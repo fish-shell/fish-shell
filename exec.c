@@ -311,13 +311,14 @@ static int has_fd( io_data_t *d, int fd )
 /**
    Read from descriptors until they are empty. 
 */
-static void read_all( io_data_t *d )
+void exec_read_io_buffer( io_data_t *d )
 {
-	
-//io_data_t *d, *prev=0;
-	
-/*for( d = io; d; d=d->next )
-  {*/
+
+	if( close( d->pipe_fd[1] ) == -1 )
+	{
+		debug( 1, PIPE_ERROR );
+		wperror( L"close" );
+	}
 	
 	if( d->io_mode == IO_BUFFER )
 	{
@@ -328,7 +329,7 @@ static void read_all( io_data_t *d )
 			return;
 		}
 
-		debug( 3, L"read_all: blocking read on fd %d", d->pipe_fd[0] );
+		debug( 3, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
 		
 		while(1)
 		{
@@ -337,25 +338,13 @@ static void read_all( io_data_t *d )
 			l=read_blocked( d->pipe_fd[0], b, 4096 );			
 			if( l==0 )
 			{
-				
-/*if( prev )
-  {
-  prev->next = d->next;
-  }
-  else
-  {
-  j->io=d->next;
-  }
-  removed = true;*/
 				break;
-				
-				
 			}
 			else if( l<0 )
 			{
 				debug( 1, 
 					   L"An error occured while reading output from code block on fd %d", d->pipe_fd[0] );
-				wperror( L"read_all" );				
+				wperror( L"exec_read_io_buffer" );				
 				break;				
 			}
 			else
@@ -364,14 +353,9 @@ static void read_all( io_data_t *d )
 			}
 		}
 	}
-	
-//if( !removed )
-//prev=d;
-//}
-	
-//if( current_block->io )
-//fwprintf( stderr, L"read_all ended %ls\n", j->command );
 }
+
+
 io_data_t *exec_make_io_buffer()
 {
 	io_data_t *buffer_redirect = malloc( sizeof( io_data_t ));
@@ -412,9 +396,8 @@ void exec_free_io_buffer( io_data_t *io_buffer )
 	}
 
 	/*
-	  Dont free fd for writing. This should already be free'd before calling read_all on the buffer
+	  Dont free fd for writing. This should already be free'd before calling exec_read_io_buffer on the buffer
 	*/
-//	close( io_buffer->pipe_fd[1] );
 	
 	b_destroy( io_buffer->out_buffer );
 	
@@ -966,16 +949,9 @@ void exec( job_t *j )
 
 				j->io = io_remove( j->io, io_buffer );
 				
-				if( close( io_buffer->pipe_fd[1] ) == -1 )
-				{
-					debug( 1, PIPE_ERROR );
-					wperror( L"close" );
-					
-				}
+				debug( 3, L"exec_read_io_buffer on block '%ls'", p->argv[0] );
 				
-				debug( 3, L"read_all on block '%ls'", p->argv[0] );
-				
-				read_all( io_buffer );
+				exec_read_io_buffer( io_buffer );
 				
 				if( io_buffer->out_buffer->used != 0 )
 				{
@@ -1233,10 +1209,9 @@ int exec_subshell( const wchar_t *cmd,
 	prev_status = proc_get_last_status();
 	
 	eval( cmd, io_buffer, SUBST );
-	close( io_buffer->pipe_fd[1] );
 	
-	debug( 4, L"read_all on cmdsub '%ls'", cmd );
-	read_all( io_buffer );
+	debug( 4, L"exec_read_io_buffer on cmdsub '%ls'", cmd );
+	exec_read_io_buffer( io_buffer );
 	
 	status = proc_get_last_status();
 	proc_set_last_status( prev_status );

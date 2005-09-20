@@ -40,4 +40,6 @@ int exec_subshell( const wchar_t *cmd,
 
 void exec_free_io_buffer( io_data_t *io_buffer );
 io_data_t *exec_make_io_buffer();
+void exec_read_io_buffer( io_data_t *d );
+
 

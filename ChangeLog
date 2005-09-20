@@ -1,3 +1,8 @@
+2005-09-20  Axel Liljencrantz  <axel@liljencrantz.se>
+
+	* exec.c, reader.c (exec_read_io_buffer, run_pager): Don't leak file descriptors when showing completion pager
+	
+	
 2005-09-19  Axel Liljencrantz  <axel@liljencrantz.se>
 
 	* env_universal.c, env_universal_common.c (barrier, callback, create_message, parse_message): Add support for blocking a client until all current messages from the client and corresponding replies  have been transmitted.

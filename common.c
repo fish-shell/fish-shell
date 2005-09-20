@@ -1,0 +1,1061 @@
+/** \file common.c
+	
+Various functions, mostly string utilities, that are used by most
+parts of fish.
+*/
+#include <stdlib.h>
+#include <termios.h>
+#include <wchar.h>
+#include <string.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <wctype.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdarg.h>		
+#include <signal.h>		
+#include <locale.h>
+
+#if HAVE_NCURSES_H
+#include <ncurses.h>
+#else
+#include <curses.h>
+#endif
+
+#if HAVE_TERMIO_H
+#include <termio.h>
+#endif
+
+#include <term.h>
+
+
+#include "config.h"
+#include "util.h"
+#include "wutil.h"
+#include "common.h"
+#include "expand.h"
+#include "proc.h"
+#include "wildcard.h"
+#include "parser.h"
+
+/**
+   Error message to show on string convertion error
+*/
+#define STR2WCS_MSG "fish: Invalid multibyte sequence \'"
+
+/**
+   The maximum number of minor errors to report. Further errors will be omitted.
+*/
+#define ERROR_MAX_COUNT 1
+
+struct termios shell_modes;      
+
+/**
+   Number of error encountered. This is reset after each command, and
+   used to limit the number of error messages on commands with many
+   string convertion problems.
+*/
+static int error_count=0;
+
+int error_max=1;
+
+wchar_t ellipsis_char;
+
+static int c1=0, c2=0, c3=0, c4=0, c5;
+
+char *profile=0;
+
+wchar_t *program_name;
+
+static int block_count=0;
+
+void common_destroy()
+{
+	debug( 3, L"Calls: wcsdupcat %d, wcsdupcat2 %d, wcsndup %d, str2wcs %d, wcs2str %d", c1, c2, c3, c4, c5 );
+}
+
+
+
+wchar_t **list_to_char_arr( array_list_t *l )
+{
+	wchar_t ** res = malloc( sizeof(wchar_t *)*(al_get_count( l )+1) );
+	int i;
+	if( res == 0 )
+	{
+		die_mem();
+	}
+	for( i=0; i<al_get_count( l ); i++ )
+		res[i] = (wchar_t *)al_get(l,i);
+	res[i]='\0';
+	return res;	
+}
+
+void block()
+{
+	block_count++;
+	if( block_count == 1 )
+	{
+		sigset_t chldset; 
+		sigemptyset( &chldset );
+		sigaddset( &chldset, SIGCHLD );
+		sigprocmask(SIG_BLOCK, &chldset, 0);
+	}
+}
+
+
+void unblock()
+{
+	block_count--;
+	if( block_count == 0 )
+	{
+		sigset_t chldset; 
+		sigemptyset( &chldset );
+		sigaddset( &chldset, SIGCHLD );
+		sigprocmask(SIG_UNBLOCK, &chldset, 0);
+	}
+}
+
+
+
+int fgetws2( wchar_t **b, int *len, FILE *f )
+{
+	int i=0;
+	wint_t c;
+	
+	wchar_t *buff = *b;
+
+	/*
+	  This is a kludge: We block SIGCHLD while reading, since I can't
+	  get getwc to perform reliably when signals are flying. Even when
+	  watching for EINTR errors, bytes are lost. 
+	*/
+
+	block();
+
+	while( 1 )
+	{
+		/* Reallocate the buffer if necessary */
+		if( i+1 >= *len )
+		{
+			int new_len = maxi( 128, (*len)*2);
+			buff = realloc( buff, sizeof(wchar_t)*new_len );
+			if( buff == 0 )
+			{
+				die_mem();
+			}
+			else
+			{
+				*len = new_len;
+				*b = buff;
+			}			
+		}
+		
+		errno=0;		
+		
+		c = getwc( f );
+		
+		if( errno == EILSEQ )
+		{
+
+			getc( f );
+			continue;
+		}
+	
+//fwprintf( stderr, L"b\n" );
+		
+		switch( c )
+		{
+			/* End of line */ 
+			case WEOF:
+			case L'\n':
+			case L'\0':
+				buff[i]=L'\0';
+				unblock();
+
+				return i;				
+				/* Ignore carriage returns */
+			case L'\r':
+				break;
+				
+			default:
+				buff[i++]=c;
+				break;
+		}		
+
+
+	}
+	unblock();
+
+}
+
+
+/**
+   Wrapper for wcsfilecmp
+*/
+static int completion_cmp( const void *a, const void *b )
+{
+	wchar_t *c= *((wchar_t **)a);
+	wchar_t *d= *((wchar_t **)b);
+	return wcsfilecmp( c, d );
+}
+
+void sort_list( array_list_t *comp )
+{
+	
+	qsort( comp->arr, 
+		   al_get_count( comp ),
+		   sizeof( void*),
+		   &completion_cmp );
+}
+
+wchar_t *str2wcs( const char *in )
+{
+	c4++;
+	
+	wchar_t *res;
+	
+	res = malloc( sizeof(wchar_t)*(strlen(in)+1) );
+	
+	if( !res )
+	{
+		die_mem();
+		
+	}
+	
+	if( (size_t)-1 == mbstowcs( res, in, sizeof(wchar_t)*(strlen(in)) +1) )
+	{
+		error_count++;
+		if( error_count <=error_max )
+		{
+			fflush( stderr );			
+			write( 2,
+				   STR2WCS_MSG,
+				   strlen(STR2WCS_MSG) );
+			write( 2,
+				   in,
+				   strlen(in ));
+			write( 2, 
+				   "\'\n",
+				   2 );
+		}
+		
+		free(res);
+		return 0;
+	}	
+	
+	return res;
+	
+}
+
+void error_reset()
+{
+	error_count=0;
+}
+
+char *wcs2str( const wchar_t *in )
+{
+	c5++;
+	
+	char *res = malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
+	if( res == 0 )
+	{
+		die_mem();
+	}
+
+	wcstombs( res, 
+			  in,
+			  MAX_UTF8_BYTES*wcslen(in)+1 );
+
+	res = realloc( res, strlen( res )+1 );
+
+	return res;
+}
+
+char **wcsv2strv( const wchar_t **in )
+{
+	int count =0;
+	int i;
+
+	while( in[count] != 0 )
+		count++;
+	char **res = malloc( sizeof( char *)*(count+1));
+	if( res == 0 )
+	{
+		die_mem();
+		
+	}
+
+	for( i=0; i<count; i++ )
+	{
+		res[i]=wcs2str(in[i]);
+	}
+	res[count]=0;
+	return res;
+
+}
+
+wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b )
+{
+	c1++;
+	
+	return wcsdupcat2( a, b, 0 );
+}
+
+wchar_t *wcsdupcat2( const wchar_t *a, ... )
+{
+	c2++;
+	
+	int len=wcslen(a);
+	int pos;
+	va_list va, va2;
+	wchar_t *arg;
+
+	va_start( va, a );
+	va_copy( va2, va );
+	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
+	{
+		len += wcslen( arg );
+	}
+	va_end( va );
+
+	wchar_t *res = malloc( sizeof(wchar_t)*(len +1 ));
+	if( res == 0 )
+		return 0;
+
+	wcscpy( res, a );
+	pos = wcslen(a);
+	while( (arg=va_arg(va2, wchar_t *) )!= 0 ) 
+	{
+		wcscpy( res+pos, arg );
+		pos += wcslen(arg);
+	}
+	va_end( va2 );
+	return res;	
+
+}
+
+
+wchar_t **strv2wcsv( const char **in )
+{
+	int count =0;
+	int i;
+
+	while( in[count] != 0 )
+		count++;
+	wchar_t **res = malloc( sizeof( wchar_t *)*(count+1));
+	if( res == 0 )
+	{
+		die_mem();
+	}
+
+	for( i=0; i<count; i++ )
+	{
+		res[i]=str2wcs(in[i]);
+	}
+	res[count]=0;
+	return res;
+
+}
+
+
+
+wchar_t *wcsndup( const wchar_t *in, int c )
+{
+	c3++;
+	
+	wchar_t *res = malloc( sizeof(wchar_t)*(c+1) );
+	if( res == 0 )
+	{
+		die_mem();
+	}
+	wcsncpy( res, in, c );
+	res[c] = L'\0';	
+	return res;	
+}
+
+long convert_digit( wchar_t d, int base )
+{
+	long res=-1;
+	if( (d <= L'9') && (d >= L'0') )
+	{
+		res = d - L'0';
+	}
+	else if( (d <= L'z') && (d >= L'a') )
+	{
+		res = d + 10 - L'a';		
+	}
+	else if( (d <= L'Z') && (d >= L'A') )
+	{
+		res = d + 10 - L'A';		
+	}
+	if( res >= base )
+	{
+		res = -1;
+	}
+	
+	return res;
+}
+
+
+long wcstol(const wchar_t *nptr, 
+			wchar_t **endptr,
+			int base)
+{
+	long long res=0;
+	int is_set=0;
+	if( base > 36 )
+	{
+		errno = EINVAL;
+		return 0;
+	}
+
+	while( 1 )
+	{
+		long nxt = convert_digit( *nptr, base );
+		if( endptr != 0 )
+			*endptr = (wchar_t *)nptr;
+		if( nxt < 0 )
+		{
+			if( !is_set )
+			{
+				errno = EINVAL;
+			}
+			return res;			
+		}
+		res = (res*base)+nxt;
+		is_set = 1;
+		if( res > LONG_MAX )
+		{
+			errno = ERANGE;
+			return LONG_MAX;
+		}
+		if( res < LONG_MIN )
+		{
+			errno = ERANGE;
+			return LONG_MIN;
+		}
+		nptr++;
+	}
+}
+
+/*$OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp $*/
+
+/*
+ * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/**
+   Appends src to string dst of size siz (unlike wcsncat, siz is the
+   full size of dst, not space left).  At most siz-1 characters will be
+   copied.  Always NUL terminates (unless siz <= wcslen(dst)).  Returns
+   wcslen(src) + MIN(siz, wcslen(initial dst)).  If retval >= siz,
+   truncation occurred.
+
+   This is the OpenBSD strlcat function, modified for wide characters,
+   and renamed to reflect this change.
+
+*/
+size_t
+wcslcat(wchar_t *dst, const wchar_t *src, size_t siz)
+{
+	
+	register wchar_t *d = dst;
+	register const wchar_t *s = src;
+	register size_t n = siz;	
+	size_t dlen;
+
+	/* Find the end of dst and adjust bytes left but don't go past end */
+	while (n-- != 0 && *d != '\0')
+		d++;
+	
+	dlen = d - dst;
+	n = siz - dlen;	
+
+	if (n == 0)
+		return(dlen + wcslen(s));
+
+	while (*s != '\0') 
+	{
+		if (n != 1) 
+		{
+			*d++ = *s;
+			n--;
+		}
+		s++;
+	}
+	*d = '\0';
+
+	return(dlen + (s - src));
+	/* count does not include NUL */
+}
+
+/*$OpenBSD: strlcpy.c,v 1.8 2003/06/17 21:56:24 millert Exp $*/
+
+/*
+ * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+/**
+   Copy src to string dst of size siz.  At most siz-1 characters will
+   be copied.  Always NUL terminates (unless siz == 0).  Returns
+   wcslen(src); if retval >= siz, truncation occurred.
+
+   This is the OpenBSD strlcpy function, modified for wide characters,
+   and renamed to reflect this change. 
+*/
+size_t
+wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz)
+{
+	register wchar_t *d = dst;
+	register const wchar_t *s = src;
+	register size_t n = siz;
+	
+	/* Copy as many bytes as will fit */
+	if (n != 0 && --n != 0) 
+	{		
+		do 
+		{			
+			if ((*d++ = *s++) == 0)
+				break;
+		}
+		while (--n != 0);
+	}
+
+	/* Not enough room in dst, add NUL and traverse rest of src */
+	if (n == 0) 
+	{		
+		if (siz != 0)
+			*d = '\0';
+		/* NUL-terminate dst */
+		while (*s++)
+			;
+	}
+	return(s - src - 1);
+	/* count does not include NUL */
+}
+
+wchar_t *wcsdup( const wchar_t *in )
+{
+	wchar_t *out = malloc( sizeof( wchar_t)*(wcslen(in)+1));
+	if( out == 0 )
+	{
+		die_mem();
+		
+	}
+	wcscpy( out, in );
+	return out;
+	
+}
+
+int wcscasecmp( const wchar_t *a, const wchar_t *b )
+{
+	if( *a == 0 )
+	{
+		return (*b==0)?0:-1;
+	}
+	else if( *b == 0 )
+	{
+		return 1;
+	}
+	int diff = towlower(*a)-towlower(*b);
+	if( diff != 0 )
+		return diff;
+	else
+		return wcscasecmp( a+1,b+1);
+}
+
+int wcsvarname( wchar_t *str )
+{
+	while( *str )
+	{
+		if( (!iswalnum(*str)) && (*str != L'_' ) )
+		{
+			return 0;
+		}
+		str++;
+	}
+	return 1;
+	
+	
+}
+
+#if !HAVE_WCWIDTH
+/**
+   Return the number of columns used by a character. 
+
+   In locales without a native wcwidth, Unicode is probably so broken
+   that it isn't worth trying to implement a real wcwidth. This
+   wcwidth assumes any printing character takes up one column.
+*/
+int wcwidth( wchar_t c )
+{
+	if( c < 32 )
+		return 0;
+	if ( c == 127 )
+		return 0;
+	return 1;
+}
+#endif
+
+/** 
+	The glibc version of wcswidth seems to hang on some strings. fish uses this replacement.
+*/
+int my_wcswidth( const wchar_t *c )
+{
+	int res=0;
+	while( *c )
+	{
+		int w = wcwidth( *c++ );
+		if( w < 0 )
+			w = 1;
+		if( w > 2 )
+			w=1;
+		
+		res += w;		
+	}
+	return res;
+}
+
+wchar_t *quote_end( const wchar_t *in )
+{
+	int level=1;
+	int offset = (*in != L'\"');
+
+	in++;
+	
+	while(1)
+	{
+/*		fwprintf( stderr, L"Check %c\n", *tok->buff );*/
+		switch( *in )
+		{
+			case L'\\':
+				in++;
+				if( *in == L'\0' )
+				{
+					return 0;
+				}
+				break;
+			case L'\"':
+			case L'\'':
+				if( (((level+offset) % 2)?L'\"':L'\'') == *in )
+				{
+					level--;
+				}
+				else
+				{
+					level++;
+				}
+				
+				break;
+		}
+		if( (*in == L'\0') ||(level==0))
+			break;
+		
+		in++;
+	}
+	return level?0:(wchar_t *)in;
+	
+}
+
+
+void fish_setlocale(int category, const wchar_t *locale)
+{
+	char *lang = wcs2str( locale );
+	setlocale(category,lang);
+	free( lang );
+	/*
+	  Use ellipsis if on known unicode system, otherwise use $
+	*/
+	if( wcslen( locale ) )
+	{
+		ellipsis_char = wcsstr( locale, L".UTF")?L'\u2026':L'$';	
+	}
+	else
+	{
+		char *lang = getenv( "LANG" );
+		if( lang )
+			ellipsis_char = strstr( lang, ".UTF")?L'\u2026':L'$';	
+		else
+			ellipsis_char = L'$';
+	}
+}
+
+int contains_str( const wchar_t *a, ... )
+{
+	wchar_t *arg;
+	va_list va;
+	int res = 0;
+	
+	va_start( va, a );
+	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
+	{
+		if( wcscmp( a,arg) == 0 )
+		{
+			res=1;
+			break;
+		}
+		
+	}
+	va_end( va );
+	return res;	
+}
+
+int read_blocked(int fd, void *buf, size_t count)
+{
+	int res;	
+	sigset_t chldset, oldset; 
+
+	sigemptyset( &chldset );
+	sigaddset( &chldset, SIGCHLD );
+	sigprocmask(SIG_BLOCK, &chldset, &oldset);
+	res = read( fd, buf, count );
+	sigprocmask( SIG_SETMASK, &oldset, 0 );
+	return res;	
+}
+
+int writeb( tputs_arg_t b )
+{
+	write( 1, &b, 1 );
+//	putc( b, stdout );
+	return 0;
+}
+
+void die_mem()
+{
+	/*
+	  int *foo=0;	
+	  *foo = 6;
+	  */	
+	debug( 0, L"Out of memory, shutting down fish." );
+	exit(1);
+}
+
+void debug( int level, wchar_t *msg, ... )
+{
+	va_list va;
+
+	if( level > DEBUG_LEVEL )
+		return;
+
+	va_start( va, msg );
+	
+	fwprintf( stderr, L"%ls: ", program_name );
+	vfwprintf( stderr, msg, va );
+	va_end( va );	
+	fwprintf( stderr, L"\n" );
+}
+
+wchar_t *escape( wchar_t *in, 
+				 int escape_all )
+{
+	wchar_t *killme=in;	
+	wchar_t *out = malloc( sizeof(wchar_t)*(wcslen(in)*4 + 1));
+	if( out != 0 )
+	{
+		wchar_t *pos=out;
+		while( *in != 0 )
+		{
+			switch( *in )
+			{
+				case L'\t':
+					*(pos++) = L'\\';
+					*(pos++) = L't';					
+					break;
+					
+				case L'\n':
+					*(pos++) = L'\\';
+					*(pos++) = L'n';					
+					break;
+					
+				case L'\b':
+					*(pos++) = L'\\';
+					*(pos++) = L'b';					
+					break;
+					
+				case L'\r':
+					*(pos++) = L'\\';
+					*(pos++) = L'r';					
+					break;
+					
+				case L'\e':
+					*(pos++) = L'\\';
+					*(pos++) = L'e';					
+					break;
+					
+				case L'\\':
+				case L'&':
+				case L'$':
+				case L' ':
+				case L'#':
+				case L'^':
+				case L'<':
+				case L'>':
+				case L'@':
+				case L'(':
+				case L')':
+				case L'{':
+				case L'}':
+				case L'?':
+				case L'*':
+				case L'|':
+				case L';':
+				case L':':
+				case L'\'':
+				case L'\"':
+					if( escape_all )
+						*pos++ = L'\\';
+					*pos++ = *in;
+					break;
+					
+				default:
+					if( *in < 32 )
+					{
+						int tmp = (*in)%16;
+						*pos++ = L'\\';
+						*pos++ = L'x';
+						*pos++ = ((*in>15)? L'1' : L'0');
+						*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+					}
+					else
+						*pos++ = *in;
+					break;
+			}
+			in++;
+		}
+		*pos = 0;
+		free(killme);		
+	}
+
+	return out;
+}
+
+
+wchar_t *unescape( wchar_t * in, int escape_special )
+{
+	int in_pos, out_pos, len = wcslen( in );
+	int c;
+	int bracket_count=0;
+	wchar_t prev=0;	
+
+	for( in_pos=0, out_pos=0; in_pos<len; prev=in[out_pos], out_pos++, in_pos++ )
+	{
+		c = in[in_pos];
+		if( c == L'\\' )
+		{
+			switch( in[++in_pos] )
+			{
+				case L'\0':
+					error( SYNTAX_ERROR, L"Unexpected end of string", -1 );
+					return in;
+					
+					break;
+
+				case L'n':
+					in[out_pos]=L'\n';
+					break;
+
+				case L'r':
+					in[out_pos]=L'\r';
+					break;
+
+				case L't':
+					in[out_pos]=L'\t';
+					break;
+
+				case L'b':
+					in[out_pos]=L'\b';
+					break;
+
+				case L'e':
+					in[out_pos]=L'\e';
+					break;
+
+				case L'u':
+				case L'U':
+				case L'x':
+				case L'o':
+				{
+					int i;
+					wchar_t res=0;
+					int chars=2;
+					int base=16;
+					
+					switch( in[in_pos] )
+					{
+						case L'u':
+							base=16;
+							chars=4;
+							break;
+							
+						case L'U':
+							base=16;
+							chars=8;
+							break;
+							
+						case L'x':
+							base=16;
+							chars=2;
+							break;
+							
+						case L'o':
+							base=8;
+							chars=3;
+							break;
+							
+					}
+					
+					for( i=0; i<chars; i++ )
+					{
+						int d = convert_digit( in[++in_pos],base);
+						if( d < 0 )
+						{
+							in_pos--;
+							break;
+						}
+						
+						res=(res*base)|d;
+						
+					}
+					
+					in[out_pos] = res;
+					
+					break;
+				}
+
+				default:
+					in[out_pos]=in[in_pos];
+					break;
+			}
+		}
+		else 
+		{
+			switch( in[in_pos]){
+				case L'~':
+					if( escape_special && (in_pos == 0) )
+						in[out_pos]=HOME_DIRECTORY;
+					else
+						in[out_pos] = L'~';
+					break;
+				case L'%':
+					if( escape_special && (in_pos == 0) )
+						in[out_pos]=PROCESS_EXPAND;
+					else
+						in[out_pos]=in[in_pos];						
+					break;
+				case L'*':
+					if( escape_special )
+					{
+						if( out_pos > 0 && in[out_pos-1]==ANY_STRING )
+						{
+							out_pos--;
+							in[out_pos] = ANY_STRING_RECURSIVE;
+						}
+						else
+							in[out_pos]=ANY_STRING;
+					}
+					else
+						in[out_pos]=in[in_pos];						
+					break;
+				case L'?':
+					if( escape_special )
+						in[out_pos]=ANY_CHAR;
+					else
+						in[out_pos]=in[in_pos];						
+					break;					
+				case L'$':
+					if( escape_special )
+						in[out_pos]=VARIABLE_EXPAND;
+					else
+						in[out_pos]=in[in_pos];											
+					break;					
+				case L'{':
+					if( escape_special )
+					{
+						bracket_count++;
+						in[out_pos]=BRACKET_BEGIN;
+					}
+					else
+						in[out_pos]=in[in_pos];						
+					break;					
+				case L'}':
+					if( escape_special )
+					{
+						bracket_count--;
+						in[out_pos]=BRACKET_END;
+					}
+					else
+						in[out_pos]=in[in_pos];						
+					break;					
+
+				case L',':
+					if( escape_special && bracket_count && prev!=BRACKET_SEP)
+					{
+						in[out_pos]=BRACKET_SEP;
+					}
+					else
+						in[out_pos]=in[in_pos];						
+					break;					
+
+				case L'\'':
+				case L'\"':
+				{
+					wchar_t *end = quote_end( &in[in_pos] );
+					int len;
+					
+					if( end == 0 )
+					{
+						error( SYNTAX_ERROR, L"Unexpected end of string", -1 );
+						return in;
+					}
+					
+					len = end- &in[in_pos]-1;					
+
+					if( escape_special)
+						in[out_pos++]=INTERNAL_SEPARATOR;
+
+					memmove( &in[out_pos], &in[in_pos+1], sizeof(wchar_t)*(len) );
+					in_pos += len+1;
+					out_pos += len-1;
+
+					if( escape_special)
+						in[++out_pos]=INTERNAL_SEPARATOR;
+
+					break;
+				}
+				default:
+					in[out_pos] = in[in_pos];
+					break;
+			}
+		}		
+	}
+	in[out_pos]=L'\0';
+	return in;	
+}
+

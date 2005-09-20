@@ -1,0 +1,92 @@
+/*
+    A small utility to print the resulting key codes from pressing a
+	key. Servers the same function as hitting ^V in bash, but I prefer
+	the way key_reader works.
+
+	Type ^C to exit the program.
+*/
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
+#include <termcap.h>
+
+static int readch()
+{
+	char arr[1];
+	if( read( 0, arr, 1 ) < 0 )
+	{
+		perror( "read" );
+		return readch();		
+	}
+	else
+		return arr[0];
+}
+
+int writestr( char *str )
+{
+	write( 1, str, strlen(str) );
+	return 0;
+}
+
+int main( int argc, char **argv)
+{
+
+	if( argc == 2 )
+	{
+		static char term_buffer[2048];
+		char *termtype = getenv ("TERM");
+		char *tbuff = malloc( sizeof(char)*9999);
+		char *res;
+		
+		tgetent( term_buffer, termtype );
+		res = tgetstr( argv[1], &tbuff );		
+		if( res != 0 )
+		{
+			while( *res != 0 )
+			{ 
+				printf("%d ", *res );
+
+
+				res++;
+			}
+			printf( "\n" );		
+		}
+		else
+		{
+			printf("Undefined sequence\n");
+		}		
+	}
+	else
+	{
+		char scratch[1024];
+		unsigned int c;
+
+		struct termios modes,      /* so we can change the modes */
+			savemodes;  /* so we can reset the modes when we're done */
+
+		tcgetattr(0,&modes);        /* get the current terminal modes */
+		savemodes = modes;          /* save a copy so we can reset them */
+		
+		modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
+		modes.c_lflag &= ~ECHO;   /* turn off echo mode */
+		modes.c_cc[VMIN]=1;
+		modes.c_cc[VTIME]=0;
+		tcsetattr(0,TCSANOW,&modes);      /* set the new modes */
+		while(1)
+		{
+			if( (c=readch()) == EOF )
+				break;
+			if((c > 31) && (c != 127) )
+				sprintf( scratch, "dec: %d hex: %x char: %c\n", c, c, c );
+			else
+				sprintf( scratch, "dec: %d hex: %x\n", c, c );
+			writestr( scratch );			
+		}
+		/* reset the terminal to the saved mode */
+		tcsetattr(0,TCSANOW,&savemodes);  
+	}	
+
+	return 0;
+}

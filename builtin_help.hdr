@@ -1,0 +1,36 @@
+/** \file builtin_help.c
+
+    Functions for printing usage information of builtin commands. This
+	file is automatically generated from the file builtin_help.hdr and
+	various help files in the doc_src directory.
+*/
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <strings.h>
+#include <wchar.h>
+
+#include "config.h"
+#include "util.h"
+#include "common.h"
+#include "builtin_help.h"
+
+/**
+	Hashtable storing the help text
+*/
+static hash_table_t tbl;
+
+char *builtin_help_get( wchar_t *cmd )
+{
+	return (char *)hash_get( &tbl, (void *)cmd );
+}
+
+void builtin_help_destroy()
+{
+	hash_destroy( &tbl );
+}
+
+
+void builtin_help_init()
+{
+	hash_init( &tbl, &hash_wcs_func, &hash_wcs_cmp );

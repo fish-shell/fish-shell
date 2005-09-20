@@ -1,0 +1,264 @@
+/** \file proc.h 
+
+    Prototypes for utilities for keeping track of jobs, processes and subshells, as
+	well as signal handling functions for tracking children. These
+	functions do not themselves launch new processes, the exec library
+	will call proc to create representations of the running jobs as
+	needed.
+	
+*/
+
+/**
+   Describes what type of IO operation an io_data_t represents
+*/
+enum io_mode
+{
+	IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
+}
+;
+
+/**
+   Types of internal processes
+*/
+enum
+{
+	EXTERNAL,
+	INTERNAL_BUILTIN,
+	INTERNAL_FUNCTION,
+	INTERNAL_BLOCK,
+	INTERNAL_EXEC
+}
+	;
+
+
+/** Represents an FD redirection */
+typedef struct io_data
+{
+	/** Type of redirect */
+	int io_mode;
+	/** FD to redirect */
+	int fd;
+	/** parameter for redirection */
+	union
+	{
+		/** Fds for IO_PIPE and for IO_BUFFER */
+		int pipe_fd[2];
+		/** Filename IO_FILE */
+		wchar_t *filename;
+		/** fd to redirect specified fd to, for IO_FD*/
+		int old_fd;
+	}
+	;
+	union
+	{
+		/** file creation flags to send to open for IO_FILE */
+		int flags;
+		/** buffer to save output in for IO_BUFFER */
+		buffer_t *out_buffer;		
+		/** Whether to close old_fd for IO_FD */
+		int close_old;
+		
+	}
+	;
+	
+	/** Pointer to the next IO redirection */
+	struct io_data *next;
+}
+io_data_t;
+
+ 
+/** 
+	A structore representing a single process. Contains variables for
+	tracking process state and the process argument list. 
+*/
+typedef struct process{
+	/** argv parameter for for execv */
+	wchar_t **argv;
+	/** actual command to pass to exec */
+	wchar_t *actual_cmd;       
+	/** process ID */
+	pid_t pid;
+	/** 
+		Type of process. Can be one of \c EXTERNAL, \c
+		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK
+	*/
+	int type;
+	/** true if process has completed */
+	volatile int completed;
+	/** true if process has stopped */
+	volatile int stopped;
+	/** reported status value */
+	volatile int status;
+	/** next process in pipeline */
+	struct process *next;       	
+#ifdef HAVE__PROC_SELF_STAT
+	/** Last time of cpu time check */
+	struct timeval last_time;
+	/** Number of jiffies spent in process at last cpu time check */
+	unsigned long last_jiffies;	
+#endif
+} process_t;
+
+
+/** Represents a pipeline of one or more processes.  */
+typedef struct job
+{
+	/** command line, used for messages */
+	wchar_t *command;              
+	/** list of processes in this job */
+	process_t *first_process;  
+	/** process group ID */
+	pid_t pgid;   
+	/** true if user was told about stopped job */
+	int notified;     
+	/** saved terminal modes */
+	struct termios tmodes;    
+	/** The job id of the job*/
+	int job_id;
+	/** Whether this job is in the foreground */
+	int fg;
+	/** 
+		Whether the specified job is completely constructed,
+		i.e. completely parsed, and every process in the job has been
+		forked
+	*/
+	int constructed;
+	/**
+	   Whether the specified job is a part of a subshell or some other form of special job that should not be reported
+	*/
+	int skip_notification;
+	
+	/** List of IO redrections for the job */
+	io_data_t *io;
+	
+	/** Should the exit status be negated */
+	int negate;	
+	/** Is this a conditional short circut thing? If so, is it an COND_OR or a COND_AND */
+	struct job *next;           
+} job_t;
+
+/** Whether we are running a subshell command */
+extern int is_subshell;
+/** Whether we are running a block of commands */
+extern int is_block;
+/** Whether we are reading from the keyboard right now*/
+extern int is_interactive;
+/** Whether this shell is attached to the keyboard at all*/
+extern int is_interactive_session;
+/** Whether we are a login shell*/
+extern int is_login;
+/** Linked list of all jobs */
+extern job_t *first_job;   
+
+
+extern pid_t proc_last_bg_pid;
+
+/**
+   Join two chains of io redirections
+*/
+io_data_t *io_add( io_data_t *first_chain, io_data_t *decond_chain );
+
+/**
+   Remove the specified io redirection from the chain
+*/
+io_data_t *io_remove( io_data_t *list, io_data_t *element );
+
+/**
+   Make a copy of the specified chain of redirections
+*/
+io_data_t *io_duplicate( io_data_t *l );
+
+/**
+   Return the last io redirection in ht e chain for the specified file descriptor.
+*/
+io_data_t *io_get( io_data_t *io, int fd );
+
+/**
+   Sets the status of the last process to exit
+*/
+void proc_set_last_status( int s );
+/**
+   Returns the status of the last process to exit
+*/
+int proc_get_last_status();
+
+/**
+   Remove the specified job
+*/
+void job_free( job_t* j );
+/**
+   Create a new job
+*/
+job_t *job_create();
+
+/**
+  Return the job with the specified job id.
+  If id is -1, return the last job used.
+*/
+job_t *job_get(int id);
+
+/**
+  Return the job with the specified pid.
+*/
+job_t *job_get_from_pid(int pid);
+
+/**
+   Tests if the job is stopped 
+ */
+int job_is_stopped( const job_t *j );
+
+/**
+   Tests if the job has completed
+ */
+int job_is_completed( const job_t *j );
+
+/**
+  Reassume a (possibly) stopped job. Put job j in the foreground.  If
+  cont is nonzero, restore the saved terminal modes and send the
+  process group a SIGCONT signal to wake it up before we block.
+
+  \param j The job
+  \param cont Whether the function should wait for the job to complete before returning
+*/
+void job_continue( job_t *j, int cont );
+/**
+   Notify user of nog events.  Notify the user about stopped or
+   terminated jobs.  Delete terminated jobs from the active job list.
+*/
+int job_do_notification();
+/**
+   Signal handler for SIGCHLD.  Mark any processes with relevant
+   information.
+
+*/
+void job_handle_signal( int signal, siginfo_t *info, void *con );
+
+/**
+   Clean up before exiting
+*/
+void proc_destroy();
+
+
+#ifdef HAVE__PROC_SELF_STAT
+/**
+   Use the procfs filesystem to look up how many jiffies of cpu time
+   was used by this process. This function is only available on
+   systems with the procfs file entry 'stat', i.e. Linux.
+*/
+unsigned long proc_get_jiffies( process_t *p );
+
+/**
+   Update process time usage for all processes by calling the
+   proc_get_jiffies function for every process of every job.
+*/
+void proc_update_jiffies();
+
+#endif
+
+/**
+   Perform a set of simple sanity checks on the job list. This
+   includes making sure that only one job is in the foreground, that
+   every process is in a valid state, etc.
+*/
+void proc_sanity_check();
+

@@ -1,0 +1,62 @@
+
+Known issues
+============
+
+Older versions of Doxygen has bugs in the man-page generation which
+cause the builtin help to render incorrectly. Version 1.2.14 is known
+to have this problem.
+
+In version 1.9.2, the installation prefix for fish rpms and debs has
+changed from /usr/local to /usr. The package should automatically
+change any instances of /usr/local/bin/fish in /etc/passwd to
+/usr/bin/fish, but some programs, like screen, may need to be
+restarted to notice the changes.  You may also run into problems when
+switching between using a package and personal builds.
+
+
+Prerequisites
+=============
+
+Fish requires the following packages to build:
+
+ - Doxygen
+ - Curses or Ncurses
+
+fish also relies on standard unix tools such as cat, cut, grep, sed,
+whoami and echo. Fish does not support cross-compilation, separate
+build directories or any other fancy configure options. Use a recent
+version of Doxygen, since older versions have bugs that make the
+builtin help pages render incorrectly. Version 1.2.14 is known to be
+broken.
+
+
+Simple install procedure
+========================
+
+ % ./configure
+ % make                                  #Compile fish
+ % make install                          #Install fish
+ % echo /usr/local/bin/fish >>/etc/shells #Add fish to list of shells
+
+If you wish to use fish as your default shell, use the following
+command:
+
+ % chsh -s /usr/local/bin/fish			 
+
+chsh will prompt you for your password, and change your default shell.
+
+
+Local install procedure
+=======================
+
+To install fish in your own home directory (typically as non-root),
+type:
+
+ % ./configure --prefix=$HOME
+ % make					# Compile fish
+ % make install			# Install fish
+
+You will not be able to use fish as the default shell unless you also
+add the corresponding line to /etc/shells, which kind of defeats the
+point of a local install. But you can at least build and run fish.
+

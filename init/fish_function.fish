@@ -28,8 +28,8 @@ function contains -d "Test if a key is contained in a set of values"
 			
 			case '-*'
 				echo Unknown option $argv[$i]
-                _contains_help
-                return 1
+				_contains_help
+				return 1
 
 			case '*'
 				# End the loop, we found the key
@@ -258,10 +258,10 @@ function vared -d "Edit variable value"
 					read -p $prompt -c $init tmp
 
 					# If variable already exists, do not add any
-                    # switches, so we don't change export rules. But
-                    # if it does not exist, we make the variable
-                    # global, so that it will not die when this
-                    # function dies
+					# switches, so we don't change export rules. But
+					# if it does not exist, we make the variable
+					# global, so that it will not die when this
+					# function dies
 
 					if test $$argv
 						set -- $argv $tmp
@@ -658,6 +658,9 @@ function type -d "Print the type of a command"
 	return $status
 end
 
+
+if status --is-interactive
+
 function prevd-or-backward-word --key-binding 
 	if test -z (commandline)
 		prevd
@@ -681,7 +684,7 @@ end
 # fish-users.
 #
 
-function delete-or-exit --key-binding -d "Exit the shell if the commandline is empty, delete a character otherwise"
+function delete-or-exit --key-binding 
 	if test (commandline)
 		commandline -f delete-char
 	else
@@ -689,3 +692,4 @@ function delete-or-exit --key-binding -d "Exit the shell if the commandline is e
 	end
 end
 
+end

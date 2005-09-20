@@ -1,7 +1,12 @@
 2005-09-20  Axel Liljencrantz  <axel@liljencrantz.se>
 
 	* exec.c, reader.c (exec_read_io_buffer, run_pager): Don't leak file descriptors when showing completion pager
-	
+
+	* builtin_set.c (print_variables): Fix broken sort of variable names on print
+
+	* builtin.c, function.c, function.h: Add support for --key-binding flag on function definitions
+
+	* init/fish_input, init/fish_function, input.c: Switch over to using keybinding-functions for keybindings
 	
 2005-09-19  Axel Liljencrantz  <axel@liljencrantz.se>
 

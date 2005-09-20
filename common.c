@@ -18,6 +18,7 @@ parts of fish.
 #include <stdarg.h>		
 #include <signal.h>		
 #include <locale.h>
+#include <time.h>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -204,7 +205,6 @@ static int completion_cmp( const void *a, const void *b )
 
 void sort_list( array_list_t *comp )
 {
-	
 	qsort( comp->arr, 
 		   al_get_count( comp ),
 		   sizeof( void*),

@@ -16,17 +16,8 @@ $if fish
 	"\M-d": kill-word
 	"\C-w": backward-kill-word	
 	"\M-k": dump-functions
-	"\C-d": __fish_delete_or_exit	
 	"\M-d": if test -z (commandline); dirh; else; commandline -f kill-word; end
-
-	"\e\eOD": if test -z (commandline); prevd; else; commandline -f backward-word; end
-	"\e\eOC": if test -z (commandline); nextd; else; commandline -f forward-word; end
-
-	"\eO3D": if test -z (commandline); prevd; else; commandline -f backward-word; end
-	"\eO3C": if test -z (commandline); nextd; else; commandline -f forward-word; end
-
-	"\e[3D": if test -z (commandline); prevd; else; commandline -f backward-word; end
-	"\e[3C": if test -z (commandline); nextd; else; commandline -f forward-word; end
+	"\C-d": delete-or-exit	
 
 $endif
 

@@ -48,18 +48,21 @@
 */
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
 
-static void parse_message( wchar_t *msg, connection_t *src );
+static void parse_message( wchar_t *msg,
+						   connection_t *src );
 
 /**
    The table of all universal variables
 */
 hash_table_t env_universal_var;
 
-void (*callback)(int type, const wchar_t *key, const wchar_t *val );
+void (*callback)( int type, 
+				  const wchar_t *key, 
+				  const wchar_t *val );
 
 
 
-void env_universal_common_init(void (*cb)(int type, const wchar_t *key, const wchar_t *val ) )
+void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const wchar_t *val ) )
 {
 	debug( 2, L"Init env_universal_common" );
 	callback = cb;
@@ -107,8 +110,8 @@ void read_message( connection_t *src )
 			if( src->input.used > 0 )
 			{
 				debug( 1, 
-					   L"Universal variable connection closed while reading command. Partial command recieved: '%ls'", 
-					   (wchar_t *)src->input.buff  );
+				       L"Universal variable connection closed while reading command. Partial command recieved: '%ls'", 
+				       (wchar_t *)src->input.buff  );
 			}
 			return;
 		}
@@ -159,7 +162,8 @@ static int match( const wchar_t *msg, const wchar_t *cmd )
 }
 
 
-static void parse_message( wchar_t *msg, connection_t *src )
+static void parse_message( wchar_t *msg, 
+						   connection_t *src )
 {
 	debug( 2, L"parse_message( %ls );", msg );
 
@@ -245,7 +249,8 @@ static void parse_message( wchar_t *msg, connection_t *src )
 	}		
 }
 
-int try_send( message_t *msg, int fd )
+int try_send( message_t *msg,
+			  int fd )
 {
 
 	int res = write( fd, msg->body, strlen(msg->body) );

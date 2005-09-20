@@ -399,6 +399,7 @@ complete.o: history.h intern.h wutil.h
 env.o: config.h util.h wutil.h proc.h common.h env.h sanity.h expand.h
 env.o: history.h reader.h parser.h env_universal.h env_universal_common.h
 env_universal.o: util.h common.h wutil.h env_universal_common.h
+env_universal.o: env_universal.h
 env_universal_common.o: util.h common.h wutil.h env_universal_common.h
 exec.o: config.h util.h common.h wutil.h proc.h exec.h parser.h builtin.h
 exec.o: function.h env.h wildcard.h sanity.h expand.h env_universal.h
@@ -428,7 +429,7 @@ mimedb.o: config.h xdgmime.h util.h
 output.o: config.h util.h wutil.h expand.h common.h output.h highlight.h
 parser.o: config.h util.h common.h wutil.h proc.h parser.h tokenizer.h exec.h
 parser.o: wildcard.h function.h builtin.h builtin_help.h env.h expand.h
-parser.o: reader.h sanity.h
+parser.o: reader.h sanity.h env_universal.h env_universal_common.h
 proc.o: config.h util.h wutil.h proc.h common.h reader.h sanity.h env.h
 reader.o: config.h util.h wutil.h highlight.h reader.h proc.h parser.h
 reader.o: complete.h history.h common.h sanity.h env.h exec.h expand.h

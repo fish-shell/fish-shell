@@ -38,6 +38,14 @@ typedef struct block
 		wchar_t *function_description; /**< The description of the function to define */
 	};
 
+	/**
+	   Third block type specific variable
+	*/
+	union
+	{
+		int function_is_binding; /**< Whether a function is a keybinding */
+	};
+
     /**
 	   Next outer block 
 	*/

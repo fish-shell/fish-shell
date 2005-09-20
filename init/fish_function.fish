@@ -289,21 +289,6 @@ function vared -d "Edit variable value"
 end
 
 #
-# This function deletes a character from the commandline if it is
-# non-empty, and exits the shell otherwise. Implementing this
-# functionality has been a longstanding request from various
-# fish-users.
-#
-
-function __fish_delete_or_exit -d "Exit the shell if the commandline is empty, delete a character otherwise"
-	if test (commandline)
-		commandline -f delete-char
-	else
-		exit
-	end
-end
-
-#
 # This function is bound to Alt-L, it is used to list the contents of
 # the directory under the cursor
 #
@@ -672,3 +657,35 @@ function type -d "Print the type of a command"
 
 	return $status
 end
+
+function prevd-or-backward-word --key-binding 
+	if test -z (commandline)
+		prevd
+	else
+		commandline -f backward-word
+	end
+end
+
+function nextd-or-forward-word --key-binding 
+	if test -z (commandline)
+		nextd
+	else
+		commandline -f forward-word
+	end
+end
+
+#
+# This function deletes a character from the commandline if it is
+# non-empty, and exits the shell otherwise. Implementing this
+# functionality has been a longstanding request from various
+# fish-users.
+#
+
+function delete-or-exit --key-binding -d "Exit the shell if the commandline is empty, delete a character otherwise"
+	if test (commandline)
+		commandline -f delete-char
+	else
+		exit
+	end
+end
+

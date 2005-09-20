@@ -874,17 +874,19 @@ static void add_common_bindings()
 		add_mapping( name[i], L"\x7f", L"Backspace", L"backward-delete-char" );
 		
 		add_terminfo_mapping( name[i], (key_home), L"Home", L"beginning-of-line" );
-		
 		add_terminfo_mapping( name[i], (key_end), L"End", L"end-of-line" );
 		
-		add_mapping( name[i], L"\e\eOC", L"Alt-Right", L"forward-word" );
-		add_mapping( name[i], L"\e\eOD", L"Alt-Left", L"backward-word" );
+		add_mapping( name[i], L"\e\eOC", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\e\eOD", L"Alt-Left", L"prevd-or-backward-word" );
 
-		add_mapping( name[i], L"\eO3C", L"Alt-Right", L"forward-word" );
-		add_mapping( name[i], L"\eO3D", L"Alt-Left", L"backward-word" );
+		add_mapping( name[i], L"\eO3C", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\eO3D", L"Alt-Left", L"prevd-or-backward-word" );
 
-		add_mapping( name[i], L"\e[3C", L"Alt-Right", L"forward-word" );
-		add_mapping( name[i], L"\e[3D", L"Alt-Left", L"backward-word" );
+		add_mapping( name[i], L"\e[3C", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\e[3D", L"Alt-Left", L"prevd-or-backward-word" );
+
+		add_mapping( name[i], L"\e[1;3C", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\e[1;3D", L"Alt-Left", L"prevd-or-backward-word" );		
 		
 		add_mapping( name[i], L"\e\eOA", L"Alt-Up", L"history-token-search-backward" );
 		add_mapping( name[i], L"\e\eOB", L"Alt-Down", L"history-token-search-forward" );
@@ -894,7 +896,9 @@ static void add_common_bindings()
 
 		add_mapping( name[i], L"\e[3A", L"Alt-Up", L"history-token-search-backward" );
 		add_mapping( name[i], L"\e[3B", L"Alt-Down", L"history-token-search-forward" );
-		
+
+		add_mapping( name[i], L"\e[1;3A", L"Alt-Up", L"history-token-search-backward" );
+		add_mapping( name[i], L"\e[1;3B", L"Alt-Down", L"history-token-search-forward" );
 	}
 
 	/*

@@ -697,6 +697,23 @@ static int builtin_functions( wchar_t **argv )
 	
 }
 
+/**
+   Test whether the specified string is a valid name for a keybinding
+*/
+static int wcsbindingname( wchar_t *str )
+{
+	
+	
+	while( *str )
+	{
+		if( (!iswalnum(*str)) && (*str != L'-' ) )
+		{
+			return 0;
+		}
+		str++;
+	}
+	return 1;
+}
 
 /**
    The function builtin, used for providing subroutines.
@@ -707,6 +724,7 @@ static int builtin_function( wchar_t **argv )
 	int argc = builtin_count_args( argv );
 	int res=0;
 	wchar_t *desc=0;	
+	int is_binding=0;
 	
 	woptind=0;
 
@@ -715,6 +733,10 @@ static int builtin_function( wchar_t **argv )
 		{
 			{
 				L"description", required_argument, 0, 'd' 
+			}
+			,
+			{
+				L"key-binding", no_argument, 0, 'b' 
 			}
 			,
 			{ 
@@ -729,7 +751,7 @@ static int builtin_function( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"d:", 
+								L"d:b", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -755,6 +777,11 @@ static int builtin_function( wchar_t **argv )
 				desc=woptarg;				
 				break;
 
+			case 'b':
+				is_binding=1;
+				break;
+				
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 				
@@ -772,7 +799,7 @@ static int builtin_function( wchar_t **argv )
 				   argc-woptind );
 		res=1;
 	}
-	else if( !wcsvarname( argv[woptind] ) )
+	else if( !(is_binding?wcsbindingname( argv[woptind] ) : wcsvarname( argv[woptind] ) ))
 	{ 
 		sb_append2( sb_err, 
 					argv[0],
@@ -780,6 +807,7 @@ static int builtin_function( wchar_t **argv )
 					argv[woptind], 
 					L"\'\n", 
 					0 );
+
 		res=1;	
 	}	
 	else if( parser_is_reserved(argv[woptind] ) )
@@ -791,12 +819,8 @@ static int builtin_function( wchar_t **argv )
                     argv[woptind],
                     L"\' is reserved,\nand can not be used as a function name\n",
                     0 );
-		
         res=1;
-		
     }
-	
-
 	
 	if( res )
 	{
@@ -840,6 +864,7 @@ static int builtin_function( wchar_t **argv )
 		parser_push_block( FUNCTION_DEF );
 		current_block->function_name=wcsdup(argv[woptind]);
 		current_block->function_description=desc?wcsdup(desc):0;
+		current_block->function_is_binding = is_binding;
 	}
 	
 	current_block->tok_pos = parser_get_pos();
@@ -2375,7 +2400,8 @@ static int builtin_end( wchar_t **argv )
 				{
 					function_add( current_block->function_name, 
 								  def,
-								  current_block->function_description);
+								  current_block->function_description,
+								  current_block->function_is_binding );
 				}
 				free(def);
 			}

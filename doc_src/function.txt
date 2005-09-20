@@ -1,9 +1,12 @@
 \section function function - create a function
 
 \subsection function-synopsis Synopsis
- <tt>function NAME; BODY; end </tt>
+ <tt>function [OPTIONS] NAME; BODY; end </tt>
 
 \subsection function-description Description
+
+- <tt>-d DESCRIPTION</tt> or \c --description=DESCRIPTION is a description of what the function does, suitable as a completion description
+- \c -b or \c --key-binding specifies that the function is a key biding. Key binding functions work exactly like regular functions except that they can not be tab-completed, and may contain the '-' character.
 
 This builtin command is used to create a new function. A Function is a
 list of commands that will be executed when the name of the function
@@ -13,7 +16,7 @@ is entered. The function
 function hi
 	echo hello
 end
-</pre> 
+BB</pre> 
 
 will write <tt>hello</tt> whenever the user enters \c hi.
 
@@ -27,7 +30,7 @@ are inserted into the environment variable <a href="index.html#variables-arrays"
 </pre>
 
 will run the \c ls command, using the \c -l option, while passing on any additional files and switches to \c ls.
-
+A
 <pre>
 function mkdir -d "Create a directory and set CWD"
 	mkdir $argv
@@ -45,4 +48,4 @@ end
 
 will run the mkdir command, and if it is succesfull, change the
 current working directory to the one just created.
- 
+

@@ -8,7 +8,6 @@
 #include <termios.h>
 #include <signal.h>
 
-
 #include "config.h"
 #include "util.h"
 #include "function.h"
@@ -31,6 +30,7 @@ typedef struct
 	wchar_t *cmd;
 	/** Function description */
 	wchar_t *desc;	
+	int is_binding;
 }
 function_data_t;
 
@@ -61,7 +61,8 @@ void function_destroy()
 
 void function_add( const wchar_t *name, 
 				   const wchar_t *val,
-				   const wchar_t *desc )
+				   const wchar_t *desc,
+				   int is_binding)
 {
 	if( function_exists( name ) )
 		function_remove( name );
@@ -69,6 +70,7 @@ void function_add( const wchar_t *name,
 	function_data_t *d = malloc( sizeof( function_data_t ) );
 	d->cmd = wcsdup( val );
 	d->desc = desc?wcsdup( desc ):0;
+	d->is_binding = is_binding;
 	hash_put( &function, intern(name), d );
 }
 
@@ -130,7 +132,9 @@ static void get_names_internal( const void *key,
 								void *aux )
 {
 	wchar_t *name = (wchar_t *)key;
-	if( name[0] != L'_' )
+	function_data_t *f = (function_data_t *)val;
+	
+	if( name[0] != L'_' && !f->is_binding)
 		al_push( (array_list_t *)aux, name );
 }
 

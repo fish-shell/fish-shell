@@ -1,0 +1,113 @@
+# Environment variable tests
+
+#Test if variables can be properly set
+
+set smurf blue
+
+if test $smurf = blue
+	echo Test 1 pass
+else
+	echo Test 1 fail
+end
+
+# Test if variables can be erased
+
+set -e smurf
+
+if test $smurf
+	echo Test 2 fail
+else
+	echo Test 2 pass
+end
+
+# Test if local variables go out of scope
+
+if true
+    set t3 bar
+end
+
+if test $t3
+    echo Test 3 fail
+else
+    echo Test 3 pass
+end
+
+# Test if globals can be set in block scope
+
+if true
+    set -g baz qux
+end
+
+if test $baz = qux
+    echo Test 4 pass
+else
+    echo Test 4 fail
+end
+
+
+#Test that scope is preserved when setting a new value
+
+set t5 a
+
+if true
+    set t5 b
+end
+
+if test $t5 = b
+    echo Test 5 pass
+else
+    echo Test 5 fail
+end
+
+# Test that scope is preserved in double blocks
+
+for i in 1 
+  set t6 $i
+  for j in a 
+    if test $t6$j = 1a
+		echo Test 6 pass
+	else
+		echo Test 6 fail
+	end
+  end
+end
+
+
+# Test if variables in for loop blocks do not go out of scope on new laps
+
+set res fail
+
+for i in 1 2
+    set t7 
+    if test $i = 1
+        set t7 b
+    else
+        if test $t7 = b
+	        set res pass
+        end
+    end
+end
+
+echo Test 7 $res
+
+# Test if variables are properly exported
+
+if true
+    set -x t8 foo
+    if test (fish -c "echo $t8") = foo
+        echo Test 8 pass
+	else
+        echo Test 8 fail
+	end
+end
+
+# Test if exported variables go out of scope
+
+if test (fish -c "echo $t8") = foo
+    echo Test 9 fail
+else
+    echo Test 9 pass
+end
+
+
+

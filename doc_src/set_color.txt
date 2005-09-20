@@ -1,0 +1,19 @@
+
+\section set_color set_color - Set the terminal color
+
+\subsection set_color-synopsis Synopsis
+ <tt>set_color [-v --version] [-h --help] [-b --background COLOR] [COLOR]</tt>
+
+\subsection set_color-description Description
+
+Change the foreground and/or background color of the terminal.
+COLOR is one of black, red, green, brown, yellow, blue, magenta,
+purple, cyan, white and normal. 
+
+- \c -b, \c --background Set the background color
+- \c -h, \c --help Display help message and exit
+- \c -v, \c --version Display version and exit
+
+Calling <tt>set_color normal</tt> will set the terminal color to
+whatever is the default color of the terminal.
+

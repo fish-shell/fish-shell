@@ -1,0 +1,48 @@
+\section function function - create a function
+
+\subsection function-synopsis Synopsis
+ <tt>function NAME; BODY; end </tt>
+
+\subsection function-description Description
+
+This builtin command is used to create a new function. A Function is a
+list of commands that will be executed when the name of the function
+is entered. The function 
+
+<pre>
+function hi
+	echo hello
+end
+</pre> 
+
+will write <tt>hello</tt> whenever the user enters \c hi.
+
+If the user enters any additional arguments after the function, they
+are inserted into the environment variable <a href="index.html#variables-arrays">array</a> argv.
+
+\subsection function-example Example
+
+<pre>function ll 
+	ls -l $argv
+</pre>
+
+will run the \c ls command, using the \c -l option, while passing on any additional files and switches to \c ls.
+
+<pre>
+function mkdir -d "Create a directory and set CWD"
+	mkdir $argv
+	if test $status = 0 
+		switch $argv[(count $argv)]
+			case '-*'
+				
+			case '*'
+				cd $argv[(count $argv)]
+				return
+		end
+	end
+end
+</pre> 
+
+will run the mkdir command, and if it is succesfull, change the
+current working directory to the one just created.
+ 

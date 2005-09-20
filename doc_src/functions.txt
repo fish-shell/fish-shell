@@ -1,0 +1,17 @@
+\section functions functions - print or erase functions
+
+\subsection function-synopsis Synopsis
+<tt>functions [-e] FUNCTIONS...</tt>
+
+\subsection functions-description Description
+
+This builtin command is used to print or erase functions.
+
+- <tt>-e</tt> or <tt>--erase</tt> causes the specified functions to be erased.
+- <tt>-n</tt> or <tt>--names</tt> List only the names of all defined functions
+
+If \c functions is called with no arguments, the names and definition
+of all functions are printed, otherwise, the specified function
+definitions will be printed.
+
+

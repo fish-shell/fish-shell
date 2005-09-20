@@ -1,0 +1,17 @@
+
+\section builtin builtin - run a builtin command
+
+\subsection builtin-synopsis Synopsis
+ <tt>builtin BUILTINNAME [OPTIONS...]</tt>
+
+\subsection builtin-description Description
+
+- <tt>-n</tt> or <tt>--names</tt> List the names of all defined builtins
+
+Prefixing a command with the word 'builtin' forces fish to ignore any aliases with the same name.
+
+\subsection builtin-example Example
+
+<tt>builtin jobs</tt>
+
+causes fish to execute the jobs builtin, even if a function named jobs exists.

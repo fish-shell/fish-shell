@@ -1,0 +1,17 @@
+\section else else - execute command if a condition is not met.
+
+\subsection else-synopsis Synopsis
+<tt>if CONDITION; COMMAND_TRUE [else; COMMAND_FALSE] end;</tt>
+
+\subsection else-description Description
+<tt>if</tt> will execute the command CONDITION. If the commands exit
+status is zero, the command COMMAND_TRUE will execute. If it is
+not zero and COMMAND_FALSE is specified, COMMAND_FALSE will be
+executed.
+
+\subsection else-example Example
+
+The command <tt>if test -f foo.txt; echo foo.txt exists; else; echo foo.txt does not exist; end</tt>
+will print <tt>foo.txt exists</tt> if the file foo.txt
+exists and is a regular file, otherwise it will print 
+<tt>foo.txt does not exist</tt>.

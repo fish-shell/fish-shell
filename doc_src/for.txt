@@ -1,0 +1,23 @@
+
+\section for for - perform a set of commands multiple times.
+
+\subsection for-synopsis Synopsis
+<tt>for VARNAME in [VALUES...]; [COMMANDS...]; end</tt>
+
+\subsection for-description Description
+<tt>for</tt> is a loop construct. It will perform the commands specified
+by <tt>COMMANDS</tt> multiple times. Each time the environment variable
+specified by <tt>VARNAME</tt> is assigned a new value from <tt>VALUES</tt>.
+
+\subsection for-example Example
+
+The command 
+
+<tt>for i in foo bar baz; echo $i; end</tt>
+
+would output:
+
+<pre>foo
+bar
+baz</pre>		
+

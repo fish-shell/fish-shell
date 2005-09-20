@@ -1,0 +1,1832 @@
+/** \mainpage fish
+
+\c fish is a user friendly shell intended mostly for interactive use.
+A shell is a program which allows you to execute other programs by
+typing their names. For updates on \c fish, go to the <a
+href="http://roo.no-ip.org/fish/"><tt>fish</tt> homepage</a>.
+
+\section syntax Syntax overview
+
+Shells like \c fish are used by giving them commands. Every \c fish command follows the same simple syntax.
+
+A command is executed by writing the name of the command followed by any arguments.
+
+Example:
+
+<tt>echo hello world</tt>
+
+calls the \c echo command. \c echo is a command which will write its
+arguments to the screen. In the example above, the output will be
+'hello world'. Everything in fish is done with commands. There are
+commonds for performing a set of command multiple times, commands for
+assigning variables, commands for treating a group of commands as a
+single command, etc.. And every single command follows the same simple
+syntax.
+
+If you wish to find out more about the echo command used above, read
+the manual page for the echo command by writing:
+
+<tt>man echo</tt>
+
+\c man is a command for displaying a manual page on a given
+topic. There are manual pages for almost every command on most
+computers. There are also manual pages for many other things, such as
+system libraries and important files.
+
+Every program on a computer can be used as a command in \c fish. If
+the program file is located in one of the directories in the <a
+href="#variables-special">PATH</a>, it is sufficient to type the name
+of the program to use it. Otherwise the whole filename, including the
+directory (like \c /home/me/code/checkers/checkers or \c ../checkers)
+has to be used.
+
+Here is a list of some useful commands:
+
+- \c cd, change the current directory
+- \c ls, list the contents of a directory
+- \c man, print a manual page
+- \c mv, move files
+- \c cp, copy files
+- \c open, open files with the default application associated with each filetype
+- \c less, read the contents of files 
+
+Commands and parameters are separated by the space character
+(&nbsp;). Every command ends with either a newline (i.e. by pressing
+the return key) or a semicolon (;). More than one command can be
+written on the same line by separating them with semicolons.
+
+
+\subsection quotes Quotes
+
+Sometimes features such as <a href="#globbing">parameter expansion</a>
+and <a href="#escapes">character escapes</a> get in the way. When that
+happens, the user can write a parameter within quotes, either '
+(single quote) or " (double quote). There is no difference between
+single quoted and double quoted strings. A quoted parameter will not
+be parameter expanded, may contain spaces, and the only escape
+sequences allowed is the corresponding quote character. Single and
+double quotes may be nested.
+
+Example:
+
+<tt>rm "cumbersome filename.txt"</tt>
+
+Will remove the file 'cumbersome filename.txt'.
+
+\subsection escapes Escaping characters
+
+Some characters can not be written directly on the command line. For
+these characters, so called escape sequences are provided. These are:
+
+- <tt>'\\n'</tt>, escapes a newline character
+- <tt>'\\t'</tt>, escapes the tab character
+- <tt>'\\b'</tt>, escapes the backspace character
+- <tt>'\\r'</tt>, escapes the carriage return character
+- <tt>'\\e'</tt>, escapes the escape character
+- <tt>'\\ '</tt>, escapes the space character
+- <tt>'\\$'</tt>, escapes the dollar character
+- <tt>'\\\\'</tt>, escapes the backslash character
+- <tt>'\\*'</tt>, escapes the star character
+- <tt>'\\?'</tt>, escapes the question mark character
+- <tt>'\\~'</tt>, escapes the tilde character
+- <tt>'\\#'</tt>, escapes the hash character
+- <tt>'\\('</tt>, escapes the left parenthesis character
+- <tt>'\\)'</tt>, escapes the right parenthesis character
+- <tt>'\\{'</tt>, escapes the left curly bracket character
+- <tt>'\\}'</tt>, escapes the right curly bracket character
+- <tt>'\\['</tt>, escapes the left bracket character
+- <tt>'\\]'</tt>, escapes the right bracket character
+- <tt>'\\\<'</tt>, escapes the less than character
+- <tt>'\\\>'</tt>, escapes the more than character
+- <tt>'\\^'</tt>, escapes the circumflex character
+- <tt>'\\x<i>xx</i>'</tt>, where <tt><i>xx</i></tt> is a hexadecimal number, escapes the ascii character with the specified value
+- <tt>'\\o<i>ooo</i>'</tt>, where <tt><i>ooo</i></tt> is an octal number, escapes the ascii character with the specified value
+- <tt>'\\u<i>xxxx</i>'</tt>, where <tt><i>xxxx</i></tt> is a hexadecimal number, escapes the unicode character with the specified value
+- <tt>'\\U<i>xxxxxxxx</i>'</tt>, where <tt><i>xxxxxxxx</i></tt> is a hexadecimal number, escapes the unicode character with the specified value
+
+\subsection redirects IO redirection
+
+Most program use three types of input/output (IO), each represented by
+a number called a file descriptor (FD). These are:
+
+- Standard input, FD 0, for reading, defaults to reading from the keyboard. 
+- Standard output, FD 1, for writing, defaults to writing to the screen.
+- Standard error, FD 2, for writing, errors and warnings defaults to writing to the screen.
+
+The reason for providing for two methods of output is so errors and
+warnings can be separated from program output.
+
+Any file descriptor can be directed to a different output than it's
+default through a simple mechanism called a redirecton.
+
+An example of a file redirection is <tt> echo hello \>output.txt</tt>,
+which directs the output of the echo command to the file error.txt.
+
+- To redirect standard input, write <tt>\<SOURCE_FILE</tt> 
+- To redirect standard output, write <tt>\>DESTINATION</tt> 
+- To redirect standard error, write <tt>^DESTINATION</tt> 
+- To redirect standard output to a file which will be appended, write <tt>\>\>DESTINATION_FILE</tt>
+- To redirect standard error to a file which will be appended, write <tt>^^DESTINATION_FILE</tt> 
+
+<tt>DESTINATION</tt> can be one of the following: 
+
+- A filename. The output will be written to the specified file.
+- An ampersand (\&) followed by the number of a file descriptor. The file descriptor will be a duplicate of the specified file descriptor.
+- A minus sign (-). The FD will be closed.
+
+Example:
+
+To redirect both standard output and standard error to the file
+all_output.txt, you can write <tt>echo Hello \>all_output.txt
+^\&1</tt>.
+
+Any FD can be redirected in an arbitrary way by prefixing the
+redirection with the number of the FD.
+
+- To redirect input of FD number N, write <tt>N\<DESTINATION</tt>
+- To redirect output of FD number N, write <tt>N\>DESTINATION</tt> 
+- To redirect output of FD number N to a file which will be appended, write <tt>N\>\>DESTINATION_FILE</tt>
+
+Example: <tt>echo Hello 2\>-</tt> and <tt>echo Hello ^-</tt> are
+equivalent.
+
+\subsection piping Piping
+
+The user can string together multiple commands into a so called
+pipeline. This means that the standard output of one command will be read
+in as standard input into the next command. This is done by separating
+the commands by the pipe character (|).
+
+For example
+
+<tt>cat foo.txt | head</tt>
+
+will call the 'cat' program with the parameter 'foo.txt', which will
+print the contents of the file 'foo.txt'. The contents of foo.txt will
+then be filtered through the program 'head', which will pass on the
+first ten lines of the file to the screen. For more information on how
+to combine commands through pipes, read the manual pages of the
+commands you want to use using the 'man' command. If you want to find
+out more about the 'cat' program, type <tt>man cat</tt>.
+
+\subsection syntax-background Background jobs
+
+When you start a job in \c fish, \c fish itself will pause, and give
+control of the terminal to the program just started. Sometimes, you
+want to continue using the commandline, and have the job run in the
+background. To create a background job, append a \& (ampersand) to
+your command. This will tell fish to run the job in the background.
+
+\subsection syntax-job-control Job control
+
+
+Most programs allow you to suspend the programs execution and return
+control to \c fish by Pressing ^Z (Press and hold the Control key and
+press 'z'). Once back at the \c fish commandline, you can start other
+programs and do anything you want. If you then want to go back to the
+suspended command by using the <a href="builtins.html#fg">fg</a>
+command.
+
+If you instead want to put a suspended job into the foreground, use
+the <a href="builtins.html#fg">fg</a> command.
+
+To get a listing of all currently started jobs, use the <a
+href="builtins.html#jobs">jobs</a> command.
+
+
+\subsection syntax-words Some common words
+
+This is a short explanation of some of the commonly used words in fish.
+
+- argument, a parameter given to a command
+- builtin, a command that is implemented as part of the shell
+- command, a program
+- function, a command that is implemented as a set of fish commands
+- job, a running pipeline or command
+- pipeline, a set of commands stringed together so that the output of one command is the input of the next command
+- redirection, a operation that changes one of the input/output streams associated with a job
+
+\section help Help
+
+\c fish has an extensive help system. Use the <a
+href="commands.html#help"><tt>help</tt></a> command to obtain help on
+a specific subject or command. For instance, writing <tt>help
+syntax</tt> displays the <a href="#syntax">syntax section</a> of this
+documentation.
+
+Help on a specific builtin can also be obtained with the <tt>-h</tt>
+parameter. For instance, to obtain help on the \c fg builtin, either
+type <tt>fg -h</tt> or <tt>help fg</tt>.
+
+
+\section completion Tab completion
+
+Tab completion is one of the most time saving features of any modern
+shell. By tapping the tab key, the user asks \c fish to guess the rest
+of the command or parameter that the user is currently typing. If
+there is only one possible completion, \c fish will write it out. If
+there is more than one completion, \c fish will write out the longest
+common prefix that all completions have in common. If all completions
+differ on the first character, a list of all possible completions is
+printed. The list features descriptions of the completions and if the
+list doesn't fit the screen, it is scrollable by using the arrow keys,
+the page up/page down keys or the space bar. Press any other key will
+exit the list and insert the presssed key into the command line.
+
+These are the general purpose tab completions that \c fish provides:
+
+- Completion of commands, both builtins, functions and regular programs.
+- Completion of environment variable names.
+- Completion of usernames for tilde expansion.
+- Completion of filenames, even on strings with wildcards such as '*' and '?'.
+- Completion of job id, job name and process names for <a href="#expand-process">process expansion</a>.
+
+\c fish provides a large number of program specific completions. Most
+of these completions are simple options like the \c -l option for \c
+ls, but some are more advanced. The latter include:
+
+- The programs 'man' and 'whatis' complete using all installed 
+manual pages.
+- The 'make' program complete using all targets in the Makefile in 
+the current directory.
+- The 'mount' command complete using all mount points specified in fstab.
+- The 'ssh' command complete using all hosts in that are stored 
+in the known_hosts file. (see the ssh documentation for more information) 
+- The 'su' command complete using all users on the system
+- The \c apt-get, \c rpm and \c tym commands complete using all installed packages.
+
+Specifying your own completions is easy. If the command 'myprog' has
+an option '-o' which can also be written as '--output', which requires
+an additional value of either 'yes' or 'no' and decides if the program
+should write anything, this can be specified by writing:
+
+<tt>complete -c myprog -s o -l output -r -a "yes no" -d "Write output"</tt>
+
+For a more complete description of how to specify your own
+completions, go <a href="builtins.html#complete">here</a> or write 'complete --help' in the \c fish shell.
+
+If you wish to use a completion, you should consider adding it to your
+startup files. When completion has been requested for a command \c
+COMMAND, fish will automatically look for the file
+~/.fish.d/completions/COMMAND.fish. If it exists, it will be
+automatically loaded. For examples of how to write your own complex
+completions, study the completions in /etc/fish.d/completions. 
+
+\section expand Parameter expansion (Globbing)
+
+When an argument for a program is given on the commandline, it
+undergoes the process of parameter expantion before it is sent on to
+the command.  There are many ways in which the user can specify a
+parameter to be expanded. These include:
+
+\subsection expand-wildcards Wildcards 
+
+If a star (*) or a question mark (?) is present in the parameter, \c
+fish attempts to mach the given parameter to any files in such a
+way that '?' can match any character except '/' and '*' can match any
+string of characters not containing '/'.
+
+Example:
+<code>a*</code> matches any files beginning with an 'a' in the current directory.
+
+<code>???</code> matches any file in the current directory whose name is exactly three characters long.
+
+\subsection expand-command-substitution Command substitution
+
+If a parameter contains a set of parenthesis, the text enclosed by the
+parentesis will be interpreted as a list of commands. Om expantion,
+this list is executed, and substituted by the output. If the output is
+more than one line long, each line will be expanded to a new
+parameter.
+
+Example:
+
+The command <code>echo (basename image.jpg .jpg).png</code> will output 'image.png'.
+
+The command <tt>for i in *.jpg; convert $i (basename $i .jpg).png;
+end</tt> will convert all Jpeg files in the current directory to the
+PNG format.
+
+
+\subsection expand-brace Brace expansion
+
+A comma separated list of characters enclosed en curly braces will be
+expanded so each element of the list becomes a new parameter.
+
+Example:
+
+<tt>echo input.{c,h,txt}</tt> outputs 'input.c input.h input.txt'
+
+The command <tt>mv *.{c,h} src/</tt> moves all files with the suffix
+'.c' or '.h' to the subdirectory src.
+
+\subsection expand-variable Variable expansion
+
+A dollar sign followed by a string of characters is expanded into the
+value of the environment variable with the same name. For an
+introduction to the concept of environment variables, read the <a
+href="#variables"> Environment variables</a> section.
+
+Example:
+
+<tt> echo \$HOME</tt> prints the home directory of the current
+user. If you wish to combine environment variables with text, you can
+encase the variables within braces to embed a variable inside running
+text like <tt>echo Konnichiwa {$USER}san</tt>, which will print a
+personalized Japanese greeting.
+
+\subsection expand-home Home directory expansion
+
+The ~ (tilde) character at the beginning of a parameter, followed by a
+username, is expanded into the home directory of the specified user. A
+lone ~, or a ~ followed by a slash, is expanded into the home
+directory of the process owner.
+
+\subsection expand-process Process expansion
+
+The \% (percent) character at the beginning of a parameter followed by
+a string is expanded into a process id. The following expantions are
+performed:
+
+- If the string is the entire word \c self, the shells pid is the result
+- Otherwise, if the string is the id of a job, the result is the process
+group id of the job.
+- Otherwise, if any child processes match the specified string, their 
+pids are the result of the expansion. 
+- Otherwise, if any processes owned by the user match the specified 
+string, their pids are the result of the expansion.
+
+This form of expansion is useful for commands like kill and fg, which
+take the process ids as an argument.
+
+Example:
+
+<tt>fg \%ema</tt> will search for a process whose command line begins
+with the letters 'ema', such as emacs, and if found, put it in the
+foreground.
+
+<tt>kill -s SIGINT \%3</tt> will send the SIGINT signal to the job
+with job id 3.
+
+\subsection  combine Combining different expansions
+
+All of the above expansions can be combined. If several expansions
+result in more than one parameter, all possible combinations are
+created.
+
+Example:
+
+If the current directory contains the files 'foo' and 'bar', the command
+<tt>echo a(ls){1,2,3} </tt>
+will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
+
+
+\section variables Environment variables
+
+The concept of environment variables are central to any
+shell. Environment variables are variables, whose values can be set
+and used by the user. 
+
+To set a variable value, use the <a href="builtins.html#set"> \c set
+command</a>.
+
+Example: 
+
+To set the variable \c smurf to the value \c blue, use the command
+<tt>set smurf blue</tt>.
+
+After a variable has been set, you can use the value of a variable in
+the shell through <a href="expand-variable">variable expansion</a>.
+
+Example:
+
+To use the value of a the variable \c smurf, use the command <tt>echo
+Smurfs are $smurf</tt>, which would print the result 'Smurfs are
+blue'.
+
+\subsection variables-scope Variable scope
+
+There are three kinds of variables in fish, universal, global and
+local variables. Universal variables are shared between all fish
+sessions a user is running on one computer. Global variables are
+specific to the current fish session, and will never be erased unless
+the user explicitly requests it using <tt>set -e</tt>. Local variables
+are specific to the current fish session, and associated with a
+specific block of commands, and is automatically erased when a
+specific block goes out of scope. A block of commands is a series of
+commands that begins with one of the commands \c 'for, \c 'while' , \c
+'if', \c 'function', \c 'begin' or \c 'switch', and ends with the
+command \c 'end'. The user can specify that a variable should have
+either global or local scope using the \c -g/--global or \c -l/--local
+switches.
+
+Variables can be explicitly set to be universal with the \c -U or \c
+--universal switch, global with the \c -g or \c --global switch, or
+local with the \c -l or \c --local switch.  The scoping rules when
+creating or updating a variable are:
+
+-# If a variable is explicitly set to either universal, global or local, that setting will be honored
+-# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the variable scope is not changed
+-# If a variable is not explicitly set to be either universal, global or local and has never befor been defined, the variable will be local to the current scope
+
+When using a variable, the variable scope will be searched from the
+inside out, i.e. a local variable will be used rather than a global
+variable with the same name, a global variable will be used rather
+than a universal variable with the same name.
+
+For example, the following code will not output anything:
+<pre>
+if true
+	# This is a nice local scope where all variables will die
+	set pirate 'There be treasure in them thar hills'
+end
+
+# This will not output anything, since the pirate is dead
+echo $pirate
+</pre>
+
+\subsection variables-universal More on universal variables
+
+Universal variables are variables that are shared between all the
+users fish sessions on the computer. Fish stores many of it's
+configuration options as universal variables. This means that in order
+to change fish settings, all you have to do is change the variable
+value once, and it will be automatically updated for all sessions, and
+preserved across computer reboots and login/logout.
+
+To see universal variables in action, start two fish sessions side by
+side, and issue the following command in one of them <tt>set
+fish_color_cwd blue</tt>. Since \c fish_color_cwd is a universal
+variable, the color of the current working directory listing in the
+prompt will instantly change to blue on both terminals.
+
+\subsection variables-functions Variable scope for functions
+
+When calling a function, all non-global variables temporarily
+dissapear. This shadowing of the local scope is needed since the
+variable namespace would become cluttered, making it very easy to
+accidentaly overwrite variables from another function.
+
+For example, the following code will output 'Avast, mateys':
+
+<pre>
+function shiver
+	set phrase 'Shiver me timbers'
+end
+
+function avast
+	set phrase 'Avast, mateys'
+
+	# Calling the shiver function here can not change any variables
+	# in the local scope
+	shiver
+
+	echo $phrase
+end
+
+avast
+</pre>
+
+\subsection variables-export Exporting variables
+
+Variables in fish can be exported. This means the variable will be
+inherited by any commands started by fish. It is convention that
+exported variables are in uppercase and unexported variables are in
+lowercase.
+
+Variables can be explicitly set to be exportes with the \c -x or \c
+--export switch, or not exported with the \c -u or \c --unexport
+switch.  The exporting rules when creating or updating a variable are
+identical to the scoping rules for variables:
+
+-# If a variable is explicitly set to either be exported or not exported, that setting will be honored
+-# If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept
+-# If a variable is not explicitly set to be either global or local and has never befor been defined, the variable will not be exported
+
+
+\subsection variables-arrays Arrays
+
+\c fish can store a list of multiple strings inside of a variable. To
+access one element of an array, use the index of the element inside of
+square brackets, like this:
+
+<pre>
+echo $PATH[3]
+</pre>
+
+If you do not use any brackets, all the elements of the array will be
+written as separate items. This means you can easily iterate over an
+array using this syntax:
+
+<pre>
+for i in $PATH; echo $i is in the path; end
+</pre>
+
+To create a variable \c smurf, containing the items \c blue and \c
+small, simply write:
+
+<pre>
+set smurf blue small
+</pre>
+
+It is also possible to set or erase individual elements of an array:
+
+<pre>
+\#Set smurf to be an array with the elements 'blue' and 'small'
+set smurf blue small
+
+\#Change the second element of smurf to 'evil'
+set smurf[2] evil
+
+\#Erase the first element
+set -e smurf[1]
+
+\#Output 'evil'
+echo $smurf
+</pre>
+
+\subsection variables-special Special variables
+
+The user can change the settings of \c fish by changing the values of
+certain environment variables.These are:
+
+- \c BROWSER, which is the users preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
+- \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
+- \c fish_color_normal, \c fish_color_command, \c fish_color_substitution, \c fish_color_redirection, \c fish_color_end, \c fish_color_error, \c fish_color_param, \c fish_color_comment, \c fish_color_match, \c fish_color_search_match, \c fish_color_cwd, \c fish_pager_color_prefix, \c fish_pager_color_completion, \c fish_pager_color_description and \c fish_pager_color_progress are used to change the color of various elements in \c fish. These variables are universal, i.e. when changing them, their new value will be used by all running fish sessions. The new value will also be retained when restarting fish.
+- \c PATH, which is an array of directories in which to search for commands
+
+\c fish also sends additional information to the user through the
+values of certain environment variables. The user can not change the values of these variables. They are:
+
+- \c _, which is the name of the currently running command.
+- \c history, which is an array containing the last commands that where entered
+- \c HOME, which is the users home directory. This variable can be changed by the root user.
+- \c PWD, which is the current working directory.
+- \c status, which is the exit status of the last foreground job to exit. If a job contains pipelines, the status of the last command in the pipeline is the status for the job.
+
+\c fish also uses several variables internally. Such variables are
+prefixed with the string __FISH or __fish. These should be ignored by the user.
+
+\section builtin-overview Builtins 
+
+Many other shells have a large library of builtin commands. Most of
+these commands are also available as standalone commands, but have
+been implemented in the shell anyway for whatever reason. To avoid
+code duplication, and to avoid the confusion of subtly differing
+versions of the same command, \c fish only implementing builtins for
+actions which cannot be performed by a regular command.
+
+\section bundle Commands bundled with fish 
+
+The following commands are distributed with fish. Many of them are
+builtins or shellscript functions, and can only be used inside fish.
+
+- <a href="builtins.html#source">.</a>, to read and execute the commands in a file 
+- <a href="builtins.html#bg">bg</a>, to set a command to the background
+- <a href="builtins.html#begin">begin</a>, to execute a block of commands
+- <a href="builtins.html#bind">bind</a>, to change keyboard bindings
+- <a href="builtins.html#brake">brake</a>, to stop the execution of a loop
+- <a href="builtins.html#builtin">builtin</a>, to execute a builtin command
+- <a href="builtins.html#case">case</a>, to conditionally execute a block of commands
+- <a href="builtins.html#cd">cd</a>, to change the current directory
+- <a href="builtins.html#command">command</a>, to execute an external program
+- <a href="builtins.html#commandline">commandline</a>, to set or get the contents of the commandline buffer
+- <a href="builtins.html#complete">complete</a>, to add and remove completions
+- <a href="builtins.html#continue">continue</a>, to skip the rest of the current lap of a loop
+- <a href="commands.html#count">count</a>, to count the number of arguments
+- <a href="commands.html#dirh">dirh</a>, to view the directory history
+- <a href="commands.html#dirs">dirs</a>, to view the directory stack
+- <a href="builtins.html#end">end</a>, to end a block of commands
+- <a href="builtins.html#else">else</a>, to conditionally execute a block of commands
+- <a href="builtins.html#eval">eval</a>, to evaluate a string as a command
+- <a href="builtins.html#exec">exec</a>, to replace the current process image with a new command
+- <a href="builtins.html#exit">exit</a>, causes \c fish to quit
+- <a href="builtins.html#fg">fg</a>, to set a command to the foreground
+- <a href="builtins.html#for">for</a>, to perform a block of commands once for every element in a list
+- <a href="builtins.html#function">function</a>, to define a new function
+- <a href="builtins.html#functions">functions</a>, to print or erase functions
+- <a href="commands.html#help">help</a>, to show the fish documentation
+- <a href="builtins.html#if">if</a>, to conditionally execute a block of commands
+- <a href="builtins.html#jobs">jobs</a>, to print the currently running jobs
+- <a href="commands.html#mimedb">mimedb</a>, to view mimedata about a file
+- <a href="commands.html#nextd">nextd</a>, to move forward in the directory history
+- <a href="builtins.html#not">not</a>, negates the exit status of any command
+- <a href="commands.html#popd">popd</a>, to move to the topmost directory on the directory stack
+- <a href="commands.html#prevd">prevd</a>, to move backwards in the direcotry stack
+- <a href="commands.html#pushd">pushd</a>, to push the surrent directory onto the directory stack
+- <a href="builtins.html#random">random</a>, to calculate a pseudo-random number
+- <a href="builtins.html#return">return</a>, to return from a function
+- <a href="builtins.html#read">read</a>, to read from a stream into an environment variable
+- <a href="builtins.html#set">set</a>, to set environment variables
+- <a href="commands.html#set_color">set_color</a>, to change the terminal colors
+- <a href="builtins.html#switch">switch</a>, to conditionally execute a block of commands
+- <a href="commands.html#tokenize">tokenize</a>, to split a string up into multiple tokens
+- <a href="builtins.html#while">while</a>, to perform a block of commands while a condition is met
+
+For more information about these commands, use the <tt>--help</tt>
+option of the command to display a longer explanation.
+
+\section editor Command Line editor
+
+The \c fish editor features copy and paste, a searchable history and
+several editor commands. These are some of the commands available in
+the editor:
+
+- Home or Ctrl-a moves to the beginning of the line.
+- End or Ctrl-e moves to the end of line.
+- Left and right moves one character left or right.
+- Alt-left and Alt-right moves one word left or right.
+- Delete and backspace removes one character forwards or backwards.
+- Ctrl-c delete entire line
+- Ctrl-d delete one character to the right of the cursor, unless the buffer is empty, in which case the shell will exit
+- Ctrl-k move contents from cursor to end of line to <a href="#killring">killring</a>.
+- Ctrl-u move contents from beginning of line to cursor <a href="#killring">killring</a>.
+- Ctrl-l clear and repaint screen.
+- Ctrl-r replace a string in the commandline
+- Ctrl-w move previous word to <a href="#killring">killring</a>.
+- Alt-d move next word to <a href="#killring">killring</a>.
+- Alt-w prints a short description of the command on the commandline
+- Alt-x gives a list of possible problems with the current commandline
+- Alt-l lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed 
+- Alt-k prints a list of all key bindings
+
+You can change these key bindings making an inputrc file. To do this,
+copy the file /etc/fish_inputrc to your home directory and rename it
+to '.fish_inputrc'. You can do this by running the command <tt>mv
+/etc/fish_inputrc ~/.fish_inputrc</tt>. Now you can edit the file
+.fish_inputrc, to change your key bindings. The fileformat of this file
+is described in the manual page for readline. Use the command <tt>man
+readline</tt> to read up on this syntax. Please note thet the
+key binding support in \c fish is still limited. You can not use the
+set command or the keyname-syntax, and the list functions is
+incomplete. Currently, the following functions are available:
+
+
+- \c backward-char, moves one character to the left
+- \c backward-delete-char, deletes one character of input to the left of the cursor
+- \c backward-kill-line, move everything from the beginning of the line to the cursor to the killring
+- \c backward-kill-word, move the word to the left of the cursor to the killring
+- \c backward-word, move one word to the left
+- \c beginning-of-history, move to the beginning of the history
+- \c beginning-of-line, move to the beginning of the line
+- \c complete, guess the remainder of the current token
+- \c delete-char, delete one character to the right of the cursor
+- \c delete-line, delete the entire line
+- \c dump-functions, print a list of all key-bindings
+- \c end-of-history, move to the end of the history
+- \c end-of-line, move to the end of the line
+- \c explain, print a description of possible problems with the current command
+- \c forward-char, move one character to the right
+- \c forward-word, move one word to the right
+- \c history-search-backward, search the history for the previous match
+- \c history-search-forward, search the history for the next match
+- \c kill-line, move everything from the cursor to the end of the line to the killring
+- \c kill-whole-line, move the line to the killring
+- \c kill-word, move the next word to the killring
+- \c yank, insert the latest entry of the killring into the buffer
+- \c yank-pop, rotate to the previous entry of the killring
+
+
+
+\subsection killring Copy and paste (Kill Ring) 
+
+\c fish uses an Emacs style kill ring for copy and paste
+functionality. Use Ctrl-K to cut from the current cursor position to
+the end of the line. The string that is cut (a.k.a. killed) is
+inserted into a linked list of kills, called the kill ring. To paste
+the latest value from the kill ring use Ctrl-Y. After pasting, use
+Meta-Y to rotate to the previous kill.
+
+If the environment variable DISPLAY is set, \c fish will try to
+connect to the X-windows server specified by this variable, and use
+the clipboard on the X server for copying and pasting. 
+
+\subsection history Searchable history
+
+After a command has been entered, it is inserted at the end of a
+history list. Any duplicate history items are automatically
+removed. By pressing the up and down keys, the user can search
+forwards and backwards in the history. If the current command line is
+not empty when starting a history search, only the commands starting
+with the string entered into the command line are searched. 
+
+The history is stored in the file '.fish_history'. It is automatically
+read on startup and merged on program exit.
+
+Example:
+
+To search for previous entries starting with the letter 'l', type 'l'
+in the console and press the up key.
+
+\section job-control Running multiple programs
+
+Normally when \c fish starts a program, this program will be put
+in the foreground, meaning it will take control of the terminal and
+\c fish will be stopped until the program finishes. Sometimes
+this is not desirable. In such cases, there are several ways in which
+the user can change <tt>fish</tt>'s behaviour.
+
+-# By ending a command with the \& (ampersand) symbol, the user tells \c fish to put the specified command into the background. A background process will be run simultaneous with \c fish. \c fish will retain control of the terminal, so the program will not be able to read from the keyboard. 
+-# By pressing ^Z, the user stops a currently running foreground  program and returns control to \c fish. Some programs do not support this feature, or remap it to another key. Gnu emacs uses ^X z to stop running.
+-# By using the <a href="builtins.html#fg">fg</a> and <a href="builtins.html#bg">bg</a> builtin commands, the user can send any currently running job into the foreground or background.
+
+\section initialization Initialization files
+
+On startup, \c fish evaluates the file /etc/fish and ~/.fish, in that
+order. If you want to run a command only on starting an interactive
+shell, test if the environment variable fish_interactive is set. If
+you want to run a command only on starting a login shell, test if the
+environment variable fish_login is set.
+
+If you want to run a set of commands when \c fish exits, redefine the
+<a href="#hooks">function hook</a> \c fish_on_exit. If the \c
+fish_on_exit is defined, it will be execute before the shell exits.
+
+<a href="#variables-universal">Universal variables</a> are stored in
+the file .fishd. Do not edit this file directly, edit them through
+fish scripts instead.
+
+\section other Other features
+
+\subsection color Syntax highlighting
+
+\c fish will interprets the command line as it is typed and uses syntax
+highlighting to provide feedback to the user. The most important
+feedback is the detection of potential errors. By default, errors are
+marked red.
+
+Detected errors include:
+
+- Non existing commands.
+- Reading or appending  from non existing files.
+- Incorrect use of output redirects
+- Mismatched parenthesis
+
+To customize the syntax highlighting, you can set the environment
+variables \c fish_color_normal, \c fish_color_command, \c
+fish_color_substitution, \c fish_color_redirection, \c fish_color_end,
+\c fish_color_error, \c fish_color_param, \c fish_color_comment, \c
+fish_color_match, \c fish_color_search_match, \c fish_color_cwd, \c
+fish_pager_color_prefix, \c fish_pager_color_completion, \c
+fish_pager_color_description and \c fish_pager_color_progress. Valid
+values are \c black, \c red, \c green, \c brown, \c yellow, \c blue,
+\c magenta, \c purple, \c cyan, \c white or \c normal. Setting one of
+the above variables to normal will mean that the text color will be
+set to the default color for the terminal.
+
+When the cursor is over a parenthesis or a quote, \c fish also
+highlights it's matching quote or parenthesis.
+
+\subsection prompt Programmable prompt
+
+By defining the \c fish_prompt function, the user can choose a custom
+prompt. The \c fish_prompt function is executed and the output is used
+as a prompt.
+
+Example: 
+<p>
+The default \c fish prompt is 
+</p>
+<p>
+<pre>
+function fish_prompt -d "Write out the prompt"
+	printf '\%s\@\%s\%s\\n\%s\%s\\n> ' (whoami) (hostname|cut -d . -f 1) (set_color \$fish_color_cwd) (prompt_pwd) (set_color normal)
+end
+</pre>
+</p>
+
+If you are using \c set_color or other commands that output escape
+codes to change the font settings of the terminal, you must always and
+every such sequence with a newline. This is needed since fish needs to
+know that exact length of the prompt in order to tetect when the
+cursor reaches the end of the line. Any newlines in the output of the
+\c fish_prompt command are ignored.
+
+\subsection title Programmable title
+
+When running in a virtual terminal, the user define the \c fish_title
+function to print a custom titlebar message. The \c fish_title
+function is executed and the output is used as a titlebar message.
+
+Example:
+<p>
+The default \c fish title is 
+</p>
+<p>
+<pre>
+function fish_title
+	echo $_ ' '
+	pwd
+end
+</pre>
+</p>
+
+\subsection hooks Event hooks
+
+There are several special function names in fish. If a function is
+given this name, it will be automatically called when a specific event
+has occured. These functions are:
+
+- \c fish_on_exit, which is called before the shell exits
+- \c fish_on_exec, which is called before interactively executing a command
+- \c fish_on_return, which is called when control returns to the shell after interactively executing a command
+
+\section todo Missing features and bugs
+
+\subsection todo-features Missing features
+
+- Complete vi-mode key bindings
+- '**' wildcard for recursive wildcard matching
+- next-history-complete
+- builtin ulimit command
+- builtin wait command
+- More completions (for example xterm, vim, 
+konsole, gnome-terminal, dcop, cdrecord, cron, xargs
+rlogin, telnet, rsync, arch, finger, nice, locate, 
+latex, bibtex, patch, aspell, xpdf,
+zip, compress, wine, xmms, dig, wine, batch, cron, 
+g++, javac, java, gcj, lpr, doxygen, whois, find)
+- Undo support
+- Multiple input characters should be inserted in one batch whenever possible, to avoid flickering
+- Check keybinding commands for output - if non has happened, don't repaint to reduce flicker
+- the jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
+- Syntax highlighting should mark cd to non-existing directories as an error
+
+
+\subsection todo-possible Possible features
+
+- Multiline editing
+- tab completion could use smart casing
+- Completions could support options beginning with a plus (like xterm
+  +fbx) and options without dashes (like top p) Do we really want to
+  complicate the code additionally for such a small number of programs?
+- mouse support like zsh has with http://stchaz.free.fr/mouse.zsh 
+  installed would be awesome
+- suggest a completion on unique matches by writing it out in an understated color
+- Maybe some functions should only be available from key-bindings. That way one could implement a large part of all the key-binding functions as regular fish functions without worrying about cluttering up the function name space.
+- With a bit of tweakage, quite a few of the readline key-binding functions could be implemented in shellscript.
+- Highlight beginning/end of block when moving over a block command
+- Inclusion guards for the init files to make them evaluate only once, even if the user has instelled fish both in /etc and in $HOME
+- Do not actually load most of the shellscript functions on startup. Only load a tiny wrapper that will load the real function when needed. This should shave of CPU-time spent on parsing 500-1000 lines of code and ~50 kB of memory on startup, and is pretty easy to implement.
+- Do not actually load/parse .fish_history, only mmap it and use some clever string handling. Should save ~150 kB of memory permanently, but is very hard to implement.
+- command specific wildcarding (use case * instead of case '*')
+- show the whole list of commands on using tab on an empty commandline
+- Automatically move cursor to the end of the current token before completing
+- Map variables. (export only the values. When expanding with no key specified, expand to all values.)
+- psub function/builtin to make somthing like process substitution using command substitution
+
+\subsection bugs Known bugs
+
+- Completion for gcc -\#\#\# option doesn't work.
+- Many completions are made specifically for the GNU 
+version of a POSIX command
+- Yanking weird characters from clipboard prints Unicode escapes
+- Prefix string in completion display is sometimes incorrect
+- redirecting input from fd:s other than 0 is broken
+- completing the string 'command ' hangs fish
+
+If you think you have found a bug not described here, please send a
+report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se
+</a>.
+
+\subsection Known issues
+
+Older versions of Doxygen has bugs in the man-page generation which
+cause the builtin help to render incorrectly. Version 1.2.14 is known
+to have this problem.
+
+In version 1.9.2, the installation prefix for fish rpms and debs
+changed from /usr/local to /usr. Packages should automatically change
+any instances of /usr/local/bin/fish in /etc/passwd to /usr/bin/fish,
+but some programs, like screen, may need to be restarted to notice the
+changes when upgrading from pre1.9.2 to 1.9.2 or later.  You may also
+run into such problems when switching between using a package and
+personal builds.
+
+*/
+/** \page design Design document
+
+\section design-overview Design document
+
+\subsection design-overview Overview
+
+This is a description of the design principles that have been used to
+design fish. The fish design has three high level goals. These are:
+
+-# Everything that can be done in other shell languages should be
+possible to do in fish, though fish may rely on external commands in
+doing so. 
+-# Fish should be user friendly, but not at the expense of expressiveness. 
+Most tradeoffs between power and ease of use can be avoided with careful design.
+-# Whenever possible without breaking the above goals, fish should
+follow the Posix syntax.
+
+\subsection ortho The law of orthogonality
+
+The shell language should have a small set of orthogonal features. Any
+situation where two features are related but not identical, one of them
+should be removed, and the other should be made powerful and general
+enough to handle all common use cases of either feature.
+
+Rationale:
+
+Related features make the language larger, which makes it harder to
+learn. It also increases the size of the sourcecode, making the
+program harder to maintain and update.
+
+Examples:
+
+- Here documents are too similar to using echo inside of a pipeline.
+- The different quoting styles are silly. ("", '' and \$'')
+
+\subsection sep The law of minimalism
+
+The shell should only contain features that cannot be implemented in
+a reasonable way outside of the shell. A large performance decrease,
+as well as some program complexity increase is acceptable in order to
+improve separation.
+
+Rationale:
+
+A modular project is easier to maintain since smaller programs are far
+easier to understand than larger ones. A modular project is also more
+future proof since the modules can be individually
+replaced. Modularity also decreases the severity of bugs, since there
+is good hope that a bug, even a serious one, in one module, does not
+take the whole system down.
+
+Examples:
+
+- Builtin commands should only be created when it cannot be
+avoided. \c echo, \c kill, \c printf and \c time are among the commands 
+that fish does not implement internally since they can be provided as 
+external commands. Several other commands that are commonly implemented 
+as builtins and can not be implemented as external commands,
+including \c type, \c vared, \c pushd and \c popd are implemented as shellscript
+functions in fish.
+- Mathematical calculations, regex matching, generating lists of numbers
+and many other funtions can easily be done in external programs. They 
+should not be supported internally by the shell.
+
+The law of minimalism does not imply that a large feature set is
+bad. So long as a feature is not part of the language itself, but a
+separate command or at least a shellscript function, bloat is much
+more acceptable.
+
+\subsection conf Configurability is the root of all evil
+
+Every configuration option in a program is a place where the program
+is too stupid to figure out for itself what the user really wants, and
+should be considered a failiure of both the program and the programmer
+who implemented it.
+
+Rationale:
+
+Different configuration options are a nightmare to maintain, since the
+number of potential bugs caused by specific configuration combinations
+quickly becomes an issue. Configuration options often imply
+assumptions about the code which change when reimplementing the code,
+causing issues with backwards compatibility. But mostly, configuration
+options should be avoided since they simply should not exist, as the
+program should be smart enough to do what is best, or at least a good
+enough approximation of it.
+
+Examples:
+
+- Fish allows the user to set various syntax highlighting colors. This is needed because fish does not know what colors the terminal uses by default, which might make some things unreadable. The proper solution would be for text color preferences to be defined centrally by the user for all programs, and for the terminal emulator to send these color properties to fish.
+- Fish does not allow you to set the history filename, the number of history entries, different language substyles or any number of other common cshell configuration options
+
+A special note on the evils of configurability is the long list of
+very useful features found in some shells, that are not turned on by
+default. Both zsh and bash support command specific completions, but
+no such completions are shipped with bash by default, and they are
+turned of by default in zsh. Other features that zsh support that are
+disabled by default include tab-completion of strings containing
+wildcards, a sane completion pager and a history file.
+
+\subsection user The law of user focus
+
+When designing a program, one should first think about how to make a
+intuitive and powerful program. Implementation issues should only be
+considered once a user interface has been designed.
+
+Rationale:
+
+If too much attention is given to what is easy to implement the law of
+orthogonality and the law of minimalism will by necessity be disobeyed.
+
+Examples:
+
+- There should only be one type of input to the shell, lists of commands. Loops, conditionals and variable assignments are all performed through regular commands.
+- The differences between builtin commands, shellscript functions and builtin commands should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expantion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
+- Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping
+- All blocks end with the \c end builtin
+
+\subsection disc The law of discoverability
+
+The shell should implement it's features in a way that makes them as
+easy as possible for the user to discover for her/himself.
+
+Rationale:
+
+A program whose features are discoverable makes a new user into an
+expert in a shorter span of time, since the user will learn how to use
+the program simply by using it. 
+
+The main benefit of a graphical program over a command line-based
+program is discoverability. In a graphical program, one can discover
+all the common features by simply looking at the user interface and
+guessing what the different buttons, menus and other widgets do. The
+traditional way to discover features in commandline programs is
+through manual pages. This requires both that the user starts to use a
+different program, and the she/he then remembers the new information
+until the next time she/he uses the same program.
+
+Examples:
+
+- Everything should be tab-completable, and every tab completion should have a description
+- Every syntax error and error in a builtin command should contain an error message describing what went wrong and a relevant help page. Whenever possible, errors should be flagged red by the syntax highlighter.
+- The help manual should be easy to read, easily available from the shell, complete and contain many examples
+- The language should be uniform, so that once the user understands the command/argument syntax, he will know the whole language, and be able to use tab-completion to discover new featues.
+
+*/
+/** \page about About fish
+
+
+
+\section about-program About the program
+
+\c fish is meant to be used for interactive shell tasks on a modern
+UNIX-like workstation. It is much more important for me to keep the
+code maintainable, readable and bug free than to support esoteric old
+hardware, software or wetware. As such, the program is often wildly
+inefficient in its use of memory and CPU cycles. On my system, \c fish
+uses a little less than half a megabyte of memory, a number that could
+be significantly reduced with a little effort. \c fish performs a lot
+of linear searches of things that could be done in logarithmic time,
+does not usually cache file system data or other search result, and
+uses the fork() call promiscuosly. None of these things matter because
+\c fish is still fast enough to be perceived as instantaneous on a
+semi-modern computer thanks to the miracles of copy-on-write, OS-level
+caching and Moores law, and it only uses a fraction of the memory used
+by most terminal emulators to display it. If this program was anything
+other than an amusing hobby for me, I would of course feel otherwise,
+but since my time is limited, this is the way it must be.
+
+
+\section about-code About the source code
+
+Fish is written using the ellemtel indentation style, using four space
+tabs. \c fish regularly performs a large set of sanity checks to make
+sure it is in a sane state. If not, the program will terminate before
+it can do any harm.
+
+Do not edit the file builtin_help.c, it is automatically generated.
+
+
+\section about-documentation About the documentation
+
+The documentation for \c fish is written for Doxygen. All header files
+are pretty heavily commented. 
+
+Since it was desirable to use the same text files for producing the
+HTML documentation as for producing the internal help output, some
+rather ugly kludges had to be used for writing the documentation for
+the builtin commands.
+
+The directory doc_src contains a file called doc.hdr, containing
+various general documentation for \c fish, and a large number of .txt
+files. Each txt file contains the documentation for one \c fish
+builtin. When creating the main doxygen documentation, all these files
+are concatenated into one file, called doc.h. When creating the
+internal documentation, each of the .txt files is converted to a .h
+file by supplying a doxygen header/footer. These headers are then
+converted into man style manuals, which in turn are converted to C
+code by a script called gen_hdr.sh. The resulting C-file,
+builtin_help.c, can then by linked into \c fish. This method is probably
+not the most robust, elegant or clever method for generating
+documentation. If someone has a suggestion of how to do i better,
+please notify me.
+*/
+/** \page difference Why fish?
+\section difference-overview What is different about fish?
+
+This page is a summary of differences between \c fish and other shells. 
+
+\subsection difference-completion Tab completion features
+
+\c fish, like many other shells, performs tab completion, i.e. the shell
+tries to guess what the user is typing and complete the users
+sentences whenever the user presses the tab key. If the shell finds
+more than one possible completion, a list of all completions is
+displayed when the users double taps on tab. \c fish extends tab
+completion functionality in several ways:
+
+- \c fish performs file completion on strings containing wildcards
+- When showing a list of possible completions, \c fish adds a 
+description to each completion. For files this description is a 
+description of the format or filetype, like 'C source code', 
+'Character device' or 'Executable'. For variables, if the 
+value is short enough, the variable value will be displayed. For 
+commands, if there is room and few enough commands, the whatis 
+description of the command is used. 
+- \c fish has extensive command specific completions, including 
+completion of specific options. This is very powerful in combination 
+with completion descriptions, as the user can see what each option does 
+without consulting the manual. Simply type the command you wish to use, 
+type a dash and double tab TAB, and the screen will fill with a list of 
+the commands options and a description of what they do. 
+- \c fish uses a decent pager when the results won't fit on one 
+screen. The pager can scroll up and down, both one row and one page at
+a time, and if any non movement key is pressed the pager exits without
+consuming the character.  Therefore, there is no need to press 
+'q' to exit before typing your completion.
+
+Some examples of the completions performed by \c fish
+
+- When completing an argument for the man command, the whatis 
+database is searched for manual pages as completions.
+- When completing a command name, the whatis database is searched 
+for each possible command, and the description returned is used 
+as the description of the command.
+- When completing an argument for the make command, the Makefile 
+in the current directory is searched for targets.
+
+\subsection difference-killring X-Windows Copy and paste
+
+\c fish supports using the X-Windows clipboard for storing copy and
+paste information. This feature is automatically enabled if the
+DISPLAY environment variable is set. For more information on how to
+use copy and paste in \c fish, read <a href="index.html#killring">
+this section</a>. This means you can easily share commands and strings
+between different shell sessions and applications.
+
+\subsection difference-open Simple launching of default applications
+
+The open command uses the mimetype database (Also used by both Gnome
+or KDE) to launch the default application for a file. Just type
+<tt>open *.html</tt> and all the HTML files in your current directory
+will be opened in your default browser. No longer will you have to
+convert your filenames to URLS, remember clunky Open Office command
+names, worry about absolute paths or any the other common pitfalls when
+opening files from the commandline.
+
+\subsection difference-help Help
+
+\c fish is heavily commented. Both the source code and the
+program in general features a great deal of easily accessible
+documentation. The <tt>help</tt> command is used to display HTML-based
+help files. Just type <tt>help</tt> and a subject, and the help system
+will try to fill your needs. To view the page you are reading right
+now, you could simply type <tt>help difference</tt>. <tt>help</tt>
+also works great together with tab completion. Write \c help and
+double tap on tab, a list of all help sections will be displayed, with
+a description of the content of each section.
+
+Also, all builtin commands have a help option. Passing '-h' or
+'--help' to any builtin will give you the same help as the help
+command, but formated for output on screen.
+
+\subsection difference-highlighting Syntax highlighting
+
+\c fish performs syntax highlighting of commands as they're
+entered. Pretty colors may look nice (or awful, depending on your
+taste), but the real advantage is error flagging. The syntax
+highlighting function does extensive error cheching and will flag many
+common errors such as misspelling a command or option, or reading from a
+non-existent file.
+
+\c fish also highlights matching quotes and parenthesis as the cursor
+moves over them. This is very useful when typing long, complex
+commands.
+
+\subsection difference-terminal Terminal handling
+
+\c fish knows it's terminal. \c fish uses the terminfo database
+to get more information on the current terminal. Some of the terminal
+handling features of \c fish are:
+
+- Backspace and delete work more often in \c fish thanks to the use of 
+terminfo. If you've been bitten by this, you'll know what this means.
+- If the screen has been written to when \c fish was in the foreground, 
+this is detected and the command line is redrawn. 
+- Process notifications, like jobs ending or being stopped by signals,
+are printed to the screen at once, not whenever the user presses the enter key.
+
+\c fish uses wide character strings internally, including double width
+characters, so it should be ready for all your Unicode needs.
+
+\subsection difference-history Smart history
+
+\c fish features an intelligent history that automatically removes any
+duplicate items. Searching is performed by entering a search string
+and using the up/down arrow keys to go to the next/previous match. On
+exit, \c fish performs a merge between the history on file and the
+history in memory history, thus making sure that multiple copies of \c
+fish running concurrently will not erase each others history
+information.
+
+\subsection difference-simple Simplicity
+
+\c fish has a simple syntax. There is only one form of
+alias/function/whatever, accessed through the <tt>function</tt>
+builtin. The are very few builtins, \c fish relies on normal commands
+like <tt>echo</tt>, <tt>kill</tt>, <tt>printf</tt> and <tt>time</tt>
+instead of reimplementing them as builtins.
+
+The globbing in fish is significantly simplified. Since I can never
+remember all the subtle differences between single and double quotes,
+which kind of tick is used for command substitution and all the other
+strange quirks of of the Posix shell language, that aspect of shells
+has been significantly simplified. This makes \c fish unsuitable for
+strange shell scripting, but much more suited to interactive needs
+than regular shells.
+
+There is no difference between double and single quotes. They both
+turn of all globbing and escape sequences. They can be nested.
+
+Token separation is performed before variable expansion. This means
+that even if a variable contains spaces, it will never be separated
+into multiple arguments. If you want to tokenize a string, you can use
+the <a href="commands.html#tokenize">tokenize</a> command.
+
+Command substitution is specified using parenthesis. 
+
+There is no math mode, use bc.
+
+The POSIX way of setting variables is <i>lame</i>. Whitespace
+sensitive languages are awful. "foo=bar" and "foo = bar" should not
+mean different things? \c fish uses a builtin, <tt>set</tt> to set and
+remove environment variables. This keeps things consistent. In fish,
+everything, including the switch/case statement is a command.
+
+In \c fish, all block types are ended by the \c end command.
+
+*/
+/** \page license License
+
+\c fish Copyright (C) 2005 Axel Liljencrantz. It is released under the
+GNU General Public License. The license agreement is included
+below. For more information on the GNU project and its goals, visit <a
+href="http://www.gnu.org">the GNU homepage</a>.
+
+\c fish also contains small amounts of code under the BSD
+license, namely versions of the two functions strlcat and strlcpy,
+modified for use with wide character strings. This code is copyrighted
+by Todd C. Miller.
+
+The XSel command, written and copyrighted by Conrad Parker, is
+distributed together with \c fish. It is released under the MIT license.
+
+The xdgmime library, written and copyrighted by Red Hat, Inc, is used
+by the mimedb command, which is a part of fish. It is released under
+the LGPL license.
+
+<H2><A NAME="SEC1" HREF="gpl.html#TOC1">GNU GENERAL PUBLIC LICENSE</A></H2>
+<P>
+Version 2, June 1991
+
+</P>
+
+<PRE>
+Copyright (C) 1989, 1991 Free Software Foundation, Inc.  
+59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+</PRE>
+
+
+<H2><A NAME="SEC2" HREF="gpl.html#TOC2">Preamble</A></H2>
+
+<P>
+The licenses for most software are designed to take away your
+freedom to share and change it.  By contrast, the GNU General Public
+License is intended to guarantee your freedom to share and change free
+software--to make sure the software is free for all its users.  This
+General Public License applies to most of the Free Software
+Foundation's software and to any other program whose authors commit to
+using it.  (Some other Free Software Foundation software is covered by
+the GNU Library General Public License instead.)  You can apply it to
+your programs, too.
+
+</P>
+<P>
+When we speak of free software, we are referring to freedom, not
+price.  Our General Public Licenses are designed to make sure that you
+have the freedom to distribute copies of free software (and charge for
+this service if you wish), that you receive source code or can get it
+if you want it, that you can change the software or use pieces of it
+in new free programs; and that you know you can do these things.
+
+</P>
+<P>
+To protect your rights, we need to make restrictions that forbid
+anyone to deny you these rights or to ask you to surrender the rights.
+These restrictions translate to certain responsibilities for you if you
+distribute copies of the software, or if you modify it.
+
+</P>
+<P>
+
+For example, if you distribute copies of such a program, whether
+gratis or for a fee, you must give the recipients all the rights that
+you have.  You must make sure that they, too, receive or can get the
+source code.  And you must show them these terms so they know their
+rights.
+
+</P>
+<P>
+We protect your rights with two steps: (1) copyright the software, and
+(2) offer you this license which gives you legal permission to copy,
+distribute and/or modify the software.
+
+</P>
+<P>
+Also, for each author's protection and ours, we want to make certain
+that everyone understands that there is no warranty for this free
+software.  If the software is modified by someone else and passed on, we
+want its recipients to know that what they have is not the original, so
+that any problems introduced by others will not reflect on the original
+authors' reputations.
+
+</P>
+<P>
+Finally, any free program is threatened constantly by software
+patents.  We wish to avoid the danger that redistributors of a free
+program will individually obtain patent licenses, in effect making the
+program proprietary.  To prevent this, we have made it clear that any
+patent must be licensed for everyone's free use or not licensed at all.
+
+</P>
+<P>
+The precise terms and conditions for copying, distribution and
+modification follow.
+
+
+</P>
+
+
+<H2><A NAME="SEC3" HREF="gpl.html#TOC3">TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION</A></H2>
+
+
+<P>
+
+<STRONG>0.</STRONG>
+This License applies to any program or other work which contains
+a notice placed by the copyright holder saying it may be distributed
+under the terms of this General Public License.  The "Program", below,
+refers to any such program or work, and a "work based on the Program"
+means either the Program or any derivative work under copyright law:
+that is to say, a work containing the Program or a portion of it,
+either verbatim or with modifications and/or translated into another
+language.  (Hereinafter, translation is included without limitation in
+the term "modification".)  Each licensee is addressed as "you".
+<P>
+
+Activities other than copying, distribution and modification are not
+covered by this License; they are outside its scope.  The act of
+running the Program is not restricted, and the output from the Program
+is covered only if its contents constitute a work based on the
+Program (independent of having been made by running the Program).
+Whether that is true depends on what the Program does.
+
+<P>
+
+<STRONG>1.</STRONG>
+You may copy and distribute verbatim copies of the Program's
+source code as you receive it, in any medium, provided that you
+conspicuously and appropriately publish on each copy an appropriate
+copyright notice and disclaimer of warranty; keep intact all the
+notices that refer to this License and to the absence of any warranty;
+and give any other recipients of the Program a copy of this License
+along with the Program.
+<P>
+
+You may charge a fee for the physical act of transferring a copy, and
+you may at your option offer warranty protection in exchange for a fee.
+<P>
+
+<STRONG>2.</STRONG>
+You may modify your copy or copies of the Program or any portion
+of it, thus forming a work based on the Program, and copy and
+distribute such modifications or work under the terms of Section 1
+above, provided that you also meet all of these conditions:
+<P>
+
+<DL>
+
+<DT>
+<DD>
+<STRONG>a)</STRONG>
+You must cause the modified files to carry prominent notices
+stating that you changed the files and the date of any change.
+</DD>
+</DT>
+</DL>
+<P>
+<DL>
+<DT>
+<DD>
+<STRONG>b)</STRONG>
+You must cause any work that you distribute or publish, that in
+whole or in part contains or is derived from the Program or any
+part thereof, to be licensed as a whole at no charge to all third
+parties under the terms of this License.
+
+</DD>
+</DT>
+</DL>
+<P>
+<DL>
+<DT>
+<DD>
+<STRONG>c)</STRONG>
+If the modified program normally reads commands interactively
+when run, you must cause it, when started running for such
+interactive use in the most ordinary way, to print or display an
+announcement including an appropriate copyright notice and a
+notice that there is no warranty (or else, saying that you provide
+a warranty) and that users may redistribute the program under
+these conditions, and telling the user how to view a copy of this
+License.  (Exception: if the Program itself is interactive but
+does not normally print such an announcement, your work based on
+the Program is not required to print an announcement.)
+</DD>
+</DT>
+</DL>
+<P>
+
+These requirements apply to the modified work as a whole.  If
+identifiable sections of that work are not derived from the Program,
+and can be reasonably considered independent and separate works in
+themselves, then this License, and its terms, do not apply to those
+sections when you distribute them as separate works.  But when you
+distribute the same sections as part of a whole which is a work based
+on the Program, the distribution of the whole must be on the terms of
+this License, whose permissions for other licensees extend to the
+entire whole, and thus to each and every part regardless of who wrote it.
+
+<P>
+
+Thus, it is not the intent of this section to claim rights or contest
+your rights to work written entirely by you; rather, the intent is to
+exercise the right to control the distribution of derivative or
+collective works based on the Program.
+<P>
+
+In addition, mere aggregation of another work not based on the Program
+with the Program (or with a work based on the Program) on a volume of
+a storage or distribution medium does not bring the other work under
+the scope of this License.
+
+<P>
+
+<STRONG>3.</STRONG>
+You may copy and distribute the Program (or a work based on it,
+under Section 2) in object code or executable form under the terms of
+Sections 1 and 2 above provided that you also do one of the following:
+
+
+<!-- we use this doubled UL to get the sub-sections indented, -->
+<!-- while making the bullets as unobvious as possible. -->
+
+<DL>
+<DT>
+
+<DD>
+<STRONG>a)</STRONG>
+Accompany it with the complete corresponding machine-readable
+source code, which must be distributed under the terms of Sections
+1 and 2 above on a medium customarily used for software interchange; or,
+</DD>
+</DT>
+</DL>
+<P>
+<DL>
+<DT>
+<DD>
+<STRONG>b)</STRONG>
+Accompany it with a written offer, valid for at least three
+years, to give any third party, for a charge no more than your
+cost of physically performing source distribution, a complete
+machine-readable copy of the corresponding source code, to be
+distributed under the terms of Sections 1 and 2 above on a medium
+customarily used for software interchange; or,
+</DD>
+
+</DT>
+</DL>
+<P>
+<DL>
+<DT>
+<DD>
+<STRONG>c)</STRONG>
+Accompany it with the information you received as to the offer
+to distribute corresponding source code.  (This alternative is
+allowed only for noncommercial distribution and only if you
+received the program in object code or executable form with such
+an offer, in accord with Subsection b above.)
+</DD>
+</DT>
+</DL>
+<P>
+
+The source code for a work means the preferred form of the work for
+making modifications to it.  For an executable work, complete source
+code means all the source code for all modules it contains, plus any
+associated interface definition files, plus the scripts used to
+control compilation and installation of the executable.  However, as a
+special exception, the source code distributed need not include
+anything that is normally distributed (in either source or binary
+form) with the major components (compiler, kernel, and so on) of the
+operating system on which the executable runs, unless that component
+itself accompanies the executable.
+<P>
+
+If distribution of executable or object code is made by offering
+access to copy from a designated place, then offering equivalent
+access to copy the source code from the same place counts as
+distribution of the source code, even though third parties are not
+compelled to copy the source along with the object code.
+<P>
+
+<STRONG>4.</STRONG>
+You may not copy, modify, sublicense, or distribute the Program
+except as expressly provided under this License.  Any attempt
+otherwise to copy, modify, sublicense or distribute the Program is
+void, and will automatically terminate your rights under this License.
+However, parties who have received copies, or rights, from you under
+this License will not have their licenses terminated so long as such
+parties remain in full compliance.
+
+<P>
+
+<STRONG>5.</STRONG>
+You are not required to accept this License, since you have not
+signed it.  However, nothing else grants you permission to modify or
+distribute the Program or its derivative works.  These actions are
+prohibited by law if you do not accept this License.  Therefore, by
+modifying or distributing the Program (or any work based on the
+Program), you indicate your acceptance of this License to do so, and
+all its terms and conditions for copying, distributing or modifying
+the Program or works based on it.
+
+<P>
+
+<STRONG>6.</STRONG>
+
+Each time you redistribute the Program (or any work based on the
+Program), the recipient automatically receives a license from the
+original licensor to copy, distribute or modify the Program subject to
+these terms and conditions.  You may not impose any further
+restrictions on the recipients' exercise of the rights granted herein.
+You are not responsible for enforcing compliance by third parties to
+this License.
+
+<P>
+
+<STRONG>7.</STRONG>
+If, as a consequence of a court judgment or allegation of patent
+infringement or for any other reason (not limited to patent issues),
+conditions are imposed on you (whether by court order, agreement or
+otherwise) that contradict the conditions of this License, they do not
+excuse you from the conditions of this License.  If you cannot
+distribute so as to satisfy simultaneously your obligations under this
+License and any other pertinent obligations, then as a consequence you
+may not distribute the Program at all.  For example, if a patent
+license would not permit royalty-free redistribution of the Program by
+all those who receive copies directly or indirectly through you, then
+the only way you could satisfy both it and this License would be to
+refrain entirely from distribution of the Program.
+<P>
+
+If any portion of this section is held invalid or unenforceable under
+any particular circumstance, the balance of the section is intended to
+apply and the section as a whole is intended to apply in other
+circumstances.
+<P>
+
+It is not the purpose of this section to induce you to infringe any
+patents or other property right claims or to contest validity of any
+such claims; this section has the sole purpose of protecting the
+integrity of the free software distribution system, which is
+implemented by public license practices.  Many people have made
+generous contributions to the wide range of software distributed
+through that system in reliance on consistent application of that
+system; it is up to the author/donor to decide if he or she is willing
+to distribute software through any other system and a licensee cannot
+impose that choice.
+<P>
+
+This section is intended to make thoroughly clear what is believed to
+be a consequence of the rest of this License.
+
+
+<P>
+
+<STRONG>8.</STRONG>
+If the distribution and/or use of the Program is restricted in
+certain countries either by patents or by copyrighted interfaces, the
+original copyright holder who places the Program under this License
+may add an explicit geographical distribution limitation excluding
+those countries, so that distribution is permitted only in or among
+countries not thus excluded.  In such case, this License incorporates
+the limitation as if written in the body of this License.
+
+<P>
+
+<STRONG>9.</STRONG>
+The Free Software Foundation may publish revised and/or new versions
+of the General Public License from time to time.  Such new versions will
+be similar in spirit to the present version, but may differ in detail to
+address new problems or concerns.
+<P>
+
+Each version is given a distinguishing version number.  If the Program
+specifies a version number of this License which applies to it and "any
+later version", you have the option of following the terms and conditions
+either of that version or of any later version published by the Free
+Software Foundation.  If the Program does not specify a version number of
+this License, you may choose any version ever published by the Free Software
+Foundation.
+
+<P>
+
+<STRONG>10.</STRONG>
+If you wish to incorporate parts of the Program into other free
+programs whose distribution conditions are different, write to the author
+to ask for permission.  For software which is copyrighted by the Free
+Software Foundation, write to the Free Software Foundation; we sometimes
+make exceptions for this.  Our decision will be guided by the two goals
+of preserving the free status of all derivatives of our free software and
+of promoting the sharing and reuse of software generally.
+
+
+
+<P><STRONG>NO WARRANTY</STRONG></P>
+
+<P>
+
+<STRONG>11.</STRONG>
+BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
+OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS
+TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE
+PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
+REPAIR OR CORRECTION.
+
+<P>
+
+<STRONG>12.</STRONG>
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
+INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING
+OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED
+TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY
+YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
+PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES.
+
+<P>
+
+
+<H2>END OF TERMS AND CONDITIONS</H2>
+
+
+
+<H2><A NAME="SEC4" HREF="gpl.html#TOC4">How to Apply These Terms to Your New Programs</A></H2>
+
+<P>
+If you develop a new program, and you want it to be of the greatest
+possible use to the public, the best way to achieve this is to make it
+free software which everyone can redistribute and change under these terms.
+
+</P>
+
+<P>
+To do so, attach the following notices to the program.  It is safest
+to attach them to the start of each source file to most effectively
+convey the exclusion of warranty; and each file should have at least
+the "copyright" line and a pointer to where the full notice is found.
+
+</P>
+
+<PRE>
+<VAR>one line to give the program's name and an idea of what it does.</VAR>
+Copyright (C) <VAR>yyyy</VAR>  <VAR>name of author</VAR>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+</PRE>
+
+<P>
+Also add information on how to contact you by electronic and paper mail.
+
+</P>
+<P>
+If the program is interactive, make it output a short notice like this
+when it starts in an interactive mode:
+
+</P>
+
+<PRE>
+Gnomovision version 69, Copyright (C) <VAR>year</VAR> <VAR>name of author</VAR>
+Gnomovision comes with ABSOLUTELY NO WARRANTY; for details
+type `show w'.  This is free software, and you are welcome
+to redistribute it under certain conditions; type `show c' 
+for details.
+</PRE>
+
+<P>
+
+The hypothetical commands <TT>`show w'</TT> and <TT>`show c'</TT> should show
+the appropriate parts of the General Public License.  Of course, the
+commands you use may be called something other than <TT>`show w'</TT> and
+<TT>`show c'</tt>; they could even be mouse-clicks or menu items--whatever
+suits your program.
+
+</P>
+<P>
+You should also get your employer (if you work as a programmer) or your
+school, if any, to sign a "copyright disclaimer" for the program, if
+necessary.  Here is a sample; alter the names:
+
+</P>
+
+<PRE>
+Yoyodyne, Inc., hereby disclaims all copyright
+interest in the program `Gnomovision'
+(which makes passes at compilers) written 
+by James Hacker.
+
+<VAR>signature of Ty Coon</VAR>, 1 April 1989
+Ty Coon, President of Vice
+</PRE>
+
+<P>
+This General Public License does not permit incorporating your program into
+proprietary programs.  If your program is a subroutine library, you may
+consider it more useful to permit linking proprietary applications with the
+library.  If this is what you want to do, use the 
+<a href="/licenses/lgpl.html">GNU Lesser General Public License</a>
+instead of this License.
+
+<p>
+
+<HR>
+
+<h2>License for wcslcat and wcslcpy</h2>
+
+\c fish also contains small amounts of code under the BSD
+license, namely versions of the two functions strlcat and strlcpy,
+modified for use with wide character strings. This code is copyrighted
+by Todd C. Miller.
+
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+
+<h2>License for XSel</h2>
+
+The XSel command, written and copyrighted by Conrad Parker, is
+distributed together with \c fish. 
+
+
+It is Copyright (C) 2001 Conrad Parker <conrad@vergenet.net>
+
+Permission to use, copy, modify, distribute, and sell this software
+and its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation. No representations are made about the
+suitability of this software for any purpose. It is provided "as is"
+without express or implied warranty.
+
+*/
+

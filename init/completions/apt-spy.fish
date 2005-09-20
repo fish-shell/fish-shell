@@ -1,0 +1,20 @@
+#apt-spy
+complete -c apt-spy -s h -d "apt-spy command help"
+complete -f -c apt-spy -s d -a "stable testing unstable" -d "Debian distribtion"
+complete -f -c apt-spy -s a -a "Africa Asia Europe North-America Oceania South-America" -d "servers in the areas"
+complete -c apt-spy -s c -d "conf file"
+complete -f -c apt-spy -s e -d "finish after number of servers"
+complete -c apt-spy -s f -d "file to grab servers"
+complete -c apt-spy -s i -d "file as input"
+complete -c apt-spy -s m -d "mirror-list file"
+complete -c apt-spy -s o -d "output sources.list file"
+complete -f -c apt-spy -s p -d "use proxy server"
+complete -f -c apt-spy -s s -d "comma separated country list"
+complete -f -c apt-spy -s t -d "how long in sec to download"
+complete -f -c apt-spy -s u -d "custom URL to get mirror list"
+complete -c apt-spy -s w -d "write top servers to file"
+complete -f -c apt-spy -s n -d "number of top servers"
+complete -f -c apt-spy -a "update" -d "update mirror list"
+complete -f -c apt-spy -s v -d "version number"
+
+

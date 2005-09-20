@@ -1,0 +1,7 @@
+\section dirs dirs
+
+\subsection dirs-synopsis Synopsis
+<tt>dirs</tt>
+
+\subsection dirs-description Description 
+<tt>dirs</tt> prints the current directory stack.

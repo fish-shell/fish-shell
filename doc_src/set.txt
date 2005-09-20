@@ -1,0 +1,40 @@
+\section set set - Handle environment variables.
+
+\subsection set-synopsis Synopsis
+<tt>set [OPTIONS] VARIABLE_NAME [VALUES...]</tt>
+
+The <tt>set</tt> builtin causes fish to assign the variable <tt>VARIABLE_NAME</tt> the values <tt>VALUES...</tt>. 
+
+\subsection set-description Description
+- <tt>-e</tt> or <tt>--erase</tt> causes the specified environment variables to be erased
+- <tt>-U</tt> or <tt>--universal</tt> causes the specified environment variable to be made universal. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
+- <tt>-g</tt> or <tt>--global</tt> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will dissapear when the current block ends
+- <tt>-l</tt> or <tt>--local</tt> forces the specified environment variable to be made local to the current block, even if the variable already exists and is non-local
+- <tt>-n</tt> or <tt>--names</tt> List only the names of all defined variables
+- <tt>-x</tt> or <tt>--export</tt> causes the specified environment variable to be exported to child processes
+- <tt>-u</tt> or <tt>--unexport</tt> causes the specified environment not to be exported to child processes
+
+If set is called with no arguments, the names and values of all
+environment variables are printed.
+
+If set is called with only one argument, the scope of the variable
+with the given name will be changed as specified, but it's value will
+remain the same. If the variable did not previously exist, it's value
+will be an empty string.
+
+If the \c -e or \c --erase option is specified, all the variables
+specified by the following arguments will be erased
+
+If a variable is set to more than one value, the variable will be an
+array with the specified elements.
+
+If the variable name is one or more array elements, such as <tt>PATH[1
+3 7]</tt>, only those array elements specified will be changed.
+
+\subsection set-example Example
+
+<tt>set foo hi</tt> sets the value of the variable foo to be hi.
+
+<tt>set -e smurf</tt> removes the variable \c smurf.
+
+<tt>set PATH[4] ~/bin</tt> changes the fourth element of the \c PATH array to \c ~/bin

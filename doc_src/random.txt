@@ -1,0 +1,25 @@
+
+\section random random - Generate random number
+
+\subsection random-synopsis Synopsis
+ <tt>random [SEED]</tt>
+
+\subsection random-description Description
+
+The \c random command is used to generate a random number in the
+interval 0<=N<32767. If an argument is given, it is used to seed the
+random number generator. This can be useful for debugging purposes,
+where it can be desirable to get the same random number sequence
+multiple times. If the random number generator is called without first
+seeding it, the current time will be used as the seed.
+
+\subsection random-example Example
+
+The following code will count down from a random number to 1:
+
+<pre>
+for i in (seq (random) -1 1)
+	echo $i
+	sleep
+end
+</pre> 

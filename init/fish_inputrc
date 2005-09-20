@@ -1,0 +1,36 @@
+#
+# This file contains key bindings for fish
+#
+
+# Include system-wide inputrc file before including fish-specific key
+# bindings if it exists
+
+$include /etc/inputrc
+
+$if fish
+	"\M-l": __fish_list_current_token
+	"\M-w": set tok (commandline -pt); if test $tok[1]; whatis $tok[1]; end
+	"\C-l": clear
+	"\C-c": delete-line		
+	"\C-u": backward-kill-line
+	"\M-d": kill-word
+	"\C-w": backward-kill-word	
+	"\M-k": dump-functions
+	"\C-d": __fish_delete_or_exit	
+	"\M-d": if test -z (commandline); dirh; else; commandline -f kill-word; end
+
+	"\e\eOD": if test -z (commandline); prevd; else; commandline -f backward-word; end
+	"\e\eOC": if test -z (commandline); nextd; else; commandline -f forward-word; end
+
+	"\eO3D": if test -z (commandline); prevd; else; commandline -f backward-word; end
+	"\eO3C": if test -z (commandline); nextd; else; commandline -f forward-word; end
+
+	"\e[3D": if test -z (commandline); prevd; else; commandline -f backward-word; end
+	"\e[3C": if test -z (commandline); nextd; else; commandline -f forward-word; end
+
+$endif
+
+# Include user-specific inputrc file after including fish-specific
+# bindings so that they will override fish defaults
+
+$include ~/.inputrc

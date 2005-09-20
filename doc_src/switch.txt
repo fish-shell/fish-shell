@@ -1,0 +1,37 @@
+
+\section switch switch - conditionally execute a block of commands
+
+\subsection switch-synopsis Synopsis
+ <tt>switch VALUE; [case [WILDCARD...]; [COMMANDS...];...] end</tt>
+
+\subsection switch-description Description
+
+The \c switch statement is used to perform one of several blocks of
+commands depending on whether a specified value equals one of several
+wildcarded values.
+
+\subsection switch-example Example
+
+If the variable \$animal contins the name of an animal, the
+following code would attempt to classify it:
+
+<p>
+<pre>
+switch $animal
+    case cat
+        echo evil
+    case wolf dog human moose dolphin whale
+        echo mammal
+    case duck goose albatros
+        echo bird
+    case shark trout stingray
+        echo fish
+end
+</pre>
+</p>
+<p>
+
+If the above code was run with \$animal set to \c whale, the output
+would be \c mammal.  
+
+</p>

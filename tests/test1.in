@@ -1,0 +1,53 @@
+#
+#Test aliases loops and conditionals
+#
+
+for i in 1 2 #Comment on same line as command
+#Comment inside loop 
+    for j in a b
+		#Double loop
+        echo $i$j
+	end;
+end
+
+# Simple alias tests
+
+function foo 
+    echo >foo.txt $argv
+end
+
+foo hello
+
+cat foo.txt |read foo
+
+if test $foo = hello;
+  echo Test 2 pass
+else
+  echo Test 2 fail
+end
+
+function foo 
+    printf 'Test %s' $1; echo ' pass'
+end
+
+foo 3 
+
+for i in Test for continue break and switch builtins problems;
+	switch $i
+		case Test
+			printf "%s " $i 
+		case "f??"
+			printf "%s " 3
+		case "c*"
+			echo pass
+		case break
+			continue
+			echo fail
+		case and
+			break
+			echo fail
+		case "*"
+			echo fail
+	end
+end
+

@@ -1,0 +1,16 @@
+
+\section help help - Display fish documantation
+
+\subsection help-synopsis Synopsis
+ <tt>help [SECTION]</tt>
+
+\subsection help-description Description
+
+The \c help command is used to display a section of the fish help documentation.
+
+If the BROWSER environment variable is set, it will be used to display
+the documentation, otherwise fish will search for a suitable browser.
+
+\subsection help-example Example
+
+<tt>help fg</tt> shows the documentation for the \c fg builtin.

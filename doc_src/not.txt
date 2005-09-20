@@ -1,0 +1,21 @@
+
+\section not not - Negate the exit status of a job
+
+\subsection not-synopsis Synopsis
+ <tt>not COMMAND [OPTIONS...]</tt>
+
+\subsection not-description Description
+
+The \c not builtin is used to negate the exit status of another command. 
+
+
+\subsection not-example Example
+
+The following code reports an error and exits if no file named spoon can be found.
+<pre>
+if not test -f spoon
+	echo There is no spoon
+	exit 1
+end
+</pre>
+

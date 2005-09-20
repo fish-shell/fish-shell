@@ -1,0 +1,19 @@
+\section source . - Evaluate contents of file.
+
+\subsection source-synopsis Synopsis
+<tt>. FILENAME</tt>
+
+\subsection source-description Description 
+
+Evaluates the commands of the specified file in the current
+shell. This is different from starting a new process to perform the
+commands (i.e. <tt>fish < FILENAME</tt>) since the commands will be
+evaluated by the current shell, which means that changes in
+environment variables, etc., will remain.
+
+\subsection source-example Example
+
+<tt>. ~/.fish</tt>
+
+causes fish to reread its initialization file.
+

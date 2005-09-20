@@ -1,0 +1,14 @@
+\section command command - run a program
+
+\subsection command-synopsis Synopsis
+<tt>command COMMANDNAME [OPTIONS...]</tt>
+
+\subsection command-description Description
+prefixing a command with the word 'command' forces fish to ignore any aliases or builtins with the same name.
+
+\subsection command-example Example
+
+
+<tt>command ls</tt>
+
+causes fish to execute the ls program, even if there exists a 'ls' alias.

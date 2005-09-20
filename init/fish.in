@@ -1,0 +1,84 @@
+#
+# Init file for fish
+#
+
+
+#
+# Set default field separators
+#
+
+set IFS \ \t\n
+
+
+#
+# Add a few common directories to path, if they exists. Note that pure
+# console programs like makedep sometimes live in /usr/X11R6/bin, so we
+# want this even for text-only terminals.
+#
+
+for i in /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin
+	if test -d $i
+	   	if echo $PATH|grep $i >/dev/null
+	   	else
+			set PATH $PATH $i
+		end
+	end
+end
+
+
+#
+# Set some value for LANG if nothing was set before
+#
+
+if status --is-login
+	if not count $LANG >/dev/null
+		set -gx LANG en_US.UTF-8
+	end
+end
+
+
+#
+# Put linux console in unicode mode. Should this be done in any other
+# situation as well?
+#
+
+if count $LANG >/dev/null
+	if test (expr match $LANG ".*UTF") -gt 0
+		if count $TERM >/dev/null
+			if test linux = $TERM
+				unicode_start ^/dev/null
+			end
+		end
+	end
+end
+
+
+#
+# Load additional initialization files
+#
+
+if test -d fish.d
+# If this file is installed in /etc, the subdirectory is called fish.d
+	for i in fish.d/*.fish
+		. $i
+	end
+else
+	if test -d .fish.d
+	# If this file is installed in ~, the subdirectory is called .fish.d
+		for i in .fish.d/*.fish
+			. $i
+		end
+	end
+end
+
+
+#
+# There are variables that contain colons that are not arrays. This 
+# reverts them back to regular strings.
+#
+
+for i in DISPLAY
+	if test (count $$i) -gt 1
+		set -- $i (printf ":%s" $$i|cut -c 2-)
+	end
+end

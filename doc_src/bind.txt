@@ -1,0 +1,16 @@
+\section bind bind - Handle key bindings.
+
+\subsection bind-synopsis Synopsis
+<tt>bind [OPTIONS] [BINDINGS...] </tt>
+
+The <tt>bind</tt> builtin causes fish to add the readline style bindings specified by <tt>BINDINGS</tt> to the list of key bindings. For more information on specifying keyboard bindings, use <tt>man readline</tt> to access the readline documentation.
+
+\subsection bind-description Description
+- <tt>-M MODE</tt> or <tt>--set-mode=MODE</tt> sets the current input mode to MODE. 
+
+
+\subsection bind-example Example
+
+<tt>bind -M vi</tt> changes to the vi input mode
+
+<tt>bind '"\\M-j": jobs'</tt> Binds the jobs command to the Alt-j keyboard shortcut

@@ -1,0 +1,33 @@
+
+\section count count - Count the number of elements of an array
+
+\subsection count-synopsis Synopsis
+ <tt>count $VARIABLE</tt>
+
+\subsection count-description Description
+
+<tt>count</tt> returns the number of arguments that where passed to
+it. This is usually used to find out how many elements an environment
+variable array contains, but this is not the only potential usage for
+the count command. 
+
+The count command does not accept any options, not even '-h'. This way
+the user does not have to worry about an array containing elements
+such as dashes. \c fish performs a special check when invoking the
+count program, and if the user uses a help option, this help page is
+displayed, but if a help option is contained inside of a variable or
+is the result of expantion, it will be passed on to the count program.
+
+\subsection count-example Example
+
+<pre>
+count $PATH
+</pre>
+
+returns the number of directories in the users PATH variable.
+
+<pre>
+count *.txt
+</pre>
+
+returns the number of files in the current working directory ending with the suffix '.txt'.

@@ -1,0 +1,23 @@
+\section if if - Conditionally execute a command
+
+\subsection if-synopsis Synopsis
+<tt>if CONDITION; COMMAND_TRUE [else; COMMAND_FALSE] end;</tt>
+
+\subsection if-description Description
+<tt>if</tt> will execute the command CONDITION. If the commands exit
+status is zero, the command COMMAND_TRUE will execute. If it is
+not zero and COMMAND_FALSE is specified, COMMAND_FALSE will be
+executed.
+
+\subsection if-example Example
+
+<pre>
+if test -f foo.txt
+	echo foo.txt exists
+else
+	echo foo.txt does not exist
+end
+</pre>
+will print <tt>foo.txt exists</tt> if the file foo.txt
+exists and is a regular file, otherwise it will print 
+<tt>foo.txt does not exist</tt>.

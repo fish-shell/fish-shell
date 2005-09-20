@@ -1,0 +1,8 @@
+\section popd popd
+
+\subsection popd-synopsis Synopsis
+<tt>popd</tt>
+
+\subsection popd-description Description 
+<tt>popd</tt> removes the top directory from the directory stack and 
+cd's to the new top directory.

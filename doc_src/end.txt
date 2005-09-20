@@ -1,0 +1,13 @@
+\section end end - end a block of commands.
+
+\subsection end-synopsis Synopsis
+<pre>for VARNAME in [VALUES...]; COMMANDS; end
+if CONDITION; COMMAND_TRUE [else; COMMAND_FALSE] end
+while CONDITION; COMMANDS; end
+switch VALUE; [case [WILDCARD...]; [COMMANDS...];...] end
+</pre>
+
+\subsection end-description Description
+<tt>end</tt> ends a block of commands. For more information, read the
+documentation for the block constructs, such as \c if, \c for and \
+while.

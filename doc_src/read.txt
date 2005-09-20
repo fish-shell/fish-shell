@@ -1,0 +1,26 @@
+\section read read - read line of input into variables
+
+\subsection read-synopsis Synopsis
+<tt>read [OPTIONS] [VARIABLES...]</tt>
+
+\subsection read-description Description
+
+The <tt>read</tt> builtin causes fish to read one line from standard
+input and store the result in one or more environment variables. 
+
+- <tt>-e</tt> or <tt>--export</tt> specifies that the variables will be exported to subshells.
+- <tt>-g</tt> or <tt>--global</tt> specifies that the variables will be made global.
+- <tt>-pPROMPT_CMD</tt> or <tt>--prompt=PROMPT_CMD</tt> specifies that the output of the shell command PROMPT_CMD should be used as the prompt for the interactive mode prompt. The default prompt command is <tt>set_color green; echo read; set_color normal; echo "> "</tt>.
+- <tt>-cCMD</tt> or <tt>--command=CMD</tt> specifies that the initial string in the interactive mode command buffer should be CMD.
+
+Read starts by reading a single line of input from stdin, the line is
+then tokenized using the <tt>IFS</tt> environment variable. Each variable
+specified in <tt>VARIABLES</tt> is then assigned one tokenized string
+element. If there are more tokens than variables, the complete
+remainder is assigned to the last variable.
+
+\subsection read-example Example
+
+<tt>echo hello|read foo</tt>
+
+Will cause the variable \$foo to be assigned the value hello.

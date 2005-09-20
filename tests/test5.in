@@ -1,0 +1,25 @@
+
+set smurf green
+
+switch $smurf;
+	case "*ee*"
+		echo Test 1 pass
+	case "*"
+		echo Test 1 fail
+end;
+
+switch $smurf
+	case *ee*
+		echo Test 2 fail
+	case red green blue
+		echo Test 2 pass
+	case "*"
+		echo Test 2 fail
+end
+
+switch $smurf
+	case cyan magenta yellow
+		echo Test 3 fail
+	case "?????"
+		echo Test 3 pass
+end

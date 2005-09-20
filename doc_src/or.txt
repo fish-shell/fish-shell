@@ -1,0 +1,23 @@
+
+\section or or - Conditionally execute a command
+
+\subsection or-synopsis Synopsis
+ <tt>or COMMAND1; COMMAND2</tt>
+
+\subsection or-description Description
+
+The \c or builtin is used to execute one command, and if it returns
+non-zero status, also execute a second command. 
+
+\subsection or-example Example
+
+The following code runs the \c make command to build a program, or if it fails, it runs <tt>make clean</tt>, which removes the files created by the build process
+<pre>
+or make; make clean
+</pre>
+
+\c or and \c and can be nested, as in this example, that attempts to build and install a program, and removed the files created by the build process on failiure
+
+<pre>
+or and make; make install; make clean
+</pre>

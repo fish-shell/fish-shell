@@ -1,0 +1,19 @@
+
+\section mimedb mimedb - Lookup file information via the mime database
+
+\subsection mimedb-synopsis Synopsis
+<tt>mimedb [OPTIONS] FILES...</tt>
+
+\subsection mimedb-description Description
+
+- \c FILES is a list of files to analyse 
+- \c -t, \c --input-file-data the specified files type should be determined both by their filename and by their contents (Default)
+- \c -f, \c --input-filename the specified files type should be determined by their filename
+- \c -i, \c --input-mime the arguments are not files but mimetypes
+- \c -m, \c --output-mime the output will be the mimetype of each file (Default)
+- \c -f, \c --output-description the output will be the description of each mimetype
+- \c -a, \c --output-action the output will be the default action of each mimetype
+- \c -l, \c --launch launch the default action for the specified file(s)
+- \c -h, \c --help Display a help message and exit
+- \c -v, \c --version Display version number and exit
+

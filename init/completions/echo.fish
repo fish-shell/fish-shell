@@ -1,0 +1,5 @@
+complete -c echo -s n -d "No newline"
+complete -c echo -s e -d "Use backslashe-escaped characters"
+complete -c echo -s E -d "Do not use backslash escaped characters"
+complete -c echo -l help -d "Display help and exit"
+complete -c echo -l version -d "Display version and exit"

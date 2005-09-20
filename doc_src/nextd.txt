@@ -1,0 +1,9 @@
+\section nextd nextd
+
+\subsection nextd-synopsis Synopsis
+<tt>nextd [-l] [pos]</tt>
+
+\subsection nextd-description Description 
+<tt>nextd</tt> moves forwards <tt>pos</tt> positions in the history of visited directories;
+if the end of the history has been hit, a warning is printed. If the <tt>-l></tt> flag is 
+specified, the current history is also displayed. 

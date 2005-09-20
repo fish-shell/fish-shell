@@ -1,0 +1,27 @@
+.TH fish 1  "February 25, 2005" "version @PACKAGE_VERSION@" "USER COMMANDS"
+.SH NAME
+fish - friendly interactive shell
+.SH SYNOPSIS
+.B fish
+[\-h] [\-v] [\-c command] [FILE [ARGUMENTS...]]
+.SH DESCRIPTION
+A shell written mainly with interactive use in mind. The complete fish manuals are written in HTML format. You can find them by using the
+.I
+help
+command from inside the fish shell.
+
+.SH OPTIONS
+.TP
+\-h
+display help and exit
+.TP
+\-c
+Evaluate the specified commands instead of reading from the commandline
+.TP
+\-i
+Specify that fish is to run in interactive mode
+.TP
+\-v
+display version and exit
+.SH AUTHOR
+Axel Liljencrantz ( @PACKAGE_BUGREPORT@ )

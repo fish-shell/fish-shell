@@ -8,6 +8,4 @@
 - <tt>-c</tt> or <tt>--is-command-substitution</tt> returns 0 if fish is currently executing a command usbstitution
 - <tt>-b</tt> or <tt>--is-block</tt> returns 0 if fish is currently executing a block of code
 - <tt>-i</tt> or <tt>--is-interactive</tt> returns 0 if fish is interactive, i.e.connected to a keyboard
-- <tt>-l</tt> or <tt>--is-login</tt> returns 0 if fish is a login shell, i.e. if the first parameter to fish was '-fish'
-
-
+- <tt>-l</tt> or <tt>--is-login</tt> returns 0 if fish is a login shell, i.e. if fish should perform login tasks such as setting up the PATH. 

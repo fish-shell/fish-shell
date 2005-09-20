@@ -762,6 +762,9 @@ Detected errors include:
 - Incorrect use of output redirects
 - Mismatched parenthesis
 
+When the cursor is over a parenthesis or a quote, \c fish also
+highlights it's matching quote or parenthesis.
+
 To customize the syntax highlighting, you can set the environment
 variables \c fish_color_normal, \c fish_color_command, \c
 fish_color_substitution, \c fish_color_redirection, \c fish_color_end,
@@ -773,9 +776,6 @@ values are \c black, \c red, \c green, \c brown, \c yellow, \c blue,
 \c magenta, \c purple, \c cyan, \c white or \c normal. Setting one of
 the above variables to normal will mean that the text color will be
 set to the default color for the terminal.
-
-When the cursor is over a parenthesis or a quote, \c fish also
-highlights it's matching quote or parenthesis.
 
 \subsection prompt Programmable prompt
 
@@ -1259,7 +1259,7 @@ mean different things? \c fish uses a builtin, <tt>set</tt> to set and
 remove environment variables. This keeps things consistent. In fish,
 everything, including the switch/case statement is a command.
 
-In \c fish, all block types are ended by the \c end command.
+In \c fish, all block types end with the \c end command.
 
 */
 /** \page license License

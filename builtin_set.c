@@ -226,22 +226,19 @@ static void print_variables(int include_values, int escape, int scope)
 	array_list_t names;
 	wchar_t **names_arr;
 	int i;
-  
+	
 	al_init( &names );
 	env_get_names( &names, scope );
-	names_arr = list_to_char_arr( &names );
-	qsort( names_arr, 
-		   al_get_count( &names ),
-		   sizeof(wchar_t *),
-		   (int (*)(const void *, const void *))&wcsfilecmp );
-  
+	
+	sort_list( &names );
+	
 	for( i = 0; i < al_get_count(&names); i++ )
 	{
-		wchar_t *key = names_arr[i];
+		wchar_t *key = al_get( &names, i );
 		/* Why does expand_escape free its argument ?! */
 		wchar_t *e_key = escape ? expand_escape(wcsdup(key), 1) : wcsdup(key);
 		sb_append(sb_out, e_key);
-
+		
 		if( include_values ) 
 		{
 			wchar_t *value = env_get(key);
@@ -249,13 +246,11 @@ static void print_variables(int include_values, int escape, int scope)
 			sb_append2(sb_out, L" ", e_value, 0);
 			free(e_value);
 		}
-
+		
 		sb_append(sb_out, L"\n");
 		free(e_key);
 	}
-  
-	free(names_arr);
-	al_destroy(&names);
+  	al_destroy(&names);
 }
 
 /**

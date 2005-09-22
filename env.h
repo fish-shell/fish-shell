@@ -89,7 +89,7 @@ void env_pop();
 /**
    Returns an array containing all exported variables in a format suitable for execv.
 */
-char **env_export_arr();
+char **env_export_arr( int recalc );
 
 /**
   Insert all variable names into l. These are not copies of the strings and should not be freed after use.

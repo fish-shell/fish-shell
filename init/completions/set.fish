@@ -7,6 +7,7 @@ complete -c set -s u -l unexport -d "Do not export variable to subprocess"
 complete -c set -s g -l global -d "Make variable scope global"
 complete -c set -s l -l local -d "Make variable scope local"
 complete -c set -s U -l universal -d "Make variable scope universal, i.e. shared between all fish terminals"
+complete -c set -s q -l query -d "Test if variable is defined"
 complete -c set -s h -l help -d "Display help and exit"
 
 function __fish_set_is_first -d 'Test if no non-switch argument has been specified yet'

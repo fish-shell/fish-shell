@@ -41,9 +41,11 @@ wchar_t * path;
 wchar_t *user;
 void (*start_fishd)();
 
+int env_universal_update=0;
+
 static int barrier_reply = 0;
 
-static void barrier();
+void env_universal_barrier();
 
 
 /**
@@ -109,8 +111,12 @@ static int get_socket( int fork_ok )
 		if( fork_ok )
 		{
 			debug( 2, L"Could not connect to socket %d, starting fishd", s );
+			
 			if( start_fishd )
+			{
 				start_fishd();
+			}
+			
 			return get_socket( 0 );
 		}
 		
@@ -133,14 +139,34 @@ static int get_socket( int fork_ok )
 
 static void callback( int type, const wchar_t *name, const wchar_t *val )
 {
+	
 	if( type == BARRIER_REPLY )
 	{
 		debug( 3, L"Got barrier reply" );
-		
 		barrier_reply = 1;
 	}
-	
+	else
+	{
+		env_universal_update=1;		
+	}	
 }
+
+static void check_connection()
+{
+	if( !init )
+		return;
+	
+	if( env_universal_server.killme )
+	{
+		debug( 3, L"Lost connection to universal variable server." );
+		close( env_universal_server.fd );
+		env_universal_server.fd = -1;
+		env_universal_server.killme=0;
+		sb_clear( &env_universal_server.input );	
+		env_universal_read_all();
+	}	
+}
+
 
 
 void env_universal_init( wchar_t * p, wchar_t *u, void (*sf)() )
@@ -160,7 +186,7 @@ void env_universal_init( wchar_t * p, wchar_t *u, void (*sf)() )
 	init = 1;	
 	if( env_universal_server.fd >= 0 )
 	{
-		barrier();
+		env_universal_barrier();
 	}
 	debug( 2, L"end env_universal_init()" );
 }
@@ -208,22 +234,13 @@ int env_universal_read_all()
 		init = 1;
 
 		if( env_universal_server.fd >= 0 )
-			barrier();
+			env_universal_barrier();
 	}
 	
 	if( env_universal_server.fd != -1 )
 	{
 		read_message( &env_universal_server );
-		if( env_universal_server.killme )
-		{
-			debug( 2, L"Lost connection to universal variable server." );
-			close( env_universal_server.fd );
-			env_universal_server.fd = -1;
-			env_universal_server.killme=0;
-			sb_clear( &env_universal_server.input );	
-
-			env_universal_read_all();
-		}
+		check_connection();		
 		return 1;
 	}
 	else
@@ -235,40 +252,59 @@ int env_universal_read_all()
 
 wchar_t *env_universal_get( const wchar_t *name )
 {
+	debug( 3, L"env_universal_get( %ls )", name );
 	if( !init)
 		return 0;
-	
-	debug( 2, L"env_universal_get( %ls )", name );
-	barrier();
 	
 	if( !name )
 		return 0;
 	
-	return (wchar_t *)hash_get( &env_universal_var, name );	
+	env_universal_barrier();
+	
+	return env_universal_common_get( name );
 }
 
-static void barrier()
+int env_universal_get_export( const wchar_t *name )
+{
+	return env_universal_common_get_export( name );
+}
+
+void env_universal_barrier()
 {
 	message_t *msg;
 	fd_set fds;
+
+	if( !init )
+		return;
 	
 	barrier_reply = 0;
 
+	/*
+	  Create barrier request
+	*/
 	msg= create_message( BARRIER, 0, 0);
 	msg->count=1;
 	q_put( &env_universal_server.unsent, msg );
 
+	/*
+	  Wait until barrier request has been sent
+	*/
 	debug( 3, L"Create barrier" );
 	while( 1 )
 	{
 		try_send_all( &env_universal_server );	
+		check_connection();		
+		
 		if( q_empty( &env_universal_server.unsent ) )
 			break;
 		FD_ZERO( &fds );
 		FD_SET( env_universal_server.fd, &fds );
 		select( env_universal_server.fd+1, 0, &fds, 0, 0 );
 	}
-
+	
+	/*
+	  Wait for barrier reply
+	*/
 	debug( 3, L"Sent barrier request" );
 	while( !barrier_reply )
 	{
@@ -278,25 +314,31 @@ static void barrier()
 		env_universal_read_all();
 	}
 	debug( 3, L"End barrier" );
-
 }
 
 
-void env_universal_set( const wchar_t *name, const wchar_t *value )
+void env_universal_set( const wchar_t *name, const wchar_t *value, int export )
 {
 	message_t *msg;
 	
 	if( !init )
 		return;
 	
-	debug( 2, L"env_universal_set( %ls, %ls )", name, value );
+	debug( 3, L"env_universal_set( %ls, %ls )", name, value );
+	
+	msg = create_message( export?SET_EXPORT:SET, 
+						  name, 
+						  value);
 
-	msg= create_message( SET, name, value);
+	if( !msg )
+	{
+		debug( 1, L"Could not create universal variable message" );
+		return;
+	}
+	
 	msg->count=1;
 	q_put( &env_universal_server.unsent, msg );
-	barrier();
-	
-
+	env_universal_barrier();
 }
 
 void env_universal_remove( const wchar_t *name )
@@ -312,5 +354,14 @@ void env_universal_remove( const wchar_t *name )
 	msg= create_message( ERASE, name, 0);
 	msg->count=1;
 	q_put( &env_universal_server.unsent, msg );
-	barrier();
+	env_universal_barrier();
+}
+
+void env_universal_get_names( array_list_t *l,
+                              int show_exported,
+                              int show_unexported )
+{
+	env_universal_common_get_names( l, 
+									show_exported,
+									show_unexported );	
 }

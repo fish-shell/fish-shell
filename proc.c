@@ -45,6 +45,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "reader.h"
 #include "sanity.h"
 #include "env.h"
+#include "parser.h"
 
 /**
    Size of message buffer 
@@ -540,7 +541,7 @@ static void handle_child_status( pid_t pid, int status )
 	int found_proc = 0;
 	job_t *j;
 	process_t *p;
-//	char mess[MESS_SIZE];	
+	char mess[MESS_SIZE];	
 	found_proc = 0;		
 	/*
 	  snprintf( mess, 
@@ -587,13 +588,12 @@ static void handle_child_status( pid_t pid, int status )
 	}
 
 
-	if( !is_interactive )
+	if( WIFSIGNALED( status ) && 
+		( WTERMSIG(status)==SIGINT  || 
+		  WTERMSIG(status)==SIGQUIT ) )
 	{
-		
-		if( WIFSIGNALED( status ) && 
-			( WTERMSIG(status)==SIGINT  || 
-			  WTERMSIG(status)==SIGQUIT ) )
-		{
+		if( !is_interactive_session )
+		{			
 			struct sigaction act;
 			sigemptyset( & act.sa_mask );
 			act.sa_flags=0;	
@@ -601,6 +601,23 @@ static void handle_child_status( pid_t pid, int status )
 			sigaction( SIGINT, &act, 0 );
 			sigaction( SIGQUIT, &act, 0 );
 			kill( getpid(), WTERMSIG(status) );
+		}
+		else
+		{
+			block_t *c = current_block;
+			
+				snprintf( mess,
+						  MESS_SIZE,
+						  "Process %ls from job %ls exited through signal, breaking loops\n",
+						  p->actual_cmd,
+						  j->command );
+				write( 2, mess, strlen(mess ));
+
+			while( c )
+			{
+				c->skip=1;
+				c=c->outer;
+			}		
 		}
 	}
 		

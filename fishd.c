@@ -107,48 +107,29 @@ int get_socket()
 	return s;
 }
 
-void enqueue( const void *k,
-			  const void *v,
-			  void *q)
-{
-	const wchar_t *key = (const wchar_t *)k;
-	const wchar_t *val = (const wchar_t *)v;
-	queue_t *queue = (queue_t *)q;
-	
-	message_t *msg = create_message( SET, key, val );
-	msg->count=1;
-	
-	q_put( queue, msg );
-}
-
-void enqueue_all( connection_t *c )
-{
-	hash_foreach2( &env_universal_var,
-	               &enqueue, 
-	               (void *)&c->unsent );
-	try_send_all( c );
-}
-
 void broadcast( int type, const wchar_t *key, const wchar_t *val )
 {
 	connection_t *c;
 	message_t *msg;
 
+	debug( 1, L"Got message %d %ls %ls", type, key, val );
+	
 	if( !conn )
 		return;
-	
-	msg = create_message( type, key, val );
 
+
+	msg = create_message( type, key, val );
+	
 	/*
 	  Don't merge loops, or try_send_all can free the message prematurely
 	*/
-			
+	
 	for( c = conn; c; c=c->next )
 	{
 		msg->count++;
 		q_put( &c->unsent, msg );
 	}	
-
+	
 	for( c = conn; c; c=c->next )
 	{
 		try_send_all( c );

@@ -1,3 +1,6 @@
+#
+# Completions for the yum command
+#
 
 #Load rpm completions, since that is where the package completion function is defined
 complete -y rpm

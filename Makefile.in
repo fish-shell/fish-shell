@@ -328,6 +328,9 @@ tokenize: tokenize.o doc_src/tokenize.c
 tokenizer_test: tokenizer.c tokenizer.h util.o wutil.o common.o
 	$(CC) ${CFLAGS} tokenizer.c util.o wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
 
+key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o util.o wutil.o
+	$(CC) key_reader.o input_common.o common.o env_universal.o env_universal_common.o util.o wutil.o $(LDFLAGS) -o $@
+
 depend:
 	makedepend -fMakefile.in -Y *.c 
 

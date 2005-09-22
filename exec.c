@@ -289,7 +289,7 @@ static void launch_process( process_t *p )
 	
 	/* Set the standard input/output channels of the new process.  */
 		
-	execve (wcs2str(p->actual_cmd), wcsv2strv( (const wchar_t **) p->argv), env_export_arr() );
+	execve (wcs2str(p->actual_cmd), wcsv2strv( (const wchar_t **) p->argv), env_export_arr( 0 ) );
 	debug( 0, 
 		   L"Failed to execute process %ls",
 		   p->actual_cmd );
@@ -659,7 +659,6 @@ void exec( job_t *j )
 	int skip_fork;
 	
 	/* This call is used so the global environment variable array is regenerated, if needed, before the fork. That way, we avoid a lot of duplicate work where EVERY child would need to generate it */
-	env_export_arr();
 
 	io_data_t pipe_read, pipe_write;
 	io_data_t *tmp;
@@ -720,6 +719,10 @@ void exec( job_t *j )
 	{
 		mypipe[1]=-1;
 		skip_fork=0;
+
+		if( p->type == EXTERNAL )
+			env_export_arr( 1 );
+
 		
 		/*
 		  Set up fd:s that will be used in the pipe 

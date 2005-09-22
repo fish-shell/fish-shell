@@ -12,17 +12,7 @@
 #include <unistd.h>
 #include <termcap.h>
 
-static int readch()
-{
-	char arr[1];
-	if( read( 0, arr, 1 ) < 0 )
-	{
-		perror( "read" );
-		return readch();		
-	}
-	else
-		return arr[0];
-}
+#include "input_common.h"
 
 int writestr( char *str )
 {
@@ -66,6 +56,9 @@ int main( int argc, char **argv)
 		struct termios modes,      /* so we can change the modes */
 			savemodes;  /* so we can reset the modes when we're done */
 
+		input_common_init(0);
+		
+
 		tcgetattr(0,&modes);        /* get the current terminal modes */
 		savemodes = modes;          /* save a copy so we can reset them */
 		
@@ -76,9 +69,9 @@ int main( int argc, char **argv)
 		tcsetattr(0,TCSANOW,&modes);      /* set the new modes */
 		while(1)
 		{
-			if( (c=readch()) == EOF )
+			if( (c=input_common_readch(0)) == EOF )
 				break;
-			if((c > 31) && (c != 127) )
+			if( (c > 31) && (c != 127) )
 				sprintf( scratch, "dec: %d hex: %x char: %c\n", c, c, c );
 			else
 				sprintf( scratch, "dec: %d hex: %x\n", c, c );
@@ -86,6 +79,8 @@ int main( int argc, char **argv)
 		}
 		/* reset the terminal to the saved mode */
 		tcsetattr(0,TCSANOW,&savemodes);  
+
+		input_common_destroy();
 	}	
 
 	return 0;

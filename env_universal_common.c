@@ -36,17 +36,42 @@
 #define SET_MBS "SET"
 
 /**
+   Non-wide version of the set_export command
+*/
+#define SET_EXPORT_MBS "SET_EXPORT"
+
+/**
    Non-wide version of the erase command
 */
 #define ERASE_MBS "ERASE"
 
+/**
+   Non-wide version of the barrier command
+*/
 #define BARRIER_MBS "BARRIER"
+
+/**
+   Non-wide version of the barrier_reply command
+*/
 #define BARRIER_REPLY_MBS "BARRIER_REPLY"
 
 /**
    Error message
 */
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
+
+/**
+   A variable entry. Stores the value of a variable and whether it
+   should be exported. Obviously, it needs to be allocated large
+   enough to fit the value string.
+*/
+typedef struct var_entry
+{
+	int export; /**< Whether the variable should be exported */
+	wchar_t val[0]; /**< The value of the variable */
+}
+var_entry_t;
+
 
 static void parse_message( wchar_t *msg,
 						   connection_t *src );
@@ -60,6 +85,17 @@ void (*callback)( int type,
 				  const wchar_t *key, 
 				  const wchar_t *val );
 
+
+/**
+   Variable used by env_get_names to communicate auxiliary information
+   to add_key_to_hash
+*/
+static int get_names_show_exported;
+/**
+   Variable used by env_get_names to communicate auxiliary information
+   to add_key_to_hash
+*/
+static int get_names_show_unexported;
 
 
 void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const wchar_t *val ) )
@@ -155,6 +191,7 @@ static int match( const wchar_t *msg, const wchar_t *cmd )
 	size_t len = wcslen( cmd );
 	if( wcsncasecmp( msg, cmd, len ) != 0 )
 		return 0;
+
 	if( msg[len] && msg[len]!= L' ' && msg[len] != L'\t' )
 		return 0;
 	
@@ -169,12 +206,13 @@ static void parse_message( wchar_t *msg,
 
 	if( msg[0] == L'#' )
 		return;
-		
-	if( match( msg, SET_STR ) )
+	
+	if( match( msg, SET_STR ) || match( msg, SET_EXPORT_STR ))
 	{
 		wchar_t *name, *val, *tmp;
-			
-		name = msg+wcslen(SET_STR);
+		int export = match( msg, SET_EXPORT_STR );
+		
+		name = msg+(export?wcslen(SET_EXPORT_STR):wcslen(SET_STR));
 		while( wcschr( L"\t ", *name ) )
 			name++;
 		
@@ -189,14 +227,22 @@ static void parse_message( wchar_t *msg,
 			
 			val = unescape( wcsdup(val), 0 );
 			
+			var_entry_t *entry = 
+				malloc( sizeof(var_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
+			if( !entry )
+				die_mem();
+			entry->export=export;
+			
+			wcscpy( entry->val, val );
 			remove_entry( key );
 			
-			hash_put( &env_universal_var, key, val );
+			hash_put( &env_universal_var, key, entry );
 			
 			if( callback )
 			{
-				callback( SET, key, val );
+				callback( export?SET_EXPORT:SET, key, val );
 			}
+			free(val );
 		}
 		else
 		{
@@ -205,7 +251,7 @@ static void parse_message( wchar_t *msg,
 	}
 	else if( match( msg, ERASE_STR ) )
 	{
-		wchar_t *name, *val, *tmp;
+		wchar_t *name, *tmp;
 		
 		name = msg+wcslen(ERASE_STR);
 		while( wcschr( L"\t ", *name ) )
@@ -253,8 +299,11 @@ int try_send( message_t *msg,
 			  int fd )
 {
 
+	debug( 3,
+		   L"before write of %d chars to fd %d", strlen(msg->body), fd );	
+
 	int res = write( fd, msg->body, strlen(msg->body) );
-	
+		
 	if( res == -1 )
 	{
 		switch( errno )
@@ -282,12 +331,11 @@ int try_send( message_t *msg,
 
 void try_send_all( connection_t *c )
 {
-	debug( 2,
+	debug( 3,
 		   L"Send all updates to connection on fd %d", 
 		   c->fd );
 	while( !q_empty( &c->unsent) )
 	{
-		
 		switch( try_send( (message_t *)q_peek( &c->unsent), c->fd ) )
 		{
 			case 1:
@@ -295,9 +343,13 @@ void try_send_all( connection_t *c )
 				break;
 				
 			case 0:
+				debug( 1,
+					   L"Socket full, send rest later" );	
 				return;
 								
 			case -1:
+				debug( 1,
+					   L"Socket dead!!!" );	
 				c->killme = 1;
 				return;
 		}
@@ -329,6 +381,7 @@ message_t *create_message( int type,
 	switch( type )
 	{
 		case SET:
+		case SET_EXPORT:
 		{
 			if( !val_in )
 			{
@@ -341,20 +394,20 @@ message_t *create_message( int type,
 			
 			char *val = wcs2str(esc );
 			free(esc);
-			
-			
-			sz = strlen(SET_MBS) + strlen(key) + strlen(val) + 4;
+						
+			sz = strlen(type==SET?SET_MBS:SET_EXPORT_MBS) + strlen(key) + strlen(val) + 4;
 			msg = malloc( sizeof( message_t ) + sz );
-	
+			
 			if( !msg )
 				die_mem();
-				
-			strcpy( msg->body, SET_MBS " " );
+			
+			strcpy( msg->body, (type==SET?SET_MBS:SET_EXPORT_MBS) );
+			strcat( msg->body, " " );
 			strcat( msg->body, key );
 			strcat( msg->body, ":" );
 			strcat( msg->body, val );
 			strcat( msg->body, "\n" );
-
+			
 			free( val );
 			
 			break;
@@ -406,3 +459,68 @@ message_t *create_message( int type,
 		msg->count=0;
 	return msg;	
 }
+
+/**
+   Function used with hash_foreach to insert keys of one table into
+   another
+*/
+static void add_key_to_hash( const void *key, 
+							 const void *data,
+							 void *aux )
+{
+	var_entry_t *e = (var_entry_t *)data;
+	if( ( e->export && get_names_show_exported) || 
+		( !e->export && get_names_show_unexported) )
+		al_push( (array_list_t *)aux, key );
+}
+
+void env_universal_common_get_names( array_list_t *l,
+									 int show_exported,
+									 int show_unexported )
+{
+	get_names_show_exported = show_exported;
+	get_names_show_unexported = show_unexported;
+	
+	hash_foreach2( &env_universal_var, 
+				   add_key_to_hash,
+				   l );
+}
+
+wchar_t *env_universal_common_get( const wchar_t *name )
+{
+	var_entry_t *e = (var_entry_t *)hash_get( &env_universal_var, name );	
+	if( e )
+		return e->val;
+	return 0;	
+}
+
+int env_universal_common_get_export( const wchar_t *name )
+{
+	var_entry_t *e = (var_entry_t *)hash_get( &env_universal_var, name );
+	if( e )
+		return e->export;
+	return 0;
+}
+
+static void enqueue( const void *k,
+					 const void *v,
+					 void *q)
+{
+	const wchar_t *key = (const wchar_t *)k;
+	const var_entry_t *val = (const var_entry_t *)v;
+	queue_t *queue = (queue_t *)q;
+	
+	message_t *msg = create_message( val->export?SET_EXPORT:SET, key, val->val );
+	msg->count=1;
+	
+	q_put( queue, msg );
+}
+
+void enqueue_all( connection_t *c )
+{
+	hash_foreach2( &env_universal_var,
+	               &enqueue, 
+	               (void *)&c->unsent );
+	try_send_all( c );
+}
+

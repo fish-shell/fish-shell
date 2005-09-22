@@ -234,7 +234,7 @@ static void print_variables(int include_values, int escape, int scope)
 	
 	for( i = 0; i < al_get_count(&names); i++ )
 	{
-		wchar_t *key = al_get( &names, i );
+		wchar_t *key = (wchar_t *)al_get( &names, i );
 		/* Why does expand_escape free its argument ?! */
 		wchar_t *e_key = escape ? expand_escape(wcsdup(key), 1) : wcsdup(key);
 		sb_append(sb_out, e_key);
@@ -284,12 +284,15 @@ int builtin_set( wchar_t **argv )
 				L"universal", no_argument, 0, 'U' 
 			} ,
 			{ 
+				L"query", no_argument, 0, 'q' 
+			} ,
+			{ 
 				0, 0, 0, 0 
 			}
 		}
 	;
 	
-	wchar_t short_options[] = L"xglenuU";
+	wchar_t short_options[] = L"xglenuUq";
 
 	int argc = builtin_count_args(argv);
 
@@ -298,7 +301,7 @@ int builtin_set( wchar_t **argv )
 	*/
 	int local = 0, global = 0, export = 0;
 	int erase = 0, list = 0, unexport=0;
-	int universal = 0;
+	int universal = 0, query=0;
 	
 
 	/*
@@ -349,12 +352,29 @@ int builtin_set( wchar_t **argv )
 			case 'U':
 				universal = 1;
 				break;
+			case 'q':
+				query = 1;
+				break;
 			case '?':
 				return 1;
 			default:
 				break;
 		}
 	}
+
+	if( query && (erase || list || global || local || universal || export || unexport ) )
+	{
+		sb_append2(sb_err,
+				  argv[0],
+				  BUILTIN_ERR_COMBO,
+				  L"\n",
+				  parser_current_line(),
+				  L"\n",
+				  0);
+		builtin_print_help( argv[0], sb_err );
+		return 1;
+	}
+	
 
 	/* Check operation and modifiers sanity */
 	if( erase && list ) 
@@ -393,6 +413,22 @@ int builtin_set( wchar_t **argv )
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
+
+	if( query )
+	{
+		/*
+		  Query mode. Return number of specified variables that do not exist.
+		*/
+		int i;
+		for( i=woptind; i<argc; i++ )
+		{
+			if( env_get( argv[i] )==0 )
+				retcode++;
+			
+		}
+		return retcode;
+	}
+	
 
 	/* Parse destination */
 	if( woptind < argc ) 

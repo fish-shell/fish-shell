@@ -38,8 +38,6 @@
 #include "reader.h"
 #include "parser.h"
 #include "env_universal.h"
-#include "env_universal.h"
-
 
 /**
    Command used to start fishd
@@ -118,6 +116,12 @@ static hash_table_t env_read_only;
    Exported variable array used by execv
 */
 static char **export_arr=0;
+
+/**
+   Buffer used for storing string contents for export_arr
+*/
+static buffer_t export_buffer;
+
 
 /**
    Flag for checking if we need to regenerate the exported variable
@@ -200,6 +204,9 @@ void env_init()
 	char **p;
 
 	sb_init( &dyn_var );
+
+	b_init( &export_buffer );
+	
 	
 	/*
 	  These variables can not be altered directly by the user
@@ -275,6 +282,8 @@ void env_destroy()
 //	fwprintf( stderr, L"Filled %d exported vars\n", c1 );
 	
 	sb_destroy( &dyn_var );
+
+	b_destroy( &export_buffer );
 	
 	while( &top->env != global )
 		env_pop();
@@ -285,13 +294,8 @@ void env_destroy()
 	hash_destroy( global );
 	free( top );
 	
-	if( export_arr != 0 )
-	{
-		for( ptr = export_arr; *ptr; ptr++ )
-			free( *ptr );
-
-		free( export_arr );
-	}
+	free( export_arr );
+	
 }
 
 /**
@@ -347,7 +351,18 @@ void env_set( const wchar_t *key,
 	
 	if( var_mode & ENV_UNIVERSAL )
 	{
-		env_universal_set( key, val );
+		int export = 0;
+
+		if( !(var_mode & ENV_EXPORT ) &&
+			!(var_mode & ENV_UNEXPORT ) )
+		{
+			env_universal_get_export( key );
+		}
+		else 
+			export = (var_mode & ENV_EXPORT );
+		
+		env_universal_set( key, val, export );
+
 		return;
 	}
 	
@@ -389,7 +404,18 @@ void env_set( const wchar_t *key,
 		{
 			if( env_universal_get( key ) )
 			{
-				env_universal_set( key, val );
+				int export = 0;
+				
+				if( !(var_mode & ENV_EXPORT ) &&
+					!(var_mode & ENV_UNEXPORT ) )
+				{
+					env_universal_get_export( key );
+				}
+				else 
+					export = (var_mode & ENV_EXPORT );
+				
+				env_universal_set( key, val, export );
+				
 				return;
 			}
 			else
@@ -602,50 +628,6 @@ void env_pop()
 	}	
 }
 
-/**
-   Recreate the table of global variables used by execv
-*/
-static void fill_arr( const void *key, const void *val, void *aux )
-{
-	var_entry_t *val_entry = (var_entry_t *)val;
-	if( val_entry->export )
-	{
-
-		c1++;
-		
-		wchar_t *wcs_val = wcsdup( val_entry->val );
-		wchar_t *pos = wcs_val;
-				
-		int *idx_ptr = (int *)aux;
-		char *key_str = wcs2str((wchar_t *)key);
-		
-		char *val_str;
-		char *woot;
-
-		while( *pos )
-		{
-			if( *pos == ARRAY_SEP )
-				*pos = L':';			
-			pos++;
-		}
-
-		val_str = wcs2str( wcs_val );
-		free( wcs_val );
-		
-		woot = malloc( sizeof(char)*( strlen(key_str) + 
-									  strlen(val_str) + 2) );
-		
-		strcpy( woot, key_str );
-		strcat( woot, "=" );
-		strcat( woot, val_str );
-		export_arr[*idx_ptr] = woot;
-		(*idx_ptr)++;
-		
-		free( key_str );
-		free( val_str );	
-	}
-}
-
 
 /**
    Function used with hash_foreach to insert keys of one table into
@@ -660,12 +642,14 @@ static void add_key_to_hash( const void *key,
 		( !e->export && get_names_show_unexported) )
 		hash_put( (hash_table_t *)aux, key, 0 );
 }
-static void add_universal_key_to_hash( const void *key, 
-									   const void *data,
-									   void *aux )
+
+static void add_to_hash( const void *k, void *aux )
 {
-	hash_put( (hash_table_t *)aux, key, 0 );
+	hash_put( (hash_table_t *)aux,
+			  k,
+			  0 );
 }
+
 
 void env_get_names( array_list_t *l, int flags )
 {
@@ -718,10 +702,15 @@ void env_get_names( array_list_t *l, int flags )
 	
 	if( show_universal )
 	{
-		if( get_names_show_unexported )
-			hash_foreach2( &env_universal_var, 
-						   add_universal_key_to_hash,
-						   &names );
+		array_list_t uni_list;
+		al_init( &uni_list );
+		
+		env_universal_get_names( &uni_list, 
+								 get_names_show_exported,
+								 get_names_show_unexported );
+
+		al_foreach2( &uni_list, &add_to_hash, &names );
+		al_destroy( &uni_list );
 	}
 	
 	hash_get_keys( &names, l );
@@ -729,35 +718,116 @@ void env_get_names( array_list_t *l, int flags )
 }
 
 
-char **env_export_arr()
+static void export_func1( const void *k, const void *v, void *aux )
 {
-	if( has_changed )
+	var_entry_t *val_entry = (var_entry_t *)v;
+	if( val_entry->export )
 	{
-		int pos=0;		
-		char **ptr;		
-		env_node_t *n=top;
+		hash_table_t *h = (hash_table_t *)aux;
 		
-		if( export_arr != 0 )
-		{
-			for( ptr = export_arr; *ptr; ptr++ )
-				free( *ptr );
-		}		
+		if( !hash_get( h, k ) )
+			hash_put( h, k, val_entry->val );
+	}
+	
+}
 
-		export_arr = realloc( export_arr,
-							  sizeof(char *)*(export_count + 1) );
+static void export_func2( const void *k, const void *v, void *aux )
+{
+	wchar_t *key = (wchar_t *)k;
+	wchar_t *val = (wchar_t *)v;
+	
+	char *ks = wcs2str( key );
+	char *vs = wcs2str( val );
+	
+	char *pos = vs;
+
+	buffer_t *out = (buffer_t *)aux;
+
+	if( !ks || !vs )
+	{
+		die_mem();
+	}
+	
+	/*
+	  Make arrays into colon-separated lists
+	*/
+	while( *pos )
+	{
+		if( *pos == ARRAY_SEP )
+			*pos = ':';			
+		pos++;
+	}
+	int nil = 0;
+	
+	b_append( out, ks, strlen(ks) );
+	b_append( out, "=", 1 );
+	b_append( out, vs, strlen(vs) );
+	b_append( out, &nil, 1 );
+
+	free( ks );
+	free( vs );
+}
+
+char **env_export_arr( int recalc)
+{
+	if( recalc )
+		env_universal_barrier();
+		
+	if( has_changed || env_universal_update )
+	{
+		array_list_t uni;
+		hash_table_t vals;
+		env_node_t *n=top;
+		int prev_was_null=1;
+		int pos=0;		
+		int i;
+
+		debug( 3, L"env_export_arr()" );
+				
+		hash_init( &vals, &hash_wcs_func, &hash_wcs_cmp );
 		
 		while( n )
 		{
-			hash_foreach2( &n->env, &fill_arr, &pos );
+			hash_foreach2( &n->env, &export_func1, &vals );
 			
 			if( n->new_scope )
 				n = global_env;
 			else
-				n = n->next;
-
+				n = n->next;			
 		}		
+		
+		al_init( &uni );
+		env_universal_get_names( &uni, 1, 0 );
+		for( i=0; i<al_get_count( &uni ); i++ )
+		{
+			wchar_t *key = (wchar_t *)al_get( &uni, i );
+			wchar_t *val = env_universal_get( key );
+			if( !hash_get( &vals, key ) )
+				hash_put( &vals, key, val );
+		}
+		al_destroy( &uni );
+
+		export_buffer.used=0;
+		
+		hash_foreach2( &vals, &export_func2, &export_buffer );
+		hash_destroy( &vals );
+		
+		export_arr = realloc( export_arr,
+							  sizeof(char *)*(hash_get_count( &vals) + 1) );
+		
+		for( i=0; i<export_buffer.used; i++ )
+		{
+			if( prev_was_null )
+			{
+				export_arr[pos++]= &export_buffer.buff[i];
+				debug( 3, L"%s", &export_buffer.buff[i]);
+			}
+			prev_was_null = (export_buffer.buff[i]==0);
+		}
 		export_arr[pos]=0;
 		has_changed=0;
+		env_universal_update=0;		
+
 	}
 	return export_arr;	
 }

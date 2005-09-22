@@ -1605,10 +1605,7 @@ static void eval_job( tokenizer *tok )
 	long long t1=0, t2=0, t3=0;
 	profile_element_t *p=0;
 	int skip = 0;
-
-	if( !is_block && !is_subshell )
-		env_universal_read_all();
-
+	
 	if( profile )
 	{
 		p=malloc( sizeof(profile_element_t));

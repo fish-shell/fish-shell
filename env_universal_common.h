@@ -8,11 +8,23 @@
 #define SET_STR L"SET"
 
 /**
+   The set_export command
+*/
+#define SET_EXPORT_STR L"SET_EXPORT"
+
+/**
    The erase command
 */
 #define ERASE_STR L"ERASE"
 
+/**
+   The barrier command
+*/
 #define BARRIER_STR L"BARRIER"
+
+/**
+   The barrier_reply command
+*/
 #define BARRIER_REPLY_STR L"BARRIER_REPLY"
 
 
@@ -27,16 +39,12 @@
 enum
 {
 	SET,
+	SET_EXPORT,
 	ERASE,
 	BARRIER,
 	BARRIER_REPLY,
 }
 	;
-
-/**
-   The table of universal variables
-*/
-extern hash_table_t env_universal_var;
 
 /**
    This struct represents a connection between a universal variable server/client
@@ -106,5 +114,26 @@ void env_universal_common_init(void (*cb)(int type, const wchar_t *key, const wc
    Destroy library data
 */
 void env_universal_common_destroy();
+
+/**
+   Add all variable names to the specified list
+*/
+void env_universal_common_get_names( array_list_t *l,
+									 int show_exported,
+									 int show_unexported );
+
+/**
+   Get the value of the variable with the specified name
+*/
+wchar_t *env_universal_common_get( const wchar_t *name );
+
+/**
+   Get the export flag of the variable with the specified
+   name. Returns 0 if the variable doesn't exist.
+*/
+int env_universal_common_get_export( const wchar_t *name );
+
+void enqueue_all( connection_t *c );
+
 
 #endif

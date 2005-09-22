@@ -53,11 +53,18 @@ end
 # Set various color values
 #
 
-function set_default -d "Set a universal variable, unless it has already been set"
-	if not test $$argv[1]
+function set_default -d "Set an universal variable, unless it has already been set"
+	if not set -q $argv[1] 
 		set -U -- $argv	
 	end
 end
+
+function set_exported_default -d "Set an exported universal variable, unless it has already been set"
+	if not set -q $argv[1]
+		set -Ux -- $argv	
+	end
+end
+
 
 # Regular syntax highlighting colors
 set_default fish_color_normal normal
@@ -83,21 +90,20 @@ set_default fish_pager_color_progress cyan
 # Directory history colors
 set_default fish_color_history_current cyan
 
-functions -e set_default
 
 #
 # Setup the CDPATH variable
 #
 
-set -gx CDPATH . ~
+set_exported_default CDPATH . ~
 
 #
 # Match colors for grep, if supported
 #
 
 if grep --color=auto --help 1>/dev/null 2>/dev/null
-	set -gx GREP_COLOR '97;45'
-	set -gx -- GREP_OPTIONS '--color=auto'
+	set_exported_default GREP_COLOR '97;45'
+	set_exported_default GREP_OPTIONS '--color=auto'
 end
 
 #
@@ -105,6 +111,9 @@ end
 #
 
 if command ls --color=auto --help 1>/dev/null 2>/dev/null
-	set -gx LS_COLORS $LS_COLORS '*.jar=01;31' '*.doc=35' '*.pdf=35' '*.ps=35' '*.xls=35' '*.swf=35' '*~=37'
+	set_exported_default LS_COLORS $LS_COLORS '*.jar=01;31' '*.doc=35' '*.pdf=35' '*.ps=35' '*.xls=35' '*.swf=35' '*~=37'
 end
 
+
+functions -e set_default
+functions -e set_exported_default

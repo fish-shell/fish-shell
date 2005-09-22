@@ -855,48 +855,51 @@ static void add_common_bindings()
 	*/
 	for( i=0; i<3; i++ )
 	{
+		/*
+		  We need alternative keybidnings for arrowkeys, since
+		  terminfo sometimes specifies a different sequence than what
+		  keypresses actually generate
+		*/
 		add_mapping( name[i], L"\e[A", L"Up", L"history-search-backward" );
 		add_mapping( name[i], L"\e[B", L"Down", L"history-search-forward" );
+		add_terminfo_mapping( name[i], (key_up), L"Up", L"history-search-backward" );
+		add_terminfo_mapping( name[i], (key_down), L"Down", L"history-search-forward" );
+
 		add_mapping( name[i], L"\e[C", L"Right", L"forward-char" );
 		add_mapping( name[i], L"\e[D", L"Left", L"backward-char" );
-		
+		add_terminfo_mapping( name[i], (key_right), L"Right", L"forward-char" );
 		add_terminfo_mapping( name[i], (key_left), L"Left", L"backward-char" );
 		
-		add_terminfo_mapping( name[i], (key_right), L"Right", L"forward-char" );
-		
-		add_terminfo_mapping( name[i], (key_up), L"Up", L"history-search-backward" );
-		
-		add_terminfo_mapping( name[i], (key_down), L"Down", L"history-search-forward" );
 		add_terminfo_mapping( name[i], (key_dc), L"Delete", L"delete-char" );
 		
 		add_terminfo_mapping( name[i], (key_backspace), L"Backspace", L"backward-delete-char" );
-		
 		add_mapping( name[i], L"\x7f", L"Backspace", L"backward-delete-char" );
 		
 		add_terminfo_mapping( name[i], (key_home), L"Home", L"beginning-of-line" );
 		add_terminfo_mapping( name[i], (key_end), L"End", L"end-of-line" );
-		
+
+		/*
+		  We need lots of alternative keybidnings, since terminal
+		  emulators can't seem to agree on what sequence to generate,
+		  and terminfo doesn't specify what sequence should be
+		  generated
+		*/
+
 		add_mapping( name[i], L"\e\eOC", L"Alt-Right", L"nextd-or-forward-word" );
 		add_mapping( name[i], L"\e\eOD", L"Alt-Left", L"prevd-or-backward-word" );
-
 		add_mapping( name[i], L"\eO3C", L"Alt-Right", L"nextd-or-forward-word" );
 		add_mapping( name[i], L"\eO3D", L"Alt-Left", L"prevd-or-backward-word" );
-
 		add_mapping( name[i], L"\e[3C", L"Alt-Right", L"nextd-or-forward-word" );
 		add_mapping( name[i], L"\e[3D", L"Alt-Left", L"prevd-or-backward-word" );
-
 		add_mapping( name[i], L"\e[1;3C", L"Alt-Right", L"nextd-or-forward-word" );
 		add_mapping( name[i], L"\e[1;3D", L"Alt-Left", L"prevd-or-backward-word" );		
 		
 		add_mapping( name[i], L"\e\eOA", L"Alt-Up", L"history-token-search-backward" );
 		add_mapping( name[i], L"\e\eOB", L"Alt-Down", L"history-token-search-forward" );
-
 		add_mapping( name[i], L"\eO3A", L"Alt-Up", L"history-token-search-backward" );
 		add_mapping( name[i], L"\eO3B", L"Alt-Down", L"history-token-search-forward" );
-
 		add_mapping( name[i], L"\e[3A", L"Alt-Up", L"history-token-search-backward" );
 		add_mapping( name[i], L"\e[3B", L"Alt-Down", L"history-token-search-forward" );
-
 		add_mapping( name[i], L"\e[1;3A", L"Alt-Up", L"history-token-search-backward" );
 		add_mapping( name[i], L"\e[1;3B", L"Alt-Down", L"history-token-search-forward" );
 	}

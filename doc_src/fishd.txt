@@ -13,7 +13,35 @@ fishd instance. fishd will create a socket in /tmp, and wait for
 incoming connections from universal variable clents, such as fish,
 When no clients are connected, fishd will automatically shut down.
 
+\subsection fishd-commands Commands
+
+Fishd works by sending and recieving sommands. Each command is ended
+with a newline. These are the commands supported by fishd:
+
+<pre>set KEY:VALUE
+set_export KEY:VALUE
+</pre>
+
+These commands update the value of a variable. The only difference
+between the two is that <tt>set_export</tt>-variables should be
+exported to children of the process using them. The variable value may
+be escaped using C-style backslash escapes. In fact, this is required
+for newline characters, which would otherwise be interpreted as end of
+command.
+
+<pre>erase KEY
+</pre>
+
+Erase the variable with the specified name.
+
+<pre>barrier
+barrier_reply
+</pre>
+
+A \c barrier command will result in a barrier_reply beeing added to
+the end of the senders queue. These commands are used to synchronize
+clients.
 
 \subecion fishd-files Files
 
-~/.fishd permenent storage location for universal variale data
+~/.fishd.HOSTNAME permenent storage location for universal variale data

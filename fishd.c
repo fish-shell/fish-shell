@@ -28,20 +28,42 @@ down and save.
 #include "wutil.h"
 #include "env_universal_common.h"
 
-
+/**
+   Maximum length of socket filename
+*/
 #ifndef UNIX_PATH_MAX 
 #define UNIX_PATH_MAX 100
 #endif
 
-#define GREETING "#Fish universal variable daemon\n#Lines beginning with '#' are ignored\n#Syntax:\n#SET VARNAME:VALUE\n#or\n#ERASE VARNAME\n#Where VALUE is the escaped value of the variable\n#Backslash escapes and \\xxx hexadecimal style escapes are supported\n"
-#define FILE ".fishd"
+/**
+   Small greeting to show that fishd is running
+*/
+#define GREETING "#Fish universal variable daemon\n"
 
+/**
+   The name of the save file. The hostname is appended to this.
+*/
+#define FILE ".fishd."
 
+/**
+   Maximum length of hostname. Longer hostnames are truncated
+*/
+#define HOSTNAME_LEN 32
+
+/**
+   The list of connections to clients
+*/
 static connection_t *conn;
+
+/**
+   The socket to accept new clients on
+*/
 static int sock;
 
-
-int get_socket()
+/**
+   Connects to the fish socket
+*/
+static int get_socket()
 {
 	int s, len;
 	struct sockaddr_un local;
@@ -107,7 +129,10 @@ int get_socket()
 	return s;
 }
 
-void broadcast( int type, const wchar_t *key, const wchar_t *val )
+/**
+   Event handler. Broadcasts updates to all clients.
+*/
+static void broadcast( int type, const wchar_t *key, const wchar_t *val )
 {
 	connection_t *c;
 	message_t *msg;
@@ -136,7 +161,10 @@ void broadcast( int type, const wchar_t *key, const wchar_t *val )
 	}	
 }
 
-void daemonize()
+/**
+   Make program into a creature of the night.
+*/
+static void daemonize()
 {
 	/*
 	  Fork, and let parent exit
@@ -178,77 +206,75 @@ void daemonize()
 
 }
 
-
-void load()
+/**
+   Load or save all variables
+*/
+void load_or_save( int save)
 {
 	struct passwd *pw;
 	char *name;
 	char *dir = getenv( "HOME" );
+	char hostname[HOSTNAME_LEN];
+	connection_t c;
+	
 	if( !dir )
 	{
 		pw = getpwuid( getuid() );
 		dir = pw->pw_dir;
 	}
-		
-	name = malloc( strlen(dir)+ strlen(FILE)+ 2 );
+	
+	gethostname( hostname, HOSTNAME_LEN );
+	
+	name = malloc( strlen(dir)+ strlen(FILE)+ strlen(hostname) + 2 );
 	strcpy( name, dir );
 	strcat( name, "/" );
 	strcat( name, FILE );
+	strcat( name, hostname );
 	
-	debug( 1, L"Open file for loading: '%s'", name );
+	debug( 1, L"Open file for %s: '%s'", 
+		   save?"saving":"loading", 
+		   name );
 	
-	connection_t load;
-	load.fd = open( name, O_RDONLY);
-	
+	c.fd = open( name, save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
 	free( name );
 	
-	if( load.fd == -1 )
+	if( c.fd == -1 )
 	{
-		debug( 0, L"Could not open save file. No previous saves?" );
-	}
-	debug( 1, L"Load input file on fd %d", load.fd );
-	sb_init( &load.input );
-	memset (&load.wstate, '\0', sizeof (mbstate_t));
-	read_message( &load );
-	sb_destroy( &load.input );
-	close( load.fd );
-}
-
-void save()
-{
-	struct passwd *pw;
-	char *name;
-	char *dir = getenv( "HOME" );
-	if( !dir )
-	{
-		pw = getpwuid( getuid() );
-		dir = pw->pw_dir;
-	}
-		
-	name = malloc( strlen(dir)+ strlen(FILE)+ 2 );
-	strcpy( name, dir );
-	strcat( name, "/" );
-	strcat( name, FILE );
-	
-	debug( 1, L"Open file for saving: '%s'", name );
-	
-	connection_t save;
-	save.fd = open( name, O_CREAT | O_TRUNC | O_WRONLY);
-	free( name );
-
-	if( save.fd == -1 )
-	{
-		debug( 0, L"Could not open save file" );
+		debug( 1, L"Could not open load/save file. No previous saves?" );
 		wperror( L"open" );
-		exit(1);
+		
 	}
-	debug( 1, L"File open on fd %d'", save.fd );
-	q_init( &save.unsent );
-	enqueue_all( &save );
-	close( save.fd );
-	q_destroy( &save.unsent );
+	debug( 1, L"File open on fd %d", c.fd );
+
+	sb_init( &c.input );
+	memset (&c.wstate, '\0', sizeof (mbstate_t));
+	q_init( &c.unsent );
+
+	if( save )
+		enqueue_all( &c );
+	else
+		read_message( &c );
+
+	q_destroy( &c.unsent );
+	sb_destroy( &c.input );
+	close( c.fd );
+
 }
 
+static void load()
+{
+	load_or_save(0);
+}
+
+
+static void save()
+{
+	load_or_save(1);
+}
+
+/**
+   Do all sorts of boring initialization.
+*/
 static void init()
 {
 	program_name=L"fishd";
@@ -267,6 +293,7 @@ static void init()
 	
 	load();	
 }
+
 
 int main( int argc, char ** argv )
 {
@@ -362,7 +389,7 @@ int main( int argc, char ** argv )
 				  won't lose everything on a system crash
 				*/
 				update_count++;
-				if( update_count >= 8 )
+				if( update_count >= 64 )
 				{
 					save();
 					update_count = 0;

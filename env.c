@@ -42,7 +42,7 @@
 /**
    Command used to start fishd
 */
-#define FISHD_CMD L"if which fishd >/dev/null ^/dev/null; fishd ^/tmp/fish.%s.log; end"
+#define FISHD_CMD L"fishd ^/tmp/fish.%s.log"
 
 /**
    At init, we read all the environment variables from this array 

@@ -1,3 +1,8 @@
+2005-09-22  Axel Liljencrantz  <axel@liljencrantz.se>
+
+	* env_universal.c, env_universal_common.c, env.c, fishd.c, builtin_set.c, exec.c, init/fish_interactive.fish: Exportable universal variables
+
+
 2005-09-20  Axel Liljencrantz  <axel@liljencrantz.se>
 
 	* exec.c, reader.c (exec_read_io_buffer, run_pager): Don't leak file descriptors when showing completion pager

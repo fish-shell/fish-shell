@@ -1483,6 +1483,13 @@ static void set_signal_handlers()
 	sigaction( SIGTTOU, &act, 0);
 	sigaction( SIGCHLD, &act, 0);
 
+	/*
+	  Ignore sigpipe, it is generated if fishd dies, but we can
+	  recover.
+	*/
+	act.sa_handler=SIG_IGN;
+	sigaction( SIGPIPE, &act, 0);
+	
 	if( is_interactive )
 	{
 

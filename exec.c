@@ -61,6 +61,20 @@ pid_t getpgid( pid_t pid );
 */
 #define FORK_ERROR L"Could not create child process - exiting"
 
+
+static void close_loop( int fd )
+{
+	while( close(fd) == -1 )
+	{
+		if( errno != EINTR )
+		{
+			debug( 1, FD_ERROR, fd );
+			wperror( L"close" );
+		}
+	}
+}
+
+
 /**
    Make sure the fd used by this redirection is not used by i.e. a pipe. 
 */
@@ -102,7 +116,7 @@ static void handle_child_io( io_data_t *io )
 {
 
 	if( env_universal_server.fd >= 0 )
-		close( env_universal_server.fd );
+		close_loop( env_universal_server.fd );
 
 	for( ; io; io=io->next )
 	{
@@ -122,8 +136,11 @@ static void handle_child_io( io_data_t *io )
 		}
 				
 		
-		if( close(io->fd) == -1 )
+		while( close(io->fd) == -1 )
 		{
+			if( errno != EINTR )
+				break;
+			
 /*			debug( 1, 
 				   FD_ERROR,
 				   io->fd );
@@ -155,14 +172,7 @@ static void handle_child_io( io_data_t *io )
 						wperror( L"dup2" );
 						exit(1);
 					}
-					if( close( tmp ) == -1 )
-					{
-						debug( 1, 
-							   FD_ERROR,
-							   io->fd );
-						wperror( L"close" );
-						exit(1);
-					}
+					close_loop( tmp );
 				}				
 				break;
 			case IO_FD:
@@ -203,11 +213,11 @@ static void handle_child_io( io_data_t *io )
 
 				if( fd_to_dup )
 				{
-					close( io->pipe_fd[0]);
-					close( io->pipe_fd[1]);
+					close_loop( io->pipe_fd[0]);
+					close_loop( io->pipe_fd[1]);
 				}
 				else
-					close( io->pipe_fd[fd_to_dup] );
+					close_loop( io->pipe_fd[fd_to_dup] );
 				
 /*				
   if( close( io[i].pipe_fd[ io->fd ] ) == -1 )
@@ -314,37 +324,44 @@ static int has_fd( io_data_t *d, int fd )
 void exec_read_io_buffer( io_data_t *d )
 {
 
-	if( close( d->pipe_fd[1] ) == -1 )
-	{
-		debug( 1, PIPE_ERROR );
-		wperror( L"close" );
-	}
+	close_loop(d->pipe_fd[1] );
 	
 	if( d->io_mode == IO_BUFFER )
-	{
-		
-		if( fcntl( d->pipe_fd[0], F_SETFL, 0 ) )
+	{		
+/*		if( fcntl( d->pipe_fd[0], F_SETFL, 0 ) )
 		{
 			wperror( L"fcntl" );
 			return;
 		}
-
+*/	
 		debug( 3, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
 		
 		while(1)
 		{
 			char b[4096];
 			int l;
-			l=read_blocked( d->pipe_fd[0], b, 4096 );			
+			l=read_blocked( d->pipe_fd[0], b, 4096 );
 			if( l==0 )
 			{
 				break;
 			}
 			else if( l<0 )
 			{
-				debug( 1, 
-					   L"An error occured while reading output from code block on fd %d", d->pipe_fd[0] );
-				wperror( L"exec_read_io_buffer" );				
+				/*
+				  exec_read_io_buffer is only called on jobs that have
+				  exited, and will therefore never block. But a broken
+				  pipe seems to cause some flags to reset, causing the
+				  EOF flag to not be set. Therefore, EAGAIN is ignored
+				  and we exit anyway.
+				*/
+				if( errno != EAGAIN )
+				{
+					debug( 1, 
+						   L"An error occured while reading output from code block on fd %d", 
+						   d->pipe_fd[0] );
+					wperror( L"exec_read_io_buffer" );				
+				}
+				
 				break;				
 			}
 			else
@@ -375,7 +392,9 @@ io_data_t *exec_make_io_buffer()
 		free( buffer_redirect );
 		return 0;
 	}
-	else if( fcntl( buffer_redirect->pipe_fd[0], F_SETFL, O_NONBLOCK ) )
+	else if( fcntl( buffer_redirect->pipe_fd[0],
+					F_SETFL,
+					O_NONBLOCK ) )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror( L"fcntl" );
@@ -388,12 +407,8 @@ io_data_t *exec_make_io_buffer()
 
 void exec_free_io_buffer( io_data_t *io_buffer )
 {
-	if( close( io_buffer->pipe_fd[0] ) == -1)
-	{
-		debug( 1, PIPE_ERROR );
-		wperror( L"close" );
-		
-	}
+	
+	close_loop( io_buffer->pipe_fd[0] );
 
 	/*
 	  Dont free fd for writing. This should already be free'd before calling exec_read_io_buffer on the buffer
@@ -457,13 +472,6 @@ static io_data_t *io_transmogrify( io_data_t * in )
 			}	
 
 			out->old_fd = fd;
-/*
-  fwprintf( stderr,
-  L"Replacing call to redirect %d to file '%ls' with call to redirect to fd %d\n", 
-  in->fd,
-  in->filename,
-  fd );			
-*/		
 			break;
 		}
 	}
@@ -484,13 +492,7 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 	switch( in->io_mode )
 	{
 		case IO_FILE:
-			if( close( out->old_fd ) == -1 )
-			{
-				debug( 1, 
-					   FILE_ERROR,
-					   in->filename );				
-				wperror( L"close" );				
-			}
+			close_loop( out->old_fd );
 			break;
 	}	
 	free(out);
@@ -567,11 +569,6 @@ static void io_print( io_data_t *io )
 
 static int handle_new_child( job_t *j, process_t *p )
 {
-	/* 
-	   If we do not output to stdout, builtin IO will not appear. 
-	   I have no idea why...
-	*/
-	//fwprintf( stdout, L"" );
 	
 	if(is_interactive  && !is_subshell && !is_block)
 	{
@@ -664,10 +661,8 @@ void exec( job_t *j )
 	io_data_t *tmp;
 
 	io_data_t *io_buffer =0;
-	
-//	if( j->job_id > 3 )
-	
-	debug( 2, L"Exec job %ls with id %d", j->command, j->job_id );	
+		
+	debug( 3, L"Exec job %ls with id %d", j->command, j->job_id );	
 	
 	if( j->first_process->type==INTERNAL_EXEC )
 	{
@@ -694,25 +689,12 @@ void exec( job_t *j )
 	
 	if( block_io )
 	{
-//		fwprintf( stderr, L"Before\n" );		
-//		io_print( j->io );		
-
 		if( j->io )
 			j->io = io_add( io_duplicate(block_io), j->io );
 		else
 			j->io=io_duplicate(block_io);				
-
-//		fwprintf( stderr, L"After\n" );
-//		io_print( j->io );		
-
 	}
 	
-/*
-  if true;
-  read foo; read bar; read baz;
-  end <foo.txt
-*/
-
 	j->io = io_add( j->io, &pipe_write );
 	
 	for (p = j->first_process; p; p = p->next)
@@ -722,12 +704,10 @@ void exec( job_t *j )
 
 		if( p->type == EXTERNAL )
 			env_export_arr( 1 );
-
 		
 		/*
 		  Set up fd:s that will be used in the pipe 
 		*/
-//		fwprintf( stderr, L"Create process %ls\n", p->actual_cmd );
 		
 		if( p == j->first_process->next )
 		{
@@ -924,7 +904,7 @@ void exec( job_t *j )
 				if( close_stdin )
 				{
 //					fwprintf( stderr, L"Close builtin_stdin\n" );					
-					close( builtin_stdin );
+					close_loop( builtin_stdin );
 				}				
 				break;				
 			}
@@ -1146,7 +1126,7 @@ void exec( job_t *j )
 		   Close the pipe the current process uses to read from the previous process_t 
 		*/
 		if( pipe_read.pipe_fd[0] >= 0 )
-			close( pipe_read.pipe_fd[0] );
+			close_loop( pipe_read.pipe_fd[0] );
 		/* 
 		   Set up the pipe the next process uses to read from the current process_t 
 		*/
@@ -1159,15 +1139,11 @@ void exec( job_t *j )
 		*/
 		if( p->next )
 		{
-			if( close(mypipe[1]) != 0 )
-			{
-				debug( 1, PIPE_ERROR );
-				wperror( L"close" );
-			}
+			close_loop(mypipe[1]);
 		}		
 	}
 
-//	fwprintf( stderr, L"Job is constructedk\n" );
+	debug( 3, L"Job is constructed" );
 
 	j->io = io_remove( j->io, &pipe_read );
 	j->io = io_remove( j->io, &pipe_write );
@@ -1175,10 +1151,7 @@ void exec( job_t *j )
 	for( tmp = block_io; tmp; tmp=tmp->next )
 		j->io = io_remove( j->io, tmp );
 	
-
-//	assert( !job_is_stopped(j));
 	j->constructed = 1;
-//	ggg( j->command, j->io );
 
 	if( !j->fg )
 	{

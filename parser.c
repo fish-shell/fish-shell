@@ -1762,7 +1762,7 @@ static void eval_job( tokenizer *tok )
 		}
 	}
 	
-	if( is_subshell )
+	if( is_subshell || is_block )
 		job_do_notification();
 //	debug( 2, L"end eval_job()\n" );
 }

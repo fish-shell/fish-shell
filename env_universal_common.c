@@ -313,7 +313,7 @@ int try_send( message_t *msg,
 				
 			default:
 				debug( 1,
-					   L"Error while sending message to fd %d. Closing connection",
+					   L"Error while sending universal variable message to fd %d. Closing connection",
 					   fd );
 				wperror( L"write" );
 				
@@ -348,8 +348,6 @@ void try_send_all( connection_t *c )
 				return;
 								
 			case -1:
-				debug( 1,
-					   L"Socket dead!!!" );	
 				c->killme = 1;
 				return;
 		}

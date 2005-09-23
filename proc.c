@@ -606,12 +606,12 @@ static void handle_child_status( pid_t pid, int status )
 		{
 			block_t *c = current_block;
 			
-				snprintf( mess,
-						  MESS_SIZE,
-						  "Process %ls from job %ls exited through signal, breaking loops\n",
-						  p->actual_cmd,
-						  j->command );
-				write( 2, mess, strlen(mess ));
+			snprintf( mess,
+					  MESS_SIZE,
+					  "Process %ls from job %ls exited through signal, breaking loops\n",
+					  p->actual_cmd,
+					  j->command );
+			write( 2, mess, strlen(mess ));
 
 			while( c )
 			{
@@ -946,12 +946,12 @@ static void read_try( job_t *j )
 	
 	if( buff )
 	{
-		//			fwprintf( stderr, L"proc::read_try('%ls')\n", j->command );
+		debug( 3, L"proc::read_try('%ls')\n", j->command );
 		while(1)
 		{
 			char b[BUFFER_SIZE];
 			int l;
-			//fwprintf( stderr, L"read...\n");
+			
 			l=read_blocked( buff->pipe_fd[0], b, BUFFER_SIZE );
 			if( l==0 )
 			{
@@ -964,8 +964,7 @@ static void read_try( job_t *j )
 					debug( 1, 
 						   L"An error occured while reading output from code block" );
 					wperror( L"read_try" );			
-				}
-				
+				}				
 				break;
 			}
 			else
@@ -987,7 +986,6 @@ void job_continue (job_t *j, int cont)
 	first_job = j;
 	j->notified = 0;
 	
-//	if( is_interactive )	
 	debug( 3,
 		   L"Continue on job %d (%ls), %ls, %ls",
 		   j->job_id, 
@@ -1023,7 +1021,6 @@ void job_continue (job_t *j, int cont)
 				
 				if( cont )
 				{  
-//					fwprintf( stderr, L"tcsetattr\n" );
 					while( 1 )
 					{
 						if( tcsetattr (0, TCSADRAIN, &j->tmodes))
@@ -1045,82 +1042,78 @@ void job_continue (job_t *j, int cont)
 				}
 			}
 		}
-	}
 
-	/* 
-	   Send the job a continue signal, if necessary.  
-	*/
-	if( cont )
-	{
-		process_t *p;
-		for( p=j->first_process; p; p=p->next )
-			p->stopped=0;
-		for( p=j->first_process; p; p=p->next )
-		{
-			if (kill ( p->pid, SIGCONT) < 0)
-			{
-				wperror (L"kill (SIGCONT)");
-				return;
-			}		
-		}
-	}
-	
-	if( j->fg )
-	{
-		int quit = 0;
-		
 		/* 
-		   Wait for job to report. Looks a bit ugly because it has to
-		   handle the possibility that a signal is dispatched while
-		   running job_is_stopped().
+		   Send the job a continue signal, if necessary.  
 		*/
-        /*
-		  fwprintf( stderr, L"Wait for %ls (%d)\n", j->command, j->pgid );
-		*/
-		while( !quit )
+		if( cont )
 		{
-			do
+			process_t *p;
+			for( p=j->first_process; p; p=p->next )
+				p->stopped=0;
+			for( p=j->first_process; p; p=p->next )
 			{
-				got_signal = 0;
-				quit = job_is_stopped( j ) || job_last_is_completed( j );
-			}
-			while( got_signal && !quit );
-			if( !quit )
-			{
-					
-				debug( 3, L"select_try()" );	
-				switch( select_try(j) )
+				if (kill ( p->pid, SIGCONT) < 0)
 				{
-					case 1:			
-					{
-						debug( 3, L"1" );	
-						read_try( j );
-						break;
-					}
-					
-					case -1:
-					{
-						/*
-						  If there is no funky IO magic, we can use
-						  waitpid instead of handling child deaths
-						  through signals. This gives a rather large
-						  speed boost (A factor 3 startup time
-						  improvement on my 300 MHz machine) on
-						  short-lived jobs.
-						*/
-						debug( 3, L"-1" );	
-						int status;						
-						pid_t pid = waitpid(-1, &status, WUNTRACED );
-						if( pid > 0 )
-							handle_child_status( pid, status );
-						break;
-					}
-								
-				}
-			}					
+					wperror (L"kill (SIGCONT)");
+					return;
+				}		
+			}
 		}
-	}
+	
+		if( j->fg )
+		{
+			int quit = 0;
 		
+			/* 
+			   Wait for job to report. Looks a bit ugly because it has to
+			   handle the possibility that a signal is dispatched while
+			   running job_is_stopped().
+			*/
+			while( !quit )
+			{
+				do
+				{
+					got_signal = 0;
+					quit = job_is_stopped( j ) || job_last_is_completed( j );
+				}
+				while( got_signal && !quit );
+				if( !quit )
+				{
+					
+					debug( 3, L"select_try()" );	
+					switch( select_try(j) )
+					{
+						case 1:			
+						{
+							read_try( j );
+							break;
+						}
+					
+						case -1:
+						{
+							/*
+							  If there is no funky IO magic, we can use
+							  waitpid instead of handling child deaths
+							  through signals. This gives a rather large
+							  speed boost (A factor 3 startup time
+							  improvement on my 300 MHz machine) on
+							  short-lived jobs.
+							*/
+							int status;						
+							pid_t pid = waitpid(-1, &status, WUNTRACED );
+							if( pid > 0 )
+								handle_child_status( pid, status );
+							break;
+						}
+								
+					}
+				}					
+			}
+		}
+	
+	}
+			
 	if( j->fg )
 	{
 		
@@ -1141,8 +1134,7 @@ void job_continue (job_t *j, int cont)
 					debug( 3, L"Set status of %ls to %d", j->command, WEXITSTATUS(p->status) );
 					proc_set_last_status( j->negate?(WEXITSTATUS(p->status)?0:1):WEXITSTATUS(p->status) );
 				}
-			}
-			
+			}			
 		}
 		/* 
 		   Put the shell back in the foreground.  
@@ -1202,7 +1194,6 @@ void job_continue (job_t *j, int cont)
 			}
 		}
 	}
-//	fwprintf( stderr, L"Job_continue end\n" );
 }
 
 void proc_sanity_check()

@@ -228,13 +228,15 @@ int env_universal_read_all()
 			return 0;
 
 		debug( 2, L"Get new fishd connection" );
-
+		
 		init = 0;
 		env_universal_server.fd = get_socket(1);
 		init = 1;
 
 		if( env_universal_server.fd >= 0 )
+		{
 			env_universal_barrier();
+		}
 	}
 	
 	if( env_universal_server.fd != -1 )
@@ -252,7 +254,6 @@ int env_universal_read_all()
 
 wchar_t *env_universal_get( const wchar_t *name )
 {
-	debug( 3, L"env_universal_get( %ls )", name );
 	if( !init)
 		return 0;
 	

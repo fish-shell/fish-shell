@@ -150,6 +150,17 @@ extern int is_login;
 /** Linked list of all jobs */
 extern job_t *first_job;   
 
+/**
+   Whether a universal variable barrier roundtrip has already been
+   made for this command. Such a roundtrip only needs to be done once
+   on a given command, unless a unversal variable value is
+   changed. Once this has been done, this variable is set to 1, so
+   that no more roundtrips need to be done.
+
+   Both setting it to one when it should be zero and the opposite may
+   cause concurrency bugs.
+*/
+extern int proc_had_barrier;
 
 extern pid_t proc_last_bg_pid;
 

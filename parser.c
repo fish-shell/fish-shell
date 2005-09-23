@@ -1624,6 +1624,8 @@ static void eval_job( tokenizer *tok )
 			j->fg=1;
 			j->constructed=0;
 			j->skip_notification = is_subshell;
+
+			proc_had_barrier=0;
 			
 			if( is_interactive )
 			{

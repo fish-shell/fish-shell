@@ -130,14 +130,6 @@ static buffer_t export_buffer;
 static int has_changed = 1;
 
 /**
-   Number of variables marked for export. The actual number of
-   variables actually exported may be lower because of variable
-   scoping rules.
-*/
-static int export_count=0;
-
-
-/**
    Free hash key and hash value
 */
 static void clear_hash_entry( const void *key, const void *data )
@@ -257,13 +249,13 @@ void env_init()
 			*val = L'\0';
 			val++;
 			pos=val;
+			//fwprintf( stderr, L"Set $%ls to %ls\n", key, val );
 			while( *pos )
 			{
 				if( *pos == L':' )
 					*pos = ARRAY_SEP;
 				pos++;
 			}
-//			fwprintf( stderr, L"Set $%ls to %ls\n", key, val );
 			
 			env_set( key, val, ENV_EXPORT | ENV_GLOBAL );
 		}		
@@ -402,6 +394,9 @@ void env_set( const wchar_t *key,
 		}
 		else
 		{
+			if( !proc_had_barrier)
+				env_universal_barrier();
+
 			if( env_universal_get( key ) )
 			{
 				int export = 0;
@@ -437,7 +432,6 @@ void env_set( const wchar_t *key,
 	if( var_mode & ENV_EXPORT)
 	{
 		entry->export = 1;
-		export_count++;
 		has_changed_new = 1;		
 	}
 	else
@@ -455,11 +449,12 @@ void env_set( const wchar_t *key,
 	if( free_val )
 		free((void *)val);
 
-//	if( has_changed_new && !has_changed_old )
-//		fwprintf( stderr, L"Reexport after setting %ls to %ls\n", key, val );	
 		
-	has_changed = has_changed_old | has_changed_new;
-	
+	has_changed = has_changed_old || has_changed_new;
+
+/*	if( has_changed_new && !has_changed_old )
+		fwprintf( stderr, L"Reexport after setting %ls to %ls, %d %d %d\n", key, val, has_changed_old, has_changed_new, has_changed );	
+*/
 }
 
 /**
@@ -482,7 +477,6 @@ static int try_remove( env_node_t *n,
 		var_entry_t * v = (var_entry_t *)old_val;
 		if( v->export )
 		{
-			export_count --;
 			has_changed = 1;
 		}
 		
@@ -562,6 +556,8 @@ wchar_t *env_get( const wchar_t *key )
 		else
 			env = env->next;
 	}	
+	if( !proc_had_barrier)
+		env_universal_barrier();
 	return env_universal_get( key );
 }
 
@@ -589,7 +585,7 @@ void env_push( int new_scope )
 	node->new_scope=new_scope;
 	if( new_scope )
 	{
-		has_changed = local_scope_exports(top);
+		has_changed |= local_scope_exports(top);
 	}
 	top = node;	
 
@@ -611,7 +607,7 @@ void env_pop()
 
 		if( killme->new_scope )
 		{
-			has_changed = killme->export || local_scope_exports( killme->next );
+			has_changed |= killme->export || local_scope_exports( killme->next );
 		}
 		
 		top = top->next;
@@ -770,9 +766,11 @@ static void export_func2( const void *k, const void *v, void *aux )
 
 char **env_export_arr( int recalc)
 {
-	if( recalc )
+	if( recalc && !proc_had_barrier)
 		env_universal_barrier();
-		
+
+//	debug( 1, L"env_export_arr() %d %d", has_changed, env_universal_update );
+	
 	if( has_changed || env_universal_update )
 	{
 		array_list_t uni;
@@ -782,7 +780,7 @@ char **env_export_arr( int recalc)
 		int pos=0;		
 		int i;
 
-		debug( 3, L"env_export_arr()" );
+//		debug( 1, L"env_export_arr() recalc" );
 				
 		hash_init( &vals, &hash_wcs_func, &hash_wcs_cmp );
 		

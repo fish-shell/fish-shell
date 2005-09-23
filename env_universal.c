@@ -259,9 +259,7 @@ wchar_t *env_universal_get( const wchar_t *name )
 	
 	if( !name )
 		return 0;
-	
-	env_universal_barrier();
-	
+
 	return env_universal_common_get( name );
 }
 

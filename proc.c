@@ -69,7 +69,7 @@ int is_interactive_session=0;
 int is_subshell=0;
 int is_block=0;
 int is_login=0;
-
+int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
 
 io_data_t *io_add( io_data_t *list, io_data_t *element )

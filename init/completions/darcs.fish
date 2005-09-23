@@ -4,7 +4,10 @@
 # Incomplete, the number of switches for darcs is _huge_
 #
 
-#Test if a non-switch argument has been given
+#
+# Test if a non-switch argument has been given
+#
+
 function __fish_use_subcommand 
 	set -l cmd -- (commandline -poc)
 	set -e cmd[1]
@@ -17,6 +20,10 @@ function __fish_use_subcommand
 	end
 	return 0
 end
+
+#
+# If no subcommand has been specified, complete using all available subcommands
+#
 
 complete -c darcs -n '__fish_use_subcommand' -xa "
 	initialize\t'Create new project'
@@ -50,13 +57,19 @@ complete -c darcs -n '__fish_use_subcommand' -xa "
 	repair\t'Repair the corrupted repository'
 "
 
+#
+# These switches are universal
+#
 complete -c darcs -s h -l help -d "shows brief description of command and its arguments"
 complete -c darcs -l disable -d "Disable this command"
 complete -c darcs -l repodir -d "Specify the repository directory in which to run" -x -a '(__fish_complete_directory (commandline -ct))'
 complete -c darcs -s v -l verbose -d "give verbose output"
 
-set record_opt --  -c darcs -n 'contains record (commandline -poc)'
+#
+# Here follows a huge list of subcommand-specific completions
+#
 
+set record_opt --  -c darcs -n 'contains record (commandline -poc)'
 complete $record_opt -s m -l patch-name -d "Name of patch" -x
 complete $record_opt -s A -l author -d "Specify author id" -x
 complete $record_opt -l logfile -d "Give patch name and comment in file" -r
@@ -133,3 +146,56 @@ complete $apply_opt -l remove-test-directory -d "remove the test directory"
 complete $apply_opt -l set-scripts-executable -d "make scripts executable"
 complete $apply_opt -l dont-set-scripts-executable -d "don"\'"t make scripts executable"
 set -e apply_opt
+
+set check_opt --  -c darcs -n 'contains check (commandline -poc)'
+complete $check_opt -s v -l verbose -d "give verbose output"
+complete $check_opt -s q -l quiet -d "suppress informational output"
+complete $check_opt -l complete -d "check the entire repository"
+complete $check_opt -l partial -d "check patches since latest checkpoint"
+complete $check_opt -l standard-verbosity -d "neither verbose nor quiet output"
+complete $check_opt -l no-test -d "don"\'"t run the test script"
+complete $check_opt -l test -d "run the test script"
+complete $check_opt -l leave-test-directory -d "don"\'"t remove the test directory"
+complete $check_opt -l remove-test-directory -d "remove the test directory"
+set -e check_opt
+
+set mv_opt --  -c darcs -n 'contains mv (commandline -poc)'
+complete $mv_opt -s v -l verbose -d "give verbose output"
+complete $mv_opt -l case-ok -d "don"\'"t refuse to add files differing only in case"
+complete $mv_opt -l standard-verbosity -d "don"\'"t give verbose output"
+set -e mv_opt
+
+set send_opt --  -c darcs -n 'contains send (commandline -poc)'
+complete $send_opt -s v -l verbose -d "give verbose output"
+complete $send_opt -s q -l quiet -d "suppress informational output"
+complete $send_opt -xs p -l patches -d "select patches matching REGEXP"
+complete $send_opt -xs t -l tags -d "select tags matching REGEXP"
+complete $send_opt -s a -l all -d "answer yes to all patches"
+complete $send_opt -xs A  -l author -d "specify author id"
+complete $send_opt -rs o -l output -d "specify output filename"
+complete $send_opt -s u -l unified -d "output patch in a darcs-specific format similar to diff -u"
+complete $send_opt -s s -l summary -d "summarize changes"
+complete $send_opt -l standard-verbosity -d "neither verbose nor quiet output"
+complete $send_opt -xl matches -d "select patches matching PATTERN"
+complete $send_opt -l interactive -d "prompt user interactively"
+complete $send_opt -xl from -d "specify email address"
+complete $send_opt -xl to -d "specify destination email"
+complete $send_opt -xl cc -d "mail results to additional EMAIL(s). Requires --reply"
+complete $send_opt -l sign -d "sign the patch with your gpg key"
+complete $send_opt -xl sign-as -d "sign the patch with a given keyid"
+complete $send_opt -rl sign-ssl -d "sign the patch using openssl with a given private key"
+complete $send_opt -l dont-sign -d "do not sign the patch"
+complete $send_opt -l dry-run -d "don"\'"t actually take the action"
+complete $send_opt -l no-summary -d "don"\'"t summarize changes"
+complete $send_opt -rl context -d "send to context stored in FILENAME"
+complete $send_opt -l edit-description -d "edit the patch bundle description"
+complete $send_opt -l set-default -d "set default repository [DEFAULT]"
+complete $send_opt -l no-set-default -d "don"\'"t set default repository"
+complete $send_opt -rl sendmail-command -d "specify sendmail command"
+set -e send_opt
+
+set init_opt --  -c darcs -n 'contains initialize (commandline -poc)'
+complete $init_opt -l plain-pristine-tree -d "Use a plain pristine tree [DEFAULT]"
+complete $init_opt -l no-pristine-tree -d "Use no pristine tree"
+set -e init_opt
+

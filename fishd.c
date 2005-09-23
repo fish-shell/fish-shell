@@ -242,7 +242,6 @@ void load_or_save( int save)
 	{
 		debug( 1, L"Could not open load/save file. No previous saves?" );
 		wperror( L"open" );
-		
 	}
 	debug( 1, L"File open on fd %d", c.fd );
 

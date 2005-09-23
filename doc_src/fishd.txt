@@ -1,0 +1,19 @@
+
+\section fishd fishd - Universal variable daemon
+
+\subsection fishd-synopsis Synopsis
+ <tt>fishd [SECTION]</tt>
+
+\subsection fishd-description Description
+
+The \c fishd daemon is used to load, save and distribute universal
+variable information. fish automtically connects to fishd via a socket
+on startup. If no instance of fishd is running, fish spawns a new
+fishd instance. fishd will create a socket in /tmp, and wait for
+incoming connections from universal variable clents, such as fish,
+When no clients are connected, fishd will automatically shut down.
+
+
+\subecion fishd-files Files
+
+~/.fishd permenent storage location for universal variale data

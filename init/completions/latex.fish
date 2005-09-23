@@ -1,0 +1,1 @@
+complete -y tex

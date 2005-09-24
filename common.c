@@ -71,6 +71,9 @@ char *profile=0;
 
 wchar_t *program_name;
 
+int debug_level=1;
+
+
 static int block_count=0;
 
 void common_destroy()
@@ -761,7 +764,7 @@ void debug( int level, wchar_t *msg, ... )
 {
 	va_list va;
 
-	if( level > DEBUG_LEVEL )
+	if( level > debug_level )
 		return;
 
 	va_start( va, msg );

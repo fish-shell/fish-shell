@@ -154,12 +154,19 @@ static void free_process( process_t *p )
 	if( p==0 )
 		return;
 
+	
+
 	free_process( p->next );
+	debug( 3, L"Free process %ls", p->actual_cmd );
 	free( p->actual_cmd );
 	if( p->argv != 0 )
 	{
+		debug( 3, L"Process has argument vector" );
 		for( arg=p->argv; *arg; arg++ )
+		{
+			debug( 3, L"Free argument %ls", *arg );
 			free( *arg );
+		}		
 		free(p->argv );
 	}
 	free( p );

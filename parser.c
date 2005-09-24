@@ -152,7 +152,14 @@ void parser_push_block( int type )
 	new->outer = current_block;
 	new->type = (current_block && current_block->skip)?FAKE:type;
 
+	/*
+	  New blocks should be skipped if the outer block is skipped,
+	  except TOP ans SUBST block, which open up new environments
+	*/
 	new->skip=current_block?current_block->skip:0;
+	if( type == TOP || type == SUBST )
+		new->skip = 0;
+	
 
 	new->loop_status=LOOP_NORMAL;
 
@@ -910,23 +917,20 @@ static void parse_job_main_loop( process_t *p,
 						   tok_get_pos( tok ) );
 					return;					
 				}
-
+				
 				p->argv = list_to_char_arr( args );
 				p->next = calloc( 1, sizeof( process_t ) );
 				if( p->next == 0 )
 				{
 					die_mem();
-					
 				}
 				tok_next( tok );
 				if( !parse_job( p->next, j, tok ))
 				{
 					/*
-					  Do not free args content on error - it is
-					  already in p->argv and will be freed by job_free
-					  later on.
+					  Don't do anything on failiure. parse_job will notice the error flag beeing set
 					*/
-					al_truncate( args, 0 );
+					
 				}
 				is_finished = 1;
 				break;
@@ -950,14 +954,21 @@ static void parse_job_main_loop( process_t *p,
 
 				if( current_block->skip )
 				{
+					/*
+					  If this command should be skipped, we do not expand the arguments
+					*/
 					skip=1;
+					
+					/*
+					  But if this is in fact a case statement, then it should be evaluated
+					*/
+					
 					if( (current_block->type == SWITCH) &&
 						(wcscmp( al_get( args, 0), L"case" )==0) &&
-						p->type )
+						p->type == INTERNAL_BUILTIN )
 					{
 						skip=0;
 					}
-
 				}
 				
 				if( !skip )
@@ -972,7 +983,7 @@ static void parse_job_main_loop( process_t *p,
 						p->type = INTERNAL_BUILTIN;
 						wcscpy( p->actual_cmd, L"count" );
 					}
-
+					
 					if( !expand_string( wcsdup(tok_last( tok )),
 										args,
 										0 )
@@ -986,7 +997,6 @@ static void parse_job_main_loop( process_t *p,
 									   tok_last(tok),
 									   tok_get_pos( tok ) );
 						}
-
 					}
 				}
 
@@ -1731,6 +1741,9 @@ static void eval_job( tokenizer *tok )
 			}
 			else
 			{
+				/*
+				  This job could not be properly parsed. We free it instead.
+				*/
 				job_free( j );
 			}
 			break;

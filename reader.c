@@ -1262,6 +1262,9 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 
 	exec_read_io_buffer( out );
 	
+	sb_destroy( &cmd );
+	
+
 	int nil=0;	
 	b_append( out->out_buffer, &nil, 1 );
 	

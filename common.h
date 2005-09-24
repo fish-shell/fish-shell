@@ -19,11 +19,6 @@ typedef char tputs_arg_t;
 #define MAX_UTF8_BYTES 6
 
 /**
-   Amount of debug info to show. Higher level means more debug info will be displayed
-*/
-#define DEBUG_LEVEL 1
-
-/**
    Color code for set_color. Does not update the color.
 */
 
@@ -46,6 +41,11 @@ extern wchar_t ellipsis_char;
    The maximum number of charset convertion errors to report
 */
 extern int error_max;
+
+/**
+   The verbosity of fish
+*/
+extern int debug_level;
 
 /**
    Profiling flag. True if commands should be profiled.

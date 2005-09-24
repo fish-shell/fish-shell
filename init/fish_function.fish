@@ -212,7 +212,7 @@ function prompt_pwd -d "Print the current working directory, ellipsise it if it 
 				set ellipsis \u2026
 			end
 		end
-		printf %s%s $ellipsis (echo $wd|cut -c (echo $len-$max_width-1|bc)-)
+		printf %s%s $ellipsis (echo $wd|cut -c (echo $len-$max_width-1|bc)- ^/dev/null )
 	else
 		echo $wd
 	end
@@ -226,7 +226,7 @@ function pwd -d "Print working directory"
 	set out (command pwd $argv)
 	if echo $out| grep \^$HOME >/dev/null
 		printf \~
-		echo $out |cut -b (echo $HOME|wc -c)-
+		echo $out |cut -b (echo $HOME|wc -c)- ^/dev/null
 	else
 		printf "%s\n" $out
 	end

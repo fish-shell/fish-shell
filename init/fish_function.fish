@@ -536,20 +536,27 @@ end
 
 function __type_help -d "Help for the type shellscript function"
 
-echo \ttype type - Indicate how a name would be interpreted if used as a command name
+set bullet \*
+if count $LANG >/dev/null
+	if test (expr match $LANG ".*UTF") -gt 0
+		set bullet \u2022
+	end
+end
+
+echo \ttype - Indicate how a name would be interpreted if used as a \n\tcommand name
 echo (__bold Synopsis)
 echo \t(set_color $fish_color_command)type(set_color normal) [OPTIONS] name [name ...]
 echo
 echo (__bold Description)
 echo
-echo \tWith no options, indicate how each name would be interpreted if used as a command name.  
+echo \tWith no options, indicate how each name would be interpreted if \n\tused as a command name.  
 echo
-echo \t\* (__bold -h) or (__bold --help) print this message
-echo \t\* (__bold -a) or (__bold --all) print all of possible definitions of the specified names
-echo \t\* (__bold -f) or (__bold --no-functions) supresses function and builtin lookup
-echo \t\* (__bold -t) or (__bold --type) print a string which is one of alias, keyword, function, builtin, or file if name is an alias, shell reserved word, function, builtin, or disk file, respectively
-echo \t\* (__bold -p) or (__bold --path) either return the name of the disk file that would be executed if name were specified as a command name, or nothing if ‘‘type  -t  name’’ would  not  return  file
-echo \t\* (__bold -P) or (__bold --force-path) either return the name of the disk file that would be executed if name were specified as a command name, or nothing no file with the spacified name could be found in the PATH
+echo \t$bullet (__bold -h) or (__bold --help) print this message
+echo \t$bullet (__bold -a) or (__bold --all) print all of possible definitions of the specified \n\t\ \ names
+echo \t$bullet (__bold -f) or (__bold --no-functions) supresses function and builtin lookup
+echo \t$bullet (__bold -t) or (__bold --type) print a string which is one of alias, keyword, \n\t\ \ function, builtin, or file if name is an alias, shell \n\t\ \ reserved word, function, builtin, or disk file, respectively
+echo \t$bullet (__bold -p) or (__bold --path) either return the name of the disk file that would \n\t\ \ be executed if name were specified as a command name, or nothing \n\t\ \ if ‘‘type  -t  name’’ would  not  return  file
+echo \t$bullet (__bold -P) or (__bold --force-path) either return the name of the disk file that \n\t\ \ would be executed if name were specified as a command name, \n\t\ \ or nothing no file with the spacified name could be found \n\t\ \ in the PATH
 echo
 echo (__bold Example)
 echo

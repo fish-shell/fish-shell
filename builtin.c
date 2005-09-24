@@ -35,6 +35,7 @@
 #include <signal.h>
 #include <wctype.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "config.h"
 #include "util.h"

@@ -175,12 +175,16 @@ wchar_t input_common_readch( int timed )
 		while(1)
 		{
 			wint_t b = readb();
+			char bb;
+			
 			int sz;
 			
 			if( b == R_NULL )
 				return R_NULL;
 
-			sz = mbrtowc( &res, &b, 1, &state );
+			bb=b;
+			
+			sz = mbrtowc( &res, &bb, 1, &state );
 			
 			switch( sz )
 			{

@@ -78,11 +78,7 @@ int highlight_get_color( int highlight )
 		return FISH_COLOR_NORMAL;
 	}
 	
-	int i;
-	int color;
-
 	return output_color_code( val );
-	
 }
 
 

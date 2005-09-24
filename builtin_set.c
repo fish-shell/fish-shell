@@ -224,7 +224,6 @@ static int fill_buffer_from_list(string_buffer_t *sb, array_list_t *list)
 static void print_variables(int include_values, int escape, int scope) 
 {
 	array_list_t names;
-	wchar_t **names_arr;
 	int i;
 	
 	al_init( &names );

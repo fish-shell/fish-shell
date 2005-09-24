@@ -39,9 +39,13 @@ barrier_reply
 </pre>
 
 A \c barrier command will result in a barrier_reply beeing added to
-the end of the senders queue. These commands are used to synchronize
-clients.
+the end of the senders queue of unsent messages. These commands are
+used to synchronize clients, since once the reply for a barrier
+message returns, the sender can know that any updates available at the
+time the original barrier request was sent have been recieved.
 
-\subecion fishd-files Files
+\subsection fishd-files Files
 
-~/.fishd.HOSTNAME permenent storage location for universal variale data
+~/.fishd.HOSTNAME permenent storage location for universal variale
+data. The data is stored as a set of \c set and \c set_export commands
+such as would be parsed by fishd.

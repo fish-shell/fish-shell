@@ -1252,15 +1252,16 @@ that even if a variable contains spaces, it will never be separated
 into multiple arguments. If you want to tokenize a string, you can use
 the <a href="commands.html#tokenize">tokenize</a> command.
 
-Command substitution is specified using parenthesis. 
+Command substitution is specified using parenthesis, as in <tt>set name (whoami)</tt>. 
 
 There is no math mode, use bc.
 
 The POSIX way of setting variables is <i>lame</i>. Whitespace
 sensitive languages are awful. "foo=bar" and "foo = bar" should not
-mean different things? \c fish uses a builtin, <tt>set</tt> to set and
-remove environment variables. This keeps things consistent. In fish,
-everything, including the switch/case statement is a command.
+mean different things. \c fish uses a builtin, <tt>set</tt> to set and
+remove environment variables. While this may seem a bit obscure, this
+makes for a very consistent language. In fish, everything, including
+the loops, assignments and switch/case statements is a command.
 
 In \c fish, all block types end with the \c end command.
 

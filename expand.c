@@ -548,7 +548,7 @@ static int find_process( const wchar_t *proc,
 				{
 					wchar_t *res = str2wcs(name);
 					if( res )
-						al_push( out, str2wcs( name ) );
+						al_push( out, res );
 				}
 			}
 		}

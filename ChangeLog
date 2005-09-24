@@ -7,7 +7,8 @@
 	* parser.c (pares_job_main_loop): Fix memory leak on parse error in pipeline
 
 	* common.h, common.c: Make DEBUG_LEVEL constant into debug_level runtime configurable variable
-	
+
+	* proc.h (handle_child_status): Fix crash bug when user presses ^C
 	
 2005-09-23  Axel Liljencrantz  <axel@liljencrantz.se>
 	

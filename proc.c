@@ -512,13 +512,6 @@ static void mark_process_status( job_t *j,
 	if (WIFSTOPPED (status))
 	{
 		p->stopped = 1;
-//		fwprintf( stderr, L"Proc %d (%ls) stopped\n", p->pid, p->actual_cmd );
-
-/*		sprintf( mess,
-  "%ls (%d): Process stopped\n",
-  j->command,
-  (int) p->pid );
-  write( 2, mess, strlen(mess) );*/
 	}
 	else
 	{
@@ -529,8 +522,9 @@ static void mark_process_status( job_t *j,
 			(! WIFSIGNALED( status )) )
 		{
 			/* This should never be reached */
-			char mess[128];
-			sprintf( mess,
+			char mess[MESS_SIZE];
+			snprintf( mess,
+					 MESS_SIZE,
 					 "Process %d exited abnormally\n",
 					 (int) p->pid );
 			
@@ -546,9 +540,9 @@ static void mark_process_status( job_t *j,
 static void handle_child_status( pid_t pid, int status )
 {
 	int found_proc = 0;
-	job_t *j;
-	process_t *p;
-	char mess[MESS_SIZE];	
+	job_t *j=0;
+	process_t *p=0;
+//	char mess[MESS_SIZE];	
 	found_proc = 0;		
 	/*
 	  snprintf( mess, 
@@ -612,19 +606,14 @@ static void handle_child_status( pid_t pid, int status )
 		else
 		{
 			block_t *c = current_block;
-			
-			snprintf( mess,
-					  MESS_SIZE,
-					  "Process %ls from job %ls exited through signal, breaking loops\n",
-					  p->actual_cmd,
-					  j->command );
-			write( 2, mess, strlen(mess ));
-
-			while( c )
+			if( p && found_proc )
 			{
-				c->skip=1;
-				c=c->outer;
-			}		
+				while( c )
+				{
+					c->skip=1;
+					c=c->outer;
+				}		
+			}			
 		}
 	}
 		

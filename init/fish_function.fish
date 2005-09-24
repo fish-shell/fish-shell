@@ -4,14 +4,31 @@
 
 
 function _contains_help -d "Helper function for contains"
-	echo "SYNOPSIS"
-	echo \tcontains \[OPTION] KEY [VALUES...]
-	echo
-	echo DESCRIPTION
-	echo \t-h, --help
-	echo \t\tdisplay help and exit
+
+set bullet \*
+	if count $LANG >/dev/null
+		if test (expr match $LANG ".*UTF") -gt 0
+			set bullet \u2022
+		end
+	end
+
+	echo \tcontains - Test if a word is present in a list\n
+	__bold Synopsis
+	echo \n\n\tcontains \[OPTION] KEY [VALUES...]\n
+	__bold Description
+	echo \n\n\t$bullet (__bold -h) or (__bold --help) display help and exit\n
 	echo \tTest if the set VALUES contains the string KEY.
-	echo \tReturn 0 if yes, 1 otherwise.
+	echo \tReturn status is 0 if yes, 1 otherwise.\n
+	__bold Example
+	echo \n
+	echo \tfor i in \~/bin /usr/local/bin
+	echo \t\tif not contains \$i \$PATH
+	echo \t\t\tset PATH \$PATH i
+	echo \t\tend
+	echo \tend
+	echo
+	echo \tThe above code tests if "~/bin" and  /usr/local/bin are in the path
+	echo \tand if they are not, they are added.
 end
 
 function contains -d "Test if a key is contained in a set of values"
@@ -242,8 +259,7 @@ function vared -d "Edit variable value"
 		switch $argv
 
 			case '-h' '--h' '--he' '--hel' '--help'
-				printf "Synopsis\n\t%svared%s VARIABLE\n\n" (set_color $fish_color_command) (set_color normal)
-				printf "\tInteractively edit the value of an environment variable\n\n"
+				__vared_help
 
 			case '-*'
 				printf "vared: Unknown option %s\n" $argv
@@ -286,6 +302,18 @@ function vared -d "Edit variable value"
 		set_color $FISH_COLOR_NORMAL
 		printf " VARIABLE\n"
 	end
+end
+
+function __vared_help -d "Display help for the vared shellscript function"
+
+	printf "\tvared - Interactively edit the value of an environment variable\n\n"
+	printf "%s\n\t%svared%s VARIABLE\n\n" (__bold Synopsis) (set_color $fish_color_command) (set_color normal)
+	__bold Description
+	printf "\n\n\tvared is used to interactively edit the value of an environment \n"
+	printf "\tvariable. Array variables as a whole can not be edited using vared,\n" 
+	printf "\tbut individual array elements can.\n\n"
+	__bold Example
+	printf "\n\n\t"\'"%svared%s PATH[3]"\'" edits the third element of the PATH array.\n\n" (set_color $fish_color_co\mmand) (set_color normal)
 end
 
 #
@@ -544,7 +572,9 @@ if count $LANG >/dev/null
 end
 
 echo \ttype - Indicate how a name would be interpreted if used as a \n\tcommand name
+echo
 echo (__bold Synopsis)
+echo
 echo \t(set_color $fish_color_command)type(set_color normal) [OPTIONS] name [name ...]
 echo
 echo (__bold Description)
@@ -591,6 +621,7 @@ function type -d "Print the type of a command"
 
 			case -h --h --he --hel --help
 				 __type_help
+				 return 0
 
 			case --
 				 break

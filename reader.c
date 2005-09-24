@@ -1944,6 +1944,26 @@ static int contains( const wchar_t *needle,
 	
 }
 
+static void reset_token_history()
+{
+	wchar_t *begin, *end;
+
+	reader_current_token_extent( &begin, &end, 0, 0 );
+	if( begin )
+	{
+		wcslcpy(data->search_buff, begin, end-begin+1);
+	}
+	else
+		data->search_buff[0]=0;
+	
+	data->token_history_pos = -1;
+	data->search_pos=0;
+	al_foreach( &data->search_prev, (void (*)(const void *))&free );
+	al_truncate( &data->search_prev, 0 );
+	al_push( &data->search_prev, wcsdup( data->search_buff ) );
+}
+
+
 /**
    Handles a token search command.
 
@@ -1961,22 +1981,8 @@ static void handle_token_history( int forward, int reset )
 		/*
 		  Start a new token search using the current token
 		*/
-
-		wchar_t *begin, *end;
-
-		reader_current_token_extent( &begin, &end, 0, 0 );
-		if( begin )
-		{
-			wcslcpy(data->search_buff, begin, end-begin+1);
-		}
-		else
-			data->search_buff[0]=0;
+		reset_token_history();
 		
-		data->token_history_pos = -1;
-		data->search_pos=0;
-		al_foreach( &data->search_prev, (void (*)(const void *))&free );
-		al_truncate( &data->search_prev, 0 );
-		al_push( &data->search_prev, wcsdup( data->search_buff ) );
 	}
 
 	current_pos  = data->token_history_pos;
@@ -2683,12 +2689,19 @@ wchar_t *reader_readline()
 			case L'\e':
 				if( *data->search_buff )
 				{
-					history_reset();
-					wcscpy( data->buff, data->search_buff );
-					data->buff_pos = data->buff_len = wcslen(data->buff);
+					if( data->token_history_pos==-1 )
+					{						
+						history_reset();
+						reader_set_buffer( data->search_buff, 
+										   wcslen(data->search_buff ) );
+					}
+					else
+					{
+						reader_replace_current_token( data->search_buff );
+					}
 					*data->search_buff=0;
 					check_colors();
-					
+				
 				}
 				
 				break;
@@ -2896,6 +2909,8 @@ wchar_t *reader_readline()
 		{
 			data->search_buff[0]=0;
 			history_reset();
+			data->token_history_pos=-1;
+			
 		}
 
 

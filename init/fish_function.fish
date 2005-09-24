@@ -242,7 +242,7 @@ function vared -d "Edit variable value"
 		switch $argv
 
 			case '-h' '--h' '--he' '--hel' '--help'
-				printf "Synopsis\n\t%svared%s VARIABLE\n\n" (set_color $FISH_COLOR_COMMAND) (set_color $FISH_COLOR_NORMAL)
+				printf "Synopsis\n\t%svared%s VARIABLE\n\n" (set_color $fish_color_command) (set_color normal)
 				printf "\tInteractively edit the value of an environment variable\n\n"
 
 			case '-*'
@@ -528,11 +528,41 @@ function dirh -d "Print the current directory history (the back- and fwd- lists)
 	echo
 end
 
+function __bold -d "Print argument in bold"
+	set_color --bold
+	printf "%s" $argv[1]
+	set_color normal
+end
+
+function __type_help -d "Help for the type shellscript function"
+
+echo \ttype type - Indicate how a name would be interpreted if used as a command name
+echo (__bold Synopsis)
+echo \t(set_color $fish_color_command)type(set_color normal) [OPTIONS] name [name ...]
+echo
+echo (__bold Description)
+echo
+echo \tWith no options, indicate how each name would be interpreted if used as a command name.  
+echo
+echo \t\* (__bold -h) or (__bold --help) print this message
+echo \t\* (__bold -a) or (__bold --all) print all of possible definitions of the specified names
+echo \t\* (__bold -f) or (__bold --no-functions) supresses function and builtin lookup
+echo \t\* (__bold -t) or (__bold --type) print a string which is one of alias, keyword, function, builtin, or file if name is an alias, shell reserved word, function, builtin, or disk file, respectively
+echo \t\* (__bold -p) or (__bold --path) either return the name of the disk file that would be executed if name were specified as a command name, or nothing if ‘‘type  -t  name’’ would  not  return  file
+echo \t\* (__bold -P) or (__bold --force-path) either return the name of the disk file that would be executed if name were specified as a command name, or nothing no file with the spacified name could be found in the PATH
+echo
+echo (__bold Example)
+echo
+echo \t\'(set_color $fish_color_command)type(set_color normal) fg\' outputs the string \'fg is a shell builtin\'.
+echo
+
+end
 
 function type -d "Print the type of a command"
 
-	set status 0
+	set status 1
 	set mode normal
+	set selection all
 
 	for i in $argv
 		switch $i
@@ -542,8 +572,18 @@ function type -d "Print the type of a command"
 			case -p --p --pa --pat --path
 				set mode path
 			
+			case -P --f --fo --for --forc --force --force- --force-p --force-pa --force-pat --force-path 
+				set mode path
+				set selection files
+			
 			case -a --a --al --all
-				set mode all
+				set selection multi
+
+			case -f --n --no --no- --no-f --no-fu --no-fun --no-func --no-funct --no-functi --no-functio --no-function --no-functions
+				set selection files
+
+			case -h --h --he --hel --help
+				 __type_help
 
 			case --
 				 break
@@ -554,105 +594,80 @@ function type -d "Print the type of a command"
 		end
 	end
 
-	switch $mode
+	for i in $argv
+		
+		switch $i
+			case '-*'
+				 continue
+		end
 
-		case normal
-			for i in $argv
+		# Found will be set to 1 if a match is found
+		set found 0
 
-				switch $i
-					case '-*'
-						continue;
+		if test $selection != files
+
+			if contains -- $i (functions -n)
+				set status 0
+				set found 1
+				switch $mode
+					case normal
+						echo $i is a function with definition
+						functions $i
+
+					case type
+						echo function
+
+					case path
+						 echo
+
 				end
-
-				if contains -- $i (functions -n)
-					echo $i is a function with definition
-					functions $i
+				if test $selection != multi
 					continue
 				end
+			end
 
-				if contains -- $i (builtin -n)
-					echo $i is a shell builtin
+			if contains -- $i (builtin -n)
+				set status 0
+				set found 1
+				switch $mode
+					case normal
+						echo $i is a builtin
+
+					case type
+						echo builtin
+
+					case path
+						echo
+				end
+				if test $selection != multi
 					continue
 				end
+			end
 
-				if which $i ^/dev/null >/dev/null
+		end
+
+		if which $i ^/dev/null >/dev/null
+			set status 0
+			set found 1
+			switch $mode
+				case normal
 					echo $i is (which $i)
-					continue
-				end
-				echo type: $i: not found
-				set status 1		
+
+					case type
+						echo file
+
+					case path
+						which $i
 			end
-
-		case path
-			for i in $argv
-
-				switch $i
-					case '-*'
-						continue;
-				end
-
-				if which $i ^/dev/null >/dev/null
-					echo $i is (which $i)
-					continue
-				end
-				set status 1		
+			if test $selection != multi
+				continue
 			end
+		end
 
-		case all
-			for i in $argv
-				set found ""
-				switch $i
-					case '-*'
-						continue;
-				end
+		if test $found = 0
+			echo type: $i: not found
+		end
 
-				if contains -- $i (functions -n)
-					echo $i is a function with definition
-					functions $i
-					set found 1
-				end
-
-				if contains -- $i (builtin -n)
-					echo $i is a shell builtin
-					set found 1
-				end
-
-				if which $i ^/dev/null >/dev/null
-					echo $i is (which $i)
-					set found 1
-				end
-
-				if test -z $found
-					echo type: $i: not found
-					set status 1		
-				end
-			end
-
-		 
-		case type
-			for i in $argv
-
-				switch $i
-					case '-*'
-						continue;
-				end
-
-				if contains -- $i (functions -n)
-					echo function
-					continue
-				end
-
-				if contains -- $i (builtin -n)
-					echo builtin
-					continue
-				end
-
-				if which $i ^/dev/null >/dev/null
-					echo file
-					continue
-				end
-				set status 1		
-			end
 	end
 
 	return $status

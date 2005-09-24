@@ -101,6 +101,7 @@ int main( int argc, char **argv )
 	char *bgcolor=0;
 	char *fgcolor=0;
 	int fg, bg;
+	int bold=0;
 	
 	while( 1 )
 	{
@@ -117,6 +118,10 @@ int main( int argc, char **argv )
 				}
 				,
 				{
+					"bold", no_argument, 0, 'o' 
+				}
+				,
+				{
 					"version", no_argument, 0, 'v' 
 				}
 				,
@@ -130,13 +135,13 @@ int main( int argc, char **argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "b:hv", 
+							   "b:hvo", 
 							   long_options, 
 							   &opt_index );
 #else
 		int opt = getopt( argc,
 						  argv, 
-						  "b:hv" );
+						  "b:hvo" );
 #endif
 		if( opt == -1 )
 			break;
@@ -153,6 +158,10 @@ int main( int argc, char **argv )
 				print_help();
 				exit(0);				
 								
+			case 'o':
+				bold=1;
+				break;
+				
 			case 'v':
 				fprintf( stderr, "set_color, version %s\n", PACKAGE_VERSION );
 				exit( 0 );								
@@ -180,13 +189,13 @@ int main( int argc, char **argv )
 			return 1;
 	}
 
-	if( !fgcolor && !bgcolor )
+	if( !fgcolor && !bgcolor && !bold )
 	{
+		fprintf( stderr, "set_color: Expected an argument\n" );
 		print_help();		
 		return 1;
 	}
 	
-		
 	fg = translate_color(fgcolor);
 	if( fgcolor && (fg==-1))
 	{
@@ -202,6 +211,12 @@ int main( int argc, char **argv )
 	}
 
 	setupterm( 0, STDOUT_FILENO, 0);
+
+	if( bold )
+	{
+		putp( enter_bold_mode );
+	}
+
 	if( bgcolor )
 	{
 		if( bg == 8 )

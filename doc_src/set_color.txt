@@ -11,6 +11,7 @@ COLOR is one of black, red, green, brown, yellow, blue, magenta,
 purple, cyan, white and normal. 
 
 - \c -b, \c --background Set the background color
+- \c -o, \c --bold Set bold or extra bright mode
 - \c -h, \c --help Display help message and exit
 - \c -v, \c --version Display version and exit
 

@@ -1,5 +1,12 @@
+2005-09-25  Axel Liljencrantz  <axel@liljencrantz.se>
+
+	* parser.c: (parse_job, parser_skip_arguemnts, paresr_Test): No semicolon required after else and begin
+
+	
 2005-09-24  Axel Liljencrantz  <axel@liljencrantz.se>
 
+	* Version 1.14.0
+	
 	* reader.c (reader_readline): Quit token search on escape
 
 	* parser.c (pares_job_main_loop): Make command substitutions for the case command expand properly

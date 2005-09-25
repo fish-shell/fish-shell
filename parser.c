@@ -266,18 +266,29 @@ wchar_t *parser_get_block_desc( int block )
 }
 
 
+int parser_skip_arguments( const wchar_t *cmd )
+{
+		
+    return contains_str( cmd,
+						 L"else",
+						 L"begin",
+						 0 );
+}
+
+
 int parser_is_subcommand( const wchar_t *cmd )
 {
-	return contains_str( cmd,
-						 L"command", 
-						 L"builtin", 
-						 L"while",
-						 L"exec",
-						 L"if",
-						 L"and",
-						 L"or",
-						 L"not",
-						 0 );
+	return parser_skip_arguments( cmd ) ||
+		contains_str( cmd,
+					  L"command", 
+					  L"builtin", 
+					  L"while",
+					  L"exec",
+					  L"if",
+					  L"and",
+					  L"or",
+					  L"not",
+					  0 );
 }
 
 /**
@@ -1522,8 +1533,18 @@ static int parse_job( process_t *p,
 	else tok_next( tok );
 	
 	if( !error_code )
-		parse_job_main_loop( p, j, tok, &args );
-
+	{
+		if( p->type == INTERNAL_BUILTIN && parser_skip_arguments( (wchar_t *)al_get(&args, 0) ) )
+		{
+			p->argv = list_to_char_arr( &args );
+//			tok_next(tok);
+		}
+		else
+		{
+			parse_job_main_loop( p, j, tok, &args );
+		}
+	}
+			
 	if( error_code )
 	{
 		/*
@@ -1755,17 +1776,17 @@ static void eval_job( tokenizer *tok )
 				tok_next( tok );
 			break;
 		}
-
+		
 		case TOK_ERROR:
 		{
 			error_arg( SYNTAX_ERROR,
 					   TOK_ERR_MSG,
 					   tok_last(tok),
 					   tok_get_pos( tok ) );
-
+			
 			return;
 		}
-
+		
 		default:
 		{
 			error_arg( SYNTAX_ERROR,
@@ -1955,13 +1976,20 @@ int parser_test( wchar_t * buff,
 						require_additional_commands--;
 					}
 
+					/*
+					  Decrement block count on end command
+					*/
 					if( wcscmp(tok_last(&tok), L"end")==0)
 					{
 						tok_next( &tok );
 						count--;
 						tok_set_pos( &tok, mark );
 					}
-					else if( parser_is_block( tok_last(&tok) ) )
+					
+					/*
+					  Handle block commands
+					*/
+					if( parser_is_block( tok_last(&tok) ) )
 					{
 						if( count >= BLOCK_MAX_COUNT )
 						{
@@ -1980,6 +2008,8 @@ int parser_test( wchar_t * buff,
 								block_type[count] = IF;
 							else if( wcscmp( tok_last(&tok), L"function") == 0 )
 								block_type[count] = FUNCTION_DEF;
+							else if( wcscmp( tok_last(&tok), L"begin") == 0 )
+								block_type[count] = BEGIN;
 							else 
 								block_type[count] = -1;							
 							
@@ -1992,13 +2022,22 @@ int parser_test( wchar_t * buff,
 							tok_set_pos( &tok, mark );
 						}
 					}
-
-					if( parser_is_subcommand( tok_last( &tok ) ) )
+					
+					/*
+					  If parser_is_subcommand is true, the command
+					  accepts a second command as it's first
+					  argument. If parser_skip_arguments is true, the
+					  second argument is optional.
+					*/
+					if( parser_is_subcommand( tok_last( &tok ) ) && !parser_skip_arguments(tok_last( &tok ) ) )
 					{
 						needs_cmd = 1;
 						had_cmd = 0;
 					}
 
+					/*
+					  The short circut commands requires _two_ additional commands.
+					*/
 					if( contains_str( tok_last( &tok ),
 									  L"or",
 									  L"and",
@@ -2019,7 +2058,11 @@ int parser_test( wchar_t * buff,
 						require_additional_commands=2;
 					}
 					
-
+					/*
+					  There are a lot of situations where pipelines
+					  are forbidden, inclusing when using the exec
+					  builtin.
+					*/
 					if( parser_is_pipe_forbidden( tok_last( &tok ) ) )
 					{
 						if( is_pipeline )
@@ -2037,6 +2080,9 @@ int parser_test( wchar_t * buff,
 						forbid_pipeline = 1;							
 					}
 					
+					/*
+					  Test that the case builtin is only used in a switch block
+					*/
 					if( wcscmp( L"case", tok_last( &tok ) )==0 )
 					{
 						if( !count || block_type[count-1]!=SWITCH )
@@ -2054,9 +2100,13 @@ int parser_test( wchar_t * buff,
                                 print_errors();
                             }
                         }
-					}					
-					else if( wcscmp( L"break", tok_last( &tok ) )==0 || 
-							 wcscmp( L"continue", tok_last( &tok ) )==0)
+					}	
+
+					/*
+					  Test that break and continue are only used in loop blocks
+					*/
+					if( wcscmp( L"break", tok_last( &tok ) )==0 || 
+						wcscmp( L"continue", tok_last( &tok ) )==0)
 					{
 						int found_loop=0;
 						int i;
@@ -2083,7 +2133,11 @@ int parser_test( wchar_t * buff,
                             }
                         }						
 					}
-					else if( wcscmp( L"else", tok_last( &tok ) )==0 )
+					
+					/*
+					  Test that else is only used in an if-block
+					*/
+					if( wcscmp( L"else", tok_last( &tok ) )==0 )
 					{
 						if( !count || block_type[count-1]!=IF )
                         {
@@ -2099,6 +2153,9 @@ int parser_test( wchar_t * buff,
 
 					}
 					
+					/*
+					  Test that end is not used when not inside a blovk
+					*/
 					if( count < 0 )
 					{
 						err = 1;

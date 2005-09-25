@@ -2,6 +2,10 @@
 
 	* parser.c: (parse_job, parser_skip_arguemnts, paresr_Test): No semicolon required after else and begin
 
+	* input_common.c (readb): Fix sign error
+
+	* input.c (input_expand_sequence): Add support for numeric backslash escapes
+	
 	
 2005-09-24  Axel Liljencrantz  <axel@liljencrantz.se>
 

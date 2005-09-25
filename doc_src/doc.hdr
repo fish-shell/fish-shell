@@ -884,8 +884,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 version of a POSIX command
 - Yanking weird characters from clipboard prints Unicode escapes
 - Prefix string in completion display is sometimes incorrect
-- Pressing escape when doing a token search breaks things
-- Universal variables should be exportable
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se

@@ -361,6 +361,7 @@ repaint();*/
 */
 static wchar_t *input_expand_sequence( const wchar_t *in )
 {
+	const wchar_t *in_orig=in;
 	wchar_t *res = malloc( sizeof( wchar_t)*(4*wcslen(in)+1));
 	wchar_t *out=res;
 	int error = 0;
@@ -372,13 +373,12 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 			case L'\\':
 			{
 				in++;
-//				fwprintf( stderr, L"Backslash\n" );
 				switch( *in )
 				{
 					case L'\0':
 						error = 1;
 						break;
-						
+												
 					case L'e':
 						*(out++)=L'\e';
 						break;
@@ -427,15 +427,77 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 					case L'v':
 						*(out++)=L'\v';
 						break;
+
+						/*
+						  Parse numeric backslash escape
+						*/
+					case L'u':
+					case L'U':
+					case L'x':
+					case L'o':
+					{
+						int i;
+						wchar_t res=0;
+						int chars=2;
+						int base=16;
+					
+						switch( *in++ )
+						{
+							case L'u':
+								base=16;
+								chars=4;
+								break;
+							
+							case L'U':
+								base=16;
+								chars=8;
+								break;
+							
+							case L'x':
+								base=16;
+								chars=2;
+								break;
+							
+							case L'o':
+								base=8;
+								chars=3;
+								break;
+								
+						}
 						
+						wchar_t *ggg = in;
+						
+						for( i=0; i<chars; i++ )
+						{
+							int d = convert_digit( *in++, base);
+							if( d < 0 )
+							{
+								break;
+							}
+							
+							res=(res*base)|d;
+							
+						}
+						in--;
+						
+						debug( 4, 
+							   L"Got numeric key sequence %d", 
+							   res );
+						
+						*(out++) = res;
+						break;
+					}
+
+					/*
+					  Parse control sequence
+					*/
 					case L'C':
 					{
-						//fwprintf( stderr, L"Control\n" );
 						in++;
+						/* Make sure next key is a dash*/
 						if( *in != L'-' )
 						{
 							error=1;
-//							fwprintf( stderr, L"no dash\n" );
 							break;
 						}
 						in++;
@@ -459,6 +521,9 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 						break;
 					}
 					
+					/*
+					  Parse meta sequence
+					*/
 					case L'M':
 					{
 						in++;
@@ -490,7 +555,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 												
 						break;
 					}
-				
+					
 					default:
 					{
 						*(out++)=*in;
@@ -509,6 +574,8 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 		}
 		in++;
 	}
+
+
 	
 	if( error )
 	{
@@ -522,6 +589,12 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 		*out = L'\0';
 	}
 	
+	if( wcslen( res ) == 0 )
+	{
+		debug( 1, L"Sequence '%ls' expanded to zero characters, skipped", in_orig );
+		error =1;
+	}
+
 	return res;
 }
 
@@ -1068,7 +1141,7 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 			case R_DUMP_FUNCTIONS:
 			{
 				dump_functions();
-				return input_readch();							
+				return R_NULL;							
 			}
 			case R_SELF_INSERT:
 			{
@@ -1121,9 +1194,9 @@ static wint_t input_try_mapping( mapping *m)
 		for( j=0; m->seq[j] != L'\0' && 
 				 m->seq[j] == (c=input_common_readch( j>0 )); j++ )
 			;
+		
 		if( m->seq[j] == L'\0' )
 		{
-
 			return input_exec_binding( m, m->seq );
 		}
 		else
@@ -1200,10 +1273,10 @@ wint_t input_readch()
 			if( wcslen( m->seq) == 0 )
 			{	
 				wchar_t arr[2]=
-				{
-					0, 
-					0
-				}
+					{
+						0, 
+						0
+					}
 				;
 				arr[0] = input_common_readch(0);
 				

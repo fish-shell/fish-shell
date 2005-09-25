@@ -56,7 +56,7 @@ void input_common_destroy()
 */
 static wint_t readb()
 {
-	char arr[1];
+	unsigned char arr[1];
 	int do_loop = 0;
 
 	do

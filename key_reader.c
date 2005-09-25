@@ -10,6 +10,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <locale.h>
 #include <termcap.h>
 
 #include "input_common.h"
@@ -22,6 +23,9 @@ int writestr( char *str )
 
 int main( int argc, char **argv)
 {
+
+	setlocale( LC_ALL, "" );
+	
 
 	if( argc == 2 )
 	{

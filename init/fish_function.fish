@@ -585,7 +585,7 @@ echo \t$bullet (__bold -h) or (__bold --help) print this message
 echo \t$bullet (__bold -a) or (__bold --all) print all possible definitions of the specified \n\t\ \ names
 echo \t$bullet (__bold -f) or (__bold --no-functions) supresses function and builtin lookup
 echo \t$bullet (__bold -t) or (__bold --type) print a string which is one of alias, keyword, \n\t\ \ function, builtin, or file if name is an alias, shell \n\t\ \ reserved word, function, builtin, or disk file, respectively
-echo \t$bullet (__bold -p) or (__bold --path) either return the name of the disk file that would \n\t\ \ be executed if name were specified as a command name, or nothing \n\t\ \ if ‘‘type  -t  name’’ would  not  return  file
+echo \t$bullet (__bold -p) or (__bold --path) either return the name of the disk file that would \n\t\ \ be executed if name were specified as a command name, or nothing \n\t\ \ if (__bold "type -t name") would  not  return  file
 echo \t$bullet (__bold -P) or (__bold --force-path) either return the name of the disk file that \n\t\ \ would be executed if name were specified as a command name, \n\t\ \ or nothing no file with the spacified name could be found \n\t\ \ in the PATH
 echo
 echo (__bold Example)

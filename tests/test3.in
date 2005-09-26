@@ -103,7 +103,7 @@ end
 
 # Test if exported variables go out of scope
 
-if test (fish -c "echo $t8") = foo
+if test (../fish -c "echo $t8") = foo
     echo Test 9 fail
 else
     echo Test 9 pass

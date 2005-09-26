@@ -377,7 +377,7 @@ void env_set( const wchar_t *key,
 	}
 
 	node = env_get_node( key );
-	if( &node->env != 0 )
+	if( node && &node->env != 0 )
 	{
 		e = (var_entry_t *) hash_get( &node->env, 
 									  key );
@@ -425,7 +425,13 @@ void env_set( const wchar_t *key,
 			}
 			else
 			{
+				/*
+				  New variable with unspecified scope. The default scope is the innermost scope that is shadowing
+				*/
 				node = top;
+				while( node->next && !node->new_scope )
+					node = node->next;
+				
 			}
 		}
 	}

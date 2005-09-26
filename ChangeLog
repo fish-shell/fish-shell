@@ -4,6 +4,8 @@
 
 	* env.c, builtin_set.c (env_exist, env_get, env_set, builtin_set): Add support for zero element arrays
 
+	* env.c (env_set): Default scope for variables is innermost function block
+	
 2005-09-25  Axel Liljencrantz  <axel@liljencrantz.se>
 
 	* parser.c: (parse_job, parser_skip_arguemnts, paresr_Test): No semicolon required after else and begin

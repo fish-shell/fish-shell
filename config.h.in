@@ -78,5 +78,8 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* System configuration directory */
+#undef SYSCONFDIR
+
 /* Evil kludge to get Power based machines to work */
 #undef TPUTS_KLUDGE

@@ -651,16 +651,15 @@ Here are some of the commands available in the editor:
 - Alt-l lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed 
 - Alt-k prints a list of all key bindings
 
-You can change these key bindings making an inputrc file. To do this,
-copy the file /etc/fish_inputrc to your home directory and rename it
-to '.fish_inputrc'. You can do this by running the command <tt>mv
-/etc/fish_inputrc ~/.fish_inputrc</tt>. Now you can edit the file
-.fish_inputrc, to change your key bindings. The fileformat of this file
-is described in the manual page for readline. Use the command <tt>man
-readline</tt> to read up on this syntax. Please note thet the
-key binding support in \c fish is still limited. You can not use the
-set command or the keyname-syntax, and the list functions is
-incomplete. Currently, the following functions are available:
+You can change these key bindings by making an inputrc file. To do
+this, copy the file /etc/fish_inputrc to your home directory and
+rename it to '.fish_inputrc'. Now you can edit the file .fish_inputrc,
+to change your key bindings. The fileformat of this file is described
+in the manual page for readline. Use the command <tt>man readline</tt>
+to read up on this syntax. Please note thet the key binding support in
+\c fish is still limited. You can not use the set command or the
+keyname-syntax, and the list functions is incomplete. Currently, the
+following functions are available:
 
 
 - \c backward-char, moves one character to the left
@@ -832,6 +831,16 @@ has occured. These functions are:
 - \c fish_on_exit, which is called before the shell exits
 - \c fish_on_exec, which is called before interactively executing a command
 - \c fish_on_return, which is called when control returns to the shell after interactively executing a command
+
+\section issues Common issues with fish
+
+If you install fish in your home directory, fish will not work
+correctly for any other user than yourself. This is because fish needs
+it's initalization files to function properly. To solve this
+problem, either copy the initialization files to each fish users home
+directory, or install them in /etc.
+
+
 
 \section todo Missing features and bugs
 

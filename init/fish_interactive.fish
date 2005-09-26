@@ -41,7 +41,7 @@ end
 # by including them when found.
 #
 
-for i in ~/.fish_inputrc /etc/fish_inputrc ~/.inputrc /etc/inputrc
+for i in ~/.fish_inputrc ~/etc/fish_inputrc /etc/fish_inputrc ~/.inputrc /etc/inputrc
 	if test -f $i
 		set -xg INPUTRC $i
 		break

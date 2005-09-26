@@ -465,8 +465,6 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 								
 						}
 						
-						wchar_t *ggg = in;
-						
 						for( i=0; i<chars; i++ )
 						{
 							int d = convert_digit( *in++, base);
@@ -498,6 +496,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 						if( *in != L'-' )
 						{
 							error=1;
+							debug( 1, L"Invalid sequence - no dash after control\n" );
 							break;
 						}
 						in++;
@@ -515,7 +514,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 							*(out++)=*in-L'A'+1;
 							break;
 						}
-//						fwprintf( stderr, L"No char after\n" );
+						debug( 1, L"Invalid sequence - Control-nothing?\n" );
 						error = 1;
 												
 						break;
@@ -530,29 +529,17 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 						if( *in != L'-' )
 						{
 							error=1;
-//							fwprintf( stderr, L"no dash\n" );
+							debug( 1, L"Invalid sequence - no dash after meta\n" );
 							break;
 						}
-						in++;
-						
-						if( (*in >= L'a') && 
-							(*in <= L'z') )
+						if( !*(in+1) )
 						{
-							*(out++)=L'\e';
-							*(out++)=*in;
+							debug( 1, L"Invalid sequence - Meta-nothing?" );
+							error=1;
 							break;
 						}
+						*(out++)=L'\e';
 						
-						if( (*in >= L'A') && 
-							(*in <= L'Z') )
-						{
-							*(out++)=L'\e';
-							*(out++)=*in;
-							break;
-						}
-//						fwprintf( stderr, L"No char after\n" );
-						error = 1;
-												
 						break;
 					}
 					
@@ -579,7 +566,6 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 	
 	if( error )
 	{
-//		fwprintf( stderr, L"%ls had errors\n", in_orig );
 		free( res);
 		res=0;
 	}
@@ -589,11 +575,15 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 		*out = L'\0';
 	}
 	
-	if( wcslen( res ) == 0 )
+	if( !error )
 	{
-		debug( 1, L"Sequence '%ls' expanded to zero characters, skipped", in_orig );
-		error =1;
-	}
+		if( wcslen( res ) == 0 )
+		{
+			debug( 1, L"Invalid sequence - '%ls' expanded to zero characters", in_orig );
+			error =1;
+			res = 0;
+		}
+	}	
 
 	return res;
 }

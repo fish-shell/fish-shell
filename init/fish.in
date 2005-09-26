@@ -54,25 +54,6 @@ end
 
 
 #
-# Load additional initialization files
-#
-
-if test -d fish.d
-# If this file is installed in /etc, the subdirectory is called fish.d
-	for i in fish.d/*.fish
-		. $i
-	end
-else
-	if test -d .fish.d
-	# If this file is installed in ~, the subdirectory is called .fish.d
-		for i in .fish.d/*.fish
-			. $i
-		end
-	end
-end
-
-
-#
 # There are variables that contain colons that are not arrays. This 
 # reverts them back to regular strings.
 #
@@ -81,4 +62,12 @@ for i in DISPLAY
 	if test (count $$i) -gt 1
 		set -- $i (printf ":%s" $$i|cut -c 2-)
 	end
+end
+
+#
+# Load additional initialization files
+#
+
+for i in fish.d/*.fish
+	. $i
 end

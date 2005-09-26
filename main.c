@@ -71,7 +71,7 @@ static int read_init()
 
 	env_set( L"__fish_help_dir", DOCDIR, 0);	
  	
-	eval( L"builtin cd /etc 2>/dev/null; . fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; . fish 2>/dev/null", 0, TOP );
 	eval( L"builtin cd 2>/dev/null;. .fish 2>/dev/null", 0, TOP );
 	
 	if( chdir( cwd ) == -1 )

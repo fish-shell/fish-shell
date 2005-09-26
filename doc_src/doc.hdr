@@ -630,24 +630,24 @@ option of the command to display a longer explanation.
 \section editor Command Line editor
 
 The \c fish editor features copy and paste, a searchable history and
-several editor commands. These are some of the commands available in
-the editor:
+many editor functions that can be bound to special keyboard
+shortcuts. The most important keybinding is probably the tab key, which is bound to the complete function. 
+Here are some of the commands available in the editor:
 
-- Home or Ctrl-a moves to the beginning of the line.
-- End or Ctrl-e moves to the end of line.
-- Left and right moves one character left or right.
-- Alt-left and Alt-right moves one word left or right.
-- Delete and backspace removes one character forwards or backwards.
+- Tab completes the current token
+- Home or Ctrl-a moves to the beginning of the line
+- End or Ctrl-e moves to the end of line
+- Left and right moves one character left or right
+- Alt-left and Alt-right moves one word left or right
+- Delete and backspace removes one character forwards or backwards
 - Ctrl-c delete entire line
 - Ctrl-d delete one character to the right of the cursor, unless the buffer is empty, in which case the shell will exit
-- Ctrl-k move contents from cursor to end of line to <a href="#killring">killring</a>.
-- Ctrl-u move contents from beginning of line to cursor <a href="#killring">killring</a>.
-- Ctrl-l clear and repaint screen.
-- Ctrl-r replace a string in the commandline
-- Ctrl-w move previous word to <a href="#killring">killring</a>.
-- Alt-d move next word to <a href="#killring">killring</a>.
-- Alt-w prints a short description of the command on the commandline
-- Alt-x gives a list of possible problems with the current commandline
+- Ctrl-k move contents from cursor to end of line to <a href="#killring">killring</a>
+- Ctrl-u move contents from beginning of line to cursor <a href="#killring">killring</a>
+- Ctrl-l clear and repaint screen
+- Ctrl-w move previous word to <a href="#killring">killring</a>
+- Alt-d move next word to <a href="#killring">killring</a>
+- Alt-w prints a short description of the command under the cursor 
 - Alt-l lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed 
 - Alt-k prints a list of all key bindings
 

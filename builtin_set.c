@@ -421,7 +421,7 @@ int builtin_set( wchar_t **argv )
 		int i;
 		for( i=woptind; i<argc; i++ )
 		{
-			if( env_get( argv[i] )==0 )
+			if( !env_exist( argv[i] ) )
 				retcode++;
 			
 		}

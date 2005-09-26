@@ -38,11 +38,14 @@
 #include "reader.h"
 #include "parser.h"
 #include "env_universal.h"
+#include "input_common.h"
 
 /**
    Command used to start fishd
 */
 #define FISHD_CMD L"fishd ^/tmp/fish.%s.log"
+
+#define ENV_NULL L"\x1d"
 
 /**
    At init, we read all the environment variables from this array 
@@ -329,7 +332,6 @@ void env_set( const wchar_t *key,
 	int has_changed_new = 0;
 	var_entry_t *e=0;
 	
-	
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
 	{
@@ -339,6 +341,14 @@ void env_set( const wchar_t *key,
 	if( wcscmp(key, L"LANG" )==0 )
 	{
 		fish_setlocale(LC_ALL,val);
+	}
+
+	/*
+	  Zero element arrays are internaly not coded as null but as this placeholder string
+	*/
+	if( !val && (var_mode & ENV_USER))
+	{
+		val = ENV_NULL;
 	}
 	
 	if( var_mode & ENV_UNIVERSAL )
@@ -511,7 +521,8 @@ wchar_t *env_get( const wchar_t *key )
 {
 	var_entry_t *res;
 	env_node_t *env = top;
-
+	wchar_t *item;
+	
 	if( wcscmp( key, L"history" ) == 0 )
 	{
 		wchar_t *current;
@@ -548,7 +559,12 @@ wchar_t *env_get( const wchar_t *key )
 								 key );
 		if( res != 0 )
 		{
-			return res->val;
+			if( wcscmp( res->val, ENV_NULL )==0) 
+			{
+				return 0;
+			}
+			else
+				return res->val;			
 		}
 		
 		if( env->new_scope )
@@ -558,7 +574,46 @@ wchar_t *env_get( const wchar_t *key )
 	}	
 	if( !proc_had_barrier)
 		env_universal_barrier();
-	return env_universal_get( key );
+	item = env_universal_get( key );
+	
+	if( !item || (wcscmp( item, ENV_NULL )==0))
+	{
+		return 0;
+	}
+	else
+		return item;
+}
+
+int env_exist( const wchar_t *key )
+{
+	var_entry_t *res;
+	env_node_t *env = top;
+	wchar_t *item;
+	
+	if( wcscmp( key, L"history" ) == 0 )
+	{
+		return 1;
+	}
+	
+	while( env != 0 )
+	{
+		res = (var_entry_t *) hash_get( &env->env, 
+								 key );
+		if( res != 0 )
+		{
+			return 1;
+		}
+		
+		if( env->new_scope )
+			env = global_env;
+		else
+			env = env->next;
+	}	
+	if( !proc_had_barrier)
+		env_universal_barrier();
+	item = env_universal_get( key );
+	
+	return item != 0;
 }
 
 static int local_scope_exports( env_node_t *n )
@@ -769,8 +824,6 @@ char **env_export_arr( int recalc)
 	if( recalc && !proc_had_barrier)
 		env_universal_barrier();
 
-//	debug( 1, L"env_export_arr() %d %d", has_changed, env_universal_update );
-	
 	if( has_changed || env_universal_update )
 	{
 		array_list_t uni;
@@ -780,7 +833,7 @@ char **env_export_arr( int recalc)
 		int pos=0;		
 		int i;
 
-//		debug( 1, L"env_export_arr() recalc" );
+		debug( 4, L"env_export_arr() recalc" );
 				
 		hash_init( &vals, &hash_wcs_func, &hash_wcs_cmp );
 		

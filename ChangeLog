@@ -1,3 +1,9 @@
+2005-09-26  Axel Liljencrantz  <axel@liljencrantz.se>
+
+	* configure.ac, init/fish.in, main.c: Make ~/etc/fish the system configuration file on installations under ~
+
+	* env.c, builtin_set.c (env_exist, env_get, env_set, builtin_set): Add support for zero element arrays
+
 2005-09-25  Axel Liljencrantz  <axel@liljencrantz.se>
 
 	* parser.c: (parse_job, parser_skip_arguemnts, paresr_Test): No semicolon required after else and begin

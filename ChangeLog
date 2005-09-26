@@ -5,6 +5,9 @@
 	* env.c, builtin_set.c (env_exist, env_get, env_set, builtin_set): Add support for zero element arrays
 
 	* env.c (env_set): Default scope for variables is innermost function block
+
+	* builtin.c (builtin_for): For-loop variable must have explicitly local scope
+
 	
 2005-09-25  Axel Liljencrantz  <axel@liljencrantz.se>
 

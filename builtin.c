@@ -2281,7 +2281,7 @@ static int builtin_for( wchar_t **argv )
 		}
 		if( argc > 3 )
 		{
-			env_set( current_block->for_variable, argv[3], 0);
+			env_set( current_block->for_variable, argv[3], ENV_LOCAL );
 		}
 		else
 		{
@@ -2371,7 +2371,7 @@ static int builtin_end( wchar_t **argv )
 				if( al_get_count( &current_block->for_vars ) )
 				{
 					wchar_t *val = (wchar_t *)al_pop( &current_block->for_vars );
-					env_set( current_block->for_variable, val, 0);
+					env_set( current_block->for_variable, val,  ENV_LOCAL);
 					current_block->loop_status = LOOP_NORMAL;
 					current_block->skip = 0;
 					free(val);

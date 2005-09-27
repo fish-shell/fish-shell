@@ -61,7 +61,7 @@ if test -z $docdir; then
 fi
 
 AC_DEFINE_UNQUOTED( DOCDIR, [L"$(eval echo $docdir)"], [Documentation directory] )
-AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$(eval echo $sysconfdir)"], [System configuration directory] )
+AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$sysconfdir"], [System configuration directory] )
 
 # See if Linux procfs is present
 AC_CHECK_FILES([/proc/self/stat])

@@ -22,8 +22,9 @@ end
 
 # Test if local variables go out of scope
 
+set -e t3
 if true
-    set t3 bar
+    set -l t3 bar
 end
 
 if test $t3
@@ -78,7 +79,6 @@ end
 set res fail
 
 for i in 1 2
-    set t7 
     if test $i = 1
         set t7 b
     else
@@ -92,8 +92,9 @@ echo Test 7 $res
 
 # Test if variables are properly exported
 
+set -e t8
 if true
-    set -x t8 foo
+    set -lx t8 foo
     if test (fish -c "echo $t8") = foo
         echo Test 8 pass
 	else

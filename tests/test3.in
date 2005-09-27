@@ -24,25 +24,25 @@ end
 
 set -e t3
 if true
-    set -l t3 bar
+	set -l t3 bar
 end
 
 if test $t3
-    echo Test 3 fail
+	echo Test 3 fail
 else
-    echo Test 3 pass
+	echo Test 3 pass
 end
 
 # Test if globals can be set in block scope
 
 if true
-    set -g baz qux
+	set -g baz qux
 end
 
 if test $baz = qux
-    echo Test 4 pass
+	echo Test 4 pass
 else
-    echo Test 4 fail
+	echo Test 4 fail
 end
 
 
@@ -51,13 +51,13 @@ end
 set t5 a
 
 if true
-    set t5 b
+	set t5 b
 end
 
 if test $t5 = b
-    echo Test 5 pass
+	echo Test 5 pass
 else
-    echo Test 5 fail
+	echo Test 5 fail
 end
 
 # Test that scope is preserved in double blocks
@@ -65,7 +65,7 @@ end
 for i in 1 
   set t6 $i
   for j in a 
-    if test $t6$j = 1a
+	if test $t6$j = 1a
 		echo Test 6 pass
 	else
 		echo Test 6 fail
@@ -79,13 +79,13 @@ end
 set res fail
 
 for i in 1 2
-    if test $i = 1
-        set t7 b
-    else
-        if test $t7 = b
-	        set res pass
-        end
-    end
+	if test $i = 1
+		set t7 b
+	else
+		if test $t7 = b
+			set res pass
+		end
+	end
 end
 
 echo Test 7 $res
@@ -94,20 +94,20 @@ echo Test 7 $res
 
 set -e t8
 if true
-    set -lx t8 foo
-    if test (fish -c "echo $t8") = foo
-        echo Test 8 pass
+	set -lx t8 foo
+	if test (../fish -c "echo $t8") = foo
+		echo Test 8 pass
 	else
-        echo Test 8 fail
+		echo Test 8 fail
 	end
 end
 
 # Test if exported variables go out of scope
 
-if test (../fish -c "echo $t8") = foo
-    echo Test 9 fail
+if test (../fish -c "echo $t8") 
+	echo Test 9 fail
 else
-    echo Test 9 pass
+	echo Test 9 pass
 end
 
 

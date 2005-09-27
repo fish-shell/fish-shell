@@ -43,7 +43,7 @@
 /**
    Command used to start fishd
 */
-#define FISHD_CMD L"fishd ^/tmp/fish.%s.log"
+#define FISHD_CMD L"if which fishd >/dev/null; fishd ^/tmp/fish.%s.log; end"
 
 #define ENV_NULL L"\x1d"
 

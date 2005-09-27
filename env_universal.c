@@ -273,7 +273,7 @@ void env_universal_barrier()
 	message_t *msg;
 	fd_set fds;
 
-	if( !init )
+	if( !init || ( env_universal_server.fd == -1 ))
 		return;
 	
 	barrier_reply = 0;

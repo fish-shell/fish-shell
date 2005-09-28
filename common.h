@@ -246,3 +246,5 @@ wchar_t *unescape( wchar_t * in, int escape_special );
 
 void block();
 void unblock();
+
+int acquire_lock_file(const char *lockfile, const int timeout);

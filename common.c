@@ -19,6 +19,8 @@ parts of fish.
 #include <signal.h>		
 #include <locale.h>
 #include <time.h>
+#include <sys/time.h>
+#include <fcntl.h>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -51,6 +53,12 @@ parts of fish.
    The maximum number of minor errors to report. Further errors will be omitted.
 */
 #define ERROR_MAX_COUNT 1
+
+/**
+   The number of nanoseconds to wait between polls when attempting to acquire 
+   a lockfile
+*/
+#define LOCKPOLLINTERVAL 1000000
 
 struct termios shell_modes;      
 
@@ -1062,3 +1070,36 @@ wchar_t *unescape( wchar_t * in, int escape_special )
 	return in;	
 }
 
+/**
+   Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
+   nanoseconds between polls and timing out after timeout seconds, 
+   thereafter forcibly attempting to obtain the lock.  Returns the opened 
+   lockfile's descriptor or -1 if not possible to open the file or on error.
+   Contains a race condition when the lockfile is on an NFS filesystem 
+   according to Linux manpage open(2)
+*/
+int acquire_lock_file(const char *lockfile, const int timeout)
+{
+	int ret = -1;
+	struct timespec pollint;
+	struct timeval start, end;
+	double elapsed;
+
+	if (gettimeofday(&start, NULL) == 0) {
+		pollint.tv_sec = 0;
+		pollint.tv_nsec = LOCKPOLLINTERVAL;
+		while ((ret = open(lockfile, O_EXCL|O_CREAT|O_RDONLY)) == -1) {
+			if (gettimeofday(&end, NULL) != 0)
+				break;
+			elapsed = end.tv_sec + end.tv_usec/1000000.0 - 
+				(start.tv_sec + start.tv_usec/1000000.0);
+			if (elapsed >= timeout) {
+				(void)unlink(lockfile);
+				ret = open(lockfile, O_EXCL|O_CREAT|O_RDONLY);
+				break;
+			}
+			(void)nanosleep(&pollint, NULL);
+		}	
+	}
+	return ret;
+}

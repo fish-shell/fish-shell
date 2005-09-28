@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
+#include <unistd.h>
 
 #include "util.h"
 #include "common.h"

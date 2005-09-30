@@ -73,106 +73,120 @@ static int sock;
 /**
    Constructs the fish socket filename
 */
-static char *get_socket_filename(void)
+static char *get_socket_filename()
 {
 	char *name;
-	char *dir = getenv("FISHD_SOCKET_DIR");
-	char *uname = getenv("USER");
+	char *dir = getenv( "FISHD_SOCKET_DIR" );
+	char *uname = getenv( "USER" );
 
-	if (dir == NULL)
+	if( dir == NULL )
+	{
 		dir = "/tmp";
+	}
 
-	if (uname == NULL) {
+	if( uname == NULL )
+	{
 		struct passwd *pw;
-		pw = getpwuid(getuid());
-		uname = strdup(pw->pw_name);
+		pw = getpwuid( getuid() );
+		uname = strdup( pw->pw_name );
 	}
 
-	name = malloc(strlen(dir)+ strlen(uname)+ strlen(SOCK_FILENAME) + 2);
-	if (name == NULL) {
-		perror("get_socket_filename");
-		exit(EXIT_FAILURE);
+	name = malloc( strlen(dir)+ strlen(uname)+ strlen(SOCK_FILENAME) + 2 );
+	if( name == NULL )
+	{
+		wperror( L"get_socket_filename" );
+		exit( EXIT_FAILURE );
 	}
-	strcpy(name, dir);
-	strcat(name, "/");
-	strcat(name, SOCK_FILENAME);
-	strcat(name, uname);
+	strcpy( name, dir );
+	strcat( name, "/" );
+	strcat( name, SOCK_FILENAME );
+	strcat( name, uname );
 
-	if (strlen(name) >= UNIX_PATH_MAX) {
-		debug(1, L"Filename too long: '%s'", name);
-		exit(EXIT_FAILURE);
+	if( strlen( name ) >= UNIX_PATH_MAX )
+	{
+		debug( 1, L"Filename too long: '%s'", name );
+		exit( EXIT_FAILURE );
 	}
 	return name;
 }
 
 /**
-   Acquire the lock file for the socket
-   Returns an fd that should be closed to unlock
+   Acquire the lock for the socket
+   Returns the name of the lock file if successful or 
+   NULL if unable to obtain lock.
+   The returned string must be free()d after unlink()ing the file to release 
+   the lock
 */
-int acquire_socket_lock_file(const char *sock_name, char **lockfile)
+static char *acquire_socket_lock( const char *sock_name )
 {
-	int fd;
-	int len = strlen(sock_name);
-
-	*lockfile = malloc(len + strlen(LOCKPOSTFIX) + 1);
-	if (*lockfile == NULL) {
-		perror("get_socket");
-		exit(EXIT_FAILURE);
+	int len = strlen( sock_name );
+	char *lockfile = malloc( len + strlen( LOCKPOSTFIX ) + 1 );
+	
+	if( lockfile == NULL ) 
+	{
+		wperror( L"acquire_socket_lock" );
+		exit( EXIT_FAILURE );
 	}
-	(void)strcpy(*lockfile, sock_name);
-	(void)strcpy(*lockfile + len, LOCKPOSTFIX);
-	if ((fd = acquire_lock_file(*lockfile, LOCKTIMEOUT)) == -1) {
-		fprintf(stderr, "Unable to obtain lockfile %s, exiting", 
-							*lockfile);
-		exit(EXIT_FAILURE);
+	strcpy( lockfile, sock_name );
+	strcpy( lockfile + len, LOCKPOSTFIX );
+	if ( !acquire_lock_file( lockfile, LOCKTIMEOUT, 1 ) )
+	{
+		free( lockfile );
+		lockfile = NULL;
 	}
-	return fd;
+	return lockfile;
 }
 
 /**
    Connects to the fish socket and starts listening for connections
 */
-static int get_socket(void)
+static int get_socket()
 {
 	int s, len, doexit = 0;
 	int exitcode = EXIT_FAILURE;
 	struct sockaddr_un local;
-	char *lockfile;
 	char *sock_name = get_socket_filename();
-	int fd_lockfile;
 
-	/**
-	   Start critical section protected by lock file
+	/*
+	   Start critical section protected by lock
 	*/
-	fd_lockfile = acquire_socket_lock_file(sock_name, &lockfile);
-	debug(1, L"Acquired lockfile %s", lockfile);
+	char *lockfile = acquire_socket_lock( sock_name );
+	if( lockfile == NULL )
+	{
+		fwprintf( stderr, L"Unable to obtain lock on socket, exiting" );
+		exit( EXIT_FAILURE );
+	}
+	debug( 1, L"Acquired lockfile: %s", lockfile );
 	
 	local.sun_family = AF_UNIX;
-	strcpy(local.sun_path, sock_name);
-	len = strlen(local.sun_path) + sizeof(local.sun_family);
+	strcpy( local.sun_path, sock_name );
+	len = strlen( local.sun_path ) + sizeof( local.sun_family );
 
 	debug(1, L"Connect to socket at %s", sock_name);
 	
-	if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-		perror("socket");
+	if( ( s = socket( AF_UNIX, SOCK_STREAM, 0 ) ) == -1 )
+	{
+		wperror( L"socket" );
 		doexit = 1;
 		goto unlock;
 	}
 
-	/**
+	/*
 	   First check whether the socket has been opened by another fishd;
 	   if so, exit with success status
 	*/
-	if (connect(s, (struct sockaddr *)&local, len) == 0) {
-		debug(1, L"Socket already exists, exiting");
+	if( connect( s, (struct sockaddr *)&local, len ) == 0 )
+	{
+		debug( 1, L"Socket already exists, exiting" );
 		doexit = 1;
 		exitcode = 0;
 		goto unlock;
 	}
 	
-	unlink(local.sun_path);
-	if (bind(s, (struct sockaddr *)&local, len) == -1) {
-		perror("bind");
+	unlink( local.sun_path );
+	if( bind( s, (struct sockaddr *)&local, len ) == -1 )
+	{
+		wperror( L"bind" );
 		doexit = 1;
 		goto unlock;
 	}
@@ -185,29 +199,32 @@ static int get_socket(void)
 	}
 */
 
-	if( fcntl( s, F_SETFL, O_NONBLOCK ) != 0 ) {
+	if( fcntl( s, F_SETFL, O_NONBLOCK ) != 0 )
+	{
 		wperror( L"fcntl" );
 		close( s );
 		doexit = 1;
-	} else if (listen(s, 64) == -1) {
-		wperror(L"listen");
+	} else if( listen( s, 64 ) == -1 )
+	{
+		wperror( L"listen" );
 		doexit = 1;
 	}
 
 unlock:
-	(void)close(fd_lockfile);
-	(void)unlink(lockfile);
-	debug(1, L"Released lockfile %s", lockfile);
-	/**
-	   End critical section protected by lock file
+	(void)unlink( lockfile );
+	debug( 1, L"Released lockfile: %s", lockfile );
+	/*
+	   End critical section protected by lock
 	*/
 	
-	free(lockfile);
+	free( lockfile );
 	
-	free(sock_name);
+	free( sock_name );
 
-	if (doexit)
-		exit(exitcode);
+	if( doexit )
+	{
+		exit( exitcode );
+	}
 
 	return s;
 }

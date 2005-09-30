@@ -55,10 +55,10 @@ parts of fish.
 #define ERROR_MAX_COUNT 1
 
 /**
-   The number of nanoseconds to wait between polls when attempting to acquire 
+   The number of microseconds to wait between polls when attempting to acquire 
    a lockfile
 */
-#define LOCKPOLLINTERVAL 1000000
+#define LOCKPOLLINTERVAL 10
 
 struct termios shell_modes;      
 
@@ -1071,35 +1071,160 @@ wchar_t *unescape( wchar_t * in, int escape_special )
 }
 
 /**
+   Convert a pid_t to a decimal string representation.
+   The str parameter must contain sufficient space.
+   The conservatively approximate maximum number of characters a pid_t will 
+   represent is given by: (int)(3.1 * sizeof(pid_t) + CHAR_BIT + 1)
+   Returns the length of the string
+*/
+static int pidtostr( pid_t pid, char *str )
+{
+	int len, i = 0;
+	int dig;
+
+	/* Store digits in reverse order into string */
+	while( pid != 0 )
+	{
+		dig = pid % 10;
+		str[i] = '0' + dig;
+		pid = ( pid - dig ) / 10;
+		i++;
+	}
+	len = i;
+	/* Reverse digits */
+	i /= 2;
+	while( i )
+	{
+		i--;
+		dig = str[i];
+		str[i] = str[len -  1 - i];
+		str[len - 1 - i] = dig;
+	}
+	return len;
+}
+
+/**
+   Create a copy of str adding this process's decimalised pid
+   The memory returned should be freed using free()
+*/
+static char *dup_str_with_pid( const char *str )
+{
+	int pidlen, len = strlen( str );
+	/*
+	   allocate enough extra space for max size of pid when converted to a 
+	   string; 3.1 ~= log(10)2
+	*/
+	char *newstr = malloc( len + 1 + 
+			(int)(3.1 * sizeof(pid_t) * CHAR_BIT + 1) );
+	
+	if ( newstr == NULL )
+	{
+		return newstr;
+	}
+	memcpy( newstr, str, len );
+	pidlen = pidtostr( getpid(), newstr + len );
+	newstr[len + pidlen] = '\0';
+	return newstr;
+}
+
+/**
    Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
    nanoseconds between polls and timing out after timeout seconds, 
-   thereafter forcibly attempting to obtain the lock.  Returns the opened 
-   lockfile's descriptor or -1 if not possible to open the file or on error.
-   Contains a race condition when the lockfile is on an NFS filesystem 
-   according to Linux manpage open(2)
+   thereafter forcibly attempting to obtain the lock.
+   Returns 1 on success, 0 on failure.
+   A temporary file based on adding the pid to the lockfile name is used, so 
+   be aware that such a file will be deleted if it already exists.
+   To remove the lock the lockfile must be unlinked.
 */
-int acquire_lock_file(const char *lockfile, const int timeout)
+int acquire_lock_file( const char *lockfile, const int timeout, int force )
 {
-	int ret = -1;
+	int fd, timed_out = 0;
+	int ret = 0; /* early exit returns failure */
 	struct timespec pollint;
 	struct timeval start, end;
 	double elapsed;
+	struct stat statbuf;
 
-	if (gettimeofday(&start, NULL) == 0) {
-		pollint.tv_sec = 0;
-		pollint.tv_nsec = LOCKPOLLINTERVAL;
-		while ((ret = open(lockfile, O_EXCL|O_CREAT|O_RDONLY)) == -1) {
-			if (gettimeofday(&end, NULL) != 0)
-				break;
-			elapsed = end.tv_sec + end.tv_usec/1000000.0 - 
-				(start.tv_sec + start.tv_usec/1000000.0);
-			if (elapsed >= timeout) {
-				(void)unlink(lockfile);
-				ret = open(lockfile, O_EXCL|O_CREAT|O_RDONLY);
+	/*
+	  (Re)create a unique file and check that it has one only link.
+	  The check would be subject to a race if the filename were not unique.
+	*/
+	char *linkfile = dup_str_with_pid( lockfile );
+	if( linkfile == NULL )
+	{
+		goto done;
+	}
+	(void)unlink( linkfile );
+	if( ( fd = open( linkfile, O_CREAT|O_RDONLY ) ) == -1 )
+	{
+		goto done;
+	}
+	close( fd );
+	if( stat( linkfile, &statbuf ) != 0 || statbuf.st_nlink != 1 )
+	{
+		goto done;
+	}
+
+	if( gettimeofday( &start, NULL ) != 0 )
+	{
+		goto done;
+	}
+	end = start;
+	pollint.tv_sec = 0;
+	pollint.tv_nsec = LOCKPOLLINTERVAL * 1000000;
+	do 
+	{
+		/*
+		  Try to create a hard link to the unique file from the 
+		  lockfile.  This will only succeed if the lockfile does not 
+		  already exist.  It is guaranteed to provide race-free 
+		  semantics over NFS which the alternative of calling 
+		  open(O_EXCL|O_CREAT) on the lockfile is not.  The lock 
+		  succeeds if the call to link returns 0 or the link count on 
+		  the unique file increases to 2.
+		*/
+		if( link( linkfile, lockfile ) == 0 ||
+		    ( stat( linkfile, &statbuf ) == 0 && 
+				statbuf.st_nlink == 2 ) )
+		{
+			/* Successful lock */
+			ret = 1;
+			break;
+		}
+		elapsed = end.tv_sec + end.tv_usec/1000000.0 - 
+			( start.tv_sec + start.tv_usec/1000000.0 );
+		/* 
+		  The check for elapsed < 0 is to deal with the unlikely event 
+		  that after the loop is entered the system time is set forward
+		  past the loop's end time.  This would otherwise result in a 
+		  (practically) infinite loop.
+		*/
+		if( timed_out || elapsed >= timeout || elapsed < 0 )
+		{
+			if ( timed_out == 0 && force )
+			{
+				/*
+				  Timed out and force was specified - attempt to
+				  remove stale lock and try a final time
+				*/
+				(void)unlink( lockfile );
+				timed_out = 1;
+				continue;
+			}
+			else
+			{
+				/*
+				  Timed out and final try was unsuccessful or 
+				  force was not specified
+				*/
 				break;
 			}
-			(void)nanosleep(&pollint, NULL);
-		}	
-	}
+		}
+		nanosleep( &pollint, NULL );
+	} while( gettimeofday( &end, NULL ) == 0 );
+done:
+	/* The linkfile is not needed once the lockfile has been created */
+	(void)unlink( linkfile );
+	free( linkfile );
 	return ret;
 }

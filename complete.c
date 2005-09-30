@@ -1489,7 +1489,7 @@ void complete_load( wchar_t *cmd,
 		struct stat buf;		
 		wchar_t *next = (wchar_t *)al_get( &path_list, i );		
 		sb_clear( &path );
-		sb_append2( &path, next, L"/", cmd, L".fish", 0 );
+		sb_append2( &path, next, L"/", cmd, L".fish", (void *)0 );
 		if( (wstat( (wchar_t *)path.buff, &buf )== 0) && 
 			(waccess( (wchar_t *)path.buff, R_OK ) == 0) )
 		{
@@ -1708,7 +1708,7 @@ static int complete_param( wchar_t *cmd_orig,
 					{
 						string_buffer_t whole_opt;
 						sb_init( &whole_opt );
-						sb_append2( &whole_opt, o->old_mode?L"-":L"--", o->long_opt, 0 );
+						sb_append2( &whole_opt, o->old_mode?L"-":L"--", o->long_opt, (void *)0 );
 						
 						if( wcsncmp( str, (wchar_t *)whole_opt.buff, wcslen(str) )==0)
 						{							

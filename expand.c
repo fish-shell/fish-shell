@@ -173,7 +173,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 							L"\'",
 							el,
 							L"\'",
-							0 );
+							(void *)0 );
 			}
 			else
 			{
@@ -199,7 +199,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 								L"\'",
 								el,
 								L"\'",
-								0 );
+								(void *)0 );
 				}
 				else
 				{

@@ -127,7 +127,7 @@ void write_part( wchar_t *begin,
 			switch( tok_last_type( &tok ) )
 			{
 				case TOK_STRING:
-					sb_append2( &out, tok_last( &tok), L"\n", 0 );
+					sb_append2( &out, tok_last( &tok), L"\n", (void *)0 );
 					break;
 								
 			}						
@@ -175,7 +175,7 @@ int builtin_commandline( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0],
 					L": Can not set commandline in non-interactive mode\n",
-					0 );
+					(void *)0 );
 		builtin_print_help( argv[0], sb_err );
 		return 1;		
 	}	
@@ -254,7 +254,7 @@ int builtin_commandline( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0 );
+							(void *)0 );
 				builtin_print_help( argv[0], sb_err );
 
 				return 1;
@@ -312,7 +312,7 @@ int builtin_commandline( wchar_t **argv )
 					   L"\n",
 					   parser_current_line(),
 					   L"\n",
-					   0);
+					   (void *)0);
 			return 1;
 		}
 		
@@ -325,7 +325,7 @@ int builtin_commandline( wchar_t **argv )
 						L"\n",
 						parser_current_line(),
 						L"\n",
-						0 );
+						(void *)0 );
 			builtin_print_help( argv[0], sb_err );
 			return 1;
  		}
@@ -352,7 +352,7 @@ int builtin_commandline( wchar_t **argv )
 							L"'\n",
 							parser_current_line(),
 							L"\n",
-							0 );
+							(void *)0 );
 				builtin_print_help( argv[0], sb_err );
 				return 1;
 			}
@@ -370,7 +370,7 @@ int builtin_commandline( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0],
 					L": Too many arguments\n",
-					0 );
+					(void *)0 );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -382,7 +382,7 @@ int builtin_commandline( wchar_t **argv )
 					argv[0],
 					BUILTIN_ERR_COMBO,
 					L",\n --cut-at-cursor and --tokenize can not be used when setting the commandline",
-					0 );
+					(void *)0 );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -393,7 +393,7 @@ int builtin_commandline( wchar_t **argv )
                     argv[0],
                     BUILTIN_ERR_COMBO,
                     L",\n insertion mode switches can not be used when not in insertion mode",
-                    0 );
+                    (void *)0 );
         builtin_print_help( argv[0], sb_err );		
         return 1;
 	}

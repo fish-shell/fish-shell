@@ -242,11 +242,11 @@ void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 	
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{
-		sb_append2( sb, desc, 0 );							
+		sb_append2( sb, desc, (void *)0 );							
 	}
 	else
 	{							
-		sb_append2( sb, desc, L", ", 0 );
+		sb_append2( sb, desc, L", ", (void *)0 );
 		if( sz < 0 )
 		{
 			sb_append( sb, L"unknown" );

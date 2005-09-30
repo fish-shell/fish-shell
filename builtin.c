@@ -115,13 +115,13 @@ static void builtin_wperror( const wchar_t *s)
 {
 	if( s != 0 )
 	{
-		sb_append2( sb_err, s, L": ", 0 );
+		sb_append2( sb_err, s, L": ", (void *)0 );
 	}
 	char *err = strerror( errno );
 	wchar_t *werr = str2wcs( err );
 	if( werr )
 	{
-		sb_append2( sb_err,  werr, L"\n", 0 );	
+		sb_append2( sb_err,  werr, L"\n", (void *)0 );	
 		free( werr );
 	}	
 }
@@ -297,7 +297,7 @@ static int builtin_builtin(  wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0);				
+							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 	
 				
@@ -340,7 +340,7 @@ static int builtin_builtin(  wchar_t **argv )
 			sb_append2( sb_out,
 						names_arr[i],
 						L"\n",
-						0 );			
+						(void *)0 );			
 		}
 		free( names_arr );
 		al_destroy( &names );			
@@ -395,7 +395,7 @@ static int builtin_generic( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0);				
+							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 				return 1;
 				
@@ -459,7 +459,7 @@ static int builtin_exec( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0);				
+							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 				return 1;
 				
@@ -545,7 +545,7 @@ static int builtin_functions( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0);				
+							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 	
 				
@@ -586,7 +586,7 @@ static int builtin_functions( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0],
 					L": Invalid combination of options\n",
-					0);				
+					(void *)0);				
 		builtin_print_help( argv[0], sb_err );
 		
 		return 1;
@@ -608,7 +608,7 @@ static int builtin_functions( wchar_t **argv )
 		{
 			sb_append2( sb_err,
 						L"functions: Expected exactly one function name\n",
-						0);				
+						(void *)0);				
 			builtin_print_help( argv[0], sb_err );
 			
 			return 1;
@@ -620,7 +620,7 @@ static int builtin_functions( wchar_t **argv )
 						L"functions: Function ",
 						func,
 						L" does not exist\n",
-						0);				
+						(void *)0);				
 			builtin_print_help( argv[0], sb_err );
 			
 			return 1;			
@@ -644,7 +644,7 @@ static int builtin_functions( wchar_t **argv )
 			sb_append2( sb_out,
 						names_arr[i],
 						L"\n",
-						0 );			
+						(void *)0 );			
 		}
 		free( names_arr );
 		al_destroy( &names );			
@@ -672,7 +672,7 @@ static int builtin_functions( wchar_t **argv )
 							L"\n\t",
 							function_get_definition(names_arr[i]),
 							L"\nend\n\n",
-							0);
+							(void *)0);
 			}
 			free( names_arr );
 			al_destroy( &names );			
@@ -688,7 +688,7 @@ static int builtin_functions( wchar_t **argv )
 							L"\n\t",
 							function_get_definition(argv[i]),
 							L"\nend\n\n",
-							0);
+							(void *)0);
 
 			break;
 		}
@@ -769,7 +769,7 @@ static int builtin_function( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0);				
+							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 				
 				return 1;
@@ -807,7 +807,7 @@ static int builtin_function( wchar_t **argv )
 					L": illegal function name \'", 
 					argv[woptind], 
 					L"\'\n", 
-					0 );
+					(void *)0 );
 
 		res=1;	
 	}	
@@ -819,7 +819,7 @@ static int builtin_function( wchar_t **argv )
 					L": the name \'",
                     argv[woptind],
                     L"\' is reserved,\nand can not be used as a function name\n",
-                    0 );
+                    (void *)0 );
         res=1;
     }
 	
@@ -852,7 +852,7 @@ static int builtin_function( wchar_t **argv )
 			}
 			
 			sb_append2( sb_err,
-						nxt, L"  ", 0 );			
+						nxt, L"  ", (void *)0 );			
 		}
 		free( names_arr );
 		al_destroy( &names );
@@ -922,7 +922,7 @@ static int builtin_random( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0);				
+							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 				
 				return 1;
@@ -965,7 +965,7 @@ static int builtin_random( wchar_t **argv )
 			{
 				sb_append2( sb_err, 
 							argv[0],
-							L": Seed value '" , argv[woptind], L"' is not a valid number\n", 0);
+							L": Seed value '" , argv[woptind], L"' is not a valid number\n", (void *)0);
 				
 				return 1;
 			}
@@ -1058,7 +1058,7 @@ static int builtin_read( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0 );
+							(void *)0 );
 				builtin_print_help( argv[0], sb_err );
 
 				return 1;
@@ -1099,7 +1099,7 @@ static int builtin_read( wchar_t **argv )
 					L"\n",
 					parser_current_line(),
 					L"\n",
-					0 );
+					(void *)0 );
 		builtin_print_help( argv[0], sb_err );		
 		return 1;		
 	}
@@ -1112,7 +1112,7 @@ static int builtin_read( wchar_t **argv )
 					L"\n",
 					parser_current_line(),
 					L"\n",
-					0 );
+					(void *)0 );
 		builtin_print_help( argv[0], sb_err );		
 		
 		return 1;		
@@ -1126,7 +1126,7 @@ static int builtin_read( wchar_t **argv )
 					L"\n",
 					parser_current_line(),
 					L"\n",
-					0 );
+					(void *)0 );
 		builtin_print_help( argv[0], sb_err );				
 		return 1;				
 	}
@@ -1295,7 +1295,7 @@ static int builtin_status( wchar_t **argv )
 							L" ",
 							long_options[opt_index].name,
 							L"\n",
-							0);				
+							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 				
 				return 1;
@@ -1399,7 +1399,7 @@ static int builtin_exit( wchar_t **argv )
 			ec = wcstol(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
-				sb_append2( sb_err, argv[0], L": Argument must be an integer '", argv[1], L"'\n", 0 );
+				sb_append2( sb_err, argv[0], L": Argument must be an integer '", argv[1], L"'\n", (void *)0 );
 				builtin_print_help( argv[0], sb_err );				
 				return 1;
 			}
@@ -1407,7 +1407,7 @@ static int builtin_exit( wchar_t **argv )
 		}
 		
 		default:
-			sb_append2( sb_err, argv[0], L": Too many arguments\n", 0 );
+			sb_append2( sb_err, argv[0], L": Too many arguments\n", (void *)0 );
 			builtin_print_help( argv[0], sb_err );				
 			return 1;
 				
@@ -1452,7 +1452,7 @@ static int builtin_cd( wchar_t **argv )
 			sb_append2( sb_err,
 						argv[0], 
 						L": Could not find home directory\n",
-						0 );			
+						(void *)0 );			
 			
 		}		
 	}	
@@ -1468,10 +1468,10 @@ static int builtin_cd( wchar_t **argv )
 					L": ",
 					dir_in,
 					L" is not a directory or you do not have permission to enter it\n",
-					0 );
+					(void *)0 );
 		sb_append2( sb_err, 
 					parser_current_line(),
-					0 );			
+					(void *)0 );			
 		return 1;
 	}		
 
@@ -1482,10 +1482,10 @@ static int builtin_cd( wchar_t **argv )
 					L": ",
 					dir,
 					L" is not a directory\n",
-					0 );
+					(void *)0 );
 		sb_append2( sb_err, 
 					parser_current_line(),
-					0 );
+					(void *)0 );
 		
 		free( dir );
 		
@@ -1611,7 +1611,7 @@ static int builtin_complete( wchar_t **argv )
 							L": Unknown option ",
 							long_options[opt_index].name,
 							L"\n",
-							0 );
+							(void *)0 );
 				sb_append( sb_err, 
 						   parser_current_line() );
 //				builtin_print_help( argv[0], sb_err );
@@ -1658,7 +1658,7 @@ static int builtin_complete( wchar_t **argv )
 								L": Parameter too long ",
 								woptarg,
 								L"\n",
-								0);
+								(void *)0);
 					sb_append( sb_err, 
 							   parser_current_line() );
 //				builtin_print_help( argv[0], sb_err );
@@ -1711,7 +1711,7 @@ static int builtin_complete( wchar_t **argv )
 		sb_append2( sb_err, 
 					argv[0],
 					L": Too many arguments\n",
-					0);
+					(void *)0);
 		sb_append( sb_err, 
 				   parser_current_line() );
 		//			builtin_print_help( argv[0], sb_err );
@@ -1782,7 +1782,7 @@ static int builtin_source( wchar_t ** argv )
 	if( (argv[1] == 0) || (argv[2]!=0) )
 	{
 		
-		sb_append2( sb_err, argv[0], L": Expected exactly one argument\n", 0 );
+		sb_append2( sb_err, argv[0], L": Expected exactly one argument\n", (void *)0 );
 		builtin_print_help( argv[0], sb_err );
 
 		return 1;
@@ -1904,7 +1904,7 @@ static int builtin_fg( wchar_t **argv )
 			sb_append2( sb_err, 
 						argv[0],
 						L": Ambiguous job\n",
-						0);	
+						(void *)0);	
 		}
 		else
 		{
@@ -1912,7 +1912,7 @@ static int builtin_fg( wchar_t **argv )
 						argv[0], 
 						L": Not a job (", 
 						argv[1], 
-						L")\n", 0 );
+						L")\n", (void *)0 );
 		}
 		builtin_print_help( argv[0], sb_err );
 		
@@ -1929,7 +1929,7 @@ static int builtin_fg( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0], 
 					L": No suitable job\n",
-					0);
+					(void *)0);
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -1976,7 +1976,7 @@ static void send_to_bg( job_t *j, wchar_t *name )
 {
 	if( j == 0 )
 	{
-		sb_append2( sb_err, L"bg", L": Unknown job ", name, L"\n", 0 );
+		sb_append2( sb_err, L"bg", L": Unknown job ", name, L"\n", (void *)0 );
 		builtin_print_help( L"bg", sb_err );
 		return;
 	}	
@@ -2106,7 +2106,7 @@ static int builtin_jobs( wchar_t **argv )
 							L": Unknown option ",
 							long_options[opt_index].name,
 							L"\n",
-							0 );
+							(void *)0 );
 				sb_append( sb_err, 
 						   parser_current_line() );
 //				builtin_print_help( argv[0], sb_err );
@@ -2162,13 +2162,13 @@ static int builtin_jobs( wchar_t **argv )
 				sb_printf( sb_out, L"%d\t", cpu_use(j) );
 #endif
 				sb_append2( sb_out, job_is_stopped(j)?L"stopped\t":L"running\t", 
-							j->command, L"\n", 0 );
+							j->command, L"\n", (void *)0 );
 			
 			}
 		}
 		if( !found )
 		{
-			sb_append2( sb_out, argv[0], L": There are no running jobs\n", 0 );
+			sb_append2( sb_out, argv[0], L": There are no running jobs\n", (void *)0 );
 		}
 	}
 	else
@@ -2179,7 +2179,7 @@ static int builtin_jobs( wchar_t **argv )
 		
 		if( woptind != argc-1 )
 		{
-			sb_append2( sb_err, argv[0], L": Expected exactly one argument\n", 0 );
+			sb_append2( sb_err, argv[0], L": Expected exactly one argument\n", (void *)0 );
 		}
 
 			
@@ -2187,7 +2187,7 @@ static int builtin_jobs( wchar_t **argv )
 		pid=wcstol( argv[woptind], &end, 10 );
 		if( errno || *end )
 		{
-			sb_append2( sb_err, argv[0], L": Not a process id: ", argv[woptind], L"\n", 0 );
+			sb_append2( sb_err, argv[0], L": Not a process id: ", argv[woptind], L"\n", (void *)0 );
 			return 1;
 				
 		}
@@ -2235,7 +2235,7 @@ static int builtin_for( wchar_t **argv )
 		sb_append2( sb_err, 
 					argv[0],
 					L": Expected at least two arguments\n",
-					0);				
+					(void *)0);				
 		builtin_print_help( argv[0], sb_err );
 	}
 	else if ( !wcsvarname(argv[1]) )
@@ -2245,7 +2245,7 @@ static int builtin_for( wchar_t **argv )
 					L": \'",
 					argv[1],
 					L"\' invalid variable name\n",
-					0);				
+					(void *)0);				
 		builtin_print_help( argv[0], sb_err );
 	}
 	else if (wcscmp( argv[2], L"in") != 0 )
@@ -2253,7 +2253,7 @@ static int builtin_for( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0],
 					L": Second argument must be \'in\'\n",
-					0);				
+					(void *)0);				
 		builtin_print_help( argv[0], sb_err );
 	}
 	else
@@ -2313,7 +2313,7 @@ static int builtin_end( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0],
 					L": Not inside of block\n",
-					0);
+					(void *)0);
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2435,7 +2435,7 @@ static int builtin_else( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0],
 					L": not inside of if block\n",
-					0);
+					(void *)0);
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2468,7 +2468,7 @@ static int builtin_break_continue( wchar_t **argv )
 	{
 		sb_append2( sb_err, 
 					argv[0], 
-					L": Unknown option \'", argv[1], L"\'", 0 );
+					L": Unknown option \'", argv[1], L"\'", (void *)0 );
 		builtin_print_help( argv[0], sb_err );
 		return 1;		
 	}
@@ -2485,7 +2485,7 @@ static int builtin_break_continue( wchar_t **argv )
 	{
 		sb_append2( sb_err, 
 					argv[0], 
-					L": Not inside of loop\n", 0 );
+					L": Not inside of loop\n", (void *)0 );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2528,7 +2528,7 @@ static int builtin_return( wchar_t **argv )
 							L": Argument must be an integer '", 
 							argv[1],
 							L"'\n", 
-							0 );
+							(void *)0 );
 				builtin_print_help( argv[0], sb_err );				
 				return 1;
 			}
@@ -2538,7 +2538,7 @@ static int builtin_return( wchar_t **argv )
 		default:
 			sb_append2( sb_err, 
 						argv[0], 
-						L": Too many arguments\n", 0 );
+						L": Too many arguments\n", (void *)0 );
 			builtin_print_help( argv[0], sb_err );
 			return 1;		
 	}
@@ -2554,7 +2554,7 @@ static int builtin_return( wchar_t **argv )
 	{
 		sb_append2( sb_err, 
 					argv[0], 
-					L": Not inside of function\n", 0 );
+					L": Not inside of function\n", (void *)0 );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2615,7 +2615,7 @@ static int builtin_case( wchar_t **argv )
 		sb_append2( sb_err,
 					argv[0],
 					L": syntax error, case command while not in switch block\n",
-					0);
+					(void *)0);
 		builtin_print_help( L"case", sb_err );
 		return 1;
 	}

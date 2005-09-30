@@ -272,12 +272,13 @@ int parser_skip_arguments( const wchar_t *cmd )
     return contains_str( cmd,
 						 L"else",
 						 L"begin",
-						 0 );
+						 (void *)0 );
 }
 
 
 int parser_is_subcommand( const wchar_t *cmd )
 {
+	
 	return parser_skip_arguments( cmd ) ||
 		contains_str( cmd,
 					  L"command", 
@@ -288,7 +289,7 @@ int parser_is_subcommand( const wchar_t *cmd )
 					  L"and",
 					  L"or",
 					  L"not",
-					  0 );
+					  (void *)0 );
 }
 
 /**
@@ -304,7 +305,7 @@ static int parser_is_block( wchar_t *word)
 						 L"function",
 						 L"switch", 
 						 L"begin",
-						 0 );
+						 (void *)0 );
 }
 
 int parser_is_reserved( wchar_t *word)
@@ -318,7 +319,7 @@ int parser_is_reserved( wchar_t *word)
 					  L"return",
 					  L"continue",
 					  L"break",
-					  0 );
+					  (void *)0 );
 }
 
 int parser_is_pipe_forbidden( wchar_t *word )
@@ -329,7 +330,7 @@ int parser_is_pipe_forbidden( wchar_t *word )
 						 L"break",
 						 L"return", 
 						 L"continue", 
-						 0 );
+						 (void *)0 );
 }
 
 static const wchar_t *parser_find_end( const wchar_t * buff ) 

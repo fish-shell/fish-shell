@@ -43,7 +43,7 @@ static int parse_fill_name( string_buffer_t *name,
 	
 		sb_append(sb_err, L"set: Invalid character in variable name: ");
 		sb_append_char(sb_err, *src);
-		sb_append2(sb_err, L"\n", 				  parser_current_line(), L"\n", 0 );
+		sb_append2(sb_err, L"\n", 				  parser_current_line(), L"\n", (void *)0 );
 //		builtin_print_help( L"set", sb_err );
 
 		return -1;
@@ -242,7 +242,7 @@ static void print_variables(int include_values, int escape, int scope)
 		{
 			wchar_t *value = env_get(key);
 			wchar_t *e_value = escape ? expand_escape_variable(value) : wcsdup(value);
-			sb_append2(sb_out, L" ", e_value, 0);
+			sb_append2(sb_out, L" ", e_value, (void *)0);
 			free(e_value);
 		}
 		
@@ -369,7 +369,7 @@ int builtin_set( wchar_t **argv )
 				  L"\n",
 				  parser_current_line(),
 				  L"\n",
-				  0);
+				  (void *)0);
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -384,7 +384,7 @@ int builtin_set( wchar_t **argv )
 				  L"\n",
 				  parser_current_line(),
 				  L"\n",
-				  0);
+				  (void *)0);
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -408,7 +408,7 @@ int builtin_set( wchar_t **argv )
 				   L"\n",
 				   parser_current_line(),
 				   L"\n", 
-				   0);
+				   (void *)0);
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -492,7 +492,7 @@ int builtin_set( wchar_t **argv )
 							L": Erase needs a variable name\n", 
 							parser_current_line(), 
 							L"\n",
-							0 );
+							(void *)0 );
 				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
 			}
@@ -530,7 +530,7 @@ int builtin_set( wchar_t **argv )
 							L": Values cannot be specfied with erase\n",
 							parser_current_line(),
 							L"\n",
-							0 );
+							(void *)0 );
 				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
 			} 

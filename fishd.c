@@ -153,7 +153,7 @@ static int get_socket()
 	char *lockfile = acquire_socket_lock( sock_name );
 	if( lockfile == NULL )
 	{
-		fwprintf( stderr, L"Unable to obtain lock on socket, exiting" );
+		debug( 0, L"Unable to obtain lock on socket, exiting" );
 		exit( EXIT_FAILURE );
 	}
 	debug( 1, L"Acquired lockfile: %s", lockfile );

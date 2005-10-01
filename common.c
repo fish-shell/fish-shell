@@ -22,6 +22,10 @@ parts of fish.
 #include <sys/time.h>
 #include <fcntl.h>
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
+
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #else
@@ -55,7 +59,7 @@ parts of fish.
 #define ERROR_MAX_COUNT 1
 
 /**
-   The number of microseconds to wait between polls when attempting to acquire 
+   The number of milliseconds to wait between polls when attempting to acquire 
    a lockfile
 */
 #define LOCKPOLLINTERVAL 10
@@ -1091,13 +1095,13 @@ wchar_t *unescape( wchar_t * in, int escape_special )
 }
 
 /**
-   Convert a pid_t to a decimal string representation.
-   The str parameter must contain sufficient space.
+   Writes a pid_t in decimal representation to str.
+   str must contain sufficient space.
    The conservatively approximate maximum number of characters a pid_t will 
-   represent is given by: (int)(3.1 * sizeof(pid_t) + CHAR_BIT + 1)
+   represent is given by: (int)(0.31 * sizeof(pid_t) + CHAR_BIT + 1)
    Returns the length of the string
 */
-static int pidtostr( pid_t pid, char *str )
+static int sprint_pid_t( pid_t pid, char *str )
 {
 	int len, i = 0;
 	int dig;
@@ -1124,37 +1128,100 @@ static int pidtostr( pid_t pid, char *str )
 }
 
 /**
-   Create a copy of str adding this process's decimalised pid
-   The memory returned should be freed using free()
+   Writes a pseudo-random number (between one and maxlen) of pseudo-random
+   digits into str.
+   str must point to an allocated buffer of size of at least maxlen chars.
+   Returns the number of digits written.
+   Since the randomness in part depends on machine time it has _some_ extra
+   strength but still not enough for use in concurrent locking schemes on a
+   single machine because gettimeofday may not return a different value on
+   consecutive calls when:
+   a) the OS does not support fine enough resolution
+   b) the OS is running on an SMP machine.
+   Additionally, gettimeofday errors are ignored.
+   Excludes chars other than digits since ANSI C only guarantees that digits
+   are consecutive.
 */
-static char *dup_str_with_pid( const char *str )
+static int sprint_rand_digits( char *str, int maxlen )
 {
-	int pidlen, len = strlen( str );
-	/*
-	   allocate enough extra space for max size of pid when converted to a 
-	   string; 3.1 ~= log(10)2
-	*/
-	char *newstr = malloc( len + 1 + 
-			(int)(3.1 * sizeof(pid_t) * CHAR_BIT + 1) );
+	int i, max;
+	struct timeval tv;
 	
-	if ( newstr == NULL )
+	/* 
+	  Seed the pseudo-random generator based on time - this assumes
+	  that consecutive calls to gettimeofday will return different values
+	  and ignores errors returned by gettimeofday.
+	  Cast to unsigned so that wrapping occurs on overflow as per ANSI C.
+	*/
+	(void)gettimeofday( &tv, NULL );
+	srand( (unsigned int)tv.tv_sec + (unsigned int)tv.tv_usec * 1000000UL );
+	max = 1 + (maxlen - 1) * (rand() / (RAND_MAX + 1.0));
+	for( i = 0; i < max; i++ )
 	{
-		return newstr;
+		str[i] = '0' + 10 * (rand() / (RAND_MAX + 1.0));
 	}
-	memcpy( newstr, str, len );
-	pidlen = pidtostr( getpid(), newstr + len );
-	newstr[len + pidlen] = '\0';
-	return newstr;
+	return i;
+}
+
+/**
+   Generate a filename unique in an NFS namespace by creating a copy of str and
+   appending .<hostname>.<pid> to it.  If gethostname() fails then a pseudo-
+   random string is substituted for <hostname> - the randomness of the string
+   should be strong enough across different machines.  The main assumption 
+   though is that gethostname will not fail and this is just a "safe enough"
+   fallback.
+   The memory returned should be freed using free().
+*/
+static char *gen_unique_nfs_filename( const char *filename )
+{
+	int pidlen, hnlen, orglen = strlen( filename );
+	char hostname[HOST_NAME_MAX + 1];
+	char *newname;
+	
+	if ( gethostname( hostname, HOST_NAME_MAX + 1 ) == 0 )
+	{
+		hnlen = strlen( hostname );
+	}
+	else
+	{
+		hnlen = sprint_rand_digits( hostname, HOST_NAME_MAX );
+		hostname[hnlen] = '\0';
+	}
+	newname = malloc( orglen + 1 /* period */ + hnlen + 1 /* period */ +
+			 /* max possible pid size: 0.31 ~= log(10)2 */
+			(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1)
+			+ 1 /* '\0' */ );
+	
+	if ( newname == NULL )
+	{
+		debug( 1, L"gen_unique_nfs_filename: %s", strerror( errno ) );
+		return newname;
+	}
+	memcpy( newname, filename, orglen );
+	newname[orglen] = '.';
+	memcpy( newname + orglen + 1, hostname, hnlen );
+	newname[orglen + 1 + hnlen] = '.';
+	pidlen = sprint_pid_t( getpid(), newname + orglen + 1 + hnlen + 1 );
+	newname[orglen + 1 + hnlen + 1 + pidlen] = '\0';
+/*	debug( 1, L"gen_unique_nfs_filename returning with: newname = \"%s\"; "
+	          L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
+		  L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
+		  newname, (int)HOST_NAME_MAX, hnlen, orglen, 
+		  (int)sizeof(pid_t), 
+		  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
+		  (int)(orglen + 1 + hnlen + 1 + 
+		  	(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
+	return newname;
 }
 
 /**
    Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
-   nanoseconds between polls and timing out after timeout seconds, 
-   thereafter forcibly attempting to obtain the lock.
+   milliseconds between polls and timing out after timeout seconds, 
+   thereafter forcibly attempting to obtain the lock if force is non-zero.
    Returns 1 on success, 0 on failure.
-   A temporary file based on adding the pid to the lockfile name is used, so 
-   be aware that such a file will be deleted if it already exists.
-   To remove the lock the lockfile must be unlinked.
+   To release the lock the lockfile must be unlinked.
+   A unique temporary file named by appending characters to the lockfile name 
+   is used; any pre-existing file of the same name is subject to deletion.
 */
 int acquire_lock_file( const char *lockfile, const int timeout, int force )
 {
@@ -1167,9 +1234,8 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 
 	/*
 	  (Re)create a unique file and check that it has one only link.
-	  The check would be subject to a race if the filename were not unique.
 	*/
-	char *linkfile = dup_str_with_pid( lockfile );
+	char *linkfile = gen_unique_nfs_filename( lockfile );
 	if( linkfile == NULL )
 	{
 		goto done;
@@ -1177,16 +1243,24 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 	(void)unlink( linkfile );
 	if( ( fd = open( linkfile, O_CREAT|O_RDONLY ) ) == -1 )
 	{
+		debug( 1, L"acquire_lock_file: open: %s", strerror( errno ) );
 		goto done;
 	}
 	close( fd );
-	if( stat( linkfile, &statbuf ) != 0 || statbuf.st_nlink != 1 )
+	if( stat( linkfile, &statbuf ) != 0 )
 	{
+		debug( 1, L"acquire_lock_file: stat: %s", strerror( errno ) );
 		goto done;
 	}
-
+	if ( statbuf.st_nlink != 1 )
+	{
+		debug( 1, L"acquire_lock_file: number of hardlinks on unique "
+			L"tmpfile is %d instead of 1.", (int)statbuf.st_nlink );
+		goto done;
+	}
 	if( gettimeofday( &start, NULL ) != 0 )
 	{
+		debug( 1, L"acquire_lock_file: gettimeofday: %s", strerror( errno ) );
 		goto done;
 	}
 	end = start;
@@ -1237,6 +1311,9 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 				  Timed out and final try was unsuccessful or 
 				  force was not specified
 				*/
+				debug( 1, L"acquire_lock_file: timed out "
+					L"trying to obtain lockfile %s using "
+					L"linkfile %s", lockfile, linkfile );
 				break;
 			}
 		}

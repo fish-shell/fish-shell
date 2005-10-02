@@ -78,11 +78,12 @@ end
 
 set res fail
 
+set -e t7
 for i in 1 2
 	if test $i = 1
-		set t7 b
+		set t7 lala
 	else
-		if test $t7 = b
+		if test $t7
 			set res pass
 		end
 	end

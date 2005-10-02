@@ -638,7 +638,7 @@ Here are some of the commands available in the editor:
 - Home or Ctrl-a moves to the beginning of the line
 - End or Ctrl-e moves to the end of line
 - Left and right moves one character left or right
-- Alt-left and Alt-right moves one word left or right
+- Alt-left and Alt-right moves one word left or right, or moves forward/backward in the directory history if the commandline is empty
 - Delete and backspace removes one character forwards or backwards
 - Ctrl-c delete entire line
 - Ctrl-d delete one character to the right of the cursor, unless the buffer is empty, in which case the shell will exit
@@ -656,10 +656,9 @@ this, copy the file /etc/fish_inputrc to your home directory and
 rename it to '.fish_inputrc'. Now you can edit the file .fish_inputrc,
 to change your key bindings. The fileformat of this file is described
 in the manual page for readline. Use the command <tt>man readline</tt>
-to read up on this syntax. Please note thet the key binding support in
-\c fish is still limited. You can not use the set command or the
-keyname-syntax, and the list functions is incomplete. Currently, the
-following functions are available:
+to read up on this syntax. Please note thet the list of key binding
+functions in fish is different to that offered by readline. Currently,
+the following functions are available:
 
 
 - \c backward-char, moves one character to the left

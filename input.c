@@ -67,6 +67,15 @@ typedef struct
 	mapping;
 
 /**
+   Symbolic names for some acces-modifiers used when parsing symbolic sequences
+*/
+#define CTRL L"Control-"
+/**
+   Symbolic names for some acces-modifiers used when parsing symbolic sequences
+*/
+#define META L"Meta-"
+
+/**
    Names of all the readline functions supported
 */
 const wchar_t *name_arr[] = 
@@ -353,6 +362,175 @@ m->command );
 repaint();*/
 }
 
+
+/**
+   Parse special character from the specified inputrc-style key binding. 
+
+   Control-a is expanded to 1, etc.
+*/
+
+static wchar_t *input_symbolic_sequence( const wchar_t *in )
+{
+	wchar_t *res=0;
+
+	if( !*in || *in == L'\n' )
+		return 0;
+	
+	debug( 4, L"Try to parse symbolic sequence %ls", in );
+
+	if( wcsncmp( in, CTRL, wcslen(CTRL) ) == 0 )
+	{
+		int has_meta=0;
+		
+		in += wcslen(CTRL);
+
+		/*
+		  Control-Meta- Should be rearranged to Meta-Control, this
+		  special-case must be handled manually.
+		*/
+		if( wcsncmp( in, META, wcslen(META) ) == 0 )
+		{
+			in += wcslen(META);
+			has_meta=1;
+		}
+		
+		wchar_t c = towlower( *in );
+		in++;		
+		if( c < L'a' || c > L'z' )
+		{
+			debug( 1, L"Invalid Control sequence" );
+			return 0;			
+		}
+		if( has_meta )
+		{
+			res = wcsdup( L"\ea" );
+			res[1]=1+c-L'a';
+		}
+		else
+		{
+			res = wcsdup( L"a" );
+			res[0]=1+c-L'a';
+		}		
+		debug( 4, L"Got control sequence %d", res[0] );
+
+	}
+	else if( wcsncmp( in, META, wcslen(META) ) == 0 )
+	{
+		in += wcslen(META);
+		res = wcsdup( L"\e" );		
+		debug( 4, L"Got meta" );
+	}
+	else 
+	{
+		int i;
+		struct 
+		{
+			wchar_t *in;
+			char *out;
+		}
+		map[]=
+		{
+			{
+				L"rubout",
+				key_backspace
+			}
+			,
+			{
+				L"del",
+				key_dc
+			}
+			,
+			{
+				L"esc",
+				"\e"
+			}
+			,
+			{
+				L"lfd",
+				"\r"
+			}
+			,
+			{
+				L"newline",
+				"\n"
+			}
+			,
+			{
+				L"ret",
+				"\n"
+			}
+			,
+			{
+				L"return",
+				"\n"
+			}
+			,
+			{
+				L"spc",
+				" "
+			}
+			,
+			{
+				L"space",
+				" "
+			}
+			,
+			{
+				L"tab",
+				"\t"
+			}
+			,
+			{
+				0,
+				0
+			}
+		}
+		;
+		
+		for( i=0; map[i].in; i++ )
+		{
+			if( wcsncmp( in, map[i].in, wcslen(map[i].in) )==0 )
+			{
+				in+= wcslen( map[i].in );
+				res = str2wcs( map[i].out );
+				
+				break;
+			}
+		}
+
+		if( !res )
+		{
+			if( iswalnum( *in ) || iswpunct( *in ) )
+			{
+				res = wcsdup( L"a" );
+				*res = *in++;
+				debug( 4, L"Got character %lc", *res );
+			}	
+		}
+	}
+	if( !res )
+	{
+		debug( 1, L"Could not parse sequence %ls", in );
+		return 0;
+	}
+	if( !*in || *in == L'\n')
+	{
+		debug( 4, L"Finished parsing sequence" );
+		return res;
+	}
+	
+	wchar_t *res2 = input_symbolic_sequence( in );
+	if( !res2 )
+	{
+		free( res );
+		return 0;
+	}
+	wchar_t *res3 = wcsdupcat( res, res2 );
+	free( res);
+	free(res2);
+	
+	return res3;
+}
 
 /**
    Unescape special character from the specified inputrc-style key sequence. 
@@ -720,16 +898,12 @@ void input_parse_inputrc_line( wchar_t *cmd )
 		val = cmd;
 		
 		sequence = input_expand_sequence( key );
-		add_mapping( L"global", sequence, key, val );
-
-//		fwprintf( stderr, L"Map %ls to %ls\n", key, val );
-
-		free( sequence );
-				
-		//fwprintf( stderr, L"Remainder \'%ls\', endchar %d\n", cmd, *cmd );
+		if( sequence )
+		{
+			add_mapping( L"global", sequence, key, val );
+			free( sequence );
+		}
 		
-		//fwprintf( stderr, L"%ls -> %ls\n", key, val );
-				
 		return;	
 	}
 	else if( wcsncmp( L"$include ", cmd, wcslen(L"$include ") ) == 0 )
@@ -812,6 +986,54 @@ void input_parse_inputrc_line( wchar_t *cmd )
 		
 		return;		
 	}
+	else 
+	{
+		/*
+		  This is a redular key binding, like 
+
+		  Control-o: kill-word
+
+		  Or at least we hope it is, since if it isn't, we have no idea what it is.
+		*/
+		
+		wchar_t *key;
+		wchar_t *val;
+		wchar_t *sequence;
+		wchar_t prev=0;
+		
+		key=cmd;
+		
+		cmd = wcschr( cmd, ':' );
+		
+		if( !cmd )
+		{
+				debug( 1, 
+					   L"Unable to parse binding" );
+				inputrc_error = 1;
+				return;
+		}
+		*cmd = 0;
+
+		cmd++;
+		
+		while( *cmd == L' ' )
+			cmd++;
+		
+		val = cmd;
+		
+		debug( 1, L"Map %ls to %ls\n", key, val );
+
+		sequence = input_symbolic_sequence( key );
+		if( sequence )
+		{
+			add_mapping( L"global", sequence, key, val );
+			free( sequence );
+		}
+				
+		return;	
+		
+	}
+	
 	debug( 1, L"I don\'t know what %ls means", cmd );	
 }
 

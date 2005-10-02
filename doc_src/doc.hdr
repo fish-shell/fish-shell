@@ -270,7 +270,7 @@ startup files. When completion has been requested for a command \c
 COMMAND, fish will automatically look for the file
 ~/.fish.d/completions/COMMAND.fish. If it exists, it will be
 automatically loaded. For examples of how to write your own complex
-completions, study the completions in /etc/fish.d/completions. 
+completions, study the completions in /etc/fish.d/completions (or ~/etc/fish.d/completions if you installed fish in your home directory). 
 
 \section expand Parameter expansion (Globbing)
 
@@ -731,11 +731,10 @@ the user can change <tt>fish</tt>'s behaviour.
 
 \section initialization Initialization files
 
-On startup, \c fish evaluates the file /etc/fish and ~/.fish, in that
+On startup, \c fish evaluates the file /etc/fish (Or ~/etc/fish if you installed fish in your home directory) and ~/.fish, in that
 order. If you want to run a command only on starting an interactive
-shell, test if the environment variable fish_interactive is set. If
-you want to run a command only on starting a login shell, test if the
-environment variable fish_login is set.
+shell, use the output of the 'status --is-interactive' command. If
+you want to run a command only on starting a login shell, use 'status --is-login' instead.
 
 If you want to run a set of commands when \c fish exits, redefine the
 <a href="#hooks">function hook</a> \c fish_on_exit. If the \c
@@ -876,7 +875,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Maybe some functions should only be available from key-bindings. That way one could implement a large part of all the key-binding functions as regular fish functions without worrying about cluttering up the function name space.
 - With a bit of tweakage, quite a few of the readline key-binding functions could be implemented in shellscript.
 - Highlight beginning/end of block when moving over a block command
-- Inclusion guards for the init files to make them evaluate only once, even if the user has instelled fish both in /etc and in $HOME
+- Inclusion guards for the init files to make them evaluate only once, even if the user has installed fish both in /etc and in $HOME
 - Do not actually load most of the shellscript functions on startup. Only load a tiny wrapper that will load the real function when needed. This should shave of CPU-time spent on parsing 500-1000 lines of code and ~50 kB of memory on startup, and is pretty easy to implement.
 - Do not actually load/parse .fish_history, only mmap it and use some clever string handling. Should save ~150 kB of memory permanently, but is very hard to implement.
 - command specific wildcarding (use case * instead of case '*', etc.)

@@ -1,3 +1,12 @@
+2005-10-02  Axel Liljencrantz  <axel@liljencrantz.se>
+
+	* input.c: Add support for symbolic key sequence definitions, i.e. 'Control-a'
+
+2005-10-01 Netocrat <netocrat@dodo.com.au>
+
+	* fishd.c, common.c: Add locking support to make sure only one version of fishd is running
+	
+	
 2005-09-26  Axel Liljencrantz  <axel@liljencrantz.se>
 
 	* configure.ac, init/fish.in, main.c: Make ~/etc/fish the system configuration file on installations under ~

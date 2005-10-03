@@ -1,3 +1,8 @@
+2005-10-03 Netocrat <netocrat@dodo.com.au>
+
+	* fishd.c, common.c: Make lock-file include hostname for increased protection on shared NFS /tmp.
+	
+	
 2005-10-02  Axel Liljencrantz  <axel@liljencrantz.se>
 
 	* input.c: Add support for symbolic key sequence definitions, i.e. 'Control-a'

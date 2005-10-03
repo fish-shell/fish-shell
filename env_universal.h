@@ -46,12 +46,25 @@ void env_universal_set( const wchar_t *name, const wchar_t *val, int export );
 */
 void env_universal_remove( const wchar_t *name );
 
+/**
+   Read all available messages from the server.
+*/
 int env_universal_read_all();
 
+/**
+   Get the names of all universal variables
+   
+   \param l the list to insert the names into
+   \param show_exported whether exported variables should be shown
+   \param show_unexported whether unexported variables should be shown
+*/
 void env_universal_get_names( array_list_t *l,
 							  int show_exported,
 							  int show_unexported );
 
+/**
+   Synchronize with fishd
+*/
 void env_universal_barrier();
 
 #endif

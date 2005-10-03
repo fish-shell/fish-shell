@@ -37,12 +37,15 @@ static int init = 0;
 */
 static int get_socket_count = 0;
 
-wchar_t * path;
-wchar_t *user;
-void (*start_fishd)();
+static wchar_t * path;
+static wchar_t *user;
+static void (*start_fishd)();
 
 int env_universal_update=0;
 
+/**
+   Flag set to 1 when a barrier reply is recieved
+*/
 static int barrier_reply = 0;
 
 void env_universal_barrier();
@@ -137,6 +140,9 @@ static int get_socket( int fork_ok )
 	return s;
 }
 
+/**
+   Callback function used whenever a new fishd message is recieved
+*/
 static void callback( int type, const wchar_t *name, const wchar_t *val )
 {
 	
@@ -151,6 +157,10 @@ static void callback( int type, const wchar_t *name, const wchar_t *val )
 	}	
 }
 
+/**
+   Make sure the connection is healthy. If not, close it, and try to
+   establish a new connection.
+*/
 static void check_connection()
 {
 	if( !init )
@@ -167,10 +177,15 @@ static void check_connection()
 	}	
 }
 
+/**
+   Try to establish a new connection to fishd. If successfull, end
+   with call to env_universal_barrier(), to make sure everything is in
+   sync.
+*/
 static void reconnect()
 {
 	if( get_socket_count >= RECONNECT_COUNT )
-		return 0;
+		return;
 	
 	debug( 2, L"Get new fishd connection" );
 	
@@ -239,6 +254,8 @@ int env_universal_read_all()
 	if( env_universal_server.fd == -1 )
 	{
 		reconnect();		
+		if( env_universal_server.fd == -1 )
+			return 0;		
 	}
 	
 	if( env_universal_server.fd != -1 )

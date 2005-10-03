@@ -52,7 +52,6 @@
 */
 extern char **environ;
 
-static int c1=0;
 
 /**
    Struct representing one level in the function variable stack
@@ -264,16 +263,15 @@ void env_init()
 		free(key);
 	}		
 
-	env_universal_init( env_get( L"FISHD_SOKET_DIR"), env_get(L"USER"), &start_fishd );
+	env_universal_init( env_get( L"FISHD_SOKET_DIR"), 
+						env_get( L"USER" ),
+						&start_fishd );
 	
 }
 
 void env_destroy()
 {
-	char **ptr;
-
 	env_universal_destroy();
-//	fwprintf( stderr, L"Filled %d exported vars\n", c1 );
 	
 	sb_destroy( &dyn_var );
 
@@ -345,7 +343,7 @@ void env_set( const wchar_t *key,
 	/*
 	  Zero element arrays are internaly not coded as null but as this placeholder string
 	*/
-	if( !val && (var_mode & ENV_USER))
+	if( !val && ( var_mode & ENV_USER ) )
 	{
 		val = ENV_NULL;
 	}
@@ -651,13 +649,6 @@ void env_push( int new_scope )
 
 }
 
-/*static int scope_count( env_node_t *n )
-{
-	if( n == global_env )
-		return 0;
-	return( scope_count( n->next) + 1 );
-}
-*/
 
 void env_pop()
 {
@@ -773,7 +764,9 @@ void env_get_names( array_list_t *l, int flags )
 	hash_destroy( &names );	
 }
 
-
+/**
+   Function used by env_export_arr to iterate over hashtable of variables
+*/
 static void export_func1( const void *k, const void *v, void *aux )
 {
 	var_entry_t *val_entry = (var_entry_t *)v;
@@ -787,6 +780,9 @@ static void export_func1( const void *k, const void *v, void *aux )
 	
 }
 
+/**
+   Function used by env_export_arr to iterate over hashtable of variables
+*/
 static void export_func2( const void *k, const void *v, void *aux )
 {
 	wchar_t *key = (wchar_t *)k;

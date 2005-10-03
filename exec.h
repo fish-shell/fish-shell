@@ -49,8 +49,17 @@ void exec( job_t *j );
 int exec_subshell( const wchar_t *cmd, 
 				   array_list_t *l );
 
+/**
+   Free all resources used by a IO_BUFFER type io redirection.
+*/
 void exec_free_io_buffer( io_data_t *io_buffer );
+
+/**
+   Create a IO_BUFFER type io redirection.
+*/
 io_data_t *exec_make_io_buffer();
+
+/**
+   Close writing end of IO_BUFFER type io redirection, and fully read the reading end.
+*/
 void exec_read_io_buffer( io_data_t *d );
-
-

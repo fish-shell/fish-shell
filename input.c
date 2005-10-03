@@ -1021,7 +1021,7 @@ void input_parse_inputrc_line( wchar_t *cmd )
 		
 		val = cmd;
 		
-		debug( 1, L"Map %ls to %ls\n", key, val );
+		debug( 3, L"Map %ls to %ls\n", key, val );
 
 		sequence = input_symbolic_sequence( key );
 		if( sequence )

@@ -122,7 +122,7 @@ static int internal_pipe( int fd[2])
 	
 	if( res != -1 )
 	{
-		debug( 1, L"Created pipe using fds %d and %d", fd[0], fd[1]);
+		debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
 		
 		al_push( open_fds, (void *)(long)fd[0] );
 		al_push( open_fds, (void *)(long)fd[1] );		
@@ -171,12 +171,10 @@ static void close_unused_internal_pipes( io_data_t *io )
 			int n = (int)(long)al_get( open_fds, i );
 			if( !use_fd_in_pipe( n, io) )
 			{
-				debug( 1, L"Close fd %d, used in other context", n );
+				debug( 4, L"Close fd %d, used in other context", n );
 				close_loop( n );
 				i--;
 			}
-			else
-				debug( 1, L"Don't close fd %d, used in this context", n );
 		}
 	}
 }
@@ -457,7 +455,7 @@ void exec_read_io_buffer( io_data_t *d )
 			wperror( L"fcntl" );
 			return;
 		}	
-		debug( 1, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
+		debug( 4, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
 		
 		while(1)
 		{
@@ -784,7 +782,7 @@ void exec( job_t *j )
 
 	io_data_t *io_buffer =0;
 		
-	debug( 1, L"Exec job %ls with id %d", j->command, j->job_id );	
+	debug( 4, L"Exec job %ls with id %d", j->command, j->job_id );	
 	
 	if( j->first_process->type==INTERNAL_EXEC )
 	{

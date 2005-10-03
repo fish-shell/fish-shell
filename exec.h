@@ -3,6 +3,17 @@
 */
 
 /**
+   Initialize the exec library
+*/
+void exec_init();
+
+/*
+  Destroy dynamically allocated data and other resources used by the
+  exec library
+*/
+void exec_destroy();
+
+/**
   Execute the processes specified by j. 
 
    I've put a fair bit of work into making builtins behave like other

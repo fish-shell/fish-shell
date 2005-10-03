@@ -164,11 +164,10 @@ static int get_names_show_unexported;
 
 /**
    When fishd isn't started, this function is provided to
-   env_universal as a callback, it tries to start upå fishd. It's
-   implementation is a bit of a hack, since it just calls a bit of
-   shellscript, and the shell is not properly initialized ad this
-   point. Should be changed to deferr the evaluation until fish has
-   been properly initialized.
+   env_universal as a callback, it tries to start up fishd. It's
+   implementation is a bit of a hack, since it evaluates a bit of
+   shellscript, and it might be used at times when that might not be
+   the best idea.
 */
 static void start_fishd()
 {

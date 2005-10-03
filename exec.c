@@ -61,9 +61,21 @@ pid_t getpgid( pid_t pid );
 */
 #define FORK_ERROR L"Could not create child process - exiting"
 
+/**
+   List of all pipes used by internal pipes. These must be closed in
+   many situations in order to make sure that stray fds aren't lying
+   around.
+*/
+array_list_t *open_fds=0;
 
+/**
+   Loops over close until thesyscall was run without beeing
+   interrupted. Thenremoves the fd from the open_fds list.
+*/
 static void close_loop( int fd )
 {
+	int i;
+	
 	while( close(fd) == -1 )
 	{
 		if( errno != EINTR )
@@ -71,6 +83,115 @@ static void close_loop( int fd )
 			debug( 1, FD_ERROR, fd );
 			wperror( L"close" );
 		}
+	}
+
+	if( open_fds )
+	{
+		for( i=0; i<al_get_count( open_fds ); i++ )
+		{
+			int n = (int)(long)al_get( open_fds, i );
+			if( n == fd )
+			{
+				al_set( open_fds,
+						i,
+						al_get( open_fds,
+								al_get_count( open_fds ) -1 ) );
+				al_truncate( open_fds, 
+							 al_get_count( open_fds ) -1 );
+				break;
+			}
+		}
+	}
+
+}
+
+/**
+   Call pipe(), and add resulting fds to open_fds, the list of opend
+   file descriptors for pipes.
+*/
+static int internal_pipe( int fd[2])
+{
+	int res = pipe( fd );
+	if( open_fds == 0 )
+	{
+		open_fds = malloc( sizeof( array_list_t ) );
+		if(!open_fds )
+			die_mem();
+		al_init( open_fds );
+	}
+	
+	if( res != -1 )
+	{
+		debug( 1, L"Created pipe using fds %d and %d", fd[0], fd[1]);
+		
+		al_push( open_fds, (void *)(long)fd[0] );
+		al_push( open_fds, (void *)(long)fd[1] );		
+	}
+	return res;
+}
+
+/**
+   Check if the specified fd is used as a part of a pipeline in the
+   specidied set of IO redirections.
+
+   \param fd the fd to search for
+   \param io the set of io redirections to search in
+*/
+static int use_fd_in_pipe( int fd, io_data_t *io )
+{	
+	if( !io )
+		return 0;
+	
+	if( (io->io_mode == IO_PIPE) || 
+		(io->io_mode == IO_BUFFER) )
+	{
+		if( io->pipe_fd[0] == fd ||
+			io->pipe_fd[1] == fd )
+			return 1;
+	}
+	
+	return use_fd_in_pipe( fd, io->next );
+}
+
+
+/**
+   Close all fds in open_fds, except for those that are mentioned in
+   the redirection list io
+
+   \param io the list of io redirections for this job. Pipes mentioned here should not be closed.
+*/
+static void close_unused_internal_pipes( io_data_t *io )
+{
+	int i=0;
+	
+	if( open_fds )
+	{
+		for( ;i<al_get_count( open_fds ); i++ )
+		{
+			int n = (int)(long)al_get( open_fds, i );
+			if( !use_fd_in_pipe( n, io) )
+			{
+				debug( 1, L"Close fd %d, used in other context", n );
+				close_loop( n );
+				i--;
+			}
+			else
+				debug( 1, L"Don't close fd %d, used in this context", n );
+		}
+	}
+}
+
+void exec_init()
+{
+	
+}
+
+void exec_destroy()
+{
+	if( open_fds )
+	{
+		al_destroy( open_fds );
+		free( open_fds );
 	}
 }
 
@@ -115,6 +236,8 @@ void free_fd( io_data_t *io, int fd )
 static void handle_child_io( io_data_t *io )
 {
 
+	close_unused_internal_pipes( io );
+	
 	if( env_universal_server.fd >= 0 )
 		close_loop( env_universal_server.fd );
 
@@ -309,7 +432,8 @@ static void launch_process( process_t *p )
 
 
 /**
-   Check if the IO redirection chains contains redirections for the specified file descriptor
+   Check if the IO redirection chains contains redirections for the
+   specified file descriptor
 */
 
 static int has_fd( io_data_t *d, int fd )
@@ -328,13 +452,12 @@ void exec_read_io_buffer( io_data_t *d )
 	
 	if( d->io_mode == IO_BUFFER )
 	{		
-/*		if( fcntl( d->pipe_fd[0], F_SETFL, 0 ) )
+		if( fcntl( d->pipe_fd[0], F_SETFL, 0 ) )
 		{
 			wperror( L"fcntl" );
 			return;
-		}
-*/	
-		debug( 3, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
+		}	
+		debug( 1, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
 		
 		while(1)
 		{
@@ -384,7 +507,7 @@ io_data_t *exec_make_io_buffer()
 	buffer_redirect->fd=1;
 
 
-	if( pipe( buffer_redirect->pipe_fd ) == -1 )
+	if( internal_pipe( buffer_redirect->pipe_fd ) == -1 )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror (L"pipe");
@@ -411,7 +534,8 @@ void exec_free_io_buffer( io_data_t *io_buffer )
 	close_loop( io_buffer->pipe_fd[0] );
 
 	/*
-	  Dont free fd for writing. This should already be free'd before calling exec_read_io_buffer on the buffer
+	  Dont free fd for writing. This should already be free'd before
+	  calling exec_read_io_buffer on the buffer
 	*/
 	
 	b_destroy( io_buffer->out_buffer );
@@ -655,14 +779,12 @@ void exec( job_t *j )
 	sigaddset( &chldset, SIGCHLD );
 	int skip_fork;
 	
-	/* This call is used so the global environment variable array is regenerated, if needed, before the fork. That way, we avoid a lot of duplicate work where EVERY child would need to generate it */
-
 	io_data_t pipe_read, pipe_write;
 	io_data_t *tmp;
 
 	io_data_t *io_buffer =0;
 		
-	debug( 3, L"Exec job %ls with id %d", j->command, j->job_id );	
+	debug( 1, L"Exec job %ls with id %d", j->command, j->job_id );	
 	
 	if( j->first_process->type==INTERNAL_EXEC )
 	{
@@ -702,8 +824,15 @@ void exec( job_t *j )
 		mypipe[1]=-1;
 		skip_fork=0;
 
+		/* 
+		   This call is used so the global environment variable array is
+		   regenerated, if needed, before the fork. That way, we avoid a
+		   lot of duplicate work where EVERY child would need to generate
+		   it
+		*/
 		if( p->type == EXTERNAL )
 			env_export_arr( 1 );
+		
 		
 		/*
 		  Set up fd:s that will be used in the pipe 
@@ -716,7 +845,7 @@ void exec( job_t *j )
 		
 		if (p->next)
 		{
-			if (pipe( mypipe ) == -1)
+			if (internal_pipe( mypipe ) == -1)
 			{
 				debug( 1, PIPE_ERROR );
 				wperror (L"pipe");
@@ -1233,4 +1362,3 @@ int exec_subshell( const wchar_t *cmd,
 	exec_free_io_buffer( io_buffer );
 	return status;	
 }
-

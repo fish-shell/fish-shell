@@ -167,6 +167,21 @@ static void check_connection()
 	}	
 }
 
+static void reconnect()
+{
+	if( get_socket_count >= RECONNECT_COUNT )
+		return 0;
+	
+	debug( 2, L"Get new fishd connection" );
+	
+	init = 0;
+	env_universal_server.fd = get_socket(1);
+	init = 1;
+	if( env_universal_server.fd >= 0 )
+	{
+		env_universal_barrier();
+	}
+}
 
 
 void env_universal_init( wchar_t * p, wchar_t *u, void (*sf)() )
@@ -223,20 +238,7 @@ int env_universal_read_all()
 
 	if( env_universal_server.fd == -1 )
 	{
-		
-		if( get_socket_count >= RECONNECT_COUNT )
-			return 0;
-
-		debug( 2, L"Get new fishd connection" );
-		
-		init = 0;
-		env_universal_server.fd = get_socket(1);
-		init = 1;
-
-		if( env_universal_server.fd >= 0 )
-		{
-			env_universal_barrier();
-		}
+		reconnect();		
 	}
 	
 	if( env_universal_server.fd != -1 )
@@ -296,6 +298,13 @@ void env_universal_barrier()
 		
 		if( q_empty( &env_universal_server.unsent ) )
 			break;
+		
+		if( env_universal_server.fd == -1 )
+		{
+			reconnect();
+			return;			
+		}
+		
 		FD_ZERO( &fds );
 		FD_SET( env_universal_server.fd, &fds );
 		select( env_universal_server.fd+1, 0, &fds, 0, 0 );
@@ -307,6 +316,11 @@ void env_universal_barrier()
 	debug( 3, L"Sent barrier request" );
 	while( !barrier_reply )
 	{
+		if( env_universal_server.fd == -1 )
+		{
+			reconnect();
+			return;			
+		}		
 		FD_ZERO( &fds );
         FD_SET( env_universal_server.fd, &fds );		
         select( env_universal_server.fd+1, &fds, 0, 0, 0 );

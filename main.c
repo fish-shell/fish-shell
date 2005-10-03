@@ -205,7 +205,8 @@ int main( int argc, char **argv )
 
 	if( force_interactive )
 		is_interactive_session=1;	
-	
+
+	exec_init();	
 	parser_init();
 	builtin_init();
 	function_init();
@@ -299,6 +300,7 @@ int main( int argc, char **argv )
 	parser_destroy();
 	wutil_destroy();
 	common_destroy();
+	exec_destroy();	
 	
 	intern_free_all();
 

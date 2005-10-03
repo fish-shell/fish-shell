@@ -117,7 +117,7 @@ extern block_t *current_block;
 extern int error_code;
 
 /**
-   Current block level redirections 
+   Current block level io redirections 
 */
 extern io_data_t *block_io;
 

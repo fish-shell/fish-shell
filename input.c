@@ -489,7 +489,7 @@ static wchar_t *input_symbolic_sequence( const wchar_t *in )
 		
 		for( i=0; map[i].in; i++ )
 		{
-			if( wcsncmp( in, map[i].in, wcslen(map[i].in) )==0 )
+			if( wcsncasecmp( in, map[i].in, wcslen(map[i].in) )==0 )
 			{
 				in+= wcslen( map[i].in );
 				res = str2wcs( map[i].out );

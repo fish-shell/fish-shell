@@ -602,6 +602,26 @@ int wcscasecmp( const wchar_t *a, const wchar_t *b )
 		return wcscasecmp( a+1,b+1);
 }
 
+int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count )
+{
+	if( count == 0 )
+		return 0;
+	
+	if( *a == 0 )
+	{
+		return (*b==0)?0:-1;
+	}
+	else if( *b == 0 )
+	{
+		return 1;
+	}
+	int diff = towlower(*a)-towlower(*b);
+	if( diff != 0 )
+		return diff;
+	else
+		return wcsncasecmp( a+1,b+1, count-1);
+}
+
 int wcsvarname( wchar_t *str )
 {
 	while( *str )

@@ -306,7 +306,7 @@ void pq_destroy(  priority_queue_t *q );
 /**
    Allocate heap memory for creating a new list and initialize it
 */
-array_list_t *al_new()
+array_list_t *al_new();
 
 /** Initialize the list. */
 void al_init( array_list_t *l );

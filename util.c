@@ -616,6 +616,16 @@ void pq_destroy(  priority_queue_t *q )
 }
 
 
+array_list_t *al_new()
+{
+	array_list_t *res = malloc( sizeof( array_list_t ) );
+	if( !res )
+		die_mem();
+	al_init( res );
+	return res;
+}
+
+
 void al_init( array_list_t *l )
 {
 	memset( l, 0, sizeof( array_list_t ) );

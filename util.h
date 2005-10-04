@@ -303,6 +303,11 @@ int pq_get_count( priority_queue_t *q );
 */
 void pq_destroy(  priority_queue_t *q );
 
+/**
+   Allocate heap memory for creating a new list and initialize it
+*/
+array_list_t *al_new()
+
 /** Initialize the list. */
 void al_init( array_list_t *l );
 /** Destroy the list and free memory used by it.*/

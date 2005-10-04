@@ -1,6 +1,6 @@
 2005-10-03 Netocrat <netocrat@dodo.com.au>
 
-	* fishd.c, common.c: Make lock-file include hostname for increased protection on shared NFS /tmp.
+	* fishd.c, common.c: Make lock-file name include hostname for increased protection on shared NFS /tmp.
 	
 	
 2005-10-02  Axel Liljencrantz  <axel@liljencrantz.se>
@@ -29,7 +29,7 @@
 
 	* input_common.c (readb): Fix sign error
 
-	* input.c (input_expand_sequence): Add support for numeric backslash escapes
+	* input.c (input_expand_sequence): Add support for numeric backslash escapes in keybinding definitions
 	
 	
 2005-09-24  Axel Liljencrantz  <axel@liljencrantz.se>

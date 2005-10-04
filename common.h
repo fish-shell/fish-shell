@@ -162,6 +162,7 @@ wchar_t *wcsdup(const wchar_t *in);
    fish and guaranteed to be a sane, english word.
 */
 int wcscasecmp( const wchar_t *a, const wchar_t *b );
+int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
 
 /**
    Test if the given string is a valid variable name

@@ -4,6 +4,11 @@
 
 */
 
+#ifndef FISH_INTERN_H
+#define FISH_INTERN_H
+
+#include <wchar.h>
+
 /**
    Return an identical copy of the specified string from a pool of unique strings. If the string was not in the pool, add a copy.
 
@@ -22,3 +27,5 @@ const wchar_t *intern_static( const wchar_t *in );
    Free all interned strings
 */
 void intern_free_all();
+
+#endif

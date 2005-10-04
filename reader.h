@@ -6,6 +6,13 @@
 	features.
 */
 
+#ifndef FISH_READER_H
+#define FISH_READER_H
+
+#include <wchar.h>
+
+#include "util.h"
+
 /**
   Read commands from fd 0 until encountering EOF
 */
@@ -184,3 +191,4 @@ void reader_current_token_extent( wchar_t **a, wchar_t **b, wchar_t **pa, wchar_
 */
 void reader_replace_current_token( wchar_t *new_token );
 
+#endif

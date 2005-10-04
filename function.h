@@ -5,6 +5,13 @@
 	parser and to some degree the builtin handling library.
 */
 
+#ifndef FISH_FUNCTION_H
+#define FISH_FUNCTION_H
+
+#include <wchar.h>
+
+#include "util.h"
+
 /**
    Initialize function data   
 */
@@ -61,4 +68,4 @@ int function_exists( const wchar_t *name);
 void function_get_names( array_list_t *list, 
 						 int get_hidden );
 
-
+#endif

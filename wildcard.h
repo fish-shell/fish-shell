@@ -7,6 +7,13 @@
 
 */
 
+#ifndef FISH_WILDCARD_H
+#define FISH_WILDCARD_H
+
+#include <wchar.h>
+
+#include "util.h"
+
 /*
     These constants are outside the 31 bit character space of USC4,
 	thogh they may clash with WEOF. I need to use characters outside of
@@ -78,3 +85,4 @@ int wildcard_complete( const wchar_t *str,
 						const wchar_t *(*desc_func)(const wchar_t *),
 						array_list_t *out );
 
+#endif

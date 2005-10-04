@@ -4,6 +4,11 @@
 	Works like the killring in emacs and readline. The killring is cut and paste whith a memory of previous cuts.
 */
 
+#ifndef FISH_KILL_H
+#define FISH_KILL_H
+
+#include <wchar.h>
+
 /**
    Add a string to the top of the killring
 */
@@ -29,3 +34,4 @@ void kill_init();
 */
 void kill_destroy();
 
+#endif

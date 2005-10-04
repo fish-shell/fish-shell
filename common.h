@@ -2,6 +2,13 @@
 	Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 */
 
+#ifndef FISH_COMMON_H
+#define FISH_COMMON_H
+
+#include <wchar.h>
+#include <termios.h>
+
+#include "util.h"
 
 /**
    Under curses, tputs expects an int (*func)(char) as its last parameter, but in ncurses, tputs expects a int (*func)(int) as its last parameter. tputs_arg_t is defined to always be what tputs expects. Hopefully.
@@ -246,5 +253,7 @@ wchar_t *unescape( wchar_t * in, int escape_special );
 
 void block();
 void unblock();
+
+#endif
 
 int acquire_lock_file( const char *lockfile, const int timeout, int force );

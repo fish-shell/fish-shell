@@ -26,8 +26,10 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 675 Mass Ave,
 Cambridge, MA 02139, USA.  */
 
-#ifndef _WGETOPT_H
-#define _WGETOPT_H 1
+#ifndef FISH_WGETOPT_H
+#define FISH_WGETOPT_H
+
+#include <wchar.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -142,4 +144,4 @@ extern int _wgetopt_internal ();
 }
 #endif
 
-#endif /* _WGETOPT_H */
+#endif /* FISH_WGETOPT_H */

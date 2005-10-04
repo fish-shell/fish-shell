@@ -2,6 +2,11 @@
 	Generic utilities library.
 */
 
+#ifndef FISH_UTIL_H
+#define FISH_UTIL_H
+
+#include <wchar.h>
+
 /**
    Data structure for an automatically resizing dynamically allocated queue,
 */
@@ -466,3 +471,5 @@ void b_append( buffer_t *b, const void *d, ssize_t len );
    Get the current time in microseconds since Jan 1, 1970
 */
 long long get_time();
+
+#endif

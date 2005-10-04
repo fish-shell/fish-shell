@@ -2,6 +2,11 @@
   Prototypes for history functions, part of the user interface.
 */
 
+#ifndef FISH_HISTORY_H
+#define FISH_HISTORY_H
+
+#include <wchar.h>
+
 /**
    Load history from file.
 */
@@ -63,3 +68,4 @@ void history_set_mode( wchar_t *name );
 */
 void history_sanity_check();
 
+#endif

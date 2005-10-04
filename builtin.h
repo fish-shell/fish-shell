@@ -2,6 +2,12 @@
 	Prototypes for functions for executing builtin functions.
 */
 
+#ifndef FISH_BUILTIN_H
+#define FISH_BUILTIN_H
+
+#include <wchar.h>
+
+#include "util.h"
 
 enum
 {
@@ -99,3 +105,5 @@ void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 
 int builtin_set(wchar_t **argv);
 int builtin_commandline(wchar_t **argv);
+
+#endif

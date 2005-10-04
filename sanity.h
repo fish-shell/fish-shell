@@ -2,6 +2,11 @@
 	Prototypes for functions for performing sanity checks on the program state
 */
 
+#ifndef FISH_SANITY_H
+#define FISH_SANITY_H
+
+#include <wchar.h>
+
 /**
   Call this function to tell the program it is not in a sane state.
 */
@@ -20,3 +25,5 @@ int sanity_check();
   \param null_ok Wheter the pointer is allowed to point to 0
 */
 void validate_pointer( const void *ptr, const wchar_t *err, int null_ok );
+
+#endif

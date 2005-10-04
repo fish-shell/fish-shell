@@ -9,6 +9,13 @@
 
 */
 
+#ifndef FISH_EXPAND_H
+#define FISH_EXPAND_H
+
+#include <wchar.h>
+
+#include "util.h"
+
 /**
    Flag specifying that subshell expantion should be skipped
 */
@@ -168,3 +175,4 @@ wchar_t *expand_backslash( wchar_t * in, int escape_special );
 */
 void expand_variable_array( const wchar_t *val, array_list_t *out );
 
+#endif

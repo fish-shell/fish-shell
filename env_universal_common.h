@@ -1,6 +1,9 @@
-#ifndef ENV_UNIVERSAL_COMMON_HH
-#define ENV_UNIVERSAL_COMMON_HH
+#ifndef FISH_ENV_UNIVERSAL_COMMON_H
+#define FISH_ENV_UNIVERSAL_COMMON_H
 
+#include <wchar.h>
+
+#include "util.h"
 
 /**
    The set command

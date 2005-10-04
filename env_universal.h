@@ -2,8 +2,10 @@
 	Universal variable client library
 */
 
-#ifndef ENV_UNIVERSAL_HH
-#define ENV_UNIVERSAL_HH
+#ifndef ENV_UNIVERSAL_H
+#define ENV_UNIVERSAL_H
+
+#include <wchar.h>
 
 #include "env_universal_common.h"
 

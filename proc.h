@@ -8,6 +8,15 @@
 	
 */
 
+#ifndef FISH_PROC_H
+#define FISH_PROC_H
+
+#include <wchar.h>
+#include <signal.h>
+#include <unistd.h>
+
+#include "util.h"
+
 /**
    Describes what type of IO operation an io_data_t represents
 */
@@ -273,3 +282,4 @@ void proc_update_jiffies();
 */
 void proc_sanity_check();
 
+#endif

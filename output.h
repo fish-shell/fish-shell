@@ -1,6 +1,12 @@
 /**
    Constants for various character classifications. Each character of a command string can be classified as one of the following types.
 */
+
+#ifndef FISH_OUTPUT_H
+#define FISH_OUTPUT_H
+
+#include <wchar.h>
+
 enum
 {
 	HIGHLIGHT_NORMAL,
@@ -87,3 +93,4 @@ int writespace( int c );
 
 int output_color_code( const wchar_t *val );
 
+#endif

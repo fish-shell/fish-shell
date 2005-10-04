@@ -4,13 +4,13 @@
   functions. 
 
 */
-#ifndef WUTIL_HH
-#define WUTIL_HH
+#ifndef FISH_WUTIL_H
+#define FISH_WUTIL_H
 
-#include <sys/types.h>
+#include <wchar.h>
 #include <dirent.h>
-#include <sys/stat.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 
 /**

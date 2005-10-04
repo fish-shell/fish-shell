@@ -5,6 +5,11 @@ inputrc information for key bindings.
 
 */
 
+#ifndef FISH_INPUT_H
+#define FISH_INPUT_H
+
+#include <wchar.h>
+
 /**
    Key codes for inputrc-style keyboard functions that are passed on
    to the caller of input_read()
@@ -107,3 +112,4 @@ void input_parse_inputrc_line( wchar_t *cmd );
 */
 wchar_t input_get_code( wchar_t *name );
 
+#endif

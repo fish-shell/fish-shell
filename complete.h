@@ -4,6 +4,13 @@
 	These functions are used for storing and retrieving tab-completion data, as well as for performing tab-completion.
 */
 
+#ifndef FISH_COMPLETE_H
+#define FISH_COMPLETE_H
+
+#include <wchar.h>
+
+#include "util.h"
+
 /** Use all completions */
 #define SHARED 0
 /** Do not use file completion */
@@ -153,3 +160,5 @@ int complete_is_valid_argument( const wchar_t *str,
    \param reload should the commands completions be reloaded, even if they where previously loaded. (This is set to true on actual completions, so that changed completion are updated in running shells)
 */
 void complete_load( wchar_t *cmd, int reload );
+
+#endif

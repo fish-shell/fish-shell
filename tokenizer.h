@@ -6,6 +6,11 @@
     segments.
 */
 
+#ifndef FISH_TOKENIZER_H
+#define FISH_TOKENIZER_H
+
+#include <wchar.h>
+
 /**
    Token types
 */
@@ -144,3 +149,4 @@ void tok_set_pos( tokenizer *tok, int pos );
 */
 const wchar_t *tok_get_desc( int type );
 
+#endif

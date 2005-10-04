@@ -2,6 +2,13 @@
 	Prototypes for functions for setting and getting environment variables.
 */
 
+#ifndef FISH_ENV_H
+#define FISH_ENV_H
+
+#include <wchar.h>
+
+#include "util.h"
+
 /**
    Flag for local (to the current block) variable
 */
@@ -102,3 +109,5 @@ char **env_export_arr( int recalc );
 
 */
 void env_get_names( array_list_t *l, int flags );
+
+#endif

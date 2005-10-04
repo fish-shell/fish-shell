@@ -2,6 +2,15 @@
 	The fish parser. 	
 */
 
+#ifndef FISH_PARSER_H
+#define FISH_PARSER_H
+
+#include <wchar.h>
+
+#include "proc.h"
+#include "util.h"
+#include "parser.h"
+
 /**
    block_t represents a block of commands. 
 */
@@ -267,3 +276,4 @@ void parser_destroy();
 */
 int parser_is_help( wchar_t *s, int min_match );
 
+#endif

@@ -2,6 +2,13 @@
 	Prototypes for functions for syntax highlighting
 */
 
+#ifndef FISH_HIGHLIGHT_H
+#define FISH_HIGHLIGHT_H
+
+#include <wchar.h>
+
+#include "util.h"
+
 /**
    Perform syntax highlighting for the shell commands in buff. The result is
    stored in the color array as a color_code from the HIGHLIGHT_ enum
@@ -37,3 +44,5 @@ void highlight_universal( wchar_t * buff, int *color, int pos, array_list_t *err
    FISH_COLOR_RED.
 */
 int highlight_get_color( int highlight );
+
+#endif

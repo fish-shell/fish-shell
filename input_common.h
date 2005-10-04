@@ -3,8 +3,10 @@
 Header file for the low level input library
 
 */
-#ifndef INPUT_COMMON_HH
-#define INPUT_COMMON_HH
+#ifndef INPUT_COMMON_H
+#define INPUT_COMMON_H
+
+#include <wchar.h>
 
 /** 
 	Hopefully, the biggest value that a wchar_t can have. UCS4 is a

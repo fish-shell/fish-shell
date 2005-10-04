@@ -2,6 +2,14 @@
 	Prototypes for functions for executing a program
 */
 
+#ifndef FISH_EXEC_H
+#define FISH_EXEC_H
+
+#include <wchar.h>
+
+#include "proc.h"
+#include "util.h"
+
 /**
    Initialize the exec library
 */
@@ -63,3 +71,5 @@ io_data_t *exec_make_io_buffer();
    Close writing end of IO_BUFFER type io redirection, and fully read the reading end.
 */
 void exec_read_io_buffer( io_data_t *d );
+
+#endif

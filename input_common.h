@@ -8,17 +8,11 @@ Header file for the low level input library
 
 #include <wchar.h>
 
-/** 
-	Hopefully, the biggest value that a wchar_t can have. UCS4 is a
-	31-bit character set, we use the upper half for special key
-	sequences. On systems where wchar_t is not a 31 (or less) bit character set
-	in a 32 (or more) bit type this will fail horribly. 
-*/
-#define WCHAR_END 0x80000000
+#define WCHAR_END (WCHAR_MAX + (unsigned long)1)
 
 enum
 {
-	R_NULL = WCHAR_END + 1
+	R_NULL = WCHAR_END + (unsigned long)1
 }
 	;
 

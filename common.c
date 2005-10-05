@@ -3,6 +3,9 @@
 Various functions, mostly string utilities, that are used by most
 parts of fish.
 */
+
+#include "config.h"
+
 #include <stdlib.h>
 #include <termios.h>
 #include <wchar.h>
@@ -39,7 +42,6 @@ parts of fish.
 #include <term.h>
 
 
-#include "config.h"
 #include "util.h"
 #include "wutil.h"
 #include "common.h"

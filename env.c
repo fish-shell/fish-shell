@@ -2,6 +2,8 @@
 	Functions for setting and getting environment variables.
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <wchar.h>
 #include <string.h>
@@ -26,7 +28,6 @@
 
 #include <term.h>
 
-#include "config.h"
 #include "util.h"
 #include "wutil.h"
 #include "proc.h"

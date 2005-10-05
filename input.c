@@ -69,11 +69,11 @@ typedef struct
 /**
    Symbolic names for some acces-modifiers used when parsing symbolic sequences
 */
-#define CTRL L"Control-"
+#define CTRL_SYMBOL L"Control-"
 /**
    Symbolic names for some acces-modifiers used when parsing symbolic sequences
 */
-#define META L"Meta-"
+#define META_SYMBOL L"Meta-"
 
 /**
    Names of all the readline functions supported
@@ -378,19 +378,19 @@ static wchar_t *input_symbolic_sequence( const wchar_t *in )
 	
 	debug( 4, L"Try to parse symbolic sequence %ls", in );
 
-	if( wcsncmp( in, CTRL, wcslen(CTRL) ) == 0 )
+	if( wcsncmp( in, CTRL_SYMBOL, wcslen(CTRL_SYMBOL) ) == 0 )
 	{
 		int has_meta=0;
 		
-		in += wcslen(CTRL);
+		in += wcslen(CTRL_SYMBOL);
 
 		/*
 		  Control-Meta- Should be rearranged to Meta-Control, this
 		  special-case must be handled manually.
 		*/
-		if( wcsncmp( in, META, wcslen(META) ) == 0 )
+		if( wcsncmp( in, META_SYMBOL, wcslen(META_SYMBOL) ) == 0 )
 		{
-			in += wcslen(META);
+			in += wcslen(META_SYMBOL);
 			has_meta=1;
 		}
 		
@@ -414,9 +414,9 @@ static wchar_t *input_symbolic_sequence( const wchar_t *in )
 		debug( 4, L"Got control sequence %d", res[0] );
 
 	}
-	else if( wcsncmp( in, META, wcslen(META) ) == 0 )
+	else if( wcsncmp( in, META_SYMBOL, wcslen(META_SYMBOL) ) == 0 )
 	{
-		in += wcslen(META);
+		in += wcslen(META_SYMBOL);
 		res = wcsdup( L"\e" );		
 		debug( 4, L"Got meta" );
 	}

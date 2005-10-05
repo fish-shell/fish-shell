@@ -8,6 +8,10 @@ Header file for the low level input library
 
 #include <wchar.h>
 
+#ifndef WCHAR_MAX
+#define WCHAR_MAX 0x80000000
+#endif
+
 #define WCHAR_END (WCHAR_MAX + (unsigned long)1)
 
 enum

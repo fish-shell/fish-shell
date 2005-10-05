@@ -999,7 +999,6 @@ void input_parse_inputrc_line( wchar_t *cmd )
 		wchar_t *key;
 		wchar_t *val;
 		wchar_t *sequence;
-		wchar_t prev=0;
 		
 		key=cmd;
 		

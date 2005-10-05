@@ -55,6 +55,17 @@ typedef struct block
 		int function_is_binding; /**< Whether a function is a keybinding */
 	};
 
+	/**
+	   Fourth block type specific variable
+	*/
+	union
+	{
+		array_list_t *function_events;
+	}
+		;
+	
+		
+
     /**
 	   Next outer block 
 	*/

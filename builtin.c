@@ -57,6 +57,7 @@
 #include "input_common.h"
 #include "input.h"
 #include "intern.h"
+#include "event.h"
 
 /**
    The default prompt for the read command
@@ -726,7 +727,8 @@ static int builtin_function( wchar_t **argv )
 	int res=0;
 	wchar_t *desc=0;	
 	int is_binding=0;
-	
+	array_list_t *events = al_new();
+		
 	woptind=0;
 
 	const static struct woption
@@ -740,19 +742,31 @@ static int builtin_function( wchar_t **argv )
 				L"key-binding", no_argument, 0, 'b' 
 			}
 			,
+			{
+				L"on-signal", required_argument, 0, 's' 
+			}
+			,
+			{
+				L"on-exit", required_argument, 0, 'x' 
+			}
+			,
+			{
+				L"on-variable", required_argument, 0, 'v' 
+			}
+			,
 			{ 
 				0, 0, 0, 0 
 			}
 		}
 	;		
 		
-	while( 1 )
+	while( 1 && (!res ) )
 	{
 		int opt_index = 0;
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"d:b", 
+								L"bd:s:x:v:", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -772,7 +786,9 @@ static int builtin_function( wchar_t **argv )
 							(void *)0);				
 				builtin_print_help( argv[0], sb_err );
 				
-				return 1;
+				res = 1;
+				break;
+				
 				
 			case 'd':		
 				desc=woptarg;				
@@ -782,46 +798,84 @@ static int builtin_function( wchar_t **argv )
 				is_binding=1;
 				break;
 				
-
+			case 's':
+			{
+				event_t *e = malloc( sizeof(event_t));
+				if( !e )
+					die_mem();
+				e->type = EVENT_SIGNAL;
+				e->signal = wcs2sig( woptarg );
+				e->function_name=0;				
+				al_push( events, e );
+				break;				
+			}
+			
+			case 'v':
+			{
+				event_t *e = malloc( sizeof(event_t));
+				if( !e )
+					die_mem();
+				e->type = EVENT_VARIABLE;
+				e->variable = wcsdup( woptarg );
+				e->function_name=0;				
+				al_push( events, e );
+				break;
+			}
+			
+			case 'x':
+			{
+				event_t *e = malloc( sizeof(event_t));
+				if( !e )
+					die_mem();
+				e->type = EVENT_EXIT;
+				e->pid = wcstol( woptarg, 0, 10 );				
+				e->function_name=0;				
+				al_push( events, e );
+				break;				
+			}
+			
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
-				return 1;
+				res = 1;				
+				break;
 				
 		}
 		
 	}		
-
-	if( argc-woptind != 1 )
-	{
-		sb_printf( sb_err, 
-				   L"%ls: Expected one argument, got %d\n",
-				   argv[0],
-				   argc-woptind );
-		res=1;
+	
+	if( !res )
+	{		
+		if( argc-woptind != 1 )
+		{
+			sb_printf( sb_err, 
+					   L"%ls: Expected one argument, got %d\n",
+					   argv[0],
+					   argc-woptind );
+			res=1;
+		}
+		else if( !(is_binding?wcsbindingname( argv[woptind] ) : wcsvarname( argv[woptind] ) ))
+		{ 
+			sb_append2( sb_err, 
+						argv[0],
+						L": illegal function name \'", 
+						argv[woptind], 
+						L"\'\n", 
+						(void *)0 );
+			
+			res=1;	
+		}	
+		else if( parser_is_reserved(argv[woptind] ) )
+		{
+			
+			sb_append2( sb_err,
+						argv[0],
+						L": the name \'",
+						argv[woptind],
+						L"\' is reserved,\nand can not be used as a function name\n",
+						(void *)0 );
+			res=1;
+		}
 	}
-	else if( !(is_binding?wcsbindingname( argv[woptind] ) : wcsvarname( argv[woptind] ) ))
-	{ 
-		sb_append2( sb_err, 
-					argv[0],
-					L": illegal function name \'", 
-					argv[woptind], 
-					L"\'\n", 
-					(void *)0 );
-
-		res=1;	
-	}	
-	else if( parser_is_reserved(argv[woptind] ) )
-    {
-		
-        sb_append2( sb_err,
-                    argv[0],
-					L": the name \'",
-                    argv[woptind],
-                    L"\' is reserved,\nand can not be used as a function name\n",
-                    (void *)0 );
-        res=1;
-    }
 	
 	if( res )
 	{
@@ -859,13 +913,26 @@ static int builtin_function( wchar_t **argv )
 		sb_append( sb_err, L"\n" );		
 
 		parser_push_block( FAKE );
+
+		al_foreach( events, (void (*)(const void *))&event_free );
+		al_destroy( events );
+		
 	}
 	else
 	{
+		int i;
+		
 		parser_push_block( FUNCTION_DEF );
 		current_block->function_name=wcsdup(argv[woptind]);
 		current_block->function_description=desc?wcsdup(desc):0;
 		current_block->function_is_binding = is_binding;
+		current_block->function_events = events;		
+		for( i=0; i<al_get_count( events ); i++ )
+		{
+			event_t *e = (event_t *)al_get( events, i );
+			e->function_name = wcsdup( current_block->function_name );
+		}
+
 	}
 	
 	current_block->tok_pos = parser_get_pos();
@@ -2388,6 +2455,8 @@ static int builtin_end( wchar_t **argv )
 		
 			case FUNCTION_DEF:
 			{
+				int i;
+				
 				/**
 				   Copy the text from the beginning of the function
 				   until the end command and use as the new definition
@@ -2402,8 +2471,10 @@ static int builtin_end( wchar_t **argv )
 					function_add( current_block->function_name, 
 								  def,
 								  current_block->function_description,
+								  current_block->function_events,
 								  current_block->function_is_binding );
-				}
+				}				
+				
 				free(def);
 			}
 			break;

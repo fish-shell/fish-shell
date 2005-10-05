@@ -31,7 +31,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <errno.h>
 #include <unistd.h>
 #include <termios.h>
-#include <sys/types.h>
 #include <fcntl.h>
 
 #ifdef HAVE_GETOPT_H
@@ -54,6 +53,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "parser.h"
 #include "expand.h"
 #include "intern.h"
+#include "exec.h"
+#include "event.h"
 
 /**
    Parse init files
@@ -206,6 +207,7 @@ int main( int argc, char **argv )
 	if( force_interactive )
 		is_interactive_session=1;	
 
+	event_init();	
 	exec_init();	
 	parser_init();
 	builtin_init();
@@ -301,6 +303,8 @@ int main( int argc, char **argv )
 	wutil_destroy();
 	common_destroy();
 	exec_destroy();	
+	event_destroy();
+	
 	
 	intern_free_all();
 

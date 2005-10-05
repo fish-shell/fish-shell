@@ -810,6 +810,16 @@ void sb_init( string_buffer_t * b)
 	b->used -= sizeof(wchar_t);
 }
 
+string_buffer_t *sb_new()
+{
+	string_buffer_t *res = malloc( sizeof( string_buffer_t ) );
+	if( !res )
+		die_mem();
+	sb_init( res );
+	return res;
+}
+
+
 void sb_append( string_buffer_t *b, const wchar_t * s)
 {
 //	fwprintf( stderr, L"Append string \'%ls\'\n", s );

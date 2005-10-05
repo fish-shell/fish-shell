@@ -409,6 +409,8 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b );
 */
 void sb_init( string_buffer_t * );
 
+string_buffer_t *sb_new();
+
 /**
    Append a string to the buffer
 */

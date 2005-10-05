@@ -191,4 +191,8 @@ void reader_current_token_extent( wchar_t **a, wchar_t **b, wchar_t **pa, wchar_
 */
 void reader_replace_current_token( wchar_t *new_token );
 
+void reader_handle_winch( int signal );
+void reader_handle_int( int signal );
+
+
 #endif

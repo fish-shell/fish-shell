@@ -156,6 +156,8 @@ extern int is_interactive;
 extern int is_interactive_session;
 /** Whether we are a login shell*/
 extern int is_login;
+/** Whether we are a event handler*/
+extern int is_event;
 /** Linked list of all jobs */
 extern job_t *first_job;   
 

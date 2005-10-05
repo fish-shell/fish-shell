@@ -3,17 +3,11 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <sys/types.h>
 #include <termios.h>
 #include <signal.h>
 

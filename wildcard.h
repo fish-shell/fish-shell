@@ -64,7 +64,6 @@ int wildcard_expand( const wchar_t *wc,
 
    \param str The string to test
    \param wc The wildcard to test against
-   \param wc_unescaped if wc_unescaped is true, \c wildcard_match uses the ANY_CHAR and ANY_STRING characters for globbing, otherwise, the '?' and '*' characters are used
    \return true if the wildcard matched
 */
 int wildcard_match( const wchar_t *str, 

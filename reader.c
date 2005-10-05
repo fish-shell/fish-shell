@@ -236,11 +236,7 @@ static int end_loop = 0;
 */
 static struct winsize termsize;
 
-/**
-   This flag is set when a WINCH signal was recieved.
-*/
 static int new_size=0;
-
 
 /**
    The list containing names of files that are being parsed
@@ -272,10 +268,7 @@ static struct termios saved_modes;
 */
 static pid_t original_pid;
 
-/**
-   Interrupted flag. Set to 1 when the user presses \^C.
-*/
-static int interupted;
+static int interupted=0;
 
 /*
   Prototypes for a bunch of functions defined later on.
@@ -284,9 +277,7 @@ static int interupted;
 static void reader_save_status();
 static void reader_check_status();
 static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int pos, array_list_t *error );
-static void handle_winch( int sig );
-
-
+static void check_winch();
 
 
 static struct termios old_modes;
@@ -333,7 +324,8 @@ static void term_steal()
 			break;
 	}
 
-	handle_winch( 0 );
+	reader_handle_winch(0 );	
+	check_winch();
 
     if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */
     {
@@ -359,6 +351,19 @@ static int room_for_usec(struct stat *st)
    string_buffer used as temporary storage for the reader_readline function
 */
 static string_buffer_t *readline_buffer=0;
+
+void reader_handle_int( int sig )
+{
+	block_t *c = current_block;
+	while( c )
+	{
+		c->skip=1;
+		c=c->outer;
+	}
+	interupted = 1;
+
+}
+
 
 int reader_get_width()
 {
@@ -1410,11 +1415,9 @@ static int handle_completions( array_list_t *comp )
 	}
 }
 
-/**
-   Respond to a winch signal by checking the terminal size
-*/
-static void handle_winch( int sig )
+void reader_handle_winch( int signal )
 {
+	
 	if (ioctl(1,TIOCGWINSZ,&termsize)!=0)
 	{
 		return;
@@ -1422,8 +1425,7 @@ static void handle_winch( int sig )
 	new_size=1;
 }
 
-
-void check_winch()
+static void check_winch()
 {
 	if( new_size )
 	{
@@ -1436,22 +1438,6 @@ void check_winch()
 	}
 }
 
-/**
-   Interactive mode ^C handler. Respond to int signal by setting
-   interrupted-flag and stopping all loops and conditionals.
-*/
-static void handle_int( int sig )
-{
-	interupted=1;
-
-	block_t *c = current_block;
-	while( c )
-	{
-		c->skip=1;
-		c=c->outer;
-	}
-
-}
 
 /**
    Reset the terminal. This function is placed in the list of
@@ -1465,98 +1451,6 @@ static void exit_func()
 	if( getpid() == original_pid )
 		tcsetattr(0, TCSANOW, &saved_modes);
 }
-
-/**
-   Sets appropriate signal handlers.
-*/
-static void set_signal_handlers()
-{
-	struct sigaction act;
-	sigemptyset( & act.sa_mask );
-	act.sa_flags=0;
-	act.sa_handler=SIG_DFL;
-
-	/*
-	  First reset everything
-	*/
-	sigaction( SIGINT, &act, 0);
-	sigaction( SIGQUIT, &act, 0);
-	sigaction( SIGTSTP, &act, 0);
-	sigaction( SIGTTIN, &act, 0);
-	sigaction( SIGTTOU, &act, 0);
-	sigaction( SIGCHLD, &act, 0);
-
-	/*
-	  Ignore sigpipe, it is generated if fishd dies, but we can
-	  recover.
-	*/
-	act.sa_handler=SIG_IGN;
-	sigaction( SIGPIPE, &act, 0);
-	
-	if( is_interactive )
-	{
-
-		/*
-		   Interactive mode. Ignore interactive signals.  We are a
-		   shell, we know whats best for the user. ;-)
-		*/
-
-		act.sa_handler=SIG_IGN;
-
-		sigaction( SIGINT, &act, 0);
-		sigaction( SIGQUIT, &act, 0);
-		sigaction( SIGTSTP, &act, 0);
-		sigaction( SIGTTIN, &act, 0);
-		sigaction( SIGTTOU, &act, 0);
-
-		act.sa_handler = &handle_int;
-		act.sa_flags = 0;
-		if( sigaction( SIGINT, &act, 0) )
-		{
-			wperror( L"sigaction" );
-			exit(1);
-		}
-
-		act.sa_sigaction = &job_handle_signal;
-		act.sa_flags = SA_SIGINFO;
-		if( sigaction( SIGCHLD, &act, 0) )
-		{
-			wperror( L"sigaction" );
-			exit(1);
-		}
-
-		act.sa_flags = 0;
-		act.sa_handler= &handle_winch;
-		if( sigaction( SIGWINCH, &act, 0 ) )
-		{
-			wperror( L"sigaction" );
-			exit(1);
-		}
-
-	}
-	else
-	{
-		/*
-		  Non-interactive. Ignore interrupt, check exit status of
-		  processes to determine result instead.
-		*/
-		act.sa_handler=SIG_IGN;
-
-		sigaction( SIGINT, &act, 0);
-		sigaction( SIGQUIT, &act, 0);
-
-		act.sa_handler=SIG_DFL;
-
-		act.sa_sigaction = &job_handle_signal;
-		act.sa_flags = SA_SIGINFO;
-		if( sigaction( SIGCHLD, &act, 0) )
-		{
-			wperror( L"sigaction" );
-			exit(1);
-		}
-	}
-}
-
 
 /**
    Initialize data for interactive use
@@ -1603,7 +1497,7 @@ static void reader_interactive_init()
 	history_init();
 
 
-	handle_winch( 0 );                /* Set handler for window change events */
+	reader_handle_winch(0);	
 	check_winch();
 	
 	tcgetattr(0,&shell_modes);        /* get the current terminal modes */
@@ -3034,8 +2928,8 @@ int reader_read()
 	*/
 	int shell_was_interactive = is_interactive;
 	is_interactive = isatty(STDIN_FILENO);
-	set_signal_handlers();
-
+	signal_set_handlers();
+	
 	res= is_interactive?read_i():read_ni();
 
 	/*
@@ -3045,6 +2939,6 @@ int reader_read()
 	end_loop = 0;
 
 	is_interactive = shell_was_interactive;
-	set_signal_handlers();
+	signal_set_handlers();
 	return res;
 }

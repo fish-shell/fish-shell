@@ -46,6 +46,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "sanity.h"
 #include "env.h"
 #include "parser.h"
+#include "signal.h"
 
 /**
    Size of message buffer 
@@ -69,6 +70,7 @@ int is_interactive_session=0;
 int is_subshell=0;
 int is_block=0;
 int is_login=0;
+int is_event=0;
 int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
 
@@ -347,156 +349,6 @@ static int job_last_is_completed( const job_t *j )
 	for (p = j->first_process; p->next; p = p->next)
 		;
 	return p->completed;
-}
-
-/**
-   Get string representation of a signal
-*/
-static wchar_t *sig2wcs( int sig )
-{
-	switch( sig )
-	{
-		case SIGHUP:
-			return L"SIGHUP";
-		case SIGINT:
-			return L"SIGINT";
-		case SIGQUIT:
-			return L"SIGQUIT";
-		case SIGILL:
-			return L"SIGILL";
-		case SIGTRAP:
-			return L"SIGTRAP";
-		case SIGABRT:
-			return L"SIGABRT";
-		case SIGBUS:
-			return L"SIGBUS";
-		case SIGFPE:
-			return L"SIGFPE";
-		case SIGKILL:
-			return L"SIGKILL";
-		case SIGUSR1:
-			return L"SIGUSR1";
-		case SIGSEGV:
-			return L"SIGSEGV";
-		case SIGUSR2:
-			return L"SIGUSR2";
-		case SIGPIPE:
-			return L"SIGPIPE";
-		case SIGALRM:
-			return L"SIGALRM";
-		case SIGTERM:
-			return L"SIGTERM";
-		case SIGCHLD:
-			return L"SIGCHLD";
-		case SIGCONT:
-			return L"SIGCONT";
-		case SIGSTOP:
-			return L"SIGSTOP";
-		case SIGTSTP:
-			return L"SIGTSTP";
-		case SIGTTIN:
-			return L"SIGTTIN";
-		case SIGTTOU:
-			return L"SIGTTOU";
-		case SIGURG:
-			return L"SIGURG";
-		case SIGXCPU:
-			return L"SIGXCPU";
-		case SIGXFSZ:
-			return L"SIGFXSZ";
-		case SIGVTALRM:
-			return L"SIGVTALRM";
-		case SIGPROF:
-			return L"SIGPROF";
-		case SIGWINCH:
-			return L"SIGWINCH";
-		case SIGIO:
-			return L"SIGIO";
-#ifdef SIGPWR
-		case SIGPWR:
-			return L"SIGPWR";
-#endif
-		case SIGSYS:
-			return L"SIGSYS";
-		default:
-			return L"Unknown";
-	}
-	
-}
-
-/**
-   Returns a description of the specified signal.
-*/
-static wchar_t *sig_description( int sig )
-{
-	switch( sig )
-	{
-		case SIGHUP:
-			return L"Terminal hung up";
-		case SIGINT:
-			return L"Quit request from job control (^C)";
-		case SIGQUIT:
-			return L"Quit request from job control with core dump (^\\)";
-		case SIGILL:
-			return L"Illegal instruction";
-		case SIGTRAP:
-			return L"Trace or breakpoint trap";
-		case SIGABRT:
-			return L"Abort";
-		case SIGBUS:
-			return L"Misaligned address error";
-		case SIGFPE:
-			return L"Floating point exception";
-		case SIGKILL:
-			return L"Forced quit";
-		case SIGUSR1:
-			return L"User defined signal 1";
-		case SIGUSR2:
-			return L"User defined signal 2";
-		case SIGSEGV:
-			return L"Address boundary error";
-		case SIGPIPE:
-			return L"Broken pipe";
-		case SIGALRM:
-			return L"Timer expired";
-		case SIGTERM:
-			return L"Polite quit request";
-		case SIGCHLD:
-			return L"Child process status changed";
-		case SIGCONT:
-			return L"Continue previously stopped process";
-		case SIGSTOP:
-			return L"Forced stop";
-		case SIGTSTP:
-			return L"Stop request from job control (^Z)";
-		case SIGTTIN:
-			return L"Stop from terminal input";
-		case SIGTTOU:
-			return L"Stop from terminal output";
-		case SIGURG:
-			return L"Urgent socket condition";
-		case SIGXCPU:
-			return L"CPU time limit exceeded";
-		case SIGXFSZ:
-			return L"File size limit exceeded";
-		case SIGVTALRM:
-			return L"Virtual timer expired";
-		case SIGPROF:
-			return L"Profiling timer expired";
-		case SIGWINCH:
-			return L"Window size change";
-		case SIGIO:
-			return L"Asynchronous IO event";
-#ifdef SIGPWR
-		case SIGPWR:
-			return L"Power failure";
-#endif
-		case SIGSYS:
-			return L"Bad system call";
-		default:
-			return L"Unknown";
-	}
-	
 }
 
 

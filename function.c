@@ -15,11 +15,8 @@
 #include "parser.h"
 #include "common.h"
 #include "intern.h"
+#include "event.h"
 
-/**
-   Table containing all functions
-*/
-static hash_table_t function;
 
 /**
    Struct describing a function
@@ -32,7 +29,12 @@ typedef struct
 	wchar_t *desc;	
 	int is_binding;
 }
-function_data_t;
+	function_data_t;
+
+/**
+   Table containing all functions
+*/
+static hash_table_t function;
 
 /**
    Free all contents of an entry to the function hash table
@@ -62,8 +64,11 @@ void function_destroy()
 void function_add( const wchar_t *name, 
 				   const wchar_t *val,
 				   const wchar_t *desc,
-				   int is_binding)
+				   array_list_t *events,
+				   int is_binding )
 {
+	int i;
+	
 	if( function_exists( name ) )
 		function_remove( name );
 	
@@ -72,6 +77,12 @@ void function_add( const wchar_t *name,
 	d->desc = desc?wcsdup( desc ):0;
 	d->is_binding = is_binding;
 	hash_put( &function, intern(name), d );
+
+	for( i=0; i<al_get_count( events ); i++ )
+	{
+		event_add_handler( (event_t *)al_get( events, i ) );
+	}
+	
 }
 
 int function_exists( const wchar_t *cmd )
@@ -83,6 +94,11 @@ void function_remove( const wchar_t *name )
 {
 	void *key;
 	function_data_t *d;
+
+	event_t ev;
+	ev.type=EVENT_ANY;
+	ev.function_name=name;	
+	event_remove( &ev );
 
 	hash_remove( &function,
 				 name,
@@ -146,3 +162,4 @@ void function_get_names( array_list_t *list, int get_hidden )
 		hash_foreach2( &function, &get_names_internal, list );
 	
 }
+

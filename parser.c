@@ -34,6 +34,7 @@ The fish parser. Contains functions for parsing code.
 #include "reader.h"
 #include "sanity.h"
 #include "env_universal.h"
+#include "event.h"
 
 /** Length of the lineinfo string used for describing the current tokenizer position */
 #define LINEINFO_SIZE 128
@@ -209,6 +210,9 @@ void parser_pop_block()
 		{
 			free( current_block->function_name );
 			free( current_block->function_description );
+			al_foreach( current_block->function_events,
+						(void (*)(const void *))&event_free );
+			free( current_block->function_events );
 			break;
 		}
 
@@ -1799,7 +1803,7 @@ static void eval_job( tokenizer *tok )
 		}
 	}
 	
-	if( is_subshell || is_block )
+	if(( is_subshell || is_block ) && (!is_event))
 		job_do_notification();
 //	debug( 2, L"end eval_job()\n" );
 }

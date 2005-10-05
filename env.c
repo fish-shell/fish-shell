@@ -40,6 +40,7 @@
 #include "parser.h"
 #include "env_universal.h"
 #include "input_common.h"
+#include "event.h"
 
 /**
    Command used to start fishd
@@ -80,7 +81,7 @@ typedef struct env_node
 	*/
 	struct env_node *next;
 }
-env_node_t;
+	env_node_t;
 
 /**
    A variable entry. Stores the value of a variable and whether it
@@ -92,7 +93,7 @@ typedef struct var_entry
 	int export; /**< Whether the variable should be exported */
 	wchar_t val[0]; /**< The value of the variable */
 }
-var_entry_t;
+	var_entry_t;
 
 /**
    Top node on the function stack
@@ -328,7 +329,11 @@ void env_set( const wchar_t *key,
 	env_node_t *node;
 	int has_changed_old = has_changed;
 	int has_changed_new = 0;
-	var_entry_t *e=0;
+	var_entry_t *e=0;	
+	int done=0;
+
+	event_t ev;
+	array_list_t ev_list;
 	
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
@@ -363,112 +368,124 @@ void env_set( const wchar_t *key,
 		
 		env_universal_set( key, val, export );
 
-		return;
-	}
-	
-	if( val == 0 )
-	{
-		wchar_t *prev_val;
-		free_val = 1;
-		prev_val = env_get( key );
-		val = wcsdup( prev_val?prev_val:L"" );
-	}
-
-	node = env_get_node( key );
-	if( node && &node->env != 0 )
-	{
-		e = (var_entry_t *) hash_get( &node->env, 
-									  key );
-		
-		if( e->export )
-			has_changed_new = 1;
-		
-	}
-
-	if( (var_mode & ENV_LOCAL) || 
-		(var_mode & ENV_GLOBAL) )
-	{
-		node = ( var_mode & ENV_GLOBAL )?global_env:top;
 	}
 	else
 	{
-		if( node )
+		
+		if( val == 0 )
 		{
-			if( !(var_mode & ENV_EXPORT ) &&
-				!(var_mode & ENV_UNEXPORT ) )
-			{				
-				var_mode = e->export?ENV_EXPORT:0;
-			}
+			wchar_t *prev_val;
+			free_val = 1;
+			prev_val = env_get( key );
+			val = wcsdup( prev_val?prev_val:L"" );
+		}
+
+		node = env_get_node( key );
+		if( node && &node->env != 0 )
+		{
+			e = (var_entry_t *) hash_get( &node->env, 
+										  key );
+		
+			if( e->export )
+				has_changed_new = 1;
+		
+		}
+
+		if( (var_mode & ENV_LOCAL) || 
+			(var_mode & ENV_GLOBAL) )
+		{
+			node = ( var_mode & ENV_GLOBAL )?global_env:top;
 		}
 		else
 		{
-			if( !proc_had_barrier)
-				env_universal_barrier();
-
-			if( env_universal_get( key ) )
+			if( node )
 			{
-				int export = 0;
-				
 				if( !(var_mode & ENV_EXPORT ) &&
 					!(var_mode & ENV_UNEXPORT ) )
-				{
-					env_universal_get_export( key );
+				{				
+					var_mode = e->export?ENV_EXPORT:0;
 				}
-				else 
-					export = (var_mode & ENV_EXPORT );
-				
-				env_universal_set( key, val, export );
-				
-				return;
 			}
 			else
 			{
-				/*
-				  New variable with unspecified scope. The default scope is the innermost scope that is shadowing
-				*/
-				node = top;
-				while( node->next && !node->new_scope )
-					node = node->next;
+				if( !proc_had_barrier)
+					env_universal_barrier();
+
+				if( env_universal_get( key ) )
+				{
+					int export = 0;
 				
+					if( !(var_mode & ENV_EXPORT ) &&
+						!(var_mode & ENV_UNEXPORT ) )
+					{
+						env_universal_get_export( key );
+					}
+					else 
+						export = (var_mode & ENV_EXPORT );
+				
+					env_universal_set( key, val, export );
+				
+					done = 1;
+				
+				}
+				else
+				{
+					/*
+					  New variable with unspecified scope. The default scope is the innermost scope that is shadowing
+					*/
+					node = top;
+					while( node->next && !node->new_scope )
+						node = node->next;
+				
+				}
 			}
 		}
-	}
 	
-//	env_remove( key, 0 );
-	void *k, *v;
-	hash_remove( &node->env, key, (const void **)&k, (const void **)&v );
-	free( k );
-	free( v );
+		if( !done )
+		{
+			void *k, *v;
+			hash_remove( &node->env, key, (const void **)&k, (const void **)&v );
+			free( k );
+			free( v );
 
-	entry = malloc( sizeof( var_entry_t ) + 
-					sizeof(wchar_t )*(wcslen(val)+1));
+			entry = malloc( sizeof( var_entry_t ) + 
+							sizeof(wchar_t )*(wcslen(val)+1));
 	
-	if( var_mode & ENV_EXPORT)
-	{
-		entry->export = 1;
-		has_changed_new = 1;		
-	}
-	else
-		entry->export = 0;
+			if( var_mode & ENV_EXPORT)
+			{
+				entry->export = 1;
+				has_changed_new = 1;		
+			}
+			else
+				entry->export = 0;
 
-	wcscpy( entry->val, val );
+			wcscpy( entry->val, val );
 
-	hash_put( &node->env, wcsdup(key), entry );
+			hash_put( &node->env, wcsdup(key), entry );
 
-	if( entry->export )
-	{
-		node->export=1;
-	}
+			if( entry->export )
+			{
+				node->export=1;
+			}
 
-	if( free_val )
-		free((void *)val);
-
+			if( free_val )
+				free((void *)val);
 		
-	has_changed = has_changed_old || has_changed_new;
+			has_changed = has_changed_old || has_changed_new;
+		}
+	
+	}
 
-/*	if( has_changed_new && !has_changed_old )
-		fwprintf( stderr, L"Reexport after setting %ls to %ls, %d %d %d\n", key, val, has_changed_old, has_changed_new, has_changed );	
-*/
+	ev.type=EVENT_VARIABLE;
+	ev.variable = key;
+	ev.function_name = 0;
+	
+	al_init( &ev_list );
+	al_push( &ev_list, L"VARIABLE" );
+	al_push( &ev_list, key );
+
+	event_fire( &ev, &ev_list );
+	al_destroy( &ev_list );	
 }
 
 /**
@@ -560,7 +577,7 @@ wchar_t *env_get( const wchar_t *key )
 	while( env != 0 )
 	{
 		res = (var_entry_t *) hash_get( &env->env, 
-								 key );
+										key );
 		if( res != 0 )
 		{
 			if( wcscmp( res->val, ENV_NULL )==0) 
@@ -602,7 +619,7 @@ int env_exist( const wchar_t *key )
 	while( env != 0 )
 	{
 		res = (var_entry_t *) hash_get( &env->env, 
-								 key );
+										key );
 		if( res != 0 )
 		{
 			return 1;

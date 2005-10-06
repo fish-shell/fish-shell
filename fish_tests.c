@@ -622,7 +622,7 @@ int main( int argc, char **argv )
 	complete_init();
 	reader_init();
 	env_init();
-	
+
 	test_util();
 	test_tok();
 	test_parser();

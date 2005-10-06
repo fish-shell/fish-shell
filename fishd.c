@@ -296,7 +296,7 @@ static void daemonize()
 	/*
 	  Put ourself in out own processing group
 	*/
-	setpgrp();
+	setpgid( 0, 0 );
 
 	/*
 	  Close stdin and stdout

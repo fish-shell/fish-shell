@@ -212,6 +212,7 @@ void parser_pop_block()
 			free( current_block->function_description );
 			al_foreach( current_block->function_events,
 						(void (*)(const void *))&event_free );
+			al_destroy( current_block->function_events );			
 			free( current_block->function_events );
 			break;
 		}

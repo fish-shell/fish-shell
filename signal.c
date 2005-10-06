@@ -12,8 +12,11 @@ The library for various signal related issues
 #include <signal.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "common.h"
+#include "util.h"
+#include "wutil.h"
 #include "signal.h"
 #include "event.h"
 #include "reader.h"
@@ -250,7 +253,9 @@ static int match_signal_name( const wchar_t *canonical,
 
 int wcs2sig( const wchar_t *str )
 {
-	int i;
+	int i, res;
+	wchar_t *end=0;
+	
 	for( i=0; lookup[i].desc ; i++ )
 	{
 		if( match_signal_name( lookup[i].name, str) )
@@ -258,6 +263,11 @@ int wcs2sig( const wchar_t *str )
 			return lookup[i].signal;
 		}
 	}
+	errno=0;
+	res = wcstol( str, &end, 10 );
+	if( !errno && end && !*end )
+		return res;
+	
 	return -1;	
 }
 
@@ -319,6 +329,31 @@ static void handle_int( int sig, siginfo_t *info, void *context )
 }
 
 /**
+   sigchld handler. Does notification and calls the handler in proc.c
+*/
+static void handle_chld( int sig, siginfo_t *info, void *context )
+{
+	job_handle_signal( sig, info, context );
+	default_handler( sig, info, context);	
+}
+
+void signal_reset_handlers()
+{
+	int i;
+	
+	struct sigaction act;
+	sigemptyset( & act.sa_mask );
+	act.sa_flags=0;
+	act.sa_handler=SIG_DFL;
+
+	for( i=0; lookup[i].desc ; i++ )
+	{
+		sigaction( lookup[i].signal, &act, 0);
+	}	
+}
+
+
+/**
    Sets appropriate signal handlers.
 */
 void signal_set_handlers()
@@ -338,7 +373,6 @@ void signal_set_handlers()
 	sigaction( SIGTTIN, &act, 0);
 	sigaction( SIGTTOU, &act, 0);
 	sigaction( SIGCHLD, &act, 0);
-	sigaction( SIGALRM, &act, 0);
 
 	/*
 	  Ignore sigpipe, it is generated if fishd dies, but we can
@@ -348,7 +382,6 @@ void signal_set_handlers()
 	
 	if( is_interactive )
 	{
-
 		/*
 		   Interactive mode. Ignore interactive signals.  We are a
 		   shell, we know whats best for the user. ;-)
@@ -370,7 +403,7 @@ void signal_set_handlers()
 			exit(1);
 		}
 
-		act.sa_sigaction = &job_handle_signal;
+		act.sa_sigaction = &handle_chld;
 		act.sa_flags = SA_SIGINFO;
 		if( sigaction( SIGCHLD, &act, 0) )
 		{
@@ -400,7 +433,7 @@ void signal_set_handlers()
 
 		act.sa_handler=SIG_DFL;
 
-		act.sa_sigaction = &job_handle_signal;
+		act.sa_sigaction = &handle_chld;
 		act.sa_flags = SA_SIGINFO;
 		if( sigaction( SIGCHLD, &act, 0) )
 		{
@@ -408,5 +441,26 @@ void signal_set_handlers()
 			exit(1);
 		}
 	}
+}
+
+void signal_handle( int sig, int do_handle )
+{
+	struct sigaction act;
+
+	/*
+	  These should always be handled
+	*/
+	if( (sig == SIGINT) ||
+		(sig == SIGQUIT) ||
+		(sig == SIGTSTP) ||
+		(sig == SIGTTIN) ||
+		(sig == SIGTTOU) ||
+		(sig == SIGCHLD) )
+		return;
+	
+	sigemptyset( & act.sa_mask );
+	act.sa_flags=SA_SIGINFO;
+	act.sa_sigaction = (do_handle?&default_handler:SIG_DFL);
+	sigaction( sig, &act, 0);
 }
 

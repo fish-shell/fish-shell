@@ -391,12 +391,7 @@ static void setup_child_process( job_t *j )
 	}
 	
 	/* Set the handling for job control signals back to the default.  */
-	signal (SIGINT, SIG_DFL);
-	signal (SIGQUIT, SIG_DFL);
-	signal (SIGTSTP, SIG_DFL);
-	signal (SIGTTIN, SIG_DFL);
-	signal (SIGTTOU, SIG_DFL);
-	signal (SIGCHLD, SIG_DFL);
+	signal_reset_handlers();
 	
 	sigset_t chldset; 
 	sigemptyset( &chldset );

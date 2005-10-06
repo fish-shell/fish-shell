@@ -20,4 +20,17 @@ const wchar_t *sig2wcs( int sig );
 */
 const wchar_t *sig_description( int sig );
 
+/**
+   Set all signal handlers to SIG_DFL
+*/
+void signal_reset_handlers();
+
+/**
+   Set signal handlers to fish default handlers
+*/
 void signal_set_handlers();
+
+/**
+   Tell fish to catch the specified signal and fire an event, instead of performing the default action
+*/
+void signal_handle( int sig, int do_handle );

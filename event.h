@@ -74,8 +74,11 @@ void event_remove( event_t *event );
    Return all events which match the specified event class 
 
    \param criterion Is the class of events to return. If the criterion has a non-null function_name, only events which trigger the specified function will return.
+   \param out the list to add events to. May be 0, in which case no events will be added, but the result count will still be valid
+   
+   \return the number of found matches
 */
-void event_get( event_t *criterion, array_list_t *out );
+int event_get( event_t *criterion, array_list_t *out );
 
 /**
    Fire the specified event. The function_name field of the event must

@@ -131,20 +131,24 @@ void event_add_handler( event_t *event )
 	if( !events )
 		events = al_new();	
 
-	debug( 1, L"add event of type %d", e->type );	
-
+	if( e->type == EVENT_SIGNAL )
+	{
+		signal_handle( e->signal, 1 );
+	}
+	
 	al_push( events, e );	
 }
 
 void event_remove( event_t *criterion )
 {
 	int i;
-	array_list_t *new_list = al_new();
-
+	array_list_t *new_list=0;
+	event_t e;
+	
 	/*
 	  Because of concurrency issues, env_remove does not actually free
-	  anything - instead it simply moves all events that should be
-	  removed to the killme list.
+	  any events - instead it simply moves all events that should be
+	  removed from the event list to the killme list.
 	*/
 	
 	if( !events )
@@ -159,30 +163,56 @@ void event_remove( event_t *criterion )
 				killme = al_new();
 			
 			al_push( killme, n );			
+
+			/*
+			  If this event was a signal handler and no other handler handles
+			  the specified signal type, do not handle that type of signal any
+			  more.
+			*/
+			if( n->type == EVENT_SIGNAL )
+			{
+				e.type = EVENT_SIGNAL;
+				e.signal = n->signal;
+				e.function_name = 0;
+				
+				if( event_get( &e, 0 ) == 1 )
+				{
+					signal_handle( e.signal, 0 );			
+				}		
+			}
+
 		}
 		else
 		{
+			if( !new_list )
+				new_list = al_new();
 			al_push( new_list, n );
 		}
 	}
 	al_destroy( events );
+	free( events );	
 	events = new_list;
 }
 
-void event_get( event_t *criterion, array_list_t *out )
+int event_get( event_t *criterion, array_list_t *out )
 {
 	int i;
+	int found = 0;
 	
 	if( !events )
-		return;	
+		return 0;	
 	
 	for( i=0; i<al_get_count( events); i++ )
 	{
 		event_t *n = (event_t *)al_get( events, i );		
 		if( event_match(criterion, n ) )
-			al_push( out, n );
-		
+		{
+			found++;
+			if( out )
+				al_push( out, n );
+		}		
 	}
+	return found;
 }
 
 /**
@@ -196,7 +226,7 @@ static void event_free_kills()
 	
 	for( i=0; i<al_get_count( killme ); i++ )
 	{
-		event_t *roadkill = (event_t *)al_get( events, i );
+		event_t *roadkill = (event_t *)al_get( killme, i );
 		event_free( roadkill );
 	}
 	al_truncate( killme, 0 );
@@ -233,13 +263,13 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 	string_buffer_t *b=0;
 	array_list_t *fire=0;
 	
-	if( !events )
-		return;
-
 	/*
 	  First we free all events that have been removed
 	*/
 	event_free_kills();	
+
+	if( !events )
+		return;
 
 	/*
 	  Then we iterate over all events, adding events that should be
@@ -408,21 +438,23 @@ void event_destroy()
 	{
 		al_foreach( events, (void (*)(const void *))&event_free );
 		al_destroy( events );
+		free( events );		
 		events=0;
 	}
 	if( killme )
 	{
 		al_foreach( killme, (void (*)(const void *))&event_free );
 		al_destroy( killme );
+		free( killme );		
 		killme=0;		
 	}	
 }
 
 void event_free( event_t *e )
 {
-	free( e->function_name );
+	free( (void *)e->function_name );
 	if( e->type == EVENT_VARIABLE )
-		free( e->variable );
+		free( (void *)e->variable );
 	free( e );
 }
 		

@@ -800,11 +800,24 @@ static int builtin_function( wchar_t **argv )
 				
 			case 's':
 			{
-				event_t *e = malloc( sizeof(event_t));
+				int sig = wcs2sig( woptarg );
+				event_t *e;
+				
+				if( sig < 0 )
+				{
+					sb_printf( sb_err, 
+							   L"%ls: Unknown signal %ls\n",
+							   argv[0],
+							   woptarg );
+					res=1;
+					break;
+				}
+				
+				e = malloc( sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_SIGNAL;
-				e->signal = wcs2sig( woptarg );
+				e->signal = sig;
 				e->function_name=0;				
 				al_push( events, e );
 				break;				
@@ -812,7 +825,19 @@ static int builtin_function( wchar_t **argv )
 			
 			case 'v':
 			{
-				event_t *e = malloc( sizeof(event_t));
+				event_t *e;
+
+				if( !wcsvarname( woptarg ) )
+				{
+					sb_printf( sb_err, 
+							   L"%ls: Invalid variable name %ls\n",
+							   argv[0],
+							   woptarg );
+					res=1;
+					break;
+				}
+				
+				e = malloc( sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_VARIABLE;
@@ -824,11 +849,29 @@ static int builtin_function( wchar_t **argv )
 			
 			case 'x':
 			{
-				event_t *e = malloc( sizeof(event_t));
+				pid_t pid;
+				wchar_t *end;
+				event_t *e;
+				
+				errno = 0;
+				pid = wcstol( woptarg, &end, 10 );	
+				if( errno || !end || *end )
+				{
+					sb_printf( sb_err,
+                               L"%ls: Invalid process id %ls\n",
+                               argv[0],
+                               woptarg );
+                    res=1;
+                    break;
+				}
+				
+				
+
+				e = malloc( sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_EXIT;
-				e->pid = wcstol( woptarg, 0, 10 );				
+				e->pid = pid;
 				e->function_name=0;				
 				al_push( events, e );
 				break;				
@@ -916,7 +959,7 @@ static int builtin_function( wchar_t **argv )
 
 		al_foreach( events, (void (*)(const void *))&event_free );
 		al_destroy( events );
-		
+		free( events );		
 	}
 	else
 	{

@@ -69,7 +69,6 @@ static void ok()
 	wprintf( L"OK\n" );
 }
 
-
 static int pq_compare( void *e1, void *e2 )
 {
 	return e1-e2;

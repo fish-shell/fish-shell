@@ -228,8 +228,8 @@ static int vgwprintf( void (*writer)(wchar_t),
 			int width = 0;
 			filter++;
 			int loop=1;
-			int precision=INT_MAX;
-			
+			int precision=-1;
+
 			while( loop )
 			{
 				switch(*filter)
@@ -291,11 +291,26 @@ static int vgwprintf( void (*writer)(wchar_t),
 					break;
 				}
 				case L's':
-				{
-					wchar_t *ss = is_long?va_arg(va, wchar_t*):str2wcs(va_arg(va, char*));
-					
+				{		
+					wchar_t *ss=0;
+					if( is_long )
+					{
+						ss = va_arg(va, void *);
+					}
+					else
+					{
+						char *ns = va_arg(va, char*);
+
+						if( ns )
+						{
+							ss = str2wcs( ns );
+						}						
+					}
+										
 					if( !ss )
+					{
 						return -1;
+					}
 					
 					if( width )
 					{
@@ -306,13 +321,13 @@ static int vgwprintf( void (*writer)(wchar_t),
 							count++;
 						}
 					}
-
+					
 					wchar_t *s=ss;
 					int precount = count;
 					
 					while( *s )
 					{
-						if( (precision <= (count-precount) ) )
+						if( (precision > 0) && (precision <= (count-precount) ) )
 							break;
 
 						writer( *(s++) );
@@ -329,27 +344,38 @@ static int vgwprintf( void (*writer)(wchar_t),
 				case L'i':
 				{
 					char str[32];
-
+					char *pos;
+					
 					switch( is_long )
 					{
 						case 0:
 						{
 							int d = va_arg( va, int );
-							snprintf( str, 32, "%.*d", precision, d );
+							if( precision > 0 )
+								snprintf( str, 32, "%.*d", precision, d );
+							else
+								snprintf( str, 32, "%d", d );
+							
 							break;
 						}
 						
 						case 1:
 						{
 							long d = va_arg( va, long );
-							snprintf( str, 32, "%.*ld", precision, d );
+							if( precision > 0 )
+								snprintf( str, 32, "%.*ld", precision, d );
+							else
+								snprintf( str, 32, "%ld", d );
 							break;
 						}
 						
 						case 2:
 						{
 							long long d = va_arg( va, long long );
-							snprintf( str, 32, "%.*lld", precision, d );
+							if( precision > 0 )
+								snprintf( str, 32, "%.*lld", precision, d );
+							else
+								snprintf( str, 32, "%lld", d );
 							break;
 						}
 						
@@ -360,27 +386,29 @@ static int vgwprintf( void (*writer)(wchar_t),
 					if( width )
 					{
 						int i;
+												
 						for( i=strlen(str); i<width; i++ )
 						{
 							writer( L' ' );
 							count++;
 						}
 					}
-										
-					int c = gwprintf( writer, L"%s", str );
-					if( c==-1 )
-						return -1;
-					else
-						count += c;
+
+					pos = str;
 					
+					while( *pos )
+					{
+						writer( *(pos++) );
+						count++;
+					}
+
 					break;
 				}
-
+				
 				case L'u':
 				{
 					char str[32];
 					
-
 					switch( is_long )
 					{
 						case 0:
@@ -436,7 +464,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 				}
 				default:
 					debug( 0, L"Unknown switch %lc in string %ls\n", *filter, filter_org );
-					exit(1);
+//					exit(1);
 			}
 		}
 		else
@@ -454,10 +482,12 @@ static int gwprintf( void (*writer)(wchar_t),
 					 ... )
 {
 	va_list va;
+	int written;
+	
 	va_start( va, filter );
-	int written=vgwprintf( writer,
-						   filter,
-						   va );
+	written=vgwprintf( writer,
+					   filter,
+					   va );
 	va_end( va );
 	return written;
 }
@@ -474,7 +504,7 @@ static struct
 sw_data;
 
 /**
-   Writer for swprintf
+   Writers for string output
 */
 static void sw_writer( wchar_t c )
 {
@@ -483,17 +513,16 @@ static void sw_writer( wchar_t c )
 	sw_data.count++;
 }
 
-
-int swprintf( wchar_t *out, size_t n, const wchar_t *filter, ... )
+int vswprintf( wchar_t *out, size_t n, const wchar_t *filter, va_list va )
 {
-	va_list va;
-	va_start( va, filter );
+	int written;
+	
 	sw_data.pos=out;
 	sw_data.max=n;
 	sw_data.count=0;
-	int written=vgwprintf( &sw_writer,
-						   filter,
-						   va );
+	written=vgwprintf( &sw_writer,
+					   filter,
+					   va );
 	if( written < n )
 	{
 		*sw_data.pos = 0;
@@ -503,6 +532,16 @@ int swprintf( wchar_t *out, size_t n, const wchar_t *filter, ... )
 		written=-1;
 	}
 	
+	return written;
+}
+
+int swprintf( wchar_t *out, size_t n, const wchar_t *filter, ... )
+{
+	va_list va;
+	int written;
+	
+	va_start( va, filter );
+	written = vswprintf( out, n, filter, va );
 	va_end( va );
 	return written;
 }
@@ -517,30 +556,41 @@ static void fw_writer( wchar_t c )
 	putw( c, fw_data );
 }
 
-/**
-   Writer for fwprintf and wprintf
+/*
+   Writers for file output
 */
+int vfwprintf( FILE *f, const wchar_t *filter, va_list va )
+{
+	fw_data = f;
+	return vgwprintf( &fw_writer, filter, va );
+}
+
 int fwprintf( FILE *f, const wchar_t *filter, ... )
 {
 	va_list va;
-	va_start( va, filter );
-	fw_data = f;
+	int written;
 	
-	int written=vgwprintf( &fw_writer, filter, va );
+	va_start( va, filter );
+	written = vfwprintf( f, filter, va );
 	va_end( va );
 	return written;
+}
+
+int vwprintf( const wchar_t *filter, va_list va )
+{
+	fw_data=stdout;	
+	return vgwprintf( &fw_writer, filter, va );
 }
 
 int wprintf( const wchar_t *filter, ... )
 {
 	va_list va;
-	va_start( va, filter );
-	fw_data = stdout;
+	int written;
 	
-	int written=vgwprintf( &fw_writer, filter, va );
+	va_start( va, filter );
+	written=vwprintf( filter, va );
 	va_end( va );
 	return written;
 }
 
 #endif
-

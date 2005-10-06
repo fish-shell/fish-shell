@@ -180,7 +180,7 @@ end
 # Completions for the shell and it's builtin commands and functions
 #
 
-for i in (builtin -n|grep -ve '(while|for|if|function|switch)' )
+for i in (builtin -n|grep -vE '(while|for|if|function|switch)' )
 	complete -c $i -s h -l help -d "Display help and exit"
 end
 

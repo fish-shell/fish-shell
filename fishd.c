@@ -237,8 +237,6 @@ static void broadcast( int type, const wchar_t *key, const wchar_t *val )
 	connection_t *c;
 	message_t *msg;
 
-	debug( 1, L"Got message %d %ls %ls", type, key, val );
-	
 	if( !conn )
 		return;
 

@@ -191,14 +191,6 @@ static int get_socket()
 		goto unlock;
 	}
 
-/*		
-	if( setsockopt( s, SOL_SOCKET, SO_PASSCRED, &on, sizeof( on ) ) )
-	{
-		perror( "setsockopt");
-		exit(1);
-	}
-*/
-
 	if( fcntl( s, F_SETFL, O_NONBLOCK ) != 0 )
 	{
 		wperror( L"fcntl" );
@@ -239,12 +231,12 @@ static void broadcast( int type, const wchar_t *key, const wchar_t *val )
 
 	if( !conn )
 		return;
-
-
+	
 	msg = create_message( type, key, val );
 	
 	/*
-	  Don't merge loops, or try_send_all can free the message prematurely
+	  Don't merge these loops, or try_send_all can free the message
+	  prematurely
 	*/
 	
 	for( c = conn; c; c=c->next )
@@ -297,7 +289,7 @@ static void daemonize()
 	setsid();
 
 	/*
-	  Close stdin and stdout
+	  Close stdin and stdout. We only use stderr, anyway.
 	*/
 	close( 0 );
 	close( 1 );
@@ -340,6 +332,7 @@ void load_or_save( int save)
 	{
 		debug( 1, L"Could not open load/save file. No previous saves?" );
 		wperror( L"open" );
+		return;		
 	}
 	debug( 1, L"File open on fd %d", c.fd );
 
@@ -355,7 +348,6 @@ void load_or_save( int save)
 	q_destroy( &c.unsent );
 	sb_destroy( &c.input );
 	close( c.fd );
-
 }
 
 static void load()
@@ -377,11 +369,8 @@ static void init()
 	program_name=L"fishd";
 
 	sock = get_socket();
-
 	daemonize();	
-
-	fish_setlocale( LC_ALL, L"" );
-	
+	fish_setlocale( LC_ALL, L"" );	
 	env_universal_common_init( &broadcast );
 	
 	load();	
@@ -538,7 +527,6 @@ int main( int argc, char ** argv )
 			env_universal_common_destroy();
 			exit(0);
 			c=c->next;
-		}
-		
+		}		
 	}
 }

@@ -17,7 +17,6 @@
 #include "proc.h"
 #include "parser.h"
 #include "common.h"
-#include "intern.h"
 #include "event.h"
 #include "signal.h"
 

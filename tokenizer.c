@@ -511,7 +511,7 @@ void tok_next( tokenizer *tok )
 			break;
 
 		case L'|':
-			check_size( tok, 16 );
+			check_size( tok, 2 );
 			
 			tok->last[0]=L'1';
 			tok->last[1]=L'\0';			
@@ -527,11 +527,17 @@ void tok_next( tokenizer *tok )
 			return read_redirect( tok, 2 );
 
 		default:
+		{
+			
 			if( iswdigit( *tok->buff ) )
 			{
-				int fd = *tok->buff - L'0';
-				check_size( tok, 16 );
-				switch( *(tok->buff+1))
+
+				wchar_t *orig = tok->buff;
+				int fd = 0;
+				while( iswdigit( *tok->buff ) )
+					fd = (fd*10) + (*(tok->buff++) - L'0');
+
+				switch( *(tok->buff))
 				{
 					case L'|':
 					{
@@ -540,24 +546,24 @@ void tok_next( tokenizer *tok )
 							tok_error( tok, PIPE_ERROR );
 							return;
 						}
-						
-						tok->buff+=2;
-						tok->last[0]=L'0'+fd;
-						tok->last[1]=L'\0';			
+						check_size( tok, 16 );						
+						tok->buff++;
+						swprintf( tok->buff, 16, L"%d", fd );
 						tok->last_type = TOK_PIPE;
 						return;
 					}
-					
+
 					case L'>':
 					case L'<':
-					{
-						tok->buff++;
 						read_redirect( tok, fd );
 						return;
-					}
+						
 				}
+				tok->buff = orig;				
 			}
 			read_string( tok );
+		}
+		
 	}
 
 }

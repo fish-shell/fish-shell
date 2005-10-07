@@ -1918,7 +1918,9 @@ static int builtin_source( wchar_t ** argv )
 	else
 	{
 		reader_push_current_filename( argv[1] );
+		env_push(0);		
 		res = reader_read();		
+		env_pop();
 		if( res )
 		{
 			sb_printf( sb_err,

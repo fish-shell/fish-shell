@@ -1171,7 +1171,7 @@ static void completion_insert( wchar_t *val, int is_complete )
 
 	if( quote == L'\0' )
 	{
-		replaced = expand_escape( wcsdup(val), 1 );
+		replaced = expand_escape( val, 1 );
 	}
 	else
 	{
@@ -1200,7 +1200,7 @@ static void completion_insert( wchar_t *val, int is_complete )
 		if( unescapable )
 		{
 			free( replaced );
-			wchar_t *tmp = expand_escape( wcsdup(val), 1 );
+			wchar_t *tmp = expand_escape( val, 1 );
 			replaced = wcsdupcat( L" ", tmp );
 			free( tmp);
 			replaced[0]=quote;
@@ -1241,7 +1241,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	if( !prefix || (wcslen(prefix)==0))
 		prefix_esc = wcsdup(L"\"\"");
 	else
-		prefix_esc = escape( wcsdup(prefix),1);
+		prefix_esc = escape( prefix,1);
 
 	sb_init( &cmd );
 	sb_printf( &cmd, 
@@ -1253,7 +1253,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	
 	for( i=0; i<al_get_count( comp); i++ )
 	{
-		wchar_t *el = escape( wcsdup((wchar_t*)al_get( comp, i )),1);		
+		wchar_t *el = escape( (wchar_t*)al_get( comp, i ),1);		
 		sb_printf( &cmd, L" %ls", el );
 		free(el);
 	}

@@ -219,13 +219,16 @@ static void parse_message( wchar_t *msg,
 		tmp = wcschr( name, L':' );
 		if( tmp )
 		{
+			wchar_t *val_unescaped;
+			
 			wchar_t *key =malloc( sizeof( wchar_t)*(tmp-name+1));
 			memcpy( key, name, sizeof( wchar_t)*(tmp-name));
 			key[tmp-name]=0;
 			
 			val = tmp+1;
 			
-			val = unescape( wcsdup(val), 0 );
+
+			val = unescape( val, 0 );
 			
 			var_entry_t *entry = 
 				malloc( sizeof(var_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
@@ -386,7 +389,7 @@ message_t *create_message( int type,
 				val_in=L"";
 			}
 			
-			wchar_t *esc = escape(wcsdup(val_in),1);
+			wchar_t *esc = escape(val_in,1);
 			if( !esc )
 				break;
 			

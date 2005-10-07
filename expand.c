@@ -115,7 +115,7 @@ void expand_variable_array( const wchar_t *val, array_list_t *out )
 	}
 }
 
-wchar_t *expand_escape( wchar_t *in,
+wchar_t *expand_escape( const wchar_t *in,
 						int escape_all )
 {
 	return escape( in, escape_all );
@@ -177,7 +177,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 			}
 			else
 			{
-				wchar_t *val = expand_escape( wcsdup(el), 1 );								
+				wchar_t *val = expand_escape( el, 1 );								
 				sb_append( &buff, val );
 				free( val );
 			}
@@ -203,7 +203,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 				}
 				else
 				{
-					wchar_t *val = expand_escape( wcsdup(el), 1 );								
+					wchar_t *val = expand_escape( el, 1 );								
 					sb_append( &buff, val );
 					free( val );
 				}
@@ -1117,10 +1117,11 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 
     for( i=0; i<al_get_count( &sub_res ); i++ )
     {
-        wchar_t *sub_item;
+        wchar_t *sub_item, *sub_item2;
         sub_item = (wchar_t *)al_get( &sub_res, i );
-        sub_item = expand_escape( sub_item, 1 );
-        int item_len = wcslen( sub_item );
+        sub_item2 = expand_escape( sub_item, 1 );
+		free(sub_item);		
+        int item_len = wcslen( sub_item2 );
 
         for( j=0; j<al_get_count( &tail_expand ); j++ )
         {
@@ -1131,14 +1132,14 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 
             sb_append_substring( &whole_item, in, len1 );
             sb_append_char( &whole_item, INTERNAL_SEPARATOR );
-            sb_append_substring( &whole_item, sub_item, item_len );
+            sb_append_substring( &whole_item, sub_item2, item_len );
 			sb_append_char( &whole_item, INTERNAL_SEPARATOR );
             sb_append( &whole_item, tail_item );			
 
             al_push( out, whole_item.buff );			
         }
 		
-        free( sub_item );
+        free( sub_item2 );
     }	
 	free(in);
 	
@@ -1152,9 +1153,12 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 }
 
 
-wchar_t *expand_backslash( wchar_t * in, int escape_special )
+wchar_t *expand_unescape( const wchar_t * in, int escape_special )
 {
-	return unescape( in, escape_special );
+	wchar_t *res = unescape( in, escape_special );
+	if( !res )
+		error( SYNTAX_ERROR, L"Unexpected end of string", -1 );
+	return res;
 }
 
 /**
@@ -1178,7 +1182,6 @@ static int tilde_expand( wchar_t **ptr )
 		if( in[1] == '/' || in[1] == '\0' )
 		{
 			/* Current users home directory */
-			struct passwd *userinfo;
 			
 			home = env_get( L"HOME" );
 			if( home )
@@ -1350,9 +1353,16 @@ int expand_string( wchar_t *str,
 
 		for( i=0; i<al_get_count( in ); i++ )
 		{
-			wchar_t *next = expand_backslash((wchar_t *)al_get( in, i ), 
-													  1);
+			wchar_t *next;
 
+			next = expand_unescape( (wchar_t *)al_get( in, i ), 
+									1);
+
+			free( (void *)al_get( in, i ) );
+
+			if( !next )
+				continue;			
+			
 			if( EXPAND_SKIP_VARIABLES & flags )
 			{
 				wchar_t *tmp;

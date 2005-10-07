@@ -247,10 +247,10 @@ void debug( int level, wchar_t *msg, ... );
    \return The escaped string, or 0 if there is not enough memory
 */
 
-wchar_t *escape( wchar_t *in, 
+wchar_t *escape( const wchar_t *in, 
 				 int escape_all );
 
-wchar_t *unescape( wchar_t * in, int escape_special );
+wchar_t *unescape( const wchar_t * in, int escape_special );
 
 void block();
 void unblock();

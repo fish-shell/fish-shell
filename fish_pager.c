@@ -284,7 +284,7 @@ static void completion_print( int cols,
 				}
 				else
 				{
-					wchar_t *tmp = escape( wcsdup(el), 1 );
+					wchar_t *tmp = escape( el, 1 );
 					whole_comp_width = my_wcswidth( tmp );
 					free(tmp);
 				}

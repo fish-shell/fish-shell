@@ -290,7 +290,7 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 int write_escaped_str( const wchar_t *str, int max_len )
 {
 
-	wchar_t *out = escape( wcsdup(str), 1 );
+	wchar_t *out = escape( str, 1 );
 	int i;
 	int len = my_wcswidth( out );
 	int written=0;

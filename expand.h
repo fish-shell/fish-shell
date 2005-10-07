@@ -111,14 +111,31 @@ int expand_string( wchar_t *in, array_list_t *out, int flag );
 wchar_t *expand_one( wchar_t *in, int flag );
 
 /**
+   Expand backslashed escapes and substitute them with their unescaped
+   counterparts. Also optionally change the wildcards, the tilde
+   character and a few more into constants which are defined to be
+   outside of the valid character space, but still inside the valid
+   space for a wchar_t. This assumes that a wchar_t is at least 32
+   bits long AND that the characterset is UCS4 or some other 31-bit
+   character set.
+
+   The result must be free()d. The original string is not modified. If
+   an invalid sequence is specified, 0 is returned.
+
+*/
+wchar_t *expand_unescape( const wchar_t * in, int escape_special );
+
+/**
    Replace special characters with escape sequences. Newline is
    replaced with \n, etc. 
 
+   The result must be free()d. The original string is not modified.
+
    \param in The string to be escaped
    \param escape_all Whether all characters wich hold special meaning in fish (Pipe, semicolon, etc,) should be escaped, or only unprintable characters
-   \return The escaped string, or 0 if there is not enough memory
+   \return The escaped string
 */
-wchar_t *expand_escape( wchar_t *in, int escape_all );
+wchar_t *expand_escape( const wchar_t *in, int escape_all );
 
 /**
    Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing.
@@ -147,22 +164,6 @@ int expand_locate_subshell( wchar_t *in,
 							wchar_t **begin, 
 							wchar_t **end,
 							int flags );
-
-
-/**
-   Expand backslashed escapes and substitute them with their unescaped
-   counterparts. Also optionally change the wildcards, the tilde
-   character and a few more into constants which are defined to be
-   outside of the valid character space, but still inside the valid
-   space for a wchar_t. This assumes that a wchar_t is at least 32
-   bits long AND that the characterset is UCS4 or some other 31-bit
-   character set.
-
-   Since removing the escape sequences can never lengthen the string,
-   the specified string is modified instead of allocating a new one.
-
-*/
-wchar_t *expand_backslash( wchar_t * in, int escape_special );
 
 
 /**

@@ -324,7 +324,7 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 		
 		for( j=0; j<al_get_count(arguments); j++ )
 		{
-			wchar_t *arg_esc = escape( wcsdup( (wchar_t *)al_get( arguments, j)), 0 );		
+			wchar_t *arg_esc = escape( (wchar_t *)al_get( arguments, j), 0 );		
 			sb_append( b, L" " );
 			sb_append( b, arg_esc );
 			free( arg_esc );				

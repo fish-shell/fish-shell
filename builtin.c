@@ -1744,12 +1744,12 @@ static int builtin_complete( wchar_t **argv )
 					
 			case 'p':					
 				cmd_type = PATH;
-				cmd = expand_backslash( wcsdup(woptarg), 1);
+				cmd = expand_unescape( woptarg, 1);
 				break;
 					
 			case 'c':
 				cmd_type = COMMAND;
-				cmd = expand_backslash( wcsdup(woptarg), 1);
+				cmd = expand_unescape( woptarg, 1);
 				break;
 				
 			case 'd':
@@ -2744,7 +2744,7 @@ static int builtin_case( wchar_t **argv )
 	for( i=1; i<argc; i++ )
 	{
 		free( unescaped );
-		unescaped = expand_backslash( wcsdup( argv[i] ), 1);
+		unescaped = expand_unescape( argv[i], 1);
 
 		if( wildcard_match( current_block->switch_value, unescaped ) )
 		{

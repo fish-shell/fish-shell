@@ -809,98 +809,98 @@ void debug( int level, wchar_t *msg, ... )
 	fwprintf( stderr, L"\n" );
 }
 
-wchar_t *escape( wchar_t *in, 
+wchar_t *escape( const wchar_t *in, 
 				 int escape_all )
 {
-	wchar_t *killme=in;	
 	wchar_t *out = malloc( sizeof(wchar_t)*(wcslen(in)*4 + 1));
-	if( out != 0 )
+	wchar_t *pos=out;
+	if( !out )
+		die_mem();
+	
+	while( *in != 0 )
 	{
-		wchar_t *pos=out;
-		while( *in != 0 )
+		switch( *in )
 		{
-			switch( *in )
-			{
-				case L'\t':
-					*(pos++) = L'\\';
-					*(pos++) = L't';					
-					break;
+			case L'\t':
+				*(pos++) = L'\\';
+				*(pos++) = L't';					
+				break;
 					
-				case L'\n':
-					*(pos++) = L'\\';
-					*(pos++) = L'n';					
-					break;
+			case L'\n':
+				*(pos++) = L'\\';
+				*(pos++) = L'n';					
+				break;
 					
-				case L'\b':
-					*(pos++) = L'\\';
-					*(pos++) = L'b';					
-					break;
+			case L'\b':
+				*(pos++) = L'\\';
+				*(pos++) = L'b';					
+				break;
 					
-				case L'\r':
-					*(pos++) = L'\\';
-					*(pos++) = L'r';					
-					break;
+			case L'\r':
+				*(pos++) = L'\\';
+				*(pos++) = L'r';					
+				break;
 					
-				case L'\e':
-					*(pos++) = L'\\';
-					*(pos++) = L'e';					
-					break;
+			case L'\e':
+				*(pos++) = L'\\';
+				*(pos++) = L'e';					
+				break;
 					
-				case L'\\':
-				case L'&':
-				case L'$':
-				case L' ':
-				case L'#':
-				case L'^':
-				case L'<':
-				case L'>':
-				case L'@':
-				case L'(':
-				case L')':
-				case L'{':
-				case L'}':
-				case L'?':
-				case L'*':
-				case L'|':
-				case L';':
-				case L':':
-				case L'\'':
-				case L'\"':
-					if( escape_all )
-						*pos++ = L'\\';
+			case L'\\':
+			case L'&':
+			case L'$':
+			case L' ':
+			case L'#':
+			case L'^':
+			case L'<':
+			case L'>':
+			case L'@':
+			case L'(':
+			case L')':
+			case L'{':
+			case L'}':
+			case L'?':
+			case L'*':
+			case L'|':
+			case L';':
+			case L':':
+			case L'\'':
+			case L'\"':
+				if( escape_all )
+					*pos++ = L'\\';
+				*pos++ = *in;
+				break;
+					
+			default:
+				if( *in < 32 )
+				{
+					int tmp = (*in)%16;
+					*pos++ = L'\\';
+					*pos++ = L'x';
+					*pos++ = ((*in>15)? L'1' : L'0');
+					*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+				}
+				else
 					*pos++ = *in;
-					break;
-					
-				default:
-					if( *in < 32 )
-					{
-						int tmp = (*in)%16;
-						*pos++ = L'\\';
-						*pos++ = L'x';
-						*pos++ = ((*in>15)? L'1' : L'0');
-						*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
-					}
-					else
-						*pos++ = *in;
-					break;
-			}
-			in++;
+				break;
 		}
-		*pos = 0;
-		free(killme);		
+		in++;
 	}
-
+	*pos = 0;
 	return out;
 }
 
 
-wchar_t *unescape( wchar_t * in, int escape_special )
+wchar_t *unescape( const wchar_t * orig, int escape_special )
 {
-	int in_pos, out_pos, len = wcslen( in );
+	int in_pos, out_pos, len = wcslen( orig );
 	int c;
 	int bracket_count=0;
 	wchar_t prev=0;	
-
+	wchar_t *in = wcsdup(orig);
+	if( !in )
+		die_mem();
+	
 	for( in_pos=0, out_pos=0; in_pos<len; prev=in[out_pos], out_pos++, in_pos++ )
 	{
 		c = in[in_pos];
@@ -909,10 +909,8 @@ wchar_t *unescape( wchar_t * in, int escape_special )
 			switch( in[++in_pos] )
 			{
 				case L'\0':
-					error( SYNTAX_ERROR, L"Unexpected end of string", -1 );
-					return in;
-					
-					break;
+					free(in);
+					return 0;
 
 				case L'n':
 					in[out_pos]=L'\n';
@@ -1067,9 +1065,9 @@ wchar_t *unescape( wchar_t * in, int escape_special )
 					int len;
 					
 					if( end == 0 )
-					{
-						error( SYNTAX_ERROR, L"Unexpected end of string", -1 );
-						return in;
+					{		
+						free(in);
+						return 0;
 					}
 					
 					len = end- &in[in_pos]-1;					
@@ -1150,10 +1148,10 @@ static int sprint_rand_digits( char *str, int maxlen )
 	struct timeval tv;
 	
 	/* 
-	  Seed the pseudo-random generator based on time - this assumes
-	  that consecutive calls to gettimeofday will return different values
-	  and ignores errors returned by gettimeofday.
-	  Cast to unsigned so that wrapping occurs on overflow as per ANSI C.
+	   Seed the pseudo-random generator based on time - this assumes
+	   that consecutive calls to gettimeofday will return different values
+	   and ignores errors returned by gettimeofday.
+	   Cast to unsigned so that wrapping occurs on overflow as per ANSI C.
 	*/
 	(void)gettimeofday( &tv, NULL );
 	srand( (unsigned int)tv.tv_sec + (unsigned int)tv.tv_usec * 1000000UL );
@@ -1190,9 +1188,9 @@ static char *gen_unique_nfs_filename( const char *filename )
 		hostname[hnlen] = '\0';
 	}
 	newname = malloc( orglen + 1 /* period */ + hnlen + 1 /* period */ +
-			 /* max possible pid size: 0.31 ~= log(10)2 */
-			(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1)
-			+ 1 /* '\0' */ );
+					  /* max possible pid size: 0.31 ~= log(10)2 */
+					  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1)
+					  + 1 /* '\0' */ );
 	
 	if ( newname == NULL )
 	{
@@ -1206,13 +1204,13 @@ static char *gen_unique_nfs_filename( const char *filename )
 	pidlen = sprint_pid_t( getpid(), newname + orglen + 1 + hnlen + 1 );
 	newname[orglen + 1 + hnlen + 1 + pidlen] = '\0';
 /*	debug( 1, L"gen_unique_nfs_filename returning with: newname = \"%s\"; "
-	          L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
-		  L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
-		  newname, (int)HOST_NAME_MAX, hnlen, orglen, 
-		  (int)sizeof(pid_t), 
-		  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
-		  (int)(orglen + 1 + hnlen + 1 + 
-		  	(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
+  L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
+  L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
+  newname, (int)HOST_NAME_MAX, hnlen, orglen, 
+  (int)sizeof(pid_t), 
+  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
+  (int)(orglen + 1 + hnlen + 1 + 
+  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
 	return newname;
 }
 
@@ -1257,7 +1255,7 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 	if ( statbuf.st_nlink != 1 )
 	{
 		debug( 1, L"acquire_lock_file: number of hardlinks on unique "
-			L"tmpfile is %d instead of 1.", (int)statbuf.st_nlink );
+			   L"tmpfile is %d instead of 1.", (int)statbuf.st_nlink );
 		goto done;
 	}
 	if( gettimeofday( &start, NULL ) != 0 )
@@ -1281,7 +1279,7 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 		*/
 		if( link( linkfile, lockfile ) == 0 ||
 		    ( stat( linkfile, &statbuf ) == 0 && 
-				statbuf.st_nlink == 2 ) )
+			  statbuf.st_nlink == 2 ) )
 		{
 			/* Successful lock */
 			ret = 1;
@@ -1290,10 +1288,10 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 		elapsed = end.tv_sec + end.tv_usec/1000000.0 - 
 			( start.tv_sec + start.tv_usec/1000000.0 );
 		/* 
-		  The check for elapsed < 0 is to deal with the unlikely event 
-		  that after the loop is entered the system time is set forward
-		  past the loop's end time.  This would otherwise result in a 
-		  (practically) infinite loop.
+		   The check for elapsed < 0 is to deal with the unlikely event 
+		   that after the loop is entered the system time is set forward
+		   past the loop's end time.  This would otherwise result in a 
+		   (practically) infinite loop.
 		*/
 		if( timed_out || elapsed >= timeout || elapsed < 0 )
 		{
@@ -1314,14 +1312,14 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 				  force was not specified
 				*/
 				debug( 1, L"acquire_lock_file: timed out "
-					L"trying to obtain lockfile %s using "
-					L"linkfile %s", lockfile, linkfile );
+					   L"trying to obtain lockfile %s using "
+					   L"linkfile %s", lockfile, linkfile );
 				break;
 			}
 		}
 		nanosleep( &pollint, NULL );
 	} while( gettimeofday( &end, NULL ) == 0 );
-done:
+  done:
 	/* The linkfile is not needed once the lockfile has been created */
 	(void)unlink( linkfile );
 	free( linkfile );

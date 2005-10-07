@@ -820,7 +820,9 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 		}
 	}
 
-	suff = expand_escape( suff, 0 );
+	wchar_t *tmp = expand_escape( suff, 0 );
+	free(suff);
+	suff = tmp;
 
 	wchar_t *desc = (wchar_t *)hash_get( suffix_hash, suff );
 
@@ -1043,7 +1045,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 		return;
 	}
 	
-	esc = expand_escape( wcsdup(cmd_start), 1 );		
+	esc = expand_escape( cmd_start, 1 );		
 	
 	if( esc )
 	{
@@ -1495,7 +1497,7 @@ void complete_load( wchar_t *cmd,
 		{
 			if( !tm || (*tm != buf.st_mtime ) )
 			{
-				wchar_t *esc = expand_escape( wcsdup((wchar_t *)path.buff), 1 );
+				wchar_t *esc = expand_escape( (wchar_t *)path.buff, 1 );
 				wchar_t *src_cmd = wcsdupcat( L". ", esc );
 				
 /*				if( tm )
@@ -2164,7 +2166,7 @@ static void append_switch( string_buffer_t *out,
 	if( !argument || argument==L"" )
 		return;
 
-	esc = expand_escape( wcsdup(argument), 1 );
+	esc = expand_escape( argument, 1 );
 	sb_printf( out, L" --%ls %ls", opt, esc );
 	free(esc);
 }

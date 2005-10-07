@@ -221,7 +221,7 @@ static int fill_buffer_from_list(string_buffer_t *sb, array_list_t *list)
    Print the names of all environment variables in the scope, with or without values,
    with or without escaping
 */
-static void print_variables(int include_values, int escape, int scope) 
+static void print_variables(int include_values, int esc, int scope) 
 {
 	array_list_t names;
 	int i;
@@ -234,14 +234,15 @@ static void print_variables(int include_values, int escape, int scope)
 	for( i = 0; i < al_get_count(&names); i++ )
 	{
 		wchar_t *key = (wchar_t *)al_get( &names, i );
-		/* Why does expand_escape free its argument ?! */
-		wchar_t *e_key = escape ? expand_escape(wcsdup(key), 1) : wcsdup(key);
+		wchar_t *e_key = esc ? escape(key, 1) : wcsdup(key);
+
 		sb_append(sb_out, e_key);
 		
 		if( include_values ) 
 		{
 			wchar_t *value = env_get(key);
-			wchar_t *e_value = escape ? expand_escape_variable(value) : wcsdup(value);
+			wchar_t *e_value;
+			e_value = esc ? expand_escape_variable(value) : wcsdup(value);
 			sb_append2(sb_out, L" ", e_value, (void *)0);
 			free(e_value);
 		}

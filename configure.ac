@@ -73,7 +73,8 @@ AC_CHECK_FILE([/usr/pkg/include],[AC_SUBST(INCLUDEDIR,[-I/usr/pkg/include])])
 AC_CHECK_FUNCS( [wprintf futimes wcwidth wcswidth] ) 
 AC_CHECK_HEADERS([getopt.h termio.h])
 
-
+AC_CHECK_LIB(socket, connect)
+AC_CHECK_LIB(rt, nanosleep)
 
 # Check if we have ncurses, and use it rather than curses if possible.
 AC_CHECK_HEADERS([ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEFINE(HAVE_NCURSES_H)],[AC_SUBST(CURSESLIB,[curses])])

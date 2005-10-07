@@ -565,13 +565,22 @@ int job_do_notification()
 						j->notified = 1;
 					if( !j->skip_notification )
 					{
-						fwprintf( stdout,
-								  L"fish: %ls %d, \'%ls\' terminated by signal %ls (%ls)",
-								  proc_is_job?L"Job":L"Process",
-								  proc_is_job?j->job_id:p->pid, 
-								  j->command,
-								  sig2wcs(WTERMSIG(p->status)),
-								  sig_description( WTERMSIG(p->status) ) );
+						if( proc_is_job )
+							fwprintf( stdout,
+									  L"fish: Job %d, \'%ls\' terminated by signal %ls (%ls)",
+									  j->job_id, 
+									  j->command,
+									  sig2wcs(WTERMSIG(p->status)),
+									  sig_description( WTERMSIG(p->status) ) );
+						else
+							fwprintf( stdout,
+									  L"fish: Process %d, \'%ls\' from job %d, \'%ls\' terminated by signal %ls (%ls)",
+									  p->pid,
+									  p->argv[0],
+									  j->job_id,
+									  j->command,
+									  sig2wcs(WTERMSIG(p->status)),
+									  sig_description( WTERMSIG(p->status) ) );
 						tputs(clr_eol,1,&writeb);
 						fwprintf (stdout, L"\n" );
 						found=1;						

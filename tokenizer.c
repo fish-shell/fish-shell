@@ -39,6 +39,11 @@
 #define INPUT_ERROR L"Invalid input"
 
 /**
+   Error string for when trying to pipe from fd 0
+*/
+#define PIPE_ERROR L"Can not use fd 0 as pipe output"
+
+/**
   Characters that separate tokens. They are ordered by frequency of occurrence to increase parsing speed.
 */
 #define SEP L" \n;|#\t\r<>^&"
@@ -489,10 +494,6 @@ void tok_next( tokenizer *tok )
 	switch( *tok->buff )
 	{
 
-		case L'|':
-			tok->last_type = TOK_PIPE;
-			tok->buff++;
-			break;
 		case L'\0':
 			tok->last_type = TOK_END;
 			/*fwprintf( stderr, L"End of string\n" );*/
@@ -509,6 +510,15 @@ void tok_next( tokenizer *tok )
 			tok->buff++;
 			break;
 
+		case L'|':
+			check_size( tok, 16 );
+			
+			tok->last[0]=L'1';
+			tok->last[1]=L'\0';			
+			tok->last_type = TOK_PIPE;
+			tok->buff++;
+			break;
+
 		case L'>':
 			return read_redirect( tok, 1 );
 		case L'<':
@@ -520,14 +530,31 @@ void tok_next( tokenizer *tok )
 			if( iswdigit( *tok->buff ) )
 			{
 				int fd = *tok->buff - L'0';
+				check_size( tok, 16 );
 				switch( *(tok->buff+1))
 				{
+					case L'|':
+					{
+						if( fd == 0 )
+						{
+							tok_error( tok, PIPE_ERROR );
+							return;
+						}
+						
+						tok->buff+=2;
+						tok->last[0]=L'0'+fd;
+						tok->last[1]=L'\0';			
+						tok->last_type = TOK_PIPE;
+						return;
+					}
+					
 					case L'>':
 					case L'<':
+					{
 						tok->buff++;
 						read_redirect( tok, fd );
 						return;
-						
+					}
 				}
 			}
 			read_string( tok );

@@ -92,6 +92,8 @@ typedef struct process{
 		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK
 	*/
 	int type;
+	/** File descriptor that pipe output should bind to */
+	int pipe_fd;
 	/** true if process has completed */
 	volatile int completed;
 	/** true if process has stopped */

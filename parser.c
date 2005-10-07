@@ -934,7 +934,7 @@ static void parse_job_main_loop( process_t *p,
 						   tok_get_pos( tok ) );
 					return;					
 				}
-				
+				p->pipe_fd = wcstol( tok_last( tok ), 0, 10 );
 				p->argv = list_to_char_arr( args );
 				p->next = calloc( 1, sizeof( process_t ) );
 				if( p->next == 0 )

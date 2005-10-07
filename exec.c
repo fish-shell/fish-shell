@@ -142,14 +142,14 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
 	if( !io )
 		return 0;
 	
-	if( (io->io_mode == IO_PIPE) || 
-		(io->io_mode == IO_BUFFER) )
+	if( ( io->io_mode == IO_BUFFER ) || 
+		( io->io_mode == IO_PIPE ) )
 	{
 		if( io->pipe_fd[0] == fd ||
 			io->pipe_fd[1] == fd )
 			return 1;
 	}
-	
+		
 	return use_fd_in_pipe( fd, io->next );
 }
 
@@ -256,7 +256,10 @@ static void handle_child_io( io_data_t *io )
 			free_fd( io, io->fd );
 		}
 				
-		
+		/*
+		  We don't mind if this fails, it is just a speculative close
+		  to make sure no unexpected untracked fd causes us to fail
+		*/
 		while( close(io->fd) == -1 )
 		{
 			if( errno != EINTR )
@@ -323,22 +326,22 @@ static void handle_child_io( io_data_t *io )
   p->pid,
   io->pipe_fd[io->fd] );
 */
-				int fd_to_dup = io->fd;//io->io_mode==IO_BUFFER?1:(io->fd?1:0);
+				int fd_to_dup = io->fd;
 				
-				if( dup2( io->pipe_fd[fd_to_dup], io->fd ) == -1 )
+				if( dup2( io->pipe_fd[fd_to_dup?1:0], io->fd ) == -1 )
 				{
 					debug( 1, PIPE_ERROR );
 					wperror( L"dup2" );
 					exit(1);
 				}
 
-				if( fd_to_dup )
+				if( fd_to_dup != 0 )
 				{
 					close_loop( io->pipe_fd[0]);
 					close_loop( io->pipe_fd[1]);
 				}
 				else
-					close_loop( io->pipe_fd[fd_to_dup] );
+					close_loop( io->pipe_fd[0] );
 				
 /*				
   if( close( io[i].pipe_fd[ io->fd ] ) == -1 )
@@ -797,9 +800,11 @@ void exec( job_t *j )
 	pipe_write.fd=1;
 	pipe_read.io_mode=IO_PIPE;
 	pipe_read.pipe_fd[0] = -1;
+	pipe_read.pipe_fd[1] = -1;
 	pipe_write.io_mode=IO_PIPE;
 	pipe_read.next=0;
 	pipe_write.next=0;
+	pipe_write.pipe_fd[0]=pipe_write.pipe_fd[1]=0;	
 
 	//fwprintf( stderr, L"Run command %ls\n", j->command );
 	
@@ -817,6 +822,8 @@ void exec( job_t *j )
 	{
 		mypipe[1]=-1;
 		skip_fork=0;
+
+		pipe_write.fd = p->pipe_fd;
 
 		/* 
 		   This call is used so the global environment variable array is
@@ -1269,7 +1276,6 @@ void exec( job_t *j )
 	debug( 3, L"Job is constructed" );
 
 	j->io = io_remove( j->io, &pipe_read );
-	j->io = io_remove( j->io, &pipe_write );
 
 	for( tmp = block_io; tmp; tmp=tmp->next )
 		j->io = io_remove( j->io, tmp );

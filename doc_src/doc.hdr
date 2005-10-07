@@ -155,9 +155,7 @@ equivalent.
 The user can string together multiple commands into a so called
 pipeline. This means that the standard output of one command will be read
 in as standard input into the next command. This is done by separating
-the commands by the pipe character (|).
-
-For example
+the commands by the pipe character (|). For example
 
 <tt>cat foo.txt | head</tt>
 
@@ -168,6 +166,17 @@ first ten lines of the file to the screen. For more information on how
 to combine commands through pipes, read the manual pages of the
 commands you want to use using the 'man' command. If you want to find
 out more about the 'cat' program, type <tt>man cat</tt>.
+
+Pipes usually connect file descriptor 1 (standard output) of the first
+process to file descriptor 0 (standard input) of the second
+process. It is possible use a different output file descriptor by
+prepending it to the pipe symbol, just like you would do with normal
+IO redirections. For example:
+
+<tt>make fish 2|less</tt>
+
+will attempt to build the fish program, and any errors will be shown
+using the less pager.
 
 \subsection syntax-background Background jobs
 

@@ -735,7 +735,7 @@ void proc_update_jiffies()
    Check if there are buffers associated with the job, and select on
    them for a while if available. 
    
-   \return 1 if buffers where avaialble, zero otherwise
+   \return 1 if buffers were avaialble, zero otherwise
 */
 static int select_try( job_t *j )
 {

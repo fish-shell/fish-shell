@@ -10,7 +10,7 @@ The <tt>set</tt> builtin causes fish to assign the variable <tt>VARIABLE_NAME</t
 - <tt>-g</tt> or <tt>--global</tt> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will dissapear when the current block ends
 - <tt>-l</tt> or <tt>--local</tt> forces the specified environment variable to be made local to the current block, even if the variable already exists and is non-local
 - <tt>-n</tt> or <tt>--names</tt> List only the names of all defined variables
-- <tt>-q</tt> or <tt>--query</tt> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that where not defined.
+- <tt>-q</tt> or <tt>--query</tt> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 - <tt>-u</tt> or <tt>--unexport</tt> causes the specified environment not to be exported to child processes
 - <tt>-U</tt> or <tt>--universal</tt> causes the specified environment variable to be made universal. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
 - <tt>-x</tt> or <tt>--export</tt> causes the specified environment variable to be exported to child processes

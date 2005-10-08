@@ -1962,7 +1962,7 @@ static int builtin_source( wchar_t ** argv )
 /**
    Make the specified job the first job of the job list. Moving jobs
    around in the list makes the list reflect the order in which the
-   jobs where used.
+   jobs were used.
 */
 static void make_first( job_t *j )
 {

@@ -75,7 +75,7 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message used when the end of a block can't be located
 */
-#define BLOCK_END_ERR_MSG L"Could not locate end of block. The 'end' command is missing, misspelled or a preceeding ';' is missing."
+#define BLOCK_END_ERR_MSG L"Could not locate end of block. The 'end' command is missing, misspelled or a preceding ';' is missing."
 
 /**
    Error message on reaching maximum number of block calls

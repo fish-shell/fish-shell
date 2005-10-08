@@ -201,7 +201,7 @@ static int inputrc_skip_block_count=0;
 static int inputrc_block_count=0;
 
 /**
-   True if syntax errors where found in the inputrc file
+   True if syntax errors were found in the inputrc file
 */
 static int inputrc_error = 0;
 

@@ -75,7 +75,7 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message used when the end of a block can't be located
 */
-#define BLOCK_END_ERR_MSG L"Could not locate end of block. The 'end' command may be missing or misspelled."
+#define BLOCK_END_ERR_MSG L"Could not locate end of block. The 'end' command is missing, misspelled or a preceeding ';' is missing."
 
 /**
    Error message on reaching maximum number of block calls
@@ -1822,7 +1822,7 @@ static void eval_job( tokenizer *tok )
 		}
 	}
 	
-	if(( is_subshell || is_block || !is_interactive) /*&& (!is_event)*/)
+	if(( is_subshell || is_block || !is_interactive) && (!is_event))
 		job_do_notification();
 //	debug( 2, L"end eval_job()\n" );
 }

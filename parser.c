@@ -72,6 +72,8 @@ The fish parser. Contains functions for parsing code.
 */
 #define RECURSION_ERR_MSG L"Maximum recursion depth reached. Accidental infinite loop?"
 
+#define BLOCK_END_ERR_MSG L"Could not locate end of block. The 'end' command may be missing or misspelled."
+
 /**
    Error message on reaching maximum number of block calls
 */
@@ -1507,10 +1509,9 @@ static int parse_job( process_t *p,
 				
 				default:
 				{
-					error_arg( SYNTAX_ERROR,
-							   L"Expected end of command, got token of type ",
-							   tok_get_desc( tok_last_type(tok)),
-							   tok_get_pos( tok ) );
+					error( SYNTAX_ERROR,
+						   BLOCK_END_ERR_MSG,
+						   current_tokenizer_pos );
 				}
 			}
 			tok_destroy( &subtok );

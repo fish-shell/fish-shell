@@ -1260,12 +1260,12 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	
 	term_donate();	
 	
-	io_data_t *out = exec_make_io_buffer();
+	io_data_t *out = io_buffer_create();
 	
 	eval( (wchar_t *)cmd.buff, out, TOP);
 	term_steal();	
 
-	exec_read_io_buffer( out );
+	io_buffer_read( out );
 	
 	sb_destroy( &cmd );
 	
@@ -1285,7 +1285,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 		free( str );
 	}
 	
-	exec_free_io_buffer( out);
+	io_buffer_destroy( out);
 	
 }
 

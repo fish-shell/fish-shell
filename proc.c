@@ -74,77 +74,6 @@ int is_event=0;
 int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
 
-io_data_t *io_add( io_data_t *list, io_data_t *element )
-{
-	io_data_t *curr = list;
-	if( curr == 0 )
-		return element;
-	while( curr->next != 0 )
-		curr = curr->next;
-	curr->next = element;
-	return list;
-}
-
-io_data_t *io_remove( io_data_t *list, io_data_t *element )
-{
-	io_data_t *curr, *prev=0;
-	for( curr=list; curr; curr = curr->next )
-	{		
-		if( element == curr )
-		{
-			if( prev == 0 )
-			{
-				io_data_t *tmp = element->next;
-				element->next = 0;
-				return tmp;
-			}
-			else
-			{
-				prev->next = element->next;
-				element->next = 0;
-				return list;
-			}
-		}
-		prev = curr;
-	}
-	return list;
-}
-
-io_data_t *io_duplicate( io_data_t *l )
-{
-	io_data_t *res;
-	
-	if( l == 0 )
-		return 0;
-
-	res = malloc( sizeof( io_data_t) );
-	
-	if( !res )
-	{
-		die_mem();
-		
-	}
-	
-	memcpy( res, l, sizeof(io_data_t ));
-	res->next=io_duplicate( l->next );
-	return res;	
-}
-
-io_data_t *io_get( io_data_t *io, int fd )
-{
-	if( io == 0 )
-		return 0;
-	
-	io_data_t *res = io_get( io->next, fd );
-	if( res )
-		return res;
-	
-	if( io->fd == fd )
-		return io;
-
-	return 0;
-}
-
 
 /**
    Recursively free a process and those following it
@@ -368,7 +297,6 @@ static void mark_process_status( job_t *j,
 	else
 	{
 		p->completed = 1;
-//		fwprintf( stderr, L"Proc %d (%ls) exited\n", p->pid, p->actual_cmd );
 		
 		if (( !WIFEXITED( status ) ) &&
 			(! WIFSIGNALED( status )) )
@@ -742,15 +670,6 @@ static int select_try( job_t *j )
 	fd_set fds;
 	int maxfd=-1;
 	io_data_t *d;
-
-	
-
-/*	if( j->stop_reading )
-  {
-  sleep(1);
-  return;
-  }
-*/
 
 	FD_ZERO(&fds);
 	

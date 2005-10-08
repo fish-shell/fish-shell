@@ -16,15 +16,8 @@
 #include <unistd.h>
 
 #include "util.h"
+#include "io.h"
 
-/**
-   Describes what type of IO operation an io_data_t represents
-*/
-enum io_mode
-{
-	IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
-}
-;
 
 /**
    Types of internal processes
@@ -40,44 +33,8 @@ enum
 	;
 
 
-/** Represents an FD redirection */
-typedef struct io_data
-{
-	/** Type of redirect */
-	int io_mode;
-	/** FD to redirect */
-	int fd;
-	/** parameter for redirection */
-	union
-	{
-		/** Fds for IO_PIPE and for IO_BUFFER */
-		int pipe_fd[2];
-		/** Filename IO_FILE */
-		wchar_t *filename;
-		/** fd to redirect specified fd to, for IO_FD*/
-		int old_fd;
-	}
-	;
-	union
-	{
-		/** file creation flags to send to open for IO_FILE */
-		int flags;
-		/** buffer to save output in for IO_BUFFER */
-		buffer_t *out_buffer;		
-		/** Whether to close old_fd for IO_FD */
-		int close_old;
-		
-	}
-	;
-	
-	/** Pointer to the next IO redirection */
-	struct io_data *next;
-}
-io_data_t;
-
- 
 /** 
-	A structore representing a single process. Contains variables for
+	A structure representing a single process. Contains variables for
 	tracking process state and the process argument list. 
 */
 typedef struct process{
@@ -176,26 +133,6 @@ extern job_t *first_job;
 extern int proc_had_barrier;
 
 extern pid_t proc_last_bg_pid;
-
-/**
-   Join two chains of io redirections
-*/
-io_data_t *io_add( io_data_t *first_chain, io_data_t *decond_chain );
-
-/**
-   Remove the specified io redirection from the chain
-*/
-io_data_t *io_remove( io_data_t *list, io_data_t *element );
-
-/**
-   Make a copy of the specified chain of redirections
-*/
-io_data_t *io_duplicate( io_data_t *l );
-
-/**
-   Return the last io redirection in ht e chain for the specified file descriptor.
-*/
-io_data_t *io_get( io_data_t *io, int fd );
 
 /**
    Sets the status of the last process to exit

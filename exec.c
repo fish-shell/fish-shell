@@ -34,6 +34,7 @@
 #include "wildcard.h"
 #include "sanity.h"
 #include "expand.h"
+#include "signal.h"
 #include "env_universal.h"
 
 /**
@@ -53,10 +54,6 @@ pid_t getpgid( pid_t pid );
 */
 #define FILE_ERROR L"An error occurred while redirecting file '%ls'"
 /**
-   pipe redirection error message
-*/
-#define PIPE_ERROR L"An error occurred while setting up pipe"
-/**
    fork error message
 */
 #define FORK_ERROR L"Could not create child process - exiting"
@@ -68,11 +65,7 @@ pid_t getpgid( pid_t pid );
 */
 array_list_t *open_fds=0;
 
-/**
-   Loops over close until thesyscall was run without beeing
-   interrupted. Thenremoves the fd from the open_fds list.
-*/
-static void close_loop( int fd )
+void exec_close( int fd )
 {
 	int i;
 	
@@ -105,13 +98,19 @@ static void close_loop( int fd )
 
 }
 
-/**
-   Call pipe(), and add resulting fds to open_fds, the list of opend
-   file descriptors for pipes.
-*/
-static int internal_pipe( int fd[2])
+int exec_pipe( int fd[2])
 {
-	int res = pipe( fd );
+	int res;
+
+	while( ( res=pipe( fd ) ) )
+	{
+		if( errno != EINTR )
+		{
+			wperror(L"pipe");
+			return res;
+		}
+	}
+	
 	if( open_fds == 0 )
 	{
 		open_fds = malloc( sizeof( array_list_t ) );
@@ -172,7 +171,7 @@ static void close_unused_internal_pipes( io_data_t *io )
 			if( !use_fd_in_pipe( n, io) )
 			{
 				debug( 4, L"Close fd %d, used in other context", n );
-				close_loop( n );
+				exec_close( n );
 				i--;
 			}
 		}
@@ -237,7 +236,7 @@ static void handle_child_io( io_data_t *io )
 	close_unused_internal_pipes( io );
 	
 	if( env_universal_server.fd >= 0 )
-		close_loop( env_universal_server.fd );
+		exec_close( env_universal_server.fd );
 
 	for( ; io; io=io->next )
 	{
@@ -296,7 +295,7 @@ static void handle_child_io( io_data_t *io )
 						wperror( L"dup2" );
 						exit(1);
 					}
-					close_loop( tmp );
+					exec_close( tmp );
 				}				
 				break;
 			case IO_FD:
@@ -337,11 +336,11 @@ static void handle_child_io( io_data_t *io )
 
 				if( fd_to_dup != 0 )
 				{
-					close_loop( io->pipe_fd[0]);
-					close_loop( io->pipe_fd[1]);
+					exec_close( io->pipe_fd[0]);
+					exec_close( io->pipe_fd[1]);
 				}
 				else
-					close_loop( io->pipe_fd[0] );
+					exec_close( io->pipe_fd[0] );
 				
 /*				
   if( close( io[i].pipe_fd[ io->fd ] ) == -1 )
@@ -439,109 +438,6 @@ static int has_fd( io_data_t *d, int fd )
 
 
 /**
-   Read from descriptors until they are empty. 
-*/
-void exec_read_io_buffer( io_data_t *d )
-{
-
-	close_loop(d->pipe_fd[1] );
-	
-	if( d->io_mode == IO_BUFFER )
-	{		
-		if( fcntl( d->pipe_fd[0], F_SETFL, 0 ) )
-		{
-			wperror( L"fcntl" );
-			return;
-		}	
-		debug( 4, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
-		
-		while(1)
-		{
-			char b[4096];
-			int l;
-			l=read_blocked( d->pipe_fd[0], b, 4096 );
-			if( l==0 )
-			{
-				break;
-			}
-			else if( l<0 )
-			{
-				/*
-				  exec_read_io_buffer is only called on jobs that have
-				  exited, and will therefore never block. But a broken
-				  pipe seems to cause some flags to reset, causing the
-				  EOF flag to not be set. Therefore, EAGAIN is ignored
-				  and we exit anyway.
-				*/
-				if( errno != EAGAIN )
-				{
-					debug( 1, 
-						   L"An error occured while reading output from code block on fd %d", 
-						   d->pipe_fd[0] );
-					wperror( L"exec_read_io_buffer" );				
-				}
-				
-				break;				
-			}
-			else
-			{				
-				b_append( d->out_buffer, b, l );				
-			}
-		}
-	}
-}
-
-
-io_data_t *exec_make_io_buffer()
-{
-	io_data_t *buffer_redirect = malloc( sizeof( io_data_t ));
-	
-	buffer_redirect->io_mode=IO_BUFFER;
-	buffer_redirect->next=0;
-	buffer_redirect->out_buffer= malloc( sizeof(buffer_t));
-	b_init( buffer_redirect->out_buffer );
-	buffer_redirect->fd=1;
-
-
-	if( internal_pipe( buffer_redirect->pipe_fd ) == -1 )
-	{
-		debug( 1, PIPE_ERROR );
-		wperror (L"pipe");
-		free(  buffer_redirect->out_buffer );
-		free( buffer_redirect );
-		return 0;
-	}
-	else if( fcntl( buffer_redirect->pipe_fd[0],
-					F_SETFL,
-					O_NONBLOCK ) )
-	{
-		debug( 1, PIPE_ERROR );
-		wperror( L"fcntl" );
-		free(  buffer_redirect->out_buffer );
-		free( buffer_redirect );
-		return 0;
-	}
-	return buffer_redirect;
-}
-
-void exec_free_io_buffer( io_data_t *io_buffer )
-{
-	
-	close_loop( io_buffer->pipe_fd[0] );
-
-	/*
-	  Dont free fd for writing. This should already be free'd before
-	  calling exec_read_io_buffer on the buffer
-	*/
-	
-	b_destroy( io_buffer->out_buffer );
-	
-	free( io_buffer->out_buffer );
-	free( io_buffer );
-}
-
-
-/**
    Make a copy of the specified io redirection chain, but change file redirection into fd redirection. 
 */
 
@@ -612,7 +508,7 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 	switch( in->io_mode )
 	{
 		case IO_FILE:
-			close_loop( out->old_fd );
+			exec_close( out->old_fd );
 			break;
 	}	
 	free(out);
@@ -846,7 +742,7 @@ void exec( job_t *j )
 		
 		if (p->next)
 		{
-			if (internal_pipe( mypipe ) == -1)
+			if (exec_pipe( mypipe ) == -1)
 			{
 				debug( 1, PIPE_ERROR );
 				wperror (L"pipe");
@@ -911,7 +807,7 @@ void exec( job_t *j )
 				if( p->next )
 				{
 //					fwprintf( stderr, L"Function %ls\n", def );
-					io_buffer = exec_make_io_buffer();					
+					io_buffer = io_buffer_create();					
 					j->io = io_add( j->io, io_buffer );
 				}
 				
@@ -928,7 +824,7 @@ void exec( job_t *j )
 				if( p->next )
 				{
 //					fwprintf( stderr, L"Block %ls\n", p->argv[0] );
-					io_buffer = exec_make_io_buffer();					
+					io_buffer = io_buffer_create();					
 					j->io = io_add( j->io, io_buffer );
 				}
 				
@@ -1034,7 +930,7 @@ void exec( job_t *j )
 				if( close_stdin )
 				{
 //					fwprintf( stderr, L"Close builtin_stdin\n" );					
-					close_loop( builtin_stdin );
+					exec_close( builtin_stdin );
 				}				
 				break;				
 			}
@@ -1062,9 +958,7 @@ void exec( job_t *j )
 
 				j->io = io_remove( j->io, io_buffer );
 				
-				debug( 3, L"exec_read_io_buffer on block '%ls'", p->argv[0] );
-				
-				exec_read_io_buffer( io_buffer );
+				io_buffer_read( io_buffer );
 				
 				if( io_buffer->out_buffer->used != 0 )
 				{
@@ -1105,7 +999,7 @@ void exec( job_t *j )
 					
 				}
 				
-				exec_free_io_buffer( io_buffer );
+				io_buffer_destroy( io_buffer );
 				
 				io_buffer=0;
 				break;
@@ -1256,7 +1150,7 @@ void exec( job_t *j )
 		   Close the pipe the current process uses to read from the previous process_t 
 		*/
 		if( pipe_read.pipe_fd[0] >= 0 )
-			close_loop( pipe_read.pipe_fd[0] );
+			exec_close( pipe_read.pipe_fd[0] );
 		/* 
 		   Set up the pipe the next process uses to read from the current process_t 
 		*/
@@ -1269,7 +1163,7 @@ void exec( job_t *j )
 		*/
 		if( p->next )
 		{
-			close_loop(mypipe[1]);
+			exec_close(mypipe[1]);
 		}		
 	}
 
@@ -1309,14 +1203,14 @@ int exec_subshell( const wchar_t *cmd,
 	}
 
 	is_subshell=1;	
-	io_buffer= exec_make_io_buffer();
+	io_buffer= io_buffer_create();
 	
 	prev_status = proc_get_last_status();
 	
 	eval( cmd, io_buffer, SUBST );
 	
 	debug( 4, L"exec_read_io_buffer on cmdsub '%ls'", cmd );
-	exec_read_io_buffer( io_buffer );
+	io_buffer_read( io_buffer );
 	
 	status = proc_get_last_status();
 	proc_set_last_status( prev_status );
@@ -1341,7 +1235,7 @@ int exec_subshell( const wchar_t *cmd,
 						if( el )
 							al_push( l, el );
 					}				
-					exec_free_io_buffer( io_buffer );
+					io_buffer_destroy( io_buffer );
 				
 					return status;
 				
@@ -1359,6 +1253,6 @@ int exec_subshell( const wchar_t *cmd,
 		}
 	}
 	
-	exec_free_io_buffer( io_buffer );
+	io_buffer_destroy( io_buffer );
 	return status;	
 }

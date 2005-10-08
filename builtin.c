@@ -58,6 +58,7 @@
 #include "input.h"
 #include "intern.h"
 #include "event.h"
+#include "signal.h"
 
 /**
    The default prompt for the read command
@@ -2500,8 +2501,6 @@ static int builtin_end( wchar_t **argv )
 		
 			case FUNCTION_DEF:
 			{
-				int i;
-				
 				/**
 				   Copy the text from the beginning of the function
 				   until the end command and use as the new definition

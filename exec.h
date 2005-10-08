@@ -11,6 +11,11 @@
 #include "util.h"
 
 /**
+   pipe redirection error message
+*/
+#define PIPE_ERROR L"An error occurred while setting up pipe"
+
+/**
    Initialize the exec library
 */
 void exec_init();
@@ -57,19 +62,17 @@ void exec( job_t *j );
 int exec_subshell( const wchar_t *cmd, 
 				   array_list_t *l );
 
-/**
-   Free all resources used by a IO_BUFFER type io redirection.
-*/
-void exec_free_io_buffer( io_data_t *io_buffer );
 
 /**
-   Create a IO_BUFFER type io redirection.
+   Loops over close until thesyscall was run without beeing
+   interrupted. Thenremoves the fd from the open_fds list.
 */
-io_data_t *exec_make_io_buffer();
+void exec_close( int fd );
 
 /**
-   Close writing end of IO_BUFFER type io redirection, and fully read the reading end.
+   Call pipe(), and add resulting fds to open_fds, the list of opend
+   file descriptors for pipes.
 */
-void exec_read_io_buffer( io_data_t *d );
+int exec_pipe( int fd[2]);
 
 #endif

@@ -531,7 +531,7 @@ void tok_next( tokenizer *tok )
 			
 			if( iswdigit( *tok->buff ) )
 			{
-
+				
 				wchar_t *orig = tok->buff;
 				int fd = 0;
 				while( iswdigit( *tok->buff ) )
@@ -548,7 +548,7 @@ void tok_next( tokenizer *tok )
 						}
 						check_size( tok, 16 );						
 						tok->buff++;
-						swprintf( tok->buff, 16, L"%d", fd );
+						swprintf( tok->last, 16, L"%d", fd );
 						tok->last_type = TOK_PIPE;
 						return;
 					}

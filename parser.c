@@ -72,6 +72,9 @@ The fish parser. Contains functions for parsing code.
 */
 #define RECURSION_ERR_MSG L"Maximum recursion depth reached. Accidental infinite loop?"
 
+/**
+   Error message used when the end of a block can't be located
+*/
 #define BLOCK_END_ERR_MSG L"Could not locate end of block. The 'end' command may be missing or misspelled."
 
 /**
@@ -126,12 +129,20 @@ io_data_t *block_io;
 */
 static array_list_t profile_data;
 
+/**
+   Keeps track of how many recursive eval calls have been made. Eval
+   doesn't call itself directly, recursion happens on blocks and on
+   command substitutions.
+*/
 static int eval_level=-1;
 
 static int parse_job( process_t *p,
 					  job_t *j,
 					  tokenizer *tok );
 
+/**
+   Struct used to keep track of profiling data for a command
+*/
 typedef struct
 {
 	int exec, parse, level, skipped;
@@ -340,6 +351,9 @@ int parser_is_pipe_forbidden( wchar_t *word )
 						 (void *)0 );
 }
 
+/**
+   Search the text for the end of the current block
+*/
 static const wchar_t *parser_find_end( const wchar_t * buff ) 
 {
 	tokenizer tok;
@@ -709,6 +723,9 @@ void parser_destroy()
 	al_destroy( &forbidden_function );
 }
 
+/**
+   Print error message if an error has occured while parsing
+*/
 static void print_errors()
 {
 	if( error_code )
@@ -1643,7 +1660,7 @@ static void eval_job( tokenizer *tok )
 	long long t1=0, t2=0, t3=0;
 	profile_element_t *p=0;
 	int skip = 0;
-	
+
 	if( profile )
 	{
 		p=malloc( sizeof(profile_element_t));
@@ -1947,7 +1964,7 @@ int parser_test( wchar_t * buff,
 	int require_additional_commands=0;
 		
 	current_tokenizer = &tok;
-
+	
 	for( tok_init( &tok, buff, 0 );
 		 tok_has_next( &tok ) && !err;
 		 tok_next( &tok ) )

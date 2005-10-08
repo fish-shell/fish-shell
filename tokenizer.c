@@ -53,6 +53,12 @@
 
    \return 0 if the system could not provide the memory needed, and 1 otherwise.
 */
+
+/**
+   Maximum length of a string containing a file descriptor number
+*/
+#define FD_STR_MAX_LEN 16
+
 const static wchar_t *tok_desc[] =
 {
 	L"Tokenizer not yet initialized",
@@ -546,9 +552,9 @@ void tok_next( tokenizer *tok )
 							tok_error( tok, PIPE_ERROR );
 							return;
 						}
-						check_size( tok, 16 );						
+						check_size( tok, FD_STR_MAX_LEN );						
 						tok->buff++;
-						swprintf( tok->last, 16, L"%d", fd );
+						swprintf( tok->last, FD_STR_MAX_LEN, L"%d", fd );
 						tok->last_type = TOK_PIPE;
 						return;
 					}

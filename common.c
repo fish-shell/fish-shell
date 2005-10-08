@@ -275,7 +275,7 @@ void error_reset()
 char *wcs2str( const wchar_t *in )
 {
 	c5++;
-	
+
 	char *res = malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
 	if( res == 0 )
 	{
@@ -317,7 +317,7 @@ char **wcsv2strv( const wchar_t **in )
 wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b )
 {
 	c1++;
-	
+
 	return wcsdupcat2( a, b, 0 );
 }
 
@@ -580,13 +580,15 @@ wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz)
 
 wchar_t *wcsdup( const wchar_t *in )
 {
-	wchar_t *out = malloc( sizeof( wchar_t)*(wcslen(in)+1));
+	size_t len=wcslen(in);
+	wchar_t *out = malloc( sizeof( wchar_t)*(len+1));
 	if( out == 0 )
 	{
 		die_mem();
 		
 	}
-	wcscpy( out, in );
+
+	memcpy( out, in, sizeof( wchar_t)*(len+1));
 	return out;
 	
 }

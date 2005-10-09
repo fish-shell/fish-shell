@@ -364,17 +364,22 @@ static void handle_child_io( io_data_t *io )
 	}
 }
 
-
+/**
+   Initialize a new child process. This should be called right away
+   after forking in the child process. If job control is suitable, the
+   process is put in the jobs group, all signal handlers are reset,
+   SIGCHLD is unblocked, and all IO redirections are performed.
+*/
 static void setup_child_process( job_t *j )
 {
 	if( is_interactive && !is_subshell && !is_block)
     {
 		pid_t pid;
 		/* 
-		   Put the process into the process group and give the process group
-		   the terminal, if appropriate.
-		   This has to be done both by the shell and in the individual
-		   child processes because of potential race conditions.  
+		   Put the process into the process group and give the process
+		   group the terminal, if appropriate.  This has to be done
+		   both by the shell and in the individual child processes
+		   because of potential race conditions.
 		*/
 		pid = getpid ();
 		if (j->pgid == 0)
@@ -402,20 +407,16 @@ static void setup_child_process( job_t *j )
 	
 	handle_child_io( j->io );
 }
-
 								 
 								 
 /**
    This function is executed by the child process created by a call to
-   fork().  This function begins by updating FDs as specified by the io
-   parameter.  If the command requested for this process is not a
-   builtin, execv is then called with the appropriate parameters. If
-   the command is a builtin, the contents of out and err are printed.
+   fork(). It should be called after \c setup_child_process. It calls
+   execve to replace the fish process image with the command specified
+   in \c p. It never returns.
 */
 static void launch_process( process_t *p )
 {
-	
-	/* Set the standard input/output channels of the new process.  */
 		
 	execve (wcs2str(p->actual_cmd), wcsv2strv( (const wchar_t **) p->argv), env_export_arr( 0 ) );
 	debug( 0, 
@@ -438,7 +439,10 @@ static int has_fd( io_data_t *d, int fd )
 
 
 /**
-   Make a copy of the specified io redirection chain, but change file redirection into fd redirection. 
+   Make a copy of the specified io redirection chain, but change file
+   redirection into fd redirection. This makes the redirection chain
+   suitable for use as block-level io, since the file won't be
+   repeatedly reopened for every command in the block.
 */
 
 static io_data_t *io_transmogrify( io_data_t * in )
@@ -498,7 +502,9 @@ static io_data_t *io_transmogrify( io_data_t * in )
 }
 
 /**
-   Free a transmogrified io chain.
+   Free a transmogrified io chain. Only the chain itself and resources
+   used by a transmogrified IO_FILE redirection are freed, since the
+   original chain may still be needed.
 */
 static void io_untransmogrify( io_data_t * in, io_data_t *out )
 {
@@ -518,7 +524,6 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 /**
    Morph an io redirection chain into redirections suitable for
    passing to eval, call eval, and clean up morphed redirections.
-   
 
    \param def the code to evaluate
    \param block_type the type of block to push on evaluation
@@ -549,41 +554,11 @@ static int internal_exec_helper( const wchar_t *def,
 	return res;
 }
 
-/*
-static void io_print( io_data_t *io )
-{
-	if( !io )
-	{
-		fwprintf( stderr, L"\n" );
-		return;
-	}
-	
-
-	fwprintf( stderr, L"IO fd %d, type ",
-			  io->fd );
-	switch( io->io_mode )
-	{
-		case IO_PIPE:
-			fwprintf(stderr, L"PIPE, data %d\n", io->pipe_fd[io->fd?1:0] );
-			break;
-		
-		case IO_FD:
-			fwprintf(stderr, L"FD, copy %d\n", io->old_fd );
-			break;
-
-		case IO_BUFFER:
-			fwprintf( stderr, L"BUFFER\n" );
-			break;
-			
-		default:
-			fwprintf( stderr, L"OTHER\n" );
-	}
-
-	io_print( io->next );
-	
-}
+/**
+   This function should be called by the parent process right after
+   fork() has been called. If job control is enabled, the child is put
+   in the jobs group.
 */
-
 static int handle_new_child( job_t *j, process_t *p )
 {
 	
@@ -1198,7 +1173,9 @@ int exec_subshell( const wchar_t *cmd,
 
 	if( !cmd )
 	{
-		debug( 1, L"Sent null command to subshell" );		
+		debug( 1, 
+			   L"Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %ls", 
+			   PACKAGE_BUGREPORT );		
 		return 0;		
 	}
 
@@ -1209,7 +1186,6 @@ int exec_subshell( const wchar_t *cmd,
 	
 	eval( cmd, io_buffer, SUBST );
 	
-	debug( 4, L"exec_read_io_buffer on cmdsub '%ls'", cmd );
 	io_buffer_read( io_buffer );
 	
 	status = proc_get_last_status();

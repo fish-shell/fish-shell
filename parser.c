@@ -51,6 +51,8 @@ The fish parser. Contains functions for parsing code.
 */
 #define MAX_RECURSION_DEPTH 128
 
+#define BUGREPORT_MSG L"If this error can be reproduced, please send a bug report to %s."
+
 /**
    Error message for improper use of the exec builtin
 */
@@ -1841,8 +1843,10 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	if( !cmd )
 	{
 		debug( 1,
-			   L"Tried to evaluate null pointer\n"
-			   L"If this error can be reproduced, please file a bug report." );		
+			   L"Tried to evaluate null pointer\n" BUGREPORT_MSG,
+			   PACKAGE_BUGREPORT );
+		
+			   
 		return 1;
 	}
 
@@ -1851,29 +1855,28 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		(block_type != SUBST))
 	{
 		debug( 1,
-			   L"Tried to evaluate buffer using invalid block scope of type '%ls'\n"
-			   L"If this error can be reproduced, please file a bug report.", 
-			   parser_get_block_desc( block_type ) );
+			   L"Tried to evaluate buffer using invalid block scope of type '%ls'\n" BUGREPORT_MSG,
+			   parser_get_block_desc( block_type ),
+			   PACKAGE_BUGREPORT );
         return 1;
     }
-	
-	
+		
 	eval_level++;
 	current_tokenizer = malloc( sizeof(tokenizer));
-
+	
 	parser_push_block( block_type );
-
+	
 	forbid_count = al_get_count( &forbidden_function );
-
+	
 	tok_init( current_tokenizer, cmd, 0 );
 	error_code = 0;
-
+	
 	while( tok_has_next( current_tokenizer ) &&
 		   !error_code &&
 		   !sanity_check() &&
 		   !exit_status() )
 		eval_job( current_tokenizer );
-
+	
 	int prev_block_type = current_block->type;	
 	parser_pop_block();
 
@@ -1883,8 +1886,9 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		{
 			debug( 0,
 				   L"End of block mismatch\n"
-				   L"Program terminating. If this error can be reproduced,\n"
-				   L"please file a bug report." );
+				   L"Program terminating. "
+				   BUGREPORT_MSG,				   
+				   PACKAGE_BUGREPORT );
 			exit(1);
 			break;
 		}

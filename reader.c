@@ -2148,14 +2148,12 @@ void reader_run_command( wchar_t *cmd )
 	free(ft);
 
 	reader_write_title();
-
+	
 	term_donate();
 	
-	if( eval( cmd, 0, TOP ) == 0 )
-	{
-		job_do_notification();
-	}
-
+	eval( cmd, 0, TOP );
+	job_do_notification();
+	
 	term_steal();
 
 	env_set( L"_", L"fish", ENV_GLOBAL );

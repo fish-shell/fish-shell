@@ -423,6 +423,8 @@ void event_fire( event_t *event, array_list_t *arguments )
 	}	
 	is_event = is_event_old;
 	
+	if( !is_event )
+		job_do_notification();
 }
 
 

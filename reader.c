@@ -623,6 +623,7 @@ void reader_write_title()
 	if( exec_subshell( title, &l ) != -1 )
 	{
 		int i;
+		job_do_notification();
 		writestr( L"\e]2;" );
 		for( i=0; i<al_get_count( &l ); i++ )
 		{
@@ -658,6 +659,7 @@ static void write_prompt()
 		{
 			if( exec_subshell( data->prompt, &prompt_list ) == -1 )
 			{
+				job_do_notification();
 				/* If executing the prompt fails, make sure we at least don't print any junk */
 				al_foreach( &prompt_list, (void (*)(const void *))&free );
 				al_destroy( &prompt_list );

@@ -1824,9 +1824,7 @@ static void eval_job( tokenizer *tok )
 		}
 	}
 	
-	if(( is_subshell || is_block || !is_interactive) && (!is_event))
-		job_do_notification();
-//	debug( 2, L"end eval_job()\n" );
+	//	debug( 2, L"end eval_job()\n" );
 }
 
 int eval( const wchar_t *cmd, io_data_t *io, int block_type )

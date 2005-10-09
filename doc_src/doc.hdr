@@ -594,7 +594,7 @@ builtins or shellscript functions, and can only be used inside fish.
 - <a href="builtins.html#bg">bg</a>, to set a command to the background
 - <a href="builtins.html#begin">begin</a>, to execute a block of commands
 - <a href="builtins.html#bind">bind</a>, to change keyboard bindings
-- <a href="builtins.html#brake">brake</a>, to stop the execution of a loop
+- <a href="builtins.html#break">break</a>, to stop the execution of a loop
 - <a href="builtins.html#builtin">builtin</a>, to execute a builtin command
 - <a href="builtins.html#case">case</a>, to conditionally execute a block of commands
 - <a href="builtins.html#cd">cd</a>, to change the current directory

@@ -33,7 +33,7 @@
 CC := @CC@
 CFLAGS := @CFLAGS@ @INCLUDEDIR@ -Wall -std=gnu99 -fno-strict-aliasing
 CPPFLAGS=@CPPFLAGS@
-LDFLAGS:= -l@CURSESLIB@ @LDFLAGS@ @LIBDIR@
+LDFLAGS:= -l@CURSESLIB@ @LIBS@ @LDFLAGS@ @LIBDIR@
 INSTALL:=@INSTALL@
 
 prefix = @prefix@
@@ -69,7 +69,7 @@ FISHD_OBJS := fishd.o env_universal_common.o common.o util.o wutil.o	\
 
 #All objects that the system needs to build mimedb
 MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o	\
-	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o
+	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o
 
 #
 # Files containing documentation for builtins. Should be listed

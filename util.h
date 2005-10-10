@@ -10,7 +10,7 @@
 /**
    Data structure for an automatically resizing dynamically allocated queue,
 */
-typedef struct queue
+typedef struct dyn_queue
 {
 	/** Start of the array */
 	void **start;
@@ -21,7 +21,7 @@ typedef struct queue
 	/** Where to remove elements */
 	void **get_pos;
 }
-queue_t;
+dyn_queue_t;
 
 /**
    Internal struct used by hash_table_t.
@@ -159,17 +159,17 @@ float minf( float a, float b );
     element to be inserted into the buffer is the first element to be
     returned. 
 */
-void q_init( queue_t *q );
+void q_init( dyn_queue_t *q );
 /** Destroy the queue */
-void q_destroy( queue_t *q );
+void q_destroy( dyn_queue_t *q );
 /** Insert element into queue */
-int q_put( queue_t *q, void *e );
+int q_put( dyn_queue_t *q, void *e );
 /** Remove and return next element from queue */
-void *q_get( queue_t *q);
+void *q_get( dyn_queue_t *q);
 /** Return next element from queue without removing it */
-void *q_peek( queue_t *q);
+void *q_peek( dyn_queue_t *q);
 /** Returns 1 if the queue is empty, 0 otherwise */
-int q_empty( queue_t *q );
+int q_empty( dyn_queue_t *q );
 
 /**
    Initialize a hash table. The hash function must never return the value 0.

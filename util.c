@@ -72,20 +72,20 @@ int maxi( int a,
 /* Queue functions */
 
 
-void q_init( queue_t *q )
+void q_init( dyn_queue_t *q )
 {
 	q->start = (void **)malloc( sizeof(void*)*1 );
 	q->stop = &q->start[1];
 	q->put_pos = q->get_pos = q->start;
 }
 
-void q_destroy( queue_t *q )
+void q_destroy( dyn_queue_t *q )
 {
 	free( q->start );
 }
 
 /*
-  static q_print( queue_t *q )
+  static q_print( dyn_queue_t *q )
   {
   int i;
   int size = (q->stop-q->start);
@@ -106,7 +106,7 @@ void q_destroy( queue_t *q )
 /**
    Reallocate the queue_t
 */
-static int q_realloc( queue_t *q )
+static int q_realloc( dyn_queue_t *q )
 {
 	void **old_start = q->start;
 	void **old_stop = q->stop;
@@ -131,7 +131,7 @@ static int q_realloc( queue_t *q )
 	return 1;
 }
 
-int q_put( queue_t *q, void *e )
+int q_put( dyn_queue_t *q, void *e )
 {
 	*q->put_pos = e;
 
@@ -144,7 +144,7 @@ int q_put( queue_t *q, void *e )
 	return 1;
 }
 
-void *q_get( queue_t *q)
+void *q_get( dyn_queue_t *q)
 {
 	void *e = *q->get_pos;
 	if( ++q->get_pos == q->stop )
@@ -152,12 +152,12 @@ void *q_get( queue_t *q)
 	return e;
 }
 
-void *q_peek( queue_t *q )
+void *q_peek( dyn_queue_t *q )
 {
 	return *q->get_pos;
 }
  
-int q_empty( queue_t *q )
+int q_empty( dyn_queue_t *q )
 {
 //	fprintf( stderr, "Queue %d is %s\n", q, (q->put_pos == q->get_pos)?"empty":"non-empty" );
 	return q->put_pos == q->get_pos;

@@ -509,7 +509,7 @@ static void enqueue( const void *k,
 {
 	const wchar_t *key = (const wchar_t *)k;
 	const var_entry_t *val = (const var_entry_t *)v;
-	queue_t *queue = (queue_t *)q;
+	dyn_queue_t *queue = (dyn_queue_t *)q;
 	
 	message_t *msg = create_message( val->export?SET_EXPORT:SET, key, val->val );
 	msg->count=1;

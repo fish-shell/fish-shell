@@ -61,7 +61,7 @@ typedef struct connection
 	/**
 	   Queue of onsent messages
 	*/
-	queue_t unsent;
+	dyn_queue_t unsent;
 	/**
 	   Set to one when this connection should be killed
 	*/

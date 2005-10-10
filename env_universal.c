@@ -9,6 +9,11 @@
 #include <pwd.h>
 #include <errno.h>
 #include <fcntl.h>
+#if HAVE_NCURSES_H
+#include <ncurses.h>
+#else
+#include <curses.h>
+#endif
 #include <term.h>
 #include <signal.h>
 

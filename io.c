@@ -38,22 +38,21 @@ Utilities for io redirection.
 void io_buffer_read( io_data_t *d )
 {
 
-	exec_close(d->pipe_fd[1] );
+	exec_close(d->param1.pipe_fd[1] );
 	
 	if( d->io_mode == IO_BUFFER )
 	{		
-		if( fcntl( d->pipe_fd[0], F_SETFL, 0 ) )
+		if( fcntl( d->param1.pipe_fd[0], F_SETFL, 0 ) )
 		{
 			wperror( L"fcntl" );
 			return;
 		}	
-		debug( 4, L"exec_read_io_buffer: blocking read on fd %d", d->pipe_fd[0] );
-		
+		debug( 4, L"exec_read_io_buffer: blocking read on fd %d", d->param1.pipe_fd[0] );
 		while(1)
 		{
 			char b[4096];
 			int l;
-			l=read_blocked( d->pipe_fd[0], b, 4096 );
+			l=read_blocked( d->param1.pipe_fd[0], b, 4096 );
 			if( l==0 )
 			{
 				break;
@@ -71,7 +70,7 @@ void io_buffer_read( io_data_t *d )
 				{
 					debug( 1, 
 						   L"An error occured while reading output from code block on fd %d", 
-						   d->pipe_fd[0] );
+						   d->param1.pipe_fd[0] );
 					wperror( L"exec_read_io_buffer" );				
 				}
 				
@@ -79,7 +78,7 @@ void io_buffer_read( io_data_t *d )
 			}
 			else
 			{				
-				b_append( d->out_buffer, b, l );				
+				b_append( d->param2.out_buffer, b, l );				
 			}
 		}
 	}
@@ -92,26 +91,26 @@ io_data_t *io_buffer_create()
 	
 	buffer_redirect->io_mode=IO_BUFFER;
 	buffer_redirect->next=0;
-	buffer_redirect->out_buffer= malloc( sizeof(buffer_t));
-	b_init( buffer_redirect->out_buffer );
+	buffer_redirect->param2.out_buffer= malloc( sizeof(buffer_t));
+	b_init( buffer_redirect->param2.out_buffer );
 	buffer_redirect->fd=1;
 
 
-	if( exec_pipe( buffer_redirect->pipe_fd ) == -1 )
+	if( exec_pipe( buffer_redirect->param1.pipe_fd ) == -1 )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror (L"pipe");
-		free(  buffer_redirect->out_buffer );
+		free(  buffer_redirect->param2.out_buffer );
 		free( buffer_redirect );
 		return 0;
 	}
-	else if( fcntl( buffer_redirect->pipe_fd[0],
+	else if( fcntl( buffer_redirect->param1.pipe_fd[0],
 					F_SETFL,
 					O_NONBLOCK ) )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror( L"fcntl" );
-		free(  buffer_redirect->out_buffer );
+		free(  buffer_redirect->param2.out_buffer );
 		free( buffer_redirect );
 		return 0;
 	}
@@ -121,16 +120,16 @@ io_data_t *io_buffer_create()
 void io_buffer_destroy( io_data_t *io_buffer )
 {
 	
-	exec_close( io_buffer->pipe_fd[0] );
+	exec_close( io_buffer->param1.pipe_fd[0] );
 
 	/*
 	  Dont free fd for writing. This should already be free'd before
 	  calling exec_read_io_buffer on the buffer
 	*/
 	
-	b_destroy( io_buffer->out_buffer );
+	b_destroy( io_buffer->param2.out_buffer );
 	
-	free( io_buffer->out_buffer );
+	free( io_buffer->param2.out_buffer );
 	free( io_buffer );
 }
 

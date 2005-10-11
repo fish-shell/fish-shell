@@ -822,7 +822,7 @@ static int builtin_function( wchar_t **argv )
 				if( !e )
 					die_mem();
 				e->type = EVENT_SIGNAL;
-				e->signal = sig;
+				e->param1.signal = sig;
 				e->function_name=0;				
 				al_push( events, e );
 				break;				
@@ -846,7 +846,7 @@ static int builtin_function( wchar_t **argv )
 				if( !e )
 					die_mem();
 				e->type = EVENT_VARIABLE;
-				e->variable = wcsdup( woptarg );
+				e->param1.variable = wcsdup( woptarg );
 				e->function_name=0;				
 				al_push( events, e );
 				break;
@@ -875,7 +875,7 @@ static int builtin_function( wchar_t **argv )
 				if( !e )
 					die_mem();
 				e->type = EVENT_EXIT;
-				e->pid = (opt=='j'?-1:1)*abs(pid);
+				e->param1.pid = (opt=='j'?-1:1)*abs(pid);
 				e->function_name=0;				
 				al_push( events, e );
 				break;				
@@ -970,14 +970,14 @@ static int builtin_function( wchar_t **argv )
 		int i;
 		
 		parser_push_block( FUNCTION_DEF );
-		current_block->function_name=wcsdup(argv[woptind]);
-		current_block->function_description=desc?wcsdup(desc):0;
-		current_block->function_is_binding = is_binding;
-		current_block->function_events = events;		
+		current_block->param1.function_name=wcsdup(argv[woptind]);
+		current_block->param2.function_description=desc?wcsdup(desc):0;
+		current_block->param3.function_is_binding = is_binding;
+		current_block->param4.function_events = events;		
 		for( i=0; i<al_get_count( events ); i++ )
 		{
 			event_t *e = (event_t *)al_get( events, i );
-			e->function_name = wcsdup( current_block->function_name );
+			e->function_name = wcsdup( current_block->param1.function_name );
 		}
 
 	}
@@ -2385,19 +2385,19 @@ static int builtin_for( wchar_t **argv )
 	else
 	{
 		parser_push_block( FOR );
-		al_init( &current_block->for_vars);
+		al_init( &current_block->param2.for_vars);
 		
 		int i;
 		current_block->tok_pos = parser_get_pos();
-		current_block->for_variable = wcsdup( argv[1] );
+		current_block->param1.for_variable = wcsdup( argv[1] );
 		
 		for( i=argc-1; i>3; i-- )
 		{
-			al_push( &current_block->for_vars, wcsdup(argv[ i ] ));
+			al_push( &current_block->param2.for_vars, wcsdup(argv[ i ] ));
 		}
 		if( argc > 3 )
 		{
-			env_set( current_block->for_variable, argv[3], ENV_LOCAL );
+			env_set( current_block->param1.for_variable, argv[3], ENV_LOCAL );
 		}
 		else
 		{
@@ -2456,7 +2456,7 @@ static int builtin_end( wchar_t **argv )
 					current_block->skip = 0;
 					kill_block = 0;
 					parser_set_pos( current_block->tok_pos);
-					current_block->while_state = WHILE_TEST_AGAIN;
+					current_block->param1.while_state = WHILE_TEST_AGAIN;
 				}
 				
 				break;
@@ -2478,16 +2478,16 @@ static int builtin_end( wchar_t **argv )
 				*/
 				if( current_block->loop_status == LOOP_BREAK )
 				{
-					while( al_get_count( &current_block->for_vars ) )
+					while( al_get_count( &current_block->param2.for_vars ) )
 					{
-						free( (void *)al_pop( &current_block->for_vars ) );
+						free( (void *)al_pop( &current_block->param2.for_vars ) );
 					}
 				}
 				
-				if( al_get_count( &current_block->for_vars ) )
+				if( al_get_count( &current_block->param2.for_vars ) )
 				{
-					wchar_t *val = (wchar_t *)al_pop( &current_block->for_vars );
-					env_set( current_block->for_variable, val,  ENV_LOCAL);
+					wchar_t *val = (wchar_t *)al_pop( &current_block->param2.for_vars );
+					env_set( current_block->param1.for_variable, val,  ENV_LOCAL);
 					current_block->loop_status = LOOP_NORMAL;
 					current_block->skip = 0;
 					free(val);
@@ -2515,11 +2515,11 @@ static int builtin_end( wchar_t **argv )
 				//fwprintf( stderr, L"Function: %ls\n", def );
 				if( !parser_test( def, 1 ) )
 				{
-					function_add( current_block->function_name, 
+					function_add( current_block->param1.function_name, 
 								  def,
-								  current_block->function_description,
-								  current_block->function_events,
-								  current_block->function_is_binding );
+								  current_block->param2.function_description,
+								  current_block->param4.function_events,
+								  current_block->param3.function_is_binding );
 				}				
 				
 				free(def);
@@ -2548,7 +2548,7 @@ static int builtin_else( wchar_t **argv )
 {
 	if( current_block == 0 || 
 		current_block->type != IF ||
-		current_block->if_state != 1)
+		current_block->param1.if_state != 1)
 	{
 		sb_append2( sb_err,
 					argv[0],
@@ -2559,7 +2559,7 @@ static int builtin_else( wchar_t **argv )
 	}
 	else
 	{
-		current_block->if_state++;
+		current_block->param1.if_state++;
 		current_block->skip = !current_block->skip;
 		env_pop();
 		env_push(0);
@@ -2711,9 +2711,9 @@ static int builtin_switch( wchar_t **argv )
 	else
 	{
 		parser_push_block( SWITCH );
-		current_block->switch_value = wcsdup( argv[1]);
+		current_block->param1.switch_value = wcsdup( argv[1]);
 		current_block->skip=1;
-		current_block->switch_taken=0;
+		current_block->param2.switch_taken=0;
 	}
 	
 	return res;
@@ -2740,7 +2740,7 @@ static int builtin_case( wchar_t **argv )
 		
 	current_block->skip = 1;
 
-	if( current_block->switch_taken )
+	if( current_block->param2.switch_taken )
 	{
 		return 0;
 	}
@@ -2750,10 +2750,10 @@ static int builtin_case( wchar_t **argv )
 		free( unescaped );
 		unescaped = expand_unescape( argv[i], 1);
 
-		if( wildcard_match( current_block->switch_value, unescaped ) )
+		if( wildcard_match( current_block->param1.switch_value, unescaped ) )
 		{
 			current_block->skip = 0;
-			current_block->switch_taken = 1;
+			current_block->param2.switch_taken = 1;
 			break;		
 		}
 	}
@@ -2772,52 +2772,52 @@ void builtin_init()
 	al_init( &io_stack );
 	hash_init( &builtin, &hash_wcs_func, &hash_wcs_cmp );
 
-	hash_put( &builtin, L"exit", &builtin_exit );	
-	hash_put( &builtin, L"builtin", &builtin_builtin );	
-	hash_put( &builtin, L"cd", &builtin_cd );
-	hash_put( &builtin, L"function", &builtin_function );	
-	hash_put( &builtin, L"functions", &builtin_functions );	
-	hash_put( &builtin, L"complete", &builtin_complete );	
-	hash_put( &builtin, L"end", &builtin_end );
-	hash_put( &builtin, L"else", &builtin_else );
-	hash_put( &builtin, L"eval", &builtin_eval );
-	hash_put( &builtin, L"for", &builtin_for );
-	hash_put( &builtin, L".", &builtin_source );
-	hash_put( &builtin, L"set", &builtin_set );
-	hash_put( &builtin, L"fg", &builtin_fg );
-	hash_put( &builtin, L"bg", &builtin_bg );
-	hash_put( &builtin, L"jobs", &builtin_jobs );
-	hash_put( &builtin, L"read", &builtin_read );
-	hash_put( &builtin, L"break", &builtin_break_continue );	
-	hash_put( &builtin, L"continue", &builtin_break_continue );
-	hash_put( &builtin, L"return", &builtin_return );
-	hash_put( &builtin, L"commandline", &builtin_commandline );
-	hash_put( &builtin, L"switch", &builtin_switch );
-	hash_put( &builtin, L"case", &builtin_case );
-	hash_put( &builtin, L"bind", &builtin_bind );
-	hash_put( &builtin, L"random", &builtin_random );	
-	hash_put( &builtin, L"status", &builtin_status );	
+	hash_put( &builtin, L"exit", (void*) &builtin_exit );	
+	hash_put( &builtin, L"builtin", (void*) &builtin_builtin );	
+	hash_put( &builtin, L"cd", (void*) &builtin_cd );
+	hash_put( &builtin, L"function", (void*) &builtin_function );	
+	hash_put( &builtin, L"functions", (void*) &builtin_functions );	
+	hash_put( &builtin, L"complete", (void*) &builtin_complete );	
+	hash_put( &builtin, L"end", (void*) &builtin_end );
+	hash_put( &builtin, L"else", (void*) &builtin_else );
+	hash_put( &builtin, L"eval", (void*) &builtin_eval );
+	hash_put( &builtin, L"for", (void*) &builtin_for );
+	hash_put( &builtin, L".", (void*) &builtin_source );
+	hash_put( &builtin, L"set", (void*) &builtin_set );
+	hash_put( &builtin, L"fg", (void*) &builtin_fg );
+	hash_put( &builtin, L"bg", (void*) &builtin_bg );
+	hash_put( &builtin, L"jobs", (void*) &builtin_jobs );
+	hash_put( &builtin, L"read", (void*) &builtin_read );
+	hash_put( &builtin, L"break", (void*) &builtin_break_continue );	
+	hash_put( &builtin, L"continue", (void*) &builtin_break_continue );
+	hash_put( &builtin, L"return", (void*) &builtin_return );
+	hash_put( &builtin, L"commandline", (void*) &builtin_commandline );
+	hash_put( &builtin, L"switch", (void*) &builtin_switch );
+	hash_put( &builtin, L"case", (void*) &builtin_case );
+	hash_put( &builtin, L"bind", (void*) &builtin_bind );
+	hash_put( &builtin, L"random", (void*) &builtin_random );	
+	hash_put( &builtin, L"status", (void*) &builtin_status );	
 	
 	/* 
 	   Builtins that are handled directly by the parser. They are
 	   bound to a noop function only so that they show up in the
 	   listings of builtin commands, etc..
 	*/
-	hash_put( &builtin, L"command", &builtin_ignore );		
-	hash_put( &builtin, L"if", &builtin_ignore );	
-	hash_put( &builtin, L"while", &builtin_ignore );	
-	hash_put( &builtin, L"not", &builtin_generic );	
-	hash_put( &builtin, L"and", &builtin_generic );	
-	hash_put( &builtin, L"or", &builtin_generic );	
-	hash_put( &builtin, L"exec", &builtin_exec );	
-	hash_put( &builtin, L"begin", &builtin_begin );	
+	hash_put( &builtin, L"command", (void*)  &builtin_ignore );		
+	hash_put( &builtin, L"if", (void*) &builtin_ignore );	
+	hash_put( &builtin, L"while", (void*) &builtin_ignore );	
+	hash_put( &builtin, L"not", (void*) &builtin_generic );	
+	hash_put( &builtin, L"and", (void*) &builtin_generic );	
+	hash_put( &builtin, L"or", (void*) &builtin_generic );	
+	hash_put( &builtin, L"exec", (void*) &builtin_exec );	
+	hash_put( &builtin, L"begin", (void*) &builtin_begin );	
 
 	/*
 	  This is not a builtin, but fish handles it's help display
 	  internally, to do some ugly special casing to make sure 'count
 	  -h', but 'count (echo -h)' does not.
 	*/
-	hash_put( &builtin, L"count", &builtin_ignore );	
+	hash_put( &builtin, L"count", (void*) &builtin_ignore );	
 
 	intern_static( L"exit" );	
 	intern_static( L"builtin" );	

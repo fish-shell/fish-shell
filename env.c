@@ -219,7 +219,7 @@ static void universal_callback( int type,
 		has_changed=1;
 		
 		ev.type=EVENT_VARIABLE;
-		ev.variable=name;
+		ev.param1.variable=name;
 		ev.function_name=0;
 		
 		al_init( &arg );
@@ -520,7 +520,7 @@ void env_set( const wchar_t *key,
 	if( !is_universal )
 	{
 		ev.type=EVENT_VARIABLE;
-		ev.variable = key;
+		ev.param1.variable = key;
 		ev.function_name = 0;
 		
 		al_init( &ev_list );

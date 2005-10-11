@@ -35,7 +35,7 @@ typedef struct block
 		int if_state; /**< The state of the if block */
 		wchar_t *switch_value; /**< The value to test in a switch block */
 		wchar_t *function_name; /**< The name of the function to define */
-	};	
+	} param1;
 
 	/**
 	   Second block type specific variable
@@ -45,7 +45,7 @@ typedef struct block
 		array_list_t for_vars; /**< List of values for a for block */	
 		int switch_taken; /**< Whether a switch match has already been found */
 		wchar_t *function_description; /**< The description of the function to define */
-	};
+	} param2;
 
 	/**
 	   Third block type specific variable
@@ -53,7 +53,7 @@ typedef struct block
 	union
 	{
 		int function_is_binding; /**< Whether a function is a keybinding */
-	};
+	} param3;
 
 	/**
 	   Fourth block type specific variable
@@ -61,8 +61,7 @@ typedef struct block
 	union
 	{
 		array_list_t *function_events;
-	}
-		;
+	} param4;
 	
 		
 

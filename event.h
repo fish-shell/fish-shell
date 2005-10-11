@@ -53,8 +53,7 @@ typedef struct
 		   Process id for process-type events. Use EVENT_ANY_PID to match any pid.
 		*/
 		pid_t pid;
-	}
-		;
+	} param1;
 
 	const wchar_t *function_name;	
 }

@@ -26,7 +26,7 @@ typedef struct io_data
 		wchar_t *filename;
 		/** fd to redirect specified fd to, for IO_FD*/
 		int old_fd;
-	}
+	} param1
 	;
 	union
 	{
@@ -37,7 +37,7 @@ typedef struct io_data
 		/** Whether to close old_fd for IO_FD */
 		int close_old;
 		
-	}
+	} param2
 	;
 	
 	/** Pointer to the next IO redirection */

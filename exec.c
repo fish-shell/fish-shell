@@ -144,8 +144,8 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
 	if( ( io->io_mode == IO_BUFFER ) || 
 		( io->io_mode == IO_PIPE ) )
 	{
-		if( io->pipe_fd[0] == fd ||
-			io->pipe_fd[1] == fd )
+		if( io->param1.pipe_fd[0] == fd ||
+			io->param1.pipe_fd[1] == fd )
 			return 1;
 	}
 		
@@ -206,11 +206,11 @@ void free_fd( io_data_t *io, int fd )
 		int i;
 		for( i=0; i<2; i++ )
 		{
-			if(io->pipe_fd[i] == fd )
+			if(io->param1.pipe_fd[i] == fd )
 			{
 				while(1)
 				{
-					if( (io->pipe_fd[i] = dup(fd)) == -1)
+					if( (io->param1.pipe_fd[i] = dup(fd)) == -1)
 					{
 						if( errno != EINTR )
 						{
@@ -242,7 +242,7 @@ static void handle_child_io( io_data_t *io )
 	{
 		int tmp;
 
-		if( io->io_mode == IO_FD && io->fd == io->old_fd )
+		if( io->io_mode == IO_FD && io->fd == io->param1.old_fd )
 		{
 			continue;
 		}
@@ -276,11 +276,12 @@ static void handle_child_io( io_data_t *io )
 			case IO_CLOSE:
 				break;
 			case IO_FILE:
-				if( (tmp=wopen( io->filename, io->flags, 0666 ))==-1 )
+				if( (tmp=wopen( io->param1.filename,
+                                io->param2.flags, 0666 ))==-1 )
 				{
 					debug( 1, 
 						   FILE_ERROR,
-						   io->filename );
+						   io->param1.filename );
 					
 					wperror( L"open" );
 					exit(1);
@@ -305,7 +306,7 @@ static void handle_child_io( io_data_t *io )
   p->pid,
   io->old_fd );
 */			
-				if( dup2( io->old_fd, io->fd ) == -1 )
+				if( dup2( io->param1.old_fd, io->fd ) == -1 )
 				{
 					debug( 1, 
 						   FD_ERROR,
@@ -327,7 +328,7 @@ static void handle_child_io( io_data_t *io )
 */
 				int fd_to_dup = io->fd;
 				
-				if( dup2( io->pipe_fd[fd_to_dup?1:0], io->fd ) == -1 )
+				if( dup2( io->param1.pipe_fd[fd_to_dup?1:0], io->fd ) == -1 )
 				{
 					debug( 1, PIPE_ERROR );
 					wperror( L"dup2" );
@@ -336,11 +337,11 @@ static void handle_child_io( io_data_t *io )
 
 				if( fd_to_dup != 0 )
 				{
-					exec_close( io->pipe_fd[0]);
-					exec_close( io->pipe_fd[1]);
+					exec_close( io->param1.pipe_fd[0]);
+					exec_close( io->param1.pipe_fd[1]);
 				}
 				else
-					exec_close( io->pipe_fd[0] );
+					exec_close( io->param1.pipe_fd[0] );
 				
 /*				
   if( close( io[i].pipe_fd[ io->fd ] ) == -1 )
@@ -458,7 +459,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 	
 	out->fd = in->fd;
 	out->io_mode = IO_FD;
-	out->close_old = 1;
+	out->param2.close_old = 1;
 	
 	switch( in->io_mode )
 	{
@@ -481,17 +482,17 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		{
 			int fd;
 			
-			if( (fd=wopen( in->filename, in->flags, 0666 ))==-1 )
+			if( (fd=wopen( in->param1.filename, in->param2.flags, 0666 ))==-1 )
 			{
 				debug( 1, 
 					   FILE_ERROR,
-					   in->filename );
+					   in->param1.filename );
 								
 				wperror( L"open" );
 				exit(1);
 			}	
 
-			out->old_fd = fd;
+			out->param1.old_fd = fd;
 			break;
 		}
 	}
@@ -514,7 +515,7 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 	switch( in->io_mode )
 	{
 		case IO_FILE:
-			exec_close( out->old_fd );
+			exec_close( out->param1.old_fd );
 			break;
 	}	
 	free(out);
@@ -669,12 +670,12 @@ void exec( job_t *j )
 	pipe_read.fd=0;
 	pipe_write.fd=1;
 	pipe_read.io_mode=IO_PIPE;
-	pipe_read.pipe_fd[0] = -1;
-	pipe_read.pipe_fd[1] = -1;
+	pipe_read.param1.pipe_fd[0] = -1;
+	pipe_read.param1.pipe_fd[1] = -1;
 	pipe_write.io_mode=IO_PIPE;
 	pipe_read.next=0;
 	pipe_write.next=0;
-	pipe_write.pipe_fd[0]=pipe_write.pipe_fd[1]=0;	
+	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=0;	
 
 	//fwprintf( stderr, L"Run command %ls\n", j->command );
 	
@@ -730,7 +731,7 @@ void exec( job_t *j )
   mypipe[0],
   mypipe[1] );
 */
-			memcpy( pipe_write.pipe_fd, mypipe, sizeof(int)*2);
+			memcpy( pipe_write.param1.pipe_fd, mypipe, sizeof(int)*2);
 		}
 		else
 		{
@@ -823,7 +824,7 @@ void exec( job_t *j )
 							
 							case IO_FD:
 							{
-								builtin_stdin = in->old_fd;
+								builtin_stdin = in->param1.old_fd;
 /*								fwprintf( stderr, 
   L"Input redirection for builtin '%ls' from fd %d\n", 
   p->argv[0],
@@ -833,7 +834,7 @@ void exec( job_t *j )
 							}
 							case IO_PIPE:
 							{
-								builtin_stdin = in->pipe_fd[0];
+								builtin_stdin = in->param1.pipe_fd[0];
 								break;
 							}
 							
@@ -845,7 +846,8 @@ void exec( job_t *j )
   L"Input redirection for builtin from file %ls\n",
   in->filename);
 */
-								new_fd=wopen( in->filename, in->flags, 0666 );
+								new_fd=wopen( in->param1.filename,
+                                              in->param2.flags, 0666 );
 								if( new_fd == -1 )
 								{
 									wperror( L"wopen" );
@@ -873,7 +875,7 @@ void exec( job_t *j )
 				}
 				else
 				{
-					builtin_stdin = pipe_read.pipe_fd[0];
+					builtin_stdin = pipe_read.param1.pipe_fd[0];
 				}
 
 				builtin_push_io( builtin_stdin );
@@ -934,7 +936,7 @@ void exec( job_t *j )
 				
 				io_buffer_read( io_buffer );
 				
-				if( io_buffer->out_buffer->used != 0 )
+				if( io_buffer->param2.out_buffer->used != 0 )
 				{
 					
 					/*Temporary signal block for SIGCHLD */
@@ -948,8 +950,8 @@ void exec( job_t *j )
 						p->pid = getpid();
 						setup_child_process( j );
 						write( io_buffer->fd, 
-							   io_buffer->out_buffer->buff, 
-							   io_buffer->out_buffer->used );
+							   io_buffer->param2.out_buffer->buff, 
+							   io_buffer->param2.out_buffer->used );
 						exit( status );
 					}
 					else if (pid < 0)
@@ -1008,7 +1010,7 @@ void exec( job_t *j )
 				{
 //				fwprintf( stderr, L"Skip fork of %ls\n", j->command );				
 					char *res = wcs2str( (wchar_t *)sb_out->buff );				
-					b_append( io->out_buffer, res, strlen( res ) );
+					b_append( io->param2.out_buffer, res, strlen( res ) );
 					skip_fork = 1;
 					free( res );				
 				}
@@ -1123,13 +1125,13 @@ void exec( job_t *j )
 		/* 
 		   Close the pipe the current process uses to read from the previous process_t 
 		*/
-		if( pipe_read.pipe_fd[0] >= 0 )
-			exec_close( pipe_read.pipe_fd[0] );
+		if( pipe_read.param1.pipe_fd[0] >= 0 )
+			exec_close( pipe_read.param1.pipe_fd[0] );
 		/* 
 		   Set up the pipe the next process uses to read from the current process_t 
 		*/
 		if( p->next )
-			pipe_read.pipe_fd[0] = mypipe[0];
+			pipe_read.param1.pipe_fd[0] = mypipe[0];
 		
 		/* 
 		   If there is a next process, close the output end of the
@@ -1192,9 +1194,9 @@ int exec_subshell( const wchar_t *cmd,
 	
 	is_subshell = prev_subshell;
 	
-	b_append( io_buffer->out_buffer, &z, 1 );
+	b_append( io_buffer->param2.out_buffer, &z, 1 );
 	
-	begin=end=io_buffer->out_buffer->buff;	
+	begin=end=io_buffer->param2.out_buffer->buff;	
 	
 	if( l )
 	{

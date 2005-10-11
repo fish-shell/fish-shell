@@ -208,27 +208,27 @@ void parser_pop_block()
 	{
 		case FOR:
 		{
-			free( current_block->for_variable );
-			al_foreach( &current_block->for_vars, 
+			free( current_block->param1.for_variable );
+			al_foreach( &current_block->param2.for_vars, 
 						(void (*)(const void *))&free );
-			al_destroy( &current_block->for_vars );
+			al_destroy( &current_block->param2.for_vars );
 			break;
 		}
 
 		case SWITCH:
 		{
-			free( current_block->switch_value );
+			free( current_block->param1.switch_value );
 			break;
 		}
 
 		case FUNCTION_DEF:
 		{
-			free( current_block->function_name );
-			free( current_block->function_description );
-			al_foreach( current_block->function_events,
+			free( current_block->param1.function_name );
+			free( current_block->param2.function_description );
+			al_foreach( current_block->param4.function_events,
 						(void (*)(const void *))&event_free );
-			al_destroy( current_block->function_events );			
-			free( current_block->function_events );
+			al_destroy( current_block->param4.function_events );			
+			free( current_block->param4.function_events );
 			break;
 		}
 
@@ -1110,20 +1110,20 @@ static void parse_job_main_loop( process_t *p,
 					{
 						case TOK_REDIRECT_APPEND:
 							new_io->io_mode = IO_FILE;
-							new_io->flags = O_CREAT | O_APPEND | O_WRONLY;
-							new_io->filename = target;
+							new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
+							new_io->param1.filename = target;
 							break;
 
 						case TOK_REDIRECT_OUT:
 							new_io->io_mode = IO_FILE;
-							new_io->flags = O_CREAT | O_WRONLY | O_TRUNC;
-							new_io->filename = target;
+							new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
+							new_io->param1.filename = target;
 							break;
 
 						case TOK_REDIRECT_IN:
 							new_io->io_mode = IO_FILE;
-							new_io->flags = O_RDONLY;
-							new_io->filename = target;
+							new_io->param2.flags = O_RDONLY;
+							new_io->param1.filename = target;
 							break;
 
 						case TOK_REDIRECT_FD:
@@ -1134,11 +1134,11 @@ static void parse_job_main_loop( process_t *p,
 							else
 							{
 								new_io->io_mode = IO_FD;
-								new_io->old_fd = wcstol( target,
+								new_io->param1.old_fd = wcstol( target,
 														 0,
 														 10 );
-								if( ( new_io->old_fd < 0 ) ||
-									( new_io->old_fd > 10 ) )
+								if( ( new_io->param1.old_fd < 0 ) ||
+									( new_io->param1.old_fd > 10 ) )
 								{
 									error_arg( SYNTAX_ERROR,
 											   L"Requested redirection to something "
@@ -1358,9 +1358,9 @@ static int parse_job( process_t *p,
 			{
 				new_block = 1;
 			}
-			else if( current_block->while_state == WHILE_TEST_AGAIN )
+			else if( current_block->param1.while_state == WHILE_TEST_AGAIN )
 			{
-				current_block->while_state = WHILE_TEST_FIRST;
+				current_block->param1.while_state = WHILE_TEST_FIRST;
 			}
 			else
 			{
@@ -1370,7 +1370,7 @@ static int parse_job( process_t *p,
 			if( new_block )
 			{
 				parser_push_block( WHILE );
-				current_block->while_state=WHILE_TEST_FIRST;
+				current_block->param1.while_state=WHILE_TEST_FIRST;
 				current_block->tok_pos = mark;
 			}
 			
@@ -1385,7 +1385,7 @@ static int parse_job( process_t *p,
 
 			parser_push_block( IF );
 
-			current_block->if_state=0;
+			current_block->param1.if_state=0;
 			current_block->tok_pos = mark;
 
 			free( nxt );
@@ -1627,7 +1627,7 @@ static void skipped_exec( job_t * j )
 			else if( wcscmp( p->argv[0], L"else" )==0)
 			{
 				if( (current_block->type == IF ) &&
-					(current_block->if_state != 0))
+					(current_block->param1.if_state != 0))
 				{
 					exec( j );
 					return;
@@ -1757,12 +1757,12 @@ static void eval_job( tokenizer *tok )
 				{
 //					debug( 2, L"We are at begining of a while block\n" );
 					
-					switch( current_block->while_state )
+					switch( current_block->param1.while_state )
 					{
 						case WHILE_TEST_FIRST:
 						{
 							current_block->skip = proc_get_last_status()!= 0;
-							current_block->while_state=WHILE_TESTED;
+							current_block->param1.while_state=WHILE_TESTED;
 						}
 						break;
 					}
@@ -1770,13 +1770,13 @@ static void eval_job( tokenizer *tok )
 
 				if( current_block->type == IF )
 				{
-					if( (!current_block->if_state) &&
+					if( (!current_block->param1.if_state) &&
 						(!current_block->skip) )
 					{
 //							debug( 2, L"Result of if block is %d\n", proc_get_last_status() );
 						
 						current_block->skip = proc_get_last_status()!= 0;
-						current_block->if_state++;
+						current_block->param1.if_state++;
 					}
 				}
 				

@@ -1271,10 +1271,10 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	
 
 	int nil=0;	
-	b_append( out->out_buffer, &nil, 1 );
+	b_append( out->param2.out_buffer, &nil, 1 );
 	
 	wchar_t *tmp;
-	wchar_t *str = str2wcs((char *)out->out_buffer->buff);
+	wchar_t *str = str2wcs((char *)out->param2.out_buffer->buff);
 	
 	if( str )
 	{

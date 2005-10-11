@@ -83,17 +83,18 @@ static int event_match( event_t *class, event_t *instance )
 	{
 			
 		case EVENT_SIGNAL:
-			if( class->signal == EVENT_ANY_SIGNAL )
+			if( class->param1.signal == EVENT_ANY_SIGNAL )
 				return 1;
-			return class->signal == instance->signal;
+			return class->param1.signal == instance->param1.signal;
 		
 		case EVENT_VARIABLE:
-			return wcscmp( instance->variable, class->variable )==0;
+			return wcscmp( instance->param1.variable,
+				       class->param1.variable )==0;
 			
 		case EVENT_EXIT:
-			if( class->pid == EVENT_ANY_PID )
+			if( class->param1.pid == EVENT_ANY_PID )
 				return 1;
-			return class->pid == instance->pid;
+			return class->param1.pid == instance->param1.pid;
 	}
 	
 	/**
@@ -118,7 +119,7 @@ static event_t *event_copy( event_t *event )
 		e->function_name = wcsdup( e->function_name );
 
 	if( e->type == EVENT_VARIABLE )
-		e->variable = wcsdup( e->variable );
+		e->param1.variable = wcsdup( e->param1.variable );
 		
 	return e;
 }
@@ -132,7 +133,7 @@ void event_add_handler( event_t *event )
 
 	if( e->type == EVENT_SIGNAL )
 	{
-		signal_handle( e->signal, 1 );
+		signal_handle( e->param1.signal, 1 );
 	}
 	
 	al_push( events, e );	
@@ -171,12 +172,12 @@ void event_remove( event_t *criterion )
 			if( n->type == EVENT_SIGNAL )
 			{
 				e.type = EVENT_SIGNAL;
-				e.signal = n->signal;
+				e.param1.signal = n->param1.signal;
 				e.function_name = 0;
 				
 				if( event_get( &e, 0 ) == 1 )
 				{
-					signal_handle( e.signal, 0 );			
+					signal_handle( e.param1.signal, 0 );
 				}		
 			}
 
@@ -389,8 +390,8 @@ static void event_fire_signal_events()
 
 		for( i=0; i<lst->count; i++ )
 		{
-			e.signal = lst->signal[i];
-			al_set( &a, 0, sig2wcs( e.signal ) );			
+			e.param1.signal = lst->signal[i];
+			al_set( &a, 0, sig2wcs( e.param1.signal ) );			
 			event_fire_internal( &e, &a );
 		}		
 
@@ -414,7 +415,7 @@ void event_fire( event_t *event, array_list_t *arguments )
 		  signal handler.
 		*/
 		if( sig_list[active_list].count < SIG_UNHANDLED_MAX )
-			sig_list[active_list].signal[sig_list[active_list].count++]=event->signal;
+			sig_list[active_list].signal[sig_list[active_list].count++]=event->param1.signal;
 		else
 			sig_list[active_list].overflow=1;
 		
@@ -458,7 +459,7 @@ void event_free( event_t *e )
 {
 	free( (void *)e->function_name );
 	if( e->type == EVENT_VARIABLE )
-		free( (void *)e->variable );
+		free( (void *)e->param1.variable );
 	free( e );
 }
 		

@@ -302,7 +302,7 @@ static void default_handler(int signal, siginfo_t *info, void *context)
 {
 	event_t e;
 	e.type=EVENT_SIGNAL;
-	e.signal = signal;
+	e.param1.signal = signal;
 	e.function_name=0;
 
 	event_fire( &e, 0 );

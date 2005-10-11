@@ -154,7 +154,7 @@ void job_free( job_t * j )
 //		fwprintf( stderr, L"Kill redirect %d of type %d\n", ionext, io->io_mode );
 		if( io->io_mode == IO_FILE )
 		{
-			free( io->filename );
+			free( io->param1.filename );
 		}
 		free( io );		
 	}
@@ -481,7 +481,7 @@ static void fire_process_event( const wchar_t *msg, pid_t pid, int status )
 	e.function_name=0;
 	
 	ev.type=EVENT_EXIT;
-	ev.pid = pid;
+	ev.param1.pid = pid;
 	
 	al_push( &event_arg, msg );			
 
@@ -734,10 +734,10 @@ static int select_try( job_t *j )
 	{
 		if( d->io_mode == IO_BUFFER )
 		{
-			int fd = d->pipe_fd[0];
+			int fd = d->param1.pipe_fd[0];
 //			fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
 			FD_SET( fd, &fds );
-			maxfd=maxi( maxfd, d->pipe_fd[0] );
+			maxfd=maxi( maxfd, d->param1.pipe_fd[0] );
 			debug( 3, L"select_try on %d\n", fd );
 		}
 	}
@@ -785,7 +785,8 @@ static void read_try( job_t *j )
 			char b[BUFFER_SIZE];
 			int l;
 			
-			l=read_blocked( buff->pipe_fd[0], b, BUFFER_SIZE );
+			l=read_blocked( buff->param1.pipe_fd[0],
+					b, BUFFER_SIZE );
 			if( l==0 )
 			{
 				break;
@@ -802,7 +803,7 @@ static void read_try( job_t *j )
 			}
 			else
 			{
-				b_append( buff->out_buffer, b, l );
+				b_append( buff->param2.out_buffer, b, l );
 			}
 			
 		}

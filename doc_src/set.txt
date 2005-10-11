@@ -6,7 +6,7 @@
 The <tt>set</tt> builtin causes fish to assign the variable <tt>VARIABLE_NAME</tt> the values <tt>VALUES...</tt>. 
 
 \subsection set-description Description
-- <tt>-e</tt> or <tt>--erase</tt> causes the specified environment variables to be erased
+- <tt>-e</tt> or <tt>--erase</tt> causes the specified environment variable to be erased
 - <tt>-g</tt> or <tt>--global</tt> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will dissapear when the current block ends
 - <tt>-l</tt> or <tt>--local</tt> forces the specified environment variable to be made local to the current block, even if the variable already exists and is non-local
 - <tt>-n</tt> or <tt>--names</tt> List only the names of all defined variables
@@ -23,7 +23,7 @@ with the given name will be changed as specified, but it's value will
 remain the same. If the variable did not previously exist, it's value
 will be an empty string.
 
-If the \c -e or \c --erase option is specified, all the variables
+If the \c -e or \c --erase option is specified, the variable
 specified by the following arguments will be erased
 
 If a variable is set to more than one value, the variable will be an

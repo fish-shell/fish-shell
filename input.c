@@ -1244,7 +1244,7 @@ static void add_vi_bindings()
 
 static int interrupt_handler()
 {
-	if( job_do_notification() )
+	if( job_reap( 1 ) )
 		repaint();
 	if( reader_interupted() )
 	{
@@ -1256,7 +1256,7 @@ static int interrupt_handler()
 int input_init()
 {
 	wchar_t *fn;
-
+	
 	input_common_init( &interrupt_handler );
 	
 	if( setupterm( 0, STDOUT_FILENO, 0) == ERR )

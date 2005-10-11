@@ -47,6 +47,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "env.h"
 #include "parser.h"
 #include "signal.h"
+#include "event.h"
 
 /**
    Size of message buffer 
@@ -460,33 +461,82 @@ static void format_job_info( const job_t *j, const wchar_t *status )
 	fwprintf (stdout, L"\n" );
 }
 
-int job_do_notification()
+static void fire_process_event( const wchar_t *msg, pid_t pid, int status )
+{
+	static event_t ev;
+	static array_list_t event_arg;
+	static string_buffer_t event_pid, event_status;
+	static int init=0;
+
+	event_t e;
+
+	if( !init )
+	{
+		al_init( &event_arg );
+		sb_init( &event_pid );
+		sb_init( &event_status );
+		init=1;
+	}
+	
+	e.function_name=0;
+	
+	ev.type=EVENT_EXIT;
+	ev.pid = pid;
+	
+	al_push( &event_arg, msg );			
+
+	sb_printf( &event_pid, L"%d", pid );			
+	al_push( &event_arg, event_pid.buff );
+
+	sb_printf( &event_status, L"%d", status );			
+	al_push( &event_arg, event_status.buff );
+
+	event_fire( &ev, &event_arg );
+	al_truncate( &event_arg, 0 );
+	sb_clear( &event_pid );	
+	sb_clear( &event_status );	
+}				
+
+int job_reap( int interactive )
 {
 	job_t *j, *jnext;	
 	int found=0;
 	
+	static int locked = 0;
+	
+	locked++;	
+	if( locked>1 )
+		return;
+		
 	for( j=first_job; j; j=jnext)
     {		
 		process_t *p;
 		jnext = j->next;
-
-
+		
+		if( (!j->skip_notification) && (!interactive) )
+		{
+			continue;
+		}
+	
 		for( p=j->first_process; p; p=p->next )
 		{
+			int s;
 			if( !p->completed )
 				continue;
 			
-			if( p->type )
-				continue;
-
+			if( !p->pid )
+				continue;			
 			
-			if( WIFSIGNALED(p->status) )
+			fire_process_event( L"PROCESS_EXIT", p->pid, WEXITSTATUS( s ) );			
+			s = p->status;
+			
+			if( WIFSIGNALED(s) )
 			{
 				/* 
 				   Ignore signal SIGPIPE.We issue it ourselves to the pipe
 				   writer when the pipe reader dies.
 				*/
-				if( WTERMSIG(p->status) != SIGPIPE )
+				if( WTERMSIG(s) != SIGPIPE )
 				{	
 					int proc_is_job = ((p==j->first_process) && (p->next == 0));
 					if( proc_is_job )
@@ -519,40 +569,47 @@ int job_do_notification()
 					*/
 					p->status = 0;
 				}
-			}
+			}						
 		}
 		
 		/* 
 		   If all processes have completed, tell the user the job has
 		   completed and delete it from the active job list.  
 		*/
-		if( job_is_completed(j) ) {
+		if( job_is_completed( j ) ) 
+		{
 			if( !j->fg && !j->notified )
 			{
 				if( !j->skip_notification )
 				{
-					format_job_info (j, L"ended");
+					format_job_info( j, L"ended" );
 					found=1;
 				}
 			}
 			job_free(j);
+			
+			fire_process_event( L"JOB_EXIT", -j->pgid, 0 );			
 		}		
-		else if(job_is_stopped (j) && !j->notified) {
+		else if( job_is_stopped( j ) && !j->notified ) 
+		{
 			/* 
 			   Notify the user about newly stopped jobs. 
 			*/
 			if( !j->skip_notification )
 			{
-				format_job_info(j, L"stopped");
+				format_job_info( j, L"stopped" );
 				found=1;
 			}			
 			j->notified = 1;
 		}
 	}
+
 	if( found )
 		fflush( stdout );
-	return found;
+
+	locked = 0;
 	
+	return found;	
 }
 
 

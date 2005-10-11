@@ -1680,8 +1680,8 @@ static void eval_job( tokenizer *tok )
 			j->command=0;
 			j->fg=1;
 			j->constructed=0;
-			j->skip_notification = is_subshell;
-
+			j->skip_notification = is_subshell || is_block || is_event || (!is_interactive);
+						
 			proc_had_barrier=0;
 			
 			if( is_interactive )
@@ -1694,7 +1694,7 @@ static void eval_job( tokenizer *tok )
 					break;
 				}
 			}
-
+			
 			j->first_process = calloc( 1, sizeof( process_t ) );
 
 			/* Copy the command name */
@@ -1773,13 +1773,8 @@ static void eval_job( tokenizer *tok )
 					if( (!current_block->if_state) &&
 						(!current_block->skip) )
 					{
-						/*
-						  We need to call job_do_notification,
-						  since this is the function which sets
-						  the status of the last process to exit
-						*/
 //							debug( 2, L"Result of if block is %d\n", proc_get_last_status() );
-
+						
 						current_block->skip = proc_get_last_status()!= 0;
 						current_block->if_state++;
 					}
@@ -1824,6 +1819,8 @@ static void eval_job( tokenizer *tok )
 		}
 	}
 	
+	job_reap( 0 );
+	
 	//	debug( 2, L"end eval_job()\n" );
 }
 
@@ -1835,16 +1832,16 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	block_t *start_current_block = current_block;
 	io_data_t *prev_io = block_io;
 	block_io = io;
-
+	
 	debug( 2, L"Eval command %ls", cmd );
-
+	
+	job_reap( 0 );
+	
 	if( !cmd )
 	{
 		debug( 1,
 			   L"Tried to evaluate null pointer\n" BUGREPORT_MSG,
 			   PACKAGE_BUGREPORT );
-		
-			   
 		return 1;
 	}
 
@@ -1945,6 +1942,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 
 	eval_level--;
 
+	job_reap( 0 );
 	return code;
 }
 

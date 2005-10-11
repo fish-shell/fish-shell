@@ -289,7 +289,6 @@ int main( int argc, char **argv )
 	{
 		eval( L"fish_on_exit", 0, TOP );
 	}
-	job_do_notification();		
 	
 	reader_pop_current_filename();	
 	

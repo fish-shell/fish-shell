@@ -15,11 +15,6 @@
 extern connection_t env_universal_server;
 
 /**
-   Update flag. Set to 1 whenever an update has occured.
-*/
-extern int env_universal_update;
-
-/**
    Initialize the envuni library
 */
 void env_universal_init();

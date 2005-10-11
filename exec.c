@@ -548,8 +548,7 @@ static int internal_exec_helper( const wchar_t *def,
 	buff->out_buffer->used );
 */
 	io_untransmogrify( io, io_internal );
-	if( !is_event )
-		job_do_notification();
+	job_reap( 0 );
 	is_block=is_block_old;
 	return res;
 }

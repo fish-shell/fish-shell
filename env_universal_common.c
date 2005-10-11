@@ -163,9 +163,20 @@ void read_message( connection_t *src )
 		{
 			if( res == L'\n' )
 			{
-				parse_message( (wchar_t *)src->input.buff, src );	
+				/*
+				  Before calling parse_message, we must empty reset
+				  everything, since the callback function could
+				  potentially call read_message.
+				*/
+				
+				wchar_t *msg = wcsdup( (wchar_t *)src->input.buff );
 				sb_clear( &src->input );
-				memset (&src->wstate, '\0', sizeof (mbstate_t));
+			 	memset (&src->wstate, '\0', sizeof (mbstate_t));
+
+
+				parse_message( msg, src );	
+				free( msg );
+				
 			}
 			else
 			{
@@ -203,7 +214,7 @@ static void parse_message( wchar_t *msg,
 						   connection_t *src )
 {
 	debug( 2, L"parse_message( %ls );", msg );
-
+	
 	if( msg[0] == L'#' )
 		return;
 	

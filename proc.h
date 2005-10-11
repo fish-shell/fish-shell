@@ -92,7 +92,7 @@ typedef struct job
 	*/
 	int constructed;
 	/**
-	   Whether the specified job is a part of a subshell or some other form of special job that should not be reported
+	   Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported
 	*/
 	int skip_notification;
 	
@@ -185,8 +185,10 @@ void job_continue( job_t *j, int cont );
 /**
    Notify user of nog events.  Notify the user about stopped or
    terminated jobs.  Delete terminated jobs from the active job list.
+
+   \param interactive whether interactive jobs should be reaped as well
 */
-int job_do_notification();
+int job_reap( int interactive );
 /**
    Signal handler for SIGCHLD.  Mark any processes with relevant
    information.

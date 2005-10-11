@@ -857,7 +857,7 @@ static void init()
 	
 
 			
-	env_universal_init( 0, 0, 0);
+	env_universal_init( 0, 0, 0, 0);
 	input_common_init( &interrupt_handler );
 	
 	sigemptyset( & act.sa_mask );

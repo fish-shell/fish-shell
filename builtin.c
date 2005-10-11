@@ -748,7 +748,11 @@ static int builtin_function( wchar_t **argv )
 			}
 			,
 			{
-				L"on-exit", required_argument, 0, 'x' 
+				L"on-job-exit", required_argument, 0, 'j' 
+			}
+			,
+			{
+				L"on-process-exit", required_argument, 0, 'p' 
 			}
 			,
 			{
@@ -767,7 +771,7 @@ static int builtin_function( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"bd:s:x:v:", 
+								L"bd:s:j:p:v:", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -848,7 +852,8 @@ static int builtin_function( wchar_t **argv )
 				break;
 			}
 			
-			case 'x':
+			case 'j':
+			case 'p':
 			{
 				pid_t pid;
 				wchar_t *end;
@@ -864,15 +869,13 @@ static int builtin_function( wchar_t **argv )
                                woptarg );
                     res=1;
                     break;
-				}
-				
-				
+				}				
 
 				e = malloc( sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_EXIT;
-				e->pid = pid;
+				e->pid = (opt=='j'?-1:1)*abs(pid);
 				e->function_name=0;				
 				al_push( events, e );
 				break;				
@@ -2252,7 +2255,7 @@ static int builtin_jobs( wchar_t **argv )
 			/*
 			  Ignore unconstructed jobs, i.e. ourself.
 			*/
-			if( j->constructed )
+			if( j->constructed /*&& j->skip_notification*/ )
 			{
 				if( !found )
 				{
@@ -2269,12 +2272,12 @@ static int builtin_jobs( wchar_t **argv )
 				found = 1;
 			
 				sb_printf( sb_out, L"%d\t%d\t", j->job_id, j->pgid );
-			
-			
+				
 #ifdef HAVE__PROC_SELF_STAT
 				sb_printf( sb_out, L"%d\t", cpu_use(j) );
 #endif
 				sb_append2( sb_out, job_is_stopped(j)?L"stopped\t":L"running\t", 
+//							job_is_completed(j)?L"completed\t":L"unfinished\t", 
 							j->command, L"\n", (void *)0 );
 			
 			}

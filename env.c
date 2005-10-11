@@ -194,6 +194,43 @@ static void start_fishd()
 	sb_destroy( &cmd );
 }
 
+static void universal_callback( int type,
+								const wchar_t *name, 
+								const wchar_t *val )
+{
+	wchar_t *str=0;
+	
+	switch( type )
+	{
+		case SET:
+		case SET_EXPORT:
+			str=L"SET";
+			break;
+		case ERASE:
+			str=L"ERASE";
+			break;
+	}
+	
+	if( str )
+	{
+		array_list_t arg;
+		event_t ev;
+		
+		has_changed=1;
+		
+		ev.type=EVENT_VARIABLE;
+		ev.variable=name;
+		ev.function_name=0;
+		
+		al_init( &arg );
+		al_push( &arg, L"VARIABLE" );
+		al_push( &arg, str );
+		al_push( &arg, name );
+		event_fire( &ev, &arg );		
+		al_destroy( &arg );
+	}
+}
+
 void env_init()
 {
 	char **p;
@@ -267,7 +304,8 @@ void env_init()
 
 	env_universal_init( env_get( L"FISHD_SOKET_DIR"), 
 						env_get( L"USER" ),
-						&start_fishd );
+						&start_fishd,
+						&universal_callback );
 	
 }
 
@@ -334,6 +372,7 @@ void env_set( const wchar_t *key,
 
 	event_t ev;
 	array_list_t ev_list;
+	int is_universal = 0;	
 	
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
@@ -367,7 +406,8 @@ void env_set( const wchar_t *key,
 			export = (var_mode & ENV_EXPORT );
 		
 		env_universal_set( key, val, export );
-
+		is_universal = 1;
+		
 	}
 	else
 	{
@@ -424,7 +464,8 @@ void env_set( const wchar_t *key,
 						export = (var_mode & ENV_EXPORT );
 				
 					env_universal_set( key, val, export );
-				
+					is_universal = 1;
+					
 					done = 1;
 				
 				}
@@ -476,16 +517,22 @@ void env_set( const wchar_t *key,
 	
 	}
 
-	ev.type=EVENT_VARIABLE;
-	ev.variable = key;
-	ev.function_name = 0;
+	if( !is_universal )
+	{
+		ev.type=EVENT_VARIABLE;
+		ev.variable = key;
+		ev.function_name = 0;
+		
+		al_init( &ev_list );
+		al_push( &ev_list, L"VARIABLE" );
+		al_push( &ev_list, key );
+		
+//	debug( 1, L"env_set: fire events on variable %ls", key );	
+		event_fire( &ev, &ev_list );
+//	debug( 1, L"env_set: return from event firing" );	
+		al_destroy( &ev_list );	
+	}
 	
-	al_init( &ev_list );
-	al_push( &ev_list, L"VARIABLE" );
-	al_push( &ev_list, key );
-
-	event_fire( &ev, &ev_list );
-	al_destroy( &ev_list );	
 }
 
 /**
@@ -843,7 +890,7 @@ char **env_export_arr( int recalc)
 	if( recalc && !proc_had_barrier)
 		env_universal_barrier();
 
-	if( has_changed || env_universal_update )
+	if( has_changed )
 	{
 		array_list_t uni;
 		hash_table_t vals;
@@ -896,7 +943,6 @@ char **env_export_arr( int recalc)
 		}
 		export_arr[pos]=0;
 		has_changed=0;
-		env_universal_update=0;		
 
 	}
 	return export_arr;	

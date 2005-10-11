@@ -280,7 +280,7 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 	for( i=0; i<al_get_count( events ); i++ )
 	{
 		event_t *criterion = (event_t *)al_get( events, i );
-		
+
 		/*
 		  Check if this event is a match
 		*/
@@ -329,8 +329,16 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 			sb_append( b, arg_esc );
 			free( arg_esc );				
 		}
+
+//		debug( 1, L"Event handler fires command '%ls'", (wchar_t *)b->buff );
 		
+		is_subshell=1;
+		is_interactive=1;
+				
 		eval( (wchar_t *)b->buff, 0, TOP );
+		is_subshell=0;
+		is_interactive=1;
+		
 	}
 
 	if( b )
@@ -349,7 +357,7 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 	  Free killed events
 	*/
 	event_free_kills();	
-
+	
 }
 
 /**
@@ -394,9 +402,8 @@ static void event_fire_signal_events()
 
 void event_fire( event_t *event, array_list_t *arguments )
 {
-
-	int is_event_old = is_event;
-	is_event=1;
+	//int is_event_old = is_event;
+	is_event++;
 	
 	if( event && (event->type == EVENT_SIGNAL) )
 	{
@@ -411,20 +418,16 @@ void event_fire( event_t *event, array_list_t *arguments )
 		else
 			sig_list[active_list].overflow=1;
 		
-		return;
-	}	
+	}
 	else
 	{
 		event_fire_signal_events();
-
+		
 		if( event )
 			event_fire_internal( event, arguments );
-
+		
 	}	
-	is_event = is_event_old;
-	
-	if( !is_event )
-		job_do_notification();
+	is_event--;// = is_event_old;	
 }
 
 

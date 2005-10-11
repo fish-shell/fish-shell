@@ -116,6 +116,7 @@ static wint_t readb()
 				{
 					debug( 3, L"Wake up on universal variable event" );					
 					env_universal_read_all();
+					debug( 3, L"Return R_NULL" );					
 					return R_NULL;
 				}				
 			}

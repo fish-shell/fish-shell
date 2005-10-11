@@ -27,6 +27,7 @@ are inserted into the environment variable <a href="index.html#variables-arrays"
 
 <pre>function ll 
 	ls -l $argv
+end
 </pre>
 
 will run the \c ls command, using the \c -l option, while passing on any additional files and switches to \c ls.

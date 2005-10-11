@@ -45,8 +45,7 @@ static int get_socket_count = 0;
 static wchar_t * path;
 static wchar_t *user;
 static void (*start_fishd)();
-
-int env_universal_update=0;
+static void (*external_callback)( int type, const wchar_t *name, const wchar_t *val );
 
 /**
    Flag set to 1 when a barrier reply is recieved
@@ -149,8 +148,7 @@ static int get_socket( int fork_ok )
    Callback function used whenever a new fishd message is recieved
 */
 static void callback( int type, const wchar_t *name, const wchar_t *val )
-{
-	
+{	
 	if( type == BARRIER_REPLY )
 	{
 		debug( 3, L"Got barrier reply" );
@@ -158,7 +156,8 @@ static void callback( int type, const wchar_t *name, const wchar_t *val )
 	}
 	else
 	{
-		env_universal_update=1;		
+		if( external_callback )
+			external_callback( type, name, val );		
 	}	
 }
 
@@ -173,7 +172,7 @@ static void check_connection()
 	
 	if( env_universal_server.killme )
 	{
-		debug( 3, L"Lost connection to universal variable server." );
+		debug( 2, L"Lost connection to universal variable server." );
 		close( env_universal_server.fd );
 		env_universal_server.fd = -1;
 		env_universal_server.killme=0;
@@ -204,12 +203,17 @@ static void reconnect()
 }
 
 
-void env_universal_init( wchar_t * p, wchar_t *u, void (*sf)() )
+void env_universal_init( wchar_t * p, 
+						 wchar_t *u, 
+						 void (*sf)(),
+						 void (*cb)( int type, const wchar_t *name, const wchar_t *val ))
 {
 	debug( 2, L"env_universal_init()" );
 	path=p;
 	user=u;
 	start_fishd=sf;	
+	external_callback = cb;
+	
 	env_universal_server.fd = -1;
 	env_universal_server.killme = 0;
 	env_universal_server.fd = get_socket(1);

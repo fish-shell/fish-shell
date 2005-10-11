@@ -2389,7 +2389,7 @@ static int read_i()
 wchar_t *reader_readline()
 {
 
-	wchar_t c;
+	wint_t c;
 	int i;
 	int last_char=0, yank=0;
 	wchar_t *yank_str;
@@ -2426,15 +2426,15 @@ wchar_t *reader_readline()
 		reader_save_status();
 
 		/*
-		   Sometimes strange input sequences seem to generate a zero
-		   byte. I believe these simply mean a character was pressed
-		   but it should be ignored. (Example: Trying to add a tilde
-		   (~) to digit)
+		  Sometimes strange input sequences seem to generate a zero
+		  byte. I believe these simply mean a character was pressed
+		  but it should be ignored. (Example: Trying to add a tilde
+		  (~) to digit)
 		*/
 		check_winch();
 		while( (c=input_readch()) == 0 )
 			;
-
+		
 		check_winch();
 		reader_check_status();
 

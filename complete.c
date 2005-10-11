@@ -1977,7 +1977,7 @@ void complete( const wchar_t *cmd,
 	
 	int old_error_max = error_max;
 	int done=0;
-
+	
 	error_max=0;
 
 	/**
@@ -1994,7 +1994,6 @@ void complete( const wchar_t *cmd,
 	{
 		done=1;		
 	}
-
 
 	/*
 	  Set on_command to true if cursor is over a command, and set the
@@ -2021,7 +2020,6 @@ void complete( const wchar_t *cmd,
 			done=1;
 	}
 	
-	
 	if( !done )
 	{
 		int had_cmd=0;
@@ -2029,8 +2027,6 @@ void complete( const wchar_t *cmd,
 		
 		tok_init( &tok, buff, TOK_ACCEPT_UNFINISHED );
 		
-		free( buff );
-
 		while( !end_loop )
 		{
 			switch( tok_last_type( &tok ) )
@@ -2053,7 +2049,7 @@ void complete( const wchar_t *cmd,
 				case TOK_BACKGROUND:
 					had_cmd=0;
 					break;
-
+					
 					
 				case TOK_ERROR:
 					end_loop=1;
@@ -2068,7 +2064,7 @@ void complete( const wchar_t *cmd,
 		}
 
 		tok_destroy( &tok );
-		
+		free( buff );
 
 		/*
 		  Get the string to complete

@@ -57,7 +57,7 @@ enum
 	HIGHLIGHT_PAGER_DESCRIPTION,
 	HIGHLIGHT_PAGER_PROGRESS
 }
-;
+	;
 
 /**
    This struct should be continually updated by signals as the term
@@ -654,8 +654,8 @@ static int completion_try_print( int cols,
 							  is_quoted,
 							  l);
 			/*
-			   List does not fit on screen. Print one screenfull and
-			   leave a scrollable interface
+			  List does not fit on screen. Print one screenfull and
+			  leave a scrollable interface
 			*/
 			while(do_loop)
 			{
@@ -944,49 +944,53 @@ int main( int argc, char **argv )
 	array_list_t comp;
 	wchar_t *prefix;
 
-	
-	init();
-
-	
-	prefix = str2wcs( argv[2] );
-	is_quoted = strcmp( "1", argv[1] )==0;
-	
-	debug( 3, L"prefix is '%ls'", prefix );
-	
-	al_init( &comp );
-	
-	for( i=3; i<argc; i++ )
-	{
-		al_push( &comp, str2wcs( argv[i] ) );
-	}
-	
-	mangle_descriptions( &comp );
-
-	for( i = 6; i>0; i-- )
-	{
-		switch( completion_try_print( i, prefix, is_quoted, &comp ) )
-		{
-			case 0:
-				break;
-			case 1:
-				i=0;
-				break;
-			case 2:
-				i=7;
-				break;
-		}
 		
+	init();
+	if( argc < 3 )
+	{
+		debug( 0, L"Insufficient arguments" );
 	}
+	else
+	{
+		prefix = str2wcs( argv[2] );
+		is_quoted = strcmp( "1", argv[1] )==0;
 	
-	al_foreach( &comp, (void(*)(const void *))&free );
-	al_destroy( &comp );	
-	free(prefix );
-
-	fwprintf( out_file, L"%ls", (wchar_t *)out_buff.buff );
-	if( is_ca_mode )
-		writembs(exit_ca_mode);
-
+		debug( 3, L"prefix is '%ls'", prefix );
 	
+		al_init( &comp );
+	
+		for( i=3; i<argc; i++ )
+		{
+			al_push( &comp, str2wcs( argv[i] ) );
+		}
+	
+		mangle_descriptions( &comp );
+
+		for( i = 6; i>0; i-- )
+		{
+			switch( completion_try_print( i, prefix, is_quoted, &comp ) )
+			{
+				case 0:
+					break;
+				case 1:
+					i=0;
+					break;
+				case 2:
+					i=7;
+					break;
+			}
+		
+		}
+	
+		al_foreach( &comp, (void(*)(const void *))&free );
+		al_destroy( &comp );	
+		free(prefix );
+
+		fwprintf( out_file, L"%ls", (wchar_t *)out_buff.buff );
+		if( is_ca_mode )
+			writembs(exit_ca_mode);
+	}
+		
 	destroy();
 }
 

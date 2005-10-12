@@ -6,6 +6,7 @@
 #define FISH_UTIL_H
 
 #include <wchar.h>
+#include <stdarg.h>
 
 /**
    Data structure for an automatically resizing dynamically allocated queue,
@@ -442,6 +443,10 @@ void sb_append2( string_buffer_t *, ... );
 */
 int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... );
 
+/**
+   Vararg version of sb_printf
+*/
+int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig );
 
 /**
   Destroy the buffer and free it's memory

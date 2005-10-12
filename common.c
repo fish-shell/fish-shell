@@ -799,16 +799,75 @@ void die_mem()
 void debug( int level, wchar_t *msg, ... )
 {
 	va_list va;
-
+	string_buffer_t sb;
+	wchar_t *start, *pos;
+	int line_width = 0;
+	int tok_width = 0;
+	int screen_width = 80;
+	
 	if( level > debug_level )
 		return;
 
+	sb_init( &sb );
 	va_start( va, msg );
 	
-	fwprintf( stderr, L"%ls: ", program_name );
-	vfwprintf( stderr, msg, va );
+	sb_printf( &sb, L"%ls: ", program_name );
+	sb_vprintf( &sb, msg, va );
 	va_end( va );	
-	fwprintf( stderr, L"\n" );
+	
+	start = pos = (wchar_t *)sb.buff;
+	while( 1 )
+	{
+		int overflow = 0;
+		
+		tok_width=0;
+		
+		while( *pos && ( !wcschr( L" \n\r\t", *pos ) ) )
+		{
+			if((tok_width + wcwidth(*pos)) >= (screen_width-1))
+			{
+				overflow = 1;
+				break;
+				
+			}
+			
+			tok_width += wcwidth( *pos );
+			pos++;
+		}
+
+		if( pos == start )
+		{
+			start = pos = pos+1;
+		}
+		else if( overflow )
+		{
+			wchar_t *token = wcsndup( start, pos-start );
+			if( line_width != 0 )
+				putwc( L'\n', stderr );
+			fwprintf( stderr, L"%ls-\n", token );
+			free( token );
+			line_width=0;
+		}
+		else
+		{
+			wchar_t *token = wcsndup( start, pos-start );
+			if( (line_width + (line_width!=0?1:0) + tok_width) > screen_width )
+			{
+				putwc( L'\n', stderr );
+				line_width=0;
+			}
+			fwprintf( stderr, L"%ls%ls", line_width?L" ":L"", token );
+			free( token );
+			line_width += (line_width!=0?1:0) + tok_width;
+		}
+		
+		if( !*pos )
+			break;
+		
+		start=pos;
+	}
+	putwc( L'\n', stderr );
+	
 }
 
 wchar_t *escape( const wchar_t *in, 

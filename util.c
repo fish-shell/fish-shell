@@ -872,6 +872,13 @@ void sb_append2( string_buffer_t *b, ... )
 int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... )
 {
 	va_list va;
+	va_start( va, format );
+	sb_vprintf( buffer, format, va );	
+	va_end( va );	
+}
+
+int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig )
+{
 	int res;
 	
 	if( !buffer->length )
@@ -885,13 +892,16 @@ int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... )
 
 	while( 1 )
 	{
+		va_list va;
+		va_copy( va, va_orig );
 		
-		va_start( va, format );
 		res = vswprintf( (wchar_t *)((char *)buffer->buff+buffer->used), 
 						 (buffer->length-buffer->used)/sizeof(wchar_t), 
 						 format,
 						 va );
 		
+
+		va_end( va );		
 		if( res >= 0 )
 		{
 			buffer->used+= res*sizeof(wchar_t);
@@ -919,7 +929,6 @@ int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... )
 			die_mem();
 		buffer->length *= 2;				
 	}
-	va_end( va );	
 	return res;	
 }
 

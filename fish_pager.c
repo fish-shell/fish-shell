@@ -848,15 +848,15 @@ static void init()
 	close(1);
 	if( open( ttyname(0), O_WRONLY ) != 1 )
 	{
-		debug( 0, L"Could not set up file descriptors for pager" );
-		exit( 1 );
-		
+		if( dup2( 2, 1 ) == -1 )
+		{			
+			debug( 0, L"Could not set up file descriptors for pager" );
+			exit( 1 );
+		}
 	}
 	out_file = fdopen( out, "w" );
 	sb_init( &out_buff );
-	
 
-			
 	env_universal_init( 0, 0, 0, 0);
 	input_common_init( &interrupt_handler );
 	
@@ -921,9 +921,6 @@ static void init()
 		debug( 0, L"Could not set up terminal" );
 		exit(1);
 	}
-
-	
-//	writembs( tparm( eat_char, ' ', c ) );
 
 }
 

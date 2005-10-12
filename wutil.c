@@ -296,7 +296,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 					wchar_t *ss=0;
 					if( is_long )
 					{
-						ss = va_arg(va, void *);
+						ss = va_arg(va, wchar_t *);
 					}
 					else
 					{
@@ -597,7 +597,7 @@ static FILE *fw_data;
 
 static void fw_writer( wchar_t c )
 {
-	putw( c, fw_data );
+	putwc( c, fw_data );
 }
 
 /*
@@ -622,8 +622,7 @@ int fwprintf( FILE *f, const wchar_t *filter, ... )
 
 int vwprintf( const wchar_t *filter, va_list va )
 {
-	fw_data=stdout;	
-	return vgwprintf( &fw_writer, filter, va );
+	return vfwprintf( stdout, filter, va );
 }
 
 int wprintf( const wchar_t *filter, ... )

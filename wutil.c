@@ -225,7 +225,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 		{
 			int i;
 			int is_long=0;
-			int width = 0;
+			int width = -1;
 			filter++;
 			int loop=1;
 			int precision=-1;
@@ -256,9 +256,10 @@ static int vgwprintf( void (*writer)(wchar_t),
 						}
 						else
 						{
+							precision=0;
 							while( (*filter >= L'0') && (*filter <= L'9'))
 							{
-								precision=10*precision+(*filter - L'0');
+								precision=10*precision+(*filter++ - L'0');
 							}							
 						}
 						break;
@@ -275,7 +276,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 					wchar_t c;
 					
 					c = is_long?va_arg(va, wchar_t):btowc(va_arg(va, int));
-					if( width )
+					if( width>= 0 )
 					{
 						int i;
 						for( i=1; i<width; i++ )
@@ -312,7 +313,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 						return -1;
 					}
 					
-					if( width )
+					if( width>=0 )
 					{
 						int i;
 						for( i=wcslen(ss); i<width; i++ )
@@ -351,7 +352,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 						case 0:
 						{
 							int d = va_arg( va, int );
-							if( precision > 0 )
+							if( precision >= 0 )
 								snprintf( str, 32, "%.*d", precision, d );
 							else
 								snprintf( str, 32, "%d", d );
@@ -362,7 +363,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 						case 1:
 						{
 							long d = va_arg( va, long );
-							if( precision > 0 )
+							if( precision >= 0 )
 								snprintf( str, 32, "%.*ld", precision, d );
 							else
 								snprintf( str, 32, "%ld", d );
@@ -372,7 +373,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 						case 2:
 						{
 							long long d = va_arg( va, long long );
-							if( precision > 0 )
+							if( precision >= 0 )
 								snprintf( str, 32, "%.*lld", precision, d );
 							else
 								snprintf( str, 32, "%lld", d );
@@ -383,7 +384,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 							return -1;
 					}
 					
-					if( width )
+					if( width >= 0 )
 					{
 						int i;
 												
@@ -408,6 +409,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 				case L'u':
 				{
 					char str[32];
+					char *pos;
 					
 					switch( is_long )
 					{
@@ -436,7 +438,7 @@ static int vgwprintf( void (*writer)(wchar_t),
 							return -1;
 					}
 					
-					if( width )
+					if( width>=0 )
 					{
 						int i;
 						for( i=strlen(str); i<width; i++ )
@@ -446,11 +448,53 @@ static int vgwprintf( void (*writer)(wchar_t),
 						}
 					}
 
-					int c = gwprintf( writer, L"%s", str );
-					if( c==-1 )
-						return -1;
+					pos = str;
+					
+					while( *pos )
+					{
+						writer( *(pos++) );
+						count++;
+					}
+					
+					break;
+				}
+
+				case L'f':
+				{
+					char str[32];
+					char *pos;
+					double val = va_arg( va, double );
+					
+					if( precision>= 0 )
+					{
+						if( width>= 0 )
+						{
+							snprintf( str, 32, "%*.*f", width, precision, val );
+						}
+						else
+						{
+							snprintf( str, 32, "%.*f", precision, val );
+						}
+					}
 					else
-						count += c;
+					{
+						if( width>= 0 )
+						{
+							snprintf( str, 32, "%*f", width, val );
+						}
+						else
+						{
+							snprintf( str, 32, "%f", val );
+						}
+					}
+
+					pos = str;
+					
+					while( *pos )
+					{
+						writer( *(pos++) );
+						count++;
+					}
 					
 					break;
 				}

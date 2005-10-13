@@ -416,21 +416,30 @@ static int vgwprintf( void (*writer)(wchar_t),
 						case 0:
 						{
 							unsigned d = va_arg( va, unsigned );
-							snprintf( str, 32, "%d", d );
+							if( precision >= 0 )
+								snprintf( str, 32, "%.*u", precision, d );
+							else
+								snprintf( str, 32, "%u", d );
 							break;
 						}
 						
 						case 1:
 						{
 							unsigned long d = va_arg( va, unsigned long );
-							snprintf( str, 32, "%ld", d );
+							if( precision >= 0 )
+								snprintf( str, 32, "%.*lu", precision, d );
+							else
+								snprintf( str, 32, "%lu", d );
 							break;
 						}
 						
 						case 2:
 						{
 							unsigned long long d = va_arg( va, unsigned long long );
-							snprintf( str, 32, "%lld", d );
+							if( precision >= 0 )
+								snprintf( str, 32, "%.*llu", precision, d );
+							else
+								snprintf( str, 32, "%llu", d );
 							break;
 						}
 						

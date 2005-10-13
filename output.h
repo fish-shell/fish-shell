@@ -93,4 +93,8 @@ int writespace( int c );
 
 int output_color_code( const wchar_t *val );
 
+void output_init();
+
+void output_destroy();
+
 #endif

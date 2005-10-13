@@ -82,6 +82,19 @@ static int col_idx[]=
 }
 	;
 
+static size_t writestr_buff_sz=0;	
+static char *writestr_buff = 0;
+
+void output_init()
+{
+}
+
+void output_destroy()
+{
+	free( writestr_buff );
+}
+
+
 void set_color( int c, int c2 )
 {
 	static int last_color = FISH_COLOR_NORMAL, last_color2=FISH_COLOR_NORMAL;
@@ -245,8 +258,25 @@ int writech( wint_t ch )
 */
 void writestr( const wchar_t *str )
 {
-	while( *str != 0 )
-		writech( *(str++) );
+	while( *str )
+		writech( *str++ );
+/*	
+	size_t len = MAX_UTF8_BYTES*wcslen(str)+1;
+	
+	if( writestr_buff_sz < len )
+	{
+		writestr_buff = realloc( writestr_buff, writestr_buff_sz );
+		if( !writestr_buff )
+			die_mem();
+		writestr_buff_sz = len;
+	}
+	
+	wcstombs( writestr_buff, 
+			  str,
+			  writestr_buff_sz );
+
+	write( 1, writestr_buff, strlen( writestr_buff ) );	
+*/
 }
 
 

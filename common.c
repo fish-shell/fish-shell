@@ -788,10 +788,6 @@ int writeb( tputs_arg_t b )
 
 void die_mem()
 {
-	/*
-	  int *foo=0;	
-	  *foo = 6;
-	  */	
 	debug( 0, L"Out of memory, shutting down fish." );
 	exit(1);
 }

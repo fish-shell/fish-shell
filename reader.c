@@ -7,7 +7,6 @@ syntax highlighting, tab-completion and various other interactive features.
 Internally the interactive mode functions rely in the functions of the
 input library to read individual characters of input.
 
-
 Token search is handled incrementally. Actual searches are only done
 on when searching backwards, since the previous results are saved. The
 last search position is remembered and a new search continues from the
@@ -32,6 +31,7 @@ commence.
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <sys/poll.h>
 #include <unistd.h>
 #include <wctype.h>
 
@@ -89,6 +89,14 @@ commence.
    The default title for the reader. This is used by reader_readline.
 */
 #define DEFAULT_TITLE L"echo $_ \" \"; pwd"
+
+/**
+   The maximum number of characters to read from the keyboard without
+   repainting. Note that this readahead wil only occur if new
+   characters are avaialble for reading, fish will never block for
+   more input without repainting.
+*/
+#define READAHEAD_MAX 256
 
 /**
    A struct describing the state of the interactive reader. These
@@ -1013,9 +1021,43 @@ static int insert_char( int c )
 */
 static int insert_str(wchar_t *str)
 {
-	while( (*str)!=0 )
-		if(!insert_char( *str++ ))
-			return 0;
+	int len = wcslen( str );
+	if( len < 4 )
+	{
+		while( (*str)!=0 )
+			if(!insert_char( *str++ ))
+				return 0;
+	}
+	else
+	{
+		
+		data->buff_len += len;
+		check_size();
+		
+		/* Insert space for extra character at the right position */
+		if( data->buff_pos < data->buff_len )
+		{
+			memmove( &data->buff[data->buff_pos+len],
+					 &data->buff[data->buff_pos],
+					 sizeof(wchar_t)*(data->buff_len-data->buff_pos) );
+		}
+		memmove( &data->buff[data->buff_pos], str, sizeof(wchar_t)*len );
+		data->buff_pos += len;
+		data->buff[data->buff_len]='\0';
+
+		/* Syntax highlight */
+		
+		reader_super_highlight_me_plenty( data->buff,
+										  data->new_color,
+										  data->buff_pos-1,
+										  0 );
+		memcpy( data->color, data->new_color, sizeof(int) * data->buff_len );
+		
+		/* repaint */
+
+		repaint();
+		
+	}
 	return 1;
 }
 
@@ -2383,6 +2425,20 @@ static int read_i()
 	return 0;
 }
 
+static int can_read( int fd )
+{
+	struct pollfd pfd = 
+	{
+		fd, POLLIN, 0 
+	}
+	;
+	switch( poll( &pfd, 1, 0 ) )
+	{
+		case 1:
+			return 1;
+	}
+	return 0;	
+}
 
 
 
@@ -2432,9 +2488,48 @@ wchar_t *reader_readline()
 		  (~) to digit)
 		*/
 		check_winch();
-		while( (c=input_readch()) == 0 )
-			;
-		
+		while( 1 )
+		{
+			c=input_readch();
+			if( (c< WCHAR_END) && (c>31) && (c != 127) )
+			{
+				if( can_read(0) )
+				{
+
+					wchar_t arr[READAHEAD_MAX+1];
+					int i;
+					
+					memset( arr, 0, sizeof( arr ) );
+					arr[0] = c;
+					
+					for( i=1; i<READAHEAD_MAX; i++ )
+					{
+						
+						if( !can_read( 0 ) )
+						{
+							c = 0;
+							break;
+						}
+						c = input_readch();
+						if( (c< WCHAR_END) && (c>31) && (c != 127) )
+						{
+							arr[i]=c;
+							c=0;
+						}
+						else
+							break;
+					}
+					
+					insert_str( arr );
+					
+				}
+			}
+			
+			if( c != 0 )
+				break;
+		}
+
+
 		check_winch();
 		reader_check_status();
 
@@ -2447,6 +2542,9 @@ wchar_t *reader_readline()
 
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank=0;
+
+		
+
 		switch (c)
 		{
 
@@ -2789,9 +2887,9 @@ wchar_t *reader_readline()
 			default:
 			{
 				if( (c< WCHAR_END) && (c>31) && (c != 127) )
-				{
 					insert_char( c );
-				}
+				else
+					debug( 0, L"Unknown keybinding %d", c );
 				break;
 			}
 

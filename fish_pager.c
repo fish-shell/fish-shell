@@ -38,8 +38,6 @@
 #include "input_common.h"
 #include "env_universal.h"
 
-#define WCHAR_END 0x80000000
-
 enum 
 {
 	LINE_UP = R_NULL+1,
@@ -857,6 +855,7 @@ static void init()
 	out_file = fdopen( out, "w" );
 	sb_init( &out_buff );
 
+	output_init();
 	env_universal_init( 0, 0, 0, 0);
 	input_common_init( &interrupt_handler );
 	
@@ -928,6 +927,7 @@ void destroy()
 {
 	env_universal_destroy();
 	input_common_destroy();
+	output_destroy();
 	del_curterm( cur_term );
 	sb_destroy( &out_buff );
 	fclose( out_file );

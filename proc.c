@@ -485,9 +485,9 @@ static void fire_process_event( const wchar_t *msg, pid_t pid, int status )
 	
 	al_push( &event_arg, msg );			
 
-	sb_printf( &event_pid, L"%d", pid );			
+	sb_printf( &event_pid, L"%d", pid );
 	al_push( &event_arg, event_pid.buff );
-
+	
 	sb_printf( &event_status, L"%d", status );			
 	al_push( &event_arg, event_status.buff );
 
@@ -527,8 +527,9 @@ int job_reap( int interactive )
 			if( !p->pid )
 				continue;			
 			
-			fire_process_event( L"PROCESS_EXIT", p->pid, WEXITSTATUS( s ) );			
 			s = p->status;
+			
+			fire_process_event( L"PROCESS_EXIT", p->pid, ( WIFSIGNALED(s)?-1:WEXITSTATUS( s )) );			
 			
 			if( WIFSIGNALED(s) )
 			{
@@ -586,9 +587,9 @@ int job_reap( int interactive )
 					found=1;
 				}
 			}
-			job_free(j);
-			
 			fire_process_event( L"JOB_EXIT", -j->pgid, 0 );			
+
+			job_free(j);
 		}		
 		else if( job_is_stopped( j ) && !j->notified ) 
 		{

@@ -105,5 +105,13 @@ void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 
 int builtin_set(wchar_t **argv);
 int builtin_commandline(wchar_t **argv);
+int builtin_ulimit(wchar_t **argv);
+
+/** 
+	This function works like wperror, but it prints its result into
+	the sb_err string_buffer_t instead of to stderr. Used by the builtin
+	commands.
+*/
+void builtin_wperror( const wchar_t *s);
 
 #endif

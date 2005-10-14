@@ -195,6 +195,19 @@ void wperror(const wchar_t *s)
 
 #if !HAVE_WPRINTF
 
+void pad( void (*writer)(wchar_t), int count)
+{
+	
+	int i;
+	if( count < 0 )
+		return;
+	
+	for( i=0; i<count; i++ )
+	{
+		writer( L' ' );
+	}
+}
+
 /**
    Generic formatting function. All other string formatting functions
    are secretly a wrapper around this function. vgprintf does not
@@ -205,13 +218,14 @@ void wperror(const wchar_t *s)
    Currently supported functionality:
 
    - precision specification, both through .* and .N
-   - width specification through *
+   - width specification through * and N
    - long versions of all filters thorugh l and ll prefix
    - Character outout using %c
    - String output through %s
    - Floating point number output through %f
    - Integer output through %d or %i
    - Unsigned integer output through %u
+   - Left padding using the - prefix
 
    For a full description on the usage of *printf, see use 'man 3 printf'.
 */
@@ -232,9 +246,20 @@ static int vgwprintf( void (*writer)(wchar_t),
 			filter++;
 			int loop=1;
 			int precision=-1;
+			int pad_left = 1;
+			
+			if( iswdigit( *filter ) )
+			{
+				width=0;
+				while( (*filter >= L'0') && (*filter <= L'9'))
+				{
+					width=10*width+(*filter++ - L'0');
+				}				
+			}
 
 			while( loop )
 			{
+				
 				switch(*filter)
 				{
 					case L'l':
@@ -242,15 +267,21 @@ static int vgwprintf( void (*writer)(wchar_t),
 						is_long++;
 						filter++;
 						break;
+
 					case L'*':
 						/* Set minimum field width */
 						width = va_arg( va, int );
 						filter++;
 						break;
+
+					case L'-':
+						filter++;
+						pad_left=0;
+						break;
+						
 					case L'.':
 						/* 
 						   Set precision.
-						   Hasn't been tested enough yet, so I don't really trust it.
 						*/
 						filter++;
 						if( *filter == L'*' )
@@ -272,30 +303,37 @@ static int vgwprintf( void (*writer)(wchar_t),
 						break;
 				}
 			}
+
 			switch( *filter )
 			{
 				case L'c':
 				{
 					wchar_t c;
-					
-					c = is_long?va_arg(va, wchar_t):btowc(va_arg(va, int));
-					if( width>= 0 )
+
+					if( (width >= 0) && pad_left )
 					{
-						int i;
-						for( i=1; i<width; i++ )
-						{
-							writer( L' ' );
-							count++;
-						}
+						pad( writer, width-1 );					
+						count += maxi( width-1, 0 );						
 					}
+
+					c = is_long?va_arg(va, wchar_t):btowc(va_arg(va, int));
 					if( precision != 0 )
 						writer( c );
+
+
+					if( (width >= 0) && !pad_left )
+					{
+						pad( writer, width-1 );
+						count += maxi( width-1, 0 );		
+					}
+					
 					count++;
 					
 					break;
 				}
 				case L's':
 				{		
+					
 					wchar_t *ss=0;
 					if( is_long )
 					{
@@ -316,14 +354,10 @@ static int vgwprintf( void (*writer)(wchar_t),
 						return -1;
 					}
 					
-					if( width>=0 )
+					if( (width >= 0) && pad_left )
 					{
-						int i;
-						for( i=wcslen(ss); i<width; i++ )
-						{
-							writer( L' ' );
-							count++;
-						}
+						pad( writer, width-wcslen(ss) );					
+						count += maxi(width-wcslen(ss), 0);						
 					}
 					
 					wchar_t *s=ss;
@@ -333,9 +367,15 @@ static int vgwprintf( void (*writer)(wchar_t),
 					{
 						if( (precision > 0) && (precision <= (count-precount) ) )
 							break;
-
+						
 						writer( *(s++) );
 						count++;
+					}
+					
+					if( (width >= 0) && !pad_left )
+					{
+						pad( writer, width-wcslen(ss) );					
+						count += maxi( width-wcslen(ss), 0 );						
 					}
 					
 					if( !is_long )
@@ -387,17 +427,12 @@ static int vgwprintf( void (*writer)(wchar_t),
 							return -1;
 					}
 					
-					if( width >= 0 )
+					if( (width >= 0) && pad_left )
 					{
-						int i;
-												
-						for( i=strlen(str); i<width; i++ )
-						{
-							writer( L' ' );
-							count++;
-						}
+						pad( writer, width-strlen(str) );					
+						count +=maxi(width-strlen(str), 0 );						
 					}
-
+					
 					pos = str;
 					
 					while( *pos )
@@ -406,6 +441,12 @@ static int vgwprintf( void (*writer)(wchar_t),
 						count++;
 					}
 
+					if( (width >= 0) && !pad_left )
+					{
+						pad( writer, width-strlen(str) );					
+						count += maxi(width-strlen(str), 0 );						
+					}
+					
 					break;
 				}
 				
@@ -449,23 +490,25 @@ static int vgwprintf( void (*writer)(wchar_t),
 						default:
 							return -1;
 					}
-					
-					if( width>=0 )
-					{
-						int i;
-						for( i=strlen(str); i<width; i++ )
-						{
-							writer( L' ' );
-							count++;
-						}
-					}
 
+					if( (width >= 0) && pad_left )
+					{
+						pad( writer, width-strlen(str) );					
+						count += maxi( width-strlen(str), 0 );						
+					}
+					
 					pos = str;
 					
 					while( *pos )
 					{
 						writer( *(pos++) );
 						count++;
+					}
+					
+					if( (width >= 0) && !pad_left )
+					{
+						pad( writer, width-strlen(str) );					
+						count += maxi( width-strlen(str), 0 );						
 					}
 					
 					break;

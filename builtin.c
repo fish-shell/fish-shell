@@ -108,12 +108,8 @@ int builtin_count_args( wchar_t **argv )
 	return argc;
 }
 
-/** 
-	This function works like wperror, but it prints its result into
-	the sb_err string_buffer_t instead of to stderr. Used by the builtin
-	commands.
-*/
-static void builtin_wperror( const wchar_t *s)
+
+void builtin_wperror( const wchar_t *s)
 {
 	if( s != 0 )
 	{
@@ -2797,6 +2793,7 @@ void builtin_init()
 	hash_put( &builtin, L"bind", (void*) &builtin_bind );
 	hash_put( &builtin, L"random", (void*) &builtin_random );	
 	hash_put( &builtin, L"status", (void*) &builtin_status );	
+	hash_put( &builtin, L"ulimit", (void*) &builtin_ulimit );	
 	
 	/* 
 	   Builtins that are handled directly by the parser. They are
@@ -2853,6 +2850,7 @@ void builtin_init()
 	intern_static( L"or" );	
 	intern_static( L"begin" );	
 	intern_static( L"status" );	
+	intern_static( L"ulimit" );	
 	
 	builtin_help_init();
 }
@@ -2980,6 +2978,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		hash_put( desc, L"and", L"Execute second command if first suceeds");
 		hash_put( desc, L"begin", L"Create a block of code" );
 		hash_put( desc, L"status", L"Return status information about fish" );
+		hash_put( desc, L"ulimit", L"Set or get the shells resurce usage limits" );
 	}
 
 	return hash_get( desc, b );	

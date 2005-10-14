@@ -313,7 +313,7 @@ static void default_handler(int signal, siginfo_t *info, void *context)
 */
 static void handle_winch( int sig, siginfo_t *info, void *context )
 {
-	reader_handle_winch( sig );	
+	common_handle_winch( sig );	
 	default_handler( sig, 0, 0 );	
 }
 
@@ -395,7 +395,7 @@ void signal_set_handlers()
 		sigaction( SIGTTIN, &act, 0);
 		sigaction( SIGTTOU, &act, 0);
 
-		act.sa_handler = &handle_int;
+		act.sa_sigaction = &handle_int;
 		act.sa_flags = SA_SIGINFO;
 		if( sigaction( SIGINT, &act, 0) )
 		{
@@ -412,7 +412,7 @@ void signal_set_handlers()
 		}
 
 		act.sa_flags = SA_SIGINFO;
-		act.sa_handler= &handle_winch;
+		act.sa_sigaction= &handle_winch;
 		if( sigaction( SIGWINCH, &act, 0 ) )
 		{
 			wperror( L"sigaction" );
@@ -459,8 +459,46 @@ void signal_handle( int sig, int do_handle )
 		return;
 	
 	sigemptyset( & act.sa_mask );
-	act.sa_flags=SA_SIGINFO;
-	act.sa_sigaction = (do_handle?&default_handler:SIG_DFL);
+	if( do_handle )
+	{
+		act.sa_flags=SA_SIGINFO;
+		act.sa_sigaction = &default_handler;
+	}
+	else
+	{
+		act.sa_flags=0;
+		act.sa_handler = SIG_DFL;
+	}
+	
 	sigaction( sig, &act, 0);
 }
+
+void signal_block()
+{
+	int i;
+	sigset_t chldset; 
+	sigemptyset( &chldset );
+	
+	for( i=0; lookup[i].desc ; i++ )
+	{
+		sigaddset( &chldset, lookup[i].signal );
+	}
+	
+	sigprocmask(SIG_BLOCK, &chldset, 0);	
+}
+
+void signal_unblock()
+{
+	int i;
+	sigset_t chldset; 
+	sigemptyset( &chldset );
+	
+	for( i=0; lookup[i].desc ; i++ )
+	{
+		sigaddset( &chldset, lookup[i].signal );
+	}
+	
+	sigprocmask(SIG_UNBLOCK, &chldset, 0);	
+}
+
 

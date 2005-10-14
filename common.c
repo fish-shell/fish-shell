@@ -87,6 +87,11 @@ wchar_t *program_name;
 
 int debug_level=1;
 
+/**
+   This struct should be continually updated by signals as the term resizes, and as such always contain the correct current size.
+*/
+static struct winsize termsize;
+
 
 static int block_count=0;
 
@@ -799,7 +804,7 @@ void debug( int level, wchar_t *msg, ... )
 	wchar_t *start, *pos;
 	int line_width = 0;
 	int tok_width = 0;
-	int screen_width = 80;
+	int screen_width = common_get_width();
 	
 	if( level > debug_level )
 		return;
@@ -817,35 +822,51 @@ void debug( int level, wchar_t *msg, ... )
 		int overflow = 0;
 		
 		tok_width=0;
-		
+
+		/*
+		  Tokenize on whitespace, and also calculate the width of the token
+		*/
 		while( *pos && ( !wcschr( L" \n\r\t", *pos ) ) )
 		{
-			if((tok_width + wcwidth(*pos)) >= (screen_width-1))
+
+			/*
+			  Check is token is wider than one line.
+			  If so we mark it as an overflow and break the token.
+			*/
+			if((tok_width + wcwidth(*pos)) > (screen_width-1))
 			{
 				overflow = 1;
-				break;
-				
+				break;				
 			}
 			
 			tok_width += wcwidth( *pos );
 			pos++;
 		}
 
+		/*
+		  If token is zero character long, we don't do anything
+		*/
 		if( pos == start )
 		{
 			start = pos = pos+1;
 		}
 		else if( overflow )
 		{
+			/*
+			  In case of overflow, we print a newline, except if we alreade are at position 0
+			*/
 			wchar_t *token = wcsndup( start, pos-start );
 			if( line_width != 0 )
-				putwc( L'\n', stderr );
+				putwc( L'\n', stderr );			
 			fwprintf( stderr, L"%ls-\n", token );
 			free( token );
 			line_width=0;
 		}
 		else
 		{
+			/*
+			  Print the token
+			*/
 			wchar_t *token = wcsndup( start, pos-start );
 			if( (line_width + (line_width!=0?1:0) + tok_width) > screen_width )
 			{
@@ -856,7 +877,9 @@ void debug( int level, wchar_t *msg, ... )
 			free( token );
 			line_width += (line_width!=0?1:0) + tok_width;
 		}
-		
+		/*
+		  Break on end of string
+		*/
 		if( !*pos )
 			break;
 		
@@ -1383,3 +1406,23 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 	free( linkfile );
 	return ret;
 }
+
+void common_handle_winch( int signal )
+{
+	if (ioctl(1,TIOCGWINSZ,&termsize)!=0)
+	{
+		return;
+	}
+}
+
+int common_get_width()
+{
+	return termsize.ws_col;
+}
+
+
+int common_get_height()
+{
+	return termsize.ws_row;
+}
+

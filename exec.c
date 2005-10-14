@@ -259,17 +259,7 @@ static void handle_child_io( io_data_t *io )
 		  We don't mind if this fails, it is just a speculative close
 		  to make sure no unexpected untracked fd causes us to fail
 		*/
-		while( close(io->fd) == -1 )
-		{
-			if( errno != EINTR )
-				break;
-			
-/*			debug( 1, 
-				   FD_ERROR,
-				   io->fd );
-			wperror( L"close" );
-			exit(1);*/
-		}
+		close(io->fd);
 		
 		switch( io->io_mode )
 		{
@@ -400,13 +390,12 @@ static void setup_child_process( job_t *j )
 	
 	/* Set the handling for job control signals back to the default.  */
 	signal_reset_handlers();
-	
-	sigset_t chldset; 
-	sigemptyset( &chldset );
-	sigaddset( &chldset, SIGCHLD );
-	sigprocmask(SIG_UNBLOCK, &chldset, 0);
-	
+
 	handle_child_io( j->io );
+
+	/* Remove all signal blocks */
+	signal_unblock();	
+	
 }
 								 
 								 
@@ -539,8 +528,13 @@ static int internal_exec_helper( const wchar_t *def,
 	io_data_t *io_internal = io_transmogrify( io );
 	int is_block_old=is_block;
 	is_block=1;
+
+	signal_unblock();
 	
 	eval( def, io_internal, block_type );		
+
+	signal_block();
+
 /*
 	io_data_t *buff = io_get( io, 1 );
 	if( buff && buff->io_mode == IO_BUFFER )
@@ -583,56 +577,37 @@ static int handle_new_child( job_t *j, process_t *p )
 					   j->pgid );
 				wperror( L"setpgid" );
 			}
-
 		}
 
 		if( j->fg )
 		{
-			while( 1)
+			if( tcsetpgrp (0, j->pgid) )
 			{
-				if( tcsetpgrp (0, j->pgid) )
-				{
-					if( errno != EINTR )
-					{
-						debug( 1, L"Could not send job %d ('%ls')to foreground", 
-							   j->job_id, 
-							   j->command );
-						wperror( L"tcsetpgrp" );
-						return -1;
-					}
-				}
-				else
-					break;
+				debug( 1, L"Could not send job %d ('%ls')to foreground", 
+					   j->job_id, 
+					   j->command );
+				wperror( L"tcsetpgrp" );
+				return -1;
 			}
 		}
 
 		if( j->fg && new_pgid)
 		{
-			while( 1 )
+			if( tcsetpgrp (0, j->pgid) )
 			{
-				if( tcsetpgrp (0, j->pgid) )
-				{
-					if( errno != EINTR )
-					{
-						debug( 1, L"Could not send job %d ('%ls')to foreground", 
-							   j->job_id, 
-							   j->command );
-						wperror( L"tcsetpgrp" );
-						return -1;
-					}
-				}
-				else
-					break;
+				debug( 1, L"Could not send job %d ('%ls')to foreground", 
+					   j->job_id, 
+					   j->command );
+				wperror( L"tcsetpgrp" );
+				return -1;
 			}
-		}
-		
+		}		
 	}
 	else
 	{
 		j->pgid = getpid();
 	}
 	return 0;
-	
 }
 
 
@@ -658,6 +633,11 @@ void exec( job_t *j )
 	{
 		/*
 		  Do a regular launch -  but without forking first...
+		*/
+		signal_block();
+
+		/*
+		  setup_child_process make sure signals are propelry set up
 		*/
 		setup_child_process( j );
 		launch_process( j->first_process );
@@ -689,6 +669,8 @@ void exec( job_t *j )
 	
 	j->io = io_add( j->io, &pipe_write );
 	
+	signal_block();
+
 	for (p = j->first_process; p; p = p->next)
 	{
 		mypipe[1]=-1;
@@ -890,8 +872,13 @@ void exec( job_t *j )
 				builtin_err_redirect = has_fd( j->io, 2 );		
 				fg = j->fg;
 				j->fg = 0;
+				
+				signal_unblock();
+				
 				p->status = builtin_run( p->argv );
-
+				
+				signal_block();
+				
 				/*
 				  Restore the fg flag, which is temporarily set to
 				  false during builtin execution so as not to confuse
@@ -939,8 +926,7 @@ void exec( job_t *j )
 				if( io_buffer->param2.out_buffer->used != 0 )
 				{
 					
-					/*Temporary signal block for SIGCHLD */
-					sigprocmask(SIG_BLOCK, &chldset, 0);
+					
 					pid = fork ();
 					if (pid == 0)
 					{
@@ -965,12 +951,13 @@ void exec( job_t *j )
 					{
 						/* 
 						   This is the parent process. Store away
-						   information on the child, and possibly fice
+						   information on the child, and possibly give
 						   it control over the terminal.
 						*/
 						p->pid = pid;						
 						if( handle_new_child( j, p ) )
-							return;										
+							exit(1);
+						
 					}					
 					
 				}
@@ -1029,8 +1016,7 @@ void exec( job_t *j )
 					
 				}
 
-				/*Temporary signal block for SIGCHLD */
-				sigprocmask(SIG_BLOCK, &chldset, 0);
+				
 				pid = fork ();
 				if (pid == 0)
 				{
@@ -1064,7 +1050,8 @@ void exec( job_t *j )
 					p->pid = pid;
 						
 					if( handle_new_child( j, p ) )
-						return;										
+						exit( 1 );
+					
 				}					
 				
 				break;
@@ -1072,8 +1059,6 @@ void exec( job_t *j )
 			
 			case EXTERNAL:
 			{
-				/*Temporary signal block for SIGCHLD */
-				sigprocmask(SIG_BLOCK, &chldset, 0);
 		
 //			fwprintf( stderr, 
 //					  L"fork on %ls\n", j->command );
@@ -1108,7 +1093,8 @@ void exec( job_t *j )
 					p->pid = pid;
 
 					if( handle_new_child( j, p ) )
-						return;
+						exit( 1 );
+					
 										
 				}
 				break;
@@ -1120,7 +1106,7 @@ void exec( job_t *j )
 		if(p->type == INTERNAL_BUILTIN)
 			builtin_pop_io();			
 		
-		sigprocmask(SIG_UNBLOCK, &chldset, 0);
+		
 		
 		/* 
 		   Close the pipe the current process uses to read from the previous process_t 
@@ -1142,6 +1128,8 @@ void exec( job_t *j )
 			exec_close(mypipe[1]);
 		}		
 	}
+
+	signal_unblock();
 
 	debug( 3, L"Job is constructed" );
 
@@ -1179,7 +1167,7 @@ int exec_subshell( const wchar_t *cmd,
 			   PACKAGE_BUGREPORT );		
 		return 0;		
 	}
-
+	
 	is_subshell=1;	
 	io_buffer= io_buffer_create();
 	

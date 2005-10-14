@@ -54,19 +54,6 @@ void reader_push_current_filename( wchar_t *fn );
  */
 wchar_t *reader_pop_current_filename();
 
-/** 
-	Returns the width of the terminal window, so that not all
-	functions that use these values continually have to keep track of
-	it.
-*/
-int reader_get_width();
-/**
-   Returns the height of the terminal window, so that not all
-   functions that use these values continually have to keep track of
-   it.
-*/
-int reader_get_height();
-
 /**
    Write the title to the titlebar. This function is called just
    before a new application starts executing and just after it
@@ -191,7 +178,9 @@ void reader_current_token_extent( wchar_t **a, wchar_t **b, wchar_t **pa, wchar_
 */
 void reader_replace_current_token( wchar_t *new_token );
 
-void reader_handle_winch( int signal );
+/**
+   The readers interupt signal handler. Cancels all currently running blocks.
+*/
 void reader_handle_int( int signal );
 
 

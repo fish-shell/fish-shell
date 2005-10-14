@@ -75,6 +75,27 @@ int is_event=0;
 int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
 
+/**
+  List used to store arguments when firing events
+*/
+static array_list_t event_arg;
+/**
+  Stringbuffer used to create arguments when firing events
+*/
+static string_buffer_t event_pid;
+/**
+  Stringbuffer used to create arguments when firing events
+*/
+static string_buffer_t event_status;
+
+
+void proc_init()
+{
+	al_init( &event_arg );
+	sb_init( &event_pid );
+	sb_init( &event_status );
+}
+
 
 /**
    Recursively free a process and those following it
@@ -164,6 +185,9 @@ void job_free( job_t * j )
 
 void proc_destroy()
 {
+	al_destroy( &event_arg );
+	sb_destroy( &event_pid );
+	sb_destroy( &event_status );
 	while( first_job )
 	{
 		debug( 2, L"freeing leaked job %ls", first_job->command );
@@ -174,9 +198,6 @@ void proc_destroy()
 void proc_set_last_status( int s )
 {
 	last_status = s;
-	wchar_t stat[16];
-	swprintf( stat, 16, L"%d", s );
-	env_set( L"status", stat, ENV_GLOBAL );
 	//	fwprintf( stderr, L"Set last status to %d\n", s );
 }
 
@@ -464,19 +485,8 @@ static void format_job_info( const job_t *j, const wchar_t *status )
 static void fire_process_event( const wchar_t *msg, pid_t pid, int status )
 {
 	static event_t ev;
-	static array_list_t event_arg;
-	static string_buffer_t event_pid, event_status;
-	static int init=0;
-
 	event_t e;
 
-	if( !init )
-	{
-		al_init( &event_arg );
-		sb_init( &event_pid );
-		sb_init( &event_status );
-		init=1;
-	}
 	
 	e.function_name=0;
 	
@@ -832,49 +842,34 @@ void job_continue (job_t *j, int cont)
 	{
 		if( !is_subshell && is_interactive && !is_block)
 		{
-				
+							
 			/* Put the job into the foreground.  */
 			if(  j->fg )
 			{
-				while( 1 )
+				signal_block();
+				if( tcsetpgrp (0, j->pgid) )
 				{
-					if( tcsetpgrp (0, j->pgid) )
-					{
-						if( errno != EINTR )
-						{
-							debug( 1, 
-								   L"Could not send job %d ('%ls') to foreground", 
-								   j->job_id, 
-								   j->command );
-							wperror( L"tcsetpgrp" );
-							return;
-						}
-					}
-					else
-						break;
+					debug( 1, 
+						   L"Could not send job %d ('%ls') to foreground", 
+						   j->job_id, 
+						   j->command );
+					wperror( L"tcsetpgrp" );
+					return;
 				}
 				
 				if( cont )
 				{  
-					while( 1 )
+					if( tcsetattr (0, TCSADRAIN, &j->tmodes))
 					{
-						if( tcsetattr (0, TCSADRAIN, &j->tmodes))
-						{
-							if( errno != EINTR )
-							{
-								debug( 1,
-									   L"Could not send job %d ('%ls') to foreground",
-									   j->job_id,
-									   j->command );
-								wperror( L"tcsetattr" );
-								return;
-							}
-						}
-						else
-							break;
-					}
-					
+						debug( 1,
+							   L"Could not send job %d ('%ls') to foreground",
+							   j->job_id,
+							   j->command );
+						wperror( L"tcsetattr" );
+						return;
+					}										
 				}
+				signal_unblock();
 			}
 		}
 
@@ -976,57 +971,34 @@ void job_continue (job_t *j, int cont)
 		*/
 		if( !is_subshell && is_interactive && !is_block)
 		{
-			
-			while( 1 )
+			signal_block();
+			if( tcsetpgrp (0, getpid()) )
 			{
-				
-				if( tcsetpgrp (0, getpid()) )
-				{
-					if( errno != EINTR )
-					{
-						debug( 1, L"Could not return shell to foreground" );
-						wperror( L"tcsetpgrp" );
-						return;
-					}
-				}
-				else break;
+				debug( 1, L"Could not return shell to foreground" );
+				wperror( L"tcsetpgrp" );
+				return;
 			}
 			
 			/* 
 			   Save jobs terminal modes.  
 			*/
-			while( 1 )
+			if( tcgetattr (0, &j->tmodes) )
 			{
-				if( tcgetattr (0, &j->tmodes) )
-				{
-					if( errno != EINTR )
-					{
-						debug( 1, L"Could not return shell to foreground" );
-						wperror( L"tcgetattr" );
-						return;
-					}
-				}
-				else
-					break;
+				debug( 1, L"Could not return shell to foreground" );
+				wperror( L"tcgetattr" );
+				return;
 			}
 			
 			/* 
 			   Restore the shell's terminal modes.  
 			*/
-			while( 1 )
+			if( tcsetattr (0, TCSADRAIN, &shell_modes))
 			{
-				if( tcsetattr (0, TCSADRAIN, &shell_modes))
-				{
-					if( errno != EINTR )
-					{
-						debug( 1, L"Could not return shell to foreground" );
-						wperror( L"tcsetattr" );
-						return;
-					}
-				}
-				else
-					break;
+				debug( 1, L"Could not return shell to foreground" );
+				wperror( L"tcsetattr" );
+				return;
 			}
+			signal_unblock();
 		}
 	}
 }

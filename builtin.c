@@ -946,7 +946,7 @@ static int builtin_function( wchar_t **argv )
 		{
 			wchar_t *nxt = names_arr[i];
 			int l = wcslen( nxt + 2 );
-			if( chars+l > reader_get_width() )
+			if( chars+l > common_get_width() )
 			{
 				chars = 0;
 				sb_append(sb_err, L"\n" );

@@ -231,15 +231,23 @@ void die_mem();
 void common_destroy();
 
 /**
-   Issue a debug message
+   Issue a debug message with printf-style string formating and
+   automatic line breaking. The string will begin with the string \c
+   program_name, followed by a colon and a whitespace.
    
-   \param level the priority of the message. Lower number means higher priority. Messages with too high priority number will be discarded.
-   \param the message. 
+   \param level the priority of the message. Lower number means higher priority. Messages with a priority_number higher than \c debug_level will be ignored..
+   \param the message format string. 
+
+   Example:
+
+   <code>debug( 1, L"Pi = %.3f", M_PI );</code>
+
+   will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that program_name is 'fish'.
 */
 void debug( int level, wchar_t *msg, ... );
 
 /**
-   Replace special characters with escape sequences. Newline is
+   Replace special characters with backslash escape sequences. Newline is
    replaced with \n, etc. 
 
    \param in The string to be escaped
@@ -255,6 +263,31 @@ wchar_t *unescape( const wchar_t * in, int escape_special );
 void block();
 void unblock();
 
+int acquire_lock_file( const char *lockfile, const int timeout, int force );
+
+/** 
+	Returns the width of the terminal window, so that not all
+	functions that use these values continually have to keep track of
+	it.
+
+   Only works if common_handle_winch is registered to handle winch signals.
+*/
+int common_get_width();
+/**
+   Returns the height of the terminal window, so that not all
+   functions that use these values continually have to keep track of
+   it.
+
+   Only works if common_handle_winch is registered to handle winch signals.
+*/
+int common_get_height();
+
+/*
+  Handle a window change event by looking up the new window size and
+  saving it in an internal variable used by common_get_wisth and
+  common_get_height().
+*/
+void common_handle_winch( int signal );
+
 #endif
 
-int acquire_lock_file( const char *lockfile, const int timeout, int force );

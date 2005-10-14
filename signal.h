@@ -31,6 +31,19 @@ void signal_reset_handlers();
 void signal_set_handlers();
 
 /**
-   Tell fish to catch the specified signal and fire an event, instead of performing the default action
+   Tell fish what to do on the specified signal.
+
+   \param sig The signal to specify the action of
+   \param do_handle If true fish will catch the specified signal and fire an event, otherwise the default action (SIG_DFL) will be set
 */
 void signal_handle( int sig, int do_handle );
+
+/*
+  Block all signals
+*/
+void signal_block();
+
+/**
+   Unblock all signals
+*/
+void signal_unblock();

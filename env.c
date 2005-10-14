@@ -251,7 +251,7 @@ void env_init()
 	hash_put( &env_read_only, L"LINES", L"" );
 	hash_put( &env_read_only, L"COLUMNS", L"" );
 	hash_put( &env_read_only, L"PWD", L"" );
-
+	
 	/*
 	  HOME should be writeable by root, since this is often a
 	  convenient way to install software.
@@ -620,6 +620,24 @@ wchar_t *env_get( const wchar_t *key )
 		}
 		return (wchar_t *)dyn_var.buff;
 	}
+	else if( wcscmp( key, L"COLUMNS" )==0 )
+	{
+		sb_clear( &dyn_var );						
+		sb_printf( &dyn_var, L"%d", common_get_width() );		
+		return (wchar_t *)dyn_var.buff;		
+	}	
+	else if( wcscmp( key, L"LINES" )==0 )
+	{
+		sb_clear( &dyn_var );						
+		sb_printf( &dyn_var, L"%d", common_get_height() );		
+		return (wchar_t *)dyn_var.buff;
+	}
+	else if( wcscmp( key, L"status" )==0 )
+	{
+		sb_clear( &dyn_var );			
+		sb_printf( &dyn_var, L"%d", proc_get_last_status() );		
+		return (wchar_t *)dyn_var.buff;		
+	}
 	
 	while( env != 0 )
 	{
@@ -658,10 +676,10 @@ int env_exist( const wchar_t *key )
 	env_node_t *env = top;
 	wchar_t *item;
 	
-	if( wcscmp( key, L"history" ) == 0 )
-	{
-		return 1;
-	}
+    if( hash_get( &env_read_only, key ) )
+    {
+        return 1;
+    }
 	
 	while( env != 0 )
 	{
@@ -809,7 +827,17 @@ void env_get_names( array_list_t *l, int flags )
 					   add_key_to_hash,
 					   &names );
 		if( get_names_show_unexported )
+		{
 			al_push( l, L"history" );
+			al_push( l, L"status" );
+		}
+		
+		if( get_names_show_exported )
+		{
+			al_push( l, L"COLUMNS" );
+			al_push( l, L"LINES" );
+		}
+		
 	}
 	
 	if( show_universal )

@@ -477,7 +477,7 @@ wchar_t *parser_cdpath_get( wchar_t *dir )
 		{
 			die_mem();			
 		}
-
+		
 		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
 			 nxt_path != 0;
 			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
@@ -1658,7 +1658,7 @@ static void eval_job( tokenizer *tok )
 	job_t *j;
 
 	int start_pos = job_start_pos = tok_get_pos( tok );
-	debug( 2, L"begin eval_job()\n" );
+	debug( 2, L"begin eval_job()" );
 	long long t1=0, t2=0, t3=0;
 	profile_element_t *p=0;
 	int skip = 0;
@@ -1755,7 +1755,6 @@ static void eval_job( tokenizer *tok )
 
 				if( current_block->type == WHILE )
 				{
-//					debug( 2, L"We are at begining of a while block\n" );
 					
 					switch( current_block->param1.while_state )
 					{
@@ -1773,8 +1772,6 @@ static void eval_job( tokenizer *tok )
 					if( (!current_block->param1.if_state) &&
 						(!current_block->skip) )
 					{
-//							debug( 2, L"Result of if block is %d\n", proc_get_last_status() );
-						
 						current_block->skip = proc_get_last_status()!= 0;
 						current_block->param1.if_state++;
 					}
@@ -1840,7 +1837,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	if( !cmd )
 	{
 		debug( 1,
-			   L"Tried to evaluate null pointer\n" BUGREPORT_MSG,
+			   L"Tried to evaluate null pointer. " BUGREPORT_MSG,
 			   PACKAGE_BUGREPORT );
 		return 1;
 	}
@@ -1850,7 +1847,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		(block_type != SUBST))
 	{
 		debug( 1,
-			   L"Tried to evaluate buffer using invalid block scope of type '%ls'\n" BUGREPORT_MSG,
+			   L"Tried to evaluate buffer using invalid block scope of type '%ls'. " BUGREPORT_MSG,
 			   parser_get_block_desc( block_type ),
 			   PACKAGE_BUGREPORT );
         return 1;
@@ -1866,11 +1863,16 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	tok_init( current_tokenizer, cmd, 0 );
 	error_code = 0;
 	
+	event_fire( 0, 0 );		
+
 	while( tok_has_next( current_tokenizer ) &&
 		   !error_code &&
 		   !sanity_check() &&
 		   !exit_status() )
+	{
 		eval_job( current_tokenizer );
+		event_fire( 0, 0 );		
+	}
 	
 	int prev_block_type = current_block->type;	
 	parser_pop_block();
@@ -1880,7 +1882,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		if( current_block == 0 )
 		{
 			debug( 0,
-				   L"End of block mismatch\n"
+				   L"End of block mismatch. "
 				   L"Program terminating. "
 				   BUGREPORT_MSG,				   
 				   PACKAGE_BUGREPORT );
@@ -2300,8 +2302,8 @@ int parser_test( wchar_t * buff,
 			print_errors();									
 		}
 	}
-
-
+	
+	
 	if( babble && count>0 )
 	{
 		error( SYNTAX_ERROR,
@@ -2309,9 +2311,9 @@ int parser_test( wchar_t * buff,
 			   block_pos[count-1] );
 		print_errors();
 	}
-
+	
 	tok_destroy( &tok );
-
+	
 
 	current_tokenizer=previous_tokenizer;
 	current_tokenizer_pos = previous_pos;

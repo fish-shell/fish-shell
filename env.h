@@ -69,9 +69,11 @@ void env_set( const wchar_t *key,
 
 
 /**
-  Return the value of the variable with the specified name.
-  Returns 0 if the key does not exist.
-  The returned string should not be modified or freed.
+  Return the value of the variable with the specified name.  Returns 0
+  if the key does not exist.  The returned string should not be
+  modified or freed. The returned string is only guaranteed to be
+  valid until the next call to env_get(), env_set(), env_push() or
+  env_pop() takes place.
 */
 wchar_t *env_get( const wchar_t *key );
 

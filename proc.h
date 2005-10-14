@@ -196,11 +196,6 @@ int job_reap( int interactive );
 */
 void job_handle_signal( int signal, siginfo_t *info, void *con );
 
-/**
-   Clean up before exiting
-*/
-void proc_destroy();
-
 
 #ifdef HAVE__PROC_SELF_STAT
 /**
@@ -224,5 +219,15 @@ void proc_update_jiffies();
    every process is in a valid state, etc.
 */
 void proc_sanity_check();
+
+/*
+  Initializations
+*/
+void proc_init();
+
+/**
+   Clean up before exiting
+*/
+void proc_destroy();
 
 #endif

@@ -207,6 +207,7 @@ int main( int argc, char **argv )
 	if( force_interactive )
 		is_interactive_session=1;	
 
+	proc_init();	
 	output_init();	
 	event_init();	
 	exec_init();	
@@ -305,7 +306,6 @@ int main( int argc, char **argv )
 	exec_destroy();	
 	event_destroy();
 	output_destroy();
-	
 	
 	intern_free_all();
 

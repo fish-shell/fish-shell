@@ -239,11 +239,6 @@ static reader_data_t *data=0;
 static int end_loop = 0;
 
 
-/**
-   This struct should be continually updated by signals as the term resizes, and as such always contain the correct current size.
-*/
-static struct winsize termsize;
-
 static int new_size=0;
 
 /**
@@ -285,8 +280,6 @@ static int interupted=0;
 static void reader_save_status();
 static void reader_check_status();
 static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int pos, array_list_t *error );
-static void check_winch();
-
 
 static struct termios old_modes;
 
@@ -332,8 +325,7 @@ static void term_steal()
 			break;
 	}
 
-	reader_handle_winch(0 );	
-	check_winch();
+	common_handle_winch(0 );	
 
     if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */
     {
@@ -371,19 +363,6 @@ void reader_handle_int( int sig )
 	interupted = 1;
 
 }
-
-
-int reader_get_width()
-{
-	return termsize.ws_col;
-}
-
-
-int reader_get_height()
-{
-	return termsize.ws_row;
-}
-
 
 wchar_t *reader_current_filename()
 {
@@ -444,7 +423,7 @@ static int check_size()
 */
 static int force_repaint()
 {
-	int max_width = reader_get_width() - data->prompt_width;
+	int max_width = common_get_width() - data->prompt_width;
 	int pref_width = my_wcswidth( data->buff ) + (data->buff_pos==data->buff_len);
 	return pref_width >= max_width;
 }
@@ -457,7 +436,7 @@ static int force_repaint()
 */
 static int calc_output()
 {
-	int max_width = reader_get_width() - data->prompt_width;
+	int max_width = common_get_width() - data->prompt_width;
 	int pref_width = my_wcswidth( data->buff ) + (data->buff_pos==data->buff_len);
 	if( pref_width <= max_width )
 	{
@@ -1405,7 +1384,7 @@ static int handle_completions( array_list_t *comp )
 
 
 			len = &data->buff[data->buff_pos]-prefix_start;
-
+			
 			if( len <= PREFIX_MAX_LEN )
 			{
 				prefix = malloc( sizeof(wchar_t)*(len+1) );
@@ -1456,30 +1435,6 @@ static int handle_completions( array_list_t *comp )
 		return len;
 	}
 }
-
-void reader_handle_winch( int signal )
-{
-	
-	if (ioctl(1,TIOCGWINSZ,&termsize)!=0)
-	{
-		return;
-	}
-	new_size=1;
-}
-
-static void check_winch()
-{
-	if( new_size )
-	{
-		wchar_t tmp[64];
-		new_size=0;
-		swprintf(tmp, 64, L"%d", termsize.ws_row );
-		env_set( L"LINES", tmp, ENV_GLOBAL );
-		swprintf(tmp, 64, L"%d", termsize.ws_col );
-		env_set( L"COLUMNS", tmp, ENV_GLOBAL );
-	}
-}
-
 
 /**
    Reset the terminal. This function is placed in the list of
@@ -1539,8 +1494,7 @@ static void reader_interactive_init()
 	history_init();
 
 
-	reader_handle_winch(0);	
-	check_winch();
+	common_handle_winch(0);	
 	
 	tcgetattr(0,&shell_modes);        /* get the current terminal modes */
 	memcpy( &saved_modes,
@@ -2487,7 +2441,6 @@ wchar_t *reader_readline()
 		  but it should be ignored. (Example: Trying to add a tilde
 		  (~) to digit)
 		*/
-		check_winch();
 		while( 1 )
 		{
 			c=input_readch();
@@ -2529,8 +2482,6 @@ wchar_t *reader_readline()
 				break;
 		}
 
-
-		check_winch();
 		reader_check_status();
 
 		if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )

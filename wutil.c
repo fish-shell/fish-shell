@@ -194,23 +194,26 @@ void wperror(const wchar_t *s)
 
 
 #if !HAVE_WPRINTF
-/*
-  Here is my own implementation of *wprintf, included since NetBSD does
-  not provide one of it's own.
-*/
 
 /**
-   This function is defined to help vgwprintf when it wants to call
-   itself recursively
-*/
-static int gwprintf( void (*writer)(wchar_t), 
-					 const wchar_t *filter, 
-					 ... );
+   Generic formatting function. All other string formatting functions
+   are secretly a wrapper around this function. vgprintf does not
+   implement all the filters supported by printf, only those that are
+   currently used by fish. vgprintf internally uses snprintf to
+   implement the %f %d and %u filters.
 
+   Currently supported functionality:
 
-/**
-   Generic formatting function. All other formatting functions are
-   secretly a wrapper around this function.
+   - precision specification, both through .* and .N
+   - width specification through *
+   - long versions of all filters thorugh l and ll prefix
+   - Character outout using %c
+   - String output through %s
+   - Floating point number output through %f
+   - Integer output through %d or %i
+   - Unsigned integer output through %u
+
+   For a full description on the usage of *printf, see use 'man 3 printf'.
 */
 static int vgwprintf( void (*writer)(wchar_t), 
 					  const wchar_t *filter, 
@@ -528,21 +531,6 @@ static int vgwprintf( void (*writer)(wchar_t),
 	}
 
 	return count;
-}
-
-static int gwprintf( void (*writer)(wchar_t), 
-					 const wchar_t *filter, 
-					 ... )
-{
-	va_list va;
-	int written;
-	
-	va_start( va, filter );
-	written=vgwprintf( writer,
-					   filter,
-					   va );
-	va_end( va );
-	return written;
 }
 
 /**

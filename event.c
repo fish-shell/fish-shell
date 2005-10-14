@@ -374,10 +374,16 @@ static void event_fire_signal_events()
 		array_list_t a;
 		al_init( &a );		
 
+		/*
+		  Switch signal lists
+		*/
 		sig_list[1-active_list].count=0;
 		sig_list[1-active_list].overflow=0;
 		active_list=1-active_list;
-		
+
+		/*
+		  Set up 
+		*/
 		e.type=EVENT_SIGNAL;
 		e.function_name=0;
 		
@@ -385,16 +391,19 @@ static void event_fire_signal_events()
 		
 		if( lst->overflow )
 		{
-			debug( 0, L"Signal overflow. Signals have been ignored" );
+			debug( 0, L"Signal list overflow. Signals have been ignored" );
 		}
-
+		
+		/*
+		  Send all signals in our private list
+		*/
 		for( i=0; i<lst->count; i++ )
 		{
 			e.param1.signal = lst->signal[i];
 			al_set( &a, 0, sig2wcs( e.param1.signal ) );			
 			event_fire_internal( &e, &a );
-		}		
-
+		}
+		
 		al_destroy( &a );
 		
 	}	

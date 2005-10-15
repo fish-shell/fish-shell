@@ -404,6 +404,20 @@ static void read_redirect( tokenizer *tok, int fd )
 		{
 			mode = 0;
 		}
+
+		if( *tok->buff == L'|' )
+		{
+			if( fd == 0 )
+			{
+				tok_error( tok, PIPE_ERROR );
+				return;
+			}
+			check_size( tok, FD_STR_MAX_LEN );						
+			tok->buff++;
+			swprintf( tok->last, FD_STR_MAX_LEN, L"%d", fd );
+			tok->last_type = TOK_PIPE;
+			return;
+		}
 	}
 	else if( *tok->buff == L'<' )
 	{
@@ -536,8 +550,7 @@ void tok_next( tokenizer *tok )
 		{
 			
 			if( iswdigit( *tok->buff ) )
-			{
-				
+			{				
 				wchar_t *orig = tok->buff;
 				int fd = 0;
 				while( iswdigit( *tok->buff ) )
@@ -545,25 +558,11 @@ void tok_next( tokenizer *tok )
 
 				switch( *(tok->buff))
 				{
-					case L'|':
-					{
-						if( fd == 0 )
-						{
-							tok_error( tok, PIPE_ERROR );
-							return;
-						}
-						check_size( tok, FD_STR_MAX_LEN );						
-						tok->buff++;
-						swprintf( tok->last, FD_STR_MAX_LEN, L"%d", fd );
-						tok->last_type = TOK_PIPE;
-						return;
-					}
-
+					case L'^':
 					case L'>':
 					case L'<':
 						read_redirect( tok, fd );
 						return;
-						
 				}
 				tok->buff = orig;				
 			}

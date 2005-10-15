@@ -101,8 +101,8 @@ these characters, so called escape sequences are provided. These are:
 - <tt>'\\^'</tt>, escapes the circumflex character
 - <tt>'\\x<i>xx</i>'</tt>, where <tt><i>xx</i></tt> is a hexadecimal number, escapes the ascii character with the specified value
 - <tt>'\\o<i>ooo</i>'</tt>, where <tt><i>ooo</i></tt> is an octal number, escapes the ascii character with the specified value
-- <tt>'\\u<i>xxxx</i>'</tt>, where <tt><i>xxxx</i></tt> is a hexadecimal number, escapes the unicode character with the specified value
-- <tt>'\\U<i>xxxxxxxx</i>'</tt>, where <tt><i>xxxxxxxx</i></tt> is a hexadecimal number, escapes the unicode character with the specified value
+- <tt>'\\u<i>xxxx</i>'</tt>, where <tt><i>xxxx</i></tt> is a hexadecimal number, escapes the 16-bit unicode character with the specified value
+- <tt>'\\U<i>xxxxxxxx</i>'</tt>, where <tt><i>xxxxxxxx</i></tt> is a hexadecimal number, escapes the 32-bit unicode character with the specified value
 
 \subsection redirects IO redirection
 
@@ -111,10 +111,10 @@ a number called a file descriptor (FD). These are:
 
 - Standard input, FD 0, for reading, defaults to reading from the keyboard. 
 - Standard output, FD 1, for writing, defaults to writing to the screen.
-- Standard error, FD 2, for writing, errors and warnings defaults to writing to the screen.
+- Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
 The reason for providing for two methods of output is so errors and
-warnings can be separated from program output.
+warnings can be separated from regular program output.
 
 Any file descriptor can be directed to a different output than it's
 default through a simple mechanism called a redirecton.
@@ -170,10 +170,10 @@ out more about the 'cat' program, type <tt>man cat</tt>.
 Pipes usually connect file descriptor 1 (standard output) of the first
 process to file descriptor 0 (standard input) of the second
 process. It is possible use a different output file descriptor by
-prepending it to the pipe symbol, just like you would do with normal
-IO redirections. For example:
+prepending the desired FD number and then output redirect symbol to
+the pipe. For example:
 
-<tt>make fish 2|less</tt>
+<tt>make fish 2>|less</tt>
 
 will attempt to build the fish program, and any errors will be shown
 using the less pager.
@@ -590,48 +590,49 @@ actions which cannot be performed by a regular command.
 The following commands are distributed with fish. Many of them are
 builtins or shellscript functions, and can only be used inside fish.
 
-- <a href="builtins.html#source">.</a>, to read and execute the commands in a file 
-- <a href="builtins.html#bg">bg</a>, to set a command to the background
-- <a href="builtins.html#begin">begin</a>, to execute a block of commands
-- <a href="builtins.html#bind">bind</a>, to change keyboard bindings
-- <a href="builtins.html#break">break</a>, to stop the execution of a loop
-- <a href="builtins.html#builtin">builtin</a>, to execute a builtin command
-- <a href="builtins.html#case">case</a>, to conditionally execute a block of commands
-- <a href="builtins.html#cd">cd</a>, to change the current directory
-- <a href="builtins.html#command">command</a>, to execute an external program
-- <a href="builtins.html#commandline">commandline</a>, to set or get the contents of the commandline buffer
-- <a href="builtins.html#complete">complete</a>, to add and remove completions
-- <a href="builtins.html#continue">continue</a>, to skip the rest of the current lap of a loop
-- <a href="commands.html#count">count</a>, to count the number of arguments
-- <a href="commands.html#dirh">dirh</a>, to view the directory history
-- <a href="commands.html#dirs">dirs</a>, to view the directory stack
-- <a href="builtins.html#end">end</a>, to end a block of commands
-- <a href="builtins.html#else">else</a>, to conditionally execute a block of commands
-- <a href="builtins.html#eval">eval</a>, to evaluate a string as a command
-- <a href="builtins.html#exec">exec</a>, to replace the current process image with a new command
+- <a href="builtins.html#source">.</a>, read and execute the commands in a file 
+- <a href="builtins.html#bg">bg</a>, set a command to the background
+- <a href="builtins.html#begin">begin</a>, execute a block of commands
+- <a href="builtins.html#bind">bind</a>, change keyboard bindings
+- <a href="builtins.html#break">break</a>, stop the execution of a loop
+- <a href="builtins.html#builtin">builtin</a>, execute a builtin command
+- <a href="builtins.html#case">case</a>, conditionally execute a block of commands
+- <a href="builtins.html#cd">cd</a>, change the current directory
+- <a href="builtins.html#command">command</a>, execute an external program
+- <a href="builtins.html#commandline">commandline</a>, set or get the contents of the commandline buffer
+- <a href="builtins.html#complete">complete</a>, add and remove completions
+- <a href="builtins.html#continue">continue</a>, skip the rest of the current lap of a loop
+- <a href="commands.html#count">count</a>, count the number of arguments
+- <a href="commands.html#dirh">dirh</a>, view the directory history
+- <a href="commands.html#dirs">dirs</a>, view the directory stack
+- <a href="builtins.html#end">end</a>, end a block of commands
+- <a href="builtins.html#else">else</a>, conditionally execute a block of commands
+- <a href="builtins.html#eval">eval</a>, evaluate a string as a command
+- <a href="builtins.html#exec">exec</a>, replace the current process image with a new command
 - <a href="builtins.html#exit">exit</a>, causes \c fish to quit
-- <a href="builtins.html#fg">fg</a>, to set a command to the foreground
+- <a href="builtins.html#fg">fg</a>, set a command to the foreground
 - <a href="commands.html#fishd">fishd</a>, the universal variable daemon
-- <a href="builtins.html#for">for</a>, to perform a block of commands once for every element in a list
-- <a href="builtins.html#function">function</a>, to define a new function
-- <a href="builtins.html#functions">functions</a>, to print or erase functions
-- <a href="commands.html#help">help</a>, to show the fish documentation
-- <a href="builtins.html#if">if</a>, to conditionally execute a block of commands
-- <a href="builtins.html#jobs">jobs</a>, to print the currently running jobs
-- <a href="commands.html#mimedb">mimedb</a>, to view mimedata about a file
-- <a href="commands.html#nextd">nextd</a>, to move forward in the directory history
+- <a href="builtins.html#for">for</a>, perform a block of commands once for every element in a list
+- <a href="builtins.html#function">function</a>, define a new function
+- <a href="builtins.html#functions">functions</a>, print or erase functions
+- <a href="commands.html#help">help</a>, show the fish documentation
+- <a href="builtins.html#if">if</a>, conditionally execute a block of commands
+- <a href="builtins.html#jobs">jobs</a>, print the currently running jobs
+- <a href="commands.html#mimedb">mimedb</a>, view mimedata about a file
+- <a href="commands.html#nextd">nextd</a>, move forward in the directory history
 - <a href="builtins.html#not">not</a>, negates the exit status of any command
-- <a href="commands.html#popd">popd</a>, to move to the topmost directory on the directory stack
-- <a href="commands.html#prevd">prevd</a>, to move backwards in the direcotry stack
-- <a href="commands.html#pushd">pushd</a>, to push the surrent directory onto the directory stack
-- <a href="builtins.html#random">random</a>, to calculate a pseudo-random number
-- <a href="builtins.html#return">return</a>, to return from a function
-- <a href="builtins.html#read">read</a>, to read from a stream into an environment variable
-- <a href="builtins.html#set">set</a>, to set environment variables
-- <a href="commands.html#set_color">set_color</a>, to change the terminal colors
-- <a href="builtins.html#switch">switch</a>, to conditionally execute a block of commands
-- <a href="commands.html#tokenize">tokenize</a>, to split a string up into multiple tokens
-- <a href="builtins.html#while">while</a>, to perform a block of commands while a condition is met
+- <a href="commands.html#popd">popd</a>, move to the topmost directory on the directory stack
+- <a href="commands.html#prevd">prevd</a>, move backwards in the direcotry stack
+- <a href="commands.html#pushd">pushd</a>, push the surrent directory onto the directory stack
+- <a href="builtins.html#random">random</a>, calculate a pseudo-random number
+- <a href="builtins.html#return">return</a>, return from a function
+- <a href="builtins.html#read">read</a>, read from a stream into an environment variable
+- <a href="builtins.html#set">set</a>, set environment variables
+- <a href="commands.html#set_color">set_color</a>, change the terminal colors
+- <a href="builtins.html#switch">switch</a>, conditionally execute a block of commands
+- <a href="commands.html#tokenize">tokenize</a>, split a string up into multiple tokens
+- <a href="builtins.html#ulimit">ulimit</a>, set or get the shells resurce usage limits
+- <a href="builtins.html#while">while</a>, perform a block of commands while a condition is met
 
 For more information about these commands, use the <tt>--help</tt>
 option of the command to display a longer explanation.

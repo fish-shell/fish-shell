@@ -717,7 +717,7 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 		echo psub: Not inside of command substitution
 	end
 
-	# Find unique file name
+	# Find unique file name for writing output to
 	while true
 		set filename /tmp/.psub.(echo %self).(random);
 		if not test -e $filename
@@ -725,7 +725,11 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 		end
 	end
 
+	# Write output to file
 	cat >$filename
+
+	# Write filename to stdout
+	echo $filename
 
 	# Find unique function name
 	while true
@@ -735,9 +739,8 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 		end
 	end
 
+	# Make sure we erase file when caller exits
 	eval function $funcname --on-job-exit caller\; rm $filename\; functions -e $funcname\; end	
-
-	echo $filename
 
 end
 

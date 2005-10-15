@@ -3,7 +3,7 @@
 #
 
 #
-# Depends on muont for $__fish_filesystems
+# Depends on mount for $__fish_filesystems
 #
 complete -y mount
 

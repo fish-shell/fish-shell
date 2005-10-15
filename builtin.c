@@ -492,7 +492,8 @@ static int builtin_functions( wchar_t **argv )
 	int argc=builtin_count_args( argv );
 	int list=0;
 	int show_hidden=0;	
-	
+	int res = 0;
+		
 	woptind=0;
 
 	const static struct woption
@@ -679,19 +680,28 @@ static int builtin_functions( wchar_t **argv )
 		
 		default:
 		{
+			
 			for( i=woptind; i<argc; i++ )
-				sb_append2( sb_out,
-							L"function ",
-							argv[i],
-							L"\n\t",
-							function_get_definition(argv[i]),
-							L"\nend\n\n",
-							(void *)0);
-
+			{
+				if( !function_exists( argv[i] ) )
+					res++;
+				else
+				{
+					sb_append2( sb_out,
+								L"function ",
+								argv[i],
+								L"\n\t",
+								function_get_definition(argv[i]),
+								L"\nend\n\n",
+								(void *)0);
+				}
+			}
+			
+			
 			break;
 		}
 	}
-	return 0;
+	return res;
 	
 	
 }
@@ -713,6 +723,17 @@ static int wcsbindingname( wchar_t *str )
 	}
 	return 1;
 }
+
+static void print_block_stack( block_t *b )
+{
+	if( !b )
+		return;
+	
+	wprintf( L"%ls (%d)\n", parser_get_block_desc( b->type ), b->job?b->job->job_id:-1 );
+	print_block_stack( b->outer );
+	
+}
+
 
 /**
    The function builtin, used for providing subroutines.
@@ -855,25 +876,82 @@ static int builtin_function( wchar_t **argv )
 				wchar_t *end;
 				event_t *e;
 				
-				errno = 0;
-				pid = wcstol( woptarg, &end, 10 );	
-				if( errno || !end || *end )
-				{
-					sb_printf( sb_err,
-                               L"%ls: Invalid process id %ls\n",
-                               argv[0],
-                               woptarg );
-                    res=1;
-                    break;
-				}				
-
 				e = malloc( sizeof(event_t));
 				if( !e )
 					die_mem();
-				e->type = EVENT_EXIT;
-				e->param1.pid = (opt=='j'?-1:1)*abs(pid);
-				e->function_name=0;				
-				al_push( events, e );
+
+				if( ( opt == 'j' ) && 
+					( wcscasecmp( woptarg, L"caller" ) == 0 ) )
+				{
+					int job_id = -1;
+					
+					if( is_subshell ) 
+					{
+						block_t *b = current_block;
+						
+//						print_block_stack( b );
+
+						while( b && (b->type != SUBST) )
+							b = b->outer;
+						
+						if( b )
+						{
+							b=b->outer;
+						}
+						if( b->job )
+						{
+//							debug( 1, L"Found block, type is %ls", parser_get_block_desc( b->type ) );
+							
+							job_id = b->job->job_id;
+						}
+						else
+						{	
+//							debug( 1, L"Calling block is null" );
+						}
+						
+					}
+					
+					if( job_id == -1 )
+					{
+						sb_printf( sb_err,
+								   L"%ls: Cannot find calling job for event handler\n",
+								   argv[0] );
+						res=1;
+					}
+					else
+					{
+						e->type = EVENT_JOB_ID;
+						e->param1.job_id = job_id;
+					}
+										
+				}
+				else
+				{
+					errno = 0;
+					pid = wcstol( woptarg, &end, 10 );	
+					if( errno || !end || *end )
+					{
+						sb_printf( sb_err,
+								   L"%ls: Invalid process id %ls\n",
+								   argv[0],
+								   woptarg );
+						res=1;
+						break;
+					}				
+					
+					
+					e->type = EVENT_EXIT;
+					e->param1.pid = (opt=='j'?-1:1)*abs(pid);
+				}
+				if( res )
+				{
+					free( e );
+				}
+				else
+				{
+					e->function_name=0;		
+					al_push( events, e );
+				}
 				break;				
 			}
 			
@@ -927,7 +1005,7 @@ static int builtin_function( wchar_t **argv )
 		wchar_t **names_arr;
 		int chars=0;
 		
-		builtin_print_help( argv[0], sb_err );
+//		builtin_print_help( argv[0], sb_err );
 		
 		sb_append( sb_err, L"Current functions are: " );		
 		chars += wcslen( L"Current functions are: " );		

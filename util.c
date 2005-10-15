@@ -872,9 +872,13 @@ void sb_append2( string_buffer_t *b, ... )
 int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... )
 {
 	va_list va;
+	int res;
+	
 	va_start( va, format );
-	sb_vprintf( buffer, format, va );	
-	va_end( va );	
+	res = sb_vprintf( buffer, format, va );	
+	va_end( va );
+	
+	return res;	
 }
 
 int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig )

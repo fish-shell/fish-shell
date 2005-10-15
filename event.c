@@ -95,6 +95,9 @@ static int event_match( event_t *class, event_t *instance )
 			if( class->param1.pid == EVENT_ANY_PID )
 				return 1;
 			return class->param1.pid == instance->param1.pid;
+
+		case EVENT_JOB_ID:
+			return class->param1.job_id == instance->param1.job_id;
 	}
 	
 	/**
@@ -180,7 +183,6 @@ void event_remove( event_t *criterion )
 					signal_handle( e.param1.signal, 0 );
 				}		
 			}
-
 		}
 		else
 		{
@@ -292,7 +294,7 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 			al_push( fire, criterion );
 		}
 	}
-
+	
 	/*
 	  No matches. Time to return.
 	*/
@@ -362,7 +364,7 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 }
 
 /**
-   Perform all pending signal events
+   Handle all pending signal events
 */
 static void event_fire_signal_events()
 {

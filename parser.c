@@ -176,7 +176,8 @@ void parser_push_block( int type )
 	if( type == TOP || type == SUBST )
 		new->skip = 0;
 	
-
+	new->job = 0; 
+	
 	new->loop_status=LOOP_NORMAL;
 
 	current_block = new;
@@ -1681,7 +1682,9 @@ static void eval_job( tokenizer *tok )
 			j->fg=1;
 			j->constructed=0;
 			j->skip_notification = is_subshell || is_block || is_event || (!is_interactive);
-						
+					
+			current_block->job = j;
+				
 			proc_had_barrier=0;
 			
 			if( is_interactive )
@@ -1733,7 +1736,7 @@ static void eval_job( tokenizer *tok )
 					p->cmd = wcsdup( j->command );					
 					p->skipped=current_block->skip;
 				}
-
+				
 				skip |= current_block->skip;
 				
 				if(!skip )
@@ -1785,6 +1788,7 @@ static void eval_job( tokenizer *tok )
 				*/
 				job_free( j );
 			}
+			current_block->job = 0;
 			break;
 		}
 		
@@ -1889,7 +1893,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 			exit(1);
 			break;
 		}
-
+		
 		if( (!error_code) && (!exit_status()) && (!proc_get_last_status()) )
 		{
 			char *h;

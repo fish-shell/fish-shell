@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <wchar.h>
+#include <wctype.h>
 #include <string.h>
 #include <dirent.h>
 #include <stdarg.h>
@@ -240,7 +241,6 @@ static int vgwprintf( void (*writer)(wchar_t),
 	{
 		if(*filter == L'%')
 		{
-			int i;
 			int is_long=0;
 			int width = -1;
 			filter++;

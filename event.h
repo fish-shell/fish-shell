@@ -23,6 +23,7 @@ enum
 	EVENT_SIGNAL, /**< An event triggered by a signal */
 	EVENT_VARIABLE, /**< An event triggered by a variable update */
 	EVENT_EXIT, /**< An event triggered by a job or process exit */
+	EVENT_JOB_ID, /**< An event triggered by a job exit */
 }
 	;
 
@@ -53,6 +54,11 @@ typedef struct
 		   Process id for process-type events. Use EVENT_ANY_PID to match any pid.
 		*/
 		pid_t pid;
+		/**
+		   Job id for EVENT_JOB_ID type events
+		*/
+		int job_id;
+		
 	} param1;
 
 	const wchar_t *function_name;	

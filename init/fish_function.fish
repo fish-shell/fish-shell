@@ -711,6 +711,36 @@ function type -d "Print the type of a command"
 	return $status
 end
 
+function psub -d "Read from stdin into a file and output the filename. Remove the file when the command that calles psub exits."
+
+	if not status --is-command-substitution
+		echo psub: Not inside of command substitution
+	end
+
+	# Find unique file name
+	while true
+		set filename /tmp/.psub.(echo %self).(random);
+		if not test -e $filename
+			break;
+		end
+	end
+
+	cat >$filename
+
+	# Find unique function name
+	while true
+		set funcname __fish_psub_(random);
+		if not functions $funcname >/dev/null ^/dev/null
+			break;
+		end
+	end
+
+	eval function $funcname --on-job-exit caller\; rm $filename\; functions -e $funcname\; end	
+
+	echo $filename
+
+end
+
 
 if status --is-interactive
 

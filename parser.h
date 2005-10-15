@@ -26,6 +26,11 @@ typedef struct block
 	int loop_status;
 
 	/**
+	   The log that is currently evaluated in the specified block.
+	*/
+	job_t *job;
+	
+	/**
 	   First block type specific variable
 	*/
 	union 

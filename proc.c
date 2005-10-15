@@ -482,7 +482,7 @@ static void format_job_info( const job_t *j, const wchar_t *status )
 	fwprintf (stdout, L"\n" );
 }
 
-static void fire_process_event( const wchar_t *msg, pid_t pid, int status )
+static void fire_process_event( const wchar_t *msg, int type, pid_t pid, int status )
 {
 	static event_t ev;
 	event_t e;
@@ -490,7 +490,7 @@ static void fire_process_event( const wchar_t *msg, pid_t pid, int status )
 	
 	e.function_name=0;
 	
-	ev.type=EVENT_EXIT;
+	ev.type=type;
 	ev.param1.pid = pid;
 	
 	al_push( &event_arg, msg );			
@@ -516,7 +516,7 @@ int job_reap( int interactive )
 	
 	locked++;	
 	if( locked>1 )
-		return;
+		return 0;
 		
 	for( j=first_job; j; j=jnext)
     {		
@@ -539,7 +539,7 @@ int job_reap( int interactive )
 			
 			s = p->status;
 			
-			fire_process_event( L"PROCESS_EXIT", p->pid, ( WIFSIGNALED(s)?-1:WEXITSTATUS( s )) );			
+			fire_process_event( L"PROCESS_EXIT", EVENT_EXIT, p->pid, ( WIFSIGNALED(s)?-1:WEXITSTATUS( s )) );			
 			
 			if( WIFSIGNALED(s) )
 			{
@@ -597,7 +597,8 @@ int job_reap( int interactive )
 					found=1;
 				}
 			}
-			fire_process_event( L"JOB_EXIT", -j->pgid, 0 );			
+			fire_process_event( L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0 );			
+			fire_process_event( L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0 );			
 
 			job_free(j);
 		}		

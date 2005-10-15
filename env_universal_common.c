@@ -230,8 +230,6 @@ static void parse_message( wchar_t *msg,
 		tmp = wcschr( name, L':' );
 		if( tmp )
 		{
-			wchar_t *val_unescaped;
-			
 			wchar_t *key =malloc( sizeof( wchar_t)*(tmp-name+1));
 			memcpy( key, name, sizeof( wchar_t)*(tmp-name));
 			key[tmp-name]=0;

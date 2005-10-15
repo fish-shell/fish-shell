@@ -71,6 +71,7 @@ commence.
 #include "input.h"
 #include "function.h"
 #include "output.h"
+#include "signal.h"
 
 /**
 	Maximum length of prefix string when printing completion
@@ -237,9 +238,6 @@ static reader_data_t *data=0;
 	Flag for ending non-interactive shell
 */
 static int end_loop = 0;
-
-
-static int new_size=0;
 
 /**
    The list containing names of files that are being parsed

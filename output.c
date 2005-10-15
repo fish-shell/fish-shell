@@ -258,9 +258,9 @@ int writech( wint_t ch )
 */
 void writestr( const wchar_t *str )
 {
-	while( *str )
-		writech( *str++ );
-/*	
+//	while( *str )
+//		writech( *str++ );
+	
 	size_t len = MAX_UTF8_BYTES*wcslen(str)+1;
 	
 	if( writestr_buff_sz < len )
@@ -276,7 +276,7 @@ void writestr( const wchar_t *str )
 			  writestr_buff_sz );
 
 	write( 1, writestr_buff, strlen( writestr_buff ) );	
-*/
+
 }
 
 

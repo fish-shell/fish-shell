@@ -118,15 +118,15 @@ end
 
 
 function __fish_contains_opt -d "Checks if a specific option has been given in the current commandline"
-	set -l next_short ""
+	set -l next_short 
 
-	set -e short_opt
-	set -e long_opt 
+	set -l short_opt
+	set -l long_opt 
 
 	for i in $argv
-		if test $next_short = 1
-			set next_short ""
-			set -g short_opt $short_opt $i
+		if test $next_short 
+			set next_short 
+			set -- short_opt $short_opt $i
 		else
 			switch $i
 				case -s
@@ -136,13 +136,10 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
 					return 1
 
 				case '**'
-					set -g -- long_opt $long_opt $i
+					set -- long_opt $long_opt $i
 			end
 		end
 	end
-
-	set -l short_opt
-	set -l long_opt 
 
 	for i in $short_opt
 

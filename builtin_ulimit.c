@@ -64,10 +64,12 @@ const static struct resource_t resource_arr[] =
 		RLIMIT_NPROC, L"Maximum number of processes available to a single user", L'u'
 	}
 	,
+#if HAVE_RLIMIT_AS
 	{
 		RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v'
 	}	
 	,
+#endif
 	{
 		0, 0
 	}
@@ -355,9 +357,11 @@ int builtin_ulimit( wchar_t ** argv )
 				what=RLIMIT_NPROC;
 				break;
 				
+#if HAVE_RLIMIT_AS				
 			case L'v':
 				what=RLIMIT_AS;
 				break;
+#endif
 				
 			case L'?':
 				builtin_print_help( argv[0], sb_err );				

@@ -30,7 +30,7 @@ value. Other options are interpreted as follows:
 - <code>-s</code> or <code>--stack-size</code> The maximum stack size
 - <code>-t</code> or <code>--cpu-time</code> The maximum amount of cpu time in seconds
 - <code>-u</code> or <code>--process-count</code> The maximum number of processes available to a single user
-- <code>-v</code> or <code>--virtual-memory-size</code> The maximum amount of virtual memory available to the shell
+- <code>-v</code> or <code>--virtual-memory-size</code> The maximum amount of virtual memory available to the shell. If supported by OS.
 
 If limit is given, it is the new value of the specified resource. If
 no option is given, then -f is assumed. Values are in kilobytes,

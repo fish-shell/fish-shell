@@ -71,7 +71,19 @@ AC_CHECK_FILE([/usr/pkg/lib],[AC_SUBST(LIBDIR,[-L/usr/pkg/lib\ -R/usr/pkg/lib])]
 AC_CHECK_FILE([/usr/pkg/include],[AC_SUBST(INCLUDEDIR,[-I/usr/pkg/include])])
 
 AC_CHECK_FUNCS( [wprintf futimes wcwidth wcswidth] ) 
-AC_CHECK_HEADERS([getopt.h termio.h])
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h])
+
+# Check for RLIMIT_AS in sys/resource.h.
+AC_MSG_CHECKING([for RLIMIT_AS in sys/resource.h])
+AC_TRY_COMPILE([#include <sys/resource.h>],
+[int tmp; tmp=RLIMIT_AS;], have_rlimit_as=yes, have_rlimit_as=no)
+if test "$have_rlimit_as" = yes; then
+    AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_RLIMIT_AS], [1],
+			  [Define to 1 if HAVE_RLIMIT_AS is defined in <sys/resource.h>.])
+else
+    AC_MSG_RESULT(no)
+fi
 
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(rt, nanosleep)

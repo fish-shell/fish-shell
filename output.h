@@ -1,3 +1,6 @@
+/** \file output.h
+	Generic output functions
+*/
 /**
    Constants for various character classifications. Each character of a command string can be classified as one of the following types.
 */
@@ -81,20 +84,46 @@ void set_color( int c, int c2 );
 */
 int writembs( char *str );
 
+/**
+   Write a wide character to fd 1.
+*/
 int writech( wint_t ch );
 
+/**
+   Write a wide character string to FD 1.
+*/
 void writestr( const wchar_t *str );
 
+/**
+   Write a wide character string to FD 1. If the string is wider than
+   the specified maximum, truncate and ellipsize it.
+*/
 void writestr_ellipsis( const wchar_t *str, int max_width );
 
+/**
+   Escape and write a string to fd 1
+*/
 int write_escaped_str( const wchar_t *str, int max_len );
 
+/**
+   parm_ich seems to often be undefined, so we use this
+   workalike. Writes the specified number of spaces.
+*/
 int writespace( int c );
 
+/**
+   Return the internal color code representing the specified color
+*/
 int output_color_code( const wchar_t *val );
 
+/**
+   Initialize static data
+*/
 void output_init();
 
+/**
+  Destroy static data
+*/
 void output_destroy();
 
 #endif

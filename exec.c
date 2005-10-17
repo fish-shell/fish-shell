@@ -59,11 +59,45 @@ pid_t getpgid( pid_t pid );
 #define FORK_ERROR L"Could not create child process - exiting"
 
 /**
+   DEfault value for the umask
+*/
+#define UMASK_DEFAULT 0664
+
+/**
    List of all pipes used by internal pipes. These must be closed in
    many situations in order to make sure that stray fds aren't lying
    around.
 */
-array_list_t *open_fds=0;
+static array_list_t *open_fds=0;
+
+/**
+   The umask. Recalculated every time exec is run.
+*/
+static int umask_val;
+
+/**
+   Calculated the current value of the umask
+*/
+static int get_umask()
+{		
+	wchar_t *m = env_get( L"umask" );
+	wchar_t *end;
+	int mask;
+	
+	if( !m || !wcslen(m) )
+		return UMASK_DEFAULT;
+	
+	errno=0;
+	mask = wcstol( m, &end, 8 );
+	
+	if( errno || *end )
+	{
+		return UMASK_DEFAULT;
+	}
+
+	return mask;
+}
+
 
 void exec_close( int fd )
 {
@@ -267,7 +301,7 @@ static void handle_child_io( io_data_t *io )
 				break;
 			case IO_FILE:
 				if( (tmp=wopen( io->param1.filename,
-                                io->param2.flags, 0666 ))==-1 )
+                                io->param2.flags, umask_val ))==-1 )
 				{
 					debug( 1, 
 						   FILE_ERROR,
@@ -471,7 +505,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		{
 			int fd;
 			
-			if( (fd=wopen( in->param1.filename, in->param2.flags, 0666 ))==-1 )
+			if( (fd=wopen( in->param1.filename, in->param2.flags, umask_val ))==-1 )
 			{
 				debug( 1, 
 					   FILE_ERROR,
@@ -626,7 +660,9 @@ void exec( job_t *j )
 	io_data_t *tmp;
 
 	io_data_t *io_buffer =0;
-		
+
+	umask_val = get_umask();
+	
 	debug( 4, L"Exec job %ls with id %d", j->command, j->job_id );	
 	
 	if( j->first_process->type==INTERNAL_EXEC )
@@ -829,7 +865,7 @@ void exec( job_t *j )
   in->filename);
 */
 								new_fd=wopen( in->param1.filename,
-                                              in->param2.flags, 0666 );
+                                              in->param2.flags, umask_val );
 								if( new_fd == -1 )
 								{
 									wperror( L"wopen" );

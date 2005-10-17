@@ -283,7 +283,7 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 	for( i=0; i<al_get_count( events ); i++ )
 	{
 		event_t *criterion = (event_t *)al_get( events, i );
-
+		
 		/*
 		  Check if this event is a match
 		*/

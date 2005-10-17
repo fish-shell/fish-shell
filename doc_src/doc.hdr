@@ -857,12 +857,12 @@ directory, or install them in /etc.
 - Complete vi-mode key bindings
 - '**' wildcard for recursive wildcard matching
 - next-history-complete
-- builtin ulimit command
+- umask shellscript function
 - builtin wait command
 - More completions (for example xterm, vim, 
 konsole, gnome-terminal, dcop, cdrecord, cron, xargs
 rlogin, telnet, rsync, arch, finger, nice, locate, 
-latex, bibtex, patch, aspell, xpdf,
+bibtex, patch, aspell, xpdf,
 zip, compress, wine, xmms, dig, wine, batch, cron, 
 g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Undo support
@@ -892,7 +892,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - show the whole list of commands on using tab on an empty commandline
 - Automatically move cursor to the end of the current token before completing
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
-- psub function/builtin to make somthing like process substitution using command substitution
 
 \subsection bugs Known bugs
 

@@ -5,7 +5,7 @@
 
 function _contains_help -d "Helper function for contains"
 
-set bullet \*
+	set bullet \*
 	if count $LANG >/dev/null
 		if test (expr match $LANG ".*UTF") -gt 0
 			set bullet \u2022
@@ -562,7 +562,7 @@ function __bold -d "Print argument in bold"
 	set_color normal
 end
 
-function __type_help -d "Help for the type shellscript function"
+function __fish_type_help -d "Help for the type shellscript function"
 
 set bullet \*
 if count $LANG >/dev/null
@@ -601,34 +601,47 @@ function type -d "Print the type of a command"
 	set mode normal
 	set selection all
 
-	for i in $argv
+
+	set -- shortopt -o tpPafh
+	if getopt -T >/dev/null
+		set longopt
+	else
+		set longopt -- -l type,path,force-path,all,no-functions,help
+	end
+
+	if not getopt -n type -Q $shortopt $longopt -- $argv
+		return 1
+	end
+
+	set tmp -- (getopt $shortopt $longopt -- $argv)
+
+	eval set opt -- $tmp
+
+	for i in $opt
 		switch $i
-			case -t --t --ty --typ --type
+			case -t --type
 				set mode type
 			
-			case -p --p --pa --pat --path
+			case -p --path
 				set mode path
 			
-			case -P --f --fo --for --forc --force --force- --force-p --force-pa --force-pat --force-path 
+			case -P --force-path 
 				set mode path
 				set selection files
 			
-			case -a --a --al --all
+			case -a --all
 				set selection multi
 
-			case -f --n --no --no- --no-f --no-fu --no-fun --no-func --no-funct --no-functi --no-functio --no-function --no-functions
+			case -f --no-functions
 				set selection files
 
-			case -h --h --he --hel --help
-				 __type_help
+			case -h --help
+				 __fish_type_help
 				 return 0
 
 			case --
 				 break
 
-			case '-*'
-				 echo Unknown option $i
-				 return 1
 		end
 	end
 
@@ -709,6 +722,203 @@ function type -d "Print the type of a command"
 	end
 
 	return $status
+end
+
+function __fish_umask_help
+
+set bullet \*
+if count $LANG >/dev/null
+	if test (expr match $LANG ".*UTF") -gt 0
+		set bullet \u2022
+	end
+end
+
+echo \tumask - Set or get the user file-creation mask
+echo
+echo (__bold Synopsis)
+echo
+echo \t(set_color $fish_color_command)umask(set_color normal) [OPTIONS] [mask]
+echo
+echo (__bold Description)
+echo
+echo \tWith no argument, the current file-creation mask is printed, if an\n\targument is specified, it is the new file creation mask.
+echo
+echo \t$bullet (__bold -h) or (__bold --help) print this message
+echo \t$bullet (__bold -S) or (__bold --symbolic) prints the file-creation mask in symbolic\n\t\ \ form instead of octal form. Use \'(set_color $fish_color_command)man(set_color $fish_color_normal) chmod\' for more information.
+echo \t$bullet (__bold -p) or (__bold --as-command) prints any output in a form that may be reused\n\t\ \ as input
+echo
+echo (__bold Example)
+echo
+echo \t\'(set_color $fish_color_command)umask(set_color normal) 600\' sets the file creation mask to read and write for the\n\towner and no permissions at all for any other users.
+echo
+
+end
+
+function __fish_umask_parse -d "Parses a file permission specification as into an octal version"
+	# Test if already a valid octal mask
+	if echo $argv | grep -E '^[0-7]{1,4}$' >/dev/null
+		echo $argv
+	else
+		set res 0 0 0
+		set el (echo $argv|tr , \n)
+		for i in $el
+			switch $i
+				case 'u*'
+					set idx 1
+					set i (echo $i| cut -c 2-) 
+
+				case 'g*'
+					set idx 2
+					set i (echo $i| cut -c 2-) 
+
+				case 'o*'
+					set idx 3
+					set i (echo $i| cut -c 2-) 
+
+				case 'a*'
+					set idx 1 2 3
+					set i (echo $i| cut -c 2-) 
+
+				case '*'
+					set idx 1 2 3
+			end
+
+			switch $i
+				case '=*'
+					set mode set
+					set i (echo $i| cut -c 2-) 
+
+				case '+*'
+					set mode add
+					set i (echo $i| cut -c 2-) 
+
+				case '-*'
+					set mode remove
+					set i (echo $i| cut -c 2-) 
+
+				case '*'
+					set mode set
+			end
+
+			if not echo $perm|grep -E '^(r|w|x)*$' >/dev/null
+				echo umask: Invalid mask $argv >&2
+				return
+			end
+
+			set val 0
+			if echo $perm |grep 'r' >/dev/null
+				set val 4
+			end
+			if echo $perm |grep 'w' >/dev/null
+				set val (echo $val + 2|bc)
+			end
+			if echo $perm |grep 'x' >/dev/null
+				set val (echo $val + 1|bc)
+			end
+
+			for j in $idx
+				set res[$j] $val
+			end
+		end
+		echo $res[1]$res[2]$res[3]
+	end
+end
+
+function __fish_umask_print_symbolic
+	set -l res ""
+	set -l letter u g o
+
+	for i in 1 2 3
+		set res $res,$letter[$i]=
+		set val (echo $umask|cut -c $i)
+
+		if contains $val 4 5 6 7
+		   set res {$res}r
+		end
+	
+		if contains $val 2 3 6 7
+		   set res {$res}w
+		end
+
+		if contains $val 1 3 5 7
+		   set res {$res}x
+		end
+
+	end
+
+	echo $res|cut -c 2-
+end
+
+function umask -d "Set default file permission mask"
+
+	set -l as_command 0
+	set -l symbolic 0
+
+	set -- shortopt -o pSh
+	if getopt -T >/dev/null
+		set longopt
+	else
+		set longopt -- -l as-command,symbolic,help
+	end
+
+	if not getopt -n umask -Q $shortopt $longopt -- $argv
+		return 1
+	end
+
+	set tmp -- (getopt $shortopt $longopt -- $argv)
+
+	eval set opt -- $tmp
+
+	while count $opt >/dev/null
+
+		switch $opt[1]
+			case -h --help
+				__fish_umask_help
+				return 0
+
+			case -p --as-command
+				set as_command 1				 
+
+			case -S --symbolic
+				set symbolic 1
+
+			case --
+				set -e opt[1]
+				break
+
+		end
+
+		set -e opt[1]
+
+	end
+
+	switch (count $opt)
+
+		case 0
+			if not set -q umask
+				set -g umask 775
+			end
+			if test $as_command -eq 1
+				echo umask $umask
+			else
+				if test $symbolic -eq 1
+					__fish_umask_print_symbolic $umask
+				else
+					echo $umask
+				end
+			end
+
+		case 1
+			set parsed (__fish_umask_parse $opt)
+			if test (count $parsed) -eq 1
+				set -g umask $parsed
+			end
+
+		case '*'
+			echo umask: Too may arguments >&2
+
+	end
+
 end
 
 function psub -d "Read from stdin into a file and output the filename. Remove the file when the command that calles psub exits."

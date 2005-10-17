@@ -1792,28 +1792,14 @@ static int complete_variable( const wchar_t *var,
 		if( varlen > namelen )
 			continue;
 
-/*		wprintf( L"Try %ls\n", name );*/
-
 		if( wcsncmp( var, name, varlen) == 0 )
 		{
 			wchar_t *value = expand_escape_variable( env_get( name ));
 			wchar_t *blarg;
 			/*
-			  What should the description of the variable be?
-
-			  If the variable doesn't have a value, or of the value is
-			  really long, we just describe it as 'Variable', but if
-			  the value is 1..16 characters long, we describe it as
-			  'Variable: VALUE'.
+			  Variable description is 'Variable: VALUE
 			*/
-/*			if( wcslen(value) < 1 || wcslen(value) > 16 )
-  {
-  blarg = wcsdupcat( &name[varlen], COMPLETE_VAR_DESC );
-  }
-  else
-  {*/
 			blarg = wcsdupcat2( &name[varlen], COMPLETE_VAR_DESC_VAL, value, 0 );
-//			}
 
 			if( blarg )
 			{
@@ -1852,7 +1838,6 @@ static int try_complete_variable( const wchar_t *cmd,
 
 	}
 	return 0;
-
 
 }
 
@@ -1952,14 +1937,9 @@ static int try_complete_user( const wchar_t *cmd,
 						free( pw_name );
 					}
 				}
-
 				endpwent();
-
 			}
-
 		}
-
-
 	}
 
 	return res;
@@ -2079,7 +2059,7 @@ void complete( const wchar_t *cmd,
 	
 		if( current_token && current_command && prev_token )
 		{
-
+			
 			if( on_command )
 			{
 				/* Complete command filename */
@@ -2096,48 +2076,9 @@ void complete( const wchar_t *cmd,
 				  expanded. This is potentially very slow.
 				*/
 
-				int cmd_ok = 1;
-				int do_file = 1;
+				int do_file;
 
-				wchar_t *end_str = current_token;
-
-				/*
-				  If the command is an function, we use the
-				  completions of the first command in the function
-				  and hope for the best...
-				*/
-				if( function_exists(current_command ) )
-				{
-					tokenizer tok2;
-					tok_init( &tok2, function_get_definition( current_command), 0 );
-					wchar_t *new_cmd=0;
-
-					switch( tok_last_type( &tok2 ) )
-					{
-						case TOK_STRING:
-							new_cmd = expand_one( wcsdup(tok_last( &tok2 )),
-												  EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES );
-							break;
-						default:
-							cmd_ok = 0;
-							break;
-					}
-
-					tok_destroy( &tok2 );
-
-					if( cmd_ok )
-					{
-						do_file &= complete_param( new_cmd,
-												   prev_token,
-												   end_str,
-												   comp );
-					}
-					if( new_cmd != 0 )
-						free(new_cmd);
-				}
-				//				fwprintf( stderr, L"complete_param with end_str %ls\n", end_str );
-				do_file &= complete_param( current_command, prev_token, end_str, comp );
-
+				do_file = complete_param( current_command, prev_token, current_token, comp );
 				complete_param_expand( current_token, comp, do_file );
 			}
 		}

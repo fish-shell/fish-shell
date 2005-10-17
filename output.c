@@ -1,3 +1,7 @@
+/** \file output.c
+	Generic output functions
+*/
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -82,7 +86,14 @@ static int col_idx[]=
 }
 	;
 
+/**
+  Size of writestr_buff
+*/
 static size_t writestr_buff_sz=0;	
+
+/**
+   Temp buffer used for converting from wide to narrow strings
+*/
 static char *writestr_buff = 0;
 
 void output_init()
@@ -97,7 +108,8 @@ void output_destroy()
 
 void set_color( int c, int c2 )
 {
-	static int last_color = FISH_COLOR_NORMAL, last_color2=FISH_COLOR_NORMAL;
+	static int last_color = FISH_COLOR_NORMAL;
+	static int last_color2 = FISH_COLOR_NORMAL;
 	int bg_set=0, last_bg_set=0;
 	char *fg = 0, *bg=0;
 
@@ -147,14 +159,16 @@ void set_color( int c, int c2 )
 		if(bg_set && !last_bg_set)
 		{
 			/*
-			  Background color changed and is set, so we enter bold mode to make reading easier
+			  Background color changed and is set, so we enter bold
+			  mode to make reading easier
 			*/
 			writembs( enter_bold_mode );
 		}
 		if(!bg_set && last_bg_set)
 		{
 			/*
-			  Background color changed and is no longer set, so we exit bold mode
+			  Background color changed and is no longer set, so we
+			  exit bold mode
 			*/
 			writembs( exit_attribute_mode );
 			/*
@@ -228,9 +242,6 @@ int writembs( char *str )
 	return 0;
 }
 
-/**
-   Write a wide character to fd 1.
-*/
 int writech( wint_t ch )
 {
 	static mbstate_t out_state;
@@ -253,37 +264,50 @@ int writech( wint_t ch )
 	return 0;
 }
 
-/**
-   Write a wide character string to FD 1.
-*/
 void writestr( const wchar_t *str )
 {
 //	while( *str )
 //		writech( *str++ );
+
+	/*
+	  Check amount of needed space
+	*/
+	size_t len = wcstombs( 0, str, 0 );
+		
+	if( len == (size_t)-1 )
+	{
+		debug( 1, L"Tried to print invalid wide character string" );
+		return;
+	}
 	
-	size_t len = MAX_UTF8_BYTES*wcslen(str)+1;
+	len++;
 	
+	/*
+	  Reallocate if needed
+	*/
 	if( writestr_buff_sz < len )
 	{
-		writestr_buff = realloc( writestr_buff, writestr_buff_sz );
+		writestr_buff = realloc( writestr_buff, len );
 		if( !writestr_buff )
 			die_mem();
 		writestr_buff_sz = len;
 	}
 	
+	/*
+	  Convert
+	*/
 	wcstombs( writestr_buff, 
 			  str,
 			  writestr_buff_sz );
 
+	/*
+	  Write
+	*/
 	write( 1, writestr_buff, strlen( writestr_buff ) );	
 
 }
 
 
-/**
-   Write a wide character string to FD 1. If the string is wider than
-   the specified maximum, truncate and ellipsize it.
-*/
 void writestr_ellipsis( const wchar_t *str, int max_width )
 {
 	int written=0;
@@ -314,9 +338,6 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 	}
 }
 
-/**
-   Escape and write a string to fd 1
-*/
 int write_escaped_str( const wchar_t *str, int max_len )
 {
 
@@ -352,16 +373,10 @@ int write_escaped_str( const wchar_t *str, int max_len )
 }
 
 
-/**
-   parm_ich seems to often be undefined, so we use this
-   workalike. Writes the specified number of spaces.
-*/
 int writespace( int c )
 {
 	if( repeat_char && strlen(repeat_char) )
 	{
-		debug( 1, L"YAY" );
-		
 		writembs( tparm( repeat_char, ' ', c ) );
 	}
 	else

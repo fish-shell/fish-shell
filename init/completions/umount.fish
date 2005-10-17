@@ -10,7 +10,7 @@ complete -y mount
 #
 # Find all mountpoints
 #
-complete -c umount -d "Mount point" -a '(cat /etc/mtab | cut -d " " -f 1-2|tr " " \n|sed -re "s/[0-9\.]*:\//\//"|grep "^/")'
+complete -c umount -d "Mount point" -x -a '(cat /etc/mtab | cut -d " " -f 1-2|tr " " \n|sed -re "s/[0-9\.]*:\//\//"|grep "^/")'
 
 complete -c umount -s V -d "Display version and exit"
 complete -c umount -s h -d "Display help and exit"
@@ -24,3 +24,4 @@ complete -c umount -s t -d "Actions should only be taken on file systems of the 
 complete -c umount -s O -d "Indicate  that  the  actions should only be taken on file systems with the specified options in /etc/fstab" -xa '(cat /etc/mtab | cut -d " " -f 4)\t"Mount option"'
 complete -c umount -s f -d "Force unmount (in case of an unreachable NFS system)"
 complete -c umount -s l -d "Detach the filesystem from the filesystem hierarchy now, and cleanup all references to the filesystem as soon as it is not busy"
+

@@ -30,8 +30,10 @@ end
 # without the description
 #
 
+#
 # Find files that complete $argv[1], has the suffix $argv[2], and
 # output them as completions with description $argv[3]
+#
 
 function __fish_complete_suffix -d "Complete using files"
 
@@ -56,7 +58,8 @@ function __fish_complete_suffix -d "Complete using files"
 end
 
 #
-# Find directories that complete $argv[1], output them as completions with description $argv[2] if defined, otherwise use 'Directory'
+# Find directories that complete $argv[1], output them as completions
+# with description $argv[2] if defined, otherwise use 'Directory'
 #
 
 function __fish_complete_directory -d "Complete using directories"
@@ -143,8 +146,6 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
 
 	for i in $short_opt
 
-#		echo >&2 Test short option \'$i\'
-
 		if test -z $i
 			continue
 		end
@@ -162,8 +163,6 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
 		if test -z $i
 			continue
 		end
-
-#		echo >&2 Test long option $i
 
 		if contains -- --$i (commandline -cpo)
 			return 0
@@ -232,8 +231,9 @@ function __fish_append -d "Internal completion function for appending string to 
 	printf "%s\n" $str$argv $str$argv,
 end
 
-
-#Completions for SysV startup scripts
+#
+# Completions for SysV startup scripts
+#
 
 set -g __fish_service_commands '
 	start\t"Start service"

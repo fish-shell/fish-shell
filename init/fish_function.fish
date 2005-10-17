@@ -925,6 +925,7 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 
 	if not status --is-command-substitution
 		echo psub: Not inside of command substitution
+		return
 	end
 
 	# Find unique file name for writing output to
@@ -935,8 +936,11 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 		end
 	end
 
-	# Write output to file
-	cat >$filename
+	# Write output to pipe. This needs to be done in the background so
+	# that the command substitution exits without needing to wait for
+	# all the commands to exit
+	mkfifo $filename 
+	cat >$filename &
 
 	# Write filename to stdout
 	echo $filename

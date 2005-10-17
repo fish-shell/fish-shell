@@ -896,7 +896,7 @@ function umask -d "Set default file permission mask"
 
 		case 0
 			if not set -q umask
-				set -g umask 775
+				set -g umask 664
 			end
 			if test $as_command -eq 1
 				echo umask $umask
@@ -909,7 +909,7 @@ function umask -d "Set default file permission mask"
 			end
 
 		case 1
-			set parsed (__fish_umask_parse $opt)
+			set -l parsed (__fish_umask_parse $opt)
 			if test (count $parsed) -eq 1
 				set -g umask $parsed
 			end

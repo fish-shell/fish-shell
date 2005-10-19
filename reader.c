@@ -2876,15 +2876,15 @@ wchar_t *reader_readline()
    the prompt, using syntax highlighting. This is used for reading
    scripts and init files.
 */
-static int read_ni()
+static int read_ni( int fd )
 {
 	FILE *in_stream;
 	wchar_t *buff=0;
 	buffer_t acc;
 
-	int des = dup( 0 );
+	int des = fd == 0 ? dup(0) : fd;
 	int res=0;
-
+	
 	if (des == -1)
 	{
 		wperror( L"dup" );
@@ -2897,7 +2897,8 @@ static int read_ni()
 	if( in_stream != 0 )
 	{
 		wchar_t *str;
-
+		int acc_used;
+		
 		while(!feof( in_stream ))
 		{
 			char buff[4096];
@@ -2905,9 +2906,18 @@ static int read_ni()
 			b_append( &acc, buff, c );
 		}
 		b_append( &acc, "\0", 1 );
+		acc_used = acc.used;
 		str = str2wcs( acc.buff );
 		b_destroy( &acc );
 
+		if(	fclose( in_stream ))
+		{
+			debug( 1, 
+				   L"Error while closing input" );
+			wperror( L"fclose" );
+			res = 1;
+		}
+		
 //		fwprintf( stderr, L"Woot is %d chars\n", wcslen( acc.buff ) );
 		
 		if( str )
@@ -2928,11 +2938,11 @@ static int read_ni()
 		}
 		else
 		{
-			if( acc.used > 1 )
+			if( acc_used > 1 )
 			{
 				debug( 1,
 					   L"Could not convert input. Read %d bytes.", 
-					   acc.used-1 );
+					   acc_used-1 );
 			}
 			else
 			{
@@ -2942,14 +2952,6 @@ static int read_ni()
 			res=1;			
 		}		
 
-		if(	fclose( in_stream ))
-		{
-			debug( 1, 
-				   L"Error while closing input" );
-			wperror( L"fclose" );
-			res = 1;
-		}
-		
 	}
 	else
 	{
@@ -2963,7 +2965,7 @@ static int read_ni()
 	return res;
 }
 
-int reader_read()
+int reader_read( int fd )
 {
 	int res;
 	/*
@@ -2972,17 +2974,18 @@ int reader_read()
 	   original state. We also update the signal handlers.
 	*/
 	int shell_was_interactive = is_interactive;
-	is_interactive = isatty(STDIN_FILENO);
+	
+	is_interactive = (fd == 0) && isatty(STDIN_FILENO);
 	signal_set_handlers();
 	
-	res= is_interactive?read_i():read_ni();
-
+	res= is_interactive?read_i():read_ni( fd );
+	
 	/*
-	   If the exit command was called in a script, only exit the
-	   script, not the program
+	  If the exit command was called in a script, only exit the
+	  script, not the program
 	*/
 	end_loop = 0;
-
+	
 	is_interactive = shell_was_interactive;
 	signal_set_handlers();
 	return res;

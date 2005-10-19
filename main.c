@@ -235,7 +235,7 @@ int main( int argc, char **argv )
 			if( my_optind == argc )
 			{
 				reader_push_current_filename( L"(stdin)" );
-				res = reader_read();				
+				res = reader_read( 0 );				
 				reader_pop_current_filename();
 			}
 			else
@@ -244,13 +244,9 @@ int main( int argc, char **argv )
 				char *file = *(argv+1);
 				int i; 
 				string_buffer_t sb;
-
-				if( close( 0 ) )
-				{
-					wperror(L"close");
-					return 1;
-				}
-				if( open(file, O_RDONLY) == -1 )
+				int fd;
+				
+				if( ( fd = open(file, O_RDONLY) ) == -1 )
 				{
 					wperror( L"open" );
 					return 1;
@@ -274,7 +270,7 @@ int main( int argc, char **argv )
 				}
 				
 				reader_push_current_filename( str2wcs( file ) );
-				res = reader_read();
+				res = reader_read( fd );
 
 				if( res )
 				{

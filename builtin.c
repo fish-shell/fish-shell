@@ -1956,7 +1956,7 @@ static int builtin_complete( wchar_t **argv )
 */
 static int builtin_source( wchar_t ** argv )
 {
-	int stdin_org;
+	int fd;
 	int res;
 	
 /*
@@ -1976,19 +1976,7 @@ static int builtin_source( wchar_t ** argv )
 		return 1;
 	}
 	
-	if( (stdin_org=dup( 0 )) == -1)
-	{
-		builtin_wperror(L"dup");
-		return 1;
-	}
-
-	if( close( 0 ) )
-	{
-		builtin_wperror(L"close");
-		return 1;
-	}
-	
-	if( wopen( argv[1], O_RDONLY ) == -1 )
+	if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
 	{		
 		builtin_wperror( L"open" );
 		res = 1;
@@ -1996,8 +1984,14 @@ static int builtin_source( wchar_t ** argv )
 	else
 	{
 		reader_push_current_filename( argv[1] );
+
+		/*
+		  Push a new non-shadowwing variable scope to the stack. That
+		  way one can use explicitly local variables in sourced files
+		  that will die on return to the calling file.
+		*/
 		env_push(0);		
-		res = reader_read();		
+		res = reader_read( fd );		
 		env_pop();
 		if( res )
 		{
@@ -2006,31 +2000,14 @@ static int builtin_source( wchar_t ** argv )
 					   argv[0],
 					   argv[1]
 				);
-			
 		}
 
-		if( close( 0 ) )
-		{
-			builtin_wperror(L"close");
-			res = errno;
-		}
+		/*
+		  Do not close fd after calling reader_read. reader_read
+		  automatically closes it before calling eval.
+		*/
+
 		reader_pop_current_filename();
-	}
-
-	if( dup( stdin_org ) == -1)
-	{
-		builtin_wperror(L"dup");
-		res = errno;
-		fwprintf( stderr, L"Could not restore stdout\n" );
-		sanity_lose();
-	}
-	
-	if( close( stdin_org ) )
-	{
-		builtin_wperror(L"close");
-		res = errno;
-		fwprintf( stderr, L"Could not restore stdout\n" );
-		sanity_lose();
 	}
 
 	return res;

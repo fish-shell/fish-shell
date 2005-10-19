@@ -14,9 +14,9 @@
 #include "util.h"
 
 /**
-  Read commands from fd 0 until encountering EOF
+  Read commands from \c fd until encountering EOF
 */
-int reader_read();
+int reader_read( int fd);
 
 /**
   Tell the shell that it should exit after the currently running command finishes.

@@ -2377,23 +2377,25 @@ static int read_i()
 	return 0;
 }
 
+/**
+   Test if there are bytes available for reading on the specified file
+   descriptor
+*/
 static int can_read( int fd )
 {
-	struct pollfd pfd = 
-	{
-		fd, POLLIN, 0 
-	}
+	struct pollfd pfd[] = 
+		{
+			{
+				fd, POLLIN, 0 
+			}
+		}
 	;
-	switch( poll( &pfd, 1, 0 ) )
-	{
-		case 1:
-			return 1;
-	}
-	return 0;	
+	return poll( pfd, 1, 0 ) == 1;
 }
 
 /**
-   Test if the specified character is in the private use area that fish uses to store internal characters
+   Test if the specified character is in the private use area that
+   fish uses to store internal characters
 */
 static int wchar_private( wchar_t c )
 {

@@ -815,7 +815,6 @@ void debug( int level, wchar_t *msg, ... )
 	sb_printf( &sb, L"%ls: ", program_name );
 	sb_vprintf( &sb, msg, va );
 	va_end( va );	
-
 	
 	if( screen_width )
 	{

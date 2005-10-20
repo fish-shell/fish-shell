@@ -8,15 +8,19 @@ Header file for the low level input library
 
 #include <wchar.h>
 
-#ifndef WCHAR_MAX
-#define WCHAR_MAX 0x80000000
-#endif
-
-#define WCHAR_END (WCHAR_MAX + (unsigned long)1)
+/*
+  Use unencoded private-use keycodes for internal characters
+*/
+#define INPUT_COMMON_RESERVED 0xe000
 
 enum
 {
-	R_NULL = WCHAR_END + (unsigned long)1
+	/**
+	   R_NULL is sometimes returned by the input when a character was
+	   requested but none could be delivered, or when an exception
+	   happened.
+	*/
+	R_NULL = INPUT_COMMON_RESERVED
 }
 	;
 

@@ -51,23 +51,32 @@
 
 #define DIRECTORIES_ONLY 32
 
-/** Character represeting a home directory */
-#define HOME_DIRECTORY 0xfffffffc
+/*
+  Use unencoded private-use keycodes for internal characters
+*/
+#define EXPAND_RESERVED 0xf000
 
-/** Character represeting process expantion */
-#define PROCESS_EXPAND 0xfffffffb
+enum
+{
+	/** Character represeting a home directory */
+	HOME_DIRECTORY = EXPAND_RESERVED,
 
-/** Character representing variable expantion */
-#define VARIABLE_EXPAND 0xfffffffa
+	/** Character represeting process expantion */
+	PROCESS_EXPAND,
+	
+	/** Character representing variable expantion */
+	VARIABLE_EXPAND,
 
-/** Character representing the start of a bracket expantion */
-#define BRACKET_BEGIN 0xfffffff9
+	/** Character representing the start of a bracket expantion */
+	BRACKET_BEGIN,
 
-/** Character representing the end of a bracket expantion */
-#define BRACKET_END 0xfffffff8
+	/** Character representing the end of a bracket expantion */
+	BRACKET_END,
 
-/** Character representing separation between two bracket elements */
-#define BRACKET_SEP 0xfffffff7
+	/** Character representing separation between two bracket elements */
+	BRACKET_SEP,
+}
+	;
 
 /** Character for separating two array elements. We use 30, i.e. the ascii record separator since that seems logical. */
 #define ARRAY_SEP 0x1e

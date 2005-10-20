@@ -2392,7 +2392,14 @@ static int can_read( int fd )
 	return 0;	
 }
 
-
+/**
+   Test if the specified character is in the private use area that fish uses to store internal characters
+*/
+static int wchar_private( wchar_t c )
+{
+	return ( (c >= 0xe000) && (c <= 0xf8ff ) );
+		
+}
 
 wchar_t *reader_readline()
 {
@@ -2442,7 +2449,7 @@ wchar_t *reader_readline()
 		while( 1 )
 		{
 			c=input_readch();
-			if( (c< WCHAR_END) && (c>31) && (c != 127) )
+			if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
 			{
 				if( can_read(0) )
 				{
@@ -2462,7 +2469,7 @@ wchar_t *reader_readline()
 							break;
 						}
 						c = input_readch();
-						if( (c< WCHAR_END) && (c>31) && (c != 127) )
+						if( (!wchar_private(c)) && (c>31) && (c != 127) )
 						{
 							arr[i]=c;
 							c=0;
@@ -2835,7 +2842,7 @@ wchar_t *reader_readline()
 			/* Other, if a normal character, we add it to the command */
 			default:
 			{
-				if( (c< WCHAR_END) && (c>31) && (c != 127) )
+				if( (!wchar_private(c)) && (c>31) && (c != 127) )
 					insert_char( c );
 				else
 					debug( 0, L"Unknown keybinding %d", c );

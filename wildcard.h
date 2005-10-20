@@ -15,20 +15,23 @@
 #include "util.h"
 
 /*
-    These constants are outside the 31 bit character space of USC4,
-	thogh they may clash with WEOF. I need to use characters outside of
-	the regular character space to represent wildcards and such, 
-	in order to do backslash removal before wildcard matching.
+  Use unencoded private-use keycodes for internal characters
 */
 
-/** Character representing any character except '/' */
-#define ANY_CHAR 0xfffffffe
+#define WILDCARD_RESERVED 0xf400
 
-/** Character representing any character string not containing '/' (A slash) */
-#define ANY_STRING 0xfffffffd
+enum
+{
+	/** Character representing any character except '/' */
+	ANY_CHAR = WILDCARD_RESERVED,
 
-/** Character representing any character string */
-#define ANY_STRING_RECURSIVE 0xfffffff6
+	/** Character representing any character string not containing '/' (A slash) */
+	ANY_STRING,
+
+	/** Character representing any character string */
+	ANY_STRING_RECURSIVE,
+}
+	;
 
 /**
     Expand the wildcard by matching against the filesystem. 

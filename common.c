@@ -815,75 +815,84 @@ void debug( int level, wchar_t *msg, ... )
 	sb_printf( &sb, L"%ls: ", program_name );
 	sb_vprintf( &sb, msg, va );
 	va_end( va );	
+
 	
-	start = pos = (wchar_t *)sb.buff;
-	while( 1 )
+	if( screen_width )
 	{
-		int overflow = 0;
+		start = pos = (wchar_t *)sb.buff;
+		while( 1 )
+		{
+			int overflow = 0;
 		
-		tok_width=0;
-
-		/*
-		  Tokenize on whitespace, and also calculate the width of the token
-		*/
-		while( *pos && ( !wcschr( L" \n\r\t", *pos ) ) )
-		{
+			tok_width=0;
 
 			/*
-			  Check is token is wider than one line.
-			  If so we mark it as an overflow and break the token.
+			  Tokenize on whitespace, and also calculate the width of the token
 			*/
-			if((tok_width + wcwidth(*pos)) > (screen_width-1))
+			while( *pos && ( !wcschr( L" \n\r\t", *pos ) ) )
 			{
-				overflow = 1;
-				break;				
-			}
+
+				/*
+				  Check is token is wider than one line.
+				  If so we mark it as an overflow and break the token.
+				*/
+				if((tok_width + wcwidth(*pos)) > (screen_width-1))
+				{
+					overflow = 1;
+					break;				
+				}
 			
-			tok_width += wcwidth( *pos );
-			pos++;
-		}
+				tok_width += wcwidth( *pos );
+				pos++;
+			}
 
-		/*
-		  If token is zero character long, we don't do anything
-		*/
-		if( pos == start )
-		{
-			start = pos = pos+1;
-		}
-		else if( overflow )
-		{
 			/*
-			  In case of overflow, we print a newline, except if we alreade are at position 0
+			  If token is zero character long, we don't do anything
 			*/
-			wchar_t *token = wcsndup( start, pos-start );
-			if( line_width != 0 )
-				putwc( L'\n', stderr );			
-			fwprintf( stderr, L"%ls-\n", token );
-			free( token );
-			line_width=0;
-		}
-		else
-		{
-			/*
-			  Print the token
-			*/
-			wchar_t *token = wcsndup( start, pos-start );
-			if( (line_width + (line_width!=0?1:0) + tok_width) > screen_width )
+			if( pos == start )
 			{
-				putwc( L'\n', stderr );
+				start = pos = pos+1;
+			}
+			else if( overflow )
+			{
+				/*
+				  In case of overflow, we print a newline, except if we alreade are at position 0
+				*/
+				wchar_t *token = wcsndup( start, pos-start );
+				if( line_width != 0 )
+					putwc( L'\n', stderr );			
+				fwprintf( stderr, L"%ls-\n", token );
+				free( token );
 				line_width=0;
 			}
-			fwprintf( stderr, L"%ls%ls", line_width?L" ":L"", token );
-			free( token );
-			line_width += (line_width!=0?1:0) + tok_width;
-		}
-		/*
-		  Break on end of string
-		*/
-		if( !*pos )
-			break;
+			else
+			{
+				/*
+				  Print the token
+				*/
+				wchar_t *token = wcsndup( start, pos-start );
+				if( (line_width + (line_width!=0?1:0) + tok_width) > screen_width )
+				{
+					putwc( L'\n', stderr );
+					line_width=0;
+				}
+				fwprintf( stderr, L"%ls%ls", line_width?L" ":L"", token );
+				free( token );
+				line_width += (line_width!=0?1:0) + tok_width;
+			}
+			/*
+			  Break on end of string
+			*/
+			if( !*pos )
+				break;
 		
-		start=pos;
+			start=pos;
+		}
+	}
+	else
+	{
+		fwprintf( stderr, L"%ls", sb.buff );
+		
 	}
 	putwc( L'\n', stderr );
 	

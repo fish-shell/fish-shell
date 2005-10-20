@@ -661,6 +661,12 @@ void exec( job_t *j )
 
 	io_data_t *io_buffer =0;
 
+	/*
+	  Set to 1 if something goes wrong while exec:ing the job, in which case the cleanup code will kick in.
+	*/
+	int exec_error=0;
+	
+
 	umask_val = get_umask();
 	
 	debug( 4, L"Exec job %ls with id %d", j->command, j->job_id );	
@@ -707,6 +713,8 @@ void exec( job_t *j )
 	
 	signal_block();
 
+
+
 	for (p = j->first_process; p; p = p->next)
 	{
 		mypipe[1]=-1;
@@ -739,7 +747,8 @@ void exec( job_t *j )
 			{
 				debug( 1, PIPE_ERROR );
 				wperror (L"pipe");
-				exit (1);
+				exec_error=1;
+				break;
 			}
 
 /*			fwprintf( stderr,
@@ -858,22 +867,22 @@ void exec( job_t *j )
 							
 							case IO_FILE:
 							{
-								int new_fd;
 /*								
   fwprintf( stderr, 
   L"Input redirection for builtin from file %ls\n",
   in->filename);
 */
-								new_fd=wopen( in->param1.filename,
+								builtin_stdin=wopen( in->param1.filename,
                                               in->param2.flags, umask_val );
-								if( new_fd == -1 )
+								if( builtin_stdin == -1 )
 								{
-									wperror( L"wopen" );
+									debug( 1, 
+										   FILE_ERROR,
+										   in->param1.filename );
+									wperror( L"open" );
 								}
 								else
 								{
-									builtin_stdin = new_fd;
-									
 									close_stdin = 1;
 								}
 								
@@ -882,6 +891,7 @@ void exec( job_t *j )
 
 							default:
 							{
+								builtin_stdin=-1;
 								debug( 1, 
 									   L"Unknown input redirection type %d",
 									   in->io_mode);
@@ -896,6 +906,12 @@ void exec( job_t *j )
 					builtin_stdin = pipe_read.param1.pipe_fd[0];
 				}
 
+				if( builtin_stdin == -1 )
+				{
+					exec_error=1;
+					break;
+				}
+				
 				builtin_push_io( builtin_stdin );
 				
 				/* 
@@ -934,7 +950,9 @@ void exec( job_t *j )
 				break;				
 			}
 		}
-
+		
+		if( exec_error )
+			break;
 
 		switch( p->type )
 		{
@@ -1167,6 +1185,8 @@ void exec( job_t *j )
 
 	signal_unblock();
 
+	
+
 	debug( 3, L"Job is constructed" );
 
 	j->io = io_remove( j->io, &pipe_read );
@@ -1181,8 +1201,11 @@ void exec( job_t *j )
 		proc_last_bg_pid = j->pgid;
 	}
 	
-	job_continue (j, 0);
-
+	if( !exec_error )
+	{
+		job_continue (j, 0);
+	}
+	
 	debug( 3, L"End of exec()" );
 	
 }

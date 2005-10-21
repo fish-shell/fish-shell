@@ -59,7 +59,7 @@ pid_t getpgid( pid_t pid );
 #define FORK_ERROR L"Could not create child process - exiting"
 
 /**
-   DEfault value for the umask
+   Default value for the umask
 */
 #define UMASK_DEFAULT 0664
 
@@ -71,12 +71,14 @@ pid_t getpgid( pid_t pid );
 static array_list_t *open_fds=0;
 
 /**
-   The umask. Recalculated every time exec is run.
+   The umask. Recalculated every time exec is run. by calling get_umask().
 */
 static int umask_val;
 
 /**
-   Calculated the current value of the umask
+   Calculate the current value of the umask. Should be done once at
+   the beginning of each call to exec. Uses the $umask environment
+   variable, if available, defaults to the constant UMASK_DEFAULT.
 */
 static int get_umask()
 {		
@@ -189,8 +191,9 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
 
 /**
    Close all fds in open_fds, except for those that are mentioned in
-   the redirection list io
-
+   the redirection list io. This should make sure that there are no
+   stray opened file descriptors in the child.
+   
    \param io the list of io redirections for this job. Pipes mentioned here should not be closed.
 */
 static void close_unused_internal_pipes( io_data_t *io )
@@ -263,7 +266,16 @@ void free_fd( io_data_t *io, int fd )
 	}
 }
 
+/**
+   Set up a childs io redirections. Should only be called by
+   setup_child_process(). Does the following: First it closes any open
+   file descriptors not related to the child by calling
+   close_unused_internal_pipes() and closing the universal variable
+   server file descriptor. It then goes on to perform all the
+   redirections described by \c io.
 
+   \param io the list of IO redirections for the child
+*/
 static void handle_child_io( io_data_t *io )
 {
 
@@ -393,7 +405,8 @@ static void handle_child_io( io_data_t *io )
    Initialize a new child process. This should be called right away
    after forking in the child process. If job control is suitable, the
    process is put in the jobs group, all signal handlers are reset,
-   SIGCHLD is unblocked, and all IO redirections are performed.
+   SIGCHLD is unblocked (the exec call blocks blocks SIGCHLD), and all
+   IO redirections and other file descriptor actions are performed.
 */
 static void setup_child_process( job_t *j )
 {
@@ -455,7 +468,6 @@ static void launch_process( process_t *p )
    Check if the IO redirection chains contains redirections for the
    specified file descriptor
 */
-
 static int has_fd( io_data_t *d, int fd )
 {
 	return io_get( d, fd ) != 0;
@@ -468,7 +480,6 @@ static int has_fd( io_data_t *d, int fd )
    suitable for use as block-level io, since the file won't be
    repeatedly reopened for every command in the block.
 */
-
 static io_data_t *io_transmogrify( io_data_t * in )
 {
 	io_data_t *out;
@@ -713,7 +724,13 @@ void exec( job_t *j )
 	
 	signal_block();
 
+	/*
+	  This loop loops over every process_t in the job, starting it as
+	  appropriate. This turns out to be rather complex, since a
+	  process_t can be one of many rather different things.
 
+	  The loop also has to handle pipelining between the jobs.
+	*/
 
 	for (p = j->first_process; p; p = p->next)
 	{
@@ -1183,9 +1200,7 @@ void exec( job_t *j )
 		}		
 	}
 
-	signal_unblock();
-
-	
+	signal_unblock();	
 
 	debug( 3, L"Job is constructed" );
 

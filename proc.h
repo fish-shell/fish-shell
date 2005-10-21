@@ -34,21 +34,52 @@ enum
 
 
 /** 
-	A structure representing a single process. Contains variables for
-	tracking process state and the process argument list. 
+	A structure representing a single fish process. Contains variables
+	for tracking process state and the process argument
+	list. Actually, a fish process can be either a regular externa
+	lrocess, an internal builtin which may or may not spawn a fake IO
+	process during execution, a shellscript function or a block of
+	commands to be evaluated by calling eval. Lastly, this process can
+	be the result of an exec command. The role of this process_t is
+	determined by the type field, which can be one of EXTERNAL,
+	INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK and
+	INTERNAL_EXEC.
+
+	The process_t contains information on how the process should be
+	started, such as command name and arguments, as well as runtime
+	information on the status of the actual physical process which
+	represents it. Shellscript functions, builtins and blocks of code
+	may all need to spawn an external process that handles the piping
+	and redirecting of IO for them.
+
+	If the process is of type EXTERNAL or INTERNAL_EXEC, argv is the
+	argument array and actual_cmd is the absolute path of the command
+	to execute.
+
+	If the process is of type ITERNAL_BUILTIN, argv is the argument
+	vector, and argv[0] is the name of the builtin command.
+
+	If the process is of type ITERNAL_FUNCTION, argv is the argument
+	vector, and argv[0] is the name of the shellscript function.
+
+	If the process is of type ITERNAL_BLOCK, argv has exactly one
+	element, which is the block of commands to execute.
+
 */
-typedef struct process{
-	/** argv parameter for for execv */
+typedef struct process
+{
+	/** 
+		Type of process. Can be one of \c EXTERNAL, \c
+		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK or
+		INTERNAL_EXEC
+	*/
+	int type;
+	/** argv parameter for for execv, builtin_run, etc. */
 	wchar_t **argv;
-	/** actual command to pass to exec */
+	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC */
 	wchar_t *actual_cmd;       
 	/** process ID */
 	pid_t pid;
-	/** 
-		Type of process. Can be one of \c EXTERNAL, \c
-		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK
-	*/
-	int type;
 	/** File descriptor that pipe output should bind to */
 	int pipe_fd;
 	/** true if process has completed */
@@ -65,10 +96,11 @@ typedef struct process{
 	/** Number of jiffies spent in process at last cpu time check */
 	unsigned long last_jiffies;	
 #endif
-} process_t;
+} 
+	process_t;
 
 
-/** Represents a pipeline of one or more processes.  */
+/** A pipeline of one or more processes. */
 typedef struct job
 {
 	/** command line, used for messages */
@@ -88,7 +120,7 @@ typedef struct job
 	/** 
 		Whether the specified job is completely constructed,
 		i.e. completely parsed, and every process in the job has been
-		forked
+		forked, etc.
 	*/
 	int constructed;
 	/**
@@ -99,11 +131,13 @@ typedef struct job
 	/** List of IO redrections for the job */
 	io_data_t *io;
 	
-	/** Should the exit status be negated */
+	/** Should the exit status be negated? This flag can only be set by the not builtin. */
 	int negate;	
-	/** Is this a conditional short circut thing? If so, is it an COND_OR or a COND_AND */
+
+	/** Pointer to the next job */
 	struct job *next;           
-} job_t;
+} 
+	job_t;
 
 /** Whether we are running a subshell command */
 extern int is_subshell;

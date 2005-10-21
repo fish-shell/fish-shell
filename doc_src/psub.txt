@@ -1,0 +1,21 @@
+
+\section psub psub - Perform process substitution
+
+\subsection psub-synopsis Synopsis
+ <tt>COMMAND1 (COMMAND2|psub) </tt>
+
+\subsection psub-description Description
+
+Posix shells feature a syntax that is a mix between command
+substitution and piping, called process substitution. It is used to
+send the output of a command into the calling command, much like
+command substitution, but with the difference that the output is not
+sent through commandline arguments but through a named pipe, with the
+filename of the named pipe sent as an argument to the calling
+program. The psub shellscript function, which when combined with a
+regular command substitution provides the same functionality.
+
+\subsection psub-example Example
+
+<tt>diff (sort a.txt|psub) (sort b.txt|psub)</tt> shows the difference
+between the sorted versions of files a.txt and b.txt.

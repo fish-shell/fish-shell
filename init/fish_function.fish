@@ -921,7 +921,21 @@ function umask -d "Set default file permission mask"
 
 end
 
+
 function psub -d "Read from stdin into a file and output the filename. Remove the file when the command that calles psub exits."
+
+	if count $argv >/dev/null
+		switch $argv[1]
+			case '-h*' --h --he --hel --help
+
+				help psub
+				return 0
+
+			case '*'
+				echo psub: Unknown argument $argv[1]
+				return 1
+		end
+	end
 
 	if not status --is-command-substitution
 		echo psub: Not inside of command substitution
@@ -958,9 +972,6 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 
 end
 
-
-if status --is-interactive
-
 function prevd-or-backward-word --key-binding 
 	if test -z (commandline)
 		prevd
@@ -990,6 +1001,4 @@ function delete-or-exit --key-binding
 	else
 		exit
 	end
-end
-
 end

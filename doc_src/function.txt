@@ -5,8 +5,12 @@
 
 \subsection function-description Description
 
-- <tt>-d DESCRIPTION</tt> or \c --description=DESCRIPTION is a description of what the function does, suitable as a completion description
 - \c -b or \c --key-binding specifies that the function is a key biding. Key binding functions work exactly like regular functions except that they can not be tab-completed, and may contain the '-' character. 
+- <tt>-d DESCRIPTION</tt> or \c --description=DESCRIPTION is a description of what the function does, suitable as a completion description
+- <tt>-j PID</tt> or <tt> --on-job-exit PID</tt> tells fish to run this function when the job with group id PID exits
+- <tt>-p PID</tt> or <tt> --on-process-exit PID</tt> tells fish to run this function when the fish child process with process id PID exits
+- <tt>-s</tt> or <tt>--on-signal SIGSPEC</tt> tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a singal number, or the signal name, such as SIGHUP (or just HUP)
+- <tt>-v</tt> or <tt>--on-variable VARIABLE_NAME</tt> tells fish to run this function when the variable VARIABLE_NAME changes value
 
 This builtin command is used to create a new function. A Function is a
 list of commands that will be executed when the name of the function

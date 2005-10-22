@@ -6,6 +6,10 @@ for i in (builtin -n)
 	complete -c help -x -a $i -d 'Help for the '$i' builtin'
 end
 
+for i in count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize psub umask type 
+	complete -c help -x -a $i -d 'Help for the '$i' command'
+end
+
 for i in syntax todo bugs history;
 	complete -c help -x -a $i -d 'Help section on '$i
 end

@@ -154,7 +154,7 @@ function help -d "Show help for the fish shell"
 		set fish_help_page "builtins.html\#"$fish_help_item
 	end
 	
-	if contains -- $fish_help_item count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize
+	if contains -- $fish_help_item count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize psub umask type 
 		set fish_help_page "commands.html\#"$fish_help_item
 	end
 	
@@ -755,48 +755,82 @@ echo
 end
 
 function __fish_umask_parse -d "Parses a file permission specification as into an octal version"
-	# Test if already a valid octal mask
-	if echo $argv | grep -E '^[0-7]{1,4}$' >/dev/null
-		echo $argv
+	# Test if already a valid octal mask, and pad it with zeros
+	if echo $argv | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
+		for i in (seq (echo 5-(echo $argv|wc -c)|bc)); set -- argv 0$argv; end
+		echo $argv 
 	else
-		set res 0 0 0
-		set el (echo $argv|tr , \n)
+		# Test if argument really is a valid symbolic mask
+		if not echo $argv | grep -E '^(((u|g|o|a|)(=|\+|-)|)(r|w|x)*)(,(((u|g|o|a|)(=|\+|-)|)(r|w|x)*))*$' >/dev/null
+			echo umask: Invalid mask $argv >&2
+			return 1
+		end
+
+		set -e implicit_all
+
+		# Make sure the current umask is defined
+		if not set -q umask
+			set umask 0000
+		end
+
+		# If umask is invalid, reset it
+		if not echo $umask | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
+			set umask 0000
+		end
+
+		# Pad umask with zeros
+		for i in (seq (echo 5-(echo $umask|wc -c)|bc)); set -- argv 0$umask; end
+
+		# Insert inverted umask into res variable
+
+		set tmp $umask
+		for i in 1 2 3
+			set -- tmp (echo $tmp|cut -c 2-)
+			set -- res[$i] (echo 7-(echo $tmp|cut -c 1)|bc)
+		end
+				
+		set -- el (echo $argv|tr , \n)
 		for i in $el
 			switch $i
 				case 'u*'
 					set idx 1
-					set i (echo $i| cut -c 2-) 
+					set -- i (echo $i| cut -c 2-)
 
 				case 'g*'
 					set idx 2
-					set i (echo $i| cut -c 2-) 
+					set -- i (echo $i| cut -c 2-)
 
 				case 'o*'
 					set idx 3
-					set i (echo $i| cut -c 2-) 
+					set -- i (echo $i| cut -c 2-)
 
 				case 'a*'
 					set idx 1 2 3
-					set i (echo $i| cut -c 2-) 
+					set -- i (echo $i| cut -c 2-)
 
 				case '*'
+					set implicit_all 1
 					set idx 1 2 3
 			end
 
 			switch $i
 				case '=*'
 					set mode set
-					set i (echo $i| cut -c 2-) 
+					set -- i (echo $i| cut -c 2-) 
 
 				case '+*'
 					set mode add
-					set i (echo $i| cut -c 2-) 
+					set -- i (echo $i| cut -c 2-) 
 
 				case '-*'
 					set mode remove
-					set i (echo $i| cut -c 2-) 
+					set -- i (echo $i| cut -c 2-) 
 
 				case '*'
+					if not set -q implicit_all
+						echo umask: Invalid mask $argv >&2
+						return
+					end
 					set mode set
 			end
 
@@ -806,41 +840,67 @@ function __fish_umask_parse -d "Parses a file permission specification as into a
 			end
 
 			set val 0
-			if echo $perm |grep 'r' >/dev/null
+			if echo $i |grep 'r' >/dev/null
 				set val 4
 			end
-			if echo $perm |grep 'w' >/dev/null
+			if echo $i |grep 'w' >/dev/null
 				set val (echo $val + 2|bc)
 			end
-			if echo $perm |grep 'x' >/dev/null
+			if echo $i |grep 'x' >/dev/null
 				set val (echo $val + 1|bc)
 			end
 
 			for j in $idx
-				set res[$j] $val
+				switch $mode
+					case set
+						 set res[$j] $val
+
+					case add
+						set res[$j] (perl -e 'print( ( '$res[$j]'|'$val[$j]' )."\n" )')
+
+					case remove
+						set res[$j] (perl -e 'print( ( (7-'$res[$j]')&'$val[$j]' )."\n" )')
+				end
 			end
 		end
-		echo $res[1]$res[2]$res[3]
+
+		for i in 1 2 3
+			set res[$i] (echo 7-$res[$i]|bc)
+		end
+		echo 0$res[1]$res[2]$res[3]
 	end
 end
 
 function __fish_umask_print_symbolic
 	set -l res ""
-	set -l letter u g o
+	set -l letter a u g o
 
-	for i in 1 2 3
+	# Make sure the current umask is defined
+	if not set -q umask
+		set umask 0000
+	end
+
+	# If umask is invalid, reset it
+	if not echo $umask | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
+		set umask 0000
+	end
+
+	# Pad umask with zeros
+	for i in (seq (echo 5-(echo $umask|wc -c)|bc)); set -- argv 0$umask; end
+
+	for i in 2 3 4
 		set res $res,$letter[$i]=
 		set val (echo $umask|cut -c $i)
 
-		if contains $val 4 5 6 7
+		if contains $val 0 1 2 3
 		   set res {$res}r
 		end
 	
-		if contains $val 2 3 6 7
+		if contains $val 0 1 4 5
 		   set res {$res}w
 		end
 
-		if contains $val 1 3 5 7
+		if contains $val 0 2 4 6
 		   set res {$res}x
 		end
 
@@ -896,7 +956,7 @@ function umask -d "Set default file permission mask"
 
 		case 0
 			if not set -q umask
-				set -g umask 664
+				set -g umask 113
 			end
 			if test $as_command -eq 1
 				echo umask $umask

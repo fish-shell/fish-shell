@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 #include <pwd.h>
 
-
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #else
@@ -27,6 +26,7 @@
 #endif
 
 #include <term.h>
+#include <errno.h>
 
 #include "util.h"
 #include "wutil.h"
@@ -384,6 +384,24 @@ void env_set( const wchar_t *key,
 	{
 		fish_setlocale(LC_ALL,val);
 	}
+
+	if( wcscmp( key, L"umask" ) == 0)
+	{
+		wchar_t *end;
+		int mask;
+		
+		if( val && wcslen(val) )
+		{				
+			errno=0;
+			mask = wcstol( val, &end, 8 );
+	
+			if( !errno && !*end )
+			{
+				umask( mask );
+			}
+		}
+	}
+	
 
 	/*
 	  Zero element arrays are internaly not coded as null but as this placeholder string

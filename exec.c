@@ -58,10 +58,6 @@ pid_t getpgid( pid_t pid );
 */
 #define FORK_ERROR L"Could not create child process - exiting"
 
-/**
-   Default value for the umask
-*/
-#define UMASK_DEFAULT 0664
 
 /**
    List of all pipes used by internal pipes. These must be closed in
@@ -69,36 +65,6 @@ pid_t getpgid( pid_t pid );
    around.
 */
 static array_list_t *open_fds=0;
-
-/**
-   The umask. Recalculated every time exec is run. by calling get_umask().
-*/
-static int umask_val;
-
-/**
-   Calculate the current value of the umask. Should be done once at
-   the beginning of each call to exec. Uses the $umask environment
-   variable, if available, defaults to the constant UMASK_DEFAULT.
-*/
-static int get_umask()
-{		
-	wchar_t *m = env_get( L"umask" );
-	wchar_t *end;
-	int mask;
-	
-	if( !m || !wcslen(m) )
-		return UMASK_DEFAULT;
-	
-	errno=0;
-	mask = wcstol( m, &end, 8 );
-	
-	if( errno || *end )
-	{
-		return UMASK_DEFAULT;
-	}
-
-	return mask;
-}
 
 
 void exec_close( int fd )
@@ -313,7 +279,7 @@ static void handle_child_io( io_data_t *io )
 				break;
 			case IO_FILE:
 				if( (tmp=wopen( io->param1.filename,
-                                io->param2.flags, umask_val ))==-1 )
+                                io->param2.flags, 0777 ) )==-1 )
 				{
 					debug( 1, 
 						   FILE_ERROR,
@@ -516,7 +482,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		{
 			int fd;
 			
-			if( (fd=wopen( in->param1.filename, in->param2.flags, umask_val ))==-1 )
+			if( (fd=wopen( in->param1.filename, in->param2.flags, 0777 ) )==-1 )
 			{
 				debug( 1, 
 					   FILE_ERROR,
@@ -676,9 +642,7 @@ void exec( job_t *j )
 	  Set to 1 if something goes wrong while exec:ing the job, in which case the cleanup code will kick in.
 	*/
 	int exec_error=0;
-	
 
-	umask_val = get_umask();
 	
 	debug( 4, L"Exec job %ls with id %d", j->command, j->job_id );	
 	
@@ -890,7 +854,7 @@ void exec( job_t *j )
   in->filename);
 */
 								builtin_stdin=wopen( in->param1.filename,
-                                              in->param2.flags, umask_val );
+                                              in->param2.flags, 0777 );
 								if( builtin_stdin == -1 )
 								{
 									debug( 1, 

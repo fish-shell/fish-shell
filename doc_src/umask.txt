@@ -7,15 +7,23 @@
 \subsection umask-description Description
 
 With no argument, the current file-creation mask is printed, if an
-argument is specified, it is the new file creation mask.
+argument is specified, it is the new file creation mask. The mask may
+be specified as an octal number, in which case it is interpreted as
+the rights that should be masked away, i.e. it is the inverse of the
+file permissions any new files will have. If a synbolic mask is
+specified, the actual file permission bits, and not the inverse, are
+specified.
 
 - <code>-h</code> or <code>--help</code> print this message
 - <code>-S</code> or <code>--symbolic</code> prints the file-creation mask in symbolic form instead of octal form. Use <code>man chmod</code> for more information.
 - <code>-p</code> or <code>--as-command</code> prints any output in a form that may be reused as input
 
-The umask implementation in fish should behave identically to the one in bash.
+The umask implementation in fish should behave identically to the one
+in bash.
 
 \subsection umask-example Example
 
-<code>umask 600</code> sets the file creation mask to read and write for the owner and no permissions at all for any other users.
+<code>umask 177</code> or <code>umask u=rw</code>sets the file
+creation mask to read and write for the owner and no permissions at
+all for any other users.
 

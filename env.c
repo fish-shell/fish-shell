@@ -234,6 +234,8 @@ static void universal_callback( int type,
 void env_init()
 {
 	char **p;
+	struct passwd *pw;
+	wchar_t *uname;
 
 	sb_init( &dyn_var );
 
@@ -253,11 +255,14 @@ void env_init()
 	hash_put( &env_read_only, L"PWD", L"" );
 	
 	/*
-	  HOME should be writeable by root, since this is often a
+	  HOME and USER should be writeable by root, since this can be a
 	  convenient way to install software.
 	*/
 	if( getuid() != 0 )
+	{
 		hash_put( &env_read_only, L"HOME", L"" );
+		hash_put( &env_read_only, L"USER", L"" );
+	}
 	
 	top = malloc( sizeof(env_node_t) );
 	top->next = 0;
@@ -266,7 +271,7 @@ void env_init()
 	hash_init( &top->env, &hash_wcs_func, &hash_wcs_cmp );
 	global_env = top;
 	global = &top->env;	
-
+	
 	/*
 	  Import environment variables
 	*/
@@ -300,8 +305,12 @@ void env_init()
 			env_set( key, val, ENV_EXPORT | ENV_GLOBAL );
 		}		
 		free(key);
-	}		
-
+	}
+	
+	pw = getpwuid( getuid() );
+	uname = str2wcs( pw->pw_name );
+	env_set( L"USER", uname, ENV_GLOBAL | ENV_EXPORT );
+	
 	env_universal_init( env_get( L"FISHD_SOKET_DIR"), 
 						env_get( L"USER" ),
 						&start_fishd,

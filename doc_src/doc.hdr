@@ -503,7 +503,7 @@ inherited by any commands started by fish. It is convention that
 exported variables are in uppercase and unexported variables are in
 lowercase.
 
-Variables can be explicitly set to be exportes with the \c -x or \c
+Variables can be explicitly set to be exported with the \c -x or \c
 --export switch, or not exported with the \c -u or \c --unexport
 switch.  The exporting rules when creating or updating a variable are
 identical to the scoping rules for variables:
@@ -557,7 +557,7 @@ echo $smurf
 \subsection variables-special Special variables
 
 The user can change the settings of \c fish by changing the values of
-certain environment variables.These are:
+certain environment variables. 
 
 - \c BROWSER, which is the users preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 - \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
@@ -569,12 +569,15 @@ values of certain environment variables. The user can not change the values of t
 
 - \c _, which is the name of the currently running command.
 - \c history, which is an array containing the last commands that where entered
-- \c HOME, which is the users home directory. This variable can be changed by the root user.
+- \c HOME, which is the users home directory. This variable can only be changed by the root user.
 - \c PWD, which is the current working directory.
 - \c status, which is the exit status of the last foreground job to exit. If a job contains pipelines, the status of the last command in the pipeline is the status for the job.
+- \c USER, which is the username. This variable can only be changed by the root user.
 
-\c fish also uses several variables internally. Such variables are
-prefixed with the string __FISH or __fish. These should be ignored by the user.
+Variables whose name are in uppercase are exported to the commands
+started by fish. \c fish also uses several variables internally. Such
+variables are prefixed with the string __FISH or __fish. These should
+be ignored by the user.
 
 \section builtin-overview Builtins 
 

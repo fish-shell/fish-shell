@@ -117,6 +117,11 @@ static hash_table_t *global;
 static hash_table_t env_read_only;
 
 /**
+   Table of variables whose value is dynamically calculated, such as umask, status, etc
+*/
+static hash_table_t env_electric;
+
+/**
    Exported variable array used by execv
 */
 static char **export_arr=0;
@@ -194,6 +199,21 @@ static void start_fishd()
 	sb_destroy( &cmd );
 }
 
+/**
+   Return the current umask value.
+*/
+static mode_t get_umask()
+{
+	mode_t res;
+	res = umask( 0 );
+	umask( res );
+	return res;
+}
+
+/**
+   Universal variable callback function. This function makes sure the
+   proper events are triggered when an event occurs.
+*/
 static void universal_callback( int type,
 								const wchar_t *name, 
 								const wchar_t *val )
@@ -254,6 +274,14 @@ void env_init()
 	hash_put( &env_read_only, L"COLUMNS", L"" );
 	hash_put( &env_read_only, L"PWD", L"" );
 	
+	/*
+	  Names of all dynamically calculated variables
+	*/
+	hash_init( &env_electric, &hash_wcs_func, &hash_wcs_cmp );
+	hash_put( &env_electric, L"history", L"" );
+	hash_put( &env_electric, L"status", L"" );
+	hash_put( &env_electric, L"umask", L"" );
+
 	/*
 	  HOME and USER should be writeable by root, since this can be a
 	  convenient way to install software.
@@ -398,17 +426,24 @@ void env_set( const wchar_t *key,
 	{
 		wchar_t *end;
 		int mask;
-		
+
+		/*
+		  Set the new umask
+		*/
 		if( val && wcslen(val) )
 		{				
 			errno=0;
 			mask = wcstol( val, &end, 8 );
 	
-			if( !errno && !*end )
+			if( !errno && (!*end) && (mask <= 0777) && (mask >= 0) )
 			{
 				umask( mask );
 			}
 		}
+		/*
+		  Do not actually create a umask variable, on env_get, it will be calculated dynamically
+		*/
+		return;
 	}
 	
 
@@ -665,6 +700,12 @@ wchar_t *env_get( const wchar_t *key )
 		sb_printf( &dyn_var, L"%d", proc_get_last_status() );		
 		return (wchar_t *)dyn_var.buff;		
 	}
+	else if( wcscmp( key, L"umask" )==0 )
+	{
+		sb_clear( &dyn_var );			
+		sb_printf( &dyn_var, L"0%0.3o", get_umask() );		
+		return (wchar_t *)dyn_var.buff;		
+	}
 	
 	while( env != 0 )
 	{
@@ -703,7 +744,7 @@ int env_exist( const wchar_t *key )
 	env_node_t *env = top;
 	wchar_t *item;
 	
-    if( hash_get( &env_read_only, key ) )
+    if( hash_get( &env_read_only, key ) || hash_get( &env_electric, key ) )
     {
         return 1;
     }
@@ -807,6 +848,13 @@ static void add_to_hash( const void *k, void *aux )
 			  0 );
 }
 
+static void add_key_to_list( const void * key, 
+							 const void * val, 
+							 void *aux )
+{
+	al_push( (array_list_t *)aux, key );
+}
+
 
 void env_get_names( array_list_t *l, int flags )
 {
@@ -853,11 +901,9 @@ void env_get_names( array_list_t *l, int flags )
 		hash_foreach2( &global_env->env, 
 					   add_key_to_hash,
 					   &names );
+
 		if( get_names_show_unexported )
-		{
-			al_push( l, L"history" );
-			al_push( l, L"status" );
-		}
+			hash_foreach2( &env_electric, &add_key_to_list, l );
 		
 		if( get_names_show_exported )
 		{

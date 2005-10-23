@@ -563,6 +563,7 @@ certain environment variables.
 - \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
 - \c fish_color_normal, \c fish_color_command, \c fish_color_substitution, \c fish_color_redirection, \c fish_color_end, \c fish_color_error, \c fish_color_param, \c fish_color_comment, \c fish_color_match, \c fish_color_search_match, \c fish_color_cwd, \c fish_pager_color_prefix, \c fish_pager_color_completion, \c fish_pager_color_description and \c fish_pager_color_progress are used to change the color of various elements in \c fish. These variables are universal, i.e. when changing them, their new value will be used by all running fish sessions. The new value will also be retained when restarting fish.
 - \c PATH, which is an array of directories in which to search for commands
+- \c umask, which is the current file creation mask. The preffered way to change the umask variable is through the <a href="commands.html#umask">umask shellscript function</a>. An attempt to set umask to an invalid value will always fail.
 
 \c fish also sends additional information to the user through the
 values of certain environment variables. The user can not change the values of these variables. They are:
@@ -635,6 +636,7 @@ builtins or shellscript functions, and can only be used inside fish.
 - <a href="builtins.html#switch">switch</a>, conditionally execute a block of commands
 - <a href="commands.html#tokenize">tokenize</a>, split a string up into multiple tokens
 - <a href="builtins.html#ulimit">ulimit</a>, set or get the shells resurce usage limits
+- <a href="commandss.html#umask">umask</a>, set or get the file creation mask
 - <a href="builtins.html#while">while</a>, perform a block of commands while a condition is met
 
 For more information about these commands, use the <tt>--help</tt>

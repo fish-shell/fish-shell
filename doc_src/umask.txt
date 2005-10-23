@@ -10,9 +10,30 @@ With no argument, the current file-creation mask is printed, if an
 argument is specified, it is the new file creation mask. The mask may
 be specified as an octal number, in which case it is interpreted as
 the rights that should be masked away, i.e. it is the inverse of the
-file permissions any new files will have. If a synbolic mask is
-specified, the actual file permission bits, and not the inverse, are
-specified.
+file permissions any new files will have. 
+
+If a symbolic mask is specified, the actual file permission bits, and
+not the inverse, should be specified. A symbolic mask is a comma
+separated list of rights. Each right consists of three parts:
+
+- The first part specifies to whom this set of right applies, and can
+be one of \c u, \c g, \c o or \c a, where \c u specifies the user who
+owns the file, \c g specifies the group owner of the file, \c o
+specifiec other users rights and \c a specifies all three should be
+changed.
+- The second part of a right specifies the mode, and can be one of \c
+=, \c + or \c -, where \c = specifies that the rights should be set to
+the new value, \c + specifies that the specified right should be added
+to those previously specified and \c - specifies that the specified
+rights should be removed from those previously specified.
+- The third part of a right specifies what rights should be changed
+and can be any compination of \c r, \c w and \c x, representing
+read, write and execute rights.
+
+If the first and second parts are skipped, they are assumed to be \c a
+and \c =, respectively. As an example, <code>r,u+w</code> means all
+users should have read access and the file owner should also have
+write access.
 
 - <code>-h</code> or <code>--help</code> print this message
 - <code>-S</code> or <code>--symbolic</code> prints the file-creation mask in symbolic form instead of octal form. Use <code>man chmod</code> for more information.

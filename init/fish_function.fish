@@ -724,36 +724,6 @@ function type -d "Print the type of a command"
 	return $status
 end
 
-function __fish_umask_help
-
-set bullet \*
-if count $LANG >/dev/null
-	if test (expr match $LANG ".*UTF") -gt 0
-		set bullet \u2022
-	end
-end
-
-echo \tumask - Set or get the user file-creation mask
-echo
-echo (__bold Synopsis)
-echo
-echo \t(set_color $fish_color_command)umask(set_color normal) [OPTIONS] [mask]
-echo
-echo (__bold Description)
-echo
-echo \tWith no argument, the current file-creation mask is printed, if an\n\targument is specified, it is the new file creation mask.
-echo
-echo \t$bullet (__bold -h) or (__bold --help) print this message
-echo \t$bullet (__bold -S) or (__bold --symbolic) prints the file-creation mask in symbolic\n\t\ \ form instead of octal form. Use \'(set_color $fish_color_command)man(set_color $fish_color_normal) chmod\' for more information.
-echo \t$bullet (__bold -p) or (__bold --as-command) prints any output in a form that may be reused\n\t\ \ as input
-echo
-echo (__bold Example)
-echo
-echo \t\'(set_color $fish_color_command)umask(set_color normal) 600\' sets the file creation mask to read and write for the\n\towner and no permissions at all for any other users.
-echo
-
-end
-
 function __fish_umask_parse -d "Parses a file permission specification as into an octal version"
 	# Test if already a valid octal mask, and pad it with zeros
 	if echo $argv | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
@@ -767,19 +737,6 @@ function __fish_umask_parse -d "Parses a file permission specification as into a
 		end
 
 		set -e implicit_all
-
-		# Make sure the current umask is defined
-		if not set -q umask
-			set umask 0000
-		end
-
-		# If umask is invalid, reset it
-		if not echo $umask | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
-			set umask 0000
-		end
-
-		# Pad umask with zeros
-		for i in (seq (echo 5-(echo $umask|wc -c)|bc)); set -- argv 0$umask; end
 
 		# Insert inverted umask into res variable
 
@@ -875,19 +832,6 @@ function __fish_umask_print_symbolic
 	set -l res ""
 	set -l letter a u g o
 
-	# Make sure the current umask is defined
-	if not set -q umask
-		set umask 0000
-	end
-
-	# If umask is invalid, reset it
-	if not echo $umask | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
-		set umask 0000
-	end
-
-	# Pad umask with zeros
-	for i in (seq (echo 5-(echo $umask|wc -c)|bc)); set -- argv 0$umask; end
-
 	for i in 2 3 4
 		set res $res,$letter[$i]=
 		set val (echo $umask|cut -c $i)
@@ -933,7 +877,7 @@ function umask -d "Set default file permission mask"
 
 		switch $opt[1]
 			case -h --help
-				__fish_umask_help
+				help umask
 				return 0
 
 			case -p --as-command

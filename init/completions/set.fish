@@ -43,4 +43,4 @@ function __fish_set_is_color -d 'Test if We are specifying a color value for the
 	end	
 end
 
-complete -c set -n '__fish_set_is_color' -x -a '$__fish_colors' -d Color
+complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' -d Color

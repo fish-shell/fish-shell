@@ -53,10 +53,15 @@ end
 # Set various color values
 #
 
-function set_default -d "Set an universal variable, unless it has already been set"
+function set_default_color -d "Set an universal variable, unless it has already been set. If set, verify that it is a valid color name"
 	if not set -q $argv[1] 
 		set -U -- $argv	
+		return
 	end
+	if contains $$argv[1] (set_color --print-colors)
+        return
+	end
+	set -U -- $argv
 end
 
 function set_exported_default -d "Set an exported universal variable, unless it has already been set"
@@ -67,28 +72,28 @@ end
 
 
 # Regular syntax highlighting colors
-set_default fish_color_normal normal
-set_default fish_color_command green
-set_default fish_color_redirection normal
-set_default fish_color_comment brown
-set_default fish_color_error red
+set_default_color fish_color_normal normal
+set_default_color fish_color_command green
+set_default_color fish_color_redirection normal
+set_default_color fish_color_comment brown
+set_default_color fish_color_error red
 
-set_default fish_color_cwd green
+set_default_color fish_color_cwd green
 
 # Background color for matching quotes and parenthesis
-set_default fish_color_match cyan
+set_default_color fish_color_match cyan
 
 # Background color for search matches
-set_default fish_color_search_match purple
+set_default_color fish_color_search_match purple
 
 # Pager colors
-set_default fish_pager_color_prefix cyan
-set_default fish_pager_color_completion normal
-set_default fish_pager_color_description normal
-set_default fish_pager_color_progress cyan
+set_default_color fish_pager_color_prefix cyan
+set_default_color fish_pager_color_completion normal
+set_default_color fish_pager_color_description normal
+set_default_color fish_pager_color_progress cyan
 
 # Directory history colors
-set_default fish_color_history_current cyan
+set_default_color fish_color_history_current cyan
 
 
 #
@@ -115,5 +120,5 @@ if command ls --color=auto --help 1>/dev/null 2>/dev/null
 end
 
 
-functions -e set_default
+functions -e set_default_color
 functions -e set_exported_default

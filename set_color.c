@@ -96,13 +96,22 @@ int translate_color( char *str )
 	
 }
 
+void print_colors()
+{
+	int i;
+	for( i=0; i<COLORS; i++ )
+	{
+		printf( "%s\n", col[i] );
+	}	
+}
+
 int main( int argc, char **argv )
 {
 	char *bgcolor=0;
 	char *fgcolor=0;
 	int fg, bg;
 	int bold=0;
-	
+		
 	while( 1 )
 	{
 #ifdef __GLIBC__
@@ -125,6 +134,10 @@ int main( int argc, char **argv )
 					"version", no_argument, 0, 'v' 
 				}
 				,
+				{
+					"print-colors", no_argument, 0, 'c' 
+				}
+				,
 				{ 
 					0, 0, 0, 0 
 				}
@@ -135,13 +148,13 @@ int main( int argc, char **argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "b:hvo", 
+							   "b:hvoc", 
 							   long_options, 
 							   &opt_index );
 #else
 		int opt = getopt( argc,
 						  argv, 
-						  "b:hvo" );
+						  "b:hvoc" );
 #endif
 		if( opt == -1 )
 			break;
@@ -166,6 +179,10 @@ int main( int argc, char **argv )
 				fprintf( stderr, "set_color, version %s\n", PACKAGE_VERSION );
 				exit( 0 );								
 
+			case 'c':
+				print_colors();
+				exit(0);
+				
 			case '?':
 				return 1;
 				

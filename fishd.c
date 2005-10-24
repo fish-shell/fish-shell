@@ -350,12 +350,17 @@ void load_or_save( int save)
 	close( c.fd );
 }
 
+/**
+   Load variables from disk
+*/
 static void load()
 {
 	load_or_save(0);
 }
 
-
+/**
+   Save variables to disk
+*/
 static void save()
 {
 	load_or_save(1);
@@ -376,7 +381,9 @@ static void init()
 	load();	
 }
 
-
+/**
+   Main function for fishd
+*/
 int main( int argc, char ** argv )
 {
 	int child_socket, t;

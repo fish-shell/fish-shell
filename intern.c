@@ -17,6 +17,9 @@
 hash_table_t *intern_table=0;
 hash_table_t *intern_static_table=0;
 
+/**
+   Load static strings that are universally common. Currently only loads the empty string.
+*/
 static void intern_load_common_static()
 {
 	intern_static( L"" );
@@ -94,6 +97,9 @@ const wchar_t *intern_static( const wchar_t *in )
 	return res;
 }
 
+/**
+   Free the specified key/value pair. Should only be called by intern_free_all at shutdown
+*/
 static void clear_value( const void *key, const void *data )
 {
 	debug( 3,  L"interned string: '%ls'", data );	

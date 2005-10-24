@@ -17,10 +17,29 @@ enum
 }
 ;
 
+/**
+   Error message on missing argument
+*/
 #define BUILTIN_ERR_MISSING L": Expected argument"
+
+/**
+   Error message on invalid combination of options
+*/
 #define BUILTIN_ERR_COMBO L": Invalid combination of options"
+
+/**
+   Error message on multiple scope levels for variables
+*/
 #define BUILTIN_ERR_GLOCAL L": Variable can only be one of universal, global and local"
+
+/**
+   Error message for specifying both export and unexport to set/read
+*/
 #define BUILTIN_ERR_EXPUNEXP L": Variable can't be both exported and unexported"
+
+/**
+   Error message for unknown switch
+*/
 #define BUILTIN_ERR_UNKNOWN	L": Unknown option"
 
 /**
@@ -103,8 +122,19 @@ int builtin_count_args( wchar_t **argv );
 void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 
 
+/**
+   The set builtin, used for setting variables. Defined in builtin_set.c.
+*/
 int builtin_set(wchar_t **argv);
+
+/**
+   The commandline builtin, used for setting and getting the contents of the commandline. Defined in builtin_commandline.c.
+*/
 int builtin_commandline(wchar_t **argv);
+
+/**
+   The ulimit builtin, used for setting resource limits. Defined in builtin_ulimit.c.
+*/
 int builtin_ulimit(wchar_t **argv);
 
 /** 

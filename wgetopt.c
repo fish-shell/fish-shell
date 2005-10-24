@@ -1,3 +1,22 @@
+/** \file wgetopt.c
+	A version of the getopt library for use with wide character strings. 
+
+	This is simply the gnu getopt library, but converted for use with
+	wchar_t instead of char. This is not usually useful since the argv
+	array is always defined to be of type char**, but in fish, all
+	internal commands use wide characters and hence this library is
+	useful.
+
+	If you want to use this version of getopt in your program, simply
+	copy wgetopt.c and wgetopt.h into your program, include wgetopt.h,
+	and use all the regular getopt functions, prefixing every
+	function, global variable and structure with a 'w', and use only
+	wide character strings. There are no other functional changes in
+	this version of getopt besides using wide character strings.
+
+*/
+
+
 /* Getopt for GNU.
    NOTE: getopt is now part of the C library, so if you don't know what
    "Keep this file name-space clean" means, talk to roland@gnu.ai.mit.edu

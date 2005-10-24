@@ -724,6 +724,9 @@ static int wcsbindingname( wchar_t *str )
 	return 1;
 }
 
+/**
+   Debug function to print the current block stack
+*/
 static void print_block_stack( block_t *b )
 {
 	if( !b )
@@ -1414,6 +1417,9 @@ static int builtin_read( wchar_t **argv )
 	return 0;
 }
 
+/**
+   The status builtin. Gives various status information on fish.
+*/
 static int builtin_status( wchar_t **argv )
 {
 	enum 
@@ -2458,6 +2464,9 @@ static int builtin_for( wchar_t **argv )
 	return res;
 }
 
+/**
+   The begin builtin. Creates a nex block.
+*/
 static int builtin_begin( wchar_t **argv )
 {
 	parser_push_block( BEGIN );

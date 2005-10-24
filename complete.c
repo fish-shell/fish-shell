@@ -309,7 +309,9 @@ static void clear_hash_entry( const void *key, const void *data )
 	free( (void *)data );
 }
 
-
+/**
+   Free hash value, but not hash key
+*/
 static void clear_hash_value( const void *key, const void *data )
 {
 	free( (void *)data );
@@ -2094,6 +2096,11 @@ void complete( const wchar_t *cmd,
 
 }
 
+/**
+   Print the GNU longopt style switch \c opt, and the argument \c
+   argument to the specified stringbuffer, but only if arguemnt is
+   non-null and longer than 0 characters.
+*/
 static void append_switch( string_buffer_t *out,
 						   const wchar_t *opt, 
 						   const wchar_t *argument )

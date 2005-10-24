@@ -88,7 +88,13 @@ typedef struct connection
 */
 typedef struct 
 {
+	/**
+	   Number of queues that contain this message. Once this reaches zero, the message should be deleted
+	*/
 	int count;
+	/**
+	   Message body. The message must be allocated using enough memory to actually contain the message.
+	*/
 	char body[0];
 }
 	message_t;
@@ -136,6 +142,9 @@ wchar_t *env_universal_common_get( const wchar_t *name );
 */
 int env_universal_common_get_export( const wchar_t *name );
 
+/**
+   Add messages about all existing variables to the specified connection
+*/
 void enqueue_all( connection_t *c );
 
 

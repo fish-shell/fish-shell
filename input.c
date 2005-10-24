@@ -263,6 +263,9 @@ void input_set_application( wchar_t *name )
 	current_application_mappings = (array_list_t *)hash_get( &all_mappings, name );	
 }
 
+/**
+   Get the mapping with the specified name
+*/
 static array_list_t *get_mapping( const wchar_t *mode )
 {
 
@@ -1109,6 +1112,9 @@ static void add_terminfo_mapping( const wchar_t *mode,
 	
 }
 
+/**
+   Call input_expand_sequence on seq, and add the result as a mapping
+*/
 static void add_escaped_mapping( const wchar_t *mode, 
 								 const wchar_t *seq,
 								 const wchar_t *desc, 
@@ -1122,7 +1128,9 @@ static void add_escaped_mapping( const wchar_t *mode,
 	}
 }
 
-
+/**
+   Add bindings common to emacs and vi
+*/
 static void add_common_bindings()
 {
 	static const wchar_t *name[] =
@@ -1204,6 +1212,9 @@ static void add_common_bindings()
 	}		
 }
 
+/**
+   Add emacs-specific bindings
+*/
 static void add_emacs_bindings()
 {	
 	add_escaped_mapping( L"emacs", (L"\\C-a"), L"Control-a", L"beginning-of-line" );
@@ -1216,6 +1227,9 @@ static void add_emacs_bindings()
 	add_terminfo_mapping( L"emacs", (key_npage), L"Page Down", L"end-of-history" );
 }
 
+/**
+   Add vi-specific bindings
+*/
 static void add_vi_bindings()
 {
 	add_mapping( L"vi", L"\e", L"Escape", L"bind -M vi-command" );
@@ -1246,6 +1260,10 @@ static void add_vi_bindings()
 	
 }
 
+/**
+   Handle interruptions to key reading by reaping finshed jobs and
+   propagating the interrupt to the reader.
+*/
 static int interrupt_handler()
 {
 	if( job_reap( 1 ) )
@@ -1313,6 +1331,9 @@ int input_init()
 	
 }
 
+/**
+   Free memory used by the specified mapping
+*/
 static void destroy_mapping( const void *key, const void *val )
 {
 	int i;
@@ -1344,7 +1365,9 @@ void input_destroy()
 	del_curterm( cur_term );
 }
 
-
+/**
+   Perform the action of the specified binding
+*/
 static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 {
 //	fwprintf( stderr, L"Binding %ls\n", m->command );
@@ -1398,7 +1421,6 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 /**
    Try reading the specified function mapping
 */
-
 static wint_t input_try_mapping( mapping *m)
 {
 	int j, k;

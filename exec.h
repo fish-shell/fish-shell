@@ -3,6 +3,9 @@
 */
 
 #ifndef FISH_EXEC_H
+/**
+   Header guard
+*/
 #define FISH_EXEC_H
 
 #include <wchar.h>
@@ -20,7 +23,7 @@
 */
 void exec_init();
 
-/*
+/**
   Destroy dynamically allocated data and other resources used by the
   exec library
 */

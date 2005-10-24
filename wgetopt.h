@@ -1,7 +1,19 @@
 /** \file wgetopt.h
-	The getopt librar for wide character strings. 
+	A version of the getopt library for use with wide character strings. 
 
-	This is simply the gnu getopt library, but converted for use with wchar_t instead of char. This is not usually useful since the argv array is always defined to be of type char**, but in fish, all internal commands use wide characters and hence this library is usefull.
+	This is simply the gnu getopt library, but converted for use with
+	wchar_t instead of char. This is not usually useful since the argv
+	array is always defined to be of type char**, but in fish, all
+	internal commands use wide characters and hence this library is
+	useful.
+
+	If you want to use this version of getopt in your program, simply
+	copy wgetopt.c and wgetopt.h into your program, include wgetopt.h,
+	and use all the regular getopt functions, prefixing every
+	function, global variable and structure with a 'w', and use only
+	wide character strings. There are no other functional changes in
+	this version of getopt besides using wide character strings.
+
 */
 
 
@@ -89,54 +101,99 @@ extern int woptopt;
 
 struct woption
 {
+	/**
+	   long name for switch
+	*/
 #if defined (__STDC__) && __STDC__
   const wchar_t *name;
 #else
   wchar_t *name;
 #endif
-  /* has_arg can't be an enum because some compilers complain about
-     type mismatches in all the code that assumes it is an int.  */
+	/** 
+		Must be one of no_argument, required_argument and
+		optional_argument.
+
+		has_arg can't be an enum because some compilers complain about
+		type mismatches in all the code that assumes it is an int.  
+	*/
   int has_arg;
+
+	/**
+	  If non-null, the flag whose value should be set if this switch is encountered
+	*/
   int *flag;
+
+	/**
+	  If \c flag is non-null, this is the value that flag will be set
+	  to. Otherwise, this is the return-value of the function call.
+	*/
   int val;
 };
 
 /* Names for the values of the `has_arg' field of `struct option'.  */
 
+/**
+   Specifies that a switch does not accept an argument
+*/
 #define	no_argument		0
+/**
+   Specifies that a switch requires an argument
+*/
 #define required_argument	1
+/**
+   Specifies that a switch accepts an optional argument
+*/
 #define optional_argument	2
 
 #if defined (__STDC__) && __STDC__
 #ifdef __GNU_LIBRARY__
-/* Get options from argument list */
+/** 
+	Get options from argument list. See the glibc manual for information on how to use this function.
+ */
 extern int wgetopt (int argc, wchar_t *const *argv, const wchar_t *shortopts);
 #else /* not __GNU_LIBRARY__ */
-/* Get options from argument list */
+
 extern int wgetopt ();
 #endif /* __GNU_LIBRARY__ */
-/* Get options from argument list */
+/** 
+	Get options from argument list. See the glibc manual for information on how to use this function.
+ */
 extern int wgetopt_long (int argc, wchar_t *const *argv, const wchar_t *shortopts,
 		        const struct woption *longopts, int *longind);
-/* Get options from argument list */
+/** 
+	Get options from argument list. See the glibc manual for information on how to use this function.
+ */
 extern int wgetopt_long_only (int argc, wchar_t *const *argv,
 			     const wchar_t *shortopts,
 		             const struct woption *longopts, int *longind);
 
-/** Internal only.  Users should not call this directly.  */
+/** 
+	Internal only.  Users should not call this directly.  
+*/
 extern int _wgetopt_internal (int argc, wchar_t *const *argv,
 			     const wchar_t *shortopts,
 		             const struct woption *longopts, int *longind,
 			     int long_only);
 #else /* not __STDC__ */
-/* Get options from argument list */
+
+/** 
+	Get options from argument list. See the glibc manual for information on how to use this function.
+ */
 extern int wgetopt ();
-/* Get options from argument list */
+
+/** 
+	Get options from argument list. See the glibc manual for information on how to use this function.
+ */
 extern int wgetopt_long ();
-/* Get options from argument list */
+
+/** 
+	Get options from argument list. See the glibc manual for information on how to use this function.
+ */
 extern int wgetopt_long_only ();
 
-/* Get options from argument list */
+/** 
+	Internal only.  Users should not call this directly.  
+*/
 extern int _wgetopt_internal ();
 #endif /* __STDC__ */
 

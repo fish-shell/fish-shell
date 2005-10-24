@@ -51,6 +51,10 @@ The fish parser. Contains functions for parsing code.
 */
 #define MAX_RECURSION_DEPTH 128
 
+/**
+   Message about reporting bugs, used on weird internal error to
+   hopefully get them to report stuff.
+*/
 #define BUGREPORT_MSG L"If this error can be reproduced, please send a bug report to %s."
 
 /**
@@ -147,7 +151,25 @@ static int parse_job( process_t *p,
 */
 typedef struct
 {
-	int exec, parse, level, skipped;
+	/**
+	   Time spent executing the specified command, including parse time for nested blocks
+	*/
+	int exec;
+	/**
+	   Time spent parsing the specified command, incvluding execution time for command substitutions
+	*/
+	int parse;
+	/**
+	   The block level of the specified command
+	*/
+	int level;
+	/**
+	   If the execution of this command was skipped
+	*/
+	int skipped;
+	/**
+	   The command string
+	*/
 	wchar_t *cmd;
 } profile_element_t;
 

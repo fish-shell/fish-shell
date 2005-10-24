@@ -5,6 +5,9 @@
 */
 
 #ifndef FISH_COMPLETE_H
+/**
+   Header guard
+*/
 #define FISH_COMPLETE_H
 
 #include <wchar.h>

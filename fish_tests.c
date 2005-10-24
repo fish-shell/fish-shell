@@ -1,4 +1,4 @@
-/** \file main.c
+/** \file fish_tests.c
 	Various bug and feature tests. Compiled and run by make test.
 */
 
@@ -39,10 +39,19 @@
 #include "parser.h"
 #include "tokenizer.h"
 
+/**
+   Number of laps to run performance testing loop
+*/
 #define LAPS 50
 
+/**
+   Number of encountered errors
+*/
 static int err_count=0;
 
+/**
+   Print formatted output
+*/
 static void say( wchar_t *blah, ... )
 {
 	va_list va;
@@ -52,6 +61,9 @@ static void say( wchar_t *blah, ... )
 	wprintf( L"\n" );
 }
 
+/**
+   Print formatted error string
+*/
 static void err( wchar_t *blah, ... )
 {
 	va_list va;
@@ -64,16 +76,25 @@ static void err( wchar_t *blah, ... )
 	wprintf( L"\n" );
 }
 
+/**
+   Print ok message
+*/
 static void ok()
 {
 	wprintf( L"OK\n" );
 }
 
+/**
+   Compare two pointers
+*/
 static int pq_compare( void *e1, void *e2 )
 {
 	return e1-e2;
 }
 
+/**
+   Test priority queue functionality
+*/
 static int pq_test( int elements )
 {
 	int i;
@@ -114,7 +135,9 @@ static int pq_test( int elements )
 	}
 }
 
-
+/**
+   Test stack functionality
+*/
 static int stack_test( int elements )
 {
 	int i;
@@ -160,7 +183,9 @@ static int stack_test( int elements )
 	return res;
 }
 
-
+/**
+   Hash function for pointers
+*/
 static int hash_func( const void *data )
 {
 /*	srand( (int)data );
@@ -170,12 +195,18 @@ static int hash_func( const void *data )
 	return 127*((foo^0xefc7e214)) ^(foo<<11);	
 }
 
+/**
+   Pointer hash comparison function
+*/
 static int compare_func( const void *key1, const void *key2 )
 {
 	return key1==key2;
 }
 
 
+/**
+   Hashtable test
+*/
 static int hash_test( int elements )
 {
 	int i;
@@ -249,6 +280,9 @@ static int hash_test( int elements )
 	
 }
 
+/**
+   Arraylist test
+*/
 static int al_test( int sz)
 {
 	int i;	
@@ -280,6 +314,9 @@ static int al_test( int sz)
 	}
 }
 
+/**
+   Stringbuffer test
+*/
 static void sb_test()
 {
 	string_buffer_t b;
@@ -299,7 +336,9 @@ static void sb_test()
 	say( (wchar_t *)b.buff );
 }
 
-
+/**
+   Performs all tests of the util library
+*/
 static void test_util()
 {
 	int i;
@@ -346,8 +385,9 @@ static void test_util()
 }
 
 
-
-
+/**
+   Test the tokenizer
+*/
 static void test_tok()
 {
 	tokenizer t;
@@ -412,6 +452,9 @@ static void test_tok()
 		
 }
 
+/**
+   Test the parser
+*/
 static void test_parser()
 {
 	say( L"Testing parser" );
@@ -514,7 +557,9 @@ static int expand_test( const wchar_t *in, int flags, ... )
 		
 }
 
-
+/**
+   Test globbing and other parameter expantion
+*/
 static void test_expand()
 {
 	say( L"Testing parameter expantion" );
@@ -536,7 +581,9 @@ static void test_expand()
 	
 }
 
-
+/**
+   Test speed of completion calculations
+*/
 void perf_complete()
 {
 	wchar_t c;
@@ -607,7 +654,9 @@ void perf_complete()
 	
 }
 
-
+/**
+   Main test 
+*/
 int main( int argc, char **argv )
 {
 

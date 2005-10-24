@@ -47,6 +47,14 @@ enum
 	;
 
 
+/**
+   Replace/append/insert the selection with/at/after the specified string.
+
+   \param begin beginning of selection
+   \param end end of selection
+   \param insert the string to insert
+   \param append_mode can be one of REPLACE_MODE, INSERT_MODE or APPEND_MODE, affects the way the test update is performed
+*/
 static void replace_part( wchar_t *begin,
 						  wchar_t *end,
 						  wchar_t *insert,
@@ -95,10 +103,18 @@ static void replace_part( wchar_t *begin,
 	sb_destroy( &out );
 }
 	
-void write_part( wchar_t *begin, 
-				 wchar_t *end, 
-				 int cut_at_cursor, 
-				 int tokenize )
+/**
+   Output the specified selection.
+
+   \param begin start of selection
+   \param end  end of selection
+   \param cut_at_cursor whether printing should stop at the surrent cursor position
+   \param tokenize whether the string should be tokenized, printing one string token on every line and skipping non-string tokens
+*/
+static void write_part( wchar_t *begin, 
+						wchar_t *end, 
+						int cut_at_cursor, 
+						int tokenize )
 {	
 	tokenizer tok;
 	string_buffer_t out;

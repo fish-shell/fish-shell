@@ -8,6 +8,9 @@
 */
 
 #ifndef FISH_WILDCARD_H
+/**
+   Header guard
+*/
 #define FISH_WILDCARD_H
 
 #include <wchar.h>
@@ -20,6 +23,9 @@
 
 #define WILDCARD_RESERVED 0xf400
 
+/**
+   Enumeration of all wildcard types
+*/
 enum
 {
 	/** Character representing any character except '/' */

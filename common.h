@@ -3,6 +3,9 @@
 */
 
 #ifndef FISH_COMMON_H
+/**
+   Header guard
+*/
 #define FISH_COMMON_H
 
 #include <wchar.h>
@@ -223,6 +226,9 @@ int read_blocked(int fd, void *buf, size_t count);
 */
 int writeb( tputs_arg_t b );
 
+/**
+   Exit program at once, leaving an error message about running out of memory
+*/
 void die_mem();
 
 /**
@@ -236,7 +242,7 @@ void common_destroy();
    program_name, followed by a colon and a whitespace.
    
    \param level the priority of the message. Lower number means higher priority. Messages with a priority_number higher than \c debug_level will be ignored..
-   \param the message format string. 
+   \param msg the message format string. 
 
    Example:
 
@@ -258,11 +264,39 @@ void debug( int level, wchar_t *msg, ... );
 wchar_t *escape( const wchar_t *in, 
 				 int escape_all );
 
-wchar_t *unescape( const wchar_t * in, int escape_special );
+/**
+   Expand backslashed escapes and substitute them with their unescaped
+   counterparts. Also optionally change the wildcards, the tilde
+   character and a few more into constants which are defined in a
+   private use area of Unicode. This assumes wchar_t is a unicode
+   character.  character set.
 
+   The result must be free()d. The original string is not modified. If
+   an invalid sequence is specified, 0 is returned.
+
+*/
+wchar_t *unescape( const wchar_t * in, 
+				   int escape_special );
+
+/**
+   Block SIGCHLD. Calls to block/unblock may be nested, and only once the nest count reaches zero wiull the block be removed.
+*/
 void block();
+
+/**
+   undo call to block().
+*/
 void unblock();
 
+/**
+   Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
+   milliseconds between polls and timing out after timeout seconds, 
+   thereafter forcibly attempting to obtain the lock if force is non-zero.
+   Returns 1 on success, 0 on failure.
+   To release the lock the lockfile must be unlinked.
+   A unique temporary file named by appending characters to the lockfile name 
+   is used; any pre-existing file of the same name is subject to deletion.
+*/
 int acquire_lock_file( const char *lockfile, const int timeout, int force );
 
 /** 
@@ -282,7 +316,7 @@ int common_get_width();
 */
 int common_get_height();
 
-/*
+/**
   Handle a window change event by looking up the new window size and
   saving it in an internal variable used by common_get_wisth and
   common_get_height().

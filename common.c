@@ -26,6 +26,11 @@ parts of fish.
 #include <fcntl.h>
 
 #ifndef HOST_NAME_MAX
+/**
+   Maximum length of hostname return. It is ok if this is too short,
+   getting the actual hostname is not critical, so long as the string
+   is unique in the filesystem namespace.
+*/
 #define HOST_NAME_MAX 255
 #endif
 
@@ -93,6 +98,9 @@ int debug_level=1;
 static struct winsize termsize;
 
 
+/**
+   Number of nested calls to the block function. Unblock when this reaches 0.
+*/
 static int block_count=0;
 
 void common_destroy()
@@ -583,6 +591,9 @@ wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz)
 	/* count does not include NUL */
 }
 
+/**
+   Fallback implementation if missing from libc
+*/
 wchar_t *wcsdup( const wchar_t *in )
 {
 	size_t len=wcslen(in);
@@ -598,6 +609,9 @@ wchar_t *wcsdup( const wchar_t *in )
 	
 }
 
+/**
+   Fallback implementation if missing from libc
+*/
 int wcscasecmp( const wchar_t *a, const wchar_t *b )
 {
 	if( *a == 0 )
@@ -615,6 +629,9 @@ int wcscasecmp( const wchar_t *a, const wchar_t *b )
 		return wcscasecmp( a+1,b+1);
 }
 
+/**
+   Fallback implementation if missing from libc
+*/
 int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count )
 {
 	if( count == 0 )
@@ -1254,8 +1271,8 @@ static int sprint_rand_digits( char *str, int maxlen )
 
 /**
    Generate a filename unique in an NFS namespace by creating a copy of str and
-   appending .<hostname>.<pid> to it.  If gethostname() fails then a pseudo-
-   random string is substituted for <hostname> - the randomness of the string
+   appending .{hostname}.{pid} to it.  If gethostname() fails then a pseudo-
+   random string is substituted for {hostname} - the randomness of the string
    should be strong enough across different machines.  The main assumption 
    though is that gethostname will not fail and this is just a "safe enough"
    fallback.
@@ -1303,15 +1320,6 @@ static char *gen_unique_nfs_filename( const char *filename )
 	return newname;
 }
 
-/**
-   Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
-   milliseconds between polls and timing out after timeout seconds, 
-   thereafter forcibly attempting to obtain the lock if force is non-zero.
-   Returns 1 on success, 0 on failure.
-   To release the lock the lockfile must be unlinked.
-   A unique temporary file named by appending characters to the lockfile name 
-   is used; any pre-existing file of the same name is subject to deletion.
-*/
 int acquire_lock_file( const char *lockfile, const int timeout, int force )
 {
 	int fd, timed_out = 0;

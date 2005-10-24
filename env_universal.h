@@ -1,4 +1,4 @@
-/** \file env_universl.h
+/** \file env_universal.h
 	Universal variable client library
 */
 
@@ -18,7 +18,7 @@ extern connection_t env_universal_server;
    Initialize the envuni library
 */
 void env_universal_init();
-/*
+/**
   Free memory used by envuni
 */
 void env_universal_destroy();

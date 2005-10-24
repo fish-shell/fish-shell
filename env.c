@@ -47,6 +47,9 @@
 */
 #define FISHD_CMD L"if which fishd >/dev/null; fishd ^/tmp/fish.%s.log; end"
 
+/**
+   Value denoting a null string
+*/
 #define ENV_NULL L"\x1d"
 
 /**
@@ -770,6 +773,9 @@ int env_exist( const wchar_t *key )
 	return item != 0;
 }
 
+/**
+   Returns true if the specified scope or any non-shadowed non-global subscopes contain an exported variable.
+*/
 static int local_scope_exports( env_node_t *n )
 {
 	
@@ -841,6 +847,9 @@ static void add_key_to_hash( const void *key,
 		hash_put( (hash_table_t *)aux, key, 0 );
 }
 
+/**
+   Add key to hashtable
+*/
 static void add_to_hash( const void *k, void *aux )
 {
 	hash_put( (hash_table_t *)aux,
@@ -848,6 +857,9 @@ static void add_to_hash( const void *k, void *aux )
 			  0 );
 }
 
+/**
+   Add key to list
+*/
 static void add_key_to_list( const void * key, 
 							 const void * val, 
 							 void *aux )

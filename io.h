@@ -17,7 +17,9 @@ typedef struct io_data
 	int io_mode;
 	/** FD to redirect */
 	int fd;
-	/** parameter for redirection */
+	/** 
+		Type-specific parameter for redirection 
+	*/
 	union
 	{
 		/** Fds for IO_PIPE and for IO_BUFFER */
@@ -28,6 +30,9 @@ typedef struct io_data
 		int old_fd;
 	} param1
 	;
+	/** 
+		Second type-specific paramter for redirection
+	*/
 	union
 	{
 		/** file creation flags to send to open for IO_FILE */

@@ -1,6 +1,6 @@
-/** \file function.c
+/** \file event.c
 
-	Functions for storing and retrieving function information.
+	Functions for handling event triggers
 
 */
 #include <stdlib.h>
@@ -31,13 +31,22 @@
 */
 typedef struct
 {
+	/**
+	   Number of delivered signals
+	*/
 	int count;
+	/**
+	   Whether signals have been skipped
+	*/
 	int overflow;	
+	/**
+	   Array of signal events
+	*/
 	int signal[SIG_UNHANDLED_MAX];	
 }
 	signal_list_t;
 
-/*
+/**
   The signal event list. Actually two separate lists. One which is
   active, which is the one that new events is written to. The inactive
   one contains the events that are currently beeing performed.

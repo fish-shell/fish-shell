@@ -1,6 +1,6 @@
 /** \file event.h
 
-Event handling library
+	Functions for handling event triggers
 
 */
 #ifndef FISH_EVENT_H

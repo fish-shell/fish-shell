@@ -1,6 +1,6 @@
-/** \file builtin_commandline.c Functions defining the commandline builtin
+/** \file builtin_ulimit.c Functions defining the ulimit builtin
 
-Functions used for implementing the commandline builtin. 
+Functions used for implementing the ulimit builtin. 
 
 */
 #include <stdlib.h>
@@ -18,14 +18,29 @@ Functions used for implementing the commandline builtin.
 #include "common.h"
 #include "wgetopt.h"
 
+/**
+   Struct describing a resource limit
+*/
 struct resource_t
 {
+	/**
+	   Resource id
+	 */
 	int resource;
+	/**
+	   Description of resource
+	*/
 	const wchar_t *desc;
+	/**
+	   Switch used on commandline to specify resource
+	*/
 	wchar_t switch_char;	
 }
 	;
 
+/**
+   Array of resource_t structs, describing all known resource types.
+*/
 const static struct resource_t resource_arr[] =
 {
 	{
@@ -76,6 +91,9 @@ const static struct resource_t resource_arr[] =
 }
 	;
 
+/**
+   Get the implicit multiplication factor for the specified resource limit
+*/
 static int get_multiplier( int what )
 {
 	if( ( what == RLIMIT_NPROC ) || 
@@ -87,7 +105,9 @@ static int get_multiplier( int what )
 	return 1024;
 }
 
-
+/**
+   Return the value for the specified resource limit
+*/
 static rlim_t get( int resource, int hard )
 {
 	struct rlimit ls;
@@ -97,6 +117,9 @@ static rlim_t get( int resource, int hard )
 	return hard ? ls.rlim_max:ls.rlim_cur;
 }
 
+/**
+   Print the value of the specified resource limit
+*/
 static void print( int resource, int hard )
 {
 	rlim_t l = get( resource, hard );
@@ -108,7 +131,9 @@ static void print( int resource, int hard )
 	
 }
 
-
+/**
+   Print values of all resource limits
+*/
 static void print_all( int hard )
 {
 	int i;
@@ -142,6 +167,9 @@ static void print_all( int hard )
 	}
 }
 
+/**
+   Returns the description for the specified resource limit
+*/
 static const wchar_t *get_desc( int what )
 {
 	int i;
@@ -156,7 +184,9 @@ static const wchar_t *get_desc( int what )
 	return L"Not a resource";
 }
 
-
+/**
+   Set the new value of the specified resource limit
+*/
 static int set( int resource, int hard, int soft, rlim_t value )
 {
 	struct rlimit ls;
@@ -194,6 +224,9 @@ static int set( int resource, int hard, int soft, rlim_t value )
 	return 0;	
 }
 
+/**
+   Set all resource limits
+*/
 static int set_all( int hard, int soft, rlim_t value )
 {
 	int i;

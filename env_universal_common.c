@@ -65,12 +65,12 @@
    should be exported. Obviously, it needs to be allocated large
    enough to fit the value string.
 */
-typedef struct var_entry
+typedef struct var_uni_entry
 {
 	int export; /**< Whether the variable should be exported */
 	wchar_t val[0]; /**< The value of the variable */
 }
-var_entry_t;
+var_uni_entry_t;
 
 
 static void parse_message( wchar_t *msg,
@@ -81,6 +81,9 @@ static void parse_message( wchar_t *msg,
 */
 hash_table_t env_universal_var;
 
+/**
+   Callback function, should be called on all events
+*/
 void (*callback)( int type, 
 				  const wchar_t *key, 
 				  const wchar_t *val );
@@ -105,6 +108,9 @@ void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const w
 	hash_init( &env_universal_var, &hash_wcs_func, &hash_wcs_cmp );
 }
 
+/**
+   Free both key and data
+*/
 static void erase( const void *key,
 				   const void *data )
 {
@@ -186,6 +192,9 @@ void read_message( connection_t *src )
 	}
 }
 
+/**
+   Remove variable with specified name
+*/
 static void remove_entry( wchar_t *name )
 {
 	void *k, *v;
@@ -197,6 +206,9 @@ static void remove_entry( wchar_t *name )
 	free( v );
 }
 
+/**
+   Test if the message msg contains the command cmd
+*/
 static int match( const wchar_t *msg, const wchar_t *cmd )
 {
 	size_t len = wcslen( cmd );
@@ -209,7 +221,9 @@ static int match( const wchar_t *msg, const wchar_t *cmd )
 	return 1;
 }
 
-
+/**
+   Parse message msg
+*/
 static void parse_message( wchar_t *msg, 
 						   connection_t *src )
 {
@@ -239,8 +253,8 @@ static void parse_message( wchar_t *msg,
 
 			val = unescape( val, 0 );
 			
-			var_entry_t *entry = 
-				malloc( sizeof(var_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
+			var_uni_entry_t *entry = 
+				malloc( sizeof(var_uni_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
 			if( !entry )
 				die_mem();
 			entry->export=export;
@@ -307,8 +321,13 @@ static void parse_message( wchar_t *msg,
 	}		
 }
 
-int try_send( message_t *msg,
-			  int fd )
+/**
+   Attempt to send the specified message to the specified file descriptor
+
+   \return 1 on sucess, 0 if the message could not be sent without blocking and -1 on error
+*/
+static int try_send( message_t *msg,
+					 int fd )
 {
 
 	debug( 3,
@@ -478,7 +497,7 @@ static void add_key_to_hash( const void *key,
 							 const void *data,
 							 void *aux )
 {
-	var_entry_t *e = (var_entry_t *)data;
+	var_uni_entry_t *e = (var_uni_entry_t *)data;
 	if( ( e->export && get_names_show_exported) || 
 		( !e->export && get_names_show_unexported) )
 		al_push( (array_list_t *)aux, key );
@@ -498,7 +517,7 @@ void env_universal_common_get_names( array_list_t *l,
 
 wchar_t *env_universal_common_get( const wchar_t *name )
 {
-	var_entry_t *e = (var_entry_t *)hash_get( &env_universal_var, name );	
+	var_uni_entry_t *e = (var_uni_entry_t *)hash_get( &env_universal_var, name );	
 	if( e )
 		return e->val;
 	return 0;	
@@ -506,18 +525,28 @@ wchar_t *env_universal_common_get( const wchar_t *name )
 
 int env_universal_common_get_export( const wchar_t *name )
 {
-	var_entry_t *e = (var_entry_t *)hash_get( &env_universal_var, name );
+	var_uni_entry_t *e = (var_uni_entry_t *)hash_get( &env_universal_var, name );
 	if( e )
 		return e->export;
 	return 0;
 }
 
+/**
+   Adds a variable creation message about the specified variable to
+   the specified queue. The function signature is non-obvious since
+   this function is used together with hash_foreach2, which requires
+   the specified function signature.
+
+   \param k the variable name
+   \param v the variable value
+   \param q the queue to add the message to
+*/
 static void enqueue( const void *k,
 					 const void *v,
 					 void *q)
 {
 	const wchar_t *key = (const wchar_t *)k;
-	const var_entry_t *val = (const var_entry_t *)v;
+	const var_uni_entry_t *val = (const var_uni_entry_t *)v;
 	dyn_queue_t *queue = (dyn_queue_t *)q;
 	
 	message_t *msg = create_message( val->export?SET_EXPORT:SET, key, val->val );

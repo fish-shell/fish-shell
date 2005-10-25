@@ -1,0 +1,15 @@
+
+\section vared vared - Interactively edit the value of an environment variable 
+
+\subsection vared-synopsis Synopsis
+ <tt>vared VARIABLE_NAME</tt>
+
+\subsection vared-description Description
+
+vared is used to interactively edit the value of an environment
+variable. Array variables as a whole can not be edited using vared,
+but individual array elements can. 
+
+\subsection vared-example Example
+
+<code>vared PATH[3]</code> edits the third element of the PATH array

@@ -2389,14 +2389,12 @@ static int read_i()
 */
 static int can_read( int fd )
 {
-	struct pollfd pfd[] = 
-		{
-			{
-				fd, POLLIN, 0 
-			}
-		}
-	;
-	return poll( pfd, 1, 0 ) == 1;
+	struct timeval can_read_timeout = { 0, 0 };
+	fd_set fds;
+    
+	FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    return select(fd + 1, &fds, 0, 0, &can_read_timeout) == 1;
 }
 
 /**

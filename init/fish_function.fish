@@ -288,18 +288,18 @@ function vared -d "Edit variable value"
 				else
 
 					printf "vared: %s is an array variable. Use " $argv
-					set_color $FISH_COLOR_COMMAND
+					set_color $fish_color_command
 					printf vared
-					set_color $FISH_COLOR_NORMAL
+					set_color $fish_color_normal
 					printf " %s[n] to edit the n:th element of %s\n" $argv $argv
 
 				end
 		end
 	else
 		printf "vared: Expected exactly one argument, got %s.\n\nSynopsis:\n\t" (count $argv)
-		set_color $FISH_COLOR_COMMAND
+		set_color $fish_color_command
 		printf vared
-		set_color $FISH_COLOR_NORMAL
+		set_color $fish_color_normal
 		printf " VARIABLE\n"
 	end
 end

@@ -217,7 +217,7 @@ int main( int argc, char **argv )
 	function_init();
 	env_init();
 	complete_init();
-	reader_init();	
+	reader_init();
 
 	reader_push_current_filename( L"(internal)" );
 

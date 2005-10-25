@@ -7,8 +7,7 @@
 # Set default field separators
 #
 
-set IFS \ \t\n
-
+set -g IFS \ \t\n
 
 #
 # Add a few common directories to path, if they exists. Note that pure
@@ -18,13 +17,11 @@ set IFS \ \t\n
 
 for i in /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin
 	if test -d $i
-	   	if echo $PATH|grep $i >/dev/null
-	   	else
+	   	if not echo $PATH|grep $i >/dev/null
 			set PATH $PATH $i
 		end
 	end
 end
-
 
 #
 # Set some value for LANG if nothing was set before

@@ -67,6 +67,7 @@ extern char *profile;
    debug function.
 */
 extern wchar_t *program_name;
+
 /**
    Take an array_list_t containing wide strings and converts them to a wchar_t **.
 */

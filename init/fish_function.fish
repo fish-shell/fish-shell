@@ -928,6 +928,9 @@ end
 
 function psub -d "Read from stdin into a file and output the filename. Remove the file when the command that calles psub exits."
 
+	set -l filename
+	set -l funcname
+
 	if count $argv >/dev/null
 		switch $argv[1]
 			case '-h*' --h --he --hel --help

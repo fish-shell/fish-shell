@@ -388,8 +388,12 @@ void env_init()
 	
 	
 	pw = getpwuid( getuid() );
-	uname = str2wcs( pw->pw_name );
-	env_set( L"USER", uname, ENV_GLOBAL | ENV_EXPORT );
+	if( pw )
+	{
+		uname = str2wcs( pw->pw_name );
+		env_set( L"USER", uname, ENV_GLOBAL | ENV_EXPORT );
+		free( uname );
+	}
 	
 	env_universal_init( env_get( L"FISHD_SOKET_DIR"), 
 						env_get( L"USER" ),
@@ -410,6 +414,8 @@ void env_destroy()
 		env_pop();
 
 	hash_destroy( &env_read_only );
+
+	hash_destroy( &env_electric );
 	
 	hash_foreach( global, &clear_hash_entry );
 	hash_destroy( global );

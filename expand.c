@@ -1328,6 +1328,7 @@ int expand_string( wchar_t *str,
 			if( (pos == str) || ( *(pos-1) != L'\\' ) )
 			{
 				error( SUBSHELL_ERROR, L"Subshells not allowed", -1 );
+				free( str );
 				al_destroy( &list1 );
 				al_destroy( &list2 );
 				return 0;
@@ -1505,7 +1506,6 @@ wchar_t *expand_one( wchar_t *string, int flags )
 	res = expand_string( string, &l, flags );
 	if( !res )
 	{
-		free( string );
 		one = 0;
 	}
 	else

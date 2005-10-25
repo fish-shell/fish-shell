@@ -270,7 +270,7 @@ wchar_t *escape( const wchar_t *in,
    counterparts. Also optionally change the wildcards, the tilde
    character and a few more into constants which are defined in a
    private use area of Unicode. This assumes wchar_t is a unicode
-   character.  character set.
+   character set.
 
    The result must be free()d. The original string is not modified. If
    an invalid sequence is specified, 0 is returned.

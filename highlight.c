@@ -357,7 +357,7 @@ void highlight_shell( wchar_t * buff,
 	/*
 	  Locate and syntax highlight subshells recursively
 	*/
-	
+
 	wchar_t *buffcpy = wcsdup( buff );
 	wchar_t *subpos=buffcpy;
 	int done=0;
@@ -386,8 +386,9 @@ void highlight_shell( wchar_t * buff,
 			break;
 		
 		subpos = end+1;		
+		
 	}
-	free( buffcpy );
+	free( buffcpy);
 	
 
 	last_val=0;

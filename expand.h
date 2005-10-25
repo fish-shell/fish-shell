@@ -162,7 +162,7 @@ wchar_t *expand_escape_variable( const wchar_t *in );
 wchar_t *expand_tilde(wchar_t *in);
 
 /**
-   Locate the last subshell in the specified string.
+   Locate the first subshell in the specified string.
    
    \param in the string to search for subshells
    \param begin the starting paranthesis of the subshell

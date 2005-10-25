@@ -942,7 +942,7 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 	end
 
 	if not status --is-command-substitution
-		echo psub: Not inside of command substitution
+		echo psub: Not inside of command substitution >&2
 		return
 	end
 

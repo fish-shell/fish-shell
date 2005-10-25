@@ -911,7 +911,7 @@ void debug( int level, wchar_t *msg, ... )
 		
 	}
 	putwc( L'\n', stderr );
-	
+	sb_destroy( &sb );
 }
 
 wchar_t *escape( const wchar_t *in, 

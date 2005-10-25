@@ -1548,9 +1548,9 @@ void reader_sanity_check()
 
 void reader_current_subshell_extent( wchar_t **a, wchar_t **b )
 {
-	wchar_t *buffcpy = wcsdup( data->buff );
 	wchar_t *begin, *end;
-
+	wchar_t *pos;
+	
 	if( a )
 		*a=0;
 	if( b )
@@ -1559,35 +1559,41 @@ void reader_current_subshell_extent( wchar_t **a, wchar_t **b )
 	if( !data )
 		return;
 
+	pos = data->buff;
+	
 	while( 1 )
 	{
 		int bc, ec;
-
-		if( expand_locate_subshell( buffcpy,
+		
+		if( expand_locate_subshell( pos,
 									&begin,
 									&end,
 									1 ) <= 0)
 		{
-			begin=buffcpy;
-			end = buffcpy + wcslen(data->buff);
+			begin=data->buff;
+			end = data->buff + wcslen(data->buff);
 			break;
 		}
-		bc = begin-buffcpy;
-		ec = end-buffcpy;
+
+		if( !end )
+		{
+			end = data->buff + wcslen(data->buff);
+		}
+
+		bc = begin-data->buff;
+		ec = end-data->buff;
+		
 		if(( bc < data->buff_pos ) && (ec >= data->buff_pos) )
 		{
 			begin++;
-
-			//fwprintf( stderr, L"Subshell!\n" );
 			break;
 		}
-		*begin=0;
+		pos = end+1;
 	}
 	if( a )
-		*a = data->buff + (begin-buffcpy);
+		*a = begin;
 	if( b )
-		*b = data->buff + (end-buffcpy);
-	free( buffcpy );
+		*b = end;
 }
 
 static void reader_current_job_or_process_extent( wchar_t **a, 

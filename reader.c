@@ -93,7 +93,7 @@ commence.
 
 /**
    The maximum number of characters to read from the keyboard without
-   repainting. Note that this readahead wil only occur if new
+   repainting. Note that this readahead will only occur if new
    characters are avaialble for reading, fish will never block for
    more input without repainting.
 */

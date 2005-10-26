@@ -486,7 +486,6 @@ static void fire_process_event( const wchar_t *msg, int type, pid_t pid, int sta
 {
 	static event_t ev;
 	event_t e;
-
 	
 	e.function_name=0;
 	

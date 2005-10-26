@@ -46,7 +46,7 @@
 /**
   Characters that separate tokens. They are ordered by frequency of occurrence to increase parsing speed.
 */
-#define SEP L" \n;|#\t\r<>^&"
+#define SEP L" \n|\t;#\r<>^&"
 /**
    Tests if the tokenizer buffer is large enough to hold contents of
    the specified length, and if not, reallocates the tokenizer buffer.
@@ -192,8 +192,18 @@ static int is_string_char( wchar_t c )
 	{
 		return 0;
 	}
+	return 1;
+}
 
-  return 1;
+/**
+   Quick test to catch the most common 'non-magical' characters, makes
+   read_string slightly faster by adding a fast path for the most
+   common characters. This is obviously not a suitable replacement for
+   iswalpha.
+*/
+static int myal( wchar_t c )
+{
+	return (c>=L'a' && c<=L'z') || (c>=L'A'&&c<=L'Z');
 }
 
 /**
@@ -212,6 +222,11 @@ static void read_string( tokenizer *tok )
 
 	while( 1 )
 	{
+		
+		if( !myal( *tok->buff ) )
+		{
+//			debug(1, L"%lc", *tok->buff );
+
 		if( *tok->buff == L'\\' )
 		{
 			tok->buff++;
@@ -338,6 +353,8 @@ static void read_string( tokenizer *tok )
 				}
 				break;
 		}
+		}
+		
 
 		if( !do_loop )
 			break;

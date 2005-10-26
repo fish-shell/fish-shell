@@ -78,6 +78,42 @@ parameter expansion.
 #define LAST_STR L"last"
 
 /**
+   Characters which make a string unclean if they are the first
+   character of the string. See \c is_clean().
+*/
+#define UNCLEAN_FIRST L"~%"
+/**
+   Unclean characters. See \c is_clean().
+*/
+#define UNCLEAN L"$*?\\\"'({})"
+
+/**
+   Test if the specified argument is clean, i.e. it does not contin
+   any tokens which are expanded. Clean strings can be passed through
+   expand_string and expand_one without changing them. About 90% of
+   all strings are clean, so skipping expantion on them actually does
+   save a small amount of time.
+*/
+static int is_clean( const wchar_t *in )
+{
+	
+	const wchar_t * str = in;
+
+	if( wcschr( UNCLEAN_FIRST, *str ) )
+		return 0;
+	while( *str )
+	{
+		if( wcschr( UNCLEAN, *str ) )
+			return 0;
+		str++;
+	}
+
+//	debug( 1, L"%ls", in );
+	
+	return 1;
+}
+
+/**
    Return the environment variable value for the string starting at in 
 */
 static wchar_t *expand_var( wchar_t *in )
@@ -1311,7 +1347,13 @@ int expand_string( wchar_t *str,
 	
 	int i;
 	int subshell_ok = 1;
-	
+
+	if( (!(flags & ACCEPT_INCOMPLETE)) && is_clean( str ) )
+	{
+		al_push( end_out, str );
+		return 1;
+	}
+
 	al_init( &list1 );
 	al_init( &list2 );
 
@@ -1501,6 +1543,9 @@ wchar_t *expand_one( wchar_t *string, int flags )
 	array_list_t l;
 	int res;
 	wchar_t *one;
+
+	if( (!(flags & ACCEPT_INCOMPLETE)) &&  is_clean( string ) )
+		return string;	
 	
 	al_init( &l );
 	res = expand_string( string, &l, flags );
@@ -1520,7 +1565,7 @@ wchar_t *expand_one( wchar_t *string, int flags )
 			al_set( &l, 0, 0 );
 		}
 	}
-	
+
 	al_foreach( &l, (void(*)(const void *))&free );
 	al_destroy( &l );
 	return one;

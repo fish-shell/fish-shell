@@ -136,14 +136,17 @@ typedef buffer_t string_buffer_t;
    Returns the larger of two ints
 */
 int maxi( int a, int b );
+
 /**
    Returns the smaller of two ints
  */
 int mini( int a, int b );
+
 /**
    Returns the larger of two floats
 */
 float maxf( float a, float b );
+
 /**
    Returns the smaller of two floats
 */
@@ -161,14 +164,19 @@ float minf( float a, float b );
     returned. 
 */
 void q_init( dyn_queue_t *q );
+
 /** Destroy the queue */
 void q_destroy( dyn_queue_t *q );
+
 /** Insert element into queue */
 int q_put( dyn_queue_t *q, void *e );
+
 /** Remove and return next element from queue */
 void *q_get( dyn_queue_t *q);
+
 /** Return next element from queue without removing it */
 void *q_peek( dyn_queue_t *q);
+
 /** Returns 1 if the queue is empty, 0 otherwise */
 int q_empty( dyn_queue_t *q );
 
@@ -224,6 +232,7 @@ void hash_remove( hash_table_t *h,
 				  const void *key, 
 				  const void **old_key,
 				  const void **old_data );
+
 /**
    Checks whether the specified key is in the hash table
 */
@@ -235,16 +244,23 @@ int hash_contains( hash_table_t *h,
 */
 void hash_get_keys( hash_table_t *h,
 					array_list_t *arr );
+
 /**
    Appends all data elements in the table to the specified list
 */
 void hash_get_data( hash_table_t *h,
 					array_list_t *arr );
-/** Call the function func for each key/data pair in the table*/
+
+/** 
+	Call the function func for each key/data pair in the table
+*/
 void hash_foreach( hash_table_t *h, 
 				   void (*func)( const void *, const void * ) );
-/** Same as hash_foreach, but the function func takes an additional
- * argument, which is provided by the caller in the variable aux */
+
+/** 
+	Same as hash_foreach, but the function func takes an additional
+	argument, which is provided by the caller in the variable aux 
+*/
 void hash_foreach2( hash_table_t *h, void (*func)( const void *, 
 												 const void *, 
 												 void *), 
@@ -269,10 +285,11 @@ int hash_wcs_func( const void *data );
 */
 int hash_wcs_cmp( const void *a, const void *b );
 
-/** Initialize the priority queue
-
- \param q the queue to initialize
- \param compare a comparison function that can compare two entries in the queue
+/** 
+	Initialize the priority queue
+	
+	\param q the queue to initialize
+	\param compare a comparison function that can compare two entries in the queue
 */
 void pq_init( priority_queue_t *q,
 			  int (*compare)(void *e1, void *e2) );
@@ -289,6 +306,7 @@ int pq_put( priority_queue_t *q,
   Removes and returns the last entry in the priority queue
 */
 void *pq_get( priority_queue_t *q );
+
 /**
   Returns the last entry in the priority queue witout removing it.
 */
@@ -314,10 +332,16 @@ void pq_destroy(  priority_queue_t *q );
 */
 array_list_t *al_new();
 
-/** Initialize the list. */
+/** 
+	Initialize the list. 
+*/
 void al_init( array_list_t *l );
-/** Destroy the list and free memory used by it.*/
+
+/** 
+	Destroy the list and free memory used by it.
+*/
 void al_destroy( array_list_t *l );
+
 /**
    Append element to list
 
@@ -327,6 +351,7 @@ void al_destroy( array_list_t *l );
    \return 1 if succesfull, 0 otherwise
 */
 int al_push( array_list_t *l, const void *o );
+
 /**
    Append all elements of a list to another
 
@@ -335,6 +360,7 @@ int al_push( array_list_t *l, const void *o );
    \return 1 if succesfull, 0 otherwise
 */
 int al_push_all( array_list_t *a, array_list_t *b );
+
 /**
    Sets the element at the specified index
 
@@ -343,6 +369,7 @@ int al_push_all( array_list_t *a, array_list_t *b );
    \param o The element 
 */
 int al_set( array_list_t *l, int pos, const void *o );
+
 /**
    Returns the element at the specified index
 
@@ -351,26 +378,37 @@ int al_set( array_list_t *l, int pos, const void *o );
    \return The element 
 */
 const void *al_get( array_list_t *l, int pos );
+
 /**
   Truncates the list to new_sz items.
 */
 void al_truncate( array_list_t *l, int new_sz );
+
 /**
   Removes and returns the last entry in the list
 */
 const void *al_pop( array_list_t *l );
+
 /**
    Returns the number of elements in the list
 */
 int al_get_count( array_list_t *l );
+
 /**
   Returns the last entry in the list witout removing it.
 */
 const void *al_peek( array_list_t *l );
-/** Returns 1 if the list is empty, 0 otherwise*/
+
+/**
+   Returns 1 if the list is empty, 0 otherwise
+*/
 int al_empty( array_list_t *l);
-/** Call the function func for each entry in the list*/
+
+/** 
+	Call the function func for each entry in the list
+*/
 void al_foreach( array_list_t *l, void (*func)(const void * ));
+
 /** 
 	Same as al_foreach, but the function func takes an additional
 	argument, which is provided by the caller in the variable aux
@@ -400,7 +438,9 @@ void al_foreach2( array_list_t *l, void (*func)(const void *, void *), void *aux
 
    Which most people would find more intuitive.
 
-   The system breaks down if the user is using numbers of a base larger than 10.
+   This won't return the optimum results for numbers in bases higher
+   than ten, such as hexadecimal, but at least a stable sort order
+   will result.
 */
 int wcsfilecmp( const wchar_t *a, const wchar_t *b );
 
@@ -432,19 +472,21 @@ void sb_append_char( string_buffer_t *, wchar_t );
    Append a null terminated list of strings to the buffer.
    Example:
 
-   sb_append2( my_buff, L"foo", L"bar", 0 );
+   sb_append2( my_buff, L"foo", L"bar", (void *)0 );
+
+   Do not forget to cast the last 0 to (void *), or you might encounter errors on 64-bit platforms!
 */
 void sb_append2( string_buffer_t *, ... );
 
 /**
    Append formated string data to the buffer. This function internally
    relies on \c vswprintf, so any filter options supported by that
-   function is also supported by this function
+   function is also supported by this function.
 */
 int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... );
 
 /**
-   Vararg version of sb_printf
+   Vararg version of sb_printf.
 */
 int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig );
 
@@ -454,15 +496,16 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 void sb_destroy( string_buffer_t * );
 
 /**
-   Truncate the buffer.
+   Truncate the buffer. This will not deallocate the memory used, it will only set the contents of the string to L"\0".
 */
 void sb_clear( string_buffer_t * );
 
 
 /**
    Initialize the specified buffer_t
- */
+*/
 void b_init( buffer_t *b);
+
 /**
    Destroy the specified buffer_t
 */

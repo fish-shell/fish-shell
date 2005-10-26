@@ -88,11 +88,11 @@ parameter expansion.
 #define UNCLEAN L"$*?\\\"'({})"
 
 /**
-   Test if the specified argument is clean, i.e. it does not contin
-   any tokens which are expanded. Clean strings can be passed through
-   expand_string and expand_one without changing them. About 90% of
-   all strings are clean, so skipping expantion on them actually does
-   save a small amount of time.
+   Test if the specified argument is clean, i.e. it does not contain
+   any tokens which need to be expanded or otherwise altered. Clean
+   strings can be passed through expand_string and expand_one without
+   changing them. About 90% of all strings are clean, so skipping
+   expantion on them actually does save a small amount of time.
 */
 static int is_clean( const wchar_t *in )
 {
@@ -114,7 +114,7 @@ static int is_clean( const wchar_t *in )
 }
 
 /**
-   Return the environment variable value for the string starting at in 
+   Return the environment variable value for the string starting at \c in. 
 */
 static wchar_t *expand_var( wchar_t *in )
 {

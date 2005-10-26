@@ -27,11 +27,16 @@
 #include "wutil.h"
 
 /**
-	Minimum allocated size for data structures. Used to avoid excessive
-	memory allocations for lists, hash tables, etc, which are nearly
-	empty.
+   Minimum allocated size for data structures. Used to avoid excessive
+   memory allocations for lists, hash tables, etc, which are nearly
+   empty.
 */
-#define MIN_SIZE 128
+#define MIN_SIZE 32
+
+/**
+   Minimum size for hash tables
+*/
+#define HASH_MIN_SIZE 7
 
 /**
    Maximum number of characters that can be inserted using a single
@@ -191,7 +196,11 @@ void hash_init( hash_table_t *h,
 				int (*hash_func)(const void *key),
 				int (*compare_func)(const void *key1, const void *key2) )
 {
-	hash_init2( h, hash_func, compare_func, 31 );	
+	h->arr = 0;
+	h->size = 0;
+	h->count=0;
+	h->hash_func = hash_func;
+	h->compare_func = compare_func;
 }
 
 
@@ -207,8 +216,11 @@ void hash_destroy( hash_table_t *h )
 static int hash_search( hash_table_t *h,
 						const void *key )
 {
-	int hv = h->hash_func( key );
-	int pos = abs(hv) % h->size;
+	int hv;
+	int pos;
+
+	hv = h->hash_func( key );
+	pos = abs(hv) % h->size;
 	while(1)
 	{
 		if( (h->arr[pos].key == 0 ) ||
@@ -229,13 +241,13 @@ static int hash_realloc( hash_table_t *h,
 {
 
 	/* Avoid reallocating when using pathetically small tables */
-	if( ( sz < h->size ) && (h->size < MIN_SIZE))
+	if( ( sz < h->size ) && (h->size < HASH_MIN_SIZE))
 		return 1;
-	sz = maxi( sz, MIN_SIZE );
-
+	sz = maxi( sz, HASH_MIN_SIZE );
+	
 	hash_struct_t *old_arr = h->arr;
 	int old_size = h->size;
-
+	
 	int i;
 
 	h->arr = malloc( sizeof( hash_struct_t) * sz );
@@ -294,7 +306,10 @@ int hash_put( hash_table_t *h,
 const void *hash_get( hash_table_t *h,
 					  const void *key )
 {
-	int pos = hash_search( h, key );
+	if( !h->count )
+		return 0;
+	
+	int pos = hash_search( h, key );	
 	if( h->arr[pos].key == 0 )
 		return 0;
 	else
@@ -303,7 +318,10 @@ const void *hash_get( hash_table_t *h,
 
 const void *hash_get_key( hash_table_t *h,
 						  const void *key )
-{
+{	
+	if( !h->count )
+		return 0;
+	
 	int pos = hash_search( h, key );
 	if( h->arr[pos].key == 0 )
 		return 0;
@@ -321,6 +339,16 @@ void hash_remove( hash_table_t *h,
 				  const void **old_key,
 				  const void **old_val )
 {
+	if( !h->count )
+	{
+
+		if( old_key != 0 )
+			*old_key = 0;
+		if( old_val != 0 )
+			*old_val = 0;
+		return;
+	}
+
 	int pos = hash_search( h, key );
 	int next_pos;
 
@@ -377,6 +405,9 @@ void hash_remove( hash_table_t *h,
 int hash_contains( hash_table_t *h,
 				   const void *key )
 {
+	if( !h->count )
+		return 0;
+	
 	int pos = hash_search( h, key );
 	return h->arr[pos].key != 0;
 }

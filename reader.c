@@ -1007,12 +1007,13 @@ static int insert_str(wchar_t *str)
 	}
 	else
 	{
+		int old_len = data->buff_len;
 		
 		data->buff_len += len;
 		check_size();
 		
-		/* Insert space for extra character at the right position */
-		if( data->buff_pos < data->buff_len )
+		/* Insert space for extra characters at the right position */
+		if( data->buff_pos < old_len )
 		{
 			memmove( &data->buff[data->buff_pos+len],
 					 &data->buff[data->buff_pos],

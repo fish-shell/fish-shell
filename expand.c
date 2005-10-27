@@ -1121,9 +1121,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 			
 			break;
 		
-	}
-	
-	
+	}	
 
 	len1 = (paran_begin-in);
 	len2 = wcslen(paran_end)-1;
@@ -1147,10 +1145,10 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 		free( subcmd );
 		return 0;
 	}	
-
+	
 	al_init( &tail_expand );
 	expand_subshell( wcsdup(paran_end+1), &tail_expand );
-
+	
     for( i=0; i<al_get_count( &sub_res ); i++ )
     {
         wchar_t *sub_item, *sub_item2;
@@ -1158,20 +1156,20 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
         sub_item2 = expand_escape( sub_item, 1 );
 		free(sub_item);		
         int item_len = wcslen( sub_item2 );
-
+		
         for( j=0; j<al_get_count( &tail_expand ); j++ )
         {
             string_buffer_t whole_item;
             wchar_t *tail_item = (wchar_t *)al_get( &tail_expand, j );
-
+			
             sb_init( &whole_item );
-
+			
             sb_append_substring( &whole_item, in, len1 );
             sb_append_char( &whole_item, INTERNAL_SEPARATOR );
             sb_append_substring( &whole_item, sub_item2, item_len );
 			sb_append_char( &whole_item, INTERNAL_SEPARATOR );
             sb_append( &whole_item, tail_item );			
-
+			
             al_push( out, whole_item.buff );			
         }
 		
@@ -1183,7 +1181,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 	
 	al_foreach( &tail_expand, (void (*)(const void *))&free );
 	al_destroy( &tail_expand );
-
+	
 	free( subcmd );
 	return 1;	
 }
@@ -1246,7 +1244,7 @@ static int tilde_expand( wchar_t **ptr )
 			old_in = name_end;
 			
 			char *name_str = wcs2str( name );			
-
+			
 			struct passwd *userinfo = 
 				getpwnam( name_str );
 			
@@ -1397,7 +1395,7 @@ int expand_string( wchar_t *str,
 		for( i=0; i<al_get_count( in ); i++ )
 		{
 			wchar_t *next;
-
+			
 			next = expand_unescape( (wchar_t *)al_get( in, i ), 
 									1);
 

@@ -1,5 +1,11 @@
 #Completions for make
-complete -x -c make -a "(grep -h -E '^[^#%=\t$][^#%=$]*:([^=]|$)' Makefile makefile GNUmakefile | cut -d ":" -f 1 | sed -r 's/^ *//;s/ *$//;s/ +/\n/g' ^/dev/null)" -d "Target"
+
+function __fish_print_make_targets
+	set files Makefile makefile GNUmakefile
+	grep -h -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $files | cut -d ":" -f 1 | sed -r 's/^ *//;s/ *$//;s/ +/\n/g' ^/dev/null
+end
+
+complete -x -c make -a "(__fish_print_make_targets)" -d "Target"
 complete -r -c make -s f -d "Use file as makefile" -r
 complete -x -c make -s C -x -a "(__fish_complete_directory (commandline -ct))" -d "Change directory"
 complete -c make -s d -d "Debug"

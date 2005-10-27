@@ -38,6 +38,9 @@
 #include "expand.h"
 #include "parser.h"
 #include "tokenizer.h"
+#include "output.h"
+#include "exec.h"
+#include "event.h"
 
 /**
    Number of laps to run performance testing loop

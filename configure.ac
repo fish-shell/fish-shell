@@ -35,22 +35,24 @@ else
     AC_SUBST( XSEL_MAN_PATH,[ ])
 fi
 
-if test $sysconfdir = '${prefix}/etc'; then
-	if [[ "$prefix" = NONE ]]; then
-		AC_DEFINE_UNQUOTED( [PREFIX], L"/usr/local", [Installation directory])
-		AC_SUBST( PREFIX, /usr/local)
-   		AC_SUBST(sysconfdir,[/etc])
-		export prefix=/usr/local
-	else
-		AC_DEFINE_UNQUOTED( [PREFIX], L"$prefix", [Installation directory])
-		AC_SUBST( PREFIX, [$prefix])
-   		AC_SUBST(sysconfdir,[/etc])
-	fi
+if [[ "$prefix" = NONE ]]; then
+	AC_DEFINE_UNQUOTED( [PREFIX], L"/usr/local", [Installation directory])
+	AC_SUBST( PREFIX, /usr/local)
+	export prefix=/usr/local
+else
+	AC_DEFINE_UNQUOTED( [PREFIX], L"$prefix", [Installation directory])
+	AC_SUBST( PREFIX, [$prefix])
+fi
 
-	if echo $prefix | grep \^$HOME >/dev/null; then
-		AC_SUBST(sysconfdir,[$HOME/etc])
-		AC_MSG_NOTICE(["Install in $HOME"])
-	fi
+if [[ "$sysconfdir" = NONE ]]; then
+	AC_SUBST(sysconfdir,[$prefix/etc])
+else
+	AC_SUBST(sysconfdir,[$sysconfdir])
+fi
+
+if echo $prefix | grep \^$HOME >/dev/null; then
+	AC_SUBST(sysconfdir,[$HOME/etc])
+	AC_MSG_NOTICE(["Install in $HOME"])
 fi
 
 AC_SUBST(fishdir,[/fish.d])

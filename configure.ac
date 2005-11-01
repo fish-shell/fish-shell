@@ -44,12 +44,6 @@ else
 	AC_SUBST( PREFIX, [$prefix])
 fi
 
-if [[ "$sysconfdir" = NONE ]]; then
-	AC_SUBST(sysconfdir,[$prefix/etc])
-else
-	AC_SUBST(sysconfdir,[$sysconfdir])
-fi
-
 if echo $prefix | grep \^$HOME >/dev/null; then
 	AC_SUBST(sysconfdir,[$HOME/etc])
 	AC_MSG_NOTICE(["Install in $HOME"])
@@ -66,7 +60,7 @@ if test -z $docdir; then
 fi
 
 AC_DEFINE_UNQUOTED( DOCDIR, [L"$(eval echo $docdir)"], [Documentation directory] )
-AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$sysconfdir"], [System configuration directory] )
+AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$(eval echo $sysconfdir)"], [System configuration directory] )
 
 # See if Linux procfs is present
 AC_CHECK_FILES([/proc/self/stat])

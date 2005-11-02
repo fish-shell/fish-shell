@@ -24,12 +24,12 @@ else
 
 	complete -c kill -s l -d "List codes and names of available signals"
 
-	for i in (kill -l|tr \ \t \n|grep "^[A-Z][A-Z0-9]*$")
+	for i in (kill -l|tr \ \t \n|grep '^[A-Z][A-Z0-9]*$')
 		complete -c kill -o $i -d Send\ $i\ signal
 		complete -c kill -o s -x -a $i\tSend\ $i\ signal -d "Send specified signal"
 	end
 end
 
-complete -c kill -xa "(__fish_complete_pids)"
+complete -c kill -xa '(__fish_complete_pids)'
 complete -c kill -s l -d "List names of available signals"
 

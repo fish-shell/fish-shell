@@ -120,7 +120,7 @@ static wchar_t *expand_var( wchar_t *in )
 {
 	if( !in )
 		return 0;
-	return (in[0] == VARIABLE_EXPAND )? env_get( expand_var(in+1) ) : env_get( in );
+	return env_get( in );
 }
 
 void expand_variable_array( const wchar_t *val, array_list_t *out )
@@ -133,7 +133,6 @@ void expand_variable_array( const wchar_t *val, array_list_t *out )
 		if( !cpy )
 		{
 			die_mem();
-			
 		}
 
 		for( start=pos=cpy; *pos; pos++ )
@@ -146,7 +145,7 @@ void expand_variable_array( const wchar_t *val, array_list_t *out )
 			}
 		}
 		al_push( out, wcsdup(start) );
-	
+		
 		free(cpy);	
 	}
 }
@@ -196,7 +195,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 	switch( al_get_count( &l) )
 	{
 		case 0:
-			sb_append( &buff, L"\'\'");
+			sb_append( &buff, L"''");
 			break;			
 
 		case 1:
@@ -206,9 +205,9 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 			if( wcschr( el, L' ' ) && is_quotable( el ) )
 			{
 				sb_append2( &buff,
-							L"\'",
+							L"'",
 							el,
-							L"\'",
+							L"'",
 							(void *)0 );
 			}
 			else
@@ -232,9 +231,9 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 				if( is_quotable( el ) )
 				{
 					sb_append2( &buff,
-								L"\'",
+								L"'",
 								el,
-								L"\'",
+								L"'",
 								(void *)0 );
 				}
 				else
@@ -693,11 +692,10 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 	int is_ok= 1;
 	int empty=0;
 	
-
 	for( i=wcslen(in)-1; (i>=0) && is_ok && !empty; i-- )
 	{
 		c = in[i];
-		if( c == VARIABLE_EXPAND )
+		if( ( c == VARIABLE_EXPAND ) || (c == VARIABLE_EXPAND_SINGLE ) )
 		{
 			int start_pos = i+1;
 			int stop_pos;
@@ -706,15 +704,8 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 			wchar_t * var_val;
 			wchar_t * new_in;			
 			array_list_t l;
-			
-			
-
-//			fwprintf( stderr, L"Expand %ls\n", in );
-			
-									
-//			while (in[stop_pos]==VARIABLE_EXPAND)			 
-//				stop_pos++;
-
+			int is_single = (c==VARIABLE_EXPAND_SINGLE);
+						
 			stop_pos = start_pos;
 
 			while( 1 )
@@ -736,95 +727,122 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 			{
 				die_mem();
 			}
-			else
-			{
-				wcsncpy( var_name, &in[start_pos], var_len );
-				var_name[var_len]='\0';
+			wcsncpy( var_name, &in[start_pos], var_len );
+			var_name[var_len]='\0';
 /*			printf( "Variable name is %s, len is %d\n", var_name, var_len );*/
-				wchar_t *var_val_orig = expand_var( var_name );
+			wchar_t *var_val_orig = expand_var( var_name );
 		
-				if( var_val_orig && (var_val = wcsdup( var_val_orig) ) )
-				{
-					int all_vars=1;
-					array_list_t idx;
-					al_init( &idx );
-					al_init( &l );
+			if( var_val_orig && (var_val = wcsdup( var_val_orig) ) )
+			{
+				int all_vars=1;
+				array_list_t idx;
+				al_init( &idx );
+				al_init( &l );
 					
-					if( in[stop_pos] == L'[' )
-					{						
-						wchar_t *end;
+				if( in[stop_pos] == L'[' )
+				{						
+					wchar_t *end;
 						
-						all_vars = 0;
+					all_vars = 0;
 		
-						stop_pos++;
-						while( 1 )
+					stop_pos++;
+					while( 1 )
+					{
+						int tmp;
+							
+						while( iswspace(in[stop_pos]) || (in[stop_pos]==INTERNAL_SEPARATOR))
+							stop_pos++;
+							
+							
+						if( in[stop_pos] == L']' )
 						{
-							int tmp;
-							
-							while( iswspace(in[stop_pos]) || (in[stop_pos]==INTERNAL_SEPARATOR))
-								stop_pos++;
-							
-							
-							if( in[stop_pos] == L']' )
-							{
-								stop_pos++;
-								break;
-							}
+							stop_pos++;
+							break;
+						}
 
-							errno=0;
-							tmp = wcstol( &in[stop_pos], &end, 10 );
-							if( ( errno ) || ( end == &in[stop_pos] ) )
-							{
-								error( SYNTAX_ERROR, 
-									   L"Expected integer or \']\'", 
-									   -1 );
-								is_ok = 0;
-								break;
-							}
-							al_push( &idx, (void *)tmp );
-							stop_pos = end-in;
+						errno=0;
+						tmp = wcstol( &in[stop_pos], &end, 10 );
+						if( ( errno ) || ( end == &in[stop_pos] ) )
+						{
+							error( SYNTAX_ERROR, 
+								   L"Expected integer or \']\'", 
+								   -1 );
+							is_ok = 0;
+							break;
 						}
+						al_push( &idx, (void *)tmp );
+						stop_pos = end-in;
 					}
+				}
 							
-					if( is_ok )
-					{				
-						expand_variable_array( var_val, &l );
-						if( !all_vars )
-						{	
-							int j;
-							for( j=0; j<al_get_count( &idx ); j++)
+				if( is_ok )
+				{				
+					expand_variable_array( var_val, &l );
+					if( !all_vars )
+					{	
+						int j;
+						for( j=0; j<al_get_count( &idx ); j++)
+						{
+							int tmp = (int)al_get( &idx, j );
+							if( tmp < 1 || tmp > al_get_count( &l ) )
 							{
-								int tmp = (int)al_get( &idx, j );
-								if( tmp < 1 || tmp > al_get_count( &l ) )
-								{
-									error( SYNTAX_ERROR, L"Array index out of bounds", -1 );
-									is_ok=0;
-									al_truncate( &idx, j );
-									break;
-								}				
-								else
-								{
-									/* Move string from list l to list idx */
-									al_set( &idx, j, al_get( &l, tmp-1 ) );
-									al_set( &l, tmp-1, 0 );
-								}
+								error( SYNTAX_ERROR, L"Array index out of bounds", -1 );
+								is_ok=0;
+								al_truncate( &idx, j );
+								break;
+							}				
+							else
+							{
+								/* Move string from list l to list idx */
+								al_set( &idx, j, al_get( &l, tmp-1 ) );
+								al_set( &l, tmp-1, 0 );
 							}
-							/* Free remaining strings in list l and truncate it */
-							al_foreach( &l, (void (*)(const void *))&free );
-							al_truncate( &l, 0 );
-							/* Add items from list idx back to list l */							
-							al_push_all( &l, &idx );							
 						}
-						free( var_val );
-					}				
+						/* Free remaining strings in list l and truncate it */
+						al_foreach( &l, (void (*)(const void *))&free );
+						al_truncate( &l, 0 );
+						/* Add items from list idx back to list l */							
+						al_push_all( &l, &idx );							
+					}
+					free( var_val );
+				}				
+				
+				if( is_single )
+				{
+					string_buffer_t res;
+					sb_init( &res );
+					
+					in[i]=0;
+					
+					sb_append( &res, in );
 
 					for( j=0; j<al_get_count( &l); j++ )
 					{
 						wchar_t *next = (wchar_t *)al_get( &l, j );
 						
 						if( is_ok )
+						{						
+							if( j != 0 )
+								sb_append( &res, L" " );
+							sb_append( &res, next );
+						}
+						free( next );
+					}	
+					sb_append( &res, &in[stop_pos] );
+					is_ok &= expand_variables( wcsdup((wchar_t *)res.buff), out );
+					
+					sb_destroy( &res );
+					
+				}
+				else
+				{
+					for( j=0; j<al_get_count( &l); j++ )
+					{
+						wchar_t *next = (wchar_t *)al_get( &l, j );
+						
+						if( is_ok )
 						{
-							
+						
 							new_len = wcslen(in) - (stop_pos-start_pos+1) + wcslen( next) +2;
 							
 							if( !(new_in = malloc( sizeof(wchar_t)*new_len )))
@@ -853,21 +871,54 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 							}
 						}
 						free( next );
-					}					
-					al_destroy( &l );
-					al_destroy( &idx );
-					free(in);
-					free(var_name );
-					return is_ok;					
+					}	
+				}
+				
+				al_destroy( &l );
+				al_destroy( &idx );
+				free(in);
+				free(var_name );
+				return is_ok;					
+			}
+			else
+			{
+				/*
+				  Expand a non-existing variable
+				*/
+				if( c == VARIABLE_EXPAND )
+				{
+					/*
+					  Regular expantion, i.e. expand this argument to nothing
+					*/
+					empty = 1;
 				}
 				else
 				{
-					empty = 1;
+					/*
+					  Expantion to single argument. 
+					*/
+					string_buffer_t res;
+					sb_init( &res );
+					
+					in[i]=0;
+					
+					sb_append( &res, in );
+
+					sb_append( &res, &in[stop_pos] );
+					is_ok &= expand_variables( wcsdup((wchar_t *)res.buff), out );
+
+					sb_destroy( &res );
+					free(in);
+					free(var_name );
+					return is_ok;
 				}
 				
-				free(var_name );				
 			}
+				
+			free(var_name );				
+				
 		}
+		
 		prev_char = c;		
 	}
 	
@@ -1326,9 +1377,9 @@ static void remove_internal_separator( const void *s, int conv )
 	}
 	*out=0;
 /*	if( changed )
-	{
-		fwprintf( stderr, L" -> %ls\n", s );
-	}
+  {
+  fwprintf( stderr, L" -> %ls\n", s );
+  }
 */
 }
 

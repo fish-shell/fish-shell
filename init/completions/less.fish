@@ -17,7 +17,7 @@ complete -c less -s I -l IGNORE-CASE -d "Search ignores all case"
 complete -c less -s j -l jump-target -d "Target line" -r -a "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 -1 -2 -3 -4 -5 -6 -7 -8 -9 -10 -11 -12 -13 -14 -15 -16 -17 -18 -19"
 complete -c less -s J -l status-column -d "Display status column"
 complete -c less -s k -l lesskey-file -d "Specify key bindings file" -r
-complete -c less -s L -l no-lessopen -d "Ignore $LESSOPEN"
+complete -c less -s L -l no-lessopen -d 'Ignore $LESSOPEN'
 complete -c less -s m -l long-prompt -d "Prompt with percentage"
 complete -c less -s M -l LONG-PROMPT -d "Verbose prompt"
 complete -c less -s n -l line-numbers -d "Display line number"

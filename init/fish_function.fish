@@ -222,7 +222,7 @@ function prompt_pwd -d "Print the current working directory, ellipsise it if it 
 	if test $len -gt $max_width
 		#Write ellipsis character if known to be using UTF
 		#else use $
-		set -l ellipsis "$" #default
+		set -l ellipsis '$' #default
 		if count $LANG >/dev/null
 			if test (expr match $LANG ".*UTF") -gt 0
 				set ellipsis \u2026

@@ -14,7 +14,10 @@
 #include "util.h"
 
 /**
-   Under curses, tputs expects an int (*func)(char) as its last parameter, but in ncurses, tputs expects a int (*func)(int) as its last parameter. tputs_arg_t is defined to always be what tputs expects. Hopefully.
+   Under curses, tputs expects an int (*func)(char) as its last
+   parameter, but in ncurses, tputs expects a int (*func)(int) as its
+   last parameter. tputs_arg_t is defined to always be what tputs
+   expects. Hopefully.
 */
 
 #ifdef NCURSES_VERSION
@@ -24,7 +27,7 @@ typedef char tputs_arg_t;
 #endif
 
 /**
-   Maximum number of bytes in a utf-8 character
+   Maximum number of bytes used by a single utf-8 character
 */
 #define MAX_UTF8_BYTES 6
 
@@ -39,11 +42,14 @@ typedef char tputs_arg_t;
 */
 #define FISH_COLOR_RESET -2
 
-/** Save the shell mode on startup so we can restore them on exit */
+/** 
+	Save the shell mode on startup so we can restore them on exit
+*/
 extern struct termios shell_modes;      
 
 /**
-   The character to use where the text has been truncated. Is an ellipsis on unicode system and a $ on other systems.
+   The character to use where the text has been truncated. Is an
+   ellipsis on unicode system and a $ on other systems.
 */
 extern wchar_t ellipsis_char;
 
@@ -69,7 +75,8 @@ extern char *profile;
 extern wchar_t *program_name;
 
 /**
-   Take an array_list_t containing wide strings and converts them to a wchar_t **.
+   Take an array_list_t containing wide strings and converts them to a
+   single null-terminated wchar_t **.
 */
 wchar_t **list_to_char_arr( array_list_t *l );
 
@@ -87,22 +94,26 @@ wchar_t **list_to_char_arr( array_list_t *l );
 int fgetws2( wchar_t **buff, int *len, FILE *f );
 
 /**
-   Sorts a list of wide strings according to the wcsfilecmp-function from the util library
+   Sorts a list of wide strings according to the wcsfilecmp-function
+   from the util library
 */
 void sort_list( array_list_t *comp );
 
 /**
-   Returns a newly allocated wide character string equivalent of the specified multibyte character string
+   Returns a newly allocated wide character string equivalent of the
+   specified multibyte character string
 */
 wchar_t *str2wcs( const char *in );
 
 /**
-   Returns a newly allocated multibyte character string equivalent of the specified wide character string
+   Returns a newly allocated multibyte character string equivalent of
+   the specified wide character string
 */
 char *wcs2str( const wchar_t *in );
 
 /**
-   Returns a newly allocated wide character string array equivalent of the specified multibyte character string array
+   Returns a newly allocated wide character string array equivalent of
+   the specified multibyte character string array
 */
 char **wcsv2strv( const wchar_t **in );
 
@@ -112,17 +123,22 @@ char **wcsv2strv( const wchar_t **in );
 wchar_t **strv2wcsv( const char **in );
 
 /**
-   Returns a newly allocated concatenation of the specified wide character strings
+   Returns a newly allocated concatenation of the specified wide
+   character strings
 */
 wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b );
 
 /**
-   Returns a newly allocated concatenation of the specified wide character strings. The last argument must be a null pointer.
+   Returns a newly allocated concatenation of the specified wide
+   character strings. The last argument must be a null pointer.
 */
 wchar_t *wcsdupcat2( const wchar_t *a, ... );
 
 /**
-   Returns a newly allocated wide character string wich is a copy of the string in, but of length c or shorter. The returned string is always null terminated, and the null is not included in the string length.
+   Returns a newly allocated wide character string wich is a copy of
+   the string in, but of length c or shorter. The returned string is
+   always null terminated, and the null is not included in the string
+   length.
 */
 wchar_t *wcsndup( const wchar_t *in, int c );
 
@@ -144,14 +160,32 @@ long wcstol(const wchar_t *nptr,
 			wchar_t **endptr,
 			int base);
 
-size_t
-wcslcat(wchar_t *dst, const wchar_t *src, size_t siz);
+/**
+   Appends src to string dst of size siz (unlike wcsncat, siz is the
+   full size of dst, not space left).  At most siz-1 characters will be
+   copied.  Always NUL terminates (unless siz <= wcslen(dst)).  Returns
+   wcslen(src) + MIN(siz, wcslen(initial dst)).  If retval >= siz,
+   truncation occurred.
 
-size_t
-wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
+   This is the OpenBSD strlcat function, modified for wide characters,
+   and renamed to reflect this change.
+
+*/
+size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
 
 /**
-   Create a dublicate string. Wide string version of strdup.
+   Copy src to string dst of size siz.  At most siz-1 characters will
+   be copied.  Always NUL terminates (unless siz == 0).  Returns
+   wcslen(src); if retval >= siz, truncation occurred.
+
+   This is the OpenBSD strlcpy function, modified for wide characters,
+   and renamed to reflect this change. 
+*/
+size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
+
+/**
+   Create a dublicate string. Wide string version of strdup. Will
+   automatically exit if out of memory.
 */
 wchar_t *wcsdup(const wchar_t *in);
 
@@ -163,9 +197,22 @@ wchar_t *wcsdup(const wchar_t *in);
    esoteric locales where uppercase and lowercase do not cleanly
    transform between each other. Hopefully this should be fine since
    fish only uses this function with one of the strings supplied by
-   fish and guaranteed to be a sane, english word.
+   fish and guaranteed to be a sane, english word. Using wcscasecmp on
+   a user-supplied string should be considered a bug.
 */
 int wcscasecmp( const wchar_t *a, const wchar_t *b );
+
+/**
+   Case insensitive string compare function. Wide string version of
+   strncasecmp.
+
+   This implementation of wcsncasecmp does not take into account
+   esoteric locales where uppercase and lowercase do not cleanly
+   transform between each other. Hopefully this should be fine since
+   fish only uses this function with one of the strings supplied by
+   fish and guaranteed to be a sane, english word. Using wcsncasecmp on
+   a user-supplied string should be considered a bug.
+*/
 int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
 
 /**
@@ -188,7 +235,11 @@ int wcwidth( wchar_t c );
 int my_wcswidth( const wchar_t *c );
 
 /**
-   This functions returns the end of a quoted substring. It can handle nested single and double quotes.
+   This functions returns the end of the quoted substring beginning at
+   \c in. It can handle both single and double quotes. Returns 0 on
+   error.
+
+   \param in the position of the opening quote
 */
 wchar_t *quote_end( const wchar_t *in );
 
@@ -205,7 +256,7 @@ void error_reset();
 /**
    Set the locale, also change the ellipsis character
 */
-void fish_setlocale(int category, const wchar_t *locale);
+void fish_setlocale( int category, const wchar_t *locale );
 
 /**
    Checks if \c needle is included in the list of strings specified

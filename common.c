@@ -314,8 +314,7 @@ char **wcsv2strv( const wchar_t **in )
 	char **res = malloc( sizeof( char *)*(count+1));
 	if( res == 0 )
 	{
-		die_mem();
-		
+		die_mem();		
 	}
 
 	for( i=0; i<count; i++ )
@@ -353,8 +352,10 @@ wchar_t *wcsdupcat2( const wchar_t *a, ... )
 
 	wchar_t *res = malloc( sizeof(wchar_t)*(len +1 ));
 	if( res == 0 )
-		return 0;
-
+	{
+		die_mem();
+	}
+	
 	wcscpy( res, a );
 	pos = wcslen(a);
 	while( (arg=va_arg(va2, wchar_t *) )!= 0 ) 
@@ -489,17 +490,6 @@ long wcstol(const wchar_t *nptr,
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/**
-   Appends src to string dst of size siz (unlike wcsncat, siz is the
-   full size of dst, not space left).  At most siz-1 characters will be
-   copied.  Always NUL terminates (unless siz <= wcslen(dst)).  Returns
-   wcslen(src) + MIN(siz, wcslen(initial dst)).  If retval >= siz,
-   truncation occurred.
-
-   This is the OpenBSD strlcat function, modified for wide characters,
-   and renamed to reflect this change.
-
-*/
 size_t
 wcslcat(wchar_t *dst, const wchar_t *src, size_t siz)
 {
@@ -552,14 +542,6 @@ wcslcat(wchar_t *dst, const wchar_t *src, size_t siz)
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/**
-   Copy src to string dst of size siz.  At most siz-1 characters will
-   be copied.  Always NUL terminates (unless siz == 0).  Returns
-   wcslen(src); if retval >= siz, truncation occurred.
-
-   This is the OpenBSD strlcpy function, modified for wide characters,
-   and renamed to reflect this change. 
-*/
 size_t
 wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz)
 {
@@ -591,9 +573,6 @@ wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz)
 	/* count does not include NUL */
 }
 
-/**
-   Fallback implementation if missing from libc
-*/
 wchar_t *wcsdup( const wchar_t *in )
 {
 	size_t len=wcslen(in);
@@ -601,7 +580,6 @@ wchar_t *wcsdup( const wchar_t *in )
 	if( out == 0 )
 	{
 		die_mem();
-		
 	}
 
 	memcpy( out, in, sizeof( wchar_t)*(len+1));
@@ -706,43 +684,25 @@ int my_wcswidth( const wchar_t *c )
 
 wchar_t *quote_end( const wchar_t *in )
 {
-	int level=1;
-	int offset = (*in != L'\"');
-
-	in++;
-	
-	while(1)
+	switch( *in )
 	{
-/*		fwprintf( stderr, L"Check %c\n", *tok->buff );*/
-		switch( *in )
+		case '"':
 		{
-			case L'\\':
-				in++;
-				if( *in == L'\0' )
-				{
+			while(1)
+			{
+				in = wcschr( in+1, L'"' );
+				if( !in )
 					return 0;
-				}
-				break;
-			case L'\"':
-			case L'\'':
-				if( (((level+offset) % 2)?L'\"':L'\'') == *in )
-				{
-					level--;
-				}
-				else
-				{
-					level++;
-				}
-				
-				break;
+				if( *(in-1) != L'\\' )
+					return (wchar_t *)in;
+			}
 		}
-		if( (*in == L'\0') ||(level==0))
-			break;
-		
-		in++;
+		case '\'':
+		{
+			return wcschr( in+1, L'\'' );
+		}
 	}
-	return level?0:(wchar_t *)in;
-	
+	return 0;
 }
 
 
@@ -997,8 +957,10 @@ wchar_t *escape( const wchar_t *in,
 }
 
 
-wchar_t *unescape( const wchar_t * orig, int escape_special )
+wchar_t *unescape( const wchar_t * orig, int unescape_special )
 {
+	
+	int mode = 0; 
 	int in_pos, out_pos, len = wcslen( orig );
 	int c;
 	int bracket_count=0;
@@ -1007,194 +969,346 @@ wchar_t *unescape( const wchar_t * orig, int escape_special )
 	if( !in )
 		die_mem();
 	
-	for( in_pos=0, out_pos=0; in_pos<len; prev=in[out_pos], out_pos++, in_pos++ )
+	for( in_pos=0, out_pos=0; 
+		 in_pos<len; 
+		 (prev=(out_pos>=0)?in[out_pos]:0), out_pos++, in_pos++ )
 	{
 		c = in[in_pos];
-		if( c == L'\\' )
+		switch( mode )
 		{
-			switch( in[++in_pos] )
+
+			/*
+			  Mode 0 means unquoted string
+			*/
+			case 0:
 			{
-				case L'\0':
-					free(in);
-					return 0;
-
-				case L'n':
-					in[out_pos]=L'\n';
-					break;
-
-				case L'r':
-					in[out_pos]=L'\r';
-					break;
-
-				case L't':
-					in[out_pos]=L'\t';
-					break;
-
-				case L'b':
-					in[out_pos]=L'\b';
-					break;
-
-				case L'e':
-					in[out_pos]=L'\e';
-					break;
-
-				case L'u':
-				case L'U':
-				case L'x':
-				case L'o':
+				if( c == L'\\' )
 				{
-					int i;
-					wchar_t res=0;
-					int chars=2;
-					int base=16;
-					
-					switch( in[in_pos] )
+					switch( in[++in_pos] )
 					{
-						case L'u':
-							base=16;
-							chars=4;
-							break;
-							
-						case L'U':
-							base=16;
-							chars=8;
-							break;
-							
-						case L'x':
-							base=16;
-							chars=2;
-							break;
-							
-						case L'o':
-							base=8;
-							chars=3;
-							break;
-							
-					}
-					
-					for( i=0; i<chars; i++ )
-					{
-						int d = convert_digit( in[++in_pos],base);
-						if( d < 0 )
+						case L'\0':
 						{
-							in_pos--;
+							free(in);
+							return 0;
+						}
+						
+						case L'n':
+						{
+							in[out_pos]=L'\n';
 							break;
 						}
 						
-						res=(res*base)|d;
+						case L'r':
+						{
+							in[out_pos]=L'\r';
+							break;
+						}
+
+						case L't':
+						{
+							in[out_pos]=L'\t';
+							break;
+						}
+
+						case L'b':
+						{
+							in[out_pos]=L'\b';
+							break;
+						}
 						
+						case L'e':
+						{
+							in[out_pos]=L'\e';
+							break;
+						}
+						
+						case L'u':
+						case L'U':
+						case L'x':
+						case L'o':
+						{
+							int i;
+							wchar_t res=0;
+							int chars=2;
+							int base=16;
+					
+							switch( in[in_pos] )
+							{
+								case L'u':
+								{
+									base=16;
+									chars=4;
+									break;
+								}
+								
+								case L'U':
+								{
+									base=16;
+									chars=8;
+									break;
+								}
+								
+								case L'x':
+								{
+									base=16;
+									chars=2;
+									break;
+								}
+								
+								case L'o':
+								{
+									base=8;
+									chars=3;
+									break;
+								}
+								
+							}
+					
+							for( i=0; i<chars; i++ )
+							{
+								int d = convert_digit( in[++in_pos],base);
+								if( d < 0 )
+								{
+									in_pos--;
+									break;
+								}
+						
+								res=(res*base)|d;
+						
+							}
+					
+							in[out_pos] = res;
+					
+							break;
+						}
+
+						default:
+						{
+							in[out_pos]=in[in_pos];
+							break;
+						}
+					}
+				}
+				else 
+				{
+					switch( in[in_pos]){
+						case L'~':
+						{
+							if( unescape_special && (in_pos == 0) )
+							{
+								in[out_pos]=HOME_DIRECTORY;
+							}
+							else
+							{
+								in[out_pos] = L'~';
+							}
+							break;
+						}
+
+						case L'%':
+						{
+							if( unescape_special && (in_pos == 0) )
+							{
+								in[out_pos]=PROCESS_EXPAND;
+							}
+							else
+							{
+								in[out_pos]=in[in_pos];						
+							}
+							break;
+						}
+
+						case L'*':
+						{
+							if( unescape_special )
+							{
+								if( out_pos > 0 && in[out_pos-1]==ANY_STRING )
+								{
+									out_pos--;
+									in[out_pos] = ANY_STRING_RECURSIVE;
+								}
+								else
+									in[out_pos]=ANY_STRING;
+							}
+							else
+							{
+								in[out_pos]=in[in_pos];						
+							}
+							break;
+						}
+
+						case L'?':
+						{
+							if( unescape_special )
+							{
+								in[out_pos]=ANY_CHAR;
+							}
+							else
+							{
+								in[out_pos]=in[in_pos];						
+							}
+							break;					
+						}
+
+						case L'$':
+						{
+							if( unescape_special )
+							{
+								in[out_pos]=VARIABLE_EXPAND;
+							}
+							else
+							{
+								in[out_pos]=in[in_pos];											
+							}
+							break;					
+						}
+
+						case L'{':
+						{
+							if( unescape_special )
+							{
+								bracket_count++;
+								in[out_pos]=BRACKET_BEGIN;
+							}
+							else
+							{
+								in[out_pos]=in[in_pos];						
+							}
+							break;					
+						}
+						
+						case L'}':
+						{
+							if( unescape_special )
+							{
+								bracket_count--;
+								in[out_pos]=BRACKET_END;
+							}
+							else
+							{
+								in[out_pos]=in[in_pos];						
+							}
+							break;					
+						}
+						
+						case L',':
+						{
+							if( unescape_special && bracket_count && prev!=BRACKET_SEP)
+							{
+								in[out_pos]=BRACKET_SEP;
+							}
+							else
+							{
+								in[out_pos]=in[in_pos];						
+							}
+							break;					
+						}
+						
+						case L'\'':
+						{
+							mode = 1;
+							out_pos--;							
+							break;					
+						}
+				
+						case L'\"':
+						{
+							mode = 2;
+							out_pos--;							
+							break;
+						}
+
+						default:
+						{
+							in[out_pos] = in[in_pos];
+							break;
+						}
+					}
+				}		
+				break;
+			}
+
+			/*
+			  Mode 1 means single quoted string, i.e 'foo'
+			*/
+			case 1:
+			{
+				if( c == L'\'' )
+				{
+					out_pos--;							
+					mode = 0;
+				}
+				else
+				{
+					in[out_pos] = in[in_pos];
+				}
+				
+				break;
+			}
+
+			/*
+			  Mode 2 means double quoted string, i.e. "foo"
+			*/
+			case 2:
+			{
+				switch( c )
+				{
+					case '"':
+					{
+						mode = 0;
+						out_pos--;							
+						break;
+					}
+				
+					case '\\':
+					{
+						switch( in[++in_pos] )
+						{
+							case L'\0':
+							{
+								free(in);
+								return 0;
+							}
+							
+							case L'$':
+							{
+								in[out_pos]=in[in_pos];
+								break;
+							}
+							
+							default:
+							{
+								in[out_pos++] = L'\\';
+								in[out_pos] = in[in_pos];
+								break;
+							}
+						}
+						break;
 					}
 					
-					in[out_pos] = res;
-					
-					break;
-				}
-
-				default:
-					in[out_pos]=in[in_pos];
-					break;
-			}
-		}
-		else 
-		{
-			switch( in[in_pos]){
-				case L'~':
-					if( escape_special && (in_pos == 0) )
-						in[out_pos]=HOME_DIRECTORY;
-					else
-						in[out_pos] = L'~';
-					break;
-				case L'%':
-					if( escape_special && (in_pos == 0) )
-						in[out_pos]=PROCESS_EXPAND;
-					else
-						in[out_pos]=in[in_pos];						
-					break;
-				case L'*':
-					if( escape_special )
+					case '$':
 					{
-						if( out_pos > 0 && in[out_pos-1]==ANY_STRING )
+						if( unescape_special )
 						{
-							out_pos--;
-							in[out_pos] = ANY_STRING_RECURSIVE;
+							in[out_pos]=VARIABLE_EXPAND_SINGLE;
 						}
 						else
-							in[out_pos]=ANY_STRING;
+						{
+							in[out_pos]=in[in_pos];
+						}
+						break;
 					}
-					else
-						in[out_pos]=in[in_pos];						
-					break;
-				case L'?':
-					if( escape_special )
-						in[out_pos]=ANY_CHAR;
-					else
-						in[out_pos]=in[in_pos];						
-					break;					
-				case L'$':
-					if( escape_special )
-						in[out_pos]=VARIABLE_EXPAND;
-					else
-						in[out_pos]=in[in_pos];											
-					break;					
-				case L'{':
-					if( escape_special )
+			
+					default:
 					{
-						bracket_count++;
-						in[out_pos]=BRACKET_BEGIN;
+						in[out_pos] = in[in_pos];
+						break;
 					}
-					else
-						in[out_pos]=in[in_pos];						
-					break;					
-				case L'}':
-					if( escape_special )
-					{
-						bracket_count--;
-						in[out_pos]=BRACKET_END;
-					}
-					else
-						in[out_pos]=in[in_pos];						
-					break;					
-
-				case L',':
-					if( escape_special && bracket_count && prev!=BRACKET_SEP)
-					{
-						in[out_pos]=BRACKET_SEP;
-					}
-					else
-						in[out_pos]=in[in_pos];						
-					break;					
-
-				case L'\'':
-				case L'\"':
-				{
-					wchar_t *end = quote_end( &in[in_pos] );
-					int len;
-					
-					if( end == 0 )
-					{		
-						free(in);
-						return 0;
-					}
-					
-					len = end- &in[in_pos]-1;					
-
-					if( escape_special)
-						in[out_pos++]=INTERNAL_SEPARATOR;
-
-					memmove( &in[out_pos], &in[in_pos+1], sizeof(wchar_t)*(len) );
-					in_pos += len+1;
-					out_pos += len-1;
-
-					if( escape_special)
-						in[++out_pos]=INTERNAL_SEPARATOR;
-
-					break;
-				}
-				default:
-					in[out_pos] = in[in_pos];
-					break;
+				
+				}						
+				break;
 			}
-		}		
+		}
 	}
 	in[out_pos]=L'\0';
 	return in;	
@@ -1310,13 +1424,13 @@ static char *gen_unique_nfs_filename( const char *filename )
 	pidlen = sprint_pid_t( getpid(), newname + orglen + 1 + hnlen + 1 );
 	newname[orglen + 1 + hnlen + 1 + pidlen] = '\0';
 /*	debug( 1, L"gen_unique_nfs_filename returning with: newname = \"%s\"; "
-  L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
-  L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
-  newname, (int)HOST_NAME_MAX, hnlen, orglen, 
-  (int)sizeof(pid_t), 
-  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
-  (int)(orglen + 1 + hnlen + 1 + 
-  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
+	L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
+	L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
+	newname, (int)HOST_NAME_MAX, hnlen, orglen, 
+	(int)sizeof(pid_t), 
+	(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
+	(int)(orglen + 1 + hnlen + 1 + 
+	(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
 	return newname;
 }
 

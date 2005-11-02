@@ -42,10 +42,10 @@ function __fish_complete_suffix -d "Complete using files"
 	set -- desc $argv[3]
 
 	set -- base (echo $comp |sed -e 's/\.[a-zA-Z0-9]*$//')
-	eval "set -- files "$base"*"$suff
+	eval "set -- files $base*$suff"
 
 	if test $files[1]
-		printf "%s\t"$desc"\n" $files
+		printf "%s\t$desc\n" $files
 	end
 
 	#
@@ -74,7 +74,7 @@ function __fish_complete_directory -d "Complete using directories"
 	eval "set -- dirs "$comp"*/"
 
 	if test $dirs[1]
-		printf "%s\t"$desc"\n" $dirs
+		printf "%s\t$desc\n" $dirs
 	end
 
 end

@@ -70,6 +70,9 @@ enum
 	/** Character representing variable expantion */
 	VARIABLE_EXPAND,
 
+	/** Character rpresenting variable expantion into a single element*/
+	VARIABLE_EXPAND_SINGLE,
+
 	/** Character representing the start of a bracket expantion */
 	BRACKET_BEGIN,
 

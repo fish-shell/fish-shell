@@ -16,19 +16,20 @@ set -g IFS \ \t\n
 #
 
 for i in /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin
-	if test -d $i
-	   	if not echo $PATH|grep $i >/dev/null
+	if not expr "$PATH" : .\*$i.\* >/dev/null
+		if test -d $i
 			set PATH $PATH $i
 		end
 	end
 end
+
 
 #
 # Set some value for LANG if nothing was set before
 #
 
 if status --is-login
-	if not count $LANG >/dev/null
+	if not set -q LANG >/dev/null
 		set -gx LANG en_US.UTF-8
 	end
 end
@@ -39,13 +40,9 @@ end
 # situation as well?
 #
 
-if count $LANG >/dev/null
-	if test (expr match $LANG ".*UTF") -gt 0
-		if count $TERM >/dev/null
-			if test linux = $TERM
-				unicode_start ^/dev/null
-			end
-		end
+if expr match "$LANG" ".*UTF" >/dev/null
+	if test linux = "$TERM"
+		unicode_start ^/dev/null
 	end
 end
 
@@ -56,7 +53,7 @@ end
 #
 
 for i in DISPLAY
-	if test (count $$i) -gt 1
+	if set -q $i
 		set -- $i (printf ":%s" $$i|cut -c 2-)
 	end
 end

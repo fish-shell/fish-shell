@@ -32,7 +32,7 @@ function _contains_help -d "Helper function for contains"
 end
 
 function contains -d "Test if a key is contained in a set of values"
-	while count $argv >/dev/null
+	while set -q argv
 		switch $argv[1]
 			case '-h' '--h' '--he' '--hel' '--help'
 				_contains_help
@@ -56,8 +56,7 @@ function contains -d "Test if a key is contained in a set of values"
 		set -e argv[1]
 	end
 
-	if count $argv >/dev/null
-	else
+	if not set -q argv 
 		echo "contains: Key not specified"
 		return 1
 	end

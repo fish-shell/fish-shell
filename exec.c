@@ -103,7 +103,7 @@ void exec_close( int fd )
 int exec_pipe( int fd[2])
 {
 	int res;
-
+	
 	while( ( res=pipe( fd ) ) )
 	{
 		if( errno != EINTR )
@@ -111,23 +111,18 @@ int exec_pipe( int fd[2])
 			wperror(L"pipe");
 			return res;
 		}
-	}
+	}	
+	
+	debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
 	
 	if( open_fds == 0 )
 	{
-		open_fds = malloc( sizeof( array_list_t ) );
-		if(!open_fds )
-			die_mem();
-		al_init( open_fds );
+		open_fds = al_new();
 	}
 	
-	if( res != -1 )
-	{
-		debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
-		
-		al_push( open_fds, (void *)(long)fd[0] );
-		al_push( open_fds, (void *)(long)fd[1] );		
-	}
+	al_push( open_fds, (void *)(long)fd[0] );
+	al_push( open_fds, (void *)(long)fd[1] );		
+	
 	return res;
 }
 
@@ -183,7 +178,6 @@ static void close_unused_internal_pipes( io_data_t *io )
 
 void exec_init()
 {
-	
 }
 
 void exec_destroy()
@@ -672,7 +666,7 @@ void exec( job_t *j )
 	pipe_write.io_mode=IO_PIPE;
 	pipe_read.next=0;
 	pipe_write.next=0;
-	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=0;	
+	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=-1;	
 
 	//fwprintf( stderr, L"Run command %ls\n", j->command );
 	
@@ -696,7 +690,7 @@ void exec( job_t *j )
 	  The loop also has to handle pipelining between the jobs.
 	*/
 
-	for (p = j->first_process; p; p = p->next)
+	for( p=j->first_process; p; p = p->next )
 	{
 		mypipe[1]=-1;
 		skip_fork=0;
@@ -722,9 +716,11 @@ void exec( job_t *j )
 			j->io = io_add( j->io, &pipe_read );
 		}
 		
-		if (p->next)
+		if( p->next )
 		{
-			if (exec_pipe( mypipe ) == -1)
+//			debug( 1, L"%ls|%ls" , p->argv[0], p->next->argv[0]);
+			
+			if( exec_pipe( mypipe ) == -1 )
 			{
 				debug( 1, PIPE_ERROR );
 				wperror (L"pipe");
@@ -775,7 +771,7 @@ void exec( job_t *j )
 				{
 					sb_init( &sb );
 				
-					for( i=1,arg = p->argv+1; *arg; i++, arg++ )
+					for( i=1, arg=p->argv+1; *arg; i++, arg++ )
 					{
 						if( i != 1 )
 							sb_append( &sb, ARRAY_SEP_STR );
@@ -948,7 +944,7 @@ void exec( job_t *j )
 				  to buffer such io, since otherwisethe internal pipe
 				  buffer might overflow.
 				*/
-				if( !io_buffer)
+				if( !io_buffer )
 				{
 					p->completed = 1;
 					break;
@@ -962,8 +958,8 @@ void exec( job_t *j )
 				{
 					
 					
-					pid = fork ();
-					if (pid == 0)
+					pid = fork();
+					if( pid == 0 )
 					{
 						/*
 						  This is the child process. Write out the contents of the pipeline.
@@ -975,7 +971,7 @@ void exec( job_t *j )
 							   io_buffer->param2.out_buffer->used );
 						exit( status );
 					}
-					else if (pid < 0)
+					else if( pid < 0 )
 					{
 						/* The fork failed. */
 						debug( 0, FORK_ERROR );
@@ -1024,7 +1020,7 @@ void exec( job_t *j )
 
 				io_data_t *io = io_get( j->io, 1 );		
 				int buffer_stdout = io && io->io_mode == IO_BUFFER;
-
+				
 				if( ( !sb_err->used ) && 
 					( !p->next ) &&
 					( sb_out->used ) && 
@@ -1050,10 +1046,9 @@ void exec( job_t *j )
 					break;
 					
 				}
-
 				
-				pid = fork ();
-				if (pid == 0)
+				pid = fork();
+				if( pid == 0 )
 				{
 					/*
 					  This is the child process. 
@@ -1068,7 +1063,7 @@ void exec( job_t *j )
 					exit( p->status );
 						
 				}
-				else if (pid < 0)
+				else if( pid < 0 )
 				{
 					/* The fork failed. */
 					debug( 0, FORK_ERROR );
@@ -1098,7 +1093,7 @@ void exec( job_t *j )
 //			fwprintf( stderr, 
 //					  L"fork on %ls\n", j->command );
 				pid = fork ();
-				if (pid == 0)
+				if( pid == 0 )
 				{
 					/*
 					  This is the child process. 
@@ -1111,7 +1106,7 @@ void exec( job_t *j )
 					  launch_process _never_ returns...
 					*/
 				}
-				else if (pid < 0)
+				else if( pid < 0 )
 				{
 					/* The fork failed. */
 					debug( 0, FORK_ERROR );
@@ -1138,11 +1133,10 @@ void exec( job_t *j )
 		}
 
 
-		if(p->type == INTERNAL_BUILTIN)
+		if( p->type == INTERNAL_BUILTIN )
 			builtin_pop_io();			
 		
-		
-		
+				
 		/* 
 		   Close the pipe the current process uses to read from the previous process_t 
 		*/
@@ -1223,7 +1217,7 @@ int exec_subshell( const wchar_t *cmd,
 	b_append( io_buffer->param2.out_buffer, &z, 1 );
 	
 	begin=end=io_buffer->param2.out_buffer->buff;	
-	
+
 	if( l )
 	{
 		while( 1 )

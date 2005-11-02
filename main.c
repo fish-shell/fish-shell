@@ -202,25 +202,26 @@ int main( int argc, char **argv )
 	is_interactive_session &= (cmd == 0);
 	is_interactive_session &= (my_optind == argc);
 	is_interactive_session &= isatty(STDIN_FILENO);	
-
+	
 //	fwprintf( stderr, L"%d %d %d\n", cmd==0, my_optind == argc, isatty(STDIN_FILENO) );
 
 	if( force_interactive )
 		is_interactive_session=1;	
-
+	
 	proc_init();	
 	output_init();	
 	event_init();	
 	exec_init();	
+	wutil_init();
 	parser_init();
 	builtin_init();
 	function_init();
 	env_init();
 	complete_init();
 	reader_init();
-
+	
 	reader_push_current_filename( L"(internal)" );
-
+	
 	if( read_init() )
 	{
 		if( cmd != 0 )

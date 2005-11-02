@@ -500,5 +500,3 @@ void signal_unblock()
 	
 	sigprocmask(SIG_UNBLOCK, &chldset, 0);	
 }
-
-

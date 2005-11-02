@@ -299,7 +299,7 @@ char *wcs2str( const wchar_t *in )
 			  in,
 			  MAX_UTF8_BYTES*wcslen(in)+1 );
 
-	res = realloc( res, strlen( res )+1 );
+//	res = realloc( res, strlen( res )+1 );
 
 	return res;
 }

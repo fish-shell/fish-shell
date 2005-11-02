@@ -95,7 +95,6 @@ io_data_t *io_buffer_create()
 	b_init( buffer_redirect->param2.out_buffer );
 	buffer_redirect->fd=1;
 
-
 	if( exec_pipe( buffer_redirect->param1.pipe_fd ) == -1 )
 	{
 		debug( 1, PIPE_ERROR );

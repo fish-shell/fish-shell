@@ -15,6 +15,12 @@
 
 
 /**
+   Call this function on startup to create internal wutil
+   resources. This function doesn't do anything.
+*/
+void wutil_init();
+
+/**
    Call this function on exit to free internal wutil resources
 */
 void wutil_destroy();

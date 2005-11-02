@@ -2573,7 +2573,8 @@ static int builtin_end( wchar_t **argv )
 										parser_get_job_pos()-current_block->tok_pos );
 				
 				//fwprintf( stderr, L"Function: %ls\n", def );
-				if( !parser_test( def, 1 ) )
+				
+				if( !is_interactive || !parser_test( def, 1 ) )
 				{
 					function_add( current_block->param1.function_name, 
 								  def,

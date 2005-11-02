@@ -44,11 +44,6 @@ else
 	AC_SUBST( PREFIX, [$prefix])
 fi
 
-if echo $prefix | grep \^$HOME >/dev/null; then
-	AC_SUBST(sysconfdir,[$HOME/etc])
-	AC_MSG_NOTICE(["Install in $HOME"])
-fi
-
 AC_SUBST(fishdir,[/fish.d])
 AC_SUBST(fishfile,[/fish])
 AC_SUBST(fishinputfile,[/fish_inputrc])

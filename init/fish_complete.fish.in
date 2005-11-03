@@ -10,7 +10,7 @@ if not status --is-interactive
 	exit
 end
 
-set -g fish_complete_path /etc/fish.d/completions ~/.fish.d/completions
+set -g fish_complete_path @SYSCONFDIR@/fish.d/completions ~/.fish.d/completions
 
 # Knowing the location of the whatis database speeds up command
 # description lookup.

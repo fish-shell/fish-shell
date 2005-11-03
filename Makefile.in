@@ -134,9 +134,9 @@ MAIN_DIR_FILES := Doxyfile Doxyfile.user Makefile.in configure			\
     config.guess fish_tests.c main.c fish_pager.c fishd.c
 
 # Files in ./init/
-INIT_DIR_FILES :=init/fish.in init/fish_complete.fish	\
+INIT_DIR_FILES :=init/fish.in init/fish_complete.fish.in	\
 	init/fish_function.fish init/fish_inputrc			\
-	init/fish_interactive.fish
+	init/fish_interactive.fish.in
 
 # Files in ./tests/
 TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\

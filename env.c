@@ -343,42 +343,56 @@ void env_init()
 	if( !path )
 	{
 		env_set( L"PATH", L"/bin" ARRAY_SEP_STR L"/usr/bin", ENV_EXPORT | ENV_GLOBAL );
+		path = env_get( L"PATH" );
 	}
 	else
 	{
-		int i;
+		int i, j;
 		array_list_t l;
-		int has_bin=0, has_usr_bin=0;
 		
 		al_init( &l );
 		expand_variable_array( path, &l );
 		
-		for( i=0; i<al_get_count( &l); i++ )
-		{
-			wchar_t * el = (wchar_t *)al_get( &l, i );
-			if( contains_str( el, L"/bin", L"/bin/", (void *)0) )
+		const wchar_t *path_el[] = 
 			{
-				has_bin = 1;
+				L"/bin",
+				L"/usr/bin",
+				PREFIX L"/bin",
+				0
 			}
-			if( contains_str( el, L"/usr/bin", L"/usr/bin/", (void *)0) )
+		;
+		
+		for( j=0; path_el[j]; j++ )
+		{
+			int has_el=0;
+			
+			for( i=0; i<al_get_count( &l); i++ )
 			{
-				has_bin = 1;
+				wchar_t * el = (wchar_t *)al_get( &l, i );
+				size_t len = wcslen( el );
+				while( (len > 0) && (el[len-1]==L'/') )
+					len--;
+				if( (wcslen( path_el[j] ) == len) && (wcsncmp( el, path_el[j], len)==0) )
+				{
+					has_el = 1;
+				}
+			}
+			
+			if( !has_el )
+			{
+				string_buffer_t b;
+				sb_init( &b );
+				sb_append2( &b, path,
+							ARRAY_SEP_STR,
+							path_el[j],
+							(void *)0 );
+								
+				env_set( L"PATH", (wchar_t *)b.buff, ENV_GLOBAL | ENV_EXPORT );
+				sb_destroy( &b );
+				path = env_get( L"PATH" );
+				
 			}
 		}
-		
-		if( !( has_bin && has_usr_bin ) )
-		{
-			string_buffer_t b;
-			sb_init( &b );
-			sb_append( &b, path );
-			if( !has_bin )
-				sb_append( &b, ARRAY_SEP_STR L"/bin" );
-			if( !has_usr_bin )
-				sb_append( &b, ARRAY_SEP_STR L"/usr/bin" );
-					
-			env_set( L"PATH", (wchar_t *)b.buff, ENV_GLOBAL | ENV_EXPORT );
-			sb_destroy( &b );
-		}		
 		
 		al_foreach( &l, (void (*)(const void *))&free );
 		al_destroy( &l );

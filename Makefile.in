@@ -374,12 +374,16 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2
 	mv /usr/src/redhat/RPMS/*/fish*@PACKAGE_VERSION@*.rpm .
 	mv /usr/src/redhat/SRPMS/fish*@PACKAGE_VERSION@*.src.rpm .
 
+distclean: clean
+	rm -f fish.spec doc_src/fish.1 doc_src/Doxyfile 
+	rm -f init/fish init/fish_interactive.fish init/fish_complete.fish
+	rm -f config.status config.log config.h Makefile
+
 clean:
 	rm -f *.o doc.h doc_src/*.doxygen doc_src/*.c builtin_help.c 
-	rm -f config.status config.log config.h Makefile
+	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f tokenizer_test fish key_reader set_color tokenize gen_hdr2 mimedb
 	rm -f fishd fish_pager count 
-	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f fish-@PACKAGE_VERSION@.tar 
 	rm -f fish-@PACKAGE_VERSION@.tar.gz 
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2

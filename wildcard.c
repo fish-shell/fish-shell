@@ -79,6 +79,13 @@ static int wildcard_match2( const wchar_t *str,
 		{
 			if( wildcard_match2( str, wc+1, 0 ) )
 				return 1;
+
+			if( *wc == ANY_STRING_RECURSIVE 
+			    && ( wildcard_match2(str+1, wc, 0) || wildcard_match2(str+1, wc+1, 0) ) ) {
+			  return 1;
+			}
+
+			
 		}
 		while( *(str++) != 0 );
 		return 0;
@@ -394,7 +401,7 @@ int wildcard_expand( const wchar_t *wc,
 							get_desc( long_name,
 									  &sb_desc,
 									  flags & EXECUTABLES_ONLY );
-							al_push( out,
+							al_push_check( out,
 									 wcsdupcat(name, (wchar_t *)sb_desc.buff) );
 						}
 						
@@ -407,7 +414,7 @@ int wildcard_expand( const wchar_t *wc,
 			else
 			{								
 				res = 1;
-				al_push( out, wcsdup( base_dir ) );
+				al_push_check( out, wcsdup( base_dir ) );
 			}							
 		}
 		else
@@ -478,7 +485,7 @@ int wildcard_expand( const wchar_t *wc,
 							return 0;						
 						}
 						
-						al_push( out, long_name );
+						al_push_check( out, long_name );
 						res = 1;
 					}
 				}
@@ -518,6 +525,11 @@ int wildcard_expand( const wchar_t *wc,
 			return 0;			
 		}
 		wcscpy( new_dir, base_dir );
+
+		int has_base = 0;
+				
+		if ( *wc == ANY_STRING_RECURSIVE ) 
+		  has_base = wildcard_expand( wc_end + 1, base_dir, flags, out );
 		
 		while( (next=readdir(dir))!=0 )
 		{
@@ -554,7 +566,14 @@ int wildcard_expand( const wchar_t *wc,
 					new_len = wcslen( new_dir );
 					new_dir[new_len] = L'/';
 					new_dir[new_len+1] = L'\0';
-					switch( wildcard_expand( wc_end + 1, new_dir, flags, out ) )
+					
+					int has_entries = 0;
+					if( *wc == ANY_STRING_RECURSIVE ) 
+						has_entries = wildcard_expand( wc, new_dir, flags, out );
+					else 
+						has_entries = wildcard_expand( wc_end + 1, new_dir, flags, out );
+
+					switch( has_entries )
 					{
 						case 0:
 							break;
@@ -569,6 +588,7 @@ int wildcard_expand( const wchar_t *wc,
 				free(name);
 			}			
 		}
+		res = res || has_base;
 		free( wc_str );
 		free( new_dir );
 	}
@@ -579,3 +599,14 @@ int wildcard_expand( const wchar_t *wc,
 	return res;
 }
 
+
+void al_push_check( array_list_t *l, const wchar_t *new )
+{
+	int i;
+
+	for( i = 0; i < al_get_count(l); i++ ) 
+		if( !wcscmp( al_get(l, i), new ) ) 
+			return;
+  
+	al_push( l, new );
+}

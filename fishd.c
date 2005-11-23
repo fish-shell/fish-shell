@@ -268,6 +268,9 @@ static void daemonize()
 			
 		case 0:
 		{
+			/*
+			  Make fish ignore the HUP signal.
+			*/
 			struct sigaction act;
 			sigemptyset( & act.sa_mask );
 			act.sa_flags=0;
@@ -278,7 +281,7 @@ static void daemonize()
 		
 		default:
 		{			
-			debug( 0, L"Parent calling exit" );
+			debug( 0, L"Parent process exiting (This is normal)" );
 			exit(0);
 		}		
 	}

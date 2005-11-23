@@ -6,10 +6,8 @@
 function _contains_help -d "Helper function for contains"
 
 	set bullet \*
-	if count $LANG >/dev/null
-		if test (expr match $LANG ".*UTF") -gt 0
-			set bullet \u2022
-		end
+	if expr match "$LANG" ".*UTF" >/dev/null
+		set bullet \u2022
 	end
 
 	echo \tcontains - Test if a word is present in a list\n
@@ -223,10 +221,8 @@ function prompt_pwd -d "Print the current working directory, ellipsise it if it 
 		#Write ellipsis character if known to be using UTF
 		#else use $
 		set -l ellipsis '$' #default
-		if count $LANG >/dev/null
-			if test (expr match $LANG ".*UTF") -gt 0
-				set ellipsis \u2026
-			end
+		if expr match "$LANG" ".*UTF" >/dev/null
+			set ellipsis \u2026
 		end
 		printf %s%s $ellipsis (echo $wd|cut -c (echo $len-$max_width-1|bc)- ^/dev/null )
 	else
@@ -564,10 +560,8 @@ end
 function __fish_type_help -d "Help for the type shellscript function"
 
 set bullet \*
-if count $LANG >/dev/null
-	if test (expr match $LANG ".*UTF") -gt 0
-		set bullet \u2022
-	end
+if expr match "$LANG" ".*UTF" >/dev/null
+	set bullet \u2022
 end
 
 echo \ttype - Indicate how a name would be interpreted if used as a \n\tcommand name

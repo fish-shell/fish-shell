@@ -186,7 +186,7 @@ static void start_fishd()
 	sb_init( &cmd );
 	pw = getpwuid(getuid());
 	
-	debug( 3, L"Spawning new copy of fishd" );
+	debug( 2, L"Spawning new copy of fishd" );
 	
 	if( !pw )
 	{
@@ -352,6 +352,9 @@ void env_init()
 		
 		al_init( &l );
 		expand_variable_array( path, &l );
+
+		debug( 3, L"PATH is %ls", path );
+		
 		
 		const wchar_t *path_el[] = 
 			{
@@ -365,6 +368,9 @@ void env_init()
 		for( j=0; path_el[j]; j++ )
 		{
 			int has_el=0;
+
+			debug( 3, L"Check directory %ls", path_el[j] );
+		
 			
 			for( i=0; i<al_get_count( &l); i++ )
 			{
@@ -381,6 +387,7 @@ void env_init()
 			if( !has_el )
 			{
 				string_buffer_t b;
+				debug( 3, L"directory %ls was missing", path_el[j] );
 				sb_init( &b );
 				sb_append2( &b, path,
 							ARRAY_SEP_STR,
@@ -394,6 +401,8 @@ void env_init()
 			}
 		}
 		
+		debug( 3, L"After: PATH is %ls", path );
+
 		al_foreach( &l, (void (*)(const void *))&free );
 		al_destroy( &l );
 		

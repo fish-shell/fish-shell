@@ -79,6 +79,43 @@ else
     AC_MSG_RESULT(no)
 fi
 
+# Check for RLIMIT_MEMLOCK in sys/resource.h.
+AC_MSG_CHECKING([for RLIMIT_MEMLOCK in sys/resource.h])
+AC_TRY_COMPILE([#include <sys/resource.h>],
+[int tmp; tmp=RLIMIT_MEMLOCK;], have_rlimit_as=yes, have_rlimit_as=no)
+if test "$have_rlimit_as" = yes; then
+    AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_RLIMIT_MEMLOCK], [1],
+			  [Define to 1 if HAVE_RLIMIT_MEMLOCK is defined in <sys/resource.h>.])
+else
+    AC_MSG_RESULT(no)
+fi
+
+# Check for RLIMIT_RSS in sys/resource.h.
+AC_MSG_CHECKING([for RLIMIT_RSS in sys/resource.h])
+AC_TRY_COMPILE([#include <sys/resource.h>],
+[int tmp; tmp=RLIMIT_RSS;], have_rlimit_as=yes, have_rlimit_as=no)
+if test "$have_rlimit_as" = yes; then
+    AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_RLIMIT_RSS], [1],
+			  [Define to 1 if HAVE_RLIMIT_RSS is defined in <sys/resource.h>.])
+else
+    AC_MSG_RESULT(no)
+fi
+
+# Check for RLIMIT_NPROC in sys/resource.h.
+AC_MSG_CHECKING([for RLIMIT_NPROC in sys/resource.h])
+AC_TRY_COMPILE([#include <sys/resource.h>],
+[int tmp; tmp=RLIMIT_NPROC;], have_rlimit_as=yes, have_rlimit_as=no)
+if test "$have_rlimit_as" = yes; then
+    AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_RLIMIT_NPROC], [1],
+			  [Define to 1 if HAVE_RLIMIT_NPROC is defined in <sys/resource.h>.])
+else
+    AC_MSG_RESULT(no)
+fi
+
+
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(rt, nanosleep)
 

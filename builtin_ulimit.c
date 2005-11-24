@@ -55,14 +55,18 @@ const static struct resource_t resource_arr[] =
 		RLIMIT_FSIZE, L"Maximum size of files created by the shell", L'f'
 	}
 	,
+#if HAVE_RLIMIT_MEMLOCK
 	{
 		RLIMIT_MEMLOCK, L"Maximum size that may be locked into memory", L'l'
 	}
 	,
+#endif
+#if HAVE_RLIMIT_RSS
 	{
 		RLIMIT_RSS, L"Maximum resident set size", L'm'
 	}
 	,
+#endif
 	{
 		RLIMIT_NOFILE, L"Maximum number of open file descriptors", L'n'
 	}
@@ -75,10 +79,12 @@ const static struct resource_t resource_arr[] =
 		RLIMIT_CPU, L"Maximum amount of cpu time in seconds", L't'
 	}
 	,
+#if HAVE_RLIMIT_NPROC
 	{
 		RLIMIT_NPROC, L"Maximum number of processes available to a single user", L'u'
 	}
 	,
+#endif
 #if HAVE_RLIMIT_AS
 	{
 		RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v'
@@ -96,8 +102,11 @@ const static struct resource_t resource_arr[] =
 */
 static int get_multiplier( int what )
 {
-	if( ( what == RLIMIT_NPROC ) || 
-		( what == RLIMIT_NOFILE ) || 
+
+	if( ( what == RLIMIT_NOFILE ) || 
+#if HAVE_RLIMIT_NPROC
+		( what == RLIMIT_NPROC ) || 
+#endif
 		( what == RLIMIT_CPU ) )
 	{
 		return 1;
@@ -365,14 +374,17 @@ int builtin_ulimit( wchar_t ** argv )
 			case L'f':
 				what=RLIMIT_FSIZE;
 				break;
-				
+#if HAVE_RLIMIT_MEMLOCK
 			case L'l':
 				what=RLIMIT_MEMLOCK;
 				break;
-				
+#endif
+
+#if HAVE_RLIMIT_RSS				
 			case L'm':
 				what=RLIMIT_RSS;
 				break;
+#endif
 				
 			case L'n':
 				what=RLIMIT_NOFILE;
@@ -385,10 +397,12 @@ int builtin_ulimit( wchar_t ** argv )
 			case L't':
 				what=RLIMIT_CPU;
 				break;
-				
+			
+#if HAVE_RLIMIT_NPROC	
 			case L'u':
 				what=RLIMIT_NPROC;
 				break;
+#endif
 				
 #if HAVE_RLIMIT_AS				
 			case L'v':

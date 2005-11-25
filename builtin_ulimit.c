@@ -35,6 +35,10 @@ struct resource_t
 	   Switch used on commandline to specify resource
 	*/
 	wchar_t switch_char;	
+	/**
+	   The implicit multiplier used when setting getting values
+	*/
+	int multiplier;	
 }
 	;
 
@@ -44,55 +48,55 @@ struct resource_t
 const static struct resource_t resource_arr[] =
 {
 	{
-		RLIMIT_CORE, L"Maximum size of core files created", L'c'
+		RLIMIT_CORE, L"Maximum size of core files created", L'c', 1024
 	}
 	,
 	{
-		RLIMIT_DATA, L"Maximum size of a process’s data segment", L'd'
+		RLIMIT_DATA, L"Maximum size of a process’s data segment", L'd', 1024
 	}
 	,
 	{
-		RLIMIT_FSIZE, L"Maximum size of files created by the shell", L'f'
+		RLIMIT_FSIZE, L"Maximum size of files created by the shell", L'f', 1024
 	}
 	,
 #if HAVE_RLIMIT_MEMLOCK
 	{
-		RLIMIT_MEMLOCK, L"Maximum size that may be locked into memory", L'l'
+		RLIMIT_MEMLOCK, L"Maximum size that may be locked into memory", L'l', 1024
 	}
 	,
 #endif
 #if HAVE_RLIMIT_RSS
 	{
-		RLIMIT_RSS, L"Maximum resident set size", L'm'
+		RLIMIT_RSS, L"Maximum resident set size", L'm', 1024
 	}
 	,
 #endif
 	{
-		RLIMIT_NOFILE, L"Maximum number of open file descriptors", L'n'
+		RLIMIT_NOFILE, L"Maximum number of open file descriptors", L'n', 1
 	}
 	,
 	{
-		RLIMIT_STACK, L"Maximum stack size", L's'
+		RLIMIT_STACK, L"Maximum stack size", L's', 1024
 	}
 	,
 	{
-		RLIMIT_CPU, L"Maximum amount of cpu time in seconds", L't'
+		RLIMIT_CPU, L"Maximum amount of cpu time in seconds", L't', 1
 	}
 	,
 #if HAVE_RLIMIT_NPROC
 	{
-		RLIMIT_NPROC, L"Maximum number of processes available to a single user", L'u'
+		RLIMIT_NPROC, L"Maximum number of processes available to a single user", L'u', 1
 	}
 	,
 #endif
 #if HAVE_RLIMIT_AS
 	{
-		RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v'
+		RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v', 1024
 	}	
 	,
 #endif
 	{
-		0, 0
+		0, 0, 0, 0
 	}
 }
 	;
@@ -102,16 +106,16 @@ const static struct resource_t resource_arr[] =
 */
 static int get_multiplier( int what )
 {
-
-	if( ( what == RLIMIT_NOFILE ) || 
-#if HAVE_RLIMIT_NPROC
-		( what == RLIMIT_NPROC ) || 
-#endif
-		( what == RLIMIT_CPU ) )
+	int i;
+	
+	for( i=0; resource_arr[i].desc; i++ )
 	{
-		return 1;
+		if( resource_arr[i].resource == what )
+		{
+			return resource_arr[i].multiplier;
+		}
 	}
-	return 1024;
+	return -1;
 }
 
 /**

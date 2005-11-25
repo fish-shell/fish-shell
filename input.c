@@ -49,6 +49,7 @@ implementation in fish is as of yet incomplete.
 #include "parser.h"
 #include "env.h"
 #include "expand.h"
+#include "event.h"
 
 static void input_read_inputrc( wchar_t *fn );
 
@@ -1266,6 +1267,10 @@ static void add_vi_bindings()
 */
 static int interrupt_handler()
 {
+	/*
+	  Fire any pending events
+	*/
+	event_fire( 0, 0 );	
 	if( job_reap( 1 ) )
 		repaint();
 	if( reader_interupted() )

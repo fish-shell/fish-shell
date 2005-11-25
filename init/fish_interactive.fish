@@ -58,7 +58,7 @@ function set_default_color -d "Set an universal variable, unless it has already 
 		set -U -- $argv	
 		return
 	end
-	if contains -- $$argv[1] (set_color --print-colors)
+	if contains -- $$argv[1] (set_color -c)
         return
 	end
 	set -U -- $argv

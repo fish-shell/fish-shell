@@ -83,7 +83,7 @@ static int parse_fill_indexes( array_list_t *indexes,
 		return -1;
 	}
 	
-	while (iswblank(*src)) 
+	while (iswspace(*src)) 
 	{
 		src++;
 	}
@@ -105,7 +105,7 @@ static int parse_fill_indexes( array_list_t *indexes,
 		al_push(indexes, ind);
 		src = end;
 		count++;
-		while (iswblank(*src)) src++;
+		while (iswspace(*src)) src++;
 	}
 
 	return count;

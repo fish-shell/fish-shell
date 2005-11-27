@@ -698,7 +698,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 						}
 						debug( 1, L"Invalid sequence - Control-nothing?\n" );
 						error = 1;
-												
+						
 						break;
 					}
 					

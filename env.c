@@ -592,8 +592,11 @@ void env_set( const wchar_t *key,
 			else
 			{
 				if( !proc_had_barrier)
+				{
+					proc_had_barrier=1;
 					env_universal_barrier();
-
+				}
+				
 				if( env_universal_get( key ) )
 				{
 					int export = 0;
@@ -808,7 +811,11 @@ wchar_t *env_get( const wchar_t *key )
 			env = env->next;
 	}	
 	if( !proc_had_barrier)
+	{
+		proc_had_barrier=1;
 		env_universal_barrier();
+	}
+	
 	item = env_universal_get( key );
 	
 	if( !item || (wcscmp( item, ENV_NULL )==0))
@@ -845,7 +852,11 @@ int env_exist( const wchar_t *key )
 			env = env->next;
 	}	
 	if( !proc_had_barrier)
+	{
+		proc_had_barrier=1;
 		env_universal_barrier();
+	}
+	
 	item = env_universal_get( key );
 	
 	return item != 0;
@@ -1079,8 +1090,11 @@ static void export_func2( const void *k, const void *v, void *aux )
 char **env_export_arr( int recalc)
 {
 	if( recalc && !proc_had_barrier)
+	{
+		proc_had_barrier=1;
 		env_universal_barrier();
-
+	}
+	
 	if( has_changed )
 	{
 		array_list_t uni;

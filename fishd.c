@@ -269,7 +269,7 @@ static void daemonize()
 		case 0:
 		{
 			/*
-			  Make fish ignore the HUP signal.
+			  Make fishd ignore the HUP signal.
 			*/
 			struct sigaction act;
 			sigemptyset( & act.sa_mask );
@@ -285,12 +285,12 @@ static void daemonize()
 			exit(0);
 		}		
 	}
-
+	
 	/*
 	  Put ourself in out own processing group
 	*/
 	setsid();
-
+	
 	/*
 	  Close stdin and stdout. We only use stderr, anyway.
 	*/
@@ -427,7 +427,7 @@ int main( int argc, char ** argv )
 			wperror( L"select" );
 			exit(1);
 		}
-		
+				
 		if( FD_ISSET( sock, &read_fd ) )
 		{
 			if( (child_socket = 

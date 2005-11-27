@@ -117,19 +117,16 @@ static int get_socket( int fork_ok )
 	if( connect( s, (struct sockaddr *)&local, len) == -1 ) 
 	{
 		close( s );
-		if( fork_ok )
+		if( fork_ok && start_fishd )
 		{
 			debug( 2, L"Could not connect to socket %d, starting fishd", s );
 			
-			if( start_fishd )
-			{
-				start_fishd();
-			}
-			
+			start_fishd();
+									
 			return get_socket( 0 );
 		}
 		
-		debug( 3, L"Could not connect to socket %d, already tried forking, giving up", s );
+		debug( 2, L"Could not connect to socket %d, already tried manual restart (or no command supplied), giving up", s );
 		return -1;
 	}
 	
@@ -305,7 +302,7 @@ void env_universal_barrier()
 
 	if( !init || ( env_universal_server.fd == -1 ))
 		return;
-	
+
 	barrier_reply = 0;
 
 	/*
@@ -330,6 +327,7 @@ void env_universal_barrier()
 		if( env_universal_server.fd == -1 )
 		{
 			reconnect();
+			debug( 2, L"barrier interrupted, exiting" );
 			return;			
 		}
 		
@@ -347,6 +345,7 @@ void env_universal_barrier()
 		if( env_universal_server.fd == -1 )
 		{
 			reconnect();
+			debug( 2, L"barrier interrupted, exiting (2)" );
 			return;			
 		}		
 		FD_ZERO( &fds );
@@ -365,7 +364,7 @@ void env_universal_set( const wchar_t *name, const wchar_t *value, int export )
 	if( !init )
 		return;
 	
-	debug( 3, L"env_universal_set( %ls, %ls )", name, value );
+	debug( 3, L"env_universal_set( \"%ls\", \"%ls\" )", name, value );
 	
 	msg = create_message( export?SET_EXPORT:SET, 
 						  name, 
@@ -388,8 +387,8 @@ void env_universal_remove( const wchar_t *name )
 	if( !init )
 		return;
 	
-	debug( 2,
-		   L"env_universal_remove( %ls )",
+	debug( 3,
+		   L"env_universal_remove( \"%ls\" )",
 		   name );
 
 	msg= create_message( ERASE, name, 0);

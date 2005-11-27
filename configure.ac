@@ -64,7 +64,7 @@ AC_CHECK_FILES([/proc/self/stat])
 AC_CHECK_FILE([/usr/pkg/lib],[AC_SUBST(LIBDIR,[-L/usr/pkg/lib\ -R/usr/pkg/lib])])
 AC_CHECK_FILE([/usr/pkg/include],[AC_SUBST(INCLUDEDIR,[-I/usr/pkg/include])])
 
-AC_CHECK_FUNCS( [wprintf futimes wcwidth wcswidth] ) 
+AC_CHECK_FUNCS( [wprintf futimes wcwidth wcswidth getopt_long] ) 
 AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h])
 
 # Check for RLIMIT_AS in sys/resource.h.

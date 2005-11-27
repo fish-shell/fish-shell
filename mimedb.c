@@ -1018,7 +1018,7 @@ int main (int argc, char *argv[])
 	*/
 	while( 1 )
 	{
-#ifdef __GLIBC__
+#ifdef HAVE_GETOPT_LONG
 		static struct option
 			long_options[] =
 			{

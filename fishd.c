@@ -71,6 +71,11 @@ static connection_t *conn;
 static int sock;
 
 /**
+   Set to one when fishd should save and exit
+*/
+static int quit=0;
+
+/**
    Constructs the fish socket filename
 */
 static char *get_socket_filename()
@@ -109,6 +114,15 @@ static char *get_socket_filename()
 	}
 	return name;
 }
+
+/**
+   Signal handler for the term signal. 
+*/
+static void handle_term( int signal )
+{
+	quit=1;
+}
+
 
 /**
    Acquire the lock for the socket
@@ -276,6 +290,14 @@ static void daemonize()
 			act.sa_flags=0;
 			act.sa_handler=SIG_IGN;
 			sigaction( SIGHUP, &act, 0);
+
+			/*
+			  Make fishd save and exit on the TERM signal.
+			*/
+			sigfillset( & act.sa_mask );
+			act.sa_flags=0;
+			act.sa_handler=&handle_term;
+			sigaction( SIGTERM, &act, 0);
 			break;
 		}
 		
@@ -389,8 +411,9 @@ static void init()
 */
 int main( int argc, char ** argv )
 {
-	int child_socket, t;
+	int child_socket;
 	struct sockaddr_un remote;
+	socklen_t t;
 	int max_fd;
 	int update_count=0;
 	
@@ -419,13 +442,25 @@ int main( int argc, char ** argv )
 				FD_SET( c->fd, &write_fd );
 			}
 		}
-		
-		res=select( max_fd, &read_fd, &write_fd, 0, 0 );
-		
-		if( res==-1 )
+
+		while( 1 )
 		{
-			wperror( L"select" );
-			exit(1);
+			res=select( max_fd, &read_fd, &write_fd, 0, 0 );
+
+			if( quit )
+			{
+				save();
+				exit(0);
+			}
+			
+			if( res != -1 )
+				break;
+			
+			if( errno != EINTR )
+			{
+				wperror( L"select" );
+				exit(1);
+			}
 		}
 				
 		if( FD_ISSET( sock, &read_fd ) )

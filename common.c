@@ -13,6 +13,7 @@ parts of fish.
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wctype.h>

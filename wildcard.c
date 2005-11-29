@@ -1,6 +1,8 @@
 /** \file wildcard.c
-	My own globbing implementation. Needed to implement this to
-	support tab-expansion of globbed parameters.
+
+    Fish needs it's own globbing implementation to support
+	tab-expansion of globbed parameters. Also provides recursive
+	wildcards using **.
 
 */
 
@@ -206,14 +208,12 @@ static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
 	int base_len = wcslen( base_dir );
 	if( !(long_name= malloc( sizeof(wchar_t)*(base_len+wcslen(name)+1) )))
 	{
-		
-		return 0;
+		die_mem();
 	}					
 	wcscpy( long_name, base_dir );
 	wcscpy(&long_name[base_len], name );
 	return long_name;
 }
-
 
 void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 {
@@ -283,6 +283,11 @@ void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 	}
 }
 
+/*
+  Test if the file specified by the given filename matches the
+  expantion flags specified. flags can be a combination of
+  EXECUTABLES_ONLY and DIRECTORIES_ONLY.
+*/
 static int test_flags( wchar_t *filename,
 					   int flags )
 {
@@ -307,11 +312,37 @@ int wildcard_expand( const wchar_t *wc,
 					 int flags,
 					 array_list_t *out )
 {
+
+	/* Points to the end of the current wildcard segment */
+	wchar_t *wc_end;
+
+	/* Variables for traversing a directory */
+	struct dirent *next;
+	DIR *dir;
+	
+	/* The result returned */
+	int res = 0;
+	
+	/* Length of the directory to search in */
+	int base_len;
+
+	/* Variables for testing for presense of recursive wildcards */
+	wchar_t *wc_recursive;
+	int is_recursive;
+
+	/* Sligtly mangled version of base_dir */
+	const wchar_t *dir_string;
+
+	/* Description for completions */
+	string_buffer_t sb_desc;
+	
 //	debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
 
 	if( flags & ACCEPT_INCOMPLETE )
 	{	
-		/* Avoid excessive number of returned matches for wc ending with a * */
+		/* 
+		   Avoid excessive number of returned matches for wc ending with a * 
+		*/
 		int len = wcslen(wc);
 		if( len && (wc[len-1]==ANY_STRING) )
 		{
@@ -322,50 +353,45 @@ int wildcard_expand( const wchar_t *wc,
 			return res;			
 		}
 	}
-	
-	struct dirent *next;
-	wchar_t *wc_end = wcschr(wc,L'/');
-	DIR *dir;
-	
-	int res = 0;
-	int base_len = wcslen( base_dir );
 
-	wchar_t *wc_recursive = wcschr( wc, ANY_STRING_RECURSIVE );
-	int is_recursive = 	is_recursive = ( wc_recursive && (!wc_end || wc_recursive < wc_end));
+	/*
+	  Initialize various variables
+	*/
 
-	const wchar_t *dir_string = base_dir[0]==L'\0'?L".":base_dir;
-
-	string_buffer_t sb_desc;
-	
-	sb_init( &sb_desc );
-//	if( accept_incomplete )
-//		wprintf( L"Glob %ls in '%ls'\n", wc, base_dir );//[0]==L'\0'?L".":base_dir );
-	
-/*
-  Test for recursive match string in current segment
-*/	
+	dir_string = base_dir[0]==L'\0'?L".":base_dir;
 	
 	if( !(dir = wopendir( dir_string )))
 	{
-//		if( errno != EACCES && errno != ENOENT )
-//			wperror( L"opendir" );
 		return 0;
 	}
 
-/*
-  Is this segment of the wildcard the last?
-*/
-	if( wc_end == 0 )
+	wc_end = wcschr(wc,L'/');
+	base_len = wcslen( base_dir );
+
+	/*
+	  Test for recursive match string in current segment
+	*/	
+	wc_recursive = wcschr( wc, ANY_STRING_RECURSIVE );
+	is_recursive = ( wc_recursive && (!wc_end || wc_recursive < wc_end));
+	
+	if( flags & ACCEPT_INCOMPLETE )
+		sb_init( &sb_desc );
+
+	/*
+	  Is this segment of the wildcard the last?
+	*/
+	if( !wc_end && !is_recursive )
 	{
 		/*
-		  Wildcard segment is the last segment
+		  Wildcard segment is the last segment,
 
 		  Insert all matching files/directories
 		*/
 		if( wc[0]=='\0' )
 		{
 			/*
-			  The last wildcard segment is empty. Insert everything if completing, the directory itself otherwise.
+			  The last wildcard segment is empty. Insert everything if
+			  completing, the directory itself otherwise.
 			*/
 			if( flags & ACCEPT_INCOMPLETE )
 			{
@@ -376,26 +402,16 @@ int wildcard_expand( const wchar_t *wc,
 						wchar_t *name = str2wcs(next->d_name);
 						if( name == 0 )
 						{
-/*							closedir( dir );*/
-/*							return -1;							*/
 							continue;
 						}
 						wchar_t *long_name = make_path( base_dir, name );
-						
-						if( long_name == 0 )
-						{
-							wperror( L"malloc" );
-							closedir( dir );
-							free(name);
-							return 0;						
-						}
 						
 						if( test_flags( long_name, flags ) )
 						{
 							get_desc( long_name,
 									  &sb_desc,
 									  flags & EXECUTABLES_ONLY );
-							al_push_check( out,
+							al_push( out,
 									 wcsdupcat(name, (wchar_t *)sb_desc.buff) );
 						}
 						
@@ -408,7 +424,7 @@ int wildcard_expand( const wchar_t *wc,
 			else
 			{								
 				res = 1;
-				al_push_check( out, wcsdup( base_dir ) );
+				al_push( out, wcsdup( base_dir ) );
 			}							
 		}
 		else
@@ -424,31 +440,22 @@ int wildcard_expand( const wchar_t *wc,
 					continue;
 				}
 				
-/*				wprintf( L"Filen heter %s\n\n\n", next->d_name );*/
 /*				wprintf( L"Match %ls (%s) against %ls\n\n\n", name, "tjo", wc );*/
 				if( flags & ACCEPT_INCOMPLETE )
 				{
 					/*					wprintf( L"match %ls to %ls\n", name, wc );*/
 					
 					wchar_t *long_name = make_path( base_dir, name );
-					if( long_name == 0 )
-					{
-						wperror( L"malloc" );
-						closedir( dir );
-						free(name);
-						return 0;						
-					}
+
 					/*
-					  Test for matches before stating file, so as to minimize the number of stat calls
+					  Test for matches before stating file, so as to minimize the number of calls to the much slower stat function 
 					*/
 					if( wildcard_complete( name,
 										   wc,
 										   L"",
 										   0,
 										   0 ) )
-					{
-
-						
+					{						
 						if( test_flags( long_name, flags ) )
 						{
 							get_desc( long_name,
@@ -471,15 +478,8 @@ int wildcard_expand( const wchar_t *wc,
 					if( wildcard_match2( name, wc, 1 ) )
 					{
 						wchar_t *long_name = make_path( base_dir, name );
-						if( long_name == 0 )
-						{
-							wperror( L"malloc" );
-							closedir( dir );
-							free(name);
-							return 0;						
-						}
 						
-						al_push_check( out, long_name );
+						al_push( out, long_name );
 						res = 1;
 					}
 				}
@@ -507,23 +507,13 @@ int wildcard_expand( const wchar_t *wc,
 		}
 		new_dir= malloc( sizeof(wchar_t)*(base_len+ln+2)  );
 
-		wc_str = wcsndup(wc, wc_end-wc);
+		wc_str = wc_end?wcsndup(wc, wc_end-wc):wcsdup(wc);
 		if( (!new_dir) || (!wc_str) )
 		{
-			if( new_dir ) 
-				free( new_dir );
-			if( wc_str ) 
-				free( wc_str );
-			wperror( L"malloc" );			
-			closedir( dir );
-			return 0;			
+			die_mem();
 		}
-		wcscpy( new_dir, base_dir );
 
-		int has_base = 0;
-				
-		if ( *wc == ANY_STRING_RECURSIVE ) 
-		  has_base = wildcard_expand( wc_end + 1, base_dir, flags, out );
+		wcscpy( new_dir, base_dir );
 		
 		while( (next=readdir(dir))!=0 )
 		{
@@ -532,75 +522,87 @@ int wildcard_expand( const wchar_t *wc,
 			{
 				continue;
 			}			
+
+			/*
+			  Test if the file/directory name matches the whole
+			  wildcard element, i.e. regular matching.
+			*/
+			int whole_match = wildcard_match2( name, wc_str, 1 );
+			int partial_match = 0;
 			
-			if( wildcard_match2( name, wc_str, 1 ) )
+			/* 
+			   If we are doing recursive matching, also check if this
+			   directory matches the part up to the recusrive
+			   wildcard, if so, then we can search all subdirectories
+			   for matches.
+			*/
+			if( is_recursive )
+			{
+				wchar_t *end = wcschr( wc, ANY_STRING_RECURSIVE );
+				wchar_t *wc_sub = wcsndup( wc, end-wc+1);
+				partial_match = wildcard_match2( name, wc_sub, 1 );
+				free( wc_sub );
+			}			
+
+			if( whole_match || partial_match )
 			{
 				int new_len;
 				struct stat buf;			
-				wcscpy(&new_dir[base_len], name );
-				free(name);
-				char *dir_str = wcs2str( new_dir );
+				char *dir_str;
 				int stat_res;
-				
-				if( !dir_str )
-				{
-					continue;					
-				}
-				
-				stat_res= stat( dir_str, &buf );
-				free( dir_str );
-				
-				if( stat_res )
-				{
-					continue;
-				}
 
-				if( buf.st_mode & S_IFDIR )
+				wcscpy(&new_dir[base_len], name );
+				dir_str = wcs2str( new_dir );
+				
+				if( dir_str )
 				{
-					new_len = wcslen( new_dir );
-					new_dir[new_len] = L'/';
-					new_dir[new_len+1] = L'\0';
+					stat_res= stat( dir_str, &buf );
+					free( dir_str );
 					
-					int has_entries = 0;
-					if( *wc == ANY_STRING_RECURSIVE ) 
-						has_entries = wildcard_expand( wc, new_dir, flags, out );
-					else 
-						has_entries = wildcard_expand( wc_end + 1, new_dir, flags, out );
-
-					switch( has_entries )
+					if( !stat_res )
 					{
-						case 0:
-							break;
-						case 1:
-							res = 1;
-							break;
+						if( buf.st_mode & S_IFDIR )
+						{
+							new_len = wcslen( new_dir );
+							new_dir[new_len] = L'/';
+							new_dir[new_len+1] = L'\0';
+							
+							/*
+							  Regular matching
+							*/
+							if( whole_match )
+							{
+								res |= wildcard_expand( wc_end?wc_end + 1:L"", 
+														new_dir, 
+														flags, 
+														out );
+							}
+							
+							/*
+							  Recursive matching
+							*/
+							if( partial_match )
+							{
+								res |= wildcard_expand( wcschr( wc, ANY_STRING_RECURSIVE ), 
+														new_dir,
+														flags, 
+														out );
+							}
+						}								
 					}
-				}								
+				}
 			}
-			else
-			{
-				free(name);
-			}			
+			free(name);
 		}
-		res = res || has_base;
+		
 		free( wc_str );
 		free( new_dir );
 	}
 	closedir( dir );
-
-	sb_destroy( &sb_desc );
-
+	
+	if( flags & ACCEPT_INCOMPLETE )
+		sb_destroy( &sb_desc );
+	
 	return res;
 }
 
-
-void al_push_check( array_list_t *l, const wchar_t *new )
-{
-	int i;
-
-	for( i = 0; i < al_get_count(l); i++ ) 
-		if( !wcscmp( al_get(l, i), new ) ) 
-			return;
-  
-	al_push( l, new );
-}

@@ -58,7 +58,7 @@ void function_set_desc( const wchar_t *name, const wchar_t *desc );
 /**
    Returns true if the function witrh the name name exists.
 */
-int function_exists( const wchar_t *name);
+int function_exists( const wchar_t *name );
 
 /**
    Insert all function names into l. These are not copies of the strings and should not be freed after use.

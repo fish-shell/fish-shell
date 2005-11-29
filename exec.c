@@ -941,15 +941,23 @@ void exec( job_t *j )
 			case INTERNAL_FUNCTION:
 			{
 				int status = proc_get_last_status();
-				
+						
 				/*
 				  Handle output from a block or function. This usually
 				  means do nothing, but in the case of pipes, we have
-				  to buffer such io, since otherwisethe internal pipe
+				  to buffer such io, since otherwise the internal pipe
 				  buffer might overflow.
 				*/
 				if( !io_buffer )
 				{
+					/*
+					  No buffer, se we exit directly. This means we
+					  have to manually set the exit status.
+					*/
+					if( p->next == 0 )
+					{
+						proc_set_last_status( j->negate?(status?0:1):status);
+					}
 					p->completed = 1;
 					break;
 				}
@@ -960,8 +968,6 @@ void exec( job_t *j )
 				
 				if( io_buffer->param2.out_buffer->used != 0 )
 				{
-					
-					
 					pid = fork();
 					if( pid == 0 )
 					{
@@ -1044,7 +1050,6 @@ void exec( job_t *j )
 					{
 						debug( 3, L"Set status of %ls to %d using short circut", j->command, p->status );
 						
-						proc_set_last_status( p->status );
 						proc_set_last_status( j->negate?(p->status?0:1):p->status );
 					}
 					break;
@@ -1093,10 +1098,7 @@ void exec( job_t *j )
 			
 			case EXTERNAL:
 			{
-		
-//			fwprintf( stderr, 
-//					  L"fork on %ls\n", j->command );
-				pid = fork ();
+				pid = fork();
 				if( pid == 0 )
 				{
 					/*
@@ -1114,8 +1116,8 @@ void exec( job_t *j )
 				{
 					/* The fork failed. */
 					debug( 0, FORK_ERROR );
-					wperror (L"fork");
-					exit (1);
+					wperror( L"fork" );
+					exit( 1 );
 				}
 				else
 				{

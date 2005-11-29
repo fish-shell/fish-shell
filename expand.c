@@ -92,7 +92,8 @@ parameter expansion.
    any tokens which need to be expanded or otherwise altered. Clean
    strings can be passed through expand_string and expand_one without
    changing them. About 90% of all strings are clean, so skipping
-   expantion on them actually does save a small amount of time.
+   expantion on them actually does save a small amount of time, since
+   it avoids multiple memory allocations during the expantion process.
 */
 static int is_clean( const wchar_t *in )
 {
@@ -339,7 +340,8 @@ static int match_pid( const wchar_t *cmd,
    Searches for a job with the specified job id, or a job or process
    which has the string \c proc as a prefix of its commandline.
 
-   If accept_incomplete is true, the remaining string for any matches are inserted.
+   If accept_incomplete is true, the remaining string for any matches
+   are inserted.
 
    If accept_incomplete is false, any job matching the specified
    string is matched, and the job pgid is returned. If no job

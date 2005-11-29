@@ -73,7 +73,7 @@ static int wildcard_match2( const wchar_t *str,
 		/* Ignore hidden file */
 		if( is_first && *str == L'.' )
 			return 0;
-		
+
 		/* Try all submatches */
 		do
 		{

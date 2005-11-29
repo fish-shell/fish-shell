@@ -261,17 +261,13 @@ static void handle_child_io( io_data_t *io )
 			free_fd( io, io->fd );
 		}
 				
-		/*
-		  We don't mind if this fails, it is just a speculative close
-		  to make sure no unexpected untracked fd causes us to fail
-		*/
-		close(io->fd);
-		
 		switch( io->io_mode )
 		{
 			case IO_CLOSE:
+				close(io->fd);
 				break;
 			case IO_FILE:
+			{
 				if( (tmp=wopen( io->param1.filename,
                                 io->param2.flags, 0777 ) )==-1 )
 				{
@@ -284,6 +280,8 @@ static void handle_child_io( io_data_t *io )
 				}				
 				else if( tmp != io->fd)
 				{
+					close(io->fd);
+		
 					if(dup2( tmp, io->fd ) == -1 )
 					{
 						debug( 1, 
@@ -295,7 +293,11 @@ static void handle_child_io( io_data_t *io )
 					exec_close( tmp );
 				}				
 				break;
+			}
+			
 			case IO_FD:
+			{
+				close(io->fd);
 /*				debug( 3, L"Redirect fd %d in process %ls (%d) from fd %d",
   io->fd,
   p->actual_cmd,
@@ -311,10 +313,12 @@ static void handle_child_io( io_data_t *io )
 					exit(1);					
 				}
 				break;
-				
+			}
+			
 			case IO_BUFFER:
 			case IO_PIPE:
 			{
+				close(io->fd);
 				
 /*				debug( 3, L"Pipe fd %d in process %ls (%d) (Through fd %d)", 
   io->fd, 

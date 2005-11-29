@@ -99,16 +99,21 @@ static int is_clean( const wchar_t *in )
 	
 	const wchar_t * str = in;
 
+	/*
+	  Test characters that have a special meaning in the first character position
+	*/
 	if( wcschr( UNCLEAN_FIRST, *str ) )
 		return 0;
+	
+	/*
+	  Test characters that have a special meaning in any character position
+	*/
 	while( *str )
 	{
 		if( wcschr( UNCLEAN, *str ) )
 			return 0;
 		str++;
 	}
-
-//	debug( 1, L"%ls", in );
 	
 	return 1;
 }
@@ -357,8 +362,6 @@ static int find_process( const wchar_t *proc,
 	wchar_t *result;	
 	
 	job_t *j;
-
-
 	
 	if( iswnumeric(proc) || (wcslen(proc)==0) )
 	{
@@ -1248,20 +1251,19 @@ wchar_t *expand_unescape( const wchar_t * in, int escape_special )
 
 /**
    Attempts tilde expansion. Of the string specified. If tilde
-   expansion is performed, the argument is freed and a new string is
-   allocated in its place. Horrible call signature. Should be
-   altered. Fugly!
+   expansion is performed, the original string is freed and a new
+   string allocated using malloc is returned, otherwise, the original
+   string is returned.
 */
-static int tilde_expand( wchar_t **ptr )
+static wchar_t * expand_tilde_internal( wchar_t *in )
 {
-	wchar_t *in = *ptr;
 	
 	if( in[0] == HOME_DIRECTORY )
 	{
 		int tilde_error = 0;
 		wchar_t *home=0;
-		wchar_t *new_in;
-		wchar_t *old_in;
+		wchar_t *new_in=0;
+		wchar_t *old_in=0;
 		
 //		fwprintf( stderr, L"Tilde expand ~%ls\n", (*ptr)+1 );
 		if( in[1] == '/' || in[1] == '\0' )
@@ -1318,26 +1320,23 @@ static int tilde_expand( wchar_t **ptr )
 			free(name);
 		}
 		
-		if( !tilde_error )
+		if( !tilde_error && home && old_in )
 		{
 			new_in = wcsdupcat( home, old_in ); 
-			free( in );
-			in = new_in;
-			free(home);
-			*ptr = in;
-		}		
-		
+		}
+		free(home);
+		free( in );
+		return new_in;			
 	}
-	return 1;
+	return in;
 } 
 
-wchar_t *expand_tilde(wchar_t *in)
+wchar_t *expand_tilde( wchar_t *in)
 {
 	if( in[0] == L'~' )
 	{
 		in[0] = HOME_DIRECTORY;
-		tilde_expand( &in );
-		return in;
+		return expand_tilde_internal( in );
 	}
 	return in;	
 }
@@ -1350,8 +1349,6 @@ static void remove_internal_separator( const void *s, int conv )
 {
 	wchar_t *in = (wchar_t *)s;
 	wchar_t *out=in;
-
-//	int changed=0;
 
 	while( *in )
 	{
@@ -1376,16 +1373,11 @@ static void remove_internal_separator( const void *s, int conv )
 		}
 	}
 	*out=0;
-/*	if( changed )
-  {
-  fwprintf( stderr, L" -> %ls\n", s );
-  }
-*/
 }
 
 
 /**
-   The real expansion function. All other expansion  functions are wrappers to this one.
+   The real expantion function. expand_one is just a wrapper around this one.
 */
 int expand_string( wchar_t *str,
 				   array_list_t *end_out, 
@@ -1451,7 +1443,7 @@ int expand_string( wchar_t *str,
 									1);
 
 			free( (void *)al_get( in, i ) );
-
+			
 			if( !next )
 				continue;			
 			
@@ -1498,7 +1490,7 @@ int expand_string( wchar_t *str,
 		for( i=0; i<al_get_count( in ); i++ )
 		{
 			wchar_t *next = (wchar_t *)al_get( in, i );		
-			if(!tilde_expand( &next ))
+			if( !(next=expand_tilde_internal( next ) ) )
 			{
 				al_destroy( in );
 				al_destroy( out );

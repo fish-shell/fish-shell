@@ -27,6 +27,12 @@
 #include "reader.h"
 #include "expand.h"
 
+/**
+   The maximum length of a filename token. This is a fallback value,
+   an attempt to find the true value using patchconf is always made. 
+*/
+#define MAX_FILE_LENGTH 1024
+
 int wildcard_has( const wchar_t *str, int internal )
 {
 	wchar_t prev=0;
@@ -312,7 +318,7 @@ int wildcard_expand( const wchar_t *wc,
 					 int flags,
 					 array_list_t *out )
 {
-
+	
 	/* Points to the end of the current wildcard segment */
 	wchar_t *wc_end;
 
@@ -440,10 +446,8 @@ int wildcard_expand( const wchar_t *wc,
 					continue;
 				}
 				
-/*				wprintf( L"Match %ls (%s) against %ls\n\n\n", name, "tjo", wc );*/
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					/*					wprintf( L"match %ls to %ls\n", name, wc );*/
 					
 					wchar_t *long_name = make_path( base_dir, name );
 
@@ -493,21 +497,44 @@ int wildcard_expand( const wchar_t *wc,
 		  Wilcard segment is not the last segment.
 		  Recursively call wildcard_expand for all matching subdirectories.
 		*/
+
+		
+		/*
+		  wc_str is the part of the wildcarded string from the
+		  beginning to the first slash
+		*/
 		wchar_t *wc_str;
+
+		/*
+		  new_dir is a scratch area containing the full path to a file/directory we are iterating over
+		*/
 		wchar_t *new_dir;
-		static size_t ln=1024;
+
+		/*
+		  The maximum length of a file element
+		*/
+		static size_t ln=MAX_FILE_LENGTH;
 		char * narrow_dir_string = wcs2str( dir_string );
 		
 		if( narrow_dir_string )
 		{
-			ln = pathconf( narrow_dir_string, _PC_NAME_MAX ); /* Find out how long the filename can be in a worst case scenario */
+			/* 
+			   Find out how long the filename can be in a worst case
+			   scenario
+			*/
+			ln = pathconf( narrow_dir_string, _PC_NAME_MAX ); 
+
+			/*
+			  If not specified, use som large number as fallback
+			*/
 			if( ln < 0 )
-				ln = 1024;		
+				ln = MAX_FILE_LENGTH;		
 			free( narrow_dir_string );
 		}
 		new_dir= malloc( sizeof(wchar_t)*(base_len+ln+2)  );
 
 		wc_str = wc_end?wcsndup(wc, wc_end-wc):wcsdup(wc);
+
 		if( (!new_dir) || (!wc_str) )
 		{
 			die_mem();

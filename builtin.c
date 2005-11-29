@@ -1957,22 +1957,13 @@ static int builtin_complete( wchar_t **argv )
 }
 
 /**
-   The source builtin. Can be called through either 'source' or
-   '.'. Evaluates the contents of a file. 
+   The  . (dot) builtin, sometimes called source. Evaluates the contents of a file. 
 */
 static int builtin_source( wchar_t ** argv )
 {
 	int fd;
 	int res;
 	
-/*
-  if( wcsstr( argv[1], L"fish_complete" ) )
-  {
-  fwprintf( stderr, L"Woot\n" );
-  return 0;
-  }
-*/
-
 	if( (argv[1] == 0) || (argv[2]!=0) )
 	{
 		

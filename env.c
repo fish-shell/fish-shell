@@ -186,7 +186,7 @@ static void start_fishd()
 	sb_init( &cmd );
 	pw = getpwuid(getuid());
 	
-	debug( 2, L"Spawning new copy of fishd" );
+	debug( 3, L"Spawning new copy of fishd" );
 	
 	if( !pw )
 	{

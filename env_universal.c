@@ -171,7 +171,7 @@ static void check_connection()
 	
 	if( env_universal_server.killme )
 	{
-		debug( 2, L"Lost connection to universal variable server." );
+		debug( 3, L"Lost connection to universal variable server." );
 		close( env_universal_server.fd );
 		env_universal_server.fd = -1;
 		env_universal_server.killme=0;
@@ -190,7 +190,7 @@ static void reconnect()
 	if( get_socket_count >= RECONNECT_COUNT )
 		return;
 	
-	debug( 2, L"Get new fishd connection" );
+	debug( 3, L"Get new fishd connection" );
 	
 	init = 0;
 	env_universal_server.fd = get_socket(1);
@@ -259,6 +259,8 @@ int env_universal_read_all()
 	if( !init)
 		return 0;
 
+	debug( 3, L"env_universal_read_all()" );
+
 	if( env_universal_server.fd == -1 )
 	{
 		reconnect();		
@@ -287,11 +289,13 @@ wchar_t *env_universal_get( const wchar_t *name )
 	if( !name )
 		return 0;
 
+	debug( 3, L"env_universal_get( \"%ls\" )", name );
 	return env_universal_common_get( name );
 }
 
 int env_universal_get_export( const wchar_t *name )
 {
+	debug( 3, L"env_universal_get_export()" );
 	return env_universal_common_get_export( name );
 }
 

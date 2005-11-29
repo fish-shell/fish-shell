@@ -79,12 +79,6 @@ static int wildcard_match2( const wchar_t *str,
 		{
 			if( wildcard_match2( str, wc+1, 0 ) )
 				return 1;
-
-			if( *wc == ANY_STRING_RECURSIVE 
-			    && ( wildcard_match2(str+1, wc, 0) || wildcard_match2(str+1, wc+1, 0) ) ) {
-			  return 1;
-			}
-
 			
 		}
 		while( *(str++) != 0 );

@@ -1707,7 +1707,6 @@ static void eval_job( tokenizer *tok )
 					
 			current_block->job = j;
 				
-			proc_had_barrier=0;
 			
 			if( is_interactive )
 			{
@@ -1763,7 +1762,15 @@ static void eval_job( tokenizer *tok )
 				
 				if(!skip )
 				{
+					int was_builtin = 0;
+					if( j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
+						was_builtin = 1;
+					
 					exec( j );					
+
+					/* Only external commands require a new fishd barrier */
+					if( !was_builtin )
+						proc_had_barrier=0;
 				}
 				else
 				{

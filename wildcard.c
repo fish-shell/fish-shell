@@ -28,6 +28,13 @@
 #include "expand.h"
 
 /**
+   This flag is set in the flags parameter of wildcard_expand if the
+   call is part of a recursiv wildcard search. It is used to make sure
+   that the contents of subdirectories are only searched once.
+*/
+#define WILDCARD_RECURSIVE 64
+
+/**
    The maximum length of a filename token. This is a fallback value,
    an attempt to find the true value using patchconf is always made. 
 */
@@ -80,20 +87,29 @@ static int wildcard_match2( const wchar_t *str,
 	{		
 		/* Ignore hidden file */
 		if( is_first && *str == L'.' )
+		{
 			return 0;
-
+		}
+		
 		/* Try all submatches */
 		do
 		{
 			if( wildcard_match2( str, wc+1, 0 ) )
 				return 1;
-			
 		}
 		while( *(str++) != 0 );
 		return 0;
 	}
+
 	if( *wc == ANY_CHAR )
+	{
+		if( is_first && *str == L'.' )
+		{
+			return 0;
+		}
+		
 		return wildcard_match2( str+1, wc+1, 0 );
+	}
 	
 	if( *wc == *str )
 		return wildcard_match2( str+1, wc+1, 0 );
@@ -379,6 +395,19 @@ int wildcard_expand( const wchar_t *wc,
 	*/	
 	wc_recursive = wcschr( wc, ANY_STRING_RECURSIVE );
 	is_recursive = ( wc_recursive && (!wc_end || wc_recursive < wc_end));
+
+	/*
+	  This makes sure that the base
+	  directory of the recursive search is
+	  also searched for matching files.
+	*/
+	if( is_recursive && (wc_end==(wc+1)) && !(flags & WILDCARD_RECURSIVE ) )
+	{
+		wildcard_expand( wc_end + 1,
+						 base_dir,
+						 flags,
+						 out );
+	}
 	
 	if( flags & ACCEPT_INCOMPLETE )
 		sb_init( &sb_desc );
@@ -430,7 +459,7 @@ int wildcard_expand( const wchar_t *wc,
 			else
 			{								
 				res = 1;
-				al_push( out, wcsdup( base_dir ) );
+				al_push_check( out, wcsdup( base_dir ) );
 			}							
 		}
 		else
@@ -459,7 +488,7 @@ int wildcard_expand( const wchar_t *wc,
 										   L"",
 										   0,
 										   0 ) )
-					{						
+					{
 						if( test_flags( long_name, flags ) )
 						{
 							get_desc( long_name,
@@ -483,7 +512,7 @@ int wildcard_expand( const wchar_t *wc,
 					{
 						wchar_t *long_name = make_path( base_dir, name );
 						
-						al_push( out, long_name );
+						al_push_check( out, long_name );
 						res = 1;
 					}
 				}
@@ -494,10 +523,9 @@ int wildcard_expand( const wchar_t *wc,
 	else
 	{
 		/*
-		  Wilcard segment is not the last segment.
-		  Recursively call wildcard_expand for all matching subdirectories.
+		  Wilcard segment is not the last segment.  Recursively call
+		  wildcard_expand for all matching subdirectories.
 		*/
-
 		
 		/*
 		  wc_str is the part of the wildcarded string from the
@@ -506,7 +534,8 @@ int wildcard_expand( const wchar_t *wc,
 		wchar_t *wc_str;
 
 		/*
-		  new_dir is a scratch area containing the full path to a file/directory we are iterating over
+		  new_dir is a scratch area containing the full path to a
+		  file/directory we are iterating over
 		*/
 		wchar_t *new_dir;
 
@@ -583,7 +612,7 @@ int wildcard_expand( const wchar_t *wc,
 				
 				if( dir_str )
 				{
-					stat_res= stat( dir_str, &buf );
+					stat_res = stat( dir_str, &buf );
 					free( dir_str );
 					
 					if( !stat_res )
@@ -603,6 +632,7 @@ int wildcard_expand( const wchar_t *wc,
 														new_dir, 
 														flags, 
 														out );
+
 							}
 							
 							/*
@@ -612,7 +642,7 @@ int wildcard_expand( const wchar_t *wc,
 							{
 								res |= wildcard_expand( wcschr( wc, ANY_STRING_RECURSIVE ), 
 														new_dir,
-														flags, 
+														flags | WILDCARD_RECURSIVE, 
 														out );
 							}
 						}								
@@ -633,3 +663,18 @@ int wildcard_expand( const wchar_t *wc,
 	return res;
 }
 
+void al_push_check( array_list_t *l, const wchar_t *new )
+{
+	int i;
+
+	for( i = 0; i < al_get_count(l); i++ ) 
+	{
+		if( !wcscmp( al_get(l, i), new ) ) 
+		{
+			free( new );
+			return;
+		}
+	}
+
+	al_push( l, new );
+}

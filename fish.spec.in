@@ -69,6 +69,9 @@ fi
 %config %_sysconfdir/fish.d/completions/*.fish
 
 %changelog
+* Tue Nov 29 2005 Axel Liljencrantz <axel@liljencrantz.se> 1.17.0-0
+- 1.17.0
+
 * Sat Sep 24 2005 Axel Liljencrantz <axel@liljencrantz.se> 1.14.0-0
 - 1.14.0
 

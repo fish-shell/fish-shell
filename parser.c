@@ -1763,8 +1763,8 @@ static void eval_job( tokenizer *tok )
 				if(!skip )
 				{
 					int was_builtin = 0;
-					if( j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
-						was_builtin = 1;
+//					if( j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
+//						was_builtin = 1;
 					
 					exec( j );					
 

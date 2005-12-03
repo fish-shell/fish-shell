@@ -882,9 +882,7 @@ directory, or install them in /etc.
 \subsection todo-features Missing features
 
 - Complete vi-mode key bindings
-- '**' wildcard for recursive wildcard matching
 - next-history-complete
-- umask shellscript function
 - builtin wait command
 - More completions (for example xterm, vim, 
 konsole, gnome-terminal, dcop, cdrecord, cron, xargs
@@ -893,7 +891,6 @@ bibtex, patch, aspell, xpdf,
 zip, compress, wine, xmms, dig, wine, batch, cron, 
 g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Undo support
-- Multiple input characters should be inserted in one batch whenever possible, to avoid flickering
 - Check keybinding commands for output - if non has happened, don't repaint to reduce flicker
 - the jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error

@@ -1390,11 +1390,14 @@ int expand_string( wchar_t *str,
 	
 	int i;
 	int subshell_ok = 1;
+	int res = EXPAND_OK;
+	
+
 
 	if( (!(flags & ACCEPT_INCOMPLETE)) && is_clean( str ) )
 	{
 		al_push( end_out, str );
-		return 1;
+		return EXPAND_OK;
 	}
 
 	al_init( &list1 );
@@ -1416,7 +1419,7 @@ int expand_string( wchar_t *str,
 				free( str );
 				al_destroy( &list1 );
 				al_destroy( &list2 );
-				return 0;
+				return EXPAND_ERROR;
 			}
 			pos++;
 		}		
@@ -1430,7 +1433,7 @@ int expand_string( wchar_t *str,
 	if( !subshell_ok )
 	{
 		al_destroy( &list1 );
-		return 0;
+		return EXPAND_ERROR;
 	}
 	else
 	{
@@ -1464,7 +1467,7 @@ int expand_string( wchar_t *str,
 				{
 					al_destroy( in );
 					al_destroy( out );
-					return 0;	
+					return EXPAND_ERROR;	
 				}
 			}
 		}
@@ -1481,7 +1484,7 @@ int expand_string( wchar_t *str,
 			{
 				al_destroy( in );
 				al_destroy( out );
-				return 0;
+				return EXPAND_ERROR;
 			}
 		}
 		al_truncate( in, 0 );
@@ -1496,17 +1499,22 @@ int expand_string( wchar_t *str,
 			{
 				al_destroy( in );
 				al_destroy( out );
-				return 0;
+				return EXPAND_ERROR;
 			}
 		
 			if( flags & ACCEPT_INCOMPLETE )
 			{
 				if( *next == PROCESS_EXPAND )
 				{
+					/*
+					  If process expantion matches, we are not
+					  interested in other completions, so we
+					  short-circut and return
+					*/
 					expand_pid( next, flags, end_out );
 					al_destroy( in );
 					al_destroy( out );
-					return 1;
+					return EXPAND_OK;
 				}
 				else
 					al_push( out, next );
@@ -1517,7 +1525,7 @@ int expand_string( wchar_t *str,
 				{
 					al_destroy( in );
 					al_destroy( out );
-					return 0;
+					return EXPAND_ERROR;
 				}
 			}
 		}
@@ -1550,19 +1558,20 @@ int expand_string( wchar_t *str,
 					case 0:
 						if( !(flags & ACCEPT_INCOMPLETE) )
 						{	
-							break;
+							if( res == EXPAND_OK )
+								res = EXPAND_WILDCARD_NO_MATCH;
+							
 						}
+						
+						break;
+						
 					case 1:
+						res = EXPAND_WILDCARD_MATCH;
 						sort_list( out );
 						al_push_all( end_out, out );
 						al_truncate( out, 0 );						
 						break;
 						
-					default:
-						fwprintf( stderr, L"error\n" );
-						/*al_destroy( &list1 );*/
-						/*al_destroy( &list2 );*/
-						/*return 0;*/
 				}			
 			}
 			else
@@ -1577,7 +1586,8 @@ int expand_string( wchar_t *str,
 		al_destroy( out );
 	}
 
-	return 1;
+	return res;
+	
 }
 
 

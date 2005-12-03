@@ -125,12 +125,34 @@ enum while_status
 */
 enum parser_error 
 {
+	/**
+	   No error
+	*/
 	NO_ERR=0,
+	/**
+	   An error in the syntax 
+	*/
 	SYNTAX_ERROR,
+	/**
+	   Error occured while evaluating commands
+	*/
 	EVAL_ERROR,
+	/**
+	   Out of memory error
+	*/
 	OOM,
+	/**
+	   Stack inconsistency error
+	*/
 	STACK_ERROR,
-	SUBSHELL_ERROR
+	/**
+	   Error while evaluating subshell
+	*/
+	SUBSHELL_ERROR,
+	/**
+	   No files matching wildcards where found
+	*/
+	WILDCARD_ERROR
 }
 ;
 

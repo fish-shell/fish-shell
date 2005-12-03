@@ -98,6 +98,11 @@ The fish parser. Contains functions for parsing code.
 */
 #define CMD_ERR_MSG L"Expected command"
 
+/**
+   Error message for wildcards with no matches
+*/
+#define WILDCARD_ERR_MSG L"Warning: No match for wildcard "
+
 /** Last error code */
 int error_code;
 
@@ -152,23 +157,23 @@ static int parse_job( process_t *p,
 typedef struct
 {
 	/**
-	   Time spent executing the specified command, including parse time for nested blocks
+	   Time spent executing the specified command, including parse time for nested blocks.
 	*/
 	int exec;
 	/**
-	   Time spent parsing the specified command, incvluding execution time for command substitutions
+	   Time spent parsing the specified command, including execution time for command substitutions.
 	*/
 	int parse;
 	/**
-	   The block level of the specified command
+	   The block level of the specified command. nested blocks and command substitutions both increase the block level.
 	*/
 	int level;
 	/**
-	   If the execution of this command was skipped
+	   If the execution of this command was skipped.
 	*/
 	int skipped;
 	/**
-	   The command string
+	   The command string.
 	*/
 	wchar_t *cmd;
 } profile_element_t;
@@ -757,6 +762,12 @@ static void print_errors()
 	{
 		int tmp;
 
+		/*
+		  Wildcard warnings are only printed in interactive mode
+		*/
+		if( ( error_code == WILDCARD_ERROR ) && !is_interactive )
+			return;
+		
 		
 		debug( 0, L"%ls", err_str );
 
@@ -791,10 +802,20 @@ int eval_args( const wchar_t *line, array_list_t *args )
 		switch(tok_last_type( &tok ) )
 		{
 			case TOK_STRING:
-				if( !expand_string( wcsdup(tok_last( &tok )), args, 0 ) )
+				switch( expand_string( wcsdup(tok_last( &tok )), args, 0 ) )
 				{
-					err_pos=tok_get_pos( &tok );
-					do_loop=0;
+					case EXPAND_ERROR:
+					{
+						err_pos=tok_get_pos( &tok );
+						do_loop=0;
+						break;
+					}
+					
+					default:
+					{
+						break;
+					}
+					
 				}
 
 				break;
@@ -948,6 +969,11 @@ static void parse_job_main_loop( process_t *p,
 
 	int proc_is_count=0;
 
+	int matched_wildcard = 0, unmatched_wildcard = 0;
+	
+	wchar_t *unmatched = 0;
+	int unmatched_pos=0;
+	
 	/*
 	  Test if this is the 'count' command. We need to special case
 	  count, since it should display a help message on 'count .h',
@@ -1045,20 +1071,47 @@ static void parse_job_main_loop( process_t *p,
 						wcscpy( p->actual_cmd, L"count" );
 					}
 					
-					if( !expand_string( wcsdup(tok_last( tok )),
-										args,
-										0 )
-						)
+
+					switch( expand_string( wcsdup(tok_last( tok )), args, 0 ) )
 					{
-						err_pos=tok_get_pos( tok );
-						if( error_code == 0 )
+						case EXPAND_ERROR:
 						{
-							error_arg( SYNTAX_ERROR,
-									   L"Could not expand string",
-									   tok_last(tok),
-									   tok_get_pos( tok ) );
+							err_pos=tok_get_pos( tok );
+							if( error_code == 0 )
+							{
+								error_arg( SYNTAX_ERROR,
+										   L"Could not expand string",
+										   tok_last(tok),
+										   tok_get_pos( tok ) );
+							}
+							break;
 						}
+						
+						case EXPAND_WILDCARD_NO_MATCH:
+						{
+							unmatched_wildcard = 1;
+							if( !unmatched )
+							{
+								unmatched = wcsdup(tok_last( tok ));
+								unmatched_pos = tok_get_pos( tok );
+							}
+							
+							break;
+						}
+						
+						case EXPAND_WILDCARD_MATCH:
+						{
+							matched_wildcard = 1;
+							break;
+						}
+						
+						case EXPAND_OK:
+						{
+							break;
+						}
+						
 					}
+
 				}
 
 				break;
@@ -1205,6 +1258,19 @@ static void parse_job_main_loop( process_t *p,
 		
 		tok_next( tok );
 	}
+
+	if( !error_code )
+	{
+		if( unmatched_wildcard && !matched_wildcard )
+		{
+			error_arg( WILDCARD_ERROR,
+					   WILDCARD_ERR_MSG,
+					   unmatched,
+					   unmatched_pos );
+		}
+	}
+	free( unmatched );
+
 	return;
 }
 
@@ -1240,6 +1306,7 @@ static int parse_job( process_t *p,
 		switch( tok_last_type( tok ))
 		{
 			case TOK_STRING:
+			{
 				nxt = expand_one( wcsdup(tok_last( tok )),
 								  EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
 				if( nxt == 0 )
@@ -1252,7 +1319,8 @@ static int parse_job( process_t *p,
 					return 0;
 				}
 				break;
-
+			}
+			
 			case TOK_ERROR:
 			{
 				error_arg( SYNTAX_ERROR,
@@ -1265,14 +1333,16 @@ static int parse_job( process_t *p,
 			}
 
 			default:
+			{
 				error_arg( SYNTAX_ERROR,
 						   L"Expected a command name, got token of type ",
 						   tok_get_desc( tok_last_type(tok)),
 						   tok_get_pos( tok ) );
 				al_destroy( &args );
 				return 0;
+			}
 		}
-
+		
 		int mark = tok_get_pos( tok );
 
 		if( wcscmp( L"command", nxt )==0 )
@@ -1377,7 +1447,7 @@ static int parse_job( process_t *p,
 			int new_block = 0;
 			tok_next( tok );
 
-			if( (current_block->type != WHILE) )
+			if( ( current_block->type != WHILE ) )
 			{
 				new_block = 1;
 			}

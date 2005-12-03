@@ -7,12 +7,18 @@
 	internal commands use wide characters and hence this library is
 	useful.
 
-	If you want to use this version of getopt in your program, simply
-	copy wgetopt.c and wgetopt.h into your program, include wgetopt.h,
-	and use all the regular getopt functions, prefixing every
-	function, global variable and structure with a 'w', and use only
-	wide character strings. There are no other functional changes in
-	this version of getopt besides using wide character strings.
+	If you want to use this version of getopt in your program,
+	download the fish sourcecode, available at <a
+	href='http://roo.no-ip.org/fish/'>the fish homepage</a>. Extract
+	the sourcode, copy wgetopt.c and wgetopt.h into your program
+	directory, include wgetopt.h in your program, and use all the
+	regular getopt functions, prefixing every function, global
+	variable and structure with a 'w', and use only wide character
+	strings. There are no other functional changes in this version of
+	getopt besides using wide character strings.
+
+	For examples of how to use wgetopt, see the fish builtin
+	functions, many of which are defined in builtin.c.
 
 */
 

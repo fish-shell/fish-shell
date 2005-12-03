@@ -6,7 +6,7 @@
    benefit from using a more clever memory allocation scheme, perhaps
    an evil combination of talloc, string buffers and reference
    counting.
-
+   
 */
 
 #ifndef FISH_EXPAND_H
@@ -84,6 +84,23 @@ enum
 }
 	;
 
+
+/**
+   These are the possible return values for expand_string
+*/
+enum
+{
+	/** Error */
+	EXPAND_ERROR,
+	/** Ok */
+	EXPAND_OK,
+	/** Ok, a wildcard in the string matched no files */
+	EXPAND_WILDCARD_NO_MATCH,
+	/* Ok, a wildcard in the string matched a file */
+	EXPAND_WILDCARD_MATCH
+}
+	;
+
 /** Character for separating two array elements. We use 30, i.e. the ascii record separator since that seems logical. */
 #define ARRAY_SEP 0x1e
 
@@ -111,6 +128,7 @@ enum
    \param in The parameter to expand
    \param flag Specifies if any expantion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \param out The list to which the result will be appended.
+   \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH
 */
 int expand_string( wchar_t *in, array_list_t *out, int flag );
 

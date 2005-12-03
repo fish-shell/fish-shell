@@ -300,6 +300,12 @@ Example:
 
 <code>???</code> matches any file in the current directory whose name is exactly three characters long.
 
+If no matches are founf for a specific wildcard, it will expand intto
+zero arguments, i.e. to nothing. If none of the wildcarded arguments
+sent to a command result in any matches, the command will not be
+executed. If this happens when using the shell interactively, a
+warning will also be printed.
+
 \subsection expand-command-substitution Command substitution
 
 If a parameter contains a set of parenthesis, the text enclosed by the

@@ -1201,7 +1201,7 @@ int exec_subshell( const wchar_t *cmd,
 	if( !cmd )
 	{
 		debug( 1, 
-			   L"Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %ls", 
+			   L"Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s", 
 			   PACKAGE_BUGREPORT );		
 		return 0;		
 	}

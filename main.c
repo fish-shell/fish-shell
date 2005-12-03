@@ -284,11 +284,7 @@ int main( int argc, char **argv )
 		}
 	}
 
-	
-	if( function_exists(L"fish_on_exit"))
-	{
-		eval( L"fish_on_exit", 0, TOP );
-	}
+	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
 	
 	reader_pop_current_filename();	
 	

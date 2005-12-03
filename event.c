@@ -273,6 +273,9 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 	int i, j;
 	string_buffer_t *b=0;
 	array_list_t *fire=0;
+
+	int was_subshell = is_subshell;
+	int was_interactive = is_interactive;
 	
 	/*
 	  First we free all events that have been removed
@@ -344,14 +347,21 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 
 //		debug( 1, L"Event handler fires command '%ls'", (wchar_t *)b->buff );
 		
+		/*
+		  Event handlers are not part of the main flow of code, so
+		  they are marked as non-interactive and as a subshell
+		*/
 		is_subshell=1;
-		is_interactive=1;
-				
+		is_interactive=0;		
 		eval( (wchar_t *)b->buff, 0, TOP );
-		is_subshell=0;
-		is_interactive=1;
 		
 	}
+
+	/*
+	  Restore interactivity flags
+	*/
+	is_subshell = was_subshell;
+	is_interactive = was_interactive;
 
 	if( b )
 	{

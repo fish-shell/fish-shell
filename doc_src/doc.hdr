@@ -757,9 +757,12 @@ order. If you want to run a command only on starting an interactive
 shell, use the output of the 'status --is-interactive' command. If
 you want to run a command only on starting a login shell, use 'status --is-login' instead.
 
-If you want to run a set of commands when \c fish exits, redefine the
-<a href="#hooks">function hook</a> \c fish_on_exit. If the \c
-fish_on_exit is defined, it will be execute before the shell exits.
+If you want to run a set of commands when \c fish exits, use an <a href='#event'>event
+handler</a> that is triggered by the exit of the shell:
+
+<pre>function on_exit --on-process %self
+	echo fish is now exiting
+end</pre>
 
 <a href="#variables-universal">Universal variables</a> are stored in
 the file .fishd.HOSTNAME, where HOSTNAME is the name of your
@@ -841,15 +844,28 @@ end
 </pre>
 </p>
 
-\subsection hooks Event hooks
+\subsection event Event handlers
 
-There are several special function names in fish. If a function is
-given this name, it will be automatically called when a specific event
-has occured. These functions are:
+When defining a new function in fish, it is possible to make it into an
+event handler, i.e. a function that is automatically run when a
+specific event takes place. Events that can trigger a handler currently are:
 
-- \c fish_on_exit, which is called before the shell exits
-- \c fish_on_exec, which is called before interactively executing a command
-- \c fish_on_return, which is called when control returns to the shell after interactively executing a command
+* When a signal is delivered
+* When a process or job exits
+* When the value of a variable is updated
+
+Example:
+
+To specify a signal handler for the WINCH signal, write:
+
+<pre>function --on-signal WINCH my_signal_handler
+	echo Got WINCH signal!
+end
+</pre>
+
+For more information on how to define new event handlers, see the
+documentation for the <a href='builtins.html#function'>function</a>
+command.
 
 \section issues Common issues with fish
 

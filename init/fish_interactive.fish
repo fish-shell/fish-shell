@@ -20,7 +20,7 @@ printf 'for instructions on how to use fish\n'
 # Set exit message
 #
 
-function fish_on_exit -d "Commands to execute when fish exits"
+function fish_on_exit -d "Commands to execute when fish exits" --on-process %self
 	echo Good bye
 end
 

@@ -2761,8 +2761,8 @@ wchar_t *reader_readline()
 				break;
 			}
 
-
-
+			
+			
 			/* Move left*/
 			case R_BACKWARD_CHAR:
 				if( data->buff_pos > 0 )

@@ -61,6 +61,9 @@ typedef struct
 		
 	} param1;
 
+	/**
+	   The name of the event handler function
+	*/
 	const wchar_t *function_name;	
 }
 	event_t;

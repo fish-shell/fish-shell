@@ -2322,7 +2322,7 @@ static int builtin_jobs( wchar_t **argv )
 				sb_printf( sb_out, L"%d\t%d\t", j->job_id, j->pgid );
 				
 #ifdef HAVE__PROC_SELF_STAT
-				sb_printf( sb_out, L"%d\t", cpu_use(j) );
+				sb_printf( sb_out, L"%d%%\t", cpu_use(j) );
 #endif
 				sb_append2( sb_out, job_is_stopped(j)?L"stopped\t":L"running\t", 
 //							job_is_completed(j)?L"completed\t":L"unfinished\t", 

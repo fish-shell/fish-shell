@@ -2352,16 +2352,8 @@ static int read_i()
 
 		data->buff_pos=data->buff_len=0;
 		data->buff[data->buff_len]=L'\0';
-		if( function_exists(L"fish_on_exec"))
-		{
-			eval( L"fish_on_exec", 0, TOP );
-		}
 		reader_run_command( tmp );
 		free( tmp );
-		if( function_exists(L"fish_on_return"))
-		{
-			eval( L"fish_on_return", 0, TOP );
-		}
 
 		if( data->end_loop)
 		{

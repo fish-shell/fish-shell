@@ -1392,7 +1392,8 @@ int expand_string( wchar_t *str,
 	int subshell_ok = 1;
 	int res = EXPAND_OK;
 	
-
+//	debug( 1, L"Expand %ls", str );
+	
 
 	if( (!(flags & ACCEPT_INCOMPLETE)) && is_clean( str ) )
 	{
@@ -1560,10 +1561,8 @@ int expand_string( wchar_t *str,
 						{	
 							if( res == EXPAND_OK )
 								res = EXPAND_WILDCARD_NO_MATCH;
-							
+							break;
 						}
-						
-						break;
 						
 					case 1:
 						res = EXPAND_WILDCARD_MATCH;

@@ -1771,7 +1771,10 @@ static void complete_param_expand( wchar_t *str,
 	else
 		comp_str = str;
 	
-//	fwprintf( stderr, L"expand_string( \"%ls\", [list], EXPAND_SKIP_SUBSHELL | ACCEPT_INCOMPLETE | %ls )\n", comp_str, do_file?L"0":L"EXPAND_SKIP_WILDCARDS" );
+	debug( 2, 
+		   L"expand_string( \"%ls\", comp_out, EXPAND_SKIP_SUBSHELL | ACCEPT_INCOMPLETE | %ls );", 
+		   comp_str, 
+		   do_file?L"0":L"EXPAND_SKIP_WILDCARDS" );
 	
 	expand_string( wcsdup(comp_str), comp_out,  EXPAND_SKIP_SUBSHELL | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) );
 }

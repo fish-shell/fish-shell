@@ -210,7 +210,7 @@ This is a short explanation of some of the commonly used words in fish.
 - argument, a parameter given to a command
 - builtin, a command that is implemented as part of the shell
 - command, a program
-- function, a command that is implemented as a set of fish commands
+- function, a block of one or more fish commands that can be called as a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
 - job, a running pipeline or command
 - pipeline, a set of commands stringed together so that the output of one command is the input of the next command
 - redirection, a operation that changes one of the input/output streams associated with a job
@@ -264,22 +264,48 @@ in the known_hosts file. (see the ssh documentation for more information)
 - The 'su' command complete using all users on the system
 - The \c apt-get, \c rpm and \c tym commands complete using all installed packages.
 
-Specifying your own completions is easy. If the command 'myprog' has
-an option '-o' which can also be written as '--output', which requires
-an additional value of either 'yes' or 'no' and decides if the program
-should write anything, this can be specified by writing:
+Specifying your own completions is not complicated. To specify a
+completion, one simply uses the \c complete command. \c complete takes
+as a parameter the name of the command to specify a completion
+for. For example, to add a completion for the program \c myprog, one
+would start the completion command with <tt>complete -c myprog
+...</tt>. To provide a list of possible completions for myprog, use
+the \c -a switch. If \c myprog accepts the arguments start and stop,
+this can be specified as <tt>complete -c myprog -a 'start
+stop'</tt>. The argument to the \c -a switch is always a single
+string. At completion time, it will be tokenized on spaces and tabs,
+and variable expantion, command substitution and other forms of
+parameter expantion will take place. 
 
-<tt>complete -c myprog -s o -l output -r -a "yes no" -d "Write output"</tt>
+Fish has a special syntax to support specifying switches accepted by a
+command. The switches \c -s, \c -l and \c -o are used to specify a
+short switch (single character, such as -l), a gnu style long switch (such as
+--color) and an old-style long switch (like -shuffle),
+respectively. If the command 'myprog' has an option '-o' which can
+also be written as '--output', and which can take an additional value
+of either 'yes' or 'no', this can be specified by writing:
 
-For a more complete description of how to specify your own
-completions, go <a href="builtins.html#complete">here</a> or write 'complete --help' in the \c fish shell.
+<tt>complete -c myprog -s o -l output -a "yes no"</tt>
+
+There are also special switches for specifying that a switch requires
+an argument, to disable filename completion, to create completions
+that are only available in some combinations, etc..  For a complete
+description of the various switches accepted by the \c complete
+command, see the documentation for the <a
+href="builtins.html#complete">complete</a> builtin, or write 'complete
+--help' inside the \c fish shell.
+
+For examples of how to write your own complex completions, study the
+completions in /etc/fish.d/completions (or ~/etc/fish.d/completions if
+you installed fish in your home directory).
 
 If you wish to use a completion, you should consider adding it to your
 startup files. When completion has been requested for a command \c
 COMMAND, fish will automatically look for the file
 ~/.fish.d/completions/COMMAND.fish. If it exists, it will be
-automatically loaded. For examples of how to write your own complex
-completions, study the completions in /etc/fish.d/completions (or ~/etc/fish.d/completions if you installed fish in your home directory). 
+automatically loaded. If you have written new completions for a common
+Unix command, please consider sharing your work by sending it to <a
+href='mailto: fish-users@lists.sf.net'>the fish mailinglist</a>.
 
 \section expand Parameter expansion (Globbing)
 
@@ -442,7 +468,7 @@ creating or updating a variable are:
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the variable scope is not changed
--# If a variable is not explicitly set to be either universal, global or local and has never befor been defined, the variable will be local to the current scope
+-# If a variable is not explicitly set to be either universal, global or local and has never befor been defined, the variable will be local to the currently executing functions. If no function is executing, the variable will be global.
 
 When using a variable, the variable scope will be searched from the
 inside out, i.e. a local variable will be used rather than a global
@@ -453,7 +479,7 @@ For example, the following code will not output anything:
 <pre>
 if true
 	# This is a nice local scope where all variables will die
-	set pirate 'There be treasure in them thar hills'
+	set -l pirate 'There be treasure in them thar hills'
 end
 
 # This will not output anything, since the pirate is dead
@@ -892,7 +918,7 @@ zip, compress, wine, xmms, dig, wine, batch, cron,
 g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Undo support
 - Check keybinding commands for output - if non has happened, don't repaint to reduce flicker
-- the jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
+- The jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error
 
 
@@ -923,7 +949,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Many completions are made specifically for the GNU 
 version of a POSIX command
 - Yanking weird characters from clipboard prints Unicode escapes
-- Prefix string in completion display is sometimes incorrect
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se
@@ -1273,17 +1298,6 @@ alias/function/whatever, accessed through the <tt>function</tt>
 builtin. The are very few builtins, \c fish relies on normal commands
 like <tt>echo</tt>, <tt>kill</tt>, <tt>printf</tt> and <tt>time</tt>
 instead of reimplementing them as builtins.
-
-The globbing in fish is significantly simplified. Since I can never
-remember all the subtle differences between single and double quotes,
-which kind of tick is used for command substitution and all the other
-strange quirks of of the Posix shell language, that aspect of shells
-has been significantly simplified. This makes \c fish unsuitable for
-strange shell scripting, but much more suited to interactive needs
-than regular shells.
-
-There is no difference between double and single quotes. They both
-turn of all globbing and escape sequences. They can be nested.
 
 Token separation is performed before variable expansion. This means
 that even if a variable contains spaces, it will never be separated

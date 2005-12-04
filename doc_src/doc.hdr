@@ -1,13 +1,16 @@
-/** \mainpage fish
+/** \mainpage Fish user documentation
 
-\c fish is a user friendly shell intended mostly for interactive use.
-A shell is a program which allows you to execute other programs by
-typing their names. For updates on \c fish, go to the <a
+\section introduction The friendly interactive shell
+
+This is the documentation for \c fish, the friendly interactive
+shell. \c fish is a user friendly commandline shell shell intended
+mostly for interactive use. A shell is a program used to execute other
+programs. For the latest information on \c fish, please visit the <a
 href="http://roo.no-ip.org/fish/"><tt>fish</tt> homepage</a>.
 
 \section syntax Syntax overview
 
-Shells like \c fish are used by giving them commands. Every \c fish
+Shells like fish are used by giving them commands. Every \c fish
 command follows the same simple syntax.
 
 A command is executed by writing the name of the command followed by
@@ -462,25 +465,25 @@ the shell through <a href="expand-variable">variable expansion</a>.
 
 Example:
 
-To use the value of a the variable \c smurf, use the command <tt>echo
-Smurfs are $smurf</tt>, which would print the result 'Smurfs are
-blue'.
+To use the value of a the variable \c smurf, write $ (dollar synbol)
+followed by the name of the variable, like <tt>echo Smurfs are
+$smurf</tt>, which would print the result 'Smurfs are blue'.
 
 \subsection variables-scope Variable scope
 
 There are three kinds of variables in fish, universal, global and
 local variables. Universal variables are shared between all fish
 sessions a user is running on one computer. Global variables are
-specific to the current fish session, and will never be erased unless
-the user explicitly requests it using <tt>set -e</tt>. Local variables
-are specific to the current fish session, and associated with a
-specific block of commands, and is automatically erased when a
-specific block goes out of scope. A block of commands is a series of
-commands that begins with one of the commands \c 'for, \c 'while' , \c
-'if', \c 'function', \c 'begin' or \c 'switch', and ends with the
-command \c 'end'. The user can specify that a variable should have
-either global or local scope using the \c -g/--global or \c -l/--local
-switches.
+specific to the current fish session, but are not associated with any
+soecific block scope, and will never be erased unless the user
+explicitly requests it using <tt>set -e</tt>. Local variables are
+specific to the current fish session, and associated with a specific
+block of commands, and is automatically erased when a specific block
+goes out of scope. A block of commands is a series of commands that
+begins with one of the commands \c 'for, \c 'while' , \c 'if', \c
+'function', \c 'begin' or \c 'switch', and ends with the command \c
+'end'. The user can specify that a variable should have either global
+or local scope using the \c -g/--global or \c -l/--local switches.
 
 Variables can be explicitly set to be universal with the \c -U or \c
 --universal switch, global with the \c -g or \c --global switch, or
@@ -491,12 +494,15 @@ creating or updating a variable are:
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the variable scope is not changed
 -# If a variable is not explicitly set to be either universal, global or local and has never befor been defined, the variable will be local to the currently executing functions. If no function is executing, the variable will be global.
 
+There may be many variables with the same name, but different scopes.
 When using a variable, the variable scope will be searched from the
 inside out, i.e. a local variable will be used rather than a global
 variable with the same name, a global variable will be used rather
 than a universal variable with the same name.
 
-For example, the following code will not output anything:
+Example:
+
+The following code will not output anything:
 <pre>
 if true
 	# This is a nice local scope where all variables will die
@@ -1024,6 +1030,10 @@ Most tradeoffs between power and ease of use can be avoided with careful design.
 -# Whenever possible without breaking the above goals, fish should
 follow the Posix syntax.
 
+To achive these high-level goals, the fish design relies on a number
+of more specific design principles. These are presented below,
+together with a rationale and a few examples for each.
+
 \subsection ortho The law of orthogonality
 
 The shell language should have a small set of orthogonal features. Any
@@ -1040,7 +1050,10 @@ program harder to maintain and update.
 Examples:
 
 - Here documents are too similar to using echo inside of a pipeline.
-- The different quoting styles are silly. ("", '' and \$'')
+- Subshells, command substitution and process substitution are strongly related. \c fish only supports command substitution, the others can be achived either using a block or the psub shellscript function. 
+- Having both aliases and functions is confusing, especially since both of them have limitations and problems. \c fish sunctions have none of the drawbacks of either syntax.
+- The many Posix quoting styles are silly, especially \$''.
+
 
 \subsection sep The law of minimalism
 
@@ -1072,9 +1085,8 @@ and many other funtions can easily be done in external programs. They
 should not be supported internally by the shell.
 
 The law of minimalism does not imply that a large feature set is
-bad. So long as a feature is not part of the language itself, but a
-separate command or at least a shellscript function, bloat is much
-more acceptable.
+bad. So long as a feature is not part of the shell itself, but a
+separate command or at least a shellscript function, bloat is fine.
 
 \subsection conf Configurability is the root of all evil
 
@@ -1097,7 +1109,7 @@ enough approximation of it.
 Examples:
 
 - Fish allows the user to set various syntax highlighting colors. This is needed because fish does not know what colors the terminal uses by default, which might make some things unreadable. The proper solution would be for text color preferences to be defined centrally by the user for all programs, and for the terminal emulator to send these color properties to fish.
-- Fish does not allow you to set the history filename, the number of history entries, different language substyles or any number of other common cshell configuration options
+- Fish does not allow you to set the history filename, the number of history entries, different language substyles or any number of other common shell configuration options.
 
 A special note on the evils of configurability is the long list of
 very useful features found in some shells, that are not turned on by
@@ -1115,8 +1127,13 @@ considered once a user interface has been designed.
 
 Rationale:
 
-If too much attention is given to what is easy to implement the law of
-orthogonality and the law of minimalism will by necessity be disobeyed.
+This design rule is different than the others, since it describes how
+one should go about designing new features, not what the features
+should be. The problem with focusing on what can be done, and what is
+easy to do, is that to much of the implementation is exposed. This
+means that the user must know a great deal about the underlying system
+to be able to guess how the shell works, it also means that the
+language will often be rather low-level.
 
 Examples:
 
@@ -1154,7 +1171,6 @@ Examples:
 
 */
 /** \page about About fish
-
 
 
 \section about-program About the program

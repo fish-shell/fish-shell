@@ -132,18 +132,20 @@ function help -d "Show help for the fish shell"
 		return 1
 	end
 
-	set fish_help_item $argv[1]
+	if count $argv >/dev/null
+		set fish_help_item $argv[1]
+	end
 	set fish_help_page ""
 
-	if test $fish_help_item = .
+	if test "$fish_help_item" = .
 		set fish_help_page "builtins.html\#source"
 	end
 
-	if test $fish_help_item = difference
+	if test "$fish_help_item" = difference
 		set fish_help_page difference.html
 	end
 
-	if test $fish_help_item = globbing
+	if test "$fish_help_item" = globbing
 		set fish_help_page "index.html\#expand"
 	end
 
@@ -561,7 +563,7 @@ function __fish_type_help -d "Help for the type shellscript function"
 
 set bullet \*
 if expr match "$LANG" ".*UTF" >/dev/null
-	set bullet \u2022
+		set bullet \u2022
 end
 
 echo \ttype - Indicate how a name would be interpreted if used as a \n\tcommand name

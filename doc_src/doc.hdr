@@ -63,11 +63,13 @@ written on the same line by separating them with semicolons.
 Sometimes features such as <a href="#globbing">parameter expansion</a>
 and <a href="#escapes">character escapes</a> get in the way. When that
 happens, the user can write a parameter within quotes, either '
-(single quote) or " (double quote). There is no difference between
-single quoted and double quoted strings. A quoted parameter will not
-be parameter expanded, may contain spaces, and the only escape
-sequences allowed is the corresponding quote character. Single and
-double quotes may be nested.
+(single quote) or " (double quote). There is one important difference
+between single quoted and double quoted strings: When using double
+quoted string, <a href='#expand-variable'>variable expantion</a> still
+takes place.  Other than that, a quoted parameter will not be
+parameter expanded, may contain spaces, and escape sequences are
+ignored. Single quotes have no special meaning withing double quotes
+and vice versa.
 
 Example:
 
@@ -381,6 +383,18 @@ encase the variables within braces to embed a variable inside running
 text like <tt>echo Konnichiwa {$USER}san</tt>, which will print a
 personalized Japanese greeting.
 
+Variable expantion is the only type of expantion performed on double
+quoted strings. There is, however, an important difference in how
+variables are expanded when quoted and when unquoted. An unquoted
+variable expantion will result in a variable number of arguments. For
+example, if the variable $foo has zero elements or is undefined, the
+argument $foo will expand to zero elements. If the variable $foo is an
+array of five elements, the argument $foo will expand to five
+elements. When quoted, like "$foo", a variable expantion will always
+result in exactly one argument. Undefined variables will expand to the
+empty string, and array variables will be concatenated using the space
+character.
+
 \subsection expand-home Home directory expansion
 
 The ~ (tilde) character at the beginning of a parameter, followed by a
@@ -431,7 +445,9 @@ will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
 
 The concept of environment variables are central to any
 shell. Environment variables are variables, whose values can be set
-and used by the user. 
+and used by the user. For information on how to use the current value
+of a variable, see the section on <a href='#expand-variable'>variable
+expantion</a>.
 
 To set a variable value, use the <a href="builtins.html#set"> \c set
 command</a>.
@@ -600,22 +616,25 @@ certain environment variables.
 - \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
 - \c fish_color_normal, \c fish_color_command, \c fish_color_substitution, \c fish_color_redirection, \c fish_color_end, \c fish_color_error, \c fish_color_param, \c fish_color_comment, \c fish_color_match, \c fish_color_search_match, \c fish_color_cwd, \c fish_pager_color_prefix, \c fish_pager_color_completion, \c fish_pager_color_description and \c fish_pager_color_progress are used to change the color of various elements in \c fish. These variables are universal, i.e. when changing them, their new value will be used by all running fish sessions. The new value will also be retained when restarting fish.
 - \c PATH, which is an array of directories in which to search for commands
-- \c umask, which is the current file creation mask. The preffered way to change the umask variable is through the <a href="commands.html#umask">umask shellscript function</a>. An attempt to set umask to an invalid value will always fail.
+- \c umask, which is the current file creation mask. The prefered way to change the umask variable is through the <a href="commands.html#umask">umask shellscript function</a>. An attempt to set umask to an invalid value will always fail.
 
 \c fish also sends additional information to the user through the
-values of certain environment variables. The user can not change the values of these variables. They are:
+values of certain environment variables. The user can not change the
+values of these variables. They are:
 
 - \c _, which is the name of the currently running command.
-- \c history, which is an array containing the last commands that where entered
+- \c history, which is an array containing the last commands that where entered.
 - \c HOME, which is the users home directory. This variable can only be changed by the root user.
-- \c PWD, which is the current working directory.
+- \c PWD, which is the current working directory. 
 - \c status, which is the exit status of the last foreground job to exit. If a job contains pipelines, the status of the last command in the pipeline is the status for the job.
 - \c USER, which is the username. This variable can only be changed by the root user.
 
 Variables whose name are in uppercase are exported to the commands
-started by fish. \c fish also uses several variables internally. Such
-variables are prefixed with the string __FISH or __fish. These should
-be ignored by the user.
+started by fish. This rule is not enfored by fish, but it is good
+coding practice to use casing to distinguish between exported and
+unexported variables. \c fish also uses several variables
+internally. Such variables are prefixed with the string __FISH or
+__fish. These should be ignored by the user.
 
 \section builtin-overview Builtins 
 
@@ -758,24 +777,26 @@ After a command has been entered, it is inserted at the end of a
 history list. Any duplicate history items are automatically
 removed. By pressing the up and down keys, the user can search
 forwards and backwards in the history. If the current command line is
-not empty when starting a history search, only the commands starting
-with the string entered into the command line are searched. 
+not empty when starting a history search, only the commands containing
+the string entered into the command line are shown.
 
 The history is stored in the file '.fish_history'. It is automatically
 read on startup and merged on program exit.
 
 Example:
 
-To search for previous entries starting with the letter 'l', type 'l'
+To search for previous entries containing the word 'make', type 'make'
 in the console and press the up key.
 
 \section job-control Running multiple programs
 
-Normally when \c fish starts a program, this program will be put
-in the foreground, meaning it will take control of the terminal and
-\c fish will be stopped until the program finishes. Sometimes
-this is not desirable. In such cases, there are several ways in which
-the user can change <tt>fish</tt>'s behaviour.
+Normally when \c fish starts a program, this program will be put in
+the foreground, meaning it will take control of the terminal and \c
+fish will be stopped until the program finishes. Sometimes this is not
+desirable. For example, you may wish to start an application with a
+graphical user interface from the terminal, and then be able to
+continue using the shell. In such cases, there are several ways in
+which the user can change <tt>fish</tt>'s behaviour.
 
 -# By ending a command with the \& (ampersand) symbol, the user tells \c fish to put the specified command into the background. A background process will be run simultaneous with \c fish. \c fish will retain control of the terminal, so the program will not be able to read from the keyboard. 
 -# By pressing ^Z, the user stops a currently running foreground  program and returns control to \c fish. Some programs do not support this feature, or remap it to another key. Gnu emacs uses ^X z to stop running.
@@ -783,13 +804,25 @@ the user can change <tt>fish</tt>'s behaviour.
 
 \section initialization Initialization files
 
-On startup, \c fish evaluates the file /etc/fish (Or ~/etc/fish if you installed fish in your home directory) and ~/.fish, in that
-order. If you want to run a command only on starting an interactive
-shell, use the output of the 'status --is-interactive' command. If
-you want to run a command only on starting a login shell, use 'status --is-login' instead.
+On startup, \c fish evaluates the file /etc/fish (Or ~/etc/fish if you
+installed fish in your home directory) and ~/.fish, in that order. If
+you want to run a command only on starting an interactive shell, use
+the exit status of the command 'status --is-interactive' to determine
+if the shell is interactive. If you want to run a command only on
+starting a login shell, use 'status --is-login' instead.
 
-If you want to run a set of commands when \c fish exits, use an <a href='#event'>event
-handler</a> that is triggered by the exit of the shell:
+Example:
+
+If you want to add the directory ~/linux/bin to your PATH variable
+when loging in, add the following to your ~/.fish file:
+
+<pre>if status --is-login
+	set PATH $PATH ~/linux/bin
+end</pre>
+
+If you want to run a set of commands when \c fish exits, use an <a
+href='#event'>event handler</a> that is triggered by the exit of the
+shell:
 
 <pre>function on_exit --on-process %self
 	echo fish is now exiting
@@ -812,7 +845,7 @@ marked red.
 Detected errors include:
 
 - Non existing commands.
-- Reading or appending  from non existing files.
+- Reading from or appending to a non existing file.
 - Incorrect use of output redirects
 - Mismatched parenthesis
 
@@ -829,7 +862,7 @@ fish_pager_color_description and \c fish_pager_color_progress. Valid
 values are \c black, \c red, \c green, \c brown, \c yellow, \c blue,
 \c magenta, \c purple, \c cyan, \c white or \c normal. Setting one of
 the above variables to normal will mean that the text color will be
-set to the default color for the terminal.
+set to the default foreground color for the terminal.
 
 \subsection prompt Programmable prompt
 

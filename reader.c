@@ -1093,7 +1093,7 @@ static wchar_t get_quote( wchar_t *cmd, int l )
    \param pos An index in the string which is inside the parameter
    \param quote If not 0, store the type of quote this parameter has, can be either ', " or \\0, meaning the string is not quoted.
    \param offset If not 0, get_param will store a pointer to the beginning of the parameter.
-   \param string If not o, get_parm will store a copy of the parameter string as returned by the tokenizer.
+   \param string If not 0, get_parm will store a copy of the parameter string as returned by the tokenizer.
    \param type If not 0, get_param will store the token type as returned by tok_last.
 */
 static void get_param( wchar_t *cmd,
@@ -1123,6 +1123,7 @@ static void get_param( wchar_t *cmd,
 			*type = tok_last_type( &tok );
 		if( string != 0 )
 			wcscpy( *string, tok_last( &tok ) );
+
 		prev_pos = tok_get_pos( &tok );
 	}
 
@@ -1381,13 +1382,12 @@ static int handle_completions( array_list_t *comp )
 					   0,
 					   0 );
 
-
 			len = &data->buff[data->buff_pos]-prefix_start;
-			
+
 			if( len <= PREFIX_MAX_LEN )
 			{
 				prefix = malloc( sizeof(wchar_t)*(len+1) );
-				wcsncpy( prefix, prefix_start, len );
+				wcslcpy( prefix, prefix_start, len );
 				prefix[len]=L'\0';
 			}
 			else
@@ -1401,6 +1401,8 @@ static int handle_completions( array_list_t *comp )
 				
 				prefix = wcsdupcat( tmp,
 									prefix_start + (len - PREFIX_MAX_LEN+1) );
+				prefix[PREFIX_MAX_LEN] = 0;
+				
 			}
 
 			{
@@ -2347,9 +2349,9 @@ static int read_i()
 		  that we can handle a call to reader_set_buffer
 		  during evaluation.
 		*/
-
+		
 		tmp = wcsdup( reader_readline() );
-
+		
 		data->buff_pos=data->buff_len=0;
 		data->buff[data->buff_len]=L'\0';
 		reader_run_command( tmp );
@@ -2397,7 +2399,6 @@ static int can_read( int fd )
 static int wchar_private( wchar_t c )
 {
 	return ( (c >= 0xe000) && (c <= 0xf8ff ) );
-		
 }
 
 wchar_t *reader_readline()

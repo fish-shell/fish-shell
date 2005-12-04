@@ -4,6 +4,11 @@
 <tt>complete (-c|--command|-p|--path) COMMAND [(-s|--short-option) SHORT_OPTION] [(-l|--long-option|-o|--old-option) LONG_OPTION [(-a||--arguments) OPTION_ARGUMENTS] [(-d|--description) DESCRIPTION] </tt>
 
 \subsection complete-description Description
+
+For an introduction to how to specify completions, see the section <a
+href='index.html#completions-own'>Writing your own completions</a> of
+the fish manual.
+
 - <tt>COMMAND</tt> is the name of the command for which to add a completion
 - <tt>SHORT_OPTION</tt> is a one character option for the command
 - <tt>LONG_OPTION</tt> is a multi character option for the command
@@ -61,7 +66,9 @@ are valid, like the \c nodeps switch.
 
 This can be written as:
 
-<tt>complete -c rpm -n "__fish_contains_opt -s e erase" -l nodeps -d 'Dont check dependencies'</tt>
+<tt>complete -c rpm -n "__fish_contains_opt -s e erase" -l nodeps -d
+"Don't check dependencies"</tt>
 
-where \c __fish_contains_opt is a function that checks the commandline buffer for the presense of a specified set of options. 
+where \c __fish_contains_opt is a function that checks the commandline
+buffer for the presense of a specified set of options.
 

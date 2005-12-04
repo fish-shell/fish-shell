@@ -7,9 +7,11 @@ href="http://roo.no-ip.org/fish/"><tt>fish</tt> homepage</a>.
 
 \section syntax Syntax overview
 
-Shells like \c fish are used by giving them commands. Every \c fish command follows the same simple syntax.
+Shells like \c fish are used by giving them commands. Every \c fish
+command follows the same simple syntax.
 
-A command is executed by writing the name of the command followed by any arguments.
+A command is executed by writing the name of the command followed by
+any arguments.
 
 Example:
 
@@ -264,6 +266,8 @@ in the known_hosts file. (see the ssh documentation for more information)
 - The 'su' command complete using all users on the system
 - The \c apt-get, \c rpm and \c tym commands complete using all installed packages.
 
+\subsection completion-own Writing your own completions
+
 Specifying your own completions is not complicated. To specify a
 completion, one simply uses the \c complete command. \c complete takes
 as a parameter the name of the command to specify a completion
@@ -342,7 +346,8 @@ parameter.
 
 Example:
 
-The command <code>echo (basename image.jpg .jpg).png</code> will output 'image.png'.
+The command <code>echo (basename image.jpg .jpg).png</code> will
+output 'image.png'.
 
 The command <tt>for i in *.jpg; convert $i (basename $i .jpg).png;
 end</tt> will convert all Jpeg files in the current directory to the

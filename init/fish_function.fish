@@ -1005,3 +1005,4 @@ function delete-or-exit --key-binding
 		exit
 	end
 end
+

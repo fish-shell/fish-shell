@@ -16,7 +16,7 @@ the user does not have to worry about an array containing elements
 such as dashes. \c fish performs a special check when invoking the
 count program, and if the user uses a help option, this help page is
 displayed, but if a help option is contained inside of a variable or
-is the result of expantion, it will be passed on to the count program.
+is the result of expansion, it will be passed on to the count program.
 
 \subsection count-example Example
 

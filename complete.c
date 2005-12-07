@@ -1971,7 +1971,7 @@ void complete( const wchar_t *cmd,
 	error_max=0;
 
 	/**
-	   If we are completing a variable name or a tilde expantion user
+	   If we are completing a variable name or a tilde expansion user
 	   name, we do that and return. No need for any other competions.
 	*/
 

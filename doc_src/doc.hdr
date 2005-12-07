@@ -68,7 +68,7 @@ and <a href="#escapes">character escapes</a> get in the way. When that
 happens, the user can write a parameter within quotes, either '
 (single quote) or " (double quote). There is one important difference
 between single quoted and double quoted strings: When using double
-quoted string, <a href='#expand-variable'>variable expantion</a> still
+quoted string, <a href='#expand-variable'>variable expansion</a> still
 takes place.  Other than that, a quoted parameter will not be
 parameter expanded, may contain spaces, and escape sequences are
 ignored. Single quotes have no special meaning withing double quotes
@@ -283,8 +283,8 @@ the \c -a switch. If \c myprog accepts the arguments start and stop,
 this can be specified as <tt>complete -c myprog -a 'start
 stop'</tt>. The argument to the \c -a switch is always a single
 string. At completion time, it will be tokenized on spaces and tabs,
-and variable expantion, command substitution and other forms of
-parameter expantion will take place. 
+and variable expansion, command substitution and other forms of
+parameter expansion will take place. 
 
 Fish has a special syntax to support specifying switches accepted by a
 command. The switches \c -s, \c -l and \c -o are used to specify a
@@ -319,7 +319,7 @@ href='mailto: fish-users@lists.sf.net'>the fish mailinglist</a>.
 \section expand Parameter expansion (Globbing)
 
 When an argument for a program is given on the commandline, it
-undergoes the process of parameter expantion before it is sent on to
+undergoes the process of parameter expansion before it is sent on to
 the command.  There are many ways in which the user can specify a
 parameter to be expanded. These include:
 
@@ -344,7 +344,7 @@ warning will also be printed.
 \subsection expand-command-substitution Command substitution
 
 If a parameter contains a set of parenthesis, the text enclosed by the
-parentesis will be interpreted as a list of commands. Om expantion,
+parentesis will be interpreted as a list of commands. Om expansion,
 this list is executed, and substituted by the output. If the output is
 more than one line long, each line will be expanded to a new
 parameter.
@@ -393,27 +393,27 @@ shells allow you to specify a variable name using '$VARNAME' or
 '${VARNAME}'. Fish only supports the former, but has no support
 whatsoever for the latter or anything remotely like it. So what is
 '{$VARNAME}' then? Well, '{WHATEVER}' is <a href='#brace'>brace
-expantion</a>, the same as supported by Posix shells, i.e.  'a{b,c}d'
+expansion</a>, the same as supported by Posix shells, i.e.  'a{b,c}d'
 -> 'abd acd' works both in bash and on fish. So '{$VARNAME}' is a
-bracket-expantion with only a single element, i.e.  it becomes
+bracket-expansion with only a single element, i.e.  it becomes
 expanded to '$VARNAME', which will be variable expanded to the value
 of the variable 'VARNAME'. So you might think that the brackets don't
 actually do anything, and that is nearly the truth. The snag is that
 there once along the way was a '}' in there somewhere, and } is not a
 valid character in a variable name.  So anything after the otherwise
-pointless bracket expantion becomes NOT a part of the variable name,
+pointless bracket expansion becomes NOT a part of the variable name,
 even if it happens to be a legal variable name character. That's why
 '{$USER}san' works. A case of one syntax just lending itself so nicely
 to solving an unrelated problem in it's spare time.
 
-Variable expantion is the only type of expantion performed on double
+Variable expansion is the only type of expansion performed on double
 quoted strings. There is, however, an important difference in how
 variables are expanded when quoted and when unquoted. An unquoted
-variable expantion will result in a variable number of arguments. For
+variable expansion will result in a variable number of arguments. For
 example, if the variable $foo has zero elements or is undefined, the
 argument $foo will expand to zero elements. If the variable $foo is an
 array of five elements, the argument $foo will expand to five
-elements. When quoted, like "$foo", a variable expantion will always
+elements. When quoted, like "$foo", a variable expansion will always
 result in exactly one argument. Undefined variables will expand to the
 empty string, and array variables will be concatenated using the space
 character.
@@ -429,7 +429,7 @@ directory of the process owner.
 \subsection expand-process Process expansion
 
 The \% (percent) character at the beginning of a parameter followed by
-a string is expanded into a process id. The following expantions are
+a string is expanded into a process id. The following expansions are
 performed:
 
 - If the string is the entire word \c self, the shells pid is the result
@@ -471,7 +471,7 @@ The concept of environment variables are central to any
 shell. Environment variables are variables, whose values can be set
 and used by the user. For information on how to use the current value
 of a variable, see the section on <a href='#expand-variable'>variable
-expantion</a>.
+expansion</a>.
 
 To set a variable value, use the <a href="builtins.html#set"> \c set
 command</a>.
@@ -1159,7 +1159,7 @@ language will often be rather low-level.
 Examples:
 
 - There should only be one type of input to the shell, lists of commands. Loops, conditionals and variable assignments are all performed through regular commands.
-- The differences between builtin commands, shellscript functions and builtin commands should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expantion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
+- The differences between builtin commands, shellscript functions and builtin commands should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
 - Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping
 - All blocks end with the \c end builtin
 

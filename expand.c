@@ -68,7 +68,7 @@ parameter expansion.
 #define COMPLETE_LAST_DESC COMPLETE_SEP_STR L"Last background job"
 
 #define COMPLETE_VAR_DESC L"Variable name is zero characters long."
-#define COMPLETE_VAR2_DESC L" Did you mean {$VARIABLE}? For information on how variable expantion in fish differs from Posix variable expantion, see the manual section on variable expantion by typing 'help expand-variable'."
+#define COMPLETE_VAR2_DESC L" Did you mean {$VARIABLE}? For information on how variable expansion in fish differs from Posix variable expansion, see the manual section on variable expansion by typing 'help expand-variable'."
 
 /**
    String in process expansion denoting ourself
@@ -95,8 +95,8 @@ parameter expansion.
    any tokens which need to be expanded or otherwise altered. Clean
    strings can be passed through expand_string and expand_one without
    changing them. About 90% of all strings are clean, so skipping
-   expantion on them actually does save a small amount of time, since
-   it avoids multiple memory allocations during the expantion process.
+   expansion on them actually does save a small amount of time, since
+   it avoids multiple memory allocations during the expansion process.
 */
 static int is_clean( const wchar_t *in )
 {
@@ -918,14 +918,14 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 				if( c == VARIABLE_EXPAND )
 				{
 					/*
-					  Regular expantion, i.e. expand this argument to nothing
+					  Regular expansion, i.e. expand this argument to nothing
 					*/
 					empty = 1;
 				}
 				else
 				{
 					/*
-					  Expantion to single argument. 
+					  Expansion to single argument. 
 					*/
 					string_buffer_t res;
 					sb_init( &res );
@@ -1404,7 +1404,7 @@ static void remove_internal_separator( const void *s, int conv )
 
 
 /**
-   The real expantion function. expand_one is just a wrapper around this one.
+   The real expansion function. expand_one is just a wrapper around this one.
 */
 int expand_string( wchar_t *str,
 				   array_list_t *end_out, 
@@ -1533,7 +1533,7 @@ int expand_string( wchar_t *str,
 				if( *next == PROCESS_EXPAND )
 				{
 					/*
-					  If process expantion matches, we are not
+					  If process expansion matches, we are not
 					  interested in other completions, so we
 					  short-circut and return
 					*/

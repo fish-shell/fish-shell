@@ -518,7 +518,7 @@ static void test_parser()
 }
 	
 /**
-   Perform parameter expantion and test if the output equals the zero-terminated parameter list supplied.
+   Perform parameter expansion and test if the output equals the zero-terminated parameter list supplied.
 
    \param in the string to expand
    \param flags the flags to send to expand_string
@@ -561,11 +561,11 @@ static int expand_test( const wchar_t *in, int flags, ... )
 }
 
 /**
-   Test globbing and other parameter expantion
+   Test globbing and other parameter expansion
 */
 static void test_expand()
 {
-	say( L"Testing parameter expantion" );
+	say( L"Testing parameter expansion" );
 	
 	if( !expand_test( L"foo", 0, L"foo", 0 ))
 	{
@@ -574,12 +574,12 @@ static void test_expand()
 
 	if( !expand_test( L"a{b,c,d}e", 0, L"abe", L"ace", L"ade", 0 ) )
 	{
-		err( L"Bracket expantion is broken" );
+		err( L"Bracket expansion is broken" );
 	}
 
 	if( !expand_test( L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0 ) )
 	{
-		err( L"Cannot skip wildcard expantion" );
+		err( L"Cannot skip wildcard expansion" );
 	}
 	
 }

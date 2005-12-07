@@ -307,7 +307,7 @@ void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 
 /*
   Test if the file specified by the given filename matches the
-  expantion flags specified. flags can be a combination of
+  expansion flags specified. flags can be a combination of
   EXECUTABLES_ONLY and DIRECTORIES_ONLY.
 */
 static int test_flags( wchar_t *filename,

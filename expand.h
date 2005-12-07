@@ -1,7 +1,7 @@
 /**\file expand.h
 
-   Prototypes for string expantion functions. These functions perform
-   several kinds of parameter expantion. There are a lot of issues
+   Prototypes for string expansion functions. These functions perform
+   several kinds of parameter expansion. There are a lot of issues
    with regards to memory allocation. Overall, these functions would
    benefit from using a more clever memory allocation scheme, perhaps
    an evil combination of talloc, string buffers and reference
@@ -20,17 +20,17 @@
 #include "util.h"
 
 /**
-   Flag specifying that subshell expantion should be skipped
+   Flag specifying that subshell expansion should be skipped
 */
 #define EXPAND_SKIP_SUBSHELL 1
 
 /**
-   Flag specifying that variable expantion should be skipped
+   Flag specifying that variable expansion should be skipped
 */
 #define EXPAND_SKIP_VARIABLES 2
 
 /**
-   Flag specifying that wildcard expantion should be skipped
+   Flag specifying that wildcard expansion should be skipped
 */
 #define EXPAND_SKIP_WILDCARDS 4
 
@@ -64,19 +64,19 @@ enum
 	/** Character represeting a home directory */
 	HOME_DIRECTORY = EXPAND_RESERVED,
 
-	/** Character represeting process expantion */
+	/** Character represeting process expansion */
 	PROCESS_EXPAND,
 	
-	/** Character representing variable expantion */
+	/** Character representing variable expansion */
 	VARIABLE_EXPAND,
 
-	/** Character rpresenting variable expantion into a single element*/
+	/** Character rpresenting variable expansion into a single element*/
 	VARIABLE_EXPAND_SINGLE,
 
-	/** Character representing the start of a bracket expantion */
+	/** Character representing the start of a bracket expansion */
 	BRACKET_BEGIN,
 
-	/** Character representing the end of a bracket expantion */
+	/** Character representing the end of a bracket expansion */
 	BRACKET_END,
 
 	/** Character representing separation between two bracket elements */
@@ -118,7 +118,7 @@ enum
    Perform various forms of expansion on in, such as tilde expansion
    (~USER becomes the users home directory), variable expansion
    ($VAR_NAME becomes the value of the environment variable VAR_NAME),
-   subshell expantion and wildcard expansion. The results are inserted
+   subshell expansion and wildcard expansion. The results are inserted
    into the list out.
    
    If the parameter does not need expansion, it is copied into the list
@@ -126,7 +126,7 @@ enum
    newly allocated strings are inserted into the list out.
    
    \param in The parameter to expand
-   \param flag Specifies if any expantion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+   \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \param out The list to which the result will be appended.
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH
 */
@@ -138,7 +138,7 @@ int expand_string( wchar_t *in, array_list_t *out, int flag );
    names.
 
    \param in The parameter to expand
-   \param flag Specifies if any expantion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+   \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return The expanded parameter, or 0 on failiure
 */
 wchar_t *expand_one( wchar_t *in, int flag );
@@ -175,9 +175,9 @@ wchar_t *expand_escape_variable( const wchar_t *in );
 
 
 /**
-   Perform tilde expantion and nothing else on the specified string.
+   Perform tilde expansion and nothing else on the specified string.
 
-   If tilde expantion is needed, the original string is freed and a
+   If tilde expansion is needed, the original string is freed and a
    new string, allocated using malloc, is returned.
 */
 wchar_t *expand_tilde(wchar_t *in);

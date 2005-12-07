@@ -1,8 +1,7 @@
-
 /** \file wildcard.h 
 
     My own globbing implementation. Needed to implement this instead
-    of using libs globbing to support tab-expantion of globbed
+    of using libs globbing to support tab-expansion of globbed
     paramaters.
 
 */

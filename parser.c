@@ -1883,9 +1883,11 @@ static void eval_job( tokenizer *tok )
 			else
 			{
 				/*
-				  This job could not be properly parsed. We free it instead.
+				  This job could not be properly parsed. We free it instead, and set the status to 1.
 				*/
 				job_free( j );
+
+				proc_set_last_status( 1 );
 			}
 			current_block->job = 0;
 			break;

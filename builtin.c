@@ -1321,6 +1321,31 @@ static int builtin_read( wchar_t **argv )
 		builtin_print_help( argv[0], sb_err );				
 		return 1;				
 	}
+
+	/* 
+	   Verify all variable names
+	*/
+	for( i=woptind; i<argc; i++ )
+	{
+		wchar_t *src;
+		
+		if( !wcslen( argv[i] ) )
+		{
+			sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
+			return 1;
+		}
+		
+		for( src=argv[i]; *src; src++ )
+		{
+			if( (!iswalnum(*src)) && (*src != L'_' ) )
+			{
+				sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *src );
+				sb_append2(sb_err, parser_current_line(), L"\n", (void *)0 );
+				return 1;
+			}
+		}
+		
+	}
 	
 	/*
 	  The call to reader_readline may change woptind, so we save it away here

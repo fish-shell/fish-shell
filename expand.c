@@ -737,15 +737,14 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 				{
 										
 					error( SYNTAX_ERROR,
-						   COMPLETE_VAR_DESC
-						   COMPLETE_VAR2_DESC ,
-						   -1 );
+						   -1, COMPLETE_VAR_DESC
+						   COMPLETE_VAR2_DESC );
 				}
 				else
 				{
 					error( SYNTAX_ERROR,
-						   COMPLETE_VAR_DESC,
-						   -1 );
+						   -1,
+						   COMPLETE_VAR_DESC);
 				}
 				
 				is_ok = 0;
@@ -795,8 +794,9 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 						if( ( errno ) || ( end == &in[stop_pos] ) )
 						{
 							error( SYNTAX_ERROR, 
-								   L"Expected integer or \']\'", 
-								   -1 );
+								   -1, 
+								   L"Expected integer or \']\'" );
+															   
 							is_ok = 0;
 							break;
 						}
@@ -816,7 +816,9 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 							int tmp = (int)al_get( &idx, j );
 							if( tmp < 1 || tmp > al_get_count( &l ) )
 							{
-								error( SYNTAX_ERROR, L"Array index out of bounds", -1 );
+								error( SYNTAX_ERROR, 
+									   -1,
+									   L"Array index out of bounds" );
 								is_ok=0;
 								al_truncate( &idx, j );
 								break;
@@ -877,8 +879,7 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 							
 							if( !(new_in = malloc( sizeof(wchar_t)*new_len )))
 							{
-								error( OOM, L"Out of memory", -1 );				
-								is_ok = 0;
+								die_mem();
 							}
 							else
 							{
@@ -1047,7 +1048,9 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	
 	if( syntax_error )
 	{
-		error( SYNTAX_ERROR, L"Mismatched brackets", -1 );
+		error( SYNTAX_ERROR, 
+			   -1,
+			   L"Mismatched brackets" );
 		return 0;
 	}
 	
@@ -1193,7 +1196,9 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 								   0 ) )
 	{
 		case -1:
-			error( SYNTAX_ERROR, L"Mismatched parans", -1 );
+			error( SYNTAX_ERROR, 
+				   -1,
+				   L"Mismatched parans" );
 			return 0;
 		case 0:
 			al_push( out, in );
@@ -1272,7 +1277,7 @@ wchar_t *expand_unescape( const wchar_t * in, int escape_special )
 {
 	wchar_t *res = unescape( in, escape_special );
 	if( !res )
-		error( SYNTAX_ERROR, L"Unexpected end of string", -1 );
+		error( SYNTAX_ERROR, -1, L"Unexpected end of string" );
 	return res;
 }
 
@@ -1441,7 +1446,7 @@ int expand_string( wchar_t *str,
 			
 			if( (pos == str) || ( *(pos-1) != L'\\' ) )
 			{
-				error( SUBSHELL_ERROR, L"Subshells not allowed", -1 );
+				error( SUBSHELL_ERROR, -1, L"Subshells not allowed" );
 				free( str );
 				al_destroy( &list1 );
 				al_destroy( &list2 );

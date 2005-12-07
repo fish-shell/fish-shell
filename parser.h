@@ -200,10 +200,11 @@ int eval_args( const wchar_t *line,
    Sets the current error
 
    \param ec The new error code
-   \param str The new error message
    \param p The character offset at which the error occured
+   \param str The printf-style error message filter
 */
-void error( int ec, const wchar_t *str, int p );
+void error( int ec, int p, const wchar_t *str, ... );
+
 
 /**
    Tests if the specified commands parameters should be interpreted as another command, which will be true if the command is either 'command', 'exec', 'if', 'while' or 'builtin'.  

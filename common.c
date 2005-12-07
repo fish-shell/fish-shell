@@ -1208,14 +1208,14 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 						case L'\'':
 						{
 							mode = 1;
-							out_pos--;							
+							in[out_pos] = INTERNAL_SEPARATOR;							
 							break;					
 						}
 				
 						case L'\"':
 						{
 							mode = 2;
-							out_pos--;							
+							in[out_pos] = INTERNAL_SEPARATOR;							
 							break;
 						}
 
@@ -1236,7 +1236,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 			{
 				if( c == L'\'' )
 				{
-					out_pos--;							
+					in[out_pos] = INTERNAL_SEPARATOR;							
 					mode = 0;
 				}
 				else
@@ -1257,7 +1257,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 					case '"':
 					{
 						mode = 0;
-						out_pos--;							
+						in[out_pos] = INTERNAL_SEPARATOR;							
 						break;
 					}
 				

@@ -81,6 +81,11 @@ enum
 
 	/** Character representing separation between two bracket elements */
 	BRACKET_SEP,
+	/**
+	   Separate subtokens in a token with this character. 
+	*/
+	INTERNAL_SEPARATOR,
+
 }
 	;
 
@@ -106,11 +111,6 @@ enum
 
 /** String containing the character for separating two array elements */
 #define ARRAY_SEP_STR L"\x1e"
-
-/**
-   Separate subtokens in a token with this character. 
-*/
-#define INTERNAL_SEPARATOR 0xfffffff0
 
 
 

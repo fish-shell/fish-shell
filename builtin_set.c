@@ -435,6 +435,13 @@ int builtin_set( wchar_t **argv )
 	{
 		dest = wcsdup(argv[woptind++]);
 		//fwprintf(stderr, L"Dest: %ls\n", dest);
+
+		if( !wcslen( dest ) )
+		{
+			free( dest );
+			sb_printf( sb_err, L"%ls: Variable name must not be zero\n", argv[0] );
+			return 1;
+		}		
 	}
 
 	/* Parse values */

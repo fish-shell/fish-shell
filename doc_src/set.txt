@@ -18,16 +18,12 @@ The <tt>set</tt> builtin causes fish to assign the variable <tt>VARIABLE_NAME</t
 If set is called with no arguments, the names and values of all
 environment variables are printed.
 
-If set is called with only one argument, the scope of the variable
-with the given name will be changed as specified, but it's value will
-remain the same. If the variable did not previously exist, it's value
-will be an empty string.
-
 If the \c -e or \c --erase option is specified, the variable
 specified by the following arguments will be erased
 
 If a variable is set to more than one value, the variable will be an
-array with the specified elements.
+array with the specified elements. If a variable is set to zero
+elements, it will become an array with zero elements.
 
 If the variable name is one or more array elements, such as <tt>PATH[1
 3 7]</tt>, only those array elements specified will be changed.

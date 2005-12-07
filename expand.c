@@ -67,6 +67,9 @@ parameter expansion.
 */
 #define COMPLETE_LAST_DESC COMPLETE_SEP_STR L"Last background job"
 
+#define COMPLETE_VAR_DESC L"Variable name is zero characters long."
+#define COMPLETE_VAR2_DESC L" Did you mean {$VARIABLE}? For information on how variable expantion in fish differs from Posix variable expantion, see the manual section on variable expantion by typing 'help expand-variable'."
+
 /**
    String in process expansion denoting ourself
 */
@@ -727,6 +730,28 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 /*			printf( "Stop for '%c'\n", in[stop_pos]);*/
 			
 			var_len = stop_pos - start_pos;
+
+			if( var_len == 0 )
+			{
+				if( in[stop_pos] == BRACKET_BEGIN )
+				{
+										
+					error( SYNTAX_ERROR,
+						   COMPLETE_VAR_DESC
+						   COMPLETE_VAR2_DESC ,
+						   -1 );
+				}
+				else
+				{
+					error( SYNTAX_ERROR,
+						   COMPLETE_VAR_DESC,
+						   -1 );
+				}
+				
+				is_ok = 0;
+				break;
+			}
+			
 			
 			if( !(var_name = malloc( sizeof(wchar_t)*(var_len+1) )))
 			{

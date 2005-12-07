@@ -323,7 +323,7 @@ undergoes the process of parameter expantion before it is sent on to
 the command.  There are many ways in which the user can specify a
 parameter to be expanded. These include:
 
-\subsection expand-wildcards Wildcards 
+\subsection expand-wildcard Wildcards 
 
 If a star (*) or a question mark (?) is present in the parameter, \c
 fish attempts to mach the given parameter to any files in such a
@@ -381,10 +381,30 @@ href="#variables"> Environment variables</a> section.
 Example:
 
 <tt> echo \$HOME</tt> prints the home directory of the current
-user. If you wish to combine environment variables with text, you can
+user. 
+
+If you wish to combine environment variables with text, you can
 encase the variables within braces to embed a variable inside running
 text like <tt>echo Konnichiwa {$USER}san</tt>, which will print a
 personalized Japanese greeting.
+
+The {$USER}san syntax might need a bit of an elaboration.  Posix
+shells allow you to specify a variable name using '$VARNAME' or
+'${VARNAME}'. Fish only supports the former, but has no support
+whatsoever for the latter or anything remotely like it. So what is
+'{$VARNAME}' then? Well, '{WHATEVER}' is <a href='#brace'>brace
+expantion</a>, the same as supported by Posix shells, i.e.  'a{b,c}d'
+-> 'abd acd' works both in bash and on fish. So '{$VARNAME}' is a
+bracket-expantion with only a single element, i.e.  it becomes
+expanded to '$VARNAME', which will be variable expanded to the value
+of the variable 'VARNAME'. So you might think that the brackets don't
+actually do anything, and that is nearly the truth. The snag is that
+there once along the way was a '}' in there somewhere, and } is not a
+valid character in a variable name.  So anything after the otherwise
+pointless bracket expantion becomes NOT a part of the variable name,
+even if it happens to be a legal variable name character. That's why
+'{$USER}san' works. A case of one syntax just lending itself so nicely
+to solving an unrelated problem in it's spare time.
 
 Variable expantion is the only type of expantion performed on double
 quoted strings. There is, however, an important difference in how
@@ -397,6 +417,7 @@ elements. When quoted, like "$foo", a variable expantion will always
 result in exactly one argument. Undefined variables will expand to the
 empty string, and array variables will be concatenated using the space
 character.
+
 
 \subsection expand-home Home directory expansion
 
@@ -504,12 +525,12 @@ Example:
 
 The following code will not output anything:
 <pre>
-if true
+begin
 	# This is a nice local scope where all variables will die
 	set -l pirate 'There be treasure in them thar hills'
 end
 
-# This will not output anything, since the pirate is dead
+# This will not output anything, since the pirate was local
 echo $pirate
 </pre>
 

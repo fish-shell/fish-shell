@@ -158,8 +158,9 @@ function help -d "Show help for the fish shell"
 	end
 	
 	set idx_subj syntax completion editor job-control todo bugs history
-	set idx_subj $idx_subj killring help color prompt title expand variables
-	set idx_subj $idx_subj builtin-overview changes
+	set idx_subj $idx_subj killring help color prompt title variables
+	set idx_subj $idx_subj builtin-overview changes 
+	set idx_subj $idx_subj expand expand-variable expand-home expand-brace expand-wildcard expand-command-substitution expand-process 
 
 	if contains -- $fish_help_item $idx_subj
 		set fish_help_page "index.html\#"$fish_help_item

@@ -283,7 +283,9 @@ install: all
 	$(INSTALL) -m 644 init/fish_inputrc $(DESTDIR)$(sysconfdir)$(fishinputfile);
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	for i in user_doc/html/* ChangeLog; do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
+		if test -f $$i; then \
+			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
+		fi; \
 	done;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1
 	for i in $(MANUALS); do \

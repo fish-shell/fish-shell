@@ -737,14 +737,16 @@ Here are some of the commands available in the editor:
 - End or Ctrl-e moves to the end of line
 - Left and right moves one character left or right
 - Alt-left and Alt-right moves one word left or right, or moves forward/backward in the directory history if the commandline is empty
+- Up and down search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history </a>section for more information on history searching.
+- Alt-up and Alt-down search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history </a>section for more information on history searching.
 - Delete and backspace removes one character forwards or backwards
 - Ctrl-c delete entire line
 - Ctrl-d delete one character to the right of the cursor, unless the buffer is empty, in which case the shell will exit
-- Ctrl-k move contents from cursor to end of line to <a href="#killring">killring</a>
-- Ctrl-u move contents from beginning of line to cursor <a href="#killring">killring</a>
+- Ctrl-k move contents from the cursor to the end of line to the <a href="#killring">killring</a>
+- Ctrl-u move contents from the beginning of line to the cursor to the <a href="#killring">killring</a>
 - Ctrl-l clear and repaint screen
-- Ctrl-w move previous word to <a href="#killring">killring</a>
-- Alt-d move next word to <a href="#killring">killring</a>
+- Ctrl-w move previous word to the <a href="#killring">killring</a>
+- Alt-d move next word to the <a href="#killring">killring</a>
 - Alt-w prints a short description of the command under the cursor 
 - Alt-l lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed 
 - Alt-k prints a list of all key bindings
@@ -806,6 +808,14 @@ removed. By pressing the up and down keys, the user can search
 forwards and backwards in the history. If the current command line is
 not empty when starting a history search, only the commands containing
 the string entered into the command line are shown.
+
+By pressing Alt-up and Alt-down, a history search is also performed,
+but instead of searching for a complete commandline, each commandline
+is tokenized into separate elements just like it would be before
+execution, and each such token is matched agains the token under the
+cursor when the search began.
+
+History searches can be aborted by pressing the escape key.
 
 The history is stored in the file '.fish_history'. It is automatically
 read on startup and merged on program exit.
@@ -1020,7 +1030,7 @@ If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se
 </a>.
 
-\subsection Known issues
+\subsection issues Known issues
 
 Older versions of Doxygen has bugs in the man-page generation which
 cause the builtin help to render incorrectly. Version 1.2.14 is known

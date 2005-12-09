@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(fish,1.18.0,fish-users@lists.sf.net)
+AC_INIT(fish,1.18.1,fish-users@lists.sf.net)
 
 AC_CANONICAL_TARGET
 

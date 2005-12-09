@@ -2586,10 +2586,13 @@ wchar_t *reader_readline()
 
 			case R_BACKWARD_KILL_LINE:
 			{
-				wchar_t prev = data->buff[data->buff_pos];
-				data->buff[data->buff_pos]=0;
-				kill_add( data->buff );
-				data->buff[data->buff_pos]=prev;
+				wchar_t *str = wcsndup( data->buff, data->buff_pos );
+				if( !str )
+					die_mem();
+				
+				kill_add( str );
+				free( str );
+				
 				data->buff_len = wcslen(data->buff +data->buff_pos);
 				memmove( data->buff, data->buff +data->buff_pos, sizeof(wchar_t)*data->buff_len );
 				data->buff[data->buff_len]=L'\0';

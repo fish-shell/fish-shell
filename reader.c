@@ -1382,8 +1382,8 @@ static int handle_completions( array_list_t *comp )
 					   0,
 					   0 );
 
-			len = &data->buff[data->buff_pos]-prefix_start;
-
+			len = &data->buff[data->buff_pos]-prefix_start+1;
+			
 			if( len <= PREFIX_MAX_LEN )
 			{
 				prefix = malloc( sizeof(wchar_t)*(len+1) );
@@ -1400,7 +1400,7 @@ static int handle_completions( array_list_t *comp )
 				;
 				
 				prefix = wcsdupcat( tmp,
-									prefix_start + (len - PREFIX_MAX_LEN+1) );
+									prefix_start + (len - PREFIX_MAX_LEN) );
 				prefix[PREFIX_MAX_LEN] = 0;
 				
 			}

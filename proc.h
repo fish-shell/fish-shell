@@ -134,6 +134,9 @@ typedef struct job
 	/** Should the exit status be negated? This flag can only be set by the not builtin. */
 	int negate;	
 
+	/** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
+	int wildcard_error;
+	
 	/** Pointer to the next job */
 	struct job *next;           
 } 

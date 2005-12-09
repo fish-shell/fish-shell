@@ -202,11 +202,14 @@ void parser_push_block( int type )
 
 	/*
 	  New blocks should be skipped if the outer block is skipped,
-	  except TOP ans SUBST block, which open up new environments
+	  except TOP ans SUBST block, which open up new environments. Fake
+	  blocks should always be skipped. Rather complicated... :-(
 	*/
 	new->skip=current_block?current_block->skip:0;
 	if( type == TOP || type == SUBST )
 		new->skip = 0;
+	if( type == FAKE )
+		new->skip = 1;
 	
 	new->job = 0; 
 	
@@ -658,7 +661,7 @@ wchar_t *get_filename( const wchar_t *cmd )
 							break;
 						default:
 							debug( 1,
-								   L"Error while searching for command %d",
+								   L"Error while searching for command %ls",
 								   new_cmd );
 							wperror( L"access" );
 					}
@@ -763,13 +766,6 @@ static void print_errors()
 	{
 		int tmp;
 
-		/*
-		  Wildcard warnings are only printed in interactive mode
-		*/
-		if( ( error_code == WILDCARD_ERROR ) && !is_interactive )
-			return;
-		
-		
 		debug( 0, L"%ls", err_str );
 
 		tmp = current_tokenizer_pos;
@@ -1268,11 +1264,21 @@ static void parse_job_main_loop( process_t *p,
 	{
 		if( unmatched_wildcard && !matched_wildcard )
 		{
-			error( WILDCARD_ERROR,
-				   unmatched_pos,
-				   WILDCARD_ERR_MSG,
-				   unmatched );
-								   
+			j->wildcard_error = 1;
+			proc_set_last_status( 1 );
+			if( is_interactive && !is_block )
+			{
+				int tmp;
+				
+				debug( 1, WILDCARD_ERR_MSG, unmatched );
+				tmp = current_tokenizer_pos;
+				current_tokenizer_pos = unmatched_pos;
+
+				fwprintf( stderr, L"%ls", parser_current_line() );
+				
+				current_tokenizer_pos=tmp;
+			}
+			
 		}
 	}
 	free( unmatched );
@@ -1700,7 +1706,6 @@ static int parse_job( process_t *p,
 		*/
 		while( prev_block != current_block )
 			parser_pop_block();
-
 	}
 	al_destroy( &args );
 	
@@ -1719,9 +1724,10 @@ static int parse_job( process_t *p,
 static void skipped_exec( job_t * j )
 {
 	process_t *p;
+
 	for( p = j->first_process; p; p=p->next )
 	{
-		if( p->type )
+		if( p->type == INTERNAL_BUILTIN )
 		{
 			if(( wcscmp( p->argv[0], L"for" )==0) ||
 			   ( wcscmp( p->argv[0], L"switch" )==0) ||
@@ -1850,6 +1856,7 @@ static void eval_job( tokenizer *tok )
 				}
 				
 				skip |= current_block->skip;
+				skip |= j->wildcard_error;
 				
 				if(!skip )
 				{

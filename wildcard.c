@@ -671,7 +671,7 @@ void al_push_check( array_list_t *l, const wchar_t *new )
 	{
 		if( !wcscmp( al_get(l, i), new ) ) 
 		{
-			free( new );
+			free( (void *)new );
 			return;
 		}
 	}

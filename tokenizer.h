@@ -69,6 +69,8 @@ typedef struct
 	int accept_unfinished;
 	/** Whether commants should be returned*/
 	int show_comments;
+	/** Flag set to true of the orig_buff points to an internal string that needs to be free()d when deallocating the tokenizer. */
+	int free_orig;
 	/** Type of last quote, can be either ' or ".*/
 	wchar_t last_quote;
 }

@@ -138,7 +138,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 	}
 
 	tok->has_next = (*b != L'\0');
-	tok->orig_buff = tok->buff = /*wcsdup*/(b);
+	tok->orig_buff = tok->buff = (wchar_t *)(b);
 
 	if( !tok->orig_buff )
 	{
@@ -152,7 +152,11 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 		if( l != 0 )
 		{
 			if( tok->orig_buff[l-1] == L'\\' )
+			{
+				tok->free_orig = 1;
+				tok->orig_buff = wcsdup( tok->orig_buff );
 				tok->orig_buff[l-1] = L'\0';
+			}
 		}
 	}
 
@@ -163,7 +167,8 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 void tok_destroy( tokenizer *tok )
 {
 	free( tok->last );
-//	free( tok->orig_buff );
+	if( tok->free_orig )
+		free( tok->orig_buff );
 }
 
 int tok_last_type( tokenizer *tok )

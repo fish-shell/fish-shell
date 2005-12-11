@@ -42,12 +42,12 @@ void io_buffer_read( io_data_t *d )
 	
 	if( d->io_mode == IO_BUFFER )
 	{		
-		if( fcntl( d->param1.pipe_fd[0], F_SETFL, 0 ) )
+/*		if( fcntl( d->param1.pipe_fd[0], F_SETFL, 0 ) )
 		{
 			wperror( L"fcntl" );
 			return;
-		}	
-		debug( 4, L"exec_read_io_buffer: blocking read on fd %d", d->param1.pipe_fd[0] );
+			}	*/
+		debug( 4, L"io_buffer_read: blocking read on fd %d", d->param1.pipe_fd[0] );
 		while(1)
 		{
 			char b[4096];
@@ -71,7 +71,7 @@ void io_buffer_read( io_data_t *d )
 					debug( 1, 
 						   L"An error occured while reading output from code block on fd %d", 
 						   d->param1.pipe_fd[0] );
-					wperror( L"exec_read_io_buffer" );				
+					wperror( L"io_buffer_read" );				
 				}
 				
 				break;				

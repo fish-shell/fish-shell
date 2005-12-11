@@ -11,13 +11,13 @@
 
 	2). Add a line like hash_put( &builtin, L"NAME", &builtin_NAME ); to builtin_init. This will enable the parser to find the builtin function.
 
-	3). Add a line like hash_put( desc, L"NAME", L"Frobble the bloogle" ); to the proper part of builtin_get_desc, containing a short description of what the builtin does. This description is used by the completion system.
+	3). Add a line like hash_put( desc, L"NAME", L"Bla bla bla" ); to the proper part of builtin_get_desc, containing a short description of what the builtin does. This description is used by the completion system.
 
-	4). Create a file names doc_src/NAME.txt, contining the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
+	4). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
 	
-	5). Add an entry to the BUILTIN_DOC_SRC variable of Makefile.in. Note that the entries should be sorted alpabetically!
+	5). Add an entry to the BUILTIN_DOC_SRC variable of Makefile.in. Note that the entries should be sorted alphabetically!
 
-	6). Add an entry to the manual at the builtin-overview subsection
+	6). Add an entry to the manual at the builtin-overview subsection. Note that the entries should be sorted alphabetically!
 
 */
 
@@ -248,8 +248,6 @@ static int builtin_bind( wchar_t **argv )
 
 	for( i=woptind; i<argc; i++ )
 	{
-//		fwprintf( stderr, L"Parse binding '%ls'\n", argv[i] );
-		
 		input_parse_inputrc_line( argv[i] );		
 	}
 
@@ -1606,7 +1604,6 @@ static int builtin_read( wchar_t **argv )
 	wchar_t *state;
 	
 	nxt = wcstok( buff, (i<argc-1)?ifs:L"", &state );
-//	fwprintf( stderr, L"first token %ls, %d args, start at %d\n", nxt, argc, i );
 	
 	while( i<argc )
 	{
@@ -1895,8 +1892,6 @@ static int builtin_cd( wchar_t **argv )
 		res=1;
 		sb_append( sb_err, L"Could not set PWD variable\n" );		
 	}
-	
-//	fwprintf( stderr, L"cd '%ls' -> '%ls', set PWD to '%ls'\n", argv[1]?argv[1]:L"-", dir, env_get( L"PWD" ) );
 	
 	free( dir );
 	
@@ -2438,7 +2433,6 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 			sb_printf( sb_out, L"%d%%\t", cpu_use(j) );
 #endif
 			sb_append2( sb_out, job_is_stopped(j)?L"stopped\t":L"running\t", 
-//							job_is_completed(j)?L"completed\t":L"unfinished\t", 
 						j->command, L"\n", (void *)0 );
 		}
 
@@ -2865,7 +2859,6 @@ static int builtin_end( wchar_t **argv )
 		{
 			parser_pop_block();
 		}
-//		fwprintf( stderr, L"End with status %d\n", proc_get_last_status() );
 		
 
 		/*

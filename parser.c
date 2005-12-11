@@ -598,6 +598,8 @@ wchar_t *get_filename( const wchar_t *cmd )
 {
 	wchar_t *path;
 
+	debug( 2, L"get_filename( '%ls' )", cmd );
+
 	if(wcschr( cmd, '/' ) != 0 )
 	{
 		if( waccess( cmd, X_OK )==0 )
@@ -1316,7 +1318,7 @@ static int parse_job( process_t *p,
 
 	block_t *prev_block = current_block;   
 		
-//	debug( 2, L"begin parse_job()\n" );
+	debug( 2, L"begin parse_job()\n" );
 	al_init( &args );
 
 	current_tokenizer_pos = tok_get_pos( tok );
@@ -1330,6 +1332,8 @@ static int parse_job( process_t *p,
 			{
 				nxt = expand_one( wcsdup(tok_last( tok )),
 								  EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
+				debug( 2, L"command '%ls' -> '%ls'", tok_last( tok ), nxt?nxt:L"0" );
+
 				if( nxt == 0 )
 				{
 					error( SYNTAX_ERROR,
@@ -1567,6 +1571,9 @@ static int parse_job( process_t *p,
 			{
 				
 				p->actual_cmd = get_filename( (wchar_t *)al_get( &args, 0 ) );
+
+				debug( 2, L"filename '%ls' -> '%ls'", (wchar_t *)al_get( &args, 0 ), p->actual_cmd?p->actual_cmd:L"0" );
+				
 				/*
 				  Check if the specified command exists
 				*/
@@ -1971,8 +1978,6 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	block_t *start_current_block = current_block;
 	io_data_t *prev_io = block_io;
 	block_io = io;
-	
-	debug( 2, L"Eval command %ls", cmd );
 	
 	job_reap( 0 );
 	

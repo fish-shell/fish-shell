@@ -1756,8 +1756,12 @@ void reader_current_token_extent( wchar_t **tok_begin,
 
 			break;
 		}
-		pa = begin + tok_get_pos( &tok );
-		pb = pa + wcslen(tok_last(&tok));
+		
+		if( tok_last_type( &tok ) == TOK_STRING )
+		{
+			pa = begin + tok_get_pos( &tok );
+			pb = pa + wcslen(tok_last(&tok));
+		}
 	}
 
 //	fwprintf( stderr, L"Res: %d %d\n", *a-data->buff, *b-data->buff );
@@ -1876,7 +1880,7 @@ static void handle_token_history( int forward, int reset )
 	int current_pos;
 	tokenizer tok;
 
-	if(reset )
+	if( reset )
 	{
 		/*
 		  Start a new token search using the current token

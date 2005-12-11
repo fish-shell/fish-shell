@@ -653,7 +653,7 @@ function type -d "Print the type of a command"
 
 		if test $selection != files
 
-			if contains -- $i (functions -n)
+			if contains -- $i (functions -na)
 				set status 0
 				set found 1
 				switch $mode

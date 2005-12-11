@@ -462,8 +462,6 @@ static void event_fire_delayed()
 		free( blocked );
 		blocked = new_blocked;
 	}
-	
-
 
 	while( sig_list[active_list].count > 0 )
 	{
@@ -518,7 +516,6 @@ static void event_fire_delayed()
 
 void event_fire( event_t *event )
 {
-	//int is_event_old = is_event;
 	is_event++;
 	
 	if( event && (event->type == EVENT_SIGNAL) )
@@ -556,7 +553,7 @@ void event_fire( event_t *event )
 		}
 		
 	}	
-	is_event--;// = is_event_old;	
+	is_event--;
 }
 
 

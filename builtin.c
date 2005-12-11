@@ -73,6 +73,18 @@
 /**
    Table of all builtins
 */
+
+
+	enum
+	{
+		JOBS_DEFAULT,
+		JOBS_PRINT_PID,
+		JOBS_PRINT_COMMAND,
+		JOBS_PRINT_GROUP,
+	}
+	;
+
+
 static hash_table_t builtin;
 
 int builtin_out_redirect;
@@ -2400,25 +2412,103 @@ static int cpu_use( job_t *j )
 }
 #endif
 
+static void builtin_jobs_print( job_t *j, int mode, int header )
+{
+	process_t *p;
+	switch( mode )
+	{
+		case JOBS_DEFAULT:
+		{
+
+			if( header )
+			{
+				/*
+				  Print table header before first job
+				*/
+				sb_append( sb_out, L"Job\tGroup\t");
+#ifdef HAVE__PROC_SELF_STAT
+				sb_append( sb_out, L"CPU\t" );
+#endif
+				sb_append( sb_out, L"State\tCommand\n" );
+			}
+			
+			sb_printf( sb_out, L"%d\t%d\t", j->job_id, j->pgid );
+			
+#ifdef HAVE__PROC_SELF_STAT
+			sb_printf( sb_out, L"%d%%\t", cpu_use(j) );
+#endif
+			sb_append2( sb_out, job_is_stopped(j)?L"stopped\t":L"running\t", 
+//							job_is_completed(j)?L"completed\t":L"unfinished\t", 
+						j->command, L"\n", (void *)0 );
+		}
+
+		case JOBS_PRINT_GROUP:
+		{
+			if( header )
+			{
+				/*
+				  Print table header before first job
+				*/
+				sb_append( sb_out, L"Group\n");
+			}
+			sb_printf( sb_out, L"%d\n", j->pgid );
+			break;
+		}
+		
+		case JOBS_PRINT_PID:
+		{			
+			if( header )
+			{
+				/*
+				  Print table header before first job
+				*/
+				sb_append( sb_out, L"Procces\n");
+			}
+
+			for( p=j->first_process; p; p=p->next )
+			{
+				sb_printf( sb_out, L"%d\n", p->pid );
+			}		
+			break;
+		}
+		
+		case JOBS_PRINT_COMMAND:
+		{			
+			if( header )
+			{
+				/*
+				  Print table header before first job
+				*/
+				sb_append( sb_out, L"Command\n");
+			}
+
+			for( p=j->first_process; p; p=p->next )
+			{
+				sb_printf( sb_out, L"%ls\n", p->argv[0] );
+			}		
+			break;
+		}
+		
+	}
+		
+}
+
+
+
 /**
    Builtin for printing running jobs
 */
 static int builtin_jobs( wchar_t **argv )
 {	
-
-	enum
-	{
-		DEFAULT,
-		PRINT_PID,
-		PRINT_COMMAND
-	}
-	;
 	
 	
 	int argc=0;
-	job_t *j;
 	int found=0;	
-	int mode=DEFAULT;
+	int mode=JOBS_DEFAULT;
+
+	job_t *print_me=0;
+	
+	
 	argc = builtin_count_args( argv );	
 	
 	woptind=0;
@@ -2436,6 +2526,14 @@ static int builtin_jobs( wchar_t **argv )
 					L"command", no_argument, 0, 'c'
 				}
 				,
+				{
+					L"group", no_argument, 0, 'g'
+				}
+				,
+				{
+					L"last", no_argument, 0, 'l'
+				}
+				,
 				{ 
 					0, 0, 0, 0 
 				}
@@ -2446,7 +2544,7 @@ static int builtin_jobs( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"pc", 
+								L"pclg", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -2472,12 +2570,32 @@ static int builtin_jobs( wchar_t **argv )
 				
 				
 			case 'p':					
-				mode=PRINT_PID;
+				mode=JOBS_PRINT_PID;
 				break;
 					
 			case 'c':					
-				mode=PRINT_COMMAND;
+				mode=JOBS_PRINT_COMMAND;
 				break;
+
+			case 'g':					
+				mode=JOBS_PRINT_GROUP;
+				break;
+
+			case 'l':
+			{
+				job_t *j;
+				for( j=first_job; j; j=j->next )
+				{
+					if( j->constructed )					
+					{
+						print_me = j;
+						break;
+					}					
+				}
+				break;
+				
+			}
+			
 
 			case '?':
 				//	builtin_print_help( argv[0], sb_err );
@@ -2487,58 +2605,16 @@ static int builtin_jobs( wchar_t **argv )
 		}
 	}	
 	
-	if( mode==DEFAULT )
+	if( woptind < argc-1 )
 	{
-		
-		for( j= first_job; j; j=j->next )
-		{
-			/*
-			  Ignore unconstructed jobs, i.e. ourself.
-			*/
-			if( j->constructed /*&& j->skip_notification*/ )
-			{
-				if( !found )
-				{
-					/*
-					  Print table header before first job
-					*/
-					sb_append( sb_out, L"Job\tGroup\t");
-#ifdef HAVE__PROC_SELF_STAT
-					sb_append( sb_out, L"CPU\t" );
-#endif
-					sb_append( sb_out, L"State\tCommand\n" );
-				}
-			
-				found = 1;
-			
-				sb_printf( sb_out, L"%d\t%d\t", j->job_id, j->pgid );
-				
-#ifdef HAVE__PROC_SELF_STAT
-				sb_printf( sb_out, L"%d%%\t", cpu_use(j) );
-#endif
-				sb_append2( sb_out, job_is_stopped(j)?L"stopped\t":L"running\t", 
-//							job_is_completed(j)?L"completed\t":L"unfinished\t", 
-							j->command, L"\n", (void *)0 );
-			
-			}
-		}
-		if( !found )
-		{
-			sb_append2( sb_out, argv[0], L": There are no running jobs\n", (void *)0 );
-		}
+		sb_append2( sb_err, argv[0], L": zero or one arguments\n", (void *)0 );
+		return 1;
 	}
-	else
+	
+	if( woptind == argc-1 )
 	{
 		long pid;
 		wchar_t *end;			
-		job_t *j;
-		
-		if( woptind != argc-1 )
-		{
-			sb_append2( sb_err, argv[0], L": Expected exactly one argument\n", (void *)0 );
-		}
-
-			
 		errno=0;
 		pid=wcstol( argv[woptind], &end, 10 );
 		if( errno || *end )
@@ -2548,30 +2624,44 @@ static int builtin_jobs( wchar_t **argv )
 				
 		}
 
-		j = job_get_from_pid( pid );
-		if( !j )
+		print_me = job_get_from_pid( pid );
+		if( !print_me )
 		{
 			sb_printf( sb_err, L"%ls: No suitable job: %d\n", argv[0], pid );
 			return 1;
 		}
-		process_t *p;
-		for( p=j->first_process; p; p=p->next )
+
+	}
+	
+	/*
+	  Do not babble if not interactive
+	*/
+	if( builtin_out_redirect )
+		found=1;
+
+	if( !print_me )
+	{
+		job_t *j;
+		
+		for( j= first_job; j; j=j->next )
 		{
-			switch( mode )
+			/*
+			  Ignore unconstructed jobs, i.e. ourself.
+			*/
+			if( j->constructed /*&& j->skip_notification*/ )
 			{
-				case PRINT_PID:
-				{
-					sb_printf( sb_out, L"%d\n", p->pid );
-					break;						
-				}
-				
-				case PRINT_COMMAND:
-				{
-					sb_printf( sb_out, L"%ls\n", p->argv[0] );
-					break;						
-				}
+				builtin_jobs_print( j, mode, !found );
+				found = 1;
 			}
-		}		
+		}
+		if( !found )
+		{
+			sb_append2( sb_out, argv[0], L": There are no running jobs\n", (void *)0 );
+		}
+	}
+	else
+	{
+		builtin_jobs_print( print_me, mode, !found );
 	}
 	
 	return 0;

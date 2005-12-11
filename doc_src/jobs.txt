@@ -1,13 +1,20 @@
 \section jobs jobs - print currently running jobs
 
 \subsection jobs-synopsis
-<tt>jobs</tt>
+<tt>jobs [OPTIONS] [PID]</tt>
 
 \subsection jobs-description Description
 The <tt>jobs</tt> builtin causes fish to print a list of the currently
 running jobs and their status. 
 
-On systems that supports this feature, jobs will also print the CPU
-usage of each job since the last command was executed. The CPU usage
-is expressed as a percentage of full CPU activity. Note that on
+jobs accepts the following switches:
+
+- <tt>-l</tt> or <tt>--last</tt> only the last job to be started is printed
+- <tt>-g</tt> or <tt>--group</tt> only print the group id of each job
+- <tt>-c</tt> or <tt>--command</tt> print the commandname for each process in all jobs
+- <tt>-p</tt> or <tt>--process</tt> print the procces id for each process in all jobs
+
+On systems that supports this feature, jobs will print the CPU usage
+of each job since the last command was executed. The CPU usage is
+expressed as a percentage of full CPU activity. Note that on
 multiprocessor systems, the total activity may be more than 100\%.

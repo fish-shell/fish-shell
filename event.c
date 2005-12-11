@@ -68,6 +68,12 @@ static array_list_t *events;
 static array_list_t *killme;
 
 /**
+   List of events that have been sent but have not yet been delivered because they are blocked.
+*/
+static array_list_t *blocked;
+
+
+/**
    Tests if one event instance matches the definition of a event
    class. If the class defines a function name, that will also be a
    match criterion.
@@ -120,7 +126,7 @@ static int event_match( event_t *class, event_t *instance )
    Create an identical copy of an event. Use deep copying, i.e. make
    duplicates of any strings used as well.
 */
-static event_t *event_copy( event_t *event )
+static event_t *event_copy( event_t *event, int copy_arguments )
 {
 	event_t *e = malloc( sizeof( event_t ) );
 	if( !e )
@@ -133,12 +139,55 @@ static event_t *event_copy( event_t *event )
 	if( e->type == EVENT_VARIABLE )
 		e->param1.variable = wcsdup( e->param1.variable );
 		
+	al_init( &e->arguments );
+	if( copy_arguments )
+	{
+		int i;
+		for( i=0; i<al_get_count( &event->arguments ); i++ )
+		{
+			al_push( &e->arguments, wcsdup( (wchar_t *)al_get( &event->arguments, i ) ) );
+		}
+				
+	}
+	
 	return e;
 }
 
+
+static int event_is_blocked( event_t *e )
+{
+	block_t *block;
+	event_block_t *eb;
+	
+	for( block = current_block; block; block = block->outer )
+	{
+		for( eb = block->first_event_block; eb; eb=eb->next )
+		{
+			if( eb->type & (1<<EVENT_ANY ) )
+				return 1;
+			if( eb->type & (1<<e->type) )
+				return 1;
+		}
+	}
+	for( eb = global_event_block; eb; eb=eb->next )
+	{
+		if( eb->type & (1<<EVENT_ANY ) )
+			return 1;
+		if( eb->type & (1<<e->type) )
+			return 1;
+		return 1;
+		
+	}
+	
+	return 0;
+}
+
+
 void event_add_handler( event_t *event )
 {
-	event_t *e = event_copy( event );
+	event_t *e;
+
+	e = event_copy( event, 0 );
 
 	if( !events )
 		events = al_new();	
@@ -268,7 +317,7 @@ static int event_is_killed( event_t *e )
    matches' path. This means that nothing is allocated/initialized
    unless that is needed.
 */
-static void event_fire_internal( event_t *event, array_list_t *arguments )
+static void event_fire_internal( event_t *event )
 {
 	int i, j;
 	string_buffer_t *b=0;
@@ -337,9 +386,9 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 		
 		sb_append( b, criterion->function_name );
 		
-		for( j=0; j<al_get_count(arguments); j++ )
+		for( j=0; j<al_get_count(&event->arguments); j++ )
 		{
-			wchar_t *arg_esc = escape( (wchar_t *)al_get( arguments, j), 0 );		
+			wchar_t *arg_esc = escape( (wchar_t *)al_get( &event->arguments, j), 0 );		
 			sb_append( b, L" " );
 			sb_append( b, arg_esc );
 			free( arg_esc );				
@@ -385,15 +434,42 @@ static void event_fire_internal( event_t *event, array_list_t *arguments )
 /**
    Handle all pending signal events
 */
-static void event_fire_signal_events()
+static void event_fire_delayed()
 {
+
+	int i;
+
+	if( blocked && is_event==1)
+	{
+		array_list_t *new_blocked = 0;
+		
+		for( i=0; i<al_get_count( blocked ); i++ )
+		{
+			event_t *e = (event_t *)al_get( blocked, i );
+			if( event_is_blocked( e ) )
+			{
+				if( !new_blocked )
+					new_blocked = al_new();
+				al_push( new_blocked, e );			
+			}
+			else
+			{
+				event_fire_internal( e );
+				event_free( e );
+			}
+		}		
+		al_destroy( blocked );
+		free( blocked );
+		blocked = new_blocked;
+	}
+	
+
+
 	while( sig_list[active_list].count > 0 )
 	{
-		int i;
 		signal_list_t *lst;
 		event_t e;
-		array_list_t a;
-		al_init( &a );		
+		al_init( &e.arguments );		
 
 		/*
 		  Switch signal lists
@@ -421,17 +497,26 @@ static void event_fire_signal_events()
 		for( i=0; i<lst->count; i++ )
 		{
 			e.param1.signal = lst->signal[i];
-			al_set( &a, 0, sig2wcs( e.param1.signal ) );			
-			event_fire_internal( &e, &a );
+			al_set( &e.arguments, 0, sig2wcs( e.param1.signal ) );			
+			if( event_is_blocked( &e ) )
+			{
+				if( !blocked )
+					blocked = al_new();
+				al_push( blocked, event_copy(&e, 1) );			
+			}
+			else
+			{
+				event_fire_internal( &e );
+			}
 		}
 		
-		al_destroy( &a );
+		al_destroy( &e.arguments );
 		
 	}	
 }
 
 
-void event_fire( event_t *event, array_list_t *arguments )
+void event_fire( event_t *event )
 {
 	//int is_event_old = is_event;
 	is_event++;
@@ -452,10 +537,23 @@ void event_fire( event_t *event, array_list_t *arguments )
 	}
 	else
 	{
-		event_fire_signal_events();
 		
+		event_fire_delayed();
+			
 		if( event )
-			event_fire_internal( event, arguments );
+		{
+			if( event_is_blocked( event ) )
+			{
+				if( !blocked )
+					blocked = al_new();
+				
+				al_push( blocked, event_copy(event, 1) );
+			}
+			else
+			{
+				event_fire_internal( event );
+			}
+		}
 		
 	}	
 	is_event--;// = is_event_old;	
@@ -487,9 +585,14 @@ void event_destroy()
 
 void event_free( event_t *e )
 {
+	/*
+	  When apropriate, we clear the argument vector
+	*/
+	al_foreach( &e->arguments, (void (*)(const void *))&free );
+	al_destroy( &e->arguments );
+
 	free( (void *)e->function_name );
 	if( e->type == EVENT_VARIABLE )
 		free( (void *)e->param1.variable );
 	free( e );
 }
-		

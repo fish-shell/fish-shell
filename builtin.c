@@ -244,6 +244,173 @@ static int builtin_bind( wchar_t **argv )
 	return 0;
 }
 
+/** 
+	The block builtin, used for temporarily blocking events
+ */
+static int builtin_block( wchar_t **argv )
+{
+	enum
+	{
+		UNSET,
+		GLOBAL,
+		LOCAL,
+	}
+	;
+
+	
+	
+	int scope=UNSET;
+	
+	int erase = 0;
+	
+	int argc=builtin_count_args( argv );
+	
+	int type = (1<<EVENT_ANY);
+	
+
+	woptind=0;
+
+	const static struct woption
+		long_options[] =
+		{
+			{
+				L"erase", no_argument, 0, 'e' 
+			}
+			,
+			{
+				L"local", no_argument, 0, 'l' 
+			}
+			,
+			{
+				L"global", no_argument, 0, 'g' 
+			}
+			,
+			{
+				L"help", no_argument, 0, 'h' 
+			}
+			,
+			{ 
+				0, 0, 0, 0 
+			}
+		}
+	;		
+		
+	while( 1 )
+	{
+		int opt_index = 0;
+		
+		int opt = wgetopt_long( argc,
+								argv, 
+								L"elgh", 
+								long_options, 
+								&opt_index );
+		if( opt == -1 )
+			break;
+			
+		switch( opt )
+		{
+			case 0:
+				if(long_options[opt_index].flag != 0)
+					break;
+				sb_append2( sb_err,
+							argv[0],
+							BUILTIN_ERR_UNKNOWN,
+							L" ",
+							long_options[opt_index].name,
+							L"\n",
+							(void *)0);				
+				builtin_print_help( argv[0], sb_err );
+					
+				return 1;
+			case 'h':
+				builtin_print_help( argv[0], sb_err );
+				return 0;
+				
+			case 'g':
+				scope = GLOBAL;
+				break;
+				
+			case 'l':
+				scope = LOCAL;
+				break;
+				
+			case 'e':
+				erase = 1;
+				break;
+				
+			case '?':
+				builtin_print_help( argv[0], sb_err );
+				
+				return 1;
+				
+		}
+		
+	}		
+
+	if( erase )
+	{
+		if( scope != UNSET )
+		{
+			sb_printf( sb_err, L"%ls: Can not specify scope when removing block\n", argv[0] );
+			return 1;
+		}
+
+		if( !global_event_block )
+		{
+			sb_printf( sb_err, L"%ls: No blocks defined\n", argv[0] );
+			return 1;
+		}
+
+		event_block_t *eb = global_event_block;
+		global_event_block = eb->next;
+		free( eb );
+	}
+	else
+	{
+		block_t *block=current_block;
+		
+		event_block_t *eb = malloc( sizeof( event_block_t ) );
+		
+		if( !eb )
+			die_mem();
+		
+		eb->type = type;
+
+		switch( scope )
+		{
+			case LOCAL:
+			{
+				if( !block->outer )
+					block=0;
+				break;
+			}
+			case GLOBAL:
+			{
+				block=0;
+			}
+			case UNSET:
+			{
+				while( block && block->type != FUNCTION_CALL )
+					block = block->outer;
+			}
+		}
+		if( block )
+		{
+			eb->next = block->first_event_block;
+			block->first_event_block = eb;
+		}
+		else
+		{
+			eb->next = global_event_block;
+			global_event_block=eb;
+		}		
+	}
+
+	return 0;
+	
+}
+
+
 
 /**
    The builtin builtin, used for given builtins precedence over functions. Mostly handled by the parser. All this code does is some additional operational modes, such as printing a list of all builtins.
@@ -838,7 +1005,7 @@ static int builtin_function( wchar_t **argv )
 					break;
 				}
 				
-				e = malloc( sizeof(event_t));
+				e = calloc( 1, sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_SIGNAL;
@@ -862,7 +1029,7 @@ static int builtin_function( wchar_t **argv )
 					break;
 				}
 				
-				e = malloc( sizeof(event_t));
+				e = calloc( 1, sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_VARIABLE;
@@ -879,7 +1046,7 @@ static int builtin_function( wchar_t **argv )
 				wchar_t *end;
 				event_t *e;
 				
-				e = malloc( sizeof(event_t));
+				e = calloc( 1, sizeof(event_t));
 				if( !e )
 					die_mem();
 
@@ -2850,6 +3017,7 @@ void builtin_init()
 	hash_init( &builtin, &hash_wcs_func, &hash_wcs_cmp );
 
 	hash_put( &builtin, L"exit", (void*) &builtin_exit );	
+	hash_put( &builtin, L"block", (void*) &builtin_block );	
 	hash_put( &builtin, L"builtin", (void*) &builtin_builtin );	
 	hash_put( &builtin, L"cd", (void*) &builtin_cd );
 	hash_put( &builtin, L"function", (void*) &builtin_function );	
@@ -2899,6 +3067,7 @@ void builtin_init()
 
 	intern_static( L"exit" );	
 	intern_static( L"builtin" );	
+	intern_static( L"block" );	
 	intern_static( L"cd" );
 	intern_static( L"function" );	
 	intern_static( L"functions" );	
@@ -3026,11 +3195,13 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		
 		hash_init( desc, &hash_wcs_func, &hash_wcs_cmp );
 
-		hash_put( desc, L"exit", L"Exit the shell" );	
+		hash_put( desc, L"block", L"Temporarily block delivery of events" );	
+		hash_put( desc, L"builtin", L"Run a builtin command" );	
+		hash_put( desc, L"complete", L"Edit command specific completions" );	
 		hash_put( desc, L"cd", L"Change working directory" );	
+		hash_put( desc, L"exit", L"Exit the shell" );	
 		hash_put( desc, L"function", L"Define a new function" );	
 		hash_put( desc, L"functions", L"List or remove functions" );	
-		hash_put( desc, L"complete", L"Edit command specific completions" );	
 		hash_put( desc, L"end", L"End a block of commands" );
 		hash_put( desc, L"else", L"Evaluate block if condition is false" );
 		hash_put( desc, L"eval", L"Evaluate parameters as a command" );	
@@ -3047,7 +3218,6 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		hash_put( desc, L"commandline", L"Set the commandline" );
 		hash_put( desc, L"switch", L"Conditionally execute a block of commands" );	
 		hash_put( desc, L"case", L"Conditionally execute a block of commands" );	
-		hash_put( desc, L"builtin", L"Run a builtin command" );	
 		hash_put( desc, L"command", L"Run a program" );		
 		hash_put( desc, L"if", L"Conditionally execute a command" );	
 		hash_put( desc, L"while", L"Perform a command multiple times" );	

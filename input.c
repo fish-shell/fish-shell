@@ -1270,7 +1270,7 @@ static int interrupt_handler()
 	/*
 	  Fire any pending events
 	*/
-	event_fire( 0, 0 );	
+	event_fire( 0 );	
 	if( job_reap( 1 ) )
 		repaint();
 	if( reader_interupted() )

@@ -682,6 +682,7 @@ builtins or shellscript functions, and can only be used inside fish.
 - <a href="builtins.html#begin">begin</a>, execute a block of commands
 - <a href="builtins.html#bind">bind</a>, change keyboard bindings
 - <a href="builtins.html#break">break</a>, stop the execution of a loop
+- <a href="builtins.html#block">block</a>, Temporarily block delivery of events
 - <a href="builtins.html#builtin">builtin</a>, execute a builtin command
 - <a href="builtins.html#case">case</a>, conditionally execute a block of commands
 - <a href="builtins.html#cd">cd</a>, change the current directory
@@ -995,7 +996,10 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Check keybinding commands for output - if non has happened, don't repaint to reduce flicker
 - The jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error
-
+- the code for printing the prompt should know about the most common escape sequences
+- block builtin
+- redo the jobs command
+- wait shellscript
 
 \subsection todo-possible Possible features
 

@@ -11,6 +11,27 @@
 #include "util.h"
 #include "parser.h"
 
+typedef struct event_block
+{
+	/**
+	   The types of events to block. This is interpreted as a bitset
+	   whete the value is 1 for every bit corresponding to a blocked
+	   event type. For example, if EVENT_VARIABLE type events should
+	   be blocked, (type & 1<<EVENT_BLOCKED) should be set. 
+
+	   Note that EVENT_ANY can be used to specify any event.
+	*/
+	int type;
+	
+	/**
+	   The next event_block struct
+	*/
+	struct event_block *next;
+}
+	event_block_t;
+
+
+
 /**
    block_t represents a block of commands. 
 */
@@ -21,12 +42,12 @@ typedef struct block
 	int tok_pos; /**< The start index of the block */
 
 	/**
-	   Status for the current loop block. Can be anu of the values from the loop_status enum.
+	   Status for the current loop block. Can be any of the values from the loop_status enum.
 	*/
 	int loop_status;
 
 	/**
-	   The log that is currently evaluated in the specified block.
+	   The job that is currently evaluated in the specified block.
 	*/
 	job_t *job;
 	
@@ -68,8 +89,11 @@ typedef struct block
 		array_list_t *function_events;
 	} param4;
 	
-		
-
+	/**
+	   Some naming confusion. This is a pointer to the first element in the list of all event blocks.
+	*/
+	event_block_t *first_event_block;
+	
     /**
 	   Next outer block 
 	*/
@@ -158,6 +182,10 @@ enum parser_error
 
 /** The current innermost block */
 extern block_t *current_block;
+
+/** Global event blocks */
+extern event_block_t *global_event_block;
+
 
 /** The current error code */
 extern int error_code;

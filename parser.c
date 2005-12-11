@@ -111,6 +111,8 @@ The fish parser. Contains functions for parsing code.
 /** Last error code */
 int error_code;
 
+event_block_t *global_event_block=0;
+
 /** Position of last error */
 
 static int err_pos;
@@ -194,7 +196,7 @@ int block_count( block_t *b )
 
 void parser_push_block( int type )
 {
-	block_t *new = malloc( sizeof( block_t ));
+	block_t *new = calloc( 1, sizeof( block_t ));
 
 //	debug( 2, L"Block push %ls %d\n", bl[type], block_count( current_block)+1 );
 	new->outer = current_block;
@@ -230,6 +232,7 @@ void parser_push_block( int type )
 void parser_pop_block()
 {
 //	debug( 2, L"Block pop %ls %d\n", bl[current_block->type], block_count(current_block)-1 );
+	event_block_t *eb, *eb_next;
 
 	if( (current_block->type != FUNCTION_DEF ) && 
 		(current_block->type != FAKE) && 
@@ -269,6 +272,12 @@ void parser_pop_block()
 		}
 
 	}
+
+	for( eb=current_block->first_event_block; eb; eb=eb_next )
+	{
+		eb_next = eb->next;
+		free(eb);
+	}	
 
 	block_t *old = current_block;
 	current_block = current_block->outer;
@@ -1996,7 +2005,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	tok_init( current_tokenizer, cmd, 0 );
 	error_code = 0;
 	
-	event_fire( 0, 0 );		
+	event_fire( 0 );		
 
 	while( tok_has_next( current_tokenizer ) &&
 		   !error_code &&
@@ -2004,7 +2013,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		   !exit_status() )
 	{
 		eval_job( current_tokenizer );
-		event_fire( 0, 0 );		
+		event_fire( 0 );		
 	}
 	
 	int prev_block_type = current_block->type;	

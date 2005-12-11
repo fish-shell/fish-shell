@@ -236,7 +236,6 @@ static void universal_callback( int type,
 	
 	if( str )
 	{
-		array_list_t arg;
 		event_t ev;
 		
 		has_changed=1;
@@ -245,12 +244,12 @@ static void universal_callback( int type,
 		ev.param1.variable=name;
 		ev.function_name=0;
 		
-		al_init( &arg );
-		al_push( &arg, L"VARIABLE" );
-		al_push( &arg, str );
-		al_push( &arg, name );
-		event_fire( &ev, &arg );		
-		al_destroy( &arg );
+		al_init( &ev.arguments );
+		al_push( &ev.arguments, L"VARIABLE" );
+		al_push( &ev.arguments, str );
+		al_push( &ev.arguments, name );
+		event_fire( &ev );		
+		al_destroy( &ev.arguments );
 	}
 }
 
@@ -489,7 +488,6 @@ void env_set( const wchar_t *key,
 	int done=0;
 
 	event_t ev;
-	array_list_t ev_list;
 	int is_universal = 0;	
 	
 	if( (var_mode & ENV_USER ) && 
@@ -669,14 +667,14 @@ void env_set( const wchar_t *key,
 		ev.param1.variable = key;
 		ev.function_name = 0;
 		
-		al_init( &ev_list );
-		al_push( &ev_list, L"VARIABLE" );
-		al_push( &ev_list, key );
+		al_init( &ev.arguments );
+		al_push( &ev.arguments, L"VARIABLE" );
+		al_push( &ev.arguments, key );
 		
 //	debug( 1, L"env_set: fire events on variable %ls", key );	
-		event_fire( &ev, &ev_list );
+		event_fire( &ev );
 //	debug( 1, L"env_set: return from event firing" );	
-		al_destroy( &ev_list );	
+		al_destroy( &ev.arguments );	
 	}
 	
 }

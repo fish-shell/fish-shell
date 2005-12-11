@@ -79,13 +79,13 @@ MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o	\
 
 BUILTIN_DOC_SRC := doc_src/source.txt doc_src/and.txt					\
 	doc_src/begin.txt doc_src/bg.txt doc_src/bind.txt					\
-	doc_src/break.txt doc_src/builtin.txt doc_src/case.txt				\
-	doc_src/cd.txt doc_src/command.txt doc_src/commandline.txt			\
-	doc_src/complete.txt doc_src/continue.txt doc_src/else.txt			\
-	doc_src/end.txt doc_src/eval.txt doc_src/exec.txt doc_src/exit.txt	\
-	doc_src/fg.txt doc_src/for.txt doc_src/function.txt					\
-	doc_src/functions.txt doc_src/if.txt doc_src/jobs.txt				\
-	doc_src/not.txt doc_src/or.txt doc_src/random.txt					\
+	doc_src/block.txt doc_src/break.txt doc_src/builtin.txt				\
+	doc_src/case.txt doc_src/cd.txt doc_src/command.txt					\
+	doc_src/commandline.txt doc_src/complete.txt doc_src/continue.txt	\
+	doc_src/else.txt doc_src/end.txt doc_src/eval.txt doc_src/exec.txt	\
+	doc_src/exit.txt doc_src/fg.txt doc_src/for.txt						\
+	doc_src/function.txt doc_src/functions.txt doc_src/if.txt			\
+	doc_src/jobs.txt doc_src/not.txt doc_src/or.txt doc_src/random.txt	\
 	doc_src/return.txt doc_src/read.txt doc_src/set.txt					\
 	doc_src/status.txt doc_src/switch.txt doc_src/ulimit.txt			\
 	doc_src/while.txt

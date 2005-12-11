@@ -76,9 +76,10 @@ int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
 
 /**
-  List used to store arguments when firing events
+   The event variable used to send all process event
 */
-static array_list_t event_arg;
+static event_t event;
+
 /**
   Stringbuffer used to create arguments when firing events
 */
@@ -91,7 +92,7 @@ static string_buffer_t event_status;
 
 void proc_init()
 {
-	al_init( &event_arg );
+	al_init( &event.arguments );
 	sb_init( &event_pid );
 	sb_init( &event_status );
 }
@@ -185,7 +186,7 @@ void job_free( job_t * j )
 
 void proc_destroy()
 {
-	al_destroy( &event_arg );
+	al_destroy( &event.arguments );
 	sb_destroy( &event_pid );
 	sb_destroy( &event_status );
 	while( first_job )
@@ -484,21 +485,21 @@ static void format_job_info( const job_t *j, const wchar_t *status )
 
 void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status )
 {
-	static event_t ev;
 	
-	ev.type=type;
-	ev.param1.pid = pid;
+	event.type=type;
+	event.param1.pid = pid;
 	
-	al_push( &event_arg, msg );			
+	al_push( &event.arguments, msg );			
 
 	sb_printf( &event_pid, L"%d", pid );
-	al_push( &event_arg, event_pid.buff );
+	al_push( &event.arguments, event_pid.buff );
 	
 	sb_printf( &event_status, L"%d", status );			
-	al_push( &event_arg, event_status.buff );
+	al_push( &event.arguments, event_status.buff );
 
-	event_fire( &ev, &event_arg );
-	al_truncate( &event_arg, 0 );
+	event_fire( &event );
+
+	al_truncate( &event.arguments, 0 );
 	sb_clear( &event_pid );	
 	sb_clear( &event_status );	
 }				

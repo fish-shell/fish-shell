@@ -198,7 +198,8 @@ void parser_push_block( int type )
 {
 	block_t *new = calloc( 1, sizeof( block_t ));
 
-//	debug( 2, L"Block push %ls %d\n", bl[type], block_count( current_block)+1 );
+	debug( 3, L"Block push %ls %d\n", parser_get_block_desc(type), block_count( current_block)+1 );
+
 	new->outer = current_block;
 	new->type = (current_block && current_block->skip)?FAKE:type;
 
@@ -231,7 +232,8 @@ void parser_push_block( int type )
 
 void parser_pop_block()
 {
-//	debug( 2, L"Block pop %ls %d\n", bl[current_block->type], block_count(current_block)-1 );
+
+	debug( 3, L"Block pop %ls %d\n", parser_get_block_desc(current_block->type), block_count(current_block)-1 );
 	event_block_t *eb, *eb_next;
 
 	if( (current_block->type != FUNCTION_DEF ) && 
@@ -301,7 +303,7 @@ wchar_t *parser_get_block_desc( int block )
 			return L"function definition block";
 			
 		case FUNCTION_CALL:
-			return L"fuction invocation block";
+			return L"function invocation block";
 			
 		case SWITCH:
 			return L"switch block";
@@ -1687,7 +1689,10 @@ static int parse_job( process_t *p,
 						 end_pos );
 
 			while( prev_block != current_block )
+			{
 				parser_pop_block();
+			}
+			
 		}
 		else tok_next( tok );
 		
@@ -1721,7 +1726,10 @@ static int parse_job( process_t *p,
 		  Make sure the block stack is consistent
 		*/
 		while( prev_block != current_block )
+		{
 			parser_pop_block();
+		}
+		
 	}
 	al_destroy( &args );
 	
@@ -1747,6 +1755,7 @@ static void skipped_exec( job_t * j )
 		{
 			if(( wcscmp( p->argv[0], L"for" )==0) ||
 			   ( wcscmp( p->argv[0], L"switch" )==0) ||
+			   ( wcscmp( p->argv[0], L"begin" )==0) ||
 			   ( wcscmp( p->argv[0], L"function" )==0))
 			{
 				parser_push_block( FAKE );
@@ -1980,6 +1989,9 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	block_io = io;
 	
 	job_reap( 0 );
+
+	debug( 4, L"eval: %ls", cmd );
+	
 	
 	if( !cmd )
 	{
@@ -2022,6 +2034,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	}
 	
 	int prev_block_type = current_block->type;	
+	
 	parser_pop_block();
 
 	while( start_current_block != current_block )

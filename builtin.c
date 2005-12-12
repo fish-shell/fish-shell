@@ -2434,6 +2434,7 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 #endif
 			sb_append2( sb_out, job_is_stopped(j)?L"stopped\t":L"running\t", 
 						j->command, L"\n", (void *)0 );
+			break;
 		}
 
 		case JOBS_PRINT_GROUP:
@@ -2481,8 +2482,7 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 				sb_printf( sb_out, L"%ls\n", p->argv[0] );
 			}		
 			break;
-		}
-		
+		}		
 	}
 		
 }
@@ -2494,17 +2494,13 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 */
 static int builtin_jobs( wchar_t **argv )
 {	
-	
-	
 	int argc=0;
 	int found=0;	
 	int mode=JOBS_DEFAULT;
-
-	job_t *print_me=0;
-	
+	int print_last = 0;
+	job_t *j;
 	
 	argc = builtin_count_args( argv );	
-	
 	woptind=0;
 
 	while( 1 )
@@ -2577,17 +2573,8 @@ static int builtin_jobs( wchar_t **argv )
 
 			case 'l':
 			{
-				job_t *j;
-				for( j=first_job; j; j=j->next )
-				{
-					if( j->constructed )					
-					{
-						print_me = j;
-						break;
-					}					
-				}
+				print_last = 1;				
 				break;
-				
 			}
 			
 
@@ -2599,63 +2586,82 @@ static int builtin_jobs( wchar_t **argv )
 		}
 	}	
 	
-	if( woptind < argc-1 )
-	{
-		sb_append2( sb_err, argv[0], L": zero or one arguments\n", (void *)0 );
-		return 1;
-	}
-	
-	if( woptind == argc-1 )
-	{
-		long pid;
-		wchar_t *end;			
-		errno=0;
-		pid=wcstol( argv[woptind], &end, 10 );
-		if( errno || *end )
-		{
-			sb_append2( sb_err, argv[0], L": Not a process id: ", argv[woptind], L"\n", (void *)0 );
-			return 1;
-				
-		}
 
-		print_me = job_get_from_pid( pid );
-		if( !print_me )
-		{
-			sb_printf( sb_err, L"%ls: No suitable job: %d\n", argv[0], pid );
-			return 1;
-		}
-
-	}
-	
 	/*
 	  Do not babble if not interactive
 	*/
 	if( builtin_out_redirect )
-		found=1;
-
-	if( !print_me )
 	{
-		job_t *j;
-		
-		for( j= first_job; j; j=j->next )
+		found=1;
+	}
+	
+	if( print_last )
+	{
+		/*
+		  Ignore unconstructed jobs, i.e. ourself.
+		*/
+		for( j=first_job; j; j=j->next )
 		{
-			/*
-			  Ignore unconstructed jobs, i.e. ourself.
-			*/
-			if( j->constructed /*&& j->skip_notification*/ )
+			if( j->constructed )					
 			{
 				builtin_jobs_print( j, mode, !found );
-				found = 1;
-			}
+				return 0;
+			}					
 		}
-		if( !found )
-		{
-			sb_append2( sb_out, argv[0], L": There are no running jobs\n", (void *)0 );
-		}
+
 	}
 	else
 	{
-		builtin_jobs_print( print_me, mode, !found );
+		if( woptind < argc )
+		{
+			int i;
+
+			found = 1;
+			
+			for( i=woptind; i<argc; i++ )
+			{
+				long pid;
+				wchar_t *end;			
+				errno=0;
+				pid=wcstol( argv[i], &end, 10 );
+				if( errno || *end )
+				{
+					sb_append2( sb_err, argv[0], L": Not a process id: ", argv[i], L"\n", (void *)0 );
+					return 1;
+				}
+				
+				j = job_get_from_pid( pid );
+				
+				if( j )
+				{
+					builtin_jobs_print( j, mode, !found );
+				}
+				else
+				{
+					sb_printf( sb_err, L"%ls: No suitable job: %d\n", argv[0], pid );
+					return 1;
+				}
+			}
+		}
+		else
+		{
+			for( j= first_job; j; j=j->next )
+			{
+				/*
+				  Ignore unconstructed jobs, i.e. ourself.
+				*/
+				if( j->constructed /*&& j->skip_notification*/ )
+				{
+					builtin_jobs_print( j, mode, !found );
+					found = 1;
+				}
+			}
+		}
+	}
+	
+	if( !found )
+	{
+		sb_append2( sb_out, argv[0], L": There are no running jobs\n", (void *)0 );
 	}
 	
 	return 0;

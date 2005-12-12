@@ -9,9 +9,9 @@ running jobs and their status.
 
 jobs accepts the following switches:
 
-- <tt>-l</tt> or <tt>--last</tt> only the last job to be started is printed
+- <tt>-c</tt> or <tt>--command</tt> print the command name for each process in jobs
 - <tt>-g</tt> or <tt>--group</tt> only print the group id of each job
-- <tt>-c</tt> or <tt>--command</tt> print the commandname for each process in all jobs
+- <tt>-l</tt> or <tt>--last</tt> only the last job to be started is printed
 - <tt>-p</tt> or <tt>--process</tt> print the procces id for each process in all jobs
 
 On systems that supports this feature, jobs will print the CPU usage

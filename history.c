@@ -127,8 +127,8 @@ static void history_load( wchar_t *name )
 
 			  Use a hashtable to check for duplicates instead.
 			*/
-			if( !hash_get( &used,
-						   buff ) )
+			if( wcslen(buff) && !hash_get( &used,
+										   buff ) )
 			{
 				history_count++;		
 				
@@ -465,10 +465,7 @@ const wchar_t *history_prev_match( const wchar_t *str )
 	
 	if( history_current->prev == 0 )
 	{
-		if( history_test( str, history_current->data ) )
-			return (wchar_t *)history_current->data;
-		else
-			return str;
+		return str;
 	}
 	if( past_end )
 		past_end = 0;

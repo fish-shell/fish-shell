@@ -1889,6 +1889,7 @@ static void handle_token_history( int forward, int reset )
 		
 	}
 
+
 	current_pos  = data->token_history_pos;
 
 	if( forward || data->search_pos < (al_get_count( &data->search_prev )-1) )
@@ -1930,6 +1931,7 @@ static void handle_token_history( int forward, int reset )
 			  history already contains the search string itself, if so
 			  return, otherwise add it.
 			*/
+
 			const wchar_t *last = al_get( &data->search_prev, al_get_count( &data->search_prev ) -1 );
 			if( wcscmp( last, data->search_buff ) )
 			{
@@ -1942,6 +1944,9 @@ static void handle_token_history( int forward, int reset )
 		}
 		else
 		{
+
+			debug( 3, L"new '%ls'", data->token_history_buff );	
+
 			for( tok_init( &tok, data->token_history_buff, TOK_ACCEPT_UNFINISHED );
 				 tok_has_next( &tok);
 				 tok_next( &tok ))
@@ -1952,11 +1957,12 @@ static void handle_token_history( int forward, int reset )
 					{
 						if( wcsstr( tok_last( &tok ), data->search_buff ) )
 						{
-//				fwprintf( stderr, L"Found token at pos %d\n", tok_get_pos( &tok ) );
+							debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
 							if( tok_get_pos( &tok ) >= current_pos )
 							{
 								break;
 							}
+							debug( 3, L"ok pos" );
 
 							if( !contains( tok_last( &tok ), &data->search_prev ) )
 							{

@@ -523,19 +523,23 @@ wchar_t *parser_cdpath_get( wchar_t *dir )
 	}
 	else
 	{
-		wchar_t *path = env_get(L"CDPATH");
+		wchar_t *path;
+		wchar_t *path_cpy;
+		wchar_t *nxt_path;
+		wchar_t *state;
+		wchar_t *whole_path;
 
-		if( path == 0 )
+		path = env_get(L"CDPATH");
+
+		if( !path || !wcslen(path) )
 		{
 			path = L".";
 		}
 
-		wchar_t *path_cpy = wcsdup( path );
-		wchar_t *nxt_path = path;
-		wchar_t *state;
-		wchar_t *whole_path;
-
-		if( (path_cpy==0) )
+		nxt_path = path;
+		path_cpy = wcsdup( path );
+		
+		if( !path_cpy )
 		{
 			die_mem();			
 		}

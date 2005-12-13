@@ -119,6 +119,11 @@ The fish parser. Contains functions for parsing code.
 #define INVALID_ELSE_ERR_MSG L"'else' builtin not inside of if block" 
 
 /**
+   Error when using end builtin outside of block
+*/
+#define INVALID_END_ERR_MSG L"'end' command outside of block"
+
+/**
    Error message for Posix-style assignment
 */
 #define COMMAND_ASSIGN_ERR_MSG L"Unknown command %ls. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
@@ -2376,7 +2381,7 @@ int parser_test( wchar_t * buff,
 						{
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
-								   L"'end' command outside of block" );
+								   INVALID_END_ERR_MSG );
 							print_errors();
 						}						
 					}

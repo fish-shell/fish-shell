@@ -128,7 +128,7 @@ void set_color( int c, int c2 )
 	{
 		c = c2 = FISH_COLOR_NORMAL;
 		if( fg )
-			writembs( tparm( set_a_foreground, 0 ) );
+			writembs( tparm( fg, 0 ) );
 		writembs( exit_attribute_mode );
 		return;
 	}

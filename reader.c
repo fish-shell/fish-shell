@@ -621,6 +621,129 @@ void reader_write_title()
 }
 
 /**
+   Tests if the specified narrow character sequence is present at the
+   specified position of the specified wide character string. All of
+   \c seq must match, but str may be longer than seq.
+*/
+static int try_sequence( char *seq, wchar_t *str )
+{
+	int i;
+	
+	for( i=0;; i++ )
+	{
+		if( !seq[i] )
+			return i;
+		
+		if( seq[i] != str[i] )
+			return 0;
+	}
+	
+	return 0;
+}
+
+/**
+   Calculate the width of the specified prompt. Does some clever magic
+   to detect common escape sequences that may be embeded in a prompt,
+   such as color codes.
+*/
+static int calc_prompt_width( array_list_t *arr )
+{
+	int res = 0;
+	int i, j, k;
+	
+	for( i=0; i<al_get_count( arr ); i++ )
+	{
+		wchar_t *next = (wchar_t *)al_get( arr, i );
+		
+		for( j=0; next[j]; j++ )
+		{
+			if( next[j] == L'\e' )
+			{
+				/*
+				  This is the start of an escape code. Try to guess it's width.
+				*/
+				int l;
+				int len=0;
+				int found = 0;
+				
+				/*
+				  Test these color escapes with parameter value 0..7
+				*/
+				char * esc[] = 
+				{
+					set_a_foreground,
+					set_a_background,
+					set_foreground,
+					set_background,
+				}
+				;
+
+				/*
+				  Test these regular escapes without any parameter values
+				*/
+				char *esc2[] =
+				{
+					enter_bold_mode,
+					exit_attribute_mode,
+					enter_underline_mode,
+					exit_underline_mode,
+					enter_standout_mode,
+					exit_standout_mode,
+					flash_screen
+				}
+				;
+				
+				for( l=0; l < (sizeof(esc)/sizeof(char *)) && !found; l++ )
+				{
+					if( !esc[l] )
+						continue;
+					
+					for( k=0; k<8; k++ )
+					{
+						len = try_sequence( tparm(esc[l],k), &next[j] );
+						if( len )
+						{
+							j += (len-1);
+							found = 1;
+							break;
+						}
+					}							
+				}
+				
+				for( l=0; l < (sizeof(esc2)/sizeof(char *)) && !found; l++ )
+				{
+					if( !esc2[l] )
+						continue;
+					/*
+					  Test both padded and unpadded version, just to
+					  be safe. Most versions of tparm don't actually
+					  seem to do anything these days.
+					*/
+					len = maxi( try_sequence( tparm(esc2[l]), &next[j] ),
+								try_sequence( esc2[l], &next[j] ));
+					
+					if( len )
+					{
+						j += (len-1);
+						found = 1;
+					}
+				}
+			}
+			else				
+			{
+				/*
+				  Ordinary decent character. Just add width.
+				*/
+				res += wcwidth( next[j] );
+			}
+			
+		}
+	}
+	return res;
+}
+
+
+/**
    Write the prompt to screen. If data->exec_prompt is set, the prompt
    command is first evaluated, and the title will be reexecuted as
    well.
@@ -649,14 +772,8 @@ static void write_prompt()
 				al_init( &prompt_list );
 			}
 		}
-		data->prompt_width=0;
-		for( i=0; i<al_get_count( &prompt_list ); i++ )
-		{
-			wchar_t *next = (wchar_t *)al_get( &prompt_list, i );
-			if( *next == L'\e' )
-				continue;
-			data->prompt_width += my_wcswidth( next );
-		}
+
+		data->prompt_width=calc_prompt_width( &prompt_list );
 
 		data->exec_prompt = 0;
 		reader_write_title();
@@ -2509,9 +2626,7 @@ wchar_t *reader_readline()
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank=0;
 
-		
-
-		switch (c)
+		switch( c )
 		{
 
 			/* go to beginning of line*/

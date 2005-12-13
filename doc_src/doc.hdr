@@ -915,17 +915,11 @@ The default \c fish prompt is
 <p>
 <pre>
 function fish_prompt -d "Write out the prompt"
-	printf '\%s\@\%s\%s\\n\%s\%s\\n> ' (whoami) (hostname|cut -d . -f 1) (set_color \$fish_color_cwd) (prompt_pwd) (set_color normal)
+	printf '\%s\@\%s\%s\%s\%s> ' (whoami) (hostname|cut -d . -f 1) (set_color \$fish_color_cwd) (prompt_pwd) (set_color normal)
 end
 </pre>
 </p>
 
-If you are using \c set_color or other commands that output escape
-codes to change the font settings of the terminal, you must always and
-every such sequence with a newline. This is needed since fish needs to
-know that exact length of the prompt in order to tetect when the
-cursor reaches the end of the line. Any newlines in the output of the
-\c fish_prompt command are ignored.
 
 \subsection title Programmable title
 

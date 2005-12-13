@@ -3,7 +3,7 @@
 \section introduction The friendly interactive shell
 
 This is the documentation for \c fish, the friendly interactive
-shell. \c fish is a user friendly commandline shell shell intended
+shell. \c fish is a user friendly commandline shell intended
 mostly for interactive use. A shell is a program used to execute other
 programs. For the latest information on \c fish, please visit the <a
 href="http://roo.no-ip.org/fish/"><tt>fish</tt> homepage</a>.
@@ -23,7 +23,7 @@ Example:
 calls the \c echo command. \c echo is a command which will write its
 arguments to the screen. In the example above, the output will be
 'hello world'. Everything in fish is done with commands. There are
-commonds for performing a set of command multiple times, commands for
+commands for performing a set of command multiple times, commands for
 assigning variables, commands for treating a group of commands as a
 single command, etc.. And every single command follows the same simple
 syntax.
@@ -120,11 +120,11 @@ a number called a file descriptor (FD). These are:
 - Standard output, FD 1, for writing, defaults to writing to the screen.
 - Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
-The reason for providing for two methods of output is so errors and
+The reason for providing for two methods of output is that errors and
 warnings can be separated from regular program output.
 
 Any file descriptor can be directed to a different output than it's
-default through a simple mechanism called a redirecton.
+default through a simple mechanism called a redirection.
 
 An example of a file redirection is <tt> echo hello \>output.txt</tt>,
 which directs the output of the echo command to the file error.txt.
@@ -247,7 +247,7 @@ differ on the first character, a list of all possible completions is
 printed. The list features descriptions of the completions and if the
 list doesn't fit the screen, it is scrollable by using the arrow keys,
 the page up/page down keys or the space bar. Press any other key will
-exit the list and insert the presssed key into the command line.
+exit the list and insert the pressed key into the command line.
 
 These are the general purpose tab completions that \c fish provides:
 
@@ -326,7 +326,7 @@ parameter to be expanded. These include:
 \subsection expand-wildcard Wildcards 
 
 If a star (*) or a question mark (?) is present in the parameter, \c
-fish attempts to mach the given parameter to any files in such a
+fish attempts to match the given parameter to any files in such a
 way that '?' can match any character except '/' and '*' can match any
 string of characters not containing '/'.
 
@@ -335,7 +335,7 @@ Example:
 
 <code>???</code> matches any file in the current directory whose name is exactly three characters long.
 
-If no matches are founf for a specific wildcard, it will expand intto
+If no matches are found for a specific wildcard, it will expand into
 zero arguments, i.e. to nothing. If none of the wildcarded arguments
 sent to a command result in any matches, the command will not be
 executed. If this happens when using the shell interactively, a
@@ -344,7 +344,7 @@ warning will also be printed.
 \subsection expand-command-substitution Command substitution
 
 If a parameter contains a set of parenthesis, the text enclosed by the
-parentesis will be interpreted as a list of commands. Om expansion,
+parenthesis will be interpreted as a list of commands. Om expansion,
 this list is executed, and substituted by the output. If the output is
 more than one line long, each line will be expanded to a new
 parameter.
@@ -486,7 +486,7 @@ the shell through <a href="expand-variable">variable expansion</a>.
 
 Example:
 
-To use the value of a the variable \c smurf, write $ (dollar synbol)
+To use the value of a the variable \c smurf, write $ (dollar symbol)
 followed by the name of the variable, like <tt>echo Smurfs are
 $smurf</tt>, which would print the result 'Smurfs are blue'.
 
@@ -496,7 +496,7 @@ There are three kinds of variables in fish, universal, global and
 local variables. Universal variables are shared between all fish
 sessions a user is running on one computer. Global variables are
 specific to the current fish session, but are not associated with any
-soecific block scope, and will never be erased unless the user
+specific block scope, and will never be erased unless the user
 explicitly requests it using <tt>set -e</tt>. Local variables are
 specific to the current fish session, and associated with a specific
 block of commands, and is automatically erased when a specific block
@@ -513,7 +513,7 @@ creating or updating a variable are:
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the variable scope is not changed
--# If a variable is not explicitly set to be either universal, global or local and has never befor been defined, the variable will be local to the currently executing functions. If no function is executing, the variable will be global.
+-# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing functions. If no function is executing, the variable will be global.
 
 There may be many variables with the same name, but different scopes.
 When using a variable, the variable scope will be searched from the
@@ -552,9 +552,9 @@ prompt will instantly change to blue on both terminals.
 \subsection variables-functions Variable scope for functions
 
 When calling a function, all non-global variables temporarily
-dissapear. This shadowing of the local scope is needed since the
+disappear. This shadowing of the local scope is needed since the
 variable namespace would become cluttered, making it very easy to
-accidentaly overwrite variables from another function.
+accidentally overwrite variables from another function.
 
 For example, the following code will output 'Avast, mateys':
 
@@ -590,7 +590,7 @@ identical to the scoping rules for variables:
 
 -# If a variable is explicitly set to either be exported or not exported, that setting will be honored
 -# If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept
--# If a variable is not explicitly set to be either global or local and has never befor been defined, the variable will not be exported
+-# If a variable is not explicitly set to be either global or local and has never before been defined, the variable will not be exported
 
 
 \subsection variables-arrays Arrays
@@ -643,7 +643,7 @@ certain environment variables.
 - \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
 - \c fish_color_normal, \c fish_color_command, \c fish_color_substitution, \c fish_color_redirection, \c fish_color_end, \c fish_color_error, \c fish_color_param, \c fish_color_comment, \c fish_color_match, \c fish_color_search_match, \c fish_color_cwd, \c fish_pager_color_prefix, \c fish_pager_color_completion, \c fish_pager_color_description and \c fish_pager_color_progress are used to change the color of various elements in \c fish. These variables are universal, i.e. when changing them, their new value will be used by all running fish sessions. The new value will also be retained when restarting fish.
 - \c PATH, which is an array of directories in which to search for commands
-- \c umask, which is the current file creation mask. The prefered way to change the umask variable is through the <a href="commands.html#umask">umask shellscript function</a>. An attempt to set umask to an invalid value will always fail.
+- \c umask, which is the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask shellscript function</a>. An attempt to set umask to an invalid value will always fail.
 
 \c fish also sends additional information to the user through the
 values of certain environment variables. The user can not change the
@@ -657,7 +657,7 @@ values of these variables. They are:
 - \c USER, which is the username. This variable can only be changed by the root user.
 
 Variables whose name are in uppercase are exported to the commands
-started by fish. This rule is not enfored by fish, but it is good
+started by fish. This rule is not enforced by fish, but it is good
 coding practice to use casing to distinguish between exported and
 unexported variables. \c fish also uses several variables
 internally. Such variables are prefixed with the string __FISH or

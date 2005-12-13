@@ -104,6 +104,21 @@ The fish parser. Contains functions for parsing code.
 #define WILDCARD_ERR_MSG L"Warning: No match for wildcard %ls"
 
 /**
+   Error when using case builtin outside of switch block
+*/
+#define INVALID_CASE_ERR_MSG L"'case' builtin not inside of switch block"
+
+/**
+   Error when using loop control builtins (break or continue) outside of loop
+*/
+#define INVALID_LOOP_ERR_MSG L"Loop control command while not inside of loop" 
+
+/**
+   Error when using else builtin outside of if block
+*/
+#define INVALID_ELSE_ERR_MSG L"'else' builtin not inside of if block" 
+
+/**
    Error message for Posix-style assignment
 */
 #define COMMAND_ASSIGN_ERR_MSG L"Unknown command %ls. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
@@ -2288,7 +2303,7 @@ int parser_test( wchar_t * buff,
                             {
                                 error( SYNTAX_ERROR,
                                        tok_get_pos( &tok ),
-									   L"'case' builtin not inside of switch block" );
+									   INVALID_CASE_ERR_MSG );
 								                                
                                 print_errors();
                             }
@@ -2321,7 +2336,7 @@ int parser_test( wchar_t * buff,
                             {
                                 error( SYNTAX_ERROR,
                                        tok_get_pos( &tok ),
-                                       L"Loop control command while not inside of loop" );
+                                       INVALID_LOOP_ERR_MSG );
 								print_errors();
                             }
                         }						
@@ -2339,7 +2354,8 @@ int parser_test( wchar_t * buff,
                             {
                                 error( SYNTAX_ERROR,
                                        tok_get_pos( &tok ),
-									   L"'else' builtin not inside of if block" );
+									   INVALID_ELSE_ERR_MSG );
+								
 								print_errors();
                             }
                         }

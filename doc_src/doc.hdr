@@ -990,8 +990,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Check keybinding commands for output - if non has happened, don't repaint to reduce flicker
 - The jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error
-- the code for printing the prompt should know about the most common escape sequences
-- redo the jobs command
 - wait shellscript
 
 \subsection todo-possible Possible features

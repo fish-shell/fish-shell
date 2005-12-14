@@ -19,6 +19,8 @@
 
 	6). Add an entry to the manual at the builtin-overview subsection. Note that the entries should be sorted alphabetically!
 
+	7). Use 'darcs add doc_src/NAME.txt' to start tracking changes to the documentation file.
+
 */
 
 #include <stdlib.h>

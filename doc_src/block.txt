@@ -1,0 +1,19 @@
+
+\section block block - Temporarily block delivery of events
+
+\subsection block-synopsis Synopsis
+ <tt>block [OPTIONS...]</tt>
+
+\subsection block-description Description
+
+- <tt>-l</tt> or <tt>--local</tt> Release the block at the end of the currently innermost block scope
+- <tt>-g</tt> or <tt>--global</tt> Never automatically release the lock
+- <tt>-e</tt> or <tt>--erase</tt> Release global block
+
+\subsection block-example Example
+
+<pre>block -g
+#Do something that should not be interrupted
+block -e
+</pre>
+

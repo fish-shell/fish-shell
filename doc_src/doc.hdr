@@ -750,14 +750,14 @@ Here are some of the commands available in the editor:
 - Alt-d move next word to the <a href="#killring">killring</a>
 - Alt-w prints a short description of the command under the cursor 
 - Alt-l lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed 
-- Alt-k prints a list of all key bindings
+- Alt-p adds the string '| less;' to the end of the job under the cursor. The result is that the output of the command will be paged.aadddddssss
 
 You can change these key bindings by making an inputrc file. To do
 this, copy the file /etc/fish_inputrc to your home directory and
 rename it to '.fish_inputrc'. Now you can edit the file .fish_inputrc,
 to change your key bindings. The fileformat of this file is described
 in the manual page for readline. Use the command <tt>man readline</tt>
-to read up on this syntax. Please note thet the list of key binding
+to read up on this syntax. Please note that the list of key binding
 functions in fish is different to that offered by readline. Currently,
 the following functions are available:
 
@@ -786,7 +786,11 @@ the following functions are available:
 - \c yank, insert the latest entry of the killring into the buffer
 - \c yank-pop, rotate to the previous entry of the killring
 
+You can also bind a pice of shellscript to a key using the same
+syntax. For example, the Alt-p functionality described above is
+implemented using the following keybinding.
 
+<pre>"\M-p": if commandline -j|grep -v 'less *$' &gt;/dev/null; commandline -aj "|less;"; end</pre>
 
 \subsection killring Copy and paste (Kill Ring) 
 
@@ -1012,6 +1016,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - show the whole list of commands on using tab on an empty commandline
 - Automatically move cursor to the end of the current token before completing
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
+- Descriptions for variables using 'set -d'.
 
 \subsection bugs Known bugs
 

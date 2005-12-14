@@ -66,7 +66,7 @@ The fish parser. Contains functions for parsing code.
    Error message for tokenizer error. The tokenizer message is
    appended to this message.
 */
-#define TOK_ERR_MSG L"Tokenizer error: %ls"
+#define TOK_ERR_MSG L"Tokenizer error: '%ls'"
 
 /**
    Error message for short circut command error.
@@ -89,19 +89,19 @@ The fish parser. Contains functions for parsing code.
 #define BLOCK_ERR_MSG L"Maximum number of nested blocks reached."
 
 /**
-   Error message on missing 'end'
+   Error message when a non-string token is found when expecting a command name
 */
-#define END_ERR_MSG L"Block missing 'end'"
+#define CMD_ERR_MSG L"Expected a command string, got token of type '%ls'"
 
 /**
-   Error message on pipe/bg character without command
+   Error message when encountering an illegal command name
 */
-#define CMD_ERR_MSG L"Expected command"
+#define ILLEGAL_CMD_ERR_MSG L"Illegal command name '%ls'"
 
 /**
    Error message for wildcards with no matches
 */
-#define WILDCARD_ERR_MSG L"Warning: No match for wildcard %ls"
+#define WILDCARD_ERR_MSG L"Warning: No match for wildcard '%ls'"
 
 /**
    Error when using case builtin outside of switch block
@@ -126,12 +126,22 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message for Posix-style assignment
 */
-#define COMMAND_ASSIGN_ERR_MSG L"Unknown command %ls. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
+#define COMMAND_ASSIGN_ERR_MSG L"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
 
 /**
    Error for invalid redirection token
 */
-#define REDIRECT_TOKEN_ERR_MSG L"Expected redirection, got token of type %ls"
+#define REDIRECT_TOKEN_ERR_MSG L"Expected redirection specification, got token of type '%ls'"
+
+/**
+   Error when encountering redirection without a command
+*/
+#define INVALID_REDIRECTION_ERR_MSG L"Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command."
+
+/** 
+	Error for wrong token type
+*/
+#define UNEXPECTED_TOKEN_ERR_MSG L"Unexpected token of type '%ls'"
 
 /** Last error code */
 int error_code;
@@ -875,7 +885,7 @@ int eval_args( const wchar_t *line, array_list_t *args )
 			default:
 				error( SYNTAX_ERROR,
 					   tok_get_pos( &tok ),
-					   L"Unexpected token of type %ls",
+					   UNEXPECTED_TOKEN_ERR_MSG,
 					   tok_get_desc( tok_last_type(&tok)) );
 				
 				do_loop=0;
@@ -1124,7 +1134,7 @@ static void parse_job_main_loop( process_t *p,
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( tok ),
-									   L"Could not expand string",
+									   L"Could not expand string '%ls'",
 									   tok_last(tok) );
 																		
 							}
@@ -1217,7 +1227,7 @@ static void parse_job_main_loop( process_t *p,
 					default:
 						error( SYNTAX_ERROR,
 							   tok_get_pos( tok ),
-							   L"Expected redirection, got token of type %ls",
+							   REDIRECT_TOKEN_ERR_MSG,
 							   tok_get_desc( tok_last_type(tok)) );
 				}
 				
@@ -1299,7 +1309,7 @@ static void parse_job_main_loop( process_t *p,
 			default:
 				error( SYNTAX_ERROR,
 					   tok_get_pos( tok ),
-					   L"Unexpected token of type %ls",
+					   UNEXPECTED_TOKEN_ERR_MSG,
 					   tok_get_desc( tok_last_type(tok)) );
 				
 				tok_next(tok);
@@ -1379,7 +1389,7 @@ static int parse_job( process_t *p,
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( tok ),
-						   L"Illegal command name %ls",
+						   ILLEGAL_CMD_ERR_MSG,
 						   tok_last( tok ) );
 					
 					al_destroy( &args );
@@ -1403,7 +1413,7 @@ static int parse_job( process_t *p,
 			{
 				error( SYNTAX_ERROR,
 					   tok_get_pos( tok ),
-					   L"Expected a command name, got token of type %ls",
+					   CMD_ERR_MSG,
 					   tok_get_desc( tok_last_type(tok) ) );
 				
 				al_destroy( &args );
@@ -1661,7 +1671,7 @@ static int parse_job( process_t *p,
 						{
 							error( EVAL_ERROR,
 								   tok_get_pos( tok ),
-								   L"Unknown command %ls",
+								   L"Unknown command '%ls'",
 								   (wchar_t *)al_get( &args, 0 ) );
 															   
 						}
@@ -1682,7 +1692,7 @@ static int parse_job( process_t *p,
 		{
 			error( SYNTAX_ERROR,
 				   tok_get_pos( tok ),
-				   L"Could not find end of block" );
+				   BLOCK_END_ERR_MSG );
 		}
 
 		if( !make_sub_block )
@@ -2006,7 +2016,7 @@ static void eval_job( tokenizer *tok )
 		{
 			error( SYNTAX_ERROR,
 				   tok_get_pos( tok ),
-				   L"Expected a command string, got token of type %ls",
+				   CMD_ERR_MSG,
 				   tok_get_desc( tok_last_type(tok)) );
 			
 			return;
@@ -2112,7 +2122,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 					debug( 1, 
 						   L"%ls", parser_get_block_desc( current_block->type ) );
 					debug( 1, 
-						   END_ERR_MSG );
+						   BLOCK_END_ERR_MSG );
 					fwprintf( stderr, L"%ls", parser_current_line() );
 			
 					h = builtin_help_get( L"end" );
@@ -2416,7 +2426,7 @@ int parser_test( wchar_t * buff,
 					{
 						error( SYNTAX_ERROR,
 							   tok_get_pos( &tok ),
-							   L"Redirection error" );
+							   INVALID_REDIRECTION_ERR_MSG );
 						print_errors();
 					}
 				}
@@ -2432,7 +2442,8 @@ int parser_test( wchar_t * buff,
 					{
 						error( SYNTAX_ERROR,
 							   tok_get_pos( &tok ),
-							   CMD_ERR_MSG );
+							   CMD_ERR_MSG,
+							   tok_get_desc( tok_last_type(&tok)));
 						print_errors();
 					}
 				}				
@@ -2471,7 +2482,8 @@ int parser_test( wchar_t * buff,
 					{
 						error( SYNTAX_ERROR,
 							   tok_get_pos( &tok ),
-							   CMD_ERR_MSG );
+							   CMD_ERR_MSG,
+							   tok_get_desc( tok_last_type(&tok)));
 						
 						print_errors();
 					}
@@ -2520,7 +2532,7 @@ int parser_test( wchar_t * buff,
 	{
 		error( SYNTAX_ERROR,
 			   block_pos[count-1],
-			   END_ERR_MSG );
+			   BLOCK_END_ERR_MSG );
 		print_errors();
 	}
 	

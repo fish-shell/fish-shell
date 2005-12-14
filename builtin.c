@@ -1750,28 +1750,20 @@ static int builtin_status( wchar_t **argv )
 */
 static int builtin_eval( wchar_t **argv )
 {
-	wchar_t *tot, **ptr, *next;
-	int totlen=0;
-
-	for( ptr = argv+1; *ptr; ptr++ )
+	string_buffer_t sb;
+	int i;
+	int argc = builtin_count_args( argv );
+	sb_init( &sb );
+	
+	for( i=1; i<argc; i++ )
 	{
-		totlen += wcslen( *ptr) + 1;
+		sb_append( &sb, argv[i] );
+		sb_append( &sb, L" " );
 	}
-	tot = malloc( sizeof(wchar_t)*totlen );
-	if( !tot )
-	{
-		die_mem();
-	}
-	for( ptr = argv+1, next=tot; *ptr; ptr++ )
-	{
-		int len = wcslen( *ptr );
-		wcscpy( next, *ptr );
-		next+=len;
-		*next++=L' ';
-	}
-	*(next-1)=L'\0';
-	eval( tot, block_io, TOP );
-	free( tot );
+	
+	eval( (wchar_t *)sb.buff, block_io, TOP );
+	sb_destroy( &sb );
+	
 	return proc_get_last_status();
 }
 

@@ -216,20 +216,11 @@ end
 # ellipsised. This function is used by the default prompt command.
 #
 
-function prompt_pwd -d "Print the current working directory, ellipsise it if it is longer than 1/4 of the terminal width"
-	set wd (pwd)
-	set len (echo $wd|wc -c)
-	set max_width (echo $COLUMNS/4|bc)
-	if test $len -gt $max_width
-		#Write ellipsis character if known to be using UTF
-		#else use $
-		set -l ellipsis '$' #default
-		if expr match "$LANG" ".*UTF" >/dev/null
-			set ellipsis \u2026
-		end
-		printf %s%s $ellipsis (echo $wd|cut -c (echo $len-$max_width-1|bc)- ^/dev/null )
-	else
-		echo $wd
+function prompt_pwd -d "Print the current working directory, shortend to fit the prompt"
+	set -l wd (pwd)
+	printf "%s" $wd|sed -re 's-/([^/])([^/]*)-/\1-g'
+	if test $wd != '~'
+		printf "%s\n" $wd|sed -re 's-.*/[^/]([^/]*$)-\1-'
 	end
 end
 

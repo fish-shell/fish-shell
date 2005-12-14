@@ -713,7 +713,7 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 			wchar_t * new_in;			
 			array_list_t l;
 			int is_single = (c==VARIABLE_EXPAND_SINGLE);
-						
+			
 			stop_pos = start_pos;
 
 			while( 1 )
@@ -847,6 +847,7 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 					in[i]=0;
 					
 					sb_append( &res, in );
+					sb_append_char( &res, INTERNAL_SEPARATOR );
 
 					for( j=0; j<al_get_count( &l); j++ )
 					{

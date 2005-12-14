@@ -238,13 +238,7 @@ end
 #
 
 function pwd -d "Print working directory"
-	set out (command pwd $argv)
-	if echo $out| grep \^$HOME >/dev/null
-		printf \~
-		echo $out |cut -b (echo $HOME|wc -c)- ^/dev/null
-	else
-		printf "%s\n" $out
-	end
+	command pwd | sed -re "s|^$HOME|~|"
 end
 
 #

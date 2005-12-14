@@ -19,7 +19,7 @@ $if fish
 	"\M-d": if test -z (commandline); dirh; else; commandline -f kill-word; end
 	"\C-d": delete-or-exit	
 # This will make sure the output of the current command is paged using the less pager when you press Meta-p
-	"\M-p": if commandline -j|grep -v "less *$" >/dev/null; commandline -aj "|less;"; end
+	"\M-p": if commandline -j|grep -v 'less *$' >/dev/null; commandline -aj "|less;"; end
 $endif
 
 # Include user-specific inputrc file after including fish-specific

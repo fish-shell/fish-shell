@@ -128,6 +128,11 @@ The fish parser. Contains functions for parsing code.
 */
 #define COMMAND_ASSIGN_ERR_MSG L"Unknown command %ls. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
 
+/**
+   Error for invalid redirection token
+*/
+#define REDIRECT_TOKEN_ERR_MSG L"Expected redirection, got token of type %ls"
+
 /** Last error code */
 int error_code;
 
@@ -356,7 +361,7 @@ wchar_t *parser_get_block_desc( int block )
 int parser_skip_arguments( const wchar_t *cmd )
 {
 		
-    return contains_str( cmd,
+	return contains_str( cmd,
 						 L"else",
 						 L"begin",
 						 (void *)0 );
@@ -927,7 +932,7 @@ wchar_t *parser_current_line()
 
 	line = wcsndup( line, line_end-line );
 
-//	debug( 2, L"Current pos %d, line pos %d, file_length %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str));
+	debug( 4, L"Current pos %d, line pos %d, file_length %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str));
 
 	if( !is_interactive )
 	{
@@ -943,7 +948,10 @@ wchar_t *parser_current_line()
 		offset=0;
 	}
 
-	/* Skip printing if we are in interactive mode and the error was on the first character of the line */
+	/* 
+	   Skip printing character position if we are in interactive mode
+	   and the error was on the first character of the line
+	*/
 	if( offset+current_line_pos )
 		swprintf( lineinfo+offset,
 				  LINEINFO_SIZE-offset,
@@ -1162,16 +1170,23 @@ static void parse_job_main_loop( process_t *p,
 				io_data_t *new_io;
 				wchar_t *target = 0;
 				
-
-
 				/*
 				  Don't check redirections in skipped part
 
-				  Otherwise, bogus errors may be the result
+				  Otherwise, bogus errors may be the result. (Do check
+				  that token is string, though)
 				*/
 				if( current_block->skip )
 				{
 					tok_next( tok );
+					if( tok_last_type( tok ) != TOK_STRING )
+					{
+						error( SYNTAX_ERROR,
+							   tok_get_pos( tok ),
+							   REDIRECT_TOKEN_ERR_MSG,
+							   tok_get_desc( tok_last_type(tok)) );
+					}
+					
 					break;
 				}
 				
@@ -1193,7 +1208,7 @@ static void parse_job_main_loop( process_t *p,
 						{
 							error( SYNTAX_ERROR,
 								   tok_get_pos( tok ),
-								   L"Could not expand string %ls",
+								   REDIRECT_TOKEN_ERR_MSG,
 								   tok_last( tok ) );
 							
 						}
@@ -1247,8 +1262,8 @@ static void parse_job_main_loop( process_t *p,
 							{
 								new_io->io_mode = IO_FD;
 								new_io->param1.old_fd = wcstol( target,
-														 0,
-														 10 );
+																0,
+																10 );
 								if( ( new_io->param1.old_fd < 0 ) ||
 									( new_io->param1.old_fd > 10 ) )
 								{
@@ -2033,8 +2048,8 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 			   L"Tried to evaluate buffer using invalid block scope of type '%ls'. " BUGREPORT_MSG,
 			   parser_get_block_desc( block_type ),
 			   PACKAGE_BUGREPORT );
-        return 1;
-    }
+		return 1;
+	}
 		
 	eval_level++;
 	current_tokenizer = malloc( sizeof(tokenizer));
@@ -2308,15 +2323,15 @@ int parser_test( wchar_t * buff,
 //							debug( 2, L"Error on block type %d\n", block_type[count-1] );
 							
 
-                            if( babble )
-                            {
-                                error( SYNTAX_ERROR,
-                                       tok_get_pos( &tok ),
+							if( babble )
+							{
+								error( SYNTAX_ERROR,
+									   tok_get_pos( &tok ),
 									   INVALID_CASE_ERR_MSG );
-								                                
-                                print_errors();
-                            }
-                        }
+								
+								print_errors();
+							}
+						}
 					}	
 
 					/*
@@ -2341,14 +2356,14 @@ int parser_test( wchar_t * buff,
 						{
 							err=1;
 							
-                            if( babble )
-                            {
-                                error( SYNTAX_ERROR,
-                                       tok_get_pos( &tok ),
-                                       INVALID_LOOP_ERR_MSG );
+							if( babble )
+							{
+								error( SYNTAX_ERROR,
+									   tok_get_pos( &tok ),
+									   INVALID_LOOP_ERR_MSG );
 								print_errors();
-                            }
-                        }						
+							}
+						}						
 					}
 					
 					/*
@@ -2357,17 +2372,17 @@ int parser_test( wchar_t * buff,
 					if( wcscmp( L"else", tok_last( &tok ) )==0 )
 					{
 						if( !count || block_type[count-1]!=IF )
-                        {
-                            err=1;
-                            if( babble )
-                            {
-                                error( SYNTAX_ERROR,
-                                       tok_get_pos( &tok ),
+						{
+							err=1;
+							if( babble )
+							{
+								error( SYNTAX_ERROR,
+									   tok_get_pos( &tok ),
 									   INVALID_ELSE_ERR_MSG );
 								
 								print_errors();
-                            }
-                        }
+							}
+						}
 
 					}
 					
@@ -2413,13 +2428,13 @@ int parser_test( wchar_t * buff,
 				if( needs_cmd && !had_cmd )
 				{
 					err = 1;					
-                    if( babble )
-                    {
-                        error( SYNTAX_ERROR,
-                               tok_get_pos( &tok ),
+					if( babble )
+					{
+						error( SYNTAX_ERROR,
+							   tok_get_pos( &tok ),
 							   CMD_ERR_MSG );
 						print_errors();
-                    }
+					}
 				}				
 				needs_cmd=0;				
 				had_cmd = 0;
@@ -2452,14 +2467,14 @@ int parser_test( wchar_t * buff,
 				if( needs_cmd && !had_cmd )
 				{
 					err = 1;					
-                    if( babble )
-                    {
-                        error( SYNTAX_ERROR,
-                               tok_get_pos( &tok ),
+					if( babble )
+					{
+						error( SYNTAX_ERROR,
+							   tok_get_pos( &tok ),
 							   CMD_ERR_MSG );
 						
-                        print_errors();
-                    }
+						print_errors();
+					}
 				}		
 		
 				if( had_cmd )

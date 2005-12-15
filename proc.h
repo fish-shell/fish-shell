@@ -20,15 +20,30 @@
 
 
 /**
-   Types of internal processes
+   Types of processes
 */
 enum
 {
+	/**
+	   A regular external command
+	*/
 	EXTERNAL,
+	/**
+	   A builtin command
+	*/
 	INTERNAL_BUILTIN,
+	/**
+	   A shellscript function
+	*/
 	INTERNAL_FUNCTION,
+	/**
+	   A block of commands
+	*/
 	INTERNAL_BLOCK,
-	INTERNAL_EXEC
+	/**
+	   The exec builtin
+	*/
+	INTERNAL_EXEC,
 }
 	;
 
@@ -142,19 +157,39 @@ typedef struct job
 } 
 	job_t;
 
-/** Whether we are running a subshell command */
+/** 
+	Whether we are running a subshell command 
+*/
 extern int is_subshell;
-/** Whether we are running a block of commands */
+
+/** 
+	Whether we are running a block of commands 
+*/
 extern int is_block;
-/** Whether we are reading from the keyboard right now*/
+
+/** 
+	Whether we are reading from the keyboard right now
+*/
 extern int is_interactive;
-/** Whether this shell is attached to the keyboard at all*/
+
+/** 
+	Whether this shell is attached to the keyboard at all
+*/
 extern int is_interactive_session;
-/** Whether we are a login shell*/
+
+/** 
+	Whether we are a login shell
+*/
 extern int is_login;
-/** Whether we are a event handler*/
+
+/** 
+	Whether we are a event handler
+*/
 extern int is_event;
-/** Linked list of all jobs */
+
+/** 
+	Linked list of all jobs 
+*/
 extern job_t *first_job;   
 
 /**
@@ -175,6 +210,7 @@ extern pid_t proc_last_bg_pid;
    Sets the status of the last process to exit
 */
 void proc_set_last_status( int s );
+
 /**
    Returns the status of the last process to exit
 */
@@ -184,6 +220,7 @@ int proc_get_last_status();
    Remove the specified job
 */
 void job_free( job_t* j );
+
 /**
    Create a new job
 */
@@ -219,6 +256,7 @@ int job_is_completed( const job_t *j );
   \param cont Whether the function should wait for the job to complete before returning
 */
 void job_continue( job_t *j, int cont );
+
 /**
    Notify user of nog events.  Notify the user about stopped or
    terminated jobs.  Delete terminated jobs from the active job list.
@@ -226,10 +264,10 @@ void job_continue( job_t *j, int cont );
    \param interactive whether interactive jobs should be reaped as well
 */
 int job_reap( int interactive );
+
 /**
    Signal handler for SIGCHLD.  Mark any processes with relevant
    information.
-
 */
 void job_handle_signal( int signal, siginfo_t *info, void *con );
 

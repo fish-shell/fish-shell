@@ -313,12 +313,12 @@ void parser_forbid_function( wchar_t *function );
 void parser_allow_function();
 
 /**
-   Initialize the parser
+   Initialize static parser data
 */
 void parser_init();
 
 /**
-   Destroy the parser
+   Destroy static parser data
 */
 void parser_destroy();
 

@@ -72,30 +72,37 @@
 */
 
 #define READ_MODE_NAME L"fish_read"
+
+/**
+   The send stuff to foreground message
+*/
+#define FG_MSG L"Send job %d, '%ls' to foreground\n"
+
+/**
+   Print modes for the jobs builtin
+*/
+enum
+{
+	JOBS_DEFAULT, /**< Print lots of general info */
+	JOBS_PRINT_PID, /**< Print pid of each process in job */
+	JOBS_PRINT_COMMAND, /**< Print command name of each process in job */
+	JOBS_PRINT_GROUP, /**< Print group id of job */
+}
+	;
+
 /**
    Table of all builtins
 */
-
-
-	enum
-	{
-		JOBS_DEFAULT,
-		JOBS_PRINT_PID,
-		JOBS_PRINT_COMMAND,
-		JOBS_PRINT_GROUP,
-	}
-	;
-
-
 static hash_table_t builtin;
 
 int builtin_out_redirect;
 int builtin_err_redirect;
 
-/** 
+/*
 	Buffers for storing the output of builtin functions
 */
 string_buffer_t *sb_out=0, *sb_err=0;
+
 /**
    Stack containing builtin I/O for recursive builtin calls.
 */
@@ -422,8 +429,6 @@ static int builtin_block( wchar_t **argv )
 	
 }
 
-
-
 /**
    The builtin builtin, used for given builtins precedence over functions. Mostly handled by the parser. All this code does is some additional operational modes, such as printing a list of all builtins.
 */
@@ -530,7 +535,6 @@ static int builtin_builtin(  wchar_t **argv )
    only a placeholder that prints the help message. Useful for
    commands that live in hte parser.
 */
-
 static int builtin_generic( wchar_t **argv )
 {
 	int argc=builtin_count_args( argv );
@@ -594,7 +598,6 @@ static int builtin_generic( wchar_t **argv )
 /**
    The exec bultin. This is only a placeholder that prints the help message. Ther actual implementation lives in exec.c. 
 */
-
 static int builtin_exec( wchar_t **argv )
 {
 	int argc=builtin_count_args( argv );
@@ -784,9 +787,9 @@ static int builtin_functions( wchar_t **argv )
 		
 		if( argc-woptind != 1 )
 		{
-			sb_append2( sb_err,
-						L"functions: Expected exactly one function name\n",
-						(void *)0);				
+			sb_printf( sb_err,
+					   L"%ls: Expected exactly one function name\n",
+					   argv[0] );				
 			builtin_print_help( argv[0], sb_err );
 			
 			return 1;
@@ -794,11 +797,11 @@ static int builtin_functions( wchar_t **argv )
 		func = argv[woptind];
 		if( !function_exists( func ) )
 		{
-			sb_append2( sb_err,
-						L"functions: Function ",
-						func,
-						L" does not exist\n",
-						(void *)0);				
+			sb_printf( sb_err,
+					   L"%ls: Function '%ls' does not exist\n",
+					   argv[0],
+					   func );
+			
 			builtin_print_help( argv[0], sb_err );
 			
 			return 1;			
@@ -1158,24 +1161,21 @@ static int builtin_function( wchar_t **argv )
 		}
 		else if( !(is_binding?wcsbindingname( argv[woptind] ) : wcsvarname( argv[woptind] ) ))
 		{ 
-			sb_append2( sb_err, 
-						argv[0],
-						L": illegal function name \'", 
-						argv[woptind], 
-						L"\'\n", 
-						(void *)0 );
+			sb_printf( sb_err, 
+					   L"%ls: illegal function name '%ls'\n", 
+					   argv[0],
+					   argv[woptind] );
 			
 			res=1;	
 		}	
 		else if( parser_is_reserved(argv[woptind] ) )
 		{
 			
-			sb_append2( sb_err,
-						argv[0],
-						L": the name \'",
-						argv[woptind],
-						L"\' is reserved,\nand can not be used as a function name\n",
-						(void *)0 );
+			sb_printf( sb_err,
+					   L"%ls: the name '%ls' is reserved,\nand can not be used as a function name\n",
+					   argv[0],
+					   argv[woptind] );
+			
 			res=1;
 		}
 	}
@@ -1248,7 +1248,6 @@ static int builtin_function( wchar_t **argv )
 /** 
 	The random builtin. For generating random numbers.
 */
-
 static int builtin_random( wchar_t **argv )
 {
 	static int seeded=0;	
@@ -1333,9 +1332,10 @@ static int builtin_random( wchar_t **argv )
 			foo = wcstol( argv[woptind], &end, 10 );
 			if( errno || *end )
 			{
-				sb_append2( sb_err, 
-							argv[0],
-							L": Seed value '" , argv[woptind], L"' is not a valid number\n", (void *)0);
+				sb_printf( sb_err,
+						   L"%ls: Seed value '%ls' is not a valid number\n", 
+						   argv[0],
+						   argv[woptind] );
 				
 				return 1;
 			}
@@ -1348,6 +1348,7 @@ static int builtin_random( wchar_t **argv )
 		{
 			sb_printf( sb_err,
 					   L"%ls: Expected zero or one argument, got %d\n",
+					   argv[0],
 					   argc-woptind );
 			builtin_print_help( argv[0], sb_err );
 			return 1;
@@ -1788,7 +1789,10 @@ static int builtin_exit( wchar_t **argv )
 			ec = wcstol(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
-				sb_append2( sb_err, argv[0], L": Argument must be an integer '", argv[1], L"'\n", (void *)0 );
+				sb_printf( sb_err, 
+						   L"%ls: Argument must be an integer '%ls'\n", 
+						   argv[0],
+						   argv[1] );
 				builtin_print_help( argv[0], sb_err );				
 				return 1;
 			}
@@ -1796,7 +1800,10 @@ static int builtin_exit( wchar_t **argv )
 		}
 		
 		default:
-			sb_append2( sb_err, argv[0], L": Too many arguments\n", (void *)0 );
+			sb_printf( sb_err, 
+					   L"%ls: Too many arguments\n", 
+					   argv[0] );
+			
 			builtin_print_help( argv[0], sb_err );				
 			return 1;
 				
@@ -2295,14 +2302,19 @@ static int builtin_fg( wchar_t **argv )
 		if( builtin_err_redirect )
 		{
 			sb_printf( sb_err, 
-					   L"Send job %d, '%ls' to foreground\n", 
+					   FG_MSG,
 					   j->job_id, 
 					   j->command );
 		}
 		else
 		{
+			/*
+			  If we aren't redirecting, send output to real stderr,
+			  since stuff in sb_err won't get printed until the
+			  command finishes.
+			*/
 			fwprintf( stderr,
-					  L"Send job %d, '%ls' to foreground\n", 
+					  FG_MSG,
 					  j->job_id, 
 					  j->command );
 		}
@@ -2313,11 +2325,7 @@ static int builtin_fg( wchar_t **argv )
 		env_set( L"_", ft, ENV_EXPORT );
 	free(ft);
 	reader_write_title();
-/*
-  fwprintf( stderr, L"Send job %d, \'%ls\' to foreground\n", 
-  j->job_id,
-  j->command );
-*/
+
 	make_first( j );
 	j->fg=1;
 	
@@ -2539,12 +2547,11 @@ static int builtin_jobs( wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-				sb_append2( sb_err,
-							argv[0],
-							L": Unknown option ",
-							long_options[opt_index].name,
-							L"\n",
-							(void *)0 );
+				sb_printf( sb_err,
+						   L"%ls: Unknown option '%ls'\n",
+						   argv[0],
+						   long_options[opt_index].name );
+											
 				sb_append( sb_err, 
 						   parser_current_line() );
 //				builtin_print_help( argv[0], sb_err );
@@ -2620,7 +2627,10 @@ static int builtin_jobs( wchar_t **argv )
 				pid=wcstol( argv[i], &end, 10 );
 				if( errno || *end )
 				{
-					sb_append2( sb_err, argv[0], L": Not a process id: ", argv[i], L"\n", (void *)0 );
+					sb_printf( sb_err, 
+							   L"%ls: Not a process id: '%ls'\n",
+							   argv[0], 
+							   argv[i] );
 					return 1;
 				}
 				
@@ -2632,7 +2642,10 @@ static int builtin_jobs( wchar_t **argv )
 				}
 				else
 				{
-					sb_printf( sb_err, L"%ls: No suitable job: %d\n", argv[0], pid );
+					sb_printf( sb_err,
+							   L"%ls: No suitable job: %d\n", 
+							   argv[0], 
+							   pid );
 					return 1;
 				}
 			}
@@ -2655,7 +2668,9 @@ static int builtin_jobs( wchar_t **argv )
 	
 	if( !found )
 	{
-		sb_append2( sb_out, argv[0], L": There are no running jobs\n", (void *)0 );
+		sb_printf( sb_out, 
+				   L"%ls: There are no running jobs\n", 
+				   argv[0] );
 	}
 	
 	return 0;
@@ -2672,28 +2687,24 @@ static int builtin_for( wchar_t **argv )
 
 	if( argc < 3) 
 	{
-		sb_append2( sb_err, 
-					argv[0],
-					L": Expected at least two arguments\n",
-					(void *)0);				
+		sb_printf( sb_err, 
+				   L"%ls: Expected at least two arguments\n",
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 	}
 	else if ( !wcsvarname(argv[1]) )
 	{
-		sb_append2( sb_err, 
-					argv[0],
-					L": \'",
-					argv[1],
-					L"\' invalid variable name\n",
-					(void *)0);				
+		sb_printf( sb_err, 
+				   L"%ls: '%ls' invalid variable name\n",
+				   argv[0],
+				   argv[1] );
 		builtin_print_help( argv[0], sb_err );
 	}
 	else if (wcscmp( argv[2], L"in") != 0 )
 	{
-		sb_append2( sb_err,
-					argv[0],
-					L": Second argument must be \'in\'\n",
-					(void *)0);				
+		sb_printf( sb_err,
+				   L"%ls: Second argument must be 'in'\n",
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 	}
 	else
@@ -2753,10 +2764,10 @@ static int builtin_end( wchar_t **argv )
 		current_block->type == OR ||
 		current_block->type == AND )
 	{
-		sb_append2( sb_err,
-					argv[0],
-					L": Not inside of block\n",
-					(void *)0);
+		sb_printf( sb_err,
+				   L"%ls: Not inside of block\n",
+				   argv[0] );
+		
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2877,10 +2888,9 @@ static int builtin_else( wchar_t **argv )
 		current_block->type != IF ||
 		current_block->param1.if_state != 1)
 	{
-		sb_append2( sb_err,
-					argv[0],
-					L": not inside of if block\n",
-					(void *)0);
+		sb_printf( sb_err,
+				   L"%ls: not inside of if block\n",
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2911,9 +2921,10 @@ static int builtin_break_continue( wchar_t **argv )
 	
 	if( argc != 1 )
 	{
-		sb_append2( sb_err, 
-					argv[0], 
-					L": Unknown option \'", argv[1], L"\'", (void *)0 );
+		sb_printf( sb_err, 
+				   L"%ls: Unknown option '%ls'\n", 
+				   argv[0], 
+				   argv[1] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;		
 	}
@@ -2928,9 +2939,9 @@ static int builtin_break_continue( wchar_t **argv )
 	
 	if( b == 0 )
 	{
-		sb_append2( sb_err, 
-					argv[0], 
-					L": Not inside of loop\n", (void *)0 );
+		sb_printf( sb_err, 
+				   L"%ls: Not inside of loop\n", 
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2968,12 +2979,10 @@ static int builtin_return( wchar_t **argv )
 			status = wcstol(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
-				sb_append2( sb_err,
-							argv[0], 
-							L": Argument must be an integer '", 
-							argv[1],
-							L"'\n", 
-							(void *)0 );
+				sb_printf( sb_err,
+						   L"%ls: Argument must be an integer '%ls'\n", 
+						   argv[0], 
+						   argv[1] );
 				builtin_print_help( argv[0], sb_err );				
 				return 1;
 			}
@@ -2981,9 +2990,9 @@ static int builtin_return( wchar_t **argv )
 			break;			
 		}
 		default:
-			sb_append2( sb_err, 
-						argv[0], 
-						L": Too many arguments\n", (void *)0 );
+			sb_printf( sb_err, 
+					   L"%ls: Too many arguments\n", 
+					   argv[0] );
 			builtin_print_help( argv[0], sb_err );
 			return 1;		
 	}
@@ -2997,9 +3006,9 @@ static int builtin_return( wchar_t **argv )
 	
 	if( b == 0 )
 	{
-		sb_append2( sb_err, 
-					argv[0], 
-					L": Not inside of function\n", (void *)0 );
+		sb_printf( sb_err,
+				   L"%ls: Not inside of function\n", 
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -3057,10 +3066,9 @@ static int builtin_case( wchar_t **argv )
 
 	if( current_block->type != SWITCH )
 	{
-		sb_append2( sb_err,
-					argv[0],
-					L": syntax error, case command while not in switch block\n",
-					(void *)0);
+		sb_printf( sb_err,
+				   L"%ls: syntax error, case command while not in switch block\n",
+				   argv[0] );
 		builtin_print_help( L"case", sb_err );
 		return 1;
 	}
@@ -3094,6 +3102,7 @@ static int builtin_case( wchar_t **argv )
   END OF BUILTIN COMMANDS
   Below are functions for handling the builtin commands
 */
+
 void builtin_init()
 {
 	al_init( &io_stack );

@@ -17,6 +17,9 @@
 */
 #define EVENT_ANY_PID 0
 
+/**
+   Enumeration of event types
+*/
 enum
 {
 	EVENT_ANY, /**< Matches any event type (Not always any event, as the function name may limit the choice as well */
@@ -40,6 +43,10 @@ typedef struct
 	   Type of event
 	*/
 	int type;
+
+	/**
+	   The type-specific parameter
+	*/
 	union
 	{
 		/**

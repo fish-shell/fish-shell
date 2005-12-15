@@ -253,7 +253,7 @@ int builtin_commandline( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"aijpctwfo", 
+								L"aijpctwfor", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -282,7 +282,11 @@ int builtin_commandline( wchar_t **argv )
 			case L'i':
 				append_mode = INSERT_MODE;
 				break;
-				
+
+			case L'r':
+				append_mode = REPLACE_MODE;
+				break;
+								
 			case 'c':
 				cut_at_cursor=1;
 				break;

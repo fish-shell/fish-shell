@@ -2163,6 +2163,7 @@ static int builtin_source( wchar_t ** argv )
 {
 	int fd;
 	int res;
+	struct stat buf;
 	
 	if( (argv[1] == 0) || (argv[2]!=0) )
 	{
@@ -2173,6 +2174,19 @@ static int builtin_source( wchar_t ** argv )
 		return 1;
 	}
 	
+	if( wstat(argv[1], &buf) == -1 )
+	{
+		builtin_wperror( L"stat" );
+		res = 1;
+	}
+
+	if( !S_ISREG(buf.st_mode) )
+	{
+		sb_append2( sb_err, argv[0], L": Expected a regular file\n", (void *)0 );
+		builtin_print_help( argv[0], sb_err );
+
+		return 1;
+	}
 	if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
 	{		
 		builtin_wperror( L"open" );

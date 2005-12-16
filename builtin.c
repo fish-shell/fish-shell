@@ -2177,9 +2177,9 @@ static int builtin_source( wchar_t ** argv )
 	if( wstat(argv[1], &buf) == -1 )
 	{
 		builtin_wperror( L"stat" );
-		res = 1;
+		return 1;
 	}
-
+		
 	if( !S_ISREG(buf.st_mode) )
 	{
 		sb_append2( sb_err, argv[0], L": Expected a regular file\n", (void *)0 );

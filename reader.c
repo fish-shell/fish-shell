@@ -3037,7 +3037,21 @@ static int read_ni( int fd )
 		while(!feof( in_stream ))
 		{
 			char buff[4096];
-			int c = fread(buff, 1, 4096, in_stream);
+			int c;
+
+			c = fread(buff, 1, 4096, in_stream);
+			if( ferror( in_stream ) )
+			{
+				debug( 1, 
+					   L"Error while reading commands" );
+
+				/*
+				  Reset buffer. We won't evaluate incomplete files.
+				*/
+				acc.used=0;
+				break;
+			}
+			
 			b_append( &acc, buff, c );
 		}
 		b_append( &acc, "\0", 1 );

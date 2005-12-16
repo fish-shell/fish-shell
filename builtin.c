@@ -1859,12 +1859,10 @@ static int builtin_cd( wchar_t **argv )
 	
 	if( !dir )
 	{
-		sb_append2( sb_err,
-					argv[0],
-					L": ",
-					dir_in,
-					L" is not a directory or you do not have permission to enter it\n",
-					(void *)0 );
+		sb_printf( sb_err,
+				   L"%ls: is not a directory or you do not have permission to enter it\n",
+				   argv[0],
+				   dir_in );
 		sb_append2( sb_err, 
 					parser_current_line(),
 					(void *)0 );			
@@ -1873,12 +1871,10 @@ static int builtin_cd( wchar_t **argv )
 
 	if( wchdir( dir ) != 0 )
 	{
-		sb_append2( sb_err,
-					argv[0],
-					L": ",
-					dir,
-					L" is not a directory\n",
-					(void *)0 );
+		sb_printf( sb_err,
+				   L"%ls: '%ls' is not a directory\n",
+				   argv[0],
+				   dir );
 		sb_append2( sb_err, 
 					parser_current_line(),
 					(void *)0 );
@@ -1891,7 +1887,7 @@ static int builtin_cd( wchar_t **argv )
 	if (!set_pwd(L"PWD"))
 	{
 		res=1;
-		sb_append( sb_err, L"Could not set PWD variable\n" );		
+		sb_printf( sb_err, L"%ls: Could not set PWD variable\n", argv[0] );		
 	}
 	
 	free( dir );
@@ -2102,10 +2098,9 @@ static int builtin_complete( wchar_t **argv )
 	
 	if( woptind != argc )
 	{
-		sb_append2( sb_err, 
-					argv[0],
-					L": Too many arguments\n",
-					(void *)0);
+		sb_printf( sb_err, 
+				   L"%ls: Too many arguments\n",
+				   argv[0] );
 		sb_append( sb_err, 
 				   parser_current_line() );
 		//			builtin_print_help( argv[0], sb_err );
@@ -2164,13 +2159,15 @@ static int builtin_source( wchar_t ** argv )
 	int fd;
 	int res;
 	struct stat buf;
+	int argc;
 	
-	if( (argv[1] == 0) || (argv[2]!=0) )
-	{
-		
-		sb_append2( sb_err, argv[0], L": Expected exactly one argument\n", (void *)0 );
-		builtin_print_help( argv[0], sb_err );
+	argc = builtin_count_args( argv );	
 
+	
+	if( argc != 2 )
+	{
+		sb_printf( sb_err, L"%ls: Expected exactly one argument, gor %d\n", argv[0], argc );
+		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 	
@@ -2182,9 +2179,9 @@ static int builtin_source( wchar_t ** argv )
 		
 	if( !S_ISREG(buf.st_mode) )
 	{
-		sb_append2( sb_err, argv[0], L": Expected a regular file\n", (void *)0 );
+		sb_printf( sb_err, L"%ls: '%ls' is not a file\n", argv[0], argv[1] );
 		builtin_print_help( argv[0], sb_err );
-
+		
 		return 1;
 	}
 	if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )

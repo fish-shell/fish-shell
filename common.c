@@ -574,6 +574,7 @@ wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz)
 	/* count does not include NUL */
 }
 
+#ifndef HAVE_WCSDUP
 wchar_t *wcsdup( const wchar_t *in )
 {
 	size_t len=wcslen(in);
@@ -587,10 +588,20 @@ wchar_t *wcsdup( const wchar_t *in )
 	return out;
 	
 }
+#endif
 
-/**
-   Fallback implementation if missing from libc
-*/
+#ifndef HAVE_WCSLEN
+size_t wcslen(const wchar_t *in)
+{
+	const wchar_t *end=in;
+	while( *end )
+		end++;
+	return end-in;
+}
+#endif
+
+
+#ifndef HAVE_WCSCASECMP
 int wcscasecmp( const wchar_t *a, const wchar_t *b )
 {
 	if( *a == 0 )
@@ -607,10 +618,10 @@ int wcscasecmp( const wchar_t *a, const wchar_t *b )
 	else
 		return wcscasecmp( a+1,b+1);
 }
+#endif
 
-/**
-   Fallback implementation if missing from libc
-*/
+
+#ifndef HAVE_WCSNCASECMP
 int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count )
 {
 	if( count == 0 )
@@ -630,6 +641,7 @@ int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count )
 	else
 		return wcsncasecmp( a+1,b+1, count-1);
 }
+#endif
 
 int wcsvarname( wchar_t *str )
 {

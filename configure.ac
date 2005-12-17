@@ -120,6 +120,8 @@ fi
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(rt, nanosleep)
 
+AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp)
+
 # Check if we have ncurses, and use it rather than curses if possible.
 AC_CHECK_HEADERS([ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEFINE(HAVE_NCURSES_H)],[AC_SUBST(CURSESLIB,[curses])])
 

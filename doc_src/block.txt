@@ -13,7 +13,7 @@
 \subsection block-example Example
 
 <pre>block -g
-#Do something that should not be interrupted
+\#Do something that should not be interrupted
 block -e
 </pre>
 

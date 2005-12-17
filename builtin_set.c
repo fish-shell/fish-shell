@@ -290,7 +290,7 @@ int builtin_set( wchar_t **argv )
 		}
 	;
 	
-	wchar_t short_options[] = L"xglenuUq";
+	wchar_t short_options[] = L"+xglenuUq";
 
 	int argc = builtin_count_args(argv);
 

@@ -251,7 +251,7 @@ function vared -d "Edit variable value"
 				if test (count $$argv ) -lt 2
 					set init ''
 					if test $$argv
-						set init -- $$argv
+						set -- init $$argv
 					end
 					set prompt 'set_color green; echo '$argv'; set_color normal; echo "> "'
 					read -p $prompt -c $init tmp
@@ -361,7 +361,7 @@ function cd -d "Change directory"
 	end
 
 	# Avoid set completions
-	set -- previous (command pwd)
+	set previous (command pwd)
 
 	if test $argv[1] = - ^/dev/null
 		if test $__fish_cd_direction = next ^/dev/null
@@ -594,7 +594,7 @@ function type -d "Print the type of a command"
 		return 1
 	end
 
-	set tmp -- (getopt $shortopt $longopt -- $argv)
+	set -- tmp (getopt $shortopt $longopt -- $argv)
 
 	eval set opt -- $tmp
 
@@ -843,7 +843,7 @@ function umask -d "Set default file permission mask"
 	if getopt -T >/dev/null
 		set longopt
 	else
-		set longopt -- -l as-command,symbolic,help
+		set -- longopt -l as-command,symbolic,help
 	end
 
 	if not getopt -n umask -Q $shortopt $longopt -- $argv
@@ -852,7 +852,7 @@ function umask -d "Set default file permission mask"
 
 	set tmp -- (getopt $shortopt $longopt -- $argv)
 
-	eval set opt -- $tmp
+	eval set -- opt $tmp
 
 	while count $opt >/dev/null
 

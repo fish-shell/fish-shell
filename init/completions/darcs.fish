@@ -9,7 +9,7 @@
 #
 
 function __fish_use_subcommand 
-	set -l cmd -- (commandline -poc)
+	set -l -- cmd (commandline -poc)
 	set -e cmd[1]
 	for i in $cmd
 		switch $i
@@ -69,7 +69,7 @@ complete -c darcs -s v -l verbose -d "give verbose output"
 # Here follows a huge list of subcommand-specific completions
 #
 
-set record_opt --  -c darcs -n 'contains record (commandline -poc)'
+set -- record_opt -c darcs -n 'contains record (commandline -poc)'
 complete $record_opt -s m -l patch-name -d "Name of patch" -x
 complete $record_opt -s A -l author -d "Specify author id" -x
 complete $record_opt -l logfile -d "Give patch name and comment in file" -r
@@ -95,7 +95,7 @@ complete $record_opt -l dont-look-for-adds -d "Don"\'"t look for any files or di
 set -e record_opt
 
 
-set pull_opt --  -c darcs -n 'contains pull (commandline -poc)'
+set -- pull_opt -c darcs -n 'contains pull (commandline -poc)'
 complete $pull_opt -s p -l patches -d "select patches matching REGEXP" -x
 complete $pull_opt -s t -l tags -d "select tags matching REGEXP" -x
 complete $pull_opt -s a -l all -d "answer yes to all patches"
@@ -120,7 +120,7 @@ complete $pull_opt -l dont-set-scripts-executable -d "don"\'"t make scripts exec
 set -e pull_opt
 
 
-set apply_opt --  -c darcs -n 'contains apply (commandline -poc)'
+set -- apply_opt  -c darcs -n 'contains apply (commandline -poc)'
 complete $apply_opt -s a -l all -d "answer yes to all patches"
 complete $apply_opt -l verify -d "verify that the patch was signed by a key in PUBRING" -r
 complete $apply_opt -l verify-ssl -d "verify using openSSL with authorized keys from file "\'"KEYS"\'"" -r
@@ -147,7 +147,7 @@ complete $apply_opt -l set-scripts-executable -d "make scripts executable"
 complete $apply_opt -l dont-set-scripts-executable -d "don"\'"t make scripts executable"
 set -e apply_opt
 
-set check_opt --  -c darcs -n 'contains check (commandline -poc)'
+set -- check_opt  -c darcs -n 'contains check (commandline -poc)'
 complete $check_opt -s v -l verbose -d "give verbose output"
 complete $check_opt -s q -l quiet -d "suppress informational output"
 complete $check_opt -l complete -d "check the entire repository"
@@ -159,13 +159,13 @@ complete $check_opt -l leave-test-directory -d "don"\'"t remove the test directo
 complete $check_opt -l remove-test-directory -d "remove the test directory"
 set -e check_opt
 
-set mv_opt --  -c darcs -n 'contains mv (commandline -poc)'
+set -- mv_opt  -c darcs -n 'contains mv (commandline -poc)'
 complete $mv_opt -s v -l verbose -d "give verbose output"
 complete $mv_opt -l case-ok -d "don"\'"t refuse to add files differing only in case"
 complete $mv_opt -l standard-verbosity -d "don"\'"t give verbose output"
 set -e mv_opt
 
-set send_opt --  -c darcs -n 'contains send (commandline -poc)'
+set -- send_opt -c darcs -n 'contains send (commandline -poc)'
 complete $send_opt -s v -l verbose -d "give verbose output"
 complete $send_opt -s q -l quiet -d "suppress informational output"
 complete $send_opt -xs p -l patches -d "select patches matching REGEXP"
@@ -194,7 +194,7 @@ complete $send_opt -l no-set-default -d "don"\'"t set default repository"
 complete $send_opt -rl sendmail-command -d "specify sendmail command"
 set -e send_opt
 
-set init_opt --  -c darcs -n 'contains initialize (commandline -poc)'
+set -- init_opt  -c darcs -n 'contains initialize (commandline -poc)'
 complete $init_opt -l plain-pristine-tree -d "Use a plain pristine tree [DEFAULT]"
 complete $init_opt -l no-pristine-tree -d "Use no pristine tree"
 set -e init_opt

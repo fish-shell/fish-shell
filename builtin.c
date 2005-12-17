@@ -658,6 +658,82 @@ static int builtin_exec( wchar_t **argv )
 	return 1;
 }
 
+static void functions_def( wchar_t *name )
+{
+	const wchar_t *desc = function_get_desc( name );
+	const wchar_t *def = function_get_definition(name);
+	
+	array_list_t ev;
+	event_t search;
+	
+	int i;
+	
+	search.function_name = name;
+	search.type = EVENT_ANY;
+	
+	al_init( &ev );
+	event_get( &search, &ev );
+	
+	sb_append2( sb_out,
+				L"function ",
+				name,
+				(void *)0);
+
+	if( desc && wcslen(desc) )
+	{
+		wchar_t *esc_desc = escape( desc, 1 );
+		
+		sb_append2( sb_out, L" --description ", esc_desc, (void *)0 );
+		free( esc_desc );
+	}
+	
+	for( i=0; i<al_get_count( &ev); i++ )
+	{
+		event_t *next = (event_t *)al_get( &ev, i );
+		switch( next->type )
+		{
+			case EVENT_SIGNAL:
+			{
+				sb_printf( sb_out, L" --on-signal %ls", sig2wcs( next->param1.signal ) );
+				break;
+			}
+			
+			case EVENT_VARIABLE:
+			{
+				sb_printf( sb_out, L" --on-variable %ls", next->param1.variable );
+				break;
+			}
+
+			case EVENT_EXIT:
+			{
+				if( next->param1.pid > 0 )
+					sb_printf( sb_out, L" --on-process-exit %d", next->param1.pid );
+				else
+					sb_printf( sb_out, L" --on-job-exit %d", -next->param1.pid );
+				break;
+			}
+
+			case EVENT_JOB_ID:
+			{
+				job_t *j = job_get( next->param1.job_id );
+				if( j )
+					sb_printf( sb_out, L" --on-job-exit %d", j->pgid );
+				break;
+			}
+
+		}
+				
+	}
+	
+	al_destroy( &ev );
+	
+	sb_append2( sb_out,
+				L"\n\t",
+				def,
+				L"\nend\n\n",
+				(void *)0);
+}
+
 
 /**
    The functions builtin, used for listing and erasing functions.
@@ -847,13 +923,8 @@ static int builtin_functions( wchar_t **argv )
 				   (int (*)(const void *, const void *))&wcsfilecmp );
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
-				sb_append2( sb_out,
-							L"function ",
-							names_arr[i],
-							L"\n\t",
-							function_get_definition(names_arr[i]),
-							L"\nend\n\n",
-							(void *)0);
+				functions_def( names_arr[i] );
+				
 			}
 			free( names_arr );
 			al_destroy( &names );			
@@ -869,13 +940,7 @@ static int builtin_functions( wchar_t **argv )
 					res++;
 				else
 				{
-					sb_append2( sb_out,
-								L"function ",
-								argv[i],
-								L"\n\t",
-								function_get_definition(argv[i]),
-								L"\nend\n\n",
-								(void *)0);
+					functions_def( argv[i] );
 				}
 			}
 			

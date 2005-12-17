@@ -71,7 +71,7 @@ complete -x -c ssh -d Hostname -a "
 
 (
 	#Prepend any username specified in the completion to the hostname
-	echo (commandline -ct)|grep -o '.*@'
+	echo (commandline -ct)|sed -nre 's/(.*@).*/\1/p'
 )(__fish_print_hostnames)
 
 (__fish_print_users)@

@@ -17,7 +17,7 @@ complete -c scp -d Hostname -a "
 
 (
 	#Prepend any username specified in the completion to the hostname
-	echo (commandline -ct)|sed -nre 's/(.*@).*/\1/p'
+	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
 )(
 	cat ~/.ssh/known_hosts{,2} ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
 ):

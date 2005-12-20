@@ -218,9 +218,9 @@ end
 
 function prompt_pwd -d "Print the current working directory, shortend to fit the prompt"
 	set -l wd (pwd)
-	printf "%s" $wd|sed -re 's-/([^/])([^/]*)-/\1-g'
+	printf "%s" $wd|sed -e 's-/\([^/]\)\([^/]*\)-/\1-g'
 	if test $wd != '~'
-		printf "%s\n" $wd|sed -re 's-.*/[^/]([^/]*$)-\1-'
+		printf "%s\n" $wd|sed -e 's-.*/[^/]\([^/]*$\)-\1-'
 	end
 end
 
@@ -229,7 +229,7 @@ end
 #
 
 function pwd -d "Print working directory"
-	command pwd | sed -re "s|^$HOME|~|"
+	command pwd | sed -e "s|^$HOME|~|"
 end
 
 #
@@ -661,7 +661,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 			if count $opt >/dev/null
 				set -- names $opt
 			else
-				set -- names (functions -na|grep "^__trap_handler_"|sed -re 's/__trap_handler_//' )
+				set -- names (functions -na|grep "^__trap_handler_"|sed -e 's/__trap_handler_//' )
 			end
 
 			for i in $names

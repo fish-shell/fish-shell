@@ -10,7 +10,7 @@ complete -y mount
 #
 # Find all mountpoints
 #
-complete -c umount -d "Mount point" -x -a '(cat /etc/mtab | cut -d " " -f 1-2|tr " " \n|sed -re "s/[0-9\.]*:\//\//"|grep "^/")'
+complete -c umount -d "Mount point" -x -a '(cat /etc/mtab | cut -d " " -f 1-2|tr " " \n|sed -e "s/[0-9\.]*:\//\//"|grep "^/")'
 
 complete -c umount -s V -d "Display version and exit"
 complete -c umount -s h -d "Display help and exit"

@@ -2,7 +2,7 @@
 # Completions for the modprobe command
 #
 
-complete -c modprobe -d Module -a "(/sbin/modprobe -l | sed -re 's/\/.*\/([^\/.]*).*/\1/')"
+complete -c modprobe -d Module -a "(/sbin/modprobe -l | sed -e 's/\/.*\/\([^\/.]*\).*/\1/')"
 complete -c modprobe -s v -l verbose -d "Print messages about what the program is doing"
 complete -c modprobe -s C -l config -d "Configuration file" -r
 complete -c modprobe -s c -l showconfig -d "Dump configuration file"

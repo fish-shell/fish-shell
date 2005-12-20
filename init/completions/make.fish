@@ -2,7 +2,7 @@
 
 function __fish_print_make_targets
 	set files Makefile makefile GNUmakefile
-	grep -h -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $files | cut -d ":" -f 1 | sed -r 's/^ *//;s/ *$//;s/ +/\n/g' ^/dev/null
+	grep -h -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $files | cut -d ":" -f 1 | sed -e 's/^ *//;s/ *$//;s/  */\n/g' ^/dev/null
 end
 
 complete -x -c make -a "(__fish_print_make_targets)" -d "Target"

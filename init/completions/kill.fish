@@ -7,7 +7,7 @@ if kill -L ^/dev/null >/dev/null
 
 	complete -c kill -s L -d "List codes and names of available signals"
 
-	set -- signals (kill -L | sed -r 's/([0-9]+) +([A-Z,0-9]+)/\1 \2\n/g;s/ +/ /g' | sed 's/^ //' | grep -E '^[^ ]+')
+	set -- signals (kill -L | sed -e 's/\([0-9][0-9]*\)  *([A-Z,0-9][A-Z,0-9]*\)/\1 \2\n/g;s/ +/ /g' | sed -e 's/^ //' | grep -E '^[^ ]+')
 	for i in $signals
 		set -- number (echo $i | cut -d " " -f 1)
 		set -- name (echo $i | cut -d " " -f 2)

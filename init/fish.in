@@ -15,13 +15,22 @@ set -g IFS \ \t\n
 # want this even for text-only terminals.
 #
 
-for i in /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin
+set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin
+
+set -l uid (id -u 2>/dev/null)
+if test "$uid" = 0
+	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
+end
+
+for i in $path_list
 	if not expr "$PATH" : .\*$i.\* >/dev/null
 		if test -d $i
 			set PATH $PATH $i
 		end
 	end
 end
+
+
 
 
 #

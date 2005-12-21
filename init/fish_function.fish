@@ -115,7 +115,7 @@ function help -d "Show help for the fish shell"
 
 		# If we are in a graphical environment, we check if there is a
 		# graphical browser to use instead.
-		if test (echo $DISPLAY)
+		if test (echo $DISPLAY) -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
 			for i in $graphical_browsers
 				if which $i 2>/dev/null >/dev/null
 					set fish_browser $i

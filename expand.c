@@ -20,6 +20,8 @@ parameter expansion.
 #include <unistd.h>
 #include <signal.h>
 
+#include <assert.h>
+
 #ifdef SunOS
 #include <procfs.h>
 #endif
@@ -1174,6 +1176,11 @@ int expand_locate_subshell( wchar_t *in,
 	*begin = paran_begin;
 	*end = paran_count?in+wcslen(in):paran_end;
 	
+/*	assert( *begin >= in );
+	assert( *begin < (in+wcslen(in) ) );
+	assert( *end >= *begin );
+	assert( *end < (in+wcslen(in) ) );
+*/
 	return 1;
 
 }

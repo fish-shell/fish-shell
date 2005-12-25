@@ -2017,7 +2017,7 @@ void complete( const wchar_t *cmd,
 		
 		tok_init( &tok, buff, TOK_ACCEPT_UNFINISHED );
 		
-		while( !end_loop )
+		while( tok_has_next( &tok) && !end_loop )
 		{
 			switch( tok_last_type( &tok ) )
 			{
@@ -2063,7 +2063,8 @@ void complete( const wchar_t *cmd,
 		reader_current_token_extent( &begin, &end, &prev_begin, &prev_end );
 
 		current_token = wcsndup( begin, reader_get_cursor_pos()-(begin-reader_get_buffer()) );
-		prev_token = wcsndup( prev_begin, prev_end - prev_begin );
+
+		prev_token = prev_begin ? wcsndup( prev_begin, prev_end - prev_begin ): wcsdup(L"");
 
 //		fwprintf( stderr, L"on_command: %d, %ls %ls\n", on_command, current_compmand, current_token );
 	

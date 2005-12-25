@@ -317,8 +317,11 @@ static int test_flags( wchar_t *filename,
 		return 1;
 	
 	struct stat buf;
-	wstat( filename, &buf );
-	
+	if( wstat( filename, &buf ) == -1 )
+	{
+		return 1;
+	}
+		
 	if( S_IFDIR & buf.st_mode )
 		return 1;
 	

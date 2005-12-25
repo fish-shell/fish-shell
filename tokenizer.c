@@ -119,12 +119,9 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 
 	memset( tok, 0, sizeof( tokenizer) );
 	
-	tok ->last = 0;
-	tok ->last_len = 0;
 	tok->accept_unfinished = flags & TOK_ACCEPT_UNFINISHED;
 	tok->show_comments = flags & TOK_SHOW_COMMENTS;
-	tok->has_next=1;
-	
+	tok->has_next=1;	
 
 	/* 
 	   Before we copy the buffer we need to check that it is not
@@ -139,12 +136,6 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 
 	tok->has_next = (*b != L'\0');
 	tok->orig_buff = tok->buff = (wchar_t *)(b);
-
-	if( !tok->orig_buff )
-	{
-		die_mem();
-		
-	}
 	
 	if( tok->accept_unfinished )
 	{
@@ -154,7 +145,11 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 			if( tok->orig_buff[l-1] == L'\\' )
 			{
 				tok->free_orig = 1;
-				tok->orig_buff = wcsdup( tok->orig_buff );
+				tok->orig_buff = tok->buff = wcsdup( tok->orig_buff );
+				if( !tok->orig_buff )
+				{
+					die_mem();		
+				}
 				tok->orig_buff[l-1] = L'\0';
 			}
 		}
@@ -624,7 +619,7 @@ wchar_t *tok_first( const wchar_t *str )
 
 int tok_get_pos( tokenizer *tok )
 {
-	return tok->last_pos;
+	return tok->last_pos + (tok->free_orig?1:0);
 }
 
 

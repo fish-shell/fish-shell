@@ -52,6 +52,8 @@ commence.
 #include <time.h>
 #include <wchar.h>
 
+#include <assert.h>
+
 #include "util.h"
 #include "wutil.h"
 #include "highlight.h"
@@ -1829,8 +1831,6 @@ void reader_current_token_extent( wchar_t **tok_begin,
 	
 	reader_current_subshell_extent( &begin, &end );
 
-//	fwprintf( stderr, L"Lalala: %d %d %d\n", begin-data->buff, end-data->buff, pos );
-
 	if( !end || !begin )
 		return;
 
@@ -1840,6 +1840,11 @@ void reader_current_token_extent( wchar_t **tok_begin,
 	b = a;
 	pa = data->buff + pos;
 	pb = pa;
+
+	assert( begin >= data->buff );
+	assert( begin <= (data->buff+wcslen(data->buff) ) );
+	assert( end >= begin );
+	assert( end <= (data->buff+wcslen(data->buff) ) );
 
 	buffcpy = wcsndup( begin, end-begin );
 
@@ -1855,15 +1860,27 @@ void reader_current_token_extent( wchar_t **tok_begin,
 		int tok_begin = tok_get_pos( &tok );
 		int tok_end=tok_begin;
 
+		/*
+		  Calculate end of token
+		*/
 		if( tok_last_type( &tok ) == TOK_STRING )
 			tok_end +=wcslen(tok_last(&tok));
-
+		
+		/*
+		  Cursor was before beginning of this token, means that the
+		  cursor is between two tokens, so we set it to a zero element
+		  string and break
+		*/
 		if( tok_begin > pos )
 		{
 			a = b = data->buff + pos;
 			break;
 		}
 
+		/*
+		  If cursor is inside the token, this is the token we are
+		  looking for. If so, set a and b and break
+		*/
 		if( tok_end >= pos )
 		{
 			a = begin + tok_get_pos( &tok );
@@ -1874,6 +1891,9 @@ void reader_current_token_extent( wchar_t **tok_begin,
 			break;
 		}
 		
+		/*
+		  Remember previous string token
+		*/
 		if( tok_last_type( &tok ) == TOK_STRING )
 		{
 			pa = begin + tok_get_pos( &tok );
@@ -1881,7 +1901,6 @@ void reader_current_token_extent( wchar_t **tok_begin,
 		}
 	}
 
-//	fwprintf( stderr, L"Res: %d %d\n", *a-data->buff, *b-data->buff );
 	free( buffcpy);
 	
 	tok_destroy( &tok );
@@ -1895,7 +1914,10 @@ void reader_current_token_extent( wchar_t **tok_begin,
 	if( prev_end )
 		*prev_end = pb;
 
-//	fwprintf( stderr, L"w00t\n" );
+	assert( pa >= data->buff );
+	assert( pa <= (data->buff+wcslen(data->buff) ) );
+	assert( pb >= pa );
+	assert( pb <= (data->buff+wcslen(data->buff) ) );
 
 }
 

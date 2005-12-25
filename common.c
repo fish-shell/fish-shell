@@ -932,7 +932,6 @@ wchar_t *escape( const wchar_t *in,
 			case L'^':
 			case L'<':
 			case L'>':
-			case L'@':
 			case L'(':
 			case L')':
 			case L'[':

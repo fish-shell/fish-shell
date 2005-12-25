@@ -393,7 +393,7 @@ wchar_t **strv2wcsv( const char **in )
 }
 
 
-
+#ifndef HAVE_WCSNDUP
 wchar_t *wcsndup( const wchar_t *in, int c )
 {
 	c3++;
@@ -407,6 +407,7 @@ wchar_t *wcsndup( const wchar_t *in, int c )
 	res[c] = L'\0';	
 	return res;	
 }
+#endif
 
 long convert_digit( wchar_t d, int base )
 {

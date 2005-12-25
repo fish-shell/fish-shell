@@ -1017,6 +1017,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Automatically move cursor to the end of the current token before completing
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
 - Descriptions for variables using 'set -d'.
+- Parse errors should when possible honor IO redirections
 
 \subsection bugs Known bugs
 

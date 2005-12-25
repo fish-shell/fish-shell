@@ -18,6 +18,15 @@ AC_PROG_INSTALL
 #AC_ISC_POSIX
 #AC_PROG_MAKE_SET
 
+AC_CHECK_PROG( has_doxygen, [doxygen], "true")
+
+if ! test $has_doxygen = "true"; then
+	echo Could not find the Doxygen program in your path.
+	echo This program is needed to build fish.
+	echo Please install it and try again.
+	exit 1
+fi
+
 # Optionally drop xsel
 AC_ARG_WITH( xsel, 
 			 AC_HELP_STRING([--without-xsel],

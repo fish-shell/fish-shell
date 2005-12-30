@@ -2844,8 +2844,13 @@ wchar_t *reader_readline()
 					writestr( L"\n" );
 				}
 				else
+				{
+					writech('\r');
+					writembs(clr_eol);
+					writech('\n');
 					repaint();
-
+				}
+				
 				break;
 			}
 

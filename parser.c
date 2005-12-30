@@ -223,6 +223,7 @@ typedef struct
 
 int block_count( block_t *b )
 {
+		
 	if( b==0)
 		return 0;
 	return( block_count(b->outer)+1);

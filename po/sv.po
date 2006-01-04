@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-04 12:52+0100\n"
+"POT-Creation-Date: 2006-01-04 15:05+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -423,7 +423,9 @@ msgstr "%ls: Ogiltigt index vid '%ls'"
 msgid ""
 "%ls: Erase needs a variable name\n"
 "%ls\n"
-msgstr "%ls: Radering kräver ett variabelnamn\n%ls\n"
+msgstr ""
+"%ls: Radering kräver ett variabelnamn\n"
+"%ls\n"
 
 #: builtin_set.c:525
 #, fuzzy, c-format
@@ -450,12 +452,16 @@ msgstr "okänd"
 msgid "Could not get user information"
 msgstr "Kunde inte hitta information om användare"
 
-#: env.c:763
+#: env.c:510
+msgid "Changing language to english"
+msgstr "Byter språk till svenska"
+
+#: env.c:766
 #, c-format
 msgid "No history at idx %d\n"
 msgstr "Ingen historieinformation för index %d\n"
 
-#: env.c:923
+#: env.c:926
 msgid "Tried to pop empty environment stack."
 msgstr "Försökte ta bort element från tom variabelstack"
 
@@ -586,186 +592,186 @@ msgstr "Kunde inte initiera terminalen"
 msgid "An error occured while reading output from code block on fd %d"
 msgstr "Ett fel inträffade under inläsning från kodblock på filidentifierare %d"
 
-#: parser.c:60
+#: parser.c:59
 #, c-format
 msgid "If this error can be reproduced, please send a bug report to %s."
 msgstr "Om du kan reproducera detta fel, var vänlig skicka en buggrapport till %s"
 
-#: parser.c:65
+#: parser.c:64
 msgid "This command can not be used in a pipeline"
 msgstr "Detta kommando kan ej användas i en pipeline"
 
-#: parser.c:71
+#: parser.c:70
 #, c-format
 msgid "Tokenizer error: '%ls'"
 msgstr "Följande fel inträffade vid symboluppdelning: '%ls'"
 
-#: parser.c:76
+#: parser.c:75
 msgid "Short circut command requires additional command"
 msgstr "Kortslutningkommandon kräver två följande kommandon"
 
-#: parser.c:81
+#: parser.c:80
 msgid "Maximum recursion depth reached. Accidental infinite loop?"
 msgstr "Maximalt rekursionsdjup uppnått. Oavsiktlig oändlig loop?"
 
-#: parser.c:86
+#: parser.c:85
 msgid "Could not locate end of block. The 'end' command is missing, misspelled or a preceding ';' is missing."
 msgstr "Kunde inte hitta slutet på ett kodblock. Kommandot 'end' kan saknas, vara felstavat eller ett ';' kan saknas."
 
-#: parser.c:91
+#: parser.c:90
 msgid "Maximum number of nested blocks reached."
 msgstr "Maximalt antal nästade block har uppnåtts."
 
-#: parser.c:96
+#: parser.c:95
 #, c-format
 msgid "Expected a command string, got token of type '%ls'."
 msgstr "Förväntade att hitta ett kommandonamn, hittade en symbol av typen '%ls'."
 
-#: parser.c:101
+#: parser.c:100
 #, c-format
 msgid "Illegal command name '%ls'."
 msgstr "Ogiltigt kommandonamn '%ls'."
 
-#: parser.c:106
+#: parser.c:105
 #, c-format
 msgid "Warning: No match for wildcard '%ls'. The command will not be executed."
 msgstr "Varning: Inga matchningar för wildcardet '%ls', kommandot kommer ej utföras."
 
-#: parser.c:111
+#: parser.c:110
 msgid "'case' builtin not inside of switch block"
 msgstr "Det inbyggda kommandot 'case' får bara användas i ett 'switch'-block."
 
-#: parser.c:116
+#: parser.c:115
 msgid "Loop control command while not inside of loop"
 msgstr "Loopstyrningskommandon får bara användas i loopar."
 
-#: parser.c:121
+#: parser.c:120
 msgid "'else' builtin not inside of if block"
 msgstr "Det inbyggda kommandot 'else' får bara användas i ett if-block"
 
-#: parser.c:126
+#: parser.c:125
 msgid "'end' command outside of block"
 msgstr "Det inbyggda kommandot 'end' får bara användas i ett block"
 
-#: parser.c:131
+#: parser.c:130
 #, c-format
 msgid "Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
 msgstr "Okänt kommando '%ls'. Menade du 'set VARIABEL VÄRDE'? För mer information om hur man tilldelar variabler värden, se manualsektionen om det inbyggda kommandot 'set' genom att skriva 'help set'."
 
-#: parser.c:136
+#: parser.c:135
 #, c-format
 msgid "Expected redirection specification, got token of type '%ls'"
 msgstr "Förväntade en IO dirigering, hittade en symbol av typen '%ls'"
 
-#: parser.c:141
+#: parser.c:140
 msgid "Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command."
 msgstr "Förväntade ett kommandonamn, hittade en IO dirigering. Fish tillåter into IO dirigeringar före kommandonamn"
 
-#: parser.c:146
+#: parser.c:145
 msgid "Tried to evaluate null pointer."
 msgstr "Försökte evaluera nollpekare."
 
-#: parser.c:151
+#: parser.c:150
 #, c-format
 msgid "Tried to evaluate buffer using invalid block scope of type '%ls'."
 msgstr "Försökte evaluera ett block av kommandon  med ogiltig blocknivå '%ls'"
 
-#: parser.c:157
+#: parser.c:156
 #, c-format
 msgid "Unexpected token of type '%ls'"
 msgstr "Oväntad symbol av typ '%ls'"
 
-#: parser.c:162
+#: parser.c:161
 #, c-format
 msgid "Error while searching for command '%ls'"
 msgstr "Ett fel uppstod under sökning efter kommandot '%ls'"
 
-#: parser.c:168
+#: parser.c:167
 msgid "'while' block"
 msgstr "'while' block"
 
-#: parser.c:174
+#: parser.c:173
 msgid "'for' block"
 msgstr "'for' block"
 
-#: parser.c:180
+#: parser.c:179
 msgid "'if' conditional block"
 msgstr "'if' villkorligt block"
 
-#: parser.c:186
+#: parser.c:185
 msgid "function definition block"
 msgstr "funktionsdefinition-block"
 
-#: parser.c:192
+#: parser.c:191
 msgid "function invocation block"
 msgstr "funktionsanropp-block"
 
-#: parser.c:198
+#: parser.c:197
 msgid "'switch' block"
 msgstr "'switch' block"
 
-#: parser.c:204
+#: parser.c:203
 msgid "unexecutable block"
 msgstr "oexekverbart block"
 
-#: parser.c:210
+#: parser.c:209
 msgid "global root block"
 msgstr "globalt rot-block"
 
-#: parser.c:216
+#: parser.c:215
 msgid "command substitution block"
 msgstr "kommandosubstitution-block"
 
-#: parser.c:222
+#: parser.c:221
 msgid "unconditional block"
 msgstr "'begin' ovillkorligen exekverat block"
 
-#: parser.c:228
+#: parser.c:227
 msgid "'and' conditional block"
 msgstr "'and' villkorligt block"
 
-#: parser.c:234
+#: parser.c:233
 msgid "'or' conditional block"
 msgstr "'or' villkorligt block"
 
-#: parser.c:240
+#: parser.c:239
 msgid "unknown/invalid block"
 msgstr "okänt/ogiltigt block"
 
-#: parser.c:892
+#: parser.c:891
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Kunde inte skrive profileringsinformation till filen '%s'"
 
-#: parser.c:898
+#: parser.c:897
 msgid "Time\tSum\tCommand\n"
 msgstr "Tid\tSumma\tKommando\n"
 
-#: parser.c:1048
+#: parser.c:1047
 #, c-format
 msgid "%ls (line %d): %n"
 msgstr "%ls (rad %d): %n"
 
-#: parser.c:1234
+#: parser.c:1233
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Kunde inte expandera strängen '%ls'"
 
-#: parser.c:1336
+#: parser.c:1335
 msgid "Invalid IO redirection"
 msgstr "Ogiltig IO omdirigering"
 
-#: parser.c:1379
+#: parser.c:1378
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "IO omdirigering till någonting som inte är en filidentifierare"
 
-#: parser.c:1770
+#: parser.c:1769
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Okänt kommando '%ls'"
 
-#: parser.c:2195
+#: parser.c:2194
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 

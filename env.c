@@ -505,6 +505,9 @@ void env_set( const wchar_t *key,
 			extern int  _nl_msg_cat_cntr;
 			++_nl_msg_cat_cntr;
 		}
+
+		if( is_interactive )
+			debug( 0, _(L"Changing language to english") );
 	}
 
 	if( wcscmp( key, L"umask" ) == 0)

@@ -65,7 +65,7 @@ COMMON_OBJS_WITH_CODE := builtin_set.o builtin_commandline.o builtin_ulimit.c
 
 # All objects that the system needs to build fish
 FISH_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE) $(COMMON_OBJS_WITH_HEADER) main.o
-FISH_PAGER_OBJS := fish_pager.o common.o output.o util.o wutil.o tokenizer.o input_common.o env_universal.o env_universal_common.o
+FISH_PAGER_OBJS := fish_pager.o common.o output.o util.o wutil.o tokenizer.o input_common.o env_universal.o env_universal_common.o translate.o
 FISH_TESTS_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE) $(COMMON_OBJS_WITH_HEADER) fish_tests.o 
 FISHD_OBJS := fishd.o env_universal_common.o common.o util.o wutil.o	\
 
@@ -336,15 +336,16 @@ uninstall: uninstall-translations
 		rm $(DESTDIR)$(mandir)/man1/$$i; \
 	done;
 
-install-translations: all
+install-translations: $(TRANSLATIONS)
 	if test $(HAVE_GETTEXT) = 1; then \
 		for i in $(TRANSLATIONS); do \
 			$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/locale/$$(basename $$i .gmo)/LC_MESSAGES; \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/locale/$$(basename $$i .gmo)/LC_MESSAGES/fish.mo; \
+			echo $(DESTDIR)$(datadir)/locale/$$(basename $$i .gmo)/LC_MESSAGES/fish.mo;\
 		done; \
 	fi
 
-uninstall-translations: all
+uninstall-translations: 
 	if test $(HAVE_GETTEXT) = 1; then \
 		for i in $(TRANSLATIONS_SRC); do \
 			rm -f $(DESTDIR)$(datadir)/locale/$$(basename $$i .po)/LC_MESSAGES/fish.mo; \
@@ -397,13 +398,13 @@ fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(INIT_DIR_FI
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/init
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/init/completions
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/tests
-	$(INSTALL) -d fish-@PACKAGE_VERSION@/translations
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/po
 	cp -f $(DOC_SRC_DIR_FILES) fish-@PACKAGE_VERSION@/doc_src
 	cp -f $(MAIN_DIR_FILES) fish-@PACKAGE_VERSION@/
 	cp -f $(INIT_DIR_FILES) fish-@PACKAGE_VERSION@/init/
 	cp -f $(COMPLETIONS_DIR_FILES) fish-@PACKAGE_VERSION@/init/completions/
 	cp -f $(TESTS_DIR_FILES) fish-@PACKAGE_VERSION@/tests/
-	cp -f $(TRANSLATIONS_SRC) fish-@PACKAGE_VERSION@/translations/
+	cp -f $(TRANSLATIONS_SRC) fish-@PACKAGE_VERSION@/po/
 	tar -c fish-@PACKAGE_VERSION@ >fish-@PACKAGE_VERSION@.tar
 	rm -rf fish-@PACKAGE_VERSION@
 
@@ -447,31 +448,31 @@ clean:
 builtin.o: config.h util.h wutil.h builtin.h function.h complete.h proc.h
 builtin.o: io.h parser.h reader.h env.h expand.h common.h wgetopt.h sanity.h
 builtin.o: tokenizer.h builtin_help.h wildcard.h input_common.h input.h
-builtin.o: intern.h event.h signal.h
+builtin.o: intern.h event.h signal.h translate.h
 builtin_commandline.o: signal.h config.h util.h builtin.h common.h wgetopt.h
 builtin_commandline.o: reader.h proc.h io.h parser.h tokenizer.h
-builtin_commandline.o: input_common.h input.h
+builtin_commandline.o: input_common.h input.h translate.h
 builtin_help.o: config.h util.h common.h builtin_help.h
 builtin_set.o: signal.h config.h util.h builtin.h env.h expand.h common.h
-builtin_set.o: wgetopt.h proc.h io.h parser.h
-builtin_ulimit.o: config.h util.h builtin.h common.h wgetopt.h
+builtin_set.o: wgetopt.h proc.h io.h parser.h translate.h
+builtin_ulimit.o: config.h util.h builtin.h common.h wgetopt.h translate.h
 common.o: config.h signal.h util.h wutil.h common.h expand.h proc.h io.h
 common.o: wildcard.h parser.h
 complete.o: signal.h config.h util.h tokenizer.h wildcard.h proc.h io.h
 complete.o: parser.h function.h complete.h builtin.h env.h exec.h expand.h
-complete.o: common.h reader.h history.h intern.h wutil.h
+complete.o: common.h reader.h history.h intern.h translate.h wutil.h
 env.o: config.h signal.h util.h wutil.h proc.h io.h common.h env.h sanity.h
 env.o: expand.h history.h reader.h parser.h env_universal.h
-env.o: env_universal_common.h input_common.h event.h
+env.o: env_universal_common.h input_common.h event.h translate.h
 env_universal.o: config.h signal.h util.h common.h wutil.h
 env_universal.o: env_universal_common.h env_universal.h
 env_universal_common.o: signal.h util.h common.h wutil.h
 env_universal_common.o: env_universal_common.h
 event.o: signal.h config.h util.h function.h proc.h io.h parser.h common.h
-event.o: event.h
+event.o: event.h translate.h
 exec.o: signal.h config.h util.h common.h wutil.h proc.h io.h exec.h parser.h
 exec.o: builtin.h function.h env.h wildcard.h sanity.h expand.h
-exec.o: env_universal.h env_universal_common.h
+exec.o: env_universal.h env_universal_common.h translate.h
 expand.o: signal.h config.h util.h common.h wutil.h env.h proc.h io.h
 expand.o: parser.h expand.h wildcard.h exec.h tokenizer.h complete.h
 fishd.o: signal.h util.h common.h wutil.h env_universal_common.h
@@ -488,10 +489,11 @@ highlight.o: common.h complete.h output.h
 history.o: config.h util.h wutil.h history.h common.h reader.h env.h sanity.h
 input.o: config.h signal.h util.h wutil.h reader.h proc.h io.h common.h
 input.o: sanity.h input_common.h input.h parser.h env.h expand.h event.h
+input.o: translate.h
 input_common.o: config.h util.h common.h wutil.h input_common.h
 input_common.o: env_universal.h env_universal_common.h
 intern.o: config.h util.h common.h intern.h
-io.o: config.h util.h wutil.h exec.h proc.h io.h common.h
+io.o: config.h util.h wutil.h exec.h proc.h io.h common.h translate.h
 key_reader.o: input_common.h
 kill.o: signal.h config.h util.h wutil.h kill.h proc.h io.h sanity.h common.h
 kill.o: env.h expand.h exec.h parser.h
@@ -504,25 +506,26 @@ output.o: highlight.h
 parser.o: signal.h config.h util.h common.h wutil.h proc.h io.h parser.h
 parser.o: tokenizer.h exec.h wildcard.h function.h builtin.h builtin_help.h
 parser.o: env.h expand.h reader.h sanity.h env_universal.h
-parser.o: env_universal_common.h event.h translate.h msgnrs.h
+parser.o: env_universal_common.h event.h translate.h
 proc.o: config.h signal.h util.h wutil.h proc.h io.h common.h reader.h
-proc.o: sanity.h env.h parser.h event.h
+proc.o: sanity.h env.h parser.h event.h translate.h
 reader.o: config.h signal.h util.h wutil.h highlight.h reader.h proc.h io.h
 reader.o: parser.h complete.h history.h common.h sanity.h env.h exec.h
 reader.o: expand.h tokenizer.h kill.h input_common.h input.h function.h
-reader.o: output.h
+reader.o: output.h translate.h
 sanity.o: signal.h config.h util.h common.h sanity.h proc.h io.h history.h
 sanity.o: reader.h kill.h wutil.h
 set_color.o: config.h
 signal.o: config.h signal.h common.h util.h wutil.h event.h reader.h proc.h
-signal.o: io.h
+signal.o: io.h translate.h
 tokenize.o: config.h
 tokenizer.o: config.h util.h wutil.h tokenizer.h common.h wildcard.h
-translate.o: msgnrs.h common.h util.h
+tokenizer.o: translate.h
+translate.o: config.h common.h util.h
 util.o: config.h util.h common.h wutil.h
 wgetopt.o: config.h wgetopt.h wutil.h
 wildcard.o: config.h util.h wutil.h complete.h common.h wildcard.h reader.h
-wildcard.o: expand.h
+wildcard.o: expand.h translate.h
 wutil.o: config.h util.h common.h wutil.h
 xdgmimealias.o: xdgmimealias.h xdgmime.h xdgmimeint.h
 xdgmime.o: xdgmime.h xdgmimeint.h xdgmimeglob.h xdgmimemagic.h xdgmimealias.h

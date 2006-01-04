@@ -36,7 +36,6 @@ The fish parser. Contains functions for parsing code.
 #include "env_universal.h"
 #include "event.h"
 #include "translate.h"
-#include "msgnrs.h"
 
 /** Length of the lineinfo string used for describing the current tokenizer position */
 #define LINEINFO_SIZE 128

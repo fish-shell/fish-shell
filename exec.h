@@ -16,7 +16,7 @@
 /**
    pipe redirection error message
 */
-#define PIPE_ERROR L"An error occurred while setting up pipe"
+#define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
 /**
    Initialize the exec library

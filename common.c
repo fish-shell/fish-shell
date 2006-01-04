@@ -724,6 +724,7 @@ void fish_setlocale(int category, const wchar_t *locale)
 {
 	char *lang = wcs2str( locale );
 	setlocale(category,lang);
+	
 	free( lang );
 	/*
 	  Use ellipsis if on known unicode system, otherwise use $
@@ -784,11 +785,16 @@ int writeb( tputs_arg_t b )
 
 void die_mem()
 {
-	debug( 0, L"Out of memory, shutting down fish." );
+	/*
+	  Do not translate this message, and do not send it through the
+	  usual channels. This increases the odds that the message gets
+	  through correctly, even if we are out of memory.
+	*/
+	fwprintf( stderr, L"Out of memory, shutting down fish.\n" );
 	exit(1);
 }
 
-void debug( int level, wchar_t *msg, ... )
+void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
 	string_buffer_t sb;

@@ -975,7 +975,68 @@ it's initalization files to function properly. To solve this
 problem, either copy the initialization files to each fish users home
 directory, or install them in /etc.
 
+\section i18n Translating fish to other languages
 
+Fish uses the GNU gettext library to implement translation to multiple
+languages. If fish is not available in your language, please consider
+making a translation. Currently, only the shell itself can be
+translated, a future version of fish should also include translated
+manuals.
+
+To make a translation of fish, you will first need the sourcecode,
+available from the <a href='http://roo.no-ip.org/fish'>fish
+homepage</a>. Download the latest version, and then extract it using a
+command like <code>tar -zxf fish-VERSION.tar.gz</code>.
+
+Next, cd into the newly created fish directory using <code>cd
+fish-VERSION</code>.
+
+You will now need to configure the sourcecode using the command
+<code>./configure</code>. This step might take a while.
+
+Before you continue, you will need to know the ISO 639 language code
+of the language you are translating to. These codes can be found <a
+href='http://www.w3.org/WAI/ER/IG/ert/iso639.htm'>here</a>. For
+example, the language code for Uighur is ug.
+
+Now you have the sourcecode and it is properly configured. Lets start
+translating. To do this, first create an empty translation table for
+the language you wish to translate to by writing <code>make
+po/[LANGUAGE CODE].po</code> in the fish terminal. For example, if you
+are translating to Uighur, you should write <code>make
+po/ug.po</code>. This should create the file po/ug.po, a template
+translation table containing all the strings that need to be
+translated.
+
+Now you are all set up to translate fish to a new language. Open the
+newly created .po file in your editor of choice, and start
+translating. The .po file format is rather simple. It contains pairs
+of string in a format like:
+
+<pre>
+msgid "%ls: No suitable job\n"
+msgstr ""
+</pre>
+
+The first line is the english string to translate, the second line
+should contain your translation. For example, in swedish the above
+might become:
+
+<pre>
+msgid "%ls: No suitable job\n"
+msgstr "%ls: Inget jobb matchar\n"
+</pre>
+
+%s, %ls, %d and other tokens beginning with a '%' are
+placeholders. These will be replaced by a value by fish at
+runtime. You must always take care to use exactly the same
+placeholders in the same order in your translation. (Actually, there
+are ways to avoid this, but they are to complicated for this short
+introduction. See the full manual for the printf C function for more
+information.)
+
+Once you have provided a translation for fish, please send it to <a
+href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 
 \section todo Missing features and bugs
 

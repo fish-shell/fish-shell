@@ -22,6 +22,7 @@ Functions used for implementing the commandline builtin.
 #include "tokenizer.h"
 #include "input_common.h"
 #include "input.h"
+#include "translate.h"
 
 /**
    Which part of the comandbuffer are we operating on
@@ -260,13 +261,10 @@ int builtin_commandline( wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-				sb_append2( sb_err, 
-							argv[0],
-							BUILTIN_ERR_UNKNOWN,
-							L" ",
-							long_options[opt_index].name,
-							L"\n",
-							(void *)0 );
+                sb_printf( sb_err,
+                           BUILTIN_ERR_UNKNOWN,
+                           argv[0],
+                           long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
 				return 1;
@@ -322,10 +320,11 @@ int builtin_commandline( wchar_t **argv )
 		*/
 		if( buffer_part || cut_at_cursor || append_mode || tokenize )
 		{
+			sb_printf(sb_err,
+					  BUILTIN_ERR_COMBO,
+					  argv[0] );
+			
 			sb_append2(sb_err,
-					   argv[0],
-					   BUILTIN_ERR_COMBO,
-					   L"\n",
 					   parser_current_line(),
 					   L"\n",
 					   (void *)0);
@@ -335,10 +334,11 @@ int builtin_commandline( wchar_t **argv )
 
 		if( argc == woptind )
 		{
+			sb_printf( sb_err,
+					   BUILTIN_ERR_MISSING,
+					   argv[0] );
+			
 			sb_append2( sb_err,
-						argv[0],
-						BUILTIN_ERR_MISSING,
-						L"\n",
 						parser_current_line(),
 						L"\n",
 						(void *)0 );
@@ -394,22 +394,23 @@ int builtin_commandline( wchar_t **argv )
 	if( (tokenize || cut_at_cursor) && (argc-woptind) )
 	{
 		
-		sb_append2( sb_err,
-					argv[0],
-					BUILTIN_ERR_COMBO,
-					L",\n --cut-at-cursor and --tokenize can not be used when setting the commandline",
-					(void *)0 );
+		sb_printf( sb_err,
+				   BUILTIN_ERR_COMBO2,
+				   argv[0],
+				   L"--cut-at-cursor and --tokenize can not be used when setting the commandline" );
+		
+
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 
 	if( append_mode && !(argc-woptind) )
 	{
-		sb_append2( sb_err,
+		sb_printf( sb_err,
+                    BUILTIN_ERR_COMBO2,
                     argv[0],
-                    BUILTIN_ERR_COMBO,
-                    L",\n insertion mode switches can not be used when not in insertion mode",
-                    (void *)0 );
+				   L"insertion mode switches can not be used when not in insertion mode" );
+
         builtin_print_help( argv[0], sb_err );		
         return 1;
 	}

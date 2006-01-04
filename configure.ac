@@ -53,6 +53,9 @@ else
 	AC_SUBST( PREFIX, [$prefix])
 fi
 
+AC_DEFINE_UNQUOTED( [LOCALEDIR], "$(eval echo $datadir)/locale", [Locale directory])
+AC_SUBST( [LOCALEDIR], [$datadir/locale])
+
 AC_SUBST(fishdir,[/fish.d])
 AC_SUBST(fishfile,[/fish])
 AC_SUBST(fishinputfile,[/fish_inputrc])
@@ -62,6 +65,7 @@ AC_ARG_VAR( [docdir], [Documentation direcotry] )
 if test -z $docdir; then
    AC_SUBST(docdir,[$datadir/doc/fish])
 fi
+
 
 AC_DEFINE_UNQUOTED( DOCDIR, [L"$(eval echo $docdir)"], [Documentation directory] )
 AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$(eval echo $sysconfdir)"], [System configuration directory] )
@@ -113,6 +117,7 @@ else
     AC_MSG_RESULT(no)
 fi
 
+
 # Check for RLIMIT_NPROC in sys/resource.h.
 AC_MSG_CHECKING([for RLIMIT_NPROC in sys/resource.h])
 AC_TRY_COMPILE([#include <sys/resource.h>],
@@ -125,18 +130,17 @@ else
     AC_MSG_RESULT(no)
 fi
 
+AC_CHECK_LIB(socket, connect, rt, nanosleep)
+AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext)
 
-AC_CHECK_LIB(socket, connect)
-AC_CHECK_LIB(rt, nanosleep)
-
-AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp)
+AC_CHECK_FUNC(gettext, AC_SUBST(HAVE_GETTEXT,1), AC_SUBST(HAVE_GETTEXT,0) )
 
 # Check if we have ncurses, and use it rather than curses if possible.
 AC_CHECK_HEADERS([ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEFINE(HAVE_NCURSES_H)],[AC_SUBST(CURSESLIB,[curses])])
 
-#Force use of ncurses if it is avialable via NetBSD pkgsrc. This is an
-#ugly kludge to force NetBSD to use ncurses, since NetBSDs own version
-#does not properly support terminfo.
+# Force use of ncurses if it is avialable via NetBSD pkgsrc. This is an
+# ugly kludge to force NetBSD to use ncurses, since NetBSDs own version
+# does not properly support terminfo.
 AC_CHECK_FILE([/usr/pkg/include/ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEFINE(HAVE_NCURSES_H)])
 
 AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile init/fish init/fish_interactive.fish init/fish_complete.fish])

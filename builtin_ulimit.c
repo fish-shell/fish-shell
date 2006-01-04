@@ -17,6 +17,7 @@ Functions used for implementing the ulimit builtin.
 #include "builtin.h"
 #include "common.h"
 #include "wgetopt.h"
+#include "translate.h"
 
 /**
    Struct describing a resource limit
@@ -344,13 +345,10 @@ int builtin_ulimit( wchar_t ** argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-				sb_append2( sb_err, 
-							argv[0],
-							BUILTIN_ERR_UNKNOWN,
-							L" ",
-							long_options[opt_index].name,
-							L"\n",
-							(void *)0 );
+                sb_printf( sb_err,
+                           BUILTIN_ERR_UNKNOWN,
+                           argv[0],
+                           long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
 				return 1;

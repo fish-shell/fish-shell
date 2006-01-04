@@ -134,7 +134,6 @@ wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b );
 */
 wchar_t *wcsdupcat2( const wchar_t *a, ... );
 
-#ifndef HAVE_WCSNDUP
 /**
    Returns a newly allocated wide character string wich is a copy of
    the string in, but of length c or shorter. The returned string is
@@ -142,7 +141,6 @@ wchar_t *wcsdupcat2( const wchar_t *a, ... );
    length.
 */
 wchar_t *wcsndup( const wchar_t *in, int c );
-#endif
 
 /**
    Converts from wide char to digit in the specified base. If d is not
@@ -185,19 +183,14 @@ size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
 */
 size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
 
-#ifndef HAVE_WCSDUP
 /**
    Create a duplicate string. Wide string version of strdup. Will
    automatically exit if out of memory.
 */
 wchar_t *wcsdup(const wchar_t *in);
-#endif
 
-#ifndef HAVE_WCSLEN
 size_t wcslen(const wchar_t *in);
-#endif
 
-#ifndef HAVE_WCSCASECMP
 /**
    Case insensitive string compare function. Wide string version of
    strcasecmp.
@@ -210,9 +203,7 @@ size_t wcslen(const wchar_t *in);
    a user-supplied string should be considered a bug.
 */
 int wcscasecmp( const wchar_t *a, const wchar_t *b );
-#endif
 
-#ifndef HAVE_WCSNCASECMP
 /**
    Case insensitive string compare function. Wide string version of
    strncasecmp.
@@ -225,7 +216,6 @@ int wcscasecmp( const wchar_t *a, const wchar_t *b );
    a user-supplied string should be considered a bug.
 */
 int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
-#endif
 
 /**
    Test if the given string is a valid variable name
@@ -314,7 +304,7 @@ void common_destroy();
 
    will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that program_name is 'fish'.
 */
-void debug( int level, wchar_t *msg, ... );
+void debug( int level, const wchar_t *msg, ... );
 
 /**
    Replace special characters with backslash escape sequences. Newline is

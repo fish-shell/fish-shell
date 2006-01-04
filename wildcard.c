@@ -1,8 +1,8 @@
 /** \file wildcard.c
 
-    Fish needs it's own globbing implementation to support
-	tab-expansion of globbed parameters. Also provides recursive
-	wildcards using **.
+Fish needs it's own globbing implementation to support
+tab-expansion of globbed parameters. Also provides recursive
+wildcards using **.
 
 */
 
@@ -26,6 +26,7 @@
 #include "complete.h"
 #include "reader.h"
 #include "expand.h"
+#include "translate.h"
 
 /**
    This flag is set in the flags parameter of wildcard_expand if the
@@ -272,11 +273,11 @@ void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 		sb_append2( sb, desc, L", ", (void *)0 );
 		if( sz < 0 )
 		{
-			sb_append( sb, L"unknown" );
+			sb_append( sb, _(L"unknown") );
 		}
 		else if( sz < 1 )
 		{
-			sb_append( sb, L"empty" );
+			sb_append( sb, _( L"empty" ) );
 		}
 		else if( sz < 1024 )
 		{

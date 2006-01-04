@@ -21,6 +21,7 @@ The library for various signal related issues
 #include "event.h"
 #include "reader.h"
 #include "proc.h"
+#include "translate.h"
 
 /**
    Struct describing an entry for the lookup table used to convert
@@ -51,182 +52,182 @@ static struct lookup_entry lookup[] =
 	{
 		SIGHUP, 
 		L"SIGHUP",
-		L"Terminal hung up"
+		N_( L"Terminal hung up" )
 	}
 	,
 	{
 		SIGINT,
 		L"SIGINT",
-		L"Quit request from job control (^C)"
+		N_( L"Quit request from job control (^C)" )
 	}
 	,
 	{
 		SIGQUIT,
 		L"SIGQUIT",
-		L"Quit request from job control with core dump (^\\)"
+		N_( L"Quit request from job control with core dump (^\\)" )
 	}
 	,
 	{
 		SIGILL,
 		L"SIGILL",
-		L"Illegal instruction"
+		N_( L"Illegal instruction" )
 	}
 	,
 	{
 		SIGTRAP, 
 		L"SIGTRAP",
-		L"Trace or breakpoint trap"
+		N_( L"Trace or breakpoint trap" )
 	}
 	,
 	{
 		SIGABRT,
 		L"SIGABRT",
-		L"Abort"
+		N_( L"Abort" )
 	}
 	,
 	{
 		SIGBUS, 
 		L"SIGBUS",
-		L"Misaligned address error"
+		N_( L"Misaligned address error" )
 	}
 	,
 	{
 		SIGFPE, 
 		L"SIGFPE",
-		L"Floating point exception"
+		N_( L"Floating point exception" )
 	}
 	,
 	{
 		SIGKILL, 
 		L"SIGKILL",
-		L"Forced quit"
+		N_( L"Forced quit" )
 	}
 	,
 	{
 		SIGUSR1,
 		L"SIGUSR1",
-		L"User defined signal 1"
+		N_( L"User defined signal 1" )
 	}
 	,
 	{
 		SIGUSR2, L"SIGUSR2",
-		L"User defined signal 2"
+		N_( L"User defined signal 2" )
 	}
 	,
 	{
 		SIGSEGV, 
 		L"SIGSEGV",
-		L"Address boundary error"
+		N_( L"Address boundary error" )
 	}
 	,
 	{
 		SIGPIPE,
 		L"SIGPIPE",
-		L"Broken pipe"
+		N_( L"Broken pipe" )
 	}
 	,
 	{
 		SIGALRM, 
 		L"SIGALRM",
-		L"Timer expired"
+		N_( L"Timer expired" )
 	}
 	,
 	{
 		SIGTERM,
 		L"SIGTERM",
-		L"Polite quit request"
+		N_( L"Polite quit request" )
 	}
 	,
 	{
 		SIGCHLD,
 		L"SIGCHLD",
-		L"Child process status changed"
+		N_( L"Child process status changed" )
 	}
 	,
 	{
 		SIGCONT,
 		L"SIGCONT",
-		L"Continue previously stopped process"
+		N_( L"Continue previously stopped process" )
 	}
 	,
 	{
 		SIGSTOP,
 		L"SIGSTOP",
-		L"Forced stop"
+		N_( L"Forced stop" )
 	}
 	,
 	{
 		SIGTSTP,
 		L"SIGTSTP",
-		L"Stop request from job control (^Z)"
+		N_( L"Stop request from job control (^Z)" )
 	}
 	,
 	{
 		SIGTTIN, 
 		L"SIGTTIN",
-		L"Stop from terminal input"
+		N_( L"Stop from terminal input" )
 	}
 	,
 	{
 		SIGTTOU,
 		L"SIGTTOU",
-		L"Stop from terminal output"
+		N_( L"Stop from terminal output" )
 	}
 	,
 	{
 		SIGURG, 
 		L"SIGURG",
-		L"Urgent socket condition"
+		N_( L"Urgent socket condition" )
 	}
 	,
 	{
 		SIGXCPU,
 		L"SIGXCPU",
-		L"CPU time limit exceeded"
+		N_( L"CPU time limit exceeded" )
 	}
 	,
 	{
 		SIGXFSZ, 
 		L"SIGXFSZ",
-		L"File size limit exceeded"
+		N_( L"File size limit exceeded" )
 	}
 	,
 	{
 		SIGVTALRM,
 		L"SIGVTALRM",
-		L"Virtual timer expired"
+		N_( L"Virtual timer expired" )
 	}
 	,
 	{
 		SIGPROF,
 		L"SIGPROF",
-		L"Profiling timer expired"
+		N_( L"Profiling timer expired" )
 	}
 	,
 	{
 		SIGWINCH,
 		L"SIGWINCH",
-		L"Window size change"
+		N_( L"Window size change" )
 	}
 	,
 	{
 		SIGIO,
 		L"SIGIO",
-		L"Asynchronous IO event"
+		N_( L"Asynchronous IO event" )
 	}
 	,
 #ifdef SIGPWR
 	{
 		SIGPWR, 
 		L"SIGPWR",
-		L"Power failure"
+		N_( L"Power failure" )
 	}
 	,
 #endif
 	{
 		SIGSYS, 
 		L"SIGSYS",
-		L"Bad system call"
+		N_( L"Bad system call" )
 	}
 	,
 	{
@@ -292,7 +293,7 @@ const wchar_t *sig_description( int sig )
 	{
 		if( lookup[i].signal == sig )
 		{
-			return lookup[i].desc;
+			return _(lookup[i].desc);
 		}
 	}
 	return L"Unknown";

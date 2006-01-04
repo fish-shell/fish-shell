@@ -70,6 +70,6 @@ for i in ls ll la
 	complete -c $i -s X -d "sort by extension"
 	complete -c $i -s 1 -d "List one file per line"
 	complete -c $i -l help -d "Display help and exit"
-	complete -c $i -l version -d "Output version and exit"
+	complete -c $i -l version -d "Display version and exit"
 
 end

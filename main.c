@@ -56,6 +56,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "exec.h"
 #include "event.h"
 #include "output.h"
+#include "translate.h"
 
 /**
    Parse init files
@@ -207,7 +208,8 @@ int main( int argc, char **argv )
 
 	if( force_interactive )
 		is_interactive_session=1;	
-	
+
+	translate_init();	
 	proc_init();	
 	output_init();	
 	event_init();	
@@ -300,6 +302,7 @@ int main( int argc, char **argv )
 	exec_destroy();	
 	event_destroy();
 	output_destroy();
+	translate_destroy();	
 	
 	intern_free_all();
 

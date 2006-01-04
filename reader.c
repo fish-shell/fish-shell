@@ -74,6 +74,7 @@ commence.
 #include "function.h"
 #include "output.h"
 #include "signal.h"
+#include "translate.h"
 
 /**
    Maximum length of prefix string when printing completion
@@ -295,7 +296,7 @@ static void term_donate()
 		{
 			if( errno != EINTR )
 			{
-				debug( 1, L"Could not set terminal mode for new job" );
+				debug( 1, _( L"Could not set terminal mode for new job" ) );
 				wperror( L"tcsetattr" );
 				break;
 			}
@@ -316,7 +317,7 @@ static void term_steal()
 		{
 			if( errno != EINTR )
 			{
-				debug( 1, L"Could not set terminal mode for shell" );
+				debug( 1, _( L"Could not set terminal mode for shell" ) );
 				wperror( L"tcsetattr" );
 				break;
 			}
@@ -1593,7 +1594,7 @@ static void reader_interactive_init()
 		if (setpgid (shell_pgid, shell_pgid) < 0)
 		{
 			debug( 1,
-				   L"Couldn't put the shell in its own process group");
+				   _( L"Couldn't put the shell in its own process group" ));
 			wperror( L"setpgid" );
 			exit (1);
 		}
@@ -1603,7 +1604,7 @@ static void reader_interactive_init()
 	if( tcsetpgrp (STDIN_FILENO, shell_pgid) )
 	{
 		debug( 1,
-			   L"Couldn't grab control of terminal" );
+			   _( L"Couldn't grab control of terminal" ) );
 		wperror( L"tcsetpgrp" );
 		exit(1);
 	}
@@ -1635,7 +1636,7 @@ static void reader_interactive_init()
 	original_pid = getpid();
 
 	if( atexit( &exit_func ) )
-		debug( 1, L"Could not set exit function" );
+		debug( 1, _( L"Could not set exit function" ) );
 
 	env_set( L"_", L"fish", ENV_GLOBAL );
 }
@@ -2367,7 +2368,7 @@ void reader_pop()
 
 	if( data == 0 )
 	{
-		debug( 0, L"Pop null reader block" );
+		debug( 0, _( L"Pop null reader block" ) );
 		sanity_lose();
 		return;
 	}
@@ -2509,7 +2510,7 @@ static int read_i()
 		{
 			if( !prev_end_loop && first_job != 0 )
 			{
-				writestr(L"There are stopped jobs\n");
+				writestr(_( L"There are stopped jobs\n" ));
 				write_prompt();
 				data->end_loop = 0;
 				prev_end_loop=1;
@@ -3025,7 +3026,7 @@ wchar_t *reader_readline()
 				if( (!wchar_private(c)) && (c>31) && (c != 127) )
 					insert_char( c );
 				else
-					debug( 0, L"Unknown keybinding %d", c );
+					debug( 0, _( L"Unknown keybinding %d" ), c );
 				break;
 			}
 
@@ -3095,7 +3096,7 @@ static int read_ni( int fd )
 			if( ferror( in_stream ) )
 			{
 				debug( 1, 
-					   L"Error while reading commands" );
+					   _( L"Error while reading commands" ) );
 
 				/*
 				  Reset buffer. We won't evaluate incomplete files.
@@ -3114,7 +3115,7 @@ static int read_ni( int fd )
 		if(	fclose( in_stream ))
 		{
 			debug( 1, 
-				   L"Error while closing input" );
+				   _( L"Error while closing input" ) );
 			wperror( L"fclose" );
 			res = 1;
 		}
@@ -3142,13 +3143,13 @@ static int read_ni( int fd )
 			if( acc_used > 1 )
 			{
 				debug( 1,
-					   L"Could not convert input. Read %d bytes.", 
+					   _( L"Could not convert input. Read %d bytes." ), 
 					   acc_used-1 );
 			}
 			else
 			{
 				debug( 1, 
-					   L"Could not read input stream" );
+					   _( L"Could not read input stream" ) );
 			}
 			res=1;			
 		}		
@@ -3157,7 +3158,7 @@ static int read_ni( int fd )
 	else
 	{
 		debug( 1, 
-			   L"Error while opening input" );
+			   _( L"Error while opening input" ) );
 		wperror( L"fdopen" );
 		free( buff );
 		res=1;

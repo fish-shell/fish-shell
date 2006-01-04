@@ -20,6 +20,7 @@ Functions used for implementing the set builtin.
 #include "wgetopt.h"
 #include "proc.h"
 #include "parser.h"
+#include "translate.h"
 
 /** 
 	Extract the name from a destination argument of the form name[index1 index2...]
@@ -92,9 +93,7 @@ static int parse_fill_indexes( array_list_t *indexes,
 		long l_ind = wcstol(src, &end, 10);
 		if (end == src) 
 		{
-			wchar_t sbuf[256];
-			swprintf(sbuf, 255, L"Invalid index starting at %ls\n", src);
-			sb_append(sb_err, sbuf);
+			sb_printf(sb_err, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
 			return -1;
 		}
 
@@ -362,13 +361,11 @@ int builtin_set( wchar_t **argv )
 
 	if( query && (erase || list || global || local || universal || export || unexport ) )
 	{
-		sb_append2(sb_err,
+		sb_printf(sb_err,
+				  BUILTIN_ERR_COMBO2,
 				  argv[0],
-				  BUILTIN_ERR_COMBO,
-				  L"\n",
-				  parser_current_line(),
-				  L"\n",
-				  (void *)0);
+				  parser_current_line() );
+		
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -377,13 +374,11 @@ int builtin_set( wchar_t **argv )
 	/* Check operation and modifiers sanity */
 	if( erase && list ) 
 	{
-		sb_append2(sb_err,
+		sb_printf(sb_err,
+				  BUILTIN_ERR_COMBO2,
 				  argv[0],
-				  BUILTIN_ERR_COMBO,
-				  L"\n",
-				  parser_current_line(),
-				  L"\n",
-				  (void *)0);
+				  parser_current_line() );		
+
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -391,9 +386,8 @@ int builtin_set( wchar_t **argv )
 	if( local + global + universal > 1 ) 
 	{
 		sb_printf( sb_err,
-				   L"%ls%ls\n%ls\n",
-				   argv[0],
 				   BUILTIN_ERR_GLOCAL,
+				   argv[0],
 				   parser_current_line() );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
@@ -401,13 +395,10 @@ int builtin_set( wchar_t **argv )
 
 	if( export && unexport ) 
 	{
-		sb_append2(sb_err,
-				   argv[0],
+		sb_printf( sb_err,
 				   BUILTIN_ERR_EXPUNEXP,
-				   L"\n",
-				   parser_current_line(),
-				   L"\n", 
-				   (void *)0);
+				   argv[0],
+				   parser_current_line() );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -493,12 +484,11 @@ int builtin_set( wchar_t **argv )
 			/* No arguments -- display name & value for all variables in scope */
 			if( erase ) 
 			{
-				sb_append2( sb_err,
-							argv[0],
-							L": Erase needs a variable name\n", 
-							parser_current_line(), 
-							L"\n",
-							(void *)0 );
+				sb_printf( sb_err,
+						   _(L"%ls: Erase needs a variable name\n%ls\n"), 
+						   argv[0],
+						   parser_current_line() );
+				
 				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
 			}
@@ -531,12 +521,11 @@ int builtin_set( wchar_t **argv )
 			/* There are some arguments, we have at least a variable name */
 			if( erase && al_get_count(&values) != 0 ) 
 			{
-				sb_append2( sb_err, 
-							argv[0],
-							L": Values cannot be specfied with erase\n",
-							parser_current_line(),
-							L"\n",
-							(void *)0 );
+				sb_printf( sb_err, 
+						   _(L"%ls: Values cannot be specfied with erase\n%ls\n"),
+						   argv[0],
+						   parser_current_line() );
+				
 				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
 			} 

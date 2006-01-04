@@ -67,6 +67,7 @@ fi
 %config %_sysconfdir/fish.d/fish_*.fish
 %dir %_sysconfdir/fish.d/completions
 %config %_sysconfdir/fish.d/completions/*.fish
+%_datadir/locale/*/fish.cat
 
 %changelog
 * Tue Nov 29 2005 Axel Liljencrantz <axel@liljencrantz.se> 1.17.0-0

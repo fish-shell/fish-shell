@@ -36,6 +36,7 @@
 #include "expand.h"
 #include "signal.h"
 #include "env_universal.h"
+#include "translate.h"
 
 /**
    Prototype for the getpgid library function. The prototype for this
@@ -48,15 +49,15 @@ pid_t getpgid( pid_t pid );
 /**
    file descriptor redirection error message
 */
-#define FD_ERROR   L"An error occurred while redirecting file descriptor %d"
+#define FD_ERROR   _( L"An error occurred while redirecting file descriptor %d" )
 /**
    file redirection error message
 */
-#define FILE_ERROR L"An error occurred while redirecting file '%ls'"
+#define FILE_ERROR _( L"An error occurred while redirecting file '%ls'" )
 /**
    fork error message
 */
-#define FORK_ERROR L"Could not create child process - exiting"
+#define FORK_ERROR _( L"Could not create child process - exiting" )
 
 
 /**
@@ -421,7 +422,7 @@ static void launch_process( process_t *p )
 		
 	execve (wcs2str(p->actual_cmd), wcsv2strv( (const wchar_t **) p->argv), env_export_arr( 0 ) );
 	debug( 0, 
-		   L"Failed to execute process %ls",
+		   _( L"Failed to execute process '%ls'" ),
 		   p->actual_cmd );
 	wperror( L"execve" );
 	exit(1);
@@ -580,7 +581,7 @@ static int handle_new_child( job_t *j, process_t *p )
 			if( getpgid( p->pid) != j->pgid )
 			{
 				debug( 1, 
-					   L"Could not send process %d from group %d to group %d",
+					   _( L"Could not send process %d from group %d to group %d" ),
 					   p->pid, 
 					   getpgid( p->pid),
 					   j->pgid );
@@ -592,7 +593,7 @@ static int handle_new_child( job_t *j, process_t *p )
 		{
 			if( tcsetpgrp (0, j->pgid) )
 			{
-				debug( 1, L"Could not send job %d ('%ls')to foreground", 
+				debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
 					   j->job_id, 
 					   j->command );
 				wperror( L"tcsetpgrp" );
@@ -604,7 +605,7 @@ static int handle_new_child( job_t *j, process_t *p )
 		{
 			if( tcsetpgrp (0, j->pgid) )
 			{
-				debug( 1, L"Could not send job %d ('%ls')to foreground", 
+				debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
 					   j->job_id, 
 					   j->command );
 				wperror( L"tcsetpgrp" );
@@ -766,7 +767,7 @@ void exec( job_t *j )
 //			fwprintf( stderr, L"run function %ls\n", argv[0] );
 				if( def == 0 )
 				{
-					debug( 0, L"Unknown function %ls", p->argv[0] );
+					debug( 0, _( L"Unknown function '%ls'" ), p->argv[0] );
 					break;
 				}
 				parser_push_block( FUNCTION_CALL );
@@ -874,7 +875,7 @@ void exec( job_t *j )
 							{
 								builtin_stdin=-1;
 								debug( 1, 
-									   L"Unknown input redirection type %d",
+									   _( L"Unknown input redirection type %d" ),
 									   in->io_mode);
 								break;
 							}
@@ -1201,7 +1202,7 @@ int exec_subshell( const wchar_t *cmd,
 	if( !cmd )
 	{
 		debug( 1, 
-			   L"Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s", 
+			   _( L"Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s." ), 
 			   PACKAGE_BUGREPORT );		
 		return 0;		
 	}

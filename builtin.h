@@ -20,31 +20,36 @@ enum
 /**
    Error message on missing argument
 */
-#define BUILTIN_ERR_MISSING L": Expected argument"
+#define BUILTIN_ERR_MISSING _( L"%ls: Expected argument\n" )
 
 /**
    Error message on invalid combination of options
 */
-#define BUILTIN_ERR_COMBO L": Invalid combination of options"
+#define BUILTIN_ERR_COMBO _( L"%ls: Invalid combination of options\n" )
+
+/**
+   Error message on invalid combination of options
+*/
+#define BUILTIN_ERR_COMBO2 _( L"%ls: Invalid combination of options,\n%ls\n" )
 
 /**
    Error message on multiple scope levels for variables
 */
-#define BUILTIN_ERR_GLOCAL L": Variable can only be one of universal, global and local"
+#define BUILTIN_ERR_GLOCAL _( L"%ls: Variable can only be one of universal, global and local\n%ls\n" )
 
 /**
    Error message for specifying both export and unexport to set/read
 */
-#define BUILTIN_ERR_EXPUNEXP L": Variable can't be both exported and unexported"
+#define BUILTIN_ERR_EXPUNEXP _( L"%ls: Variable can't be both exported and unexported\n%ls\n" )
 
 /**
    Error message for unknown switch
 */
-#define BUILTIN_ERR_UNKNOWN	L": Unknown option"
+#define BUILTIN_ERR_UNKNOWN	_( L"%ls: Unknown option '%ls'\n" )
 
-#define BUILTIN_ERR_VARCHAR L"%ls: Invalid character in variable name: '%lc'. Only alphanumerical characters and underscores are valid in a variable name.\n"
+#define BUILTIN_ERR_VARCHAR _( L"%ls: Invalid character '%lc' in variable name. Only alphanumerical characters and underscores are valid in a variable name.\n" )
 
-#define BUILTIN_ERR_VARNAME_ZERO L"%ls: Variable name can not be the empty string\n"
+#define BUILTIN_ERR_VARNAME_ZERO _( L"%ls: Variable name can not be the empty string\n" )
 
 /**
    Stringbuffer used to represent standard output

@@ -19,6 +19,7 @@
 #include "common.h"
 #include "event.h"
 #include "signal.h"
+#include "translate.h"
 
 /**
    Number of signals that can be queued before an overflow occurs
@@ -486,7 +487,7 @@ static void event_fire_delayed()
 		
 		if( lst->overflow )
 		{
-			debug( 0, L"Signal list overflow. Signals have been ignored" );
+			debug( 0, _( L"Signal list overflow. Signals have been ignored." ) );
 		}
 		
 		/*

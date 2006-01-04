@@ -41,6 +41,7 @@
 #include "env_universal.h"
 #include "input_common.h"
 #include "event.h"
+#include "translate.h"
 
 /**
    Command used to start fishd
@@ -190,7 +191,7 @@ static void start_fishd()
 	
 	if( !pw )
 	{
-		debug( 0, L"Could not get user information" );
+		debug( 0, _( L"Could not get user information" ) );
 		return;
 	}
 	
@@ -417,7 +418,7 @@ void env_init()
 		free( uname );
 	}
 	
-	env_universal_init( env_get( L"FISHD_SOKET_DIR"), 
+	env_universal_init( env_get( L"FISHD_SOCKET_DIR"), 
 						env_get( L"USER" ),
 						&start_fishd,
 						&universal_callback );
@@ -499,6 +500,11 @@ void env_set( const wchar_t *key,
 	if( wcscmp(key, L"LANG" )==0 )
 	{
 		fish_setlocale(LC_ALL,val);
+		/* Make change known to gettext.  */
+		{
+			extern int  _nl_msg_cat_cntr;
+			++_nl_msg_cat_cntr;
+		}
 	}
 
 	if( wcscmp( key, L"umask" ) == 0)
@@ -754,7 +760,7 @@ wchar_t *env_get( const wchar_t *key )
 			wchar_t *next = history_get( i-add_current );
 			if( !next )
 			{
-				debug( 1, L"No history at idx %d\n", i );
+				debug( 1, _( L"No history at idx %d\n" ), i );
 				break;
 			}
 			
@@ -914,7 +920,7 @@ void env_pop()
 	else
 	{
 		debug( 0,
-			   L"Tried to pop empty environment stack." );
+			   _( L"Tried to pop empty environment stack." ) );
 		sanity_lose();
 	}	
 }

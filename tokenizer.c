@@ -20,64 +20,62 @@
 #include "tokenizer.h"
 #include "common.h"
 #include "wildcard.h"
+#include "translate.h"
 
 /**
    Error string for unexpected end of string
 */
-#define EOL_ERROR L"Unexpected end of token"
+#define EOL_ERROR _( L"Unexpected end of token" )
 /**
    Error string for mismatched parenthesis
 */
-#define PARAN_ERROR L"Parenthesis mismatch"
+#define PARAN_ERROR _( L"Parenthesis mismatch" )
 /**
    Error string for invalid redirections
 */
-#define REDIRECT_ERROR L"Invalid redirection"
+#define REDIRECT_ERROR _( L"Invalid redirection" )
 /**
    Error string for invalid input
 */
-#define INPUT_ERROR L"Invalid input"
+#define INPUT_ERROR _( L"Invalid input" )
 
 /**
    Error string for when trying to pipe from fd 0
 */
-#define PIPE_ERROR L"Can not use fd 0 as pipe output"
+#define PIPE_ERROR _( L"Can not use fd 0 as pipe output" )
 
 /**
   Characters that separate tokens. They are ordered by frequency of occurrence to increase parsing speed.
 */
 #define SEP L" \n|\t;#\r<>^&"
-/**
-   Tests if the tokenizer buffer is large enough to hold contents of
-   the specified length, and if not, reallocates the tokenizer buffer.
-
-   \return 0 if the system could not provide the memory needed, and 1 otherwise.
-*/
 
 /**
    Maximum length of a string containing a file descriptor number
 */
 #define FD_STR_MAX_LEN 16
 
-const static wchar_t *tok_desc[] =
+static const wchar_t *tok_desc[] =
 {
-	L"Tokenizer not yet initialized",
-	L"Tokenizer error",
-	L"Invalid token",
-	L"String",
-	L"Pipe",
-	L"End of command",
-	L"Redirect output to file",
-	L"Append output to file",
-	L"Redirect input to file",
-	L"Redirect to file descriptor",
-	L"Run job in background",
-	L"Comment"
+	N_(L"Tokenizer not yet initialized"),
+	N_( L"Tokenizer error" ),
+	N_( L"Invalid token" ),
+	N_( L"String" ),
+	N_( L"Pipe" ),
+	N_( L"End of command" ),
+	N_( L"Redirect output to file" ),
+	N_( L"Append output to file" ),
+	N_( L"Redirect input to file" ),
+	N_( L"Redirect to file descriptor" ),
+	N_( L"Run job in background" ),
+	N_( L"Comment" )
 }
-;
+	;
 
 /**
-   Make sure the tokenizer buffer have room for a token of the specified size.
+   Tests if the tokenizer buffer is large enough to hold contents of
+   the specified length, and if not, reallocates the tokenizer buffer.
+
+   \return 0 if the system could not provide the memory needed, and 1 otherwise.
 */
 static int check_size( tokenizer *tok, size_t len )
 {
@@ -484,7 +482,8 @@ static int my_iswspace( wchar_t c )
 
 const wchar_t *tok_get_desc( int type )
 {
-	return tok_desc[type];
+
+	return _(tok_desc[type]);
 }
 
 

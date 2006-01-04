@@ -35,6 +35,7 @@
 #include "reader.h"
 #include "history.h"
 #include "intern.h"
+#include "translate.h"
 
 #include "wutil.h"
 
@@ -746,7 +747,7 @@ int complete_is_valid_option( const wchar_t *str,
 						str[0] = opt[j];
 						str[1]=0;
 						al_push( errors,
-								 wcsdupcat2(L"Unknown option \'", str, L"\'", 0) );
+								 wcsdupcat2(_( L"Unknown option: " ), L"'", str, L"'", 0) );
 					}
 
 					opt_found = 0;
@@ -765,12 +766,12 @@ int complete_is_valid_option( const wchar_t *str,
 				if( hash_get_count( &gnu_match_hash )==0)
 				{
 					al_push( errors,
-							 wcsdupcat2(L"Unknown option \'", opt, L"\'", 0) );
+							 wcsdupcat2( _(L"Unknown option: "), L"'", opt, L"\'", 0) );
 				}
 				else
 				{
 					al_push( errors,
-							 wcsdupcat2(L"Multiple matches for option \'", opt, L"\'", 0) );
+							 wcsdupcat2( _(L"Multiple matches for option: "), L"'", opt, L"\'", 0) );
 				}
 			}
 		}
@@ -845,7 +846,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 			if( al_get_count( &l )>0 )
 			{
 				wchar_t *ln = (wchar_t *)al_get(&l, 0 );
-				if( wcscmp( ln, L"unknown" ) != 0 )
+				if( wcscmp( ln, _(L"unknown") ) != 0 )
 				{
 					desc = wcsdupcat( COMPLETE_SEP_STR, ln);
 					/*

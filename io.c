@@ -32,6 +32,7 @@ Utilities for io redirection.
 #include "exec.h"
 #include "common.h"
 #include "io.h"
+#include "translate.h"
 
 
 
@@ -69,7 +70,7 @@ void io_buffer_read( io_data_t *d )
 				if( errno != EAGAIN )
 				{
 					debug( 1, 
-						   L"An error occured while reading output from code block on fd %d", 
+						   _(L"An error occured while reading output from code block on fd %d"), 
 						   d->param1.pipe_fd[0] );
 					wperror( L"io_buffer_read" );				
 				}

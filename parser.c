@@ -35,6 +35,8 @@ The fish parser. Contains functions for parsing code.
 #include "sanity.h"
 #include "env_universal.h"
 #include "event.h"
+#include "translate.h"
+#include "msgnrs.h"
 
 /** Length of the lineinfo string used for describing the current tokenizer position */
 #define LINEINFO_SIZE 128
@@ -55,93 +57,188 @@ The fish parser. Contains functions for parsing code.
    Message about reporting bugs, used on weird internal error to
    hopefully get them to report stuff.
 */
-#define BUGREPORT_MSG L"If this error can be reproduced, please send a bug report to %s."
+#define BUGREPORT_MSG _( L"If this error can be reproduced, please send a bug report to %s.")
 
 /**
    Error message for improper use of the exec builtin
 */
-#define EXEC_ERR_MSG L"this command can not be used in a pipeline"
+#define EXEC_ERR_MSG _(L"This command can not be used in a pipeline")
 
 /**
    Error message for tokenizer error. The tokenizer message is
    appended to this message.
 */
-#define TOK_ERR_MSG L"Tokenizer error: '%ls'"
+#define TOK_ERR_MSG _( L"Tokenizer error: '%ls'")
 
 /**
    Error message for short circut command error.
 */
-#define COND_ERR_MSG L"Short circut command requires additional command"
+#define COND_ERR_MSG _( L"Short circut command requires additional command")
 
 /**
    Error message on reaching maximum recusrion depth
 */
-#define RECURSION_ERR_MSG L"Maximum recursion depth reached. Accidental infinite loop?"
+#define RECURSION_ERR_MSG _( L"Maximum recursion depth reached. Accidental infinite loop?")
 
 /**
    Error message used when the end of a block can't be located
 */
-#define BLOCK_END_ERR_MSG L"Could not locate end of block. The 'end' command is missing, misspelled or a preceding ';' is missing."
+#define BLOCK_END_ERR_MSG _( L"Could not locate end of block. The 'end' command is missing, misspelled or a preceding ';' is missing.")
 
 /**
    Error message on reaching maximum number of block calls
 */
-#define BLOCK_ERR_MSG L"Maximum number of nested blocks reached."
+#define BLOCK_ERR_MSG _( L"Maximum number of nested blocks reached.")
 
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_ERR_MSG L"Expected a command string, got token of type '%ls'"
+#define CMD_ERR_MSG _( L"Expected a command string, got token of type '%ls'.")
 
 /**
    Error message when encountering an illegal command name
 */
-#define ILLEGAL_CMD_ERR_MSG L"Illegal command name '%ls'"
+#define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'.")
 
 /**
    Error message for wildcards with no matches
 */
-#define WILDCARD_ERR_MSG L"Warning: No match for wildcard '%ls'"
+#define WILDCARD_ERR_MSG _( L"Warning: No match for wildcard '%ls'. The command will not be executed.")
 
 /**
    Error when using case builtin outside of switch block
 */
-#define INVALID_CASE_ERR_MSG L"'case' builtin not inside of switch block"
+#define INVALID_CASE_ERR_MSG _( L"'case' builtin not inside of switch block")
 
 /**
    Error when using loop control builtins (break or continue) outside of loop
 */
-#define INVALID_LOOP_ERR_MSG L"Loop control command while not inside of loop" 
+#define INVALID_LOOP_ERR_MSG _( L"Loop control command while not inside of loop" )
 
 /**
    Error when using else builtin outside of if block
 */
-#define INVALID_ELSE_ERR_MSG L"'else' builtin not inside of if block" 
+#define INVALID_ELSE_ERR_MSG _( L"'else' builtin not inside of if block" )
 
 /**
    Error when using end builtin outside of block
 */
-#define INVALID_END_ERR_MSG L"'end' command outside of block"
+#define INVALID_END_ERR_MSG _( L"'end' command outside of block")
 
 /**
    Error message for Posix-style assignment
 */
-#define COMMAND_ASSIGN_ERR_MSG L"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
+#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'.")
 
 /**
    Error for invalid redirection token
 */
-#define REDIRECT_TOKEN_ERR_MSG L"Expected redirection specification, got token of type '%ls'"
+#define REDIRECT_TOKEN_ERR_MSG _( L"Expected redirection specification, got token of type '%ls'")
 
 /**
    Error when encountering redirection without a command
 */
-#define INVALID_REDIRECTION_ERR_MSG L"Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command."
+#define INVALID_REDIRECTION_ERR_MSG _( L"Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command.")
+
+/**
+   Error for evaluating null pointer
+*/
+#define EVAL_NULL_ERR_MSG _( L"Tried to evaluate null pointer." )
+
+/**
+   Error for evaluating in illegal scope
+*/
+#define INVALID_SCOPE_ERR_MSG _( L"Tried to evaluate buffer using invalid block scope of type '%ls'." )
+
 
 /** 
 	Error for wrong token type
 */
-#define UNEXPECTED_TOKEN_ERR_MSG L"Unexpected token of type '%ls'"
+#define UNEXPECTED_TOKEN_ERR_MSG _( L"Unexpected token of type '%ls'")
+
+/**
+   Unexpected error in parser_get_filename()
+*/
+#define MISSING_COMMAND_ERR_MSG _( L"Error while searching for command '%ls'" )
+
+
+/** 
+	While block description
+*/
+#define WHILE_BLOCK _( L"'while' block" )
+
+
+/** 
+	For block description
+*/
+#define FOR_BLOCK _( L"'for' block" )
+
+
+/** 
+	If block description
+*/
+#define IF_BLOCK _( L"'if' conditional block" )
+
+
+/** 
+	function definition block description
+*/
+#define FUNCTION_DEF_BLOCK _( L"function definition block" )
+
+
+/** 
+	Function invocation block description
+*/
+#define FUNCTION_CALL_BLOCK _( L"function invocation block" )
+
+
+/** 
+	Switch block description
+*/
+#define SWITCH_BLOCK _( L"'switch' block" )
+
+
+/** 
+	Fake block description
+*/
+#define FAKE_BLOCK _( L"unexecutable block" )
+
+
+/** 
+	Top block description
+*/
+#define TOP_BLOCK _( L"global root block" )
+
+
+/** 
+	Command substitution block description
+*/
+#define SUBST_BLOCK _( L"command substitution block" )
+
+
+/** 
+	Begin block description
+*/
+#define BEGIN_BLOCK _( L"unconditional block" )
+
+
+/** 
+	And block description
+*/
+#define AND_BLOCK _( L"'and' conditional block" )
+
+
+/** 
+	 block description
+*/
+#define OR_BLOCK _( L"'or' conditional block" )
+
+
+/** 
+	Unknown block description
+*/
+#define UNKNOWN_BLOCK _( L"unknown/invalid block" )
+
 
 /** Last error code */
 int error_code;
@@ -322,48 +419,48 @@ void parser_pop_block()
 	free( old );
 }
 
-wchar_t *parser_get_block_desc( int block )
+const wchar_t *parser_get_block_desc( int block )
 {
 	switch( block )
 	{
 		case WHILE:
-			return L"while block";
+			return WHILE_BLOCK;
 			
 		case FOR:
-			return L"for block";
+			return FOR_BLOCK;
 			
 		case IF:
-			return L"'if' conditional block";
+			return IF_BLOCK;
 
 		case FUNCTION_DEF:
-			return L"function definition block";
+			return FUNCTION_DEF_BLOCK;
 			
 		case FUNCTION_CALL:
-			return L"function invocation block";
+			return FUNCTION_CALL_BLOCK;
 			
 		case SWITCH:
-			return L"switch block";
+			return SWITCH_BLOCK;
 			
 		case FAKE:
-			return L"unexecutable block";
+			return FAKE_BLOCK;
 			
 		case TOP:
-			return L"global root block";
+			return TOP_BLOCK;
 			
 		case SUBST:
-			return L"command substitution block";
+			return SUBST_BLOCK;
 			
 		case BEGIN:
-			return L"unconditional block";
+			return BEGIN_BLOCK;
 			
 		case AND:
-			return L"'and' conditional command";
+			return AND_BLOCK;
 			
 		case OR:
-			return L"'or' conditional command";
+			return OR_BLOCK;
 			
 		default:
-			return L"unknown/invalid block";
+			return UNKNOWN_BLOCK;
 	}
 
 }
@@ -714,7 +811,7 @@ wchar_t *get_filename( const wchar_t *cmd )
 							break;
 						default:
 							debug( 1,
-								   L"Error while searching for command %ls",
+								   MISSING_COMMAND_ERR_MSG,
 								   new_cmd );
 							wperror( L"access" );
 					}
@@ -724,7 +821,6 @@ wchar_t *get_filename( const wchar_t *cmd )
 			free( new_cmd );
 		}
 	}
-
 	return 0;
 }
 
@@ -793,13 +889,13 @@ void parser_destroy()
 		if( !f )
 		{
 			debug( 1,
-				   L"Could not write profiling information to file '%s'",
+				   _(L"Could not write profiling information to file '%s'"),
 				   profile );
 		}
 		else
 		{
 			fwprintf( f, 
-					  L"Time\tSum\tCommand\n",
+					  _(L"Time\tSum\tCommand\n"),
 					  al_get_count( &profile_data ) );
 			print_profile( &profile_data, 0, f );
 			fclose( f );
@@ -949,7 +1045,7 @@ wchar_t *parser_current_line()
 	{
 		swprintf( lineinfo,
 				  LINEINFO_SIZE,
-				  L"%ls (line %d): %n",
+				  _(L"%ls (line %d): %n"),
 				  file,
 				  lineno,
 				  &offset );
@@ -1135,7 +1231,7 @@ static void parse_job_main_loop( process_t *p,
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( tok ),
-									   L"Could not expand string '%ls'",
+									   _(L"Could not expand string '%ls'"),
 									   tok_last(tok) );
 																		
 							}
@@ -1237,7 +1333,7 @@ static void parse_job_main_loop( process_t *p,
 					if( error_code == 0 )
 						error( SYNTAX_ERROR,
 							   tok_get_pos( tok ),
-							   L"Invalid IO redirection" );
+							   _(L"Invalid IO redirection") );
 					tok_next(tok);
 				}
 				else
@@ -1280,8 +1376,7 @@ static void parse_job_main_loop( process_t *p,
 								{
 									error( SYNTAX_ERROR,
 										   tok_get_pos( tok ),
-										   L"Requested redirection to something "
-										   L"that is not a file descriptor %ls",
+										   _(L"Requested redirection to something that is not a file descriptor %ls"),
 										   target );
 									
 									tok_next(tok);
@@ -1672,7 +1767,7 @@ static int parse_job( process_t *p,
 						{
 							error( EVAL_ERROR,
 								   tok_get_pos( tok ),
-								   L"Unknown command '%ls'",
+								   _(L"Unknown command '%ls'"),
 								   (wchar_t *)al_get( &args, 0 ) );
 															   
 						}
@@ -2046,7 +2141,9 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	if( !cmd )
 	{
 		debug( 1,
-			   L"Tried to evaluate null pointer. " BUGREPORT_MSG,
+			   EVAL_NULL_ERR_MSG );
+		debug( 1,
+			   BUGREPORT_MSG,
 			   PACKAGE_BUGREPORT );
 		return 1;
 	}
@@ -2056,8 +2153,11 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		(block_type != SUBST))
 	{
 		debug( 1,
-			   L"Tried to evaluate buffer using invalid block scope of type '%ls'. " BUGREPORT_MSG,
-			   parser_get_block_desc( block_type ),
+			   INVALID_SCOPE_ERR_MSG,
+			   parser_get_block_desc( block_type ) );
+		
+		debug( 1,
+			   BUGREPORT_MSG,
 			   PACKAGE_BUGREPORT );
 		return 1;
 	}
@@ -2092,8 +2192,8 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		if( current_block == 0 )
 		{
 			debug( 0,
-				   L"End of block mismatch. "
-				   L"Program terminating. "
+				   _(L"End of block mismatch. Program terminating.") );
+			debug( 0,
 				   BUGREPORT_MSG,				   
 				   PACKAGE_BUGREPORT );
 			exit(1);

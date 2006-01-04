@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-04 15:05+0100\n"
+"POT-Creation-Date: 2006-01-04 15:14+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -358,8 +358,8 @@ msgid "Stop the innermost currently evaluated function"
 msgstr "Avbryt den innersta utförda funktionen"
 
 #: builtin.c:3358
-msgid "Set the commandline"
-msgstr "Sätt kommandoraden"
+msgid "Set or get the commandline"
+msgstr "Ändra eller visa kommandoraden"
 
 #: builtin.c:3359 builtin.c:3360
 msgid "Conditionally execute a block of commands"
@@ -1141,6 +1141,3 @@ msgstr "%ls: Variabelnamn får inte vara tomma\n"
 #: exec.h:19
 msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av en pipa"
-
-#~ msgid "Set or get the commandline"
-#~ msgstr "Ändra eller visa kommandoraden"

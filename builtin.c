@@ -3355,7 +3355,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		hash_put( desc, L"break", _( L"Stop the innermost loop" ) );	
 		hash_put( desc, L"continue", _( L"Skip the rest of the current lap of the innermost loop" ) );
 		hash_put( desc, L"return", _( L"Stop the innermost currently evaluated function" ) );
-		hash_put( desc, L"commandline", _( L"Set the commandline" ) );
+		hash_put( desc, L"commandline", _( L"Set or get the commandline" ) );
 		hash_put( desc, L"switch", _( L"Conditionally execute a block of commands" ) );	
 		hash_put( desc, L"case", _( L"Conditionally execute a block of commands" ) );	
 		hash_put( desc, L"command", _( L"Run a program" ) );		

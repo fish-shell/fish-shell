@@ -33,9 +33,12 @@ broken.
 Simple install procedure
 ========================
 
+If you have downloaded the darcs repository of fish, you need to sun
+autoheader and autoconf.
+
  % ./configure
- % make                                  #Compile fish
- % make install                          #Install fish
+ % make                                  # Compile fish
+ % make install                          # Install fish
  % echo /usr/local/bin/fish >>/etc/shells #Add fish to list of shells
 
 If you wish to use fish as your default shell, use the following
@@ -49,6 +52,9 @@ chsh will prompt you for your password, and change your default shell.
 Local install procedure
 =======================
 
+If you have downloaded the darcs repository of fish, you need to sun
+autoheader and autoconf.
+
 To install fish in your own home directory (typically as non-root),
 type:
 
@@ -57,6 +63,6 @@ type:
  % make install			# Install fish
 
 You will not be able to use fish as the default shell unless you also
-add the corresponding line to /etc/shells, which kind of defeats the
-point of a local install. But you can at least build and run fish.
-
+add the corresponding line to /etc/shells, which mostly defeats the
+point of a local install. As a workaround, you can add fish as the
+last command of the init files for your regular shell.

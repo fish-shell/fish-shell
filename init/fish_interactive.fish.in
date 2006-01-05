@@ -6,10 +6,6 @@ if not status --is-interactive
 	exit
 end
 
-function _ -d "Alias for the gettext command"
-	gettext fish $argv
-end
-
 #
 # Print a greeting 
 #

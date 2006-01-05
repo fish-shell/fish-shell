@@ -67,6 +67,10 @@ for i in DISPLAY
 	end
 end
 
+function _ -d "Alias for the gettext command"
+	gettext fish $argv
+end
+
 #
 # Load additional initialization files
 #

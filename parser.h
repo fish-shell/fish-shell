@@ -115,8 +115,6 @@ enum block_type
 	SUBST, /**< Command substitution scope */
 	TOP, /**< Outermost block */
 	BEGIN, /**< Unconditional block */
-	AND, /**< And block */
-	OR, /**< Or block */
 }
 ;
 

@@ -222,18 +222,6 @@ The fish parser. Contains functions for parsing code.
 
 
 /** 
-	And block description
-*/
-#define AND_BLOCK _( L"'and' conditional block" )
-
-
-/** 
-	 block description
-*/
-#define OR_BLOCK _( L"'or' conditional block" )
-
-
-/** 
 	Unknown block description
 */
 #define UNKNOWN_BLOCK _( L"unknown/invalid block" )
@@ -354,8 +342,6 @@ void parser_push_block( int type )
 
 	if( (new->type != FUNCTION_DEF) && 
 		(new->type != FAKE) && 
-		(new->type != OR) && 
-		(new->type != AND) && 
 		(new->type != TOP) )
 	{
 		env_push( type == FUNCTION_CALL );
@@ -370,8 +356,6 @@ void parser_pop_block()
 
 	if( (current_block->type != FUNCTION_DEF ) && 
 		(current_block->type != FAKE) && 
-		(current_block->type != OR) && 
-		(current_block->type != AND) && 
 		(current_block->type != TOP) )
 	{
 		env_pop();
@@ -451,12 +435,6 @@ const wchar_t *parser_get_block_desc( int block )
 			
 		case BEGIN:
 			return BEGIN_BLOCK;
-			
-		case AND:
-			return AND_BLOCK;
-			
-		case OR:
-			return OR_BLOCK;
 			
 		default:
 			return UNKNOWN_BLOCK;
@@ -1570,7 +1548,7 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
-				parser_push_block( AND );
+				j->skip = proc_get_last_status();				
 				free( nxt );
 				continue;
 			}
@@ -1584,7 +1562,7 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
-				parser_push_block( OR );
+				j->skip = !proc_get_last_status();				
 				free( nxt );
 				continue;
 			}
@@ -1987,18 +1965,6 @@ static void eval_job( tokenizer *tok )
 			
 			j->first_process = calloc( 1, sizeof( process_t ) );
 
-			/* Copy the command name */
-			if( current_block->type == OR )
-			{
-				skip = (proc_get_last_status() == 0 );
-				parser_pop_block();
-			}
-			else if( current_block->type == AND )
-			{
-				skip = (proc_get_last_status() != 0 );
-				parser_pop_block();
-			}
-			
 
 			if( parse_job( j->first_process, j, tok ) &&
 				j->first_process->argv )
@@ -2026,6 +1992,7 @@ static void eval_job( tokenizer *tok )
 				
 				skip |= current_block->skip;
 				skip |= j->wildcard_error;
+				skip |= j->skip;
 				
 				if(!skip )
 				{
@@ -2205,31 +2172,16 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 
 			//debug( 2, L"Status %d\n", proc_get_last_status() );
 
-			switch( prev_block_type )
-			{
-				case OR:
-				case AND:
-					debug( 1, 
-						   COND_ERR_MSG );					
-					fwprintf( stderr, L"%ls", parser_current_line() );
-					
-					h = builtin_help_get( prev_block_type == OR? L"or": L"and" );
-					if( h )
-						fwprintf( stderr, L"%s", h );
-					break;
-					
-				default:
-					debug( 1, 
-						   L"%ls", parser_get_block_desc( current_block->type ) );
-					debug( 1, 
-						   BLOCK_END_ERR_MSG );
-					fwprintf( stderr, L"%ls", parser_current_line() );
+			debug( 1, 
+				   L"%ls", parser_get_block_desc( current_block->type ) );
+			debug( 1, 
+				   BLOCK_END_ERR_MSG );
+			fwprintf( stderr, L"%ls", parser_current_line() );
 			
-					h = builtin_help_get( L"end" );
-					if( h )
-						fwprintf( stderr, L"%s", h );
-					break;
-			}
+			h = builtin_help_get( L"end" );
+			if( h )
+				fwprintf( stderr, L"%s", h );
+			break;
 			
 		}
 		prev_block_type = current_block->type;	
@@ -2395,7 +2347,7 @@ int parser_test( wchar_t * buff,
 								
 							}
 						}
-						require_additional_commands=2;
+						require_additional_commands=1;
 					}
 					
 					/*

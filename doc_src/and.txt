@@ -2,22 +2,16 @@
 \section and and - Conditionally execute a command
 
 \subsection and-synopsis Synopsis
- <tt>and COMMAND1; COMMAND2</tt>
+ <tt>COMMAND1; and COMMAND2</tt>
 
 \subsection and-description Description
 
-The \c and builtin is used to execute one command, and if it returns
-zero status, also execute a second command. 
+The \c and builtin is used to execute a command if the current exit status (as set by the last previous command) is zero
 
 \subsection and-example Example
 
 The following code runs the \c make command to build a program, and if it suceeds, it runs <tt>make install</tt>, which installs the program.
 <pre>
-and make; make install
+make; and make install
 </pre>
 
-\c or and \c and can be nested, as in this example, that attempts to build and install a program, and removed the files created by the build process on failiure
-
-<pre>
-or and make; make install; make clean
-</pre>

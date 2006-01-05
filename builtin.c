@@ -2807,9 +2807,7 @@ static int builtin_begin( wchar_t **argv )
 */
 static int builtin_end( wchar_t **argv )
 {
-	if( !current_block->outer ||
-		current_block->type == OR ||
-		current_block->type == AND )
+	if( !current_block->outer )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Not inside of block\n" ),

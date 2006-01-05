@@ -678,6 +678,7 @@ The following commands are distributed with fish. Many of them are
 builtins or shellscript functions, and can only be used inside fish.
 
 - <a href="builtins.html#source">.</a>, read and execute the commands in a file 
+- <a href="builtins.html#and">and</a>, execute second command if first suceeds
 - <a href="builtins.html#bg">bg</a>, set a command to the background
 - <a href="builtins.html#begin">begin</a>, execute a block of commands
 - <a href="builtins.html#bind">bind</a>, change keyboard bindings
@@ -709,6 +710,7 @@ builtins or shellscript functions, and can only be used inside fish.
 - <a href="commands.html#mimedb">mimedb</a>, view mimedata about a file
 - <a href="commands.html#nextd">nextd</a>, move forward in the directory history
 - <a href="builtins.html#not">not</a>, negates the exit status of any command
+- <a href="builtins.html#or">or</a>, execute second command if first fails
 - <a href="commands.html#popd">popd</a>, move to the topmost directory on the directory stack
 - <a href="commands.html#prevd">prevd</a>, move backwards in the direcotry stack
 - <a href="commands.html#pushd">pushd</a>, push the surrent directory onto the directory stack

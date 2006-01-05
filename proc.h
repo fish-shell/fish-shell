@@ -152,6 +152,9 @@ typedef struct job
 	/** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
 	int wildcard_error;
 	
+	/** Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or */
+	int skip;
+	
 	/** Pointer to the next job */
 	struct job *next;           
 } 

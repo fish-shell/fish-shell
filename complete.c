@@ -49,63 +49,63 @@
 /**
    Description for ~USER completion
 */
-#define COMPLETE_USER_DESC COMPLETE_SEP_STR L"User home"
+#define COMPLETE_USER_DESC _( L"User home" )
 
 /**
    Description for short variables. The value is concatenated to this description
 */
-#define COMPLETE_VAR_DESC_VAL COMPLETE_SEP_STR L"Variable: "
+#define COMPLETE_VAR_DESC_VAL _( L"Variable: " )
 
 /**
    Description for generic executable
 */
-#define COMPLETE_EXEC_DESC COMPLETE_SEP_STR L"Executable"
+#define COMPLETE_EXEC_DESC _( L"Executable" )
 /**
    Description for link to executable
 */
-#define COMPLETE_EXEC_LINK_DESC COMPLETE_SEP_STR L"Executable link"
+#define COMPLETE_EXEC_LINK_DESC _( L"Executable link" )
 
 /**
    Description for regular file
 */
-#define COMPLETE_FILE_DESC COMPLETE_SEP_STR L"File"
+#define COMPLETE_FILE_DESC _( L"File" )
 /**
    Description for character device
 */
-#define COMPLETE_CHAR_DESC COMPLETE_SEP_STR L"Character device"
+#define COMPLETE_CHAR_DESC _( L"Character device" )
 /**
    Description for block device
 */
-#define COMPLETE_BLOCK_DESC COMPLETE_SEP_STR L"Block device"
+#define COMPLETE_BLOCK_DESC _( L"Block device" )
 /**
    Description for fifo buffer
 */
-#define COMPLETE_FIFO_DESC COMPLETE_SEP_STR L"Fifo"
+#define COMPLETE_FIFO_DESC _( L"Fifo" )
 /**
    Description for symlink
 */
-#define COMPLETE_SYMLINK_DESC COMPLETE_SEP_STR L"Symbolic link"
+#define COMPLETE_SYMLINK_DESC _( L"Symbolic link" )
 /**
    Description for Rotten symlink
 */
-#define COMPLETE_ROTTEN_SYMLINK_DESC COMPLETE_SEP_STR L"Rotten symbolic link"
+#define COMPLETE_ROTTEN_SYMLINK_DESC _( L"Rotten symbolic link" )
 /**
    Description for socket
 */
-#define COMPLETE_SOCKET_DESC COMPLETE_SEP_STR L"Socket"
+#define COMPLETE_SOCKET_DESC _( L"Socket" )
 /**
    Description for directory
 */
-#define COMPLETE_DIRECTORY_DESC COMPLETE_SEP_STR L"Directory"
+#define COMPLETE_DIRECTORY_DESC _( L"Directory" )
 
 /**
    Description for function
 */
-#define COMPLETE_FUNCTION_DESC COMPLETE_SEP_STR L"Function"
+#define COMPLETE_FUNCTION_DESC _( L"Function" )
 /**
    Description for builtin command
 */
-#define COMPLETE_BUILTIN_DESC COMPLETE_SEP_STR L"Builtin"
+#define COMPLETE_BUILTIN_DESC _( L"Builtin" )
 
 /**
    The command to run to get a description from a file suffix
@@ -204,6 +204,9 @@ static hash_table_t *condition_cache=0;
    Set of commands for which completions have already been loaded
 */
 static hash_table_t *loaded_completions=0;
+
+static string_buffer_t *get_desc_buff=0;
+
 
 void complete_init()
 {
@@ -425,9 +428,7 @@ void complete_add( const wchar_t *cmd,
 
 	if( desc && wcslen( desc ) )
 	{
-		tmp = wcsdupcat( COMPLETE_SEP_STR, desc );
-		opt->desc = intern( tmp );
-		free( tmp );
+		opt->desc = intern( desc );
 	}
 	else
 		opt->desc = L"";
@@ -846,15 +847,15 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 			if( al_get_count( &l )>0 )
 			{
 				wchar_t *ln = (wchar_t *)al_get(&l, 0 );
-				if( wcscmp( ln, _(L"unknown") ) != 0 )
+				if( wcscmp( ln, L"unknown" ) != 0 )
 				{
-					desc = wcsdupcat( COMPLETE_SEP_STR, ln);
+					desc = wcsdup( ln);
 					/*
 					  I have decided I prefer to have the description
 					  begin in uppercase and the whole universe will just
 					  have to accept it. Hah!
 					*/
-					desc[1]=towupper(desc[1]);
+					desc[0]=towupper(desc[0]);
 				}
 			}
 
@@ -881,43 +882,48 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 const wchar_t *complete_get_desc( const wchar_t *filename )
 {
 	struct stat buf;
-	const wchar_t *desc = COMPLETE_FILE_DESC;
-
+//	const wchar_t *desc = COMPLETE_FILE_DESC;
+	if( !get_desc_buff )
+	{
+		get_desc_buff = malloc(sizeof(string_buffer_t) );
+		sb_init( get_desc_buff );
+	}
+	else
+	{
+		sb_clear( get_desc_buff );
+	}
 	
 	if( lwstat( filename, &buf )==0)
-	{
-		if( waccess( filename, X_OK ) == 0 )
-		{
-			desc = COMPLETE_EXEC_DESC;
-		}
-		
+	{		
 		if( S_ISCHR(buf.st_mode) )
-			desc= COMPLETE_CHAR_DESC;
+		{
+			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_CHAR_DESC );				
+		}
 		else if( S_ISBLK(buf.st_mode) )
-			desc = COMPLETE_BLOCK_DESC;
+			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_BLOCK_DESC );				
 		else if( S_ISFIFO(buf.st_mode) )
-			desc = COMPLETE_FIFO_DESC;
+			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_FIFO_DESC );				
 		else if( S_ISLNK(buf.st_mode))
 		{
 			struct stat buf2;
-			desc = COMPLETE_SYMLINK_DESC;
-
-			if( waccess( filename, X_OK ) == 0 )
-				desc = COMPLETE_EXEC_LINK_DESC;
 
 			if( wstat( filename, &buf2 ) == 0 )
 			{
 				if( S_ISDIR(buf2.st_mode) )
 				{
-					desc = L"/" COMPLETE_SYMLINK_DESC;
+					sb_printf( get_desc_buff, L"/%lc%ls", COMPLETE_SEP, COMPLETE_SYMLINK_DESC );
 				}
+				else if( waccess( filename, X_OK ) == 0 )
+					sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_EXEC_LINK_DESC );				
+				else
+					sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_SYMLINK_DESC );
 			}
 			else
 			{
 				switch( errno )
 				{
 					case ENOENT:
-						desc = COMPLETE_ROTTEN_SYMLINK_DESC;
+						sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_ROTTEN_SYMLINK_DESC );
 						break;
 
 					case EACCES:
@@ -928,11 +934,17 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 						break;
 				}
 			}
+
 		}
 		else if( S_ISSOCK(buf.st_mode))
-			desc= COMPLETE_SOCKET_DESC;
+			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_SOCKET_DESC );
 		else if( S_ISDIR(buf.st_mode) )
-			desc= L"/" COMPLETE_DIRECTORY_DESC;
+			sb_printf( get_desc_buff, L"/%lc%ls", COMPLETE_SEP, COMPLETE_DIRECTORY_DESC );
+		else if( waccess( filename, X_OK ) == 0 )
+		{
+			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_EXEC_DESC );
+		}
+
 	}
 /*	else
   {
@@ -949,19 +961,27 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
   }
   }
 */
-	if( desc == COMPLETE_FILE_DESC )
+	if( wcslen((wchar_t *)get_desc_buff->buff) == 0 )
 	{
 		wchar_t *suffix = wcsrchr( filename, L'.' );
 		if( suffix != 0 )
 		{
 			if( !wcsrchr( suffix, L'/' ) )
 			{
-				desc = complete_get_desc_suffix( suffix );
+				sb_printf( get_desc_buff,
+						   L"%lc%ls",
+						   COMPLETE_SEP,
+						   complete_get_desc_suffix( suffix ) );			
 			}
 		}
+		else
+			sb_printf( get_desc_buff,
+					   L"%lc%ls", 
+					   COMPLETE_SEP, 
+					   COMPLETE_FILE_DESC );			
 	}
-
-	return desc;
+	
+	return (wchar_t *)get_desc_buff->buff;
 }
 
 /**
@@ -1007,6 +1027,7 @@ static void copy_strings_with_prefix( array_list_t *comp_out,
 
 		wildcard_complete( next_str, wc, desc, desc_func, comp_out );
 	}
+
 	free( wc );
 
 }
@@ -1303,7 +1324,7 @@ static void complete_cmd( const wchar_t *cmd,
 			{
 				wchar_t *nxt = (wchar_t *)al_get( &tmp, i );
 				
-				wchar_t *desc = wcsrchr( nxt, COMPLETE_SEP );
+				wchar_t *desc = wcsrchr( nxt, COMPLETE_SEP )+1;
 				int is_valid = (desc && (wcscmp(desc, 
 												COMPLETE_DIRECTORY_DESC)==0));
 				if( is_valid )
@@ -1810,7 +1831,7 @@ static int complete_variable( const wchar_t *var,
 			/*
 			  Variable description is 'Variable: VALUE
 			*/
-			blarg = wcsdupcat2( &name[varlen], COMPLETE_VAR_DESC_VAL, value, 0 );
+			blarg = wcsdupcat2( &name[varlen], COMPLETE_SEP_STR, COMPLETE_VAR_DESC_VAL, value, 0 );
 
 			if( blarg )
 			{
@@ -1937,6 +1958,7 @@ static int try_complete_user( const wchar_t *cmd,
 						{
 							wchar_t *blarg = wcsdupcat2( &pw_name[name_len], 
 														 L"/", 
+														 COMPLETE_SEP_STR,
 														 COMPLETE_USER_DESC,
 														 0 );
 							if( blarg != 0 )

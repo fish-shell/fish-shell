@@ -229,9 +229,10 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Create a template translation object
-messages.pot: *.c *.h
+messages.pot: *.c *.h init/*.in init/*.fish
 	if test $(HAVE_GETTEXT) = 1;then \
-		xgettext -k_ -kN_ --no-wrap *.c *.h -o messages.pot; \
+		xgettext -k_ -kN_ -kcomplete_desc --no-wrap *.c *.h -o messages.pot; \
+		xgettext -j -k_ -LShell --no-wrap init/*.in init/*.fish -o messages.pot; \
 	fi
 
 # Generate the internal help functions by making doxygen create

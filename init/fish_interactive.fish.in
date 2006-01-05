@@ -6,26 +6,30 @@ if not status --is-interactive
 	exit
 end
 
+function _ -d "Alias for the gettext command"
+	gettext fish $argv
+end
+
 #
 # Print a greeting 
 #
 
-printf 'Welcome to fish, the friendly interactive shell\n' 
-printf 'Type %shelp%s for instructions on how to use fish\n' (set_color green) (set_color normal)
+printf (_ 'Welcome to fish, the friendly interactive shell\n')
+printf (_ 'Type %shelp%s for instructions on how to use fish\n') (set_color green) (set_color normal)
 
 #
 # Set exit message
 #
 
-function fish_on_exit -d "Commands to execute when fish exits" --on-process %self
-	echo Good bye
+function fish_on_exit -d (_ "Commands to execute when fish exits") --on-process %self
+	printf (_ "Good bye\n")
 end
 
 # Set the default prompt command. Make sure that every terminal escape
 # string has a newline before and after, so that fish will know how
 # long it is.
 
-function fish_prompt -d "Write out the prompt"
+function fish_prompt -d (_ "Write out the prompt")
 	printf '%s@%s %s%s%s> \n' (whoami) (hostname|cut -d . -f 1) (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
 end
 

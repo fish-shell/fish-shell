@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-04 15:14+0100\n"
+"POT-Creation-Date: 2006-01-05 14:39+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -414,12 +414,12 @@ msgid "Set or get the shells resurce usage limits"
 msgstr "Visa eller redigera skalets resursanvändningsgränser"
 
 #: builtin_set.c:96
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
-msgstr "%ls: Ogiltigt index vid '%ls'"
+msgstr "%ls: Ogiltigt index vid '%ls'\n"
 
 #: builtin_set.c:488
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Erase needs a variable name\n"
 "%ls\n"
@@ -428,7 +428,7 @@ msgstr ""
 "%ls\n"
 
 #: builtin_set.c:525
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Values cannot be specfied with erase\n"
 "%ls\n"
@@ -436,17 +436,69 @@ msgstr ""
 "%ls: Värden kan inte specificeras vid radering\n"
 "%ls\n"
 
-#: complete.c:750 complete.c:769
+#: complete.c:52
+msgid "User home"
+msgstr "Hemkatalog"
+
+#: complete.c:57
+msgid "Variable: "
+msgstr "Variabel: "
+
+#: complete.c:62
+msgid "Executable"
+msgstr "Program"
+
+#: complete.c:66
+msgid "Executable link"
+msgstr "Länk till program"
+
+#: complete.c:71
+msgid "File"
+msgstr "Fil"
+
+#: complete.c:75
+msgid "Character device"
+msgstr "Teckenenhet"
+
+#: complete.c:79
+msgid "Block device"
+msgstr "Blockenhet"
+
+#: complete.c:83
+msgid "Fifo"
+msgstr "Fifo"
+
+#: complete.c:87
+msgid "Symbolic link"
+msgstr "Symbolisk länk"
+
+#: complete.c:91
+msgid "Rotten symbolic link"
+msgstr "Rutten symbolisk länk"
+
+#: complete.c:95
+msgid "Socket"
+msgstr "Uttag (socket)"
+
+#: complete.c:99 init/fish_complete.fish.in:68 init/fish_complete.fish:68
+msgid "Directory"
+msgstr "Katalog"
+
+#: complete.c:104
+msgid "Function"
+msgstr "Funktion"
+
+#: complete.c:108
+msgid "Builtin"
+msgstr "Inbyggt kommando"
+
+#: complete.c:751 complete.c:770
 msgid "Unknown option: "
 msgstr "Okänt argument: "
 
-#: complete.c:774
+#: complete.c:775
 msgid "Multiple matches for option: "
 msgstr "Mer än ett argument passar: "
-
-#: complete.c:849 wildcard.c:276
-msgid "unknown"
-msgstr "okänd"
 
 #: env.c:194
 msgid "Could not get user information"
@@ -574,7 +626,7 @@ msgid "Unable to parse binding"
 msgstr "Kunde inte tolka tangentbordsgenväg"
 
 #: input.c:1041
-#, fuzzy, c-format
+#, c-format
 msgid "I don't know what %ls means"
 msgstr "Vet inte vad '%ls' betyder"
 
@@ -1087,6 +1139,10 @@ msgstr "Kör jobb i bakgrunden"
 msgid "Comment"
 msgstr "Kommentar"
 
+#: wildcard.c:276
+msgid "unknown"
+msgstr "okänd"
+
 #: wildcard.c:280
 msgid "empty"
 msgstr "tom"
@@ -1141,3 +1197,128 @@ msgstr "%ls: Variabelnamn får inte vara tomma\n"
 #: exec.h:19
 msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av en pipa"
+
+#: init/fish_complete.fish.in:179 init/fish_complete.fish:179
+msgid "Display help and exit"
+msgstr "Visa hjälp och avsluta"
+
+#: init/fish_complete.fish.in:198 init/fish_complete.fish:198
+msgid "Package"
+msgstr "Paket"
+
+#: init/fish_complete.fish.in:244 init/fish_complete.fish:244
+msgid "Start service"
+msgstr "Starta tjänst"
+
+#: init/fish_complete.fish.in:245 init/fish_complete.fish:245
+msgid "Stop service"
+msgstr "Stanna tjänst"
+
+#: init/fish_complete.fish.in:246 init/fish_complete.fish:246
+msgid "Print service status"
+msgstr "Visa status för tjänst"
+
+#: init/fish_complete.fish.in:247 init/fish_complete.fish:247
+msgid "Stop and then start service"
+msgstr "Stanna och starta tjänst"
+
+#: init/fish_complete.fish.in:248 init/fish_complete.fish:248
+msgid "Reload service configuration"
+msgstr "Ladda om konfiguration för tjänst"
+
+#: init/fish_interactive.fish.in:9 init/fish_interactive.fish:9
+msgid "-d"
+msgstr ""
+
+#: init/fish_interactive.fish.in:10 init/fish_interactive.fish:10
+msgid "fish"
+msgstr ""
+
+#: init/fish_interactive.fish.in:17 init/fish_interactive.fish:17
+msgid "Welcome to fish, the friendly interactive shell\\n"
+msgstr "Välkommen till fish, det vänliga interaktiva skalet\\n"
+
+#: init/fish_interactive.fish.in:18 init/fish_interactive.fish:18
+msgid "Type %shelp%s for instructions on how to use fish\\n"
+msgstr "Skriv %shelp%s för instruktioner om hur man använder fish\\n"
+
+#: init/fish_interactive.fish.in:24 init/fish_interactive.fish:24
+msgid "Commands to execute when fish exits"
+msgstr "Kommandon som utförs när fish avslutas"
+
+#: init/fish_interactive.fish.in:25 init/fish_interactive.fish:25
+msgid "Good bye\\n"
+msgstr "Hej då\\n"
+
+#: init/fish_interactive.fish.in:32 init/fish_interactive.fish:32
+msgid "Write out the prompt"
+msgstr "Skriver ut prompten"
+
+#: init/fish_function.fish:58
+msgid "%s: Key not specified\\n"
+msgstr "%s: Ingen nyckel specificerad"
+
+#: init/fish_function.fish:130
+msgid "%s: Could not find a web browser.\\n"
+msgstr "%s: Kunde inte hitta en webbrowser\\n"
+
+#: init/fish_function.fish:131
+#, sh-format
+msgid "Please set the variable $BROWSER to a suitable browser and try again\\n\\n"
+msgstr "Var vänlig sätt variablen $BROWSER till en lämplig browser och försök igen\\n\\n"
+
+#: init/fish_function.fish:273
+msgid "vared: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of %s\\n"
+msgstr "vared: %s är en arrayvariabel. Använd %svared%s %s[n] för att redigera det n:te elementet av %s\\n"
+
+#: init/fish_function.fish:277
+msgid "vared: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
+msgstr "vared: Förväntade exakt ett argument, fick %s\\n\\nSynopsis:\\n\\t%svared%s VARIABEL\\n"
+
+#: init/fish_function.fish:386
+msgid "Hit end of history...\\n"
+msgstr "Inga fler kataloger..."
+
+#: init/fish_function.fish:422
+msgid "The number of positions to skip must be a non-negative integer\\n"
+msgstr "Antalet positioner att hoppa över måste vara ett positivt heltal"
+
+#: init/fish_function.fish:775
+msgid "%s is a function with definition\\n"
+msgstr "%s är en funktion med definitionen\\n"
+
+#: init/fish_function.fish:779
+msgid "function"
+msgstr "funktion"
+
+#: init/fish_function.fish:795
+msgid "%s is a builtin\\n"
+msgstr "%s är ett inbygggt kommando\\n"
+
+#: init/fish_function.fish:798
+msgid "builtin\\n"
+msgstr "inbyggt kommando\\n"
+
+#: init/fish_function.fish:815
+msgid "%s is %s\\n"
+msgstr "%s är %s\\n"
+
+#: init/fish_function.fish:818
+msgid "file"
+msgstr "fil"
+
+#: init/fish_function.fish:829
+msgid "%s: Could not find '%s'"
+msgstr "%s: Kunde inte hitta '%s'"
+
+#: init/fish_function.fish:845
+msgid "%s: Invalid mask '%s'\\n"
+msgstr "%s: Ogiltigt mask '%s'\\n"
+
+#: init/fish_function.fish:1032
+msgid "%s: Too many arguments\\n"
+msgstr "%s: För många argument\\n"
+
+#: init/fish_function.fish:1052
+msgid "%s: Unknown argument '%s'\\n"
+msgstr "%s: Okänt argument '%s'\\n"

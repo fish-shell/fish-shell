@@ -55,7 +55,7 @@ function contains -d "Test if a key is contained in a set of values"
 	end
 
 	if not set -q argv 
-		echo "contains: Key not specified"
+		printf (_ "%s: Key not specified\n") contains
 		return 1
 	end
 
@@ -127,8 +127,8 @@ function help -d "Show help for the fish shell"
 	end
 
 	if test -z $fish_browser
-		printf "help: Could not find a web browser.\n"
-		printf "Please set the variable $BROWSER to a suitable browser and try again\n\n"
+		printf (_ '%s: Could not find a web browser.\n') help
+		printf (_ 'Please set the variable $BROWSER to a suitable browser and try again\n\n')
 		return 1
 	end
 
@@ -270,20 +270,11 @@ function vared -d "Edit variable value"
 
 				else
 
-					printf "vared: %s is an array variable. Use " $argv
-					set_color $fish_color_command
-					printf vared
-					set_color $fish_color_normal
-					printf " %s[n] to edit the n:th element of %s\n" $argv $argv
-
+					printf (_ 'vared: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of %s\n') $argv (set_color $fish_color_command) (set_color $fish_color_normal) $argv $argv
 				end
 		end
 	else
-		printf "vared: Expected exactly one argument, got %s.\n\nSynopsis:\n\t" (count $argv)
-		set_color $fish_color_command
-		printf vared
-		set_color $fish_color_normal
-		printf " VARIABLE\n"
+		printf (_ 'vared: Expected exactly one argument, got %s.\n\nSynopsis:\n\t%svared%s VARIABLE\n') (count $argv) (set_color $fish_color_command) (set_color $fish_color_normal)
 	end
 end
 
@@ -392,7 +383,7 @@ function __fish_move_last -d "Move the last element of a directory history from 
 
 	if test $size_src = 0
 		# Cannot make this step
-		echo "Hit end of history..."
+		printf (_ "Hit end of history...\n")
 		return 1
 	end
 
@@ -428,7 +419,7 @@ function prevd -d "Move back in the directory history"
 				if test $argv[$i] -ge 0 ^/dev/null
 					set times $argv[$i]
 				else
-					echo "The number of positions to skip must be a non-negative integer"
+					printf (_ "The number of positions to skip must be a non-negative integer\n")
 					return 1
 				end
 				continue
@@ -781,11 +772,11 @@ function type -d "Print the type of a command"
 				set found 1
 				switch $mode
 					case normal
-						echo $i is a function with definition
+						printf (_ '%s is a function with definition\n') $i
 						functions $i
 
 					case type
-						echo function
+						printf (_ function)
 
 					case path
 						 echo
@@ -801,10 +792,10 @@ function type -d "Print the type of a command"
 				set found 1
 				switch $mode
 					case normal
-						echo $i is a builtin
+						printf (_ '%s is a builtin\n') $i
 
 					case type
-						echo builtin
+						printf (_ 'builtin\n')
 
 					case path
 						echo
@@ -821,10 +812,10 @@ function type -d "Print the type of a command"
 			set found 1
 			switch $mode
 				case normal
-					echo $i is (which $i)
+					printf (_ '%s is %s\n') $i (which $i)
 
 					case type
-						echo file
+						printf (_ file)
 
 					case path
 						which $i
@@ -835,7 +826,7 @@ function type -d "Print the type of a command"
 		end
 
 		if test $found = 0
-			echo type: $i: not found
+			printf (_ "%s: Could not find '%s'") type $i
 		end
 
 	end
@@ -851,7 +842,7 @@ function __fish_umask_parse -d "Parses a file permission specification as into a
 	else
 		# Test if argument really is a valid symbolic mask
 		if not echo $argv | grep -E '^(((u|g|o|a|)(=|\+|-)|)(r|w|x)*)(,(((u|g|o|a|)(=|\+|-)|)(r|w|x)*))*$' >/dev/null
-			echo umask: Invalid mask $argv >&2
+			printf (_ "%s: Invalid mask '%s'\n") umask $argv >&2
 			return 1
 		end
 
@@ -1038,7 +1029,7 @@ function umask -d "Set default file permission mask"
 			end
 
 		case '*'
-			echo umask: Too may arguments >&2
+			printf (_ '%s: Too many arguments\n') umask >&2
 
 	end
 
@@ -1058,7 +1049,7 @@ function psub -d "Read from stdin into a file and output the filename. Remove th
 				return 0
 
 			case '*'
-				echo psub: Unknown argument $argv[1]
+				printf (_ "%s: Unknown argument '%s'\n") psub $argv[1]
 				return 1
 		end
 	end

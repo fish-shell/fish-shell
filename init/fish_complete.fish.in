@@ -65,7 +65,7 @@ end
 function __fish_complete_directory -d "Complete using directories"
 
 	set -- comp $argv[1]
-	set -- desc Directory
+	set -- desc (_ Directory)
 
 	if test (count $argv) -gt 1
 		set desc $argv[2]
@@ -176,9 +176,12 @@ end
 # Completions for the shell and it's builtin commands and functions
 #
 
+set -l __fish_help_desc (_ "Display help and exit")
 for i in (builtin -n|grep -vE '(while|for|if|function|switch)' )
-	complete -c $i -s h -l help -d "Display help and exit"
+
+	complete -c $i -s h -l help -d $__fish_help_desc
 end
+
 
 
 function __fish_print_packages
@@ -191,13 +194,16 @@ function __fish_print_packages
 			return
 	end
 
+	#Get the word 'Package' in the current language
+	set -l package (_ Package)
+
 	if which apt-cache >/dev/null ^/dev/null
 		# Apply the following filters to output of apt-cache:
 		# 1) Remove package names with parentesis in them, since these seem to not correspond to actual packages as reported by rpm
 		# 2) Remove package names that are .so files, since these seem to not correspond to actual packages as reported by rpm
 		# 3) Remove path information such as /usr/bin/, as rpm packages do not have paths
 
-		apt-cache --no-generate pkgnames (commandline -tc)|grep -v \( |grep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/\tPackage/'
+		apt-cache --no-generate pkgnames (commandline -tc)|grep -v \( |grep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/\t'$package'/'
 		return
 	end
 
@@ -219,7 +225,7 @@ function __fish_print_packages
 		end
 
 		# Remove package version information from output and pipe into cache file
-		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/\tPackage/' &
+		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/\t'$package'/' &
 	end
 end
 
@@ -235,12 +241,9 @@ end
 # Completions for SysV startup scripts
 #
 
-set -g __fish_service_commands '
-	start\t"Start service"
-	stop\t"Stop service"
-	status\t"Print service status"
-	restart\t"Stop and then start service"
-	reload\t"Reload service configuration"
-'
+complete -x -p "/etc/init.d/*" -a start\t(_ 'Start service')
+complete -x -p "/etc/init.d/*" -a stop\t(_ 'Stop service')
+complete -x -p "/etc/init.d/*" -a status\t(_ 'Print service status')
+complete -x -p "/etc/init.d/*" -a restart\t(_ 'Stop and then start service')
+complete -x -p "/etc/init.d/*" -a reload\t(_ 'Reload service configuration')
 
-complete -x -p "/etc/init.d/*" -a '$__fish_service_commands'

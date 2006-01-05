@@ -155,15 +155,15 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			/*
 			  A descripton generating function is specified, use it
 			*/
-			new = wcsdupcat2( str, COMPLETE_SEP_STR, desc_func( orig ), 0);			
+			new = wcsdupcat2( str, COMPLETE_SEP_STR, desc_func( orig ), (void *)0);			
 		}
 		else
 		{
 			/*
 			  Append generic description to item, if the description exists
 			*/
-			if( desc && wcslen(desc)>1 )
-				new = wcsdupcat( str, desc );
+			if( desc && wcslen(desc) )
+				new = wcsdupcat2( str, COMPLETE_SEP_STR, desc, (void *)0 );
 			else
 				new = wcsdup( str );
 		}

@@ -422,9 +422,10 @@ static void printed_length( wchar_t *str,
 				case L'^':
 				case L'<':
 				case L'>':
-				case L'@':
 				case L'(':
 				case L')':
+				case L'[':
+				case L']':
 				case L'{':
 				case L'}':
 				case L'?':
@@ -432,6 +433,11 @@ static void printed_length( wchar_t *str,
 				case L'|':
 				case L';':
 				case L':':
+				case L'\'':
+				case L'"':
+				case L'%':
+				case L'~':
+					
 					if( has_description )
 						desc_len++;
 					else

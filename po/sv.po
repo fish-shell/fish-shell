@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-05 14:53+0100\n"
+"POT-Creation-Date: 2006-01-05 16:56+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -106,12 +106,12 @@ msgstr "%ls: Seedningsvärde '%ls' är inte ett giltigt nummer\n"
 msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Förväntade noll eller ett argument, fick %d\n"
 
-#: builtin.c:1830 builtin.c:3031
+#: builtin.c:1830 builtin.c:3029
 #, c-format
 msgid "%ls: Argument must be an integer '%ls'\n"
 msgstr "%ls: Argumentet '%d' är inte ett heltal\n"
 
-#: builtin.c:1841 builtin.c:2134 builtin.c:3042
+#: builtin.c:1841 builtin.c:2134 builtin.c:3040
 #, c-format
 msgid "%ls: Too many arguments\n"
 msgstr "%ls: För många argument\n"
@@ -141,7 +141,7 @@ msgstr "%ls: Kunde inte sätta variableln PWD\n"
 msgid "%ls: Parameter '%ls' is too long\n"
 msgstr "%ls: Parametern '%ls' är för lång\n"
 
-#: builtin.c:2201 builtin.c:3087
+#: builtin.c:2201 builtin.c:3085
 #, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
 msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
@@ -247,169 +247,169 @@ msgstr "%ls: '%ls' är ett ogiltigt variabelnamn\n"
 msgid "%ls: Second argument must be 'in'\n"
 msgstr "%ls: Andra argumentet måste vara 'in'\n"
 
-#: builtin.c:2815
+#: builtin.c:2813
 #, c-format
 msgid "%ls: Not inside of block\n"
 msgstr "%ls: Inte i ett block\n"
 
-#: builtin.c:2939
+#: builtin.c:2937
 #, c-format
 msgid "%ls: Not inside of 'if' block\n"
 msgstr "%ls: Inte i ett 'if' block\n"
 
-#: builtin.c:2991
+#: builtin.c:2989
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Inte i en loop\n"
 
-#: builtin.c:3058
+#: builtin.c:3056
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Inte i en funktion\n"
 
-#: builtin.c:3118
+#: builtin.c:3116
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
 msgstr "%ls: 'case' kommandot kan bara användas i ett 'switch' block\n"
 
-#: builtin.c:3316
+#: builtin.c:3314
 #, c-format
 msgid "Unknown builtin '%ls'"
 msgstr "Okänt inbyggt kommando '%ls'"
 
-#: builtin.c:3338
+#: builtin.c:3336
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
 
-#: builtin.c:3339
+#: builtin.c:3337
 msgid "Run a builtin command"
 msgstr "Utför ett inbyggt kommando"
 
-#: builtin.c:3340
+#: builtin.c:3338
 msgid "Edit command specific completions"
 msgstr "Ändra kommando-specifika kompletteringar"
 
-#: builtin.c:3341
+#: builtin.c:3339
 msgid "Change working directory"
 msgstr "Ändra nuvarande katalog"
 
-#: builtin.c:3342
+#: builtin.c:3340
 msgid "Exit the shell"
 msgstr "Avsluta fish"
 
-#: builtin.c:3343
+#: builtin.c:3341
 msgid "Define a new function"
 msgstr "Definera ny funktion"
 
-#: builtin.c:3344
+#: builtin.c:3342
 msgid "List or remove functions"
 msgstr "Visa och ta bort funktioner"
 
-#: builtin.c:3345
+#: builtin.c:3343
 msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
-#: builtin.c:3346
+#: builtin.c:3344
 msgid "Evaluate block if condition is false"
 msgstr "Utför block om ett villkor är uppfyllt"
 
-#: builtin.c:3347
+#: builtin.c:3345
 msgid "Evaluate parameters as a command"
 msgstr "Utför argument som kommandon"
 
-#: builtin.c:3348
+#: builtin.c:3346
 msgid "Perform a set of commands multiple times"
 msgstr "Utför ett block flera gånger"
 
-#: builtin.c:3349
+#: builtin.c:3347
 msgid "Evaluate contents of file"
 msgstr "Utför filinnehåll som kommandon"
 
-#: builtin.c:3350
+#: builtin.c:3348
 msgid "Handle environment variables"
 msgstr "Redigera miljövariabler"
 
-#: builtin.c:3351
+#: builtin.c:3349
 msgid "Send job to foreground"
 msgstr "Skick jobb till förgrunden"
 
-#: builtin.c:3352
+#: builtin.c:3350
 msgid "Send job to background"
 msgstr "Skicka jobb till bakgrunden"
 
-#: builtin.c:3353
+#: builtin.c:3351
 msgid "Print currently running jobs"
 msgstr "Skriv ut nuvarande jobb"
 
-#: builtin.c:3354
+#: builtin.c:3352
 msgid "Read a line of input into variables"
 msgstr "Läs in en rad till en variabel"
 
-#: builtin.c:3355
+#: builtin.c:3353
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
-#: builtin.c:3356
+#: builtin.c:3354
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Avbryt nuvarande varv i den innersta loopen"
 
-#: builtin.c:3357
+#: builtin.c:3355
 msgid "Stop the innermost currently evaluated function"
 msgstr "Avbryt den innersta utförda funktionen"
 
-#: builtin.c:3358
+#: builtin.c:3356
 msgid "Set or get the commandline"
 msgstr "Ändra eller visa kommandoraden"
 
-#: builtin.c:3359 builtin.c:3360
+#: builtin.c:3357 builtin.c:3358
 msgid "Conditionally execute a block of commands"
 msgstr "Utför ett block av kommandon om ett villkor är uppfyllt"
 
-#: builtin.c:3361
+#: builtin.c:3359
 msgid "Run a program"
 msgstr "Kör ett program"
 
-#: builtin.c:3362
+#: builtin.c:3360
 msgid "Conditionally execute a command"
 msgstr "Utför ett kommando om ett villkor är uppfyllt"
 
-#: builtin.c:3363
+#: builtin.c:3361
 msgid "Perform a command multiple times"
 msgstr "Utför ett kommando upprepade gånger"
 
-#: builtin.c:3364
+#: builtin.c:3362
 msgid "Handle key bindings"
 msgstr "Hantera tangentbordsgenvägar för fish"
 
-#: builtin.c:3365
+#: builtin.c:3363
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
 
-#: builtin.c:3366
+#: builtin.c:3364
 msgid "Run command in current process"
 msgstr "Kör ett kommando i den nuvarande processen"
 
-#: builtin.c:3367
+#: builtin.c:3365
 msgid "Negate exit status of job"
 msgstr "Negera resultatet av ett kommando"
 
-#: builtin.c:3368
+#: builtin.c:3366
 msgid "Execute second command if first fails"
 msgstr "Utför ett kommando om föregående kommando misslyckades"
 
-#: builtin.c:3369
+#: builtin.c:3367
 msgid "Execute second command if first suceeds"
 msgstr "Utför ett kommando om föregående kommando lyckades"
 
-#: builtin.c:3370
+#: builtin.c:3368
 msgid "Create a block of code"
 msgstr "Skape ett kodblock"
 
-#: builtin.c:3371
+#: builtin.c:3369
 msgid "Return status information about fish"
 msgstr "Visa information om fish"
 
-#: builtin.c:3372
+#: builtin.c:3370
 msgid "Set or get the shells resurce usage limits"
 msgstr "Visa eller redigera skalets resursanvändningsgränser"
 
@@ -681,149 +681,151 @@ msgstr "Förväntade att hitta ett kommandonamn, hittade en symbol av typen '%ls
 
 #: parser.c:100
 #, c-format
+msgid "Expected a command string, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? For more information on the 'or' builtin command, see the help section for 'or' by typing 'help or'."
+msgstr "Förväntade att hitta ett kommandonamn, hittade en symbol av typen '%ls'. Menade du 'KOMMANDO; or KOMMANDO'? För mer information, se manualsektionen om det inbbyggda kommandot 'or' genom att skriva 'help or'."
+
+#: parser.c:105
+#, c-format
+msgid "Expected a command string, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? For more information on the 'and' builtin command, see the help section for 'and' by typing 'help and'."
+msgstr "Förväntade att hitta ett kommandonamn, hittade en symbol av typen '%ls'. Menade du 'KOMMANDO; and KOMMANDO'? För mer information, se manualsektionen om det inbbyggda kommandot 'and' genom att skriva 'help and'."
+
+#: parser.c:110
+#, c-format
 msgid "Illegal command name '%ls'."
 msgstr "Ogiltigt kommandonamn '%ls'."
 
-#: parser.c:105
+#: parser.c:115
 #, c-format
 msgid "Warning: No match for wildcard '%ls'. The command will not be executed."
 msgstr "Varning: Inga matchningar för wildcardet '%ls', kommandot kommer ej utföras."
 
-#: parser.c:110
+#: parser.c:120
 msgid "'case' builtin not inside of switch block"
 msgstr "Det inbyggda kommandot 'case' får bara användas i ett 'switch'-block."
 
-#: parser.c:115
+#: parser.c:125
 msgid "Loop control command while not inside of loop"
 msgstr "Loopstyrningskommandon får bara användas i loopar."
 
-#: parser.c:120
+#: parser.c:130
 msgid "'else' builtin not inside of if block"
 msgstr "Det inbyggda kommandot 'else' får bara användas i ett if-block"
 
-#: parser.c:125
+#: parser.c:135
 msgid "'end' command outside of block"
 msgstr "Det inbyggda kommandot 'end' får bara användas i ett block"
 
-#: parser.c:130
+#: parser.c:140
 #, c-format
 msgid "Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'."
 msgstr "Okänt kommando '%ls'. Menade du 'set VARIABEL VÄRDE'? För mer information om hur man tilldelar variabler värden, se manualsektionen om det inbyggda kommandot 'set' genom att skriva 'help set'."
 
-#: parser.c:135
+#: parser.c:145
 #, c-format
 msgid "Expected redirection specification, got token of type '%ls'"
 msgstr "Förväntade en IO dirigering, hittade en symbol av typen '%ls'"
 
-#: parser.c:140
+#: parser.c:150
 msgid "Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command."
 msgstr "Förväntade ett kommandonamn, hittade en IO dirigering. Fish tillåter into IO dirigeringar före kommandonamn"
 
-#: parser.c:145
+#: parser.c:155
 msgid "Tried to evaluate null pointer."
 msgstr "Försökte evaluera nollpekare."
 
-#: parser.c:150
+#: parser.c:160
 #, c-format
 msgid "Tried to evaluate buffer using invalid block scope of type '%ls'."
 msgstr "Försökte evaluera ett block av kommandon  med ogiltig blocknivå '%ls'"
 
-#: parser.c:156
+#: parser.c:166
 #, c-format
 msgid "Unexpected token of type '%ls'"
 msgstr "Oväntad symbol av typ '%ls'"
 
-#: parser.c:161
+#: parser.c:171
 #, c-format
 msgid "Error while searching for command '%ls'"
 msgstr "Ett fel uppstod under sökning efter kommandot '%ls'"
 
-#: parser.c:167
+#: parser.c:177
 msgid "'while' block"
 msgstr "'while' block"
 
-#: parser.c:173
+#: parser.c:183
 msgid "'for' block"
 msgstr "'for' block"
 
-#: parser.c:179
+#: parser.c:189
 msgid "'if' conditional block"
 msgstr "'if' villkorligt block"
 
-#: parser.c:185
+#: parser.c:195
 msgid "function definition block"
 msgstr "funktionsdefinition-block"
 
-#: parser.c:191
+#: parser.c:201
 msgid "function invocation block"
 msgstr "funktionsanropp-block"
 
-#: parser.c:197
+#: parser.c:207
 msgid "'switch' block"
 msgstr "'switch' block"
 
-#: parser.c:203
+#: parser.c:213
 msgid "unexecutable block"
 msgstr "oexekverbart block"
 
-#: parser.c:209
+#: parser.c:219
 msgid "global root block"
 msgstr "globalt rot-block"
 
-#: parser.c:215
+#: parser.c:225
 msgid "command substitution block"
 msgstr "kommandosubstitution-block"
 
-#: parser.c:221
+#: parser.c:231
 msgid "unconditional block"
 msgstr "'begin' ovillkorligen exekverat block"
 
-#: parser.c:227
-msgid "'and' conditional block"
-msgstr "'and' villkorligt block"
-
-#: parser.c:233
-msgid "'or' conditional block"
-msgstr "'or' villkorligt block"
-
-#: parser.c:239
+#: parser.c:237
 msgid "unknown/invalid block"
 msgstr "okänt/ogiltigt block"
 
-#: parser.c:891
+#: parser.c:879
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Kunde inte skrive profileringsinformation till filen '%s'"
 
-#: parser.c:897
+#: parser.c:885
 msgid "Time\tSum\tCommand\n"
 msgstr "Tid\tSumma\tKommando\n"
 
-#: parser.c:1047
+#: parser.c:1035
 #, c-format
 msgid "%ls (line %d): %n"
 msgstr "%ls (rad %d): %n"
 
-#: parser.c:1233
+#: parser.c:1221
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Kunde inte expandera strängen '%ls'"
 
-#: parser.c:1335
+#: parser.c:1323
 msgid "Invalid IO redirection"
 msgstr "Ogiltig IO omdirigering"
 
-#: parser.c:1378
+#: parser.c:1366
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "IO omdirigering till någonting som inte är en filidentifierare"
 
-#: parser.c:1769
+#: parser.c:1779
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Okänt kommando '%ls'"
 
-#: parser.c:2194
+#: parser.c:2214
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 
@@ -1322,3 +1324,9 @@ msgstr "%s: För många argument\\n"
 #: init/fish_function.fish:1052
 msgid "%s: Unknown argument '%s'\\n"
 msgstr "%s: Okänt argument '%s'\\n"
+
+#~ msgid "'and' conditional block"
+#~ msgstr "'and' villkorligt block"
+
+#~ msgid "'or' conditional block"
+#~ msgstr "'or' villkorligt block"

@@ -95,6 +95,16 @@ The fish parser. Contains functions for parsing code.
 #define CMD_ERR_MSG _( L"Expected a command string, got token of type '%ls'.")
 
 /**
+   Error message when a non-string token is found when expecting a command name
+*/
+#define CMD_OR_ERR_MSG _( L"Expected a command string, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? For more information on the 'or' builtin command, see the help section for 'or' by typing 'help or'.")
+
+/**
+   Error message when a non-string token is found when expecting a command name
+*/
+#define CMD_AND_ERR_MSG _( L"Expected a command string, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? For more information on the 'and' builtin command, see the help section for 'and' by typing 'help and'.")
+
+/**
    Error message when encountering an illegal command name
 */
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'.")
@@ -1482,6 +1492,28 @@ static int parse_job( process_t *p,
 				return 0;
 			}
 
+			case TOK_PIPE:
+			{
+				wchar_t *str = tok_string( tok );
+				if( tok_get_pos(tok)>0 && str[tok_get_pos(tok)-1] == L'|' )
+				{
+					error( SYNTAX_ERROR,
+						   tok_get_pos( tok ),
+						   CMD_OR_ERR_MSG,
+						   tok_get_desc( tok_last_type(tok) ) );
+				}
+				else
+				{
+					error( SYNTAX_ERROR,
+					   tok_get_pos( tok ),
+					   CMD_ERR_MSG,
+						   tok_get_desc( tok_last_type(tok) ) );
+				}
+				
+				al_destroy( &args );
+				return 0;
+			}
+			
 			default:
 			{
 				error( SYNTAX_ERROR,
@@ -2063,7 +2095,28 @@ static void eval_job( tokenizer *tok )
 				tok_next( tok );
 			break;
 		}
-		
+
+		case TOK_BACKGROUND:
+		{
+			wchar_t *str = tok_string( tok );
+			if( tok_get_pos(tok)>0 && str[tok_get_pos(tok)-1] == L'&' )
+			{
+				error( SYNTAX_ERROR,
+					   tok_get_pos( tok ),
+					   CMD_AND_ERR_MSG,
+					   tok_get_desc( tok_last_type(tok) ) );
+			}
+			else
+			{
+				error( SYNTAX_ERROR,
+					   tok_get_pos( tok ),
+					   CMD_ERR_MSG,
+					   tok_get_desc( tok_last_type(tok) ) );
+			}
+			
+			return 0;
+		}
+				
 		case TOK_ERROR:
 		{
 			error( SYNTAX_ERROR,

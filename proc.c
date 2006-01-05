@@ -478,7 +478,8 @@ void job_handle_signal ( int signal, siginfo_t *info, void *con )
 */
 static void format_job_info( const job_t *j, const wchar_t *status )
 {
-	fwprintf (stdout, _( L"\rJob %d, \'%ls\' has %ls" ), j->job_id, j->command, status);
+	fwprintf (stdout, L"\r" );
+	fwprintf (stdout, _( L"Job %d, \'%ls\' has %ls" ), j->job_id, j->command, status);
 	fflush( stdout );
 	tputs(clr_eol,1,&writeb);
 	fwprintf (stdout, L"\n" );

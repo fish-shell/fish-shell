@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-05 14:39+0100\n"
+"POT-Creation-Date: 2006-01-05 14:53+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -197,7 +197,7 @@ msgstr "CPU\t"
 msgid "State\tCommand\n"
 msgstr "Tillstånd\tKommando\n"
 
-#: builtin.c:2481 proc.c:612
+#: builtin.c:2481 proc.c:613
 msgid "stopped"
 msgstr "stannat"
 
@@ -545,7 +545,7 @@ msgstr "Misslyckades med att exekvera processen '%ls'"
 msgid "Could not send process %d from group %d to group %d"
 msgstr "Kunde inte skicka process %d från grupp %d till grupp %d"
 
-#: exec.c:596 exec.c:608 proc.c:854 proc.c:866
+#: exec.c:596 exec.c:608 proc.c:855 proc.c:867
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Kunde inte skicka jobb %d ('%ls') till förgrunden"
@@ -831,68 +831,68 @@ msgstr "Blockslut matchar inte. Programmet avslutas."
 msgid "Job inconsistency"
 msgstr "Jobb i ogiltigt tillstånd"
 
-#: proc.c:481
+#: proc.c:482
 #, c-format
-msgid "\rJob %d, '%ls' has %ls"
-msgstr "\rJobb %d, '%ls' har %ls"
+msgid "Job %d, '%ls' has %ls"
+msgstr "Jobb %d, '%ls' har %ls"
 
-#: proc.c:557
+#: proc.c:558
 #, c-format
 msgid "%ls: Job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: Jobb %d, '%ls' avslutat av signal %ls (%ls)"
 
-#: proc.c:565
+#: proc.c:566
 #, c-format
 msgid "%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr "Process %d, '%ls', från jobb %d, '%ls' avslutat av signal %ls (%ls)"
 
-#: proc.c:596
+#: proc.c:597
 msgid "ended"
 msgstr "avslutat"
 
-#: proc.c:811
+#: proc.c:812
 msgid "An error occured while reading output from code block"
 msgstr "Ett fel inträffade medan utdata lästes från kodblock"
 
-#: proc.c:978 proc.c:988 proc.c:998
+#: proc.c:979 proc.c:989 proc.c:999
 msgid "Could not return shell to foreground"
 msgstr "Kunde inte återställa skalet till förgrunden"
 
-#: proc.c:1021
+#: proc.c:1022
 msgid "Job command"
 msgstr "Jobb kommando"
 
-#: proc.c:1024 proc.c:1051
+#: proc.c:1025 proc.c:1052
 msgid "Process list pointer"
 msgstr "Processlistepekare"
 
-#: proc.c:1027
+#: proc.c:1028
 msgid "Job list pointer"
 msgstr "Joblistepekare"
 
-#: proc.c:1038
+#: proc.c:1039
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
 msgstr "Mer än ett jobb i förgrunden: job 1: '%ls', jobb 2 '%ls'"
 
-#: proc.c:1049
+#: proc.c:1050
 msgid "Process argument list"
 msgstr "Processargumentlista"
 
-#: proc.c:1050
+#: proc.c:1051
 msgid "Process name"
 msgstr "Processnamn"
 
-#: proc.c:1052
+#: proc.c:1053
 msgid "Process command"
 msgstr "Processkommando"
 
-#: proc.c:1057
+#: proc.c:1058
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
 msgstr "Jobb '%ls', process '%ls' har ogiltigt tillstånd 'stopped'=%d"
 
-#: proc.c:1067
+#: proc.c:1068
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
 msgstr "Jobb '%ls', process '%ls' har ogiltigt tillstånd 'completed'=%d"

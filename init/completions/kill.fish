@@ -31,5 +31,5 @@ else
 end
 
 complete -c kill -xa '(__fish_complete_pids)'
-complete -c kill -s l -d "List names of available signals"
+complete -c kill -s l -d (_ "List names of available signals")
 

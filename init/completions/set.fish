@@ -1,14 +1,14 @@
 
 complete -y set_color
 
-complete -c set -s e -l erase -d "Erase variable"
-complete -c set -s x -l export -d "Export variable to subprocess"
-complete -c set -s u -l unexport -d "Do not export variable to subprocess"
-complete -c set -s g -l global -d "Make variable scope global"
-complete -c set -s l -l local -d "Make variable scope local"
-complete -c set -s U -l universal -d "Make variable scope universal, i.e. shared between all fish terminals"
-complete -c set -s q -l query -d "Test if variable is defined"
-complete -c set -s h -l help -d "Display help and exit"
+complete -c set -s e -l erase -d (_ "Erase variable")
+complete -c set -s x -l export -d (_ "Export variable to subprocess")
+complete -c set -s u -l unexport -d (_ "Do not export variable to subprocess")
+complete -c set -s g -l global -d (_ "Make variable scope global")
+complete -c set -s l -l local -d (_ "Make variable scope local")
+complete -c set -s U -l universal -d (_ "Make variable scope universal, i.e. shared between all fish terminals")
+complete -c set -s q -l query -d (_ "Test if variable is defined")
+complete -c set -s h -l help -d (_ "Display help and exit")
 
 function __fish_set_is_first -d 'Test if no non-switch argument has been specified yet'
 	set -- cmd (commandline -poc)
@@ -43,4 +43,4 @@ function __fish_set_is_color -d 'Test if We are specifying a color value for the
 	end	
 end
 
-complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' -d Color
+complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' -d (_ Color)

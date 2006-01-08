@@ -6,10 +6,10 @@ complete -c bunzip2 -x -a "(
 )
 "
 
-complete -c bunzip2 -s c -l stdout -d "Decompress to stdout"
-complete -c bunzip2 -s f -l force -d "Overwrite"
-complete -c bunzip2 -s k -l keep -d "Do not overwrite"
-complete -c bunzip2 -s s -l small -d "Reduce memory usage"
-complete -c bunzip2 -s v -l verbose -d "Print compression ratios"
-complete -c bunzip2 -s L -l license -d "Print license"
-complete -c bunzip2 -s V -l version -d "Print version"
+complete -c bunzip2 -s c -l stdout -d (_ "Decompress to stdout")
+complete -c bunzip2 -s f -l force -d (_ "Overwrite")
+complete -c bunzip2 -s k -l keep -d (_ "Do not overwrite")
+complete -c bunzip2 -s s -l small -d (_ "Reduce memory usage")
+complete -c bunzip2 -s v -l verbose -d (_ "Print compression ratios")
+complete -c bunzip2 -s L -l license -d (_ "Print license")
+complete -c bunzip2 -s V -l version -d (_ "Display version and exit")

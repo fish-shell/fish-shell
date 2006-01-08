@@ -1,32 +1,32 @@
 # Completions for zip
-complete -c zip -s f -d "Freshen: only changed files"
-complete -c zip -s d -d "Delete entries in zipfile"
-complete -c zip -s u -d "Update: only changed or newer files"
-complete -c zip -s m -d "Move into zipfile (delete files)"
-complete -c zip -s r -d "Recurse into directories"
-complete -c zip -s j -d "Junk directory names"
-complete -c zip -s 0 -d "Store only"
-complete -c zip -s l -d "Convert LF to CR LF"
-complete -c zip -o ll -d "Convert CR LF to LF"
-complete -c zip -s 1 -d "Compress faster"
-complete -c zip -s 9 -d "Compress better"
-complete -c zip -s q -d "Quiet operation"
-complete -c zip -s v -d "Verbose operation"
-complete -c zip -s c -d "Add one-line comments"
-complete -c zip -s z -d "Add zipfile comments"
-complete -c zip -s @ -d "Read names from stdin"
-complete -c zip -s o -d "Make zipfile as old as the latest entry"
-complete -c zip -s x -r -d "Exclude the following names"
-complete -c zip -s i -r -d "Include only the following names"
-complete -c zip -s F -d "Fix zipfile"
-complete -c zip -o FF -d "Fix zipfile (try harder)"
-complete -c zip -s A -d "Adjust self-extracting exe"
-complete -c zip -s J -d "Junk zipfile prefix"
-complete -c zip -s T -d "Test zipfile integrity"
-complete -c zip -s X -d "Exclude extra file attributes"
-complete -c zip -s y -d "Store symbolic links as links"
-complete -c zip -s R -d "PKZIP recursion"
-complete -c zip -s e -d "Encrypt"
-complete -c zip -s n -r -d "Don\'t compress these suffixes"
-complete -c zip -s h -d "Usage"
+complete -c zip -s f -d (_ "Freshen: only changed files")
+complete -c zip -s d -d (_ "Delete entries in zipfile")
+complete -c zip -s u -d (_ "Update: only changed or newer files")
+complete -c zip -s m -d (_ "Move into zipfile (delete files)")
+complete -c zip -s r -d (_ "Operate recursively")
+complete -c zip -s j -d (_ "Do not store directory names")
+complete -c zip -s 0 -d (_ "Do not compress at all")
+complete -c zip -s l -d (_ "Convert LF to CR LF")
+complete -c zip -o ll -d (_ "Convert CR LF to LF")
+complete -c zip -s 1 -d (_ "Compress faster")
+complete -c zip -s 9 -d (_ "Compress better")
+complete -c zip -s q -d (_ "Quiet mode")
+complete -c zip -s v -d (_ "Verbose mode")
+complete -c zip -s c -d (_ "Add one-line comments")
+complete -c zip -s z -d (_ "Add zipfile comments")
+complete -c zip -s @ -d (_ "Read names from stdin")
+complete -c zip -s o -d (_ "Make zipfile as old as the latest entry")
+complete -c zip -s x -r -d (_ "Exclude the following names")
+complete -c zip -s i -r -d (_ "Include only the following names")
+complete -c zip -s F -d (_ "Fix zipfile")
+complete -c zip -o FF -d (_ "Fix zipfile (try harder)")
+complete -c zip -s A -d (_ "Adjust offsets to suit self-extracting exe")
+complete -c zip -s J -d (_ "Strip prepended data")
+complete -c zip -s T -d (_ "Test zipfile integrity")
+complete -c zip -s X -d (_ "Exclude extra file attributes")
+complete -c zip -s y -d (_ "Store symbolic links as links")
+complete -c zip -s R -d (_ "PKZIP recursion")
+complete -c zip -s e -d (_ "Encrypt")
+complete -c zip -s n -r -d (_ "Don\'t compress these suffixes")
+complete -c zip -s h -d (_ "Display help and exit")
 

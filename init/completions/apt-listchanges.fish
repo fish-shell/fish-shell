@@ -1,13 +1,13 @@
 #apt-listchanges
-complete -c apt-listchanges -l help -d "apt-listchanges command help"
-complete -c apt-listchanges -l apt -d "read filenames from pipe"
-complete -f -c apt-listchanges -s v -l verbose -d "verbose info"
-complete -f -c apt-listchanges -s f -l frontend -a "pager browser xterm-pager xterm-browser text mail none" -d "select fronend interface"
-complete -r -f -c apt-listchanges -l email-address -d "specify email address"
-complete -f -c apt-listchanges -s c -l confirm -d "ask confirmation"
-complete -f -c apt-listchanges -s a -l all -d "display all changelogs"
-complete -r -c apt-listchanges -l save_seen -d "avoid changelogs from db in named file"
-complete -r -f -c apt-listchanges -l which -a "news changelogs both" -d "select display"
-complete -f -c apt-listchanges -s h -l headers -d "insert header"
-complete -f -c apt-listchanges -l debug -d "display debug info"
-complete -r -c apt-listchanges -l profile -d "select an option profile"
+complete -c apt-listchanges -l help -d (_ "Apt-listchanges command help")
+complete -c apt-listchanges -l apt -d (_ "Read filenames from pipe")
+complete -f -c apt-listchanges -s v -l verbose -d (_ "Verbose info")
+complete -f -c apt-listchanges -s f -l frontend -a "pager browser xterm-pager xterm-browser text mail none" -d (_ "Select fronend interface")
+complete -r -f -c apt-listchanges -l email-address -d (_ "Specify email address")
+complete -f -c apt-listchanges -s c -l confirm -d (_ "Ask confirmation")
+complete -f -c apt-listchanges -s a -l all -d (_ "Display all changelogs")
+complete -r -c apt-listchanges -l save_seen -d (_ "Avoid changelogs from db in named file")
+complete -r -f -c apt-listchanges -l which -a "news changelogs both" -d (_ "Select display")
+complete -f -c apt-listchanges -s h -l headers -d (_ "Insert header")
+complete -f -c apt-listchanges -l debug -d (_ "Display debug info")
+complete -r -c apt-listchanges -l profile -d (_ "Select an option profile")

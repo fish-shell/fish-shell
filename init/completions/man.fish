@@ -29,36 +29,36 @@ end
 
 complete -xc man -a "(__fish_complete_man)"
 
-complete -xc man -a 1 -d "Program section"
-complete -xc man -a 2 -d "Syscall section"
-complete -xc man -a 3 -d "Library section"
-complete -xc man -a 4 -d "Device section"
-complete -xc man -a 5 -d "File format section"
-complete -xc man -a 6 -d "Games section"
-complete -xc man -a 7 -d "Misc section"
-complete -xc man -a 8 -d "Admin section"
-complete -xc man -a 9 -d "Kernel section"
-complete -xc man -a tcl -d "Tcl section"
-complete -xc man -a n -d "New section"
-complete -xc man -a l -d "Local section"
+complete -xc man -a 1 -d (_ "Program section")
+complete -xc man -a 2 -d (_ "Syscall section")
+complete -xc man -a 3 -d (_ "Library section")
+complete -xc man -a 4 -d (_ "Device section")
+complete -xc man -a 5 -d (_ "File format section")
+complete -xc man -a 6 -d (_ "Games section")
+complete -xc man -a 7 -d (_ "Misc section")
+complete -xc man -a 8 -d (_ "Admin section")
+complete -xc man -a 9 -d (_ "Kernel section")
+complete -xc man -a tcl -d (_ "Tcl section")
+complete -xc man -a n -d (_ "New section")
+complete -xc man -a l -d (_ "Local section")
 complete -xc man -a p
-complete -xc man -a o -d "Old section"
-complete -rc man -s C -d "Configuration file"
-complete -xc man -s M -a "(__fish_complete_directory (commandline -ct))" -d "Manpath"
-complete -rc man -s P -d "Pager"
-complete -xc man -s S -d "Manual sections"
-complete -c man -s a -d "Display all matches"
-complete -c man -s c -d "Always reformat"
-complete -c man -s d -d "Debug"
-complete -c man -s D -d "Debug and run"
-complete -c man -s f -d "Whatis"
-complete -c man -s F -l preformat -d "Format only"
-complete -c man -s h -d "Display help and exit"
-complete -c man -s k -d "Apropos"
-complete -c man -s K -d "Search in all man pages"
-complete -xc man -s m -d "Set system"
-complete -xc man -s p -d "Preprocessors"
-complete -c man -s t -d "Format for printing"
-complete -c man -s w -l path -d "Only print locations"
-complete -c man -s W -d "Only print locations"
+complete -xc man -a o -d (_ "Old section")
+complete -rc man -s C -d (_ "Configuration file")
+complete -xc man -s M -a "(__fish_complete_directory (commandline -ct))" -d (_ "Manpath")
+complete -rc man -s P -d (_ "Pager")
+complete -xc man -s S -d (_ "Manual sections")
+complete -c man -s a -d (_ "Display all matches")
+complete -c man -s c -d (_ "Always reformat")
+complete -c man -s d -d (_ "Debug")
+complete -c man -s D -d (_ "Debug and run")
+complete -c man -s f -d (_ "Whatis")
+complete -c man -s F -l preformat -d (_ "Format only")
+complete -c man -s h -d (_ "Display help and exit")
+complete -c man -s k -d (_ "Apropos")
+complete -c man -s K -d (_ "Search in all man pages")
+complete -xc man -s m -d (_ "Set system")
+complete -xc man -s p -d (_ "Preprocessors")
+complete -c man -s t -d (_ "Format for printing")
+complete -c man -s w -l path -d (_ "Only print locations")
+complete -c man -s W -d (_ "Only print locations")
 

@@ -253,7 +253,6 @@ wchar_t *str2wcs( const char *in )
 	if( !res )
 	{
 		die_mem();
-		
 	}
 	
 	if( (size_t)-1 == mbstowcs( res, in, sizeof(wchar_t)*(strlen(in)) +1) )

@@ -1,17 +1,17 @@
 #apt-file
-complete -c apt-file -s h -l help -d "apt-file command help"
-complete -x -c apt-file -a update -d "resync pkg contents from source"
-complete -r -c apt-file -a search -d "search pkg containing pattern"
-complete -r -c apt-file -a list -d "list contents of a pkg matching pattern"
-complete -x -c apt-file -a purge -d "remove all gz files from cache"
-complete -r -c apt-file -s c -l cache -d "set cache dir"
-complete -f -c apt-file -s v -l verbose -d "run in verbose"
-complete -c apt-file -s d -l cdrom-mount -d "use cdrom-mount-point"
-complete -f -c apt-file -s i -l ignore-case -d "do not expand pattern"
-complete -f -c apt-file -s x -l regexp -d "pattern is regexp"
-complete -f -c apt-file -s V -l version -d "show version"
-complete -f -c apt-file -s a -l architecture -d "set arch"
-complete -r -c apt-file -s s -l sources-list -a "(ls /etc/apt)" -d "set sources.list file"
-complete -f -c apt-file -s l -l package-only -d "only display pkg name"
-complete -f -c apt-file -s F -l fixed-string -d "do not expand pattern"
-complete -f -c apt-file -s y -l dummy -d "run in dummy mode"
+complete -c apt-file -s h -l help -d (_ "Display help and exit")
+complete -x -c apt-file -a update -d (_ "Resync pkg contents from source")
+complete -r -c apt-file -a search -d (_ "Search pkg containing pattern")
+complete -r -c apt-file -a list -d (_ "List contents of a pkg matching pattern")
+complete -x -c apt-file -a purge -d (_ "Remove all gz files from cache")
+complete -r -c apt-file -s c -l cache -d (_ "Set cache dir")
+complete -f -c apt-file -s v -l verbose -d (_ "Run in verbose")
+complete -c apt-file -s d -l cdrom-mount -d (_ "Use cdrom-mount-point")
+complete -f -c apt-file -s i -l ignore-case -d (_ "Do not expand pattern")
+complete -f -c apt-file -s x -l regexp -d (_ "Pattern is regexp")
+complete -f -c apt-file -s V -l version -d (_ "Show version")
+complete -f -c apt-file -s a -l architecture -d (_ "Set arch")
+complete -r -c apt-file -s s -l sources-list -a "(ls /etc/apt)" -d (_ "Set sources.list file")
+complete -f -c apt-file -s l -l package-only -d (_ "Only display pkg name")
+complete -f -c apt-file -s F -l fixed-string -d (_ "Do not expand pattern")
+complete -f -c apt-file -s y -l dummy -d (_ "Run in dummy mode")

@@ -1248,7 +1248,14 @@ int exec_subshell( const wchar_t *cmd,
 					wchar_t *el;
 					*end=0;
 					el = str2wcs( begin );				
-					al_push( l, el );
+					if( !el )
+					{
+						debug( 0, L"Subshell returned illegal string, discarded one entry" );
+					}
+					else
+					{
+						al_push( l, el );
+					}
 					begin = end+1;
 					break;
 				}

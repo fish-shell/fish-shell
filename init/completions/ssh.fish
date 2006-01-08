@@ -3,15 +3,15 @@
 #
 
 for i in ssh scp
-	complete -c $i -s 1 -d "Protocall version 1 only"
-	complete -c $i -s 2 -d "Protocall version 2 only"
-	complete -c $i -s 4 -d "IPv4 addresses only"
-	complete -c $i -s 6 -d "IPv6 addresses only"
-	complete -c $i -s C -d "Compress all data"
-	complete -xc $i -s c -d "Encryption algorithm" -a "blowfish 3des des"
-	complete -r -c $i -s F -d "Configuration file"
-	complete -r -c $i -s i -d "Identity file"
-	complete -x -c $i -s o -d "Options" -a "
+	complete -c $i -s 1 -d (_ "Protocall version 1 only")
+	complete -c $i -s 2 -d (_ "Protocall version 2 only")
+	complete -c $i -s 4 -d (_ "IPv4 addresses only")
+	complete -c $i -s 6 -d (_ "IPv6 addresses only")
+	complete -c $i -s C -d (_ "Compress all data")
+	complete -xc $i -s c -d (_ "Encryption algorithm") -a "blowfish 3des des"
+	complete -r -c $i -s F -d (_ "Configuration file")
+	complete -r -c $i -s i -d (_ "Identity file")
+	complete -x -c $i -s o -d (_ "Options") -a "
 		AddressFamily
 		BatchMode
 		BindAddress
@@ -58,7 +58,7 @@ for i in ssh scp
 		UserKnownHostsFile
 		VerifyHostKeyDNS
 	"
-	complete -c $i -s v -d "Verbose mode"
+	complete -c $i -s v -d (_ "Verbose mode")
 end;
 
 #
@@ -77,30 +77,30 @@ complete -x -c ssh -d Hostname -a "
 (__fish_print_users)@
 "
 
-complete -c ssh -s a -d "Disables forwarding of the authentication agent"
-complete -c ssh -s A -d "Enables forwarding of the authentication agent"
-complete -x -c ssh -s b -d "Interface to transmit from" -a "
+complete -c ssh -s a -d (_ "Disables forwarding of the authentication agent")
+complete -c ssh -s A -d (_ "Enables forwarding of the authentication agent")
+complete -x -c ssh -s b -d (_ "Interface to transmit from") -a "
 (
 	cat /proc/net/arp ^/dev/null| grep -v '^IP'|cut -d ' ' -f 1 ^/dev/null
 )
 "
 
-complete -x -c ssh -s e -d "Escape character" -a "^ none"
-complete -c ssh -s f -d "Go to background"
-complete -c ssh -s g -d "Allow remote host to connect to local forwarded ports"
-complete -c ssh -s I -d "Smartcard device"
-complete -c ssh -s k -d "Disable forwarding of Kerberos tickets"
-complete -c ssh -s l -x -a "(__fish_complete_users)" -d "User"
-complete -c ssh -s m -d "MAC algorithm"
-complete -c ssh -s n -d "Prevent reading from stdin"
-complete -c ssh -s N -d "Do not execute remote command"
-complete -c ssh -s p -x -d "Port"
-complete -c ssh -s q -d "Quiet mode"
-complete -c ssh -s s -d "Subsystem"
-complete -c ssh -s t -d "Force pseudo-tty allocation"
-complete -c ssh -s T -d "Disable pseudo-tty allocation"
-complete -c ssh -s x -d "Disable X11 forwarding"
-complete -c ssh -s X -d "Enable X11 forwarding"
-complete -c ssh -s L -d "Locally forwarded ports"
-complete -c ssh -s R -d "Remotely forwarded ports"
-complete -c ssh -s D -d "Dynamic port forwarding"
+complete -x -c ssh -s e -d (_ "Escape character") -a "^ none"
+complete -c ssh -s f -d (_ "Go to background")
+complete -c ssh -s g -d (_ "Allow remote host to connect to local forwarded ports")
+complete -c ssh -s I -d (_ "Smartcard device")
+complete -c ssh -s k -d (_ "Disable forwarding of Kerberos tickets")
+complete -c ssh -s l -x -a "(__fish_complete_users)" -d (_ "User")
+complete -c ssh -s m -d (_ "MAC algorithm")
+complete -c ssh -s n -d (_ "Prevent reading from stdin")
+complete -c ssh -s N -d (_ "Do not execute remote command")
+complete -c ssh -s p -x -d (_ "Port")
+complete -c ssh -s q -d (_ "Quiet mode")
+complete -c ssh -s s -d (_ "Subsystem")
+complete -c ssh -s t -d (_ "Force pseudo-tty allocation")
+complete -c ssh -s T -d (_ "Disable pseudo-tty allocation")
+complete -c ssh -s x -d (_ "Disable X11 forwarding")
+complete -c ssh -s X -d (_ "Enable X11 forwarding")
+complete -c ssh -s L -d (_ "Locally forwarded ports")
+complete -c ssh -s R -d (_ "Remotely forwarded ports")
+complete -c ssh -s D -d (_ "Dynamic port forwarding")

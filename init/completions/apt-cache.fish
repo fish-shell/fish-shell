@@ -1,33 +1,31 @@
 #apt-cache
-complete -c apt-cache -s h -l help -d "apt-cache command help"
-complete -c apt-cache -a add -d "add index files Debug only"
-complete -f -c apt-cache -a gencaches -d "build apt cache"
-complete -x -c apt-cache -a showpkg -d "show package info"
-complete -f -c apt-cache -a stats -d "show cache statistics"
-complete -x -c apt-cache -a showsrc -d "show source package"
-complete -f -c apt-cache -a dump -d "show packages in cache"
-complete -f -c apt-cache -a dumpavail -d "print available list"
-complete -f -c apt-cache -a unmet -d "list unmet dep in cache"
-complete -x -c apt-cache -a show -d "display package record"
-complete -x -c apt-cache -a search -d "search pkgname by REGEX"
-complete -c apt-cache -l full -a search -d "search full package name"
-complete -x -c apt-cache -l names-only -a search -d "search pkgname only"
-complete -x -c apt-cache -a depends -d "list dep for the package"
-complete -x -c apt-cache -a rdepends -d "list reverse dep for the package"
-complete -x -c apt-cache -a pkgnames -d "print package name by prefix"
-complete -x -c apt-cache -a dotty -d "generate dotty output for packages"
-complete -x -c apt-cache -a policy -d "debug preferences file"
-complete -x -c apt-cache -a madison -d "mimic madison"
-complete -r -c apt-cache -s p -l pkg-cache -d "select file to store pkg cache"
-complete -r -c apt-cache -s s -l src-cache -d "select file to store src cache"
-complete -f -c apt-cache -s q -l quiet -d "quiet output"
-complete -f -c apt-cache -s i -l important -d "print important deps"
-complete -f -c apt-cache -s a -l all-versions -d "print full records"
-complete -f -c apt-cache -s g -l generate -d "auto-gen package cache"
-complete -f -c apt-cache -l all-names -d "print all names"
-complete -f -c apt-cache -l recurse -d "dep and rdep recursive"
-complete -f -c apt-cache -l installed -d "limit to installed"
-complete -f -c apt-cache -s v -l version -d "show version"
-complete -r -c apt-cache -s c -l config-file -d "specify config file"
-complete -x -c apt-cache -s o -l option -d "specify options"
+complete -c apt-cache -s h -l help -d (_ "Display help and exit")
+complete -f -c apt-cache -a gencaches -d (_ "Build apt cache")
+complete -x -c apt-cache -a showpkg -d (_ "Show package info")
+complete -f -c apt-cache -a stats -d (_ "Show cache statistics")
+complete -x -c apt-cache -a showsrc -d (_ "Show source package")
+complete -f -c apt-cache -a dump -d (_ "Show packages in cache")
+complete -f -c apt-cache -a dumpavail -d (_ "Print available list")
+complete -f -c apt-cache -a unmet -d (_ "List unmet dep in cache")
+complete -x -c apt-cache -a show -d (_ "Display package record")
+complete -x -c apt-cache -a search -d (_ "Search pkgname by REGEX")
+complete -c apt-cache -l full -a search -d (_ "Search full package name")
+complete -x -c apt-cache -l names-only -a search -d (_ "Search pkgname only")
+complete -x -c apt-cache -a depends -d (_ "List dep for the package")
+complete -x -c apt-cache -a rdepends -d (_ "List reverse dep for the package")
+complete -x -c apt-cache -a pkgnames -d (_ "Print package name by prefix")
+complete -x -c apt-cache -a dotty -d (_ "Generate dotty output for packages")
+complete -x -c apt-cache -a policy -d (_ "Debug preferences file")
+complete -r -c apt-cache -s p -l pkg-cache -d (_ "Select file to store pkg cache")
+complete -r -c apt-cache -s s -l src-cache -d (_ "Select file to store src cache")
+complete -f -c apt-cache -s q -l quiet -d (_ "Quiet mode")
+complete -f -c apt-cache -s i -l important -d (_ "Print important deps")
+complete -f -c apt-cache -s a -l all-versions -d (_ "Print full records")
+complete -f -c apt-cache -s g -l generate -d (_ "Auto-gen package cache")
+complete -f -c apt-cache -l all-names -d (_ "Print all names")
+complete -f -c apt-cache -l recurse -d (_ "Dep and rdep recursive")
+complete -f -c apt-cache -l installed -d (_ "Limit to installed")
+complete -f -c apt-cache -s v -l version -d (_ "Show version")
+complete -r -c apt-cache -s c -l config-file -d (_ "Specify config file")
+complete -x -c apt-cache -s o -l option -d (_ "Specify options")
 

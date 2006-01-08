@@ -3324,6 +3324,7 @@ void builtin_get_names( array_list_t *list )
 
 const wchar_t *builtin_get_desc( const wchar_t *b )
 {
+	wchar_t *res;
 	
 	if( !desc )
 	{
@@ -3333,46 +3334,45 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		
 		hash_init( desc, &hash_wcs_func, &hash_wcs_cmp );
 
-		hash_put( desc, L"block", _( L"Temporarily block delivery of events" ) );	
-		hash_put( desc, L"builtin", _( L"Run a builtin command" ) );	
-		hash_put( desc, L"complete", _( L"Edit command specific completions" ) );	
-		hash_put( desc, L"cd", _( L"Change working directory" ) );	
-		hash_put( desc, L"exit", _( L"Exit the shell" ) );	
-		hash_put( desc, L"function", _( L"Define a new function" ) );	
-		hash_put( desc, L"functions", _( L"List or remove functions" ) );	
-		hash_put( desc, L"end", _( L"End a block of commands" ) );
-		hash_put( desc, L"else", _( L"Evaluate block if condition is false" ) );
-		hash_put( desc, L"eval", _( L"Evaluate parameters as a command" ) );	
-		hash_put( desc, L"for", _( L"Perform a set of commands multiple times" ) );
-		hash_put( desc, L".", _( L"Evaluate contents of file" ) );
-		hash_put( desc, L"set", _( L"Handle environment variables" ) );
-		hash_put( desc, L"fg", _( L"Send job to foreground" ) );
-		hash_put( desc, L"bg", _( L"Send job to background" ) );
-		hash_put( desc, L"jobs", _( L"Print currently running jobs" ) );
-		hash_put( desc, L"read", _( L"Read a line of input into variables" ) );
-		hash_put( desc, L"break", _( L"Stop the innermost loop" ) );	
-		hash_put( desc, L"continue", _( L"Skip the rest of the current lap of the innermost loop" ) );
-		hash_put( desc, L"return", _( L"Stop the innermost currently evaluated function" ) );
-		hash_put( desc, L"commandline", _( L"Set or get the commandline" ) );
-		hash_put( desc, L"switch", _( L"Conditionally execute a block of commands" ) );	
-		hash_put( desc, L"case", _( L"Conditionally execute a block of commands" ) );	
-		hash_put( desc, L"command", _( L"Run a program" ) );		
-		hash_put( desc, L"if", _( L"Conditionally execute a command" ) );	
-		hash_put( desc, L"while", _( L"Perform a command multiple times" ) );	
-		hash_put( desc, L"bind", _( L"Handle key bindings" ));
-		hash_put( desc, L"random", _( L"Generate random number" ));
-		hash_put( desc, L"exec", _( L"Run command in current process" ));
-		hash_put( desc, L"not", _( L"Negate exit status of job" ));
-		hash_put( desc, L"or", _( L"Execute second command if first fails" ));
-		hash_put( desc, L"and", _( L"Execute second command if first suceeds" ));
-		hash_put( desc, L"begin", _( L"Create a block of code" ) );
-		hash_put( desc, L"status", _( L"Return status information about fish" ) );
-		hash_put( desc, L"ulimit", _( L"Set or get the shells resurce usage limits" ) );
+		hash_put( desc, L"block", N_( L"Temporarily block delivery of events" ) );	
+		hash_put( desc, L"builtin", N_( L"Run a builtin command" ) );	
+		hash_put( desc, L"complete", N_( L"Edit command specific completions" ) );	
+		hash_put( desc, L"cd", N_( L"Change working directory" ) );	
+		hash_put( desc, L"exit", N_( L"Exit the shell" ) );	
+		hash_put( desc, L"function", N_( L"Define a new function" ) );	
+		hash_put( desc, L"functions", N_( L"List or remove functions" ) );	
+		hash_put( desc, L"end", N_( L"End a block of commands" ) );
+		hash_put( desc, L"else", N_( L"Evaluate block if condition is false" ) );
+		hash_put( desc, L"eval", N_( L"Evaluate parameters as a command" ) );	
+		hash_put( desc, L"for", N_( L"Perform a set of commands multiple times" ) );
+		hash_put( desc, L".", N_( L"Evaluate contents of file" ) );
+		hash_put( desc, L"set", N_( L"Handle environment variables" ) );
+		hash_put( desc, L"fg", N_( L"Send job to foreground" ) );
+		hash_put( desc, L"bg", N_( L"Send job to background" ) );
+		hash_put( desc, L"jobs", N_( L"Print currently running jobs" ) );
+		hash_put( desc, L"read", N_( L"Read a line of input into variables" ) );
+		hash_put( desc, L"break", N_( L"Stop the innermost loop" ) );	
+		hash_put( desc, L"continue", N_( L"Skip the rest of the current lap of the innermost loop" ) );
+		hash_put( desc, L"return", N_( L"Stop the innermost currently evaluated function" ) );
+		hash_put( desc, L"commandline", N_( L"Set or get the commandline" ) );
+		hash_put( desc, L"switch", N_( L"Conditionally execute a block of commands" ) );	
+		hash_put( desc, L"case", N_( L"Conditionally execute a block of commands" ) );	
+		hash_put( desc, L"command", N_( L"Run a program" ) );		
+		hash_put( desc, L"if", N_( L"Conditionally execute a command" ) );	
+		hash_put( desc, L"while", N_( L"Perform a command multiple times" ) );	
+		hash_put( desc, L"bind", N_( L"Handle key bindings" ));
+		hash_put( desc, L"random", N_( L"Generate random number" ));
+		hash_put( desc, L"exec", N_( L"Run command in current process" ));
+		hash_put( desc, L"not", N_( L"Negate exit status of job" ));
+		hash_put( desc, L"or", N_( L"Execute second command if first fails" ));
+		hash_put( desc, L"and", N_( L"Execute second command if first suceeds" ));
+		hash_put( desc, L"begin", N_( L"Create a block of code" ) );
+		hash_put( desc, L"status", N_( L"Return status information about fish" ) );
+		hash_put( desc, L"ulimit", N_( L"Set or get the shells resource usage limits" ) );
 	}
 
-	return hash_get( desc, b );	
+	return _( hash_get( desc, b ));	
 }
-
 
 void builtin_push_io( int in)
 {

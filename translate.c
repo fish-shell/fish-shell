@@ -44,6 +44,9 @@ char *translate_wcs2str( const wchar_t *in )
 
 const wchar_t *wgettext( const wchar_t *in )
 {
+	if( !in )
+		return in;
+	
 	char *mbs_in = translate_wcs2str( in );	
 	char *out = gettext( mbs_in );
 	wchar_t *wres=0;

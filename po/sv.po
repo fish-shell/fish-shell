@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-05 16:56+0100\n"
+"POT-Creation-Date: 2006-01-08 03:12+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -23,7 +23,7 @@ msgstr "Skicka job %d, '%ls' till förgrunden\n"
 #: builtin.c:370
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
-msgstr "%ls: Can inte specificera blocknivå vid blockradering\n"
+msgstr "%ls: Can inte specificera definitionsområde vid blockradering\n"
 
 #: builtin.c:376
 #, c-format
@@ -99,7 +99,7 @@ msgstr "Nuvarande funktioner är: "
 #: builtin.c:1382
 #, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
-msgstr "%ls: Seedningsvärde '%ls' är inte ett giltigt nummer\n"
+msgstr "%ls: Slumpfrö '%ls' är inte ett giltigt nummer\n"
 
 #: builtin.c:1396
 #, c-format
@@ -195,7 +195,7 @@ msgstr "CPU\t"
 
 #: builtin.c:2472
 msgid "State\tCommand\n"
-msgstr "Tillstånd\tKommando\n"
+msgstr "Status\tKommando\n"
 
 #: builtin.c:2481 proc.c:613
 msgid "stopped"
@@ -277,140 +277,140 @@ msgstr "%ls: 'case' kommandot kan bara användas i ett 'switch' block\n"
 msgid "Unknown builtin '%ls'"
 msgstr "Okänt inbyggt kommando '%ls'"
 
-#: builtin.c:3336
+#: builtin.c:3337
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
 
-#: builtin.c:3337
+#: builtin.c:3338
 msgid "Run a builtin command"
 msgstr "Utför ett inbyggt kommando"
 
-#: builtin.c:3338
+#: builtin.c:3339
 msgid "Edit command specific completions"
 msgstr "Ändra kommando-specifika kompletteringar"
 
-#: builtin.c:3339
-msgid "Change working directory"
-msgstr "Ändra nuvarande katalog"
-
 #: builtin.c:3340
+msgid "Change working directory"
+msgstr "Ändra arbetskatalog"
+
+#: builtin.c:3341
 msgid "Exit the shell"
 msgstr "Avsluta fish"
 
-#: builtin.c:3341
+#: builtin.c:3342
 msgid "Define a new function"
 msgstr "Definera ny funktion"
 
-#: builtin.c:3342
+#: builtin.c:3343
 msgid "List or remove functions"
 msgstr "Visa och ta bort funktioner"
 
-#: builtin.c:3343
+#: builtin.c:3344
 msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
-#: builtin.c:3344
+#: builtin.c:3345
 msgid "Evaluate block if condition is false"
 msgstr "Utför block om ett villkor är uppfyllt"
 
-#: builtin.c:3345
+#: builtin.c:3346
 msgid "Evaluate parameters as a command"
 msgstr "Utför argument som kommandon"
 
-#: builtin.c:3346
+#: builtin.c:3347
 msgid "Perform a set of commands multiple times"
 msgstr "Utför ett block flera gånger"
 
-#: builtin.c:3347
+#: builtin.c:3348
 msgid "Evaluate contents of file"
 msgstr "Utför filinnehåll som kommandon"
 
-#: builtin.c:3348
+#: builtin.c:3349
 msgid "Handle environment variables"
 msgstr "Redigera miljövariabler"
 
-#: builtin.c:3349
+#: builtin.c:3350
 msgid "Send job to foreground"
 msgstr "Skick jobb till förgrunden"
 
-#: builtin.c:3350
+#: builtin.c:3351
 msgid "Send job to background"
 msgstr "Skicka jobb till bakgrunden"
 
-#: builtin.c:3351
+#: builtin.c:3352
 msgid "Print currently running jobs"
 msgstr "Skriv ut nuvarande jobb"
 
-#: builtin.c:3352
+#: builtin.c:3353
 msgid "Read a line of input into variables"
 msgstr "Läs in en rad till en variabel"
 
-#: builtin.c:3353
+#: builtin.c:3354
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
-#: builtin.c:3354
+#: builtin.c:3355
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Avbryt nuvarande varv i den innersta loopen"
 
-#: builtin.c:3355
+#: builtin.c:3356
 msgid "Stop the innermost currently evaluated function"
 msgstr "Avbryt den innersta utförda funktionen"
 
-#: builtin.c:3356
+#: builtin.c:3357
 msgid "Set or get the commandline"
 msgstr "Ändra eller visa kommandoraden"
 
-#: builtin.c:3357 builtin.c:3358
+#: builtin.c:3358 builtin.c:3359
 msgid "Conditionally execute a block of commands"
 msgstr "Utför ett block av kommandon om ett villkor är uppfyllt"
 
-#: builtin.c:3359
+#: builtin.c:3360
 msgid "Run a program"
 msgstr "Kör ett program"
 
-#: builtin.c:3360
+#: builtin.c:3361
 msgid "Conditionally execute a command"
 msgstr "Utför ett kommando om ett villkor är uppfyllt"
 
-#: builtin.c:3361
+#: builtin.c:3362
 msgid "Perform a command multiple times"
 msgstr "Utför ett kommando upprepade gånger"
 
-#: builtin.c:3362
+#: builtin.c:3363
 msgid "Handle key bindings"
 msgstr "Hantera tangentbordsgenvägar för fish"
 
-#: builtin.c:3363
+#: builtin.c:3364
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
 
-#: builtin.c:3364
+#: builtin.c:3365
 msgid "Run command in current process"
 msgstr "Kör ett kommando i den nuvarande processen"
 
-#: builtin.c:3365
+#: builtin.c:3366
 msgid "Negate exit status of job"
 msgstr "Negera resultatet av ett kommando"
 
-#: builtin.c:3366
+#: builtin.c:3367
 msgid "Execute second command if first fails"
 msgstr "Utför ett kommando om föregående kommando misslyckades"
 
-#: builtin.c:3367
+#: builtin.c:3368
 msgid "Execute second command if first suceeds"
 msgstr "Utför ett kommando om föregående kommando lyckades"
 
-#: builtin.c:3368
-msgid "Create a block of code"
-msgstr "Skape ett kodblock"
-
 #: builtin.c:3369
+msgid "Create a block of code"
+msgstr "Skapa ett kodblock"
+
+#: builtin.c:3370
 msgid "Return status information about fish"
 msgstr "Visa information om fish"
 
-#: builtin.c:3370
-msgid "Set or get the shells resurce usage limits"
+#: builtin.c:3371
+msgid "Set or get the shells resource usage limits"
 msgstr "Visa eller redigera skalets resursanvändningsgränser"
 
 #: builtin_set.c:96
@@ -481,24 +481,26 @@ msgid "Socket"
 msgstr "Uttag (socket)"
 
 #: complete.c:99 init/fish_complete.fish.in:68 init/fish_complete.fish:68
+#: init/completions/ruby.fish:23
 msgid "Directory"
 msgstr "Katalog"
 
-#: complete.c:104
+#: complete.c:104 init/completions/function.fish:2
+#: init/completions/functions.fish:2
 msgid "Function"
 msgstr "Funktion"
 
-#: complete.c:108
+#: complete.c:108 init/completions/function.fish:3
 msgid "Builtin"
 msgstr "Inbyggt kommando"
 
-#: complete.c:751 complete.c:770
+#: complete.c:756 complete.c:775
 msgid "Unknown option: "
-msgstr "Okänt argument: "
+msgstr "Okänd flagga: "
 
-#: complete.c:775
+#: complete.c:780
 msgid "Multiple matches for option: "
-msgstr "Mer än ett argument passar: "
+msgstr "Mer än en flagga passar: "
 
 #: env.c:194
 msgid "Could not get user information"
@@ -651,7 +653,7 @@ msgstr "Om du kan reproducera detta fel, var vänlig skicka en buggrapport till 
 
 #: parser.c:64
 msgid "This command can not be used in a pipeline"
-msgstr "Detta kommando kan ej användas i en pipeline"
+msgstr "Detta kommando kan ej användas i ett rör"
 
 #: parser.c:70
 #, c-format
@@ -736,7 +738,7 @@ msgstr "Försökte evaluera nollpekare."
 #: parser.c:160
 #, c-format
 msgid "Tried to evaluate buffer using invalid block scope of type '%ls'."
-msgstr "Försökte evaluera ett block av kommandon  med ogiltig blocknivå '%ls'"
+msgstr "Försökte evaluera ett block av kommandon  med ogiltig definitionsområde '%ls'"
 
 #: parser.c:166
 #, c-format
@@ -1003,7 +1005,7 @@ msgstr "Minnesadress korsar segmentgräns"
 
 #: signal.c:126
 msgid "Broken pipe"
-msgstr "Avbruten pipe"
+msgstr "Avbrutet rör"
 
 #: signal.c:132
 msgid "Timer expired"
@@ -1091,7 +1093,7 @@ msgstr "Ogiltiga indata"
 
 #: tokenizer.c:45
 msgid "Can not use fd 0 as pipe output"
-msgstr "Kan inte skicka pipe-data till fileidentifierare 0"
+msgstr "Kan inte skicka rördata till fileidentifierare 0"
 
 #: tokenizer.c:59
 msgid "Tokenizer not yet initialized"
@@ -1111,7 +1113,7 @@ msgstr "Textsträng"
 
 #: tokenizer.c:63
 msgid "Pipe"
-msgstr "Pipe"
+msgstr "Rör"
 
 #: tokenizer.c:64
 msgid "End of command"
@@ -1160,7 +1162,7 @@ msgid ""
 "%ls: Invalid combination of options,\n"
 "%ls\n"
 msgstr ""
-"%ls: Ogiltig kombination av argument,\n"
+"%ls: Ogiltig kombination av flaggor,\n"
 "%ls\n"
 
 #: builtin.h:38
@@ -1184,7 +1186,7 @@ msgstr ""
 #: builtin.h:48
 #, c-format
 msgid "%ls: Unknown option '%ls'\n"
-msgstr "%ls: Okänt argument '%ls'\n"
+msgstr "%ls: Okänd flagga '%ls'\n"
 
 #: builtin.h:50
 #, c-format
@@ -1198,13 +1200,45 @@ msgstr "%ls: Variabelnamn får inte vara tomma\n"
 
 #: exec.h:19
 msgid "An error occurred while setting up pipe"
-msgstr "Ett fel inträffade under skapandet av en pipa"
+msgstr "Ett fel inträffade under skapandet av ett rör"
 
 #: init/fish_complete.fish.in:179 init/fish_complete.fish:179
+#: init/completions/apropos.fish:11 init/completions/apt-build.fish:3
+#: init/completions/apt-cache.fish:2 init/completions/apt-cdrom.fish:2
+#: init/completions/apt-config.fish:2
+#: init/completions/apt-extracttemplates.fish:3
+#: init/completions/apt-file.fish:2 init/completions/bc.fish:9
+#: init/completions/cat.fish:10 init/completions/chgrp.fish:10
+#: init/completions/chown.fish:9 init/completions/complete.fish:13
+#: init/completions/configure.fish:1 init/completions/cut.fish:8
+#: init/completions/date.fish:9 init/completions/df.fish:16
+#: init/completions/diff.fish:26 init/completions/du.fish:18
+#: init/completions/echo.fish:4 init/completions/fish.fish:2
+#: init/completions/functions.fish:4 init/completions/grep.fish:20
+#: init/completions/gunzip.fish:8 init/completions/gzip.fish:10
+#: init/completions/id.fish:6 init/completions/less.fish:1
+#: init/completions/ls.fish:72 init/completions/man.fish:56
+#: init/completions/mimedb.fish:8 init/completions/mount.fish:47
+#: init/completions/mplayer.fish:35 init/completions/mplayer.fish:82
+#: init/completions/mv.fish:10 init/completions/nice.fish:3
+#: init/completions/pine.fish:3 init/completions/ps.fish:35
+#: init/completions/python.fish:4 init/completions/read.fish:1
+#: init/completions/rmdir.fish:6 init/completions/rm.fish:8
+#: init/completions/sed.fish:11 init/completions/set.fish:11
+#: init/completions/sort.fish:19 init/completions/su.fish:10
+#: init/completions/test.fish:2 init/completions/tex.fish:2
+#: init/completions/top.fish:5 init/completions/touch.fish:10
+#: init/completions/trap.fish:4 init/completions/ulimit.fish:13
+#: init/completions/umount.fish:16 init/completions/uniq.fish:13
+#: init/completions/valgrind.fish:24 init/completions/vared.fish:2
+#: init/completions/wc.fish:6 init/completions/wget.fish:6
+#: init/completions/xprop.fish:2 init/completions/xsel.fish:16
+#: init/completions/yum.fish:49 init/completions/zcat.fish:7
 msgid "Display help and exit"
 msgstr "Visa hjälp och avsluta"
 
 #: init/fish_complete.fish.in:198 init/fish_complete.fish:198
+#: init/completions/apt-get.fish:21
 msgid "Package"
 msgstr "Paket"
 
@@ -1228,31 +1262,31 @@ msgstr "Stanna och starta tjänst"
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
-#: init/fish_interactive.fish.in:9 init/fish_interactive.fish:9
+#: init/fish.in:70
 msgid "-d"
 msgstr ""
 
-#: init/fish_interactive.fish.in:10 init/fish_interactive.fish:10
+#: init/fish.in:71
 msgid "fish"
 msgstr ""
 
-#: init/fish_interactive.fish.in:17 init/fish_interactive.fish:17
+#: init/fish_interactive.fish.in:13 init/fish_interactive.fish:13
 msgid "Welcome to fish, the friendly interactive shell\\n"
 msgstr "Välkommen till fish, det vänliga interaktiva skalet\\n"
 
-#: init/fish_interactive.fish.in:18 init/fish_interactive.fish:18
+#: init/fish_interactive.fish.in:14 init/fish_interactive.fish:14
 msgid "Type %shelp%s for instructions on how to use fish\\n"
 msgstr "Skriv %shelp%s för instruktioner om hur man använder fish\\n"
 
-#: init/fish_interactive.fish.in:24 init/fish_interactive.fish:24
+#: init/fish_interactive.fish.in:20 init/fish_interactive.fish:20
 msgid "Commands to execute when fish exits"
 msgstr "Kommandon som utförs när fish avslutas"
 
-#: init/fish_interactive.fish.in:25 init/fish_interactive.fish:25
+#: init/fish_interactive.fish.in:21 init/fish_interactive.fish:21
 msgid "Good bye\\n"
 msgstr "Hej då\\n"
 
-#: init/fish_interactive.fish.in:32 init/fish_interactive.fish:32
+#: init/fish_interactive.fish.in:28 init/fish_interactive.fish:28
 msgid "Write out the prompt"
 msgstr "Skriver ut prompten"
 
@@ -1325,8 +1359,6588 @@ msgstr "%s: För många argument\\n"
 msgid "%s: Unknown argument '%s'\\n"
 msgstr "%s: Okänt argument '%s'\\n"
 
-#~ msgid "'and' conditional block"
-#~ msgstr "'and' villkorligt block"
+#: init/completions/apm.fish:2 init/completions/apropos.fish:20
+#: init/completions/at.fish:2 init/completions/bc.fish:8
+#: init/completions/bunzip2.fish:15 init/completions/bzip2.fish:17
+#: init/completions/cat.fish:11 init/completions/chgrp.fish:11
+#: init/completions/chown.fish:10 init/completions/configure.fish:2
+#: init/completions/cut.fish:9 init/completions/cvs.fish:33
+#: init/completions/cvs.fish:44 init/completions/date.fish:10
+#: init/completions/df.fish:17 init/completions/diff.fish:25
+#: init/completions/du.fish:19 init/completions/echo.fish:5
+#: init/completions/fish.fish:3 init/completions/gunzip.fish:18
+#: init/completions/gzip.fish:20 init/completions/id.fish:7
+#: init/completions/less.fish:41 init/completions/ls.fish:73
+#: init/completions/make.fish:26 init/completions/mimedb.fish:9
+#: init/completions/modprobe.fish:14 init/completions/mount.fish:46
+#: init/completions/mplayer.fish:83 init/completions/mv.fish:11
+#: init/completions/nice.fish:4 init/completions/perl.fish:18
+#: init/completions/python.fish:12 init/completions/rmdir.fish:7
+#: init/completions/rm.fish:9 init/completions/ruby.fish:21
+#: init/completions/sed.fish:12 init/completions/sort.fish:20
+#: init/completions/su.fish:11 init/completions/tar.fish:51
+#: init/completions/test.fish:3 init/completions/tex.fish:3
+#: init/completions/top.fish:13 init/completions/umount.fish:15
+#: init/completions/uname.fish:11 init/completions/uniq.fish:14
+#: init/completions/valgrind.fish:26 init/completions/wc.fish:7
+#: init/completions/w.fish:5 init/completions/wget.fish:5
+#: init/completions/xsel.fish:18 init/completions/yum.fish:57
+#: init/completions/zcat.fish:9
+msgid "Display version and exit"
+msgstr "Visa hjälp och avsluta"
 
-#~ msgid "'or' conditional block"
-#~ msgstr "'or' villkorligt block"
+#: init/completions/apm.fish:3
+msgid "print APM info"
+msgstr "Visa APM info"
+
+#: init/completions/apm.fish:4
+msgid "print time remaining"
+msgstr "Visa kvarvarande tid"
+
+#: init/completions/apm.fish:5
+msgid "monitor status info"
+msgstr "Bevaka status information"
+
+#: init/completions/apm.fish:6
+msgid "request APM standby mode"
+msgstr "Begär APM standbyläge"
+
+#: init/completions/apm.fish:7
+msgid "request APM suspend mode"
+msgstr "Begär APM suspendläge"
+
+#: init/completions/apm.fish:8
+msgid "APM status debugging info"
+msgstr "APM status debuginfo"
+
+#: init/completions/apropos.fish:9
+msgid "Whatis entry"
+msgstr "'Whatis'-inlägg"
+
+#: init/completions/apropos.fish:12
+msgid "Print debugging info"
+msgstr "Visa debuginfo"
+
+#: init/completions/apropos.fish:13
+msgid "Print verbose warning"
+msgstr "Visa utförliga varningar"
+
+#: init/completions/apropos.fish:14
+msgid "Keyword as regex"
+msgstr "Nyckelord är ett reguljärt uttryck"
+
+#: init/completions/apropos.fish:15
+msgid "Keyword as wildwards"
+msgstr "Nyckelord har wildcards"
+
+#: init/completions/apropos.fish:16
+msgid "Keyword as exactly match"
+msgstr "Nyckelord är en exakt matchning"
+
+#: init/completions/apropos.fish:17
+msgid "Search for other system"
+msgstr "Sör efter annat system"
+
+#: init/completions/apropos.fish:18
+msgid "Specify man path"
+msgstr "Specificera manualsökväg"
+
+#: init/completions/apropos.fish:19
+msgid "Specify a conf file"
+msgstr "Specificera en konfigurationsfil"
+
+#: init/completions/apt-build.fish:4
+msgid "Update list of packages"
+msgstr "Updatera listan på paket"
+
+#: init/completions/apt-build.fish:5
+msgid "Upgrade packages"
+msgstr "Upgradera paket"
+
+#: init/completions/apt-build.fish:6
+msgid "Rebuild your system"
+msgstr "Återbygg systemet"
+
+#: init/completions/apt-build.fish:7
+msgid "Build and install a new pkg"
+msgstr "Bygg och installera nytt paket"
+
+#: init/completions/apt-build.fish:8
+msgid "Download and extract a src"
+msgstr "Nedladda och extrahera källkod"
+
+#: init/completions/apt-build.fish:9
+msgid "Info on a pkg"
+msgstr "Visa info om paket"
+
+#: init/completions/apt-build.fish:10
+msgid "Remove packages"
+msgstr "Radera paket"
+
+#: init/completions/apt-build.fish:11
+msgid "Erase built pkgs"
+msgstr "Radera byggda paket"
+
+#: init/completions/apt-build.fish:12
+msgid "Build src without install"
+msgstr "Bygg källkod utan att installera"
+
+#: init/completions/apt-build.fish:13
+msgid "Clean src dirs"
+msgstr "Rensa källkodskataloger"
+
+#: init/completions/apt-build.fish:14
+msgid "Update src and rebuild them"
+msgstr "Uppdatera källkod och bygg om dem"
+
+#: init/completions/apt-build.fish:15
+msgid "Update the repository"
+msgstr "Uppdatera arkiv"
+
+#: init/completions/apt-build.fish:16
+msgid "Do not use gcc wrapper"
+msgstr "Använd inte gcc-wrapper"
+
+#: init/completions/apt-build.fish:17
+msgid "Remove build-dep"
+msgstr "Ta bort bygg-beroenden"
+
+#: init/completions/apt-build.fish:18
+msgid "Do not download source"
+msgstr "Ladda inte ner källkod"
+
+#: init/completions/apt-build.fish:19
+msgid "Specify build-dir"
+msgstr "Specificera bygg-katalog"
+
+#: init/completions/apt-build.fish:20
+msgid "Rebuild a package"
+msgstr "Bygg om paket"
+
+#: init/completions/apt-build.fish:21
+msgid "Rebuild and install an installed pkg"
+msgstr "Bygg och installera ett installerat paket"
+
+#: init/completions/apt-build.fish:22
+msgid "Use <command> to build"
+msgstr "Använd <kommando> för att bygga"
+
+#: init/completions/apt-build.fish:23
+msgid "Apply <file> patch"
+msgstr "Applicera <fil> som patch"
+
+#: init/completions/apt-build.fish:24
+msgid "Prefix to strip on patch"
+msgstr "Ta bort <prefix> på patch"
+
+#: init/completions/apt-build.fish:25
+msgid "Assume yes"
+msgstr "Antag ja på alla frågor"
+
+#: init/completions/apt-build.fish:26
+msgid "Use purge instead of remove"
+msgstr ""
+
+#: init/completions/apt-build.fish:27
+msgid "Do not run update"
+msgstr "Kör inte uppdatering"
+
+#: init/completions/apt-build.fish:28
+msgid "Specify sources.list file"
+msgstr "Specificera sources.list fil"
+
+#: init/completions/apt-build.fish:29 init/completions/apt-cache.fish:28
+#: init/completions/apt-cdrom.fish:11 init/completions/apt-config.fish:5
+#: init/completions/apt-file.fish:12 init/completions/apt-ftparchive.fish:15
+#: init/completions/apt-sortpkgs.fish:4 init/completions/apt-zip-inst.fish:3
+#: init/completions/apt-zip-list.fish:3
+msgid "Show version"
+msgstr "Visa version och avsluta"
+
+#: init/completions/apt-cache.fish:3
+msgid "Build apt cache"
+msgstr "Bygg aptcache"
+
+#: init/completions/apt-cache.fish:4
+msgid "Show package info"
+msgstr "Visa paketinfo"
+
+#: init/completions/apt-cache.fish:5
+msgid "Show cache statistics"
+msgstr "Visa cachestatistik"
+
+#: init/completions/apt-cache.fish:6
+msgid "Show source package"
+msgstr "Visa alla källkodspaket"
+
+#: init/completions/apt-cache.fish:7
+msgid "Show packages in cache"
+msgstr "Visa paket i cache"
+
+#: init/completions/apt-cache.fish:8
+msgid "Print available list"
+msgstr "Visa tillgängliga paket"
+
+#: init/completions/apt-cache.fish:9
+msgid "List unmet dep in cache"
+msgstr "Visa ouppklarade beroenden i cache"
+
+#: init/completions/apt-cache.fish:10
+msgid "Display package record"
+msgstr "Visa paketinfo"
+
+#: init/completions/apt-cache.fish:11
+msgid "Search pkgname by REGEX"
+msgstr "Sök paket matchande reguljärt uttryck"
+
+#: init/completions/apt-cache.fish:12
+msgid "Search full package name"
+msgstr "Sök fullt paketnamn"
+
+#: init/completions/apt-cache.fish:13
+msgid "Search pkgname only"
+msgstr "Sök enbart paketnamn"
+
+#: init/completions/apt-cache.fish:14
+msgid "List dep for the package"
+msgstr "Visa beroenden för paket"
+
+#: init/completions/apt-cache.fish:15
+msgid "List reverse dep for the package"
+msgstr "Visa paket som beror på det givna paketet"
+
+#: init/completions/apt-cache.fish:16
+msgid "Print package name by prefix"
+msgstr "Visa paket som matchar det givna prefixet"
+
+#: init/completions/apt-cache.fish:17
+msgid "Generate dotty output for packages"
+msgstr "Generera utdata för dotty"
+
+#: init/completions/apt-cache.fish:18
+msgid "Debug preferences file"
+msgstr "Fil för debuginställningar"
+
+#: init/completions/apt-cache.fish:19
+msgid "Select file to store pkg cache"
+msgstr "Välj paketcache"
+
+#: init/completions/apt-cache.fish:20
+msgid "Select file to store src cache"
+msgstr "Välj källkodscache"
+
+#: init/completions/apt-cache.fish:21 init/completions/apt-ftparchive.fish:10
+#: init/completions/apt-get.fish:39 init/completions/ping.fish:17
+#: init/completions/ssh.fish:98 init/completions/zip.fish:13
+msgid "Quiet mode"
+msgstr "Tyst läge"
+
+#: init/completions/apt-cache.fish:22
+msgid "Print important deps"
+msgstr "Visa viktiga beroenden"
+
+#: init/completions/apt-cache.fish:23
+msgid "Print full records"
+msgstr "Visa full info"
+
+#: init/completions/apt-cache.fish:24
+msgid "Auto-gen package cache"
+msgstr "Autogenerera paketcache"
+
+#: init/completions/apt-cache.fish:25
+msgid "Print all names"
+msgstr "Visa alla namn"
+
+#: init/completions/apt-cache.fish:26
+msgid "Dep and rdep recursive"
+msgstr "Rekursiva beroendeberäkningar"
+
+#: init/completions/apt-cache.fish:27
+msgid "Limit to installed"
+msgstr "Bara installerade paket"
+
+#: init/completions/apt-cache.fish:29 init/completions/apt-cdrom.fish:12
+#: init/completions/apt-config.fish:6
+msgid "Specify config file"
+msgstr "Specificera konfigurationsfil"
+
+#: init/completions/apt-cache.fish:30 init/completions/apt-cdrom.fish:13
+#: init/completions/apt-config.fish:7
+#: init/completions/apt-extracttemplates.fish:6
+#: init/completions/apt-zip-list.fish:10
+msgid "Specify options"
+msgstr "Specificera inställningar"
+
+#: init/completions/apt-cdrom.fish:3
+msgid "Add new disc to source list"
+msgstr "Lägg till skiva till källlista"
+
+#: init/completions/apt-cdrom.fish:4
+msgid "Report identity of disc"
+msgstr "Visa skivas identitet"
+
+#: init/completions/apt-cdrom.fish:5 init/completions/mount.fish:45
+#: init/completions/umount.fish:13
+msgid "Mount point"
+msgstr "Välj monteringskatalog"
+
+#: init/completions/apt-cdrom.fish:6
+msgid "Rename a disc"
+msgstr "Byt namn på skiva"
+
+#: init/completions/apt-cdrom.fish:7
+msgid "No mounting"
+msgstr "Montera inte"
+
+#: init/completions/apt-cdrom.fish:8
+msgid "Fast copy"
+msgstr "Snabb kopiering"
+
+#: init/completions/apt-cdrom.fish:9
+msgid "Thorough pkg scan"
+msgstr "Nogrann paketskanning"
+
+#: init/completions/apt-cdrom.fish:10
+msgid "No changes"
+msgstr "Inga förändringar"
+
+#: init/completions/apt-config.fish:3
+msgid "Access config file from shell"
+msgstr "Hitta konfigurationsfil via skalet"
+
+#: init/completions/apt-config.fish:4
+msgid "Dump contents of config file"
+msgstr "Skriv ut innehåll av konfigureringsfil"
+
+#: init/completions/apt-extracttemplates.fish:4
+msgid "Set temp dir"
+msgstr "Välj temporär katalog"
+
+#: init/completions/apt-extracttemplates.fish:5
+#, fuzzy
+msgid "Specifiy config file"
+msgstr "Specificera konfigurationsfil"
+
+#: init/completions/apt-file.fish:3
+msgid "Resync pkg contents from source"
+msgstr ""
+
+#: init/completions/apt-file.fish:4
+msgid "Search pkg containing pattern"
+msgstr ""
+
+#: init/completions/apt-file.fish:5
+msgid "List contents of a pkg matching pattern"
+msgstr ""
+
+#: init/completions/apt-file.fish:6
+msgid "Remove all gz files from cache"
+msgstr "Ta bort alla gx-filer från cache"
+
+#: init/completions/apt-file.fish:7
+msgid "Set cache dir"
+msgstr "Välj cache katalog"
+
+#: init/completions/apt-file.fish:8
+msgid "Run in verbose"
+msgstr "Utförligt läge"
+
+#: init/completions/apt-file.fish:9
+msgid "Use cdrom-mount-point"
+msgstr "Välj cdrom-monteringsplats"
+
+#: init/completions/apt-file.fish:10 init/completions/apt-file.fish:16
+msgid "Do not expand pattern"
+msgstr "Expandera inte mönster"
+
+#: init/completions/apt-file.fish:11
+msgid "Pattern is regexp"
+msgstr "Mönster är ett reguljärt uttryck"
+
+#: init/completions/apt-file.fish:13
+msgid "Set arch"
+msgstr "Välj arkitektur"
+
+#: init/completions/apt-file.fish:14
+msgid "Set sources.list file"
+msgstr "Specificera sources.list fil"
+
+#: init/completions/apt-file.fish:15
+msgid "Only display pkg name"
+msgstr "Visa bara paketnamn"
+
+#: init/completions/apt-file.fish:17
+msgid "Run in dummy mode"
+msgstr "Kör i dummyläge"
+
+#: init/completions/apt-ftparchive.fish:3
+msgid "Generate pkg from source"
+msgstr "Generera paket från källkod"
+
+#: init/completions/apt-ftparchive.fish:4
+msgid "Generate source index file"
+msgstr "Generera källindexfil"
+
+#: init/completions/apt-ftparchive.fish:5
+msgid "Generate contents file"
+msgstr "Generera filinnehåll"
+
+#: init/completions/apt-ftparchive.fish:6
+msgid "Generate release file"
+msgstr ""
+
+#: init/completions/apt-ftparchive.fish:7
+msgid "Remove records"
+msgstr ""
+
+#: init/completions/apt-ftparchive.fish:8
+msgid "Generate MD5 sums"
+msgstr "Generera MD5-summa"
+
+#: init/completions/apt-ftparchive.fish:9
+msgid "Use a binary db"
+msgstr "Använd binär databas"
+
+#: init/completions/apt-ftparchive.fish:11
+msgid "Perform delinking"
+msgstr ""
+
+#: init/completions/apt-ftparchive.fish:12
+msgid "Perform contents generation"
+msgstr ""
+
+#: init/completions/apt-ftparchive.fish:13
+msgid "Use source override"
+msgstr ""
+
+#: init/completions/apt-ftparchive.fish:14
+msgid "Make caching db readonly"
+msgstr "Gör cache skrivskyddad"
+
+#: init/completions/apt-ftparchive.fish:16
+msgid "Use config file"
+msgstr "Välj konfigurationsfil"
+
+#: init/completions/apt-ftparchive.fish:17
+#: init/completions/apt-sortpkgs.fish:6
+msgid "Set config options"
+msgstr "Välj inställningar"
+
+#: init/completions/apt-get.fish:3
+msgid "test if apt has yet to be given the subcommand"
+msgstr "Testa om apt har tagit emot ett underkommando"
+
+#: init/completions/apt-get.fish:12
+msgid "Test if apt command should have packages as potential completion"
+msgstr "Testa om aptkommando bore ha paket som potentiell komplettering"
+
+#: init/completions/apt-get.fish:23
+#, fuzzy
+msgid "apt-get command help"
+msgstr "Processkommando"
+
+#: init/completions/apt-get.fish:24
+msgid "Update sources"
+msgstr "Uppdatera källor"
+
+#: init/completions/apt-get.fish:25
+#, fuzzy
+msgid "upgrade or install newest packages"
+msgstr "Bygg och installera nytt paket"
+
+#: init/completions/apt-get.fish:26
+msgid "Use with dselect front-end"
+msgstr "Använd med dselect-gränssnitt"
+
+#: init/completions/apt-get.fish:27
+msgid "distro upgrade"
+msgstr ""
+
+#: init/completions/apt-get.fish:28
+#, fuzzy
+msgid "install one or more packages"
+msgstr "Visa beroenden för paket"
+
+#: init/completions/apt-get.fish:29
+#, fuzzy
+msgid "remove one or more packages"
+msgstr "Radera paket"
+
+#: init/completions/apt-get.fish:30
+#, fuzzy
+msgid "fetch source packages"
+msgstr "Visa alla källkodspaket"
+
+#: init/completions/apt-get.fish:31
+#, fuzzy
+msgid "install/remove packages for dependencies"
+msgstr "Fråga inte efter extra beroenden"
+
+#: init/completions/apt-get.fish:32
+msgid "update cache and check dep"
+msgstr ""
+
+#: init/completions/apt-get.fish:33
+msgid "clean local caches and packages"
+msgstr ""
+
+#: init/completions/apt-get.fish:34
+msgid "clean packages no longer be downloaded"
+msgstr ""
+
+#: init/completions/apt-get.fish:35
+msgid "Download Only"
+msgstr ""
+
+#: init/completions/apt-get.fish:36
+msgid "correct broken deps"
+msgstr ""
+
+#: init/completions/apt-get.fish:37
+#, fuzzy
+msgid "ignore missing packages"
+msgstr "Upgradera paket"
+
+#: init/completions/apt-get.fish:38
+msgid "Disable downloading packages"
+msgstr ""
+
+#: init/completions/apt-get.fish:40
+msgid "perform a siulation"
+msgstr ""
+
+#: init/completions/apt-get.fish:41
+msgid "automatic yes to prompts"
+msgstr ""
+
+#: init/completions/apt-get.fish:42
+#, fuzzy
+msgid "show upgraded packages"
+msgstr "Upgradera paket"
+
+#: init/completions/apt-get.fish:43
+#, fuzzy
+msgid "show full versions for packages"
+msgstr "Visa alla källkodspaket"
+
+#: init/completions/apt-get.fish:44 init/completions/apt-get.fish:45
+#, fuzzy
+msgid "compile source packages"
+msgstr "Visa alla källkodspaket"
+
+#: init/completions/apt-get.fish:46
+#, fuzzy
+msgid "ignore package Holds"
+msgstr "Upgradera paket"
+
+#: init/completions/apt-get.fish:47
+#, fuzzy
+msgid "Do not upgrade packages"
+msgstr "Upgradera paket"
+
+#: init/completions/apt-get.fish:48
+#, fuzzy
+msgid "Force yes"
+msgstr "Tvingad stopp"
+
+#: init/completions/apt-get.fish:49
+msgid "print the URIs"
+msgstr ""
+
+#: init/completions/apt-get.fish:50
+msgid "use purge instead of remove"
+msgstr ""
+
+#: init/completions/apt-get.fish:51
+#, fuzzy
+msgid "reinstall packages"
+msgstr "Visa alla namn"
+
+#: init/completions/apt-get.fish:52
+#, fuzzy
+msgid "erase obsolete files"
+msgstr "Utför filinnehåll som kommandon"
+
+#: init/completions/apt-get.fish:53
+msgid "control default input to the policy engine"
+msgstr ""
+
+#: init/completions/apt-get.fish:54
+msgid "only perform operations that are trivial"
+msgstr ""
+
+#: init/completions/apt-get.fish:55
+msgid "abort if any packages are to be removed"
+msgstr ""
+
+#: init/completions/apt-get.fish:56
+#, fuzzy
+msgid "only accept source packages"
+msgstr "Visa alla källkodspaket"
+
+#: init/completions/apt-get.fish:57
+#, fuzzy
+msgid "download only diff file"
+msgstr "LAdda inte initieringsfiler"
+
+#: init/completions/apt-get.fish:58
+#, fuzzy
+msgid "download only tar file"
+msgstr "LAdda inte initieringsfiler"
+
+#: init/completions/apt-get.fish:59
+msgid "only process arch-dep build-deps"
+msgstr ""
+
+#: init/completions/apt-get.fish:60
+msgid "ignore non-authenticated packages"
+msgstr ""
+
+#: init/completions/apt-get.fish:61
+#, fuzzy
+msgid "show program version"
+msgstr "Visa version och avsluta"
+
+#: init/completions/apt-get.fish:62
+#, fuzzy
+msgid "specify a config file"
+msgstr "Välj konfigurationsfil"
+
+#: init/completions/apt-get.fish:63
+#, fuzzy
+msgid "set a config option"
+msgstr "Ladda om konfiguration för tjänst"
+
+#: init/completions/apt-key.fish:2
+msgid "Add a new key"
+msgstr ""
+
+#: init/completions/apt-key.fish:3
+#, fuzzy
+msgid "Remove a key"
+msgstr "Radera paket"
+
+#: init/completions/apt-key.fish:4
+msgid "List trusted keys"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:2
+#, fuzzy
+msgid "Apt-listbugs command help"
+msgstr "Processkommando"
+
+#: init/completions/apt-listbugs.fish:3
+msgid "Set severity"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:4
+msgid "Targs you want to see"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:5
+msgid "Outstanding 'pending upload' resolved done open"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:6
+#, fuzzy
+msgid "Ignore bugs in your system"
+msgstr "Återbygg systemet"
+
+#: init/completions/apt-listbugs.fish:7
+msgid "Ignore newer bugs than upgrade pkgs"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:8
+msgid "Bugs for downgrade pkgs"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:9
+msgid "Bug Tracking system"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:10
+msgid "Specify port for web interface"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:11
+msgid "Use daily bug report"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:12
+msgid "Use the raw index.db"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:13
+#, fuzzy
+msgid "Specify index dir"
+msgstr "Specificera bygg-katalog"
+
+#: init/completions/apt-listbugs.fish:14
+msgid "Specify Pin-Priority value"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:15
+#, fuzzy
+msgid "Specify the title of rss"
+msgstr "Specificera inställningar"
+
+#: init/completions/apt-listbugs.fish:16
+msgid "Retrieve fresh bugs"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:17
+msgid "Do not display progress bar"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:18
+#, fuzzy
+msgid "Specify local cache dir"
+msgstr "Specificera en konfigurationsfil"
+
+#: init/completions/apt-listbugs.fish:19
+msgid "Specify the expire cache timer"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:20
+#, fuzzy
+msgid "Specify apt config file"
+msgstr "Specificera en konfigurationsfil"
+
+#: init/completions/apt-listbugs.fish:21
+#, fuzzy
+msgid "Assume all yes"
+msgstr "Antag ja på alla frågor"
+
+#: init/completions/apt-listbugs.fish:22
+#, fuzzy
+msgid "Assume all no"
+msgstr "Numrera alla rader"
+
+#: init/completions/apt-listbugs.fish:23
+msgid "List bugs from pkgs"
+msgstr ""
+
+#: init/completions/apt-listbugs.fish:24
+#, fuzzy
+msgid "List bugs in rss format"
+msgstr "Lista information om inoder"
+
+#: init/completions/apt-listchanges.fish:2
+msgid "Apt-listchanges command help"
+msgstr ""
+
+#: init/completions/apt-listchanges.fish:3
+msgid "Read filenames from pipe"
+msgstr "Läs filnamn från rör"
+
+#: init/completions/apt-listchanges.fish:4
+msgid "Verbose info"
+msgstr "Utförligt läge"
+
+#: init/completions/apt-listchanges.fish:5
+#, fuzzy
+msgid "Select fronend interface"
+msgstr "Välj gränssnitt"
+
+#: init/completions/apt-listchanges.fish:6 init/completions/darcs.fish:179
+#, fuzzy
+msgid "Specify email address"
+msgstr "Specificera bygg-katalog"
+
+#: init/completions/apt-listchanges.fish:7
+#, fuzzy
+msgid "Ask confirmation"
+msgstr "Ladda om konfiguration för tjänst"
+
+#: init/completions/apt-listchanges.fish:8
+#, fuzzy
+msgid "Display all changelogs"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/apt-listchanges.fish:9
+msgid "Avoid changelogs from db in named file"
+msgstr ""
+
+#: init/completions/apt-listchanges.fish:10
+#, fuzzy
+msgid "Select display"
+msgstr "Välj fält"
+
+#: init/completions/apt-listchanges.fish:11
+msgid "Insert header"
+msgstr ""
+
+#: init/completions/apt-listchanges.fish:12
+#, fuzzy
+msgid "Display debug info"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/apt-listchanges.fish:13
+#, fuzzy
+msgid "Select an option profile"
+msgstr "Radera filer från zipfil"
+
+#: init/completions/apt-move.fish:2
+#, fuzzy
+msgid "Generate master file"
+msgstr "IO dirigering till slutet av fil"
+
+#: init/completions/apt-move.fish:3
+#, fuzzy
+msgid "Alias of get"
+msgstr "Alias för atq"
+
+#: init/completions/apt-move.fish:4
+msgid "Move pkgs to local tree"
+msgstr ""
+
+#: init/completions/apt-move.fish:5
+#, fuzzy
+msgid "Delete obsolete pkg files"
+msgstr "Radera filer från zipfil"
+
+#: init/completions/apt-move.fish:6
+#, fuzzy
+msgid "Build new local files"
+msgstr "Lista bara lokala filsystem"
+
+#: init/completions/apt-move.fish:7
+#, fuzzy
+msgid "Rebuild index files"
+msgstr "Läs in en rad till en variabel"
+
+#: init/completions/apt-move.fish:8
+msgid "Move pkgs from cache to local mirror"
+msgstr ""
+
+#: init/completions/apt-move.fish:9
+#, fuzzy
+msgid "Alias to move delete packages"
+msgstr "Visa paket som beror på det givna paketet"
+
+#: init/completions/apt-move.fish:10
+#, fuzzy
+msgid "Alias for update"
+msgstr "Alias för atq"
+
+#: init/completions/apt-move.fish:11
+msgid "Download pkg missing from mirror"
+msgstr ""
+
+#: init/completions/apt-move.fish:12
+msgid "Sync pkgs installed"
+msgstr ""
+
+#: init/completions/apt-move.fish:14
+#, fuzzy
+msgid "Move file from CLI"
+msgstr "URL att hämta fil från"
+
+#: init/completions/apt-move.fish:15
+msgid "Mirror|sync|repo"
+msgstr ""
+
+#: init/completions/apt-move.fish:16
+#, fuzzy
+msgid "Fetch pkg from STDIN"
+msgstr "Läs paket från fil"
+
+#: init/completions/apt-move.fish:17
+msgid "Fetch src pkg from STDIN"
+msgstr ""
+
+#: init/completions/apt-move.fish:18
+#, fuzzy
+msgid "Process all pkgs"
+msgstr "Processnamn"
+
+#: init/completions/apt-move.fish:19
+#, fuzzy
+msgid "Use specific conffile"
+msgstr "Välj konfigurationsfil"
+
+#: init/completions/apt-move.fish:20
+#, fuzzy
+msgid "Use specific dist"
+msgstr "Använd specificerad kö"
+
+#: init/completions/apt-move.fish:21
+#, fuzzy
+msgid "Force deletion"
+msgstr "Tvingad stopp"
+
+#: init/completions/apt-move.fish:22
+#, fuzzy
+msgid "Suppresses normal output"
+msgstr "Tyst läge"
+
+#: init/completions/apt-move.fish:23
+msgid "Test run"
+msgstr ""
+
+#: init/completions/apt-proxy-import.fish:2
+#, fuzzy
+msgid "apt-proxy-import command help"
+msgstr "Ändra eller visa kommandoraden"
+
+#: init/completions/apt-proxy-import.fish:3 init/completions/atq.fish:2
+#: init/completions/atrm.fish:2
+#, fuzzy
+msgid "print version"
+msgstr "Visa utförliga varningar"
+
+#: init/completions/apt-proxy-import.fish:4
+#, fuzzy
+msgid "verbose info"
+msgstr "Utförligt läge"
+
+#: init/completions/apt-proxy-import.fish:5
+msgid "no message to STDOUT"
+msgstr ""
+
+#: init/completions/apt-proxy-import.fish:6
+msgid "recurse into subdir"
+msgstr ""
+
+#: init/completions/apt-proxy-import.fish:7
+msgid "dir to import"
+msgstr ""
+
+#: init/completions/apt-proxy-import.fish:8
+#, fuzzy
+msgid "change to user"
+msgstr "Ändra nuvarande katalog"
+
+#: init/completions/apt-proxy-import.fish:9
+msgid "debug level[default 0]"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:2
+msgid "Apt-rdepends command help"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:3
+msgid "Show bulid deps"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:4
+#, fuzzy
+msgid "Generate a dotty graph"
+msgstr "Generera ett slumptal"
+
+#: init/completions/apt-rdepends.fish:5
+msgid "Show state of deps"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:6
+msgid "List pkgs depending on"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:7
+msgid "Only follow DEPENDS recursively"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:8
+msgid "Only show DEPENDS"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:9
+msgid "Only follow STATES recursively"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:10
+msgid "Only show STATES"
+msgstr ""
+
+#: init/completions/apt-rdepends.fish:11
+#, fuzzy
+msgid "Display man page"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/apt-rdepends.fish:12
+#, fuzzy
+msgid "Print version"
+msgstr "Visa utförliga varningar"
+
+#: init/completions/apt-setup.fish:2
+msgid "Probe a CD"
+msgstr ""
+
+#: init/completions/apt-setup.fish:3
+#, fuzzy
+msgid "Run in noninteractive mode"
+msgstr "Kör i interaktivt läge"
+
+#: init/completions/apt-show-source.fish:2
+#, fuzzy
+msgid "apt-show-source command help"
+msgstr "Processkommando"
+
+#: init/completions/apt-show-source.fish:3
+#: init/completions/apt-show-source.fish:4
+#: init/completions/apt-show-versions.fish:10
+#: init/completions/apt-show-versions.fish:11
+#, fuzzy
+msgid "read pkg from FILE"
+msgstr "Läs paket från fil"
+
+#: init/completions/apt-show-source.fish:5
+#: init/completions/apt-show-source.fish:6
+#: init/completions/apt-show-versions.fish:12
+#: init/completions/apt-show-versions.fish:13
+#, fuzzy
+msgid "specify APT list dir"
+msgstr "Specificera APT listningskatalog"
+
+#: init/completions/apt-show-source.fish:7
+#, fuzzy
+msgid "list PKG info"
+msgstr "Lista paketinformation"
+
+#: init/completions/apt-show-source.fish:8
+msgid "print version only"
+msgstr ""
+
+#: init/completions/apt-show-source.fish:9
+msgid "print all src pkgs with version"
+msgstr ""
+
+#: init/completions/apt-show-source.fish:10
+#, fuzzy
+msgid "verbose message"
+msgstr "Utförligt läge"
+
+#: init/completions/apt-show-versions.fish:2
+msgid "apt-show-versions command help"
+msgstr ""
+
+#: init/completions/apt-show-versions.fish:3
+#, fuzzy
+msgid "print PKG versions"
+msgstr "Visa APM info"
+
+#: init/completions/apt-show-versions.fish:4
+msgid "using regex"
+msgstr ""
+
+#: init/completions/apt-show-versions.fish:5
+msgid "print only upgradeable pkgs"
+msgstr ""
+
+#: init/completions/apt-show-versions.fish:6
+#, fuzzy
+msgid "print all versions"
+msgstr "Visa alla namn"
+
+#: init/completions/apt-show-versions.fish:7
+#, fuzzy
+msgid "print pkg name/distro"
+msgstr "Visa alla namn"
+
+#: init/completions/apt-show-versions.fish:8
+#, fuzzy
+msgid "print verbose info"
+msgstr "Visa utförliga varningar"
+
+#: init/completions/apt-show-versions.fish:9
+msgid "init or update cache only"
+msgstr ""
+
+#: init/completions/apt-sortpkgs.fish:2
+#, fuzzy
+msgid "Apt-sortpkgs command help"
+msgstr "Processkommando"
+
+#: init/completions/apt-sortpkgs.fish:3
+msgid "Use source index field"
+msgstr ""
+
+#: init/completions/apt-sortpkgs.fish:5
+#, fuzzy
+msgid "Specify conffile"
+msgstr "Specificera konfigurationsfil"
+
+#: init/completions/apt-spy.fish:2
+#, fuzzy
+msgid "Apt-spy command help"
+msgstr "Processkommando"
+
+#: init/completions/apt-spy.fish:3
+msgid "Debian distribtion"
+msgstr ""
+
+#: init/completions/apt-spy.fish:4
+msgid "Servers in the areas"
+msgstr ""
+
+#: init/completions/apt-spy.fish:5
+#, fuzzy
+msgid "Conf file"
+msgstr "fil"
+
+#: init/completions/apt-spy.fish:6
+msgid "Finish after number of servers"
+msgstr ""
+
+#: init/completions/apt-spy.fish:7
+#, fuzzy
+msgid "File to grab servers"
+msgstr "Fil att lagra serversvar i"
+
+#: init/completions/apt-spy.fish:8
+#, fuzzy
+msgid "File as input"
+msgstr "Ändra nuvarande katalog"
+
+#: init/completions/apt-spy.fish:9
+msgid "Mirror-list file"
+msgstr ""
+
+#: init/completions/apt-spy.fish:10
+#, fuzzy
+msgid "Output sources.list file"
+msgstr "Specificera sources.list fil"
+
+#: init/completions/apt-spy.fish:11
+msgid "Use proxy server"
+msgstr ""
+
+#: init/completions/apt-spy.fish:12
+msgid "Comma separated country list"
+msgstr ""
+
+#: init/completions/apt-spy.fish:13
+msgid "How long in sec to download"
+msgstr ""
+
+#: init/completions/apt-spy.fish:14
+msgid "Custom URL to get mirror list"
+msgstr ""
+
+#: init/completions/apt-spy.fish:15
+#, fuzzy
+msgid "Write top servers to file"
+msgstr "Skriv prototyper till fil"
+
+#: init/completions/apt-spy.fish:16
+msgid "Number of top servers"
+msgstr ""
+
+#: init/completions/apt-spy.fish:17
+msgid "Update mirror list"
+msgstr ""
+
+#: init/completions/apt-spy.fish:18
+#, fuzzy
+msgid "Version number"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/apt-src.fish:2
+#, fuzzy
+msgid "Apt-src command help"
+msgstr "Processkommando"
+
+#: init/completions/apt-src.fish:3
+#, fuzzy
+msgid "Update list of src pkgs"
+msgstr "Updatera listan på paket"
+
+#: init/completions/apt-src.fish:4
+msgid "Install src pkgs"
+msgstr ""
+
+#: init/completions/apt-src.fish:5
+#, fuzzy
+msgid "Upgrade src pkgs"
+msgstr "Upgradera paket"
+
+#: init/completions/apt-src.fish:6
+#, fuzzy
+msgid "Remove src pkgs"
+msgstr "Radera paket"
+
+#: init/completions/apt-src.fish:7 init/completions/apt-src.fish:14
+msgid "Build src pkgs"
+msgstr ""
+
+#: init/completions/apt-src.fish:8
+#, fuzzy
+msgid "Clean src pkgs"
+msgstr "Rensa källkodskataloger"
+
+#: init/completions/apt-src.fish:9
+msgid "Detect known src tree"
+msgstr ""
+
+#: init/completions/apt-src.fish:10
+msgid "List installed src pkg\\(s\\)"
+msgstr ""
+
+#: init/completions/apt-src.fish:11
+msgid "Root src tree"
+msgstr ""
+
+#: init/completions/apt-src.fish:12
+msgid "Version of src pkg"
+msgstr ""
+
+#: init/completions/apt-src.fish:13
+#, fuzzy
+msgid "Name of the src pkg"
+msgstr "Namn på patch"
+
+#: init/completions/apt-src.fish:15
+msgid "Install after build"
+msgstr ""
+
+#: init/completions/apt-src.fish:16
+#, fuzzy
+msgid "Patch local changes"
+msgstr "Inga förändringar"
+
+#: init/completions/apt-src.fish:17
+#, fuzzy
+msgid "Specify a dir"
+msgstr "Ange författar-id"
+
+#: init/completions/apt-src.fish:18
+#, fuzzy
+msgid "Run on current dir"
+msgstr "Kör ett kommando i den nuvarande processen"
+
+#: init/completions/apt-src.fish:19
+msgid "Omit debian version"
+msgstr ""
+
+#: init/completions/apt-src.fish:20
+#, fuzzy
+msgid "Do not del built files"
+msgstr "LAdda inte initieringsfiler"
+
+#: init/completions/apt-src.fish:21
+#, fuzzy
+msgid "Do not del source files"
+msgstr "Ladda inte ner källkod"
+
+#: init/completions/apt-src.fish:22
+#, fuzzy
+msgid "Source tree version"
+msgstr "Visa version och avsluta"
+
+#: init/completions/apt-src.fish:23
+msgid "Output to /dev/null"
+msgstr ""
+
+#: init/completions/apt-src.fish:24
+#, fuzzy
+msgid "Output trace"
+msgstr "Välj bytsekvens"
+
+#: init/completions/apt-zip-inst.fish:4 init/completions/apt-zip-list.fish:4
+msgid "Removable medium"
+msgstr ""
+
+#: init/completions/apt-zip-inst.fish:5 init/completions/apt-zip-list.fish:5
+msgid "Select an action"
+msgstr "Välj en handling"
+
+#: init/completions/apt-zip-inst.fish:6 init/completions/apt-zip-list.fish:6
+msgid "List of pkgs to install"
+msgstr "Visa paket att installera"
+
+#: init/completions/apt-zip-inst.fish:7 init/completions/apt-zip-list.fish:7
+msgid "Fix broken option"
+msgstr ""
+
+#: init/completions/apt-zip-inst.fish:8 init/completions/apt-zip-list.fish:8
+msgid "Specify a non-mountpoint dir"
+msgstr "Specificera katalog som inte är monteringsplats"
+
+#: init/completions/apt-zip-list.fish:9
+msgid "Select a method"
+msgstr "Välj metod"
+
+#: init/completions/apt-zip-list.fish:11
+msgid "Accept protocols"
+msgstr "Acceptera specificerade protokoll"
+
+#: init/completions/apt-zip-list.fish:12
+msgid "Reject protocols"
+msgstr "Vägra använda specificerade protokoll"
+
+#: init/completions/arp.fish:2 init/completions/makedepend.fish:11
+#: init/completions/mount.fish:48 init/completions/python.fish:11
+#: init/completions/ruby.fish:19 init/completions/ssh.fish:61
+#: init/completions/umount.fish:17 init/completions/valgrind.fish:28
+#: init/completions/zip.fish:14
+msgid "Verbose mode"
+msgstr "Utförligt läge"
+
+#: init/completions/arp.fish:3
+msgid "numerical address"
+msgstr "Numerisk adress"
+
+#: init/completions/arp.fish:4
+msgid "class of hw type"
+msgstr "Klass av hårdvara"
+
+#: init/completions/arp.fish:5
+msgid "show arp entries"
+msgstr "Visa ARP-inlägg"
+
+#: init/completions/arp.fish:6
+msgid "remove an entry for hostname"
+msgstr "Ta bort hostname-inlägg"
+
+#: init/completions/arp.fish:7
+msgid "use hardware address"
+msgstr "Använd hårdvaruadress"
+
+#: init/completions/arp.fish:8
+msgid "select interface"
+msgstr "Välj gränssnitt"
+
+#: init/completions/arp.fish:9
+msgid "Manually create ARP address"
+msgstr "Skapa ARP adress manuellt"
+
+#: init/completions/arp.fish:10
+#, fuzzy
+msgid "take addr from filename, default /etc/ethers"
+msgstr "Hämta adress från file, standard är /etc/ethers"
+
+#: init/completions/atd.fish:2
+msgid "limiting load factor"
+msgstr "Begränsande lastfaktor"
+
+#: init/completions/atd.fish:3
+msgid "minimum interval in seconds"
+msgstr "Minimalt intervall i sekunder"
+
+#: init/completions/atd.fish:4
+msgid "Debug mode"
+msgstr "Debugläge"
+
+#: init/completions/atd.fish:5
+msgid "process at queue only once"
+msgstr "Processa bara en gång vid kö"
+
+#: init/completions/at.fish:3
+msgid "Use specified queue"
+msgstr "Använd specificerad kö"
+
+#: init/completions/at.fish:4
+msgid "Send mail to user"
+msgstr "Skicka epost till användare"
+
+#: init/completions/at.fish:5
+msgid "Read job from file"
+msgstr "Läs in jobb från fil"
+
+#: init/completions/at.fish:6
+msgid "Alias for atq"
+msgstr "Alias för atq"
+
+#: init/completions/at.fish:7
+msgid "Alias for atrm"
+msgstr "Alias för atrm"
+
+#: init/completions/at.fish:8
+msgid "Show the time"
+msgstr "Visa tid"
+
+#: init/completions/at.fish:9
+msgid "Print the jobs listed"
+msgstr "Visa listade jobb"
+
+#: init/completions/atq.fish:3
+#, fuzzy
+msgid "use specified queue"
+msgstr "Använd specificerad kö"
+
+#: init/completions/bc.fish:3
+msgid "Force interactive mode"
+msgstr "Tvinga interaktivt läge"
+
+#: init/completions/bc.fish:4
+msgid "Define math library"
+msgstr "Definera matematikbibliotek"
+
+#: init/completions/bc.fish:5
+msgid "Give warnings for extensions to POSIX bc"
+msgstr "Varna vid användning av Posix-förlängningar"
+
+#: init/completions/bc.fish:6
+msgid "Process exactly POSIX bc"
+msgstr "Använd exakt Posix bc"
+
+#: init/completions/bc.fish:7
+msgid "Do not print the GNU welcome"
+msgstr "Visa inte välkomstmeddelande"
+
+#: init/completions/btdownloadheadless.py.fish:4
+msgid "Maximum uploads at once"
+msgstr "Maximalt antal uppladningar"
+
+#: init/completions/btdownloadheadless.py.fish:5
+msgid "Number of seconds between keepalives"
+msgstr "Sekunder mellan keepalives"
+
+#: init/completions/btdownloadheadless.py.fish:6
+msgid "Bytes per request"
+msgstr "Bytes per förfrågan"
+
+#: init/completions/btdownloadheadless.py.fish:7
+msgid "Requests per pipe"
+msgstr "Förfrågningar per rör"
+
+#: init/completions/btdownloadheadless.py.fish:8
+msgid "Maximum length prefix encoding"
+msgstr "Maximal längd på prefixkod"
+
+#: init/completions/btdownloadheadless.py.fish:9
+msgid "IP to report to the tracker"
+msgstr "IP adress att rapportera till tracker"
+
+#: init/completions/btdownloadheadless.py.fish:10
+msgid "Minimum port to listen to"
+msgstr "Lägsta portnummer att lyssna på"
+
+#: init/completions/btdownloadheadless.py.fish:11
+msgid "Maximum port to listen to"
+msgstr "Högsta portnummer att lyssna på"
+
+#: init/completions/btdownloadheadless.py.fish:12
+msgid "File for server response"
+msgstr "Fil att lagra serversvar i"
+
+#: init/completions/btdownloadheadless.py.fish:13
+msgid "URL to get file from"
+msgstr "URL att hämta fil från"
+
+#: init/completions/btdownloadheadless.py.fish:14
+msgid "Local file target"
+msgstr "Lokal fil att hämta till"
+
+#: init/completions/btdownloadheadless.py.fish:15
+msgid "Time to close inactive socket"
+msgstr "Fördröjning innan inaktivt uttag stängs"
+
+#: init/completions/btdownloadheadless.py.fish:16
+msgid "Time between checking timeouts"
+msgstr "Intervall mellan kontroller av timeouts"
+
+#: init/completions/btdownloadheadless.py.fish:17
+msgid "Maximum outgoing slice length"
+msgstr "Längsta slice-storlek"
+
+#: init/completions/btdownloadheadless.py.fish:18
+msgid "Maximum time to guess rate"
+msgstr "Maximalt tid att gissa kvot"
+
+#: init/completions/btdownloadheadless.py.fish:19
+msgid "IP to bind to locally"
+msgstr "Lokal IP adress att binda till"
+
+#: init/completions/btdownloadheadless.py.fish:20
+msgid "Time between screen updates"
+msgstr "Tid mellan skärmuppdateringar"
+
+#: init/completions/btdownloadheadless.py.fish:21
+msgid "Time to wait between requesting more peers"
+msgstr "Tidsintevall mellan förfrågningar efter nya fränder"
+
+#: init/completions/btdownloadheadless.py.fish:22
+msgid "Minimum number of peers to not do requesting"
+msgstr "Minimalt antal fränder för att inte skicka förfrågan"
+
+#: init/completions/btdownloadheadless.py.fish:23
+msgid "Number of seconds before assuming http timeout"
+msgstr "Sekunder innan http-timeout"
+
+#: init/completions/btdownloadheadless.py.fish:24
+msgid "Number of peers at which to stop initiating new connections"
+msgstr "Antal fränder för att inte skapa nya uppkopplingar"
+
+#: init/completions/btdownloadheadless.py.fish:25
+msgid "Maximum number of connections to allow"
+msgstr "Maximalt antal tillåtna uppkopplingar"
+
+#: init/completions/btdownloadheadless.py.fish:26
+msgid "Whether to check hashes on disk"
+msgstr "Om disk-hashar skall verifieras"
+
+#: init/completions/btdownloadheadless.py.fish:27
+msgid "Maximum kB/s to upload at"
+msgstr "MAximal uppladdningstakt i kB/s"
+
+#: init/completions/btdownloadheadless.py.fish:28
+msgid "Seconds to wait for data to come in before assuming choking"
+msgstr "Antal sekunder att vänta innan antagande om strypning"
+
+#: init/completions/btdownloadheadless.py.fish:29
+msgid "Whether to display diagnostic info"
+msgstr "Visa debuginfo"
+
+#: init/completions/btdownloadheadless.py.fish:30
+msgid "Number of downloads at which to switch from random to rarest first"
+msgstr "Antal nedladdningar för att byta från slumpmässig slice till ovanligaste slice först"
+
+#: init/completions/btdownloadheadless.py.fish:31
+msgid "Number of uploads to fill out to with optimistic unchokes"
+msgstr "Antalet uppladningar att fulla med optimistisk avstrypning"
+
+#: init/completions/btdownloadheadless.py.fish:32
+msgid "Whether to inform the user that hash failures occur"
+msgstr "Om användaren skall informeras om hashfel"
+
+#: init/completions/bunzip2.fish:9
+msgid "Decompress to stdout"
+msgstr "Dekomprimera till standard ut"
+
+#: init/completions/bunzip2.fish:10 init/completions/bzip2.fish:11
+#: init/completions/gunzip.fish:7 init/completions/gzip.fish:9
+#: init/completions/zcat.fish:6
+msgid "Overwrite"
+msgstr "Skiv över"
+
+#: init/completions/bunzip2.fish:11 init/completions/bzip2.fish:12
+#: init/completions/tar.fish:26
+msgid "Do not overwrite"
+msgstr "Skriv ej över"
+
+#: init/completions/bunzip2.fish:12 init/completions/bzcat.fish:8
+#: init/completions/bzip2.fish:13
+msgid "Reduce memory usage"
+msgstr "Minska minnesanvändning"
+
+#: init/completions/bunzip2.fish:13 init/completions/bzip2.fish:15
+msgid "Print compression ratios"
+msgstr "Skriv ut kompressionsfaktor"
+
+#: init/completions/bunzip2.fish:14 init/completions/bzip2.fish:16
+#: init/completions/gunzip.fish:10 init/completions/gzip.fish:12
+#: init/completions/zcat.fish:8
+msgid "Print license"
+msgstr "Skriv ut licens"
+
+#: init/completions/bzip2.fish:1 init/completions/gunzip.fish:1
+#: init/completions/gzip.fish:1
+msgid "Compress to stdout"
+msgstr "Komprimera till standard ut"
+
+#: init/completions/bzip2.fish:9
+msgid "Compress file"
+msgstr "Komprimera fil"
+
+#: init/completions/bzip2.fish:10 init/completions/gunzip.fish:16
+#: init/completions/gzip.fish:18
+msgid "Check integrity"
+msgstr "Verifiera integritet"
+
+#: init/completions/bzip2.fish:14 init/completions/chgrp.fish:6
+#: init/completions/chown.fish:5
+msgid "Supress errors"
+msgstr "Visa inte fel"
+
+#: init/completions/bzip2.fish:18
+msgid "Small block size"
+msgstr "Liten blockstorlek"
+
+#: init/completions/bzip2.fish:19
+msgid "Large block size"
+msgstr "Stor blockstorlek"
+
+#: init/completions/cat.fish:1
+msgid "Escape all non-printing characters"
+msgstr "Ersätt oskrivbara tecken"
+
+#: init/completions/cat.fish:2
+msgid "Number nonblank lines"
+msgstr "Numrera icke-toma rader"
+
+#: init/completions/cat.fish:3
+msgid "Escape non-printing characters except tab"
+msgstr "Erätt oskrivbarta tecken utom tab"
+
+#: init/completions/cat.fish:5
+msgid "Number all lines"
+msgstr "Numrera alla rader"
+
+#: init/completions/cat.fish:6
+msgid "Never more than single blank line"
+msgstr "Visa maximalt en tom rad i följd"
+
+#: init/completions/cat.fish:7
+msgid "Escape non-printing characters except newline"
+msgstr "Erätt oskrivbarta tecken utom radbrytning"
+
+#: init/completions/cat.fish:8
+msgid "Escape tab"
+msgstr "Ersätt tab"
+
+#: init/completions/cat.fish:9
+msgid "Escape non-printing except newline and tab"
+msgstr "Erätt oskrivbarta tecken utom tab och radbrytning"
+
+#: init/completions/chgrp.fish:2 init/completions/chown.fish:1
+msgid "Output diagnostic for changed files"
+msgstr "Visa information om ändrade filer"
+
+#: init/completions/chgrp.fish:3 init/completions/chown.fish:2
+msgid "Dereferense symbolic links"
+msgstr "Följ symboliska länkar"
+
+#: init/completions/chgrp.fish:4 init/completions/chown.fish:3
+msgid "Do not dereference symbolic links"
+msgstr "Följ ej symboliska länkar"
+
+#: init/completions/chgrp.fish:5 init/completions/chown.fish:4
+msgid "Change from owner/group"
+msgstr "Byt från ägare/grupp"
+
+#: init/completions/chgrp.fish:7 init/completions/chown.fish:6
+msgid "Use same owner/group as file"
+msgstr "Använd samma ägare grupp som specificerad fil"
+
+#: init/completions/chgrp.fish:8 init/completions/chown.fish:7
+#: init/completions/zip.fish:6
+msgid "Operate recursively"
+msgstr "Rekurivt läge"
+
+#: init/completions/chgrp.fish:9 init/completions/chown.fish:8
+msgid "Output diagnostic for every file"
+msgstr "Visa information om alla filer"
+
+#: init/completions/chown.fish:11 init/completions/chown.fish:12
+#: init/completions/w.fish:6
+msgid "Username"
+msgstr "Användarnamn"
+
+#: init/completions/commandline.fish:1
+msgid "Add text to the end of commandline"
+msgstr "Lägg till text till slutet av valt område"
+
+#: init/completions/commandline.fish:2
+msgid "Add text at cursor"
+msgstr "Lägg till text vid markören"
+
+#: init/completions/commandline.fish:3
+msgid "Replace selected part of buffer (replace)"
+msgstr "Ersätt valt område"
+
+#: init/completions/commandline.fish:5
+msgid "Operate only on job under cursor"
+msgstr "Välj jobb under markören"
+
+#: init/completions/commandline.fish:6
+msgid "Operate only on process under cursor"
+msgstr "Välj process under markören"
+
+#: init/completions/commandline.fish:7
+msgid "Operate only on tokenizer token under cursor"
+msgstr "Välj symbol under markören"
+
+#: init/completions/commandline.fish:8
+msgid "Operate on entire buffer (default)"
+msgstr "Välj hela buffern"
+
+#: init/completions/commandline.fish:10
+msgid "Only return part of commandline before the cursor"
+msgstr "Visa bara del av buffern före markören"
+
+#: init/completions/commandline.fish:11
+msgid "Inject readline functions to reader"
+msgstr "Skicka readline-funktion till läsaren"
+
+#: init/completions/complete.fish:1
+msgid "Command to add completion to"
+msgstr "Kommando att komplettera"
+
+#: init/completions/complete.fish:2
+msgid "Path to add completion to"
+msgstr "Sökväg att komplettera"
+
+#: init/completions/complete.fish:3
+msgid "Posix-style option to complete"
+msgstr "Posix-typ av flagga att komplettera"
+
+#: init/completions/complete.fish:4
+msgid "GNU-style option to complete"
+msgstr "GNU-typ av flagga att komplettera"
+
+#: init/completions/complete.fish:5
+msgid "Old style long option to complete"
+msgstr "Gammal typ av lång flagga att komplettera"
+
+#: init/completions/complete.fish:6
+msgid "Do not use file completion"
+msgstr "Använd inte fil-komplettering"
+
+#: init/completions/complete.fish:7
+msgid "Require parameter"
+msgstr "Kräv parameter"
+
+#: init/completions/complete.fish:8
+msgid "Require parameter and do not use file completion"
+msgstr "Kräv parameter, använd inte filkomplettering"
+
+#: init/completions/complete.fish:9
+msgid "A list of possible arguments"
+msgstr "Parametrar specifikt för denna flagga för flagga"
+
+#: init/completions/complete.fish:10
+msgid "Description of this completions"
+msgstr "Beskrivning av denna komplettering"
+
+#: init/completions/complete.fish:11
+msgid "Option list is not complete"
+msgstr "Detta kommando accepterar andra flaggor än de här specificerade"
+
+#: init/completions/complete.fish:12
+msgid "Remove completion"
+msgstr "Ta bort komplettering"
+
+#: init/completions/configure.fish:3 init/completions/rpm.fish:6
+msgid "Be less verbose"
+msgstr "Tyst läge"
+
+#: init/completions/configure.fish:4
+msgid "Cache test results in specified file"
+msgstr "Cachea resultat is specificerad fil"
+
+#: init/completions/configure.fish:5
+msgid "Cache test results in file config.cache"
+msgstr "Cachea test resultat i filen config.cache"
+
+#: init/completions/configure.fish:6
+msgid "Do not create output files"
+msgstr "Skapa inte utfiler"
+
+#: init/completions/configure.fish:7
+msgid "Set source directory"
+msgstr "Sätt källkatalog"
+
+#: init/completions/configure.fish:8
+msgid "Architecture-independent install directory"
+msgstr "Arkitekturoberoende installationskatalog"
+
+#: init/completions/configure.fish:9
+msgid "Architecture-dependent install directory"
+msgstr "Arkitekturberoende installationskatalog"
+
+#: init/completions/configure.fish:10
+msgid "configure for building on BUILD"
+msgstr "Målarkitektur"
+
+#: init/completions/configure.fish:11
+msgid "cross-compile to build programs to run on HOST"
+msgstr "Korskompilera för specificerad värd"
+
+#: init/completions/configure.fish:12
+msgid "configure for building compilers for TARGET"
+msgstr "Korskompilera för specificerat mål"
+
+#: init/completions/cut.fish:1
+msgid "Ouput byte range"
+msgstr "Välj bytsekvens"
+
+#: init/completions/cut.fish:2
+msgid "Output character range"
+msgstr "Välj teckensekvens"
+
+#: init/completions/cut.fish:3
+msgid "Select field delimiter"
+msgstr "Välj fältavgränsare"
+
+#: init/completions/cut.fish:4
+msgid "Select fields"
+msgstr "Välj fält"
+
+#: init/completions/cut.fish:5
+msgid "Dont split mutibyte characters"
+msgstr "Dela inte multibytesekvenser"
+
+#: init/completions/cut.fish:6
+msgid "Do not print lines without delimiter"
+msgstr "Skriv inte ut rader utan fältavgränsare"
+
+#: init/completions/cut.fish:7
+msgid "Select output delimiter"
+msgstr "Välj utdataavgränsare"
+
+#: init/completions/cvs.fish:5
+msgid "Add a new file/directory to the repository"
+msgstr "Lägg till fil/katalog till arkiv"
+
+#: init/completions/cvs.fish:6
+msgid "Administration front end for rcs"
+msgstr "Administrationsfrontend för rcs"
+
+#: init/completions/cvs.fish:7
+msgid "Show last revision where each line was modified"
+msgstr "Visa senaste revision vid vilken vare rad modifierades"
+
+#: init/completions/cvs.fish:8
+msgid "Checkout sources for editing"
+msgstr "Checka ut källkod för redigering"
+
+#: init/completions/cvs.fish:9
+msgid "Check files into the repository"
+msgstr "Checka in filer till arkiv"
+
+#: init/completions/cvs.fish:10
+msgid "Show differences between revisions"
+msgstr "Visa skillnader mellan revisioner"
+
+#: init/completions/cvs.fish:11
+msgid "Get ready to edit a watched file"
+msgstr "Förbered redigering av övervakad fil"
+
+#: init/completions/cvs.fish:12
+msgid "See who is editing a watched file"
+msgstr "Se vem som redigerar övervakad fil"
+
+#: init/completions/cvs.fish:13
+msgid "Export sources from CVS, similar to checkout"
+msgstr "Exportera källkod från CSV"
+
+#: init/completions/cvs.fish:14
+msgid "Show repository access history"
+msgstr "Visa åtkomsthistorik"
+
+#: init/completions/cvs.fish:15
+msgid "Import sources into CVS, using vendor branches"
+msgstr "Importera källor till CVS"
+
+#: init/completions/cvs.fish:16
+msgid "Create a CVS repository if it doesnt exist"
+msgstr "Skapa arkiv om det inte redan existerar"
+
+#: init/completions/cvs.fish:17
+msgid "Kerberos server mode"
+msgstr "Kerberosserverläge"
+
+#: init/completions/cvs.fish:18
+msgid "Print out history information for files"
+msgstr "Visa historikinformation för filer"
+
+#: init/completions/cvs.fish:19
+msgid "Prompt for password for authenticating server"
+msgstr "Be om lösenord för autentisering"
+
+#: init/completions/cvs.fish:20
+msgid "Removes entry in .cvspass for remote repository"
+msgstr "Ta bort inlägg i .cvspass för fjärrarkiv"
+
+#: init/completions/cvs.fish:21
+msgid "Password server mode"
+msgstr "Serverpassordläge"
+
+#: init/completions/cvs.fish:22
+msgid "Show last revision where each line of module was modified"
+msgstr "Visa senaste revision vid vilken vare rad i modul modifierades"
+
+#: init/completions/cvs.fish:23
+msgid "Create \"patch\" format diffs between releases"
+msgstr "Skapa differens mellan versioner i \"patch\"-format"
+
+#: init/completions/cvs.fish:24
+msgid "Indicate that a Module is no longer in use"
+msgstr "Indikera att modul inte längre används"
+
+#: init/completions/cvs.fish:25
+msgid "Remove an entry from the repository"
+msgstr "Ta bort ett inlägg från arkiv"
+
+#: init/completions/cvs.fish:26
+msgid "Print out history information for a module"
+msgstr "Skriv ut historik för modul"
+
+#: init/completions/cvs.fish:27
+msgid "Add a symbolic tag to a module"
+msgstr "Lägg till symbolisk märke till modul"
+
+#: init/completions/cvs.fish:28
+msgid "Server mode"
+msgstr "Serverläge"
+
+#: init/completions/cvs.fish:29
+msgid "Display status information on checked out files"
+msgstr "Visa status för utcheckade files"
+
+#: init/completions/cvs.fish:30
+msgid "Add a symbolic tag to checked out version of files"
+msgstr "Lägg till symboliskt märke till utcheckad version av filer"
+
+#: init/completions/cvs.fish:31
+msgid "Undo an edit command"
+msgstr "Ångra ett redigeringskommando"
+
+#: init/completions/cvs.fish:32
+msgid "Bring work tree in sync with repository"
+msgstr "Synkronisera arbetsträd med arkiv"
+
+#: init/completions/cvs.fish:34
+msgid "Set watches"
+msgstr "Lägg till övervakning"
+
+#: init/completions/cvs.fish:35
+msgid "See who is watching a file"
+msgstr "Visa övervakningar på fil"
+
+#: init/completions/cvs.fish:37
+msgid "Displays usage information for command"
+msgstr "Visa användningsinformation för kommando"
+
+#: init/completions/cvs.fish:38
+msgid "Cause CVS to be really quiet"
+msgstr "Mycket tyst läge"
+
+#: init/completions/cvs.fish:39
+msgid "Cause CVS to be somewhat quiet"
+msgstr "Tyst läge"
+
+#: init/completions/cvs.fish:40
+msgid "Make checked-out files read-only"
+msgstr "Gör utcheckade filer skrivskyddade"
+
+#: init/completions/cvs.fish:41
+msgid "Make checked-out files read-write (default)"
+msgstr "Gör utcheckade filer läs och skrivbara"
+
+#: init/completions/cvs.fish:42
+msgid "Do not execute anything that will change the disk"
+msgstr "Utför ingenting som skriver till disk"
+
+#: init/completions/cvs.fish:43
+msgid "Show trace of program execution -- try with -n"
+msgstr "Visa spår av programexekvering -- använd med -n"
+
+#: init/completions/cvs.fish:45
+msgid "Use \"tmpdir\" for temporary files"
+msgstr "Välj temporär katalog"
+
+#: init/completions/cvs.fish:46
+msgid "Use \"editor\" for editing log information"
+msgstr "Välj editor"
+
+#: init/completions/cvs.fish:47
+#, sh-format
+msgid "Overrides $CVSROOT as the root of the CVS tree"
+msgstr "Välj rot för CVSträd"
+
+#: init/completions/cvs.fish:48
+msgid "Do not use the ~/.cvsrc file"
+msgstr "Ignorera ~/.cvsrc"
+
+#: init/completions/cvs.fish:49
+msgid "Compression level for net traffic"
+msgstr "Kompressionsnivå för nätverkstrafik"
+
+#: init/completions/cvs.fish:50
+msgid "Encrypt all net traffic"
+msgstr "Kryptera all nätverkstrafik"
+
+#: init/completions/cvs.fish:51
+msgid "Authenticate all net traffic"
+msgstr "Autentisera all nätverkstrafik"
+
+#: init/completions/cvs.fish:52
+msgid "Set CVS user variable"
+msgstr "Set CVS-användare"
+
+#: init/completions/darcs.fish:28
+msgid "Create new project"
+msgstr "Skapa nytt arkiv"
+
+#: init/completions/darcs.fish:29
+msgid "Create a local copy of another repository"
+msgstr "Skapa lokal kopia av arkiv"
+
+#: init/completions/darcs.fish:30
+msgid "Add one or more new files or directories"
+msgstr "Lägg till filer eller kataloger till arkivet"
+
+#: init/completions/darcs.fish:31
+msgid "Remove one or more files or directories from the repository"
+msgstr "Ta bort filer eller kataloger från arkivet"
+
+#: init/completions/darcs.fish:32
+msgid "Move/rename one or more files or directories"
+msgstr "Flytta/byt namn på en eller flera filer eller kataloger"
+
+#: init/completions/darcs.fish:33
+msgid "Replace a token with a new value for that token"
+msgstr "Ersätt en symbol med ett nytt värde för den symbolen"
+
+#: init/completions/darcs.fish:34
+msgid "Save changes in the working copy to the repository as a patch"
+msgstr "Spara ändringar i arbetskopian till arkivet som en patch"
+
+#: init/completions/darcs.fish:35
+msgid "Copy and apply patches from another repository to this one"
+msgstr "Kopiera och applicera patchar från ett annat arkiv till detta"
+
+#: init/completions/darcs.fish:36
+msgid "Send by email a bundle of one or more patches"
+msgstr "Skicka epost-paket av en eller flera patchar"
+
+#: init/completions/darcs.fish:37
+msgid "Apply patches (from an email bundle) to the repository"
+msgstr "Applicera patchar (från epost-paket) till arkivet"
+
+#: init/completions/darcs.fish:38
+msgid "Copy and apply patches from this repository to another one"
+msgstr "Kopiera och applicera patchar från detta arkiv till ett annat"
+
+#: init/completions/darcs.fish:39
+msgid "Display unrecorded changes in the working copy"
+msgstr "Visa olagrade ändringar i arbetskopian"
+
+#: init/completions/darcs.fish:40
+msgid "Gives a changelog style summary of the repo history"
+msgstr "Ge en changelog-formaterad summering av arkivhistorik"
+
+#: init/completions/darcs.fish:41
+msgid "Remove recorded patches without changing the working copy"
+msgstr "Ta bort lagrade patchar utan att ändra arbetskopian"
+
+#: init/completions/darcs.fish:42
+msgid "Replace a recorded patch with a better version"
+msgstr "Ersätt den lagrade patchen med en bättre version"
+
+#: init/completions/darcs.fish:43
+msgid "Revert to the recorded version (safe the first time only)"
+msgstr "Backa till senaste lagrade version (Är bara säkert en gång)"
+
+#: init/completions/darcs.fish:44
+msgid "Undo the last revert (may fail if changes after the revert)"
+msgstr "Ångra senaste revert-operation (kan misslyckas om ändringar har utförts efter revert-operationen)"
+
+#: init/completions/darcs.fish:45
+msgid "Opposite of pull; unsafe if the patch is not in remote repo"
+msgstr "Motsatsen till pull, osäker om patchen inte finns i fjärrarkivet"
+
+#: init/completions/darcs.fish:46
+msgid "Record an inverse patch without changing the working copy"
+msgstr "Lagra en omvänd patch utan att ändra arbetskopian"
+
+#: init/completions/darcs.fish:47
+msgid "Tag the contents of the repository with a version name"
+msgstr "Märk innehållet i arkivet med ett versionsnummer"
+
+#: init/completions/darcs.fish:48
+msgid "Set a value for a preference (test, predist, ...)"
+msgstr "Välj ett värde för en preferens (test, predisk, ...)"
+
+#: init/completions/darcs.fish:49
+msgid "Create a diff between two versions of the repository"
+msgstr "Skappa en diff mellan två versioner i arkivet"
+
+#: init/completions/darcs.fish:50
+msgid "Display which patch last modified something"
+msgstr "Visa vilken patch som senast modifierade någonting"
+
+#: init/completions/darcs.fish:51
+msgid "Optimize the repository"
+msgstr "Optimera arkiv"
+
+#: init/completions/darcs.fish:52
+msgid "Check the repository for consistency"
+msgstr "Kontrollera arkivets konsistens"
+
+#: init/completions/darcs.fish:53
+msgid "Mark any conflicts to the working copy for manual resolution"
+msgstr "Markera konflikter mot arketskopian för manuell lösning"
+
+#: init/completions/darcs.fish:54
+msgid "Create a distribution tarball"
+msgstr "Skapa distribuerbar tarboll"
+
+#: init/completions/darcs.fish:55
+msgid "Locate the most recent version lacking an error"
+msgstr "Hitta senaste version utan ett givet fel"
+
+#: init/completions/darcs.fish:56
+msgid "Repair the corrupted repository"
+msgstr "Reparera trasigt arkiv"
+
+#: init/completions/darcs.fish:61
+msgid "Shows brief description of command and its arguments"
+msgstr "Visa kort beskrivning av underkommandon"
+
+#: init/completions/darcs.fish:62
+msgid "Disable this command"
+msgstr "Inaktivera kommando"
+
+#: init/completions/darcs.fish:63
+msgid "Specify the repository directory in which to run"
+msgstr "Specificera vilket arkiv som skall användas"
+
+#: init/completions/darcs.fish:64 init/completions/darcs.fish:149
+#: init/completions/darcs.fish:161 init/completions/darcs.fish:167
+msgid "Give verbose output"
+msgstr "Visa utförlig information"
+
+#: init/completions/darcs.fish:71
+msgid "Name of patch"
+msgstr "Namn på patch"
+
+#: init/completions/darcs.fish:72 init/completions/darcs.fish:172
+msgid "Specify author id"
+msgstr "Ange författar-id"
+
+#: init/completions/darcs.fish:73
+msgid "Give patch name and comment in file"
+msgstr "Välj patchnamn och kommentar via fil"
+
+#: init/completions/darcs.fish:74 init/completions/darcs.fish:99
+#: init/completions/darcs.fish:122 init/completions/darcs.fish:171
+#, fuzzy
+msgid "Answer yes to all patches"
+msgstr "Svara ja på alla patchar"
+
+#: init/completions/darcs.fish:75
+msgid "In addition to modifications, look for files that are not boring, and thus are potentially pending addition"
+msgstr "Förutom att lägga till ändringar, sök efter interessanta filer att lägga till arkivet"
+
+#: init/completions/darcs.fish:76
+msgid "Delete the logfile when done"
+msgstr "Radera logfil"
+
+#: init/completions/darcs.fish:77 init/completions/darcs.fish:130
+#: init/completions/darcs.fish:163
+msgid "Don't give verbose output"
+msgstr "Visa inte utförlig information"
+
+#: init/completions/darcs.fish:78 init/completions/darcs.fish:108
+#: init/completions/darcs.fish:139 init/completions/darcs.fish:154
+#, fuzzy
+msgid "Don't run the test script"
+msgstr "Kör testskript"
+
+#: init/completions/darcs.fish:79 init/completions/darcs.fish:107
+#: init/completions/darcs.fish:140 init/completions/darcs.fish:155
+msgid "Run the test script"
+msgstr "Kör testskript"
+
+#: init/completions/darcs.fish:80 init/completions/darcs.fish:142
+#: init/completions/darcs.fish:156
+msgid "Don't remove the test directory"
+msgstr "Ta inte bort testkatalog"
+
+#: init/completions/darcs.fish:81 init/completions/darcs.fish:143
+#: init/completions/darcs.fish:157
+msgid "Remove the test directory"
+msgstr "Ta bort testkatalog"
+
+#: init/completions/darcs.fish:82 init/completions/darcs.fish:105
+#: init/completions/darcs.fish:132
+msgid "Create compressed patches"
+msgstr "Skapa komprimerade patchar"
+
+#: init/completions/darcs.fish:83 init/completions/darcs.fish:106
+#: init/completions/darcs.fish:133
+msgid "Don't create compressed patches"
+msgstr "Skapa inte komprimerade patchar"
+
+#: init/completions/darcs.fish:84
+msgid "Expect to receive input from a pipe"
+msgstr "Förvänta indata från rör"
+
+#: init/completions/darcs.fish:85 init/completions/darcs.fish:104
+#: init/completions/darcs.fish:134 init/completions/darcs.fish:178
+msgid "Prompt user interactively"
+msgstr "Fråga användaren interaktivt"
+
+#: init/completions/darcs.fish:86
+msgid "Ask for extra dependencies"
+msgstr "Fråga efter extra beroenden"
+
+#: init/completions/darcs.fish:87
+msgid "Don't ask for extra dependencies"
+msgstr "Fråga inte efter extra beroenden"
+
+#: init/completions/darcs.fish:88
+msgid "Edit the long comment by default"
+msgstr "Redigera långa kommentarer som standard"
+
+#: init/completions/darcs.fish:89
+msgid "Don't give a long comment"
+msgstr "Redigera inte lång kommentar"
+
+#: init/completions/darcs.fish:90
+msgid "Prompt for whether to edit the long comment"
+msgstr "Fråga om den långa kommentaren skall redigeras"
+
+#: init/completions/darcs.fish:91 init/completions/darcs.fish:112
+#: init/completions/darcs.fish:131
+msgid "Don't trust the file modification times"
+msgstr "Lita inte på filmodifieringstid"
+
+#: init/completions/darcs.fish:92
+msgid "Don't look for any files or directories that could be added, and don't add them automatically"
+msgstr "Leta inte efter filer eller kataloger att lägga till, och lägg inte till dem automatiskt"
+
+#: init/completions/darcs.fish:97 init/completions/darcs.fish:169
+msgid "Select patches matching REGEXP"
+msgstr "Välj patchar som matchar REGEXP"
+
+#: init/completions/darcs.fish:98 init/completions/darcs.fish:170
+msgid "Select tags matching REGEXP"
+msgstr "Välj märkningar som matchar REGEXP"
+
+#: init/completions/darcs.fish:100 init/completions/darcs.fish:175
+msgid "Summarize changes"
+msgstr "Summera ändringar"
+
+#: init/completions/darcs.fish:101 init/completions/darcs.fish:150
+#: init/completions/darcs.fish:168
+msgid "Suppress informational output"
+msgstr "Tyst läge"
+
+#: init/completions/darcs.fish:102 init/completions/darcs.fish:177
+msgid "Select patches matching PATTERN"
+msgstr "Välj patchar som matchar MÖNSTER"
+
+#: init/completions/darcs.fish:103 init/completions/darcs.fish:128
+msgid "Use external tool to merge conflicts"
+msgstr "Använd externt verktyg för att hantera sammanslagningskonflikter"
+
+#: init/completions/darcs.fish:109 init/completions/darcs.fish:186
+msgid "Don't actually take the action"
+msgstr "Gör ingenting"
+
+#: init/completions/darcs.fish:110 init/completions/darcs.fish:187
+msgid "Don't summarize changes"
+msgstr "Summera inte ändringar"
+
+#: init/completions/darcs.fish:111 init/completions/darcs.fish:153
+#: init/completions/darcs.fish:176
+msgid "Neither verbose nor quiet output"
+msgstr "Varken tyst eller utförligt läge"
+
+#: init/completions/darcs.fish:113
+msgid "Don't automatically fulfill dependencies"
+msgstr "Fråga efter extra beroenden"
+
+#: init/completions/darcs.fish:114 init/completions/darcs.fish:190
+msgid "Set default repository [DEFAULT]"
+msgstr "Välj standardarkiv"
+
+#: init/completions/darcs.fish:115 init/completions/darcs.fish:191
+msgid "Don't set default repository"
+msgstr "Välj inte standardarkiv"
+
+#: init/completions/darcs.fish:116 init/completions/darcs.fish:144
+msgid "Make scripts executable"
+msgstr "Gör skript exekverbara"
+
+#: init/completions/darcs.fish:117 init/completions/darcs.fish:145
+msgid "Don't make scripts executable"
+msgstr "Gör inte skript exekverbara"
+
+#: init/completions/darcs.fish:123
+msgid "Verify that the patch was signed by a key in PUBRING"
+msgstr "Verifiera att patch är signerad från nyckel i specificerad nyckelring"
+
+#: init/completions/darcs.fish:124
+msgid "Verify using openSSL with authorized keys from file 'KEYS'"
+msgstr ""
+
+#: init/completions/darcs.fish:125 init/completions/darcs.fish:192
+#, fuzzy
+msgid "Specify sendmail command"
+msgstr "Specificera en konfigurationsfil"
+
+#: init/completions/darcs.fish:126
+msgid "Reply to email-based patch using FROM address"
+msgstr ""
+
+#: init/completions/darcs.fish:127 init/completions/darcs.fish:181
+msgid "Mail results to additional EMAIL(s). Requires --reply"
+msgstr ""
+
+#: init/completions/darcs.fish:129
+msgid "Don't verify patch signature"
+msgstr ""
+
+#: init/completions/darcs.fish:135
+msgid "Mark conflicts"
+msgstr ""
+
+#: init/completions/darcs.fish:136
+msgid "Allow conflicts, but don't mark them"
+msgstr ""
+
+#: init/completions/darcs.fish:137
+msgid "Equivalent to --dont-allow-conflicts, for backwards compatibility"
+msgstr ""
+
+#: init/completions/darcs.fish:138
+msgid "Fail on patches that create conflicts [DEFAULT]"
+msgstr ""
+
+#: init/completions/darcs.fish:141
+msgid "Forward unsigned messages without extra header"
+msgstr ""
+
+#: init/completions/darcs.fish:151
+#, fuzzy
+msgid "Check the entire repository"
+msgstr "Checka in filer till arkiv"
+
+#: init/completions/darcs.fish:152
+msgid "Check patches since latest checkpoint"
+msgstr ""
+
+#: init/completions/darcs.fish:162
+msgid "Don't refuse to add files differing only in case"
+msgstr ""
+
+#: init/completions/darcs.fish:173
+#, fuzzy
+msgid "Specify output filename"
+msgstr "Specificera inställningar"
+
+#: init/completions/darcs.fish:174
+msgid "Output patch in a darcs-specific format similar to diff -u"
+msgstr ""
+
+#: init/completions/darcs.fish:180
+#, fuzzy
+msgid "Specify destination email"
+msgstr "Hantera tangentbordsgenvägar för fish"
+
+#: init/completions/darcs.fish:182
+msgid "Sign the patch with your gpg key"
+msgstr ""
+
+#: init/completions/darcs.fish:183
+msgid "Sign the patch with a given keyid"
+msgstr ""
+
+#: init/completions/darcs.fish:184
+msgid "Sign the patch using openssl with a given private key"
+msgstr ""
+
+#: init/completions/darcs.fish:185
+#, fuzzy
+msgid "Do not sign the patch"
+msgstr "Använd inte X-användargränssnittet"
+
+#: init/completions/darcs.fish:188
+msgid "Send to context stored in FILENAME"
+msgstr ""
+
+#: init/completions/darcs.fish:189
+#, fuzzy
+msgid "Edit the patch bundle description"
+msgstr "IO dirigering till filidentifierare"
+
+#: init/completions/darcs.fish:196
+msgid "Use a plain pristine tree [DEFAULT]"
+msgstr ""
+
+#: init/completions/darcs.fish:197
+msgid "Use no pristine tree"
+msgstr ""
+
+#: init/completions/date.fish:1
+msgid "Display date described by string"
+msgstr "Visa datum specificerat i textsträng"
+
+#: init/completions/date.fish:2
+msgid "Display date for each line in file"
+msgstr "Visa datum för varje rad i fil"
+
+#: init/completions/date.fish:3
+msgid "Output in ISO 8601 format"
+msgstr "Visa datum i ISO 8601-format"
+
+#: init/completions/date.fish:4 init/completions/touch.fish:9
+msgid "Set time"
+msgstr "Sätt tid"
+
+#: init/completions/date.fish:5
+msgid "Output RFC-2822 compliant date string"
+msgstr "Visa datum i RFC-2822-format"
+
+#: init/completions/date.fish:6
+msgid "display the last modification time of file"
+msgstr "Visa senaste modiferingsdatum för fil"
+
+#: init/completions/date.fish:7 init/completions/date.fish:8
+msgid "print or set Coordinated Universal Time"
+msgstr "Visa eller välj Koordinerad universaltid (UCT)"
+
+#: init/completions/df.fish:3
+msgid "Include empty filesystems"
+msgstr "Inkludera tomma filsystem"
+
+#: init/completions/df.fish:4 init/completions/du.fish:3
+#: init/completions/tar.fish:13
+msgid "Block size"
+msgstr "Blockstorlek"
+
+#: init/completions/df.fish:5 init/completions/du.fish:7
+msgid "Human readable sizes"
+msgstr "Människoanpassade storleksangivelser, bas 1024"
+
+#: init/completions/df.fish:6 init/completions/du.fish:8
+msgid "Human readable sizes, powers of 1000"
+msgstr "Människoanpassade storleksangivelser, bas 1000"
+
+#: init/completions/df.fish:7
+msgid "List inode information"
+msgstr "Lista information om inoder"
+
+#: init/completions/df.fish:8 init/completions/du.fish:9
+msgid "Use 1kB block size"
+msgstr "Använd 1kB blockstorlek"
+
+#: init/completions/df.fish:9
+msgid "List only local filesystems"
+msgstr "Lista bara lokala filsystem"
+
+#: init/completions/df.fish:10
+msgid "Do not sync before getting usage info"
+msgstr "Synkronisera inte filsystem innan användningsinformation hämtas"
+
+#: init/completions/df.fish:11
+msgid "Use Posix format"
+msgstr "Använd Posix-format"
+
+#: init/completions/df.fish:12
+msgid "Sync before getting usage info"
+msgstr "Synkronisera filsystem innan användningsinformation hämtas"
+
+#: init/completions/df.fish:13
+msgid "Filesystem type"
+msgstr "Typ av filsystem"
+
+#: init/completions/df.fish:14
+msgid "Print filesystem type"
+msgstr "Visa filsystemtyp"
+
+#: init/completions/df.fish:15
+msgid "Excluded filesystem type"
+msgstr "Exkludera filsystemtyp"
+
+#: init/completions/diff.fish:2
+msgid "Ignore case differences"
+msgstr "Ignorera skiftläge"
+
+#: init/completions/diff.fish:3
+msgid "Ignore case when comparing file names"
+msgstr "Ignorera skiftläge på filnamn"
+
+#: init/completions/diff.fish:4
+msgid "Consider case when comparing file names"
+msgstr "Skilj på skiftläge på filnamn"
+
+#: init/completions/diff.fish:5
+msgid "Ignore changes due to tab expansion"
+msgstr "Ignorera ändringar på grund av tab expantion"
+
+#: init/completions/diff.fish:6
+msgid "Ignore changes in the amount of white space"
+msgstr "Ignorera skillnader i blanka tecken"
+
+#: init/completions/diff.fish:7
+msgid "Ignore all white space"
+msgstr "Ignorera blanka tecken"
+
+#: init/completions/diff.fish:8
+msgid "Ignore changes whose lines are all blank"
+msgstr "Ignorera ändringar vars rader enbart består av blana tecken"
+
+#: init/completions/diff.fish:9
+msgid "Ignore changes whose lines match the REGEX"
+msgstr "Ignorera ändringar som matchar REGEX"
+
+#: init/completions/diff.fish:10
+msgid "Treat all files as text"
+msgstr "Behandla alla filer som text"
+
+#: init/completions/diff.fish:11
+msgid "Recursively compare subdirectories"
+msgstr "Rekursera till underkataloger"
+
+#: init/completions/diff.fish:12
+msgid "Treat absent files as empty"
+msgstr "Behandla saknade filer som om de vore tomma"
+
+#: init/completions/diff.fish:13
+msgid "Output NUM lines of copied context"
+msgstr "Skriv ut NUM rader av kopierad sammanhang"
+
+#: init/completions/diff.fish:14
+msgid "Output 3 lines of copied context"
+msgstr "Skriv ut 3 rader av kopierad sammanhang"
+
+#: init/completions/diff.fish:15
+msgid "Output NUM lines of unified context"
+msgstr "Skriv ut NUM rader av unifieradt sammanhang"
+
+#: init/completions/diff.fish:16
+msgid "Output 3 lines of unified context"
+msgstr "Skriv ut 3 rader av unifieradt sammanhang"
+
+#: init/completions/diff.fish:17
+msgid "Output only whether the files differ"
+msgstr "Skriv bara ut huruvida filerna skiljer sig"
+
+#: init/completions/diff.fish:18
+msgid "Output a normal diff"
+msgstr "Skriv ut en vanlig diff"
+
+#: init/completions/diff.fish:19
+msgid "Output in two columns"
+msgstr "Skriv ut i två kolumner"
+
+#: init/completions/diff.fish:20
+msgid "Output at most NUM print columns"
+msgstr "Skriv ut som mest NUM kolumner"
+
+#: init/completions/diff.fish:21
+msgid "Try to find a smaller set of changes"
+msgstr "Försök hitta en mindre uppsättning ändringar"
+
+#: init/completions/diff.fish:22
+msgid "Compare FILE1 to all operands"
+msgstr "Jämför FIL1 med alla operander"
+
+#: init/completions/diff.fish:23
+msgid "Compare FILE2 to all operands"
+msgstr "Jämför FIL2 med alla operander"
+
+#: init/completions/diff.fish:24
+msgid "Pass the output through 'pr'"
+msgstr "Skicka utdata genom 'pr'"
+
+#: init/completions/du.fish:1
+msgid "Write size for all files"
+msgstr "Skriv ut storlek för alla filer"
+
+#: init/completions/du.fish:2
+msgid "Print file size, not disk usage"
+msgstr "Skriv ut filstorlek, inte använt diskutrymme"
+
+#: init/completions/du.fish:4
+msgid "Use 1B block size"
+msgstr "Använd 1B som blockstorlek"
+
+#: init/completions/du.fish:5
+msgid "Produce grand total"
+msgstr "Visa totalsumma"
+
+#: init/completions/du.fish:6
+msgid "Dereference file symlinks"
+msgstr "Följ symboliska länkar till filer"
+
+#: init/completions/du.fish:10
+msgid "Count hard links multiple times"
+msgstr "Räkna hårda länkar alla gånger de förekommer"
+
+#: init/completions/du.fish:11
+msgid "Dereference all symlinks"
+msgstr "Följ alla symboliska länkar"
+
+#: init/completions/du.fish:12
+msgid "Do not include subdirectory size"
+msgstr "Inkludera inte underkatalogers storlek"
+
+#: init/completions/du.fish:13
+msgid "Display only a total for each argument"
+msgstr "Visa bara en totalsumma för varje argument"
+
+#: init/completions/du.fish:14
+msgid "Skip other filesystems"
+msgstr "Skippa andra filsystem"
+
+#: init/completions/du.fish:15
+msgid "Exclude files thet match pattern in file"
+msgstr "Exkludera filer som matchar mönster från fil"
+
+#: init/completions/du.fish:16
+msgid "Exclude files that match pattern"
+msgstr "Exkludera filer som matchar mönster"
+
+#: init/completions/du.fish:17
+msgid "Recursion limit"
+msgstr "Rekursionsgräns"
+
+#: init/completions/echo.fish:1
+msgid "No newline"
+msgstr "Skriv ingen radbrytning"
+
+#: init/completions/echo.fish:2
+msgid "Use backslashe-escaped characters"
+msgstr "Använd omvänt snedstreck-specialsekvenser"
+
+#: init/completions/echo.fish:3
+msgid "Do not use backslash escaped characters"
+msgstr "Använd inte omvänt snedstreck-specialsekvenser"
+
+#: init/completions/emacs.fish:4
+msgid "Do not load init files"
+msgstr "LAdda inte initieringsfiler"
+
+#: init/completions/emacs.fish:5
+msgid "Load users init file"
+msgstr "Ladda användarens initieringsfiler"
+
+#: init/completions/emacs.fish:6
+msgid "Use file as terminal"
+msgstr "Användard fil som terminal"
+
+#: init/completions/emacs.fish:7
+msgid "Execute Lisp function"
+msgstr "Utför lispfunktion"
+
+#: init/completions/emacs.fish:8
+msgid "Load Lisp code from file"
+msgstr "Ladda lispfunktion från fil"
+
+#: init/completions/emacs.fish:9
+msgid "Do not use X interface"
+msgstr "Använd inte X-användargränssnittet"
+
+#: init/completions/emacs.fish:10
+msgid "Create window on the specified display"
+msgstr "Skapa fönster på specificerad skärm"
+
+#: init/completions/fish.fish:1
+msgid "Run fish with this command"
+msgstr "Utför detta kommando i fish"
+
+#: init/completions/fish.fish:4
+msgid "Run in interactive mode"
+msgstr "Kör i interaktivt läge"
+
+#: init/completions/fish.fish:5
+msgid "Output profiling information to specified file"
+msgstr "Skriv profileringsinformation till specificerad fil"
+
+#: init/completions/function.fish:1 init/completions/functions.fish:5
+msgid "Set function description"
+msgstr "Välj funktionsbeskrivning"
+
+#: init/completions/function.fish:4
+msgid "Make the function a job exit event handler"
+msgstr "Gör funktionen till en händelsehanterare för avslutade jobb"
+
+#: init/completions/function.fish:5
+msgid "Make the function a process exit event handler"
+msgstr "Gör funktionen till en händelsehanterare för avslutade processer"
+
+#: init/completions/function.fish:6
+msgid "Make the function a signal event handler"
+msgstr "Gör funktionen till en händelsehanterare för signaler"
+
+#: init/completions/function.fish:7
+msgid "Make the function a variable update event handler"
+msgstr "Gör funktionen till en händelsehanterare för variabeluppdateringar"
+
+#: init/completions/functions.fish:1
+msgid "Erase function"
+msgstr "Radera funktion"
+
+#: init/completions/functions.fish:3
+msgid "Show hidden functions"
+msgstr "Visa dolda funktioner"
+
+#: init/completions/gcc.fish:5
+msgid "Language"
+msgstr "Språk"
+
+#: init/completions/gcc.fish:23
+msgid "Pass program exit codes"
+msgstr "Skicka vidare slutstatus"
+
+#: init/completions/gcc.fish:24
+msgid "Stop after assembler"
+msgstr "Stanna efter assembler"
+
+#: init/completions/gcc.fish:25
+msgid "Stop after compile"
+msgstr "Stanna efter kompilering"
+
+#: init/completions/gcc.fish:26
+msgid "Stop after preprocesswor"
+msgstr "Stanna efter förprocessor"
+
+#: init/completions/gcc.fish:27
+msgid "Output file"
+msgstr "Utdatafil"
+
+#: init/completions/gcc.fish:28
+msgid "Print commands to stderr"
+msgstr "Skriv kommandon till standard fel"
+
+#: init/completions/gcc.fish:29
+msgid "Print quoted commands to stderr, do not run"
+msgstr "Skriv citerade kommandon till standard fel, utför dem inte"
+
+#: init/completions/gcc.fish:30
+msgid "Use pipes"
+msgstr "Använd rör"
+
+#: init/completions/gcc.fish:31
+msgid "Use ansi mode"
+msgstr "Använd ansiläge"
+
+#: init/completions/gcc.fish:32
+msgid "Standard mode"
+msgstr "Standardläge"
+
+#: init/completions/gcc.fish:46
+msgid "Write prototypes to file"
+msgstr "Skriv prototyper till fil"
+
+#: init/completions/gcc.fish:47
+msgid "Do not recognize asm, inline or typeof keywords"
+msgstr "Känn inte igen asm, inline och typeof nyckelorden"
+
+#: init/completions/gcc.fish:48
+msgid "Do not use builtin functions"
+msgstr "Använd inte inbyggda funktioner"
+
+#: init/completions/gcc.fish:49
+msgid "Assert hosted environment"
+msgstr "Försäkra värdmiljö"
+
+#: init/completions/gcc.fish:50
+msgid "Assert freestanding environment"
+msgstr "Försäkra självständig miljö"
+
+#: init/completions/gcc.fish:51
+msgid "Use Microsoft extensions"
+msgstr "Använd Microsoftförlängningar"
+
+#: init/completions/gcc.fish:52
+msgid "Use ANSI trigraphs"
+msgstr "Använd ANSI-trigrafer"
+
+#: init/completions/gcc.fish:53
+msgid "Do not use integrated preprocessor"
+msgstr "Använd inte inbyggd förprocessor"
+
+#: init/completions/gcc.fish:54
+msgid "char is unsigned"
+msgstr ""
+
+#: init/completions/gcc.fish:55
+msgid "char is signed"
+msgstr ""
+
+#: init/completions/gcc.fish:56
+msgid "bifield is unsigned"
+msgstr ""
+
+#: init/completions/gcc.fish:57
+msgid "bifield is signed"
+msgstr ""
+
+#: init/completions/gcc.fish:58
+msgid "All bifields are signed"
+msgstr ""
+
+#: init/completions/gcc.fish:59
+msgid "All bifield are signed"
+msgstr ""
+
+#: init/completions/gcc.fish:60 init/completions/gcc.fish:65
+msgid "String constants are not const"
+msgstr ""
+
+#: init/completions/gcc.fish:61
+msgid "C++ ABI version"
+msgstr ""
+
+#: init/completions/gcc.fish:62
+msgid "Turn off access checking"
+msgstr ""
+
+#: init/completions/gcc.fish:63
+msgid "Check pointer returned by new"
+msgstr ""
+
+#: init/completions/gcc.fish:64
+msgid "Put globals in the common segment"
+msgstr ""
+
+#: init/completions/gcc.fish:66
+msgid "Accept $ in identifiers"
+msgstr ""
+
+#: init/completions/gcc.fish:67
+msgid "Reject $ in identifiers"
+msgstr ""
+
+#: init/completions/gcc.fish:68
+msgid "Do not omit unneeded temporarys"
+msgstr ""
+
+#: init/completions/gcc.fish:69
+msgid "Allow exception violations"
+msgstr ""
+
+#: init/completions/gcc.fish:70
+msgid "Do not extend for-loop scope"
+msgstr "Utöka inte definitionsområde för for-loop"
+
+#: init/completions/gcc.fish:71
+msgid "Extend for-loop scope"
+msgstr "Utöka definitionsområde för for-loop"
+
+#: init/completions/gcc.fish:72
+msgid "Do not recognize typeof as keyword"
+msgstr ""
+
+#: init/completions/gcc.fish:73
+msgid "Do not emit code for implicit templates"
+msgstr ""
+
+#: init/completions/gcc.fish:74
+msgid "Do not emit code for implicit inline templates"
+msgstr ""
+
+#: init/completions/gcc.fish:75
+msgid "Do not emit out-of-line code for inline functions"
+msgstr ""
+
+#: init/completions/gcc.fish:76
+msgid "Disable warnings about MFC"
+msgstr ""
+
+#: init/completions/gcc.fish:77
+msgid "Disable some built-in functions"
+msgstr ""
+
+#: init/completions/gcc.fish:78
+msgid "Disable operator keywords"
+msgstr ""
+
+#: init/completions/gcc.fish:79
+msgid "Disable optional diagnostics"
+msgstr ""
+
+#: init/completions/gcc.fish:80
+msgid "Downgrade some errors to warnings"
+msgstr ""
+
+#: init/completions/gcc.fish:81
+msgid "Enable automatic template instantiation at link time"
+msgstr ""
+
+#: init/completions/gcc.fish:82
+msgid "Disable generation of C++ runtime type information"
+msgstr ""
+
+#: init/completions/gcc.fish:89
+msgid "Do not emit code for thread-safe initialization of local statics"
+msgstr ""
+
+#: init/completions/gcc.fish:90
+msgid "Use __cxa_atexit for destructors"
+msgstr ""
+
+#: init/completions/gcc.fish:91
+msgid "Hides inline methods from export table"
+msgstr ""
+
+#: init/completions/gcc.fish:92
+msgid "Do not use weak symbol support"
+msgstr ""
+
+#: init/completions/gprof.fish:1
+msgid "Print annotated source"
+msgstr "Skriv ut kommenterad källkod"
+
+#: init/completions/gprof.fish:2
+msgid "Do not print explanations"
+msgstr "Skriv inte ut förklaringar"
+
+#: init/completions/gprof.fish:3
+msgid "Print tally"
+msgstr "Visa sammanställning av antal funktionanrop"
+
+#: init/completions/gprof.fish:4
+msgid "Display summary"
+msgstr "Visa sammanställning"
+
+#: init/completions/gprof.fish:5
+msgid "Search directories for source"
+msgstr "Sök i specificerade kataloger efter källkod"
+
+#: init/completions/gprof.fish:6
+msgid "No annotated source"
+msgstr "Visa inte kommenterad källkod"
+
+#: init/completions/gprof.fish:7
+msgid "Print full path of source"
+msgstr "Visa full sökväg till källkod"
+
+#: init/completions/gprof.fish:8
+msgid "Print flat profile"
+msgstr "Visa platt profil"
+
+#: init/completions/gprof.fish:9
+msgid "No flat profile"
+msgstr "Visa inte platt profil"
+
+#: init/completions/gprof.fish:10
+msgid "Print call graph"
+msgstr "Visa anropsgraf"
+
+#: init/completions/gprof.fish:11
+msgid "No call graph"
+msgstr "Visa inte anropsgraf"
+
+#: init/completions/gprof.fish:12
+msgid "Annotate to file"
+msgstr "Skriv kommentarer till fil"
+
+#: init/completions/gprof.fish:13
+msgid "No tally"
+msgstr "Visa inte sammanställning av antal funktionanrop"
+
+#: init/completions/gprof.fish:14
+msgid "Suggest function ordering"
+msgstr "Föreslå funktionsordning"
+
+#: init/completions/gprof.fish:15
+msgid "Suggest file ordering"
+msgstr "Föreslå filordning"
+
+#: init/completions/gprof.fish:16
+msgid "Traditional mode"
+msgstr "Traditionellt läge"
+
+#: init/completions/gprof.fish:17
+msgid "Set width of output"
+msgstr "Välj bredd på utdata"
+
+#: init/completions/gprof.fish:18
+msgid "Anotate every line"
+msgstr "Kommentera varje rad"
+
+#: init/completions/gprof.fish:19
+msgid "Set demangling style"
+msgstr "Välj avmanglingsstil"
+
+#: init/completions/gprof.fish:20
+msgid "Turn of demangling"
+msgstr "Slå av avmangling"
+
+#: init/completions/gprof.fish:21
+msgid "Supress static functions"
+msgstr "Visa inte statiska funktioner"
+
+#: init/completions/gprof.fish:23
+msgid "Ignore symbols not known to be functions"
+msgstr "Ignorera symboler som inte är kända funktioner"
+
+#: init/completions/gprof.fish:24
+msgid "Delete arcs from callgraph"
+msgstr "Radera arker från anropsgraf"
+
+#: init/completions/gprof.fish:25
+msgid "Line by line profiling"
+msgstr "Profilera radvis"
+
+#: init/completions/gprof.fish:26
+msgid "Supress output when executed less than specified times"
+msgstr "Visa inte utdata för kod som exekverats färre gånger än specificerat antal"
+
+#: init/completions/gprof.fish:27
+msgid "Only propagate times for matching symbols"
+msgstr "Propagera bara tider för matchande symboler"
+
+#: init/completions/gprof.fish:28
+msgid "Do not propagate times for matching symbols"
+msgstr ""
+
+#: init/completions/gprof.fish:29
+msgid "Mention unused functions in flat profile"
+msgstr ""
+
+#: init/completions/gprof.fish:30
+msgid "Specify debugging options"
+msgstr ""
+
+#: init/completions/gprof.fish:31 init/completions/rpm.fish:4
+#: init/completions/who.fish:18
+#, fuzzy
+msgid "Print help and exit"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/gprof.fish:32 init/completions/rpm.fish:5
+#: init/completions/who.fish:19
+#, fuzzy
+msgid "Display version and exit and exit"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/gprof.fish:33
+msgid "Profile data format"
+msgstr ""
+
+#: init/completions/gprof.fish:34
+msgid "Print summary"
+msgstr ""
+
+#: init/completions/grep.fish:2
+msgid "Print NUM lines of trailing context"
+msgstr ""
+
+#: init/completions/grep.fish:3
+msgid "Process binary file as text"
+msgstr ""
+
+#: init/completions/grep.fish:4
+msgid "Print NUM lines of leading context"
+msgstr ""
+
+#: init/completions/grep.fish:5
+msgid "Print NUM lines of context"
+msgstr ""
+
+#: init/completions/grep.fish:6
+msgid "Print byte offset of matches"
+msgstr ""
+
+#: init/completions/grep.fish:7
+msgid "Assume data type for binary files"
+msgstr ""
+
+#: init/completions/grep.fish:10
+msgid "Only print number of matches"
+msgstr ""
+
+#: init/completions/grep.fish:11
+msgid "Action for devices"
+msgstr ""
+
+#: init/completions/grep.fish:12
+msgid "Action for directories"
+msgstr ""
+
+#: init/completions/grep.fish:13
+msgid "Pattern is extended regexp"
+msgstr ""
+
+#: init/completions/grep.fish:14
+msgid "Pattern is a regexp"
+msgstr ""
+
+#: init/completions/grep.fish:15
+msgid "Pattern is a fixed string"
+msgstr ""
+
+#: init/completions/grep.fish:16
+msgid "Use pattern from file"
+msgstr ""
+
+#: init/completions/grep.fish:17
+msgid "Pattern is basic regex"
+msgstr ""
+
+#: init/completions/grep.fish:18
+msgid "Print filename"
+msgstr ""
+
+#: init/completions/grep.fish:19
+msgid "Supress printing filename"
+msgstr ""
+
+#: init/completions/grep.fish:21
+msgid "Skip binary files"
+msgstr ""
+
+#: init/completions/grep.fish:22 init/completions/sort.fish:3
+msgid "Ignore case"
+msgstr "Ignorera skiftläge"
+
+#: init/completions/grep.fish:23
+msgid "Print first non-matching file"
+msgstr ""
+
+#: init/completions/grep.fish:24
+msgid "Print first matching file"
+msgstr ""
+
+#: init/completions/grep.fish:25
+msgid "Stop reading after NUM matches"
+msgstr ""
+
+#: init/completions/grep.fish:26
+msgid "Use the mmap system call to read input"
+msgstr ""
+
+#: init/completions/grep.fish:27
+msgid "Print linenumber"
+msgstr ""
+
+#: init/completions/grep.fish:28
+msgid "Show only matching part"
+msgstr ""
+
+#: init/completions/grep.fish:29
+msgid "Rename stdin"
+msgstr ""
+
+#: init/completions/grep.fish:30
+msgid "Use line buffering"
+msgstr ""
+
+#: init/completions/grep.fish:31 init/completions/grep.fish:32
+msgid "Do not write anything"
+msgstr ""
+
+#: init/completions/grep.fish:33 init/completions/grep.fish:34
+msgid "Read files under each directory"
+msgstr ""
+
+#: init/completions/grep.fish:35
+msgid "Recurse, search file matching PATTERN"
+msgstr ""
+
+#: init/completions/grep.fish:36
+msgid "Recurse, skip file matching PATTERN"
+msgstr ""
+
+#: init/completions/grep.fish:37
+msgid "Suppress error messages"
+msgstr ""
+
+#: init/completions/grep.fish:38
+msgid "Treat files as binary"
+msgstr ""
+
+#: init/completions/grep.fish:39
+msgid "Report Unix-style byte offsets"
+msgstr ""
+
+#: init/completions/grep.fish:40
+msgid "Print the version number"
+msgstr ""
+
+#: init/completions/grep.fish:41
+msgid "Invert the sense of matching"
+msgstr ""
+
+#: init/completions/grep.fish:42
+msgid "Only whole matching words"
+msgstr ""
+
+#: init/completions/grep.fish:43
+msgid "Only whole matching lines"
+msgstr ""
+
+#: init/completions/grep.fish:44
+msgid "Synonym for -i"
+msgstr ""
+
+#: init/completions/grep.fish:45
+msgid "Output a zero byte after filename"
+msgstr ""
+
+#: init/completions/gunzip.fish:9 init/completions/gzip.fish:11
+msgid "List compression information"
+msgstr ""
+
+#: init/completions/gunzip.fish:11 init/completions/gzip.fish:13
+msgid "Do not save/restore filename"
+msgstr ""
+
+#: init/completions/gunzip.fish:12 init/completions/gzip.fish:14
+msgid "Save/restore filename"
+msgstr ""
+
+#: init/completions/gunzip.fish:13 init/completions/gzip.fish:15
+msgid "Supress warnings"
+msgstr ""
+
+#: init/completions/gunzip.fish:14 init/completions/gzip.fish:16
+msgid "Recurse directories"
+msgstr ""
+
+#: init/completions/gunzip.fish:15 init/completions/gzip.fish:17
+msgid "Suffix"
+msgstr ""
+
+#: init/completions/gunzip.fish:17 init/completions/gzip.fish:19
+msgid "Display compression ratios"
+msgstr ""
+
+#: init/completions/gzip.fish:21
+msgid "Use fast setting"
+msgstr ""
+
+#: init/completions/gzip.fish:22
+msgid "Use high compression setting"
+msgstr ""
+
+#: init/completions/help.fish:6
+msgid "Help for the '%s' builtin"
+msgstr ""
+
+#: init/completions/help.fish:10
+#, fuzzy
+msgid "Help for the '%s' command"
+msgstr "Ändra eller visa kommandoraden"
+
+#: init/completions/help.fish:14
+msgid "Help section on %s"
+msgstr ""
+
+#: init/completions/help.fish:17
+msgid "Help on how tab-completion works"
+msgstr ""
+
+#: init/completions/help.fish:18
+msgid "Help on how job control works"
+msgstr ""
+
+#: init/completions/help.fish:19
+msgid "Summary on how fish differs from other shells"
+msgstr ""
+
+#: init/completions/help.fish:21
+#, fuzzy
+msgid "Help on how to set the prompt"
+msgstr "Skriver ut prompten"
+
+#: init/completions/help.fish:22
+msgid "Help on how to set the titlebar message"
+msgstr ""
+
+#: init/completions/help.fish:23
+msgid "Help on how to copy and paste"
+msgstr ""
+
+#: init/completions/help.fish:24
+msgid "Help on editor shortcuts"
+msgstr ""
+
+#: init/completions/help.fish:25
+#, fuzzy
+msgid "Help on environment variables"
+msgstr "Redigera miljövariabler"
+
+#: init/completions/help.fish:26
+msgid "Help on setting syntax highlighting colors"
+msgstr ""
+
+#: init/completions/help.fish:27
+msgid "Help on changing the prompt"
+msgstr ""
+
+#: init/completions/help.fish:28
+msgid "Help on changing the titlebar messages"
+msgstr ""
+
+#: init/completions/help.fish:29
+#, fuzzy
+msgid "A short summary of all builtin commands"
+msgstr "Utför ett inbyggt kommando"
+
+#: init/completions/help.fish:30
+msgid "The changelog"
+msgstr ""
+
+#: init/completions/help.fish:32 init/completions/help.fish:33
+msgid "Help on parameter expansion (Globbing)"
+msgstr ""
+
+#: init/completions/help.fish:34
+#, sh-format
+msgid "Help on variable exapantion $VARNAME"
+msgstr ""
+
+#: init/completions/help.fish:35
+msgid "Help on home directory expansion ~USER"
+msgstr ""
+
+#: init/completions/help.fish:36
+msgid "Help on brace expansion {a,b,c}"
+msgstr ""
+
+#: init/completions/help.fish:37
+msgid "Help on wildcard expansion *.*"
+msgstr ""
+
+#: init/completions/help.fish:38
+msgid "Help on command substututions (SUBCOMMAND)"
+msgstr ""
+
+#: init/completions/help.fish:39
+msgid "Help on process expansion %JOB"
+msgstr ""
+
+#: init/completions/id.fish:1
+msgid "Print effective group id"
+msgstr ""
+
+#: init/completions/id.fish:2
+msgid "Print all group ids"
+msgstr ""
+
+#: init/completions/id.fish:3
+msgid "Print name, not number"
+msgstr ""
+
+#: init/completions/id.fish:4
+msgid "Print real ID, not effective"
+msgstr ""
+
+#: init/completions/id.fish:5
+msgid "Print effective user ID"
+msgstr ""
+
+#: init/completions/ifconfig.fish:1
+#, fuzzy
+msgid "Stop interface"
+msgstr "Stanna tjänst"
+
+#: init/completions/ifconfig.fish:2
+#, fuzzy
+msgid "Start interface"
+msgstr "Starta tjänst"
+
+#: init/completions/ifconfig.fish:25
+msgid "Network interface"
+msgstr ""
+
+#: init/completions/jobs.fish:3
+msgid "Show the process id of each process in the job"
+msgstr ""
+
+#: init/completions/jobs.fish:4
+msgid "Show group id of job"
+msgstr ""
+
+#: init/completions/jobs.fish:5
+msgid "Show commandname of each job"
+msgstr ""
+
+#: init/completions/jobs.fish:6
+msgid "Show status for last be started"
+msgstr ""
+
+#: init/completions/kill.fish:34
+msgid "List names of available signals"
+msgstr ""
+
+#: init/completions/less.fish:2
+msgid "Search after end of screen"
+msgstr ""
+
+#: init/completions/less.fish:3
+msgid "Buffer space"
+msgstr ""
+
+#: init/completions/less.fish:4
+msgid "Disable automtic buffer allocation"
+msgstr ""
+
+#: init/completions/less.fish:5
+msgid "Repaint from top"
+msgstr ""
+
+#: init/completions/less.fish:6
+msgid "Clear and repaint from top"
+msgstr ""
+
+#: init/completions/less.fish:7
+msgid "Supress error for lacking terminal capability"
+msgstr ""
+
+#: init/completions/less.fish:8
+msgid "Exit on second EOF"
+msgstr ""
+
+#: init/completions/less.fish:9
+msgid "Exit on EOF"
+msgstr ""
+
+#: init/completions/less.fish:10
+msgid "Open non-regular files"
+msgstr ""
+
+#: init/completions/less.fish:11
+msgid "Quit if file shorter than one screen"
+msgstr ""
+
+#: init/completions/less.fish:12
+msgid "Hilight one search target"
+msgstr ""
+
+#: init/completions/less.fish:13
+msgid "No search highlighting"
+msgstr ""
+
+#: init/completions/less.fish:14
+msgid "Maximum backward scroll"
+msgstr ""
+
+#: init/completions/less.fish:15
+msgid "Search ignores lowercase case"
+msgstr ""
+
+#: init/completions/less.fish:16
+msgid "Search ignores all case"
+msgstr ""
+
+#: init/completions/less.fish:17
+msgid "Target line"
+msgstr ""
+
+#: init/completions/less.fish:18
+msgid "Display status column"
+msgstr ""
+
+#: init/completions/less.fish:19
+#, fuzzy
+msgid "Specify key bindings file"
+msgstr "Hantera tangentbordsgenvägar för fish"
+
+#: init/completions/less.fish:21
+msgid "Prompt with percentage"
+msgstr ""
+
+#: init/completions/less.fish:22
+msgid "Verbose prompt"
+msgstr ""
+
+#: init/completions/less.fish:23
+#, fuzzy
+msgid "Display line number"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/less.fish:24
+msgid "Display line number for each line"
+msgstr ""
+
+#: init/completions/less.fish:25
+#, fuzzy
+msgid "Log input to file"
+msgstr "IO dirigering av indata till fil"
+
+#: init/completions/less.fish:26
+msgid "Log to file, overwrite"
+msgstr ""
+
+#: init/completions/less.fish:27
+msgid "Start at first occorance of pattern"
+msgstr ""
+
+#: init/completions/less.fish:28
+msgid "Prompt string"
+msgstr ""
+
+#: init/completions/less.fish:29 init/completions/less.fish:30
+#: init/completions/sed.fish:1 init/completions/sed.fish:2
+msgid "Silent mode"
+msgstr ""
+
+#: init/completions/less.fish:31 init/completions/less.fish:32
+msgid "Completly silent mode"
+msgstr ""
+
+#: init/completions/less.fish:33
+msgid "Display control chars"
+msgstr ""
+
+#: init/completions/less.fish:34
+msgid "Display control chars, guess screen appearance"
+msgstr ""
+
+#: init/completions/less.fish:35
+msgid "Miltiple blank lines sqeezed"
+msgstr ""
+
+#: init/completions/less.fish:36
+msgid "Do not fold long lines"
+msgstr ""
+
+#: init/completions/less.fish:37
+msgid "Edit tag"
+msgstr ""
+
+#: init/completions/less.fish:38
+msgid "Set tag file"
+msgstr ""
+
+#: init/completions/less.fish:39
+msgid "Allow backspace and carriage return"
+msgstr ""
+
+#: init/completions/less.fish:40
+msgid "Allow backspace, tab and carriage return"
+msgstr ""
+
+#: init/completions/less.fish:42
+msgid "Flash first unread line on new page"
+msgstr ""
+
+#: init/completions/less.fish:43
+msgid "Flash first unread line on any movement"
+msgstr ""
+
+#: init/completions/less.fish:44
+msgid "set tab stops"
+msgstr ""
+
+#: init/completions/less.fish:45
+msgid "No termcap init"
+msgstr ""
+
+#: init/completions/less.fish:46
+msgid "No keypad init"
+msgstr ""
+
+#: init/completions/less.fish:47
+msgid "Maximum forward scroll"
+msgstr ""
+
+#: init/completions/less.fish:48
+msgid "Max scroll window"
+msgstr ""
+
+#: init/completions/less.fish:48
+msgid "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"
+msgstr ""
+
+#: init/completions/less.fish:49
+msgid "Set quote char"
+msgstr ""
+
+#: init/completions/less.fish:50
+msgid "Lines after EOF are blank"
+msgstr ""
+
+#: init/completions/less.fish:51
+msgid "Scroll on arrows"
+msgstr ""
+
+#: init/completions/ls.fish:4
+msgid "Show hidden"
+msgstr ""
+
+#: init/completions/ls.fish:5
+msgid "Show hidden except . and .."
+msgstr ""
+
+#: init/completions/ls.fish:6
+msgid "Print author"
+msgstr ""
+
+#: init/completions/ls.fish:7
+msgid "Octal escapes for non graphic"
+msgstr ""
+
+#: init/completions/ls.fish:8
+msgid "Use SIZE-byte blocks"
+msgstr ""
+
+#: init/completions/ls.fish:9
+msgid "Ignore files ending with ~"
+msgstr ""
+
+#: init/completions/ls.fish:10
+msgid "Show and sort by ctime"
+msgstr ""
+
+#: init/completions/ls.fish:11
+msgid "List by columns"
+msgstr ""
+
+#: init/completions/ls.fish:12
+msgid "Show colors"
+msgstr ""
+
+#: init/completions/ls.fish:13
+msgid "List directories"
+msgstr ""
+
+#: init/completions/ls.fish:14
+#, fuzzy
+msgid "Generate dired output"
+msgstr "Generera ett slumptal"
+
+#: init/completions/ls.fish:15 init/completions/ls.fish:66
+msgid "Do not sort"
+msgstr ""
+
+#: init/completions/ls.fish:16
+msgid "Append filetype indicator"
+msgstr ""
+
+#: init/completions/ls.fish:17
+msgid "List format"
+msgstr ""
+
+#: init/completions/ls.fish:18
+msgid "Long forma, full-iso time"
+msgstr ""
+
+#: init/completions/ls.fish:19
+msgid "Long format without owner"
+msgstr ""
+
+#: init/completions/ls.fish:20
+#, fuzzy
+msgid "Do not print group information"
+msgstr "Kunde inte hitta information om användare"
+
+#: init/completions/ls.fish:21
+msgid "Human readable size"
+msgstr ""
+
+#: init/completions/ls.fish:22
+msgid "Human readable size, base 1000"
+msgstr ""
+
+#: init/completions/ls.fish:23 init/completions/ls.fish:30
+msgid "Follow symlinks"
+msgstr ""
+
+#: init/completions/ls.fish:25
+msgid "Append indicator to entry"
+msgstr ""
+
+#: init/completions/ls.fish:26
+msgid "Print index number of files"
+msgstr ""
+
+#: init/completions/ls.fish:27
+msgid "Skip entries matching pattern"
+msgstr ""
+
+#: init/completions/ls.fish:28
+msgid "like --block-size=1K"
+msgstr ""
+
+#: init/completions/ls.fish:29 init/completions/ps.fish:25
+msgid "Long format"
+msgstr ""
+
+#: init/completions/ls.fish:31
+msgid "Comma separated format"
+msgstr ""
+
+#: init/completions/ls.fish:32
+msgid "Long format, numeric IDs"
+msgstr ""
+
+#: init/completions/ls.fish:33
+msgid "Print raw entry names"
+msgstr ""
+
+#: init/completions/ls.fish:34
+msgid "Long format without groups"
+msgstr ""
+
+#: init/completions/ls.fish:35
+msgid "Append indicator"
+msgstr ""
+
+#: init/completions/ls.fish:36
+msgid "? fo non graphic"
+msgstr ""
+
+#: init/completions/ls.fish:37
+msgid "Non graphic as-is"
+msgstr ""
+
+#: init/completions/ls.fish:38
+msgid "Enclose entry in quotes"
+msgstr ""
+
+#: init/completions/ls.fish:39
+msgid "Select quoting style"
+msgstr ""
+
+#: init/completions/ls.fish:40
+msgid "Reverse sort order"
+msgstr ""
+
+#: init/completions/ls.fish:41
+msgid "List subdirectory recursively"
+msgstr ""
+
+#: init/completions/ls.fish:42
+msgid "Print size of files"
+msgstr ""
+
+#: init/completions/ls.fish:43
+msgid "Sort by size"
+msgstr ""
+
+#: init/completions/ls.fish:44
+msgid "Sort criteria"
+msgstr ""
+
+#: init/completions/ls.fish:55
+msgid "Show time type"
+msgstr ""
+
+#: init/completions/ls.fish:62
+msgid "Select time style"
+msgstr ""
+
+#: init/completions/ls.fish:63
+msgid "Sort by modification time"
+msgstr ""
+
+#: init/completions/ls.fish:64
+msgid "Assume tab stops at each COLS"
+msgstr ""
+
+#: init/completions/ls.fish:65
+msgid "Show access time"
+msgstr ""
+
+#: init/completions/ls.fish:67
+msgid "Sort by version"
+msgstr ""
+
+#: init/completions/ls.fish:68
+msgid "Assume screen width"
+msgstr ""
+
+#: init/completions/ls.fish:69
+msgid "List entries by lines"
+msgstr ""
+
+#: init/completions/ls.fish:70
+msgid "sort by extension"
+msgstr ""
+
+#: init/completions/ls.fish:71
+msgid "List one file per line"
+msgstr ""
+
+#: init/completions/makedepend.fish:1
+#, fuzzy
+msgid "Define"
+msgstr "fil"
+
+#: init/completions/makedepend.fish:2
+#, fuzzy
+msgid "Include directory"
+msgstr "Ogiltig IO dirigering"
+
+#: init/completions/makedepend.fish:3
+msgid "Replace include directories"
+msgstr ""
+
+#: init/completions/makedepend.fish:4
+#, fuzzy
+msgid "Append dependencies to makefile"
+msgstr "IO dirigering till slutet av fil"
+
+#: init/completions/makedepend.fish:5
+msgid "Specify makefile"
+msgstr ""
+
+#: init/completions/makedepend.fish:6
+msgid "Prepend file to input"
+msgstr ""
+
+#: init/completions/makedepend.fish:7
+msgid "Object file suffix"
+msgstr ""
+
+#: init/completions/makedepend.fish:8
+msgid "Object file prefix"
+msgstr ""
+
+#: init/completions/makedepend.fish:9
+msgid "Starting string delimiter"
+msgstr ""
+
+#: init/completions/makedepend.fish:10
+msgid "Line width"
+msgstr ""
+
+#: init/completions/makedepend.fish:12
+msgid "Warn about multiple inclusion"
+msgstr ""
+
+#: init/completions/make.fish:5
+msgid ":"
+msgstr ""
+
+#: init/completions/make.fish:8
+msgid "Target"
+msgstr ""
+
+#: init/completions/make.fish:9
+msgid "Use file as makefile"
+msgstr ""
+
+#: init/completions/make.fish:10 init/completions/tar.fish:15
+#, fuzzy
+msgid "Change directory"
+msgstr "Ändra nuvarande katalog"
+
+#: init/completions/make.fish:11 init/completions/man.fish:52
+msgid "Debug"
+msgstr ""
+
+#: init/completions/make.fish:12
+msgid "Environment before makefile"
+msgstr ""
+
+#: init/completions/make.fish:13
+msgid "Ignore errors"
+msgstr ""
+
+#: init/completions/make.fish:14
+msgid "Search directory for Makefile"
+msgstr ""
+
+#: init/completions/make.fish:15
+msgid "Number of jobs"
+msgstr ""
+
+#: init/completions/make.fish:16
+msgid "Continue after an error"
+msgstr ""
+
+#: init/completions/make.fish:17
+msgid "Start when load drops"
+msgstr ""
+
+#: init/completions/make.fish:18
+#, fuzzy
+msgid "Do not execute commands"
+msgstr "Utför ett kommando om ett villkor är uppfyllt"
+
+#: init/completions/make.fish:19
+msgid "Ignore specified file"
+msgstr ""
+
+#: init/completions/make.fish:20
+msgid "Print database"
+msgstr ""
+
+#: init/completions/make.fish:21
+msgid "Question mode"
+msgstr ""
+
+#: init/completions/make.fish:22
+msgid "Eliminate implicit rules"
+msgstr ""
+
+#: init/completions/make.fish:23
+msgid "Silent operation"
+msgstr ""
+
+#: init/completions/make.fish:24
+msgid "Cancel the effect of -k"
+msgstr ""
+
+#: init/completions/make.fish:25
+msgid "Touch files, dont run commands"
+msgstr ""
+
+#: init/completions/make.fish:27
+#, fuzzy
+msgid "Print working directory"
+msgstr "Ändra nuvarande katalog"
+
+#: init/completions/make.fish:28
+msgid "Pretend file is modified"
+msgstr ""
+
+#: init/completions/man.fish:32
+msgid "Program section"
+msgstr ""
+
+#: init/completions/man.fish:33
+msgid "Syscall section"
+msgstr ""
+
+#: init/completions/man.fish:34
+msgid "Library section"
+msgstr ""
+
+#: init/completions/man.fish:35
+#, fuzzy
+msgid "Device section"
+msgstr "Definera ny funktion"
+
+#: init/completions/man.fish:36
+msgid "File format section"
+msgstr ""
+
+#: init/completions/man.fish:37
+msgid "Games section"
+msgstr ""
+
+#: init/completions/man.fish:38
+msgid "Misc section"
+msgstr ""
+
+#: init/completions/man.fish:39
+msgid "Admin section"
+msgstr ""
+
+#: init/completions/man.fish:40
+msgid "Kernel section"
+msgstr ""
+
+#: init/completions/man.fish:41
+msgid "Tcl section"
+msgstr ""
+
+#: init/completions/man.fish:42
+msgid "New section"
+msgstr ""
+
+#: init/completions/man.fish:43
+msgid "Local section"
+msgstr ""
+
+#: init/completions/man.fish:45
+#, fuzzy
+msgid "Old section"
+msgstr "Ogiltig IO dirigering"
+
+#: init/completions/man.fish:46 init/completions/modprobe.fish:7
+#: init/completions/ssh.fish:12 init/completions/yum.fish:51
+msgid "Configuration file"
+msgstr ""
+
+#: init/completions/man.fish:47
+msgid "Manpath"
+msgstr ""
+
+#: init/completions/man.fish:48
+#, fuzzy
+msgid "Pager"
+msgstr "Paket"
+
+#: init/completions/man.fish:49
+msgid "Manual sections"
+msgstr ""
+
+#: init/completions/man.fish:50
+#, fuzzy
+msgid "Display all matches"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/man.fish:51
+msgid "Always reformat"
+msgstr ""
+
+#: init/completions/man.fish:53
+msgid "Debug and run"
+msgstr ""
+
+#: init/completions/man.fish:54
+msgid "Whatis"
+msgstr ""
+
+#: init/completions/man.fish:55
+msgid "Format only"
+msgstr ""
+
+#: init/completions/man.fish:57
+msgid "Apropos"
+msgstr ""
+
+#: init/completions/man.fish:58
+msgid "Search in all man pages"
+msgstr ""
+
+#: init/completions/man.fish:59
+msgid "Set system"
+msgstr ""
+
+#: init/completions/man.fish:60
+msgid "Preprocessors"
+msgstr ""
+
+#: init/completions/man.fish:61
+msgid "Format for printing"
+msgstr ""
+
+#: init/completions/man.fish:62 init/completions/man.fish:63
+msgid "Only print locations"
+msgstr ""
+
+#: init/completions/mimedb.fish:1
+msgid "Input is a file, use name and contents to determine mimetype"
+msgstr ""
+
+#: init/completions/mimedb.fish:2
+msgid "Input is a file, use name to determine mimetype"
+msgstr ""
+
+#: init/completions/mimedb.fish:3
+msgid "Input is a mimetype"
+msgstr ""
+
+#: init/completions/mimedb.fish:4
+msgid "Output mimetype"
+msgstr ""
+
+#: init/completions/mimedb.fish:5
+msgid "Output description of mimetype"
+msgstr ""
+
+#: init/completions/mimedb.fish:6
+msgid "Output default action for mimetype"
+msgstr ""
+
+#: init/completions/mimedb.fish:7
+msgid "Launch default action for each file"
+msgstr ""
+
+#: init/completions/modprobe.fish:6
+msgid "Print messages about what the program is doing"
+msgstr ""
+
+#: init/completions/modprobe.fish:8
+msgid "Dump configuration file"
+msgstr ""
+
+#: init/completions/modprobe.fish:9
+msgid "Do not actually insert/remove module"
+msgstr ""
+
+#: init/completions/modprobe.fish:10 init/completions/modprobe.fish:11
+msgid "Ignore install and remove commands in configuration file"
+msgstr ""
+
+#: init/completions/modprobe.fish:12
+msgid "Ignore bogus module names"
+msgstr ""
+
+#: init/completions/modprobe.fish:13
+msgid "Remove modules"
+msgstr ""
+
+#: init/completions/modprobe.fish:15
+#, fuzzy
+msgid "Ignore all version information"
+msgstr "Kunde inte hitta information om användare"
+
+#: init/completions/modprobe.fish:16
+msgid "Ignore version magic information"
+msgstr ""
+
+#: init/completions/modprobe.fish:17
+msgid "Ignore module interface version"
+msgstr ""
+
+#: init/completions/modprobe.fish:18
+msgid "List all modules matching the given wildcard"
+msgstr ""
+
+#: init/completions/modprobe.fish:19
+msgid "Insert modules matching the given wildcard"
+msgstr ""
+
+#: init/completions/modprobe.fish:20
+msgid "Restrict wildcards to specified directory"
+msgstr ""
+
+#: init/completions/modprobe.fish:21
+msgid "Send error messages through syslog"
+msgstr ""
+
+#: init/completions/modprobe.fish:22
+msgid "Specify kernel version"
+msgstr ""
+
+#: init/completions/modprobe.fish:23
+msgid "List dependencies of module"
+msgstr ""
+
+#: init/completions/modprobe.fish:24
+msgid "Rename module"
+msgstr ""
+
+#: init/completions/modprobe.fish:25
+msgid "Fail if inserting already loaded module"
+msgstr ""
+
+#: init/completions/mount.fish:49
+msgid "Mount filesystems in fstab"
+msgstr ""
+
+#: init/completions/mount.fish:50
+msgid "Fork process for each mount"
+msgstr ""
+
+#: init/completions/mount.fish:51
+msgid "Fake mounting"
+msgstr ""
+
+#: init/completions/mount.fish:52
+msgid "Add label to output"
+msgstr ""
+
+#: init/completions/mount.fish:53
+msgid "Do not write mtab"
+msgstr ""
+
+#: init/completions/mount.fish:54
+msgid "Tolerate sloppy mount options"
+msgstr ""
+
+#: init/completions/mount.fish:55
+msgid "Read only"
+msgstr ""
+
+#: init/completions/mount.fish:56
+msgid "Read/Write mode"
+msgstr ""
+
+#: init/completions/mount.fish:57
+msgid "Mount partition with specified label"
+msgstr ""
+
+#: init/completions/mount.fish:58
+msgid "Mount partition with specified UID"
+msgstr ""
+
+#: init/completions/mount.fish:59
+msgid "Exclude filesystems"
+msgstr ""
+
+#: init/completions/mount.fish:60
+msgid "Remount a subtree to a second position"
+msgstr ""
+
+#: init/completions/mount.fish:61
+msgid "Move a subtree to a new position"
+msgstr ""
+
+#: init/completions/mount.fish:62
+msgid "Filesystem"
+msgstr ""
+
+#: init/completions/mount.fish:64
+msgid "Mount option"
+msgstr ""
+
+#: init/completions/mplayer.fish:27
+msgid "Dynamically change postprocessing"
+msgstr ""
+
+#: init/completions/mplayer.fish:28
+msgid "A/V sync speed"
+msgstr ""
+
+#: init/completions/mplayer.fish:29 init/completions/mplayer.fish:31
+msgid "Skip frames to maintain A/V sync"
+msgstr ""
+
+#: init/completions/mplayer.fish:30
+#, fuzzy
+msgid "Show help and exit"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/mplayer.fish:32
+msgid "Loop playback"
+msgstr ""
+
+#: init/completions/mplayer.fish:33
+msgid "Play in random order"
+msgstr ""
+
+#: init/completions/mplayer.fish:36
+msgid "Full screen"
+msgstr ""
+
+#: init/completions/mplayer.fish:37
+msgid "Set playlist"
+msgstr ""
+
+#: init/completions/mplayer.fish:38
+msgid "Audio language"
+msgstr ""
+
+#: init/completions/mplayer.fish:39
+msgid "Play audio from file"
+msgstr ""
+
+#: init/completions/mplayer.fish:40
+msgid "Set default CD-ROM drive"
+msgstr ""
+
+#: init/completions/mplayer.fish:41
+msgid "Set number of audio channels"
+msgstr ""
+
+#: init/completions/mplayer.fish:42
+msgid "Set start chapter"
+msgstr ""
+
+#: init/completions/mplayer.fish:43
+msgid "Set default DVD-ROM drive"
+msgstr ""
+
+#: init/completions/mplayer.fish:44
+msgid "Set dvd viewing angle"
+msgstr ""
+
+#: init/completions/mplayer.fish:45
+msgid "Force rebuilding index"
+msgstr ""
+
+#: init/completions/mplayer.fish:46
+msgid "Override framerate"
+msgstr ""
+
+#: init/completions/mplayer.fish:47
+#, fuzzy
+msgid "Rebuild index if unavailable"
+msgstr "Läs in en rad till en variabel"
+
+#: init/completions/mplayer.fish:48
+msgid "Load index from file"
+msgstr ""
+
+#: init/completions/mplayer.fish:49
+msgid "Force non-interleaved AVI parser"
+msgstr ""
+
+#: init/completions/mplayer.fish:50
+msgid "Rebuild index and save to file"
+msgstr ""
+
+#: init/completions/mplayer.fish:51
+msgid "Seek to give time position"
+msgstr ""
+
+#: init/completions/mplayer.fish:52
+msgid "TV capture mode"
+msgstr ""
+
+#: init/completions/mplayer.fish:53
+msgid "Subtitle language"
+msgstr ""
+
+#: init/completions/mplayer.fish:54
+msgid "Subtitle file"
+msgstr ""
+
+#: init/completions/mplayer.fish:55
+msgid "Handle subtitlefile as unicode"
+msgstr ""
+
+#: init/completions/mplayer.fish:56
+msgid "Handle subtitlefile as utf8"
+msgstr ""
+
+#: init/completions/mplayer.fish:58 init/completions/mplayer.fish:76
+msgid "Video output"
+msgstr ""
+
+#: init/completions/mplayer.fish:64 init/completions/mplayer.fish:70
+msgid "Audio output"
+msgstr ""
+
+#: init/completions/mv.fish:1
+msgid "Make backup of each existing destination file"
+msgstr ""
+
+#: init/completions/mv.fish:2
+msgid "Do not prompt before overwriting"
+msgstr ""
+
+#: init/completions/mv.fish:3
+msgid "Prompt before overwrite"
+msgstr ""
+
+#: init/completions/mv.fish:4
+msgid "Answer for overwrite questions"
+msgstr ""
+
+#: init/completions/mv.fish:5
+msgid "Remove trailing slashes from source"
+msgstr ""
+
+#: init/completions/mv.fish:6
+msgid "Backup suffix"
+msgstr ""
+
+#: init/completions/mv.fish:7
+#, fuzzy
+msgid "Target directory"
+msgstr "Ändra nuvarande katalog"
+
+#: init/completions/mv.fish:8
+msgid "Do not overwrite newer files"
+msgstr ""
+
+#: init/completions/mv.fish:9 init/completions/rmdir.fish:5
+#: init/completions/rm.fish:7
+msgid "Explain what is done"
+msgstr ""
+
+#: init/completions/nextd.fish:1 init/completions/prevd.fish:1
+msgid "Also print directory history"
+msgstr ""
+
+#: init/completions/nice.fish:2
+msgid "Increment priority by specified number first"
+msgstr ""
+
+#: init/completions/perl.fish:1 init/completions/ruby.fish:2
+msgid "Specify record separator"
+msgstr ""
+
+#: init/completions/perl.fish:2 init/completions/ruby.fish:3
+#, fuzzy
+msgid "Feed input to split"
+msgstr "IO dirigering av indata till fil"
+
+#: init/completions/perl.fish:3 init/completions/ruby.fish:4
+msgid "Check syntax"
+msgstr ""
+
+#: init/completions/perl.fish:4 init/completions/ruby.fish:6
+msgid "Debugger"
+msgstr ""
+
+#: init/completions/perl.fish:5
+msgid "Debug option"
+msgstr ""
+
+#: init/completions/perl.fish:6 init/completions/ruby.fish:7
+#, fuzzy
+msgid "Execute command"
+msgstr "Processkommando"
+
+#: init/completions/perl.fish:7 init/completions/ruby.fish:9
+msgid "Set regexp used to split input"
+msgstr ""
+
+#: init/completions/perl.fish:8 init/completions/ruby.fish:10
+msgid "Edit files in-place"
+msgstr ""
+
+#: init/completions/perl.fish:9 init/completions/ruby.fish:11
+msgid "Include path"
+msgstr ""
+
+#: init/completions/perl.fish:10 init/completions/ruby.fish:12
+msgid "Line ending processing"
+msgstr ""
+
+#: init/completions/perl.fish:11 init/completions/ruby.fish:13
+msgid "Loop script"
+msgstr ""
+
+#: init/completions/perl.fish:12 init/completions/ruby.fish:14
+#, sh-format
+msgid "Loop script, print $_"
+msgstr ""
+
+#: init/completions/perl.fish:13
+msgid "Invoke CPP"
+msgstr ""
+
+#: init/completions/perl.fish:14 init/completions/ruby.fish:16
+msgid "Define custom switches"
+msgstr ""
+
+#: init/completions/perl.fish:15 init/completions/ruby.fish:17
+#, sh-format
+msgid "Search $PATH for script"
+msgstr ""
+
+#: init/completions/perl.fish:16 init/completions/ruby.fish:18
+msgid "Taint checking"
+msgstr ""
+
+#: init/completions/perl.fish:17
+#, fuzzy
+msgid "Unsafe mode"
+msgstr "Hemkatalog"
+
+#: init/completions/perl.fish:19 init/completions/ruby.fish:22
+msgid "Extract script"
+msgstr ""
+
+#: init/completions/pine.fish:1
+msgid "Open folder"
+msgstr ""
+
+#: init/completions/pine.fish:2
+#, fuzzy
+msgid "Open file"
+msgstr "fil"
+
+#: init/completions/pine.fish:4
+msgid "Start in folder index"
+msgstr ""
+
+#: init/completions/pine.fish:5
+msgid "Initial set of keystrokes"
+msgstr ""
+
+#: init/completions/pine.fish:6
+msgid "Use function keys for commands"
+msgstr ""
+
+#: init/completions/pine.fish:7
+msgid "Expand collections in FOLDER LIST display"
+msgstr ""
+
+#: init/completions/pine.fish:8
+msgid "Start with specified current message number"
+msgstr ""
+
+#: init/completions/pine.fish:9
+msgid "Open folder read-only"
+msgstr ""
+
+#: init/completions/pine.fish:10
+#, fuzzy
+msgid "Set configuration file"
+msgstr "Ladda om konfiguration för tjänst"
+
+#: init/completions/pine.fish:11
+#, fuzzy
+msgid "Set global configuration file"
+msgstr "Ladda om konfiguration för tjänst"
+
+#: init/completions/pine.fish:12
+msgid "Restricted mode"
+msgstr ""
+
+#: init/completions/pine.fish:13
+msgid "Enable suspention support"
+msgstr ""
+
+#: init/completions/pine.fish:14
+msgid "Produce a sample global configuration file"
+msgstr ""
+
+#: init/completions/pine.fish:15
+#, fuzzy
+msgid "Produce sample configuration file"
+msgstr "Ladda om konfiguration för tjänst"
+
+#: init/completions/pine.fish:16
+msgid "Set mail sort order"
+msgstr ""
+
+#: init/completions/pine.fish:26
+msgid "Config option"
+msgstr ""
+
+#: init/completions/ping.fish:2
+msgid "Audible ping"
+msgstr ""
+
+#: init/completions/ping.fish:3
+msgid "Adaptive ping"
+msgstr ""
+
+#: init/completions/ping.fish:4
+msgid "Allow pinging a broadcast address"
+msgstr ""
+
+#: init/completions/ping.fish:5
+msgid "Do not allow ping to change source address of probes"
+msgstr ""
+
+#: init/completions/ping.fish:6
+msgid "Stop after sending count ECHO_REQUEST packets"
+msgstr ""
+
+#: init/completions/ping.fish:7
+msgid "Set the SO_DEBUG option on the socket being used"
+msgstr ""
+
+#: init/completions/ping.fish:8
+msgid "Allocate and set 20 bit flow label on echo request packets"
+msgstr ""
+
+#: init/completions/ping.fish:9
+msgid "Flood ping"
+msgstr ""
+
+#: init/completions/ping.fish:10
+msgid "Wait  interval  seconds  between sending each packet"
+msgstr ""
+
+#: init/completions/ping.fish:11
+msgid "Set source address to specified interface address"
+msgstr ""
+
+#: init/completions/ping.fish:12
+msgid "If preload is specified, ping sends that many packets not waiting for reply"
+msgstr ""
+
+#: init/completions/ping.fish:13
+msgid "Suppress loopback of multicast packets"
+msgstr ""
+
+#: init/completions/ping.fish:14
+#, fuzzy
+msgid "Numeric output only"
+msgstr "IO dirigering till fil"
+
+#: init/completions/ping.fish:15
+msgid "You may specify up to 16 'pad' bytes to fill out the packet you send"
+msgstr ""
+
+#: init/completions/ping.fish:16
+msgid "Set Quality of Service -related bits in ICMP datagrams"
+msgstr ""
+
+#: init/completions/ping.fish:18
+msgid "Record route"
+msgstr ""
+
+#: init/completions/ping.fish:19
+msgid "Bypass  the  normal routing tables and send directly to a host on an attached interface"
+msgstr ""
+
+#: init/completions/ping.fish:20
+msgid "Specifies  the  number of data bytes to be sent"
+msgstr ""
+
+#: init/completions/ping.fish:21
+#, fuzzy
+msgid "Set socket sndbuf"
+msgstr "Viktig socket-situation"
+
+#: init/completions/ping.fish:22
+msgid "Set the IP Time to Live"
+msgstr ""
+
+#: init/completions/ping.fish:23
+msgid "Set special IP timestamp options"
+msgstr ""
+
+#: init/completions/ping.fish:24
+msgid "Select  Path  MTU  Discovery  strategy"
+msgstr ""
+
+#: init/completions/ping.fish:25
+msgid "Print full user-to-user latency"
+msgstr ""
+
+#: init/completions/ping.fish:26
+msgid "Verbose output"
+msgstr ""
+
+#: init/completions/ping.fish:27
+msgid "Show version and exit"
+msgstr ""
+
+#: init/completions/ping.fish:28
+msgid "Specify  a timeout, in seconds, before ping exits regardless of how many packets have been sent or received"
+msgstr ""
+
+#: init/completions/ping.fish:29
+msgid "Time to wait for a response, in seconds"
+msgstr ""
+
+#: init/completions/ps.fish:3 init/completions/ps.fish:7
+msgid "Select all"
+msgstr ""
+
+#: init/completions/ps.fish:4
+#, fuzzy
+msgid "Invert selection"
+msgstr "Ogiltig IO dirigering"
+
+#: init/completions/ps.fish:5
+msgid "Select all processes except session leaders and terminal-less"
+msgstr ""
+
+#: init/completions/ps.fish:6
+msgid "Select all processes except session leaders"
+msgstr ""
+
+#: init/completions/ps.fish:8
+msgid "Deselect all processes that do not fulfill conditions"
+msgstr ""
+
+#: init/completions/ps.fish:10
+#, fuzzy
+msgid "Select by command"
+msgstr "Jobb kommando"
+
+#: init/completions/ps.fish:11
+msgid "Select by group"
+msgstr ""
+
+#: init/completions/ps.fish:13 init/completions/ps.fish:14
+msgid "Select by user"
+msgstr ""
+
+#: init/completions/ps.fish:15
+msgid "Select by group/session"
+msgstr ""
+
+#: init/completions/ps.fish:16
+msgid "Select by PID"
+msgstr ""
+
+#: init/completions/ps.fish:17
+msgid "Select by parent PID"
+msgstr ""
+
+#: init/completions/ps.fish:18
+msgid "Select by session ID"
+msgstr ""
+
+#: init/completions/ps.fish:19
+msgid "Select by tty"
+msgstr ""
+
+#: init/completions/ps.fish:20
+msgid "Extra full format"
+msgstr ""
+
+#: init/completions/ps.fish:21 init/completions/ps.fish:26
+#, fuzzy
+msgid "User defined format"
+msgstr "Användardefinerad signal 2"
+
+#: init/completions/ps.fish:22
+msgid "Add column for security data"
+msgstr ""
+
+#: init/completions/ps.fish:23
+msgid "Full format"
+msgstr ""
+
+#: init/completions/ps.fish:24
+#, fuzzy
+msgid "Jobs format"
+msgstr "Jobb kommando"
+
+#: init/completions/ps.fish:27
+msgid "Do not show flags"
+msgstr ""
+
+#: init/completions/ps.fish:28
+msgid "Display security context format"
+msgstr ""
+
+#: init/completions/ps.fish:29
+msgid "Show hierarchy"
+msgstr ""
+
+#: init/completions/ps.fish:30
+msgid "Set namelist file"
+msgstr ""
+
+#: init/completions/ps.fish:31
+msgid "Wide output"
+msgstr ""
+
+#: init/completions/ps.fish:32 init/completions/ps.fish:33
+msgid "Show threads"
+msgstr ""
+
+#: init/completions/ps.fish:34
+#, fuzzy
+msgid "Display vesrion and exit"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/ps.fish:36
+msgid "Display debugging info"
+msgstr ""
+
+#: init/completions/python.fish:1
+msgid "Execute argument as command"
+msgstr ""
+
+#: init/completions/python.fish:2
+msgid "Debug on"
+msgstr ""
+
+#: init/completions/python.fish:3
+#, fuzzy
+msgid "Ignore environment variables"
+msgstr "Redigera miljövariabler"
+
+#: init/completions/python.fish:5
+msgid "Interactive mode after executing commands"
+msgstr ""
+
+#: init/completions/python.fish:6
+msgid "Enable optimizations"
+msgstr ""
+
+#: init/completions/python.fish:7
+msgid "Division control"
+msgstr ""
+
+#: init/completions/python.fish:8
+msgid "Disable import of site module"
+msgstr ""
+
+#: init/completions/python.fish:9
+msgid "Warn on mixed tabs and spaces"
+msgstr ""
+
+#: init/completions/python.fish:10
+msgid "Unbuffered inputg and output"
+msgstr ""
+
+#: init/completions/python.fish:13
+msgid "Warning control"
+msgstr ""
+
+#: init/completions/python.fish:14
+msgid "Skip first line of input"
+msgstr ""
+
+#: init/completions/read.fish:2
+#, fuzzy
+msgid "Set prompt command"
+msgstr "Ändra eller visa kommandoraden"
+
+#: init/completions/read.fish:3 init/completions/set.fish:5
+msgid "Export variable to subprocess"
+msgstr ""
+
+#: init/completions/read.fish:4 init/completions/set.fish:7
+msgid "Make variable scope global"
+msgstr "Globalt definitionsområde"
+
+#: init/completions/read.fish:5 init/completions/set.fish:8
+msgid "Make variable scope local"
+msgstr "Lokalt defintionsområde"
+
+#: init/completions/read.fish:6 init/completions/set.fish:6
+msgid "Do not export variable to subprocess"
+msgstr "Exportera inte variabel till barnprocesser"
+
+#: init/completions/renice.fish:2
+msgid "Force following parameters to be process ID's (The default)"
+msgstr ""
+
+#: init/completions/renice.fish:3
+msgid "Force following parameters to be interpreted as process group ID's"
+msgstr ""
+
+#: init/completions/renice.fish:4
+msgid "Force following parameters to be interpreted as user names"
+msgstr ""
+
+#: init/completions/rmdir.fish:3
+msgid "Ignore errors from non-empty directories"
+msgstr ""
+
+#: init/completions/rmdir.fish:4
+msgid "Remove each component of path"
+msgstr ""
+
+#: init/completions/rm.fish:2
+msgid "Unlink directory (Only by superuser)"
+msgstr ""
+
+#: init/completions/rm.fish:3
+msgid "Never prompt before removal"
+msgstr ""
+
+#: init/completions/rm.fish:4
+msgid "Prompt before removal"
+msgstr ""
+
+#: init/completions/rm.fish:5 init/completions/rm.fish:6
+msgid "Remove content of subdirectories"
+msgstr ""
+
+#: init/completions/rpm.fish:7
+msgid "Be more verbose"
+msgstr ""
+
+#: init/completions/rpm.fish:8
+#, fuzzy
+msgid "List of rpm configuration files"
+msgstr "Visa och ta bort funktioner"
+
+#: init/completions/rpm.fish:9
+msgid "Pipe output through specified command"
+msgstr "Filtrera utdata genom specificerat kommando"
+
+#: init/completions/rpm.fish:10
+msgid "Specify directory for rpm database"
+msgstr ""
+
+#: init/completions/rpm.fish:15
+msgid "Specify root directory for rpm operations"
+msgstr ""
+
+#: init/completions/rpm.fish:22 init/completions/rpm.fish:25
+msgid "Add suggested packages to the transaction set when needed"
+msgstr ""
+
+#: init/completions/rpm.fish:23
+msgid "Installs or upgrades all the missing ok files in the package, regardless if they exist"
+msgstr ""
+
+#: init/completions/rpm.fish:24
+msgid "Used with --relocate, permit relocations on all file paths, not just those OLD-PATH's included in the binary package relocation hint(s)"
+msgstr ""
+
+#: init/completions/rpm.fish:26
+msgid "Installs or upgrades all the missingok files in the package, regardless if they exist"
+msgstr ""
+
+#: init/completions/rpm.fish:27
+msgid "Used with --relocate, permit relocations on all file paths, not just those OLD-PATHs"
+msgstr ""
+
+#: init/completions/ruby.fish:5
+msgid "Kanji code-set"
+msgstr ""
+
+#: init/completions/ruby.fish:8
+#, fuzzy
+msgid "Display help"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/ruby.fish:15
+msgid "Require file"
+msgstr ""
+
+#: init/completions/ruby.fish:20
+msgid "Verbose mode without message"
+msgstr ""
+
+#: init/completions/ruby.fish:24
+msgid "Compiler debug mode"
+msgstr ""
+
+#: init/completions/scp.fish:28 init/completions/top.fish:2
+msgid "Batch mode"
+msgstr ""
+
+#: init/completions/scp.fish:29
+msgid "Bandwidth limit"
+msgstr ""
+
+#: init/completions/scp.fish:30 init/completions/ssh.fish:97
+#, fuzzy
+msgid "Port"
+msgstr "Avbrott"
+
+#: init/completions/scp.fish:31
+msgid "Preserves modification times, access times, and modes from the original file"
+msgstr ""
+
+#: init/completions/scp.fish:32
+msgid "Disable progress meter"
+msgstr ""
+
+#: init/completions/scp.fish:33
+msgid "Recursively copy"
+msgstr ""
+
+#: init/completions/scp.fish:34
+#, fuzzy
+msgid "Encyption program"
+msgstr "Kör ett program"
+
+#: init/completions/screen.fish:1
+msgid "Print a list of running screen sessions"
+msgstr ""
+
+#: init/completions/sed.fish:3
+msgid "Evaluate expression"
+msgstr "Utför argument som kommandon"
+
+#: init/completions/sed.fish:4
+#, fuzzy
+msgid "Evalute file"
+msgstr "Utför filinnehåll som kommandon"
+
+#: init/completions/sed.fish:5
+msgid "Edit files in place"
+msgstr ""
+
+#: init/completions/sed.fish:6
+msgid "Specify line-length"
+msgstr ""
+
+#: init/completions/sed.fish:7
+msgid "Disable all GNU extensions"
+msgstr ""
+
+#: init/completions/sed.fish:8
+msgid "Use extended regexp"
+msgstr ""
+
+#: init/completions/sed.fish:9
+msgid "Consider files as separate"
+msgstr ""
+
+#: init/completions/sed.fish:10
+msgid "Use minimal IO buffers"
+msgstr ""
+
+#: init/completions/service.fish:3
+#, fuzzy
+msgid "Service name"
+msgstr "Processnamn"
+
+#: init/completions/set_color.fish:1 init/completions/set.fish:46
+msgid "Color"
+msgstr ""
+
+#: init/completions/set_color.fish:2
+msgid "Change background color"
+msgstr ""
+
+#: init/completions/set_color.fish:3
+msgid "Make font bold"
+msgstr ""
+
+#: init/completions/set.fish:4
+msgid "Erase variable"
+msgstr ""
+
+#: init/completions/set.fish:9
+msgid "Make variable scope universal, i.e. shared between all fish terminals"
+msgstr ""
+
+#: init/completions/set.fish:10
+msgid "Test if variable is defined"
+msgstr ""
+
+#: init/completions/sort.fish:1
+msgid "Ignore leading blanks"
+msgstr ""
+
+#: init/completions/sort.fish:2
+msgid "Consider only blanks and alphanumerics"
+msgstr ""
+
+#: init/completions/sort.fish:4
+msgid "Compare general numeric value"
+msgstr ""
+
+#: init/completions/sort.fish:5
+msgid "Consider only printable"
+msgstr ""
+
+#: init/completions/sort.fish:6
+msgid "Compare month names"
+msgstr ""
+
+#: init/completions/sort.fish:7
+msgid "Compare string numerical value"
+msgstr ""
+
+#: init/completions/sort.fish:8
+msgid "Reverse results"
+msgstr ""
+
+#: init/completions/sort.fish:9
+msgid "Only check if sorted"
+msgstr ""
+
+#: init/completions/sort.fish:10
+msgid "Define key"
+msgstr ""
+
+#: init/completions/sort.fish:11
+msgid "Merge sorted files"
+msgstr ""
+
+#: init/completions/sort.fish:12
+#, fuzzy
+msgid "Write to file"
+msgstr "IO dirigering av indata till fil"
+
+#: init/completions/sort.fish:13
+msgid "Stabilize sort"
+msgstr ""
+
+#: init/completions/sort.fish:14
+msgid "Set main memory buffer"
+msgstr ""
+
+#: init/completions/sort.fish:15
+msgid "Field separator"
+msgstr ""
+
+#: init/completions/sort.fish:16
+msgid "Set temporary directory"
+msgstr ""
+
+#: init/completions/sort.fish:17
+msgid "Output only first of equal lines"
+msgstr ""
+
+#: init/completions/sort.fish:18
+msgid "Lines end with 0 byte"
+msgstr ""
+
+#: init/completions/ssh.fish:6
+msgid "Protocall version 1 only"
+msgstr ""
+
+#: init/completions/ssh.fish:7
+msgid "Protocall version 2 only"
+msgstr ""
+
+#: init/completions/ssh.fish:8
+msgid "IPv4 addresses only"
+msgstr ""
+
+#: init/completions/ssh.fish:9
+msgid "IPv6 addresses only"
+msgstr ""
+
+#: init/completions/ssh.fish:10
+msgid "Compress all data"
+msgstr ""
+
+#: init/completions/ssh.fish:11
+msgid "Encryption algorithm"
+msgstr ""
+
+#: init/completions/ssh.fish:13
+msgid "Identity file"
+msgstr ""
+
+#: init/completions/ssh.fish:14
+msgid "Options"
+msgstr ""
+
+#: init/completions/ssh.fish:80
+msgid "Disables forwarding of the authentication agent"
+msgstr ""
+
+#: init/completions/ssh.fish:81
+msgid "Enables forwarding of the authentication agent"
+msgstr ""
+
+#: init/completions/ssh.fish:82
+msgid "Interface to transmit from"
+msgstr ""
+
+#: init/completions/ssh.fish:88
+msgid "Escape character"
+msgstr ""
+
+#: init/completions/ssh.fish:89
+#, fuzzy
+msgid "Go to background"
+msgstr "Skicka jobb till bakgrunden"
+
+#: init/completions/ssh.fish:90
+msgid "Allow remote host to connect to local forwarded ports"
+msgstr ""
+
+#: init/completions/ssh.fish:91
+#, fuzzy
+msgid "Smartcard device"
+msgstr "Starta tjänst"
+
+#: init/completions/ssh.fish:92
+msgid "Disable forwarding of Kerberos tickets"
+msgstr ""
+
+#: init/completions/ssh.fish:93
+#, fuzzy
+msgid "User"
+msgstr "Hemkatalog"
+
+#: init/completions/ssh.fish:94
+msgid "MAC algorithm"
+msgstr ""
+
+#: init/completions/ssh.fish:95
+msgid "Prevent reading from stdin"
+msgstr ""
+
+#: init/completions/ssh.fish:96
+#, fuzzy
+msgid "Do not execute remote command"
+msgstr "Utför ett kommando om ett villkor är uppfyllt"
+
+#: init/completions/ssh.fish:99
+msgid "Subsystem"
+msgstr ""
+
+#: init/completions/ssh.fish:100
+msgid "Force pseudo-tty allocation"
+msgstr ""
+
+#: init/completions/ssh.fish:101
+msgid "Disable pseudo-tty allocation"
+msgstr ""
+
+#: init/completions/ssh.fish:102
+msgid "Disable X11 forwarding"
+msgstr ""
+
+#: init/completions/ssh.fish:103
+msgid "Enable X11 forwarding"
+msgstr ""
+
+#: init/completions/ssh.fish:104
+msgid "Locally forwarded ports"
+msgstr ""
+
+#: init/completions/ssh.fish:105
+msgid "Remotely forwarded ports"
+msgstr ""
+
+#: init/completions/ssh.fish:106
+msgid "Dynamic port forwarding"
+msgstr ""
+
+#: init/completions/su.fish:4
+msgid "Make login shell"
+msgstr ""
+
+#: init/completions/su.fish:5
+#, fuzzy
+msgid "Pass command to shell"
+msgstr "Processkommando"
+
+#: init/completions/su.fish:6
+#, fuzzy
+msgid "Pass -f to the shell"
+msgstr "Avsluta fish"
+
+#: init/completions/su.fish:7 init/completions/su.fish:8
+msgid "Preserve environment"
+msgstr ""
+
+#: init/completions/tar.fish:1 init/completions/tar.fish:2
+msgid "Append archive to archive"
+msgstr ""
+
+#: init/completions/tar.fish:3
+msgid "Create archive"
+msgstr ""
+
+#: init/completions/tar.fish:4 init/completions/tar.fish:5
+msgid "Compare archive and filesystem"
+msgstr ""
+
+#: init/completions/tar.fish:6
+msgid "Delete from archive"
+msgstr ""
+
+#: init/completions/tar.fish:7
+msgid "Append files to archive"
+msgstr ""
+
+#: init/completions/tar.fish:8
+msgid "List archive"
+msgstr ""
+
+#: init/completions/tar.fish:9
+#, fuzzy
+msgid "Append new files"
+msgstr "IO dirigering till slutet av fil"
+
+#: init/completions/tar.fish:10 init/completions/tar.fish:11
+msgid "Extract from archive"
+msgstr ""
+
+#: init/completions/tar.fish:12
+msgid "Keep access time"
+msgstr ""
+
+#: init/completions/tar.fish:14
+#, fuzzy
+msgid "Reblock while reading"
+msgstr "Ett fel inträffade medan kommandon lästes in"
+
+#: init/completions/tar.fish:16
+msgid "Print directory names"
+msgstr ""
+
+#: init/completions/tar.fish:17
+msgid "Archive file"
+msgstr ""
+
+#: init/completions/tar.fish:18
+msgid "Archive is local"
+msgstr ""
+
+#: init/completions/tar.fish:19
+msgid "Run script at end of tape"
+msgstr ""
+
+#: init/completions/tar.fish:20
+msgid "Use old incremental GNU format"
+msgstr ""
+
+#: init/completions/tar.fish:21
+msgid "Use new incremental GNU format"
+msgstr ""
+
+#: init/completions/tar.fish:22
+msgid "Derefrerence symlinks"
+msgstr ""
+
+#: init/completions/tar.fish:23
+msgid "Ignore zero bloch in archive"
+msgstr ""
+
+#: init/completions/tar.fish:24
+msgid "Filter through bzip2"
+msgstr ""
+
+#: init/completions/tar.fish:25
+msgid "Dont exit on unreadable files"
+msgstr ""
+
+#: init/completions/tar.fish:27
+msgid "Starting file in archive"
+msgstr ""
+
+#: init/completions/tar.fish:28
+msgid "Stay in local filesystem"
+msgstr ""
+
+#: init/completions/tar.fish:29
+msgid "Tape length"
+msgstr ""
+
+#: init/completions/tar.fish:30
+msgid "Dont extract modification time"
+msgstr ""
+
+#: init/completions/tar.fish:31
+msgid "Multi volume archive"
+msgstr ""
+
+#: init/completions/tar.fish:32
+msgid "Only store newer files"
+msgstr ""
+
+#: init/completions/tar.fish:33 init/completions/tar.fish:34
+msgid "Use V7 format"
+msgstr ""
+
+#: init/completions/tar.fish:35
+msgid "Extract to stdout"
+msgstr ""
+
+#: init/completions/tar.fish:36 init/completions/tar.fish:37
+msgid "Extract all permissions"
+msgstr ""
+
+#: init/completions/tar.fish:38
+msgid "Dont strip leading /"
+msgstr ""
+
+#: init/completions/tar.fish:39
+msgid "Preserve all permissions and do not sort file arguments"
+msgstr ""
+
+#: init/completions/tar.fish:40
+msgid "Show record number"
+msgstr ""
+
+#: init/completions/tar.fish:41
+msgid "Remove files after adding to archive"
+msgstr ""
+
+#: init/completions/tar.fish:42 init/completions/tar.fish:43
+msgid "Do not sort file arguments"
+msgstr ""
+
+#: init/completions/tar.fish:44
+msgid "Preserve file ownership"
+msgstr ""
+
+#: init/completions/tar.fish:45
+msgid "Handle sparse files"
+msgstr ""
+
+#: init/completions/tar.fish:46
+msgid "Extract file from file"
+msgstr ""
+
+#: init/completions/tar.fish:47
+msgid "-T has null-terminated names"
+msgstr ""
+
+#: init/completions/tar.fish:48
+msgid "Print total bytes written"
+msgstr ""
+
+#: init/completions/tar.fish:49
+msgid "Vorbose mode"
+msgstr ""
+
+#: init/completions/tar.fish:50
+msgid "Set volume name"
+msgstr ""
+
+#: init/completions/tar.fish:52 init/completions/tar.fish:53
+msgid "Ask for confirmation"
+msgstr ""
+
+#: init/completions/tar.fish:54
+msgid "Verify archive"
+msgstr ""
+
+#: init/completions/tar.fish:55
+msgid "Exclude file"
+msgstr ""
+
+#: init/completions/tar.fish:56
+msgid "Exclude files listed in specified file"
+msgstr ""
+
+#: init/completions/tar.fish:57 init/completions/tar.fish:58
+msgid "Filter through compress"
+msgstr ""
+
+#: init/completions/tar.fish:59 init/completions/tar.fish:60
+msgid "Filter through gzip"
+msgstr ""
+
+#: init/completions/tar.fish:61
+msgid "Filter through specified program"
+msgstr ""
+
+#: init/completions/test.fish:4
+msgid "Negate expression"
+msgstr ""
+
+#: init/completions/test.fish:5
+msgid "Logical and"
+msgstr ""
+
+#: init/completions/test.fish:6
+msgid "Logical or"
+msgstr ""
+
+#: init/completions/test.fish:7
+msgid "String length is non-zero"
+msgstr ""
+
+#: init/completions/test.fish:8
+msgid "String length is zero"
+msgstr ""
+
+#: init/completions/test.fish:9
+msgid "Strings are equal"
+msgstr ""
+
+#: init/completions/test.fish:10
+msgid "Strings are not equal"
+msgstr ""
+
+#: init/completions/test.fish:11
+msgid "Integers are equal"
+msgstr ""
+
+#: init/completions/test.fish:12
+msgid "Left integer larger than or equal to right integer"
+msgstr ""
+
+#: init/completions/test.fish:13
+msgid "Left integer larger than right integer"
+msgstr ""
+
+#: init/completions/test.fish:14
+msgid "Left integer less than or equal to right integer"
+msgstr ""
+
+#: init/completions/test.fish:15
+msgid "Left integer less than right integer"
+msgstr ""
+
+#: init/completions/test.fish:16
+msgid "Left integer not equal to right integer"
+msgstr ""
+
+#: init/completions/test.fish:17
+msgid "Left file equal to right file"
+msgstr ""
+
+#: init/completions/test.fish:18
+msgid "Left file newer than right file"
+msgstr ""
+
+#: init/completions/test.fish:19
+msgid "Left file older than right file"
+msgstr ""
+
+#: init/completions/test.fish:20
+#, fuzzy
+msgid "File is block device"
+msgstr "Blockenhet"
+
+#: init/completions/test.fish:21
+#, fuzzy
+msgid "File is character device"
+msgstr "Teckenenhet"
+
+#: init/completions/test.fish:22
+#, fuzzy
+msgid "File is directory"
+msgstr "Ändra nuvarande katalog"
+
+#: init/completions/test.fish:23
+msgid "File exists"
+msgstr ""
+
+#: init/completions/test.fish:24
+msgid "File is regular"
+msgstr ""
+
+#: init/completions/test.fish:25
+msgid "File is set-group-ID"
+msgstr ""
+
+#: init/completions/test.fish:26 init/completions/test.fish:29
+msgid "File is symlink"
+msgstr ""
+
+#: init/completions/test.fish:27
+msgid "File owned by effective group ID"
+msgstr ""
+
+#: init/completions/test.fish:28
+msgid "File has sticky bit set"
+msgstr ""
+
+#: init/completions/test.fish:30
+msgid "File owned by effective user ID"
+msgstr ""
+
+#: init/completions/test.fish:31
+msgid "File is named pipe"
+msgstr ""
+
+#: init/completions/test.fish:32
+msgid "File is readable"
+msgstr ""
+
+#: init/completions/test.fish:33
+msgid "File size is non-zero"
+msgstr ""
+
+#: init/completions/test.fish:34
+msgid "File is socket"
+msgstr ""
+
+#: init/completions/test.fish:35
+msgid "FD is terminal"
+msgstr ""
+
+#: init/completions/test.fish:36
+msgid "File set-user-ID bit is set"
+msgstr ""
+
+#: init/completions/test.fish:37
+msgid "File is writable"
+msgstr ""
+
+#: init/completions/test.fish:38
+#, fuzzy
+msgid "File is executable"
+msgstr "Program"
+
+#: init/completions/tokenize.fish:1
+msgid "Allow empty tokens"
+msgstr ""
+
+#: init/completions/tokenize.fish:2
+msgid "Ignore empty tokens"
+msgstr ""
+
+#: init/completions/tokenize.fish:3
+msgid "Delimiters for tokenization"
+msgstr ""
+
+#: init/completions/top.fish:3
+msgid "Toggle command line/program name"
+msgstr ""
+
+#: init/completions/top.fish:4
+msgid "Update interval"
+msgstr ""
+
+#: init/completions/top.fish:6
+msgid "Toggle idle processes"
+msgstr ""
+
+#: init/completions/top.fish:7
+msgid "Maximium iterations"
+msgstr ""
+
+#: init/completions/top.fish:8
+msgid "Monitor effective UID"
+msgstr ""
+
+#: init/completions/top.fish:9
+msgid "Monitor user"
+msgstr ""
+
+#: init/completions/top.fish:10
+msgid "Monitor PID"
+msgstr ""
+
+#: init/completions/top.fish:11
+msgid "Secure mode"
+msgstr ""
+
+#: init/completions/top.fish:12
+msgid "Cumulative mode"
+msgstr ""
+
+#: init/completions/touch.fish:1
+msgid "Change access time"
+msgstr ""
+
+#: init/completions/touch.fish:2
+msgid "Set date back"
+msgstr ""
+
+#: init/completions/touch.fish:3
+msgid "Do not create file"
+msgstr ""
+
+#: init/completions/touch.fish:4 init/completions/touch.fish:8
+msgid "Set date"
+msgstr ""
+
+#: init/completions/touch.fish:5
+msgid "Set date forward"
+msgstr ""
+
+#: init/completions/touch.fish:6
+msgid "Change modification time"
+msgstr ""
+
+#: init/completions/touch.fish:7
+msgid "Use this files times"
+msgstr ""
+
+#: init/completions/touch.fish:11
+#, fuzzy
+msgid "Display version nd exit"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/trap.fish:2
+msgid "Display names of all signals"
+msgstr ""
+
+#: init/completions/trap.fish:3
+msgid "Display all currently defined trap handlers"
+msgstr ""
+
+#: init/completions/type.fish:2
+msgid "Print this message"
+msgstr ""
+
+#: init/completions/type.fish:3
+msgid "Print all possible definitions of the specified name"
+msgstr ""
+
+#: init/completions/type.fish:4
+#, fuzzy
+msgid "Supress function and builtin lookup"
+msgstr "funktionsdefinition-block"
+
+#: init/completions/type.fish:5
+#, fuzzy
+msgid "Print command type"
+msgstr "Processkommando"
+
+#: init/completions/type.fish:6
+msgid "Print path to command, or nothing if name is not a command"
+msgstr ""
+
+#: init/completions/type.fish:7
+#, fuzzy
+msgid "Print path to command"
+msgstr "Slut på kommando"
+
+#: init/completions/ulimit.fish:2
+#, fuzzy
+msgid "Set or get all current limits"
+msgstr "Visa eller redigera skalets resursanvändningsgränser"
+
+#: init/completions/ulimit.fish:3
+#, fuzzy
+msgid "Maximum size of core files created"
+msgstr "Maximalt antal nästade block har uppnåtts."
+
+#: init/completions/ulimit.fish:4
+msgid "Maximum size of a process's data segment"
+msgstr ""
+
+#: init/completions/ulimit.fish:5
+msgid "Maximum size of files created by the shell"
+msgstr ""
+
+#: init/completions/ulimit.fish:6
+msgid "Maximum size that may be locked into memory"
+msgstr ""
+
+#: init/completions/ulimit.fish:7
+msgid "Maximum resident set size"
+msgstr ""
+
+#: init/completions/ulimit.fish:8
+#, fuzzy
+msgid "Maximum number of open file descriptors"
+msgstr "Maximalt antal nästade block har uppnåtts."
+
+#: init/completions/ulimit.fish:9
+msgid "Maximum stack size"
+msgstr ""
+
+#: init/completions/ulimit.fish:10
+msgid "Maximum amount of cpu time in seconds"
+msgstr ""
+
+#: init/completions/ulimit.fish:11
+msgid "Maximum number of processes available to a single user"
+msgstr ""
+
+#: init/completions/ulimit.fish:12
+msgid "Maximum amount of virtual memory available to the shell"
+msgstr ""
+
+#: init/completions/umount.fish:18
+msgid "Unmount without writing in /etc/mtab"
+msgstr ""
+
+#: init/completions/umount.fish:19
+msgid "In case unmounting fails, try to remount read-only"
+msgstr ""
+
+#: init/completions/umount.fish:20
+msgid "In case the unmounted device was a loop device, also free this loop device"
+msgstr ""
+
+#: init/completions/umount.fish:21
+msgid "Don't call the /sbin/umount.<filesystem> helper even if it exists"
+msgstr ""
+
+#: init/completions/umount.fish:22
+msgid "All of the file systems described in /etc/mtab are unmounted"
+msgstr ""
+
+#: init/completions/umount.fish:23
+msgid "Actions should only be taken on file systems of the specified type"
+msgstr ""
+
+#: init/completions/umount.fish:24
+msgid "Indicate  that  the  actions should only be taken on file systems with the specified options in /etc/fstab"
+msgstr ""
+
+#: init/completions/umount.fish:25
+msgid "Force unmount (in case of an unreachable NFS system)"
+msgstr ""
+
+#: init/completions/umount.fish:26
+msgid "Detach the filesystem from the filesystem hierarchy now, and cleanup all references to the filesystem as soon as it is not busy"
+msgstr ""
+
+#: init/completions/uname.fish:1
+msgid "Print all"
+msgstr ""
+
+#: init/completions/uname.fish:2
+msgid "Print kernel name"
+msgstr ""
+
+#: init/completions/uname.fish:3
+msgid "Print network node hostname"
+msgstr ""
+
+#: init/completions/uname.fish:4
+#, fuzzy
+msgid "Print kernel release"
+msgstr "Visa status för tjänst"
+
+#: init/completions/uname.fish:5
+msgid "Print kernel version"
+msgstr ""
+
+#: init/completions/uname.fish:6
+#, fuzzy
+msgid "Print machine name"
+msgstr "Processnamn"
+
+#: init/completions/uname.fish:7
+msgid "Print procssor"
+msgstr ""
+
+#: init/completions/uname.fish:8
+msgid "Print harware platform"
+msgstr ""
+
+#: init/completions/uname.fish:9
+msgid "Print operating system"
+msgstr ""
+
+#: init/completions/uname.fish:10
+msgid "Print help"
+msgstr ""
+
+#: init/completions/uniq.fish:1
+msgid "Print number of occurences"
+msgstr ""
+
+#: init/completions/uniq.fish:2
+msgid "Only print duplicates"
+msgstr ""
+
+#: init/completions/uniq.fish:3
+msgid "Remove non-suplicate lines"
+msgstr ""
+
+#: init/completions/uniq.fish:8
+msgid "Avoid comparing first N fields"
+msgstr ""
+
+#: init/completions/uniq.fish:9
+msgid "Case insensitive"
+msgstr ""
+
+#: init/completions/uniq.fish:10
+msgid "Avoid comparing first N characters"
+msgstr ""
+
+#: init/completions/uniq.fish:11
+msgid "Only print unique lines"
+msgstr ""
+
+#: init/completions/uniq.fish:12
+msgid "Compare only N characters"
+msgstr ""
+
+#: init/completions/valgrind.fish:12
+#, fuzzy
+msgid "Skin"
+msgstr "Textsträng"
+
+#: init/completions/valgrind.fish:25
+#, fuzzy
+msgid "Display help and debug options"
+msgstr "Visa hjälp och avsluta"
+
+#: init/completions/valgrind.fish:27
+msgid "Run silently"
+msgstr ""
+
+#: init/completions/valgrind.fish:29
+msgid "Valgrind-ise children"
+msgstr ""
+
+#: init/completions/valgrind.fish:30
+#, fuzzy
+msgid "Track file descriptors"
+msgstr "IO dirigering till filidentifierare"
+
+#: init/completions/valgrind.fish:31
+#, fuzzy
+msgid "Log to file descriptor"
+msgstr "IO dirigering till filidentifierare"
+
+#: init/completions/valgrind.fish:32
+msgid "Log to file"
+msgstr ""
+
+#: init/completions/valgrind.fish:33
+msgid "Log to socket"
+msgstr ""
+
+#: init/completions/valgrind.fish:35
+msgid "Callers in stack trace"
+msgstr ""
+
+#: init/completions/valgrind.fish:36
+msgid "Stop showing errors if too many"
+msgstr ""
+
+#: init/completions/valgrind.fish:37
+msgid "Continue trace below main()"
+msgstr ""
+
+#: init/completions/valgrind.fish:38
+msgid "Supress errors from file"
+msgstr ""
+
+#: init/completions/valgrind.fish:39
+msgid "Print suppressions for detected errors"
+msgstr ""
+
+#: init/completions/valgrind.fish:40
+msgid "Start debugger on error"
+msgstr ""
+
+#: init/completions/valgrind.fish:41
+#, fuzzy
+msgid "Debugger command"
+msgstr "Jobb kommando"
+
+#: init/completions/valgrind.fish:42
+msgid "File descriptor for input"
+msgstr ""
+
+#: init/completions/valgrind.fish:46 init/completions/valgrind.fish:55
+msgid "Check for memory leaks"
+msgstr ""
+
+#: init/completions/valgrind.fish:47 init/completions/valgrind.fish:56
+msgid "Show reachable leaked memory"
+msgstr ""
+
+#: init/completions/valgrind.fish:48
+msgid "Determines how willing Memcheck is to consider different backtraces to be the same"
+msgstr ""
+
+#: init/completions/valgrind.fish:49 init/completions/valgrind.fish:58
+msgid "Set size of freed memory pool"
+msgstr ""
+
+#: init/completions/valgrind.fish:57
+msgid "Determines how willing Addrcheck is to consider different backtraces to be the same"
+msgstr ""
+
+#: init/completions/valgrind.fish:63
+msgid "Type of L1 instruction cache"
+msgstr ""
+
+#: init/completions/valgrind.fish:64
+msgid "Type of L1 data cache"
+msgstr ""
+
+#: init/completions/valgrind.fish:65
+msgid "Type of L2 cache"
+msgstr ""
+
+#: init/completions/valgrind.fish:69
+msgid "Specify a function that allocates memory"
+msgstr ""
+
+#: init/completions/valgrind.fish:71
+msgid "The number of bytes of heap overhead per allocation"
+msgstr ""
+
+#: init/completions/valgrind.fish:72
+msgid "Profile stack usage"
+msgstr ""
+
+#: init/completions/valgrind.fish:73
+msgid "Depth of call chain"
+msgstr ""
+
+#: init/completions/valgrind.fish:74
+msgid "Profiling output format"
+msgstr ""
+
+#: init/completions/wc.fish:1
+msgid "Print byte counts"
+msgstr ""
+
+#: init/completions/wc.fish:2
+msgid "Print character counts"
+msgstr ""
+
+#: init/completions/wc.fish:3
+#, fuzzy
+msgid "Print newline counts"
+msgstr "Visa status för tjänst"
+
+#: init/completions/wc.fish:4
+msgid "Print length of longest line"
+msgstr ""
+
+#: init/completions/wc.fish:5
+msgid "Print word counts"
+msgstr ""
+
+#: init/completions/w.fish:1
+msgid "Dont print header"
+msgstr ""
+
+#: init/completions/w.fish:2
+msgid "Ignore username for time calculations"
+msgstr ""
+
+#: init/completions/w.fish:3
+msgid "Short format"
+msgstr ""
+
+#: init/completions/w.fish:4
+msgid "Toggle printing of remote hostname"
+msgstr ""
+
+#: init/completions/wget.fish:7
+msgid "Go to background immediately after startup"
+msgstr ""
+
+#: init/completions/wget.fish:8
+#, fuzzy
+msgid "Execute command as if part of .wgetrc"
+msgstr "Utför ett kommando om föregående kommando misslyckades"
+
+#: init/completions/wget.fish:9
+msgid "Log all messages to logfile"
+msgstr ""
+
+#: init/completions/wget.fish:10
+msgid "Append all messages to logfile"
+msgstr ""
+
+#: init/completions/wget.fish:11
+msgid "Turn on debug output"
+msgstr ""
+
+#: init/completions/wget.fish:12
+msgid "Turn off Wget's output"
+msgstr ""
+
+#: init/completions/wget.fish:13
+msgid "Turn on verbose output"
+msgstr ""
+
+#: init/completions/wget.fish:14 init/completions/wget.fish:15
+msgid "Turn off verbose without being completely quiet"
+msgstr ""
+
+#: init/completions/wget.fish:16
+msgid "Read URLs from file"
+msgstr ""
+
+#: init/completions/wget.fish:17
+msgid "Force input to be treated as HTML"
+msgstr ""
+
+#: init/completions/wget.fish:18
+msgid "Prepend string to relative links"
+msgstr ""
+
+#: init/completions/wget.fish:19
+msgid "Bind address on local machine"
+msgstr ""
+
+#: init/completions/wget.fish:20
+msgid "Set number of retries to number"
+msgstr ""
+
+#: init/completions/wget.fish:21
+#, fuzzy
+msgid "Concatenate output to file"
+msgstr "IO dirigering till slutet av fil"
+
+#: init/completions/wget.fish:22 init/completions/wget.fish:23
+msgid "Never overwrite files with same name"
+msgstr ""
+
+#: init/completions/wget.fish:24
+msgid "Continue getting a partially-downloaded file"
+msgstr ""
+
+#: init/completions/wget.fish:25
+msgid "Select progress meter type"
+msgstr ""
+
+#: init/completions/wget.fish:32
+msgid "Turn on time-stamping"
+msgstr ""
+
+#: init/completions/wget.fish:33
+msgid "Print the headers/responses sent by servers"
+msgstr ""
+
+#: init/completions/wget.fish:34
+msgid "Do not download the pages, just check that they are there"
+msgstr ""
+
+#: init/completions/wget.fish:35
+msgid "Set the network timeout"
+msgstr ""
+
+#: init/completions/wget.fish:36
+msgid "Set the DNS lookup timeout"
+msgstr ""
+
+#: init/completions/wget.fish:37
+msgid "Set the connect timeout"
+msgstr ""
+
+#: init/completions/wget.fish:38
+msgid "Set the read (and write) timeout"
+msgstr ""
+
+#: init/completions/wget.fish:39
+msgid "Limit the download speed"
+msgstr ""
+
+#: init/completions/wget.fish:40
+msgid "Wait the specified number of seconds between the retrievals"
+msgstr ""
+
+#: init/completions/wget.fish:41
+msgid "Wait time between retries"
+msgstr ""
+
+#: init/completions/wget.fish:42
+msgid "Wait random amount of time between retrievals"
+msgstr ""
+
+#: init/completions/wget.fish:43
+msgid "Toggle proxy support"
+msgstr ""
+
+#: init/completions/wget.fish:44
+msgid "Specify download quota for automatic retrievals"
+msgstr ""
+
+#: init/completions/wget.fish:45
+msgid "Turn off caching of DNS lookups"
+msgstr ""
+
+#: init/completions/wget.fish:46
+msgid "Change which characters found in remote URLs may show up in local file names"
+msgstr ""
+
+#: init/completions/wget.fish:53 init/completions/wget.fish:54
+msgid "Do not create a hierarchy of directories"
+msgstr ""
+
+#: init/completions/wget.fish:55
+msgid "Force creation of a hierarchy of directories"
+msgstr ""
+
+#: init/completions/wget.fish:56 init/completions/wget.fish:57
+msgid "Disable generation of host-prefixed directories"
+msgstr ""
+
+#: init/completions/wget.fish:58
+msgid "Use the protocol name as a directory component"
+msgstr ""
+
+#: init/completions/wget.fish:59
+msgid "Ignore specified number of directory components"
+msgstr ""
+
+#: init/completions/wget.fish:60
+msgid "Set directory prefix"
+msgstr ""
+
+#: init/completions/wget.fish:61
+msgid "Force html files to have html extension"
+msgstr ""
+
+#: init/completions/wget.fish:62
+msgid "Specify the http username"
+msgstr ""
+
+#: init/completions/wget.fish:63
+msgid "Specify the http password"
+msgstr ""
+
+#: init/completions/wget.fish:64
+msgid "Disable server-side cache"
+msgstr ""
+
+#: init/completions/wget.fish:65
+msgid "Disable the use of cookies"
+msgstr ""
+
+#: init/completions/wget.fish:66
+msgid "Load cookies from file"
+msgstr ""
+
+#: init/completions/wget.fish:67
+#, fuzzy
+msgid "Save cookies to file"
+msgstr "Utför filinnehåll som kommandon"
+
+#: init/completions/wget.fish:68
+msgid "Save session cookies"
+msgstr ""
+
+#: init/completions/wget.fish:69
+msgid "Ignore 'Content-Length' header"
+msgstr ""
+
+#: init/completions/wget.fish:70
+msgid "Define an additional-header to be passed to the HTTP servers"
+msgstr ""
+
+#: init/completions/wget.fish:71
+msgid "Specify the proxy username"
+msgstr ""
+
+#: init/completions/wget.fish:72
+msgid "Specify the proxy password"
+msgstr ""
+
+#: init/completions/wget.fish:73
+msgid "Set referer URL"
+msgstr ""
+
+#: init/completions/wget.fish:74
+msgid "Save the headers sent by the HTTP server"
+msgstr ""
+
+#: init/completions/wget.fish:75
+msgid "Identify as agent-string"
+msgstr ""
+
+#: init/completions/wget.fish:76 init/completions/wget.fish:77
+msgid "Use POST as the method for all HTTP requests and send the specified data in the request body"
+msgstr ""
+
+#: init/completions/wget.fish:78
+msgid "Turn off keep-alive for http downloads"
+msgstr ""
+
+#: init/completions/wget.fish:82
+msgid "Don't remove the temporary .listing files generated"
+msgstr ""
+
+#: init/completions/wget.fish:83
+msgid "Turn off FTP globbing"
+msgstr ""
+
+#: init/completions/wget.fish:84
+msgid "Use the passive FTP retrieval scheme"
+msgstr ""
+
+#: init/completions/wget.fish:85
+msgid "Traverse symlinks and retrive pointed-to files"
+msgstr ""
+
+#: init/completions/wget.fish:89
+msgid "Turn on recursive retrieving"
+msgstr ""
+
+#: init/completions/wget.fish:90
+msgid "Specify recursion maximum depth"
+msgstr ""
+
+#: init/completions/wget.fish:91
+msgid "delete every single file downloaded"
+msgstr ""
+
+#: init/completions/wget.fish:92
+msgid "convert the links in the document to make them suitable for local viewing"
+msgstr ""
+
+#: init/completions/wget.fish:93
+msgid "Back up the original version"
+msgstr ""
+
+#: init/completions/wget.fish:94
+msgid "Turn on options suitable for mirroring"
+msgstr ""
+
+#: init/completions/wget.fish:95
+msgid "download all the files that are necessary to properly display a given HTML page"
+msgstr ""
+
+#: init/completions/wget.fish:96
+msgid "Turn on strict parsing of HTML comments"
+msgstr ""
+
+#: init/completions/wget.fish:100
+msgid "comma-separated lists of file name suffixes or patterns to accept"
+msgstr ""
+
+#: init/completions/wget.fish:101
+msgid "comma-separated lists of file name suffixes or patterns to reject"
+msgstr ""
+
+#: init/completions/wget.fish:102
+msgid "Set domains to be followed"
+msgstr ""
+
+#: init/completions/wget.fish:103
+msgid "Specify the domains that are not to be followed"
+msgstr ""
+
+#: init/completions/wget.fish:104
+msgid "Follow FTP links from HTML documents"
+msgstr ""
+
+#: init/completions/wget.fish:105
+msgid "HTML tags to follow"
+msgstr ""
+
+#: init/completions/wget.fish:106
+msgid "HTML tags to ignore"
+msgstr ""
+
+#: init/completions/wget.fish:107
+msgid "Enable spanning across hosts"
+msgstr ""
+
+#: init/completions/wget.fish:108
+msgid "Follow relative links only"
+msgstr ""
+
+#: init/completions/wget.fish:109
+msgid "Specify a comma-separated list of directories you wish to follow"
+msgstr ""
+
+#: init/completions/wget.fish:110
+msgid "Specify a comma-separated list of directories you wish to exclude"
+msgstr ""
+
+#: init/completions/wget.fish:111 init/completions/wget.fish:112
+msgid "Do not ever ascend to the parent directory"
+msgstr ""
+
+#: init/completions/who.fish:1
+msgid "Same as -b -d --login -p -r -t -T -u"
+msgstr ""
+
+#: init/completions/who.fish:2
+msgid "Print time of last boot"
+msgstr ""
+
+#: init/completions/who.fish:3
+#, fuzzy
+msgid "Print dead processes"
+msgstr "Visa status för tjänst"
+
+#: init/completions/who.fish:4
+msgid "Print line of headings"
+msgstr ""
+
+#: init/completions/who.fish:5
+msgid "Print idle time"
+msgstr ""
+
+#: init/completions/who.fish:6
+msgid "Print login process"
+msgstr ""
+
+#: init/completions/who.fish:7
+msgid "Canonicalize hostnames via DNS"
+msgstr ""
+
+#: init/completions/who.fish:8
+msgid "Print hostname and user for stdin"
+msgstr ""
+
+#: init/completions/who.fish:9
+msgid "Print active processes spawned by init"
+msgstr ""
+
+#: init/completions/who.fish:10
+msgid "Print all login names and number of users logged on"
+msgstr ""
+
+#: init/completions/who.fish:11
+#, fuzzy
+msgid "Print current runlevel"
+msgstr "Skriv ut nuvarande jobb"
+
+#: init/completions/who.fish:12
+msgid "Print name, line, and time"
+msgstr ""
+
+#: init/completions/who.fish:13
+msgid "Print last system clock change"
+msgstr ""
+
+#: init/completions/who.fish:14 init/completions/who.fish:15
+#: init/completions/who.fish:16
+msgid "Print users message status as +, - or ?"
+msgstr "Visa användarstatus som +, - eller ?"
+
+#: init/completions/who.fish:17
+msgid "List users logged in"
+msgstr "Visa inloggade användare"
+
+#: init/completions/xprop.fish:3
+msgid "Display grammar and exit"
+msgstr "Visa grammatik och avsluta"
+
+#: init/completions/xprop.fish:4
+msgid "Select window by id"
+msgstr "Välj fönster via id"
+
+#: init/completions/xprop.fish:5
+msgid "Select window by name"
+msgstr "Välj fönster via namn"
+
+#: init/completions/xprop.fish:6
+msgid "Display font properties"
+msgstr "Visa fontegenskaper"
+
+#: init/completions/xprop.fish:7
+msgid "Select root window"
+msgstr "Välj rotfönster"
+
+#: init/completions/xprop.fish:8
+msgid "Specify X server"
+msgstr "Välj X-server"
+
+#: init/completions/xprop.fish:9
+msgid "Maximum display length"
+msgstr ""
+
+#: init/completions/xprop.fish:10
+msgid "Do not show property type"
+msgstr "Visa inte egenskapstyp"
+
+#: init/completions/xprop.fish:11
+msgid "Set format file"
+msgstr "Välj formatfil"
+
+#: init/completions/xprop.fish:12
+msgid "Select window manager frame"
+msgstr ""
+
+#: init/completions/xprop.fish:13
+msgid "Remove property"
+msgstr "Ta bort egenskap"
+
+#: init/completions/xprop.fish:19
+msgid "Set property"
+msgstr "Sätt egenskap"
+
+#: init/completions/xprop.fish:25
+msgid "Examine property updates forever"
+msgstr "Lyssna efter uppdateringar för alltid"
+
+#: init/completions/xprop.fish:26
+msgid "Set format"
+msgstr "Välj format"
+
+#: init/completions/xsel.fish:1
+#, fuzzy
+msgid "Append input to selection"
+msgstr "IO dirigering till slutet av fil"
+
+#: init/completions/xsel.fish:2
+msgid "Append to selection as input grows"
+msgstr ""
+
+#: init/completions/xsel.fish:3
+msgid "Read into selection"
+msgstr ""
+
+#: init/completions/xsel.fish:4
+msgid "Write selection"
+msgstr ""
+
+#: init/completions/xsel.fish:5
+msgid "Clear selection"
+msgstr ""
+
+#: init/completions/xsel.fish:6
+msgid "Delete selection"
+msgstr ""
+
+#: init/completions/xsel.fish:7
+msgid "Use primary selection"
+msgstr ""
+
+#: init/completions/xsel.fish:8
+msgid "Use secondary selection"
+msgstr ""
+
+#: init/completions/xsel.fish:9
+msgid "Use clipboard selection"
+msgstr ""
+
+#: init/completions/xsel.fish:10
+msgid "Make current selections persistent after program exit"
+msgstr ""
+
+#: init/completions/xsel.fish:11
+msgid "Exchange primary and secondary selections"
+msgstr ""
+
+#: init/completions/xsel.fish:12
+msgid "X server display"
+msgstr ""
+
+#: init/completions/xsel.fish:13
+msgid "Timeout for retrieving selection"
+msgstr "Timeout under hämtning"
+
+#: init/completions/xsel.fish:14
+msgid "Error log"
+msgstr "Fellogg"
+
+#: init/completions/xsel.fish:15
+msgid "Do not detach from the controlling terminal"
+msgstr "Frikoppla inte från terminalen"
+
+#: init/completions/xsel.fish:17
+msgid "Print informative messages"
+msgstr "Visa informativa meddelanden"
+
+#: init/completions/yum.fish:50
+msgid "Assume yes to all questions"
+msgstr "Anta ja på alla frågor"
+
+#: init/completions/yum.fish:52
+msgid "Set debug level"
+msgstr "Välj debugnivå"
+
+#: init/completions/yum.fish:53
+msgid "Set error level"
+msgstr "Välj felrapporteringsnivå"
+
+#: init/completions/yum.fish:54
+msgid "Be tolerant of errors in commandline"
+msgstr "Tolerera fel i kommandoraden"
+
+#: init/completions/yum.fish:55
+msgid "Set maximum delay between commands"
+msgstr "Välj maximal fördröjning mellan kommandon"
+
+#: init/completions/yum.fish:56
+msgid "Run commands from cache"
+msgstr "Kör ett kommando från cache"
+
+#: init/completions/yum.fish:58
+msgid "Specify installroot"
+msgstr "Välj installationsrot"
+
+#: init/completions/yum.fish:59
+msgid "Enable repository"
+msgstr "Aktivera lager"
+
+#: init/completions/yum.fish:60
+msgid "Disable repository"
+msgstr "Inaktivera lager"
+
+#: init/completions/yum.fish:61
+msgid "Enables obsolets processing logic"
+msgstr "Slå på hantering av obsoleta paket"
+
+#: init/completions/yum.fish:62
+msgid "Output rss-data to file"
+msgstr "Skriv rss-data till fil"
+
+#: init/completions/yum.fish:63
+msgid "Exclude specified package from updates"
+msgstr "Exkludera specificerade paket från uppdateringar"
+
+#: init/completions/zip.fish:2
+msgid "Freshen: only changed files"
+msgstr "Uppdatera: Lägg till ändrade filer"
+
+#: init/completions/zip.fish:3
+msgid "Delete entries in zipfile"
+msgstr "Radera filer från zipfil"
+
+#: init/completions/zip.fish:4
+msgid "Update: only changed or newer files"
+msgstr "Uppdatera: Lägg bara till ändrade och nya filer"
+
+#: init/completions/zip.fish:5
+msgid "Move into zipfile (delete files)"
+msgstr "Radera de filer som läggs till arkivet"
+
+#: init/completions/zip.fish:7
+msgid "Do not store directory names"
+msgstr "Lagra inte katalognamn"
+
+#: init/completions/zip.fish:8
+msgid "Do not compress at all"
+msgstr "Komprimera inte alls"
+
+#: init/completions/zip.fish:9
+msgid "Convert LF to CR LF"
+msgstr "Konvertera LF (Unixradbrytning) till CR LF (Windowsradbrytning)"
+
+#: init/completions/zip.fish:10
+msgid "Convert CR LF to LF"
+msgstr "Konvertera CR LF (Windowsradbrytning) till LF (Unixradbrytning)"
+
+#: init/completions/zip.fish:11
+msgid "Compress faster"
+msgstr "Snabbkomprimering"
+
+#: init/completions/zip.fish:12
+msgid "Compress better"
+msgstr "Högre kompressionsgrad"
+
+#: init/completions/zip.fish:15
+msgid "Add one-line comments"
+msgstr "Lägg till enradskommentar"
+
+#: init/completions/zip.fish:16
+msgid "Add zipfile comments"
+msgstr "Lägg till kommentar till zipfil"
+
+#: init/completions/zip.fish:17
+msgid "Read names from stdin"
+msgstr "Läs namn från standard in"
+
+#: init/completions/zip.fish:18
+msgid "Make zipfile as old as the latest entry"
+msgstr "Sät filens modifieringsdatum till modifieringsdatum av senaste fil"
+
+#: init/completions/zip.fish:19
+msgid "Exclude the following names"
+msgstr "Exkludera följande namn"
+
+#: init/completions/zip.fish:20
+msgid "Include only the following names"
+msgstr "Inkludera bara följande namn"
+
+#: init/completions/zip.fish:21
+msgid "Fix zipfile"
+msgstr "Reparera zip-fil"
+
+#: init/completions/zip.fish:22
+msgid "Fix zipfile (try harder)"
+msgstr "Reparera zip-fil (försök hårdare)"
+
+#: init/completions/zip.fish:23
+msgid "Adjust offsets to suit self-extracting exe"
+msgstr "Justera förskjutningar för att lämna plats för att skapa ett självextraherande arkiv"
+
+#: init/completions/zip.fish:24
+msgid "Strip prepended data"
+msgstr "Ta bort datablock före arkivet"
+
+#: init/completions/zip.fish:25
+msgid "Test zipfile integrity"
+msgstr "Testa zipfilintegritet"
+
+#: init/completions/zip.fish:26
+msgid "Exclude extra file attributes"
+msgstr "Exkludera extra filattribut"
+
+#: init/completions/zip.fish:27
+msgid "Store symbolic links as links"
+msgstr "Lagra symboliska länkar som länkar"
+
+#: init/completions/zip.fish:28
+msgid "PKZIP recursion"
+msgstr "PKZIP rekursion"
+
+#: init/completions/zip.fish:29
+msgid "Encrypt"
+msgstr "Kryptera"
+
+#: init/completions/zip.fish:30
+msgid "Don't compress these suffixes"
+msgstr "Komprimera inte dessa suffix"
+

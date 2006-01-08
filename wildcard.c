@@ -131,7 +131,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 									   const wchar_t *(*desc_func)(const wchar_t *),
 									   array_list_t *out )
 {
-	if( *wc == 0 && 
+	if( *wc == 0 &&
 		( ( *str != L'.') || (!is_first)) )
 	{
 		if( !out )
@@ -148,7 +148,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 				
 			new = wcsdup( str );
 			sep = wcschr(new, PROG_COMPLETE_SEP );
-			*sep = COMPLETE_SEP;
+			*sep = COMPLETE_SEP;			
 		}
 		else if( desc_func )
 		{
@@ -163,7 +163,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			  Append generic description to item, if the description exists
 			*/
 			if( desc && wcslen(desc) )
-				new = wcsdupcat2( str, COMPLETE_SEP_STR, desc, (void *)0 );
+				new = wcsdupcat2( str, desc, (void *)0 );
 			else
 				new = wcsdup( str );
 		}

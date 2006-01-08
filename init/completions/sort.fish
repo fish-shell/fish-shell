@@ -1,21 +1,21 @@
-complete -c sort -s b -l ignore-leading-blanks -d "Ignore leading blanks"
-complete -c sort -s d -l dictionary-order -d "Consider only blanks and alphanumerics"
-complete -c sort -s f -l ignore-case -d "Ignore case"
-complete -c sort -s g -l general-numeric-sort -d "Compare general numeric value"
-complete -c sort -s i -l ignore-nonprinting -d "Consider only printable"
-complete -c sort -s M -l month-sort -d "Compare month names"
-complete -c sort -s n -l numeric-sort -d "Compare string numerical value"
-complete -c sort -s r -l reverse -d "Reverse results"
-complete -c sort -s c -l check -d "Only check if sorted"
-complete -c sort -s k -l key -d "Define key"
-complete -c sort -s m -l merge -d "Merge sorted files"
-complete -c sort -s o -l output -f -d "Write to file"
-complete -c sort -s s -l stable -d "Stabilize sort"
-complete -c sort -s S -l buffer-size -r -d "Set main memory buffer"
-complete -c sort -s t -l field-separator -d "Field separator"
-complete -c sort -s T -l temporary-directory -r -d "Set temporary directory"
-complete -c sort -s u -l unique -d "Output only first of equal lines"
-complete -c sort -s z -l zero-terminated -d "Lines end with 0 byte"
-complete -c sort -l help -d "Display help and exit"
-complete -c sort -l version -d "Display version and exit"
+complete -c sort -s b -l ignore-leading-blanks -d (_ "Ignore leading blanks")
+complete -c sort -s d -l dictionary-order -d (_ "Consider only blanks and alphanumerics")
+complete -c sort -s f -l ignore-case -d (_ "Ignore case")
+complete -c sort -s g -l general-numeric-sort -d (_ "Compare general numeric value")
+complete -c sort -s i -l ignore-nonprinting -d (_ "Consider only printable")
+complete -c sort -s M -l month-sort -d (_ "Compare month names")
+complete -c sort -s n -l numeric-sort -d (_ "Compare string numerical value")
+complete -c sort -s r -l reverse -d (_ "Reverse results")
+complete -c sort -s c -l check -d (_ "Only check if sorted")
+complete -c sort -s k -l key -d (_ "Define key")
+complete -c sort -s m -l merge -d (_ "Merge sorted files")
+complete -c sort -s o -l output -f -d (_ "Write to file")
+complete -c sort -s s -l stable -d (_ "Stabilize sort")
+complete -c sort -s S -l buffer-size -r -d (_ "Set main memory buffer")
+complete -c sort -s t -l field-separator -d (_ "Field separator")
+complete -c sort -s T -l temporary-directory -r -d (_ "Set temporary directory")
+complete -c sort -s u -l unique -d (_ "Output only first of equal lines")
+complete -c sort -s z -l zero-terminated -d (_ "Lines end with 0 byte")
+complete -c sort -l help -d (_ "Display help and exit")
+complete -c sort -l version -d (_ "Display version and exit")
 

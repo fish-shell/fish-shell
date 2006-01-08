@@ -1,39 +1,39 @@
 
-complete -c test -l help -d "Display help and exit"
-complete -c test -l version -d "Display version and exit"
-complete -c test -a ! -d "Negate expression"
-complete -c test -s a -d "Logical and"
-complete -c test -s o -d "Logical or"
-complete -c test -s n -d "String length is non-zero"
-complete -c test -s z -d "String length is zero"
-complete -c test -a = -d "Strings are equal"
-complete -c test -a != -d "Strings are not equal"
-complete -c test -o eq -d "Integers are equal"
-complete -c test -o ge -d "Left integer larger than or equal to right integer"
-complete -c test -o gt -d "Left integer larger than right integer"
-complete -c test -o le -d "Left integer less than or equal to right integer"
-complete -c test -o lt -d "Left integer less than right integer"
-complete -c test -o ne -d "Left integer not equal to right integer"
-complete -c test -o ef -d "Left file equal to right file"
-complete -c test -o nt -d "Left file newer than right file"
-complete -c test -o ot -d "Left file older than right file"
-complete -c test -s b -d "File is block device"
-complete -c test -s c -d "File is character device"
-complete -c test -s d -d "File is directory"
-complete -c test -s e -d "File exists"
-complete -c test -s f -d "File is regular"
-complete -c test -s g -d "File is set-group-ID"
-complete -c test -s h -d "File is symlink"
-complete -c test -s G -d "File owned by effective group ID"
-complete -c test -s k -d "File has sticky bit set"
-complete -c test -s L -d "File is symlink"
-complete -c test -s O -d "File owned by effective user ID"
-complete -c test -s p -d "File is named pipe"
-complete -c test -s r -d "File is readable"
-complete -c test -s s -d "File size is non-zero"
-complete -c test -s S -d "File is socket"
-complete -c test -s t -d "FD is terminal"
-complete -c test -s u -d "File set-user-ID bit is set"
-complete -c test -s w -d "File is writable"
-complete -c test -s x -d "File is executable"
+complete -c test -l help -d (_ "Display help and exit")
+complete -c test -l version -d (_ "Display version and exit")
+complete -c test -a ! -d (_ "Negate expression")
+complete -c test -s a -d (_ "Logical and")
+complete -c test -s o -d (_ "Logical or")
+complete -c test -s n -d (_ "String length is non-zero")
+complete -c test -s z -d (_ "String length is zero")
+complete -c test -a = -d (_ "Strings are equal")
+complete -c test -a != -d (_ "Strings are not equal")
+complete -c test -o eq -d (_ "Integers are equal")
+complete -c test -o ge -d (_ "Left integer larger than or equal to right integer")
+complete -c test -o gt -d (_ "Left integer larger than right integer")
+complete -c test -o le -d (_ "Left integer less than or equal to right integer")
+complete -c test -o lt -d (_ "Left integer less than right integer")
+complete -c test -o ne -d (_ "Left integer not equal to right integer")
+complete -c test -o ef -d (_ "Left file equal to right file")
+complete -c test -o nt -d (_ "Left file newer than right file")
+complete -c test -o ot -d (_ "Left file older than right file")
+complete -c test -s b -d (_ "File is block device")
+complete -c test -s c -d (_ "File is character device")
+complete -c test -s d -d (_ "File is directory")
+complete -c test -s e -d (_ "File exists")
+complete -c test -s f -d (_ "File is regular")
+complete -c test -s g -d (_ "File is set-group-ID")
+complete -c test -s h -d (_ "File is symlink")
+complete -c test -s G -d (_ "File owned by effective group ID")
+complete -c test -s k -d (_ "File has sticky bit set")
+complete -c test -s L -d (_ "File is symlink")
+complete -c test -s O -d (_ "File owned by effective user ID")
+complete -c test -s p -d (_ "File is named pipe")
+complete -c test -s r -d (_ "File is readable")
+complete -c test -s s -d (_ "File size is non-zero")
+complete -c test -s S -d (_ "File is socket")
+complete -c test -s t -d (_ "FD is terminal")
+complete -c test -s u -d (_ "File set-user-ID bit is set")
+complete -c test -s w -d (_ "File is writable")
+complete -c test -s x -d (_ "File is executable")
 

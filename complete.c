@@ -325,6 +325,7 @@ static void clear_hash_value( const void *key, const void *data )
 void complete_destroy()
 {
 	complete_entry *i=first_entry, *prev;
+
 	while( i )
 	{
 		prev = i;
@@ -346,7 +347,13 @@ void complete_destroy()
 		hash_destroy( loaded_completions );
 		free( loaded_completions );
 	}
-	
+
+	if( get_desc_buff )
+	{
+		sb_destroy( get_desc_buff );
+		free( get_desc_buff );
+	}
+
 }
 
 /**
@@ -380,8 +387,6 @@ void complete_add( const wchar_t *cmd,
 	complete_entry *c =
 		complete_find_exact_entry( cmd, cmd_type );
 	complete_entry_opt *opt;
-	wchar_t *tmp;
-
 
 	if( c == 0 )
 	{
@@ -961,6 +966,7 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
   }
   }
 */
+
 	if( wcslen((wchar_t *)get_desc_buff->buff) == 0 )
 	{
 		wchar_t *suffix = wcsrchr( filename, L'.' );
@@ -980,7 +986,7 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 					   COMPLETE_SEP, 
 					   COMPLETE_FILE_DESC );			
 	}
-	
+
 	return (wchar_t *)get_desc_buff->buff;
 }
 
@@ -1071,131 +1077,127 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	
 	esc = expand_escape( cmd_start, 1 );		
 	
-	if( esc )
+	if( whatis_path )
 	{
+		apropos_cmd =wcsdupcat2( L"grep ^/dev/null -F <", whatis_path, L" ", esc, 0 );
+	}
+	else
+	{
+		apropos_cmd = wcsdupcat( L"apropos ^/dev/null ", esc );
+	}
+	free(esc);		
 	
-		if( whatis_path )
+	al_init( &list );
+	hash_init( &lookup, &hash_wcs_func, &hash_wcs_cmp );
+
+	/*
+	  First locate a list of possible descriptions using a single
+	  call to apropos or a direct search if we know the location
+	  of the whatis database. This can take some time on slower
+	  systems with a large set of manuals, but it should be ok
+	  since apropos is only called once.
+	*/
+	exec_subshell( apropos_cmd, &list );
+	/*
+	  Then discard anything that is not a possible completion and put
+	  the result into a hashtable with the completion as key and the
+	  description as value.
+	  
+	  Should be reasonably fast, since no memory allocations are needed.
+	*/
+	for( i=0; i<al_get_count( &list); i++ )
+	{
+		wchar_t *el = (wchar_t *)al_get( &list, i );
+		wchar_t *key, *key_end, *val_begin;
+		
+		if( !el )
+			continue;
+		
+		//fwprintf( stderr, L"%ls\n", el );
+		if( wcsncmp( el, cmd_start, cmd_len ) != 0 )
+			continue;
+		//fwprintf( stderr, L"%ls\n", el );
+		key = el + cmd_len;
+		
+		key_end = wcschr( el, L' ' );
+		if( !key_end )
 		{
-			apropos_cmd =wcsdupcat2( L"grep ^/dev/null -F <", whatis_path, L" ", esc, 0 );
+			key_end = wcschr( el, L'\t' );
+			if( !key_end )
+			{
+				continue;
+			}
+		}
+		
+		*key_end = 0;
+		val_begin=key_end+1;
+		
+		//fwprintf( stderr, L"Key %ls\n", el );
+		
+		while( *val_begin != L'-' && *val_begin)
+		{
+			val_begin++;
+		}
+		
+		if( !val_begin )
+		{
+			continue;
+		}
+		
+		val_begin++;
+		
+		while( *val_begin == L' ' || *val_begin == L'\t' )
+		{
+			val_begin++;
+		}
+		
+		if( !*val_begin )
+		{
+			continue;
+		}
+		
+		/*
+		  And once again I make sure the first character is uppercased
+		  because I like it that way, and I get to decide these
+		  things.
+		*/
+		val_begin[0]=towupper(val_begin[0]);
+		hash_put( &lookup, key, val_begin );				
+	}
+
+	/*
+	  Then do a lookup on every completion and if a match is found,
+	  change to the new description. 
+	  
+	  This needs to do a reallocation for every description added, but
+	  there shouldn't be that many completions, so it should be ok.
+	*/
+	for( i=0; i<al_get_count(comp); i++ )
+	{
+		wchar_t *el = (wchar_t *)al_get( comp, i );
+		wchar_t *cmd_end = wcschr( el, 
+								   COMPLETE_SEP );
+		wchar_t *new_desc;
+		
+		if( cmd_end )
+			*cmd_end = 0;
+
+		new_desc = (wchar_t *)hash_get( &lookup,
+										el );
+		
+		if( new_desc )
+		{
+			wchar_t *new_el = wcsdupcat2( el,
+										  COMPLETE_SEP_STR,
+										  new_desc, 
+										  0 );
+			al_set( comp, i, new_el );
+			free( el );			
 		}
 		else
 		{
-			apropos_cmd = wcsdupcat( L"apropos ^/dev/null ", esc );
-		}
-		free(esc);		
-
-		al_init( &list );
-		hash_init( &lookup, &hash_wcs_func, &hash_wcs_cmp );
-
-		/*
-		  First locate a list of possible descriptions using a single
-		  call to apropos or a direct search if we know the location
-		  of the whatis database. This can take some time on slower
-		  systems with a large set of manuals, but it should be ok
-		  since apropos is only called once.
-		*/
-		exec_subshell( apropos_cmd, &list );
-		/*
-		  Then discard anything that is not a possible completion and put
-		  the result into a hashtable with the completion as key and the
-		  description as value.
-
-		  Should be reasonably fast, since no memory allocations are needed.
-		*/
-		for( i=0; i<al_get_count( &list); i++ )
-		{
-			wchar_t *el = (wchar_t *)al_get( &list, i );
-			wchar_t *key, *key_end, *val_begin;
-			
-			if( !el )
-				continue;
-			
-			//fwprintf( stderr, L"%ls\n", el );
-			if( wcsncmp( el, cmd_start, cmd_len ) != 0 )
-				continue;
-			//fwprintf( stderr, L"%ls\n", el );
-			key = el + cmd_len;
-
-			key_end = wcschr( el, L' ' );
-			if( !key_end )
-			{
-				key_end = wcschr( el, L'\t' );
-				if( !key_end )
-				{
-					continue;
-				}
-			}
-			
-			*key_end = 0;
-			val_begin=key_end+1;
-
-			//fwprintf( stderr, L"Key %ls\n", el );
-
-			while( *val_begin != L'-' && *val_begin)
-			{
-				val_begin++;
-			}
-			
-			if( !val_begin )
-			{
-				continue;
-			}
-			
-			val_begin++;
-				
-			while( *val_begin == L' ' || *val_begin == L'\t' )
-			{
-				val_begin++;
-			}
-			
-			if( !*val_begin )
-			{
-				continue;
-			}
-			
-			/*
-			  And once again I make sure the first character is uppercased
-			  because I like it that way, and I get to decide these
-			  things.
-			*/
-			val_begin[0]=towupper(val_begin[0]);
-			hash_put( &lookup, key, val_begin );				
-		}
-
-		/*
-		  Then do a lookup on every completion and if a match is found,
-		  change to the new description. 
-
-		  This needs to do a reallocation for every description added, but
-		  there shouldn't be that many completions, so it should be ok.
-		*/
-		for( i=0; i<al_get_count(comp); i++ )
-		{
-			wchar_t *el = (wchar_t *)al_get( comp, i );
-			wchar_t *cmd_end = wcschr( el, 
-									   COMPLETE_SEP );
-			wchar_t *new_desc;
-		
 			if( cmd_end )
-				*cmd_end = 0;
-
-			new_desc = (wchar_t *)hash_get( &lookup,
-											el );
-		
-			if( new_desc )
-			{
-				wchar_t *new_el = wcsdupcat2( el,
-											  COMPLETE_SEP_STR,
-											  new_desc, 
-											  0 );
-				al_set( comp, i, new_el );
-				free( el );			
-			}
-			else
-			{
-				if( cmd_end )
-					*cmd_end = COMPLETE_SEP;
-			}
+				*cmd_end = COMPLETE_SEP;
 		}
 	}
 	
@@ -1722,12 +1724,13 @@ static int complete_param( wchar_t *cmd_orig,
 						short_ok( str, o->short_opt, i->short_opt_str ) )
 					{
 						wchar_t *next_opt =
-							malloc( sizeof(wchar_t)*(2 + wcslen(o->desc)));
+							malloc( sizeof(wchar_t)*(3 + wcslen(o->desc)));
 						if( !next_opt )
 							die_mem();
 						
 						next_opt[0]=o->short_opt;
-						next_opt[1]=L'\0';
+						next_opt[1]=COMPLETE_SEP;						
+						next_opt[2]=L'\0';			
 						wcscat( next_opt, o->desc );
 						al_push( comp_out, next_opt );
 					}
@@ -1754,14 +1757,14 @@ static int complete_param( wchar_t *cmd_orig,
 							if( o->old_mode || !(o->result_mode & NO_COMMON ) )
 							{
 								al_push( comp_out,
-										 wcsdupcat(&((wchar_t *)whole_opt.buff)[wcslen(str)], o->desc) );
+										 wcsdupcat2(&((wchar_t *)whole_opt.buff)[wcslen(str)], COMPLETE_SEP_STR, o->desc, (void *)0) );
 //								fwprintf( stderr, L"Add without param %ls\n", o->long_opt );
 							}
 							
 							if( !o->old_mode && ( wcslen(o->comp) || (o->result_mode & NO_COMMON ) ) )
 							{
 								al_push( comp_out,
-										 wcsdupcat2(&((wchar_t *)whole_opt.buff)[wcslen(str)], L"=", o->desc, 0) );
+										 wcsdupcat2(&((wchar_t *)whole_opt.buff)[wcslen(str)], L"=", COMPLETE_SEP_STR, o->desc, (void *)0) );
 //								fwprintf( stderr, L"Add with param %ls\n", o->long_opt );
 							}
 							

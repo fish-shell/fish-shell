@@ -106,7 +106,7 @@ int main( int argc, char **argv )
 	
 	char *cmd=0;	
 
-	fish_setlocale( LC_ALL, L"" );
+	wsetlocale( LC_ALL, L"" );
 	is_interactive_session=1;
 	program_name=L"fish";
 	

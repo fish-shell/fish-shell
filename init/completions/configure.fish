@@ -7,6 +7,6 @@ complete -c configure -s n -l no-create -d (_ "Do not create output files")
 complete -c configure -l srcdir -d (_ "Set source directory") -a "__fish_complete_directory (commandline -ct)" -x
 complete -c configure -l prefix -d (_ "Architecture-independent install directory") -a "__fish_complete_directory (commandline -ct)" -x
 complete -c configure -l exec-prefix -d (_ "Architecture-dependent install directory") -a "__fish_complete_directory (commandline -ct)" -x
-complete -c configure -l build -d (_ "configure for building on BUILD") -x
-complete -c configure -l host -d (_ "cross-compile to build programs to run on HOST") -x
-complete -c configure -l target -d (_ "configure for building compilers for TARGET") -x -u
+complete -c configure -l build -d (_ "Configure for building on BUILD") -x
+complete -c configure -l host -d (_ "Cross-compile to build programs to run on HOST") -x
+complete -c configure -l target -d (_ "Configure for building compilers for TARGET") -x -u

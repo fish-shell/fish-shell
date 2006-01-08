@@ -88,17 +88,17 @@ complete -c wget -l retr-symlinks -d (_ "Traverse symlinks and retrive pointed-t
 
 complete -c wget -s r -l recursive -d (_ "Turn on recursive retrieving")
 complete -c wget -n '__fish_contains_opt -s r recursive' -s l -l level -d (_ "Specify recursion maximum depth") -x
-complete -c wget -l delete-after -d (_ "delete every single file downloaded")
-complete -c wget -s k -l convert-links -d (_ "convert the links in the document to make them suitable for local viewing")
+complete -c wget -l delete-after -d (_ "Delete every single file downloaded")
+complete -c wget -s k -l convert-links -d (_ "Convert the links in the document to make them suitable for local viewing")
 complete -c wget -s K -l backup-converted -d (_ "Back up the original version")
 complete -c wget -s m -l mirror -d (_ "Turn on options suitable for mirroring")
-complete -c wget -s p -l page-requisites -d (_ "download all the files that are necessary to properly display a given HTML page")
+complete -c wget -s p -l page-requisites -d (_ "Download all the files that are necessary to properly display a given HTML page")
 complete -c wget -l strict-comments -d (_ "Turn on strict parsing of HTML comments")
 
 #Recursive accept/reject options
 
-complete -c wget -s A -l accept -d (_ "comma-separated lists of file name suffixes or patterns to accept") -x
-complete -c wget -s R -l reject -d (_ "comma-separated lists of file name suffixes or patterns to reject") -x
+complete -c wget -s A -l accept -d (_ "Comma-separated lists of file name suffixes or patterns to accept") -x
+complete -c wget -s R -l reject -d (_ "Comma-separated lists of file name suffixes or patterns to reject") -x
 complete -c wget -s D -l domains -d (_ "Set domains to be followed") -x
 complete -c wget -l exclude-domains -d (_ "Specify the domains that are not to be followed") -x
 complete -c wget -l follow-ftp -d (_ "Follow FTP links from HTML documents")

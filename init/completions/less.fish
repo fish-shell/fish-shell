@@ -41,7 +41,7 @@ complete -c less -s U -l UNDERLINE-SPECIAL -d (_ "Allow backspace, tab and carri
 complete -c less -s V -l version -d (_ "Display version and exit")
 complete -c less -s w -l hilite-unread -d (_ "Flash first unread line on new page")
 complete -c less -s W -l HILITE-UNREAD -d (_ "Flash first unread line on any movement")
-complete -c less -s x -l tabs -d (_ "set tab stops") -r -a "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"
+complete -c less -s x -l tabs -d (_ "Set tab stops") -r -a "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"
 complete -c less -s X -l no-init -d (_ "No termcap init")
 complete -c less -l no-keypad -d (_ "No keypad init")
 complete -c less -s y -l max-forw-scroll -d (_ "Maximum forward scroll") -r -a "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"

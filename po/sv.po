@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-08 03:12+0100\n"
+"POT-Creation-Date: 2006-01-08 04:00+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -1207,33 +1207,35 @@ msgstr "Ett fel inträffade under skapandet av ett rör"
 #: init/completions/apt-cache.fish:2 init/completions/apt-cdrom.fish:2
 #: init/completions/apt-config.fish:2
 #: init/completions/apt-extracttemplates.fish:3
-#: init/completions/apt-file.fish:2 init/completions/bc.fish:9
-#: init/completions/cat.fish:10 init/completions/chgrp.fish:10
-#: init/completions/chown.fish:9 init/completions/complete.fish:13
-#: init/completions/configure.fish:1 init/completions/cut.fish:8
-#: init/completions/date.fish:9 init/completions/df.fish:16
-#: init/completions/diff.fish:26 init/completions/du.fish:18
-#: init/completions/echo.fish:4 init/completions/fish.fish:2
-#: init/completions/functions.fish:4 init/completions/grep.fish:20
-#: init/completions/gunzip.fish:8 init/completions/gzip.fish:10
-#: init/completions/id.fish:6 init/completions/less.fish:1
-#: init/completions/ls.fish:72 init/completions/man.fish:56
-#: init/completions/mimedb.fish:8 init/completions/mount.fish:47
-#: init/completions/mplayer.fish:35 init/completions/mplayer.fish:82
-#: init/completions/mv.fish:10 init/completions/nice.fish:3
-#: init/completions/pine.fish:3 init/completions/ps.fish:35
-#: init/completions/python.fish:4 init/completions/read.fish:1
-#: init/completions/rmdir.fish:6 init/completions/rm.fish:8
-#: init/completions/sed.fish:11 init/completions/set.fish:11
-#: init/completions/sort.fish:19 init/completions/su.fish:10
-#: init/completions/test.fish:2 init/completions/tex.fish:2
-#: init/completions/top.fish:5 init/completions/touch.fish:10
-#: init/completions/trap.fish:4 init/completions/ulimit.fish:13
-#: init/completions/umount.fish:16 init/completions/uniq.fish:13
-#: init/completions/valgrind.fish:24 init/completions/vared.fish:2
-#: init/completions/wc.fish:6 init/completions/wget.fish:6
-#: init/completions/xprop.fish:2 init/completions/xsel.fish:16
-#: init/completions/yum.fish:49 init/completions/zcat.fish:7
+#: init/completions/apt-file.fish:2 init/completions/apt-ftparchive.fish:2
+#: init/completions/apt-zip-inst.fish:2 init/completions/apt-zip-list.fish:2
+#: init/completions/bc.fish:9 init/completions/cat.fish:10
+#: init/completions/chgrp.fish:10 init/completions/chown.fish:9
+#: init/completions/complete.fish:13 init/completions/configure.fish:1
+#: init/completions/cut.fish:8 init/completions/date.fish:9
+#: init/completions/df.fish:16 init/completions/diff.fish:26
+#: init/completions/du.fish:18 init/completions/echo.fish:4
+#: init/completions/fish.fish:2 init/completions/functions.fish:4
+#: init/completions/grep.fish:20 init/completions/gunzip.fish:8
+#: init/completions/gzip.fish:10 init/completions/id.fish:6
+#: init/completions/less.fish:1 init/completions/ls.fish:72
+#: init/completions/man.fish:56 init/completions/mimedb.fish:8
+#: init/completions/mount.fish:47 init/completions/mplayer.fish:35
+#: init/completions/mplayer.fish:82 init/completions/mv.fish:10
+#: init/completions/nice.fish:3 init/completions/pine.fish:3
+#: init/completions/ps.fish:35 init/completions/python.fish:4
+#: init/completions/read.fish:1 init/completions/rmdir.fish:6
+#: init/completions/rm.fish:8 init/completions/sed.fish:11
+#: init/completions/set.fish:11 init/completions/sort.fish:19
+#: init/completions/su.fish:10 init/completions/test.fish:2
+#: init/completions/tex.fish:2 init/completions/top.fish:5
+#: init/completions/touch.fish:10 init/completions/trap.fish:4
+#: init/completions/ulimit.fish:13 init/completions/umount.fish:16
+#: init/completions/uniq.fish:13 init/completions/valgrind.fish:24
+#: init/completions/vared.fish:2 init/completions/wc.fish:6
+#: init/completions/wget.fish:6 init/completions/xprop.fish:2
+#: init/completions/xsel.fish:16 init/completions/yum.fish:49
+#: init/completions/zcat.fish:7 init/completions/zip.fish:31
 msgid "Display help and exit"
 msgstr "Visa hjälp och avsluta"
 
@@ -1360,32 +1362,32 @@ msgid "%s: Unknown argument '%s'\\n"
 msgstr "%s: Okänt argument '%s'\\n"
 
 #: init/completions/apm.fish:2 init/completions/apropos.fish:20
-#: init/completions/at.fish:2 init/completions/bc.fish:8
-#: init/completions/bunzip2.fish:15 init/completions/bzip2.fish:17
-#: init/completions/cat.fish:11 init/completions/chgrp.fish:11
-#: init/completions/chown.fish:10 init/completions/configure.fish:2
-#: init/completions/cut.fish:9 init/completions/cvs.fish:33
-#: init/completions/cvs.fish:44 init/completions/date.fish:10
-#: init/completions/df.fish:17 init/completions/diff.fish:25
-#: init/completions/du.fish:19 init/completions/echo.fish:5
-#: init/completions/fish.fish:3 init/completions/gunzip.fish:18
-#: init/completions/gzip.fish:20 init/completions/id.fish:7
-#: init/completions/less.fish:41 init/completions/ls.fish:73
-#: init/completions/make.fish:26 init/completions/mimedb.fish:9
-#: init/completions/modprobe.fish:14 init/completions/mount.fish:46
-#: init/completions/mplayer.fish:83 init/completions/mv.fish:11
-#: init/completions/nice.fish:4 init/completions/perl.fish:18
-#: init/completions/python.fish:12 init/completions/rmdir.fish:7
-#: init/completions/rm.fish:9 init/completions/ruby.fish:21
-#: init/completions/sed.fish:12 init/completions/sort.fish:20
-#: init/completions/su.fish:11 init/completions/tar.fish:51
-#: init/completions/test.fish:3 init/completions/tex.fish:3
-#: init/completions/top.fish:13 init/completions/umount.fish:15
-#: init/completions/uname.fish:11 init/completions/uniq.fish:14
-#: init/completions/valgrind.fish:26 init/completions/wc.fish:7
-#: init/completions/w.fish:5 init/completions/wget.fish:5
-#: init/completions/xsel.fish:18 init/completions/yum.fish:57
-#: init/completions/zcat.fish:9
+#: init/completions/apt-ftparchive.fish:15 init/completions/at.fish:2
+#: init/completions/bc.fish:8 init/completions/bunzip2.fish:15
+#: init/completions/bzip2.fish:17 init/completions/cat.fish:11
+#: init/completions/chgrp.fish:11 init/completions/chown.fish:10
+#: init/completions/configure.fish:2 init/completions/cut.fish:9
+#: init/completions/cvs.fish:33 init/completions/cvs.fish:44
+#: init/completions/date.fish:10 init/completions/df.fish:17
+#: init/completions/diff.fish:25 init/completions/du.fish:19
+#: init/completions/echo.fish:5 init/completions/fish.fish:3
+#: init/completions/gunzip.fish:18 init/completions/gzip.fish:20
+#: init/completions/id.fish:7 init/completions/less.fish:41
+#: init/completions/ls.fish:73 init/completions/make.fish:26
+#: init/completions/mimedb.fish:9 init/completions/modprobe.fish:14
+#: init/completions/mount.fish:46 init/completions/mplayer.fish:83
+#: init/completions/mv.fish:11 init/completions/nice.fish:4
+#: init/completions/perl.fish:18 init/completions/python.fish:12
+#: init/completions/rmdir.fish:7 init/completions/rm.fish:9
+#: init/completions/ruby.fish:21 init/completions/sed.fish:12
+#: init/completions/sort.fish:20 init/completions/su.fish:11
+#: init/completions/tar.fish:51 init/completions/test.fish:3
+#: init/completions/tex.fish:3 init/completions/top.fish:13
+#: init/completions/umount.fish:15 init/completions/uname.fish:11
+#: init/completions/uniq.fish:14 init/completions/valgrind.fish:26
+#: init/completions/wc.fish:7 init/completions/w.fish:5
+#: init/completions/wget.fish:5 init/completions/xsel.fish:18
+#: init/completions/yum.fish:57 init/completions/zcat.fish:9
 msgid "Display version and exit"
 msgstr "Visa hjälp och avsluta"
 
@@ -1537,9 +1539,9 @@ msgstr "Ta bort <prefix> på patch"
 msgid "Assume yes"
 msgstr "Antag ja på alla frågor"
 
-#: init/completions/apt-build.fish:26
+#: init/completions/apt-build.fish:26 init/completions/apt-get.fish:50
 msgid "Use purge instead of remove"
-msgstr ""
+msgstr "Använd rensning istället för radering"
 
 #: init/completions/apt-build.fish:27
 msgid "Do not run update"
@@ -1551,9 +1553,8 @@ msgstr "Specificera sources.list fil"
 
 #: init/completions/apt-build.fish:29 init/completions/apt-cache.fish:28
 #: init/completions/apt-cdrom.fish:11 init/completions/apt-config.fish:5
-#: init/completions/apt-file.fish:12 init/completions/apt-ftparchive.fish:15
-#: init/completions/apt-sortpkgs.fish:4 init/completions/apt-zip-inst.fish:3
-#: init/completions/apt-zip-list.fish:3
+#: init/completions/apt-file.fish:12 init/completions/apt-sortpkgs.fish:4
+#: init/completions/apt-zip-inst.fish:3 init/completions/apt-zip-list.fish:3
 msgid "Show version"
 msgstr "Visa version och avsluta"
 
@@ -1717,21 +1718,20 @@ msgid "Set temp dir"
 msgstr "Välj temporär katalog"
 
 #: init/completions/apt-extracttemplates.fish:5
-#, fuzzy
 msgid "Specifiy config file"
 msgstr "Specificera konfigurationsfil"
 
 #: init/completions/apt-file.fish:3
 msgid "Resync pkg contents from source"
-msgstr ""
+msgstr "Återsynkronisera paketinnehåll från källkod"
 
 #: init/completions/apt-file.fish:4
 msgid "Search pkg containing pattern"
-msgstr ""
+msgstr "Sök paket innehållande mönster"
 
 #: init/completions/apt-file.fish:5
 msgid "List contents of a pkg matching pattern"
-msgstr ""
+msgstr "Lista innehåll av paket som matchar mönster"
 
 #: init/completions/apt-file.fish:6
 msgid "Remove all gz files from cache"
@@ -1827,7 +1827,8 @@ msgid "Set config options"
 msgstr "Välj inställningar"
 
 #: init/completions/apt-get.fish:3
-msgid "test if apt has yet to be given the subcommand"
+#, fuzzy
+msgid "Test if apt has yet to be given the subcommand"
 msgstr "Testa om apt har tagit emot ett underkommando"
 
 #: init/completions/apt-get.fish:12
@@ -1836,7 +1837,7 @@ msgstr "Testa om aptkommando bore ha paket som potentiell komplettering"
 
 #: init/completions/apt-get.fish:23
 #, fuzzy
-msgid "apt-get command help"
+msgid "Apt-get command help"
 msgstr "Processkommando"
 
 #: init/completions/apt-get.fish:24
@@ -1845,7 +1846,7 @@ msgstr "Uppdatera källor"
 
 #: init/completions/apt-get.fish:25
 #, fuzzy
-msgid "upgrade or install newest packages"
+msgid "Upgrade or install newest packages"
 msgstr "Bygg och installera nytt paket"
 
 #: init/completions/apt-get.fish:26
@@ -1853,39 +1854,41 @@ msgid "Use with dselect front-end"
 msgstr "Använd med dselect-gränssnitt"
 
 #: init/completions/apt-get.fish:27
-msgid "distro upgrade"
+msgid "Distro upgrade"
 msgstr ""
 
 #: init/completions/apt-get.fish:28
 #, fuzzy
-msgid "install one or more packages"
+msgid "Install one or more packages"
 msgstr "Visa beroenden för paket"
 
 #: init/completions/apt-get.fish:29
 #, fuzzy
-msgid "remove one or more packages"
+msgid "Remove one or more packages"
 msgstr "Radera paket"
 
 #: init/completions/apt-get.fish:30
 #, fuzzy
-msgid "fetch source packages"
+msgid "Fetch source packages"
 msgstr "Visa alla källkodspaket"
 
 #: init/completions/apt-get.fish:31
 #, fuzzy
-msgid "install/remove packages for dependencies"
+msgid "Install/remove packages for dependencies"
 msgstr "Fråga inte efter extra beroenden"
 
 #: init/completions/apt-get.fish:32
-msgid "update cache and check dep"
-msgstr ""
+#, fuzzy
+msgid "Update cache and check dep"
+msgstr "Uppdatera källkod och bygg om dem"
 
 #: init/completions/apt-get.fish:33
-msgid "clean local caches and packages"
-msgstr ""
+#, fuzzy
+msgid "Clean local caches and packages"
+msgstr "Inga förändringar"
 
 #: init/completions/apt-get.fish:34
-msgid "clean packages no longer be downloaded"
+msgid "Clean packages no longer be downloaded"
 msgstr ""
 
 #: init/completions/apt-get.fish:35
@@ -1893,12 +1896,12 @@ msgid "Download Only"
 msgstr ""
 
 #: init/completions/apt-get.fish:36
-msgid "correct broken deps"
+msgid "Correct broken deps"
 msgstr ""
 
 #: init/completions/apt-get.fish:37
 #, fuzzy
-msgid "ignore missing packages"
+msgid "Ignore missing packages"
 msgstr "Upgradera paket"
 
 #: init/completions/apt-get.fish:38
@@ -1906,31 +1909,31 @@ msgid "Disable downloading packages"
 msgstr ""
 
 #: init/completions/apt-get.fish:40
-msgid "perform a siulation"
+msgid "Perform a siulation"
 msgstr ""
 
 #: init/completions/apt-get.fish:41
-msgid "automatic yes to prompts"
+msgid "Automatic yes to prompts"
 msgstr ""
 
 #: init/completions/apt-get.fish:42
 #, fuzzy
-msgid "show upgraded packages"
+msgid "Show upgraded packages"
 msgstr "Upgradera paket"
 
 #: init/completions/apt-get.fish:43
 #, fuzzy
-msgid "show full versions for packages"
+msgid "Show full versions for packages"
 msgstr "Visa alla källkodspaket"
 
 #: init/completions/apt-get.fish:44 init/completions/apt-get.fish:45
 #, fuzzy
-msgid "compile source packages"
+msgid "Compile source packages"
 msgstr "Visa alla källkodspaket"
 
 #: init/completions/apt-get.fish:46
 #, fuzzy
-msgid "ignore package Holds"
+msgid "Ignore package Holds"
 msgstr "Upgradera paket"
 
 #: init/completions/apt-get.fish:47
@@ -1944,71 +1947,69 @@ msgid "Force yes"
 msgstr "Tvingad stopp"
 
 #: init/completions/apt-get.fish:49
-msgid "print the URIs"
-msgstr ""
-
-#: init/completions/apt-get.fish:50
-msgid "use purge instead of remove"
-msgstr ""
+#, fuzzy
+msgid "Print the URIs"
+msgstr "Visa listade jobb"
 
 #: init/completions/apt-get.fish:51
 #, fuzzy
-msgid "reinstall packages"
+msgid "Reinstall packages"
 msgstr "Visa alla namn"
 
 #: init/completions/apt-get.fish:52
 #, fuzzy
-msgid "erase obsolete files"
+msgid "Erase obsolete files"
 msgstr "Utför filinnehåll som kommandon"
 
 #: init/completions/apt-get.fish:53
-msgid "control default input to the policy engine"
+msgid "Control default input to the policy engine"
 msgstr ""
 
 #: init/completions/apt-get.fish:54
-msgid "only perform operations that are trivial"
+msgid "Only perform operations that are trivial"
 msgstr ""
 
 #: init/completions/apt-get.fish:55
-msgid "abort if any packages are to be removed"
+msgid "Abort if any packages are to be removed"
 msgstr ""
 
 #: init/completions/apt-get.fish:56
 #, fuzzy
-msgid "only accept source packages"
+msgid "Only accept source packages"
 msgstr "Visa alla källkodspaket"
 
 #: init/completions/apt-get.fish:57
 #, fuzzy
-msgid "download only diff file"
+msgid "Download only diff file"
 msgstr "LAdda inte initieringsfiler"
 
 #: init/completions/apt-get.fish:58
 #, fuzzy
-msgid "download only tar file"
+msgid "Download only tar file"
 msgstr "LAdda inte initieringsfiler"
 
 #: init/completions/apt-get.fish:59
-msgid "only process arch-dep build-deps"
+msgid "Only process arch-dep build-deps"
 msgstr ""
 
 #: init/completions/apt-get.fish:60
-msgid "ignore non-authenticated packages"
-msgstr ""
+#, fuzzy
+msgid "Ignore non-authenticated packages"
+msgstr "Ignorera blanka tecken"
 
 #: init/completions/apt-get.fish:61
 #, fuzzy
-msgid "show program version"
+msgid "Show program version"
 msgstr "Visa version och avsluta"
 
 #: init/completions/apt-get.fish:62
 #, fuzzy
-msgid "specify a config file"
-msgstr "Välj konfigurationsfil"
+msgid "Specify a config file"
+msgstr "Specificera en konfigurationsfil"
 
 #: init/completions/apt-get.fish:63
 #, fuzzy
-msgid "set a config option"
+msgid "Set a config option"
 msgstr "Ladda om konfiguration för tjänst"
 
 #: init/completions/apt-key.fish:2
@@ -2134,6 +2135,7 @@ msgid "Read filenames from pipe"
 msgstr "Läs filnamn från rör"
 
 #: init/completions/apt-listchanges.fish:4
+#: init/completions/apt-proxy-import.fish:4
 msgid "Verbose info"
 msgstr "Utförligt läge"
 
@@ -2280,39 +2282,35 @@ msgstr ""
 
 #: init/completions/apt-proxy-import.fish:2
 #, fuzzy
-msgid "apt-proxy-import command help"
+msgid "Apt-proxy-import command help"
 msgstr "Ändra eller visa kommandoraden"
 
-#: init/completions/apt-proxy-import.fish:3 init/completions/atq.fish:2
-#: init/completions/atrm.fish:2
+#: init/completions/apt-proxy-import.fish:3
+#: init/completions/apt-rdepends.fish:12
 #, fuzzy
-msgid "print version"
+msgid "Print version"
 msgstr "Visa utförliga varningar"
 
-#: init/completions/apt-proxy-import.fish:4
-#, fuzzy
-msgid "verbose info"
-msgstr "Utförligt läge"
-
 #: init/completions/apt-proxy-import.fish:5
-msgid "no message to STDOUT"
+msgid "No message to STDOUT"
 msgstr ""
 
 #: init/completions/apt-proxy-import.fish:6
-msgid "recurse into subdir"
-msgstr ""
+#, fuzzy
+msgid "Recurse into subdir"
+msgstr "Rekursera till underkataloger"
 
 #: init/completions/apt-proxy-import.fish:7
-msgid "dir to import"
+msgid "Dir to import"
 msgstr ""
 
 #: init/completions/apt-proxy-import.fish:8
 #, fuzzy
-msgid "change to user"
+msgid "Change to user"
 msgstr "Ändra nuvarande katalog"
 
 #: init/completions/apt-proxy-import.fish:9
-msgid "debug level[default 0]"
+msgid "Debug level[default 0]"
 msgstr ""
 
 #: init/completions/apt-rdepends.fish:2
@@ -2357,11 +2355,6 @@ msgstr ""
 msgid "Display man page"
 msgstr "Visa hjälp och avsluta"
 
-#: init/completions/apt-rdepends.fish:12
-#, fuzzy
-msgid "Print version"
-msgstr "Visa utförliga varningar"
-
 #: init/completions/apt-setup.fish:2
 msgid "Probe a CD"
 msgstr ""
@@ -2373,7 +2366,7 @@ msgstr "Kör i interaktivt läge"
 
 #: init/completions/apt-show-source.fish:2
 #, fuzzy
-msgid "apt-show-source command help"
+msgid "Apt-show-source command help"
 msgstr "Processkommando"
 
 #: init/completions/apt-show-source.fish:3
@@ -2381,7 +2374,7 @@ msgstr "Processkommando"
 #: init/completions/apt-show-versions.fish:10
 #: init/completions/apt-show-versions.fish:11
 #, fuzzy
-msgid "read pkg from FILE"
+msgid "Read pkg from FILE"
 msgstr "Läs paket från fil"
 
 #: init/completions/apt-show-source.fish:5
@@ -2389,61 +2382,65 @@ msgstr "Läs paket från fil"
 #: init/completions/apt-show-versions.fish:12
 #: init/completions/apt-show-versions.fish:13
 #, fuzzy
-msgid "specify APT list dir"
+msgid "Specify APT list dir"
 msgstr "Specificera APT listningskatalog"
 
 #: init/completions/apt-show-source.fish:7
 #, fuzzy
-msgid "list PKG info"
+msgid "List PKG info"
 msgstr "Lista paketinformation"
 
 #: init/completions/apt-show-source.fish:8
-msgid "print version only"
-msgstr ""
+#, fuzzy
+msgid "Print version only"
+msgstr "Visa utförliga varningar"
 
 #: init/completions/apt-show-source.fish:9
-msgid "print all src pkgs with version"
-msgstr ""
+#, fuzzy
+msgid "Print all src pkgs with version"
+msgstr "Visa alla namn"
 
 #: init/completions/apt-show-source.fish:10
 #, fuzzy
-msgid "verbose message"
+msgid "Verbose message"
 msgstr "Utförligt läge"
 
 #: init/completions/apt-show-versions.fish:2
-msgid "apt-show-versions command help"
-msgstr ""
+#, fuzzy
+msgid "Apt-show-versions command help"
+msgstr "Processkommando"
 
 #: init/completions/apt-show-versions.fish:3
 #, fuzzy
-msgid "print PKG versions"
+msgid "Print PKG versions"
 msgstr "Visa APM info"
 
 #: init/completions/apt-show-versions.fish:4
-msgid "using regex"
+msgid "Using regex"
 msgstr ""
 
 #: init/completions/apt-show-versions.fish:5
-msgid "print only upgradeable pkgs"
-msgstr ""
+#, fuzzy
+msgid "Print only upgradeable pkgs"
+msgstr "Upgradera paket"
 
 #: init/completions/apt-show-versions.fish:6
 #, fuzzy
-msgid "print all versions"
+msgid "Print all versions"
 msgstr "Visa alla namn"
 
 #: init/completions/apt-show-versions.fish:7
 #, fuzzy
-msgid "print pkg name/distro"
+msgid "Print pkg name/distro"
 msgstr "Visa alla namn"
 
 #: init/completions/apt-show-versions.fish:8
 #, fuzzy
-msgid "print verbose info"
+msgid "Print verbose info"
 msgstr "Visa utförliga varningar"
 
 #: init/completions/apt-show-versions.fish:9
-msgid "init or update cache only"
+msgid "Init or update cache only"
 msgstr ""
 
 #: init/completions/apt-sortpkgs.fish:2
@@ -2752,6 +2749,11 @@ msgstr "Visa tid"
 #: init/completions/at.fish:9
 msgid "Print the jobs listed"
 msgstr "Visa listade jobb"
+
+#: init/completions/atq.fish:2 init/completions/atrm.fish:2
+#, fuzzy
+msgid "print version"
+msgstr "Visa utförliga varningar"
 
 #: init/completions/atq.fish:3
 #, fuzzy
@@ -4362,27 +4364,15 @@ msgstr "Propagera bara tider för matchande symboler"
 
 #: init/completions/gprof.fish:28
 msgid "Do not propagate times for matching symbols"
-msgstr ""
+msgstr "Skicka inte vidare tider för matchande symboler"
 
 #: init/completions/gprof.fish:29
 msgid "Mention unused functions in flat profile"
-msgstr ""
+msgstr "Nämn oanvända funktioner i platt profil"
 
 #: init/completions/gprof.fish:30
 msgid "Specify debugging options"
-msgstr ""
-
-#: init/completions/gprof.fish:31 init/completions/rpm.fish:4
-#: init/completions/who.fish:18
-#, fuzzy
-msgid "Print help and exit"
-msgstr "Visa hjälp och avsluta"
-
-#: init/completions/gprof.fish:32 init/completions/rpm.fish:5
-#: init/completions/who.fish:19
-#, fuzzy
-msgid "Display version and exit and exit"
-msgstr "Visa hjälp och avsluta"
+msgstr "Välj debuginställningar"
 
 #: init/completions/gprof.fish:33
 msgid "Profile data format"
@@ -7553,114 +7543,112 @@ msgid "Turn on options suitable for mirroring"
 msgstr ""
 
 #: init/completions/wget.fish:95
-msgid "download all the files that are necessary to properly display a given HTML page"
+msgid "Download all the files that are necessary to properly display a given HTML page"
 msgstr ""
 
 #: init/completions/wget.fish:96
 msgid "Turn on strict parsing of HTML comments"
-msgstr ""
+msgstr "Slå på strikt tolkning av HTML-kommentarer"
 
 #: init/completions/wget.fish:100
 msgid "comma-separated lists of file name suffixes or patterns to accept"
-msgstr ""
+msgstr "Kommasepare4rad lista av filnamns-suffix eller mönster att ladda ner"
 
 #: init/completions/wget.fish:101
 msgid "comma-separated lists of file name suffixes or patterns to reject"
-msgstr ""
+msgstr "Kommasepare4rad lista av filnamns-suffix eller mönster att inte ladda ner"
 
 #: init/completions/wget.fish:102
 msgid "Set domains to be followed"
-msgstr ""
+msgstr "Välj domäner att följa"
 
 #: init/completions/wget.fish:103
 msgid "Specify the domains that are not to be followed"
-msgstr ""
+msgstr "Specificera domäner som inte skall följas"
 
 #: init/completions/wget.fish:104
 msgid "Follow FTP links from HTML documents"
-msgstr ""
+msgstr "Följ FTP-länkar från HTML-dokument"
 
 #: init/completions/wget.fish:105
 msgid "HTML tags to follow"
-msgstr ""
+msgstr "Följ specificerade HTML-taggar"
 
 #: init/completions/wget.fish:106
 msgid "HTML tags to ignore"
-msgstr ""
+msgstr "Ignorera specificerad HTML-taggar"
 
 #: init/completions/wget.fish:107
 msgid "Enable spanning across hosts"
-msgstr ""
+msgstr "Följ länkar mellan olika värdar"
 
 #: init/completions/wget.fish:108
 msgid "Follow relative links only"
-msgstr ""
+msgstr "Följ bara relativa länkar"
 
 #: init/completions/wget.fish:109
 msgid "Specify a comma-separated list of directories you wish to follow"
-msgstr ""
+msgstr "Specificera en kommaseparerad lista av kataloger som skall följas"
 
 #: init/completions/wget.fish:110
 msgid "Specify a comma-separated list of directories you wish to exclude"
-msgstr ""
+msgstr "Specificera en kommaseparerad lista av kataloger som skall exkluderas"
 
 #: init/completions/wget.fish:111 init/completions/wget.fish:112
 msgid "Do not ever ascend to the parent directory"
-msgstr ""
+msgstr "Nedstig aldrig i föräldrakatalog"
 
 #: init/completions/who.fish:1
 msgid "Same as -b -d --login -p -r -t -T -u"
-msgstr ""
+msgstr "Synonymt med -b -d --login -p -r -t -T -u"
 
 #: init/completions/who.fish:2
 msgid "Print time of last boot"
-msgstr ""
+msgstr "Visa tidpunkt för senaste uppstart"
 
 #: init/completions/who.fish:3
-#, fuzzy
 msgid "Print dead processes"
-msgstr "Visa status för tjänst"
+msgstr "Visa döda processer"
 
 #: init/completions/who.fish:4
 msgid "Print line of headings"
-msgstr ""
+msgstr "Skriv ut rad av överskrifter"
 
 #: init/completions/who.fish:5
 msgid "Print idle time"
-msgstr ""
+msgstr "Visa overksam tid"
 
 #: init/completions/who.fish:6
 msgid "Print login process"
-msgstr ""
+msgstr "Visa inloggningsprocess"
 
 #: init/completions/who.fish:7
 msgid "Canonicalize hostnames via DNS"
-msgstr ""
+msgstr "Gör värdnamn kanoniska via DNS"
 
 #: init/completions/who.fish:8
 msgid "Print hostname and user for stdin"
-msgstr ""
+msgstr "Visa värdnamn och användare för standard in"
 
 #: init/completions/who.fish:9
 msgid "Print active processes spawned by init"
-msgstr ""
+msgstr "Visa aktiva processer skapade av init"
 
 #: init/completions/who.fish:10
 msgid "Print all login names and number of users logged on"
-msgstr ""
+msgstr "Skriv ut alla inloggningsnamn och antal inloggade användare"
 
 #: init/completions/who.fish:11
-#, fuzzy
 msgid "Print current runlevel"
-msgstr "Skriv ut nuvarande jobb"
+msgstr "Skriv ut nuvarande körnivå"
 
 #: init/completions/who.fish:12
 msgid "Print name, line, and time"
-msgstr ""
+msgstr "Visa namn, rad och tid"
 
 #: init/completions/who.fish:13
 msgid "Print last system clock change"
-msgstr ""
+msgstr "Visa senaste systemklockändring"
 
 #: init/completions/who.fish:14 init/completions/who.fish:15
 #: init/completions/who.fish:16
@@ -7709,7 +7697,7 @@ msgstr "Välj formatfil"
 
 #: init/completions/xprop.fish:12
 msgid "Select window manager frame"
-msgstr ""
+msgstr "Välj fönsterhanterarens ram"
 
 #: init/completions/xprop.fish:13
 msgid "Remove property"
@@ -7728,53 +7716,52 @@ msgid "Set format"
 msgstr "Välj format"
 
 #: init/completions/xsel.fish:1
-#, fuzzy
 msgid "Append input to selection"
-msgstr "IO dirigering till slutet av fil"
+msgstr "Lägg till indata till slutet at urval"
 
 #: init/completions/xsel.fish:2
 msgid "Append to selection as input grows"
-msgstr ""
+msgstr "Lägg till till urval när indata växer"
 
 #: init/completions/xsel.fish:3
 msgid "Read into selection"
-msgstr ""
+msgstr "Läs in in urval"
 
 #: init/completions/xsel.fish:4
 msgid "Write selection"
-msgstr ""
+msgstr "Visa urval"
 
 #: init/completions/xsel.fish:5
 msgid "Clear selection"
-msgstr ""
+msgstr "Töm urval"
 
 #: init/completions/xsel.fish:6
 msgid "Delete selection"
-msgstr ""
+msgstr "Radera urval"
 
 #: init/completions/xsel.fish:7
 msgid "Use primary selection"
-msgstr ""
+msgstr "Använd primärt urval"
 
 #: init/completions/xsel.fish:8
 msgid "Use secondary selection"
-msgstr ""
+msgstr "Använd sekundärt urval"
 
 #: init/completions/xsel.fish:9
 msgid "Use clipboard selection"
-msgstr ""
+msgstr "Använd urklipp (clipboard) istället för urval"
 
 #: init/completions/xsel.fish:10
 msgid "Make current selections persistent after program exit"
-msgstr ""
+msgstr "Gör så nuvarande urval finns kvar efter programavslut"
 
 #: init/completions/xsel.fish:11
 msgid "Exchange primary and secondary selections"
-msgstr ""
+msgstr "Växla primärt och sekundärt urval"
 
 #: init/completions/xsel.fish:12
 msgid "X server display"
-msgstr ""
+msgstr "X-serverdisplay"
 
 #: init/completions/xsel.fish:13
 msgid "Timeout for retrieving selection"
@@ -7944,3 +7931,10 @@ msgstr "Kryptera"
 msgid "Don't compress these suffixes"
 msgstr "Komprimera inte dessa suffix"
 
+#, fuzzy
+#~ msgid "specify a config file"
+#~ msgstr "Välj konfigurationsfil"
+
+#, fuzzy
+#~ msgid "verbose info"
+#~ msgstr "Utförligt läge"

@@ -1,8 +1,8 @@
 # Completions for the rpm command. Insanely complicated,
 # since rpm has multiple operation modes, and a perverse number of switches.
 
-complete -c rpm -s "?" -l help -d (_ "Print help and exit")
-complete -c rpm -l version -d (_ "Display version and exit and exit")
+complete -c rpm -s "?" -l help -d (_ "Display help and exit")
+complete -c rpm -l version -d (_ "Display version and exit")
 complete -c rpm -l quiet -d (_ "Be less verbose")
 complete -c rpm -s v -d (_ "Be more verbose")
 complete -c rpm -l rcfile -d (_ "List of rpm configuration files") -f
@@ -24,7 +24,7 @@ complete $rpm_install -l allfiles -d (_ "Installs or upgrades all the missing ok
 complete $rpm_install -l badreloc -d (_ "Used with --relocate, permit relocations on all file paths, not just those OLD-PATH's included in the binary package relocation hint(s)")
 complete $rpm_install -l aid -d (_ 'Add suggested packages to the transaction set when needed')
 complete $rpm_install -l allfiles -d (_ 'Installs or upgrades all the missingok files in the package, regardless if they exist')
-complete $rpm_install -l badreloc -d (_ 'Used with --relocate, permit relocations on all file paths, not just those OLD-PATH's included in the binary package relocation hint(s)')
+complete $rpm_install -l badreloc -d (_ "Used with --relocate, permit relocations on all file paths, not just those OLD-PATH's included in the binary package relocation hint(s)")
 complete $rpm_install -l excludepath -d (_ "Don't install files whose name begins with OLDPATH") -xa "(__fish_complete_directory (commandline -ct) 'Skip installation of files in this directory')"
 complete $rpm_install -l excludedocs -d (_ "Don't install any files which are marked as documentation (which includes man pages and texinfo documents)")
 complete $rpm_install -l force -d (_ 'Same as using --replacepkgs, --replacefiles, and --oldpackage')
@@ -131,4 +131,4 @@ complete $rpm_mode -s V -l verify -d (_ 'Verify package integrety')
 complete $rpm_mode -s e -l erase -d (_ 'Erase package')
 set -e rpm_mode
 
-complete -c rpm -xa '(__fish_complete_suffix (commandline -ct) .rpm (_ "RPM package") )'
+complete -c rpm -xa '(__fish_complete_suffix (commandline -ct) .rpm (_ "Package") )'

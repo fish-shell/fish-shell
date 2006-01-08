@@ -15,6 +15,6 @@ complete -c who -s T -l mesg -d (_ "Print users message status as +, - or ?")
 complete -c who -s w -l writable -d (_ "Print users message status as +, - or ?")
 complete -c who -l message -d (_ "Print users message status as +, - or ?")
 complete -c who -s u -l users -d (_ "List users logged in")
-complete -c who -l help -d (_ "Print help and exit")
-complete -c who -l version -d (_ "Display version and exit and exit")
+complete -c who -l help -d (_ "Display help and exit")
+complete -c who -l version -d (_ "Display version and exit")
 

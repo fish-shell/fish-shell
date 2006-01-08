@@ -215,6 +215,73 @@ static mode_t get_umask()
 }
 
 /**
+   Checks if the specified variable is a locale variable
+*/
+static int is_locale( const wchar_t *key )
+{
+	return contains_str( key, L"LANG", L"LC_ALL", L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES", L"LC_MONETARY", L"LC_NUMERIC", L"LC_TIME", (void *)0);
+}
+
+/**
+  Properly sets all locale information
+*/
+static void handle_locale()
+{
+	const wchar_t *lc_all = env_get( L"LC_ALL" );
+	const wchar_t *lang;
+	int i;
+	wchar_t *old = wcsdup(wsetlocale( LC_MESSAGES, (void *)0 ));
+	
+	static const wchar_t *lc[] = 
+		{
+			L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES", L"LC_MONETARY", L"LC_NUMERIC", L"LC_TIME", (void *)0
+		}
+	;
+	static const int cat[] = 
+		{
+			LC_COLLATE, LC_CTYPE, LC_MESSAGES, LC_MONETARY, LC_NUMERIC, LC_TIME
+		}
+	;
+	
+	if( lc_all )
+	{
+		wsetlocale( LC_ALL, lc_all );
+	}
+	else
+	{
+		lang = env_get( L"LANG" );
+		if( lang )
+		{
+			wsetlocale( LC_ALL, lang );
+		}
+		
+		for( i=0; lc[i]; i++ )
+		{
+			const wchar_t *val = env_get( lc[i] );
+			if( val )
+				wsetlocale(  cat[i], val );
+		}
+	}
+	
+	if( wcscmp( wsetlocale( LC_MESSAGES, (void *)0 ), old ) != 0 )
+	{
+		/* Make change known to gettext.  */
+		{
+			extern int  _nl_msg_cat_cntr;
+			++_nl_msg_cat_cntr;
+		}			
+		
+		if( is_interactive )
+		{
+			debug( 0, _(L"Changing language to english") );
+		}
+	}
+	free( old );
+		
+}
+
+
+/**
    Universal variable callback function. This function makes sure the
    proper events are triggered when an event occurs.
 */
@@ -223,6 +290,9 @@ static void universal_callback( int type,
 								const wchar_t *val )
 {
 	wchar_t *str=0;
+	
+	if( is_locale( name ) )
+		handle_locale();
 	
 	switch( type )
 	{
@@ -475,7 +545,7 @@ static env_node_t *env_get_node( const wchar_t *key )
 	
 	return 0;
 }
-	
+
 void env_set( const wchar_t *key, 
 			  const wchar_t *val, 
 			  int var_mode )
@@ -490,26 +560,13 @@ void env_set( const wchar_t *key,
 
 	event_t ev;
 	int is_universal = 0;	
-	
+
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
 	{
 		return;
 	}
 	
-	if( wcscmp(key, L"LANG" )==0 )
-	{
-		fish_setlocale(LC_ALL,val);
-		/* Make change known to gettext.  */
-		{
-			extern int  _nl_msg_cat_cntr;
-			++_nl_msg_cat_cntr;
-		}
-
-		if( is_interactive )
-			debug( 0, _(L"Changing language to english") );
-	}
-
 	if( wcscmp( key, L"umask" ) == 0)
 	{
 		wchar_t *end;
@@ -533,7 +590,6 @@ void env_set( const wchar_t *key,
 		*/
 		return;
 	}
-	
 
 	/*
 	  Zero element arrays are internaly not coded as null but as this placeholder string
@@ -685,8 +741,16 @@ void env_set( const wchar_t *key,
 //	debug( 1, L"env_set: return from event firing" );	
 		al_destroy( &ev.arguments );	
 	}
-	
+
+	if( is_locale( key ) )
+	{
+		handle_locale();
+	}
+		
 }
+
+
+
 
 /**
    Attempt to remove/free the specified key/value pair from the
@@ -735,6 +799,10 @@ void env_remove( const wchar_t *key, int var_mode )
 	{
 		env_universal_remove( key );
 	}
+
+	if( is_locale( key ) )
+		handle_locale();
+			
 }
 
 

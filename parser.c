@@ -2114,7 +2114,7 @@ static void eval_job( tokenizer *tok )
 					   tok_get_desc( tok_last_type(tok) ) );
 			}
 			
-			return 0;
+			return;
 		}
 				
 		case TOK_ERROR:

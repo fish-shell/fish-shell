@@ -845,8 +845,7 @@ static void init()
 {
 	struct sigaction act;
 	program_name = L"fish_pager";
-	fish_setlocale( LC_ALL, L"" );
-	
+	wsetlocale( LC_ALL, L"" );
 	
 	int out = dup( 1 );
 	close(1);

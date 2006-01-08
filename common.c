@@ -104,8 +104,17 @@ static struct winsize termsize;
 */
 static int block_count=0;
 
+static string_buffer_t *setlocale_buff=0;
+
+
 void common_destroy()
 {
+	if( setlocale_buff )
+	{
+		sb_destroy( setlocale_buff );
+		free( setlocale_buff );
+	}
+	
 	debug( 3, L"Calls: wcsdupcat %d, wcsdupcat2 %d, wcsndup %d, str2wcs %d, wcs2str %d", c1, c2, c3, c4, c5 );
 }
 
@@ -719,27 +728,33 @@ wchar_t *quote_end( const wchar_t *in )
 }
 
 
-void fish_setlocale(int category, const wchar_t *locale)
+const wchar_t *wsetlocale(int category, const wchar_t *locale)
 {
-	char *lang = wcs2str( locale );
-	setlocale(category,lang);
+
+	char *lang = locale?wcs2str( locale ):0;
+	char * res = setlocale(category,lang);
 	
 	free( lang );
+
 	/*
 	  Use ellipsis if on known unicode system, otherwise use $
 	*/
-	if( wcslen( locale ) )
+	char *ctype = setlocale( LC_CTYPE, (void *)0 );
+	ellipsis_char = (strstr( ctype, ".UTF")||strstr( ctype, ".utf") )?L'\u2026':L'$';	
+		
+	if( !res )
+		return 0;
+	
+	if( !setlocale_buff )
 	{
-		ellipsis_char = wcsstr( locale, L".UTF")?L'\u2026':L'$';	
+		setlocale_buff = malloc( sizeof(string_buffer_t) );
+		sb_init( setlocale_buff);
 	}
-	else
-	{
-		char *lang = getenv( "LANG" );
-		if( lang )
-			ellipsis_char = strstr( lang, ".UTF")?L'\u2026':L'$';	
-		else
-			ellipsis_char = L'$';
-	}
+	
+	sb_clear( setlocale_buff );
+	sb_printf( setlocale_buff, L"%s", res );
+	
+	return (wchar_t *)setlocale_buff->buff;	
 }
 
 int contains_str( const wchar_t *a, ... )

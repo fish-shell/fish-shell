@@ -400,7 +400,7 @@ static void init()
 
 	sock = get_socket();
 	daemonize();	
-	fish_setlocale( LC_ALL, L"" );	
+	wsetlocale( LC_ALL, L"" );	
 	env_universal_common_init( &broadcast );
 	
 	load();	

@@ -655,6 +655,7 @@ values of these variables. They are:
 - \c PWD, which is the current working directory. 
 - \c status, which is the exit status of the last foreground job to exit. If a job contains pipelines, the status of the last command in the pipeline is the status for the job.
 - \c USER, which is the username. This variable can only be changed by the root user.
+- \c LANG, \cLC_ALL, \c LC_COLLATE, \c LC_CTYPE, \cLC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 
 Variables whose name are in uppercase are exported to the commands
 started by fish. This rule is not enforced by fish, but it is good
@@ -662,6 +663,22 @@ coding practice to use casing to distinguish between exported and
 unexported variables. \c fish also uses several variables
 internally. Such variables are prefixed with the string __FISH or
 __fish. These should be ignored by the user.
+
+\subsection variables-locale Locale variables
+
+The most common way to set the locale to use a command like 'set -x
+LANG en_GB.utf8', which sets the current locale to be the english
+language, adapted to great britain, using the UTF-8 character set. For
+a list of available locales, use 'locale -a'.
+
+\c LANG, \cLC_ALL, \c LC_COLLATE, \c LC_CTYPE, \cLC_MESSAGES, \c
+LC_MONETARY, \c LC_NUMERIC and LC_TIME set the language option for the
+shell and subprograms. These variables work as follows: \c LC_ALL
+forces all the aspects of the locale to the specified value. If LC_ALL
+is set, all other locale variables will be ignored. The other LC_
+variables set the specified aspect of the locale information. . LANG
+is a fallback value, it will be used if none of the LC_ variables are
+specified.
 
 \section builtin-overview Builtins 
 

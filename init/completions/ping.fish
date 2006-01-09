@@ -23,8 +23,8 @@ complete -c ping -s t -d (_ "Set the IP Time to Live") -x
 complete -c ping -s T -d (_ "Set special IP timestamp options") -x
 complete -c ping -s M -d (_ "Select  Path  MTU  Discovery  strategy") -x -a "do want dont"
 complete -c ping -s U -d (_ "Print full user-to-user latency")
-complete -c ping -s v -d (_ "Verbose output")
-complete -c ping -s V -d (_ "Show version and exit")
+complete -c ping -s v -d (_ "Verbose mode")
+complete -c ping -s V -d (_ "Display version and exit")
 complete -c ping -s w -d (_ "Specify  a timeout, in seconds, before ping exits regardless of how many packets have been sent or received") -x
 complete -c ping -s W -d (_ "Time to wait for a response, in seconds") -x
 

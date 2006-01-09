@@ -1,5 +1,5 @@
 
-complete -c type -s h -l help -d (_ "Print this message")
+complete -c type -s h -l help -d (_ "Display help and exit")
 complete -c type -s a -l all -d (_ "Print all possible definitions of the specified name")
 complete -c type -s f -l no-functions -d (_ "Supress function and builtin lookup")
 complete -c type -s t -l type -d (_ "Print command type")

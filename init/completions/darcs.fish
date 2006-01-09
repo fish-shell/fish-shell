@@ -61,7 +61,7 @@ complete -c darcs -n '__fish_use_subcommand' -xa 'repair\t"'(_ "Repair the corru
 complete -c darcs -s h -l help -d (_ "Shows brief description of command and its arguments")
 complete -c darcs -l disable -d (_ "Disable this command")
 complete -c darcs -l repodir -d (_ "Specify the repository directory in which to run") -x -a '(__fish_complete_directory (commandline -ct))'
-complete -c darcs -s v -l verbose -d (_ "Give verbose output")
+complete -c darcs -s v -l verbose -d (_ "Verbose mode")
 
 #
 # Here follows a huge list of subcommand-specific completions
@@ -134,7 +134,6 @@ complete $apply_opt -l dont-compress -d (_ "Don't create compressed patches")
 complete $apply_opt -l interactive -d (_ "Prompt user interactively")
 complete $apply_opt -l mark-conflicts -d (_ "Mark conflicts")
 complete $apply_opt -l allow-conflicts -d (_ "Allow conflicts, but don't mark them")
-complete $apply_opt -l no-resolve-conflicts -d (_ "Equivalent to --dont-allow-conflicts, for backwards compatibility")
 complete $apply_opt -l dont-allow-conflicts -d (_ "Fail on patches that create conflicts [DEFAULT]")
 complete $apply_opt -l no-test -d (_ "Don't run the test script")
 complete $apply_opt -l test -d (_ "Run the test script")
@@ -146,7 +145,7 @@ complete $apply_opt -l dont-set-scripts-executable -d (_ "Don't make scripts exe
 set -e apply_opt
 
 set -- check_opt  -c darcs -n 'contains check (commandline -poc)'
-complete $check_opt -s v -l verbose -d (_ "Give verbose output")
+complete $check_opt -s v -l verbose -d (_ "Verbose mode")
 complete $check_opt -s q -l quiet -d (_ "Suppress informational output")
 complete $check_opt -l complete -d (_ "Check the entire repository")
 complete $check_opt -l partial -d (_ "Check patches since latest checkpoint")
@@ -158,13 +157,13 @@ complete $check_opt -l remove-test-directory -d (_ "Remove the test directory")
 set -e check_opt
 
 set -- mv_opt  -c darcs -n 'contains mv (commandline -poc)'
-complete $mv_opt -s v -l verbose -d (_ "Give verbose output")
+complete $mv_opt -s v -l verbose -d (_ "Verbose mode")
 complete $mv_opt -l case-ok -d (_ "Don't refuse to add files differing only in case")
 complete $mv_opt -l standard-verbosity -d (_ "Don't give verbose output")
 set -e mv_opt
 
 set -- send_opt -c darcs -n 'contains send (commandline -poc)'
-complete $send_opt -s v -l verbose -d (_ "Give verbose output")
+complete $send_opt -s v -l verbose -d (_ "Verbose mode")
 complete $send_opt -s q -l quiet -d (_ "Suppress informational output")
 complete $send_opt -xs p -l patches -d (_ "Select patches matching REGEXP")
 complete $send_opt -xs t -l tags -d (_ "Select tags matching REGEXP")

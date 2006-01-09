@@ -27,7 +27,7 @@ set mplayer_lang "
 complete -c mplayer -o autoq -d (_ "Dynamically change postprocessing") -x
 complete -c mplayer -o autosync -x -d (_ "A/V sync speed")
 complete -c mplayer -o framedrop -d (_ "Skip frames to maintain A/V sync")
-complete -c mplayer -s h -o help -d (_ "Show help and exit")
+complete -c mplayer -s h -o help -d (_ "Display help and exit")
 complete -c mplayer -o hardframedrop -d (_ "Skip frames to maintain A/V sync")
 complete -c mplayer -o loop -x -d (_ "Loop playback") -r -a "0 1 2 3 4 5 6 7 8 9"
 complete -c mplayer -o shuffle -d (_ "Play in random order")

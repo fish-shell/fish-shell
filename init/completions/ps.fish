@@ -31,7 +31,7 @@ complete -c ps -s n -d (_ "Set namelist file") -r
 complete -c ps -s w -d (_ "Wide output")
 complete -c ps -s L -d (_ "Show threads")
 complete -c ps -s T -d (_ "Show threads")
-complete -c ps -s V -l version -d (_ "Display vesrion and exit")
+complete -c ps -s V -l version -d (_ "Display version and exit")
 complete -c ps -l help -d (_ "Display help and exit")
 complete -c ps -l info -d (_ "Display debugging info")
 

@@ -1,6 +1,6 @@
 complete -c configure -s h -l help -x -a "short recursive" -d (_ "Display help and exit")
 complete -c configure -s V -l version -d (_ "Display version and exit")
-complete -c configure -s q -l quiet -d (_ "Be less verbose")
+complete -c configure -s q -l quiet -d (_ "Quiet mode")
 complete -c configure -l cache-file -f -d (_ "Cache test results in specified file")
 complete -c configure -s C -l config-cache -d (_ "Cache test results in file config.cache")
 complete -c configure -s n -l no-create -d (_ "Do not create output files")

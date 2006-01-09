@@ -25,7 +25,7 @@ complete -f -c apt-cache -s g -l generate -d (_ "Auto-gen package cache")
 complete -f -c apt-cache -l all-names -d (_ "Print all names")
 complete -f -c apt-cache -l recurse -d (_ "Dep and rdep recursive")
 complete -f -c apt-cache -l installed -d (_ "Limit to installed")
-complete -f -c apt-cache -s v -l version -d (_ "Show version")
+complete -f -c apt-cache -s v -l version -d (_ "Display version and exit")
 complete -r -c apt-cache -s c -l config-file -d (_ "Specify config file")
 complete -x -c apt-cache -s o -l option -d (_ "Specify options")
 

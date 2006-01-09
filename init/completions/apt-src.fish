@@ -1,5 +1,5 @@
 #apt-src
-complete -c apt-src -s h -l help -d (_ "Apt-src command help")
+complete -c apt-src -s h -l help -d (_ "Display help and exit")
 complete -f -c apt-src -a "update" -d (_ "Update list of src pkgs")
 complete -f -c apt-src -a "install" -d (_ "Install src pkgs")
 complete -f -c apt-src -a "upgrade" -d (_ "Upgrade src pkgs")

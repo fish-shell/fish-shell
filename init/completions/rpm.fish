@@ -3,8 +3,8 @@
 
 complete -c rpm -s "?" -l help -d (_ "Display help and exit")
 complete -c rpm -l version -d (_ "Display version and exit")
-complete -c rpm -l quiet -d (_ "Be less verbose")
-complete -c rpm -s v -d (_ "Be more verbose")
+complete -c rpm -l quiet -d (_ "Quiet mode")
+complete -c rpm -s v -d (_ "Verbose mode")
 complete -c rpm -l rcfile -d (_ "List of rpm configuration files") -f
 complete -c rpm -l pipe -d (_ "Pipe output through specified command") -r
 complete -c rpm -l dbpath -d (_ "Specify directory for rpm database") -a "
@@ -51,7 +51,7 @@ complete $rpm_install -l notriggerpostun -d (_ "Don't execute triggerpostun scri
 complete $rpm_install -l oldpackage -d (_ 'Allow an upgrade to replace a newer package with an older one')
 complete $rpm_install -l percent -d (_ 'Print percentages as files are unpacked from the package archive. This is intended to make rpm easy to run from other tools')
 complete $rpm_install -l prefix -d (_ 'For relocatable binary packages, translate all file paths that start with the installation prefix in the package relocation hint(s) to NEWPATH') -xa "(__fish_complete_directory (commandline -ct) 'Directory prefix for relocatable packages')"
-complete $rpm_install -l relocate -x -d (_ 'For relocatable binary packages, translate all file paths that start with OLDPATH in the package relocation hint(s) to NEWPATH. This option can be used repeatedly if several OLDPATH’s in the package are to be relocated')
+complete $rpm_install -l relocate -x -d (_ "For relocatable binary packages, translate all file paths that start with OLDPATH in the package relocation hint(s) to NEWPATH. This option can be used repeatedly if several OLDPATH's in the package are to be relocated")
 complete $rpm_install -l repackage -d (_ 'Re-package the files before erasing. The previously installed package will be named according to the macro %_repackage_name_fmt and will be created in the directory named by the macro %_repackage_dir (default value is /var/spool/repackage)')
 complete $rpm_install -l replacefiles -d (_ 'Install the packages even if they replace files from other, already installed, packages')
 complete $rpm_install -l replacepkgs -d (_ 'Install the packages even if some of them are already installed on this system')
@@ -97,7 +97,7 @@ complete $rpm_verify -l nodeps -d (_ "Don't verify dependencies of packages")
 complete $rpm_verify -l nodigest -d (_ "Don't verify package or header digests when reading")
 complete $rpm_verify -l nofiles -d (_ "Don't verify any attributes of package files")
 complete $rpm_verify -l noscripts -d (_ "Don't execute the %verifyscript scriptlet (if any)")
-complete $rpm_verify -l nosignature -d (_ 'Don’t verify package or header signatures when reading')
+complete $rpm_verify -l nosignature -d (_ "Don't verify package or header signatures when reading")
 complete $rpm_verify -l nolinkto -d (_ "Don't verify linkto attribute")
 complete $rpm_verify -l nomd5 -d (_ "Don't verify md5 attribute")
 complete $rpm_verify -l nosize -d (_ "Don't verify size attribute")
@@ -111,7 +111,7 @@ set -e rpm_verify
 set -- rpm_erase -c rpm -n "__fish_contains_opt -s e erase"
 complete $rpm_erase -a "(__fish_print_packages)"
 complete $rpm_erase -l allmatches -d (_ 'Remove all versions of the package which match PACKAGE_NAME. Normally an error is issued if PACKAGE_NAME matches multiple packages')
-complete $rpm_erase -l nodeps -d (_ 'Don’t check dependencies before uninstalling the packages')
+complete $rpm_erase -l nodeps -d (_ "Don't check dependencies before uninstalling the packages")
 complete $rpm_erase -l noscripts -d (_ "Don't execute scriplets")
 complete $rpm_erase -l nopreun -d (_ "Don't execute preun scriptlet")
 complete $rpm_erase -l nopostun -d (_ "Don't execute postun scriptlet")

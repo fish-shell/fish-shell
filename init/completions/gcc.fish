@@ -51,12 +51,12 @@ complete -c gcc -o ffreestanding -d (_ 'Assert freestanding environment')
 complete -c gcc -o fms-extensions -d (_ 'Use Microsoft extensions')
 complete -c gcc -o trigraphs -d (_ 'Use ANSI trigraphs')
 complete -c gcc -o no-integrated-cpp -d (_ 'Do not use integrated preprocessor')
-complete -c gcc -o funsigned-char -d (_ 'Char is unsigned')
-complete -c gcc -o fsigned-char -d (_ 'Char is signed')
-complete -c gcc -o funsigned-bitfields -d (_ 'Bifield is unsigned')
-complete -c gcc -o fsigned-bitfields -d (_ 'Bifield is signed')
-complete -c gcc -o fno-unsigned-bitfields -d (_ 'All bifields are signed')
-complete -c gcc -o fno-signed-bitfields -d (_ 'All bifield are signed')
+complete -c gcc -o funsigned-char -d (_ 'char is unsigned')
+complete -c gcc -o fsigned-char -d (_ 'char is signed')
+complete -c gcc -o funsigned-bitfields -d (_ 'bitfield is unsigned')
+complete -c gcc -o fsigned-bitfields -d (_ 'bitfield is signed')
+complete -c gcc -o fno-unsigned-bitfields -d (_ 'All bitfields are signed')
+complete -c gcc -o fno-signed-bitfields -d (_ 'All bitfields are unsigned')
 complete -c gcc -o fwritable-strings -d (_ 'String constants are not const')
 complete -c gcc -o fabi-version -d (_ 'C++ ABI version') -r -x -a '1 0'
 complete -c gcc -o fno-access-control -d (_ 'Turn off access checking')
@@ -83,7 +83,7 @@ complete -c gcc -o fno-rtti -d (_ 'Disable generation of C++ runtime type inform
 #complete -c gcc -o fstats -d (_ 'Emit front-end usage statistics')
 
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17;
-	complete -c gcc -o ftemplate-depth-1 -d Set\ maximum\ template\ depth\ to\ $i;
+	complete -c gcc -o ftemplate-depth-1 -d (printf (_ "Set maximum template depth to %s") $i);
 end;
 
 complete -c gcc -o fno-threadsafe-statistics -d (_ 'Do not emit code for thread-safe initialization of local statics')

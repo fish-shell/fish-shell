@@ -3,8 +3,8 @@
 #
 
 for i in ssh scp
-	complete -c $i -s 1 -d (_ "Protocall version 1 only")
-	complete -c $i -s 2 -d (_ "Protocall version 2 only")
+	complete -c $i -s 1 -d (_ "Protocoll version 1 only")
+	complete -c $i -s 2 -d (_ "Protocoll version 2 only")
 	complete -c $i -s 4 -d (_ "IPv4 addresses only")
 	complete -c $i -s 6 -d (_ "IPv6 addresses only")
 	complete -c $i -s C -d (_ "Compress all data")

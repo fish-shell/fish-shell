@@ -10,7 +10,7 @@ complete -xc apropos -a '(__fish_complete_apropos)' -d (_ "Whatis entry")
 
 complete -c apropos -s h -l help -d (_ "Display help and exit")
 complete -f -c apropos -s d -l debug -d (_ "Print debugging info")
-complete -f -c apropos -s v -l verbose -d (_ "Print verbose warning")
+complete -f -c apropos -s v -l verbose -d (_ "Verbose mode")
 complete -f -c apropos -s r -l regex -d (_ "Keyword as regex")
 complete -f -c apropos -s w -l wildcard -d (_ "Keyword as wildwards")
 complete -f -c apropos -s e -l exact -d (_ "Keyword as exactly match")

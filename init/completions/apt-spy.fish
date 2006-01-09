@@ -1,5 +1,5 @@
 #apt-spy
-complete -c apt-spy -s h -d (_ "Apt-spy command help")
+complete -c apt-spy -s h -d (_ "Display help and exit")
 complete -f -c apt-spy -s d -a "stable testing unstable" -d (_ "Debian distribtion")
 complete -f -c apt-spy -s a -a "Africa Asia Europe North-America Oceania South-America" -d (_ "Servers in the areas")
 complete -c apt-spy -s c -d (_ "Conf file")

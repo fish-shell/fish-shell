@@ -1,6 +1,6 @@
 #apt-zip-list
 complete -c apt-zip-list -s h -l help -d (_ "Display help and exit")
-complete -f -c apt-zip-list -s V -l version -d (_ "Show version")
+complete -f -c apt-zip-list -s V -l version -d (_ "Display version and exit")
 complete -c apt-zip-list -s m -l medium -d (_ "Removable medium")
 complete -f -c apt-zip-list -s a -l aptgetaction -a "dselect-upgrade upgrade dist-upgrade" -d (_ "Select an action")
 complete -c apt-zip-list -s p -l packages -d (_ "List of pkgs to install")

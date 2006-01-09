@@ -1,7 +1,7 @@
 #apt-listbugs
-complete -c apt-listbugs -s h -l help -d (_ "Apt-listbugs command help")
+complete -c apt-listbugs -s h -l help -d (_ "Display help and exit")
 complete -f -c apt-listbugs -s s -l severity -a "critical grave"  -d (_ "Set severity")
-complete -f -c apt-listbugs -s T -l tag -d (_ "Targs you want to see")
+complete -f -c apt-listbugs -s T -l tag -d (_ "Tags you want to see")
 complete -f -c apt-listbugs -s S -l stats -d (_ "Outstanding 'pending upload' resolved done open") -d "status you want to see"
 complete -f -c apt-listbugs -s l -l showless -d (_ "Ignore bugs in your system")
 complete -f -c apt-listbugs -s g -l showgreater -d (_ "Ignore newer bugs than upgrade pkgs")
@@ -18,8 +18,8 @@ complete -f -c apt-listbugs -s q -l quiet -d (_ "Do not display progress bar")
 complete -f -c apt-listbugs -s c -l cache-dir -a "/var/cache/apt-listbugs/" -d (_ "Specify local cache dir")
 complete -f -c apt-listbugs -s t -l timer -d (_ "Specify the expire cache timer")
 complete -c apt-listbugs -s C -l aptconf -d (_ "Specify apt config file")
-complete -f -c apt-listbugs -s y -l force-yes -d (_ "Assume all yes")
-complete -f -c apt-listbugs -s n -l force-no -d (_ "Assume all no")
+complete -f -c apt-listbugs -s y -l force-yes -d (_ "Assume yes to all questions")
+complete -f -c apt-listbugs -s n -l force-no -d (_ "Assume no to all questions")
 complete -c apt-listbugs -a list -d (_ "List bugs from pkgs")
 complete -c apt-listbugs -a rss -d (_ "List bugs in rss format")
 

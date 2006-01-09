@@ -977,8 +977,10 @@ void sb_destroy( string_buffer_t * b )
 
 void sb_clear( string_buffer_t * b )
 {
-	free( b->buff );
-	sb_init( b );
+	wchar_t c=0;
+	b->used=0;
+	b_append( b, &c, sizeof( wchar_t));
+	b->used -= sizeof(wchar_t);
 }
 
 

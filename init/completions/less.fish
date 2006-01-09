@@ -32,21 +32,21 @@ complete -c less -s Q -l QUIET -d (_ "Completly silent mode")
 complete -c less -l SILENT -d (_ "Completly silent mode")
 complete -c less -s r -l raw-control-chars -d (_ "Display control chars")
 complete -c less -s R -l RAW-CONTROL-CHARS -d (_ "Display control chars, guess screen appearance")
-complete -c less -s s -l squeeze-blank-lines -d (_ "Miltiple blank lines sqeezed")
+complete -c less -s s -l squeeze-blank-lines -d (_ "Multiple blank lines sqeezed")
 complete -c less -s S -l chop-long-lines -d (_ "Do not fold long lines")
 complete -c less -s t -l tag -d (_ "Edit tag") -r
 complete -c less -s T -l tag-file -d (_ "Set tag file") -r
 complete -c less -s u -l underline-special -d (_ "Allow backspace and carriage return")
 complete -c less -s U -l UNDERLINE-SPECIAL -d (_ "Allow backspace, tab and carriage return")
 complete -c less -s V -l version -d (_ "Display version and exit")
-complete -c less -s w -l hilite-unread -d (_ "Flash first unread line on new page")
-complete -c less -s W -l HILITE-UNREAD -d (_ "Flash first unread line on any movement")
+complete -c less -s w -l hilite-unread -d (_ "Highlight first unread line on new page")
+complete -c less -s W -l HILITE-UNREAD -d (_ "Highlight first unread line on any movement")
 complete -c less -s x -l tabs -d (_ "Set tab stops") -r -a "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16"
 complete -c less -s X -l no-init -d (_ "No termcap init")
 complete -c less -l no-keypad -d (_ "No keypad init")
 complete -c less -s y -l max-forw-scroll -d (_ "Maximum forward scroll") -r -a "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"
-complete -c less -s z -l window -d (_ "Max scroll window") -r -d (_ "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19")
+complete -c less -s z -l window -d (_ "Max scroll window") -r -a "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"
 complete -c less -s \" -l quotes -d (_ "Set quote char") -r
 complete -c less -s \~ -l tilde -d (_ "Lines after EOF are blank")
-complete -c less -s \# -l shift -d (_ "Scroll on arrows") -a "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"
+complete -c less -s \# -l shift -d (_ "Characters to scroll on left/right arrows") -a "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19"
 

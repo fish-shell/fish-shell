@@ -29,7 +29,7 @@ complete -c scp -s B -d (_ "Batch mode")
 complete -c scp -s l -x -d (_ "Bandwidth limit")
 complete -c scp -s P -x -d (_ "Port")
 complete -c scp -s p -d (_ "Preserves modification times, access times, and modes from the original file")
-complete -c scp -s q -d (_ "Disable progress meter")
+complete -c scp -s q -d (_ "Do not display progress bar")
 complete -c scp -s r -d (_ "Recursively copy")
 complete -c scp -s S -d (_ "Encyption program")
 

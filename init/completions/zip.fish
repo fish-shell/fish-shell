@@ -27,6 +27,6 @@ complete -c zip -s X -d (_ "Exclude extra file attributes")
 complete -c zip -s y -d (_ "Store symbolic links as links")
 complete -c zip -s R -d (_ "PKZIP recursion")
 complete -c zip -s e -d (_ "Encrypt")
-complete -c zip -s n -r -d (_ "Don\'t compress these suffixes")
+complete -c zip -s n -r -d (_ "Don\'t compress files with these suffixes")
 complete -c zip -s h -d (_ "Display help and exit")
 

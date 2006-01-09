@@ -1003,7 +1003,7 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 
    \param comp_out the destination list
    \param wc_escaped the prefix, possibly containing wildcards. The wildcard should not have been unescaped, i.e. '*' should be used for any string, not the ANY_STRING character.
-   \param desc the default description, used for completions with no embedded description
+   \param desc the default description, used for completions with no embedded description. The description _may_ contain a COMPLETE_SEP character, if not, one will be prefixed to it
    \param desc_func the function that generates a description for those completions witout an embedded description
    \param possible_comp the list of possible completions to iterate over
 */
@@ -1056,8 +1056,11 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	if( !cmd )
 		return;
 
-	cmd_start=wcschr(cmd, L'/');
-	if( !cmd_start )
+	cmd_start=wcsrchr(cmd, L'/');
+
+	if( cmd_start )
+		cmd_start++;
+	else
 		cmd_start = cmd;
 	
 	cmd_len = wcslen(cmd_start);

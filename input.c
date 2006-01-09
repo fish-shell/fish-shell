@@ -674,6 +674,8 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 					*/
 					case L'C':
 					{
+						int has_escape = 0;
+						
 						in++;
 						/* Make sure next key is a dash*/
 						if( *in != L'-' )
@@ -683,17 +685,29 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 							break;
 						}
 						in++;
+
+						if( (*in == L'\\') && (*(in+1)==L'e') )
+						{
+							has_escape = 1;
+							in += 2;
+							
+						}
+						
 						
 						if( (*in >= L'a') && 
-							(*in <= L'z') )
+							(*in < L'a'+32) )
 						{
+							if( has_escape )
+								*(out++)=L'\e';							
 							*(out++)=*in-L'a'+1;
 							break;
 						}
 						
 						if( (*in >= L'A') && 
-							(*in <= L'Z') )
+							(*in < L'A'+32) )
 						{
+							if( has_escape )
+								*(out++)=L'\e';							
 							*(out++)=*in-L'A'+1;
 							break;
 						}

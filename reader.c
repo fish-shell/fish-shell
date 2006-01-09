@@ -911,15 +911,22 @@ static void reader_save_status()
 	  futimes is defined, but it should make the status saving stuff
 	  failsafe.
 	*/
-	struct timeval t=
+	struct timeval t[]=
 		{
-			time(0)-1,
-			0
+			{
+				time(0)-1,
+				0
+			}
+			,
+			{
+				time(0)-1,
+				0
+			}
 		}
 	;
 
-	futimes( 1, &t );
-	futimes( 2, &t );
+	futimes( 1, t );
+	futimes( 2, t );
 #endif
 
 	fstat( 1, &prev_buff_1 );

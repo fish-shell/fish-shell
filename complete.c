@@ -332,12 +332,14 @@ void complete_destroy()
 		i=i->next;
 		complete_free_entry( prev );
 	}
-
+	first_entry = 0;
+	
 	if( suffix_hash )
 	{
 		hash_foreach( suffix_hash, &clear_hash_entry );
 		hash_destroy( suffix_hash );
 		free( suffix_hash );		
+		suffix_hash=0;
 	}
 	
 	if( loaded_completions )
@@ -346,12 +348,14 @@ void complete_destroy()
 					  &clear_hash_value );
 		hash_destroy( loaded_completions );
 		free( loaded_completions );
+		loaded_completions = 0;
 	}
 
 	if( get_desc_buff )
 	{
 		sb_destroy( get_desc_buff );
 		free( get_desc_buff );
+		get_desc_buff = 0;
 	}
 
 }
@@ -1352,10 +1356,10 @@ static void complete_cmd( const wchar_t *cmd,
 
 /**
    Evaluate the argument list (as supplied by complete -a) and insert
-   any return matching completions. Matching is done using\c
+   any return matching completions. Matching is done using \c
    copy_strings_with_prefix, meaning the completion may contain
    wildcards. Logically, this is not always the right thing to do, but
-   I have yet to come up with a case where one would not want this.
+   I have yet to come up with a case where this matters.
    
    \param str The string to complete.
    \param args The list of option arguments to be evaluated.

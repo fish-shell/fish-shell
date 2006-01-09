@@ -163,7 +163,15 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			  Append generic description to item, if the description exists
 			*/
 			if( desc && wcslen(desc) )
-				new = wcsdupcat2( str, desc, (void *)0 );
+			{
+				/*
+				  Check if the description already contains a separator character, if not, prepend it
+				*/
+				if( wcschr( desc, COMPLETE_SEP ) )
+					new = wcsdupcat2( str, desc, (void *)0 );
+				else
+					new = wcsdupcat2( str, COMPLETE_SEP_STR, desc, (void *)0 );
+			}
 			else
 				new = wcsdup( str );
 		}

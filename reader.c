@@ -904,7 +904,7 @@ static void check_colors()
 static void reader_save_status()
 {
 
-#if (defined(__FreeBSD__) || defined(__NetBSD__))
+#ifdef HAVE_FUTIMES
 	/*
 	  This futimes call tries to trick the system into using st_mtime
 	  as a tampering flag. This of course only works on systems where
@@ -918,10 +918,8 @@ static void reader_save_status()
 		}
 	;
 
-	if( futimes( 1, &t ) || futimes( 2, &t ) )
-	{
-		wperror( L"futimes" );
-	}
+	futimes( 1, &t );
+	futimes( 2, &t );
 #endif
 
 	fstat( 1, &prev_buff_1 );

@@ -655,7 +655,7 @@ values of these variables. They are:
 - \c PWD, which is the current working directory. 
 - \c status, which is the exit status of the last foreground job to exit. If a job contains pipelines, the status of the last command in the pipeline is the status for the job.
 - \c USER, which is the username. This variable can only be changed by the root user.
-- \c LANG, \cLC_ALL, \c LC_COLLATE, \c LC_CTYPE, \cLC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
+- \c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and \c LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 
 Variables whose name are in uppercase are exported to the commands
 started by fish. This rule is not enforced by fish, but it is good
@@ -668,7 +668,7 @@ __fish. These should be ignored by the user.
 
 The most common way to set the locale to use a command like 'set -x
 LANG en_GB.utf8', which sets the current locale to be the english
-language, adapted to great britain, using the UTF-8 character set. For
+language, as used in Great Britain, using the UTF-8 character set. For
 a list of available locales, use 'locale -a'.
 
 \c LANG, \cLC_ALL, \c LC_COLLATE, \c LC_CTYPE, \cLC_MESSAGES, \c
@@ -676,7 +676,7 @@ LC_MONETARY, \c LC_NUMERIC and LC_TIME set the language option for the
 shell and subprograms. These variables work as follows: \c LC_ALL
 forces all the aspects of the locale to the specified value. If LC_ALL
 is set, all other locale variables will be ignored. The other LC_
-variables set the specified aspect of the locale information. . LANG
+variables set the specified aspect of the locale information. LANG
 is a fallback value, it will be used if none of the LC_ variables are
 specified.
 
@@ -1106,6 +1106,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 version of a POSIX command
 - Yanking weird characters from clipboard prints Unicode escapes
 - Suspending and then resuming pipelines containing a builtin seems to be broken.
+- Interactive input seems broken inside blocks. Is local echo and other terminal values not restored when in an interactive block?
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se

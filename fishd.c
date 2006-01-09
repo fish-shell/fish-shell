@@ -174,8 +174,8 @@ static int get_socket()
 	
 	local.sun_family = AF_UNIX;
 	strcpy( local.sun_path, sock_name );
-	len = strlen( local.sun_path ) + sizeof( local.sun_family );
-
+	len = sizeof(local);
+	
 	debug(1, L"Connect to socket at %s", sock_name);
 	
 	if( ( s = socket( AF_UNIX, SOCK_STREAM, 0 ) ) == -1 )

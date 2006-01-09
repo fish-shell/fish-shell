@@ -49,7 +49,7 @@ end
 # situation as well?
 #
 
-if expr match "$LANG" ".*UTF" >/dev/null
+if expr "$LANG" : ".*UTF" >/dev/null
 	if test linux = "$TERM"
 		unicode_start ^/dev/null
 	end

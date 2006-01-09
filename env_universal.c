@@ -112,7 +112,7 @@ static int get_socket( int fork_ok )
 	local.sun_family = AF_UNIX;
 	strcpy(local.sun_path, name );
 	free( name );
-	len = strlen(local.sun_path) + sizeof(local.sun_family);
+	len = sizeof(local);
 	
 	if( connect( s, (struct sockaddr *)&local, len) == -1 ) 
 	{

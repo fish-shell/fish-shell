@@ -6,7 +6,7 @@
 function _contains_help -d "Helper function for contains"
 
 	set bullet \*
-	if expr match "$LANG" ".*UTF" >/dev/null
+	if expr "$LANG" : ".*UTF" >/dev/null
 		set bullet \u2022
 	end
 
@@ -677,7 +677,7 @@ end
 function __fish_type_help -d "Help for the type shellscript function"
 
 set bullet \*
-if expr match "$LANG" ".*UTF" >/dev/null
+if expr "$LANG" : ".*UTF" >/dev/null
 		set bullet \u2022
 end
 

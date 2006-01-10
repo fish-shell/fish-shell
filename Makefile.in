@@ -438,7 +438,7 @@ clean:
 	rm -rf doc_src/builtin_doc
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -rf xsel-0.9.6/
-	rm $(TRANSLATIONS)
+	rm -f $(TRANSLATIONS)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

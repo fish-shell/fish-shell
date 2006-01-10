@@ -671,7 +671,7 @@ LANG en_GB.utf8', which sets the current locale to be the english
 language, as used in Great Britain, using the UTF-8 character set. For
 a list of available locales, use 'locale -a'.
 
-\c LANG, \cLC_ALL, \c LC_COLLATE, \c LC_CTYPE, \cLC_MESSAGES, \c
+\c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c
 LC_MONETARY, \c LC_NUMERIC and LC_TIME set the language option for the
 shell and subprograms. These variables work as follows: \c LC_ALL
 forces all the aspects of the locale to the specified value. If LC_ALL

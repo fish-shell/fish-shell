@@ -130,7 +130,8 @@ else
     AC_MSG_RESULT(no)
 fi
 
-AC_CHECK_LIB(socket, connect, rt, nanosleep)
+AC_CHECK_LIB(socket, connect)
+AC_CHECK_LIB(rt, nanosleep)
 AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext futimes)
 
 AC_CHECK_FUNC(gettext, AC_SUBST(HAVE_GETTEXT,1), AC_SUBST(HAVE_GETTEXT,0) )

@@ -1437,6 +1437,10 @@ static int builtin_read( wchar_t **argv )
 				}
 				,
 				{
+					L"universal", no_argument, 0, 'U'
+				}
+				,
+				{
 					L"unexport", no_argument, 0, 'u'
 				}
 				,
@@ -1458,7 +1462,7 @@ static int builtin_read( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"xglup:c:", 
+								L"xglUup:c:", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -1485,6 +1489,9 @@ static int builtin_read( wchar_t **argv )
 				break;
 			case L'l':		
 				place |= ENV_LOCAL;
+				break;
+			case L'U':		
+				place |= ENV_UNIVERSAL;
 				break;
 			case L'u':		
 				place |= ENV_UNEXPORT;
@@ -1517,7 +1524,7 @@ static int builtin_read( wchar_t **argv )
 		return 1;		
 	}
 	
-	if( (place&ENV_LOCAL) && (place & ENV_GLOBAL) )
+	if( (place&ENV_LOCAL?1:0) + (place & ENV_GLOBAL?1:0) + (place & ENV_UNIVERSAL?1:0) > 1)
 	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_GLOCAL,

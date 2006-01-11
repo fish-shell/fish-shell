@@ -440,10 +440,32 @@ static int has_fd( io_data_t *d, int fd )
 
 
 /**
+   Free a transmogrified io chain. Only the chain itself and resources
+   used by a transmogrified IO_FILE redirection are freed, since the
+   original chain may still be needed.
+*/
+static void io_untransmogrify( io_data_t * in, io_data_t *out )
+{
+	if( !out )
+		return;
+	io_untransmogrify( in->next, out->next );
+	switch( in->io_mode )
+	{
+		case IO_FILE:
+			exec_close( out->param1.old_fd );
+			break;
+	}	
+	free(out);
+}
+
+
+/**
    Make a copy of the specified io redirection chain, but change file
    redirection into fd redirection. This makes the redirection chain
    suitable for use as block-level io, since the file won't be
    repeatedly reopened for every command in the block.
+
+   \return the transmogrified chain on sucess, or 0 on failiure
 */
 static io_data_t *io_transmogrify( io_data_t * in )
 {
@@ -459,7 +481,8 @@ static io_data_t *io_transmogrify( io_data_t * in )
 	out->fd = in->fd;
 	out->io_mode = IO_FD;
 	out->param2.close_old = 1;
-	
+	out->next=0;
+		
 	switch( in->io_mode )
 	{
 		/*
@@ -488,7 +511,8 @@ static io_data_t *io_transmogrify( io_data_t * in )
 					   in->param1.filename );
 								
 				wperror( L"open" );
-				exit(1);
+				free( out );
+				return 0;
 			}	
 
 			out->param1.old_fd = fd;
@@ -496,30 +520,18 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		}
 	}
 	
-	out->next = io_transmogrify( in->next );
+	if( in->next)
+	{
+		out->next = io_transmogrify( in->next );
+		if( !out->next )
+		{
+			io_untransmogrify( in, out );
+			return 0;
+		}
+	}
 	
 	return out;
 }
-
-/**
-   Free a transmogrified io chain. Only the chain itself and resources
-   used by a transmogrified IO_FILE redirection are freed, since the
-   original chain may still be needed.
-*/
-static void io_untransmogrify( io_data_t * in, io_data_t *out )
-{
-	if( !in )
-		return;
-	io_untransmogrify( in->next, out->next );
-	switch( in->io_mode )
-	{
-		case IO_FILE:
-			exec_close( out->param1.old_fd );
-			break;
-	}	
-	free(out);
-}
-
 
 /**
    Morph an io redirection chain into redirections suitable for
@@ -530,21 +542,29 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
    \param io the io redirections to be performed on this block
 */
 
-static int internal_exec_helper( const wchar_t *def, 
+static void internal_exec_helper( const wchar_t *def, 
 								 int block_type,
 								 io_data_t *io )
 {
-	int res=0;
 	io_data_t *io_internal = io_transmogrify( io );
 	int is_block_old=is_block;
 	is_block=1;
 
-	signal_unblock();
+	/*
+	  Did the transmogrification fail - if so, set error status and return
+	*/
+	if( io && !io_internal )
+	{
+		proc_set_last_status( 1 );
+		return;
+	}
 	
+	signal_unblock();
+		
 	eval( def, io_internal, block_type );		
-
+	
 	signal_block();
-
+	
 /*
 	io_data_t *buff = io_get( io, 1 );
 	if( buff && buff->io_mode == IO_BUFFER )
@@ -555,7 +575,6 @@ static int internal_exec_helper( const wchar_t *def,
 	io_untransmogrify( io, io_internal );
 	job_reap( 0 );
 	is_block=is_block_old;
-	return res;
 }
 
 /**

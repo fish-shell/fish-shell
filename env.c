@@ -834,7 +834,7 @@ wchar_t *env_get( const wchar_t *key )
 			wchar_t *next = history_get( i-add_current );
 			if( !next )
 			{
-				debug( 1, _( L"No history at idx %d\n" ), i );
+				debug( 1, _( L"No history item at index %d\n" ), i );
 				break;
 			}
 			

@@ -891,7 +891,6 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 const wchar_t *complete_get_desc( const wchar_t *filename )
 {
 	struct stat buf;
-//	const wchar_t *desc = COMPLETE_FILE_DESC;
 	if( !get_desc_buff )
 	{
 		get_desc_buff = malloc(sizeof(string_buffer_t) );

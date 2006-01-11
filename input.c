@@ -1026,7 +1026,7 @@ void input_parse_inputrc_line( wchar_t *cmd )
 		if( !cmd )
 		{
 				debug( 1, 
-					   _( L"Unable to parse binding" ) );
+					   _( L"Unable to parse key binding" ) );
 				inputrc_error = 1;
 				return;
 		}

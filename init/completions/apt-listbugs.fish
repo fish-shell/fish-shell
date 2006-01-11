@@ -2,10 +2,10 @@
 complete -c apt-listbugs -s h -l help -d (_ "Display help and exit")
 complete -f -c apt-listbugs -s s -l severity -a "critical grave"  -d (_ "Set severity")
 complete -f -c apt-listbugs -s T -l tag -d (_ "Tags you want to see")
-complete -f -c apt-listbugs -s S -l stats -d (_ "Outstanding 'pending upload' resolved done open") -d "status you want to see"
+complete -f -c apt-listbugs -s S -l stats -a "outstanding 'pending upload' resolved done open" -d (_ "Bug-status you want to see")
 complete -f -c apt-listbugs -s l -l showless -d (_ "Ignore bugs in your system")
-complete -f -c apt-listbugs -s g -l showgreater -d (_ "Ignore newer bugs than upgrade pkgs")
-complete -f -c apt-listbugs -s D -l show-downgrade -d (_ "Bugs for downgrade pkgs")
+complete -f -c apt-listbugs -s g -l showgreater -d (_ "Ignore newer bugs than upgrade packages")
+complete -f -c apt-listbugs -s D -l show-downgrade -d (_ "Bugs for downgrade packages")
 complete -f -c apt-listbugs -s H -l hostname -a "osdn.debian.or.jp" -d (_ "Bug Tracking system")
 complete -f -c apt-listbugs -s p -l port -d (_ "Specify port for web interface")
 complete -f -c apt-listbugs -s R -l release-critical -d (_ "Use daily bug report")
@@ -20,6 +20,6 @@ complete -f -c apt-listbugs -s t -l timer -d (_ "Specify the expire cache timer"
 complete -c apt-listbugs -s C -l aptconf -d (_ "Specify apt config file")
 complete -f -c apt-listbugs -s y -l force-yes -d (_ "Assume yes to all questions")
 complete -f -c apt-listbugs -s n -l force-no -d (_ "Assume no to all questions")
-complete -c apt-listbugs -a list -d (_ "List bugs from pkgs")
+complete -c apt-listbugs -a list -d (_ "List bugs from packages")
 complete -c apt-listbugs -a rss -d (_ "List bugs in rss format")
 

@@ -24,7 +24,7 @@ set -e $skin
 complete -c valgrind -l help -d (_ "Display help and exit")
 complete -c valgrind -l help-debug -d (_ "Display help and debug options")
 complete -c valgrind -l version -d (_ "Display version and exit")
-complete -c valgrind -s q -l quiet -d (_ "Run silently")
+complete -c valgrind -s q -l quiet -d (_ "Quiet mode")
 complete -c valgrind -s v -l verbose -d (_ "Verbose mode")
 complete -xc valgrind -l trace-children -d (_ "Valgrind-ise children") -a "yes no"
 complete -xc valgrind -l track-fds -d (_ "Track file descriptors") -a "yes no"
@@ -43,7 +43,7 @@ complete -xc valgrind -l input-fd -d (_ "File descriptor for input") -a "0 1 2 3
 
 
 # Memcheck-specific options
-complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l leak-check -d (_ "Check for memory leaks") -a "no\t'Do not check for memory leaks' summary\t'Show a leak summary' full\t'Describe memory leaks in detail'"
+complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l leak-check -d (_ "Check for memory leaks") -a "no\tDon't\ check\ for\ memory\ leaks summary\t'Show a leak summary' full\t'Describe memory leaks in detail'"
 complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l show-reachable -d (_ "Show reachable leaked memory") -a "yes\t'Show reachable leaked memory' no\t'Do not show reachable leaked memory'"
 complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l leak-resolution -d (_ "Determines how willing Memcheck is to consider different backtraces to be the same") -a "low\t'Two entries need to match' med\t'Four entries need to match' high\t'All entries need to match'"
 complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l freelist-vol -d (_ "Set size of freed memory pool")

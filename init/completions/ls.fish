@@ -12,12 +12,12 @@ for i in ls ll la
 	complete -c $i -l color -f -a "never always auto" -d (_ "Use colors")
 	complete -c $i -s d -l directory -d (_ "List directories, not their content")
 	complete -c $i -s D -l dired -d (_ "Generate dired output")
-	complete -c $i -s f -d (_ "Do not sort")
+	complete -c $i -s f -d (_ "Don't sort")
 	complete -c $i -s F -l classify -d (_ "Append filetype indicator")
 	complete -c $i -l format -x -a "across commas horizontal long single-column verbose vertical" -d (_ "List format")
 	complete -c $i -l full-time -d (_ "Long format, full-iso time")
 	complete -c $i -s g -d (_ "Long format without owner")
-	complete -c $i -s G -l no-group -d (_ "Do not print group information")
+	complete -c $i -s G -l no-group -d (_ "Don't print group information")
 	complete -c $i -s h -l human-readable -d (_ "Human readable sizes")
 	complete -c $i -l si -d (_ "Human readable sizes, powers of 1000")
 	complete -c $i -s H -l dereference-command-line -d (_ "Follow symlinks")
@@ -43,7 +43,7 @@ for i in ls ll la
 	complete -c $i -s S -d (_ "Sort by size")
 	complete -c $i -l sort -x -d (_ "Sort criteria") -a "
 	extension\t'Sort by file extension'
-	none\t'Do not sort'
+	none\tDon't\ sort
 		size\t'Sort by size'
 		time\t'Sort by modification time'
 		version\t'Sort by version'

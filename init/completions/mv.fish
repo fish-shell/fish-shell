@@ -6,7 +6,7 @@ complete -c mv -l strip-trailing-slashes -d (_ "Remove trailing slashes from sou
 complete -c mv -s S -l suffix -r -d (_ "Backup suffix")
 complete -c mv -l target-directory -d (_ "Target directory") -x -a "(__fish_complete_directory (commandline -ct) 'Target directory')"
 complete -c mv -s u -l update -d (_ "Do not overwrite newer files")
-complete -c mv -s v -l vervose -d (_ "Explain what is done")
+complete -c mv -s v -l vervose -d (_ "Verbose mode")
 complete -c mv -l help -d (_ "Display help and exit")
 complete -c mv -l version -d (_ "Display version and exit")
 

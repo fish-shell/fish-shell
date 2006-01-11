@@ -1,4 +1,4 @@
-complete -c uname -s a -l all -d (_ "Print all")
+complete -c uname -s a -l all -d (_ "Print all information")
 complete -c uname -s s -l kernel-name -d (_ "Print kernel name")
 complete -c uname -s n -l nodename -d (_ "Print network node hostname")
 complete -c uname -s r -l kernel-release -d (_ "Print kernel release")

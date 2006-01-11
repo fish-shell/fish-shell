@@ -213,7 +213,7 @@ static struct lookup_entry lookup[] =
 	{
 		SIGIO,
 		L"SIGIO",
-		N_( L"Asynchronous IO event" )
+		N_( L"I/O on asynchronous file descriptor is possible" )
 	}
 	,
 #ifdef SIGPWR

@@ -6,7 +6,7 @@ for i in (builtin -n)
 	complete -c help -x -a $i -d (printf (_ "Help for the '%s' builtin") $i)
 end
 
-for i in count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize psub umask type 
+for i in count dirh dirs help mimedb nextd open popd prevd pushd set_color psub umask type 
 	complete -c help -x -a $i -d (printf (_ "Help for the '%s' command") $i )
 end
 

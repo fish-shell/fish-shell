@@ -44,7 +44,7 @@ complete -c mplayer -o dvd-device -d (_ "Set default DVD-ROM drive")
 complete -c mplayer -o dvdangle -d (_ "Set dvd viewing angle") -x -a "1 2 3 4 5 6 7 8"
 complete -c mplayer -o forceidx -d (_ "Force rebuilding index")
 complete -c mplayer -o fps -d (_ "Override framerate") -x -a "24 25 30"
-complete -c mplayer -o idx -d (_ "Rebuild index if unavailable")
+complete -c mplayer -o idx -d (_ "Build index if unavailable")
 complete -c mplayer -o loadidx -d (_ "Load index from file") -r
 complete -c mplayer -o ni -d (_ "Force non-interleaved AVI parser")
 complete -c mplayer -o saveidx -d (_ "Rebuild index and save to file") -r

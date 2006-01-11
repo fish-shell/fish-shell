@@ -9,7 +9,7 @@ complete -c wget -s e -l execute -d (_ "Execute command as if part of .wgetrc") 
 complete -c wget -s o -l output-file -d (_ "Log all messages to logfile") -f
 complete -c wget -s a -l append-output -d (_ "Append all messages to logfile")
 complete -c wget -s d -l debug -d (_ "Turn on debug output")
-complete -c wget -s q -l quiet -d (_ "Turn off Wget's output")
+complete -c wget -s q -l quiet -d (_ "Quiet mode")
 complete -c wget -s v -l verbose -d (_ "Verbose mode")
 complete -c wget -l non-verbose -d (_ "Turn off verbose without being completely quiet")
 complete -c wget -o nv -d (_ "Turn off verbose without being completely quiet")

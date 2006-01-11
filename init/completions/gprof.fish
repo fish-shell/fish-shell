@@ -29,6 +29,6 @@ complete -xc gprof -s N -l no-time -d (_ "Do not propagate times for matching sy
 complete -xc gprof -s z -l display-unused-functions -d (_ "Mention unused functions in flat profile")
 complete -xc gprof -s d -l debug -d (_ "Specify debugging options")
 complete -xc gprof -s h -l help -d (_ "Display help and exit")
-complete -xc gprof -s v -l version -d (_ "Display version and exit and exit")
+complete -xc gprof -s v -l version -d (_ "Display version and exit")
 complete -xc gprof -s O -l file-format -x -a "auto bsd 4.4bsd magic prof" -d (_ "Profile data format")
 complete -xc gprof -s s -l sum -d (_ "Print summary")

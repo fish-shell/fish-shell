@@ -1834,7 +1834,7 @@ static int builtin_exit( wchar_t **argv )
 			if( errno || *end != 0)
 			{
 				sb_printf( sb_err, 
-						   _( L"%ls: Argument must be an integer '%ls'\n" ), 
+						   _( L"%ls: Argument '%ls' must be an integer\n" ), 
 						   argv[0],
 						   argv[1] );
 				builtin_print_help( argv[0], sb_err );				
@@ -2302,6 +2302,10 @@ static int builtin_fg( wchar_t **argv )
 		*/
 		for( j=first_job; ((j!=0) && (!j->constructed)); j=j->next )
 			;
+		sb_printf( sb_err,
+				   _( L"%ls: There are no jobs\n" ),
+				   argv[0] );
+		builtin_print_help( argv[0], sb_err );
 	}
 	else if( argv[2] != 0 )
 	{
@@ -2334,17 +2338,14 @@ static int builtin_fg( wchar_t **argv )
 	{
 		int pid = abs(wcstol( argv[1], 0, 10 ));
 		j = job_get_from_pid( pid );
+		sb_printf( sb_err,
+				   _( "%ls: No suitable job: %d\n" ),
+				   argv[0],
+				   pid );
+		builtin_print_help( argv[0], sb_err );
 	}
 
-	if( j == 0 )
-	{
-		sb_printf( sb_err,
-				   _( L"%ls: No suitable job\n" ),
-				   argv[0] );
-		builtin_print_help( argv[0], sb_err );
-		return 1;
-	}
-	else
+	if( j != 0 )
 	{
 		if( builtin_err_redirect )
 		{
@@ -2682,7 +2683,7 @@ static int builtin_jobs( wchar_t **argv )
 				if( errno || *end )
 				{
 					sb_printf( sb_err, 
-							   _( L"%ls: Not a process id: '%ls'\n" ),
+							   _( L"%ls: '%ls' is not a job\n" ),
 							   argv[0], 
 							   argv[i] );
 					return 1;
@@ -2749,7 +2750,7 @@ static int builtin_for( wchar_t **argv )
 	else if ( !wcsvarname(argv[1]) )
 	{
 		sb_printf( sb_err, 
-				   _( L"%ls: '%ls' invalid variable name\n" ),
+				   _( L"%ls: '%ls' is not a valid variable name\n" ),
 				   argv[0],
 				   argv[1] );
 		builtin_print_help( argv[0], sb_err );
@@ -3033,7 +3034,7 @@ static int builtin_return( wchar_t **argv )
 			if( errno || *end != 0)
 			{
 				sb_printf( sb_err,
-						   _( L"%ls: Argument must be an integer '%ls'\n" ), 
+						   _( L"%ls: Argument '%ls' must be an integer\n" ), 
 						   argv[0], 
 						   argv[1] );
 				builtin_print_help( argv[0], sb_err );				
@@ -3122,7 +3123,7 @@ static int builtin_case( wchar_t **argv )
 		sb_printf( sb_err,
 				   _( L"%ls: 'case' command while not in switch block\n" ),
 				   argv[0] );
-		builtin_print_help( L"case", sb_err );
+		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 		
@@ -3342,7 +3343,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		hash_init( desc, &hash_wcs_func, &hash_wcs_cmp );
 
 		hash_put( desc, L"block", N_( L"Temporarily block delivery of events" ) );	
-		hash_put( desc, L"builtin", N_( L"Run a builtin command" ) );	
+		hash_put( desc, L"builtin", N_( L"Run a builtin command instead of a function" ) );	
 		hash_put( desc, L"complete", N_( L"Edit command specific completions" ) );	
 		hash_put( desc, L"cd", N_( L"Change working directory" ) );	
 		hash_put( desc, L"exit", N_( L"Exit the shell" ) );	
@@ -3360,19 +3361,19 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		hash_put( desc, L"read", N_( L"Read a line of input into variables" ) );
 		hash_put( desc, L"break", N_( L"Stop the innermost loop" ) );	
 		hash_put( desc, L"continue", N_( L"Skip the rest of the current lap of the innermost loop" ) );
-		hash_put( desc, L"return", N_( L"Stop the innermost currently evaluated function" ) );
+		hash_put( desc, L"return", N_( L"Stop the currently evaluated function" ) );
 		hash_put( desc, L"commandline", N_( L"Set or get the commandline" ) );
 		hash_put( desc, L"switch", N_( L"Conditionally execute a block of commands" ) );	
 		hash_put( desc, L"case", N_( L"Conditionally execute a block of commands" ) );	
-		hash_put( desc, L"command", N_( L"Run a program" ) );		
-		hash_put( desc, L"if", N_( L"Conditionally execute a command" ) );	
+		hash_put( desc, L"command", N_( L"Run a program instead of a function or builtin" ) );		
+		hash_put( desc, L"if", N_( L"Evaluate block if condition is true" ) );
 		hash_put( desc, L"while", N_( L"Perform a command multiple times" ) );	
-		hash_put( desc, L"bind", N_( L"Handle key bindings" ));
+		hash_put( desc, L"bind", N_( L"Handle fish key bindings" ));
 		hash_put( desc, L"random", N_( L"Generate random number" ));
 		hash_put( desc, L"exec", N_( L"Run command in current process" ));
 		hash_put( desc, L"not", N_( L"Negate exit status of job" ));
-		hash_put( desc, L"or", N_( L"Execute second command if first fails" ));
-		hash_put( desc, L"and", N_( L"Execute second command if first suceeds" ));
+		hash_put( desc, L"or", N_( L"Execute command if previous command failed" ));
+		hash_put( desc, L"and", N_( L"Execute command if previous command suceeded" ));
 		hash_put( desc, L"begin", N_( L"Create a block of code" ) );
 		hash_put( desc, L"status", N_( L"Return status information about fish" ) );
 		hash_put( desc, L"ulimit", N_( L"Set or get the shells resource usage limits" ) );

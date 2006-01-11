@@ -82,7 +82,7 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message used when the end of a block can't be located
 */
-#define BLOCK_END_ERR_MSG _( L"Could not locate end of block. The 'end' command is missing, misspelled or a preceding ';' is missing.")
+#define BLOCK_END_ERR_MSG _( L"Could not locate end of block. The 'end' command is missing, misspelled or a ';' is missing.")
 
 /**
    Error message on reaching maximum number of block calls
@@ -92,22 +92,22 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_ERR_MSG _( L"Expected a command string, got token of type '%ls'.")
+#define CMD_ERR_MSG _( L"Expected a command name, got token of type '%ls'")
 
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_OR_ERR_MSG _( L"Expected a command string, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? For more information on the 'or' builtin command, see the help section for 'or' by typing 'help or'.")
+#define CMD_OR_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? For more information on the 'or' builtin command, see the help section for 'or' by typing 'help or'.")
 
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_AND_ERR_MSG _( L"Expected a command string, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? For more information on the 'and' builtin command, see the help section for 'and' by typing 'help and'.")
+#define CMD_AND_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? For more information on the 'and' builtin command, see the help section for 'and' by typing 'help and'.")
 
 /**
    Error message when encountering an illegal command name
 */
-#define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'.")
+#define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")
 
 /**
    Error message for wildcards with no matches
@@ -137,7 +137,7 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message for Posix-style assignment
 */
-#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the manual section on the set command by typing 'help set'.")
+#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the help section on the set command by typing 'help set'.")
 
 /**
    Error for invalid redirection token
@@ -157,7 +157,7 @@ The fish parser. Contains functions for parsing code.
 /**
    Error for evaluating in illegal scope
 */
-#define INVALID_SCOPE_ERR_MSG _( L"Tried to evaluate buffer using invalid block scope of type '%ls'." )
+#define INVALID_SCOPE_ERR_MSG _( L"Tried to evaluate commands using invalid block type '%ls'" )
 
 
 /** 
@@ -228,7 +228,7 @@ The fish parser. Contains functions for parsing code.
 /** 
 	Begin block description
 */
-#define BEGIN_BLOCK _( L"unconditional block" )
+#define BEGIN_BLOCK _( L"'begin' unconditional block" )
 
 
 /** 

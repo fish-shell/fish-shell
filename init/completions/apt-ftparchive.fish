@@ -1,6 +1,6 @@
 #apt-ftparchive
 complete -c apt-ftparchive -s h -l help -d (_ "Display help and exit")
-complete -f -c apt-ftparchive -a packages -d (_ "Generate pkg from source")
+complete -f -c apt-ftparchive -a packages -d (_ "Generate package from source")
 complete -f -c apt-ftparchive -a sources -d (_ "Generate source index file")
 complete -f -c apt-ftparchive -a contents -d (_ "Generate contents file")
 complete -f -c apt-ftparchive -a release -d (_ "Generate release file")

@@ -6,7 +6,7 @@ complete -c set -s x -l export -d (_ "Export variable to subprocess")
 complete -c set -s u -l unexport -d (_ "Do not export variable to subprocess")
 complete -c set -s g -l global -d (_ "Make variable scope global")
 complete -c set -s l -l local -d (_ "Make variable scope local")
-complete -c set -s U -l universal -d (_ "Make variable scope universal, i.e. shared between all fish terminals")
+complete -c set -s U -l universal -d (_ "Make variable scope universal, i.e. share variable with all the users fish processes on this computer")
 complete -c set -s q -l query -d (_ "Test if variable is defined")
 complete -c set -s h -l help -d (_ "Display help and exit")
 

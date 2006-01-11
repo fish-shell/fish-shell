@@ -35,7 +35,7 @@ enum
 /**
    Error message on multiple scope levels for variables
 */
-#define BUILTIN_ERR_GLOCAL _( L"%ls: Variable can only be one of universal, global and local\n%ls\n" )
+#define BUILTIN_ERR_GLOCAL _( L"%ls: Variable scope can only be one of universal, global and local\n%ls\n" )
 
 /**
    Error message for specifying both export and unexport to set/read

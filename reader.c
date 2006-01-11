@@ -3120,7 +3120,7 @@ static int read_ni( int fd )
 		if(	fclose( in_stream ))
 		{
 			debug( 1, 
-				   _( L"Error while closing input" ) );
+				   _( L"Error while closing input stream" ) );
 			wperror( L"fclose" );
 			res = 1;
 		}
@@ -3163,7 +3163,7 @@ static int read_ni( int fd )
 	else
 	{
 		debug( 1, 
-			   _( L"Error while opening input" ) );
+			   _( L"Error while opening input stream" ) );
 		wperror( L"fdopen" );
 		free( buff );
 		res=1;

@@ -31,7 +31,7 @@ static int insane;
 
 void sanity_lose()
 {
-	debug( 0, L"Errors detected, shutting down" );
+	debug( 0, _(L"Errors detected, shutting down") );
 	insane = 1;
 }
 
@@ -59,13 +59,13 @@ void validate_pointer( const void *ptr, const wchar_t *err, int null_ok )
 	
 	if( (0x00000003 & (int)ptr) != 0 )
 	{
-		debug( 0, L"The pointer '\%ls\' is invalid", err );
+		debug( 0, _(L"The pointer '%ls' is invalid"), err );
 		sanity_lose();		
 	}
 	
 	if((!null_ok) && (ptr==0))
 	{
-		debug( 0, L"The pointer '\%ls\' is null", err );
+		debug( 0, _(L"The pointer '%ls' is null"), err );
 		sanity_lose();		
 	}
 }

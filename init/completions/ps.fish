@@ -25,7 +25,7 @@ complete -c ps -s j -d (_ "Jobs format")
 complete -c ps -s l -d (_ "Long format")
 complete -c ps -s o -l format -d (_ "User defined format") -x
 complete -c ps -s y -d (_ "Do not show flags")
-complete -c ps -s Z -l context -d (_ "Display security context format")
+complete -c ps -s Z -l context -d (_ "Add column for security data")
 complete -c ps -s H -l forest -d (_ "Show hierarchy")
 complete -c ps -s n -d (_ "Set namelist file") -r
 complete -c ps -s w -d (_ "Wide output")
@@ -33,5 +33,5 @@ complete -c ps -s L -d (_ "Show threads")
 complete -c ps -s T -d (_ "Show threads")
 complete -c ps -s V -l version -d (_ "Display version and exit")
 complete -c ps -l help -d (_ "Display help and exit")
-complete -c ps -l info -d (_ "Display debugging info")
+complete -c ps -l info -d (_ "Display debug info")
 

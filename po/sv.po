@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-11 15:10+0100\n"
+"POT-Creation-Date: 2006-01-11 15:44+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -531,30 +531,34 @@ msgstr "Kunde inte skapa barnprocess - avslutar programmet"
 msgid "Failed to execute process '%ls'"
 msgstr "Misslyckades med att exekvera processen '%ls'"
 
-#: exec.c:584
+#: exec.c:596
 #, c-format
 msgid "Could not send process %d from group %d to group %d"
 msgstr "Kunde inte skicka process %d från grupp %d till grupp %d"
 
-#: exec.c:596 exec.c:608 proc.c:855 proc.c:867
+#: exec.c:608 exec.c:620 proc.c:855 proc.c:867
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Kunde inte skicka jobb %d ('%ls') till förgrunden"
 
-#: exec.c:770
+#: exec.c:782
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Okänd funktion '%ls'"
 
-#: exec.c:878
+#: exec.c:890
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Okänd dirigering av standard in av typ %d"
 
-#: exec.c:1205
+#: exec.c:1217
 #, c-format
 msgid "Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s."
 msgstr "Skickade noll-kommando till subskal. Detta är en fish-bug. Om den kan reproduceras, skicka en rapport till %s."
+
+#: exec.c:1265
+msgid "Subshell returned illegal string, discarded one entry"
+msgstr "Underskal lämnade tillbaka ogiltig sträng, ignorerade ett element"
 
 #: input.c:406
 msgid "Invalid Control sequence"
@@ -1278,11 +1282,11 @@ msgstr "Stanna och starta tjänst"
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
-#: init/fish.in:73
+#: init/fish.in:74
 msgid "-d"
 msgstr ""
 
-#: init/fish.in:74
+#: init/fish.in:75
 msgid "fish"
 msgstr ""
 

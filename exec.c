@@ -565,13 +565,6 @@ static void internal_exec_helper( const wchar_t *def,
 	
 	signal_block();
 	
-/*
-	io_data_t *buff = io_get( io, 1 );
-	if( buff && buff->io_mode == IO_BUFFER )
-	fwprintf( stderr, L"block %ls produced %d bytes of output\n", 
-	def,
-	buff->out_buffer->used );
-*/
 	io_untransmogrify( io, io_internal );
 	job_reap( 0 );
 	is_block=is_block_old;
@@ -1269,7 +1262,7 @@ int exec_subshell( const wchar_t *cmd,
 					el = str2wcs( begin );				
 					if( !el )
 					{
-						debug( 0, L"Subshell returned illegal string, discarded one entry" );
+						debug( 0, _( L"Subshell returned illegal string, discarded one entry" ) );
 					}
 					else
 					{

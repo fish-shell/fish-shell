@@ -23,7 +23,7 @@ Example:
 calls the \c echo command. \c echo is a command which will write its
 arguments to the screen. In the example above, the output will be
 'hello world'. Everything in fish is done with commands. There are
-commands for performing a set of command multiple times, commands for
+commands for performing a set of commands multiple times, commands for
 assigning variables, commands for treating a group of commands as a
 single command, etc.. And every single command follows the same simple
 syntax.
@@ -38,7 +38,7 @@ topic. There are manual pages for almost every command on most
 computers. There are also manual pages for many other things, such as
 system libraries and important files.
 
-Every program on a computer can be used as a command in \c fish. If
+Every program on your computer can be used as a command in \c fish. If
 the program file is located in one of the directories in the <a
 href="#variables-special">PATH</a>, it is sufficient to type the name
 of the program to use it. Otherwise the whole filename, including the
@@ -78,7 +78,11 @@ Example:
 
 <tt>rm "cumbersome filename.txt"</tt>
 
-Will remove the file 'cumbersome filename.txt'.
+Will remove the file 'cumbersome filename.txt', while
+
+<tt>rm cumbersome filename.txt</tt>
+
+would remove the two files 'cumbersome' and 'filenmae.txt'.
 
 \subsection escapes Escaping characters
 
@@ -138,8 +142,8 @@ which directs the output of the echo command to the file error.txt.
 <tt>DESTINATION</tt> can be one of the following: 
 
 - A filename. The output will be written to the specified file.
-- An ampersand (\&) followed by the number of a file descriptor. The file descriptor will be a duplicate of the specified file descriptor.
-- A minus sign (-). The FD will be closed.
+- An ampersand (\&) followed by the number of another file descriptor. The file descriptor will be a duplicate of the specified file descriptor.
+- A minus sign (-). The file descriptor will be closed.
 
 Example:
 
@@ -239,15 +243,16 @@ type <tt>fg -h</tt> or <tt>help fg</tt>.
 
 Tab completion is one of the most time saving features of any modern
 shell. By tapping the tab key, the user asks \c fish to guess the rest
-of the command or parameter that the user is currently typing. If
-there is only one possible completion, \c fish will write it out. If
-there is more than one completion, \c fish will write out the longest
-common prefix that all completions have in common. If all completions
-differ on the first character, a list of all possible completions is
-printed. The list features descriptions of the completions and if the
-list doesn't fit the screen, it is scrollable by using the arrow keys,
-the page up/page down keys or the space bar. Press any other key will
-exit the list and insert the pressed key into the command line.
+of the command or parameter that the user is currently typing. If \c
+fish can only find one possible completion, \c fish will write it
+out. If there is more than one completion, \c fish will write out the
+longest common prefix that all completions have in common. If all
+completions differ on the first character, a list of all possible
+completions is printed. The list features descriptions of the
+completions and if the list doesn't fit the screen, it is scrollable
+by using the arrow keys, the page up/page down keys or the space
+bar. Press any other key will exit the list and insert the pressed key
+into the command line.
 
 These are the general purpose tab completions that \c fish provides:
 
@@ -261,20 +266,20 @@ These are the general purpose tab completions that \c fish provides:
 of these completions are simple options like the \c -l option for \c
 ls, but some are more advanced. The latter include:
 
-- The programs 'man' and 'whatis' complete using all installed 
-manual pages.
-- The 'make' program complete using all targets in the Makefile in 
-the current directory.
-- The 'mount' command complete using all mount points specified in fstab.
-- The 'ssh' command complete using all hosts in that are stored 
-in the known_hosts file. (see the ssh documentation for more information) 
-- The 'su' command complete using all users on the system
-- The \c apt-get, \c rpm and \c tym commands complete using all installed packages.
+- The programs 'man' and 'whatis' show all installed 
+manual pages as completions.
+- The 'make' program uses all targets in the Makefile in 
+the current directory as completions.
+- The 'mount' command uses all mount points specified in fstab as completions.
+- The 'ssh' command uses all hosts in that are stored 
+in the known_hosts file as completions. (see the ssh documentation for more information) 
+- The 'su' command uses all users on the system as completions.
+- The \c apt-get, \c rpm and \c yum commands use all installed packages as completions.
 
 \subsection completion-own Writing your own completions
 
 Specifying your own completions is not complicated. To specify a
-completion, one simply uses the \c complete command. \c complete takes
+completion, use the \c complete command. \c complete takes
 as a parameter the name of the command to specify a completion
 for. For example, to add a completion for the program \c myprog, one
 would start the completion command with <tt>complete -c myprog
@@ -361,7 +366,7 @@ PNG format.
 
 \subsection expand-brace Brace expansion
 
-A comma separated list of characters enclosed en curly braces will be
+A comma separated list of characters enclosed in curly braces will be
 expanded so each element of the list becomes a new parameter.
 
 Example:
@@ -403,8 +408,9 @@ there once along the way was a '}' in there somewhere, and } is not a
 valid character in a variable name.  So anything after the otherwise
 pointless bracket expansion becomes NOT a part of the variable name,
 even if it happens to be a legal variable name character. That's why
-'{$USER}san' works. A case of one syntax just lending itself so nicely
-to solving an unrelated problem in it's spare time.
+'{$USER}san' looks for the variable '$USER' and not for the variable
+'$USERsan'. It's a case of one syntax lending itself nicely to
+solving an unrelated problem in it's spare time.
 
 Variable expansion is the only type of expansion performed on double
 quoted strings. There is, however, an important difference in how
@@ -695,7 +701,7 @@ The following commands are distributed with fish. Many of them are
 builtins or shellscript functions, and can only be used inside fish.
 
 - <a href="builtins.html#source">.</a>, read and execute the commands in a file 
-- <a href="builtins.html#and">and</a>, execute second command if first suceeds
+- <a href="builtins.html#and">and</a>, execute command if previous command suceeded
 - <a href="builtins.html#bg">bg</a>, set a command to the background
 - <a href="builtins.html#begin">begin</a>, execute a block of commands
 - <a href="builtins.html#bind">bind</a>, change keyboard bindings
@@ -727,7 +733,7 @@ builtins or shellscript functions, and can only be used inside fish.
 - <a href="commands.html#mimedb">mimedb</a>, view mimedata about a file
 - <a href="commands.html#nextd">nextd</a>, move forward in the directory history
 - <a href="builtins.html#not">not</a>, negates the exit status of any command
-- <a href="builtins.html#or">or</a>, execute second command if first fails
+- <a href="builtins.html#or">or</a>, execute a command if previous command failed
 - <a href="commands.html#popd">popd</a>, move to the topmost directory on the directory stack
 - <a href="commands.html#prevd">prevd</a>, move backwards in the direcotry stack
 - <a href="commands.html#pushd">pushd</a>, push the surrent directory onto the directory stack
@@ -739,7 +745,7 @@ builtins or shellscript functions, and can only be used inside fish.
 - <a href="builtins.html#switch">switch</a>, conditionally execute a block of commands
 - <a href="commands.html#tokenize">tokenize</a>, split a string up into multiple tokens
 - <a href="builtins.html#ulimit">ulimit</a>, set or get the shells resurce usage limits
-- <a href="commandss.html#umask">umask</a>, set or get the file creation mask
+- <a href="commands.html#umask">umask</a>, set or get the file creation mask
 - <a href="builtins.html#while">while</a>, perform a block of commands while a condition is met
 
 For more information about these commands, use the <tt>--help</tt>
@@ -769,7 +775,7 @@ Here are some of the commands available in the editor:
 - Alt-d move next word to the <a href="#killring">killring</a>
 - Alt-w prints a short description of the command under the cursor 
 - Alt-l lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed 
-- Alt-p adds the string '| less;' to the end of the job under the cursor. The result is that the output of the command will be paged.aadddddssss
+- Alt-p adds the string '| less;' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
 You can change these key bindings by making an inputrc file. To do
 this, copy the file /etc/fish_inputrc to your home directory and
@@ -941,6 +947,9 @@ function fish_prompt -d "Write out the prompt"
 	printf '\%s\@\%s\%s\%s\%s> ' (whoami) (hostname|cut -d . -f 1) (set_color \$fish_color_cwd) (prompt_pwd) (set_color normal)
 end
 </pre>
+
+where \c prompt_pwd is a shellscript function that displays a condensed version of the current working direcotry.
+
 </p>
 
 

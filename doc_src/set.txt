@@ -1,22 +1,24 @@
 \section set set - Handle environment variables.
 
 \subsection set-synopsis Synopsis
-<tt>set [OPTIONS] VARIABLE_NAME [VALUES...]</tt>
+<code>set [OPTIONS] [VARIABLE_NAME [VALUES...]]</code>
 
-The <tt>set</tt> builtin causes fish to assign the variable <tt>VARIABLE_NAME</tt> the values <tt>VALUES...</tt>. 
+The <code>set</code> builtin causes fish to assign the variable <code>VARIABLE_NAME</code> the values <code>VALUES...</code>. 
 
 \subsection set-description Description
-- <tt>-e</tt> or <tt>--erase</tt> causes the specified environment variable to be erased
-- <tt>-g</tt> or <tt>--global</tt> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will dissapear when the current block ends
-- <tt>-l</tt> or <tt>--local</tt> forces the specified environment variable to be made local to the current block, even if the variable already exists and is non-local
-- <tt>-n</tt> or <tt>--names</tt> List only the names of all defined variables
-- <tt>-q</tt> or <tt>--query</tt> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
-- <tt>-u</tt> or <tt>--unexport</tt> causes the specified environment not to be exported to child processes
-- <tt>-U</tt> or <tt>--universal</tt> causes the specified environment variable to be made universal. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
-- <tt>-x</tt> or <tt>--export</tt> causes the specified environment variable to be exported to child processes
+- <code>-e</code> or <code>--erase</code> causes the specified environment variable to be erased
+- <code>-g</code> or <code>--global</code> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will dissapear when the current block ends
+- <code>-l</code> or <code>--local</code> forces the specified environment variable to be made local to the current block, even if the variable already exists and is non-local
+- <code>-n</code> or <code>--names</code> List only the names of all defined variables
+- <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
+- <code>-u</code> or <code>--unexport</code> causes the specified environment not to be exported to child processes
+- <code>-U</code> or <code>--universal</code> causes the specified environment variable to be made universal. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
+- <code>-x</code> or <code>--export</code> causes the specified environment variable to be exported to child processes
 
 If set is called with no arguments, the names and values of all
-environment variables are printed.
+environment variables are printed. If some of the scope or export
+flags have been given, only the variables matching the specified scope
+are printed. 
 
 If the \c -e or \c --erase option is specified, the variable
 specified by the following arguments will be erased
@@ -25,13 +27,15 @@ If a variable is set to more than one value, the variable will be an
 array with the specified elements. If a variable is set to zero
 elements, it will become an array with zero elements.
 
-If the variable name is one or more array elements, such as <tt>PATH[1
-3 7]</tt>, only those array elements specified will be changed.
+If the variable name is one or more array elements, such as <code>PATH[1
+3 7]</code>, only those array elements specified will be changed.
 
 \subsection set-example Example
 
-<tt>set foo hi</tt> sets the value of the variable foo to be hi.
+<code>set -xg</code> will print all global, exported variables.
 
-<tt>set -e smurf</tt> removes the variable \c smurf.
+<code>set foo hi</code> sets the value of the variable foo to be hi.
 
-<tt>set PATH[4] ~/bin</tt> changes the fourth element of the \c PATH array to \c ~/bin
+<code>set -e smurf</code> removes the variable \c smurf.
+
+<code>set PATH[4] ~/bin</code> changes the fourth element of the \c PATH array to \c ~/bin

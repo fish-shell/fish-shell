@@ -41,6 +41,10 @@ if status --is-login
 	if not set -q LANG >/dev/null
 		set -gx LANG en_US.UTF-8
 	end
+
+	if test -f /etc/sysconfig/i18n
+		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/')
+	end
 end
 
 

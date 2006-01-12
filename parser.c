@@ -37,9 +37,6 @@ The fish parser. Contains functions for parsing code.
 #include "event.h"
 #include "translate.h"
 
-/** Length of the lineinfo string used for describing the current tokenizer position */
-#define LINEINFO_SIZE 128
-
 /**
    Maximum number of block levels in code. This is not the same as
    maximum recursion depth, this only has to do with how many block
@@ -253,7 +250,7 @@ static wchar_t err_str[256];
 static tokenizer *current_tokenizer;
 
 /** String for representing the current line */
-static wchar_t lineinfo[LINEINFO_SIZE];
+static string_buffer_t  *lineinfo=0;
 
 /** This is the position of the beginning of the currently parsed command */
 static int current_tokenizer_pos;
@@ -998,12 +995,17 @@ wchar_t *parser_current_line()
 	int i;
 	int offset;
 	int current_line_pos=current_tokenizer_pos;
-
+	
 	if( !line )
 		return L"";
 	
-	lineinfo[0]=0;
-
+	if( !lineinfo )
+	{
+		lineinfo = malloc( sizeof(string_buffer_t) );
+		sb_init( lineinfo );
+	}
+	sb_clear( lineinfo );
+	
 	/*
 	  Calculate line number, line offset, etc.
 	*/
@@ -1026,16 +1028,15 @@ wchar_t *parser_current_line()
 
 	line = wcsndup( line, line_end-line );
 
-	debug( 4, L"Current pos %d, line pos %d, file_length %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str));
+	debug( 4, L"Current pos %d, line pos %d, file_length %d, is_interactive %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str), is_interactive);
 
 	if( !is_interactive )
 	{
-		swprintf( lineinfo,
-				  LINEINFO_SIZE,
-				  _(L"%ls (line %d): %n"),
-				  file,
-				  lineno,
-				  &offset );
+		sb_printf( lineinfo,
+				   _(L"%ls (line %d): "),
+				   file,
+				   lineno );
+		offset = my_wcswidth( (wchar_t *)lineinfo->buff );
 	}
 	else
 	{
@@ -1046,17 +1047,17 @@ wchar_t *parser_current_line()
 	   Skip printing character position if we are in interactive mode
 	   and the error was on the first character of the line
 	*/
-	if( offset+current_line_pos )
-		swprintf( lineinfo+offset,
-				  LINEINFO_SIZE-offset,
-				  L"%ls\n%*c^\n",
-				  line,
-				  offset+current_line_pos,
-				  L' ' );
-
+	if( !is_interactive || (current_line_pos!=0) )
+	{
+		sb_printf( lineinfo,
+				   L"%ls\n%*c^\n",
+				   line,
+				   offset+current_line_pos,
+				   L' ' );
+	}
 	free( line );
 
-	return lineinfo;
+	return (wchar_t *)lineinfo->buff;
 }
 
 int parser_get_pos()

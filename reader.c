@@ -3182,7 +3182,7 @@ int reader_read( int fd )
 	*/
 	int shell_was_interactive = is_interactive;
 	
-	is_interactive = (fd == 0) && isatty(STDIN_FILENO);
+	is_interactive = ((fd == 0) && isatty(STDIN_FILENO));
 	signal_set_handlers();
 	
 	res= is_interactive?read_i():read_ni( fd );

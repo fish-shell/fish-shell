@@ -26,7 +26,7 @@ complete $rpm_install -l excludepath -d (_ "Don't install files whose name begin
 complete $rpm_install -l excludedocs -d (_ "Don't install any files which are marked as documentation")
 complete $rpm_install -l force -d (_ 'Same as using --replacepkgs, --replacefiles, and --oldpackage')
 complete $rpm_install -s h -l hash -d (_ 'Print 50 hash marks as the package archive is unpacked')
-complete $rpm_install -l ignoresize -d (_ "Don't check for sufficient disk space before installation"
+complete $rpm_install -l ignoresize -d (_ "Don't check for sufficient disk space before installation")
 complete $rpm_install -l ignorearch -d (_ "Allow installation or upgrading even if the architectures of the binary package and host don't match")
 complete $rpm_install -l ignoreos -d (_ "Allow installation or upgrading even if the operating systems of the binary package and host don't match")
 complete $rpm_install -l includedocs -d (_ 'Install documentation files (default)')

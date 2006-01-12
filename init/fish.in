@@ -43,7 +43,7 @@ if status --is-login
 	end
 
 	if test -f /etc/sysconfig/i18n
-		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/')
+		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/p')
 	end
 end
 

@@ -90,6 +90,10 @@
 */
 #define COMPLETE_ROTTEN_SYMLINK_DESC _( L"Rotten symbolic link" )
 /**
+   Description for symlink loop
+*/
+#define COMPLETE_LOOP_SYMLINK_DESC _( L"Symbolic link loop" )
+/**
    Description for socket
 */
 #define COMPLETE_SOCKET_DESC _( L"Socket" )
@@ -938,7 +942,16 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 						break;
 
 					default:
-						wperror( L"stat" );
+						if( errno == ELOOP )
+						{
+							sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_LOOP_SYMLINK_DESC );
+						}
+						
+						/*
+						  Some kind of broken symlink. We ignore it
+						  here, and it will get a 'file' description,
+						  or one based on suffix.
+						*/
 						break;
 				}
 			}
@@ -954,21 +967,6 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 		}
 
 	}
-/*	else
-  {
-
-  switch( errno )
-  {
-  case EACCES:
-  break;
-
-  default:
-  fprintf( stderr, L"The following error happened on file %ls\n", filename );
-  wperror( L"lstat" );
-  break;
-  }
-  }
-*/
 
 	if( wcslen((wchar_t *)get_desc_buff->buff) == 0 )
 	{
@@ -1332,16 +1330,19 @@ static void complete_cmd( const wchar_t *cmd,
 			{
 				wchar_t *nxt = (wchar_t *)al_get( &tmp, i );
 				
-				wchar_t *desc = wcsrchr( nxt, COMPLETE_SEP )+1;
-				int is_valid = (desc && (wcscmp(desc, 
-												COMPLETE_DIRECTORY_DESC)==0));
-				if( is_valid )
+				wchar_t *desc = wcsrchr( nxt, COMPLETE_SEP );
+				if( desc )
 				{
-					al_push( comp, nxt );
-				}
-				else
-				{
-					free(nxt);
+					int is_valid = desc && (wcscmp(desc+1, 
+												   COMPLETE_DIRECTORY_DESC)==0);
+					if( is_valid )
+					{
+						al_push( comp, nxt );
+					}
+					else
+					{
+						free(nxt);
+					}
 				}
 			}
 		}

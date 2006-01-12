@@ -150,27 +150,34 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			sep = wcschr(new, PROG_COMPLETE_SEP );
 			*sep = COMPLETE_SEP;			
 		}
-		else if( desc_func )
-		{
-			/*
-			  A descripton generating function is specified, use it
-			*/
-			new = wcsdupcat2( str, COMPLETE_SEP_STR, desc_func( orig ), (void *)0);			
-		}
 		else
 		{
+			wchar_t *this_desc = desc;
+			
+			if( desc_func )
+			{
+				/*
+				  A descripton generating function is specified, call
+				  it. If it returns something, use that as the
+				  description.
+				*/
+				wchar_t *func_desc = desc_func( orig );
+				if( func_desc )
+					this_desc = func_desc;
+			}
+			
 			/*
-			  Append generic description to item, if the description exists
+			  Append description to item, if a description exists
 			*/
-			if( desc && wcslen(desc) )
+			if( this_desc && wcslen(this_desc) )
 			{
 				/*
 				  Check if the description already contains a separator character, if not, prepend it
 				*/
-				if( wcschr( desc, COMPLETE_SEP ) )
-					new = wcsdupcat2( str, desc, (void *)0 );
+				if( wcschr( this_desc, COMPLETE_SEP ) )
+					new = wcsdupcat2( str, this_desc, (void *)0 );
 				else
-					new = wcsdupcat2( str, COMPLETE_SEP_STR, desc, (void *)0 );
+					new = wcsdupcat2( str, COMPLETE_SEP_STR, this_desc, (void *)0 );
 			}
 			else
 				new = wcsdup( str );
@@ -328,7 +335,7 @@ static int test_flags( wchar_t *filename,
 	struct stat buf;
 	if( wstat( filename, &buf ) == -1 )
 	{
-		return 1;
+		return 0;
 	}
 		
 	if( S_IFDIR & buf.st_mode )

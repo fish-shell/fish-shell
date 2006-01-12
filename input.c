@@ -1241,6 +1241,7 @@ static void add_emacs_bindings()
 	add_escaped_mapping( L"emacs", (L"\\C-h"), L"Control-h", L"backward-delete-char" );
 	add_escaped_mapping( L"emacs", (L"\\C-e"), L"Control-e", L"end-of-line" );
 	add_escaped_mapping( L"emacs", (L"\\C-w"), L"Control-w", L"backward-kill-word" );
+	add_escaped_mapping( L"emacs", (L"\e\x7f"), L"Alt-backspace", L"backward-kill-word" );
 	add_terminfo_mapping( L"emacs", (key_ppage), L"Page Up", L"beginning-of-history" );
 	add_terminfo_mapping( L"emacs", (key_npage), L"Page Down", L"end-of-history" );
 }

@@ -1371,10 +1371,16 @@ static void complete_from_args( const wchar_t *str,
 								const wchar_t *desc,
 								array_list_t *comp_out )
 {
+	int was_interactive = is_interactive;
+	is_interactive=0;
+	
 	array_list_t possible_comp;
 	al_init( &possible_comp );
 
 	eval_args( args, &possible_comp );
+
+	is_interactive=was_interactive;
+	
 
 	debug( 3, L"desc is '%ls', %d long\n", desc, wcslen(desc) );
 

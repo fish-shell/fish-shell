@@ -42,6 +42,7 @@
 #include "input_common.h"
 #include "event.h"
 #include "translate.h"
+#include "complete.h"
 
 /**
    Command used to start fishd
@@ -215,11 +216,24 @@ static mode_t get_umask()
 }
 
 /**
+   List of all locale variable names
+*/
+static const wchar_t *locale_variable[] =
+{
+	L"LANG", L"LC_ALL", L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES", L"LC_MONETARY", L"LC_NUMERIC", L"LC_TIME", (void *)0
+}
+	;
+
+/**
    Checks if the specified variable is a locale variable
 */
 static int is_locale( const wchar_t *key )
 {
-	return contains_str( key, L"LANG", L"LC_ALL", L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES", L"LC_MONETARY", L"LC_NUMERIC", L"LC_TIME", (void *)0);
+	int i;
+	for( i=0; locale_variable[i]; i++ )
+		if( wcscmp(locale_variable[i], key ) == 0 )
+			return 1;
+	return 0;
 }
 
 /**
@@ -231,15 +245,13 @@ static void handle_locale()
 	const wchar_t *lang;
 	int i;
 	wchar_t *old = wcsdup(wsetlocale( LC_MESSAGES, (void *)0 ));
-	
-	static const wchar_t *lc[] = 
-		{
-			L"LC_COLLATE", L"LC_CTYPE", L"LC_MESSAGES", L"LC_MONETARY", L"LC_NUMERIC", L"LC_TIME", (void *)0
-		}
-	;
+
+	/*
+	  Array of locale constants corresponding to the local variable names defined in locale_variable
+	*/
 	static const int cat[] = 
 		{
-			LC_COLLATE, LC_CTYPE, LC_MESSAGES, LC_MONETARY, LC_NUMERIC, LC_TIME
+			0, LC_ALL, LC_COLLATE, LC_CTYPE, LC_MESSAGES, LC_MONETARY, LC_NUMERIC, LC_TIME
 		}
 	;
 	
@@ -255,9 +267,9 @@ static void handle_locale()
 			wsetlocale( LC_ALL, lang );
 		}
 		
-		for( i=0; lc[i]; i++ )
+		for( i=2; locale_variable[i]; i++ )
 		{
-			const wchar_t *val = env_get( lc[i] );
+			const wchar_t *val = env_get( locale_variable[i] );
 			if( val )
 				wsetlocale(  cat[i], val );
 		}
@@ -978,7 +990,19 @@ void env_pop()
 {
 	if( &top->env != global )
 	{
+		int i;
+		int locale_changed = 0;
+		
 		env_node_t *killme = top;
+
+		for( i=0; locale_variable[i]; i++ )
+		{
+			if( hash_get( &killme->env, locale_variable[i] ) )
+			{
+				locale_changed = 1;
+				break;
+			}
+		}
 
 		if( killme->new_scope )
 		{
@@ -989,6 +1013,9 @@ void env_pop()
 		hash_foreach( &killme->env, &clear_hash_entry );
 		hash_destroy( &killme->env );
 		free( killme );
+
+		if( locale_changed )
+			handle_locale();
 		
 	}
 	else

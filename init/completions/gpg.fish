@@ -57,19 +57,19 @@ complete -c gpg -l verify-files -d (_ "Identical to '--multifile --verify'")
 complete -c gpg -l encrypt-files -d (_ "Identical to '--multifile --encrypt'")
 complete -c gpg -l decrypt-files -d (_ "Identical to --multifile --decrypt")
 
-complete -c gpg -l list-keys -a "(__fish_complete_gpg_user_id)" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
-complete -c gpg -l list-public-keys -a "(__fish_complete_gpg_user_id)" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
-complete -c gpg -s K -l list-secret-keys -a "(__fish_complete_gpg_user_id)" -d (_ "List all keys from the secret keyrings, or just the ones given on the command line")
-complete -c gpg -l list-sigs -a "(__fish_complete_gpg_user_id)" -d (_ "Same as --list-keys, but the signatures are listed too")
+complete -c gpg -l list-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
+complete -c gpg -l list-public-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
+complete -c gpg -s K -l list-secret-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the secret keyrings, or just the ones given on the command line")
+complete -c gpg -l list-sigs -a "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --list-keys, but the signatures are listed too")
 
-complete -c gpg -l check-sigs -a "(__fish_complete_gpg_user_id)" -d (_ "Same as --list-keys, but the signatures are listed and verified")
-complete -c gpg -l fingerprint -a "(__fish_complete_gpg_user_id)" -d (_ "List all keys with their fingerprints")
+complete -c gpg -l check-sigs -a "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --list-keys, but the signatures are listed and verified")
+complete -c gpg -l fingerprint -a "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "List all keys with their fingerprints")
 complete -c gpg -l gen-key -d (_ "Generate a new key pair")
 
 complete -c gpg -l edit-key -d (_ "Present a menu which enables you to do all key related tasks") -xa "(__fish_complete_gpg_user_id)"
 
-complete -c gpg -l sign-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Signs a public key with your secret key")
-complete -c gpg -l lsign-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Signs a public key with your secret key but marks it as non exportable")
+complete -c gpg -l sign-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Sign a public key with your secret key")
+complete -c gpg -l lsign-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Sign a public key with your secret key but mark it as non exportable")
 
 complete -c gpg -l delete-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Remove key from the public keyring")
 complete -c gpg -l delete-secret-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Remove key from the secret and public keyring")
@@ -78,17 +78,17 @@ complete -c gpg -l delete-secret-and-public-key -xa "(__fish_complete_gpg_user_i
 complete -c gpg -l gen-revoke -xa "(__fish_complete_gpg_user_id)" -d (_ "Generate a revocation certificate for the complete key") 
 complete -c gpg -l desig-revoke -xa "(__fish_complete_gpg_user_id)" -d (_ "Generate a designated revocation certificate for a key")
 
-complete -c gpg -l export -a "(__fish_complete_gpg_user_id)" -d (_ "Either export all keys from all keyrings (default keyrings and those registered via option --keyring), or if at least one name is given, those of the given name")
-complete -c gpg -l send-keys -xa "(__fish_complete_gpg_user_id)" -d (_ "Same as --export but sends the keys to a keyserver")
+complete -c gpg -l export -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Export all or the given keys from all keyrings" )
+complete -c gpg -l send-keys -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --export but sends the keys to a keyserver")
 complete -c gpg -l export-secret-keys -a "(__fish_complete_gpg_user_id)" -d (_ "Same as --export, but exports the secret keys instead")
 complete -c gpg -l export-secret-subkeys -a "(__fish_complete_gpg_user_id)" -d (_ "Same as --export, but exports the secret keys instead")
 
-complete -c gpg -l import -a "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys. This adds the given keys to the keyring.")
-complete -c gpg -l fast-import -a "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys. This adds the given keys to the keyring.")
+complete -c gpg -l import -a "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys" )
+complete -c gpg -l fast-import -a "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys" )
 
 complete -c gpg -l recv-keys -a "(__fish_complete_gpg_key_id)" -d (_ "Import the keys with the given key IDs from a keyserver")
 complete -c gpg -l refresh-keys -a "(__fish_complete_gpg_key_id)" -d (_ "Request updates from a keyserver for keys that already exist on the local keyring")
-complete -c gpg -l search-keys -a "(__fish_complete_gpg_user_id)" -d (_ "Search the keyserver for the given names")
+complete -c gpg -l search-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "Search the keyserver for the given names")
 complete -c gpg -l update-trustdb -d (_ "Do trust database maintenance")
 complete -c gpg -l check-trustdb -d (_ "Do trust database maintenance without user interaction") 
 
@@ -97,8 +97,8 @@ complete -c gpg -l import-ownertrust -d (_ "Update the trustdb with the ownertru
 
 complete -c gpg -l rebuild-keydb-caches -d (_ "Create signature caches in the keyring")
 
-complete -c gpg -l print-md -d (_ "Print message digest of algorithm ALGO for all given files or stdin")
-complete -c gpg -l print-mds -d (_ "Print message digest of algorithm ALGO for all given files or stdin")
+complete -c gpg -l print-md -xa "(__fish_print_gpg_algo Hash)" -d (_ "Print message digest of specified algorithm for all given files or stdin")
+complete -c gpg -l print-mds -d (_ "Print message digest of all algorithms for all given files or stdin")
 
 complete -c gpg -l gen-random -xa "0 1 2" -d (_ "Emit specified number of random bytes of the given quality level")
 
@@ -115,9 +115,6 @@ complete -c gpg -s a -l armor -d (_ "Create ASCII armored output")
 complete -c gpg -s o -l output -r -d (_ "Write output to specified file")
 
 complete -c gpg -l max-output -d (_ "Sets a limit on the number of bytes that will be generated when processing a file") -x
-
-complete -c gpg -l mangle-dos-filenames -d (_ "Replace (rather than add to) the extension of an output filename")
-complete -c gpg -l no-mangle-dos-filenames -d (_ "Add to (rather than replace) the extension of an output filename (default)")
 
 complete -c gpg -s u -l local-user -xa "(__fish_complete_gpg_user_id)" -d (_ "Use specified key as the key to sign with")
 complete -c gpg -l default-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Use specified key as the default key to sign with")
@@ -145,9 +142,9 @@ complete -c gpg -l no-textmode -d (_ "Don't treat input files as text and store 
 
 complete -c gpg -s n -l dry-run -d (_ "Don't make any changes (this is not completely implemented)") 
 
-complete -c gpg -s i -l interactive -d (_ "Prompt before overwriting any files")
+complete -c gpg -s i -l interactive -d (_ "Prompt before overwrite")
 
-complete -c gpg -l batch -d (_ "Use batch mode")
+complete -c gpg -l batch -d (_ "Batch mode")
 complete -c gpg -l no-batch -d (_ "Don't use batch mode")
 complete -c gpg -l no-tty -d (_ "Make sure that the TTY (terminal) is never used for any output")
 
@@ -165,14 +162,14 @@ complete -c gpg -l trust-model -a "pgp classic direct always" -d (_ "Set what tr
 complete -c gpg -l keyid-format -a "short 0xshort long 0xlong" -d (_ "Select how to display key IDs")
 
 complete -c gpg -l keyserver -x -d (_ "Use specified keyserver")
-complete -c gpg -l keyserver-options -xa "(__fish_append , include-revoked include-disabled honor-keyserver-url include-subkeys use-temp-files keep-temp-files verbose timeout http-proxy auto-key-retrieve)" -d (_ "Space or comma delimited string that gives options for the keyserver")
+complete -c gpg -l keyserver-options -xa "(__fish_append , include-revoked include-disabled honor-keyserver-url include-subkeys use-temp-files keep-temp-files verbose timeout http-proxy auto-key-retrieve)" -d (_ "Options for the keyserver")
 
 complete -c gpg -l import-options -xa "(__fish_append , import-local-sigs repair-pks-subkey-bug merge-only)" -d (_ "Options for importing keys")
 complete -c gpg -l export-options -xa "(__fish_append , export-local-sigs export-attributes export-sensitive-revkeys export-minimal)" -d (_ "Options for exporting keys")
-complete -c gpg -l list-options -xa "(__fish_append , show-photos show-policy-urls show-notations show-std-notations show-user-notations show-keyserver-urls show-uid-validity show-unusable-uids show-unusable-subkeys show-keyring show-sig-expire show-sig-subpackets )" -d (_ "This is a space or comma delimited string that gives options used when listing keys and signatures")
-complete -c gpg -l verify-options -xa "(__fish_append , show-photos show-policy-urls show-notations show-std-notations show-user-notations show-keyserver-urls show-uid-validity show-unusable-uids)" -d (_ "Options used when verifying signatures")
+complete -c gpg -l list-options -xa "(__fish_append , show-photos show-policy-urls show-notations show-std-notations show-user-notations show-keyserver-urls show-uid-validity show-unusable-uids show-unusable-subkeys show-keyring show-sig-expire show-sig-subpackets )" -d (_ "Options for listing keys and signatures")
+complete -c gpg -l verify-options -xa "(__fish_append , show-photos show-policy-urls show-notations show-std-notations show-user-notations show-keyserver-urls show-uid-validity show-unusable-uids)" -d (_ "Options for verifying signatures")
 
-complete -c gpg -l photo-viewer -r -d (_ "This is the command line that should be run to view a photo ID")
+complete -c gpg -l photo-viewer -r -d (_ "The command line that should be run to view a photo ID")
 complete -c gpg -l exec-path -r -d (_ "Sets a list of directories to search for photo viewers and keyserver helpers")
 
 complete -c gpg -l show-keyring -d (_ "Display the keyring name at the head of key listings to show which keyring a given key resides on")

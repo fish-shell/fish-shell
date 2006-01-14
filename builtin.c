@@ -720,6 +720,7 @@ static void functions_def( wchar_t *name )
 				def,
 				L"\nend\n\n",
 				(void *)0);
+	
 }
 
 
@@ -2339,7 +2340,7 @@ static int builtin_fg( wchar_t **argv )
 		int pid = abs(wcstol( argv[1], 0, 10 ));
 		j = job_get_from_pid( pid );
 		sb_printf( sb_err,
-				   _( "%ls: No suitable job: %d\n" ),
+				   _( L"%ls: No suitable job: %d\n" ),
 				   argv[0],
 				   pid );
 		builtin_print_help( argv[0], sb_err );
@@ -3332,7 +3333,6 @@ void builtin_get_names( array_list_t *list )
 
 const wchar_t *builtin_get_desc( const wchar_t *b )
 {
-	wchar_t *res;
 	
 	if( !desc )
 	{

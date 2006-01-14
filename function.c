@@ -68,12 +68,20 @@ void function_add( const wchar_t *name,
 				   int is_binding )
 {
 	int i;
+	wchar_t *cmd_end;
 	
+
 	if( function_exists( name ) )
 		function_remove( name );
 	
 	function_data_t *d = malloc( sizeof( function_data_t ) );
 	d->cmd = wcsdup( val );
+	cmd_end = d->cmd + wcslen(d->cmd)-1;
+	while( (cmd_end>d->cmd) && wcschr( L"\n\r\t ", *cmd_end ) )
+	{
+		*cmd_end--=0;
+	}
+	
 	d->desc = desc?wcsdup( desc ):0;
 	d->is_binding = is_binding;
 	hash_put( &function, intern(name), d );

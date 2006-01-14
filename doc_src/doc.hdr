@@ -1111,8 +1111,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 \subsection bugs Known bugs
 
 - Completion for gcc -\#\#\# option doesn't work.
-- Many completions are made specifically for the GNU 
-version of a POSIX command
+- Many completions are made specifically for the GNU version of a POSIX command
 - Yanking weird characters from clipboard prints Unicode escapes
 - Suspending and then resuming pipelines containing a builtin seems to be broken.
 - Interactive input seems broken inside blocks. Is local echo and other terminal values not restored when in an interactive block?

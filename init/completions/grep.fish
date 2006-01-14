@@ -1,3 +1,6 @@
+#
+# Completions for the grep command
+#
 
 complete -c grep -s A -l after-context -d (_ "Print NUM lines of trailing context")
 complete -c grep -s a -l text -d (_ "Process binary file as text")

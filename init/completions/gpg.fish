@@ -6,14 +6,13 @@
 # written to, to make gpg use a different locale than the one
 # specified in the environment or to specify an alternative home
 # directory.
-#
+
 # Switches related to debugging, switches whose use is not
 # recommended, switches whose behaviour is as of yet undefined,
 # switches for experimental features, switches to make gpg compliant
-# to legacy pgp-versions and deprecated or obsolete switches have all
-# been removed. The remaining list of completions is still quite 
-# impressive.
-#
+# to legacy pgp-versions, dos-specific switches and deprecated or
+# obsolete switches have all been removed. The remaining list of
+# completions is still quite impressive.
 
 #
 # Various functions used for dynamic completions

@@ -179,13 +179,11 @@ complete -c gpg -l trustdb-name -r -d (_ "Use specified file instead of the defa
 complete -c gpg -l homedir -xa "(__fish_complete_directory (commandline -ct))" -d (_ "Set the home directory")
 complete -c gpg -l display-charset -xa " iso-8859-1 iso-8859-2 iso-8859-15 koi8-r utf-8 " -d (_ "Set the native character set")
 
-complete -c gpg -l utf8-strings -d (_ "Assume that command line arguments are given as UTF8 strings")
-complete -c gpg -l no-utf8-strings -d (_ "Assume that arguments are encoded in the character set as specified by --display- charset. These options affect all following arguments")
-complete -c gpg -l options -r -d (_ "Read options from specified file and do not try to read them from the default options file in the homedir")
+complete -c gpg -l utf8-strings -d (_ "Assume that following command line arguments are given in UTF8")
+complete -c gpg -l no-utf8-strings -d (_ "Assume that following arguments are encoded in the character set specified by --display-charset")
+complete -c gpg -l options -r -d (_ "Read options from specified file, do not read the default options file")
 complete -c gpg -l no-options -d (_ "Shortcut for '--options /dev/null'")
 complete -c gpg -l load-extension -x -d (_ "Load an extension module")
-
-complete -c gpg -l enable-progress-filter -d (_ "Enable certain PROGRESS status outputs")
 
 complete -c gpg -l status-fd -x -d (_ "Write special status strings to the specified file descriptor")
 complete -c gpg -l logger-fd -x -d (_ "Write log output to the specified file descriptor")
@@ -207,15 +205,15 @@ complete -c gpg -s N -l set-notation -x -d (_ "Put the specified name value pair
 complete -c gpg -l sig-policy-url -x -d (_ "Set signature policy")
 complete -c gpg -l cert-policy-url -x -d (_ "Set certificate policy")
 complete -c gpg -l set-policy-url -x -d (_ "Set signature and certificate policy")
-complete -c gpg -l sig-keyserver-url -x -d (_ "Use specified string as a preferred keyserver URL for data signatures")
+complete -c gpg -l sig-keyserver-url -x -d (_ "Use specified URL as a preferred keyserver for data signatures")
 
 complete -c gpg -l set-filename -x -d (_ "Use specified string as the filename which is stored inside messages")
 
 complete -c gpg -l for-your-eyes-only -d (_ "Set the 'for your eyes only' flag in the message")
 complete -c gpg -l no-for-your-eyes-only -d (_ "Clear the 'for your eyes only' flag in the message") 
 
-complete -c gpg -l use-embedded-filename -d (_ "Try to create a file with a name as embedded in the data")
-complete -c gpg -l no-use-embedded-filename -d (_ "Don't try to create a file with a name as embedded in the data") 
+complete -c gpg -l use-embedded-filename -d (_ "Create file with name as given in data")
+complete -c gpg -l no-use-embedded-filename -d (_ "Don't create file with name as given in data")
 
 complete -c gpg -l completes-needed -x -d (_ "Number of completely trusted users to introduce a new key signer (defaults to 1)")
 complete -c gpg -l marginals-needed -x -d (_ "Number of marginally trusted users to introduce a new key signer (defaults to 3)")
@@ -230,7 +228,7 @@ complete -c gpg -l s2k-cipher-algo -xa "(__fish_print_gpg_algo Cipher)" -d (_ "U
 complete -c gpg -l s2k-digest-algo -xa "(__fish_print_gpg_algo Hash)" -d (_ "Use specified digest algorithm to mangle the passphrases")
 complete -c gpg -l s2k-mode -xa "0\t'Plain passphrase' 1\t'Salted passphrase' 3\t'Repeated salted mangling'" -d (_ "Selects how passphrases are mangled")
 
-complete -c gpg -l simple-sk-checksum -d (_ "Secret keys are integrity protected by using a SHA-1 checksum")
+complete -c gpg -l simple-sk-checksum -d (_ "Integrity protect secret keys by using a SHA-1 checksum" )
 
 complete -c gpg -l disable-cipher-algo -xa "(__fish_print_gpg_algo Cipher)" -d (_ "Never allow the use of specified cipher algorithm")
 complete -c gpg -l disable-pubkey-algo -xa "(__fish_print_gpg_algo Pubkey)" -d (_ "Never allow the use of specified public key algorithm")
@@ -245,7 +243,7 @@ complete -c gpg -l throw-keyids -d (_ "Do not put the recipient keyid into encry
 complete -c gpg -l no-throw-keyids -d (_ "Put the recipient keyid into encrypted packets")
 complete -c gpg -l not-dash-escaped -d (_ "Change the behavior of cleartext signatures so that they can be used for patch files")
 
-complete -c gpg -l escape-from-lines -d (_ "Mangle From-field of email headers (Default)")
+complete -c gpg -l escape-from-lines -d (_ "Mangle From-field of email headers (default)")
 complete -c gpg -l no-escape-from-lines -d (_ "Do not mangle From-field of email headers")
 
 complete -c gpg -l passphrase-fd -x -d (_ "Read passphrase from specified file descriptor")

@@ -1262,7 +1262,7 @@ int exec_subshell( const wchar_t *cmd,
 					el = str2wcs( begin );				
 					if( !el )
 					{
-						debug( 0, _( L"Subshell returned illegal string, discarded one entry" ) );
+						debug( 0, _( L"Subshell '%ls' returned illegal string, discarded one entry" ), cmd );
 					}
 					else
 					{

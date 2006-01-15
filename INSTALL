@@ -33,13 +33,13 @@ broken.
 Simple install procedure
 ========================
 
-If you have downloaded the darcs repository of fish, you need to sun
-autoheader and autoconf.
+If you have downloaded the darcs repository of fish, you need to run
+autoconf.
 
  % ./configure
- % make                                  # Compile fish
- % make install                          # Install fish
- % echo /usr/local/bin/fish >>/etc/shells #Add fish to list of shells
+ % make                                   # Compile fish
+ % make install                           # Install fish
+ % echo /usr/local/bin/fish >>/etc/shells # Add fish to list of shells
 
 If you wish to use fish as your default shell, use the following
 command:
@@ -52,8 +52,8 @@ chsh will prompt you for your password, and change your default shell.
 Local install procedure
 =======================
 
-If you have downloaded the darcs repository of fish, you need to sun
-autoheader and autoconf.
+If you have downloaded the darcs repository of fish, you need to run
+autoconf first.
 
 To install fish in your own home directory (typically as non-root),
 type:

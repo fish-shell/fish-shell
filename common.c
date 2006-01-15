@@ -812,10 +812,6 @@ void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
 	string_buffer_t sb;
-	wchar_t *start, *pos;
-	int line_width = 0;
-	int tok_width = 0;
-	int screen_width = common_get_width();
 	
 	if( level > debug_level )
 		return;
@@ -826,10 +822,22 @@ void debug( int level, const wchar_t *msg, ... )
 	sb_printf( &sb, L"%ls: ", program_name );
 	sb_vprintf( &sb, msg, va );
 	va_end( va );	
+
+	write_screen( (wchar_t *)sb.buff );
+
+	sb_destroy( &sb );	
+}
+
+void write_screen( const wchar_t *msg )
+{
+	const wchar_t *start, *pos;
+	int line_width = 0;
+	int tok_width = 0;
+	int screen_width = common_get_width();
 	
 	if( screen_width )
 	{
-		start = pos = (wchar_t *)sb.buff;
+		start = pos = msg;
 		while( 1 )
 		{
 			int overflow = 0;
@@ -901,11 +909,9 @@ void debug( int level, const wchar_t *msg, ... )
 	}
 	else
 	{
-		fwprintf( stderr, L"%ls", sb.buff );
-		
+		fwprintf( stderr, L"%ls", msg );
 	}
 	putwc( L'\n', stderr );
-	sb_destroy( &sb );
 }
 
 wchar_t *escape( const wchar_t *in, 

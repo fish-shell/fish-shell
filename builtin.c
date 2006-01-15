@@ -876,6 +876,8 @@ static int builtin_functions( wchar_t **argv )
 	}
 	else if( list )
 	{
+		int is_screen = !builtin_out_redirect && isatty(1);
+		
 		al_init( &names );
 		function_get_names( &names, show_hidden );
 		names_arr = list_to_char_arr( &names );
@@ -883,13 +885,33 @@ static int builtin_functions( wchar_t **argv )
 			   al_get_count( &names ), 
 			   sizeof(wchar_t *), 
 			   (int (*)(const void *, const void *))&wcsfilecmp );
-		for( i=0; i<al_get_count( &names ); i++ )
+		if( is_screen )
 		{
-			sb_append2( sb_out,
-						names_arr[i],
-						L"\n",
-						(void *)0 );			
+			string_buffer_t buff;
+			sb_init( &buff );
+			
+			for( i=0; i<al_get_count( &names ); i++ )
+			{
+				sb_append2( &buff,
+							names_arr[i],
+							L", ",
+							(void *)0 );			
+			}
+			
+			write_screen( (wchar_t *)buff.buff );
+			sb_destroy( &buff );
 		}
+		else
+		{
+			for( i=0; i<al_get_count( &names ); i++ )
+			{
+				sb_append2( sb_out,
+							names_arr[i],
+							L"\n",
+							(void *)0 );			
+			}
+		}
+		
 		free( names_arr );
 		al_destroy( &names );			
 		return 0;

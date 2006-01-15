@@ -380,5 +380,12 @@ int common_get_height();
 */
 void common_handle_winch( int signal );
 
+/**
+   Write paragraph of output to screen. Ignore newlines in message and
+   perform internal line-breaking.
+*/
+void write_screen( const wchar_t *msg );
+
+
 #endif
 

@@ -10,9 +10,10 @@
 # Switches related to debugging, switches whose use is not
 # recommended, switches whose behaviour is as of yet undefined,
 # switches for experimental features, switches to make gpg compliant
-# to legacy pgp-versions, dos-specific switches and deprecated or
-# obsolete switches have all been removed. The remaining list of
-# completions is still quite impressive.
+# to legacy pgp-versions, dos-specific switches, switches meant for
+# the options file and deprecated or obsolete switches have all been
+# removed. The remaining list of completions is still quite
+# impressive.
 
 #
 # Various functions used for dynamic completions
@@ -57,13 +58,13 @@ complete -c gpg -l verify-files -d (_ "Identical to '--multifile --verify'")
 complete -c gpg -l encrypt-files -d (_ "Identical to '--multifile --encrypt'")
 complete -c gpg -l decrypt-files -d (_ "Identical to --multifile --decrypt")
 
-complete -c gpg -l list-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
-complete -c gpg -l list-public-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
-complete -c gpg -s K -l list-secret-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the secret keyrings, or just the ones given on the command line")
-complete -c gpg -l list-sigs -a "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --list-keys, but the signatures are listed too")
+complete -c gpg -l list-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
+complete -c gpg -l list-public-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the public keyrings, or just the ones given on the command line")
+complete -c gpg -s K -l list-secret-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "List all keys from the secret keyrings, or just the ones given on the command line")
+complete -c gpg -l list-sigs -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --list-keys, but the signatures are listed too")
 
-complete -c gpg -l check-sigs -a "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --list-keys, but the signatures are listed and verified")
-complete -c gpg -l fingerprint -a "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "List all keys with their fingerprints")
+complete -c gpg -l check-sigs -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --list-keys, but the signatures are listed and verified")
+complete -c gpg -l fingerprint -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "List all keys with their fingerprints")
 complete -c gpg -l gen-key -d (_ "Generate a new key pair")
 
 complete -c gpg -l edit-key -d (_ "Present a menu which enables you to do all key related tasks") -xa "(__fish_complete_gpg_user_id)"
@@ -80,15 +81,15 @@ complete -c gpg -l desig-revoke -xa "(__fish_complete_gpg_user_id)" -d (_ "Gener
 
 complete -c gpg -l export -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Export all or the given keys from all keyrings" )
 complete -c gpg -l send-keys -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (_ "Same as --export but sends the keys to a keyserver")
-complete -c gpg -l export-secret-keys -a "(__fish_complete_gpg_user_id)" -d (_ "Same as --export, but exports the secret keys instead")
-complete -c gpg -l export-secret-subkeys -a "(__fish_complete_gpg_user_id)" -d (_ "Same as --export, but exports the secret keys instead")
+complete -c gpg -l export-secret-keys -xa "(__fish_complete_gpg_user_id)" -d (_ "Same as --export, but exports the secret keys instead")
+complete -c gpg -l export-secret-subkeys -xa "(__fish_complete_gpg_user_id)" -d (_ "Same as --export, but exports the secret keys instead")
 
-complete -c gpg -l import -a "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys" )
-complete -c gpg -l fast-import -a "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys" )
+complete -c gpg -l import -xa "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys" )
+complete -c gpg -l fast-import -xa "(__fish_complete_gpg_user_id)" -d (_ "Import/merge keys" )
 
-complete -c gpg -l recv-keys -a "(__fish_complete_gpg_key_id)" -d (_ "Import the keys with the given key IDs from a keyserver")
-complete -c gpg -l refresh-keys -a "(__fish_complete_gpg_key_id)" -d (_ "Request updates from a keyserver for keys that already exist on the local keyring")
-complete -c gpg -l search-keys -a "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "Search the keyserver for the given names")
+complete -c gpg -l recv-keys -xa "(__fish_complete_gpg_key_id)" -d (_ "Import the keys with the given key IDs from a keyserver")
+complete -c gpg -l refresh-keys -xa "(__fish_complete_gpg_key_id)" -d (_ "Request updates from a keyserver for keys that already exist on the local keyring")
+complete -c gpg -l search-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" -d (_ "Search the keyserver for the given names")
 complete -c gpg -l update-trustdb -d (_ "Do trust database maintenance")
 complete -c gpg -l check-trustdb -d (_ "Do trust database maintenance without user interaction") 
 
@@ -122,19 +123,15 @@ complete -c gpg -l default-key -xa "(__fish_complete_gpg_user_id)" -d (_ "Use sp
 complete -c gpg -s r -l recipient -xa "(__fish_complete_gpg_user_id)" -d (_ "Encrypt for specified user id")
 complete -c gpg -s R -l hidden-recipient -xa "(__fish_complete_gpg_user_id)" -d (_ "Encrypt for specified user id, but hide the keyid of the key")
 complete -c gpg -l default-recipient -xa "(__fish_complete_gpg_user_id)" -d (_ "Use specified user id as default recipient")
-complete -c gpg -l default-recipient-self -d (_ "Use the default key as default recipient if option --recipient is not used and don't ask if this is a valid one")
+complete -c gpg -l default-recipient-self -d (_ "Use the default key as default recipient")
 complete -c gpg -l no-default-recipient -d (_ "Reset --default-recipient and --default-recipient-self")
-
-complete -c gpg -l encrypt-to -xa "(__fish_complete_gpg_user_id)" -d (_ "Same as --recipient but this one is intended for use in the options file and may be used with your own user-id as an 'encrypt-to-self'")
-complete -c gpg -l hidden-encrypt-to -xa "(__fish_complete_gpg_user_id)" -d (_ "Same as --hidden-recipient but this one is intended for use in the options file and may be used with your own user-id as a hidden 'encrypt-to-self'")
-complete -c gpg -l no-encrypt-to -d (_ "Disable the use of all --encrypt-to and --hidden-encrypt-to keys")
 
 complete -c gpg -s v -l verbose -d (_ "Give more information during processing")
 complete -c gpg -s q -l quiet -d (_ "Quiet mode")
 
-complete -c gpg -s z -d (_ "Compression level") -a "(seq 1 9)"
-complete -c gpg -l compress-level -d (_ "Compression level") -a "(seq 1 9)"
-complete -c gpg -l bzip2-compress-level -d (_ "Compression level") -a "(seq 1 9)"
+complete -c gpg -s z -d (_ "Compression level") -xa "(seq 1 9)"
+complete -c gpg -l compress-level -d (_ "Compression level") -xa "(seq 1 9)"
+complete -c gpg -l bzip2-compress-level -d (_ "Compression level") -xa "(seq 1 9)"
 complete -c gpg -l bzip2-decompress-lowmem -d (_ "Use a different decompression method for BZIP2 compressed files")
 
 complete -c gpg -s t -l textmode -d (_ "Treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings")
@@ -146,20 +143,20 @@ complete -c gpg -s i -l interactive -d (_ "Prompt before overwrite")
 
 complete -c gpg -l batch -d (_ "Batch mode")
 complete -c gpg -l no-batch -d (_ "Don't use batch mode")
-complete -c gpg -l no-tty -d (_ "Make sure that the TTY (terminal) is never used for any output")
+complete -c gpg -l no-tty -d (_ "Never write output to terminal")
 
 complete -c gpg -l yes -d (_ "Assume yes on most questions")
 complete -c gpg -l no -d (_ "Assume no on most questions")
 
-complete -c gpg -l ask-cert-level -d (_ "When making a key signature, prompt for a certification level")
-complete -c gpg -l no-ask-cert-level -d (_ "When making a key signature, do not prompt for a certification level")
-complete -c gpg -l default-cert-level -a "0\t'Not verified' 1\t'Not verified' 2\t'Caual verification' 3\t'Extensive verification'" -d (_ "The default certification level to use for the check level when signing a key")
-complete -c gpg -l min-cert-level -a "0 1 2 3" -d (_ "When building the trust database, disregard any signatures with a certification level below this")
+complete -c gpg -l ask-cert-level -d (_ "Prompt for a certification level when making a key signature")
+complete -c gpg -l no-ask-cert-level -d (_ "Don't prompt for a certification level when making a key signature")
+complete -c gpg -l default-cert-level -xa "0\t'Not verified' 1\t'Not verified' 2\t'Caual verification' 3\t'Extensive verification'" -d (_ "The default certification level to use for the level check when signing a key")
+complete -c gpg -l min-cert-level -xa "0 1 2 3" -d (_ "Disregard any signatures with a certification level below specified level when building the trust database")
 
-complete -c gpg -l trusted-key -a "(__fish_complete_gpg_key_id)" -d (_ "Assume that the specified key is as trustworthy as one of your own secret keys")
-complete -c gpg -l trust-model -a "pgp classic direct always" -d (_ "Set what trust model GnuPG should follow")
+complete -c gpg -l trusted-key -xa "(__fish_complete_gpg_key_id)" -d (_ "Assume that the specified key is as trustworthy as one of your own secret keys")
+complete -c gpg -l trust-model -xa "pgp classic direct always" -d (_ "Specify trust model")
 
-complete -c gpg -l keyid-format -a "short 0xshort long 0xlong" -d (_ "Select how to display key IDs")
+complete -c gpg -l keyid-format -xa "short 0xshort long 0xlong" -d (_ "Select how to display key IDs")
 
 complete -c gpg -l keyserver -x -d (_ "Use specified keyserver")
 complete -c gpg -l keyserver-options -xa "(__fish_append , include-revoked include-disabled honor-keyserver-url include-subkeys use-temp-files keep-temp-files verbose timeout http-proxy auto-key-retrieve)" -d (_ "Options for the keyserver")
@@ -179,8 +176,8 @@ complete -c gpg -l secret-keyring -r -d (_ "Add specified file to the current li
 complete -c gpg -l primary-keyring -r -d (_ "Designate specified file as the primary public keyring")
 
 complete -c gpg -l trustdb-name -r -d (_ "Use specified file instead of the default trustdb")
-complete -c gpg -l homedir -a "(__fish_complete_directory (commandline -ct))" -d (_ "Set the home directory")
-complete -c gpg -l display-charset -a " iso-8859-1 iso-8859-2 iso-8859-15 koi8-r utf-8 " -d (_ "Set the name of the native character set")
+complete -c gpg -l homedir -xa "(__fish_complete_directory (commandline -ct))" -d (_ "Set the home directory")
+complete -c gpg -l display-charset -xa " iso-8859-1 iso-8859-2 iso-8859-15 koi8-r utf-8 " -d (_ "Set the native character set")
 
 complete -c gpg -l utf8-strings -d (_ "Assume that command line arguments are given as UTF8 strings")
 complete -c gpg -l no-utf8-strings -d (_ "Assume that arguments are encoded in the character set as specified by --display- charset. These options affect all following arguments")

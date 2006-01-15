@@ -236,14 +236,14 @@ void free_fd( io_data_t *io, int fd )
    redirections described by \c io.
 
    \param io the list of IO redirections for the child
+   \param exit_on_error whether to call exit() on errors
+
+   \return 1 on sucess, 0 on failiure
 */
-static void handle_child_io( io_data_t *io )
+static int handle_child_io( io_data_t *io, int exit_on_error )
 {
 
 	close_unused_internal_pipes( io );
-	
-	if( env_universal_server.fd >= 0 )
-		exec_close( env_universal_server.fd );
 
 	for( ; io; io=io->next )
 	{
@@ -277,7 +277,14 @@ static void handle_child_io( io_data_t *io )
 						   io->param1.filename );
 					
 					wperror( L"open" );
-					exit(1);
+					if( exit_on_error )
+					{
+						exit(1);
+					}
+					else
+					{
+						return 0;
+					}					
 				}				
 				else if( tmp != io->fd)
 				{
@@ -289,7 +296,14 @@ static void handle_child_io( io_data_t *io )
 							   FD_ERROR,
 							   io->fd );
 						wperror( L"dup2" );
-						exit(1);
+						if( exit_on_error )
+						{
+							exit(1);
+						}
+						else
+						{
+							return 0;
+						}
 					}
 					exec_close( tmp );
 				}				
@@ -299,19 +313,21 @@ static void handle_child_io( io_data_t *io )
 			case IO_FD:
 			{
 				close(io->fd);
-/*				debug( 3, L"Redirect fd %d in process %ls (%d) from fd %d",
-  io->fd,
-  p->actual_cmd,
-  p->pid,
-  io->old_fd );
-*/			
+
 				if( dup2( io->param1.old_fd, io->fd ) == -1 )
 				{
 					debug( 1, 
 						   FD_ERROR,
 						   io->fd );
 					wperror( L"dup2" );
-					exit(1);					
+					if( exit_on_error )
+					{
+						exit(1);
+					}
+					else
+					{
+						return 0;
+					}
 				}
 				break;
 			}
@@ -319,21 +335,23 @@ static void handle_child_io( io_data_t *io )
 			case IO_BUFFER:
 			case IO_PIPE:
 			{
-				close(io->fd);
-				
-/*				debug( 3, L"Pipe fd %d in process %ls (%d) (Through fd %d)", 
-  io->fd, 
-  p->actual_cmd,
-  p->pid,
-  io->pipe_fd[io->fd] );
-*/
 				int fd_to_dup = io->fd;
+
+				close(io->fd);
 				
 				if( dup2( io->param1.pipe_fd[fd_to_dup?1:0], io->fd ) == -1 )
 				{
 					debug( 1, PIPE_ERROR );
 					wperror( L"dup2" );
-					exit(1);
+					if( exit_on_error )
+					{
+						exit(1);
+					}
+					else
+					{
+						return 0;
+					}					
+
 				}
 
 				if( fd_to_dup != 0 )
@@ -342,28 +360,21 @@ static void handle_child_io( io_data_t *io )
 					exec_close( io->param1.pipe_fd[1]);
 				}
 				else
+				{
 					exec_close( io->param1.pipe_fd[0] );
+				}
 				
-/*				
-  if( close( io[i].pipe_fd[ io->fd ] ) == -1 )
-  {
-  wperror( L"close" );
-  exit(1);
-  }
-*/			
-/*				if( close( io[i].pipe_fd[1] ) == -1 )
-  {
-  wperror( L"close" );
-  exit(1);
-  }
-*/
-		
-/*		    fprintf( stderr, "fd %d points to fd %d\n", i, io[i].fd[i>0?1:0] );*/
 				break;
 			}
 			
 		}
 	}
+
+	if( env_universal_server.fd >= 0 )
+		exec_close( env_universal_server.fd );
+
+	return 1;
+	
 }
 
 /**
@@ -372,9 +383,16 @@ static void handle_child_io( io_data_t *io )
    process is put in the jobs group, all signal handlers are reset,
    SIGCHLD is unblocked (the exec call blocks blocks SIGCHLD), and all
    IO redirections and other file descriptor actions are performed.
+
+   \param j the job to set up the IO for
+   \param exit_on_error whether to call exit() on errors
+
+   \return 1 on sucess, 0 on failiure
 */
-static void setup_child_process( job_t *j )
+static int setup_child_process( job_t *j, int exit_on_error )
 {
+	int res;
+	
 	if( is_interactive && !is_subshell && !is_block)
     {
 		pid_t pid;
@@ -400,13 +418,18 @@ static void setup_child_process( job_t *j )
 		}
 	}
 	
+	res = handle_child_io( j->io, exit_on_error );
+
 	/* Set the handling for job control signals back to the default.  */
-	signal_reset_handlers();
-
-	handle_child_io( j->io );
-
+	if( res )
+	{
+		signal_reset_handlers();
+	}
+	
 	/* Remove all signal blocks */
 	signal_unblock();	
+	
+	return res;
 	
 }
 								 
@@ -667,11 +690,20 @@ void exec( job_t *j )
 		/*
 		  setup_child_process make sure signals are propelry set up
 		*/
-		setup_child_process( j );
-		launch_process( j->first_process );
-		/*
-		  launch_process _never_ returns...
-		*/
+		if( setup_child_process( j, 0 ) )
+		{
+			/*
+			  launch_process never returns
+			*/
+			launch_process( j->first_process );
+		}
+		else
+		{
+			j->constructed=1;
+			j->first_process->completed=1;
+			return;
+		}
+		
 	}
 	
 
@@ -988,7 +1020,7 @@ void exec( job_t *j )
 						  This is the child process. Write out the contents of the pipeline.
 						*/
 						p->pid = getpid();
-						setup_child_process( j );
+						setup_child_process( j, 1 );
 						write( io_buffer->fd, 
 							   io_buffer->param2.out_buffer->buff, 
 							   io_buffer->param2.out_buffer->used );
@@ -1076,7 +1108,7 @@ void exec( job_t *j )
 					  This is the child process. 
 					*/
 					p->pid = getpid();
-					setup_child_process( j );
+					setup_child_process( j, 1 );
 					if( sb_out->used )
 						fwprintf( stdout, L"%ls", sb_out->buff );
 					if( sb_err->used )
@@ -1118,7 +1150,7 @@ void exec( job_t *j )
 					  This is the child process. 
 					*/
 					p->pid = getpid();
-					setup_child_process( j );
+					setup_child_process( j, 1 );
 					launch_process( p );
 
 					/*

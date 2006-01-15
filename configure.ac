@@ -1,23 +1,18 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(fish,1.19.0,fish-users@lists.sf.net)
 
-AC_CANONICAL_TARGET
+# Run autoheader automatically, it's quick, and saves people the hassle of remembering to run it manually
+autoheader
 
-if test $target_cpu = powerpc; then
-   AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
-fi
-
-AC_DEFINE_UNQUOTED([CPU],[L"$target_cpu"],[CPU type])
-
+# Tell autoconf to create config.h header 
 AC_CONFIG_HEADERS(config.h)
 
-# Checks for programs.
+# Set up various programs needed for install
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
-#AC_ISC_POSIX
-#AC_PROG_MAKE_SET
 
+# Check for doxygen, needed to build
 AC_CHECK_PROG( has_doxygen, [doxygen], "true")
 
 if ! test $has_doxygen = "true"; then
@@ -44,6 +39,17 @@ else
     AC_SUBST( XSEL_MAN_PATH,[ ])
 fi
 
+# Test cpu for special handling of ppc
+AC_CANONICAL_TARGET
+
+if test $target_cpu = powerpc; then
+   AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
+fi
+
+AC_DEFINE_UNQUOTED([CPU],[L"$target_cpu"],[CPU type])
+
+
+# Set up install locations
 if [[ "$prefix" = NONE ]]; then
 	AC_DEFINE_UNQUOTED( [PREFIX], L"/usr/local", [Installation directory])
 	AC_SUBST( PREFIX, /usr/local)
@@ -52,9 +58,6 @@ else
 	AC_DEFINE_UNQUOTED( [PREFIX], L"$prefix", [Installation directory])
 	AC_SUBST( PREFIX, [$prefix])
 fi
-
-AC_DEFINE_UNQUOTED( [LOCALEDIR], "$(eval echo $datadir)/locale", [Locale directory])
-AC_SUBST( [LOCALEDIR], [$datadir/locale])
 
 AC_SUBST(fishdir,[/fish.d])
 AC_SUBST(fishfile,[/fish])
@@ -66,10 +69,13 @@ if test -z $docdir; then
    AC_SUBST(docdir,[$datadir/doc/fish])
 fi
 
-
 AC_DEFINE_UNQUOTED( DOCDIR, [L"$(eval echo $docdir)"], [Documentation directory] )
 AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$(eval echo $sysconfdir)"], [System configuration directory] )
 AC_SUBST( SYSCONFDIR, ["$(eval echo $sysconfdir)"] )
+
+# Set up locale directory
+AC_DEFINE_UNQUOTED( [LOCALEDIR], "$(eval echo $datadir)/locale", [Locale directory])
+AC_SUBST( [LOCALEDIR], [$datadir/locale])
 
 # See if Linux procfs is present
 AC_CHECK_FILES([/proc/self/stat])
@@ -77,9 +83,6 @@ AC_CHECK_FILES([/proc/self/stat])
 # See if NetBSD pkgsrc is installed
 AC_CHECK_FILE([/usr/pkg/lib],[AC_SUBST(LIBDIR,[-L/usr/pkg/lib\ -R/usr/pkg/lib])])
 AC_CHECK_FILE([/usr/pkg/include],[AC_SUBST(INCLUDEDIR,[-I/usr/pkg/include])])
-
-AC_CHECK_FUNCS( [wprintf futimes wcwidth wcswidth getopt_long] ) 
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h])
 
 # Check for RLIMIT_AS in sys/resource.h.
 AC_MSG_CHECKING([for RLIMIT_AS in sys/resource.h])
@@ -130,10 +133,17 @@ else
     AC_MSG_RESULT(no)
 fi
 
+# Check for libraries
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(rt, nanosleep)
-AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext futimes)
 
+# Check for various header files
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h])
+
+# Check for various function
+AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext wprintf futimes wcwidth wcswidth getopt_long ) 
+
+# Check again for gettext library, so we can insert information 
 AC_CHECK_FUNC(gettext, AC_SUBST(HAVE_GETTEXT,1), AC_SUBST(HAVE_GETTEXT,0) )
 
 # Check if we have ncurses, and use it rather than curses if possible.
@@ -146,3 +156,5 @@ AC_CHECK_FILE([/usr/pkg/include/ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEF
 
 AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile init/fish init/fish_interactive.fish init/fish_complete.fish])
 AC_OUTPUT
+
+echo "Now run 'make' and 'make install'"

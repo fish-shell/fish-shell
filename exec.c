@@ -389,11 +389,11 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 
    \return 1 on sucess, 0 on failiure
 */
-static int setup_child_process( job_t *j, int exit_on_error )
+static int setup_child_process( job_t *j, process_t *p )
 {
 	int res;
 	
-	if( is_interactive && !is_subshell && !is_block)
+	if( is_interactive  && p->type==EXTERNAL )
     {
 		pid_t pid;
 		/* 
@@ -418,7 +418,7 @@ static int setup_child_process( job_t *j, int exit_on_error )
 		}
 	}
 	
-	res = handle_child_io( j->io, exit_on_error );
+	res = handle_child_io( j->io, (p==0) );
 
 	/* Set the handling for job control signals back to the default.  */
 	if( res )
@@ -601,7 +601,7 @@ static void internal_exec_helper( const wchar_t *def,
 static int handle_new_child( job_t *j, process_t *p )
 {
 	
-	if(is_interactive  && !is_subshell && !is_block)
+	if( is_interactive  && p->type==EXTERNAL )
 	{
 		int new_pgid=0;
 		
@@ -1020,7 +1020,7 @@ void exec( job_t *j )
 						  This is the child process. Write out the contents of the pipeline.
 						*/
 						p->pid = getpid();
-						setup_child_process( j, 1 );
+						setup_child_process( j, p );
 						write( io_buffer->fd, 
 							   io_buffer->param2.out_buffer->buff, 
 							   io_buffer->param2.out_buffer->used );
@@ -1108,7 +1108,7 @@ void exec( job_t *j )
 					  This is the child process. 
 					*/
 					p->pid = getpid();
-					setup_child_process( j, 1 );
+					setup_child_process( j, p );
 					if( sb_out->used )
 						fwprintf( stdout, L"%ls", sb_out->buff );
 					if( sb_err->used )
@@ -1150,7 +1150,7 @@ void exec( job_t *j )
 					  This is the child process. 
 					*/
 					p->pid = getpid();
-					setup_child_process( j, 1 );
+					setup_child_process( j, p );
 					launch_process( p );
 
 					/*

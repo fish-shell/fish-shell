@@ -541,7 +541,7 @@ int job_reap( int interactive )
 		process_t *p;
 		jnext = j->next;
 		
-		if( (!j->skip_notification) && (!interactive) )
+		if( (!j->skip_notification) && (!interactive) && (!j->fg))
 		{
 			continue;
 		}

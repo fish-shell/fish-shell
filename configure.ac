@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(fish,1.19.0,fish-users@lists.sf.net)
+AC_INIT(fish,1.20.0,fish-users@lists.sf.net)
 
 # Run autoheader automatically, it's quick, and saves people the hassle of remembering to run it manually
 autoheader

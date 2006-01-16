@@ -1084,6 +1084,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - The jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error
 - wait shellscript
+- Signal handler to save the history file before exiting from a signal
 
 \subsection todo-possible Possible features
 

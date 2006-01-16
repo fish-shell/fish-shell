@@ -585,6 +585,12 @@ static int vgwprintf( void (*writer)(wchar_t),
 					*n = count;					
 					break;
 				}
+				case L'%':
+				{
+					writer('%');
+					count++;
+					break;
+				}
 				default:
 					debug( 0, L"Unknown switch %lc in string %ls\n", *filter, filter_org );
 //					exit(1);

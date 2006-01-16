@@ -152,7 +152,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 		}
 		else
 		{
-			wchar_t *this_desc = desc;
+			const wchar_t *this_desc = desc;
 			
 			if( desc_func )
 			{
@@ -161,7 +161,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 				  it. If it returns something, use that as the
 				  description.
 				*/
-				wchar_t *func_desc = desc_func( orig );
+				const wchar_t *func_desc = desc_func( orig );
 				if( func_desc )
 					this_desc = func_desc;
 			}

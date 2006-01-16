@@ -224,6 +224,7 @@ wchar_t input_get_code( wchar_t *name )
 /**
    Returns the function name for the given function code.
 */
+/*
 static const wchar_t *input_get_name( wchar_t c )
 {
 
@@ -237,10 +238,11 @@ static const wchar_t *input_get_name( wchar_t c )
 	}
 	return 0;		
 }
-
+*/
 /**
    Returns the function description for the given function code.
 */
+/*
 static const wchar_t *input_get_desc( wchar_t c )
 {
 
@@ -254,7 +256,7 @@ static const wchar_t *input_get_desc( wchar_t c )
 	}
 	return 0;		
 }
-
+*/
 void input_set_mode( wchar_t *name )
 {
 	current_mode_mappings = (array_list_t *)hash_get( &all_mappings, name );	
@@ -327,6 +329,7 @@ void add_mapping( const wchar_t *mode,
    Compare sort order for two keyboard mappings. This function is made
    to be suitable for use with the qsort method. 
 */
+/*
 static int mapping_compare( const void *a, const void *b )
 {
 	mapping *c = *(mapping **)a;
@@ -337,7 +340,7 @@ static int mapping_compare( const void *a, const void *b )
 	return wcscmp( c->seq_desc, d->seq_desc );
 	
 }
-
+*/
 
 
 /**

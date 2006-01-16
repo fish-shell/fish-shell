@@ -95,6 +95,11 @@ function __fish_complete_pids -d "Print a list of process identifiers along with
 	#	pgrep -l -v -P %self | sed 's/ /\t/'
 end
 
+function __fish_complete_command -d "Complete using all available commands"
+        for i in $PATH; command ls $i; end
+end
+
+
 function __fish_print_hostnames -d "Print a list of known hostnames"
 
 	# Print all hosts from /etc/hosts
@@ -264,6 +269,20 @@ function __fish_gnu_complete -d "Wrapper for the complete builtin. Skips the lon
 	
 	complete $argv
 
+end
+
+function __fish_is_first_token -d 'Test if no non-switch argument has been specified yet'
+	set -- cmd (commandline -poc)
+	set -e -- cmd[1]
+	for i in $cmd
+		switch $i
+			case '-*'
+
+			case '*'
+				return 1;
+		end
+	end
+	return 0
 end
 
 #

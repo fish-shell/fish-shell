@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-15 21:05+0100\n"
+"POT-Creation-Date: 2006-01-16 16:27+0100\n"
 "PO-Revision-Date: 2006-01-13 00:56+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -202,7 +202,7 @@ msgstr "CPU\t"
 msgid "State\tCommand\n"
 msgstr "Status\tKommando\n"
 
-#: builtin.c:2512 proc.c:613
+#: builtin.c:2512 proc.c:632
 msgid "stopped"
 msgstr "stannat"
 
@@ -531,111 +531,112 @@ msgstr "Ett fel inträffade vid IO dirigering av filen '%ls'"
 msgid "Could not create child process - exiting"
 msgstr "Kunde inte skapa barnprocess - avslutar programmet"
 
-#: exec.c:425
+#: exec.c:448
 #, c-format
 msgid "Failed to execute process '%ls'"
 msgstr "Misslyckades med att exekvera processen '%ls'"
 
-#: exec.c:596
+#: exec.c:619
 #, c-format
 msgid "Could not send process %d from group %d to group %d"
 msgstr "Kunde inte skicka process %d från grupp %d till grupp %d"
 
-#: exec.c:608 exec.c:620 proc.c:855 proc.c:867
+#: exec.c:631 exec.c:643 proc.c:895 proc.c:907
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Kunde inte skicka jobb %d ('%ls') till förgrunden"
 
-#: exec.c:782
+#: exec.c:814
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Okänd funktion '%ls'"
 
-#: exec.c:890
+#: exec.c:922
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Okänd dirigering av standard in av typ %d"
 
-#: exec.c:1217
+#: exec.c:1249
 #, c-format
 msgid "Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s."
 msgstr "Skickade noll-kommando till subskal. Detta är en fish-bug. Om den kan reproduceras, skicka en rapport till %s."
 
-#: exec.c:1265
+#: exec.c:1297
+#, c-format
 msgid "Subshell '%ls' returned illegal string, discarded one entry"
 msgstr "Underskal '%ls' lämnade tillbaka ogiltig sträng, ignorerade ett element"
 
-#: input.c:406
+#: input.c:409
 msgid "Invalid Control sequence"
 msgstr "Ogiltig kontroll-sekvens"
 
-#: input.c:518
+#: input.c:521
 #, c-format
 msgid "Could not parse sequence '%ls'"
 msgstr "Kunde inte tolka sekvens '%ls'"
 
-#: input.c:684
+#: input.c:687
 msgid "Invalid sequence - no dash after control\n"
 msgstr "Ogiltig sekvens - inget bindestreck efter 'kontroll'\n"
 
-#: input.c:714
+#: input.c:717
 msgid "Invalid sequence - Control-nothing?\n"
 msgstr "Ogiltig sekvens - Kontroll-ingenting?\n"
 
-#: input.c:729
+#: input.c:732
 msgid "Invalid sequence - no dash after meta\n"
 msgstr "Ogiltig sekvens - inget bindestreck efter 'meta'\n"
 
-#: input.c:734
+#: input.c:737
 msgid "Invalid sequence - Meta-nothing?"
 msgstr "Ogiltig sekvens - Meta-ingenting?"
 
-#: input.c:779
+#: input.c:782
 #, c-format
 msgid "Invalid sequence - '%ls' expanded to zero characters"
 msgstr "Ogiltig sekvens - '%ls' expanderades till en tom sträng"
 
-#: input.c:843
+#: input.c:846
 msgid "Mismatched $endif in inputrc file"
 msgstr "$endif matchade inte i inputrc-fil"
 
-#: input.c:895
+#: input.c:898
 msgid "Mismatched quote"
 msgstr "Citat-tecknen matchar inte varandra"
 
-#: input.c:909
+#: input.c:912
 msgid "Expected a ':'"
 msgstr "Förväntade ett ':'"
 
-#: input.c:954
+#: input.c:957
 #, c-format
 msgid "I don't know what '%ls' means"
 msgstr "Vet inte vad '%ls' betyder"
 
-#: input.c:958
+#: input.c:961
 #, c-format
 msgid "Expected end of line, got '%ls'"
 msgstr "Förväntade radslut, fick '%ls'"
 
-#: input.c:963
+#: input.c:966
 msgid "Syntax: set KEY VALUE"
 msgstr "Syntax: set NAMN VÄRDE"
 
-#: input.c:1029
+#: input.c:1032
 msgid "Unable to parse key binding"
 msgstr "Kunde inte tolka tangentbordsgenväg"
 
-#: input.c:1055
+#: input.c:1058
 #, c-format
 msgid "I don't know what %ls means"
 msgstr "Vet inte vad '%ls' betyder"
 
-#: input.c:1081
+#: input.c:1084
 #, c-format
 msgid "Error while reading input information from file '%ls'"
 msgstr "Ett fel uppstod under inläsning av filen '%ls'"
 
-#: input.c:1309
+#: input.c:1312
 msgid "Could not set up terminal"
 msgstr "Kunde inte initiera terminalen"
 
@@ -829,72 +830,72 @@ msgstr "Okänt kommando '%ls'"
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 
-#: proc.c:143
+#: proc.c:149
 msgid "Job inconsistency"
 msgstr "Jobb i ogiltigt tillstånd"
 
-#: proc.c:482
+#: proc.c:501
 #, c-format
 msgid "Job %d, '%ls' has %ls"
 msgstr "Jobb %d, '%ls' har %ls"
 
-#: proc.c:558
+#: proc.c:577
 #, c-format
 msgid "%ls: Job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: Jobb %d, '%ls' avslutat av signal %ls (%ls)"
 
-#: proc.c:566
+#: proc.c:585
 #, c-format
 msgid "%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: Process %d, '%ls', från jobb %d, '%ls' avslutat av signal %ls (%ls)"
 
-#: proc.c:597
+#: proc.c:616
 msgid "ended"
 msgstr "avslutat"
 
-#: proc.c:812
+#: proc.c:835
 msgid "An error occured while reading output from code block"
 msgstr "Ett fel inträffade under läsandet av utdata från kodblock"
 
-#: proc.c:979 proc.c:989 proc.c:999
+#: proc.c:1018 proc.c:1028 proc.c:1038
 msgid "Could not return shell to foreground"
 msgstr "Kunde inte återställa skalet till förgrunden"
 
-#: proc.c:1022
+#: proc.c:1061
 msgid "Job command"
 msgstr "Jobb kommando"
 
-#: proc.c:1025 proc.c:1052
+#: proc.c:1064 proc.c:1091
 msgid "Process list pointer"
 msgstr "Processlistepekare"
 
-#: proc.c:1028
+#: proc.c:1067
 msgid "Job list pointer"
 msgstr "Jobblistepekare"
 
-#: proc.c:1039
+#: proc.c:1078
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
 msgstr "Mer än ett jobb i förgrunden: job 1: '%ls', jobb 2 '%ls'"
 
-#: proc.c:1050
+#: proc.c:1089
 msgid "Process argument list"
 msgstr "Processargumentlista"
 
-#: proc.c:1051
+#: proc.c:1090
 msgid "Process name"
 msgstr "Processnamn"
 
-#: proc.c:1053
+#: proc.c:1092
 msgid "Process command"
 msgstr "Processkommando"
 
-#: proc.c:1058
+#: proc.c:1097
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
 msgstr "Jobb '%ls', process '%ls' har ogiltigt tillstånd 'stopped'=%d"
 
-#: proc.c:1068
+#: proc.c:1107
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
 msgstr "Jobb '%ls', process '%ls' har ogiltigt tillstånd 'completed'=%d"
@@ -1214,7 +1215,7 @@ msgstr "%ls: Den tomma strängen är inte ett tillåtet variabelnamn\n"
 msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av ett rör"
 
-#: init/fish_complete.fish.in:179 init/fish_complete.fish:179
+#: init/fish_complete.fish.in:184 init/fish_complete.fish:184
 #: init/completions/apropos.fish:11 init/completions/apt-build.fish:3
 #: init/completions/apt-cache.fish:2 init/completions/apt-cdrom.fish:2
 #: init/completions/apt-config.fish:2
@@ -1248,7 +1249,7 @@ msgstr "Ett fel inträffade under skapandet av ett rör"
 #: init/completions/read.fish:1 init/completions/rmdir.fish:6
 #: init/completions/rm.fish:8 init/completions/rpm.fish:4
 #: init/completions/ruby.fish:8 init/completions/sed.fish:27
-#: init/completions/set.fish:82 init/completions/sort.fish:19
+#: init/completions/set.fish:68 init/completions/sort.fish:19
 #: init/completions/su.fish:10 init/completions/test.fish:2
 #: init/completions/tex.fish:2 init/completions/top.fish:5
 #: init/completions/touch.fish:10 init/completions/trap.fish:4
@@ -1263,28 +1264,28 @@ msgstr "Ett fel inträffade under skapandet av ett rör"
 msgid "Display help and exit"
 msgstr "Visa hjälp och avsluta"
 
-#: init/fish_complete.fish.in:198 init/fish_complete.fish:198
+#: init/fish_complete.fish.in:203 init/fish_complete.fish:203
 #: init/completions/apt-get.fish:21
 msgid "Package"
 msgstr "Paket"
 
-#: init/fish_complete.fish.in:273 init/fish_complete.fish:273
+#: init/fish_complete.fish.in:292 init/fish_complete.fish:292
 msgid "Start service"
 msgstr "Starta tjänst"
 
-#: init/fish_complete.fish.in:274 init/fish_complete.fish:274
+#: init/fish_complete.fish.in:293 init/fish_complete.fish:293
 msgid "Stop service"
 msgstr "Stanna tjänst"
 
-#: init/fish_complete.fish.in:275 init/fish_complete.fish:275
+#: init/fish_complete.fish.in:294 init/fish_complete.fish:294
 msgid "Print service status"
 msgstr "Visa status för tjänst"
 
-#: init/fish_complete.fish.in:276 init/fish_complete.fish:276
+#: init/fish_complete.fish.in:295 init/fish_complete.fish:295
 msgid "Stop and then start service"
 msgstr "Stanna och starta tjänst"
 
-#: init/fish_complete.fish.in:277 init/fish_complete.fish:277
+#: init/fish_complete.fish.in:296 init/fish_complete.fish:296
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
@@ -6602,23 +6603,23 @@ msgstr "Ignorera första raden indata"
 msgid "Set prompt command"
 msgstr "Välj promptkommando"
 
-#: init/completions/read.fish:3 init/completions/set.fish:76
+#: init/completions/read.fish:3 init/completions/set.fish:62
 msgid "Export variable to subprocess"
 msgstr "Exportera variabel till underprocess"
 
-#: init/completions/read.fish:4 init/completions/set.fish:78
+#: init/completions/read.fish:4 init/completions/set.fish:64
 msgid "Make variable scope global"
 msgstr "Globalt definitionsområde"
 
-#: init/completions/read.fish:5 init/completions/set.fish:79
+#: init/completions/read.fish:5 init/completions/set.fish:65
 msgid "Make variable scope local"
 msgstr "Lokalt defintionsområde"
 
-#: init/completions/read.fish:6 init/completions/set.fish:80
+#: init/completions/read.fish:6 init/completions/set.fish:66
 msgid "Make variable scope universal, i.e. share variable with all the users fish processes on this computer"
 msgstr "Gör variabelns definitionsområde universellt, dvs. dela variabel med alla användarens fish-processer på denna dator"
 
-#: init/completions/read.fish:7 init/completions/set.fish:77
+#: init/completions/read.fish:7 init/completions/set.fish:63
 msgid "Do not export variable to subprocess"
 msgstr "Exportera inte variabel till barnprocesser"
 
@@ -7086,7 +7087,7 @@ msgstr "Fördröj filöppnande till ett kommando inehållande den relaterade 'w'
 msgid "Service name"
 msgstr "Namn på tjänst"
 
-#: init/completions/set_color.fish:1 init/completions/set.fish:88
+#: init/completions/set_color.fish:1 init/completions/set.fish:74
 msgid "Color"
 msgstr "Färg"
 
@@ -7098,15 +7099,15 @@ msgstr "Byt bakgrundsfärg"
 msgid "Make font bold"
 msgstr "Använd fetstil"
 
-#: init/completions/set.fish:75
+#: init/completions/set.fish:61
 msgid "Erase variable"
 msgstr "Radera variabel"
 
-#: init/completions/set.fish:81
+#: init/completions/set.fish:67
 msgid "Test if variable is defined"
 msgstr "Testa om variabeln är definerad"
 
-#: init/completions/set.fish:92
+#: init/completions/set.fish:78
 msgid "Locale"
 msgstr "Lokal"
 
@@ -8649,7 +8650,7 @@ msgstr "Lagra symboliska länkar som länkar"
 
 #: init/completions/zip.fish:28
 msgid "PKZIP recursion"
-msgstr "PKZIP rekursion"
+msgstr "PKZIP-rekursion"
 
 #: init/completions/zip.fish:29
 msgid "Encrypt"

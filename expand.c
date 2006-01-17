@@ -38,39 +38,46 @@ parameter expansion.
 #include "exec.h"
 #include "tokenizer.h"
 #include "complete.h"
+#include "translate.h"
 
 /**
    Description for child process
 */
-#define COMPLETE_CHILD_PROCESS_DESC COMPLETE_SEP_STR L"Child process"
+#define COMPLETE_CHILD_PROCESS_DESC _( L"Child process")
 
 /**
    Description for non-child process
 */
-#define COMPLETE_PROCESS_DESC COMPLETE_SEP_STR L"Process"
+#define COMPLETE_PROCESS_DESC _( L"Process")
 
 /**
    Description for long job
 */
-#define COMPLETE_JOB_DESC COMPLETE_SEP_STR L"Job"
+#define COMPLETE_JOB_DESC _( L"Job")
 
 /**
    Description for short job. The job command is concatenated
 */
-#define COMPLETE_JOB_DESC_VAL COMPLETE_SEP_STR, L"Job: "
+#define COMPLETE_JOB_DESC_VAL _( L"Job: ")
 
 /**
    Description for the shells own pid
 */
-#define COMPLETE_SELF_DESC COMPLETE_SEP_STR L"Shell process"
+#define COMPLETE_SELF_DESC _( L"Shell process")
 
 /**
    Description for the shells own pid
 */
-#define COMPLETE_LAST_DESC COMPLETE_SEP_STR L"Last background job"
+#define COMPLETE_LAST_DESC _( L"Last background job")
 
-#define COMPLETE_VAR_DESC L"Variable name is zero characters long."
-#define COMPLETE_VAR2_DESC L"Variable name is zero characters long.  Did you mean{$VARIABLE}? To learn about variable expansion in fish, type 'help expand-variable'."
+#define COMPLETE_VAR_DESC _( L"The '$' character begins a variable name. The character '%lc', which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long.")
+
+#define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long.")
+
+#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean {$VARIABLE}? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable \name, and variable names may not be zero characters long. To learn about variable expansion in fish, type 'help expand-variable'." )
+
+#define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
+
 
 /**
    String in process expansion denoting ourself
@@ -393,8 +400,10 @@ static int find_process( const wchar_t *proc,
 				{
 					al_push( out, 
 							 wcsdupcat2( jid+wcslen(proc), 
-										 COMPLETE_JOB_DESC_VAL, j->command, 
-										 0 ) );
+										 COMPLETE_SEP_STR,
+										 COMPLETE_JOB_DESC_VAL, 
+										 j->command, 
+										 (void *)0 ) );
 					
 					
 				}
@@ -435,8 +444,10 @@ static int find_process( const wchar_t *proc,
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
-				wchar_t *res = wcsdupcat( j->command + wcslen(proc), 
-										  COMPLETE_JOB_DESC );
+				wchar_t *res = wcsdupcat2( j->command + wcslen(proc), 
+										   COMPLETE_SEP_STR,
+										   COMPLETE_JOB_DESC,
+										   (void *)0 );
 //				fwprintf( stderr, L"Woot %ls\n", res );
 				
 				al_push( out, res );
@@ -474,8 +485,10 @@ static int find_process( const wchar_t *proc,
 			{
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					wchar_t *res = wcsdupcat( p->actual_cmd + wcslen(proc), 
-											  COMPLETE_CHILD_PROCESS_DESC );
+					wchar_t *res = wcsdupcat2( p->actual_cmd + wcslen(proc), 
+											  COMPLETE_SEP_STR,
+											  COMPLETE_CHILD_PROCESS_DESC,
+											  (void *)0);
 					al_push( out, res );
 				}
 				else
@@ -584,8 +597,10 @@ static int find_process( const wchar_t *proc,
 			{			
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					wchar_t *res = wcsdupcat( cmd + wcslen(proc),
-											  COMPLETE_PROCESS_DESC );
+					wchar_t *res = wcsdupcat2( cmd + wcslen(proc),
+											  COMPLETE_SEP_STR,
+											   COMPLETE_PROCESS_DESC,
+											   (void *)0);
 					if( res )
 						al_push( out, res );
 				}
@@ -627,12 +642,12 @@ static int expand_pid( wchar_t *in,
 	{
 		if( wcsncmp( in+1, SELF_STR, wcslen(in+1) )==0 )
 		{
-			wchar_t *res = wcsdupcat( SELF_STR+wcslen(in+1), COMPLETE_SELF_DESC );
+			wchar_t *res = wcsdupcat2( SELF_STR+wcslen(in+1), COMPLETE_SEP_STR, COMPLETE_SELF_DESC, (void *)0 );
 			al_push( out, res );			
 		}		
 		else if( wcsncmp( in+1, LAST_STR, wcslen(in+1) )==0 )
 		{
-			wchar_t *res = wcsdupcat( LAST_STR+wcslen(in+1), COMPLETE_LAST_DESC );
+			wchar_t *res = wcsdupcat2( LAST_STR+wcslen(in+1), COMPLETE_SEP_STR, COMPLETE_LAST_DESC, (void *)0 );
 			al_push( out, res );			
 		}		
 	}
@@ -735,19 +750,43 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 
 			if( var_len == 0 )
 			{
-				if( in[stop_pos] == BRACKET_BEGIN )
+				switch( in[stop_pos] )
 				{
-										
-					error( SYNTAX_ERROR,
-						   -1, COMPLETE_VAR_DESC
-						   COMPLETE_VAR2_DESC );
+					case BRACKET_BEGIN:
+					{
+						error( SYNTAX_ERROR,
+							   -1, 
+							   COMPLETE_VAR_BRACKET_DESC );
+						break;
+					}
+					
+					case INTERNAL_SEPARATOR:
+					{
+						error( SYNTAX_ERROR,
+							   -1, 
+							   COMPLETE_VAR_PARAN_DESC );
+						break;
+					}
+					
+					case 0:
+					{
+						error( SYNTAX_ERROR,
+							   -1,
+							   COMPLETE_VAR_NULL_DESC,
+							   in[stop_pos] );
+						break;
+					}
+					
+					default:
+					{
+						error( SYNTAX_ERROR,
+							   -1,
+							   COMPLETE_VAR_DESC,
+							   in[stop_pos] );
+						break;						
+					}
 				}
-				else
-				{
-					error( SYNTAX_ERROR,
-						   -1,
-						   COMPLETE_VAR_DESC);
-				}
+				
 				
 				is_ok = 0;
 				break;

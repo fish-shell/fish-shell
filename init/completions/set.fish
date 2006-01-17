@@ -58,20 +58,25 @@ end
 # Completions
 #
 
-complete -c set -s e -l erase -d (_ "Erase variable")
-complete -c set -s x -l export -d (_ "Export variable to subprocess")
-complete -c set -s u -l unexport -d (_ "Do not export variable to subprocess")
-complete -c set -s g -l global -d (_ "Make variable scope global")
-complete -c set -s l -l local -d (_ "Make variable scope local")
-complete -c set -s U -l universal -d (_ "Make variable scope universal, i.e. share variable with all the users fish processes on this computer")
-complete -c set -s q -l query -d (_ "Test if variable is defined")
-complete -c set -s h -l help -d (_ "Display help and exit")
+# Regular switches, set only accepts these before the variable name,
+# so we need to test using __fish_is_first_token
 
-# Complete using preexisting variables
+complete -c set -n '__fish_is_first_token' -s e -l erase -d (_ "Erase variable")
+complete -c set -n '__fish_is_first_token' -s x -l export -d (_ "Export variable to subprocess")
+complete -c set -n '__fish_is_first_token' -s u -l unexport -d (_ "Do not export variable to subprocess")
+complete -c set -n '__fish_is_first_token' -s g -l global -d (_ "Make variable scope global")
+complete -c set -n '__fish_is_first_token' -s l -l local -d (_ "Make variable scope local")
+complete -c set -n '__fish_is_first_token' -s U -l universal -d (_ "Make variable scope universal, i.e. share variable with all the users fish processes on this computer")
+complete -c set -n '__fish_is_first_token' -s q -l query -d (_ "Test if variable is defined")
+complete -c set -n '__fish_is_first_token' -s h -l help -d (_ "Display help and exit")
+
+# Complete using preexisting variable names
 complete -c set -n '__fish_is_first_token' -x -a "(set|sed -e 's/ /\tVariable: /')"
 
 # Color completions
 complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' -d (_ Color)
+complete -c set -n '__fish_set_is_color' -s b -l background -x -a '(set_color --print-colors)' -d (_ "Change background color")
+complete -c set -n '__fish_set_is_color' -s o -l bold -d (_ 'Make font bold')
 
 # Locale completions
 complete -c set -n '__fish_is_first_token' -x -a '$__fish_locale_vars' -d 'Locale variable'

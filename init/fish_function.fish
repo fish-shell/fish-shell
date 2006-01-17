@@ -70,6 +70,7 @@ function contains -d "Test if a key is contained in a set of values"
 	return $status
 end
 
+
 #
 # help should use 'open' to find a suitable browser, but only
 # if there is a mime database _and_ DISPLAY is set, since the
@@ -81,20 +82,22 @@ end
 function help -d "Show help for the fish shell"
 
 	# Declare variables to set correct scope
-
 	set fish_browser
 	set fish_browser_bg
+
+	set -l h syntax completion editor job-control todo bugs history killring help
+	set h $h color prompt title variables builtin-overview changes expand 
+	set h $h expand-variable expand-home expand-brace expand-wildcard 
+	set -l help_topics $h expand-command-substitution expand-process 
 
 	#
 	# Find a suitable browser for viewing the help pages. This is needed
 	# by the help function defined below.
 	#
-
 	set graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape
 	set text_browsers htmlview www-browser links elinks lynx w3m
 
 	if test $BROWSER
-
 		# User has manualy set a preferred browser, so we respect that
 		set fish_browser $BROWSER
 
@@ -102,9 +105,7 @@ function help -d "Show help for the fish shell"
 		if contains -- $BROWSER $graphical_browsers
 			set fish_browser_bg 1
 		end
-
 	else
-
 		# Check for a text-based browser.
 		for i in $text_browsers
 			if which $i 2>/dev/null >/dev/null
@@ -113,8 +114,8 @@ function help -d "Show help for the fish shell"
 			end
 		end
 
-		# If we are in a graphical environment, we check if there is a
-		# graphical browser to use instead.
+		# If we are in a graphical environment, check if there is a graphical
+		# browser to use instead.
 		if test (echo $DISPLAY) -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
 			for i in $graphical_browsers
 				if which $i 2>/dev/null >/dev/null
@@ -132,46 +133,29 @@ function help -d "Show help for the fish shell"
 		return 1
 	end
 
-	if count $argv >/dev/null
-		set fish_help_item $argv[1]
-	end
-	set fish_help_page ""
+	set fish_help_item $argv[1]
 
-	if test "$fish_help_item" = .
-		set fish_help_page "builtins.html\#source"
-	end
-
-	if test "$fish_help_item" = difference
-		set fish_help_page difference.html
-	end
-
-	if test "$fish_help_item" = globbing
-		set fish_help_page "index.html\#expand"
-	end
-
-	if contains -- $fish_help_item (builtin -n)
-		set fish_help_page "builtins.html\#"$fish_help_item
-	end
-	
-	if contains -- $fish_help_item count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize psub umask type 
-		set fish_help_page "commands.html\#"$fish_help_item
-	end
-	
-	set idx_subj syntax completion editor job-control todo bugs history
-	set idx_subj $idx_subj killring help color prompt title variables
-	set idx_subj $idx_subj builtin-overview changes 
-	set idx_subj $idx_subj expand expand-variable expand-home expand-brace expand-wildcard expand-command-substitution expand-process 
-
-	if contains -- $fish_help_item $idx_subj
-		set fish_help_page "index.html\#"$fish_help_item
-	end
-
-	if not test $fish_help_page
-		if which $fish_help_item >/dev/null ^/dev/null
-			man $fish_help_item
-			return
-		end
-		set fish_help_page "index.html"
+	switch "$fish_help_item"
+		case ""
+			set fish_help_page index.html
+		case "."
+			set fish_help_page "builtins.html\#source"
+		case difference
+			set fish_help_page difference.html
+		case globbing
+			set fish_help_page "index.html\#expand"
+		case (builtin -n)
+			set fish_help_page "builtins.html\#"$fish_help_item
+		case count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize psub umask type 
+			set fish_help_page "commands.html\#"$fish_help_item
+		case $help_topics
+			set fish_help_page "index.html\#"$fish_help_item
+		case "*"
+			if which $fish_help_item >/dev/null ^/dev/null
+				man $fish_help_item
+				return
+			end
+			set fish_help_page "index.html"
 	end
 
 	if test $fish_browser_bg
@@ -179,7 +163,6 @@ function help -d "Show help for the fish shell"
 	else
 		eval $fish_browser file://$__fish_help_dir/$fish_help_page
 	end
-
 end
 
 #
@@ -707,16 +690,18 @@ end
 
 function type -d "Print the type of a command"
 
+	# Initialize
 	set status 1
 	set mode normal
 	set selection all
 
-
+	# Get options
+	#
 	set -- shortopt -o tpPafh
 	if getopt -T >/dev/null
 		set longopt
 	else
-		set longopt -- -l type,path,force-path,all,no-functions,help
+		set -- longopt -l type,path,force-path,all,no-functions,help
 	end
 
 	if not getopt -n type -Q $shortopt $longopt -- $argv
@@ -725,7 +710,7 @@ function type -d "Print the type of a command"
 
 	set -- tmp (getopt $shortopt $longopt -- $argv)
 
-	eval set opt -- $tmp
+	eval set -- opt $tmp
 
 	for i in $opt
 		switch $i
@@ -755,6 +740,7 @@ function type -d "Print the type of a command"
 		end
 	end
 
+	# Check all possible types for the remaining arguments
 	for i in $argv
 		
 		switch $i
@@ -776,7 +762,7 @@ function type -d "Print the type of a command"
 						functions $i
 
 					case type
-						printf (_ function)
+						printf (_ 'function\n')
 
 					case path
 						 echo
@@ -815,7 +801,7 @@ function type -d "Print the type of a command"
 					printf (_ '%s is %s\n') $i (which $i)
 
 					case type
-						printf (_ file)
+						printf (_ 'file\n')
 
 					case path
 						which $i
@@ -947,15 +933,15 @@ function __fish_umask_print_symbolic
 		set val (echo $umask|cut -c $i)
 
 		if contains $val 0 1 2 3
-		   set res {$res}r
+			set res {$res}r
 		end
 	
 		if contains $val 0 1 4 5
-		   set res {$res}w
+			set res {$res}w
 		end
 
 		if contains $val 0 2 4 6
-		   set res {$res}x
+			set res {$res}x
 		end
 
 	end

@@ -74,7 +74,7 @@ parameter expansion.
 
 #define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long.")
 
-#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean {$VARIABLE}? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable \name, and variable names may not be zero characters long. To learn about variable expansion in fish, type 'help expand-variable'." )
+#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean {$VARIABLE}? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn about variable expansion in fish, type 'help expand-variable'." )
 
 #define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
 

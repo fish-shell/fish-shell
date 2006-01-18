@@ -2317,7 +2317,7 @@ static void make_first( job_t *j )
 static int builtin_fg( wchar_t **argv )
 {
 	job_t *j;
-	
+
 	if( argv[1] == 0 )
 	{
 		/*
@@ -2325,10 +2325,13 @@ static int builtin_fg( wchar_t **argv )
 		*/
 		for( j=first_job; ((j!=0) && (!j->constructed)); j=j->next )
 			;
-		sb_printf( sb_err,
-				   _( L"%ls: There are no jobs\n" ),
-				   argv[0] );
-		builtin_print_help( argv[0], sb_err );
+		if( !j )
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: There are no jobs\n" ),
+					   argv[0] );
+			builtin_print_help( argv[0], sb_err );
+		}
 	}
 	else if( argv[2] != 0 )
 	{
@@ -2399,7 +2402,6 @@ static int builtin_fg( wchar_t **argv )
 
 	make_first( j );
 	j->fg=1;
-	
 		
 	job_continue( j, job_is_stopped(j) );
 	return 0;

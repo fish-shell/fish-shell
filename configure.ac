@@ -149,7 +149,7 @@ AC_CHECK_LIB(rt, nanosleep)
 AC_CHECK_LIB(intl, gettext)
 
 # Check for various header files
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h])
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h])
 
 # Check for various functions, and insert results into config.h
 AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext wprintf futimes wcwidth wcswidth getopt_long ) 

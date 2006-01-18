@@ -8,7 +8,12 @@ Translation library, internally uses catgets
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <wchar.h>
+
+#if HAVE_LIBINTL_H
 #include <libintl.h>
+#endif
 
 #include "common.h"
 #include "util.h"

@@ -233,7 +233,7 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Create a template translation object
-messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish
+messages.pot: 
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ -kcomplete_desc --no-wrap *.c *.h -o messages.pot; \
 		xgettext -j -k_ -LShell --no-wrap init/*.in init/*.fish init/completions/*.fish -o messages.pot; \

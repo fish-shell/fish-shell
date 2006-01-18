@@ -62,19 +62,19 @@ complete -c darcs -s h -l help -d (_ "Shows brief description of command and its
 complete -c darcs -l disable -d (_ "Disable this command")
 complete -c darcs -l repodir -d (_ "Specify the repository directory in which to run") -x -a '(__fish_complete_directory (commandline -ct))'
 complete -c darcs -s v -l verbose -d (_ "Verbose mode")
+complete -c darcs -l standard-verbosity -d (_ "Neither verbose nor quiet output")
 
 #
-# Here follows a huge list of subcommand-specific completions
+# Here follows a huge list of subcommand-specific completions. These are incomplete.
 #
 
-set -- record_opt -c darcs -n 'contains record (commandline -poc)'
+set -l record_opt -c darcs -n 'contains record (commandline -poc)'
 complete $record_opt -s m -l patch-name -d (_ "Name of patch") -x
 complete $record_opt -s A -l author -d (_ "Specify author id") -x
 complete $record_opt -l logfile -d (_ "Give patch name and comment in file") -r
 complete $record_opt -s a -l all -d (_ "Answer yes to all patches")
 complete $record_opt -s l -l look-for-adds -d (_ "In addition to modifications, look for files that are not boring, and thus are potentially pending addition")
 complete $record_opt -l delete-logfile -d (_ "Delete the logfile when done")
-complete $record_opt -l standard-verbosity -d (_ "Don't give verbose output")
 complete $record_opt -l no-test -d (_ "Don't run the test script")
 complete $record_opt -l test -d (_ "Run the test script")
 complete $record_opt -l leave-test-directory -d (_ "Don't remove the test directory")
@@ -90,10 +90,9 @@ complete $record_opt -l skip-long-comment -d (_ "Don't give a long comment")
 complete $record_opt -l prompt-long-comment -d (_ "Prompt for whether to edit the long comment")
 complete $record_opt -l ignore-times -d (_ "Don't trust the file modification times")
 complete $record_opt -l dont-look-for-adds -d (_ "Don't look for any files or directories that could be added, and don't add them automatically")
-set -e record_opt
 
 
-set -- pull_opt -c darcs -n 'contains pull (commandline -poc)'
+set -l pull_opt -c darcs -n 'contains pull (commandline -poc)'
 complete $pull_opt -s p -l patches -d (_ "Select patches matching REGEXP") -x
 complete $pull_opt -s t -l tags -d (_ "Select tags matching REGEXP") -x
 complete $pull_opt -s a -l all -d (_ "Answer yes to all patches")
@@ -108,17 +107,15 @@ complete $pull_opt -l test -d (_ "Run the test script")
 complete $pull_opt -l no-test -d (_ "Don't run the test script")
 complete $pull_opt -l dry-run -d (_ "Don't actually take the action")
 complete $pull_opt -l no-summary -d (_ "Don't summarize changes")
-complete $pull_opt -l standard-verbosity -d (_ "Neither verbose nor quiet output")
 complete $pull_opt -l ignore-times -d (_ "Don't trust the file modification times")
 complete $pull_opt -l no-deps -d (_ "Don't automatically fulfill dependencies")
 complete $pull_opt -l set-default -d (_ "Set default repository [DEFAULT]")
 complete $pull_opt -l no-set-default -d (_ "Don't set default repository")
 complete $pull_opt -l set-scripts-executable -d (_ "Make scripts executable")
 complete $pull_opt -l dont-set-scripts-executable -d (_ "Don't make scripts executable")
-set -e pull_opt
 
 
-set -- apply_opt  -c darcs -n 'contains apply (commandline -poc)'
+set -l apply_opt  -c darcs -n 'contains apply (commandline -poc)'
 complete $apply_opt -s a -l all -d (_ "Answer yes to all patches")
 complete $apply_opt -l verify -d (_ "Verify that the patch was signed by a key in PUBRING") -r
 complete $apply_opt -l verify-ssl -d (_ "Verify using openSSL with authorized keys from file 'KEYS'") -r
@@ -127,7 +124,6 @@ complete $apply_opt -l reply -d (_ "Reply to email-based patch using FROM addres
 complete $apply_opt -l cc -d (_ "Mail results to additional EMAIL(s). Requires --reply") -x
 complete $apply_opt -l external-merge -d (_ "Use external tool to merge conflicts") -r
 complete $apply_opt -l no-verify -d (_ "Don't verify patch signature")
-complete $apply_opt -l standard-verbosity -d (_ "Don't give verbose output")
 complete $apply_opt -l ignore-times -d (_ "Don't trust the file modification times")
 complete $apply_opt -l compress -d (_ "Create compressed patches")
 complete $apply_opt -l dont-compress -d (_ "Don't create compressed patches")
@@ -142,27 +138,25 @@ complete $apply_opt -l leave-test-directory -d (_ "Don't remove the test directo
 complete $apply_opt -l remove-test-directory -d (_ "Remove the test directory")
 complete $apply_opt -l set-scripts-executable -d (_ "Make scripts executable")
 complete $apply_opt -l dont-set-scripts-executable -d (_ "Don't make scripts executable")
-set -e apply_opt
 
-set -- check_opt  -c darcs -n 'contains check (commandline -poc)'
+
+set -l check_opt  -c darcs -n 'contains check (commandline -poc)'
 complete $check_opt -s v -l verbose -d (_ "Verbose mode")
 complete $check_opt -s q -l quiet -d (_ "Suppress informational output")
 complete $check_opt -l complete -d (_ "Check the entire repository")
 complete $check_opt -l partial -d (_ "Check patches since latest checkpoint")
-complete $check_opt -l standard-verbosity -d (_ "Neither verbose nor quiet output")
 complete $check_opt -l no-test -d (_ "Don't run the test script")
 complete $check_opt -l test -d (_ "Run the test script")
 complete $check_opt -l leave-test-directory -d (_ "Don't remove the test directory")
 complete $check_opt -l remove-test-directory -d (_ "Remove the test directory")
-set -e check_opt
 
-set -- mv_opt  -c darcs -n 'contains mv (commandline -poc)'
+
+set -l mv_opt  -c darcs -n 'contains mv (commandline -poc)'
 complete $mv_opt -s v -l verbose -d (_ "Verbose mode")
 complete $mv_opt -l case-ok -d (_ "Don't refuse to add files differing only in case")
-complete $mv_opt -l standard-verbosity -d (_ "Don't give verbose output")
-set -e mv_opt
 
-set -- send_opt -c darcs -n 'contains send (commandline -poc)'
+
+set -l send_opt -c darcs -n 'contains send (commandline -poc)'
 complete $send_opt -s v -l verbose -d (_ "Verbose mode")
 complete $send_opt -s q -l quiet -d (_ "Suppress informational output")
 complete $send_opt -xs p -l patches -d (_ "Select patches matching REGEXP")
@@ -172,7 +166,6 @@ complete $send_opt -xs A  -l author -d (_ "Specify author id")
 complete $send_opt -rs o -l output -d (_ "Specify output filename")
 complete $send_opt -s u -l unified -d (_ "Output patch in a darcs-specific format similar to diff -u")
 complete $send_opt -s s -l summary -d (_ "Summarize changes")
-complete $send_opt -l standard-verbosity -d (_ "Neither verbose nor quiet output")
 complete $send_opt -xl matches -d (_ "Select patches matching PATTERN")
 complete $send_opt -l interactive -d (_ "Prompt user interactively")
 complete $send_opt -xl from -d (_ "Specify email address")
@@ -189,10 +182,55 @@ complete $send_opt -l edit-description -d (_ "Edit the patch bundle description"
 complete $send_opt -l set-default -d (_ "Set default repository [DEFAULT]")
 complete $send_opt -l no-set-default -d (_ "Don't set default repository")
 complete $send_opt -rl sendmail-command -d (_ "Specify sendmail command")
-set -e send_opt
 
-set -- init_opt  -c darcs -n 'contains initialize (commandline -poc)'
+
+set -l init_opt  -c darcs -n 'contains initialize (commandline -poc)'
 complete $init_opt -l plain-pristine-tree -d (_ "Use a plain pristine tree [DEFAULT]")
 complete $init_opt -l no-pristine-tree -d (_ "Use no pristine tree")
-set -e init_opt
+
+
+set -l annotate_opt -c darcs -n 'contains annotate (commandline -poc)'
+complete $annotate_opt -s s -l summary -d (_ "Summarize changes")
+complete $annotate_opt -l no-summary -d (_ "Don't summarize changes")
+complete $annotate_opt -s u -l unified -d (_ "Output patch in a darcs-specific format similar to diff -u")
+complete $annotate_opt -l human-readable -d (_ "Give human-readable output")
+complete $annotate_opt -l xml-output -d (_ "Generate XML formatted output")
+complete $annotate_opt -l match -x -d (_ "Select patch matching PATTERN")
+complete $annotate_opt -s p -l patch -x -d (_ "Select patch matching REGEXP")
+complete $annotate_opt -s t -l tag -x -d (_ "Select tag matching REGEXP")
+complete $annotate_opt -l creator-hash -x -d (_ "Specify hash of creator patch (see docs)")
+
+
+set -l changes_opt -c darcs -n 'contains changes (commandline -poc)'
+complete $changes_opt -l to-match -x -d (_ "Select changes up to a patch matching PATTERN")
+complete $changes_opt -l to-patch -x -d (_ "Select changes up to a patch matching REGEXP")
+complete $changes_opt -l to-tag -x -d (_ "Select changes up to a tag matching REGEXP")
+complete $changes_opt -l from-match -x -d (_ "Select changes starting with a patch matching PATTERN")
+complete $changes_opt -l from-patch -x -d (_ "Select changes starting with a patch matching REGEXP")
+complete $changes_opt -l from-tag -x -d (_ "Select changes starting with a tag matching REGEXP")
+complete $changes_opt -l last -x -d (_ "Select the last NUMBER patches")
+complete $changes_opt -l matches -x -d (_ "Select patches matching PATTERN")
+complete $changes_opt -s p -l patches -x -d (_ "Select patches matching REGEXP")
+complete $changes_opt -s t -l tags -x -d (_ "Select tags matching REGEXP")
+complete $changes_opt -l context -d (_ "Give output suitable for get --context")
+complete $changes_opt -l xml-output -d (_ "Generate XML formatted output")
+complete $changes_opt -l human-readable -d (_ "Give human-readable output")
+complete $changes_opt -s s -l summary -d (_ "Summarize changes")
+complete $changes_opt -l no-summary -d (_ "Don't summarize changes")
+complete $changes_opt -s q -l quiet -d (_ "Suppress informational output")
+complete $changes_opt -l reverse -d (_ "Show changes in reverse order")
+complete $changes_opt -l repo -x -d (_ "Specify the repository URL")
+
+
+set -l add_opt -c darcs -n 'contains add (commandline -poc)'
+complete $add_opt -l boring -d (_ "Don't skip boring files")
+complete $add_opt -l case-ok -d (_ "Don't refuse to add files differing only in case")
+complete $add_opt -s r -l recursive -d (_ "Add contents of subdirectories")
+complete $add_opt -l not-recursive -d (_ "Don't add contents of subdirectories")
+complete $add_opt -l date-trick -d (_ "Add files with date appended to avoid conflict. [EXPERIMENTAL]")
+complete $add_opt -l no-date-trick -d (_ "Don't use experimental date appending trick. [DEFAULT]")
+complete $add_opt -s q -l quiet -d (_ "Suppress informational output")
+complete $add_opt -l dry-run -d (_ "Don't actually take the action")
+complete $add_opt -s q -l quiet -d (_ "Suppress informational output")
+
 

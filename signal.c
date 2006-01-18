@@ -186,30 +186,44 @@ static struct lookup_entry lookup[] =
 		N_( L"CPU time limit exceeded" )
 	}
 	,
+#ifdef SIGXFSZ
 	{
 		SIGXFSZ, 
 		L"SIGXFSZ",
 		N_( L"File size limit exceeded" )
 	}
 	,
+#endif
 	{
 		SIGVTALRM,
 		L"SIGVTALRM",
 		N_( L"Virtual timer expired" )
 	}
 	,
+#ifdef SIGPROF
 	{
 		SIGPROF,
 		L"SIGPROF",
 		N_( L"Profiling timer expired" )
 	}
 	,
+#endif
+#ifdef SIGWINCH
 	{
 		SIGWINCH,
 		L"SIGWINCH",
 		N_( L"Window size change" )
 	}
 	,
+#endif
+#ifdef SIGWIND
+	{
+		SIGWIND,
+		L"SIGWIND",
+		N_( L"Window size change" )
+	}
+	,
+#endif
 	{
 		SIGIO,
 		L"SIGIO",
@@ -224,12 +238,54 @@ static struct lookup_entry lookup[] =
 	}
 	,
 #endif
+#ifdef SIGSYS
 	{
 		SIGSYS, 
 		L"SIGSYS",
 		N_( L"Bad system call" )
 	}
 	,
+#endif
+#ifdef SIGINFO
+	{
+		SIGINFO,
+		L"SIGINFO",
+		N_( L"Information request" )
+	}
+	,
+#endif
+#ifdef SIGSTKFLT
+	{
+		SIGSTKFLT,
+		L"SISTKFLT",
+		N_( L"Stack fault" )
+	}
+	,
+#endif
+#ifdef SIGEMT
+	{
+		SIGEMT,
+		L"SIGEMT",
+		N_( L"Emulator trap" )
+	}
+	,
+#endif
+#ifdef SIGIOT
+	{
+		SIGIOT,
+		L"SIGIOT",
+		N_( L"Abort (Alias for SIGABRT)" )
+	}
+	,
+#endif
+#ifdef SIGUNUSED
+	{
+		SIGUNUSED,
+		L"SIGUNUSED",
+		N_( L"Unused signal" )
+	}
+	,
+#endif
 	{
 		0,
 		0,

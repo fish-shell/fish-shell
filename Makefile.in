@@ -223,20 +223,23 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Update existing po file or copy messages.pot
-%.po: messages.pot
+%.po:messages.pot
 	if test $(HAVE_GETTEXT) = 1;then \
 		if test -f $*.po; then \
-			msgmerge -U --backup=existing --no-wrap $*.po messages.pot;\
+			msgmerge -U --backup=existing $*.po messages.pot;\
 		else \
 			cp messages.pot $*.po;\
 		fi; \
 	fi
 
 # Create a template translation object
-messages.pot: 
+messages messages.pot: 
 	if test $(HAVE_GETTEXT) = 1;then \
-		xgettext -k_ -kN_ -kcomplete_desc --no-wrap *.c *.h -o messages.pot; \
-		xgettext -j -k_ -LShell --no-wrap init/*.in init/*.fish init/completions/*.fish -o messages.pot; \
+		xgettext -k_ -kN_ -kcomplete_desc *.c *.h -o messages.pot; \
+		if ! xgettext -j -k_ -LShell init/*.in init/*.fish init/completions/*.fish -o messages.pot; then \
+			echo "Your xgettext version is too old to build the messages.pot file"\
+			false;\
+		fi; \
 	fi
 
 # Generate the internal help functions by making doxygen create

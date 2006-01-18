@@ -2525,8 +2525,8 @@ static int read_i()
 		{
 			prev_end_loop=0;
 		}
-
 		error_reset();
+
 	}
 	reader_pop();
 	return 0;
@@ -2829,7 +2829,7 @@ wchar_t *reader_readline()
 				break;
 			}
 			
-			/* exit, but only if line is empty or the previous keypress was also an exit call */
+			/* exit, but only if line is empty */
 			case R_EXIT:
 			{
 				if( data->buff_len == 0 )

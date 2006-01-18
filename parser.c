@@ -1162,6 +1162,7 @@ static void parse_job_main_loop( process_t *p,
 
 			case TOK_BACKGROUND:
 				j->fg = 0;
+				j->terminal=0;
 			case TOK_END:
 			{
 				p->argv = list_to_char_arr( args );
@@ -1981,10 +1982,10 @@ static void eval_job( tokenizer *tok )
 			j->fg=1;
 			j->constructed=0;
 			j->skip_notification = is_subshell || is_block || is_event || (!is_interactive);
-					
-			current_block->job = j;
-				
+			j->terminal = is_interactive && !is_subshell;
 			
+			current_block->job = j;
+						
 			if( is_interactive )
 			{
 				if( tcgetattr (0, &j->tmodes) )

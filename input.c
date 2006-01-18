@@ -1292,12 +1292,32 @@ static int interrupt_handler()
 	  Fire any pending events
 	*/
 	event_fire( 0 );	
+	
+	/*
+	  Reap stray processes, including printing exit status messages
+	*/
 	if( job_reap( 1 ) )
 		repaint();
+	
+	/*
+	  Check if we should exit
+	*/
+	if( exit_status() )
+	{
+		return R_EXIT;
+	}
+	
+	/*
+	  Tell the reader an event occured
+	*/
 	if( reader_interupted() )
 	{
+		/*
+		  Return 3, i.e. the character read by a Control-C.
+		*/
 		return 3;
 	}
+
 	return 0;	
 }
 

@@ -154,7 +154,10 @@ typedef struct job
 	
 	/** Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or */
 	int skip;
-	
+
+	/** Whether this job wants to have control of the terminal when it is in the foreground */
+	int terminal;
+		
 	/** Pointer to the next job */
 	struct job *next;           
 } 

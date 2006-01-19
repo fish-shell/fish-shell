@@ -25,7 +25,12 @@
 #include <termio.h>
 #endif
 
+#if HAVE_TERM_H
 #include <term.h>
+#elif HAVE_NCURSES_TERM_H
+#include <ncurses/term.h>
+#endif
+
 #include <errno.h>
 
 #include "util.h"

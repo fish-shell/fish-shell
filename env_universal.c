@@ -11,12 +11,19 @@
 #include <pwd.h>
 #include <errno.h>
 #include <fcntl.h>
+
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #else
 #include <curses.h>
 #endif
+
+#if HAVE_TERM_H
 #include <term.h>
+#elif HAVE_NCURSES_TERM_H
+#include <ncurses/term.h>
+#endif
+
 #include <signal.h>
 
 #include "util.h"

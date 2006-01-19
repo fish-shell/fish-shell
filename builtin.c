@@ -2317,7 +2317,7 @@ static void make_first( job_t *j )
 static int builtin_fg( wchar_t **argv )
 {
 	job_t *j;
-
+	
 	if( argv[1] == 0 )
 	{
 		/*

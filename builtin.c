@@ -2321,14 +2321,18 @@ static int builtin_fg( wchar_t **argv )
 	if( argv[1] == 0 )
 	{
 		/*
-		  Last constructed job in the job que by default
+		  Select last constructed job (I.e. first job in the job que)
+		  that is possible to put in the foreground
 		*/
-		for( j=first_job; ((j!=0) && (!j->constructed)); j=j->next )
-			;
+		for( j=first_job; j; j=j->next )
+		{
+			if( j->constructed && (!job_is_completed(j)) && (job_is_stopped(j) || !j->fg))
+				break;
+		}			
 		if( !j )
 		{
 			sb_printf( sb_err,
-					   _( L"%ls: There are no jobs\n" ),
+					   _( L"%ls: There are no suitable jobs\n" ),
 					   argv[0] );
 			builtin_print_help( argv[0], sb_err );
 		}
@@ -2358,20 +2362,24 @@ static int builtin_fg( wchar_t **argv )
 		}
 		builtin_print_help( argv[0], sb_err );
 		
-		return 1;
+		j=0;
+		
 	}
 	else
 	{
 		int pid = abs(wcstol( argv[1], 0, 10 ));
 		j = job_get_from_pid( pid );
-		sb_printf( sb_err,
-				   _( L"%ls: No suitable job: %d\n" ),
-				   argv[0],
-				   pid );
-		builtin_print_help( argv[0], sb_err );
+		if( !j )
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: No suitable job: %d\n" ),
+					   argv[0],
+					   pid );
+			builtin_print_help( argv[0], sb_err );
+		}
 	}
-
-	if( j != 0 )
+	
+	if( j )
 	{
 		if( builtin_err_redirect )
 		{
@@ -2392,25 +2400,25 @@ static int builtin_fg( wchar_t **argv )
 					  j->job_id, 
 					  j->command );
 		}
-	}
-	
-	wchar_t *ft = tok_first( j->command );
-	if( ft != 0 )
-		env_set( L"_", ft, ENV_EXPORT );
-	free(ft);
-	reader_write_title();
 
-	make_first( j );
-	j->fg=1;
+		wchar_t *ft = tok_first( j->command );
+		if( ft != 0 )
+			env_set( L"_", ft, ENV_EXPORT );
+		free(ft);
+		reader_write_title();
 		
-	job_continue( j, job_is_stopped(j) );
-	return 0;
+		make_first( j );
+		j->fg=1;
+		
+		job_continue( j, job_is_stopped(j) );
+	}
+	return j != 0;
 }
 
 /**
    Helper function for builtin_bg()
 */
-static void send_to_bg( job_t *j, const wchar_t *name )
+static int send_to_bg( job_t *j, const wchar_t *name )
 {
 	if( j == 0 )
 	{
@@ -2419,7 +2427,7 @@ static void send_to_bg( job_t *j, const wchar_t *name )
 				   L"bg",
 				   name );
 		builtin_print_help( L"bg", sb_err );
-		return;
+		return 1;
 	}	
 	else
 	{
@@ -2431,6 +2439,7 @@ static void send_to_bg( job_t *j, const wchar_t *name )
 	make_first( j );
 	j->fg=0;
 	job_continue( j, job_is_stopped(j) );
+	return 0;
 }
 
 
@@ -2439,20 +2448,38 @@ static void send_to_bg( job_t *j, const wchar_t *name )
 */
 static int builtin_bg( wchar_t **argv )
 {
+	int res = 0;
+	
 	if( argv[1] == 0 )
 	{
   		job_t *j;
-		for( j=first_job; ((j!=0) && (!j->constructed) && (!job_is_stopped(j))); j=j->next )
-			;
-		send_to_bg( j, _(L"(default)" ) );
-		return 0;
+		for( j=first_job; j; j=j->next )
+		{
+			if( job_is_stopped(j) )
+				break;
+		}
+		
+		if( !j )
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: There are no suitable jobs\n" ),
+					   argv[0] );
+			res = 1;
+		}
+		else
+		{
+			res = send_to_bg( j, _(L"(default)" ) );
+		}
 	}
-	for( argv++; *argv != 0; argv++ )
+	else
 	{
-		int pid = wcstol( *argv, 0, 10 );
-		send_to_bg( job_get_from_pid( pid ), *argv);
+		for( argv++; !res && *argv != 0; argv++ )
+		{
+			int pid = wcstol( *argv, 0, 10 );
+			res |= send_to_bg( job_get_from_pid( pid ), *argv);
+		}
 	}
-	return 0;
+	return res;
 }
 
 

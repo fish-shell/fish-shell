@@ -193,7 +193,7 @@ set -l annotate_opt -c darcs -n 'contains annotate (commandline -poc)'
 complete $annotate_opt -s s -l summary -d (_ "Summarize changes")
 complete $annotate_opt -l no-summary -d (_ "Don't summarize changes")
 complete $annotate_opt -s u -l unified -d (_ "Output patch in a darcs-specific format similar to diff -u")
-complete $annotate_opt -l human-readable -d (_ "Give human-readable output")
+complete $annotate_opt -l human-readable -d (_ "Give human readable output")
 complete $annotate_opt -l xml-output -d (_ "Generate XML formatted output")
 complete $annotate_opt -l match -x -d (_ "Select patch matching PATTERN")
 complete $annotate_opt -s p -l patch -x -d (_ "Select patch matching REGEXP")

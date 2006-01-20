@@ -1076,19 +1076,19 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 
 - Complete vi-mode key bindings
 - next-history-complete
-- builtin wait command
 - More completions (for example xterm, vim, 
 konsole, gnome-terminal, dcop, cdrecord, cron, xargs
 rlogin, telnet, rsync, arch, finger, nice, locate, 
 bibtex, patch, aspell, xpdf,
-zip, compress, wine, xmms, dig, wine, batch, cron, 
+compress, wine, xmms, dig, wine, batch, cron, 
 g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Undo support
-- Check keybinding commands for output - if non has happened, don't repaint to reduce flicker
+- Check keybinding commands for output - if nothing has happened, don't repaint to reduce flicker
 - The jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error
 - wait shellscript
 - Signal handler to save the history file before exiting from a signal
+
 
 \subsection todo-possible Possible features
 
@@ -1100,7 +1100,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - mouse support like zsh has with http://stchaz.free.fr/mouse.zsh 
   installed would be awesome
 - suggest a completion on unique matches by writing it out in an understated color
-- Maybe some functions should only be available from key-bindings. That way one could implement a large part of all the key-binding functions as regular fish functions without worrying about cluttering up the function name space.
 - With a bit of tweakage, quite a few of the readline key-binding functions could be implemented in shellscript.
 - Highlight beginning/end of block when moving over a block command
 - Inclusion guards for the init files to make them evaluate only once, even if the user has installed fish both in /etc and in $HOME
@@ -1113,17 +1112,17 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Descriptions for variables using 'set -d'.
 - Parse errors should when possible honor IO redirections
 
+
 \subsection bugs Known bugs
 
 - Completion for gcc -\#\#\# option doesn't work.
-- Many completions are made specifically for the GNU version of a POSIX command
 - Yanking weird characters from clipboard prints Unicode escapes
-- Suspending and then resuming pipelines containing a builtin seems to be broken.
-- Interactive input seems broken inside blocks. Is local echo and other terminal values not restored when in an interactive block?
+- Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se
 </a>.
+
 
 \subsection issues Known issues
 
@@ -1138,6 +1137,7 @@ but some programs, like screen, may need to be restarted to notice the
 changes when upgrading from pre1.9.2 to 1.9.2 or later.  You may also
 run into such problems when switching between using a package and
 personal builds.
+
 
 */
 /** \page design Design document

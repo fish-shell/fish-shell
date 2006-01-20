@@ -95,6 +95,8 @@ void translate_destroy()
 
 #else
 
+int _nl_msg_cat_cntr=0;
+
 const wchar_t *wgettext( const wchar_t *in )
 {
 	return in;

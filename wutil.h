@@ -81,6 +81,13 @@ wchar_t *wgetcwd( wchar_t *buff, size_t sz );
 */
 int wchdir( const wchar_t * dir );
 
+/*
+  Here follows the prototypes for fallback implementations of various
+  standarcs libc functions relating to wide character support. Some of
+  these prototypes are always defined, since some libc versions
+  include the code, but you have to use special magical #defines for
+  the prototype to appear.
+*/
 
 #if !HAVE_FWPRINTF
 
@@ -112,28 +119,66 @@ int swprintf( wchar_t *str, size_t l, const wchar_t *format, ... );
 */
 int wprintf( const wchar_t *format, ... );
 
+/**
+   Print formated string. Some operating systems (Like NetBSD) do not
+   have wide string formating functions.  Therefore we define our
+   own. Not at all complete. Supports wide and narrow characters,
+   strings and decimal numbers, position (%n), field width and
+   precision.
+*/
 int vwprintf( const wchar_t *filter, va_list va );
+
+/**
+   Print formated string. Some operating systems (Like NetBSD) do not
+   have wide string formating functions.  Therefore we define our
+   own. Not at all complete. Supports wide and narrow characters,
+   strings and decimal numbers, position (%n), field width and
+   precision.
+*/
 int vfwprintf( FILE *f, const wchar_t *filter, va_list va );
+
+/**
+   Print formated string. Some operating systems (Like NetBSD) do not
+   have wide string formating functions.  Therefore we define our
+   own. Not at all complete. Supports wide and narrow characters,
+   strings and decimal numbers, position (%n), field width and
+   precision.
+*/
 int vswprintf( wchar_t *out, size_t n, const wchar_t *filter, va_list va );
 
 #endif
 
 #ifndef HAVE_FGETWC
 
+/**
+   Fallback implementation of fgetwc
+*/
 wint_t fgetwc(FILE *stream);
+
+/**
+   Fallback implementation of getwc
+*/
 wint_t getwc(FILE *stream);
 
 #endif
 
 #ifndef HAVE_FPUTWC
 
+/**
+   Fallback implementation of fputwc
+*/
 wint_t fputwc(wchar_t wc, FILE *stream);
+/**
+   Fallback implementation of putwc
+*/
 wint_t putwc(wchar_t wc, FILE *stream);
 
 #endif
 
 #ifndef HAVE_WCSTOK
-
+/**
+   Fallback implementation of wcstok. Uses code borrowed from glibc.
+*/
 wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr);
 
 #endif

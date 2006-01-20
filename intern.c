@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "util.h"
+#include "wutil.h"
 #include "common.h"
 #include "intern.h"
 

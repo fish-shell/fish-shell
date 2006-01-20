@@ -13,6 +13,7 @@
 
 #include "config.h"
 #include "util.h"
+#include "wutil.h"
 #include "function.h"
 #include "proc.h"
 #include "parser.h"

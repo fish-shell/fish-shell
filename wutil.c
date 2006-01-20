@@ -1,5 +1,7 @@
 /** \file wutil.c
-	Wide character equivalents of various standard unix functions. 
+	Wide character equivalents of various standard unix
+	functions. Also contains fallback implementations of a large number
+	of wide character unix functions.
 */
 #include "config.h"
 
@@ -218,7 +220,7 @@ void wperror(const wchar_t *s)
 }
 
 
-#if !HAVE_WPRINTF
+#if !HAVE_FWPRINTF
 
 void pad( void (*writer)(wchar_t), int count)
 {
@@ -707,3 +709,318 @@ int wprintf( const wchar_t *filter, ... )
 }
 
 #endif
+
+#ifndef HAVE_FGETWC
+
+wint_t fgetwc(FILE *stream)
+{
+	wchar_t res=0;
+	mbstate_t state=0;
+	memset (&state, '\0', sizeof (state));
+
+	while(1)
+	{
+		int b = fgetc( stream );
+		char bb;
+			
+		int sz;
+			
+		if( b == EOF )
+			return WEOF;
+
+		bb=b;
+			
+		sz = mbrtowc( &res, &bb, 1, &state );
+			
+		switch( sz )
+		{
+			case -1:
+				memset (&state, '\0', sizeof (state));
+				return WEOF;
+
+			case -2:
+				break;
+			case 0:
+				return 0;
+			default:
+				return res;
+		}
+	}
+
+}
+
+
+wint_t getwc(FILE *stream)
+{
+	return fgetwc( stream );
+}
+
+
+#endif
+
+#ifndef HAVE_FPUTWC
+
+wint_t fputwc(wchar_t wc, FILE *stream)
+{
+	int res;
+	char *s[MB_CUR_MAX+1];
+	memset( s, 0, MB_CUR_MAX+1 );
+	wctomb( s, wc );
+	res = fputs( sm stream );
+	return res==EOF?WEOF:wc;
+}
+
+wint_t putwc(wchar_t wc, FILE *stream)
+{
+	return fputwc( wc, stream );
+}
+
+#endif
+
+#ifndef HAVE_WCSTOK
+
+/*
+  Used by fallback wcstok. Borrowed from glibc
+*/
+static size_t wcsspn (const wchar_t *wcs,
+					  const wchar_t *accept )
+{
+	register const wchar_t *p;
+	register const wchar_t *a;
+	register size_t count = 0;
+
+	for (p = wcs; *p != L'\0'; ++p)
+    {
+		for (a = accept; *a != L'\0'; ++a)
+			if (*p == *a)
+				break;
+		
+		if (*a == L'\0')
+			return count;
+		else
+			++count;
+    }
+	return count;	
+}
+
+/*
+  Used by fallback wcstok. Borrowed from glibc
+*/
+static wchar_t *wcspbrk (const wchar_t *wcs, const wchar_t *accept)
+{
+	while (*wcs != L'\0')
+		if (wcschr (accept, *wcs) == NULL)
+			++wcs;
+		else
+			return (wchar_t *) wcs;
+	return NULL;	
+}
+
+/*
+  Fallback wcstok implementation. Borrowed from glibc.
+*/
+wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr)
+{
+	wchar_t *result;
+
+	if (wcs == NULL)
+    {
+		if (*save_ptr == NULL)
+        {
+			errno = EINVAL;
+			return NULL;
+        }
+		else
+			wcs = *save_ptr;
+    }
+
+	/* Scan leading delimiters.  */
+	wcs += wcsspn (wcs, delim);
+	
+	if (*wcs == L'\0')
+    {
+		*save_ptr = NULL;		
+		return NULL;
+    }
+
+	/* Find the end of the token.  */
+	result = wcs;
+	
+	wcs = wcspbrk (result, delim);
+	
+	if (wcs == NULL)
+	{
+		/* This token finishes the string.  */
+		*save_ptr = NULL;
+	}
+	else
+    {
+		/* Terminate the token and make *SAVE_PTR point past it.  */
+		*wcs = L'\0';
+		*save_ptr = wcs + 1;
+    }
+	return result;
+}
+
+#endif
+
+#ifndef HAVE_WCSDUP
+wchar_t *wcsdup( const wchar_t *in )
+{
+	size_t len=wcslen(in);
+	wchar_t *out = malloc( sizeof( wchar_t)*(len+1));
+	if( out == 0 )
+	{
+		die_mem();
+	}
+
+	memcpy( out, in, sizeof( wchar_t)*(len+1));
+	return out;
+	
+}
+#endif
+
+#ifndef HAVE_WCSLEN
+size_t wcslen(const wchar_t *in)
+{
+	const wchar_t *end=in;
+	while( *end )
+		end++;
+	return end-in;
+}
+#endif
+
+
+#ifndef HAVE_WCSCASECMP
+int wcscasecmp( const wchar_t *a, const wchar_t *b )
+{
+	if( *a == 0 )
+	{
+		return (*b==0)?0:-1;
+	}
+	else if( *b == 0 )
+	{
+		return 1;
+	}
+	int diff = towlower(*a)-towlower(*b);
+	if( diff != 0 )
+		return diff;
+	else
+		return wcscasecmp( a+1,b+1);
+}
+#endif
+
+
+#ifndef HAVE_WCSNCASECMP
+int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count )
+{
+	if( count == 0 )
+		return 0;
+	
+	if( *a == 0 )
+	{
+		return (*b==0)?0:-1;
+	}
+	else if( *b == 0 )
+	{
+		return 1;
+	}
+	int diff = towlower(*a)-towlower(*b);
+	if( diff != 0 )
+		return diff;
+	else
+		return wcsncasecmp( a+1,b+1, count-1);
+}
+#endif
+
+#ifndef HAVE_WCWIDTH
+int wcwidth( wchar_t c )
+{
+	if( c < 32 )
+		return 0;
+	if ( c == 127 )
+		return 0;
+	return 1;
+}
+#endif
+
+#ifndef HAVE_WCSNDUP
+wchar_t *wcsndup( const wchar_t *in, int c )
+{
+	wchar_t *res = malloc( sizeof(wchar_t)*(c+1) );
+	if( res == 0 )
+	{
+		die_mem();
+	}
+	wcsncpy( res, in, c );
+	res[c] = L'\0';	
+	return res;	
+}
+#endif
+
+long convert_digit( wchar_t d, int base )
+{
+	long res=-1;
+	if( (d <= L'9') && (d >= L'0') )
+	{
+		res = d - L'0';
+	}
+	else if( (d <= L'z') && (d >= L'a') )
+	{
+		res = d + 10 - L'a';		
+	}
+	else if( (d <= L'Z') && (d >= L'A') )
+	{
+		res = d + 10 - L'A';		
+	}
+	if( res >= base )
+	{
+		res = -1;
+	}
+	
+	return res;
+}
+
+#ifndef HAVE_WCSTOL
+long wcstol(const wchar_t *nptr, 
+			wchar_t **endptr,
+			int base)
+{
+	long long res=0;
+	int is_set=0;
+	if( base > 36 )
+	{
+		errno = EINVAL;
+		return 0;
+	}
+
+	while( 1 )
+	{
+		long nxt = convert_digit( *nptr, base );
+		if( endptr != 0 )
+			*endptr = (wchar_t *)nptr;
+		if( nxt < 0 )
+		{
+			if( !is_set )
+			{
+				errno = EINVAL;
+			}
+			return res;			
+		}
+		res = (res*base)+nxt;
+		is_set = 1;
+		if( res > LONG_MAX )
+		{
+			errno = ERANGE;
+			return LONG_MAX;
+		}
+		if( res < LONG_MIN )
+		{
+			errno = ERANGE;
+			return LONG_MIN;
+		}
+		nptr++;
+	}
+}
+#endif
+

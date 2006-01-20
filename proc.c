@@ -650,12 +650,15 @@ int job_reap( int interactive )
 
 
 #ifdef HAVE__PROC_SELF_STAT
+
+#define FN_SIZE 256
+
 /**
    Get the CPU time for the specified process
 */
 unsigned long proc_get_jiffies( process_t *p )
 {
-	wchar_t fn[256];
+	wchar_t fn[FN_SIZE];
 	//char stat_line[1024];
 
 	char state;
@@ -678,7 +681,7 @@ unsigned long proc_get_jiffies( process_t *p )
 	if( p->pid <= 0 )
 		return 0;
 	
-	swprintf( fn, 512, L"/proc/%d/stat", p->pid );
+	swprintf( fn, FN_SIZE, L"/proc/%d/stat", p->pid );
 	
 	FILE *f = wfopen( fn, "r" );
 	if( !f )

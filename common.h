@@ -134,31 +134,6 @@ wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b );
 */
 wchar_t *wcsdupcat2( const wchar_t *a, ... );
 
-/**
-   Returns a newly allocated wide character string wich is a copy of
-   the string in, but of length c or shorter. The returned string is
-   always null terminated, and the null is not included in the string
-   length.
-*/
-wchar_t *wcsndup( const wchar_t *in, int c );
-
-/**
-   Converts from wide char to digit in the specified base. If d is not
-   a valid digit in the specified base, return -1.
-*/
-long convert_digit( wchar_t d, int base );
-
-
-/**
-   Convert a wide character string to a number in the specified
-   base. This functions is the wide character string equivalent of
-   strtol. For bases of 10 or lower, 0..9 are used to represent
-   numbers. For bases below 36, a-z and A-Z are used to represent
-   numbers higher than 9. Higher bases than 36 are not supported.
-*/
-long wcstol(const wchar_t *nptr,
-			wchar_t **endptr,
-			int base);
 
 /**
    Appends src to string dst of size siz (unlike wcsncat, siz is the
@@ -184,51 +159,10 @@ size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
 size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
 
 /**
-   Create a duplicate string. Wide string version of strdup. Will
-   automatically exit if out of memory.
-*/
-wchar_t *wcsdup(const wchar_t *in);
-
-size_t wcslen(const wchar_t *in);
-
-/**
-   Case insensitive string compare function. Wide string version of
-   strcasecmp.
-
-   This implementation of wcscasecmp does not take into account
-   esoteric locales where uppercase and lowercase do not cleanly
-   transform between each other. Hopefully this should be fine since
-   fish only uses this function with one of the strings supplied by
-   fish and guaranteed to be a sane, english word. Using wcscasecmp on
-   a user-supplied string should be considered a bug.
-*/
-int wcscasecmp( const wchar_t *a, const wchar_t *b );
-
-/**
-   Case insensitive string compare function. Wide string version of
-   strncasecmp.
-
-   This implementation of wcsncasecmp does not take into account
-   esoteric locales where uppercase and lowercase do not cleanly
-   transform between each other. Hopefully this should be fine since
-   fish only uses this function with one of the strings supplied by
-   fish and guaranteed to be a sane, english word. Using wcsncasecmp on
-   a user-supplied string should be considered a bug.
-*/
-int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
-
-/**
    Test if the given string is a valid variable name
 */
 
 int wcsvarname( wchar_t *str );
-
-/**
-   The prototype for this function is missing in some libc
-   implementations. Fish has a fallback implementation in case the
-   implementation is missing altogether.
-*/
-int wcwidth( wchar_t c );
 
 
 /**

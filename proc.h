@@ -14,6 +14,7 @@
 #include <wchar.h>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include "util.h"
 #include "io.h"

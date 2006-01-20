@@ -152,7 +152,8 @@ AC_CHECK_LIB(intl, gettext)
 AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h])
 
 # Check for various functions, and insert results into config.h
-AC_CHECK_FUNCS(wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext wprintf futimes wcwidth wcswidth getopt_long ) 
+AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
+AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc wcstol )
 
 # Check again for gettext library, and insert results into the Makefile
 AC_CHECK_FUNC(gettext, AC_SUBST(HAVE_GETTEXT,1), AC_SUBST(HAVE_GETTEXT,0) )

@@ -13,6 +13,7 @@ Functions used for implementing the commandline builtin.
 
 #include "config.h"
 #include "util.h"
+#include "wutil.h"
 #include "builtin.h"
 #include "common.h"
 #include "wgetopt.h"

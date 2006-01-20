@@ -13,6 +13,7 @@ Functions used for implementing the set builtin.
 
 #include "config.h"
 #include "util.h"
+#include "wutil.h"
 #include "builtin.h"
 #include "env.h"
 #include "expand.h"

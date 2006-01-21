@@ -836,6 +836,12 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 void sb_init( string_buffer_t * b)
 {
 	wchar_t c=0;
+
+	if( !b )
+	{
+		return;
+	}
+
 	memset( b, 0, sizeof(string_buffer_t) );	
 	b_append( b, &c, sizeof( wchar_t));
 	b->used -= sizeof(wchar_t);
@@ -856,8 +862,14 @@ void sb_append( string_buffer_t *b, const wchar_t * s)
 //	fwprintf( stderr, L"Append string \'%ls\'\n", s );
 
 	if( !s )
+	{
 		return;
-
+	}
+	
+	if( !b )
+	{
+		return;
+	}
 
 	b_append( b, s, sizeof(wchar_t)*(wcslen(s)+1) );
 	b->used -= sizeof(wchar_t);
@@ -868,7 +880,14 @@ void sb_append_substring( string_buffer_t *b, const wchar_t *s, size_t l )
     wchar_t tmp=0;
 
 	if( !s )
+	{
 		return;
+	}
+	
+	if( !b )
+	{
+		return;
+	}
 
     b_append( b, s, sizeof(wchar_t)*l );
     b_append( b, &tmp, sizeof(wchar_t) );
@@ -883,6 +902,12 @@ void sb_append_char( string_buffer_t *b, wchar_t c )
 			c, 0
 		}
 	;
+
+	if( !b )
+	{
+		return;
+	}
+
 	sb_append( b, buff );
 
 }
@@ -891,6 +916,11 @@ void sb_append2( string_buffer_t *b, ... )
 {
 	va_list va;
 	wchar_t *arg;
+
+	if( !b )
+	{
+		return;
+	}
 
 	va_start( va, b );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 )
@@ -905,6 +935,11 @@ int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... )
 	va_list va;
 	int res;
 	
+	if( !buffer )
+	{
+		return -1;
+	}
+
 	va_start( va, format );
 	res = sb_vprintf( buffer, format, va );	
 	va_end( va );
@@ -916,6 +951,11 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 {
 	int res;
 	
+	if( !buffer )
+	{
+		return -1;
+	}
+
 	if( !buffer->length )
 	{
 		buffer->length = MIN_SIZE;
@@ -972,6 +1012,11 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 
 void sb_destroy( string_buffer_t * b )
 {
+	if( !b )
+	{
+		return;
+	}
+
 	free( b->buff );
 }
 

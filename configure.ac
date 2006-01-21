@@ -170,7 +170,7 @@ AC_TRY_LINK([#if HAVE_LIBINTL_H]
 if test "$have__nl_msg_cat_cntr" = yes; then
     AC_MSG_RESULT(yes)
 	AC_DEFINE([HAVE__NL_MSG_CAT_CNTR], [1],
-			  [Define to 1 if the _nl_msg_cat_cntr synbol is exported.])	
+	          [Define to 1 if the _nl_msg_cat_cntr symbol is exported.])	
 else
     AC_MSG_RESULT(no)
 fi

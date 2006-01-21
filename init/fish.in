@@ -32,10 +32,9 @@ for i in $path_list
 end
 
 
-
-
 #
-# Set some value for LANG if nothing was set before
+# Set some value for LANG if nothing was set before, and this is a
+# login shell. Also check for i18n information in /etc/sysconfig/i18n
 #
 
 if status --is-login
@@ -71,6 +70,12 @@ for i in DISPLAY
 		set -- $i (printf ":%s" $$i|cut -c 2-)
 	end
 end
+
+#
+# Alias for gettext (or a fallback if gettext isn't installed) This
+# needs to be defined here and not in fish_function.fish, since it is
+# used by other init files.
+#
 
 if which gettext >/dev/null ^/dev/null
 	function _ -d "Alias for the gettext command"

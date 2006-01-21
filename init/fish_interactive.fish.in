@@ -40,7 +40,7 @@ end
 # @SYSCONFDIR@/fish_inputrc.
 #
 
-for i in ~/.fish_inputrc @SYSCONFDIR@/fish_inputrc ~/etc/fish_inputrc /etc/fish_inputrc ~/.inputrc /etc/inputrc
+for i in ~/.fish_inputrc @SYSCONFDIR@/fish_inputrc ~/.inputrc /etc/inputrc
 	if test -f $i
 		set -xg INPUTRC $i
 		break
@@ -118,6 +118,10 @@ if command ls --color=auto --help 1>/dev/null 2>/dev/null
 	set_exported_default LS_COLORS $LS_COLORS '*.jar=01;31' '*.doc=35' '*.pdf=35' '*.ps=35' '*.xls=35' '*.swf=35' '*~=37'
 end
 
+
+#
+# Remove temporary functions
+#
 
 functions -e set_default_color
 functions -e set_exported_default

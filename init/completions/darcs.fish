@@ -118,7 +118,7 @@ complete $pull_opt -l dont-set-scripts-executable -d (_ "Don't make scripts exec
 set -l apply_opt  -c darcs -n 'contains apply (commandline -poc)'
 complete $apply_opt -s a -l all -d (_ "Answer yes to all patches")
 complete $apply_opt -l verify -d (_ "Verify that the patch was signed by a key in PUBRING") -r
-complete $apply_opt -l verify-ssl -d (_ "Verify using openSSL with authorized keys from file 'KEYS'") -r
+complete $apply_opt -l verify-ssl -d (_ "Verify using openSSL with authorized keys from specified file") -r
 complete $apply_opt -l sendmail-command -d (_ "Specify sendmail command") -r
 complete $apply_opt -l reply -d (_ "Reply to email-based patch using FROM address") -x
 complete $apply_opt -l cc -d (_ "Mail results to additional EMAIL(s). Requires --reply") -x

@@ -143,6 +143,7 @@ else
     AC_MSG_RESULT(no)
 fi
 
+
 # Check for libraries
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(rt, nanosleep)
@@ -153,10 +154,26 @@ AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl
 
 # Check for various functions, and insert results into config.h
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
-AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc wcstol )
+AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
+AC_CHECK_FUNCS( wcstol dcgettext )
 
 # Check again for gettext library, and insert results into the Makefile
 AC_CHECK_FUNC(gettext, AC_SUBST(HAVE_GETTEXT,1), AC_SUBST(HAVE_GETTEXT,0) )
+
+# Check for _nl_msg_cat_cntr symbol
+AC_MSG_CHECKING([for _nl_msg_cat_cntr symbol])
+AC_TRY_LINK([#if HAVE_LIBINTL_H]
+[#include <libintl.h>]
+[#endif],
+[extern int  _nl_msg_cat_cntr;]
+[int tmp = _nl_msg_cat_cntr;], have__nl_msg_cat_cntr=yes, have__nl_msg_cat_cntr=no)
+if test "$have__nl_msg_cat_cntr" = yes; then
+    AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE__NL_MSG_CAT_CNTR], [1],
+			  [Define to 1 if the _nl_msg_cat_cntr synbol is exported.])	
+else
+    AC_MSG_RESULT(no)
+fi
 
 # Check if we have ncurses, and use it rather than curses if possible.
 AC_CHECK_HEADERS([ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEFINE(HAVE_NCURSES_H)],[AC_SUBST(CURSESLIB,[curses])])

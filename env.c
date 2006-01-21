@@ -282,12 +282,17 @@ static void handle_locale()
 	
 	if( wcscmp( wsetlocale( LC_MESSAGES, (void *)0 ), old ) != 0 )
 	{
-		/* Make change known to gettext.  */
+
+		/* Try to make change known to gettext.  */
+#ifdef HAVE__NL_MSG_CAT_CNTR
 		{
 			extern int  _nl_msg_cat_cntr;
 			++_nl_msg_cat_cntr;
 		}			
-		
+#elif HAVE_DCGETTEXT
+		dcgettext("fish","",LC_MESSAGES);
+#endif		
+
 		if( is_interactive )
 		{
 			complete_destroy();

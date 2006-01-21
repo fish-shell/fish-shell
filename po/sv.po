@@ -508,7 +508,7 @@ msgid "Could not get user information"
 msgstr "Kunde inte hitta information om användare"
 
 #: env.c:296
-msgid "Changing language to english"
+msgid "Changing language to English"
 msgstr "Byter språk till svenska"
 
 #: env.c:854

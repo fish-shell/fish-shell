@@ -293,7 +293,7 @@ static void handle_locale()
 			complete_destroy();
 			complete_init();
 			
-			debug( 0, _(L"Changing language to english") );
+			debug( 0, _(L"Changing language to English") );
 		}
 	}
 	free( old );

@@ -353,16 +353,16 @@ uninstall: uninstall-translations
 install-translations: $(TRANSLATIONS)
 	if test $(HAVE_GETTEXT) = 1; then \
 		for i in $(TRANSLATIONS); do \
-			$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/locale/$$(basename $$i .gmo)/LC_MESSAGES; \
-			$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/locale/$$(basename $$i .gmo)/LC_MESSAGES/fish.mo; \
-			echo $(DESTDIR)$(datadir)/locale/$$(basename $$i .gmo)/LC_MESSAGES/fish.mo;\
+			$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES; \
+			$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
+			echo $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
 		done; \
 	fi
 
 uninstall-translations: 
 	if test $(HAVE_GETTEXT) = 1; then \
 		for i in $(TRANSLATIONS_SRC); do \
-			rm -f $(DESTDIR)$(datadir)/locale/$$(basename $$i .po)/LC_MESSAGES/fish.mo; \
+			rm -f $(DESTDIR)$(datadir)/locale/`basename $$i .po`/LC_MESSAGES/fish.mo; \
 		done; \
 	fi
 

@@ -895,6 +895,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 const wchar_t *complete_get_desc( const wchar_t *filename )
 {
 	struct stat buf;
+			
 	if( !get_desc_buff )
 	{
 		get_desc_buff = malloc(sizeof(string_buffer_t) );
@@ -971,21 +972,21 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 	if( wcslen((wchar_t *)get_desc_buff->buff) == 0 )
 	{
 		wchar_t *suffix = wcsrchr( filename, L'.' );
-		if( suffix != 0 )
+		if( suffix != 0 && !wcsrchr( suffix, L'/' ) )
 		{
-			if( !wcsrchr( suffix, L'/' ) )
-			{
-				sb_printf( get_desc_buff,
-						   L"%lc%ls",
-						   COMPLETE_SEP,
-						   complete_get_desc_suffix( suffix ) );			
-			}
+			sb_printf( get_desc_buff,
+					   L"%lc%ls",
+					   COMPLETE_SEP,
+					   complete_get_desc_suffix( suffix ) );			
 		}
 		else
+		{ 
 			sb_printf( get_desc_buff,
 					   L"%lc%ls", 
 					   COMPLETE_SEP, 
-					   COMPLETE_FILE_DESC );			
+					   COMPLETE_FILE_DESC );
+		}
+		
 	}
 
 	return (wchar_t *)get_desc_buff->buff;

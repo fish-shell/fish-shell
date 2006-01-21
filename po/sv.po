@@ -6670,7 +6670,7 @@ msgstr "Definera egna flaggor"
 #: init/completions/perl.fish:15 init/completions/ruby.fish:17
 #, sh-format
 msgid "Search $PATH for script"
-msgstr "Genomsög $PATH efter skript"
+msgstr "Genomsök $PATH efter skript"
 
 #: init/completions/perl.fish:16 init/completions/ruby.fish:18
 msgid "Taint checking"
@@ -6726,7 +6726,7 @@ msgstr "Välj global konfigurationsfil"
 
 #: init/completions/pine.fish:12
 msgid "Restricted mode"
-msgstr "Begränsat läge"
+msgstr "Inskränkt läge"
 
 #: init/completions/pine.fish:13
 msgid "Enable suspention support"
@@ -6762,7 +6762,7 @@ msgstr "Tillåt pingning till broadcast-adress"
 
 #: init/completions/ping.fish:5
 msgid "Do not allow ping to change source address of probes"
-msgstr "Tillåt inte ping att ändra källadress på frågor"
+msgstr "Tillåt inte ping att ändra källadress på sonder"
 
 #: init/completions/ping.fish:6
 msgid "Stop after specified number of ECHO_REQUEST packets"

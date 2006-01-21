@@ -1144,7 +1144,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 			val_begin++;
 		}
 		
-		if( !val_begin )
+		if( !*val_begin )
 		{
 			continue;
 		}

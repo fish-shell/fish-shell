@@ -29,13 +29,13 @@
 #
 
 # Compiler flags
-
 CC := @CC@
 CFLAGS := @CFLAGS@ @INCLUDEDIR@ -Wall -std=gnu99 -fno-strict-aliasing
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS:= -l@CURSESLIB@ @LIBS@ @LDFLAGS@ @LIBDIR@
 INSTALL:=@INSTALL@
 
+# Installation directories
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 datadir = @datadir@
@@ -50,6 +50,7 @@ docdir = @docdir@
 #Init files to install
 INIT_DIR_INSTALL = init/fish_interactive.fish init/fish_function.fish init/fish_complete.fish 
 
+# Set to 1 if we have gettext
 HAVE_GETTEXT=@HAVE_GETTEXT@
 
 # All objects used by fish, that are compiled from an ordinary .c file
@@ -64,16 +65,26 @@ COMMON_OBJS := function.o builtin.o common.o complete.o env.o exec.o	\
 COMMON_OBJS_WITH_HEADER := builtin_help.o
 
 # main.c exists, but main.h does not, etc.
-COMMON_OBJS_WITH_CODE := builtin_set.o builtin_commandline.o builtin_ulimit.c builtin_complete.o
+COMMON_OBJS_WITH_CODE := builtin_set.o builtin_commandline.o	\
+	builtin_ulimit.c builtin_complete.o
 
 # All objects that the system needs to build fish
-FISH_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE) $(COMMON_OBJS_WITH_HEADER) main.o
-FISH_PAGER_OBJS := fish_pager.o common.o output.o util.o wutil.o tokenizer.o input_common.o env_universal.o env_universal_common.o translate.o
-FISH_TESTS_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE) $(COMMON_OBJS_WITH_HEADER) fish_tests.o 
+FISH_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE)	\
+	$(COMMON_OBJS_WITH_HEADER) main.o
+
+# All objects that the system needs to build fish_pager
+FISH_PAGER_OBJS := fish_pager.o common.o output.o util.o wutil.o		\
+	tokenizer.o input_common.o env_universal.o env_universal_common.o	\
+	translate.o
+
+# All objects that the system needs to build fish_tests
+FISH_TESTS_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE)	\
+	$(COMMON_OBJS_WITH_HEADER) fish_tests.o
+
+# All objects that the system needs to build fishd
 FISHD_OBJS := fishd.o env_universal_common.o common.o util.o wutil.o	\
 
-
-#All objects that the system needs to build mimedb
+# All objects needed to build mimedb
 MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o	\
 	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o
 
@@ -82,7 +93,6 @@ MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o	\
 # alphabetically, since this is the order in which they will be written
 # in the help file.
 #
-
 BUILTIN_DOC_SRC := doc_src/source.txt doc_src/and.txt					\
 	doc_src/begin.txt doc_src/bg.txt doc_src/bind.txt					\
 	doc_src/block.txt doc_src/break.txt doc_src/builtin.txt				\
@@ -106,7 +116,6 @@ BUILTIN_DOC_HDR := $(BUILTIN_DOC_SRC:.txt=.doxygen)
 # alphabetically, since this is the order in which they will be written
 # in the help file.
 #
-
 CMD_DOC_SRC := doc_src/count.txt doc_src/dirh.txt doc_src/dirs.txt	\
 	doc_src/fishd.txt doc_src/help.txt doc_src/mimedb.txt			\
 	doc_src/nextd.txt doc_src/open.txt doc_src/popd.txt				\
@@ -119,6 +128,9 @@ CMD_DOC_SRC := doc_src/count.txt doc_src/dirh.txt doc_src/dirs.txt	\
 #
 CMD_DOC_HDR := $(CMD_DOC_SRC:.txt=.doxygen)
 
+#
+# Files in the test directory
+#
 TEST_IN := $(wildcard tests/test*.in)
 
 #
@@ -226,7 +238,7 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Update existing po file or copy messages.pot
-%.po:messages.pot
+%.po:
 	if test $(HAVE_GETTEXT) = 1;then \
 		if test -f $*.po; then \
 			msgmerge -U --backup=existing $*.po messages.pot;\
@@ -236,11 +248,12 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Create a template translation object
-messages messages.pot: 
+messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ -kcomplete_desc *.c *.h -o messages.pot; \
 		if ! xgettext -j -k_ -LShell init/*.in init/*.fish init/completions/*.fish -o messages.pot; then \
 			echo "Your xgettext version is too old to build the messages.pot file"\
+			rm messages.pot
 			false;\
 		fi; \
 	fi

@@ -32,6 +32,9 @@ if ! test $has_doxygen = "true"; then
 	exit 1
 fi
 
+# Check for seq program. If missing, install fallback shellscript implementation
+AC_CHECK_PROG( SEQ_FALLBACK, seq, [ ], [seq])
+
 # Optionally drop xsel
 AC_ARG_WITH( xsel, 
 			 AC_HELP_STRING([--without-xsel],
@@ -183,7 +186,7 @@ AC_CHECK_HEADERS([ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEFINE(HAVE_NCURS
 # does not properly support terminfo.
 AC_CHECK_FILE([/usr/pkg/include/ncurses.h],[AC_SUBST(CURSESLIB,[ncurses]) AC_DEFINE(HAVE_NCURSES_H)])
 
-AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile init/fish init/fish_interactive.fish init/fish_complete.fish])
+AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile init/fish init/fish_interactive.fish init/fish_complete.fish seq])
 AC_OUTPUT
 
 echo "Now run 'make' and 'make install' to built and install fish."

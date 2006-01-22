@@ -168,10 +168,6 @@ int q_empty( dyn_queue_t *q )
 	return q->put_pos == q->get_pos;
 }
 
-/* Stack functions */
-
-
-
 
 /* Hash table functions */
 

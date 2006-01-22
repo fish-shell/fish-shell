@@ -432,7 +432,7 @@ static void setup_path()
 			
 			sb_destroy( &b );
 			
-			al_foreach( &l, &free );
+			al_foreach( &l, (void (*)(const void *))&free );
 			path = env_get( L"PATH" );
 			al_truncate( &l, 0 );
 			expand_variable_array( path, &l );			
@@ -740,7 +740,8 @@ void env_set( const wchar_t *key,
 				else
 				{
 					/*
-					  New variable with unspecified scope. The default scope is the innermost scope that is shadowing
+					  New variable with unspecified scope. The default
+					  scope is the innermost scope that is shadowing
 					*/
 					node = top;
 					while( node->next && !node->new_scope )

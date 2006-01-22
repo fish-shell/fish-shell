@@ -47,6 +47,9 @@ fishfile = @fishfile@
 fishinputfile = @fishinputfile@
 docdir = @docdir@
 
+#Init files to install
+INIT_DIR_INSTALL = init/fish_interactive.fish init/fish_function.fish init/fish_complete.fish 
+
 HAVE_GETTEXT=@HAVE_GETTEXT@
 
 # All objects used by fish, that are compiled from an ordinary .c file
@@ -134,7 +137,7 @@ MAIN_DIR_FILES := Doxyfile Doxyfile.user Makefile.in configure			\
     $(COMMON_OBJS:.o=.h) $(COMMON_OBJS_WITH_CODE:.o=.c)					\
     $(COMMON_OBJS:.o=.c) builtin_help.hdr fish.spec.in INSTALL README	\
     user_doc.head.html xsel-0.9.6.tar ChangeLog config.sub				\
-    config.guess fish_tests.c main.c fish_pager.c fishd.c
+    config.guess fish_tests.c main.c fish_pager.c fishd.c seq.in
 
 # Files in ./init/
 INIT_DIR_FILES :=init/fish.in init/fish_complete.fish.in	\
@@ -148,7 +151,7 @@ TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
 COMPLETIONS_DIR_FILES := $(wildcard init/completions/*.fish)
 
 # Programs to build
-PROGRAMS:=fish set_color @XSEL@ mimedb count fish_pager fishd
+PROGRAMS:=fish set_color @XSEL@ @SEQ_FALLBACK@ mimedb count fish_pager fishd
 
 # Manuals to install
 MANUALS:=doc_src/fish.1 @XSEL_MAN_PATH@			\
@@ -311,7 +314,7 @@ install: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)/completions
 	$(INSTALL) -m 644 init/fish $(DESTDIR)$(sysconfdir)$(fishfile)
-	for i in init/fish_interactive.fish init/fish_function.fish init/fish_complete.fish ; do \
+	for i in $(INIT_DIR_INSTALL); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)$(fishdir); \
 	done;
 	for i in $(COMPLETIONS_DIR_FILES); do \

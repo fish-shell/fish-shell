@@ -64,7 +64,7 @@ COMMON_OBJS := function.o builtin.o common.o complete.o env.o exec.o	\
 COMMON_OBJS_WITH_HEADER := builtin_help.o
 
 # main.c exists, but main.h does not, etc.
-COMMON_OBJS_WITH_CODE := builtin_set.o builtin_commandline.o builtin_ulimit.c
+COMMON_OBJS_WITH_CODE := builtin_set.o builtin_commandline.o builtin_ulimit.c builtin_complete.o
 
 # All objects that the system needs to build fish
 FISH_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE) $(COMMON_OBJS_WITH_HEADER) main.o

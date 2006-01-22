@@ -34,9 +34,10 @@ library. These styles are:
 - Old style long options, like '-Wall'. Old style long options are more than one character long, are preceeded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter ('-ao null').
 - GNU style long options, like '--colors'. GNU style long options are more than one character long, are preceeded by two hyphens, and may not be grouped together. Option arguments may be specified in the following parameter ('--quoting-style shell') or by appending the option with a '=' and the value ('--quoting-style=shell'). GNU style long options may be abbrevated so long as the abbrevation is unique ('--h' is equivalent to '--help' if help is the only long option beginning with an 'h').
 
-\c complete only allows one of old style long options and GNU style
-long options to be used on a specific command, but short options can
-always be specified.
+The options for specifying command name, command path, or command
+switches may all be used multiple times to specify multiple commands
+which have the same completion or multiple switches accepted by a
+command.
 
 When erasing completions, it is possible to either erase all
 completions for a specific command by specifying <tt>complete -e -c

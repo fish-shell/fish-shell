@@ -435,9 +435,9 @@ void complete_add( const wchar_t *cmd,
 	opt->result_mode = result_mode;
 	opt->old_mode=old_mode;
 
-	opt->comp = intern(comp);
-	opt->condition = intern(condition);
-	opt->long_opt = intern( long_opt );
+	opt->comp = intern(comp?comp:L"");
+	opt->condition = intern(condition?condition:L"");
+	opt->long_opt = intern( long_opt?long_opt:L"" );
 
 	if( desc && wcslen( desc ) )
 	{

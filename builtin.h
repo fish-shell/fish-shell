@@ -146,6 +146,13 @@ int builtin_commandline(wchar_t **argv);
 */
 int builtin_ulimit(wchar_t **argv);
 
+/**
+   The complete builtin. Used for specifying programmable
+   tab-completions. Calls the functions in complete.c for any heavy
+   lifting.
+*/
+int builtin_complete(wchar_t **argv);
+
 /** 
 	This function works like wperror, but it prints its result into
 	the sb_err string_buffer_t instead of to stderr. Used by the builtin

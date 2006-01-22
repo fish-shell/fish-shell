@@ -39,43 +39,57 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 	for( s=short_opt; *s; s++ )
 	{
 		complete_add( cmd, 
-				  cmd_type,
-				  *s,
-				  0,
-				  0,
-				  result_mode,
-				  authorative,
-				  condition,
-				  comp,
-				  desc );
+					  cmd_type,
+					  *s,
+					  0,
+					  0,
+					  result_mode,
+					  authorative,
+					  condition,
+					  comp,
+					  desc );
 	}
 	
 	for( i=0; i<al_get_count( gnu_opt ); i++ )
 	{
 		complete_add( cmd, 
-				  cmd_type,
-				  0,
-				  (wchar_t *)al_get(gnu_opt, i ),
-				  0,
-				  result_mode,
-				  authorative,
-				  condition,
-				  comp,
-				  desc );
+					  cmd_type,
+					  0,
+					  (wchar_t *)al_get(gnu_opt, i ),
+					  0,
+					  result_mode,
+					  authorative,
+					  condition,
+					  comp,
+					  desc );
 	}
 	
 	for( i=0; i<al_get_count( old_opt ); i++ )
 	{
 		complete_add( cmd, 
-				  cmd_type,
-				  0,
-				  (wchar_t *)al_get(old_opt, i ),
-				  1,
-				  result_mode,
-				  authorative,
-				  condition,
-				  comp,
-				  desc );
+					  cmd_type,
+					  0,
+					  (wchar_t *)al_get(old_opt, i ),
+					  1,
+					  result_mode,
+					  authorative,
+					  condition,
+					  comp,
+					  desc );
+	}	
+
+	if( al_get_count( old_opt )+al_get_count( gnu_opt )+wcslen(short_opt) == 0 )
+	{
+		complete_add( cmd, 
+					  cmd_type,
+					  0,
+					  0,
+					  0,
+					  result_mode,
+					  authorative,
+					  condition,
+					  comp,
+					  desc );
 	}	
 }
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-21 12:48+0100\n"
+"POT-Creation-Date: 2006-01-22 23:49+0100\n"
 "PO-Revision-Date: 2006-01-13 00:56+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -106,12 +106,12 @@ msgstr "%ls: Slumpfrö ”%ls” är inte ett giltigt nummer\n"
 msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Förväntade noll eller ett argument, fick %d\n"
 
-#: builtin.c:1860 builtin.c:3089
+#: builtin.c:1860 builtin.c:2837
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
 msgstr "%ls: Argumentet ”%ls” måste vara ett heltal\n"
 
-#: builtin.c:1871 builtin.c:2164 builtin.c:3100
+#: builtin.c:1871 builtin.c:2848 builtin_complete.c:408
 #, c-format
 msgid "%ls: Too many arguments\n"
 msgstr "%ls: För många argument\n"
@@ -139,275 +139,270 @@ msgstr "%ls: ”%ls” är inte en katalog\n"
 msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Kunde inte sätta variableln PWD\n"
 
-#: builtin.c:2110
-#, c-format
-msgid "%ls: Parameter '%ls' is too long\n"
-msgstr "%ls: Parametern ”%ls” är för lång\n"
-
-#: builtin.c:2231 builtin.c:3145
+#: builtin.c:1980 builtin.c:2893
 #, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
 msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
 
-#: builtin.c:2244
+#: builtin.c:1993
 #, c-format
 msgid "%ls: '%ls' is not a file\n"
 msgstr "%ls: ”%ls” är inte en fil\n"
 
-#: builtin.c:2269
+#: builtin.c:2018
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
 msgstr "%ls: Ett fel uppstod medan filen ”%ls” lästed\n"
 
-#: builtin.c:2335 builtin.c:2465
+#: builtin.c:2083 builtin.c:2213
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: Det finns inga lämpliga jobb\n"
 
-#: builtin.c:2353
+#: builtin.c:2101
 #, c-format
 msgid "%ls: Ambiguous job\n"
 msgstr "%ls: Mer än ett jobb matchar\n"
 
-#: builtin.c:2359 builtin.c:2738
+#: builtin.c:2107 builtin.c:2486
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
 msgstr "%ls: ”%ls” är inte ett jobb\n"
 
-#: builtin.c:2375 builtin.c:2753
+#: builtin.c:2123 builtin.c:2501
 #, c-format
 msgid "%ls: No suitable job: %d\n"
 msgstr "%ls: Inget passande jobb: %d\n"
 
-#: builtin.c:2426
+#: builtin.c:2174
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
 msgstr "%ls: Okänt jobb ”%ls”\n"
 
-#: builtin.c:2435
+#: builtin.c:2183
 #, c-format
 msgid "Send job %d '%ls' to background\n"
 msgstr "Skicka jobb %d ”%ls” till bakgrunden\n"
 
-#: builtin.c:2471
+#: builtin.c:2219
 msgid "(default)"
 msgstr "(standard)"
 
-#: builtin.c:2528
+#: builtin.c:2276
 msgid "Job\tGroup\t"
 msgstr "Jobb\tGrupp\t"
 
-#: builtin.c:2530
+#: builtin.c:2278
 msgid "CPU\t"
 msgstr "CPU\t"
 
-#: builtin.c:2532
+#: builtin.c:2280
 msgid "State\tCommand\n"
 msgstr "Status\tKommando\n"
 
-#: builtin.c:2541 proc.c:636
+#: builtin.c:2289 proc.c:636
 msgid "stopped"
 msgstr "stannat"
 
-#: builtin.c:2541
+#: builtin.c:2289
 msgid "running"
 msgstr "kör"
 
-#: builtin.c:2556
+#: builtin.c:2304
 msgid "Group\n"
 msgstr "Grupp\n"
 
-#: builtin.c:2569
+#: builtin.c:2317
 msgid "Procces\n"
 msgstr "Process\n"
 
-#: builtin.c:2586
+#: builtin.c:2334
 msgid "Command\n"
 msgstr "Kommando\n"
 
-#: builtin.c:2779
+#: builtin.c:2527
 #, c-format
 msgid "%ls: There are no jobs\n"
 msgstr "%ls: Det finns inga jobb\n"
 
-#: builtin.c:2798
+#: builtin.c:2546
 #, c-format
 msgid "%ls: Expected at least two arguments\n"
 msgstr "%ls: Förväntade minst två argument\n"
 
-#: builtin.c:2805
+#: builtin.c:2553
 #, c-format
 msgid "%ls: '%ls' is not a valid variable name\n"
 msgstr "%ls: ”%ls” är ett ogiltigt variabelnamn\n"
 
-#: builtin.c:2813
+#: builtin.c:2561
 #, c-format
 msgid "%ls: Second argument must be 'in'\n"
 msgstr "%ls: Andra argumentet måste vara ”in”\n"
 
-#: builtin.c:2873
+#: builtin.c:2621
 #, c-format
 msgid "%ls: Not inside of block\n"
 msgstr "%ls: Inte i ett block\n"
 
-#: builtin.c:2997
+#: builtin.c:2745
 #, c-format
 msgid "%ls: Not inside of 'if' block\n"
 msgstr "%ls: Inte i ett ”if” block\n"
 
-#: builtin.c:3049
+#: builtin.c:2797
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Inte i en loop\n"
 
-#: builtin.c:3116
+#: builtin.c:2864
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Inte i en funktion\n"
 
-#: builtin.c:3176
+#: builtin.c:2924
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
 msgstr "%ls: ”case” kommandot kan bara användas i ett ”switch”-block\n"
 
-#: builtin.c:3374
+#: builtin.c:3122
 #, c-format
 msgid "Unknown builtin '%ls'"
 msgstr "Okänt inbyggt kommando ”%ls”"
 
-#: builtin.c:3396
+#: builtin.c:3144
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
 
-#: builtin.c:3397
+#: builtin.c:3145
 msgid "Run a builtin command instead of a function"
 msgstr "Utför ett inbyggt kommando istället för en funktion"
 
-#: builtin.c:3398
+#: builtin.c:3146
 msgid "Edit command specific completions"
 msgstr "Redigera kommando-specifika kompletteringar"
 
-#: builtin.c:3399
+#: builtin.c:3147
 msgid "Change working directory"
 msgstr "Ändra arbetskatalog"
 
-#: builtin.c:3400
+#: builtin.c:3148
 msgid "Exit the shell"
 msgstr "Avsluta fish"
 
-#: builtin.c:3401
+#: builtin.c:3149
 msgid "Define a new function"
 msgstr "Definera ny funktion"
 
-#: builtin.c:3402
+#: builtin.c:3150
 msgid "List or remove functions"
 msgstr "Visa eller ta bort funktioner"
 
-#: builtin.c:3403
+#: builtin.c:3151
 msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
-#: builtin.c:3404
+#: builtin.c:3152
 msgid "Evaluate block if condition is false"
 msgstr "Utför block om ett villkor inte är uppfyllt"
 
-#: builtin.c:3405
+#: builtin.c:3153
 msgid "Evaluate parameters as a command"
 msgstr "Utför argument som kommando"
 
-#: builtin.c:3406
+#: builtin.c:3154
 msgid "Perform a set of commands multiple times"
 msgstr "Utför ett block flera gånger"
 
-#: builtin.c:3407
+#: builtin.c:3155
 msgid "Evaluate contents of file"
 msgstr "Utför filinnehåll som kommandon"
 
-#: builtin.c:3408
+#: builtin.c:3156
 msgid "Handle environment variables"
 msgstr "Redigera miljövariabler"
 
-#: builtin.c:3409
+#: builtin.c:3157
 msgid "Send job to foreground"
 msgstr "Skick jobb till förgrunden"
 
-#: builtin.c:3410
+#: builtin.c:3158
 msgid "Send job to background"
 msgstr "Skicka jobb till bakgrunden"
 
-#: builtin.c:3411
+#: builtin.c:3159
 msgid "Print currently running jobs"
 msgstr "Visa nuvarande jobb"
 
-#: builtin.c:3412
+#: builtin.c:3160
 msgid "Read a line of input into variables"
 msgstr "Läs in en rad till variabler"
 
-#: builtin.c:3413
+#: builtin.c:3161
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
-#: builtin.c:3414
+#: builtin.c:3162
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Avbryt nuvarande varv i den innersta loopen"
 
-#: builtin.c:3415
+#: builtin.c:3163
 msgid "Stop the currently evaluated function"
 msgstr "Avbryt den nuvarande funktionen"
 
-#: builtin.c:3416
+#: builtin.c:3164
 msgid "Set or get the commandline"
 msgstr "Ändra eller visa kommandoraden"
 
-#: builtin.c:3417 builtin.c:3418
+#: builtin.c:3165 builtin.c:3166
 msgid "Conditionally execute a block of commands"
 msgstr "Utför ett kommando om ett villkor är uppfyllt"
 
-#: builtin.c:3419
+#: builtin.c:3167
 msgid "Run a program instead of a function or builtin"
 msgstr "Kör ett program istället för en funktion eller ett inbuggt kommando"
 
-#: builtin.c:3420
+#: builtin.c:3168
 msgid "Evaluate block if condition is true"
 msgstr "Utför ett block om ett villkor är uppfyllt"
 
-#: builtin.c:3421
+#: builtin.c:3169
 msgid "Perform a command multiple times"
 msgstr "Utför ett kommando upprepade gånger"
 
-#: builtin.c:3422
+#: builtin.c:3170
 msgid "Handle fish key bindings"
 msgstr "Hantera tangentbordsgenvägar för fish"
 
-#: builtin.c:3423
+#: builtin.c:3171
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
 
-#: builtin.c:3424
+#: builtin.c:3172
 msgid "Run command in current process"
 msgstr "Kör ett kommando i den nuvarande processen"
 
-#: builtin.c:3425
+#: builtin.c:3173
 msgid "Negate exit status of job"
 msgstr "Negera resultatet av ett kommando"
 
-#: builtin.c:3426
+#: builtin.c:3174
 msgid "Execute command if previous command failed"
 msgstr "Utför  kommando om föregående kommando misslyckades"
 
-#: builtin.c:3427
+#: builtin.c:3175
 msgid "Execute command if previous command suceeded"
 msgstr "Utför kommando om föregående kommando lyckades"
 
-#: builtin.c:3428
+#: builtin.c:3176
 msgid "Create a block of code"
 msgstr "Skapa ett kodblock"
 
-#: builtin.c:3429
+#: builtin.c:3177
 msgid "Return status information about fish"
 msgstr "Visa statusinformation om fish"
 
-#: builtin.c:3430
+#: builtin.c:3178
 msgid "Set or get the shells resource usage limits"
 msgstr "Redigera eller visa skalets resursanvändningsgränser"
 
@@ -504,20 +499,20 @@ msgstr "Okänd flagga: "
 msgid "Multiple matches for option: "
 msgstr "Mer än en flagga matchar: "
 
-#: env.c:200
+#: env.c:217
 msgid "Could not get user information"
 msgstr "Kunde inte hitta information om användare"
 
-#: env.c:296
+#: env.c:308 env.c:316
 msgid "Changing language to English"
 msgstr "Byter språk till svenska"
 
-#: env.c:854
+#: env.c:892
 #, c-format
 msgid "No history item at index %d\n"
 msgstr "Ingen historieinformation vid index %d\n"
 
-#: env.c:1029
+#: env.c:1067
 msgid "Tried to pop empty environment stack."
 msgstr "Försökte ta bort element från tom variabelstack"
 
@@ -1431,15 +1426,15 @@ msgstr "Stanna och starta tjänst"
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
-#: init/fish.in:74
+#: init/fish.in:80
 msgid "^/dev/null"
 msgstr ""
 
-#: init/fish.in:75 init/fish.in:79
+#: init/fish.in:81 init/fish.in:85
 msgid "-d"
 msgstr ""
 
-#: init/fish.in:76
+#: init/fish.in:82
 msgid "fish"
 msgstr ""
 
@@ -9147,3 +9142,12 @@ msgstr "Kryptera"
 #: init/completions/zip.fish:30
 msgid "Don't compress files with these suffixes"
 msgstr "Komprimera inte filer med dessa ändelser"
+
+#: seq:23
+msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
+msgstr "%s: Förväntade 1, 2 eller 3 argument, fick %d\\n"
+
+#: seq:30
+msgid "%s: '%s' is not a number\\n"
+msgstr "%s: ”%s” är inte ett nummer\\n"
+

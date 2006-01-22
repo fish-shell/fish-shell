@@ -21,6 +21,11 @@ Functions used for implementing the complete builtin.
 #include "parser.h"
 #include "translate.h"
 
+/*
+  builtin_complete_* are a set of rather silly looping functions that
+  make sure that all the proper combinations of complete_add or
+  complete_remove get called.
+*/
 
 static void	builtin_complete_add2( const wchar_t *cmd,
 								   int cmd_type,
@@ -232,7 +237,7 @@ static void	builtin_complete_remove( array_list_t *cmd,
 
 int builtin_complete( wchar_t **argv )
 {
-	
+	int res=0;
 	int argc=0;
 	int result_mode=SHARED;
 	int remove = 0;
@@ -255,7 +260,7 @@ int builtin_complete( wchar_t **argv )
 	
 	woptind=0;
 	
-	while( 1 )
+	while( res == 0 )
 	{
 		const static struct woption
 			long_options[] =
@@ -345,8 +350,8 @@ int builtin_complete( wchar_t **argv )
 //				builtin_print_help( argv[0], sb_err );
 
 				
-				return 1;
-				
+				res = 1;
+				break;
 				
 			case 'x':					
 				result_mode |= EXCLUSIVE;
@@ -410,13 +415,17 @@ int builtin_complete( wchar_t **argv )
 			case '?':
 				//	builtin_print_help( argv[0], sb_err );
 				
-				return 1;
+				res = 1;
+				break;
 				
 		}
 		
 	}
-	
-	if( woptind != argc )
+
+	if( res != 0 )
+	{
+	}
+	else if( woptind != argc )
 	{
 		sb_printf( sb_err, 
 				   _( L"%ls: Too many arguments\n" ),
@@ -425,17 +434,13 @@ int builtin_complete( wchar_t **argv )
 				   parser_current_line() );
 		//			builtin_print_help( argv[0], sb_err );
 
-		return 1;
+		res = 1;
 	}
-
-	if( load )
+	else if( load )
 	{
 		complete_load( load, 1 );		
-		return 0;		
 	}
-	
-
-	if( (al_get_count( &cmd) == 0 ) && (al_get_count( &path) == 0 ) )
+	else if( (al_get_count( &cmd) == 0 ) && (al_get_count( &path) == 0 ) )
 	{
 		/* No arguments specified, meaning we print the definitions of
 		 * all specified completions to stdout.*/
@@ -466,6 +471,7 @@ int builtin_complete( wchar_t **argv )
 		}
 
 	}	
+
 	al_foreach( &cmd, (void (*)(const void *))&free );
 	al_foreach( &path, (void (*)(const void *))&free );
 
@@ -474,7 +480,6 @@ int builtin_complete( wchar_t **argv )
 	sb_destroy( &short_opt );
 	al_destroy( &gnu_opt );
 	al_destroy( &old_opt );
-	
 
-	return 0;
+	return res;
 }

@@ -30,9 +30,16 @@ license. Read the source code of the library for more information.
 #include <fcntl.h>
 #include <libgen.h>
 #include <errno.h>
+#include <regex.h>
+#include <locale.h>
+
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+
+#if HAVE_LIBINTL_H
+#include <libintl.h>
 #endif
 
 #include "xdgmime.h"
@@ -53,20 +60,30 @@ license. Read the source code of the library for more information.
 #define MIME_SUFFIX ".xml"
 
 /**
-   Start tag for comment
+   Start tag for langauge-specific comment
 */
-#define START_TAG "<comment>"
+#define START_TAG "<comment *(| +xml:lang *= *(\"%s\"|'%s') *)>"
 
 /**
    End tab for comment
 */
-#define STOP_TAG "</comment>"
+#define STOP_TAG "</comment *>"
 
 /**
    File contains cached list of mime actions
 */
 #define DESKTOP_DEFAULT "applications/defaults.list"
 
+/**
+   Size for temporary string buffer used to make a regex for language
+   specific descriptions
+*/
+#define BUFF_SIZE 1024
+
+/*
+  Program name
+*/
+#define MIMEDB "mimedb"
 
 /**
    All types of input and output possible
@@ -81,6 +98,8 @@ enum
 	LAUNCH
 }
 ;
+
+static regex_t *start_re=0, *stop_re=0;
 
 /**
    Error flag. Non-zero if something bad happened.
@@ -101,6 +120,12 @@ static int launch_len=0;
 */
 static int launch_pos=0;
 
+#if HAVE_GETTEXT
+#define _(string) gettext(string)
+#else
+#define _(string) (string)
+#endif
+
 /**
    Dynamically generated function, made from the documentation in doc_src.
 */
@@ -115,7 +140,7 @@ void *my_malloc( size_t s )
 	if( !s )
 	{
 		error=1;
-		fprintf( stderr, "mimedb: Out of memory\n" );
+		fprintf( stderr, _("%s: Out of memory\n"), MIMEDB );
 	}
 	return res;
 }
@@ -129,7 +154,7 @@ char *my_strdup( char *s )
 	if( !s )
 	{
 		error=1;
-		fprintf( stderr, "mimedb: Out of memory\n" );
+		fprintf( stderr, _("%s: Out of memory\n"), MIMEDB );
 	}
 	return res;
 }
@@ -364,9 +389,54 @@ static char *munge( char *in )
 		}
 		in++;
 	}
-	fprintf( stderr, "mimedb: Unknown error in munge()\n" );
+	fprintf( stderr, _( "%s: Unknown error in munge()\n"), MIMEDB );
 	error=1;
 	return 0;
+}
+
+/**
+   Return a regular expression that matches all strings specifying the current locale
+*/
+static char *get_lang_re()
+{
+	
+	static char buff[BUFF_SIZE];
+	const char *lang = setlocale( LC_MESSAGES, 0 );
+	int close=0;
+	char *out=buff;
+
+	if( (1+strlen(lang)*4) >= BUFF_SIZE )
+	{
+		fprintf( stderr, _( "%s: Locale string too long\n"), MIMEDB );
+		error = 1;
+		return 0;
+	}
+	
+	for( ; *lang; lang++ )
+	{
+		switch( *lang )
+		{
+			case '@':
+			case '.':
+			case '_':
+				if( close )
+					*out++ = ')';
+				
+				close=1;
+				*out++ = '(';
+				*out++ = '|';
+				*out++ = *lang;
+				break;
+				
+			default:
+				*out++ = *lang;
+		}
+	}
+	
+	if( close )
+		*out++ = ')';
+	*out++=0;
+	return buff;
 }
 
 /**
@@ -380,8 +450,36 @@ static char *get_description( const char *mimetype )
 	int fd;
 	struct stat st;
 	char *contents;
-	char *start, *stop;
+	char *start=0, *stop=0;
 
+	if( !start_re )
+	{
+		char *lang;
+		char buff[BUFF_SIZE];
+
+		lang = get_lang_re();
+		if( !lang )
+			return 0;
+		
+		snprintf( buff, BUFF_SIZE, START_TAG, lang, lang );
+
+		start_re = my_malloc( sizeof(regex_t));
+		stop_re = my_malloc( sizeof(regex_t));
+		
+		if( regcomp( start_re, buff, REG_EXTENDED ) || 
+			regcomp( stop_re, STOP_TAG, REG_EXTENDED ) )
+		{
+			fprintf( stderr, _( "%s: Could not compile regular expressions\n"), MIMEDB );
+			error=1;
+
+			free( start_re );
+			free( stop_re );
+			start_re = stop_re = 0;
+
+			return 0;
+		}		
+	}
+	
 	fn_part = my_malloc( strlen(MIME_DIR) + strlen( mimetype) + strlen(MIME_SUFFIX) + 1 );
 
 	if( !fn_part )
@@ -436,15 +534,40 @@ static char *get_description( const char *mimetype )
 	free( fn );
 
 	contents[st.st_size]=0;
-
-	start = strstr( contents, START_TAG );
-	if( start )
+	regmatch_t match[1];
+	int w = -1;
+	
+	start=contents;
+	
+	/*
+	  On multiple matches, use the longest match, should be a pretty
+	  good heuristic for best match...
+	*/
+	while( !regexec(start_re, start, 1, match, 0) )
 	{
-		start += strlen(START_TAG);
-		stop = strstr( start, STOP_TAG );
-		if( stop )
+		int new_w = match[0].rm_eo - match[0].rm_so;
+		
+		if( new_w > w )
 		{
+			/* 
+			   New match is for a longer match then the previous
+			   match, so we use the new match
+			*/
+			w=new_w;
+			start += match[0].rm_eo;
+		}
+	}
+	
+	if( w != -1 )
+	{
+		if( !regexec(stop_re, start, 1, match, 0) )
+		{
+			/*
+			  We've found the beginning and the end of a suitable description
+			*/
 			char *res;
+
+			stop = start + match[0].rm_so;
 			*stop = '\0';
 			res = munge( start );
 			free( contents );
@@ -452,7 +575,7 @@ static char *get_description( const char *mimetype )
 		}
 	}
 	free( contents );
-	fprintf( stderr, "mimedb: No description for type %s\n", mimetype );
+	fprintf( stderr, _( "%s: No description for type %s\n"), MIMEDB, mimetype );
 	error=1;
 	return 0;
 
@@ -516,7 +639,7 @@ static char *get_action( const char *mimetype )
 		
 	if( !launcher )
 	{
-		fprintf( stderr, "Could not parse launcher string %s\n", launcher_str );	
+		fprintf( stderr, _("%s: Could not parse launcher string '%s'\n"), MIMEDB, launcher_str );	
 		error=1;
 		return 0;
 	}
@@ -549,7 +672,7 @@ static char *get_action( const char *mimetype )
 	if( !launcher_command_str )
 	{
 		fprintf( stderr, 
-				 "mimedb: Default launcher %s does not specify how to start\n", 
+				 _( "%s: Default launcher '%s' does not specify how to start\n"), MIMEDB, 
 				 launcher_filename );
 		free( launcher_filename );
 		return 0;	
@@ -929,7 +1052,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 				}
 				
 				default:
-					fprintf( stderr, "Unsupported switch %c in launch string %s\n", *filter, filter_org );
+					fprintf( stderr, _("%s: Unsupported switch '%c' in launch string '%s'\n"), MIMEDB, *filter, filter_org );
 					launch_len=0;
 					break;
 					
@@ -950,7 +1073,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 		case -1:
 		{
 			launch_len = 0;
-			fprintf( stderr, "mimedb: Out of memory\n" );
+			fprintf( stderr, _( "%s: Out of memory\n"), MIMEDB );
 			return;
 		}
 		case 0:
@@ -996,6 +1119,15 @@ static void clear_entry( const void *key, const void *val )
 }
 
 
+static void locale_init()
+{
+	setlocale( LC_ALL, "" );
+#if HAVE_GETTEXT
+	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
+	textdomain( PACKAGE_NAME );
+#endif
+}
+
 
 /**
    Main function. Parses options and calls helper function for any heavy lifting.
@@ -1011,8 +1143,9 @@ int main (int argc, char *argv[])
 	int i;
 
 	hash_table_t launch_hash;
-	
 
+	locale_init();
+	
 	/*
 	  Parse options
 	*/
@@ -1118,7 +1251,7 @@ int main (int argc, char *argv[])
 				exit(0);				
 								
 			case 'v':
-				printf( "mimedb, version %s\n", PACKAGE_VERSION );
+				printf( _("%s, version %s\n"), MIMEDB, PACKAGE_VERSION );
 				exit( 0 );				
 				
 			case '?':
@@ -1129,7 +1262,7 @@ int main (int argc, char *argv[])
 
 	if( ( output_type == LAUNCH )&&(input_type==MIMETYPE))
 	{
-		fprintf( stderr, "Can not launch a mimetype\n" );
+		fprintf( stderr, _("%s: Can not launch a mimetype\n"), MIMEDB );
 		print_help();
 		exit(1);
 	}
@@ -1161,7 +1294,7 @@ int main (int argc, char *argv[])
 		mimetype = xdg_mime_unalias_mime_type (mimetype);
 		if( !mimetype )
 		{
-			fprintf( stderr, "mimedb: Could not parse mimetype from argument %s\n", argv[i] );
+			fprintf( stderr, _( "%s: Could not parse mimetype from argument '%s'\n"), MIMEDB, argv[i] );
 			error=1;
 			return 1;
 		}
@@ -1227,7 +1360,7 @@ int main (int argc, char *argv[])
 	/*
 	  Perform the actual launching
 	*/
-	if( output_type == LAUNCH )
+	if( output_type == LAUNCH && !error )
 	{
 		int i;
 		array_list_t mimes;
@@ -1239,7 +1372,7 @@ int main (int argc, char *argv[])
 			array_list_t *files = (array_list_t *)hash_get( &launch_hash, mimetype );
 			if( !files )
 			{
-				fprintf( stderr, "mimedb: Unknown error\n" );
+				fprintf( stderr, _( "%s: Unknown error\n"), MIMEDB );
 				error=1;
 				break;				
 			}
@@ -1259,6 +1392,14 @@ int main (int argc, char *argv[])
 	
 	if( launch_buff )
 		free( launch_buff );
+
+	if( start_re )
+	{
+		regfree( start_re );
+		regfree( stop_re );
+		free( start_re );
+		free( stop_re );
+	}	
 
 	xdg_mime_shutdown();
 	

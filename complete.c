@@ -1550,13 +1550,6 @@ void complete_load( wchar_t *cmd,
 				wchar_t *esc = expand_escape( (wchar_t *)path.buff, 1 );
 				wchar_t *src_cmd = wcsdupcat( L". ", esc );
 				
-/*				if( tm )
-					debug( 0, L"Reload %ls completions, old time was %d, new time is %d",
-						   cmd,
-						   tm?*tm:-1, 
-						   buf.st_mtime);
-*/			
-
 				if( !tm )
 				{
 					tm = malloc(sizeof(time_t));
@@ -1568,7 +1561,6 @@ void complete_load( wchar_t *cmd,
 				hash_put( loaded_completions,
 						  intern( cmd ),
 						  tm );
-				
 				
 				free( esc );
 				
@@ -1592,8 +1584,6 @@ void complete_load( wchar_t *cmd,
 	*/
 	if( !tm )
 	{
-//		debug( 0, L"Insert null timestamp for command %ls", cmd );
-		
 		tm = malloc(sizeof(time_t));		
 		if( !tm )
 			die_mem();
@@ -1646,7 +1636,7 @@ static int complete_param( wchar_t *cmd_orig,
 		if( str[0] == L'-' )
 		{
 			/* Check if we are entering a combined option and argument
-			 * (like --color=auto or -I/usr/include) */
+			   (like --color=auto or -I/usr/include) */
 			for( o = i->first_option; o; o=o->next )
 			{
 				wchar_t *arg;
@@ -1664,7 +1654,7 @@ static int complete_param( wchar_t *cmd_orig,
 		else if( popt[0] == L'-' )
 		{
 			/* Check if the previous option has any specified
-			 * arguments to match against */
+			   arguments to match against */
 			int found_old = 0;
 
 			/*

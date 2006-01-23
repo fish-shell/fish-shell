@@ -25,14 +25,14 @@ or updated
 - \c -b or \c --current-buffer select the entire buffer (default)
 - \c -j or \c --current-job select the current job
 - \c -p or \c --current-process select the current process
-- \c -t or \c --current_token select the current token. 
+- \c -t or \c --current_token select the current token.
 
 The following switch changes the way \c commandline prints the current
 commandline
 
 - \c -c or \c --cut-at-cursor only print selection up until the
   current cursor position
-- \c o or \c --tokenize tokenize the selection and print one string-type token per line
+- \c -o or \c --tokenize tokenize the selection and print one string-type token per line
 
 Other switches
 

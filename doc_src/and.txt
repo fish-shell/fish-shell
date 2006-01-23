@@ -10,7 +10,7 @@ The \c and builtin is used to execute a command if the current exit status (as s
 
 \subsection and-example Example
 
-The following code runs the \c make command to build a program, and if it suceeds, it runs <tt>make install</tt>, which installs the program.
+The following code runs the \c make command to build a program, and if it succeeds, it runs <tt>make install</tt>, which installs the program.
 <pre>
 make; and make install
 </pre>

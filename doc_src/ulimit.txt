@@ -1,5 +1,5 @@
 
-\section ulimit ulimit - Set or get the shells resurce usage limits
+\section ulimit ulimit - Set or get the shells resource usage limits
 
 \subsection ulimit-synopsis Synopsis
 <tt>ulimit [OPTIONS] [LIMIT]</tt>
@@ -38,7 +38,7 @@ except for -t, which is in seconds and -n and -u, which are unscaled
 values. The return status is 0 unless an invalid option or argument is
 supplied, or an error occurs while setting a new limit.
 
-The fish implementation of ulimit should behave identically to the implementation in bash, except for these differences: 
+The fish implementation of ulimit should behave identically to the implementation in bash, except for these differences:
 
 - Fish ulimit supports GNU-style long options for all switches
 - Fish ulimit does not support the -p option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE.

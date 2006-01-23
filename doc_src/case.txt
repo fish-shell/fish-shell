@@ -23,7 +23,7 @@ switch $animal
         echo evil
     case wolf dog human moose dolphin whale
         echo mammal
-    case duck goose albatros
+    case duck goose albatross
         echo bird
     case shark trout stingray
         echo fish

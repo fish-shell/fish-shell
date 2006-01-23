@@ -3,11 +3,11 @@
 \subsection set-synopsis Synopsis
 <code>set [OPTIONS] [VARIABLE_NAME [VALUES...]]</code>
 
-The <code>set</code> builtin causes fish to assign the variable <code>VARIABLE_NAME</code> the values <code>VALUES...</code>. 
+The <code>set</code> builtin causes fish to assign the variable <code>VARIABLE_NAME</code> the values <code>VALUES...</code>.
 
 \subsection set-description Description
 - <code>-e</code> or <code>--erase</code> causes the specified environment variable to be erased
-- <code>-g</code> or <code>--global</code> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will dissapear when the current block ends
+- <code>-g</code> or <code>--global</code> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will disappear when the current block ends
 - <code>-l</code> or <code>--local</code> forces the specified environment variable to be made local to the current block, even if the variable already exists and is non-local
 - <code>-n</code> or <code>--names</code> List only the names of all defined variables
 - <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
@@ -18,7 +18,7 @@ The <code>set</code> builtin causes fish to assign the variable <code>VARIABLE_N
 If set is called with no arguments, the names and values of all
 environment variables are printed. If some of the scope or export
 flags have been given, only the variables matching the specified scope
-are printed. 
+are printed.
 
 If the \c -e or \c --erase option is specified, the variable
 specified by the following arguments will be erased

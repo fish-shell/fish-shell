@@ -7,8 +7,8 @@
 \subsection exec-description Description
 
 The \c exec builtin is used to replace the currently running shells
-process image with a new command. On sucessfull completion, exec never
-returns. exec can not be used inside a pipeline. 
+process image with a new command. On successful completion, exec never
+returns. exec can not be used inside a pipeline.
 
 \subsection exec-example Example
 

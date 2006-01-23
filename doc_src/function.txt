@@ -5,22 +5,22 @@
 
 \subsection function-description Description
 
-- \c -b or \c --key-binding specifies that the function is a key biding. Key binding functions work exactly like regular functions except that they can not be tab-completed, and may contain the '-' character. 
+- \c -b or \c --key-binding specifies that the function is a key biding. Key binding functions work exactly like regular functions except that they can not be tab-completed, and may contain the '-' character.
 - <tt>-d DESCRIPTION</tt> or \c --description=DESCRIPTION is a description of what the function does, suitable as a completion description
 - <tt>-j PID</tt> or <tt> --on-job-exit PID</tt> tells fish to run this function when the job with group id PID exits
 - <tt>-p PID</tt> or <tt> --on-process-exit PID</tt> tells fish to run this function when the fish child process with process id PID exits
-- <tt>-s</tt> or <tt>--on-signal SIGSPEC</tt> tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a singal number, or the signal name, such as SIGHUP (or just HUP)
+- <tt>-s</tt> or <tt>--on-signal SIGSPEC</tt> tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a signal number, or the signal name, such as SIGHUP (or just HUP)
 - <tt>-v</tt> or <tt>--on-variable VARIABLE_NAME</tt> tells fish to run this function when the variable VARIABLE_NAME changes value
 
 This builtin command is used to create a new function. A Function is a
 list of commands that will be executed when the name of the function
-is entered. The function 
+is entered. The function
 
 <pre>
 function hi
 	echo hello
 end
-</pre> 
+</pre>
 
 will write <tt>hello</tt> whenever the user enters \c hi.
 
@@ -29,7 +29,7 @@ are inserted into the environment variable <a href="index.html#variables-arrays"
 
 \subsection function-example Example
 
-<pre>function ll 
+<pre>function ll
 	ls -l $argv
 end
 </pre>
@@ -39,18 +39,18 @@ will run the \c ls command, using the \c -l option, while passing on any additio
 <pre>
 function mkdir -d "Create a directory and set CWD"
 	mkdir $argv
-	if test $status = 0 
+	if test $status = 0
 		switch $argv[(count $argv)]
 			case '-*'
-				
+
 			case '*'
 				cd $argv[(count $argv)]
 				return
 		end
 	end
 end
-</pre> 
+</pre>
 
-will run the mkdir command, and if it is succesfull, change the
+will run the mkdir command, and if it is successful, change the
 current working directory to the one just created.
 

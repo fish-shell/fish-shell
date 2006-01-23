@@ -8,7 +8,7 @@
 The \c break builtin is used to halt a currently running loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
 
 \subsection break-example Example
-The following code searches all .c files for smurfs, and halts at the first occurance.
+The following code searches all .c files for smurfs, and halts at the first occurrence.
 <p>
 <tt>for i in *.c;
 <br>&nbsp;&nbsp;&nbsp;&nbsp;if grep smurf $i;

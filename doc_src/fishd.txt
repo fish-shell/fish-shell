@@ -7,15 +7,15 @@
 \subsection fishd-description Description
 
 The \c fishd daemon is used to load, save and distribute universal
-variable information. fish automtically connects to fishd via a socket
+variable information. fish automatically connects to fishd via a socket
 on startup. If no instance of fishd is running, fish spawns a new
 fishd instance. fishd will create a socket in /tmp, and wait for
-incoming connections from universal variable clents, such as fish,
+incoming connections from universal variable clients, such as fish,
 When no clients are connected, fishd will automatically shut down.
 
 \subsection fishd-commands Commands
 
-Fishd works by sending and recieving sommands. Each command is ended
+Fishd works by sending and receiving commands. Each command is ended
 with a newline. These are the commands supported by fishd:
 
 <pre>set KEY:VALUE
@@ -38,14 +38,14 @@ Erase the variable with the specified name.
 barrier_reply
 </pre>
 
-A \c barrier command will result in a barrier_reply beeing added to
+A \c barrier command will result in a barrier_reply being added to
 the end of the senders queue of unsent messages. These commands are
 used to synchronize clients, since once the reply for a barrier
 message returns, the sender can know that any updates available at the
-time the original barrier request was sent have been recieved.
+time the original barrier request was sent have been received.
 
 \subsection fishd-files Files
 
-~/.fishd.HOSTNAME permenent storage location for universal variale
+~/.fishd.HOSTNAME permanent storage location for universal variable
 data. The data is stored as a set of \c set and \c set_export commands
 such as would be parsed by fishd.

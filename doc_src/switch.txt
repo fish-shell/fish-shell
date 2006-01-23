@@ -12,7 +12,7 @@ wildcarded values.
 
 \subsection switch-example Example
 
-If the variable \$animal contins the name of an animal, the
+If the variable \$animal contains the name of an animal, the
 following code would attempt to classify it:
 
 <p>
@@ -22,7 +22,7 @@ switch $animal
         echo evil
     case wolf dog human moose dolphin whale
         echo mammal
-    case duck goose albatros
+    case duck goose albatross
         echo bird
     case shark trout stingray
         echo fish
@@ -32,6 +32,6 @@ end
 <p>
 
 If the above code was run with \$animal set to \c whale, the output
-would be \c mammal.  
+would be \c mammal.
 
 </p>

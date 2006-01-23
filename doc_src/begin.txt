@@ -7,10 +7,10 @@
 \subsection begin-description Description
 
 The \c begin builtin is used to create a new block of code. The block
-is unconditionally erxecuted. Begin is equivalent to <tt>if
+is unconditionally executed. Begin is equivalent to <tt>if
 true</tt>. The begin command is used to group any number of commands
 into a block. The reason for this is usually either to introduce a new
-variable scope or to redirect the input ot output of this set of
+variable scope or to redirect the input to output of this set of
 commands as a group.
 
 \subsection begin-example Example

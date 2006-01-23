@@ -1,5 +1,5 @@
 
-\section trap trap - perform an action when the shell recives a signal
+\section trap trap - perform an action when the shell receives a signal
 
 \subsection trap-synopsis Synopsis
 <tt>trap [OPTIONS] [[ARG] SIGSPEC ... ]</tt>
@@ -8,10 +8,10 @@
 
 Trap is a shellscript wrapper around the fish event delivery
 framework. IT is defined for backwards compatibility reasons. For
-other uses, it is recomended to define a <a
+other uses, it is recommended to define a <a
 href='index.html#event'>event handler</a>.
 
-- ARG is the command to be executed on signal delivary
+- ARG is the command to be executed on signal delivery
 - SIGSPEC is the name of the signal to trap
 - \c -h or \c --help Display help and exit
 - \c -l or \c --list-signals print a list of signal names

@@ -136,7 +136,7 @@ const wchar_t *function_get_desc( const wchar_t *argv )
 	if( data == 0 )
 		return 0;
 	
-	return data->desc?data->desc:data->cmd;
+	return data->desc;
 }
 
 void function_set_desc( const wchar_t *name, const wchar_t *desc )

@@ -1216,6 +1216,17 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	free( apropos_cmd );
 }
 
+static const wchar_t *complete_function_desc( const wchar_t *fn )
+{
+	const wchar_t *res = function_get_desc( fn );
+
+	if( !res )
+		res = function_get_definition( fn );
+
+	return res;
+}
+
+
 /**
    Complete the specified command name. Search for executables in the
    path, executables defined using an absolute path, functions,
@@ -1295,7 +1306,7 @@ static void complete_cmd( const wchar_t *cmd,
 
 		al_init( &possible_comp );
 		function_get_names( &possible_comp, cmd[0] == L'_' );
-		copy_strings_with_prefix( comp, cmd, COMPLETE_FUNCTION_DESC, &function_get_desc, &possible_comp );
+		copy_strings_with_prefix( comp, cmd, COMPLETE_FUNCTION_DESC, &complete_function_desc, &possible_comp );
 		al_truncate( &possible_comp, 0 );
 
 		builtin_get_names( &possible_comp );

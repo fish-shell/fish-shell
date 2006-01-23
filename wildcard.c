@@ -293,7 +293,7 @@ void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 		sb_append2( sb, desc, L", ", (void *)0 );
 		if( sz < 0 )
 		{
-			sb_append( sb, _(L"unknown") );
+			sb_append( sb, L"unknown" );
 		}
 		else if( sz < 1 )
 		{

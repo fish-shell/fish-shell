@@ -28,12 +28,14 @@
 # hallucinations.
 #
 
-# Compiler flags
+# Programs
 CC := @CC@
+INSTALL:=@INSTALL@
+
+# Compiler flags
 CFLAGS := @CFLAGS@ @INCLUDEDIR@ -Wall -std=gnu99 -fno-strict-aliasing
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS:= -l@CURSESLIB@ @LIBS@ @LDFLAGS@ @LIBDIR@
-INSTALL:=@INSTALL@
 
 # Installation directories
 prefix = @prefix@
@@ -248,12 +250,12 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Create a template translation object
-messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish
+messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish seq
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ -kcomplete_desc *.c *.h -o messages.pot; \
-		if ! xgettext -j -k_ -LShell init/*.in init/*.fish init/completions/*.fish -o messages.pot; then \
+		if ! xgettext -j -k_ -LShell init/*.in init/*.fish init/completions/*.fish seq -o messages.pot; then \
 			echo "Your xgettext version is too old to build the messages.pot file"\
-			rm messages.pot
+			rm messages.pot\
 			false;\
 		fi; \
 	fi
@@ -293,6 +295,7 @@ messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish
 builtin_help.c: $(BUILTIN_DOC_HDR) doc_src/count.doxygen gen_hdr2 gen_hdr.sh builtin_help.hdr $(CMD_DOC_HDR)
 	cd doc_src; doxygen; cd ..; 
 	cp builtin_help.hdr builtin_help.c; 
+	chmod 755 gen_hdr.sh
 	for i in $(BUILTIN_DOC_HDR) doc_src/count.doxygen ; do \
 		echo '    hash_put( &tbl, L"'`basename $$i .doxygen`'",' >>$@; \
 		./gen_hdr.sh $$i >>$@; \
@@ -314,6 +317,7 @@ builtin_help.c: $(BUILTIN_DOC_HDR) doc_src/count.doxygen gen_hdr2 gen_hdr.sh bui
 	echo "void print_help()" >>$@
 	echo "{" >>$@
 	echo '    printf( "%s",' >>$@
+	chmod 755 gen_hdr.sh
 	./gen_hdr.sh $*.doxygen >>$@
 	echo ");" >>$@
 	echo "}" >>$@

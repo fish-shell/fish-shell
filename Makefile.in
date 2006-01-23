@@ -85,6 +85,7 @@ FISH_TESTS_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE)	\
 
 # All objects that the system needs to build fishd
 FISHD_OBJS := fishd.o env_universal_common.o common.o util.o wutil.o	\
+	doc_src/fishd.o
 
 # All objects needed to build mimedb
 MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o	\
@@ -171,7 +172,8 @@ PROGRAMS:=fish set_color @XSEL@ @SEQ_FALLBACK@ mimedb count fish_pager fishd
 MANUALS:=doc_src/fish.1 @XSEL_MAN_PATH@			\
 	doc_src/builtin_doc/man/man1/mimedb.1		\
 	doc_src/builtin_doc/man/man1/set_color.1	\
-	doc_src/builtin_doc/man/man1/count.1
+	doc_src/builtin_doc/man/man1/count.1 \
+	doc_src/builtin_doc/man/man1/fishd.1
 
 #All translation message catalogs
 TRANSLATIONS_SRC := $(wildcard po/*.po)
@@ -366,7 +368,7 @@ uninstall: uninstall-translations
 	rm -f $(DESTDIR)$(sysconfdir)$(fishinputfile)
 	rm -r $(DESTDIR)$(sysconfdir)$(fishdir)
 	rm -r $(DESTDIR)$(docdir)
-	for i in fish.1* @XSEL_MAN@ mimedb.1* set_color.1* count.1*; do \
+	for i in fish.1* @XSEL_MAN@ mimedb.1* fishd.1* set_color.1* count.1*; do \
 		rm $(DESTDIR)$(mandir)/man1/$$i; \
 	done;
 
@@ -393,7 +395,7 @@ fish: $(FISH_OBJS)
 fish_pager: $(FISH_PAGER_OBJS)
 	$(CC) $(FISH_PAGER_OBJS) $(LDFLAGS) -o $@
 
-fishd: $(FISHD_OBJS)
+fishd: $(FISHD_OBJS) 
 	$(CC) $(FISHD_OBJS) $(LDFLAGS) -o $@
 
 fish_tests: $(FISH_TESTS_OBJS)

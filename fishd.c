@@ -7,6 +7,9 @@ instances. When no clients are running, fishd will automatically shut
 down and save.
 
 */
+
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -18,6 +21,10 @@ down and save.
 #include <sys/un.h>
 #include <pwd.h>
 #include <fcntl.h>
+
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #include <errno.h>
 #include <locale.h>
@@ -74,6 +81,11 @@ static int sock;
    Set to one when fishd should save and exit
 */
 static int quit=0;
+
+/**
+   Dynamically generated function, made from the documentation in doc_src.
+*/
+void print_help();
 
 /**
    Constructs the fish socket filename
@@ -396,11 +408,9 @@ static void save()
 */
 static void init()
 {
-	program_name=L"fishd";
 
 	sock = get_socket();
 	daemonize();	
-	wsetlocale( LC_ALL, L"" );	
 	env_universal_common_init( &broadcast );
 	
 	load();	
@@ -419,8 +429,68 @@ int main( int argc, char ** argv )
 	
 	fd_set read_fd, write_fd;
 	
-	init();
+	program_name=L"fishd";
+	wsetlocale( LC_ALL, L"" );	
+
+	/*
+	  Parse options
+	*/
+	while( 1 )
+	{
+#ifdef HAVE_GETOPT_LONG
+		static struct option
+			long_options[] =
+			{
+				{
+					"help", no_argument, 0, 'h' 
+				}
+				,
+				{
+					"version", no_argument, 0, 'v' 
+				}
+				,
+				{ 
+					0, 0, 0, 0 
+				}
+			}
+		;
+		
+		int opt_index = 0;
+		
+		int opt = getopt_long( argc,
+							   argv, 
+							   "hv",
+							   long_options, 
+							   &opt_index );
+		
+#else	
+		int opt = getopt( argc,
+						  argv, 
+						  "hv" );
+#endif
+		if( opt == -1 )
+			break;
+		
+		switch( opt )
+		{
+			case 0:
+				break;				
+
+			case 'h':
+				print_help();
+				exit(0);				
+								
+			case 'v':
+				debug( 0, L"%ls, version %s\n", program_name, PACKAGE_VERSION );
+				exit( 0 );				
+				
+			case '?':
+				return 1;
+				
+		}		
+	}
 	
+	init();
 	while(1) 
 	{
 		connection_t *c;

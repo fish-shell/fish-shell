@@ -20,3 +20,8 @@ purple, cyan, white and normal.
 Calling <tt>set_color normal</tt> will set the terminal color to
 whatever is the default color of the terminal.
 
+Some terminals use the --bold escape sequence to switch to a brighter
+color set. On such terminals, <code>set_color white</code> will result
+in a grey font color, while <code>set_color --bold white</code> will
+result in a white font color.
+

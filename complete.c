@@ -1234,7 +1234,7 @@ static const wchar_t *complete_function_desc( const wchar_t *fn )
 
    \param cmd the command string to find completions for
 
-   B\param comp the list to add all completions to
+   \param comp the list to add all completions to
 */
 static void complete_cmd( const wchar_t *cmd,
 						  array_list_t *comp )

@@ -657,15 +657,15 @@ static void functions_def( wchar_t *name )
 	
 	array_list_t ev;
 	event_t search;
-	
+
 	int i;
-	
+
 	search.function_name = name;
 	search.type = EVENT_ANY;
-	
+
 	al_init( &ev );
 	event_get( &search, &ev );
-	
+
 	sb_append2( sb_out,
 				L"function ",
 				name,
@@ -674,11 +674,11 @@ static void functions_def( wchar_t *name )
 	if( desc && wcslen(desc) )
 	{
 		wchar_t *esc_desc = escape( desc, 1 );
-		
+	
 		sb_append2( sb_out, L" --description ", esc_desc, (void *)0 );
 		free( esc_desc );
 	}
-	
+
 	for( i=0; i<al_get_count( &ev); i++ )
 	{
 		event_t *next = (event_t *)al_get( &ev, i );
@@ -689,7 +689,7 @@ static void functions_def( wchar_t *name )
 				sb_printf( sb_out, L" --on-signal %ls", sig2wcs( next->param1.signal ) );
 				break;
 			}
-			
+
 			case EVENT_VARIABLE:
 			{
 				sb_printf( sb_out, L" --on-variable %ls", next->param1.variable );
@@ -714,17 +714,17 @@ static void functions_def( wchar_t *name )
 			}
 
 		}
-				
+	
 	}
-	
+
 	al_destroy( &ev );
-	
+
 	sb_append2( sb_out,
 				L"\n\t",
 				def,
 				L"\nend\n\n",
 				(void *)0);
-	
+
 }
 
 
@@ -744,7 +744,7 @@ static int builtin_functions( wchar_t **argv )
 	int list=0;
 	int show_hidden=0;	
 	int res = 0;
-		
+
 	woptind=0;
 
 	const static struct woption
@@ -775,7 +775,7 @@ static int builtin_functions( wchar_t **argv )
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
 								argv, 
 								L"ed:na", 
@@ -783,7 +783,7 @@ static int builtin_functions( wchar_t **argv )
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -820,10 +820,8 @@ static int builtin_functions( wchar_t **argv )
 				return 1;
 				
 		}
-		
-	}		
 
-
+	}
 
 	/*
 	  Erase, desc and list are mutually exclusive
@@ -833,13 +831,12 @@ static int builtin_functions( wchar_t **argv )
 		sb_printf( sb_err,
 				   _( L"%ls: Invalid combination of options\n" ),
 				   argv[0] );
-		
+
 
 		builtin_print_help( argv[0], sb_err );
-		
+
 		return 1;
 	}
-	
 
 	if( erase )
 	{

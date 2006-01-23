@@ -112,7 +112,6 @@ int event_get( event_t *criterion, array_list_t *out );
    dispatched.
 
    \param event the specific event whose handlers should fire
-   \param arguments the argument string to send to the event handler function
 */
 void event_fire( event_t *event );
 

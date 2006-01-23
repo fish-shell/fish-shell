@@ -80,7 +80,7 @@ license. Read the source code of the library for more information.
 */
 #define BUFF_SIZE 1024
 
-/*
+/**
   Program name
 */
 #define MIMEDB "mimedb"
@@ -99,7 +99,14 @@ enum
 }
 ;
 
-static regex_t *start_re=0, *stop_re=0;
+/**
+   Regular expression variable used to find start tag of description
+*/
+static regex_t *start_re=0;
+/**
+   Regular expression variable used to find end tag of description
+*/
+static regex_t *stop_re=0;
 
 /**
    Error flag. Non-zero if something bad happened.
@@ -121,6 +128,9 @@ static int launch_len=0;
 static int launch_pos=0;
 
 #if HAVE_GETTEXT
+/**
+   gettext alias
+*/
 #define _(string) gettext(string)
 #else
 #define _(string) (string)
@@ -477,7 +487,7 @@ static char *get_description( const char *mimetype )
 			start_re = stop_re = 0;
 
 			return 0;
-		}		
+		}
 	}
 	
 	fn_part = my_malloc( strlen(MIME_DIR) + strlen( mimetype) + strlen(MIME_SUFFIX) + 1 );
@@ -1118,7 +1128,9 @@ static void clear_entry( const void *key, const void *val )
 	free( l );
 }
 
-
+/**
+   Do locale specific init
+*/
 static void locale_init()
 {
 	setlocale( LC_ALL, "" );

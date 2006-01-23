@@ -88,8 +88,6 @@ int error_max=1;
 
 wchar_t ellipsis_char;
 
-static int c1=0, c2=0, c3=0, c4=0, c5;
-
 char *profile=0;
 
 wchar_t *program_name;
@@ -107,6 +105,9 @@ static struct winsize termsize;
 */
 static int block_count=0;
 
+/**
+   String buffer used by the wsetlocale function
+*/
 static string_buffer_t *setlocale_buff=0;
 
 
@@ -117,8 +118,6 @@ void common_destroy()
 		sb_destroy( setlocale_buff );
 		free( setlocale_buff );
 	}
-	
-	debug( 3, L"Calls: wcsdupcat %d, wcsdupcat2 %d, wcsndup %d, str2wcs %d, wcs2str %d", c1, c2, c3, c4, c5 );
 }
 
 
@@ -256,8 +255,6 @@ void sort_list( array_list_t *comp )
 
 wchar_t *str2wcs( const char *in )
 {
-	c4++;
-	
 	wchar_t *res;
 	
 	res = malloc( sizeof(wchar_t)*(strlen(in)+1) );
@@ -299,9 +296,8 @@ void error_reset()
 
 char *wcs2str( const wchar_t *in )
 {
-	c5++;
-
 	char *res = malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
+
 	if( res == 0 )
 	{
 		die_mem();
@@ -311,7 +307,7 @@ char *wcs2str( const wchar_t *in )
 			  in,
 			  MAX_UTF8_BYTES*wcslen(in)+1 );
 
-//	res = realloc( res, strlen( res )+1 );
+	res = realloc( res, strlen( res )+1 );
 
 	return res;
 }
@@ -340,15 +336,11 @@ char **wcsv2strv( const wchar_t **in )
 
 wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b )
 {
-	c1++;
-
 	return wcsdupcat2( a, b, 0 );
 }
 
 wchar_t *wcsdupcat2( const wchar_t *a, ... )
 {
-	c2++;
-	
 	int len=wcslen(a);
 	int pos;
 	va_list va, va2;

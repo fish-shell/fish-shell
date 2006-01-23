@@ -183,15 +183,17 @@ TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 all: $(PROGRAMS) user_doc
 	@echo fish has now been built. 
 	@echo Use \'make install\' to install fish.
+.PHONY: all
 
 debug:
 	make fish CFLAGS="-O0 -Wno-unused -Werror -g @INCLUDEDIR@ -Wall -std=gnu99 -fno-strict-aliasing"
+.PHONY: debug
 
 # User documentation, describing the features of the fish shell.
 user_doc: doc.h Doxyfile.user user_doc.head.html
 	doxygen Doxyfile.user
 
-#Source code documentation. Also includes user documentation.
+# Source code documentation. Also includes user documentation.
 doc: *.h *.c doc.h Doxyfile builtin_help.c
 	doxygen; 
 
@@ -205,6 +207,7 @@ doc/refman.pdf: doc
 
 test: $(PROGRAMS) fish_tests
 	./fish_tests; cd tests; ../fish <test.fish;
+.PHONY: test
 
 xsel-0.9.6:
 	tar -xf xsel-0.9.6.tar
@@ -325,6 +328,10 @@ builtin_help.c: $(BUILTIN_DOC_HDR) doc_src/count.doxygen gen_hdr2 gen_hdr.sh bui
 	echo "}" >>$@
 #man -- doc_src/builtin_doc/man/man1/`basename $@ .c`.1 | cat -s | ./gen_hdr2 >>$@
 
+#
+# The build rules for installing/uninstalling
+#
+
 install: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir) 
 	for i in $(PROGRAMS); do\
@@ -358,6 +365,7 @@ install: all install-translations
 	@echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.
 	@echo
 	@echo Have fun!
+.PHONY: install
 
 uninstall: uninstall-translations
 	for i in $(PROGRAMS); do \
@@ -371,6 +379,7 @@ uninstall: uninstall-translations
 	for i in fish.1* @XSEL_MAN@ mimedb.1* fishd.1* set_color.1* count.1*; do \
 		rm $(DESTDIR)$(mandir)/man1/$$i; \
 	done;
+.PHONY: uninstall
 
 install-translations: $(TRANSLATIONS)
 	if test $(HAVE_GETTEXT) = 1; then \
@@ -380,6 +389,7 @@ install-translations: $(TRANSLATIONS)
 			echo $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
 		done; \
 	fi
+.PHONY: install-translations
 
 uninstall-translations: 
 	if test $(HAVE_GETTEXT) = 1; then \
@@ -387,8 +397,12 @@ uninstall-translations:
 			rm -f $(DESTDIR)$(datadir)/locale/`basename $$i .po`/LC_MESSAGES/fish.mo; \
 		done; \
 	fi
+.PHONY: uninstall-translations
 
-# The fish shell
+#
+# The build rules for all the commands
+#
+
 fish: $(FISH_OBJS) 
 	$(CC) $(FISH_OBJS) $(LDFLAGS) -o $@
 
@@ -412,11 +426,16 @@ set_color: set_color.o doc_src/set_color.c
 tokenizer_test: tokenizer.c tokenizer.h util.o wutil.o common.o
 	$(CC) ${CFLAGS} tokenizer.c util.o wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
 
+# Neat little program to show output from terminal
 key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o util.o wutil.o
 	$(CC) key_reader.o input_common.o common.o env_universal.o env_universal_common.o util.o wutil.o $(LDFLAGS) -o $@
 
+#
+# Update dependencies
+#
 depend:
 	makedepend -fMakefile.in -Y *.c 
+.PHONY: depend
 
 # Copy all the source files into a new directory and use tar to create
 # an archive from it. Simplest way I could think of to make an archive
@@ -455,11 +474,17 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2
 	rpmbuild -ba --clean /usr/src/redhat/SPECS/fish.spec
 	mv /usr/src/redhat/RPMS/*/fish*@PACKAGE_VERSION@*.rpm .
 	mv /usr/src/redhat/SRPMS/fish*@PACKAGE_VERSION@*.src.rpm .
+.PHONY: rpm
+
+#
+# Cleanup targets
+#
 
 distclean: clean
 	rm -f fish.spec doc_src/fish.1 doc_src/Doxyfile 
 	rm -f init/fish init/fish_interactive.fish init/fish_complete.fish
 	rm -f config.status config.log config.h Makefile
+.PHONY: distclean
 
 clean:
 	rm -f *.o doc.h doc_src/*.doxygen doc_src/*.c builtin_help.c 
@@ -475,6 +500,7 @@ clean:
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -rf xsel-0.9.6/
 	rm -f $(TRANSLATIONS)
+.PHONY: clean
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

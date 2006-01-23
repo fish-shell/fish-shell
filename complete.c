@@ -209,6 +209,9 @@ static hash_table_t *condition_cache=0;
 */
 static hash_table_t *loaded_completions=0;
 
+/**
+   String buffer used by complete_get_desc
+*/
 static string_buffer_t *get_desc_buff=0;
 
 

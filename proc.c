@@ -651,6 +651,9 @@ int job_reap( int interactive )
 
 #ifdef HAVE__PROC_SELF_STAT
 
+/**
+   Maximum length of a /proc/[PID]/stat filename
+*/
 #define FN_SIZE 256
 
 /**
@@ -659,7 +662,6 @@ int job_reap( int interactive )
 unsigned long proc_get_jiffies( process_t *p )
 {
 	wchar_t fn[FN_SIZE];
-	//char stat_line[1024];
 
 	char state;
 	int pid, ppid, pgrp, 

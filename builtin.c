@@ -646,6 +646,10 @@ static int builtin_exec( wchar_t **argv )
 	return 1;
 }
 
+/**
+   Print the definitions of the given function to sb_out
+   stringbuffer. Used by the functions builtin.
+*/
 static void functions_def( wchar_t *name )
 {
 	const wchar_t *desc = function_get_desc( name );
@@ -2260,6 +2264,9 @@ static int cpu_use( job_t *j )
 }
 #endif
 
+/**
+   Print information about the specified job
+*/
 static void builtin_jobs_print( job_t *j, int mode, int header )
 {
 	process_t *p;

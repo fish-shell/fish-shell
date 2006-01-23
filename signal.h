@@ -38,7 +38,7 @@ void signal_set_handlers();
 */
 void signal_handle( int sig, int do_handle );
 
-/*
+/**
   Block all signals
 */
 void signal_block();

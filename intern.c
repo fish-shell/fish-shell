@@ -15,8 +15,15 @@
 #include "common.h"
 #include "intern.h"
 
-hash_table_t *intern_table=0;
-hash_table_t *intern_static_table=0;
+/**
+   Table of interned strings
+*/
+static hash_table_t *intern_table=0;
+
+/**
+   Table of static interned strings
+*/
+static hash_table_t *intern_static_table=0;
 
 /**
    Load static strings that are universally common. Currently only loads the empty string.

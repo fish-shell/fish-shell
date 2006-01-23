@@ -11,6 +11,9 @@
 #include "util.h"
 #include "parser.h"
 
+/**
+   event_block_t represents a block on events of the specified type
+*/
 typedef struct event_block
 {
 	/**
@@ -193,10 +196,10 @@ wchar_t *get_filename( const wchar_t *cmd );
   Evaluate the expressions contained in cmd.
 
   \param cmd the string to evaluate
-  \param out buffer to insert output to. May be null.
-  \param the type of block to push onto the scope stack
+  \param io io redirections to perform on all started jobs
   \param block_type The type of block to push on the block stack
-  \return 0 on success.
+
+  \return 0 on success, 1 otherwise
 */
 int eval( const wchar_t *cmd, io_data_t *io, int block_type );
 
@@ -235,10 +238,10 @@ int parser_is_subcommand( const wchar_t *cmd );
    command scope, like 'for', 'end' or 'command' or 'exec'. These
    functions may not be overloaded, so their names are reserved.
 
-   \param cmd The command name to test
+   \param word The command name to test
    \return 1 of the command parameter is a command, 0 otherwise
 */
-int parser_is_reserved( wchar_t *word);
+int parser_is_reserved( wchar_t *word );
 
 /**
    Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.

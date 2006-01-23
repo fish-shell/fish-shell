@@ -54,6 +54,9 @@
 */
 #define FD_STR_MAX_LEN 16
 
+/**
+   Descriptions of all tokenizer errors
+*/
 static const wchar_t *tok_desc[] =
 {
 	N_(L"Tokenizer not yet initialized"),

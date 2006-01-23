@@ -311,8 +311,10 @@ typedef struct
 	wchar_t *cmd;
 } profile_element_t;
 
-
-int block_count( block_t *b )
+/**
+   Return the current number of block nestings
+*/
+static int block_count( block_t *b )
 {
 		
 	if( b==0)
@@ -449,8 +451,12 @@ const wchar_t *parser_get_block_desc( int block )
 
 }
 
-
-int parser_skip_arguments( const wchar_t *cmd )
+/**
+   Check if the specified bcommand is one of the builtins that cannot
+   have arguments, any followin argument is interpreted as a new
+   command
+*/
+static int parser_skip_arguments( const wchar_t *cmd )
 {
 		
 	return contains_str( cmd,
@@ -458,7 +464,6 @@ int parser_skip_arguments( const wchar_t *cmd )
 						 L"begin",
 						 (void *)0 );
 }
-
 
 int parser_is_subcommand( const wchar_t *cmd )
 {
@@ -506,7 +511,10 @@ int parser_is_reserved( wchar_t *word)
 					  (void *)0 );
 }
 
-int parser_is_pipe_forbidden( wchar_t *word )
+/**
+   Returns 1 if the specified command is a builtin that may not be used in a pipeline
+*/
+static int parser_is_pipe_forbidden( wchar_t *word )
 {
 	return contains_str( word,
 						 L"exec",
@@ -817,9 +825,12 @@ void parser_init()
 	al_init( &forbidden_function );
 }
 
-void print_profile( array_list_t *p, 
-					int pos, 
-					FILE *out )
+/**
+   Print profiling information to the specified stream
+*/
+static void print_profile( array_list_t *p, 
+						   int pos, 
+						   FILE *out )
 {
 	profile_element_t *me, *prev;
 	int i;		

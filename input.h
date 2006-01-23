@@ -77,8 +77,8 @@ wint_t input_readch();
 /**
    Push a character or a readline function onto the stack of unread
    characters that input_readch will return before actually reading from fd
-   0.
-*/
+   0.   
+ */
 void input_unreadch( wint_t ch );
 
 
@@ -88,7 +88,7 @@ void input_unreadch( wint_t ch );
    \param mode the name of the mapping mode to add this mapping to
    \param s the sequence
    \param d a description of the sequence
-   \param c am input function that will be run whenever the key sequence occurs
+   \param cmd an input function that will be run whenever the key sequence occurs
 */
 void add_mapping( const wchar_t *mode, const wchar_t *s, const wchar_t * d, const wchar_t *cmd );
 

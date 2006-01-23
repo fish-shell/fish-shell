@@ -1,4 +1,4 @@
-/** \file builtin_commandline.c Functions defining the complete builtin
+/** \file builtin_complete.c Functions defining the complete builtin
 
 Functions used for implementing the complete builtin. 
 

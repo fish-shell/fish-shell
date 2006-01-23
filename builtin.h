@@ -47,8 +47,14 @@ enum
 */
 #define BUILTIN_ERR_UNKNOWN	_( L"%ls: Unknown option '%ls'\n" )
 
+/**
+   Error message for invalid character in variable name
+*/
 #define BUILTIN_ERR_VARCHAR _( L"%ls: Invalid character '%lc' in variable name. Only alphanumerical characters and underscores are valid in a variable name.\n" )
 
+/**
+   Error message for invalid (empty) variable name
+*/
 #define BUILTIN_ERR_VARNAME_ZERO _( L"%ls: Variable name can not be the empty string\n" )
 
 /**

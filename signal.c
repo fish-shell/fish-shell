@@ -355,6 +355,9 @@ const wchar_t *sig_description( int sig )
 	return L"Unknown";
 }
 
+/**
+   Standard signal handler
+*/
 static void default_handler(int signal, siginfo_t *info, void *context)
 {
 	event_t e;

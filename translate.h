@@ -21,7 +21,9 @@ const wchar_t *wgettext( const wchar_t *in );
 
 /**
   Initialize (or reinitialize) the translation library
-  \param lang The two-character language name, such as 'de' or 'en'
 */
 void translate_init();
+/**
+   Free memory used by the translation library
+*/
 void translate_destroy();

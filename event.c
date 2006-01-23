@@ -155,7 +155,9 @@ static event_t *event_copy( event_t *event, int copy_arguments )
 	return e;
 }
 
-
+/**
+   Test if specified event is blocked
+*/
 static int event_is_blocked( event_t *e )
 {
 	block_t *block;

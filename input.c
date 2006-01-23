@@ -196,7 +196,18 @@ const wchar_t code_arr[] =
 */
 static hash_table_t all_mappings;
 
-static array_list_t *current_mode_mappings, *current_application_mappings, *global_mappings;
+/**
+   Mappings for the current input mode
+*/
+static array_list_t *current_mode_mappings; 
+/**
+   Mappings for the current application
+*/
+static array_list_t *current_application_mappings;
+/**
+   Global mappings
+*/
+static array_list_t *global_mappings;
 
 /**
    Number of nested conditional statement levels that are not evaluated

@@ -277,7 +277,15 @@ static struct termios saved_modes;
 */
 static pid_t original_pid;
 
+/**
+   This variable is set to true by the signal handler when ^C is pressed
+*/
 static int interupted=0;
+
+/**
+   Original terminal mode when fish was started
+*/
+static struct termios old_modes;
 
 /*
   Prototypes for a bunch of functions defined later on.
@@ -287,8 +295,10 @@ static void reader_save_status();
 static void reader_check_status();
 static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int pos, array_list_t *error );
 
-static struct termios old_modes;
 
+/**
+   Give up control of terminal
+*/
 static void term_donate()
 {
 	tcgetattr(0,&old_modes);        /* get the current terminal modes */
@@ -313,6 +323,9 @@ static void term_donate()
 	
 }
 
+/**
+   Grab control of terminal
+*/
 static void term_steal()
 {	
 
@@ -1728,6 +1741,9 @@ void reader_current_subshell_extent( wchar_t **a, wchar_t **b )
 		*b = end;
 }
 
+/**
+   Get the beginning and dend of the job or process definition under the cursor
+*/
 static void reader_current_job_or_process_extent( wchar_t **a, 
 												  wchar_t **b, 
 												  int process )
@@ -1997,6 +2013,9 @@ static int contains( const wchar_t *needle,
 	
 }
 
+/**
+   Reset the data structures associated with the token search
+*/
 static void reset_token_history()
 {
 	wchar_t *begin, *end;

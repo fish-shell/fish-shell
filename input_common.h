@@ -8,7 +8,7 @@ Header file for the low level input library
 
 #include <wchar.h>
 
-/*
+/**
   Use unencoded private-use keycodes for internal characters
 */
 #define INPUT_COMMON_RESERVED 0xe000
@@ -24,8 +24,14 @@ enum
 }
 	;
 
+/**
+   Init the library
+*/
 void input_common_init( int (*ih)() );
 
+/**
+   Free memory used by the library
+*/
 void input_common_destroy();
 
 /**
@@ -39,6 +45,11 @@ void input_common_destroy();
 */
 wchar_t input_common_readch( int timed );
 
+/**
+   Push a character or a readline function onto the stack of unread
+   characters that input_readch will return before actually reading from fd
+   0.
+*/
 void input_common_unreadch( wint_t ch );
 
 #endif

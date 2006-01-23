@@ -211,6 +211,9 @@ extern job_t *first_job;
 */
 extern int proc_had_barrier;
 
+/**
+   Pid of last process to be started in the background
+*/
 extern pid_t proc_last_bg_pid;
 
 /**
@@ -307,7 +310,7 @@ void proc_sanity_check();
 */
 void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status );
 
-/*
+/**
   Initializations
 */
 void proc_init();

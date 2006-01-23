@@ -385,7 +385,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
    IO redirections and other file descriptor actions are performed.
 
    \param j the job to set up the IO for
-   \param exit_on_error whether to call exit() on errors
+   \param p the child process to set up
 
    \return 1 on sucess, 0 on failiure
 */

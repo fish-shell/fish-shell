@@ -2,7 +2,7 @@
 \section fishd fishd - Universal variable daemon
 
 \subsection fishd-synopsis Synopsis
- <tt>fishd [SECTION]</tt>
+ <tt>fishd [(-h|--help|-v|--version)]</tt>
 
 \subsection fishd-description Description
 
@@ -13,39 +13,13 @@ fishd instance. fishd will create a socket in /tmp, and wait for
 incoming connections from universal variable clients, such as fish,
 When no clients are connected, fishd will automatically shut down.
 
-\subsection fishd-commands Commands
-
-Fishd works by sending and receiving commands. Each command is ended
-with a newline. These are the commands supported by fishd:
-
-<pre>set KEY:VALUE
-set_export KEY:VALUE
-</pre>
-
-These commands update the value of a variable. The only difference
-between the two is that <tt>set_export</tt>-variables should be
-exported to children of the process using them. The variable value may
-be escaped using C-style backslash escapes. In fact, this is required
-for newline characters, which would otherwise be interpreted as end of
-command.
-
-<pre>erase KEY
-</pre>
-
-Erase the variable with the specified name.
-
-<pre>barrier
-barrier_reply
-</pre>
-
-A \c barrier command will result in a barrier_reply being added to
-the end of the senders queue of unsent messages. These commands are
-used to synchronize clients, since once the reply for a barrier
-message returns, the sender can know that any updates available at the
-time the original barrier request was sent have been received.
+- <tt>-h</tt> or <tt>--help</tt> displays this help message and then exits
+- <tt>-v</tt> or <tt>--version</tt> displays the current fish version and then exits
 
 \subsection fishd-files Files
 
 ~/.fishd.HOSTNAME permanent storage location for universal variable
 data. The data is stored as a set of \c set and \c set_export commands
-such as would be parsed by fishd.
+such as would be parsed by fishd.  If an instance of fishd is running
+(which is generally the case), manual modifications to ~/.fishd.HOSTNAME
+will be lost.

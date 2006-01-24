@@ -444,7 +444,7 @@ depend:
 #
 # Uses install instead of mkdir so build won't fail if the directory 
 # exists
-fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(INIT_DIR_FILES) $(TEST_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog $(TRANSLATIONS_SRC)
+fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(INIT_DIR_FILES) $(TEST_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
 	rm -rf fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/doc_src

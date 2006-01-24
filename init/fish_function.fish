@@ -210,10 +210,11 @@ end
 
 function prompt_pwd -d "Print the current working directory, shortend to fit the prompt"
 	set -l wd (pwd)
-	printf "%s" $wd|sed -e 's-/\([^/]\)\([^/]*\)-/\1-g'
+	set -l res (echo $wd|sed -e 's-/\([^/]\)\([^/]*\)-/\1-g')
 	if test $wd != '~'
-		printf "%s\n" $wd|sed -e 's-.*/[^/]\([^/]*$\)-\1-'
+		set res $res(echo $wd|sed -e 's-.*/[^/]\([^/]*$\)-\1-')
 	end
+	echo $res
 end
 
 #

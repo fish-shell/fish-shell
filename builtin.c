@@ -277,13 +277,9 @@ static int builtin_block( wchar_t **argv )
 	;
 
 	int scope=UNSET;
-	
 	int erase = 0;
-	
 	int argc=builtin_count_args( argv );
-	
-	int type = (1<<EVENT_ANY);
-	
+	int type = (1<<EVENT_ANY);	
 
 	woptind=0;
 
@@ -645,7 +641,7 @@ static int builtin_exec( wchar_t **argv )
 }
 
 /**
-   Print the definitions of the given function to sb_out
+   Print the definition of the given function to sb_out
    stringbuffer. Used by the functions builtin.
 */
 static void functions_def( wchar_t *name )
@@ -910,7 +906,7 @@ static int builtin_functions( wchar_t **argv )
 							(void *)0 );			
 			}
 		}
-		
+
 		free( names_arr );
 		al_destroy( &names );			
 		return 0;
@@ -932,16 +928,14 @@ static int builtin_functions( wchar_t **argv )
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
 				functions_def( names_arr[i] );
-				
 			}
 			free( names_arr );
 			al_destroy( &names );			
 			break;
 		}
-		
+
 		default:
 		{
-			
 			for( i=woptind; i<argc; i++ )
 			{
 				if( !function_exists( argv[i] ) )
@@ -951,13 +945,11 @@ static int builtin_functions( wchar_t **argv )
 					functions_def( argv[i] );
 				}
 			}
-			
-			
+
 			break;
 		}
 	}
 	return res;
-	
 	
 }
 
@@ -965,9 +957,7 @@ static int builtin_functions( wchar_t **argv )
    Test whether the specified string is a valid name for a keybinding
 */
 static int wcsbindingname( wchar_t *str )
-{
-	
-	
+{	
 	while( *str )
 	{
 		if( (!iswalnum(*str)) && (*str != L'-' ) )
@@ -1062,10 +1052,9 @@ static int builtin_function( wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-				
+
 				res = 1;
-				break;
-				
+				break;			
 				
 			case 'd':		
 				desc=woptarg;				

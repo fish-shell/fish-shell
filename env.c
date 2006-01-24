@@ -305,7 +305,7 @@ static void handle_locale()
 			++_nl_msg_cat_cntr;
 		}
 #elif HAVE_DCGETTEXT
-		dcgettext("fish","",LC_MESSAGES);
+		dcgettext("fish","Changing language to English",LC_MESSAGES);
 #endif		
 
 		if( is_interactive )

@@ -276,8 +276,6 @@ static int builtin_block( wchar_t **argv )
 	}
 	;
 
-	
-	
 	int scope=UNSET;
 	
 	int erase = 0;

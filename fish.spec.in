@@ -53,6 +53,7 @@ fi
 %_mandir/man1/set_color.1*
 %_mandir/man1/count.1*
 %_mandir/man1/fishd.1*
+%_mandir/man1/fish_pager.1*
 %attr(0755,root,root) %_bindir/fish
 %attr(0755,root,root) %_bindir/fishd
 %attr(0755,root,root) %_bindir/fish_pager

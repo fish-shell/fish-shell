@@ -155,6 +155,11 @@ AC_CHECK_LIB(intl, gettext)
 # Check for various header files
 AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h])
 
+AC_CHECK_HEADER([regex.h],
+				[AC_DEFINE([HAVE_REGEX_H])],
+				[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
+
+
 # Check for various functions, and insert results into config.h
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )

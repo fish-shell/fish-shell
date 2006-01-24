@@ -232,6 +232,15 @@ function __fish_print_packages
 		# Remove package version information from output and pipe into cache file
 		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/\t'$package'/' &
 	end
+
+	# This completes the package name from the portage tree. 
+	# True for installing new packages. Function for printing 
+	# installed on the system packages is in completions/emerge.fish
+	if which emerge >/dev/null ^/dev/null
+		emerge -s \^(commandline -tc) |grep "^*" |cut -d\  -f3 |cut -d/ -f2
+		return
+	end
+
 end
 
 

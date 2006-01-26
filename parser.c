@@ -1026,12 +1026,12 @@ static void parser_stack_trace( block_t *b, string_buffer_t *buff)
 		const wchar_t *file = function_get_definition_file( b->param1.function_name );
 		if( file )
 			sb_printf( buff, 
-					   _(L"\tcalled on line %d of file '%ls'\n"),
+					   _(L"\tcalled on line %d of file '%ls',\n"),
 					   b->param3.function_lineno, 
 					   file );
 		else
 			sb_printf( buff, 
-					   _(L"\tcalled on standard input\n") );
+					   _(L"\tcalled on standard input,\n") );
 		
 		if( al_get_count( &b->param2.function_vars ) )
 		{
@@ -1042,7 +1042,7 @@ static void parser_stack_trace( block_t *b, string_buffer_t *buff)
 			{
 				sb_append2( &tmp, i?L" ":L"", (wchar_t *)al_get( &b->param2.function_vars, i ), (void *)0 );
 			}
-			sb_printf( buff, _(L"\twith parameters '%ls',\n"), (wchar_t *)tmp.buff );
+			sb_printf( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
 			
 			sb_destroy( &tmp );
 		}				

@@ -715,7 +715,7 @@ int wprintf( const wchar_t *filter, ... )
 wint_t fgetwc(FILE *stream)
 {
 	wchar_t res=0;
-	mbstate_t state=0;
+	mbstate_t state;
 	memset (&state, '\0', sizeof (state));
 
 	while(1)
@@ -763,10 +763,10 @@ wint_t getwc(FILE *stream)
 wint_t fputwc(wchar_t wc, FILE *stream)
 {
 	int res;
-	char *s[MB_CUR_MAX+1];
+	char s[MB_CUR_MAX+1];
 	memset( s, 0, MB_CUR_MAX+1 );
 	wctomb( s, wc );
-	res = fputs( sm stream );
+	res = fputs( s, stream );
 	return res==EOF?WEOF:wc;
 }
 
@@ -782,7 +782,7 @@ wint_t putwc(wchar_t wc, FILE *stream)
 /*
   Used by fallback wcstok. Borrowed from glibc
 */
-static size_t wcsspn (const wchar_t *wcs,
+static size_t fish_wcsspn (const wchar_t *wcs,
 					  const wchar_t *accept )
 {
 	register const wchar_t *p;
@@ -806,7 +806,7 @@ static size_t wcsspn (const wchar_t *wcs,
 /*
   Used by fallback wcstok. Borrowed from glibc
 */
-static wchar_t *wcspbrk (const wchar_t *wcs, const wchar_t *accept)
+static wchar_t *fish_wcspbrk (const wchar_t *wcs, const wchar_t *accept)
 {
 	while (*wcs != L'\0')
 		if (wcschr (accept, *wcs) == NULL)
@@ -819,7 +819,7 @@ static wchar_t *wcspbrk (const wchar_t *wcs, const wchar_t *accept)
 /*
   Fallback wcstok implementation. Borrowed from glibc.
 */
-wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr)
+wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **save_ptr)
 {
 	wchar_t *result;
 
@@ -835,7 +835,7 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr)
     }
 
 	/* Scan leading delimiters.  */
-	wcs += wcsspn (wcs, delim);
+	wcs += fish_wcsspn (wcs, delim);
 	
 	if (*wcs == L'\0')
     {
@@ -846,7 +846,7 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr)
 	/* Find the end of the token.  */
 	result = wcs;
 	
-	wcs = wcspbrk (result, delim);
+	wcs = fish_wcspbrk (result, delim);
 	
 	if (wcs == NULL)
 	{

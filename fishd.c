@@ -74,6 +74,15 @@ time the original barrier request was sent have been received.
 #endif
 
 /**
+   Fallback if MSG_DONTWAIT isn't defined. That's actually prerry bad,
+   and may lead to strange fishd behaviour, but at least it should
+   work most of the time.
+*/
+#ifndef MSG_DONTWAIT
+#define MSG_DONTWAIT 0
+#endif
+
+/**
    Small greeting to show that fishd is running
 */
 #define GREETING "#Fish universal variable daemon\n"

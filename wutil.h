@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include <stdarg.h>
 
 /**
    Call this function on startup to create internal wutil

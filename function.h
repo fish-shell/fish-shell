@@ -69,4 +69,8 @@ int function_exists( const wchar_t *name );
 void function_get_names( array_list_t *list, 
 						 int get_hidden );
 
+const wchar_t *function_get_definition_file( const wchar_t *name );
+
+int function_get_definition_offset( const wchar_t *name );
+
 #endif

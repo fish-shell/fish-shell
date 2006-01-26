@@ -385,7 +385,7 @@ void reader_handle_int( int sig )
 
 wchar_t *reader_current_filename()
 {
-	return (wchar_t *)al_peek( &current_filename );
+	return al_get_count( &current_filename )?(wchar_t *)al_peek( &current_filename ):0;
 }
 
 

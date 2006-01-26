@@ -63,7 +63,7 @@ typedef struct block
 		wchar_t *for_variable; /**< Name of the variable to loop over */
 		int if_state; /**< The state of the if block */
 		wchar_t *switch_value; /**< The value to test in a switch block */
-		wchar_t *function_name; /**< The name of the function to define */
+		wchar_t *function_name; /**< The name of the function to define or the function called*/
 	} param1;
 
 	/**
@@ -74,6 +74,7 @@ typedef struct block
 		array_list_t for_vars; /**< List of values for a for block */	
 		int switch_taken; /**< Whether a switch match has already been found */
 		wchar_t *function_description; /**< The description of the function to define */
+		array_list_t function_vars;		/**< List of arguments for a function call */
 	} param2;
 
 	/**
@@ -82,6 +83,7 @@ typedef struct block
 	union
 	{
 		int function_is_binding; /**< Whether a function is a keybinding */
+		int function_lineno; /**< Function invocation line number */		 
 	} param3;
 
 	/**
@@ -250,6 +252,11 @@ int parser_is_reserved( wchar_t *word );
    init.fish (line 127): ls|grep pancake
 */
 wchar_t *parser_current_line();
+
+/**
+   Returns the current line number
+*/
+int parser_get_lineno();
 
 /**
    Returns the current position in the latest string of the tokenizer.

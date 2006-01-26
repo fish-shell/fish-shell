@@ -806,7 +806,7 @@ void exec( job_t *j )
 				wchar_t **arg;
 				int i;
 				string_buffer_t sb;
-			
+				
 				const wchar_t * def = function_get_definition( p->argv[0] );
 //			fwprintf( stderr, L"run function %ls\n", argv[0] );
 				if( def == 0 )
@@ -814,14 +814,24 @@ void exec( job_t *j )
 					debug( 0, _( L"Unknown function '%ls'" ), p->argv[0] );
 					break;
 				}
+				
+				int lineno = parser_get_lineno();
+				
 				parser_push_block( FUNCTION_CALL );
 				
+				al_init( &current_block->param2.function_vars );
+				current_block->param1.function_name = wcsdup( p->argv[0] );
+				current_block->param3.function_lineno = lineno;
+												
 				if( builtin_count_args(p->argv)>1 )
 				{
 					sb_init( &sb );
 				
 					for( i=1, arg=p->argv+1; *arg; i++, arg++ )
 					{
+						al_push( &current_block->param2.function_vars, 
+								 escape(*arg, 1) );
+
 						if( i != 1 )
 							sb_append( &sb, ARRAY_SEP_STR );
 						sb_append( &sb, *arg );
@@ -830,6 +840,11 @@ void exec( job_t *j )
 					env_set( L"argv", (wchar_t *)sb.buff, ENV_LOCAL );
 					sb_destroy( &sb );
 				}
+				else
+				{
+					env_set( L"argv", 0, ENV_LOCAL );
+				}
+				
 				parser_forbid_function( p->argv[0] );
 
 				if( p->next )

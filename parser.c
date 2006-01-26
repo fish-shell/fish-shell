@@ -398,6 +398,15 @@ void parser_pop_block()
 			break;
 		}
 
+		case FUNCTION_CALL:
+		{
+			free( current_block->param1.function_name );
+			al_foreach( &current_block->param2.function_vars, 
+						(void (*)(const void *))&free );
+			al_destroy( &current_block->param2.function_vars );
+			break;
+		}
+
 	}
 
 	for( eb=current_block->first_event_block; eb; eb=eb_next )
@@ -899,6 +908,14 @@ void parser_destroy()
 	}
 	
 	al_destroy( &forbidden_function );
+
+	if( lineinfo )
+	{
+		sb_destroy( lineinfo );
+		free(lineinfo );
+		lineinfo = 0;
+	}
+	
 }
 
 /**
@@ -995,17 +1012,139 @@ int eval_args( const wchar_t *line, array_list_t *args )
 	return 1;
 }
 
+static void parser_stack_trace( block_t *b, string_buffer_t *buff)
+{
+	if( !b )
+		return;
+	
+	if( b->type == FUNCTION_CALL )
+	{
+		int i;
+		
+		sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
+
+		const wchar_t *file = function_get_definition_file( b->param1.function_name );
+		if( file )
+			sb_printf( buff, 
+					   _(L"\tcalled on line %d of file '%ls'\n"),
+					   b->param3.function_lineno, 
+					   file );
+		else
+			sb_printf( buff, 
+					   _(L"\tcalled on standard input\n") );
+		
+		if( al_get_count( &b->param2.function_vars ) )
+		{
+			string_buffer_t tmp;
+			sb_init( &tmp );
+			
+			for( i=0; i<al_get_count( &b->param2.function_vars ); i++ )
+			{
+				sb_append2( &tmp, i?L" ":L"", (wchar_t *)al_get( &b->param2.function_vars, i ), (void *)0 );
+			}
+			sb_printf( buff, _(L"\twith parameters '%ls',\n"), (wchar_t *)tmp.buff );
+			
+			sb_destroy( &tmp );
+		}				
+		sb_printf( buff, 
+				   L"\n" );
+	}	
+	parser_stack_trace( b->outer, buff );	
+}
+
+static const wchar_t *is_function()
+{
+	block_t *b = current_block;
+	while( 1 )
+	{
+		if( !b )
+		{
+			return 0;
+		}
+		if( b->type == FUNCTION_CALL )
+		{
+			return b->param1.function_name;
+		}
+		b=b->outer;
+	}
+}
+
+
+int parser_get_lineno()
+{
+	int i;
+	const wchar_t *whole_str = tok_string( current_tokenizer );
+	const wchar_t *function_name;
+	
+	int lineno = 1;
+
+	for( i=0; i<current_tokenizer_pos; i++ )
+	{
+		if( whole_str[i] == L'\n' )
+		{
+			lineno++;
+		}
+	}
+	
+	if( (function_name = is_function()) )
+	{
+		lineno += function_get_definition_offset( function_name );
+	}	
+	
+	return lineno;
+}
+
+static const wchar_t *parser_current_filename()
+{
+	block_t *b = current_block;
+	
+	while( 1 )
+	{
+		if( !b )
+		{
+			return reader_current_filename();	
+		}
+		if( b->type == FUNCTION_CALL )
+		{
+			return function_get_definition_file(b->param1.function_name );
+		}
+		b=b->outer;
+	}	
+}
+
+static int printed_width( const wchar_t *str, int len )
+{
+	int res=0;
+	int i;
+	for( i=0; i<len; i++ )
+	{
+		if( str[i] == L'\t' )
+		{
+			res=(res+8)&~7;
+		}
+		else
+		{
+			res += wcwidth( str[i] );
+		}
+	}
+	return res;
+}
+
+
 wchar_t *parser_current_line()
 {
 	int lineno=1;
 
-	wchar_t *file = reader_current_filename();
+	const wchar_t *file = parser_current_filename();
 	wchar_t *whole_str = tok_string( current_tokenizer );
 	wchar_t *line = whole_str;
 	wchar_t *line_end;
 	int i;
 	int offset;
-	int current_line_pos=current_tokenizer_pos;
+	int current_line_width;
+	const wchar_t *function_name=0;
+	int current_line_start=0;
+	
 	
 	if( !line )
 		return L"";
@@ -1015,7 +1154,7 @@ wchar_t *parser_current_line()
 		lineinfo = malloc( sizeof(string_buffer_t) );
 		sb_init( lineinfo );
 	}
-	sb_clear( lineinfo );
+	sb_clear( lineinfo );	
 	
 	/*
 	  Calculate line number, line offset, etc.
@@ -1025,10 +1164,17 @@ wchar_t *parser_current_line()
 		if( whole_str[i] == L'\n' )
 		{
 			lineno++;
-			current_line_pos = current_tokenizer_pos-i-1;
+			current_line_start=i+1;
 			line = &whole_str[i+1];
 		}
 	}
+
+	current_line_width=printed_width(whole_str+current_line_start, current_tokenizer_pos-current_line_start );
+
+	if( (function_name = is_function()) )
+	{
+		lineno += function_get_definition_offset( function_name );
+	}	
 
 	/*
 	  Copy current line from whole string
@@ -1039,34 +1185,55 @@ wchar_t *parser_current_line()
 
 	line = wcsndup( line, line_end-line );
 
-	debug( 4, L"Current pos %d, line pos %d, file_length %d, is_interactive %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str), is_interactive);
-
+	/**
+	   If we are not going to print a stack trace, at least print the line number and filename
+	*/
 	if( !is_interactive )
 	{
-		sb_printf( lineinfo,
-				   _(L"%ls (line %d): "),
-				   file,
-				   lineno );
-		offset = my_wcswidth( (wchar_t *)lineinfo->buff );
+		int prev_width = my_wcswidth( (wchar_t *)lineinfo->buff );
+		if( file )
+			sb_printf( lineinfo,
+					   _(L"%ls (line %d): "),
+					   file,
+					   lineno );
+		else
+			sb_printf( lineinfo,
+					   L"%ls: ",
+					   _(L"Standard input"),
+					   lineno );
+		offset = my_wcswidth( (wchar_t *)lineinfo->buff ) - prev_width;
 	}
 	else
 	{
 		offset=0;
 	}
 
+//	debug( 1, L"Current pos %d, line pos %d, file_length %d, is_interactive %d, offset %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str), is_interactive, offset);
 	/* 
 	   Skip printing character position if we are in interactive mode
-	   and the error was on the first character of the line
+	   and the error was on the first character of the line.
 	*/
-	if( !is_interactive || (current_line_pos!=0) )
+	if( !is_interactive || is_function() || (current_line_width!=0) )
 	{
-		sb_printf( lineinfo,
-				   L"%ls\n%*c^\n",
-				   line,
-				   offset+current_line_pos,
-				   L' ' );
+		// Workaround since it seems impossible to print 0 copies of a character using printf
+		if( offset+current_line_width )
+		{
+			sb_printf( lineinfo,
+					   L"%ls\n%*lc^\n",
+					   line,
+					   offset+current_line_width,
+					   L' ' );
+		}
+		else
+		{
+			sb_printf( lineinfo,					   
+					   L"%ls\n^\n",
+					   line );
+		}
 	}
+	
 	free( line );
+	parser_stack_trace( current_block, lineinfo );
 
 	return (wchar_t *)lineinfo->buff;
 }

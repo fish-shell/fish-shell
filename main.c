@@ -184,7 +184,7 @@ int main( int argc, char **argv )
 				
 			case 'v':
 				fwprintf( stderr, 
-						  L"%s, version %s\n", 
+						  _(L"%s, version %s\n"), 
 						  PACKAGE_NAME,
 						  PACKAGE_VERSION );
 				exit( 0 );				
@@ -222,8 +222,6 @@ int main( int argc, char **argv )
 	complete_init();
 	reader_init();
 	
-	reader_push_current_filename( L"(internal)" );
-	
 	if( read_init() )
 	{
 		if( cmd != 0 )
@@ -237,9 +235,7 @@ int main( int argc, char **argv )
 		{
 			if( my_optind == argc )
 			{
-				reader_push_current_filename( L"(stdin)" );
 				res = reader_read( 0 );				
-				reader_pop_current_filename();
 			}
 			else
 			{
@@ -278,8 +274,8 @@ int main( int argc, char **argv )
 				if( res )
 				{
 					debug( 1, 
-						   L"Error while reading file %ls\n", 
-						   reader_current_filename() );
+						   _(L"Error while reading file %ls\n"), 
+						   reader_current_filename()?reader_current_filename(): _(L"Standard input") );
 				}				
 				free(reader_pop_current_filename());
 			}
@@ -287,9 +283,7 @@ int main( int argc, char **argv )
 	}
 
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
-	
-	reader_pop_current_filename();	
-	
+		
 	proc_destroy();
 	env_destroy();
 	builtin_destroy();

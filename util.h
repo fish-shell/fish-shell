@@ -7,6 +7,7 @@
 
 #include <wchar.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 /**
    Data structure for an automatically resizing dynamically allocated queue,

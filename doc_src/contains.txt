@@ -1,0 +1,24 @@
+
+\section contains contains - Test if a word is present in a list
+
+\subsection contains-synopsis Synopsis
+<code>contains [OPTIONS] KEY [VALUES...]</code>
+
+\subsection contains-description Description
+
+- \c -h or \c --help display this message
+
+Test if the set VALUES contains the string KEY. Return status is 0 if
+yes, 1 otherwise
+
+
+\subsection contains-example Example
+<pre>
+for i in ~/bin /usr/local/bin
+	if not contains \$i \$PATH
+		set PATH \$PATH i
+	end
+end
+</pre>
+
+The above code tests if ~/bin and  /usr/local/bin are in the path and if they are not, they are added.

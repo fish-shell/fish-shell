@@ -1,39 +1,15 @@
 #
-# This file defines various functions for fish
+# This file defines various shellscript functions. Most of them are
+# meant to be used directly by the user, but some of them, typically
+# the ones whose name start with '__fish_', are only meant to be used
+# internally by fish.
 #
-
-
-function _contains_help -d "Helper function for contains"
-
-	set bullet \*
-	if expr "$LANG" : ".*UTF" >/dev/null
-		set bullet \u2022
-	end
-
-	echo \tcontains - Test if a word is present in a list\n
-	__bold Synopsis
-	echo \n\n\tcontains \[OPTION] KEY [VALUES...]\n
-	__bold Description
-	echo \n\n\t$bullet (__bold -h) or (__bold --help) display help and exit\n
-	echo \tTest if the set VALUES contains the string KEY.
-	echo \tReturn status is 0 if yes, 1 otherwise.\n
-	__bold Example
-	echo \n
-	echo \tfor i in \~/bin /usr/local/bin
-	echo \t\tif not contains \$i \$PATH
-	echo \t\t\tset PATH \$PATH i
-	echo \t\tend
-	echo \tend
-	echo
-	echo \tThe above code tests if "~/bin" and  /usr/local/bin are in the path
-	echo \tand if they are not, they are added.
-end
 
 function contains -d "Test if a key is contained in a set of values"
 	while set -q argv
 		switch $argv[1]
 			case '-h' '--h' '--he' '--hel' '--help'
-				_contains_help
+				help contains
 				return
 
 			case '--'
@@ -667,36 +643,6 @@ function trap -d 'Perform an action when the shell recives a signal'
 
 end
 
-function __fish_type_help -d "Help for the type shellscript function"
-
-set bullet \*
-if expr "$LANG" : ".*UTF" >/dev/null
-		set bullet \u2022
-end
-
-echo \ttype - Indicate how a name would be interpreted if used as a \n\tcommand name
-echo
-echo (__bold Synopsis)
-echo
-echo \t(set_color $fish_color_command)type(set_color normal) [OPTIONS] name [name ...]
-echo
-echo (__bold Description)
-echo
-echo \tWith no options, indicate how each name would be interpreted if \n\tused as a command name.  
-echo
-echo \t$bullet (__bold -h) or (__bold --help) print this message
-echo \t$bullet (__bold -a) or (__bold --all) print all possible definitions of the specified \n\t\ \ names
-echo \t$bullet (__bold -f) or (__bold --no-functions) supresses function and builtin lookup
-echo \t$bullet (__bold -t) or (__bold --type) print a string which is one of alias, keyword, \n\t\ \ function, builtin, or file if name is an alias, shell \n\t\ \ reserved word, function, builtin, or disk file, respectively
-echo \t$bullet (__bold -p) or (__bold --path) either return the name of the disk file that would \n\t\ \ be executed if name were specified as a command name, or nothing \n\t\ \ if (__bold "type -t name") would  not  return  file
-echo \t$bullet (__bold -P) or (__bold --force-path) either return the name of the disk file that \n\t\ \ would be executed if name were specified as a command name, \n\t\ \ or nothing no file with the spacified name could be found \n\t\ \ in the PATH
-echo
-echo (__bold Example)
-echo
-echo \t\'(set_color $fish_color_command)type(set_color normal) fg\' outputs the string \'fg is a shell builtin\'.
-echo
-
-end
 
 function type -d "Print the type of a command"
 
@@ -741,7 +687,7 @@ function type -d "Print the type of a command"
 				set selection files
 
 			case -h --help
-				 __fish_type_help
+				 help type
 				 return 0
 
 			case --

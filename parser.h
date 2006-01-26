@@ -92,6 +92,7 @@ typedef struct block
 	union
 	{
 		array_list_t *function_events;
+		wchar_t *function_filename;
 	} param4;
 	
 	/**
@@ -337,5 +338,13 @@ void parser_destroy();
    \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
 */
 int parser_is_help( wchar_t *s, int min_match );
+
+/**
+   Returns the file currently evaluated by the parser. This can be
+   different than reader_current_filename, e.g. if we are evaulating a
+   function defined in a different file than the one curently read.
+*/
+const wchar_t *parser_current_filename();
+
 
 #endif

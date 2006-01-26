@@ -401,6 +401,7 @@ void parser_pop_block()
 		case FUNCTION_CALL:
 		{
 			free( current_block->param1.function_name );
+			free( current_block->param4.function_filename );
 			al_foreach( &current_block->param2.function_vars, 
 						(void (*)(const void *))&free );
 			al_destroy( &current_block->param2.function_vars );
@@ -1023,7 +1024,8 @@ static void parser_stack_trace( block_t *b, string_buffer_t *buff)
 		
 		sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
 
-		const wchar_t *file = function_get_definition_file( b->param1.function_name );
+		const wchar_t *file = b->param4.function_filename;
+
 		if( file )
 			sb_printf( buff, 
 					   _(L"\tcalled on line %d of file '%ls',\n"),
@@ -1094,7 +1096,7 @@ int parser_get_lineno()
 	return lineno;
 }
 
-static const wchar_t *parser_current_filename()
+const wchar_t *parser_current_filename()
 {
 	block_t *b = current_block;
 	
@@ -1188,7 +1190,7 @@ wchar_t *parser_current_line()
 	/**
 	   If we are not going to print a stack trace, at least print the line number and filename
 	*/
-	if( !is_interactive )
+	if( !is_interactive || is_function() )
 	{
 		int prev_width = my_wcswidth( (wchar_t *)lineinfo->buff );
 		if( file )

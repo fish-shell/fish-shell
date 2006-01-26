@@ -815,13 +815,18 @@ void exec( job_t *j )
 					break;
 				}
 				
+				/*
+				  These two lines must be called before the new block is pushed
+				*/
 				int lineno = parser_get_lineno();
+				wchar_t *file = parser_current_filename()?wcsdup(parser_current_filename()):0;
 				
 				parser_push_block( FUNCTION_CALL );
 				
 				al_init( &current_block->param2.function_vars );
 				current_block->param1.function_name = wcsdup( p->argv[0] );
 				current_block->param3.function_lineno = lineno;
+				current_block->param4.function_filename = file;
 												
 				if( builtin_count_args(p->argv)>1 )
 				{

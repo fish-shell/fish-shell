@@ -48,7 +48,7 @@ complete -c mplayer -o idx -d (_ "Build index if unavailable")
 complete -c mplayer -o loadidx -d (_ "Load index from file") -r
 complete -c mplayer -o ni -d (_ "Force non-interleaved AVI parser")
 complete -c mplayer -o saveidx -d (_ "Rebuild index and save to file") -r
-complete -c mplayer -o ss -d (_ "Seek to give time position") -x
+complete -c mplayer -o ss -d (_ "Seek to given time position") -x
 complete -c mplayer -o tv -d (_ "TV capture mode")
 complete -c mplayer -o slang -d (_ "Subtitle language") -x -a $mplayer_lang
 complete -c mplayer -o sub -d (_ "Subtitle file") -r

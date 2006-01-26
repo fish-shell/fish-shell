@@ -124,7 +124,7 @@ complete $rpm_mode -s i -l install -d (_ 'Install new package')
 complete $rpm_mode -s U -l upgrade -d (_ 'Upgrade existing package')
 complete $rpm_mode -s F -l freshen -d (_ 'Upgrade package if already installed')
 complete $rpm_mode -s q -l query -d (_ 'Query installed packages')
-complete $rpm_mode -s V -l verify -d (_ 'Verify package integrety')
+complete $rpm_mode -s V -l verify -d (_ 'Verify package integrity')
 complete $rpm_mode -s e -l erase -d (_ 'Erase package')
 set -e rpm_mode
 

@@ -10,7 +10,7 @@ complete -c pine -s o -d (_ "Open folder read-only")
 complete -c pine -s p -d (_ "Set configuration file") -r
 complete -c pine -s P -d (_ "Set global configuration file")
 complete -c pine -s r -d (_ "Restricted mode")
-complete -c pine -s z -d (_ "Enable suspention support")
+complete -c pine -s z -d (_ "Enable suspension support")
 complete -c pine -o conf -d (_ "Produce a sample global configuration file")
 complete -c pine -o pinerc -d (_ "Produce sample configuration file") -r
 complete -c pine -o sort -d (_ "Set mail sort order") -a "

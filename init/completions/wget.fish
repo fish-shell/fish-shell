@@ -82,7 +82,7 @@ complete -c wget -l no-http-keep-alive -d (_ "Turn off keep-alive for http downl
 complete -c wget -l no-remove-listing -d (_ "Don't remove the temporary .listing files generated")
 complete -c wget -l no-glob -d (_ "Turn off FTP globbing")
 complete -c wget -l passive-ftp -d (_ "Use the passive FTP retrieval scheme")
-complete -c wget -l retr-symlinks -d (_ "Traverse symlinks and retrive pointed-to files")
+complete -c wget -l retr-symlinks -d (_ "Traverse symlinks and retrieve pointed-to files")
 
 # Recursive options
 

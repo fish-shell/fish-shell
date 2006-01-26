@@ -653,7 +653,7 @@ void env_set( const wchar_t *key,
 	/*
 	  Zero element arrays are internaly not coded as null but as this placeholder string
 	*/
-	if( !val && ( var_mode & ENV_USER ) )
+	if( !val )
 	{
 		val = ENV_NULL;
 	}

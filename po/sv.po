@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-25 00:02+0100\n"
+"POT-Creation-Date: 2006-01-26 16:15+0100\n"
 "PO-Revision-Date: 2006-01-13 00:56+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -555,12 +555,12 @@ msgstr "Kunde inte skicka jobb %d (”%ls”) till förgrunden"
 msgid "Unknown function '%ls'"
 msgstr "Okänd funktion ”%ls”"
 
-#: exec.c:922
+#: exec.c:937
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Okänd dirigering av standard in av typ %d"
 
-#: exec.c:1250
+#: exec.c:1265
 #, c-format
 msgid ""
 "Sent null command to subshell. This is a fish bug. If it can be reproduced, "
@@ -569,7 +569,7 @@ msgstr ""
 "Skickade noll-kommando till subskal. Detta är en fish-bug. Om den kan "
 "reproduceras, skicka en rapport till %s."
 
-#: exec.c:1298
+#: exec.c:1313
 #, c-format
 msgid "Subshell '%ls' returned illegal string, discarded one entry"
 msgstr ""
@@ -726,6 +726,20 @@ msgstr ""
 "Ett fel inträffade under inläsning av utdata från kodblock på "
 "filidentifierare %d"
 
+#: main.c:187 mimedb.c:1266 set_color.c:212
+#, c-format
+msgid "%s, version %s\n"
+msgstr "%s, version %s\n"
+
+#: main.c:277
+#, c-format
+msgid "Error while reading file %ls\n"
+msgstr "Ett fel uppstod medan filen ”%ls” lästes\n"
+
+#: main.c:278 parser.c:1202
+msgid "Standard input"
+msgstr "Standard in"
+
 #: mimedb.c:153 mimedb.c:167 mimedb.c:1086
 #, c-format
 msgid "%s: Out of memory\n"
@@ -752,6 +766,7 @@ msgid "%s: No description for type %s\n"
 msgstr "%s: Beskrivning saknas för typ %s\n"
 
 #: mimedb.c:652
+#, c-format
 msgid "%s: Could not parse launcher string '%s'\n"
 msgstr "%s: Kunde inte tolka körsträng ”%ls”\n"
 
@@ -764,11 +779,6 @@ msgstr "%s: Standardkörsträng ”%s” anger inte hur programmet ska startas\n
 #, c-format
 msgid "%s: Unsupported switch '%c' in launch string '%s'\n"
 msgstr "%s: Flaggan ”%c” i körsträng ”%s” stöds inte\n"
-
-#: mimedb.c:1266 set_color.c:212
-#, c-format
-msgid "%s, version %s\n"
-msgstr "%s, version %s\n"
 
 #: mimedb.c:1277
 #, c-format
@@ -963,40 +973,59 @@ msgstr "”begin” ovillkorligen exekverat block"
 msgid "unknown/invalid block"
 msgstr "okänt/ogiltigt block"
 
-#: parser.c:887
+#: parser.c:896
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Kunde inte skriva profileringsinformation till filen ”%s”"
 
-#: parser.c:893
+#: parser.c:902
 msgid "Time\tSum\tCommand\n"
 msgstr "Tid\tSumma\tKommando\n"
 
-#: parser.c:1047
+#: parser.c:1024
+#, c-format
+msgid "in function '%ls',\n"
+msgstr "i funktion ”%ls”,\n"
+
+#: parser.c:1029
+#, c-format
+msgid "\tcalled on line %d of file '%ls',\n"
+msgstr "\tanropad på rad %d i fil ”%ls”,\n"
+
+#: parser.c:1034
+msgid "\tcalled on standard input,\n"
+msgstr "\tanropad från standard in,\n"
+
+#: parser.c:1045
+#, c-format
+msgid "\twith parameter list '%ls'\n"
+msgstr "\tmed parameterlista '%ls'\n"
+
+#: parser.c:1196
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (rad %d): "
 
-#: parser.c:1234
+#: parser.c:1401
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Kunde inte expandera strängen ”%ls”"
 
-#: parser.c:1336
+#: parser.c:1503
 msgid "Invalid IO redirection"
 msgstr "Ogiltig IO omdirigering"
 
-#: parser.c:1379
+#: parser.c:1546
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "IO dirigering till någonting som inte är en filidentifierare"
 
-#: parser.c:1792
+#: parser.c:1959
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Okänt kommando ”%ls”"
 
-#: parser.c:2227
+#: parser.c:2394
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 
@@ -1443,59 +1472,60 @@ msgstr "Ett fel inträffade under skapandet av ett rör"
 #: init/completions/configure.fish:1 init/completions/cut.fish:8
 #: init/completions/date.fish:9 init/completions/df.fish:33
 #: init/completions/diff.fish:26 init/completions/du.fish:18
-#: init/completions/echo.fish:4 init/completions/fish.fish:2
-#: init/completions/functions.fish:4 init/completions/fusermount.fish:12
-#: init/completions/gpg.fish:108 init/completions/gprof.fish:31
-#: init/completions/grep.fish:23 init/completions/gunzip.fish:8
-#: init/completions/gzip.fish:10 init/completions/id.fish:6
-#: init/completions/less.fish:1 init/completions/ls.fish:88
-#: init/completions/man.fish:56 init/completions/mimedb.fish:8
-#: init/completions/mount.fish:47 init/completions/mplayer.fish:30
-#: init/completions/mplayer.fish:35 init/completions/mplayer.fish:82
-#: init/completions/mv.fish:10 init/completions/nice.fish:3
-#: init/completions/pine.fish:3 init/completions/ps.fish:35
-#: init/completions/python.fish:4 init/completions/read.fish:1
-#: init/completions/rmdir.fish:6 init/completions/rm.fish:8
-#: init/completions/rpm.fish:4 init/completions/ruby.fish:8
-#: init/completions/sed.fish:27 init/completions/set.fish:71
-#: init/completions/sort.fish:19 init/completions/sshfs.fish:32
-#: init/completions/sudo.fish:9 init/completions/su.fish:10
-#: init/completions/test.fish:2 init/completions/tex.fish:2
-#: init/completions/time.fish:9 init/completions/top.fish:5
-#: init/completions/touch.fish:10 init/completions/trap.fish:4
-#: init/completions/type.fish:2 init/completions/ulimit.fish:13
-#: init/completions/umount.fish:16 init/completions/uname.fish:10
-#: init/completions/uniq.fish:13 init/completions/valgrind.fish:24
-#: init/completions/vared.fish:2 init/completions/wc.fish:6
-#: init/completions/wget.fish:6 init/completions/who.fish:18
-#: init/completions/xprop.fish:2 init/completions/xsel.fish:16
-#: init/completions/yum.fish:49 init/completions/zcat.fish:7
-#: init/completions/zip.fish:31
+#: init/completions/echo.fish:4 init/completions/emerge.fish:30
+#: init/completions/fish.fish:2 init/completions/functions.fish:4
+#: init/completions/fusermount.fish:12 init/completions/gpg.fish:108
+#: init/completions/gprof.fish:31 init/completions/grep.fish:23
+#: init/completions/gunzip.fish:8 init/completions/gzip.fish:10
+#: init/completions/id.fish:6 init/completions/less.fish:1
+#: init/completions/ls.fish:88 init/completions/man.fish:56
+#: init/completions/mimedb.fish:8 init/completions/mount.fish:47
+#: init/completions/mplayer.fish:30 init/completions/mplayer.fish:35
+#: init/completions/mplayer.fish:82 init/completions/mv.fish:10
+#: init/completions/nice.fish:3 init/completions/pine.fish:3
+#: init/completions/ps.fish:35 init/completions/python.fish:4
+#: init/completions/read.fish:1 init/completions/rmdir.fish:6
+#: init/completions/rm.fish:8 init/completions/rpm.fish:4
+#: init/completions/ruby.fish:8 init/completions/sed.fish:27
+#: init/completions/set.fish:71 init/completions/sort.fish:19
+#: init/completions/sshfs.fish:32 init/completions/sudo.fish:9
+#: init/completions/su.fish:10 init/completions/test.fish:2
+#: init/completions/tex.fish:2 init/completions/time.fish:9
+#: init/completions/top.fish:5 init/completions/touch.fish:10
+#: init/completions/trap.fish:4 init/completions/type.fish:2
+#: init/completions/ulimit.fish:13 init/completions/umount.fish:16
+#: init/completions/uname.fish:10 init/completions/uniq.fish:13
+#: init/completions/valgrind.fish:24 init/completions/vared.fish:2
+#: init/completions/wc.fish:6 init/completions/wget.fish:6
+#: init/completions/who.fish:18 init/completions/xprop.fish:2
+#: init/completions/xsel.fish:16 init/completions/yum.fish:49
+#: init/completions/zcat.fish:7 init/completions/zip.fish:31
 msgid "Display help and exit"
 msgstr "Visa hjälp och avsluta"
 
 #: init/fish_complete.fish.in:203 init/fish_complete.fish:203
-#: init/completions/apt-get.fish:21
+#: init/completions/apt-get.fish:21 init/completions/emerge.fish:28
+#: init/completions/emerge.fish:29
 msgid "Package"
 msgstr "Paket"
 
-#: init/fish_complete.fish.in:292 init/fish_complete.fish:292
+#: init/fish_complete.fish.in:301 init/fish_complete.fish:292
 msgid "Start service"
 msgstr "Starta tjänst"
 
-#: init/fish_complete.fish.in:293 init/fish_complete.fish:293
+#: init/fish_complete.fish.in:302 init/fish_complete.fish:293
 msgid "Stop service"
 msgstr "Stanna tjänst"
 
-#: init/fish_complete.fish.in:294 init/fish_complete.fish:294
+#: init/fish_complete.fish.in:303 init/fish_complete.fish:294
 msgid "Print service status"
 msgstr "Visa status för tjänst"
 
-#: init/fish_complete.fish.in:295 init/fish_complete.fish:295
+#: init/fish_complete.fish.in:304 init/fish_complete.fish:295
 msgid "Stop and then start service"
 msgstr "Stanna och starta tjänst"
 
-#: init/fish_complete.fish.in:296 init/fish_complete.fish:296
+#: init/fish_complete.fish.in:305 init/fish_complete.fish:296
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
@@ -2102,7 +2132,7 @@ msgstr "Testa om apt har tagit emot ett underkommando"
 
 #: init/completions/apt-get.fish:12
 msgid "Test if apt command should have packages as potential completion"
-msgstr "Testa om aptkommando bore ha paket som potentiell komplettering"
+msgstr "Testa om aptkommando borde ha paket som potentiell komplettering"
 
 #: init/completions/apt-get.fish:24
 msgid "Update sources"
@@ -4194,6 +4224,261 @@ msgstr "Använd inte X-användargränssnittet"
 #: init/completions/emacs.fish:10
 msgid "Create window on the specified display"
 msgstr "Skapa fönster på angiven skärm"
+
+#: init/completions/emerge.fish:3
+msgid "Test if emerge command should have packages as potential completion"
+msgstr "Testa om emergekommando borde ha paket som potentiell komplettering"
+
+#: init/completions/emerge.fish:12
+msgid ""
+"Tests if emerge command should have package as potential completion for "
+"removal"
+msgstr ""
+"Testa om emergekommando borde ha paket som potentiell komplettering för "
+"borttagning"
+
+#: init/completions/emerge.fish:21
+msgid ""
+"Prints completions for installed packages on the system from /var/db/pkg"
+msgstr ""
+"Visa kompletteringar för installerade packet på systemet från /var/db/pkg"
+
+#: init/completions/emerge.fish:31
+msgid "Cleans the system by removing outdated packages"
+msgstr "Rensa systemet genom att ta bort inaktuella paket"
+
+#: init/completions/emerge.fish:32
+msgid ""
+"Cleans the system by removing packages that are not associated with "
+"explicitly merged packages"
+msgstr ""
+"Rensa systemet genom att ta bort paket som int är associerade med explicit "
+"installerade paket"
+
+#: init/completions/emerge.fish:33
+msgid ""
+"Displays important portage variables that will be exported to ebuild.sh when "
+"performing merges"
+msgstr ""
+"Visa viktiga portage-variabler som kommer esporteras till ebuild.sh vid "
+"installationer"
+
+#: init/completions/emerge.fish:34
+msgid ""
+"Causes portage to process all the metacache files as is normally done on the "
+"tail end of an rsync update using emerge --sync"
+msgstr ""
+"Får portage att behandla alla metacache-filer som vanligtvis görs vid slutet "
+"av en rsync-uppdatering vid användande av emerge --sync"
+
+#: init/completions/emerge.fish:35
+msgid ""
+"Removes all but the most recently installed version of a package from your "
+"system"
+msgstr ""
+"Tar bort alla utom den senast installerade versionen av ett paket från ditt "
+"system"
+
+#: init/completions/emerge.fish:36
+msgid ""
+"Causes portage to check and update the dependency cache of all ebuilds in "
+"the portage tree"
+msgstr ""
+"Får portage att kontrollera och uppdatera beroendecachen av alla abuilds i "
+"partageträdet"
+
+#: init/completions/emerge.fish:37
+msgid ""
+"Searches for matches of the supplied string in the current local portage tree"
+msgstr ""
+"Söker efter matchar till den angivna strängen i det nuvarande lokala "
+"portageträdet"
+
+#: init/completions/emerge.fish:38
+msgid "Removes all matching packages completely from your system"
+msgstr "Ta bort alla matchande paket helt från ditt system"
+
+#: init/completions/emerge.fish:39
+msgid ""
+"Before performing the merge, display what ebuilds and tbz2s will be "
+"installed, in the same format as when using --pretend"
+msgstr ""
+"Före installationen utförs, visa vilka ebuilds och tbz2:or som kommer "
+"installeras, i samma format som vid --pretend"
+
+#: init/completions/emerge.fish:40
+msgid ""
+"Tell emerge to build binary packages for all ebuilds processed in addition "
+"to actually merging the packages"
+msgstr ""
+"Bygg binära paket för alla ebuilds som behandlats förutom att installera "
+"paketen"
+
+#: init/completions/emerge.fish:41
+msgid "Creates a binary package, but does not merge it to the system"
+msgstr "Skapa ett binärt paket, men installera dem inte"
+
+#: init/completions/emerge.fish:42
+msgid ""
+"When pretending, also display the ChangeLog entries for packages that will "
+"be upgraded"
+msgstr ""
+"Vid låtsasinstallation, visa också ChangeLog-filen för paketet som kommer "
+"uppgraderas"
+
+#: init/completions/emerge.fish:43
+msgid "Display the pretend output in a tabular form"
+msgstr "Visa låtsasinstallationsutdata i tabellform"
+
+#: init/completions/emerge.fish:44
+msgid "Tell emerge to run the ebuild command in --debug mode"
+msgstr "Utför ebuild-kmmandot i ”--debug”-läge"
+
+#: init/completions/emerge.fish:45
+msgid ""
+"When used in conjunction with --update, this flag forces emerge to consider "
+"the entire dependency tree of packages, instead of checking only the "
+"immediate dependencies of the packages"
+msgstr ""
+"Vid användning med --update tvingar denna flagga emerge att betrakta hela "
+"beroendeträdet av paket, istället för att bara kontrollera omedelbara "
+"beroenden"
+
+#: init/completions/emerge.fish:46
+msgid "Virtually tweaks the tree of installed packages to contain nothing"
+msgstr "Ändrar virtuellt trädet av installerade paket till att vara tomt"
+
+#: init/completions/emerge.fish:47
+msgid ""
+"Instead of doing any package building, just perform fetches for all packages "
+"(main package as well as all dependencies)"
+msgstr ""
+"Istället för att bygga paket, utför bara hämtning för alla paket (huvudpaket "
+"och alla beroenden)"
+
+#: init/completions/emerge.fish:48
+msgid ""
+"Same as --fetchonly except that all package files, including those not "
+"required to build the package, will be processed"
+msgstr ""
+"Samma som --fetchonly utom att alla paketfiler, inklusive de som inte krävs "
+"för att bygga paketet, processas"
+
+#: init/completions/emerge.fish:49
+msgid ""
+"Using the server and location defined in PORTAGE_BINHOST, portage will "
+"download the information from each binary file there and it will use that "
+"information to help build the dependency list"
+msgstr ""
+"Portage laddar ner informationen från varje binär fil från servern och "
+"platsen angivna i PORTAGE_BINHOST, och använder den informationen vid "
+"konstruktionen av beroendeträdet"
+
+#: init/completions/emerge.fish:50
+msgid ""
+"This option is identical to -g, except it will not use ANY information from "
+"the local machine"
+msgstr ""
+"Samma sak som -g, utom at det kommer inte använda NÅGON information från den "
+"lokala maskinen"
+
+#: init/completions/emerge.fish:51
+msgid ""
+"Tells emerge to include installed packages where USE flags have changed "
+"since installation"
+msgstr ""
+"Instruera emerge att inkludera installerade paket där USE-flaggor har "
+"ändrats sedan senaste installation"
+
+#: init/completions/emerge.fish:52
+msgid ""
+"Merge files in CONFIG_PROTECT to the live fs instead of silently dropping "
+"them"
+msgstr ""
+"Installera filer i CONFIG_PROTECT till filsystemet istället för att tyst "
+"ignorera dem"
+
+#: init/completions/emerge.fish:53
+msgid "Merge specified packages, but don't merge any dependencies"
+msgstr "Installera angivna paket, men installera inga beroenden"
+
+#: init/completions/emerge.fish:54
+msgid ""
+"Skip the packages specified on the command-line that have already been "
+"installed"
+msgstr "Skippa angivna paket som redan har installerats"
+
+#: init/completions/emerge.fish:55
+msgid "Disables the spinner regardless of terminal type"
+msgstr "Avaktivera statusuppdateraren, oavsett terminaltyp"
+
+#: init/completions/emerge.fish:56
+msgid "Emerge as normal, but don't add packages to the world profile"
+msgstr "Kör emerge som vanligt, men lägg inte till paket till världsprofilen"
+
+#: init/completions/emerge.fish:57
+msgid ""
+"Only merge (or pretend to merge) the dependencies of the specified packages, "
+"not the packages themselves"
+msgstr ""
+"Installera (eller låtsas installera) bara beroendena till de angivna "
+"paketen, inte själva paketen"
+
+#: init/completions/emerge.fish:58
+msgid "Do not merge, display what ebuilds and tbz2s would have been installed"
+msgstr ""
+"Installera inte, visa vilka ebuilds och tbz2:or som skulle ha installerats"
+
+#: init/completions/emerge.fish:59
+msgid "Reduced output from portage's displays"
+msgstr "Reducerad utdata från portage"
+
+#: init/completions/emerge.fish:60
+msgid "Resumes the last merge operation"
+msgstr "Återupta senaste installationsoperation"
+
+#: init/completions/emerge.fish:61
+msgid ""
+"Matches the search string against the description field as well the "
+"package's name"
+msgstr "Matchar söksträngen mot beskrivningsfältet samt paketets namn"
+
+#: init/completions/emerge.fish:62
+msgid ""
+"Remove the first package in the resume list so that a merge may continue in "
+"the presence of an uncorrectable or inconsequential error"
+msgstr ""
+"Ta bort det första paketet i resume-listan så att en installation kan "
+"fortsätta vid irreparabelt eller oviktigt fel"
+
+#: init/completions/emerge.fish:63
+msgid "Shows the dependency tree using indentation for dependencies"
+msgstr "Visa beroendeträdet med indentering för beroenden"
+
+#: init/completions/emerge.fish:64
+msgid "Updates packages to the best version available"
+msgstr "Uppdaterar till den bästa tillgängliga versionen"
+
+#: init/completions/emerge.fish:66
+msgid ""
+"Like --usepkg, except this only allows the use of binary packages, and it "
+"will abort the emerge if the package is not available at the time of "
+"dependency calculation"
+msgstr ""
+"Som --usepkg, men tillåter bara binära paket, och avbryter installationen om "
+"paketet inte finns tillgängligt vid beroendeberäkningarna"
+
+#: init/completions/emerge.fish:67
+msgid "Increased or expanded display of content in portage's displays"
+msgstr "Utökat utdata från portage"
+
+#: init/completions/emerge.fish:68
+msgid ""
+"Displays the currently installed version of portage along with other "
+"information useful for quick reference on a system"
+msgstr ""
+"Visar den för tillfället installerade versionen av portage och annan "
+"information som är användbar som en snabbreferens för systemet"
 
 #: init/completions/fish.fish:1
 msgid "Run fish with this command"
@@ -6631,8 +6916,8 @@ msgid "Rebuild index and save to file"
 msgstr "Bygg om index och spara till fil"
 
 #: init/completions/mplayer.fish:51
-msgid "Seek to give time position"
-msgstr "Sök för att ange tidsposition"
+msgid "Seek to given time position"
+msgstr "Sök till angiven tidsposition"
 
 #: init/completions/mplayer.fish:52
 msgid "TV capture mode"
@@ -6817,7 +7102,7 @@ msgid "Restricted mode"
 msgstr "Inskränkt läge"
 
 #: init/completions/pine.fish:13
-msgid "Enable suspention support"
+msgid "Enable suspension support"
 msgstr "Aktivera stöd för programpausning (^Z)"
 
 #: init/completions/pine.fish:14
@@ -7542,7 +7827,7 @@ msgid "Query installed packages"
 msgstr "Fråga installerat paket"
 
 #: init/completions/rpm.fish:127
-msgid "Verify package integrety"
+msgid "Verify package integrity"
 msgstr "Verifiera paketintegritet"
 
 #: init/completions/rpm.fish:128
@@ -7944,7 +8229,7 @@ msgid "Use new incremental GNU format"
 msgstr "Använd nytt inkrementellt GNU-format"
 
 #: init/completions/tar.fish:22
-msgid "Derefrerence symlinks"
+msgid "Dereference symlinks"
 msgstr "Följ symboliska länkar"
 
 #: init/completions/tar.fish:23
@@ -8438,7 +8723,7 @@ msgid "Print processor"
 msgstr "Visa processor"
 
 #: init/completions/uname.fish:8
-msgid "Print harware platform"
+msgid "Print hardware platform"
 msgstr "Visa hårdvaruplattoform"
 
 #: init/completions/uname.fish:9
@@ -8861,7 +9146,7 @@ msgid "Use the passive FTP retrieval scheme"
 msgstr "Använd passiv FTP"
 
 #: init/completions/wget.fish:85
-msgid "Traverse symlinks and retrive pointed-to files"
+msgid "Traverse symlinks and retrieve pointed-to files"
 msgstr "Följ symboliska länkar och hämta pekade filer"
 
 #: init/completions/wget.fish:89

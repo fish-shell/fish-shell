@@ -1059,7 +1059,7 @@ msgid "%ls: No suitable job\n"
 msgstr "%ls: Inget jobb matchar\n"
 </pre>
 
-%s, %ls, %d and other tokens beginning with a '%' are
+\%s, \%ls, %\d and other tokens beginning with a '\%' are
 placeholders. These will be replaced by a value by fish at
 runtime. You must always take care to use exactly the same
 placeholders in the same order in your translation. (Actually, there

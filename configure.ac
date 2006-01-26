@@ -156,7 +156,7 @@ AC_CHECK_LIB(intl, gettext)
 AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h])
 
 AC_CHECK_HEADER([regex.h],
-				[AC_DEFINE([HAVE_REGEX_H])],
+				[AC_DEFINE([HAVE_REGEX_H], [1], [Define to 1 if you have the <regex.h> header file.])],
 				[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
 
 

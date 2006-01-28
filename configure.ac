@@ -165,6 +165,9 @@ AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol dcgettext )
 
+AC_DEFINE([HAVE_TRANSLATE_H], [1],
+			  [Define to 1 if the wgettext function should be used for translating strings.])
+
 # Check again for gettext library, and insert results into the Makefile
 AC_CHECK_FUNC(gettext, AC_SUBST(HAVE_GETTEXT,1), AC_SUBST(HAVE_GETTEXT,0) )
 

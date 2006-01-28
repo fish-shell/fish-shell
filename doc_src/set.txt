@@ -27,8 +27,14 @@ If a variable is set to more than one value, the variable will be an
 array with the specified elements. If a variable is set to zero
 elements, it will become an array with zero elements.
 
-If the variable name is one or more array elements, such as <code>PATH[1
-3 7]</code>, only those array elements specified will be changed.
+If the variable name is one or more array elements, such as
+<code>PATH[1 3 7]</code>, only those array elements specified will be
+changed.
+
+The set command requires all switch arguments to come before any
+non-switch arguments. For example, <code>set flags -l</code> will have
+the effect of setting the value of the variable <code>flags</code> to
+'-l', not making the variable local.
 
 \subsection set-example Example
 

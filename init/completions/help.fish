@@ -32,5 +32,5 @@ complete -c help -x -a expand-variable -d (_ "Help on variable expansion \$VARNA
 complete -c help -x -a expand-home -d (_ "Help on home directory expansion ~USER")
 complete -c help -x -a expand-brace -d (_ "Help on brace expansion {a,b,c}")
 complete -c help -x -a expand-wildcard -d (_ "Help on wildcard expansion *.*")
-complete -c help -x -a expand-command-substitution -d (_ "Help on command substututions (SUBCOMMAND)")
+complete -c help -x -a expand-command-substitution -d (_ "Help on command substitution (SUBCOMMAND)")
 complete -c help -x -a expand-process -d (_ "Help on process expansion %JOB")

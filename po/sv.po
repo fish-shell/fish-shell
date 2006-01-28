@@ -5435,7 +5435,7 @@ msgid "Ignore CRC errors"
 msgstr "Ignorera CRC-fel"
 
 #: init/completions/gpg.fish:273
-msgid "Do not fail on MDC integrity protection failiure"
+msgid "Do not fail on MDC integrity protection failure"
 msgstr "Misslyckas inte vid MDC-integritetsskyddsmisslyckande"
 
 #: init/completions/gpg.fish:275
@@ -5676,7 +5676,7 @@ msgid "Set width of output"
 msgstr "Välj bredd på utdata"
 
 #: init/completions/gprof.fish:18
-msgid "Anotate every line"
+msgid "Annotate every line"
 msgstr "Kommentera varje rad"
 
 #: init/completions/gprof.fish:19
@@ -5993,7 +5993,7 @@ msgid "Help on wildcard expansion *.*"
 msgstr "Hjälp om jokertecken *.*"
 
 #: init/completions/help.fish:35
-msgid "Help on command substututions (SUBCOMMAND)"
+msgid "Help on command substitutions (SUBCOMMAND)"
 msgstr "Hjälp om kommandosubstitution (UNDERKOMMANDO)"
 
 #: init/completions/help.fish:36
@@ -6149,7 +6149,7 @@ msgid "Log to file, overwrite"
 msgstr "Logga til fil, skriv över tidigare information"
 
 #: init/completions/less.fish:27
-msgid "Start at first occorance of pattern"
+msgid "Start at first occurrence of pattern"
 msgstr "Starta vid första matchningen av angivet mönster"
 
 #: init/completions/less.fish:28

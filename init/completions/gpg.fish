@@ -270,7 +270,7 @@ complete -c gpg -l allow-freeform-uid -d (_ "Disable all checks on the form of t
 complete -c gpg -l ignore-time-conflict -d (_ "Do not fail if signature is older than key")
 complete -c gpg -l ignore-valid-from -d (_ "Allow subkeys that have a timestamp from the future")
 complete -c gpg -l ignore-crc-error -d (_ "Ignore CRC errors")
-complete -c gpg -l ignore-mdc-error -d (_ "Do not fail on MDC integrity protection failiure")
+complete -c gpg -l ignore-mdc-error -d (_ "Do not fail on MDC integrity protection failure")
 
 complete -c gpg -l lock-once -d (_ "Lock the databases the first time a lock is requested and do not release the lock until the process terminates")
 complete -c gpg -l lock-multiple -d (_ "Release the locks every time a lock is no longer needed")

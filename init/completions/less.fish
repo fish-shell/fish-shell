@@ -24,7 +24,7 @@ complete -c less -s n -l line-numbers -d (_ "Display line number")
 complete -c less -s N -l LINE-NUMBERS -d (_ "Display line number for each line")
 complete -c less -s o -l log-file -d (_ "Log input to file") -r
 complete -c less -s O -l LOG-FILE -d (_ "Log to file, overwrite") -r
-complete -c less -s p -l pattern -d (_ "Start at first occorance of pattern") -r
+complete -c less -s p -l pattern -d (_ "Start at first occurrence of pattern") -r
 complete -c less -s P -l prompt -d (_ "Prompt string") -r
 complete -c less -s q -l quiet -d (_ "Silent mode")
 complete -c less -l silent -d (_ "Silent mode")

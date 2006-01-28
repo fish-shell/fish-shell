@@ -4,6 +4,16 @@ set -l from 1
 set -l step 1
 set -l to 1
 
+if test 1 = "@HAVE_GETTEXT@"; and which gettext >/dev/null ^/dev/null
+	function _ -d "Alias for the gettext command"
+		gettext fish $argv
+	end
+else
+	function _ -d "Alias for the gettext command"
+		printf "%s" $argv
+	end
+end
+
 switch (count $argv)
 	case 1
 		set to $argv[1]

@@ -1,5 +1,5 @@
 # fish - the friendly interactive shell
-# Copyright (C) 2006
+# Copyright © 2006
 # This file is distributed under the same license as the fish package.
 # Axel Liljencrantz <liljencrantz@gmail.com>, 2006
 #
@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-26 16:15+0100\n"
+"POT-Creation-Date: 2006-01-28 03:12+0100\n"
 "PO-Revision-Date: 2006-01-13 00:56+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -555,12 +555,12 @@ msgstr "Kunde inte skicka jobb %d (”%ls”) till förgrunden"
 msgid "Unknown function '%ls'"
 msgstr "Okänd funktion ”%ls”"
 
-#: exec.c:937
+#: exec.c:942
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Okänd dirigering av standard in av typ %d"
 
-#: exec.c:1265
+#: exec.c:1270
 #, c-format
 msgid ""
 "Sent null command to subshell. This is a fish bug. If it can be reproduced, "
@@ -568,12 +568,6 @@ msgid ""
 msgstr ""
 "Skickade noll-kommando till subskal. Detta är en fish-bug. Om den kan "
 "reproduceras, skicka en rapport till %s."
-
-#: exec.c:1313
-#, c-format
-msgid "Subshell '%ls' returned illegal string, discarded one entry"
-msgstr ""
-"Underskal ”%ls” lämnade tillbaka ogiltig sträng, ignorerade ett element"
 
 #: expand.c:46
 msgid "Child process"
@@ -736,7 +730,7 @@ msgstr "%s, version %s\n"
 msgid "Error while reading file %ls\n"
 msgstr "Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: main.c:278 parser.c:1202
+#: main.c:278 parser.c:1204
 msgid "Standard input"
 msgstr "Standard in"
 
@@ -973,59 +967,59 @@ msgstr "”begin” ovillkorligen exekverat block"
 msgid "unknown/invalid block"
 msgstr "okänt/ogiltigt block"
 
-#: parser.c:896
+#: parser.c:897
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Kunde inte skriva profileringsinformation till filen ”%s”"
 
-#: parser.c:902
+#: parser.c:903
 msgid "Time\tSum\tCommand\n"
 msgstr "Tid\tSumma\tKommando\n"
 
-#: parser.c:1024
+#: parser.c:1025
 #, c-format
 msgid "in function '%ls',\n"
 msgstr "i funktion ”%ls”,\n"
 
-#: parser.c:1029
+#: parser.c:1031
 #, c-format
 msgid "\tcalled on line %d of file '%ls',\n"
 msgstr "\tanropad på rad %d i fil ”%ls”,\n"
 
-#: parser.c:1034
+#: parser.c:1036
 msgid "\tcalled on standard input,\n"
 msgstr "\tanropad från standard in,\n"
 
-#: parser.c:1045
+#: parser.c:1047
 #, c-format
 msgid "\twith parameter list '%ls'\n"
 msgstr "\tmed parameterlista '%ls'\n"
 
-#: parser.c:1196
+#: parser.c:1198
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (rad %d): "
 
-#: parser.c:1401
+#: parser.c:1403
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Kunde inte expandera strängen ”%ls”"
 
-#: parser.c:1503
+#: parser.c:1505
 msgid "Invalid IO redirection"
 msgstr "Ogiltig IO omdirigering"
 
-#: parser.c:1546
+#: parser.c:1548
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "IO dirigering till någonting som inte är en filidentifierare"
 
-#: parser.c:1959
+#: parser.c:1961
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Okänt kommando ”%ls”"
 
-#: parser.c:2394
+#: parser.c:2396
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 
@@ -1392,6 +1386,51 @@ msgstr "Kör jobb i bakgrunden"
 msgid "Comment"
 msgstr "Kommentar"
 
+#: wgetopt.c:537
+#, c-format
+msgid "%ls: Option `%ls' is ambiguous\n"
+msgstr "%ls: Flaggan ”%ls” är tvetydig\n"
+
+#: wgetopt.c:561
+#, c-format
+msgid "%ls: Option `--%ls' doesn't allow an argument\n"
+msgstr "%ls: Flaggan ”--%ls” tar inget argument\n"
+
+#: wgetopt.c:566
+#, c-format
+msgid "%ls: Option `%lc%ls' doesn't allow an argument\n"
+msgstr "%ls: Flaggan ”%lc%ls” tar inget argument\n"
+
+#: wgetopt.c:580
+#, c-format
+msgid "%ls: Option `%ls' requires an argument\n"
+msgstr "%ls: Flaggan ”%ls” kräver ett argument\n"
+
+#: wgetopt.c:608
+#, c-format
+msgid "%ls: Unrecognized option `--%ls'\n"
+msgstr "%ls: Okänd flagga ”--%ls”\n"
+
+#: wgetopt.c:612
+#, c-format
+msgid "%ls: Unrecognized option `%lc%ls'\n"
+msgstr "%ls: Okänd flagga ”%lc%ls”\n"
+
+#: wgetopt.c:637
+#, c-format
+msgid "%ls: Illegal option -- %lc\n"
+msgstr "%ls: Ogiltig flagga -- ”%lc”\n"
+
+#: wgetopt.c:639
+#, c-format
+msgid "%ls: Invalid option -- %lc\n"
+msgstr "%ls: Ogiltigt flagga -- %lc\n"
+
+#: wgetopt.c:673
+#, c-format
+msgid "%ls: Option requires an argument -- %lc\n"
+msgstr "%ls: Flaggan kräver ett argument -- %lc\n"
+
 #: wildcard.c:300
 msgid "empty"
 msgstr "tom"
@@ -1509,23 +1548,23 @@ msgstr "Visa hjälp och avsluta"
 msgid "Package"
 msgstr "Paket"
 
-#: init/fish_complete.fish.in:301 init/fish_complete.fish:292
+#: init/fish_complete.fish.in:301 init/fish_complete.fish:301
 msgid "Start service"
 msgstr "Starta tjänst"
 
-#: init/fish_complete.fish.in:302 init/fish_complete.fish:293
+#: init/fish_complete.fish.in:302 init/fish_complete.fish:302
 msgid "Stop service"
 msgstr "Stanna tjänst"
 
-#: init/fish_complete.fish.in:303 init/fish_complete.fish:294
+#: init/fish_complete.fish.in:303 init/fish_complete.fish:303
 msgid "Print service status"
 msgstr "Visa status för tjänst"
 
-#: init/fish_complete.fish.in:304 init/fish_complete.fish:295
+#: init/fish_complete.fish.in:304 init/fish_complete.fish:304
 msgid "Stop and then start service"
 msgstr "Stanna och starta tjänst"
 
-#: init/fish_complete.fish.in:305 init/fish_complete.fish:296
+#: init/fish_complete.fish.in:305 init/fish_complete.fish:305
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
@@ -1561,15 +1600,15 @@ msgstr "Hej då\\n"
 msgid "Write out the prompt"
 msgstr "Skriv prompten"
 
-#: init/fish_function.fish:58
+#: init/fish_function.fish:34
 msgid "%s: Key not specified\\n"
 msgstr "%s: Ingen nyckel angiven"
 
-#: init/fish_function.fish:131
+#: init/fish_function.fish:107
 msgid "%s: Could not find a web browser.\\n"
 msgstr "%s: Kunde inte hitta en webbrowser\\n"
 
-#: init/fish_function.fish:132
+#: init/fish_function.fish:108
 #, sh-format
 msgid ""
 "Please set the variable $BROWSER to a suitable browser and try again\\n\\n"
@@ -1577,7 +1616,7 @@ msgstr ""
 "Var vänlig sätt variablen $BROWSER så den anger en lämplig browser och "
 "försök igen\\n\\n"
 
-#: init/fish_function.fish:266
+#: init/fish_function.fish:242
 msgid ""
 "vared: %s is an array variable. Use %svared%s %s[n] to edit the n:th element "
 "of %s\\n"
@@ -1585,7 +1624,7 @@ msgstr ""
 "vared: %s är en arrayvariabel. Använd %svared%s %s[n] för att redigera det n:"
 "te elementet av %s\\n"
 
-#: init/fish_function.fish:270
+#: init/fish_function.fish:246
 msgid ""
 "vared: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABLE\\n"
@@ -1593,51 +1632,51 @@ msgstr ""
 "vared: Förväntade exakt ett argument, fick %s\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABEL\\n"
 
-#: init/fish_function.fish:379
+#: init/fish_function.fish:344
 msgid "Hit end of history...\\n"
 msgstr "Slut på kataloghistorik...\\n"
 
-#: init/fish_function.fish:415
+#: init/fish_function.fish:380
 msgid "The number of positions to skip must be a non-negative integer\\n"
 msgstr "Antalet positioner att hoppa över måste vara ett positivt heltal"
 
-#: init/fish_function.fish:771
+#: init/fish_function.fish:706
 msgid "%s is a function with definition\\n"
 msgstr "%s är en funktion med definitionen\\n"
 
-#: init/fish_function.fish:775
+#: init/fish_function.fish:710
 msgid "function\\n"
 msgstr "funktion\\n"
 
-#: init/fish_function.fish:791
+#: init/fish_function.fish:726
 msgid "%s is a builtin\\n"
 msgstr "%s är ett inbyggt kommando\\n"
 
-#: init/fish_function.fish:794
+#: init/fish_function.fish:729
 msgid "builtin\\n"
 msgstr "inbyggt kommando\\n"
 
-#: init/fish_function.fish:811
+#: init/fish_function.fish:746
 msgid "%s is %s\\n"
 msgstr "%s är %s\\n"
 
-#: init/fish_function.fish:814
+#: init/fish_function.fish:749
 msgid "file\\n"
 msgstr "fil\\n"
 
-#: init/fish_function.fish:825
+#: init/fish_function.fish:760
 msgid "%s: Could not find '%s'"
 msgstr "%s: Kunde inte hitta ”%s”"
 
-#: init/fish_function.fish:841
+#: init/fish_function.fish:776
 msgid "%s: Invalid mask '%s'\\n"
 msgstr "%s: Ogiltigt mask ”%s”\\n"
 
-#: init/fish_function.fish:1028
+#: init/fish_function.fish:963
 msgid "%s: Too many arguments\\n"
 msgstr "%s: För många argument\\n"
 
-#: init/fish_function.fish:1048
+#: init/fish_function.fish:983
 msgid "%s: Unknown argument '%s'\\n"
 msgstr "%s: Okänt argument ”%s”\\n"
 
@@ -5993,7 +6032,7 @@ msgid "Help on wildcard expansion *.*"
 msgstr "Hjälp om jokertecken *.*"
 
 #: init/completions/help.fish:35
-msgid "Help on command substitutions (SUBCOMMAND)"
+msgid "Help on command substitution (SUBCOMMAND)"
 msgstr "Hjälp om kommandosubstitution (UNDERKOMMANDO)"
 
 #: init/completions/help.fish:36
@@ -9573,3 +9612,4 @@ msgstr "%s: Förväntade 1, 2 eller 3 argument, fick %d\\n"
 #: seq:28
 msgid "%s: '%s' is not a number\\n"
 msgstr "%s: ”%s” är inte ett nummer\\n"
+

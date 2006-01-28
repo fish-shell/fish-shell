@@ -42,6 +42,11 @@ typedef char tputs_arg_t;
 */
 #define FISH_COLOR_RESET -2
 
+/**
+   This is in the unicode private use area.
+*/
+#define ENCODE_DIRECT_BASE 0xf000
+
 /** 
 	Save the shell mode on startup so we can restore them on exit
 */

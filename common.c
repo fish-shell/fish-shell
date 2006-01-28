@@ -60,11 +60,6 @@ parts of fish.
 #include "parser.h"
 
 /**
-   Error message to show on string convertion error
-*/
-#define STR2WCS_MSG "fish: Invalid multibyte sequence \'"
-
-/**
    The maximum number of minor errors to report. Further errors will be omitted.
 */
 #define ERROR_MAX_COUNT 1
@@ -255,38 +250,51 @@ void sort_list( array_list_t *comp )
 
 wchar_t *str2wcs( const char *in )
 {
-	wchar_t *res;
+	wchar_t *out;
+	size_t res=0;
+	int in_pos=0;
+	int out_pos = 0;
+	size_t len = strlen(in);
+	mbstate_t state;
 	
-	res = malloc( sizeof(wchar_t)*(strlen(in)+1) );
+	out = malloc( sizeof(wchar_t)*(len+1) );
+	memset( &state, 0, sizeof(state) );
 	
-	if( !res )
+	if( !out )
 	{
 		die_mem();
 	}
-	
-	if( (size_t)-1 == mbstowcs( res, in, sizeof(wchar_t)*(strlen(in)) +1) )
+
+	while( in[in_pos] )
 	{
-		error_count++;
-		if( error_count <=error_max )
+		res = mbrtowc( &out[out_pos], &in[in_pos], len-in_pos, &state );
+
+		switch( res )
 		{
-			fflush( stderr );			
-			write( 2,
-				   STR2WCS_MSG,
-				   strlen(STR2WCS_MSG) );
-			write( 2,
-				   in,
-				   strlen(in ));
-			write( 2, 
-				   "\'\n",
-				   2 );
+			case (size_t)(-2):
+			case (size_t)(-1):
+			{
+				out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
+				in_pos++;
+				memset( &state, 0, sizeof(state) );
+				break;
+			}
+				
+			case 0:
+			{
+				return out;
+			}
+			default:
+			{
+				in_pos += res;
+				break;
+			}
 		}
-		
-		free(res);
-		return 0;
-	}	
+		out_pos++;
+	}
+	out[out_pos] = 0;
 	
-	return res;
-	
+	return out;	
 }
 
 void error_reset()
@@ -296,20 +304,51 @@ void error_reset()
 
 char *wcs2str( const wchar_t *in )
 {
-	char *res = malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
+	char *out;	
+	size_t res=0;
+	int in_pos=0;
+	int out_pos = 0;
+	mbstate_t state;
+	
+	out = malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
+	memset( &state, 0, sizeof(state) );
 
-	if( res == 0 )
+	if( !out )
 	{
 		die_mem();
 	}
 
-	wcstombs( res, 
-			  in,
-			  MAX_UTF8_BYTES*wcslen(in)+1 );
-
-	res = realloc( res, strlen( res )+1 );
-
-	return res;
+	while( in[in_pos] )
+	{
+		if( ( in[in_pos] >= ENCODE_DIRECT_BASE) &&
+			( in[in_pos] < ENCODE_DIRECT_BASE+256) )
+		{
+			out[out_pos++] = in[in_pos]- ENCODE_DIRECT_BASE;
+		}
+		else
+		{
+			res = wcrtomb( &out[out_pos], in[in_pos], &state );
+			
+			switch( res )
+			{
+				case (size_t)(-1):
+					{
+						debug( 1, L"Wide character has no narrow representation" );
+						memset( &state, 0, sizeof(state) );
+						break;
+					}
+				default:
+				{
+					out_pos += res;
+					break;
+				}
+			}
+		}
+		in_pos++;
+	}
+	out[out_pos] = 0;
+	
+	return out;	
 }
 
 char **wcsv2strv( const wchar_t **in )
@@ -752,6 +791,26 @@ wchar_t *escape( const wchar_t *in,
 	
 	while( *in != 0 )
 	{
+
+		if( ( *in >= ENCODE_DIRECT_BASE) &&
+			( *in < ENCODE_DIRECT_BASE+256) )
+		{
+			int val = *in - ENCODE_DIRECT_BASE;
+			int tmp;
+			
+			*(pos++) = L'\\';
+			*(pos++) = L'X';
+			
+			tmp = val/16;			
+			*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+			
+			tmp = val%16;			
+			*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+			
+		}
+		else
+		{
+			
 		switch( *in )
 		{
 			case L'\t':
@@ -820,6 +879,8 @@ wchar_t *escape( const wchar_t *in,
 					*pos++ = *in;
 				break;
 		}
+		}
+		
 		in++;
 	}
 	*pos = 0;
@@ -892,6 +953,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							break;
 						}
 						
+						case L'X':
 						case L'u':
 						case L'U':
 						case L'x':
@@ -901,7 +963,9 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							wchar_t res=0;
 							int chars=2;
 							int base=16;
-					
+							
+							int byte = 0;
+							
 							switch( in[in_pos] )
 							{
 								case L'u':
@@ -920,6 +984,14 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 								
 								case L'x':
 								{
+									base=16;
+									chars=2;
+									break;
+								}
+								
+								case L'X':
+								{
+									byte=1;
 									base=16;
 									chars=2;
 									break;
@@ -947,7 +1019,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 						
 							}
 					
-							in[out_pos] = res;
+							in[out_pos] = (byte?ENCODE_DIRECT_BASE:0)+res;
 					
 							break;
 						}

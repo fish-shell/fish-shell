@@ -412,6 +412,18 @@ static void printed_length( wchar_t *str,
 		int has_description = 0;
 		while( *str != 0 )
 		{
+			if( ( *str >= ENCODE_DIRECT_BASE) &&
+				( *str < ENCODE_DIRECT_BASE+256) )
+			{
+				if( has_description )
+					desc_len+=4;
+				else
+					comp_len+=4;
+
+			}
+			else
+			{
+				
 			switch( *str )
 			{
 				case L'\n':
@@ -460,6 +472,8 @@ static void printed_length( wchar_t *str,
 						comp_len+= wcwidth(*str);
 					break;
 			}
+			}
+			
 			str++;
 		}
 		if( has_description )
@@ -968,7 +982,11 @@ int main( int argc, char **argv )
 	
 		for( i=3; i<argc; i++ )
 		{
-			al_push( &comp, str2wcs( argv[i] ) );
+			wchar_t *wcs = str2wcs( argv[i] );
+			if( wcs )
+			{
+				al_push( &comp, wcs );
+			}
 		}
 	
 		mangle_descriptions( &comp );

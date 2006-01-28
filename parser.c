@@ -229,6 +229,12 @@ The fish parser. Contains functions for parsing code.
 
 
 /** 
+	Source block description
+*/
+#define SOURCE_BLOCK _( L"Block created by the . builtin" )
+
+
+/** 
 	Unknown block description
 */
 #define UNKNOWN_BLOCK _( L"unknown/invalid block" )
@@ -401,10 +407,17 @@ void parser_pop_block()
 		case FUNCTION_CALL:
 		{
 			free( current_block->param1.function_name );
-			free( current_block->param4.function_filename );
+			free( current_block->param4.call_filename );
 			al_foreach( &current_block->param2.function_vars, 
 						(void (*)(const void *))&free );
 			al_destroy( &current_block->param2.function_vars );
+			break;
+		}
+
+		case SOURCE:
+		{
+			free( current_block->param4.call_filename );
+			free( current_block->param1.source_dest );
 			break;
 		}
 
@@ -454,6 +467,9 @@ const wchar_t *parser_get_block_desc( int block )
 			
 		case BEGIN:
 			return BEGIN_BLOCK;
+			
+		case SOURCE:
+			return SOURCE_BLOCK;
 			
 		default:
 			return UNKNOWN_BLOCK;
@@ -1018,18 +1034,21 @@ static void parser_stack_trace( block_t *b, string_buffer_t *buff)
 	if( !b )
 		return;
 	
-	if( b->type == FUNCTION_CALL )
+	if( b->type == FUNCTION_CALL || b->type==SOURCE)
 	{
 		int i;
-		
-		sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
 
-		const wchar_t *file = b->param4.function_filename;
+		if( b->type==SOURCE)
+			sb_printf( buff, _(L"in . (source) call of file '%ls',\n"), b->param1.source_dest );
+		else
+			sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
+
+		const wchar_t *file = b->param4.call_filename;
 
 		if( file )
 			sb_printf( buff, 
 					   _(L"\tcalled on line %d of file '%ls',\n"),
-					   b->param3.function_lineno, 
+					   b->param3.call_lineno, 
 					   file );
 		else
 			sb_printf( buff, 

@@ -969,19 +969,6 @@ static int wcsbindingname( wchar_t *str )
 	return 1;
 }
 
-/**
-   Debug function to print the current block stack
-*/
-static void print_block_stack( block_t *b )
-{
-	if( !b )
-		return;
-	
-	wprintf( L"%ls (%d)\n", parser_get_block_desc( b->type ), b->job?b->job->job_id:-1 );
-	print_block_stack( b->outer );
-	
-}
-
 
 /**
    The function builtin, used for providing subroutines.
@@ -1133,8 +1120,6 @@ static int builtin_function( wchar_t **argv )
 					{
 						block_t *b = current_block;
 						
-//						print_block_stack( b );
-
 						while( b && (b->type != SUBST) )
 							b = b->outer;
 						
@@ -1144,15 +1129,8 @@ static int builtin_function( wchar_t **argv )
 						}
 						if( b->job )
 						{
-//							debug( 1, L"Found block, type is %ls", parser_get_block_desc( b->type ) );
-							
 							job_id = b->job->job_id;
 						}
-						else
-						{	
-//							debug( 1, L"Calling block is null" );
-						}
-						
 					}
 					
 					if( job_id == -1 )
@@ -1990,16 +1968,23 @@ static int builtin_source( wchar_t ** argv )
 	}
 	else
 	{
-		reader_push_current_filename( argv[1] );
 
 		/*
 		  Push a new non-shadowwing variable scope to the stack. That
 		  way one can use explicitly local variables in sourced files
 		  that will die on return to the calling file.
 		*/
-		env_push(0);		
+		int lineno = parser_get_lineno();
+		wchar_t *file = parser_current_filename()?wcsdup(parser_current_filename()):0;
+		reader_push_current_filename( argv[1] );
+		parser_push_block( SOURCE );		
+
+		current_block->param1.source_dest = wcsdup( argv[1] );
+		current_block->param3.call_lineno = lineno;
+		current_block->param4.call_filename = file;
+
 		res = reader_read( fd );		
-		env_pop();
+		parser_pop_block();
 		if( res )
 		{
 			sb_printf( sb_err,

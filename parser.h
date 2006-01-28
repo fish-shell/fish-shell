@@ -64,6 +64,7 @@ typedef struct block
 		int if_state; /**< The state of the if block */
 		wchar_t *switch_value; /**< The value to test in a switch block */
 		wchar_t *function_name; /**< The name of the function to define or the function called*/
+		wchar_t *source_dest; /**< The name of the file to source*/
 	} param1;
 
 	/**
@@ -83,7 +84,7 @@ typedef struct block
 	union
 	{
 		int function_is_binding; /**< Whether a function is a keybinding */
-		int function_lineno; /**< Function invocation line number */		 
+		int call_lineno; /**< Function invocation line number */		 
 	} param3;
 
 	/**
@@ -92,7 +93,7 @@ typedef struct block
 	union
 	{
 		array_list_t *function_events;
-		wchar_t *function_filename;
+		wchar_t *call_filename;
 	} param4;
 	
 	/**
@@ -121,6 +122,7 @@ enum block_type
 	SUBST, /**< Command substitution scope */
 	TOP, /**< Outermost block */
 	BEGIN, /**< Unconditional block */
+	SOURCE, /**< Block created by the . (source) builtin */
 }
 ;
 

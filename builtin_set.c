@@ -509,9 +509,6 @@ int builtin_set( wchar_t **argv )
 				!erase &&
 				!list )
 			{
-				/*
-				  Only update the variable scope
-				*/
 				env_set( name, 0, scope );
 				finished = 1;
 			}

@@ -26,7 +26,19 @@ end
 # long it is.
 
 function fish_prompt -d (_ "Write out the prompt")
-	printf '%s@%s %s%s%s> \n' (whoami) (hostname|cut -d . -f 1) (set_color $fish_color_cwd) (prompt_pwd) (set_color normal)
+	if not set -q __fish_prompt_whoami
+		set -g __fish_prompt_whoami (whoami)
+	end
+	
+	if not set -q __fish_prompt_hostname
+		set -g __fish_prompt_hostname (hostname|cut -d . -f 1)
+	end
+	
+	if not set -q __fish_prompt_normal
+		set -g __fish_prompt_normal (set_color normal)
+	end
+	
+	printf '%s@%s %s%s%s> \n' $__fish_prompt_whoami $__fish_prompt_hostname (set_color $fish_color_cwd) (prompt_pwd) $__fish_prompt_normal
 end
 
 #

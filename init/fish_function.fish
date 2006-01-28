@@ -180,17 +180,17 @@ function open -d "Open file in default application"
 end
 
 #
-# Print the current working directory. If it is too long, it will be
-# ellipsised. This function is used by the default prompt command.
+# Print the current working directory in a shortened form.This
+# function is used by the default prompt command.
 #
 
 function prompt_pwd -d "Print the current working directory, shortend to fit the prompt"
-	set -l wd (pwd)
-	set -l res (echo $wd|sed -e 's-/\([^/]\)\([^/]*\)-/\1-g')
-	if test $wd != '~'
-		set res $res(echo $wd|sed -e 's-.*/[^/]\([^/]*$\)-\1-')
+	if test "$PWD" != "$HOME"
+		printf "%s" (echo $PWD|sed -e "s|^$HOME|~|" -e 's-/\([^/]\)\([^/]*\)-/\1-g')
+		echo $PWD|sed -e 's-.*/[^/]\([^/]*$\)-\1-'
+	else
+		echo '~'
 	end
-	echo $res
 end
 
 #

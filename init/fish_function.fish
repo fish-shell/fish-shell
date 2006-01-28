@@ -58,8 +58,8 @@ end
 function help -d "Show help for the fish shell"
 
 	# Declare variables to set correct scope
-	set fish_browser
-	set fish_browser_bg
+	set -l fish_browser
+	set -l fish_browser_bg
 
 	set -l h syntax completion editor job-control todo bugs history killring help
 	set h $h color prompt title variables builtin-overview changes expand 
@@ -70,8 +70,8 @@ function help -d "Show help for the fish shell"
 	# Find a suitable browser for viewing the help pages. This is needed
 	# by the help function defined below.
 	#
-	set graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape
-	set text_browsers htmlview www-browser links elinks lynx w3m
+	set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape
+	set -l text_browsers htmlview www-browser links elinks lynx w3m
 
 	if test $BROWSER
 		# User has manualy set a preferred browser, so we respect that
@@ -121,11 +121,11 @@ function help -d "Show help for the fish shell"
 		case globbing
 			set fish_help_page "index.html\#expand"
 		case (builtin -n)
-			set fish_help_page "builtins.html\#"$fish_help_item
-		case count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize psub umask type 
-			set fish_help_page "commands.html\#"$fish_help_item
+			set fish_help_page "builtins.html\#$fish_help_item"
+		case contains count dirh dirs help mimedb nextd open popd prevd pushd set_color tokenize psub umask type vared
+			set fish_help_page "commands.html\#$fish_help_item"
 		case $help_topics
-			set fish_help_page "index.html\#"$fish_help_item
+			set fish_help_page "index.html\#$fish_help_item"
 		case "*"
 			if which $fish_help_item >/dev/null ^/dev/null
 				man $fish_help_item
@@ -211,7 +211,7 @@ function vared -d "Edit variable value"
 		switch $argv
 
 			case '-h' '--h' '--he' '--hel' '--help'
-				__vared_help
+				help vared
 
 			case '-*'
 				printf "vared: Unknown option %s\n" $argv
@@ -247,17 +247,6 @@ function vared -d "Edit variable value"
 	end
 end
 
-function __vared_help -d "Display help for the vared shellscript function"
-
-	printf "\tvared - Interactively edit the value of an environment variable\n\n"
-	printf "%s\n\t%svared%s VARIABLE\n\n" (__bold Synopsis) (set_color $fish_color_command) (set_color normal)
-	__bold Description
-	printf "\n\n\tvared is used to interactively edit the value of an environment \n"
-	printf "\tvariable. Array variables as a whole can not be edited using vared,\n" 
-	printf "\tbut individual array elements can.\n\n"
-	__bold Example
-	printf "\n\n\t"\'"%svared%s PATH[3]"\'" edits the third element of the PATH array.\n\n" (set_color $fish_color_co\mmand) (set_color normal)
-end
 
 #
 # This function is bound to Alt-L, it is used to list the contents of

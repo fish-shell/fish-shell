@@ -1016,7 +1016,7 @@ void exec( job_t *j )
 				if( !io_buffer )
 				{
 					/*
-					  No buffer, se we exit directly. This means we
+					  No buffer, so we exit directly. This means we
 					  have to manually set the exit status.
 					*/
 					if( p->next == 0 )
@@ -1068,6 +1068,15 @@ void exec( job_t *j )
 					}					
 					
 				}
+				else
+				{
+					if( p->next == 0 )
+					{
+						proc_set_last_status( j->negate?(status?0:1):status);
+					}
+					p->completed = 1;
+				}
+				
 				
 				io_buffer_destroy( io_buffer );
 				

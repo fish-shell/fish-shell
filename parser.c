@@ -1031,7 +1031,7 @@ int eval_args( const wchar_t *line, array_list_t *args )
 	return 1;
 }
 
-static void parser_stack_trace( block_t *b, string_buffer_t *buff)
+void parser_stack_trace( block_t *b, string_buffer_t *buff)
 {
 	if( !b )
 		return;
@@ -1363,7 +1363,7 @@ static void parse_job_main_loop( process_t *p,
 
 			case TOK_BACKGROUND:
 				j->fg = 0;
-				j->terminal=0;
+
 			case TOK_END:
 			{
 				p->argv = list_to_char_arr( args );
@@ -2183,7 +2183,6 @@ static void eval_job( tokenizer *tok )
 			j->fg=1;
 			j->constructed=0;
 			j->skip_notification = is_subshell || is_block || is_event || (!is_interactive);
-			j->terminal = is_interactive && !is_subshell;
 			
 			current_block->job = j;
 						

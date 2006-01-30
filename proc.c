@@ -83,6 +83,7 @@ int is_login=0;
 int is_event=0;
 int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
+int job_control_mode = JOB_CONTROL_INTERACTIVE;
 
 /**
    The event variable used to send all process event
@@ -229,6 +230,10 @@ job_t *job_create()
 	res->next = first_job;
 	res->job_id = free_id;
 	first_job = res;
+
+	res->job_control = (job_control_mode==JOB_CONTROL_ALL) || 
+		((job_control_mode == JOB_CONTROL_INTERACTIVE) && (is_interactive));
+	
 //	if( res->job_id > 2 )
 //		fwprintf( stderr, L"Create job %d\n", res->job_id );	
 	return res;
@@ -875,37 +880,34 @@ void job_continue (job_t *j, int cont)
 
 	if( !job_is_completed( j ) )
 	{
-		if( j->terminal )
-		{
-							
+		if( j->job_control && j->fg )
+		{							
+
 			/* Put the job into the foreground.  */
-			if(  j->fg )
+			signal_block();
+			if( tcsetpgrp (0, j->pgid) )
 			{
-				signal_block();
-				if( tcsetpgrp (0, j->pgid) )
-				{
-					debug( 1, 
-						   _( L"Could not send job %d ('%ls') to foreground" ), 
-						   j->job_id, 
-						   j->command );
-					wperror( L"tcsetpgrp" );
-					return;
-				}
-				
-				if( cont )
-				{  
-					if( tcsetattr (0, TCSADRAIN, &j->tmodes))
-					{
-						debug( 1,
-							   _( L"Could not send job %d ('%ls') to foreground" ),
-							   j->job_id,
-							   j->command );
-						wperror( L"tcsetattr" );
-						return;
-					}										
-				}
-				signal_unblock();
+				debug( 1, 
+					   _( L"Could not send job %d ('%ls') to foreground" ), 
+					   j->job_id, 
+					   j->command );
+				wperror( L"tcsetpgrp" );
+				return;
 			}
+			
+			if( cont )
+			{  
+				if( tcsetattr (0, TCSADRAIN, &j->tmodes))
+				{
+					debug( 1,
+						   _( L"Could not send job %d ('%ls') to foreground" ),
+						   j->job_id,
+						   j->command );
+					wperror( L"tcsetattr" );
+					return;
+				}										
+			}
+			signal_unblock();		
 		}
 
 		/* 
@@ -1005,7 +1007,7 @@ void job_continue (job_t *j, int cont)
 		/* 
 		   Put the shell back in the foreground.  
 		*/
-		if( j->terminal )
+		if( j->job_control && j->fg )
 		{
 			signal_block();
 			if( tcsetpgrp (0, getpid()) )

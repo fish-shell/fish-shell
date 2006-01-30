@@ -348,5 +348,10 @@ int parser_is_help( wchar_t *s, int min_match );
 */
 const wchar_t *parser_current_filename();
 
+/**
+   Write a stack trace starting at the specified block to the specified string_buffer_t
+*/
+void parser_stack_trace( block_t *b, string_buffer_t *buff);
+
 
 #endif

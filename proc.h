@@ -48,6 +48,13 @@ enum
 }
 	;
 
+enum
+{
+	JOB_CONTROL_ALL, 
+	JOB_CONTROL_INTERACTIVE,
+	JOB_CONTROL_NONE,
+}
+	;
 
 /** 
 	A structure representing a single fish process. Contains variables
@@ -156,9 +163,9 @@ typedef struct job
 	/** Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or */
 	int skip;
 
-	/** Whether this job wants to have control of the terminal when it is in the foreground */
-	int terminal;
-		
+	/** Whether the job is under job control */
+	int job_control;
+			
 	/** Pointer to the next job */
 	struct job *next;           
 } 
@@ -215,6 +222,11 @@ extern int proc_had_barrier;
    Pid of last process to be started in the background
 */
 extern pid_t proc_last_bg_pid;
+
+/**
+   Can be one of JOB_CONTROL_ALL, JOB_CONTROL_INTERACTIVE and JOB_CONTROL_NONE
+*/
+extern int job_control_mode;
 
 /**
    Sets the status of the last process to exit

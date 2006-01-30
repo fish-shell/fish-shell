@@ -1668,6 +1668,7 @@ static int builtin_status( wchar_t **argv )
 		SUBST,
 		BLOCK,
 		INTERACTIVE,
+		STACK_TRACE,
 		LOGIN
 	}
 	;
@@ -1701,6 +1702,22 @@ static int builtin_status( wchar_t **argv )
 			}
 			,
 			{ 
+				L"full-job-control", no_argument, 0, 'f' 
+			}
+			,
+			{ 
+				L"interactive-job-control", no_argument, 0, 'I' 
+			}
+			,
+			{ 
+				L"no-job-control", no_argument, 0, 'n' 
+			}
+			,
+			{ 
+				L"print-stack-trace", no_argument, 0, 't' 
+			}
+			,
+			{ 
 				0, 0, 0, 0 
 			}
 		}
@@ -1712,7 +1729,7 @@ static int builtin_status( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"hcbil", 
+								L"hcbilfInt", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -1751,6 +1768,22 @@ static int builtin_status( wchar_t **argv )
 				mode = LOGIN;
 				break;
 
+			case 'f':
+				job_control_mode = JOB_CONTROL_ALL;
+				break;
+				
+			case 'I':
+				job_control_mode = JOB_CONTROL_INTERACTIVE;
+				break;
+				
+			case 'n':
+				job_control_mode = JOB_CONTROL_NONE;
+				break;
+
+			case 't':
+				mode = STACK_TRACE;
+				break;
+				
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 				
@@ -1773,7 +1806,13 @@ static int builtin_status( wchar_t **argv )
 			
 		case LOGIN:
 			return !is_login;
-			
+
+		case STACK_TRACE:
+		{
+			parser_stack_trace( current_block, sb_out );
+			break;
+		}
+		
 	}
 	
 	return 0;
@@ -2047,7 +2086,7 @@ static int builtin_fg( wchar_t **argv )
 		*/
 		for( j=first_job; j; j=j->next )
 		{
-			if( j->constructed && (!job_is_completed(j)) && (job_is_stopped(j) || !j->fg))
+			if( j->constructed && (!job_is_completed(j)) && ( (job_is_stopped(j) || !j->fg) && (j->job_control)))
 				break;
 		}			
 		if( !j )
@@ -2098,6 +2137,17 @@ static int builtin_fg( wchar_t **argv )
 					   pid );
 			builtin_print_help( argv[0], sb_err );
 		}
+		if( !j->job_control )
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n" ),
+					   argv[0],
+					   pid,
+					   j->command );
+			builtin_print_help( argv[0], sb_err );
+			j=0;
+		}
+		
 	}
 	
 	if( j )
@@ -2150,6 +2200,16 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 		builtin_print_help( L"bg", sb_err );
 		return 1;
 	}	
+	else if( !j->job_control )
+	{
+		sb_printf( sb_err,
+				   _( L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n" ),
+				   L"bg",
+				   j->job_id,
+				   j->command );
+		builtin_print_help( L"bg", sb_err );
+		return 1;
+	}
 	else
 	{
 		sb_printf( sb_err, 
@@ -2176,7 +2236,7 @@ static int builtin_bg( wchar_t **argv )
   		job_t *j;
 		for( j=first_job; j; j=j->next )
 		{
-			if( job_is_stopped(j) )
+			if( job_is_stopped(j) && j->job_control && (!job_is_completed(j)) )
 				break;
 		}
 		

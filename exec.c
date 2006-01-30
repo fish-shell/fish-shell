@@ -393,7 +393,7 @@ static int setup_child_process( job_t *j, process_t *p )
 {
 	int res;
 
-	if( j->terminal )
+	if( j->job_control )
     {
 		pid_t pid;
 		/* 
@@ -602,7 +602,7 @@ static void internal_exec_helper( const wchar_t *def,
 static int handle_new_child( job_t *j, process_t *p )
 {
 	
-	if( j->terminal )
+	if( j->job_control )
 	{
 		int new_pgid=0;
 		
@@ -636,18 +636,6 @@ static int handle_new_child( job_t *j, process_t *p )
 				return -1;
 			}
 		}
-
-		if( j->fg && new_pgid)
-		{
-			if( tcsetpgrp (0, j->pgid) )
-			{
-				debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
-					   j->job_id, 
-					   j->command );
-				wperror( L"tcsetpgrp" );
-				return -1;
-			}
-		}		
 	}
 	else
 	{

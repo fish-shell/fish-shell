@@ -6,15 +6,15 @@
 	1). Create a function in builtin.c with the following signature:
 
 	<tt>static int builtin_NAME( wchar_t ** args )</tt>
-	
-	where NAME is the name of the builtin, and args is a zero-terminated list of arguments. 
+
+	where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
 
 	2). Add a line like hash_put( &builtin, L"NAME", &builtin_NAME ); to builtin_init. This will enable the parser to find the builtin function.
 
 	3). Add a line like hash_put( desc, L"NAME", _(L"Bla bla bla") ); to the proper part of builtin_get_desc, containing a short description of what the builtin does. This description is used by the completion system.
 
 	4). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
-	
+
 	5). Add an entry to the BUILTIN_DOC_SRC variable of Makefile.in. Note that the entries should be sorted alphabetically!
 
 	6). Add an entry to the manual at the builtin-overview subsection. Note that the entries should be sorted alphabetically!
@@ -109,7 +109,7 @@ string_buffer_t *sb_out=0, *sb_err=0;
 */
 static array_list_t io_stack;
 
-/** 
+/**
 	The file from which builtin functions should attempt to read, use
 	instead of stdin.
 */
@@ -141,9 +141,9 @@ void builtin_wperror( const wchar_t *s)
 	wchar_t *werr = str2wcs( err );
 	if( werr )
 	{
-		sb_append2( sb_err,  werr, L"\n", (void *)0 );	
+		sb_append2( sb_err,  werr, L"\n", (void *)0 );
 		free( werr );
-	}	
+	}
 }
 
 
@@ -176,7 +176,7 @@ void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 
 	if( b == sb_err )
 	{
-		sb_append( sb_err, 
+		sb_append( sb_err,
 				   parser_current_line() );
 	}
 
@@ -185,8 +185,8 @@ void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 	if( !h )
 		return;
 
-	
-	
+
+
 	wchar_t *str = str2wcs(builtin_help_get( cmd ));
 	if( str )
 	{
@@ -201,34 +201,34 @@ static int builtin_bind( wchar_t **argv )
 {
 	int i;
 	int argc=builtin_count_args( argv );
-	
+
 	woptind=0;
 
 	const static struct woption
 		long_options[] =
 		{
 			{
-				L"set-mode", required_argument, 0, 'M' 
+				L"set-mode", required_argument, 0, 'M'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"M:", 
-								long_options, 
+								argv,
+								L"M:",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -237,33 +237,33 @@ static int builtin_bind( wchar_t **argv )
 				sb_printf( sb_err,
 						   BUILTIN_ERR_UNKNOWN,
 						   argv[0],
-						   long_options[opt_index].name );				
+						   long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
-			case 'M':		
+
+			case 'M':
 				input_set_mode( woptarg );
 				break;
 
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-		
-	}		
+
+	}
 
 	for( i=woptind; i<argc; i++ )
 	{
-		input_parse_inputrc_line( argv[i] );		
+		input_parse_inputrc_line( argv[i] );
 	}
 
 	return 0;
 }
 
-/** 
+/**
 	The block builtin, used for temporarily blocking events
  */
 static int builtin_block( wchar_t **argv )
@@ -279,7 +279,7 @@ static int builtin_block( wchar_t **argv )
 	int scope=UNSET;
 	int erase = 0;
 	int argc=builtin_count_args( argv );
-	int type = (1<<EVENT_ANY);	
+	int type = (1<<EVENT_ANY);
 
 	woptind=0;
 
@@ -287,39 +287,39 @@ static int builtin_block( wchar_t **argv )
 		long_options[] =
 		{
 			{
-				L"erase", no_argument, 0, 'e' 
+				L"erase", no_argument, 0, 'e'
 			}
 			,
 			{
-				L"local", no_argument, 0, 'l' 
+				L"local", no_argument, 0, 'l'
 			}
 			,
 			{
-				L"global", no_argument, 0, 'g' 
+				L"global", no_argument, 0, 'g'
 			}
 			,
 			{
-				L"help", no_argument, 0, 'h' 
+				L"help", no_argument, 0, 'h'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"elgh", 
-								long_options, 
+								argv,
+								L"elgh",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -328,34 +328,34 @@ static int builtin_block( wchar_t **argv )
 				sb_printf( sb_err,
 						   BUILTIN_ERR_UNKNOWN,
 						   argv[0],
-						   long_options[opt_index].name );				
+						   long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-					
+
 				return 1;
 			case 'h':
 				builtin_print_help( argv[0], sb_err );
 				return 0;
-				
+
 			case 'g':
 				scope = GLOBAL;
 				break;
-				
+
 			case 'l':
 				scope = LOCAL;
 				break;
-				
+
 			case 'e':
 				erase = 1;
 				break;
-				
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-		
-	}		
+
+	}
 
 	if( erase )
 	{
@@ -378,12 +378,12 @@ static int builtin_block( wchar_t **argv )
 	else
 	{
 		block_t *block=current_block;
-		
+
 		event_block_t *eb = malloc( sizeof( event_block_t ) );
-		
+
 		if( !eb )
 			die_mem();
-		
+
 		eb->type = type;
 
 		switch( scope )
@@ -413,11 +413,11 @@ static int builtin_block( wchar_t **argv )
 		{
 			eb->next = global_event_block;
 			global_event_block=eb;
-		}		
+		}
 	}
 
 	return 0;
-	
+
 }
 
 /**
@@ -427,38 +427,38 @@ static int builtin_builtin(  wchar_t **argv )
 {
 	int argc=builtin_count_args( argv );
 	int list=0;
-	
+
 	woptind=0;
 
 	const static struct woption
 		long_options[] =
 		{
 			{
-				L"names", no_argument, 0, 'n' 
+				L"names", no_argument, 0, 'n'
 			}
 			,
 			{
-				L"help", no_argument, 0, 'h' 
+				L"help", no_argument, 0, 'h'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"nh", 
-								long_options, 
+								argv,
+								L"nh",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -469,52 +469,52 @@ static int builtin_builtin(  wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-	
-				
+
+
 				return 1;
 			case 'h':
 				builtin_print_help( argv[0], sb_err );
 				return 0;
-				
+
 			case 'n':
 				list=1;
 				break;
-				
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-		
-	}		
+
+	}
 
 	if( list )
 	{
 		array_list_t names;
 		wchar_t **names_arr;
 		int i;
-		
+
 		al_init( &names );
 		builtin_get_names( &names );
 		names_arr = list_to_char_arr( &names );
-		qsort( names_arr, 
-			   al_get_count( &names ), 
-			   sizeof(wchar_t *), 
+		qsort( names_arr,
+			   al_get_count( &names ),
+			   sizeof(wchar_t *),
 			   (int (*)(const void *, const void *))&wcsfilecmp );
 		for( i=0; i<al_get_count( &names ); i++ )
 		{
 			if( wcscmp( names_arr[i], L"count" ) == 0 )
 				continue;
-			
+
 			sb_append2( sb_out,
 						names_arr[i],
 						L"\n",
-						(void *)0 );			
+						(void *)0 );
 		}
 		free( names_arr );
-		al_destroy( &names );			
-	}	
+		al_destroy( &names );
+	}
 	return 0;
 }
 
@@ -535,24 +535,24 @@ static int builtin_generic( wchar_t **argv )
 				L"help", no_argument, 0, 'h'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"h", 
-								long_options, 
+								argv,
+								L"h",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -564,24 +564,24 @@ static int builtin_generic( wchar_t **argv )
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 				return 1;
-				
+
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
-				return 0;				
-				
+				return 0;
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-		
-	}		
+
+	}
 	return 1;
 }
 
 /**
-   The exec bultin. This is only a placeholder that prints the help message. Ther actual implementation lives in exec.c. 
+   The exec bultin. This is only a placeholder that prints the help message. Ther actual implementation lives in exec.c.
 */
 static int builtin_exec( wchar_t **argv )
 {
@@ -595,24 +595,24 @@ static int builtin_exec( wchar_t **argv )
 				L"help", no_argument, 0, 'h'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"h", 
-								long_options, 
+								argv,
+								L"h",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -624,19 +624,19 @@ static int builtin_exec( wchar_t **argv )
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 				return 1;
-				
+
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
-				return 0;				
-				
+				return 0;
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-		
-	}		
+
+	}
 	return 1;
 }
 
@@ -648,7 +648,7 @@ static void functions_def( wchar_t *name )
 {
 	const wchar_t *desc = function_get_desc( name );
 	const wchar_t *def = function_get_definition(name);
-	
+
 	array_list_t ev;
 	event_t search;
 
@@ -668,7 +668,7 @@ static void functions_def( wchar_t *name )
 	if( desc && wcslen(desc) )
 	{
 		wchar_t *esc_desc = escape( desc, 1 );
-	
+
 		sb_append2( sb_out, L" --description ", esc_desc, (void *)0 );
 		free( esc_desc );
 	}
@@ -708,7 +708,7 @@ static void functions_def( wchar_t *name )
 			}
 
 		}
-	
+
 	}
 
 	al_destroy( &ev );
@@ -729,14 +729,14 @@ static int builtin_functions( wchar_t **argv )
 {
 	int i;
 	int erase=0;
-	wchar_t *desc=0;	
+	wchar_t *desc=0;
 
 	array_list_t names;
 	wchar_t **names_arr;
 
 	int argc=builtin_count_args( argv );
 	int list=0;
-	int show_hidden=0;	
+	int show_hidden=0;
 	int res = 0;
 
 	woptind=0;
@@ -745,35 +745,35 @@ static int builtin_functions( wchar_t **argv )
 		long_options[] =
 		{
 			{
-				L"erase", no_argument, 0, 'e' 
+				L"erase", no_argument, 0, 'e'
 			}
 			,
 			{
-				L"description", required_argument, 0, 'd' 
+				L"description", required_argument, 0, 'd'
 			}
 			,
 			{
-				L"names", no_argument, 0, 'n' 
+				L"names", no_argument, 0, 'n'
 			}
 			,
 			{
 				L"all", no_argument, 0, 'a'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
 
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"ed:na", 
-								long_options, 
+								argv,
+								L"ed:na",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
@@ -788,31 +788,31 @@ static int builtin_functions( wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-	
-				
+
+
 				return 1;
-				
-			case 'e':		
-				erase=1;				
+
+			case 'e':
+				erase=1;
 				break;
 
 			case 'd':
 				desc=woptarg;
-				break;				
+				break;
 
 			case 'n':
 				list=1;
 				break;
-			
+
 			case 'a':
 				show_hidden=1;
 				break;
-				
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
 
 	}
@@ -842,14 +842,14 @@ static int builtin_functions( wchar_t **argv )
 	else if( desc )
 	{
 		wchar_t *func;
-		
+
 		if( argc-woptind != 1 )
 		{
 			sb_printf( sb_err,
 					   _( L"%ls: Expected exactly one function name\n" ),
-					   argv[0] );				
+					   argv[0] );
 			builtin_print_help( argv[0], sb_err );
-			
+
 			return 1;
 		}
 		func = argv[woptind];
@@ -859,40 +859,40 @@ static int builtin_functions( wchar_t **argv )
 					   _( L"%ls: Function '%ls' does not exist\n" ),
 					   argv[0],
 					   func );
-			
+
 			builtin_print_help( argv[0], sb_err );
-			
-			return 1;			
+
+			return 1;
 		}
-		
-		function_set_desc( func, desc );		
-		
-		return 0;		
+
+		function_set_desc( func, desc );
+
+		return 0;
 	}
 	else if( list )
 	{
 		int is_screen = !builtin_out_redirect && isatty(1);
-		
+
 		al_init( &names );
 		function_get_names( &names, show_hidden );
 		names_arr = list_to_char_arr( &names );
-		qsort( names_arr, 
-			   al_get_count( &names ), 
-			   sizeof(wchar_t *), 
+		qsort( names_arr,
+			   al_get_count( &names ),
+			   sizeof(wchar_t *),
 			   (int (*)(const void *, const void *))&wcsfilecmp );
 		if( is_screen )
 		{
 			string_buffer_t buff;
 			sb_init( &buff );
-			
+
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
 				sb_append2( &buff,
 							names_arr[i],
 							L", ",
-							(void *)0 );			
+							(void *)0 );
 			}
-			
+
 			write_screen( (wchar_t *)buff.buff );
 			sb_destroy( &buff );
 		}
@@ -903,34 +903,34 @@ static int builtin_functions( wchar_t **argv )
 				sb_append2( sb_out,
 							names_arr[i],
 							L"\n",
-							(void *)0 );			
+							(void *)0 );
 			}
 		}
 
 		free( names_arr );
-		al_destroy( &names );			
+		al_destroy( &names );
 		return 0;
 	}
-	
-	
+
+
 	switch( argc - woptind )
 	{
 		case 0:
 		{
-			sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );		
+			sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );
 			al_init( &names );
 			function_get_names( &names, show_hidden );
 			names_arr = list_to_char_arr( &names );
-			qsort( names_arr, 
-				   al_get_count( &names ), 
-				   sizeof(wchar_t *), 
+			qsort( names_arr,
+				   al_get_count( &names ),
+				   sizeof(wchar_t *),
 				   (int (*)(const void *, const void *))&wcsfilecmp );
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
 				functions_def( names_arr[i] );
 			}
 			free( names_arr );
-			al_destroy( &names );			
+			al_destroy( &names );
 			break;
 		}
 
@@ -950,14 +950,14 @@ static int builtin_functions( wchar_t **argv )
 		}
 	}
 	return res;
-	
+
 }
 
 /**
    Test whether the specified string is a valid name for a keybinding
 */
 static int wcsbindingname( wchar_t *str )
-{	
+{
 	while( *str )
 	{
 		if( (!iswalnum(*str)) && (*str != L'-' ) )
@@ -975,60 +975,60 @@ static int wcsbindingname( wchar_t *str )
    It calls various functions from function.c to perform any heavy lifting.
 */
 static int builtin_function( wchar_t **argv )
-{	
+{
 	int argc = builtin_count_args( argv );
 	int res=0;
-	wchar_t *desc=0;	
+	wchar_t *desc=0;
 	int is_binding=0;
 	array_list_t *events = al_new();
-		
+
 	woptind=0;
 
 	const static struct woption
 		long_options[] =
 		{
 			{
-				L"description", required_argument, 0, 'd' 
+				L"description", required_argument, 0, 'd'
 			}
 			,
 			{
-				L"key-binding", no_argument, 0, 'b' 
+				L"key-binding", no_argument, 0, 'b'
 			}
 			,
 			{
-				L"on-signal", required_argument, 0, 's' 
+				L"on-signal", required_argument, 0, 's'
 			}
 			,
 			{
-				L"on-job-exit", required_argument, 0, 'j' 
+				L"on-job-exit", required_argument, 0, 'j'
 			}
 			,
 			{
-				L"on-process-exit", required_argument, 0, 'p' 
+				L"on-process-exit", required_argument, 0, 'p'
 			}
 			,
 			{
-				L"on-variable", required_argument, 0, 'v' 
+				L"on-variable", required_argument, 0, 'v'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 && (!res ) )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"bd:s:j:p:v:", 
-								long_options, 
+								argv,
+								L"bd:s:j:p:v:",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -1041,88 +1041,88 @@ static int builtin_function( wchar_t **argv )
 				builtin_print_help( argv[0], sb_err );
 
 				res = 1;
-				break;			
-				
-			case 'd':		
-				desc=woptarg;				
+				break;
+
+			case 'd':
+				desc=woptarg;
 				break;
 
 			case 'b':
 				is_binding=1;
 				break;
-				
+
 			case 's':
 			{
 				int sig = wcs2sig( woptarg );
 				event_t *e;
-				
+
 				if( sig < 0 )
 				{
-					sb_printf( sb_err, 
+					sb_printf( sb_err,
 							   _( L"%ls: Unknown signal '%ls'\n" ),
 							   argv[0],
 							   woptarg );
 					res=1;
 					break;
 				}
-				
+
 				e = calloc( 1, sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_SIGNAL;
 				e->param1.signal = sig;
-				e->function_name=0;				
+				e->function_name=0;
 				al_push( events, e );
-				break;				
+				break;
 			}
-			
+
 			case 'v':
 			{
 				event_t *e;
 
 				if( !wcsvarname( woptarg ) )
 				{
-					sb_printf( sb_err, 
+					sb_printf( sb_err,
 							   _( L"%ls: Invalid variable name '%ls'\n" ),
 							   argv[0],
 							   woptarg );
 					res=1;
 					break;
 				}
-				
+
 				e = calloc( 1, sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_VARIABLE;
 				e->param1.variable = wcsdup( woptarg );
-				e->function_name=0;				
+				e->function_name=0;
 				al_push( events, e );
 				break;
 			}
-			
+
 			case 'j':
 			case 'p':
 			{
 				pid_t pid;
 				wchar_t *end;
 				event_t *e;
-				
+
 				e = calloc( 1, sizeof(event_t));
 				if( !e )
 					die_mem();
 
-				if( ( opt == 'j' ) && 
+				if( ( opt == 'j' ) &&
 					( wcscasecmp( woptarg, L"caller" ) == 0 ) )
 				{
 					int job_id = -1;
-					
-					if( is_subshell ) 
+
+					if( is_subshell )
 					{
 						block_t *b = current_block;
-						
+
 						while( b && (b->type != SUBST) )
 							b = b->outer;
-						
+
 						if( b )
 						{
 							b=b->outer;
@@ -1132,7 +1132,7 @@ static int builtin_function( wchar_t **argv )
 							job_id = b->job->job_id;
 						}
 					}
-					
+
 					if( job_id == -1 )
 					{
 						sb_printf( sb_err,
@@ -1145,12 +1145,12 @@ static int builtin_function( wchar_t **argv )
 						e->type = EVENT_JOB_ID;
 						e->param1.job_id = job_id;
 					}
-										
+
 				}
 				else
 				{
 					errno = 0;
-					pid = wcstol( woptarg, &end, 10 );	
+					pid = wcstol( woptarg, &end, 10 );
 					if( errno || !end || *end )
 					{
 						sb_printf( sb_err,
@@ -1159,9 +1159,9 @@ static int builtin_function( wchar_t **argv )
 								   woptarg );
 						res=1;
 						break;
-					}				
-					
-					
+					}
+
+
 					e->type = EVENT_EXIT;
 					e->param1.pid = (opt=='j'?-1:1)*abs(pid);
 				}
@@ -1171,59 +1171,59 @@ static int builtin_function( wchar_t **argv )
 				}
 				else
 				{
-					e->function_name=0;		
+					e->function_name=0;
 					al_push( events, e );
 				}
-				break;				
+				break;
 			}
-			
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				res = 1;				
+				res = 1;
 				break;
-				
+
 		}
-		
-	}		
-	
+
+	}
+
 	if( !res )
-	{		
+	{
 		if( argc-woptind != 1 )
 		{
-			sb_printf( sb_err, 
+			sb_printf( sb_err,
 					   _( L"%ls: Expected one argument, got %d\n" ),
 					   argv[0],
 					   argc-woptind );
 			res=1;
 		}
 		else if( !(is_binding?wcsbindingname( argv[woptind] ) : wcsvarname( argv[woptind] ) ))
-		{ 
-			sb_printf( sb_err, 
-					   _( L"%ls: Illegal function name '%ls'\n" ), 
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: Illegal function name '%ls'\n" ),
 					   argv[0],
 					   argv[woptind] );
-			
-			res=1;	
-		}	
+
+			res=1;
+		}
 		else if( parser_is_reserved(argv[woptind] ) )
 		{
-			
+
 			sb_printf( sb_err,
 					   _( L"%ls: The name '%ls' is reserved,\nand can not be used as a function name\n" ),
 					   argv[0],
 					   argv[woptind] );
-			
+
 			res=1;
 		}
 	}
-	
+
 	if( res )
 	{
 		int i;
 		array_list_t names;
 		wchar_t **names_arr;
 		int chars=0;
-		
+
 //		builtin_print_help( argv[0], sb_err );
 		const wchar_t *cfa =  _( L"Current functions are: " );
 		sb_append( sb_err, cfa );
@@ -1232,9 +1232,9 @@ static int builtin_function( wchar_t **argv )
 		al_init( &names );
 		function_get_names( &names, 0 );
 		names_arr = list_to_char_arr( &names );
-		qsort( names_arr, 
-			   al_get_count( &names ), 
-			   sizeof(wchar_t *), 
+		qsort( names_arr,
+			   al_get_count( &names ),
+			   sizeof(wchar_t *),
 			   (int (*)(const void *, const void *))&wcsfilecmp );
 		for( i=0; i<al_get_count( &names ); i++ )
 		{
@@ -1245,29 +1245,29 @@ static int builtin_function( wchar_t **argv )
 				chars = 0;
 				sb_append(sb_err, L"\n" );
 			}
-			
+
 			sb_append2( sb_err,
-						nxt, L"  ", (void *)0 );			
+						nxt, L"  ", (void *)0 );
 		}
 		free( names_arr );
 		al_destroy( &names );
-		sb_append( sb_err, L"\n" );		
+		sb_append( sb_err, L"\n" );
 
 		parser_push_block( FAKE );
 
 		al_foreach( events, (void (*)(const void *))&event_free );
 		al_destroy( events );
-		free( events );		
+		free( events );
 	}
 	else
 	{
 		int i;
-		
+
 		parser_push_block( FUNCTION_DEF );
 		current_block->param1.function_name=wcsdup(argv[woptind]);
 		current_block->param2.function_description=desc?wcsdup(desc):0;
 		current_block->param3.function_is_binding = is_binding;
-		current_block->param4.function_events = events;		
+		current_block->param4.function_events = events;
 		for( i=0; i<al_get_count( events ); i++ )
 		{
 			event_t *e = (event_t *)al_get( events, i );
@@ -1275,49 +1275,49 @@ static int builtin_function( wchar_t **argv )
 		}
 
 	}
-	
+
 	current_block->tok_pos = parser_get_pos();
 	current_block->skip = 1;
-	
+
 	return 0;
-	
+
 }
 
-/** 
+/**
 	The random builtin. For generating random numbers.
 */
 static int builtin_random( wchar_t **argv )
 {
-	static int seeded=0;	
+	static int seeded=0;
 	int argc = builtin_count_args( argv );
-	
+
 	woptind=0;
-	
+
 	const static struct woption
 		long_options[] =
 		{
 			{
-				L"help", no_argument, 0, 'h' 
+				L"help", no_argument, 0, 'h'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"h", 
-								long_options, 
+								argv,
+								L"h",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -1328,21 +1328,21 @@ static int builtin_random( wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
-			case 'h':		
+
+			case 'h':
 				builtin_print_help( argv[0], sb_err );
 				break;
 
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-		
-	}		
+
+	}
 
 	switch( argc-woptind )
 	{
@@ -1357,28 +1357,28 @@ static int builtin_random( wchar_t **argv )
 			sb_printf( sb_out, L"%d\n", rand()%32767 );
 			break;
 		}
-		
+
 		case 1:
 		{
 			int foo;
 			wchar_t *end=0;
-			
+
 			errno=0;
 			foo = wcstol( argv[woptind], &end, 10 );
 			if( errno || *end )
 			{
 				sb_printf( sb_err,
-						   _( L"%ls: Seed value '%ls' is not a valid number\n" ), 
+						   _( L"%ls: Seed value '%ls' is not a valid number\n" ),
 						   argv[0],
 						   argv[woptind] );
-				
+
 				return 1;
 			}
 			seeded=1;
 			srand( foo );
 			break;
 		}
-		
+
 		default:
 		{
 			sb_printf( sb_err,
@@ -1389,7 +1389,7 @@ static int builtin_random( wchar_t **argv )
 			return 1;
 		}
 	}
-	return 0;	
+	return 0;
 }
 
 
@@ -1405,7 +1405,7 @@ static int builtin_read( wchar_t **argv )
 	wchar_t *nxt;
 	wchar_t *prompt = DEFAULT_READ_PROMPT;
 	wchar_t *commandline = L"";
-	
+
 	woptind=0;
 
 	while( 1 )
@@ -1441,22 +1441,22 @@ static int builtin_read( wchar_t **argv )
 					L"command", required_argument, 0, 'c'
 				}
 				,
-				{ 
-					0, 0, 0, 0 
+				{
+					0, 0, 0, 0
 				}
 			}
-		;		
-		
+		;
+
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"xglUup:c:", 
-								long_options, 
+								argv,
+								L"xglUup:c:",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -1469,20 +1469,20 @@ static int builtin_read( wchar_t **argv )
 				builtin_print_help( argv[0], sb_err );
 
 				return 1;
-				
-			case L'x':		
+
+			case L'x':
 				place |= ENV_EXPORT;
 				break;
-			case L'g':		
+			case L'g':
 				place |= ENV_GLOBAL;
 				break;
-			case L'l':		
+			case L'l':
 				place |= ENV_LOCAL;
 				break;
-			case L'U':		
+			case L'U':
 				place |= ENV_UNIVERSAL;
 				break;
-			case L'u':		
+			case L'u':
 				place |= ENV_UNEXPORT;
 				break;
 			case L'p':
@@ -1491,15 +1491,15 @@ static int builtin_read( wchar_t **argv )
 			case L'c':
 				commandline = woptarg;
 				break;
-				
+
 			case L'?':
 				builtin_print_help( argv[0], sb_err );
 
-				
-				return 1;	
+
+				return 1;
 		}
-		
-	}		
+
+	}
 
 	if( ( place & ENV_UNEXPORT ) && ( place & ENV_EXPORT ) )
 	{
@@ -1507,50 +1507,50 @@ static int builtin_read( wchar_t **argv )
 				   BUILTIN_ERR_EXPUNEXP,
 				   argv[0],
 				   parser_current_line() );
-		
-					
-		builtin_print_help( argv[0], sb_err );		
-		return 1;		
+
+
+		builtin_print_help( argv[0], sb_err );
+		return 1;
 	}
-	
+
 	if( (place&ENV_LOCAL?1:0) + (place & ENV_GLOBAL?1:0) + (place & ENV_UNIVERSAL?1:0) > 1)
 	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_GLOCAL,
 				   argv[0],
 				   parser_current_line() );
-		builtin_print_help( argv[0], sb_err );		
-		
-		return 1;		
+		builtin_print_help( argv[0], sb_err );
+
+		return 1;
 	}
-	
+
 	if( woptind == argc )
 	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_MISSING,
-				   argv[0] );		
-		
+				   argv[0] );
+
 		sb_append2( sb_err,
 					parser_current_line(),
 					L"\n",
 					(void *)0 );
-		builtin_print_help( argv[0], sb_err );				
-		return 1;				
+		builtin_print_help( argv[0], sb_err );
+		return 1;
 	}
 
-	/* 
+	/*
 	   Verify all variable names
 	*/
 	for( i=woptind; i<argc; i++ )
 	{
 		wchar_t *src;
-		
+
 		if( !wcslen( argv[i] ) )
 		{
 			sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
 			return 1;
 		}
-		
+
 		for( src=argv[i]; *src; src++ )
 		{
 			if( (!iswalnum(*src)) && (*src != L'_' ) )
@@ -1560,9 +1560,9 @@ static int builtin_read( wchar_t **argv )
 				return 1;
 			}
 		}
-		
+
 	}
-	
+
 	/*
 	  The call to reader_readline may change woptind, so we save it away here
 	*/
@@ -1576,83 +1576,83 @@ static int builtin_read( wchar_t **argv )
 	  Check if we should read interactively using \c reader_readline()
 	*/
 	if( isatty(0) && builtin_stdin == 0 )
-	{				
-		reader_push( READ_MODE_NAME );		
+	{
+		reader_push( READ_MODE_NAME );
 		reader_set_prompt( prompt );
-				
+
 		reader_set_buffer( commandline, wcslen( commandline ) );
 		buff = wcsdup(reader_readline( ));
 		reader_pop();
 	}
 	else
-	{		
+	{
 		string_buffer_t sb;
 		sb_init( &sb );
 		while( 1 )
 		{
 			int eof=0;
 			int finished=0;
-			
+
 			wchar_t res=0;
 			static mbstate_t state;
 			memset (&state, '\0', sizeof (state));
-			
+
 			while( !finished )
 			{
 				char b;
-				int read_res = read_blocked( builtin_stdin, &b, 1 );				
+				int read_res = read_blocked( builtin_stdin, &b, 1 );
 				if( read_res <= 0 )
 				{
 					eof=1;
 					break;
 				}
-				
+
 				int sz = mbrtowc( &res, &b, 1, &state );
-				
+
 				switch( sz )
 				{
 					case -1:
 						memset (&state, '\0', sizeof (state));
 						break;
-						
+
 					case -2:
 						break;
 					case 0:
 						eof=1;
 						finished = 1;
 						break;
-						
+
 					default:
 						finished=1;
 						break;
-						
+
 				}
 			}
-			
+
 			if( eof )
 				break;
 			if( res == L'\n' )
 				break;
-			
+
 			sb_append_char( &sb, res );
 		}
 		buff = wcsdup( (wchar_t *)sb.buff );
-		sb_destroy( &sb );		
+		sb_destroy( &sb );
 	}
-	
+
 	wchar_t *state;
-	
+
 	nxt = wcstok( buff, (i<argc-1)?ifs:L"", &state );
-	
+
 	while( i<argc )
 	{
-		env_set( argv[i], nxt != 0 ? nxt: L"", place );		
+		env_set( argv[i], nxt != 0 ? nxt: L"", place );
 
 		i++;
 		if( nxt != 0 )
-			nxt = wcstok( 0, (i<argc-1)?ifs:L"", &state);		
+			nxt = wcstok( 0, (i<argc-1)?ifs:L"", &state);
 	}
-	
+
 	free( buff );
 	return 0;
 }
@@ -1662,79 +1662,89 @@ static int builtin_read( wchar_t **argv )
 */
 static int builtin_status( wchar_t **argv )
 {
-	enum 
+	enum
 	{
 		NORMAL,
-		SUBST,
-		BLOCK,
-		INTERACTIVE,
+		IS_SUBST,
+		IS_BLOCK,
+		IS_INTERACTIVE,
+		IS_LOGIN,
+		IS_FULL_JOB_CONTROL,
+		IS_INTERACTIVE_JOB_CONTROL,
+		IS_NO_JOB_CONTROL,
 		STACK_TRACE,
-		LOGIN
+		DONE,
 	}
 	;
-	
+
 	int mode = NORMAL;
-	
-	int argc = builtin_count_args( argv );	
+
+	int argc = builtin_count_args( argv );
+	int res=0;
+
 	woptind=0;
-	
-	const static struct woption
+
+	const struct woption
 		long_options[] =
 		{
 			{
-				L"help", no_argument, 0, 'h' 
+				L"help", no_argument, 0, 'h'
 			}
 			,
 			{
-				L"is-command-substitution", no_argument, 0, 'c' 
+				L"is-command-substitution", no_argument, &mode, IS_SUBST
 			}
 			,
 			{
-				L"is-block", no_argument, 0, 'b' 
+				L"is-block", no_argument, &mode, IS_BLOCK
 			}
 			,
-			{ 
-				L"is-interactive", no_argument, 0, 'i' 
+			{
+				L"is-interactive", no_argument, &mode, IS_INTERACTIVE
 			}
 			,
-			{ 
-				L"is-login", no_argument, 0, 'l' 
+			{
+				L"is-login", no_argument, &mode, IS_LOGIN
 			}
 			,
-			{ 
-				L"full-job-control", no_argument, 0, 'f' 
+			{
+				L"is-full-job-control", no_argument, &mode, IS_FULL_JOB_CONTROL
 			}
 			,
-			{ 
-				L"interactive-job-control", no_argument, 0, 'I' 
+			{
+				L"is-interactive-job-control", no_argument, &mode, IS_INTERACTIVE_JOB_CONTROL
 			}
 			,
-			{ 
-				L"no-job-control", no_argument, 0, 'n' 
+			{
+				L"is-no-job-control", no_argument, &mode, IS_NO_JOB_CONTROL
 			}
 			,
-			{ 
-				L"print-stack-trace", no_argument, 0, 't' 
+			{
+				L"job-control", required_argument, 0, 'j'
 			}
 			,
-			{ 
-				0, 0, 0, 0 
+			{
+				L"print-stack-trace", no_argument, 0, 't'
+			}
+			,
+			{
+				0, 0, 0, 0
 			}
 		}
-	;		
-		
+	;
+
 	while( 1 )
 	{
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"hcbilfInt", 
-								long_options, 
+								argv,
+								L"hjt",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -1745,77 +1755,89 @@ static int builtin_status( wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
-			case 'h':		
+
+			case 'h':
 				builtin_print_help( argv[0], sb_err );
 				return 0;
-				
-			case 'i':		
-				mode = INTERACTIVE;
-				break;
-				
-			case 'c':		
-				mode = SUBST;
-				break;
-				
-			case 'b':		
-				mode = BLOCK;
+
+			case 'j':
+				if( wcscmp( woptarg, L"full" ) == 0 )
+					job_control_mode = JOB_CONTROL_ALL;
+				else if( wcscmp( woptarg, L"interactive" ) == 0 )
+					job_control_mode = JOB_CONTROL_INTERACTIVE;
+				else if( wcscmp( woptarg, L"none" ) == 0 )
+					job_control_mode = JOB_CONTROL_NONE;
+				else
+				{
+					sb_printf( sb_err,
+							   L"%ls: Invalid job control mode '%ls'\n",
+							   woptarg );
+					res = 1;
+				}
+				mode = DONE;				
 				break;
 
-			case 'l':		
-				mode = LOGIN;
-				break;
-
-			case 'f':
-				job_control_mode = JOB_CONTROL_ALL;
-				break;
-				
-			case 'I':
-				job_control_mode = JOB_CONTROL_INTERACTIVE;
-				break;
-				
-			case 'n':
-				job_control_mode = JOB_CONTROL_NONE;
-				break;
-
-			case 't':
-				mode = STACK_TRACE;
-				break;
-				
 			case '?':
 				builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-		
-	}		
+
+	}
+
+	if( !res )
+	{
 
 	switch( mode )
 	{
-		case INTERACTIVE:
+		case IS_INTERACTIVE:
 			return !is_interactive_session;
-			
-		case SUBST:
+
+		case IS_SUBST:
 			return !is_subshell;
-			
-		case BLOCK:
+
+		case IS_BLOCK:
 			return !is_block;
-			
-		case LOGIN:
+
+		case IS_LOGIN:
 			return !is_login;
+			
+		case IS_FULL_JOB_CONTROL:
+			return job_control_mode != JOB_CONTROL_ALL;
+
+		case IS_INTERACTIVE_JOB_CONTROL:
+			return job_control_mode != JOB_CONTROL_INTERACTIVE;
+
+		case IS_NO_JOB_CONTROL:
+			return job_control_mode != JOB_CONTROL_NONE;
 
 		case STACK_TRACE:
 		{
 			parser_stack_trace( current_block, sb_out );
 			break;
 		}
-		
+
+		case NORMAL:
+		{
+			if( is_login )
+				sb_printf( sb_out, _( L"This is a login shell\n" ) );
+			else
+				sb_printf( sb_out, _( L"This is not a login shell\n" ) );
+
+			sb_printf( sb_out, _(L"Job control: %ls\n"),
+					   job_control_mode==JOB_CONTROL_INTERACTIVE?_(L"Only on interactive jobs"):
+					   (job_control_mode==JOB_CONTROL_NONE?_(L"Never"):_(L"Always")) );
+
+			parser_stack_trace( current_block, sb_out );
+			break;
+		}
 	}
-	
-	return 0;
+	}
+
+	return res;
 }
 
 
@@ -1829,16 +1851,16 @@ static int builtin_eval( wchar_t **argv )
 	int i;
 	int argc = builtin_count_args( argv );
 	sb_init( &sb );
-	
+
 	for( i=1; i<argc; i++ )
 	{
 		sb_append( &sb, argv[i] );
 		sb_append( &sb, L" " );
 	}
-	
+
 	eval( (wchar_t *)sb.buff, block_io, TOP );
 	sb_destroy( &sb );
-	
+
 	return proc_get_last_status();
 }
 
@@ -1846,9 +1868,9 @@ static int builtin_eval( wchar_t **argv )
    The exit builtin. Calls reader_exit to exit and returns the value specified.
 */
 static int builtin_exit( wchar_t **argv )
-{	
+{
 	int argc = builtin_count_args( argv );
-	
+
 	int ec=0;
 	switch( argc )
 	{
@@ -1857,28 +1879,28 @@ static int builtin_exit( wchar_t **argv )
 		case 2:
 		{
 			wchar_t *end;
-			errno = 0;			
+			errno = 0;
 			ec = wcstol(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
-				sb_printf( sb_err, 
-						   _( L"%ls: Argument '%ls' must be an integer\n" ), 
+				sb_printf( sb_err,
+						   _( L"%ls: Argument '%ls' must be an integer\n" ),
 						   argv[0],
 						   argv[1] );
-				builtin_print_help( argv[0], sb_err );				
+				builtin_print_help( argv[0], sb_err );
 				return 1;
 			}
 			break;
 		}
-		
+
 		default:
-			sb_printf( sb_err, 
-					   _( L"%ls: Too many arguments\n" ), 
+			sb_printf( sb_err,
+					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
-			
-			builtin_print_help( argv[0], sb_err );				
+
+			builtin_print_help( argv[0], sb_err );
 			return 1;
-				
+
 	}
 	reader_exit( 1 );
 	return ec;
@@ -1920,24 +1942,24 @@ static int builtin_cd( wchar_t **argv )
 			sb_printf( sb_err,
 					   _( L"%ls: Could not find home directory\n" ),
 					   argv[0] );
-		}		
-	}	
-	else 
+		}
+	}
+	else
 		dir_in = argv[1];
-	
-	dir = parser_cdpath_get( dir_in );	
-	
+
+	dir = parser_cdpath_get( dir_in );
+
 	if( !dir )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: '%ls' is not a directory or you do not have permission to enter it\n" ),
 				   argv[0],
 				   dir_in );
-		sb_append2( sb_err, 
+		sb_append2( sb_err,
 					parser_current_line(),
-					(void *)0 );			
+					(void *)0 );
 		return 1;
-	}		
+	}
 
 	if( wchdir( dir ) != 0 )
 	{
@@ -1945,30 +1967,30 @@ static int builtin_cd( wchar_t **argv )
 				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
 				   dir );
-		sb_append2( sb_err, 
+		sb_append2( sb_err,
 					parser_current_line(),
 					(void *)0 );
-		
+
 		free( dir );
-		
+
 		return 1;
 	}
 
 	if (!set_pwd(L"PWD"))
 	{
 		res=1;
-		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );		
+		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );
 	}
-	
+
 	free( dir );
-	
+
 	return res;
 }
 
 
 
 /**
-   The  . (dot) builtin, sometimes called source. Evaluates the contents of a file. 
+   The  . (dot) builtin, sometimes called source. Evaluates the contents of a file.
 */
 static int builtin_source( wchar_t ** argv )
 {
@@ -1976,32 +1998,32 @@ static int builtin_source( wchar_t ** argv )
 	int res;
 	struct stat buf;
 	int argc;
-	
-	argc = builtin_count_args( argv );	
 
-	
+	argc = builtin_count_args( argv );
+
+
 	if( argc != 2 )
 	{
 		sb_printf( sb_err, _( L"%ls: Expected exactly one argument, got %d\n" ), argv[0], argc );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
-	
+
 	if( wstat(argv[1], &buf) == -1 )
 	{
 		builtin_wperror( L"stat" );
 		return 1;
 	}
-		
+
 	if( !S_ISREG(buf.st_mode) )
 	{
 		sb_printf( sb_err, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
 		builtin_print_help( argv[0], sb_err );
-		
+
 		return 1;
 	}
 	if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
-	{		
+	{
 		builtin_wperror( L"open" );
 		res = 1;
 	}
@@ -2016,13 +2038,13 @@ static int builtin_source( wchar_t ** argv )
 		int lineno = parser_get_lineno();
 		wchar_t *file = parser_current_filename()?wcsdup(parser_current_filename()):0;
 		reader_push_current_filename( argv[1] );
-		parser_push_block( SOURCE );		
+		parser_push_block( SOURCE );
 
 		current_block->param1.source_dest = wcsdup( argv[1] );
 		current_block->param3.call_lineno = lineno;
 		current_block->param4.call_filename = file;
 
-		res = reader_read( fd );		
+		res = reader_read( fd );
 		parser_pop_block();
 		if( res )
 		{
@@ -2078,17 +2100,17 @@ static void make_first( job_t *j )
 static int builtin_fg( wchar_t **argv )
 {
 	job_t *j;
-	
+
 	if( argv[1] == 0 )
 	{
 		/*
-		  Select last constructed job (I.e. first job in the job que) that is possible to put in the foreground 
+		  Select last constructed job (I.e. first job in the job que) that is possible to put in the foreground
 		*/
 		for( j=first_job; j; j=j->next )
 		{
 			if( j->constructed && (!job_is_completed(j)) && ( (job_is_stopped(j) || !j->fg) && (j->job_control)))
 				break;
-		}			
+		}
 		if( !j )
 		{
 			sb_printf( sb_err,
@@ -2109,21 +2131,21 @@ static int builtin_fg( wchar_t **argv )
 		j = job_get_from_pid( pid );
 		if( j != 0 )
 		{
-			sb_printf( sb_err, 
+			sb_printf( sb_err,
 						_( L"%ls: Ambiguous job\n" ),
-					   argv[0] );			
+					   argv[0] );
 		}
 		else
 		{
 			sb_printf( sb_err,
-					   _( L"%ls: '%ls' is not a job\n" ), 
-					   argv[0], 
+					   _( L"%ls: '%ls' is not a job\n" ),
+					   argv[0],
 					   argv[1] );
 		}
 		builtin_print_help( argv[0], sb_err );
-		
+
 		j=0;
-		
+
 	}
 	else
 	{
@@ -2147,16 +2169,16 @@ static int builtin_fg( wchar_t **argv )
 			builtin_print_help( argv[0], sb_err );
 			j=0;
 		}
-		
+
 	}
-	
+
 	if( j )
 	{
 		if( builtin_err_redirect )
 		{
-			sb_printf( sb_err, 
+			sb_printf( sb_err,
 					   FG_MSG,
-					   j->job_id, 
+					   j->job_id,
 					   j->command );
 		}
 		else
@@ -2168,7 +2190,7 @@ static int builtin_fg( wchar_t **argv )
 			*/
 			fwprintf( stderr,
 					  FG_MSG,
-					  j->job_id, 
+					  j->job_id,
 					  j->command );
 		}
 
@@ -2177,10 +2199,10 @@ static int builtin_fg( wchar_t **argv )
 			env_set( L"_", ft, ENV_EXPORT );
 		free(ft);
 		reader_write_title();
-		
+
 		make_first( j );
 		j->fg=1;
-		
+
 		job_continue( j, job_is_stopped(j) );
 	}
 	return j != 0;
@@ -2193,13 +2215,13 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 {
 	if( j == 0 )
 	{
-		sb_printf( sb_err, 
+		sb_printf( sb_err,
 				   _( L"%ls: Unknown job '%ls'\n" ),
 				   L"bg",
 				   name );
 		builtin_print_help( L"bg", sb_err );
 		return 1;
-	}	
+	}
 	else if( !j->job_control )
 	{
 		sb_printf( sb_err,
@@ -2212,7 +2234,7 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 	}
 	else
 	{
-		sb_printf( sb_err, 
+		sb_printf( sb_err,
 				   _(L"Send job %d '%ls' to background\n"),
 				   j->job_id,
 				   j->command );
@@ -2230,7 +2252,7 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 static int builtin_bg( wchar_t **argv )
 {
 	int res = 0;
-	
+
 	if( argv[1] == 0 )
 	{
   		job_t *j;
@@ -2239,7 +2261,7 @@ static int builtin_bg( wchar_t **argv )
 			if( job_is_stopped(j) && j->job_control && (!job_is_completed(j)) )
 				break;
 		}
-		
+
 		if( !j )
 		{
 			sb_printf( sb_err,
@@ -2272,20 +2294,20 @@ static int cpu_use( job_t *j )
 {
 	double u=0;
 	process_t *p;
-	
+
 	for( p=j->first_process; p; p=p->next )
 	{
 		struct timeval t;
 		int jiffies;
 		gettimeofday( &t, 0 );
 		jiffies = proc_get_jiffies( p );
-		
+
 		double t1 = 1000000.0*p->last_time.tv_sec+p->last_time.tv_usec;
 		double t2 = 1000000.0*t.tv_sec+t.tv_usec;
-		
+
 /*		fwprintf( stderr, L"t1 %f t2 %f p1 %d p2 %d\n",
   t1, t2, jiffies, p->last_jiffies );
-*/	
+*/
 
 		u += ((double)(jiffies-p->last_jiffies))/(t2-t1);
 	}
@@ -2315,17 +2337,17 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 #endif
 				sb_append( sb_out, _( L"State\tCommand\n" ) );
 			}
-			
+
 			sb_printf( sb_out, L"%d\t%d\t", j->job_id, j->pgid );
-			
+
 #ifdef HAVE__PROC_SELF_STAT
 			sb_printf( sb_out, L"%d%%\t", cpu_use(j) );
 #endif
-			sb_append2( sb_out, 
-						job_is_stopped(j)?_(L"stopped"):_(L"running"), 
-						L"\t", 
-						j->command, 
-						L"\n", 
+			sb_append2( sb_out,
+						job_is_stopped(j)?_(L"stopped"):_(L"running"),
+						L"\t",
+						j->command,
+						L"\n",
 						(void *)0 );
 			break;
 		}
@@ -2342,9 +2364,9 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 			sb_printf( sb_out, L"%d\n", j->pgid );
 			break;
 		}
-		
+
 		case JOBS_PRINT_PID:
-		{			
+		{
 			if( header )
 			{
 				/*
@@ -2356,12 +2378,12 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 			for( p=j->first_process; p; p=p->next )
 			{
 				sb_printf( sb_out, L"%d\n", p->pid );
-			}		
+			}
 			break;
 		}
-		
+
 		case JOBS_PRINT_COMMAND:
-		{			
+		{
 			if( header )
 			{
 				/*
@@ -2373,11 +2395,11 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 			for( p=j->first_process; p; p=p->next )
 			{
 				sb_printf( sb_out, L"%ls\n", p->argv[0] );
-			}		
+			}
 			break;
-		}		
+		}
 	}
-		
+
 }
 
 
@@ -2386,14 +2408,14 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
    Builtin for printing running jobs
 */
 static int builtin_jobs( wchar_t **argv )
-{	
+{
 	int argc=0;
-	int found=0;	
+	int found=0;
 	int mode=JOBS_DEFAULT;
 	int print_last = 0;
 	job_t *j;
-	
-	argc = builtin_count_args( argv );	
+
+	argc = builtin_count_args( argv );
 	woptind=0;
 
 	while( 1 )
@@ -2417,22 +2439,22 @@ static int builtin_jobs( wchar_t **argv )
 					L"last", no_argument, 0, 'l'
 				}
 				,
-				{ 
-					0, 0, 0, 0 
+				{
+					0, 0, 0, 0
 				}
 			}
-		;		
-		
+		;
+
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"pclg", 
-								long_options, 
+								argv,
+								L"pclg",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -2442,42 +2464,42 @@ static int builtin_jobs( wchar_t **argv )
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-											
-				sb_append( sb_err, 
+
+				sb_append( sb_err,
 						   parser_current_line() );
 //				builtin_print_help( argv[0], sb_err );
 
-				
+
 				return 1;
-				
-				
-			case 'p':					
+
+
+			case 'p':
 				mode=JOBS_PRINT_PID;
 				break;
-					
-			case 'c':					
+
+			case 'c':
 				mode=JOBS_PRINT_COMMAND;
 				break;
 
-			case 'g':					
+			case 'g':
 				mode=JOBS_PRINT_GROUP;
 				break;
 
 			case 'l':
 			{
-				print_last = 1;				
+				print_last = 1;
 				break;
 			}
-			
+
 
 			case '?':
 				//	builtin_print_help( argv[0], sb_err );
-				
+
 				return 1;
-				
+
 		}
-	}	
-	
+	}
+
 
 	/*
 	  Do not babble if not interactive
@@ -2486,7 +2508,7 @@ static int builtin_jobs( wchar_t **argv )
 	{
 		found=1;
 	}
-	
+
 	if( print_last )
 	{
 		/*
@@ -2494,11 +2516,11 @@ static int builtin_jobs( wchar_t **argv )
 		*/
 		for( j=first_job; j; j=j->next )
 		{
-			if( j->constructed )					
+			if( j->constructed )
 			{
 				builtin_jobs_print( j, mode, !found );
 				return 0;
-			}					
+			}
 		}
 
 	}
@@ -2509,24 +2531,24 @@ static int builtin_jobs( wchar_t **argv )
 			int i;
 
 			found = 1;
-			
+
 			for( i=woptind; i<argc; i++ )
 			{
 				long pid;
-				wchar_t *end;			
+				wchar_t *end;
 				errno=0;
 				pid=wcstol( argv[i], &end, 10 );
 				if( errno || *end )
 				{
-					sb_printf( sb_err, 
+					sb_printf( sb_err,
 							   _( L"%ls: '%ls' is not a job\n" ),
-							   argv[0], 
+							   argv[0],
 							   argv[i] );
 					return 1;
 				}
-				
+
 				j = job_get_from_pid( pid );
-				
+
 				if( j )
 				{
 					builtin_jobs_print( j, mode, !found );
@@ -2534,8 +2556,8 @@ static int builtin_jobs( wchar_t **argv )
 				else
 				{
 					sb_printf( sb_err,
-							   _( L"%ls: No suitable job: %d\n" ), 
-							   argv[0], 
+							   _( L"%ls: No suitable job: %d\n" ),
+							   argv[0],
 							   pid );
 					return 1;
 				}
@@ -2556,14 +2578,14 @@ static int builtin_jobs( wchar_t **argv )
 			}
 		}
 	}
-	
+
 	if( !found )
 	{
-		sb_printf( sb_out, 
-				   _( L"%ls: There are no jobs\n" ), 
+		sb_printf( sb_out,
+				   _( L"%ls: There are no jobs\n" ),
 				   argv[0] );
 	}
-	
+
 	return 0;
 }
 
@@ -2574,18 +2596,18 @@ static int builtin_for( wchar_t **argv )
 {
 	int argc = builtin_count_args( argv );
 	int res=1;
-	
 
-	if( argc < 3) 
+
+	if( argc < 3)
 	{
-		sb_printf( sb_err, 
+		sb_printf( sb_err,
 				   _( L"%ls: Expected at least two arguments\n" ),
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 	}
 	else if ( !wcsvarname(argv[1]) )
 	{
-		sb_printf( sb_err, 
+		sb_printf( sb_err,
 				   _( L"%ls: '%ls' is not a valid variable name\n" ),
 				   argv[0],
 				   argv[1] );
@@ -2603,7 +2625,7 @@ static int builtin_for( wchar_t **argv )
 		res=0;
 	}
 
-	
+
 	if( res )
 	{
 		parser_push_block( FAKE );
@@ -2612,11 +2634,11 @@ static int builtin_for( wchar_t **argv )
 	{
 		parser_push_block( FOR );
 		al_init( &current_block->param2.for_vars);
-		
+
 		int i;
 		current_block->tok_pos = parser_get_pos();
 		current_block->param1.for_variable = wcsdup( argv[1] );
-		
+
 		for( i=argc-1; i>3; i-- )
 		{
 			al_push( &current_block->param2.for_vars, wcsdup(argv[ i ] ));
@@ -2628,7 +2650,7 @@ static int builtin_for( wchar_t **argv )
 		else
 		{
 			current_block->skip=1;
-		}	
+		}
 	}
 	return res;
 }
@@ -2642,12 +2664,12 @@ static int builtin_begin( wchar_t **argv )
 	current_block->tok_pos = parser_get_pos();
 	return 0;
 }
- 
+
 
 /**
    Builtin for ending a block of code, such as a for-loop or an if statement.
 
-   The end command is whare a lot of the block-level magic happens. 
+   The end command is whare a lot of the block-level magic happens.
 */
 static int builtin_end( wchar_t **argv )
 {
@@ -2656,7 +2678,7 @@ static int builtin_end( wchar_t **argv )
 		sb_printf( sb_err,
 				   _( L"%ls: Not inside of block\n" ),
 				   argv[0] );
-		
+
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -2668,7 +2690,7 @@ static int builtin_end( wchar_t **argv )
 		   variables in the current loop scope won't die between laps.
 		*/
 		int kill_block = 1;
-		
+
 		switch( current_block->type )
 		{
 			case WHILE:
@@ -2685,17 +2707,17 @@ static int builtin_end( wchar_t **argv )
 					parser_set_pos( current_block->tok_pos);
 					current_block->param1.while_state = WHILE_TEST_AGAIN;
 				}
-				
+
 				break;
 			}
-			
+
 			case IF:
 			case SUBST:
 			case BEGIN:
 				/*
 				  Nothing special happens at the end of these. The scope just ends.
 				*/
-				
+
 				break;
 
 			case FOR:
@@ -2710,7 +2732,7 @@ static int builtin_end( wchar_t **argv )
 						free( (void *)al_pop( &current_block->param2.for_vars ) );
 					}
 				}
-				
+
 				if( al_get_count( &current_block->param2.for_vars ) )
 				{
 					wchar_t *val = (wchar_t *)al_pop( &current_block->param2.for_vars );
@@ -2718,17 +2740,17 @@ static int builtin_end( wchar_t **argv )
 					current_block->loop_status = LOOP_NORMAL;
 					current_block->skip = 0;
 					free(val);
-					
+
 					kill_block = 0;
 					parser_set_pos( current_block->tok_pos );
-/*					
-  fwprintf( stderr, 
+/*
+  fwprintf( stderr,
   L"jump to %d\n",
   current_block->tok_pos );								*/
 				}
 				break;
 			}
-		
+
 			case FUNCTION_DEF:
 			{
 				/**
@@ -2736,36 +2758,36 @@ static int builtin_end( wchar_t **argv )
 				   until the end command and use as the new definition
 				   for the specified function
 				*/
-				wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos, 
+				wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
 										parser_get_job_pos()-current_block->tok_pos );
-				
+
 				//fwprintf( stderr, L"Function: %ls\n", def );
-				
+
 				if( !is_interactive || !parser_test( def, 1 ) )
 				{
-					function_add( current_block->param1.function_name, 
+					function_add( current_block->param1.function_name,
 								  def,
 								  current_block->param2.function_description,
 								  current_block->param4.function_events,
 								  current_block->param3.function_is_binding );
-				}				
-				
+				}
+
 				free(def);
 			}
 			break;
-			
+
 		}
 		if( kill_block )
 		{
 			parser_pop_block();
 		}
-		
+
 
 		/*
 		  If everything goes ok, return status of last command to execute.
 		*/
 		return proc_get_last_status();
-	}	
+	}
 }
 
 /**
@@ -2773,7 +2795,7 @@ static int builtin_end( wchar_t **argv )
 */
 static int builtin_else( wchar_t **argv )
 {
-	if( current_block == 0 || 
+	if( current_block == 0 ||
 		current_block->type != IF ||
 		current_block->param1.if_state != 1)
 	{
@@ -2805,9 +2827,9 @@ static int builtin_break_continue( wchar_t **argv )
 {
 	int is_break = (wcscmp(argv[0],L"break")==0);
 	int argc = builtin_count_args( argv );
-	
+
 	block_t *b = current_block;
-	
+
 	if( argc != 1 )
 	{
 		sb_printf( sb_err,
@@ -2816,28 +2838,28 @@ static int builtin_break_continue( wchar_t **argv )
 				   argv[1] );
 
 		builtin_print_help( argv[0], sb_err );
-		return 1;		
+		return 1;
 	}
-	
 
-	while( (b != 0) && 
-		   ( b->type != WHILE) && 
+
+	while( (b != 0) &&
+		   ( b->type != WHILE) &&
 		   (b->type != FOR ) )
 	{
 		b = b->outer;
 	}
-	
+
 	if( b == 0 )
 	{
-		sb_printf( sb_err, 
-				   _( L"%ls: Not inside of loop\n" ), 
+		sb_printf( sb_err,
+				   _( L"%ls: Not inside of loop\n" ),
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
-	
+
 	b = current_block;
-	while( ( b->type != WHILE) && 
+	while( ( b->type != WHILE) &&
 		   (b->type != FOR ) )
 	{
 		b->skip=1;
@@ -2854,10 +2876,10 @@ static int builtin_break_continue( wchar_t **argv )
 static int builtin_return( wchar_t **argv )
 {
 	int argc = builtin_count_args( argv );
-	int status = 0;	
-	
+	int status = 0;
+
 	block_t *b = current_block;
-	
+
 	switch( argc )
 	{
 		case 1:
@@ -2865,44 +2887,44 @@ static int builtin_return( wchar_t **argv )
 		case 2:
 		{
 			wchar_t *end;
-			errno = 0;			
+			errno = 0;
 			status = wcstol(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
 				sb_printf( sb_err,
-						   _( L"%ls: Argument '%ls' must be an integer\n" ), 
-						   argv[0], 
+						   _( L"%ls: Argument '%ls' must be an integer\n" ),
+						   argv[0],
 						   argv[1] );
-				builtin_print_help( argv[0], sb_err );				
+				builtin_print_help( argv[0], sb_err );
 				return 1;
 			}
 //			fwprintf( stderr, L"Return with status %d\n", status );
-			break;			
+			break;
 		}
 		default:
-			sb_printf( sb_err, 
-					   _( L"%ls: Too many arguments\n" ), 
+			sb_printf( sb_err,
+					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
 			builtin_print_help( argv[0], sb_err );
-			return 1;		
+			return 1;
 	}
-	
 
-	while( (b != 0) && 
+
+	while( (b != 0) &&
 		   ( b->type != FUNCTION_CALL)  )
 	{
 		b = b->outer;
 	}
-	
+
 	if( b == 0 )
 	{
 		sb_printf( sb_err,
-				   _( L"%ls: Not inside of function\n" ), 
+				   _( L"%ls: Not inside of function\n" ),
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
-	
+
 	b = current_block;
 	while( ( b->type != FUNCTION_CALL))
 	{
@@ -2911,7 +2933,7 @@ static int builtin_return( wchar_t **argv )
 	}
 	b->skip=1;
 //	proc_set_last_status( status );
-	
+
 	return status;
 }
 
@@ -2920,16 +2942,16 @@ static int builtin_return( wchar_t **argv )
 */
 static int builtin_switch( wchar_t **argv )
 {
-	int res=0;	
+	int res=0;
 	int argc = builtin_count_args( argv );
-	
+
 	if( argc != 2 )
 	{
-		sb_printf( sb_err, 
+		sb_printf( sb_err,
 				   _( L"%ls: Expected exactly one argument, got %d\n" ),
 				   argv[0],
 				   argc-1 );
-		
+
 		builtin_print_help( argv[0], sb_err );
 		res=1;
 		parser_push_block( FAKE );
@@ -2941,7 +2963,7 @@ static int builtin_switch( wchar_t **argv )
 		current_block->skip=1;
 		current_block->param2.switch_taken=0;
 	}
-	
+
 	return res;
 }
 
@@ -2962,14 +2984,14 @@ static int builtin_case( wchar_t **argv )
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
-		
+
 	current_block->skip = 1;
 
 	if( current_block->param2.switch_taken )
 	{
 		return 0;
 	}
-	
+
 	for( i=1; i<argc; i++ )
 	{
 		free( unescaped );
@@ -2979,12 +3001,12 @@ static int builtin_case( wchar_t **argv )
 		{
 			current_block->skip = 0;
 			current_block->param2.switch_taken = 1;
-			break;		
+			break;
 		}
 	}
 	free( unescaped );
-	
-	return 0;		
+
+	return 0;
 }
 
 
@@ -2998,13 +3020,13 @@ void builtin_init()
 	al_init( &io_stack );
 	hash_init( &builtin, &hash_wcs_func, &hash_wcs_cmp );
 
-	hash_put( &builtin, L"exit", (void*) &builtin_exit );	
-	hash_put( &builtin, L"block", (void*) &builtin_block );	
-	hash_put( &builtin, L"builtin", (void*) &builtin_builtin );	
+	hash_put( &builtin, L"exit", (void*) &builtin_exit );
+	hash_put( &builtin, L"block", (void*) &builtin_block );
+	hash_put( &builtin, L"builtin", (void*) &builtin_builtin );
 	hash_put( &builtin, L"cd", (void*) &builtin_cd );
-	hash_put( &builtin, L"function", (void*) &builtin_function );	
-	hash_put( &builtin, L"functions", (void*) &builtin_functions );	
-	hash_put( &builtin, L"complete", (void*) &builtin_complete );	
+	hash_put( &builtin, L"function", (void*) &builtin_function );
+	hash_put( &builtin, L"functions", (void*) &builtin_functions );
+	hash_put( &builtin, L"complete", (void*) &builtin_complete );
 	hash_put( &builtin, L"end", (void*) &builtin_end );
 	hash_put( &builtin, L"else", (void*) &builtin_else );
 	hash_put( &builtin, L"eval", (void*) &builtin_eval );
@@ -3015,45 +3037,45 @@ void builtin_init()
 	hash_put( &builtin, L"bg", (void*) &builtin_bg );
 	hash_put( &builtin, L"jobs", (void*) &builtin_jobs );
 	hash_put( &builtin, L"read", (void*) &builtin_read );
-	hash_put( &builtin, L"break", (void*) &builtin_break_continue );	
+	hash_put( &builtin, L"break", (void*) &builtin_break_continue );
 	hash_put( &builtin, L"continue", (void*) &builtin_break_continue );
 	hash_put( &builtin, L"return", (void*) &builtin_return );
 	hash_put( &builtin, L"commandline", (void*) &builtin_commandline );
 	hash_put( &builtin, L"switch", (void*) &builtin_switch );
 	hash_put( &builtin, L"case", (void*) &builtin_case );
 	hash_put( &builtin, L"bind", (void*) &builtin_bind );
-	hash_put( &builtin, L"random", (void*) &builtin_random );	
-	hash_put( &builtin, L"status", (void*) &builtin_status );	
-	hash_put( &builtin, L"ulimit", (void*) &builtin_ulimit );	
-	
-	/* 
+	hash_put( &builtin, L"random", (void*) &builtin_random );
+	hash_put( &builtin, L"status", (void*) &builtin_status );
+	hash_put( &builtin, L"ulimit", (void*) &builtin_ulimit );
+
+	/*
 	   Builtins that are handled directly by the parser. They are
 	   bound to a noop function only so that they show up in the
 	   listings of builtin commands, etc..
 	*/
-	hash_put( &builtin, L"command", (void*)  &builtin_ignore );		
-	hash_put( &builtin, L"if", (void*) &builtin_ignore );	
-	hash_put( &builtin, L"while", (void*) &builtin_ignore );	
-	hash_put( &builtin, L"not", (void*) &builtin_generic );	
-	hash_put( &builtin, L"and", (void*) &builtin_generic );	
-	hash_put( &builtin, L"or", (void*) &builtin_generic );	
-	hash_put( &builtin, L"exec", (void*) &builtin_exec );	
-	hash_put( &builtin, L"begin", (void*) &builtin_begin );	
+	hash_put( &builtin, L"command", (void*)  &builtin_ignore );
+	hash_put( &builtin, L"if", (void*) &builtin_ignore );
+	hash_put( &builtin, L"while", (void*) &builtin_ignore );
+	hash_put( &builtin, L"not", (void*) &builtin_generic );
+	hash_put( &builtin, L"and", (void*) &builtin_generic );
+	hash_put( &builtin, L"or", (void*) &builtin_generic );
+	hash_put( &builtin, L"exec", (void*) &builtin_exec );
+	hash_put( &builtin, L"begin", (void*) &builtin_begin );
 
 	/*
 	  This is not a builtin, but fish handles it's help display
 	  internally, to do some ugly special casing to make sure 'count
 	  -h', but 'count (echo -h)' does not.
 	*/
-	hash_put( &builtin, L"count", (void*) &builtin_ignore );	
+	hash_put( &builtin, L"count", (void*) &builtin_ignore );
 
-	intern_static( L"exit" );	
-	intern_static( L"builtin" );	
-	intern_static( L"block" );	
+	intern_static( L"exit" );
+	intern_static( L"builtin" );
+	intern_static( L"block" );
 	intern_static( L"cd" );
-	intern_static( L"function" );	
-	intern_static( L"functions" );	
-	intern_static( L"complete" );	
+	intern_static( L"function" );
+	intern_static( L"functions" );
+	intern_static( L"complete" );
 	intern_static( L"end" );
 	intern_static( L"else" );
 	intern_static( L"eval" );
@@ -3064,26 +3086,26 @@ void builtin_init()
 	intern_static( L"bg" );
 	intern_static( L"jobs" );
 	intern_static( L"read" );
-	intern_static( L"break" );	
+	intern_static( L"break" );
 	intern_static( L"continue" );
 	intern_static( L"return" );
 	intern_static( L"commandline" );
 	intern_static( L"switch" );
 	intern_static( L"case" );
 	intern_static( L"bind" );
-	intern_static( L"random" );	
-	intern_static( L"command" );		
-	intern_static( L"if" );	
-	intern_static( L"while" );	
-	intern_static( L"exec" );	
-	intern_static( L"count" );	
-	intern_static( L"not" );	
-	intern_static( L"and" );	
-	intern_static( L"or" );	
-	intern_static( L"begin" );	
-	intern_static( L"status" );	
-	intern_static( L"ulimit" );	
-	
+	intern_static( L"random" );
+	intern_static( L"command" );
+	intern_static( L"if" );
+	intern_static( L"while" );
+	intern_static( L"exec" );
+	intern_static( L"count" );
+	intern_static( L"not" );
+	intern_static( L"and" );
+	intern_static( L"or" );
+	intern_static( L"begin" );
+	intern_static( L"status" );
+	intern_static( L"ulimit" );
+
 	builtin_help_init();
 }
 
@@ -3091,10 +3113,10 @@ void builtin_destroy()
 {
 	if( desc )
 	{
-		hash_destroy( desc );	
+		hash_destroy( desc );
 		free( desc );
 	}
-	
+
 	al_destroy( &io_stack );
 	hash_destroy( &builtin );
 	builtin_help_destroy();
@@ -3108,7 +3130,7 @@ int builtin_exists( wchar_t *cmd )
 	*/
 	if( wcscmp( cmd, L"count" )==0)
 		return 0;
-	
+
 	return (hash_get(&builtin, cmd) != 0 );
 }
 
@@ -3123,7 +3145,7 @@ static int internal_help( wchar_t *cmd )
 		wcscmp( cmd, L"function" ) == 0 ||
 		wcscmp( cmd, L"if" ) == 0 ||
 		wcscmp( cmd, L"end" ) == 0 ||
-		wcscmp( cmd, L"switch" ) == 0 ) 
+		wcscmp( cmd, L"switch" ) == 0 )
 		return 1;
 	return 0;
 }
@@ -3133,7 +3155,7 @@ int builtin_run( wchar_t **argv )
 {
 	int (*cmd)(wchar_t **argv)=0;
 	cmd = hash_get( &builtin, argv[0] );
-	
+
 	if( argv[1] != 0 && !internal_help(argv[0]) )
 	{
 		if( argv[2] == 0 && (parser_is_help( argv[1], 0 ) ) )
@@ -3142,22 +3164,22 @@ int builtin_run( wchar_t **argv )
 			return 0;
 		}
 	}
-	
+
 	if( cmd != 0 )
 	{
 		int status;
-		
+
 		status = cmd(argv);
 //				fwprintf( stderr, L"Builtin: Set status of %ls to %d\n", argv[0], status );
-		
+
 		return status;
-		
+
 	}
 	else
 	{
 		debug( 0, _( L"Unknown builtin '%ls'" ), argv[0] );
 	}
-	return 1;	
+	return 1;
 }
 
 
@@ -3168,25 +3190,25 @@ void builtin_get_names( array_list_t *list )
 
 const wchar_t *builtin_get_desc( const wchar_t *b )
 {
-	
+
 	if( !desc )
 	{
 		desc = malloc( sizeof( hash_table_t ) );
-		if( !desc) 
+		if( !desc)
 			return 0;
-		
+
 		hash_init( desc, &hash_wcs_func, &hash_wcs_cmp );
 
-		hash_put( desc, L"block", N_( L"Temporarily block delivery of events" ) );	
-		hash_put( desc, L"builtin", N_( L"Run a builtin command instead of a function" ) );	
-		hash_put( desc, L"complete", N_( L"Edit command specific completions" ) );	
-		hash_put( desc, L"cd", N_( L"Change working directory" ) );	
-		hash_put( desc, L"exit", N_( L"Exit the shell" ) );	
-		hash_put( desc, L"function", N_( L"Define a new function" ) );	
-		hash_put( desc, L"functions", N_( L"List or remove functions" ) );	
+		hash_put( desc, L"block", N_( L"Temporarily block delivery of events" ) );
+		hash_put( desc, L"builtin", N_( L"Run a builtin command instead of a function" ) );
+		hash_put( desc, L"complete", N_( L"Edit command specific completions" ) );
+		hash_put( desc, L"cd", N_( L"Change working directory" ) );
+		hash_put( desc, L"exit", N_( L"Exit the shell" ) );
+		hash_put( desc, L"function", N_( L"Define a new function" ) );
+		hash_put( desc, L"functions", N_( L"List or remove functions" ) );
 		hash_put( desc, L"end", N_( L"End a block of commands" ) );
 		hash_put( desc, L"else", N_( L"Evaluate block if condition is false" ) );
-		hash_put( desc, L"eval", N_( L"Evaluate parameters as a command" ) );	
+		hash_put( desc, L"eval", N_( L"Evaluate parameters as a command" ) );
 		hash_put( desc, L"for", N_( L"Perform a set of commands multiple times" ) );
 		hash_put( desc, L".", N_( L"Evaluate contents of file" ) );
 		hash_put( desc, L"set", N_( L"Handle environment variables" ) );
@@ -3194,15 +3216,15 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		hash_put( desc, L"bg", N_( L"Send job to background" ) );
 		hash_put( desc, L"jobs", N_( L"Print currently running jobs" ) );
 		hash_put( desc, L"read", N_( L"Read a line of input into variables" ) );
-		hash_put( desc, L"break", N_( L"Stop the innermost loop" ) );	
+		hash_put( desc, L"break", N_( L"Stop the innermost loop" ) );
 		hash_put( desc, L"continue", N_( L"Skip the rest of the current lap of the innermost loop" ) );
 		hash_put( desc, L"return", N_( L"Stop the currently evaluated function" ) );
 		hash_put( desc, L"commandline", N_( L"Set or get the commandline" ) );
-		hash_put( desc, L"switch", N_( L"Conditionally execute a block of commands" ) );	
-		hash_put( desc, L"case", N_( L"Conditionally execute a block of commands" ) );	
-		hash_put( desc, L"command", N_( L"Run a program instead of a function or builtin" ) );		
+		hash_put( desc, L"switch", N_( L"Conditionally execute a block of commands" ) );
+		hash_put( desc, L"case", N_( L"Conditionally execute a block of commands" ) );
+		hash_put( desc, L"command", N_( L"Run a program instead of a function or builtin" ) );
 		hash_put( desc, L"if", N_( L"Evaluate block if condition is true" ) );
-		hash_put( desc, L"while", N_( L"Perform a command multiple times" ) );	
+		hash_put( desc, L"while", N_( L"Perform a command multiple times" ) );
 		hash_put( desc, L"bind", N_( L"Handle fish key bindings" ));
 		hash_put( desc, L"random", N_( L"Generate random number" ));
 		hash_put( desc, L"exec", N_( L"Run command in current process" ));
@@ -3214,7 +3236,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 		hash_put( desc, L"ulimit", N_( L"Set or get the shells resource usage limits" ) );
 	}
 
-	return _( hash_get( desc, b ));	
+	return _( hash_get( desc, b ));
 }
 
 void builtin_push_io( int in)
@@ -3223,13 +3245,13 @@ void builtin_push_io( int in)
 	{
 		al_push( &io_stack, (void *)(long)builtin_stdin );
 		al_push( &io_stack, sb_out );
-		al_push( &io_stack, sb_err );		
+		al_push( &io_stack, sb_err );
 	}
 	builtin_stdin = in;
 	sb_out = malloc(sizeof(string_buffer_t));
 	sb_err = malloc(sizeof(string_buffer_t));
 	sb_init( sb_out );
-	sb_init( sb_err );	
+	sb_init( sb_err );
 }
 
 void builtin_pop_io()
@@ -3239,7 +3261,7 @@ void builtin_pop_io()
 	sb_destroy( sb_err );
 	free( sb_out);
 	free(sb_err);
-	
+
 	if( al_get_count( &io_stack ) >0 )
 	{
 		sb_err = (string_buffer_t *)al_pop( &io_stack );

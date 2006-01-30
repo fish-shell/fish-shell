@@ -116,15 +116,15 @@ static void tok_error( tokenizer *tok, const wchar_t *err )
 void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 {
 //	fwprintf( stderr, L"CREATE: \'%ls\'\n", b );
-		
+
 
 	memset( tok, 0, sizeof( tokenizer) );
-	
+
 	tok->accept_unfinished = flags & TOK_ACCEPT_UNFINISHED;
 	tok->show_comments = flags & TOK_SHOW_COMMENTS;
-	tok->has_next=1;	
+	tok->has_next=1;
 
-	/* 
+	/*
 	   Before we copy the buffer we need to check that it is not
 	   null. But before that, we need to init the tokenizer far enough
 	   so that errors can be properly flagged
@@ -137,7 +137,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 
 	tok->has_next = (*b != L'\0');
 	tok->orig_buff = tok->buff = (wchar_t *)(b);
-	
+
 	if( tok->accept_unfinished )
 	{
 		int l = wcslen( tok->orig_buff );
@@ -149,7 +149,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 				tok->orig_buff = tok->buff = wcsdup( tok->orig_buff );
 				if( !tok->orig_buff )
 				{
-					die_mem();		
+					die_mem();
 				}
 				tok->orig_buff[l-1] = L'\0';
 			}
@@ -223,7 +223,7 @@ static void read_string( tokenizer *tok )
 
 	while( 1 )
 	{
-		
+
 		if( !myal( *tok->buff ) )
 		{
 //			debug(1, L"%lc", *tok->buff );
@@ -260,7 +260,7 @@ static void read_string( tokenizer *tok )
 						mode = 1;
 						break;
 					}
-					
+
 					case L'[':
 					{
 						if( tok->buff != start )
@@ -271,7 +271,7 @@ static void read_string( tokenizer *tok )
 					case L'\'':
 					case L'"':
 					{
-						
+
 						wchar_t *end = quote_end( tok->buff );
 						tok->last_quote = *tok->buff;
 						if( end )
@@ -281,14 +281,14 @@ static void read_string( tokenizer *tok )
 						else
 						{
 							tok->buff += wcslen( tok->buff );
-							
+
 							if( (!tok->accept_unfinished) )
 							{
 								tok_error( tok, EOL_ERROR );
 								return;
 							}
 							do_loop = 0;
-							
+
 						}
 						break;
 					}
@@ -303,7 +303,7 @@ static void read_string( tokenizer *tok )
 				}
 				break;
 			}
-		
+
 			case 3:
 			case 1:
 				switch( *tok->buff )
@@ -355,7 +355,7 @@ static void read_string( tokenizer *tok )
 				break;
 		}
 		}
-		
+
 
 		if( !do_loop )
 			break;
@@ -408,7 +408,7 @@ static void read_comment( tokenizer *tok )
 static void read_redirect( tokenizer *tok, int fd )
 {
 	int mode = -1;
-	
+
 	if( (*tok->buff == L'>') ||
 		(*tok->buff == L'^') )
 	{
@@ -430,7 +430,7 @@ static void read_redirect( tokenizer *tok, int fd )
 				tok_error( tok, PIPE_ERROR );
 				return;
 			}
-			check_size( tok, FD_STR_MAX_LEN );						
+			check_size( tok, FD_STR_MAX_LEN );
 			tok->buff++;
 			swprintf( tok->last, FD_STR_MAX_LEN, L"%d", fd );
 			tok->last_type = TOK_PIPE;
@@ -446,14 +446,14 @@ static void read_redirect( tokenizer *tok, int fd )
 	{
 		tok_error( tok, REDIRECT_ERROR);
 	}
-	
+
 	if( !check_size( tok, 2 ))
 	{
 		return;
 	}
-	
+
 	swprintf( tok->last, tok->last_len, L"%d", fd );
-	
+
 	if( *tok->buff == L'&' )
 	{
 		tok->buff++;
@@ -496,10 +496,10 @@ void tok_next( tokenizer *tok )
 
 	if( tok_last_type( tok ) == TOK_ERROR )
 	{
-		tok->has_next=0;	
-		return;	
+		tok->has_next=0;
+		return;
 	}
-	
+
 	if( !tok->has_next )
 	{
 /*		wprintf( L"EOL\n" );*/
@@ -551,9 +551,9 @@ void tok_next( tokenizer *tok )
 
 		case L'|':
 			check_size( tok, 2 );
-			
+
 			tok->last[0]=L'1';
-			tok->last[1]=L'\0';			
+			tok->last[1]=L'\0';
 			tok->last_type = TOK_PIPE;
 			tok->buff++;
 			break;
@@ -567,9 +567,9 @@ void tok_next( tokenizer *tok )
 
 		default:
 		{
-			
+
 			if( iswdigit( *tok->buff ) )
-			{				
+			{
 				wchar_t *orig = tok->buff;
 				int fd = 0;
 				while( iswdigit( *tok->buff ) )
@@ -583,11 +583,11 @@ void tok_next( tokenizer *tok )
 						read_redirect( tok, fd );
 						return;
 				}
-				tok->buff = orig;				
+				tok->buff = orig;
 			}
 			read_string( tok );
 		}
-		
+
 	}
 
 }
@@ -603,7 +603,7 @@ wchar_t *tok_first( const wchar_t *str )
 	wchar_t *res=0;
 
 	tok_init( &t, str, 0 );
-	
+
 	switch( tok_last_type( &t ) )
 	{
 		case TOK_STRING:

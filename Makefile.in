@@ -33,9 +33,9 @@ CC := @CC@
 INSTALL:=@INSTALL@
 
 # Compiler flags
-CFLAGS := @CFLAGS@ @INCLUDEDIR@ -Wall -std=gnu99 -fno-strict-aliasing
+CFLAGS:=@CFLAGS@ -Wall -std=gnu99 -fno-strict-aliasing
 CPPFLAGS=@CPPFLAGS@
-LDFLAGS:= -l@CURSESLIB@ @LIBS@ @LDFLAGS@ @LIBDIR@
+LDFLAGS:= @LIBS@ @LDFLAGS@ 
 
 # Installation directories
 prefix = @prefix@
@@ -188,7 +188,7 @@ all: $(PROGRAMS) user_doc
 .PHONY: all
 
 debug:
-	make fish CFLAGS="-O0 -Wno-unused -Werror -g @INCLUDEDIR@ -Wall -std=gnu99 -fno-strict-aliasing"
+	make fish CFLAGS="-O0 -Wno-unused -Werror -g -Wall -std=gnu99 -fno-strict-aliasing"
 .PHONY: debug
 
 # User documentation, describing the features of the fish shell.

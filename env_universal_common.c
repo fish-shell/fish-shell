@@ -5,6 +5,8 @@
    client library and by the daemon.
 
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>

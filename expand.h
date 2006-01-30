@@ -182,20 +182,6 @@ wchar_t *expand_escape_variable( const wchar_t *in );
 */
 wchar_t *expand_tilde(wchar_t *in);
 
-/**
-   Locate the first subshell in the specified string.
-   
-   \param in the string to search for subshells
-   \param begin the starting paranthesis of the subshell
-   \param end the ending paranthesis of the subshell
-   \param flags set this variable to ACCEPT_INCOMPLETE if in tab_completion mode
-   \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
-*/
-int expand_locate_subshell( wchar_t *in, 
-							wchar_t **begin, 
-							wchar_t **end,
-							int flags );
-
 
 /**
    Tokenize the specified string into the specified array_list_t.

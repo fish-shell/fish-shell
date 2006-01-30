@@ -86,16 +86,15 @@ void function_add( const wchar_t *name,
 {
 	int i;
 	wchar_t *cmd_end;
+	function_data_t *d;
 	
-
 	if( function_exists( name ) )
 		function_remove( name );
 	
-
-	
-	function_data_t *d = malloc( sizeof( function_data_t ) );
+	d = malloc( sizeof( function_data_t ) );
 	d->definition_offset = count_lineno( parser_get_buffer(), current_block->tok_pos );
 	d->cmd = wcsdup( val );
+
 	cmd_end = d->cmd + wcslen(d->cmd)-1;
 	while( (cmd_end>d->cmd) && wcschr( L"\n\r\t ", *cmd_end ) )
 	{
@@ -105,6 +104,7 @@ void function_add( const wchar_t *name,
 	d->desc = desc?wcsdup( desc ):0;
 	d->is_binding = is_binding;
 	d->definition_file = reader_current_filename()?intern(reader_current_filename()):0;
+	
 	hash_put( &function, intern(name), d );
 	
 	for( i=0; i<al_get_count( events ); i++ )
@@ -123,8 +123,8 @@ void function_remove( const wchar_t *name )
 {
 	void *key;
 	function_data_t *d;
-
 	event_t ev;
+
 	ev.type=EVENT_ANY;
 	ev.function_name=name;	
 	event_remove( &ev );

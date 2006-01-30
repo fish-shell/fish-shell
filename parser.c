@@ -265,7 +265,7 @@ static int current_tokenizer_pos;
 block_t *current_block=0;
 
 /** List of called functions, used to help prevent infinite recursion */
-static array_list_t forbidden_function;
+static array_list_t *forbidden_function;
 
 /**
    String index where the current job started.
@@ -726,7 +726,7 @@ void parser_forbid_function( wchar_t *function )
   if( function )
   debug( 2, L"Forbid %ls\n", function );
 */
-	al_push( &forbidden_function, function?wcsdup(function):0 );
+	al_push( forbidden_function, function?wcsdup(function):0 );
 }
 
 void parser_allow_function()
@@ -735,7 +735,7 @@ void parser_allow_function()
   if( al_peek( &forbidden_function) )
   debug( 2, L"Allow %ls\n", al_peek( &forbidden_function)  );
 */
-	free( (void *) al_pop( &forbidden_function ) );
+	free( (void *) al_pop( forbidden_function ) );
 }
 
 void error( int ec, int p, const wchar_t *str, ... )
@@ -848,7 +848,8 @@ void parser_init()
 	{
 		al_init( &profile_data);
 	}
-	al_init( &forbidden_function );
+	forbidden_function = al_new();
+	
 }
 
 /**
@@ -924,14 +925,15 @@ void parser_destroy()
 		al_destroy( &profile_data );
 	}
 	
-	al_destroy( &forbidden_function );
-
 	if( lineinfo )
 	{
 		sb_destroy( lineinfo );
 		free(lineinfo );
 		lineinfo = 0;
 	}
+
+	al_destroy( forbidden_function );
+	free( forbidden_function );
 	
 }
 
@@ -1236,7 +1238,7 @@ wchar_t *parser_current_line()
 	*/
 	if( !is_interactive || is_function() || (current_line_width!=0) )
 	{
-		// Workaround since it seems impossible to print 0 copies of a character using printf
+		// Workaround since it seems impossible to print 0 copies of a character using %*lc
 		if( offset+current_line_width )
 		{
 			sb_printf( lineinfo,
@@ -1875,7 +1877,7 @@ static int parse_job( process_t *p,
 			int nxt_forbidden;
 			wchar_t *forbid;
 
-			forbid = (wchar_t *)(al_get_count( &forbidden_function)?al_peek( &forbidden_function ):0);
+			forbid = (wchar_t *)(al_get_count( forbidden_function)?al_peek( forbidden_function ):0);
 			nxt_forbidden = forbid && (wcscmp( forbid, nxt) == 0 );
 
 			/*
@@ -1887,7 +1889,7 @@ static int parse_job( process_t *p,
 				/*
 				  Check if we have reached the maximum recursion depth
 				*/
-				if( al_get_count( &forbidden_function ) > MAX_RECURSION_DEPTH )
+				if( al_get_count( forbidden_function ) > MAX_RECURSION_DEPTH )
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( tok ),
@@ -2351,6 +2353,15 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	tokenizer *previous_tokenizer=current_tokenizer;
 	block_t *start_current_block = current_block;
 	io_data_t *prev_io = block_io;
+	array_list_t *prev_forbidden = forbidden_function;
+
+	if( block_type == SUBST )
+	{
+		forbidden_function = al_new();
+	}
+	
+	forbid_count = al_get_count( forbidden_function );
+	
 	block_io = io;
 	
 	job_reap( 0 );
@@ -2387,7 +2398,6 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	
 	parser_push_block( block_type );
 	
-	forbid_count = al_get_count( &forbidden_function );
 	
 	tok_init( current_tokenizer, cmd, 0 );
 	error_code = 0;
@@ -2447,19 +2457,28 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	tok_destroy( current_tokenizer );
 	free( current_tokenizer );
 
-	while( forbid_count < al_get_count( &forbidden_function ))
+	while( al_get_count( forbidden_function ) > forbid_count )
 		parser_allow_function();
 
+	if( block_type == SUBST )
+	{
+		al_destroy( forbidden_function );
+		free( forbidden_function );	
+	}
+	
+	/* 
+	   Restore previous eval state
+	*/
+	forbidden_function = prev_forbidden;	
 	current_tokenizer=previous_tokenizer;
+	block_io = prev_io;	
+	eval_level--;
 
 	code=error_code;
 	error_code=0;
 
-	block_io = prev_io;	
-
-	eval_level--;
-
 	job_reap( 0 );
+
 	return code;
 }
 

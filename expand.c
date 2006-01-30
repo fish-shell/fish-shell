@@ -39,6 +39,7 @@ parameter expansion.
 #include "tokenizer.h"
 #include "complete.h"
 #include "translate.h"
+#include "parse_util.h"
 
 /**
    Description for child process
@@ -1154,105 +1155,23 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	return 1;	
 }
 
-int expand_locate_subshell( wchar_t *in, 
-							wchar_t **begin, 
-							wchar_t **end,
-							int allow_incomplete )
-{
-	wchar_t *pos;
-	wchar_t prev=0;
-	int syntax_error=0;
-	int paran_count=0;	
-
-	wchar_t *paran_begin=0, *paran_end=0;
-
-	for( pos=in; *pos; pos++ )
-	{
-		if( prev != '\\' )
-		{
-			if( wcschr( L"\'\"", *pos ) )
-			{
-				wchar_t *end = quote_end( pos );
-				if( end && *end)
-				{
-					pos=end;
-				}
-				else
-					break;
-			}
-			else
-			{
-				if( *pos == '(' )
-				{
-					if(( paran_count == 0)&&(paran_begin==0))
-						paran_begin = pos;
-				
-					paran_count++;
-				}
-				else if( *pos == ')' )
-				{
-					paran_count--;
-					if( (paran_count == 0) && (paran_end == 0) )
-					{
-						paran_end = pos;
-						break;
-					}
-				
-					if( paran_count < 0 )
-					{
-						syntax_error = 1;
-						break;
-					}
-				}
-			}
-			
-		}
-		
-		prev = *pos;
-	}
-	
-	syntax_error |= (paran_count < 0 );
-	syntax_error |= ((paran_count>0)&&(!allow_incomplete));
-	
-	if( syntax_error )
-	{
-		return -1;
-	}
-	
-	if( paran_begin == 0 )
-	{
-		return 0;
-	}
-
-	*begin = paran_begin;
-	*end = paran_count?in+wcslen(in):paran_end;
-	
-/*	assert( *begin >= in );
-	assert( *begin < (in+wcslen(in) ) );
-	assert( *end >= *begin );
-	assert( *end < (in+wcslen(in) ) );
-*/
-	return 1;
-
-}
-
 /**
    Perform subshell expansion
 */
 static int expand_subshell( wchar_t *in, array_list_t *out )
 {
-	wchar_t *paran_begin=0, *paran_end=0;
+	const wchar_t *paran_begin=0, *paran_end=0;
 	int len1, len2;
 	wchar_t prev=0;
 	wchar_t *subcmd;
 	array_list_t sub_res, tail_expand;
 	int i, j;
-	wchar_t *item_begin;
+	const wchar_t *item_begin;
 
-	switch( expand_locate_subshell(in, 
-								   &paran_begin,
-								   &paran_end,
-								   0 ) )
+	switch( parse_util_locate_cmdsubst(in, 
+									   &paran_begin,
+									   &paran_end,
+									   0 ) )
 	{
 		case -1:
 			error( SYNTAX_ERROR, 

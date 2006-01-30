@@ -388,7 +388,7 @@ static void handle_child_status( pid_t pid, int status )
   "Process %d is %ls from job %ls\n",
   (int) pid, p->actual_cmd, j->command );
   write( 2, mess, strlen(mess ));
-*/			
+*/		
 				
 				mark_process_status ( j, p, status);
 				if( p->completed && prev != 0  )

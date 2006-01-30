@@ -96,8 +96,45 @@ function __fish_complete_pids -d "Print a list of process identifiers along with
 end
 
 function __fish_complete_command -d "Complete using all available commands"
-        for i in $PATH; command ls $i; end
+	printf "%s\n" (commandline -ct)(complete -C (commandline -ct))
 end
+
+function __fish_complete_subcommand  -d "Complete subcommand"
+	set -l res ""
+	set -l had_cmd 0
+	set -l cmd (commandline -cop) (commandline -ct)
+	set -l skip_next 1
+
+	for i in $cmd
+
+		if test "$skip_next" = 1
+			set skip_next 0
+			continue
+		end
+
+		if test "$had_cmd" = 1
+			set res "$res $i"
+		else
+
+			if contains $i $argv
+				set skip_next 1
+				continue
+			end
+
+			switch $i
+				case '-*'
+					 
+				case '*'
+					set had_cmd 1
+					set res $i
+			end
+		end
+	end
+	
+	printf "%s\n" (commandline -ct)(complete -C $res)
+
+end
+
 
 
 function __fish_print_hostnames -d "Print a list of known hostnames"

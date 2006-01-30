@@ -1733,8 +1733,8 @@ static int builtin_status( wchar_t **argv )
 				
 			case 'h':		
 				builtin_print_help( argv[0], sb_err );
-				break;
-
+				return 0;
+				
 			case 'i':		
 				mode = INTERACTIVE;
 				break;

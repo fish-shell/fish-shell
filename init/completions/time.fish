@@ -1,5 +1,5 @@
 
-complete -c time -a "(__fish_complete_command)" -d (_ "Command")
+complete -c time -a "(__fish_complete_subcommand -- -o --output -f --format)" -d (_ "Command")
 
 complete -c time -s f -l format -d (_ "Specify output format") -x
 complete -c time -s p -l portable -d (_ "Use the portable output format")

@@ -36,6 +36,7 @@
 #include "history.h"
 #include "intern.h"
 #include "translate.h"
+#include "parse_util.h"
 
 #include "wutil.h"
 
@@ -2007,7 +2008,8 @@ static int try_complete_user( const wchar_t *cmd,
 void complete( const wchar_t *cmd,
 			   array_list_t *comp )
 {
-	wchar_t *begin, *end, *prev_begin, *prev_end, *buff;
+	const wchar_t *begin, *end, *prev_begin, *prev_end;
+	wchar_t *buff;
 	tokenizer tok;
 	wchar_t *current_token=0, *current_command=0, *prev_token=0;
 
@@ -2016,7 +2018,9 @@ void complete( const wchar_t *cmd,
 	
 	int old_error_max = error_max;
 	int done=0;
-	
+
+	int cursor_pos = wcslen(cmd );
+		
 	error_max=0;
 
 	/**
@@ -2042,7 +2046,7 @@ void complete( const wchar_t *cmd,
 
 	if( !done )
 	{
-		reader_current_subshell_extent( &begin, &end );
+		parse_util_cmdsubst_extent( cmd, cursor_pos, &begin, &end );
 
 		if( !begin )
 			done=1;
@@ -2051,7 +2055,7 @@ void complete( const wchar_t *cmd,
 	if( !done )
 	{
 		
-		pos = reader_get_cursor_pos()-(begin-reader_get_buffer());
+		pos = cursor_pos-(begin-cmd);
 
 		buff = wcsndup( begin, end-begin );
 
@@ -2109,9 +2113,9 @@ void complete( const wchar_t *cmd,
 		  Get the string to complete
 		*/
 
-		reader_current_token_extent( &begin, &end, &prev_begin, &prev_end );
+		parse_util_token_extent( cmd, cursor_pos, &begin, &end, &prev_begin, &prev_end );
 
-		current_token = wcsndup( begin, reader_get_cursor_pos()-(begin-reader_get_buffer()) );
+		current_token = wcsndup( begin, cursor_pos-(begin-cmd) );
 
 		prev_token = prev_begin ? wcsndup( prev_begin, prev_end - prev_begin ): wcsdup(L"");
 

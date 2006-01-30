@@ -18,6 +18,7 @@
 #include "tokenizer.h"
 #include "proc.h"
 #include "parser.h"
+#include "parse_util.h"
 #include "builtin.h"
 #include "function.h"
 #include "env.h"
@@ -365,11 +366,11 @@ void highlight_shell( wchar_t * buff,
 	while( 1 )
 	{
 		wchar_t *begin, *end;
-		
-		if( expand_locate_subshell( subpos, 
-									&begin, 
-									&end,
-									1) <= 0)
+	
+		if( parse_util_locate_cmdsubst( subpos, 
+										(const wchar_t **)&begin, 
+										(const wchar_t **)&end,
+										1) <= 0)
 		{
 			break;
 		}

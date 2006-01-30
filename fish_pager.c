@@ -424,54 +424,54 @@ static void printed_length( wchar_t *str,
 			else
 			{
 				
-			switch( *str )
-			{
-				case L'\n':
-				case L'\b':
-				case L'\r':
-				case L'\e':
-				case L'\t':
-				case L'\\':
-				case L'&':
-				case L'$':
-				case L' ':
-				case L'#':
-				case L'^':
-				case L'<':
-				case L'>':
-				case L'(':
-				case L')':
-				case L'[':
-				case L']':
-				case L'{':
-				case L'}':
-				case L'?':
-				case L'*':
-				case L'|':
-				case L';':
-				case L':':
-				case L'\'':
-				case L'"':
-				case L'%':
-				case L'~':
+				switch( *str )
+				{
+					case L'\n':
+					case L'\b':
+					case L'\r':
+					case L'\e':
+					case L'\t':
+					case L'\\':
+					case L'&':
+					case L'$':
+					case L' ':
+					case L'#':
+					case L'^':
+					case L'<':
+					case L'>':
+					case L'(':
+					case L')':
+					case L'[':
+					case L']':
+					case L'{':
+					case L'}':
+					case L'?':
+					case L'*':
+					case L'|':
+					case L';':
+					case L':':
+					case L'\'':
+					case L'"':
+					case L'%':
+					case L'~':
 					
-					if( has_description )
-						desc_len++;
-					else
-						comp_len+=2;
-					break;
+						if( has_description )
+							desc_len++;
+						else
+							comp_len+=2;
+						break;
 
-				case COMPLETE_SEP:
-					has_description = 1;
-					break;
+					case COMPLETE_SEP:
+						has_description = 1;
+						break;
 
-				default:
-					if( has_description )
-						desc_len+= wcwidth(*str);
-					else
-						comp_len+= wcwidth(*str);
-					break;
-			}
+					default:
+						if( has_description )
+							desc_len+= wcwidth(*str);
+						else
+							comp_len+= wcwidth(*str);
+						break;
+				}
 			}
 			
 			str++;

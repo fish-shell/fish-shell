@@ -159,6 +159,8 @@ int builtin_ulimit(wchar_t **argv);
 */
 int builtin_complete(wchar_t **argv);
 
+const wchar_t *builtin_complete_get_temporary_buffer();
+
 /** 
 	This function works like wperror, but it prints its result into
 	the sb_err string_buffer_t instead of to stderr. Used by the builtin

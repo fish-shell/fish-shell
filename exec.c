@@ -1077,7 +1077,6 @@ void exec( job_t *j )
 					p->completed = 1;
 				}
 				
-				
 				io_buffer_destroy( io_buffer );
 				
 				io_buffer=0;

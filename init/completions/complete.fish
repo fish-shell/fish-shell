@@ -11,3 +11,4 @@ complete -c complete -s d -l description -d (_ "Description of this completions"
 complete -c complete -s u -l unauthorative -d (_ "Option list is not complete")
 complete -c complete -s e -l erase -d (_ "Remove completion")
 complete -c complete -s h -l help -d (_ "Display help and exit")
+complete -c complete -s C -l do-complete -d (_ "Print all completions for the specified commandline")

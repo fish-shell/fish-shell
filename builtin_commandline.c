@@ -24,6 +24,7 @@ Functions used for implementing the commandline builtin.
 #include "input_common.h"
 #include "input.h"
 #include "translate.h"
+#include "parse_util.h"
 
 /**
    Which part of the comandbuffer are we operating on
@@ -48,6 +49,26 @@ enum
 }
 	;
 
+/**
+   Returns the current commandline buffer.
+*/
+static const wchar_t *get_buffer()
+{
+	const wchar_t *buff = builtin_complete_get_temporary_buffer();
+	if( !buff )
+		buff = reader_get_buffer();
+	return buff;
+}
+
+static int get_cursor_pos()
+{
+	const wchar_t *buff = builtin_complete_get_temporary_buffer();
+	if( buff )
+		return wcslen( buff );
+	else
+		return reader_get_cursor_pos();
+}
+
 
 /**
    Replace/append/insert the selection with/at/after the specified string.
@@ -57,14 +78,14 @@ enum
    \param insert the string to insert
    \param append_mode can be one of REPLACE_MODE, INSERT_MODE or APPEND_MODE, affects the way the test update is performed
 */
-static void replace_part( wchar_t *begin,
-						  wchar_t *end,
+static void replace_part( const wchar_t *begin,
+						  const wchar_t *end,
 						  wchar_t *insert,
 						  int append_mode )
 {
-	wchar_t *buff = reader_get_buffer();
+	const wchar_t *buff = get_buffer();
 	string_buffer_t out;
-	int out_pos=reader_get_cursor_pos();
+	int out_pos=get_cursor_pos();
 					
 	sb_init( &out );
 
@@ -88,7 +109,7 @@ static void replace_part( wchar_t *begin,
 		}
 		case INSERT_MODE:
 		{
-			int cursor = reader_get_cursor_pos() -(begin-buff);
+			int cursor = get_cursor_pos() -(begin-buff);
 			sb_append_substring( &out, begin, cursor );
 			sb_append( &out, insert );
 			sb_append_substring( &out, begin+cursor, end-begin-cursor );
@@ -109,8 +130,8 @@ static void replace_part( wchar_t *begin,
    \param cut_at_cursor whether printing should stop at the surrent cursor position
    \param tokenize whether the string should be tokenized, printing one string token on every line and skipping non-string tokens
 */
-static void write_part( wchar_t *begin, 
-						wchar_t *end, 
+static void write_part( const wchar_t *begin, 
+						const wchar_t *end, 
 						int cut_at_cursor, 
 						int tokenize )
 {	
@@ -119,7 +140,7 @@ static void write_part( wchar_t *begin,
 	wchar_t *buff;
 	int pos;
 
-	pos = reader_get_cursor_pos()-(begin-reader_get_buffer());
+	pos = get_cursor_pos()-(begin-get_buffer());
 
 	if( tokenize )
 	{
@@ -184,7 +205,7 @@ int builtin_commandline( wchar_t **argv )
 	
 	int tokenize = 0;	
 
-	if( !reader_get_buffer() )
+	if( !get_buffer() )
 	{
 		sb_append2( sb_err,
 					argv[0],
@@ -429,32 +450,42 @@ int builtin_commandline( wchar_t **argv )
 		buffer_part = STRING_MODE;
 	}
 		
-	wchar_t *begin, *end;
+	const wchar_t *begin, *end;
 	
 	switch( buffer_part )
 	{
 		case STRING_MODE:
 		{			
-			begin = reader_get_buffer();
+			begin = get_buffer();
 			end = begin+wcslen(begin);
 			break;			
 		}
 
 		case PROCESS_MODE:
 		{
-			reader_current_process_extent( &begin, &end );
+			parse_util_process_extent( get_buffer(),
+									   get_cursor_pos(),
+									   &begin, 
+									   &end );
 			break;
 		}
 		
 		case JOB_MODE:
 		{
-			reader_current_job_extent( &begin, &end );					
+			parse_util_job_extent( get_buffer(),
+								   get_cursor_pos(),
+								   &begin,
+								   &end );					
 			break;			
 		}
 		
 		case TOKEN_MODE:
 		{
-			reader_current_token_extent( &begin, &end, 0, 0 );
+			parse_util_token_extent( get_buffer(),
+									 get_cursor_pos(),
+									 &begin, 
+									 &end, 
+									 0, 0 );
 			break;			
 		}
 				

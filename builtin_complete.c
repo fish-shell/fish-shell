@@ -19,7 +19,10 @@ Functions used for implementing the complete builtin.
 #include "complete.h"
 #include "wgetopt.h"
 #include "parser.h"
+#include "reader.h"
 #include "translate.h"
+
+const static wchar_t *temporary_buffer;
 
 /*
   builtin_complete_* are a set of rather silly looping functions that
@@ -235,6 +238,11 @@ static void	builtin_complete_remove( array_list_t *cmd,
 }
 
 
+const wchar_t *builtin_complete_get_temporary_buffer()
+{
+	return temporary_buffer;
+}
+
 int builtin_complete( wchar_t **argv )
 {
 	int res=0;
@@ -247,9 +255,18 @@ int builtin_complete( wchar_t **argv )
 	array_list_t gnu_opt, old_opt;
 	wchar_t *comp=L"", *desc=L"", *condition=L"", *load=0;
 
+	wchar_t *do_complete = 0;
+	
 	array_list_t cmd;
 	array_list_t path;
 
+	static int recursion_level=0;
+	
+	if( !is_interactive_session )
+	{
+		debug( 1, _(L"%ls: Command only available in interactive sessions"), argv[0] );
+	}
+	
 	al_init( &cmd );
 	al_init( &path );
 	sb_init( &short_opt );
@@ -320,6 +337,10 @@ int builtin_complete( wchar_t **argv )
 					L"load", required_argument, 0, 'y'
 				}
 				,
+				{
+					L"do-complete", required_argument, 0, 'C'
+				}
+				,
 				{ 
 					0, 0, 0, 0 
 				}
@@ -330,7 +351,7 @@ int builtin_complete( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"a:c:p:s:l:o:d:frxeun:y:", 
+								L"a:c:p:s:l:o:d:frxeun:y:C:", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -410,8 +431,11 @@ int builtin_complete( wchar_t **argv )
 			case 'y':
 				load = woptarg;
 				break;
-				
 
+			case 'C':
+				do_complete = woptarg?woptarg:reader_get_buffer();
+				break;
+				
 			case '?':
 				//	builtin_print_help( argv[0], sb_err );
 				
@@ -424,6 +448,40 @@ int builtin_complete( wchar_t **argv )
 
 	if( res != 0 )
 	{
+	}
+	else if( do_complete )
+	{
+		array_list_t comp;
+		int i;
+
+		const wchar_t *prev_temporary_buffer = temporary_buffer;
+		temporary_buffer = do_complete;		
+
+		if( recursion_level < 1 )
+		{
+		recursion_level++;
+			
+		
+		al_init( &comp );
+
+		complete( do_complete, &comp );
+
+		for( i=0; i<al_get_count( &comp ); i++ )
+		{
+			wchar_t *next = (wchar_t *)al_get( &comp, i );
+			wchar_t *sep = wcschr( next, COMPLETE_SEP );
+			if( sep )
+				*sep = L'\t';
+			sb_printf( sb_out, L"%ls\n", next );
+		}
+		
+		al_foreach( &comp, (void (*)(const void *))&free );
+		al_destroy( &comp );
+		recursion_level--;
+		}
+		
+		temporary_buffer = prev_temporary_buffer;		
+		
 	}
 	else if( woptind != argc )
 	{

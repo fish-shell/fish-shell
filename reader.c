@@ -80,6 +80,7 @@ commence.
 #include "output.h"
 #include "signal.h"
 #include "translate.h"
+#include "parse_util.h"
 
 /**
    Maximum length of prefix string when printing completion
@@ -1691,274 +1692,17 @@ void reader_sanity_check()
 	}
 }
 
-void reader_current_subshell_extent( wchar_t **a, wchar_t **b )
-{
-	wchar_t *begin, *end;
-	wchar_t *pos;
-	
-	if( a )
-		*a=0;
-	if( b )
-		*b = 0;
-
-	if( !data )
-		return;
-
-	pos = data->buff;
-	
-	while( 1 )
-	{
-		int bc, ec;
-		
-		if( expand_locate_subshell( pos,
-									&begin,
-									&end,
-									1 ) <= 0)
-		{
-			begin=data->buff;
-			end = data->buff + wcslen(data->buff);
-			break;
-		}
-
-		if( !end )
-		{
-			end = data->buff + wcslen(data->buff);
-		}
-
-		bc = begin-data->buff;
-		ec = end-data->buff;
-		
-		if(( bc < data->buff_pos ) && (ec >= data->buff_pos) )
-		{
-			begin++;
-			break;
-		}
-		pos = end+1;
-	}
-	if( a )
-		*a = begin;
-	if( b )
-		*b = end;
-}
-
-/**
-   Get the beginning and dend of the job or process definition under the cursor
-*/
-static void reader_current_job_or_process_extent( wchar_t **a, 
-												  wchar_t **b, 
-												  int process )
-{
-	wchar_t *begin, *end;
-	int pos;
-	wchar_t *buffcpy;
-	int finished=0;
-	
-	tokenizer tok;
-
-	if( a )
-		*a=0;
-	if( b )
-		*b = 0;
-	
-	reader_current_subshell_extent( &begin, &end );
-	if( !end || !begin )
-		return;
-
-	pos = data->buff_pos - (begin - data->buff);
-//	fwprintf( stderr, L"Subshell extent: %d %d %d\n", begin-data->buff, end-data->buff, pos );
-
-	if( a )
-	{
-		*a = begin;
-	}
-	
-	if( b )
-	{
-		*b = end;
-	}
-
-	buffcpy = wcsndup( begin, end-begin );
-
-	if( !buffcpy )
-	{
-		die_mem();
-	}
-//	fwprintf( stderr, L"Strlen: %d\n", wcslen(buffcpy ) );
-
-	for( tok_init( &tok, buffcpy, TOK_ACCEPT_UNFINISHED );
-		 tok_has_next( &tok ) && !finished;
-		 tok_next( &tok ) )
-	{
-		int tok_begin = tok_get_pos( &tok );
-//		fwprintf( stderr, L".");
-
-		switch( tok_last_type( &tok ) )
-		{
-			case TOK_PIPE:
-				if( !process )
-					break;
-				
-			case TOK_END:
-			case TOK_BACKGROUND:
-			{
-
-//				fwprintf( stderr, L"New cmd at %d\n", tok_begin );
-				
-				if( tok_begin >= pos )
-				{
-					finished=1;					
-					if( b )
-						*b = data->buff + tok_begin;
-				}
-				else
-				{
-					if( a )
-						*a = data->buff + tok_begin+1;
-				}
-				break;
-				
-			}
-		}
-	}
-
-//	fwprintf( stderr, L"Res: %d %d\n", *a-data->buff, *b-data->buff );
-	free( buffcpy);
-	
-	tok_destroy( &tok );
-
-}
-
-void reader_current_process_extent( wchar_t **a, wchar_t **b )
-{
-	reader_current_job_or_process_extent( a, b, 1 );	
-}
-
-void reader_current_job_extent( wchar_t **a, wchar_t **b )
-{
-	reader_current_job_or_process_extent( a, b, 0 );	
-}
-
-
-void reader_current_token_extent( wchar_t **tok_begin,
-								  wchar_t **tok_end,
-								  wchar_t **prev_begin, 
-								  wchar_t **prev_end )
-{
-	wchar_t *begin, *end;
-	int pos;
-	wchar_t *buffcpy;
-
-	tokenizer tok;
-
-	wchar_t *a, *b, *pa, *pb;
-	
-
-	a = b = pa = pb = 0;
-	
-	reader_current_subshell_extent( &begin, &end );
-
-	if( !end || !begin )
-		return;
-
-	pos = data->buff_pos - (begin - data->buff);
-
-	a = data->buff + pos;
-	b = a;
-	pa = data->buff + pos;
-	pb = pa;
-
-	assert( begin >= data->buff );
-	assert( begin <= (data->buff+wcslen(data->buff) ) );
-	assert( end >= begin );
-	assert( end <= (data->buff+wcslen(data->buff) ) );
-
-	buffcpy = wcsndup( begin, end-begin );
-
-	if( !buffcpy )
-	{
-		die_mem();
-	}
-
-	for( tok_init( &tok, buffcpy, TOK_ACCEPT_UNFINISHED );
-		 tok_has_next( &tok );
-		 tok_next( &tok ) )
-	{
-		int tok_begin = tok_get_pos( &tok );
-		int tok_end=tok_begin;
-
-		/*
-		  Calculate end of token
-		*/
-		if( tok_last_type( &tok ) == TOK_STRING )
-			tok_end +=wcslen(tok_last(&tok));
-		
-		/*
-		  Cursor was before beginning of this token, means that the
-		  cursor is between two tokens, so we set it to a zero element
-		  string and break
-		*/
-		if( tok_begin > pos )
-		{
-			a = b = data->buff + pos;
-			break;
-		}
-
-		/*
-		  If cursor is inside the token, this is the token we are
-		  looking for. If so, set a and b and break
-		*/
-		if( tok_end >= pos )
-		{
-			a = begin + tok_get_pos( &tok );
-			b = a + wcslen(tok_last(&tok));
-
-//			fwprintf( stderr, L"Whee %ls\n", *a );
-
-			break;
-		}
-		
-		/*
-		  Remember previous string token
-		*/
-		if( tok_last_type( &tok ) == TOK_STRING )
-		{
-			pa = begin + tok_get_pos( &tok );
-			pb = pa + wcslen(tok_last(&tok));
-		}
-	}
-
-	free( buffcpy);
-	
-	tok_destroy( &tok );
-
-	if( tok_begin )
-		*tok_begin = a;
-	if( tok_end )
-		*tok_end = b;
-	if( prev_begin )
-		*prev_begin = pa;
-	if( prev_end )
-		*prev_end = pb;
-
-	assert( pa >= data->buff );
-	assert( pa <= (data->buff+wcslen(data->buff) ) );
-	assert( pb >= pa );
-	assert( pb <= (data->buff+wcslen(data->buff) ) );
-
-}
-
-
 void reader_replace_current_token( wchar_t *new_token )
 {
 
-	wchar_t *begin, *end;
+	const wchar_t *begin, *end;
 	string_buffer_t sb;
 	int new_pos;
 
 	/*
 	  Find current token
 	*/
-	reader_current_token_extent( &begin, &end, 0, 0 );
+	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
 
 	if( !begin || !end )
 		return;
@@ -2018,9 +1762,9 @@ static int contains( const wchar_t *needle,
 */
 static void reset_token_history()
 {
-	wchar_t *begin, *end;
+	const wchar_t *begin, *end;
 
-	reader_current_token_extent( &begin, &end, 0, 0 );
+	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
 	if( begin )
 	{
 		wcslcpy(data->search_buff, begin, end-begin+1);
@@ -2718,10 +2462,10 @@ wchar_t *reader_readline()
 
  				if( comp_empty )
 				{
-					wchar_t *begin, *end;
+					const wchar_t *begin, *end;
 					wchar_t *buffcpy;
 
-					reader_current_subshell_extent( &begin, &end );
+					parse_util_cmdsubst_extent( data->buff, data->buff_pos, &begin, &end );
 
 					int len = data->buff_pos - (data->buff - begin);
 					buffcpy = wcsndup( begin, len );

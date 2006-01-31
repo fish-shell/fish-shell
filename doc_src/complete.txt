@@ -14,6 +14,7 @@ the fish manual.
 - <tt>LONG_OPTION</tt> is a multi character option for the command
 - <tt>OPTION_ARGUMENTS</tt> is parameter containing a space-separated list of possible option-arguments, which may contain subshells
 - <tt>DESCRIPTION</tt> is a description of what the option and/or option arguments do
+- <tt>-C STRING</tt> or <tt>--do-complete=STRING</tt> makes complete try to find all possible completions for the specified string
 - <tt>-e</tt> or <tt>--erase</tt> implies that the specified completion should be deleted
 - <tt>-f</tt> or <tt>--no-files</tt> specifies that the option specified by this completion may not be followed by a filename
 - <tt>-n</tt> or <tt>--condition</tt> specifies a shell command that must return 0 if the completion is to be used. This makes it possible to specify completions that should only be used in some cases.
@@ -31,8 +32,8 @@ options, the same styles as the GNU version of the getopt
 library. These styles are:
 
 - Short options, like '-a'. Short options are a single character long, are preceded by a single hyphen and may be grouped together (like '-la', which is equivalent to '-l -a'). Option arguments may be specified in the following parameter ('-w 32') or by appending the option with the value ('-w32').
-- Old style long options, like '-Wall'. Old style long options are more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter ('-ao null').
-- GNU style long options, like '--colors'. GNU style long options are more than one character long, are preceded by two hyphens, and may not be grouped together. Option arguments may be specified in the following parameter ('--quoting-style shell') or by appending the option with a '=' and the value ('--quoting-style=shell'). GNU style long options may be abbreviated so long as the abbreviation is unique ('--h' is equivalent to '--help' if help is the only long option beginning with an 'h').
+- Old style long options, like '-Wall'. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter ('-ao null').
+- GNU style long options, like '--colors'. GNU style long options can be more than one character long, are preceded by two hyphens, and may not be grouped together. Option arguments may be specified in the following parameter ('--quoting-style shell') or by appending the option with a '=' and the value ('--quoting-style=shell'). GNU style long options may be abbreviated so long as the abbreviation is unique ('--h' is equivalent to '--help' if help is the only long option beginning with an 'h').
 
 The options for specifying command name, command path, or command
 switches may all be used multiple times to specify multiple commands

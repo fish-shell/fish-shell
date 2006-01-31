@@ -43,6 +43,10 @@ Other switches
   that they will be returned to the reader before any additional
   actual keypresses are read.
 
+If commandline is called during a call to complete a given string
+using <code>complete -C STRING</code>, commandline will consider the
+specified string to be the current contents of the commandline.
+
 \subsection commandline-example Example
 
 <tt>commandline -j $history[3]</tt>

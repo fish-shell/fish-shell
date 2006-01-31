@@ -573,25 +573,7 @@ int my_wcswidth( const wchar_t *c )
 
 wchar_t *quote_end( const wchar_t *in )
 {
-	switch( *in )
-	{
-		case '"':
-		{
-			while(1)
-			{
-				in = wcschr( in+1, L'"' );
-				if( !in )
-					return 0;
-				if( *(in-1) != L'\\' )
-					return (wchar_t *)in;
-			}
-		}
-		case '\'':
-		{
-			return wcschr( in+1, L'\'' );
-		}
-	}
-	return 0;
+	return wcschr( in+1, *in );
 }
 
 

@@ -143,7 +143,7 @@ which directs the output of the echo command to the file error.txt.
 
 - A filename. The output will be written to the specified file.
 - An ampersand (\&) followed by the number of another file descriptor. The file descriptor will be a duplicate of the specified file descriptor.
-- A minus sign (-). The file descriptor will be closed.
+- An ampersand followed by a minus sign (\&-). The file descriptor will be closed.
 
 Example:
 

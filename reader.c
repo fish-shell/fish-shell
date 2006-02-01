@@ -2641,7 +2641,10 @@ wchar_t *reader_readline()
 			case R_HISTORY_SEARCH_BACKWARD:
 			{
 				if( (last_char != R_HISTORY_SEARCH_BACKWARD) &&
-					(last_char != R_HISTORY_SEARCH_FORWARD) )
+					(last_char != R_HISTORY_SEARCH_FORWARD) &&
+					(last_char != R_FORWARD_CHAR) &&
+					(last_char != R_BACKWARD_CHAR) )
+
 				{
 					wcscpy(data->search_buff, data->buff );
 					data->search_buff[data->buff_pos]=0;
@@ -2655,7 +2658,9 @@ wchar_t *reader_readline()
 			case R_HISTORY_SEARCH_FORWARD:
 			{
 				if( (last_char != R_HISTORY_SEARCH_BACKWARD) &&
-					(last_char != R_HISTORY_SEARCH_FORWARD) )
+					(last_char != R_HISTORY_SEARCH_FORWARD) &&
+					(last_char != R_FORWARD_CHAR) &&
+					(last_char != R_BACKWARD_CHAR) )
 				{
 					wcscpy(data->search_buff, data->buff );
 					data->search_buff[data->buff_pos]=0;
@@ -2808,7 +2813,9 @@ wchar_t *reader_readline()
 		if( (c != R_HISTORY_SEARCH_BACKWARD) &&
 			(c != R_HISTORY_SEARCH_FORWARD) &&
 			(c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
-			(c != R_HISTORY_TOKEN_SEARCH_FORWARD)  )
+			(c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
+			(c != R_FORWARD_CHAR) &&
+			(c != R_BACKWARD_CHAR) )
 		{
 			data->search_buff[0]=0;
 			history_reset();

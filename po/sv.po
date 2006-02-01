@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-31 22:54+0100\n"
+"POT-Creation-Date: 2006-02-01 16:51+0100\n"
 "PO-Revision-Date: 2006-01-31 01:56+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -131,12 +131,12 @@ msgstr "Aldrig"
 msgid "Always"
 msgstr "Alltid"
 
-#: builtin.c:1887 builtin.c:2895
+#: builtin.c:1887 builtin.c:2885
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
 msgstr "%ls: Argumentet ”%ls” måste vara ett heltal\n"
 
-#: builtin.c:1898 builtin.c:2906 builtin_complete.c:489
+#: builtin.c:1898 builtin.c:2896 builtin_complete.c:489
 #, c-format
 msgid "%ls: Too many arguments\n"
 msgstr "%ls: För många argument\n"
@@ -164,7 +164,7 @@ msgstr "%ls: ”%ls” är inte en katalog\n"
 msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Kunde inte sätta variableln PWD\n"
 
-#: builtin.c:2007 builtin.c:2951
+#: builtin.c:2007 builtin.c:2941
 #, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
 msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
@@ -174,32 +174,32 @@ msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
 msgid "%ls: '%ls' is not a file\n"
 msgstr "%ls: ”%ls” är inte en fil\n"
 
-#: builtin.c:2052
+#: builtin.c:2042
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
 msgstr "%ls: Ett fel uppstod medan filen ”%ls” lästed\n"
 
-#: builtin.c:2117 builtin.c:2268
+#: builtin.c:2107 builtin.c:2258
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: Det finns inga lämpliga jobb\n"
 
-#: builtin.c:2135
+#: builtin.c:2125
 #, c-format
 msgid "%ls: Ambiguous job\n"
 msgstr "%ls: Mer än ett jobb matchar\n"
 
-#: builtin.c:2141 builtin.c:2544
+#: builtin.c:2131 builtin.c:2534
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
 msgstr "%ls: ”%ls” är inte ett jobb\n"
 
-#: builtin.c:2157 builtin.c:2559
+#: builtin.c:2147 builtin.c:2549
 #, c-format
 msgid "%ls: No suitable job: %d\n"
 msgstr "%ls: Inget passande jobb: %d\n"
 
-#: builtin.c:2165
+#: builtin.c:2155
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
@@ -208,12 +208,12 @@ msgstr ""
 "Kan inte skicka jobb %d, ”%ls” till förgrunden eftersom det inte anväder "
 "jobbkontroll\n"
 
-#: builtin.c:2219
+#: builtin.c:2209
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
 msgstr "%ls: Okänt jobb ”%ls”\n"
 
-#: builtin.c:2228
+#: builtin.c:2218
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
@@ -222,230 +222,230 @@ msgstr ""
 "Kan inte skicka jobb %d, ”%ls” till bakgrunden eftersom det inte anväder "
 "jobbkontrol\n"
 
-#: builtin.c:2238
+#: builtin.c:2228
 #, c-format
 msgid "Send job %d '%ls' to background\n"
 msgstr "Skicka jobb %d ”%ls” till bakgrunden\n"
 
-#: builtin.c:2274
+#: builtin.c:2264
 msgid "(default)"
 msgstr "(standard)"
 
-#: builtin.c:2334
+#: builtin.c:2324
 msgid "Job\tGroup\t"
 msgstr "Jobb\tGrupp\t"
 
-#: builtin.c:2336
+#: builtin.c:2326
 msgid "CPU\t"
 msgstr "CPU\t"
 
-#: builtin.c:2338
+#: builtin.c:2328
 msgid "State\tCommand\n"
 msgstr "Status\tKommando\n"
 
-#: builtin.c:2347 proc.c:641
+#: builtin.c:2337 proc.c:641
 msgid "stopped"
 msgstr "stannat"
 
-#: builtin.c:2347
+#: builtin.c:2337
 msgid "running"
 msgstr "kör"
 
-#: builtin.c:2362
+#: builtin.c:2352
 msgid "Group\n"
 msgstr "Grupp\n"
 
-#: builtin.c:2375
+#: builtin.c:2365
 msgid "Procces\n"
 msgstr "Process\n"
 
-#: builtin.c:2392
+#: builtin.c:2382
 msgid "Command\n"
 msgstr "Kommando\n"
 
-#: builtin.c:2585
+#: builtin.c:2575
 #, c-format
 msgid "%ls: There are no jobs\n"
 msgstr "%ls: Det finns inga jobb\n"
 
-#: builtin.c:2604
+#: builtin.c:2594
 #, c-format
 msgid "%ls: Expected at least two arguments\n"
 msgstr "%ls: Förväntade minst två argument\n"
 
-#: builtin.c:2611
+#: builtin.c:2601
 #, c-format
 msgid "%ls: '%ls' is not a valid variable name\n"
 msgstr "%ls: ”%ls” är ett ogiltigt variabelnamn\n"
 
-#: builtin.c:2619
+#: builtin.c:2609
 #, c-format
 msgid "%ls: Second argument must be 'in'\n"
 msgstr "%ls: Andra argumentet måste vara ”in”\n"
 
-#: builtin.c:2679
+#: builtin.c:2669
 #, c-format
 msgid "%ls: Not inside of block\n"
 msgstr "%ls: Inte i ett block\n"
 
-#: builtin.c:2803
+#: builtin.c:2793
 #, c-format
 msgid "%ls: Not inside of 'if' block\n"
 msgstr "%ls: Inte i ett ”if” block\n"
 
-#: builtin.c:2855
+#: builtin.c:2845
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Inte i en loop\n"
 
-#: builtin.c:2922
+#: builtin.c:2912
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Inte i en funktion\n"
 
-#: builtin.c:2982
+#: builtin.c:2972
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
 msgstr "%ls: ”case” kommandot kan bara användas i ett ”switch”-block\n"
 
-#: builtin.c:3180
+#: builtin.c:3170
 #, c-format
 msgid "Unknown builtin '%ls'"
 msgstr "Okänt inbyggt kommando ”%ls”"
 
-#: builtin.c:3202
+#: builtin.c:3192
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
 
-#: builtin.c:3203
+#: builtin.c:3193
 msgid "Run a builtin command instead of a function"
 msgstr "Utför ett inbyggt kommando istället för en funktion"
 
-#: builtin.c:3204
+#: builtin.c:3194
 msgid "Edit command specific completions"
 msgstr "Redigera kommando-specifika kompletteringar"
 
-#: builtin.c:3205
+#: builtin.c:3195
 msgid "Change working directory"
 msgstr "Ändra arbetskatalog"
 
-#: builtin.c:3206
+#: builtin.c:3196
 msgid "Exit the shell"
 msgstr "Avsluta fish"
 
-#: builtin.c:3207
+#: builtin.c:3197
 msgid "Define a new function"
 msgstr "Definera ny funktion"
 
-#: builtin.c:3208
+#: builtin.c:3198
 msgid "List or remove functions"
 msgstr "Visa eller ta bort funktioner"
 
-#: builtin.c:3209
+#: builtin.c:3199
 msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
-#: builtin.c:3210
+#: builtin.c:3200
 msgid "Evaluate block if condition is false"
 msgstr "Utför block om ett villkor inte är uppfyllt"
 
-#: builtin.c:3211
+#: builtin.c:3201
 msgid "Evaluate parameters as a command"
 msgstr "Utför argument som kommando"
 
-#: builtin.c:3212
+#: builtin.c:3202
 msgid "Perform a set of commands multiple times"
 msgstr "Utför ett block flera gånger"
 
-#: builtin.c:3213
+#: builtin.c:3203
 msgid "Evaluate contents of file"
 msgstr "Utför filinnehåll som kommandon"
 
-#: builtin.c:3214
+#: builtin.c:3204
 msgid "Handle environment variables"
 msgstr "Redigera miljövariabler"
 
-#: builtin.c:3215
+#: builtin.c:3205
 msgid "Send job to foreground"
 msgstr "Skick jobb till förgrunden"
 
-#: builtin.c:3216
+#: builtin.c:3206
 msgid "Send job to background"
 msgstr "Skicka jobb till bakgrunden"
 
-#: builtin.c:3217
+#: builtin.c:3207
 msgid "Print currently running jobs"
 msgstr "Visa nuvarande jobb"
 
-#: builtin.c:3218
+#: builtin.c:3208
 msgid "Read a line of input into variables"
 msgstr "Läs in en rad till variabler"
 
-#: builtin.c:3219
+#: builtin.c:3209
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
-#: builtin.c:3220
+#: builtin.c:3210
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Avbryt nuvarande varv i den innersta loopen"
 
-#: builtin.c:3221
+#: builtin.c:3211
 msgid "Stop the currently evaluated function"
 msgstr "Avbryt den nuvarande funktionen"
 
-#: builtin.c:3222
+#: builtin.c:3212
 msgid "Set or get the commandline"
 msgstr "Ändra eller visa kommandoraden"
 
-#: builtin.c:3223 builtin.c:3224
+#: builtin.c:3213 builtin.c:3214
 msgid "Conditionally execute a block of commands"
 msgstr "Utför ett kommando om ett villkor är uppfyllt"
 
-#: builtin.c:3225
+#: builtin.c:3215
 msgid "Run a program instead of a function or builtin"
 msgstr "Kör ett program istället för en funktion eller ett inbuggt kommando"
 
-#: builtin.c:3226
+#: builtin.c:3216
 msgid "Evaluate block if condition is true"
 msgstr "Utför ett block om ett villkor är uppfyllt"
 
-#: builtin.c:3227
+#: builtin.c:3217
 msgid "Perform a command multiple times"
 msgstr "Utför ett kommando upprepade gånger"
 
-#: builtin.c:3228
+#: builtin.c:3218
 msgid "Handle fish key bindings"
 msgstr "Hantera tangentbordsgenvägar för fish"
 
-#: builtin.c:3229
+#: builtin.c:3219
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
 
-#: builtin.c:3230
+#: builtin.c:3220
 msgid "Run command in current process"
 msgstr "Kör ett kommando i den nuvarande processen"
 
-#: builtin.c:3231
+#: builtin.c:3221
 msgid "Negate exit status of job"
 msgstr "Negera resultatet av ett kommando"
 
-#: builtin.c:3232
+#: builtin.c:3222
 msgid "Execute command if previous command failed"
 msgstr "Utför  kommando om föregående kommando misslyckades"
 
-#: builtin.c:3233
+#: builtin.c:3223
 msgid "Execute command if previous command suceeded"
 msgstr "Utför kommando om föregående kommando lyckades"
 
-#: builtin.c:3234
+#: builtin.c:3224
 msgid "Create a block of code"
 msgstr "Skapa ett kodblock"
 
-#: builtin.c:3235
+#: builtin.c:3225
 msgid "Return status information about fish"
 msgstr "Visa statusinformation om fish"
 
-#: builtin.c:3236
+#: builtin.c:3226
 msgid "Set or get the shells resource usage limits"
 msgstr "Redigera eller visa skalets resursanvändningsgränser"
 
@@ -565,7 +565,36 @@ msgstr "Ingen historieinformation vid index %d\n"
 msgid "Tried to pop empty environment stack."
 msgstr "Försökte ta bort element från tom variabelstack"
 
-#: event.c:490
+#: event.c:208
+#, c-format
+msgid "signal handler for %ls (%ls)"
+msgstr "signalhanterare för %ls (%ls)"
+
+#: event.c:212
+msgid "handler for variable '%ls'"
+msgstr "hanterare för variabel ”%ls”"
+
+#: event.c:218
+#, c-format
+msgid "exit handler for process %d"
+msgstr "avslutshanterare för process %d"
+
+#: event.c:224 event.c:235
+#, c-format
+msgid "exit handler for job %d, '%ls'"
+msgstr "avslutshanterare för jobb %d, ”%ls”"
+
+#: event.c:226
+#, c-format
+msgid "exit handler for job with process group %d"
+msgstr "avslutshanterare för jobb med processgrupp %d"
+
+#: event.c:237
+#, c-format
+msgid "exit handler for job with job id %d"
+msgstr "avslutshanterare för jobb med jobid %d"
+
+#: event.c:551
 msgid "Signal list overflow. Signals have been ignored."
 msgstr "Signallistan är full. Signaler har ignorerats."
 
@@ -593,22 +622,22 @@ msgstr "Misslyckades med att exekvera processen ”%ls”"
 msgid "Could not send process %d from group %d to group %d"
 msgstr "Kunde inte skicka process %d från grupp %d till grupp %d"
 
-#: exec.c:632 proc.c:891 proc.c:903
+#: exec.c:637 proc.c:890 proc.c:902
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Kunde inte skicka jobb %d (”%ls”) till förgrunden"
 
-#: exec.c:802
+#: exec.c:803
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Okänd funktion ”%ls”"
 
-#: exec.c:930
+#: exec.c:920
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Okänd dirigering av standard in av typ %d"
 
-#: exec.c:1266
+#: exec.c:1256
 #, c-format
 msgid ""
 "Sent null command to subshell. This is a fish bug. If it can be reproduced, "
@@ -671,10 +700,10 @@ msgid ""
 "variable name, and variable names may not be zero characters long. To learn "
 "more about variable expansion in fish, type 'help expand-variable'."
 msgstr ""
-"Menade du {$VARIABEL}? Tecknet ”$” börjar ett variabelnamn. Tecknet ”%lc”, "
-"som direkt följde ett ”$”, är inte tillåtet som del av ett variabelnamn, och "
-"variabelnamn får inte vara noll tecken långa. För mer information om "
-"variabelexpansion i fish, skriv ”help expand-variable”."
+"Menade du {$VARIABEL}? Tecknet ”$” börjar ett variabelnamn. En "
+"klammerparantes, som direkt följde ett ”$”, är inte tillåtet som del av ett "
+"variabelnamn, och variabelnamn får inte vara noll tecken långa. För mer "
+"information om variabelexpansion i fish, skriv ”help expand-variable”."
 
 #: expand.c:92
 msgid ""
@@ -778,7 +807,7 @@ msgstr "%s, version %s\n"
 msgid "Error while reading file %ls\n"
 msgstr "Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: main.c:278 parser.c:1225
+#: main.c:278 parser.c:1261
 msgid "Standard input"
 msgstr "Standard in"
 
@@ -1015,68 +1044,81 @@ msgstr "”begin” ovillkorligen exekverat block"
 msgid "Block created by the . builtin"
 msgstr "Block skapat av det inbyggda kommandot ”.”"
 
-#: parser.c:240
+#: parser.c:239
+msgid "event handler block"
+msgstr "händelsehanterarblock"
+
+#: parser.c:245
 msgid "unknown/invalid block"
 msgstr "okänt/ogiltigt block"
 
-#: parser.c:914
+#: parser.c:922
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Kunde inte skriva profileringsinformation till filen ”%s”"
 
-#: parser.c:920
+#: parser.c:928
 msgid "Time\tSum\tCommand\n"
 msgstr "Tid\tSumma\tKommando\n"
 
-#: parser.c:1044
+#: parser.c:1049
+#, c-format
+msgid "in event handler: %ls\n"
+msgstr "i händelsehanterare: %ls\n"
+
+#: parser.c:1062
 #, c-format
 msgid "in . (source) call of file '%ls',\n"
 msgstr "i ”.”-anrop av fil ”%ls”,\n"
 
-#: parser.c:1046
+#: parser.c:1065
 #, c-format
 msgid "in function '%ls',\n"
 msgstr "i funktion ”%ls”,\n"
 
-#: parser.c:1052
+#: parser.c:1068
+msgid "in command substitution\n"
+msgstr "i kommandosubstitution\n"
+
+#: parser.c:1076
 #, c-format
 msgid "\tcalled on line %d of file '%ls',\n"
 msgstr "\tanropad på rad %d i fil ”%ls”,\n"
 
-#: parser.c:1057
+#: parser.c:1081
 msgid "\tcalled on standard input,\n"
 msgstr "\tanropad från standard in,\n"
 
-#: parser.c:1068
+#: parser.c:1094
 #, c-format
 msgid "\twith parameter list '%ls'\n"
 msgstr "\tmed parameterlista ”%ls”\n"
 
-#: parser.c:1219
+#: parser.c:1255
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (rad %d): "
 
-#: parser.c:1424
+#: parser.c:1460
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Kunde inte expandera strängen ”%ls”"
 
-#: parser.c:1526
+#: parser.c:1562
 msgid "Invalid IO redirection"
 msgstr "Ogiltig IO omdirigering"
 
-#: parser.c:1569
+#: parser.c:1605
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "IO dirigering till någonting som inte är en filidentifierare"
 
-#: parser.c:1982
+#: parser.c:2018
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Okänt kommando ”%ls”"
 
-#: parser.c:2424
+#: parser.c:2458
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 
@@ -1109,45 +1151,45 @@ msgstr "avslutat"
 msgid "An error occured while reading output from code block"
 msgstr "Ett fel inträffade under läsandet av utdata från kodblock"
 
-#: proc.c:1015 proc.c:1025 proc.c:1035
+#: proc.c:1027 proc.c:1037 proc.c:1047
 msgid "Could not return shell to foreground"
 msgstr "Kunde inte återställa skalet till förgrunden"
 
-#: proc.c:1058
+#: proc.c:1070
 msgid "Job command"
 msgstr "Jobb kommando"
 
-#: proc.c:1061 proc.c:1088
+#: proc.c:1073 proc.c:1100
 msgid "Process list pointer"
 msgstr "Processlistepekare"
 
-#: proc.c:1064
+#: proc.c:1076
 msgid "Job list pointer"
 msgstr "Jobblistepekare"
 
-#: proc.c:1075
+#: proc.c:1087
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
 msgstr "Mer än ett jobb i förgrunden: job 1: ”%ls”, jobb 2 ”%ls”"
 
-#: proc.c:1086
+#: proc.c:1098
 msgid "Process argument list"
 msgstr "Processargumentlista"
 
-#: proc.c:1087
+#: proc.c:1099
 msgid "Process name"
 msgstr "Processnamn"
 
-#: proc.c:1089
+#: proc.c:1101
 msgid "Process command"
 msgstr "Processkommando"
 
-#: proc.c:1094
+#: proc.c:1106
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
 msgstr "Jobb ”%ls”, process ”%ls” har ogiltigt tillstånd ”stopped”=%d"
 
-#: proc.c:1104
+#: proc.c:1116
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
 msgstr "Jobb ”%ls”, process ”%ls” har ogiltigt tillstånd ”completed”=%d"
@@ -1180,29 +1222,29 @@ msgstr "Ta bort element från tomt läsarblock"
 msgid "There are stopped jobs\n"
 msgstr "Det finns bakgrundsjobb\n"
 
-#: reader.c:2802
+#: reader.c:2807
 #, c-format
 msgid "Unknown keybinding %d"
 msgstr "Okänd tangentbordsbindning %d"
 
-#: reader.c:2872
+#: reader.c:2878
 msgid "Error while reading commands"
 msgstr "Ett fel inträffade medan kommandon lästes in"
 
-#: reader.c:2891
+#: reader.c:2897
 msgid "Error while closing input stream"
 msgstr "Ett fel inträffade medan indataström stängdes"
 
-#: reader.c:2919
+#: reader.c:2925
 #, c-format
 msgid "Could not convert input. Read %d bytes."
 msgstr "Kunde inte konvertera indata. Läste %d bytes."
 
-#: reader.c:2925
+#: reader.c:2931
 msgid "Could not read input stream"
 msgstr "Kunde inte läsa från indataström"
 
-#: reader.c:2934
+#: reader.c:2940
 msgid "Error while opening input stream"
 msgstr "Ett fel inträffade medan indataström öppnades"
 
@@ -3527,8 +3569,8 @@ msgid "Make checked-out files read-write (default)"
 msgstr "Gör utcheckade filer läs och skrivbara"
 
 #: init/completions/cvs.fish:42
-msgid "Do not execute anything that will change the disk"
-msgstr "Utför ingenting som skriver till disk"
+msgid "Do not change any files"
+msgstr "Ändra inga filer"
 
 #: init/completions/cvs.fish:43
 msgid "Show trace of program execution -- try with -n"
@@ -4658,7 +4700,7 @@ msgid "Stop after compile"
 msgstr "Stanna efter kompilering"
 
 #: init/completions/gcc.fish:26
-msgid "Stop after preprocesswor"
+msgid "Stop after preprocessor"
 msgstr "Stanna efter förprocessor"
 
 #: init/completions/gcc.fish:27
@@ -8275,7 +8317,9 @@ msgstr "Välj vilka jobb som ställs under jobbkontroll"
 #: init/completions/status.fish:10
 msgid ""
 "Print a list of all function calls leading up to running the current command"
-msgstr "Visa en lista av alla funktionsanropp som lett fram till anropet på det nu körande kommandot"
+msgstr ""
+"Visa en lista av alla funktionsanropp som lett fram till anropet på det nu "
+"körande kommandot"
 
 #: init/completions/sudo.fish:5
 msgid "Command to run"

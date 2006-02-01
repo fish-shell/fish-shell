@@ -588,7 +588,7 @@ int job_reap( int interactive )
 									  j->job_id, 
 									  j->command,
 									  sig2wcs(WTERMSIG(p->status)),
-									  sig_description( WTERMSIG(p->status) ) );
+									  signal_get_desc( WTERMSIG(p->status) ) );
 						else
 							fwprintf( stdout,
 									  _( L"%ls: Process %d, \'%ls\' from job %d, \'%ls\' terminated by signal %ls (%ls)" ),
@@ -598,7 +598,7 @@ int job_reap( int interactive )
 									  j->job_id,
 									  j->command,
 									  sig2wcs(WTERMSIG(p->status)),
-									  sig_description( WTERMSIG(p->status) ) );
+									  signal_get_desc( WTERMSIG(p->status) ) );
 						tputs(clr_eol,1,&writeb);
 						fwprintf (stdout, L"\n" );
 						found=1;						

@@ -18,7 +18,7 @@ const wchar_t *sig2wcs( int sig );
 /**
    Returns a description of the specified signal.
 */
-const wchar_t *sig_description( int sig );
+const wchar_t *signal_get_desc( int sig );
 
 /**
    Set all signal handlers to SIG_DFL

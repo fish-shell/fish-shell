@@ -233,6 +233,11 @@ The fish parser. Contains functions for parsing code.
 */
 #define SOURCE_BLOCK _( L"Block created by the . builtin" )
 
+/**
+	Source block description
+*/
+#define EVENT_BLOCK _( L"event handler block" )
+
 
 /**
 	Unknown block description
@@ -333,6 +338,9 @@ void parser_push_block( int type )
 {
 	block_t *new = calloc( 1, sizeof( block_t ));
 
+	new->src_lineno = parser_get_lineno();
+	new->src_filename = parser_current_filename()?wcsdup(parser_current_filename()):0;
+	
 	debug( 3, L"Block push %ls %d\n", parser_get_block_desc(type), block_count( current_block)+1 );
 
 	new->outer = current_block;
@@ -407,16 +415,11 @@ void parser_pop_block()
 		case FUNCTION_CALL:
 		{
 			free( current_block->param1.function_name );
-			free( current_block->param4.call_filename );
-			al_foreach( &current_block->param2.function_vars,
-						(void (*)(const void *))&free );
-			al_destroy( &current_block->param2.function_vars );
 			break;
 		}
 
 		case SOURCE:
 		{
-			free( current_block->param4.call_filename );
 			free( current_block->param1.source_dest );
 			break;
 		}
@@ -428,6 +431,8 @@ void parser_pop_block()
 		eb_next = eb->next;
 		free(eb);
 	}
+
+	free( current_block->src_filename );
 
 	block_t *old = current_block;
 	current_block = current_block->outer;
@@ -470,6 +475,9 @@ const wchar_t *parser_get_block_desc( int block )
 
 		case SOURCE:
 			return SOURCE_BLOCK;
+
+		case EVENT:
+			return EVENT_BLOCK;
 
 		default:
 			return UNKNOWN_BLOCK;
@@ -1035,40 +1043,60 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 {
 	if( !b )
 		return;
-
-	if( b->type == FUNCTION_CALL || b->type==SOURCE)
+	
+	if( b->type==EVENT )
+	{
+		sb_printf( buff, _(L"in event handler: %ls\n"), event_get_desc( b->param1.event ));
+		sb_printf( buff,
+				   L"\n" );
+		return;
+	}
+	
+	if( b->type == FUNCTION_CALL || b->type==SOURCE || b->type==SUBST)
 	{
 		int i;
 
-		if( b->type==SOURCE)
-			sb_printf( buff, _(L"in . (source) call of file '%ls',\n"), b->param1.source_dest );
-		else
-			sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
+		switch( b->type)
+		{
+			case SOURCE:
+				sb_printf( buff, _(L"in . (source) call of file '%ls',\n"), b->param1.source_dest );
+				break;
+			case FUNCTION_CALL:
+				sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
+				break;
+			case SUBST:
+				sb_printf( buff, _(L"in command substitution\n") );
+				break;
+		}
 
-		const wchar_t *file = b->param4.call_filename;
+		const wchar_t *file = b->src_filename;
 
 		if( file )
 			sb_printf( buff,
 					   _(L"\tcalled on line %d of file '%ls',\n"),
-					   b->param3.call_lineno,
+					   b->src_lineno,
 					   file );
 		else
 			sb_printf( buff,
 					   _(L"\tcalled on standard input,\n") );
 
-		if( al_get_count( &b->param2.function_vars ) )
-		{
-			string_buffer_t tmp;
-			sb_init( &tmp );
-
-			for( i=0; i<al_get_count( &b->param2.function_vars ); i++ )
+		if( b->type == FUNCTION_CALL )
+		{			
+			if( b->param2.function_call_process->argv[1] )
 			{
-				sb_append2( &tmp, i?L" ":L"", (wchar_t *)al_get( &b->param2.function_vars, i ), (void *)0 );
+				string_buffer_t tmp;
+				sb_init( &tmp );
+				
+				for( i=1; b->param2.function_call_process->argv[i]; i++ )
+				{
+					sb_append2( &tmp, i>1?L" ":L"", b->param2.function_call_process->argv[i], (void *)0 );
+				}
+				sb_printf( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
+				
+				sb_destroy( &tmp );
 			}
-			sb_printf( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
-
-			sb_destroy( &tmp );
 		}
+		
 		sb_printf( buff,
 				   L"\n" );
 	}
@@ -1096,10 +1124,18 @@ static const wchar_t *is_function()
 int parser_get_lineno()
 {
 	int i;
-	const wchar_t *whole_str = tok_string( current_tokenizer );
+	const wchar_t *whole_str;
 	const wchar_t *function_name;
 
 	int lineno = 1;
+
+	if( !current_tokenizer )
+		return -1;
+	
+	whole_str = tok_string( current_tokenizer );
+
+	if( !whole_str )
+		return -1;
 
 	for( i=0; i<current_tokenizer_pos; i++ )
 	{
@@ -2377,8 +2413,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		return 1;
 	}
 
-	if( (block_type!=TOP) &&
-		(block_type != FUNCTION_CALL) &&
+	if( (block_type != TOP) &&
 		(block_type != SUBST))
 	{
 		debug( 1,
@@ -2392,12 +2427,12 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	}
 
 	eval_level++;
-	current_tokenizer = malloc( sizeof(tokenizer));
 
 	parser_push_block( block_type );
 
-
+	current_tokenizer = malloc( sizeof(tokenizer));
 	tok_init( current_tokenizer, cmd, 0 );
+
 	error_code = 0;
 
 	event_fire( 0 );

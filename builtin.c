@@ -2029,20 +2029,10 @@ static int builtin_source( wchar_t ** argv )
 	}
 	else
 	{
-
-		/*
-		  Push a new non-shadowwing variable scope to the stack. That
-		  way one can use explicitly local variables in sourced files
-		  that will die on return to the calling file.
-		*/
-		int lineno = parser_get_lineno();
-		wchar_t *file = parser_current_filename()?wcsdup(parser_current_filename()):0;
-		reader_push_current_filename( argv[1] );
 		parser_push_block( SOURCE );
+		reader_push_current_filename( argv[1] );
 
 		current_block->param1.source_dest = wcsdup( argv[1] );
-		current_block->param3.call_lineno = lineno;
-		current_block->param4.call_filename = file;
 
 		res = reader_read( fd );
 		parser_pop_block();

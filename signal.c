@@ -342,7 +342,7 @@ const wchar_t *sig2wcs( int sig )
 	return L"Unknown";
 }
 
-const wchar_t *sig_description( int sig )
+const wchar_t *signal_get_desc( int sig )
 {
 	int i;
 	for( i=0; lookup[i].desc ; i++ )

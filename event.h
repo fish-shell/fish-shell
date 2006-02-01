@@ -130,4 +130,10 @@ void event_destroy();
 */
 void event_free( event_t *e );
 
+/**
+   Returns a string describing the specified event. The string should
+   not be freed.
+*/
+const wchar_t *event_get_desc( event_t *e );
+
 #endif

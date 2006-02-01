@@ -2813,7 +2813,6 @@ wchar_t *reader_readline()
 			data->search_buff[0]=0;
 			history_reset();
 			data->token_history_pos=-1;
-
 		}
 
 

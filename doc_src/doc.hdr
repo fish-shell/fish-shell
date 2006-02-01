@@ -6,7 +6,7 @@ This is the documentation for \c fish, the friendly interactive
 shell. \c fish is a user friendly commandline shell intended
 mostly for interactive use. A shell is a program used to execute other
 programs. For the latest information on \c fish, please visit the <a
-href="http://roo.no-ip.org/fish/"><tt>fish</tt> homepage</a>.
+href="http://roo.no-ip.org/fish/"><code>fish</code> homepage</a>.
 
 \section syntax Syntax overview
 
@@ -18,7 +18,7 @@ any arguments.
 
 Example:
 
-<tt>echo hello world</tt>
+<code>echo hello world</code>
 
 calls the \c echo command. \c echo is a command which will write its
 arguments to the screen. In the example above, the output will be
@@ -31,7 +31,7 @@ syntax.
 If you wish to find out more about the echo command used above, read
 the manual page for the echo command by writing:
 
-<tt>man echo</tt>
+<code>man echo</code>
 
 \c man is a command for displaying a manual page on a given
 topic. There are manual pages for almost every command on most
@@ -76,11 +76,11 @@ and vice versa.
 
 Example:
 
-<tt>rm "cumbersome filename.txt"</tt>
+<code>rm "cumbersome filename.txt"</code>
 
 Will remove the file 'cumbersome filename.txt', while
 
-<tt>rm cumbersome filename.txt</tt>
+<code>rm cumbersome filename.txt</code>
 
 would remove the two files 'cumbersome' and 'filenmae.txt'.
 
@@ -89,31 +89,32 @@ would remove the two files 'cumbersome' and 'filenmae.txt'.
 Some characters can not be written directly on the command line. For
 these characters, so called escape sequences are provided. These are:
 
-- <tt>'\\n'</tt>, escapes a newline character
-- <tt>'\\t'</tt>, escapes the tab character
-- <tt>'\\b'</tt>, escapes the backspace character
-- <tt>'\\r'</tt>, escapes the carriage return character
-- <tt>'\\e'</tt>, escapes the escape character
-- <tt>'\\ '</tt>, escapes the space character
-- <tt>'\\$'</tt>, escapes the dollar character
-- <tt>'\\\\'</tt>, escapes the backslash character
-- <tt>'\\*'</tt>, escapes the star character
-- <tt>'\\?'</tt>, escapes the question mark character
-- <tt>'\\~'</tt>, escapes the tilde character
-- <tt>'\\#'</tt>, escapes the hash character
-- <tt>'\\('</tt>, escapes the left parenthesis character
-- <tt>'\\)'</tt>, escapes the right parenthesis character
-- <tt>'\\{'</tt>, escapes the left curly bracket character
-- <tt>'\\}'</tt>, escapes the right curly bracket character
-- <tt>'\\['</tt>, escapes the left bracket character
-- <tt>'\\]'</tt>, escapes the right bracket character
-- <tt>'\\\<'</tt>, escapes the less than character
-- <tt>'\\\>'</tt>, escapes the more than character
-- <tt>'\\^'</tt>, escapes the circumflex character
-- <tt>'\\x<i>xx</i>'</tt>, where <tt><i>xx</i></tt> is a hexadecimal number, escapes the ascii character with the specified value
-- <tt>'\\o<i>ooo</i>'</tt>, where <tt><i>ooo</i></tt> is an octal number, escapes the ascii character with the specified value
-- <tt>'\\u<i>xxxx</i>'</tt>, where <tt><i>xxxx</i></tt> is a hexadecimal number, escapes the 16-bit unicode character with the specified value
-- <tt>'\\U<i>xxxxxxxx</i>'</tt>, where <tt><i>xxxxxxxx</i></tt> is a hexadecimal number, escapes the 32-bit unicode character with the specified value
+- <code>'\\n'</code>, escapes a newline character
+- <code>'\\t'</code>, escapes the tab character
+- <code>'\\b'</code>, escapes the backspace character
+- <code>'\\r'</code>, escapes the carriage return character
+- <code>'\\e'</code>, escapes the escape character
+- <code>'\\ '</code>, escapes the space character
+- <code>'\\$'</code>, escapes the dollar character
+- <code>'\\\\'</code>, escapes the backslash character
+- <code>'\\*'</code>, escapes the star character
+- <code>'\\?'</code>, escapes the question mark character
+- <code>'\\~'</code>, escapes the tilde character
+- <code>'\\#'</code>, escapes the hash character
+- <code>'\\('</code>, escapes the left parenthesis character
+- <code>'\\)'</code>, escapes the right parenthesis character
+- <code>'\\{'</code>, escapes the left curly bracket character
+- <code>'\\}'</code>, escapes the right curly bracket character
+- <code>'\\['</code>, escapes the left bracket character
+- <code>'\\]'</code>, escapes the right bracket character
+- <code>'\\\<'</code>, escapes the less than character
+- <code>'\\\>'</code>, escapes the more than character
+- <code>'\\^'</code>, escapes the circumflex character
+- <code>'\\x<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes the ascii character with the specified value
+- <code>'\\X<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes a byte of data with the specified value. If you are using a mutibyte encoding, this can be used to enter invalid strings. Only use this if you know what you are doing.
+- <code>'\\o<i>ooo</i>'</code>, where <code><i>ooo</i></code> is an octal number, escapes the ascii character with the specified value
+- <code>'\\u<i>xxxx</i>'</code>, where <code><i>xxxx</i></code> is a hexadecimal number, escapes the 16-bit unicode character with the specified value
+- <code>'\\U<i>xxxxxxxx</i>'</code>, where <code><i>xxxxxxxx</i></code> is a hexadecimal number, escapes the 32-bit unicode character with the specified value
 
 \subsection redirects IO redirection
 
@@ -124,22 +125,22 @@ a number called a file descriptor (FD). These are:
 - Standard output, FD 1, for writing, defaults to writing to the screen.
 - Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
-The reason for providing for two methods of output is that errors and
-warnings can be separated from regular program output.
+The reason for providing for two output file descriptors is to allow
+separation of errors and warnings from regular program output.
 
 Any file descriptor can be directed to a different output than it's
 default through a simple mechanism called a redirection.
 
-An example of a file redirection is <tt> echo hello \>output.txt</tt>,
+An example of a file redirection is <code> echo hello \>output.txt</code>,
 which directs the output of the echo command to the file error.txt.
 
-- To redirect standard input, write <tt>\<SOURCE_FILE</tt> 
-- To redirect standard output, write <tt>\>DESTINATION</tt> 
-- To redirect standard error, write <tt>^DESTINATION</tt> 
-- To redirect standard output to a file which will be appended, write <tt>\>\>DESTINATION_FILE</tt>
-- To redirect standard error to a file which will be appended, write <tt>^^DESTINATION_FILE</tt> 
+- To redirect standard input, write <code>\<SOURCE_FILE</code> 
+- To redirect standard output, write <code>\>DESTINATION</code> 
+- To redirect standard error, write <code>^DESTINATION</code> 
+- To redirect standard output to a file which will be appended, write <code>\>\>DESTINATION_FILE</code>
+- To redirect standard error to a file which will be appended, write <code>^^DESTINATION_FILE</code> 
 
-<tt>DESTINATION</tt> can be one of the following: 
+<code>DESTINATION</code> can be one of the following: 
 
 - A filename. The output will be written to the specified file.
 - An ampersand (\&) followed by the number of another file descriptor. The file descriptor will be a duplicate of the specified file descriptor.
@@ -148,17 +149,17 @@ which directs the output of the echo command to the file error.txt.
 Example:
 
 To redirect both standard output and standard error to the file
-all_output.txt, you can write <tt>echo Hello \>all_output.txt
-^\&1</tt>.
+all_output.txt, you can write <code>echo Hello \>all_output.txt
+^\&1</code>.
 
 Any FD can be redirected in an arbitrary way by prefixing the
 redirection with the number of the FD.
 
-- To redirect input of FD number N, write <tt>N\<DESTINATION</tt>
-- To redirect output of FD number N, write <tt>N\>DESTINATION</tt> 
-- To redirect output of FD number N to a file which will be appended, write <tt>N\>\>DESTINATION_FILE</tt>
+- To redirect input of FD number N, write <code>N\<DESTINATION</code>
+- To redirect output of FD number N, write <code>N\>DESTINATION</code> 
+- To redirect output of FD number N to a file which will be appended, write <code>N\>\>DESTINATION_FILE</code>
 
-Example: <tt>echo Hello 2\>-</tt> and <tt>echo Hello ^-</tt> are
+Example: <code>echo Hello 2\>-</code> and <code>echo Hello ^-</code> are
 equivalent.
 
 \subsection piping Piping
@@ -168,7 +169,7 @@ pipeline. This means that the standard output of one command will be read
 in as standard input into the next command. This is done by separating
 the commands by the pipe character (|). For example
 
-<tt>cat foo.txt | head</tt>
+<code>cat foo.txt | head</code>
 
 will call the 'cat' program with the parameter 'foo.txt', which will
 print the contents of the file 'foo.txt'. The contents of foo.txt will
@@ -176,7 +177,7 @@ then be filtered through the program 'head', which will pass on the
 first ten lines of the file to the screen. For more information on how
 to combine commands through pipes, read the manual pages of the
 commands you want to use using the 'man' command. If you want to find
-out more about the 'cat' program, type <tt>man cat</tt>.
+out more about the 'cat' program, type <code>man cat</code>.
 
 Pipes usually connect file descriptor 1 (standard output) of the first
 process to file descriptor 0 (standard input) of the second
@@ -184,7 +185,7 @@ process. It is possible use a different output file descriptor by
 prepending the desired FD number and then output redirect symbol to
 the pipe. For example:
 
-<tt>make fish 2>|less</tt>
+<code>make fish 2>|less</code>
 
 will attempt to build the fish program, and any errors will be shown
 using the less pager.
@@ -198,7 +199,6 @@ background. To create a background job, append a \& (ampersand) to
 your command. This will tell fish to run the job in the background.
 
 \subsection syntax-job-control Job control
-
 
 Most programs allow you to suspend the programs execution and return
 control to \c fish by Pressing ^Z (Press and hold the Control key and
@@ -219,7 +219,7 @@ href="builtins.html#jobs">jobs</a> command.
 This is a short explanation of some of the commonly used words in fish.
 
 - argument, a parameter given to a command
-- builtin, a command that is implemented as part of the shell
+- builtin, a command that is implemented in the shell
 - command, a program
 - function, a block of one or more fish commands that can be called as a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
 - job, a running pipeline or command
@@ -229,14 +229,14 @@ This is a short explanation of some of the commonly used words in fish.
 \section help Help
 
 \c fish has an extensive help system. Use the <a
-href="commands.html#help"><tt>help</tt></a> command to obtain help on
-a specific subject or command. For instance, writing <tt>help
-syntax</tt> displays the <a href="#syntax">syntax section</a> of this
+href="commands.html#help"><code>help</code></a> command to obtain help on
+a specific subject or command. For instance, writing <code>help
+syntax</code> displays the <a href="#syntax">syntax section</a> of this
 documentation.
 
-Help on a specific builtin can also be obtained with the <tt>-h</tt>
+Help on a specific builtin can also be obtained with the <code>-h</code>
 parameter. For instance, to obtain help on the \c fg builtin, either
-type <tt>fg -h</tt> or <tt>help fg</tt>.
+type <code>fg -h</code> or <code>help fg</code>.
 
 
 \section completion Tab completion
@@ -282,11 +282,11 @@ Specifying your own completions is not complicated. To specify a
 completion, use the \c complete command. \c complete takes
 as a parameter the name of the command to specify a completion
 for. For example, to add a completion for the program \c myprog, one
-would start the completion command with <tt>complete -c myprog
-...</tt>. To provide a list of possible completions for myprog, use
+would start the completion command with <code>complete -c myprog
+...</code>. To provide a list of possible completions for myprog, use
 the \c -a switch. If \c myprog accepts the arguments start and stop,
-this can be specified as <tt>complete -c myprog -a 'start
-stop'</tt>. The argument to the \c -a switch is always a single
+this can be specified as <code>complete -c myprog -a 'start
+stop'</code>. The argument to the \c -a switch is always a single
 string. At completion time, it will be tokenized on spaces and tabs,
 and variable expansion, command substitution and other forms of
 parameter expansion will take place. 
@@ -299,7 +299,7 @@ respectively. If the command 'myprog' has an option '-o' which can
 also be written as '--output', and which can take an additional value
 of either 'yes' or 'no', this can be specified by writing:
 
-<tt>complete -c myprog -s o -l output -a "yes no"</tt>
+<code>complete -c myprog -s o -l output -a "yes no"</code>
 
 There are also special switches for specifying that a switch requires
 an argument, to disable filename completion, to create completions
@@ -359,8 +359,8 @@ Example:
 The command <code>echo (basename image.jpg .jpg).png</code> will
 output 'image.png'.
 
-The command <tt>for i in *.jpg; convert $i (basename $i .jpg).png;
-end</tt> will convert all Jpeg files in the current directory to the
+The command <code>for i in *.jpg; convert $i (basename $i .jpg).png;
+end</code> will convert all Jpeg files in the current directory to the
 PNG format.
 
 
@@ -371,9 +371,9 @@ expanded so each element of the list becomes a new parameter.
 
 Example:
 
-<tt>echo input.{c,h,txt}</tt> outputs 'input.c input.h input.txt'
+<code>echo input.{c,h,txt}</code> outputs 'input.c input.h input.txt'
 
-The command <tt>mv *.{c,h} src/</tt> moves all files with the suffix
+The command <code>mv *.{c,h} src/</code> moves all files with the suffix
 '.c' or '.h' to the subdirectory src.
 
 \subsection expand-variable Variable expansion
@@ -385,12 +385,12 @@ href="#variables"> Environment variables</a> section.
 
 Example:
 
-<tt> echo \$HOME</tt> prints the home directory of the current
+<code> echo \$HOME</code> prints the home directory of the current
 user. 
 
 If you wish to combine environment variables with text, you can
 encase the variables within braces to embed a variable inside running
-text like <tt>echo Konnichiwa {$USER}san</tt>, which will print a
+text like <code>echo Konnichiwa {$USER}san</code>, which will print a
 personalized Japanese greeting.
 
 The {$USER}san syntax might need a bit of an elaboration.  Posix
@@ -451,11 +451,11 @@ take the process ids as an argument.
 
 Example:
 
-<tt>fg \%ema</tt> will search for a process whose command line begins
+<code>fg \%ema</code> will search for a process whose command line begins
 with the letters 'ema', such as emacs, and if found, put it in the
 foreground.
 
-<tt>kill -s SIGINT \%3</tt> will send the SIGINT signal to the job
+<code>kill -s SIGINT \%3</code> will send the SIGINT signal to the job
 with job id 3.
 
 \subsection  combine Combining different expansions
@@ -467,7 +467,7 @@ created.
 Example:
 
 If the current directory contains the files 'foo' and 'bar', the command
-<tt>echo a(ls){1,2,3} </tt>
+<code>echo a(ls){1,2,3} </code>
 will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
 
 
@@ -485,7 +485,7 @@ command</a>.
 Example: 
 
 To set the variable \c smurf to the value \c blue, use the command
-<tt>set smurf blue</tt>.
+<code>set smurf blue</code>.
 
 After a variable has been set, you can use the value of a variable in
 the shell through <a href="expand-variable">variable expansion</a>.
@@ -493,8 +493,8 @@ the shell through <a href="expand-variable">variable expansion</a>.
 Example:
 
 To use the value of a the variable \c smurf, write $ (dollar symbol)
-followed by the name of the variable, like <tt>echo Smurfs are
-$smurf</tt>, which would print the result 'Smurfs are blue'.
+followed by the name of the variable, like <code>echo Smurfs are
+$smurf</code>, which would print the result 'Smurfs are blue'.
 
 \subsection variables-scope Variable scope
 
@@ -503,7 +503,7 @@ local variables. Universal variables are shared between all fish
 sessions a user is running on one computer. Global variables are
 specific to the current fish session, but are not associated with any
 specific block scope, and will never be erased unless the user
-explicitly requests it using <tt>set -e</tt>. Local variables are
+explicitly requests it using <code>set -e</code>. Local variables are
 specific to the current fish session, and associated with a specific
 block of commands, and is automatically erased when a specific block
 goes out of scope. A block of commands is a series of commands that
@@ -550,8 +550,8 @@ value once, and it will be automatically updated for all sessions, and
 preserved across computer reboots and login/logout.
 
 To see universal variables in action, start two fish sessions side by
-side, and issue the following command in one of them <tt>set
-fish_color_cwd blue</tt>. Since \c fish_color_cwd is a universal
+side, and issue the following command in one of them <code>set
+fish_color_cwd blue</code>. Since \c fish_color_cwd is a universal
 variable, the color of the current working directory listing in the
 prompt will instantly change to blue on both terminals.
 
@@ -748,7 +748,7 @@ builtins or shellscript functions, and can only be used inside fish.
 - <a href="commands.html#umask">umask</a>, set or get the file creation mask
 - <a href="builtins.html#while">while</a>, perform a block of commands while a condition is met
 
-For more information about these commands, use the <tt>--help</tt>
+For more information about these commands, use the <code>--help</code>
 option of the command to display a longer explanation.
 
 \section editor Command Line editor
@@ -781,7 +781,7 @@ You can change these key bindings by making an inputrc file. To do
 this, copy the file /etc/fish_inputrc to your home directory and
 rename it to '.fish_inputrc'. Now you can edit the file .fish_inputrc,
 to change your key bindings. The fileformat of this file is described
-in the manual page for readline. Use the command <tt>man readline</tt>
+in the manual page for readline. Use the command <code>man readline</code>
 to read up on this syntax. Please note that the list of key binding
 functions in fish is different to that offered by readline. Currently,
 the following functions are available:
@@ -863,7 +863,7 @@ fish will be stopped until the program finishes. Sometimes this is not
 desirable. For example, you may wish to start an application with a
 graphical user interface from the terminal, and then be able to
 continue using the shell. In such cases, there are several ways in
-which the user can change <tt>fish</tt>'s behaviour.
+which the user can change <code>fish</code>'s behaviour.
 
 -# By ending a command with the \& (ampersand) symbol, the user tells \c fish to put the specified command into the background. A background process will be run simultaneous with \c fish. \c fish will retain control of the terminal, so the program will not be able to read from the keyboard. 
 -# By pressing ^Z, the user stops a currently running foreground  program and returns control to \c fish. Some programs do not support this feature, or remap it to another key. Gnu emacs uses ^X z to stop running.
@@ -875,13 +875,13 @@ On startup, \c fish evaluates the file /etc/fish (Or ~/etc/fish if you
 installed fish in your home directory) and ~/.fish, in that order. If
 you want to run a command only on starting an interactive shell, use
 the exit status of the command 'status --is-interactive' to determine
-if the shell is interactive. If you want to run a command only on
-starting a login shell, use 'status --is-login' instead.
+if the shell is interactive. If you want to run a command only when
+using a login shell, use 'status --is-login' instead.
 
-Example:
+Examples:
 
 If you want to add the directory ~/linux/bin to your PATH variable
-when loging in, add the following to your ~/.fish file:
+when using a login shell, add the following to your ~/.fish file:
 
 <pre>if status --is-login
 	set PATH $PATH ~/linux/bin
@@ -891,7 +891,7 @@ If you want to run a set of commands when \c fish exits, use an <a
 href='#event'>event handler</a> that is triggered by the exit of the
 shell:
 
-<pre>function on_exit --on-process %self
+<pre>function on_exit --on-process \%self
 	echo fish is now exiting
 end</pre>
 
@@ -1411,7 +1411,7 @@ between different shell sessions and applications.
 
 The open command uses the mimetype database (Also used by both Gnome
 or KDE) to launch the default application for a file. Just type
-<tt>open *.html</tt> and all the HTML files in your current directory
+<code>open *.html</code> and all the HTML files in your current directory
 will be opened in your default browser. No longer will you have to
 convert your filenames to URLS, remember clunky Open Office command
 names, worry about absolute paths or any the other common pitfalls when
@@ -1421,10 +1421,10 @@ opening files from the commandline.
 
 \c fish is heavily commented. Both the source code and the
 program in general features a great deal of easily accessible
-documentation. The <tt>help</tt> command is used to display HTML-based
-help files. Just type <tt>help</tt> and a subject, and the help system
+documentation. The <code>help</code> command is used to display HTML-based
+help files. Just type <code>help</code> and a subject, and the help system
 will try to fill your needs. To view the page you are reading right
-now, you could simply type <tt>help difference</tt>. <tt>help</tt>
+now, you could simply type <code>help difference</code>. <code>help</code>
 also works great together with tab completion. Write \c help and
 double tap on tab, a list of all help sections will be displayed, with
 a description of the content of each section.
@@ -1475,9 +1475,9 @@ information.
 \subsection difference-simple Simplicity
 
 \c fish has a simple syntax. There is only one form of
-alias/function/whatever, accessed through the <tt>function</tt>
+alias/function/whatever, accessed through the <code>function</code>
 builtin. The are very few builtins, \c fish relies on normal commands
-like <tt>echo</tt>, <tt>kill</tt>, <tt>printf</tt> and <tt>time</tt>
+like <code>echo</code>, <code>kill</code>, <code>printf</code> and <code>time</code>
 instead of reimplementing them as builtins.
 
 Token separation is performed before variable expansion. This means
@@ -1485,13 +1485,13 @@ that even if a variable contains spaces, it will never be separated
 into multiple arguments. If you want to tokenize a string, you can use
 the <a href="commands.html#tokenize">tokenize</a> command.
 
-Command substitution is specified using parenthesis, as in <tt>set name (whoami)</tt>. 
+Command substitution is specified using parenthesis, as in <code>set name (whoami)</code>. 
 
 There is no math mode, use bc.
 
 The POSIX way of setting variables is <i>lame</i>. Whitespace
 sensitive languages are awful. "foo=bar" and "foo = bar" should not
-mean different things. \c fish uses a builtin, <tt>set</tt> to set and
+mean different things. \c fish uses a builtin, <code>set</code> to set and
 remove environment variables. While this may seem a bit obscure, this
 makes for a very consistent language. In fish, everything, including
 the loops, assignments and switch/case statements is a command.

@@ -23,7 +23,7 @@ complete -c gcc -s x -d (_ "Language") -x -a '
 complete -c gcc -o pass-exit-codes -d (_ "Pass program exit codes")
 complete -c gcc -s c -d (_ "Stop after assembler")
 complete -c gcc -s S -d (_ "Stop after compile")
-complete -c gcc -s E -d (_ "Stop after preprocesswor")
+complete -c gcc -s E -d (_ "Stop after preprocessor")
 complete -c gcc -s o -r -d (_ "Output file")
 complete -c gcc -s v -d (_ "Print commands to stderr")
 complete -c gcc -o \#\#\# -d (_ "Print quoted commands to stderr, do not run")

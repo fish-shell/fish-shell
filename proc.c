@@ -880,9 +880,8 @@ void job_continue (job_t *j, int cont)
 
 	if( !job_is_completed( j ) )
 	{
-		if( j->job_control && j->fg )
+		if( j->terminal && j->fg )
 		{							
-
 			/* Put the job into the foreground.  */
 			signal_block();
 			if( tcsetpgrp (0, j->pgid) )
@@ -916,15 +915,28 @@ void job_continue (job_t *j, int cont)
 		if( cont )
 		{
 			process_t *p;
+
 			for( p=j->first_process; p; p=p->next )
 				p->stopped=0;
-			for( p=j->first_process; p; p=p->next )
+
+			if( j->job_control )
 			{
-				if (kill ( p->pid, SIGCONT) < 0)
+				if( killpg( j->pgid, SIGCONT ) )
 				{
-					wperror (L"kill (SIGCONT)");
+					wperror( L"killpg (SIGCONT)" );
 					return;
-				}		
+				}
+			}
+			else
+			{
+				for( p=j->first_process; p; p=p->next )
+				{
+					if (kill ( p->pid, SIGCONT) < 0)
+					{
+						wperror (L"kill (SIGCONT)");
+						return;
+					}		
+				}
 			}
 		}
 	
@@ -1007,7 +1019,7 @@ void job_continue (job_t *j, int cont)
 		/* 
 		   Put the shell back in the foreground.  
 		*/
-		if( j->job_control && j->fg )
+		if( j->terminal && j->fg )
 		{
 			signal_block();
 			if( tcsetpgrp (0, getpid()) )

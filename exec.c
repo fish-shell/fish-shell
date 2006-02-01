@@ -409,13 +409,13 @@ static int setup_child_process( job_t *j, process_t *p )
 		/* Wait till shell puts os in our own group */
 		while( getpgrp() != j->pgid )
 			sleep(0);
-		
-		/* Wait till shell gives us stdin */
-		if ( j->fg )
-		{
-			while( tcgetpgrp( 0 ) != j->pgid )
-				sleep(0);
-		}
+	}
+	
+	/* Wait till shell gives us stdin */
+	if ( j->terminal && j->fg )
+	{
+		while( tcgetpgrp( 0 ) != j->pgid )
+			sleep(0);
 	}
 	
 	res = handle_child_io( j->io, (p==0) );
@@ -624,23 +624,24 @@ static int handle_new_child( job_t *j, process_t *p )
 				wperror( L"setpgid" );
 			}
 		}
-
-		if( j->fg )
-		{
-			if( tcsetpgrp (0, j->pgid) )
-			{
-				debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
-					   j->job_id, 
-					   j->command );
-				wperror( L"tcsetpgrp" );
-				return -1;
-			}
-		}
 	}
 	else
 	{
 		j->pgid = getpid();
 	}
+	
+	if( j->terminal && j->fg )
+	{
+		if( tcsetpgrp (0, j->pgid) )
+		{
+			debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
+				   j->job_id, 
+				   j->command );
+			wperror( L"tcsetpgrp" );
+			return -1;
+		}
+	}
+
 	return 0;
 }
 

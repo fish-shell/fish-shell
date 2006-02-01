@@ -166,6 +166,9 @@ typedef struct job
 	/** Whether the job is under job control */
 	int job_control;
 			
+	/** Whether the job wants to own the terminal when in the foreground */
+	int terminal;
+			
 	/** Pointer to the next job */
 	struct job *next;           
 } 

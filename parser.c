@@ -2179,13 +2179,12 @@ static void eval_job( tokenizer *tok )
 		case TOK_STRING:
 		{
 			j = job_create();
-			j->command=0;
 			j->fg=1;
-			j->constructed=0;
+			j->terminal = j->job_control && (!is_subshell && !is_event);
 			j->skip_notification = is_subshell || is_block || is_event || (!is_interactive);
-
+			
 			current_block->job = j;
-
+			
 			if( is_interactive )
 			{
 				if( tcgetattr (0, &j->tmodes) )

@@ -177,8 +177,8 @@ int my_wcswidth( const wchar_t *c );
 
 /**
    This functions returns the end of the quoted substring beginning at
-   \c in. It can handle both single and double quotes. Returns 0 on
-   error.
+   \c in. The type of quoting character is detemrined by examining \c
+   in. Returns 0 on error.
 
    \param in the position of the opening quote
 */

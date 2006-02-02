@@ -65,7 +65,7 @@ typedef struct block
 		int if_state; /**< The state of the if block */
 		wchar_t *switch_value; /**< The value to test in a switch block */
 		wchar_t *function_name; /**< The name of the function to define or the function called*/
-		wchar_t *source_dest; /**< The name of the file to source*/
+		const wchar_t *source_dest; /**< The name of the file to source*/
 		event_t *event; /**<The event that triggered this block */		
 	} param1;
 
@@ -99,7 +99,7 @@ typedef struct block
 	/**
 	   Name of file that created this block
 	*/
-	wchar_t *src_filename;
+	const wchar_t *src_filename;
 	
 	/**
 	   Line number where this block was created

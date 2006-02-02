@@ -26,6 +26,14 @@
 
 #define TMP_LEN_MIN 256
 
+#ifndef PATH_MAX
+#ifdef MAXPATHLEN
+#define PATH_MAX MAXPATHLEN
+#else
+#define PATH_MAX 4096
+#endif
+#endif
+
 /**
    Buffer for converting wide arguments to narrow arguments, used by
    the \c wutil_wcs2str() function.
@@ -219,6 +227,61 @@ void wperror(const wchar_t *s)
 	fwprintf( stderr, L"%s\n", strerror( errno ) );
 }
 
+#ifdef HAVE_REALPATH_NULL
+
+wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
+{
+	char *tmp = wutil_wcs2str(pathname);
+	char *narrow_res = realpath( tmp, 0 );	
+	wchar_t *res;	
+
+	if( !narrow_res )
+		return 0;
+		
+	if( resolved_path )
+	{
+		wchar_t *tmp2 = str2wcs( narrow_res );
+		wcslcpy( resolved_path, tmp2, PATH_MAX );
+		free( tmp2 );
+		res = resolved_path;		
+	}
+	else
+	{
+		res = str2wcs( narrow_res );
+	}
+
+    free( narrow_res );
+
+	return res;
+}
+
+#else
+
+wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
+{
+	char *tmp =wutil_wcs2str(name);
+	char narrow[PATH_MAX];
+	char *narrow_res = realpath( tmp, narrow );
+	wchar_t *res;	
+
+	if( !narrow_res )
+		return 0;
+		
+	if( resolved_path )
+	{
+		wchar_t *tmp2 = str2wcs( narrow_res );
+		wcslcpy( resolved_path, tmp2, PATH_MAX );
+		free( tmp2 );
+		res = resolved_path;		
+	}
+	else
+	{
+		res = str2wcs( narrow_res );
+	}
+	return res;
+}
+
+#endif
 
 #if !HAVE_FWPRINTF
 

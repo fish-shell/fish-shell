@@ -36,6 +36,7 @@ The fish parser. Contains functions for parsing code.
 #include "env_universal.h"
 #include "event.h"
 #include "translate.h"
+#include "intern.h"
 
 /**
    Maximum number of block levels in code. This is not the same as
@@ -339,7 +340,7 @@ void parser_push_block( int type )
 	block_t *new = calloc( 1, sizeof( block_t ));
 
 	new->src_lineno = parser_get_lineno();
-	new->src_filename = parser_current_filename()?wcsdup(parser_current_filename()):0;
+	new->src_filename = parser_current_filename()?intern(parser_current_filename()):0;
 	
 	debug( 3, L"Block push %ls %d\n", parser_get_block_desc(type), block_count( current_block)+1 );
 
@@ -418,12 +419,6 @@ void parser_pop_block()
 			break;
 		}
 
-		case SOURCE:
-		{
-			free( current_block->param1.source_dest );
-			break;
-		}
-
 	}
 
 	for( eb=current_block->first_event_block; eb; eb=eb_next )
@@ -431,8 +426,6 @@ void parser_pop_block()
 		eb_next = eb->next;
 		free(eb);
 	}
-
-	free( current_block->src_filename );
 
 	block_t *old = current_block;
 	current_block = current_block->outer;

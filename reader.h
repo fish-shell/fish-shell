@@ -48,7 +48,7 @@ wchar_t *reader_current_filename();
    
    \param fn The fileanme to push
 */
-void reader_push_current_filename( wchar_t *fn );
+void reader_push_current_filename( const wchar_t *fn );
 /**
    Pop the current filename from the stack of read files
  */

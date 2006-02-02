@@ -244,7 +244,8 @@ int main( int argc, char **argv )
 				int i; 
 				string_buffer_t sb;
 				int fd;
-				
+				wchar_t *rel_filename, *abs_filename;
+								
 				if( ( fd = open(file, O_RDONLY) ) == -1 )
 				{
 					wperror( L"open" );
@@ -267,8 +268,13 @@ int main( int argc, char **argv )
 					env_set( L"argv", (wchar_t *)sb.buff, 0 );
 					sb_destroy( &sb );
 				}
+
+				rel_filename = str2wcs( file );
+				abs_filename = wrealpath( rel_filename, 0 );				
+				reader_push_current_filename( intern( abs_filename ) );
+				free( rel_filename );
+				free( abs_filename );
 				
-				reader_push_current_filename( str2wcs( file ) );
 				res = reader_read( fd );
 
 				if( res )
@@ -277,7 +283,7 @@ int main( int argc, char **argv )
 						   _(L"Error while reading file %ls\n"), 
 						   reader_current_filename()?reader_current_filename(): _(L"Standard input") );
 				}				
-				free(reader_pop_current_filename());
+				reader_pop_current_filename();
 			}
 		}
 	}

@@ -18,8 +18,9 @@ for i in /usr/pkg /sw; do
 	else
     	AC_MSG_RESULT(no)
 	fi
+
 done
- 
+
 # If needed, run autoheader automatically
 AC_MSG_CHECKING([if autoheader needs to be run])
 if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
@@ -161,6 +162,23 @@ if test "$have_rlimit_as" = yes; then
 			  [Define to 1 if HAVE_RLIMIT_NPROC is defined in <sys/resource.h>.])
 else
     AC_MSG_RESULT(no)
+fi
+
+# Check if realpath accepts null for its second argument
+AC_MSG_CHECKING([if realpath accepts null for its second argument])
+AC_RUN_IFELSE(
+	[AC_LANG_PROGRAM([#include <limits.h>
+#include <stdlib.h>],
+		[int status; char *res; res = realpath( "foo", 0 ); status = (res && (strlen(res)>3))?0:1; free(res); exit( status );])], 
+	[have_realpath_null=yes], 
+	[have_realpath_null=no] )
+
+if test "$have_realpath_null" = yes; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_REALPATH_NULL], [1],
+		[Define to 1 if realpath accepts null for its second argument.])
+else
+	AC_MSG_RESULT(no)
 fi
 
 

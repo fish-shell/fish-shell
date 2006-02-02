@@ -2001,7 +2001,6 @@ static int builtin_source( wchar_t ** argv )
 
 	argc = builtin_count_args( argv );
 
-
 	if( argc != 2 )
 	{
 		sb_printf( sb_err, _( L"%ls: Expected exactly one argument, got %d\n" ), argv[0], argc );
@@ -2029,10 +2028,23 @@ static int builtin_source( wchar_t ** argv )
 	}
 	else
 	{
-		parser_push_block( SOURCE );
-		reader_push_current_filename( argv[1] );
+		wchar_t *fn = wrealpath( argv[1], 0 );
+		const wchar_t *fn_intern;
 
-		current_block->param1.source_dest = wcsdup( argv[1] );
+		if( !fn )
+		{
+			fn_intern = intern( argv[1] );
+		}
+		else
+		{
+			fn_intern = intern(fn);
+			free( fn );
+		}
+		
+		parser_push_block( SOURCE );		
+		reader_push_current_filename( fn_intern );
+		
+		current_block->param1.source_dest = fn_intern;
 
 		res = reader_read( fd );
 		parser_pop_block();

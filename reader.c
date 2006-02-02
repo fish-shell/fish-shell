@@ -390,7 +390,7 @@ wchar_t *reader_current_filename()
 }
 
 
-void reader_push_current_filename( wchar_t *fn )
+void reader_push_current_filename( const wchar_t *fn )
 {
 	al_push( &current_filename, fn );
 }
@@ -2678,7 +2678,6 @@ wchar_t *reader_readline()
 					(last_char != R_HISTORY_TOKEN_SEARCH_FORWARD) )
 				{
 					reset=1;
-
 				}
 
 				handle_token_history( 0, reset );

@@ -74,12 +74,15 @@ static array_list_t *killme;
 */
 static array_list_t *blocked;
 
+/**
+   String buffer used for formating event descriptions in event_get_desc()
+*/
 static string_buffer_t *get_desc_buff=0;
 
 /**
    Tests if one event instance matches the definition of a event
-   class. If the class defines a function name, that will also be a
-   match criterion.
+   class. If both the class and the instance name a function,
+   they must name the same function.
 
 */
 static int event_match( event_t *class, event_t *instance )

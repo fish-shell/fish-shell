@@ -212,7 +212,7 @@ AC_TRY_LINK([#if HAVE_LIBINTL_H]
 [#include <libintl.h>]
 [#endif],
 [extern int  _nl_msg_cat_cntr;]
-[int tmp = _nl_msg_cat_cntr;], have__nl_msg_cat_cntr=yes, have__nl_msg_cat_cntr=no)
+[int tmp = _nl_msg_cat_cntr; exit(tmp);], have__nl_msg_cat_cntr=yes, have__nl_msg_cat_cntr=no)
 if test "$have__nl_msg_cat_cntr" = yes; then
     AC_MSG_RESULT(yes)
 	AC_DEFINE([HAVE__NL_MSG_CAT_CNTR], [1],

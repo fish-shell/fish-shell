@@ -116,7 +116,7 @@ function __fish_complete_subcommand  -d "Complete subcommand"
 			set res "$res $i"
 		else
 
-			if contains $i $argv
+			if contains -- $i $argv
 				set skip_next 1
 				continue
 			end
@@ -326,6 +326,20 @@ function __fish_is_first_token -d 'Test if no non-switch argument has been speci
 
 			case '*'
 				return 1;
+		end
+	end
+	return 0
+end
+
+function __fish_no_arguments -d "Internal fish function"
+	set -l cmd (commandline -poc) (commandline -tc)
+	set -e cmd[1]
+	for i in $cmd
+		switch $i
+			case '-*'
+				 
+			case '*'
+				 return 1
 		end
 	end
 	return 0

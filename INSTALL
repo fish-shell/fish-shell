@@ -2,16 +2,15 @@
 Known issues
 ============
 
-Older versions of Doxygen has bugs in the man-page generation which
-cause the builtin help to render incorrectly. Version 1.2.14 is known
-to have this problem.
+Fish currently requires a semi-modern GCC version to
+compile. Specifically, GCC 2.95.* won't compile fish. Fish has not
+been coded with an C99- or GNU-specific features in mind, so it is
+hoped that it should be possible to make fish work with other
+compilers. Patches are welcome.
 
-In version 1.9.2, the installation prefix for fish rpms and debs has
-changed from /usr/local to /usr. The package should automatically
-change any instances of /usr/local/bin/fish in /etc/passwd to
-/usr/bin/fish, but some programs, like screen, may need to be
-restarted to notice the changes.  You may also run into problems when
-switching between using a package and personal builds.
+Older versions of Doxygen has bugs in the man-page generation which
+cause the builtin help to render incorrectly. Doxygen 1.2.14 is known
+to have this problem.
 
 
 Prerequisites
@@ -23,18 +22,16 @@ Fish requires the following packages to build:
  - Curses or Ncurses
 
 fish also relies on standard unix tools such as cat, cut, grep, sed,
-whoami and echo. Fish does not support cross-compilation, separate
-build directories or any other fancy configure options. Use a recent
-version of Doxygen, since older versions have bugs that make the
-builtin help pages render incorrectly. Version 1.2.14 is known to be
-broken.
+whoami, bc and echo. Fish does not support cross-compilation, separate
+build directories or any other fancy configure options. 
 
 
 Simple install procedure
 ========================
 
 If you have downloaded the darcs repository of fish, you need to run
-autoconf.
+the autoconf command first. Then use the following commands to compile
+fish:
 
  % ./configure
  % make                                   # Compile fish

@@ -18,8 +18,8 @@ function contains -d "Test if a key is contained in a set of values"
 				break
 			
 			case '-*'
-				echo Unknown option $argv[$i]
-				_contains_help
+				printf (_ "%s: Unknown option '%s'\n") contains $argv[$i]
+				help contains
 				return 1
 
 			case '*'

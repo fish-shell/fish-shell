@@ -67,6 +67,8 @@ pid_t getpgid( pid_t pid );
 */
 static array_list_t *open_fds=0;
 
+static int handle_new_child( job_t *j, process_t *p );
+
 
 void exec_close( int fd )
 {
@@ -238,7 +240,7 @@ void free_fd( io_data_t *io, int fd )
    \param io the list of IO redirections for the child
    \param exit_on_error whether to call exit() on errors
 
-   \return 1 on sucess, 0 on failiure
+   \return 0 on sucess, -1 on failiure
 */
 static int handle_child_io( io_data_t *io, int exit_on_error )
 {
@@ -283,7 +285,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 					}
 					else
 					{
-						return 0;
+						return -1;
 					}					
 				}				
 				else if( tmp != io->fd)
@@ -302,7 +304,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 						}
 						else
 						{
-							return 0;
+							return -1;
 						}
 					}
 					exec_close( tmp );
@@ -326,7 +328,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 					}
 					else
 					{
-						return 0;
+						return -1;
 					}
 				}
 				break;
@@ -349,7 +351,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 					}
 					else
 					{
-						return 0;
+						return -1;
 					}					
 
 				}
@@ -373,7 +375,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 	if( env_universal_server.fd >= 0 )
 		exec_close( env_universal_server.fd );
 
-	return 1;
+	return 0;
 	
 }
 
@@ -387,41 +389,24 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
    \param j the job to set up the IO for
    \param p the child process to set up
 
-   \return 1 on sucess, 0 on failiure
+   \return 0 on sucess, -1 on failiure
 */
 static int setup_child_process( job_t *j, process_t *p )
 {
-	int res;
+	int res=0;
 	
-	if( j->job_control )
-    {
-		pid_t pid;
-		/* 
-		   Put the process into the process group and give the process
-		   group the terminal, if appropriate. This has to be done
-		   both by the shell and in the individual child processes
-		   because of potential race conditions.
-		*/
-		pid = getpid ();
-		if (j->pgid == 0)
-			j->pgid = pid;
-		
-		/* Wait till shell puts us in our own group */
-		while( getpgrp() != j->pgid )
-			sleep(0);
-	}
-	
-	/* Wait till shell gives us stdin */
-	if ( j->terminal && j->fg )
+	if( p )
 	{
-		while( tcgetpgrp( 0 ) != j->pgid )
-			sleep(0);
+		res = handle_new_child( j, p );
 	}
 	
-	res = handle_child_io( j->io, (p==0) );
+	if( !res )	
+	{
+		res = handle_child_io( j->io, (p==0) );
+	}
 	
 	/* Set the handling for job control signals back to the default.  */
-	if( res )
+	if( !res )
 	{
 		signal_reset_handlers();
 	}
@@ -601,6 +586,7 @@ static void internal_exec_helper( const wchar_t *def,
 */
 static int handle_new_child( job_t *j, process_t *p )
 {
+	int res = 0;
 	
 	if( j->job_control )
 	{
@@ -622,6 +608,7 @@ static int handle_new_child( job_t *j, process_t *p )
 					   getpgid( p->pid),
 					   j->pgid );
 				wperror( L"setpgid" );
+				res = -1;
 			}
 		}
 	}
@@ -638,11 +625,11 @@ static int handle_new_child( job_t *j, process_t *p )
 				   j->job_id, 
 				   j->command );
 			wperror( L"tcsetpgrp" );
-			return -1;
+			res = -1;
 		}
 	}
 
-	return 0;
+	return res;
 }
 
 
@@ -680,7 +667,7 @@ void exec( job_t *j )
 		/*
 		  setup_child_process make sure signals are propelry set up
 		*/
-		if( setup_child_process( j, 0 ) )
+		if( !setup_child_process( j, 0 ) )
 		{
 			/*
 			  launch_process never returns

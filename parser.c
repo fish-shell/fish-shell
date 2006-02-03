@@ -1130,7 +1130,7 @@ int parser_get_lineno()
 	if( !whole_str )
 		return -1;
 
-	for( i=0; i<current_tokenizer_pos; i++ )
+	for( i=0; i<current_tokenizer_pos && whole_str[i]; i++ )
 	{
 		if( whole_str[i] == L'\n' )
 		{

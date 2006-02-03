@@ -125,6 +125,10 @@ int main( int argc, char **argv )
 				}
 				,
 				{
+					"login", no_argument, 0, 'l' 
+				}
+				,
+				{
 					"profile", required_argument, 0, 'p' 
 				}
 				,
@@ -146,14 +150,14 @@ int main( int argc, char **argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "hivc:p:", 
+							   "hilvc:p:", 
 							   long_options, 
 							   &opt_index );
 		
 #else	
 		int opt = getopt( argc,
 						  argv, 
-						  "hivc:p:" );
+						  "hilvc:p:" );
 #endif
 		if( opt == -1 )
 			break;
@@ -170,12 +174,14 @@ int main( int argc, char **argv )
 
 			case 'h':
 				cmd = "help";
-				//interactive=0;
-				
 				break;
 
 			case 'i':
 				force_interactive = 1;
+				break;				
+				
+			case 'l':
+				is_login=1;
 				break;				
 				
 			case 'p':
@@ -198,16 +204,11 @@ int main( int argc, char **argv )
 	my_optind = optind;
 	
 	is_login |= strcmp( argv[0], "-fish") == 0;
-//	fwprintf( stderr, L"%s\n", argv[0] );
 		
 	is_interactive_session &= (cmd == 0);
 	is_interactive_session &= (my_optind == argc);
 	is_interactive_session &= isatty(STDIN_FILENO);	
-	
-//	fwprintf( stderr, L"%d %d %d\n", cmd==0, my_optind == argc, isatty(STDIN_FILENO) );
-
-	if( force_interactive )
-		is_interactive_session=1;	
+	is_interactive_session |= force_interactive;
 
 	translate_init();	
 	proc_init();	
@@ -274,7 +275,7 @@ int main( int argc, char **argv )
 				reader_push_current_filename( intern( abs_filename ) );
 				free( rel_filename );
 				free( abs_filename );
-				
+
 				res = reader_read( fd );
 
 				if( res )
@@ -289,7 +290,7 @@ int main( int argc, char **argv )
 	}
 
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
-		
+
 	proc_destroy();
 	env_destroy();
 	builtin_destroy();
@@ -303,7 +304,7 @@ int main( int argc, char **argv )
 	event_destroy();
 	output_destroy();
 	translate_destroy();	
-	
+
 	intern_free_all();
 
 	return res;	

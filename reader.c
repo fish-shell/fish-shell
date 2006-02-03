@@ -606,6 +606,8 @@ void reader_write_title()
 	wchar_t *title;
 	array_list_t l;
 	wchar_t *term = env_get( L"TERM" );
+	int was_interactive = is_interactive;
+	is_interactive = 0;
 
 	/*
 	  This is a pretty lame heuristic for detecting terminals that do
@@ -637,6 +639,8 @@ void reader_write_title()
 		}
 		writestr( L"\7" );
 	}
+	is_interactive = was_interactive;
+	
 	al_foreach( &l, (void (*)(const void *))&free );
 	al_destroy( &l );
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
@@ -786,6 +790,8 @@ static void write_prompt()
 
 		if( data->prompt )
 		{
+			int was_interactive = is_interactive;
+			is_interactive = 0;
 			if( exec_subshell( data->prompt, &prompt_list ) == -1 )
 			{
 				/* If executing the prompt fails, make sure we at least don't print any junk */
@@ -793,6 +799,7 @@ static void write_prompt()
 				al_destroy( &prompt_list );
 				al_init( &prompt_list );
 			}
+			is_interactive = was_interactive;			
 		}
 
 		data->prompt_width=calc_prompt_width( &prompt_list );

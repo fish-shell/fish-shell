@@ -406,7 +406,7 @@ static int setup_child_process( job_t *j, process_t *p )
 		if (j->pgid == 0)
 			j->pgid = pid;
 
-		/* Wait till shell puts os in our own group */
+		/* Wait till shell puts us in our own group */
 		while( getpgrp() != j->pgid )
 			sleep(0);
 	}

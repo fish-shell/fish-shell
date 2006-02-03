@@ -42,9 +42,11 @@
 
 
 /*
-  Completion description strings for files
+  Completion description strings, mostly for different types of files, such as sockets, block devices, etc.
 
-  There are a few other completion description strings defined in expand.c
+  There are a few more completion description strings defined in
+  expand.c. Maybe all completion description strings should be defined
+  in the same file?
 */
 
 /**
@@ -95,20 +97,20 @@
 */
 #define COMPLETE_LOOP_SYMLINK_DESC _( L"Symbolic link loop" )
 /**
-   Description for socket
+   Description for socket files
 */
 #define COMPLETE_SOCKET_DESC _( L"Socket" )
 /**
-   Description for directory
+   Description for directories
 */
 #define COMPLETE_DIRECTORY_DESC _( L"Directory" )
 
 /**
-   Description for function
+   Generic description for functions
 */
 #define COMPLETE_FUNCTION_DESC _( L"Function" )
 /**
-   Description for builtin command
+   Generic description for builtin commands
 */
 #define COMPLETE_BUILTIN_DESC _( L"Builtin" )
 
@@ -126,17 +128,23 @@
 
 /**
    Condition cache value returned from hashtable when this condition
-   has not yet been tested
+   has not yet been tested. This value is NULL, so that when the hash
+   table returns NULL, this wil be seen as an untested condition.
 */
 #define CC_NOT_TESTED 0
 
 /**
-   Condition cache value returned from hashtable when the condition is met
+   Condition cache value returned from hashtable when the condition is
+   met. This can be any value, that is a valid pointer, and that is
+   different from CC_NOT_TESTED and CC_FALSE.
 */
 #define CC_TRUE L"true"
 
 /**
-   Condition cache value returned from hashtable when the condition is not met
+   Condition cache value returned from hashtable when the condition is
+   not met. This can be any value, that is a valid pointer, and that
+   is different from CC_NOT_TESTED and CC_TRUE.
+
 */
 #define CC_FALSE L"false"
 
@@ -148,8 +156,8 @@
 
    If either short_opt or long_opt are non-zero, they specify a switch
    for the command. If \c comp is also not empty, it contains a list
-   of arguments that may only follow after the specified switch.
-
+   of non-switch arguments that may only follow directly after the
+   specified switch.   
 */
 typedef struct complete_entry_opt
 {
@@ -163,11 +171,13 @@ typedef struct complete_entry_opt
 	const wchar_t *desc;
 	/** Condition under which to use the option */
 	const wchar_t *condition;
-	/** Must be one of the values SHARED, NO_FILES, NO_COMMON, EXCLUSIVE. */
+	/** Must be one of the values SHARED, NO_FILES, NO_COMMON,
+		EXCLUSIVE, and determines how completions should be performed
+		on the argument after the switch. */
 	int result_mode;
-	/** Next option in the linked list */
 	/** True if old style long options are used */
 	int old_mode;
+	/** Next option in the linked list */
 	struct complete_entry_opt *next;
 }
 	complete_entry_opt;
@@ -270,8 +280,6 @@ static int condition_test( const wchar_t *condition )
 	if (test_res == CC_NOT_TESTED )
 	{
 		test_res = exec_subshell( condition, 0 )?CC_FALSE:CC_TRUE;
-//		debug( 1, L"Eval returns %ls for '%ls'", test_res, condition );
-
 		hash_put( condition_cache, condition, test_res );
 
 		/*
@@ -281,13 +289,10 @@ static int condition_test( const wchar_t *condition )
 
 	if( test_res == CC_TRUE )
 	{
-//		debug( 1, L"Use conditional completion on condition %ls", condition );
 		return 1;
 	}
 
-//	debug( 1, L"Skip conditional completion on condition %ls", condition );
 	return 0;
-
 }
 
 

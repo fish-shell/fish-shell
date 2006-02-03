@@ -168,8 +168,9 @@ fi
 AC_MSG_CHECKING([if realpath accepts null for its second argument])
 AC_RUN_IFELSE(
 	[AC_LANG_PROGRAM([#include <limits.h>
+#include <errno.h>
 #include <stdlib.h>],
-		[int status; char *res; res = realpath( "foo", 0 ); status = (res && (strlen(res)>3))?0:1; free(res); exit( status );])], 
+		[int status; char *res; res = realpath( "somefile", 0 ); status = !(res != 0 || errno == ENOENT); exit( status );])], 
 	[have_realpath_null=yes], 
 	[have_realpath_null=no] )
 

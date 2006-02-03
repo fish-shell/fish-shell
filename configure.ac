@@ -19,7 +19,17 @@ for i in /usr/pkg /sw; do
     	AC_MSG_RESULT(no)
 	fi
 
+	AC_MSG_CHECKING([for $i/bin command directory])
+	if test -d $i/bin; then
+		AC_MSG_RESULT(yes)
+		optbindirs="$optbindirs $i/bin"
+	else
+    	AC_MSG_RESULT(no)
+	fi
+
 done
+
+AC_SUBST( optbindirs, $optbindirs )
 
 # If needed, run autoheader automatically
 AC_MSG_CHECKING([if autoheader needs to be run])

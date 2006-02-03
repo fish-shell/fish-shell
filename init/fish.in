@@ -15,7 +15,7 @@ set -g IFS \ \t\n
 # want this even for text-only terminals.
 #
 
-set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin
+set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin @optbindirs@
 
 # Root should also have the sbin directories in the path
 set -l uid (id -u 2>/dev/null)

@@ -392,20 +392,20 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 static int setup_child_process( job_t *j, process_t *p )
 {
 	int res;
-
+	
 	if( j->job_control )
     {
 		pid_t pid;
 		/* 
 		   Put the process into the process group and give the process
-		   group the terminal, if appropriate.  This has to be done
+		   group the terminal, if appropriate. This has to be done
 		   both by the shell and in the individual child processes
 		   because of potential race conditions.
 		*/
 		pid = getpid ();
 		if (j->pgid == 0)
 			j->pgid = pid;
-
+		
 		/* Wait till shell puts us in our own group */
 		while( getpgrp() != j->pgid )
 			sleep(0);
@@ -419,7 +419,7 @@ static int setup_child_process( job_t *j, process_t *p )
 	}
 	
 	res = handle_child_io( j->io, (p==0) );
-
+	
 	/* Set the handling for job control signals back to the default.  */
 	if( res )
 	{

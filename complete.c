@@ -1053,10 +1053,9 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	int i;
 	const wchar_t *cmd_start;
 	int cmd_len;
-	wchar_t *apropos_cmd=0;
+	wchar_t *lookup_cmd=0;
 	array_list_t list;
 	hash_table_t lookup;
-	wchar_t *whatis_path = env_get( L"__fish_whatis_path" );
 	wchar_t *esc;
 
 	if( !cmd )
@@ -1076,7 +1075,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	  to many results - require at least two characters if we don't
 	  know the location of the whatis-database.
 	*/
-	if( (cmd_len < 2) && (!whatis_path) )
+	if(cmd_len < 2 )
 		return;
 
 	if( wildcard_has( cmd_start, 0 ) )
@@ -1086,14 +1085,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 
 	esc = expand_escape( cmd_start, 1 );
 
-	if( whatis_path )
-	{
-		apropos_cmd =wcsdupcat2( L"grep ^/dev/null -F <", whatis_path, L" ", esc, 0 );
-	}
-	else
-	{
-		apropos_cmd = wcsdupcat( L"apropos ^/dev/null ", esc );
-	}
+	lookup_cmd = wcsdupcat( L"__fish_describe_command ", esc );
 	free(esc);
 
 	al_init( &list );
@@ -1106,7 +1098,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	  systems with a large set of manuals, but it should be ok
 	  since apropos is only called once.
 	*/
-	exec_subshell( apropos_cmd, &list );
+	exec_subshell( lookup_cmd, &list );
 	/*
 	  Then discard anything that is not a possible completion and put
 	  the result into a hashtable with the completion as key and the
@@ -1118,53 +1110,18 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	{
 		wchar_t *el = (wchar_t *)al_get( &list, i );
 		wchar_t *key, *key_end, *val_begin;
-
+		key = el+wcslen(cmd);
+		
 		if( !el )
 			continue;
 
-		//fwprintf( stderr, L"%ls\n", el );
-		if( wcsncmp( el, cmd_start, cmd_len ) != 0 )
-			continue;
-		//fwprintf( stderr, L"%ls\n", el );
-		key = el + cmd_len;
-
-		key_end = wcschr( el, L' ' );
+		key_end = wcschr( el, L'\t' );
 		if( !key_end )
-		{
-			key_end = wcschr( el, L'\t' );
-			if( !key_end )
-			{
-				continue;
-			}
-		}
-
+			continue;
+		
 		*key_end = 0;
-		val_begin=key_end+1;
-
-		//fwprintf( stderr, L"Key %ls\n", el );
-
-		while( *val_begin != L'-' && *val_begin)
-		{
-			val_begin++;
-		}
-
-		if( !*val_begin )
-		{
-			continue;
-		}
-
-		val_begin++;
-
-		while( *val_begin == L' ' || *val_begin == L'\t' )
-		{
-			val_begin++;
-		}
-
-		if( !*val_begin )
-		{
-			continue;
-		}
-
+		val_begin = key_end+1;
+		
 		/*
 		  And once again I make sure the first character is uppercased
 		  because I like it that way, and I get to decide these
@@ -1214,7 +1171,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	al_foreach( &list,
 				(void(*)(const void *))&free );
 	al_destroy( &list );
-	free( apropos_cmd );
+	free( lookup_cmd );
 }
 
 static const wchar_t *complete_function_desc( const wchar_t *fn )

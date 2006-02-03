@@ -247,6 +247,13 @@ function vared -d "Edit variable value"
 	end
 end
 
+#
+# This function is used internally by the fish command completion code
+#
+
+function __fish_describe_command -d "Command used to find descriptions for commands"
+	apropos $argv | sed -ne "s/^$argv\([^ ]*\) *(1) *- \(.*\)\$/$argv\1"\t"\2/p" 
+end
 
 #
 # This function is bound to Alt-L, it is used to list the contents of

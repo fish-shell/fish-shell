@@ -271,7 +271,9 @@ int main( int argc, char **argv )
 				}
 
 				rel_filename = str2wcs( file );
-				abs_filename = wrealpath( rel_filename, 0 );				
+				abs_filename = wrealpath( rel_filename, 0 );
+				if( !abs_filename )
+					abs_filename = wcsdup(rel_filename);
 				reader_push_current_filename( intern( abs_filename ) );
 				free( rel_filename );
 				free( abs_filename );

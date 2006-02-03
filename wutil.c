@@ -68,9 +68,16 @@ void wutil_destroy()
 */
 static char *wutil_wcs2str( const wchar_t *in )
 {
+	size_t res=0;
+	int in_pos=0;
+	int out_pos = 0;
+	mbstate_t state;
+	size_t new_sz;
+
 	wutil_calls++;
+	memset( &state, 0, sizeof(state) );
 	
-	size_t new_sz =MAX_UTF8_BYTES*wcslen(in)+1;
+	new_sz =MAX_UTF8_BYTES*wcslen(in)+1;
 	if( tmp_len < new_sz )
 	{
 		new_sz = maxi( new_sz, TMP_LEN_MIN );
@@ -82,8 +89,37 @@ static char *wutil_wcs2str( const wchar_t *in )
 		tmp_len = new_sz;
 	}
 	
-	wcstombs( tmp, in, tmp_len );
-	return tmp;
+	while( in[in_pos] )
+	{
+		if( ( in[in_pos] >= ENCODE_DIRECT_BASE) &&
+			( in[in_pos] < ENCODE_DIRECT_BASE+256) )
+		{
+			tmp[out_pos++] = in[in_pos]- ENCODE_DIRECT_BASE;
+		}
+		else
+		{
+			res = wcrtomb( &tmp[out_pos], in[in_pos], &state );
+			
+			switch( res )
+			{
+				case (size_t)(-1):
+					{
+						debug( 1, L"Wide character has no narrow representation" );
+						memset( &state, 0, sizeof(state) );
+						break;
+					}
+				default:
+				{
+					out_pos += res;
+					break;
+				}
+			}
+		}
+		in_pos++;
+	}
+	tmp[out_pos] = 0;
+	
+	return tmp;	
 }
 
 wchar_t *wgetcwd( wchar_t *buff, size_t sz )
@@ -259,7 +295,7 @@ wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 
 wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 {
-	char *tmp =wutil_wcs2str(name);
+	char *tmp =wutil_wcs2str(pathname);
 	char narrow[PATH_MAX];
 	char *narrow_res = realpath( tmp, narrow );
 	wchar_t *res;	

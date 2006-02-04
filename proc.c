@@ -993,7 +993,7 @@ void job_continue (job_t *j, int cont)
 			}
 		}	
 	}
-			
+	
 	if( j->fg )
 	{
 		

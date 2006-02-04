@@ -968,10 +968,12 @@ int eval_args( const wchar_t *line, array_list_t *args )
 	tokenizer *previous_tokenizer=current_tokenizer;
 	int previous_pos=current_tokenizer_pos;
 	int do_loop=1;
+	int was_interactive = is_interactive;
+
+	is_interactive = 0;
+	current_tokenizer_pos = 0;
+	
 	tok_init( &tok, line, 0 );
-
-	current_tokenizer=&tok;
-
 	error_code=0;
 
 	for(;do_loop && tok_has_next( &tok) ; tok_next( &tok ) )
@@ -1028,7 +1030,8 @@ int eval_args( const wchar_t *line, array_list_t *args )
 
 	current_tokenizer=previous_tokenizer;
 	current_tokenizer_pos = previous_pos;
-
+	is_interactive = was_interactive;
+	
 	return 1;
 }
 

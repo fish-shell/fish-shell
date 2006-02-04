@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(fish,1.20.1,fish-users@lists.sf.net)
 
-for i in /usr/pkg /sw; do
+for i in /usr/pkg /sw /opt /opt/local; do
 
 	AC_MSG_CHECKING([for $i/include include directory])
 	if test -d $i/include; then

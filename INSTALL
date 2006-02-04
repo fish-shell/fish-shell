@@ -3,10 +3,10 @@ Known issues
 ============
 
 Fish currently requires a semi-modern GCC version to
-compile. Specifically, GCC 2.95.* won't compile fish. Fish has not
-been coded with an C99- or GNU-specific features in mind, so it is
-hoped that it should be possible to make fish work with other
-compilers. Patches are welcome.
+compile. Specifically, GCC 2.95.* won't compile fish, but GCC 3.23
+should work. Fish has not been coded with an C99- or GNU-specific
+features in mind, so it is hoped that it should be possible to make
+fish work with other compilers. Patches are welcome.
 
 Older versions of Doxygen has bugs in the man-page generation which
 cause the builtin help to render incorrectly. Doxygen 1.2.14 is known
@@ -16,14 +16,16 @@ to have this problem.
 Prerequisites
 =============
 
-Fish requires the following packages to build:
+Fish requires the following programs and libraries to build:
 
  - Doxygen
  - Curses or Ncurses
+ - GNU make
+ - GCC
 
 fish also relies on standard unix tools such as cat, cut, grep, sed,
-whoami, bc and echo. Fish does not support cross-compilation, separate
-build directories or any other fancy configure options. 
+whoami, bc and echo. Fish does not yet support cross-compilation,
+separate build directories or any other fancy configure options.
 
 
 Simple install procedure

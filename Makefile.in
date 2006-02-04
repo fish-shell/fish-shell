@@ -17,6 +17,10 @@
 #
 
 #
+# @configure_input@
+#
+
+#
 # Makefile for the fish shell. Can build fish and associated
 # applications, install them, recalculate dependencies and also create
 # binary distributions in tar.bz2 tar.gz and rpm formats.

@@ -41,6 +41,7 @@ struct lookup_entry
 	   Signal description
 	*/
 	const wchar_t *desc;	
+	
 };
 
 /**
@@ -535,28 +536,14 @@ void signal_handle( int sig, int do_handle )
 
 void signal_block()
 {
-	int i;
 	sigset_t chldset; 
-	sigemptyset( &chldset );
-	
-	for( i=0; lookup[i].desc ; i++ )
-	{
-		sigaddset( &chldset, lookup[i].signal );
-	}
-	
+	sigfillset( &chldset );
 	sigprocmask(SIG_BLOCK, &chldset, 0);	
 }
 
 void signal_unblock()
 {
-	int i;
 	sigset_t chldset; 
-	sigemptyset( &chldset );
-	
-	for( i=0; lookup[i].desc ; i++ )
-	{
-		sigaddset( &chldset, lookup[i].signal );
-	}
-	
+	sigfillset( &chldset );
 	sigprocmask(SIG_UNBLOCK, &chldset, 0);	
 }

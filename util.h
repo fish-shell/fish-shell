@@ -298,6 +298,20 @@ int hash_wcs_func( const void *data );
 int hash_wcs_cmp( const void *a, 
 				  const void *b );
 
+/**
+   Hash function suitable for direct pointer comparison
+*/
+int hash_ptr_func( const void *data );
+
+
+/**
+   Hash comparison function suitable for direct pointer comparison
+*/
+int hash_ptr_cmp( const void *a,
+                  const void *b );
+
+
+
 /** 
 	Initialize the priority queue
 	

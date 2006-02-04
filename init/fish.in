@@ -1,7 +1,7 @@
 #
 # Init file for fish
 #
-
+# @configure_input@
 
 #
 # Set default field separators
@@ -18,8 +18,7 @@ set -g IFS \ \t\n
 set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin @optbindirs@
 
 # Root should also have the sbin directories in the path
-set -l uid (id -u 2>/dev/null)
-if test "$uid" = 0
+if test "$USER" = root
 	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
 end
 

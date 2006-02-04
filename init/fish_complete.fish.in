@@ -1,6 +1,8 @@
 # Main file for fish command completions. This file contains various
 # common helper functions for the command completions. All actual
 # completions are located in the completions subdirectory.
+#
+# @configure_input@
 
 #
 # Don't need completions in non-interactive mode

@@ -1120,11 +1120,12 @@ static const wchar_t *is_function()
 
 int parser_get_lineno()
 {
-	int i;
 	const wchar_t *whole_str;
 	const wchar_t *function_name;
-
-	int lineno = 1;
+	
+	static const wchar_t *prev_str = 0;
+	static int i=0;
+	static int lineno=1;
 
 	if( !current_tokenizer )
 		return -1;
@@ -1133,8 +1134,15 @@ int parser_get_lineno()
 
 	if( !whole_str )
 		return -1;
+	
+	if( whole_str != prev_str || i>current_tokenizer_pos )
+	{
+		prev_str = whole_str;
+		i=0;
+		lineno = 0;
+	}
 
-	for( i=0; i<current_tokenizer_pos && whole_str[i]; i++ )
+	for( ; i<current_tokenizer_pos && whole_str[i]; i++ )
 	{
 		if( whole_str[i] == L'\n' )
 		{

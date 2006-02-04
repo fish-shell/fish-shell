@@ -1,6 +1,7 @@
 #
 # Initializations that should only be performed when in interactive mode
 #
+# @configure_input@
 
 if not status --is-interactive
 	exit
@@ -64,12 +65,14 @@ end
 # Set various color values
 #
 
+set -g all_colors (set_color -c)
+
 function set_default_color -d "Set an universal variable, unless it has already been set. If set, verify that it is a valid color name"
 	if not set -q $argv[1] 
 		set -U -- $argv	
 		return
 	end
-	if contains -- $$argv[1] (set_color -c)
+	if contains -- $$argv[1] $all_colors
         return
 	end
 	set -U -- $argv
@@ -137,3 +140,4 @@ end
 
 functions -e set_default_color
 functions -e set_exported_default
+set -e all_colors

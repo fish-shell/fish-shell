@@ -511,6 +511,20 @@ int hash_wcs_cmp( const void *a, const void *b )
 	return wcscmp((wchar_t *)a,(wchar_t *)b) == 0;
 }
 
+int hash_ptr_func( const void *data )
+{
+	return (int)(long) data;
+}
+
+/**
+   Hash comparison function suitable for direct pointer comparison
+*/
+int hash_ptr_cmp( const void *a,
+                  const void *b )
+{
+	return a == b;
+}
+
 void pq_init( priority_queue_t *q,
 			  int (*compare)(void *e1, void *e2) )
 {

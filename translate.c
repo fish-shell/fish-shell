@@ -43,6 +43,22 @@ static char *wcs2str_buff=0;
 */
 static size_t wcs2str_buff_count=0;
 
+static int is_init = 0;
+
+static void internal_init()
+{
+	int i;
+
+	is_init = 1;
+	
+	for(i=0; i<BUFF_COUNT; i++ )
+		sb_init( &buff[i] );
+	
+	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
+	textdomain( PACKAGE_NAME );
+}
+
+
 /**
    Wide to narrow character conversion. Internal implementation that
    avoids exessive calls to malloc
@@ -70,7 +86,10 @@ const wchar_t *wgettext( const wchar_t *in )
 {
 	if( !in )
 		return in;
-	
+
+	if( !is_init )
+		internal_init();
+		
 	char *mbs_in = translate_wcs2str( in );	
 	char *out = gettext( mbs_in );
 	wchar_t *wres=0;
@@ -81,30 +100,22 @@ const wchar_t *wgettext( const wchar_t *in )
 	wres = (wchar_t *)buff[curr_buff].buff;
 	curr_buff = (curr_buff+1)%BUFF_COUNT;
 
-/*	
-    write( 2, res, strlen(res) );
-*/
-//	debug( 1, L"%ls -> %s (%d) -> %ls (%d)\n", in, out, strlen(out) , wres, wcslen(wres) );
-
 	return wres;
 }
 
 
 void translate_init()
 {
-	int i;
-	
-	for(i=0; i<BUFF_COUNT; i++ )
-		sb_init( &buff[i] );
-	
-	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
-	textdomain( PACKAGE_NAME );
-
 }
 
 void translate_destroy()
 {
 	int i;
+
+	if( !is_init )
+		return;
+	
+	is_init = 0;
 	
 	for(i=0; i<BUFF_COUNT; i++ )
 		sb_destroy( &buff[i] );

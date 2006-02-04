@@ -1955,9 +1955,11 @@ static int builtin_cd( wchar_t **argv )
 				   _( L"%ls: '%ls' is not a directory or you do not have permission to enter it\n" ),
 				   argv[0],
 				   dir_in );
-		sb_append2( sb_err,
-					parser_current_line(),
-					(void *)0 );
+		if( !is_interactive )
+			sb_append2( sb_err,
+						parser_current_line(),
+						(void *)0 );
+
 		return 1;
 	}
 
@@ -1967,10 +1969,11 @@ static int builtin_cd( wchar_t **argv )
 				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
 				   dir );
-		sb_append2( sb_err,
-					parser_current_line(),
-					(void *)0 );
-
+		if( !is_interactive )
+			sb_append2( sb_err,
+						parser_current_line(),
+						(void *)0 );
+		
 		free( dir );
 
 		return 1;

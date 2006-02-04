@@ -67,7 +67,7 @@ pid_t getpgid( pid_t pid );
 */
 static array_list_t *open_fds=0;
 
-static int handle_new_child( job_t *j, process_t *p );
+static int set_child_group( job_t *j, process_t *p, int print_errors );
 
 
 void exec_close( int fd )
@@ -397,7 +397,7 @@ static int setup_child_process( job_t *j, process_t *p )
 	
 	if( p )
 	{
-		res = handle_new_child( j, p );
+		res = set_child_group( j, p, 1 );
 	}
 	
 	if( !res )	
@@ -580,11 +580,18 @@ static void internal_exec_helper( const wchar_t *def,
 }
 
 /**
-   This function should be called by the parent process right after
-   fork() has been called. If job control is enabled, the child is put
-   in the jobs group.
+   This function should be called by both the parent process and the
+   child right after fork() has been called. If job control is
+   enabled, the child is put in the jobs group, and if the child is
+   also in the foreground, it is also given control of the
+   terminal. When called in the parent process, this function may
+   fail, since the child might have already finished and called
+   exit. The parent process may safely ignore the exit status of this
+   call.
+
+   Returns 0 on sucess, -1 on failiure. 
 */
-static int handle_new_child( job_t *j, process_t *p )
+static int set_child_group( job_t *j, process_t *p, int print_errors )
 {
 	int res = 0;
 	
@@ -600,7 +607,7 @@ static int handle_new_child( job_t *j, process_t *p )
 		
 		if( setpgid (p->pid, j->pgid) )
 		{						
-			if( getpgid( p->pid) != j->pgid )
+			if( getpgid( p->pid) != j->pgid && print_errors )
 			{
 				debug( 1, 
 					   _( L"Could not send process %d from group %d to group %d" ),
@@ -616,10 +623,10 @@ static int handle_new_child( job_t *j, process_t *p )
 	{
 		j->pgid = getpid();
 	}
-	
+
 	if( j->terminal && j->fg )
 	{
-		if( tcsetpgrp (0, j->pgid) )
+		if( tcsetpgrp (0, j->pgid) && print_errors )
 		{
 			debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
 				   j->job_id, 
@@ -1027,9 +1034,8 @@ void exec( job_t *j )
 						   it control over the terminal.
 						*/
 						p->pid = pid;						
-						if( handle_new_child( j, p ) )
-							exit(1);
-						
+						set_child_group( j, p, 0 );
+												
 					}					
 					
 				}
@@ -1127,9 +1133,8 @@ void exec( job_t *j )
 					*/
 					p->pid = pid;
 						
-					if( handle_new_child( j, p ) )
-						exit( 1 );
-					
+					set_child_group( j, p, 0 );
+										
 				}					
 				
 				break;
@@ -1167,20 +1172,16 @@ void exec( job_t *j )
 					*/
 					p->pid = pid;
 
-					if( handle_new_child( j, p ) )
-						exit( 1 );
-					
-										
+					set_child_group( j, p, 0 );
+															
 				}
 				break;
 			}
 			
 		}
 
-
 		if( p->type == INTERNAL_BUILTIN )
-			builtin_pop_io();			
-		
+			builtin_pop_io();
 				
 		/* 
 		   Close the pipe the current process uses to read from the previous process_t 

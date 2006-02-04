@@ -125,8 +125,13 @@ void print_colors()
 	}	
 }
 
-static void locale_init()
+static void check_locale_init()
 {
+	static int is_init = 0;
+	if( is_init )
+		return;
+	
+	is_init = 1;
 	setlocale( LC_ALL, "" );
 #if HAVE_GETTEXT
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
@@ -142,7 +147,6 @@ int main( int argc, char **argv )
 	int fg, bg;
 	int bold=0;
 
-	locale_init();
 	
 		
 	while( 1 )
@@ -209,6 +213,7 @@ int main( int argc, char **argv )
 				break;
 				
 			case 'v':
+				check_locale_init();
 				fprintf( stderr, _("%s, version %s\n"), SET_COLOR, PACKAGE_VERSION );
 				exit( 0 );								
 
@@ -235,12 +240,14 @@ int main( int argc, char **argv )
 			break;
 			
 		default:
+			check_locale_init();
 			printf( _("%s: Too many arguments\n"), SET_COLOR );
 			return 1;
 	}
 
 	if( !fgcolor && !bgcolor && !bold )
 	{
+		check_locale_init();
 		fprintf( stderr, _("%s: Expected an argument\n"), SET_COLOR );
 		print_help();		
 		return 1;
@@ -249,6 +256,7 @@ int main( int argc, char **argv )
 	fg = translate_color(fgcolor);
 	if( fgcolor && (fg==-1))
 	{
+		check_locale_init();
 		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, fgcolor );
 		return 1;		
 	}
@@ -256,6 +264,7 @@ int main( int argc, char **argv )
 	bg = translate_color(bgcolor);
 	if( bgcolor && (bg==-1))
 	{
+		check_locale_init();
 		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, bgcolor );
 		return 1;		
 	}

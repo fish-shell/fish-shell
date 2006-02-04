@@ -342,7 +342,7 @@ void parser_push_block( int type )
 	new->src_lineno = parser_get_lineno();
 	new->src_filename = parser_current_filename()?intern(parser_current_filename()):0;
 	
-	debug( 3, L"Block push %ls %d\n", parser_get_block_desc(type), block_count( current_block)+1 );
+//	debug( 3, L"Block push %ls %d\n", parser_get_block_desc(type), block_count( current_block)+1 );
 
 	new->outer = current_block;
 	new->type = (current_block && current_block->skip)?FAKE:type;
@@ -375,8 +375,9 @@ void parser_push_block( int type )
 void parser_pop_block()
 {
 
-	debug( 3, L"Block pop %ls %d\n", parser_get_block_desc(current_block->type), block_count(current_block)-1 );
 	event_block_t *eb, *eb_next;
+
+//	debug( 3, L"Block pop %ls %d\n", parser_get_block_desc(current_block->type), block_count(current_block)-1 );
 
 	if( (current_block->type != FUNCTION_DEF ) &&
 		(current_block->type != FAKE) &&
@@ -1687,7 +1688,6 @@ static int parse_job( process_t *p,
 
 	block_t *prev_block = current_block;
 
-	debug( 2, L"begin parse_job()\n" );
 	al_init( &args );
 
 	current_tokenizer_pos = tok_get_pos( tok );
@@ -1701,7 +1701,6 @@ static int parse_job( process_t *p,
 			{
 				nxt = expand_one( wcsdup(tok_last( tok )),
 								  EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
-				debug( 2, L"command '%ls' -> '%ls'", tok_last( tok ), nxt?nxt:L"0" );
 
 				if( nxt == 0 )
 				{
@@ -1963,8 +1962,6 @@ static int parse_job( process_t *p,
 
 				p->actual_cmd = get_filename( (wchar_t *)al_get( &args, 0 ) );
 
-				debug( 2, L"filename '%ls' -> '%ls'", (wchar_t *)al_get( &args, 0 ), p->actual_cmd?p->actual_cmd:L"0" );
-
 				/*
 				  Check if the specified command exists
 				*/
@@ -2122,7 +2119,6 @@ static int parse_job( process_t *p,
 	}
 	al_destroy( &args );
 
-//	debug( 2, L"end parse_job()\n" );
 	return !error_code;
 }
 
@@ -2192,7 +2188,6 @@ static void eval_job( tokenizer *tok )
 	job_t *j;
 
 	int start_pos = job_start_pos = tok_get_pos( tok );
-	debug( 2, L"begin eval_job()" );
 	long long t1=0, t2=0, t3=0;
 	profile_element_t *p=0;
 	int skip = 0;
@@ -2373,7 +2368,6 @@ static void eval_job( tokenizer *tok )
 
 	job_reap( 0 );
 
-	//	debug( 2, L"end eval_job()\n" );
 }
 
 int eval( const wchar_t *cmd, io_data_t *io, int block_type )
@@ -2397,7 +2391,6 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	job_reap( 0 );
 
 	debug( 4, L"eval: %ls", cmd );
-
 
 	if( !cmd )
 	{

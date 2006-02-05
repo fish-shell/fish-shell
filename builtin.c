@@ -79,6 +79,15 @@
 */
 #define FG_MSG _( L"Send job %d, '%ls' to foreground\n" )
 
+typedef struct builtin_data
+{
+	const wchar_t *name;
+	int (*func)(wchar_t **argv);
+	const wchar_t *desc;
+}
+	builtin_data_t;
+
+
 /**
    Print modes for the jobs builtin
 */
@@ -160,15 +169,6 @@ void builtin_wperror( const wchar_t *s)
 */
 
 
-/**
-   Noop function. A fake function which successfully does nothing, for
-   builtins which are handled by the parser, such as command and
-   while.
-*/
-static int builtin_ignore( wchar_t **argv )
-{
-	return 0;
-}
 
 void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 {
@@ -581,67 +581,6 @@ static int builtin_generic( wchar_t **argv )
 }
 
 /**
-   The exec bultin. This is only a placeholder that prints the help message. Ther actual implementation lives in exec.c.
-*/
-static int builtin_exec( wchar_t **argv )
-{
-	int argc=builtin_count_args( argv );
-	woptind=0;
-
-	const static struct woption
-		long_options[] =
-		{
-			{
-				L"help", no_argument, 0, 'h'
-			}
-			,
-			{
-				0, 0, 0, 0
-			}
-		}
-	;
-
-	while( 1 )
-	{
-		int opt_index = 0;
-
-		int opt = wgetopt_long( argc,
-								argv,
-								L"h",
-								long_options,
-								&opt_index );
-		if( opt == -1 )
-			break;
-
-		switch( opt )
-		{
-			case 0:
-				if(long_options[opt_index].flag != 0)
-					break;
-                sb_printf( sb_err,
-                           BUILTIN_ERR_UNKNOWN,
-                           argv[0],
-                           long_options[opt_index].name );
-				builtin_print_help( argv[0], sb_err );
-				return 1;
-
-			case 'h':
-				builtin_print_help( argv[0], sb_out );
-				return 0;
-
-			case '?':
-				builtin_print_help( argv[0], sb_err );
-
-				return 1;
-
-		}
-
-	}
-	return 1;
-}
-
-/**
-   Print the definition of the given function to sb_out
    stringbuffer. Used by the functions builtin.
 */
 static void functions_def( wchar_t *name )
@@ -3020,97 +2959,75 @@ static int builtin_case( wchar_t **argv )
   Below are functions for handling the builtin commands
 */
 
-void builtin_init()
+const static builtin_data_t data[]=
 {
-	al_init( &io_stack );
-	hash_init( &builtin, &hash_wcs_func, &hash_wcs_cmp );
-
-	hash_put( &builtin, L"exit", (void*) &builtin_exit );
-	hash_put( &builtin, L"block", (void*) &builtin_block );
-	hash_put( &builtin, L"builtin", (void*) &builtin_builtin );
-	hash_put( &builtin, L"cd", (void*) &builtin_cd );
-	hash_put( &builtin, L"function", (void*) &builtin_function );
-	hash_put( &builtin, L"functions", (void*) &builtin_functions );
-	hash_put( &builtin, L"complete", (void*) &builtin_complete );
-	hash_put( &builtin, L"end", (void*) &builtin_end );
-	hash_put( &builtin, L"else", (void*) &builtin_else );
-	hash_put( &builtin, L"eval", (void*) &builtin_eval );
-	hash_put( &builtin, L"for", (void*) &builtin_for );
-	hash_put( &builtin, L".", (void*) &builtin_source );
-	hash_put( &builtin, L"set", (void*) &builtin_set );
-	hash_put( &builtin, L"fg", (void*) &builtin_fg );
-	hash_put( &builtin, L"bg", (void*) &builtin_bg );
-	hash_put( &builtin, L"jobs", (void*) &builtin_jobs );
-	hash_put( &builtin, L"read", (void*) &builtin_read );
-	hash_put( &builtin, L"break", (void*) &builtin_break_continue );
-	hash_put( &builtin, L"continue", (void*) &builtin_break_continue );
-	hash_put( &builtin, L"return", (void*) &builtin_return );
-	hash_put( &builtin, L"commandline", (void*) &builtin_commandline );
-	hash_put( &builtin, L"switch", (void*) &builtin_switch );
-	hash_put( &builtin, L"case", (void*) &builtin_case );
-	hash_put( &builtin, L"bind", (void*) &builtin_bind );
-	hash_put( &builtin, L"random", (void*) &builtin_random );
-	hash_put( &builtin, L"status", (void*) &builtin_status );
-	hash_put( &builtin, L"ulimit", (void*) &builtin_ulimit );
+	{L"exit",  &builtin_exit, N_( L"Exit the shell" )  },
+	{L"block",  &builtin_block, N_( L"Temporarily block delivery of events" )  },
+	{L"builtin",  &builtin_builtin, N_( L"Run a builtin command instead of a function" )  },
+	{L"cd",  &builtin_cd, N_( L"Change working directory" )  },
+	{L"function",  &builtin_function, N_( L"Define a new function" )  },
+	{L"functions",  &builtin_functions, N_( L"List or remove functions" )  },
+	{L"complete",  &builtin_complete, N_( L"Edit command specific completions" )  },
+	{L"end",  &builtin_end, N_( L"End a block of commands" )  },
+	{L"else",  &builtin_else, N_( L"Evaluate block if condition is false" )  },
+	{L"eval",  &builtin_eval, N_( L"Evaluate parameters as a command" )  },
+	{L"for",  &builtin_for, N_( L"Perform a set of commands multiple times" )  },
+	{L".",  &builtin_source, N_( L"Evaluate contents of file" )  },
+	{L"set",  &builtin_set, N_( L"Handle environment variables" )  },
+	{L"fg",  &builtin_fg, N_( L"Send job to foreground" )  },
+	{L"bg",  &builtin_bg, N_( L"Send job to background" )  },
+	{L"jobs",  &builtin_jobs, N_( L"Print currently running jobs" )  },
+	{L"read",  &builtin_read, N_( L"Read a line of input into variables" )  },
+	{L"break",  &builtin_break_continue, N_( L"Stop the innermost loop" )  },
+	{L"continue",  &builtin_break_continue, N_( L"Skip the rest of the current lap of the innermost loop" )  },
+	{L"return",  &builtin_return, N_( L"Stop the currently evaluated function" )  },
+	{L"commandline",  &builtin_commandline, N_( L"Set or get the commandline" )  },
+	{L"switch",  &builtin_switch, N_( L"Conditionally execute a block of commands" )  },
+	{L"case",  &builtin_case, N_( L"Conditionally execute a block of commands" )  },
+	{L"bind",  &builtin_bind, N_( L"Handle fish key bindings" ) },
+	{L"random",  &builtin_random, N_( L"Generate random number" ) },
+	{L"status",  &builtin_status, N_( L"Return status information about fish" ) },
+	{L"ulimit",  &builtin_ulimit, N_( L"Set or get the shells resource usage limits" ) },
 
 	/*
 	   Builtins that are handled directly by the parser. They are
 	   bound to a noop function only so that they show up in the
 	   listings of builtin commands, etc..
 	*/
-	hash_put( &builtin, L"command", (void*)  &builtin_ignore );
-	hash_put( &builtin, L"if", (void*) &builtin_ignore );
-	hash_put( &builtin, L"while", (void*) &builtin_ignore );
-	hash_put( &builtin, L"not", (void*) &builtin_generic );
-	hash_put( &builtin, L"and", (void*) &builtin_generic );
-	hash_put( &builtin, L"or", (void*) &builtin_generic );
-	hash_put( &builtin, L"exec", (void*) &builtin_exec );
-	hash_put( &builtin, L"begin", (void*) &builtin_begin );
+	{L"command",   &builtin_generic, N_( L"Run a program instead of a function or builtin" )  },
+	{L"if",  &builtin_generic, N_( L"Evaluate block if condition is true" )  },
+	{L"while",  &builtin_generic, N_( L"Perform a command multiple times" )  },
+	{L"not",  &builtin_generic, N_( L"Negate exit status of job" ) },
+	{L"and",  &builtin_generic, N_( L"Execute command if previous command suceeded" ) },
+	{L"or",  &builtin_generic, N_( L"Execute command if previous command failed" ) },
+	{L"exec",  &builtin_generic, N_( L"Run command in current process" ) },
+	{L"begin",  &builtin_begin, N_( L"Create a block of code" )  },
 
 	/*
 	  This is not a builtin, but fish handles it's help display
 	  internally, to do some ugly special casing to make sure 'count
 	  -h', but 'count (echo -h)' does not.
 	*/
-	hash_put( &builtin, L"count", (void*) &builtin_ignore );
+	{L"count",  &builtin_generic, 0 },
+	{0,0}
+}
+	;
+	
 
-	intern_static( L"exit" );
-	intern_static( L"builtin" );
-	intern_static( L"block" );
-	intern_static( L"cd" );
-	intern_static( L"function" );
-	intern_static( L"functions" );
-	intern_static( L"complete" );
-	intern_static( L"end" );
-	intern_static( L"else" );
-	intern_static( L"eval" );
-	intern_static( L"for" );
-	intern_static( L"." );
-	intern_static( L"set" );
-	intern_static( L"fg" );
-	intern_static( L"bg" );
-	intern_static( L"jobs" );
-	intern_static( L"read" );
-	intern_static( L"break" );
-	intern_static( L"continue" );
-	intern_static( L"return" );
-	intern_static( L"commandline" );
-	intern_static( L"switch" );
-	intern_static( L"case" );
-	intern_static( L"bind" );
-	intern_static( L"random" );
-	intern_static( L"command" );
-	intern_static( L"if" );
-	intern_static( L"while" );
-	intern_static( L"exec" );
-	intern_static( L"count" );
-	intern_static( L"not" );
-	intern_static( L"and" );
-	intern_static( L"or" );
-	intern_static( L"begin" );
-	intern_static( L"status" );
-	intern_static( L"ulimit" );
+void builtin_init()
+{
+	
+	int i;
+	
+	al_init( &io_stack );
+	hash_init( &builtin, &hash_wcs_func, &hash_wcs_cmp );
 
+	for( i=0; data[i].name; i++ )
+	{
+		hash_put( &builtin, data[i].name, data[i].func );
+		intern_static( data[i].name );
+	}
+	
 	builtin_help_init();
 }
 
@@ -3198,47 +3115,17 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 
 	if( !desc )
 	{
+		int i;
 		desc = malloc( sizeof( hash_table_t ) );
 		if( !desc)
 			return 0;
 
 		hash_init( desc, &hash_wcs_func, &hash_wcs_cmp );
 
-		hash_put( desc, L"block", N_( L"Temporarily block delivery of events" ) );
-		hash_put( desc, L"builtin", N_( L"Run a builtin command instead of a function" ) );
-		hash_put( desc, L"complete", N_( L"Edit command specific completions" ) );
-		hash_put( desc, L"cd", N_( L"Change working directory" ) );
-		hash_put( desc, L"exit", N_( L"Exit the shell" ) );
-		hash_put( desc, L"function", N_( L"Define a new function" ) );
-		hash_put( desc, L"functions", N_( L"List or remove functions" ) );
-		hash_put( desc, L"end", N_( L"End a block of commands" ) );
-		hash_put( desc, L"else", N_( L"Evaluate block if condition is false" ) );
-		hash_put( desc, L"eval", N_( L"Evaluate parameters as a command" ) );
-		hash_put( desc, L"for", N_( L"Perform a set of commands multiple times" ) );
-		hash_put( desc, L".", N_( L"Evaluate contents of file" ) );
-		hash_put( desc, L"set", N_( L"Handle environment variables" ) );
-		hash_put( desc, L"fg", N_( L"Send job to foreground" ) );
-		hash_put( desc, L"bg", N_( L"Send job to background" ) );
-		hash_put( desc, L"jobs", N_( L"Print currently running jobs" ) );
-		hash_put( desc, L"read", N_( L"Read a line of input into variables" ) );
-		hash_put( desc, L"break", N_( L"Stop the innermost loop" ) );
-		hash_put( desc, L"continue", N_( L"Skip the rest of the current lap of the innermost loop" ) );
-		hash_put( desc, L"return", N_( L"Stop the currently evaluated function" ) );
-		hash_put( desc, L"commandline", N_( L"Set or get the commandline" ) );
-		hash_put( desc, L"switch", N_( L"Conditionally execute a block of commands" ) );
-		hash_put( desc, L"case", N_( L"Conditionally execute a block of commands" ) );
-		hash_put( desc, L"command", N_( L"Run a program instead of a function or builtin" ) );
-		hash_put( desc, L"if", N_( L"Evaluate block if condition is true" ) );
-		hash_put( desc, L"while", N_( L"Perform a command multiple times" ) );
-		hash_put( desc, L"bind", N_( L"Handle fish key bindings" ));
-		hash_put( desc, L"random", N_( L"Generate random number" ));
-		hash_put( desc, L"exec", N_( L"Run command in current process" ));
-		hash_put( desc, L"not", N_( L"Negate exit status of job" ));
-		hash_put( desc, L"or", N_( L"Execute command if previous command failed" ));
-		hash_put( desc, L"and", N_( L"Execute command if previous command suceeded" ));
-		hash_put( desc, L"begin", N_( L"Create a block of code" ) );
-		hash_put( desc, L"status", N_( L"Return status information about fish" ) );
-		hash_put( desc, L"ulimit", N_( L"Set or get the shells resource usage limits" ) );
+		for( i=0; data[i].name; i++ )
+		{
+			hash_put( desc, data[i].name, data[i].desc );
+		}
 	}
 
 	return _( hash_get( desc, b ));

@@ -1612,6 +1612,11 @@ static void reader_interactive_init()
 	kill_init();
 	shell_pgid = getpgrp ();
 
+	/*
+	  This should enable job control on fish, even if our parent did
+	  not enable it for us.
+	*/
+
 	/* Loop until we are in the foreground.  */
 	while (tcgetpgrp( 0 ) != shell_pgid)
 	{
@@ -1644,7 +1649,6 @@ static void reader_interactive_init()
 	al_init( &prompt_list );
 	history_init();
 
-
 	common_handle_winch(0);
 
 	tcgetattr(0,&shell_modes);        /* get the current terminal modes */
@@ -1663,7 +1667,10 @@ static void reader_interactive_init()
         exit(1);
     }
 
-	/* We need to know the parents pid so we'll know if we are a subshell */
+	/* 
+	   We need to know our own pid so we'll later know if we are a
+	   fork 
+	*/
 	original_pid = getpid();
 
 	if( atexit( &exit_func ) )

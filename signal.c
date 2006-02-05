@@ -41,7 +41,6 @@ struct lookup_entry
 	   Signal description
 	*/
 	const wchar_t *desc;	
-	
 };
 
 /**
@@ -406,7 +405,7 @@ void signal_reset_handlers()
 	sigemptyset( & act.sa_mask );
 	act.sa_flags=0;
 	act.sa_handler=SIG_DFL;
-
+	
 	for( i=0; lookup[i].desc ; i++ )
 	{
 		sigaction( lookup[i].signal, &act, 0);
@@ -434,7 +433,7 @@ void signal_set_handlers()
 	sigaction( SIGTTIN, &act, 0);
 	sigaction( SIGTTOU, &act, 0);
 	sigaction( SIGCHLD, &act, 0);
-
+	
 	/*
 	  Ignore sigpipe, it is generated if fishd dies, but we can
 	  recover.
@@ -449,7 +448,7 @@ void signal_set_handlers()
 		*/
 
 		act.sa_handler=SIG_IGN;
-
+		
 		sigaction( SIGINT, &act, 0);
 		sigaction( SIGQUIT, &act, 0);
 		sigaction( SIGTSTP, &act, 0);

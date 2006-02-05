@@ -672,7 +672,8 @@ void exec( job_t *j )
 		signal_block();
 
 		/*
-		  setup_child_process make sure signals are propelry set up
+		  setup_child_process make sure signals are properly set
+		  up. It will also call signal_unblock
 		*/
 		if( !setup_child_process( j, 0 ) )
 		{

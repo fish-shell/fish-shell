@@ -232,7 +232,7 @@ const void *hash_get_key( hash_table_t *h,
 */
 int hash_get_count( hash_table_t *h);
 /**
-   Remove the specified key from the hash table
+   Remove the specified key from the hash table if it exists. Do nothing if it does not exist.
 
    \param h The hashtable
    \param key The key

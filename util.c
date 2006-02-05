@@ -907,19 +907,16 @@ void sb_append_substring( string_buffer_t *b, const wchar_t *s, size_t l )
 
 void sb_append_char( string_buffer_t *b, wchar_t c )
 {
-	wchar_t buff[2]=
-		{
-			c, 0
-		}
-	;
+    wchar_t tmp=0;
 
 	if( !b )
 	{
 		return;
 	}
 
-	sb_append( b, buff );
-
+	b_append( b, &c, sizeof(wchar_t) );
+    b_append( b, &tmp, sizeof(wchar_t) );
+    b->used -= sizeof(wchar_t);
 }
 
 void sb_append2( string_buffer_t *b, ... )

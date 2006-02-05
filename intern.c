@@ -25,14 +25,6 @@ static hash_table_t *intern_table=0;
 */
 static hash_table_t *intern_static_table=0;
 
-/**
-   Load static strings that are universally common. Currently only loads the empty string.
-*/
-static void intern_load_common_static()
-{
-	intern_static( L"" );
-}
-
 const wchar_t *intern( const wchar_t *in )
 {
 	const wchar_t *res=0;
@@ -40,9 +32,6 @@ const wchar_t *intern( const wchar_t *in )
 	if( !in )
 		return 0;
 	
-	intern_load_common_static();
-	
-
 	if( !intern_table )
 	{
 		intern_table = malloc( sizeof( hash_table_t ) );

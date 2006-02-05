@@ -37,6 +37,7 @@ The fish parser. Contains functions for parsing code.
 #include "event.h"
 #include "translate.h"
 #include "intern.h"
+#include "parse_util.h"
 
 /**
    Maximum number of block levels in code. This is not the same as
@@ -1122,11 +1123,13 @@ int parser_get_lineno()
 {
 	const wchar_t *whole_str;
 	const wchar_t *function_name;
+
+	int lineno;
 	
-	static const wchar_t *prev_str = 0;
+/*	static const wchar_t *prev_str = 0;
 	static int i=0;
 	static int lineno=1;
-
+*/
 	if( !current_tokenizer )
 		return -1;
 	
@@ -1135,20 +1138,7 @@ int parser_get_lineno()
 	if( !whole_str )
 		return -1;
 	
-	if( whole_str != prev_str || i>current_tokenizer_pos )
-	{
-		prev_str = whole_str;
-		i=0;
-		lineno = 0;
-	}
-
-	for( ; i<current_tokenizer_pos && whole_str[i]; i++ )
-	{
-		if( whole_str[i] == L'\n' )
-		{
-			lineno++;
-		}
-	}
+	lineno = parse_util_lineno( whole_str, current_tokenizer_pos );
 
 	if( (function_name = is_function()) )
 	{

@@ -21,6 +21,51 @@
 #include "tokenizer.h"
 #include "parse_util.h"
 
+int parse_util_lineno( const wchar_t *str, int len )
+{
+	static int res = 1;
+	static int i=0;
+	static const wchar_t *prev_str = 0;
+
+	static const wchar_t *prev_str2 = 0;
+	static int i2 = 0;
+	static int res2 = 1;
+	
+	if( str != prev_str || i>len )
+	{
+		if( prev_str2 == str && i2 <= len )
+		{
+			const wchar_t *tmp_str = prev_str;
+			int tmp_i = i;
+			int tmp_res = res;
+			prev_str = prev_str2;
+			i=i2;
+			res=res2;
+			
+			prev_str2 = tmp_str;
+			i2 = tmp_i;
+			res2 = tmp_res;
+		}
+		else
+		{
+			prev_str2 = prev_str;
+			i2 = i;
+			res2=res;
+				
+			prev_str = str;
+			i=0;
+			res=1;
+		}
+	}
+	
+	for( ; i<len; i++ )
+	{
+		if( str[i] == L'\n' )
+			res++;
+	}
+	return res;
+}
+
 int parse_util_locate_cmdsubst( const wchar_t *in, 
 								const wchar_t **begin, 
 								const wchar_t **end,

@@ -47,4 +47,7 @@ void parse_util_token_extent( const wchar_t *buff,
 							  const wchar_t **prev_begin, 
 							  const wchar_t **prev_end );
 
+int parse_util_lineno( const wchar_t *str, int len );
+
+
 #endif

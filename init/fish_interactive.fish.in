@@ -65,17 +65,10 @@ end
 # Set various color values
 #
 
-set -g all_colors (set_color -c)
-
-function set_default_color -d "Set an universal variable, unless it has already been set. If set, verify that it is a valid color name"
-	if not set -q $argv[1] 
-		set -U -- $argv	
-		return
+function set_default -d "Set an exported universal variable, unless it has already been set"
+	if not set -q $argv[1]
+		set -Ux -- $argv	
 	end
-	if contains -- $$argv[1] $all_colors
-        return
-	end
-	set -U -- $argv
 end
 
 function set_exported_default -d "Set an exported universal variable, unless it has already been set"
@@ -86,35 +79,35 @@ end
 
 
 # Regular syntax highlighting colors
-set_default_color fish_color_normal normal
-set_default_color fish_color_command green
-set_default_color fish_color_redirection normal
-set_default_color fish_color_comment brown
-set_default_color fish_color_error red
+set_default fish_color_normal normal
+set_default fish_color_command green
+set_default fish_color_redirection normal
+set_default fish_color_comment brown
+set_default fish_color_error red
 
-set_default_color fish_color_cwd green
+set_default fish_color_cwd green
 
 # Background color for matching quotes and parenthesis
-set_default_color fish_color_match cyan
+set_default fish_color_match cyan
 
 # Background color for search matches
-set_default_color fish_color_search_match purple
+set_default fish_color_search_match purple
 
 # Pager colors
-set_default_color fish_pager_color_prefix cyan
-set_default_color fish_pager_color_completion normal
-set_default_color fish_pager_color_description normal
-set_default_color fish_pager_color_progress cyan
+set_default fish_pager_color_prefix cyan
+set_default fish_pager_color_completion normal
+set_default fish_pager_color_description normal
+set_default fish_pager_color_progress cyan
 
 # Directory history colors
-set_default_color fish_color_history_current cyan
+set_default fish_color_history_current cyan
 
 
 #
 # Setup the CDPATH variable
 #
 
-set_exported_default CDPATH . ~
+set_default CDPATH . ~
 
 #
 # Match colors for grep, if supported
@@ -130,7 +123,46 @@ end
 #
 
 if command ls --color=auto --help 1>/dev/null 2>/dev/null
-	set_exported_default LS_COLORS $LS_COLORS '*.jar=01;31' '*.doc=35' '*.pdf=35' '*.ps=35' '*.xls=35' '*.swf=35' '*~=37'
+
+	set -l color_document 35
+	set -l color_image '01;35'
+	set -l color_sound '01;35'
+	set -l color_video '01;35'
+	set -l color_archive '01;31'
+	set -l color_command '01;32'
+	set -l color_backup 37
+
+	set -l default no=00 fi=00 'di=01;34' 'ln=01;36' 'pi=40;33' 'so=01;35' 'bd=40;33;01' 'cd=40;33;01' 'or=01;05;37;41' 'mi=01;05;37;41' ex=$color_command 
+
+	for i in .cmd .exe .com .btm .bat .sh .csh .fish
+		set default $default "*$i=$color_command"
+	end
+		
+	for i in .tar .tgz .arj .taz .lhz .zip .z .Z .gz .bz2 .bz .tz .rpm .cpio .jar .deb .rar .bin .hqx
+		set default $default "*$i=$color_archive"
+	end
+
+	for i in .jpg .jpeg .gif .bmp .xbm .xpm .png .tif 
+		set default $default "*$i=$color_image"
+	end
+
+	for i in .mp3 .au .wav .aiff .ogg .wma 
+		set default $default "*$i=$color_sound"
+	end
+
+	for i in .avi .mpeg .mpg .divx .mov .qt .wmv .rm
+		set default $default "*$i=$color_video"
+	end
+
+	for i in .htm .html .rtf .wpd .doc .pdf .ps .xls .swf .txt .tex .sxw .dvi INSTALL README ChangeLog
+		set default $default "*$i=$color_document" 
+	end
+	
+	for i in '~' .bak
+		set default $default "*$i=$color_backup" 
+	end
+
+	set -gx LS_COLORS $default
 end
 
 
@@ -138,6 +170,5 @@ end
 # Remove temporary functions
 #
 
-functions -e set_default_color
 functions -e set_exported_default
-set -e all_colors
+functions -e set_default

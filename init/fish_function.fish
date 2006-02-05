@@ -252,7 +252,7 @@ end
 #
 
 function __fish_describe_command -d "Command used to find descriptions for commands"
-	apropos $argv | sed -ne "s/^$argv\([^ ]*\) *(1) *- \(.*\)\$/$argv\1"\t"\2/p" 
+	apropos $argv | sed -ne "s/^$argv\([^ ]*\) *([18]) *- \(.*\)\$/$argv\1"\t"\2/p" 
 end
 
 #

@@ -12,7 +12,7 @@ complete -f -c apt-move -a mirror -d (_ "Download package missing from mirror")
 complete -f -c apt-move -a sync -d (_ "Sync packages installed")
 complete -f -c apt-move -a exclude -d 'test $LOCALDIR/.exclude file'
 complete -c apt-move -a movefile -d (_ "Move file specified on commandline")
-complete -f -c apt-move -a listbin -d (_ "List packags that may serve as input to mirrorbin or mirrorsource" )
+complete -f -c apt-move -a listbin -d (_ "List packages that may serve as input to mirrorbin or mirrorsource" )
 complete -f -c apt-move -a mirrorbin -d (_ "Fetch package from STDIN")
 complete -f -c apt-move -a mirrorsrc -d (_ "Fetch source package from STDIN")
 complete -f -c apt-move -s a -d (_ "Process all packages")

@@ -1,6 +1,6 @@
 #apt-rdepends
 complete -c apt-rdepends -l help -d (_ "Display help and exit")
-complete -f -c apt-rdepends -s b -l build-depends -d (_ "Show bulid dependencies")
+complete -f -c apt-rdepends -s b -l build-depends -d (_ "Show build dependencies")
 complete -f -c apt-rdepends -s d -l dotty -d (_ "Generate a dotty graph")
 complete -f -c apt-rdepends -s p -l print-state -d (_ "Show state of dependencies")
 complete -f -c apt-rdepends -s r -l reverse -d (_ "List packages depending on")

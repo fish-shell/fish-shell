@@ -2,7 +2,7 @@
 complete -c apt-listchanges -l help -d (_ "Display help and exit")
 complete -c apt-listchanges -l apt -d (_ "Read filenames from pipe")
 complete -f -c apt-listchanges -s v -l verbose -d (_ "Verbose mode")
-complete -f -c apt-listchanges -s f -l frontend -a "pager browser xterm-pager xterm-browser text mail none" -d (_ "Select fronend interface")
+complete -f -c apt-listchanges -s f -l frontend -a "pager browser xterm-pager xterm-browser text mail none" -d (_ "Select frontend interface")
 complete -r -f -c apt-listchanges -l email-address -d (_ "Specify email address")
 complete -f -c apt-listchanges -s c -l confirm -d (_ "Ask confirmation")
 complete -f -c apt-listchanges -s a -l all -d (_ "Display all changelogs")

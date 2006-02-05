@@ -6,19 +6,19 @@ complete -c wget -s V -l version -d (_ "Display version and exit")
 complete -c wget -s h -l help -d (_ "Display help and exit")
 complete -c wget -s b -l background -d (_ "Go to background immediately after startup")
 complete -c wget -s e -l execute -d (_ "Execute command as if part of .wgetrc") -x
-complete -c wget -s o -l output-file -d (_ "Log all messages to logfile") -f
+complete -c wget -s o -l output-file -d (_ "Log all messages to logfile") -r
 complete -c wget -s a -l append-output -d (_ "Append all messages to logfile")
 complete -c wget -s d -l debug -d (_ "Turn on debug output")
 complete -c wget -s q -l quiet -d (_ "Quiet mode")
 complete -c wget -s v -l verbose -d (_ "Verbose mode")
 complete -c wget -l non-verbose -d (_ "Turn off verbose without being completely quiet")
 complete -c wget -o nv -d (_ "Turn off verbose without being completely quiet")
-complete -c wget -s i -l input-file -d (_ "Read URLs from file") -f
+complete -c wget -s i -l input-file -d (_ "Read URLs from file") -r
 complete -c wget -s F -l force-html -d (_ "Force input to be treated as HTML")
 complete -c wget -s B -l base -d (_ "Prepend string to relative links") -x
 complete -c wget -l bind-adress -d (_ "Bind address on local machine") -xa "(__fish_print_addresses; __fish_print_hostnames)"
 complete -c wget -s t -l tries -d (_ "Set number of retries to number") -xa "0 1 2 4 8 16 32 64 128"
-complete -c wget -s O -l output-document -d (_ "Concatenate output to file") -f
+complete -c wget -s O -l output-document -d (_ "Concatenate output to file") -r
 complete -c wget -l no-clobber -d (_ "Never overwrite files with same name")
 complete -c wget -o nc  -d (_ "Never overwrite files with same name")
 complete -c wget -s c -l continue -d (_ "Continue getting a partially-downloaded file")
@@ -57,13 +57,13 @@ complete -c wget -l no-host-directories -d (_ "Disable generation of host-prefix
 complete -c wget -o nH -d (_ "Disable generation of host-prefixed directories")
 complete -c wget -l protocal-directories -d (_ "Use the protocol name as a directory component")
 complete -c wget -l cut-dirs -d (_ "Ignore specified number of directory components") -xa "1 2 3 4 5"
-complete -c wget -s P -l directory-prefix -d (_ "Set directory prefix") -f
+complete -c wget -s P -l directory-prefix -d (_ "Set directory prefix") -r
 complete -c wget -s E -l html-extension -d (_ "Force html files to have html extension")
 complete -c wget -l http-user -d (_ "Specify the http username") -xa "(__fish_complete_users)"
 complete -c wget -l http-passwd -d (_ "Specify the http password") -x
 complete -c wget -l no-cache -d (_ "Disable server-side cache")
 complete -c wget -l no-cookies -d (_ "Disable the use of cookies")
-complete -c wget -l load-cookies -d (_ "Load cookies from file") -f
+complete -c wget -l load-cookies -d (_ "Load cookies from file") -r
 complete -c wget -l save-cookies -d (_ "Save cookies to file")
 complete -c wget -l keep-session-cookies -d (_ "Save session cookies")
 complete -c wget -l ignore-length -d (_ "Ignore 'Content-Length' header")
@@ -74,7 +74,7 @@ complete -c wget -l referer -d (_ "Set referer URL") -x
 complete -c wget -l save-headers -d (_ "Save the headers sent by the HTTP server")
 complete -c wget -s U -l user-agent -d (_ "Identify as agent-string") -x
 complete -c wget -l post-data -d (_ "Use POST as the method for all HTTP requests and send the specified data in the request body") -x
-complete -c wget -l post-file -d (_ "Use POST as the method for all HTTP requests and send the specified data in the request body") -f
+complete -c wget -l post-file -d (_ "Use POST as the method for all HTTP requests and send the specified data in the request body") -r
 complete -c wget -l no-http-keep-alive -d (_ "Turn off keep-alive for http downloads")
 
 #FTP options

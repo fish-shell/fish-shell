@@ -62,9 +62,9 @@ io_data_t *io_add( io_data_t *first_chain, io_data_t *decond_chain );
 io_data_t *io_remove( io_data_t *list, io_data_t *element );
 
 /**
-   Make a copy of the specified chain of redirections
+   Make a copy of the specified chain of redirections. Uses halloc.
 */
-io_data_t *io_duplicate( io_data_t *l );
+io_data_t *io_duplicate( void *context, io_data_t *l );
 
 /**
    Return the last io redirection in ht e chain for the specified file descriptor.

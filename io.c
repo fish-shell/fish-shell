@@ -175,14 +175,14 @@ io_data_t *io_remove( io_data_t *list, io_data_t *element )
 	return list;
 }
 
-io_data_t *io_duplicate( io_data_t *l )
+io_data_t *io_duplicate( void *context, io_data_t *l )
 {
 	io_data_t *res;
 	
 	if( l == 0 )
 		return 0;
 
-	res = malloc( sizeof( io_data_t) );
+	res = halloc( context, sizeof( io_data_t) );
 	
 	if( !res )
 	{
@@ -191,7 +191,7 @@ io_data_t *io_duplicate( io_data_t *l )
 	}
 	
 	memcpy( res, l, sizeof(io_data_t ));
-	res->next=io_duplicate( l->next );
+	res->next=io_duplicate( context, l->next );
 	return res;	
 }
 

@@ -38,6 +38,7 @@ The fish parser. Contains functions for parsing code.
 #include "translate.h"
 #include "intern.h"
 #include "parse_util.h"
+#include "halloc.h"
 
 /**
    Maximum number of block levels in code. This is not the same as
@@ -1376,7 +1377,7 @@ static void parse_job_main_loop( process_t *p,
 				}
 				p->pipe_fd = wcstol( tok_last( tok ), 0, 10 );
 				p->argv = list_to_char_arr( args );
-				p->next = calloc( 1, sizeof( process_t ) );
+				p->next = halloc( j, sizeof( process_t ) );
 				if( p->next == 0 )
 				{
 					die_mem();
@@ -1464,7 +1465,7 @@ static void parse_job_main_loop( process_t *p,
 							unmatched_wildcard = 1;
 							if( !unmatched )
 							{
-								unmatched = wcsdup(tok_last( tok ));
+								unmatched = halloc_wcsdup( j, tok_last( tok ));
 								unmatched_pos = tok_get_pos( tok );
 							}
 
@@ -1518,7 +1519,7 @@ static void parse_job_main_loop( process_t *p,
 					break;
 				}
 
-				new_io = calloc( 1, sizeof(io_data_t) );
+				new_io = halloc( j, sizeof(io_data_t) );
 				if( !new_io )
 					die_mem();
 
@@ -1531,7 +1532,10 @@ static void parse_job_main_loop( process_t *p,
 				{
 					case TOK_STRING:
 					{
-						target = expand_one( wcsdup( tok_last( tok ) ), 0);
+						wchar_t *tmp = expand_one( wcsdup( tok_last( tok ) ), 0);
+						target = halloc_wcsdup( j, tmp );
+						free( tmp );
+
 						if( target == 0 && error_code == 0 )
 						{
 							error( SYNTAX_ERROR,
@@ -1602,14 +1606,13 @@ static void parse_job_main_loop( process_t *p,
 
 									tok_next(tok);
 								}
-								free(target);
 							}
 							break;
 					}
 				}
 
 				j->io = io_add( j->io, new_io );
-
+				
 			}
 			break;
 
@@ -1660,7 +1663,6 @@ static void parse_job_main_loop( process_t *p,
 
 		}
 	}
-	free( unmatched );
 
 	return;
 }
@@ -2221,8 +2223,7 @@ static void eval_job( tokenizer *tok )
 				}
 			}
 
-			j->first_process = calloc( 1, sizeof( process_t ) );
-
+			j->first_process = halloc( j, sizeof( process_t ) );
 
 			if( parse_job( j->first_process, j, tok ) &&
 				j->first_process->argv )
@@ -2235,11 +2236,13 @@ static void eval_job( tokenizer *tok )
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );
 
-					j->command = wcsndup( tok_string(tok)+start_pos,
-										  stop_pos-start_pos );
+					j->command = halloc_wcsndup( j,
+												 tok_string(tok)+start_pos,
+												 stop_pos-start_pos );
 				}
 				else
-					j->command = wcsdup( L"" );
+					j->command = halloc_wcsdup( j,
+												L"" );
 
 				if( profile )
 				{

@@ -119,8 +119,6 @@ static void free_process( process_t *p )
 	if( p==0 )
 		return;
 
-	
-
 	free_process( p->next );
 	free( p->actual_cmd );
 	if( p->argv != 0 )
@@ -131,7 +129,6 @@ static void free_process( process_t *p )
 		}		
 		free(p->argv );
 	}
-	free( p );
 }
 
 /**
@@ -176,21 +173,7 @@ void job_free( job_t * j )
 	/* Then free ourselves */
 	free_process( j->first_process);
 	
-	if( j->command != 0 )
-		free( j->command );
-	
-	for( io=j->io; io; io=ionext )
-	{
-		ionext = io->next;
-//		fwprintf( stderr, L"Kill redirect %d of type %d\n", ionext, io->io_mode );
-		if( io->io_mode == IO_FILE )
-		{
-			free( io->param1.filename );
-		}
-		free( io );		
-	}
-	
-	free( j );
+	halloc_free( j );
 }
 
 void proc_destroy()
@@ -223,7 +206,7 @@ job_t *job_create()
 	
 	while( job_get( free_id ) != 0 )
 		free_id++;
-	res = calloc( 1, sizeof(job_t) );
+	res = halloc( 0, sizeof(job_t) );
 	res->next = first_job;
 	res->job_id = free_id;
 	first_job = res;

@@ -247,7 +247,9 @@ int proc_get_last_status();
 void job_free( job_t* j );
 
 /**
-   Create a new job
+   Create a new job. Job struct is allocated using halloc, so anything
+   that should be freed with the job can uset it as a halloc context
+   when allocating.
 */
 job_t *job_create();
 

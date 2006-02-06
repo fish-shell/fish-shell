@@ -706,9 +706,9 @@ void exec( job_t *j )
 	if( block_io )
 	{
 		if( j->io )
-			j->io = io_add( io_duplicate(block_io), j->io );
+			j->io = io_add( io_duplicate( j, block_io), j->io );
 		else
-			j->io=io_duplicate(block_io);				
+			j->io=io_duplicate( j, block_io);				
 	}
 	
 	j->io = io_add( j->io, &pipe_write );

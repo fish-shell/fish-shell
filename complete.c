@@ -846,7 +846,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 		}
 	}
 
-	wchar_t *tmp = expand_escape( suff, 0 );
+	wchar_t *tmp = escape( suff, 0 );
 	free(suff);
 	suff = tmp;
 
@@ -1088,7 +1088,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 		return;
 	}
 
-	esc = expand_escape( cmd_start, 1 );
+	esc = escape( cmd_start, 1 );
 
 	lookup_cmd = wcsdupcat( L"__fish_describe_command ", esc );
 	free(esc);
@@ -1524,7 +1524,7 @@ void complete_load( wchar_t *cmd,
 		{
 			if( !tm || (*tm != buf.st_mtime ) )
 			{
-				wchar_t *esc = expand_escape( (wchar_t *)path.buff, 1 );
+				wchar_t *esc = escape( (wchar_t *)path.buff, 1 );
 				wchar_t *src_cmd = wcsdupcat( L". ", esc );
 
 				if( !tm )
@@ -2134,7 +2134,7 @@ static void append_switch( string_buffer_t *out,
 	if( !argument || argument==L"" )
 		return;
 
-	esc = expand_escape( argument, 1 );
+	esc = escape( argument, 1 );
 	sb_printf( out, L" --%ls %ls", opt, esc );
 	free(esc);
 }

@@ -25,7 +25,6 @@
 #include "sanity.h"
 #include "common.h"
 #include "env.h"
-#include "expand.h"
 #include "exec.h"
 #include "parser.h"
 
@@ -95,7 +94,7 @@ void kill_add( wchar_t *str )
 	wchar_t *disp;
 	if( (disp = env_get( L"DISPLAY" )) )
 	{
-		wchar_t *escaped_str = expand_escape( str, 1 );
+		wchar_t *escaped_str = escape( str, 1 );
 		wchar_t *cmd = wcsdupcat2(L"echo ", escaped_str, L"|xsel -b",0);
 		exec_subshell( cmd, 0 );
 		free( cut_buffer );
@@ -137,7 +136,7 @@ static void kill_check_x_buffer()
 		
 		for( i=0; i<al_get_count( &list ); i++ )
 		{
-			wchar_t *next_line = expand_escape( (wchar_t *)al_get( &list, i ), 0);
+			wchar_t *next_line = escape( (wchar_t *)al_get( &list, i ), 0);
 			if( i==0 )
 			{
 				new_cut_buffer = next_line;

@@ -47,7 +47,6 @@
 #include "parser.h"
 #include "reader.h"
 #include "env.h"
-#include "expand.h"
 #include "common.h"
 #include "wgetopt.h"
 #include "sanity.h"
@@ -2937,7 +2936,7 @@ static int builtin_case( wchar_t **argv )
 	for( i=1; i<argc; i++ )
 	{
 		free( unescaped );
-		unescaped = expand_unescape( argv[i], 1);
+		unescaped = unescape( argv[i], 1);
 
 		if( wildcard_match( current_block->param1.switch_value, unescaped ) )
 		{

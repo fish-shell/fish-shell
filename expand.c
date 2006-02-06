@@ -181,12 +181,6 @@ void expand_variable_array( const wchar_t *val, array_list_t *out )
 	}
 }
 
-wchar_t *expand_escape( const wchar_t *in,
-						int escape_all )
-{
-	return escape( in, escape_all );
-}
-
 
 /**
    Test if the specified string does not contain character which can
@@ -243,7 +237,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 			}
 			else
 			{
-				wchar_t *val = expand_escape( el, 1 );
+				wchar_t *val = escape( el, 1 );
 				sb_append( &buff, val );
 				free( val );
 			}
@@ -269,7 +263,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 				}
 				else
 				{
-					wchar_t *val = expand_escape( el, 1 );
+					wchar_t *val = escape( el, 1 );
 					sb_append( &buff, val );
 					free( val );
 				}
@@ -1217,7 +1211,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
     {
         wchar_t *sub_item, *sub_item2;
         sub_item = (wchar_t *)al_get( &sub_res, i );
-        sub_item2 = expand_escape( sub_item, 1 );
+        sub_item2 = escape( sub_item, 1 );
 		free(sub_item);
         int item_len = wcslen( sub_item2 );
 
@@ -1251,7 +1245,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 }
 
 
-wchar_t *expand_unescape( const wchar_t * in, int escape_special )
+static wchar_t *expand_unescape( const wchar_t * in, int escape_special )
 {
 	wchar_t *res = unescape( in, escape_special );
 	if( !res )

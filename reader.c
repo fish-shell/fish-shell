@@ -1343,7 +1343,7 @@ static void completion_insert( wchar_t *val, int is_complete )
 
 	if( quote == L'\0' )
 	{
-		replaced = expand_escape( val, 1 );
+		replaced = escape( val, 1 );
 	}
 	else
 	{
@@ -1372,7 +1372,7 @@ static void completion_insert( wchar_t *val, int is_complete )
 		if( unescapable )
 		{
 			free( replaced );
-			wchar_t *tmp = expand_escape( val, 1 );
+			wchar_t *tmp = escape( val, 1 );
 			replaced = wcsdupcat( L" ", tmp );
 			free( tmp);
 			replaced[0]=quote;

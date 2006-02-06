@@ -175,10 +175,8 @@ end
 # application for the file.
 #
 
-function open -d "Open file in default application"
-	if test (uname) = Darwin
-		open $argv
-	else
+if not test (uname) = Darwin
+	function open -d "Open file in default application"
 		mimedb -l -- $argv
 	end
 end
@@ -188,12 +186,23 @@ end
 # function is used by the default prompt command.
 #
 
-function prompt_pwd -d "Print the current working directory, shortend to fit the prompt"
-	if test "$PWD" != "$HOME"
-		printf "%s" (echo $PWD|sed -e 's|/private||' -e "s|^$HOME|~|" -e 's-/\([^/]\)\([^/]*\)-/\1-g')
-		echo $PWD|sed -e 's-.*/[^/]\([^/]*$\)-\1-'
-	else
-		echo '~'
+if test (uname) = Darwin
+	function prompt_pwd -d "Print the current working directory, shortend to fit the prompt"
+		if test "$PWD" != "$HOME"
+			printf "%s" (echo $PWD|sed -e 's|/private||' -e "s|^$HOME|~|" -e 's-/\([^/]\)\([^/]*\)-/\1-g')
+			echo $PWD|sed -e 's-.*/[^/]\([^/]*$\)-\1-'
+		else
+			echo '~'
+		end
+	end
+else
+	function prompt_pwd -d "Print the current working directory, shortend to fit the prompt"
+		if test "$PWD" != "$HOME"
+			printf "%s" (echo $PWD|sed -e "s|^$HOME|~|" -e 's-/\([^/]\)\([^/]*\)-/\1-g')
+			echo $PWD|sed -e 's-.*/[^/]\([^/]*$\)-\1-'
+		else
+			echo '~'
+		end
 	end
 end
 

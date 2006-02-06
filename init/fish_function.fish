@@ -218,7 +218,7 @@ function vared -d "Edit variable value"
 				help vared
 
 			case '-*'
-				printf "vared: Unknown option %s\n" $argv
+				printf (_ "%s: Unknown option %s\n") vared $argv
 
 			case '*'
 				if test (count $$argv ) -lt 2
@@ -243,11 +243,11 @@ function vared -d "Edit variable value"
 
 				else
 
-					printf (_ 'vared: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of %s\n') $argv (set_color $fish_color_command) (set_color $fish_color_normal) $argv $argv
+					printf (_ '%s: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of %s\n') $argv (set_color $fish_color_command) (set_color $fish_color_normal) vared $argv $argv
 				end
 		end
 	else
-		printf (_ 'vared: Expected exactly one argument, got %s.\n\nSynopsis:\n\t%svared%s VARIABLE\n') (count $argv) (set_color $fish_color_command) (set_color $fish_color_normal)
+		printf (_ '%s: Expected exactly one argument, got %s.\n\nSynopsis:\n\t%svared%s VARIABLE\n') vared (count $argv) (set_color $fish_color_command) (set_color $fish_color_normal)
 	end
 end
 
@@ -290,7 +290,7 @@ function popd -d "Pop dir from stack"
 	if test $dirstack[1]
 		cd $dirstack[1]
 	else
-		echo Directory stack is empty...
+		printf (_ "%s: Directory stack is empty...") popd
 		return 1
 	end
 
@@ -345,10 +345,10 @@ end
 
 
 function __fish_move_last -d "Move the last element of a directory history from src to dest"
-	set src $argv[1]
-	set dest $argv[2]
+	set -l src $argv[1]
+	set -l dest $argv[2]
 
-	set size_src (count $$src)
+	set -l size_src (count $$src)
 
 	if test $size_src = 0
 		# Cannot make this step
@@ -374,15 +374,15 @@ end
 
 function prevd -d "Move back in the directory history"
 	# Parse arguments
-	set show_hist 0 
-	set times 1
+	set -l show_hist 0 
+	set -l times 1
 	for i in (seq (count $argv))
 		switch $argv[$i]
-			case '-l'
+			case '-l' --l --li --lis --list
 				set show_hist 1
 				continue
 			case '-*'
-				echo Uknown option $argv[$i]
+				printf (_ "%s: Unknown option %s\n" ) prevd $argv[$i]
 				return 1
 			case '*'
 				if test $argv[$i] -ge 0 ^/dev/null
@@ -396,7 +396,7 @@ function prevd -d "Move back in the directory history"
 	end
 
 	# Traverse history
-	set code 1
+	set -l code 1
 	for i in (seq $times)
 		# Try one step backward
 		if __fish_move_last dirprev dirnext;
@@ -425,21 +425,21 @@ end
 
 function nextd -d "Move forward in the directory history"
 	# Parse arguments
-	set show_hist 0 
-	set times 1
+	set -l show_hist 0 
+	set -l times 1
 	for i in (seq (count $argv))
 		switch $argv[$i]
-			case '-l'
+			case '-l' --l --li --lis --list
 				set show_hist 1
 				continue
 			case '-*'
-				echo Uknown option $argv[$i]
+				printf (_ "%s: Unknown option %s\n" ) nextd $argv[$i]
 				return 1
 			case '*'
 				if test $argv[$i] -ge 0 ^/dev/null
 					set times $argv[$i]
 				else
-					echo "The number of positions to skip must be a non-negative integer"
+					printf (_ "%s: The number of positions to skip must be a non-negative integer\n" ) nextd
 					return 1
 				end
 				continue
@@ -447,7 +447,7 @@ function nextd -d "Move forward in the directory history"
 	end
 
 	# Traverse history
-	set code 1
+	set -l code 1
 	for i in (seq $times)
 		# Try one step backward
 		if __fish_move_last dirnext dirprev;
@@ -476,9 +476,9 @@ end
 
 function dirh -d "Print the current directory history (the back- and fwd- lists)" 
 	# Avoid set comment
-	set current (command pwd)
-	set -- separator "  "
-	set -- line_len (echo (count $dirprev) + (echo $dirprev $current $dirnext | wc -m) | bc)
+	set -l current (command pwd)
+	set -l separator "  "
+	set -l line_len (echo (count $dirprev) + (echo $dirprev $current $dirnext | wc -m) | bc)
 	if test $line_len -gt $COLUMNS
 		# Print one entry per line if history is long
 		set separator "\n"

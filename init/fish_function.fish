@@ -92,7 +92,7 @@ function help -d "Show help for the fish shell"
 
 		# If we are in a graphical environment, check if there is a graphical
 		# browser to use instead.
-		if test (echo $DISPLAY) -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
+		if test "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
 			for i in $graphical_browsers
 				if which $i 2>/dev/null >/dev/null
 					set fish_browser $i
@@ -544,10 +544,9 @@ function trap -d 'Perform an action when the shell recives a signal'
 	set -l shortopt
 	set -l longopt
 
-	set shortopt -o lph
-	if getopt -T >/dev/null
-		set longopt
-	else
+	set -l shortopt -o lph
+	set -l longopt
+	if not getopt -T >/dev/null
 		set longopt -l print,help,list-signals
 	end
 
@@ -656,26 +655,27 @@ end
 function type -d "Print the type of a command"
 
 	# Initialize
-	set status 1
-	set mode normal
-	set selection all
+	set -l status 1
+	set -l mode normal
+	set -l selection all
 
+	#
 	# Get options
 	#
-	set -- shortopt -o tpPafh
-	if getopt -T >/dev/null
-		set longopt
-	else
-		set -- longopt -l type,path,force-path,all,no-functions,help
+	set -l shortopt -o tpPafh
+	set -l longopt
+	if not getopt -T >/dev/null
+		set longopt -l type,path,force-path,all,no-functions,help
 	end
 
 	if not getopt -n type -Q $shortopt $longopt -- $argv
 		return 1
 	end
 
-	set -- tmp (getopt $shortopt $longopt -- $argv)
+	set -l tmp (getopt $shortopt $longopt -- $argv)
 
-	eval set -- opt $tmp
+	set -l opt
+	eval set opt $tmp
 
 	for i in $opt
 		switch $i
@@ -788,7 +788,7 @@ end
 function __fish_umask_parse -d "Parses a file permission specification as into an octal version"
 	# Test if already a valid octal mask, and pad it with zeros
 	if echo $argv | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
-		for i in (seq (echo 5-(echo $argv|wc -c)|bc)); set -- argv 0$argv; end
+		for i in (seq (echo 5-(echo $argv|wc -c)|bc)); set argv 0$argv; end
 		echo $argv 
 	else
 		# Test if argument really is a valid symbolic mask
@@ -797,34 +797,38 @@ function __fish_umask_parse -d "Parses a file permission specification as into a
 			return 1
 		end
 
-		set -e implicit_all
+		set -l implicit_all
 
 		# Insert inverted umask into res variable
 
-		set tmp $umask
+		set -l mode
+		set -l val
+		set -l tmp $umask
+		set -l res
+
 		for i in 1 2 3
-			set -- tmp (echo $tmp|cut -c 2-)
-			set -- res[$i] (echo 7-(echo $tmp|cut -c 1)|bc)
+			set tmp (echo $tmp|cut -c 2-)
+			set res[$i] (echo 7-(echo $tmp|cut -c 1)|bc)
 		end
 				
-		set -- el (echo $argv|tr , \n)
+		set -l el (echo $argv|tr , \n)
 		for i in $el
 			switch $i
 				case 'u*'
 					set idx 1
-					set -- i (echo $i| cut -c 2-)
+					set i (echo $i| cut -c 2-)
 
 				case 'g*'
 					set idx 2
-					set -- i (echo $i| cut -c 2-)
+					set i (echo $i| cut -c 2-)
 
 				case 'o*'
 					set idx 3
-					set -- i (echo $i| cut -c 2-)
+					set i (echo $i| cut -c 2-)
 
 				case 'a*'
 					set idx 1 2 3
-					set -- i (echo $i| cut -c 2-)
+					set i (echo $i| cut -c 2-)
 
 				case '*'
 					set implicit_all 1
@@ -834,26 +838,26 @@ function __fish_umask_parse -d "Parses a file permission specification as into a
 			switch $i
 				case '=*'
 					set mode set
-					set -- i (echo $i| cut -c 2-) 
+					set i (echo $i| cut -c 2-) 
 
 				case '+*'
 					set mode add
-					set -- i (echo $i| cut -c 2-) 
+					set i (echo $i| cut -c 2-) 
 
 				case '-*'
 					set mode remove
-					set -- i (echo $i| cut -c 2-) 
+					set i (echo $i| cut -c 2-) 
 
 				case '*'
-					if not set -q implicit_all
-						echo umask: Invalid mask $argv >&2
+					if not count $implicit_all >/dev/null
+						printf (_ "%s: Invalid mask %s\n") umask $argv >&2
 						return
 					end
 					set mode set
 			end
 
 			if not echo $perm|grep -E '^(r|w|x)*$' >/dev/null
-				echo umask: Invalid mask $argv >&2
+				printf (_ "%s: Invalid mask %s\n") umask $argv >&2
 				return
 			end
 
@@ -919,20 +923,19 @@ function umask -d "Set default file permission mask"
 	set -l as_command 0
 	set -l symbolic 0
 
-	set -- shortopt -o pSh
-	if getopt -T >/dev/null
-		set longopt
-	else
-		set -- longopt -l as-command,symbolic,help
+	set -l shortopt -o pSh
+	set -l longopt
+	if not getopt -T >/dev/null
+		set longopt -l as-command,symbolic,help
 	end
 
 	if not getopt -n umask -Q $shortopt $longopt -- $argv
 		return 1
 	end
 
-	set tmp -- (getopt $shortopt $longopt -- $argv)
+	set -l tmp (getopt $shortopt $longopt -- $argv)
 
-	eval set -- opt $tmp
+	eval set opt $tmp
 
 	while count $opt >/dev/null
 
@@ -977,7 +980,9 @@ function umask -d "Set default file permission mask"
 			set -l parsed (__fish_umask_parse $opt)
 			if test (count $parsed) -eq 1
 				set -g umask $parsed
+				return 0
 			end
+			return 1
 
 		case '*'
 			printf (_ '%s: Too many arguments\n') umask >&2

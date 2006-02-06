@@ -115,8 +115,6 @@ void common_destroy()
 	}
 }
 
-
-
 wchar_t **list_to_char_arr( array_list_t *l )
 {
 	wchar_t ** res = malloc( sizeof(wchar_t *)*(al_get_count( l )+1) );

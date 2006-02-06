@@ -7,6 +7,8 @@
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <wchar.h>
 #include <dirent.h>
 #include <unistd.h>

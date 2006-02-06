@@ -388,7 +388,7 @@ static void event_fire_internal( event_t *event )
 	string_buffer_t *b=0;
 	array_list_t *fire=0;
 
-	int was_subshell = is_subshell;
+	int was_interactive = is_interactive;
 	
 	/*
 	  First we free all events that have been removed
@@ -464,7 +464,7 @@ static void event_fire_internal( event_t *event )
 		  Event handlers are not part of the main flow of code, so
 		  they are marked as non-interactive and as a subshell
 		*/
-		is_subshell=1;
+		is_interactive=0;
 		parser_push_block( EVENT );
 		current_block->param1.event = event;
 		eval( (wchar_t *)b->buff, 0, TOP );
@@ -475,7 +475,7 @@ static void event_fire_internal( event_t *event )
 	/*
 	  Restore interactivity flags
 	*/
-	is_subshell = was_subshell;
+	is_interactive = was_interactive;
 
 	if( b )
 	{
@@ -628,6 +628,7 @@ void event_init()
 
 void event_destroy()
 {
+
 	if( events )
 	{
 		al_foreach( events, (void (*)(const void *))&event_free );
@@ -635,6 +636,7 @@ void event_destroy()
 		free( events );		
 		events=0;
 	}
+
 	if( killme )
 	{
 		al_foreach( killme, (void (*)(const void *))&event_free );
@@ -642,6 +644,7 @@ void event_destroy()
 		free( killme );		
 		killme=0;		
 	}	
+
 	if( get_desc_buff )
 	{
 		sb_destroy( get_desc_buff );

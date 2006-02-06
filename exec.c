@@ -37,6 +37,7 @@
 #include "signal.h"
 #include "env_universal.h"
 #include "translate.h"
+#include "halloc.h"
 
 /**
    Prototype for the getpgid library function. The prototype for this
@@ -791,7 +792,7 @@ void exec( job_t *j )
 				int i;
 				string_buffer_t sb;
 				
-				const wchar_t * def = wcsdup(function_get_definition( p->argv[0] ));
+				wchar_t * def = halloc_wcsdup( j, function_get_definition( p->argv[0] ));
 				//fwprintf( stderr, L"run function %ls\n", argv[0] );
 				if( def == 0 )
 				{
@@ -834,8 +835,6 @@ void exec( job_t *j )
 				
 				internal_exec_helper( def, TOP, j->io );
 				
-				free( def );
-
 				parser_allow_function();
 				parser_pop_block();
 				

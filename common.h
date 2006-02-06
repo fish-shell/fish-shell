@@ -83,9 +83,10 @@ extern wchar_t *program_name;
 
 /**
    Take an array_list_t containing wide strings and converts them to a
-   single null-terminated wchar_t **.
+   single null-terminated wchar_t **. The array is allocated using
+   halloc, and uses the \c context parameter as context.
 */
-wchar_t **list_to_char_arr( array_list_t *l );
+wchar_t **list_to_char_arr( void *context, array_list_t *l );
 
 /**
    Read a line from the stream f into the buffer buff of length len. If

@@ -58,6 +58,7 @@ parts of fish.
 #include "proc.h"
 #include "wildcard.h"
 #include "parser.h"
+#include "halloc.h"
 
 /**
    The maximum number of minor errors to report. Further errors will be omitted.
@@ -115,9 +116,9 @@ void common_destroy()
 	}
 }
 
-wchar_t **list_to_char_arr( array_list_t *l )
+wchar_t **list_to_char_arr( void *context, array_list_t *l )
 {
-	wchar_t ** res = malloc( sizeof(wchar_t *)*(al_get_count( l )+1) );
+	wchar_t ** res = halloc( context, sizeof(wchar_t *)*(al_get_count( l )+1) );
 	int i;
 	if( res == 0 )
 	{

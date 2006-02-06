@@ -53,6 +53,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "signal.h"
 #include "event.h"
 #include "translate.h"
+#include "halloc.h"
 
 /**
    Size of message buffer 
@@ -127,7 +128,6 @@ static void free_process( process_t *p )
 		{
 			free( *arg );
 		}		
-		free(p->argv );
 	}
 }
 

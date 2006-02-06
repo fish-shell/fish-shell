@@ -59,6 +59,7 @@
 #include "event.h"
 #include "signal.h"
 #include "translate.h"
+#include "halloc.h"
 
 /**
    The default prompt for the read command
@@ -494,7 +495,7 @@ static int builtin_builtin(  wchar_t **argv )
 
 		al_init( &names );
 		builtin_get_names( &names );
-		names_arr = list_to_char_arr( &names );
+		names_arr = list_to_char_arr( 0, &names );
 		qsort( names_arr,
 			   al_get_count( &names ),
 			   sizeof(wchar_t *),
@@ -509,7 +510,7 @@ static int builtin_builtin(  wchar_t **argv )
 						L"\n",
 						(void *)0 );
 		}
-		free( names_arr );
+		halloc_free( names_arr );
 		al_destroy( &names );
 	}
 	return 0;
@@ -811,7 +812,7 @@ static int builtin_functions( wchar_t **argv )
 
 		al_init( &names );
 		function_get_names( &names, show_hidden );
-		names_arr = list_to_char_arr( &names );
+		names_arr = list_to_char_arr( 0, &names );
 		qsort( names_arr,
 			   al_get_count( &names ),
 			   sizeof(wchar_t *),
@@ -843,7 +844,7 @@ static int builtin_functions( wchar_t **argv )
 			}
 		}
 
-		free( names_arr );
+		halloc_free( names_arr );
 		al_destroy( &names );
 		return 0;
 	}
@@ -856,7 +857,7 @@ static int builtin_functions( wchar_t **argv )
 			sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );
 			al_init( &names );
 			function_get_names( &names, show_hidden );
-			names_arr = list_to_char_arr( &names );
+			names_arr = list_to_char_arr( 0, &names );
 			qsort( names_arr,
 				   al_get_count( &names ),
 				   sizeof(wchar_t *),
@@ -865,7 +866,7 @@ static int builtin_functions( wchar_t **argv )
 			{
 				functions_def( names_arr[i] );
 			}
-			free( names_arr );
+			halloc_free( names_arr );
 			al_destroy( &names );
 			break;
 		}
@@ -1167,7 +1168,7 @@ static int builtin_function( wchar_t **argv )
 
 		al_init( &names );
 		function_get_names( &names, 0 );
-		names_arr = list_to_char_arr( &names );
+		names_arr = list_to_char_arr( 0, &names );
 		qsort( names_arr,
 			   al_get_count( &names ),
 			   sizeof(wchar_t *),
@@ -1193,7 +1194,7 @@ static int builtin_function( wchar_t **argv )
 
 		al_foreach( events, (void (*)(const void *))&event_free );
 		al_destroy( events );
-		free( events );
+		halloc_free( events );
 	}
 	else
 	{

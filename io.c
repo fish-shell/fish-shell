@@ -37,7 +37,7 @@ Utilities for io redirection.
 #include "common.h"
 #include "io.h"
 #include "translate.h"
-
+#include "halloc.h"
 
 
 void io_buffer_read( io_data_t *d )

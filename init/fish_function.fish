@@ -176,7 +176,11 @@ end
 #
 
 function open -d "Open file in default application"
-	mimedb -l -- $argv
+	if test (uname) = Darwin
+		open $argv
+	else
+		mimedb -l -- $argv
+	end
 end
 
 #

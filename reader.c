@@ -607,7 +607,6 @@ void reader_write_title()
 	array_list_t l;
 	wchar_t *term = env_get( L"TERM" );
 	int was_interactive = is_interactive;
-	is_interactive = 0;
 
 	/*
 	  This is a pretty lame heuristic for detecting terminals that do
@@ -629,6 +628,7 @@ void reader_write_title()
 
 	al_init( &l );
 
+	is_interactive = 0;
 	if( exec_subshell( title, &l ) != -1 )
 	{
 		int i;

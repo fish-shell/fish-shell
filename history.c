@@ -45,6 +45,8 @@ typedef struct
 	   The last item loaded from file
 	*/
 	ll_node_t *last_loaded;
+
+	int is_loaded;
 }
 	history_data;
 
@@ -82,25 +84,31 @@ static wchar_t *mode_name;
 */
 static hash_table_t history_table;
 
+/**
+   Flag, set to 1 once the history file has been loaded
+*/
+static int is_loaded;
 
 /**
-   Load history from ~/.fish_history
+   Load history from file
 */
-static void history_load( wchar_t *name )
+static void history_load()
 {
 	wchar_t *fn;
 	wchar_t *buff=0;
 	int buff_len=0;
 	FILE *in_stream;
 	hash_table_t used;
-	
+
+	is_loaded = 1;
+		
 	block();
 	hash_init2( &used, 
 				&hash_wcs_func,
 				&hash_wcs_cmp,
 				4096 );
 
-	fn = wcsdupcat2( env_get(L"HOME"), L"/.", name, L"_history", 0 );
+	fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", 0 );
 	
 	in_stream = wfopen( fn, "r" );
 	
@@ -111,7 +119,7 @@ static void history_load( wchar_t *name )
 			int buff_read = fgetws2( &buff, &buff_len, in_stream );
 			if( buff_read == -1 )
 			{
-				debug( 1, L"The following non-fatal error occurred while reading command history from \'%ls\':", name );
+				debug( 1, L"The following non-fatal error occurred while reading command history from \'%ls\':", mode_name );
 				wperror( L"fgetws2" );
 				fclose( in_stream );
 				free( fn );
@@ -161,7 +169,7 @@ static void history_load( wchar_t *name )
 	{
 		if( errno != ENOENT )
 		{
-			debug( 1, L"The following non-fatal error occurred while reading command history from \'%ls\':", name );
+			debug( 1, L"The following non-fatal error occurred while reading command history from \'%ls\':", mode_name );
 			wperror( L"fopen" );
 		}
 		
@@ -198,6 +206,7 @@ static void history_to_hash()
 	d->last=history_last;
 	d->last_loaded=last_loaded;
 	d->count=history_count;
+	d->is_loaded = is_loaded;
 	
 	hash_put( &history_table, 
 			  mode_name,
@@ -223,13 +232,14 @@ void history_set_mode( wchar_t *name )
 		history_current = history_last = curr->last;
 		last_loaded = curr->last_loaded;
 		history_count = curr->count;
+		is_loaded = curr->is_loaded;
 	}
 	else
 	{
 		history_count=0;
 		history_last = history_current = last_loaded=0;
 		mode_name = wcsdup( name );
-		history_load( name );
+		is_loaded = 0;
 	}
 	
 	past_end=1;
@@ -259,6 +269,9 @@ static void history_save()
 	/* First we save this sessions history in local variables */
 	ll_node_t *real_pos = history_last, *real_first = last_loaded;
 
+	if( !is_loaded )
+		return;
+	
 	if( !real_first )
 	{
 		real_first = history_current;
@@ -390,6 +403,9 @@ void history_destroy()
 */
 static ll_node_t *history_find( ll_node_t *n, const wchar_t *s )
 {
+	if( !is_loaded )
+		history_load();	
+
 	if( n == 0 )
 		return 0;
 	
@@ -405,6 +421,9 @@ static ll_node_t *history_find( ll_node_t *n, const wchar_t *s )
 void history_add( const wchar_t *str )
 {
 	ll_node_t *old_node;
+
+	if( !is_loaded )
+		history_load();	
 
 	if( wcslen( str ) == 0 )
 		return;
@@ -460,6 +479,9 @@ static int history_test( const wchar_t *needle, const wchar_t *haystack )
 
 const wchar_t *history_prev_match( const wchar_t *str )
 {
+	if( !is_loaded )
+		history_load();	
+
 	if( history_current == 0 )
 		return str;
 	
@@ -481,6 +503,9 @@ const wchar_t *history_prev_match( const wchar_t *str )
 
 const wchar_t *history_next_match( const wchar_t *str)
 {
+	if( !is_loaded )
+		history_load();	
+
 	if( history_current == 0 )
 		return str;
 
@@ -507,15 +532,21 @@ void history_reset()
 */
 void history_first()
 {
-	while( history_current->prev )
-		history_current = history_current->prev;
+	if( is_loaded )
+		while( history_current->prev )
+			history_current = history_current->prev;
 	
 }
 
 wchar_t *history_get( int idx )
 {
-	ll_node_t *n=history_last;
+	ll_node_t *n;
 	int i;
+	if( !is_loaded )
+		history_load();	
+
+	n = history_last;
+	
 	if( idx<0)
 	{
 		debug( 1, L"Tried to access negative history index %d", idx );

@@ -8,7 +8,8 @@
 #include <wchar.h>
 
 /**
-   Load history from file.
+   Init history library. The history file won't actually be loaded
+   until the first time a history search is performed.
 */
 void history_init();
 

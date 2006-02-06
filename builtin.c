@@ -406,6 +406,7 @@ static int builtin_block( wchar_t **argv )
 		{
 			eb->next = block->first_event_block;
 			block->first_event_block = eb;
+			halloc_register( block, eb );
 		}
 		else
 		{
@@ -917,9 +918,14 @@ static int builtin_function( wchar_t **argv )
 	int res=0;
 	wchar_t *desc=0;
 	int is_binding=0;
-	array_list_t *events = al_new();
+	array_list_t *events;
+	int i;
 
 	woptind=0;
+
+	parser_push_block( FUNCTION_DEF );
+	events=halloc( current_block, sizeof(array_list_t ) );
+	al_init( events );
 
 	const static struct woption
 		long_options[] =
@@ -1003,7 +1009,7 @@ static int builtin_function( wchar_t **argv )
 					break;
 				}
 
-				e = calloc( 1, sizeof(event_t));
+				e = halloc( current_block, sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_SIGNAL;
@@ -1027,11 +1033,11 @@ static int builtin_function( wchar_t **argv )
 					break;
 				}
 
-				e = calloc( 1, sizeof(event_t));
+				e = halloc( current_block, sizeof(event_t));
 				if( !e )
 					die_mem();
 				e->type = EVENT_VARIABLE;
-				e->param1.variable = wcsdup( woptarg );
+				e->param1.variable = halloc_register( current_block, wcsdup( woptarg ));
 				e->function_name=0;
 				al_push( events, e );
 				break;
@@ -1044,10 +1050,10 @@ static int builtin_function( wchar_t **argv )
 				wchar_t *end;
 				event_t *e;
 
-				e = calloc( 1, sizeof(event_t));
+				e = halloc( current_block, sizeof(event_t));
 				if( !e )
 					die_mem();
-
+				
 				if( ( opt == 'j' ) &&
 					( wcscasecmp( woptarg, L"caller" ) == 0 ) )
 				{
@@ -1154,6 +1160,8 @@ static int builtin_function( wchar_t **argv )
 		}
 	}
 
+	halloc_register( current_block, events->arr );
+
 	if( res )
 	{
 		int i;
@@ -1186,33 +1194,27 @@ static int builtin_function( wchar_t **argv )
 			sb_append2( sb_err,
 						nxt, L"  ", (void *)0 );
 		}
-		free( names_arr );
+		halloc_free( names_arr );
 		al_destroy( &names );
 		sb_append( sb_err, L"\n" );
 
+		parser_pop_block();
 		parser_push_block( FAKE );
-
-		al_foreach( events, (void (*)(const void *))&event_free );
-		al_destroy( events );
-		halloc_free( events );
 	}
 	else
 	{
-		int i;
-
-		parser_push_block( FUNCTION_DEF );
-		current_block->param1.function_name=wcsdup(argv[woptind]);
-		current_block->param2.function_description=desc?wcsdup(desc):0;
+		current_block->param1.function_name=halloc_register( current_block, wcsdup(argv[woptind]));
+		current_block->param2.function_description=desc?halloc_register( current_block, wcsdup(desc)):0;
 		current_block->param3.function_is_binding = is_binding;
 		current_block->param4.function_events = events;
+
 		for( i=0; i<al_get_count( events ); i++ )
 		{
 			event_t *e = (event_t *)al_get( events, i );
-			e->function_name = wcsdup( current_block->param1.function_name );
+			e->function_name = current_block->param1.function_name;
 		}
-
 	}
-
+	
 	current_block->tok_pos = parser_get_pos();
 	current_block->skip = 1;
 
@@ -2579,12 +2581,14 @@ static int builtin_for( wchar_t **argv )
 
 		int i;
 		current_block->tok_pos = parser_get_pos();
-		current_block->param1.for_variable = wcsdup( argv[1] );
+		current_block->param1.for_variable = halloc_register( current_block, wcsdup( argv[1] ));
 
 		for( i=argc-1; i>3; i-- )
 		{
-			al_push( &current_block->param2.for_vars, wcsdup(argv[ i ] ));
+			al_push( &current_block->param2.for_vars, halloc_register( current_block, wcsdup(argv[ i ] ) ) );
 		}
+		halloc_register( current_block, current_block->param2.for_vars.arr );
+
 		if( argc > 3 )
 		{
 			env_set( current_block->param1.for_variable, argv[3], ENV_LOCAL );
@@ -2669,10 +2673,7 @@ static int builtin_end( wchar_t **argv )
 				*/
 				if( current_block->loop_status == LOOP_BREAK )
 				{
-					while( al_get_count( &current_block->param2.for_vars ) )
-					{
-						free( (void *)al_pop( &current_block->param2.for_vars ) );
-					}
+					al_truncate( &current_block->param2.for_vars, 0 );
 				}
 
 				if( al_get_count( &current_block->param2.for_vars ) )
@@ -2681,8 +2682,7 @@ static int builtin_end( wchar_t **argv )
 					env_set( current_block->param1.for_variable, val,  ENV_LOCAL);
 					current_block->loop_status = LOOP_NORMAL;
 					current_block->skip = 0;
-					free(val);
-
+					
 					kill_block = 0;
 					parser_set_pos( current_block->tok_pos );
 /*
@@ -2901,7 +2901,7 @@ static int builtin_switch( wchar_t **argv )
 	else
 	{
 		parser_push_block( SWITCH );
-		current_block->param1.switch_value = wcsdup( argv[1]);
+		current_block->param1.switch_value = halloc_register( current_block, wcsdup( argv[1]));
 		current_block->skip=1;
 		current_block->param2.switch_taken=0;
 	}

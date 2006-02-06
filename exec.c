@@ -792,7 +792,7 @@ void exec( job_t *j )
 				int i;
 				string_buffer_t sb;
 				
-				wchar_t * def = halloc_wcsdup( j, function_get_definition( p->argv[0] ));
+				wchar_t * def = halloc_register( j, wcsdup( function_get_definition( p->argv[0] )));
 				//fwprintf( stderr, L"run function %ls\n", argv[0] );
 				if( def == 0 )
 				{
@@ -803,7 +803,7 @@ void exec( job_t *j )
 				parser_push_block( FUNCTION_CALL );
 				
 				current_block->param2.function_call_process = p;
-				current_block->param1.function_name = wcsdup( p->argv[0] );
+				current_block->param1.function_name = halloc_register( current_block, wcsdup( p->argv[0] ) );
 												
 				if( builtin_count_args(p->argv)>1 )
 				{

@@ -82,7 +82,7 @@ FISH_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE)	\
 # All objects that the system needs to build fish_pager
 FISH_PAGER_OBJS := fish_pager.o common.o output.o util.o wutil.o		\
 	tokenizer.o input_common.o env_universal.o env_universal_common.o	\
-	translate.o
+	translate.o halloc.o
 
 # All objects that the system needs to build fish_tests
 FISH_TESTS_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE)	\
@@ -90,11 +90,11 @@ FISH_TESTS_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE)	\
 
 # All objects that the system needs to build fishd
 FISHD_OBJS := fishd.o env_universal_common.o common.o util.o wutil.o	\
-	doc_src/fishd.o
+	doc_src/fishd.o halloc.o
 
 # All objects needed to build mimedb
 MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o	\
-	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o
+	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o halloc.o
 
 #
 # Files containing documentation for builtins. Should be listed

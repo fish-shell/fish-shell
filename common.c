@@ -125,7 +125,11 @@ wchar_t **list_to_char_arr( void *context, array_list_t *l )
 		die_mem();
 	}
 	for( i=0; i<al_get_count( l ); i++ )
+	{		
 		res[i] = (wchar_t *)al_get(l,i);
+		if( context )
+			halloc_register( context, res[i] );
+	}
 	res[i]='\0';
 	return res;	
 }

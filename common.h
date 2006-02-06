@@ -84,7 +84,9 @@ extern wchar_t *program_name;
 /**
    Take an array_list_t containing wide strings and converts them to a
    single null-terminated wchar_t **. The array is allocated using
-   halloc, and uses the \c context parameter as context.
+   halloc, and uses the \c context parameter as context. If \c context
+   is not noll, all elements of the \c array_list_t are also
+   registered to \c context using \c halloc_register().
 */
 wchar_t **list_to_char_arr( void *context, array_list_t *l );
 

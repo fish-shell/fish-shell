@@ -171,13 +171,11 @@ void expand_variable_array( const wchar_t *val, array_list_t *out )
 			if( *pos == ARRAY_SEP )
 			{
 				*pos=0;
-				al_push( out, wcsdup(start) );
+				al_push( out, start==cpy?cpy:wcsdup(start) );
 				start=pos+1;
 			}
 		}
-		al_push( out, wcsdup(start) );
-
-		free(cpy);
+		al_push( out, start==cpy?cpy:wcsdup(start) );
 	}
 }
 

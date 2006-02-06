@@ -339,7 +339,7 @@ static int block_count( block_t *b )
 
 void parser_push_block( int type )
 {
-	block_t *new = calloc( 1, sizeof( block_t ));
+	block_t *new = halloc( 0, sizeof( block_t ));
 
 	new->src_lineno = parser_get_lineno();
 	new->src_filename = parser_current_filename()?intern(parser_current_filename()):0;
@@ -376,9 +376,6 @@ void parser_push_block( int type )
 
 void parser_pop_block()
 {
-
-	event_block_t *eb, *eb_next;
-
 //	debug( 3, L"Block pop %ls %d\n", parser_get_block_desc(current_block->type), block_count(current_block)-1 );
 
 	if( (current_block->type != FUNCTION_DEF ) &&
@@ -388,51 +385,9 @@ void parser_pop_block()
 		env_pop();
 	}
 
-	switch( current_block->type)
-	{
-		case FOR:
-		{
-			free( current_block->param1.for_variable );
-			al_foreach( &current_block->param2.for_vars,
-						(void (*)(const void *))&free );
-			al_destroy( &current_block->param2.for_vars );
-			break;
-		}
-
-		case SWITCH:
-		{
-			free( current_block->param1.switch_value );
-			break;
-		}
-
-		case FUNCTION_DEF:
-		{
-			free( current_block->param1.function_name );
-			free( current_block->param2.function_description );
-			al_foreach( current_block->param4.function_events,
-						(void (*)(const void *))&event_free );
-			al_destroy( current_block->param4.function_events );
-			free( current_block->param4.function_events );
-			break;
-		}
-
-		case FUNCTION_CALL:
-		{
-			free( current_block->param1.function_name );
-			break;
-		}
-
-	}
-
-	for( eb=current_block->first_event_block; eb; eb=eb_next )
-	{
-		eb_next = eb->next;
-		free(eb);
-	}
-
 	block_t *old = current_block;
 	current_block = current_block->outer;
-	free( old );
+	halloc_free( old );
 }
 
 const wchar_t *parser_get_block_desc( int block )
@@ -1440,7 +1395,7 @@ static void parse_job_main_loop( process_t *p,
 						  Display help for count
 						*/
 						p->type = INTERNAL_BUILTIN;
-						wcscpy( p->actual_cmd, L"count" );
+						p->actual_cmd = L"count";
 					}
 
 
@@ -1465,7 +1420,7 @@ static void parse_job_main_loop( process_t *p,
 							unmatched_wildcard = 1;
 							if( !unmatched )
 							{
-								unmatched = halloc_wcsdup( j, tok_last( tok ));
+								unmatched = halloc_register( j, wcsdup( tok_last( tok )));
 								unmatched_pos = tok_get_pos( tok );
 							}
 
@@ -1532,9 +1487,7 @@ static void parse_job_main_loop( process_t *p,
 				{
 					case TOK_STRING:
 					{
-						wchar_t *tmp = expand_one( wcsdup( tok_last( tok ) ), 0);
-						target = halloc_wcsdup( j, tmp );
-						free( tmp );
+						target = (wchar_t *)halloc_register( j, expand_one( wcsdup( tok_last( tok ) ), 0));
 
 						if( target == 0 && error_code == 0 )
 						{
@@ -1955,13 +1908,12 @@ static int parse_job( process_t *p,
 			*/
 			if( current_block->skip )
 			{
-				p->actual_cmd = wcsdup(L"");
+				p->actual_cmd = L"";
 			}
 			else
 			{
-
-				p->actual_cmd = get_filename( (wchar_t *)al_get( &args, 0 ) );
-
+				p->actual_cmd = halloc_register(j, get_filename( (wchar_t *)al_get( &args, 0 ) ));
+				
 				/*
 				  Check if the specified command exists
 				*/
@@ -2236,13 +2188,11 @@ static void eval_job( tokenizer *tok )
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );
 
-					j->command = halloc_wcsndup( j,
-												 tok_string(tok)+start_pos,
-												 stop_pos-start_pos );
+					j->command = halloc_register( j, wcsndup( tok_string(tok)+start_pos,
+														   stop_pos-start_pos ));
 				}
 				else
-					j->command = halloc_wcsdup( j,
-												L"" );
+					j->command = L"";
 
 				if( profile )
 				{

@@ -109,28 +109,6 @@ void proc_init()
 	sb_init( &event_status );
 }
 
-
-/**
-   Recursively free a process and those following it
-*/
-static void free_process( process_t *p )
-{
-	wchar_t **arg;
-	
-	if( p==0 )
-		return;
-
-	free_process( p->next );
-	free( p->actual_cmd );
-	if( p->argv != 0 )
-	{
-		for( arg=p->argv; *arg; arg++ )
-		{
-			free( *arg );
-		}		
-	}
-}
-
 /**
    Remove job from list of jobs 
 */
@@ -164,15 +142,7 @@ static int job_remove( job_t *j )
 */
 void job_free( job_t * j )
 {
-	io_data_t *io, *ionext;
-	
-//	fwprintf( stderr, L"Remove job %d (%ls)\n", j->job_id, j->command );	
-
 	job_remove( j );
-	
-	/* Then free ourselves */
-	free_process( j->first_process);
-	
 	halloc_free( j );
 }
 

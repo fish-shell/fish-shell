@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(fish,1.20.1,fish-users@lists.sf.net)
+AC_INIT(fish,1.20.2,fish-users@lists.sf.net)
 
 for i in /usr/pkg /sw /opt /opt/local; do
 

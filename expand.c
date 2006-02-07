@@ -317,8 +317,8 @@ static int match_pid( const wchar_t *cmd,
 		return 0;
 
 	/*
-	   Test if the commandline is a path to the command, if so we try
-	   to match against only the command part
+	  Test if the commandline is a path to the command, if so we try
+	  to match against only the command part
 	*/
 	wchar_t *first_token = tok_first( cmd );
 	if( first_token == 0 )
@@ -329,8 +329,8 @@ static int match_pid( const wchar_t *cmd,
 	wchar_t *p;
 
 	/*
-	   This should be done by basename(), if it wasn't for the fact
-	   that is does not accept wide strings
+	  This should be done by basename(), if it wasn't for the fact
+	  that is does not accept wide strings
 	*/
 	for( p=first_token; *p; p++ )
 	{
@@ -491,9 +491,9 @@ static int find_process( const wchar_t *proc,
 				if( flags & ACCEPT_INCOMPLETE )
 				{
 					wchar_t *res = wcsdupcat2( p->actual_cmd + wcslen(proc),
-											  COMPLETE_SEP_STR,
-											  COMPLETE_CHILD_PROCESS_DESC,
-											  (void *)0);
+											   COMPLETE_SEP_STR,
+											   COMPLETE_CHILD_PROCESS_DESC,
+											   (void *)0);
 					al_push( out, res );
 				}
 				else
@@ -603,7 +603,7 @@ static int find_process( const wchar_t *proc,
 				if( flags & ACCEPT_INCOMPLETE )
 				{
 					wchar_t *res = wcsdupcat2( cmd + wcslen(proc),
-											  COMPLETE_SEP_STR,
+											   COMPLETE_SEP_STR,
 											   COMPLETE_PROCESS_DESC,
 											   (void *)0);
 					if( res )
@@ -713,6 +713,17 @@ static int expand_pid( wchar_t *in,
 
 /**
    Expand all environment variables in the string *ptr.
+
+   This function is slow, fragile and complicated. There are lots of
+   little corner cases, like $$foo should do a double expansion,
+   $foo$bar should not double expand bar, etc. Also, it's easy to
+   accidentally leak memory on array out of bounds errors an various
+   other situations. All in all, this function should be rewritten,
+   split out into multiple logical units and carefully tested. After
+   that, it can probably be optimized to do fewer memory allocations,
+   fewer string scans and overall just less work. But until that
+   happens, don't edit it unless you know exactly what you are doing,
+   and do proper testing afterwards.
 */
 static int expand_variables( wchar_t *in, array_list_t *out )
 {
@@ -885,73 +896,74 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 					free( var_val );
 				}
 
-				if( is_single )
+				if( is_ok )
 				{
-					string_buffer_t res;
-					sb_init( &res );
-
-					in[i]=0;
-
-					sb_append( &res, in );
-					sb_append_char( &res, INTERNAL_SEPARATOR );
-
-					for( j=0; j<al_get_count( &l); j++ )
+					
+					if( is_single )
 					{
-						wchar_t *next = (wchar_t *)al_get( &l, j );
+						string_buffer_t res;
+						sb_init( &res );
 
-						if( is_ok )
+						in[i]=0;
+
+						sb_append( &res, in );
+						sb_append_char( &res, INTERNAL_SEPARATOR );
+
+						for( j=0; j<al_get_count( &l); j++ )
 						{
-							if( j != 0 )
-								sb_append( &res, L" " );
-							sb_append( &res, next );
-						}
-						free( next );
-					}
-					sb_append( &res, &in[stop_pos] );
-					is_ok &= expand_variables( wcsdup((wchar_t *)res.buff), out );
-
-					sb_destroy( &res );
-
-				}
-				else
-				{
-					for( j=0; j<al_get_count( &l); j++ )
-					{
-						wchar_t *next = (wchar_t *)al_get( &l, j );
-
-						if( is_ok )
-						{
-
-							new_len = wcslen(in) - (stop_pos-start_pos+1) + wcslen( next) +2;
-
-							if( !(new_in = malloc( sizeof(wchar_t)*new_len )))
+							wchar_t *next = (wchar_t *)al_get( &l, j );
+							
+							if( is_ok )
 							{
-								die_mem();
+								if( j != 0 )
+									sb_append( &res, L" " );
+								sb_append( &res, next );
 							}
-							else
+							free( next );
+						}
+						sb_append( &res, &in[stop_pos] );
+						is_ok &= expand_variables( (wchar_t *)res.buff, out );
+					}
+					else
+					{
+						for( j=0; j<al_get_count( &l); j++ )
+						{
+							wchar_t *next = (wchar_t *)al_get( &l, j );
+
+							if( is_ok )
 							{
 
-								wcsncpy( new_in, in, start_pos-1 );
+								new_len = wcslen(in) - (stop_pos-start_pos+1) + wcslen( next) +2;
 
-								if(start_pos>1 && new_in[start_pos-2]!=VARIABLE_EXPAND)
+								if( !(new_in = malloc( sizeof(wchar_t)*new_len )))
 								{
-									new_in[start_pos-1]=INTERNAL_SEPARATOR;
-									new_in[start_pos]=L'\0';
+									die_mem();
 								}
 								else
-									new_in[start_pos-1]=L'\0';
+								{
 
-								wcscat( new_in, next );
-								wcscat( new_in, &in[stop_pos] );
+									wcsncpy( new_in, in, start_pos-1 );
+
+									if(start_pos>1 && new_in[start_pos-2]!=VARIABLE_EXPAND)
+									{
+										new_in[start_pos-1]=INTERNAL_SEPARATOR;
+										new_in[start_pos]=L'\0';
+									}
+									else
+										new_in[start_pos-1]=L'\0';
+
+									wcscat( new_in, next );
+									wcscat( new_in, &in[stop_pos] );
 
 //								fwprintf( stderr, L"New value %ls\n", new_in );
-								is_ok &= expand_variables( new_in, out );
+									is_ok &= expand_variables( new_in, out );
+								}
 							}
+							free( next );
 						}
-						free( next );
 					}
 				}
-
+				
 				al_destroy( &l );
 				al_destroy( &idx );
 				free(in);

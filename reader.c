@@ -875,10 +875,9 @@ void reader_destroy()
 
 void reader_exit( int do_exit )
 {
-	if( is_interactive )
+	if( data )
 		data->end_loop=do_exit;
-	else
-		end_loop=do_exit;
+	end_loop=do_exit;
 }
 
 void repaint()
@@ -2978,8 +2977,10 @@ int reader_read( int fd )
 	  If the exit command was called in a script, only exit the
 	  script, not the program
 	*/
+	if( data )
+		data->end_loop = 0;
 	end_loop = 0;
-
+	
 	is_interactive = shell_was_interactive;
 	signal_set_handlers();
 	return res;

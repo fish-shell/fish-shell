@@ -605,7 +605,7 @@ wchar_t *parser_cdpath_get( wchar_t *dir )
 		return 0;
 
 
-	if( dir[0] == L'/' )
+	if( dir[0] == L'/'|| (wcsncmp( dir, L"./", 2 )==0) )
 	{
 		struct stat buf;
 		if( wstat( dir, &buf ) == 0 )

@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <pwd.h>
 #include <signal.h>
+#include <wchar.h>
 
 #include "config.h"
 #include "util.h"
@@ -1073,6 +1074,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	al_init( &list );
 	hash_init( &lookup, &hash_wcs_func, &hash_wcs_cmp );
 
+
 	/*
 	  First locate a list of possible descriptions using a single
 	  call to apropos or a direct search if we know the location
@@ -1081,6 +1083,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	  since apropos is only called once.
 	*/
 	exec_subshell( lookup_cmd, &list );
+	
 	/*
 	  Then discard anything that is not a possible completion and put
 	  the result into a hashtable with the completion as key and the
@@ -1110,6 +1113,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 		  things.
 		*/
 		val_begin[0]=towupper(val_begin[0]);
+		
 		hash_put( &lookup, key, val_begin );
 	}
 
@@ -1139,6 +1143,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 										  COMPLETE_SEP_STR,
 										  new_desc,
 										  0 );
+
 			al_set( comp, i, new_el );
 			free( el );
 		}
@@ -1260,6 +1265,10 @@ static void complete_cmd( const wchar_t *cmd,
 	/*
 	  Tab complete implicit cd for directories in CDPATH
 	*/
+
+	if( cmd[0] != L'/' && ( wcsncmp( cmd, L"./", 2 )!=0) )
+	{
+		
 	for( nxt_path = wcstok( cdpath_cpy, ARRAY_SEP_STR, &state );
 		 nxt_path != 0;
 		 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
@@ -1303,7 +1312,8 @@ static void complete_cmd( const wchar_t *cmd,
 		}
 
 		al_destroy( &tmp );
-
+	}
+	
 	}
 
 	free( cdpath_cpy );

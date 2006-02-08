@@ -20,6 +20,7 @@
 #include "reader.h"
 #include "parse_util.h"
 #include "env.h"
+#include "expand.h"
 
 
 /**

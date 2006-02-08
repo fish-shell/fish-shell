@@ -67,6 +67,8 @@ fi
 %config %_sysconfdir/fish.d/fish_*.fish
 %dir %_sysconfdir/fish.d/completions
 %config %_sysconfdir/fish.d/completions/*.fish
+%dir %_sysconfdir/fish.d/functions
+%config %_sysconfdir/fish.d/functions/*.fish
 %_datadir/locale/*/LC_MESSAGES/fish.mo
 
 %changelog

@@ -220,6 +220,7 @@ int main( int argc, char **argv )
 	builtin_init();
 	function_init();
 	env_init();
+	parse_util_init();
 	complete_init();
 	reader_init();
 	
@@ -303,6 +304,7 @@ int main( int argc, char **argv )
 	wutil_destroy();
 	common_destroy();
 	exec_destroy();	
+	parse_util_destroy();
 	event_destroy();
 	output_destroy();
 	translate_destroy();	

@@ -287,6 +287,7 @@ wchar_t *str2wcs( const char *in )
 			{
 				return out;
 			}
+		
 			default:
 			{
 				in_pos += res;

@@ -14,16 +14,6 @@ end
 
 set -g fish_complete_path @SYSCONFDIR@/fish.d/completions ~/.fish.d/completions
 
-# Knowing the location of the whatis database speeds up command
-# description lookup.
-
-for i in /var/cache/man/{whatis,windex} /usr{,/local}{,/share}/man/{whatis,windex}
-	if test -f $i
-		set -g __fish_whatis_path $i
-		break
-	end
-end
-
 #
 # Convenience functions
 #
@@ -31,55 +21,6 @@ end
 # and descriptions, while __fish_print_* only prints the completion,
 # without the description
 #
-
-#
-# Find files that complete $argv[1], has the suffix $argv[2], and
-# output them as completions with description $argv[3]
-#
-
-function __fish_complete_suffix -d "Complete using files"
-
-	set -- comp $argv[1]
-	set -- suff $argv[2]
-	set -- desc $argv[3]
-
-	set -- base (echo $comp |sed -e 's/\.[a-zA-Z0-9]*$//')
-	eval "set -- files $base*$suff"
-
-	if test $files[1]
-		printf "%s\t$desc\n" $files
-	end
-
-	#
-	# Also do directory completion, since there might be files
-	# with the correct suffix in a subdirectory
-	#
-
-	__fish_complete_directory $comp
-
-end
-
-#
-# Find directories that complete $argv[1], output them as completions
-# with description $argv[2] if defined, otherwise use 'Directory'
-#
-
-function __fish_complete_directory -d "Complete using directories"
-
-	set -- comp $argv[1]
-	set -- desc (_ Directory)
-
-	if test (count $argv) -gt 1
-		set desc $argv[2]
-	end
-
-	eval "set -- dirs "$comp"*/"
-
-	if test $dirs[1]
-		printf "%s\t$desc\n" $dirs
-	end
-
-end
 
 function __fish_complete_users -d "Print a list of local users, with the real user name as a description"
 	cat /etc/passwd | sed -e "s/^\([^:]*\):[^:]*:[^:]*:[^:]*:\([^:]*\):.*/\1\t\2/"
@@ -99,42 +40,6 @@ end
 
 function __fish_complete_command -d "Complete using all available commands"
 	printf "%s\n" (commandline -ct)(complete -C (commandline -ct))
-end
-
-function __fish_complete_subcommand  -d "Complete subcommand"
-	set -l res ""
-	set -l had_cmd 0
-	set -l cmd (commandline -cop) (commandline -ct)
-	set -l skip_next 1
-
-	for i in $cmd
-
-		if test "$skip_next" = 1
-			set skip_next 0
-			continue
-		end
-
-		if test "$had_cmd" = 1
-			set res "$res $i"
-		else
-
-			if contains -- $i $argv
-				set skip_next 1
-				continue
-			end
-
-			switch $i
-				case '-*'
-					 
-				case '*'
-					set had_cmd 1
-					set res $i
-			end
-		end
-	end
-	
-	printf "%s\n" (commandline -ct)(complete -C $res)
-
 end
 
 
@@ -166,59 +71,6 @@ function __fish_print_users -d "Print a list of local users"
 	cat /etc/passwd | cut -d : -f 1
 end
 
-
-function __fish_contains_opt -d "Checks if a specific option has been given in the current commandline"
-	set -l next_short 
-
-	set -l short_opt
-	set -l long_opt 
-
-	for i in $argv
-		if test $next_short 
-			set next_short 
-			set -- short_opt $short_opt $i
-		else
-			switch $i
-				case -s
-					set next_short 1
-				case '-*'
-					echo __fish_contains_opt: Unknown option $i
-					return 1
-
-				case '**'
-					set -- long_opt $long_opt $i
-			end
-		end
-	end
-
-	for i in $short_opt
-
-		if test -z $i
-			continue
-		end
-
-		if commandline -cpo | grep -- "^-"$i"\|^-[^-]*"$i >/dev/null
-			return 0
-		end
-		
-		if commandline -ct | grep -- "^-"$i"\|^-[^-]*"$i >/dev/null
-			return 0
-		end
-	end
-
-	for i in $long_opt
-		if test -z $i
-			continue
-		end
-
-		if contains -- --$i (commandline -cpo)
-			return 0
-		end
-	end
-
-	return 1
-end
-
 #
 # Completions for the shell and it's builtin commands and functions
 #
@@ -231,95 +83,11 @@ end
 
 
 
-function __fish_print_packages
-
-	# apt-cache is much, much faster than rpm, and can do this in real
-    # time. We use it if available.
-
-	switch (commandline -tc)
-		case '-**'
-			return
-	end
-
-	#Get the word 'Package' in the current language
-	set -l package (_ Package)
-
-	if which apt-cache >/dev/null ^/dev/null
-		# Apply the following filters to output of apt-cache:
-		# 1) Remove package names with parentesis in them, since these seem to not correspond to actual packages as reported by rpm
-		# 2) Remove package names that are .so files, since these seem to not correspond to actual packages as reported by rpm
-		# 3) Remove path information such as /usr/bin/, as rpm packages do not have paths
-
-		apt-cache --no-generate pkgnames (commandline -tc)|grep -v \( |grep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/\t'$package'/'
-		return
-	end
-
-	# Rpm is too slow for this job, so we set it up to do completions
-    # as a background job and cache the results.
-
-	if which rpm >/dev/null ^/dev/null
-
-		# If the cache is less than five minutes old, we do not recalculate it
-
-		set cache_file /tmp/.rpm-cache.$USER
-			if test -f $cache_file 
-			cat $cache_file
-			set age (echo (date +%s) - (stat -c '%Y' $cache_file) | bc)
-			set max_age 250
-			if test $age -lt $max_age
-				return
-			end
-		end
-
-		# Remove package version information from output and pipe into cache file
-		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/\t'$package'/' &
-	end
-
-	# This completes the package name from the portage tree. 
-	# True for installing new packages. Function for printing 
-	# installed on the system packages is in completions/emerge.fish
-	if which emerge >/dev/null ^/dev/null
-		emerge -s \^(commandline -tc) |grep "^*" |cut -d\  -f3 |cut -d/ -f2
-		return
-	end
-
-end
-
-
 function __fish_append -d "Internal completion function for appending string to the commandline"
 	set separator $argv[1]
 	set -e argv[1]
 	set str (commandline -tc| sed -ne "s/\(.*$separator\)[^$separator]*/\1/p"|sed -e "s/--.*=//")
 	printf "%s\n" "$str"$argv "$str"(printf "%s\n" $argv|sed -e "s/\(\t\|\$\)/,\1/") 
-end
-
-function __fish_gnu_complete -d "Wrapper for the complete builtin. Skips the long completions on non-GNU systems"
-	set is_gnu 0
-
-	# Check if we are using a gnu system
-	for i in (seq (count $argv))
-		switch  $argv[$i]
-			
-			case -g --is-gnu
-				set -e argv[$i]
-				set is_gnu 1
-				break
-		end
-	end
-
-	# Remove long option if not on a gnu system
-	if test $is_gnu = 0
-		for i in (seq (count $argv))
-			if test $argv[$i] = -l
-				set -e argv[$i]
-				set -e argv[$i]
-				break
-			end
-		end
-	end
-	
-	complete $argv
-
 end
 
 function __fish_is_first_token -d 'Test if no non-switch argument has been specified yet'

@@ -171,6 +171,8 @@ TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
 
 COMPLETIONS_DIR_FILES := $(wildcard init/completions/*.fish)
 
+FUNCTIONS_DIR_FILES := $(wildcard init/functions/*.fish)
+
 # Programs to build
 PROGRAMS:=fish set_color @XSEL@ @SEQ_FALLBACK@ mimedb count fish_pager fishd
 
@@ -262,7 +264,7 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Create a template translation object
-messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish seq
+messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish init/functions/*.fish seq
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ -kcomplete_desc *.c *.h -o messages.pot; \
 		if ! xgettext -j -k_ -LShell init/*.in init/*.fish init/completions/*.fish seq -o messages.pot; then \
@@ -346,12 +348,16 @@ install: all install-translations
 	done;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)/completions
+	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)/functions
 	$(INSTALL) -m 644 init/fish $(DESTDIR)$(sysconfdir)$(fishfile)
 	for i in $(INIT_DIR_INSTALL); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)$(fishdir); \
 	done;
 	for i in $(COMPLETIONS_DIR_FILES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)$(fishdir)/completions/; \
+	done;
+	for i in $(FUNCTIONS_DIR_FILES); do \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)$(fishdir)/functions/; \
 	done;
 	$(INSTALL) -m 644 init/fish_inputrc $(DESTDIR)$(sysconfdir)$(fishinputfile);
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
@@ -450,18 +456,20 @@ depend:
 #
 # Uses install instead of mkdir so build won't fail if the directory 
 # exists
-fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(INIT_DIR_FILES) $(TEST_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
+fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(INIT_DIR_FILES) $(TEST_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
 	rm -rf fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/doc_src
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/init
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/init/completions
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/init/functions
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/tests
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/po
 	cp -f $(DOC_SRC_DIR_FILES) fish-@PACKAGE_VERSION@/doc_src
 	cp -f $(MAIN_DIR_FILES) fish-@PACKAGE_VERSION@/
 	cp -f $(INIT_DIR_FILES) fish-@PACKAGE_VERSION@/init/
 	cp -f $(COMPLETIONS_DIR_FILES) fish-@PACKAGE_VERSION@/init/completions/
+	cp -f $(FUNCTIONS_DIR_FILES) fish-@PACKAGE_VERSION@/init/functions/
 	cp -f $(TESTS_DIR_FILES) fish-@PACKAGE_VERSION@/tests/
 	cp -f $(TRANSLATIONS_SRC) fish-@PACKAGE_VERSION@/po/
 	tar -c fish-@PACKAGE_VERSION@ >fish-@PACKAGE_VERSION@.tar

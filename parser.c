@@ -1856,7 +1856,7 @@ static int parse_job( process_t *p,
 			continue;
 		}
 
-		if( use_function)
+		if( use_function && !current_block->skip )
 		{
 			int nxt_forbidden;
 			wchar_t *forbid;

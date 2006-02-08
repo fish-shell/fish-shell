@@ -87,6 +87,8 @@ if test 1 = "@HAVE_GETTEXT@"
 	end
 end
 
+set -g fish_function_path $PWD/fish.d/functions
+
 #
 # Load additional initialization files
 #

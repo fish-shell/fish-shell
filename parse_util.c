@@ -13,6 +13,7 @@
 
 #include <wchar.h>
 
+#include <time.h>
 #include <assert.h>
 
 #include "util.h"
@@ -20,6 +21,14 @@
 #include "common.h"
 #include "tokenizer.h"
 #include "parse_util.h"
+#include "expand.h"
+#include "intern.h"
+#include "exec.h"
+
+/**
+   Set of files which have been autoloaded
+*/
+static hash_table_t *loaded=0;
 
 int parse_util_lineno( const wchar_t *str, int len )
 {
@@ -419,4 +428,151 @@ void parse_util_token_extent( const wchar_t *buff,
 }
 
 
+int parse_util_load( const wchar_t *cmd,
+					  const wchar_t *path_var,
+					  void (*on_load)(const wchar_t *cmd),
+					  int reload )
+{
+	array_list_t path_list;
+	int i;
+	string_buffer_t path;
+	time_t *tm;
+	int reloaded = 0;
+	
+	/*
+	  Do we know where to look
+	*/
+	
+	if( !path_var )
+		return 0;
+	
+	if( !loaded )
+	{
+		loaded = malloc( sizeof( hash_table_t ) );
+		if( !loaded )
+		{
+			die_mem();
+		}
+		hash_init( loaded, &hash_wcs_func, &hash_wcs_cmp );
+	}
+	
+
+	/*
+	  Get modification time of file
+	*/
+	tm = (time_t *)hash_get( loaded, cmd );
+
+	/*
+	  Did we just check this?
+	*/
+	if( tm )
+		if(tm[1]-time(0)<=1)
+			return 0;
+
+	/*
+	  Return if already loaded and we are skipping reloading
+	*/
+	if( !reload && tm )
+		return 0;
+	debug( 1, L"WOO %ls", cmd );
+
+	al_init( &path_list );
+
+	sb_init( &path );
+
+	expand_variable_array( path_var, &path_list );
+
+	/*
+	  Iterate over path searching for suitable completion files
+	*/
+	for( i=0; i<al_get_count( &path_list ); i++ )
+	{
+		struct stat buf;
+		wchar_t *next = (wchar_t *)al_get( &path_list, i );
+		sb_clear( &path );
+		sb_append2( &path, next, L"/", cmd, L".fish", (void *)0 );
+		if( (wstat( (wchar_t *)path.buff, &buf )== 0) &&
+			(waccess( (wchar_t *)path.buff, R_OK ) == 0) )
+		{
+			if( !tm || (*tm != buf.st_mtime ) )
+			{
+				wchar_t *esc = escape( (wchar_t *)path.buff, 1 );
+				wchar_t *src_cmd = wcsdupcat( L". ", esc );
+
+				if( !tm )
+				{
+					tm = malloc(sizeof(time_t)*2);
+					if( !tm )
+						die_mem();
+				}
+
+				tm[0] = buf.st_mtime;
+				tm[1] = time(0);
+				hash_put( loaded,
+						  intern( cmd ),
+						  tm );
+
+				free( esc );
+
+				on_load(cmd );
+				
+				/*
+				  Source the completion file for the specified completion
+				*/
+				exec_subshell( src_cmd, 0 );
+				free(src_cmd);
+				reloaded = 1;
+				break;
+			}
+		}
+	}
+
+	/*
+	  If no file was found we insert the current time. Later we only
+	  research if the current time is at least five seconds later.
+	  This way, the files won't be searched over and over again.
+	*/
+	if( !tm )
+	{
+		tm = malloc(sizeof(time_t)*2);
+		if( !tm )
+			die_mem();
+		
+		tm[0] = 0;
+		tm[1] = time(0);
+		hash_put( loaded, intern( cmd ), tm );
+	}
+
+	sb_destroy( &path );
+	al_foreach( &path_list, (void (*)(const void *))&free );
+
+	al_destroy( &path_list );
+
+	return reloaded;	
+}
+
+void parse_util_init()
+{
+}
+
+/**
+   Free hash value, but not hash key
+*/
+static void clear_hash_value( const void *key, const void *data )
+{
+	free( (void *)data );
+}
+
+
+void parse_util_destroy()
+{
+	if( loaded )
+	{
+		hash_foreach( loaded,
+					  &clear_hash_value );
+		hash_destroy( loaded );
+		free( loaded );
+		loaded = 0;
+	}
+}
 

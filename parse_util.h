@@ -49,5 +49,16 @@ void parse_util_token_extent( const wchar_t *buff,
 
 int parse_util_lineno( const wchar_t *str, int len );
 
+int parse_util_load( const wchar_t *cmd,
+					 const wchar_t *path_var,
+					 void (*on_load)(const wchar_t *cmd),
+					 int reload );
+
+void parse_util_init();
+
+
+void parse_util_destroy();
+
+
 
 #endif

@@ -216,11 +216,6 @@ static hash_table_t *suffix_hash=0;
 static hash_table_t *condition_cache=0;
 
 /**
-   Set of commands for which completions have already been loaded
-*/
-static hash_table_t *loaded_completions=0;
-
-/**
    String buffer used by complete_get_desc
 */
 static string_buffer_t *get_desc_buff=0;
@@ -326,15 +321,6 @@ static void clear_hash_entry( const void *key, const void *data )
 	free( (void *)data );
 }
 
-/**
-   Free hash value, but not hash key
-*/
-static void clear_hash_value( const void *key, const void *data )
-{
-	free( (void *)data );
-}
-
-
 void complete_destroy()
 {
 	complete_entry *i=first_entry, *prev;
@@ -353,15 +339,6 @@ void complete_destroy()
 		hash_destroy( suffix_hash );
 		free( suffix_hash );
 		suffix_hash=0;
-	}
-
-	if( loaded_completions )
-	{
-		hash_foreach( loaded_completions,
-					  &clear_hash_value );
-		hash_destroy( loaded_completions );
-		free( loaded_completions );
-		loaded_completions = 0;
 	}
 
 	if( get_desc_buff )
@@ -1464,117 +1441,15 @@ static int short_ok( wchar_t *arg,
 	return 1;
 }
 
-void complete_load( wchar_t *cmd,
-					int reload )
+static void complete_load_handler( const wchar_t *cmd )
 {
-	const wchar_t *path_var;
-	array_list_t path_list;
-	int i;
-	string_buffer_t path;
-	time_t *tm;
-
-	/*
-	  First check that the specified completion hasn't already been loaded
-	*/
-	if( !loaded_completions )
-	{
-		loaded_completions = malloc( sizeof( hash_table_t ) );
-		if( !loaded_completions )
-		{
-			die_mem();
-		}
-		hash_init( loaded_completions, &hash_wcs_func, &hash_wcs_cmp );
-	}
-
-	/*
-	  Get modification time of file
-	*/
-	tm = (time_t *)hash_get( loaded_completions, cmd );
-
-	/*
-	  Return if already loaded and we are skipping reloading
-	*/
-	if( !reload && tm )
-		return;
-
-	/*
-	  Do we know where to look for completions?
-	*/
-	path_var = env_get( L"fish_complete_path" );
-	if( !path_var )
-		return;
-
-	al_init( &path_list );
-
-	sb_init( &path );
-
-	expand_variable_array( path_var, &path_list );
-
-	/*
-	  Iterate over path searching for suitable completion files
-	*/
-	for( i=0; i<al_get_count( &path_list ); i++ )
-	{
-		struct stat buf;
-		wchar_t *next = (wchar_t *)al_get( &path_list, i );
-		sb_clear( &path );
-		sb_append2( &path, next, L"/", cmd, L".fish", (void *)0 );
-		if( (wstat( (wchar_t *)path.buff, &buf )== 0) &&
-			(waccess( (wchar_t *)path.buff, R_OK ) == 0) )
-		{
-			if( !tm || (*tm != buf.st_mtime ) )
-			{
-				wchar_t *esc = escape( (wchar_t *)path.buff, 1 );
-				wchar_t *src_cmd = wcsdupcat( L". ", esc );
-
-				if( !tm )
-				{
-					tm = malloc(sizeof(time_t));
-					if( !tm )
-						die_mem();
-				}
-
-				*tm = buf.st_mtime;
-				hash_put( loaded_completions,
-						  intern( cmd ),
-						  tm );
-
-				free( esc );
-
-				complete_remove( cmd, COMMAND, 0, 0 );
-
-				/*
-				  Source the completion file for the specified completion
-				*/
-				exec_subshell( src_cmd, 0 );
-				free(src_cmd);
-
-				break;
-			}
-		}
-	}
-
-	/*
-	  If no file was found we insert a last modified time of Jan 1, 1970.
-	  This way, the completions_path wont be searched over and over again
-	  when reload is set to 0.
-	*/
-	if( !tm )
-	{
-		tm = malloc(sizeof(time_t));
-		if( !tm )
-			die_mem();
-
-		*tm = 0;
-		hash_put( loaded_completions, intern( cmd ), tm );
-	}
-
-	sb_destroy( &path );
-	al_foreach( &path_list, (void (*)(const void *))&free );
-
-	al_destroy( &path_list );
+	complete_remove( cmd, COMMAND, 0, 0 );
 }
 
+void complete_load( const wchar_t *name, int reload )
+{
+	parse_util_load( name, 	env_get( L"fish_complete_path" ), &complete_load_handler, reload );	
+}
 
 /**
    Find completion for the argument str of command cmd_orig with

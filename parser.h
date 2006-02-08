@@ -257,7 +257,7 @@ int parser_is_subcommand( const wchar_t *cmd );
    \param word The command name to test
    \return 1 of the command parameter is a command, 0 otherwise
 */
-int parser_is_reserved( wchar_t *word );
+int parser_is_reserved( const wchar_t *word );
 
 /**
    Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.

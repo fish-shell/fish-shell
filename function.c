@@ -45,7 +45,10 @@ typedef struct
 static hash_table_t function;
 static int is_autoload = 0;
 
-
+/**
+   Make sure that if the specified function is a dynamically loaded
+   function, it has been fully loaded.
+*/
 static int load( const wchar_t *name )
 {
 	int was_autoload = is_autoload;
@@ -64,8 +67,50 @@ static int load( const wchar_t *name )
 	return res;
 }
 
-static void load_all()
-{	
+/**
+   Insert a list of all dynamically loaded functions into the
+   specified list.
+*/
+static void autoload_names( array_list_t *out, int get_hidden )
+{
+	int i;
+	
+	array_list_t path_list;
+	const wchar_t *path_var = env_get( L"fish_function_path" );
+	
+	if( ! path_var )
+		return;
+	
+	al_init( &path_list );
+
+	expand_variable_array( path_var, &path_list );
+	for( i=0; i<al_get_count( &path_list ); i++ )
+	{
+		wchar_t *ndir = (wchar_t *)al_get( &path_list, i );
+		DIR *dir = wopendir( ndir );
+		struct wdirent *next;
+		while( (next=wreaddir(dir))!=0 )
+		{
+			wchar_t *fn = next->d_name;
+			wchar_t *suffix;
+			if( !get_hidden && fn[0] == L'_' )
+				continue;
+			
+			suffix = wcsrchr( fn, L'.' );
+			if( suffix && (wcscmp( suffix, L".fish" ) == 0 ) )
+			{
+				wchar_t *dup;
+				*suffix = 0;
+				dup = wcsdup( fn );
+				if( !dup )
+					die_mem();
+				al_push( out, dup );
+			}
+		}				
+		closedir(dir);
+	}
+	al_foreach( &path_list, (void (*)(const void *))&free );
+	al_destroy( &path_list );
 }
 
 
@@ -133,7 +178,6 @@ void function_add( const wchar_t *name,
 
 int function_exists( const wchar_t *cmd )
 {
-	function_data_t *data;
 	if( parser_is_reserved(cmd) )
 		return 0;
 	
@@ -210,7 +254,7 @@ static void get_names_internal( const void *key,
 
 void function_get_names( array_list_t *list, int get_hidden )
 {
-	load_all();
+	autoload_names( list, get_hidden );
 	
 	if( get_hidden )
 		hash_get_keys( &function, list );
@@ -241,6 +285,4 @@ int function_get_definition_offset( const wchar_t *argv )
 	
 	return data->definition_offset;
 }
-
-
 

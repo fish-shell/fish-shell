@@ -39,15 +39,19 @@
    the \c wutil_wcs2str() function.
 */
 static char *tmp=0;
+static wchar_t *tmp2=0;
 /**
    Length of the \c tmp buffer.
 */
 static size_t tmp_len=0;
+static size_t tmp2_len=0;
 
 /**
    Counts the number of calls to the wutil wrapper functions
 */
 static int wutil_calls = 0;
+
+static struct wdirent my_wdirent;
 
 void wutil_init()
 {
@@ -56,6 +60,7 @@ void wutil_init()
 void wutil_destroy()
 {
 	free( tmp );
+	free( tmp2 );
 	tmp=0;
 	tmp_len=0;
 	debug( 3, L"wutil functions called %d times", wutil_calls );
@@ -68,14 +73,9 @@ void wutil_destroy()
 */
 static char *wutil_wcs2str( const wchar_t *in )
 {
-	size_t res=0;
-	int in_pos=0;
-	int out_pos = 0;
-	mbstate_t state;
 	size_t new_sz;
-
+	
 	wutil_calls++;
-	memset( &state, 0, sizeof(state) );
 	
 	new_sz =MAX_UTF8_BYTES*wcslen(in)+1;
 	if( tmp_len < new_sz )
@@ -88,39 +88,50 @@ static char *wutil_wcs2str( const wchar_t *in )
 		}
 		tmp_len = new_sz;
 	}
-	
-	while( in[in_pos] )
-	{
-		if( ( in[in_pos] >= ENCODE_DIRECT_BASE) &&
-			( in[in_pos] < ENCODE_DIRECT_BASE+256) )
-		{
-			tmp[out_pos++] = in[in_pos]- ENCODE_DIRECT_BASE;
-		}
-		else
-		{
-			res = wcrtomb( &tmp[out_pos], in[in_pos], &state );
-			
-			switch( res )
-			{
-				case (size_t)(-1):
-					{
-						debug( 1, L"Wide character has no narrow representation" );
-						memset( &state, 0, sizeof(state) );
-						break;
-					}
-				default:
-				{
-					out_pos += res;
-					break;
-				}
-			}
-		}
-		in_pos++;
-	}
-	tmp[out_pos] = 0;
-	
-	return tmp;	
+
+	return wcs2str_internal( in, tmp );
 }
+
+
+/**
+   Convert the specified wide character string to a narrow character
+   string. This function uses an internal temporary buffer for storing
+   the result so subsequent results will overwrite previous results.
+*/
+static wchar_t *wutil_str2wcs( const char *in )
+{
+	size_t new_sz;
+	
+	wutil_calls++;
+	
+	new_sz = sizeof(wchar_t)*(strlen(in)+1);
+	if( tmp2_len < new_sz )
+	{
+		new_sz = maxi( new_sz, TMP_LEN_MIN );
+		tmp2 = realloc( tmp2, new_sz );
+		if( !tmp2 )
+		{
+			die_mem();
+		}
+		tmp2_len = new_sz;
+	}
+
+	return str2wcs_internal( in, tmp2 );
+}
+
+
+
+struct wdirent *wreaddir(DIR *dir )
+{
+	struct dirent *d = readdir( dir );
+	if( !d )
+		return 0;
+
+	my_wdirent.d_name = wutil_str2wcs( d->d_name );
+	return &my_wdirent;
+	
+}
+
 
 wchar_t *wgetcwd( wchar_t *buff, size_t sz )
 {

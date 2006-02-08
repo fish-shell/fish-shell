@@ -114,12 +114,15 @@ void sort_list( array_list_t *comp );
    specified multibyte character string
 */
 wchar_t *str2wcs( const char *in );
+wchar_t *str2wcs_internal( const char *in, wchar_t *out );
 
 /**
    Returns a newly allocated multibyte character string equivalent of
    the specified wide character string
 */
 char *wcs2str( const wchar_t *in );
+
+char *wcs2str_internal( const wchar_t *in, char *out );
 
 /**
    Returns a newly allocated wide character string array equivalent of

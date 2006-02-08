@@ -363,7 +363,7 @@ int wildcard_expand( const wchar_t *wc,
 	wchar_t *wc_end;
 
 	/* Variables for traversing a directory */
-	struct dirent *next;
+	struct wdirent *next;
 	DIR *dir;
 	
 	/* The result returned */
@@ -454,15 +454,11 @@ int wildcard_expand( const wchar_t *wc,
 			*/
 			if( flags & ACCEPT_INCOMPLETE )
 			{
-				while( (next=readdir(dir))!=0 )
+				while( (next=wreaddir(dir))!=0 )
 				{
-					if( next->d_name[0] != '.' )
+					if( next->d_name[0] != L'.' )
 					{
-						wchar_t *name = str2wcs(next->d_name);
-						if( name == 0 )
-						{
-							continue;
-						}
+						wchar_t *name = next->d_name;
 						wchar_t *long_name = make_path( base_dir, name );
 						
 						if( test_flags( long_name, flags ) )
@@ -474,8 +470,6 @@ int wildcard_expand( const wchar_t *wc,
 									 wcsdupcat(name, (wchar_t *)sb_desc.buff) );
 						}
 						
-						free(name);
-
 						free( long_name );
 					}					
 				}
@@ -491,13 +485,9 @@ int wildcard_expand( const wchar_t *wc,
 			/*
 			  This is the last wildcard segment, and it is not empty. Match files/directories.
 			*/
-			while( (next=readdir(dir))!=0 )
+			while( (next=wreaddir(dir))!=0 )
 			{
-				wchar_t *name = str2wcs(next->d_name);
-				if( name == 0 )
-				{
-					continue;
-				}
+				wchar_t *name = next->d_name;
 				
 				if( flags & ACCEPT_INCOMPLETE )
 				{
@@ -540,7 +530,6 @@ int wildcard_expand( const wchar_t *wc,
 						res = 1;
 					}
 				}
-				free( name );
 			}
 		}
 	}
@@ -595,14 +584,10 @@ int wildcard_expand( const wchar_t *wc,
 
 		wcscpy( new_dir, base_dir );
 		
-		while( (next=readdir(dir))!=0 )
+		while( (next=wreaddir(dir))!=0 )
 		{
-			wchar_t *name = str2wcs(next->d_name);
-			if( name == 0 )
-			{
-				continue;
-			}			
-
+			wchar_t *name = next->d_name;
+			
 			/*
 			  Test if the file/directory name matches the whole
 			  wildcard element, i.e. regular matching.
@@ -673,7 +658,6 @@ int wildcard_expand( const wchar_t *wc,
 					}
 				}
 			}
-			free(name);
 		}
 		
 		free( wc_str );

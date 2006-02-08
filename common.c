@@ -254,13 +254,21 @@ void sort_list( array_list_t *comp )
 wchar_t *str2wcs( const char *in )
 {
 	wchar_t *out;
+	size_t len = strlen(in);
+	
+	out = malloc( sizeof(wchar_t)*(len+1) );
+	return str2wcs_internal( in, out );
+	
+}
+
+wchar_t *str2wcs_internal( const char *in, wchar_t *out )
+{
 	size_t res=0;
 	int in_pos=0;
 	int out_pos = 0;
-	size_t len = strlen(in);
 	mbstate_t state;
+	size_t len = strlen(in);
 	
-	out = malloc( sizeof(wchar_t)*(len+1) );
 	memset( &state, 0, sizeof(state) );
 	
 	if( !out )
@@ -309,19 +317,25 @@ void error_reset()
 char *wcs2str( const wchar_t *in )
 {
 	char *out;	
-	size_t res=0;
-	int in_pos=0;
-	int out_pos = 0;
-	mbstate_t state;
 	
 	out = malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
-	memset( &state, 0, sizeof(state) );
 
 	if( !out )
 	{
 		die_mem();
 	}
 
+	return wcs2str_internal( in, out );
+}
+
+char *wcs2str_internal( const wchar_t *in, char *out )
+{
+	size_t res=0;
+	int in_pos=0;
+	int out_pos = 0;
+	mbstate_t state;
+	memset( &state, 0, sizeof(state) );
+	
 	while( in[in_pos] )
 	{
 		if( ( in[in_pos] >= ENCODE_DIRECT_BASE) &&

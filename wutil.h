@@ -16,6 +16,13 @@
 #include <sys/types.h>
 #include <stdarg.h>
 
+struct wdirent
+{
+	wchar_t *d_name;
+}
+	;
+
+
 /**
    Call this function on startup to create internal wutil
    resources. This function doesn't do anything.
@@ -90,6 +97,8 @@ int wchdir( const wchar_t * dir );
 	malloc, and must be free'd by the user.
 */
 wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path);
+
+struct wdirent *wreaddir(DIR *dir );
 
 /*
   Here follows the prototypes for fallback implementations of various

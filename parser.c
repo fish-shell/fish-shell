@@ -2052,14 +2052,9 @@ static int parse_job( process_t *p,
 
 	if( error_code )
 	{
-		/*
-		  We don't know what the state of the args array and the argv
-		  vector is on error, so we do an internal cleanup here.
-		*/
-		al_foreach( &args,
-					(void (*)(const void *))&free );
-		free(p->argv);
-		p->argv=0;
+		if( !p->argv )
+			al_foreach( &args,
+						(void (*)(const void *))&free );
 		/*
 		  Make sure the block stack is consistent
 		*/

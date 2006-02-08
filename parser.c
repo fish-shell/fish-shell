@@ -1169,7 +1169,7 @@ wchar_t *parser_current_line()
 	/*
 	  Calculate line number, line offset, etc.
 	*/
-	for( i=0; i<current_tokenizer_pos; i++ )
+	for( i=0; i<current_tokenizer_pos && whole_str[i]; i++ )
 	{
 		if( whole_str[i] == L'\n' )
 		{
@@ -1640,6 +1640,7 @@ static int parse_job( process_t *p,
 	int is_new_block=0;     // Does this command create a new block?
 
 	block_t *prev_block = current_block;
+	int prev_tokenizer_pos = current_tokenizer_pos;	
 
 	al_init( &args );
 
@@ -1663,6 +1664,7 @@ static int parse_job( process_t *p,
 						   tok_last( tok ) );
 
 					al_destroy( &args );
+					current_tokenizer_pos = prev_tokenizer_pos;	
 					return 0;
 				}
 				break;
@@ -1676,6 +1678,7 @@ static int parse_job( process_t *p,
 					   tok_last(tok) );
 
 				al_destroy( &args );
+				current_tokenizer_pos = prev_tokenizer_pos;	
 				return 0;
 			}
 
@@ -1698,6 +1701,7 @@ static int parse_job( process_t *p,
 				}
 
 				al_destroy( &args );
+				current_tokenizer_pos = prev_tokenizer_pos;	
 				return 0;
 			}
 
@@ -1709,6 +1713,7 @@ static int parse_job( process_t *p,
 					   tok_get_desc( tok_last_type(tok) ) );
 
 				al_destroy( &args );
+				current_tokenizer_pos = prev_tokenizer_pos;	
 				return 0;
 			}
 		}
@@ -1795,6 +1800,7 @@ static int parse_job( process_t *p,
 					   EXEC_ERR_MSG );
 				al_destroy( &args );
 				free(nxt);
+				current_tokenizer_pos = prev_tokenizer_pos;	
 				return 0;
 			}
 
@@ -1809,6 +1815,7 @@ static int parse_job( process_t *p,
 				use_builtin=0;
 				p->type=INTERNAL_EXEC;
 				free( nxt );
+				current_tokenizer_pos = prev_tokenizer_pos;	
 				continue;
 			}
 		}
@@ -1972,6 +1979,7 @@ static int parse_job( process_t *p,
 
 	if( is_new_block )
 	{
+		
 		const wchar_t *end=parser_find_end( tok_string( tok ) +
 											current_tokenizer_pos );
 		tokenizer subtok;
@@ -2065,7 +2073,7 @@ static int parse_job( process_t *p,
 
 	}
 	al_destroy( &args );
-
+	current_tokenizer_pos = prev_tokenizer_pos;	
 	return !error_code;
 }
 

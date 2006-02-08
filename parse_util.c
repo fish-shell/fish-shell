@@ -28,7 +28,7 @@
 /**
    Set of files which have been autoloaded
 */
-static hash_table_t *loaded=0;
+static hash_table_t *all_loaded=0;
 
 int parse_util_lineno( const wchar_t *str, int len )
 {
@@ -438,6 +438,8 @@ int parse_util_load( const wchar_t *cmd,
 	string_buffer_t path;
 	time_t *tm;
 	int reloaded = 0;
+	hash_table_t *loaded;
+	
 	
 	/*
 	  Do we know where to look
@@ -445,6 +447,18 @@ int parse_util_load( const wchar_t *cmd,
 	
 	if( !path_var )
 		return 0;
+
+	if( !all_loaded )
+	{
+		all_loaded = malloc( sizeof( hash_table_t ) );
+		if( !all_loaded )
+		{
+			die_mem();
+		}
+		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
+	}
+	
+	loaded = hash_get( all_loaded, path_var );
 	
 	if( !loaded )
 	{
@@ -454,8 +468,8 @@ int parse_util_load( const wchar_t *cmd,
 			die_mem();
 		}
 		hash_init( loaded, &hash_wcs_func, &hash_wcs_cmp );
+		hash_put( all_loaded, wcsdup(path_var), loaded );
 	}
-	
 
 	/*
 	  Get modification time of file
@@ -514,7 +528,7 @@ int parse_util_load( const wchar_t *cmd,
 				free( esc );
 
 				on_load(cmd );
-				
+
 				/*
 				  Source the completion file for the specified completion
 				*/
@@ -562,16 +576,26 @@ static void clear_hash_value( const void *key, const void *data )
 	free( (void *)data );
 }
 
+static void clear_loaded_entry( const void *key, const void *data )
+{
+	hash_table_t *loaded = (hash_table_t *)data;
+	hash_foreach( loaded,
+				  &clear_hash_value );
+	hash_destroy( loaded );
+	free( loaded );	
+	free( (void *)key );
+}
 
 void parse_util_destroy()
 {
-	if( loaded )
+	if( all_loaded )
 	{
-		hash_foreach( loaded,
-					  &clear_hash_value );
-		hash_destroy( loaded );
-		free( loaded );
-		loaded = 0;
+		hash_foreach( all_loaded,
+					  &clear_loaded_entry );
+		
+		hash_destroy( all_loaded );
+		free( all_loaded );	
+		all_loaded = 0;
 	}
 }
 

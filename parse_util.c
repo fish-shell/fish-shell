@@ -474,7 +474,6 @@ int parse_util_load( const wchar_t *cmd,
 	*/
 	if( !reload && tm )
 		return 0;
-	debug( 1, L"WOO %ls", cmd );
 
 	al_init( &path_list );
 

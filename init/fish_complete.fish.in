@@ -43,7 +43,6 @@ function __fish_complete_command -d "Complete using all available commands"
 end
 
 
-
 function __fish_print_hostnames -d "Print a list of known hostnames"
 
 	# Print all hosts from /etc/hosts

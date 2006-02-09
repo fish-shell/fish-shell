@@ -60,6 +60,7 @@
 #include "signal.h"
 #include "translate.h"
 #include "halloc.h"
+#include "halloc_util.h"
 
 /**
    The default prompt for the read command
@@ -496,7 +497,7 @@ static int builtin_builtin(  wchar_t **argv )
 
 		al_init( &names );
 		builtin_get_names( &names );
-		names_arr = list_to_char_arr( 0, &names );
+		names_arr = list_to_char_arr( &names );
 		qsort( names_arr,
 			   al_get_count( &names ),
 			   sizeof(wchar_t *),
@@ -511,7 +512,7 @@ static int builtin_builtin(  wchar_t **argv )
 						L"\n",
 						(void *)0 );
 		}
-		halloc_free( names_arr );
+		free( names_arr );
 		al_destroy( &names );
 	}
 	return 0;
@@ -813,7 +814,7 @@ static int builtin_functions( wchar_t **argv )
 
 		al_init( &names );
 		function_get_names( &names, show_hidden );
-		names_arr = list_to_char_arr( 0, &names );
+		names_arr = list_to_char_arr( &names );
 		qsort( names_arr,
 			   al_get_count( &names ),
 			   sizeof(wchar_t *),
@@ -845,7 +846,7 @@ static int builtin_functions( wchar_t **argv )
 			}
 		}
 
-		halloc_free( names_arr );
+		free( names_arr );
 		al_destroy( &names );
 		return 0;
 	}
@@ -858,7 +859,7 @@ static int builtin_functions( wchar_t **argv )
 			sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );
 			al_init( &names );
 			function_get_names( &names, show_hidden );
-			names_arr = list_to_char_arr( 0, &names );
+			names_arr = list_to_char_arr( &names );
 			qsort( names_arr,
 				   al_get_count( &names ),
 				   sizeof(wchar_t *),
@@ -867,7 +868,7 @@ static int builtin_functions( wchar_t **argv )
 			{
 				functions_def( names_arr[i] );
 			}
-			halloc_free( names_arr );
+			free( names_arr );
 			al_destroy( &names );
 			break;
 		}
@@ -924,8 +925,7 @@ static int builtin_function( wchar_t **argv )
 	woptind=0;
 
 	parser_push_block( FUNCTION_DEF );
-	events=halloc( current_block, sizeof(array_list_t ) );
-	al_init( events );
+	events=al_halloc( current_block );
 
 	const static struct woption
 		long_options[] =
@@ -1160,8 +1160,6 @@ static int builtin_function( wchar_t **argv )
 		}
 	}
 
-	halloc_register( current_block, events->arr );
-
 	if( res )
 	{
 		int i;
@@ -1176,7 +1174,7 @@ static int builtin_function( wchar_t **argv )
 
 		al_init( &names );
 		function_get_names( &names, 0 );
-		names_arr = list_to_char_arr( 0, &names );
+		names_arr = list_to_char_arr( &names );
 		qsort( names_arr,
 			   al_get_count( &names ),
 			   sizeof(wchar_t *),
@@ -1194,7 +1192,7 @@ static int builtin_function( wchar_t **argv )
 			sb_append2( sb_err,
 						nxt, L"  ", (void *)0 );
 		}
-		halloc_free( names_arr );
+		free( names_arr );
 		al_destroy( &names );
 		sb_append( sb_err, L"\n" );
 
@@ -1207,7 +1205,7 @@ static int builtin_function( wchar_t **argv )
 		current_block->param2.function_description=desc?halloc_register( current_block, wcsdup(desc)):0;
 		current_block->param3.function_is_binding = is_binding;
 		current_block->param4.function_events = events;
-
+		
 		for( i=0; i<al_get_count( events ); i++ )
 		{
 			event_t *e = (event_t *)al_get( events, i );

@@ -88,7 +88,7 @@ extern wchar_t *program_name;
    is not noll, all elements of the \c array_list_t are also
    registered to \c context using \c halloc_register().
 */
-wchar_t **list_to_char_arr( void *context, array_list_t *l );
+wchar_t **list_to_char_arr( array_list_t *l );
 
 /**
    Read a line from the stream f into the buffer buff of length len. If
@@ -236,7 +236,12 @@ int writeb( tputs_arg_t b );
 void die_mem();
 
 /**
-  Clean up 
+  Create global_context using halloc
+*/
+void common_init();
+
+/**
+   Free global_context using halloc_free
 */
 void common_destroy();
 
@@ -281,16 +286,6 @@ wchar_t *escape( const wchar_t *in,
 */
 wchar_t *unescape( const wchar_t * in, 
 				   int escape_special );
-
-/**
-   Block SIGCHLD. Calls to block/unblock may be nested, and only once the nest count reaches zero wiull the block be removed.
-*/
-void block();
-
-/**
-   undo call to block().
-*/
-void unblock();
 
 /**
    Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 

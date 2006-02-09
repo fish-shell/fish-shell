@@ -21,6 +21,7 @@
 #include "event.h"
 #include "signal.h"
 #include "translate.h"
+#include "halloc_util.h"
 
 /**
    Number of signals that can be queued before an overflow occurs
@@ -194,10 +195,7 @@ const wchar_t *event_get_desc( event_t *e )
 {
 	if( !get_desc_buff )
 	{
-		get_desc_buff=malloc(sizeof(string_buffer_t) );
-		if( !get_desc_buff )
-			die_mem();
-		sb_init( get_desc_buff );
+		get_desc_buff=sb_halloc( global_context );
 	}
 	else
 	{
@@ -255,7 +253,7 @@ void event_add_handler( event_t *event )
 	e = event_copy( event, 0 );
 
 	if( !events )
-		events = al_new();	
+		events = al_new();
 
 	if( e->type == EVENT_SIGNAL )
 	{
@@ -644,13 +642,6 @@ void event_destroy()
 		free( killme );		
 		killme=0;		
 	}	
-
-	if( get_desc_buff )
-	{
-		sb_destroy( get_desc_buff );
-		free( get_desc_buff );
-	}
-	
 }
 
 void event_free( event_t *e )

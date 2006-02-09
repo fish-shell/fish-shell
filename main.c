@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "event.h"
 #include "output.h"
 #include "translate.h"
+#include "halloc_util.h"
 
 /**
    Parse init files
@@ -73,7 +74,7 @@ static int read_init()
 	}
 
 	env_set( L"__fish_help_dir", DOCDIR, 0);	
- 	
+	
 	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; . fish 2>/dev/null", 0, TOP );
 	eval( L"builtin cd 2>/dev/null;. .fish 2>/dev/null", 0, TOP );
 	
@@ -210,9 +211,10 @@ int main( int argc, char **argv )
 	is_interactive_session &= isatty(STDIN_FILENO);	
 	is_interactive_session |= force_interactive;
 
-	translate_init();	
+	common_init();
+	halloc_util_init();	
+
 	proc_init();	
-	output_init();	
 	event_init();	
 	exec_init();	
 	wutil_init();
@@ -220,7 +222,6 @@ int main( int argc, char **argv )
 	builtin_init();
 	function_init();
 	env_init();
-	parse_util_init();
 	complete_init();
 	reader_init();
 	
@@ -302,13 +303,11 @@ int main( int argc, char **argv )
 	reader_destroy();
 	parser_destroy();
 	wutil_destroy();
-	common_destroy();
 	exec_destroy();	
-	parse_util_destroy();
 	event_destroy();
-	output_destroy();
-	translate_destroy();	
 
+	common_destroy();
+	halloc_util_destroy();
 	intern_free_all();
 
 	return res;	

@@ -38,6 +38,7 @@
 #include "env_universal.h"
 #include "translate.h"
 #include "halloc.h"
+#include "halloc_util.h"
 
 /**
    Prototype for the getpgid library function. The prototype for this

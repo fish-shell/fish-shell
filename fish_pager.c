@@ -887,7 +887,7 @@ static void init()
 	*/
 	sb_init( &out_buff );
 
-	output_init();
+	halloc_util_init();
 	env_universal_init( 0, 0, 0, 0);
 	input_common_init( &interrupt_handler );
 	
@@ -914,6 +914,9 @@ static void init()
     pager_modes.c_cc[VMIN]=1;
     pager_modes.c_cc[VTIME]=0;
 
+	/*
+	  
+	*/
     if( tcsetattr(0,TCSANOW,&pager_modes))      /* set the new modes */
     {
         wperror(L"tcsetattr");
@@ -932,7 +935,7 @@ void destroy()
 {
 	env_universal_destroy();
 	input_common_destroy();
-	output_destroy();
+	halloc_util_destroy();
 	del_curterm( cur_term );
 	sb_destroy( &out_buff );
 	fclose( out_file );

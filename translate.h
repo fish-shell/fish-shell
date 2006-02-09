@@ -19,11 +19,3 @@ Translation library, internally uses catgets
 */
 const wchar_t *wgettext( const wchar_t *in );
 
-/**
-  Initialize (or reinitialize) the translation library
-*/
-void translate_init();
-/**
-   Free memory used by the translation library
-*/
-void translate_destroy();

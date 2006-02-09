@@ -6,19 +6,26 @@
 
 */
 
+#ifndef FISH_HALLOC_H
+#define FISH_HALLOC_H
+
 /**
-   Allocate new memory using specified parent memory context. If \c
-   context is null, a new root context is created. Context _must_ be
-   either 0 or the result of a previous call to halloc.
+   Allocate new memory using specified parent memory context. Context
+   _must_ be either 0 or the result of a previous call to halloc.
 
-   If \c context is null, the resulting block must be freed with a
-   call to halloc_free().
+   If \c context is null, the resulting block is a root context, and
+   must be freed with a call to halloc_free().
 
-   If \c context is not null, the resulting memory block must never be
-   explicitly freed, it will be automatically freed whenever the
-   parent context is freed.
+   If \c context is not null, the resulting memory block is a child
+   context, and must never be explicitly freed, it will be
+   automatically freed whenever the parent context is freed.
 */
 void *halloc( void *context, size_t size );
+
+/**
+   Make the specified function run whenever context is free'd, using data as argument.
+*/
+void halloc_register_function( void *context, void (*func)(void *), void *data );
 
 /**
    Free memory context and all children contexts. Only root contexts
@@ -26,10 +33,6 @@ void *halloc( void *context, size_t size );
 */
 void halloc_free( void *context );
 
-/**
-   Free the memory pointed to by \c data when the memory pointed to by
-   \c context is free:d. Note that this will _not_ turn the specified
-   memory area into a valid halloc context. Only memory areas created
-   using a call to halloc() can be used as a context.
-*/
-void *halloc_register( void *context, void *data );
+
+#endif
+

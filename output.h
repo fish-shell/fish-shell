@@ -116,14 +116,4 @@ int writespace( int c );
 */
 int output_color_code( const wchar_t *val );
 
-/**
-   Initialize static data
-*/
-void output_init();
-
-/**
-  Destroy static data
-*/
-void output_destroy();
-
 #endif

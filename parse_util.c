@@ -24,6 +24,7 @@
 #include "expand.h"
 #include "intern.h"
 #include "exec.h"
+#include "halloc_util.h"
 
 /**
    Set of files which have been autoloaded
@@ -427,6 +428,36 @@ void parse_util_token_extent( const wchar_t *buff,
 
 }
 
+/**
+   Free hash value, but not hash key
+*/
+static void clear_hash_value( const void *key, const void *data )
+{
+	free( (void *)data );
+}
+
+static void clear_loaded_entry( const void *key, const void *data )
+{
+	hash_table_t *loaded = (hash_table_t *)data;
+	hash_foreach( loaded,
+				  &clear_hash_value );
+	hash_destroy( loaded );
+	free( loaded );	
+	free( (void *)key );
+}
+
+static void parse_util_destroy()
+{
+	if( all_loaded )
+	{
+		hash_foreach( all_loaded,
+					  &clear_loaded_entry );
+		
+		hash_destroy( all_loaded );
+		free( all_loaded );	
+		all_loaded = 0;
+	}
+}
 
 int parse_util_load( const wchar_t *cmd,
 					  const wchar_t *path_var,
@@ -469,6 +500,7 @@ int parse_util_load( const wchar_t *cmd,
 		}
 		hash_init( loaded, &hash_wcs_func, &hash_wcs_cmp );
 		hash_put( all_loaded, wcsdup(path_var), loaded );
+ 		halloc_register_function_void( global_context, &parse_util_destroy );
 	}
 
 	/*
@@ -562,40 +594,5 @@ int parse_util_load( const wchar_t *cmd,
 	al_destroy( &path_list );
 
 	return reloaded;	
-}
-
-void parse_util_init()
-{
-}
-
-/**
-   Free hash value, but not hash key
-*/
-static void clear_hash_value( const void *key, const void *data )
-{
-	free( (void *)data );
-}
-
-static void clear_loaded_entry( const void *key, const void *data )
-{
-	hash_table_t *loaded = (hash_table_t *)data;
-	hash_foreach( loaded,
-				  &clear_hash_value );
-	hash_destroy( loaded );
-	free( loaded );	
-	free( (void *)key );
-}
-
-void parse_util_destroy()
-{
-	if( all_loaded )
-	{
-		hash_foreach( all_loaded,
-					  &clear_loaded_entry );
-		
-		hash_destroy( all_loaded );
-		free( all_loaded );	
-		all_loaded = 0;
-	}
 }
 

@@ -17,6 +17,7 @@ Translation library, internally uses catgets
 
 #include "common.h"
 #include "util.h"
+#include "halloc_util.h"
 
 #if HAVE_GETTEXT
 
@@ -45,6 +46,21 @@ static size_t wcs2str_buff_count=0;
 
 static int is_init = 0;
 
+static void internal_destroy()
+{
+	int i;
+
+	if( !is_init )
+		return;
+	
+	is_init = 0;
+	
+	for(i=0; i<BUFF_COUNT; i++ )
+		sb_destroy( &buff[i] );
+
+	free( wcs2str_buff );
+}
+
 static void internal_init()
 {
 	int i;
@@ -52,7 +68,10 @@ static void internal_init()
 	is_init = 1;
 	
 	for(i=0; i<BUFF_COUNT; i++ )
+	{
 		sb_init( &buff[i] );
+	}
+	halloc_register_function_void( global_context, &internal_destroy );
 	
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );
@@ -103,39 +122,11 @@ const wchar_t *wgettext( const wchar_t *in )
 	return wres;
 }
 
-
-void translate_init()
-{
-}
-
-void translate_destroy()
-{
-	int i;
-
-	if( !is_init )
-		return;
-	
-	is_init = 0;
-	
-	for(i=0; i<BUFF_COUNT; i++ )
-		sb_destroy( &buff[i] );
-
-	free( wcs2str_buff );
-}
-
 #else
 
 const wchar_t *wgettext( const wchar_t *in )
 {
 	return in;
-}
-
-void translate_init()
-{
-}
-
-void translate_destroy()
-{
 }
 
 #endif

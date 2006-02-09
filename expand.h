@@ -130,7 +130,7 @@ enum
    \param out The list to which the result will be appended.
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH
 */
-int expand_string( wchar_t *in, array_list_t *out, int flag );
+int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
 
 /**
    expand_one is identical to expand_string, except it will fail if in
@@ -141,13 +141,12 @@ int expand_string( wchar_t *in, array_list_t *out, int flag );
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return The expanded parameter, or 0 on failiure
 */
-wchar_t *expand_one( wchar_t *in, int flag );
+wchar_t *expand_one( void *context, wchar_t *in, int flag );
 
 /**
    Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing.
 */
 wchar_t *expand_escape_variable( const wchar_t *in );
-
 
 /**
    Perform tilde expansion and nothing else on the specified string.

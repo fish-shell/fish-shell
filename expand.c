@@ -36,6 +36,7 @@ parameter expansion.
 #include "expand.h"
 #include "wildcard.h"
 #include "exec.h"
+#include "signal.h"
 #include "tokenizer.h"
 #include "complete.h"
 #include "translate.h"
@@ -557,8 +558,10 @@ static int find_process( const wchar_t *proc,
 				continue;
 			}
 
+			signal_block();
 			fgetws2( &cmd, &sz, cmdfile );
-
+			signal_unblock();
+			
 			fclose( cmdfile );
 		}
 		else
@@ -903,9 +906,9 @@ static int expand_variables( wchar_t *in, array_list_t *out )
 					{
 						string_buffer_t res;
 						sb_init( &res );
-
+						
 						in[i]=0;
-
+						
 						sb_append( &res, in );
 						sb_append_char( &res, INTERNAL_SEPARATOR );
 
@@ -1393,7 +1396,8 @@ static void remove_internal_separator( const void *s, int conv )
 /**
    The real expansion function. expand_one is just a wrapper around this one.
 */
-int expand_string( wchar_t *str,
+int expand_string( void *context,
+				   wchar_t *str,
 				   array_list_t *end_out,
 				   int flags )
 {
@@ -1403,12 +1407,14 @@ int expand_string( wchar_t *str,
 	int i;
 	int subshell_ok = 1;
 	int res = EXPAND_OK;
+	int start_count = al_get_count( end_out );
 
 //	debug( 1, L"Expand %ls", str );
 
 
 	if( (!(flags & ACCEPT_INCOMPLETE)) && is_clean( str ) )
 	{
+		halloc_register( context, str );
 		al_push( end_out, str );
 		return EXPAND_OK;
 	}
@@ -1597,22 +1603,33 @@ int expand_string( wchar_t *str,
 		al_destroy( out );
 	}
 
+	if( context )
+	{
+		for( i=start_count; i<al_get_count( end_out ); i++ )
+		{
+			halloc_register( context, al_get( end_out, i ) );
+		}
+	}
+	
 	return res;
 
 }
 
 
-wchar_t *expand_one( wchar_t *string, int flags )
+wchar_t *expand_one( void *context, wchar_t *string, int flags )
 {
 	array_list_t l;
 	int res;
 	wchar_t *one;
 
 	if( (!(flags & ACCEPT_INCOMPLETE)) &&  is_clean( string ) )
+	{
+		halloc_register( context, string );
 		return string;
-
+	}
+	
 	al_init( &l );
-	res = expand_string( string, &l, flags );
+	res = expand_string( 0, string, &l, flags );
 	if( !res )
 	{
 		one = 0;
@@ -1632,6 +1649,8 @@ wchar_t *expand_one( wchar_t *string, int flags )
 
 	al_foreach( &l, (void(*)(const void *))&free );
 	al_destroy( &l );
+
+	halloc_register( context, string );
 	return one;
 }
 

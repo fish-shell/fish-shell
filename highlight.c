@@ -132,7 +132,7 @@ void highlight_shell( wchar_t * buff,
 					*/
 					wchar_t *cmd = 
 						(last_type == TOK_STRING) ? 
-						expand_one(wcsdup(tok_last( &tok )),EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES) : 
+						expand_one( 0, wcsdup(tok_last( &tok )),EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES) : 
 						wcsdup(tok_last( &tok ));
 					if( cmd == 0 )
 					{
@@ -248,7 +248,7 @@ void highlight_shell( wchar_t * buff,
 				{
 					case TOK_STRING:
 					{
-						target = expand_one( wcsdup( tok_last( &tok ) ), EXPAND_SKIP_SUBSHELL);
+						target = expand_one( 0, wcsdup( tok_last( &tok ) ), EXPAND_SKIP_SUBSHELL);
 						/*
 						  Redirect filename may contain a subshell. 
 						  If so, it will be ignored/not flagged.

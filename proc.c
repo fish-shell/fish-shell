@@ -109,6 +109,7 @@ void proc_init()
 	sb_init( &event_status );
 }
 
+
 /**
    Remove job from list of jobs 
 */

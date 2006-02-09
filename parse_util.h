@@ -8,6 +8,7 @@
 
 #include <wchar.h>
 
+
 /**
    Locate the first subshell in the specified string.
    
@@ -77,15 +78,5 @@ int parse_util_load( const wchar_t *cmd,
 					 const wchar_t *path_var,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload );
-
-/**
-   Init the parser utility library
-*/
-void parse_util_init();
-
-/**
-   Free resources used by the parser utility library
-*/
-void parse_util_destroy();
 
 #endif

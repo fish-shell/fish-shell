@@ -43,6 +43,7 @@
 #include "expand.h"
 #include "common.h"
 #include "output.h"
+#include "halloc_util.h"
 #include "highlight.h"
 
 /**
@@ -101,11 +102,7 @@ static size_t writestr_buff_sz=0;
 */
 static char *writestr_buff = 0;
 
-void output_init()
-{
-}
-
-void output_destroy()
+static void output_destroy()
 {
 	free( writestr_buff );
 }
@@ -292,6 +289,12 @@ void writestr( const wchar_t *str )
 	*/
 	if( writestr_buff_sz < len )
 	{
+		if( !writestr_buff )
+			halloc_register_function_void( global_context, &output_destroy );
+		
+										   
+									  
+
 		writestr_buff = realloc( writestr_buff, len );
 		if( !writestr_buff )
 			die_mem();

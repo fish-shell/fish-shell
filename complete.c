@@ -38,7 +38,7 @@
 #include "intern.h"
 #include "translate.h"
 #include "parse_util.h"
-
+#include "halloc_util.h"
 #include "wutil.h"
 
 
@@ -222,10 +222,6 @@ static hash_table_t *condition_cache=0;
 static string_buffer_t *get_desc_buff=0;
 
 
-void complete_init()
-{
-}
-
 /**
    This command clears the cache of condition tests created by \c condition_test().
 */
@@ -322,6 +318,10 @@ static void clear_hash_entry( const void *key, const void *data )
 	free( (void *)data );
 }
 
+void complete_init()
+{
+}
+
 void complete_destroy()
 {
 	complete_entry *i=first_entry, *prev;
@@ -341,14 +341,6 @@ void complete_destroy()
 		free( suffix_hash );
 		suffix_hash=0;
 	}
-
-	if( get_desc_buff )
-	{
-		sb_destroy( get_desc_buff );
-		free( get_desc_buff );
-		get_desc_buff = 0;
-	}
-
 }
 
 /**
@@ -885,14 +877,13 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 
 	if( !get_desc_buff )
 	{
-		get_desc_buff = malloc(sizeof(string_buffer_t) );
-		sb_init( get_desc_buff );
+		get_desc_buff = sb_halloc( global_context);
 	}
 	else
 	{
 		sb_clear( get_desc_buff );
 	}
-
+	
 	if( lwstat( filename, &buf )==0)
 	{
 		if( S_ISCHR(buf.st_mode) )
@@ -1005,7 +996,8 @@ static void copy_strings_with_prefix( array_list_t *comp_out,
 	int i;
 	wchar_t *wc;
 
-	wc = expand_one( wcsdup(wc_escaped), EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_WILDCARDS);
+	wc = expand_one( 0,
+					 wcsdup(wc_escaped), EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_WILDCARDS);
 	if(!wc)
 		return;
 
@@ -1201,7 +1193,8 @@ static void complete_cmd( const wchar_t *cmd,
 		array_list_t tmp;
 		al_init( &tmp );
 
-		if( expand_string( wcsdup(cmd),
+		if( expand_string( 0,
+						   wcsdup(cmd),
 						   comp,
 						   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 		{
@@ -1227,9 +1220,10 @@ static void complete_cmd( const wchar_t *cmd,
 
 			al_init( &tmp );
 
-			if( expand_string( nxt_completion,
-						   &tmp,
-						   ACCEPT_INCOMPLETE |
+			if( expand_string( 0,
+							   nxt_completion,
+							   &tmp,
+							   ACCEPT_INCOMPLETE |
 							   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 			{
 				for( i=0; i<al_get_count(&tmp); i++ )
@@ -1285,8 +1279,9 @@ static void complete_cmd( const wchar_t *cmd,
 
 		al_init( &tmp );
 
-		if( expand_string( nxt_completion,
-					   &tmp,
+		if( expand_string( 0,
+						   nxt_completion,
+						   &tmp,
 						   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 		{
 
@@ -1672,7 +1667,10 @@ static void complete_param_expand( wchar_t *str,
 		   comp_str,
 		   do_file?L"0":L"EXPAND_SKIP_WILDCARDS" );
 
-	expand_string( wcsdup(comp_str), comp_out,  EXPAND_SKIP_SUBSHELL | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) );
+	expand_string( 0, 
+				   wcsdup(comp_str),
+				   comp_out,
+				   EXPAND_SKIP_SUBSHELL | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) );
 }
 
 /**

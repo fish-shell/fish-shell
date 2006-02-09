@@ -20,7 +20,6 @@ parts of fish.
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>		
-#include <signal.h>		
 #include <locale.h>
 #include <time.h>
 #include <sys/time.h>
@@ -58,7 +57,6 @@ parts of fish.
 #include "proc.h"
 #include "wildcard.h"
 #include "parser.h"
-#include "halloc.h"
 
 /**
    The maximum number of minor errors to report. Further errors will be omitted.
@@ -95,20 +93,14 @@ int debug_level=1;
 */
 static struct winsize termsize;
 
-
-/**
-   Number of nested calls to the block function. Unblock when this reaches 0.
-*/
-static int block_count=0;
-
 /**
    String buffer used by the wsetlocale function
 */
 static string_buffer_t *setlocale_buff=0;
 
-
 void common_destroy()
 {
+	
 	if( setlocale_buff )
 	{
 		sb_destroy( setlocale_buff );
@@ -116,9 +108,13 @@ void common_destroy()
 	}
 }
 
-wchar_t **list_to_char_arr( void *context, array_list_t *l )
+void common_init()
 {
-	wchar_t ** res = halloc( context, sizeof(wchar_t *)*(al_get_count( l )+1) );
+}
+
+wchar_t **list_to_char_arr( array_list_t *l )
+{
+	wchar_t ** res = malloc( sizeof(wchar_t *)*(al_get_count( l )+1) );
 	int i;
 	if( res == 0 )
 	{
@@ -127,39 +123,10 @@ wchar_t **list_to_char_arr( void *context, array_list_t *l )
 	for( i=0; i<al_get_count( l ); i++ )
 	{		
 		res[i] = (wchar_t *)al_get(l,i);
-		if( context )
-			halloc_register( context, res[i] );
 	}
 	res[i]='\0';
 	return res;	
 }
-
-void block()
-{
-	block_count++;
-	if( block_count == 1 )
-	{
-		sigset_t chldset; 
-		sigemptyset( &chldset );
-		sigaddset( &chldset, SIGCHLD );
-		sigprocmask(SIG_BLOCK, &chldset, 0);
-	}
-}
-
-
-void unblock()
-{
-	block_count--;
-	if( block_count == 0 )
-	{
-		sigset_t chldset; 
-		sigemptyset( &chldset );
-		sigaddset( &chldset, SIGCHLD );
-		sigprocmask(SIG_UNBLOCK, &chldset, 0);
-	}
-}
-
-
 
 int fgetws2( wchar_t **b, int *len, FILE *f )
 {
@@ -173,8 +140,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 	  get getwc to perform reliably when signals are flying. Even when
 	  watching for EINTR errors, bytes are lost. 
 	*/
-
-	block();
 
 	while( 1 )
 	{
@@ -214,8 +179,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 			case L'\n':
 			case L'\0':
 				buff[i]=L'\0';
-				unblock();
-
 				return i;				
 				/* Ignore carriage returns */
 			case L'\r':
@@ -228,7 +191,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 
 
 	}
-	unblock();
 
 }
 

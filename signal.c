@@ -43,6 +43,9 @@ struct lookup_entry
 	const wchar_t *desc;	
 };
 
+static int block_count=0;
+
+
 /**
    Lookup table used to convert between signal names and signal ids,
    etc.
@@ -536,13 +539,22 @@ void signal_handle( int sig, int do_handle )
 void signal_block()
 {
 	sigset_t chldset; 
-	sigfillset( &chldset );
-	sigprocmask(SIG_BLOCK, &chldset, 0);	
+	
+	if( !block_count )
+	{
+		sigfillset( &chldset );
+		sigprocmask(SIG_BLOCK, &chldset, 0);	
+	}
+	block_count++;
 }
 
 void signal_unblock()
 {
 	sigset_t chldset; 
-	sigfillset( &chldset );
-	sigprocmask(SIG_UNBLOCK, &chldset, 0);	
+	block_count--;
+	if( !block_count )
+	{
+		sigfillset( &chldset );
+		sigprocmask(SIG_UNBLOCK, &chldset, 0);	
+	}
 }

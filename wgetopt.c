@@ -534,7 +534,7 @@ int long_only;
 		if (ambig && !exact)
 		{
 			if (wopterr)
-				fwprintf (stderr, _(L"%ls: Option `%ls' is ambiguous\n"),
+				fwprintf (stderr, _(L"%ls: Option '%ls' is ambiguous\n"),
 						  argv[0], argv[woptind]);
 			nextchar += wcslen (nextchar);
 			woptind++;
@@ -558,12 +558,12 @@ int long_only;
 						if (argv[woptind - 1][1] == '-')
 							/* --option */
 							fwprintf (stderr,
-									  _(L"%ls: Option `--%ls' doesn't allow an argument\n"),
+									  _(L"%ls: Option '--%ls' doesn't allow an argument\n"),
 									  argv[0], pfound->name);
 						else
 							/* +option or -option */
 							fwprintf (stderr,
-									  _(L"%ls: Option `%lc%ls' doesn't allow an argument\n"),
+									  _(L"%ls: Option '%lc%ls' doesn't allow an argument\n"),
 									  argv[0], argv[woptind - 1][0], pfound->name);
 					}
 					nextchar += wcslen (nextchar);
@@ -577,7 +577,7 @@ int long_only;
 				else
 				{
 					if (wopterr)
-						fwprintf (stderr, _(L"%ls: Option `%ls' requires an argument\n"),
+						fwprintf (stderr, _(L"%ls: Option '%ls' requires an argument\n"),
 								  argv[0], argv[woptind - 1]);
 					nextchar += wcslen (nextchar);
 					return optstring[0] == ':' ? ':' : '?';
@@ -605,11 +605,11 @@ int long_only;
 			{
 				if (argv[woptind][1] == '-')
 					/* --option */
-					fwprintf (stderr, _(L"%ls: Unrecognized option `--%ls'\n"),
+					fwprintf (stderr, _(L"%ls: Unrecognized option '--%ls'\n"),
 							  argv[0], nextchar);
 				else
 					/* +option or -option */
-					fwprintf (stderr, _(L"%ls: Unrecognized option `%lc%ls'\n"),
+					fwprintf (stderr, _(L"%ls: Unrecognized option '%lc%ls'\n"),
 							  argv[0], argv[woptind][0], nextchar);
 			}
 			nextchar = (wchar_t *) L"";

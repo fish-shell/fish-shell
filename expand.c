@@ -41,6 +41,7 @@ parameter expansion.
 #include "complete.h"
 #include "translate.h"
 #include "parse_util.h"
+#include "halloc_util.h"
 
 /**
    Description for child process
@@ -1607,7 +1608,7 @@ int expand_string( void *context,
 	{
 		for( i=start_count; i<al_get_count( end_out ); i++ )
 		{
-			halloc_register( context, al_get( end_out, i ) );
+			halloc_register( context, (void *)al_get( end_out, i ) );
 		}
 	}
 	
@@ -1650,7 +1651,7 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
 	al_foreach( &l, (void(*)(const void *))&free );
 	al_destroy( &l );
 
-	halloc_register( context, string );
+	halloc_register( context, one );
 	return one;
 }
 

@@ -17,23 +17,6 @@ function __fish_no_cvs_subcommand
 end
 
 #
-# Test to see if we've seen a subcommand from a list.
-# This logic may seem backwards, but the commandline will often be much shorter
-#  than the list
-#
-
-function __fish_seen_cvs_subcommand_from
-	set -l -- cmd (commandline -poc)
-	set -e cmd[1]
-	for i in $cmd
-		if contains -- $i $argv
-			return 0
-		end
-	end
-	return 1
-end
-
-#
 # If no subcommand has been specified, complete using all available subcommands
 #
 
@@ -96,17 +79,17 @@ complete -c cvs -n '__fish_no_cvs_subcommand' -x -s z -d (_ "Compression level f
 # Universal cvs options, which can be applied to any cvs command.
 #
 
-complete -c cvs -n '__fish_seen_cvs_subcommand_from checkout diff export history rdiff rtag update' -x -s D -d (_ "Use the most recent revision no later than date.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from annotate export rdiff rtag update' -s f -d (_ "Retrieve files even when no match for tag/date.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from add checkout diff import update' -x -s k -d (_ "Alter default keyword processing.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from annotate checkout commit diff edit editors export log rdiff remove rtag status tag unedit update watch watchers' -s l -d (_ "Don't recurse.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from add commit import' -x -s m -d (_ "Specify log message instead of invoking editor.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from checkout commit export rtag' -s n -d (_ "Don't run any tag programs.")
+complete -c cvs -n '__fish_seen_subcommand_from checkout diff export history rdiff rtag update' -x -s D -d (_ "Use the most recent revision no later than date.")
+complete -c cvs -n '__fish_seen_subcommand_from annotate export rdiff rtag update' -s f -d (_ "Retrieve files even when no match for tag/date.")
+complete -c cvs -n '__fish_seen_subcommand_from add checkout diff import update' -x -s k -d (_ "Alter default keyword processing.")
+complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff edit editors export log rdiff remove rtag status tag unedit update watch watchers' -s l -d (_ "Don't recurse.")
+complete -c cvs -n '__fish_seen_subcommand_from add commit import' -x -s m -d (_ "Specify log message instead of invoking editor.")
+complete -c cvs -n '__fish_seen_subcommand_from checkout commit export rtag' -s n -d (_ "Don't run any tag programs.")
 complete -c cvs -n 'not __fish_no_cvs_subcommand' -s P -d (_ "Prune empty directories.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from checkout update' -s p -d (_ "Pipe files to stdout.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from annotate checkout commit diff edit editors export rdiff remove rtag status tag unedit update watch watchers' -s R -d (_ "Process directories recursively.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from annotate checkout commit diff history export rdiff rtag update' -x -s r -d (_ "Use a specified tag.")
-complete -c cvs -n '__fish_seen_cvs_subcommand_from import update' -r -s W -d (_ "Specify filenames to be filtered.")
+complete -c cvs -n '__fish_seen_subcommand_from checkout update' -s p -d (_ "Pipe files to stdout.")
+complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff edit editors export rdiff remove rtag status tag unedit update watch watchers' -s R -d (_ "Process directories recursively.")
+complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff history export rdiff rtag update' -x -s r -d (_ "Use a specified tag.")
+complete -c cvs -n '__fish_seen_subcommand_from import update' -r -s W -d (_ "Specify filenames to be filtered.")
 
 #
 # cvs options for admin. Note that all options marked as "useless", "might not

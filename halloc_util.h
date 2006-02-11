@@ -26,4 +26,10 @@ void halloc_register_function_void( void *context, void (*func)() );
    using a call to halloc() can be used as a context.
 */
 void *halloc_register( void *context, void *data );
+
+wchar_t *halloc_wcsdup( void *context, wchar_t *str );
+wchar_t *halloc_wcsndup( void * context, const wchar_t *in, int c );
+
+
+
 #endif

@@ -19,6 +19,7 @@
 #include "reader.h"
 #include "env.h"
 #include "sanity.h"
+#include "signal.h"
 
 /*
   The history is implemented using a linked list. Searches are done

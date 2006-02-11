@@ -1037,7 +1037,7 @@ static int builtin_function( wchar_t **argv )
 				if( !e )
 					die_mem();
 				e->type = EVENT_VARIABLE;
-				e->param1.variable = halloc_register( current_block, wcsdup( woptarg ));
+				e->param1.variable = halloc_wcsdup( current_block, woptarg );
 				e->function_name=0;
 				al_push( events, e );
 				break;
@@ -1201,8 +1201,8 @@ static int builtin_function( wchar_t **argv )
 	}
 	else
 	{
-		current_block->param1.function_name=halloc_register( current_block, wcsdup(argv[woptind]));
-		current_block->param2.function_description=desc?halloc_register( current_block, wcsdup(desc)):0;
+		current_block->param1.function_name=halloc_wcsdup( current_block, argv[woptind]);
+		current_block->param2.function_description=desc?halloc_wcsdup( current_block, desc):0;
 		current_block->param3.function_is_binding = is_binding;
 		current_block->param4.function_events = events;
 		
@@ -2579,11 +2579,11 @@ static int builtin_for( wchar_t **argv )
 
 		int i;
 		current_block->tok_pos = parser_get_pos();
-		current_block->param1.for_variable = halloc_register( current_block, wcsdup( argv[1] ));
+		current_block->param1.for_variable = halloc_wcsdup( current_block, argv[1] );
 
 		for( i=argc-1; i>3; i-- )
 		{
-			al_push( &current_block->param2.for_vars, halloc_register( current_block, wcsdup(argv[ i ] ) ) );
+			al_push( &current_block->param2.for_vars, halloc_wcsdup( current_block, argv[ i ] ) );
 		}
 		halloc_register( current_block, current_block->param2.for_vars.arr );
 
@@ -2899,7 +2899,7 @@ static int builtin_switch( wchar_t **argv )
 	else
 	{
 		parser_push_block( SWITCH );
-		current_block->param1.switch_value = halloc_register( current_block, wcsdup( argv[1]));
+		current_block->param1.switch_value = halloc_wcsdup( current_block, argv[1]);
 		current_block->skip=1;
 		current_block->param2.switch_taken=0;
 	}

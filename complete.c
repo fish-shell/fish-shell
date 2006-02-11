@@ -380,7 +380,6 @@ void complete_add( const wchar_t *cmd,
 		if( !(c = malloc( sizeof(complete_entry) )))
 			die_mem();
 
-
 		c->next = first_entry;
 		first_entry = c;
 

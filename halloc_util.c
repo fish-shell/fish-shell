@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "util.h"
 #include "common.h"
@@ -33,7 +34,7 @@ array_list_t *al_halloc( void *context )
 	if( !res )
 		die_mem();
 	al_init( res );
-	halloc_register_function( res, (void (*)(void *)) &al_destroy, res );
+	halloc_register_function( context, (void (*)(void *)) &al_destroy, res );
 	return res;
 }
 
@@ -43,7 +44,7 @@ string_buffer_t *sb_halloc( void *context )
 	if( !res )
 		die_mem();
 	sb_init( res );
-	halloc_register_function( res, (void (*)(void *)) &sb_destroy, res );
+	halloc_register_function( context, (void (*)(void *)) &sb_destroy, res );
 	return res;
 }
 
@@ -67,3 +68,27 @@ void *halloc_register( void *context, void *data )
 	return data;
 }
 
+wchar_t *halloc_wcsdup( void *context, wchar_t *in )
+{
+	size_t len=wcslen(in);
+	wchar_t *out = halloc( context, sizeof( wchar_t)*(len+1));
+	
+	if( out == 0 )
+	{
+		die_mem();
+	}
+	memcpy( out, in, sizeof( wchar_t)*(len+1));
+	return out;
+}
+
+wchar_t *halloc_wcsndup( void * context, const wchar_t *in, int c )
+{
+	wchar_t *res = halloc( context, sizeof(wchar_t)*(c+1) );
+	if( res == 0 )
+	{
+		die_mem();
+	}
+	wcslcpy( res, in, c );
+	res[c] = L'\0';	
+	return res;	
+}

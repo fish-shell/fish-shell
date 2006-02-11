@@ -1321,8 +1321,7 @@ static void parse_job_main_loop( process_t *p,
 					return;
 				}
 				p->pipe_fd = wcstol( tok_last( tok ), 0, 10 );
-				p->argv = list_to_char_arr( args );
-				halloc_register( j, p->argv );
+				halloc_register( j, p->argv=list_to_char_arr( args ) );
 				p->next = halloc( j, sizeof( process_t ) );
 				if( p->next == 0 )
 				{
@@ -1344,8 +1343,7 @@ static void parse_job_main_loop( process_t *p,
 
 			case TOK_END:
 			{
-				p->argv = list_to_char_arr( args );
-				halloc_register( j, p->argv );
+				halloc_register( j, p->argv=list_to_char_arr( args ) );
 				if( tok_has_next(tok))
 					tok_next(tok);
 
@@ -1412,7 +1410,7 @@ static void parse_job_main_loop( process_t *p,
 							unmatched_wildcard = 1;
 							if( !unmatched )
 							{
-								unmatched = halloc_register( j, wcsdup( tok_last( tok )));
+								unmatched = halloc_wcsdup( j, tok_last( tok ));
 								unmatched_pos = tok_get_pos( tok );
 							}
 
@@ -2034,9 +2032,8 @@ static int parse_job( process_t *p,
 	if( !error_code )
 	{
 		if( p->type == INTERNAL_BUILTIN && parser_skip_arguments( (wchar_t *)al_get(args, 0) ) )
-		{
-			p->argv = list_to_char_arr( args );
-			halloc_register( j, p->argv );
+		{			
+			halloc_register( j, p->argv = list_to_char_arr( args ) );
 //			tok_next(tok);
 		}
 		else
@@ -2173,8 +2170,9 @@ static void eval_job( tokenizer *tok )
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );
 
-					j->command = halloc_register( j, wcsndup( tok_string(tok)+start_pos,
-														   stop_pos-start_pos ));
+					j->command = halloc_wcsndup( j,
+												 tok_string(tok)+start_pos,
+												 stop_pos-start_pos );
 				}
 				else
 					j->command = L"";

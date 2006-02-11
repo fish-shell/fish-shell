@@ -199,7 +199,7 @@ AC_CHECK_LIB(rt, nanosleep)
 AC_CHECK_LIB(intl, gettext)
 
 # Check for various header files
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h])
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h])
 
 AC_CHECK_HEADER([regex.h],
 				[AC_DEFINE([HAVE_REGEX_H], [1], [Define to 1 if you have the <regex.h> header file.])],

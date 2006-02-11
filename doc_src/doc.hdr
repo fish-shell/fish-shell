@@ -609,6 +609,10 @@ square brackets, like this:
 echo $PATH[3]
 </pre>
 
+Note that array indices start at 1 in fish, not 0, as is more common
+in other languages. This is because many common unix tools like seq
+are more suited to such use. 
+
 If you do not use any brackets, all the elements of the array will be
 written as separate items. This means you can easily iterate over an
 array using this syntax:

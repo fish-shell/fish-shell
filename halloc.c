@@ -15,16 +15,17 @@
 #include "common.h"
 #include "halloc.h"
 
-#define HALLOC_BLOCK_SIZE 256
+#define HALLOC_BLOCK_SIZE 128
 #define HALLOC_SCRAP_SIZE 16
 
+#ifdef HALLOC_DEBUG
 static int child_count=0;
 static int child_size=0;
 static int alloc_count =0;
 static int alloc_spill = 0;
 static pid_t pid=0;
 static int parent_count=0;
-
+#endif
 
 typedef struct halloc
 {
@@ -44,6 +45,7 @@ static void late_free( void *data)
 {
 }
 
+#ifdef HALLOC_DEBUG
 static void woot()
 {
 	if( getpid() == pid )
@@ -53,6 +55,7 @@ static void woot()
 			   parent_count+alloc_count, (double)alloc_spill/(parent_count+alloc_count) );				
 	}
 }
+#endif
 
 void *halloc( void *context, size_t size )
 {	
@@ -61,6 +64,7 @@ void *halloc( void *context, size_t size )
 	{
 		void *res;
 		
+#ifdef HALLOC_DEBUG
 			
 		if( !child_count )
 		{
@@ -70,7 +74,7 @@ void *halloc( void *context, size_t size )
 		
 		child_count++;
 		child_size += size;
-		
+#endif	
 		parent = halloc_from_data( context );
 		if( size <= parent->scratch_free )
 		{
@@ -80,11 +84,16 @@ void *halloc( void *context, size_t size )
 		}
 		else
 		{
+
+#ifdef HALLOC_DEBUG
 			alloc_count++;
-			
+#endif	
+		
 			if( parent->scratch_free < HALLOC_SCRAP_SIZE )
 			{
+#ifdef HALLOC_DEBUG
 				alloc_spill += parent->scratch_free;
+#endif
 				res = calloc( 1, size + HALLOC_BLOCK_SIZE );
 				parent->scratch = res + size;
 				parent->scratch_free = HALLOC_BLOCK_SIZE;
@@ -106,8 +115,9 @@ void *halloc( void *context, size_t size )
 		
 		if( !me )
 			return 0;
+#ifdef HALLOC_DEBUG
 		parent_count++;
-		
+#endif		
 		me->scratch = ((void *)me) + sizeof(halloc_t) + size;
 		me->scratch_free = HALLOC_BLOCK_SIZE;
 		
@@ -138,8 +148,9 @@ void halloc_free( void *context )
 	
 	me = halloc_from_data( context );
 
+#ifdef HALLOC_DEBUG
 	alloc_spill += me->scratch_free;
-
+#endif
 	for( i=0; i<al_get_count(&me->children); i+=2 )
 	{
 		void (*func)(void *) = (void (*)(void *))al_get( &me->children, i );

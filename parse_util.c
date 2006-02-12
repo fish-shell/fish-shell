@@ -489,7 +489,7 @@ int parse_util_load( const wchar_t *cmd,
 		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
 	}
 	
-	loaded = hash_get( all_loaded, path_var );
+	loaded = (hash_table_t *)hash_get( all_loaded, path_var );
 	
 	if( !loaded )
 	{

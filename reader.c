@@ -1417,6 +1417,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	sb_init( &cmd );
 	sb_printf( &cmd,
 			   L"fish_pager %d %ls",
+//			   L"valgrind --track-fds=yes --log-file=pager.txt ./fish_pager %d %ls",
 			   is_quoted,
 			   prefix_esc );
 

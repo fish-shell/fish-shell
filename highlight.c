@@ -130,10 +130,10 @@ void highlight_shell( wchar_t * buff,
 					/*
 					  Command. First check that the command actually exists.
 					*/
-					wchar_t *cmd = 
-						(last_type == TOK_STRING) ? 
-						expand_one( 0, wcsdup(tok_last( &tok )),EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES) : 
-						wcsdup(tok_last( &tok ));
+					wchar_t *cmd = expand_one( 0, 
+											   wcsdup(tok_last( &tok )),
+											   EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
+					
 					if( cmd == 0 )
 					{
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
@@ -145,7 +145,6 @@ void highlight_shell( wchar_t * buff,
 						int is_subcommand = 0;
 						int mark = tok_get_pos( &tok );
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;
-
 						
 						if( parser_is_subcommand( cmd ) )
 						{

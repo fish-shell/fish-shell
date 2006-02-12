@@ -136,7 +136,7 @@ static void kill_check_x_buffer()
 		
 		for( i=0; i<al_get_count( &list ); i++ )
 		{
-			wchar_t *next_line = escape( (wchar_t *)al_get( &list, i ), 0);
+			wchar_t *next_line = escape( (wchar_t *)al_get( &list, i ), 0 );
 			if( i==0 )
 			{
 				new_cut_buffer = next_line;

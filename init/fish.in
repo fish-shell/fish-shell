@@ -8,6 +8,7 @@
 #
 
 set -g IFS \ \t\n
+set -g fish_function_path $PWD/fish.d/functions ~/.fish.d/functions
 
 #
 # Add a few common directories to path, if they exists. Note that pure
@@ -86,8 +87,6 @@ if test 1 = "@HAVE_GETTEXT@"
 		end
 	end
 end
-
-set -g fish_function_path $PWD/fish.d/functions
 
 #
 # Load additional initialization files

@@ -1220,7 +1220,7 @@ static wchar_t get_quote( wchar_t *cmd, int l )
 
 		if( cmd[i] == L'\'' || cmd[i] == L'\"' )
 		{
-			wchar_t *end = quote_end( &cmd[i] );
+			const wchar_t *end = quote_end( &cmd[i] );
 			//fwprintf( stderr, L"Jump %d\n",  end-cmd );
 			if(( end == 0 ) || (!*end) || (end-cmd > l))
 			{

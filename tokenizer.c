@@ -272,11 +272,11 @@ static void read_string( tokenizer *tok )
 					case L'"':
 					{
 
-						wchar_t *end = quote_end( tok->buff );
+						const wchar_t *end = quote_end( tok->buff );
 						tok->last_quote = *tok->buff;
 						if( end )
 						{
-							tok->buff=end;
+							tok->buff=(wchar_t *)end;
 						}
 						else
 						{
@@ -311,10 +311,10 @@ static void read_string( tokenizer *tok )
 					case L'\'':
 					case L'\"':
 					{
-						wchar_t *end = quote_end( tok->buff );
+						const wchar_t *end = quote_end( tok->buff );
 						if( end )
 						{
-							tok->buff=end;
+							tok->buff=(wchar_t *)end;
 						}
 						else
 							do_loop = 0;

@@ -551,12 +551,34 @@ int my_wcswidth( const wchar_t *c )
 	return res;
 }
 
-wchar_t *quote_end( const wchar_t *in )
+const wchar_t *quote_end( const wchar_t *pos )
 {
-	return wcschr( in+1, *in );
+	wchar_t c = *pos;
+	
+	while( 1 )
+	{
+		pos++;
+
+		if( !*pos )
+			return 0;
+		
+		if( *pos == L'\\')
+		{
+			pos++;
+		}
+		else
+		{
+			if( *pos == c )
+			{
+				return pos;
+			}
+		}
+	}
+	return 0;
+	
 }
 
-
+				
 const wchar_t *wsetlocale(int category, const wchar_t *locale)
 {
 
@@ -1137,6 +1159,30 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 			*/
 			case 1:
 			{
+				if( c == L'\\' )
+				{
+					switch( in[++in_pos] )
+					{
+						case L'\'':
+						{
+							in[out_pos]=in[in_pos];
+							break;
+						}
+						
+						case 0:
+						{
+							free(in);
+							return 0;
+						}
+						
+						default:
+						{
+							in[out_pos++] = L'\\';
+							in[out_pos]= in[in_pos];
+						}
+					}
+					
+				}
 				if( c == L'\'' )
 				{
 					in[out_pos] = INTERNAL_SEPARATOR;							
@@ -1175,11 +1221,12 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							}
 							
 							case L'$':
+							case '"':
 							{
 								in[out_pos]=in[in_pos];
 								break;
 							}
-							
+
 							default:
 							{
 								in[out_pos++] = L'\\';

@@ -69,10 +69,13 @@ happens, the user can write a parameter within quotes, either '
 (single quote) or " (double quote). There is one important difference
 between single quoted and double quoted strings: When using double
 quoted string, <a href='#expand-variable'>variable expansion</a> still
-takes place.  Other than that, a quoted parameter will not be
-parameter expanded, may contain spaces, and escape sequences are
-ignored. Single quotes have no special meaning withing double quotes
-and vice versa.
+takes place. Other than that, a quoted parameter will not be parameter
+expanded, may contain spaces, and escape sequences are ignored. The
+only backslash escape accepted within single quotes is \\', which
+escapes a single quote. The only backslash escapes accepted within
+double quotes are \\", which escapes a double quote, and \\$, which
+escapes a dollar character. Single quotes have no special meaning
+withing double quotes and vice versa.
 
 Example:
 
@@ -82,7 +85,7 @@ Will remove the file 'cumbersome filename.txt', while
 
 <code>rm cumbersome filename.txt</code>
 
-would remove the two files 'cumbersome' and 'filenmae.txt'.
+would remove the two files 'cumbersome' and 'filename.txt'.
 
 \subsection escapes Escaping characters
 

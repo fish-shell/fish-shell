@@ -190,7 +190,7 @@ int my_wcswidth( const wchar_t *c );
 
    \param in the position of the opening quote
 */
-wchar_t *quote_end( const wchar_t *in );
+const wchar_t *quote_end( const wchar_t *in );
 
 /**
    A call to this function will reset the error counter. Some

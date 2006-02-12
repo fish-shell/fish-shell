@@ -156,9 +156,6 @@ static wchar_t *expand_var( wchar_t *in )
 	return env_get( in );
 }
 
-static string_buffer_t *var_tmp = 0;
-static array_list_t *var_idx_list;
-
 void expand_variable_array( const wchar_t *val, array_list_t *out )
 {
 	if( val )
@@ -714,31 +711,6 @@ static int expand_pid( wchar_t *in,
 	return 1;
 }
 
-static void var_tmp_init()
-{
-	if( !var_tmp )
-	{
-		var_tmp = sb_halloc( global_context );
-		if( !var_tmp )
-			die_mem();
-	}
-	else
-	{
-		sb_clear(var_tmp );
-	}
-
-	if( !var_idx_list )
-	{
-		var_idx_list = al_halloc( global_context );
-		if( !var_idx_list )
-			die_mem();
-	}
-	else
-	{
-		al_truncate( var_idx_list, 0 );
-	}
-}
-
 /**
    Expand all environment variables in the string *ptr.
 
@@ -760,6 +732,31 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 	int i, j;
 	int is_ok= 1;
 	int empty=0;
+
+	static string_buffer_t *var_tmp = 0;
+	static array_list_t *var_idx_list = 0;
+
+	if( !var_tmp )
+	{
+		var_tmp = sb_halloc( global_context );
+		if( !var_tmp )
+			die_mem();
+	}
+	else
+	{
+		sb_clear(var_tmp );
+	}
+
+	if( !var_idx_list )
+	{
+		var_idx_list = al_halloc( global_context );
+		if( !var_idx_list )
+			die_mem();
+	}
+	else
+	{
+		al_truncate( var_idx_list, 0 );
+	}
 
 	for( i=last_idx; (i>=0) && is_ok && !empty; i-- )
 	{
@@ -836,8 +833,6 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 				break;
 			}
 
-			var_tmp_init();
-			
 			sb_append_substring( var_tmp, &in[start_pos], var_len );
 
 			var_val = expand_var( (wchar_t *)var_tmp->buff );

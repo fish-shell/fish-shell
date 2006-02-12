@@ -94,7 +94,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 		{
 			if( wcschr( L"\'\"", *pos ) )
 			{
-				wchar_t *end = quote_end( pos );
+				const wchar_t *end = quote_end( pos );
 				if( end && *end)
 				{
 					pos=end;
@@ -464,14 +464,14 @@ int parse_util_load( const wchar_t *cmd,
 					  void (*on_load)(const wchar_t *cmd),
 					  int reload )
 {
-	array_list_t path_list;
+	static array_list_t *path_list=0;
+	static string_buffer_t *path=0;
+
 	int i;
-	string_buffer_t path;
 	time_t *tm;
 	int reloaded = 0;
 	hash_table_t *loaded;
-	
-	
+
 	/*
 	  Do we know where to look
 	*/
@@ -520,30 +520,35 @@ int parse_util_load( const wchar_t *cmd,
 	*/
 	if( !reload && tm )
 		return 0;
+	
+	if( !path_list )
+		path_list = al_halloc( global_context);
 
-	al_init( &path_list );
-
-	sb_init( &path );
-
-	expand_variable_array( path_var, &path_list );
-
+	
+	if( !path )
+		path = sb_halloc( global_context );
+	else
+		sb_clear( path );
+	
+	expand_variable_array( path_var, path_list );
+	
 	/*
 	  Iterate over path searching for suitable completion files
 	*/
-	for( i=0; i<al_get_count( &path_list ); i++ )
+	for( i=0; i<al_get_count( path_list ); i++ )
 	{
 		struct stat buf;
-		wchar_t *next = (wchar_t *)al_get( &path_list, i );
-		sb_clear( &path );
-		sb_append2( &path, next, L"/", cmd, L".fish", (void *)0 );
-		if( (wstat( (wchar_t *)path.buff, &buf )== 0) &&
-			(waccess( (wchar_t *)path.buff, R_OK ) == 0) )
+		wchar_t *next = (wchar_t *)al_get( path_list, i );
+		sb_clear( path );
+		sb_append2( path, next, L"/", cmd, L".fish", (void *)0 );
+		if( (wstat( (wchar_t *)path->buff, &buf )== 0) &&
+			(waccess( (wchar_t *)path->buff, R_OK ) == 0) )
 		{
 			if( !tm || (*tm != buf.st_mtime ) )
 			{
-				wchar_t *esc = escape( (wchar_t *)path.buff, 1 );
+				wchar_t *esc = escape( (wchar_t *)path->buff, 1 );
 				wchar_t *src_cmd = wcsdupcat( L". ", esc );
-
+				
 				if( !tm )
 				{
 					tm = malloc(sizeof(time_t)*2);
@@ -588,10 +593,8 @@ int parse_util_load( const wchar_t *cmd,
 		hash_put( loaded, intern( cmd ), tm );
 	}
 
-	sb_destroy( &path );
-	al_foreach( &path_list, (void (*)(const void *))&free );
-
-	al_destroy( &path_list );
+	al_foreach( path_list, (void (*)(const void *))&free );
+	al_truncate( path_list, 0 );
 
 	return reloaded;	
 }

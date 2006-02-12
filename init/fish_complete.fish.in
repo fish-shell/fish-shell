@@ -30,32 +30,8 @@ function __fish_complete_groups -d "Print a list of local groups, with group mem
 	cat /etc/group | sed -e "s/^\([^:]*\):[^:]*:[^:]*:\(.*\)/\1\tMembers: \2/"
 end
 
-function __fish_complete_pids -d "Print a list of process identifiers along with brief descriptions"
-	# This may be a bit slower, but it's nice - having the tty displayed is really handy
-	ps --no-heading -o pid,comm,tty --ppid %self -N | sed -r 's/ *([0-9]+) +([^ ].*[^ ]|[^ ]) +([^ ]+)$/\1\t\2 [\3]/' ^/dev/null
-
-	# If the above is too slow, this is faster but a little less useful
-	#	pgrep -l -v -P %self | sed 's/ /\t/'
-end
-
 function __fish_complete_command -d "Complete using all available commands"
 	printf "%s\n" (commandline -ct)(complete -C (commandline -ct))
-end
-
-
-function __fish_print_hostnames -d "Print a list of known hostnames"
-
-	# Print all hosts from /etc/hosts
-	if test -f /etc/hosts
-		sed </etc/hosts -e 's/[0-9.]*\( \|\t\)*\(.*\)/\2/'|sed -e 's/\#.*//'|tr \t \n |grep -v '^$'
-	end
-	# Print nfs servers from /etc/fstab
-	if test -f /etc/fstab
-		grep </etc/fstab "^\([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\|[a-zA-Z.]*\):"|cut -d : -f 1
-	end
-
-	# Print hosts with known ssh keys
-	cat ~/.ssh/known_hosts{,2} ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
 end
 
 function __fish_print_interfaces -d "Print a list of known network interfaces"
@@ -81,7 +57,6 @@ for i in (builtin -n|grep -vE '(while|for|if|function|switch)' )
 end
 
 
-
 function __fish_append -d "Internal completion function for appending string to the commandline"
 	set separator $argv[1]
 	set -e argv[1]
@@ -89,33 +64,6 @@ function __fish_append -d "Internal completion function for appending string to 
 	printf "%s\n" "$str"$argv "$str"(printf "%s\n" $argv|sed -e "s/\(\t\|\$\)/,\1/") 
 end
 
-function __fish_is_first_token -d 'Test if no non-switch argument has been specified yet'
-	set -- cmd (commandline -poc)
-	set -e -- cmd[1]
-	for i in $cmd
-		switch $i
-			case '-*'
-
-			case '*'
-				return 1;
-		end
-	end
-	return 0
-end
-
-function __fish_no_arguments -d "Internal fish function"
-	set -l cmd (commandline -poc) (commandline -tc)
-	set -e cmd[1]
-	for i in $cmd
-		switch $i
-			case '-*'
-				 
-			case '*'
-				 return 1
-		end
-	end
-	return 0
-end
 
 #
 # Test to see if we've seen a subcommand from a list.

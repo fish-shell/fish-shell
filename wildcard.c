@@ -555,7 +555,7 @@ int wildcard_expand( const wchar_t *wc,
 		/*
 		  The maximum length of a file element
 		*/
-		static size_t ln=MAX_FILE_LENGTH;
+		size_t ln=MAX_FILE_LENGTH;
 		char * narrow_dir_string = wcs2str( dir_string );
 		
 		if( narrow_dir_string )

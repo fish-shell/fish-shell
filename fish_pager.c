@@ -42,6 +42,7 @@
 #include "output.h"
 #include "input_common.h"
 #include "env_universal.h"
+#include "halloc_util.h"
 
 enum 
 {
@@ -753,7 +754,8 @@ static int completion_try_print( int cols,
 						}
 						else
 						{
-							writembs( flash_screen );
+							if( flash_screen )
+								writembs( flash_screen );
 						}
 
 						break;
@@ -777,7 +779,8 @@ static int completion_try_print( int cols,
 						}
 						else
 						{
-							writembs( flash_screen );
+							if( flash_screen )
+								writembs( flash_screen );
 						}
 						break;
 					}

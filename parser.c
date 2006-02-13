@@ -71,9 +71,9 @@ The fish parser. Contains functions for parsing code.
 #define TOK_ERR_MSG _( L"Tokenizer error: '%ls'")
 
 /**
-   Error message for short circut command error.
+   Error message for short circuit command error.
 */
-#define COND_ERR_MSG _( L"Short circut command requires additional command")
+#define COND_ERR_MSG _( L"Short circuit command requires additional command")
 
 /**
    Error message on reaching maximum recusrion depth
@@ -2554,7 +2554,7 @@ int parser_test( wchar_t * buff,
 					}
 
 					/*
-					  The short circut commands requires _two_ additional commands.
+					  The short circuit commands requires _two_ additional commands.
 					*/
 					if( contains_str( tok_last( &tok ),
 									  L"or",

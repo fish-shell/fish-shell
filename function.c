@@ -88,6 +88,9 @@ static void autoload_names( array_list_t *out, int get_hidden )
 	{
 		wchar_t *ndir = (wchar_t *)al_get( &path_list, i );
 		DIR *dir = wopendir( ndir );
+		if( !dir )
+			continue;
+		
 		struct wdirent *next;
 		while( (next=wreaddir(dir))!=0 )
 		{
@@ -101,7 +104,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 			{
 				wchar_t *dup;
 				*suffix = 0;
-				dup = wcsdup( fn );
+				dup = intern( fn );
 				if( !dup )
 					die_mem();
 				al_push( out, dup );

@@ -1781,7 +1781,6 @@ static int parse_job( process_t *p,
 				error( SYNTAX_ERROR,
 					   tok_get_pos( tok ),
 					   EXEC_ERR_MSG );
-				free(nxt);
 				current_tokenizer_pos = prev_tokenizer_pos;	
 				return 0;
 			}
@@ -2012,7 +2011,6 @@ static int parse_job( process_t *p,
 										 end_pos - current_tokenizer_pos);
 
 			p->type = INTERNAL_BLOCK;
-			free( (void *)al_get( args, 0 ) );
 			al_set( args, 0, sub_block );
 
 			tok_set_pos( tok,
@@ -2317,7 +2315,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	{
 		forbidden_function = al_new();
 	}
-
+	
 	forbid_count = al_get_count( forbidden_function );
 
 	block_io = io;

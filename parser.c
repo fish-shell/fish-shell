@@ -708,7 +708,7 @@ wchar_t *get_filename( const wchar_t *cmd )
 
 	debug( 2, L"get_filename( '%ls' )", cmd );
 
-	if(wcschr( cmd, '/' ) != 0 )
+	if(wcschr( cmd, L'/' ) != 0 )
 	{
 		if( waccess( cmd, X_OK )==0 )
 		{
@@ -748,9 +748,9 @@ wchar_t *get_filename( const wchar_t *cmd )
 			{
 				int path_len = wcslen( nxt_path );
 				wcscpy( new_cmd, nxt_path );
-				if( new_cmd[path_len-1] != '/' )
+				if( new_cmd[path_len-1] != L'/' )
 				{
-					new_cmd[path_len++]='/';
+					new_cmd[path_len++]=L'/';
 				}
 				wcscpy( &new_cmd[path_len], cmd );
 				if( waccess( new_cmd, X_OK )==0 )

@@ -1126,7 +1126,7 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	{
 		error( SYNTAX_ERROR,
 			   -1,
-			   L"Mismatched brackets" );
+			   _(L"Mismatched brackets") );
 		return 0;
 	}
 

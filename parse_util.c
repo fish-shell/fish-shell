@@ -24,6 +24,7 @@
 #include "expand.h"
 #include "intern.h"
 #include "exec.h"
+#include "env.h"
 #include "halloc_util.h"
 
 /**
@@ -598,4 +599,29 @@ int parse_util_load( const wchar_t *cmd,
 
 	return reloaded;	
 }
+
+void parse_util_set_argv( wchar_t **argv )
+{
+	if( *argv )
+	{
+		wchar_t **arg;
+		string_buffer_t sb;
+		sb_init( &sb );
+		
+		for( arg=argv; *arg; arg++ )
+		{
+			if( arg != argv )
+				sb_append( &sb, ARRAY_SEP_STR );
+			sb_append( &sb, *arg );
+		}
+			
+		env_set( L"argv", (wchar_t *)sb.buff, ENV_LOCAL );
+		sb_destroy( &sb );
+	}
+	else
+	{
+		env_set( L"argv", 0, ENV_LOCAL );
+	}				
+}
+
 

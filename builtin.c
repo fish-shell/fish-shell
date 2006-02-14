@@ -61,6 +61,8 @@
 #include "translate.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "parse_util.h"
+#include "expand.h"
 
 /**
    The default prompt for the read command
@@ -1941,9 +1943,9 @@ static int builtin_source( wchar_t ** argv )
 
 	argc = builtin_count_args( argv );
 
-	if( argc != 2 )
+	if( argc < 2 )
 	{
-		sb_printf( sb_err, _( L"%ls: Expected exactly one argument, got %d\n" ), argv[0], argc );
+		sb_printf( sb_err, _( L"%ls: Expected at least one argument, got %d\n" ), argv[0], argc );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -1983,9 +1985,12 @@ static int builtin_source( wchar_t ** argv )
 		
 		parser_push_block( SOURCE );		
 		reader_push_current_filename( fn_intern );
-		
+
+	
 		current_block->param1.source_dest = fn_intern;
 
+		parse_util_set_argv( argv+2);
+		
 		res = reader_read( fd );
 		parser_pop_block();
 		if( res )
@@ -2007,7 +2012,6 @@ static int builtin_source( wchar_t ** argv )
 
 	return res;
 }
-
 
 /**
    Make the specified job the first job of the job list. Moving jobs

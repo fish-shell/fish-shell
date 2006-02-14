@@ -243,6 +243,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 	int i;
 	int written=0;
 	
+//	debug( 1, L"print %ls", al_get(c->comp, 0 ) );
 	if( c->pref_width <= width )
 	{
 		/*
@@ -264,31 +265,46 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 		comp_width = maxi( mini( c->comp_width,
 								 2*(width-4)/3 ),
 						   width - desc_all );
+		if( c->desc_width )
+			desc_width = width-comp_width-4;
+		else
+			c->desc_width=0;
 		
-		desc_width = width-comp_width-4;
 	}
 	
 	for( i=0; i<al_get_count( c->comp ); i++ )
 	{
 		if( i != 0 )
-			written += print_max( L" ", comp_width - written, 1 );
+			written += print_max( L"  ", comp_width - written, 2 );
 		set_color( get_color(HIGHLIGHT_PAGER_PREFIX),FISH_COLOR_NORMAL );
 		written += print_max( prefix, comp_width - written, 1 );
 		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION),FISH_COLOR_IGNORE );
 		written += print_max( (wchar_t *)al_get( c->comp, i ), comp_width - written, i!=(al_get_count(c->comp)-1) );
 	}
 
-	while( written < (width-desc_width-2))
+
+	if( desc_width )
 	{
-		written++;
-		writech( L' ');
+		while( written < (width-desc_width-2))
+		{
+			written++;
+			writech( L' ');
+		}
+		written += print_max( L"(", 1, 0 );
+		set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ),
+				   FISH_COLOR_IGNORE );
+		written += print_max( c->desc, desc_width, 0 );
+		written += print_max( L")", 1, 0 );
+	}
+	else
+	{
+		while( written < width )
+		{
+			written++;
+			writech( L' ');
+		}
 	}
 	
-	written += print_max( L"(", 1, 0 );
-	set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ),
-			   FISH_COLOR_IGNORE );
-	written += print_max( c->desc, desc_width, 0 );
-	written += print_max( L")", 1, 0 );
 }
 
 /**
@@ -322,14 +338,16 @@ static void completion_print( int cols,
 		{
 			comp_t *el;
 
+			int is_last = (j==(cols-1));
+			
 			if( al_get_count( l ) <= j*rows + i )
 				continue;
 
 			el = (comp_t *)al_get( l, j*rows + i );
 			
-			completion_print_item( prefix, el, width[j] );
+			completion_print_item( prefix, el, width[j] - (is_last?0:2) );
 
-			if( j != cols-1)
+			if( !is_last)
 				writestr( L"  " );
 		}
 		writech( L'\n' );
@@ -683,7 +701,7 @@ static void join_completions( array_list_t *l )
 {
 	int i, in, out;
 	hash_table_t desc_table;
-
+	
 	hash_init( &desc_table, &hash_wcs_func, &hash_wcs_cmp );
 
 	for( i=0; i<al_get_count(l); i++ )
@@ -698,7 +716,7 @@ static void join_completions( array_list_t *l )
 		prev_idx = ((long)hash_get( &desc_table, desc) )-1;
 		if( prev_idx == -1 )
 		{
-			hash_put( &desc_table, desc, (void *)(i+1));
+			hash_put( &desc_table, halloc_wcsdup( global_context, desc), (void *)(i+1));
 		}
 		else
 		{
@@ -714,7 +732,10 @@ static void join_completions( array_list_t *l )
 				sb_append( &foo, old );
 				sb_append_char( &foo, COMPLETE_ITEM_SEP );
 				sb_append( &foo, item );
+
+				free( (void *)al_get( l, prev_idx ) );
 				al_set( l, prev_idx, foo.buff );
+
 				free( (void *)al_get( l, i ) );
 				al_set( l, i, 0 );
 			}
@@ -729,17 +750,18 @@ static void join_completions( array_list_t *l )
 	out=0;
 	for( in=0; in < al_get_count(l); in++ )
 	{
-		if( al_get( l, in ) )
+		const void * d =  al_get( l, in );
+		
+		if( d )
 		{
-			al_set( l, out++, al_get( l, in ) );
+			al_set( l, out++, d );
 		}
 	}
-	al_truncate( l, out );
-	
+	al_truncate( l, out );	
 }
 
 /**
-   Replace compåletion strings with a comp_t structure
+   Replace completion strings with a comp_t structure
 */
 static void mangle_completions( array_list_t *l, const wchar_t *prefix )
 {
@@ -752,11 +774,11 @@ static void mangle_completions( array_list_t *l, const wchar_t *prefix )
 		comp_t *comp = halloc( global_context, sizeof( comp_t ) );
 		comp->comp = al_halloc( global_context );
 		
-		for( start=end=next; *end; end++ )
+		for( start=end=next; 1; end++ )
 		{
 			wchar_t c = *end;
 			
-			if( c == COMPLETE_ITEM_SEP || c==COMPLETE_SEP )
+			if( (c == COMPLETE_ITEM_SEP) || (c==COMPLETE_SEP) || !c)
 			{
 				*end = 0;
 				wchar_t * str = escape( start, 1 );
@@ -770,10 +792,14 @@ static void mangle_completions( array_list_t *l, const wchar_t *prefix )
 			{
 				comp->desc = halloc_wcsdup( global_context, start );
 				break;
-			}			
+			}	
+			
+			if( !c )
+				break;
+			
 		}
 
-		comp->comp_width  += my_wcswidth(prefix)*al_get_count(comp->comp) + (al_get_count(comp->comp)-1);
+		comp->comp_width  += my_wcswidth(prefix)*al_get_count(comp->comp) + 2*(al_get_count(comp->comp)-1);
 		comp->desc_width = comp->desc?my_wcswidth( comp->desc ):0;
 		
 		comp->pref_width = comp->comp_width + comp->desc_width + (comp->desc_width?4:0);
@@ -915,12 +941,11 @@ int main( int argc, char **argv )
 				al_push( comp, wcs );
 			}
 		}
-	
+		
 		mangle_descriptions( comp );
 		if( wcscmp( prefix, L"-" ) == 0 )
 			join_completions( comp );
 		mangle_completions( comp, prefix );
-		
 	
 		for( i = 6; i>0; i-- )
 		{

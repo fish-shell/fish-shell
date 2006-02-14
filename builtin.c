@@ -1613,6 +1613,8 @@ static int builtin_status( wchar_t **argv )
 		IS_NO_JOB_CONTROL,
 		STACK_TRACE,
 		DONE,
+		CURRENT_FILENAME,
+		CURRENT_LINE_NUMBER
 	}
 	;
 
@@ -1656,6 +1658,14 @@ static int builtin_status( wchar_t **argv )
 			,
 			{
 				L"is-no-job-control", no_argument, &mode, IS_NO_JOB_CONTROL
+			}
+			,
+			{
+				L"current-filename", no_argument, &mode, CURRENT_FILENAME
+			}
+			,
+			{
+				L"current-line-number", no_argument, &mode, CURRENT_LINE_NUMBER
 			}
 			,
 			{
@@ -1732,6 +1742,24 @@ static int builtin_status( wchar_t **argv )
 
 		switch( mode )
 		{
+			case CURRENT_FILENAME:
+			{
+				const wchar_t *fn = parser_current_filename();
+				
+				if( !fn )
+					fn = _(L"Standard input");
+				
+				sb_printf( sb_out, L"%ls\n", fn );
+				
+				break;
+			}
+			
+			case CURRENT_LINE_NUMBER:
+			{
+				sb_printf( sb_out, L"%d\n", parser_get_lineno() );
+				break;				
+			}
+			
 			case IS_INTERACTIVE:
 				return !is_interactive_session;
 
@@ -1766,9 +1794,9 @@ static int builtin_status( wchar_t **argv )
 				else
 					sb_printf( sb_out, _( L"This is not a login shell\n" ) );
 
-				sb_printf( sb_out, _(L"Job control: %ls\n"),
-						   job_control_mode==JOB_CONTROL_INTERACTIVE?_(L"Only on interactive jobs"):
-						   (job_control_mode==JOB_CONTROL_NONE?_(L"Never"):_(L"Always")) );
+				sb_printf( sb_out, _( L"Job control: %ls\n" ),
+						   job_control_mode==JOB_CONTROL_INTERACTIVE?_( L"Only on interactive jobs" ):
+						   (job_control_mode==JOB_CONTROL_NONE ? _( L"Never" ) : _( L"Always" ) ) );
 
 				parser_stack_trace( current_block, sb_out );
 				break;

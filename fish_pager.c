@@ -42,6 +42,7 @@
 #include "output.h"
 #include "input_common.h"
 #include "env_universal.h"
+#include "halloc.h"
 #include "halloc_util.h"
 
 enum 
@@ -92,8 +93,18 @@ static wchar_t *hightlight_var[] =
 static string_buffer_t out_buff;
 static FILE *out_file;
 
+typedef struct 
+{
+	array_list_t *comp;
+	wchar_t *desc;
+	int comp_width;	
+	int desc_width;	
+	int pref_width;
+	int min_width;
+}
+	comp_t;
 
-int get_color( int highlight )
+static int get_color( int highlight )
 {
 	if( highlight < 0 )
 		return FISH_COLOR_NORMAL;
@@ -103,9 +114,6 @@ int get_color( int highlight )
 	wchar_t *val = env_universal_get( hightlight_var[highlight]);
 	
 	if( val == 0 )
-		return FISH_COLOR_NORMAL;
-	
-	if( val == 0 )
 	{
 		return FISH_COLOR_NORMAL;
 	}
@@ -113,7 +121,20 @@ int get_color( int highlight )
 	return output_color_code( val );	
 }
 
-int try_sequence( char *seq )
+static void recalc_width( array_list_t *l, const wchar_t *prefix )
+{
+	int i;
+	for( i=0; i<al_get_count( l ); i++ )
+	{
+		comp_t *c = (comp_t *)al_get( l, i );
+		
+		c->min_width = mini( c->desc_width, maxi(0,termsize.ws_col/3 - 2)) +
+			mini( c->desc_width, maxi(0,termsize.ws_col/5 - 4)) +4;
+	}
+	
+}
+
+static int try_sequence( char *seq )
 {
 	int j, k;
 	wint_t c=0;
@@ -195,6 +216,80 @@ static wint_t readch()
 	return input_common_readch(0);
 }
 
+static int print_max( const wchar_t *str, int max, int has_more )
+{
+	int i;
+	int written = 0;
+	for( i=0; str[i]; i++ )
+	{
+		if( written + wcwidth(str[i]) > max )
+			break;
+		if( ( written + wcwidth(str[i]) == max) && (has_more || str[i+1]) )
+		{
+			writech( ellipsis_char );
+			written += wcwidth(ellipsis_char );
+			break;
+		}
+			
+		writech( str[i] );
+		written+= wcwidth( str[i] );
+	}
+	return written;
+}
+
+static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
+{
+	int comp_width, desc_width;
+	int i;
+	int written=0;
+	
+	if( c->pref_width <= width )
+	{
+		/*
+		  The entry fits, we give it as much space as it wants
+		*/
+		comp_width = c->comp_width;
+		desc_width = c->desc_width;
+	}
+	else
+	{
+		/*
+		  The completion and description won't fit on the
+		  allocated space. Give a maximum of 2/3 of the
+		  space to the completion, and whatever is left to
+		  the description.
+		*/
+		int desc_all = c->desc_width?c->desc_width+4:0;
+		
+		comp_width = maxi( mini( c->comp_width,
+								 2*(width-4)/3 ),
+						   width - desc_all );
+		
+		desc_width = width-comp_width-4;
+	}
+	
+	for( i=0; i<al_get_count( c->comp ); i++ )
+	{
+		if( i != 0 )
+			written += print_max( L" ", comp_width - written, 1 );
+		set_color( get_color(HIGHLIGHT_PAGER_PREFIX),FISH_COLOR_NORMAL );
+		written += print_max( prefix, comp_width - written, 1 );
+		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION),FISH_COLOR_IGNORE );
+		written += print_max( (wchar_t *)al_get( c->comp, i ), comp_width - written, i!=(al_get_count(c->comp)-1) );
+	}
+
+	while( written < (width-desc_width-2))
+	{
+		written++;
+		writech( L' ');
+	}
+	
+	written += print_max( L"(", 1, 0 );
+	set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ),
+			   FISH_COLOR_IGNORE );
+	written += print_max( c->desc, desc_width, 0 );
+	written += print_max( L")", 1, 0 );
+}
 
 /**
    Print the specified part of the completion list, using the
@@ -220,288 +315,24 @@ static void completion_print( int cols,
 
 	int rows = (al_get_count( l )-1)/cols+1;
 	int i, j;
-	int prefix_width= my_wcswidth(prefix);
 
 	for( i = row_start; i<row_stop; i++ )
 	{
 		for( j = 0; j < cols; j++ )
 		{
-			wchar_t *el, *el_end;
+			comp_t *el;
 
 			if( al_get_count( l ) <= j*rows + i )
 				continue;
 
-			el = (wchar_t *)al_get( l, j*rows + i );
-			el_end= wcschr( el, COMPLETE_SEP );
+			el = (comp_t *)al_get( l, j*rows + i );
+			
+			completion_print_item( prefix, el, width[j] );
 
-			set_color( get_color(HIGHLIGHT_PAGER_PREFIX),FISH_COLOR_NORMAL );
-
-			writestr( prefix );
-
-			set_color( get_color(HIGHLIGHT_PAGER_COMPLETION),FISH_COLOR_IGNORE );
-
-			if( el_end == 0 )
-			{
-				/* We do not have a description for this completion */
-				int written = 0;
-				int max_written = width[j] - prefix_width - (j==cols-1?0:2);
-
-				if( is_quoted )
-				{
-					for( i=0; i<max_written; i++ )
-					{
-						if( !el[i] )
-							break;
-						writech( el[i] );
-						written+= wcwidth( el[i] );
-					}
-				}
-				else
-				{
-					written = write_escaped_str( el, max_written );
-				}
-
-				set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ),
-						   FISH_COLOR_IGNORE );
-
-				writespace( width[j]-
-							written-
-							prefix_width );
-			}
-			else
-			{
-				int whole_desc_width = my_wcswidth(el_end+1);
-				int whole_comp_width;
-
-				/*
-				  Temporarily drop the description so that wcswidth et
-				  al only calculate the width of the completion.
-				*/
-				*el_end = L'\0';
-
-				/*
-				  Calculate preferred completion width
-				*/
-				if( is_quoted )
-				{
-					whole_comp_width = my_wcswidth(el);
-				}
-				else
-				{
-					wchar_t *tmp = escape( el, 1 );
-					whole_comp_width = my_wcswidth( tmp );
-					free(tmp);
-				}
-
-				/*
-				  Calculate how wide this entry 'wants' to be
-				*/
-				int pref_width = whole_desc_width + 4 + prefix_width + 2 -
-					(j==cols-1?2:0) + whole_comp_width;
-
-				int comp_width, desc_width;
-
-				if( pref_width <= width[j] )
-				{
-					/*
-					  The entry fits, we give it as much space as it wants
-					*/
-					comp_width = whole_comp_width;
-					desc_width = whole_desc_width;
-				}
-				else
-				{
-					/*
-					  The completion and description won't fit on the
-					  allocated space. Give a maximum of 2/3 of the
-					  space to the completion, and whatever is left to
-					  the description.
-					*/
-					int sum = width[j] - prefix_width - 4 - 2 + (j==cols-1?2:0);
-
-					comp_width = maxi( mini( whole_comp_width,
-											 2*sum/3 ),
-									   sum - whole_desc_width );
-					desc_width = sum-comp_width;
-				}
-
-				/* First we must print the completion. */
-				if( is_quoted )
-				{
-					writestr_ellipsis( el, comp_width);
-				}
-				else
-				{
-					write_escaped_str( el, comp_width );
-				}
-
-				/* Put the description back */
-				*el_end = COMPLETE_SEP;
-
-				/* And print it */
-				set_color( get_color(HIGHLIGHT_PAGER_DESCRIPTION),
-						   FISH_COLOR_IGNORE );
-				writespace( maxi( 2,
-								  width[j]
-								  - comp_width
-								  - desc_width
-								  - 4
-								  - prefix_width
-								  + (j==cols-1?2:0) ) );
-				/* Print description */
-				writestr(L"(");
-				writestr_ellipsis( el_end+1, desc_width);
-				writestr(L")");
-
-				if( j != cols-1)
-					writestr( L"  " );
-
-			}
+			if( j != cols-1)
+				writestr( L"  " );
 		}
 		writech( L'\n' );
-	}
-}
-
-/**
-   Calculates how long the specified string would be when printed on the command line.
-
-   \param str The string to be printed.
-   \param is_quoted Whether the string would be printed quoted or unquoted
-   \param pref_width the preferred width for this item
-   \param min_width the minimum width for this item
-*/
-static void printed_length( wchar_t *str,
-							int is_quoted,
-							int *pref_width,
-							int *min_width )
-{
-	if( is_quoted )
-	{
-		wchar_t *sep = wcschr(str,COMPLETE_SEP);
-		if( sep )
-		{
-			*sep=0;
-			int cw = my_wcswidth( str );
-			int dw = my_wcswidth(sep+1);
-
-			if( termsize.ws_col > 80 )
-				dw = mini( dw, termsize.ws_col/3 );
-
-
-			*pref_width = cw+dw+4;
-
-			if( dw > termsize.ws_col/3 )
-			{
-				dw = termsize.ws_col/3;
-			}
-
-			*min_width=cw+dw+4;
-
-			*sep= COMPLETE_SEP;
-			return;
-		}
-		else
-		{
-			*pref_width=*min_width= my_wcswidth( str );
-			return;
-		}
-
-	}
-	else
-	{
-		int comp_len=0, desc_len=0;
-		int has_description = 0;
-		while( *str != 0 )
-		{
-			if( ( *str >= ENCODE_DIRECT_BASE) &&
-				( *str < ENCODE_DIRECT_BASE+256) )
-			{
-				if( has_description )
-					desc_len+=4;
-				else
-					comp_len+=4;
-
-			}
-			else
-			{
-				
-				switch( *str )
-				{
-					case L'\n':
-					case L'\b':
-					case L'\r':
-					case L'\e':
-					case L'\t':
-					case L'\\':
-					case L'&':
-					case L'$':
-					case L' ':
-					case L'#':
-					case L'^':
-					case L'<':
-					case L'>':
-					case L'(':
-					case L')':
-					case L'[':
-					case L']':
-					case L'{':
-					case L'}':
-					case L'?':
-					case L'*':
-					case L'|':
-					case L';':
-					case L':':
-					case L'\'':
-					case L'"':
-					case L'%':
-					case L'~':
-					
-						if( has_description )
-							desc_len++;
-						else
-							comp_len+=2;
-						break;
-
-					case COMPLETE_SEP:
-						has_description = 1;
-						break;
-
-					default:
-						if( has_description )
-							desc_len+= wcwidth(*str);
-						else
-							comp_len+= wcwidth(*str);
-						break;
-				}
-			}
-			
-			str++;
-		}
-		if( has_description )
-		{
-			/*
-			  Mangle long descriptions to make formating look nicer
-			*/
-			debug( 3, L"Desc, width = %d %d\n", comp_len, desc_len );
-//			if( termsize.ws_col > 80 )
-//				desc_len = mini( desc_len, termsize.ws_col/3 );
-
-			*pref_width = comp_len+ desc_len+4;;
-
-			comp_len = mini( comp_len, maxi(0,termsize.ws_col/3 - 2));
-			desc_len = mini( desc_len, maxi(0,termsize.ws_col/5 - 4));
-
-			*min_width = comp_len+ desc_len+4;
-			return;
-		}
-		else
-		{
-			debug( 3, L"No desc, width = %d\n", comp_len );
-			
-			*pref_width=*min_width= comp_len;
-			return;
-		}
-
 	}
 }
 
@@ -552,8 +383,6 @@ static int completion_try_print( int cols,
 	
 	int pref_tot_width=0;
 	int min_tot_width = 0;
-	int prefix_width = my_wcswidth( prefix );
-	
 	int res=0;
 	/*
 	  Skip completions on tiny terminals
@@ -561,25 +390,24 @@ static int completion_try_print( int cols,
 	
 	if( termsize.ws_col < 16 )
 		return 1;
-
+	
 	memset( pref_width, 0, sizeof(pref_width) );
 	memset( min_width, 0, sizeof(min_width) );
-
+	
 	/* Calculate how wide the list would be */
 	for( j = 0; j < cols; j++ )
 	{
 		for( i = 0; i<rows; i++ )
 		{
 			int pref,min;
-			wchar_t *el;
+			comp_t *c;
 			if( al_get_count( l ) <= j*rows + i )
 				continue;
 
-			el = (wchar_t *)al_get( l, j*rows + i );
-			printed_length( el, is_quoted, &pref, &min );
-
-			pref += prefix_width;
-			min += prefix_width;
+			c = (comp_t *)al_get( l, j*rows + i );
+			pref = c->pref_width;
+			min = c->min_width;
+			
 			if( j != cols-1 )
 			{
 				pref += 2;
@@ -808,7 +636,9 @@ static int completion_try_print( int cols,
 }
 
 /**
-   Substitute any series of tabs, newlines, etc. with a single space character in completion description
+   Substitute any series of whitespace with a single space character
+   inside completion descriptions. Remove all whitespace from
+   beginning/end of completion descriptions.
 */
 static void mangle_descriptions( array_list_t *l )
 {
@@ -845,6 +675,117 @@ static void mangle_descriptions( array_list_t *l )
 		*out=0;		
 	}
 }
+
+/**
+   Merge multiple completions with the same description to the same line
+*/
+static void join_completions( array_list_t *l )
+{
+	int i, in, out;
+	hash_table_t desc_table;
+
+	hash_init( &desc_table, &hash_wcs_func, &hash_wcs_cmp );
+
+	for( i=0; i<al_get_count(l); i++ )
+	{
+		wchar_t *item = (wchar_t *)al_get( l, i );
+		wchar_t *desc = wcschr( item, COMPLETE_SEP );
+		long prev_idx;
+		
+		if( !desc )
+			continue;
+		desc++;
+		prev_idx = ((long)hash_get( &desc_table, desc) )-1;
+		if( prev_idx == -1 )
+		{
+			hash_put( &desc_table, desc, (void *)(i+1));
+		}
+		else
+		{
+			string_buffer_t foo;
+			wchar_t *old = (wchar_t *)al_get( l, prev_idx );
+			wchar_t *old_end = wcschr( old, COMPLETE_SEP );
+			
+			if( old_end )
+			{
+				*old_end = 0;
+				
+				sb_init( &foo );
+				sb_append( &foo, old );
+				sb_append_char( &foo, COMPLETE_ITEM_SEP );
+				sb_append( &foo, item );
+				al_set( l, prev_idx, foo.buff );
+				free( (void *)al_get( l, i ) );
+				al_set( l, i, 0 );
+			}
+			
+//			debug( 1, L"WOOT WOOT %ls är släkt med %ls", item, al_get( l, prev_idx ) );
+			
+		}
+		
+	}	
+	hash_destroy( &desc_table );
+
+	out=0;
+	for( in=0; in < al_get_count(l); in++ )
+	{
+		if( al_get( l, in ) )
+		{
+			al_set( l, out++, al_get( l, in ) );
+		}
+	}
+	al_truncate( l, out );
+	
+}
+
+/**
+   Replace compåletion strings with a comp_t structure
+*/
+static void mangle_completions( array_list_t *l, const wchar_t *prefix )
+{
+	int i;
+	
+	for( i=0; i<al_get_count( l ); i++ )
+	{
+		wchar_t *next = (wchar_t *)al_get( l, i );
+		wchar_t *start, *end;
+		comp_t *comp = halloc( global_context, sizeof( comp_t ) );
+		comp->comp = al_halloc( global_context );
+		
+		for( start=end=next; *end; end++ )
+		{
+			wchar_t c = *end;
+			
+			if( c == COMPLETE_ITEM_SEP || c==COMPLETE_SEP )
+			{
+				*end = 0;
+				wchar_t * str = escape( start, 1 );
+				comp->comp_width += my_wcswidth( str );
+				halloc_register( global_context, str );
+				al_push( comp->comp, str );
+				start = end+1;
+			}
+
+			if( c == COMPLETE_SEP )
+			{
+				comp->desc = halloc_wcsdup( global_context, start );
+				break;
+			}			
+		}
+
+		comp->comp_width  += my_wcswidth(prefix)*al_get_count(comp->comp) + (al_get_count(comp->comp)-1);
+		comp->desc_width = comp->desc?my_wcswidth( comp->desc ):0;
+		
+		comp->pref_width = comp->comp_width + comp->desc_width + (comp->desc_width?4:0);
+		
+		free( next );
+		al_set( l, i, comp );
+	}
+	
+	recalc_width( l, prefix );
+}
+
+
 
 /**
    Respond to a winch signal by checking the terminal size
@@ -942,45 +883,48 @@ void destroy()
 	del_curterm( cur_term );
 	sb_destroy( &out_buff );
 	fclose( out_file );
-
 }
 
 int main( int argc, char **argv )
 {
 	int i;
 	int is_quoted=0;	
-	array_list_t comp;
+	array_list_t *comp;
 	wchar_t *prefix;
-
 		
 	init();
+	
 	if( argc < 3 )
 	{
 		debug( 0, L"Insufficient arguments" );
 	}
 	else
 	{
+		comp = al_halloc( global_context );
 		prefix = str2wcs( argv[2] );
 		is_quoted = strcmp( "1", argv[1] )==0;
-	
+		is_quoted = 0;
+		
 		debug( 3, L"prefix is '%ls'", prefix );
-	
-		al_init( &comp );
-	
+		
 		for( i=3; i<argc; i++ )
 		{
 			wchar_t *wcs = str2wcs( argv[i] );
 			if( wcs )
 			{
-				al_push( &comp, wcs );
+				al_push( comp, wcs );
 			}
 		}
 	
-		mangle_descriptions( &comp );
-
+		mangle_descriptions( comp );
+		if( wcscmp( prefix, L"-" ) == 0 )
+			join_completions( comp );
+		mangle_completions( comp, prefix );
+		
+	
 		for( i = 6; i>0; i-- )
 		{
-			switch( completion_try_print( i, prefix, is_quoted, &comp ) )
+			switch( completion_try_print( i, prefix, is_quoted, comp ) )
 			{
 				case 0:
 					break;
@@ -994,8 +938,6 @@ int main( int argc, char **argv )
 		
 		}
 	
-		al_foreach( &comp, (void(*)(const void *))&free );
-		al_destroy( &comp );	
 		free(prefix );
 
 		fwprintf( out_file, L"%ls", (wchar_t *)out_buff.buff );

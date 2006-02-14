@@ -47,7 +47,7 @@ typedef char tputs_arg_t;
 /**
    This is in the unicode private use area.
 */
-#define ENCODE_DIRECT_BASE 0xf000
+#define ENCODE_DIRECT_BASE 0xf100
 
 /** 
 	Save the shell mode on startup so we can restore them on exit

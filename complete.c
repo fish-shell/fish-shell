@@ -815,7 +815,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 		}
 	}
 
-	wchar_t *tmp = escape( suff, 0 );
+	wchar_t *tmp = escape( suff, 1 );
 	free(suff);
 	suff = tmp;
 

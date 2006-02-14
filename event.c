@@ -450,7 +450,7 @@ static void event_fire_internal( event_t *event )
 		
 		for( j=0; j<al_get_count(&event->arguments); j++ )
 		{
-			wchar_t *arg_esc = escape( (wchar_t *)al_get( &event->arguments, j), 0 );		
+			wchar_t *arg_esc = escape( (wchar_t *)al_get( &event->arguments, j), 1 );		
 			sb_append( b, L" " );
 			sb_append( b, arg_esc );
 			free( arg_esc );				

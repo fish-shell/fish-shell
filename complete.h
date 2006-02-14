@@ -33,6 +33,8 @@
 /** Separateor between completion and description*/
 #define COMPLETE_SEP_STR L"\004"
 
+#define COMPLETE_ITEM_SEP L'\uf500'
+
 /**
    Character that separates the completion and description on programmable completions
 */

@@ -512,7 +512,7 @@ int parse_util_load( const wchar_t *cmd,
 	  Did we just check this?
 	*/
 	if( tm )
-		if(tm[1]-time(0)<=1)
+		if(time(0)-tm[1]<=1)
 			return 0;
 
 	/*

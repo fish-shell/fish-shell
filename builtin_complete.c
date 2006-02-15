@@ -27,7 +27,7 @@ const static wchar_t *temporary_buffer;
 /*
   builtin_complete_* are a set of rather silly looping functions that
   make sure that all the proper combinations of complete_add or
-  complete_remove get called.
+  complete_remove get called. 
 */
 
 static void	builtin_complete_add2( const wchar_t *cmd,
@@ -307,7 +307,8 @@ int builtin_complete( wchar_t **argv )
 				}
 				,
 				{
-					L"long-option", required_argument, 0, 'l'				}
+					L"long-option", required_argument, 0, 'l'
+				}
 				,
 				{
 					L"old-option", required_argument, 0, 'o' 
@@ -415,10 +416,8 @@ int builtin_complete( wchar_t **argv )
 				comp = woptarg;
 				break;
 				
-
 			case 'e':
 				remove = 1;
-				
 				break;
 
 			case 'n':
@@ -441,86 +440,85 @@ int builtin_complete( wchar_t **argv )
 		
 	}
 
-	if( res != 0 )
+	if( !res )
 	{
-	}
-	else if( do_complete )
-	{
-		array_list_t comp;
-		int i;
-
-		const wchar_t *prev_temporary_buffer = temporary_buffer;
-		temporary_buffer = do_complete;		
-
-		if( recursion_level < 1 )
+		if( do_complete )
 		{
-		recursion_level++;
+			array_list_t comp;
+			int i;
+
+			const wchar_t *prev_temporary_buffer = temporary_buffer;
+			temporary_buffer = do_complete;		
+
+			if( recursion_level < 1 )
+			{
+				recursion_level++;
 			
+				al_init( &comp );
+			
+				complete( do_complete, &comp );
+			
+				for( i=0; i<al_get_count( &comp ); i++ )
+				{
+					wchar_t *next = (wchar_t *)al_get( &comp, i );
+					wchar_t *sep = wcschr( next, COMPLETE_SEP );
+					if( sep )
+						*sep = L'\t';
+					sb_printf( sb_out, L"%ls\n", next );
+				}
+			
+				al_foreach( &comp, (void (*)(const void *))&free );
+				al_destroy( &comp );
+				recursion_level--;
+			}
 		
-		al_init( &comp );
-
-		complete( do_complete, &comp );
-
-		for( i=0; i<al_get_count( &comp ); i++ )
-		{
-			wchar_t *next = (wchar_t *)al_get( &comp, i );
-			wchar_t *sep = wcschr( next, COMPLETE_SEP );
-			if( sep )
-				*sep = L'\t';
-			sb_printf( sb_out, L"%ls\n", next );
+			temporary_buffer = prev_temporary_buffer;		
+		
 		}
-		
-		al_foreach( &comp, (void (*)(const void *))&free );
-		al_destroy( &comp );
-		recursion_level--;
-		}
-		
-		temporary_buffer = prev_temporary_buffer;		
-		
-	}
-	else if( woptind != argc )
-	{
-		sb_printf( sb_err, 
-				   _( L"%ls: Too many arguments\n" ),
-				   argv[0] );
-		sb_append( sb_err, 
-				   parser_current_line() );
-		//			builtin_print_help( argv[0], sb_err );
-
-		res = 1;
-	}
-	else if( (al_get_count( &cmd) == 0 ) && (al_get_count( &path) == 0 ) )
-	{
-		/* No arguments specified, meaning we print the definitions of
-		 * all specified completions to stdout.*/
-		complete_print( sb_out );		
-	}
-	else
-	{
-		if( remove )
+		else if( woptind != argc )
 		{
-			builtin_complete_remove( &cmd,
-									 &path,
-									 (wchar_t *)short_opt.buff,
-									 &gnu_opt,
-									 &old_opt );									 
+			sb_printf( sb_err, 
+					   _( L"%ls: Too many arguments\n" ),
+					   argv[0] );
+			sb_append( sb_err, 
+					   parser_current_line() );
+			//			builtin_print_help( argv[0], sb_err );
+
+			res = 1;
+		}
+		else if( (al_get_count( &cmd) == 0 ) && (al_get_count( &path) == 0 ) )
+		{
+			/* No arguments specified, meaning we print the definitions of
+			 * all specified completions to stdout.*/
+			complete_print( sb_out );		
 		}
 		else
 		{
-			builtin_complete_add( &cmd, 
-								  &path,
-								  (wchar_t *)short_opt.buff,
-								  &gnu_opt,
-								  &old_opt, 
-								  result_mode, 
-								  authorative,
-								  condition,
-								  comp,
-								  desc ); 
-		}
+			if( remove )
+			{
+				builtin_complete_remove( &cmd,
+										 &path,
+										 (wchar_t *)short_opt.buff,
+										 &gnu_opt,
+										 &old_opt );									 
+			}
+			else
+			{
+				builtin_complete_add( &cmd, 
+									  &path,
+									  (wchar_t *)short_opt.buff,
+									  &gnu_opt,
+									  &old_opt, 
+									  result_mode, 
+									  authorative,
+									  condition,
+									  comp,
+									  desc ); 
+			}
 
-	}	
-
+		}	
+	}
+	
 	al_foreach( &cmd, (void (*)(const void *))&free );
 	al_foreach( &path, (void (*)(const void *))&free );
 

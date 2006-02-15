@@ -3175,6 +3175,7 @@ void builtin_destroy()
 	{
 		hash_destroy( desc );
 		free( desc );
+		desc=0;
 	}
 
 	al_destroy( &io_stack );

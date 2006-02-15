@@ -79,6 +79,8 @@ int parse_util_load( const wchar_t *cmd,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload );
 
+void parse_util_load_reset( const wchar_t *path_var );
+
 /**
    Set the argv environment variable to the specified null-terminated
    array of strings

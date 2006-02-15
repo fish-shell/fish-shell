@@ -325,7 +325,8 @@ void complete_init()
 void complete_destroy()
 {
 	complete_entry *i=first_entry, *prev;
-
+	wchar_t *path;
+	
 	while( i )
 	{
 		prev = i;
@@ -341,6 +342,13 @@ void complete_destroy()
 		free( suffix_hash );
 		suffix_hash=0;
 	}
+
+	path = env_get( L"fish_complete_path" );
+
+	if( path )
+		parse_util_load_reset( path );
+	
+
 }
 
 /**

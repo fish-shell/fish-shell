@@ -460,10 +460,23 @@ static void parse_util_destroy()
 	}
 }
 
+void parse_util_load_reset( const wchar_t *path_var )
+{
+	if( all_loaded )
+	{
+		void *key, *data;
+		hash_remove( all_loaded, path_var, (const void **)&key, (const void **)&data );
+		if( key )
+			clear_loaded_entry( key, data );
+	}
+	
+}
+
+
 int parse_util_load( const wchar_t *cmd,
-					  const wchar_t *path_var,
-					  void (*on_load)(const wchar_t *cmd),
-					  int reload )
+					 const wchar_t *path_var,
+					 void (*on_load)(const wchar_t *cmd),
+					 int reload )
 {
 	static array_list_t *path_list=0;
 	static string_buffer_t *path=0;

@@ -1,5 +1,5 @@
 
-function __fish_umask_parse -d "Parses a file permission specification as into an octal version"
+function __fish_umask_parse -d "Internal umask function"
 	# Test if already a valid octal mask, and pad it with zeros
 	if echo $argv | grep -E '^(0|)[0-7]{1,3}$' >/dev/null
 		for i in (seq (echo 5-(echo $argv|wc -c)|bc)); set argv 0$argv; end
@@ -132,7 +132,7 @@ function __fish_umask_print_symbolic
 	echo $res|cut -c 2-
 end
 
-function umask -d "Set default file permission mask"
+function umask -d (_ "Set default file permission mask")
 
 	set -l as_command 0
 	set -l symbolic 0

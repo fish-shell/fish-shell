@@ -4,7 +4,7 @@
 # value of a variable interactively.
 #
 
-function vared -d "Edit variable value"
+function vared -d (_ "Edit variable value")
 	if test (count $argv) = 1
 		switch $argv
 

@@ -1,6 +1,6 @@
 
 
-function psub -d "Read from stdin into a file and output the filename. Remove the file when the command that calles psub exits."
+function psub -d (_ "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits.")
 
 	set -l filename
 	set -l funcname

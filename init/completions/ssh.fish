@@ -1,69 +1,8 @@
 #
-# Common completions for all ssh commands
+# Load common ssh options
 #
 
-for i in ssh scp
-	complete -c $i -s 1 -d (_ "Protocoll version 1 only")
-	complete -c $i -s 2 -d (_ "Protocoll version 2 only")
-	complete -c $i -s 4 -d (_ "IPv4 addresses only")
-	complete -c $i -s 6 -d (_ "IPv6 addresses only")
-	complete -c $i -s C -d (_ "Compress all data")
-	complete -xc $i -s c -d (_ "Encryption algorithm") -a "blowfish 3des des"
-	complete -r -c $i -s F -d (_ "Configuration file")
-	complete -r -c $i -s i -d (_ "Identity file")
-	complete -x -c $i -s o -d (_ "Options") -a "
-		AddressFamily
-		BatchMode
-		BindAddress
-		ChallengeResponseAuthentication
-		CheckHostIP
-		Cipher
-		Ciphers
-		Compression
-		CompressionLevel
-		ConnectionAttempts
-		ConnectTimeout
-		ControlMaster
-		ControlPath
-		GlobalKnownHostsFile
-		GSSAPIAuthentication
-		GSSAPIDelegateCredentials
-		Host
-		HostbasedAuthentication
-		HostKeyAlgorithms
-		HostKeyAlias
-		HostName
-		IdentityFile
-		IdentitiesOnly
-		LogLevel
-		MACs
-		NoHostAuthenticationForLocalhost
-		NumberOfPasswordPrompts
-		PasswordAuthentication
-		Port
-		PreferredAuthentications
-		Protocol
-		ProxyCommand
-		PubkeyAuthentication
-		RhostsRSAAuthentication
-		RSAAuthentication
-		SendEnv
-		ServerAliveInterval
-		ServerAliveCountMax
-		SmartcardDevice
-		StrictHostKeyChecking
-		TCPKeepAlive
-		UsePrivilegedPort
-		User
-		UserKnownHostsFile
-		VerifyHostKeyDNS
-	"
-	complete -c $i -s v -d (_ "Verbose mode")
-end;
-
-#
-# ssh specific completions
-#
+__fish_complete_ssh ssh
 
 complete -x -c ssh -d Hostname -a "
 

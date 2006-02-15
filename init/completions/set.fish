@@ -3,12 +3,6 @@
 #
 
 #
-# We depend on set_color completions for color definitions
-#
-
-complete -y set_color
-
-#
 # All locale variables used by set completions
 #
 

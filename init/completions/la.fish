@@ -1,2 +1,2 @@
 
-complete -y ls
+__fish_complete_ls la

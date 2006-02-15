@@ -2000,7 +2000,7 @@ static int builtin_source( wchar_t ** argv )
 	{
 		wchar_t *fn = wrealpath( argv[1], 0 );
 		const wchar_t *fn_intern;
-
+		
 		if( !fn )
 		{
 			fn_intern = intern( argv[1] );
@@ -2018,8 +2018,8 @@ static int builtin_source( wchar_t ** argv )
 		current_block->param1.source_dest = fn_intern;
 
 		parse_util_set_argv( argv+2);
-		
 		res = reader_read( fd );
+		
 		parser_pop_block();
 		if( res )
 		{

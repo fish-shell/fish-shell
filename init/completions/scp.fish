@@ -2,7 +2,7 @@
 # Load common ssh options
 #
 
-complete -y ssh
+__fish_complete_ssh scp
 
 #
 # scp specific completions

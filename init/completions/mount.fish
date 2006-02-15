@@ -3,44 +3,6 @@
 # A list of all known filesystem types, used by various completions,
 # including mount and df
 
-set -g __fish_filesystems '
-	adfs
-	affs
-	autofs
-	coda
-	coherent
-	cramfs
-	devpts
-	efs
-	ext
-	ext2
-	ext3
-	hfs
-	hpfs
-	iso9660
-	jfs
-	minix
-	msdos
-	ncpfs
-	nfs
-	ntfs
-	proc
-	qnx4
-	ramfs
-	reiserfs
-	romfs
-	smbfs
-	sysv
-	tmpfs
-	udf
-	ufs
-	umsdos
-	vfat
-	xenix
-	xfs
-	xiafs
-'
-
 # Completions for mount
 complete -x -c mount -a '(cat /etc/fstab|sed -e "s/^\([^ \t]*\)[ \t]*\([^ \t]*\).*/\1\n\2/"|grep "^/")' -d (_ 'Mount point')
 complete -c mount -s V -d (_ 'Display version and exit')
@@ -59,7 +21,7 @@ complete -x -c mount -s U -d (_ 'Mount partition with specified UID')
 complete -c mount -s O -x -d (_ 'Exclude filesystems')
 complete -c mount -l bind -f -d (_ 'Remount a subtree to a second position')
 complete -c mount -l move -f -d (_ 'Move a subtree to a new position')
-complete -c mount -x -s t -d (_ 'Filesystem') -a $__fish_filesystems
+complete -c mount -x -s t -d (_ 'Filesystem') -a "(__fish_print_filesystems)"
 
 complete -c mount -x -s o -d (_ 'Mount option') -a '(__fish_append , $__fish_mount_opts)'
 

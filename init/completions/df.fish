@@ -3,11 +3,6 @@
 #
 
 #
-# Completions for mount define the $__fish_filesystems variable
-#
-complete -y mount
-
-#
 # Test if we are using GNU sed
 #
 
@@ -19,7 +14,7 @@ __fish_gnu_complete -c df -s i -l inodes -d (_ "List inode information") $is_gnu
 __fish_gnu_complete -c df -s k -d (_ "Use 1kB block size") $is_gnu
 __fish_gnu_complete -c df -s l -l local -d (_ "List only local filesystems") $is_gnu
 __fish_gnu_complete -c df -s P -l portability -d (_ "Use Posix format") $is_gnu
-__fish_gnu_complete -c df -s t -l type -r -d (_ "Show filesystems of specified type") $is_gnu -x -a $__fish_filesystems
+__fish_gnu_complete -c df -s t -l type -r -d (_ "Show filesystems of specified type") $is_gnu -x -a "(__fish_print_filesystems)"
 
 if test -n "$is_gnu"
 
@@ -29,7 +24,7 @@ if test -n "$is_gnu"
 	complete -c df -l no-sync -d (_ "Do not sync before getting usage info")
 	complete -c df -l sync -d (_ "Sync before getting usage info")
 	complete -c df -s T -l print-type -d (_ "Print filesystem type")
-	complete -c df -s x -l exclude-type -d (_ "Excluded filesystem type") -r -x -a $__fish_filesystems
+	complete -c df -s x -l exclude-type -d (_ "Excluded filesystem type") -r -x -a "(__fish_print_filesystems)"
 	complete -c df -l help -d (_ "Display help and exit")
 	complete -c df -l version -d (_ "Display version and exit")
 

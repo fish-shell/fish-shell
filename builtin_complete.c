@@ -253,7 +253,7 @@ int builtin_complete( wchar_t **argv )
 	
 	string_buffer_t short_opt;
 	array_list_t gnu_opt, old_opt;
-	wchar_t *comp=L"", *desc=L"", *condition=L"", *load=0;
+	wchar_t *comp=L"", *desc=L"", *condition=L"";
 
 	wchar_t *do_complete = 0;
 	
@@ -334,10 +334,6 @@ int builtin_complete( wchar_t **argv )
 				}
 				,
 				{
-					L"load", required_argument, 0, 'y'
-				}
-				,
-				{
 					L"do-complete", required_argument, 0, 'C'
 				}
 				,
@@ -351,7 +347,7 @@ int builtin_complete( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"a:c:p:s:l:o:d:frxeun:y:C:", 
+								L"a:c:p:s:l:o:d:frxeun:C:", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -368,6 +364,7 @@ int builtin_complete( wchar_t **argv )
                            long_options[opt_index].name );
 				sb_append( sb_err, 
 						   parser_current_line() );
+				
 //				builtin_print_help( argv[0], sb_err );
 
 				
@@ -428,15 +425,13 @@ int builtin_complete( wchar_t **argv )
 				condition = woptarg;
 				break;
 				
-			case 'y':
-				load = woptarg;
-				break;
-
 			case 'C':
 				do_complete = woptarg?woptarg:reader_get_buffer();
 				break;
 				
 			case '?':
+				sb_append( sb_err, 
+						   parser_current_line() );
 				//	builtin_print_help( argv[0], sb_err );
 				
 				res = 1;
@@ -493,10 +488,6 @@ int builtin_complete( wchar_t **argv )
 		//			builtin_print_help( argv[0], sb_err );
 
 		res = 1;
-	}
-	else if( load )
-	{
-		complete_load( load, 1 );		
 	}
 	else if( (al_get_count( &cmd) == 0 ) && (al_get_count( &path) == 0 ) )
 	{

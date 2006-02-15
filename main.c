@@ -295,11 +295,11 @@ int main( int argc, char **argv )
 
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
 
+	complete_destroy();
 	proc_destroy();
 	env_destroy();
 	builtin_destroy();
 	function_destroy();
-	complete_destroy();
 	reader_destroy();
 	parser_destroy();
 	wutil_destroy();

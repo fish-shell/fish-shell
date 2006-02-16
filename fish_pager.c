@@ -76,6 +76,7 @@ static struct termios pager_modes;
 
 static int is_ca_mode = 0;
 
+static buffer_t *pager_buffer;
 
 /**
    The environment variables used to specify the color of different
@@ -216,6 +217,20 @@ static wint_t readch()
 	return input_common_readch(0);
 }
 
+
+static int pager_buffered_writer( char c)
+{
+	b_append( pager_buffer, &c, 1 );
+	return 0;
+}
+
+static void pager_flush()
+{
+	write( 1, pager_buffer->buff, pager_buffer->used );
+	pager_buffer->used = 0;
+}
+
+
 static int print_max( const wchar_t *str, int max, int has_more )
 {
 	int i;
@@ -239,7 +254,7 @@ static int print_max( const wchar_t *str, int max, int has_more )
 
 static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 {
-	int comp_width, desc_width;
+	int comp_width=0, desc_width=0;
 	int i;
 	int written=0;
 	
@@ -346,7 +361,7 @@ static void completion_print( int cols,
 			el = (comp_t *)al_get( l, j*rows + i );
 			
 			completion_print_item( prefix, el, width[j] - (is_last?0:2) );
-
+			
 			if( !is_last)
 				writestr( L"  " );
 		}
@@ -507,6 +522,7 @@ static int completion_try_print( int cols,
 			}
 			
 			completion_print( cols, width, 0, rows, prefix, is_quoted, l);
+			pager_flush();
 		}
 		else
 		{
@@ -539,6 +555,7 @@ static int completion_try_print( int cols,
 						  percent );
 				writestr(msg);
 				set_color( FISH_COLOR_NORMAL, FISH_COLOR_NORMAL );
+				pager_flush();
 				int c = readch();
 
 				switch( c )
@@ -860,6 +877,9 @@ static void init()
 	halloc_util_init();
 	env_universal_init( 0, 0, 0, 0);
 	input_common_init( &interrupt_handler );
+	output_set_writer( &pager_buffered_writer );
+	pager_buffer = halloc( global_context, sizeof( buffer_t ) );
+	halloc_register_function( global_context, (void (*)(void *))&b_destroy, pager_buffer );
 	
 	sigemptyset( & act.sa_mask );
 	act.sa_flags=0;

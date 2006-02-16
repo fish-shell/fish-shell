@@ -337,4 +337,16 @@ void proc_init();
 */
 void proc_destroy();
 
+/**
+   Set new value for is_interactive flag, saving previous value. If
+   needed, update signal handlers.
+*/
+void proc_push_interactive( int value );
+
+/**
+   Set is_interactive flag to the previous value. If needed, update
+   signal handlers.
+*/
+void proc_pop_interactive();
+
 #endif

@@ -606,7 +606,6 @@ void reader_write_title()
 	wchar_t *title;
 	array_list_t l;
 	wchar_t *term = env_get( L"TERM" );
-	int was_interactive = is_interactive;
 
 	/*
 	  This is a pretty lame heuristic for detecting terminals that do
@@ -628,7 +627,7 @@ void reader_write_title()
 
 	al_init( &l );
 
-	is_interactive = 0;
+	proc_push_interactive(0);
 	if( exec_subshell( title, &l ) != -1 )
 	{
 		int i;
@@ -639,8 +638,8 @@ void reader_write_title()
 		}
 		writestr( L"\7" );
 	}
-	is_interactive = was_interactive;
-	
+	proc_pop_interactive();
+		
 	al_foreach( &l, (void (*)(const void *))&free );
 	al_destroy( &l );
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
@@ -790,8 +789,8 @@ static void write_prompt()
 
 		if( data->prompt )
 		{
-			int was_interactive = is_interactive;
-			is_interactive = 0;
+			proc_push_interactive( 0 );
+			
 			if( exec_subshell( data->prompt, &prompt_list ) == -1 )
 			{
 				/* If executing the prompt fails, make sure we at least don't print any junk */
@@ -799,7 +798,7 @@ static void write_prompt()
 				al_destroy( &prompt_list );
 				al_init( &prompt_list );
 			}
-			is_interactive = was_interactive;			
+			proc_pop_interactive();
 		}
 
 		data->prompt_width=calc_prompt_width( &prompt_list );
@@ -1472,7 +1471,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
    the prefix.
    - If the list contains multiple elements without
    a common prefix, call run_pager to display a list of completions
-
+   
    \param comp the list of completion strings
 */
 
@@ -1480,7 +1479,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 static int handle_completions( array_list_t *comp )
 {
 	int i;
-
+	
 	if( al_get_count( comp ) == 0 )
 	{
 		if( flash_screen != 0 )
@@ -2967,11 +2966,9 @@ int reader_read( int fd )
 	  we need to preserve is_interactive, so we save the
 	  original state. We also update the signal handlers.
 	*/
-	int shell_was_interactive = is_interactive;
 
-	is_interactive = ((fd == 0) && isatty(STDIN_FILENO));
-	signal_set_handlers();
-
+	proc_push_interactive( ((fd == 0) && isatty(STDIN_FILENO)));
+		
 	res= is_interactive?read_i():read_ni( fd );
 
 	/*
@@ -2982,7 +2979,6 @@ int reader_read( int fd )
 		data->end_loop = 0;
 	end_loop = 0;
 	
-	is_interactive = shell_was_interactive;
-	signal_set_handlers();
+	proc_pop_interactive();
 	return res;
 }

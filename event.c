@@ -385,8 +385,6 @@ static void event_fire_internal( event_t *event )
 	int i, j;
 	string_buffer_t *b=0;
 	array_list_t *fire=0;
-
-	int was_interactive = is_interactive;
 	
 	/*
 	  First we free all events that have been removed
@@ -462,18 +460,13 @@ static void event_fire_internal( event_t *event )
 		  Event handlers are not part of the main flow of code, so
 		  they are marked as non-interactive and as a subshell
 		*/
-		is_interactive=0;
+		proc_push_interactive(0);
 		parser_push_block( EVENT );
 		current_block->param1.event = event;
 		eval( (wchar_t *)b->buff, 0, TOP );
 		parser_pop_block();
-				
+		proc_pop_interactive();					
 	}
-
-	/*
-	  Restore interactivity flags
-	*/
-	is_interactive = was_interactive;
 
 	if( b )
 	{

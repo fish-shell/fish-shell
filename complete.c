@@ -334,7 +334,7 @@ void complete_destroy()
 		complete_free_entry( prev );
 	}
 	first_entry = 0;
-
+	
 	if( suffix_hash )
 	{
 		hash_foreach( suffix_hash, &clear_hash_entry );
@@ -342,9 +342,9 @@ void complete_destroy()
 		free( suffix_hash );
 		suffix_hash=0;
 	}
-
+	
 	path = env_get( L"fish_complete_path" );
-
+	
 	if( path )
 		parse_util_load_reset( path );
 	
@@ -1338,17 +1338,16 @@ static void complete_from_args( const wchar_t *str,
 								const wchar_t *desc,
 								array_list_t *comp_out )
 {
-	int was_interactive = is_interactive;
 
 	array_list_t possible_comp;
 	int i;
 
 	al_init( &possible_comp );
 
-	is_interactive=0;
+	proc_push_interactive(0);
 	eval_args( args, &possible_comp );
-	is_interactive=was_interactive;
-
+	proc_pop_interactive();
+	
 	/* We need to unescape these strings before matching them */
 	for( i=0; i< al_get_count( &possible_comp ); i++ )
 	{

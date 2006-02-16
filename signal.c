@@ -387,7 +387,6 @@ static void handle_winch( int sig, siginfo_t *info, void *context )
 static void handle_int( int sig, siginfo_t *info, void *context )
 {
 	reader_handle_int( sig );
-
 	default_handler( sig, info, context);	
 }
 
@@ -422,6 +421,10 @@ void signal_reset_handlers()
 void signal_set_handlers()
 {
 	struct sigaction act;
+
+	if( is_interactive == -1 )
+		return;
+	
 	sigemptyset( & act.sa_mask );
 	act.sa_flags=SA_SIGINFO;
 	act.sa_sigaction = &default_handler;
@@ -442,7 +445,7 @@ void signal_set_handlers()
 	  recover.
 	*/
 	sigaction( SIGPIPE, &act, 0);
-	
+
 	if( is_interactive )
 	{
 		/*

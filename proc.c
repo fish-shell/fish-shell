@@ -54,6 +54,8 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "event.h"
 #include "translate.h"
 #include "halloc.h"
+#include "halloc_util.h"
+#include "output.h"
 
 /**
    Size of message buffer 
@@ -76,7 +78,7 @@ static int last_status=0;
 static sig_atomic_t got_signal=0;
 
 job_t *first_job=0;
-int is_interactive=0;
+int is_interactive=-1;
 int is_interactive_session=0;
 int is_subshell=0;
 int is_block=0;
@@ -101,9 +103,12 @@ static string_buffer_t event_pid;
 */
 static string_buffer_t event_status;
 
+static array_list_t *interactive_stack;
 
 void proc_init()
 {
+	interactive_stack = al_halloc( global_context );
+	proc_push_interactive( 0 );
 	al_init( &event.arguments );
 	sb_init( &event_pid );
 	sb_init( &event_status );
@@ -1077,3 +1082,19 @@ void proc_sanity_check()
 	}	
 }
 
+void proc_push_interactive( int value )
+{
+	int old = is_interactive;
+	al_push( interactive_stack, (void *)(long)is_interactive );
+	is_interactive = value;
+	if( old != value )
+		signal_set_handlers();
+}
+
+void proc_pop_interactive()
+{
+	int old = is_interactive;
+	is_interactive= (int)(long)al_pop(interactive_stack);
+	if( is_interactive != old )
+		signal_set_handlers();
+}

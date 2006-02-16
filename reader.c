@@ -834,25 +834,6 @@ static void write_cmdline()
 	}
 }
 
-/**
-   perm_left_cursor and parm_right_cursor don't seem to be defined as
-   often as cursor_left and cursor_right, so we use this workalike.
-*/
-static void move_cursor( int steps )
-{
-	int i;
-
-	if( steps < 0 ){
-		for( i=0; i>steps; i--)
-		{
-			writembs(cursor_left);
-		}
-	}
-	else
-		for( i=0; i<steps; i++)
-			writembs(cursor_right);
-}
-
 
 void reader_init()
 {
@@ -1462,7 +1443,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 
 /**
    Handle the list of completions. This means the following:
-
+   
    - If the list is empty, flash the terminal.
    - If the list contains one element, write the whole element, and if
    the element does not end on a '/', '@', ':', or a '=', also write a trailing
@@ -2792,8 +2773,8 @@ wchar_t *reader_readline()
 
 			case R_CLEAR_SCREEN:
 			{
-				writembs( clear_screen );
-
+				if( clear_screen )
+					writembs( clear_screen );
 				repaint();
 				break;
 			}

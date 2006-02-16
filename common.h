@@ -224,13 +224,6 @@ int contains_str( const wchar_t *needle, ... );
 int read_blocked(int fd, void *buf, size_t count);
 
 /**
-   This is for writing process notification messages. Has to write to
-   stdout, so clr_eol and such functions will work correctly. Not an
-   issue since this function is only used in interactive mode anyway.
-*/
-int writeb( tputs_arg_t b );
-
-/**
    Exit program at once, leaving an error message about running out of memory
 */
 void die_mem();

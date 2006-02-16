@@ -641,12 +641,6 @@ int read_blocked(int fd, void *buf, size_t count)
 	return res;	
 }
 
-int writeb( tputs_arg_t b )
-{
-	write( 1, &b, 1 );
-//	putc( b, stdout );
-	return 0;
-}
 
 void die_mem()
 {

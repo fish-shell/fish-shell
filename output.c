@@ -102,9 +102,20 @@ static size_t writestr_buff_sz=0;
 */
 static char *writestr_buff = 0;
 
+/**
+   The function used for output
+*/
+
+static int (*out)(char *str) = &writembs;
+
 static void output_destroy()
 {
 	free( writestr_buff );
+}
+
+void output_set_writer( int (*writer)(char *) )
+{
+	out = writer;
 }
 
 
@@ -130,8 +141,8 @@ void set_color( int c, int c2 )
 	{
 		c = c2 = FISH_COLOR_NORMAL;
 		if( fg )
-			writembs( tparm( fg, 0 ) );
-		writembs( exit_attribute_mode );
+			out( tparm( fg, 0 ) );
+		out( exit_attribute_mode );
 		return;
 	}
 
@@ -164,7 +175,7 @@ void set_color( int c, int c2 )
 			  Background color changed and is set, so we enter bold
 			  mode to make reading easier
 			*/
-			writembs( enter_bold_mode );
+			out( enter_bold_mode );
 		}
 		if(!bg_set && last_bg_set)
 		{
@@ -172,14 +183,14 @@ void set_color( int c, int c2 )
 			  Background color changed and is no longer set, so we
 			  exit bold mode
 			*/
-			writembs( exit_attribute_mode );
+			out( exit_attribute_mode );
 			/*
 			  We don't know if exit_attribute_mode resets colors, so
 			  we set it to something known.
 			*/
 			if( fg )
 			{
-				writembs( tparm( fg, 0 ) );
+				out( tparm( fg, 0 ) );
 				last_color=0;
 			}
 		}
@@ -190,8 +201,8 @@ void set_color( int c, int c2 )
 		if( c==FISH_COLOR_NORMAL )
 		{
 			if( fg )
-				writembs( tparm( fg, 0 ) );
-			writembs( exit_attribute_mode );
+				out( tparm( fg, 0 ) );
+			out( exit_attribute_mode );
 
 			last_color2 = FISH_COLOR_NORMAL;
 		}
@@ -199,7 +210,7 @@ void set_color( int c, int c2 )
 		{
 			if( fg )
 			{
-				writembs( tparm( fg, c ) );
+				out( tparm( fg, c ) );
 			}
 		}
 	}
@@ -212,13 +223,13 @@ void set_color( int c, int c2 )
 		{
 			if( bg )
 			{
-				writembs( tparm( bg, 0 ) );
+				out( tparm( bg, 0 ) );
 			}
 
-			writembs(exit_attribute_mode);
+			out(exit_attribute_mode);
 			if(( last_color != FISH_COLOR_NORMAL ) && fg )
 			{
-				writembs(tparm( fg, last_color ));
+				out(tparm( fg, last_color ));
 			}
 
 			last_color2 = c2;
@@ -227,11 +238,44 @@ void set_color( int c, int c2 )
 		{
 			if( bg )
 			{
-				writembs( tparm( bg, c2 ) );
+				out( tparm( bg, c2 ) );
 			}
 			last_color2 = c2;
 		}
 	}
+}
+
+/**
+   perm_left_cursor and parm_right_cursor don't seem to be properly
+   emulated by many terminal emulators, so we only use plain
+   curor_left, curor_right...
+*/
+void move_cursor( int steps )
+{
+	int i;
+	
+	if( !steps )
+		return;
+	
+	if( steps < 0 ){
+		for( i=0; i>steps; i--)
+		{
+			out(cursor_left);
+		}
+	}
+	else
+	{
+		for( i=0; i<steps; i++)
+		{
+			out(cursor_right);
+		}
+	}
+}
+
+int writeb( tputs_arg_t b )
+{
+	write( 1, &b, 1 );
+	return 0;
 }
 
 int writembs( char *str )
@@ -385,7 +429,7 @@ int writespace( int c )
 {
 	if( repeat_char && strlen(repeat_char) )
 	{
-		writembs( tparm( repeat_char, ' ', c ) );
+		out( tparm( repeat_char, ' ', c ) );
 	}
 	else
 	{

@@ -57,6 +57,7 @@ implementation in fish is as of yet incomplete.
 #include "event.h"
 #include "signal.h"
 #include "translate.h"
+#include "output.h"
 
 static void input_read_inputrc( wchar_t *fn );
 

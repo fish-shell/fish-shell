@@ -1,4 +1,4 @@
-#!@prefix@/bin/fish
+#!/usr/bin/env fish
 # 
 # Fallback implementation of the seq command
 #

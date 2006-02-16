@@ -135,7 +135,7 @@ int writeb( tputs_arg_t b );
    Set the function used for writing in move_cursor, writespace and
    set_color. By default, writembs is used.
 */
-void output_set_writer( int (*writer)(char *) );
+void output_set_writer( int (*writer)(char) );
 
 
 #endif

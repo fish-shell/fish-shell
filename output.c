@@ -51,6 +51,8 @@
 */
 #define COLORS (sizeof(col)/sizeof(wchar_t *))
 
+static int writeb_internal( char c );
+
 /**
    Names of different colors. 
 */
@@ -106,14 +108,14 @@ static char *writestr_buff = 0;
    The function used for output
 */
 
-static int (*out)(char *str) = &writembs;
+static int (*out)(char c) = &writeb_internal;
 
 static void output_destroy()
 {
 	free( writestr_buff );
 }
 
-void output_set_writer( int (*writer)(char *) )
+void output_set_writer( int (*writer)(char) )
 {
 	out = writer;
 }
@@ -141,8 +143,8 @@ void set_color( int c, int c2 )
 	{
 		c = c2 = FISH_COLOR_NORMAL;
 		if( fg )
-			out( tparm( fg, 0 ) );
-		out( exit_attribute_mode );
+			writembs( tparm( fg, 0 ) );
+		writembs( exit_attribute_mode );
 		return;
 	}
 
@@ -175,7 +177,7 @@ void set_color( int c, int c2 )
 			  Background color changed and is set, so we enter bold
 			  mode to make reading easier
 			*/
-			out( enter_bold_mode );
+			writembs( enter_bold_mode );
 		}
 		if(!bg_set && last_bg_set)
 		{
@@ -183,14 +185,14 @@ void set_color( int c, int c2 )
 			  Background color changed and is no longer set, so we
 			  exit bold mode
 			*/
-			out( exit_attribute_mode );
+			writembs( exit_attribute_mode );
 			/*
 			  We don't know if exit_attribute_mode resets colors, so
 			  we set it to something known.
 			*/
 			if( fg )
 			{
-				out( tparm( fg, 0 ) );
+				writembs( tparm( fg, 0 ) );
 				last_color=0;
 			}
 		}
@@ -201,8 +203,8 @@ void set_color( int c, int c2 )
 		if( c==FISH_COLOR_NORMAL )
 		{
 			if( fg )
-				out( tparm( fg, 0 ) );
-			out( exit_attribute_mode );
+				writembs( tparm( fg, 0 ) );
+			writembs( exit_attribute_mode );
 
 			last_color2 = FISH_COLOR_NORMAL;
 		}
@@ -210,7 +212,7 @@ void set_color( int c, int c2 )
 		{
 			if( fg )
 			{
-				out( tparm( fg, c ) );
+				writembs( tparm( fg, c ) );
 			}
 		}
 	}
@@ -223,13 +225,13 @@ void set_color( int c, int c2 )
 		{
 			if( bg )
 			{
-				out( tparm( bg, 0 ) );
+				writembs( tparm( bg, 0 ) );
 			}
 
-			out(exit_attribute_mode);
+			writembs(exit_attribute_mode);
 			if(( last_color != FISH_COLOR_NORMAL ) && fg )
 			{
-				out(tparm( fg, last_color ));
+				writembs(tparm( fg, last_color ));
 			}
 
 			last_color2 = c2;
@@ -238,7 +240,7 @@ void set_color( int c, int c2 )
 		{
 			if( bg )
 			{
-				out( tparm( bg, c2 ) );
+				writembs( tparm( bg, c2 ) );
 			}
 			last_color2 = c2;
 		}
@@ -260,30 +262,37 @@ void move_cursor( int steps )
 	if( steps < 0 ){
 		for( i=0; i>steps; i--)
 		{
-			out(cursor_left);
+			writembs(cursor_left);
 		}
 	}
 	else
 	{
 		for( i=0; i<steps; i++)
 		{
-			out(cursor_right);
+			writembs(cursor_right);
 		}
 	}
 }
 
+static int writeb_internal( char c )
+{
+	write( 1, &c, 1 );
+	return 0;
+}
+
 int writeb( tputs_arg_t b )
 {
-	write( 1, &b, 1 );
+	out( b );
 	return 0;
 }
 
 int writembs( char *str )
 {
 #ifdef TPUTS_KLUDGE
-	write( 1, str, strlen(str));
+	while( *str )
+		out( *str );
 #else
-	tputs(str,1,&writeb);
+	tputs(str,1,writeb);
 #endif
 	return 0;
 }
@@ -294,24 +303,17 @@ int writech( wint_t ch )
 	char buff[MB_CUR_MAX];
 	size_t bytes = wcrtomb( buff, ch, &out_state );
 	int err;
+	int i;
 	
-	while( (err =write( 1, buff, bytes ) ) )
-	{
-		if( err >= 0 )
-			break;
-		
-		if( errno == EINTR )
-			continue;
-		
-		wperror( L"write" );
-		return 1;
-	}
-	
+	for( i=0; i<bytes; i++ )
+		out( buff[i] );
 	return 0;
 }
 
 void writestr( const wchar_t *str )
 {
+	char *pos;
+	
 //	while( *str )
 //		writech( *str++ );
 
@@ -355,7 +357,8 @@ void writestr( const wchar_t *str )
 	/*
 	  Write
 	*/
-	write( 1, writestr_buff, strlen( writestr_buff ) );	
+	for( pos = writestr_buff; *pos; pos++ )
+		out( *pos );
 
 }
 
@@ -429,17 +432,15 @@ int writespace( int c )
 {
 	if( repeat_char && strlen(repeat_char) )
 	{
-		out( tparm( repeat_char, ' ', c ) );
+		writembs( tparm( repeat_char, ' ', c ) );
 	}
 	else
 	{
-		write( 1, "        ", mini(c,8) );
-		if( c>8)
-		{
-			writespace( c-8);
-		}
+		int i;
+		
+		for( i=0; i<c; i++ )
+			out( ' ' );
 	}
-	
 	return 0;
 }
 

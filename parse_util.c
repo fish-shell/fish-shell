@@ -495,13 +495,14 @@ int parse_util_load( const wchar_t *cmd,
 
 	if( !all_loaded )
 	{
-		all_loaded = malloc( sizeof( hash_table_t ) );
+		all_loaded = malloc( sizeof( hash_table_t ) );		
+		halloc_register_function_void( global_context, &parse_util_destroy );
 		if( !all_loaded )
 		{
 			die_mem();
 		}
 		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
-	}
+ 	}
 	
 	loaded = (hash_table_t *)hash_get( all_loaded, path_var );
 	
@@ -514,7 +515,6 @@ int parse_util_load( const wchar_t *cmd,
 		}
 		hash_init( loaded, &hash_wcs_func, &hash_wcs_cmp );
 		hash_put( all_loaded, wcsdup(path_var), loaded );
- 		halloc_register_function_void( global_context, &parse_util_destroy );
 	}
 
 	/*
@@ -526,9 +526,13 @@ int parse_util_load( const wchar_t *cmd,
 	  Did we just check this?
 	*/
 	if( tm )
+	{
 		if(time(0)-tm[1]<=1)
+		{
 			return 0;
-
+		}
+	}
+	
 	/*
 	  Return if already loaded and we are skipping reloading
 	*/
@@ -558,7 +562,7 @@ int parse_util_load( const wchar_t *cmd,
 		if( (wstat( (wchar_t *)path->buff, &buf )== 0) &&
 			(waccess( (wchar_t *)path->buff, R_OK ) == 0) )
 		{
-			if( !tm || (*tm != buf.st_mtime ) )
+			if( !tm || (tm[0] != buf.st_mtime ) )
 			{
 				wchar_t *esc = escape( (wchar_t *)path->buff, 1 );
 				wchar_t *src_cmd = wcsdupcat( L". ", esc );

@@ -1192,13 +1192,7 @@ Older versions of Doxygen has bugs in the man-page generation which
 cause the builtin help to render incorrectly. Version 1.2.14 is known
 to have this problem.
 
-In version 1.9.2, the installation prefix for fish rpms and debs
-changed from /usr/local to /usr. Packages should automatically change
-any instances of /usr/local/bin/fish in /etc/passwd to /usr/bin/fish,
-but some programs, like screen, may need to be restarted to notice the
-changes when upgrading from pre1.9.2 to 1.9.2 or later.  You may also
-run into such problems when switching between using a package and
-personal builds.
+
 
 
 */

@@ -1,0 +1,9 @@
+
+\section fish_pager fish_pager - Internal command used by fish
+
+\subsection fish_pager-description Description
+
+This command is used internally by fish to display a list of
+completions. It should not be used by other commands, as it's
+interface is liable to change in the future.
+

@@ -13,30 +13,50 @@ Source0:                http://roo.no-ip.org/%{name}/files/%{version}/%{name}-%{
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:          doxygen ncurses-devel xorg-x11-devel
 
+
+
+
 %description 
 fish is a shell geared towards interactive use. It's features are
 focused on user friendlieness and discoverability. The language syntax
 is simple but incompatible with other shell languages.
 
+
+
+
 %prep
 %setup -q
 
-%build
 
+
+
+%build
 %configure docdir=%_datadir/doc/%{name}-%{version}
 make %{?_smp_mflags}
+
+
+
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR="$RPM_BUILD_ROOT" 
 
+
+
+
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+
+
 
 %post
 if ! grep %_bindir/fish %_sysconfdir/shells >/dev/null; then
 	echo %_bindir/fish >>%_sysconfdir/shells
 fi
+
+
+
 
 %postun
 if [ "$1" = 0 ]; then
@@ -44,9 +64,14 @@ if [ "$1" = 0 ]; then
 	mv %_sysconfdir/fish.tmp %_sysconfdir/shells
 fi
 
+
+
+
 %files
 %defattr(-,root,root,-)
+
 %doc %_datadir/doc/%{name}-%{version}
+
 %_mandir/man1/fish.1*
 %_mandir/man1/xsel.1x*
 %_mandir/man1/mimedb.1*
@@ -54,6 +79,7 @@ fi
 %_mandir/man1/count.1*
 %_mandir/man1/fishd.1*
 %_mandir/man1/fish_pager.1*
+
 %attr(0755,root,root) %_bindir/fish
 %attr(0755,root,root) %_bindir/fishd
 %attr(0755,root,root) %_bindir/fish_pager
@@ -61,15 +87,25 @@ fi
 %attr(0755,root,root) %_bindir/set_color
 %attr(0755,root,root) %_bindir/mimedb
 %attr(0755,root,root) %_bindir/count
+
 %config %_sysconfdir/fish
 %config %_sysconfdir/fish_inputrc
 %dir %_sysconfdir/fish.d
 %config %_sysconfdir/fish.d/fish_*.fish
-%dir %_sysconfdir/fish.d/completions
-%config %_sysconfdir/fish.d/completions/*.fish
-%dir %_sysconfdir/fish.d/functions
-%config %_sysconfdir/fish.d/functions/*.fish
+
+%dir %_datadir/fish
+%_datadir/fish/fish
+
+%dir %_datadir/fish/completions
+%_datadir/fish/completions/*.fish
+
+%dir %_datadir/fish/functions
+%_datadir/fish/functions/*.fish
+
 %_datadir/locale/*/LC_MESSAGES/fish.mo
+
+
+
 
 %changelog
 * Tue Nov 29 2005 Axel Liljencrantz <axel@liljencrantz.se> 1.17.0-0

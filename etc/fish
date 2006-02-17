@@ -1,14 +1,20 @@
 #
 # Init file for fish
 #
-# @configure_input@
+# etc/fish.  Generated from fish.in by configure.
+
+#
+# Set default search paths
+#
+
+set -g fish_function_path /usr/share/functions /etc/fish.d/functions ~/.fish.d/functions
+set -g fish_complete_path /usr/share/completions /etc/fish.d/completions ~/.fish.d/completions
 
 #
 # Set default field separators
 #
 
 set -g IFS \ \t\n
-set -g fish_function_path $PWD/fish.d/functions ~/.fish.d/functions
 
 #
 # Add a few common directories to path, if they exists. Note that pure
@@ -16,7 +22,7 @@ set -g fish_function_path $PWD/fish.d/functions ~/.fish.d/functions
 # want this even for text-only terminals.
 #
 
-set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin @optbindirs@
+set -l path_list /bin /usr/bin /usr/X11R6/bin /usr/bin  /sw/bin
 
 # Root should also have the sbin directories in the path
 if test "$USER" = root
@@ -53,7 +59,7 @@ end
 # situation as well?
 #
 
-if expr "$LANG" : ".*UTF" >/dev/null
+if expr "$LANG" : ".*[Uu][Tt][Ff]" >/dev/null
 	if test linux = "$TERM"
 		unicode_start ^/dev/null
 	end
@@ -80,7 +86,7 @@ end
 function _ -d "Alias for the gettext command"
 	printf "%s" $argv
 end
-if test 1 = "@HAVE_GETTEXT@"
+if test 1 = "1"
 	if which gettext ^/dev/null >/dev/null
 		function _ -d "Alias for the gettext command"
 			gettext fish $argv

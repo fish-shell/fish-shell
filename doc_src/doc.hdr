@@ -216,6 +216,42 @@ the <a href="builtins.html#fg">fg</a> command.
 To get a listing of all currently started jobs, use the <a
 href="builtins.html#jobs">jobs</a> command.
 
+\subsection syntax-function Shellscript functions
+
+Functions are used to group together commands and arguments
+using a single name. For example, the following is a function
+definition that calls the command 'ls -l' to print a detailed listing
+of the contents of the current directory:
+
+<pre>
+function ll
+	ls -l $argv
+end
+</pre>
+
+The first line tells fish that a function by the name of ll is to be
+defined. To use it, simply write <code>ll</code> on the
+commandline. The second line tells fish that the command <code>ls -l
+$argv</code> should be called when ll is invoked. $argv is an array
+variable, which always contains all arguments sent to the function. In
+the example above, these are simply passed on to the ls command. For
+more information on functions, see the documentation for the <a
+href='builtin.html#function'>function builtin</a>.
+
+Functions can be defined on the commandline or in a configuration
+file, but they can also be automatically loaded. Fish automatically
+searches through any directories in the array variable
+\$fish_function_path, and any functions defined are automatically
+loaded when needed. A function definition file must have a filename
+consisting of the name of the function and the suffix '.fish'.  
+
+The default value for \$fish_function_path is ~/.fish.d/functions,
+/etc/fish.d/functions /usr/share/fish/functions. The exact path to the
+last two of these may be slighly different depending on what install
+path prefix was chosen at configuration time. The rationale behind
+having three different directories is that the first one is for user
+specific functions, the second one is for system-wide additional
+functions and the last one is for default fish functions.
 
 \subsection syntax-words Some common words
 
@@ -313,16 +349,32 @@ href="builtins.html#complete">complete</a> builtin, or write 'complete
 --help' inside the \c fish shell.
 
 For examples of how to write your own complex completions, study the
-completions in /etc/fish.d/completions (or ~/etc/fish.d/completions if
-you installed fish in your home directory).
+completions in /usr/share/fish/completions. (The exact path depends on
+your chosen installation prefix and may be slightly different)
 
-If you wish to use a completion, you should consider adding it to your
-startup files. When completion has been requested for a command \c
-COMMAND, fish will automatically look for the file
-~/.fish.d/completions/COMMAND.fish. If it exists, it will be
-automatically loaded. If you have written new completions for a common
+\subsection completion-path Where to put completions
+
+Completions can be defined on the commandline or in a configuration
+file, but they can also be automatically loaded. Fish automatically
+searches through any directories in the array variable
+\$fish_complete_path, and any completions defined are automatically
+loaded when needed. A completion file must have a filename consisting
+of the name of the command to complete and the suffix '.fish'.
+
+The default value for \$fish_complete_path is ~/.fish.d/completions,
+/etc/fish.d/completions and /usr/share/fish/completions. The exact
+path to the last two of these may be slighly different depending on
+what install path prefix was chosen at configuration time. If a
+suitable file is found in one of these directories, it will be
+automatically loaded and the search will be stopped. The rationale
+behind having three different directories is that the first one is for
+user specific completions, the second one is for system-wide
+completions and the last one is for default fish completions.
+
+If you have written new completions for a common
 Unix command, please consider sharing your work by sending it to <a
 href='mailto: fish-users@lists.sf.net'>the fish mailinglist</a>.
+
 
 \section expand Parameter expansion (Globbing)
 
@@ -878,12 +930,15 @@ which the user can change <code>fish</code>'s behaviour.
 
 \section initialization Initialization files
 
-On startup, \c fish evaluates the file /etc/fish (Or ~/etc/fish if you
-installed fish in your home directory) and ~/.fish, in that order. If
-you want to run a command only on starting an interactive shell, use
-the exit status of the command 'status --is-interactive' to determine
-if the shell is interactive. If you want to run a command only when
-using a login shell, use 'status --is-login' instead.
+On startup, \c fish evaluates the files /usr/share/fish/fish,
+/etc/fish (Or ~/etc/fish if you installed fish in your home directory)
+and ~/.fish, in that order. The first file should not be directly
+edited, the second one is meant for systemwide configuration and the
+last one is meant for user configuration. If you want to run a command
+only on starting an interactive shell, use the exit status of the
+command 'status --is-interactive' to determine if the shell is
+interactive. If you want to run a command only when using a login
+shell, use 'status --is-login' instead.
 
 Examples:
 

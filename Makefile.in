@@ -48,13 +48,11 @@ datadir = @datadir@
 bindir = @bindir@
 mandir = @mandir@
 sysconfdir = @sysconfdir@
-fishdir = @fishdir@
-fishfile = @fishfile@
 fishinputfile = @fishinputfile@
 docdir = @docdir@
 
-#Init files to install
-INIT_DIR_INSTALL = init/fish_interactive.fish init/fish_function.fish init/fish_complete.fish 
+#etc files to install
+ETC_DIR_INSTALL = etc/fish_interactive.fish etc/fish_function.fish 
 
 # Set to 1 if we have gettext
 HAVE_GETTEXT=@HAVE_GETTEXT@
@@ -162,18 +160,20 @@ MAIN_DIR_FILES := Doxyfile Doxyfile.user Makefile.in configure			\
     user_doc.head.html xsel-0.9.6.tar ChangeLog config.sub				\
     config.guess fish_tests.c main.c fish_pager.c fishd.c seq.in
 
-# Files in ./init/
-INIT_DIR_FILES :=init/fish.in init/fish_complete.fish.in	\
-	init/fish_function.fish init/fish_inputrc			\
-	init/fish_interactive.fish.in
+# Files in ./etc/
+ETC_DIR_FILES :=etc/fish.in etc/fish_function.fish etc/fish_inputrc	\
+	etc/fish_interactive.fish.in
+
+# Files in ./share/
+SHARE_DIR_FILES :=share/fish
 
 # Files in ./tests/
 TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
 	$(TEST_IN:.in=.status) tests/test.fish tests/gen_output.fish
 
-COMPLETIONS_DIR_FILES := $(wildcard init/completions/*.fish)
+COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish)
 
-FUNCTIONS_DIR_FILES := $(wildcard init/functions/*.fish)
+FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 
 # Programs to build
 PROGRAMS:=fish set_color @XSEL@ @SEQ_FALLBACK@ mimedb count fish_pager fishd
@@ -266,10 +266,10 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	fi
 
 # Create a template translation object
-messages.pot: *.c *.h init/*.in init/*.fish init/completions/*.fish init/functions/*.fish seq
+messages.pot: *.c *.h etc/*.in etc/*.fish share/*.in share/completions/*.fish share/functions/*.fish seq
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ -kcomplete_desc *.c *.h -o messages.pot; \
-		if ! xgettext -j -k_ -LShell init/*.in init/*.fish init/functions/*.fish init/completions/*.fish seq -o messages.pot; then \
+		if ! xgettext -j -k_ -LShell etc/*.in etc/*.fish share/*.in share/completions/*.fish share/functions/*.fish seq -o messages.pot; then \
 			echo "Your xgettext version is too old to build the messages.pot file"\
 			rm messages.pot\
 			false;\
@@ -348,20 +348,22 @@ install: all install-translations
 	for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
 	done;
-	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)
-	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)/completions
-	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)$(fishdir)/functions
-	$(INSTALL) -m 644 init/fish $(DESTDIR)$(sysconfdir)$(fishfile)
-	for i in $(INIT_DIR_INSTALL); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)$(fishdir); \
+	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish.d
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
+	$(INSTALL) -m 644 etc/fish $(DESTDIR)$(sysconfdir)/fish
+	$(INSTALL) -m 644 share/fish $(DESTDIR)$(datadir)/fish
+	for i in $(ETC_DIR_INSTALL); do \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)/fish.d; \
 	done;
 	for i in $(COMPLETIONS_DIR_FILES); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)$(fishdir)/completions/; \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 	done;
 	for i in $(FUNCTIONS_DIR_FILES); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)$(fishdir)/functions/; \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 	done;
-	$(INSTALL) -m 644 init/fish_inputrc $(DESTDIR)$(sysconfdir)$(fishinputfile);
+	$(INSTALL) -m 644 etc/fish_inputrc $(DESTDIR)$(sysconfdir)/fish_inputrc;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	for i in user_doc/html/* ChangeLog; do \
 		if test -f $$i; then \
@@ -387,9 +389,10 @@ uninstall: uninstall-translations
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
 	rm -f $(DESTDIR)$(bindir)/xsel
-	rm -f $(DESTDIR)$(sysconfdir)$(fishfile)
-	rm -f $(DESTDIR)$(sysconfdir)$(fishinputfile)
-	rm -r $(DESTDIR)$(sysconfdir)$(fishdir)
+	rm -f $(DESTDIR)$(sysconfdir)/fish
+	rm -f $(DESTDIR)$(sysconfdir)/fish_inputrc
+	rm -r $(DESTDIR)$(sysconfdir)/fish.d
+	rm -r $(DESTDIR)$(datadir)/fish
 	rm -r $(DESTDIR)$(docdir)
 	for i in fish.1* @XSEL_MAN@ mimedb.1* fishd.1* set_color.1* count.1*; do \
 		rm $(DESTDIR)$(mandir)/man1/$$i; \
@@ -458,20 +461,22 @@ depend:
 #
 # Uses install instead of mkdir so build won't fail if the directory 
 # exists
-fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(INIT_DIR_FILES) $(TEST_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
+fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FILES) $(TEST_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
 	rm -rf fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/doc_src
-	$(INSTALL) -d fish-@PACKAGE_VERSION@/init
-	$(INSTALL) -d fish-@PACKAGE_VERSION@/init/completions
-	$(INSTALL) -d fish-@PACKAGE_VERSION@/init/functions
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/etc
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/share
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/share/completions
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/share/functions
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/tests
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/po
 	cp -f $(DOC_SRC_DIR_FILES) fish-@PACKAGE_VERSION@/doc_src
 	cp -f $(MAIN_DIR_FILES) fish-@PACKAGE_VERSION@/
-	cp -f $(INIT_DIR_FILES) fish-@PACKAGE_VERSION@/init/
-	cp -f $(COMPLETIONS_DIR_FILES) fish-@PACKAGE_VERSION@/init/completions/
-	cp -f $(FUNCTIONS_DIR_FILES) fish-@PACKAGE_VERSION@/init/functions/
+	cp -f $(ETC_DIR_FILES) fish-@PACKAGE_VERSION@/etc/
+	cp -f $(SHARE_DIR_FILES) fish-@PACKAGE_VERSION@/share/
+	cp -f $(COMPLETIONS_DIR_FILES) fish-@PACKAGE_VERSION@/share/completions/
+	cp -f $(FUNCTIONS_DIR_FILES) fish-@PACKAGE_VERSION@/share/functions/
 	cp -f $(TESTS_DIR_FILES) fish-@PACKAGE_VERSION@/tests/
 	cp -f $(TRANSLATIONS_SRC) fish-@PACKAGE_VERSION@/po/
 	tar -c fish-@PACKAGE_VERSION@ >fish-@PACKAGE_VERSION@.tar
@@ -499,7 +504,7 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2
 
 distclean: clean
 	rm -f fish.spec doc_src/fish.1 doc_src/Doxyfile 
-	rm -f init/fish init/fish_interactive.fish init/fish_complete.fish
+	rm -f etc/fish etc/fish_interactive.fish share/fish
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 

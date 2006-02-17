@@ -102,7 +102,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 			suffix = wcsrchr( fn, L'.' );
 			if( suffix && (wcscmp( suffix, L".fish" ) == 0 ) )
 			{
-				wchar_t *dup;
+				const wchar_t *dup;
 				*suffix = 0;
 				dup = intern( fn );
 				if( !dup )

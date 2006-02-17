@@ -1,8 +1,13 @@
+#
 # Main file for fish command completions. This file contains various
 # common helper functions for the command completions. All actual
 # completions are located in the completions subdirectory.
 #
-# @configure_input@
+
+#
+# Assign a temporary value here for performance reasons. The real value should be set in /etc/fish.
+#
+set -g fish_function_path 
 
 #
 # Don't need completions in non-interactive mode
@@ -11,8 +16,6 @@
 if not status --is-interactive
 	exit
 end
-
-set -g fish_complete_path @SYSCONFDIR@/fish.d/completions ~/.fish.d/completions
 
 #
 # Convenience functions

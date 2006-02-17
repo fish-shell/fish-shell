@@ -52,7 +52,7 @@ fishinputfile = @fishinputfile@
 docdir = @docdir@
 
 #etc files to install
-ETC_DIR_INSTALL = etc/fish_interactive.fish etc/fish_function.fish 
+ETC_DIR_INSTALL = etc/fish_interactive.fish 
 
 # Set to 1 if we have gettext
 HAVE_GETTEXT=@HAVE_GETTEXT@
@@ -161,7 +161,7 @@ MAIN_DIR_FILES := Doxyfile Doxyfile.user Makefile.in configure			\
     config.guess fish_tests.c main.c fish_pager.c fishd.c seq.in
 
 # Files in ./etc/
-ETC_DIR_FILES :=etc/fish.in etc/fish_function.fish etc/fish_inputrc	\
+ETC_DIR_FILES :=etc/fish.in etc/fish_inputrc	\
 	etc/fish_interactive.fish.in
 
 # Files in ./share/

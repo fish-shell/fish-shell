@@ -507,8 +507,22 @@ void tok_next( tokenizer *tok )
 		return;
 	}
 
-	while( my_iswspace(*(tok->buff) ) )
-		tok->buff++;
+	while( 1 )
+	{
+		if( my_iswspace(*(tok->buff) ) )
+		{
+			tok->buff++;
+		}
+		else
+		{
+			if(( *(tok->buff) == L'\\') &&( *(tok->buff+1) == L'\n') )
+			{
+				tok->buff+=2;
+			}
+			break;
+		}
+	}
+	
 
 	if( *tok->buff == L'#')
 	{

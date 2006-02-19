@@ -484,7 +484,7 @@ void parse_util_load_reset( const wchar_t *path_var )
 
 
 int parse_util_load( const wchar_t *cmd,
-					 const wchar_t *path_var,
+					 const wchar_t *path_var_name,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload )
 {
@@ -496,13 +496,15 @@ int parse_util_load( const wchar_t *cmd,
 	int reloaded = 0;
 	hash_table_t *loaded;
 
+	const wchar_t *path_var = env_get( path_var_name );
+
 	/*
 	  Do we know where to look
 	*/
 	
 	if( !path_var )
 		return 0;
-
+	
 	if( !all_loaded )
 	{
 		all_loaded = malloc( sizeof( hash_table_t ) );		
@@ -514,7 +516,7 @@ int parse_util_load( const wchar_t *cmd,
 		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
  	}
 	
-	loaded = (hash_table_t *)hash_get( all_loaded, path_var );
+	loaded = (hash_table_t *)hash_get( all_loaded, path_var_name );
 	
 	if( !loaded )
 	{
@@ -524,7 +526,7 @@ int parse_util_load( const wchar_t *cmd,
 			die_mem();
 		}
 		hash_init( loaded, &hash_wcs_func, &hash_wcs_cmp );
-		hash_put( all_loaded, wcsdup(path_var), loaded );
+		hash_put( all_loaded, wcsdup(path_var_name), loaded );
 	}
 
 	/*
@@ -551,7 +553,6 @@ int parse_util_load( const wchar_t *cmd,
 	
 	if( !path_list )
 		path_list = al_halloc( global_context);
-
 	
 	if( !path )
 		path = sb_halloc( global_context );

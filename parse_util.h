@@ -90,17 +90,17 @@ int parse_util_lineno( const wchar_t *str, int len );
    not load it multiple times unless it's timestamp changes.
 
    \param cmd the filename to search for. The suffix '.fish' is always added to this name
-   \param path_var a list of paths to search in. 
+   \param path_var_name the name of an environment variable containing a search path
    \param on_load a callback function to run if a suitable file is found, which has not already been run
    \param reload wheter to recheck file timestamps on already loaded files
 */
 int parse_util_load( const wchar_t *cmd,
-					 const wchar_t *path_var,
+					 const wchar_t *path_var_name,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload );
 
 /**
-   Reset the loader for the specified path value
+   Reset the loader for the specified path variable
 */
 void parse_util_load_reset( const wchar_t *path_var );
 

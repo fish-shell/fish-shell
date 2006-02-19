@@ -343,12 +343,8 @@ void complete_destroy()
 		suffix_hash=0;
 	}
 	
-	path = env_get( L"fish_complete_path" );
+	parse_util_load_reset(L"fish_complete_path");
 	
-	if( path )
-		parse_util_load_reset( path );
-	
-
 }
 
 /**
@@ -1463,7 +1459,7 @@ static void complete_load_handler( const wchar_t *cmd )
 
 void complete_load( const wchar_t *name, int reload )
 {
-	parse_util_load( name, 	env_get( L"fish_complete_path" ), &complete_load_handler, reload );	
+	parse_util_load( name, L"fish_complete_path", &complete_load_handler, reload );	
 }
 
 /**

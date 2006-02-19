@@ -60,7 +60,7 @@ static int load( const wchar_t *name )
 	
 	is_autoload = 1;	
 	res = parse_util_load( name,
-						   env_get( L"fish_function_path" ),
+						   L"fish_function_path",
 						   &function_remove,
 						   1 );
 	is_autoload = was_autoload;

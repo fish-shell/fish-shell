@@ -1169,6 +1169,9 @@ wchar_t *parser_current_line()
 		}
 	}
 
+//	lineno = current_tokenizer_pos;
+	
+
 	current_line_width=printed_width(whole_str+current_line_start, current_tokenizer_pos-current_line_start );
 
 	if( (function_name = is_function()) )
@@ -1328,6 +1331,7 @@ static void parse_job_main_loop( process_t *p,
 					die_mem();
 				}
 				tok_next( tok );
+				
 				if( !parse_job( p->next, j, tok ))
 				{
 					/*
@@ -2123,7 +2127,8 @@ static void eval_job( tokenizer *tok )
 	long long t1=0, t2=0, t3=0;
 	profile_element_t *p=0;
 	int skip = 0;
-
+	int job_begin_pos, prev_tokenizer_pos;
+	
 	if( profile )
 	{
 		p=malloc( sizeof(profile_element_t));
@@ -2157,6 +2162,8 @@ static void eval_job( tokenizer *tok )
 
 			j->first_process = halloc( j, sizeof( process_t ) );
 
+			job_begin_pos = tok_get_pos( tok );
+			
 			if( parse_job( j->first_process, j, tok ) &&
 				j->first_process->argv )
 			{
@@ -2191,9 +2198,11 @@ static void eval_job( tokenizer *tok )
 					int was_builtin = 0;
 //					if( j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
 //						was_builtin = 1;
-
+					prev_tokenizer_pos = current_tokenizer_pos;
+					current_tokenizer_pos = job_begin_pos;		
 					exec( j );
-
+					current_tokenizer_pos = prev_tokenizer_pos;
+					
 					/* Only external commands require a new fishd barrier */
 					if( !was_builtin )
 						proc_had_barrier=0;

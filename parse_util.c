@@ -36,10 +36,16 @@ static hash_table_t *all_loaded=0;
 
 int parse_util_lineno( const wchar_t *str, int len )
 {
-	static int res = 1;
-	static int i=0;
+	/**
+	   First cached state
+	*/
 	static const wchar_t *prev_str = 0;
+	static int i=0;
+	static int res = 1;
 
+	/**
+	   Second cached state
+	*/
 	static const wchar_t *prev_str2 = 0;
 	static int i2 = 0;
 	static int res2 = 1;
@@ -111,7 +117,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 				{
 					if(( paran_count == 0)&&(paran_begin==0))
 						paran_begin = pos;
-				
+					
 					paran_count++;
 				}
 				else if( *pos == ')' )
@@ -241,7 +247,6 @@ static void job_or_process_extent( const wchar_t *buff,
 		return;
 
 	pos = cursor_pos - (begin - buff);
-//	fwprintf( stderr, L"Subshell extent: %d %d %d\n", begin-buff, end-buff, pos );
 
 	if( a )
 	{
@@ -259,14 +264,12 @@ static void job_or_process_extent( const wchar_t *buff,
 	{
 		die_mem();
 	}
-//	fwprintf( stderr, L"Strlen: %d\n", wcslen(buffcpy ) );
 
 	for( tok_init( &tok, buffcpy, TOK_ACCEPT_UNFINISHED );
 		 tok_has_next( &tok ) && !finished;
 		 tok_next( &tok ) )
 	{
 		int tok_begin = tok_get_pos( &tok );
-//		fwprintf( stderr, L".");
 
 		switch( tok_last_type( &tok ) )
 		{
@@ -277,8 +280,6 @@ static void job_or_process_extent( const wchar_t *buff,
 			case TOK_END:
 			case TOK_BACKGROUND:
 			{
-
-//				fwprintf( stderr, L"New cmd at %d\n", tok_begin );
 				
 				if( tok_begin >= pos )
 				{
@@ -297,7 +298,6 @@ static void job_or_process_extent( const wchar_t *buff,
 		}
 	}
 
-//	fwprintf( stderr, L"Res: %d %d\n", *a-buff, *b-buff );
 	free( buffcpy);
 	
 	tok_destroy( &tok );
@@ -593,7 +593,8 @@ int parse_util_load( const wchar_t *cmd,
 
 				free( esc );
 
-				on_load(cmd );
+				if( on_load )
+					on_load(cmd );
 
 				/*
 				  Source the completion file for the specified completion

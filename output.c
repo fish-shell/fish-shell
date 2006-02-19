@@ -302,7 +302,6 @@ int writech( wint_t ch )
 	static mbstate_t out_state;
 	char buff[MB_CUR_MAX];
 	size_t bytes = wcrtomb( buff, ch, &out_state );
-	int err;
 	int i;
 	
 	for( i=0; i<bytes; i++ )

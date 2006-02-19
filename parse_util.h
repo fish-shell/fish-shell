@@ -87,4 +87,9 @@ void parse_util_load_reset( const wchar_t *path_var );
 */
 void parse_util_set_argv( wchar_t **argv );
 
+/**
+   Make duplicate string, unescape wildcard characters but n ot performing any other character transformation
+*/
+wchar_t *parse_util_unescape_wildcards( const wchar_t *in );
+
 #endif

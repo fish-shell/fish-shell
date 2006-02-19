@@ -205,7 +205,7 @@ int main( int argc, char **argv )
 
 	my_optind = optind;
 	
-	is_login |= strcmp( argv[0], "-fish") == 0;
+	is_login |= (strcmp( argv[0], "-fish") == 0);
 		
 	is_interactive_session &= (cmd == 0);
 	is_interactive_session &= (my_optind == argc);

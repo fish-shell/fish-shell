@@ -25,6 +25,7 @@
 #include "intern.h"
 #include "exec.h"
 #include "env.h"
+#include "wildcard.h"
 #include "halloc_util.h"
 
 /**
@@ -641,4 +642,41 @@ void parse_util_set_argv( wchar_t **argv )
 	}				
 }
 
+wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
+{
+	wchar_t *in, *out;
+	wchar_t *unescaped = wcsdup(str);
+
+	if( !unescaped )
+		die_mem();
+	
+	for( in=out=unescaped; *in; in++ )
+	{
+		switch( *in )
+		{
+			case L'\\':
+				if( *(in+1) )
+				{
+					in++;
+					*(out++)=*in;
+				}
+				*(out++)=*in;
+				break;
+				
+			case L'*':
+				*(out++)=ANY_STRING;					
+				break;
+				
+			case L'?':
+				*(out++)=ANY_CHAR;					
+				break;
+				
+			default:
+				*(out++)=*in;
+				break;
+		}
+		
+	}
+	return unescaped;
+}
 

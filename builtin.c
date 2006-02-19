@@ -2968,8 +2968,10 @@ static int builtin_case( wchar_t **argv )
 	for( i=1; i<argc; i++ )
 	{
 		free( unescaped );
-		unescaped = unescape( argv[i], 1);
 
+		unescaped = parse_util_unescape_wildcards( argv[i] );
+		
+		
 		if( wildcard_match( current_block->param1.switch_value, unescaped ) )
 		{
 			current_block->skip = 0;

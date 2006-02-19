@@ -1001,17 +1001,21 @@ static void copy_strings_with_prefix( array_list_t *comp_out,
 									  array_list_t *possible_comp )
 {
 	int i;
-	wchar_t *wc;
+	wchar_t *wc, *tmp;
 
-	wc = expand_one( 0,
+	tmp = expand_one( 0,
 					 wcsdup(wc_escaped), EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_WILDCARDS);
-	if(!wc)
+	if(!tmp)
 		return;
 
-	if( wc[0] == L'~' )
+	if( tmp[0] == L'~' )
 	{
-		wc=expand_tilde(wc);
+		tmp=expand_tilde(wc);
 	}
+	
+	wc = parse_util_unescape_wildcards( tmp );
+	free(tmp);
+	
 
 //	int str_len = wcslen( str );
 	for( i=0; i<al_get_count( possible_comp ); i++ )

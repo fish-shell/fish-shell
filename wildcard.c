@@ -72,7 +72,6 @@ int wildcard_has( const wchar_t *str, int internal )
    \param str String to be matched.
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards. 
-   \param wc_unescaped Whether the unescaped special character ANY_CHAR abd ANY_STRING should be used instead of '?' and '*' for wildcard matching
 */
 
 

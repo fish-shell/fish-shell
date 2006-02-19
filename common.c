@@ -527,8 +527,6 @@ int wcsvarname( wchar_t *str )
 		str++;
 	}
 	return 1;
-	
-	
 }
 
 

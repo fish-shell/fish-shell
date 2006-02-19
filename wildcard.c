@@ -41,6 +41,29 @@ wildcards using **.
 */
 #define MAX_FILE_LENGTH 1024
 
+/**
+   Push the specified argument to the list if an identical string is
+   not already in the list. This function iterates over the list,
+   which is quite slow if the list is large. It might make sense to
+   use a hashtable for this.
+*/
+static void al_push_check( array_list_t *l, const wchar_t *new )
+{
+	int i;
+
+	for( i = 0; i < al_get_count(l); i++ ) 
+	{
+		if( !wcscmp( al_get(l, i), new ) ) 
+		{
+			free( (void *)new );
+			return;
+		}
+	}
+
+	al_push( l, new );
+}
+
+
 int wildcard_has( const wchar_t *str, int internal )
 {
 	wchar_t prev=0;
@@ -73,8 +96,6 @@ int wildcard_has( const wchar_t *str, int internal )
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards. 
 */
-
-
 static int wildcard_match2( const wchar_t *str, 
 							const wchar_t *wc, 
 							int is_first )
@@ -670,18 +691,3 @@ int wildcard_expand( const wchar_t *wc,
 	return res;
 }
 
-void al_push_check( array_list_t *l, const wchar_t *new )
-{
-	int i;
-
-	for( i = 0; i < al_get_count(l); i++ ) 
-	{
-		if( !wcscmp( al_get(l, i), new ) ) 
-		{
-			free( (void *)new );
-			return;
-		}
-	}
-
-	al_push( l, new );
-}

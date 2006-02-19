@@ -1,6 +1,7 @@
 /** \file parse_util.h
 
-    Various utility functions for parsing a command
+    Various mostly unrelated utility functions related to parsing,
+    loading and evaluating fish code.
 */
 
 #ifndef FISH_PARSE_UTIL_H
@@ -8,9 +9,8 @@
 
 #include <wchar.h>
 
-
 /**
-   Locate the first subshell in the specified string.
+   Find the beginning and end of the first subshell in the specified string.
    
    \param in the string to search for subshells
    \param begin the starting paranthesis of the subshell
@@ -26,6 +26,11 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 
 /**
    Find the beginning and end of the command substitution under the cursor
+
+   \param buff the string to search for subshells
+   \param cursor_pos the position of the cursor
+   \param a the start of the searched string
+   \param b the end of the searched string
 */
 void parse_util_cmdsubst_extent( const wchar_t *buff,
 								 int cursor_pos,
@@ -34,23 +39,38 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 
 /**
    Find the beginning and end of the process definition under the cursor
+
+   \param buff the string to search for subshells
+   \param cursor_pos the position of the cursor
+   \param a the start of the searched string
+   \param b the end of the searched string
 */
 void parse_util_process_extent( const wchar_t *buff,
-								int pos,
+								int cursor_pos,
 								const wchar_t **a, 
 								const wchar_t **b );
 
 
 /**
    Find the beginning and end of the job definition under the cursor
+
+   \param buff the string to search for subshells
+   \param cursor_pos the position of the cursor
+   \param a the start of the searched string
+   \param b the end of the searched string
 */
 void parse_util_job_extent( const wchar_t *buff,
-							int pos,
+							int cursor_pos,
 							const wchar_t **a, 
 							const wchar_t **b );
 
 /**
    Find the beginning and end of the token under the cursor
+
+   \param buff the string to search for subshells
+   \param cursor_pos the position of the cursor
+   \param a the start of the searched string
+   \param b the end of the searched string
 */
 void parse_util_token_extent( const wchar_t *buff,
 							  int cursor_pos,
@@ -79,16 +99,20 @@ int parse_util_load( const wchar_t *cmd,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload );
 
+/**
+   Reset the loader for the specified path value
+*/
 void parse_util_load_reset( const wchar_t *path_var );
 
 /**
    Set the argv environment variable to the specified null-terminated
-   array of strings
+   array of strings. 
 */
 void parse_util_set_argv( wchar_t **argv );
 
 /**
-   Make duplicate string, unescape wildcard characters but n ot performing any other character transformation
+   Make a duplicate of the specified string, unescape wildcard
+   characters but not performing any other character transformation.
 */
 wchar_t *parse_util_unescape_wildcards( const wchar_t *in );
 

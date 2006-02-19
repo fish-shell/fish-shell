@@ -19,7 +19,7 @@
    If \c context is not null, context must be a halloc root block. the
    resulting memory block is a child context, and must never be
    explicitly freed, it will be automatically freed whenever the
-   parent context is freed. Child blocks can never be used as the
+   parent context is freed. Child blocks can also never be used as the
    context in calls to halloc_register_function, halloc_free, etc.
 */
 void *halloc( void *context, size_t size );

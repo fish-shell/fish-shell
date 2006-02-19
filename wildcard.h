@@ -92,10 +92,4 @@ int wildcard_complete( const wchar_t *str,
 						const wchar_t *(*desc_func)(const wchar_t *),
 						array_list_t *out );
 
-/**
-   Push string if not already in list
-*/
-void al_push_check( array_list_t *l, const wchar_t *str );
-
-
 #endif

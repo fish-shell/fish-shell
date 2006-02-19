@@ -1311,11 +1311,10 @@ static void parse_job_main_loop( process_t *p,
 	while( 1 )
 	{
 
-		/* debug( 2, L"Read token %ls\n", wcsdup(tok_last( tok )) ); */
-
 		switch( tok_last_type( tok ) )
 		{
 			case TOK_PIPE:
+			{
 				if( (p->type == INTERNAL_EXEC) )
 				{
 					error( SYNTAX_ERROR,
@@ -1332,19 +1331,20 @@ static void parse_job_main_loop( process_t *p,
 				}
 				tok_next( tok );
 				
-				if( !parse_job( p->next, j, tok ))
-				{
-					/*
-					  Don't do anything on failiure. parse_job will notice the error flag beeing set
-					*/
+				/*
+				  Don't do anything on failiure. parse_job will notice the error flag beeing set
+				*/
+				parse_job( p->next, j, tok );
 
-				}
 				is_finished = 1;
 				break;
-
+			}
+			
 			case TOK_BACKGROUND:
+			{
 				j->fg = 0;
-
+			}
+			
 			case TOK_END:
 			{
 				halloc_register( j, p->argv=list_to_char_arr( args ) );

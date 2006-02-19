@@ -1,6 +1,7 @@
 /** \file parse_util.c
 
-    Various utility functions for parsing a command
+    Various mostly unrelated utility functions related to parsing,
+    loading and evaluating fish code.
 */
 
 #include "config.h"
@@ -438,6 +439,9 @@ static void clear_hash_value( const void *key, const void *data )
 	free( (void *)data );
 }
 
+/**
+   Part of the autoloader cleanup 
+*/
 static void clear_loaded_entry( const void *key, const void *data )
 {
 	hash_table_t *loaded = (hash_table_t *)data;
@@ -448,6 +452,11 @@ static void clear_loaded_entry( const void *key, const void *data )
 	free( (void *)key );
 }
 
+/**
+   The autoloader cleanup function. It is run on shutdown and frees
+   any memory used by the autoloader code to keep track of loaded
+   files.
+*/
 static void parse_util_destroy()
 {
 	if( all_loaded )

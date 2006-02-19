@@ -403,7 +403,7 @@ static void read_comment( tokenizer *tok )
 }
 
 /**
-   Read a FD redirect.
+   Read a FD redirection.
 */
 static void read_redirect( tokenizer *tok, int fd )
 {

@@ -1940,29 +1940,51 @@ static int parse_job( process_t *p,
 					}
 					else
 					{
+						int tmp;
+
+						/* 
+						   We couln't find the specified command.
+
+						   What we want to happen now is that the
+						   specified job won't get executed, and an
+						   error message is printed on-screen, but
+						   otherwise, the parsing/execution of the
+						   file continues. Because of this, we don't
+						   want to call error(), since that would stop
+						   execution of the file. Instead we let
+						   p->actual_command be 0 (null), which will
+						   cause the job to silently not execute. We
+						   also print an error message.
+						*/
 						if( wcschr( (wchar_t *)al_get( args, 0 ), L'=' ) )
 						{
-							error( EVAL_ERROR,
-								   tok_get_pos( tok ),
+							debug( 0,
 								   COMMAND_ASSIGN_ERR_MSG,
 								   (wchar_t *)al_get( args, 0 ) );
-
+							
 
 						}
 						else
 						{
-							error( EVAL_ERROR,
-								   tok_get_pos( tok ),
+							debug( 0,
 								   _(L"Unknown command '%ls'"),
 								   (wchar_t *)al_get( args, 0 ) );
-
 						}
+						
+						tmp = current_tokenizer_pos;
+						current_tokenizer_pos = tok_get_pos(tok);
+						
+						fwprintf( stderr, L"%ls", parser_current_line() );
+
+						current_tokenizer_pos=tmp;
+						j->skip=1;
+						
 					}
 				}
 			}
 		}
 	}
-
+	
 	if( is_new_block )
 	{
 		

@@ -262,7 +262,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 		if( io->fd > 2 )
 		{
 			/*
-			  Make sure the fd used by this redirection is not used by i.e. a pipe. 
+			  Make sure the fd used by this redirection is not used by e.g. a pipe. 
 			*/
 			free_fd( io, io->fd );
 		}
@@ -405,7 +405,7 @@ static int setup_child_process( job_t *j, process_t *p )
 	
 	if( !res )	
 	{
-		res = handle_child_io( j->io, (p==0) );
+		res = handle_child_io( j->io, (p!=0) );
 	}
 	
 	/* Set the handling for job control signals back to the default.  */

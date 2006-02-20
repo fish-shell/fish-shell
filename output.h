@@ -133,7 +133,9 @@ int writeb( tputs_arg_t b );
 
 /**
    Set the function used for writing in move_cursor, writespace and
-   set_color. By default, writembs is used.
+   set_color and all other output functions in this library. By
+   default, the write call is used to give completely unbuffered
+   output to stdout.
 */
 void output_set_writer( int (*writer)(char) );
 

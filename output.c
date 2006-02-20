@@ -143,7 +143,9 @@ void set_color( int c, int c2 )
 	{
 		c = c2 = FISH_COLOR_NORMAL;
 		if( fg )
+		{
 			writembs( tparm( fg, 0 ) );
+		}
 		writembs( exit_attribute_mode );
 		return;
 	}
@@ -203,12 +205,14 @@ void set_color( int c, int c2 )
 		if( c==FISH_COLOR_NORMAL )
 		{
 			if( fg )
+			{
 				writembs( tparm( fg, 0 ) );
+			}
 			writembs( exit_attribute_mode );
 
 			last_color2 = FISH_COLOR_NORMAL;
 		}
-		else if( ( c >= 0) && ( c < FISH_COLOR_NORMAL ) )
+		else if( ( c >= 0 ) && ( c < FISH_COLOR_NORMAL ) )
 		{
 			if( fg )
 			{
@@ -228,15 +232,15 @@ void set_color( int c, int c2 )
 				writembs( tparm( bg, 0 ) );
 			}
 
-			writembs(exit_attribute_mode);
-			if(( last_color != FISH_COLOR_NORMAL ) && fg )
+			writembs( exit_attribute_mode );
+			if( ( last_color != FISH_COLOR_NORMAL ) && fg )
 			{
-				writembs(tparm( fg, last_color ));
+				writembs( tparm( fg, last_color ) );
 			}
 
 			last_color2 = c2;
 		}
-		else if ((c2 >= 0 ) &&(c2 < FISH_COLOR_NORMAL))
+		else if ( ( c2 >= 0 ) && ( c2 < FISH_COLOR_NORMAL ) )
 		{
 			if( bg )
 			{
@@ -290,7 +294,9 @@ int writembs( char *str )
 {
 #ifdef TPUTS_KLUDGE
 	while( *str )
+	{
 		out( *str );
+	}
 #else
 	tputs(str,1,writeb);
 #endif
@@ -305,7 +311,9 @@ int writech( wint_t ch )
 	int i;
 	
 	for( i=0; i<bytes; i++ )
+	{
 		out( buff[i] );
+	}
 	return 0;
 }
 
@@ -335,14 +343,15 @@ void writestr( const wchar_t *str )
 	if( writestr_buff_sz < len )
 	{
 		if( !writestr_buff )
+		{
 			halloc_register_function_void( global_context, &output_destroy );
+		}
 		
-										   
-									  
-
 		writestr_buff = realloc( writestr_buff, len );
 		if( !writestr_buff )
+		{
 			die_mem();
+		}
 		writestr_buff_sz = len;
 	}
 	
@@ -357,8 +366,9 @@ void writestr( const wchar_t *str )
 	  Write
 	*/
 	for( pos = writestr_buff; *pos; pos++ )
+	{
 		out( *pos );
-
+	}
 }
 
 
@@ -377,7 +387,9 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 	{
 		int w = wcwidth( *str );
 		if( written+w+wcwidth( ellipsis_char )>max_width )
+		{
 			break;
+		}
 		written+=w;
 		writech( *(str++) );
 	}
@@ -438,7 +450,9 @@ int writespace( int c )
 		int i;
 		
 		for( i=0; i<c; i++ )
+		{
 			out( ' ' );
+		}
 	}
 	return 0;
 }
@@ -458,7 +472,11 @@ int output_color_code( const wchar_t *val )
 	}
 
 	if( color >= 0 )
+	{
 		return color;
+	}
 	else
+	{
 		return FISH_COLOR_NORMAL;
+	}
 }

@@ -298,7 +298,6 @@ int job_reap( int interactive );
 */
 void job_handle_signal( int signal, siginfo_t *info, void *con );
 
-
 #ifdef HAVE__PROC_SELF_STAT
 /**
    Use the procfs filesystem to look up how many jiffies of cpu time

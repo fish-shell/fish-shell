@@ -345,8 +345,6 @@ void parser_push_block( int type )
 	new->src_lineno = parser_get_lineno();
 	new->src_filename = parser_current_filename()?intern(parser_current_filename()):0;
 	
-//	debug( 3, L"Block push %ls %d\n", parser_get_block_desc(type), block_count( current_block)+1 );
-	
 	new->outer = current_block;
 	new->type = (current_block && current_block->skip)?FAKE:type;
 	
@@ -357,9 +355,13 @@ void parser_push_block( int type )
 	*/
 	new->skip=current_block?current_block->skip:0;
 	if( type == TOP || type == SUBST )
+	{
 		new->skip = 0;
+	}
 	if( type == FAKE )
+	{
 		new->skip = 1;
+	}
 	
 	new->job = 0;
 	new->loop_status=LOOP_NORMAL;
@@ -759,7 +761,9 @@ wchar_t *get_filename( const wchar_t *cmd )
 					if( wstat( new_cmd, &buff )==-1 )
 					{
 						if( errno != EACCES )
+						{
 							wperror( L"stat" );
+						}
 						continue;
 					}
 					if( S_ISREG(buff.st_mode) )
@@ -778,10 +782,12 @@ wchar_t *get_filename( const wchar_t *cmd )
 						case ENOTDIR:
 							break;
 						default:
+						{
 							debug( 1,
 								   MISSING_COMMAND_ERR_MSG,
 								   new_cmd );
 							wperror( L"access" );
+						}
 					}
 				}
 			}
@@ -814,8 +820,10 @@ static void print_profile( array_list_t *p,
 	int my_time;
 
 	if( pos >= al_get_count( p ) )
+	{
 		return;
-
+	}
+	
 	me= (profile_element_t *)al_get( p, pos );
 	if( !me->skipped )
 	{
@@ -825,12 +833,20 @@ static void print_profile( array_list_t *p,
 		{
 			prev = (profile_element_t *)al_get( p, i );
 			if( prev->skipped )
+			{
 				continue;
-
+			}
+			
 			if( prev->level <= me->level )
+			{
 				break;
+			}
+
 			if( prev->level > me->level+1 )
+			{
 				continue;
+			}
+
 			my_time -= prev->parse;
 			my_time -= prev->exec;
 		}
@@ -931,26 +947,20 @@ int eval_args( const wchar_t *line, array_list_t *args )
 		switch(tok_last_type( &tok ) )
 		{
 			case TOK_STRING:
-				switch( expand_string( 0, wcsdup(tok_last( &tok )), args, 0 ) )
+			{
+				if( expand_string( 0, wcsdup(tok_last( &tok )), args, 0 ) == EXPAND_ERROR )
 				{
-					case EXPAND_ERROR:
-					{
-						err_pos=tok_get_pos( &tok );
-						do_loop=0;
-						break;
-					}
-
-					default:
-					{
-						break;
-					}
-
+					err_pos=tok_get_pos( &tok );
+					do_loop=0;
 				}
-
 				break;
+			}
+			
 			case TOK_END:
+			{
 				break;
-
+			}
+			
 			case TOK_ERROR:
 			{
 				error( SYNTAX_ERROR,
@@ -963,6 +973,7 @@ int eval_args( const wchar_t *line, array_list_t *args )
 			}
 
 			default:
+			{
 				error( SYNTAX_ERROR,
 					   tok_get_pos( &tok ),
 					   UNEXPECTED_TOKEN_ERR_MSG,
@@ -970,6 +981,7 @@ int eval_args( const wchar_t *line, array_list_t *args )
 
 				do_loop=0;
 				break;
+			}
 		}
 	}
 	
@@ -1003,27 +1015,37 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 		switch( b->type)
 		{
 			case SOURCE:
+			{
 				sb_printf( buff, _(L"in . (source) call of file '%ls',\n"), b->param1.source_dest );
 				break;
+			}
 			case FUNCTION_CALL:
+			{
 				sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
 				break;
+			}
 			case SUBST:
+			{
 				sb_printf( buff, _(L"in command substitution\n") );
 				break;
+			}
 		}
 
 		const wchar_t *file = b->src_filename;
 
 		if( file )
+		{
 			sb_printf( buff,
 					   _(L"\tcalled on line %d of file '%ls',\n"),
 					   b->src_lineno,
 					   file );
+		}
 		else
+		{
 			sb_printf( buff,
 					   _(L"\tcalled on standard input,\n") );
-
+		}
+		
 		if( b->type == FUNCTION_CALL )
 		{			
 			if( b->param2.function_call_process->argv[1] )
@@ -1975,7 +1997,7 @@ static int parse_job( process_t *p,
 						current_tokenizer_pos = tok_get_pos(tok);
 						
 						fwprintf( stderr, L"%ls", parser_current_line() );
-
+						
 						current_tokenizer_pos=tmp;
 						j->skip=1;
 						

@@ -657,7 +657,15 @@ int wildcard_expand( const wchar_t *wc,
 							*/
 							if( whole_match )
 							{
-								res |= wildcard_expand( wc_end?wc_end + 1:L"", 
+								wchar_t *new_wc = L"";
+								if( wc_end )
+								{
+									new_wc=wc_end+1;
+									while(*new_wc==L'/')
+										new_wc++;
+								}
+								
+								res |= wildcard_expand( new_wc,
 														new_dir, 
 														flags, 
 														out );

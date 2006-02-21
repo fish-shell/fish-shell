@@ -289,12 +289,13 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 	
 	for( i=0; i<al_get_count( c->comp ); i++ )
 	{
+		const wchar_t *comp = (const wchar_t *)al_get( c->comp, i );
 		if( i != 0 )
 			written += print_max( L"  ", comp_width - written, 2 );
 		set_color( get_color(HIGHLIGHT_PAGER_PREFIX),FISH_COLOR_NORMAL );
-		written += print_max( prefix, comp_width - written, 1 );
+		written += print_max( prefix, comp_width - written, comp[0]?1:0 );
 		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION),FISH_COLOR_IGNORE );
-		written += print_max( (wchar_t *)al_get( c->comp, i ), comp_width - written, i!=(al_get_count(c->comp)-1) );
+		written += print_max( comp, comp_width - written, i!=(al_get_count(c->comp)-1) );
 	}
 
 

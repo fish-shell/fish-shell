@@ -88,7 +88,7 @@ wchar_t *halloc_wcsndup( void * context, const wchar_t *in, int c )
 	{
 		die_mem();
 	}
-	wcslcpy( res, in, c );
+	wcslcpy( res, in, c+1 );
 	res[c] = L'\0';	
 	return res;	
 }

@@ -1085,7 +1085,7 @@ wchar_t *wcsndup( const wchar_t *in, int c )
 	{
 		die_mem();
 	}
-	wcsncpy( res, in, c );
+	wcsncpy( res, in, c+1 );
 	res[c] = L'\0';	
 	return res;	
 }

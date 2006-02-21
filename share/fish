@@ -7,28 +7,8 @@
 #
 # Assign a temporary value here for performance reasons. The real value should be set in /etc/fish.
 #
-set -g fish_function_path 
 
-#
-# Don't need completions in non-interactive mode
-#
-
-#
-# Alias for gettext (or a fallback if gettext isn't installed) This
-# needs to be defined here and not in fish_function.fish, since it is
-# used by other init files.
-#
-
-function _ -d "Alias for the gettext command"
-	printf "%s" $argv
-end
-if test 1 = "1"
-	if which gettext ^/dev/null >/dev/null
-		function _ -d "Alias for the gettext command"
-			gettext fish $argv
-		end
-	end
-end
+set -g fish_function_path $PWD/functions/
 
 #
 # Set some value for LANG if nothing was set before, and this is a
@@ -44,6 +24,10 @@ if status --is-login
 		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/p')
 	end
 end
+
+#
+# Don't need completions in non-interactive mode
+#
 
 if not status --is-interactive
 	exit

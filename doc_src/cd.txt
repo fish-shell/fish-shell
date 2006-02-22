@@ -3,10 +3,9 @@
 \subsection cd-synopsis Synopsis
 <tt>cd [DIRECTORY]</tt>
 
-\subsection cd-description Description
-Changes the current directory. If <tt>DIRECTORY</tt> is supplied it
-will become the new directory. If \c DIRECTORY is a relative path, the
-CDPATH environment variable will be separated using the : as
-separator, and the resulting list will be searched for a suitable new
-current directory. If CDPATH is not set, it is assumed to be '.'. If
-\c DIRECTORY is not specified, \$HOME will be the new directory.
+\subsection cd-description Description Changes the current
+directory. If <tt>DIRECTORY</tt> is supplied it will become the new
+directory. If \c DIRECTORY is a relative path, the paths found in the
+CDPATH environment variable array will be tried as prefixes for the
+specified path. If CDPATH is not set, it is assumed to be '.'. If \c
+DIRECTORY is not specified, \$HOME will be the new directory.

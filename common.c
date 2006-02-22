@@ -71,13 +71,6 @@ parts of fish.
 
 struct termios shell_modes;      
 
-/**
-   Number of error encountered. This is reset after each command, and
-   used to limit the number of error messages on commands with many
-   string convertion problems.
-*/
-static int error_count=0;
-
 int error_max=1;
 
 wchar_t ellipsis_char;
@@ -269,11 +262,6 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 	out[out_pos] = 0;
 	
 	return out;	
-}
-
-void error_reset()
-{
-	error_count=0;
 }
 
 char *wcs2str( const wchar_t *in )

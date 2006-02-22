@@ -2287,7 +2287,6 @@ static int read_i()
 		{
 			prev_end_loop=0;
 		}
-		error_reset();
 
 	}
 	reader_pop();
@@ -2935,7 +2934,6 @@ static int read_ni( int fd )
 		free( buff );
 		res=1;
 	}
-	error_reset();
 	return res;
 }
 

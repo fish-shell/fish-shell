@@ -1365,7 +1365,7 @@ static void complete_from_args( const wchar_t *str,
 {
 
 	array_list_t possible_comp;
-	int i;
+/*	int i; */
 
 	al_init( &possible_comp );
 
@@ -1373,7 +1373,17 @@ static void complete_from_args( const wchar_t *str,
 	eval_args( args, &possible_comp );
 	proc_pop_interactive();
 	
-	/* We need to unescape these strings before matching them */
+	/*
+	  Completion results where previously unescaped by the
+	  code below. I have no idea why that was done, but I have
+	  not removed this since I'm not sure if this might be
+	  correct, though I can't think of any reason why it
+	  should be.
+
+	  If this code is readded - add an explanation of _why_ completion
+	  strings should be escaped!
+	*/
+	/*
 	for( i=0; i< al_get_count( &possible_comp ); i++ )
 	{
 		wchar_t *next = (wchar_t *)al_get( &possible_comp, i );
@@ -1387,6 +1397,7 @@ static void complete_from_args( const wchar_t *str,
 			}
 			else
 			{
+				al_set( &possible_comp , i, 0 );
 				debug( 2, L"Could not expand string %ls on line %d of file %s", next, __LINE__, __FILE__ );
 			}
 			free( next );
@@ -1396,7 +1407,8 @@ static void complete_from_args( const wchar_t *str,
 			debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
 		}
 	}
-	
+	*/
+
 	copy_strings_with_prefix( comp_out, str, desc, 0, &possible_comp );
 
 	al_foreach( &possible_comp, (void (*)(const void *))&free );

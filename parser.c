@@ -1352,7 +1352,8 @@ static void parse_job_main_loop( process_t *p,
 					return;
 				}
 				p->pipe_fd = wcstol( tok_last( tok ), 0, 10 );
-				halloc_register( j, p->argv=list_to_char_arr( args ) );
+				if( !p->argv )
+					halloc_register( j, p->argv = list_to_char_arr( args ) );
 				p->next = halloc( j, sizeof( process_t ) );
 				if( p->next == 0 )
 				{
@@ -1376,7 +1377,8 @@ static void parse_job_main_loop( process_t *p,
 			
 			case TOK_END:
 			{
-				halloc_register( j, p->argv=list_to_char_arr( args ) );
+				if( !p->argv )
+					halloc_register( j, p->argv = list_to_char_arr( args ) );
 				if( tok_has_next(tok))
 					tok_next(tok);
 
@@ -2086,8 +2088,8 @@ static int parse_job( process_t *p,
 	{
 		if( p->type == INTERNAL_BUILTIN && parser_skip_arguments( (wchar_t *)al_get(args, 0) ) )
 		{			
-			halloc_register( j, p->argv = list_to_char_arr( args ) );
-//			tok_next(tok);
+			if( !p->argv )
+				halloc_register( j, p->argv = list_to_char_arr( args ) );
 		}
 		else
 		{

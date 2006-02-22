@@ -481,8 +481,10 @@ void complete_remove( const wchar_t *cmd,
 							{
 								wchar_t *pos2 = pos+1;
 								while( *pos2 == L':' )
+								{
 									pos2++;
-
+								}
+								
 								memmove( pos,
 										 pos2,
 										 sizeof(wchar_t)*wcslen(pos2) );
@@ -500,7 +502,9 @@ void complete_remove( const wchar_t *cmd,
 						free( o );
 					}
 					else
+					{
 						oprev = o;
+					}
 				}
 			}
 
@@ -523,7 +527,9 @@ void complete_remove( const wchar_t *cmd,
 		}
 
 		if( e )
+		{
 			eprev = e;
+		}
 	}
 }
 
@@ -541,8 +547,14 @@ static void parse_cmd_string( const wchar_t *str,
 	/* Get the path of the command */
 	path = get_filename( str );
 	if( path == 0 )
+	{
+		/**
+		   Use the empty string as the 'path' for commands that can
+		   not be found.
+		*/
 		path = wcsdup(L"");
-
+	}
+	
 	/* Make sure the path is not included in the command */
 	cmd = wcsrchr( str, L'/' );
 	if( cmd != 0 )
@@ -611,11 +623,11 @@ int complete_is_valid_option( const wchar_t *str,
 		return 0;
 	}
 
-
-
 	if( !(short_validated = malloc( wcslen( opt ) )))
+	{
 		die_mem();
-
+	}
+	
 	memset( short_validated, 0, wcslen( opt ) );
 
 	hash_init( &gnu_match_hash,
@@ -649,8 +661,10 @@ int complete_is_valid_option( const wchar_t *str,
 		const wchar_t *a;
 
 		if( !wildcard_match( match, i->cmd ) )
+		{
 			continue;
-
+		}
+		
 		found_match = 1;
 
 		if( !i->authorative )
@@ -666,15 +680,19 @@ int complete_is_valid_option( const wchar_t *str,
 			for( o = i->first_option; o; o=o->next )
 			{
 				if( o->old_mode )
+				{
 					continue;
-
+				}
+				
 				if( wcsncmp( &opt[2], o->long_opt, gnu_opt_len )==0)
 				{
 					hash_put( &gnu_match_hash, o->long_opt, L"" );
 					if( (wcsncmp( &opt[2],
 								  o->long_opt,
 								  wcslen( o->long_opt) )==0) )
+					{
 						is_gnu_exact=1;
+					}
 				}
 			}
 		}
@@ -926,24 +944,30 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 				switch( errno )
 				{
 					case ENOENT:
+					{
 						sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_ROTTEN_SYMLINK_DESC );
 						break;
-
+					}
+					
 					case EACCES:
+					{
 						break;
-
+					}
+					
 					default:
+					{
 						if( errno == ELOOP )
 						{
 							sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_LOOP_SYMLINK_DESC );
 						}
 
 						/*
-						  Some kind of broken symlink. We ignore it
-						  here, and it will get a 'file' description,
-						  or one based on suffix.
+						  Some kind of unknown broken symlink. We
+						  ignore it here, and it will get a 'file'
+						  description, or one based on suffix.
 						*/
 						break;
+					}
 				}
 			}
 
@@ -1013,19 +1037,14 @@ static void copy_strings_with_prefix( array_list_t *comp_out,
 	if(!tmp)
 		return;
 
-	if( tmp[0] == L'~' )
-	{
-		tmp=expand_tilde(wc);
-	}
-	
 	wc = parse_util_unescape_wildcards( tmp );
 	free(tmp);
 	
 	for( i=0; i<al_get_count( possible_comp ); i++ )
 	{
 		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
-
-		wildcard_complete( next_str, wc, desc, desc_func, comp_out );
+		if( next_str )
+			wildcard_complete( next_str, wc, desc, desc_func, comp_out );
 	}
 
 	free( wc );
@@ -1358,10 +1377,26 @@ static void complete_from_args( const wchar_t *str,
 	for( i=0; i< al_get_count( &possible_comp ); i++ )
 	{
 		wchar_t *next = (wchar_t *)al_get( &possible_comp, i );
-		al_set( &possible_comp , i, unescape( next, 0 ) );
-		free( next );
+		wchar_t *next_unescaped;
+		if( next )
+		{
+			next_unescaped = unescape( next, 0 );
+			if( next_unescaped )
+			{
+				al_set( &possible_comp , i, next_unescaped );
+			}
+			else
+			{
+				debug( 2, L"Could not expand string %ls on line %d of file %s", next, __LINE__, __FILE__ );
+			}
+			free( next );
+		}
+		else
+		{
+			debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		}
 	}
-
+	
 	copy_strings_with_prefix( comp_out, str, desc, 0, &possible_comp );
 
 	al_foreach( &possible_comp, (void (*)(const void *))&free );
@@ -1674,11 +1709,11 @@ static void complete_param_expand( wchar_t *str,
 		comp_str = str;
 	}
 	
-	debug( 2,
+	debug( 3,
 		   L"expand_string( \"%ls\", comp_out, EXPAND_SKIP_SUBSHELL | ACCEPT_INCOMPLETE | %ls );",
 		   comp_str,
 		   do_file?L"0":L"EXPAND_SKIP_WILDCARDS" );
-
+	
 	expand_string( 0, 
 				   wcsdup(comp_str),
 				   comp_out,
@@ -1753,10 +1788,8 @@ static int try_complete_variable( const wchar_t *cmd,
 		{
 			return 0;
 		}
-
 	}
 	return 0;
-
 }
 
 /**

@@ -212,8 +212,13 @@ wchar_t *str2wcs( const char *in )
 	size_t len = strlen(in);
 	
 	out = malloc( sizeof(wchar_t)*(len+1) );
+
+	if( !out )
+	{
+		die_mem();
+	}
+
 	return str2wcs_internal( in, out );
-	
 }
 
 wchar_t *str2wcs_internal( const char *in, wchar_t *out )
@@ -226,11 +231,6 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 	
 	memset( &state, 0, sizeof(state) );
 	
-	if( !out )
-	{
-		die_mem();
-	}
-
 	while( in[in_pos] )
 	{
 		res = mbrtowc( &out[out_pos], &in[in_pos], len-in_pos, &state );

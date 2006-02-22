@@ -155,16 +155,12 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 		return 0;
 	}
 
-	*begin = paran_begin;
-	*end = paran_count?in+wcslen(in):paran_end;
+	if( begin )
+		*begin = paran_begin;
+	if( end )
+		*end = paran_count?in+wcslen(in):paran_end;
 	
-/*	assert( *begin >= in );
-	assert( *begin < (in+wcslen(in) ) );
-	assert( *end >= *begin );
-	assert( *end < (in+wcslen(in) ) );
-*/
 	return 1;
-
 }
 
 

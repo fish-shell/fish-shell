@@ -708,7 +708,7 @@ wchar_t *get_filename( const wchar_t *cmd )
 {
 	wchar_t *path;
 
-	debug( 2, L"get_filename( '%ls' )", cmd );
+	debug( 3, L"get_filename( '%ls' )", cmd );
 
 	if(wcschr( cmd, L'/' ) != 0 )
 	{
@@ -948,7 +948,14 @@ int eval_args( const wchar_t *line, array_list_t *args )
 		{
 			case TOK_STRING:
 			{
-				if( expand_string( 0, wcsdup(tok_last( &tok )), args, 0 ) == EXPAND_ERROR )
+				wchar_t *tmp = wcsdup(tok_last( &tok ));
+				
+				if( !tmp )
+				{
+					die_mem();
+				}
+				
+				if( expand_string( 0, tmp, args, 0 ) == EXPAND_ERROR )
 				{
 					err_pos=tok_get_pos( &tok );
 					do_loop=0;

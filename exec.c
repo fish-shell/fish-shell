@@ -1260,10 +1260,16 @@ int exec_subshell( const wchar_t *cmd,
 					{
 						wchar_t *el = str2wcs( begin );
 						if( el )
+						{
 							al_push( l, el );
+						}
+						else
+						{
+							debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+						}
 					}				
 					io_buffer_destroy( io_buffer );
-				
+					
 					return status;
 				
 				case '\n':
@@ -1271,7 +1277,14 @@ int exec_subshell( const wchar_t *cmd,
 					wchar_t *el;
 					*end=0;
 					el = str2wcs( begin );
-					al_push( l, el );
+					if( el )
+					{
+						al_push( l, el );
+					}
+					else
+					{
+						debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+					}
 					begin = end+1;
 					break;
 				}

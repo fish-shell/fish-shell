@@ -567,11 +567,12 @@ static void remove_duplicates( array_list_t *l )
 
 	prev = (wchar_t *)al_get( l, 0 );
 	for( in=1, out=1; in < al_get_count( l ); in++ )
-	{
+	{		
 		wchar_t *curr = (wchar_t *)al_get( l, in );
+
 		if( fldcmp( prev, curr )==0 )
 		{
-			free( curr );
+			free( curr );			
 		}
 		else
 		{
@@ -2036,7 +2037,6 @@ void reader_set_buffer( wchar_t *b, int p )
 	else
 	{
 		data->buff_pos=l;
-//		fwprintf( stderr, L"Pos %d\n", l );
 	}
 
 	reader_super_highlight_me_plenty( data->buff,

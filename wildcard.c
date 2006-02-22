@@ -151,13 +151,32 @@ static int wildcard_complete_internal( const wchar_t *orig,
 									   const wchar_t *(*desc_func)(const wchar_t *),
 									   array_list_t *out )
 {
+	if( !wc )
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+	
+	if( !str )
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+	
+	if( !orig )
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+
 	if( *wc == 0 &&
 		( ( *str != L'.') || (!is_first)) )
 	{
-		if( !out )
-			return 1;
-		
 		wchar_t *new;
+		if( !out )
+		{
+			return 1;
+		}
 			
 		if( wcschr( str, PROG_COMPLETE_SEP ) )
 		{
@@ -165,7 +184,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			  This completion has an embedded description, du not use the generic description
 			*/
 			wchar_t *sep;
-				
+			
 			new = wcsdup( str );
 			sep = wcschr(new, PROG_COMPLETE_SEP );
 			*sep = COMPLETE_SEP;			
@@ -661,15 +680,19 @@ int wildcard_expand( const wchar_t *wc,
 								if( wc_end )
 								{
 									new_wc=wc_end+1;
+									/*
+									  Accept multiple '/' as a single direcotry separator
+									*/
 									while(*new_wc==L'/')
+									{
 										new_wc++;
+									}
 								}
 								
 								res |= wildcard_expand( new_wc,
 														new_dir, 
 														flags, 
 														out );
-
 							}
 							
 							/*
@@ -694,8 +717,10 @@ int wildcard_expand( const wchar_t *wc,
 	closedir( dir );
 	
 	if( flags & ACCEPT_INCOMPLETE )
+	{
 		sb_destroy( &sb_desc );
-	
+	}
+
 	return res;
 }
 

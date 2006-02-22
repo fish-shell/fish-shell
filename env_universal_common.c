@@ -105,7 +105,7 @@ static int get_names_show_unexported;
 
 void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const wchar_t *val ) )
 {
-	debug( 2, L"Init env_universal_common" );
+	debug( 3, L"Init env_universal_common" );
 	callback = cb;
 	hash_init( &env_universal_var, &hash_wcs_func, &hash_wcs_cmp );
 }
@@ -229,7 +229,7 @@ static int match( const wchar_t *msg, const wchar_t *cmd )
 static void parse_message( wchar_t *msg, 
 						   connection_t *src )
 {
-	debug( 2, L"parse_message( %ls );", msg );
+	debug( 3, L"parse_message( %ls );", msg );
 	
 	if( msg[0] == L'#' )
 		return;

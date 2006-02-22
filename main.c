@@ -123,6 +123,10 @@ int main( int argc, char **argv )
 				}
 				,
 				{
+					"debug-level", required_argument, 0, 'd' 
+				}
+				,
+				{
 					"interactive", no_argument, 0, 'i' 
 				}
 				,
@@ -152,14 +156,14 @@ int main( int argc, char **argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "hilvc:p:", 
+							   "hilvc:p:d:", 
 							   long_options, 
 							   &opt_index );
 		
 #else	
 		int opt = getopt( argc,
 						  argv, 
-						  "hilvc:p:" );
+						  "hilvc:p:d:" );
 #endif
 		if( opt == -1 )
 			break;
@@ -174,6 +178,22 @@ int main( int argc, char **argv )
 				is_interactive_session = 0;
 				break;
 
+			case 'd':		
+			{
+				char *end;
+				int tmp = strtol(optarg, &end, 10);
+				if( tmp >= 0 && tmp <=10 && !*end )
+				{
+					debug_level=tmp;
+				}
+				else
+				{
+					debug( 0, _(L"Invalid value '%s' for debug level switch"), optarg );
+					exit(1);
+				}
+				break;
+			}
+			
 			case 'h':
 				cmd = "help";
 				break;
@@ -233,7 +253,7 @@ int main( int argc, char **argv )
 			wchar_t *cmd_wcs = str2wcs( cmd );
 			res = eval( cmd_wcs, 0, TOP );
 			free(cmd_wcs);
-			reader_exit(0);			
+			reader_exit(0);
 		}
 		else
 		{

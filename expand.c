@@ -1189,6 +1189,18 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 	int i, j;
 	const wchar_t *item_begin;
 
+	if( !in )
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+
+	if( !out )
+	{
+		debug( 2, L"Got null pointer on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+
 	switch( parse_util_locate_cmdsubst(in,
 									   &paran_begin,
 									   &paran_end,
@@ -1205,7 +1217,6 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 		case 1:
 
 			break;
-
 	}
 
 	len1 = (paran_begin-in);
@@ -1254,10 +1265,10 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
             sb_append_substring( &whole_item, sub_item2, item_len );
 			sb_append_char( &whole_item, INTERNAL_SEPARATOR );
             sb_append( &whole_item, tail_item );
-
-            al_push( out, whole_item.buff );
+			
+			al_push( out, whole_item.buff );
         }
-
+		
         free( sub_item2 );
     }
 	free(in);
@@ -1438,23 +1449,18 @@ int expand_string( void *context,
 
 	if( EXPAND_SKIP_SUBSHELL & flags )
 	{
-		wchar_t *pos = str;
-
-		while( 1 )
+		const wchar_t *begin, *end;
+		
+		if( parse_util_locate_cmdsubst( str,
+										&begin,
+										&end,
+										1 ) != 0 )
 		{
-			pos = wcschr( pos, L'(' );
-			if( pos == 0 )
-				break;
-
-			if( (pos == str) || ( *(pos-1) != L'\\' ) )
-			{
-				error( SUBSHELL_ERROR, -1, L"Subshells not allowed" );
-				free( str );
-				al_destroy( &list1 );
-				al_destroy( &list2 );
-				return EXPAND_ERROR;
-			}
-			pos++;
+			error( SUBSHELL_ERROR, -1, L"Subshells not allowed" );
+			free( str );
+			al_destroy( &list1 );
+			al_destroy( &list2 );
+			return EXPAND_ERROR;
 		}
 		al_push( &list1, str );
 	}
@@ -1483,7 +1489,10 @@ int expand_string( void *context,
 			free( (void *)al_get( in, i ) );
 
 			if( !next )
-				continue;
+			{
+				debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+				continue;				
+			}
 
 			if( EXPAND_SKIP_VARIABLES & flags )
 			{
@@ -1492,7 +1501,6 @@ int expand_string( void *context,
 					if( *tmp == VARIABLE_EXPAND )
 						*tmp = L'$';
 				al_push( out, next );
-
 			}
 			else
 			{
@@ -1513,6 +1521,13 @@ int expand_string( void *context,
 		for( i=0; i<al_get_count( in ); i++ )
 		{
 			wchar_t *next = (wchar_t *)al_get( in, i );
+
+			if( !next )
+			{
+				debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+				continue;				
+			}	
+
 			if( !expand_brackets( next, flags, out ))
 			{
 				al_destroy( in );
@@ -1528,6 +1543,13 @@ int expand_string( void *context,
 		for( i=0; i<al_get_count( in ); i++ )
 		{
 			wchar_t *next = (wchar_t *)al_get( in, i );
+
+			if( !next )
+			{
+				debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+				continue;				
+			}	
+
 			if( !(next=expand_tilde_internal( next ) ) )
 			{
 				al_destroy( in );
@@ -1572,6 +1594,12 @@ int expand_string( void *context,
 			wchar_t *next = (wchar_t *)al_get( in, i );
 			int wc_res;
 
+			if( !next )
+			{
+				debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+				continue;				
+			}	
+
 			remove_internal_separator( next, EXPAND_SKIP_WILDCARDS & flags );
 			
 			if( ((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
@@ -1590,27 +1618,46 @@ int expand_string( void *context,
 				switch( wc_res )
 				{
 					case 0:
+					{
 						if( !(flags & ACCEPT_INCOMPLETE) )
 						{
 							if( res == EXPAND_OK )
 								res = EXPAND_WILDCARD_NO_MATCH;
 							break;
 						}
-
+					}
+					
 					case 1:
+					{
+						int j;
 						res = EXPAND_WILDCARD_MATCH;
 						sort_list( out );
-						al_push_all( end_out, out );
+
+						for( j=0; j<al_get_count( out ); j++ )
+						{
+							wchar_t *next = (wchar_t *)al_get( out, j );
+							if( !next )
+							{
+								debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+								continue;				
+							}	
+							al_push( end_out, next );
+						}
 						al_truncate( out, 0 );
 						break;
+					}
 				}
 			}
 			else
 			{
 				if( flags & ACCEPT_INCOMPLETE)
+				{
 					free( next );
+				}
 				else
+				{
 					al_push( end_out, next );
+				}
 			}
 		}
 		al_destroy( in );

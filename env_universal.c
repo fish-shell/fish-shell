@@ -214,7 +214,7 @@ void env_universal_init( wchar_t * p,
 						 void (*sf)(),
 						 void (*cb)( int type, const wchar_t *name, const wchar_t *val ))
 {
-	debug( 2, L"env_universal_init()" );
+	debug( 3, L"env_universal_init()" );
 	path=p;
 	user=u;
 	start_fishd=sf;	
@@ -233,7 +233,7 @@ void env_universal_init( wchar_t * p,
 	{
 		env_universal_barrier();
 	}
-	debug( 2, L"end env_universal_init()" );
+	debug( 3, L"end env_universal_init()" );
 }
 
 void env_universal_destroy()

@@ -340,10 +340,34 @@ builtin_help.c: $(BUILTIN_DOC_HDR) doc_src/count.doxygen gen_hdr2 gen_hdr.sh bui
 #man -- doc_src/builtin_doc/man/man1/`basename $@ .c`.1 | cat -s | ./gen_hdr2 >>$@
 
 #
-# The build rules for installing/uninstalling
+# The build rules for installing/uninstalling fish
 #
 
-install: all install-translations
+# Check for an incompatible installed fish version, and fail with an
+# error if found
+
+check-uninstall:
+	if test -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish -o -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish; then \
+		echo;\
+		echo ERROR;\
+		echo;\
+		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
+		echo You must uninstall this fish version before installing proceeding;\
+		echo type \'make uninstall-legacy\' to uninstall these files,;\
+		echo or type \'make force-install\' to force installation.;\
+		echo The latter may result in a broken installation.;\
+		echo;\
+		false;\
+	fi;
+.PHONY: check-uninstall
+
+# Try to install after checking for incompatible installed versions
+install: all check-uninstall install-force
+.PHONY: install
+
+# Force installation, even in presense of incompatible previous
+# version
+install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir) 
 	for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
@@ -382,7 +406,10 @@ install: all install-translations
 	@echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.
 	@echo
 	@echo Have fun!
-.PHONY: install
+.PHONY: force-install
+
+
+# Uninstall this fish version
 
 uninstall: uninstall-translations
 	for i in $(PROGRAMS); do \
@@ -391,13 +418,35 @@ uninstall: uninstall-translations
 	rm -f $(DESTDIR)$(bindir)/xsel
 	rm -f $(DESTDIR)$(sysconfdir)/fish
 	rm -f $(DESTDIR)$(sysconfdir)/fish_inputrc
-	rm -r $(DESTDIR)$(sysconfdir)/fish.d
-	rm -r $(DESTDIR)$(datadir)/fish
-	rm -r $(DESTDIR)$(docdir)
-	for i in fish.1* @XSEL_MAN@ mimedb.1* fishd.1* set_color.1* count.1*; do \
-		rm $(DESTDIR)$(mandir)/man1/$$i; \
+	if test -d $(DESTDIR)$(datadir)/fish; then \
+		rm -r $(DESTDIR)$(datadir)/fish; \
+	fi
+	if test -d $(DESTDIR)$(docdir); then \
+		rm -r $(DESTDIR)$(docdir);\
+	fi
+	for i in fish.1 @XSEL_MAN@ mimedb.1 fishd.1 set_color.1 count.1; do \
+		rm -f $(DESTDIR)$(mandir)/man1/$$i*; \
 	done;
 .PHONY: uninstall
+
+# Uninstall older fish release. This is not the default uninstall
+# since there is a slight chance that it removes a file put in place by
+# the sysadmin.
+
+uninstall-legacy: uninstall
+	rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish
+	rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish
+	rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish
+	if test -d $(DESTDIR)$(sysconfdir)/fish.d/completions; then \
+		for i in $(COMPLETIONS_DIR_FILES); do \
+			basename=`basename $$i`; \
+			if test -f $(DESTDIR)$(sysconfdir)/fish.d/completions/$$basename; then \
+				rm $(DESTDIR)$(sysconfdir)/fish.d/completions/$$basename; \
+			fi; \
+		done; \
+	fi;
+	rmdir $(DESTDIR)$(sysconfdir)/fish.d/completions; true
+	rmdir $(DESTDIR)$(sysconfdir)/fish.d; true
 
 install-translations: $(TRANSLATIONS)
 	if test $(HAVE_GETTEXT) = 1; then \
@@ -406,13 +455,13 @@ install-translations: $(TRANSLATIONS)
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
 			echo $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
 		done; \
-	fi
+	fi;
 .PHONY: install-translations
 
 uninstall-translations: 
 	if test $(HAVE_GETTEXT) = 1; then \
 		for i in $(TRANSLATIONS_SRC); do \
-			rm -f $(DESTDIR)$(datadir)/locale/`basename $$i .po`/LC_MESSAGES/fish.mo; \
+			rm -f $(DESTDIR)$(datadir)/locale/*/LC_MESSAGES/fish.mo; \
 		done; \
 	fi
 .PHONY: uninstall-translations
@@ -461,7 +510,7 @@ depend:
 #
 # Uses install instead of mkdir so build won't fail if the directory 
 # exists
-fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FILES) $(TEST_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
+fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FILES) $(TEST_DIR_FILES) $(SHARE_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
 	rm -rf fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/doc_src

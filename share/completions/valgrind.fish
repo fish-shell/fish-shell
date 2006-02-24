@@ -17,7 +17,7 @@ complete -xc valgrind -l $skin -d (_ "Skin") -a "
 	massif\tHeap\ profiler
 "
 
-eval function __fish_valgrind_skin\; contains -- --$skin=\$argv \(commandline -cpo\)\;end
+eval "function __fish_valgrind_skin; contains -- --$skin=\$argv (commandline -cpo);end"
 
 set -e $skin
 
@@ -66,7 +66,7 @@ complete -n "__fish_valgrind_skin cachegrind" -xc valgrind -l L2 -d (_ "Type of 
 
 
 # Massif-specific options
-complete -c valgrind -n "__fish_valgrind_skin massif" -l alloc-fn -d (_ "Specify a function that allocates memory") -x
+complete -c valgrind -n "__fish_valgrind_skin massif" -l alloc-fn -d (_ "Specify a function that allocates memory") -x -a "(__fish_print_function_prototypes)"
 complete -c valgrind -n "__fish_valgrind_skin massif" -x -l heap -d 'Profile heap usage' -a 'yes\t"Profile heap usage" no\t"Do not profile heap usage"'
 complete -c valgrind -n "__fish_valgrind_skin massif" -x -l heap-admin -d (_ "The number of bytes of heap overhead per allocation")
 complete -c valgrind -n "__fish_valgrind_skin massif" -x -l stacks -d (_ "Profile stack usage") -a 'yes\t"Profile stack usage" no\t"Do not profile stack usage"'

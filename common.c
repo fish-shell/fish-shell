@@ -917,74 +917,87 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							break;
 						}
 						
-						case L'X':
 						case L'u':
 						case L'U':
 						case L'x':
-						case L'o':
+						case L'X':
+						case L'0':
+						case L'1':
+						case L'2':
+						case L'3':
+						case L'4':
+						case L'5':
+						case L'6':
+						case L'7':
 						{
 							int i;
-							wchar_t res=0;
+							long long res=0;
 							int chars=2;
 							int base=16;
 							
 							int byte = 0;
+							int max_val = 127;
 							
 							switch( in[in_pos] )
 							{
 								case L'u':
 								{
-									base=16;
 									chars=4;
+									max_val = 35535;
 									break;
 								}
 								
 								case L'U':
 								{
-									base=16;
 									chars=8;
+									max_val = WCHAR_MAX;
 									break;
 								}
 								
 								case L'x':
 								{
-									base=16;
-									chars=2;
 									break;
 								}
 								
 								case L'X':
 								{
 									byte=1;
-									base=16;
-									chars=2;
+									max_val = 255;
 									break;
 								}
 								
-								case L'o':
+								default:
 								{
 									base=8;
 									chars=3;
+									in_pos--;
 									break;
-								}
-								
+								}								
 							}
 					
 							for( i=0; i<chars; i++ )
 							{
 								int d = convert_digit( in[++in_pos],base);
+								
 								if( d < 0 )
 								{
 									in_pos--;
 									break;
 								}
-						
+								
 								res=(res*base)|d;
-						
 							}
-					
-							in[out_pos] = (byte?ENCODE_DIRECT_BASE:0)+res;
-					
+
+							if( (res > 0) && (res <= max_val) )
+							{
+								in[out_pos] = (byte?ENCODE_DIRECT_BASE:0)+res;
+							}
+							else
+							{	
+								free(in);	
+								return 0;
+							}
+							
 							break;
 						}
 

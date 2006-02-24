@@ -115,7 +115,7 @@ these characters, so called escape sequences are provided. These are:
 - <code>'\\^'</code>, escapes the circumflex character
 - <code>'\\x<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes the ascii character with the specified value
 - <code>'\\X<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes a byte of data with the specified value. If you are using a mutibyte encoding, this can be used to enter invalid strings. Only use this if you know what you are doing.
-- <code>'\\o<i>ooo</i>'</code>, where <code><i>ooo</i></code> is an octal number, escapes the ascii character with the specified value
+- <code>'\\<i>ooo</i>'</code>, where <code><i>ooo</i></code> is an octal number, escapes the ascii character with the specified value
 - <code>'\\u<i>xxxx</i>'</code>, where <code><i>xxxx</i></code> is a hexadecimal number, escapes the 16-bit unicode character with the specified value
 - <code>'\\U<i>xxxxxxxx</i>'</code>, where <code><i>xxxxxxxx</i></code> is a hexadecimal number, escapes the 32-bit unicode character with the specified value
 

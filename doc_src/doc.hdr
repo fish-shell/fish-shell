@@ -1353,208 +1353,6 @@ Examples:
 - The language should be uniform, so that once the user understands the command/argument syntax, he will know the whole language, and be able to use tab-completion to discover new featues.
 
 */
-/** \page about About fish
-
-
-\section about-program About the program
-
-\c fish is meant to be used for interactive shell tasks on a modern
-UNIX-like workstation. It is much more important for me to keep the
-code maintainable, readable and bug free than to support esoteric old
-hardware, software or wetware. As such, the program is often wildly
-inefficient in its use of memory and CPU cycles. On my system, \c fish
-uses a little less than half a megabyte of memory, a number that could
-be significantly reduced with a little effort. \c fish performs a lot
-of linear searches of things that could be done in logarithmic time,
-does not usually cache file system data or other search result, and
-uses the fork() call promiscuosly. None of these things matter because
-\c fish is still fast enough to be perceived as instantaneous on a
-semi-modern computer thanks to the miracles of copy-on-write, OS-level
-caching and Moores law, and it only uses a fraction of the memory used
-by most terminal emulators to display it. If this program was anything
-other than an amusing hobby for me, I would of course feel otherwise,
-but since my time is limited, this is the way it must be.
-
-
-\section about-code About the source code
-
-Fish is written using the ellemtel indentation style, using four space
-tabs. \c fish regularly performs a large set of sanity checks to make
-sure it is in a sane state. If not, the program will terminate before
-it can do any harm.
-
-Do not edit the file builtin_help.c, it is automatically generated.
-
-
-\section about-documentation About the documentation
-
-The documentation for \c fish is written for Doxygen. All header files
-are pretty heavily commented. 
-
-Since it was desirable to use the same text files for producing the
-HTML documentation as for producing the internal help output, some
-rather ugly kludges had to be used for writing the documentation for
-the builtin commands.
-
-The directory doc_src contains a file called doc.hdr, containing
-various general documentation for \c fish, and a large number of .txt
-files. Each txt file contains the documentation for one \c fish
-builtin. When creating the main doxygen documentation, all these files
-are concatenated into one file, called doc.h. When creating the
-internal documentation, each of the .txt files is converted to a .h
-file by supplying a doxygen header/footer. These headers are then
-converted into man style manuals, which in turn are converted to C
-code by a script called gen_hdr.sh. The resulting C-file,
-builtin_help.c, can then by linked into \c fish. This method is probably
-not the most robust, elegant or clever method for generating
-documentation. If someone has a suggestion of how to do i better,
-please notify me.
-*/
-/** \page difference Why fish?
-\section difference-overview What is different about fish?
-
-This page is a summary of differences between \c fish and other shells. 
-
-\subsection difference-completion Tab completion features
-
-\c fish, like many other shells, performs tab completion, i.e. the shell
-tries to guess what the user is typing and complete the users
-sentences whenever the user presses the tab key. If the shell finds
-more than one possible completion, a list of all completions is
-displayed when the users double taps on tab. \c fish extends tab
-completion functionality in several ways:
-
-- \c fish performs file completion on strings containing wildcards
-- When showing a list of possible completions, \c fish adds a 
-description to each completion. For files this description is a 
-description of the format or filetype, like 'C source code', 
-'Character device' or 'Executable'. For variables, if the 
-value is short enough, the variable value will be displayed. For 
-commands, if there is room and few enough commands, the whatis 
-description of the command is used. 
-- \c fish has extensive command specific completions, including 
-completion of specific options. This is very powerful in combination 
-with completion descriptions, as the user can see what each option does 
-without consulting the manual. Simply type the command you wish to use, 
-type a dash and double tab TAB, and the screen will fill with a list of 
-the commands options and a description of what they do. 
-- \c fish uses a decent pager when the results won't fit on one 
-screen. The pager can scroll up and down, both one row and one page at
-a time, and if any non movement key is pressed the pager exits without
-consuming the character.  Therefore, there is no need to press 
-'q' to exit before typing your completion.
-
-Some examples of the completions performed by \c fish
-
-- When completing an argument for the man command, the whatis 
-database is searched for manual pages as completions.
-- When completing a command name, the whatis database is searched 
-for each possible command, and the description returned is used 
-as the description of the command.
-- When completing an argument for the make command, the Makefile 
-in the current directory is searched for targets.
-
-\subsection difference-killring X-Windows Copy and paste
-
-\c fish supports using the X-Windows clipboard for storing copy and
-paste information. This feature is automatically enabled if the
-DISPLAY environment variable is set. For more information on how to
-use copy and paste in \c fish, read <a href="index.html#killring">
-this section</a>. This means you can easily share commands and strings
-between different shell sessions and applications.
-
-\subsection difference-open Simple launching of default applications
-
-The open command uses the mimetype database (Also used by both Gnome
-or KDE) to launch the default application for a file. Just type
-<code>open *.html</code> and all the HTML files in your current directory
-will be opened in your default browser. No longer will you have to
-convert your filenames to URLS, remember clunky Open Office command
-names, worry about absolute paths or any the other common pitfalls when
-opening files from the commandline.
-
-\subsection difference-help Help
-
-\c fish is heavily commented. Both the source code and the
-program in general features a great deal of easily accessible
-documentation. The <code>help</code> command is used to display HTML-based
-help files. Just type <code>help</code> and a subject, and the help system
-will try to fill your needs. To view the page you are reading right
-now, you could simply type <code>help difference</code>. <code>help</code>
-also works great together with tab completion. Write \c help and
-double tap on tab, a list of all help sections will be displayed, with
-a description of the content of each section.
-
-Also, all builtin commands have a help option. Passing '-h' or
-'--help' to any builtin will give you the same help as the help
-command, but formated for output on screen.
-
-\subsection difference-highlighting Syntax highlighting
-
-\c fish performs syntax highlighting of commands as they're
-entered. Pretty colors may look nice (or awful, depending on your
-taste), but the real advantage is error flagging. The syntax
-highlighting function does extensive error cheching and will flag many
-common errors such as misspelling a command or option, or reading from a
-non-existent file.
-
-\c fish also highlights matching quotes and parenthesis as the cursor
-moves over them. This is very useful when typing long, complex
-commands.
-
-\subsection difference-terminal Terminal handling
-
-\c fish knows it's terminal. \c fish uses the terminfo database
-to get more information on the current terminal. Some of the terminal
-handling features of \c fish are:
-
-- Backspace and delete work more often in \c fish thanks to the use of 
-terminfo. If you've been bitten by this, you'll know what this means.
-- If the screen has been written to when \c fish was in the foreground, 
-this is detected and the command line is redrawn. 
-- Process notifications, like jobs ending or being stopped by signals,
-are printed to the screen at once, not whenever the user presses the enter key.
-
-\c fish uses wide character strings internally, including double width
-characters, so it should be ready for all your Unicode needs.
-
-\subsection difference-history Smart history
-
-\c fish features an intelligent history that automatically removes any
-duplicate items. Searching is performed by entering a search string
-and using the up/down arrow keys to go to the next/previous match. On
-exit, \c fish performs a merge between the history on file and the
-history in memory history, thus making sure that multiple copies of \c
-fish running concurrently will not erase each others history
-information.
-
-\subsection difference-simple Simplicity
-
-\c fish has a simple syntax. There is only one form of
-alias/function/whatever, accessed through the <code>function</code>
-builtin. The are very few builtins, \c fish relies on normal commands
-like <code>echo</code>, <code>kill</code>, <code>printf</code> and <code>time</code>
-instead of reimplementing them as builtins.
-
-Token separation is performed before variable expansion. This means
-that even if a variable contains spaces, it will never be separated
-into multiple arguments. If you want to tokenize a string, you can use
-the <a href="commands.html#tokenize">tokenize</a> command.
-
-Command substitution is specified using parenthesis, as in <code>set name (whoami)</code>. 
-
-There is no math mode, use bc.
-
-The POSIX way of setting variables is <i>lame</i>. Whitespace
-sensitive languages are awful. "foo=bar" and "foo = bar" should not
-mean different things. \c fish uses a builtin, <code>set</code> to set and
-remove environment variables. While this may seem a bit obscure, this
-makes for a very consistent language. In fish, everything, including
-the loops, assignments and switch/case statements is a command.
-
-In \c fish, all block types end with the \c end command.
-
-*/
 /** \page license Licenses
 
 Fish Copyright (C) 2005 Axel Liljencrantz. Fish is released under the
@@ -2539,4 +2337,76 @@ DAMAGES.
 
 
 */
+/** \page faq Frequently asked questions
 
+- <a href='#faq-cwd-symlink'>Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?</a>
+- <a href='#faq-cd-autocomplete'>Why does the cd command autocompletion list the subdirectories of my home directory as completions?</a>
+- <a href='#faq-cd-implicit'>I accidentally entered a directory path and fish changed directory. What happened?</a>
+- <a href='#faq-open'>The open command doesn't work.</a>
+
+<hr>
+
+\section faq-cwd-symlink Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?
+<i>
+For example if I have the directory ~/images which is a symlink to
+~/Documents,/Images if I write 'cd doc', my prompt will say
+~/D/Images, not ~/images.
+</i>
+
+Because it is impossible to consistently keep symlinked directories
+unresolved. It is indeed possible to do this partially, and many other
+shells do so. But it was felt there are enough serious corner cases
+that this is a bad idea. Most such issues have to do with how '..' is
+handled, and are varitations of the following example:
+
+Writing <code>cd images; ls ..</code> given the above directory
+structure would list the contents of ~/Documents, not of ~, even
+though using <code>cd ..</code> changes the current direcotry to ~,
+and the prompt, the pwd builtin and many other directory information
+sources suggest that the the current directory is ~/images and it's
+parent is ~. This issue is not possible to fix without either making
+every single command into a builtin, breaking Unix semantics or
+implementing kludges in every single command.
+
+This issue can also be seen when doing IO redirection. 
+
+Another related issue is that many programs that operate on recursive
+directory trees, like the find command, silently ignore symlinked
+directories. For example, <code>find $PWD -name '*.txt'</code>
+silently fails in shells that don't resolve symlinked paths.
+
+<hr>
+
+\section faq-cd-autocomplete Why does the cd command autocompletion list the subdirectories of my home directory as completions?
+
+Because they are possible completions. In fish, if you specify a
+relative directory to the cd command, i.e. any path that does not
+start with '.' or '/', the environment variable CD_PATH will be
+examined, and any directories in this path is used as a base
+direcotry. To disable this feature, use <code>set CD_PATH .</code> to
+only use the current directory for searches.
+
+<hr>
+
+\section faq-cd-implicit I accidentally entered a directory path and fish changed directory. What happened?
+
+If fish is unable to locate a command with a given name, fish will
+test if a directory of that name exists. If it does, it is implicitly
+assumed that you want to change working directory. For example, the 
+fastest way to switch to your home directory is to simply type
+<code>~</code>.
+
+<hr>
+
+\section faq-open The open command doesn't work.
+
+The open command uses the mimetype database and the .desktop files
+used by Gnome and KDE to identify filetypes and default actions. If
+at least one of these two desktops are installed, but the open command is
+not working, this probably means that the relevant files are installed
+in a nonstandard location. Please contact the <a
+href='mailto:fish-users@lists.sf.net'>fish mailing list</a>, and
+hopefully this can be resolved.
+
+
+*/

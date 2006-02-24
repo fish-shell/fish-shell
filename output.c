@@ -305,10 +305,31 @@ int writembs( char *str )
 
 int writech( wint_t ch )
 {
-	static mbstate_t out_state;
-	char buff[MB_CUR_MAX];
-	size_t bytes = wcrtomb( buff, ch, &out_state );
+	mbstate_t state;
 	int i;
+	char buff[MB_CUR_MAX+1];
+	size_t bytes;
+
+	if( ( ch >= ENCODE_DIRECT_BASE) &&
+		( ch < ENCODE_DIRECT_BASE+256) )
+	{
+		buff[0] = ch- ENCODE_DIRECT_BASE;
+		bytes=1;
+	}
+	else
+	{
+		memset( &state, 0, sizeof(state) );
+		bytes= wcrtomb( buff, ch, &state );
+		
+		switch( bytes )
+		{
+			case (size_t)(-1):
+			{
+				return 1;
+			}
+
+		}
+	}
 	
 	for( i=0; i<bytes; i++ )
 	{

@@ -313,7 +313,7 @@ int writech( wint_t ch )
 	if( ( ch >= ENCODE_DIRECT_BASE) &&
 		( ch < ENCODE_DIRECT_BASE+256) )
 	{
-		buff[0] = ch- ENCODE_DIRECT_BASE;
+		buff[0] = ch - ENCODE_DIRECT_BASE;
 		bytes=1;
 	}
 	else
@@ -327,7 +327,6 @@ int writech( wint_t ch )
 			{
 				return 1;
 			}
-
 		}
 	}
 	

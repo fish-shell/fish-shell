@@ -258,7 +258,6 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 	int i;
 	int written=0;
 	
-//	debug( 1, L"print %ls", al_get(c->comp, 0 ) );
 	if( c->pref_width <= width )
 	{
 		/*

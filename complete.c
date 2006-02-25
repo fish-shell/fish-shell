@@ -395,7 +395,6 @@ void complete_add( const wchar_t *cmd,
 		c->short_opt_str = wcsdup(L"");
 	}
 
-/*		wprintf( L"Add completion to option (short %lc, long %ls)\n", short_opt, long_opt );*/
 	if( !(opt = malloc( sizeof( complete_entry_opt ) )))
 	{
 		die_mem();
@@ -654,7 +653,7 @@ int complete_is_valid_option( const wchar_t *str,
 	  Make sure completions are loaded for the specified command
 	*/
 	complete_load( cmd, 0 );
-
+	
 	for( i=first_entry; i; i=i->next )
 	{
 		wchar_t *match = i->cmd_type?path:cmd;
@@ -1956,11 +1955,10 @@ void complete( const wchar_t *cmd,
 
 	if( !done )
 	{
-
 		pos = cursor_pos-(begin-cmd);
-
+		
 		buff = wcsndup( begin, end-begin );
-
+		
 		if( !buff )
 			done=1;
 	}
@@ -2025,7 +2023,6 @@ void complete( const wchar_t *cmd,
 
 		if( current_token && current_command && prev_token )
 		{
-
 			if( on_command )
 			{
 				/* Complete command filename */
@@ -2052,7 +2049,6 @@ void complete( const wchar_t *cmd,
 		free( current_token );
 		free( current_command );
 		free( prev_token );
-
 	}
 
 	error_max=old_error_max;

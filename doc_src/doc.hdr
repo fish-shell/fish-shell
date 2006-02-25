@@ -1165,7 +1165,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - With a bit of tweakage, quite a few of the readline key-binding functions could be implemented in shellscript.
 - Highlight beginning/end of block when moving over a block command
 - Inclusion guards for the init files to make them evaluate only once, even if the user has installed fish both in /etc and in $HOME
-- Do not actually load most of the shellscript functions on startup. Only load a tiny wrapper that will load the real function when needed. This should shave of CPU-time spent on parsing 500-1000 lines of code and ~50 kB of memory on startup, and is pretty easy to implement.
 - Do not actually load/parse .fish_history, only mmap it and use some clever string handling. Should save ~150 kB of memory permanently, but is very hard to implement.
 - command specific wildcarding (use case * instead of case '*', etc.)
 - show the whole list of commands on using tab on an empty commandline
@@ -2379,12 +2378,11 @@ silently fails in shells that don't resolve symlinked paths.
 
 \section faq-cd-autocomplete Why does the cd command autocompletion list the subdirectories of my home directory as completions?
 
-Because they are possible completions. In fish, if you specify a
-relative directory to the cd command, i.e. any path that does not
-start with '.' or '/', the environment variable CD_PATH will be
-examined, and any directories in this path is used as a base
-direcotry. To disable this feature, use <code>set CD_PATH .</code> to
-only use the current directory for searches.
+Because they are completions. In fish, if you specify a relative
+directory to the cd command, i.e. any path that does not start with
+'.' or '/', the environment variable CD_PATH will be examined, and any
+directories in this path is used as a base direcotry. To disable this
+feature, use the command <code>set CD_PATH .</code>.
 
 <hr>
 

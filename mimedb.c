@@ -21,6 +21,7 @@ license. Read the source code of the library for more information.
 
 #include "config.h"
 
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +44,9 @@ license. Read the source code of the library for more information.
 #endif
 
 #include "xdgmime.h"
+#include "fallback.h"
 #include "util.h"
+
 
 /**
    Location of the applications .desktop file, relative to a base mime directory

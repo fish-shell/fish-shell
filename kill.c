@@ -18,7 +18,10 @@
 
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "kill.h"
 #include "proc.h"

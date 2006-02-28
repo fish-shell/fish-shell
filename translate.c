@@ -6,6 +6,7 @@ Translation library, internally uses catgets
 
 #include "config.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,7 +17,9 @@ Translation library, internally uses catgets
 #endif
 
 #include "common.h"
+#include "fallback.h"
 #include "util.h"
+
 #include "halloc_util.h"
 
 #if HAVE_GETTEXT

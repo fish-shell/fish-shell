@@ -5,6 +5,7 @@ Utilities for io redirection.
 */
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -31,7 +32,9 @@ Utilities for io redirection.
 #include <ncurses/term.h>
 #endif
 
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "exec.h"
 #include "common.h"

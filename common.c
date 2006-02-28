@@ -6,6 +6,7 @@ parts of fish.
 
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <termios.h>
 #include <wchar.h>
@@ -50,7 +51,9 @@ parts of fish.
 #include <ncurses/term.h>
 #endif
 
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "common.h"
 #include "expand.h"

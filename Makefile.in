@@ -57,7 +57,7 @@ ETC_DIR_INSTALL = etc/fish_interactive.fish
 # Set to 1 if we have gettext
 HAVE_GETTEXT=@HAVE_GETTEXT@
 
-CORE_OBJS := util.o common.o halloc.o halloc_util.o 
+CORE_OBJS := util.o common.o halloc.o halloc_util.o fallback.o
 
 # All objects used by fish, that are compiled from an ordinary .c file
 # using an ordinary .h file.

@@ -12,7 +12,10 @@
 #include <string.h>
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "function.h"
 #include "proc.h"

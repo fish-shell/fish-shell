@@ -5,6 +5,7 @@ Implementation file for the low level input library
 */
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,7 +16,9 @@ Implementation file for the low level input library
 #include <wchar.h>
 
 
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "wutil.h"
 #include "input_common.h"

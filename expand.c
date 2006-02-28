@@ -27,7 +27,10 @@ parameter expansion.
 #endif
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "wutil.h"
 #include "env.h"

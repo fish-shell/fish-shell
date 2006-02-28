@@ -42,7 +42,10 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <ncurses/term.h>
 #endif
 
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "proc.h"
 #include "common.h"

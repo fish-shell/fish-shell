@@ -4,6 +4,7 @@
 
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -26,7 +27,9 @@
 #include <locale.h>
 #include <dirent.h>
 
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "proc.h"
 #include "reader.h"

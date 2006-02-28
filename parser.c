@@ -18,7 +18,10 @@ The fish parser. Contains functions for parsing code.
 #include <signal.h>
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "wutil.h"
 #include "proc.h"

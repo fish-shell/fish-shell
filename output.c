@@ -38,7 +38,10 @@
 #include <time.h>
 #include <wchar.h>
 
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "expand.h"
 #include "common.h"
@@ -292,15 +295,7 @@ int writeb( tputs_arg_t b )
 
 int writembs( char *str )
 {
-#ifdef TPUTS_KLUDGE
-	while( *str )
-	{
-		out( *str );
-	}
-#else
-	tputs(str,1,writeb);
-#endif
-	return 0;
+	return tputs(str,1,&writeb)==ERR?1:0;
 }
 
 int writech( wint_t ch )

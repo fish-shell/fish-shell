@@ -12,7 +12,10 @@
 #include <signal.h>
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "highlight.h"
 #include "tokenizer.h"

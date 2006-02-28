@@ -8,10 +8,13 @@
 
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "halloc.h"
 

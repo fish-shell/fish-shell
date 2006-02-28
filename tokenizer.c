@@ -15,7 +15,10 @@
 #include <string.h>
 #include <unistd.h>
 
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "tokenizer.h"
 #include "common.h"

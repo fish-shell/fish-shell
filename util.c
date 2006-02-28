@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -22,7 +23,9 @@
 #include <errno.h>
 
 
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "wutil.h"
 

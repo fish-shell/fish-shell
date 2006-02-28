@@ -13,7 +13,10 @@ Functions used for implementing the ulimit builtin.
 #include <errno.h>
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "builtin.h"
 #include "common.h"
 #include "wgetopt.h"

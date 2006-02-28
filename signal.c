@@ -6,6 +6,7 @@ The library for various signal related issues
 
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,7 +16,9 @@ The library for various signal related issues
 #include <errno.h>
 
 #include "common.h"
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "signal.h"
 #include "event.h"

@@ -12,7 +12,10 @@
 
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "history.h"
 #include "common.h"

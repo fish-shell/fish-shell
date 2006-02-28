@@ -43,7 +43,10 @@ implementation in fish is as of yet incomplete.
 #include <wctype.h>
 
 
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "reader.h"
 #include "proc.h"

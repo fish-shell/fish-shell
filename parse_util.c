@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -17,7 +18,9 @@
 #include <time.h>
 #include <assert.h>
 
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "common.h"
 #include "tokenizer.h"

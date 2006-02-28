@@ -14,7 +14,10 @@
 
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "sanity.h"
 #include "proc.h"

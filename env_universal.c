@@ -1,5 +1,6 @@
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -26,7 +27,9 @@
 
 #include <signal.h>
 
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "wutil.h"
 #include "env_universal_common.h"

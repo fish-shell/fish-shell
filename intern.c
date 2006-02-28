@@ -5,12 +5,15 @@
 */
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <unistd.h>
 
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "common.h"
 #include "intern.h"

@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "config.h"
 
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -40,7 +41,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <locale.h>
 #include <signal.h>
 
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "reader.h"
 #include "builtin.h"

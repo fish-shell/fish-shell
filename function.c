@@ -9,8 +9,11 @@
 #include <signal.h>
 
 #include "config.h"
+
 #include "wutil.h"
+#include "fallback.h"
 #include "util.h"
+
 #include "function.h"
 #include "proc.h"
 #include "parser.h"

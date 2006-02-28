@@ -35,7 +35,10 @@
 
 #include <signal.h>
 
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "common.h"
 #include "complete.h"

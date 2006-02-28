@@ -12,7 +12,10 @@ Functions used for implementing the commandline builtin.
 #include <signal.h>
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "builtin.h"
 #include "common.h"

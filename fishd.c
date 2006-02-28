@@ -41,6 +41,7 @@ time the original barrier request was sent have been received.
 
 #include "config.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -61,7 +62,9 @@ time the original barrier request was sent have been received.
 #include <locale.h>
 #include <signal.h>
 
+#include "fallback.h"
 #include "util.h"
+
 #include "common.h"
 #include "wutil.h"
 #include "env_universal_common.h"

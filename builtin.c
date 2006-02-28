@@ -38,7 +38,10 @@
 #include <time.h>
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "builtin.h"
 #include "function.h"

@@ -21,7 +21,10 @@
 #include <wchar.h>
 
 #include "config.h"
+
+#include "fallback.h"
 #include "util.h"
+
 #include "tokenizer.h"
 #include "wildcard.h"
 #include "proc.h"

@@ -18,7 +18,10 @@ wildcards using **.
 #include <dirent.h>
 #include <errno.h>
 
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "complete.h"
 #include "common.h"

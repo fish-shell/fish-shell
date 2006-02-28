@@ -59,7 +59,10 @@ commence.
 
 #include <assert.h>
 
+
+#include "fallback.h"
 #include "util.h"
+
 #include "wutil.h"
 #include "highlight.h"
 #include "reader.h"

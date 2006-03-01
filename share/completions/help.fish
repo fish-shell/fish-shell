@@ -3,34 +3,34 @@
 #
 
 for i in (builtin -n)
-	complete -c help -x -a $i -d (printf (_ "Help for the '%s' builtin") $i)
+	complete -c help -x -a $i -d (N_ "Help for the specified builtin")
 end
 
 for i in count dirh dirs help mimedb nextd open popd prevd pushd set_color psub umask type 
-	complete -c help -x -a $i -d (printf (_ "Help for the '%s' command") $i )
+	complete -c help -x -a $i -d (N_ "Help for the specified command")
 end
 
 for i in syntax todo bugs history;
-	complete -c help -x -a $i -d (printf (_ "Help section on %s") $i)
+	complete -c help -x -a $i -d (N_ "Help section" )
 end
 
-complete -c help -x -a completion -d (_ "Help on how tab-completion works")
-complete -c help -x -a job-control -d (_ "Help on how job control works")
-complete -c help -x -a difference -d (_ "Summary on how fish differs from other shells")
+complete -c help -x -a completion -d (N_ "Help on how tab-completion works")
+complete -c help -x -a job-control -d (N_ "Help on how job control works")
+complete -c help -x -a difference -d (N_ "Summary on how fish differs from other shells")
 
-complete -c help -x -a prompt -d (_ "Help on how to set the prompt")
-complete -c help -x -a title -d (_ "Help on how to set the titlebar message")
-complete -c help -x -a killring -d (_ "Help on how to copy and paste")
-complete -c help -x -a editor -d (_ "Help on editor shortcuts")
-complete -c help -x -a variables -d (_ "Help on environment variables")
-complete -c help -x -a color -d (_ "Help on setting syntax highlighting colors")
-complete -c help -x -a builtin-overview -d (_ "A short summary of all builtin commands")
+complete -c help -x -a prompt -d (N_ "Help on how to set the prompt")
+complete -c help -x -a title -d (N_ "Help on how to set the titlebar message")
+complete -c help -x -a killring -d (N_ "Help on how to copy and paste")
+complete -c help -x -a editor -d (N_ "Help on editor shortcuts")
+complete -c help -x -a variables -d (N_ "Help on environment variables")
+complete -c help -x -a color -d (N_ "Help on setting syntax highlighting colors")
+complete -c help -x -a builtin-overview -d (N_ "A short summary of all builtin commands")
 
-complete -c help -x -a globbing -d (_ "Help on parameter expansion (Globbing)")
-complete -c help -x -a expand -d (_ "Help on parameter expansion (Globbing)")
-complete -c help -x -a expand-variable -d (_ "Help on variable expansion \$VARNAME")
-complete -c help -x -a expand-home -d (_ "Help on home directory expansion ~USER")
-complete -c help -x -a expand-brace -d (_ "Help on brace expansion {a,b,c}")
-complete -c help -x -a expand-wildcard -d (_ "Help on wildcard expansion *.*")
-complete -c help -x -a expand-command-substitution -d (_ "Help on command substitution (SUBCOMMAND)")
-complete -c help -x -a expand-process -d (_ "Help on process expansion %JOB")
+complete -c help -x -a globbing -d (N_ "Help on parameter expansion (Globbing)")
+complete -c help -x -a expand -d (N_ "Help on parameter expansion (Globbing)")
+complete -c help -x -a expand-variable -d (N_ "Help on variable expansion \$VARNAME")
+complete -c help -x -a expand-home -d (N_ "Help on home directory expansion ~USER")
+complete -c help -x -a expand-brace -d (N_ "Help on brace expansion {a,b,c}")
+complete -c help -x -a expand-wildcard -d (N_ "Help on wildcard expansion *.*")
+complete -c help -x -a expand-command-substitution -d (N_ "Help on command substitution (SUBCOMMAND)")
+complete -c help -x -a expand-process -d (N_ "Help on process expansion %JOB")

@@ -268,8 +268,8 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 # Create a template translation object
 messages.pot: *.c *.h etc/*.in share/fish share/completions/*.fish share/functions/*.fish seq
 	if test $(HAVE_GETTEXT) = 1;then \
-		xgettext -k_ -kN_ -kcomplete_desc *.c *.h -o messages.pot; \
-		if ! xgettext -j -k_ -LShell etc/*.in share/fish share/completions/*.fish share/functions/*.fish seq -o messages.pot; then \
+		xgettext -k_ -kN_ *.c *.h -o messages.pot; \
+		if ! xgettext -j -k_ -kN_ -LShell etc/*.in share/fish share/completions/*.fish share/functions/*.fish seq -o messages.pot; then \
 			echo "Your xgettext version is too old to build the messages.pot file"\
 			rm messages.pot\
 			false;\

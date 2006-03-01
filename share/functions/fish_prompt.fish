@@ -2,7 +2,7 @@
 # string has a newline before and after, so that fish will know how
 # long it is.
 
-function fish_prompt -d (_ "Write out the prompt")
+function fish_prompt -d (N_ "Write out the prompt")
 
 	# Just calculate these once, to save a few cycles when displaying the prompt
 	if not set -q __fish_prompt_hostname

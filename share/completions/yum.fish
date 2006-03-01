@@ -43,21 +43,21 @@ complete -c yum -n '__fish_yum_has_command' -xa "
 
 complete -c yum -n '__fish_yum_package_ok' -a "(__fish_print_packages)"
 
-complete -c yum -s h -l help -d (_ "Display help and exit") 
-complete -c yum -s y -d (_ "Assume yes to all questions") 
-complete -c yum -s c -d (_ "Configuration file") -r 
-complete -c yum -s d -d (_ "Set debug level") -x 
-complete -c yum -s e -d (_ "Set error level") -x 
-complete -c yum -s t -l tolerant -d (_ "Be tolerant of errors in commandline") 
-complete -c yum -s R -d (_ "Set maximum delay between commands") -x
-complete -c yum -s c -d (_ "Run commands from cache") 
-complete -c yum -l version -d (_ "Display version and exit") 
-complete -c yum -l installroot -d (_ "Specify installroot") -r 
-complete -c yum -l enablerepo -d (_ "Enable repository") -r 
-complete -c yum -l disablerepo -d (_ "Disable repository") -r
-complete -c yum -l obsoletes -d (_ "Enables obsolets processing logic") 
-complete -c yum -l rss-filename -d (_ "Output rss-data to file") -r 
-complete -c yum -l exclude -d (_ "Exclude specified package from updates") -a "(__fish_print_packages)" 
+complete -c yum -s h -l help -d (N_ "Display help and exit") 
+complete -c yum -s y -d (N_ "Assume yes to all questions") 
+complete -c yum -s c -d (N_ "Configuration file") -r 
+complete -c yum -s d -d (N_ "Set debug level") -x 
+complete -c yum -s e -d (N_ "Set error level") -x 
+complete -c yum -s t -l tolerant -d (N_ "Be tolerant of errors in commandline") 
+complete -c yum -s R -d (N_ "Set maximum delay between commands") -x
+complete -c yum -s c -d (N_ "Run commands from cache") 
+complete -c yum -l version -d (N_ "Display version and exit") 
+complete -c yum -l installroot -d (N_ "Specify installroot") -r 
+complete -c yum -l enablerepo -d (N_ "Enable repository") -r 
+complete -c yum -l disablerepo -d (N_ "Disable repository") -r
+complete -c yum -l obsoletes -d (N_ "Enables obsolets processing logic") 
+complete -c yum -l rss-filename -d (N_ "Output rss-data to file") -r 
+complete -c yum -l exclude -d (N_ "Exclude specified package from updates") -a "(__fish_print_packages)" 
 
 complete -c yum -n 'contains list (commandline -poc)' -a "
 	all\t'List all packages'

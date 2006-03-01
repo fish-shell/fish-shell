@@ -1,5 +1,5 @@
 
-function dirh -d (_ "Print the current directory history (the back- and fwd- lists)") 
+function dirh -d (N_ "Print the current directory history (the back- and fwd- lists)") 
 	# Avoid set comment
 	set -l current (command pwd)
 	set -l separator "  "

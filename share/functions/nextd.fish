@@ -1,5 +1,5 @@
 
-function nextd -d (_ "Move forward in the directory history")
+function nextd -d (N_ "Move forward in the directory history")
 	# Parse arguments
 	set -l show_hist 0 
 	set -l times 1

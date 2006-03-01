@@ -1,1 +1,1 @@
-complete -c nextd -s l -d (_ "Also print directory history")
+complete -c nextd -s l -d (N_ "Also print directory history")

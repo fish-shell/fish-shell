@@ -2,7 +2,7 @@
 # The following functions add support for a directory history
 #
 
-function cd -d (_ "Change directory")
+function cd -d (N_ "Change directory")
 
 	# Skip history in subshells
 	if status --is-command-substitution

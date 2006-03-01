@@ -1,5 +1,5 @@
 
-function type -d (_ "Print the type of a command")
+function type -d (N_ "Print the type of a command")
 
 	# Initialize
 	set -l status 1

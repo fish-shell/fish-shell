@@ -16,6 +16,7 @@
 
 #include "function.h"
 #include "proc.h"
+#include "translate.h"
 #include "parser.h"
 #include "common.h"
 #include "intern.h"
@@ -230,7 +231,7 @@ const wchar_t *function_get_desc( const wchar_t *argv )
 	if( data == 0 )
 		return 0;
 	
-	return data->desc;
+	return _(data->desc);
 }
 
 void function_set_desc( const wchar_t *name, const wchar_t *desc )

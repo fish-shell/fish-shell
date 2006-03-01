@@ -56,40 +56,40 @@ complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'watchers\t"'(_ "See who is wa
 # cvs_options switches, which must be specified before a command.
 # 
 
-complete -c cvs -n '__fish_no_cvs_subcommand' -x -l allow-root -d (_ "Specify legal cvsroot directory." )
-complete -c cvs -n '__fish_no_cvs_subcommand' -s a -d (_ "Authenticate all net traffic")
-complete -c cvs -n '__fish_no_cvs_subcommand' -r -s T -d (_ "Use "tmpdir" for temporary files")
-complete -c cvs -n '__fish_no_cvs_subcommand' -x -s d -d (_ "Overrides $CVSROOT as the root of the CVS tree")
-complete -c cvs -n '__fish_no_cvs_subcommand' -x -s e -d (_ "Use "editor" for editing log information")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s f -d (_ "Do not use the ~/.cvsrc file")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s H -d (_ "Displays usage information for command")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s n -d (_ "Do not change any files")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s Q -d (_ "Cause CVS to be really quiet")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s R -d (_ "Read-only repository mode")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s q -d (_ "Cause CVS to be somewhat quiet")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s r -d (_ "Make checked-out files read-only")
-complete -c cvs -n '__fish_no_cvs_subcommand' -x -s s -d (_ "Set CVS user variable")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s t -d (_ "Show trace of program execution -- try with -n")
-complete -c cvs -n '__fish_no_cvs_subcommand' -x -s v -d (_ "Display version and exit")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s w -d (_ "Make checked-out files read-write (default)")
-complete -c cvs -n '__fish_no_cvs_subcommand' -s x -d (_ "Encrypt all net traffic")
-complete -c cvs -n '__fish_no_cvs_subcommand' -x -s z -d (_ "Compression level for net traffic") -a '1 2 3 4 5 6 7 8 9'
+complete -c cvs -n '__fish_no_cvs_subcommand' -x -l allow-root -d (N_ "Specify legal cvsroot directory." )
+complete -c cvs -n '__fish_no_cvs_subcommand' -s a -d (N_ "Authenticate all net traffic")
+complete -c cvs -n '__fish_no_cvs_subcommand' -r -s T -d (N_ "Use "tmpdir" for temporary files")
+complete -c cvs -n '__fish_no_cvs_subcommand' -x -s d -d (N_ "Overrides $CVSROOT as the root of the CVS tree")
+complete -c cvs -n '__fish_no_cvs_subcommand' -x -s e -d (N_ "Use "editor" for editing log information")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s f -d (N_ "Do not use the ~/.cvsrc file")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s H -d (N_ "Displays usage information for command")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s n -d (N_ "Do not change any files")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s Q -d (N_ "Cause CVS to be really quiet")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s R -d (N_ "Read-only repository mode")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s q -d (N_ "Cause CVS to be somewhat quiet")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s r -d (N_ "Make checked-out files read-only")
+complete -c cvs -n '__fish_no_cvs_subcommand' -x -s s -d (N_ "Set CVS user variable")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s t -d (N_ "Show trace of program execution -- try with -n")
+complete -c cvs -n '__fish_no_cvs_subcommand' -x -s v -d (N_ "Display version and exit")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s w -d (N_ "Make checked-out files read-write (default)")
+complete -c cvs -n '__fish_no_cvs_subcommand' -s x -d (N_ "Encrypt all net traffic")
+complete -c cvs -n '__fish_no_cvs_subcommand' -x -s z -d (N_ "Compression level for net traffic") -a '1 2 3 4 5 6 7 8 9'
 
 #
 # Universal cvs options, which can be applied to any cvs command.
 #
 
-complete -c cvs -n '__fish_seen_subcommand_from checkout diff export history rdiff rtag update' -x -s D -d (_ "Use the most recent revision no later than date")
-complete -c cvs -n '__fish_seen_subcommand_from annotate export rdiff rtag update' -s f -d (_ "Retrieve files even when no match for tag/date")
-complete -c cvs -n '__fish_seen_subcommand_from add checkout diff import update' -x -s k -d (_ "Alter default keyword processing")
-complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff edit editors export log rdiff remove rtag status tag unedit update watch watchers' -s l -d (_ "Don't recurse")
-complete -c cvs -n '__fish_seen_subcommand_from add commit import' -x -s m -d (_ "Specify log message instead of invoking editor")
-complete -c cvs -n '__fish_seen_subcommand_from checkout commit export rtag' -s n -d (_ "Don't run any tag programs")
-complete -c cvs -n 'not __fish_no_cvs_subcommand' -s P -d (_ "Prune empty directories")
-complete -c cvs -n '__fish_seen_subcommand_from checkout update' -s p -d (_ "Pipe files to stdout")
-complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff edit editors export rdiff remove rtag status tag unedit update watch watchers' -s R -d (_ "Process directories recursively")
-complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff history export rdiff rtag update' -x -s r -d (_ "Use a specified tag")
-complete -c cvs -n '__fish_seen_subcommand_from import update' -r -s W -d (_ "Specify filenames to be filtered")
+complete -c cvs -n '__fish_seen_subcommand_from checkout diff export history rdiff rtag update' -x -s D -d (N_ "Use the most recent revision no later than date")
+complete -c cvs -n '__fish_seen_subcommand_from annotate export rdiff rtag update' -s f -d (N_ "Retrieve files even when no match for tag/date")
+complete -c cvs -n '__fish_seen_subcommand_from add checkout diff import update' -x -s k -d (N_ "Alter default keyword processing")
+complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff edit editors export log rdiff remove rtag status tag unedit update watch watchers' -s l -d (N_ "Don't recurse")
+complete -c cvs -n '__fish_seen_subcommand_from add commit import' -x -s m -d (N_ "Specify log message instead of invoking editor")
+complete -c cvs -n '__fish_seen_subcommand_from checkout commit export rtag' -s n -d (N_ "Don't run any tag programs")
+complete -c cvs -n 'not __fish_no_cvs_subcommand' -s P -d (N_ "Prune empty directories")
+complete -c cvs -n '__fish_seen_subcommand_from checkout update' -s p -d (N_ "Pipe files to stdout")
+complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff edit editors export rdiff remove rtag status tag unedit update watch watchers' -s R -d (N_ "Process directories recursively")
+complete -c cvs -n '__fish_seen_subcommand_from annotate checkout commit diff history export rdiff rtag update' -x -s r -d (N_ "Use a specified tag")
+complete -c cvs -n '__fish_seen_subcommand_from import update' -r -s W -d (N_ "Specify filenames to be filtered")
 
 #
 # cvs options for admin. Note that all options marked as "useless", "might not
@@ -97,90 +97,90 @@ complete -c cvs -n '__fish_seen_subcommand_from import update' -r -s W -d (_ "Sp
 #
 
 set -l admin_opt -c cvs -n 'contains admin (commandline -poc)'
-complete $admin_opt -x -s k -d (_ "Set the default keyword substitution")
-complete $admin_opt    -s l -d (_ "Lock a revision")
-complete $admin_opt -x -s m -d (_ "Replace a log message")
-complete $admin_opt -x -s n -d (_ "Force name/rev association")
-complete $admin_opt -x -s N -d (_ "Make a name/rev association")
-complete $admin_opt    -s q -d (_ "Run quietly")
-complete $admin_opt -x -s s -d (_ "Set a state attribute for a revision")
-complete $admin_opt    -s t -d (_ "Write descriptive text from a file into RCS")
-complete $admin_opt -x -o t- -d (_ "Write descriptive text into RCS")
-complete $admin_opt -x -s l -d (_ "Unlock a revision")
+complete $admin_opt -x -s k -d (N_ "Set the default keyword substitution")
+complete $admin_opt    -s l -d (N_ "Lock a revision")
+complete $admin_opt -x -s m -d (N_ "Replace a log message")
+complete $admin_opt -x -s n -d (N_ "Force name/rev association")
+complete $admin_opt -x -s N -d (N_ "Make a name/rev association")
+complete $admin_opt    -s q -d (N_ "Run quietly")
+complete $admin_opt -x -s s -d (N_ "Set a state attribute for a revision")
+complete $admin_opt    -s t -d (N_ "Write descriptive text from a file into RCS")
+complete $admin_opt -x -o t- -d (N_ "Write descriptive text into RCS")
+complete $admin_opt -x -s l -d (N_ "Unlock a revision")
 
 #
 # cvs options for annotate.
 #
 
 set -l annotate_opt -c cvs -n 'contains annotate (commandline -poc)'
-complete $annotate_opt -s f -d (_ "Annotate binary files")
+complete $annotate_opt -s f -d (N_ "Annotate binary files")
 
 #
 # cvs options for checkout.
 #
 
 set -l checkout_opt -c cvs -n 'contains checkout (commandline -poc)'
-complete $checkout_opt    -s A -d (_ "Reset sticky tags/dates/k-opts")
-complete $checkout_opt    -s c -d (_ "Copy module file to stdout")
-complete $checkout_opt -x -s d -d (_ "Name directory for working files")
-complete $checkout_opt -x -s j -d (_ "Merge revisions")
-complete $checkout_opt    -s N -d (_ "For -d. Don't shorten paths")
+complete $checkout_opt    -s A -d (N_ "Reset sticky tags/dates/k-opts")
+complete $checkout_opt    -s c -d (N_ "Copy module file to stdout")
+complete $checkout_opt -x -s d -d (N_ "Name directory for working files")
+complete $checkout_opt -x -s j -d (N_ "Merge revisions")
+complete $checkout_opt    -s N -d (N_ "For -d. Don't shorten paths")
 
 #
 # cvs options for commit.
 #
 
 set -l commit_opt -c cvs -n 'contains commit (commandline -poc)'
-complete $commit_opt -r -s F -d (_ "Read log message from file")
-complete $commit_opt    -s f -d (_ "Force new revision")
+complete $commit_opt -r -s F -d (N_ "Read log message from file")
+complete $commit_opt    -s f -d (N_ "Force new revision")
 
 #
 # cvs options for diff.
 #
 
 set -l diff_opt -c cvs -n 'contains diff (commandline -poc)'
-complete $diff_opt    -s a -l text -d (_ "Treat all files as text")
-complete $diff_opt    -s b -l ignore-space-change -d (_ "Treat all whitespace as one space")
-complete $diff_opt    -s B -l ignore-blank-lines -d (_ "Ignore blank line only changes")
-complete $diff_opt    -l binary -d (_ "Binary mode")
-complete $diff_opt    -l brief -d (_ "Report only whether files differ")
-complete $diff_opt    -s c -d (_ "Use context format")
-complete $diff_opt -r -s C -d (_ "Set context size")
-complete $diff_opt    -l context -d (_ "Set context format and, optionally, size")
-complete $diff_opt    -l changed-group-format -d (_ "Set line group format")
-complete $diff_opt    -s d -l minimal -d (_ "Try to find a smaller set of changes")
-complete $diff_opt    -s e -l ed -d (_ "Make output a valid ed script")
-complete $diff_opt    -s t -l expand-tabs -d (_ "Expand tabs to spaces")
-complete $diff_opt    -s f -l forward-ed -d (_ "Output that looks like an ed script")
-complete $diff_opt -x -s F -d (_ "Set regexp for context, unified formats")
-complete $diff_opt    -s H -l speed-large-files -d (_ "Speed handling of large files with small changes")
-complete $diff_opt -x -l horizon-lines -d (_ "Set horizon lines")
-complete $diff_opt    -s i -l ignore-case -d (_ "Ignore changes in case")
-complete $diff_opt -x -s I -l ignore-matching-lines -d (_ "Ignore changes matching regexp")
-complete $diff_opt -x -l ifdef -d (_ "Make ifdef from diff")
-complete $diff_opt    -s w -l ignore-all-space -d (_ "Ignore whitespace")
-complete $diff_opt    -s T -l initial-tab -d (_ "Start lines with a tab")
-complete $diff_opt -x -s L -l label -d (_ "Use label instead of filename in output")
-complete $diff_opt    -l left-column -d (_ "Print only left column")
-complete $diff_opt -x -l line-format -d (_ "Use format to produce if-then-else output")
-complete $diff_opt    -s n -l rcs -d (_ "Produce RCS-style diffs")
-complete $diff_opt    -s N -l new-file -d (_ "Treat files absent from one dir as empty")
-complete $diff_opt -l new-group-format -l new-line-format -l old-group-format -l old-line-format -d (_ "Specifies line formatting")
-complete $diff_opt    -s p -l show-c-function -d (_ "Identify the C function each change is in")
-complete $diff_opt    -s s -l report-identical-files -d (_ "Report identical files")
-complete $diff_opt    -s y -l side-by-side -d (_ "Use side-by-side format")
-complete $diff_opt    -l suppress-common-lines -d (_ "Suppress common lines in side-by-side")
-complete $diff_opt    -s u -l unified -d (_ "Use unified format")
-complete $diff_opt -x -s U -d (_ "Set context size in unified")
-complete $diff_opt -x -s W -l width -d (_ "Set column width for side-by-side format")
+complete $diff_opt    -s a -l text -d (N_ "Treat all files as text")
+complete $diff_opt    -s b -l ignore-space-change -d (N_ "Treat all whitespace as one space")
+complete $diff_opt    -s B -l ignore-blank-lines -d (N_ "Ignore blank line only changes")
+complete $diff_opt    -l binary -d (N_ "Binary mode")
+complete $diff_opt    -l brief -d (N_ "Report only whether files differ")
+complete $diff_opt    -s c -d (N_ "Use context format")
+complete $diff_opt -r -s C -d (N_ "Set context size")
+complete $diff_opt    -l context -d (N_ "Set context format and, optionally, size")
+complete $diff_opt    -l changed-group-format -d (N_ "Set line group format")
+complete $diff_opt    -s d -l minimal -d (N_ "Try to find a smaller set of changes")
+complete $diff_opt    -s e -l ed -d (N_ "Make output a valid ed script")
+complete $diff_opt    -s t -l expand-tabs -d (N_ "Expand tabs to spaces")
+complete $diff_opt    -s f -l forward-ed -d (N_ "Output that looks like an ed script")
+complete $diff_opt -x -s F -d (N_ "Set regexp for context, unified formats")
+complete $diff_opt    -s H -l speed-large-files -d (N_ "Speed handling of large files with small changes")
+complete $diff_opt -x -l horizon-lines -d (N_ "Set horizon lines")
+complete $diff_opt    -s i -l ignore-case -d (N_ "Ignore changes in case")
+complete $diff_opt -x -s I -l ignore-matching-lines -d (N_ "Ignore changes matching regexp")
+complete $diff_opt -x -l ifdef -d (N_ "Make ifdef from diff")
+complete $diff_opt    -s w -l ignore-all-space -d (N_ "Ignore whitespace")
+complete $diff_opt    -s T -l initial-tab -d (N_ "Start lines with a tab")
+complete $diff_opt -x -s L -l label -d (N_ "Use label instead of filename in output")
+complete $diff_opt    -l left-column -d (N_ "Print only left column")
+complete $diff_opt -x -l line-format -d (N_ "Use format to produce if-then-else output")
+complete $diff_opt    -s n -l rcs -d (N_ "Produce RCS-style diffs")
+complete $diff_opt    -s N -l new-file -d (N_ "Treat files absent from one dir as empty")
+complete $diff_opt -l new-group-format -l new-line-format -l old-group-format -l old-line-format -d (N_ "Specifies line formatting")
+complete $diff_opt    -s p -l show-c-function -d (N_ "Identify the C function each change is in")
+complete $diff_opt    -s s -l report-identical-files -d (N_ "Report identical files")
+complete $diff_opt    -s y -l side-by-side -d (N_ "Use side-by-side format")
+complete $diff_opt    -l suppress-common-lines -d (N_ "Suppress common lines in side-by-side")
+complete $diff_opt    -s u -l unified -d (N_ "Use unified format")
+complete $diff_opt -x -s U -d (N_ "Set context size in unified")
+complete $diff_opt -x -s W -l width -d (N_ "Set column width for side-by-side format")
 
 #
 # cvs export options.
 #
 
 set -l export_opt -c cvs -n 'contains export (commandline -poc)'
-complete $export_opt -x -s d -d (_ "Name directory for working files")
-complete $export_opt    -s N -d (_ "For -d. Don't shorten paths")
+complete $export_opt -x -s d -d (N_ "Name directory for working files")
+complete $export_opt    -s N -d (N_ "For -d. Don't shorten paths")
 
 #
 # cvs history options.
@@ -188,64 +188,64 @@ complete $export_opt    -s N -d (_ "For -d. Don't shorten paths")
 #
 
 set -l history_opt -c cvs -n 'contains history (commandline -poc)'
-complete $history_opt -s c -d (_ "Report on each commit")
-complete $history_opt -s e -d (_ "Report on everything")
-complete $history_opt -x -s m -d (_ "Report on a module")
-complete $history_opt -s o -d (_ "Report on checked-out modules")
-complete $history_opt -s T -d (_ "Report on all tags")
-complete $history_opt -x -s x -d (_ "Specify record type") -a "F\trelease O\tcheckout E\texport T\trtag C\tcollisions G\tmerge U\t'Working file copied from repository' P\t'Working file patched to repository' W\t'Working copy deleted during update' A\t'New file added' M\t'File modified' R\t'File removed.'"
-complete $history_opt -s a -d (_ "Show history for all users")
-complete $history_opt -s l -d (_ "Show last modification only")
-complete $history_opt -s w -d (_ "Show only records for this directory")
+complete $history_opt -s c -d (N_ "Report on each commit")
+complete $history_opt -s e -d (N_ "Report on everything")
+complete $history_opt -x -s m -d (N_ "Report on a module")
+complete $history_opt -s o -d (N_ "Report on checked-out modules")
+complete $history_opt -s T -d (N_ "Report on all tags")
+complete $history_opt -x -s x -d (N_ "Specify record type") -a "F\trelease O\tcheckout E\texport T\trtag C\tcollisions G\tmerge U\t'Working file copied from repository' P\t'Working file patched to repository' W\t'Working copy deleted during update' A\t'New file added' M\t'File modified' R\t'File removed.'"
+complete $history_opt -s a -d (N_ "Show history for all users")
+complete $history_opt -s l -d (N_ "Show last modification only")
+complete $history_opt -s w -d (N_ "Show only records for this directory")
 
 #
 # cvs import options.
 #
 
 set -l import_opt -c cvs -n 'contains import (commandline -poc)'
-complete $import_opt -x -s b -d (_ "Multiple vendor branch")
-complete $import_opt -r -s I -d (_ "Files to ignore during import")
+complete $import_opt -x -s b -d (N_ "Multiple vendor branch")
+complete $import_opt -r -s I -d (N_ "Files to ignore during import")
 
 #
 # cvs log options.
 #
 
 set -l log_opt -c cvs -n 'contains log (commandline -poc)'
-complete $log_opt -s b -d (_ "Print info about revision on default branch")
-complete $log_opt -x -s d -d (_ "Specify date range for query")
-complete $log_opt -s h -d (_ "Print only file info")
-complete $log_opt -s N -d (_ "Do not print tags")
-complete $log_opt -s R -d (_ "Print only rcs filename")
-complete $log_opt -x -s r -d (_ "Print only given revisions")
-complete $log_opt -s S -d (_ "Suppress header if no revisions found")
-complete $log_opt -x -s s -d (_ "Specify revision states")
-complete $log_opt -s t -d (_ "Same as -h, plus descriptive text")
-complete $log_opt -x -s w -d (_ "Specify users for query")
+complete $log_opt -s b -d (N_ "Print info about revision on default branch")
+complete $log_opt -x -s d -d (N_ "Specify date range for query")
+complete $log_opt -s h -d (N_ "Print only file info")
+complete $log_opt -s N -d (N_ "Do not print tags")
+complete $log_opt -s R -d (N_ "Print only rcs filename")
+complete $log_opt -x -s r -d (N_ "Print only given revisions")
+complete $log_opt -s S -d (N_ "Suppress header if no revisions found")
+complete $log_opt -x -s s -d (N_ "Specify revision states")
+complete $log_opt -s t -d (N_ "Same as -h, plus descriptive text")
+complete $log_opt -x -s w -d (N_ "Specify users for query")
 
 #
 # cvs rdiff options.
 #
 
 set -l rdiff_opt -c cvs -n 'contains rdiff (commandline -poc)'
-complete $rdiff_opt -s c -d (_ "Use context diff format")
-complete $rdiff_opt -s s -d (_ "Create summary change report")
-complete $rdiff_opt -s t -d (_ "diff top two revisions")
-complete $rdiff_opt -s u -d (_ "Use unidiff format")
+complete $rdiff_opt -s c -d (N_ "Use context diff format")
+complete $rdiff_opt -s s -d (N_ "Create summary change report")
+complete $rdiff_opt -s t -d (N_ "diff top two revisions")
+complete $rdiff_opt -s u -d (N_ "Use unidiff format")
 
 #
 # cvs release options.
 #
 
-complete -c cvs -n 'contains release (commandline -poc)' -s d -d (_ "Delete working copy if release succeeds")
+complete -c cvs -n 'contains release (commandline -poc)' -s d -d (N_ "Delete working copy if release succeeds")
 
 #
 # cvs update options.
 #
 
 set -l update_opt -c cvs -n 'contains update (commandline -poc)'
-complete $update_opt -s A -d (_ "Reset sticky tags, dates, and k-opts")
-complete $update_opt -s C -d (_ "Overwrite modified files with clean copies")
-complete $update_opt -s d -d (_ "Create any missing directories")
-complete $update_opt -x -s I -d (_ "Specify files to ignore")
-complete $update_opt -x -s j -d (_ "Merge revisions")
+complete $update_opt -s A -d (N_ "Reset sticky tags, dates, and k-opts")
+complete $update_opt -s C -d (N_ "Overwrite modified files with clean copies")
+complete $update_opt -s d -d (N_ "Create any missing directories")
+complete $update_opt -x -s I -d (N_ "Specify files to ignore")
+complete $update_opt -x -s j -d (N_ "Merge revisions")
 

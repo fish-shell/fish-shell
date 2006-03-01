@@ -7,7 +7,7 @@
 # theoretical problem.
 #
 
-function help -d (_ "Show help for the fish shell")
+function help -d (N_ "Show help for the fish shell")
 
 	# Declare variables to set correct scope
 	set -l fish_browser

@@ -5,7 +5,7 @@
 # internally by fish.
 #
 
-function contains -d (_ "Test if a key is contained in a set of values")
+function contains -d (N_ "Test if a key is contained in a set of values")
 	while set -q argv
 		switch $argv[1]
 			case '-h' '--h' '--he' '--hel' '--help'

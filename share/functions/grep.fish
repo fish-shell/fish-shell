@@ -7,7 +7,7 @@ if grep --color=auto --help 1>/dev/null 2>/dev/null
 		set -gx GREP_COLOR '97;45'
 	end
 	if not set -q GREP_OPTIONS 
-		set -gx GREP_OPTIONS '97;45'
+		set -gx GREP_OPTIONS --color=auto
 	end
 end
 

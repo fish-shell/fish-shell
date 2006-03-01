@@ -1,15 +1,15 @@
 
 function __fish_complete_ssh -d "common completions for ssh commands"
 
-	complete -c $argv -s 1 -d (_ "Protocoll version 1 only")
-	complete -c $argv -s 2 -d (_ "Protocoll version 2 only")
-	complete -c $argv -s 4 -d (_ "IPv4 addresses only")
-	complete -c $argv -s 6 -d (_ "IPv6 addresses only")
-	complete -c $argv -s C -d (_ "Compress all data")
-	complete -xc $argv -s c -d (_ "Encryption algorithm") -a "blowfish 3des des"
-	complete -r -c $argv -s F -d (_ "Configuration file")
-	complete -r -c $argv -s i -d (_ "Identity file")
-	complete -x -c $argv -s o -d (_ "Options") -a "
+	complete -c $argv -s 1 -d (N_ "Protocoll version 1 only")
+	complete -c $argv -s 2 -d (N_ "Protocoll version 2 only")
+	complete -c $argv -s 4 -d (N_ "IPv4 addresses only")
+	complete -c $argv -s 6 -d (N_ "IPv6 addresses only")
+	complete -c $argv -s C -d (N_ "Compress all data")
+	complete -xc $argv -s c -d (N_ "Encryption algorithm") -a "blowfish 3des des"
+	complete -r -c $argv -s F -d (N_ "Configuration file")
+	complete -r -c $argv -s i -d (N_ "Identity file")
+	complete -x -c $argv -s o -d (N_ "Options") -a "
 		AddressFamily
 		BatchMode
 		BindAddress
@@ -56,6 +56,6 @@ function __fish_complete_ssh -d "common completions for ssh commands"
 		UserKnownHostsFile
 		VerifyHostKeyDNS
 	"
-	complete -c $argv -s v -d (_ "Verbose mode")
+	complete -c $argv -s v -d (N_ "Verbose mode")
 end
 

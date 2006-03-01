@@ -1,5 +1,5 @@
 
-function prevd -d (_ "Move back in the directory history")
+function prevd -d (N_ "Move back in the directory history")
 	# Parse arguments
 	set -l show_hist 0 
 	set -l times 1

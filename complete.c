@@ -1560,7 +1560,7 @@ static int complete_param( wchar_t *cmd_orig,
 				{
 					use_common &= ((o->result_mode & NO_COMMON )==0);
 					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( arg, o->comp, o->desc, comp_out );
+					complete_from_args( arg, o->comp, _(o->desc), comp_out );
 				}
 
 			}
@@ -1584,7 +1584,7 @@ static int complete_param( wchar_t *cmd_orig,
 						found_old = 1;
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( str, o->comp, o->desc, comp_out );
+						complete_from_args( str, o->comp, _(o->desc), comp_out );
 					}
 				}
 			}
@@ -1610,7 +1610,7 @@ static int complete_param( wchar_t *cmd_orig,
 					{
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( str, o->comp, o->desc, comp_out );
+						complete_from_args( str, o->comp, _(o->desc), comp_out );
 
 					}
 				}
@@ -1634,7 +1634,7 @@ static int complete_param( wchar_t *cmd_orig,
 				if( (o->short_opt == L'\0' ) && (o->long_opt[0]==L'\0'))
 				{
 					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( str, o->comp, o->desc, comp_out );
+					complete_from_args( str, o->comp, _(o->desc), comp_out );
 				}
 
 				if( wcslen(str) > 0 )
@@ -1645,15 +1645,16 @@ static int complete_param( wchar_t *cmd_orig,
 					if( o->short_opt != L'\0' &&
 						short_ok( str, o->short_opt, i->short_opt_str ) )
 					{
+						const wchar_t *desc = _(o->desc );
 						wchar_t *next_opt =
-							malloc( sizeof(wchar_t)*(3 + wcslen(o->desc)));
+							malloc( sizeof(wchar_t)*(3 + wcslen(desc)));
 						if( !next_opt )
 							die_mem();
 
 						next_opt[0]=o->short_opt;
 						next_opt[1]=COMPLETE_SEP;
 						next_opt[2]=L'\0';
-						wcscat( next_opt, o->desc );
+						wcscat( next_opt, desc );
 						al_push( comp_out, next_opt );
 					}
 
@@ -1681,7 +1682,7 @@ static int complete_param( wchar_t *cmd_orig,
 								al_push( comp_out,
 										 wcsdupcat2( &((wchar_t *)whole_opt.buff)[wcslen(str)], 
 													 COMPLETE_SEP_STR, 
-													 o->desc, 
+													 _(o->desc), 
 													 (void *)0) );
 							}
 
@@ -1691,7 +1692,7 @@ static int complete_param( wchar_t *cmd_orig,
 										 wcsdupcat2( &((wchar_t *)whole_opt.buff)[wcslen(str)], 
 													 L"=", 
 													 COMPLETE_SEP_STR, 
-													 o->desc, 
+													 _(o->desc), 
 													 (void *)0) );
 							}
 						}
@@ -2119,7 +2120,7 @@ void complete_print( string_buffer_t *out )
 
 			append_switch( out,
 						   L"description",
-						   o->desc );
+						   _(o->desc) );
 
 			append_switch( out,
 						   L"arguments",

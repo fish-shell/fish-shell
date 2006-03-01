@@ -1,7 +1,6 @@
 /** \file wutil.c
 	Wide character equivalents of various standard unix
-	functions. Also contains fallback implementations of a large number
-	of wide character unix functions.
+	functions.
 */
 #include "config.h"
 

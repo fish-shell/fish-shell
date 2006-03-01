@@ -5,7 +5,7 @@
 #
 
 if not test (uname) = Darwin
-	function open -d (_ "Open file in default application")
+	function open -d (N_ "Open file in default application")
 		mimedb -l -- $argv
 	end
 end

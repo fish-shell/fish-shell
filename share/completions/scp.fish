@@ -25,11 +25,11 @@ complete -c scp -d Hostname -a "
 (__fish_print_users)@
 
 "
-complete -c scp -s B -d (_ "Batch mode")
-complete -c scp -s l -x -d (_ "Bandwidth limit")
-complete -c scp -s P -x -d (_ "Port")
-complete -c scp -s p -d (_ "Preserves modification times, access times, and modes from the original file")
-complete -c scp -s q -d (_ "Do not display progress bar")
-complete -c scp -s r -d (_ "Recursively copy")
-complete -c scp -s S -d (_ "Encyption program")
+complete -c scp -s B -d (N_ "Batch mode")
+complete -c scp -s l -x -d (N_ "Bandwidth limit")
+complete -c scp -s P -x -d (N_ "Port")
+complete -c scp -s p -d (N_ "Preserves modification times, access times, and modes from the original file")
+complete -c scp -s q -d (N_ "Do not display progress bar")
+complete -c scp -s r -d (N_ "Recursively copy")
+complete -c scp -s S -d (N_ "Encyption program")
 

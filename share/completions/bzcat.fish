@@ -5,4 +5,4 @@ complete -c bzcat -x -a "(
 	__fish_complete_suffix (commandline -ct) .tbz2 'Compressed archive'
 )
 "
-complete -c bzcat -s s -l small -d (_ "Reduce memory usage")
+complete -c bzcat -s s -l small -d (N_ "Reduce memory usage")

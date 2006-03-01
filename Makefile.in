@@ -94,7 +94,7 @@ FISHD_OBJS := fishd.o env_universal_common.o wutil.o	\
 
 # All objects needed to build mimedb
 MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o		\
-	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o
+	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o $(CORE_OBJS)
 
 #
 # Files containing documentation for builtins. Should be listed
@@ -483,8 +483,8 @@ fish_tests: $(FISH_TESTS_OBJS)
 	$(CC) $(FISH_TESTS_OBJS) $(LDFLAGS) -o $@
 
 
-mimedb: $(MIME_OBJS) util.o common.o doc_src/mimedb.c
-	$(CC) ${MIME_OBJS} util.o common.o doc_src/mimedb.c $(LDFLAGS) -o $@
+mimedb: $(MIME_OBJS) doc_src/mimedb.c
+	$(CC) ${MIME_OBJS} doc_src/mimedb.c $(LDFLAGS) -o $@
 
 set_color: set_color.o doc_src/set_color.c 
 	$(CC) set_color.o doc_src/set_color.c $(LDFLAGS) -o $@

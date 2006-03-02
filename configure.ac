@@ -123,6 +123,82 @@ AC_SUBST( [LOCALEDIR], [$datadir/locale])
 # See if Linux procfs is present
 AC_CHECK_FILES([/proc/self/stat])
 
+# Check for RLIMIT_NPROC in sys/resource.h.
+AC_MSG_CHECKING([for RLIMIT_NPROC in sys/resource.h])
+AC_TRY_COMPILE([#include <sys/resource.h>],
+[int tmp; tmp=RLIMIT_NPROC;], have_rlimit_as=yes, have_rlimit_as=no)
+if test "$have_rlimit_as" = yes; then
+    AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_RLIMIT_NPROC], [1],
+			  [Define to 1 if HAVE_RLIMIT_NPROC is defined in <sys/resource.h>.])
+else
+    AC_MSG_RESULT(no)
+fi
+
+# Check for libraries
+AC_SEARCH_LIBS( gettext, intl )
+AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
+AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
+AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
+
+# Check for various header files
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h])
+
+AC_CHECK_HEADER([regex.h],
+				[AC_DEFINE([HAVE_REGEX_H], [1], [Define to 1 if you have the <regex.h> header file.])],
+				[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
+
+# Check for various functions, and insert results into config.h
+AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
+AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
+AC_CHECK_FUNCS( wcstol dcgettext )
+
+# Check if realpath accepts null for its second argument
+AC_MSG_CHECKING([if realpath accepts null for its second argument])
+AC_RUN_IFELSE(
+	[AC_LANG_PROGRAM([
+#include <limits.h>
+#include <errno.h>
+#include <stdlib.h>],
+		[int status; char *res; res = realpath( "somefile", 0 ); status = !(res != 0 || errno == ENOENT); exit( status );])], 
+	[have_realpath_null=yes], 
+	[have_realpath_null=no] )
+
+if test "$have_realpath_null" = yes; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_REALPATH_NULL], [1],
+		[Define to 1 if realpath accepts null for its second argument.])
+else
+	AC_MSG_RESULT(no)
+fi
+
+if test "$ac_cv_func_fwprintf" = yes; then
+
+# Check if fwprintf is broken
+AC_MSG_CHECKING([if fwprintf is broken])
+AC_RUN_IFELSE(
+    [AC_LANG_PROGRAM([
+#include <stdlib.h>
+#include <stdio.h>
+#include <locale.h>
+#include <wchar.h>
+],[
+	setlocale( LC_ALL, "" );
+	fwprintf( stderr, L"%ls%ls", L"", L"fish:" );
+])],
+    [fwprintf_broken=no],
+    [fwprintf_broken=yes] )
+
+if test "$fwprintf_broken" = yes; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_FWPRINTF], [0],
+		[Undefined if no fwprintf implementation exists, defined to 0 if fwprintf exist but is broken, 1 if it exists and works])
+else
+	AC_MSG_RESULT(no)
+fi
+
+fi
+
 # Check for RLIMIT_AS in sys/resource.h.
 AC_MSG_CHECKING([for RLIMIT_AS in sys/resource.h])
 AC_TRY_COMPILE([#include <sys/resource.h>],
@@ -159,61 +235,8 @@ else
     AC_MSG_RESULT(no)
 fi
 
-
-# Check for RLIMIT_NPROC in sys/resource.h.
-AC_MSG_CHECKING([for RLIMIT_NPROC in sys/resource.h])
-AC_TRY_COMPILE([#include <sys/resource.h>],
-[int tmp; tmp=RLIMIT_NPROC;], have_rlimit_as=yes, have_rlimit_as=no)
-if test "$have_rlimit_as" = yes; then
-    AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE_RLIMIT_NPROC], [1],
-			  [Define to 1 if HAVE_RLIMIT_NPROC is defined in <sys/resource.h>.])
-else
-    AC_MSG_RESULT(no)
-fi
-
-# Check if realpath accepts null for its second argument
-AC_MSG_CHECKING([if realpath accepts null for its second argument])
-AC_RUN_IFELSE(
-	[AC_LANG_PROGRAM([#include <limits.h>
-#include <errno.h>
-#include <stdlib.h>],
-		[int status; char *res; res = realpath( "somefile", 0 ); status = !(res != 0 || errno == ENOENT); exit( status );])], 
-	[have_realpath_null=yes], 
-	[have_realpath_null=no] )
-
-if test "$have_realpath_null" = yes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE_REALPATH_NULL], [1],
-		[Define to 1 if realpath accepts null for its second argument.])
-else
-	AC_MSG_RESULT(no)
-fi
-
-
-# Check for libraries
-AC_CHECK_LIB(socket, connect)
-AC_CHECK_LIB(rt, nanosleep)
-AC_CHECK_LIB(intl, gettext)
-
-# Check for various header files
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h])
-
-AC_CHECK_HEADER([regex.h],
-				[AC_DEFINE([HAVE_REGEX_H], [1], [Define to 1 if you have the <regex.h> header file.])],
-				[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
-
-
-# Check for various functions, and insert results into config.h
-AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
-AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol dcgettext )
-
 AC_DEFINE([HAVE_TRANSLATE_H], [1],
 			  [Define to 1 if the wgettext function should be used for translating strings.])
-
-# Check again for gettext library, and insert results into the Makefile
-AC_CHECK_FUNC(gettext, AC_SUBST(HAVE_GETTEXT,1), AC_SUBST(HAVE_GETTEXT,0) )
 
 # Check for _nl_msg_cat_cntr symbol
 AC_MSG_CHECKING([for _nl_msg_cat_cntr symbol])
@@ -223,15 +246,12 @@ AC_TRY_LINK([#if HAVE_LIBINTL_H]
 [extern int  _nl_msg_cat_cntr;]
 [int tmp = _nl_msg_cat_cntr; exit(tmp);], have__nl_msg_cat_cntr=yes, have__nl_msg_cat_cntr=no)
 if test "$have__nl_msg_cat_cntr" = yes; then
-    AC_MSG_RESULT(yes)
+	AC_MSG_RESULT(yes)
 	AC_DEFINE([HAVE__NL_MSG_CAT_CNTR], [1],
 	          [Define to 1 if the _nl_msg_cat_cntr symbol is exported.])	
 else
     AC_MSG_RESULT(no)
 fi
-
-# Check if we have ncurses, and use it rather than curses if possible.
-AC_SEARCH_LIBS( setupterm, [ncurses curses], [ AC_MSG_NOTICE([Found curses implementation])], [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
 
 AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish etc/fish_interactive.fish seq])
 AC_OUTPUT

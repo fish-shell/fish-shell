@@ -51,8 +51,15 @@ int tputs(const char *str, int affcnt, int (*putc)(tputs_arg_t))
 #endif
 
 
+#ifndef HAVE_FWPRINTF
+#define INTERNAL_FWPRINTF 1
+#endif
 
-#if !HAVE_FWPRINTF
+#ifdef HAVE_BROKEN_FWPRINTF
+#define INTERNAL_FWPRINTF 1
+#endif
+
+#ifdef INTERNAL_FWPRINTF
 
 void pad( void (*writer)(wchar_t), int count)
 {

@@ -179,28 +179,29 @@ fi
 
 if test "$ac_cv_func_fwprintf" = yes; then
 
-# Check if fwprintf is broken
-AC_MSG_CHECKING([if fwprintf is broken])
-AC_RUN_IFELSE(
-    [AC_LANG_PROGRAM([
+	# Check if fwprintf is broken
+	AC_MSG_CHECKING([if fwprintf is broken])
+	AC_RUN_IFELSE(
+	    [AC_LANG_PROGRAM([
 #include <stdlib.h>
 #include <stdio.h>
 #include <locale.h>
 #include <wchar.h>
-],[
-	setlocale( LC_ALL, "" );
-	fwprintf( stderr, L"%ls%ls", L"", L"fish:" );
-])],
-    [fwprintf_broken=no],
-    [fwprintf_broken=yes] )
+			],
+		[
+				setlocale( LC_ALL, "" );
+				fwprintf( stderr, L"%ls%ls", L"", L"fish:" );
+			])],
+	    [fwprintf_broken=no],
+	    [fwprintf_broken=yes] )
 
-if test "$fwprintf_broken" = yes; then
-	AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE_FWPRINTF], [0],
-		[Undefined if no fwprintf implementation exists, defined to 0 if fwprintf exist but is broken, 1 if it exists and works])
-else
-	AC_MSG_RESULT(no)
-fi
+	if test "$fwprintf_broken" = yes; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1],
+			[Define to 1 one if the implemented fwprintf is broken])
+	else
+		AC_MSG_RESULT(no)
+	fi
 
 fi
 

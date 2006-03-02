@@ -300,19 +300,14 @@ char *wcs2str_internal( const wchar_t *in, char *out )
 		{
 			res = wcrtomb( &out[out_pos], in[in_pos], &state );
 			
-			switch( res )
+			if( res == (size_t)(-1) )
 			{
-				case (size_t)(-1):
-					{
-						debug( 1, L"Wide character has no narrow representation" );
-						memset( &state, 0, sizeof(state) );
-						break;
-					}
-				default:
-				{
-					out_pos += res;
-					break;
-				}
+				debug( 1, L"Wide character has no narrow representation" );
+				memset( &state, 0, sizeof(state) );
+			}
+			else
+			{
+				out_pos += res;
 			}
 		}
 		in_pos++;

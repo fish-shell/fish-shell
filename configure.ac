@@ -1,6 +1,9 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(fish,1.21.1,fish-users@lists.sf.net)
 
+# Detect directories which may contain additional headers, libraries
+# and commands. This needs to be done early - before Autoconf starts
+# to mess with CFLAGS and all the other environemnt variables.
 for i in /usr/pkg /sw /opt /opt/local; do
 
 	AC_MSG_CHECKING([for $i/include include directory])
@@ -65,10 +68,11 @@ This program is needed to build fish.
 Please install it and try again.])
 fi
 
-# Check for seq program. If missing, install fallback shellscript implementation
+# Check for seq command. If missing, make sure fallback shellscript
+# implementation is installed
 AC_CHECK_PROG( SEQ_FALLBACK, seq, [ ], [seq])
 
-# Optionally drop xsel
+# Optionally drop xsel command
 AC_ARG_WITH( xsel, 
 			 AC_HELP_STRING([--without-xsel],
              [do not build the xsel program needed for X clipboard integration]),
@@ -95,7 +99,10 @@ fi
 AC_DEFINE_UNQUOTED([CPU],[L"$target_cpu"],[CPU type])
 
 
-# Set up installation directories
+# Set up PREFIX and related preprocessor symbols. Fish needs to know
+# where it will be installed. One of the reasons for this is so that
+# it can make sure the fish installation directory is in the path
+# during startup.
 if [[ "$prefix" = NONE ]]; then
 	AC_DEFINE_UNQUOTED( [PREFIX], L"/usr/local", [Installation directory])
 	AC_SUBST( PREFIX, /usr/local)
@@ -104,7 +111,14 @@ else
 	AC_DEFINE_UNQUOTED( [PREFIX], L"$prefix", [Installation directory])
 	AC_SUBST( PREFIX, [$prefix])
 fi
+AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$(eval echo $sysconfdir)"], [System configuration directory] )
+AC_DEFINE_UNQUOTED( DATADIR, [L"$(eval echo $datadir)"], [System configuration directory] )
+AC_SUBST( SYSCONFDIR, ["$(eval echo $sysconfdir)"] )
+AC_SUBST( DATADIR, ["$(eval echo $datadir)"] )
 
+
+# Set up the directory where the documentation files should be
+# installed
 AC_ARG_VAR( [docdir], [Documentation direcotry] )
 
 if test -z $docdir; then
@@ -112,47 +126,37 @@ if test -z $docdir; then
 fi
 
 AC_DEFINE_UNQUOTED( DOCDIR, [L"$(eval echo $docdir)"], [Documentation directory] )
-AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$(eval echo $sysconfdir)"], [System configuration directory] )
-AC_DEFINE_UNQUOTED( DATADIR, [L"$(eval echo $datadir)"], [System configuration directory] )
-AC_SUBST( SYSCONFDIR, ["$(eval echo $sysconfdir)"] )
-AC_SUBST( DATADIR, ["$(eval echo $datadir)"] )
 
-# Set up locale directory
+
+# Set up locale directory. This is where the .po files will be
+# installed.
 AC_DEFINE_UNQUOTED( [LOCALEDIR], "$(eval echo $datadir)/locale", [Locale directory])
 AC_SUBST( [LOCALEDIR], [$datadir/locale])
 
-# See if Linux procfs is present
+# See if Linux procfs is present. This is used to get extra
+# information about running processes.
 AC_CHECK_FILES([/proc/self/stat])
 
-# Check for RLIMIT_NPROC in sys/resource.h.
-AC_MSG_CHECKING([for RLIMIT_NPROC in sys/resource.h])
-AC_TRY_COMPILE([#include <sys/resource.h>],
-[int tmp; tmp=RLIMIT_NPROC;], have_rlimit_as=yes, have_rlimit_as=no)
-if test "$have_rlimit_as" = yes; then
-    AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE_RLIMIT_NPROC], [1],
-			  [Define to 1 if HAVE_RLIMIT_NPROC is defined in <sys/resource.h>.])
-else
-    AC_MSG_RESULT(no)
-fi
-
-# Check for libraries
+# Check for presense of various libraries
 AC_SEARCH_LIBS( gettext, intl )
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
 
-# Check for various header files
+# Check for presense of various header files
 AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h])
 
 AC_CHECK_HEADER([regex.h],
 				[AC_DEFINE([HAVE_REGEX_H], [1], [Define to 1 if you have the <regex.h> header file.])],
 				[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
 
-# Check for various functions, and insert results into config.h
+# Check for presense of various functions
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol dcgettext )
+
+# Here follows a list of small programs used to test for various
+# features that Autoconf doesn't tell us about
 
 # Check if realpath accepts null for its second argument
 AC_MSG_CHECKING([if realpath accepts null for its second argument])
@@ -198,6 +202,18 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+fi
+
+# Check for RLIMIT_NPROC in sys/resource.h.
+AC_MSG_CHECKING([for RLIMIT_NPROC in sys/resource.h])
+AC_TRY_COMPILE([#include <sys/resource.h>],
+[int tmp; tmp=RLIMIT_NPROC;], have_rlimit_as=yes, have_rlimit_as=no)
+if test "$have_rlimit_as" = yes; then
+    AC_MSG_RESULT(yes)
+	AC_DEFINE([HAVE_RLIMIT_NPROC], [1],
+			  [Define to 1 if HAVE_RLIMIT_NPROC is defined in <sys/resource.h>.])
+else
+    AC_MSG_RESULT(no)
 fi
 
 # Check for RLIMIT_AS in sys/resource.h.
@@ -254,6 +270,7 @@ else
     AC_MSG_RESULT(no)
 fi
 
+# Tell the world what we know
 AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish etc/fish_interactive.fish seq])
 AC_OUTPUT
 

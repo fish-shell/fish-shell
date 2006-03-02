@@ -553,7 +553,7 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2
 
 distclean: clean
 	rm -f fish.spec doc_src/fish.1 doc_src/Doxyfile 
-	rm -f etc/fish etc/fish_interactive.fish share/fish
+	rm -f etc/fish etc/fish_interactive.fish seq
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 

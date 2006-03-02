@@ -450,22 +450,22 @@ personalized Japanese greeting.
 
 The {$USER}san syntax might need a bit of an elaboration.  Posix
 shells allow you to specify a variable name using '$VARNAME' or
-'${VARNAME}'. Fish only supports the former, but has no support
-whatsoever for the latter or anything remotely like it. So what is
-'{$VARNAME}' then? Well, '{WHATEVER}' is <a href='#brace'>brace
-expansion</a>, the same as supported by Posix shells, i.e.  'a{b,c}d'
--> 'abd acd' works both in bash and on fish. So '{$VARNAME}' is a
-bracket-expansion with only a single element, i.e.  it becomes
-expanded to '$VARNAME', which will be variable expanded to the value
-of the variable 'VARNAME'. So you might think that the brackets don't
-actually do anything, and that is nearly the truth. The snag is that
-there once along the way was a '}' in there somewhere, and } is not a
-valid character in a variable name.  So anything after the otherwise
-pointless bracket expansion becomes NOT a part of the variable name,
-even if it happens to be a legal variable name character. That's why
-'{$USER}san' looks for the variable '$USER' and not for the variable
-'$USERsan'. It's a case of one syntax lending itself nicely to
-solving an unrelated problem in it's spare time.
+'${VARNAME}'. Fish supports the former, and has no support whatsoever
+for the latter or anything like it. So what is '{$VARNAME}' then?
+Well, '{WHATEVER}' is <a href='#brace'>brace expansion</a>, identical
+to that supported by Posix shells, i.e.  'a{b,c}d' -> 'abd acd' works
+both in bash and on fish. So '{$VARNAME}' is a bracket-expansion with
+only a single element, i.e.  it becomes expanded to '$VARNAME', which
+will be variable expanded to the value of the variable 'VARNAME'. So
+you might think that the brackets don't actually do anything, and that
+is nearly the truth. The snag is that there once along the way was a
+'}' in there somewhere, and } is not a valid character in a variable
+name.  So anything after the otherwise pointless bracket expansion
+becomes explicitly NOT a part of the variable name, even if it happens
+to be a legal variable name character. That's why '{$USER}san' looks
+for the variable '$USER' and not for the variable '$USERsan'. It's
+simply a case of one syntax lending itself nicely to solving an
+unrelated problem in it's spare time.
 
 Variable expansion is the only type of expansion performed on double
 quoted strings. There is, however, an important difference in how
@@ -479,6 +479,29 @@ result in exactly one argument. Undefined variables will expand to the
 empty string, and array variables will be concatenated using the space
 character.
 
+There is one further notable feature of fish variable
+expansion. Consider the following code snippet:
+
+<pre>
+set foo a b c
+set a 10; set b 20; set c 30
+for i in (seq (count $$foo))
+	echo $$foo[$i]
+end
+# Output is:
+# 10
+# 20
+# 30
+</pre>
+
+The above code demonstrates how to use multiple '$' symbols to expand
+the value of a variable as a variable name. One can simply think of
+the $-symbol as a variable dereference operator. When using this
+feature together with array brackets, the brackets will always match
+the innermost $ dereference. Thus, $$foo[5] will always mean the fift
+element of the foo variable should be dereferenced and never that the fift
+element of the doubly dereferenced variable foo. The latter can
+instead be expressed as $$foo[1][5].
 
 \subsection expand-home Home directory expansion
 

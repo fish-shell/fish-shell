@@ -1,6 +1,43 @@
 # Process this file with autoconf to produce a configure script.
 AC_INIT(fish,1.21.1,fish-users@lists.sf.net)
 
+# If needed, run autoconf to regenerate the configure file
+AC_MSG_CHECKING([if autoconf needs to be run])
+if test configure -ot configure.ac; then
+	AC_MSG_RESULT([yes])
+	if which autoconf >/dev/null; then
+		AC_MSG_NOTICE([running autoconf])
+		if autoconf; then
+			./configure $@
+		fi
+		exit			
+	else
+		AC_MSG_ERROR( [cannot find the autoconf program in your path.
+This program is needs to be run whenever the configure.ac file is modified.
+Please install it and try again.])
+	fi
+else
+	AC_MSG_RESULT([no])
+fi
+
+
+# If needed, run autoheader to regenerate config.h.in
+AC_MSG_CHECKING([if autoheader needs to be run])
+if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
+	AC_MSG_RESULT([yes])
+	if which autoheader >/dev/null; then
+		AC_MSG_NOTICE([running autoheader])
+		autoheader
+	else
+		AC_MSG_ERROR( [cannot find the autoheader program in your path.
+This program is needs to be run whenever the configure.ac file is modified.
+Please install it and try again.])
+	fi
+else
+	AC_MSG_RESULT([no])
+fi
+
+
 # Detect directories which may contain additional headers, libraries
 # and commands. This needs to be done early - before Autoconf starts
 # to mess with CFLAGS and all the other environemnt variables.
@@ -12,7 +49,7 @@ for i in /usr/pkg /sw /opt /opt/local; do
 		CPPFLAGS="$CPPFLAGS -I$i/include/"
 		CFLAGS="$CFLAGS -I$i/include/"
 	else
-    	AC_MSG_RESULT(no)
+   	AC_MSG_RESULT(no)
 	fi
 
 	AC_MSG_CHECKING([for $i/lib library directory])
@@ -34,22 +71,6 @@ for i in /usr/pkg /sw /opt /opt/local; do
 done
 
 AC_SUBST( optbindirs, $optbindirs )
-
-# If needed, run autoheader automatically
-AC_MSG_CHECKING([if autoheader needs to be run])
-if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
-	AC_MSG_RESULT([yes])
-	if which autoheader >/dev/null; then
-		AC_MSG_NOTICE([running autoheader])
-		autoheader
-	else
-		AC_MSG_ERROR( [cannot find the autoheader program in your path.
-This program is needed because the configure.ac file has been modified.
-Please install it and try again.])
-	fi
-else
-	AC_MSG_RESULT([no])
-fi
 
 # Tell autoconf to create config.h header 
 AC_CONFIG_HEADERS(config.h)
@@ -182,26 +203,23 @@ if test "$ac_cv_func_fwprintf" = yes; then
 	# Check if fwprintf is broken
 	AC_MSG_CHECKING([if fwprintf is broken])
 	AC_RUN_IFELSE(
-	    [AC_LANG_PROGRAM([
+		[AC_LANG_PROGRAM([
 #include <stdlib.h>
 #include <stdio.h>
 #include <locale.h>
 #include <wchar.h>
 			],
-		[
+			[
 				setlocale( LC_ALL, "" );
 				fwprintf( stderr, L"%ls%ls", L"", L"fish:" );
 			])],
-	    [fwprintf_broken=no],
-	    [fwprintf_broken=yes] )
-
-	if test "$fwprintf_broken" = yes; then
-		AC_MSG_RESULT(yes)
-		AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1],
-			[Define to 1 one if the implemented fwprintf is broken])
-	else
-		AC_MSG_RESULT(no)
-	fi
+	    [
+			AC_MSG_RESULT(no)
+		],
+	    [
+			AC_MSG_RESULT([yes])
+			AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1], [Define to 1 one if the implemented fwprintf is broken])
+		] )
 
 fi
 

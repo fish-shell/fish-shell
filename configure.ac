@@ -159,7 +159,7 @@ AC_SUBST( [LOCALEDIR], [$datadir/locale])
 AC_CHECK_FILES([/proc/self/stat])
 
 # Check for presense of various libraries
-AC_SEARCH_LIBS( gettext, intl )
+AC_SEARCH_LIBS( gettext, intl, AC_SUBST( HAVE_GETTEXT, [1] ), AC_SUBST( HAVE_GETTEXT, [0] ) )
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )

@@ -7,6 +7,7 @@ for i in /usr/pkg /sw /opt /opt/local; do
 	if test -d $i/include; then
 		AC_MSG_RESULT(yes)
 		CPPFLAGS="$CPPFLAGS -I$i/include/"
+		CFLAGS="$CFLAGS -I$i/include/"
 	else
     	AC_MSG_RESULT(no)
 	fi
@@ -256,5 +257,6 @@ fi
 AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish etc/fish_interactive.fish seq])
 AC_OUTPUT
 
+echo "fish is now configured."
 echo "Now run 'make' and 'make install' to built and install fish."
 echo "Good luck!"

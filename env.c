@@ -892,7 +892,10 @@ wchar_t *env_get( const wchar_t *key )
 			wchar_t *next = history_get( i-add_current );
 			if( !next )
 			{
-				debug( 1, _( L"No history item at index %d\n" ), i );
+				/*
+				  This is not an error - it simply means the user has
+				  a short history
+				*/
 				break;
 			}
 			

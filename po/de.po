@@ -1300,11 +1300,11 @@ msgstr "fish"
 
 #: init/fish_interactive.fish.in:13 init/fish_interactive.fish:13
 msgid "Welcome to fish, the friendly interactive shell\\n"
-msgstr "Willkommen zu fish, der Freundlichen Interaktiven SHell"
+msgstr "Willkommen zu fish, der Freundlichen Interaktiven Shell\\n"
 
 #: init/fish_interactive.fish.in:14 init/fish_interactive.fish:14
 msgid "Type %shelp%s for instructions on how to use fish\\n"
-msgstr "Anweisungen zur fish-Benutzung erhalten Sie über %shelp%s "
+msgstr "Anweisungen zur fish-Benutzung erhalten Sie über %shelp%s\\n"
 
 #: init/fish_interactive.fish.in:20 init/fish_interactive.fish:20
 msgid "Commands to execute when fish exits"

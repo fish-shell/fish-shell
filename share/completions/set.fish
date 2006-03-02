@@ -65,7 +65,7 @@ complete -c set -n '__fish_is_first_token' -s q -l query -d (N_ "Test if variabl
 complete -c set -n '__fish_is_first_token' -s h -l help -d (N_ "Display help and exit")
 
 # Complete using preexisting variable names
-complete -c set -n '__fish_is_first_token' -x -a "(set|sed -e 's/ /\tVariable: /')"
+complete -c set -n '__fish_is_first_token' -x -a "(set|sed -e 's/ /'\t'Variable: /')"
 
 # Color completions
 complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' -d (N_ Color)

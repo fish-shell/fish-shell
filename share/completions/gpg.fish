@@ -23,12 +23,12 @@ function __fish_complete_gpg_user_id -d "Complete using gpg user ids"
 	# gpg doesn't seem to like it when you use the whole key name as a
 	# completion, so we skip the <EMAIL> part and use it a s a
 	# description.	
-	gpg --list-keys --with-colon|cut -d : -f 10|sed -ne 's/\(.*\) <\(.*\)>/\1\t\2/p'
+	gpg --list-keys --with-colon|cut -d : -f 10|sed -ne 's/\(.*\) <\(.*\)>/\1'\t'\2/p'
 end
 
 function __fish_complete_gpg_key_id -d 'Complete using gpg key ids'
 	# Use user_id as the description
-	gpg --list-keys --with-colons|cut -d : -f 5,10|sed -ne "s/\(.*\):\(.*\)/\1\t\2/p"
+	gpg --list-keys --with-colons|cut -d : -f 5,10|sed -ne "s/\(.*\):\(.*\)/\1'\t'\2/p"
 end
 
 function __fish_print_gpg_algo -d "Complete using all algorithms of the type specified in argv[1] supported by gpg. argv[1] is a regexp"

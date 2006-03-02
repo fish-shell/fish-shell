@@ -18,7 +18,7 @@ function __fish_print_packages
 		# 2) Remove package names that are .so files, since these seem to not correspond to actual packages as reported by rpm
 		# 3) Remove path information such as /usr/bin/, as rpm packages do not have paths
 
-		apt-cache --no-generate pkgnames (commandline -tc)|grep -v \( |grep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/\t'$package'/'
+		apt-cache --no-generate pkgnames (commandline -tc)|grep -v \( |grep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/'\t$package'/'
 		return
 	end
 
@@ -40,7 +40,7 @@ function __fish_print_packages
 		end
 
 		# Remove package version information from output and pipe into cache file
-		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/\t'$package'/' &
+		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/'\t$package'/' &
 	end
 
 	# This completes the package name from the portage tree. 

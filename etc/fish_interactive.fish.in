@@ -45,15 +45,21 @@ end
 # Set various color values
 #
 
-function set_default -d "Set an exported universal variable, unless it has already been set"
+function set_default -d "Set an universal variable, unless it has already been set"
 	if not set -q $argv[1]
-		set -Ux -- $argv	
+		set -U -- $argv	
+	end
+	if not set -q $argv[1]
+		set -g -- $argv	
 	end
 end
 
 function set_exported_default -d "Set an exported universal variable, unless it has already been set"
 	if not set -q $argv[1]
 		set -Ux -- $argv	
+	end
+	if not set -q $argv[1]
+		set -gx -- $argv	
 	end
 end
 

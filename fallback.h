@@ -24,8 +24,6 @@ int tputs(const char *str, int affcnt, int (*putc)(tputs_arg_t));
   the prototype to appear.
 */
 
-#if !HAVE_FWPRINTF
-
 /**
    Print formated string. Some operating systems (Like NetBSD) do not
    have wide string formating functions.  Therefore we implement our
@@ -81,10 +79,6 @@ int vfwprintf( FILE *f, const wchar_t *filter, va_list va );
 */
 int vswprintf( wchar_t *out, size_t n, const wchar_t *filter, va_list va );
 
-#endif
-
-#ifndef HAVE_FGETWC
-
 /**
    Fallback implementation of fgetwc
 */
@@ -95,10 +89,6 @@ wint_t fgetwc(FILE *stream);
 */
 wint_t getwc(FILE *stream);
 
-#endif
-
-#ifndef HAVE_FPUTWC
-
 /**
    Fallback implementation of fputwc
 */
@@ -108,15 +98,11 @@ wint_t fputwc(wchar_t wc, FILE *stream);
 */
 wint_t putwc(wchar_t wc, FILE *stream);
 
-#endif
-
-#ifndef HAVE_WCSTOK
 /**
    Fallback implementation of wcstok. Uses code borrowed from glibc.
 */
 wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr);
 
-#endif
 
 /**
    Return the number of columns used by a character. This is a libc

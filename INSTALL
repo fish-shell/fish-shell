@@ -3,8 +3,8 @@ Known issues
 ============
 
 Fish currently requires a semi-modern GCC version to
-compile. Specifically, GCC 2.95.* won't compile fish, but GCC 3.23
-should work. Fish has not been coded with an C99- or GNU-specific
+compile. Specifically, GCC 2.95.* won't compile fish, but GCC 3.2.3 is
+known to work. Fish has not been coded with an C99- or GNU-specific
 features in mind, so it is hoped that it should be possible to make
 fish work with other compilers. Patches are welcome.
 
@@ -52,7 +52,7 @@ Local install procedure
 =======================
 
 If you have downloaded the darcs repository of fish, you need to run
-autoconf first.
+autoconf to generate the configure script.
 
 To install fish in your own home directory (typically as non-root),
 type:

@@ -36,8 +36,22 @@
 CC := @CC@
 INSTALL:=@INSTALL@
 
-# Compiler flags
-CFLAGS:=@CFLAGS@ -Wall -std=gnu99 -fno-strict-aliasing
+#
+# Compiler flags:
+#
+# -fno-optimize-sibling-calls seems to work around a bug where sending
+# a SIGWINCH to fish on NetBSD causes fish to exit. This is probably
+# either a compiler bug or a libc bug, but this seems to fix things for
+# now. Long term, this should be tracked down and truly fixed, at which
+# point we can remove this silly flag.
+#
+# -fno-strict-aliasing was sent in in a patch from James Vega. The
+# specific problem that this fixes has been lost to me.
+#
+# -Wall is there to keep me on my toes
+#
+
+CFLAGS:=@CFLAGS@ -Wall -fno-strict-aliasing -fno-optimize-sibling-calls
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS:= @LIBS@ @LDFLAGS@ 
 
@@ -197,7 +211,7 @@ all: $(PROGRAMS) user_doc
 .PHONY: all
 
 debug:
-	make fish CFLAGS="-O0 -Wno-unused -Werror -g -Wall -std=gnu99 -fno-strict-aliasing"
+	make fish CFLAGS="-O0 -Wno-unused -Werror -g -Wall -fno-strict-aliasing -fno-optimize-sibling-calls"
 .PHONY: debug
 
 # User documentation, describing the features of the fish shell.

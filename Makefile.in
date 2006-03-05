@@ -461,6 +461,7 @@ uninstall-legacy: uninstall
 	fi;
 	rmdir $(DESTDIR)$(sysconfdir)/fish.d/completions; true
 	rmdir $(DESTDIR)$(sysconfdir)/fish.d; true
+	@echo The previous fish installation has been removed. 
 
 install-translations: $(TRANSLATIONS)
 	if test $(HAVE_GETTEXT) = 1; then \

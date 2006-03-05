@@ -2,7 +2,11 @@
 #ifndef FISH_FALLBACK_H
 #define FISH_FALLBACK_H
 
+#include <stdio.h>
+#include <stdarg.h>
+
 #ifdef TPUTS_KLUDGE
+
 
 /**
    Linux on PPC seems to have a tputs implementation that sometimes

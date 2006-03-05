@@ -92,6 +92,7 @@
 
 #include "wgetopt.h"
 #include "wutil.h"
+#include "fallback.h"
 
 
 

@@ -45,13 +45,10 @@ INSTALL:=@INSTALL@
 # now. Long term, this should be tracked down and truly fixed, at which
 # point we can remove this silly flag.
 #
-# -fno-strict-aliasing was sent in in a patch from James Vega. The
-# specific problem that this fixes has been lost to me.
-#
 # -Wall is there to keep me on my toes
 #
 
-CFLAGS:=@CFLAGS@ -Wall -fno-strict-aliasing -fno-optimize-sibling-calls
+CFLAGS:=@CFLAGS@ -Wall -fno-optimize-sibling-calls
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS:= @LIBS@ @LDFLAGS@ 
 
@@ -211,7 +208,7 @@ all: $(PROGRAMS) user_doc
 .PHONY: all
 
 debug:
-	make fish CFLAGS="-O0 -Wno-unused -Werror -g -Wall -fno-strict-aliasing -fno-optimize-sibling-calls"
+	make fish CFLAGS="-O0 -Wno-unused -Werror -g -Wall -fno-optimize-sibling-calls"
 .PHONY: debug
 
 # User documentation, describing the features of the fish shell.

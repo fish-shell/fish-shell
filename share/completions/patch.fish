@@ -4,7 +4,7 @@
 
 complete -c patch -s b -l backup -d (N_ "Make backup files, when patching a file, rename or copy the original instead of removing it")
 complete -c patch -l backup-if-mismatch -d (N_ "Back up a file if the patch does not match the file exactly")
-complete -c patch -l no-backup-if-mismatch -d (N_ "Do not back up a file if the patch does not match the file  exactly")
+complete -c patch -l no-backup-if-mismatch -d (N_ "Do not back up a file if the patch does not match the file exactly")
 complete -c patch -s B -l prefix -r -f -d (N_ "Prefix pref to a file name when generating its simple backup file name")
 complete -c patch -l binary -d (N_ "Read and write all files in binary mode")
 complete -c patch -s c -l context -d (N_ "Interpret the patch file as a ordinary context diff")
@@ -26,7 +26,7 @@ complete -c patch -s p -l strip -r -f -d (N_ "Strip the smallest prefix containi
 complete -c patch -l posix -d (N_ "Conform more strictly to the POSIX standard")
 complete -c patch -l quoting-style -r -f -d (N_ "Use style word to quote output names")
 complete -c patch -s r -l reject-file -r -f -d (N_ "Put rejects into rejectfile instead of the default .rej file")
-complete -c patch -s R -l reverse -d (N_ "Assume  that this patch was created with the old and new files swapped")
+complete -c patch -s R -l reverse -d (N_ "Assume that this patch was created with the old and new files swapped")
 complete -c patch -s s -l silent -l quiet -d (N_ "Work silently, unless an error occurs")
 complete -c patch -s t -l batch -d (N_ "Suppress questions like -f, but make some different assumptions")
 complete -c patch -s T -l set-time -d (N_ "Set the modification and access times of patched files from time stamps given in context diff headers, local time")
@@ -37,5 +37,5 @@ complete -c patch -l verbose -d (N_ "Output extra information about the work bei
 complete -c patch -s x -l debug -r -f -d (N_ "Set internal debugging flags of interest only to patch patchers")
 complete -c patch -s Y -l basename-prefix -r -f -d (N_ "Prefix pref to the basename of a file name when generating its simple backup file name")
 complete -c patch -s z -l suffix -r -f -d (N_ "Use suffix as the simple backup suffix")
-complete -c patch -s Z -l set-utc -d (N_ "Set the modification and access times of patched files from time stamps given  in  context  diff  headers, UTC, GMT")
+complete -c patch -s Z -l set-utc -d (N_ "Set the modification and access times of patched files from time stamps given in context diff headers, UTC, GMT")
 

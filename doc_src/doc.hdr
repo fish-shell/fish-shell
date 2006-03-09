@@ -1161,11 +1161,10 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 \subsection todo-features Missing features
 
 - Complete vi-mode key bindings
-- next-history-complete
 - More completions (for example xterm, vim, 
-konsole, gnome-terminal, dcop, cdrecord, cron, xargs
+konsole, gnome-terminal, dcop, cron,
 rlogin, telnet, rsync, arch, finger, nice, locate, 
-bibtex, patch, aspell, xpdf,
+bibtex, aspell, xpdf,
 compress, wine, xmms, dig, wine, batch, cron, 
 g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Undo support

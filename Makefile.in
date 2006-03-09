@@ -39,11 +39,14 @@ INSTALL:=@INSTALL@
 #
 # Compiler flags:
 #
+#
 # -fno-optimize-sibling-calls seems to work around a bug where sending
-# a SIGWINCH to fish on NetBSD causes fish to exit. This is probably
-# either a compiler bug or a libc bug, but this seems to fix things for
-# now. Long term, this should be tracked down and truly fixed, at which
-# point we can remove this silly flag.
+# a SIGWINCH to fish on NetBSD causes fish to exit when compiled with
+# GCC 3.3.3. This is probably either a compiler bug or a libc bug, but
+# adding this flag seems to fix things for now. Long term, the real
+# problem should be tracked down and truly fixed, at which point we
+# can remove this silly flag. This bug has been verified to not exist
+# on Linux using GCC 3.3.3.
 #
 # -Wall is there to keep me on my toes
 #

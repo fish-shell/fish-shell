@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-07 00:08+0100\n"
-"PO-Revision-Date: 2006-03-07 00:14+0100\n"
+"POT-Creation-Date: 2006-03-07 13:37+0100\n"
+"PO-Revision-Date: 2006-03-07 03:20+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -1645,21 +1645,22 @@ msgstr "Hej då\\n"
 #: share/completions/mount.fish:9 share/completions/mplayer.fish:30
 #: share/completions/mplayer.fish:35 share/completions/mplayer.fish:82
 #: share/completions/mv.fish:10 share/completions/nice.fish:3
-#: share/completions/pine.fish:3 share/completions/ps.fish:35
-#: share/completions/python.fish:4 share/completions/read.fish:1
-#: share/completions/rmdir.fish:6 share/completions/rm.fish:8
-#: share/completions/rpm.fish:4 share/completions/ruby.fish:8
-#: share/completions/sed.fish:27 share/completions/set.fish:65
-#: share/completions/sort.fish:19 share/completions/sshfs.fish:32
-#: share/completions/sudo.fish:7 share/completions/su.fish:10
-#: share/completions/test.fish:2 share/completions/time.fish:9
-#: share/completions/top.fish:5 share/completions/touch.fish:10
-#: share/completions/trap.fish:4 share/completions/type.fish:2
-#: share/completions/ulimit.fish:13 share/completions/umount.fish:11
-#: share/completions/uname.fish:10 share/completions/uniq.fish:13
-#: share/completions/valgrind.fish:24 share/completions/vared.fish:2
-#: share/completions/wc.fish:6 share/completions/wget.fish:6
-#: share/completions/who.fish:18 share/completions/xprop.fish:2
+#: share/completions/patch.fish:19 share/completions/pine.fish:3
+#: share/completions/ps.fish:35 share/completions/python.fish:4
+#: share/completions/read.fish:1 share/completions/rmdir.fish:6
+#: share/completions/rm.fish:8 share/completions/rpm.fish:4
+#: share/completions/ruby.fish:8 share/completions/sed.fish:27
+#: share/completions/set.fish:65 share/completions/sort.fish:19
+#: share/completions/sshfs.fish:32 share/completions/sudo.fish:7
+#: share/completions/su.fish:10 share/completions/test.fish:2
+#: share/completions/time.fish:9 share/completions/top.fish:5
+#: share/completions/touch.fish:10 share/completions/trap.fish:4
+#: share/completions/type.fish:2 share/completions/ulimit.fish:13
+#: share/completions/umount.fish:11 share/completions/uname.fish:10
+#: share/completions/uniq.fish:13 share/completions/valgrind.fish:24
+#: share/completions/vared.fish:2 share/completions/wc.fish:6
+#: share/completions/wget.fish:6 share/completions/who.fish:18
+#: share/completions/xargs.fish:8 share/completions/xprop.fish:2
 #: share/completions/xsel.fish:16 share/completions/yum.fish:46
 #: share/completions/zcat.fish:7 share/completions/zip.fish:31
 #: share/functions/__fish_complete_ls.fish:90
@@ -1699,19 +1700,20 @@ msgstr "Ladda om konfiguration för tjänst"
 #: share/completions/atq.fish:2 share/completions/atrm.fish:2
 #: share/completions/bc.fish:8 share/completions/bunzip2.fish:15
 #: share/completions/bzip2.fish:17 share/completions/cat.fish:11
-#: share/completions/chgrp.fish:11 share/completions/chown.fish:10
-#: share/completions/configure.fish:2 share/completions/cut.fish:9
-#: share/completions/cvs.fish:51 share/completions/cvs.fish:73
-#: share/completions/date.fish:10 share/completions/df.fish:29
-#: share/completions/diff.fish:25 share/completions/du.fish:19
-#: share/completions/echo.fish:5 share/completions/fish.fish:3
-#: share/completions/fusermount.fish:13 share/completions/gprof.fish:32
-#: share/completions/grep.fish:43 share/completions/gunzip.fish:18
-#: share/completions/gzip.fish:20 share/completions/id.fish:7
-#: share/completions/less.fish:41 share/completions/make.fish:26
-#: share/completions/mimedb.fish:9 share/completions/modprobe.fish:14
-#: share/completions/mount.fish:8 share/completions/mplayer.fish:83
-#: share/completions/mv.fish:11 share/completions/nice.fish:4
+#: share/completions/cdrecord.fish:5 share/completions/chgrp.fish:11
+#: share/completions/chown.fish:10 share/completions/configure.fish:2
+#: share/completions/cut.fish:9 share/completions/cvs.fish:51
+#: share/completions/cvs.fish:73 share/completions/date.fish:10
+#: share/completions/df.fish:29 share/completions/diff.fish:25
+#: share/completions/du.fish:19 share/completions/echo.fish:5
+#: share/completions/fish.fish:3 share/completions/fusermount.fish:13
+#: share/completions/gprof.fish:32 share/completions/grep.fish:43
+#: share/completions/gunzip.fish:18 share/completions/gzip.fish:20
+#: share/completions/id.fish:7 share/completions/less.fish:41
+#: share/completions/make.fish:26 share/completions/mimedb.fish:9
+#: share/completions/modprobe.fish:14 share/completions/mount.fish:8
+#: share/completions/mplayer.fish:83 share/completions/mv.fish:11
+#: share/completions/nice.fish:4 share/completions/patch.fish:34
 #: share/completions/perl.fish:18 share/completions/ping.fish:27
 #: share/completions/ps.fish:34 share/completions/python.fish:12
 #: share/completions/rmdir.fish:7 share/completions/rm.fish:9
@@ -1724,9 +1726,9 @@ msgstr "Ladda om konfiguration för tjänst"
 #: share/completions/uname.fish:11 share/completions/uniq.fish:14
 #: share/completions/valgrind.fish:26 share/completions/wc.fish:7
 #: share/completions/w.fish:5 share/completions/wget.fish:5
-#: share/completions/who.fish:19 share/completions/xsel.fish:18
-#: share/completions/yum.fish:54 share/completions/zcat.fish:9
-#: share/functions/__fish_complete_ls.fish:91
+#: share/completions/who.fish:19 share/completions/xargs.fish:18
+#: share/completions/xsel.fish:18 share/completions/yum.fish:54
+#: share/completions/zcat.fish:9 share/functions/__fish_complete_ls.fish:91
 #: share/functions/__fish_complete_tex.fish:5
 msgid "Display version and exit"
 msgstr "Visa version och avsluta"
@@ -3039,6 +3041,355 @@ msgstr "Ersätt tab med specialsekvens"
 #: share/completions/cat.fish:9
 msgid "Escape non-printing except newline and tab"
 msgstr "Erätt oskrivbarta tecken utom tab och radbrytning med specialsekvenser"
+
+#: share/completions/cdrecord.fish:6
+msgid "Increment the level of general verbosity by one"
+msgstr "Öka pratigheten ett steg"
+
+#: share/completions/cdrecord.fish:7
+msgid "Increment the verbose level in respect of SCSI command transport by one"
+msgstr "Öka pratighet om SCSI-kommandotransporten ett steg"
+
+#: share/completions/cdrecord.fish:8
+msgid "Set the misc debug value to #"
+msgstr "Välj den allmänna debugnivån"
+
+#: share/completions/cdrecord.fish:9
+msgid "Increment the misc debug level by one"
+msgstr "Öka den allmänna debugnivån ett steg"
+
+#: share/completions/cdrecord.fish:10
+msgid "Do not print out a status report for failed SCSI commands"
+msgstr "Skriv inte ut en statusrapport för misslyckade SCSI-kommandon"
+
+#: share/completions/cdrecord.fish:11
+msgid "Force to continue on some errors"
+msgstr "Tvinga att fortsätt vid fel"
+
+#: share/completions/cdrecord.fish:12
+msgid "Tell cdrecord to set the SCSI IMMED flag in certain commands"
+msgstr "Instruera cdrecord att sätta SCSI IMMED-flaggan i vissa kommandon"
+
+#: share/completions/cdrecord.fish:13
+msgid ""
+"Defines the minimum drive buffer fill ratio for the experimental ATAPI wait "
+"mode intended to free the IDE bus to allow hard disk and CD/DVD writer on "
+"the same IDE cable"
+msgstr ""
+
+#: share/completions/cdrecord.fish:14
+msgid "Complete CD/DVD-Recorder recording process with the laser turned off"
+msgstr ""
+
+#: share/completions/cdrecord.fish:15
+msgid "Tells cdrecord to handle images created by readcd -clone"
+msgstr ""
+
+#: share/completions/cdrecord.fish:17
+msgid "Set SAO (Session At Once) mode, usually called Disk At Once mode"
+msgstr ""
+"<Välj SAO- (Session At Once) skrivläge, vanlightvis kallat Disk At Once-"
+"skrivläge"
+
+#: share/completions/cdrecord.fish:18
+#, fuzzy
+msgid "Set TAO (Track At Once) writing mode"
+msgstr "Välj TAO- (Track At Once) skrivläge"
+
+#: share/completions/cdrecord.fish:19
+msgid "Set RAW writing mode"
+msgstr "Välj RAW-skrivläge"
+
+#: share/completions/cdrecord.fish:20
+msgid "Select Set RAW writing, the preferred raw writing mode"
+msgstr ""
+
+#: share/completions/cdrecord.fish:21
+msgid "Select Set RAW writing, the less preferred raw writing mode"
+msgstr ""
+
+#: share/completions/cdrecord.fish:22
+msgid ""
+"Select Set RAW writing, the preferred raw writing mode if raw96r is not "
+"supported"
+msgstr ""
+
+#: share/completions/cdrecord.fish:23
+msgid "Allow multi session CDs to be made"
+msgstr ""
+
+#: share/completions/cdrecord.fish:24
+msgid ""
+"Retrieve multi session info in a form suitable for mkisofs-1.10 or later"
+msgstr ""
+
+#: share/completions/cdrecord.fish:25
+msgid "Retrieve and print out the table of content or PMA of a CD"
+msgstr ""
+
+#: share/completions/cdrecord.fish:26
+msgid "Retrieve and print out the ATIP (absolute Time in Pre-groove) info"
+msgstr ""
+
+#: share/completions/cdrecord.fish:27
+msgid "The disk will only be fixated"
+msgstr ""
+
+#: share/completions/cdrecord.fish:28
+msgid "Do not fixate the disk after writing the tracks"
+msgstr ""
+
+#: share/completions/cdrecord.fish:29
+msgid ""
+"Wait for input to become available on standard input before trying to open "
+"the SCSI driver"
+msgstr ""
+
+#: share/completions/cdrecord.fish:30
+msgid "Load the media and exit"
+msgstr ""
+
+#: share/completions/cdrecord.fish:31
+msgid "Load the media, lock the door and exit"
+msgstr ""
+
+#: share/completions/cdrecord.fish:32
+msgid "Eject disk after doing the work"
+msgstr ""
+
+#: share/completions/cdrecord.fish:33
+msgid "Set the speed factor of the writing process to #"
+msgstr ""
+
+#: share/completions/cdrecord.fish:34
+msgid "Blank a CD-RW and exit or blank a CD-RW before writing"
+msgstr ""
+
+#: share/completions/cdrecord.fish:35
+msgid "Format a CD-RW/DVD-RW/DVD+RW disc"
+msgstr ""
+
+#: share/completions/cdrecord.fish:36
+#, fuzzy
+msgid "Set the FIFO (ring buffer) size to #"
+msgstr "Välj minnesbuffertstorlek"
+
+#: share/completions/cdrecord.fish:37
+msgid "Set the maximum transfer size for a single SCSI command to #"
+msgstr ""
+
+#: share/completions/cdrecord.fish:38
+msgid "Sets the SCSI target for the CD/DVD-Recorder"
+msgstr ""
+
+#: share/completions/cdrecord.fish:39
+msgid "Set the grace time before starting to write to ># seconds"
+msgstr ""
+
+#: share/completions/cdrecord.fish:40
+msgid "Set the default SCSI command timeout value to # seconds"
+msgstr ""
+
+#: share/completions/cdrecord.fish:41
+msgid "Allows the user to manually select a driver for the device"
+msgstr ""
+
+#: share/completions/cdrecord.fish:45
+#, fuzzy
+msgid "Set driver specific options"
+msgstr "Välj konfigurationsinställningar"
+
+#: share/completions/cdrecord.fish:46
+msgid ""
+"Set the driveropts specified by driveropts=option list, the speed of the "
+"drive and the dummy flag and exit"
+msgstr ""
+
+#: share/completions/cdrecord.fish:47
+msgid "Checks if a driver for the current drive is present and exit"
+msgstr ""
+
+#: share/completions/cdrecord.fish:48
+msgid ""
+"Print the drive capabilities for SCSI-3/mmc compliant drives as obtained "
+"from mode page 0x2A"
+msgstr ""
+
+#: share/completions/cdrecord.fish:49
+msgid "Do an inquiry for the drive, print the inquiry info and exit"
+msgstr ""
+
+#: share/completions/cdrecord.fish:50
+msgid "Scan all SCSI devices on all SCSI busses and print the inquiry strings"
+msgstr ""
+
+#: share/completions/cdrecord.fish:51
+msgid "Try to reset the SCSI bus where the CD recorder is located"
+msgstr ""
+
+#: share/completions/cdrecord.fish:52
+msgid "Try to send an abort sequence to the drive"
+msgstr ""
+
+#: share/completions/cdrecord.fish:53
+msgid "Allow cdrecord to write more than the official size of a medium"
+msgstr ""
+
+#: share/completions/cdrecord.fish:54
+msgid "Ignore the known size of the medium, use for debugging only"
+msgstr ""
+
+#: share/completions/cdrecord.fish:55
+#, fuzzy
+msgid "Use *.inf files to overwrite audio options"
+msgstr "Svar till överskrivningsfrågor"
+
+#: share/completions/cdrecord.fish:56
+msgid "Set the default pre-gap size for all tracks except track nr 1"
+msgstr ""
+
+#: share/completions/cdrecord.fish:57
+msgid "Set Packet writing mode (experimental interface)"
+msgstr ""
+
+#: share/completions/cdrecord.fish:58
+msgid "Set the packet size to #, forces fixed packet mode (experimental)"
+msgstr ""
+
+#: share/completions/cdrecord.fish:59
+msgid ""
+"Do not close the current track, only when in packet writing mode "
+"(experimental)"
+msgstr ""
+
+#: share/completions/cdrecord.fish:60
+msgid "Set the Media Catalog Number of the CD"
+msgstr ""
+
+#: share/completions/cdrecord.fish:61
+msgid ""
+"Write CD-Text info based on info taken from a file that contains ascii info "
+"for the text strings"
+msgstr ""
+
+#: share/completions/cdrecord.fish:62
+msgid "Write CD-Text based on info found in the binary file filename"
+msgstr ""
+
+#: share/completions/cdrecord.fish:63
+msgid "Take all recording related info from a CDRWIN compliant CUE sheet file"
+msgstr ""
+
+#: share/completions/cdrecord.fish:67
+msgid "Set the International Standard Recording Number for the next track"
+msgstr ""
+
+#: share/completions/cdrecord.fish:68
+msgid "Sets an index list for the next track"
+msgstr ""
+
+#: share/completions/cdrecord.fish:69
+msgid "All subsequent tracks are written in CD-DA audio format"
+msgstr ""
+
+#: share/completions/cdrecord.fish:70
+msgid "Audio data is assumed to be in byte-swapped (little-endian) order"
+msgstr ""
+
+#: share/completions/cdrecord.fish:71
+msgid "All subsequent tracks are written in CD-ROM mode 1 (Yellow Book) format"
+msgstr ""
+
+#: share/completions/cdrecord.fish:72
+msgid "All subsequent tracks are written in CD-ROM mode 2 format"
+msgstr ""
+
+#: share/completions/cdrecord.fish:73 share/completions/cdrecord.fish:74
+msgid "All subsequent tracks are written in CD-ROM XA mode 2 form 1 format"
+msgstr ""
+
+#: share/completions/cdrecord.fish:75
+msgid "All subsequent tracks are written in CD-ROM XA mode 2 form 2 format"
+msgstr ""
+
+#: share/completions/cdrecord.fish:76
+msgid ""
+"All subsequent tracks are written in a way that allows a mix of CD-ROM XA "
+"mode 2 form 1/2 format"
+msgstr ""
+
+#: share/completions/cdrecord.fish:77
+msgid "The TOC type for the disk is set to CDI, with XA only"
+msgstr ""
+
+#: share/completions/cdrecord.fish:78
+msgid "Use the ISO-9660 file system size as the size of the next track"
+msgstr ""
+
+#: share/completions/cdrecord.fish:79
+msgid ""
+"15 sectors of zeroed data will be added to the end of this and each "
+"subsequent data track"
+msgstr ""
+
+#: share/completions/cdrecord.fish:80
+msgid "Set the amount of data to be appended as padding to the next track"
+msgstr ""
+
+#: share/completions/cdrecord.fish:81
+msgid "Do not pad the following tracks - the default"
+msgstr ""
+
+#: share/completions/cdrecord.fish:82
+msgid ""
+"Allow all subsequent tracks to violate the Red Book track length standard "
+"(min 4 s)"
+msgstr ""
+
+#: share/completions/cdrecord.fish:83
+msgid "Re-enforce the Red Book track length standard (min 4 s)"
+msgstr ""
+
+#: share/completions/cdrecord.fish:84
+msgid "Set the pre-gap size for the next track"
+msgstr ""
+
+#: share/completions/cdrecord.fish:85
+msgid ""
+"All TOC entries for subsequent audio tracks will indicate that the audio "
+"data has been sampled with 50/15 microsec pre-emphasis"
+msgstr ""
+
+#: share/completions/cdrecord.fish:86
+msgid ""
+"All TOC entries for subsequent audio tracks will indicate that the audio "
+"data has been mastered with linear data"
+msgstr ""
+
+#: share/completions/cdrecord.fish:87
+msgid ""
+"All TOC entries for subsequent audio tracks of the resulting CD will "
+"indicate that the audio data has permission to be copied without limit"
+msgstr ""
+
+#: share/completions/cdrecord.fish:88
+msgid ""
+"All TOC entries for subsequent audio tracks of the resulting CD will "
+"indicate that the audio data has permission to be copied only once for "
+"personal use"
+msgstr ""
+
+#: share/completions/cdrecord.fish:89
+msgid ""
+"All TOC entries for subsequent audio tracks of the resulting CD will "
+"indicate that the audio data has no permission to be copied"
+msgstr ""
+
+#: share/completions/cdrecord.fish:90
+msgid ""
+"If the master image for the next track has been stored on a raw disk, use "
+"this option to specify the valid amount of data on this disk"
+msgstr ""
 
 #: share/completions/chgrp.fish:2 share/completions/chown.fish:1
 msgid "Output diagnostic for changed files"
@@ -7091,6 +7442,164 @@ msgstr "Skriv även ut kataloghistorik"
 msgid "Increment priority by specified number first"
 msgstr "Öka prioritet med angivet nummer först"
 
+#: share/completions/patch.fish:5
+msgid ""
+"Make backup files, when patching a file, rename or copy the original instead "
+"of removing it"
+msgstr ""
+
+#: share/completions/patch.fish:6
+msgid "Back up a file if the patch does not match the file exactly"
+msgstr ""
+
+#: share/completions/patch.fish:7
+msgid "Do not back up a file if the patch does not match the file exactly"
+msgstr ""
+
+#: share/completions/patch.fish:8
+msgid "Prefix pref to a file name when generating its simple backup file name"
+msgstr ""
+
+#: share/completions/patch.fish:9
+msgid "Read and write all files in binary mode"
+msgstr ""
+
+#: share/completions/patch.fish:10
+msgid "Interpret the patch file as a ordinary context diff"
+msgstr ""
+
+#: share/completions/patch.fish:11
+msgid "Change to the directory dir immediately"
+msgstr ""
+
+#: share/completions/patch.fish:12
+msgid "Use the #ifdef ... #endif construct to mark changes"
+msgstr ""
+
+#: share/completions/patch.fish:13
+msgid ""
+"Print the results of applying the patches without actually changing any files"
+msgstr ""
+
+#: share/completions/patch.fish:14
+#, fuzzy
+msgid "Interpret the patch file as an ed script"
+msgstr "Utdata ser ut som ett ed-skript"
+
+#: share/completions/patch.fish:15
+msgid "Remove output files that are empty after the patches have been applied"
+msgstr ""
+
+#: share/completions/patch.fish:16
+msgid ""
+"Assume that the user knows exactly what he/she is doing, and do not ask "
+"questions"
+msgstr ""
+
+#: share/completions/patch.fish:17
+msgid "Set the maximum fuzz factor"
+msgstr ""
+
+#: share/completions/patch.fish:18
+msgid ""
+"This option controls patch's actions when a file is under RCS or SCCS "
+"control, and does not exist or is read-only and matches the default version, "
+"or when a file is under ClearCase control and does not exist"
+msgstr ""
+
+#: share/completions/patch.fish:20
+#, fuzzy
+msgid "Read the patch from patchfile"
+msgstr "Läs paket från fil"
+
+#: share/completions/patch.fish:21
+msgid ""
+"Match patterns loosely, in case tabs or spaces have been munged in your files"
+msgstr ""
+
+#: share/completions/patch.fish:22
+msgid "Interpret the patch file as a normal diff"
+msgstr ""
+
+#: share/completions/patch.fish:23
+msgid "Ignore patches that seem to be reversed or already applied"
+msgstr ""
+
+#: share/completions/patch.fish:24
+msgid "Send output to outfile instead of patching files in place"
+msgstr ""
+
+#: share/completions/patch.fish:25
+msgid ""
+"Strip the smallest prefix containing num leading slashes from each file name "
+"found in the patch file"
+msgstr ""
+
+#: share/completions/patch.fish:26
+msgid "Conform more strictly to the POSIX standard"
+msgstr ""
+
+#: share/completions/patch.fish:27
+#, fuzzy
+msgid "Use style word to quote output names"
+msgstr "Använd portabelt utdataformat"
+
+#: share/completions/patch.fish:28
+#, fuzzy
+msgid "Put rejects into rejectfile instead of the default .rej file"
+msgstr "Använd angiven fil istället för standard-förtroendedatabasen"
+
+#: share/completions/patch.fish:29
+msgid "Assume that this patch was created with the old and new files swapped"
+msgstr ""
+
+#: share/completions/patch.fish:30
+msgid "Work silently, unless an error occurs"
+msgstr ""
+
+#: share/completions/patch.fish:31
+msgid "Suppress questions like -f, but make some different assumptions"
+msgstr ""
+
+#: share/completions/patch.fish:32
+msgid ""
+"Set the modification and access times of patched files from time stamps "
+"given in context diff headers, local time"
+msgstr ""
+
+#: share/completions/patch.fish:33
+#, fuzzy
+msgid "Interpret the patch file as a unified context diff"
+msgstr "Skriv ut 3 rader av unifieradt sammanhang"
+
+#: share/completions/patch.fish:35
+msgid "Use method to determine backup file names"
+msgstr ""
+
+#: share/completions/patch.fish:36
+msgid "Output extra information about the work being done"
+msgstr ""
+
+#: share/completions/patch.fish:37
+msgid "Set internal debugging flags of interest only to patch patchers"
+msgstr ""
+
+#: share/completions/patch.fish:38
+msgid ""
+"Prefix pref to the basename of a file name when generating its simple backup "
+"file name"
+msgstr ""
+
+#: share/completions/patch.fish:39
+msgid "Use suffix as the simple backup suffix"
+msgstr ""
+
+#: share/completions/patch.fish:40
+msgid ""
+"Set the modification and access times of patched files from time stamps "
+"given in context diff headers, UTC, GMT"
+msgstr ""
+
 #: share/completions/perl.fish:1 share/completions/ruby.fish:2
 msgid "Specify record separator"
 msgstr "Ange postavdelare"
@@ -9646,6 +10155,58 @@ msgstr "Visa användarstatus som +, - eller ?"
 #: share/completions/who.fish:17
 msgid "List users logged in"
 msgstr "Visa inloggade användare"
+
+#: share/completions/xargs.fish:5
+msgid ""
+"Input filenames are terminated by a null character instead of by whitespace, "
+"and the quotes and backslash are not special"
+msgstr ""
+
+#: share/completions/xargs.fish:6 share/completions/xargs.fish:7
+msgid "Set the end of file string to eof-str"
+msgstr ""
+
+#: share/completions/xargs.fish:9 share/completions/xargs.fish:10
+msgid ""
+"Replace replace-str in the initial arguments with names from standard input"
+msgstr ""
+
+#: share/completions/xargs.fish:11 share/completions/xargs.fish:12
+msgid "Use at most max-lines nonblank input lines per command line"
+msgstr ""
+
+#: share/completions/xargs.fish:13
+#, fuzzy
+msgid "Use at most max-args arguments per command line"
+msgstr "Ändra eller visa kommandoraden"
+
+#: share/completions/xargs.fish:14
+msgid ""
+"Prompt the user about whether to run each command line and read a line from "
+"the terminal"
+msgstr ""
+
+#: share/completions/xargs.fish:15
+msgid ""
+"If the standard input does not contain any nonblanks, do not run the command"
+msgstr ""
+
+#: share/completions/xargs.fish:16
+msgid "Use at most max-chars characters per command line"
+msgstr ""
+
+#: share/completions/xargs.fish:17
+msgid "Print the command line on the standard error output before executing it"
+msgstr ""
+
+#: share/completions/xargs.fish:19
+#, fuzzy
+msgid "Exit if the size is exceeded"
+msgstr "Maximal filstorlek överskriden"
+
+#: share/completions/xargs.fish:20
+msgid "Run up to max-procs processes at a time"
+msgstr ""
 
 #: share/completions/xprop.fish:3
 msgid "Display grammar and exit"

@@ -11,21 +11,6 @@
 set -g fish_function_path $PWD/functions/
 
 #
-# Set some value for LANG if nothing was set before, and this is a
-# login shell. Also check for i18n information in /etc/sysconfig/i18n
-#
-
-if status --is-login
-	if not set -q LANG >/dev/null
-		set -gx LANG en_US.UTF-8
-	end
-
-	if test -f /etc/sysconfig/i18n
-		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/p')
-	end
-end
-
-#
 # Don't need completions in non-interactive mode
 #
 

@@ -54,9 +54,8 @@ end
 # Completions for the shell and it's builtin commands and functions
 #
 
-set -l __fish_help_desc (_ "Display help and exit")
-for i in (builtin -n|grep -vE '(while|for|if|function|switch)' )
-	complete -c $i -s h -l help -d $__fish_help_desc
+for i in (builtin -n|grep -v '\(while\|for\|if\|function\|switch\)' )
+	complete -c $i -s h -l help -d "Display help and exit"
 end
 
 

@@ -13,6 +13,8 @@
 #include <locale.h>
 #include <termcap.h>
 
+#include "fallback.h"
+
 #include "input_common.h"
 
 int writestr( char *str )

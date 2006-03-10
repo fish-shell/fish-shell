@@ -1347,7 +1347,8 @@ static int builtin_read( wchar_t **argv )
 	wchar_t *nxt;
 	wchar_t *prompt = DEFAULT_READ_PROMPT;
 	wchar_t *commandline = L"";
-
+	int exit_res=0;
+	
 	woptind=0;
 
 	while( 1 )
@@ -1529,10 +1530,12 @@ static int builtin_read( wchar_t **argv )
 	else
 	{
 		string_buffer_t sb;
+		int eof=0;
+		
 		sb_init( &sb );
+		
 		while( 1 )
 		{
-			int eof=0;
 			int finished=0;
 
 			wchar_t res=0;
@@ -1573,11 +1576,18 @@ static int builtin_read( wchar_t **argv )
 
 			if( eof )
 				break;
+
 			if( res == L'\n' )
 				break;
 
 			sb_append_char( &sb, res );
 		}
+
+		if( sb.used < 2 && eof )
+		{
+			exit_res = 1;
+		}
+		
 		buff = wcsdup( (wchar_t *)sb.buff );
 		sb_destroy( &sb );
 	}
@@ -1596,7 +1606,7 @@ static int builtin_read( wchar_t **argv )
 	}
 
 	free( buff );
-	return 0;
+	return exit_res;
 }
 
 /**

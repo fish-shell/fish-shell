@@ -6,8 +6,8 @@ function __fish_describe_command -d "Command used to find descriptions for comma
 	apropos $argv | awk -v FS=" +- +" '{
 		split($1, names, ", ");
 		for (name in names)
-			if (names[name] ~ /^'"$argv"'.* *\([18]\)/) {
-				sub("( |\t)*\\([18]\\)", "", names[name]);
+			if (names[name] ~ /^'"$argv"'.* *\([18]\)/ ) {
+				sub( "( |\t)*\\\([18]\\\)", "", names[name] );
 				print names[name] "\t" $2;
 			}
 	}'

@@ -6,6 +6,8 @@ AC_MSG_CHECKING([if autoconf needs to be run])
 if test configure -ot configure.ac; then
 	AC_MSG_RESULT([yes])
 	if which autoconf >/dev/null; then
+		# No need to provide any error messages if autoconf fails, the
+		# shell and autconf should take care of that themselves
 		AC_MSG_NOTICE([running autoconf])
 		if autoconf; then
 			./configure $@

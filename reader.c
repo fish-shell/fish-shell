@@ -269,12 +269,6 @@ static struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
 */
 static array_list_t prompt_list;
 
-/**
-   Stores the previous termios mode so we can reset the modes when
-   we execute programs and when the shell exits.
-*/
-static struct termios saved_modes;
-
 
 /**
    Store the pid of the parent process, so the exit function knows whether it should reset the terminal or not.
@@ -294,6 +288,12 @@ static struct termios old_modes;
 /*
   Prototypes for a bunch of functions defined later on.
 */
+
+/**
+   Stores the previous termios mode so we can reset the modes when
+   we execute programs and when the shell exits.
+*/
+static struct termios saved_modes;
 
 static void reader_save_status();
 static void reader_check_status();
@@ -841,6 +841,16 @@ static void write_cmdline()
 
 void reader_init()
 {
+	tcgetattr(0,&shell_modes);        /* get the current terminal modes */
+	memcpy( &saved_modes,
+			&shell_modes,
+			sizeof(saved_modes));     /* save a copy so we can reset the terminal later */
+	
+	shell_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
+	shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
+    shell_modes.c_cc[VMIN]=1;
+    shell_modes.c_cc[VTIME]=0;
+
 	al_init( &current_filename);
 }
 
@@ -854,6 +864,8 @@ void reader_destroy()
 		free( readline_buffer );
 		readline_buffer=0;
 	}
+	tcsetattr(0, TCSANOW, &saved_modes);
+
 }
 
 
@@ -1571,18 +1583,6 @@ static int handle_completions( array_list_t *comp )
 	}
 }
 
-/**
-   Reset the terminal. This function is placed in the list of
-   functions to call when exiting by using the atexit function. It
-   checks whether it is the original parent process that is exiting
-   and not a subshell, and if it is the parent, it restores the
-   terminal.
-*/
-static void exit_func()
-{
-	if( getpid() == original_pid )
-		tcsetattr(0, TCSANOW, &saved_modes);
-}
 
 /**
    Initialize data for interactive use
@@ -1635,16 +1635,6 @@ static void reader_interactive_init()
 
 	common_handle_winch(0);
 
-	tcgetattr(0,&shell_modes);        /* get the current terminal modes */
-	memcpy( &saved_modes,
-			&shell_modes,
-			sizeof(saved_modes));     /* save a copy so we can reset the terminal later */
-
-	shell_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
-	shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
-    shell_modes.c_cc[VMIN]=1;
-    shell_modes.c_cc[VTIME]=0;
-
     if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
     {
         wperror(L"tcsetattr");
@@ -1656,9 +1646,6 @@ static void reader_interactive_init()
 	   fork 
 	*/
 	original_pid = getpid();
-
-	if( atexit( &exit_func ) )
-		debug( 1, _( L"Could not set exit function" ) );
 
 	env_set( L"_", L"fish", ENV_GLOBAL );
 }
@@ -2799,7 +2786,11 @@ wchar_t *reader_readline()
 				if( (!wchar_private(c)) && (c>31) && (c != 127) )
 					insert_char( c );
 				else
-					debug( 0, _( L"Unknown keybinding %d" ), c );
+				{
+					// Carriage returns happen. We ignore them
+					if( c != 13 )
+						debug( 0, _( L"Unknown keybinding %d" ), c );
+				}
 				break;
 			}
 
@@ -2950,7 +2941,7 @@ int reader_read( int fd )
 	*/
 
 	proc_push_interactive( ((fd == 0) && isatty(STDIN_FILENO)));
-		
+	
 	res= is_interactive?read_i():read_ni( fd );
 
 	/*

@@ -62,6 +62,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "translate.h"
 #include "halloc_util.h"
 
+
 /**
    Parse init files
 */
@@ -69,7 +70,7 @@ static int read_init()
 {
 	char cwd[4096];
 	wchar_t *wcwd;
-	
+
 	if( !getcwd( cwd, 4096 ) )
 	{
 		wperror( L"getcwd" );		
@@ -77,11 +78,11 @@ static int read_init()
 	}
 
 	env_set( L"__fish_help_dir", DOCDIR, 0);	
-	
+
 	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; . fish 2>/dev/null", 0, TOP );
 	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; . fish 2>/dev/null", 0, TOP );
 	eval( L"builtin cd 2>/dev/null;. .fish 2>/dev/null", 0, TOP );
-	
+
 	if( chdir( cwd ) == -1 )
 	{
 //		fwprintf( stderr, L"Invalid directory: %s\n", cwd );
@@ -248,7 +249,7 @@ int main( int argc, char **argv )
 	env_init();
 	complete_init();
 	reader_init();
-	
+
 	if( read_init() )
 	{
 		if( cmd != 0 )

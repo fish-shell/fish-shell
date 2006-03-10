@@ -9,6 +9,7 @@ inputrc information for key bindings.
 #define FISH_INPUT_H
 
 #include <wchar.h>
+#include "input_common.h"
 
 /**
    Key codes for inputrc-style keyboard functions that are passed on

@@ -228,6 +228,8 @@ static int inputrc_block_count=0;
 */
 static int inputrc_error = 0;
 
+static int is_init = 0;
+
 wchar_t input_get_code( wchar_t *name )
 {
 
@@ -1346,6 +1348,11 @@ int input_init()
 {
 	wchar_t *fn;
 	
+	if( is_init )
+		return 1;
+	
+	is_init = 1;
+
 	input_common_init( &interrupt_handler );
 	
 	if( setupterm( 0, STDOUT_FILENO, 0) == ERR )
@@ -1424,6 +1431,11 @@ static void destroy_mapping( const void *key, const void *val )
 
 void input_destroy()
 {
+	if( !is_init )
+		return;
+	
+	is_init=0;
+	
 	input_common_destroy();
 	
 	hash_foreach( &all_mappings, &destroy_mapping );	

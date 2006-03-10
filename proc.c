@@ -192,7 +192,7 @@ job_t *job_create()
 
 	res->job_control = (job_control_mode==JOB_CONTROL_ALL) || 
 		((job_control_mode == JOB_CONTROL_INTERACTIVE) && (is_interactive));
-	
+
 //	if( res->job_id > 2 )
 //		fwprintf( stderr, L"Create job %d\n", res->job_id );	
 	return res;
@@ -813,8 +813,7 @@ static void read_try( job_t *j )
 			else
 			{
 				b_append( buff->param2.out_buffer, b, l );
-			}
-			
+			}			
 		}
 	}
 }
@@ -829,14 +828,14 @@ void job_continue (job_t *j, int cont)
 	j->next = first_job;
 	first_job = j;
 	j->notified = 0;
-	
+
 	debug( 4,
-		   L"Continue on job %d (%ls), %ls, %ls",
+		   L"Continue job %d (%ls), %ls, %ls",
 		   j->job_id, 
 		   j->command, 
 		   job_is_completed( j )?L"COMPLETED":L"UNCOMPLETED", 
 		   is_interactive?L"INTERACTIVE":L"NON-INTERACTIVE" );
-
+	
 	if( !job_is_completed( j ) )
 	{
 		if( j->terminal && j->fg )

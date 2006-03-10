@@ -2017,10 +2017,10 @@ static int builtin_source( wchar_t ** argv )
 		parser_push_block( SOURCE );		
 		reader_push_current_filename( fn_intern );
 
-	
 		current_block->param1.source_dest = fn_intern;
 
 		parse_util_set_argv( argv+2);
+
 		res = reader_read( fd );
 		
 		parser_pop_block();
@@ -2029,8 +2029,7 @@ static int builtin_source( wchar_t ** argv )
 			sb_printf( sb_err,
 					   _( L"%ls: Error while reading file '%ls'\n" ),
 					   argv[0],
-					   argv[1]
-				);
+					   argv[1] );
 		}
 
 		/*

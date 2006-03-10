@@ -89,16 +89,9 @@ static wint_t readb()
 				case EINTR:
 				case EAGAIN:
 				{
-//					wperror( L"select" );
 					if( interrupt_handler )
 					{
 						int res = interrupt_handler();
-						
-/*						debug( 0,
-							   L"interrupt, %d is %ls", 
-							   res, 
-							   (res==R_NULL?L"good": L"Bad") );
-*/
 						if( res )
 							return res;
 					}
@@ -142,6 +135,7 @@ static wint_t readb()
 	
 	return arr[0];
 }
+
 
 wchar_t input_common_readch( int timed )
 {

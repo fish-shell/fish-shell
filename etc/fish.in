@@ -58,9 +58,11 @@ end
 # situation as well?
 #
 
-if expr "$LANG" : ".*[Uu][Tt][Ff]" >/dev/null
+if expr "$LANG" : ".*\.[Uu][Tt][Ff].*" >/dev/null
 	if test linux = "$TERM"
-		unicode_start ^/dev/null
+		if which unicode_start >/dev/null
+			unicode_start
+		end
 	end
 end
 

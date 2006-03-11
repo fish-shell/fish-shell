@@ -2446,11 +2446,19 @@ wchar_t *reader_readline()
  				if( comp_empty )
 				{
 					const wchar_t *begin, *end;
+					const wchar_t *token_begin, *token_end;
 					wchar_t *buffcpy;
-
+					int len;
+					int cursor_steps;
+					
 					parse_util_cmdsubst_extent( data->buff, data->buff_pos, &begin, &end );
 
-					int len = data->buff_pos - (data->buff - begin);
+					parse_util_token_extent( begin, data->buff_pos - (begin-data->buff), &token_begin, &token_end, 0, 0 );
+					cursor_steps = token_end - data->buff- data->buff_pos;
+					data->buff_pos += cursor_steps;
+					move_cursor( cursor_steps );
+					
+					len = data->buff_pos - (data->buff - begin);
 					buffcpy = wcsndup( begin, len );
 
 					//fwprintf( stderr, L"String is %ls\n", buffcpy );
@@ -2463,6 +2471,7 @@ wchar_t *reader_readline()
 					remove_duplicates( &comp );
 
 					free( buffcpy );
+
 				}
 				if( (comp_empty =
 					 handle_completions( &comp ) ) )

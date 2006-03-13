@@ -292,7 +292,7 @@ else
 fi
 
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish etc/fish_interactive.fish seq])
+AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish etc/fish_interactive.fish share/fish seq])
 AC_OUTPUT
 
 echo "fish is now configured."

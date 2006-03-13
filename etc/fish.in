@@ -24,10 +24,7 @@ set -g IFS \ \t\n
 
 set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin @optbindirs@
 
-#
 # Root should also have the sbin directories in the path
-#
-
 if test "$USER" = root
 	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
 end

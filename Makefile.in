@@ -179,7 +179,7 @@ ETC_DIR_FILES :=etc/fish.in etc/fish_inputrc	\
 	etc/fish_interactive.fish.in
 
 # Files in ./share/
-SHARE_DIR_FILES :=share/fish
+SHARE_DIR_FILES :=share/fish.in
 
 # Files in ./tests/
 TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\

@@ -119,7 +119,7 @@ function type -d (N_ "Print the type of a command")
 						printf (_ 'file\n')
 
 					case path
-						which $i
+						echo $path
 			end
 			if test $selection != multi
 				continue

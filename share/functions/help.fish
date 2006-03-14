@@ -36,7 +36,7 @@ function help -d (N_ "Show help for the fish shell")
 	else
 		# Check for a text-based browser.
 		for i in $text_browsers
-			if which $i 2>/dev/null >/dev/null
+			if type -f $i >/dev/null
 				set fish_browser $i
 				break
 			end
@@ -46,7 +46,7 @@ function help -d (N_ "Show help for the fish shell")
 		# browser to use instead.
 		if test "$DISPLAY" -a \( "$XAUTHORITY" = "$HOME/.Xauthority" -o "$XAUTHORITY" = "" \)
 			for i in $graphical_browsers
-				if which $i 2>/dev/null >/dev/null
+				if type -f $i >/dev/null
 					set fish_browser $i
 					set fish_browser_bg 1
 					break
@@ -79,7 +79,7 @@ function help -d (N_ "Show help for the fish shell")
 		case $help_topics
 			set fish_help_page "index.html\#$fish_help_item"
 		case "*"
-			if which $fish_help_item >/dev/null ^/dev/null
+			if type -f $fish_help_item >/dev/null
 				man $fish_help_item
 				return
 			end

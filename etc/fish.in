@@ -4,7 +4,7 @@
 # @configure_input@
 
 #
-# Set default search paths
+# Set default search paths for completions and shellscript functions
 #
 
 set -g fish_function_path ~/.fish.d/functions    @SYSCONFDIR@/fish.d/functions    @DATADIR@/fish/functions 
@@ -24,7 +24,10 @@ set -g IFS \ \t\n
 
 set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin @optbindirs@
 
+#
 # Root should also have the sbin directories in the path
+#
+
 if test "$USER" = root
 	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
 end
@@ -39,33 +42,39 @@ end
 
 
 #
-# Set some value for LANG if nothing was set before, and this is a
-# login shell. Also check for i18n information in /etc/sysconfig/i18n
+# Some things should only be done for login terminals
 #
 
 if status --is-login
+
+	#
+	# Set some value for LANG if nothing was set before, and this is a
+	# login shell.
+	#
+
 	if not set -q LANG >/dev/null
 		set -gx LANG en_US.UTF-8
 	end
 
+	# Check for i18n information in
+	# /etc/sysconfig/i18n
+
 	if test -f /etc/sysconfig/i18n
 		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/p')
 	end
-end
 
-#
-# Put linux console in unicode mode. Should this be done in any other
-# situation as well?
-#
+	#
+	# Put linux consoles in unicode mode.
+	#
 
-if expr "$LANG" : ".*\.[Uu][Tt][Ff].*" >/dev/null
-	if test linux = "$TERM"
-		if which unicode_start >/dev/null
-			unicode_start
+	if expr "$LANG" : ".*\.[Uu][Tt][Ff].*" >/dev/null
+		if test "$TERM" = linux
+			if which unicode_start >/dev/null
+				unicode_start
+			end
 		end
 	end
 end
-
 
 #
 # There are variables that contain colons that are not arrays. This 

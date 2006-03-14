@@ -1045,9 +1045,14 @@ where \c prompt_pwd is a shellscript function that displays a condensed version 
 
 \subsection title Programmable title
 
-When running in a virtual terminal, the user define the \c fish_title
-function to print a custom titlebar message. The \c fish_title
-function is executed and the output is used as a titlebar message.
+When using most virtual terminals, it is possible to set the message
+displayed in the titlebar of the terminal window. This can be done
+automatically in fish by defining the \c fish_title function. The \c
+fish_title function is executed before and after a new command is
+executed or put into the foreground and the output is used as a
+titlebar message. The $_ environment variable will always contain the
+name of the job to be put into the foreground (Or 'fish' if control is
+returning to the shell) when the fish_prompt function is called.
 
 Example:
 <p>
@@ -1173,6 +1178,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Syntax highlighting should mark cd to non-existing directories as an error
 - wait shellscript
 - Signal handler to save the history file before exiting from a signal
+- Support for the screen clipboard
 
 
 \subsection todo-possible Possible features
@@ -1194,6 +1200,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
 - Descriptions for variables using 'set -d'.
 - Parse errors should when possible honor IO redirections
+- Support for writing strings like /u/l/b/foo and have them expand to /usr/local/bin/foo - perhaps through tab expansion
 
 
 \subsection bugs Known bugs

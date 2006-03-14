@@ -42,7 +42,7 @@ end
 
 
 #
-# Set various color values
+# Set various defaults using these throwaway functions
 #
 
 function set_default -d "Set an universal variable, unless it has already been set"
@@ -85,7 +85,10 @@ set_default fish_pager_color_completion normal
 set_default fish_pager_color_description normal
 set_default fish_pager_color_progress cyan
 
+#
 # Directory history colors
+#
+
 set_default fish_color_history_current cyan
 
 
@@ -96,7 +99,7 @@ set_default fish_color_history_current cyan
 set_default CDPATH . ~
 
 #
-# Remove temporary functions
+# Remove temporary functions for setting default variable values
 #
 
 functions -e set_exported_default

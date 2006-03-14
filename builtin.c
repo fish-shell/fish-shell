@@ -586,6 +586,7 @@ static int builtin_generic( wchar_t **argv )
 }
 
 /**
+   Output a definition of the specified function to the sb_out
    stringbuffer. Used by the functions builtin.
 */
 static void functions_def( wchar_t *name )

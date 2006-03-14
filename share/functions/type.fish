@@ -105,12 +105,15 @@ function type -d (N_ "Print the type of a command")
 
 		end
 
-		if which $i ^/dev/null >/dev/null
+		set -l path (which $i ^/dev/null)
+		set -l path_ok 0
+		count $path >/dev/null; and test -x $path; and set -l path_ok 1
+		if test $path_ok = 1
 			set status 0
 			set found 1
 			switch $mode
 				case normal
-					printf (_ '%s is %s\n') $i (which $i)
+					printf (_ '%s is %s\n') $i $path
 
 					case type
 						printf (_ 'file\n')

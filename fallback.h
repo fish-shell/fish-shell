@@ -5,8 +5,20 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#ifdef TPUTS_KLUDGE
+/**
+   Under curses, tputs expects an int (*func)(char) as its last
+   parameter, but in ncurses, tputs expects a int (*func)(int) as its
+   last parameter. tputs_arg_t is defined to always be what tputs
+   expects. Hopefully.
+*/
 
+#ifdef NCURSES_VERSION
+typedef int tputs_arg_t;
+#else
+typedef char tputs_arg_t;
+#endif
+
+#ifdef TPUTS_KLUDGE
 
 /**
    Linux on PPC seems to have a tputs implementation that sometimes

@@ -16,19 +16,6 @@
 #include "util.h"
 
 /**
-   Under curses, tputs expects an int (*func)(char) as its last
-   parameter, but in ncurses, tputs expects a int (*func)(int) as its
-   last parameter. tputs_arg_t is defined to always be what tputs
-   expects. Hopefully.
-*/
-
-#ifdef NCURSES_VERSION
-typedef int tputs_arg_t;
-#else
-typedef char tputs_arg_t;
-#endif
-
-/**
    Maximum number of bytes used by a single utf-8 character
 */
 #define MAX_UTF8_BYTES 6

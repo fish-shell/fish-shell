@@ -17,28 +17,6 @@ set -g fish_complete_path ~/.fish.d/completions  @SYSCONFDIR@/fish.d/completions
 set -g IFS \ \t\n
 
 #
-# Add a few common directories to path, if they exists. Note that pure
-# console programs like makedep sometimes live in /usr/X11R6/bin, so we
-# want this even for text-only terminals.
-#
-
-set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin @optbindirs@
-
-# Root should also have the sbin directories in the path
-if test "$USER" = root
-	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
-end
-
-for i in $path_list
-	if not expr "$PATH" : .\*$i.\* >/dev/null
-		if test -d $i
-			set PATH $PATH $i
-		end
-	end
-end
-
-
-#
 # Some things should only be done for login terminals
 #
 

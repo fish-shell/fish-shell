@@ -3,7 +3,8 @@
 # Alias for gettext (or a fallback if gettext isn't installed)
 #
 
-if type -f gettext >/dev/null
+set -l path (which $i ^/dev/null)
+if test -x (echo $path)
 	function _ -d "Alias for the gettext command"
 		gettext fish $argv
 	end

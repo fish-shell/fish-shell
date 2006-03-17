@@ -106,9 +106,7 @@ function type -d (N_ "Print the type of a command")
 		end
 
 		set -l path (which $i ^/dev/null)
-		set -l path_ok 0
-		count $path >/dev/null; and test -x $path; and set -l path_ok 1
-		if test $path_ok = 1
+		if test -x (echo $path)
 			set status 0
 			set found 1
 			switch $mode
@@ -127,7 +125,7 @@ function type -d (N_ "Print the type of a command")
 		end
 
 		if test $found = 0
-			printf (_ "%s: Could not find '%s'") type $i
+			printf (_ "%s: Could not find '%s'\n") type $i
 		end
 
 	end

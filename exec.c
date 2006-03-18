@@ -653,8 +653,6 @@ void exec( job_t *j )
 	pid_t pid;
 	int mypipe[2];
 	sigset_t chldset; 
-	sigemptyset( &chldset );
-	sigaddset( &chldset, SIGCHLD );
 	int skip_fork;
 	
 	io_data_t pipe_read, pipe_write;
@@ -667,6 +665,11 @@ void exec( job_t *j )
 	*/
 	int exec_error=0;
 
+	if( no_exec )
+		return;
+	
+	sigemptyset( &chldset );
+	sigaddset( &chldset, SIGCHLD );
 	
 	debug( 4, L"Exec job '%ls' with id %d", j->command, j->job_id );	
 	

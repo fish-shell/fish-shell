@@ -90,6 +90,8 @@ int is_event=0;
 int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
 int job_control_mode = JOB_CONTROL_INTERACTIVE;
+int no_exec=0;
+
 
 /**
    The event variable used to send all process event

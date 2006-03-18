@@ -232,6 +232,12 @@ extern pid_t proc_last_bg_pid;
 extern int job_control_mode;
 
 /**
+   If this flag is set, fish will never fork or run execve.
+*/
+extern int no_exec;
+
+
+/**
    Sets the status of the last process to exit
 */
 void proc_set_last_status( int s );

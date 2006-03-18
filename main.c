@@ -139,6 +139,10 @@ int main( int argc, char **argv )
 				}
 				,
 				{
+					"no-execute", no_argument, 0, 'n' 
+				}
+				,
+				{
 					"profile", required_argument, 0, 'p' 
 				}
 				,
@@ -160,14 +164,14 @@ int main( int argc, char **argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "hilvc:p:d:", 
+							   "hilnvc:p:d:", 
 							   long_options, 
 							   &opt_index );
 		
 #else	
 		int opt = getopt( argc,
 						  argv, 
-						  "hilvc:p:d:" );
+						  "hilnvc:p:d:" );
 #endif
 		if( opt == -1 )
 			break;
@@ -210,6 +214,10 @@ int main( int argc, char **argv )
 				is_login=1;
 				break;				
 				
+			case 'n':
+				no_exec=1;
+				break;				
+				
 			case 'p':
 				profile = optarg;
 				break;				
@@ -236,6 +244,15 @@ int main( int argc, char **argv )
 	is_interactive_session &= isatty(STDIN_FILENO);	
 	is_interactive_session |= force_interactive;
 
+	/*
+	  No-exec is prohibited when in interactive mode
+	*/
+	if( is_interactive_session && no_exec)
+	{
+		debug( 1, _(L"Can not use the no-execute mode when running an interactive session") );
+		no_exec = 0;
+	}
+	
 	common_init();
 	halloc_util_init();	
 

@@ -2521,7 +2521,7 @@ int parser_test( wchar_t * buff,
 	current_tokenizer = &tok;
 
 	for( tok_init( &tok, buff, 0 );
-		 tok_has_next( &tok ) && !err;
+		 tok_has_next( &tok );
 		 tok_next( &tok ) )
 	{
 		current_tokenizer_pos = tok_get_pos( &tok );

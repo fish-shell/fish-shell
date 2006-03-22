@@ -343,7 +343,7 @@ void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 		}
 		else if( sz < 1024 )
 		{
-			sb_printf( sb, L"%dB", sz );
+			sb_printf( sb, L"%lldB", sz );
 		}
 		else
 		{

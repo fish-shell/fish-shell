@@ -31,13 +31,7 @@ int tputs(const char *str, int affcnt, int (*putc)(tputs_arg_t));
 
 #endif
 
-/*
-  Here follows the prototypes for fallback implementations of various
-  standarcs libc functions relating to wide character support. Some of
-  these prototypes are always defined, since some libc versions
-  include the code, but you have to use special magical #defines for
-  the prototype to appear.
-*/
+#ifndef HAVE_FWPRINTF
 
 /**
    Print formated string. Some operating systems (Like NetBSD) do not
@@ -94,6 +88,9 @@ int vfwprintf( FILE *f, const wchar_t *filter, va_list va );
 */
 int vswprintf( wchar_t *out, size_t n, const wchar_t *filter, va_list va );
 
+#endif
+
+#ifndef HAVE_FGETWC
 /**
    Fallback implementation of fgetwc
 */
@@ -104,6 +101,10 @@ wint_t fgetwc(FILE *stream);
 */
 wint_t getwc(FILE *stream);
 
+#endif
+
+#ifndef HAVE_FPUTWC
+
 /**
    Fallback implementation of fputwc
 */
@@ -113,11 +114,18 @@ wint_t fputwc(wchar_t wc, FILE *stream);
 */
 wint_t putwc(wchar_t wc, FILE *stream);
 
+#endif
+
+#ifndef HAVE_WCSTOK
+
 /**
    Fallback implementation of wcstok. Uses code borrowed from glibc.
 */
 wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr);
 
+#endif
+
+#ifndef HAVE_WCWIDTH
 
 /**
    Return the number of columns used by a character. This is a libc
@@ -132,14 +140,28 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr);
 */
 int wcwidth( wchar_t c );
 
+#endif
+
+#ifndef HAVE_WCSDUP
+
 /**
    Create a duplicate string. Wide string version of strdup. Will
    automatically exit if out of memory.
 */
 wchar_t *wcsdup(const wchar_t *in);
 
+#endif
+
+#ifndef HAVE_WCSLEN
+
+/**
+   Fallback for wcsen. Returns the length of the specified string.
+*/
 size_t wcslen(const wchar_t *in);
 
+#endif
+
+#ifndef HAVE_WCSCASECMP
 /**
    Case insensitive string compare function. Wide string version of
    strcasecmp.
@@ -152,6 +174,10 @@ size_t wcslen(const wchar_t *in);
    a user-supplied string should be considered a bug.
 */
 int wcscasecmp( const wchar_t *a, const wchar_t *b );
+
+#endif
+
+#ifndef HAVE_WCSNCASECMP
 
 /**
    Case insensitive string compare function. Wide string version of
@@ -172,13 +198,26 @@ int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
    always null terminated, and the null is not included in the string
    length.
 */
+
+#endif
+
+#ifndef HAVE_WCSNDUP
+
+/**
+   Fallback for wcsndup function. Returns a copy of \c in, truncated
+   to a maximum length of \c c.
+*/
 wchar_t *wcsndup( const wchar_t *in, int c );
+
+#endif
 
 /**
    Converts from wide char to digit in the specified base. If d is not
    a valid digit in the specified base, return -1.
 */
 long convert_digit( wchar_t d, int base );
+
+#ifndef HAVE_WCSTOL
 
 /**
    Fallback implementation. Convert a wide character string to a
@@ -192,6 +231,6 @@ long wcstol(const wchar_t *nptr,
 			wchar_t **endptr,
 			int base);
 
-
+#endif
 
 #endif

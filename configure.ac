@@ -112,6 +112,54 @@ else
     AC_SUBST( XSEL_MAN_PATH,[ ])
 fi
 
+#
+# If we are using gcc, set some flags that increase the odds of the
+# compiler producing a working binary...
+#
+
+if test "$CC" = gcc; then
+   
+	#
+	# This seems to be needed in some glibc versions in order to get
+	# the prototypes for wide character functions like wcsdup and
+	# fwprintf.  Fish should not actually use anu C99-specific
+	# features - if it does, please report this as a bug.
+	#
+
+	CFLAGS="$CFLAGS -std=c99"
+
+
+	#
+	# -fno-optimize-sibling-calls seems to work around a bug where
+	# sending a SIGWINCH to fish on NetBSD causes fish to exit when
+	# compiled with GCC 3.3.3. This is probably either a compiler bug
+	# or a libc bug, but adding this flag seems to fix things for
+	# now. Long term, the real problem should be tracked down and
+	# truly fixed, at which point we can remove this silly flag. This
+	# bug has been verified to not exist on Linux using GCC 3.3.3.
+	#
+
+	CFLAGS="$CFLAGS -fno-optimize-sibling-calls"
+
+
+	#
+	# -Wall is there to keep me on my toes
+	#
+
+	CFLAGS="$CFLAGS -Wall"
+
+	#
+	# This gives us access to prototypes for gnu extensions if we are
+	# compiling agains glibc. All extensions that are used must have a
+	# fallback implementation available in fallback.h, in order to
+	# keep fish working on non-gnu platforms.
+	#
+
+	CFLAGS="$CFLAGS -D _GNU_SOURCE"
+	
+fi
+
+
 # Test cpu for special handling of ppc
 AC_CANONICAL_TARGET
 

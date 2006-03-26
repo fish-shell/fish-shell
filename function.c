@@ -195,14 +195,17 @@ int function_exists( const wchar_t *cmd )
 void function_remove( const wchar_t *name )
 {
 	void *key;
+	const void *dv;
 	function_data_t *d;
 	event_t ev;
 
 	hash_remove( &function,
 				 name,
 				 (const void **) &key,
-				 (const void **)&d );
+				 &dv );
 
+	d=(function_data_t *)dv;
+	
 	if( !key )
 		return;
 

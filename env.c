@@ -820,14 +820,19 @@ void env_set( const wchar_t *key,
 static int try_remove( env_node_t *n,
 					   const wchar_t *key )
 {
+	const void *old_key_void, *old_val_void;
 	wchar_t *old_key, *old_val;
 	if( n == 0 )
 		return 0;
 
 	hash_remove( &n->env, 
 				 key,
-				 (const void **)&old_key, 
-				 (const void **)&old_val );
+				 &old_key_void, 
+				 &old_val_void );
+
+	old_key = (wchar_t *)old_key_void;
+	old_val = (wchar_t *)old_val_void;
+	
 	if( old_key != 0 )
 	{
 		var_entry_t * v = (var_entry_t *)old_val;

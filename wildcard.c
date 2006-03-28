@@ -124,6 +124,14 @@ static int wildcard_match2( const wchar_t *str,
 		while( *(str++) != 0 );
 		return 0;
 	}
+	else if( *str == 0 )
+	{
+		/*
+		  End of string, but not end of wildcard, and the next wildcard
+		  element is not a '*', so this is not a match.
+		*/
+		return 0;
+	}
 
 	if( *wc == ANY_CHAR )
 	{

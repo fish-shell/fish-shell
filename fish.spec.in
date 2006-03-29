@@ -1,3 +1,5 @@
+%define xinclude %( if test -d /usr/X11R6/include; then echo /usr/X11R6/include; else echo /usr/include; fi )
+
 Summary:                A friendly interactive shell
 Name:                   @PACKAGE_NAME@
 
@@ -11,8 +13,9 @@ URL:                    http://roo.no-ip.org/fish/
 Source0:                http://roo.no-ip.org/%{name}/files/%{version}/%{name}-%{version}.tar.bz2
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:          doxygen ncurses-devel xorg-x11-devel
-
+BuildRequires:          doxygen ncurses-devel
+BuildRequires:          %{xinclude}/X11/StringDefs.h, %{xinclude}/X11/Xlib.h
+BuildRequires:          %{xinclude}/X11/Intrinsic.h, %{xinclude}/X11/Xatom.h
 
 
 

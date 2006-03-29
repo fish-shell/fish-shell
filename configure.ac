@@ -113,7 +113,7 @@ else
 fi
 
 #
-# Test if the compiler accepts the -std=c99 flag. If so, that
+# Test if the compiler accepts the -std=c99 flag. If so, using it
 # increases the odds of correct compilation, since we want to use the
 # *wprintf functions, which where defined in C99.
 #
@@ -165,8 +165,12 @@ if test "$CC" = gcc; then
 
 fi
 
+#
+# If we are compiling against glibc, set some flags to work around
+# some rather stupid attempts to hide prototypes for *wprintf
+# functions, as well as prototypes of various gnu extensions.
+#
 
-# Check if we are compiling against glibc
 AC_MSG_CHECKING([if we are compiling against glibc])
 AC_RUN_IFELSE(
 	[AC_LANG_PROGRAM([

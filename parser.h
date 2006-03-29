@@ -260,6 +260,12 @@ int parser_is_subcommand( const wchar_t *cmd );
 int parser_is_reserved( const wchar_t *word );
 
 /**
+   Test if the specified string is command that opens a new block
+*/
+
+int parser_is_block( const wchar_t *word);
+
+/**
    Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.
    Example: 
 

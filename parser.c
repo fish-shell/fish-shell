@@ -463,11 +463,7 @@ int parser_is_subcommand( const wchar_t *cmd )
 					  (void *)0 );
 }
 
-/**
-   Test if the specified string is command that opens a new block
-*/
-
-static int parser_is_block( const wchar_t *word)
+int parser_is_block( const wchar_t *word)
 {
 	return contains_str( word,
 						 L"for",

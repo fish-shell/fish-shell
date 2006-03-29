@@ -2,11 +2,12 @@
 Known issues
 ============
 
-Fish currently requires a semi-modern GCC version to
-compile. Specifically, GCC 2.95.* won't compile fish, but GCC 3.2.3 is
-known to work. Fish has not been coded with an C99- or GNU-specific
-features in mind, so it is hoped that it should be possible to make
-fish work with other compilers. Patches are welcome.
+Fish is developed using GCC, with the goal of using only C89 language
+features. Fish does, however use the *wprintf family of functions,
+which are new to the C99 standrard. It is not unlikely that any given
+release contains a few GCC:isms, but ICC 9.0.030 has been found to
+produce working binaries. GCC 2.95.* won't compile fish, but GCC 3.2.3
+is known to work. Patches to fix any remaining GNU:isms are welcome.
 
 Older versions of Doxygen has bugs in the man-page generation which
 cause the builtin help to render incorrectly. Doxygen 1.2.14 is known

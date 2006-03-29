@@ -72,7 +72,7 @@ COMMON_OBJS_WITH_HEADER := builtin_help.o
 
 # main.c exists, but main.h does not, etc.
 COMMON_OBJS_WITH_CODE := builtin_set.o builtin_commandline.o	\
-	builtin_ulimit.c builtin_complete.o
+	builtin_ulimit.o builtin_complete.o
 
 # All objects that the system needs to build fish
 FISH_OBJS := $(COMMON_OBJS) $(COMMON_OBJS_WITH_CODE)	\
@@ -170,8 +170,10 @@ SHARE_DIR_FILES :=share/fish.in
 TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
 	$(TEST_IN:.in=.status) tests/test.fish tests/gen_output.fish
 
+# Files in ./share/completions/
 COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish)
 
+# Files in ./share/functions/
 FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 
 # Programs to build
@@ -483,11 +485,11 @@ fish_tests: $(FISH_TESTS_OBJS)
 	$(CC) $(FISH_TESTS_OBJS) $(LDFLAGS) -o $@
 
 
-mimedb: $(MIME_OBJS) doc_src/mimedb.c
-	$(CC) ${MIME_OBJS} doc_src/mimedb.c $(LDFLAGS) -o $@
+mimedb: $(MIME_OBJS) doc_src/mimedb.o
+	$(CC) ${MIME_OBJS} doc_src/mimedb.o $(LDFLAGS) -o $@
 
-set_color: set_color.o doc_src/set_color.c 
-	$(CC) set_color.o doc_src/set_color.c $(LDFLAGS) -o $@
+set_color: set_color.o doc_src/set_color.o 
+	$(CC) set_color.o doc_src/set_color.o $(LDFLAGS) -o $@
 
 # Test program for the tokenizer library
 tokenizer_test: tokenizer.c tokenizer.h util.o wutil.o common.o

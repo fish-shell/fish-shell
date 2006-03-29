@@ -291,7 +291,7 @@ static void history_save()
 	history_count=0;
 	past_end=1;
 
-	history_load( mode_name );
+	history_load();
 	if( real_pos != 0 )
 	{
 		/* 

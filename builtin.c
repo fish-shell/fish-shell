@@ -3231,7 +3231,7 @@ static int internal_help( wchar_t *cmd )
 int builtin_run( wchar_t **argv )
 {
 	int (*cmd)(wchar_t **argv)=0;
-	cmd = hash_get( &builtin, argv[0] );
+	cmd = (int (*)(wchar_t **))hash_get( &builtin, argv[0] );
 
 	if( argv[1] != 0 && !internal_help(argv[0]) )
 	{

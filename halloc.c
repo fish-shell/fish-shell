@@ -41,7 +41,7 @@ typedef struct halloc
 
 static halloc_t *halloc_from_data( void *data )
 {
-	return (halloc_t *)(data - sizeof( halloc_t ) );
+	return (halloc_t *)(((char *)data) - sizeof( halloc_t ) );
 }
 
 static void late_free( void *data)
@@ -83,7 +83,7 @@ void *halloc( void *context, size_t size )
 		{
 			res = parent->scratch;
 			parent->scratch_free -= size;
-			parent->scratch += size;
+			parent->scratch = ((char *)parent->scratch)+size;
 		}
 		else
 		{
@@ -98,7 +98,7 @@ void *halloc( void *context, size_t size )
 				alloc_spill += parent->scratch_free;
 #endif
 				res = calloc( 1, size + HALLOC_BLOCK_SIZE );
-				parent->scratch = res + size;
+				parent->scratch = (char *)res + size;
 				parent->scratch_free = HALLOC_BLOCK_SIZE;
 			}
 			else
@@ -121,7 +121,7 @@ void *halloc( void *context, size_t size )
 #ifdef HALLOC_DEBUG
 		parent_count++;
 #endif		
-		me->scratch = ((void *)me) + sizeof(halloc_t) + size;
+		me->scratch = ((char *)me) + sizeof(halloc_t) + size;
 		me->scratch_free = HALLOC_BLOCK_SIZE;
 		
 		al_init( &me->children );

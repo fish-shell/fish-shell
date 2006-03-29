@@ -3,6 +3,8 @@
 Functions used for implementing the ulimit builtin. 
 
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -11,8 +13,6 @@ Functions used for implementing the ulimit builtin.
 #include <sys/resource.h>
 #include <unistd.h>
 #include <errno.h>
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

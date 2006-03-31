@@ -542,7 +542,7 @@ fish-@PACKAGE_VERSION@.tar.bz2: fish-@PACKAGE_VERSION@.tar
 # Create .rpm file for the current systems architecture and an
 # .src.rpm file.
 rpm: fish-@PACKAGE_VERSION@.tar.bz2
-	@if !which rpmbuild; then \
+	@if ! which rpmbuild; then \
 		echo Could not find the rpmbuild command, needed to build an rpm; \
 		echo You may be able to install it using the following command:; \
 		echo \'yum install rpm-build\'; \

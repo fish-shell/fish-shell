@@ -197,6 +197,13 @@ all: $(PROGRAMS) user_doc
 	@echo Use \'make install\' to install fish.
 .PHONY: all
 
+configure: configure.ac
+	autoconf
+	./config.status --recheck
+
+Makefile: Makefile.in configure
+	./config.status
+
 debug:
 	make fish CFLAGS="@CFLAGS@ -O0 -Wno-unused -Werror -g"
 .PHONY: debug
@@ -504,6 +511,7 @@ key_reader: key_reader.o input_common.o $(CORE_OBJS) env_universal.o env_univers
 #
 depend:
 	makedepend -fMakefile.in -Y *.c 
+	./config.status
 .PHONY: depend
 
 # Copy all the source files into a new directory and use tar to create

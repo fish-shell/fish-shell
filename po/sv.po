@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-03-07 13:37+0100\n"
-"PO-Revision-Date: 2006-03-07 03:20+0100\n"
+"PO-Revision-Date: 2006-03-13 18:06+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -3079,16 +3079,16 @@ msgstr ""
 
 #: share/completions/cdrecord.fish:14
 msgid "Complete CD/DVD-Recorder recording process with the laser turned off"
-msgstr ""
+msgstr "Fullfölj CD/DVD-brännarens inspelningsprocess med lasern avstängd"
 
 #: share/completions/cdrecord.fish:15
 msgid "Tells cdrecord to handle images created by readcd -clone"
-msgstr ""
+msgstr "Ange att cdrecord ska hantera bilder skapade av readcd -clone"
 
 #: share/completions/cdrecord.fish:17
 msgid "Set SAO (Session At Once) mode, usually called Disk At Once mode"
 msgstr ""
-"<Välj SAO- (Session At Once) skrivläge, vanlightvis kallat Disk At Once-"
+"Välj SAO- (Session At Once) skrivläge, vanligtvis kallat Disk At Once-"
 "skrivläge"
 
 #: share/completions/cdrecord.fish:18
@@ -3102,112 +3102,110 @@ msgstr "Välj RAW-skrivläge"
 
 #: share/completions/cdrecord.fish:20
 msgid "Select Set RAW writing, the preferred raw writing mode"
-msgstr ""
+msgstr "Välj det bättre RAW-skrivläget"
 
 #: share/completions/cdrecord.fish:21
 msgid "Select Set RAW writing, the less preferred raw writing mode"
-msgstr ""
+msgstr "Välj det mindre bra RAW-skrivläget"
 
 #: share/completions/cdrecord.fish:22
 msgid ""
 "Select Set RAW writing, the preferred raw writing mode if raw96r is not "
 "supported"
-msgstr ""
+msgstr "Välj det RAW-skrivläget som är bäst om stöd saknas för raw96r"
 
 #: share/completions/cdrecord.fish:23
 msgid "Allow multi session CDs to be made"
-msgstr ""
+msgstr "Tillåt skapandet av multisessions-CD"
 
 #: share/completions/cdrecord.fish:24
 msgid ""
 "Retrieve multi session info in a form suitable for mkisofs-1.10 or later"
-msgstr ""
+msgstr "Hämta multisessionsinfo i ett format lämpligt för mkisofs-1.10 och senare"
 
 #: share/completions/cdrecord.fish:25
 msgid "Retrieve and print out the table of content or PMA of a CD"
-msgstr ""
+msgstr "Hämta och skriv ut innehållsförteckningen eller PMA för en CD"
 
 #: share/completions/cdrecord.fish:26
 msgid "Retrieve and print out the ATIP (absolute Time in Pre-groove) info"
-msgstr ""
+msgstr "Hämta och skriv ut ATIP (absolute Time in Pre-groove) info"
 
 #: share/completions/cdrecord.fish:27
 msgid "The disk will only be fixated"
-msgstr ""
+msgstr "Fixera endast skivan"
 
 #: share/completions/cdrecord.fish:28
 msgid "Do not fixate the disk after writing the tracks"
-msgstr ""
+msgstr "Fixera inte skivan efter stt spåren skrivits"
 
 #: share/completions/cdrecord.fish:29
 msgid ""
 "Wait for input to become available on standard input before trying to open "
 "the SCSI driver"
-msgstr ""
+msgstr "Vänta på att indata ska bli tillgängligt från standard in innan försök rill att öppna SCSI-enheten"
 
 #: share/completions/cdrecord.fish:30
 msgid "Load the media and exit"
-msgstr ""
+msgstr "Ladda mediet och avsluta"
 
 #: share/completions/cdrecord.fish:31
 msgid "Load the media, lock the door and exit"
-msgstr ""
+msgstr "Ladda mediet, lås luckan och avsluta"
 
 #: share/completions/cdrecord.fish:32
 msgid "Eject disk after doing the work"
-msgstr ""
+msgstr "Skicka ut skivan efter arbetets utförande"
 
 #: share/completions/cdrecord.fish:33
 msgid "Set the speed factor of the writing process to #"
-msgstr ""
+msgstr "Sätt hastighetsfaktorn för skrivprocessen"
 
 #: share/completions/cdrecord.fish:34
 msgid "Blank a CD-RW and exit or blank a CD-RW before writing"
-msgstr ""
+msgstr "Töm en CD-RW och avsluta eller töm en CD-RW för skrivning"
 
 #: share/completions/cdrecord.fish:35
 msgid "Format a CD-RW/DVD-RW/DVD+RW disc"
-msgstr ""
+msgstr "Formatera en CD-RW/DVD-RW/DVD+RW-skiva"
 
 #: share/completions/cdrecord.fish:36
-#, fuzzy
 msgid "Set the FIFO (ring buffer) size to #"
-msgstr "Välj minnesbuffertstorlek"
+msgstr "Välj FIFO- (ringbuffert) storlek"
 
 #: share/completions/cdrecord.fish:37
 msgid "Set the maximum transfer size for a single SCSI command to #"
-msgstr ""
+msgstr "Välj maximal överföringshastighet för ett enkilt SCSI-kommando"
 
 #: share/completions/cdrecord.fish:38
 msgid "Sets the SCSI target for the CD/DVD-Recorder"
-msgstr ""
+msgstr "Välj SCSI-målet för CD/DVD-brännaren"
 
 #: share/completions/cdrecord.fish:39
 msgid "Set the grace time before starting to write to ># seconds"
-msgstr ""
+msgstr "Välj väntetiden i sekunder innan skrivning till skivan påbörjas"
 
 #: share/completions/cdrecord.fish:40
 msgid "Set the default SCSI command timeout value to # seconds"
-msgstr ""
+msgstr "Välj standard-SCSI-timeoutvärdet i sekunder"
 
 #: share/completions/cdrecord.fish:41
 msgid "Allows the user to manually select a driver for the device"
-msgstr ""
+msgstr "Låter användaren manuellt välja en drivrutin för enheten"
 
 #: share/completions/cdrecord.fish:45
-#, fuzzy
 msgid "Set driver specific options"
-msgstr "Välj konfigurationsinställningar"
+msgstr "Välj drivrutinsspecifika inställningar"
 
 #: share/completions/cdrecord.fish:46
 msgid ""
 "Set the driveropts specified by driveropts=option list, the speed of the "
 "drive and the dummy flag and exit"
-msgstr ""
+msgstr "Välj drivrutinsinställningar angivna av listandriveropt=inställning, hastigheten på enheten och dunny-flaggan och avsluta"
 
 #: share/completions/cdrecord.fish:47
 msgid "Checks if a driver for the current drive is present and exit"
-msgstr ""
+msgstr "Kontrollerar om en drivrutin för den nuvarande enheten finns tillgänglig och avsluta"
 
 #: share/completions/cdrecord.fish:48
 msgid ""
@@ -3217,64 +3215,63 @@ msgstr ""
 
 #: share/completions/cdrecord.fish:49
 msgid "Do an inquiry for the drive, print the inquiry info and exit"
-msgstr ""
+msgstr "Utför en föffrågan på enheten, visa förfrågningsinformationen och avsluta"
 
 #: share/completions/cdrecord.fish:50
 msgid "Scan all SCSI devices on all SCSI busses and print the inquiry strings"
-msgstr ""
+msgstr "Genomsök alla SCSI-enheter på alla SCSI-bussar och skriv ut förfrågningssträngarna"
 
 #: share/completions/cdrecord.fish:51
 msgid "Try to reset the SCSI bus where the CD recorder is located"
-msgstr ""
+msgstr "Försök att återställa SCSI-bussen som CD-brännaren befinner sig på"
 
 #: share/completions/cdrecord.fish:52
 msgid "Try to send an abort sequence to the drive"
-msgstr ""
+msgstr "Försök skicka en avbrottssekvens till enheten"
 
 #: share/completions/cdrecord.fish:53
 msgid "Allow cdrecord to write more than the official size of a medium"
-msgstr ""
+msgstr "Tillåt cdrecord att skriva mer än den officiella storleken på ett medium"
 
 #: share/completions/cdrecord.fish:54
 msgid "Ignore the known size of the medium, use for debugging only"
-msgstr ""
+msgstr "Ignorera den kända storleken på ett medium, använd endast vid debuggning"
 
 #: share/completions/cdrecord.fish:55
-#, fuzzy
 msgid "Use *.inf files to overwrite audio options"
-msgstr "Svar till överskrivningsfrågor"
+msgstr "Använd *.inf-filer för att skriva över ljudinställningar"
 
 #: share/completions/cdrecord.fish:56
 msgid "Set the default pre-gap size for all tracks except track nr 1"
-msgstr ""
+msgstr "Välj standard-pre-gap-storlek för alla spår utom spår 1"
 
 #: share/completions/cdrecord.fish:57
 msgid "Set Packet writing mode (experimental interface)"
-msgstr ""
+msgstr "Välj paketskrivningsläge (experimentellt gränssnitt)"
 
 #: share/completions/cdrecord.fish:58
 msgid "Set the packet size to #, forces fixed packet mode (experimental)"
-msgstr ""
+msgstr "Ange paketstorlek, tvingar fast paket-läge (experimentell)"
 
 #: share/completions/cdrecord.fish:59
 msgid ""
 "Do not close the current track, only when in packet writing mode "
 "(experimental)"
-msgstr ""
+msgstr "Avsluta inte det nuvarande spåret, bara i paketskrivningsläge (experimentell)"
 
 #: share/completions/cdrecord.fish:60
 msgid "Set the Media Catalog Number of the CD"
-msgstr ""
+msgstr "Välj Mediakatalog-nummer för CD:n"
 
 #: share/completions/cdrecord.fish:61
 msgid ""
 "Write CD-Text info based on info taken from a file that contains ascii info "
 "for the text strings"
-msgstr ""
+msgstr "Skriv CD-Text-infromation baserat på information tagen från fil i ascii-format"
 
 #: share/completions/cdrecord.fish:62
 msgid "Write CD-Text based on info found in the binary file filename"
-msgstr ""
+msgstr "Skriv CD-Text-infromation baserat på information tagen från fil i binärt format"
 
 #: share/completions/cdrecord.fish:63
 msgid "Take all recording related info from a CDRWIN compliant CUE sheet file"
@@ -4766,7 +4763,7 @@ msgstr "Skriv ut NUM rader av unifieradt sammanhang"
 
 #: share/completions/diff.fish:16
 msgid "Output 3 lines of unified context"
-msgstr "Skriv ut 3 rader av unifieradt sammanhang"
+msgstr "Skriv ut 3 rader av unifierat sammanhang"
 
 #: share/completions/diff.fish:17
 msgid "Output only whether the files differ"

@@ -27,7 +27,7 @@ typedef char tputs_arg_t;
    Linux on PPC seems to have a tputs implementation that sometimes
    behaves strangely. This fallback seems to fix things.
 */
-int tputs(const char *str, int affcnt, int (*putc)(tputs_arg_t));
+int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t));
 
 #endif
 

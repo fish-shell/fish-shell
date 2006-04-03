@@ -38,17 +38,17 @@
 #include <ncurses/term.h>
 #endif
 
-#include "common.h"
+#include "fallback.h"
 #include "util.h"
 
 
 #ifdef TPUTS_KLUDGE
 
-int tputs(const char *str, int affcnt, int (*putc)(tputs_arg_t))
+int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t))
 {
 	while( *str )
 	{
-		putc( *str++ );
+		fish_putc( *str++ );
 	}	
 }
 

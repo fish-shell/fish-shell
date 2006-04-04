@@ -2503,7 +2503,7 @@ static int builtin_jobs( wchar_t **argv )
 		*/
 		for( j=first_job; j; j=j->next )
 		{
-			if( j->constructed )
+			if( j->constructed && !job_is_completed(j) )
 			{
 				builtin_jobs_print( j, mode, !found );
 				return 0;
@@ -2536,7 +2536,7 @@ static int builtin_jobs( wchar_t **argv )
 
 				j = job_get_from_pid( pid );
 
-				if( j )
+				if( j && !job_is_completed( j ) )
 				{
 					builtin_jobs_print( j, mode, !found );
 				}
@@ -2557,7 +2557,7 @@ static int builtin_jobs( wchar_t **argv )
 				/*
 				  Ignore unconstructed jobs, i.e. ourself.
 				*/
-				if( j->constructed /*&& j->skip_notification*/ )
+				if( j->constructed && !job_is_completed(j) )
 				{
 					builtin_jobs_print( j, mode, !found );
 					found = 1;

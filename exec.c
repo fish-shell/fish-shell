@@ -1209,13 +1209,11 @@ void exec( job_t *j )
 	{
 		proc_last_bg_pid = j->pgid;
 	}
-	
+
 	if( !exec_error )
 	{
 		job_continue (j, 0);
 	}
-	
-	debug( 3, L"End of exec()" );
 	
 }
 

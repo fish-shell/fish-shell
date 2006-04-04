@@ -2265,7 +2265,19 @@ static int read_i()
 
 		if( data->end_loop)
 		{
-			if( !prev_end_loop && first_job != 0 )
+			job_t *j;
+			int has_job=0;
+			
+			for( j=first_job; j; j=j->next )
+			{
+				if( !job_is_completed(j) )
+				{
+					has_job = 1;
+					break;
+				}
+			}
+			
+			if( !prev_end_loop && has_job )
 			{
 				writestr(_( L"There are stopped jobs\n" ));
 				write_prompt();

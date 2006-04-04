@@ -265,27 +265,11 @@ int job_is_completed( const job_t *j )
 	{
 		if (!p->completed)
 		{
-//			fwprintf( stderr, L"Process %ls not finished\n", p->argv[0] );
 			return 0;
 		}
 	}
 	return 1;
 }
-
-/**
-   Return true if all processes in the job have completed.  
-
-   \param j the job to test
-*/
-static int job_last_is_completed( const job_t *j )
-{
-	process_t *p;
-	
-	for (p = j->first_process; p->next; p = p->next)
-		;
-	return p->completed;
-}
-
 
 /**
    Store the status of the process pid that was returned by waitpid.
@@ -503,6 +487,11 @@ int job_reap( int interactive )
 	static int locked = 0;
 	
 	locked++;	
+	
+	/*
+	  job_read may fire an event handler, we do not want to call
+	  ourselves recursively (to avoid infinite recursion).
+	*/
 	if( locked>1 )
 		return 0;
 		
@@ -511,6 +500,11 @@ int job_reap( int interactive )
 		process_t *p;
 		jnext = j->next;
 		
+		/*
+		  If we are reaping only jobs who do not need status messages
+		  sent to the console, do not consider reaping jobs that need
+		  status messages
+		*/
 		if( (!j->skip_notification) && (!interactive) && (!j->fg))
 		{
 			continue;
@@ -915,7 +909,7 @@ void job_continue (job_t *j, int cont)
 				do
 				{
 					got_signal = 0;
-					quit = job_is_stopped( j ) || job_last_is_completed( j );
+					quit = job_is_stopped( j ) || job_is_completed( j );
 				}
 				while( got_signal && !quit );
 				if( !quit )
@@ -1039,7 +1033,7 @@ void proc_sanity_check()
 		/*
 		  More than one foreground job?
 		*/
-		if( j->fg && !(job_is_stopped(j) || job_last_is_completed(j) ) )
+		if( j->fg && !(job_is_stopped(j) || job_is_completed(j) ) )
 		{
 			if( fg_job != 0 )
 			{

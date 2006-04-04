@@ -2497,7 +2497,6 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	return code;
 }
 
-
 int parser_test( wchar_t * buff,
 				 int babble )
 {

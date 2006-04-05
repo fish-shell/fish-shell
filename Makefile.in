@@ -198,7 +198,6 @@ all: $(PROGRAMS) user_doc
 .PHONY: all
 
 configure: configure.ac
-	autoconf
 	./config.status --recheck
 
 Makefile: Makefile.in configure

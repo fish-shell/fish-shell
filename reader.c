@@ -2473,8 +2473,6 @@ wchar_t *reader_readline()
 					len = data->buff_pos - (data->buff - begin);
 					buffcpy = wcsndup( begin, len );
 
-					//fwprintf( stderr, L"String is %ls\n", buffcpy );
-
 					reader_save_status();
 					data->complete_func( buffcpy, &comp );
 					reader_check_status();
@@ -2504,7 +2502,6 @@ wchar_t *reader_readline()
 
 
 				repaint();
-//				wcscpy(data->search_buff,data->buff);
 				break;
 			}
 
@@ -2524,7 +2521,6 @@ wchar_t *reader_readline()
 				reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
 
 				repaint();
-//				wcscpy(data->search_buff,data->buff);
 				break;
 			}
 
@@ -2536,7 +2532,6 @@ wchar_t *reader_readline()
 				reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
 
 				repaint();
-//				wcscpy(data->search_buff,data->buff);
 				break;
 			}
 
@@ -2545,7 +2540,6 @@ wchar_t *reader_readline()
 			{	yank_str = kill_yank();
 				insert_str( yank_str );
 				yank = wcslen( yank_str );
-//				wcscpy(data->search_buff,data->buff);
 				break;
 			}
 
@@ -2708,6 +2702,7 @@ wchar_t *reader_readline()
 
 			/* Move left*/
 			case R_BACKWARD_CHAR:
+			{
 				if( data->buff_pos > 0 )
 				{
 					data->buff_pos--;
@@ -2722,8 +2717,9 @@ wchar_t *reader_readline()
 					}
 				}
 				break;
-
-				/* Move right*/
+			}
+			
+			/* Move right*/
 			case R_FORWARD_CHAR:
 			{
 				if( data->buff_pos < data->buff_len )
@@ -2808,7 +2804,12 @@ wchar_t *reader_readline()
 					insert_char( c );
 				else
 				{
-					// Carriage returns happen. We ignore them
+					/*
+					  Carriage returns happen - they are usually a
+					  sign of an incorrectly set terminal, but there
+					  really isn't very much we can do at this point,
+					  so we ignore them.
+					*/
 					if( c != 13 )
 						debug( 0, _( L"Unknown keybinding %d" ), c );
 				}
@@ -2885,7 +2886,7 @@ static int read_ni( int fd )
 					   _( L"Error while reading commands" ) );
 
 				/*
-				  Reset buffer. We won't evaluate incomplete files.
+				  Reset buffer on error. We won't evaluate incomplete files.
 				*/
 				acc.used=0;
 				break;
@@ -2906,13 +2907,10 @@ static int read_ni( int fd )
 			res = 1;
 		}
 
-//		fwprintf( stderr, L"Woot is %d chars\n", wcslen( acc.buff ) );
-
 		if( str )
 		{
 			if( !parser_test( str, 1 ) )
 			{
-				//fwprintf( stderr, L"We parse it\n" );
 				eval( str, 0, TOP );
 			}
 			else
@@ -2955,10 +2953,11 @@ static int read_ni( int fd )
 int reader_read( int fd )
 {
 	int res;
+
 	/*
-	  If reader_read is called recursively through the '.' builtin,
-	  we need to preserve is_interactive, so we save the
-	  original state. We also update the signal handlers.
+	  If reader_read is called recursively through the '.' builtin, we
+	  need to preserve is_interactive. This, and signal handler setup
+	  is handled by proc_push_interactive/proc_pop_interactive.
 	*/
 
 	proc_push_interactive( ((fd == 0) && isatty(STDIN_FILENO)));
@@ -2967,7 +2966,7 @@ int reader_read( int fd )
 
 	/*
 	  If the exit command was called in a script, only exit the
-	  script, not the program
+	  script, not the program.
 	*/
 	if( data )
 		data->end_loop = 0;

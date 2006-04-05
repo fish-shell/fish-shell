@@ -1400,6 +1400,11 @@ The xdgmime library, written and copyrighted by Red Hat, Inc, is used
 by the mimedb command, which is a part of fish. It is released under
 the LGPL license.  The license agreement is included below.
 
+Fish contains code from the glibc library, namely the wcstok
+function. This code is licensed under the LGPL. The license agreement
+is included below.
+
+
 <HR>
 
 <H2><A NAME="SEC1" HREF="gpl.html#TOC1">GNU GENERAL PUBLIC LICENSE</A></H2>

@@ -33,8 +33,9 @@ the manual page for the echo command by writing:
 
 <code>man echo</code>
 
-\c man is a command for displaying a manual page on a given
-topic. There are manual pages for almost every command on most
+\c man is a command for displaying a manual page on a given topic. The
+man command takes the name of the manual page to display as an
+argument. There are manual pages for almost every command on most
 computers. There are also manual pages for many other things, such as
 system libraries and important files.
 
@@ -60,6 +61,17 @@ Commands and parameters are separated by the space character
 the return key) or a semicolon (;). More than one command can be
 written on the same line by separating them with semicolons.
 
+A switch is a very common special type of argument. Switches almost
+always start with one or more hyphens (-) and alter the way a command
+operates. For example, the \c ls command usually lists all the files
+and directories in the current working directory, but by using the \c
+-l switch, the behaviour of ls is changed to not only display the
+filename, but also the size, permissions, owner and modification time
+of each file. Switches differ between commands and are documented in
+the manual page for each command. Some switches are very common
+though, for example '--help' will usually display a help text, '-i'
+will often turn on interactive prompting before taking action, while
+'-f' will turn it off.
 
 \subsection quotes Quotes
 
@@ -200,7 +212,15 @@ When you start a job in \c fish, \c fish itself will pause, and give
 control of the terminal to the program just started. Sometimes, you
 want to continue using the commandline, and have the job run in the
 background. To create a background job, append a \& (ampersand) to
-your command. This will tell fish to run the job in the background.
+your command. This will tell fish to run the job in the
+background. Background jobs are very useful when running programs that
+have a graphical user interface.
+
+Example:
+
+<code>emacs \&</code>
+
+will start the emacs text editor in the background. 
 
 \subsection syntax-job-control Job control
 
@@ -211,16 +231,17 @@ programs and do anything you want. If you then want to go back to the
 suspended command by using the <a href="builtins.html#fg">fg</a>
 command.
 
-If you instead want to put a suspended job into the foreground, use
-the <a href="builtins.html#fg">fg</a> command.
+If you instead want to put a suspended job into the background, use
+the <a href="builtins.html#bg">bg</a> command.
 
 To get a listing of all currently started jobs, use the <a
 href="builtins.html#jobs">jobs</a> command.
 
 \subsection syntax-function Shellscript functions
 
-Functions are used to group together commands and arguments
-using a single name. For example, the following is a function
+Functions are used to group together commands and arguments using a
+single name. It can also be used to start a specific command with
+additional arguments. For example, the following is a function
 definition that calls the command 'ls -l' to print a detailed listing
 of the contents of the current directory:
 
@@ -237,14 +258,14 @@ $argv</code> should be called when ll is invoked. $argv is an array
 variable, which always contains all arguments sent to the function. In
 the example above, these are simply passed on to the ls command. For
 more information on functions, see the documentation for the <a
-href='builtin.html#function'>function builtin</a>.
+href='builtin.html#function'>function</a> builtin.
 
 Functions can be defined on the commandline or in a configuration
 file, but they can also be automatically loaded. Fish automatically
 searches through any directories in the array variable
 \$fish_function_path, and any functions defined are automatically
 loaded when needed. A function definition file must have a filename
-consisting of the name of the function and the suffix '.fish'.  
+consisting of the name of the function plus the suffix '.fish'.  
 
 The default value for \$fish_function_path is ~/.fish.d/functions,
 /etc/fish.d/functions /usr/share/fish/functions. The exact path to the
@@ -259,12 +280,13 @@ functions and the last one is for default fish functions.
 This is a short explanation of some of the commonly used words in fish.
 
 - argument, a parameter given to a command
-- builtin, a command that is implemented in the shell
-- command, a program
-- function, a block of one or more fish commands that can be called as a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
+- builtin, a command that is implemented in the shell. Builtins are commands that are so closely tied to the shell that it is impossible to implement them as external commands.
+- command, a program that the shell can run.
+- function, a block of commands and arguments that can be called as if they where a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
 - job, a running pipeline or command
 - pipeline, a set of commands stringed together so that the output of one command is the input of the next command
 - redirection, a operation that changes one of the input/output streams associated with a job
+- switch, a special flag sent as an argument to a command that will alter the behavious of the command. A switch almost always begins with one or two hyphens.
 
 \section help Help
 
@@ -1384,8 +1406,8 @@ Examples:
 /** \page license Licenses
 
 Fish Copyright (C) 2005 Axel Liljencrantz. Fish is released under the
-GNU General Public License. The license agreement is included
-below.
+GNU General Public License, version 2. The license agreement is
+included below.
 
 Fish contains code under the BSD license, namely versions of the
 two functions strlcat and strlcpy, modified for use with wide
@@ -1394,7 +1416,7 @@ license agreement is included below.
 
 The XSel command, written and copyrighted by Conrad Parker, is
 distributed together with, and used by fish. It is released under the MIT
-license.  The license agreement is included below.
+license. The license agreement is included below.
 
 The xdgmime library, written and copyrighted by Red Hat, Inc, is used
 by the mimedb command, which is a part of fish. It is released under

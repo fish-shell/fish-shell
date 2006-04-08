@@ -1228,7 +1228,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 \subsection bugs Known bugs
 
 - Completion for gcc -\#\#\# option doesn't work.
-- Yanking weird characters from clipboard prints Unicode escapes
+- Yanking weird characters from the clipboard prints Unicode escapes
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 
 If you think you have found a bug not described here, please send a
@@ -1420,7 +1420,7 @@ license. The license agreement is included below.
 
 The xdgmime library, written and copyrighted by Red Hat, Inc, is used
 by the mimedb command, which is a part of fish. It is released under
-the LGPL license.  The license agreement is included below.
+the LGPL. The license agreement is included below.
 
 Fish contains code from the glibc library, namely the wcstok
 function. This code is licensed under the LGPL. The license agreement

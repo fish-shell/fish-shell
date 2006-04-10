@@ -104,7 +104,7 @@ typedef struct env_node
 typedef struct var_entry
 {
 	int export; /**< Whether the variable should be exported */
-	wchar_t val[0]; /**< The value of the variable */
+	wchar_t val[1]; /**< The value of the variable */
 }
 	var_entry_t;
 

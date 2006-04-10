@@ -2,7 +2,7 @@
 function type -d (N_ "Print the type of a command")
 
 	# Initialize
-	set -l status 1
+	set -l res 1
 	set -l mode normal
 	set -l selection all
 
@@ -66,7 +66,7 @@ function type -d (N_ "Print the type of a command")
 		if test $selection != files
 
 			if contains -- $i (functions -na)
-				set status 0
+				set res 0
 				set found 1
 				switch $mode
 					case normal
@@ -86,7 +86,8 @@ function type -d (N_ "Print the type of a command")
 			end
 
 			if contains -- $i (builtin -n)
-				set status 0
+
+				set res 0
 				set found 1
 				switch $mode
 					case normal
@@ -107,7 +108,7 @@ function type -d (N_ "Print the type of a command")
 
 		set -l path (which $i ^/dev/null)
 		if test -x (echo $path)
-			set status 0
+			set res 0
 			set found 1
 			switch $mode
 				case normal
@@ -130,6 +131,6 @@ function type -d (N_ "Print the type of a command")
 
 	end
 
-	return $status
+	return $res
 end
 

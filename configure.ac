@@ -85,7 +85,7 @@ AC_PROG_INSTALL
 # Check for doxygen, which is needed to build
 AC_CHECK_PROG( has_doxygen, [doxygen], "true")
 
-if ! test $has_doxygen = "true"; then
+if ! test "$has_doxygen" = "true"; then
 	AC_MSG_ERROR( [cannot find the Doxygen program in your path.
 This program is needed to build fish.
 Please install it and try again.])

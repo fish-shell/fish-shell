@@ -608,7 +608,7 @@ static env_node_t *env_get_node( const wchar_t *key )
 	return 0;
 }
 
-void env_set( const wchar_t *key, 
+int env_set( const wchar_t *key, 
 			  const wchar_t *val, 
 			  int var_mode )
 {
@@ -626,7 +626,7 @@ void env_set( const wchar_t *key,
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
 	{
-		return;
+		return ENV_PERM;
 	}
 	
 	if( wcscmp( key, L"umask" ) == 0)
@@ -650,7 +650,7 @@ void env_set( const wchar_t *key,
 		/*
 		  Do not actually create a umask variable, on env_get, it will be calculated dynamically
 		*/
-		return;
+		return 0;
 	}
 
 	/*
@@ -749,7 +749,7 @@ void env_set( const wchar_t *key,
 					node = top;
 					while( node->next && !node->new_scope )
 						node = node->next;
-				
+					
 				}
 			}
 		}
@@ -809,7 +809,8 @@ void env_set( const wchar_t *key,
 	{
 		handle_locale();
 	}
-		
+
+	return 0;
 }
 
 

@@ -26,6 +26,18 @@ Functions used for implementing the set builtin.
 #include "parser.h"
 #include "translate.h"
 
+static void my_env_set( wchar_t *key, wchar_t *val, int scope )
+{
+	switch( env_set( key, val, scope | ENV_USER ) )
+	{
+		case ENV_PERM:
+		{
+			sb_printf( sb_err, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key );
+			break;
+		}
+	}
+}
+
 /** 
 	Extract the name from a destination argument of the form name[index1 index2...]
 */
@@ -512,7 +524,7 @@ int builtin_set( wchar_t **argv )
 				!erase &&
 				!list )
 			{
-				env_set( name, 0, scope );
+				my_env_set( name, 0, scope );
 				finished = 1;
 			}
 		}
@@ -572,7 +584,7 @@ int builtin_set( wchar_t **argv )
 					else 
 					{
 						fill_buffer_from_list(&result_sb, &val_l);
-						env_set(name, (wchar_t *) result_sb.buff, scope);
+						my_env_set(name, (wchar_t *) result_sb.buff, scope);
 					}     
 				}
 				else
@@ -585,7 +597,7 @@ int builtin_set( wchar_t **argv )
 					fill_buffer_from_list( &result_sb,
 										   &val_l );
 
-					env_set(name,
+					my_env_set(name,
 							(wchar_t *) result_sb.buff,
 							scope);
 				}

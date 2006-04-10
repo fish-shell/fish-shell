@@ -42,6 +42,11 @@
 #define ENV_UNIVERSAL 32
 
 /**
+   Error code for trying to alter read-only variable
+*/
+#define ENV_PERM 1
+
+/**
    Initialize environment variable data
 */
 void env_init();
@@ -61,9 +66,15 @@ void env_destroy();
    \param val The value
    \param mode The type of the variable. Can be any combination of ENV_GLOBAL, ENV_LOCAL, ENV_EXPORT and ENV_USER. If mode is zero, the current variable space is searched and the current mode is used. If no current variable with the same name is found, ENV_LOCAL is assumed.
 
+   \returns 0 on suicess or an error code on failiure.
+
+   The current error codes are:
+
+   * ENV_PERM, can only be returned when setting as a user, e.g. ENV_USER is set. This means that the user tried to change a read-only variable.
+
 */
 
-void env_set( const wchar_t *key, 
+int env_set( const wchar_t *key, 
 			  const wchar_t *val,
 			  int mode );
 

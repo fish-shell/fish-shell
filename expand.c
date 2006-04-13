@@ -429,7 +429,6 @@ static int find_process( const wchar_t *proc,
 				{
 					result = malloc(sizeof(wchar_t)*16 );
 					swprintf( result, 16, L"%d", j->pgid );
-					//fwprintf( stderr, L"pid %d %ls\n", j->pgid, result );
 					al_push( out, result );
 					found = 1;
 				}
@@ -441,11 +440,8 @@ static int find_process( const wchar_t *proc,
 
 	for( j=first_job; j != 0; j=j->next )
 	{
-//		fwprintf( stderr, L"..." );
 		if( j->command == 0 )
 			continue;
-
-		//	fwprintf( stderr, L"match '%ls' '%ls'\n\n\n", j->command, proc );
 
 		if( match_pid( j->command, proc, flags ) )
 		{
@@ -455,8 +451,6 @@ static int find_process( const wchar_t *proc,
 										   COMPLETE_SEP_STR,
 										   COMPLETE_JOB_DESC,
 										   (void *)0 );
-//				fwprintf( stderr, L"Woot %ls\n", res );
-
 				al_push( out, res );
 			}
 			else
@@ -482,11 +476,8 @@ static int find_process( const wchar_t *proc,
 		for( p=j->first_process; p; p=p->next )
 		{
 
-//		fwprintf( stderr, L"..." );
 			if( p->actual_cmd == 0 )
 				continue;
-
-			//	fwprintf( stderr, L"match '%ls' '%ls'\n\n\n", j->command, proc );
 
 			if( match_pid( p->actual_cmd, proc, flags ) )
 			{
@@ -687,27 +678,22 @@ static int expand_pid( wchar_t *in,
 		}
 	}
 
-//	fwprintf( stderr, L"expand_pid() %ls\n", in );
 	int prev = al_get_count( out );
 	if( !find_process( in+1, flags, out ) )
 		return 0;
 
 	if( prev == al_get_count( out ) )
 	{
-//		fwprintf( stderr, L"no match\n" );
-
 		if( flags & ACCEPT_INCOMPLETE )
 			free( in );
 		else
 		{
 			*in = L'%';
-//			fwprintf( stderr, L"return %ls\n", in );
 			al_push( out, in );
 		}
 	}
 	else
 	{
-//		fwprintf( stderr, L"match\n" );
 		free( in );
 	}
 
@@ -967,7 +953,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 									else
 									{
 										
-										wcsncpy( new_in, in, start_pos-1 );
+										wcslcpy( new_in, in, start_pos );
 
 										if(start_pos>1 && new_in[start_pos-2]!=VARIABLE_EXPAND)
 										{
@@ -980,7 +966,6 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 										wcscat( new_in, next );
 										wcscat( new_in, &in[stop_pos] );
 										
-//								fwprintf( stderr, L"New value %ls\n", new_in );
 										is_ok &= expand_variables( new_in, out, i );
 									}
 								}
@@ -1058,9 +1043,6 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 
 	wchar_t *item_begin;
 	int len1, len2, tot_len;
-
-//	fwprintf( stderr, L"expand %ls\n", in );
-
 
 	for( pos=in;
 		 (!bracket_end) && (*pos) && !syntax_error;
@@ -1153,8 +1135,8 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 				int item_len = pos-item_begin;
 
 				whole_item = malloc( sizeof(wchar_t)*(tot_len + item_len + 1) );
-				wcsncpy( whole_item, in, len1 );
-				wcsncpy( whole_item+len1, item_begin, item_len );
+				wcslcpy( whole_item, in, len1+1 );
+				wcslcpy( whole_item+len1, item_begin, item_len+1 );
 				wcscpy( whole_item+len1+item_len, bracket_end+1 );
 
 				expand_brackets( whole_item, flags, out );
@@ -1234,7 +1216,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 		return 0;
 	}
 
-	wcsncpy( subcmd, paran_begin+1, paran_end-paran_begin-1 );
+	wcslcpy( subcmd, paran_begin+1, paran_end-paran_begin );
 	subcmd[ paran_end-paran_begin-1]=0;
 
 	if( exec_subshell( subcmd, &sub_res)==-1 )
@@ -1310,7 +1292,6 @@ static wchar_t * expand_tilde_internal( wchar_t *in )
 		wchar_t *new_in=0;
 		wchar_t *old_in=0;
 
-//		fwprintf( stderr, L"Tilde expand ~%ls\n", (*ptr)+1 );
 		if( in[1] == '/' || in[1] == '\0' )
 		{
 			/* Current users home directory */
@@ -1438,7 +1419,6 @@ int expand_string( void *context,
 	int start_count = al_get_count( end_out );
 
 //	debug( 1, L"Expand %ls", str );
-
 
 	if( (!(flags & ACCEPT_INCOMPLETE)) && is_clean( str ) )
 	{

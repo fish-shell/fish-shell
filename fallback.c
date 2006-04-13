@@ -818,8 +818,7 @@ wchar_t *wcsndup( const wchar_t *in, int c )
 	{
 		return 0;
 	}
-	wcsncpy( res, in, c+1 );
-	res[c] = L'\0';	
+	wcslcpy( res, in, c+1 );
 	return res;	
 }
 #endif

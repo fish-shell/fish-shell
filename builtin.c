@@ -1468,20 +1468,6 @@ static int builtin_read( wchar_t **argv )
 		return 1;
 	}
 
-	if( woptind == argc )
-	{
-		sb_printf( sb_err,
-				   BUILTIN_ERR_MISSING,
-				   argv[0] );
-
-		sb_append2( sb_err,
-					parser_current_line(),
-					L"\n",
-					(void *)0 );
-		builtin_print_help( argv[0], sb_err );
-		return 1;
-	}
-
 	/*
 	  Verify all variable names
 	*/
@@ -1511,10 +1497,6 @@ static int builtin_read( wchar_t **argv )
 	  The call to reader_readline may change woptind, so we save it away here
 	*/
 	i=woptind;
-
-	ifs = env_get( L"IFS" );
-	if( ifs == 0 )
-		ifs = L"";
 
 	/*
 	  Check if we should read interactively using \c reader_readline()
@@ -1593,20 +1575,29 @@ static int builtin_read( wchar_t **argv )
 		sb_destroy( &sb );
 	}
 
-	wchar_t *state;
-
-	nxt = wcstok( buff, (i<argc-1)?ifs:L"", &state );
-
-	while( i<argc )
+	if( i != argc )
 	{
-		env_set( argv[i], nxt != 0 ? nxt: L"", place );
+		
+		wchar_t *state;
 
-		i++;
-		if( nxt != 0 )
-			nxt = wcstok( 0, (i<argc-1)?ifs:L"", &state);
+		ifs = env_get( L"IFS" );
+		if( ifs == 0 )
+			ifs = L"";
+		
+		nxt = wcstok( buff, (i<argc-1)?ifs:L"", &state );
+		
+		while( i<argc )
+		{
+			env_set( argv[i], nxt != 0 ? nxt: L"", place );
+			
+			i++;
+			if( nxt != 0 )
+				nxt = wcstok( 0, (i<argc-1)?ifs:L"", &state);
+		}
 	}
-
+	
 	free( buff );
+
 	return exit_res;
 }
 

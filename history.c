@@ -202,6 +202,10 @@ static void history_to_hash()
 {
 	history_data *d;
 	
+	if( !history_last )
+		return;
+	
+
 	d = (history_data *)hash_get( &history_table, 
 								  mode_name );
 	

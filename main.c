@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "output.h"
 #include "translate.h"
 #include "halloc_util.h"
+#include "history.h"
 
 
 /**

@@ -887,6 +887,7 @@ long wcstol(const wchar_t *nptr,
 		nptr++;
 	}
 }
+
 #endif
 #ifndef HAVE_WCSLCAT
 

@@ -609,8 +609,8 @@ static env_node_t *env_get_node( const wchar_t *key )
 }
 
 int env_set( const wchar_t *key, 
-			  const wchar_t *val, 
-			  int var_mode )
+			 const wchar_t *val, 
+			 int var_mode )
 {
 	int free_val = 0;
 	var_entry_t *entry;

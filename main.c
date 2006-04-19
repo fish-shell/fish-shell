@@ -298,10 +298,10 @@ int main( int argc, char **argv )
 					return 1;
 				}
 
-				sb_init( &sb );
-				
 				if( *(argv+2))
 				{
+					sb_init( &sb );
+				
 					for( i=1,ptr = argv+2; *ptr; i++, ptr++ )
 					{
 						if( i != 1 )

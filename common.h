@@ -134,30 +134,6 @@ wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b );
 */
 wchar_t *wcsdupcat2( const wchar_t *a, ... );
 
-
-/**
-   Appends src to string dst of size siz (unlike wcsncat, siz is the
-   full size of dst, not space left).  At most siz-1 characters will be
-   copied.  Always NUL terminates (unless siz <= wcslen(dst)).  Returns
-   wcslen(src) + MIN(siz, wcslen(initial dst)).  If retval >= siz,
-   truncation occurred.
-
-   This is the OpenBSD strlcat function, modified for wide characters,
-   and renamed to reflect this change.
-
-*/
-size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
-
-/**
-   Copy src to string dst of size siz.  At most siz-1 characters will
-   be copied.  Always NUL terminates (unless siz == 0).  Returns
-   wcslen(src); if retval >= siz, truncation occurred.
-
-   This is the OpenBSD strlcpy function, modified for wide characters,
-   and renamed to reflect this change. 
-*/
-size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
-
 /**
    Test if the given string is a valid variable name
 */

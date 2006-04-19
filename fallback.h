@@ -232,5 +232,34 @@ long wcstol(const wchar_t *nptr,
 			int base);
 
 #endif
+#ifndef HAVE_WCSLCAT
+
+/**
+   Appends src to string dst of size siz (unlike wcsncat, siz is the
+   full size of dst, not space left).  At most siz-1 characters will be
+   copied.  Always NUL terminates (unless siz <= wcslen(dst)).  Returns
+   wcslen(src) + MIN(siz, wcslen(initial dst)).  If retval >= siz,
+   truncation occurred.
+
+   This is the OpenBSD strlcat function, modified for wide characters,
+   and renamed to reflect this change.
+
+*/
+size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
+
+#endif
+#ifndef HAVE_WCSLCPY
+
+/**
+   Copy src to string dst of size siz.  At most siz-1 characters will
+   be copied.  Always NUL terminates (unless siz == 0).  Returns
+   wcslen(src); if retval >= siz, truncation occurred.
+
+   This is the OpenBSD strlcpy function, modified for wide characters,
+   and renamed to reflect this change. 
+*/
+size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
+
+#endif
 
 #endif

@@ -1631,7 +1631,6 @@ static void reader_interactive_init()
 
 
 	al_init( &prompt_list );
-	history_init();
 
 	common_handle_winch(0);
 
@@ -1658,7 +1657,6 @@ static void reader_interactive_destroy()
 	kill_destroy();
 	al_foreach( &prompt_list, (void (*)(const void *))&free );
 	al_destroy( &prompt_list );
-	history_destroy();
 
 	writestr( L"\n" );
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );

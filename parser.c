@@ -165,7 +165,7 @@ The fish parser. Contains functions for parsing code.
 
 
 /**
-	Error for wrong token type
+   Error for wrong token type
 */
 #define UNEXPECTED_TOKEN_ERR_MSG _( L"Unexpected token of type '%ls'")
 
@@ -176,78 +176,78 @@ The fish parser. Contains functions for parsing code.
 
 
 /**
-	While block description
+   While block description
 */
 #define WHILE_BLOCK _( L"'while' block" )
 
 
 /**
-	For block description
+   For block description
 */
 #define FOR_BLOCK _( L"'for' block" )
 
 
 /**
-	If block description
+   If block description
 */
 #define IF_BLOCK _( L"'if' conditional block" )
 
 
 /**
-	function definition block description
+   Function definition block description
 */
 #define FUNCTION_DEF_BLOCK _( L"function definition block" )
 
 
 /**
-	Function invocation block description
+   Function invocation block description
 */
 #define FUNCTION_CALL_BLOCK _( L"function invocation block" )
 
 
 /**
-	Switch block description
+   Switch block description
 */
 #define SWITCH_BLOCK _( L"'switch' block" )
 
 
 /**
-	Fake block description
+   Fake block description
 */
 #define FAKE_BLOCK _( L"unexecutable block" )
 
 
 /**
-	Top block description
+   Top block description
 */
 #define TOP_BLOCK _( L"global root block" )
 
 
 /**
-	Command substitution block description
+   Command substitution block description
 */
 #define SUBST_BLOCK _( L"command substitution block" )
 
 
 /**
-	Begin block description
+   Begin block description
 */
 #define BEGIN_BLOCK _( L"'begin' unconditional block" )
 
 
 /**
-	Source block description
+   Source block description
 */
 #define SOURCE_BLOCK _( L"Block created by the . builtin" )
 
 /**
-	Source block description
+   Source block description
 */
 #define EVENT_BLOCK _( L"event handler block" )
 
 
 /**
-	Unknown block description
+   Unknown block description
 */
 #define UNKNOWN_BLOCK _( L"unknown/invalid block" )
 
@@ -724,75 +724,85 @@ wchar_t *get_filename( const wchar_t *cmd )
 	else
 	{
 		path = env_get(L"PATH");
-		if( path != 0 )
+		if( path == 0 )
 		{
-			/*
-			  Allocate string long enough to hold the whole command
-			*/
-			wchar_t *new_cmd = malloc( sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
-			/*
-			   We tokenize a copy of the path, since strtok modifies
-			   its arguments
-			*/
-			wchar_t *path_cpy = wcsdup( path );
-			wchar_t *nxt_path = path;
-			wchar_t *state;
-			
-			if( (new_cmd==0) || (path_cpy==0) )
+			if( contains_str( PREFIX L"/bin", L"/bin", L"/usr/bin", (void *)0 ) )
 			{
-				die_mem();
+				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
 			}
-
-			for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-				 nxt_path != 0;
-				 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+			else
 			{
-				int path_len = wcslen( nxt_path );
-				wcscpy( new_cmd, nxt_path );
-				if( new_cmd[path_len-1] != L'/' )
-				{
-					new_cmd[path_len++]=L'/';
-				}
-				wcscpy( &new_cmd[path_len], cmd );
-				if( waccess( new_cmd, X_OK )==0 )
-				{
-					struct stat buff;
-					if( wstat( new_cmd, &buff )==-1 )
-					{
-						if( errno != EACCES )
-						{
-							wperror( L"stat" );
-						}
-						continue;
-					}
-					if( S_ISREG(buff.st_mode) )
-					{
-						free( path_cpy );
-						return new_cmd;
-					}
-				}
-				else
-				{
-					switch( errno )
-					{
-						case ENOENT:
-						case ENAMETOOLONG:
-						case EACCES:
-						case ENOTDIR:
-							break;
-						default:
-						{
-							debug( 1,
-								   MISSING_COMMAND_ERR_MSG,
-								   new_cmd );
-							wperror( L"access" );
-						}
-					}
-				}
+				path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
 			}
-			free( path_cpy );
-			free( new_cmd );
 		}
+		
+		/*
+		  Allocate string long enough to hold the whole command
+		*/
+		wchar_t *new_cmd = malloc( sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
+		/*
+		  We tokenize a copy of the path, since strtok modifies
+		  its arguments
+		*/
+		wchar_t *path_cpy = wcsdup( path );
+		wchar_t *nxt_path = path;
+		wchar_t *state;
+			
+		if( (new_cmd==0) || (path_cpy==0) )
+		{
+			die_mem();
+		}
+
+		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
+			 nxt_path != 0;
+			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+		{
+			int path_len = wcslen( nxt_path );
+			wcscpy( new_cmd, nxt_path );
+			if( new_cmd[path_len-1] != L'/' )
+			{
+				new_cmd[path_len++]=L'/';
+			}
+			wcscpy( &new_cmd[path_len], cmd );
+			if( waccess( new_cmd, X_OK )==0 )
+			{
+				struct stat buff;
+				if( wstat( new_cmd, &buff )==-1 )
+				{
+					if( errno != EACCES )
+					{
+						wperror( L"stat" );
+					}
+					continue;
+				}
+				if( S_ISREG(buff.st_mode) )
+				{
+					free( path_cpy );
+					return new_cmd;
+				}
+			}
+			else
+			{
+				switch( errno )
+				{
+					case ENOENT:
+					case ENAMETOOLONG:
+					case EACCES:
+					case ENOTDIR:
+						break;
+					default:
+					{
+						debug( 1,
+							   MISSING_COMMAND_ERR_MSG,
+							   new_cmd );
+						wperror( L"access" );
+					}
+				}
+			}
+		}
+		free( path_cpy );
+		free( new_cmd );
+
 	}
 	return 0;
 }
@@ -1101,8 +1111,8 @@ int parser_get_lineno()
 	int lineno;
 	
 /*	static const wchar_t *prev_str = 0;
-	static int i=0;
-	static int lineno=1;
+  static int i=0;
+  static int lineno=1;
 */
 	if( !current_tokenizer )
 		return -1;
@@ -1241,8 +1251,8 @@ wchar_t *parser_current_line()
 
 //	debug( 1, L"Current pos %d, line pos %d, file_length %d, is_interactive %d, offset %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str), is_interactive, offset);
 	/*
-	   Skip printing character position if we are in interactive mode
-	   and the error was on the first character of the line.
+	  Skip printing character position if we are in interactive mode
+	  and the error was on the first character of the line.
 	*/
 	if( !is_interactive || is_function() || (current_line_width!=0) )
 	{
@@ -1716,8 +1726,8 @@ static int parse_job( process_t *p,
 				else
 				{
 					error( SYNTAX_ERROR,
-					   tok_get_pos( tok ),
-					   CMD_ERR_MSG,
+						   tok_get_pos( tok ),
+						   CMD_ERR_MSG,
 						   tok_get_desc( tok_last_type(tok) ) );
 				}
 
@@ -1926,8 +1936,8 @@ static int parse_job( process_t *p,
 		if( !p->type || (p->type == INTERNAL_EXEC) )
 		{
 			/*
-			   If we are not executing the current block, allow
-			   non-existent commands.
+			  If we are not executing the current block, allow
+			  non-existent commands.
 			*/
 			if( current_block->skip )
 			{
@@ -2482,7 +2492,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	}
 
 	/*
-	   Restore previous eval state
+	  Restore previous eval state
 	*/
 	forbidden_function = prev_forbidden;
 	current_tokenizer=previous_tokenizer;

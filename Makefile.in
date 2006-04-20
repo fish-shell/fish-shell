@@ -344,7 +344,6 @@ builtin_help.c: $(BUILTIN_DOC_HDR) doc_src/count.doxygen gen_hdr2 gen_hdr.sh bui
 	./gen_hdr.sh $*.doxygen >>$@
 	echo ");" >>$@
 	echo "}" >>$@
-#man -- doc_src/builtin_doc/man/man1/`basename $@ .c`.1 | cat -s | ./gen_hdr2 >>$@
 
 #
 # The build rules for installing/uninstalling fish
@@ -413,7 +412,7 @@ install-force: all install-translations
 	@echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.
 	@echo
 	@echo Have fun!
-.PHONY: force-install
+.PHONY: install-force
 
 
 # Uninstall this fish version
@@ -455,6 +454,7 @@ uninstall-legacy: uninstall
 	rmdir $(DESTDIR)$(sysconfdir)/fish.d/completions; true
 	rmdir $(DESTDIR)$(sysconfdir)/fish.d; true
 	@echo The previous fish installation has been removed. 
+.PHONY: uninstall-legacy
 
 install-translations: $(TRANSLATIONS)
 	if test $(HAVE_GETTEXT) = 1; then \
@@ -579,7 +579,7 @@ distclean: clean
 .PHONY: distclean
 
 clean:
-	rm -f *.o doc.h doc_src/*.doxygen doc_src/*.c builtin_help.c 
+	rm -f *.o doc.h doc_src/*.doxygen doc_src/*.c builtin_help.c doc_src/*.o
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f tokenizer_test fish key_reader set_color gen_hdr2 mimedb
 	rm -f fishd fish_pager count fish_tests 
@@ -620,7 +620,6 @@ complete.o: signal.h config.h fallback.h common.h util.h tokenizer.h
 complete.o: wildcard.h proc.h io.h parser.h event.h function.h complete.h
 complete.o: builtin.h env.h exec.h expand.h reader.h history.h intern.h
 complete.o: translate.h parse_util.h halloc_util.h wutil.h
-dragon.o: signal.h
 env.o: config.h signal.h fallback.h common.h util.h wutil.h proc.h io.h env.h
 env.o: sanity.h expand.h history.h reader.h parser.h event.h env_universal.h
 env.o: env_universal_common.h input_common.h translate.h complete.h
@@ -637,7 +636,7 @@ exec.o: halloc.h halloc_util.h parse_util.h
 expand.o: signal.h config.h fallback.h common.h util.h wutil.h env.h proc.h
 expand.o: io.h parser.h event.h expand.h wildcard.h exec.h tokenizer.h
 expand.o: complete.h translate.h parse_util.h halloc_util.h
-fallback.o: config.h common.h util.h
+fallback.o: config.h fallback.h common.h util.h
 fishd.o: config.h signal.h fallback.h common.h util.h wutil.h
 fishd.o: env_universal_common.h
 fish_pager.o: config.h signal.h fallback.h common.h util.h wutil.h complete.h
@@ -670,6 +669,7 @@ kill.o: io.h sanity.h env.h exec.h parser.h event.h
 main.o: config.h signal.h fallback.h common.h util.h reader.h builtin.h
 main.o: function.h complete.h wutil.h env.h sanity.h proc.h io.h parser.h
 main.o: event.h expand.h intern.h exec.h output.h translate.h halloc_util.h
+main.o: history.h
 mimedb.o: config.h xdgmime.h fallback.h common.h util.h
 output.o: config.h signal.h fallback.h common.h util.h wutil.h expand.h
 output.o: output.h halloc_util.h highlight.h

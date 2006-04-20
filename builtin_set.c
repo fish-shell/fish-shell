@@ -26,12 +26,16 @@ Functions used for implementing the set builtin.
 #include "parser.h"
 #include "translate.h"
 
+#define BUILTIN_SET_PATH_ERROR L"%ls: Could not add component %ls to %ls.\n"
+#define BUILTIN_SET_PATH_HINT L"%ls: Did you mean 'set %ls $%ls %ls'?\n"
+
 /**
    Call env_set. On error, print a description of the problem to
    stderr.
 */
 static void my_env_set( const wchar_t *key, const wchar_t *val, int scope )
 {
+
 	switch( env_set( key, val, scope | ENV_USER ) )
 	{
 		case ENV_PERM:
@@ -265,6 +269,17 @@ static void print_variables(int include_values, int esc, int scope)
   	al_destroy(&names);
 }
 
+static int is_path_variable( const wchar_t *env )
+{
+	return contains_str( env,
+						 L"PATH",
+						 L"CDPATH",
+						 L"fish_function_path",
+						 L"fish_completion_path",
+						 (void *)0 );
+}
+
+
 /**
    The set builtin. Creates, updates and erases environment variables and environemnt variable arrays. 
 */
@@ -478,6 +493,80 @@ int builtin_set( wchar_t **argv )
 		al_push(&values, argv[woptind++]);
 	}
 
+	if( is_path_variable( dest ) )
+	{
+		int i;
+		int error = 0;
+		
+		for( i=0; i<al_get_count( &values ); i++ )
+		{
+			int show_perror = 0;
+			int show_hint = 0;
+			
+			struct stat buff;
+			wchar_t *dir = (wchar_t *)al_get( &values, i );
+			
+			if( wstat( dir, &buff ) )
+			{
+				error = 1;
+				show_perror = 1;
+			}
+
+			if( !( S_IFDIR & buff.st_mode ) )
+			{
+				error = 1;
+				
+			}
+			
+			if( error )
+			{
+				wchar_t *colon;
+				
+				sb_printf( sb_err, 
+						   _(BUILTIN_SET_PATH_ERROR),
+						   argv[0], 
+						   dir, 
+						   dest );
+				colon = wcschr( dir, L':' );
+				
+				if( colon && *(colon+1) ) 
+				{
+					show_hint = 1;
+				}
+
+			}
+			
+			if( show_perror )
+			{
+				builtin_wperror( argv[0] );
+			}
+			
+			if( show_hint )
+			{
+				sb_printf( sb_err, 
+						   _(BUILTIN_SET_PATH_HINT),
+						   argv[0],
+						   dest,
+						   dest,
+						   wcschr( dir, L':' )+1);
+			}
+			
+			if( error )
+			{
+				break;
+			}
+			
+		}
+
+		if( error )
+		{
+			al_destroy(&values);
+			return 1;
+		}
+		
+	}
+
+
 	/* Extract variable name and indexes */
 
 	sb_init(&name_sb);
@@ -507,7 +596,7 @@ int builtin_set( wchar_t **argv )
 		int scope = (local ? ENV_LOCAL : 0) | (global ? ENV_GLOBAL : 0) | (export ? ENV_EXPORT : 0) | (unexport ? ENV_UNEXPORT : 0) | (universal ? ENV_UNIVERSAL:0) | ENV_USER; 
 		if( list ) 
 		{
-			/* Maybe we should issue an error if there are any other arguments */
+			/* Maybe we should issue an error if there are any other arguments? */
 			print_variables(0, 0, scope);
 			finished=1;			
 		} 
@@ -602,6 +691,7 @@ int builtin_set( wchar_t **argv )
 					else 
 					{
 						fill_buffer_from_list(&result_sb, &val_l);
+
 						my_env_set(name, (wchar_t *) result_sb.buff, scope);
 					}     
 				}

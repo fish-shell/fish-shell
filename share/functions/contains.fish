@@ -1,9 +1,3 @@
-#
-# This file defines various shellscript functions. Most of them are
-# meant to be used directly by the user, but some of them, typically
-# the ones whose name start with '__fish_', are only meant to be used
-# internally by fish.
-#
 
 function contains -d (N_ "Test if a key is contained in a set of values")
 	while set -q argv

@@ -1284,7 +1284,7 @@ Examples:
 
 - Here documents are too similar to using echo inside of a pipeline.
 - Subshells, command substitution and process substitution are strongly related. \c fish only supports command substitution, the others can be achived either using a block or the psub shellscript function. 
-- Having both aliases and functions is confusing, especially since both of them have limitations and problems. \c fish sunctions have none of the drawbacks of either syntax.
+- Having both aliases and functions is confusing, especially since both of them have limitations and problems. \c fish functions have none of the drawbacks of either syntax.
 - The many Posix quoting styles are silly, especially \$''.
 
 
@@ -1377,14 +1377,14 @@ Examples:
 
 \subsection disc The law of discoverability
 
-The shell should implement it's features in a way that makes them as
-easy as possible for the user to discover for her/himself.
+A program should be designed to make its features as
+easy as possible to discover for the user.
 
 Rationale:
 
-A program whose features are discoverable makes a new user into an
-expert in a shorter span of time, since the user will learn how to use
-the program simply by using it. 
+A program whose features are discoverable turns a new user into an
+expert in a shorter span of time, since the user will become an expert
+on the program simply by using it.
 
 The main benefit of a graphical program over a command line-based
 program is discoverability. In a graphical program, one can discover

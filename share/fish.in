@@ -18,7 +18,7 @@ if test "$USER" = root
 end
 
 for i in $path_list
-	if not expr "$PATH" : .\*$i.\* >/dev/null
+	if not expr "$PATH" : "$i/*" >/dev/null
 		if test -d $i
 			set PATH $PATH $i
 		end
@@ -43,8 +43,8 @@ end
 # Convenience functions
 #
 # The naming heuristic is that __fish_complete_* prints completions
-# and descriptions, while __fish_print_* only prints the completion,
-# without the description
+# and descriptions, while __fish_print_* only prints the completions
+# and no descriptions
 #
 
 function __fish_complete_users -d "Print a list of local users, with the real user name as a description"

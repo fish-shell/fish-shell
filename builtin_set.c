@@ -274,8 +274,6 @@ static int is_path_variable( const wchar_t *env )
 	return contains_str( env,
 						 L"PATH",
 						 L"CDPATH",
-						 L"fish_function_path",
-						 L"fish_completion_path",
 						 (void *)0 );
 }
 

@@ -11,6 +11,22 @@ wildcarded values. The \c case statement is used together with the \c
 switch statement in order to determine which block should be
 performed.
 
+Each \c case command is given one or more parameter. The first \c case
+command with a parameter that matches the string specified in the
+switch command will be evaluated. \c case parameters may contain
+wildcards. These need to be escaped or quoted in order to avoid
+regular wildcard expansion using filenames.
+
+Note that fish does not fall through on case statements. Though the
+syntax may look a bit like C switch statements, it behaves more like
+the case stamantes of traditional shells.
+
+Also note that command substitutions in a case statement will be
+evaluated even if it's body is not taken. This may seem
+counterintuitive at first, but it is unavoidable, since it would be
+impossible to know if a case command will evaluate to true before all
+forms of parameter expansion have been performed for the case command.
+
 \subsection case-example Example
 
 If the variable \$animal contains the name of an animal, the following
@@ -27,9 +43,11 @@ switch $animal
         echo bird
     case shark trout stingray
         echo fish
+    case '*'
+        echo I have no idea what a $animal is
 end
 </pre>
 </p>
 <p>
-If the above code was run with \$animal set to \c whale, the output would be \c mammal.
+If the above code was run with \c \$animal set to \c whale, the output would be \c mammal.
 </p>

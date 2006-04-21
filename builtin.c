@@ -1029,7 +1029,7 @@ static int builtin_function( wchar_t **argv )
 			{
 				event_t *e;
 
-				if( !wcsvarname( woptarg ) )
+				if( wcsvarname( woptarg ) )
 				{
 					sb_printf( sb_err,
 							   _( L"%ls: Invalid variable name '%ls'\n" ),
@@ -1145,7 +1145,7 @@ static int builtin_function( wchar_t **argv )
 					   argc-woptind );
 			res=1;
 		}
-		else if( !(is_binding?wcsbindingname( argv[woptind] ) : wcsvarname( argv[woptind] ) ))
+		else if( !(is_binding?wcsbindingname( argv[woptind] ) : !wcsvarname( argv[woptind] ) ))
 		{
 			sb_printf( sb_err,
 					   _( L"%ls: Illegal function name '%ls'\n" ),
@@ -2584,7 +2584,7 @@ static int builtin_for( wchar_t **argv )
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 	}
-	else if ( !wcsvarname(argv[1]) )
+	else if ( wcsvarname(argv[1]) )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: '%ls' is not a valid variable name\n" ),

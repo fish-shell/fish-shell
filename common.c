@@ -400,17 +400,17 @@ wchar_t **strv2wcsv( const char **in )
 
 }
 
-int wcsvarname( wchar_t *str )
+wchar_t *wcsvarname( wchar_t *str )
 {
 	while( *str )
 	{
 		if( (!iswalnum(*str)) && (*str != L'_' ) )
 		{
-			return 0;
+			return str;
 		}
 		str++;
 	}
-	return 1;
+	return 0;
 }
 
 

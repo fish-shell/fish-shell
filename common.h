@@ -138,7 +138,14 @@ wchar_t *wcsdupcat2( const wchar_t *a, ... );
    Test if the given string is a valid variable name
 */
 
-int wcsvarname( wchar_t *str );
+
+/**
+   Test if the given string is a valid variable name. 
+
+   \return null if this is a valid name, and a pointer to the first invalid character otherwise
+*/
+
+wchar_t *wcsvarname( wchar_t *str );
 
 
 /**

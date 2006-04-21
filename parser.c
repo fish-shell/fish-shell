@@ -1981,7 +1981,8 @@ static int parse_job( process_t *p,
 					else
 					{
 						int tmp;
-
+						wchar_t *cmd = (wchar_t *)al_get( args, 0 );
+						
 						/* 
 						   We couln't find the specified command.
 
@@ -1996,19 +1997,42 @@ static int parse_job( process_t *p,
 						   cause the job to silently not execute. We
 						   also print an error message.
 						*/
-						if( wcschr( (wchar_t *)al_get( args, 0 ), L'=' ) )
+						if( wcschr( cmd, L'=' ) )
 						{
 							debug( 0,
 								   COMMAND_ASSIGN_ERR_MSG,
 								   (wchar_t *)al_get( args, 0 ) );
-							
-
 						}
-						else
+						else if(cmd[0]==L'$')
+						{
+							wchar_t *val = env_get( cmd+1 );
+							if( val )
+							{
+								debug( 0,
+									   _(L"Variables may not be used as commands. Define a function like 'function %ls; %ls $argv; end' instead. For more information, see the help section for the function command by typing 'help function'." ),
+									   cmd+1,
+									   val,
+									   cmd );
+							}
+							else
+							{
+								debug( 0,
+									   _(L"Variables may not be used as commands. Define a function instead. For more information, see the help section for the function command by typing 'help function'." ),
+									   cmd );
+							}			
+						}
+						else if(wcschr( cmd, L'$' ))
 						{
 							debug( 0,
+								   _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. For more information, see the help section for the eval command by typing 'help eval'." ),
+								   cmd,
+								   cmd );
+						}
+						else
+						{			
+							debug( 0,
 								   _(L"Unknown command '%ls'"),
-								   (wchar_t *)al_get( args, 0 ) );
+								   cmd );
 						}
 						
 						tmp = current_tokenizer_pos;

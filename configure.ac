@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(fish,1.21.5,fish-users@lists.sf.net)
+AC_INIT(fish,1.21.6,fish-users@lists.sf.net)
 
 # If needed, run autoconf to regenerate the configure file
 AC_MSG_CHECKING([if autoconf needs to be run])
@@ -12,7 +12,7 @@ if test configure -ot configure.ac; then
 		if autoconf; then
 			./configure "$@"
 		fi
-		exit			
+		exit	
 	else
 		AC_MSG_ERROR( [cannot find the autoconf program in your path.
 This program needs to be run whenever the configure.ac file is modified.

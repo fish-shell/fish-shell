@@ -101,12 +101,12 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_OR_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? For more information on the 'or' builtin command, see the help section for 'or' by typing 'help or'.")
+#define CMD_OR_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
 
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_AND_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? For more information on the 'and' builtin command, see the help section for 'and' by typing 'help and'.")
+#define CMD_AND_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
 
 /**
    Error message when encountering an illegal command name
@@ -2009,7 +2009,7 @@ static int parse_job( process_t *p,
 							if( val )
 							{
 								debug( 0,
-									   _(L"Variables may not be used as commands. Define a function like 'function %ls; %ls $argv; end' instead. For more information, see the help section for the function command by typing 'help function'." ),
+									   _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end'. See the help section for the function command by typing 'help function'." ),
 									   cmd+1,
 									   val,
 									   cmd );
@@ -2017,14 +2017,14 @@ static int parse_job( process_t *p,
 							else
 							{
 								debug( 0,
-									   _(L"Variables may not be used as commands. Define a function instead. For more information, see the help section for the function command by typing 'help function'." ),
+									   _(L"Variables may not be used as commands. Instead, define a function. See the help section for the function command by typing 'help function'." ),
 									   cmd );
 							}			
 						}
 						else if(wcschr( cmd, L'$' ))
 						{
 							debug( 0,
-								   _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. For more information, see the help section for the eval command by typing 'help eval'." ),
+								   _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. See the help section for the eval command by typing 'help eval'." ),
 								   cmd,
 								   cmd );
 						}

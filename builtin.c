@@ -2077,7 +2077,7 @@ static void make_first( job_t *j )
 */
 static int builtin_fg( wchar_t **argv )
 {
-	job_t *j;
+	job_t *j=0;
 
 	if( argv[1] == 0 )
 	{
@@ -2127,27 +2127,40 @@ static int builtin_fg( wchar_t **argv )
 	}
 	else
 	{
-		int pid = abs(wcstol( argv[1], 0, 10 ));
-		j = job_get_from_pid( pid );
-		if( !j )
+		wchar_t *end;		
+		int pid = abs(wcstol( argv[1], &end, 10 ));
+		
+		if( *end )
 		{
-			sb_printf( sb_err,
-					   _( L"%ls: No suitable job: %d\n" ),
-					   argv[0],
-					   pid );
-			builtin_print_help( argv[0], sb_err );
+				sb_printf( sb_err,
+						   _( L"%ls: Argument must be a number: %ls\n" ),
+						   argv[0],
+						   argv[1] );
+				builtin_print_help( argv[0], sb_err );
 		}
-		if( !j->job_control )
+		else
 		{
-			sb_printf( sb_err,
-					   _( L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n" ),
-					   argv[0],
-					   pid,
-					   j->command );
-			builtin_print_help( argv[0], sb_err );
-			j=0;
+			j = job_get_from_pid( pid );
+			if( !j || !j->constructed || job_is_completed( j ))
+			{
+				sb_printf( sb_err,
+						   _( L"%ls: No suitable job: %d\n" ),
+						   argv[0],
+						   pid );
+				builtin_print_help( argv[0], sb_err );
+				j=0;
+			}
+			else if( !j->job_control )
+			{
+				sb_printf( sb_err,
+						   _( L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n" ),
+						   argv[0],
+						   pid,
+						   j->command );
+				builtin_print_help( argv[0], sb_err );
+				j=0;
+			}
 		}
-
 	}
 
 	if( j )

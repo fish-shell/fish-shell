@@ -261,7 +261,7 @@ job_t *job_create();
 
 /**
   Return the job with the specified job id.
-  If id is -1, return the last job used.
+  If id is 0 or less, return the last job used.
 */
 job_t *job_get(int id);
 

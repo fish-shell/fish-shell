@@ -182,7 +182,7 @@ int proc_get_last_status()
 
 job_t *job_create()
 {
-	int free_id=0;
+	int free_id=1;
 	job_t *res;
 	
 	while( job_get( free_id ) != 0 )
@@ -204,7 +204,7 @@ job_t *job_create()
 job_t *job_get( int id )
 {
 	job_t *res = first_job;
-	if( id == -1 )
+	if( id <= 0 )
 	{
 		return res;
 	}

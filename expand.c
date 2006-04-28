@@ -421,16 +421,18 @@ static int find_process( const wchar_t *proc,
 		{
 
 			int jid = wcstol( proc, 0, 10 );
-
-			j = job_get( jid );
-			if( (j != 0) && (j->command != 0 ) )
+			if( jid > 0 )
 			{
-
+				j = job_get( jid );
+				if( (j != 0) && (j->command != 0 ) )
 				{
-					result = malloc(sizeof(wchar_t)*16 );
-					swprintf( result, 16, L"%d", j->pgid );
-					al_push( out, result );
-					found = 1;
+					
+					{
+						result = malloc(sizeof(wchar_t)*16 );
+						swprintf( result, 16, L"%d", j->pgid );
+						al_push( out, result );
+						found = 1;
+					}
 				}
 			}
 		}

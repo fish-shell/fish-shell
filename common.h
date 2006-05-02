@@ -181,9 +181,11 @@ void error_reset();
 const wchar_t *wsetlocale( int category, const wchar_t *locale );
 
 /**
-   Checks if \c needle is included in the list of strings specified
+   Checks if \c needle is included in the list of strings specified. A warning is printed if needle is zero.
 
    \param needle the string to search for in the list 
+
+   \return zero is needle is not found, of if needle is null, non-zero otherwise
 */
 int contains_str( const wchar_t *needle, ... );
 

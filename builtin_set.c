@@ -491,7 +491,7 @@ int builtin_set( wchar_t **argv )
 		al_push(&values, argv[woptind++]);
 	}
 
-	if( is_path_variable( dest ) )
+	if( dest && is_path_variable( dest ) )
 	{
 		int i;
 		int error = 0;

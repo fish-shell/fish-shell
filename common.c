@@ -495,6 +495,12 @@ int contains_str( const wchar_t *a, ... )
 	wchar_t *arg;
 	va_list va;
 	int res = 0;
+
+	if( !a )
+	{
+		debug( 1, L"Warning: Called contains_str with null argument. This is a bug." );		
+		return 0;
+	}
 	
 	va_start( va, a );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 

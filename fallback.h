@@ -6,7 +6,7 @@
 #include <stdarg.h>
 #include <wctype.h>
 #include <wchar.h>
-#include "common.h"
+
 
 /**
    Under curses, tputs expects an int (*func)(char) as its last

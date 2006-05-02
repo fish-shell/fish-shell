@@ -213,7 +213,8 @@ wchar_t *wcsndup( const wchar_t *in, int c );
 
 /**
    Converts from wide char to digit in the specified base. If d is not
-   a valid digit in the specified base, return -1.
+   a valid digit in the specified base, return -1. This is a helper
+   function for wcstol, but it is useful itself, so it is exported.
 */
 long convert_digit( wchar_t d, int base );
 

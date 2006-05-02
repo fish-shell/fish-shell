@@ -328,7 +328,8 @@ void proc_update_jiffies();
 void proc_sanity_check();
 
 /**
-   Send of an process/job exit event notification. This function is a conveniance wrapper around event_fire().
+   Send a process/job exit event notification. This function is a
+   conveniance wrapper around event_fire().
 */
 void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status );
 

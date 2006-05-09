@@ -28,64 +28,147 @@ Functions used for implementing the set builtin.
 
 #define BUILTIN_SET_PATH_ERROR L"%ls: Could not add component %ls to %ls.\n"
 #define BUILTIN_SET_PATH_HINT L"%ls: Did you mean 'set %ls $%ls %ls'?\n"
+#define BUILTIN_SET_ARG_COUNT L"%ls: The number of variable indexes does not match the number of values\n"
+
+static int is_path_variable( const wchar_t *env )
+{
+	return contains_str( env,
+						 L"PATH",
+						 L"CDPATH",
+						 (void *)0 );
+}
 
 /**
-   Call env_set. On error, print a description of the problem to
-   stderr.
+   Call env_set. If this is a path variable, e.g. PATH, validate the
+   elements. On error, print a description of the problem to stderr.
 */
-static void my_env_set( const wchar_t *key, const wchar_t *val, int scope )
+static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 {
+	string_buffer_t sb;
+	int i;
+	int retcode = 0;
+	wchar_t *val_str=0;
+		
+	if( is_path_variable( key ) )
+	{
+		int error = 0;
+		
+		for( i=0; i<al_get_count( val ); i++ )
+		{
+			int show_perror = 0;
+			int show_hint = 0;
+			
+			struct stat buff;
+			wchar_t *dir = (wchar_t *)al_get( val, i );
+			
+			if( wstat( dir, &buff ) )
+			{
+				error = 1;
+				show_perror = 1;
+			}
 
-	switch( env_set( key, val, scope | ENV_USER ) )
+			if( !( S_IFDIR & buff.st_mode ) )
+			{
+				error = 1;
+				
+			}
+			
+			if( error )
+			{
+				wchar_t *colon;
+				
+				sb_printf( sb_err, 
+						   _(BUILTIN_SET_PATH_ERROR),
+						   L"set", 
+						   dir, 
+						   key );
+				colon = wcschr( dir, L':' );
+				
+				if( colon && *(colon+1) ) 
+				{
+					show_hint = 1;
+				}
+
+			}
+			
+			if( show_perror )
+			{
+				builtin_wperror( L"set" );
+			}
+			
+			if( show_hint )
+			{
+				sb_printf( sb_err, 
+						   _(BUILTIN_SET_PATH_HINT),
+						   L"set",
+						   key,
+						   key,
+						   wcschr( dir, L':' )+1);
+			}
+			
+			if( error )
+			{
+				break;
+			}
+			
+		}
+
+		if( error )
+		{
+			return 1;
+		}
+		
+	}
+
+	sb_init( &sb );
+
+	if( al_get_count( val ) )
+	{
+		for( i=0; i<al_get_count( val ); i++ )
+		{
+			sb_append( &sb, (wchar_t *)al_get( val, i ) );
+			if( i<al_get_count( val )-1 )
+			{
+				sb_append( &sb, ARRAY_SEP_STR );
+			}
+		}
+		val_str = (wchar_t *)sb.buff;
+		
+	}
+	
+	switch( env_set( key, val_str, scope | ENV_USER ) )
 	{
 		case ENV_PERM:
 		{
 			sb_printf( sb_err, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key );
+			retcode=1;
 			break;
 		}
 	}
+
+	sb_destroy( &sb );
+
+	return retcode;
 }
-
-/** 
-	Extract the name from a destination argument of the form name[index1 index2...]
-*/
-static int parse_fill_name( string_buffer_t *name, 
-							const wchar_t *src) 
-{
-
-	if (src == 0) 
-	{
-		return 0;
-	}
-	
-	while (iswalnum(*src) || *src == L'_')
-	{
-		sb_append_char(name, *src++);
-	}
-	
-	if (*src != L'[' && *src != L'\0') 
-	{
-		sb_printf( sb_err, BUILTIN_ERR_VARCHAR, L"set", *src );
-		sb_append2(sb_err, parser_current_line(), L"\n", (void *)0 );
-//		builtin_print_help( L"set", sb_err );
-
-		return -1;
-	}
-	else 
-	{
-		return 0;
-	}
-}
-
 
 /** 
 	Extract indexes from a destination argument of the form name[index1 index2...]
-*/
-static int parse_fill_indexes( array_list_t *indexes,
-							   const wchar_t *src)
-{
-	int count = 0;
 
+	\param indexes the list to insert the new indexes into
+	\param src the source string to parse
+	\param name the name of the element. Return null if the name in \c src does not match this name
+
+	\return the number of indexes parsed, or -1 on error
+*/
+static int parse_index( array_list_t *indexes,
+						const wchar_t *src,
+						const wchar_t *name )
+{
+	int len;
+	
+	int count = 0;
+	const wchar_t *src_orig = src;
+	
 	if (src == 0)
 	{
 		return 0;
@@ -96,16 +179,27 @@ static int parse_fill_indexes( array_list_t *indexes,
 		src++;
 	}
 	
-	if (*src == L'\0') 
+	if (*src != L'[')
 	{
+		sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), L"set" );					
 		return 0;
 	}
+
+	len = src-src_orig;
 	
-	if (*src++ != L'[')
+	if( (wcsncmp( src_orig, name, len )!=0) || (wcslen(name) != (len)) )
 	{
-		return -1;
+		sb_printf( sb_err, 
+				   _(L"%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"),
+				   L"set", 
+				   name,
+				   len,
+				   src_orig);
+		return 0;
 	}
-	
+
+	src++;	
+
 	while (iswspace(*src)) 
 	{
 		src++;
@@ -118,9 +212,9 @@ static int parse_fill_indexes( array_list_t *indexes,
 		if (end == src) 
 		{
 			sb_printf(sb_err, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
-			return -1;
+			return 0;
 		}
-
+		
 		int *ind = (int *) calloc(1, sizeof(int));
 		*ind = (int) l_ind;
 		al_push(indexes, ind);
@@ -185,7 +279,7 @@ static int al_contains_int( array_list_t *list,
 /**
    Erase from a list values at specified indexes 
 */
-static int erase_values(array_list_t *list, array_list_t *indexes) 
+static void erase_values(array_list_t *list, array_list_t *indexes) 
 {
 	int i;
 	array_list_t result;
@@ -207,8 +301,6 @@ static int erase_values(array_list_t *list, array_list_t *indexes)
 	al_truncate(list,0);	
 	al_push_all( list, &result );
 	al_destroy(&result);
-
-	return al_get_count(list);    
 }
 
 
@@ -269,13 +361,6 @@ static void print_variables(int include_values, int esc, int scope)
   	al_destroy(&names);
 }
 
-static int is_path_variable( const wchar_t *env )
-{
-	return contains_str( env,
-						 L"PATH",
-						 L"CDPATH",
-						 (void *)0 );
-}
 
 
 /**
@@ -337,14 +422,12 @@ int builtin_set( wchar_t **argv )
 	  Variables used for performing the actual work
 	*/
 	wchar_t *dest = 0;
-	array_list_t values;
-	string_buffer_t name_sb;
 	int retcode=0;
-	wchar_t *name;
-	array_list_t indexes;
-	int retval;
-
-
+	int scope;
+	int slice=0;
+	int i;
+	
+	
 	/* Parse options to obtain the requested operation and the modifiers */
 	woptind = 0;
 	while (1) 
@@ -407,7 +490,7 @@ int builtin_set( wchar_t **argv )
 				  argv[0],
 				  parser_current_line() );
 		
-		builtin_print_help( argv[0], sb_err );
+//		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 	
@@ -420,7 +503,7 @@ int builtin_set( wchar_t **argv )
 				  argv[0],
 				  parser_current_line() );		
 
-		builtin_print_help( argv[0], sb_err );
+//		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 
@@ -433,7 +516,7 @@ int builtin_set( wchar_t **argv )
 				   BUILTIN_ERR_GLOCAL,
 				   argv[0],
 				   parser_current_line() );
-		builtin_print_help( argv[0], sb_err );
+//		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 
@@ -446,9 +529,14 @@ int builtin_set( wchar_t **argv )
 				   BUILTIN_ERR_EXPUNEXP,
 				   argv[0],
 				   parser_current_line() );
-		builtin_print_help( argv[0], sb_err );
+//		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
+
+	/*
+	  Calculate the scope value for variable assignement
+	*/
+	scope = (local ? ENV_LOCAL : 0) | (global ? ENV_GLOBAL : 0) | (export ? ENV_EXPORT : 0) | (unexport ? ENV_UNEXPORT : 0) | (universal ? ENV_UNIVERSAL:0) | ENV_USER; 
 
 	if( query )
 	{
@@ -468,262 +556,188 @@ int builtin_set( wchar_t **argv )
 		return retcode;
 	}
 	
-
-	/* Parse destination */
-	if( woptind < argc ) 
+	if( woptind == argc )
 	{
-		dest = wcsdup(argv[woptind++]);
-		
-		if( !wcslen( dest ) )
+		/*
+		  Print values of variables
+		*/
+
+		if( erase ) 
 		{
-			free( dest );
-			sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
-			return 1;
-		}		
+			sb_printf( sb_err,
+					   _(L"%ls: Erase needs a variable name\n%ls\n"), 
+					   argv[0],
+					   parser_current_line() );
+			
+//			builtin_print_help( argv[0], sb_err );
+			retcode = 1;
+		}
+		else
+		{
+			print_variables( 1, 1, scope );
+		}
+		
+		return retcode;
 	}
 
-	/* Parse values */
-	// wchar_t **values = woptind < argc ? (wchar_t **) calloc(argc - woptind, sizeof(wchar_t *)) : 0;
-
-	al_init(&values);
-	while( woptind < argc ) 
+	if( list ) 
 	{
-		al_push(&values, argv[woptind++]);
+		/* Maybe we should issue an error if there are any other arguments? */
+		print_variables(0, 0, scope);
+		return 0;
+	} 
+	
+	if( !(dest = wcsdup(argv[woptind])))
+	{
+		die_mem();		
 	}
 
-	if( dest && is_path_variable( dest ) )
+	if( wcschr( dest, L'[' ) )
 	{
-		int i;
-		int error = 0;
+		slice = 1;
+		*wcschr( dest, L'[' )=0;
+	}
+	
+	if( !wcslen( dest ) )
+	{
+		free( dest );
+		sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
+		return 1;
+	}
+
+	
+	/*
+	  set assignment can work in two modes, either using slices or
+	  using the whole array. We detect which mode is used here.
+	*/
+	
+	if( slice )
+	{
+
+		/*
+		  Slice mode
+		*/
+		int idx_count, val_count;
+		array_list_t values;
+		array_list_t indexes;
 		
-		for( i=0; i<al_get_count( &values ); i++ )
-		{
-			int show_perror = 0;
-			int show_hint = 0;
-			
-			struct stat buff;
-			wchar_t *dir = (wchar_t *)al_get( &values, i );
-			
-			if( wstat( dir, &buff ) )
+		al_init(&values);
+		al_init(&indexes);
+	
+		for( ; woptind<argc; woptind++ )
+		{			
+			if( !parse_index( &indexes, argv[woptind], dest ) )
 			{
-				error = 1;
-				show_perror = 1;
-			}
-
-			if( !( S_IFDIR & buff.st_mode ) )
-			{
-				error = 1;
-				
-			}
-			
-			if( error )
-			{
-				wchar_t *colon;
-				
-				sb_printf( sb_err, 
-						   _(BUILTIN_SET_PATH_ERROR),
-						   argv[0], 
-						   dir, 
-						   dest );
-				colon = wcschr( dir, L':' );
-				
-				if( colon && *(colon+1) ) 
-				{
-					show_hint = 1;
-				}
-
-			}
-			
-			if( show_perror )
-			{
-				builtin_wperror( argv[0] );
-			}
-			
-			if( show_hint )
-			{
-				sb_printf( sb_err, 
-						   _(BUILTIN_SET_PATH_HINT),
-						   argv[0],
-						   dest,
-						   dest,
-						   wcschr( dir, L':' )+1);
-			}
-			
-			if( error )
-			{
+				retcode = 1;
 				break;
 			}
 			
-		}
+			val_count = argc-woptind-1;
+			idx_count = al_get_count( &indexes );
 
-		if( error )
-		{
-			al_destroy(&values);
-			return 1;
-		}
-		
-	}
-
-
-	/* Extract variable name and indexes */
-
-	sb_init(&name_sb);
-	retval = parse_fill_name(&name_sb, dest);
-
-	
-	if( retval < 0 ) 
-		retcode=1;
-
-	if( !retcode )
-	{
-		name = (wchar_t *) name_sb.buff;
-		
-		al_init(&indexes);
-		retval = parse_fill_indexes(&indexes, dest);
-		if (retval < 0) 
-			retcode = 1;
-	}
-	
-	if( !retcode )
-	{
-		
-		int i;
-		int finished=0;
-		
-		/* Do the actual work */
-		int scope = (local ? ENV_LOCAL : 0) | (global ? ENV_GLOBAL : 0) | (export ? ENV_EXPORT : 0) | (unexport ? ENV_UNEXPORT : 0) | (universal ? ENV_UNIVERSAL:0) | ENV_USER; 
-		if( list ) 
-		{
-			/* Maybe we should issue an error if there are any other arguments? */
-			print_variables(0, 0, scope);
-			finished=1;			
-		} 
-		
-		if( (!finished ) && 
-			 (name == 0 || wcslen(name) == 0))
-		{
-			/* No arguments -- display name & value for all variables in scope */
-			if( erase ) 
+			if( !erase )
 			{
-				sb_printf( sb_err,
-						   _(L"%ls: Erase needs a variable name\n%ls\n"), 
-						   argv[0],
-						   parser_current_line() );
+				if( val_count < idx_count )
+				{
+					sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), argv[0] );
+					retcode=1;
+					break;
+				}
+				if( val_count == idx_count )
+				{
+					woptind++;
+					break;
+				}
+			}
+		}		
+
+		if( !retcode )
+		{
+			/*
+			  Slice indexes have been calculated, do the actual work
+			*/
+
+			array_list_t result;
+			al_init(&result);
+
+			expand_variable_array( env_get(dest), &result );
+			if( erase )
+			{
+				erase_values(&result, &indexes);
+				my_env_set( dest, &result, scope);
+			}
+			else
+			{
+				array_list_t value;
+				al_init(&value);
+
+				while( woptind < argc ) 
+				{
+					al_push(&value, argv[woptind++]);
+				}
+
+				update_values( &result, 
+							   &indexes,
+							   &value );
 				
-				builtin_print_help( argv[0], sb_err );
-				retcode = 1;
-			}
-			else 
-			{
-				print_variables( 1, 1, scope );
-			}
-
-			finished=1;			
-		} 
-
-
-		if( !finished )
-		{
-			if( al_get_count( &values ) == 0 && 
-				al_get_count( &indexes ) == 0 &&
-				!erase &&
-				!list )
-			{
-				my_env_set( name, 0, scope );
-				finished = 1;
-			}
+				my_env_set(dest,
+						   &result,
+						   scope);
+								
+				al_destroy( &value );
+								
+			}			
+			al_foreach( &result, (void (*)(const void *))&free );
+			al_destroy( &result );
 		}
+
+		al_foreach( &indexes, (void (*)(const void *))&free );
+		al_destroy(&indexes);
+		al_destroy(&values);
 		
-		if( !finished )
+	}
+	else
+	{
+		woptind++;
+		
+		/*
+		  No slicing
+		*/
+		if( erase )
 		{
-			/* There are some arguments, we have at least a variable name */
-			if( erase && al_get_count(&values) != 0 ) 
+			if( woptind != argc )
 			{
 				sb_printf( sb_err, 
 						   _(L"%ls: Values cannot be specfied with erase\n%ls\n"),
 						   argv[0],
 						   parser_current_line() );
-				
-				builtin_print_help( argv[0], sb_err );
-				retcode = 1;
-			} 
+				retcode=1;
+			}
 			else
-			{    
-				/* All ok, we can alter the specified variable */
-				array_list_t val_l;
-				al_init(&val_l);
-
-				void *old=0;
-				
-				if (al_get_count(&indexes) == 0) 
-				{
-					/* We will act upon the entire variable */
-	
- 					al_push( &val_l, wcsdup(L"") );
-					old = val_l.arr;
-					
-					/* Build indexes for all variable or all new values */
-					int end_index = erase ? al_get_count(&val_l) : al_get_count(&values);
-					for (i = 0; i < end_index; i++) 
-					{
-						int *ind = (int *) calloc(1, sizeof(int));
-						*ind = i + 1;
-						al_push(&indexes, ind);
-					}
-				}
-				else 
-				{
-					/* We will act upon some specific indexes */
-					expand_variable_array( env_get(name), &val_l );
-				}
-				
-				string_buffer_t result_sb;
-				sb_init(&result_sb);
-				if (erase) 
-				{
-					int rem = erase_values(&val_l, &indexes);
-					if (rem == 0) 
-					{
-						env_remove(name, ENV_USER);
-					}
-					else 
-					{
-						fill_buffer_from_list(&result_sb, &val_l);
-
-						my_env_set(name, (wchar_t *) result_sb.buff, scope);
-					}     
-				}
-				else
-				{
-					
-					update_values( &val_l, 
-								   &indexes,
-								   &values );
-
-					fill_buffer_from_list( &result_sb,
-										   &val_l );
-
-					my_env_set(name,
-							(wchar_t *) result_sb.buff,
-							scope);
-				}
-				
-				al_foreach( &val_l, (void (*)(const void *))&free );
-				al_destroy(&val_l);
-				sb_destroy(&result_sb); 
+			{
+				env_remove( dest, ENV_USER );
 			}
 		}
+		else
+		{
+			array_list_t val;
+			al_init( &val );
+			
+			for( i=woptind; i<argc; i++ )
+			{
+				al_push( &val, argv[i] );
+			}
 
-		al_foreach( &indexes, (void (*)(const void *))&free );
-		al_destroy(&indexes);
+			retcode = my_env_set( dest, &val, scope );
+						
+			al_destroy( &val );			
+			
+		}		
 	}
 	
-/* Common cleanup */
-
-	free(dest);		
-	sb_destroy(&name_sb);
-	al_destroy( &values );
+	free( dest );
 	
 	return retcode;
+
 }
 

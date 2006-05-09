@@ -838,7 +838,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							int base=16;
 							
 							int byte = 0;
-							int max_val = 127;
+							wchar_t max_val = 127;
 							
 							switch( in[in_pos] )
 							{

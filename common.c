@@ -890,7 +890,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 								res=(res*base)|d;
 							}
 
-							if( (res > 0) && (res <= max_val) )
+							if( (res <= max_val) )
 							{
 								in[out_pos] = (byte?ENCODE_DIRECT_BASE:0)+res;
 							}

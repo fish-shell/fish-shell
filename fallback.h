@@ -8,6 +8,13 @@
 #include <wchar.h>
 
 
+#ifndef WCHAR_MAX
+/**
+   This _should_ be defined by wchar.h, but e.g. OpenBSD doesn't.
+*/
+#define WCHAR_MAX 0x7fffffffu
+#endif
+
 /**
    Under curses, tputs expects an int (*func)(char) as its last
    parameter, but in ncurses, tputs expects a int (*func)(int) as its

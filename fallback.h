@@ -3,6 +3,7 @@
 #define FISH_FALLBACK_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <wctype.h>
 #include <wchar.h>

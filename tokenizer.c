@@ -611,7 +611,7 @@ void tok_next( tokenizer *tok )
 
 wchar_t *tok_string( tokenizer *tok )
 {
-	return tok->orig_buff;
+	return tok?tok->orig_buff:0;
 }
 
 wchar_t *tok_first( const wchar_t *str )

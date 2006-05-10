@@ -1173,9 +1173,9 @@ wchar_t *parser_current_line()
 {
 	int lineno=1;
 
-	const wchar_t *file = parser_current_filename();
-	wchar_t *whole_str = tok_string( current_tokenizer );
-	wchar_t *line = whole_str;
+	const wchar_t *file;
+	wchar_t *whole_str;
+	wchar_t *line;
 	wchar_t *line_end;
 	int i;
 	int offset;
@@ -1183,6 +1183,14 @@ wchar_t *parser_current_line()
 	const wchar_t *function_name=0;
 	int current_line_start=0;
 
+	if( !current_tokenizer )
+	{
+		return L"";
+	}
+
+	file = parser_current_filename();
+	whole_str = tok_string( current_tokenizer );
+	line = whole_str;
 
 	if( !line )
 		return L"";

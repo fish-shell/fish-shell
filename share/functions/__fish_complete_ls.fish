@@ -65,7 +65,7 @@ function __fish_complete_ls -d "Compleletions for ls and it's aliases"
 		complete $cmds -l quoting-style -x -a "literal locale shell shell-always c escape" -d (N_ "Select quoting style")
 		complete $cmds -l sort -x -d (N_ "Sort criteria") -a "
 			extension\t'Sort by file extension'
-			none\tDon't\ sort
+			none\tDon\'t\ sort
 			size\t'Sort by size'
 			time\t'Sort by modification time'
 			version\t'Sort by version'

@@ -944,7 +944,7 @@ int eval_args( const wchar_t *line, array_list_t *args )
 	int do_loop=1;
 
 	proc_push_interactive(0);	
-
+	current_tokenizer = &tok;
 	current_tokenizer_pos = 0;
 	
 	tok_init( &tok, line, 0 );

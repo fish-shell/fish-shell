@@ -2,7 +2,7 @@
 function __fish_complete_apropos
 	if test (commandline -ct)
 		set str (commandline -ct)
-		apropos $str|sed -e "s/^\(.*$str\([^ ]*\).*\)$/$str\2"\t"\1/"
+		apropos $str|sed -e "s/^\(.*$str\([^ ]*\).*\)\$/$str\2"\t"\1/"
 	end
 end
 

@@ -80,9 +80,9 @@ static int read_init()
 
 	env_set( L"__fish_help_dir", DOCDIR, 0);	
 
-	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; . fish 2>/dev/null", 0, TOP );
-	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; . fish 2>/dev/null", 0, TOP );
-	eval( L"builtin cd 2>/dev/null;. .fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; and . fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; and . fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd 2>/dev/null; and . .fish 2>/dev/null", 0, TOP );
 
 	if( chdir( cwd ) == -1 )
 	{
@@ -336,7 +336,7 @@ int main( int argc, char **argv )
 			}
 		}
 	}
-
+	
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
 
 	history_destroy();

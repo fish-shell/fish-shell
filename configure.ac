@@ -389,6 +389,20 @@ else
     AC_MSG_RESULT(no)
 fi
 
+# Check if we are using basic BSD curses - in that case we redefine
+# del_curterm as a no-op, to avoid a double-free
+
+AC_MSG_CHECKING([If we are using BSD curses])
+case $target_os in
+	*bsd*)
+		AC_MSG_RESULT(yes)
+		AC_CHECK_LIB( ncurses, del_curterm, true, [AC_DEFINE([HAVE_BROKEN_DEL_CURTERM],[1],[We are using basic BSD curses, redefine del_curterm to a no-op to avoid a double-free bug])])
+		;;
+	*)
+		AC_MSG_RESULT(no)
+		;;
+esac
+
 # Tell the world what we know
 AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish etc/fish_interactive.fish share/fish seq])
 AC_OUTPUT

@@ -137,16 +137,28 @@ struct wdirent *wreaddir(DIR *dir )
 
 wchar_t *wgetcwd( wchar_t *buff, size_t sz )
 {
-	char buffc[sz*MAX_UTF8_BYTES];
-	char *res = getcwd( buffc, sz*MAX_UTF8_BYTES );
-	if( !res )
-		return 0;
-	
-	if( (size_t)-1 == mbstowcs( buff, buffc, sizeof( wchar_t ) * sz ) )
+	char *buffc = malloc( sz*MAX_UTF8_BYTES);
+	char *res;
+	wchar_t *ret = 0;
+		
+	if( !buffc )
 	{
-		return 0;		
-	}	
-	return buff;
+		errno = ENOMEM;
+		return 0;
+	}
+	
+	res = getcwd( buffc, sz*MAX_UTF8_BYTES );
+	if( res )
+	{
+		if( (size_t)-1 != mbstowcs( buff, buffc, sizeof( wchar_t ) * sz ) )
+		{
+			ret = buff;
+		}	
+	}
+	
+	free( buffc );
+	
+	return ret;
 }
 
 int wchdir( const wchar_t * dir )

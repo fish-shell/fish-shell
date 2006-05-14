@@ -285,7 +285,6 @@ static void get_names_internal_all( const void *key,
 								void *aux )
 {
 	wchar_t *name = (wchar_t *)key;
-	function_data_t *f = (function_data_t *)val;
 	
 	if( !al_contains_str( (array_list_t *)aux, name ) )
 	{

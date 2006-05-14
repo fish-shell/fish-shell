@@ -55,143 +55,189 @@ static int block_count=0;
 */
 static struct lookup_entry lookup[] =
 {
+#ifdef SIGHUP
 	{
 		SIGHUP, 
 		L"SIGHUP",
 		N_( L"Terminal hung up" )
 	}
 	,
+#endif
+#ifdef SIGINT
 	{
 		SIGINT,
 		L"SIGINT",
 		N_( L"Quit request from job control (^C)" )
 	}
 	,
+#endif
+#ifdef SIGQUIT
 	{
 		SIGQUIT,
 		L"SIGQUIT",
 		N_( L"Quit request from job control with core dump (^\\)" )
 	}
 	,
+#endif
+#ifdef SIGILL
 	{
 		SIGILL,
 		L"SIGILL",
 		N_( L"Illegal instruction" )
 	}
 	,
+#endif
+#ifdef SIGTRAP
 	{
 		SIGTRAP, 
 		L"SIGTRAP",
 		N_( L"Trace or breakpoint trap" )
 	}
 	,
+#endif
+#ifdef SIGABRT
 	{
 		SIGABRT,
 		L"SIGABRT",
 		N_( L"Abort" )
 	}
 	,
+#endif
+#ifdef SIGBUS
 	{
 		SIGBUS, 
 		L"SIGBUS",
 		N_( L"Misaligned address error" )
 	}
 	,
+#endif
+#ifdef SIGFPE
 	{
 		SIGFPE, 
 		L"SIGFPE",
 		N_( L"Floating point exception" )
 	}
 	,
+#endif
+#ifdef SIGKILL
 	{
 		SIGKILL, 
 		L"SIGKILL",
 		N_( L"Forced quit" )
 	}
 	,
+#endif
+#ifdef SIGUSR1
 	{
 		SIGUSR1,
 		L"SIGUSR1",
 		N_( L"User defined signal 1" )
 	}
 	,
+#endif
+#ifdef SIGUSR2
 	{
 		SIGUSR2, L"SIGUSR2",
 		N_( L"User defined signal 2" )
 	}
 	,
+#endif
+#ifdef SIGSEGV
 	{
 		SIGSEGV, 
 		L"SIGSEGV",
 		N_( L"Address boundary error" )
 	}
 	,
+#endif
+#ifdef SIGPIPE
 	{
 		SIGPIPE,
 		L"SIGPIPE",
 		N_( L"Broken pipe" )
 	}
 	,
+#endif
+#ifdef SIGALRM
 	{
 		SIGALRM, 
 		L"SIGALRM",
 		N_( L"Timer expired" )
 	}
 	,
+#endif
+#ifdef SIGTERM
 	{
 		SIGTERM,
 		L"SIGTERM",
 		N_( L"Polite quit request" )
 	}
 	,
+#endif
+#ifdef SIGCHLD
 	{
 		SIGCHLD,
 		L"SIGCHLD",
 		N_( L"Child process status changed" )
 	}
 	,
+#endif
+#ifdef SIGCONT
 	{
 		SIGCONT,
 		L"SIGCONT",
 		N_( L"Continue previously stopped process" )
 	}
 	,
+#endif
+#ifdef SIGSTOP
 	{
 		SIGSTOP,
 		L"SIGSTOP",
 		N_( L"Forced stop" )
 	}
 	,
+#endif
+#ifdef SIGTSTP
 	{
 		SIGTSTP,
 		L"SIGTSTP",
 		N_( L"Stop request from job control (^Z)" )
 	}
 	,
+#endif
+#ifdef SIGTTIN
 	{
 		SIGTTIN, 
 		L"SIGTTIN",
 		N_( L"Stop from terminal input" )
 	}
 	,
+#endif
+#ifdef SIGTTOU
 	{
 		SIGTTOU,
 		L"SIGTTOU",
 		N_( L"Stop from terminal output" )
 	}
 	,
+#endif
+#ifdef SIGURG
 	{
 		SIGURG, 
 		L"SIGURG",
 		N_( L"Urgent socket condition" )
 	}
 	,
+#endif
+#ifdef SIGXCPY
 	{
 		SIGXCPU,
 		L"SIGXCPU",
 		N_( L"CPU time limit exceeded" )
 	}
 	,
+#endif
 #ifdef SIGXFSZ
 	{
 		SIGXFSZ, 
@@ -200,12 +246,14 @@ static struct lookup_entry lookup[] =
 	}
 	,
 #endif
+#ifdef SIGVTALRM
 	{
 		SIGVTALRM,
 		L"SIGVTALRM",
 		N_( L"Virtual timer expired" )
 	}
 	,
+#endif
 #ifdef SIGPROF
 	{
 		SIGPROF,
@@ -230,12 +278,14 @@ static struct lookup_entry lookup[] =
 	}
 	,
 #endif
+#ifdef SIGWIO
 	{
 		SIGIO,
 		L"SIGIO",
 		N_( L"I/O on asynchronous file descriptor is possible" )
 	}
 	,
+#endif
 #ifdef SIGPWR
 	{
 		SIGPWR, 
@@ -338,6 +388,7 @@ int wcs2sig( const wchar_t *str )
 const wchar_t *sig2wcs( int sig )
 {
 	int i;
+
 	for( i=0; lookup[i].desc ; i++ )
 	{
 		if( lookup[i].signal == sig )
@@ -345,12 +396,14 @@ const wchar_t *sig2wcs( int sig )
 			return lookup[i].name;
 		}
 	}
-	return L"Unknown";
+
+	return _(L"Unknown");
 }
 
 const wchar_t *signal_get_desc( int sig )
 {
 	int i;
+
 	for( i=0; lookup[i].desc ; i++ )
 	{
 		if( lookup[i].signal == sig )
@@ -358,7 +411,8 @@ const wchar_t *signal_get_desc( int sig )
 			return _(lookup[i].desc);
 		}
 	}
-	return L"Unknown";
+
+	return _(L"Unknown");
 }
 
 /**
@@ -535,13 +589,13 @@ void signal_set_handlers()
 			exit(1);
 		}
 	}
-
+	
 }
 
 void signal_handle( int sig, int do_handle )
 {
 	struct sigaction act;
-
+	
 	/*
 	  These should always be handled
 	*/
@@ -553,15 +607,15 @@ void signal_handle( int sig, int do_handle )
 		(sig == SIGCHLD) )
 		return;
 	
-	sigemptyset( & act.sa_mask );
+	sigemptyset( &act.sa_mask );
 	if( do_handle )
 	{
-		act.sa_flags=SA_SIGINFO;
+		act.sa_flags = SA_SIGINFO;
 		act.sa_sigaction = &default_handler;
 	}
 	else
 	{
-		act.sa_flags=0;
+		act.sa_flags = 0;
 		act.sa_handler = SIG_DFL;
 	}
 	
@@ -577,16 +631,20 @@ void signal_block()
 		sigfillset( &chldset );
 		sigprocmask(SIG_BLOCK, &chldset, 0);	
 	}
+	
 	block_count++;
 }
 
 void signal_unblock()
 {
 	sigset_t chldset; 
+
 	block_count--;
+
 	if( !block_count )
 	{
 		sigfillset( &chldset );
 		sigprocmask(SIG_UNBLOCK, &chldset, 0);	
 	}
+
 }

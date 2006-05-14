@@ -62,11 +62,6 @@ parts of fish.
 #include "parser.h"
 
 /**
-   The maximum number of minor errors to report. Further errors will be omitted.
-*/
-#define ERROR_MAX_COUNT 1
-
-/**
    The number of milliseconds to wait between polls when attempting to acquire 
    a lockfile
 */

@@ -545,23 +545,27 @@ void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
 	string_buffer_t sb;
+	string_buffer_t sb2;
 	
 	if( level > debug_level )
 		return;
 
 	sb_init( &sb );
+	sb_init( &sb2 );
 	va_start( va, msg );
 	
 	sb_printf( &sb, L"%ls: ", program_name );
 	sb_vprintf( &sb, msg, va );
 	va_end( va );	
 
-	write_screen( (wchar_t *)sb.buff );
+	write_screen( (wchar_t *)sb.buff, &sb2 );
+	fwprintf( stderr, L"%ls", sb2.buff );	
 
 	sb_destroy( &sb );	
+	sb_destroy( &sb2 );	
 }
 
-void write_screen( const wchar_t *msg )
+void write_screen( const wchar_t *msg, string_buffer_t *buff )
 {
 	const wchar_t *start, *pos;
 	int line_width = 0;
@@ -611,8 +615,8 @@ void write_screen( const wchar_t *msg )
 				*/
 				wchar_t *token = wcsndup( start, pos-start );
 				if( line_width != 0 )
-					putwc( L'\n', stderr );			
-				fwprintf( stderr, L"%ls-\n", token );
+					sb_append_char( buff, L'\n' );
+				sb_printf( buff, L"%ls-\n", token );
 				free( token );
 				line_width=0;
 			}
@@ -624,10 +628,10 @@ void write_screen( const wchar_t *msg )
 				wchar_t *token = wcsndup( start, pos-start );
 				if( (line_width + (line_width!=0?1:0) + tok_width) > screen_width )
 				{
-					putwc( L'\n', stderr );
+					sb_append_char( buff, L'\n' );
 					line_width=0;
 				}
-				fwprintf( stderr, L"%ls%ls", line_width?L" ":L"", token );
+				sb_printf( buff, L"%ls%ls", line_width?L" ":L"", token );
 				free( token );
 				line_width += (line_width!=0?1:0) + tok_width;
 			}
@@ -642,9 +646,9 @@ void write_screen( const wchar_t *msg )
 	}
 	else
 	{
-		fwprintf( stderr, L"%ls", msg );
+		sb_printf( buff, L"%ls", msg );
 	}
-	putwc( L'\n', stderr );
+	sb_append_char( buff, L'\n' );
 }
 
 wchar_t *escape( const wchar_t *in, 

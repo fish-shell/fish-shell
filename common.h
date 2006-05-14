@@ -287,10 +287,10 @@ int common_get_height();
 void common_handle_winch( int signal );
 
 /**
-   Write paragraph of output to screen. Ignore newlines in message and
-   perform internal line-breaking.
+   Write paragraph of output to the specified stringbuffer, and redo
+   the linebreaks to fit the current screen.
 */
-void write_screen( const wchar_t *msg );
+void write_screen( const wchar_t *msg, string_buffer_t *buff );
 
 
 #endif

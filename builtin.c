@@ -497,27 +497,24 @@ static int builtin_builtin(  wchar_t **argv )
 	if( list )
 	{
 		array_list_t names;
-		wchar_t **names_arr;
 		int i;
 
 		al_init( &names );
 		builtin_get_names( &names );
-		names_arr = list_to_char_arr( &names );
-		qsort( names_arr,
-			   al_get_count( &names ),
-			   sizeof(wchar_t *),
-			   (int (*)(const void *, const void *))&wcsfilecmp );
+		sort_list( &names );
+		
 		for( i=0; i<al_get_count( &names ); i++ )
 		{
-			if( wcscmp( names_arr[i], L"count" ) == 0 )
+			wchar_t *el = (wchar_t *)al_get( &names, i );
+			
+			if( wcscmp( el, L"count" ) == 0 )
 				continue;
 
 			sb_append2( sb_out,
-						names_arr[i],
+						el,
 						L"\n",
 						(void *)0 );
 		}
-		free( names_arr );
 		al_destroy( &names );
 	}
 	return 0;
@@ -677,7 +674,6 @@ static int builtin_functions( wchar_t **argv )
 	wchar_t *desc=0;
 
 	array_list_t names;
-	wchar_t **names_arr;
 
 	int argc=builtin_count_args( argv );
 	int list=0;
@@ -820,11 +816,7 @@ static int builtin_functions( wchar_t **argv )
 
 		al_init( &names );
 		function_get_names( &names, show_hidden );
-		names_arr = list_to_char_arr( &names );
-		qsort( names_arr,
-			   al_get_count( &names ),
-			   sizeof(wchar_t *),
-			   (int (*)(const void *, const void *))&wcsfilecmp );
+		sort_list( &names );
 		if( is_screen )
 		{
 			string_buffer_t buff;
@@ -833,12 +825,12 @@ static int builtin_functions( wchar_t **argv )
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
 				sb_append2( &buff,
-							names_arr[i],
+							al_get(&names, i),
 							L", ",
 							(void *)0 );
 			}
 
-			write_screen( (wchar_t *)buff.buff );
+			write_screen( (wchar_t *)buff.buff, sb_out );
 			sb_destroy( &buff );
 		}
 		else
@@ -846,13 +838,12 @@ static int builtin_functions( wchar_t **argv )
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
 				sb_append2( sb_out,
-							names_arr[i],
+							al_get(&names, i),
 							L"\n",
 							(void *)0 );
 			}
 		}
 
-		free( names_arr );
 		al_destroy( &names );
 		return 0;
 	}
@@ -865,16 +856,13 @@ static int builtin_functions( wchar_t **argv )
 			sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );
 			al_init( &names );
 			function_get_names( &names, show_hidden );
-			names_arr = list_to_char_arr( &names );
-			qsort( names_arr,
-				   al_get_count( &names ),
-				   sizeof(wchar_t *),
-				   (int (*)(const void *, const void *))&wcsfilecmp );
+			sort_list( &names );
+			
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
-				functions_def( names_arr[i] );
+				functions_def( (wchar_t *)al_get( &names, i ) );
 			}
-			free( names_arr );
+			
 			al_destroy( &names );
 			break;
 		}
@@ -1170,7 +1158,6 @@ static int builtin_function( wchar_t **argv )
 	{
 		int i;
 		array_list_t names;
-		wchar_t **names_arr;
 		int chars=0;
 
 //		builtin_print_help( argv[0], sb_err );
@@ -1180,14 +1167,11 @@ static int builtin_function( wchar_t **argv )
 
 		al_init( &names );
 		function_get_names( &names, 0 );
-		names_arr = list_to_char_arr( &names );
-		qsort( names_arr,
-			   al_get_count( &names ),
-			   sizeof(wchar_t *),
-			   (int (*)(const void *, const void *))&wcsfilecmp );
+		sort_list( &names );
+
 		for( i=0; i<al_get_count( &names ); i++ )
 		{
-			wchar_t *nxt = names_arr[i];
+			wchar_t *nxt = (wchar_t *)al_get( &names, i );
 			int l = wcslen( nxt + 2 );
 			if( chars+l > common_get_width() )
 			{
@@ -1198,7 +1182,6 @@ static int builtin_function( wchar_t **argv )
 			sb_append2( sb_err,
 						nxt, L"  ", (void *)0 );
 		}
-		free( names_arr );
 		al_destroy( &names );
 		sb_append( sb_err, L"\n" );
 

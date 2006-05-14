@@ -248,6 +248,19 @@ void function_set_desc( const wchar_t *name, const wchar_t *desc )
 	data->desc =wcsdup(desc);
 }
 
+static int al_contains_str( array_list_t *list, const wchar_t * str )
+{
+	int i;
+	for( i=0; i<al_get_count( list ); i++ )
+	{
+		if( wcscmp( al_get( list, i ), str) == 0 )
+			{
+				return 1;
+			}
+	}
+	return 0;
+}
+	
 /**
    Helper function for removing hidden functions 
 */
@@ -258,8 +271,26 @@ static void get_names_internal( const void *key,
 	wchar_t *name = (wchar_t *)key;
 	function_data_t *f = (function_data_t *)val;
 	
-	if( name[0] != L'_' && !f->is_binding)
+	if( name[0] != L'_' && !f->is_binding && !al_contains_str( (array_list_t *)aux, name ) )
+	{
 		al_push( (array_list_t *)aux, name );
+	}
+}
+
+/**
+   Helper function for removing hidden functions 
+*/
+static void get_names_internal_all( const void *key,
+								const void *val,
+								void *aux )
+{
+	wchar_t *name = (wchar_t *)key;
+	function_data_t *f = (function_data_t *)val;
+	
+	if( !al_contains_str( (array_list_t *)aux, name ) )
+	{
+		al_push( (array_list_t *)aux, name );
+	}
 }
 
 void function_get_names( array_list_t *list, int get_hidden )
@@ -267,9 +298,13 @@ void function_get_names( array_list_t *list, int get_hidden )
 	autoload_names( list, get_hidden );
 	
 	if( get_hidden )
-		hash_get_keys( &function, list );
+	{
+		hash_foreach2( &function, &get_names_internal_all, list );
+	}
 	else
+	{
 		hash_foreach2( &function, &get_names_internal, list );
+	}
 	
 }
 

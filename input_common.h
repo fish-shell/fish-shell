@@ -20,7 +20,8 @@ enum
 	   requested but none could be delivered, or when an exception
 	   happened.
 	*/
-	R_NULL = INPUT_COMMON_RESERVED
+	R_NULL = INPUT_COMMON_RESERVED,
+	R_EOF
 }
 	;
 

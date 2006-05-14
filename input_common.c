@@ -64,7 +64,7 @@ static wint_t readb()
 {
 	unsigned char arr[1];
 	int do_loop = 0;
-
+	
 	do
 	{
 		fd_set fd;	
@@ -93,17 +93,21 @@ static wint_t readb()
 					{
 						int res = interrupt_handler();
 						if( res )
+						{
 							return res;
+						}
 					}
+					
 					
 					do_loop = 1;
 					break;
 				}
 				default:
 				{
-					debug( 0, L"Error while reading input from keyboard, shutting down" );
-					wperror(L"read");
-					exit(1);
+					/*
+					  The teminal has been closed. Save and exit.
+					*/
+					return R_EOF;
 				}
 			}	
 		}
@@ -120,11 +124,12 @@ static wint_t readb()
 			}
 			if( FD_ISSET( 0, &fd ) )
 			{
-				if( read_blocked( 0, arr, 1 ) == -1 )
+				if( read_blocked( 0, arr, 1 ) != 1 )
 				{
-					debug( 0, L"Error while reading input from keyboard, shutting down" );
-					wperror(L"read");
-					exit(1);
+					/*
+					  The teminal has been closed. Save and exit.
+					*/
+					return R_EOF;
 				}
 				do_loop = 0;
 			}				
@@ -179,8 +184,8 @@ wchar_t input_common_readch( int timed )
 			
 			int sz;
 			
-			if( b == R_NULL )
-				return R_NULL;
+			if( (b == R_NULL) || (b == R_EOF) )
+				return b;
 
 			bb=b;
 			

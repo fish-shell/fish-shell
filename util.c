@@ -809,6 +809,7 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 	{
 		return 1;
 	}
+
 	int secondary_diff=0;
 	if( iswdigit( *a ) && iswdigit( *b ) )
 	{

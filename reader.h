@@ -21,7 +21,7 @@ int reader_read( int fd);
 /**
   Tell the shell that it should exit after the currently running command finishes.
 */
-void reader_exit( int do_exit );
+void reader_exit( int do_exit, int force );
 
 /**
    Check that the reader is in a sane state
@@ -161,6 +161,11 @@ void reader_replace_current_token( wchar_t *new_token );
    The readers interupt signal handler. Cancels all currently running blocks.
 */
 void reader_handle_int( int signal );
+
+/**
+   This function returns true if fish is exiting by force, i.e. because stdin died
+*/
+int reader_exit_forced();
 
 
 #endif

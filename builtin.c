@@ -1857,7 +1857,7 @@ static int builtin_exit( wchar_t **argv )
 			return 1;
 
 	}
-	reader_exit( 1 );
+	reader_exit( 1, 0 );
 	return ec;
 }
 

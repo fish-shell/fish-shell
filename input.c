@@ -119,7 +119,8 @@ const wchar_t *name_arr[] =
 	L"history-token-search-backward",
 	L"history-token-search-forward",
 	L"self-insert",
-	L"null"
+	L"null",
+	L"eof"
 }
 	;
 
@@ -155,7 +156,8 @@ const wchar_t *desc_arr[] =
 	L"Search backward through list of previous commands for matching token",
 	L"Search forward through list of previous commands for matching token",
 	L"Insert the pressed key",
-	L"Do nothing"
+	L"Do nothing",
+	L"End of file"
 }
 	;
 
@@ -191,7 +193,8 @@ const wchar_t code_arr[] =
 	R_HISTORY_TOKEN_SEARCH_BACKWARD,
 	R_HISTORY_TOKEN_SEARCH_FORWARD,
 	R_SELF_INSERT,
-	R_NULL
+	R_NULL,
+	R_EOF
 }
 	;
 

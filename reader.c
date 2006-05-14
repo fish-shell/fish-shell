@@ -232,6 +232,11 @@ typedef struct reader_data
 	   When this is true, the reader will exit
 	*/
 	int end_loop;
+	/**
+	   If this is true, exit reader even if there are running
+	   jobs. This happens if we press e.g. ^D twice.
+	*/
+	int prev_end_loop;
 
 	/**
 	   Pointer to previous reader_data
@@ -298,6 +303,11 @@ static struct termios saved_modes;
 static void reader_save_status();
 static void reader_check_status();
 static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int pos, array_list_t *error );
+
+/**
+   Variable to keep track of forced exits - see \c reader_exit_forced();
+*/
+static int exit_forced;
 
 
 /**
@@ -369,6 +379,12 @@ static int room_for_usec(struct stat *st)
 			   (&(st->st_atime) + 4) == &(st->st_ctime));
 	return res;
 }
+
+int reader_exit_forced()
+{
+	return exit_forced;
+}
+
 
 /**
    string_buffer used as temporary storage for the reader_readline function
@@ -869,11 +885,14 @@ void reader_destroy()
 }
 
 
-void reader_exit( int do_exit )
+void reader_exit( int do_exit, int forced )
 {
 	if( data )
 		data->end_loop=do_exit;
 	end_loop=do_exit;
+	if( forced )
+		exit_forced = 1;
+	
 }
 
 void repaint()
@@ -2230,7 +2249,6 @@ int exit_status()
 */
 static int read_i()
 {
-	int prev_end_loop=0;
 
 	reader_push(L"fish");
 	reader_set_complete_function( &complete );
@@ -2238,6 +2256,7 @@ static int read_i()
 	reader_set_test_function( &shell_test );
 
 	data->prompt_width=60;
+	data->prev_end_loop=0;
 
 	while( (!data->end_loop) && (!sanity_check()) )
 	{
@@ -2254,12 +2273,7 @@ static int read_i()
 		  during evaluation.
 		*/
 
-		tmp = wcsdup( reader_readline() );
-
-		data->buff_pos=data->buff_len=0;
-		data->buff[data->buff_len]=L'\0';
-		reader_run_command( tmp );
-		free( tmp );
+		tmp = reader_readline();
 
 		if( data->end_loop)
 		{
@@ -2275,17 +2289,24 @@ static int read_i()
 				}
 			}
 			
-			if( !prev_end_loop && has_job )
+			if( !reader_exit_forced() && !data->prev_end_loop && has_job )
 			{
 				writestr(_( L"There are stopped jobs\n" ));
 				write_prompt();
 				data->end_loop = 0;
-				prev_end_loop=1;
+				data->prev_end_loop=1;
 			}
 		}
 		else
 		{
-			prev_end_loop=0;
+			tmp = wcsdup( tmp );
+			
+			data->buff_pos=data->buff_len=0;
+			data->buff[data->buff_len]=L'\0';
+			reader_run_command( tmp );
+			free( tmp );
+
+			data->prev_end_loop=0;
 		}
 
 	}
@@ -2439,6 +2460,14 @@ wchar_t *reader_readline()
 			{
 				data->exec_prompt=1;
 				repaint();
+				break;
+			}
+
+			case R_EOF:
+			{
+				exit_forced = 1;
+				data->end_loop=1;
+				debug( 1, L"got R_EOF" );
 				break;
 			}
 
@@ -2833,14 +2862,17 @@ wchar_t *reader_readline()
 	}
 
 	al_destroy( &comp );
-    if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */
-    {
-        wperror(L"tcsetattr");
-        exit(1);
-    }
-
-	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
-
+	if( !reader_exit_forced() )
+	{
+		if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */
+		{
+			wperror(L"tcsetattr");
+			exit(1);
+		}
+		
+		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
+	}
+	
 	return data->buff;
 }
 

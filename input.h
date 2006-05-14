@@ -17,7 +17,7 @@ inputrc information for key bindings.
 */
 enum
 {
-	R_BEGINNING_OF_LINE = R_NULL+1, 
+	R_BEGINNING_OF_LINE = R_NULL+10,  /* This give input_common ten slots for lowlevel keycodes */
 	R_END_OF_LINE,
 	R_FORWARD_CHAR,
 	R_BACKWARD_CHAR,

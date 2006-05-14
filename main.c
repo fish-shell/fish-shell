@@ -276,7 +276,7 @@ int main( int argc, char **argv )
 			wchar_t *cmd_wcs = str2wcs( cmd );
 			res = eval( cmd_wcs, 0, TOP );
 			free(cmd_wcs);
-			reader_exit(0);
+			reader_exit(0, 0);
 		}
 		else
 		{
@@ -336,9 +336,9 @@ int main( int argc, char **argv )
 			}
 		}
 	}
-	
-	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
 
+	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
+	
 	history_destroy();
 	complete_destroy();
 	proc_destroy();
@@ -354,6 +354,7 @@ int main( int argc, char **argv )
 	common_destroy();
 	halloc_util_destroy();
 	intern_free_all();
+
 
 	return res;	
 }

@@ -367,6 +367,7 @@ const wchar_t *signal_get_desc( int sig )
 static void default_handler(int signal, siginfo_t *info, void *context)
 {
 	event_t e;
+
 	e.type=EVENT_SIGNAL;
 	e.param1.signal = signal;
 	e.function_name=0;
@@ -381,6 +382,22 @@ static void handle_winch( int sig, siginfo_t *info, void *context )
 {
 	common_handle_winch( sig );	
 	default_handler( sig, 0, 0 );	
+}
+
+/**
+   Respond to a winch signal by checking the terminal size
+*/
+static void handle_hup( int sig, siginfo_t *info, void *context )
+{
+	if( event_signal_listen( SIGHUP ) )
+	{
+		default_handler( sig, 0, 0 );	
+	}
+	else
+	{
+		reader_exit( 1, 1 );
+	}
+	
 }
 
 /**
@@ -479,10 +496,18 @@ void signal_set_handlers()
 			wperror( L"sigaction" );
 			exit(1);
 		}
-
+		
 		act.sa_flags = SA_SIGINFO;
 		act.sa_sigaction= &handle_winch;
 		if( sigaction( SIGWINCH, &act, 0 ) )
+		{
+			wperror( L"sigaction" );
+			exit(1);
+		}
+
+		act.sa_flags = SA_SIGINFO;
+		act.sa_sigaction= &handle_hup;
+		if( sigaction( SIGHUP, &act, 0 ) )
 		{
 			wperror( L"sigaction" );
 			exit(1);
@@ -510,6 +535,7 @@ void signal_set_handlers()
 			exit(1);
 		}
 	}
+
 }
 
 void signal_handle( int sig, int do_handle )

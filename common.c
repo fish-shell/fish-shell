@@ -72,6 +72,21 @@ parts of fish.
 */
 #define LOCKPOLLINTERVAL 10
 
+/**
+  Highest legal ascii value
+*/
+#define ASCII_MAX 127u
+
+/**
+  Highest legal 16-bit unicode value
+*/
+#define UCS2_MAX 0xffffu
+
+/**
+  Highest legal byte value
+*/
+#define BYTE_MAX 0xffu
+
 struct termios shell_modes;      
 
 int error_max=1;
@@ -842,14 +857,14 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							int base=16;
 							
 							int byte = 0;
-							wchar_t max_val = 127;
+							wchar_t max_val = ASCII_MAX;
 							
 							switch( in[in_pos] )
 							{
 								case L'u':
 								{
 									chars=4;
-									max_val = 35535;
+									max_val = UCS2_MAX;
 									break;
 								}
 								
@@ -868,7 +883,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 								case L'X':
 								{
 									byte=1;
-									max_val = 255;
+									max_val = BYTE_MAX;
 									break;
 								}
 								

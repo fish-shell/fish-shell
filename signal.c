@@ -426,7 +426,11 @@ static void default_handler(int signal, siginfo_t *info, void *context)
 	e.param1.signal = signal;
 	e.function_name=0;
 
-	event_fire( &e );
+	if( event_get( &e, 0 ) )
+	{
+		
+		event_fire( &e );
+	}
 }
 
 /**
@@ -443,7 +447,13 @@ static void handle_winch( int sig, siginfo_t *info, void *context )
 */
 static void handle_hup( int sig, siginfo_t *info, void *context )
 {
-	if( event_signal_listen( SIGHUP ) )
+	event_t e;
+
+	e.type=EVENT_SIGNAL;
+	e.param1.signal = SIGHUP;
+	e.function_name=0;
+
+	if( event_get( &e, 0 ) )
 	{
 		default_handler( sig, 0, 0 );	
 	}
@@ -502,7 +512,7 @@ void signal_set_handlers()
 	sigemptyset( & act.sa_mask );
 	act.sa_flags=SA_SIGINFO;
 	act.sa_sigaction = &default_handler;
-
+	
 	/*
 	  First reset everything to a use default_handler, a function
 	  whose sole action is to fire of an event

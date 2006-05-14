@@ -654,24 +654,3 @@ void event_free( event_t *e )
 	free( e );
 }
 
-int event_signal_listen( int signal )
-{
-	int i;
-	
-	if( !events )
-		return 0;
-	
-	for( i=0; i<al_get_count( events ); i++ )
-	{
-		event_t *e = (event_t *)al_get( events, i );
-		
-		if( e->type == EVENT_SIGNAL && 
-			(e->param1.signal == signal || e->param1.signal == EVENT_ANY_SIGNAL) )
-		{
-			return 1;
-		}
-	}
-	return 0;
-	
-	
-}

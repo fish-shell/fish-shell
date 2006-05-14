@@ -136,9 +136,4 @@ void event_free( event_t *e );
 */
 const wchar_t *event_get_desc( event_t *e );
 
-/**
-   Returns a non-zero status if there are event listeners that fire on the specified signal
-*/
-int event_signal_listen( int signal );
-
 #endif

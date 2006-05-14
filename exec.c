@@ -564,7 +564,7 @@ static void internal_exec_helper( const wchar_t *def,
 	io_data_t *io_internal = io_transmogrify( io );
 	int is_block_old=is_block;
 	is_block=1;
-
+	
 	/*
 	  Did the transmogrification fail - if so, set error status and return
 	*/
@@ -575,7 +575,7 @@ static void internal_exec_helper( const wchar_t *def,
 	}
 	
 	signal_unblock();
-		
+	
 	eval( def, io_internal, block_type );		
 	
 	signal_block();
@@ -837,7 +837,7 @@ void exec( job_t *j )
 					io_buffer = io_buffer_create();					
 					j->io = io_add( j->io, io_buffer );
 				}
-				
+								
 				internal_exec_helper( p->argv[0], TOP, j->io );			
 				break;
 				
@@ -852,6 +852,7 @@ void exec( job_t *j )
 				if( p == j->first_process )
 				{
 					io_data_t *in = io_get( j->io, 0 );
+					
 					if( in )
 					{
 						switch( in->io_mode )

@@ -89,4 +89,6 @@ io_data_t *io_buffer_create();
 */
 void io_buffer_read( io_data_t *d );
 
+void io_print( io_data_t *io );
+
 #endif

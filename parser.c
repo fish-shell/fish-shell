@@ -1878,6 +1878,7 @@ static int parse_job( process_t *p,
 
 			consumed=1;
 			is_new_block=1;
+
 		}
 		else if( wcscmp( L"if", nxt ) ==0 )
 		{
@@ -1937,7 +1938,7 @@ static int parse_job( process_t *p,
 				builtin_exists( (wchar_t *)al_get( args, 0 ) ) )
 			{
 				p->type = INTERNAL_BUILTIN;
-				is_new_block = parser_is_block( (wchar_t *)al_get( args, 0 ) );
+				is_new_block |= parser_is_block( (wchar_t *)al_get( args, 0 ) );
 			}
 		}
 
@@ -2075,6 +2076,7 @@ static int parse_job( process_t *p,
 
 		if( !make_sub_block )
 		{
+
 			tok_init( &subtok, end, 0 );
 			switch( tok_last_type( &subtok ) )
 			{

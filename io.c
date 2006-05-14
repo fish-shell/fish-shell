@@ -213,37 +213,34 @@ io_data_t *io_get( io_data_t *io, int fd )
 	return 0;
 }
 
-/*
-static void io_print( io_data_t *io )
+
+void io_print( io_data_t *io )
 {
 	if( !io )
 	{
-		fwprintf( stderr, L"\n" );
 		return;
 	}
 	
-
-	fwprintf( stderr, L"IO fd %d, type ",
+	debug( 1, L"IO fd %d, type ",
 			  io->fd );
 	switch( io->io_mode )
 	{
 		case IO_PIPE:
-			fwprintf(stderr, L"PIPE, data %d\n", io->pipe_fd[io->fd?1:0] );
+			debug( 1, L"PIPE, data %d", io->param1.pipe_fd[io->fd?1:0] );
 			break;
 		
 		case IO_FD:
-			fwprintf(stderr, L"FD, copy %d\n", io->old_fd );
+			debug( 1, L"FD, copy %d", io->param1.old_fd );
 			break;
 
 		case IO_BUFFER:
-			fwprintf( stderr, L"BUFFER\n" );
+			debug( 1, L"BUFFER" );
 			break;
 			
 		default:
-			fwprintf( stderr, L"OTHER\n" );
+			debug( 1, L"OTHER" );
 	}
 
 	io_print( io->next );
 	
 }
-*/

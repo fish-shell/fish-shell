@@ -1334,7 +1334,7 @@ static int builtin_read( wchar_t **argv )
 	int exit_res=0;
 	
 	woptind=0;
-
+	
 	while( 1 )
 	{
 		const static struct woption

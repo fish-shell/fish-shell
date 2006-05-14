@@ -2107,12 +2107,13 @@ static int parse_job( process_t *p,
 		{
 
 			int end_pos = end-tok_string( tok );
-			wchar_t *sub_block= wcsndup( tok_string( tok ) + current_tokenizer_pos,
-										 end_pos - current_tokenizer_pos);
+			wchar_t *sub_block= halloc_wcsndup( j,
+												tok_string( tok ) + current_tokenizer_pos,
+												end_pos - current_tokenizer_pos);
 
 			p->type = INTERNAL_BLOCK;
 			al_set( args, 0, sub_block );
-
+			
 			tok_set_pos( tok,
 						 end_pos );
 

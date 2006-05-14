@@ -1983,7 +1983,8 @@ void complete( const wchar_t *cmd,
 					{
 						if( parser_is_subcommand( tok_last( &tok ) ) )
 							break;
-
+						
+						free( current_command );
 						current_command = wcsdup( tok_last( &tok ) );
 
 						on_command = (pos <= tok_get_pos( &tok) + wcslen( tok_last( &tok ) ) );
@@ -2050,10 +2051,11 @@ void complete( const wchar_t *cmd,
 			}
 		}
 
-		free( current_token );
-		free( current_command );
-		free( prev_token );
 	}
+
+	free( current_token );
+	free( current_command );
+	free( prev_token );
 
 	error_max=old_error_max;
 	condition_cache_clear();

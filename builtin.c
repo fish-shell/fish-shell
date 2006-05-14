@@ -1422,7 +1422,6 @@ static int builtin_read( wchar_t **argv )
 			case L'?':
 				builtin_print_help( argv[0], sb_err );
 
-
 				return 1;
 		}
 

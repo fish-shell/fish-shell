@@ -18,7 +18,8 @@ if test "$USER" = root
 end
 
 for i in $path_list
-	if not expr "$PATH" : "$i/*" >/dev/null
+	set -l regex "^$i\(\|/*\)\$"
+	if not  printf "%s\n" $PATH|grep $regex >/dev/null
 		if test -d $i
 			set PATH $PATH $i
 		end

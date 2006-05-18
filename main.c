@@ -63,6 +63,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "halloc_util.h"
 #include "history.h"
 
+/**
+   The string describing the single-character options accepted by the main fish binary
+*/
+#define GETOPT_STRING "hilnvc:p:d:"
 
 /**
    Parse init files
@@ -165,14 +169,14 @@ int main( int argc, char **argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "hilnvc:p:d:", 
+							   GETOPT_STRING,
 							   long_options, 
 							   &opt_index );
 		
 #else	
 		int opt = getopt( argc,
 						  argv, 
-						  "hilnvc:p:d:" );
+						  GETOPT_STRING );
 #endif
 		if( opt == -1 )
 			break;
@@ -259,7 +263,6 @@ int main( int argc, char **argv )
 
 	proc_init();	
 	event_init();	
-	exec_init();	
 	wutil_init();
 	parser_init();
 	builtin_init();
@@ -348,7 +351,6 @@ int main( int argc, char **argv )
 	reader_destroy();
 	parser_destroy();
 	wutil_destroy();
-	exec_destroy();	
 	event_destroy();
 
 	common_destroy();

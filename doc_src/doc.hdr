@@ -1200,8 +1200,9 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - The jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error
 - wait shellscript
-- Signal handler to save the history file before exiting from a signal
 - Support for the screen clipboard
+- The -a string sent to complete should be validated
+- Fish should detect improper variable expansion when validating, e.g. strings such as 'foo$' and 'a${}' should be detected as invalid
 
 
 \subsection todo-possible Possible features

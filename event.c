@@ -57,7 +57,7 @@ typedef struct
   active, which is the one that new events is written to. The inactive
   one contains the events that are currently beeing performed.
 */
-static signal_list_t sig_list[2];
+static signal_list_t sig_list[]={{0,0},{0,0}};
 
 /**
    The index of sig_list that is the list of signals currently written to
@@ -273,9 +273,12 @@ void event_remove( event_t *criterion )
 	event_t e;
 	
 	/*
-	  Because of concurrency issues, env_remove does not actually free
-	  any events - instead it simply moves all events that should be
-	  removed from the event list to the killme list.
+	  Because of concurrency issues (env_remove could remove an event
+	  that is currently being executed), env_remove does not actually
+	  free any events - instead it simply moves all events that should
+	  be removed from the event list to the killme list, and the ones
+	  that shouldn't be killed to new_list, and then drops the empty
+	  events-list.
 	*/
 	
 	if( !events )
@@ -617,7 +620,6 @@ void event_fire( event_t *event )
 
 void event_init()
 {
-	sig_list[active_list].count=0;	
 }
 
 void event_destroy()

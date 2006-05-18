@@ -126,7 +126,7 @@ int exec_pipe( int fd[2])
 	
 	if( open_fds == 0 )
 	{
-		open_fds = al_new();
+		open_fds = al_halloc( global_context );
 	}
 	
 	al_push( open_fds, (void *)(long)fd[0] );
@@ -164,7 +164,8 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
    the redirection list io. This should make sure that there are no
    stray opened file descriptors in the child.
    
-   \param io the list of io redirections for this job. Pipes mentioned here should not be closed.
+   \param io the list of io redirections for this job. Pipes mentioned
+   here should not be closed.
 */
 static void close_unused_internal_pipes( io_data_t *io )
 {
@@ -184,20 +185,6 @@ static void close_unused_internal_pipes( io_data_t *io )
 		}
 	}
 }
-
-void exec_init()
-{
-}
-
-void exec_destroy()
-{
-	if( open_fds )
-	{
-		al_destroy( open_fds );
-		free( open_fds );
-	}
-}
-
 
 /**
    Make sure the fd used by this redirection is not used by i.e. a pipe. 

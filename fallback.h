@@ -7,13 +7,13 @@
 #include <stdarg.h>
 #include <wctype.h>
 #include <wchar.h>
-
+#include <limits.h>
 
 #ifndef WCHAR_MAX
 /**
    This _should_ be defined by wchar.h, but e.g. OpenBSD doesn't.
 */
-#define WCHAR_MAX 0x7fffffffu
+#define WCHAR_MAX INT_MAX
 #endif
 
 /**

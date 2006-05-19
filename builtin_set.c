@@ -26,10 +26,24 @@ Functions used for implementing the set builtin.
 #include "parser.h"
 #include "translate.h"
 
+/**
+   Error message for invalid path operations
+*/
 #define BUILTIN_SET_PATH_ERROR L"%ls: Could not add component %ls to %ls.\n"
+
+/**
+   Hint for invalid path operation with a colon
+*/
 #define BUILTIN_SET_PATH_HINT L"%ls: Did you mean 'set %ls $%ls %ls'?\n"
+
+/**
+   Error for mismatch between index count and elements
+*/
 #define BUILTIN_SET_ARG_COUNT L"%ls: The number of variable indexes does not match the number of values\n"
 
+/**
+   Test if the specified variable should be subject to path validation
+*/
 static int is_path_variable( const wchar_t *env )
 {
 	return contains_str( env,
@@ -82,13 +96,14 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 						   L"set", 
 						   dir, 
 						   key );
+				
 				colon = wcschr( dir, L':' );
 				
 				if( colon && *(colon+1) ) 
 				{
 					show_hint = 1;
 				}
-
+				
 			}
 			
 			if( show_perror )
@@ -184,7 +199,7 @@ static int parse_index( array_list_t *indexes,
 		sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), L"set" );					
 		return 0;
 	}
-
+	
 	len = src-src_orig;
 	
 	if( (wcsncmp( src_orig, name, len )!=0) || (wcslen(name) != (len)) )
@@ -233,7 +248,8 @@ static int parse_index( array_list_t *indexes,
    indexes. The previous entries at the specidied position will be
    free'd.
 
-   \return The number of elements in the list after the modifications have been made
+   \return The number of elements in the list after the modifications
+   have been made
 */
 static int update_values( array_list_t *list, 
 						  array_list_t *indexes,
@@ -266,7 +282,7 @@ static int al_contains_int( array_list_t *list,
 	for (i = 0; i < al_get_count(list); i++) 
 	{
 		int *current = (int *) al_get(list, i);
-		if (current != 0 && *current == val) 
+		if( current != 0 && *current == val ) 
 		{
 			return 1;
 		}
@@ -301,27 +317,6 @@ static void erase_values(array_list_t *list, array_list_t *indexes)
 	al_truncate(list,0);	
 	al_push_all( list, &result );
 	al_destroy(&result);
-}
-
-
-/**
-   Fill a string buffer with values from a list, using ARRAY_SEP_STR to separate them 
-*/
-static int fill_buffer_from_list(string_buffer_t *sb, array_list_t *list) 
-{
-	int i;
-
-	for (i = 0; i < al_get_count(list); i++) 
-	{
-		wchar_t *v = (wchar_t *) al_get(list, i);
-		if (v != 0) 
-		{
-			sb_append(sb, v);
-		}    
-		if (i < al_get_count(list) - 1)
-			sb_append(sb, ARRAY_SEP_STR);
-	}
-	return al_get_count(list);
 }
 
 
@@ -364,9 +359,9 @@ static void print_variables(int include_values, int esc, int scope)
 
 
 /**
-   The set builtin. Creates, updates and erases environment variables and environemnt variable arrays. 
+   The set builtin. Creates, updates and erases environment variables
+   and environemnt variable arrays.
 */
-
 int builtin_set( wchar_t **argv ) 
 {
 	

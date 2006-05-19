@@ -144,7 +144,7 @@ a number called a file descriptor (FD). These are:
 The reason for providing for two output file descriptors is to allow
 separation of errors and warnings from regular program output.
 
-Any file descriptor can be directed to a different output than it's
+Any file descriptor can be directed to a different output than its
 default through a simple mechanism called a redirection.
 
 An example of a file redirection is <code> echo hello \>output.txt</code>,
@@ -488,7 +488,7 @@ becomes explicitly NOT a part of the variable name, even if it happens
 to be a legal variable name character. That's why '{$USER}san' looks
 for the variable '$USER' and not for the variable '$USERsan'. It's
 simply a case of one syntax lending itself nicely to solving an
-unrelated problem in it's spare time.
+unrelated problem in its spare time.
 
 Variable expansion is the only type of expansion performed on double
 quoted strings. There is, however, an important difference in how
@@ -644,7 +644,7 @@ echo $pirate
 \subsection variables-universal More on universal variables
 
 Universal variables are variables that are shared between all the
-users fish sessions on the computer. Fish stores many of it's
+users fish sessions on the computer. Fish stores many of its
 configuration options as universal variables. This means that in order
 to change fish settings, all you have to do is change the variable
 value once, and it will be automatically updated for all sessions, and
@@ -1026,7 +1026,7 @@ Detected errors include:
 - Mismatched parenthesis
 
 When the cursor is over a parenthesis or a quote, \c fish also
-highlights it's matching quote or parenthesis.
+highlights its matching quote or parenthesis.
 
 To customize the syntax highlighting, you can set the environment
 variables \c fish_color_normal, \c fish_color_command, \c
@@ -1117,7 +1117,7 @@ command.
 
 If you install fish in your home directory, fish will not work
 correctly for any other user than yourself. This is because fish needs
-it's initalization files to function properly. To solve this
+its initalization files to function properly. To solve this
 problem, either copy the initialization files to each fish users home
 directory, or install them in /etc.
 
@@ -1177,7 +1177,7 @@ msgstr "%ls: Inget passande jobb\n"
 placeholders. These will be replaced by a value by fish at
 runtime. You must always take care to use exactly the same
 placeholders in the same order in your translation. (Actually, there
-are ways to avoid this, but they are to complicated for this short
+are ways to avoid this, but they are too complicated for this short
 introduction. See the full manual for the printf C function for more
 information.)
 

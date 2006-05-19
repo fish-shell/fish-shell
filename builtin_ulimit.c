@@ -63,13 +63,13 @@ const static struct resource_t resource_arr[] =
 		RLIMIT_FSIZE, L"Maximum size of files created by the shell", L'f', 1024
 	}
 	,
-#if HAVE_RLIMIT_MEMLOCK
+#ifdef RLIMIT_MEMLOCK
 	{
 		RLIMIT_MEMLOCK, L"Maximum size that may be locked into memory", L'l', 1024
 	}
 	,
 #endif
-#if HAVE_RLIMIT_RSS
+#ifdef RLIMIT_RSS
 	{
 		RLIMIT_RSS, L"Maximum resident set size", L'm', 1024
 	}
@@ -87,13 +87,13 @@ const static struct resource_t resource_arr[] =
 		RLIMIT_CPU, L"Maximum amount of cpu time in seconds", L't', 1
 	}
 	,
-#if HAVE_RLIMIT_NPROC
+#ifdef RLIMIT_NPROC
 	{
 		RLIMIT_NPROC, L"Maximum number of processes available to a single user", L'u', 1
 	}
 	,
 #endif
-#if HAVE_RLIMIT_AS
+#ifdef RLIMIT_AS
 	{
 		RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v', 1024
 	}	

@@ -102,7 +102,7 @@ static int pq_compare( void *e1, void *e2 )
 /**
    Test priority queue functionality
 */
-static int pq_test( int elements )
+static void pq_test( int elements )
 {
 	int i;
 	int prev;
@@ -290,7 +290,7 @@ static int hash_test( int elements )
 /**
    Arraylist test
 */
-static int al_test( int sz)
+static void al_test( int sz)
 {
 	int i;	
 	array_list_t l;
@@ -690,7 +690,6 @@ int main( int argc, char **argv )
 	proc_init();	
 	halloc_util_init();
 	event_init();	
-	exec_init();	
 	parser_init();
 	function_init();
 	builtin_init();
@@ -718,7 +717,6 @@ int main( int argc, char **argv )
 	builtin_destroy();
 	complete_destroy();
 	wutil_destroy();
-	exec_destroy();
 	event_destroy();
 	proc_destroy();
 	halloc_util_destroy();

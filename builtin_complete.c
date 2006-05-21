@@ -445,6 +445,42 @@ int builtin_complete( wchar_t **argv )
 
 	if( !res )
 	{
+		if( condition && wcslen( condition ) )
+		{
+			if( parser_test( condition, 0 ) )
+			{
+				sb_printf( sb_err,
+						   L"%ls: Condition '%ls' contained a syntax error\n", 
+						   argv[0],
+						   condition );
+				
+				parser_test( condition, 1 );
+				
+				res = 1;
+			}
+		}
+	}
+	
+	if( !res )
+	{
+		if( comp && wcslen( comp ) )
+		{
+			if( parser_test_args( comp, 0 ) )
+			{
+				sb_printf( sb_err,
+						   L"%ls: Completion '%ls' contained a syntax error\n", 
+						   argv[0],
+						   comp );
+				
+				parser_test_args( comp, 1 );
+				
+				res = 1;
+			}
+		}
+	}
+
+	if( !res )
+	{
 		if( do_complete )
 		{
 			array_list_t comp;

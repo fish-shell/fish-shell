@@ -261,27 +261,18 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 }
 
 /**
-   Tests if all characters in the string are numeric
-*/
-static int isnumeric( const char *n )
-{
-	if( *n == '\0' )
-		return 1;
-	if( *n < '0' || *n > '9' )
-		return 0;
-	return isnumeric( n+1 );
-}
-
-/**
    Tests if all characters in the wide string are numeric
 */
 static int iswnumeric( const wchar_t *n )
 {
-	if( *n == L'\0' )
-		return 1;
-	if( *n < L'0' || *n > L'9' )
-		return 0;
-	return iswnumeric( n+1 );
+	for( ; *n; n++ )
+	{
+		if( *n < L'0' || *n > L'9' )
+		{
+			return 0;
+		}
+	}
+	return 1;
 }
 
 /**
@@ -356,9 +347,9 @@ static int find_process( const wchar_t *proc,
 						 array_list_t *out )
 {
 	DIR *dir;
-	struct dirent *next;
-	char *pdir_name;
-	char *pfile_name;
+	struct wdirent *next;
+	wchar_t *pdir_name;
+	wchar_t *pfile_name;
 	wchar_t *cmd=0;
 	int sz=0;
 	int found = 0;
@@ -494,20 +485,20 @@ static int find_process( const wchar_t *proc,
 		return 1;
 	}
 
-	pdir_name = malloc( 256 );
-	pfile_name = malloc( 64 );
-	strcpy( pdir_name, "/proc/" );
-
-	while( (next=readdir(dir))!=0 )
+	pdir_name = malloc( sizeof(wchar_t)*256 );
+	pfile_name = malloc( sizeof(wchar_t)*64 );
+	wcscpy( pdir_name, L"/proc/" );
+	
+	while( (next=wreaddir(dir))!=0 )
 	{
-		char *name = next->d_name;
+		wchar_t *name = next->d_name;
 		struct stat buf;
 
-		if( !isnumeric( name ) )
+		if( !iswnumeric( name ) )
 			continue;
 
-		strcpy( pdir_name + 6, name );
-		if( stat( pdir_name, &buf ) )
+		wcscpy( pdir_name + 6, name );
+		if( wstat( pdir_name, &buf ) )
 		{
 			continue;
 		}
@@ -515,17 +506,17 @@ static int find_process( const wchar_t *proc,
 		{
 			continue;
 		}
-		strcpy( pfile_name, pdir_name );
-		strcat( pfile_name, "/cmdline" );
+		wcscpy( pfile_name, pdir_name );
+		wcscat( pfile_name, L"/cmdline" );
 
-		if( !stat( pfile_name, &buf ) )
+		if( !wstat( pfile_name, &buf ) )
 		{
 			/*
 			  the 'cmdline' file exists, it should contain the commandline
 			*/
 			FILE *cmdfile;
 
-			if((cmdfile=fopen( pfile_name, "r" ))==0)
+			if((cmdfile=wfopen( pfile_name, "r" ))==0)
 			{
 				wperror( L"fopen" );
 				continue;
@@ -540,15 +531,15 @@ static int find_process( const wchar_t *proc,
 		else
 		{
 #ifdef SunOS
-			strcpy( pfile_name, pdir_name );
-			strcat( pfile_name, "/psinfo" );
-			if( !stat( pfile_name, &buf ) )
+			wcscpy( pfile_name, pdir_name );
+			wcscat( pfile_name, L"/psinfo" );
+			if( !wstat( pfile_name, &buf ) )
 			{
 				psinfo_t info;
 
 				FILE *psfile;
 
-				if((psfile=fopen( pfile_name, "r" ))==0)
+				if((psfile=wfopen( pfile_name, "r" ))==0)
 				{
 					wperror( L"fopen" );
 					continue;
@@ -587,7 +578,7 @@ static int find_process( const wchar_t *proc,
 				}
 				else
 				{
-					wchar_t *res = str2wcs(name);
+					wchar_t *res = wcsdup(name);
 					if( res )
 						al_push( out, res );
 				}

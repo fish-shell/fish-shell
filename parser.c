@@ -2711,7 +2711,7 @@ int parser_test_args(const  wchar_t * buff,
 		current_tokenizer_pos = tok_get_pos( &tok );
 		switch( tok_last_type( &tok ) )
 		{
-
+			
 			case TOK_STRING:
 			{
 				err |= parser_test_argument( tok_last( &tok ), babble );

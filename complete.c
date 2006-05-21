@@ -2023,9 +2023,28 @@ void complete( const wchar_t *cmd,
 		current_token = wcsndup( begin, cursor_pos-(begin-cmd) );
 
 		prev_token = prev_begin ? wcsndup( prev_begin, prev_end - prev_begin ): wcsdup(L"");
-
+		
 //		fwprintf( stderr, L"on_command: %d, %ls %ls\n", on_command, current_compmand, current_token );
-
+		if( !had_cmd )
+		{
+			on_command=1;
+		}
+		
+		if( !current_token )
+		{
+			current_token = wcsdup(L"");
+		}
+		
+		if( !current_command )
+		{
+			current_command = wcsdup(L"");
+		}
+		
+		if( !prev_token )
+		{
+			prev_token = wcsdup(L"");
+		}
+	
 		if( current_token && current_command && prev_token )
 		{
 			if( on_command )
@@ -2045,7 +2064,7 @@ void complete( const wchar_t *cmd,
 				*/
 
 				int do_file;
-
+				
 				do_file = complete_param( current_command, prev_token, current_token, comp );
 				complete_param_expand( current_token, comp, do_file );
 			}

@@ -315,10 +315,20 @@ const wchar_t *parser_get_block_desc( int block );
 
 
 /**
-   Test if the specified string can be parsed, or if more bytes need to be read first. 
-   The result has the first bit set if the string contains errors, and the second bit is set if the string contains an unclosed block.
+   Test if the specified string can be parsed, or if more bytes need
+   to be read first.  The result has the first bit set if the string
+   contains errors, and the second bit is set if the string contains
+   an unclosed block.
 */
-int parser_test( wchar_t * buff, int babble );
+int parser_test( const wchar_t * buff, int babble );
+
+/**
+   Test if the specified string can be parsed as an argument list,
+   e.g. sent to eval_args.  The result has the first bit set if the
+   string contains errors, and the second bit is set if the string
+   contains an unclosed block.
+*/
+int parser_test_args( const wchar_t * buff, int babble );
 
 /**
    Returns the full path of the specified directory. If the \c in is a

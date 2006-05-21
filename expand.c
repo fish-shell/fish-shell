@@ -77,27 +77,6 @@ parameter expansion.
 #define COMPLETE_LAST_DESC _( L"Last background job")
 
 /**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_DESC _( L"The '$' character begins a variable name. The character '%lc', which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean {$VARIABLE}? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
-
-
-/**
    String in process expansion denoting ourself
 */
 #define SELF_STR L"self"
@@ -804,8 +783,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 					{
 						error( SYNTAX_ERROR,
 							   -1,
-							   COMPLETE_VAR_NULL_DESC,
-							   in[stop_pos] );
+							   COMPLETE_VAR_NULL_DESC );
 						break;
 					}
 

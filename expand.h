@@ -112,6 +112,27 @@ enum
 /** String containing the character for separating two array elements */
 #define ARRAY_SEP_STR L"\x1e"
 
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_DESC _( L"The '$' character begins a variable name. The character '%lc', which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
+
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
+
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean {$VARIABLE}? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
+
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
+
+
 
 
 /**

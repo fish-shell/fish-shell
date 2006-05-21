@@ -2590,7 +2590,7 @@ static int builtin_for( wchar_t **argv )
 	else if (wcscmp( argv[2], L"in") != 0 )
 	{
 		sb_printf( sb_err,
-				   _( L"%ls: Second argument must be 'in'\n" ),
+				   BUILTIN_FOR_ERR_IN,
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 	}

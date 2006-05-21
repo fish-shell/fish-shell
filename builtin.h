@@ -58,6 +58,11 @@ enum
 #define BUILTIN_ERR_VARNAME_ZERO _( L"%ls: Variable name can not be the empty string\n" )
 
 /**
+   Error message when second argument to for isn't 'in'
+*/
+#define BUILTIN_FOR_ERR_IN _( L"%ls: Second argument must be 'in'\n" )
+
+/**
    Stringbuffer used to represent standard output
 */
 extern string_buffer_t *sb_out;

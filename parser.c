@@ -2790,7 +2790,9 @@ int parser_test( const  wchar_t * buff,
 	*/
 	int needs_cmd=0; 
 	void *context = halloc( 0, 0 );
-	
+	int arg_count=0;
+	wchar_t *cmd;
+		
 	current_tokenizer = &tok;
 
 	for( tok_init( &tok, buff, 0 );
@@ -2808,10 +2810,11 @@ int parser_test( const  wchar_t * buff,
 				{
 					int mark = tok_get_pos( &tok );
 					had_cmd = 1;
-					
-					if( !expand_one( context, 
-									 wcsdup( tok_last( &tok ) ), 
-									 EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES ) )
+					arg_count=0;
+							
+					if( !(cmd = expand_one( context, 
+											wcsdup( tok_last( &tok ) ), 
+											EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES ) ) )
 					{
 						err=1;
 						if( babble )
@@ -2827,7 +2830,7 @@ int parser_test( const  wchar_t * buff,
 					
 					if( needs_cmd )
 					{
-						if( contains_str( tok_last(&tok),
+						if( contains_str( cmd,
 										  L"end",
 										  0 ) )
 						{
@@ -2848,7 +2851,7 @@ int parser_test( const  wchar_t * buff,
 					/*
 					  Decrement block count on end command
 					*/
-					if( wcscmp(tok_last(&tok), L"end")==0)
+					if( wcscmp(cmd, L"end")==0)
 					{
 						tok_next( &tok );
 						count--;
@@ -2858,7 +2861,7 @@ int parser_test( const  wchar_t * buff,
 					/*
 					  Handle block commands
 					*/
-					if( parser_is_block( tok_last(&tok) ) )
+					if( parser_is_block( cmd ) )
 					{
 						if( count >= BLOCK_MAX_COUNT )
 						{
@@ -3041,7 +3044,42 @@ int parser_test( const  wchar_t * buff,
 				}
 				else
 				{
-					err = parser_test_argument( tok_last( &tok ), babble );
+					err |= parser_test_argument( tok_last( &tok ), babble );
+
+					if( arg_count >= 0 && expand_is_clean( tok_last( &tok ) ) )
+					{
+						arg_count++;
+					}
+					else
+					{
+						arg_count = -1;
+					}
+					
+					/*
+					  Try to make sure the second argument to 'for' is 'in'
+					*/
+					if( wcscmp( cmd, L"for" ) == 0 )
+					{
+						if( arg_count == 2 )
+						{
+							if( wcscmp( tok_last( &tok ), L"in" ) != 0 )
+							{
+								err = 1;
+															
+								if( babble )
+								{
+									error( SYNTAX_ERROR,
+										   tok_get_pos( &tok ),
+										   BUILTIN_FOR_ERR_IN,
+										   L"for" );
+									
+									print_errors();
+								}
+							}
+						}
+					}
+					
+					
 				}
 				
 				break;
@@ -3217,7 +3255,7 @@ int parser_test( const  wchar_t * buff,
 	error_code=0;
 
 	halloc_free( context );
-	
+
 	return err | ((count!=0)<<1);
 }
 

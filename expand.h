@@ -188,4 +188,15 @@ wchar_t *expand_tilde(wchar_t *in);
 */
 void expand_variable_array( const wchar_t *val, array_list_t *out );
 
+/**
+   Test if the specified argument is clean, i.e. it does not contain
+   any tokens which need to be expanded or otherwise altered. Clean
+   strings can be passed through expand_string and expand_one without
+   changing them. About two thirds of all strings are clean, so
+   skipping expansion on them actually does save a small amount of
+   time, since it avoids multiple memory allocations during the
+   expansion process.
+*/
+int expand_is_clean( const wchar_t *in );
+
 #endif

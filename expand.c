@@ -96,15 +96,7 @@ parameter expansion.
 */
 #define UNCLEAN L"$*?\\\"'({})"
 
-/**
-   Test if the specified argument is clean, i.e. it does not contain
-   any tokens which need to be expanded or otherwise altered. Clean
-   strings can be passed through expand_string and expand_one without
-   changing them. About 90% of all strings are clean, so skipping
-   expansion on them actually does save a small amount of time, since
-   it avoids multiple memory allocations during the expansion process.
-*/
-static int is_clean( const wchar_t *in )
+int expand_is_clean( const wchar_t *in )
 {
 
 	const wchar_t * str = in;
@@ -204,7 +196,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 		case 0:
 			sb_append( &buff, L"''");
 			break;
-
+			
 		case 1:
 		{
 			wchar_t *el = (wchar_t *)al_get( &l, 0 );
@@ -1372,7 +1364,6 @@ static void remove_internal_separator( const void *s, int conv )
 	*out=0;
 }
 
-
 /**
    The real expansion function. expand_one is just a wrapper around this one.
 */
@@ -1389,9 +1380,7 @@ int expand_string( void *context,
 	int res = EXPAND_OK;
 	int start_count = al_get_count( end_out );
 
-//	debug( 1, L"Expand %ls", str );
-
-	if( (!(flags & ACCEPT_INCOMPLETE)) && is_clean( str ) )
+	if( (!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean( str ) )
 	{
 		halloc_register( context, str );
 		al_push( end_out, str );
@@ -1636,8 +1625,8 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
 	array_list_t l;
 	int res;
 	wchar_t *one;
-
-	if( (!(flags & ACCEPT_INCOMPLETE)) &&  is_clean( string ) )
+	
+	if( (!(flags & ACCEPT_INCOMPLETE)) &&  expand_is_clean( string ) )
 	{
 		halloc_register( context, string );
 		return string;

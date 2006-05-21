@@ -43,7 +43,7 @@ complete -xc valgrind -l input-fd -d (N_ "File descriptor for input") -a "0 1 2 
 
 
 # Memcheck-specific options
-complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l leak-check -d (N_ "Check for memory leaks") -a "no\tDon't\ check\ for\ memory\ leaks summary\t'Show a leak summary' full\t'Describe memory leaks in detail'"
+complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l leak-check -d (N_ "Check for memory leaks") -a "no\tDon\'t\ check\ for\ memory\ leaks summary\t'Show a leak summary' full\t'Describe memory leaks in detail'"
 complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l show-reachable -d (N_ "Show reachable leaked memory") -a "yes\t'Show reachable leaked memory' no\t'Do not show reachable leaked memory'"
 complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l leak-resolution -d (N_ "Determines how willing Memcheck is to consider different backtraces to be the same") -a "low\t'Two entries need to match' med\t'Four entries need to match' high\t'All entries need to match'"
 complete -n "__fish_valgrind_skin memcheck" -xc valgrind -l freelist-vol -d (N_ "Set size of freed memory pool")

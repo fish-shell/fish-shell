@@ -24,7 +24,7 @@ complete -x -c ssh -s b -d (N_ "Interface to transmit from") -a "
 )
 "
 
-complete -x -c ssh -s e -d (N_ "Escape character") -a "^ none"
+complete -x -c ssh -s e -d (N_ "Escape character") -a "\^ none"
 complete -c ssh -s f -d (N_ "Go to background")
 complete -c ssh -s g -d (N_ "Allow remote host to connect to local forwarded ports")
 complete -c ssh -s I -d (N_ "Smartcard device")

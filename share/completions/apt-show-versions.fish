@@ -9,6 +9,6 @@ complete -f -c apt-show-versions -s v -l verbose -d (N_ 'Print verbose info')
 complete -f -c apt-show-versions -s i -l initialize -d (N_ 'Init or update cache only')
 complete -r -c apt-show-versions -l status-file -d (N_ 'Read package from file')
 complete -r -c apt-show-versions -o stf -d (N_ 'Read package from file')
-complete -r -c apt-show-versions -l list-dir -a '(ls -Fp .|grep /$) /var/lib/apt/lists /var/state/apt/lists' -d (N_ 'Specify APT list dir')
-complete -r -c apt-show-versions -o ld -a '(ls -Fp .|grep /$) /var/lib/apt/lists /var/state/apt/lists' -d (N_ 'Specify APT list dir')
+complete -r -c apt-show-versions -l list-dir -a '(ls -Fp .|grep /\$) /var/lib/apt/lists /var/state/apt/lists' -d (N_ 'Specify APT list dir')
+complete -r -c apt-show-versions -o ld -a '(ls -Fp .|grep /\$) /var/lib/apt/lists /var/state/apt/lists' -d (N_ 'Specify APT list dir')
 

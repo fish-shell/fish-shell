@@ -990,9 +990,12 @@ int main( int argc, char **argv )
 
 		fwprintf( out_file, L"%ls", (wchar_t *)out_buff.buff );
 		if( is_ca_mode )
+		{
 			writembs(exit_ca_mode);
+			pager_flush();
+		}
 	}
-		
+	
 	destroy();
 }
 

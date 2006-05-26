@@ -379,13 +379,13 @@ int builtin_ulimit( wchar_t ** argv )
 			case L'f':
 				what=RLIMIT_FSIZE;
 				break;
-#if HAVE_RLIMIT_MEMLOCK
+#ifdef RLIMIT_MEMLOCK
 			case L'l':
 				what=RLIMIT_MEMLOCK;
 				break;
 #endif
 
-#if HAVE_RLIMIT_RSS				
+#ifdef RLIMIT_RSS				
 			case L'm':
 				what=RLIMIT_RSS;
 				break;
@@ -403,13 +403,13 @@ int builtin_ulimit( wchar_t ** argv )
 				what=RLIMIT_CPU;
 				break;
 			
-#if HAVE_RLIMIT_NPROC	
+#ifdef RLIMIT_NPROC	
 			case L'u':
 				what=RLIMIT_NPROC;
 				break;
 #endif
 				
-#if HAVE_RLIMIT_AS				
+#ifdef RLIMIT_AS				
 			case L'v':
 				what=RLIMIT_AS;
 				break;

@@ -2542,6 +2542,25 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	return code;
 }
 
+static int parser_get_block_type( const wchar_t *cmd )
+{
+	if( wcscmp( cmd, L"while") == 0 )
+		return WHILE;
+	else if( wcscmp( cmd, L"for") == 0 )
+		return FOR;
+	else if( wcscmp( cmd, L"switch") == 0 )
+		return SWITCH;
+	else if( wcscmp( cmd, L"if") == 0 )
+		return IF;
+	else if( wcscmp( cmd, L"function") == 0 )
+		return FUNCTION_DEF;
+	else if( wcscmp( cmd, L"begin") == 0 )
+		return BEGIN;
+	else
+		return -1;
+}
+
+
 static int parser_test_argument( const wchar_t *arg, int babble )
 {
 	wchar_t *unesc;
@@ -2822,7 +2841,7 @@ int parser_test( const  wchar_t * buff,
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
 								   ILLEGAL_CMD_ERR_MSG,
-								   tok_last( &tok ) );
+								   cmd );
 							
 							print_errors();
 						}						
@@ -2830,6 +2849,11 @@ int parser_test( const  wchar_t * buff,
 					
 					if( needs_cmd )
 					{
+						/*
+						  end is not a valid command when a followup
+						  command is needed, such as after 'and' or
+						  'while'
+						*/
 						if( contains_str( cmd,
 										  L"end",
 										  0 ) )
@@ -2873,23 +2897,7 @@ int parser_test( const  wchar_t * buff,
 						}
 						else
 						{
-							if( wcscmp( tok_last(&tok), L"while") == 0 )
-								block_type[count] = WHILE;
-							else if( wcscmp( tok_last(&tok), L"for") == 0 )
-								block_type[count] = FOR;
-							else if( wcscmp( tok_last(&tok), L"switch") == 0 )
-								block_type[count] = SWITCH;
-							else if( wcscmp( tok_last(&tok), L"if") == 0 )
-								block_type[count] = IF;
-							else if( wcscmp( tok_last(&tok), L"function") == 0 )
-								block_type[count] = FUNCTION_DEF;
-							else if( wcscmp( tok_last(&tok), L"begin") == 0 )
-								block_type[count] = BEGIN;
-							else
-								block_type[count] = -1;
-							
-//							debug( 2, L"add block of type %d after cmd %ls\n", block_type[count], tok_last(&tok) );
-							
+							block_type[count] = parser_get_block_type( cmd );
 							block_pos[count] = current_tokenizer_pos;
 							tok_next( &tok );
 							count++;
@@ -2903,17 +2911,20 @@ int parser_test( const  wchar_t * buff,
 					  argument. If parser_skip_arguments is true, the
 					  second argument is optional.
 					*/
-					if( parser_is_subcommand( tok_last( &tok ) ) && !parser_skip_arguments(tok_last( &tok ) ) )
+					if( parser_is_subcommand( cmd ) && !parser_skip_arguments(cmd ) )
 					{
 						needs_cmd = 1;
 						had_cmd = 0;
 					}
 					
-					if( contains_str( tok_last( &tok ),
+					if( contains_str( cmd,
 									  L"or",
 									  L"and",
 									  0 ) )
 					{
+						/*
+						  'or' and 'and' can not be used inside pipelines
+						*/
 						if( is_pipeline )
 						{
 							err=1;
@@ -2934,7 +2945,7 @@ int parser_test( const  wchar_t * buff,
 					  are forbidden, including when using the exec
 					  builtin.
 					*/
-					if( parser_is_pipe_forbidden( tok_last( &tok ) ) )
+					if( parser_is_pipe_forbidden( cmd ) )
 					{
 						if( is_pipeline )
 						{
@@ -2953,16 +2964,13 @@ int parser_test( const  wchar_t * buff,
 					}
 
 					/*
-					  Test that the case builtin is only used in a switch block
+					  Test that the case builtin is only used directly in a switch block
 					*/
-					if( wcscmp( L"case", tok_last( &tok ) )==0 )
+					if( wcscmp( L"case", cmd )==0 )
 					{
 						if( !count || block_type[count-1]!=SWITCH )
 						{
 							err=1;
-
-//							debug( 2, L"Error on block type %d\n", block_type[count-1] );
-
 
 							if( babble )
 							{
@@ -2976,10 +2984,9 @@ int parser_test( const  wchar_t * buff,
 					}
 
 					/*
-					  Test that break and continue are only used in loop blocks
+					  Test that break and continue are only used within loop blocks
 					*/
-					if( wcscmp( L"break", tok_last( &tok ) )==0 ||
-						wcscmp( L"continue", tok_last( &tok ) )==0)
+					if( contains_str( cmd, L"break", L"continue", (void *)0 ) )
 					{
 						int found_loop=0;
 						int i;
@@ -3008,9 +3015,9 @@ int parser_test( const  wchar_t * buff,
 					}
 
 					/*
-					  Test that else is only used in an if-block
+					  Test that else is only used directly in an if-block
 					*/
-					if( wcscmp( L"else", tok_last( &tok ) )==0 )
+					if( wcscmp( L"else", cmd )==0 )
 					{
 						if( !count || block_type[count-1]!=IF )
 						{
@@ -3028,7 +3035,7 @@ int parser_test( const  wchar_t * buff,
 					}
 
 					/*
-					  Test that end is not used when not inside a blovk
+					  Test that end is not used when not inside any block
 					*/
 					if( count < 0 )
 					{
@@ -3045,7 +3052,10 @@ int parser_test( const  wchar_t * buff,
 				else
 				{
 					err |= parser_test_argument( tok_last( &tok ), babble );
-
+					
+					/*
+					  If possible, keep track of number of supplied arguments
+					*/
 					if( arg_count >= 0 && expand_is_clean( tok_last( &tok ) ) )
 					{
 						arg_count++;
@@ -3078,8 +3088,6 @@ int parser_test( const  wchar_t * buff,
 							}
 						}
 					}
-					
-					
 				}
 				
 				break;

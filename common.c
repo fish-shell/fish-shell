@@ -67,21 +67,6 @@ parts of fish.
 */
 #define LOCKPOLLINTERVAL 10
 
-/**
-  Highest legal ascii value
-*/
-#define ASCII_MAX 127u
-
-/**
-  Highest legal 16-bit unicode value
-*/
-#define UCS2_MAX 0xffffu
-
-/**
-  Highest legal byte value
-*/
-#define BYTE_MAX 0xffu
-
 struct termios shell_modes;      
 
 int error_max=1;

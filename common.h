@@ -36,6 +36,21 @@
 */
 #define ENCODE_DIRECT_BASE 0xf100
 
+/**
+  Highest legal ascii value
+*/
+#define ASCII_MAX 127u
+
+/**
+  Highest legal 16-bit unicode value
+*/
+#define UCS2_MAX 0xffffu
+
+/**
+  Highest legal byte value
+*/
+#define BYTE_MAX 0xffu
+
 /** 
 	Save the shell mode on startup so we can restore them on exit
 */

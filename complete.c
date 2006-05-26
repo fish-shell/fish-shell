@@ -2071,7 +2071,7 @@ void complete( const wchar_t *cmd,
 		}
 
 	}
-
+	
 	free( current_token );
 	free( current_command );
 	free( prev_token );

@@ -373,35 +373,47 @@ int builtin_set( wchar_t **argv )
 		{
 			{ 
 				L"export", no_argument, 0, 'x' 
-			},
+			}
+			,
 			{ 
 				L"global", no_argument, 0, 'g' 
-			},
+			}
+			,
 			{ 
 				L"local", no_argument, 0, 'l'  
-			},
+			}
+			,
 			{ 
 				L"erase", no_argument, 0, 'e'  
-			},
+			}
+			,
 			{ 
 				L"names", no_argument, 0, 'n' 
-			} ,
+			} 
+			,
 			{ 
 				L"unexport", no_argument, 0, 'u' 
-			} ,
+			} 
+			,
 			{ 
 				L"universal", no_argument, 0, 'U' 
-			} ,
+			} 
+			,
 			{ 
 				L"query", no_argument, 0, 'q' 
-			} ,
+			} 
+			,
+			{ 
+				L"help", no_argument, 0, 'h' 
+			} 
+			,
 			{ 
 				0, 0, 0, 0 
 			}
 		}
 	;
 	
-	const wchar_t *short_options = L"+xglenuUq";
+	const wchar_t *short_options = L"+xglenuUqh";
 
 	int argc = builtin_count_args(argv);
 
@@ -438,32 +450,47 @@ int builtin_set( wchar_t **argv )
 		{
 			case 0:
 				break;
+
 			case 'e':
 				erase = 1;
 				break;
+
 			case 'n':
 				list = 1;
 				break;
+
 			case 'x':
 				export = 1;
 				break;
+
 			case 'l':
 				local = 1;
 				break;
+
 			case 'g':
 				global = 1;
 				break;
+
 			case 'u':
 				unexport = 1;
 				break;
+
 			case 'U':
 				universal = 1;
 				break;
+
 			case 'q':
 				query = 1;
 				break;
+
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;
+
 			case '?':
+				builtin_print_help( argv[0], sb_err );
 				return 1;
+
 			default:
 				break;
 		}
@@ -485,7 +512,7 @@ int builtin_set( wchar_t **argv )
 				  argv[0],
 				  parser_current_line() );
 		
-//		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 	
@@ -498,7 +525,7 @@ int builtin_set( wchar_t **argv )
 				  argv[0],
 				  parser_current_line() );		
 
-//		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 
@@ -511,7 +538,7 @@ int builtin_set( wchar_t **argv )
 				   BUILTIN_ERR_GLOCAL,
 				   argv[0],
 				   parser_current_line() );
-//		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 
@@ -524,7 +551,7 @@ int builtin_set( wchar_t **argv )
 				   BUILTIN_ERR_EXPUNEXP,
 				   argv[0],
 				   parser_current_line() );
-//		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 
@@ -564,7 +591,7 @@ int builtin_set( wchar_t **argv )
 					   argv[0],
 					   parser_current_line() );
 			
-//			builtin_print_help( argv[0], sb_err );
+			builtin_print_help( argv[0], sb_err );
 			retcode = 1;
 		}
 		else

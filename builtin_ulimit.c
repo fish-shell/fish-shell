@@ -326,6 +326,10 @@ int builtin_ulimit( wchar_t ** argv )
 					L"virtual-memory-size", no_argument, 0, 'v'
 				}
 				,
+				{ 
+					L"help", no_argument, 0, 'h' 
+				} 
+				,
 				{
 					0, 0, 0, 0 
 				}
@@ -337,7 +341,7 @@ int builtin_ulimit( wchar_t ** argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"aHScdflmnptuv", 
+								L"aHScdflmnptuvh", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -415,6 +419,10 @@ int builtin_ulimit( wchar_t ** argv )
 				break;
 #endif
 				
+			case L'h':
+				builtin_print_help( argv[0], sb_out );				
+				return 0;
+
 			case L'?':
 				builtin_print_help( argv[0], sb_err );				
 				return 1;	

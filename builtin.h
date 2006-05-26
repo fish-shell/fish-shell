@@ -62,6 +62,8 @@ enum
 */
 #define BUILTIN_FOR_ERR_IN _( L"%ls: Second argument must be 'in'\n" )
 
+#define BUILTIN_ERR_TOO_MANY_ARGUMENTS _( L"%ls: Too many arguments\n" )
+
 /**
    Stringbuffer used to represent standard output
 */

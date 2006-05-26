@@ -159,6 +159,15 @@ void builtin_wperror( const wchar_t *s)
 	}
 }
 
+static int count_char( const wchar_t *str, wchar_t c )
+{
+	int res = 0;
+	for( ; *str; str++ )
+	{
+		res += (*str==c);
+	}
+	return res;
+}
 
 /*
   Here follows the definition of all builtin commands. The function
@@ -170,9 +179,11 @@ void builtin_wperror( const wchar_t *s)
   are part of the parser. (They are not parsed as commands, instead
   they only slightly alter the parser state)
 
+  If \c b is the buffer representing standard error, and the help
+  message is about to be printed to an interactive screen, it may be
+  shortened to fit the screen.
+
 */
-
-
 
 void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 {
@@ -189,11 +200,50 @@ void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 	if( !h )
 		return;
 
-
-
-	wchar_t *str = str2wcs(builtin_help_get( cmd ));
+	wchar_t *str = str2wcs( h );
 	if( str )
 	{
+
+		if( is_interactive && !builtin_out_redirect && b==sb_err)
+		{
+			/* Interactive mode help to screen - only print synopsis if the rest won't fit  */
+			
+			int screen_height, lines;
+			
+			screen_height = common_get_height();
+			lines = count_char( str, L'\n' );
+			if( lines > 2*screen_height/3 )
+			{
+				wchar_t *pos;
+				
+				/* Find first empty line */
+				for( pos=str; *pos; pos++ )
+				{
+					if( *pos == L'\n' )
+					{
+						wchar_t *pos2;
+						int is_empty = 1;
+						
+						for( pos2 = pos+1; *pos2; pos2++ )
+						{
+							if( *pos2 == L'\n' )
+								break;
+							
+							if( *pos2 != L'\t' && *pos2 !=L' ' )
+							{
+								is_empty = 0;
+								break;
+							}
+						}
+						if( is_empty )
+						{
+							*(pos+1)=L'\0';
+						}
+					}
+				}
+			}
+		}
+		
 		sb_append( b, str );
 		free( str );
 	}
@@ -216,6 +266,10 @@ static int builtin_bind( wchar_t **argv )
 			}
 			,
 			{
+				L"help", no_argument, 0, 'h'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -227,7 +281,7 @@ static int builtin_bind( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"M:",
+								L"M:h",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -250,6 +304,10 @@ static int builtin_bind( wchar_t **argv )
 				input_set_mode( woptarg );
 				break;
 
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;
+				
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
@@ -337,7 +395,7 @@ static int builtin_block( wchar_t **argv )
 
 				return 1;
 			case 'h':
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_out );
 				return 0;
 
 			case 'g':
@@ -478,7 +536,7 @@ static int builtin_builtin(  wchar_t **argv )
 
 				return 1;
 			case 'h':
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_out );
 				return 0;
 
 			case 'n':
@@ -702,6 +760,10 @@ static int builtin_functions( wchar_t **argv )
 			}
 			,
 			{
+				L"help", no_argument, 0, 'h'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -713,7 +775,7 @@ static int builtin_functions( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"ed:na",
+								L"ed:nah",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -748,6 +810,10 @@ static int builtin_functions( wchar_t **argv )
 			case 'a':
 				show_hidden=1;
 				break;
+
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;
 
 			case '?':
 				builtin_print_help( argv[0], sb_err );
@@ -949,6 +1015,10 @@ static int builtin_function( wchar_t **argv )
 			}
 			,
 			{
+				L"help", no_argument, 0, 'h'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -960,7 +1030,7 @@ static int builtin_function( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"bd:s:j:p:v:",
+								L"bd:s:j:p:v:h",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1114,6 +1184,10 @@ static int builtin_function( wchar_t **argv )
 				break;
 			}
 
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;
+				
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 				res = 1;
@@ -1160,7 +1234,7 @@ static int builtin_function( wchar_t **argv )
 		array_list_t names;
 		int chars=0;
 
-//		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( argv[0], sb_err );
 		const wchar_t *cfa =  _( L"Current functions are: " );
 		sb_append( sb_err, cfa );
 		chars += wcslen( cfa );
@@ -1258,7 +1332,7 @@ static int builtin_random( wchar_t **argv )
 				return 1;
 
 			case 'h':
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_out );
 				break;
 
 			case '?':
@@ -1369,6 +1443,10 @@ static int builtin_read( wchar_t **argv )
 				}
 				,
 				{
+					L"help", no_argument, 0, 'h'
+				}
+				,
+				{
 					0, 0, 0, 0
 				}
 			}
@@ -1378,7 +1456,7 @@ static int builtin_read( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"xglUup:c:",
+								L"xglUup:c:h",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1418,6 +1496,10 @@ static int builtin_read( wchar_t **argv )
 			case L'c':
 				commandline = woptarg;
 				break;
+
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;
 
 			case L'?':
 				builtin_print_help( argv[0], sb_err );
@@ -1695,7 +1777,7 @@ static int builtin_status( wchar_t **argv )
 				return 1;
 
 			case 'h':
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_out );
 				return 0;
 
 			case 'j':
@@ -1849,7 +1931,7 @@ static int builtin_exit( wchar_t **argv )
 
 		default:
 			sb_printf( sb_err,
-					   _( L"%ls: Too many arguments\n" ),
+					   BUILTIN_ERR_TOO_MANY_ARGUMENTS,
 					   argv[0] );
 
 			builtin_print_help( argv[0], sb_err );
@@ -2413,6 +2495,10 @@ static int builtin_jobs( wchar_t **argv )
 				}
 				,
 				{
+					L"help", no_argument, 0, 'h'
+				}
+				,
+				{
 					0, 0, 0, 0
 				}
 			}
@@ -2422,7 +2508,7 @@ static int builtin_jobs( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"pclg",
+								L"pclgh",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -2440,7 +2526,7 @@ static int builtin_jobs( wchar_t **argv )
 
 				sb_append( sb_err,
 						   parser_current_line() );
-//				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_err );
 
 
 				return 1;
@@ -2464,9 +2550,12 @@ static int builtin_jobs( wchar_t **argv )
 				break;
 			}
 
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;				
 
 			case '?':
-				//	builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_err );
 
 				return 1;
 

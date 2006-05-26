@@ -341,6 +341,10 @@ int builtin_complete( wchar_t **argv )
 					L"do-complete", required_argument, 0, 'C'
 				}
 				,
+				{
+					L"help", no_argument, 0, 'h'
+				}
+				,
 				{ 
 					0, 0, 0, 0 
 				}
@@ -351,7 +355,7 @@ int builtin_complete( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"a:c:p:s:l:o:d:frxeun:C:", 
+								L"a:c:p:s:l:o:d:frxeun:C:h", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -369,7 +373,7 @@ int builtin_complete( wchar_t **argv )
 				sb_append( sb_err, 
 						   parser_current_line() );
 				
-//				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_err );
 
 				
 				res = 1;
@@ -431,10 +435,14 @@ int builtin_complete( wchar_t **argv )
 				do_complete = woptarg?woptarg:reader_get_buffer();
 				break;
 				
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;
+				
 			case '?':
 				sb_append( sb_err, 
 						   parser_current_line() );
-				//	builtin_print_help( argv[0], sb_err );
+				builtin_print_help( argv[0], sb_err );
 				
 				res = 1;
 				break;
@@ -521,7 +529,7 @@ int builtin_complete( wchar_t **argv )
 					   argv[0] );
 			sb_append( sb_err, 
 					   parser_current_line() );
-			//			builtin_print_help( argv[0], sb_err );
+			builtin_print_help( argv[0], sb_err );
 
 			res = 1;
 		}

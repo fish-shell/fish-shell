@@ -266,6 +266,10 @@ int builtin_commandline( wchar_t **argv )
 				}
 				,
 				{
+					L"help", no_argument, 0, 'h'
+				}
+				,
+				{
 					0, 0, 0, 0 
 				}
 			}
@@ -275,7 +279,7 @@ int builtin_commandline( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"aijpctwfor", 
+								L"aijpctwforh", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -329,6 +333,10 @@ int builtin_commandline( wchar_t **argv )
 			case 'o':
 				tokenize=1;
 				break;
+
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return 0;
 
 			case L'?':
 				builtin_print_help( argv[0], sb_err );				

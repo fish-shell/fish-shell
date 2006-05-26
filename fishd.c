@@ -111,6 +111,11 @@ time the original barrier request was sent have been received.
 #define LOCKTIMEOUT 1
 
 /**
+   Getopt short switches for fishd
+*/
+#define GETOPT_STRING "hv"
+
+/**
    The list of connections to clients
 */
 static connection_t *conn;
@@ -502,14 +507,14 @@ int main( int argc, char ** argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "hv",
+							   GETOPT_STRING,
 							   long_options, 
 							   &opt_index );
 		
 #else	
 		int opt = getopt( argc,
 						  argv, 
-						  "hv" );
+						  GETOPT_STRING );
 #endif
 		if( opt == -1 )
 			break;

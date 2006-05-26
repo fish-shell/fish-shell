@@ -49,6 +49,11 @@
 */
 #define SET_COLOR "set_color"
 
+/**
+   Getopt short switches for set_color
+*/
+#define GETOPT_STRING "b:hvoc"
+
 #if HAVE_GETTEXT
 #define _(string) gettext(string)
 #else
@@ -186,13 +191,13 @@ int main( int argc, char **argv )
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "b:hvoc", 
+							   GETOPT_STRING, 
 							   long_options, 
 							   &opt_index );
 #else
 		int opt = getopt( argc,
 						  argv, 
-						  "b:hvoc" );
+						  GETOPT_STRING );
 #endif
 		if( opt == -1 )
 			break;

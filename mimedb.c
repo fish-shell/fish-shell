@@ -89,6 +89,11 @@ license. Read the source code of the library for more information.
 #define MIMEDB "mimedb"
 
 /**
+   Getopt short switches for mimedb
+*/
+#define GETOPT_STRING "tfimdalhv"
+
+/**
    All types of input and output possible
 */
 enum
@@ -1216,14 +1221,14 @@ int main (int argc, char *argv[])
 		
 		int opt = getopt_long( argc,
 							   argv, 
-							   "tfimdalhv", 
+							   GETOPT_STRING,
 							   long_options, 
 							   &opt_index );
 		
 #else	
 		int opt = getopt( argc,
 						  argv, 
-						  "tfimdalhv" );
+						  GETOPT_STRING );
 #endif
 		if( opt == -1 )
 			break;

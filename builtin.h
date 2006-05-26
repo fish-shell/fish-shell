@@ -139,32 +139,41 @@ const wchar_t *builtin_get_desc( const wchar_t *b );
 int builtin_count_args( wchar_t **argv );
 
 /**
-   Print help for the specified builtin. If \c b is sb_err, also print the line information
+   Print help for the specified builtin. If \c b is sb_err, also print
+   the line information
 */
 void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 
 
 /**
-   The set builtin, used for setting variables. Defined in builtin_set.c.
+   The set builtin, used for setting variables. Defined in
+   builtin_set.c.
 */
 int builtin_set(wchar_t **argv);
 
 /**
-   The commandline builtin, used for setting and getting the contents of the commandline. Defined in builtin_commandline.c.
+   The commandline builtin, used for setting and getting the contents
+   of the commandline. Defined in builtin_commandline.c.
 */
 int builtin_commandline(wchar_t **argv);
 
 /**
-   The ulimit builtin, used for setting resource limits. Defined in builtin_ulimit.c.
+   The ulimit builtin, used for setting resource limits. Defined in
+   builtin_ulimit.c.
 */
 int builtin_ulimit(wchar_t **argv);
 
 /**
    The complete builtin. Used for specifying programmable
    tab-completions. Calls the functions in complete.c for any heavy
-   lifting.
+   lifting. Defined in builtin_complete.c
 */
 int builtin_complete(wchar_t **argv);
+
+/**
+   The jobs builtin. Used fopr printing running jobs. Defined in builtin_jobs.c.
+*/
+int builtin_jobs(wchar_t **argv);
 
 const wchar_t *builtin_complete_get_temporary_buffer();
 

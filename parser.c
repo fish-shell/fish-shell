@@ -2810,7 +2810,7 @@ int parser_test( const  wchar_t * buff,
 	int needs_cmd=0; 
 	void *context = halloc( 0, 0 );
 	int arg_count=0;
-	wchar_t *cmd;
+	wchar_t *cmd=0;
 		
 	current_tokenizer = &tok;
 

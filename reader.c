@@ -2082,7 +2082,7 @@ void reader_run_command( wchar_t *cmd )
 
 	term_steal();
 
-	env_set( L"_", L"fish", ENV_GLOBAL );
+	env_set( L"_", program_name, ENV_GLOBAL );
 
 #ifdef HAVE__PROC_SELF_STAT
 	proc_update_jiffies();

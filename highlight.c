@@ -112,11 +112,42 @@ static void highlight_param( const wchar_t * buff,
 					
 					switch( buff[++in_pos] )
 					{
+						case L'~':
+						case L'%':
+						{
+							if( in_pos == 1 )
+							{
+								color[start_pos] = HIGHLIGHT_ESCAPE;
+								color[in_pos+1] = HIGHLIGHT_NORMAL;
+							}
+							break;
+						}
+
+						case L',':
+						{
+							if( bracket_count )
+							{
+								color[start_pos] = HIGHLIGHT_ESCAPE;
+								color[in_pos+1] = HIGHLIGHT_NORMAL;
+							}
+
+							break;					
+						}
+						
 						case L'n':
 						case L'r':
 						case L't':
 						case L'b':
 						case L'e':
+						case L'*':
+						case L'?':
+						case L'$':
+						case L'(':
+						case L')':
+						case L'{':
+						case L'}':
+						case L'\'':
+						case L'"':
 						{
 							color[start_pos]=HIGHLIGHT_ESCAPE;
 							color[in_pos+1]=HIGHLIGHT_NORMAL;

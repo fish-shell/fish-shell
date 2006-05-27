@@ -52,7 +52,8 @@ static wchar_t *highlight_var[] =
 	L"fish_color_match",
 	L"fish_color_search_match",
 	L"fish_color_operator",
-	L"fish_color_escape"
+	L"fish_color_escape",
+	L"fish_color_quote"
 }
 	;
 
@@ -262,12 +263,14 @@ static void highlight_param( const wchar_t * buff,
 						
 						case L'\'':
 						{
+							color[in_pos] = HIGHLIGHT_QUOTE;
 							mode = 1;
 							break;					
 						}
 				
 						case L'\"':
 						{
+							color[in_pos] = HIGHLIGHT_QUOTE;
 							mode = 2;
 							break;
 						}
@@ -291,7 +294,7 @@ static void highlight_param( const wchar_t * buff,
 						case L'\'':
 						{
 							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;
+							color[in_pos+1] = HIGHLIGHT_QUOTE;
 							break;
 						}
 						
@@ -306,6 +309,7 @@ static void highlight_param( const wchar_t * buff,
 				if( c == L'\'' )
 				{
 					mode = 0;
+					color[in_pos+1] = HIGHLIGHT_NORMAL;
 				}
 				
 				break;
@@ -321,6 +325,7 @@ static void highlight_param( const wchar_t * buff,
 					case '"':
 					{
 						mode = 0;
+						color[in_pos+1] = HIGHLIGHT_NORMAL;
 						break;
 					}
 				
@@ -339,7 +344,7 @@ static void highlight_param( const wchar_t * buff,
 							case '"':
 							{
 								color[start_pos] = HIGHLIGHT_ESCAPE;
-								color[in_pos+1] = HIGHLIGHT_NORMAL;
+								color[in_pos+1] = HIGHLIGHT_QUOTE;
 								break;
 							}
 						}
@@ -349,7 +354,7 @@ static void highlight_param( const wchar_t * buff,
 					case '$':
 					{
 						color[in_pos] = HIGHLIGHT_OPERATOR;
-						color[in_pos+1] = HIGHLIGHT_NORMAL;
+						color[in_pos+1] = HIGHLIGHT_QUOTE;
 						break;
 					}
 				

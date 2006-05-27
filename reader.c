@@ -917,7 +917,7 @@ void repaint()
 	if( steps )
 		move_cursor( -steps );
 
-	set_color( FISH_COLOR_NORMAL, -1 );
+	set_color( FISH_COLOR_NORMAL, FISH_COLOR_IGNORE );
 	reader_save_status();
 }
 
@@ -1144,7 +1144,7 @@ static int insert_char( int c )
 		}
 		else
 			writech(c);
-		set_color( FISH_COLOR_NORMAL, -1 );
+		set_color( FISH_COLOR_NORMAL, FISH_COLOR_IGNORE );
 	}
 	else
 	{

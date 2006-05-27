@@ -21,17 +21,6 @@
 #define MAX_UTF8_BYTES 6
 
 /**
-   Color code for set_color. Does not update the color.
-*/
-
-#define FISH_COLOR_IGNORE -1
-
-/**
-   Color code for set_color. Sets the default color.
-*/
-#define FISH_COLOR_RESET -2
-
-/**
    This is in the unicode private use area.
 */
 #define ENCODE_DIRECT_BASE 0xf100

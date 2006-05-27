@@ -128,8 +128,19 @@ void set_color( int c, int c2 )
 {
 	static int last_color = FISH_COLOR_NORMAL;
 	static int last_color2 = FISH_COLOR_NORMAL;
+	static int was_bold=0;
 	int bg_set=0, last_bg_set=0;
 	char *fg = 0, *bg=0;
+
+	int is_bold = 0;
+
+	is_bold |= (c&FISH_COLOR_BOLD)!=0;
+	is_bold |= (c2&FISH_COLOR_BOLD)!=0;
+
+//	debug( 1, L"WOO %d %d %d", is_bold, c&FISH_COLOR_BOLD,c2&FISH_COLOR_BOLD);
+
+	c = c&(~FISH_COLOR_BOLD);
+	c2 = c2&(~FISH_COLOR_BOLD);
 
 	if( (set_a_foreground != 0) && (strlen( set_a_foreground) != 0 ) )
 	{
@@ -145,14 +156,31 @@ void set_color( int c, int c2 )
 	if( (c == FISH_COLOR_RESET) || (c2 == FISH_COLOR_RESET))
 	{
 		c = c2 = FISH_COLOR_NORMAL;
+		was_bold=0;
 		if( fg )
 		{
+			/*
+			  If we exit attibute mode, we must first set a color, or
+			  previously coloured text might lose it's
+			  color. Terminals are weird...
+			*/
 			writembs( tparm( fg, 0 ) );
 		}
 		writembs( exit_attribute_mode );
 		return;
 	}
 
+	if( was_bold && !is_bold )
+	{
+		/*
+		  Only way to exit bold mode is a reset of all attributes. 
+		*/
+		writembs( exit_attribute_mode );
+		last_color = FISH_COLOR_NORMAL;
+		last_color2 = FISH_COLOR_NORMAL;
+		was_bold=0;
+	}
+	
 	if( last_color2 != FISH_COLOR_NORMAL &&
 		last_color2 != FISH_COLOR_RESET &&
 		last_color2 != FISH_COLOR_IGNORE )
@@ -164,7 +192,6 @@ void set_color( int c, int c2 )
 	}
 
 	if( c2 != FISH_COLOR_NORMAL &&
-		c2 != FISH_COLOR_RESET &&
 		c2 != FISH_COLOR_IGNORE )
 	{
 		/*
@@ -180,7 +207,8 @@ void set_color( int c, int c2 )
 		{
 			/*
 			  Background color changed and is set, so we enter bold
-			  mode to make reading easier
+			  mode to make reading easier. This means bold mode is
+			  _always_ on when the background color is set.
 			*/
 			writembs( enter_bold_mode );
 		}
@@ -252,7 +280,20 @@ void set_color( int c, int c2 )
 			last_color2 = c2;
 		}
 	}
+
+	/*
+	  Lastly, we set bold mode correctly
+	*/
+	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set )
+	{
+		if( is_bold && !was_bold )
+		{
+			writembs( tparm( enter_bold_mode ) );
+		}
+		was_bold = is_bold;	
+	}
 }
+
 
 /**
    perm_left_cursor and parm_right_cursor don't seem to be properly
@@ -475,23 +516,34 @@ int writespace( int c )
 
 int output_color_code( const wchar_t *val )
 {
-	int i, color=-1;
+	int j, i, color=FISH_COLOR_NORMAL;
+	array_list_t el;
+	int is_bold=0;
 	
-	for( i=0; i<COLORS; i++ )
-	{
-		if( wcscasecmp( col[i], val ) == 0 )
-		{
-			color = col_idx[i];
-			break;
-		}
-	}
-
-	if( color >= 0 )
-	{
-		return color;
-	}
-	else
-	{
+	if( !val )
 		return FISH_COLOR_NORMAL;
+	
+	al_init( &el );
+	expand_variable_array( val, &el );
+	
+	for( j=0; j<al_get_count( &el ); j++ )
+	{
+		wchar_t *next = (wchar_t *)al_get( &el, j );
+		
+		is_bold |= (wcsncmp( next, L"--bold", wcslen(next) ) == 0 ) && wcslen(next)>=3;
+		is_bold |= wcscmp( next, L"-b" ) == 0;
+
+		for( i=0; i<COLORS; i++ )
+		{
+			if( wcscasecmp( col[i], next ) == 0 )
+			{
+				color = col_idx[i];
+				break;
+			}
+		}
+		
 	}
+	
+	return color | (is_bold?FISH_COLOR_BOLD:0);
+	
 }

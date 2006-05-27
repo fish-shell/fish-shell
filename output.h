@@ -41,10 +41,13 @@ enum
 	FISH_COLOR_CYAN,
 	FISH_COLOR_WHITE,
 	/** The default fg color of the terminal */
-	FISH_COLOR_NORMAL
+	FISH_COLOR_NORMAL,
+	FISH_COLOR_IGNORE,
+	FISH_COLOR_RESET
 }
 ;
- 
+
+#define FISH_COLOR_BOLD 0x80
 
 /**
    Sets the fg and bg color. May be called as often as you like, since

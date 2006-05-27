@@ -2099,7 +2099,13 @@ void reader_run_command( wchar_t *cmd )
 
 static int shell_test( wchar_t *b )
 {
-	return !wcslen(b);
+	if( parser_test( b, 0 ) )
+	{
+		writech( L'\n' );
+		parser_test( b, 1 );
+		return 1;
+	}
+	return 0;
 }
 
 /**

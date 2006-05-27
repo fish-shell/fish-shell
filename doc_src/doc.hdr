@@ -1197,12 +1197,9 @@ compress, wine, xmms, dig, wine, batch, cron,
 g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Undo support
 - Check keybinding commands for output - if nothing has happened, don't repaint to reduce flicker
-- The jobs builtin should be able to give information on a specific job, such as the pids of the processes in the job
 - Syntax highlighting should mark cd to non-existing directories as an error
 - wait shellscript
 - Support for the screen clipboard
-- The -a string sent to complete should be validated
-- Fish should detect improper variable expansion when validating, e.g. strings such as 'foo$' and 'a${}' should be detected as invalid
 
 
 \subsection todo-possible Possible features
@@ -1220,7 +1217,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Inclusion guards for the init files to make them evaluate only once, even if the user has installed fish both in /etc and in $HOME
 - Do not actually load/parse .fish_history, only mmap it and use some clever string handling. Should save ~150 kB of memory permanently, but is very hard to implement.
 - command specific wildcarding (use case * instead of case '*', etc.)
-- show the whole list of commands on using tab on an empty commandline
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
 - Descriptions for variables using 'set -d'.
 - Parse errors should when possible honor IO redirections

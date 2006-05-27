@@ -44,7 +44,6 @@ static wchar_t *highlight_var[] =
 {
 	L"fish_color_normal",
 	L"fish_color_command",
-	L"fish_color_subshell",
 	L"fish_color_redirection",
 	L"fish_color_end",
 	L"fish_color_error",
@@ -78,6 +77,9 @@ int highlight_get_color( int highlight )
 	return output_color_code( val );
 }
 
+/**
+   Highligt operators (such as $, ~, %, as well as escaped characters.
+*/
 static void highlight_param( const wchar_t * buff,
 							 int *color,
 							 int pos,
@@ -223,6 +225,8 @@ static void highlight_param( const wchar_t * buff,
 						case L'*':
 						case L'?':
 						case L'$':
+						case L'(':
+						case L')':
 						{
 							color[in_pos] = HIGHLIGHT_OPERATOR;
 							color[in_pos+1] = HIGHLIGHT_NORMAL;
@@ -231,12 +235,16 @@ static void highlight_param( const wchar_t * buff,
 						
 						case L'{':
 						{
+							color[in_pos] = HIGHLIGHT_OPERATOR;
+							color[in_pos+1] = HIGHLIGHT_NORMAL;
 							bracket_count++;
 							break;					
 						}
 						
 						case L'}':
 						{
+							color[in_pos] = HIGHLIGHT_OPERATOR;
+							color[in_pos+1] = HIGHLIGHT_NORMAL;
 							bracket_count--;
 							break;						
 						}
@@ -662,7 +670,7 @@ void highlight_shell( wchar_t * buff,
 			*end=0;
 		
 		highlight_shell( begin+1, color +(begin-buffcpy)+1, -1, error );
-		color[end-buffcpy]=HIGHLIGHT_PARAM;
+		color[end-buffcpy]=HIGHLIGHT_OPERATOR;
 		
 		if( done )
 			break;

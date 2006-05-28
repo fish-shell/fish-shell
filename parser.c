@@ -1976,7 +1976,7 @@ static int parse_job( process_t *p,
 
 						tmp = (wchar_t *)al_get( args, 0 );
 						al_truncate( args, 0 );
-						al_push( args, wcsdup( L"cd" ) );
+						al_push( args, halloc_wcsdup( j, L"cd" ) );
 						al_push( args, tmp );
 						/*
 						  If we have defined a wrapper around cd, use it,

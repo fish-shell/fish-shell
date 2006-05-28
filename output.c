@@ -544,6 +544,9 @@ int output_color_code( const wchar_t *val )
 		
 	}
 	
+	al_foreach( &el, (void (*)(const void *))&free );
+	al_destroy( &el );
+	
 	return color | (is_bold?FISH_COLOR_BOLD:0);
 	
 }

@@ -752,7 +752,8 @@ certain environment variables.
 
 - \c BROWSER, which is the users preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 - \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
-- \c fish_color_normal, \c fish_color_command, \c fish_color_quote, \c fish_color_redirection, \c fish_color_end, \c fish_color_error, \c fish_color_param, \c fish_color_comment, \c fish_color_match, \c fish_color_search_match, \c fish_color_operator, \c fish_color_escape, \c fish_color_cwd, \c fish_pager_color_prefix, \c fish_pager_color_completion, \c fish_pager_color_description and \c fish_pager_color_progress are used to change the color of various elements in \c fish. These variables are universal, i.e. when changing them, their new value will be used by all running fish sessions. The new value will also be retained when restarting fish.
+- A large number of variable starting with the prefixes \c fish_color and \c fish_pager_color. See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
+- \c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and \c LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 - \c PATH, which is an array of directories in which to search for commands
 - \c umask, which is the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask shellscript function</a>. An attempt to set umask to an invalid value will always fail.
 
@@ -767,7 +768,6 @@ values of most of these variables.
 - \c PWD, which is the current working directory. 
 - \c status, which is the exit status of the last foreground job to exit. If a job contains pipelines, the status of the last command in the pipeline is the status for the job.
 - \c USER, which is the username. This variable can only be changed by the root user.
-- \c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and \c LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 
 Variables whose name are in uppercase are exported to the commands
 started by fish, those in lowercase are not exported. This rule is not
@@ -775,6 +775,45 @@ enforced by fish, but it is good coding practice to use casing to
 distinguish between exported and unexported variables. \c fish also
 uses several variables internally. Such variables are prefixed with
 the string __FISH or __fish. These should be ignored by the user.
+
+\subsection variables-color Variables for changing highlighting colors
+
+The colors used by fish for syntax highlighting can be configured by
+changing the values of a various variables. The value of these
+variables can be one of the colors accepted by the <a
+href='commands.html#set_color'>\c set_color</a> command. The \c --bold
+or \c -b switches accepted by \c set_color are also accepted.
+
+The following variables are available to change the highligting colors
+in fish:
+
+- \c fish_color_normal, the default color
+- \c fish_color_command, the color for commands
+- \c fish_color_quote, the color for quoted blocks of text
+- \c fish_color_redirection, the color for IO redirections
+- \c fish_color_end, the color for process separators like ';' and '&'
+- \c fish_color_error, the color used to highlight potential errors
+- \c fish_color_param, the color for regular command parameters
+- \c fish_color_comment, the color used for code comments
+- \c fish_color_match, the color used to highlight matching parenthesis
+- \c fish_color_search_match, the color used to highlight history search matches
+- \c fish_color_operator, the color for parameter expansion operators like '*' and '~'
+- \c fish_color_escape, the color used to highlight character escapes like '\\n' and '\\x70'
+- \c fish_color_cwd, the color used for the current working directory in the default prompt
+
+Additionally, the following variables are available to change the
+highlighting in the completion pager:
+
+- \c fish_pager_color_prefix, the color of the prefix string, i.e. the string that is to be completed
+- \c fish_pager_color_completion, the color of the completion itself
+- \c fish_pager_color_description, the color of the completion description
+- \c fish_pager_color_progress, the color of the progress bar at the bottom left corner
+
+Example:
+
+To make errors highlighted and red, use:
+
+<code>set fish_color_error red --bold</code>D
 
 \subsection variables-locale Locale variables
 

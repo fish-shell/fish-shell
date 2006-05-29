@@ -524,7 +524,7 @@ int output_color_code( const wchar_t *val )
 		return FISH_COLOR_NORMAL;
 	
 	al_init( &el );
-	expand_variable_array( val, &el );
+	tokenize_variable_array( val, &el );
 	
 	for( j=0; j<al_get_count( &el ); j++ )
 	{

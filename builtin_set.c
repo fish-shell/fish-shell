@@ -682,7 +682,7 @@ int builtin_set( wchar_t **argv )
 			array_list_t result;
 			al_init(&result);
 
-			expand_variable_array( env_get(dest), &result );
+			tokenize_variable_array( env_get(dest), &result );
 			if( erase )
 			{
 				erase_values(&result, &indexes);

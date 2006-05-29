@@ -87,7 +87,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 	
 	al_init( &path_list );
 
-	expand_variable_array( path_var, &path_list );
+	tokenize_variable_array( path_var, &path_list );
 	for( i=0; i<al_get_count( &path_list ); i++ )
 	{
 		wchar_t *ndir = (wchar_t *)al_get( &path_list, i );

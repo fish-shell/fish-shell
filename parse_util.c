@@ -558,7 +558,7 @@ int parse_util_load( const wchar_t *cmd,
 	else
 		sb_clear( path );
 	
-	expand_variable_array( path_var, path_list );
+	tokenize_variable_array( path_var, path_list );
 	
 	/*
 	  Iterate over path searching for suitable completion files

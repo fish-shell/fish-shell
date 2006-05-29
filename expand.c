@@ -130,32 +130,6 @@ static wchar_t *expand_var( wchar_t *in )
 	return env_get( in );
 }
 
-void expand_variable_array( const wchar_t *val, array_list_t *out )
-{
-	if( val )
-	{
-		wchar_t *cpy = wcsdup( val );
-		wchar_t *pos, *start;
-
-		if( !cpy )
-		{
-			die_mem();
-		}
-
-		for( start=pos=cpy; *pos; pos++ )
-		{
-			if( *pos == ARRAY_SEP )
-			{
-				*pos=0;
-				al_push( out, start==cpy?cpy:wcsdup(start) );
-				start=pos+1;
-			}
-		}
-		al_push( out, start==cpy?cpy:wcsdup(start) );
-	}
-}
-
-
 /**
    Test if the specified string does not contain character which can
    not be used inside a quoted string.
@@ -188,7 +162,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 	string_buffer_t buff;
 
 	al_init( &l );
-	expand_variable_array( in, &l );
+	tokenize_variable_array( in, &l );
 	sb_init( &buff );
 
 	switch( al_get_count( &l) )
@@ -834,7 +808,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 
 				if( is_ok )
 				{
-					expand_variable_array( var_val, &var_item_list );
+					tokenize_variable_array( var_val, &var_item_list );
 					if( !all_vars )
 					{
 						int j;

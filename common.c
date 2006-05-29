@@ -1403,3 +1403,29 @@ int common_get_height()
 	return termsize.ws_row;
 }
 
+void tokenize_variable_array( const wchar_t *val, array_list_t *out )
+{
+	if( val )
+	{
+		wchar_t *cpy = wcsdup( val );
+		wchar_t *pos, *start;
+
+		if( !cpy )
+		{
+			die_mem();
+		}
+
+		for( start=pos=cpy; *pos; pos++ )
+		{
+			if( *pos == ARRAY_SEP )
+			{
+				*pos=0;
+				al_push( out, start==cpy?cpy:wcsdup(start) );
+				start=pos+1;
+			}
+		}
+		al_push( out, start==cpy?cpy:wcsdup(start) );
+	}
+}
+
+

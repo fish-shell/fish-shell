@@ -179,16 +179,6 @@ wchar_t *expand_tilde(wchar_t *in);
 
 
 /**
-   Tokenize the specified string into the specified array_list_t.
-   Each new element is allocated using malloc and must be freed by the
-   caller.
-   
-   \param val the input string. The contents of this string is not changed.
-   \param out the list in which to place the elements. 
-*/
-void expand_variable_array( const wchar_t *val, array_list_t *out );
-
-/**
    Test if the specified argument is clean, i.e. it does not contain
    any tokens which need to be expanded or otherwise altered. Clean
    strings can be passed through expand_string and expand_one without

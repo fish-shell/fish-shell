@@ -396,7 +396,7 @@ static void setup_path()
 	al_init( &l );
 	
 	if( path )
-		expand_variable_array( path, &l );
+		tokenize_variable_array( path, &l );
 	
 	for( j=0; path_el[j]; j++ )
 	{
@@ -438,7 +438,7 @@ static void setup_path()
 			al_foreach( &l, (void (*)(const void *))&free );
 			path = env_get( L"PATH" );
 			al_truncate( &l, 0 );
-			expand_variable_array( path, &l );			
+			tokenize_variable_array( path, &l );			
 		}
 	}
 	

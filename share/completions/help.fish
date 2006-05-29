@@ -6,7 +6,7 @@ for i in (builtin -n)
 	complete -c help -x -a $i -d (N_ "Help for the specified builtin")
 end
 
-for i in count dirh dirs help mimedb nextd open popd prevd pushd set_color psub umask type 
+for i in case (sed -n < /usr/share/doc/fish-1.21.7/commands.html -e "s/.*<h2><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
 	complete -c help -x -a $i -d (N_ "Help for the specified command")
 end
 

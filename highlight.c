@@ -148,6 +148,12 @@ static void highlight_param( const wchar_t * buff,
 						case L'}':
 						case L'\'':
 						case L'"':
+						case L'<':
+						case L'>':
+						case L'^':
+						case L' ':
+						case L'\\':
+						case L'#':
 						{
 							color[start_pos]=HIGHLIGHT_ESCAPE;
 							color[in_pos+1]=HIGHLIGHT_NORMAL;

@@ -49,12 +49,12 @@ has to be used.
 Here is a list of some useful commands:
 
 - \c cd, change the current directory
-- \c ls, list the contents of a directory
-- \c man, print a manual page
-- \c mv, move files
+- \c ls, list files and directories
+- \c man, display a manual page on the screen
+- \c mv, move (rename) files
 - \c cp, copy files
 - \c open, open files with the default application associated with each filetype
-- \c less, read the contents of files 
+- \c less, list the contents of files 
 
 Commands and parameters are separated by the space character
 (&nbsp;). Every command ends with either a newline (i.e. by pressing
@@ -68,10 +68,10 @@ and directories in the current working directory, but by using the \c
 -l switch, the behaviour of ls is changed to not only display the
 filename, but also the size, permissions, owner and modification time
 of each file. Switches differ between commands and are documented in
-the manual page for each command. Some switches are very common
-though, for example '--help' will usually display a help text, '-i'
-will often turn on interactive prompting before taking action, while
-'-f' will turn it off.
+the manual page for each command. Some switches are common to most
+command though, for example '--help' will usually display a help text,
+'-i' will often turn on interactive prompting before taking action,
+while '-f' will turn it off.
 
 \subsection quotes Quotes
 
@@ -116,6 +116,7 @@ these characters, so called escape sequences are provided. These are:
 - <code>'\\*'</code>, escapes the star character
 - <code>'\\?'</code>, escapes the question mark character
 - <code>'\\~'</code>, escapes the tilde character
+- <code>'\\%'</code>, escapes the percent character
 - <code>'\\#'</code>, escapes the hash character
 - <code>'\\('</code>, escapes the left parenthesis character
 - <code>'\\)'</code>, escapes the right parenthesis character
@@ -540,6 +541,7 @@ a string is expanded into a process id. The following expansions are
 performed:
 
 - If the string is the entire word \c self, the shells pid is the result
+- When inside a command substitution, if the string is the entire word \c caller, the job number (not the pid) of the job the created the command substitution is the result
 - Otherwise, if the string is the id of a job, the result is the process
 group id of the job.
 - Otherwise, if any child processes match the specified string, their 

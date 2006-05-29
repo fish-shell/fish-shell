@@ -797,6 +797,7 @@ int env_set( const wchar_t *key,
 		
 		al_init( &ev.arguments );
 		al_push( &ev.arguments, L"VARIABLE" );
+		al_push( &ev.arguments, L"SET" );
 		al_push( &ev.arguments, key );
 		
 //	debug( 1, L"env_set: fire events on variable %ls", key );	
@@ -817,6 +818,8 @@ int env_set( const wchar_t *key,
 /**
    Attempt to remove/free the specified key/value pair from the
    specified hash table.
+
+   \return zero if the variable was not found, non-zero otherwise
 */
 static int try_remove( env_node_t *n,
 					   const wchar_t *key )
@@ -862,7 +865,22 @@ void env_remove( const wchar_t *key, int var_mode )
 		return;
 	}
 	
-	if( !try_remove( top, key ) )
+	if( try_remove( top, key ) )
+	{		
+        event_t ev;
+
+        ev.type=EVENT_VARIABLE;
+        ev.param1.variable=key;
+        ev.function_name=0;
+
+        al_init( &ev.arguments );
+        al_push( &ev.arguments, L"VARIABLE" );
+        al_push( &ev.arguments, L"ERASE" );
+        al_push( &ev.arguments, key );
+        event_fire( &ev );	
+        al_destroy( &ev.arguments );
+	}
+	else
 	{
 		env_universal_remove( key );
 	}

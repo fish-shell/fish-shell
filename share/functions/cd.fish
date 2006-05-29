@@ -11,7 +11,7 @@ function cd -d (N_ "Change directory")
 	end
 
 	# Avoid set completions
-	set previous (command pwd)
+	set previous $PWD
 
 	if test $argv[1] = - ^/dev/null
 		if test $__fish_cd_direction = next ^/dev/null
@@ -24,7 +24,7 @@ function cd -d (N_ "Change directory")
 				
 	builtin cd $argv[1]
 
-	if test $status = 0 -a (command pwd) != $previous
+	if test $status = 0 -a $PWD != $previous
 		set -g dirprev $dirprev $previous
 		set -e dirnext
 		set -g __fish_cd_direction prev

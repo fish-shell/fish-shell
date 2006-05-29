@@ -3,5 +3,5 @@
 #
 
 function pwd -d (N_ "Print working directory")
-	command pwd | sed -e 's|/private||' -e "s|^$HOME|~|"
+	echo $PWD | sed -e 's|/private||' -e "s|^$HOME|~|"
 end

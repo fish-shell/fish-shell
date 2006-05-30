@@ -40,10 +40,11 @@ if test "$USER" = root
 	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
 end
 
-# Make a regular expressin that matches any component in the PATH. A
+# Make a regular expression that matches any component in the PATH. A
 # trailing slash is ok. The sed call is to remove the last '\|'.  
 
-set -l path_regexp \\\((printf "^%s\\(\\|/\\)\$\\|" $PATH | sed -e "s/..\$//")\\\)
+
+set -l path_regexp \\\((printf "%s" \^$PATH'\(\|/\)$\|' | sed -e "s/..\$//")\\\)
 
 for i in (printf "%s\n" $path_list|grep -v $path_regexp)
 	if test -d $i

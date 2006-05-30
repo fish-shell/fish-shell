@@ -109,142 +109,101 @@ static void highlight_param( const wchar_t * buff,
 				if( c == L'\\' )
 				{
 					int start_pos = in_pos;
+					in_pos++;
 					
-					switch( buff[++in_pos] )
+					if( wcschr( L"~%", buff[in_pos] ) )
 					{
-						case L'~':
-						case L'%':
+						if( in_pos == 1 )
 						{
-							if( in_pos == 1 )
-							{
-								color[start_pos] = HIGHLIGHT_ESCAPE;
-								color[in_pos+1] = HIGHLIGHT_NORMAL;
-							}
-							break;
-						}
-
-						case L',':
-						{
-							if( bracket_count )
-							{
-								color[start_pos] = HIGHLIGHT_ESCAPE;
-								color[in_pos+1] = HIGHLIGHT_NORMAL;
-							}
-
-							break;					
-						}
-						
-						case L'n':
-						case L'r':
-						case L't':
-						case L'b':
-						case L'e':
-						case L'*':
-						case L'?':
-						case L'$':
-						case L'(':
-						case L')':
-						case L'{':
-						case L'}':
-						case L'\'':
-						case L'"':
-						case L'<':
-						case L'>':
-						case L'^':
-						case L' ':
-						case L'\\':
-						case L'#':
-						{
-							color[start_pos]=HIGHLIGHT_ESCAPE;
-							color[in_pos+1]=HIGHLIGHT_NORMAL;
-							break;
-						}
-						
-						case L'u':
-						case L'U':
-						case L'x':
-						case L'X':
-						case L'0':
-						case L'1':
-						case L'2':
-						case L'3':
-						case L'4':
-						case L'5':
-						case L'6':
-						case L'7':
-						{
-							int i;
-							long long res=0;
-							int chars=2;
-							int base=16;
-							
-							int byte = 0;
-							wchar_t max_val = ASCII_MAX;
-							
-							switch( buff[in_pos] )
-							{
-								case L'u':
-								{
-									chars=4;
-									max_val = UCS2_MAX;
-									break;
-								}
-								
-								case L'U':
-								{
-									chars=8;
-									max_val = WCHAR_MAX;
-									break;
-								}
-								
-								case L'x':
-								{
-									break;
-								}
-								
-								case L'X':
-								{
-									byte=1;
-									max_val = BYTE_MAX;
-									break;
-								}
-								
-								default:
-								{
-									base=8;
-									chars=3;
-									in_pos--;
-									break;
-								}								
-							}
-					
-							for( i=0; i<chars; i++ )
-							{
-								int d = convert_digit( buff[++in_pos],base);
-								
-								if( d < 0 )
-								{
-									in_pos--;
-									break;
-								}
-								
-								res=(res*base)|d;
-							}
-
-							if( (res <= max_val) )
-							{
-								color[start_pos] = HIGHLIGHT_ESCAPE;
-								color[in_pos+1] = HIGHLIGHT_NORMAL;								
-							}
-							else
-							{	
-								color[start_pos] = HIGHLIGHT_ERROR;
-								color[in_pos+1] = HIGHLIGHT_NORMAL;								
-							}
-							
-							break;
+							color[start_pos] = HIGHLIGHT_ESCAPE;
+							color[in_pos+1] = HIGHLIGHT_NORMAL;
 						}
 					}
+					else if( buff[in_pos]==L',' )
+					{
+						if( bracket_count )
+						{
+							color[start_pos] = HIGHLIGHT_ESCAPE;
+							color[in_pos+1] = HIGHLIGHT_NORMAL;
+						}
+					}
+					else if( wcschr( L"nrtbe*?$(){}'\"<>^ \\#;|&", buff[in_pos] ) )
+					{
+						color[start_pos]=HIGHLIGHT_ESCAPE;
+						color[in_pos+1]=HIGHLIGHT_NORMAL;
+					}
+					else if( wcschr( L"uUxX01234567", buff[in_pos] ) )
+					{
+						int i;
+						long long res=0;
+						int chars=2;
+						int base=16;
+						
+						int byte = 0;
+						wchar_t max_val = ASCII_MAX;
+						
+						switch( buff[in_pos] )
+						{
+							case L'u':
+							{
+								chars=4;
+								max_val = UCS2_MAX;
+								break;
+							}
+							
+							case L'U':
+							{
+								chars=8;
+								max_val = WCHAR_MAX;
+								break;
+							}
+							
+							case L'x':
+							{
+								break;
+							}
+							
+							case L'X':
+							{
+								byte=1;
+								max_val = BYTE_MAX;
+								break;
+							}
+							
+							default:
+							{
+								base=8;
+								chars=3;
+								in_pos--;
+								break;
+							}								
+						}
+						
+						for( i=0; i<chars; i++ )
+						{
+							int d = convert_digit( buff[++in_pos],base);
+							
+							if( d < 0 )
+							{
+								in_pos--;
+								break;
+							}
+							
+							res=(res*base)|d;
+						}
+
+						if( (res <= max_val) )
+						{
+							color[start_pos] = HIGHLIGHT_ESCAPE;
+							color[in_pos+1] = HIGHLIGHT_NORMAL;								
+						}
+						else
+						{	
+							color[start_pos] = HIGHLIGHT_ERROR;
+							color[in_pos+1] = HIGHLIGHT_NORMAL;								
+						}
+					}
+
 				}
 				else 
 				{

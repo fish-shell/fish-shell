@@ -2565,7 +2565,7 @@ static int parser_get_block_type( const wchar_t *cmd )
 }
 
 
-static int parser_test_argument( const wchar_t *arg, int babble )
+static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 {
 	wchar_t *unesc;
 	wchar_t *pos;
@@ -2587,7 +2587,7 @@ static int parser_test_argument( const wchar_t *arg, int babble )
 				if( babble )
 				{
 					error( SYNTAX_ERROR,
-						   -1,
+						   offset,
 						   L"Mismatched parans" );
 					print_errors();
 				}
@@ -2619,13 +2619,13 @@ static int parser_test_argument( const wchar_t *arg, int babble )
 				
 				/*
 				  Do _not_ call sb_destroy on this stringbuffer - it's
-				  buffer is used as the new 'arg_cpy'.
+				  buffer is used as the new 'arg_cpy'. It is free'd at
+				  the end of the loop.
 				*/
 				break;
-			}
-			
+			}			
 		}
-	}	
+	}
 
 	unesc = unescape( arg_cpy, 1 );
 	free( arg_cpy );
@@ -2648,8 +2648,9 @@ static int parser_test_argument( const wchar_t *arg, int babble )
 						if( babble )
 						{
 							error( SYNTAX_ERROR,
-								   -1,
+								   offset,
 								   COMPLETE_VAR_BRACKET_DESC );
+
 							print_errors();
 						}
 						break;
@@ -2661,7 +2662,7 @@ static int parser_test_argument( const wchar_t *arg, int babble )
 						if( babble )
 						{
 							error( SYNTAX_ERROR,
-								   -1,
+								   offset,
 								   COMPLETE_VAR_PARAN_DESC );
 							print_errors();
 						}
@@ -2674,7 +2675,7 @@ static int parser_test_argument( const wchar_t *arg, int babble )
 						if( babble )
 						{
 							error( SYNTAX_ERROR,
-								   -1,
+								   offset,
 								   COMPLETE_VAR_NULL_DESC );
 							print_errors();
 						}
@@ -2692,7 +2693,7 @@ static int parser_test_argument( const wchar_t *arg, int babble )
 							if( babble )
 							{
 								error( SYNTAX_ERROR,
-									   -1,
+									   offset,
 									   COMPLETE_VAR_DESC,
 									   *(pos+1) );
 								print_errors();
@@ -2737,7 +2738,7 @@ int parser_test_args(const  wchar_t * buff,
 			
 			case TOK_STRING:
 			{
-				err |= parser_test_argument( tok_last( &tok ), babble );
+				err |= parser_test_argument( tok_last( &tok ), babble, tok_get_pos( &tok ) );
 				break;
 			}
 			
@@ -3055,7 +3056,7 @@ int parser_test( const  wchar_t * buff,
 				}
 				else
 				{
-					err |= parser_test_argument( tok_last( &tok ), babble );
+					err |= parser_test_argument( tok_last( &tok ), babble, tok_get_pos( &tok ) );
 					
 					/*
 					  If possible, keep track of number of supplied arguments

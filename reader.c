@@ -2473,7 +2473,6 @@ wchar_t *reader_readline()
 			{
 				exit_forced = 1;
 				data->end_loop=1;
-				debug( 1, L"got R_EOF" );
 				break;
 			}
 

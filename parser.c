@@ -252,6 +252,10 @@ The fish parser. Contains functions for parsing code.
 #define UNKNOWN_BLOCK _( L"unknown/invalid block" )
 
 
+/**
+   Size of the error string buffer
+*/
+#define ERR_STR_SZ 1024
 /** Last error code */
 int error_code;
 
@@ -262,7 +266,7 @@ event_block_t *global_event_block=0;
 static int err_pos;
 
 /** Description of last error */
-static wchar_t err_str[256];
+static wchar_t err_str[ERR_STR_SZ];
 
 /** Pointer to the current tokenizer */
 static tokenizer *current_tokenizer;
@@ -698,7 +702,7 @@ void error( int ec, int p, const wchar_t *str, ... )
 	err_pos = p;
 
 	va_start( va, str );
-	vswprintf( err_str, 256, str, va );
+	vswprintf( err_str, ERR_STR_SZ, str, va );
 	va_end( va );
 
 }

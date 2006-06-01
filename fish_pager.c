@@ -719,7 +719,8 @@ static void mangle_descriptions( array_list_t *l )
 */
 static void join_completions( array_list_t *l )
 {
-	int i, in, out;
+	long i;
+	int in, out;
 	hash_table_t desc_table;
 	
 	hash_init( &desc_table, &hash_wcs_func, &hash_wcs_cmp );

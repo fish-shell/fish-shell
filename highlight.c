@@ -753,10 +753,10 @@ static void highlight_universal_internal( wchar_t * buff,
 						{
 							if( prev_q == *str )
 							{
-								int pos1, pos2;
+								long pos1, pos2;
 							
 								level--;
-								pos1 = (int)al_pop( &l );
+								pos1 = (long)al_pop( &l );
 								pos2 = str-buff;
 								if( pos1==pos || pos2==pos )
 								{

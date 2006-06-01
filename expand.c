@@ -778,7 +778,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 					stop_pos++;
 					while( 1 )
 					{
-						int tmp;
+						long tmp;
 
 						while( iswspace(in[stop_pos]) || (in[stop_pos]==INTERNAL_SEPARATOR))
 							stop_pos++;
@@ -814,7 +814,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 						int j;
 						for( j=0; j<al_get_count( var_idx_list ); j++)
 						{
-							int tmp = (int)al_get( var_idx_list, j );
+							long tmp = (long)al_get( var_idx_list, j );
 							if( tmp < 1 || tmp > al_get_count( &var_item_list ) )
 							{
 								error( SYNTAX_ERROR,

@@ -482,7 +482,7 @@ static int history_test( const wchar_t *needle, const wchar_t *haystack )
 /*
 	return wcsncmp( haystack, needle, wcslen(needle) )==0;
 */
-	return (int)wcsstr( haystack, needle );
+	return !!wcsstr( haystack, needle );
 }
 
 const wchar_t *history_prev_match( const wchar_t *str )

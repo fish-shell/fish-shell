@@ -761,8 +761,6 @@ static void join_completions( array_list_t *l )
 				al_set( l, i, 0 );
 			}
 			
-//			debug( 1, L"WOOT WOOT %ls är släkt med %ls", item, al_get( l, prev_idx ) );
-			
 		}
 		
 	}	

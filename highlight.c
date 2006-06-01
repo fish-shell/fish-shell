@@ -431,7 +431,6 @@ void highlight_shell( wchar_t * buff,
 					}
 					else
 					{
-						wchar_t *tmp;
 						int is_cmd = 0;
 						int is_subcommand = 0;
 						int mark = tok_get_pos( &tok );
@@ -460,31 +459,39 @@ void highlight_shell( wchar_t * buff,
 
 						if( !is_subcommand )
 						{
+							wchar_t *tmp;
 							/*
 							  OK, this is a command, it has been
 							  successfully expanded and everything
 							  looks ok. Lets check if the command
 							  exists.
 							*/
+
+							/*
+							  First check if it is a builtin or
+							  function, since we don't have to stat
+							  any files for that
+							*/
 							is_cmd |= builtin_exists( cmd );
 							is_cmd |= function_exists( cmd );
-							is_cmd |= (tmp=get_filename( cmd )) != 0;
-							
-							/* 
-							   Could not find the command. Maybe it is a path for a implicit cd command.
-							   Lets check!
+
+							/*
+							  Moving on to expensive tests
 							*/
-							if( !is_cmd )
-							{
-								wchar_t *pp = parser_cdpath_get( cmd );
-								if( pp )
-								{
-									free( pp );
-									is_cmd = 1;
-								}		
-							}
-							
+
+							/*
+							  Check if this is a regular command
+							*/
+							is_cmd |= !!(tmp=get_filename( cmd ));
 							free(tmp);
+
+							/* 
+							   Could not find the command. Maybe it is
+							   a path for a implicit cd command.
+							*/
+							is_cmd |= !!(tmp=parser_cdpath_get( cmd ));
+							free( tmp );
+														
 							if( is_cmd )
 							{								
 								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;
@@ -504,8 +511,7 @@ void highlight_shell( wchar_t * buff,
 							if( last_cmd )
 								free( last_cmd );
 							last_cmd = wcsdup( tok_last( &tok ) );						
-						}					
-
+						}
 					}
 
 				}

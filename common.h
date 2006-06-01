@@ -151,6 +151,14 @@ wchar_t *wcsdupcat2( const wchar_t *a, ... );
 
 wchar_t *wcsvarname( wchar_t *str );
 
+/**
+   Test if the given string is valid in a variable name 
+
+   \return 1 if this is a valid name, 0 otherwise
+*/
+
+int wcsvarchr( wchar_t chr );
+
 
 /**
    A wcswidth workalike. Fish uses this since the regular wcswidth seems flaky.

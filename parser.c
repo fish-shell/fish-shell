@@ -2684,10 +2684,11 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 
 					default:
 					{
-						if( !iswalnum(*(pos+1)) && 
-							*(pos+1)!=L'_' && 
-							*(pos+1)!=VARIABLE_EXPAND &&
-							*(pos+1)!=VARIABLE_EXPAND_SINGLE ) 
+						wchar_t n = *(pos+1);
+						
+						if( n != VARIABLE_EXPAND &&
+							n != VARIABLE_EXPAND_SINGLE &&
+							!wcsvarchr(n) )
 						{
 							err=1;
 							if( babble )

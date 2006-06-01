@@ -219,9 +219,17 @@ static void highlight_param( const wchar_t * buff,
 							break;
 						}
 
+						case L'$':
+						{
+							wchar_t n = buff[in_pos+1];							
+							color[in_pos] = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
+							color[in_pos+1] = HIGHLIGHT_NORMAL;								
+							break;
+						}
+
+
 						case L'*':
 						case L'?':
-						case L'$':
 						case L'(':
 						case L')':
 						{
@@ -349,8 +357,9 @@ static void highlight_param( const wchar_t * buff,
 					
 					case '$':
 					{
-						color[in_pos] = HIGHLIGHT_OPERATOR;
-						color[in_pos+1] = HIGHLIGHT_QUOTE;
+						wchar_t n = buff[in_pos+1];
+						color[in_pos] = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
+						color[in_pos+1] = HIGHLIGHT_QUOTE;								
 						break;
 					}
 				

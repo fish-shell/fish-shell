@@ -408,6 +408,11 @@ wchar_t *wcsvarname( wchar_t *str )
 	return 0;
 }
 
+int wcsvarchr( wchar_t chr )
+{
+	return ( (iswalnum(chr)) || (chr == L'_' ));
+}
+
 
 /** 
 	The glibc version of wcswidth seems to hang on some strings. fish uses this replacement.

@@ -2500,16 +2500,11 @@ static int builtin_end( wchar_t **argv )
 				wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
 										parser_get_job_pos()-current_block->tok_pos );
 
-				//fwprintf( stderr, L"Function: %ls\n", def );
-
-				if( !is_interactive || !parser_test( def, sb_err, argv[0] ) )
-				{
-					function_add( current_block->param1.function_name,
-								  def,
-								  current_block->param2.function_description,
-								  current_block->param4.function_events,
-								  current_block->param3.function_is_binding );
-				}
+				function_add( current_block->param1.function_name,
+							  def,
+							  current_block->param2.function_description,
+							  current_block->param4.function_events,
+							  current_block->param3.function_is_binding );
 
 				free(def);
 			}

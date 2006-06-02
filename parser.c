@@ -919,21 +919,38 @@ void parser_destroy()
 /**
    Print error message if an error has occured while parsing
 */
-static void print_errors()
+static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 {
 	if( error_code )
 	{
 		int tmp;
 
-		debug( 0, L"%ls", err_str );
+		sb_printf( target, L"%ls: %ls\n", prefix, err_str );
 
 		tmp = current_tokenizer_pos;
 		current_tokenizer_pos = err_pos;
 
-		fwprintf( stderr, L"%ls", parser_current_line() );
+		sb_printf( target, L"%ls", parser_current_line() );
 
 		current_tokenizer_pos=tmp;
 	}
+}
+
+static void print_errors_stderr()
+{
+	if( error_code )
+	{
+		debug( 0, L"%ls", err_str );
+		int tmp;
+		
+		tmp = current_tokenizer_pos;
+		current_tokenizer_pos = err_pos;
+		
+		fwprintf( stderr, L"%ls", parser_current_line() );
+		
+		current_tokenizer_pos=tmp;
+	}
+	
 }
 
 int eval_args( const wchar_t *line, array_list_t *args )
@@ -1004,8 +1021,9 @@ int eval_args( const wchar_t *line, array_list_t *args )
 			}
 		}
 	}
+
+	print_errors_stderr();
 	
-	print_errors();
 	tok_destroy( &tok );
 	
 	current_tokenizer=previous_tokenizer;
@@ -2516,7 +2534,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		parser_pop_block();
 	}
 
-	print_errors();
+	print_errors_stderr();
 
 	tok_destroy( current_tokenizer );
 	free( current_tokenizer );
@@ -2565,7 +2583,7 @@ static int parser_get_block_type( const wchar_t *cmd )
 }
 
 
-static int parser_test_argument( const wchar_t *arg, int babble, int offset )
+static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset )
 {
 	wchar_t *unesc;
 	wchar_t *pos;
@@ -2584,12 +2602,12 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 		{
 			case -1:
 				err=1;
-				if( babble )
+				if( out )
 				{
 					error( SYNTAX_ERROR,
 						   offset,
 						   L"Mismatched parans" );
-					print_errors();
+					print_errors( out, prefix);
 				}
 				free( arg_cpy );
 				return 1;
@@ -2611,7 +2629,7 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 				
 //				debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
 	
-				err |= parser_test( subst, babble );
+				err |= parser_test( subst, out, prefix );
 				
 				free( subst );
 				free( arg_cpy );
@@ -2645,13 +2663,13 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 					case BRACKET_BEGIN:
 					{
 						err=1;
-						if( babble )
+						if( out )
 						{
 							error( SYNTAX_ERROR,
 								   offset,
 								   COMPLETE_VAR_BRACKET_DESC );
 
-							print_errors();
+							print_errors( out, prefix);
 						}
 						break;
 					}
@@ -2659,12 +2677,12 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 					case INTERNAL_SEPARATOR:
 					{
 						err=1;
-						if( babble )
+						if( out )
 						{
 							error( SYNTAX_ERROR,
 								   offset,
 								   COMPLETE_VAR_PARAN_DESC );
-							print_errors();
+							print_errors( out, prefix);
 						}
 						break;
 					}
@@ -2672,12 +2690,12 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 					case 0:
 					{
 						err=1;
-						if( babble )
+						if( out )
 						{
 							error( SYNTAX_ERROR,
 								   offset,
 								   COMPLETE_VAR_NULL_DESC );
-							print_errors();
+							print_errors( out, prefix);
 						}
 						break;
 					}
@@ -2691,13 +2709,13 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 							!wcsvarchr(n) )
 						{
 							err=1;
-							if( babble )
+							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   offset,
 									   COMPLETE_VAR_DESC,
 									   *(pos+1) );
-								print_errors();
+								print_errors( out, prefix);
 							}
 						}
 						
@@ -2719,7 +2737,7 @@ static int parser_test_argument( const wchar_t *arg, int babble, int offset )
 }
 
 int parser_test_args(const  wchar_t * buff,
-					 int babble )
+					 string_buffer_t *out, const wchar_t *prefix )
 {
 	tokenizer tok;
 	tokenizer *previous_tokenizer = current_tokenizer;
@@ -2739,7 +2757,7 @@ int parser_test_args(const  wchar_t * buff,
 			
 			case TOK_STRING:
 			{
-				err |= parser_test_argument( tok_last( &tok ), babble, tok_get_pos( &tok ) );
+				err |= parser_test_argument( tok_last( &tok ), out, prefix, tok_get_pos( &tok ) );
 				break;
 			}
 			
@@ -2750,13 +2768,13 @@ int parser_test_args(const  wchar_t * buff,
 			
 			case TOK_ERROR:
 			{
-				if( babble )
+				if( out )
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( &tok ),
 						   TOK_ERR_MSG,
 						   tok_last(&tok) );
-					print_errors();
+					print_errors( out, prefix );
 				}
 				err=1;
 				do_loop=0;
@@ -2765,13 +2783,13 @@ int parser_test_args(const  wchar_t * buff,
 			
 			default:
 			{
-				if( babble )
+				if( out )
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( &tok ),
 						   UNEXPECTED_TOKEN_ERR_MSG,
 						   tok_get_desc( tok_last_type(&tok)) );
-					print_errors();
+					print_errors( out, prefix );
 				}
 				err=1;				
 				do_loop=0;
@@ -2791,7 +2809,8 @@ int parser_test_args(const  wchar_t * buff,
 }
 
 int parser_test( const  wchar_t * buff,
-				 int babble )
+				 string_buffer_t *out,
+				 const wchar_t *prefix)
 {
 	tokenizer tok;
 	/* 
@@ -2842,14 +2861,14 @@ int parser_test( const  wchar_t * buff,
 											EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES ) ) )
 					{
 						err=1;
-						if( babble )
+						if( out )
 						{
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
 								   ILLEGAL_CMD_ERR_MSG,
 								   cmd );
 							
-							print_errors();
+							print_errors( out, prefix );
 						}						
 					}
 					
@@ -2865,13 +2884,13 @@ int parser_test( const  wchar_t * buff,
 										  0 ) )
 						{
 							err=1;
-							if( babble )
+							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   COND_ERR_MSG );
 								
-								print_errors();
+								print_errors( out, prefix );
 							}
 						}
 						
@@ -2899,7 +2918,7 @@ int parser_test( const  wchar_t * buff,
 								   tok_get_pos( &tok ),
 								   BLOCK_ERR_MSG );
 
-							print_errors();
+							print_errors( out, prefix );
 						}
 						else
 						{
@@ -2934,13 +2953,13 @@ int parser_test( const  wchar_t * buff,
 						if( is_pipeline )
 						{
 							err=1;
-							if( babble )
+							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   EXEC_ERR_MSG );
 
-								print_errors();
+								print_errors( out, prefix );
 
 							}
 						}
@@ -2956,13 +2975,13 @@ int parser_test( const  wchar_t * buff,
 						if( is_pipeline )
 						{
 							err=1;
-							if( babble )
+							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   EXEC_ERR_MSG );
 
-								print_errors();
+								print_errors( out, prefix );
 
 							}
 						}
@@ -2978,13 +2997,13 @@ int parser_test( const  wchar_t * buff,
 						{
 							err=1;
 
-							if( babble )
+							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   INVALID_CASE_ERR_MSG );
 
-								print_errors();
+								print_errors( out, prefix);
 							}
 						}
 					}
@@ -3010,12 +3029,12 @@ int parser_test( const  wchar_t * buff,
 						{
 							err=1;
 
-							if( babble )
+							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   INVALID_LOOP_ERR_MSG );
-								print_errors();
+								print_errors( out, prefix );
 							}
 						}
 					}
@@ -3028,13 +3047,13 @@ int parser_test( const  wchar_t * buff,
 						if( !count || block_type[count-1]!=IF )
 						{
 							err=1;
-							if( babble )
+							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   INVALID_ELSE_ERR_MSG );
 
-								print_errors();
+								print_errors( out, prefix );
 							}
 						}
 
@@ -3046,18 +3065,18 @@ int parser_test( const  wchar_t * buff,
 					if( count < 0 )
 					{
 						err = 1;
-						if( babble )
+						if( out )
 						{
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
 								   INVALID_END_ERR_MSG );
-							print_errors();
+							print_errors( out, prefix );
 						}
 					}
 				}
 				else
 				{
-					err |= parser_test_argument( tok_last( &tok ), babble, tok_get_pos( &tok ) );
+					err |= parser_test_argument( tok_last( &tok ), out, prefix, tok_get_pos( &tok ) );
 					
 					/*
 					  If possible, keep track of number of supplied arguments
@@ -3082,14 +3101,14 @@ int parser_test( const  wchar_t * buff,
 							{
 								err = 1;
 															
-								if( babble )
+								if( out )
 								{
 									error( SYNTAX_ERROR,
 										   tok_get_pos( &tok ),
 										   BUILTIN_FOR_ERR_IN,
 										   L"for" );
 									
-									print_errors();
+									print_errors( out, prefix );
 								}
 							}
 						}
@@ -3107,12 +3126,12 @@ int parser_test( const  wchar_t * buff,
 				if( !had_cmd )
 				{
 					err = 1;
-					if( babble )
+					if( out )
 					{
 						error( SYNTAX_ERROR,
 							   tok_get_pos( &tok ),
 							   INVALID_REDIRECTION_ERR_MSG );
-						print_errors();
+						print_errors( out, prefix );
 					}
 				}
 				break;
@@ -3123,13 +3142,13 @@ int parser_test( const  wchar_t * buff,
 				if( needs_cmd && !had_cmd )
 				{
 					err = 1;
-					if( babble )
+					if( out )
 					{
 						error( SYNTAX_ERROR,
 							   tok_get_pos( &tok ),
 							   CMD_ERR_MSG,
 							   tok_get_desc( tok_last_type(&tok)));
-						print_errors();
+						print_errors( out, prefix );
 					}
 				}
 				needs_cmd=0;
@@ -3144,7 +3163,7 @@ int parser_test( const  wchar_t * buff,
 				if( !had_cmd )
 				{
 					err=1;
-					if( babble )
+					if( out )
 					{
 						if( tok_get_pos(&tok)>0 && buff[tok_get_pos(&tok)-1] == L'|' )
 						{
@@ -3162,19 +3181,19 @@ int parser_test( const  wchar_t * buff,
 								   tok_get_desc( tok_last_type(&tok)));
 						}
 						
-						print_errors();
+						print_errors( out, prefix );
 					}
 				}
 				else if( forbid_pipeline )
 				{
 					err=1;
-					if( babble )
+					if( out )
 					{
 						error( SYNTAX_ERROR,
 							   tok_get_pos( &tok ),
 							   EXEC_ERR_MSG );
 						
-						print_errors();
+						print_errors( out, prefix );
 					}
 				}
 				else
@@ -3191,7 +3210,7 @@ int parser_test( const  wchar_t * buff,
 				if( !had_cmd )
 				{
 					err = 1;
-					if( babble )
+					if( out )
 					{
 						if( tok_get_pos(&tok)>0 && buff[tok_get_pos(&tok)-1] == L'&' )
 						{
@@ -3209,7 +3228,7 @@ int parser_test( const  wchar_t * buff,
 								   tok_get_desc( tok_last_type(&tok)));
 						}
 						
-						print_errors();
+						print_errors( out, prefix );
 					}
 				}
 				
@@ -3223,7 +3242,7 @@ int parser_test( const  wchar_t * buff,
 			case TOK_ERROR:
 			default:
 				err = 1;
-				if( babble )
+				if( out )
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( &tok ),
@@ -3231,7 +3250,7 @@ int parser_test( const  wchar_t * buff,
 						   tok_last(&tok) );
 
 
-					print_errors();
+					print_errors( out, prefix );
 					//debug( 2, tok_last( &tok) );
 				}
 				break;
@@ -3241,23 +3260,23 @@ int parser_test( const  wchar_t * buff,
 	if( needs_cmd )
 	{
 		err=1;
-		if( babble )
+		if( out )
 		{
 			error( SYNTAX_ERROR,
 				   tok_get_pos( &tok ),
 				   COND_ERR_MSG );
 
-			print_errors();
+			print_errors( out, prefix );
 		}
 	}
 
 
-	if( babble && count>0 )
+	if( out && count>0 )
 	{
 		error( SYNTAX_ERROR,
 			   block_pos[count-1],
 			   BLOCK_END_ERR_MSG );
-		print_errors();
+		print_errors( out, prefix );
 	}
 
 	tok_destroy( &tok );

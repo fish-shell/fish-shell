@@ -320,7 +320,7 @@ const wchar_t *parser_get_block_desc( int block );
    contains errors, and the second bit is set if the string contains
    an unclosed block.
 */
-int parser_test( const wchar_t * buff, int babble );
+int parser_test( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
 
 /**
    Test if the specified string can be parsed as an argument list,
@@ -328,7 +328,7 @@ int parser_test( const wchar_t * buff, int babble );
    string contains errors, and the second bit is set if the string
    contains an unclosed block.
 */
-int parser_test_args( const wchar_t * buff, int babble );
+int parser_test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
 
 /**
    Returns the full path of the specified directory. If the \c in is a

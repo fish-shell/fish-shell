@@ -2099,10 +2099,15 @@ void reader_run_command( wchar_t *cmd )
 
 static int shell_test( wchar_t *b )
 {
-	if( parser_test( b, 0 ) )
+	if( parser_test( b, 0, 0 ) )
 	{
+		string_buffer_t sb;
+		sb_init( &sb );
+		
 		writech( L'\n' );
-		parser_test( b, 1 );
+		parser_test( b, &sb, L"fish" );
+		fwprintf( stderr, L"%ls", sb.buff );
+		sb_destroy( &sb );
 		return 1;
 	}
 	return 0;
@@ -2944,18 +2949,21 @@ static int read_ni( int fd )
 
 		if( str )
 		{
-			if( !parser_test( str, 1 ) )
-			{
-				eval( str, 0, TOP );
-			}
-			else
-			{
-				/*
-				  No error reporting - parser_test did that for us
-				*/
-				res = 1;
-			}
-			free( str );
+		string_buffer_t sb;
+		sb_init( &sb );
+		
+		if( !parser_test( str, &sb, L"fish" ) )
+		{
+			eval( str, 0, TOP );
+		}
+		else
+		{
+			fwprintf( stderr, L"%ls", sb.buff );
+			res = 1;
+		}
+		sb_destroy( &sb );
+		
+		free( str );
 		}
 		else
 		{

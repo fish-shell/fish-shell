@@ -30,7 +30,10 @@ const static wchar_t *temporary_buffer;
 /*
   builtin_complete_* are a set of rather silly looping functions that
   make sure that all the proper combinations of complete_add or
-  complete_remove get called. 
+  complete_remove get called. This is needed since complete allows you
+  to specify multiple switches on a single commandline, like 'complete
+  -s a -s b -s c', but the complete_add function only accepts one
+  short switch and one long switch.
 */
 
 static void	builtin_complete_add2( const wchar_t *cmd,
@@ -455,14 +458,14 @@ int builtin_complete( wchar_t **argv )
 	{
 		if( condition && wcslen( condition ) )
 		{
-			if( parser_test( condition, 0 ) )
+			if( parser_test( condition, 0, 0 ) )
 			{
 				sb_printf( sb_err,
 						   L"%ls: Condition '%ls' contained a syntax error\n", 
 						   argv[0],
 						   condition );
 				
-				parser_test( condition, 1 );
+				parser_test( condition, sb_err, argv[0] );
 				
 				res = 1;
 			}
@@ -473,14 +476,14 @@ int builtin_complete( wchar_t **argv )
 	{
 		if( comp && wcslen( comp ) )
 		{
-			if( parser_test_args( comp, 0 ) )
+			if( parser_test_args( comp, 0, 0 ) )
 			{
 				sb_printf( sb_err,
 						   L"%ls: Completion '%ls' contained a syntax error\n", 
 						   argv[0],
 						   comp );
 				
-				parser_test_args( comp, 1 );
+				parser_test_args( comp, sb_err, argv[0] );
 				
 				res = 1;
 			}

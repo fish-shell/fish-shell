@@ -2502,7 +2502,7 @@ static int builtin_end( wchar_t **argv )
 
 				//fwprintf( stderr, L"Function: %ls\n", def );
 
-				if( !is_interactive || !parser_test( def, 1 ) )
+				if( !is_interactive || !parser_test( def, sb_err, argv[0] ) )
 				{
 					function_add( current_block->param1.function_name,
 								  def,

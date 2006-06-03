@@ -668,7 +668,7 @@ void exec( job_t *j )
 		signal_block();
 
 		/*
-		  setup_child_process make sure signals are properly set
+		  setup_child_process makes sure signals are properly set
 		  up. It will also call signal_unblock
 		*/
 		if( !setup_child_process( j, 0 ) )
@@ -757,22 +757,12 @@ void exec( job_t *j )
 				break;
 			}
 
-/*			fwprintf( stderr,
-  L"Make pipe from %ls to %ls using fds %d and %d\n", 
-  p->actual_cmd,
-  p->next->actual_cmd,
-  mypipe[0],
-  mypipe[1] );
-*/
 			memcpy( pipe_write.param1.pipe_fd, mypipe, sizeof(int)*2);
 		}
 		else
 		{
 			/*
 			  This is the last element of the pipeline.
-			*/
-
-			/*
 			  Remove the io redirection for pipe output.
 			*/
 			j->io = io_remove( j->io, &pipe_write );
@@ -785,7 +775,6 @@ void exec( job_t *j )
 			{
 				
 				wchar_t * def = halloc_register( j, wcsdup( function_get_definition( p->argv[0] )));
-				//fwprintf( stderr, L"run function %ls\n", argv[0] );
 				if( def == 0 )
 				{
 					debug( 0, _( L"Unknown function '%ls'" ), p->argv[0] );
@@ -803,7 +792,6 @@ void exec( job_t *j )
 
 				if( p->next )
 				{
-//					fwprintf( stderr, L"Function %ls\n", def );
 					io_buffer = io_buffer_create();					
 					j->io = io_add( j->io, io_buffer );
 				}
@@ -820,7 +808,6 @@ void exec( job_t *j )
 			{
 				if( p->next )
 				{
-//					fwprintf( stderr, L"Block %ls\n", p->argv[0] );
 					io_buffer = io_buffer_create();					
 					j->io = io_add( j->io, io_buffer );
 				}
@@ -848,11 +835,6 @@ void exec( job_t *j )
 							case IO_FD:
 							{
 								builtin_stdin = in->param1.old_fd;
-/*								fwprintf( stderr, 
-  L"Input redirection for builtin '%ls' from fd %d\n", 
-  p->argv[0],
-  in->old_fd );
-*/
 								break;
 							}
 							case IO_PIPE:
@@ -863,11 +845,6 @@ void exec( job_t *j )
 							
 							case IO_FILE:
 							{
-/*								
-  fwprintf( stderr, 
-  L"Input redirection for builtin from file %ls\n",
-  in->filename);
-*/
 								builtin_stdin=wopen( in->param1.filename,
                                               in->param2.flags, 0777 );
 								if( builtin_stdin == -1 )
@@ -907,40 +884,37 @@ void exec( job_t *j )
 					exec_error=1;
 					break;
 				}
+				else
+				{
+					builtin_push_io( builtin_stdin );
+					
+					/* 
+					   Since this may be the foreground job, and since a
+					   builtin may execute another foreground job, we need to
+					   pretend to suspend this job while running the builtin.
+					*/
+					
+					builtin_out_redirect = has_fd( j->io, 1 );
+					builtin_err_redirect = has_fd( j->io, 2 );		
+					fg = j->fg;
+					j->fg = 0;
+					
+					signal_unblock();
+					
+					p->status = builtin_run( p->argv );
+					
+					signal_block();
+					
+					/*
+					  Restore the fg flag, which is temporarily set to
+					  false during builtin execution so as not to confuse
+					  some job-handling builtins.
+					*/
+					j->fg = fg;
+				}
 				
-				builtin_push_io( builtin_stdin );
-				
-				/* 
-				   Since this may be the foreground job, and since a
-				   builtin may execute another foreground job, we need to
-				   pretend to suspend this job while running the builtin.
-				*/
-
-				builtin_out_redirect = has_fd( j->io, 1 );
-				builtin_err_redirect = has_fd( j->io, 2 );		
-				fg = j->fg;
-				j->fg = 0;
-				
-				signal_unblock();
-				
-				p->status = builtin_run( p->argv );
-				
-				signal_block();
-				
-				/*
-				  Restore the fg flag, which is temporarily set to
-				  false during builtin execution so as not to confuse
-				  some job-handling builtins.
-				*/
-				j->fg = fg;
-
-
-/*			if( is_interactive )
-  fwprintf( stderr, L"Builtin '%ls' finished\n", j->command );
-*/
 				if( close_stdin )
 				{
-//					fwprintf( stderr, L"Close builtin_stdin\n" );					
 					exec_close( builtin_stdin );
 				}				
 				break;				
@@ -1059,7 +1033,6 @@ void exec( job_t *j )
 					( sb_out->used ) && 
 					( buffer_stdout ) )
 				{
-//				fwprintf( stderr, L"Skip fork of %ls\n", j->command );				
 					char *res = wcs2str( (wchar_t *)sb_out->buff );				
 					b_append( io->param2.out_buffer, res, strlen( res ) );
 					skip_fork = 1;
@@ -1082,9 +1055,13 @@ void exec( job_t *j )
 				pid = fork();
 				if( pid == 0 )
 				{
+
 					/*
-					  This is the child process. 
+					  This is the child process. Setup redirections,
+					  print correct output to stdout and stderr, and
+					  then exit.
 					*/
+
 					p->pid = getpid();
 					setup_child_process( j, p );
 					if( sb_out->used )
@@ -1106,7 +1083,7 @@ void exec( job_t *j )
 				{
 					/* 
 					   This is the parent process. Store away
-					   information on the child, and possibly fice
+					   information on the child, and possibly give
 					   it control over the terminal.
 					*/
 					p->pid = pid;
@@ -1173,8 +1150,11 @@ void exec( job_t *j )
 			pipe_read.param1.pipe_fd[0] = mypipe[0];
 		
 		/* 
-		   If there is a next process, close the output end of the
-		   pipe (the child subprocess already has a copy of the pipe).
+		   If there is a next process in the pipeline, close the
+		   output end of the current pipe (the surrent child
+		   subprocess already has a copy of the pipe - this makes sure
+		   we don't leak file descriptors either in the shell or in
+		   the children).
 		*/
 		if( p->next )
 		{

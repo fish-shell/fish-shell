@@ -1933,7 +1933,7 @@ static int builtin_exit( wchar_t **argv )
 /**
    Helper function for builtin_cd, used for seting the current working directory
 */
-static int set_pwd(wchar_t *env)
+static int set_pwd( wchar_t *env)
 {
 	wchar_t dir_path[4096];
 	wchar_t *res = wgetcwd( dir_path, 4096 );
@@ -2003,7 +2003,7 @@ static int builtin_cd( wchar_t **argv )
 		return 1;
 	}
 
-	if (!set_pwd(L"PWD"))
+	if( !set_pwd(L"PWD") )
 	{
 		res=1;
 		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );
@@ -2134,11 +2134,13 @@ static int builtin_fg( wchar_t **argv )
 	if( argv[1] == 0 )
 	{
 		/*
-		  Select last constructed job (I.e. first job in the job que) that is possible to put in the foreground
+		  Select last constructed job (I.e. first job in the job que)
+		  that is possible to put in the foreground
 		*/
 		for( j=first_job; j; j=j->next )
 		{
-			if( j->constructed && (!job_is_completed(j)) && ( (job_is_stopped(j) || !j->fg) && (j->job_control)))
+			if( j->constructed && (!job_is_completed(j)) && 
+				( (job_is_stopped(j) || !j->fg) && (j->job_control) ) )
 				break;
 		}
 		if( !j )
@@ -2458,7 +2460,7 @@ static int builtin_end( wchar_t **argv )
 			case SUBST:
 			case BEGIN:
 				/*
-				  Nothing special happens at the end of these. The scope just ends.
+				  Nothing special happens at the end of these commands. The scope just ends.
 				*/
 
 				break;
@@ -2482,10 +2484,6 @@ static int builtin_end( wchar_t **argv )
 					
 					kill_block = 0;
 					parser_set_pos( current_block->tok_pos );
-/*
-  fwprintf( stderr,
-  L"jump to %d\n",
-  current_block->tok_pos );								*/
 				}
 				break;
 			}
@@ -2499,7 +2497,7 @@ static int builtin_end( wchar_t **argv )
 				*/
 				wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
 										parser_get_job_pos()-current_block->tok_pos );
-
+				
 				function_add( current_block->param1.function_name,
 							  def,
 							  current_block->param2.function_description,
@@ -2632,7 +2630,6 @@ static int builtin_return( wchar_t **argv )
 				builtin_print_help( argv[0], sb_err );
 				return 1;
 			}
-//			fwprintf( stderr, L"Return with status %d\n", status );
 			break;
 		}
 		default:
@@ -2861,6 +2858,10 @@ const static builtin_data_t builtin_data[]=
 		L"ulimit",  &builtin_ulimit, N_( L"Set or get the shells resource usage limits" ) 
 	}
 	,
+	{
+		L"begin",  &builtin_begin, N_( L"Create a block of code" )  
+	}
+	,
 
 	/*
 	  Builtins that are handled directly by the parser. They are
@@ -2893,10 +2894,6 @@ const static builtin_data_t builtin_data[]=
 	,
 	{
 		L"exec",  &builtin_generic, N_( L"Run command in current process" ) 
-	}
-	,
-	{
-		L"begin",  &builtin_begin, N_( L"Create a block of code" )  
 	}
 	,
 
@@ -2995,8 +2992,6 @@ int builtin_run( wchar_t **argv )
 		int status;
 
 		status = cmd(argv);
-//				fwprintf( stderr, L"Builtin: Set status of %ls to %d\n", argv[0], status );
-
 		return status;
 
 	}
@@ -3034,7 +3029,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 	return _( hash_get( desc, b ));
 }
 
-void builtin_push_io( int in)
+void builtin_push_io( int in )
 {
 	if( builtin_stdin != -1 )
 	{

@@ -814,8 +814,7 @@ static void highlight_universal_internal( wchar_t * buff,
 			wchar_t inc_char = buff[pos];
 			int level = 0;
 			wchar_t *str = &buff[pos];
-			int match_found=0;
-			
+			int match_found=0;			
 
 			while( (str >= buff) && *str)
 			{
@@ -847,7 +846,7 @@ void highlight_universal( wchar_t * buff,
 {
 	int i;
 	
-	for( i=0; buff[i] != 0; i++ )
+	for( i=0; buff[i]; i++ )
 		color[i] = 0;
 	
 	highlight_universal_internal( buff, color, pos, error );

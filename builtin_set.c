@@ -624,6 +624,7 @@ int builtin_set( wchar_t **argv )
 	{
 		free( dest );
 		sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
+		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
 
@@ -650,6 +651,7 @@ int builtin_set( wchar_t **argv )
 		{			
 			if( !parse_index( &indexes, argv[woptind], dest ) )
 			{
+				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
 				break;
 			}
@@ -662,6 +664,7 @@ int builtin_set( wchar_t **argv )
 				if( val_count < idx_count )
 				{
 					sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), argv[0] );
+					builtin_print_help( argv[0], sb_err );
 					retcode=1;
 					break;
 				}
@@ -733,6 +736,7 @@ int builtin_set( wchar_t **argv )
 						   _(L"%ls: Values cannot be specfied with erase\n%ls\n"),
 						   argv[0],
 						   parser_current_line() );
+				builtin_print_help( argv[0], sb_err );
 				retcode=1;
 			}
 			else

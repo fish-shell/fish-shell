@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: fish 1.20.0\n"
+"Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-07 13:37+0100\n"
+"POT-Creation-Date: 2006-06-03 13:52+0200\n"
 "PO-Revision-Date: 2006-03-13 18:06+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -20,32 +20,32 @@ msgstr ""
 msgid "Send job %d, '%ls' to foreground\n"
 msgstr "Skicka job %d, ”%ls” till förgrunden\n"
 
-#: builtin.c:368
+#: builtin.c:414
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
 msgstr "%ls: Can inte ange definitionsområde vid blockradering\n"
 
-#: builtin.c:374
+#: builtin.c:420
 #, c-format
 msgid "%ls: No blocks defined\n"
 msgstr "%ls: Inga block definerade\n"
 
-#: builtin.c:770 builtin.h:28
+#: builtin.c:821 builtin.h:28
 #, c-format
 msgid "%ls: Invalid combination of options\n"
 msgstr "%ls: Ogiltig kombination av flaggor\n"
 
-#: builtin.c:793
+#: builtin.c:844
 #, c-format
 msgid "%ls: Expected exactly one function name\n"
 msgstr "%ls: Förväntade exakt ett funktionsnamn\n"
 
-#: builtin.c:803
+#: builtin.c:854
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"
 msgstr "%ls: Funktionen ”%ls” existerar inte\n"
 
-#: builtin.c:864
+#: builtin.c:910
 msgid ""
 "Current function definitions are:\n"
 "\n"
@@ -53,37 +53,37 @@ msgstr ""
 "Nuvarande funktionsdefinitioner är:\n"
 "\n"
 
-#: builtin.c:1010
+#: builtin.c:1057
 #, c-format
 msgid "%ls: Unknown signal '%ls'\n"
 msgstr "%ls: Okänd signal ”%ls”\n"
 
-#: builtin.c:1034
+#: builtin.c:1081
 #, c-format
 msgid "%ls: Invalid variable name '%ls'\n"
 msgstr "%ls: Ogiltigt variabelnamn ”%ls”\n"
 
-#: builtin.c:1087
+#: builtin.c:1134
 #, c-format
 msgid "%ls: Cannot find calling job for event handler\n"
 msgstr "%ls: Kan inte hitta anropande job för händelsehanterare\n"
 
-#: builtin.c:1105
+#: builtin.c:1152
 #, c-format
 msgid "%ls: Invalid process id %ls\n"
 msgstr "%ls: Ogiltigt processid %ls\n"
 
-#: builtin.c:1142
+#: builtin.c:1193
 #, c-format
 msgid "%ls: Expected one argument, got %d\n"
 msgstr "%ls: Förväntade ett argument, fick %d\n"
 
-#: builtin.c:1150
+#: builtin.c:1201
 #, c-format
 msgid "%ls: Illegal function name '%ls'\n"
 msgstr "%ls: Ogiltigt funktionsnamn ”%ls”\n"
 
-#: builtin.c:1160
+#: builtin.c:1211
 #, c-format
 msgid ""
 "%ls: The name '%ls' is reserved,\n"
@@ -92,65 +92,60 @@ msgstr ""
 "%ls: Namnet ”%ls” är reserverat,\n"
 " och kan inte användas som funktionsnamn\n"
 
-#: builtin.c:1176
+#: builtin.c:1226
 msgid "Current functions are: "
 msgstr "Nuvarande funktioner är: "
 
-#: builtin.c:1313
+#: builtin.c:1359
 #, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
 msgstr "%ls: Slumpfrö ”%ls” är inte ett giltigt nummer\n"
 
-#: builtin.c:1327
+#: builtin.c:1373
 #, c-format
 msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Förväntade noll eller ett argument, fick %d\n"
 
-#: builtin.c:1753 main.c:313 parser.c:1237
+#: builtin.c:1807 main.c:336 parser.c:1273
 msgid "Standard input"
 msgstr "Standard in"
 
-#: builtin.c:1796
+#: builtin.c:1850
 msgid "This is a login shell\n"
 msgstr "Detta är ett login-skal\n"
 
-#: builtin.c:1798
+#: builtin.c:1852
 msgid "This is not a login shell\n"
 msgstr "Detta är inte ett login-skal\n"
 
-#: builtin.c:1800
+#: builtin.c:1854
 #, c-format
 msgid "Job control: %ls\n"
 msgstr "Jobkontroll: %ls\n"
 
-#: builtin.c:1801
+#: builtin.c:1855
 msgid "Only on interactive jobs"
 msgstr "Bara för interaktiva jobb"
 
-#: builtin.c:1802
+#: builtin.c:1856
 msgid "Never"
 msgstr "Aldrig"
 
-#: builtin.c:1802
+#: builtin.c:1856
 msgid "Always"
 msgstr "Alltid"
 
-#: builtin.c:1857 builtin.c:2871
+#: builtin.c:1911 builtin.c:2629
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
 msgstr "%ls: Argumentet ”%ls” måste vara ett heltal\n"
 
-#: builtin.c:1868 builtin.c:2882 builtin_complete.c:484
-#, c-format
-msgid "%ls: Too many arguments\n"
-msgstr "%ls: För många argument\n"
-
-#: builtin.c:1913
+#: builtin.c:1967
 #, c-format
 msgid "%ls: Could not find home directory\n"
 msgstr "%ls: Kunde inte hitta hemkatalogen\n"
 
-#: builtin.c:1925
+#: builtin.c:1979
 #, c-format
 msgid ""
 "%ls: '%ls' is not a directory or you do not have permission to enter it\n"
@@ -158,52 +153,56 @@ msgstr ""
 "%ls: ”%ls” är inte en katalog eller så har du inte rättigheter att läsa "
 "denna katalog\n"
 
-#: builtin.c:1939
+#: builtin.c:1993
 #, c-format
 msgid "%ls: '%ls' is not a directory\n"
 msgstr "%ls: ”%ls” är inte en katalog\n"
 
-#: builtin.c:1955
+#: builtin.c:2009
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Kunde inte sätta variableln PWD\n"
 
-#: builtin.c:1979
+#: builtin.c:2033
 #, c-format
 msgid "%ls: Expected at least one argument, got %d\n"
 msgstr "%ls: Förväntade minst ett argument, fick %d\n"
 
-#: builtin.c:1992
+#: builtin.c:2046
 #, c-format
 msgid "%ls: '%ls' is not a file\n"
 msgstr "%ls: ”%ls” är inte en fil\n"
 
-#: builtin.c:2030
+#: builtin.c:2084
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
-msgstr "%ls: Ett fel uppstod medan filen ”%ls” lästed\n"
+msgstr "%ls: Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: builtin.c:2094 builtin.c:2245
+#: builtin.c:2147 builtin.c:2311
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: Det finns inga lämpliga jobb\n"
 
-#: builtin.c:2112
+#: builtin.c:2165
 #, c-format
 msgid "%ls: Ambiguous job\n"
 msgstr "%ls: Mer än ett jobb matchar\n"
 
-#: builtin.c:2118 builtin.c:2521
+#: builtin.c:2171 builtin_jobs.c:302
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
 msgstr "%ls: ”%ls” är inte ett jobb\n"
 
-#: builtin.c:2134 builtin.c:2536
+#: builtin.c:2188
+msgid "%ls: Argument '%ls' is not a number\n"
+msgstr "%ls: Argumentet ”l%s” är inte ett nummer\n"
+
+#: builtin.c:2199 builtin_jobs.c:317
 #, c-format
 msgid "%ls: No suitable job: %d\n"
 msgstr "%ls: Inget passande jobb: %d\n"
 
-#: builtin.c:2142
+#: builtin.c:2208
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
@@ -212,12 +211,12 @@ msgstr ""
 "Kan inte skicka jobb %d, ”%ls” till förgrunden eftersom det inte anväder "
 "jobbkontroll\n"
 
-#: builtin.c:2196
+#: builtin.c:2262
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
 msgstr "%ls: Okänt jobb ”%ls”\n"
 
-#: builtin.c:2205
+#: builtin.c:2271
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
@@ -226,249 +225,259 @@ msgstr ""
 "Kan inte skicka jobb %d, ”%ls” till bakgrunden eftersom det inte anväder "
 "jobbkontrol\n"
 
-#: builtin.c:2215
+#: builtin.c:2281
 #, c-format
 msgid "Send job %d '%ls' to background\n"
 msgstr "Skicka jobb %d ”%ls” till bakgrunden\n"
 
-#: builtin.c:2251
+#: builtin.c:2317
 msgid "(default)"
 msgstr "(standard)"
 
-#: builtin.c:2311
-msgid "Job\tGroup\t"
-msgstr "Jobb\tGrupp\t"
-
-#: builtin.c:2313
-msgid "CPU\t"
-msgstr "CPU\t"
-
-#: builtin.c:2315
-msgid "State\tCommand\n"
-msgstr "Status\tKommando\n"
-
-#: builtin.c:2324 proc.c:600
-msgid "stopped"
-msgstr "stannat"
-
-#: builtin.c:2324
-msgid "running"
-msgstr "kör"
-
-#: builtin.c:2339
-msgid "Group\n"
-msgstr "Grupp\n"
-
-#: builtin.c:2352
-msgid "Procces\n"
-msgstr "Process\n"
-
-#: builtin.c:2369
-msgid "Command\n"
-msgstr "Kommando\n"
-
-#: builtin.c:2562
-#, c-format
-msgid "%ls: There are no jobs\n"
-msgstr "%ls: Det finns inga jobb\n"
-
-#: builtin.c:2581
+#: builtin.c:2344
 #, c-format
 msgid "%ls: Expected at least two arguments, got %d\n"
 msgstr "%ls: Förväntade minst två argument, fick %d\n"
 
-#: builtin.c:2589
+#: builtin.c:2352
 #, c-format
 msgid "%ls: '%ls' is not a valid variable name\n"
 msgstr "%ls: ”%ls” är ett ogiltigt variabelnamn\n"
 
-#: builtin.c:2597
-#, c-format
-msgid "%ls: Second argument must be 'in'\n"
-msgstr "%ls: Andra argumentet måste vara ”in”\n"
-
-#: builtin.c:2659
+#: builtin.c:2422
 #, c-format
 msgid "%ls: Not inside of block\n"
 msgstr "%ls: Inte i ett block\n"
 
-#: builtin.c:2779
+#: builtin.c:2537
 #, c-format
 msgid "%ls: Not inside of 'if' block\n"
 msgstr "%ls: Inte i ett ”if” block\n"
 
-#: builtin.c:2831
+#: builtin.c:2589
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Inte i en loop\n"
 
-#: builtin.c:2898
+#: builtin.c:2640 builtin_complete.c:531 builtin.h:65
+#, c-format
+msgid "%ls: Too many arguments\n"
+msgstr "%ls: För många argument\n"
+
+#: builtin.c:2656
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Inte i en funktion\n"
 
-#: builtin.c:2927
+#: builtin.c:2685
 #, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
 msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
 
-#: builtin.c:2958
+#: builtin.c:2716
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
 msgstr "%ls: ”case” kommandot kan bara användas i ett ”switch”-block\n"
 
-#: builtin.c:2999
+#: builtin.c:2757
 msgid "Exit the shell"
 msgstr "Avsluta fish"
 
-#: builtin.c:3003
+#: builtin.c:2761
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
 
-#: builtin.c:3007
+#: builtin.c:2765
 msgid "Run a builtin command instead of a function"
 msgstr "Utför ett inbyggt kommando istället för en funktion"
 
-#: builtin.c:3011
+#: builtin.c:2769
 msgid "Change working directory"
 msgstr "Ändra arbetskatalog"
 
-#: builtin.c:3015
+#: builtin.c:2773
 msgid "Define a new function"
 msgstr "Definera ny funktion"
 
-#: builtin.c:3019
+#: builtin.c:2777
 msgid "List or remove functions"
 msgstr "Visa eller ta bort funktioner"
 
-#: builtin.c:3023
+#: builtin.c:2781
 msgid "Edit command specific completions"
 msgstr "Redigera kommando-specifika kompletteringar"
 
-#: builtin.c:3027
+#: builtin.c:2785
 msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
-#: builtin.c:3031
+#: builtin.c:2789
 msgid "Evaluate block if condition is false"
 msgstr "Utför block om ett villkor inte är uppfyllt"
 
-#: builtin.c:3035
+#: builtin.c:2793
 msgid "Evaluate parameters as a command"
 msgstr "Utför argument som kommando"
 
-#: builtin.c:3039
+#: builtin.c:2797
 msgid "Perform a set of commands multiple times"
 msgstr "Utför ett block flera gånger"
 
-#: builtin.c:3043
+#: builtin.c:2801
 msgid "Evaluate contents of file"
 msgstr "Utför filinnehåll som kommandon"
 
-#: builtin.c:3047
+#: builtin.c:2805
 msgid "Handle environment variables"
 msgstr "Redigera miljövariabler"
 
-#: builtin.c:3051
+#: builtin.c:2809
 msgid "Send job to foreground"
 msgstr "Skick jobb till förgrunden"
 
-#: builtin.c:3055
+#: builtin.c:2813
 msgid "Send job to background"
 msgstr "Skicka jobb till bakgrunden"
 
-#: builtin.c:3059
+#: builtin.c:2817
 msgid "Print currently running jobs"
 msgstr "Visa nuvarande jobb"
 
-#: builtin.c:3063
+#: builtin.c:2821
 msgid "Read a line of input into variables"
 msgstr "Läs in en rad till variabler"
 
-#: builtin.c:3067
+#: builtin.c:2825
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
-#: builtin.c:3071
+#: builtin.c:2829
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Avbryt nuvarande varv i den innersta loopen"
 
-#: builtin.c:3075
+#: builtin.c:2833
 msgid "Stop the currently evaluated function"
 msgstr "Avbryt den nuvarande funktionen"
 
-#: builtin.c:3079
+#: builtin.c:2837
 msgid "Set or get the commandline"
 msgstr "Ändra eller visa kommandoraden"
 
-#: builtin.c:3083 builtin.c:3087
+#: builtin.c:2841 builtin.c:2845
 msgid "Conditionally execute a block of commands"
 msgstr "Utför ett kommando om ett villkor är uppfyllt"
 
-#: builtin.c:3091
+#: builtin.c:2849
 msgid "Handle fish key bindings"
 msgstr "Hantera tangentbordsgenvägar för fish"
 
-#: builtin.c:3095
+#: builtin.c:2853
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
 
-#: builtin.c:3099
+#: builtin.c:2857
 msgid "Return status information about fish"
 msgstr "Visa statusinformation om fish"
 
-#: builtin.c:3103
+#: builtin.c:2861
 msgid "Set or get the shells resource usage limits"
 msgstr "Redigera eller visa skalets resursanvändningsgränser"
 
-#: builtin.c:3113
+#: builtin.c:2871
 msgid "Run a program instead of a function or builtin"
 msgstr "Kör ett program istället för en funktion eller ett inbuggt kommando"
 
-#: builtin.c:3117
+#: builtin.c:2875
 msgid "Evaluate block if condition is true"
 msgstr "Utför ett block om ett villkor är uppfyllt"
 
-#: builtin.c:3121
+#: builtin.c:2879
 msgid "Perform a command multiple times"
 msgstr "Utför ett kommando upprepade gånger"
 
-#: builtin.c:3125
+#: builtin.c:2883
 msgid "Negate exit status of job"
 msgstr "Negera resultatet av ett kommando"
 
-#: builtin.c:3129
+#: builtin.c:2887
 msgid "Execute command if previous command suceeded"
 msgstr "Utför kommando om föregående kommando lyckades"
 
-#: builtin.c:3133
+#: builtin.c:2891
 msgid "Execute command if previous command failed"
 msgstr "Utför  kommando om föregående kommando misslyckades"
 
-#: builtin.c:3137
+#: builtin.c:2895
 msgid "Run command in current process"
 msgstr "Kör ett kommando i den nuvarande processen"
 
-#: builtin.c:3141
+#: builtin.c:2899
 msgid "Create a block of code"
 msgstr "Skapa ett kodblock"
 
-#: builtin.c:3247
+#: builtin.c:3005
 #, c-format
 msgid "Unknown builtin '%ls'"
 msgstr "Okänt inbyggt kommando ”%ls”"
 
-#: builtin_complete.c:270
+#: builtin_complete.c:273
 #, c-format
 msgid "%ls: Command only available in interactive sessions"
 msgstr "%ls: Kommandot finns bara tillgängligt under interaktiva sessioner"
 
-#: builtin_set.c:100
+#: builtin_jobs.c:88
+msgid "Job\tGroup\t"
+msgstr "Jobb\tGrupp\t"
+
+#: builtin_jobs.c:90
+msgid "CPU\t"
+msgstr "CPU\t"
+
+#: builtin_jobs.c:92
+msgid "State\tCommand\n"
+msgstr "Status\tKommando\n"
+
+#: builtin_jobs.c:101 proc.c:596
+msgid "stopped"
+msgstr "stannat"
+
+#: builtin_jobs.c:101
+msgid "running"
+msgstr "kör"
+
+#: builtin_jobs.c:116
+msgid "Group\n"
+msgstr "Grupp\n"
+
+#: builtin_jobs.c:129
+msgid "Procces\n"
+msgstr "Process\n"
+
+#: builtin_jobs.c:146
+msgid "Command\n"
+msgstr "Kommando\n"
+
+#: builtin_jobs.c:343
+#, c-format
+msgid "%ls: There are no jobs\n"
+msgstr "%ls: Det finns inga jobb\n"
+
+#: builtin_set.c:158
+#, c-format
+msgid "%ls: Tried to change the read-only variable '%ls'\n"
+msgstr "%ls: Försökte ändra den skrivskyddade variablen ”%ls”\n"
+
+#: builtin_set.c:208
+#, c-format
+msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
+msgstr "%ls: Flera variabelnamn angivna i ett anrop (%ls och %.*ls)\n"
+
+#: builtin_set.c:229
 #, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
 msgstr "%ls: Ogiltigt index vid ”%ls”\n"
 
-#: builtin_set.c:492
+#: builtin_set.c:590
 #, c-format
 msgid ""
 "%ls: Erase needs a variable name\n"
@@ -477,7 +486,7 @@ msgstr ""
 "%ls: Radering kräver ett variabelnamn\n"
 "%ls\n"
 
-#: builtin_set.c:526
+#: builtin_set.c:733
 #, c-format
 msgid ""
 "%ls: Values cannot be specfied with erase\n"
@@ -565,7 +574,7 @@ msgstr "Kunde inte hitta information om användare"
 msgid "Changing language to English"
 msgstr "Byter språk till svenska"
 
-#: env.c:1073
+#: env.c:1097
 msgid "Tried to pop empty environment stack."
 msgstr "Försökte ta bort element från tom variabelstack"
 
@@ -599,7 +608,7 @@ msgstr "avslutshanterare för jobb med processgrupp %d"
 msgid "exit handler for job with job id %d"
 msgstr "avslutshanterare för jobb med jobid %d"
 
-#: event.c:548
+#: event.c:551
 msgid "Signal list overflow. Signals have been ignored."
 msgstr "Signallistan är full. Signaler har ignorerats."
 
@@ -617,32 +626,32 @@ msgstr "Ett fel inträffade vid IO dirigering av filen ”%ls”"
 msgid "Could not create child process - exiting"
 msgstr "Kunde inte skapa barnprocess - avslutar programmet"
 
-#: exec.c:440
+#: exec.c:427
 #, c-format
 msgid "Failed to execute process '%ls'"
 msgstr "Misslyckades med att exekvera processen ”%ls”"
 
-#: exec.c:619
+#: exec.c:606
 #, c-format
 msgid "Could not send process %d from group %d to group %d"
 msgstr "Kunde inte skicka process %d från grupp %d till grupp %d"
 
-#: exec.c:637 proc.c:849 proc.c:861
+#: exec.c:624 proc.c:844 proc.c:856
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Kunde inte skicka jobb %d (”%ls”) till förgrunden"
 
-#: exec.c:801
+#: exec.c:791
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Okänd funktion ”%ls”"
 
-#: exec.c:901
+#: exec.c:892
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Okänd dirigering av standard in av typ %d"
 
-#: exec.c:1231
+#: exec.c:1220
 #, c-format
 msgid ""
 "Sent null command to subshell. This is a fish bug. If it can be reproduced, "
@@ -675,126 +684,81 @@ msgstr "Skalprocess"
 msgid "Last background job"
 msgstr "Senaste bakgrundsjobb"
 
-#: expand.c:82
-#, c-format
-msgid ""
-"The '$' character begins a variable name. The character '%lc', which "
-"directly followed a '$', is not allowed as a part of a variable name, and "
-"variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type 'help expand-variable'."
-msgstr ""
-"Tecknet ”$” börjar ett variabelnamn. Tecknet ”%lc”, som direkt följde ett "
-"”$”, är inte tillåtet som del av ett variabelnamn, och variabelnamn får inte "
-"vara noll tecken långa. För mer information om variabelexpansion i fish, "
-"skriv ”help expand-variable”."
-
-#: expand.c:87
-msgid ""
-"The '$' begins a variable name. It was given at the end of an argument. "
-"Variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type 'help expand-variable'."
-msgstr ""
-"Tecknet ”$” börjar ett variabelnamn. Det påträffades som det sista tecknet i "
-"ett argument. Variabelnamn får inte vara noll tecken långa. För mer "
-"information om variabelexpansion i fish, skriv ”help expand-variable”."
-
-#: expand.c:92
-msgid ""
-"Did you mean {$VARIABLE}? The '$' character begins a variable name. A "
-"bracket, which directly followed a '$', is not allowed as a part of a "
-"variable name, and variable names may not be zero characters long. To learn "
-"more about variable expansion in fish, type 'help expand-variable'."
-msgstr ""
-"Menade du {$VARIABEL}? Tecknet ”$” börjar ett variabelnamn. En "
-"klammerparantes, som direkt följde ett ”$”, är inte tillåtet som del av ett "
-"variabelnamn, och variabelnamn får inte vara noll tecken långa. För mer "
-"information om variabelexpansion i fish, skriv ”help expand-variable”."
-
-#: expand.c:97
-msgid ""
-"Did you mean (COMMAND)? In fish, the '$' character is only used for "
-"accessing variables. To learn more about command substitution in fish, type "
-"'help expand-command-substitution'."
-msgstr ""
-"Menade du (KOMMANDO)? I fish används tecknet ”$” bara för att komma åt "
-"variabler. För att lära dig mer om kommandosubstitutionm skriv ”help expand-"
-"command-substitution”."
-
-#: expand.c:1132
+#: expand.c:1051
 msgid "Mismatched brackets"
 msgstr "Klammerparanteser matchar inte varandra"
 
-#: input.c:430
+#: input.c:435
 msgid "Invalid Control sequence"
 msgstr "Ogiltig kontroll-sekvens"
 
-#: input.c:542
+#: input.c:547
 #, c-format
 msgid "Could not parse sequence '%ls'"
 msgstr "Kunde inte tolka sekvens ”%ls”"
 
-#: input.c:708
+#: input.c:713
 msgid "Invalid sequence - no dash after control\n"
 msgstr "Ogiltig sekvens - inget bindestreck efter ”control”\n"
 
-#: input.c:738
+#: input.c:743
 msgid "Invalid sequence - Control-nothing?\n"
 msgstr "Ogiltig sekvens - Kontroll-ingenting?\n"
 
-#: input.c:753
+#: input.c:758
 msgid "Invalid sequence - no dash after meta\n"
 msgstr "Ogiltig sekvens - inget bindestreck efter ”meta”\n"
 
-#: input.c:758
+#: input.c:763
 msgid "Invalid sequence - Meta-nothing?"
 msgstr "Ogiltig sekvens - Meta-ingenting?"
 
-#: input.c:803
+#: input.c:808
 #, c-format
 msgid "Invalid sequence - '%ls' expanded to zero characters"
 msgstr "Ogiltig sekvens - ”%ls” expanderades till en tom sträng"
 
-#: input.c:867
+#: input.c:872
 msgid "Mismatched $endif in inputrc file"
 msgstr "$endif matchade inte i inputrc-fil"
 
-#: input.c:919
+#: input.c:924
 msgid "Mismatched quote"
 msgstr "Citat-tecknen matchar inte varandra"
 
-#: input.c:933
+#: input.c:938
 msgid "Expected a ':'"
 msgstr "Förväntade ett ”:”"
 
-#: input.c:978
+#: input.c:983
 #, c-format
 msgid "I don't know what '%ls' means"
 msgstr "Vet inte vad ”%ls” betyder"
 
-#: input.c:982
+#: input.c:987
 #, c-format
 msgid "Expected end of line, got '%ls'"
 msgstr "Förväntade radslut, fick ”%ls”"
 
-#: input.c:987
+#: input.c:992
 msgid "Syntax: set KEY VALUE"
 msgstr "Syntax: set NAMN VÄRDE"
 
-#: input.c:1053
+#: input.c:1058
 msgid "Unable to parse key binding"
 msgstr "Kunde inte tolka tangentbordsgenväg"
 
-#: input.c:1079
+#: input.c:1084
 #, c-format
 msgid "I don't know what %ls means"
 msgstr "Vet inte vad ”%ls” betyder"
 
-#: input.c:1105
+#: input.c:1110
 #, c-format
 msgid "Error while reading input information from file '%ls'"
 msgstr "Ett fel uppstod under inläsning av filen ”%ls”"
 
-#: input.c:1353
+#: input.c:1363
 msgid "Could not set up terminal"
 msgstr "Kunde inte initiera terminalen"
 
@@ -806,72 +770,76 @@ msgstr ""
 "Ett fel inträffade under inläsning av utdata från kodblock på "
 "filidentifierare %d"
 
-#: main.c:194
+#: main.c:204
 #, c-format
 msgid "Invalid value '%s' for debug level switch"
 msgstr "Ogiltigt värde ”%s” för debugnivåflagga"
 
-#: main.c:218 mimedb.c:1269 set_color.c:218
+#: main.c:232 mimedb.c:1274 set_color.c:223
 #, c-format
 msgid "%s, version %s\n"
 msgstr "%s, version %s\n"
 
-#: main.c:312
+#: main.c:257
+msgid "Can not use the no-execute mode when running an interactive session"
+msgstr "no-execute läget kan inte användas i en i interaktiv session"
+
+#: main.c:335
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: mimedb.c:156 mimedb.c:170 mimedb.c:1089
+#: mimedb.c:161 mimedb.c:175 mimedb.c:1094
 #, c-format
 msgid "%s: Out of memory\n"
 msgstr "%s: Slut på minne\n"
 
-#: mimedb.c:405
+#: mimedb.c:410
 #, c-format
 msgid "%s: Unknown error in munge()\n"
 msgstr "%s: Okänt fel i munge()\n"
 
-#: mimedb.c:423
+#: mimedb.c:428
 #, c-format
 msgid "%s: Locale string too long\n"
 msgstr "%s: Lokalsträng för lång\n"
 
-#: mimedb.c:485
+#: mimedb.c:490
 #, c-format
 msgid "%s: Could not compile regular expressions\n"
 msgstr "%s: Kunde inte kompilera reguljärt uttryck\n"
 
-#: mimedb.c:591
+#: mimedb.c:596
 #, c-format
 msgid "%s: No description for type %s\n"
 msgstr "%s: Beskrivning saknas för typ %s\n"
 
-#: mimedb.c:655
+#: mimedb.c:660
 #, c-format
 msgid "%s: Could not parse launcher string '%s'\n"
 msgstr "%s: Kunde inte tolka körsträng ”%ls”\n"
 
-#: mimedb.c:688
+#: mimedb.c:693
 #, c-format
 msgid "%s: Default launcher '%s' does not specify how to start\n"
 msgstr "%s: Standardkörsträng ”%s” anger inte hur programmet ska startas\n"
 
-#: mimedb.c:1068
+#: mimedb.c:1073
 #, c-format
 msgid "%s: Unsupported switch '%c' in launch string '%s'\n"
 msgstr "%s: Flaggan ”%c” i körsträng ”%s” stöds inte\n"
 
-#: mimedb.c:1280
+#: mimedb.c:1285
 #, c-format
 msgid "%s: Can not launch a mimetype\n"
 msgstr "%s: Kan inte köra en mimetyp\n"
 
-#: mimedb.c:1312
+#: mimedb.c:1317
 #, c-format
 msgid "%s: Could not parse mimetype from argument '%s'\n"
 msgstr "%s: Kunde inte tolka mimetyp från argument ”%s”\n"
 
-#: mimedb.c:1390
+#: mimedb.c:1395
 #, c-format
 msgid "%s: Unknown error\n"
 msgstr "%s: Okänt fel\n"
@@ -892,8 +860,8 @@ msgid "Tokenizer error: '%ls'"
 msgstr "Ett fel inträffade vid symboluppdelning: ”%ls”"
 
 #: parser.c:79
-msgid "Short circuit command requires additional command"
-msgstr "Kortslutningkommandon kräver ett efterföljande kommandon"
+msgid "Pipe or short circuit command requires additional command"
+msgstr "Pipa eller kortslutningkommando kräver ett efterföljande kommandon"
 
 #: parser.c:84
 msgid "Maximum recursion depth reached. Accidental infinite loop?"
@@ -921,23 +889,23 @@ msgstr ""
 #, c-format
 msgid ""
 "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or "
-"COMMAND'? For more information on the 'or' builtin command, see the help "
-"section for 'or' by typing 'help or'."
+"COMMAND'? See the help section for the 'or' builtin command by typing 'help "
+"or'."
 msgstr ""
 "Förväntade att hitta ett kommandonamn, hittade en symbol av typen ”%ls”. "
-"Menade du ”KOMMANDO; or KOMMANDO”? För mer information on det inbyggda "
-"kommandot ”or”, se hjälpsektionen om ”or” genom att skriva ”help or”."
+"Menade du ”KOMMANDO; or KOMMANDO”? Se hjälpsektionen om ”or” genom att "
+"skriva ”help or”."
 
 #: parser.c:109
 #, c-format
 msgid ""
 "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and "
-"COMMAND'? For more information on the 'and' builtin command, see the help "
-"section for 'and' by typing 'help and'."
+"COMMAND'? See the help section for the 'and' builtin command by typing 'help "
+"and'."
 msgstr ""
 "Förväntade att hitta ett kommandonamn, hittade en symbol av typen ”%ls”. "
-"Menade du ”KOMMANDO; and KOMMANDO”? För mer information om det inbyggda "
-"kommandot ”and”, se hjälpsektionen om ”and” genom att skriva ”help and”."
+"Menade du ”KOMMANDO; and KOMMANDO”? Se hjälpsektionen om ”and” genom att "
+"skriva ”help and”."
 
 #: parser.c:114
 #, c-format
@@ -1062,199 +1030,218 @@ msgstr "händelsehanterarblock"
 msgid "unknown/invalid block"
 msgstr "okänt/ogiltigt block"
 
-#: parser.c:883
+#: parser.c:893
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Kunde inte skriva profileringsinformation till filen ”%s”"
 
-#: parser.c:889
+#: parser.c:899
 msgid "Time\tSum\tCommand\n"
 msgstr "Tid\tSumma\tKommando\n"
 
-#: parser.c:1015
+#: parser.c:1043
 #, c-format
 msgid "in event handler: %ls\n"
 msgstr "i händelsehanterare: %ls\n"
 
-#: parser.c:1029
+#: parser.c:1057
 #, c-format
 msgid "in . (source) call of file '%ls',\n"
 msgstr "i ”.”-anrop av fil ”%ls”,\n"
 
-#: parser.c:1034
+#: parser.c:1062
 #, c-format
 msgid "in function '%ls',\n"
 msgstr "i funktion ”%ls”,\n"
 
-#: parser.c:1039
+#: parser.c:1067
 msgid "in command substitution\n"
 msgstr "i kommandosubstitution\n"
 
-#: parser.c:1049
+#: parser.c:1077
 #, c-format
 msgid "\tcalled on line %d of file '%ls',\n"
 msgstr "\tanropad på rad %d i fil ”%ls”,\n"
 
-#: parser.c:1056
+#: parser.c:1084
 msgid "\tcalled on standard input,\n"
 msgstr "\tanropad från standard in,\n"
 
-#: parser.c:1070
+#: parser.c:1098
 #, c-format
 msgid "\twith parameter list '%ls'\n"
 msgstr "\tmed parameterlista ”%ls”\n"
 
-#: parser.c:1231
+#: parser.c:1267
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (rad %d): "
 
-#: parser.c:1439
+#: parser.c:1475
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Kunde inte expandera strängen ”%ls”"
 
-#: parser.c:1542
+#: parser.c:1578
 msgid "Invalid IO redirection"
 msgstr "Ogiltig IO omdirigering"
 
-#: parser.c:1585
+#: parser.c:1621
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "IO dirigering till någonting som inte är en filidentifierare"
 
-#: parser.c:2004
+#: parser.c:2043
+#, c-format
+msgid ""
+"Variables may not be used as commands. Instead, define a function like "
+"'function %ls; %ls $argv; end'. See the help section for the function "
+"command by typing 'help function'."
+msgstr ""
+
+#: parser.c:2051
+msgid ""
+"Variables may not be used as commands. Instead, define a function. See the "
+"help section for the function command by typing 'help function'."
+msgstr ""
+
+#: parser.c:2058
+#, c-format
+msgid ""
+"Commands may not contain variables. Use the eval builtin instead, like 'eval "
+"%ls'. See the help section for the eval command by typing 'help eval'."
+msgstr ""
+"Okänt kommando ”%ls”. Menade du ”set VARIABEL VÄRDE”? Se hjälpsektionen om "
+"det inbyggda kommandot ”set” genom att skriva ”help set”."
+
+#: parser.c:2065
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Okänt kommando ”%ls”"
 
-#: parser.c:2444
+#: parser.c:2507
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 
-#: proc.c:135
+#: proc.c:137
 msgid "Job inconsistency"
 msgstr "Jobb i ogiltigt tillstånd"
 
-#: proc.c:469
+#: proc.c:455
 #, c-format
 msgid "Job %d, '%ls' has %ls"
 msgstr "Jobb %d, ”%ls” har %ls"
 
-#: proc.c:545
+#: proc.c:541
 #, c-format
 msgid "%ls: Job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: Jobb %d, ”%ls” avslutat av signal %ls (%ls)"
 
-#: proc.c:553
+#: proc.c:549
 #, c-format
 msgid ""
 "%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr ""
 "%ls: Process %d, ”%ls”, från jobb %d, ”%ls” avslutat av signal %ls (%ls)"
 
-#: proc.c:584
+#: proc.c:580
 msgid "ended"
 msgstr "avslutat"
 
-#: proc.c:808
+#: proc.c:804
 msgid "An error occured while reading output from code block"
 msgstr "Ett fel inträffade under läsandet av utdata från kodblock"
 
-#: proc.c:986 proc.c:996 proc.c:1006
+#: proc.c:981 proc.c:991 proc.c:1001
 msgid "Could not return shell to foreground"
 msgstr "Kunde inte återställa skalet till förgrunden"
 
-#: proc.c:1029
+#: proc.c:1024
 msgid "Job command"
 msgstr "Jobb kommando"
 
-#: proc.c:1032 proc.c:1059
+#: proc.c:1027 proc.c:1054
 msgid "Process list pointer"
 msgstr "Processlistepekare"
 
-#: proc.c:1035
+#: proc.c:1030
 msgid "Job list pointer"
 msgstr "Jobblistepekare"
 
-#: proc.c:1046
+#: proc.c:1041
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
 msgstr "Mer än ett jobb i förgrunden: job 1: ”%ls”, jobb 2 ”%ls”"
 
-#: proc.c:1057
+#: proc.c:1052
 msgid "Process argument list"
 msgstr "Processargumentlista"
 
-#: proc.c:1058
+#: proc.c:1053
 msgid "Process name"
 msgstr "Processnamn"
 
-#: proc.c:1060
+#: proc.c:1055
 msgid "Process command"
 msgstr "Processkommando"
 
-#: proc.c:1065
+#: proc.c:1060
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
 msgstr "Jobb ”%ls”, process ”%ls” har ogiltigt tillstånd ”stopped”=%d"
 
-#: proc.c:1075
+#: proc.c:1070
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
 msgstr "Jobb ”%ls”, process ”%ls” har ogiltigt tillstånd ”completed”=%d"
 
-#: reader.c:318
+#: reader.c:328
 msgid "Could not set terminal mode for new job"
 msgstr "Kunde inte återställa terminalen för nytt jobb"
 
-#: reader.c:342
+#: reader.c:352
 msgid "Could not set terminal mode for shell"
 msgstr "Kunde inte återställa terminalen till skalet"
 
-#: reader.c:1617
+#: reader.c:1636
 msgid "Couldn't put the shell in its own process group"
 msgstr "Kunde inte skicka skalet till sin egen processgrupp"
 
-#: reader.c:1627
+#: reader.c:1646
 msgid "Couldn't grab control of terminal"
 msgstr "Kunde inte ta kontroll över terminalen"
 
-#: reader.c:1661
-msgid "Could not set exit function"
-msgstr "Kunde inte sätta avslutningsfunktionen"
-
-#: reader.c:2141
+#: reader.c:2156
 msgid "Pop null reader block"
 msgstr "Ta bort element från tomt läsarblock"
 
-#: reader.c:2283
+#: reader.c:2305
 msgid "There are stopped jobs\n"
 msgstr "Det finns bakgrundsjobb\n"
 
-#: reader.c:2802
+#: reader.c:2851
 #, c-format
 msgid "Unknown keybinding %d"
 msgstr "Okänd tangentbordsbindning %d"
 
-#: reader.c:2873
+#: reader.c:2926
 msgid "Error while reading commands"
 msgstr "Ett fel inträffade medan kommandon lästes in"
 
-#: reader.c:2892
+#: reader.c:2945
 msgid "Error while closing input stream"
 msgstr "Ett fel inträffade medan indataström stängdes"
 
-#: reader.c:2920
+#: reader.c:2973
 #, c-format
 msgid "Could not convert input. Read %d bytes."
 msgstr "Kunde inte konvertera indata. Läste %d bytes."
 
-#: reader.c:2926
+#: reader.c:2979
 msgid "Could not read input stream"
 msgstr "Kunde inte läsa från indataström"
 
-#: reader.c:2935
+#: reader.c:2988
 msgid "Error while opening input stream"
 msgstr "Ett fel inträffade medan indataström öppnades"
 
@@ -1272,160 +1259,164 @@ msgstr "Pekaren ”%ls” är ogiltig"
 msgid "The pointer '%ls' is null"
 msgstr "Pekaren ”%ls” är noll"
 
-#: set_color.c:245
+#: set_color.c:250
 #, c-format
 msgid "%s: Too many arguments\n"
 msgstr "%s: För många argument\n"
 
-#: set_color.c:252
+#: set_color.c:257
 #, c-format
 msgid "%s: Expected an argument\n"
 msgstr "%s: Förväntade argument\n"
 
-#: set_color.c:261 set_color.c:269
+#: set_color.c:266 set_color.c:274
 #, c-format
 msgid "%s: Unknown color '%s'\n"
 msgstr "%s: Okänd färg ”%s”\n"
 
-#: signal.c:61
+#: signal.c:62
 msgid "Terminal hung up"
 msgstr "Terminalen bröt uppkopplingen"
 
-#: signal.c:67
+#: signal.c:70
 msgid "Quit request from job control (^C)"
 msgstr "Avslutning via jobbkontroll (^C)"
 
-#: signal.c:73
+#: signal.c:78
 msgid "Quit request from job control with core dump (^\\)"
 msgstr "Avslutning via jobbkontroll med minnesdump (^\\)"
 
-#: signal.c:79
+#: signal.c:86
 msgid "Illegal instruction"
 msgstr "Ogiltig instruktion"
 
-#: signal.c:85
+#: signal.c:94
 msgid "Trace or breakpoint trap"
 msgstr "Spårnings eller brytpunktsfälla utlöstes"
 
-#: signal.c:91
+#: signal.c:102
 msgid "Abort"
 msgstr "Avbrott"
 
-#: signal.c:97
+#: signal.c:110
 msgid "Misaligned address error"
 msgstr "Bussfel (Ogiltigt justerad minnesadress)"
 
-#: signal.c:103
+#: signal.c:118
 msgid "Floating point exception"
 msgstr "Flyttalsundantag"
 
-#: signal.c:109
+#: signal.c:126
 msgid "Forced quit"
 msgstr "Tvingad avslutning"
 
-#: signal.c:115
+#: signal.c:134
 msgid "User defined signal 1"
 msgstr "Användardefinerad signal 1"
 
-#: signal.c:120
+#: signal.c:141
 msgid "User defined signal 2"
 msgstr "Användardefinerad signal 2"
 
-#: signal.c:126
+#: signal.c:149
 msgid "Address boundary error"
 msgstr "Minnesadress korsar segmentgräns"
 
-#: signal.c:132
+#: signal.c:157
 msgid "Broken pipe"
 msgstr "Avbrutet rör"
 
-#: signal.c:138
+#: signal.c:165
 msgid "Timer expired"
 msgstr "Timer utlöstes"
 
-#: signal.c:144
+#: signal.c:173
 msgid "Polite quit request"
 msgstr "Artig avslutning"
 
-#: signal.c:150
+#: signal.c:181
 msgid "Child process status changed"
 msgstr "Barnprocess fick ändrad status"
 
-#: signal.c:156
+#: signal.c:189
 msgid "Continue previously stopped process"
 msgstr "Fortsätt tidigare stannad process"
 
-#: signal.c:162
+#: signal.c:197
 msgid "Forced stop"
 msgstr "Tvingad att stoppa"
 
-#: signal.c:168
+#: signal.c:205
 msgid "Stop request from job control (^Z)"
 msgstr "Stoppad genom jobbkontroll (^Z)"
 
-#: signal.c:174
+#: signal.c:213
 msgid "Stop from terminal input"
 msgstr "Stoppad från terminalläsning"
 
-#: signal.c:180
+#: signal.c:221
 msgid "Stop from terminal output"
 msgstr "Stoppad från terminalskrivning"
 
-#: signal.c:186
+#: signal.c:229
 msgid "Urgent socket condition"
 msgstr "Viktig socket-situation"
 
-#: signal.c:192
+#: signal.c:237
 msgid "CPU time limit exceeded"
 msgstr "Slut på processortid"
 
-#: signal.c:199
+#: signal.c:245
 msgid "File size limit exceeded"
 msgstr "Maximal filstorlek överskriden"
 
-#: signal.c:206
+#: signal.c:253
 msgid "Virtual timer expired"
 msgstr "Virtuell timer utlöst"
 
-#: signal.c:213
+#: signal.c:261
 msgid "Profiling timer expired"
 msgstr "Profileringstimer utlöst"
 
-#: signal.c:221 signal.c:229
+#: signal.c:269 signal.c:277
 msgid "Window size change"
 msgstr "Terminalfönstret ändrade storlek"
 
-#: signal.c:236
+#: signal.c:285
 msgid "I/O on asynchronous file descriptor is possible"
 msgstr "Läsning/skrivning på asynkron filidentifierare möjligt"
 
-#: signal.c:243
+#: signal.c:293
 msgid "Power failure"
 msgstr "Strömavbrott"
 
-#: signal.c:251
+#: signal.c:301
 msgid "Bad system call"
 msgstr "Felaktigt systemanrop"
 
-#: signal.c:259
+#: signal.c:309
 msgid "Information request"
 msgstr "Informationsbegäran"
 
-#: signal.c:267
+#: signal.c:317
 msgid "Stack fault"
 msgstr "Stackfel"
 
-#: signal.c:275
+#: signal.c:325
 msgid "Emulator trap"
 msgstr "Emulatorfälla"
 
-#: signal.c:283
+#: signal.c:333
 msgid "Abort (Alias for SIGABRT)"
 msgstr "Avbrott (Alias för SIGABRT)"
 
-#: signal.c:291
+#: signal.c:341
 msgid "Unused signal"
 msgstr "Oanvänd signal"
+
+#: signal.c:400 signal.c:415
+msgid "Unknown"
+msgstr "Okänd"
 
 #: tokenizer.c:31
 msgid "Unexpected end of token"
@@ -1540,7 +1531,7 @@ msgstr "%ls: Ogiltigt flagga -- %lc\n"
 msgid "%ls: Option requires an argument -- %lc\n"
 msgstr "%ls: Flaggan kräver ett argument -- %lc\n"
 
-#: wildcard.c:342
+#: wildcard.c:350
 msgid "empty"
 msgstr "tom"
 
@@ -1596,9 +1587,59 @@ msgstr ""
 msgid "%ls: Variable name can not be the empty string\n"
 msgstr "%ls: Den tomma strängen är inte ett tillåtet variabelnamn\n"
 
+#: builtin.h:63
+#, c-format
+msgid "%ls: Second argument must be 'in'\n"
+msgstr "%ls: Andra argumentet måste vara ”in”\n"
+
 #: exec.h:19
 msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av ett rör"
+
+#: expand.h:118
+#, c-format
+msgid ""
+"The '$' character begins a variable name. The character '%lc', which "
+"directly followed a '$', is not allowed as a part of a variable name, and "
+"variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type 'help expand-variable'."
+msgstr ""
+"Tecknet ”$” börjar ett variabelnamn. Tecknet ”%lc”, som direkt följde ett "
+"”$”, är inte tillåtet som del av ett variabelnamn, och variabelnamn får inte "
+"vara noll tecken långa. För mer information om variabelexpansion i fish, "
+"skriv ”help expand-variable”."
+
+#: expand.h:123
+msgid ""
+"The '$' begins a variable name. It was given at the end of an argument. "
+"Variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type 'help expand-variable'."
+msgstr ""
+"Tecknet ”$” börjar ett variabelnamn. Det påträffades som det sista tecknet i "
+"ett argument. Variabelnamn får inte vara noll tecken långa. För mer "
+"information om variabelexpansion i fish, skriv ”help expand-variable”."
+
+#: expand.h:128
+msgid ""
+"Did you mean {$VARIABLE}? The '$' character begins a variable name. A "
+"bracket, which directly followed a '$', is not allowed as a part of a "
+"variable name, and variable names may not be zero characters long. To learn "
+"more about variable expansion in fish, type 'help expand-variable'."
+msgstr ""
+"Menade du {$VARIABEL}? Tecknet ”$” börjar ett variabelnamn. En "
+"klammerparantes, som direkt följde ett ”$”, är inte tillåtet som del av ett "
+"variabelnamn, och variabelnamn får inte vara noll tecken långa. För mer "
+"information om variabelexpansion i fish, skriv ”help expand-variable”."
+
+#: expand.h:133
+msgid ""
+"Did you mean (COMMAND)? In fish, the '$' character is only used for "
+"accessing variables. To learn more about command substitution in fish, type "
+"'help expand-command-substitution'."
+msgstr ""
+"Menade du (KOMMANDO)? I fish används tecknet ”$” bara för att komma åt "
+"variabler. För att lära dig mer om kommandosubstitutionm skriv ”help expand-"
+"command-substitution”."
 
 #: etc/fish_interactive.fish.in:14
 msgid "Welcome to fish, the friendly interactive shell\\n"
@@ -1616,75 +1657,31 @@ msgstr "Kommandon som utförs när fish avslutas"
 msgid "Good bye\\n"
 msgstr "Hej då\\n"
 
-#: share/fish:72 share/completions/apropos.fish:11
-#: share/completions/apt-build.fish:3 share/completions/apt-cache.fish:2
-#: share/completions/apt-cdrom.fish:2 share/completions/apt-config.fish:2
-#: share/completions/apt-extracttemplates.fish:3
-#: share/completions/apt-file.fish:2 share/completions/apt-ftparchive.fish:2
-#: share/completions/apt-get.fish:23 share/completions/apt-listbugs.fish:2
-#: share/completions/apt-listchanges.fish:2
-#: share/completions/apt-proxy-import.fish:2
-#: share/completions/apt-rdepends.fish:2
-#: share/completions/apt-show-source.fish:2
-#: share/completions/apt-show-versions.fish:2
-#: share/completions/apt-sortpkgs.fish:2 share/completions/apt-spy.fish:2
-#: share/completions/apt-src.fish:2 share/completions/apt-zip-inst.fish:2
-#: share/completions/apt-zip-list.fish:2 share/completions/bc.fish:9
-#: share/completions/cat.fish:10 share/completions/chgrp.fish:10
-#: share/completions/chown.fish:9 share/completions/complete.fish:13
-#: share/completions/configure.fish:1 share/completions/cut.fish:8
-#: share/completions/date.fish:9 share/completions/df.fish:28
-#: share/completions/diff.fish:26 share/completions/du.fish:18
-#: share/completions/echo.fish:4 share/completions/emerge.fish:30
-#: share/completions/fish.fish:2 share/completions/functions.fish:4
-#: share/completions/fusermount.fish:12 share/completions/gpg.fish:108
-#: share/completions/gprof.fish:31 share/completions/grep.fish:23
-#: share/completions/gunzip.fish:8 share/completions/gzip.fish:10
-#: share/completions/id.fish:6 share/completions/less.fish:1
-#: share/completions/man.fish:28 share/completions/mimedb.fish:8
-#: share/completions/mount.fish:9 share/completions/mplayer.fish:30
-#: share/completions/mplayer.fish:35 share/completions/mplayer.fish:82
-#: share/completions/mv.fish:10 share/completions/nice.fish:3
-#: share/completions/patch.fish:19 share/completions/pine.fish:3
-#: share/completions/ps.fish:35 share/completions/python.fish:4
-#: share/completions/read.fish:1 share/completions/rmdir.fish:6
-#: share/completions/rm.fish:8 share/completions/rpm.fish:4
-#: share/completions/ruby.fish:8 share/completions/sed.fish:27
-#: share/completions/set.fish:65 share/completions/sort.fish:19
-#: share/completions/sshfs.fish:32 share/completions/sudo.fish:7
-#: share/completions/su.fish:10 share/completions/test.fish:2
-#: share/completions/time.fish:9 share/completions/top.fish:5
-#: share/completions/touch.fish:10 share/completions/trap.fish:4
-#: share/completions/type.fish:2 share/completions/ulimit.fish:13
-#: share/completions/umount.fish:11 share/completions/uname.fish:10
-#: share/completions/uniq.fish:13 share/completions/valgrind.fish:24
-#: share/completions/vared.fish:2 share/completions/wc.fish:6
-#: share/completions/wget.fish:6 share/completions/who.fish:18
-#: share/completions/xargs.fish:8 share/completions/xprop.fish:2
-#: share/completions/xsel.fish:16 share/completions/yum.fish:46
-#: share/completions/zcat.fish:7 share/completions/zip.fish:31
-#: share/functions/__fish_complete_ls.fish:90
-#: share/functions/__fish_complete_tex.fish:4
-msgid "Display help and exit"
-msgstr "Visa hjälp och avsluta"
+#: share/fish:22
+msgid ""
+"%s: Warning: The directory %s has been removed from your PATH, because it "
+"does not exist\\n"
+msgstr ""
+"%s: Varning: Katalogen %s har tagits bort från din PATH eftersom den inte "
+"existerar\\n"
 
-#: share/fish:82
+#: share/fish:108
 msgid "Start service"
 msgstr "Starta tjänst"
 
-#: share/fish:83
+#: share/fish:109
 msgid "Stop service"
 msgstr "Stanna tjänst"
 
-#: share/fish:84
+#: share/fish:110
 msgid "Print service status"
 msgstr "Visa status för tjänst"
 
-#: share/fish:85
+#: share/fish:111
 msgid "Stop and then start service"
 msgstr "Stanna och starta tjänst"
 
-#: share/fish:86
+#: share/fish:112
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
@@ -1702,33 +1699,34 @@ msgstr "Ladda om konfiguration för tjänst"
 #: share/completions/bzip2.fish:17 share/completions/cat.fish:11
 #: share/completions/cdrecord.fish:5 share/completions/chgrp.fish:11
 #: share/completions/chown.fish:10 share/completions/configure.fish:2
-#: share/completions/cut.fish:9 share/completions/cvs.fish:51
-#: share/completions/cvs.fish:73 share/completions/date.fish:10
-#: share/completions/df.fish:29 share/completions/diff.fish:25
-#: share/completions/du.fish:19 share/completions/echo.fish:5
-#: share/completions/fish.fish:3 share/completions/fusermount.fish:13
-#: share/completions/gprof.fish:32 share/completions/grep.fish:43
-#: share/completions/gunzip.fish:18 share/completions/gzip.fish:20
-#: share/completions/id.fish:7 share/completions/less.fish:41
-#: share/completions/make.fish:26 share/completions/mimedb.fish:9
-#: share/completions/modprobe.fish:14 share/completions/mount.fish:8
-#: share/completions/mplayer.fish:83 share/completions/mv.fish:11
-#: share/completions/nice.fish:4 share/completions/patch.fish:34
-#: share/completions/perl.fish:18 share/completions/ping.fish:27
-#: share/completions/ps.fish:34 share/completions/python.fish:12
-#: share/completions/rmdir.fish:7 share/completions/rm.fish:9
-#: share/completions/rpm.fish:5 share/completions/ruby.fish:21
-#: share/completions/sed.fish:28 share/completions/sort.fish:20
-#: share/completions/sshfs.fish:24 share/completions/su.fish:11
-#: share/completions/tar.fish:51 share/completions/test.fish:3
-#: share/completions/time.fish:10 share/completions/top.fish:13
-#: share/completions/touch.fish:11 share/completions/umount.fish:10
-#: share/completions/uname.fish:11 share/completions/uniq.fish:14
-#: share/completions/valgrind.fish:26 share/completions/wc.fish:7
-#: share/completions/w.fish:5 share/completions/wget.fish:5
-#: share/completions/who.fish:19 share/completions/xargs.fish:18
-#: share/completions/xsel.fish:18 share/completions/yum.fish:54
-#: share/completions/zcat.fish:9 share/functions/__fish_complete_ls.fish:91
+#: share/completions/cp.fish:15 share/completions/cut.fish:9
+#: share/completions/cvs.fish:51 share/completions/cvs.fish:73
+#: share/completions/date.fish:10 share/completions/df.fish:29
+#: share/completions/diff.fish:25 share/completions/du.fish:19
+#: share/completions/echo.fish:5 share/completions/fish.fish:3
+#: share/completions/fusermount.fish:14 share/completions/gprof.fish:32
+#: share/completions/grep.fish:43 share/completions/gunzip.fish:18
+#: share/completions/gzip.fish:20 share/completions/id.fish:7
+#: share/completions/less.fish:41 share/completions/make.fish:26
+#: share/completions/mimedb.fish:9 share/completions/modprobe.fish:14
+#: share/completions/mount.fish:8 share/completions/mplayer.fish:83
+#: share/completions/mv.fish:11 share/completions/nice.fish:4
+#: share/completions/patch.fish:34 share/completions/perl.fish:18
+#: share/completions/ping.fish:27 share/completions/ps.fish:34
+#: share/completions/python.fish:12 share/completions/rmdir.fish:7
+#: share/completions/rm.fish:9 share/completions/rpm.fish:5
+#: share/completions/ruby.fish:21 share/completions/sed.fish:28
+#: share/completions/sort.fish:20 share/completions/sshfs.fish:24
+#: share/completions/su.fish:11 share/completions/tar.fish:51
+#: share/completions/test.fish:3 share/completions/time.fish:10
+#: share/completions/top.fish:13 share/completions/touch.fish:11
+#: share/completions/umount.fish:10 share/completions/uname.fish:11
+#: share/completions/uniq.fish:14 share/completions/valgrind.fish:26
+#: share/completions/wc.fish:7 share/completions/w.fish:5
+#: share/completions/wget.fish:5 share/completions/who.fish:19
+#: share/completions/xargs.fish:18 share/completions/xsel.fish:18
+#: share/completions/yum.fish:54 share/completions/zcat.fish:9
+#: share/functions/__fish_complete_ls.fish:91
 #: share/functions/__fish_complete_tex.fish:5
 msgid "Display version and exit"
 msgstr "Visa version och avsluta"
@@ -1761,6 +1759,58 @@ msgstr "APM-status debuginformation"
 msgid "whatis entry"
 msgstr "”whatis”-inlägg"
 
+#: share/completions/apropos.fish:11 share/completions/apt-build.fish:3
+#: share/completions/apt-cache.fish:2 share/completions/apt-cdrom.fish:2
+#: share/completions/apt-config.fish:2
+#: share/completions/apt-extracttemplates.fish:3
+#: share/completions/apt-file.fish:2 share/completions/apt-ftparchive.fish:2
+#: share/completions/apt-get.fish:23 share/completions/apt-listbugs.fish:2
+#: share/completions/apt-listchanges.fish:2
+#: share/completions/apt-proxy-import.fish:2
+#: share/completions/apt-rdepends.fish:2
+#: share/completions/apt-show-source.fish:2
+#: share/completions/apt-show-versions.fish:2
+#: share/completions/apt-sortpkgs.fish:2 share/completions/apt-spy.fish:2
+#: share/completions/apt-src.fish:2 share/completions/apt-zip-inst.fish:2
+#: share/completions/apt-zip-list.fish:2 share/completions/bc.fish:9
+#: share/completions/cat.fish:10 share/completions/chgrp.fish:10
+#: share/completions/chown.fish:9 share/completions/complete.fish:13
+#: share/completions/configure.fish:1 share/completions/cp.fish:14
+#: share/completions/cut.fish:8 share/completions/date.fish:9
+#: share/completions/df.fish:28 share/completions/diff.fish:26
+#: share/completions/du.fish:18 share/completions/echo.fish:4
+#: share/completions/emerge.fish:30 share/completions/fish.fish:2
+#: share/completions/functions.fish:4 share/completions/fusermount.fish:13
+#: share/completions/gpg.fish:108 share/completions/gprof.fish:31
+#: share/completions/grep.fish:23 share/completions/gunzip.fish:8
+#: share/completions/gzip.fish:10 share/completions/id.fish:6
+#: share/completions/less.fish:1 share/completions/man.fish:28
+#: share/completions/mimedb.fish:8 share/completions/mount.fish:9
+#: share/completions/mplayer.fish:30 share/completions/mplayer.fish:35
+#: share/completions/mplayer.fish:82 share/completions/mv.fish:10
+#: share/completions/nice.fish:3 share/completions/patch.fish:19
+#: share/completions/pine.fish:3 share/completions/ps.fish:35
+#: share/completions/python.fish:4 share/completions/read.fish:1
+#: share/completions/rmdir.fish:6 share/completions/rm.fish:8
+#: share/completions/rpm.fish:4 share/completions/ruby.fish:8
+#: share/completions/sed.fish:27 share/completions/set.fish:65
+#: share/completions/sort.fish:19 share/completions/sshfs.fish:32
+#: share/completions/sudo.fish:7 share/completions/su.fish:10
+#: share/completions/test.fish:2 share/completions/time.fish:9
+#: share/completions/top.fish:5 share/completions/touch.fish:10
+#: share/completions/trap.fish:4 share/completions/type.fish:2
+#: share/completions/ulimit.fish:13 share/completions/umount.fish:11
+#: share/completions/uname.fish:10 share/completions/uniq.fish:13
+#: share/completions/valgrind.fish:24 share/completions/vared.fish:2
+#: share/completions/wc.fish:6 share/completions/wget.fish:6
+#: share/completions/who.fish:18 share/completions/xargs.fish:8
+#: share/completions/xprop.fish:2 share/completions/xsel.fish:16
+#: share/completions/yum.fish:46 share/completions/zcat.fish:7
+#: share/completions/zip.fish:31 share/functions/__fish_complete_ls.fish:90
+#: share/functions/__fish_complete_tex.fish:4
+msgid "Display help and exit"
+msgstr "Visa hjälp och avsluta"
+
 #: share/completions/apropos.fish:12
 msgid "Print debugging info"
 msgstr "Visa debuginformation"
@@ -1769,16 +1819,16 @@ msgstr "Visa debuginformation"
 #: share/completions/apt-listchanges.fish:4
 #: share/completions/apt-proxy-import.fish:4
 #: share/completions/apt-show-source.fish:10 share/completions/arp.fish:2
-#: share/completions/darcs.fish:64 share/completions/darcs.fish:144
-#: share/completions/darcs.fish:155 share/completions/darcs.fish:160
-#: share/completions/makedepend.fish:11 share/completions/mount.fish:10
-#: share/completions/mv.fish:9 share/completions/ping.fish:26
-#: share/completions/python.fish:11 share/completions/rmdir.fish:5
-#: share/completions/rpm.fish:7 share/completions/ruby.fish:19
-#: share/completions/tar.fish:49 share/completions/time.fish:8
-#: share/completions/umount.fish:12 share/completions/valgrind.fish:28
-#: share/completions/wget.fish:13 share/completions/zip.fish:14
-#: share/functions/__fish_complete_ssh.fish:59
+#: share/completions/cp.fish:13 share/completions/darcs.fish:64
+#: share/completions/darcs.fish:144 share/completions/darcs.fish:155
+#: share/completions/darcs.fish:160 share/completions/makedepend.fish:11
+#: share/completions/mount.fish:10 share/completions/mv.fish:9
+#: share/completions/ping.fish:26 share/completions/python.fish:11
+#: share/completions/rmdir.fish:5 share/completions/rpm.fish:7
+#: share/completions/ruby.fish:19 share/completions/tar.fish:49
+#: share/completions/time.fish:8 share/completions/umount.fish:12
+#: share/completions/valgrind.fish:28 share/completions/wget.fish:13
+#: share/completions/zip.fish:14 share/functions/__fish_complete_ssh.fish:59
 msgid "Verbose mode"
 msgstr "Utförligt läge"
 
@@ -3076,6 +3126,9 @@ msgid ""
 "mode intended to free the IDE bus to allow hard disk and CD/DVD writer on "
 "the same IDE cable"
 msgstr ""
+"Definerar den minsta enhetsbufferfyllnadshastigheten för det experimentella "
+"ATAPI-vänteläget som är menat att underlätta för IDE-bussen att låta "
+"hårddisk och CD/DVD-skrivare befinna sig på samma IDE-kabel"
 
 #: share/completions/cdrecord.fish:14
 msgid "Complete CD/DVD-Recorder recording process with the laser turned off"
@@ -3092,7 +3145,6 @@ msgstr ""
 "skrivläge"
 
 #: share/completions/cdrecord.fish:18
-#, fuzzy
 msgid "Set TAO (Track At Once) writing mode"
 msgstr "Välj TAO- (Track At Once) skrivläge"
 
@@ -3121,7 +3173,8 @@ msgstr "Tillåt skapandet av multisessions-CD"
 #: share/completions/cdrecord.fish:24
 msgid ""
 "Retrieve multi session info in a form suitable for mkisofs-1.10 or later"
-msgstr "Hämta multisessionsinfo i ett format lämpligt för mkisofs-1.10 och senare"
+msgstr ""
+"Hämta multisessionsinfo i ett format lämpligt för mkisofs-1.10 och senare"
 
 #: share/completions/cdrecord.fish:25
 msgid "Retrieve and print out the table of content or PMA of a CD"
@@ -3143,7 +3196,9 @@ msgstr "Fixera inte skivan efter stt spåren skrivits"
 msgid ""
 "Wait for input to become available on standard input before trying to open "
 "the SCSI driver"
-msgstr "Vänta på att indata ska bli tillgängligt från standard in innan försök rill att öppna SCSI-enheten"
+msgstr ""
+"Vänta på att indata ska bli tillgängligt från standard in innan försök rill "
+"att öppna SCSI-enheten"
 
 #: share/completions/cdrecord.fish:30
 msgid "Load the media and exit"
@@ -3201,25 +3256,34 @@ msgstr "Välj drivrutinsspecifika inställningar"
 msgid ""
 "Set the driveropts specified by driveropts=option list, the speed of the "
 "drive and the dummy flag and exit"
-msgstr "Välj drivrutinsinställningar angivna av listandriveropt=inställning, hastigheten på enheten och dunny-flaggan och avsluta"
+msgstr ""
+"Välj drivrutinsinställningar angivna av listandriveropt=inställning, "
+"hastigheten på enheten och dunny-flaggan och avsluta"
 
 #: share/completions/cdrecord.fish:47
 msgid "Checks if a driver for the current drive is present and exit"
-msgstr "Kontrollerar om en drivrutin för den nuvarande enheten finns tillgänglig och avsluta"
+msgstr ""
+"Kontrollerar om en drivrutin för den nuvarande enheten finns tillgänglig och "
+"avsluta"
 
 #: share/completions/cdrecord.fish:48
 msgid ""
 "Print the drive capabilities for SCSI-3/mmc compliant drives as obtained "
 "from mode page 0x2A"
 msgstr ""
+"Visa enhetsförmågor för SCSI-3/mmc-anpassade enheter hämtade från lägessida "
+"0x2A"
 
 #: share/completions/cdrecord.fish:49
 msgid "Do an inquiry for the drive, print the inquiry info and exit"
-msgstr "Utför en föffrågan på enheten, visa förfrågningsinformationen och avsluta"
+msgstr ""
+"Utför en föffrågan på enheten, visa förfrågningsinformationen och avsluta"
 
 #: share/completions/cdrecord.fish:50
 msgid "Scan all SCSI devices on all SCSI busses and print the inquiry strings"
-msgstr "Genomsök alla SCSI-enheter på alla SCSI-bussar och skriv ut förfrågningssträngarna"
+msgstr ""
+"Genomsök alla SCSI-enheter på alla SCSI-bussar och skriv ut "
+"förfrågningssträngarna"
 
 #: share/completions/cdrecord.fish:51
 msgid "Try to reset the SCSI bus where the CD recorder is located"
@@ -3231,11 +3295,13 @@ msgstr "Försök skicka en avbrottssekvens till enheten"
 
 #: share/completions/cdrecord.fish:53
 msgid "Allow cdrecord to write more than the official size of a medium"
-msgstr "Tillåt cdrecord att skriva mer än den officiella storleken på ett medium"
+msgstr ""
+"Tillåt cdrecord att skriva mer än den officiella storleken på ett medium"
 
 #: share/completions/cdrecord.fish:54
 msgid "Ignore the known size of the medium, use for debugging only"
-msgstr "Ignorera den kända storleken på ett medium, använd endast vid debuggning"
+msgstr ""
+"Ignorera den kända storleken på ett medium, använd endast vid debuggning"
 
 #: share/completions/cdrecord.fish:55
 msgid "Use *.inf files to overwrite audio options"
@@ -3257,7 +3323,8 @@ msgstr "Ange paketstorlek, tvingar fast paket-läge (experimentell)"
 msgid ""
 "Do not close the current track, only when in packet writing mode "
 "(experimental)"
-msgstr "Avsluta inte det nuvarande spåret, bara i paketskrivningsläge (experimentell)"
+msgstr ""
+"Avsluta inte det nuvarande spåret, bara i paketskrivningsläge (experimentell)"
 
 #: share/completions/cdrecord.fish:60
 msgid "Set the Media Catalog Number of the CD"
@@ -3267,53 +3334,60 @@ msgstr "Välj Mediakatalog-nummer för CD:n"
 msgid ""
 "Write CD-Text info based on info taken from a file that contains ascii info "
 "for the text strings"
-msgstr "Skriv CD-Text-infromation baserat på information tagen från fil i ascii-format"
+msgstr ""
+"Skriv CD-Text-infromation baserat på information tagen från fil i ascii-"
+"format"
 
 #: share/completions/cdrecord.fish:62
 msgid "Write CD-Text based on info found in the binary file filename"
-msgstr "Skriv CD-Text-infromation baserat på information tagen från fil i binärt format"
+msgstr ""
+"Skriv CD-Text-infromation baserat på information tagen från fil i binärt "
+"format"
 
 #: share/completions/cdrecord.fish:63
 msgid "Take all recording related info from a CDRWIN compliant CUE sheet file"
 msgstr ""
+"Ta all inspelningrelaterad information från en CDRWIN-anpassad CUE-bladsfil"
 
 #: share/completions/cdrecord.fish:67
 msgid "Set the International Standard Recording Number for the next track"
-msgstr ""
+msgstr "Ange det internationella standardinspelningsnumret för nästa spår"
 
 #: share/completions/cdrecord.fish:68
 msgid "Sets an index list for the next track"
-msgstr ""
+msgstr "Ange en indexlista för nästa spår"
 
 #: share/completions/cdrecord.fish:69
 msgid "All subsequent tracks are written in CD-DA audio format"
-msgstr ""
+msgstr "Alla följande spår är skrivna i CD-DA-ljudformatet"
 
 #: share/completions/cdrecord.fish:70
 msgid "Audio data is assumed to be in byte-swapped (little-endian) order"
-msgstr ""
+msgstr "Ljuddata antas vara i omvänd byteordning"
 
 #: share/completions/cdrecord.fish:71
 msgid "All subsequent tracks are written in CD-ROM mode 1 (Yellow Book) format"
-msgstr ""
+msgstr "Alla följande spår är skrivna i CD-ROM läge 1 (Yellow book) formatet"
 
 #: share/completions/cdrecord.fish:72
 msgid "All subsequent tracks are written in CD-ROM mode 2 format"
-msgstr ""
+msgstr "Alla följande spår är skrivna i CD-ROM läge 2 formatet"
 
 #: share/completions/cdrecord.fish:73 share/completions/cdrecord.fish:74
 msgid "All subsequent tracks are written in CD-ROM XA mode 2 form 1 format"
-msgstr ""
+msgstr "Alla följande spår är skrivna i CD-ROM XA läge 2 form 1 formatet"
 
 #: share/completions/cdrecord.fish:75
 msgid "All subsequent tracks are written in CD-ROM XA mode 2 form 2 format"
-msgstr ""
+msgstr "Alla följande spår är skrivna i CD-ROM XA läge 2 form 2 formatet"
 
 #: share/completions/cdrecord.fish:76
 msgid ""
 "All subsequent tracks are written in a way that allows a mix of CD-ROM XA "
 "mode 2 form 1/2 format"
 msgstr ""
+"Alla följande spår är skrivna på ett sätt som fillåter en blandning av CD-"
+"ROM XA läge 2 form 1/2 formaten"
 
 #: share/completions/cdrecord.fish:77
 msgid "The TOC type for the disk is set to CDI, with XA only"
@@ -3510,6 +3584,14 @@ msgstr "Ta bort komplettering"
 msgid "Print all completions for the specified commandline"
 msgstr "Visa alla möjliga kompletteringar för det angivna commandot"
 
+#: share/completions/complete.fish:15
+msgid ""
+"The completion should only be used if the specified command has a zero exit "
+"status"
+msgstr ""
+"Completteringen skall bara användas om det angivna kommandot har nollskild "
+"avslutningstatus"
+
 #: share/completions/configure.fish:4
 msgid "Cache test results in specified file"
 msgstr "Cache:a resultat i angiven fil"
@@ -3545,6 +3627,111 @@ msgstr "Korskompilera för angiven värd"
 #: share/completions/configure.fish:12
 msgid "Configure for building compilers for TARGET"
 msgstr "Konfigurera för att bygga kompilator för angivet mål"
+
+#: share/completions/cp.fish:1
+msgid "Same as -dpR"
+msgstr "Samma sak som -dpR"
+
+#: share/completions/cp.fish:2 share/completions/mv.fish:1
+msgid "Make backup of each existing destination file"
+msgstr "Gör backup av varje existerande destinationsfil"
+
+#: share/completions/cp.fish:3
+msgid "Copy contents of special files when recursive"
+msgstr "Kopiera innehåll i specialla filer i rekursivt läge"
+
+#: share/completions/cp.fish:4
+msgid "Same as --no-dereference --preserve=link"
+msgstr "Samma sak som --no-dereference --preserve=link"
+
+#: share/completions/cp.fish:5 share/completions/mv.fish:2
+msgid "Do not prompt before overwriting"
+msgstr "Fråga inte före överskrivning"
+
+#: share/completions/cp.fish:6 share/completions/gpg.fish:142
+#: share/completions/mv.fish:3
+msgid "Prompt before overwrite"
+msgstr "Fråga före överskrivning"
+
+#: share/completions/cp.fish:7
+msgid "Follow command-line symbolic links"
+msgstr "Följ symboliska länkar från kommandoraden"
+
+#: share/completions/cp.fish:8
+msgid "Link files instead of copying"
+msgstr "Länka filer istället för att kopiera dem"
+
+#: share/completions/cp.fish:9 share/completions/mv.fish:5
+msgid "Remove trailing slashes from source"
+msgstr "Ta bort snedstreck i slutet på källangivelser"
+
+#: share/completions/cp.fish:10 share/completions/mv.fish:6
+msgid "Backup suffix"
+msgstr "Backup-ändelse"
+
+#: share/completions/cp.fish:11 share/completions/mv.fish:7
+msgid "Target directory"
+msgstr "Målkatalog"
+
+#: share/completions/cp.fish:12 share/completions/mv.fish:8
+msgid "Do not overwrite newer files"
+msgstr "Skriv inte över nyare filer"
+
+#: share/completions/cp.fish:16
+msgid "Always follow symbolic links"
+msgstr "Följ alltid symboliska länkar"
+
+#: share/completions/cp.fish:17
+msgid "Never follow symbolic links"
+msgstr "Följ aldrig symboliska länkar"
+
+#: share/completions/cp.fish:18
+msgid "Same as --preserve=mode,ownership,timestamps"
+msgstr ""
+
+#: share/completions/cp.fish:19
+msgid "Preserve the specified attributes and security contexts, if possible"
+msgstr ""
+
+#: share/completions/cp.fish:20
+msgid "Don't preserve the specified attributes"
+msgstr "Behåll inte de angivna attributen"
+
+#: share/completions/cp.fish:21
+msgid "Use full source file name under DIRECTORY"
+msgstr "Använd fullt källfilsnamn under KATALOG"
+
+#: share/completions/cp.fish:22
+msgid "Copy directories recursively"
+msgstr "Kopiera kataloger rekursivt"
+
+#: share/completions/cp.fish:23
+msgid ""
+"Remove each existing destination file before attempting to open it (contrast "
+"with --force)"
+msgstr ""
+"Ta bort varje existerande målfil innan försök att öppna den (jämför med --"
+"force)"
+
+#: share/completions/cp.fish:24
+msgid "Control creation of sparse files"
+msgstr "Kontrollera skapandet av glesa filer"
+
+#: share/completions/cp.fish:25
+msgid "Make symbolic links instead of copying"
+msgstr "Skapa symboliska länkar istället för att kopiera"
+
+#: share/completions/cp.fish:26
+msgid "Treat DEST as a normal file"
+msgstr "Behandla DEST som en vanlig fil"
+
+#: share/completions/cp.fish:27
+msgid "Stay on this file system"
+msgstr "Stanna på detta filsystem"
+
+#: share/completions/cp.fish:28
+msgid "Set security context of copy to CONTEXT"
+msgstr "Ange säkerhetskontext för kopia"
 
 #: share/completions/cut.fish:1
 msgid "Output byte range"
@@ -5145,14 +5332,18 @@ msgid "Run fish with this command"
 msgstr "Utför detta kommando i fish"
 
 #: share/completions/fish.fish:4
+msgid "Only parse input, do not execute"
+msgstr "Verifiera bara kommandon, utför dem inte"
+
+#: share/completions/fish.fish:5
 msgid "Run in interactive mode"
 msgstr "Kör i interaktivt läge"
 
-#: share/completions/fish.fish:5
+#: share/completions/fish.fish:6
 msgid "Run in login mode"
 msgstr "Kör i loginläge"
 
-#: share/completions/fish.fish:6
+#: share/completions/fish.fish:7
 msgid "Output profiling information to specified file"
 msgstr "Skriv profileringsinformation till angiven fil"
 
@@ -5188,20 +5379,20 @@ msgstr "Radera funktion"
 msgid "Show hidden functions"
 msgstr "Visa dolda funktioner"
 
-#: share/completions/fusermount.fish:14 share/completions/sshfs.fish:27
+#: share/completions/fusermount.fish:15 share/completions/sshfs.fish:27
 #: share/completions/sshfs.fish:31
 msgid "Mount options"
 msgstr "Monteringsflagga"
 
-#: share/completions/fusermount.fish:15
+#: share/completions/fusermount.fish:16
 msgid "Unmount"
 msgstr "Avmontera"
 
-#: share/completions/fusermount.fish:16
+#: share/completions/fusermount.fish:17
 msgid "Quiet"
 msgstr "Tyst läge"
 
-#: share/completions/fusermount.fish:17
+#: share/completions/fusermount.fish:18
 msgid "Lazy unmount"
 msgstr "Lat avmontering"
 
@@ -5686,10 +5877,6 @@ msgstr ""
 #: share/completions/gpg.fish:140
 msgid "Don't make any changes (this is not completely implemented)"
 msgstr "Gör inga ändringar (inte helt implementerat)"
-
-#: share/completions/gpg.fish:142 share/completions/mv.fish:3
-msgid "Prompt before overwrite"
-msgstr "Fråga före överskrivning"
 
 #: share/completions/gpg.fish:144 share/completions/scp.fish:28
 #: share/completions/top.fish:2
@@ -7010,7 +7197,8 @@ msgstr "Fortsätt inte vid fel"
 msgid "Touch files, don't run commands"
 msgstr "Ändra ändringstid på filer, utför inte kommandon"
 
-#: share/completions/make.fish:27 share/functions/pwd.fish:5
+#: share/completions/make.fish:27 share/functions/pwd.fish:7
+#: share/functions/pwd.fish:11
 msgid "Print working directory"
 msgstr "Visa nuvarande katalog"
 
@@ -7403,33 +7591,9 @@ msgstr "Bildutdata"
 msgid "Audio output"
 msgstr "Ljudutdata"
 
-#: share/completions/mv.fish:1
-msgid "Make backup of each existing destination file"
-msgstr "Gör backup av varje existerande destinationsfil"
-
-#: share/completions/mv.fish:2
-msgid "Do not prompt before overwriting"
-msgstr "Fråga inte före överskrivning"
-
 #: share/completions/mv.fish:4
 msgid "Answer for overwrite questions"
 msgstr "Svar till överskrivningsfrågor"
-
-#: share/completions/mv.fish:5
-msgid "Remove trailing slashes from source"
-msgstr "Ta bort snedstreck i slutet på källangivelser"
-
-#: share/completions/mv.fish:6
-msgid "Backup suffix"
-msgstr "Backup-ändelse"
-
-#: share/completions/mv.fish:7
-msgid "Target directory"
-msgstr "Målkatalog"
-
-#: share/completions/mv.fish:8
-msgid "Do not overwrite newer files"
-msgstr "Skriv inte över nyare filer"
 
 #: share/completions/nextd.fish:1 share/completions/prevd.fish:1
 msgid "Also print directory history"
@@ -7444,14 +7608,16 @@ msgid ""
 "Make backup files, when patching a file, rename or copy the original instead "
 "of removing it"
 msgstr ""
+"Skapa backupfiler, vid fixning av fil, byt namn eller kopiera orginalet "
+"istället för att ta bort det"
 
 #: share/completions/patch.fish:6
 msgid "Back up a file if the patch does not match the file exactly"
-msgstr ""
+msgstr "Skapa backup av fil om fix inte matchar filen exakt"
 
 #: share/completions/patch.fish:7
 msgid "Do not back up a file if the patch does not match the file exactly"
-msgstr ""
+msgstr "Skapa inte backup av fil om fix inte matchar filen exakt"
 
 #: share/completions/patch.fish:8
 msgid "Prefix pref to a file name when generating its simple backup file name"
@@ -7479,9 +7645,8 @@ msgid ""
 msgstr ""
 
 #: share/completions/patch.fish:14
-#, fuzzy
 msgid "Interpret the patch file as an ed script"
-msgstr "Utdata ser ut som ett ed-skript"
+msgstr "Tolka fixfil som ett ed-skript"
 
 #: share/completions/patch.fish:15
 msgid "Remove output files that are empty after the patches have been applied"
@@ -7495,7 +7660,7 @@ msgstr ""
 
 #: share/completions/patch.fish:17
 msgid "Set the maximum fuzz factor"
-msgstr ""
+msgstr "Sätt maximal fuzzfaktor"
 
 #: share/completions/patch.fish:18
 msgid ""
@@ -7505,9 +7670,8 @@ msgid ""
 msgstr ""
 
 #: share/completions/patch.fish:20
-#, fuzzy
 msgid "Read the patch from patchfile"
-msgstr "Läs paket från fil"
+msgstr "Läs fix från patchfil"
 
 #: share/completions/patch.fish:21
 msgid ""
@@ -7542,17 +7706,17 @@ msgid "Use style word to quote output names"
 msgstr "Använd portabelt utdataformat"
 
 #: share/completions/patch.fish:28
-#, fuzzy
 msgid "Put rejects into rejectfile instead of the default .rej file"
-msgstr "Använd angiven fil istället för standard-förtroendedatabasen"
+msgstr ""
+"Lägg till misslyckade fixar till angiven fil istället för standard-.rej-fil"
 
 #: share/completions/patch.fish:29
 msgid "Assume that this patch was created with the old and new files swapped"
-msgstr ""
+msgstr "Antag att denna fix skapades med ombytta gamla och nya filer"
 
 #: share/completions/patch.fish:30
 msgid "Work silently, unless an error occurs"
-msgstr ""
+msgstr "Arbeta tyst, om inte ett fel uppstår"
 
 #: share/completions/patch.fish:31
 msgid "Suppress questions like -f, but make some different assumptions"
@@ -7565,9 +7729,8 @@ msgid ""
 msgstr ""
 
 #: share/completions/patch.fish:33
-#, fuzzy
 msgid "Interpret the patch file as a unified context diff"
-msgstr "Skriv ut 3 rader av unifieradt sammanhang"
+msgstr "Tolka fixfil som unifierad kontextdiff"
 
 #: share/completions/patch.fish:35
 msgid "Use method to determine backup file names"
@@ -9213,6 +9376,67 @@ msgstr "Filtrera genom gzip"
 msgid "Filter through specified program"
 msgstr "Filtrera genom angivet program"
 
+#: share/completions/telnet.fish:9 share/completions/telnet.fish:14
+msgid "Specifies an 8-bit data path."
+msgstr "Anger en 8-bitars dataväg"
+
+#: share/completions/telnet.fish:10
+msgid "Do not try to negotiate TELNET BINARY option."
+msgstr ""
+
+#: share/completions/telnet.fish:11
+msgid "Stops any character from being recognized as an escape character."
+msgstr ""
+
+#: share/completions/telnet.fish:12
+msgid "Use local Kerberos authentication, if possible."
+msgstr ""
+
+#: share/completions/telnet.fish:13
+msgid "Specifies no automatic login to remote system."
+msgstr ""
+
+#: share/completions/telnet.fish:15
+msgid "Attempt automatic login."
+msgstr ""
+
+#: share/completions/telnet.fish:16
+msgid "Disables reading user's .telnetrc"
+msgstr "Inaktivera inläsning av användarens .telnetrc"
+
+#: share/completions/telnet.fish:17
+msgid "Sets debug mode."
+msgstr "Väljer debugnivå"
+
+#: share/completions/telnet.fish:18
+msgid "Sets IP TOS."
+msgstr ""
+
+#: share/completions/telnet.fish:19
+#, fuzzy
+msgid "Disables atype type of authentication."
+msgstr "Inaktivera vidareskickning av autentiseringsagent"
+
+#: share/completions/telnet.fish:20
+msgid "User login."
+msgstr "Användarinloggning"
+
+#: share/completions/telnet.fish:21
+msgid "Log to tracefile."
+msgstr "Logga till spårfil"
+
+#: share/completions/telnet.fish:22
+msgid "Turn on encryption."
+msgstr "Slå på kryptering"
+
+#: share/completions/telnet.fish:23
+msgid "User interface similar to rlogin."
+msgstr "Användargränssnitt liknande rlogin"
+
+#: share/completions/telnet.fish:24
+msgid "Use Kerberos realm for authentication."
+msgstr "Använd Kerberos-realm för autentisering"
+
 #: share/completions/test.fish:4
 msgid "Negate expression"
 msgstr "Negera uttryck"
@@ -10173,9 +10397,8 @@ msgid "Use at most max-lines nonblank input lines per command line"
 msgstr ""
 
 #: share/completions/xargs.fish:13
-#, fuzzy
 msgid "Use at most max-args arguments per command line"
-msgstr "Ändra eller visa kommandoraden"
+msgstr "Använd som mest angivet antal argument per kommando"
 
 #: share/completions/xargs.fish:14
 msgid ""
@@ -10197,13 +10420,12 @@ msgid "Print the command line on the standard error output before executing it"
 msgstr ""
 
 #: share/completions/xargs.fish:19
-#, fuzzy
 msgid "Exit if the size is exceeded"
-msgstr "Maximal filstorlek överskriden"
+msgstr "Avsluta om storleken överskrids"
 
 #: share/completions/xargs.fish:20
 msgid "Run up to max-procs processes at a time"
-msgstr ""
+msgstr "Kör upp till angivet antal processer i taget"
 
 #: share/completions/xprop.fish:3
 msgid "Display grammar and exit"
@@ -10475,15 +10697,15 @@ msgstr "Kryptera"
 msgid "Don't compress files with these suffixes"
 msgstr "Komprimera inte filer med dessa ändelser"
 
-#: share/functions/contains.fish:8
+#: share/functions/contains.fish:2
 msgid "Test if a key is contained in a set of values"
 msgstr "Testa om en nyckel finns med i en uppsättning av värden"
 
-#: share/functions/contains.fish:21
+#: share/functions/contains.fish:15
 msgid "%s: Unknown option '%s'\\n"
 msgstr "%s: Okänd flagga ”%s”\\n"
 
-#: share/functions/contains.fish:34
+#: share/functions/contains.fish:28
 msgid "%s: Key not specified\\n"
 msgstr "%s: Ingen nyckel angiven"
 
@@ -10495,16 +10717,12 @@ msgstr "Visa arbetskatalogshistorik (bakåt och frammåt)"
 msgid "Print directory stack"
 msgstr "Visa katalogstack"
 
-#: share/functions/_.fish:6 seq:15
-msgid "^/dev/null"
-msgstr ""
-
-#: share/functions/_.fish:7 share/functions/_.fish:11
+#: share/functions/_.fish:8 share/functions/_.fish:12
 #: share/functions/N_.fish:3 seq:11 seq:16
 msgid "-d"
 msgstr ""
 
-#: share/functions/_.fish:8 seq:17
+#: share/functions/_.fish:9 seq:17
 msgid "fish"
 msgstr ""
 
@@ -10872,7 +11090,11 @@ msgstr "Flaggor"
 msgid "Hit end of history...\\n"
 msgstr "Slut på kataloghistorik...\\n"
 
-#: share/functions/fish_prompt.fish:5
+#: share/functions/fish_prompt.fish:6
+msgid "Event handler, repaints the prompt when fish_color_cwd changes"
+msgstr ""
+
+#: share/functions/fish_prompt.fish:10
 msgid "Write out the prompt"
 msgstr "Skriv prompten"
 
@@ -10972,25 +11194,25 @@ msgstr "%s är en funktion med definitionen\\n"
 msgid "function\\n"
 msgstr "funktion\\n"
 
-#: share/functions/type.fish:93
+#: share/functions/type.fish:94
 msgid "%s is a builtin\\n"
 msgstr "%s är ett inbyggt kommando\\n"
 
-#: share/functions/type.fish:96
+#: share/functions/type.fish:97
 msgid "builtin\\n"
 msgstr "inbyggt kommando\\n"
 
-#: share/functions/type.fish:113
+#: share/functions/type.fish:115
 msgid "%s is %s\\n"
 msgstr "%s är %s\\n"
 
-#: share/functions/type.fish:116
+#: share/functions/type.fish:118
 msgid "file\\n"
 msgstr "fil\\n"
 
-#: share/functions/type.fish:127
-msgid "%s: Could not find '%s'"
-msgstr "%s: Kunde inte hitta ”%s”"
+#: share/functions/type.fish:129
+msgid "%s: Could not find '%s'\\n"
+msgstr "%s: Kunde inte hitta ”%s”\\n"
 
 #: share/functions/umask.fish:10 share/functions/umask.fish:67
 #: share/functions/umask.fish:74
@@ -11025,6 +11247,10 @@ msgstr ""
 "%s: Förväntade exakt ett argument, fick %s\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABEL\\n"
 
+#: seq:15
+msgid "^/dev/null"
+msgstr ""
+
 #: seq:36
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 msgstr "%s: Förväntade 1, 2 eller 3 argument, fick %d\\n"
@@ -11032,6 +11258,13 @@ msgstr "%s: Förväntade 1, 2 eller 3 argument, fick %d\\n"
 #: seq:43
 msgid "%s: '%s' is not a number\\n"
 msgstr "%s: ”%s” är inte ett nummer\\n"
+
+#, fuzzy
+#~ msgid "%ls: Argument must be a number: %ls\n"
+#~ msgstr "%ls: Argumentet ”%ls” måste vara ett heltal\n"
+
+#~ msgid "Could not set exit function"
+#~ msgstr "Kunde inte sätta avslutningsfunktionen"
 
 #~ msgid "No history item at index %d\n"
 #~ msgstr "Ingen historieinformation vid index %d\n"

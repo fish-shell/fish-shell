@@ -8,10 +8,16 @@
 
 The \c or builtin is used to execute a command if the current exit status (as set by the last previous command) is non-zero
 
+The or command does not change the current exit status.
+
 \subsection or-example Example
 
-The following code runs the \c make command to build a program, or if it fails, it runs <tt>make clean</tt>, which removes the files created by the build process
+The following code runs the \c make command to build a program, if the
+build succceds, the program is installed. If either step fails,
+<tt>make clean</tt> is run, which removes the files created by the
+build process
+
 <pre>
-make; or make clean
+make; and make install; or make clean
 </pre>
 

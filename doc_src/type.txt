@@ -15,6 +15,9 @@ With no options, indicate how each name would be interpreted if used as a comman
 - \c -p or \c --path either return the name of the disk file that would be executed if name were specified as a command name, or nothing if 'type  -t  name' would  not  return 'file'
 - \c -P or \c --force-path either return the name of the disk file that would be executed if name were specified as a command name, or nothing no file with the specified name could be found in the PATH
 
+\c type returns a zero exit status if the specified command was found,
+otherwise the exit status is one.
+
 \subsection type-example Example
 
 <tt>type fg</tt> outputs the string 'fg is a shell builtin'.

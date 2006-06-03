@@ -5,9 +5,12 @@
 if CONDITION; COMMAND_TRUE [else; COMMAND_FALSE] end
 while CONDITION; COMMANDS; end
 switch VALUE; [case [WILDCARD...]; [COMMANDS...];...] end
+begin; [COMMANDS...] end
 </pre>
 
 \subsection end-description Description
 <tt>end</tt> ends a block of commands. For more information, read the
 documentation for the block constructs, such as \c if, \c for and \
 while.
+
+The end command does not change the current exit status.

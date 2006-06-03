@@ -1,31 +1,28 @@
 \section set set - Handle environment variables.
 
 \subsection set-synopsis Synopsis
-<code>set [OPTIONS] [VARIABLE_NAME [VALUES...]]</code>
-
-or
-
-<code>set [OPTIONS] [VARIABLE_NAME[INDICES]... [VALUES...]]</code>
+<pre>set [OPTIONS] [VARIABLE_NAME [VALUES...]]
+set [OPTIONS] [VARIABLE_NAME[INDICES]... [VALUES...]]
+set -q VARIABLE_NAMES...
+set (-e | --erase) VARIABLE_NAME[INDICES]... 
+set (-e | --erase) VARIABLE_NAME</pre>
 
 The <code>set</code> builtin causes fish to assign the variable <code>VARIABLE_NAME</code> the values <code>VALUES...</code>.
 
 \subsection set-description Description
 - <code>-e</code> or <code>--erase</code> causes the specified environment variable to be erased
-- <code>-g</code> or <code>--global</code> causes the specified environment variable to be made global. If this option is not supplied, the specified variable will disappear when the current block ends
-- <code>-l</code> or <code>--local</code> forces the specified environment variable to be made local to the current block, even if the variable already exists and is non-local
+- <code>-l</code> or <code>--local</code> forces the specified environment variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
+- <code>-g</code> or <code>--global</code> causes the specified environment variable to be given a global scope. Non-global variables disappear when the block they belong to ends
+- <code>-U</code> or <code>--universal</code> causes the specified environment variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
 - <code>-n</code> or <code>--names</code> List only the names of all defined variables
 - <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 - <code>-u</code> or <code>--unexport</code> causes the specified environment not to be exported to child processes
-- <code>-U</code> or <code>--universal</code> causes the specified environment variable to be made universal. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
 - <code>-x</code> or <code>--export</code> causes the specified environment variable to be exported to child processes
 
 If set is called with no arguments, the names and values of all
 environment variables are printed. If some of the scope or export
 flags have been given, only the variables matching the specified scope
 are printed.
-
-If the \c -e or \c --erase option is specified, the variable
-specified by the following arguments will be erased
 
 If a variable is set to more than one value, the variable will be an
 array with the specified elements. If a variable is set to zero
@@ -37,10 +34,28 @@ changed. When array indices are specified to set, multiple arguments
 may be used to specify additional indexes, e.g. <code>set PATH[1]
 PATH[4] /bin /sbin</code>.
 
+-# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
+-# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previos variable scope is used.
+-# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing functions. If no function is executing, the variable will be global.
+
+-# If a variable is explicitly set to either be exported or not exported, that setting will be honored.
+-# If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
+-# If a variable is not explicitly set to be either global or local and has never before been defined, the variable will not be exported.
+
+If the \c -e or \c --erase option is specified, the variable specified
+by the following arguments will be erased. If variable indices are
+specified, only the thecified slices of the array veraible will be
+erased.
+
 The set command requires all switch arguments to come before any
 non-switch arguments. For example, <code>set flags -l</code> will have
 the effect of setting the value of the variable <code>flags</code> to
 '-l', not making the variable local.
+
+Set exits with an exit status of zero it the variable assignemnts
+where sucessfully performed, with a non-zero exit status otherwise. In
+query mode, the exit status is the number of variables that where not
+found.
 
 \subsection set-example Example
 

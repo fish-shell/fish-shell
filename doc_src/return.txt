@@ -8,12 +8,13 @@
 used to halt a currently running function. It is usually added inside
 of a conditional block such as an <a href="#if">if</a> statement or a
 <a href="#switch">switch</a> statement to conditionally stop the
-executing function and return to the caller.
+executing function and return to the caller, but it can also be used
+to specify the exit status of a function.
 
 - \c STATUS is the return status of the function. If unspecified, the status is set to 0.
 
 \subsection return-example Example
-The following code is an implementation of the false program as a fish builtin
+The following code is an implementation of the false command as a fish function
 <p>
 <pre>function false
 	return 1

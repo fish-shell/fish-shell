@@ -6,7 +6,7 @@
 
 \subsection count-description Description
 
-<tt>count</tt> returns the number of arguments that were passed to
+<tt>count</tt> prints the number of arguments that were passed to
 it. This is usually used to find out how many elements an environment
 variable array contains, but this is not the only potential usage for
 the count command. 
@@ -17,6 +17,9 @@ such as dashes. \c fish performs a special check when invoking the
 count program, and if the user uses a help option, this help page is
 displayed, but if a help option is contained inside of a variable or
 is the result of expansion, it will be passed on to the count program.
+
+Count exits with a non-zero exit status if no arguments where passed
+to it, with zero otherwise.
 
 \subsection count-example Example
 

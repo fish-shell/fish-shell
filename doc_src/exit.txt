@@ -11,4 +11,4 @@ code. Otherwise the exit code will be 0.
 
 If exit is called while sourcing a file (using the <a
 href="#source">.</a> builtin) the rest of the file will be skipped,
-but the shell will not exit.
+but the shell itself will not exit.

@@ -2185,7 +2185,7 @@ static int builtin_fg( wchar_t **argv )
 		if( *end )
 		{
 				sb_printf( sb_err,
-						   _( L"%ls: Argument must be a number: %ls\n" ),
+						   _( L"%ls: Argument '%ls' is not a number\n" ),
 						   argv[0],
 						   argv[1] );
 				builtin_print_help( argv[0], sb_err );

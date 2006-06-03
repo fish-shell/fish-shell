@@ -15,9 +15,9 @@ complete -c cp -l help -d (N_ "Display help and exit")
 complete -c cp -l version -d (N_ "Display version and exit")
 complete -c cp -s L -l dereference -d (N_ "Always follow symbolic links")
 complete -c cp -s P -l no-dereference -d (N_ "Never follow symbolic links")
-complete -c cp -s p  -d (N_ ""Same as --preserve=mode,ownership,timestamps)
-complete -c cp -l preserve -d (N_ "Preserve the specified attributes (default: mode,ownership,timestamps) and security contexts, if possible additional attributes: links, all")
-complete -c cp -l no-preserve -r -d (N_ "Don't preserve the specified attributes")
+complete -c cp -s p  -d (N_ "Same as --preserve=mode,ownership,timestamps")
+complete -c cp -l preserve -d (N_ "Preserve the specified attributes and security contexts, if possible") -a "mode ownership timestamps links all"
+complete -c cp -l no-preserve -r -d (N_ "Don't preserve the specified attributes") -a "mode ownership timestamps links all"
 complete -c cp -l parents -d (N_ "Use full source file name under DIRECTORY")
 complete -c cp -s r -s R -l recursive -d (N_ "Copy directories recursively")
 complete -c cp -l remove-destination -d (N_ "Remove each existing destination file before attempting to open it (contrast with --force)")

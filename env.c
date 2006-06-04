@@ -822,10 +822,12 @@ int env_set( const wchar_t *key,
    \return zero if the variable was not found, non-zero otherwise
 */
 static int try_remove( env_node_t *n,
-					   const wchar_t *key )
+					   const wchar_t *key,
+					   int var_mode )
 {
 	const void *old_key_void, *old_val_void;
 	wchar_t *old_key, *old_val;
+
 	if( n == 0 )
 		return 0;
 
@@ -850,44 +852,70 @@ static int try_remove( env_node_t *n,
 		return 1;
 	}
 
+	if( var_mode & ENV_LOCAL )
+		return 0;
+	
 	if( n->new_scope )
-		return try_remove( global_env, key );
+		return try_remove( global_env, key, var_mode );
 	else
-		return try_remove( n->next, key );
+		return try_remove( n->next, key, var_mode );
 }
 
 
-void env_remove( const wchar_t *key, int var_mode )
+int env_remove( const wchar_t *key, int var_mode )
 {
+	env_node_t *first_node;
+	int erased = 0;
+	
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
 	{
-		return;
+		return 2;
 	}
 	
-	if( try_remove( top, key ) )
-	{		
-        event_t ev;
-
-        ev.type=EVENT_VARIABLE;
-        ev.param1.variable=key;
-        ev.function_name=0;
-
-        al_init( &ev.arguments );
-        al_push( &ev.arguments, L"VARIABLE" );
-        al_push( &ev.arguments, L"ERASE" );
-        al_push( &ev.arguments, key );
-        event_fire( &ev );	
-        al_destroy( &ev.arguments );
-	}
-	else
+	first_node = top;
+	
+	if( ! (var_mode & ENV_UNIVERSAL ) )
 	{
-		env_universal_remove( key );
+		
+		if( var_mode & ENV_GLOBAL )
+		{
+			first_node = global_env;
+		}
+		
+		if( try_remove( first_node, key, var_mode ) )
+		{		
+			event_t ev;
+			
+			ev.type=EVENT_VARIABLE;
+			ev.param1.variable=key;
+			ev.function_name=0;
+			
+			al_init( &ev.arguments );
+			al_push( &ev.arguments, L"VARIABLE" );
+			al_push( &ev.arguments, L"ERASE" );
+			al_push( &ev.arguments, key );
+			
+			event_fire( &ev );	
+			
+			al_destroy( &ev.arguments );
+			erased = 1;
+		}
+	}
+	
+	if( !erased && 
+		!(var_mode & ENV_GLOBAL) &&
+		!(var_mode & ENV_LOCAL) ) 
+	{
+		erased = !env_universal_remove( key );
 	}
 
 	if( is_locale( key ) )
+	{
 		handle_locale();
-			
+	}
+	
+	return !erased;	
 }
 
 
@@ -989,40 +1017,60 @@ wchar_t *env_get( const wchar_t *key )
 		return item;
 }
 
-int env_exist( const wchar_t *key )
+int env_exist( const wchar_t *key, int mode )
 {
 	var_entry_t *res;
-	env_node_t *env = top;
-	wchar_t *item;
-	
-    if( hash_get( &env_read_only, key ) || hash_get( &env_electric, key ) )
-    {
-        return 1;
-    }
-	
-	while( env != 0 )
+	env_node_t *env;
+	wchar_t *item=0;
+
+	/*
+	  Read only variables all exist, and they are all global. A local
+	  varion can not exist.
+	*/
+	if( ! (mode & ENV_LOCAL) && ! (mode & ENV_UNIVERSAL) )
 	{
-		res = (var_entry_t *) hash_get( &env->env, 
-										key );
-		if( res != 0 )
+		if( hash_get( &env_read_only, key ) || hash_get( &env_electric, key ) )
 		{
 			return 1;
 		}
-		
-		if( env->new_scope )
-			env = global_env;
-		else
-			env = env->next;
-	}	
-	if( !proc_had_barrier)
+	}
+
+	if( ! (mode & ENV_UNIVERSAL) )
 	{
-		proc_had_barrier=1;
-		env_universal_barrier();
+		env = (mode & ENV_GLOBAL)?global_env:top;
+					
+		while( env != 0 )
+		{
+			res = (var_entry_t *) hash_get( &env->env, 
+											key );
+			if( res != 0 )
+			{
+				return 1;
+			}
+			
+			if( mode & ENV_LOCAL )
+				break;
+			
+			if( env->new_scope )
+				env = global_env;
+			else
+				env = env->next;
+		}	
 	}
 	
-	item = env_universal_get( key );
+	if( ! (mode & ENV_LOCAL) && ! (mode & ENV_GLOBAL) )
+	{
+		if( !proc_had_barrier)
+		{
+			proc_had_barrier=1;
+			env_universal_barrier();
+		}
+		
+		item = env_universal_get( key );
 	
+	}
 	return item != 0;
+
 }
 
 /**

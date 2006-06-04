@@ -91,16 +91,21 @@ wchar_t *env_get( const wchar_t *key );
 /**
    Returns 1 if the specified key exists. This can't be reliable done
    using env_get, since env_get returns null for 0-element arrays
+
+   \param key The name of the variable to remove
+   \param mode the scope to search in. All scopes are searched if unset
 */
-int env_exist( const wchar_t *key );
+int env_exist( const wchar_t *key, int mode );
 
 /**
    Remove environemnt variable
    
    \param key The name of the variable to remove
-   \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If this is a user request, read-only variables can not be removed.
+   \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If this is a user request, read-only variables can not be removed. The mode may also specify the scope of the variable that should be erased.
+
+   \return zero if the variable existed, and non-zero if the variable did not exist
 */
-void env_remove( const wchar_t *key, int mode );
+int env_remove( const wchar_t *key, int mode );
 
 /**
   Push the variable stack. Used for implementing local variables for functions and for-loops.

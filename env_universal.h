@@ -40,8 +40,10 @@ int env_universal_get_export( const wchar_t *name );
 void env_universal_set( const wchar_t *name, const wchar_t *val, int export );
 /**
    Erase a universal variable
+   
+   \return zero if the variable existed, and non-zero if the variable did not exist
 */
-void env_universal_remove( const wchar_t *name );
+int env_universal_remove( const wchar_t *name );
 
 /**
    Read all available messages from the server.

@@ -824,7 +824,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 							{
 								error( SYNTAX_ERROR,
 									   -1,
-									   L"Array index out of bounds" );
+									   ARRAY_BOUNDS_ERR );
 								is_ok=0;
 								al_truncate( var_idx_list, j );
 								break;

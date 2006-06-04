@@ -256,8 +256,7 @@ static int parse_index( array_list_t *indexes,
    indexes. The previous entries at the specidied position will be
    free'd.
 
-   \return The number of elements in the list after the modifications
-   have been made
+   \return 0 if the operation was successfull, non-zero otherwise
 */
 static int update_values( array_list_t *list, 
 						  array_list_t *indexes,
@@ -270,11 +269,16 @@ static int update_values( array_list_t *list,
 	{
 		int ind = *(int *) al_get(indexes, i) - 1;
 		void *new = (void *) al_get(values, i);
+		if( ind <= 0 )
+		{
+			return 1;
+		}
+		
 		free((void *) al_get(list, ind));
 		al_set(list, ind, new != 0 ? wcsdup(new) : wcsdup(L""));
 	}
   
-	return al_get_count(list);
+	return 0;
 }
 
 
@@ -571,13 +575,13 @@ int builtin_set( wchar_t **argv )
 	if( query )
 	{
 		/*
-		  Query mode. Return the number variables that do not exist
+		  Query mode. Return the number of variables that do not exist
 		  out of the specified variables.
 		*/
 		int i;
 		for( i=woptind; i<argc; i++ )
 		{
-			if( !env_exist( argv[i] ) )
+			if( !env_exist( argv[i], scope ) )
 			{
 				retcode++;
 			}
@@ -616,7 +620,7 @@ int builtin_set( wchar_t **argv )
 		print_variables(0, 0, scope);
 		return 0;
 	} 
-	
+
 	if( !(dest = wcsdup(argv[woptind])))
 	{
 		die_mem();		
@@ -636,6 +640,13 @@ int builtin_set( wchar_t **argv )
 		return 1;
 	}
 
+	if( slice && erase && (scope != ENV_USER) )
+	{
+		free( dest );
+		sb_printf( sb_err, _(L"%ls: Can not specify scope when erasing array slice\n"), argv[0] );
+		builtin_print_help( argv[0], sb_err );
+		return 1;
+	}
 	
 	/*
 	  set assignment can work in two modes, either using slices or
@@ -709,9 +720,14 @@ int builtin_set( wchar_t **argv )
 					al_push(&value, argv[woptind++]);
 				}
 
-				update_values( &result, 
-							   &indexes,
-							   &value );
+				if( update_values( &result, 
+								   &indexes,
+								   &value ) )
+				{
+					sb_printf( sb_err, L"%ls: ", argv[0] );
+					sb_printf( sb_err, ARRAY_BOUNDS_ERR );
+					sb_append( sb_err, L"\n" );
+				}
 				
 				my_env_set(dest,
 						   &result,
@@ -750,7 +766,7 @@ int builtin_set( wchar_t **argv )
 			}
 			else
 			{
-				env_remove( dest, ENV_USER );
+				retcode = env_remove( dest, scope );
 			}
 		}
 		else

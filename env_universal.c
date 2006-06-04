@@ -395,11 +395,15 @@ void env_universal_set( const wchar_t *name, const wchar_t *value, int export )
 	env_universal_barrier();
 }
 
-void env_universal_remove( const wchar_t *name )
+int env_universal_remove( const wchar_t *name )
 {
+	int res;
+	
 	message_t *msg;
 	if( !init )
-		return;
+		return 1;
+		
+	res = !env_universal_common_get( name );
 	
 	debug( 3,
 		   L"env_universal_remove( \"%ls\" )",
@@ -409,6 +413,8 @@ void env_universal_remove( const wchar_t *name )
 	msg->count=1;
 	q_put( &env_universal_server.unsent, msg );
 	env_universal_barrier();
+
+	return res;
 }
 
 void env_universal_get_names( array_list_t *l,

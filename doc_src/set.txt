@@ -32,7 +32,12 @@ If the variable name is one or more array elements, such as
 <code>PATH[1 3 7]</code>, only those array elements specified will be
 changed. When array indices are specified to set, multiple arguments
 may be used to specify additional indexes, e.g. <code>set PATH[1]
-PATH[4] /bin /sbin</code>.
+PATH[4] /bin /sbin</code>. If you specify a negative index when
+expanding or assigning to an array variable, the index will be
+calculated from the end of the array. For example, the index -1 means
+the last index of an array.
+
+
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previos variable scope is used.

@@ -747,6 +747,10 @@ set -e smurf[1]
 echo $smurf
 </pre>
 
+If you specify a negative index when expanding or assigning to an
+array variable, the index will be calculated from the end of the
+array. For example, the index -1 means the last index of an array.
+
 \subsection variables-special Special variables
 
 The user can change the settings of \c fish by changing the values of

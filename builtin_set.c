@@ -177,7 +177,8 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 */
 static int parse_index( array_list_t *indexes,
 						const wchar_t *src,
-						const wchar_t *name )
+						const wchar_t *name,
+						int var_count )
 {
 	int len;
 	
@@ -224,13 +225,20 @@ static int parse_index( array_list_t *indexes,
 	{
 		wchar_t *end;
 		long l_ind = wcstol(src, &end, 10);
+		int *ind;
+		
 		if (end == src) 
 		{
 			sb_printf(sb_err, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
 			return 0;
 		}
+
+		if( l_ind < 0 )
+		{
+			l_ind = var_count+l_ind+1;
+		}
 		
-		int *ind = (int *) calloc(1, sizeof(int));
+		ind = (int *) calloc(1, sizeof(int));
 		*ind = (int) l_ind;
 		al_push(indexes, ind);
 		src = end;
@@ -643,13 +651,17 @@ int builtin_set( wchar_t **argv )
 		int idx_count, val_count;
 		array_list_t values;
 		array_list_t indexes;
+		array_list_t result;
 		
 		al_init(&values);
 		al_init(&indexes);
+		al_init(&result);
+
+		tokenize_variable_array( env_get(dest), &result );
 	
 		for( ; woptind<argc; woptind++ )
 		{			
-			if( !parse_index( &indexes, argv[woptind], dest ) )
+			if( !parse_index( &indexes, argv[woptind], dest, al_get_count( &result ) ) )
 			{
 				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
@@ -682,10 +694,6 @@ int builtin_set( wchar_t **argv )
 			  Slice indexes have been calculated, do the actual work
 			*/
 
-			array_list_t result;
-			al_init(&result);
-
-			tokenize_variable_array( env_get(dest), &result );
 			if( erase )
 			{
 				erase_values(&result, &indexes);
@@ -712,9 +720,10 @@ int builtin_set( wchar_t **argv )
 				al_destroy( &value );
 								
 			}			
-			al_foreach( &result, (void (*)(const void *))&free );
-			al_destroy( &result );
 		}
+
+		al_foreach( &result, (void (*)(const void *))&free );
+		al_destroy( &result );
 
 		al_foreach( &indexes, (void (*)(const void *))&free );
 		al_destroy(&indexes);

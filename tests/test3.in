@@ -111,5 +111,31 @@ else
 	echo Test 9 pass
 end
 
+# Test erasing variables in specific scope
+
+set -eU foo
+set -g foo bar
+begin
+	set -l foo baz
+	set -eg foo
+end
+
+if set -q foo
+	echo Test 10 fail
+else
+	echo Test 10 pass
+end
 
 
+# Test universal variable erasing
+
+set -e foo
+../fish -c "set -U foo bar"
+
+if set -q foo
+	echo Test 11 pass
+else
+	echo Test 11 fail
+end
+
+set -eU foo

@@ -2445,10 +2445,10 @@ DAMAGES.
 <hr>
 
 \section faq-cwd-symlink Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?
+
 <i>
-For example if I have the directory ~/images which is a symlink to
-~/Documents,/Images if I write 'cd doc', my prompt will say
-~/D/Images, not ~/images.
+For example if ~/images is a symlink to ~/Documents/Images, if I write
+'cd images', my prompt will say ~/D/Images, not ~/images.
 </i>
 
 Because it is impossible to consistently keep symlinked directories
@@ -2479,9 +2479,9 @@ silently fails in shells that don't resolve symlinked paths.
 
 Because they are completions. In fish, if you specify a relative
 directory to the cd command, i.e. any path that does not start with
-'.' or '/', the environment variable CD_PATH will be examined, and any
+either './' or '/', the environment variable CDPATH will be examined, and any
 directories in this path is used as a base direcotry. To disable this
-feature, use the command <code>set CD_PATH .</code>.
+feature, write <code>set CDPATH .</code> on the commandline.
 
 <hr>
 

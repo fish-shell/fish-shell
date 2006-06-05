@@ -291,15 +291,15 @@ int job_is_completed( const job_t *j );
 void job_continue( job_t *j, int cont );
 
 /**
-   Notify user of nog events.  Notify the user about stopped or
-   terminated jobs.  Delete terminated jobs from the active job list.
+   Notify the user about stopped or terminated jobs. Delete terminated
+   jobs from the job list.
 
    \param interactive whether interactive jobs should be reaped as well
 */
 int job_reap( int interactive );
 
 /**
-   Signal handler for SIGCHLD.  Mark any processes with relevant
+   Signal handler for SIGCHLD. Mark any processes with relevant
    information.
 */
 void job_handle_signal( int signal, siginfo_t *info, void *con );

@@ -1363,8 +1363,10 @@ static void parse_job_main_loop( process_t *p,
 
 	/*
 	  Test if this is the 'count' command. We need to special case
-	  count, since it should display a help message on 'count .h',
-	  but not on 'set foo -h; count $foo'.
+	  count in the shell, since it should display a help message on
+	  'count -h', but not on 'set foo -h; count $foo'. This is an ugly
+	  workaround and a huge hack, but as near as I can tell, the
+	  alternatives are worse.
 	*/
 	if( p->actual_cmd )
 	{
@@ -2810,7 +2812,7 @@ int parser_test_args(const  wchar_t * buff,
 
 int parser_test( const  wchar_t * buff,
 				 string_buffer_t *out,
-				 const wchar_t *prefix)
+				 const wchar_t *prefix )
 {
 	tokenizer tok;
 	/* 

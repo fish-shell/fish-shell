@@ -153,6 +153,14 @@
 #define CC_FALSE L"false"
 
 /**
+   The special cased translation macro for completions. The empty
+   string needs to be special cased, since it can occur, and should
+   not be translated. (Gettext returns the version information as the
+   response)
+*/
+#define C_(wstr) ((wstr==L"")?L"":wgettext(wstr))
+
+/**
    Struct describing a completion option entry.
 
    If short_opt and long_opt are both zero, the comp field must not be
@@ -1560,7 +1568,7 @@ static int complete_param( wchar_t *cmd_orig,
 				{
 					use_common &= ((o->result_mode & NO_COMMON )==0);
 					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( arg, o->comp, _(o->desc), comp_out );
+					complete_from_args( arg, o->comp, C_(o->desc), comp_out );
 				}
 
 			}
@@ -1584,7 +1592,7 @@ static int complete_param( wchar_t *cmd_orig,
 						found_old = 1;
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( str, o->comp, _(o->desc), comp_out );
+						complete_from_args( str, o->comp, C_(o->desc), comp_out );
 					}
 				}
 			}
@@ -1610,7 +1618,7 @@ static int complete_param( wchar_t *cmd_orig,
 					{
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( str, o->comp, _(o->desc), comp_out );
+						complete_from_args( str, o->comp, C_(o->desc), comp_out );
 
 					}
 				}
@@ -1634,7 +1642,7 @@ static int complete_param( wchar_t *cmd_orig,
 				if( (o->short_opt == L'\0' ) && (o->long_opt[0]==L'\0'))
 				{
 					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( str, o->comp, _(o->desc), comp_out );
+					complete_from_args( str, o->comp, C_(o->desc), comp_out );
 				}
 
 				if( wcslen(str) > 0 )
@@ -1645,7 +1653,7 @@ static int complete_param( wchar_t *cmd_orig,
 					if( o->short_opt != L'\0' &&
 						short_ok( str, o->short_opt, i->short_opt_str ) )
 					{
-						const wchar_t *desc = _(o->desc );
+						const wchar_t *desc = C_(o->desc );
 						wchar_t *next_opt =
 							malloc( sizeof(wchar_t)*(3 + wcslen(desc)));
 						if( !next_opt )
@@ -1682,7 +1690,7 @@ static int complete_param( wchar_t *cmd_orig,
 								al_push( comp_out,
 										 wcsdupcat2( &((wchar_t *)whole_opt.buff)[wcslen(str)], 
 													 COMPLETE_SEP_STR, 
-													 _(o->desc), 
+													 C_(o->desc), 
 													 (void *)0) );
 							}
 
@@ -1692,7 +1700,7 @@ static int complete_param( wchar_t *cmd_orig,
 										 wcsdupcat2( &((wchar_t *)whole_opt.buff)[wcslen(str)], 
 													 L"=", 
 													 COMPLETE_SEP_STR, 
-													 _(o->desc), 
+													 C_(o->desc), 
 													 (void *)0) );
 							}
 						}
@@ -2141,7 +2149,7 @@ void complete_print( string_buffer_t *out )
 
 			append_switch( out,
 						   L"description",
-						   _(o->desc) );
+						   C_(o->desc) );
 
 			append_switch( out,
 						   L"arguments",

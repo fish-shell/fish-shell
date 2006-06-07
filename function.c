@@ -160,7 +160,7 @@ void function_add( const wchar_t *name,
 	function_remove( name );
 	
 	d = malloc( sizeof( function_data_t ) );
-	d->definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos );
+	d->definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
 	d->cmd = wcsdup( val );
 	
 	cmd_end = d->cmd + wcslen(d->cmd)-1;

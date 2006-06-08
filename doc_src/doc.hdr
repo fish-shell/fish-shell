@@ -2444,7 +2444,7 @@ DAMAGES.
 
 <hr>
 
-\section faq-cwd-symlink Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?
+\section faq-cwd-symlink Why does cd, $PWD and and various fish commands always resolve symlinked directories to their canonical path?
 
 <i>
 For example if ~/images is a symlink to ~/Documents/Images, if I write

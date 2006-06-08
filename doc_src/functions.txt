@@ -1,17 +1,22 @@
 \section functions functions - print or erase functions
 
 \subsection function-synopsis Synopsis
-<tt>functions [-e] FUNCTIONS...</tt>
+<code>functions [-e] FUNCTIONS...</code>
 
 \subsection functions-description Description
 
 This builtin command is used to print or erase functions.
 
-- <tt>-e</tt> or <tt>--erase</tt> causes the specified functions to be erased.
-- <tt>-n</tt> or <tt>--names</tt> List only the names of all defined functions
+- <code>-a</code> or <code>--all</code> list all functions, even those whose name start with an underscore.
+- <code>-d DESCRIPTION</code> or <code>--description=DESCRIPTION</code> change the description of this function
+- <code>-e</code> or <code>--erase</code> causes the specified functions to be erased.
+- <code>-h</code> or <code>--help</code> display a help message and exit
+- <code>-n</code> or <code>--names</code> list only the names of all defined functions
 
 If \c functions is called with no arguments, the names and definition
 of all functions are printed, otherwise, the specified function
 definitions will be printed.
 
+If a function is automatically loaded, using <code>functions -e</code>
+to erase it will not remove the function.
 

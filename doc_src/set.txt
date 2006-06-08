@@ -38,9 +38,14 @@ expanding or assigning to an array variable, the index will be
 calculated from the end of the array. For example, the index -1 means
 the last index of an array.
 
+The scoping rules when creating or updating a variable are:
+
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previos variable scope is used.
 -# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing functions. If no function is executing, the variable will be global.
+
+The exporting rules when creating or updating a variable are identical
+to the scoping rules for variables:
 
 -# If a variable is explicitly set to either be exported or not exported, that setting will be honored.
 -# If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
@@ -65,7 +70,7 @@ variable assignments where sucessfully performed, with a non-zero exit
 status otherwise. In query mode, the exit status is the number of
 variables that where not found. In erase mode, set exits with a zero
 exit status in case of success, with a non-zero exit status if the
-commandline was invalid, if the variable was readprotected or if the
+commandline was invalid, if the variable was write-protected or if the
 variable did not exist.
 
 \subsection set-example Example

@@ -76,7 +76,7 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message for short circuit command error.
 */
-#define COND_ERR_MSG _( L"Pipe or short circuit command requires additional command")
+#define COND_ERR_MSG _( L"An additional command is required" )
 
 /**
    Error message on reaching maximum recusrion depth
@@ -1232,7 +1232,7 @@ static int printed_width( const wchar_t *str, int len )
 {
 	int res=0;
 	int i;
-	for( i=0; i<len; i++ )
+	for( i=0; str[i] && i<len; i++ )
 	{
 		if( str[i] == L'\t' )
 		{

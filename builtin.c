@@ -1902,7 +1902,10 @@ static int builtin_exit( wchar_t **argv )
 	switch( argc )
 	{
 		case 1:
+		{
 			break;
+		}
+		
 		case 2:
 		{
 			wchar_t *end;
@@ -1921,13 +1924,15 @@ static int builtin_exit( wchar_t **argv )
 		}
 
 		default:
+		{
 			sb_printf( sb_err,
 					   BUILTIN_ERR_TOO_MANY_ARGUMENTS,
 					   argv[0] );
 
 			builtin_print_help( argv[0], sb_err );
 			return 1;
-
+		}
+		
 	}
 	reader_exit( 1, 0 );
 	return ec;
@@ -1983,10 +1988,12 @@ static int builtin_cd( wchar_t **argv )
 				   argv[0],
 				   dir_in );
 		if( !is_interactive )
+		{
 			sb_append2( sb_err,
 						parser_current_line(),
 						(void *)0 );
-
+		}
+		
 		return 1;
 	}
 
@@ -1997,9 +2004,11 @@ static int builtin_cd( wchar_t **argv )
 				   argv[0],
 				   dir );
 		if( !is_interactive )
+		{
 			sb_append2( sb_err,
 						parser_current_line(),
 						(void *)0 );
+		}
 		
 		free( dir );
 
@@ -2116,7 +2125,9 @@ static void make_first( job_t *j )
 	if( curr == j )
 	{
 		if( prev == 0 )
+		{
 			return;
+		}
 		else
 		{
 			prev->next = curr->next;
@@ -2144,7 +2155,9 @@ static int builtin_fg( wchar_t **argv )
 		{
 			if( j->constructed && (!job_is_completed(j)) && 
 				( (job_is_stopped(j) || !j->fg) && (j->job_control) ) )
+			{
 				break;
+			}
 		}
 		if( !j )
 		{
@@ -2307,9 +2320,11 @@ static int builtin_bg( wchar_t **argv )
 		for( j=first_job; j; j=j->next )
 		{
 			if( job_is_stopped(j) && j->job_control && (!job_is_completed(j)) )
+			{
 				break;
+			}
 		}
-
+		
 		if( !j )
 		{
 			sb_printf( sb_err,

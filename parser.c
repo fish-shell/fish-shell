@@ -1065,14 +1065,30 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 
 	if( b->type==EVENT )
 	{
+		/*
+		  This is an event handler
+		*/
 		sb_printf( buff, _(L"in event handler: %ls\n"), event_get_desc( b->param1.event ));
 		sb_printf( buff,
 				   L"\n" );
+
+		/*
+		  Stop recursing at event handler. No reason to belive that
+		  any other code is relevant.
+
+		  It might make sense in the future to continue printing the
+		  stack trace of the code that invoked the event, if this is a
+		  programmatic event, but we can't currently detect that.
+		*/
 		return;
 	}
 	
 	if( b->type == FUNCTION_CALL || b->type==SOURCE || b->type==SUBST)
 	{
+		/*
+		  These types of blocks should be printed
+		*/
+
 		int i;
 
 		switch( b->type)
@@ -1129,9 +1145,18 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 		sb_printf( buff,
 				   L"\n" );
 	}
+
+	/*
+	  Recursively print the next block
+	*/
 	parser_stack_trace( b->outer, buff );
 }
 
+/**
+   Returns true if we are currently evaluating a function. This is
+   tested by moving down the block-scope-stack, checking every block
+   if it is of type FUNCTION_CALL.
+*/
 static const wchar_t *is_function()
 {
 	block_t *b = current_block;
@@ -1197,6 +1222,12 @@ const wchar_t *parser_current_filename()
 	}
 }
 
+/**
+   Calculates the on-screen width of the specified substring of the
+   specified string. This function takes into account the width and
+   allignment of the tab character, but other wise behaves like
+   repeatedly calling wcwidth.
+*/
 static int printed_width( const wchar_t *str, int len )
 {
 	int res=0;
@@ -1428,7 +1459,8 @@ static void parse_job_main_loop( process_t *p,
 				tok_next( tok );
 				
 				/*
-				  Don't do anything on failiure. parse_job will notice the error flag beeing set
+				  Don't do anything on failiure. parse_job will notice
+				  the error flag and report any errors for us
 				*/
 				parse_job( p->next, j, tok );
 
@@ -1713,7 +1745,7 @@ static void parse_job_main_loop( process_t *p,
 
 
 /**
-   Fully parse a single job. Does not call exec on it.
+   Fully parse a single job. Does not call exec on it, but any command substitutions in the job will be executed.
 
    \param p The process structure that should be used to represent the first process in the job.
    \param j The job structure to contain the parsed job
@@ -2394,7 +2426,10 @@ static void eval_job( tokenizer *tok )
 			else
 			{
 				/*
-				  This job could not be properly parsed. We free it instead, and set the status to 1.
+				  This job could not be properly parsed. We free it
+				  instead, and set the status to 1. This should be
+				  rare, since most errors should be detected by the
+				  ahead of time validator.
 				*/
 				job_free( j );
 
@@ -2591,6 +2626,9 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	return code;
 }
 
+/**
+   \return the block type created by the specified builtin, or -1 on error.
+*/
 static int parser_get_block_type( const wchar_t *cmd )
 {
 	if( wcscmp( cmd, L"while") == 0 )
@@ -2609,7 +2647,11 @@ static int parser_get_block_type( const wchar_t *cmd )
 		return -1;
 }
 
-
+/**
+   Test if this argument contains any errors. Detected errors include
+   syntax errors in command substitutions, imporoper escaped
+   characters and improper use of the variable expansion operator.
+*/
 static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset )
 {
 	wchar_t *unesc;

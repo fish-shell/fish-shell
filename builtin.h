@@ -141,6 +141,11 @@ int builtin_count_args( wchar_t **argv );
 /**
    Print help for the specified builtin. If \c b is sb_err, also print
    the line information
+
+   If \c b is the buffer representing standard error, and the help
+   message is about to be printed to an interactive screen, it may be
+   shortened to fit the screen.
+
 */
 void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 

@@ -90,9 +90,10 @@ static int read_init()
 
 	if( chdir( cwd ) == -1 )
 	{
-//		fwprintf( stderr, L"Invalid directory: %s\n", cwd );
-//		wperror( L"chdir" );
-//		return 0;
+		/*
+		  If we can't change back to previos irectory, we'll stay in
+		  ~. Should be a sane default behavior.
+		*/
 	}	
 	wcwd = str2wcs( cwd );
 	if( wcwd )

@@ -160,16 +160,19 @@ static int count_char( const wchar_t *str, wchar_t c )
 /*
   Here follows the definition of all builtin commands. The function
   names are all on the form builtin_NAME where NAME is the name of the
-  builtin. so the function name for the builtin 'jobs' is
-  'builtin_jobs'.
+  builtin. so the function name for the builtin 'fg' is
+  'builtin_fg'.
 
-  Two builtins, 'command' and 'builtin' are not defined here as they
-  are part of the parser. (They are not parsed as commands, instead
-  they only slightly alter the parser state)
+  A few builtins, including 'while', 'command' and 'builtin' are not
+  defined here as they are handled directly by the parser. (They are
+  not parsed as commands, instead they only alter the parser state)
 
-  If \c b is the buffer representing standard error, and the help
-  message is about to be printed to an interactive screen, it may be
-  shortened to fit the screen.
+  The builtins 'break' and 'continue' are so closely related that they
+  share the same implementation, namely 'builtin_break_continue.
+
+  Several other builtins, including jobs, ulimit and set are so big
+  that they have been given their own file. These files are all named
+  'builtin_NAME.c', where NAME is the name of the builtin.
 
 */
 

@@ -157,6 +157,13 @@ void function_add( const wchar_t *name,
 	wchar_t *cmd_end;
 	function_data_t *d;
 	
+	
+	if( !name || !val )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
+
 	function_remove( name );
 	
 	d = malloc( sizeof( function_data_t ) );
@@ -185,6 +192,13 @@ void function_add( const wchar_t *name,
 
 int function_exists( const wchar_t *cmd )
 {
+	
+	if( !cmd )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 0;
+	}
+
 	if( parser_is_reserved(cmd) )
 		return 0;
 	
@@ -198,6 +212,12 @@ void function_remove( const wchar_t *name )
 	const void *dv;
 	function_data_t *d;
 	event_t ev;
+	
+	if( !name )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
 
 	hash_remove( &function,
 				 name,
@@ -219,6 +239,13 @@ void function_remove( const wchar_t *name )
 const wchar_t *function_get_definition( const wchar_t *argv )
 {
 	function_data_t *data;
+	
+	if( !argv )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 0;
+	}
+
 	load( argv );
 	data = (function_data_t *)hash_get( &function, argv );
 	if( data == 0 )
@@ -229,6 +256,12 @@ const wchar_t *function_get_definition( const wchar_t *argv )
 const wchar_t *function_get_desc( const wchar_t *argv )
 {
 	function_data_t *data;
+	if( !argv )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 0;
+	}
+	
 	load( argv );
 	data = (function_data_t *)hash_get( &function, argv );
 	if( data == 0 )
@@ -240,6 +273,12 @@ const wchar_t *function_get_desc( const wchar_t *argv )
 void function_set_desc( const wchar_t *name, const wchar_t *desc )
 {
 	function_data_t *data;
+	if( !name || !desc )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
+	
 	load( name );
 	data = (function_data_t *)hash_get( &function, name );
 	if( data == 0 )
@@ -294,6 +333,12 @@ static void get_names_internal_all( const void *key,
 
 void function_get_names( array_list_t *list, int get_hidden )
 {
+	if( !list )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
+	
 	autoload_names( list, get_hidden );
 	
 	if( get_hidden )
@@ -310,6 +355,13 @@ void function_get_names( array_list_t *list, int get_hidden )
 const wchar_t *function_get_definition_file( const wchar_t *argv )
 {
 	function_data_t *data;
+
+	if( !argv )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 0;
+	}
+	
 	load( argv );
 	data = (function_data_t *)hash_get( &function, argv );
 	if( data == 0 )
@@ -322,6 +374,13 @@ const wchar_t *function_get_definition_file( const wchar_t *argv )
 int function_get_definition_offset( const wchar_t *argv )
 {
 	function_data_t *data;
+
+	if( !argv )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return -1;
+	}
+	
 	load( argv );
 	data = (function_data_t *)hash_get( &function, argv );
 	if( data == 0 )

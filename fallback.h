@@ -17,6 +17,19 @@
 #endif
 
 /**
+   Make sure __func__ is defined to some string. This should be the
+   currently compiled function, but not all compilers support this
+   feature.
+*/
+#if __STDC_VERSION__ < 199901L
+# if __GNUC__ >= 2
+#  define __func__ __FUNCTION__
+# else
+#  define __func__ "<unknown>"
+# endif
+#endif
+
+/**
    Under curses, tputs expects an int (*func)(char) as its last
    parameter, but in ncurses, tputs expects a int (*func)(int) as its
    last parameter. tputs_arg_t is defined to always be what tputs

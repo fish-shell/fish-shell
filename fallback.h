@@ -17,9 +17,9 @@
 #endif
 
 /**
-   Make sure __func__ is defined to some string. This should be the
-   currently compiled function, but not all compilers support this
-   feature.
+   Make sure __func__ is defined to some string. In C99, this should
+   be the currently compiled function. If we aren't using C99 or
+   later, older versions of GCC had __FUNCTION__.
 */
 #if __STDC_VERSION__ < 199901L
 # if __GNUC__ >= 2

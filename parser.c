@@ -711,6 +711,12 @@ wchar_t *get_filename( const wchar_t *cmd )
 {
 	wchar_t *path;
 
+	if( !cmd )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 0;
+	}
+	
 	debug( 3, L"get_filename( '%ls' )", cmd );
 
 	if(wcschr( cmd, L'/' ) != 0 )
@@ -964,6 +970,12 @@ int eval_args( const wchar_t *line, array_list_t *args )
 	int previous_pos=current_tokenizer_pos;
 	int do_loop=1;
 
+	if( !line || !args )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 1;
+	}
+	
 	proc_push_interactive(0);	
 	current_tokenizer = &tok;
 	current_tokenizer_pos = 0;
@@ -1035,9 +1047,22 @@ int eval_args( const wchar_t *line, array_list_t *args )
 
 void parser_stack_trace( block_t *b, string_buffer_t *buff)
 {
+	
+	/*
+	  Validate input
+	*/
+	if( !buff )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
+	
+	/*
+	  Check if we should end the recursion
+	*/
 	if( !b )
 		return;
-	
+
 	if( b->type==EVENT )
 	{
 		sb_printf( buff, _(L"in event handler: %ls\n"), event_get_desc( b->param1.event ));
@@ -2592,8 +2617,16 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 	int err=0;
 	
 	const wchar_t *paran_begin, *paran_end;
-	wchar_t *arg_cpy = wcsdup( arg );
+	wchar_t *arg_cpy;
 	int do_loop = 1;
+	
+	if( !arg )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 1;
+	}
+	
+	arg_cpy = wcsdup( arg );
 	
 	while( do_loop )
 	{
@@ -2747,6 +2780,12 @@ int parser_test_args(const  wchar_t * buff,
 	int do_loop = 1;
 	int err = 0;
 	
+	if( !buff )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 1;
+	}
+	
 	current_tokenizer = &tok;
 	
 	for( tok_init( &tok, buff, 0 );
@@ -2835,10 +2874,17 @@ int parser_test( const  wchar_t * buff,
 	   Set to one if an additional process specification is needed 
 	*/
 	int needs_cmd=0; 
-	void *context = halloc( 0, 0 );
+	void *context;
 	int arg_count=0;
 	wchar_t *cmd=0;
 		
+	if( !buff )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 1;
+	}
+	
+	context = halloc( 0, 0 );
 	current_tokenizer = &tok;
 
 	for( tok_init( &tok, buff, 0 );

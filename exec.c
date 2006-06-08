@@ -652,6 +652,12 @@ void exec( job_t *j )
 	*/
 	int exec_error=0;
 
+	if( !j )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
+	
 	if( no_exec )
 		return;
 	

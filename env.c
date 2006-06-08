@@ -623,6 +623,12 @@ int env_set( const wchar_t *key,
 	event_t ev;
 	int is_universal = 0;	
 
+	if( !key )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return ENV_INVALID;
+	}
+	
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
 	{
@@ -867,6 +873,12 @@ int env_remove( const wchar_t *key, int var_mode )
 	env_node_t *first_node;
 	int erased = 0;
 	
+	if( !key )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 1;
+	}
+	
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
 	{
@@ -924,6 +936,12 @@ wchar_t *env_get( const wchar_t *key )
 	var_entry_t *res;
 	env_node_t *env = top;
 	wchar_t *item;
+	
+	if( !key )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 0;
+	}
 	
 	if( wcscmp( key, L"history" ) == 0 )
 	{
@@ -1023,9 +1041,15 @@ int env_exist( const wchar_t *key, int mode )
 	env_node_t *env;
 	wchar_t *item=0;
 
+	if( !key )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return 0;
+	}
+	
 	/*
 	  Read only variables all exist, and they are all global. A local
-	  varion can not exist.
+	  version can not exist.
 	*/
 	if( ! (mode & ENV_LOCAL) && ! (mode & ENV_UNIVERSAL) )
 	{

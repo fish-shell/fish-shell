@@ -44,7 +44,12 @@
 /**
    Error code for trying to alter read-only variable
 */
-#define ENV_PERM 1
+enum{
+	ENV_PERM = 1,
+	ENV_INVALID
+}
+;
+
 
 /**
    Initialize environment variable data
@@ -71,7 +76,7 @@ void env_destroy();
    The current error codes are:
 
    * ENV_PERM, can only be returned when setting as a user, e.g. ENV_USER is set. This means that the user tried to change a read-only variable.
-
+   * ENV_INVALID, the variable name or mode was invalid
 */
 
 int env_set( const wchar_t *key, 

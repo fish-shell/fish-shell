@@ -336,7 +336,7 @@ char **wcsv2strv( const wchar_t **in )
 
 wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b )
 {
-	return wcsdupcat2( a, b, 0 );
+	return wcsdupcat2( a, b, (void *)0 );
 }
 
 wchar_t *wcsdupcat2( const wchar_t *a, ... )
@@ -498,10 +498,10 @@ int contains_str( const wchar_t *a, ... )
 
 	if( !a )
 	{
-		debug( 1, L"Warning: Called contains_str with null argument. This is a bug." );		
+		debug( 0, L"%s called with null input", __func__ );
 		return 0;
 	}
-	
+
 	va_start( va, a );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
 	{
@@ -547,6 +547,12 @@ void debug( int level, const wchar_t *msg, ... )
 	string_buffer_t sb;
 	string_buffer_t sb2;
 	
+	if( !msg )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
+	
 	if( level > debug_level )
 		return;
 
@@ -572,6 +578,12 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff )
 	int line_width = 0;
 	int tok_width = 0;
 	int screen_width = common_get_width();
+	
+	if( !msg || !buff )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
 	
 	if( screen_width )
 	{
@@ -656,8 +668,18 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff )
 wchar_t *escape( const wchar_t *in, 
 				 int escape_all )
 {
-	wchar_t *out = malloc( sizeof(wchar_t)*(wcslen(in)*4 + 1));
-	wchar_t *pos=out;
+	wchar_t *out;
+	wchar_t *pos;
+
+	if( !in )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		exit(1);
+	}
+	
+	out = malloc( sizeof(wchar_t)*(wcslen(in)*4 + 1));
+	pos = out;
+	
 	if( !out )
 		die_mem();
 	
@@ -764,11 +786,22 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 {
 	
 	int mode = 0; 
-	int in_pos, out_pos, len = wcslen( orig );
+	int in_pos, out_pos, len;
 	int c;
 	int bracket_count=0;
 	wchar_t prev=0;	
-	wchar_t *in = wcsdup(orig);
+	wchar_t *in;
+
+	if( !orig )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		exit(1);
+	}
+	
+	len = wcslen( orig );
+	in = wcsdup( orig );
+
+
 	if( !in )
 		die_mem();
 	

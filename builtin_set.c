@@ -159,6 +159,13 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 			retcode=1;
 			break;
 		}
+		
+		case ENV_INVALID:
+		{
+			sb_printf( sb_err, _(L"%ls: Unknown error"), L"set" );
+			retcode=1;
+			break;
+		}
 	}
 
 	sb_destroy( &sb );

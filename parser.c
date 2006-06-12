@@ -749,7 +749,7 @@ wchar_t *parser_get_filename( void *context, const wchar_t *cmd )
 		/*
 		  Allocate string long enough to hold the whole command
 		*/
-		wchar_t *new_cmd = malloc( sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
+		wchar_t *new_cmd = halloc( context, sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
 		/*
 		  We tokenize a copy of the path, since strtok modifies
 		  its arguments
@@ -788,7 +788,6 @@ wchar_t *parser_get_filename( void *context, const wchar_t *cmd )
 				if( S_ISREG(buff.st_mode) )
 				{
 					free( path_cpy );
-					halloc_register( context, new_cmd );
 					return new_cmd;
 				}
 			}
@@ -812,7 +811,6 @@ wchar_t *parser_get_filename( void *context, const wchar_t *cmd )
 			}
 		}
 		free( path_cpy );
-		free( new_cmd );
 
 	}
 	return 0;

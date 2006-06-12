@@ -1903,6 +1903,7 @@ static int builtin_exit( wchar_t **argv )
 	{
 		case 1:
 		{
+			ec = proc_get_last_status();
 			break;
 		}
 		

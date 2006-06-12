@@ -1,5 +1,5 @@
 #
-#Completions for patch
+# Completions for patch
 #
 
 complete -c patch -s b -l backup -d (N_ "Make backup files, when patching a file, rename or copy the original instead of removing it")
@@ -24,7 +24,7 @@ complete -c patch -s N -l forward -d (N_ "Ignore patches that seem to be reverse
 complete -c patch -s o -l output -r -f -d (N_ "Send output to outfile instead of patching files in place")
 complete -c patch -s p -l strip -r -f -d (N_ "Strip the smallest prefix containing num leading slashes from each file name found in the patch file")
 complete -c patch -l posix -d (N_ "Conform more strictly to the POSIX standard")
-complete -c patch -l quoting-style -r -f -d (N_ "Use style word to quote output names")
+complete -c patch -l quoting-style -r -f -d (N_ "Use style word to quote output names") -a "literal shell shell-always c escape"
 complete -c patch -s r -l reject-file -r -f -d (N_ "Put rejects into rejectfile instead of the default .rej file")
 complete -c patch -s R -l reverse -d (N_ "Assume that this patch was created with the old and new files swapped")
 complete -c patch -s s -l silent -l quiet -d (N_ "Work silently, unless an error occurs")

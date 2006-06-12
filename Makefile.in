@@ -519,10 +519,11 @@ depend:
 #
 # Uses install instead of mkdir so build won't fail if the directory 
 # exists
-fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FILES) $(TEST_DIR_FILES) $(SHARE_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog 
+fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FILES) $(TEST_DIR_FILES) $(SHARE_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog user_doc
 	rm -rf fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/doc_src
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/user_doc
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/etc
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/share
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/share/completions
@@ -530,6 +531,7 @@ fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FIL
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/tests
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/po
 	cp -f $(DOC_SRC_DIR_FILES) fish-@PACKAGE_VERSION@/doc_src
+	cp -rf user_doc fish-@PACKAGE_VERSION@/
 	cp -f $(MAIN_DIR_FILES) fish-@PACKAGE_VERSION@/
 	cp -f $(ETC_DIR_FILES) fish-@PACKAGE_VERSION@/etc/
 	cp -f $(SHARE_DIR_FILES) fish-@PACKAGE_VERSION@/share/

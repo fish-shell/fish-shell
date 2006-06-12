@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-03 12:06+0200\n"
+"POT-Creation-Date: 2006-06-12 17:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: English <fish-users@lists.sf.net>\n"
@@ -21,32 +21,32 @@ msgstr ""
 msgid "Send job %d, '%ls' to foreground\n"
 msgstr "Send job %d, “%ls” to foreground\n"
 
-#: builtin.c:414
+#: builtin.c:417
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
 msgstr "%ls: Can not specify scope when removing block\n"
 
-#: builtin.c:420
+#: builtin.c:423
 #, c-format
 msgid "%ls: No blocks defined\n"
 msgstr "%ls: No blocks defined\n"
 
-#: builtin.c:821 builtin.h:28
+#: builtin.c:824 builtin.h:28
 #, c-format
 msgid "%ls: Invalid combination of options\n"
 msgstr "%ls: Invalid combination of options\n"
 
-#: builtin.c:844
+#: builtin.c:847
 #, c-format
 msgid "%ls: Expected exactly one function name\n"
 msgstr "%ls: Expected exactly one function name\n"
 
-#: builtin.c:854
+#: builtin.c:857
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"
 msgstr "%ls: Function “%ls” does not exist\n"
 
-#: builtin.c:910
+#: builtin.c:913
 msgid ""
 "Current function definitions are:\n"
 "\n"
@@ -54,37 +54,37 @@ msgstr ""
 "Current function definitions are:\n"
 "\n"
 
-#: builtin.c:1057
+#: builtin.c:1060
 #, c-format
 msgid "%ls: Unknown signal '%ls'\n"
 msgstr "%ls: Unknown signal “%ls”\n"
 
-#: builtin.c:1081
+#: builtin.c:1084
 #, c-format
 msgid "%ls: Invalid variable name '%ls'\n"
 msgstr "%ls: Invalid variable name “%ls”\n"
 
-#: builtin.c:1134
+#: builtin.c:1137
 #, c-format
 msgid "%ls: Cannot find calling job for event handler\n"
 msgstr "%ls: Cannot find calling job for event handler\n"
 
-#: builtin.c:1152
+#: builtin.c:1155
 #, c-format
 msgid "%ls: Invalid process id %ls\n"
 msgstr "%ls: Invalid process id %ls\n"
 
-#: builtin.c:1193
+#: builtin.c:1196
 #, c-format
 msgid "%ls: Expected one argument, got %d\n"
 msgstr "%ls: Expected one argument, got %d\n"
 
-#: builtin.c:1201
+#: builtin.c:1204
 #, c-format
 msgid "%ls: Illegal function name '%ls'\n"
 msgstr "%ls: Illegal function name “%ls”\n"
 
-#: builtin.c:1211
+#: builtin.c:1214
 #, c-format
 msgid ""
 "%ls: The name '%ls' is reserved,\n"
@@ -93,117 +93,116 @@ msgstr ""
 "%ls: The name “%ls” is reserved,\n"
 "and can not be used as a function name\n"
 
-#: builtin.c:1226
+#: builtin.c:1229
 msgid "Current functions are: "
 msgstr "Current functions are: "
 
-#: builtin.c:1359
+#: builtin.c:1362
 #, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
 msgstr "%ls: Seed value “%ls” is not a valid number\n"
 
-#: builtin.c:1373
+#: builtin.c:1376
 #, c-format
 msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Expected zero or one argument, got %d\n"
 
-#: builtin.c:1807 main.c:336 parser.c:1273
+#: builtin.c:1810 main.c:337 parser.c:1328
 msgid "Standard input"
 msgstr "Standard input"
 
-#: builtin.c:1850
+#: builtin.c:1853
 msgid "This is a login shell\n"
 msgstr "This is a login shell\n"
 
-#: builtin.c:1852
+#: builtin.c:1855
 msgid "This is not a login shell\n"
 msgstr "This is not a login shell\n"
 
-#: builtin.c:1854
+#: builtin.c:1857
 #, c-format
 msgid "Job control: %ls\n"
 msgstr "Job control: %ls\n"
 
-#: builtin.c:1855
+#: builtin.c:1858
 msgid "Only on interactive jobs"
 msgstr "Only on interactive jobs"
 
-#: builtin.c:1856
+#: builtin.c:1859
 msgid "Never"
 msgstr "Never"
 
-#: builtin.c:1856
+#: builtin.c:1859
 msgid "Always"
 msgstr "Always"
 
-#: builtin.c:1911 builtin.c:2629
+#: builtin.c:1917 builtin.c:2642
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
 msgstr "%ls: Argument “%ls” must be an integer\n"
 
-#: builtin.c:1967
+#: builtin.c:1976
 #, c-format
 msgid "%ls: Could not find home directory\n"
 msgstr "%ls: Could not find home directory\n"
 
-#: builtin.c:1979
+#: builtin.c:1988
 #, c-format
 msgid ""
 "%ls: '%ls' is not a directory or you do not have permission to enter it\n"
 msgstr ""
 "%ls: “%ls” is not a directory or you do not have permission to enter it\n"
 
-#: builtin.c:1993
+#: builtin.c:2003
 #, c-format
 msgid "%ls: '%ls' is not a directory\n"
 msgstr "%ls: “%ls” is not a directory\n"
 
-#: builtin.c:2009
+#: builtin.c:2018
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Could not set PWD variable\n"
 
-#: builtin.c:2033
+#: builtin.c:2042
 #, c-format
 msgid "%ls: Expected at least one argument, got %d\n"
 msgstr "%ls: Expected at least one argument, got %d\n"
 
-#: builtin.c:2046
+#: builtin.c:2055
 #, c-format
 msgid "%ls: '%ls' is not a file\n"
 msgstr "%ls: “%ls” is not a file\n"
 
-#: builtin.c:2084
+#: builtin.c:2093
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
 msgstr "%ls: Error while reading file “%ls”\n"
 
-#: builtin.c:2147 builtin.c:2311
+#: builtin.c:2162 builtin.c:2328
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: There are no suitable jobs\n"
 
-#: builtin.c:2165
+#: builtin.c:2180
 #, c-format
 msgid "%ls: Ambiguous job\n"
 msgstr "%ls: Ambiguous job\n"
 
-#: builtin.c:2171 builtin_jobs.c:302
+#: builtin.c:2186 builtin_jobs.c:302
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
 msgstr "%ls: “%ls” is not a job\n"
 
-#: builtin.c:2188
-#, c-format
-msgid "%ls: Argument must be a number: %ls\n"
-msgstr "%ls: Argument must be a number: %ls\n"
+#: builtin.c:2203
+msgid "%ls: Argument '%ls' is not a number\n"
+msgstr "%ls: Argument “%ls” is not a number\n"
 
-#: builtin.c:2199 builtin_jobs.c:317
+#: builtin.c:2214 builtin_jobs.c:317
 #, c-format
 msgid "%ls: No suitable job: %d\n"
 msgstr "%ls: No suitable job: %d\n"
 
-#: builtin.c:2208
+#: builtin.c:2223
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
@@ -212,12 +211,12 @@ msgstr ""
 "%ls: Can't put job %d, “%ls” to foreground because it is not under job "
 "control\n"
 
-#: builtin.c:2262
+#: builtin.c:2277
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
 msgstr "%ls: Unknown job “%ls”\n"
 
-#: builtin.c:2271
+#: builtin.c:2286
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
@@ -226,197 +225,197 @@ msgstr ""
 "%ls: Can't put job %d, “%ls” to background because it is not under job "
 "control\n"
 
-#: builtin.c:2281
+#: builtin.c:2296
 #, c-format
 msgid "Send job %d '%ls' to background\n"
 msgstr "Send job %d “%ls” to background\n"
 
-#: builtin.c:2317
+#: builtin.c:2334
 msgid "(default)"
 msgstr "(default)"
 
-#: builtin.c:2344
+#: builtin.c:2361
 #, c-format
 msgid "%ls: Expected at least two arguments, got %d\n"
 msgstr "%ls: Expected at least two arguments, got %d\n"
 
-#: builtin.c:2352
+#: builtin.c:2369
 #, c-format
 msgid "%ls: '%ls' is not a valid variable name\n"
 msgstr "%ls: “%ls” is not a valid variable name\n"
 
-#: builtin.c:2422
+#: builtin.c:2439
 #, c-format
 msgid "%ls: Not inside of block\n"
 msgstr "%ls: Not inside of block\n"
 
-#: builtin.c:2537
+#: builtin.c:2550
 #, c-format
 msgid "%ls: Not inside of 'if' block\n"
 msgstr "%ls: Not inside of “if” block\n"
 
-#: builtin.c:2589
+#: builtin.c:2602
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Not inside of loop\n"
 
-#: builtin.c:2640 builtin_complete.c:531 builtin.h:65
+#: builtin.c:2652 builtin_complete.c:531 builtin.h:65
 #, c-format
 msgid "%ls: Too many arguments\n"
 msgstr "%ls: Too many arguments\n"
 
-#: builtin.c:2656
+#: builtin.c:2668
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Not inside of function\n"
 
-#: builtin.c:2685
+#: builtin.c:2697
 #, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
 msgstr "%ls: Expected exactly one argument, got %d\n"
 
-#: builtin.c:2716
+#: builtin.c:2728
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
 msgstr "%ls: “case” command while not in switch block\n"
 
-#: builtin.c:2757
+#: builtin.c:2769
 msgid "Exit the shell"
 msgstr "Exit the shell"
 
-#: builtin.c:2761
+#: builtin.c:2773
 msgid "Temporarily block delivery of events"
 msgstr "Temporarily block delivery of events"
 
-#: builtin.c:2765
+#: builtin.c:2777
 msgid "Run a builtin command instead of a function"
 msgstr "Run a builtin command instead of a function"
 
-#: builtin.c:2769
+#: builtin.c:2781
 msgid "Change working directory"
 msgstr "Change working directory"
 
-#: builtin.c:2773
+#: builtin.c:2785
 msgid "Define a new function"
 msgstr "Define a new function"
 
-#: builtin.c:2777
+#: builtin.c:2789
 msgid "List or remove functions"
 msgstr "List or remove functions"
 
-#: builtin.c:2781
+#: builtin.c:2793
 msgid "Edit command specific completions"
 msgstr "Edit command specific completions"
 
-#: builtin.c:2785
+#: builtin.c:2797
 msgid "End a block of commands"
 msgstr "End a block of commands"
 
-#: builtin.c:2789
+#: builtin.c:2801
 msgid "Evaluate block if condition is false"
 msgstr "Evaluate block if condition is false"
 
-#: builtin.c:2793
+#: builtin.c:2805
 msgid "Evaluate parameters as a command"
 msgstr "Evaluate parameters as a command"
 
-#: builtin.c:2797
+#: builtin.c:2809
 msgid "Perform a set of commands multiple times"
 msgstr "Perform a set of commands multiple times"
 
-#: builtin.c:2801
+#: builtin.c:2813
 msgid "Evaluate contents of file"
 msgstr "Evaluate contents of file"
 
-#: builtin.c:2805
+#: builtin.c:2817
 msgid "Handle environment variables"
 msgstr "Handle environment variables"
 
-#: builtin.c:2809
+#: builtin.c:2821
 msgid "Send job to foreground"
 msgstr "Send job to foreground"
 
-#: builtin.c:2813
+#: builtin.c:2825
 msgid "Send job to background"
 msgstr "Send job to background"
 
-#: builtin.c:2817
+#: builtin.c:2829
 msgid "Print currently running jobs"
 msgstr "Print currently running jobs"
 
-#: builtin.c:2821
+#: builtin.c:2833
 msgid "Read a line of input into variables"
 msgstr "Read a line of input into variables"
 
-#: builtin.c:2825
+#: builtin.c:2837
 msgid "Stop the innermost loop"
 msgstr "Stop the innermost loop"
 
-#: builtin.c:2829
+#: builtin.c:2841
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Skip the rest of the current lap of the innermost loop"
 
-#: builtin.c:2833
+#: builtin.c:2845
 msgid "Stop the currently evaluated function"
 msgstr "Stop the currently evaluated function"
 
-#: builtin.c:2837
+#: builtin.c:2849
 msgid "Set or get the commandline"
 msgstr "Set or get the commandline"
 
-#: builtin.c:2841 builtin.c:2845
+#: builtin.c:2853 builtin.c:2857
 msgid "Conditionally execute a block of commands"
 msgstr "Conditionally execute a block of commands"
 
-#: builtin.c:2849
+#: builtin.c:2861
 msgid "Handle fish key bindings"
 msgstr "Handle fish key bindings"
 
-#: builtin.c:2853
+#: builtin.c:2865
 msgid "Generate random number"
 msgstr "Generate random number"
 
-#: builtin.c:2857
+#: builtin.c:2869
 msgid "Return status information about fish"
 msgstr "Return status information about fish"
 
-#: builtin.c:2861
+#: builtin.c:2873
 msgid "Set or get the shells resource usage limits"
 msgstr "Set or get the shells resource usage limits"
 
-#: builtin.c:2871
-msgid "Run a program instead of a function or builtin"
-msgstr "Run a program instead of a function or builtin"
-
-#: builtin.c:2875
-msgid "Evaluate block if condition is true"
-msgstr "Evaluate block if condition is true"
-
-#: builtin.c:2879
-msgid "Perform a command multiple times"
-msgstr "Perform a command multiple times"
-
-#: builtin.c:2883
-msgid "Negate exit status of job"
-msgstr "Negate exit status of job"
-
-#: builtin.c:2887
-msgid "Execute command if previous command suceeded"
-msgstr "Execute command if previous command suceeded"
-
-#: builtin.c:2891
-msgid "Execute command if previous command failed"
-msgstr "Execute command if previous command failed"
-
-#: builtin.c:2895
-msgid "Run command in current process"
-msgstr "Run command in current process"
-
-#: builtin.c:2899
+#: builtin.c:2877
 msgid "Create a block of code"
 msgstr "Create a block of code"
 
-#: builtin.c:3005
+#: builtin.c:2887
+msgid "Run a program instead of a function or builtin"
+msgstr "Run a program instead of a function or builtin"
+
+#: builtin.c:2891
+msgid "Evaluate block if condition is true"
+msgstr "Evaluate block if condition is true"
+
+#: builtin.c:2895
+msgid "Perform a command multiple times"
+msgstr "Perform a command multiple times"
+
+#: builtin.c:2899
+msgid "Negate exit status of job"
+msgstr "Negate exit status of job"
+
+#: builtin.c:2903
+msgid "Execute command if previous command suceeded"
+msgstr "Execute command if previous command suceeded"
+
+#: builtin.c:2907
+msgid "Execute command if previous command failed"
+msgstr "Execute command if previous command failed"
+
+#: builtin.c:2911
+msgid "Run command in current process"
+msgstr "Run command in current process"
+
+#: builtin.c:3028
 #, c-format
 msgid "Unknown builtin '%ls'"
 msgstr "Unknown builtin “%ls”"
@@ -468,18 +467,22 @@ msgstr "%ls: There are no jobs\n"
 msgid "%ls: Tried to change the read-only variable '%ls'\n"
 msgstr "%ls: Tried to change the read-only variable “%ls”\n"
 
-#: builtin_set.c:208
+#: builtin_set.c:165
+msgid "%ls: Unknown error"
+msgstr "%ls: Unknown error"
+
+#: builtin_set.c:216
 #, c-format
 msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
 msgstr ""
 "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
 
-#: builtin_set.c:229
+#: builtin_set.c:239
 #, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
 msgstr "%ls: Invalid index starting at “%ls”\n"
 
-#: builtin_set.c:590
+#: builtin_set.c:609
 #, c-format
 msgid ""
 "%ls: Erase needs a variable name\n"
@@ -488,7 +491,11 @@ msgstr ""
 "%ls: Erase needs a variable name\n"
 "%ls\n"
 
-#: builtin_set.c:733
+#: builtin_set.c:653
+msgid "%ls: Can not specify scope when erasing array slice\n"
+msgstr "%ls: Can not specify scope when erasing array slice\n"
+
+#: builtin_set.c:768
 #, c-format
 msgid ""
 "%ls: Values cannot be specfied with erase\n"
@@ -497,74 +504,74 @@ msgstr ""
 "%ls: Values cannot be specfied with erase\n"
 "%ls\n"
 
-#: complete.c:59
+#: complete.c:60
 msgid "User home"
 msgstr "User home"
 
-#: complete.c:64
+#: complete.c:65
 msgid "Variable: "
 msgstr "Variable: "
 
-#: complete.c:69
+#: complete.c:70
 msgid "Executable"
 msgstr "Executable"
 
-#: complete.c:73
+#: complete.c:74
 msgid "Executable link"
 msgstr "Executable link"
 
-#: complete.c:78
+#: complete.c:79
 msgid "File"
 msgstr "File"
 
-#: complete.c:82
+#: complete.c:83
 msgid "Character device"
 msgstr "Character device"
 
-#: complete.c:86
+#: complete.c:87
 msgid "Block device"
 msgstr "Block device"
 
-#: complete.c:90
+#: complete.c:91
 msgid "Fifo"
 msgstr "Fifo"
 
-#: complete.c:94
+#: complete.c:95
 msgid "Symbolic link"
 msgstr "Symbolic link"
 
-#: complete.c:98
+#: complete.c:99
 msgid "Rotten symbolic link"
 msgstr "Rotten symbolic link"
 
-#: complete.c:102
+#: complete.c:103
 msgid "Symbolic link loop"
 msgstr "Symbolic link loop"
 
-#: complete.c:106
+#: complete.c:107
 msgid "Socket"
 msgstr "Socket"
 
-#: complete.c:110 share/completions/ruby.fish:23
+#: complete.c:111 share/completions/ruby.fish:23
 #: share/functions/__fish_complete_directory.fish:9
 msgid "Directory"
 msgstr "Directory"
 
-#: complete.c:115 share/completions/function.fish:2
+#: complete.c:116 share/completions/function.fish:2
 #: share/completions/functions.fish:2 share/completions/type.fish:10
 msgid "Function"
 msgstr "Function"
 
-#: complete.c:119 share/completions/function.fish:3
+#: complete.c:120 share/completions/function.fish:3
 #: share/completions/type.fish:9
 msgid "Builtin"
 msgstr "Builtin"
 
-#: complete.c:776 complete.c:794
+#: complete.c:810 complete.c:828
 msgid "Unknown option: "
 msgstr "Unknown option: "
 
-#: complete.c:799
+#: complete.c:833
 msgid "Multiple matches for option: "
 msgstr "Multiple matches for option: "
 
@@ -576,7 +583,7 @@ msgstr "Could not get user information"
 msgid "Changing language to English"
 msgstr "Changing language to English"
 
-#: env.c:1097
+#: env.c:1169
 msgid "Tried to pop empty environment stack."
 msgstr "Tried to pop empty environment stack."
 
@@ -643,17 +650,17 @@ msgstr "Could not send process %d from group %d to group %d"
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Could not send job %d (“%ls”) to foreground"
 
-#: exec.c:791
+#: exec.c:786
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Unknown function “%ls”"
 
-#: exec.c:892
+#: exec.c:875
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Unknown input redirection type %d"
 
-#: exec.c:1220
+#: exec.c:1206
 #, c-format
 msgid ""
 "Sent null command to subshell. This is a fish bug. If it can be reproduced, "
@@ -686,7 +693,7 @@ msgstr "Shell process"
 msgid "Last background job"
 msgstr "Last background job"
 
-#: expand.c:1051
+#: expand.c:1056
 msgid "Mismatched brackets"
 msgstr "Mismatched brackets"
 
@@ -771,21 +778,21 @@ msgid ""
 msgstr ""
 "An error occured while reading output from code block on file descriptor %d"
 
-#: main.c:204
+#: main.c:205
 #, c-format
 msgid "Invalid value '%s' for debug level switch"
 msgstr "Invalid value “%s” for debug level switch"
 
-#: main.c:232 mimedb.c:1274 set_color.c:223
+#: main.c:233 mimedb.c:1274 set_color.c:223
 #, c-format
 msgid "%s, version %s\n"
 msgstr "%s, version %s\n"
 
-#: main.c:257
+#: main.c:258
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Can not use the no-execute mode when running an interactive session"
 
-#: main.c:335
+#: main.c:336
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Error while reading file %ls\n"
@@ -860,8 +867,8 @@ msgid "Tokenizer error: '%ls'"
 msgstr "Tokenizer error: “%ls”"
 
 #: parser.c:79
-msgid "Pipe or short circuit command requires additional command"
-msgstr "Pipe or short circuit command requires additional command"
+msgid "An additional command is required"
+msgstr "An additional command is required"
 
 #: parser.c:84
 msgid "Maximum recursion depth reached. Accidental infinite loop?"
@@ -885,26 +892,24 @@ msgid "Expected a command name, got token of type '%ls'"
 msgstr "Expected a command name, got token of type “%ls”"
 
 #: parser.c:104
-#, c-format
 msgid ""
 "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or "
-"COMMAND'? See the help section for the “or” builtin command by typing 'help "
+"COMMAND'? See the help section for the 'or' builtin command by typing 'help "
 "or'."
 msgstr ""
-"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or "
-"COMMAND'? See the help section for the “or” builtin command by typing 'help "
-"or'."
+"Expected a command name, got token of type “%ls”. Did you mean “COMMAND; or "
+"COMMAND”? See the help section for the “or” builtin command by typing “help "
+"or”."
 
 #: parser.c:109
-#, c-format
 msgid ""
 "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and "
-"COMMAND'? See the help section for the “and” builtin command by typing 'help "
+"COMMAND'? See the help section for the 'and' builtin command by typing 'help "
 "and'."
 msgstr ""
-"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and "
-"COMMAND'? See the help section for the “and” builtin command by typing 'help "
-"and'."
+"Expected a command name, got token of type “%ls”. Did you mean “COMMAND; and "
+"COMMAND”? See the help section for the “and” builtin command by typing “help "
+"and”."
 
 #: parser.c:114
 #, c-format
@@ -1028,68 +1033,68 @@ msgstr "event handler block"
 msgid "unknown/invalid block"
 msgstr "unknown/invalid block"
 
-#: parser.c:893
+#: parser.c:898
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Could not write profiling information to file “%s”"
 
-#: parser.c:899
+#: parser.c:904
 msgid "Time\tSum\tCommand\n"
 msgstr "Time\tSum\tCommand\n"
 
-#: parser.c:1043
+#: parser.c:1070
 #, c-format
 msgid "in event handler: %ls\n"
 msgstr "in event handler: %ls\n"
 
-#: parser.c:1057
+#: parser.c:1097
 #, c-format
 msgid "in . (source) call of file '%ls',\n"
 msgstr "in . (source) call of file “%ls”,\n"
 
-#: parser.c:1062
+#: parser.c:1102
 #, c-format
 msgid "in function '%ls',\n"
 msgstr "in function “%ls”,\n"
 
-#: parser.c:1067
+#: parser.c:1107
 msgid "in command substitution\n"
 msgstr "in command substitution\n"
 
-#: parser.c:1077
+#: parser.c:1117
 #, c-format
 msgid "\tcalled on line %d of file '%ls',\n"
 msgstr "\tcalled on line %d of file “%ls”,\n"
 
-#: parser.c:1084
+#: parser.c:1124
 msgid "\tcalled on standard input,\n"
 msgstr "\tcalled on standard input,\n"
 
-#: parser.c:1098
+#: parser.c:1138
 #, c-format
 msgid "\twith parameter list '%ls'\n"
 msgstr "\twith parameter list “%ls”\n"
 
-#: parser.c:1267
+#: parser.c:1322
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (line %d): "
 
-#: parser.c:1475
+#: parser.c:1533
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Could not expand string “%ls”"
 
-#: parser.c:1578
+#: parser.c:1636
 msgid "Invalid IO redirection"
 msgstr "Invalid IO redirection"
 
-#: parser.c:1621
+#: parser.c:1679
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "Requested redirection to something that is not a file descriptor %ls"
 
-#: parser.c:2043
+#: parser.c:2100
 #, c-format
 msgid ""
 "Variables may not be used as commands. Instead, define a function like "
@@ -1100,7 +1105,7 @@ msgstr ""
 "'function %ls; %ls $argv; end'. See the help section for the function "
 "command by typing “help function”."
 
-#: parser.c:2051
+#: parser.c:2108
 msgid ""
 "Variables may not be used as commands. Instead, define a function. See the "
 "help section for the function command by typing 'help function'."
@@ -1108,7 +1113,7 @@ msgstr ""
 "Variables may not be used as commands. Instead, define a function. See the "
 "help section for the function command by typing “help function”."
 
-#: parser.c:2058
+#: parser.c:2115
 #, c-format
 msgid ""
 "Commands may not contain variables. Use the eval builtin instead, like 'eval "
@@ -1117,12 +1122,12 @@ msgstr ""
 "Commands may not contain variables. Use the eval builtin instead, like 'eval "
 "%ls'. See the help section for the eval command by typing “help eval”."
 
-#: parser.c:2065
+#: parser.c:2122
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Unknown command “%ls”"
 
-#: parser.c:2507
+#: parser.c:2567
 msgid "End of block mismatch. Program terminating."
 msgstr "End of block mismatch. Program terminating."
 
@@ -1643,6 +1648,10 @@ msgstr ""
 "accessing variables. To learn more about command substitution in fish, type "
 "“help expand-command-substitution”."
 
+#: expand.h:135
+msgid "Array index out of bounds"
+msgstr "Array index out of bounds"
+
 #: etc/fish_interactive.fish.in:14
 msgid "Welcome to fish, the friendly interactive shell\\n"
 msgstr "Welcome to fish, the friendly interactive shell\\n"
@@ -1661,10 +1670,10 @@ msgstr "Good bye\\n"
 
 #: share/fish:22
 msgid ""
-"%s: Warning: The directory %s has been removed from your PATH, because it "
+"%s: Warning: The directory %s has been removed from your PATH because it "
 "does not exist\\n"
 msgstr ""
-"%s: Warning: The directory %s has been removed from your PATH, because it "
+"%s: Warning: The directory %s has been removed from your PATH because it "
 "does not exist\\n"
 
 #: share/fish:108
@@ -3698,16 +3707,12 @@ msgid "Never follow symbolic links"
 msgstr "Never follow symbolic links"
 
 #: share/completions/cp.fish:18
-msgid "Same"
-msgstr "Same"
+msgid "Same as --preserve=mode,ownership,timestamps"
+msgstr "Same as --preserve=mode,ownership,timestamps"
 
 #: share/completions/cp.fish:19
-msgid ""
-"Preserve the specified attributes (default: mode,ownership,timestamps) and "
-"security contexts, if possible additional attributes: links, all"
-msgstr ""
-"Preserve the specified attributes (default: mode,ownership,timestamps) and "
-"security contexts, if possible additional attributes: links, all"
+msgid  "Preserve the specified attributes and security contexts, if possible"
+msgstr "Preserve the specified attributes and security contexts, if possible"
 
 #: share/completions/cp.fish:20
 msgid "Don't preserve the specified attributes"
@@ -5265,8 +5270,7 @@ msgstr "Merge specified packages, but don't merge any dependencies"
 msgid ""
 "Skip the packages specified on the command-line that have already been "
 "installed"
-msgstr ""
-"Skip the packages specified on the command-line that have already been "
+msgstr "Skip the packages specified on the command-line that have already been "
 "installed"
 
 #: share/completions/emerge.fish:55
@@ -5281,8 +5285,7 @@ msgstr "Emerge as normal, but don't add packages to the world profile"
 msgid ""
 "Only merge (or pretend to merge) the dependencies of the specified packages, "
 "not the packages themselves"
-msgstr ""
-"Only merge (or pretend to merge) the dependencies of the specified packages, "
+msgstr "Only merge (or pretend to merge) the dependencies of the specified packages, "
 "not the packages themselves"
 
 #: share/completions/emerge.fish:58
@@ -5301,16 +5304,14 @@ msgstr "Resumes the last merge operation"
 msgid ""
 "Matches the search string against the description field as well the "
 "package's name"
-msgstr ""
-"Matches the search string against the description field as well the "
+msgstr "Matches the search string against the description field as well the "
 "package's name"
 
 #: share/completions/emerge.fish:62
 msgid ""
 "Remove the first package in the resume list so that a merge may continue in "
 "the presence of an uncorrectable or inconsequential error"
-msgstr ""
-"Remove the first package in the resume list so that a merge may continue in "
+msgstr "Remove the first package in the resume list so that a merge may continue in "
 "the presence of an uncorrectable or inconsequential error"
 
 #: share/completions/emerge.fish:63
@@ -5326,8 +5327,7 @@ msgid ""
 "Like --usepkg, except this only allows the use of binary packages, and it "
 "will abort the emerge if the package is not available at the time of "
 "dependency calculation"
-msgstr ""
-"Like --usepkg, except this only allows the use of binary packages, and it "
+msgstr "Like --usepkg, except this only allows the use of binary packages, and it "
 "will abort the emerge if the package is not available at the time of "
 "dependency calculation"
 
@@ -5339,8 +5339,7 @@ msgstr "Increased or expanded display of content in portage's displays"
 msgid ""
 "Displays the currently installed version of portage along with other "
 "information useful for quick reference on a system"
-msgstr ""
-"Displays the currently installed version of portage along with other "
+msgstr "Displays the currently installed version of portage along with other "
 "information useful for quick reference on a system"
 
 #: share/completions/fish.fish:1
@@ -6298,8 +6297,7 @@ msgstr "Do not fail on MDC integrity protection failure"
 msgid ""
 "Lock the databases the first time a lock is requested and do not release the "
 "lock until the process terminates"
-msgstr ""
-"Lock the databases the first time a lock is requested and do not release the "
+msgstr "Lock the databases the first time a lock is requested and do not release the "
 "lock until the process terminates"
 
 #: share/completions/gpg.fish:276
@@ -6309,8 +6307,7 @@ msgstr "Release the locks every time a lock is no longer needed"
 #: share/completions/gpg.fish:278
 msgid ""
 "Do not create an internal pool file for quicker generation of random numbers"
-msgstr ""
-"Do not create an internal pool file for quicker generation of random numbers"
+msgstr "Do not create an internal pool file for quicker generation of random numbers"
 
 #: share/completions/gpg.fish:279
 msgid "Reset verbose level to 0"
@@ -6328,8 +6325,7 @@ msgstr "Suppress the warning about “using insecure memory”"
 msgid ""
 "Suppress the warning about unsafe file and home directory (--homedir) "
 "permissions"
-msgstr ""
-"Suppress the warning about unsafe file and home directory (--homedir) "
+msgstr "Suppress the warning about unsafe file and home directory (--homedir) "
 "permissions"
 
 #: share/completions/gpg.fish:283
@@ -6364,16 +6360,14 @@ msgstr "Print key listings delimited by colons"
 msgid ""
 "Print key listings delimited by colons (like --with-colons) and print the "
 "public key data"
-msgstr ""
-"Print key listings delimited by colons (like --with-colons) and print the "
+msgstr "Print key listings delimited by colons (like --with-colons) and print the "
 "public key data"
 
 #: share/completions/gpg.fish:296
 msgid ""
 "Same as the command --fingerprint but changes only the format of the output "
 "and may be used together with another command"
-msgstr ""
-"Same as the command --fingerprint but changes only the format of the output "
+msgstr "Same as the command --fingerprint but changes only the format of the output "
 "and may be used together with another command"
 
 #: share/completions/gpg.fish:298
@@ -6384,15 +6378,13 @@ msgstr "Changes the output of the list commands to work faster"
 msgid ""
 "Do not merge primary user ID and primary key in --with-colon listing mode "
 "and print all timestamps as UNIX timestamps"
-msgstr ""
-"Do not merge primary user ID and primary key in --with-colon listing mode "
+msgstr "Do not merge primary user ID and primary key in --with-colon listing mode "
 "and print all timestamps as UNIX timestamps"
 
 #: share/completions/gpg.fish:301
 msgid ""
 "Changes the behaviour of some commands. This is like --dry-run but different"
-msgstr ""
-"Changes the behaviour of some commands. This is like --dry-run but different"
+msgstr "Changes the behaviour of some commands. This is like --dry-run but different"
 
 #: share/completions/gpg.fish:303
 msgid "Display the session key used for one message"
@@ -6414,8 +6406,7 @@ msgstr "Do not prompt for an expiration time"
 msgid ""
 "Don't look at the key ID as stored in the message but try all secret keys in "
 "turn to find the right decryption key"
-msgstr ""
-"Don't look at the key ID as stored in the message but try all secret keys in "
+msgstr "Don't look at the key ID as stored in the message but try all secret keys in "
 "turn to find the right decryption key"
 
 #: share/completions/gpg.fish:313
@@ -6423,8 +6414,7 @@ msgid ""
 "Enable a mode in which filenames of the form -&n, where n is a non-negative "
 "decimal number, refer to the file descriptor n and not to a file with that "
 "name"
-msgstr ""
-"Enable a mode in which filenames of the form -&n, where n is a non-negative "
+msgstr "Enable a mode in which filenames of the form -&n, where n is a non-negative "
 "decimal number, refer to the file descriptor n and not to a file with that "
 "name"
 
@@ -6443,8 +6433,7 @@ msgstr "Remove all entries from the --group list"
 #: share/completions/gpg.fish:319
 msgid ""
 "Don't change the permissions of a secret keyring back to user read/write only"
-msgstr ""
-"Don't change the permissions of a secret keyring back to user read/write only"
+msgstr "Don't change the permissions of a secret keyring back to user read/write only"
 
 #: share/completions/gpg.fish:321
 msgid "Set the list of personal cipher preferences to the specified string"
@@ -6457,8 +6446,7 @@ msgstr "Set the list of personal digest preferences to the specified string"
 #: share/completions/gpg.fish:323
 msgid ""
 "Set the list of personal compression preferences to the specified string"
-msgstr ""
-"Set the list of personal compression preferences to the specified string"
+msgstr "Set the list of personal compression preferences to the specified string"
 
 #: share/completions/gpg.fish:324
 msgid "Set the list of default preferences to the specified string"
@@ -7613,8 +7601,7 @@ msgstr "Increment priority by specified number first"
 msgid ""
 "Make backup files, when patching a file, rename or copy the original instead "
 "of removing it"
-msgstr ""
-"Make backup files, when patching a file, rename or copy the original instead "
+msgstr "Make backup files, when patching a file, rename or copy the original instead "
 "of removing it"
 
 #: share/completions/patch.fish:6
@@ -7648,8 +7635,7 @@ msgstr "Use the #ifdef ... #endif construct to mark changes"
 #: share/completions/patch.fish:13
 msgid ""
 "Print the results of applying the patches without actually changing any files"
-msgstr ""
-"Print the results of applying the patches without actually changing any files"
+msgstr "Print the results of applying the patches without actually changing any files"
 
 #: share/completions/patch.fish:14
 msgid "Interpret the patch file as an ed script"
@@ -7663,8 +7649,7 @@ msgstr "Remove output files that are empty after the patches have been applied"
 msgid ""
 "Assume that the user knows exactly what he/she is doing, and do not ask "
 "questions"
-msgstr ""
-"Assume that the user knows exactly what he/she is doing, and do not ask "
+msgstr "Assume that the user knows exactly what he/she is doing, and do not ask "
 "questions"
 
 #: share/completions/patch.fish:17
@@ -7676,8 +7661,7 @@ msgid ""
 "This option controls patch's actions when a file is under RCS or SCCS "
 "control, and does not exist or is read-only and matches the default version, "
 "or when a file is under ClearCase control and does not exist"
-msgstr ""
-"This option controls patch's actions when a file is under RCS or SCCS "
+msgstr "This option controls patch's actions when a file is under RCS or SCCS "
 "control, and does not exist or is read-only and matches the default version, "
 "or when a file is under ClearCase control and does not exist"
 
@@ -7688,8 +7672,7 @@ msgstr "Read the patch from patchfile"
 #: share/completions/patch.fish:21
 msgid ""
 "Match patterns loosely, in case tabs or spaces have been munged in your files"
-msgstr ""
-"Match patterns loosely, in case tabs or spaces have been munged in your files"
+msgstr "Match patterns loosely, in case tabs or spaces have been munged in your files"
 
 #: share/completions/patch.fish:22
 msgid "Interpret the patch file as a normal diff"
@@ -7707,8 +7690,7 @@ msgstr "Send output to outfile instead of patching files in place"
 msgid ""
 "Strip the smallest prefix containing num leading slashes from each file name "
 "found in the patch file"
-msgstr ""
-"Strip the smallest prefix containing num leading slashes from each file name "
+msgstr "Strip the smallest prefix containing num leading slashes from each file name "
 "found in the patch file"
 
 #: share/completions/patch.fish:26
@@ -7739,8 +7721,7 @@ msgstr "Suppress questions like -f, but make some different assumptions"
 msgid ""
 "Set the modification and access times of patched files from time stamps "
 "given in context diff headers, local time"
-msgstr ""
-"Set the modification and access times of patched files from time stamps "
+msgstr "Set the modification and access times of patched files from time stamps "
 "given in context diff headers, local time"
 
 #: share/completions/patch.fish:33
@@ -7763,8 +7744,7 @@ msgstr "Set internal debugging flags of interest only to patch patchers"
 msgid ""
 "Prefix pref to the basename of a file name when generating its simple backup "
 "file name"
-msgstr ""
-"Prefix pref to the basename of a file name when generating its simple backup "
+msgstr "Prefix pref to the basename of a file name when generating its simple backup "
 "file name"
 
 #: share/completions/patch.fish:39
@@ -7775,8 +7755,7 @@ msgstr "Use suffix as the simple backup suffix"
 msgid ""
 "Set the modification and access times of patched files from time stamps "
 "given in context diff headers, UTC, GMT"
-msgstr ""
-"Set the modification and access times of patched files from time stamps "
+msgstr "Set the modification and access times of patched files from time stamps "
 "given in context diff headers, UTC, GMT"
 
 #: share/completions/perl.fish:1 share/completions/ruby.fish:2
@@ -7985,8 +7964,7 @@ msgstr "Record route"
 msgid ""
 "Bypass the normal routing tables and send directly to a host on an attached "
 "interface"
-msgstr ""
-"Bypass the normal routing tables and send directly to a host on an attached "
+msgstr "Bypass the normal routing tables and send directly to a host on an attached "
 "interface"
 
 #: share/completions/ping.fish:20
@@ -8017,8 +7995,7 @@ msgstr "Print full user-to-user latency"
 msgid ""
 "Specify  a timeout, in seconds, before ping exits regardless of how many "
 "packets have been sent or received"
-msgstr ""
-"Specify  a timeout, in seconds, before ping exits regardless of how many "
+msgstr "Specify  a timeout, in seconds, before ping exits regardless of how many "
 "packets have been sent or received"
 
 #: share/completions/ping.fish:29
@@ -8185,8 +8162,7 @@ msgstr "Make variable scope local"
 msgid ""
 "Make variable scope universal, i.e. share variable with all the users fish "
 "processes on this computer"
-msgstr ""
-"Make variable scope universal, i.e. share variable with all the users fish "
+msgstr "Make variable scope universal, i.e. share variable with all the users fish "
 "processes on this computer"
 
 #: share/completions/read.fish:7 share/completions/set.fish:60
@@ -8257,16 +8233,14 @@ msgstr "Add suggested packages to the transaction set when needed"
 msgid ""
 "Installs or upgrades all the files in the package, even if they aren't "
 "needed (missingok) and don't exist"
-msgstr ""
-"Installs or upgrades all the files in the package, even if they aren't "
+msgstr "Installs or upgrades all the files in the package, even if they aren't "
 "needed (missingok) and don't exist"
 
 #: share/completions/rpm.fish:24
 msgid ""
 "Used with --relocate, permit relocations on all file paths, not just those "
 "OLD-PATH's included in the binary package relocation hint(s)"
-msgstr ""
-"Used with --relocate, permit relocations on all file paths, not just those "
+msgstr "Used with --relocate, permit relocations on all file paths, not just those "
 "OLD-PATH's included in the binary package relocation hint(s)"
 
 #: share/completions/rpm.fish:25
@@ -8293,16 +8267,14 @@ msgstr "Don't check for sufficient disk space before installation"
 msgid ""
 "Allow installation or upgrading even if the architectures of the binary "
 "package and host don't match"
-msgstr ""
-"Allow installation or upgrading even if the architectures of the binary "
+msgstr "Allow installation or upgrading even if the architectures of the binary "
 "package and host don't match"
 
 #: share/completions/rpm.fish:31
 msgid ""
 "Allow installation or upgrading even if the operating systems of the binary "
 "package and host don't match"
-msgstr ""
-"Allow installation or upgrading even if the operating systems of the binary "
+msgstr "Allow installation or upgrading even if the operating systems of the binary "
 "package and host don't match"
 
 #: share/completions/rpm.fish:32
@@ -8377,8 +8349,7 @@ msgstr "Allow an upgrade to replace a newer package with an older one"
 msgid ""
 "Print percentages as files are unpacked from the package archive. This is "
 "intended to make rpm easy to run from other tools"
-msgstr ""
-"Print percentages as files are unpacked from the package archive. This is "
+msgstr "Print percentages as files are unpacked from the package archive. This is "
 "intended to make rpm easy to run from other tools"
 
 #: share/completions/rpm.fish:50
@@ -8475,8 +8446,7 @@ msgstr "List the package specific scriptlets"
 msgid ""
 "Display the states of files in the package. The state of each file is one of "
 "normal, not installed, or replaced"
-msgstr ""
-"Display the states of files in the package. The state of each file is one of "
+msgstr "Display the states of files in the package. The state of each file is one of "
 "normal, not installed, or replaced"
 
 #: share/completions/rpm.fish:71 share/completions/rpm.fish:72
@@ -8495,8 +8465,7 @@ msgstr "Query package owning specified file"
 msgid ""
 "Query package that contains a given file identifier, i.e. the MD5 digest of "
 "the file contents"
-msgstr ""
-"Query package that contains a given file identifier, i.e. the MD5 digest of "
+msgstr "Query package that contains a given file identifier, i.e. the MD5 digest of "
 "the file contents"
 
 #: share/completions/rpm.fish:81
@@ -8507,8 +8476,7 @@ msgstr "Query packages with the specified group"
 msgid ""
 "Query package that contains a given header identifier, i.e. the SHA1 digest "
 "of the immutable header region"
-msgstr ""
-"Query package that contains a given header identifier, i.e. the SHA1 digest "
+msgstr "Query package that contains a given header identifier, i.e. the SHA1 digest "
 "of the immutable header region"
 
 #: share/completions/rpm.fish:83
@@ -8519,8 +8487,7 @@ msgstr "Query an (uninstalled) package in specified file"
 msgid ""
 "Query package that contains a given package identifier, i.e. the MD5 digest "
 "of the combined header and payload contents"
-msgstr ""
-"Query package that contains a given package identifier, i.e. the MD5 digest "
+msgstr "Query package that contains a given package identifier, i.e. the MD5 digest "
 "of the combined header and payload contents"
 
 #: share/completions/rpm.fish:85
@@ -8542,8 +8509,7 @@ msgstr "Query all packages that provide the specified capability"
 #: share/completions/rpm.fish:89
 msgid ""
 "Query all packages that requires the specified capability for functioning"
-msgstr ""
-"Query all packages that requires the specified capability for functioning"
+msgstr "Query all packages that requires the specified capability for functioning"
 
 #: share/completions/rpm.fish:93
 msgid "Don't verify dependencies of packages"
@@ -8665,8 +8631,7 @@ msgstr "Port"
 #: share/completions/scp.fish:31
 msgid ""
 "Preserves modification times, access times, and modes from the original file"
-msgstr ""
-"Preserves modification times, access times, and modes from the original file"
+msgstr "Preserves modification times, access times, and modes from the original file"
 
 #: share/completions/scp.fish:33
 msgid "Recursively copy"
@@ -8716,8 +8681,7 @@ msgstr "Use minimal IO buffers"
 msgid ""
 "Delay opening files until a command containing the related 'w' function is "
 "applied"
-msgstr ""
-"Delay opening files until a command containing the related “w” function is "
+msgstr "Delay opening files until a command containing the related “w” function is "
 "applied"
 
 #: share/completions/service.fish:3
@@ -8947,8 +8911,7 @@ msgstr "Set which jobs are out under job control"
 #: share/completions/status.fish:10
 msgid ""
 "Print a list of all function calls leading up to running the current command"
-msgstr ""
-"Print a list of all function calls leading up to running the current command"
+msgstr "Print a list of all function calls leading up to running the current command"
 
 #: share/completions/sudo.fish:5
 msgid "Command to run"
@@ -9399,64 +9362,64 @@ msgid "Filter through specified program"
 msgstr "Filter through specified program"
 
 #: share/completions/telnet.fish:9 share/completions/telnet.fish:14
-msgid "Specifies an 8-bit data path."
-msgstr "Specifies an 8-bit data path."
+msgid  "Specifies an 8-bit data path"
+msgstr "Specifies an 8-bit data path"
 
 #: share/completions/telnet.fish:10
-msgid "Do not try to negotiate TELNET BINARY option."
-msgstr "Do not try to negotiate TELNET BINARY option."
+msgid "Do not try to negotiate TELNET BINARY option"
+msgstr "Do not try to negotiate TELNET BINARY option"
 
 #: share/completions/telnet.fish:11
-msgid "Stops any character from being recognized as an escape character."
-msgstr "Stops any character from being recognized as an escape character."
+msgid "Stops any character from being recognized as an escape character"
+msgstr "Stops any character from being recognized as an escape character"
 
 #: share/completions/telnet.fish:12
-msgid "Use local Kerberos authentication, if possible."
-msgstr "Use local Kerberos authentication, if possible."
+msgid "Use local Kerberos authentication, if possible"
+msgstr "Use local Kerberos authentication, if possible"
 
 #: share/completions/telnet.fish:13
-msgid "Specifies no automatic login to remote system."
-msgstr "Specifies no automatic login to remote system."
+msgid "Specifies no automatic login to remote system"
+msgstr "Specifies no automatic login to remote system"
 
 #: share/completions/telnet.fish:15
-msgid "Attempt automatic login."
-msgstr "Attempt automatic login."
+msgid "Attempt automatic login"
+msgstr "Attempt automatic login"
 
 #: share/completions/telnet.fish:16
 msgid "Disables reading user's .telnetrc"
 msgstr "Disables reading user's .telnetrc"
 
 #: share/completions/telnet.fish:17
-msgid "Sets debug mode."
-msgstr "Sets debug mode."
+msgid "Sets debug mode"
+msgstr "Sets debug mode"
 
 #: share/completions/telnet.fish:18
-msgid "Sets IP TOS."
-msgstr "Sets IP TOS."
+msgid "Sets IP TOS"
+msgstr "Sets IP TOS"
 
 #: share/completions/telnet.fish:19
-msgid "Disables atype type of authentication."
-msgstr "Disables atype type of authentication."
+msgid "Disables specified type of authentication"
+msgstr "Disables specified type of authentication"
 
 #: share/completions/telnet.fish:20
-msgid "User login."
-msgstr "User login."
+msgid "User login"
+msgstr "User login"
 
 #: share/completions/telnet.fish:21
-msgid "Log to tracefile."
-msgstr "Log to tracefile."
+msgid "Log to tracefile"
+msgstr "Log to tracefile"
 
 #: share/completions/telnet.fish:22
-msgid "Turn on encryption."
-msgstr "Turn on encryption."
+msgid "Turn on encryption"
+msgstr "Turn on encryption"
 
 #: share/completions/telnet.fish:23
-msgid "User interface similar to rlogin."
-msgstr "User interface similar to rlogin."
+msgid "User interface similar to rlogin"
+msgstr "User interface similar to rlogin"
 
 #: share/completions/telnet.fish:24
-msgid "Use Kerberos realm for authentication."
-msgstr "Use Kerberos realm for authentication."
+msgid "Use Kerberos realm for authentication"
+msgstr "Use Kerberos realm for authentication"
 
 #: share/completions/test.fish:4
 msgid "Negate expression"
@@ -9761,8 +9724,7 @@ msgstr "In case unmounting fails, try to remount read-only"
 #: share/completions/umount.fish:15
 msgid ""
 "In case the unmounted device was a loop device, also free this loop device"
-msgstr ""
-"In case the unmounted device was a loop device, also free this loop device"
+msgstr "In case the unmounted device was a loop device, also free this loop device"
 
 #: share/completions/umount.fish:16
 msgid "Don't call the /sbin/umount.<filesystem> helper even if it exists"
@@ -9780,8 +9742,7 @@ msgstr "Actions should only be taken on file systems of the specified type"
 msgid ""
 "Actions should only be taken on file systems with the specified options in /"
 "etc/fstab"
-msgstr ""
-"Actions should only be taken on file systems with the specified options in /"
+msgstr "Actions should only be taken on file systems with the specified options in /"
 "etc/fstab"
 
 #: share/completions/umount.fish:20
@@ -11276,7 +11237,7 @@ msgstr ""
 
 #: seq:15
 msgid "^/dev/null"
-msgstr ""
+msgstr "^/dev/null"
 
 #: seq:36
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
@@ -11285,3 +11246,12 @@ msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 #: seq:43
 msgid "%s: '%s' is not a number\\n"
 msgstr "%s: “%s” is not a number\\n"
+
+#~ msgid "%ls: Argument must be a number: %ls\n"
+#~ msgstr "%ls: Argument must be a number: %ls\n"
+
+#~ msgid "Pipe or short circuit command requires additional command"
+#~ msgstr "Pipe or short circuit command requires additional command"
+
+#~ msgid "Same"
+#~ msgstr "Same"

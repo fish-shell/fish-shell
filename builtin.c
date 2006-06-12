@@ -2623,7 +2623,7 @@ static int builtin_break_continue( wchar_t **argv )
 static int builtin_return( wchar_t **argv )
 {
 	int argc = builtin_count_args( argv );
-	int status = 0;
+	int status = proc_get_last_status();
 
 	block_t *b = current_block;
 

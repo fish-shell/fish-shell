@@ -116,7 +116,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 		}				
 		closedir(dir);
 	}
-	al_foreach( &path_list, (void (*)(const void *))&free );
+	al_foreach( &path_list, &free );
 	al_destroy( &path_list );
 }
 
@@ -124,8 +124,8 @@ static void autoload_names( array_list_t *out, int get_hidden )
 /**
    Free all contents of an entry to the function hash table
 */
-static void clear_function_entry( const void *key, 
-							   const void *data )
+static void clear_function_entry( void *key, 
+								  void *data )
 {
 	function_data_t *d = (function_data_t *)data;
 	free( (void *)d->cmd );
@@ -209,7 +209,7 @@ int function_exists( const wchar_t *cmd )
 void function_remove( const wchar_t *name )
 {
 	void *key;
-	const void *dv;
+	void *dv;
 	function_data_t *d;
 	event_t ev;
 	
@@ -221,7 +221,7 @@ void function_remove( const wchar_t *name )
 
 	hash_remove( &function,
 				 name,
-				 (const void **) &key,
+				 &key,
 				 &dv );
 
 	d=(function_data_t *)dv;
@@ -303,8 +303,8 @@ static int al_contains_str( array_list_t *list, const wchar_t * str )
 /**
    Helper function for removing hidden functions 
 */
-static void get_names_internal( const void *key,
-								const void *val,
+static void get_names_internal( void *key,
+								void *val,
 								void *aux )
 {
 	wchar_t *name = (wchar_t *)key;
@@ -319,9 +319,9 @@ static void get_names_internal( const void *key,
 /**
    Helper function for removing hidden functions 
 */
-static void get_names_internal_all( const void *key,
-								const void *val,
-								void *aux )
+static void get_names_internal_all( void *key,
+									void *val,
+									void *aux )
 {
 	wchar_t *name = (wchar_t *)key;
 	

@@ -31,9 +31,9 @@ dyn_queue_t;
 typedef struct
 {
 	/** Hash key*/
-	const void *key;
+	void *key;
 	/** Value */
-	const void *data;
+	void *data;
 }
 hash_struct_t;
 
@@ -61,9 +61,9 @@ typedef struct hash_table
 	/** Length of array */
 	int size;
 	/** Hash function */
-	int (*hash_func)( const void *key );
+	int (*hash_func)( void *key );
 	/** Comparison function */
-	int (*compare_func)( const void *key1, const void *key2 );
+	int (*compare_func)( void *key1, void *key2 );
 }
 hash_table_t;
 
@@ -93,7 +93,7 @@ priority_queue_t;
 typedef struct array_list
 {
 	/** Array containing the data */
-	const void **arr;
+	void **arr;
 	/** Position to append elements at*/
 	int pos;
 	/** Length of array */
@@ -195,15 +195,15 @@ int q_empty( dyn_queue_t *q );
    Initialize a hash table. The hash function must never return the value 0.
 */
 void hash_init( hash_table_t *h,
-				int (*hash_func)(const void *key),
-				int (*compare_func)(const void *key1, const void *key2) );
+				int (*hash_func)( void *key),
+				int (*compare_func)( void *key1, void *key2 ) );
 
 /**
    Initialize a hash table. The hash function must never return the value 0.
 */
 void hash_init2( hash_table_t *h,
-				int (*hash_func)(const void *key),
-				 int (*compare_func)(const void *key1, const void *key2),
+				int (*hash_func)( void *key ),
+				 int (*compare_func)( void *key1, void *key2 ),
 				 size_t capacity);
 
 /**
@@ -219,13 +219,13 @@ int hash_put( hash_table_t *h,
 /**
    Returns the data with the associated key, or 0 if no such key is in the hashtable
 */
-const void *hash_get( hash_table_t *h,
-					  const void *key );
+void *hash_get( hash_table_t *h,
+				const void *key );
 /**
    Returns the hash tables version of the specified key
 */
-const void *hash_get_key( hash_table_t *h, 
-						  const void *key );
+void *hash_get_key( hash_table_t *h, 
+					const void *key );
 
 /**
    Returns the number of key/data pairs in the table.
@@ -241,8 +241,8 @@ int hash_get_count( hash_table_t *h);
 */
 void hash_remove( hash_table_t *h, 
 				  const void *key, 
-				  const void **old_key,
-				  const void **old_data );
+				  void **old_key,
+				  void **old_data );
 
 /**
    Checks whether the specified key is in the hash table
@@ -266,49 +266,49 @@ void hash_get_data( hash_table_t *h,
    Call the function func for each key/data pair in the table
 */
 void hash_foreach( hash_table_t *h, 
-				   void (*func)( const void *, const void * ) );
+				   void (*func)( void *, void * ) );
 
 /**
    Same as hash_foreach, but the function func takes an additional
    argument, which is provided by the caller in the variable aux 
 */
-void hash_foreach2( hash_table_t *h, void (*func)( const void *, 
-												 const void *, 
-												 void *), 
+void hash_foreach2( hash_table_t *h, void (*func)( void *, 
+												   void *, 
+												   void *), 
 					void *aux );
 
 /**
    Hash function suitable for character strings. 
 */
-int hash_str_func( const void *data );
+int hash_str_func( void *data );
 /**
    Hash comparison function suitable for character strings
 */
-int hash_str_cmp( const void *a,
-				  const void *b );
+int hash_str_cmp( void *a,
+				  void *b );
 
 /**
    Hash function suitable for wide character strings. 
 */
-int hash_wcs_func( const void *data );
+int hash_wcs_func( void *data );
 
 /**
    Hash comparison function suitable for wide character strings
 */
-int hash_wcs_cmp( const void *a, 
-				  const void *b );
+int hash_wcs_cmp( void *a, 
+				  void *b );
 
 /**
    Hash function suitable for direct pointer comparison
 */
-int hash_ptr_func( const void *data );
+int hash_ptr_func( void *data );
 
 
 /**
    Hash comparison function suitable for direct pointer comparison
 */
-int hash_ptr_cmp( const void *a,
-                  const void *b );
+int hash_ptr_cmp( void *a,
+                  void *b );
 
 
 
@@ -404,7 +404,7 @@ int al_set( array_list_t *l, int pos, const void *o );
    \param pos The index 
    \return The element 
 */
-const void *al_get( array_list_t *l, int pos );
+void *al_get( array_list_t *l, int pos );
 
 /**
   Truncates the list to new_sz items.
@@ -414,7 +414,7 @@ void al_truncate( array_list_t *l, int new_sz );
 /**
   Removes and returns the last entry in the list
 */
-const void *al_pop( array_list_t *l );
+void *al_pop( array_list_t *l );
 
 /**
    Returns the number of elements in the list
@@ -424,7 +424,7 @@ int al_get_count( array_list_t *l );
 /**
   Returns the last entry in the list witout removing it.
 */
-const void *al_peek( array_list_t *l );
+void *al_peek( array_list_t *l );
 
 /**
    Returns 1 if the list is empty, 0 otherwise
@@ -434,13 +434,13 @@ int al_empty( array_list_t *l);
 /** 
 	Call the function func for each entry in the list
 */
-void al_foreach( array_list_t *l, void (*func)(const void * ));
+void al_foreach( array_list_t *l, void (*func)( void * ));
 
 /** 
 	Same as al_foreach, but the function func takes an additional
 	argument, which is provided by the caller in the variable aux
 */
-void al_foreach2( array_list_t *l, void (*func)(const void *, void *), void *aux);
+void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux);
 
 /**
    Compares two wide character strings without case but with  

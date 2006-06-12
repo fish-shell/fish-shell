@@ -179,7 +179,7 @@ static void kill_check_x_buffer()
 			}
 		}
 		
-		al_foreach( &list, (void (*)(const void *))&free );
+		al_foreach( &list, &free );
 		al_destroy( &list );
 	}
 }

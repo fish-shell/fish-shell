@@ -188,7 +188,7 @@ static const wchar_t *locale_variable[] =
 /**
    Free hash key and hash value
 */
-static void clear_hash_entry( const void *key, const void *data )
+static void clear_hash_entry( void *key, void *data )
 {
 	var_entry_t *entry = (var_entry_t *)data;	
 	if( entry->export )
@@ -435,14 +435,14 @@ static void setup_path()
 			
 			sb_destroy( &b );
 			
-			al_foreach( &l, (void (*)(const void *))&free );
+			al_foreach( &l, &free );
 			path = env_get( L"PATH" );
 			al_truncate( &l, 0 );
 			tokenize_variable_array( path, &l );			
 		}
 	}
 	
-	al_foreach( &l, (void (*)(const void *))&free );
+	al_foreach( &l, &free );
 	al_destroy( &l );
 }
 
@@ -763,7 +763,7 @@ int env_set( const wchar_t *key,
 		if( !done )
 		{
 			void *k, *v;
-			hash_remove( &node->env, key, (const void **)&k, (const void **)&v );
+			hash_remove( &node->env, key, &k, &v );
 			free( k );
 			free( v );
 
@@ -831,7 +831,7 @@ static int try_remove( env_node_t *n,
 					   const wchar_t *key,
 					   int var_mode )
 {
-	const void *old_key_void, *old_val_void;
+	void *old_key_void, *old_val_void;
 	wchar_t *old_key, *old_val;
 
 	if( n == 0 )
@@ -1176,8 +1176,8 @@ void env_pop()
    Function used with hash_foreach to insert keys of one table into
    another
 */
-static void add_key_to_hash( const void *key, 
-							 const void *data,
+static void add_key_to_hash( void *key, 
+							 void *data,
 							 void *aux )
 {
 	var_entry_t *e = (var_entry_t *)data;
@@ -1191,7 +1191,7 @@ static void add_key_to_hash( const void *key,
 /**
    Add key to hashtable
 */
-static void add_to_hash( const void *k, void *aux )
+static void add_to_hash( void *k, void *aux )
 {
 	hash_put( (hash_table_t *)aux,
 			  k,
@@ -1201,8 +1201,8 @@ static void add_to_hash( const void *k, void *aux )
 /**
    Add key to list
 */
-static void add_key_to_list( const void * key, 
-							 const void * val, 
+static void add_key_to_list( void * key, 
+							 void * val, 
 							 void *aux )
 {
 	al_push( (array_list_t *)aux, key );
@@ -1286,7 +1286,7 @@ void env_get_names( array_list_t *l, int flags )
 /**
    Function used by env_export_arr to iterate over hashtable of variables
 */
-static void export_func1( const void *k, const void *v, void *aux )
+static void export_func1( void *k, void *v, void *aux )
 {
 	var_entry_t *val_entry = (var_entry_t *)v;
 	if( val_entry->export )
@@ -1302,7 +1302,7 @@ static void export_func1( const void *k, const void *v, void *aux )
 /**
    Function used by env_export_arr to iterate over hashtable of variables
 */
-static void export_func2( const void *k, const void *v, void *aux )
+static void export_func2( void *k, void *v, void *aux )
 {
 	wchar_t *key = (wchar_t *)k;
 	wchar_t *val = (wchar_t *)v;

@@ -324,7 +324,7 @@ static void complete_free_entry( complete_entry *c )
 /**
    Free hash key and hash value
 */
-static void clear_hash_entry( const void *key, const void *data )
+static void clear_hash_entry( void *key, void *data )
 {
 	free( (void *)key );
 	free( (void *)data );
@@ -918,7 +918,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 				}
 			}
 
-			al_foreach( &l, (void (*)(const void *))&free );
+			al_foreach( &l, &free );
 			al_destroy( &l );
 		}
 
@@ -1223,7 +1223,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 
 	hash_destroy( &lookup );
 	al_foreach( &list,
-				(void(*)(const void *))&free );
+				&free );
 	al_destroy( &list );
 	free( lookup_cmd );
 }
@@ -1454,7 +1454,7 @@ static void complete_from_args( const wchar_t *str,
 
 	copy_strings_with_prefix( comp_out, str, desc, 0, &possible_comp );
 
-	al_foreach( &possible_comp, (void (*)(const void *))&free );
+	al_foreach( &possible_comp, &free );
 	al_destroy( &possible_comp );
 }
 

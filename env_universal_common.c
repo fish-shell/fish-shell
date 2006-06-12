@@ -116,8 +116,8 @@ void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const w
 /**
    Free both key and data
 */
-static void erase( const void *key,
-				   const void *data )
+static void erase( void *key,
+				   void *data )
 {
 	free( (void *)key );
 	free( (void *)data );
@@ -205,8 +205,8 @@ static void remove_entry( wchar_t *name )
 	void *k, *v;
 	hash_remove( &env_universal_var, 
 				 name,
-				 (const void **)&k,
-				 (const void **)&v );
+				 &k,
+				 &v );
 	free( k );
 	free( v );
 }
@@ -498,8 +498,8 @@ message_t *create_message( int type,
    Function used with hash_foreach to insert keys of one table into
    another
 */
-static void add_key_to_hash( const void *key, 
-							 const void *data,
+static void add_key_to_hash( void *key, 
+							 void *data,
 							 void *aux )
 {
 	var_uni_entry_t *e = (var_uni_entry_t *)data;
@@ -546,8 +546,8 @@ int env_universal_common_get_export( const wchar_t *name )
    \param v the variable value
    \param q the queue to add the message to
 */
-static void enqueue( const void *k,
-					 const void *v,
+static void enqueue( void *k,
+					 void *v,
 					 void *q)
 {
 	const wchar_t *key = (const wchar_t *)k;

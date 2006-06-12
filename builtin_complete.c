@@ -517,7 +517,7 @@ int builtin_complete( wchar_t **argv )
 					sb_printf( sb_out, L"%ls\n", next );
 				}
 			
-				al_foreach( &comp, (void (*)(const void *))&free );
+				al_foreach( &comp, &free );
 				al_destroy( &comp );
 				recursion_level--;
 			}
@@ -569,8 +569,8 @@ int builtin_complete( wchar_t **argv )
 		}	
 	}
 	
-	al_foreach( &cmd, (void (*)(const void *))&free );
-	al_foreach( &path, (void (*)(const void *))&free );
+	al_foreach( &cmd, &free );
+	al_foreach( &path, &free );
 
 	al_destroy( &cmd );
 	al_destroy( &path );

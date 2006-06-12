@@ -660,7 +660,7 @@ void reader_write_title()
 	}
 	proc_pop_interactive();
 		
-	al_foreach( &l, (void (*)(const void *))&free );
+	al_foreach( &l, &free );
 	al_destroy( &l );
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 }
@@ -804,7 +804,7 @@ static void write_prompt()
 	if( data->exec_prompt )
 	{
 
-		al_foreach( &prompt_list, (void (*)(const void *))&free );
+		al_foreach( &prompt_list, &free );
 		al_truncate( &prompt_list, 0 );
 
 		if( data->prompt )
@@ -814,7 +814,7 @@ static void write_prompt()
 			if( exec_subshell( data->prompt, &prompt_list ) == -1 )
 			{
 				/* If executing the prompt fails, make sure we at least don't print any junk */
-				al_foreach( &prompt_list, (void (*)(const void *))&free );
+				al_foreach( &prompt_list, &free );
 				al_destroy( &prompt_list );
 				al_init( &prompt_list );
 			}
@@ -1674,7 +1674,7 @@ static void reader_interactive_init()
 static void reader_interactive_destroy()
 {
 	kill_destroy();
-	al_foreach( &prompt_list, (void (*)(const void *))&free );
+	al_foreach( &prompt_list, &free );
 	al_destroy( &prompt_list );
 
 	writestr( L"\n" );
@@ -1776,7 +1776,7 @@ static void reset_token_history()
 
 	data->token_history_pos = -1;
 	data->search_pos=0;
-	al_foreach( &data->search_prev, (void (*)(const void *))&free );
+	al_foreach( &data->search_prev, &free );
 	al_truncate( &data->search_prev, 0 );
 	al_push( &data->search_prev, wcsdup( data->search_buff ) );
 }
@@ -2172,7 +2172,7 @@ void reader_pop()
 	/*
 	  Clean up after history search
 	*/
-	al_foreach( &n->search_prev, (void (*)(const void *))&free );
+	al_foreach( &n->search_prev, &free );
 	al_destroy( &n->search_prev );
     free( (void *)n->token_history_buff);
 
@@ -2438,7 +2438,7 @@ wchar_t *reader_readline()
 
 		if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
 		{
-			al_foreach( &comp, (void (*)(const void *))&free );
+			al_foreach( &comp, &free );
 			al_truncate( &comp, 0 );
 			comp_empty = 1;
 		}
@@ -2523,7 +2523,7 @@ wchar_t *reader_readline()
 				if( (comp_empty =
 					 handle_completions( &comp ) ) )
 				{
-					al_foreach( &comp, (void (*)(const void *))&free );
+					al_foreach( &comp, &free );
 					al_truncate( &comp, 0 );
 				}
 

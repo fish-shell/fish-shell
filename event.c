@@ -627,7 +627,7 @@ void event_destroy()
 
 	if( events )
 	{
-		al_foreach( events, (void (*)(const void *))&event_free );
+		al_foreach( events, (void (*)(void *))&event_free );
 		al_destroy( events );
 		free( events );		
 		events=0;
@@ -635,7 +635,7 @@ void event_destroy()
 
 	if( killme )
 	{
-		al_foreach( killme, (void (*)(const void *))&event_free );
+		al_foreach( killme, (void (*)(void *))&event_free );
 		al_destroy( killme );
 		free( killme );		
 		killme=0;		
@@ -647,7 +647,7 @@ void event_free( event_t *e )
 	/*
 	  When apropriate, we clear the argument vector
 	*/
-	al_foreach( &e->arguments, (void (*)(const void *))&free );
+	al_foreach( &e->arguments, &free );
 	al_destroy( &e->arguments );
 
 	free( (void *)e->function_name );

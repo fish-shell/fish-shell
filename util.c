@@ -175,8 +175,8 @@ int q_empty( dyn_queue_t *q )
 /* Hash table functions */
 
 void hash_init2( hash_table_t *h,
-				int (*hash_func)(const void *key),
-				 int (*compare_func)(const void *key1, const void *key2),
+				int (*hash_func)(void *key),
+				 int (*compare_func)(void *key1, void *key2),
 				 size_t capacity)
 {
 	int i;
@@ -192,8 +192,8 @@ void hash_init2( hash_table_t *h,
 }
 
 void hash_init( hash_table_t *h,
-				int (*hash_func)(const void *key),
-				int (*compare_func)(const void *key1, const void *key2) )
+				int (*hash_func)(void *key),
+				int (*compare_func)(void *key1, void *key2) )
 {
 	h->arr = 0;
 	h->size = 0;
@@ -213,7 +213,7 @@ void hash_destroy( hash_table_t *h )
    \return index in the table, or to the first free index if the key is not in the table
 */
 static int hash_search( hash_table_t *h,
-						const void *key )
+						void *key )
 {
 	int hv;
 	int pos;
@@ -290,38 +290,38 @@ int hash_put( hash_table_t *h,
 		}
 	}
 
-	pos = hash_search( h, key );
+	pos = hash_search( h, (void *)key );
 
 	if( h->arr[pos].key == 0 )
 	{
 		h->count++;
 	}
 
-	h->arr[pos].key = key;
-	h->arr[pos].data = data;
+	h->arr[pos].key = (void *)key;
+	h->arr[pos].data = (void *)data;
 	return 1;
 }
 
-const void *hash_get( hash_table_t *h,
-					  const void *key )
+void *hash_get( hash_table_t *h,
+				const void *key )
 {
 	if( !h->count )
 		return 0;
 	
-	int pos = hash_search( h, key );	
+	int pos = hash_search( h, (void *)key );	
 	if( h->arr[pos].key == 0 )
 		return 0;
 	else
 		return h->arr[pos].data;
 }
 
-const void *hash_get_key( hash_table_t *h,
-						  const void *key )
+void *hash_get_key( hash_table_t *h,
+					const void *key )
 {	
 	if( !h->count )
 		return 0;
 	
-	int pos = hash_search( h, key );
+	int pos = hash_search( h, (void *)key );
 	if( h->arr[pos].key == 0 )
 		return 0;
 	else
@@ -335,8 +335,8 @@ int hash_get_count( hash_table_t *h)
 
 void hash_remove( hash_table_t *h,
 				  const void *key,
-				  const void **old_key,
-				  const void **old_val )
+				  void **old_key,
+				  void **old_val )
 {
 	if( !h->count )
 	{
@@ -348,7 +348,7 @@ void hash_remove( hash_table_t *h,
 		return;
 	}
 
-	int pos = hash_search( h, key );
+	int pos = hash_search( h, (void *)key );
 	int next_pos;
 
 	if( h->arr[pos].key == 0 )
@@ -407,15 +407,15 @@ int hash_contains( hash_table_t *h,
 	if( !h->count )
 		return 0;
 	
-	int pos = hash_search( h, key );
+	int pos = hash_search( h, (void *)key );
 	return h->arr[pos].key != 0;
 }
 
 /**
    Push hash value into array_list_t
 */
-static void hash_put_data( const void *key,
-						   const void *data,
+static void hash_put_data( void *key,
+						   void *data,
 						   void *al )
 {
 	al_push( (array_list_t *)al,
@@ -432,7 +432,7 @@ void hash_get_data( hash_table_t *h,
 /**
    Push hash key into array_list_t
 */
-static void hash_put_key( const void *key, const void *data, void *al )
+static void hash_put_key( void *key, void *data, void *al )
 {
 	al_push( (array_list_t *)al, key );
 }
@@ -445,7 +445,7 @@ void hash_get_keys( hash_table_t *h,
 }
 
 void hash_foreach( hash_table_t *h,
-				   void (*func)(const void *, const void *) )
+				   void (*func)( void *, void *) )
 {
 	int i;
 	for( i=0; i<h->size; i++ )
@@ -458,7 +458,7 @@ void hash_foreach( hash_table_t *h,
 }
 
 void hash_foreach2( hash_table_t *h,
-					void (*func)( const void *, const void *, void * ),
+					void (*func)( void *, void *, void * ),
 					void *aux )
 {
 	int i;
@@ -472,7 +472,7 @@ void hash_foreach2( hash_table_t *h,
 }
 
 
-int hash_str_cmp( const void *a, const void *b )
+int hash_str_cmp( void *a, void *b )
 {
 	return strcmp((char *)a,(char *)b) == 0;
 }
@@ -486,7 +486,7 @@ static uint rotl5( uint in )
 }
 
 
-int hash_str_func( const void *data )
+int hash_str_func( void *data )
 {
 	int res = 0x67452301u;
 	const char *str = data;	
@@ -497,7 +497,7 @@ int hash_str_func( const void *data )
 	return res;
 }
 
-int hash_wcs_func( const void *data )
+int hash_wcs_func( void *data )
 {
 	int res = 0x67452301u;
 	const wchar_t *str = data;	
@@ -509,12 +509,12 @@ int hash_wcs_func( const void *data )
 }
 
 
-int hash_wcs_cmp( const void *a, const void *b )
+int hash_wcs_cmp( void *a, void *b )
 {
 	return wcscmp((wchar_t *)a,(wchar_t *)b) == 0;
 }
 
-int hash_ptr_func( const void *data )
+int hash_ptr_func( void *data )
 {
 	return (int)(long) data;
 }
@@ -522,8 +522,8 @@ int hash_ptr_func( const void *data )
 /**
    Hash comparison function suitable for direct pointer comparison
 */
-int hash_ptr_cmp( const void *a,
-                  const void *b )
+int hash_ptr_cmp( void *a,
+                  void *b )
 {
 	return a == b;
 }
@@ -691,7 +691,7 @@ int al_push( array_list_t *l, const void *o )
 		l->arr = tmp;
 		l->size = new_size;		
 	}
-	l->arr[l->pos++] = o;
+	l->arr[l->pos++] = (void *)o;
 	return 1;
 }
 
@@ -715,7 +715,7 @@ int al_set( array_list_t *l, int pos, const void *o )
 		return 0;
 	if( pos < l->pos )
 	{
-		l->arr[pos] = o;
+		l->arr[pos] = (void *)o;
 		return 1;
 	}
 	old_pos=l->pos;
@@ -734,7 +734,7 @@ int al_set( array_list_t *l, int pos, const void *o )
 	return 0;	
 }
 
-const void *al_get( array_list_t *l, int pos )
+void *al_get( array_list_t *l, int pos )
 {
 	if( pos < 0 )
 		return 0;
@@ -748,12 +748,12 @@ void al_truncate( array_list_t *l, int new_sz )
 	l->pos = new_sz;
 }
 
-const void *al_pop( array_list_t *l )
+void *al_pop( array_list_t *l )
 {
-	const void *e = l->arr[--l->pos];
+	void *e = l->arr[--l->pos];
 	if( (l->pos*3 < l->size) && (l->size < MIN_SIZE) )
 	{
-		const void ** old_arr = l->arr;
+		void ** old_arr = l->arr;
 		int old_size = l->size;
 		l->size = l->size/2;
 		l->arr = realloc( l->arr, sizeof(void*)*l->size );
@@ -766,7 +766,7 @@ const void *al_pop( array_list_t *l )
 	return e;
 }
 
-const void *al_peek( array_list_t *l )
+void *al_peek( array_list_t *l )
 {
 
 	return l->pos>0?l->arr[l->pos-1]:0;
@@ -783,14 +783,14 @@ int al_get_count( array_list_t *l )
 	return l->pos;
 }
 
-void al_foreach( array_list_t *l, void (*func)( const void * ))
+void al_foreach( array_list_t *l, void (*func)( void * ))
 {
 	int i;
 	for( i=0; i<l->pos; i++ )
 		func( l->arr[i] );
 }
 
-void al_foreach2( array_list_t *l, void (*func)( const void *, void *), void *aux)
+void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux)
 {
 	int i;
 	for( i=0; i<l->pos; i++ )

@@ -837,7 +837,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 							}
 						}
 						/* Free remaining strings in list l and truncate it */
-						al_foreach( &var_item_list, (void (*)(const void *))&free );
+						al_foreach( &var_item_list, &free );
 						al_truncate( &var_item_list, 0 );
 						/* Add items from list idx back to list l */
 						al_push_all( &var_item_list, var_idx_list );
@@ -1163,7 +1163,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 
 	if( exec_subshell( subcmd, &sub_res)==-1 )
 	{
-		al_foreach( &sub_res, (void (*)(const void *))&free );
+		al_foreach( &sub_res, &free );
 		al_destroy( &sub_res );
 		free( subcmd );
 		return 0;
@@ -1202,7 +1202,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 
 	al_destroy( &sub_res );
 
-	al_foreach( &tail_expand, (void (*)(const void *))&free );
+	al_foreach( &tail_expand, &free );
 	al_destroy( &tail_expand );
 
 	free( subcmd );
@@ -1630,7 +1630,7 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
 		}
 	}
 
-	al_foreach( &l, (void(*)(const void *))&free );
+	al_foreach( &l, &free );
 	al_destroy( &l );
 
 	halloc_register( context, one );

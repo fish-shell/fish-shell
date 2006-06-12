@@ -745,10 +745,10 @@ int builtin_set( wchar_t **argv )
 			}			
 		}
 
-		al_foreach( &result, (void (*)(const void *))&free );
+		al_foreach( &result, &free );
 		al_destroy( &result );
 
-		al_foreach( &indexes, (void (*)(const void *))&free );
+		al_foreach( &indexes, &free );
 		al_destroy(&indexes);
 		al_destroy(&values);
 		

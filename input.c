@@ -1,5 +1,5 @@
 /** \file input.c
-	
+a	
 Functions for reading a character of input from stdin, using the
 inputrc information for key bindings.
 
@@ -1411,7 +1411,7 @@ int input_init()
 /**
    Free memory used by the specified mapping
 */
-static void destroy_mapping( const void *key, const void *val )
+static void destroy_mapping( void *key, void *val )
 {
 	int i;
 	array_list_t *mappings = (array_list_t *)val;

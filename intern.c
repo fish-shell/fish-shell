@@ -100,7 +100,7 @@ const wchar_t *intern_static( const wchar_t *in )
 /**
    Free the specified key/value pair. Should only be called by intern_free_all at shutdown
 */
-static void clear_value( const void *key, const void *data )
+static void clear_value( void *key, void *data )
 {
 	debug( 3,  L"interned string: '%ls'", data );	
 	free( (void *)data );

@@ -433,7 +433,7 @@ void parse_util_token_extent( const wchar_t *buff,
 /**
    Free hash value, but not hash key
 */
-static void clear_hash_value( const void *key, const void *data )
+static void clear_hash_value( void *key, void *data )
 {
 	free( (void *)data );
 }
@@ -441,7 +441,7 @@ static void clear_hash_value( const void *key, const void *data )
 /**
    Part of the autoloader cleanup 
 */
-static void clear_loaded_entry( const void *key, const void *data )
+static void clear_loaded_entry( void *key, void *data )
 {
 	hash_table_t *loaded = (hash_table_t *)data;
 	hash_foreach( loaded,
@@ -474,7 +474,7 @@ void parse_util_load_reset( const wchar_t *path_var )
 	if( all_loaded )
 	{
 		void *key, *data;
-		hash_remove( all_loaded, path_var, (const void **)&key, (const void **)&data );
+		hash_remove( all_loaded, path_var, &key, &data );
 		if( key )
 			clear_loaded_entry( key, data );
 	}
@@ -622,7 +622,7 @@ int parse_util_load( const wchar_t *cmd,
 		hash_put( loaded, intern( cmd ), tm );
 	}
 
-	al_foreach( path_list, (void (*)(const void *))&free );
+	al_foreach( path_list, &free );
 	al_truncate( path_list, 0 );
 
 	return reloaded;	

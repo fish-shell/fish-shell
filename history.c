@@ -360,7 +360,7 @@ static void history_save()
    Save the specified mode to file
 */
 
-static void history_destroy_mode( const void *name, const void *link )
+static void history_destroy_mode( void *name, void *link )
 {
 	mode_name = (wchar_t *)name;
 	history_data *d = (history_data *)link;

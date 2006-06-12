@@ -204,9 +204,10 @@ extern io_data_t *block_io;
   Finds the full path of an executable in a newly allocated string.
   
   \param cmd The name of the executable.
+  \param context the halloc context to use for memory allocations
   \return 0 if the command can not be found, the path of the command otherwise.
 */
-wchar_t *get_filename( const wchar_t *cmd );
+wchar_t *parser_get_filename( void *context, const wchar_t *cmd );
 
 /**
   Evaluate the expressions contained in cmd.
@@ -337,7 +338,7 @@ int parser_test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t 
    directories i the CDPATH, the full path is returned. If no
    directory can be found, 0 is returned.
 */
-wchar_t *parser_cdpath_get( wchar_t *in );
+wchar_t *parser_cdpath_get( void *context, wchar_t *in );
 
 /**
    Tell the parser that the specified function may not be run if not

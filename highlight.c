@@ -30,6 +30,8 @@
 #include "common.h"
 #include "complete.h"
 #include "output.h"
+#include "halloc.h"
+#include "halloc_util.h"
 
 static void highlight_universal_internal( wchar_t * buff, 
 										  int *color, 
@@ -381,10 +383,24 @@ void highlight_shell( wchar_t * buff,
 	int i;
 	int last_val;
 	wchar_t *last_cmd=0;
-	int len = wcslen(buff);
+	int len;
+
+	void *context;
+	
+	if( !buff || !color )
+	{
+		debug( 0, L"%s called with null input", __func__ );
+		return;
+	}
+
+	
+
+	len = wcslen(buff);
 	
 	if( !len )
 		return;
+	
+	context = halloc( 0, 0 );
 	
 	for( i=0; buff[i] != 0; i++ )
 		color[i] = -1;
@@ -430,7 +446,7 @@ void highlight_shell( wchar_t * buff,
 					/*
 					  Command. First check that the command actually exists.
 					*/
-					wchar_t *cmd = expand_one( 0, 
+					wchar_t *cmd = expand_one( context, 
 											   wcsdup(tok_last( &tok )),
 											   EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
 					
@@ -491,15 +507,13 @@ void highlight_shell( wchar_t * buff,
 							/*
 							  Check if this is a regular command
 							*/
-							is_cmd |= !!(tmp=get_filename( cmd ));
-							free(tmp);
+							is_cmd |= !!(tmp=parser_get_filename( context, cmd ));
 
 							/* 
 							   Could not find the command. Maybe it is
 							   a path for a implicit cd command.
 							*/
-							is_cmd |= !!(tmp=parser_cdpath_get( cmd ));
-							free( tmp );
+							is_cmd |= !!(tmp=parser_cdpath_get( context, cmd ));
 														
 							if( is_cmd )
 							{								
@@ -513,13 +527,10 @@ void highlight_shell( wchar_t * buff,
 							}
 							had_cmd = 1;
 						}
-						free(cmd);
 
 						if( had_cmd )
 						{
-							if( last_cmd )
-								free( last_cmd );
-							last_cmd = wcsdup( tok_last( &tok ) );						
+							last_cmd = halloc_wcsdup( context, tok_last( &tok ) );						
 						}
 					}
 
@@ -553,7 +564,7 @@ void highlight_shell( wchar_t * buff,
 				{
 					case TOK_STRING:
 					{
-						target = expand_one( 0, wcsdup( tok_last( &tok ) ), EXPAND_SKIP_SUBSHELL);
+						target = expand_one( context, wcsdup( tok_last( &tok ) ), EXPAND_SKIP_SUBSHELL);
 						/*
 						  Redirect filename may contain a subshell. 
 						  If so, it will be ignored/not flagged.
@@ -571,7 +582,7 @@ void highlight_shell( wchar_t * buff,
 
 				if( target != 0 )
 				{
-					wchar_t *dir = wcsdup( target );
+					wchar_t *dir = halloc_wcsdup( context, target );
 					wchar_t *dir_end = wcsrchr( dir, L'/' );
 					struct stat buff;
 					/* 
@@ -587,9 +598,8 @@ void highlight_shell( wchar_t * buff,
 							if( error )
 								al_push( error, wcsdupcat2( L"Directory \'", dir, L"\' does not exist", 0 ) );
 							
-						}						
+						}
 					}
-					free( dir );
 					
 					/*
 					  If the file is read from or appended to, check
@@ -605,7 +615,6 @@ void highlight_shell( wchar_t * buff,
 								al_push( error, wcsdupcat2( L"File \'", target, L"\' does not exist", 0 ) );
 						}
 					}
-					free( target );					
 				}
 				break;
 			}
@@ -655,16 +664,13 @@ void highlight_shell( wchar_t * buff,
 		}
 	}
 
-	if( last_cmd )
-		free( last_cmd );
-	
 	tok_destroy( &tok );	
 			 
 	/*
 	  Locate and syntax highlight subshells recursively
 	*/
 
-	wchar_t *buffcpy = wcsdup( buff );
+	wchar_t *buffcpy = halloc_wcsdup( context, buff );
 	wchar_t *subpos=buffcpy;
 	int done=0;
 	
@@ -694,8 +700,6 @@ void highlight_shell( wchar_t * buff,
 		subpos = end+1;		
 		
 	}
-	free( buffcpy);
-	
 
 	last_val=0;
 	for( i=0; buff[i] != 0; i++ )
@@ -719,6 +723,9 @@ void highlight_shell( wchar_t * buff,
 			color[i]=0;
 		}
 	}
+
+	halloc_free( context );
+	
 }
 
 /**

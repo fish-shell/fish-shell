@@ -71,7 +71,7 @@ void *halloc_register( void *context, void *data )
 	return data;
 }
 
-wchar_t *halloc_wcsdup( void *context, wchar_t *in )
+wchar_t *halloc_wcsdup( void *context, const wchar_t *in )
 {
 	size_t len=wcslen(in);
 	wchar_t *out = halloc( context, sizeof( wchar_t)*(len+1));

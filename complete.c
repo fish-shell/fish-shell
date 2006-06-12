@@ -41,6 +41,7 @@
 #include "intern.h"
 #include "translate.h"
 #include "parse_util.h"
+#include "halloc.h"
 #include "halloc_util.h"
 #include "wutil.h"
 
@@ -557,18 +558,19 @@ void complete_remove( const wchar_t *cmd,
 }
 
 /**
-   Find the full path and commandname from a command string.  the
-   result of \c pathp must be freed by the caller, the result of \c
-   cmdp must not be freed by the caller.
+   Find the full path and commandname from a command string. Both
+   pointers are allocated using halloc and will be free'd when\c
+   context is halloc_free'd.
 */
-static void parse_cmd_string( const wchar_t *str,
+static void parse_cmd_string( void *context, 
+							  const wchar_t *str,
 							  wchar_t **pathp,
 							  wchar_t **cmdp )
 {
     wchar_t *cmd, *path;
 
 	/* Get the path of the command */
-	path = get_filename( str );
+	path = parser_get_filename( context, str );
 	if( path == 0 )
 	{
 		/**
@@ -611,6 +613,8 @@ int complete_is_valid_option( const wchar_t *str,
 	int gnu_opt_len=0;
 	char *short_validated;
 
+	void *context;
+	
 	if( !str || !opt )
 	{
 		debug( 0, L"%s called with null input", __func__ );
@@ -652,11 +656,15 @@ int complete_is_valid_option( const wchar_t *str,
 		return 0;
 	}
 
-	if( !(short_validated = malloc( wcslen( opt ) )))
+	context = halloc( 0, 0 );
+
+	if( !(short_validated = halloc( context, wcslen( opt ) )))
 	{
 		die_mem();
 	}
 	
+
+
 	memset( short_validated, 0, wcslen( opt ) );
 
 	hash_init( &gnu_match_hash,
@@ -677,7 +685,7 @@ int complete_is_valid_option( const wchar_t *str,
 		}
 	}
 	
-	parse_cmd_string( str, &path, &cmd );
+	parse_cmd_string( context, str, &path, &cmd );
 
 	/*
 	  Make sure completions are loaded for the specified command
@@ -776,7 +784,6 @@ int complete_is_valid_option( const wchar_t *str,
 			}
 		}
 	}
-	free( path );
 
 	if( authorative )
 	{
@@ -830,8 +837,9 @@ int complete_is_valid_option( const wchar_t *str,
 	}
 
 	hash_destroy( &gnu_match_hash );
-	free( short_validated );
 
+	halloc_free( context );
+	
 	return (authorative && found_match)?opt_found:1;
 }
 
@@ -1567,12 +1575,13 @@ static int complete_param( wchar_t *cmd_orig,
 	wchar_t *cmd, *path;
 	int use_common=1, use_files=1;
 
-	parse_cmd_string( cmd_orig, &path, &cmd );
+	void *context = halloc( 0, 0 );
+	
+	parse_cmd_string( context, cmd_orig, &path, &cmd );
 
 	complete_load( cmd, 1 );
 
 	al_init( &matches );
-
 
 	for( i=first_entry; i; i=i->next )
 	{
@@ -1696,11 +1705,10 @@ static int complete_param( wchar_t *cmd_orig,
 					*/
 					if( o->long_opt[0] != L'\0' )
 					{
-						string_buffer_t whole_opt;
-						sb_init( &whole_opt );
-						sb_append2( &whole_opt, o->old_mode?L"-":L"--", o->long_opt, (void *)0 );
+						string_buffer_t *whole_opt = sb_halloc( context );
+						sb_append2( whole_opt, o->old_mode?L"-":L"--", o->long_opt, (void *)0 );
 
-						if( wcsncmp( str, (wchar_t *)whole_opt.buff, wcslen(str) )==0)
+						if( wcsncmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0)
 						{
 							/*
 							  If the option requires arguments, add
@@ -1713,7 +1721,7 @@ static int complete_param( wchar_t *cmd_orig,
 							if( o->old_mode || !(o->result_mode & NO_COMMON ) )
 							{
 								al_push( comp_out,
-										 wcsdupcat2( &((wchar_t *)whole_opt.buff)[wcslen(str)], 
+										 wcsdupcat2( &((wchar_t *)whole_opt->buff)[wcslen(str)], 
 													 COMPLETE_SEP_STR, 
 													 C_(o->desc), 
 													 (void *)0) );
@@ -1722,20 +1730,21 @@ static int complete_param( wchar_t *cmd_orig,
 							if( !o->old_mode && ( wcslen(o->comp) || (o->result_mode & NO_COMMON ) ) )
 							{
 								al_push( comp_out,
-										 wcsdupcat2( &((wchar_t *)whole_opt.buff)[wcslen(str)], 
+										 wcsdupcat2( &((wchar_t *)whole_opt->buff)[wcslen(str)], 
 													 L"=", 
 													 COMPLETE_SEP_STR, 
 													 C_(o->desc), 
 													 (void *)0) );
 							}
 						}
-						sb_destroy( &whole_opt );
 					}
 				}
 			}
 		}
 	}
-	free( path );
+	
+	halloc_free( context );
+	
 	return use_files;
 }
 

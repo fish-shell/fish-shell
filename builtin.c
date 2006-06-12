@@ -1965,7 +1965,8 @@ static int builtin_cd( wchar_t **argv )
 	wchar_t *dir_in;
 	wchar_t *dir;
 	int res=0;
-
+	void *context = halloc( 0, 0 );
+	
 	if( argv[1]  == 0 )
 	{
 		dir_in = env_get( L"HOME" );
@@ -1979,7 +1980,7 @@ static int builtin_cd( wchar_t **argv )
 	else
 		dir_in = argv[1];
 
-	dir = parser_cdpath_get( dir_in );
+	dir = parser_cdpath_get( context, dir_in );
 
 	if( !dir )
 	{
@@ -1994,10 +1995,9 @@ static int builtin_cd( wchar_t **argv )
 						(void *)0 );
 		}
 		
-		return 1;
+		res = 1;
 	}
-
-	if( wchdir( dir ) != 0 )
+	else if( wchdir( dir ) != 0 )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: '%ls' is not a directory\n" ),
@@ -2010,18 +2010,15 @@ static int builtin_cd( wchar_t **argv )
 						(void *)0 );
 		}
 		
-		free( dir );
-
-		return 1;
+		res = 1;
 	}
-
-	if( !set_pwd(L"PWD") )
+	else if( !set_pwd(L"PWD") )
 	{
 		res=1;
 		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );
 	}
 
-	free( dir );
+	halloc_free( context );
 
 	return res;
 }

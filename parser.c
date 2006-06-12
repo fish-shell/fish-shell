@@ -594,7 +594,7 @@ static const wchar_t *parser_find_end( const wchar_t * buff )
 
 }
 
-wchar_t *parser_cdpath_get( wchar_t *dir )
+wchar_t *parser_cdpath_get( void *context, wchar_t *dir )
 {
 	wchar_t *res = 0;
 
@@ -609,7 +609,7 @@ wchar_t *parser_cdpath_get( wchar_t *dir )
 		{
 			if( S_ISDIR(buf.st_mode) )
 			{
-				res = wcsdup( dir );
+				res = halloc_wcsdup( context, dir );
 			}
 		}
 	}
@@ -664,11 +664,11 @@ wchar_t *parser_cdpath_get( wchar_t *dir )
 				if( S_ISDIR(buf.st_mode) )
 				{
 					res = whole_path;
+					halloc_register( context, whole_path );					
 					break;
 				}
 			}
 			free( whole_path );
-
 		}
 		free( path_cpy );
 	}
@@ -707,7 +707,7 @@ void error( int ec, int p, const wchar_t *str, ... )
 
 }
 
-wchar_t *get_filename( const wchar_t *cmd )
+wchar_t *parser_get_filename( void *context, const wchar_t *cmd )
 {
 	wchar_t *path;
 
@@ -717,7 +717,7 @@ wchar_t *get_filename( const wchar_t *cmd )
 		return 0;
 	}
 	
-	debug( 3, L"get_filename( '%ls' )", cmd );
+	debug( 3, L"parser_get_filename( '%ls' )", cmd );
 
 	if(wcschr( cmd, L'/' ) != 0 )
 	{
@@ -726,7 +726,7 @@ wchar_t *get_filename( const wchar_t *cmd )
 			struct stat buff;
 			wstat( cmd, &buff );
 			if( S_ISREG(buff.st_mode) )
-				return wcsdup( cmd );
+				return halloc_wcsdup( context, cmd );
 			else
 				return 0;
 		}
@@ -788,6 +788,7 @@ wchar_t *get_filename( const wchar_t *cmd )
 				if( S_ISREG(buff.st_mode) )
 				{
 					free( path_cpy );
+					halloc_register( context, new_cmd );
 					return new_cmd;
 				}
 			}
@@ -2035,7 +2036,7 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
-				p->actual_cmd = halloc_register(j, get_filename( (wchar_t *)al_get( args, 0 ) ));
+				p->actual_cmd = parser_get_filename( j, (wchar_t *)al_get( args, 0 ) );
 				
 				/*
 				  Check if the specified command exists
@@ -2049,11 +2050,10 @@ static int parse_job( process_t *p,
 					  implicit command.
 					*/
 					wchar_t *pp =
-						parser_cdpath_get( (wchar_t *)al_get( args, 0 ) );
+						parser_cdpath_get( j, (wchar_t *)al_get( args, 0 ) );
 					if( pp )
 					{
 						wchar_t *tmp;
-						free( pp );
 
 						tmp = (wchar_t *)al_get( args, 0 );
 						al_truncate( args, 0 );

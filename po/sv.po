@@ -848,7 +848,7 @@ msgstr "%s: Okänt fel\n"
 #, c-format
 msgid "If this error can be reproduced, please send a bug report to %s."
 msgstr ""
-"Om du kan reproducera detta fel, var vänlig skicka en buggrapport till %s"
+"Om du kan reproducera detta fel, var vänlig skicka en buggrapport till %s."
 
 #: parser.c:68
 msgid "This command can not be used in a pipeline"
@@ -1097,13 +1097,13 @@ msgid ""
 "Variables may not be used as commands. Instead, define a function like "
 "'function %ls; %ls $argv; end'. See the help section for the function "
 "command by typing 'help function'."
-msgstr ""
+msgstr "Variabler får inte användas som kommandon. Definera istället en funktion, t.ex. ”function %ls; %ls $argv; end”. Se hjälpsektionen för function-kommandot genom att skriva ”help function”"
 
 #: parser.c:2051
 msgid ""
 "Variables may not be used as commands. Instead, define a function. See the "
 "help section for the function command by typing 'help function'."
-msgstr ""
+msgstr "Variabler får inte användas som kommandon. Definera istället en funktion. Se hjälpsektionen för function-kommandot genom att skriva ”help function”"
 
 #: parser.c:2058
 #, c-format
@@ -3391,25 +3391,25 @@ msgstr ""
 
 #: share/completions/cdrecord.fish:77
 msgid "The TOC type for the disk is set to CDI, with XA only"
-msgstr ""
+msgstr "Innehållsförteckningen är satt till CDI, med enbart XA"
 
 #: share/completions/cdrecord.fish:78
 msgid "Use the ISO-9660 file system size as the size of the next track"
-msgstr ""
+msgstr "Använd ISO-9660-filsystemets storlek som storlek på nästa spår"
 
 #: share/completions/cdrecord.fish:79
 msgid ""
 "15 sectors of zeroed data will be added to the end of this and each "
 "subsequent data track"
-msgstr ""
+msgstr "Lägg till 15 sektorer av nolldata till slutet av varje efterföljande dataspår"
 
 #: share/completions/cdrecord.fish:80
 msgid "Set the amount of data to be appended as padding to the next track"
-msgstr ""
+msgstr "Ange mängden data som skall läggas till som paddning till nästa spår"
 
 #: share/completions/cdrecord.fish:81
 msgid "Do not pad the following tracks - the default"
-msgstr ""
+msgstr "Lägg inte till paddning till de följande spåren - standard"
 
 #: share/completions/cdrecord.fish:82
 msgid ""
@@ -7701,9 +7701,8 @@ msgid "Conform more strictly to the POSIX standard"
 msgstr ""
 
 #: share/completions/patch.fish:27
-#, fuzzy
 msgid "Use style word to quote output names"
-msgstr "Använd portabelt utdataformat"
+msgstr "Använd angiven stil vid citering av utdatanamn"
 
 #: share/completions/patch.fish:28
 msgid "Put rejects into rejectfile instead of the default .rej file"
@@ -9377,64 +9376,63 @@ msgid "Filter through specified program"
 msgstr "Filtrera genom angivet program"
 
 #: share/completions/telnet.fish:9 share/completions/telnet.fish:14
-msgid "Specifies an 8-bit data path."
+msgid "Specifies an 8-bit data path"
 msgstr "Anger en 8-bitars dataväg"
 
 #: share/completions/telnet.fish:10
-msgid "Do not try to negotiate TELNET BINARY option."
-msgstr ""
+msgid "Do not try to negotiate TELNET BINARY option"
+msgstr "Försök inte förhandla TELNET BINARY-flaggan"
 
 #: share/completions/telnet.fish:11
-msgid "Stops any character from being recognized as an escape character."
-msgstr ""
+msgid "Stops any character from being recognized as an escape character"
+msgstr "Hindra alla tecken från att kännas igen som specialsekvens"
 
 #: share/completions/telnet.fish:12
-msgid "Use local Kerberos authentication, if possible."
-msgstr ""
+msgid "Use local Kerberos authentication, if possible"
+msgstr "Använd lokal kerberosautentisering, om möjligt"
 
 #: share/completions/telnet.fish:13
-msgid "Specifies no automatic login to remote system."
-msgstr ""
+msgid "Specifies no automatic login to remote system"
+msgstr "Försök inte logga in automatiskt på fjärrsystem"
 
 #: share/completions/telnet.fish:15
-msgid "Attempt automatic login."
-msgstr ""
+msgid "Attempt automatic login"
+msgstr "Försök logga in automatiskt på fjärrsystem"
 
 #: share/completions/telnet.fish:16
 msgid "Disables reading user's .telnetrc"
 msgstr "Inaktivera inläsning av användarens .telnetrc"
 
 #: share/completions/telnet.fish:17
-msgid "Sets debug mode."
+msgid "Sets debug mode"
 msgstr "Väljer debugnivå"
 
 #: share/completions/telnet.fish:18
-msgid "Sets IP TOS."
+msgid "Sets IP TOS"
 msgstr ""
 
 #: share/completions/telnet.fish:19
-#, fuzzy
-msgid "Disables atype type of authentication."
-msgstr "Inaktivera vidareskickning av autentiseringsagent"
+msgid "Disables specified type of authentication"
+msgstr "Inaktivera angivna autentiseringstypen"
 
 #: share/completions/telnet.fish:20
-msgid "User login."
+msgid "User login"
 msgstr "Användarinloggning"
 
 #: share/completions/telnet.fish:21
-msgid "Log to tracefile."
+msgid "Log to tracefile"
 msgstr "Logga till spårfil"
 
 #: share/completions/telnet.fish:22
-msgid "Turn on encryption."
+msgid "Turn on encryption"
 msgstr "Slå på kryptering"
 
 #: share/completions/telnet.fish:23
-msgid "User interface similar to rlogin."
+msgid "User interface similar to rlogin"
 msgstr "Användargränssnitt liknande rlogin"
 
 #: share/completions/telnet.fish:24
-msgid "Use Kerberos realm for authentication."
+msgid "Use Kerberos realm for authentication"
 msgstr "Använd Kerberos-realm för autentisering"
 
 #: share/completions/test.fish:4
@@ -11229,7 +11227,7 @@ msgstr "%s: För många argument\\n"
 
 #: share/functions/vared.fish:7
 msgid "Edit variable value"
-msgstr "Redigera variablevärde"
+msgstr "Redigera variabelvärde"
 
 #: share/functions/vared.fish:40
 msgid ""
@@ -11272,8 +11270,3 @@ msgstr "%s: ”%s” är inte ett nummer\\n"
 #~ msgid "%ls: Expected at least two arguments\n"
 #~ msgstr "%ls: Förväntade minst två argument\n"
 
-#~ msgid "Treat all files as text."
-#~ msgstr "Behandla alla filer som text"
-
-#~ msgid "Try to find a smaller set of changes."
-#~ msgstr "Försök hitta en mindre uppsättning ändringar"

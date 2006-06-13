@@ -61,6 +61,11 @@ parts of fish.
 #include "wildcard.h"
 #include "parser.h"
 
+#include "util.c"
+#include "halloc.c"
+#include "halloc_util.c"
+#include "fallback.c"
+
 /**
    The number of milliseconds to wait between polls when attempting to acquire 
    a lockfile

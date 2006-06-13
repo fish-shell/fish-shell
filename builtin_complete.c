@@ -249,7 +249,12 @@ const wchar_t *builtin_complete_get_temporary_buffer()
 	return temporary_buffer;
 }
 
-int builtin_complete( wchar_t **argv )
+/**
+   The complete builtin. Used for specifying programmable
+   tab-completions. Calls the functions in complete.c for any heavy
+   lifting. Defined in builtin_complete.c
+*/
+static int builtin_complete( wchar_t **argv )
 {
 	int res=0;
 	int argc=0;

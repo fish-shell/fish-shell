@@ -150,36 +150,6 @@ int builtin_count_args( wchar_t **argv );
 void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 
 
-/**
-   The set builtin, used for setting variables. Defined in
-   builtin_set.c.
-*/
-int builtin_set(wchar_t **argv);
-
-/**
-   The commandline builtin, used for setting and getting the contents
-   of the commandline. Defined in builtin_commandline.c.
-*/
-int builtin_commandline(wchar_t **argv);
-
-/**
-   The ulimit builtin, used for setting resource limits. Defined in
-   builtin_ulimit.c.
-*/
-int builtin_ulimit(wchar_t **argv);
-
-/**
-   The complete builtin. Used for specifying programmable
-   tab-completions. Calls the functions in complete.c for any heavy
-   lifting. Defined in builtin_complete.c
-*/
-int builtin_complete(wchar_t **argv);
-
-/**
-   The jobs builtin. Used fopr printing running jobs. Defined in builtin_jobs.c.
-*/
-int builtin_jobs(wchar_t **argv);
-
 const wchar_t *builtin_complete_get_temporary_buffer();
 
 /** 
@@ -188,5 +158,14 @@ const wchar_t *builtin_complete_get_temporary_buffer();
 	commands.
 */
 void builtin_wperror( const wchar_t *s);
+
+/**
+   Return the help text for the specified builtin command. Use
+   non-wide characters since wide characters have some issues with
+   string formating escape sequences sometimes.
+
+   \param cmd The command for which to obtain help text
+*/
+char *builtin_help_get( wchar_t *cmd );
 
 #endif

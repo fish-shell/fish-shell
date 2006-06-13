@@ -191,10 +191,6 @@ extern block_t *current_block;
 /** Global event blocks */
 extern event_block_t *global_event_block;
 
-
-/** The current error code */
-extern int error_code;
-
 /**
    Current block level io redirections 
 */

@@ -171,6 +171,7 @@ void proc_destroy()
 
 void proc_set_last_status( int s )
 {
+
 	last_status = s;
 	//	fwprintf( stderr, L"Set last status to %d\n", s );
 }

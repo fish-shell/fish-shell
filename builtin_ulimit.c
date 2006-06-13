@@ -257,7 +257,11 @@ static int set_all( int hard, int soft, rlim_t value )
 	return res;
 }
 
-int builtin_ulimit( wchar_t ** argv )
+/**
+   The ulimit builtin, used for setting resource limits. Defined in
+   builtin_ulimit.c.
+*/
+static int builtin_ulimit( wchar_t ** argv )
 {
 	int hard=0;
 	int soft=0;

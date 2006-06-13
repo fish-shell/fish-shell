@@ -54,7 +54,6 @@
 #include "wgetopt.h"
 #include "sanity.h"
 #include "tokenizer.h"
-#include "builtin_help.h"
 #include "wildcard.h"
 #include "input_common.h"
 #include "input.h"
@@ -66,6 +65,13 @@
 #include "halloc_util.h"
 #include "parse_util.h"
 #include "expand.h"
+
+#include "builtin_help.c"
+#include "builtin_set.c"
+#include "builtin_commandline.c"
+#include "builtin_complete.c"
+#include "builtin_ulimit.c"
+#include "builtin_jobs.c"
 
 /**
    The default prompt for the read command
@@ -2942,8 +2948,6 @@ void builtin_init()
 		hash_put( &builtin, builtin_data[i].name, builtin_data[i].func );
 		intern_static( builtin_data[i].name );
 	}
-	
-	builtin_help_init();
 }
 
 void builtin_destroy()
@@ -2957,7 +2961,6 @@ void builtin_destroy()
 
 	al_destroy( &io_stack );
 	hash_destroy( &builtin );
-	builtin_help_destroy();
 }
 
 int builtin_exists( wchar_t *cmd )

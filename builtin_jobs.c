@@ -158,7 +158,10 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 
 
 
-int builtin_jobs( wchar_t **argv )
+/**
+   The jobs builtin. Used fopr printing running jobs. Defined in builtin_jobs.c.
+*/
+static int builtin_jobs( wchar_t **argv )
 {
 	int argc=0;
 	int found=0;

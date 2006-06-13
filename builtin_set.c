@@ -381,7 +381,7 @@ static void print_variables(int include_values, int esc, int scope)
    The set builtin. Creates, updates and erases environment variables
    and environemnt variable arrays.
 */
-int builtin_set( wchar_t **argv ) 
+static int builtin_set( wchar_t **argv ) 
 {
 	
 	/**

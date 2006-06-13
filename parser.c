@@ -31,7 +31,6 @@ The fish parser. Contains functions for parsing code.
 #include "wildcard.h"
 #include "function.h"
 #include "builtin.h"
-#include "builtin_help.h"
 #include "env.h"
 #include "expand.h"
 #include "reader.h"
@@ -256,10 +255,13 @@ The fish parser. Contains functions for parsing code.
    Size of the error string buffer
 */
 #define ERR_STR_SZ 1024
+
 /** Last error code */
-int error_code;
+static int error_code;
 
 event_block_t *global_event_block=0;
+
+io_data_t *block_io;
 
 /** Position of last error */
 
@@ -287,8 +289,6 @@ static array_list_t *forbidden_function;
    String index where the current job started.
 */
 static int job_start_pos;
-
-io_data_t *block_io;
 
 /**
    List of all profiling data

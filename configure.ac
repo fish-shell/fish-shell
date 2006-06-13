@@ -361,4 +361,4 @@ AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish etc
 AC_OUTPUT
 
 echo "fish is now configured."
-echo "Use 'make' and 'make install' to built and install fish."
+echo "Use 'make' and 'make install' to build and install fish."

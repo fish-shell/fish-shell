@@ -230,7 +230,7 @@ static int get_socket()
 		debug( 0, L"Unable to obtain lock on socket, exiting" );
 		exit( EXIT_FAILURE );
 	}
-	debug( 1, L"Acquired lockfile: %s", lockfile );
+	debug( 4, L"Acquired lockfile: %s", lockfile );
 	
 	local.sun_family = AF_UNIX;
 	strcpy( local.sun_path, sock_name );
@@ -278,7 +278,7 @@ static int get_socket()
 
 unlock:
 	(void)unlink( lockfile );
-	debug( 1, L"Released lockfile: %s", lockfile );
+	debug( 4, L"Released lockfile: %s", lockfile );
 	/*
 	   End critical section protected by lock
 	*/
@@ -406,7 +406,7 @@ void load_or_save( int save)
 	strcat( name, FILE );
 	strcat( name, hostname );
 	
-	debug( 1, L"Open file for %s: '%s'", 
+	debug( 4, L"Open file for %s: '%s'", 
 		   save?"saving":"loading", 
 		   name );
 	
@@ -419,7 +419,7 @@ void load_or_save( int save)
 		wperror( L"open" );
 		return;		
 	}
-	debug( 1, L"File open on fd %d", c.fd );
+	debug( 4, L"File open on fd %d", c.fd );
 
 	sb_init( &c.input );
 	memset (&c.wstate, '\0', sizeof (mbstate_t));
@@ -592,7 +592,7 @@ int main( int argc, char ** argv )
 			}
 			else
 			{
-				debug( 1, L"Connected with new child on fd %d", child_socket );
+				debug( 4, L"Connected with new child on fd %d", child_socket );
 
 				if( fcntl( child_socket, F_SETFL, O_NONBLOCK ) != 0 )
 				{
@@ -649,7 +649,7 @@ int main( int argc, char ** argv )
 		{
 			if( c->killme )
 			{
-				debug( 1, L"Close connection %d", c->fd );
+				debug( 4, L"Close connection %d", c->fd );
 
 				close(c->fd );
 				sb_destroy( &c->input );

@@ -14,6 +14,13 @@
 - \c -f, \c --output-description the output will be the description of each mimetype
 - \c -a, \c --output-action the output will be the default action of each mimetype
 - \c -l, \c --launch launch the default action for the specified file(s)
-- \c -h, \c --help Display a help message and exit
-- \c -v, \c --version Display version number and exit
+- \c -h, \c --help display a help message and exit
+- \c -v, \c --version display version number and exit
+
+The mimedb command is used to query the mimetype database and the
+.desktop files installed on the system in order to find information on
+a file. The information that mimedb can retrive includes the mimetype
+for a file, a description of the type and what its default action
+is. mimedb can also be used to launch the default action for this
+file.
 

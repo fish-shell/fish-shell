@@ -90,7 +90,7 @@ typedef struct
 /**
    Names of all the readline functions supported
 */
-const wchar_t *name_arr[] = 
+static const wchar_t *name_arr[] = 
 {
 	L"beginning-of-line",
 	L"end-of-line",
@@ -127,7 +127,8 @@ const wchar_t *name_arr[] =
 /**
    Description of each supported readline function
 */
-const wchar_t *desc_arr[] =
+/*
+static const wchar_t *desc_arr[] =
 {
 	L"Move to beginning of line",
 	L"Move to end of line",
@@ -160,11 +161,11 @@ const wchar_t *desc_arr[] =
 	L"End of file"
 }
 	;
-
+*/
 /**
    Internal code for each supported readline function
 */
-const wchar_t code_arr[] = 
+static const wchar_t code_arr[] = 
 {
 	R_BEGINNING_OF_LINE,
 	R_END_OF_LINE,

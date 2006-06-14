@@ -33,6 +33,8 @@
 #include "halloc.h"
 #include "halloc_util.h"
 
+#define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
+
 static void highlight_universal_internal( wchar_t * buff, 
 										  int *color, 
 										  int pos, 
@@ -45,39 +47,166 @@ static void highlight_universal_internal( wchar_t * buff,
 static wchar_t *highlight_var[] = 
 {
 	L"fish_color_normal",
-	L"fish_color_command",
-	L"fish_color_redirection",
-	L"fish_color_end",
 	L"fish_color_error",
+	L"fish_color_command",
+	L"fish_color_end",
 	L"fish_color_param",
 	L"fish_color_comment",
 	L"fish_color_match",
 	L"fish_color_search_match",
 	L"fish_color_operator",
 	L"fish_color_escape",
-	L"fish_color_quote"
+	L"fish_color_quote",
+	L"fish_color_redirection",
+	L"fish_color_valid_path"
 }
 	;
 
-#define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
+static int is_potential_path( const wchar_t *path )
+{
+	wchar_t *tilde, *unescaped;
+	wchar_t *in, *out;
+	int has_magic = 0;
+	int res = 0;
+
+	void *context = halloc( 0, 0 );
+
+	tilde = expand_tilde( wcsdup(path) );
+	
+	unescaped = unescape( tilde, 1 );
+//	debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
+	
+	halloc_register( context, unescaped );
+	halloc_register( context, tilde );
+			
+	for( in = out = unescaped; *in; in++ )
+	{
+		switch( *in )
+		{
+			case PROCESS_EXPAND:
+			case VARIABLE_EXPAND:
+			case VARIABLE_EXPAND_SINGLE:
+			case BRACKET_BEGIN:
+			case BRACKET_END:
+			case BRACKET_SEP:
+			{
+				has_magic = 1;
+				break;		
+			}
+
+			case INTERNAL_SEPARATOR:
+			{
+				break;
+			}
+						
+			default:
+			{
+				*(out++) = *in;
+				break;
+			}
+			
+		}
+		
+	}
+	*out = 0;
+	
+	if( !has_magic )
+	{
+		int must_be_dir = 0;
+		DIR *dir;
+		must_be_dir = unescaped[wcslen(unescaped)-1] == L'/';
+		if( must_be_dir )
+		{
+			dir = wopendir( unescaped );
+			res = !!dir;
+			closedir( dir );
+		}
+		else
+		{
+			wchar_t *dir_name, *base;
+			struct wdirent *ent;
+		
+			dir_name = wdirname( halloc_wcsdup(context, unescaped) );
+			base = wbasename( halloc_wcsdup(context, unescaped) );			
+			
+			if( (wcscmp( dir_name, L"/" ) == 0 ) &&
+				(wcscmp( base, L"/" ) == 0 ) )
+			{
+				res = 1;
+			}
+			else if( (dir = wopendir( dir_name )) )
+			{
+				
+				while( (ent = wreaddir( dir )) )
+				{
+					if( wcsncmp( ent->d_name, base, wcslen(base) ) == 0 )
+					{
+						res = 1;
+						break;
+					}
+				}
+						
+				closedir( dir );
+			}
+		}
+		
+	}
+	
+	halloc_free( context );
+		
+	return res;
+	
+}
+
+
 
 int highlight_get_color( int highlight )
 {
+	int i;
+	int idx=0;
+	int result = 0;
+	
 	if( highlight < 0 )
 		return FISH_COLOR_NORMAL;
-	if( highlight >= VAR_COUNT )
+	if( highlight >= (1<<VAR_COUNT) )
 		return FISH_COLOR_NORMAL;
-	
-	wchar_t *val = env_get( highlight_var[highlight]);
-	if( val == 0 )
-		val = env_get( highlight_var[HIGHLIGHT_NORMAL]);
-	
-	if( val == 0 )
+
+	for( i=0; i<(VAR_COUNT-1); i++ )
 	{
-		return FISH_COLOR_NORMAL;
+		if( highlight & (1<<i ))
+		{
+			idx = i;
+			break;
+		}
 	}
+		
+	wchar_t *val = env_get( highlight_var[idx]);
+
+//	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
+
+	if( val == 0 )
+		val = env_get( highlight_var[0]);
 	
-	return output_color_code( val );
+	if( val )
+		result = output_color_code( val );
+	
+	if( highlight & HIGHLIGHT_VALID_PATH )
+	{
+		wchar_t *val2 = env_get( L"fish_color_valid_path" );
+		int result2 = output_color_code( val2 );
+		if( result == FISH_COLOR_NORMAL )
+			result = result2;
+		else 
+		{
+			if( result2 & FISH_COLOR_BOLD )
+				result |= FISH_COLOR_BOLD;
+			if( result2 & FISH_COLOR_UNDERLINE )
+				result |= FISH_COLOR_UNDERLINE;
+		}
+		
+	}
+	return result;
+	
 }
 
 /**
@@ -679,8 +808,8 @@ void highlight_shell( wchar_t * buff,
 		wchar_t *begin, *end;
 	
 		if( parse_util_locate_cmdsubst( subpos, 
-										(const wchar_t **)&begin, 
-										(const wchar_t **)&end,
+										&begin, 
+										&end,
 										1) <= 0)
 		{
 			break;
@@ -710,6 +839,32 @@ void highlight_shell( wchar_t * buff,
 			color[i] = last_val;
 	}
 
+	/*
+	  Color potentially valid paths in a special path color if they
+	  are the current token.
+	*/
+
+	if( pos >= 0 && pos <= len )
+	{
+		
+		wchar_t *tok_begin, *tok_end;
+		wchar_t *token;
+
+		parse_util_token_extent( buff, pos, &tok_begin, &tok_end, 0, 0 );
+		if( tok_begin )
+		{
+			token = halloc_wcsndup( context, tok_begin, tok_end-tok_begin );
+			
+			if( is_potential_path( token ) )
+			{
+				for( i=tok_begin-buff; i < (tok_end-buff); i++ )
+				{
+					color[i] |= HIGHLIGHT_VALID_PATH;
+				}
+			}
+		}
+	}
+	
 
 	highlight_universal_internal( buff, color, pos, error );
 
@@ -782,8 +937,8 @@ static void highlight_universal_internal( wchar_t * buff,
 								pos2 = str-buff;
 								if( pos1==pos || pos2==pos )
 								{
-									color[pos1]|=HIGHLIGHT_MATCH<<8;
-									color[pos2]|=HIGHLIGHT_MATCH<<8;
+									color[pos1]|=HIGHLIGHT_MATCH<<16;
+									color[pos2]|=HIGHLIGHT_MATCH<<16;
 									match_found = 1;
 									
 								}
@@ -808,7 +963,7 @@ static void highlight_universal_internal( wchar_t * buff,
 			al_destroy( &l );
 		
 			if( !match_found )
-				color[pos] = HIGHLIGHT_ERROR<<8;
+				color[pos] = HIGHLIGHT_ERROR<<16;
 		}
 
 		/*
@@ -832,8 +987,8 @@ static void highlight_universal_internal( wchar_t * buff,
 				if( level == 0 )
 				{
 					int pos2 = str-buff;
-					color[pos]|=HIGHLIGHT_MATCH<<8;
-					color[pos2]|=HIGHLIGHT_MATCH<<8;
+					color[pos]|=HIGHLIGHT_MATCH<<16;
+					color[pos2]|=HIGHLIGHT_MATCH<<16;
 					match_found=1;
 					break;
 				}
@@ -841,7 +996,7 @@ static void highlight_universal_internal( wchar_t * buff,
 			}
 			
 			if( !match_found )
-				color[pos] = HIGHLIGHT_ERROR<<8;
+				color[pos] = HIGHLIGHT_ERROR<<16;
 		}
 	}
 }

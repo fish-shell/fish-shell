@@ -18,6 +18,7 @@
 #include <dirent.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <libgen.h>
 
 
 #include "fallback.h"
@@ -25,6 +26,8 @@
 
 #include "common.h"
 #include "wutil.h"
+#include "halloc.h"
+#include "halloc_util.h"
 
 #define TMP_LEN_MIN 256
 
@@ -41,12 +44,12 @@
    the \c wutil_wcs2str() function.
 */
 static char *tmp=0;
-static wchar_t *tmp2=0;
+static wchar_t *tmp2;
 /**
    Length of the \c tmp buffer.
 */
 static size_t tmp_len=0;
-static size_t tmp2_len=0;
+static size_t tmp2_len;
 
 /**
    Counts the number of calls to the wutil wrapper functions
@@ -63,6 +66,7 @@ void wutil_destroy()
 {
 	free( tmp );
 	free( tmp2 );
+
 	tmp=0;
 	tmp_len=0;
 	debug( 3, L"wutil functions called %d times", wutil_calls );
@@ -117,7 +121,7 @@ static wchar_t *wutil_str2wcs( const char *in )
 		}
 		tmp2_len = new_sz;
 	}
-
+	
 	return str2wcs_internal( in, tmp2 );
 }
 
@@ -343,3 +347,41 @@ wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 }
 
 #endif
+
+
+wchar_t *wdirname( const wchar_t *path )
+{
+	static string_buffer_t *sb = 0;
+	if( sb )
+		sb_clear(sb);
+	else 
+		sb = sb_halloc( global_context );
+	
+	char *tmp =wutil_wcs2str(path);
+	char *narrow_res = dirname( tmp );
+	if( !narrow_res )
+		return 0;
+	
+	sb_printf( sb, L"%s", narrow_res );
+	return (wchar_t *)sb->buff;
+}
+
+wchar_t *wbasename( const wchar_t *path )
+{
+	static string_buffer_t *sb = 0;
+	if( sb )
+		sb_clear(sb);
+	else 
+		sb = sb_halloc( global_context );
+	
+	char *tmp =wutil_wcs2str(path);
+	char *narrow_res = basename( tmp );
+	if( !narrow_res )
+		return 0;
+	
+	sb_printf( sb, L"%s", narrow_res );
+	return (wchar_t *)sb->buff;
+}
+
+
+

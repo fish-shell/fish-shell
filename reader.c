@@ -609,8 +609,8 @@ static void remove_duplicates( array_list_t *l )
 */
 static void set_color_translated( int c )
 {
-	set_color( highlight_get_color( c & 0xff ),
-			   highlight_get_color( (c>>8)&0xff ) );
+	set_color( highlight_get_color( c & 0xffff ),
+			   highlight_get_color( (c>>16)&0xffff ) );
 }
 
 int reader_interupted()
@@ -1697,7 +1697,7 @@ void reader_sanity_check()
 void reader_replace_current_token( wchar_t *new_token )
 {
 
-	const wchar_t *begin, *end;
+	wchar_t *begin, *end;
 	string_buffer_t sb;
 	int new_pos;
 
@@ -1764,7 +1764,7 @@ static int contains( const wchar_t *needle,
 */
 static void reset_token_history()
 {
-	const wchar_t *begin, *end;
+	wchar_t *begin, *end;
 
 	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
 	if( begin )
@@ -2494,8 +2494,8 @@ wchar_t *reader_readline()
 
  				if( comp_empty )
 				{
-					const wchar_t *begin, *end;
-					const wchar_t *token_begin, *token_end;
+					wchar_t *begin, *end;
+					wchar_t *token_begin, *token_end;
 					wchar_t *buffcpy;
 					int len;
 					int cursor_steps;

@@ -99,4 +99,15 @@ wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path);
 
 struct wdirent *wreaddir(DIR *dir );
 
+/**
+   Wide character version of dirname()
+*/
+wchar_t *wdirname( const wchar_t *path );
+
+/**
+   Wide character version of basename()
+*/
+wchar_t *wbasename( const wchar_t *path );
+
+
 #endif

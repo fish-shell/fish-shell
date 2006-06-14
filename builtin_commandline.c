@@ -461,13 +461,13 @@ static int builtin_commandline( wchar_t **argv )
 		buffer_part = STRING_MODE;
 	}
 		
-	const wchar_t *begin, *end;
+	wchar_t *begin, *end;
 	
 	switch( buffer_part )
 	{
 		case STRING_MODE:
 		{			
-			begin = get_buffer();
+			begin = (wchar_t *)get_buffer();
 			end = begin+wcslen(begin);
 			break;			
 		}

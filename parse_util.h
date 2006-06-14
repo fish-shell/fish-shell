@@ -20,8 +20,8 @@
 */
 
 int parse_util_locate_cmdsubst( const wchar_t *in, 
-								const wchar_t **begin, 
-								const wchar_t **end,
+								wchar_t **begin, 
+								wchar_t **end,
 								int allow_incomplete );
 
 /**
@@ -34,8 +34,8 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 */
 void parse_util_cmdsubst_extent( const wchar_t *buff,
 								 int cursor_pos,
-								 const wchar_t **a, 
-								 const wchar_t **b );
+								 wchar_t **a, 
+								 wchar_t **b );
 
 /**
    Find the beginning and end of the process definition under the cursor
@@ -47,8 +47,8 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 */
 void parse_util_process_extent( const wchar_t *buff,
 								int cursor_pos,
-								const wchar_t **a, 
-								const wchar_t **b );
+								wchar_t **a, 
+								wchar_t **b );
 
 
 /**
@@ -61,8 +61,8 @@ void parse_util_process_extent( const wchar_t *buff,
 */
 void parse_util_job_extent( const wchar_t *buff,
 							int cursor_pos,
-							const wchar_t **a, 
-							const wchar_t **b );
+							wchar_t **a, 
+							wchar_t **b );
 
 /**
    Find the beginning and end of the token under the cursor
@@ -74,10 +74,10 @@ void parse_util_job_extent( const wchar_t *buff,
 */
 void parse_util_token_extent( const wchar_t *buff,
 							  int cursor_pos,
-							  const wchar_t **tok_begin,
-							  const wchar_t **tok_end,
-							  const wchar_t **prev_begin, 
-							  const wchar_t **prev_end );
+							  wchar_t **tok_begin,
+							  wchar_t **tok_end,
+							  wchar_t **prev_begin, 
+							  wchar_t **prev_end );
 
 
 /**

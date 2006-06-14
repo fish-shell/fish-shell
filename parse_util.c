@@ -42,14 +42,14 @@ int parse_util_lineno( const wchar_t *str, int len )
 	/**
 	   First cached state
 	*/
-	static const wchar_t *prev_str = 0;
+	static wchar_t *prev_str = 0;
 	static int i=0;
 	static int res = 1;
 
 	/**
 	   Second cached state
 	*/
-	static const wchar_t *prev_str2 = 0;
+	static wchar_t *prev_str2 = 0;
 	static int i2 = 0;
 	static int res2 = 1;
 	
@@ -57,7 +57,7 @@ int parse_util_lineno( const wchar_t *str, int len )
 	{
 		if( prev_str2 == str && i2 <= len )
 		{
-			const wchar_t *tmp_str = prev_str;
+			wchar_t *tmp_str = prev_str;
 			int tmp_i = i;
 			int tmp_res = res;
 			prev_str = prev_str2;
@@ -74,7 +74,7 @@ int parse_util_lineno( const wchar_t *str, int len )
 			i2 = i;
 			res2=res;
 				
-			prev_str = str;
+			prev_str = (wchar_t *)str;
 			i=0;
 			res=1;
 		}
@@ -89,27 +89,27 @@ int parse_util_lineno( const wchar_t *str, int len )
 }
 
 int parse_util_locate_cmdsubst( const wchar_t *in, 
-								const wchar_t **begin, 
-								const wchar_t **end,
+								wchar_t **begin, 
+								wchar_t **end,
 								int allow_incomplete )
 {
-	const wchar_t *pos;
+	wchar_t *pos;
 	wchar_t prev=0;
 	int syntax_error=0;
 	int paran_count=0;	
 
-	const wchar_t *paran_begin=0, *paran_end=0;
+	wchar_t *paran_begin=0, *paran_end=0;
 
-	for( pos=in; *pos; pos++ )
+	for( pos=(wchar_t *)in; *pos; pos++ )
 	{
 		if( prev != '\\' )
 		{
 			if( wcschr( L"\'\"", *pos ) )
 			{
-				const wchar_t *end = quote_end( pos );
-				if( end && *end)
+				wchar_t *q_end = quote_end( pos );
+				if( q_end && *q_end)
 				{
-					pos=end;
+					pos=q_end;
 				}
 				else
 					break;
@@ -161,7 +161,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 	if( begin )
 		*begin = paran_begin;
 	if( end )
-		*end = paran_count?in+wcslen(in):paran_end;
+		*end = paran_count?(wchar_t *)in+wcslen(in):paran_end;
 	
 	return 1;
 }
@@ -169,11 +169,11 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 
 void parse_util_cmdsubst_extent( const wchar_t *buff,
 								 int cursor_pos,
-								 const wchar_t **a, 
-								 const wchar_t **b )
+								 wchar_t **a, 
+								 wchar_t **b )
 {
-	const wchar_t *begin, *end;
-	const wchar_t *pos;
+	wchar_t *begin, *end;
+	wchar_t *pos;
 	
 	if( a )
 		*a=0;
@@ -183,7 +183,7 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 	if( !buff )
 		return;
 
-	pos = buff;
+	pos = (wchar_t *)buff;
 	
 	while( 1 )
 	{
@@ -194,14 +194,14 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 										&end,
 										1 ) <= 0)
 		{
-			begin=buff;
-			end = buff + wcslen(buff);
+			begin=(wchar_t *)buff;
+			end = (wchar_t *)buff + wcslen(buff);
 			break;
 		}
 
 		if( !end )
 		{
-			end = buff + wcslen(buff);
+			end = (wchar_t *)buff + wcslen(buff);
 		}
 
 		bc = begin-buff;
@@ -225,11 +225,11 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 */
 static void job_or_process_extent( const wchar_t *buff,
 								   int cursor_pos,
-								   const wchar_t **a, 
-								   const wchar_t **b, 
+								   wchar_t **a, 
+								   wchar_t **b, 
 								   int process )
 {
-	const wchar_t *begin, *end;
+	wchar_t *begin, *end;
 	int pos;
 	wchar_t *buffcpy;
 	int finished=0;
@@ -284,12 +284,12 @@ static void job_or_process_extent( const wchar_t *buff,
 				{
 					finished=1;					
 					if( b )
-						*b = buff + tok_begin;
+						*b = (wchar_t *)buff + tok_begin;
 				}
 				else
 				{
 					if( a )
-						*a = buff + tok_begin+1;
+						*a = (wchar_t *)buff + tok_begin+1;
 				}
 				break;
 				
@@ -305,16 +305,16 @@ static void job_or_process_extent( const wchar_t *buff,
 
 void parse_util_process_extent( const wchar_t *buff,
 								int pos,
-								const wchar_t **a, 
-								const wchar_t **b )
+								wchar_t **a, 
+								wchar_t **b )
 {
 	job_or_process_extent( buff, pos, a, b, 1 );	
 }
 
 void parse_util_job_extent( const wchar_t *buff,
 							int pos,
-							const wchar_t **a, 
-							const wchar_t **b )
+							wchar_t **a, 
+							wchar_t **b )
 {
 	job_or_process_extent( buff,pos,a, b, 0 );	
 }
@@ -322,18 +322,20 @@ void parse_util_job_extent( const wchar_t *buff,
 
 void parse_util_token_extent( const wchar_t *buff,
 							  int cursor_pos,
-							  const wchar_t **tok_begin,
-							  const wchar_t **tok_end,
-							  const wchar_t **prev_begin, 
-							  const wchar_t **prev_end )
+							  wchar_t **tok_begin,
+							  wchar_t **tok_end,
+							  wchar_t **prev_begin, 
+							  wchar_t **prev_end )
 {
-	const wchar_t *begin, *end;
+	wchar_t *begin, *end;
 	int pos;
 	wchar_t *buffcpy;
 
 	tokenizer tok;
 
-	const wchar_t *a, *b, *pa, *pb;
+	wchar_t *a, *b, *pa, *pb;
+	
+	assert( cursor_pos >= 0 );
 	
 
 	a = b = pa = pb = 0;
@@ -345,9 +347,9 @@ void parse_util_token_extent( const wchar_t *buff,
 
 	pos = cursor_pos - (begin - buff);
 
-	a = buff + pos;
+	a = (wchar_t *)buff + pos;
 	b = a;
-	pa = buff + pos;
+	pa = (wchar_t *)buff + pos;
 	pb = pa;
 
 	assert( begin >= buff );
@@ -382,7 +384,7 @@ void parse_util_token_extent( const wchar_t *buff,
 		*/
 		if( tok_begin > pos )
 		{
-			a = b = buff + pos;
+			a = b = (wchar_t *)buff + pos;
 			break;
 		}
 
@@ -495,7 +497,7 @@ int parse_util_load( const wchar_t *cmd,
 	int reloaded = 0;
 	hash_table_t *loaded;
 
-	const wchar_t *path_var = env_get( path_var_name );
+	wchar_t *path_var = env_get( path_var_name );
 
 	/*
 	  Do we know where to look

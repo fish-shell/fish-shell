@@ -1108,7 +1108,7 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 */
 static int expand_subshell( wchar_t *in, array_list_t *out )
 {
-	const wchar_t *paran_begin=0, *paran_end=0;
+	wchar_t *paran_begin=0, *paran_end=0;
 	int len1, len2;
 	wchar_t prev=0;
 	wchar_t *subcmd;
@@ -1371,7 +1371,7 @@ int expand_string( void *context,
 
 	if( EXPAND_SKIP_SUBSHELL & flags )
 	{
-		const wchar_t *begin, *end;
+		wchar_t *begin, *end;
 		
 		if( parse_util_locate_cmdsubst( str,
 										&begin,

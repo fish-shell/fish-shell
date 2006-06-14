@@ -1955,7 +1955,7 @@ static int try_complete_user( const wchar_t *cmd,
 void complete( const wchar_t *cmd,
 			   array_list_t *comp )
 {
-	const wchar_t *begin, *end, *prev_begin, *prev_end;
+	wchar_t *begin, *end, *prev_begin, *prev_end;
 	wchar_t *buff;
 	tokenizer tok;
 	wchar_t *current_token=0, *current_command=0, *prev_token=0;

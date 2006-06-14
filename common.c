@@ -438,7 +438,7 @@ int my_wcswidth( const wchar_t *c )
 	return res;
 }
 
-const wchar_t *quote_end( const wchar_t *pos )
+wchar_t *quote_end( const wchar_t *pos )
 {
 	wchar_t c = *pos;
 	
@@ -457,7 +457,7 @@ const wchar_t *quote_end( const wchar_t *pos )
 		{
 			if( *pos == c )
 			{
-				return pos;
+				return (wchar_t *)pos;
 			}
 		}
 	}

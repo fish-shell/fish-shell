@@ -2656,7 +2656,7 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 	wchar_t *pos;
 	int err=0;
 	
-	const wchar_t *paran_begin, *paran_end;
+	wchar_t *paran_begin, *paran_end;
 	wchar_t *arg_cpy;
 	int do_loop = 1;
 	

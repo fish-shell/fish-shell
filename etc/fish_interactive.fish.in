@@ -73,6 +73,7 @@ set_default fish_color_error red --bold
 set_default fish_color_escape cyan
 set_default fish_color_operator cyan
 set_default fish_color_quote brown
+set_default fish_color_valid_path --underline
 
 set_default fish_color_cwd green
 

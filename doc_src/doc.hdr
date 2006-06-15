@@ -2441,6 +2441,7 @@ DAMAGES.
 - <a href='#faq-cd-autocomplete'>Why does the cd command autocompletion list the subdirectories of my home directory as completions?</a>
 - <a href='#faq-cd-implicit'>I accidentally entered a directory path and fish changed directory. What happened?</a>
 - <a href='#faq-open'>The open command doesn't work.</a>
+- <a href='#faq-default'>How do I make fish my default shell?</a>
 
 <hr>
 
@@ -2505,5 +2506,25 @@ in a nonstandard location. Please contact the <a
 href='mailto:fish-users@lists.sf.net'>fish mailing list</a>, and
 hopefully this can be resolved.
 
+\section faq-default How do I make fish my default shell?
+
+If you installed fish manually (e.g. by compiling it, not by using a
+package manager), you first need to add fish to the list of shells by
+executing the following command (assuming you installed fish in
+/usr/local) as root:
+
+<code>echo /usr/local/bin/fish >>/etc/shells</code>
+
+If you installed a prepackaged version of fish, the package manager
+should have already done this for you.
+
+In order to change your default shell, type:
+
+<code>chsh -s /usr/bin/fish</code>
+
+You may need to adjust the above path to e.g. /usr/local/bin/fish.
+
+You will need to log out and back in again for the change to take
+effect.
 
 */

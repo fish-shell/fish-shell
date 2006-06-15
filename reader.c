@@ -2238,7 +2238,7 @@ static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int po
 				*/
 				if( color[start+i]>>8 == 0 )
 				{
-					color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<8;
+					color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
 				}
 			}
 		}

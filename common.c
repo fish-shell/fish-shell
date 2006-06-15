@@ -131,12 +131,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 	
 	wchar_t *buff = *b;
 
-	/*
-	  This is a kludge: We block SIGCHLD while reading, since I can't
-	  get getwc to perform reliably when signals are flying. Even when
-	  watching for EINTR errors, bytes are lost. 
-	*/
-
 	while( 1 )
 	{
 		/* Reallocate the buffer if necessary */
@@ -242,12 +236,12 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 		{
 			case (size_t)(-2):
 			case (size_t)(-1):
-			{
-				out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
-				in_pos++;
-				memset( &state, 0, sizeof(state) );
-				break;
-			}
+				{
+					out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
+					in_pos++;
+					memset( &state, 0, sizeof(state) );
+					break;
+				}
 				
 			case 0:
 			{
@@ -660,8 +654,10 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff )
 			  Break on end of string
 			*/
 			if( !*pos )
+			{
 				break;
-		
+			}
+			
 			start=pos;
 		}
 	}
@@ -712,17 +708,17 @@ wchar_t *escape( const wchar_t *in,
 		else
 		{
 			
-		switch( *in )
-		{
-			case L'\t':
-				*(pos++) = L'\\';
-				*(pos++) = L't';					
-				break;
+			switch( *in )
+			{
+				case L'\t':
+					*(pos++) = L'\\';
+					*(pos++) = L't';					
+					break;
 					
-			case L'\n':
-				*(pos++) = L'\\';
-				*(pos++) = L'n';					
-				break;
+				case L'\n':
+					*(pos++) = L'\\';
+					*(pos++) = L'n';					
+					break;
 					
 			case L'\b':
 				*(pos++) = L'\\';

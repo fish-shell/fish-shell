@@ -91,7 +91,7 @@ static hash_table_t history_table;
 /**
    Flag, set to 1 once the history file has been loaded
 */
-static int is_loaded;
+static int is_loaded=0;
 
 /**
    Load history from file
@@ -202,7 +202,7 @@ static void history_to_hash()
 {
 	history_data *d;
 	
-	if( !history_last )
+	if( !mode_name )
 		return;
 	
 
@@ -229,12 +229,22 @@ void history_set_mode( wchar_t *name )
 	
 	if( mode_name )
 	{		
+		/*
+		  Move the current history to the hashtable
+		*/
 		history_to_hash();		
 	}
+	
+	/*
+	  See if the new history already exists
+	*/
 	curr = (history_data *)hash_get( &history_table,
 									 name );
 	if( curr )
 	{
+		/*
+		  Yes. Restore it.
+		*/
 		mode_name = (wchar_t *)hash_get_key( &history_table,
 											 name );
 		history_current = history_last = curr->last;
@@ -244,6 +254,9 @@ void history_set_mode( wchar_t *name )
 	}
 	else
 	{
+		/*
+		  Nope. Create a new history list.
+		*/
 		history_count=0;
 		history_last = history_current = last_loaded=0;
 		mode_name = wcsdup( name );
@@ -370,7 +383,7 @@ static void history_destroy_mode( void *name, void *link )
 	past_end=1;
 
 //	fwprintf( stderr, L"Destroy history mode \'%ls\'\n", mode_name );
-		
+
 	if( history_last )
 	{
 		history_save();	
@@ -389,11 +402,12 @@ static void history_destroy_mode( void *name, void *link )
 
 void history_destroy()
 {
+	
 	/**
 	   Make sure current mode is in table
 	*/
 	history_to_hash();		
-
+		
 	/**
 	   Save all modes in table
 	*/

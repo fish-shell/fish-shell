@@ -519,6 +519,7 @@ void highlight_shell( wchar_t * buff,
 	int len;
 
 	void *context;
+	wchar_t *cmd=0;
 	
 	if( !buff || !color )
 	{
@@ -545,6 +546,7 @@ void highlight_shell( wchar_t * buff,
 		int last_type = tok_last_type( &tok );
 		int prev_argc=0;
 		
+				
 		switch( last_type )
 		{
 			case TOK_STRING:
@@ -570,7 +572,15 @@ void highlight_shell( wchar_t * buff,
 									 &color[tok_get_pos( &tok )],
 									 pos-tok_get_pos( &tok ), 
 									 error );
-
+					
+					if( cmd && (wcscmp( cmd, L"cd" ) == 0) )
+					{
+						if( !parser_cdpath_get( context, param ) )
+						{
+							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
+						}
+					}
+					
 				}
 				else
 				{ 
@@ -579,9 +589,9 @@ void highlight_shell( wchar_t * buff,
 					/*
 					  Command. First check that the command actually exists.
 					*/
-					wchar_t *cmd = expand_one( context, 
-											   wcsdup(tok_last( &tok )),
-											   EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
+					cmd = expand_one( context, 
+									  wcsdup(tok_last( &tok )),
+									  EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
 					
 					if( cmd == 0 )
 					{
@@ -853,7 +863,7 @@ void highlight_shell( wchar_t * buff,
 		
 		wchar_t *tok_begin, *tok_end;
 		wchar_t *token;
-
+		
 		parse_util_token_extent( buff, pos, &tok_begin, &tok_end, 0, 0 );
 		if( tok_begin )
 		{

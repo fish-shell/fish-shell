@@ -712,7 +712,8 @@ static int calc_prompt_width( array_list_t *arr )
 				int found = 0;
 
 				/*
-				  Test these color escapes with parameter value 0..7
+				  Detect these terminfo color escapes with parameter
+				  value 0..7, all of which don't move the cursor
 				*/
 				char * esc[] =
 					{
@@ -724,7 +725,8 @@ static int calc_prompt_width( array_list_t *arr )
 				;
 
 				/*
-				  Test these regular escapes without any parameter values
+				  Detect these semi-common terminfo escapes without any
+				  parameter values, all of which don't move the cursor
 				*/
 				char *esc2[] =
 					{
@@ -734,7 +736,20 @@ static int calc_prompt_width( array_list_t *arr )
 						exit_underline_mode,
 						enter_standout_mode,
 						exit_standout_mode,
-						flash_screen
+						flash_screen,
+						enter_subscript_mode,
+						exit_subscript_mode,
+						enter_superscript_mode,
+						exit_superscript_mode,
+						enter_blink_mode,
+						enter_italics_mode,
+						exit_italics_mode,
+						enter_reverse_mode,
+						enter_shadow_mode,
+						exit_shadow_mode,
+						enter_standout_mode,
+						exit_standout_mode,
+						enter_secure_mode
 					}
 				;
 
@@ -766,13 +781,17 @@ static int calc_prompt_width( array_list_t *arr )
 					*/
 					len = maxi( try_sequence( tparm(esc2[l]), &next[j] ),
 								try_sequence( esc2[l], &next[j] ));
-
+					
 					if( len )
 					{
 						j += (len-1);
 						found = 1;
 					}
 				}
+			}
+			else if( next[j] == L'\t' )
+			{
+				res=(res+8)&~7;				
 			}
 			else
 			{
@@ -781,7 +800,6 @@ static int calc_prompt_width( array_list_t *arr )
 				*/
 				res += wcwidth( next[j] );
 			}
-
 		}
 	}
 	return res;
@@ -2842,13 +2860,11 @@ wchar_t *reader_readline()
 				else
 				{
 					/*
-					  Carriage returns happen - they are usually a
-					  sign of an incorrectly set terminal, but there
-					  really isn't very much we can do at this point,
-					  so we ignore them.
+					  Low priority debug message. These can happen if
+					  the user presses an unefined control
+					  sequnece. No reason to report.
 					*/
-					if( c != 13 )
-						debug( 0, _( L"Unknown keybinding %d" ), c );
+					debug( 2, _( L"Unknown keybinding %d" ), c );
 				}
 				break;
 			}

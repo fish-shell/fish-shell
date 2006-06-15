@@ -100,7 +100,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 
 	wchar_t *paran_begin=0, *paran_end=0;
 
-	for( pos=(wchar_t *)in; *pos; pos++ )
+	for( pos = (wchar_t *)in; *pos; pos++ )
 	{
 		if( prev != '\\' )
 		{
@@ -112,7 +112,9 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 					pos=q_end;
 				}
 				else
+				{
 					break;
+				}
 			}
 			else
 			{
@@ -141,7 +143,6 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 			}
 			
 		}
-		
 		prev = *pos;
 	}
 	
@@ -212,6 +213,12 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 			begin++;
 			break;
 		}
+
+		if( !*end )
+		{
+			break;
+		}
+		
 		pos = end+1;
 	}
 	if( a )

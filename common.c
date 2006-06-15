@@ -445,13 +445,15 @@ wchar_t *quote_end( const wchar_t *pos )
 	while( 1 )
 	{
 		pos++;
-
+		
 		if( !*pos )
 			return 0;
 		
 		if( *pos == L'\\')
 		{
 			pos++;
+			if( !*pos )
+				return 0;
 		}
 		else
 		{

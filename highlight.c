@@ -72,12 +72,15 @@ static int is_potential_path( const wchar_t *path )
 	void *context = halloc( 0, 0 );
 
 	tilde = expand_tilde( wcsdup(path) );
+	halloc_register( context, tilde );
 	
 	unescaped = unescape( tilde, 1 );
+	if( unescaped )
+	{
+		
 //	debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
 	
 	halloc_register( context, unescaped );
-	halloc_register( context, tilde );
 			
 	for( in = out = unescaped; *in; in++ )
 	{
@@ -110,7 +113,7 @@ static int is_potential_path( const wchar_t *path )
 	}
 	*out = 0;
 	
-	if( !has_magic )
+	if( !has_magic && wcslen( unescaped ) )
 	{
 		int must_be_dir = 0;
 		DIR *dir;
@@ -150,6 +153,7 @@ static int is_potential_path( const wchar_t *path )
 			}
 		}
 		
+	}
 	}
 	
 	halloc_free( context );

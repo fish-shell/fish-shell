@@ -36,6 +36,8 @@
 #include <libintl.h>
 #endif
 
+#include "fallback.h"
+
 /*
   Small utility for setting the color.
   Usage: set_color COLOR
@@ -52,7 +54,7 @@
 /**
    Getopt short switches for set_color
 */
-#define GETOPT_STRING "b:hvoc"
+#define GETOPT_STRING "b:hvocu"
 
 #if HAVE_GETTEXT
 #define _(string) gettext(string)
@@ -152,9 +154,9 @@ int main( int argc, char **argv )
 	char *fgcolor=0;
 	int fg, bg;
 	int bold=0;
-
-	
-		
+	int underline=0;
+	char *bg_seq, *fg_seq;
+			
 	while( 1 )
 	{
 #ifdef HAVE_GETOPT_LONG
@@ -171,6 +173,10 @@ int main( int argc, char **argv )
 				,
 				{
 					"bold", no_argument, 0, 'o' 
+				}
+				,
+				{
+					"underline", no_argument, 0, 'u' 
 				}
 				,
 				{
@@ -218,6 +224,10 @@ int main( int argc, char **argv )
 				bold=1;
 				break;
 				
+			case 'u':
+				underline=1;
+				break;
+				
 			case 'v':
 				check_locale_init();
 				fprintf( stderr, _("%s, version %s\n"), SET_COLOR, PACKAGE_VERSION );
@@ -251,7 +261,7 @@ int main( int argc, char **argv )
 			return 1;
 	}
 
-	if( !fgcolor && !bgcolor && !bold )
+	if( !fgcolor && !bgcolor && !bold && !underline )
 	{
 		check_locale_init();
 		fprintf( stderr, _("%s: Expected an argument\n"), SET_COLOR );
@@ -277,16 +287,28 @@ int main( int argc, char **argv )
 
 	setupterm( 0, STDOUT_FILENO, 0);
 
+	fg_seq = set_a_foreground?set_a_foreground:set_foreground;
+	bg_seq = set_a_background?set_a_background:set_background;
+	
+
 	if( bold )
 	{
-		putp( enter_bold_mode );
+		if( enter_bold_mode )
+			putp( enter_bold_mode );
+	}
+
+	if( underline )
+	{
+		if( enter_underline_mode )
+			putp( enter_underline_mode );
 	}
 
 	if( bgcolor )
 	{
 		if( bg == 8 )
 		{
-			putp( tparm( set_a_background, 0) );
+			if( bg_seq )
+				putp( tparm( bg_seq, 0) );
 			putp( tparm(exit_attribute_mode) );		
 		}	
 	}
@@ -295,12 +317,14 @@ int main( int argc, char **argv )
 	{
 		if( fg == 8 )
 		{
-			putp( tparm( set_a_foreground, 0) );
+			if( fg_seq )
+				putp( tparm( fg_seq, 0) );
 			putp( tparm(exit_attribute_mode) );		
 		}	
 		else
 		{
-			putp( tparm( set_a_foreground, fg) );
+			if( fg_seq )
+				putp( tparm( fg_seq, fg) );
 		}
 	}
 	
@@ -308,8 +332,11 @@ int main( int argc, char **argv )
 	{
 		if( bg != 8 )
 		{
-			putp( tparm( set_a_background, bg) );
+			if( bg_seq )
+				putp( tparm( bg_seq, bg) );
 		}
 	}
+
 	del_curterm( cur_term );
+
 }

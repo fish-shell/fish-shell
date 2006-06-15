@@ -560,7 +560,7 @@ int output_color_code( const wchar_t *val )
 		wchar_t *next = (wchar_t *)al_get( &el, j );
 		
 		is_bold |= (wcsncmp( next, L"--bold", wcslen(next) ) == 0 ) && wcslen(next)>=3;
-		is_bold |= wcscmp( next, L"-b" ) == 0;
+		is_bold |= wcscmp( next, L"-o" ) == 0;
 
 		is_underline |= (wcsncmp( next, L"--underline", wcslen(next) ) == 0 ) && wcslen(next)>=3;
 		is_underline |= wcscmp( next, L"-u" ) == 0;

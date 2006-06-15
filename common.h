@@ -95,8 +95,8 @@ wchar_t **list_to_char_arr( array_list_t *l );
 int fgetws2( wchar_t **buff, int *len, FILE *f );
 
 /**
-   Sorts a list of wide strings according to the wcsfilecmp-function
-   from the util library
+   Sorts an array_list of wide strings according to the
+   wcsfilecmp-function from the util library
 */
 void sort_list( array_list_t *comp );
 

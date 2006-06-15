@@ -137,19 +137,24 @@ enum
 
 /**
    Perform various forms of expansion on in, such as tilde expansion
-   (~USER becomes the users home directory), variable expansion
-   ($VAR_NAME becomes the value of the environment variable VAR_NAME),
+   (\~USER becomes the users home directory), variable expansion
+   (\$VAR_NAME becomes the value of the environment variable VAR_NAME),
    subshell expansion and wildcard expansion. The results are inserted
    into the list out.
    
    If the parameter does not need expansion, it is copied into the list
    out. If expansion is performed, the original parameter is freed and
    newly allocated strings are inserted into the list out.
-   
+
+   If \c context is non-null, all the strings contained in the
+   array_list_t \c out will be registered to be free'd when context is
+   free'd.
+ 
+   \param context the halloc context to use for automatic deallocation
    \param in The parameter to expand
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \param out The list to which the result will be appended.
-   \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH
+   \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
 int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
 
@@ -158,6 +163,10 @@ int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
    expands to more than one string. This is used for expanding command
    names.
 
+   If \c context is non-null, the returning string ill be registered
+   to be free'd when context is free'd.
+ 
+   \param context the halloc context to use for automatic deallocation   
    \param in The parameter to expand
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return The expanded parameter, or 0 on failiure
@@ -166,6 +175,8 @@ wchar_t *expand_one( void *context, wchar_t *in, int flag );
 
 /**
    Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing.
+
+   \param in the value to escape
 */
 wchar_t *expand_escape_variable( const wchar_t *in );
 
@@ -174,6 +185,8 @@ wchar_t *expand_escape_variable( const wchar_t *in );
 
    If tilde expansion is needed, the original string is freed and a
    new string, allocated using malloc, is returned.
+
+   \param in the string to tilde expand
 */
 wchar_t *expand_tilde(wchar_t *in);
 
@@ -186,6 +199,8 @@ wchar_t *expand_tilde(wchar_t *in);
    skipping expansion on them actually does save a small amount of
    time, since it avoids multiple memory allocations during the
    expansion process.
+
+   \param in the string to test
 */
 int expand_is_clean( const wchar_t *in );
 

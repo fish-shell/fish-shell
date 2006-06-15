@@ -720,62 +720,68 @@ wchar_t *escape( const wchar_t *in,
 					*(pos++) = L'n';					
 					break;
 					
-			case L'\b':
-				*(pos++) = L'\\';
-				*(pos++) = L'b';					
-				break;
+				case L'\b':
+					*(pos++) = L'\\';
+					*(pos++) = L'b';					
+					break;
 					
-			case L'\r':
-				*(pos++) = L'\\';
-				*(pos++) = L'r';					
-				break;
+				case L'\r':
+					*(pos++) = L'\\';
+					*(pos++) = L'r';					
+					break;
 					
-			case L'\e':
-				*(pos++) = L'\\';
-				*(pos++) = L'e';					
-				break;
+				case L'\e':
+					*(pos++) = L'\\';
+					*(pos++) = L'e';					
+					break;
 					
-			case L'\\':
-			case L'&':
-			case L'$':
-			case L' ':
-			case L'#':
-			case L'^':
-			case L'<':
-			case L'>':
-			case L'(':
-			case L')':
-			case L'[':
-			case L']':
-			case L'{':
-			case L'}':
-			case L'?':
-			case L'*':
-			case L'|':
-			case L';':
-			case L':':
-			case L'\'':
-			case L'"':
-			case L'%':
-			case L'~':
-				if( escape_all )
-					*pos++ = L'\\';
-				*pos++ = *in;
-				break;
-					
-			default:
-				if( *in < 32 )
+				case L'\\':
+				case L'&':
+				case L'$':
+				case L' ':
+				case L'#':
+				case L'^':
+				case L'<':
+				case L'>':
+				case L'(':
+				case L')':
+				case L'[':
+				case L']':
+				case L'{':
+				case L'}':
+				case L'?':
+				case L'*':
+				case L'|':
+				case L';':
+				case L':':
+				case L'\'':
+				case L'"':
+				case L'%':
+				case L'~':
 				{
-					int tmp = (*in)%16;
-					*pos++ = L'\\';
-					*pos++ = L'x';
-					*pos++ = ((*in>15)? L'1' : L'0');
-					*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
-				}
-				else
+					if( escape_all )
+						*pos++ = L'\\';
 					*pos++ = *in;
-				break;
-		}
+					break;
+				}
+				
+				default:
+				{
+					if( *in < 32 )
+					{
+						int tmp = (*in)%16;
+						*pos++ = L'\\';
+						*pos++ = L'x';
+						*pos++ = ((*in>15)? L'1' : L'0');
+						*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+					}
+					else
+					{
+						*pos++ = *in;
+					}
+					break;
+				}
+			}
 		}
 		
 		in++;
@@ -798,12 +804,11 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 	if( !orig )
 	{
 		debug( 0, L"%s called with null input", __func__ );
-		exit(1);
+		return 0;
 	}
 	
 	len = wcslen( orig );
 	in = wcsdup( orig );
-
 
 	if( !in )
 		die_mem();
@@ -1314,13 +1319,13 @@ static char *gen_unique_nfs_filename( const char *filename )
 	pidlen = sprint_pid_t( getpid(), newname + orglen + 1 + hnlen + 1 );
 	newname[orglen + 1 + hnlen + 1 + pidlen] = '\0';
 /*	debug( 1, L"gen_unique_nfs_filename returning with: newname = \"%s\"; "
-	L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
-	L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
-	newname, (int)HOST_NAME_MAX, hnlen, orglen, 
-	(int)sizeof(pid_t), 
-	(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
-	(int)(orglen + 1 + hnlen + 1 + 
-	(int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
+  L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
+  L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
+  newname, (int)HOST_NAME_MAX, hnlen, orglen, 
+  (int)sizeof(pid_t), 
+  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
+  (int)(orglen + 1 + hnlen + 1 + 
+  (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
 	return newname;
 }
 

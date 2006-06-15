@@ -498,9 +498,13 @@ fishd: $(FISHD_OBJS)
 fish_tests: $(FISH_TESTS_OBJS)
 	$(CC) $(FISH_TESTS_OBJS) $(LDFLAGS) -o $@
 
-
+# mimedb does not need any libraries, so we don't use LDFLAGS here
 mimedb: $(MIME_OBJS) doc_src/mimedb.o
-	$(CC) ${MIME_OBJS} doc_src/mimedb.o $(LDFLAGS) -o $@
+	$(CC) $(MIME_OBJS) doc_src/mimedb.o -o $@
+
+# count does not need any libraries, so we don't use LDFLAGS here
+count: count.o
+	$(CC) count.o -o $@
 
 set_color: set_color.o doc_src/set_color.o 
 	$(CC) set_color.o doc_src/set_color.o $(LDFLAGS) -o $@

@@ -1005,3 +1005,18 @@ int del_curterm(TERMINAL *oterm)
 
 #endif
 
+#ifndef HAVE_LRAND48_R
+
+int lrand48_r(struct drand48_data *buffer, long int *result)
+{
+	*result = rand_r( &buffer->seed );	
+	return 0;
+}
+
+int srand48_r(long int seedval, struct drand48_data *buffer)
+{
+	buffer->seed = (int)seedval;
+	return 0;
+}
+
+#endif

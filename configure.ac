@@ -276,7 +276,7 @@ AC_CHECK_HEADER([regex.h],
 # Check for presense of various functions
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy )
+AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r)
 
 # Here follows a list of small programs used to test for various
 # features that Autoconf doesn't tell us about

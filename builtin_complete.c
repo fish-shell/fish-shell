@@ -400,12 +400,20 @@ static int builtin_complete( wchar_t **argv )
 				break;
 					
 			case 'p':	
-				al_push( &cmd, unescape( woptarg, 1));
-				break;
-				
 			case 'c':
-				al_push( &cmd, unescape( woptarg, 1) );
+			{
+				wchar_t *a = unescape( woptarg, 1);
+				if( a )
+				{
+					al_push( (opt=='p'?&path:&cmd), a );
+				}
+				else
+				{
+					sb_printf( sb_err, L"%ls: Invalid token '%ls'\n", argv[0], woptarg );
+					res = 1;					
+				}				
 				break;
+			}
 				
 			case 'd':
 				desc = woptarg;

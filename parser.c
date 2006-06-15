@@ -2721,91 +2721,103 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 	}
 
 	unesc = unescape( arg_cpy, 1 );
-	free( arg_cpy );
-
-	/*
-	  Check for invalid variable expansions
-	*/
-	for( pos = unesc; *pos; pos++ )
+	if( !unesc )
 	{
-		switch( *pos )
+		if( out )
 		{
-			case VARIABLE_EXPAND:
-			case VARIABLE_EXPAND_SINGLE:
+			error( SYNTAX_ERROR,
+				   offset,
+				   L"Invalid token '%ls'", arg_cpy );
+			print_errors( out, prefix);
+		}
+		return 1;
+	}
+	else
+	{	
+		/*
+		  Check for invalid variable expansions
+		*/
+		for( pos = unesc; *pos; pos++ )
+		{
+			switch( *pos )
 			{
-				switch( *(pos+1))
+				case VARIABLE_EXPAND:
+				case VARIABLE_EXPAND_SINGLE:
 				{
-					case BRACKET_BEGIN:
+					switch( *(pos+1))
 					{
-						err=1;
-						if( out )
-						{
-							error( SYNTAX_ERROR,
-								   offset,
-								   COMPLETE_VAR_BRACKET_DESC );
-
-							print_errors( out, prefix);
-						}
-						break;
-					}
-
-					case INTERNAL_SEPARATOR:
-					{
-						err=1;
-						if( out )
-						{
-							error( SYNTAX_ERROR,
-								   offset,
-								   COMPLETE_VAR_PARAN_DESC );
-							print_errors( out, prefix);
-						}
-						break;
-					}
-
-					case 0:
-					{
-						err=1;
-						if( out )
-						{
-							error( SYNTAX_ERROR,
-								   offset,
-								   COMPLETE_VAR_NULL_DESC );
-							print_errors( out, prefix);
-						}
-						break;
-					}
-
-					default:
-					{
-						wchar_t n = *(pos+1);
-						
-						if( n != VARIABLE_EXPAND &&
-							n != VARIABLE_EXPAND_SINGLE &&
-							!wcsvarchr(n) )
+						case BRACKET_BEGIN:
 						{
 							err=1;
 							if( out )
 							{
 								error( SYNTAX_ERROR,
 									   offset,
-									   COMPLETE_VAR_DESC,
-									   *(pos+1) );
+									   COMPLETE_VAR_BRACKET_DESC );
+
 								print_errors( out, prefix);
 							}
+							break;
 						}
+
+						case INTERNAL_SEPARATOR:
+						{
+							err=1;
+							if( out )
+							{
+								error( SYNTAX_ERROR,
+									   offset,
+									   COMPLETE_VAR_PARAN_DESC );
+								print_errors( out, prefix);
+							}
+							break;
+						}
+
+						case 0:
+						{
+							err=1;
+							if( out )
+							{
+								error( SYNTAX_ERROR,
+									   offset,
+									   COMPLETE_VAR_NULL_DESC );
+								print_errors( out, prefix);
+							}
+							break;
+						}
+
+						default:
+						{
+							wchar_t n = *(pos+1);
 						
-						break;
-					}
+							if( n != VARIABLE_EXPAND &&
+								n != VARIABLE_EXPAND_SINGLE &&
+								!wcsvarchr(n) )
+							{
+								err=1;
+								if( out )
+								{
+									error( SYNTAX_ERROR,
+										   offset,
+										   COMPLETE_VAR_DESC,
+										   *(pos+1) );
+									print_errors( out, prefix);
+								}
+							}
+						
+							break;
+						}
 					
-				}
+					}
 				
-				break;
-			}
+					break;
+				}
+			}		
 		}
-		
-		
 	}
-	
+
+	free( arg_cpy );
+		
 	free( unesc );
 	return err;
 	

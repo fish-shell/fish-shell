@@ -1286,6 +1286,8 @@ static int builtin_function( wchar_t **argv )
 static int builtin_random( wchar_t **argv )
 {
 	static int seeded=0;
+	static struct drand48_data seed_buffer;
+	
 	int argc = builtin_count_args( argv );
 
 	woptind=0;
@@ -1346,18 +1348,22 @@ static int builtin_random( wchar_t **argv )
 
 		case 0:
 		{
+			long res;
+			
 			if( !seeded )
 			{
 				seeded=1;
-				srand( time( 0 ) );
+				srand48_r(time(0), &seed_buffer);
 			}
-			sb_printf( sb_out, L"%d\n", rand()%32767 );
+			lrand48_r( &seed_buffer, &res );
+			
+			sb_printf( sb_out, L"%d\n", res%32767 );
 			break;
 		}
 
 		case 1:
 		{
-			int foo;
+			long foo;
 			wchar_t *end=0;
 
 			errno=0;
@@ -1372,7 +1378,7 @@ static int builtin_random( wchar_t **argv )
 				return 1;
 			}
 			seeded=1;
-			srand( foo );
+			srand48_r( foo, &seed_buffer);
 			break;
 		}
 

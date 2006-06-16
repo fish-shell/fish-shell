@@ -177,84 +177,149 @@ The fish parser. Contains functions for parsing code.
 /**
    While block description
 */
-#define WHILE_BLOCK _( L"'while' block" )
+#define WHILE_BLOCK N_( L"'while' block" )
 
 
 /**
    For block description
 */
-#define FOR_BLOCK _( L"'for' block" )
+#define FOR_BLOCK N_( L"'for' block" )
 
 
 /**
    If block description
 */
-#define IF_BLOCK _( L"'if' conditional block" )
+#define IF_BLOCK N_( L"'if' conditional block" )
 
 
 /**
    Function definition block description
 */
-#define FUNCTION_DEF_BLOCK _( L"function definition block" )
+#define FUNCTION_DEF_BLOCK N_( L"function definition block" )
 
 
 /**
    Function invocation block description
 */
-#define FUNCTION_CALL_BLOCK _( L"function invocation block" )
+#define FUNCTION_CALL_BLOCK N_( L"function invocation block" )
 
 
 /**
    Switch block description
 */
-#define SWITCH_BLOCK _( L"'switch' block" )
+#define SWITCH_BLOCK N_( L"'switch' block" )
 
 
 /**
    Fake block description
 */
-#define FAKE_BLOCK _( L"unexecutable block" )
+#define FAKE_BLOCK N_( L"unexecutable block" )
 
 
 /**
    Top block description
 */
-#define TOP_BLOCK _( L"global root block" )
+#define TOP_BLOCK N_( L"global root block" )
 
 
 /**
    Command substitution block description
 */
-#define SUBST_BLOCK _( L"command substitution block" )
+#define SUBST_BLOCK N_( L"command substitution block" )
 
 
 /**
    Begin block description
 */
-#define BEGIN_BLOCK _( L"'begin' unconditional block" )
+#define BEGIN_BLOCK N_( L"'begin' unconditional block" )
 
 
 /**
    Source block description
 */
-#define SOURCE_BLOCK _( L"Block created by the . builtin" )
+#define SOURCE_BLOCK N_( L"Block created by the . builtin" )
 
 /**
    Source block description
 */
-#define EVENT_BLOCK _( L"event handler block" )
+#define EVENT_BLOCK N_( L"event handler block" )
 
 
 /**
    Unknown block description
 */
-#define UNKNOWN_BLOCK _( L"unknown/invalid block" )
+#define UNKNOWN_BLOCK N_( L"unknown/invalid block" )
 
 
 /**
    Size of the error string buffer
 */
 #define ERR_STR_SZ 1024
+
+struct block_lookup_entry
+{
+	int type;
+	const wchar_t *name;
+	const wchar_t *desc;
+}
+	;
+
+
+const static struct block_lookup_entry block_lookup[]=
+{
+	{
+		WHILE, L"while", WHILE_BLOCK 
+	}
+	,
+	{
+		FOR, L"for", FOR_BLOCK 
+	}
+	,
+	{
+		IF, L"if", IF_BLOCK 
+	}
+	,
+	{
+		FUNCTION_DEF, L"function", FUNCTION_DEF_BLOCK 
+	}
+	,
+	{
+		FUNCTION_CALL, 0, FUNCTION_CALL_BLOCK 
+	}
+	,
+	{
+		SWITCH, L"switch", SWITCH_BLOCK 
+	}
+	,
+	{
+		FAKE, 0, FAKE_BLOCK 
+	}
+	,
+	{
+		TOP, 0, TOP_BLOCK 
+	}
+	,
+	{
+		SUBST, 0, SUBST_BLOCK 
+	}
+	,
+	{
+		BEGIN, L"begin", BEGIN_BLOCK 
+	}
+	,
+	{
+		SOURCE, L".", SOURCE_BLOCK 
+	}
+	,
+	{
+		EVENT, 0, EVENT_BLOCK 
+	}
+	,
+	{
+		0,0,0
+	}
+}
+	;
 
 /** Last error code */
 static int error_code;
@@ -393,48 +458,16 @@ void parser_pop_block()
 
 const wchar_t *parser_get_block_desc( int block )
 {
-	switch( block )
+	int i;
+	
+	for( i=0; block_lookup[i].desc; i++ )
 	{
-		case WHILE:
-			return WHILE_BLOCK;
-
-		case FOR:
-			return FOR_BLOCK;
-
-		case IF:
-			return IF_BLOCK;
-
-		case FUNCTION_DEF:
-			return FUNCTION_DEF_BLOCK;
-
-		case FUNCTION_CALL:
-			return FUNCTION_CALL_BLOCK;
-
-		case SWITCH:
-			return SWITCH_BLOCK;
-
-		case FAKE:
-			return FAKE_BLOCK;
-
-		case TOP:
-			return TOP_BLOCK;
-
-		case SUBST:
-			return SUBST_BLOCK;
-
-		case BEGIN:
-			return BEGIN_BLOCK;
-
-		case SOURCE:
-			return SOURCE_BLOCK;
-
-		case EVENT:
-			return EVENT_BLOCK;
-
-		default:
-			return UNKNOWN_BLOCK;
+		if( block_lookup[i].type == block )
+		{
+			return _( block_lookup[i].desc );
+		}
 	}
-
+	return _(UNKNOWN_BLOCK);
 }
 
 /**
@@ -1769,6 +1802,9 @@ static int parse_job( process_t *p,
 	while( al_get_count( args ) == 0 )
 	{
 		wchar_t *nxt=0;
+		int consumed = 0; // Set to one if the command requires a second command, like e.g. while does
+		int mark;         // Use to save the position of the beginning of the token
+		
 		switch( tok_last_type( tok ))
 		{
 			case TOK_STRING:
@@ -1835,11 +1871,13 @@ static int parse_job( process_t *p,
 			}
 		}
 		
-		int mark = tok_get_pos( tok );
+		mark = tok_get_pos( tok );
 
-		int consumed = 0;
-		
-
+		/*
+		  Test if this command is one of the many special builtins
+		  that work directly on the parser, like e.g. 'not', that
+		  simply flips the status inversion flag in the job.
+		*/
 		if( wcscmp( L"command", nxt )==0 )
 		{
 			tok_next( tok );
@@ -1973,8 +2011,14 @@ static int parse_job( process_t *p,
 			consumed=1;			
 		}
 
+		/*
+		  Test if we need another command
+		*/
 		if( consumed )
 		{
+			/*
+			  Yes we do, around in the loop for another lap, then!
+			*/
 			continue;
 		}
 
@@ -2624,25 +2668,39 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	return code;
 }
 
+
 /**
    \return the block type created by the specified builtin, or -1 on error.
 */
 static int parser_get_block_type( const wchar_t *cmd )
 {
-	if( wcscmp( cmd, L"while") == 0 )
-		return WHILE;
-	else if( wcscmp( cmd, L"for") == 0 )
-		return FOR;
-	else if( wcscmp( cmd, L"switch") == 0 )
-		return SWITCH;
-	else if( wcscmp( cmd, L"if") == 0 )
-		return IF;
-	else if( wcscmp( cmd, L"function") == 0 )
-		return FUNCTION_DEF;
-	else if( wcscmp( cmd, L"begin") == 0 )
-		return BEGIN;
-	else
-		return -1;
+	int i;
+	
+	for( i=0; block_lookup[i].desc; i++ )
+	{
+		if( block_lookup[i].name && (wcscmp( block_lookup[i].name, cmd ) == 0) )
+		{
+			return block_lookup[i].type;
+		}
+	}
+	return -1;
+}
+
+/**
+   \return the block type created by the specified builtin, or -1 on error.
+*/
+static const wchar_t *parser_get_block_command( int type )
+{
+	int i;
+	
+	for( i=0; block_lookup[i].desc; i++ )
+	{
+		if( block_lookup[i].type == type )
+		{
+			return block_lookup[i].name;
+		}
+	}
+	return 0;
 }
 
 /**
@@ -3167,10 +3225,15 @@ int parser_test( const  wchar_t * buff,
 						err = 1;
 						if( out )
 						{
+							char *h;
+							
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
 								   INVALID_END_ERR_MSG );
 							print_errors( out, prefix );
+							h = builtin_help_get( L"end" );
+							if( h )
+								sb_printf( out, L"%s", h );
 						}
 					}
 				}
@@ -3373,10 +3436,26 @@ int parser_test( const  wchar_t * buff,
 
 	if( out && count>0 )
 	{
+		const char *h;
+		const wchar_t *cmd;
+		
 		error( SYNTAX_ERROR,
 			   block_pos[count-1],
 			   BLOCK_END_ERR_MSG );
+
 		print_errors( out, prefix );
+
+		cmd = parser_get_block_command(  block_type[count -1] );
+		if( cmd )
+		{
+			h = builtin_help_get( cmd );
+			if( cmd )
+			{
+				sb_printf( out, L"%s", h );
+			}
+		}
+		
+		
 	}
 
 	tok_destroy( &tok );

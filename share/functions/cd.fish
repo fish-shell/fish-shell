@@ -23,13 +23,14 @@ function cd -d (N_ "Change directory")
 	end
 				
 	builtin cd $argv[1]
+	set -l cd_status $status
 
-	if test $status = 0 -a $PWD != $previous
+	if test $cd_status = 0 -a $PWD != $previous
 		set -g dirprev $dirprev $previous
 		set -e dirnext
 		set -g __fish_cd_direction prev
 	end
 
-	return $status
+	return $cd_status
 end
 

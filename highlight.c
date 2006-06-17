@@ -187,7 +187,7 @@ int highlight_get_color( int highlight )
 	wchar_t *val = env_get( highlight_var[idx]);
 
 //	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
-
+	
 	if( val == 0 )
 		val = env_get( highlight_var[0]);
 	
@@ -227,6 +227,7 @@ static void highlight_param( const wchar_t * buff,
 	int in_pos, len = wcslen( buff );
 	int bracket_count=0;
 	wchar_t c;
+	int normal_status = *color;
 	
 	for( in_pos=0;
 		 in_pos<len; 
@@ -251,7 +252,7 @@ static void highlight_param( const wchar_t * buff,
 						if( in_pos == 1 )
 						{
 							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;
+							color[in_pos+1] = normal_status;
 						}
 					}
 					else if( buff[in_pos]==L',' )
@@ -259,13 +260,13 @@ static void highlight_param( const wchar_t * buff,
 						if( bracket_count )
 						{
 							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;
+							color[in_pos+1] = normal_status;
 						}
 					}
 					else if( wcschr( L"nrtbe*?$(){}'\"<>^ \\#;|&", buff[in_pos] ) )
 					{
 						color[start_pos]=HIGHLIGHT_ESCAPE;
-						color[in_pos+1]=HIGHLIGHT_NORMAL;
+						color[in_pos+1]=normal_status;
 					}
 					else if( wcschr( L"uUxX01234567", buff[in_pos] ) )
 					{
@@ -330,12 +331,12 @@ static void highlight_param( const wchar_t * buff,
 						if( (res <= max_val) )
 						{
 							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;								
+							color[in_pos+1] = normal_status;								
 						}
 						else
 						{	
 							color[start_pos] = HIGHLIGHT_ERROR;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;								
+							color[in_pos+1] = normal_status;								
 						}
 					}
 
@@ -349,7 +350,7 @@ static void highlight_param( const wchar_t * buff,
 							if( in_pos == 0 )
 							{
 								color[in_pos] = HIGHLIGHT_OPERATOR;
-								color[in_pos+1] = HIGHLIGHT_NORMAL;
+								color[in_pos+1] = normal_status;
 							}
 							break;
 						}
@@ -358,7 +359,7 @@ static void highlight_param( const wchar_t * buff,
 						{
 							wchar_t n = buff[in_pos+1];							
 							color[in_pos] = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;								
+							color[in_pos+1] = normal_status;								
 							break;
 						}
 
@@ -369,14 +370,14 @@ static void highlight_param( const wchar_t * buff,
 						case L')':
 						{
 							color[in_pos] = HIGHLIGHT_OPERATOR;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;
+							color[in_pos+1] = normal_status;
 							break;
 						}
 						
 						case L'{':
 						{
 							color[in_pos] = HIGHLIGHT_OPERATOR;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;
+							color[in_pos+1] = normal_status;
 							bracket_count++;
 							break;					
 						}
@@ -384,7 +385,7 @@ static void highlight_param( const wchar_t * buff,
 						case L'}':
 						{
 							color[in_pos] = HIGHLIGHT_OPERATOR;
-							color[in_pos+1] = HIGHLIGHT_NORMAL;
+							color[in_pos+1] = normal_status;
 							bracket_count--;
 							break;						
 						}
@@ -394,7 +395,7 @@ static void highlight_param( const wchar_t * buff,
 							if( bracket_count )
 							{
 								color[in_pos] = HIGHLIGHT_OPERATOR;
-								color[in_pos+1] = HIGHLIGHT_NORMAL;
+								color[in_pos+1] = normal_status;
 							}
 
 							break;					
@@ -448,7 +449,7 @@ static void highlight_param( const wchar_t * buff,
 				if( c == L'\'' )
 				{
 					mode = 0;
-					color[in_pos+1] = HIGHLIGHT_NORMAL;
+					color[in_pos+1] = normal_status;
 				}
 				
 				break;
@@ -464,7 +465,7 @@ static void highlight_param( const wchar_t * buff,
 					case '"':
 					{
 						mode = 0;
-						color[in_pos+1] = HIGHLIGHT_NORMAL;
+						color[in_pos+1] = normal_status;
 						break;
 					}
 				
@@ -568,19 +569,26 @@ void highlight_shell( wchar_t * buff,
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
 					}					
 
+					if( cmd && (wcscmp( cmd, L"cd" ) == 0) )
+					{
+						wchar_t *dir = expand_one( context, 
+												   wcsdup(tok_last( &tok )),
+												   EXPAND_SKIP_SUBSHELL );
+						if( dir )
+						{
+							if( !parser_cdpath_get( context, dir ) )
+							{
+								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
+							}
+						}
+					}
+					
 					highlight_param( param,
 									 &color[tok_get_pos( &tok )],
 									 pos-tok_get_pos( &tok ), 
 									 error );
 					
-					if( cmd && (wcscmp( cmd, L"cd" ) == 0) )
-					{
-						if( !parser_cdpath_get( context, param ) )
-						{
-							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
-						}
-					}
-					
+
 				}
 				else
 				{ 
@@ -607,8 +615,9 @@ void highlight_shell( wchar_t * buff,
 						if( parser_is_subcommand( cmd ) )
 						{
 							tok_next( &tok );
-							if(( wcscmp( L"-h", tok_last( &tok ) ) == 0 ) ||
-							   ( wcscmp( L"--help", tok_last( &tok ) ) == 0 ) )							
+							if( ( ! parser_is_block( cmd ) ) &&
+								( ( wcscmp( L"-h", tok_last( &tok ) ) == 0 ) ||
+								  ( wcsncmp( L"--help", tok_last( &tok ), wcslen( tok_last( &tok ) ) ) == 0 && wcslen( tok_last( &tok ) ) >= 3 ) ) )							
 							{
 								/* 
 								   The builtin and command builtins
@@ -651,7 +660,7 @@ void highlight_shell( wchar_t * buff,
 							  Check if this is a regular command
 							*/
 							is_cmd |= !!(tmp=parser_get_filename( context, cmd ));
-
+							
 							/* 
 							   Could not find the command. Maybe it is
 							   a path for a implicit cd command.
@@ -844,6 +853,10 @@ void highlight_shell( wchar_t * buff,
 		
 	}
 
+	/*
+	  The highlighting code only changes the first element when the
+	  color changes. This fills in the rest.
+	*/
 	last_val=0;
 	for( i=0; buff[i] != 0; i++ )
 	{

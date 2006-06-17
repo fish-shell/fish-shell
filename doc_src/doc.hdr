@@ -541,7 +541,6 @@ a string is expanded into a process id. The following expansions are
 performed:
 
 - If the string is the entire word \c self, the shells pid is the result
-- When inside a command substitution, if the string is the entire word \c caller, the job number (not the pid) of the job the created the command substitution is the result
 - Otherwise, if the string is the id of a job, the result is the process
 group id of the job.
 - Otherwise, if any child processes match the specified string, their 

@@ -299,6 +299,9 @@ int del_curterm(TERMINAL *oterm);
 */
 struct drand48_data
 {
+	/**
+	   Seed value
+	*/
 	unsigned int seed;
 }
 	;

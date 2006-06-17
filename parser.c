@@ -256,15 +256,29 @@ The fish parser. Contains functions for parsing code.
 */
 #define ERR_STR_SZ 1024
 
+/**
+   Datastructure to describe a block type, like while blocks, command substitution blocks, etc.
+*/
 struct block_lookup_entry
 {
+	/**
+	   The block type id. The legal values are defined in parser.h.
+	*/
 	int type;
+	/**
+	   The name of the builtin that creates this type of block, if any. 
+	*/
 	const wchar_t *name;
+	/**
+	   A description of this block type
+	*/
 	const wchar_t *desc;
 }
 	;
 
-
+/**
+   List of all legal block types
+*/
 const static struct block_lookup_entry block_lookup[]=
 {
 	{

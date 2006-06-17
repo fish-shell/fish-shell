@@ -1,10 +1,12 @@
 /** \file complete.h
 	Prototypes for functions related to tab-completion.
 
-	These functions are used for storing and retrieving tab-completion data, as well as for performing tab-completion.
+	These functions are used for storing and retrieving tab-completion
+	data, as well as for performing tab-completion.
 */
 
 #ifndef FISH_COMPLETE_H
+
 /**
    Header guard
 */
@@ -14,29 +16,53 @@
 
 #include "util.h"
 
-/** Use all completions */
+/** 
+	Use all completions 
+*/
 #define SHARED 0
-/** Do not use file completion */
+/** 
+	Do not use file completion 
+*/
 #define NO_FILES 1
-/** Require a parameter after completion */
+/** 
+	Require a parameter after completion 
+*/
 #define NO_COMMON 2
-/** Only use the argument list specifies with completion after option. This is the same as (NO_FILES & NO_COMMON) */
+/** 
+	Only use the argument list specifies with completion after
+	option. This is the same as (NO_FILES & NO_COMMON)
+*/
 #define EXCLUSIVE 3
 
-/** Command is a path */
+/** 
+	Command is a path 
+*/
 #define PATH 1
-/** Command is not a path */
+/** 
+	Command is not a path 
+*/
 #define COMMAND 0
 
-/** Separateor between completion and description*/
+/** 
+	Separator between completion and description
+*/
 #define COMPLETE_SEP L'\004'
-/** Separateor between completion and description*/
+
+/** 
+	Separator between completion and description
+*/
 #define COMPLETE_SEP_STR L"\004"
 
+/**
+   Separator between completion items in fish_pager. This is used for
+   completion grouping, e.g. when putting completions with the same
+   descriptions on the same line.
+*/
 #define COMPLETE_ITEM_SEP L'\uf500'
 
 /**
-   Character that separates the completion and description on programmable completions
+   Character that separates the completion and description on
+   programmable completions
 */
 #define PROG_COMPLETE_SEP L'\t'
 

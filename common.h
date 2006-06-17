@@ -103,16 +103,39 @@ void sort_list( array_list_t *comp );
 /**
    Returns a newly allocated wide character string equivalent of the
    specified multibyte character string
+
+   This function encodes illegal character sequences in a reversible
+   way using the private use area.
 */
 wchar_t *str2wcs( const char *in );
+
+/**
+   Converts the narrow character string \c in into it's wide
+   equivalent, stored in \c out. \c out must have enough space to fit
+   the entire string.
+
+   This function encodes illegal character sequences in a reversible
+   way using the private use area.
+*/
 wchar_t *str2wcs_internal( const char *in, wchar_t *out );
 
 /**
    Returns a newly allocated multibyte character string equivalent of
    the specified wide character string
+
+   This function decodes illegal character sequences in a reversible
+   way using the private use area.
 */
 char *wcs2str( const wchar_t *in );
 
+/**
+   Converts the wide character string \c in into it's narrow
+   equivalent, stored in \c out. \c out must have enough space to fit
+   the entire string.
+
+   This function decodes illegal character sequences in a reversible
+   way using the private use area.
+*/
 char *wcs2str_internal( const wchar_t *in, char *out );
 
 /**

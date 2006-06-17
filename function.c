@@ -36,9 +36,22 @@ typedef struct
 	wchar_t *cmd;
 	/** Function description */
 	wchar_t *desc;	
+	/**
+	   File where this function was defined
+	*/
 	const wchar_t *definition_file;
+	/**
+	   Line where definition started
+	*/
 	int definition_offset;	
+	/**
+	   Flag for specifying functions which are actually key bindings
+	*/
 	int is_binding;
+	
+	/**
+	   Flag for specifying that this function was automatically loaded
+	*/
 	int is_autoload;
 }
 	function_data_t;
@@ -47,6 +60,12 @@ typedef struct
    Table containing all functions
 */
 static hash_table_t function;
+
+/**
+   Kludgy flag set by the load function in order to tell function_add
+   that the function being defined is autoloaded. There should be a
+   better way to do this...
+*/
 static int is_autoload = 0;
 
 /**

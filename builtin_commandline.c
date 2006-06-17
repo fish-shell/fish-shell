@@ -63,6 +63,9 @@ static const wchar_t *get_buffer()
 	return buff;
 }
 
+/**
+   Returns the position of the cursor
+*/
 static int get_cursor_pos()
 {
 	const wchar_t *buff = builtin_complete_get_temporary_buffer();

@@ -15,7 +15,7 @@
 
 	4). Add an entry to the BUILTIN_DOC_SRC variable of Makefile.in. Note that the entries should be sorted alphabetically!
 
-	5). Add an entry to the manual at the builtin-overview subsection. Note that the entries should be sorted alphabetically!
+	5). Add an entry to the manual at the builtin-overview subsection of doc_src/doc.hdr. Note that the entries should be sorted alphabetically!
 
 	6). Use 'darcs add doc_src/NAME.txt' to start tracking changes to the documentation file.
 
@@ -89,10 +89,22 @@
 */
 #define FG_MSG _( L"Send job %d, '%ls' to foreground\n" )
 
+/**
+   Datastructure to describe a builtin. 
+*/
 typedef struct builtin_data
 {
+	/**
+	   Name of the builtin
+	*/
 	const wchar_t *name;
+	/**
+	   Function pointer tothe builtin implementation
+	*/
 	int (*func)(wchar_t **argv);
+	/**
+	   Description of what the builtin does
+	*/
 	const wchar_t *desc;
 }
 	builtin_data_t;
@@ -153,6 +165,9 @@ void builtin_wperror( const wchar_t *s)
 	}
 }
 
+/**
+   Count the number of times the specified character occurs in the specified string
+*/
 static int count_char( const wchar_t *str, wchar_t c )
 {
 	int res = 0;
@@ -1979,6 +1994,7 @@ static int builtin_cd( wchar_t **argv )
 	wchar_t *dir;
 	int res=0;
 	void *context = halloc( 0, 0 );
+
 	
 	if( argv[1]  == 0 )
 	{
@@ -2776,6 +2792,9 @@ static int builtin_case( wchar_t **argv )
   Below are functions for handling the builtin commands
 */
 
+/**
+   Data about all the builtin commands in fish
+*/
 const static builtin_data_t builtin_data[]=
 {
 	{

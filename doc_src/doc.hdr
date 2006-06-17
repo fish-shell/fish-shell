@@ -268,8 +268,8 @@ searches through any directories in the array variable
 loaded when needed. A function definition file must have a filename
 consisting of the name of the function plus the suffix '.fish'.  
 
-The default value for \$fish_function_path is ~/.fish.d/functions,
-/etc/fish.d/functions /usr/share/fish/functions. The exact path to the
+The default value for \$fish_function_path is \c ~/.fish.d/functions
+\c /etc/fish.d/functions \c /usr/share/fish/functions. The exact path to the
 last two of these may be slighly different depending on what install
 path prefix was chosen at configuration time. The rationale behind
 having three different directories is that the first one is for user
@@ -787,7 +787,7 @@ the string __FISH or __fish. These should be ignored by the user.
 The colors used by fish for syntax highlighting can be configured by
 changing the values of a various variables. The value of these
 variables can be one of the colors accepted by the <a
-href='commands.html#set_color'>\c set_color</a> command. The \c --bold
+href='commands.html#set_color'>set_color</a> command. The \c --bold
 or \c -b switches accepted by \c set_color are also accepted.
 
 The following variables are available to change the highligting colors
@@ -819,7 +819,7 @@ Example:
 
 To make errors highlighted and red, use:
 
-<code>set fish_color_error red --bold</code>D
+<code>set fish_color_error red --bold</code>
 
 \subsection variables-locale Locale variables
 
@@ -1236,7 +1236,7 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 - Complete vi-mode key bindings
 - More completions (for example xterm, vim, 
 konsole, gnome-terminal, dcop, cron,
-rlogin, telnet, rsync, arch, finger, nice, locate, 
+rlogin, rsync, arch, finger, nice, locate, 
 bibtex, aspell, xpdf,
 compress, wine, xmms, dig, wine, batch, cron, 
 g++, javac, java, gcj, lpr, doxygen, whois, find)
@@ -1284,9 +1284,6 @@ report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se
 Older versions of Doxygen has bugs in the man-page generation which
 cause the builtin help to render incorrectly. Version 1.2.14 is known
 to have this problem.
-
-
-
 
 */
 /** \page design Design document

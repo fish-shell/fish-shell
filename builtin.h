@@ -62,6 +62,9 @@ enum
 */
 #define BUILTIN_FOR_ERR_IN _( L"%ls: Second argument must be 'in'\n" )
 
+/**
+   Error message when too many arguments are supplied to a builtin
+*/
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _( L"%ls: Too many arguments\n" )
 
 /**
@@ -150,6 +153,11 @@ int builtin_count_args( wchar_t **argv );
 void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 
 
+/**
+   Slightly kludgy function used with 'complete -C' in order to make
+   the commandline builtin operate on the string to complete instead
+   of operating on whatever is to be completed.
+*/
 const wchar_t *builtin_complete_get_temporary_buffer();
 
 /** 
@@ -166,6 +174,6 @@ void builtin_wperror( const wchar_t *s);
 
    \param cmd The command for which to obtain help text
 */
-char *builtin_help_get( wchar_t *cmd );
+char *builtin_help_get( const wchar_t *cmd );
 
 #endif

@@ -41,15 +41,20 @@ typedef struct
 	   Number of entries
 	*/
 	int count;
+
 	/**
 	   Last history item
 	*/
 	ll_node_t *last;
+
 	/**
 	   The last item loaded from file
 	*/
 	ll_node_t *last_loaded;
 
+	/**
+	   Set to one if the file containing the saved history has been loaded
+	*/
 	int is_loaded;
 }
 	history_data;
@@ -79,7 +84,9 @@ static int past_end =1;
 static int history_count=0;
 
 /**
-   The name of the current history list. The name is used to switch between history lists for different commands as sell as for deciding the name of the file to save the history in.
+   The name of the current history list. The name is used to switch
+   between history lists for different commands as sell as for
+   deciding the name of the file to save the history in.
 */
 static wchar_t *mode_name;
 

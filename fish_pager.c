@@ -97,13 +97,34 @@ static wchar_t *hightlight_var[] =
 static string_buffer_t out_buff;
 static FILE *out_file;
 
+/**
+   Data structure describing one or a group of related completions
+ */
 typedef struct 
 {
+	/**
+	   The list of all completin strings this entry applies to
+	*/
 	array_list_t *comp;
+	/**
+	   The description
+	*/
 	wchar_t *desc;
+	/**
+	   On-screen width of the completion string
+	*/
 	int comp_width;	
+	/**
+	   On-screen width of the description information
+	*/
 	int desc_width;	
+	/**
+	   Preffered total width
+	*/
 	int pref_width;
+	/**
+	   Minimum acceptable width
+	*/
 	int min_width;
 }
 	comp_t;

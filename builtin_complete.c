@@ -25,6 +25,9 @@ Functions used for implementing the complete builtin.
 #include "reader.h"
 #include "translate.h"
 
+/**
+   Internal storage for the builtin_get_temporary_buffer() function.
+*/
 const static wchar_t *temporary_buffer;
 
 /*
@@ -36,6 +39,9 @@ const static wchar_t *temporary_buffer;
   short switch and one long switch.
 */
 
+/**
+   Silly function
+*/
 static void	builtin_complete_add2( const wchar_t *cmd,
 								   int cmd_type,
 								   const wchar_t *short_opt,
@@ -107,6 +113,9 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 	}	
 }
 
+/**
+   Silly function
+*/
 static void	builtin_complete_add( array_list_t *cmd, 
 								  array_list_t *path,
 								  const wchar_t *short_opt,
@@ -150,6 +159,9 @@ static void	builtin_complete_add( array_list_t *cmd,
 	
 }
 
+/**
+   Silly function
+*/
 static void builtin_complete_remove3( wchar_t *cmd,
 									  int cmd_type,
 									  wchar_t short_opt,
@@ -166,6 +178,9 @@ static void builtin_complete_remove3( wchar_t *cmd,
 	}	
 }
 
+/**
+   Silly function
+*/
 static void	builtin_complete_remove2( wchar_t *cmd,
 									  int cmd_type,
 									  const wchar_t *short_opt,
@@ -214,6 +229,9 @@ static void	builtin_complete_remove2( wchar_t *cmd,
 	
 }
 
+/**
+   Silly function
+*/
 static void	builtin_complete_remove( array_list_t *cmd, 
 									 array_list_t *path,
 									 const wchar_t *short_opt,
@@ -363,7 +381,7 @@ static int builtin_complete( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"a:c:p:s:l:o:d:frxeun:C:h", 
+								L"a:c:p:s:l:o:d:frxeun:C::h", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )

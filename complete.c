@@ -1228,6 +1228,9 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	free( lookup_cmd );
 }
 
+/**
+   Returns a description for the specified function
+*/
 static const wchar_t *complete_function_desc( const wchar_t *fn )
 {
 	const wchar_t *res = function_get_desc( fn );
@@ -1548,6 +1551,14 @@ static int short_ok( wchar_t *arg,
 	return 1;
 }
 
+/**
+   This is an event handler triggered when the definition of a
+   specifiec function is changed. It automatcally removes the
+   specified function.
+
+   This is to make sure that the function disappears if the file is
+   removed or if ti contains a syntax error.
+*/
 static void complete_load_handler( const wchar_t *cmd )
 {
 	complete_remove( cmd, COMMAND, 0, 0 );

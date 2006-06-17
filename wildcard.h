@@ -57,7 +57,7 @@ enum
 
 	\param wc The wildcard string
 	\param base_dir The base directory of the filesystem to perform the match against
-	\param status flags for the search. Can be any combination of ACCEPT_INCOMPLETE and EXECUTABLES_ONLY
+	\param flags flags for the search. Can be any combination of ACCEPT_INCOMPLETE and EXECUTABLES_ONLY
 	\param out The list in which to put the output
 
 	\return 1 if matches where found, 0 otherwise.

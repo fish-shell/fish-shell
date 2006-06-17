@@ -1,5 +1,11 @@
 /** \file util.h
 	Generic utilities library.
+
+	All containers in this library except strinb_buffer_t are written
+	so that they don't allocate any memory until the first element is
+	inserted into them. That way it is known to be very cheap to
+	initialize various containers at startup, supporting the fish
+	notion of doing as much lazy initalization as possible.
 */
 
 #ifndef FISH_UTIL_H

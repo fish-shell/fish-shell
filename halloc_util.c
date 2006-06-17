@@ -1,4 +1,4 @@
-/** \file halloc.c
+/** \file halloc_util.c
 
     A hierarchical memory allocation system. Works just like talloc
 	used in Samba, except that an arbitrary block allocated with

@@ -985,17 +985,16 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 
 	wchar_t *item_begin;
 	int len1, len2, tot_len;
-
+	
 	for( pos=in;
-		 (!bracket_end) && (*pos) && !syntax_error;
+		 (*pos) && !syntax_error;
 		 pos++ )
 	{
 		switch( *pos )
 		{
 			case BRACKET_BEGIN:
 			{
-				if(( bracket_count == 0)&&(bracket_begin==0))
-					bracket_begin = pos;
+				bracket_begin = pos;
 
 				bracket_count++;
 				break;
@@ -1004,9 +1003,11 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 			case BRACKET_END:
 			{
 				bracket_count--;
-				if( (bracket_count == 0) && (bracket_end == 0) )
+				if( bracket_end < bracket_begin )
+				{
 					bracket_end = pos;
-
+				}
+				
 				if( bracket_count < 0 )
 				{
 					syntax_error = 1;
@@ -1024,7 +1025,9 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	if( bracket_count > 0 )
 	{
 		if( !(flags & ACCEPT_INCOMPLETE) )
+		{
 			syntax_error = 1;
+		}
 		else
 		{
 
@@ -1041,9 +1044,6 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 				sb_append( &mod, in );
 				sb_append_char( &mod, BRACKET_END );
 			}
-
-
-
 
 			return expand_brackets( (wchar_t*)mod.buff, 1, out );
 		}

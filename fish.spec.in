@@ -13,7 +13,7 @@ URL:                    http://roo.no-ip.org/fish/
 Source0:                http://roo.no-ip.org/%{name}/files/%{version}/%{name}-%{version}.tar.bz2
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:          doxygen ncurses-devel
+BuildRequires:          ncurses-devel
 BuildRequires:          %{xinclude}/X11/StringDefs.h, %{xinclude}/X11/Xlib.h
 BuildRequires:          %{xinclude}/X11/Intrinsic.h, %{xinclude}/X11/Xatom.h
 

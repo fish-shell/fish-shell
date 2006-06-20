@@ -80,87 +80,90 @@ static int is_potential_path( const wchar_t *path )
 	void *context = halloc( 0, 0 );
 
 	tilde = expand_tilde( wcsdup(path) );
-	halloc_register( context, tilde );
-	
-	unescaped = unescape( tilde, 1 );
-	if( unescaped )
+	if( tilde )
 	{
-		
-//	debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
+		halloc_register( context, tilde );
 	
-		halloc_register( context, unescaped );
-			
-		for( in = out = unescaped; *in; in++ )
+		unescaped = unescape( tilde, 1 );
+		if( unescaped )
 		{
-			switch( *in )
-			{
-				case PROCESS_EXPAND:
-				case VARIABLE_EXPAND:
-				case VARIABLE_EXPAND_SINGLE:
-				case BRACKET_BEGIN:
-				case BRACKET_END:
-				case BRACKET_SEP:
-				{
-					has_magic = 1;
-					break;		
-				}
-				
-				case INTERNAL_SEPARATOR:
-				{
-					break;
-				}
-				
-				default:
-				{
-					*(out++) = *in;
-					break;
-				}
-				
-			}
 			
-		}
-		*out = 0;
-		
-		if( !has_magic && wcslen( unescaped ) )
-		{
-			int must_be_dir = 0;
-			DIR *dir;
-			must_be_dir = unescaped[wcslen(unescaped)-1] == L'/';
-			if( must_be_dir )
-			{
-				dir = wopendir( unescaped );
-				res = !!dir;
-				closedir( dir );
-			}
-			else
-			{
-				wchar_t *dir_name, *base;
-				struct wdirent *ent;
-				
-				dir_name = wdirname( halloc_wcsdup(context, unescaped) );
-				base = wbasename( halloc_wcsdup(context, unescaped) );			
+//	debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
 			
-				if( (wcscmp( dir_name, L"/" ) == 0 ) &&
-					(wcscmp( base, L"/" ) == 0 ) )
+			halloc_register( context, unescaped );
+			
+			for( in = out = unescaped; *in; in++ )
+			{
+				switch( *in )
 				{
-					res = 1;
-				}
-				else if( (dir = wopendir( dir_name )) )
-				{
-					
-					while( (ent = wreaddir( dir )) )
+					case PROCESS_EXPAND:
+					case VARIABLE_EXPAND:
+					case VARIABLE_EXPAND_SINGLE:
+					case BRACKET_BEGIN:
+					case BRACKET_END:
+					case BRACKET_SEP:
 					{
-						if( wcsncmp( ent->d_name, base, wcslen(base) ) == 0 )
-						{
-							res = 1;
-							break;
-						}
+						has_magic = 1;
+						break;		
 					}
-					
+				
+					case INTERNAL_SEPARATOR:
+					{
+						break;
+					}
+				
+					default:
+					{
+						*(out++) = *in;
+						break;
+					}
+				
+				}
+			
+			}
+			*out = 0;
+		
+			if( !has_magic && wcslen( unescaped ) )
+			{
+				int must_be_dir = 0;
+				DIR *dir;
+				must_be_dir = unescaped[wcslen(unescaped)-1] == L'/';
+				if( must_be_dir )
+				{
+					dir = wopendir( unescaped );
+					res = !!dir;
 					closedir( dir );
 				}
-			}
+				else
+				{
+					wchar_t *dir_name, *base;
+					struct wdirent *ent;
+				
+					dir_name = wdirname( halloc_wcsdup(context, unescaped) );
+					base = wbasename( halloc_wcsdup(context, unescaped) );			
 			
+					if( (wcscmp( dir_name, L"/" ) == 0 ) &&
+						(wcscmp( base, L"/" ) == 0 ) )
+					{
+						res = 1;
+					}
+					else if( (dir = wopendir( dir_name )) )
+					{
+					
+						while( (ent = wreaddir( dir )) )
+						{
+							if( wcsncmp( ent->d_name, base, wcslen(base) ) == 0 )
+							{
+								res = 1;
+								break;
+							}
+						}
+					
+						closedir( dir );
+					}
+				}
+			
+			}
 		}
 	}
 	

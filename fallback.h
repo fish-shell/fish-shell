@@ -310,8 +310,9 @@ struct drand48_data
    Fallback implementation of lrand48_r. Internally uses rand_r, so it is pretty weak.
 */
 int lrand48_r(struct drand48_data *buffer, long int *result);
+
 /**
-   Fallback implementation of srand48_r
+   Fallback implementation of srand48_r, the seed function for lrand48_r.
 */
 int srand48_r(long int seedval, struct drand48_data *buffer);
 

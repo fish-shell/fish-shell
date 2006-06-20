@@ -969,7 +969,10 @@ void parser_destroy()
 }
 
 /**
-   Print error message if an error has occured while parsing
+   Print error message to string_buffer_t if an error has occured while parsing
+
+   \param target the buffer to write to
+   \param prefix: The string token to prefix the ech line with. Usually the name of the command trying to parse something.
 */
 static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 {
@@ -988,6 +991,9 @@ static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 	}
 }
 
+/**
+   Print error message to stderr if an error has occured while parsing
+*/
 static void print_errors_stderr()
 {
 	if( error_code )

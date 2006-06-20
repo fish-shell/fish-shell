@@ -303,7 +303,10 @@ static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
 	return long_name;
 }
 
-void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
+/**
+   Get the description of the specified filename. If this is a regular file, append the filesize to the description.
+*/
+static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 {
 	const wchar_t *desc;
 	
@@ -376,7 +379,7 @@ void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 	}
 }
 
-/*
+/**
   Test if the file specified by the given filename matches the
   expansion flags specified. flags can be a combination of
   EXECUTABLES_ONLY and DIRECTORIES_ONLY.

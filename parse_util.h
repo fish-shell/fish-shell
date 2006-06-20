@@ -22,7 +22,7 @@
 int parse_util_locate_cmdsubst( const wchar_t *in, 
 								wchar_t **begin, 
 								wchar_t **end,
-								int allow_incomplete );
+								int flags );
 
 /**
    Find the beginning and end of the command substitution under the cursor
@@ -65,12 +65,16 @@ void parse_util_job_extent( const wchar_t *buff,
 							wchar_t **b );
 
 /**
-   Find the beginning and end of the token under the cursor
+   Find the beginning and end of the token under the cursor and the
+   toekn before the current token. Any combination of tok_begin,
+   tok_end, prev_begin and prev_end may be null.
 
    \param buff the string to search for subshells
    \param cursor_pos the position of the cursor
-   \param a the start of the searched string
-   \param b the end of the searched string
+   \param tok_begin the start of the current token
+   \param tok_end the end of the current token
+   \param prev_begin the start o the token before the current token
+   \param prev_end the end of the token before the current token
 */
 void parse_util_token_extent( const wchar_t *buff,
 							  int cursor_pos,

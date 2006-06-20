@@ -18,37 +18,92 @@
 #include "common.h"
 #include "halloc.h"
 
+/**
+   Extra size to allocate whenever doing a halloc, in order to fill uyp smaller halloc calls
+*/
 #define HALLOC_BLOCK_SIZE 128
+
+/**
+   Maximum size of trailing halloc space to refuse to discard
+*/
 #define HALLOC_SCRAP_SIZE 16
 
 #ifdef HALLOC_DEBUG
+/**
+   Debug statistic parameter
+*/
 static int child_count=0;
+/**
+   Debug statistic parameter
+*/
 static int child_size=0;
+/**
+   Debug statistic parameter
+*/
 static int alloc_count =0;
+/**
+   Debug statistic parameter
+*/
 static int alloc_spill = 0;
+/**
+   Debug statistic parameter
+*/
 static pid_t pid=0;
+/**
+   Debug statistic parameter
+*/
 static int parent_count=0;
 #endif
 
+/**
+   The main datastructure for a main halloc context
+*/
 typedef struct halloc
 {
+	/**
+	   List of all addresses and functions to call on them
+	*/
 	array_list_t children;
+	/**
+	   Memory scratch area used to fullfil smaller memory allocations
+	*/
 	void *scratch;
+	/**
+	   Amount of free space in the scratch area
+	*/
 	size_t scratch_free;
-	long long data[0];
+#if __STDC_VERSION__ < 199901L
+	/**
+	   The actual data. MAde to be of type long long to make sure memory alignment is in order.
+	*/
+	long long data[1]; // Waste one byte on non-C99 compilers... :-( 
+#else
+	long long data[];
+#endif
 }
 	halloc_t;
 
+/**
+   Get the offset of the halloc structure before a data block
+*/
 static halloc_t *halloc_from_data( void *data )
 {
 	return (halloc_t *)(((char *)data) - sizeof( halloc_t ) );
 }
 
+/**
+   A function that does nothing
+*/
 static void late_free( void *data)
 {
 }
 
 #ifdef HALLOC_DEBUG
+/**
+   Debug function, called at exit when in debug mode. Prints usage
+   statistics, like number of allocations and number of internal calls
+   to malloc.
+*/
 static void woot()
 {
 	if( getpid() == pid )

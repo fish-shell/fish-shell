@@ -113,6 +113,9 @@ static char *writestr_buff = 0;
 
 static int (*out)(char c) = &writeb_internal;
 
+/**
+   Cleanup function. Run automatically through halloc
+*/
 static void output_destroy()
 {
 	free( writestr_buff );
@@ -347,6 +350,9 @@ void move_cursor( int steps )
 	}
 }
 
+/**
+   Default output method, simply calls write() on stdout
+*/
 static int writeb_internal( char c )
 {
 	write( 1, &c, 1 );

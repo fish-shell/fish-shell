@@ -89,6 +89,9 @@ io_data_t *io_buffer_create();
 */
 void io_buffer_read( io_data_t *d );
 
+/**
+   Print debug information about the specified IO redirection chain to stderr.
+*/
 void io_print( io_data_t *io );
 
 #endif

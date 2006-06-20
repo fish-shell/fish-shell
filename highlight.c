@@ -33,6 +33,9 @@
 #include "halloc.h"
 #include "halloc_util.h"
 
+/**
+   Number of elements in the highlight_var array
+*/
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
 static void highlight_universal_internal( wchar_t * buff, 
@@ -62,6 +65,11 @@ static wchar_t *highlight_var[] =
 }
 	;
 
+/**
+   Tests if the specified string is the prefix of any valid path in the system. 
+
+   \return zero it this is not a valid prefix, non-zero otherwise
+*/
 static int is_potential_path( const wchar_t *path )
 {
 	wchar_t *tilde, *unescaped;

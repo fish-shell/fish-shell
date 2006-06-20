@@ -132,6 +132,9 @@ enum
 */
 #define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
 
+/**
+   Error issued on array out of bounds
+*/
 #define ARRAY_BOUNDS_ERR _(L"Array index out of bounds")
 
 

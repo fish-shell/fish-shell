@@ -306,6 +306,9 @@ void function_set_desc( const wchar_t *name, const wchar_t *desc )
 	data->desc =wcsdup(desc);
 }
 
+/**
+   Search arraylist of strings for specified string
+*/
 static int al_contains_str( array_list_t *list, const wchar_t * str )
 {
 	int i;

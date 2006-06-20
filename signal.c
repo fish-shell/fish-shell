@@ -46,6 +46,9 @@ struct lookup_entry
 	const wchar_t *desc;	
 };
 
+/**
+   The number of signal blocks in place. Increased by signal_block, decreased by signal_unblock.
+*/
 static int block_count=0;
 
 
@@ -53,7 +56,7 @@ static int block_count=0;
    Lookup table used to convert between signal names and signal ids,
    etc.
 */
-static struct lookup_entry lookup[] =
+const static struct lookup_entry lookup[] =
 {
 #ifdef SIGHUP
 	{

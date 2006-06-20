@@ -570,6 +570,13 @@ static int expand_pid( wchar_t *in,
 					   int flags,
 					   array_list_t *out )
 {
+
+	if( !in || !out)
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+
 	if( *in != PROCESS_EXPAND )
 	{
 		al_push( out, in );
@@ -662,6 +669,12 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 
 	static string_buffer_t *var_tmp = 0;
 	static array_list_t *var_idx_list = 0;
+
+	if( !in || !out)
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
 
 	if( !var_tmp )
 	{
@@ -986,6 +999,12 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	wchar_t *item_begin;
 	int len1, len2, tot_len;
 	
+	if( !in || !out)
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+
 	for( pos=in;
 		 (*pos) && !syntax_error;
 		 pos++ )
@@ -1116,15 +1135,9 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 	int i, j;
 	const wchar_t *item_begin;
 
-	if( !in )
+	if( !in || !out)
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
-	}
-
-	if( !out )
-	{
-		debug( 2, L"Got null pointer on line %d of file %s", __LINE__, __FILE__ );
 		return 0;		
 	}
 
@@ -1209,7 +1222,9 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 	return 1;
 }
 
-
+/**
+   Wrapper around unescape funtion. Issues an error() on failiure.
+*/
 static wchar_t *expand_unescape( const wchar_t * in, int escape_special )
 {
 	wchar_t *res = unescape( in, escape_special );

@@ -52,6 +52,11 @@
 #define LAPS 50
 
 /**
+   The result of one of the test passes
+*/
+#define NUM_ANS L"-7 99999999 1234567 deadbeef DEADBEEFDEADBEEF"
+
+/**
    Number of encountered errors
 */
 static int err_count=0;
@@ -344,8 +349,6 @@ static void sb_test()
 	say( (wchar_t *)b.buff );
 
 	sb_clear( &b );
-
-#define NUM_ANS L"-7 99999999 1234567 deadbeef DEADBEEFDEADBEEF"
 
 	sb_printf( &b, L"%d %u %o %x %llX", -7, 99999999, 01234567, 0xdeadbeef, 0xdeadbeefdeadbeefll );
 	if( wcscmp( (wchar_t *)b.buff,  NUM_ANS) != 0 )

@@ -29,12 +29,18 @@
 #include "halloc.h"
 #include "halloc_util.h"
 
+/**
+   Minimum length of the internal covnersion buffers
+*/
 #define TMP_LEN_MIN 256
 
 #ifndef PATH_MAX
 #ifdef MAXPATHLEN
 #define PATH_MAX MAXPATHLEN
 #else
+/**
+   Fallback length of MAXPATHLEN. Just a hopefully sane value...
+*/
 #define PATH_MAX 4096
 #endif
 #endif
@@ -44,11 +50,20 @@
    the \c wutil_wcs2str() function.
 */
 static char *tmp=0;
+/**
+   Buffer for converting narrow results to wide ones, used by the \c
+   wutil_str2wcs() function. Avoid usign this without thinking about
+   it, since sebseuent calls will overwrite previous values.
+*/
 static wchar_t *tmp2;
 /**
    Length of the \c tmp buffer.
 */
 static size_t tmp_len=0;
+
+/**
+   Length of the \c tmp2 buffer
+*/
 static size_t tmp2_len;
 
 /**
@@ -56,6 +71,9 @@ static size_t tmp2_len;
 */
 static int wutil_calls = 0;
 
+/**
+   Storage for the wreaddir function
+*/
 static struct wdirent my_wdirent;
 
 void wutil_init()

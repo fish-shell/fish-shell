@@ -51,6 +51,9 @@ string_buffer_t *sb_halloc( void *context )
 	return res;
 }
 
+/**
+   A function that takes a single parameter, which is a function pointer, and calls it.
+*/
 static void halloc_passthrough( void *f )
 {
 	void (*func)() = (void (*)() )f;

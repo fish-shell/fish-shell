@@ -10,6 +10,59 @@
 #include "util.h"
 
 /**
+   Internal value representing highlighting of normal text
+*/
+#define HIGHLIGHT_NORMAL 0x1
+/**
+   Internal value representing highlighting of an error
+*/
+#define HIGHLIGHT_ERROR 0x2
+/**
+   Internal value representing highlighting of a command
+*/
+#define HIGHLIGHT_COMMAND 0x4
+/**
+   Internal value representing highlighting of a process separator
+*/
+#define HIGHLIGHT_END 0x8
+/**
+   Internal value representing highlighting of a regular command parameter
+*/
+#define HIGHLIGHT_PARAM 0x10
+/**
+   Internal value representing highlighting of a comment
+*/
+#define HIGHLIGHT_COMMENT 0x20
+/**
+   Internal value representing highlighting of a matching parenteses, etc.
+*/
+#define HIGHLIGHT_MATCH 0x40
+/**
+   Internal value representing highlighting of a search match
+*/
+#define HIGHLIGHT_SEARCH_MATCH 0x80
+/**
+   Internal value representing highlighting of an operator
+*/
+#define HIGHLIGHT_OPERATOR 0x100
+/**
+   Internal value representing highlighting of an escape sequence
+*/
+#define HIGHLIGHT_ESCAPE 0x200
+/**
+   Internal value representing highlighting of a quoted string
+*/
+#define HIGHLIGHT_QUOTE 0x400
+/**
+   Internal value representing highlighting of an IO redirection
+*/
+#define HIGHLIGHT_REDIRECTION 0x800 
+/**
+   Internal value representing highlighting a potentially valid path
+*/
+#define HIGHLIGHT_VALID_PATH 0x1000
+
+/**
    Perform syntax highlighting for the shell commands in buff. The result is
    stored in the color array as a color_code from the HIGHLIGHT_ enum
    for each character in buff.

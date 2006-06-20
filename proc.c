@@ -108,6 +108,9 @@ static string_buffer_t event_pid;
 */
 static string_buffer_t event_status;
 
+/**
+   A stack containing the values of is_interactive. Used by proc_push_interactive and proc_pop_interactive.
+*/
 static array_list_t *interactive_stack;
 
 void proc_init()

@@ -232,6 +232,9 @@ static int inputrc_block_count=0;
 */
 static int inputrc_error = 0;
 
+/**
+   Set to one when the input subsytem has been initialized. 
+*/
 static int is_init = 0;
 
 wchar_t input_get_code( wchar_t *name )

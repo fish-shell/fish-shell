@@ -47,8 +47,14 @@ static char *wcs2str_buff=0;
 */
 static size_t wcs2str_buff_count=0;
 
+/**
+   Flag to tell whether the translation library has been initialized
+*/
 static int is_init = 0;
 
+/**
+   Internal shutdown function. Automatically called on shutdown if the library has been initialized.
+*/
 static void internal_destroy()
 {
 	int i;
@@ -64,6 +70,9 @@ static void internal_destroy()
 	free( wcs2str_buff );
 }
 
+/**
+   Internal init function. Automatically called when a translation is first requested.
+*/
 static void internal_init()
 {
 	int i;

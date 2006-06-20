@@ -52,11 +52,6 @@ extern struct termios shell_modes;
 extern wchar_t ellipsis_char;
 
 /**
-   The maximum number of charset convertion errors to report
-*/
-extern int error_max;
-
-/**
    The verbosity of fish
 */
 extern int debug_level;

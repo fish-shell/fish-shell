@@ -74,8 +74,6 @@ parts of fish.
 
 struct termios shell_modes;      
 
-int error_max=1;
-
 wchar_t ellipsis_char;
 
 char *profile=0;

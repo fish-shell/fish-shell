@@ -136,22 +136,6 @@ void builtin_pop_io();
 */
 const wchar_t *builtin_get_desc( const wchar_t *b );
 
-/**
-   Counts the number of non null pointers in the specified array
-*/
-int builtin_count_args( wchar_t **argv );
-
-/**
-   Print help for the specified builtin. If \c b is sb_err, also print
-   the line information
-
-   If \c b is the buffer representing standard error, and the help
-   message is about to be printed to an interactive screen, it may be
-   shortened to fit the screen.
-
-*/
-void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
-
 
 /**
    Slightly kludgy function used with 'complete -C' in order to make
@@ -160,12 +144,6 @@ void builtin_print_help( wchar_t *cmd, string_buffer_t *b );
 */
 const wchar_t *builtin_complete_get_temporary_buffer();
 
-/** 
-	This function works like wperror, but it prints its result into
-	the sb_err string_buffer_t instead of to stderr. Used by the builtin
-	commands.
-*/
-void builtin_wperror( const wchar_t *s);
 
 /**
    Return the help text for the specified builtin command. Use

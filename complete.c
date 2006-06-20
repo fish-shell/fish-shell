@@ -1776,12 +1776,12 @@ static void complete_param_expand( wchar_t *str,
 	{
 		comp_str = str;
 	}
-	
+	/*
 	debug( 3,
 		   L"expand_string( \"%ls\", comp_out, EXPAND_SKIP_SUBSHELL | ACCEPT_INCOMPLETE | %ls );",
 		   comp_str,
 		   do_file?L"0":L"EXPAND_SKIP_WILDCARDS" );
-	
+	*/
 	expand_string( 0, 
 				   wcsdup(comp_str),
 				   comp_out,
@@ -1974,7 +1974,6 @@ void complete( const wchar_t *cmd,
 	int on_command=0;
 	int pos;
 
-	int old_error_max = error_max;
 	int done=0;
 
 	int cursor_pos = wcslen(cmd );
@@ -1985,8 +1984,6 @@ void complete( const wchar_t *cmd,
 		return;
 	}
 	
-	error_max=0;
-
 	/**
 	   If we are completing a variable name or a tilde expansion user
 	   name, we do that and return. No need for any other competions.
@@ -2135,7 +2132,6 @@ void complete( const wchar_t *cmd,
 	free( current_command );
 	free( prev_token );
 
-	error_max=old_error_max;
 	condition_cache_clear();
 
 }

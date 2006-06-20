@@ -179,7 +179,7 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 	\param indexes the list to insert the new indexes into
 	\param src the source string to parse
 	\param name the name of the element. Return null if the name in \c src does not match this name
-	\param the number of elements in the array to parse. 
+	\param var_count the number of elements in the array to parse. 
 
 	\return the total number of indexes parsed, or -1 on error
 */

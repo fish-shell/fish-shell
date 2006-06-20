@@ -70,6 +70,12 @@ static void al_push_check( array_list_t *l, const wchar_t *new )
 int wildcard_has( const wchar_t *str, int internal )
 {
 	wchar_t prev=0;
+	if( !str )
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
+
 	if( internal )
 	{
 		for( ; *str; str++ )
@@ -162,19 +168,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 									   const wchar_t *(*desc_func)(const wchar_t *),
 									   array_list_t *out )
 {
-	if( !wc )
-	{
-		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
-	}
-	
-	if( !str )
-	{
-		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
-	}
-	
-	if( !orig )
+	if( !wc || !str || !orig)
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
 		return 0;		
@@ -318,6 +312,11 @@ static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 		}
 	;
 	
+	if( !fn || !sb )
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return;		
+	}
 	
 	sb_clear( sb );
 	
@@ -436,6 +435,12 @@ int wildcard_expand( const wchar_t *wc,
 	string_buffer_t sb_desc;
 	
 	//	debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
+
+	if( !wc || !base_dir || !out)
+	{
+		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+		return 0;		
+	}
 
 	if( flags & ACCEPT_INCOMPLETE )
 	{	

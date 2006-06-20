@@ -66,12 +66,7 @@
 #include "parse_util.h"
 #include "expand.h"
 
-#include "builtin_help.c"
-#include "builtin_set.c"
-#include "builtin_commandline.c"
-#include "builtin_complete.c"
-#include "builtin_ulimit.c"
-#include "builtin_jobs.c"
+
 
 /**
    The default prompt for the read command
@@ -139,7 +134,11 @@ static int builtin_stdin;
 */
 static hash_table_t *desc=0;
 
-int builtin_count_args( wchar_t **argv )
+/**
+   Counts the number of non null pointers in the specified array
+*/
+
+static int builtin_count_args( wchar_t **argv )
 {
 	int argc = 1;
 	while( argv[argc] != 0 )
@@ -149,8 +148,13 @@ int builtin_count_args( wchar_t **argv )
 	return argc;
 }
 
+/** 
+	This function works like wperror, but it prints its result into
+	the sb_err string_buffer_t instead of to stderr. Used by the builtin
+	commands.
+*/
 
-void builtin_wperror( const wchar_t *s)
+static void builtin_wperror( const wchar_t *s)
 {
 	if( s != 0 )
 	{
@@ -178,26 +182,18 @@ static int count_char( const wchar_t *str, wchar_t c )
 	return res;
 }
 
-/*
-  Here follows the definition of all builtin commands. The function
-  names are all on the form builtin_NAME where NAME is the name of the
-  builtin. so the function name for the builtin 'fg' is
-  'builtin_fg'.
+/**
+   Print help for the specified builtin. If \c b is sb_err, also print
+   the line information
 
-  A few builtins, including 'while', 'command' and 'builtin' are not
-  defined here as they are handled directly by the parser. (They are
-  not parsed as commands, instead they only alter the parser state)
-
-  The builtins 'break' and 'continue' are so closely related that they
-  share the same implementation, namely 'builtin_break_continue.
-
-  Several other builtins, including jobs, ulimit and set are so big
-  that they have been given their own file. These files are all named
-  'builtin_NAME.c', where NAME is the name of the builtin.
+   If \c b is the buffer representing standard error, and the help
+   message is about to be printed to an interactive screen, it may be
+   shortened to fit the screen.
 
 */
 
-void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
+
+static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 {
 	const char *h;
 
@@ -260,6 +256,35 @@ void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 		free( str );
 	}
 }
+
+/*
+  Here follows the definition of all builtin commands. The function
+  names are all on the form builtin_NAME where NAME is the name of the
+  builtin. so the function name for the builtin 'fg' is
+  'builtin_fg'.
+
+  A few builtins, including 'while', 'command' and 'builtin' are not
+  defined here as they are handled directly by the parser. (They are
+  not parsed as commands, instead they only alter the parser state)
+
+  The builtins 'break' and 'continue' are so closely related that they
+  share the same implementation, namely 'builtin_break_continue.
+
+  Several other builtins, including jobs, ulimit and set are so big
+  that they have been given their own file. These files are all named
+  'builtin_NAME.c', where NAME is the name of the builtin.
+
+*/
+
+
+#include "builtin_help.c"
+#include "builtin_set.c"
+#include "builtin_commandline.c"
+#include "builtin_complete.c"
+#include "builtin_ulimit.c"
+#include "builtin_jobs.c"
+
+
 /**
    The bind builtin, used for setting character sequences
 */

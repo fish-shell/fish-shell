@@ -208,8 +208,13 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 	int in_pos=0;
 	int out_pos = 0;
 	mbstate_t state;
-	size_t len = strlen(in);
-	
+	size_t len;
+
+	CHECK( in, 0 );
+	CHECK( out, 0 );
+		
+	len = strlen(in);
+
 	memset( &state, 0, sizeof(state) );
 	
 	while( in[in_pos] )
@@ -265,6 +270,10 @@ char *wcs2str_internal( const wchar_t *in, char *out )
 	int in_pos=0;
 	int out_pos = 0;
 	mbstate_t state;
+
+	CHECK( in, 0 );
+	CHECK( out, 0 );
+	
 	memset( &state, 0, sizeof(state) );
 	
 	while( in[in_pos] )

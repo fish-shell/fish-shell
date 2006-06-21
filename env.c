@@ -1206,6 +1206,8 @@ void env_get_names( array_list_t *l, int flags )
 	hash_table_t names;
 	env_node_t *n=top;
 
+	CHECK( l, );
+	
 	get_names_show_exported = 
 		flags & ENV_EXPORT|| (!(flags & ENV_UNEXPORT));
 	get_names_show_unexported = 
@@ -1327,7 +1329,7 @@ static void export_func2( void *k, void *v, void *aux )
 	free( vs );
 }
 
-char **env_export_arr( int recalc)
+char **env_export_arr( int recalc )
 {
 	if( recalc && !proc_had_barrier)
 	{

@@ -695,6 +695,10 @@ unsigned long proc_get_jiffies( process_t *p )
 	{
 		return 0;
 	}
+
+	/*
+	  Don't need to check exit status of fclose on read-only streams
+	*/
 	fclose( f );
 	return utime+stime+cutime+cstime;
 	

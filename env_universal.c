@@ -182,7 +182,12 @@ static void check_connection()
 	if( env_universal_server.killme )
 	{
 		debug( 3, L"Lost connection to universal variable server." );
-		close( env_universal_server.fd );
+		
+		if( close( env_universal_server.fd ) )
+		{
+			wperror( L"close" );
+		}
+		
 		env_universal_server.fd = -1;
 		env_universal_server.killme=0;
 		sb_clear( &env_universal_server.input );	
@@ -252,7 +257,12 @@ void env_universal_destroy()
 		}
 		try_send_all( &env_universal_server );	
 	}
-	close( env_universal_server.fd );
+
+	if( close( env_universal_server.fd ) )
+	{
+		wperror( L"close" );
+	}
+	
 	env_universal_server.fd =-1;
 	q_destroy( &env_universal_server.unsent );
 	sb_destroy( &env_universal_server.input );	

@@ -86,9 +86,10 @@ void exec_close( int fd )
 		{
 			debug( 1, FD_ERROR, fd );
 			wperror( L"close" );
+			break;
 		}
 	}
-
+	
 	if( open_fds )
 	{
 		for( i=0; i<al_get_count( open_fds ); i++ )
@@ -260,7 +261,11 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 		switch( io->io_mode )
 		{
 			case IO_CLOSE:
-				close(io->fd);
+				if( close(io->fd) )
+				{
+					debug( 0, _(L"Failed to close file descriptor %d"), io->fd );
+					wperror( L"close" );
+				}
 				break;
 			case IO_FILE:
 			{
@@ -283,8 +288,12 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 				}				
 				else if( tmp != io->fd)
 				{
+					/*
+					  This call will sometimes fail, but that is ok,
+					  this is just a precausion.
+					*/
 					close(io->fd);
-		
+							
 					if(dup2( tmp, io->fd ) == -1 )
 					{
 						debug( 1, 
@@ -307,6 +316,10 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 			
 			case IO_FD:
 			{
+				/*
+				  This call will sometimes fail, but that is ok,
+				  this is just a precausion.
+				*/
 				close(io->fd);
 
 				if( dup2( io->param1.old_fd, io->fd ) == -1 )
@@ -332,6 +345,10 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 			{
 				int fd_to_dup = io->fd;
 
+				/*
+				  This call will sometimes fail, but that is ok,
+				  this is just a precausion.
+				*/
 				close(io->fd);
 				
 				if( dup2( io->param1.pipe_fd[fd_to_dup?1:0], io->fd ) == -1 )

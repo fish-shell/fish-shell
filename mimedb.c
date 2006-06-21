@@ -548,6 +548,9 @@ static char *get_description( const char *mimetype )
 		return 0;
 	}
 
+	/*
+	  Don't need to check exit status of close on read-only file descriptors
+	*/
 	close( fd );
 	free( fn );
 

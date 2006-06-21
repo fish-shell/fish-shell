@@ -1335,6 +1335,9 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 		debug( 1, L"acquire_lock_file: open: %s", strerror( errno ) );
 		goto done;
 	}
+	/*
+	  Don't need to check exit status of close on read-only file descriptors
+	*/
 	close( fd );
 	if( stat( linkfile, &statbuf ) != 0 )
 	{

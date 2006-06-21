@@ -1132,6 +1132,9 @@ static void input_read_inputrc( wchar_t *fn )
 			}
 		}
 		free( buff );
+		/*
+		  Don't need to check exit status of fclose on read-only stream
+		*/
 		fclose( rc );
 	}
 	signal_unblock();

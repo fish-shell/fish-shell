@@ -866,7 +866,6 @@ void parser_init()
 		al_init( &profile_data);
 	}
 	forbidden_function = al_new();
-
 }
 
 /**
@@ -914,12 +913,27 @@ static void print_profile( array_list_t *p,
 
 		if( me->cmd )
 		{
-			fwprintf( out, L"%d\t%d\t", my_time, me->parse+me->exec );
+			if( fwprintf( out, L"%d\t%d\t", my_time, me->parse+me->exec ) < 0 )
+			{
+				wperror( L"fwprintf" );
+				return;
+			}
+			
 			for( i=0; i<me->level; i++ )
 			{
-				fwprintf( out, L"-" );
+				if( fwprintf( out, L"-" ) < 0 )
+				{
+					wperror( L"fwprintf" );
+					return;
+				}
+
 			}
-			fwprintf( out, L"> %ls\n", me->cmd );
+			if( fwprintf( out, L"> %ls\n", me->cmd ) < 0 )
+			{
+				wperror( L"fwprintf" );
+				return;
+			}
+
 		}
 	}
 	print_profile( p, pos+1, out );
@@ -943,11 +957,21 @@ void parser_destroy()
 		}
 		else
 		{
-			fwprintf( f,
-					  _(L"Time\tSum\tCommand\n"),
-					  al_get_count( &profile_data ) );
-			print_profile( &profile_data, 0, f );
-			fclose( f );
+			if( fwprintf( f,
+						  _(L"Time\tSum\tCommand\n"),
+						  al_get_count( &profile_data ) ) < 0 )
+			{
+				wperror( L"fwprintf" );
+			}
+			else
+			{
+				print_profile( &profile_data, 0, f );
+			}
+			
+			if( fclose( f ) )
+			{
+				wperror( L"fclose" );
+			}
 		}
 		al_destroy( &profile_data );
 	}

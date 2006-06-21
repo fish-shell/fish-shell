@@ -303,11 +303,12 @@ int waccess(const wchar_t *file_name, int mode)
 
 void wperror(const wchar_t *s)
 {
+	int e = errno;
 	if( s != 0 )
 	{
 		fwprintf( stderr, L"%ls: ", s );
 	}
-	fwprintf( stderr, L"%s\n", strerror( errno ) );
+	fwprintf( stderr, L"%s\n", strerror( e ) );
 }
 
 #ifdef HAVE_REALPATH_NULL

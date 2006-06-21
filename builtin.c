@@ -3015,12 +3015,8 @@ void builtin_destroy()
 
 int builtin_exists( wchar_t *cmd )
 {
-	if( !cmd )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 0;
-	}
-	
+	CHECK( cmd, 0 );
+		
 	/*
 	  Count is not a builtin, but it's help is handled internally by
 	  fish, so it is in the hash_table_t.
@@ -3052,12 +3048,9 @@ int builtin_run( wchar_t **argv )
 {
 	int (*cmd)(wchar_t **argv)=0;
 	
-	if( !argv || !argv[0] )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 1;
-	}	
-	
+	CHECK( argv, 1 );
+	CHECK( argv[0], 1 );
+		
 	cmd = (int (*)(wchar_t **))hash_get( &builtin, argv[0] );
 
 	if( argv[1] != 0 && !internal_help(argv[0]) )
@@ -3087,24 +3080,15 @@ int builtin_run( wchar_t **argv )
 
 void builtin_get_names( array_list_t *list )
 {
-	if( !list )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}
-	
+	CHECK( list, );
+		
  	hash_get_keys( &builtin, list );
 }
 
 const wchar_t *builtin_get_desc( const wchar_t *b )
 {
-	if( !b )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 0;
-	}
+	CHECK( b, 0 );
 	
-
 	if( !desc )
 	{
 		int i;

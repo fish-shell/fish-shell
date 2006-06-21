@@ -52,7 +52,10 @@ int parse_util_lineno( const wchar_t *str, int len )
 	static wchar_t *prev_str2 = 0;
 	static int i2 = 0;
 	static int res2 = 1;
+
+	CHECK( str, 0 );
 	
+
 	if( str != prev_str || i>len )
 	{
 		if( prev_str2 == str && i2 <= len )
@@ -100,6 +103,8 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 
 	wchar_t *paran_begin=0, *paran_end=0;
 
+	CHECK( in, 0 );
+	
 	for( pos = (wchar_t *)in; *pos; pos++ )
 	{
 		if( prev != '\\' )
@@ -176,13 +181,12 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 	wchar_t *begin, *end;
 	wchar_t *pos;
 	
+	CHECK( buff, );
+
 	if( a )
 		*a=0;
 	if( b )
 		*b = 0;
-
-	if( !buff )
-		return;
 
 	pos = (wchar_t *)buff;
 	
@@ -243,6 +247,8 @@ static void job_or_process_extent( const wchar_t *buff,
 	
 	tokenizer tok;
 
+	CHECK( buff, );
+	
 	if( a )
 		*a=0;
 	if( b )
@@ -342,6 +348,8 @@ void parse_util_token_extent( const wchar_t *buff,
 
 	wchar_t *a, *b, *pa, *pb;
 	
+	CHECK( buff, );
+		
 	assert( cursor_pos >= 0 );
 	
 

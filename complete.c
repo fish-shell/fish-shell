@@ -389,12 +389,8 @@ void complete_add( const wchar_t *cmd,
 	complete_entry *c;
 	complete_entry_opt *opt;
 
-	if( !cmd )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}	
-
+	CHECK( cmd, );
+	
 	c = complete_find_exact_entry( cmd, cmd_type );
 
 	if( c == 0 )
@@ -461,12 +457,8 @@ void complete_remove( const wchar_t *cmd,
 {
 	complete_entry *e, *eprev=0, *enext=0;
 
-	if( !cmd )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}
-	
+	CHECK( cmd, );
+		
 	for( e = first_entry; e; e=enext )
 	{
 		enext=e->next;
@@ -615,12 +607,9 @@ int complete_is_valid_option( const wchar_t *str,
 
 	void *context;
 	
-	if( !str || !opt )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 0;
-	}
-	
+	CHECK( str, 0 );
+	CHECK( opt, 0 );
+		
 	/*
 	  Check some generic things like -- and - options.
 	*/
@@ -942,12 +931,8 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 {
 	struct stat buf;
 
-	if( !filename )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 0;
-	}
-	
+	CHECK( filename, 0 );
+		
 	if( !get_desc_buff )
 	{
 		get_desc_buff = sb_halloc( global_context);
@@ -1978,12 +1963,9 @@ void complete( const wchar_t *cmd,
 
 	int cursor_pos = wcslen(cmd );
 
-	if( !cmd || !comp )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}
-	
+	CHECK( cmd, );
+	CHECK( comp, );
+		
 	/**
 	   If we are completing a variable name or a tilde expansion user
 	   name, we do that and return. No need for any other competions.

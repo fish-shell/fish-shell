@@ -495,12 +495,8 @@ int contains_str( const wchar_t *a, ... )
 	va_list va;
 	int res = 0;
 
-	if( !a )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 0;
-	}
-
+	CHECK( a, 0 );
+	
 	va_start( va, a );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
 	{
@@ -546,12 +542,8 @@ void debug( int level, const wchar_t *msg, ... )
 	string_buffer_t sb;
 	string_buffer_t sb2;
 	
-	if( !msg )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}
-	
+	CHECK( msg, );
+		
 	if( level > debug_level )
 		return;
 
@@ -578,12 +570,9 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff )
 	int tok_width = 0;
 	int screen_width = common_get_width();
 	
-	if( !msg || !buff )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}
-	
+	CHECK( msg, );
+	CHECK( buff, );
+		
 	if( screen_width )
 	{
 		start = pos = msg;
@@ -799,12 +788,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 	wchar_t prev=0;	
 	wchar_t *in;
 
-	if( !orig )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 0;
-	}
-	
+	CHECK( orig, 0 );
+		
 	len = wcslen( orig );
 	in = wcsdup( orig );
 

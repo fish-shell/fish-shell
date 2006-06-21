@@ -68,6 +68,26 @@ extern char *profile;
 extern wchar_t *program_name;
 
 /**
+   This macro is used to check that an input argument is not null. It
+   is a bit lika a non-fatal form of assert. Instead of exit-ing on
+   failiure, the current function is ended at once. The second
+   parameter is the exit status of the current function on failiure.
+*/
+#define CHECK( arg, retval )					\
+	if( !(arg) )														\
+	{																	\
+		debug( 1,														\
+			   L"function %s called with null value for argument %s. "	\
+			   L"This is a bug. "										\
+			   L"If you can reproduce it, please send a bug report to %s.", \
+			   __func__,												\
+			   #arg,													\
+			   PACKAGE_BUGREPORT );										\
+		return retval;													\
+	}																	\
+		
+
+/**
    Take an array_list_t containing wide strings and converts them to a
    single null-terminated wchar_t **. The array is allocated using
    halloc, and uses the \c context parameter as context. If \c context

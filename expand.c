@@ -101,6 +101,8 @@ int expand_is_clean( const wchar_t *in )
 
 	const wchar_t * str = in;
 
+	CHECK( in, 1 );
+
 	/*
 	  Test characters that have a special meaning in the first character position
 	*/
@@ -160,6 +162,8 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 
 	array_list_t l;
 	string_buffer_t buff;
+
+	CHECK( in, 0 );
 
 	al_init( &l );
 	tokenize_variable_array( in, &l );
@@ -1316,6 +1320,8 @@ static wchar_t * expand_tilde_internal( wchar_t *in )
 
 wchar_t *expand_tilde( wchar_t *in)
 {
+	CHECK( in, 0 );
+	
 	if( in[0] == L'~' )
 	{
 		in[0] = HOME_DIRECTORY;
@@ -1373,6 +1379,9 @@ int expand_string( void *context,
 	int subshell_ok = 1;
 	int res = EXPAND_OK;
 	int start_count = al_get_count( end_out );
+
+	CHECK( str, EXPAND_ERROR );
+	CHECK( end_out, EXPAND_ERROR );
 
 	if( (!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean( str ) )
 	{
@@ -1619,6 +1628,8 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
 	array_list_t l;
 	int res;
 	wchar_t *one;
+
+	CHECK( string, 0 );
 	
 	if( (!(flags & ACCEPT_INCOMPLETE)) &&  expand_is_clean( string ) )
 	{

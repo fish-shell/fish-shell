@@ -533,14 +533,9 @@ void highlight_shell( wchar_t * buff,
 	void *context;
 	wchar_t *cmd=0;
 	
-	if( !buff || !color )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}
-
+	CHECK( buff, );
+	CHECK( color, );
 	
-
 	len = wcslen(buff);
 	
 	if( !len )

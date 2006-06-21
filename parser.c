@@ -758,12 +758,8 @@ wchar_t *parser_get_filename( void *context, const wchar_t *cmd )
 {
 	wchar_t *path;
 
-	if( !cmd )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 0;
-	}
-	
+	CHECK( cmd, 0 );
+		
 	debug( 3, L"parser_get_filename( '%ls' )", cmd );
 
 	if(wcschr( cmd, L'/' ) != 0 )
@@ -1022,12 +1018,9 @@ int eval_args( const wchar_t *line, array_list_t *args )
 	int previous_pos=current_tokenizer_pos;
 	int do_loop=1;
 
-	if( !line || !args )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 1;
-	}
-	
+	CHECK( line, 1 );
+	CHECK( args, 1 );
+		
 	proc_push_interactive(0);	
 	current_tokenizer = &tok;
 	current_tokenizer_pos = 0;
@@ -1103,12 +1096,8 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 	/*
 	  Validate input
 	*/
-	if( !buff )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return;
-	}
-	
+	CHECK( buff, );
+		
 	/*
 	  Check if we should end the recursion
 	*/
@@ -2738,12 +2727,8 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 	wchar_t *arg_cpy;
 	int do_loop = 1;
 	
-	if( !arg )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 1;
-	}
-	
+	CHECK( arg, 1 );
+		
 	arg_cpy = wcsdup( arg );
 	
 	while( do_loop )
@@ -2910,12 +2895,8 @@ int parser_test_args(const  wchar_t * buff,
 	int do_loop = 1;
 	int err = 0;
 	
-	if( !buff )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 1;
-	}
-	
+	CHECK( buff, 1 );
+		
 	current_tokenizer = &tok;
 	
 	for( tok_init( &tok, buff, 0 );
@@ -3008,12 +2989,8 @@ int parser_test( const  wchar_t * buff,
 	int arg_count=0;
 	wchar_t *cmd=0;
 		
-	if( !buff )
-	{
-		debug( 0, L"%s called with null input", __func__ );
-		return 1;
-	}
-	
+	CHECK( buff, 1 );
+		
 	context = halloc( 0, 0 );
 	current_tokenizer = &tok;
 

@@ -29,18 +29,16 @@
    Error string for unexpected end of string
 */
 #define EOL_ERROR _( L"Unexpected end of token" )
+
 /**
    Error string for mismatched parenthesis
 */
 #define PARAN_ERROR _( L"Parenthesis mismatch" )
+
 /**
    Error string for invalid redirections
 */
 #define REDIRECT_ERROR _( L"Invalid redirection" )
-/**
-   Error string for invalid input
-*/
-#define INPUT_ERROR _( L"Invalid input" )
 
 /**
    Error string for when trying to pipe from fd 0
@@ -118,25 +116,15 @@ static void tok_error( tokenizer *tok, const wchar_t *err )
 
 void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 {
-//	fwprintf( stderr, L"CREATE: \'%ls\'\n", b );
 
+	CHECK( tok, );
+	CHECK( b, );
 
 	memset( tok, 0, sizeof( tokenizer) );
 
 	tok->accept_unfinished = flags & TOK_ACCEPT_UNFINISHED;
 	tok->show_comments = flags & TOK_SHOW_COMMENTS;
 	tok->has_next=1;
-
-	/*
-	   Before we copy the buffer we need to check that it is not
-	   null. But before that, we need to init the tokenizer far enough
-	   so that errors can be properly flagged
-	*/
-	if( !b )
-	{
-		tok_error( tok, INPUT_ERROR );
-		return;
-	}
 
 	tok->has_next = (*b != L'\0');
 	tok->orig_buff = tok->buff = (wchar_t *)(b);
@@ -165,6 +153,8 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 
 void tok_destroy( tokenizer *tok )
 {
+	CHECK( tok, );
+	
 	free( tok->last );
 	if( tok->free_orig )
 		free( tok->orig_buff );
@@ -172,11 +162,15 @@ void tok_destroy( tokenizer *tok )
 
 int tok_last_type( tokenizer *tok )
 {
+	CHECK( tok, 0 );
+	
 	return tok->last_type;
 }
 
 wchar_t *tok_last( tokenizer *tok )
 {
+	CHECK( tok, 0 );
+	
 	return tok->last;
 }
 
@@ -470,6 +464,8 @@ static void read_redirect( tokenizer *tok, int fd )
 
 wchar_t tok_last_quote( tokenizer *tok )
 {
+	CHECK( tok, 0 );
+	
 	return tok->last_quote;
 }
 
@@ -488,15 +484,19 @@ static int my_iswspace( wchar_t c )
 
 const wchar_t *tok_get_desc( int type )
 {
-
+	if( type < 0 || type >= sizeof( tok_desc ) )
+	{
+		return _(L"Invalid token type");
+	}
 	return _(tok_desc[type]);
 }
 
 
 void tok_next( tokenizer *tok )
 {
-//	fwprintf( stderr, L"tok_next on %ls (prev=%ls)\n", tok->orig_buff, tok_desc[tok->last_type] );
 
+	CHECK( tok, );
+	
 	if( tok_last_type( tok ) == TOK_ERROR )
 	{
 		tok->has_next=0;
@@ -619,6 +619,8 @@ wchar_t *tok_first( const wchar_t *str )
 	tokenizer t;
 	wchar_t *res=0;
 
+	CHECK( str, 0 );
+	
 	tok_init( &t, str, 0 );
 
 	switch( tok_last_type( &t ) )
@@ -638,12 +640,16 @@ wchar_t *tok_first( const wchar_t *str )
 
 int tok_get_pos( tokenizer *tok )
 {
+	CHECK( tok, 0 );
+	
 	return tok->last_pos + (tok->free_orig?1:0);
 }
 
 
 void tok_set_pos( tokenizer *tok, int pos )
 {
+	CHECK( tok, );
+	
 	tok->buff = tok->orig_buff + pos;
 	tok->has_next = 1;
 	tok_next( tok );

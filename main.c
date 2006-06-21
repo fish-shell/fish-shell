@@ -117,6 +117,8 @@ int main( int argc, char **argv )
 	
 	char *cmd=0;	
 
+	halloc_util_init();	
+
 	wsetlocale( LC_ALL, L"" );
 	is_interactive_session=1;
 	program_name=L"fish";
@@ -258,7 +260,6 @@ int main( int argc, char **argv )
 		no_exec = 0;
 	}
 	
-	halloc_util_init();	
 
 	proc_init();	
 	event_init();	

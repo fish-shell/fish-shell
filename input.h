@@ -111,6 +111,6 @@ void input_parse_inputrc_line( wchar_t *cmd );
 /**
    Returns the function for the given function name.
 */
-wchar_t input_get_code( wchar_t *name );
+wchar_t input_get_code( const wchar_t *name );
 
 #endif

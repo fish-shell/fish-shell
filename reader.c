@@ -2080,7 +2080,7 @@ int reader_get_cursor_pos()
 }
 
 
-void reader_run_command( wchar_t *cmd )
+void reader_run_command( const wchar_t *cmd )
 {
 
 	wchar_t *ft;

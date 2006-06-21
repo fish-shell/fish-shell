@@ -61,6 +61,7 @@ implementation in fish is as of yet incomplete.
 #include "signal.h"
 #include "translate.h"
 #include "output.h"
+#include "intern.h"
 
 static void input_read_inputrc( wchar_t *fn );
 
@@ -71,9 +72,9 @@ static void input_read_inputrc( wchar_t *fn );
 
 typedef struct
 {
-	wchar_t *seq; /**< Character sequence which generates this event */
-	wchar_t *seq_desc; /**< Description of the character sequence suitable for printing on-screen */
-	wchar_t *command; /**< command that should be evaluated by this mapping */
+	const wchar_t *seq; /**< Character sequence which generates this event */
+	const wchar_t *seq_desc; /**< Description of the character sequence suitable for printing on-screen */
+	const wchar_t *command; /**< command that should be evaluated by this mapping */
 		
 }
 	mapping;
@@ -237,7 +238,7 @@ static int inputrc_error = 0;
 */
 static int is_init = 0;
 
-wchar_t input_get_code( wchar_t *name )
+wchar_t input_get_code( const wchar_t *name )
 {
 
 	int i;
@@ -340,18 +341,16 @@ void add_mapping( const wchar_t *mode,
 		mapping *m = (mapping *)al_get( mappings, i );
 		if( wcscmp( m->seq, s ) == 0 )
 		{
-			free( m->command );
-			free( m->seq_desc );
-			m->seq_desc = wcsdup(d );
-			m->command=wcsdup(c);
+			m->seq_desc = intern(d);
+			m->command = intern(c);
 			return;
 		}
 	}
 	
 	mapping *m = malloc( sizeof( mapping ) );
-	m->seq = wcsdup( s );
-	m->seq_desc = wcsdup(d );
-	m->command=wcsdup(c);
+	m->seq = intern( s );
+	m->seq_desc = intern(d );
+	m->command = intern(c);
 	al_push( mappings, m );	
 }
 
@@ -1427,20 +1426,11 @@ int input_init()
 */
 static void destroy_mapping( void *key, void *val )
 {
-	int i;
 	array_list_t *mappings = (array_list_t *)val;
 	
-	for( i=0; i<al_get_count( mappings ); i++ )
-	{
-		mapping *m = (mapping *)al_get( mappings, i );
-		free( m->seq );
-		free( m->seq_desc );
-		
-		free( m->command );
-		free(m );
-	}
-		
+	al_foreach( mappings, &free );		
 	al_destroy( mappings );
+
 	free((void *)key);
 	free((void *)val);	
 }

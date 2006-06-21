@@ -72,7 +72,7 @@ void repaint();
    Run the specified command with the correct terminal modes, and
    while taking care to perform job notification, set the title, etc.
 */
-void reader_run_command( wchar_t *buff );
+void reader_run_command( const wchar_t *buff );
 
 /**
    Get the string of character currently entered into the command

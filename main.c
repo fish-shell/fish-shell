@@ -258,7 +258,6 @@ int main( int argc, char **argv )
 		no_exec = 0;
 	}
 	
-	common_init();
 	halloc_util_init();	
 
 	proc_init();	
@@ -353,7 +352,6 @@ int main( int argc, char **argv )
 	wutil_destroy();
 	event_destroy();
 
-	common_destroy();
 	halloc_util_destroy();
 	intern_free_all();
 

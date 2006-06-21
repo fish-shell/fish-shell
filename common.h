@@ -251,16 +251,6 @@ int read_blocked(int fd, void *buf, size_t count);
 void die_mem();
 
 /**
-  Create global_context using halloc
-*/
-void common_init();
-
-/**
-   Free global_context using halloc_free
-*/
-void common_destroy();
-
-/**
    Issue a debug message with printf-style string formating and
    automatic line breaking. The string will begin with the string \c
    program_name, followed by a colon and a whitespace.

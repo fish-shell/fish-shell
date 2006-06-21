@@ -92,20 +92,6 @@ static struct winsize termsize;
 */
 static string_buffer_t *setlocale_buff=0;
 
-void common_destroy()
-{
-	
-	if( setlocale_buff )
-	{
-		sb_destroy( setlocale_buff );
-		free( setlocale_buff );
-	}
-}
-
-void common_init()
-{
-}
-
 wchar_t **list_to_char_arr( array_list_t *l )
 {
 	wchar_t ** res = malloc( sizeof(wchar_t *)*(al_get_count( l )+1) );
@@ -479,8 +465,7 @@ const wchar_t *wsetlocale(int category, const wchar_t *locale)
 	
 	if( !setlocale_buff )
 	{
-		setlocale_buff = malloc( sizeof(string_buffer_t) );
-		sb_init( setlocale_buff);
+		setlocale_buff = sb_halloc( global_context);
 	}
 	
 	sb_clear( setlocale_buff );

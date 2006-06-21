@@ -8,6 +8,7 @@
 #include <wctype.h>
 #include <wchar.h>
 #include <limits.h>
+#include <sys/time.h>
 
 #ifndef WCHAR_MAX
 /**
@@ -315,6 +316,12 @@ int lrand48_r(struct drand48_data *buffer, long int *result);
    Fallback implementation of srand48_r, the seed function for lrand48_r.
 */
 int srand48_r(long int seedval, struct drand48_data *buffer);
+
+#endif
+
+#ifndef HAVE_FUTIMES
+
+int futimes(int fd, const struct timeval *times);
 
 #endif
 

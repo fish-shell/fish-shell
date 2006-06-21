@@ -1020,3 +1020,15 @@ int srand48_r(long int seedval, struct drand48_data *buffer)
 }
 
 #endif
+
+#ifndef HAVE_FUTIMES
+
+int futimes(int fd, const struct timeval *times)
+{
+	errno = ENOSYS;
+	return -1;
+}
+
+
+#endif
+

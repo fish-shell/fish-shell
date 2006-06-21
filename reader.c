@@ -962,7 +962,6 @@ static void check_colors()
 static void reader_save_status()
 {
 
-#ifdef HAVE_FUTIMES
 	/*
 	  This futimes call tries to trick the system into using st_mtime
 	  as a tampering flag. This of course only works on systems where
@@ -983,9 +982,13 @@ static void reader_save_status()
 		}
 	;
 
+	/*
+	  Don't check return value on these. We don't care if they fail,
+	  really.  This is all just to make the prompt look ok, which is
+	  impossible to do 100% reliably. We try, at least.
+	*/
 	futimes( 1, t );
 	futimes( 2, t );
-#endif
 
 	fstat( 1, &prev_buff_1 );
 	fstat( 2, &prev_buff_2 );

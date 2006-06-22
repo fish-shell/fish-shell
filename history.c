@@ -103,13 +103,19 @@ static int is_loaded=0;
 /**
    Load history from file
 */
-static void history_load()
+static int history_load()
 {
 	wchar_t *fn;
 	wchar_t *buff=0;
 	int buff_len=0;
 	FILE *in_stream;
 	hash_table_t used;
+	int res = 0;
+	
+	if( !mode_name )
+	{
+		return -1;
+	}	
 
 	is_loaded = 1;
 		
@@ -136,7 +142,7 @@ static void history_load()
 				free( fn );
 				free( buff );
 				signal_unblock();				
-				return;
+				return -1;
 			}
 
 			/*
@@ -182,6 +188,8 @@ static void history_load()
 		{
 			debug( 1, L"The following non-fatal error occurred while reading command history from \'%ls\':", mode_name );
 			wperror( L"fopen" );
+			res = -1;
+			
 		}
 		
 	}	
@@ -193,6 +201,8 @@ static void history_load()
 	free( fn );
 	last_loaded = history_last;
 	signal_unblock();
+	return res;
+	
 }
 
 void history_init()
@@ -315,7 +325,9 @@ static void history_save()
 	history_count=0;
 	past_end=1;
 
-	history_load();
+	if( !history_load() )
+	{
+		
 	if( real_pos != 0 )
 	{
 		/* 
@@ -373,6 +385,8 @@ static void history_save()
 		}
 		free( fn );	
 	}
+	}
+	
 	
 }
 
@@ -433,7 +447,13 @@ void history_destroy()
 static ll_node_t *history_find( ll_node_t *n, const wchar_t *s )
 {
 	if( !is_loaded )
-		history_load();	
+	{
+		if( history_load() )
+		{
+			return 0;
+		}
+	}
+	
 
 	if( n == 0 )
 		return 0;
@@ -452,7 +472,13 @@ void history_add( const wchar_t *str )
 	ll_node_t *old_node;
 
 	if( !is_loaded )
-		history_load();	
+	{
+		if( history_load() )
+		{
+			return;
+		}
+	}
+	
 
 	if( wcslen( str ) == 0 )
 		return;
@@ -509,7 +535,13 @@ static int history_test( const wchar_t *needle, const wchar_t *haystack )
 const wchar_t *history_prev_match( const wchar_t *str )
 {
 	if( !is_loaded )
-		history_load();	
+	{
+		if( history_load() )
+		{
+			return 0;
+		}
+	}
+	
 
 	if( history_current == 0 )
 		return str;
@@ -533,7 +565,13 @@ const wchar_t *history_prev_match( const wchar_t *str )
 const wchar_t *history_next_match( const wchar_t *str)
 {
 	if( !is_loaded )
-		history_load();	
+	{
+		if( history_load() )
+		{
+			return 0;
+		}
+	}
+	
 
 	if( history_current == 0 )
 		return str;
@@ -571,9 +609,15 @@ wchar_t *history_get( int idx )
 {
 	ll_node_t *n;
 	int i;
+	
 	if( !is_loaded )
-		history_load();	
-
+	{
+		if( history_load() )
+		{
+			return 0;
+		}
+	}
+	
 	n = history_last;
 	
 	if( idx<0)

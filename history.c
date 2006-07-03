@@ -160,7 +160,7 @@ static int history_load()
 				history_current = malloc( sizeof( ll_node_t ) );
 				if( !history_current )
 				{
-					die_mem();
+					DIE_MEM();
 					
 				}
 				

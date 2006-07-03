@@ -631,7 +631,7 @@ static int builtin_set( wchar_t **argv )
 
 	if( !(dest = wcsdup(argv[woptind])))
 	{
-		die_mem();		
+		DIE_MEM();		
 	}
 
 	if( wcschr( dest, L'[' ) )

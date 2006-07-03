@@ -274,7 +274,7 @@ static void job_or_process_extent( const wchar_t *buff,
 
 	if( !buffcpy )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 
 	for( tok_init( &tok, buffcpy, TOK_ACCEPT_UNFINISHED );
@@ -376,7 +376,7 @@ void parse_util_token_extent( const wchar_t *buff,
 
 	if( !buffcpy )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 
 	for( tok_init( &tok, buffcpy, TOK_ACCEPT_UNFINISHED );
@@ -527,7 +527,7 @@ int parse_util_load( const wchar_t *cmd,
 		halloc_register_function_void( global_context, &parse_util_destroy );
 		if( !all_loaded )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
  	}
@@ -539,7 +539,7 @@ int parse_util_load( const wchar_t *cmd,
 		loaded = malloc( sizeof( hash_table_t ) );
 		if( !loaded )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 		hash_init( loaded, &hash_wcs_func, &hash_wcs_cmp );
 		hash_put( all_loaded, wcsdup(path_var_name), loaded );
@@ -598,7 +598,7 @@ int parse_util_load( const wchar_t *cmd,
 				{
 					tm = malloc(sizeof(time_t)*2);
 					if( !tm )
-						die_mem();
+						DIE_MEM();
 				}
 
 				tm[0] = buf.st_mtime;
@@ -632,7 +632,7 @@ int parse_util_load( const wchar_t *cmd,
 	{
 		tm = malloc(sizeof(time_t)*2);
 		if( !tm )
-			die_mem();
+			DIE_MEM();
 		
 		tm[0] = 0;
 		tm[1] = time(0);
@@ -675,7 +675,7 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 	wchar_t *unescaped = wcsdup(str);
 
 	if( !unescaped )
-		die_mem();
+		DIE_MEM();
 	
 	for( in=out=unescaped; *in; in++ )
 	{

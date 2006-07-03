@@ -268,7 +268,7 @@ static int condition_test( const wchar_t *condition )
 		condition_cache = malloc( sizeof( hash_table_t ) );
 		if( !condition_cache )
 		{
-			die_mem();
+			DIE_MEM();
 
 		}
 
@@ -397,7 +397,7 @@ void complete_add( const wchar_t *cmd,
 	{
 		if( !(c = malloc( sizeof(complete_entry) )))
 		{
-			die_mem();
+			DIE_MEM();
 		}
 		
 		c->next = first_entry;
@@ -412,7 +412,7 @@ void complete_add( const wchar_t *cmd,
 
 	if( !(opt = malloc( sizeof( complete_entry_opt ) )))
 	{
-		die_mem();
+		DIE_MEM();
 	}
 	
 	opt->next = c->first_option;
@@ -649,7 +649,7 @@ int complete_is_valid_option( const wchar_t *str,
 
 	if( !(short_validated = halloc( context, wcslen( opt ) )))
 	{
-		die_mem();
+		DIE_MEM();
 	}
 	
 
@@ -860,7 +860,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 	{
 		suffix_hash = malloc( sizeof( hash_table_t) );
 		if( !suffix_hash )
-			die_mem();
+			DIE_MEM();
 		hash_init( suffix_hash, &hash_wcs_func, &hash_wcs_cmp );
 	}
 
@@ -1687,7 +1687,7 @@ static int complete_param( wchar_t *cmd_orig,
 						wchar_t *next_opt =
 							malloc( sizeof(wchar_t)*(3 + wcslen(desc)));
 						if( !next_opt )
-							die_mem();
+							DIE_MEM();
 
 						next_opt[0]=o->short_opt;
 						next_opt[1]=COMPLETE_SEP;

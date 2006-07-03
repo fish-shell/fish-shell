@@ -108,7 +108,7 @@ static char *wutil_wcs2str( const wchar_t *in )
 		tmp = realloc( tmp, new_sz );
 		if( !tmp )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 		tmp_len = new_sz;
 	}
@@ -135,7 +135,7 @@ static wchar_t *wutil_str2wcs( const char *in )
 		tmp2 = realloc( tmp2, new_sz );
 		if( !tmp2 )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 		tmp2_len = new_sz;
 	}

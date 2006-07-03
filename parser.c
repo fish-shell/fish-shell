@@ -680,7 +680,7 @@ wchar_t *parser_cdpath_get( void *context, wchar_t *dir )
 
 		if( !path_cpy )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 
 		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
@@ -803,7 +803,7 @@ wchar_t *parser_get_filename( void *context, const wchar_t *cmd )
 			
 		if( (new_cmd==0) || (path_cpy==0) )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 
 		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
@@ -1063,7 +1063,7 @@ int eval_args( const wchar_t *line, array_list_t *args )
 				
 				if( !tmp )
 				{
-					die_mem();
+					DIE_MEM();
 				}
 				
 				if( expand_string( 0, tmp, args, 0 ) == EXPAND_ERROR )
@@ -1519,7 +1519,7 @@ static void parse_job_main_loop( process_t *p,
 				p->next = halloc( j, sizeof( process_t ) );
 				if( p->next == 0 )
 				{
-					die_mem();
+					DIE_MEM();
 				}
 				tok_next( tok );
 				
@@ -1664,7 +1664,7 @@ static void parse_job_main_loop( process_t *p,
 
 				new_io = halloc( j, sizeof(io_data_t) );
 				if( !new_io )
-					die_mem();
+					DIE_MEM();
 
 				new_io->fd = wcstol( tok_last( tok ),
 									 0,

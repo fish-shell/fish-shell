@@ -664,7 +664,7 @@ array_list_t *al_new()
 {
 	array_list_t *res = malloc( sizeof( array_list_t ) );
 	if( !res )
-		die_mem();
+		DIE_MEM();
 	al_init( res );
 	return res;
 }
@@ -865,7 +865,7 @@ string_buffer_t *sb_new()
 {
 	string_buffer_t *res = malloc( sizeof( string_buffer_t ) );
 	if( !res )
-		die_mem();
+		DIE_MEM();
 	sb_init( res );
 	return res;
 }
@@ -972,7 +972,7 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 		buffer->length = MIN_SIZE;
 		buffer->buff = malloc( MIN_SIZE );
 		if( !buffer->buff )
-			die_mem();
+			DIE_MEM();
 	}
 	
 
@@ -1012,7 +1012,7 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 
 		buffer->buff = realloc( buffer->buff, 2*buffer->length );
 		if( !buffer->buff )
-			die_mem();
+			DIE_MEM();
 		buffer->length *= 2;				
 	}
 	return res;	
@@ -1085,7 +1085,7 @@ void b_append( buffer_t *b, const void *d, ssize_t len )
 		void *d = realloc( b->buff, l );
 		if( !d )
 		{
-			die_mem();
+			DIE_MEM();
 			
 		}
 		b->buff=d;

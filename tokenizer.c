@@ -140,7 +140,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 				tok->orig_buff = tok->buff = wcsdup( tok->orig_buff );
 				if( !tok->orig_buff )
 				{
-					die_mem();
+					DIE_MEM();
 				}
 				tok->orig_buff[l-1] = L'\0';
 			}

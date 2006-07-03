@@ -684,7 +684,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 	{
 		var_tmp = sb_halloc( global_context );
 		if( !var_tmp )
-			die_mem();
+			DIE_MEM();
 	}
 	else
 	{
@@ -695,7 +695,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 	{
 		var_idx_list = al_halloc( global_context );
 		if( !var_idx_list )
-			die_mem();
+			DIE_MEM();
 	}
 	else
 	{
@@ -907,7 +907,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 									
 									if( !(new_in = malloc( sizeof(wchar_t)*new_len )))
 									{
-										die_mem();
+										DIE_MEM();
 									}
 									else
 									{

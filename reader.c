@@ -449,7 +449,7 @@ static int check_size()
 			data->color==0 ||
 			data->new_color == 0 )
 		{
-			die_mem();
+			DIE_MEM();
 
 		}
 	}
@@ -2567,7 +2567,7 @@ wchar_t *reader_readline()
 			{
 				wchar_t *str = wcsndup( data->buff, data->buff_pos );
 				if( !str )
-					die_mem();
+					DIE_MEM();
 
 				kill_add( str );
 				free( str );

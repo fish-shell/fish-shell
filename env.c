@@ -1306,7 +1306,7 @@ static void export_func2( void *k, void *v, void *aux )
 
 	if( !ks || !vs )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 	
 	/*

@@ -102,7 +102,7 @@ static char *translate_wcs2str( const wchar_t *in )
 		wcs2str_buff = realloc( wcs2str_buff, len );
 		if( wcs2str_buff == 0 )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 	}
 	

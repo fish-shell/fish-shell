@@ -88,6 +88,15 @@ extern wchar_t *program_name;
 		
 
 /**
+   Exit program at once, leaving an error message about running out of memory
+*/
+#define DIE_MEM()								\
+	{																	\
+		fwprintf( stderr, L"fish: Out of memory on line %d of file %s, shutting down fish\n", __LINE__, __FILE__ );	\
+		exit(1);														\
+	}																	\
+		
+/**
    Take an array_list_t containing wide strings and converts them to a
    single null-terminated wchar_t **. The array is allocated using
    halloc, and uses the \c context parameter as context. If \c context
@@ -245,10 +254,6 @@ int contains_str( const wchar_t *needle, ... );
 */
 int read_blocked(int fd, void *buf, size_t count);
 
-/**
-   Exit program at once, leaving an error message about running out of memory
-*/
-void die_mem();
 
 /**
    Issue a debug message with printf-style string formating and

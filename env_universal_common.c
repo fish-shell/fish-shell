@@ -261,7 +261,7 @@ static void parse_message( wchar_t *msg,
 			var_uni_entry_t *entry = 
 				malloc( sizeof(var_uni_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
 			if( !entry )
-				die_mem();
+				DIE_MEM();
 			entry->export=export;
 			
 			wcscpy( entry->val, val );
@@ -433,7 +433,7 @@ message_t *create_message( int type,
 			msg = malloc( sizeof( message_t ) + sz );
 			
 			if( !msg )
-				die_mem();
+				DIE_MEM();
 			
 			strcpy( msg->body, (type==SET?SET_MBS:SET_EXPORT_MBS) );
 			strcat( msg->body, " " );
@@ -453,7 +453,7 @@ message_t *create_message( int type,
             msg = malloc( sizeof( message_t ) + sz );
 
 			if( !msg )
-				die_mem();
+				DIE_MEM();
 			
             strcpy( msg->body, ERASE_MBS " " );
             strcat( msg->body, key );
@@ -466,7 +466,7 @@ message_t *create_message( int type,
 			msg = malloc( sizeof( message_t )  + 
 						  strlen( BARRIER_MBS ) +2);
 			if( !msg )
-				die_mem();
+				DIE_MEM();
 			strcpy( msg->body, BARRIER_MBS "\n" );
 			break;
 		}
@@ -476,7 +476,7 @@ message_t *create_message( int type,
 			msg = malloc( sizeof( message_t )  +
 						  strlen( BARRIER_REPLY_MBS ) +2);
 			if( !msg )
-				die_mem();
+				DIE_MEM();
 			strcpy( msg->body, BARRIER_REPLY_MBS "\n" );
 			break;
 		}

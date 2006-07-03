@@ -481,7 +481,7 @@ static int builtin_block( wchar_t **argv )
 		event_block_t *eb = malloc( sizeof( event_block_t ) );
 
 		if( !eb )
-			die_mem();
+			DIE_MEM();
 
 		eb->type = type;
 
@@ -1112,7 +1112,7 @@ static int builtin_function( wchar_t **argv )
 
 				e = halloc( current_block, sizeof(event_t));
 				if( !e )
-					die_mem();
+					DIE_MEM();
 				e->type = EVENT_SIGNAL;
 				e->param1.signal = sig;
 				e->function_name=0;
@@ -1136,7 +1136,7 @@ static int builtin_function( wchar_t **argv )
 
 				e = halloc( current_block, sizeof(event_t));
 				if( !e )
-					die_mem();
+					DIE_MEM();
 				e->type = EVENT_VARIABLE;
 				e->param1.variable = halloc_wcsdup( current_block, woptarg );
 				e->function_name=0;
@@ -1153,7 +1153,7 @@ static int builtin_function( wchar_t **argv )
 
 				e = halloc( current_block, sizeof(event_t));
 				if( !e )
-					die_mem();
+					DIE_MEM();
 				
 				if( ( opt == 'j' ) &&
 					( wcscasecmp( woptarg, L"caller" ) == 0 ) )

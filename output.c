@@ -440,7 +440,7 @@ void writestr( const wchar_t *str )
 		writestr_buff = realloc( writestr_buff, len );
 		if( !writestr_buff )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 		writestr_buff_sz = len;
 	}

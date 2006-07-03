@@ -140,7 +140,7 @@ static event_t *event_copy( event_t *event, int copy_arguments )
 {
 	event_t *e = malloc( sizeof( event_t ) );
 	if( !e )
-		die_mem();
+		DIE_MEM();
 	memcpy( e, event, sizeof(event_t));
 
 	if( e->function_name )

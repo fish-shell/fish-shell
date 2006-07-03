@@ -40,7 +40,7 @@ const wchar_t *intern( const wchar_t *in )
 		intern_table = malloc( sizeof( hash_table_t ) );
 		if( !intern_table )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 		hash_init( intern_table, &hash_wcs_func, &hash_wcs_cmp );
 	}
@@ -59,7 +59,7 @@ const wchar_t *intern( const wchar_t *in )
 			res = wcsdup( in );
 			if( !res )
 			{
-				die_mem();
+				DIE_MEM();
 			}
 			
 			hash_put( intern_table, res, res );
@@ -81,7 +81,7 @@ const wchar_t *intern_static( const wchar_t *in )
 		intern_static_table = malloc( sizeof( hash_table_t ) );
 		if( !intern_static_table )
 		{
-			die_mem();			
+			DIE_MEM();			
 		}
 		hash_init( intern_static_table, &hash_wcs_func, &hash_wcs_cmp );
 	}

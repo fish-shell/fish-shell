@@ -189,7 +189,7 @@ io_data_t *io_duplicate( void *context, io_data_t *l )
 	
 	if( !res )
 	{
-		die_mem();
+		DIE_MEM();
 		
 	}
 	

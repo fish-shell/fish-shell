@@ -129,7 +129,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 				*suffix = 0;
 				dup = intern( fn );
 				if( !dup )
-					die_mem();
+					DIE_MEM();
 				al_push( out, dup );
 			}
 		}				

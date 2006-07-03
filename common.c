@@ -98,7 +98,7 @@ wchar_t **list_to_char_arr( array_list_t *l )
 	int i;
 	if( res == 0 )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 	for( i=0; i<al_get_count( l ); i++ )
 	{		
@@ -124,7 +124,7 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 			buff = realloc( buff, sizeof(wchar_t)*new_len );
 			if( buff == 0 )
 			{
-				die_mem();
+				DIE_MEM();
 			}
 			else
 			{
@@ -196,7 +196,7 @@ wchar_t *str2wcs( const char *in )
 
 	if( !out )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 
 	return str2wcs_internal( in, out );
@@ -258,7 +258,7 @@ char *wcs2str( const wchar_t *in )
 
 	if( !out )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 
 	return wcs2str_internal( in, out );
@@ -314,7 +314,7 @@ char **wcsv2strv( const wchar_t **in )
 	char **res = malloc( sizeof( char *)*(count+1));
 	if( res == 0 )
 	{
-		die_mem();		
+		DIE_MEM();		
 	}
 
 	for( i=0; i<count; i++ )
@@ -349,7 +349,7 @@ wchar_t *wcsdupcat2( const wchar_t *a, ... )
 	wchar_t *res = malloc( sizeof(wchar_t)*(len +1 ));
 	if( res == 0 )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 	
 	wcscpy( res, a );
@@ -375,7 +375,7 @@ wchar_t **strv2wcsv( const char **in )
 	wchar_t **res = malloc( sizeof( wchar_t *)*(count+1));
 	if( res == 0 )
 	{
-		die_mem();
+		DIE_MEM();
 	}
 
 	for( i=0; i<count; i++ )
@@ -518,18 +518,6 @@ int read_blocked(int fd, void *buf, size_t count)
 	return res;	
 }
 
-
-void die_mem()
-{
-	/*
-	  Do not translate this message, and do not send it through the
-	  usual channels. This increases the odds that the message gets
-	  through correctly, even if we are out of memory.
-	*/
-	fwprintf( stderr, L"Out of memory, shutting down fish.\n" );
-	exit(1);
-}
-
 void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
@@ -665,7 +653,7 @@ wchar_t *escape( const wchar_t *in,
 	pos = out;
 	
 	if( !out )
-		die_mem();
+		DIE_MEM();
 	
 	while( *in != 0 )
 	{
@@ -788,7 +776,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 	in = wcsdup( orig );
 
 	if( !in )
-		die_mem();
+		DIE_MEM();
 	
 	for( in_pos=0, out_pos=0; 
 		 in_pos<len; 
@@ -1440,7 +1428,7 @@ void tokenize_variable_array( const wchar_t *val, array_list_t *out )
 
 		if( !cpy )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 
 		for( start=pos=cpy; *pos; pos++ )

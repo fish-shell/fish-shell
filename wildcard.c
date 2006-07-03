@@ -290,7 +290,7 @@ static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
 	int base_len = wcslen( base_dir );
 	if( !(long_name= malloc( sizeof(wchar_t)*(base_len+wcslen(name)+1) )))
 	{
-		die_mem();
+		DIE_MEM();
 	}					
 	wcscpy( long_name, base_dir );
 	wcscpy(&long_name[base_len], name );
@@ -637,7 +637,7 @@ int wildcard_expand( const wchar_t *wc,
 
 		if( (!new_dir) || (!wc_str) )
 		{
-			die_mem();
+			DIE_MEM();
 		}
 
 		wcscpy( new_dir, base_dir );

@@ -495,7 +495,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 	
 	out = malloc( sizeof( io_data_t ) );
 	if( !out )
-		die_mem();
+		DIE_MEM();
 	
 	out->fd = in->fd;
 	out->io_mode = IO_FD;

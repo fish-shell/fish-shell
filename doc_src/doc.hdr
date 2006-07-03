@@ -842,7 +842,7 @@ Many other shells have a large library of builtin commands. Most of
 these commands are also available as standalone commands, but have
 been implemented in the shell anyway for whatever reason. To avoid
 code duplication, and to avoid the confusion of subtly differing
-versions of the same command, \c fish only implementing builtins for
+versions of the same command, \c fish only implements builtins for
 actions which cannot be performed by a regular command.
 
 \section bundle Commands bundled with fish 

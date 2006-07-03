@@ -25,7 +25,11 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 								int flags );
 
 /**
-   Find the beginning and end of the command substitution under the cursor
+   Find the beginning and end of the command substitution under the
+   cursor. If no subshell is found, the entire string is returned. If
+   the current command substitution is not ended, i.e. the closing
+   parenthesis is missing, then the string from the beginning of the
+   substitution to the end of the string is returned.
 
    \param buff the string to search for subshells
    \param cursor_pos the position of the cursor

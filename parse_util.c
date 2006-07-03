@@ -180,27 +180,27 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 {
 	wchar_t *begin, *end;
 	wchar_t *pos;
+	const wchar_t *cursor = buff + cursor_pos;
 	
 	CHECK( buff, );
 
 	if( a )
-		*a=0;
+		*a = (wchar_t *)buff;
 	if( b )
-		*b = 0;
-
+		*b = (wchar_t *)buff+wcslen(buff);
+	
 	pos = (wchar_t *)buff;
 	
 	while( 1 )
 	{
-		int bc, ec;
-		
 		if( parse_util_locate_cmdsubst( pos,
 										&begin,
 										&end,
 										1 ) <= 0)
 		{
-			begin=(wchar_t *)buff;
-			end = (wchar_t *)buff + wcslen(buff);
+			/*
+			  No subshell found
+			*/
 			break;
 		}
 
@@ -209,12 +209,13 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 			end = (wchar_t *)buff + wcslen(buff);
 		}
 
-		bc = begin-buff;
-		ec = end-buff;
-		
-		if(( bc < cursor_pos ) && (ec >= cursor_pos) )
+		if(( begin < cursor ) && (end >= cursor) )
 		{
 			begin++;
+			if( a )
+				*a = begin;
+			if( b )
+				*b = end;
 			break;
 		}
 
@@ -225,10 +226,7 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 		
 		pos = end+1;
 	}
-	if( a )
-		*a = begin;
-	if( b )
-		*b = end;
+	
 }
 
 /**
@@ -359,21 +357,21 @@ void parse_util_token_extent( const wchar_t *buff,
 
 	if( !end || !begin )
 		return;
-
+	
 	pos = cursor_pos - (begin - buff);
-
+	
 	a = (wchar_t *)buff + pos;
 	b = a;
 	pa = (wchar_t *)buff + pos;
 	pb = pa;
-
+	
 	assert( begin >= buff );
 	assert( begin <= (buff+wcslen(buff) ) );
 	assert( end >= begin );
 	assert( end <= (buff+wcslen(buff) ) );
-
+	
 	buffcpy = wcsndup( begin, end-begin );
-
+	
 	if( !buffcpy )
 	{
 		DIE_MEM();

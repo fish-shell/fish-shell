@@ -261,14 +261,17 @@ The fish parser. Contains functions for parsing code.
 */
 struct block_lookup_entry
 {
+
 	/**
 	   The block type id. The legal values are defined in parser.h.
 	*/
 	int type;
+
 	/**
 	   The name of the builtin that creates this type of block, if any. 
 	*/
 	const wchar_t *name;
+	
 	/**
 	   A description of this block type
 	*/
@@ -3045,10 +3048,11 @@ int parser_test( const  wchar_t * buff,
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
 								   ILLEGAL_CMD_ERR_MSG,
-								   cmd );
+								   tok_last( &tok ) );
 							
 							print_errors( out, prefix );
-						}						
+						}
+						break;
 					}
 					
 					if( needs_cmd )
@@ -3257,6 +3261,7 @@ int parser_test( const  wchar_t * buff,
 								sb_printf( out, L"%s", h );
 						}
 					}
+					
 				}
 				else
 				{

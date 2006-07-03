@@ -884,7 +884,7 @@ void highlight_shell( wchar_t * buff,
 		wchar_t *token;
 		
 		parse_util_token_extent( buff, pos, &tok_begin, &tok_end, 0, 0 );
-		if( tok_begin )
+		if( tok_begin && tok_end )
 		{
 			token = halloc_wcsndup( context, tok_begin, tok_end-tok_begin );
 			

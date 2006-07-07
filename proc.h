@@ -276,7 +276,7 @@ job_t *job_get_from_pid(int pid);
 int job_is_stopped( const job_t *j );
 
 /**
-   Tests if the job has completed
+   Tests if the job has completed, i.e. if the last process of the pipeline has ended.
  */
 int job_is_completed( const job_t *j );
 

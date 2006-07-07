@@ -257,7 +257,7 @@ int job_is_stopped( const job_t *j )
 
 
 /* 
-   Return true if all processes in the job have completed.  
+   Return true if the last processes in the job has completed.  
 
    \param j the job to test
 */
@@ -265,14 +265,11 @@ int job_is_completed( const job_t *j )
 {
 	process_t *p;
 	
-	for (p = j->first_process; p; p = p->next)
-	{
-		if (!p->completed)
-		{
-			return 0;
-		}
-	}
-	return 1;
+	for (p = j->first_process; p->next; p = p->next)
+		;
+	
+	return p->completed;
+	
 }
 
 /**
@@ -1013,6 +1010,7 @@ void job_continue (job_t *j, int cont)
 			signal_unblock();
 		}
 	}
+	
 }
 
 void proc_sanity_check()

@@ -2524,11 +2524,12 @@ wchar_t *reader_readline()
 					parse_util_cmdsubst_extent( data->buff, data->buff_pos, &begin, &end );
 
 					parse_util_token_extent( begin, data->buff_pos - (begin-data->buff), &token_begin, &token_end, 0, 0 );
+					
 					cursor_steps = token_end - data->buff- data->buff_pos;
 					data->buff_pos += cursor_steps;
 					move_cursor( cursor_steps );
-					
-					len = data->buff_pos - (data->buff - begin);
+
+					len = data->buff_pos - (begin-data->buff);
 					buffcpy = wcsndup( begin, len );
 
 					reader_save_status();

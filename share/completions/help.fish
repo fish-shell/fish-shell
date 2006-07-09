@@ -6,7 +6,7 @@ for i in (builtin -n)
 	complete -c help -x -a $i -d (N_ "Help for the specified builtin")
 end
 
-for i in case (sed -n < /usr/share/doc/fish-1.21.7/commands.html -e "s/.*<h2><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
+for i in case (sed -n < $__fish_help_dir/commands.html -e "s/.*<h2><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
 	complete -c help -x -a $i -d (N_ "Help for the specified command")
 end
 

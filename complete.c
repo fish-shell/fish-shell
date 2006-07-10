@@ -1965,6 +1965,9 @@ void complete( const wchar_t *cmd,
 
 	CHECK( cmd, );
 	CHECK( comp, );
+
+//	debug( 1, L"Complete '%ls'", cmd );
+	
 		
 	/**
 	   If we are completing a variable name or a tilde expansion user
@@ -2062,7 +2065,7 @@ void complete( const wchar_t *cmd,
 
 		prev_token = prev_begin ? wcsndup( prev_begin, prev_end - prev_begin ): wcsdup(L"");
 		
-//		fwprintf( stderr, L"on_command: %d, %ls %ls\n", on_command, current_compmand, current_token );
+//		debug( 0, L"on_command: %d, %ls %ls\n", on_command, current_command, current_token );
 		if( !had_cmd )
 		{
 			on_command=1;

@@ -123,6 +123,7 @@ static void output_destroy()
 
 void output_set_writer( int (*writer)(char) )
 {
+	CHECK( writer, );
 	out = writer;
 }
 
@@ -144,8 +145,6 @@ void set_color( int c, int c2 )
 
 	is_underline |= (c&FISH_COLOR_UNDERLINE)!=0;
 	is_underline |= (c2&FISH_COLOR_UNDERLINE)!=0;
-
-//	debug( 1, L"WOO %d %d %d", is_bold, c&FISH_COLOR_BOLD,c2&FISH_COLOR_BOLD);
 
 	c = c&(~(FISH_COLOR_BOLD|FISH_COLOR_UNDERLINE));
 	c2 = c2&(~(FISH_COLOR_BOLD|FISH_COLOR_UNDERLINE));
@@ -367,9 +366,8 @@ int writeb( tputs_arg_t b )
 
 int writembs( char *str )
 {
-	if( !str )
-		return 1;
-	
+	CHECK( str, 1 );
+		
 	return tputs(str,1,&writeb)==ERR?1:0;
 }
 
@@ -410,6 +408,8 @@ int writech( wint_t ch )
 void writestr( const wchar_t *str )
 {
 	char *pos;
+
+	CHECK( str, );
 	
 //	while( *str )
 //		writech( *str++ );
@@ -465,7 +465,11 @@ void writestr( const wchar_t *str )
 void writestr_ellipsis( const wchar_t *str, int max_width )
 {
 	int written=0;
-	int tot = my_wcswidth(str);
+	int tot;
+
+	CHECK( str, );
+	
+	tot = my_wcswidth(str);
 
 	if( tot <= max_width )
 	{
@@ -497,10 +501,15 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 int write_escaped_str( const wchar_t *str, int max_len )
 {
 
-	wchar_t *out = escape( str, 1 );
+	wchar_t *out;
 	int i;
-	int len = my_wcswidth( out );
+	int len;
 	int written=0;
+
+	CHECK( str, 0 );
+	
+	out = escape( str, 1 );
+	len = my_wcswidth( out );
 
 	if( max_len && (max_len < len))
 	{

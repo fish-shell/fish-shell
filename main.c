@@ -90,7 +90,7 @@ static int read_init()
 	if( chdir( cwd ) == -1 )
 	{
 		/*
-		  If we can't change back to previos irectory, we'll stay in
+		  If we can't change back to previos directory, we'll stay in
 		  ~. Should be a sane default behavior.
 		*/
 	}	

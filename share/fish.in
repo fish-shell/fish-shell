@@ -24,7 +24,7 @@ for idx in (seq (count $PATH))
 end
 
 if count $erase_idx >/dev/null
-   set -e PATH[(echo $erase_idx)]
+	set -e PATH[(echo $erase_idx)]
 end
 
 #

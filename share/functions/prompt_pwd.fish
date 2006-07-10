@@ -12,7 +12,7 @@ else
 	function prompt_pwd -d (N_ "Print the current working directory, shortend to fit the prompt")
 		if test "$PWD" != "$HOME"
 			printf "%s" (echo $PWD|sed -e "s|^$HOME|~|" -e 's-/\([^/]\)\([^/]*\)-/\1-g')
-			echo $PWD|sed -e 's-.*/[^/]\([^/]*$\)-\1-'
+			echo $PWD|sed -n -e 's-.*/[^/]\([^/]*$\)-\1-p'
 		else
 			echo '~'
 		end

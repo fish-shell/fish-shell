@@ -1,0 +1,1636 @@
+# translation of fr.po to Français
+# FRENCH TRANSLATION FOR FISH
+# Copyright (C) 2006 Xavier Douville
+# This file is distributed under the GNU General Public License, version 2 or later.
+# Xavier Douville <fish-fr@douville.org>, 2006.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: fr\n"
+"POT-Creation-Date: 2006-07-10 13:44-0400\n"
+"PO-Revision-Date: 2006-07-10 19:05-0400\n"
+"Last-Translator: Xavier Douville <fish-fr@douville.org>\n"
+"Language-Team: Français <traduc@traduc.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.10.2\n"
+
+#: builtin.c:84
+#, c-format
+msgid "Send job %d, '%ls' to foreground\n"
+msgstr "Mettre la tâche %d, '%ls' en premier plan\n"
+
+#: builtin.c:414
+#, c-format
+msgid "%ls: Can not specify scope when removing block\n"
+msgstr "%ls: Ne peut pas indiquer la portée en enlevant le bloc\n"
+
+#: builtin.c:420
+#, c-format
+msgid "%ls: No blocks defined\n"
+msgstr "%ls: Aucun bloc défini\n"
+
+#: builtin.c:821 builtin.h:28
+#, c-format
+msgid "%ls: Invalid combination of options\n"
+msgstr "%ls: Combinaison d'options invalide\n"
+
+#: builtin.c:844
+#, c-format
+msgid "%ls: Expected exactly one function name\n"
+msgstr "%ls: Exactement un nom de fonction est attendu\n"
+
+#: builtin.c:854
+#, c-format
+msgid "%ls: Function '%ls' does not exist\n"
+msgstr "%ls: La fonction '%ls' n'existe pas\n"
+
+#: builtin.c:910
+msgid ""
+"Current function definitions are:\n"
+"\n"
+msgstr ""
+"Définitions de fonctions courantes:\n"
+"\n"
+
+#: builtin.c:1057
+#, c-format
+msgid "%ls: Unknown signal '%ls'\n"
+msgstr "%ls: Signal inconnu '%ls'\n"
+
+#: builtin.c:1081
+#, c-format
+msgid "%ls: Invalid variable name '%ls'\n"
+msgstr "%ls: Nom de variable invalide '%ls'\n"
+
+#: builtin.c:1134
+#, c-format
+msgid "%ls: Cannot find calling job for event handler\n"
+msgstr "%ls: Impossible de trouver la tâche parente pour le gestionnaire d'événements\n"
+
+#: builtin.c:1152
+#, c-format
+msgid "%ls: Invalid process id %ls\n"
+msgstr "%ls: id de processus invalide %ls\n"
+
+#: builtin.c:1193
+#, c-format
+msgid "%ls: Expected one argument, got %d\n"
+msgstr "%ls: Un argument attendu, %d obtenu(s)\n"
+
+#: builtin.c:1201
+#, c-format
+msgid "%ls: Illegal function name '%ls'\n"
+msgstr "%ls: Nom de fonction illégal '%ls'\n"
+
+#: builtin.c:1211
+#, c-format
+msgid ""
+"%ls: The name '%ls' is reserved,\n"
+"and can not be used as a function name\n"
+msgstr ""
+"%ls: Le nom '%ls' est réservé,\n"
+"et ne peut pas être utilisé comme nom de fonction\n"
+
+#: builtin.c:1226
+msgid "Current functions are: "
+msgstr "Les fonctions courantes sont: "
+
+#: builtin.c:1359
+#, c-format
+msgid "%ls: Seed value '%ls' is not a valid number\n"
+msgstr "%ls: La valeur germe '%ls' n'est pas un nombre valide\n"
+
+#: builtin.c:1373
+#, c-format
+msgid "%ls: Expected zero or one argument, got %d\n"
+msgstr "%ls: Zéro ou un argument attendu, %d obtenu(s)\n"
+
+#: builtin.c:1807 main.c:336 parser.c:1255
+msgid "Standard input"
+msgstr "Entrée standard"
+
+#: builtin.c:1850
+msgid "This is a login shell\n"
+msgstr "Ceci est un shell de connexion\n"
+
+#: builtin.c:1852
+msgid "This is not a login shell\n"
+msgstr "Ceci n'est pas un shell de connexion\n"
+
+#: builtin.c:1854
+#, c-format
+msgid "Job control: %ls\n"
+msgstr "Contrôle des tâches: %ls\n"
+
+#: builtin.c:1855
+msgid "Only on interactive jobs"
+msgstr "Seulement sur les tâches interactives"
+
+#: builtin.c:1856
+msgid "Never"
+msgstr "Jamais"
+
+#: builtin.c:1856
+msgid "Always"
+msgstr "Toujours"
+
+#: builtin.c:1911 builtin.c:2634
+#, c-format
+msgid "%ls: Argument '%ls' must be an integer\n"
+msgstr "%ls: L'argument '%ls' doit être un entier\n"
+
+#: builtin.c:1967
+#, c-format
+msgid "%ls: Could not find home directory\n"
+msgstr "%ls: Répertoire personnel introuvable\n"
+
+#: builtin.c:1979
+#, c-format
+msgid "%ls: '%ls' is not a directory or you do not have permission to enter it\n"
+msgstr "%ls: '%ls' n'est pas un répertoire ou vous n'avez pas l'autorisation d'y entrer\n"
+
+#: builtin.c:1993
+#, c-format
+msgid "%ls: '%ls' is not a directory\n"
+msgstr "%ls: '%ls' n'est pas un répertoire\n"
+
+#: builtin.c:2009
+#, c-format
+msgid "%ls: Could not set PWD variable\n"
+msgstr "%ls: Définition de la variable PWD impossible\n"
+
+#: builtin.c:2033
+#, c-format
+msgid "%ls: Expected at least one argument, got %d\n"
+msgstr "%ls: Au moins un argument attendu, %d obtenu\n"
+
+#: builtin.c:2046
+#, c-format
+msgid "%ls: '%ls' is not a file\n"
+msgstr "%ls: '%ls' n'est pas un fichier\n"
+
+#: builtin.c:2084
+#, c-format
+msgid "%ls: Error while reading file '%ls'\n"
+msgstr "%ls: Erreur de lecture sur le fichier '%ls'\n"
+
+#: builtin.c:2147 builtin.c:2311
+#, c-format
+msgid "%ls: There are no suitable jobs\n"
+msgstr "%ls: Aucune tâche appropriée\n"
+
+#: builtin.c:2165
+#, c-format
+msgid "%ls: Ambiguous job\n"
+msgstr "%ls: Tâche ambiguë\n"
+
+#: builtin.c:2171 builtin_jobs.c:302
+#, c-format
+msgid "%ls: '%ls' is not a job\n"
+msgstr "%ls: '%ls' n'est pas une tâche\n"
+
+#: builtin.c:2188
+#, c-format
+msgid "%ls: Argument must be a number: %ls\n"
+msgstr "%ls: L'argument doit être un nombre: %ls\n"
+
+#: builtin.c:2199 builtin_jobs.c:317
+#, c-format
+msgid "%ls: No suitable job: %d\n"
+msgstr "%ls: Aucune tâche appropriée: %d\n"
+
+#: builtin.c:2208
+#, c-format
+msgid ""
+"%ls: Can't put job %d, '%ls' to foreground because it is not under job "
+"control\n"
+msgstr ""
+"%ls: Ne peut mettre la tâche %d, '%ls' en premier plan parce qu'elle "
+"n'est pas gérée par le contrôleur de tâches\n"
+
+#: builtin.c:2262
+#, c-format
+msgid "%ls: Unknown job '%ls'\n"
+msgstr "%ls: Tâche inconnue: '%ls'\n"
+
+#: builtin.c:2271
+#, c-format
+msgid ""
+"%ls: Can't put job %d, '%ls' to background because it is not under job "
+"control\n"
+msgstr ""
+"%ls: Ne peut mettre la tâche %d, '%ls' en arrière-plan parce qu'elle "
+"n'est pas gérée par le contrôleur de tâches\n"
+
+#: builtin.c:2281
+#, c-format
+msgid "Send job %d '%ls' to background\n"
+msgstr "Envoyer la tâche %d '%ls' en arrière-plan\n"
+
+#: builtin.c:2317
+msgid "(default)"
+msgstr "(défaut)"
+
+#: builtin.c:2344
+#, c-format
+msgid "%ls: Expected at least two arguments, got %d\n"
+msgstr "%ls: Au moins deux arguments attendus, %d obtenu\n"
+
+#: builtin.c:2352
+#, c-format
+msgid "%ls: '%ls' is not a valid variable name\n"
+msgstr "%ls: '%ls' est un nom de variable invalide\n"
+
+#: builtin.c:2422
+#, c-format
+msgid "%ls: Not inside of block\n"
+msgstr "%ls: À l'extérieur du bloc\n"
+
+#: builtin.c:2542
+#, c-format
+msgid "%ls: Not inside of 'if' block\n"
+msgstr "%ls: À l'extérieur du bloc 'if'\n"
+
+#: builtin.c:2594
+#, c-format
+msgid "%ls: Not inside of loop\n"
+msgstr "%ls: À l'extérieur de la boucle\n"
+
+#: builtin.c:2645 builtin_complete.c:528 builtin.h:65
+#, c-format
+msgid "%ls: Too many arguments\n"
+msgstr "%ls: Trop d'arguments\n"
+
+#: builtin.c:2661
+#, c-format
+msgid "%ls: Not inside of function\n"
+msgstr "%ls: À l'extérieur de la fonction\n"
+
+#: builtin.c:2690
+#, c-format
+msgid "%ls: Expected exactly one argument, got %d\n"
+msgstr "%ls: Exactement un argument attendu, %d obtenu(s)\n"
+
+#: builtin.c:2721
+#, c-format
+msgid "%ls: 'case' command while not in switch block\n"
+msgstr "%ls: commande 'case' sans bloc 'switch'\n"
+
+#: builtin.c:2762
+msgid "Exit the shell"
+msgstr "Quitter le shell"
+
+#: builtin.c:2766
+msgid "Temporarily block delivery of events"
+msgstr "Bloquer temporairement la distribution des événements"
+
+#: builtin.c:2770
+msgid "Run a builtin command instead of a function"
+msgstr "Exécuter une commande interne au lieu d'une fonction"
+
+#: builtin.c:2774
+msgid "Change working directory"
+msgstr "Changer le répertoire de travail"
+
+#: builtin.c:2778
+msgid "Define a new function"
+msgstr "Définir une nouvelle fonction"
+
+#: builtin.c:2782
+msgid "List or remove functions"
+msgstr "Lister ou enlever des fonctions"
+
+#: builtin.c:2786
+msgid "Edit command specific completions"
+msgstr "Éditer les complétions spécifiques aux commandes"
+
+#: builtin.c:2790
+msgid "End a block of commands"
+msgstr "Termine un bloc de commandes"
+
+#: builtin.c:2794
+msgid "Evaluate block if condition is false"
+msgstr "Évalue le bloc si la condition est fausse"
+
+#: builtin.c:2798
+msgid "Evaluate parameters as a command"
+msgstr "Évaluer le paramètre comme une commande"
+
+#: builtin.c:2802
+msgid "Perform a set of commands multiple times"
+msgstr "Exécuter un ensemble de commandes plusieurs fois"
+
+#: builtin.c:2806
+msgid "Evaluate contents of file"
+msgstr "Évaluer le contenu d'un fichier"
+
+#: builtin.c:2810
+msgid "Handle environment variables"
+msgstr "Gérer les variables d'environnement"
+
+#: builtin.c:2814
+msgid "Send job to foreground"
+msgstr "Mettre la tâche en premier plan"
+
+#: builtin.c:2818
+msgid "Send job to background"
+msgstr "Mettre la tâche en arrière-plan"
+
+#: builtin.c:2822
+msgid "Print currently running jobs"
+msgstr "Afficher les tâches en cours d'exécution"
+
+#: builtin.c:2826
+msgid "Read a line of input into variables"
+msgstr "Lire une ligne d'entrée dans des variables"
+
+#: builtin.c:2830
+msgid "Stop the innermost loop"
+msgstr "Arrêter la boucle interne"
+
+#: builtin.c:2834
+msgid "Skip the rest of the current lap of the innermost loop"
+msgstr "Sauter le reste de la boucle interne"
+
+#: builtin.c:2838
+msgid "Stop the currently evaluated function"
+msgstr "Arrêter la fonction en évaluation"
+
+#: builtin.c:2842
+msgid "Set or get the commandline"
+msgstr "Définir ou obtenir la ligne de commande"
+
+#: builtin.c:2846 builtin.c:2850
+msgid "Conditionally execute a block of commands"
+msgstr "Exécuter conditionnellement un bloc de commandes"
+
+#: builtin.c:2854
+msgid "Handle fish key bindings"
+msgstr "Gérer les combinaisons de touches de fish"
+
+#: builtin.c:2858
+msgid "Generate random number"
+msgstr "Génère un nombre aléatoire"
+
+#: builtin.c:2862
+msgid "Return status information about fish"
+msgstr "Retourner l'information sur l'état de fish"
+
+#: builtin.c:2866
+msgid "Set or get the shells resource usage limits"
+msgstr "Définir ou obtenir les limites d'utilisation des ressources du shell"
+
+#: builtin.c:2876
+msgid "Run a program instead of a function or builtin"
+msgstr "Exécuter un programme au lieu d'une fonction ou d'une commande interne"
+
+#: builtin.c:2880
+msgid "Evaluate block if condition is true"
+msgstr "Évaluer le bloc si la condition est vraie"
+
+#: builtin.c:2884
+msgid "Perform a command multiple times"
+msgstr "Exécuter une commande plusieurs fois"
+
+#: builtin.c:2888
+msgid "Negate exit status of job"
+msgstr "Inverser l'état de sortie de la tâche"
+
+#: builtin.c:2892
+msgid "Execute command if previous command suceeded"
+msgstr "Exécuter la commande si la précédente a réussi"
+
+#: builtin.c:2896
+msgid "Execute command if previous command failed"
+msgstr "Exécuter la commande si la précédente a échoué"
+
+#: builtin.c:2900
+msgid "Run command in current process"
+msgstr "Exécuter la commande dans le processus courant"
+
+#: builtin.c:2904
+msgid "Create a block of code"
+msgstr "Créer un bloc de code"
+
+#: builtin.c:3010
+#, c-format
+msgid "Unknown builtin '%ls'"
+msgstr "Commande interne inconnue '%ls'"
+
+#: builtin_complete.c:270
+#, c-format
+msgid "%ls: Command only available in interactive sessions"
+msgstr "%ls: Commande disponible seulement dans les sessions interactives"
+
+#: builtin_jobs.c:88
+msgid "Job\tGroup\t"
+msgstr "Tâche\tGroupe\t"
+
+#: builtin_jobs.c:90
+msgid "CPU\t"
+msgstr "CPU\t"
+
+#: builtin_jobs.c:92
+msgid "State\tCommand\n"
+msgstr "État\tCommande\n"
+
+#: builtin_jobs.c:101 proc.c:596
+msgid "stopped"
+msgstr "arrêtée"
+
+#: builtin_jobs.c:101
+msgid "running"
+msgstr "en cours d'exécution"
+
+#: builtin_jobs.c:116
+msgid "Group\n"
+msgstr "Groupe\n"
+
+#: builtin_jobs.c:129
+msgid "Procces\n"
+msgstr "Processus\n"
+
+#: builtin_jobs.c:146
+msgid "Command\n"
+msgstr "Commande\n"
+
+#: builtin_jobs.c:343
+#, c-format
+msgid "%ls: There are no jobs\n"
+msgstr "%ls: Il n'y a aucune tâche\n"
+
+#: builtin_set.c:158
+#, c-format
+msgid "%ls: Tried to change the read-only variable '%ls'\n"
+msgstr "%ls: Impossible de changer la valeur de la variable en lecture seule '%ls'\n"
+
+#: builtin_set.c:208
+#, c-format
+msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
+msgstr "%ls: Plusieurs noms de variable spécifiés dans un seul appel (%ls and %.*ls)\n"
+
+#: builtin_set.c:229
+#, c-format
+msgid "%ls: Invalid index starting at '%ls'\n"
+msgstr "%ls: Index invalide commençant à '%ls'\n"
+
+#: builtin_set.c:590
+#, c-format
+msgid ""
+"%ls: Erase needs a variable name\n"
+"%ls\n"
+msgstr ""
+"%ls: 'Erase' requiert un nom de variable\n"
+"%ls\n"
+
+#: builtin_set.c:733
+#, c-format
+msgid ""
+"%ls: Values cannot be specfied with erase\n"
+"%ls\n"
+msgstr ""
+"%ls: 'erase' ne peut pas spécifier des valeurs\n"
+"%ls\n"
+
+#: complete.c:59
+msgid "User home"
+msgstr "Répertoire personnel"
+
+#: complete.c:64
+msgid "Variable: "
+msgstr "Variable: "
+
+#: complete.c:69
+msgid "Executable"
+msgstr "Exécutable"
+
+#: complete.c:73
+msgid "Executable link"
+msgstr "Lien exécutable"
+
+#: complete.c:78
+msgid "File"
+msgstr "Fichier"
+
+#: complete.c:82
+msgid "Character device"
+msgstr "Périphérique de caractères"
+
+#: complete.c:86
+msgid "Block device"
+msgstr "Périphérique de blocs"
+
+#: complete.c:90
+msgid "Fifo"
+msgstr "Fifo"
+
+#: complete.c:94
+msgid "Symbolic link"
+msgstr "Lien symbolique"
+
+#: complete.c:98
+msgid "Rotten symbolic link"
+msgstr "Lien symbolique putréfié"
+
+#: complete.c:102
+msgid "Symbolic link loop"
+msgstr "Boucle de liens symboliques"
+
+#: complete.c:106
+msgid "Socket"
+msgstr "Socket"
+
+#: complete.c:110
+msgid "Directory"
+msgstr "Répertoire"
+
+#: complete.c:115
+msgid "Function"
+msgstr "Fonction"
+
+#: complete.c:119
+msgid "Builtin"
+msgstr "Commande interne"
+
+#: complete.c:776 complete.c:794
+msgid "Unknown option: "
+msgstr "Option inconnue: "
+
+#: complete.c:799
+msgid "Multiple matches for option: "
+msgstr "Plusieurs correspondances pour l'option: "
+
+#: env.c:220
+msgid "Could not get user information"
+msgstr "Obtention des informations utilisateur impossible."
+
+#: env.c:311 env.c:319
+msgid "Changing language to English"
+msgstr "Changement de langue à français"
+
+#: env.c:1097
+msgid "Tried to pop empty environment stack."
+msgstr "Impossible de dépiler une pile d'environnement vide"
+
+#: event.c:212
+#, c-format
+msgid "signal handler for %ls (%ls)"
+msgstr "gestionnaire de signaux pour %ls (%ls)"
+
+#: event.c:216
+#, c-format
+msgid "handler for variable '%ls'"
+msgstr "gestionnaire pour la variable '%ls'"
+
+#: event.c:222
+#, c-format
+msgid "exit handler for process %d"
+msgstr "gestionnaire de sortie pour le processus %d"
+
+#: event.c:228 event.c:239
+#, c-format
+msgid "exit handler for job %d, '%ls'"
+msgstr "gestionnaire de sortie pour la tâche %d, '%ls'"
+
+#: event.c:230
+#, c-format
+msgid "exit handler for job with process group %d"
+msgstr "gestionnaire de sortie pour la tâche avec le groupe de processus %d"
+
+#: event.c:241
+#, c-format
+msgid "exit handler for job with job id %d"
+msgstr "gestionnaire de sortie pour la tâche %d"
+
+#: event.c:551
+msgid "Signal list overflow. Signals have been ignored."
+msgstr "Débordement de la liste des signaux. Des signaux ont été ignorés."
+
+#: exec.c:58
+#, c-format
+msgid "An error occurred while redirecting file descriptor %d"
+msgstr "Une erreur s'est produite pendant la redirection du descripteur de fichier %d"
+
+#: exec.c:62
+#, c-format
+msgid "An error occurred while redirecting file '%ls'"
+msgstr "Une erreur est survenue pendant la redirection du fichier '%ls'"
+
+#: exec.c:66
+msgid "Could not create child process - exiting"
+msgstr "Impossible de créer le processus fils - fermeture"
+
+#: exec.c:427
+#, c-format
+msgid "Failed to execute process '%ls'"
+msgstr "L'exécution du processus '%ls' a échoué"
+
+#: exec.c:606
+#, c-format
+msgid "Could not send process %d from group %d to group %d"
+msgstr "Déplacement du processus %d du groupe %d au groupe %d impossible"
+
+#: exec.c:624 proc.c:844 proc.c:856
+#, c-format
+msgid "Could not send job %d ('%ls') to foreground"
+msgstr "Mise en premier plan de la tâche %d ('%ls') impossible"
+
+#: exec.c:791
+#, c-format
+msgid "Unknown function '%ls'"
+msgstr "Fonction inconnue '%ls'"
+
+#: exec.c:892
+#, c-format
+msgid "Unknown input redirection type %d"
+msgstr "Type de redirection d'entrée inconnu: %d"
+
+#: exec.c:1220
+#, c-format
+msgid ""
+"Sent null command to subshell. This is a fish bug. If it can be reproduced, "
+"please send a bug report to %s."
+msgstr ""
+"Commande nulle envoyé au sous-shell. Ceci est un bogue de fish. S'il peut "
+"être reproduit, envoyez un rapport de bogue à %s."
+
+#: expand.c:52
+msgid "Child process"
+msgstr "Processus fils"
+
+#: expand.c:57
+msgid "Process"
+msgstr "Processus"
+
+#: expand.c:62
+msgid "Job"
+msgstr "Tâche"
+
+#: expand.c:67
+msgid "Job: "
+msgstr "Tâche: "
+
+#: expand.c:72
+msgid "Shell process"
+msgstr "Processus shell"
+
+#: expand.c:77
+msgid "Last background job"
+msgstr "Dernière tâche mise en arrière-plan"
+
+#: expand.c:1051
+msgid "Mismatched brackets"
+msgstr "Les crochets ne concordent pas"
+
+#: input.c:435
+msgid "Invalid Control sequence"
+msgstr "Séquence de contrôle invalide"
+
+#: input.c:547
+#, c-format
+msgid "Could not parse sequence '%ls'"
+msgstr "Analyse de la séquence '%ls' impossible"
+
+#: input.c:713
+msgid "Invalid sequence - no dash after control\n"
+msgstr "Séquence invalide - pas de tiret après CTRL\n"
+
+#: input.c:743
+msgid "Invalid sequence - Control-nothing?\n"
+msgstr "Séquence invalide - CTRL-rien?\n"
+
+#: input.c:758
+msgid "Invalid sequence - no dash after meta\n"
+msgstr "Séquence invalide - pas de tiret après méta\n"
+
+#: input.c:763
+msgid "Invalid sequence - Meta-nothing?"
+msgstr "Séquence invalide - Méta-rien?"
+
+#: input.c:808
+#, c-format
+msgid "Invalid sequence - '%ls' expanded to zero characters"
+msgstr "Séquence invalide - '%ls' ne contient aucun caractère"
+
+#: input.c:872
+msgid "Mismatched $endif in inputrc file"
+msgstr "Les $endif ne concordent pas dans le fichier inputrc"
+
+#: input.c:924
+msgid "Mismatched quote"
+msgstr "Apostrophe non-concordante"
+
+#: input.c:938
+msgid "Expected a ':'"
+msgstr "Attendu ':'"
+
+#: input.c:983
+#, c-format
+msgid "I don't know what '%ls' means"
+msgstr "Je ne sais pas ce que '%ls' veut dire"
+
+#: input.c:987
+#, c-format
+msgid "Expected end of line, got '%ls'"
+msgstr "Fin de ligne attendu, '%ls' obtenu"
+
+#: input.c:992
+msgid "Syntax: set KEY VALUE"
+msgstr "Syntaxe: set CLÉ VALEUR"
+
+#: input.c:1058
+msgid "Unable to parse key binding"
+msgstr "Incapable d'analyser les combinaisons de touches"
+
+#: input.c:1084
+#, c-format
+msgid "I don't know what %ls means"
+msgstr "Je ne sais pas ce que %ls veut dire"
+
+#: input.c:1110
+#, c-format
+msgid "Error while reading input information from file '%ls'"
+msgstr "Erreur lors de la lecture d'information d'entrée du fichier '%ls'"
+
+#: input.c:1363
+msgid "Could not set up terminal"
+msgstr "Paramétrage du terminal impossible"
+
+#: io.c:80
+#, c-format
+msgid "An error occured while reading output from code block on file descriptor %d"
+msgstr "Une erreur est survenue lors de la lecture de la sortie du bloc de code sur le descripteur de fichier %d"
+
+#: main.c:204
+#, c-format
+msgid "Invalid value '%s' for debug level switch"
+msgstr "Valeur '%s' invalide comme interrupteur au niveau de débogage"
+
+#: main.c:232 mimedb.c:1274 set_color.c:223
+#, c-format
+msgid "%s, version %s\n"
+msgstr "%s, version %s\n"
+
+#: main.c:257
+msgid "Can not use the no-execute mode when running an interactive session"
+msgstr "Le mode no-execute ne peut pas être utilisé dans une session interactive"
+
+#: main.c:335
+#, c-format
+msgid "Error while reading file %ls\n"
+msgstr "Erreur lors de la lecture du fichier %ls\n"
+
+#: mimedb.c:161 mimedb.c:175 mimedb.c:1094
+#, c-format
+msgid "%s: Out of memory\n"
+msgstr "%s: Mémoire pleine\n"
+
+#: mimedb.c:410
+#, c-format
+msgid "%s: Unknown error in munge()\n"
+msgstr "%s: Erreur inconnue dans munge()\n"
+
+#: mimedb.c:428
+#, c-format
+msgid "%s: Locale string too long\n"
+msgstr "%s: Chaîne de caractères de locale trop longue\n"
+
+#: mimedb.c:490
+#, c-format
+msgid "%s: Could not compile regular expressions\n"
+msgstr "%s: Compilation impossible de l'expression régulière\n"
+
+#: mimedb.c:596
+#, c-format
+msgid "%s: No description for type %s\n"
+msgstr "%s: Aucune description pour le type %s\n"
+
+#: mimedb.c:660
+#, c-format
+msgid "%s: Could not parse launcher string '%s'\n"
+msgstr "%s: Analyse impossible de la chaîne de lancement '%s'\n"
+
+#: mimedb.c:693
+#, c-format
+msgid "%s: Default launcher '%s' does not specify how to start\n"
+msgstr "%s: Le lanceur par défaut '%s' ne spécifie pas comment démarrer\n"
+
+#: mimedb.c:1073
+#, c-format
+msgid "%s: Unsupported switch '%c' in launch string '%s'\n"
+msgstr "%s: Commutateur '%c' non supporté dans la chaîne de démarrage '%s'\n"
+
+#: mimedb.c:1285
+#, c-format
+msgid "%s: Can not launch a mimetype\n"
+msgstr "%s: Impossible de lancer un type Mime\n"
+
+#: mimedb.c:1317
+#, c-format
+msgid "%s: Could not parse mimetype from argument '%s'\n"
+msgstr "%s: Analyse impossible du type Mime à partir de l'argument '%s'\n"
+
+#: mimedb.c:1395
+#, c-format
+msgid "%s: Unknown error\n"
+msgstr "%s: Erreur inconnue\n"
+
+#: parser.c:63
+#, c-format
+msgid "If this error can be reproduced, please send a bug report to %s."
+msgstr "Si cette erreur peut être reproduite, envoyez un rapport de bogue à %s."
+
+#: parser.c:68
+msgid "This command can not be used in a pipeline"
+msgstr "Cette commande ne peut pas être utilisée dans un pipeline"
+
+#: parser.c:74
+#, c-format
+msgid "Tokenizer error: '%ls'"
+msgstr "Erreur d'analyseur lexical: '%ls'"
+
+#: parser.c:79
+msgid "Pipe or short circuit command requires additional command"
+msgstr "Le tube ou la commande court-circuit exige une commande additionnelle"
+
+#: parser.c:84
+msgid "Maximum recursion depth reached. Accidental infinite loop?"
+msgstr "Profondeur maximale de récursion atteinte. Boucle infinie accidentelle?"
+
+#: parser.c:89
+msgid ""
+"Could not locate end of block. The 'end' command is missing, misspelled or a "
+"';' is missing."
+msgstr ""
+"Fin de bloc introuvable. La commande 'end' est manquante, mal écrite ou un "
+"';' est manquant."
+
+#: parser.c:94
+msgid "Maximum number of nested blocks reached."
+msgstr "Nombre maximum de blocs imbriqués atteint."
+
+#: parser.c:99
+#, c-format
+msgid "Expected a command name, got token of type '%ls'"
+msgstr "Un nom de commande est attendu, un jeton de type '%ls' est obtenu"
+
+#: parser.c:104
+#, c-format
+msgid ""
+"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or "
+"COMMAND'? See the help section for the 'or' builtin command by typing 'help "
+"or'."
+msgstr ""
+"Un nom de commande est attendu, un jeton de type '%ls' est obtenu. "
+"Vouliez-vous dire 'COMMANDE; or COMMANDE'? Lisez l'aide pour la "
+"commande interne 'or' en tapant 'help or'."
+
+#: parser.c:109
+#, c-format
+msgid ""
+"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and "
+"COMMAND'? See the help section for the 'and' builtin command by typing 'help "
+"and'."
+msgstr ""
+"Un nom de commande est attendu, un jeton de type '%ls' est obtenu. "
+"Vouliez-vous dire 'COMMANDE; and COMMANDE'? Lisez l'aide pour la "
+"commande interne 'and' en tapant 'help and'."
+
+#: parser.c:114
+#, c-format
+msgid "Illegal command name '%ls'"
+msgstr "Nom de commande illégal '%ls'"
+
+#: parser.c:119
+#, c-format
+msgid "Warning: No match for wildcard '%ls'. The command will not be executed."
+msgstr "Avertissement: Aucune correspondance pour l'expression générique '%ls'. La commande ne sera pas exécutée."
+
+#: parser.c:124
+msgid "'case' builtin not inside of switch block"
+msgstr "Commande interne 'case' à l'extérieur d'un bloc 'switch'"
+
+#: parser.c:129
+msgid "Loop control command while not inside of loop"
+msgstr "Commande de contrôle de boucle à l'extérieur d'une boucle"
+
+#: parser.c:134
+msgid "'else' builtin not inside of if block"
+msgstr "Commande interne 'else' à l'extérieur d'un bloc 'if'"
+
+#: parser.c:139
+msgid "'end' command outside of block"
+msgstr "Commande interne 'end' à l'extérieur d'un bloc"
+
+#: parser.c:144
+#, c-format
+msgid ""
+"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on "
+"setting variable values, see the help section on the set command by typing "
+"'help set'."
+msgstr ""
+"Commande '%ls' inconnue. Vouliez-vous dire 'set VARIABLE VALEUR'? Pour de "
+"l'information sur l'attribution de valeurs à des variables, lisez l'aide "
+"sur la commande 'set' en tapant 'help set'."
+
+#: parser.c:149
+#, c-format
+msgid "Expected redirection specification, got token of type '%ls'"
+msgstr "Spécification de redirection attendue, jeton de type '%ls' obtenu"
+
+#: parser.c:154
+msgid ""
+"Encountered redirection when expecting a command name. Fish does not allow a "
+"redirection operation before a command."
+msgstr ""
+"Redirection produite en s'attendant à un nom de commande. Fish ne permet pas "
+"une opération de redirection avant une commande."
+
+#: parser.c:159
+msgid "Tried to evaluate null pointer."
+msgstr "Évaluation de pointeur nul."
+
+#: parser.c:164
+#, c-format
+msgid "Tried to evaluate commands using invalid block type '%ls'"
+msgstr "Évaluation de commandes en utilisant un type de bloc invalide '%ls'"
+
+#: parser.c:170
+#, c-format
+msgid "Unexpected token of type '%ls'"
+msgstr "Jeton de type '%ls' inattendu."
+
+#: parser.c:175
+#, c-format
+msgid "Error while searching for command '%ls'"
+msgstr "Erreur lors de la recherche de la commande '%ls'"
+
+#: parser.c:181
+msgid "'while' block"
+msgstr "bloc 'while'"
+
+#: parser.c:187
+msgid "'for' block"
+msgstr "bloc 'for'"
+
+#: parser.c:193
+msgid "'if' conditional block"
+msgstr "bloc conditionnel 'if'"
+
+#: parser.c:199
+msgid "function definition block"
+msgstr "bloc de définition de fonction"
+
+#: parser.c:205
+msgid "function invocation block"
+msgstr "bloc d'invocation de fonction"
+
+#: parser.c:211
+msgid "'switch' block"
+msgstr "bloc 'switch'"
+
+#: parser.c:217
+msgid "unexecutable block"
+msgstr "bloc inexécutable"
+
+#: parser.c:223
+msgid "global root block"
+msgstr "bloc racine global"
+
+#: parser.c:229
+msgid "command substitution block"
+msgstr "bloc de substitution de commande"
+
+#: parser.c:235
+msgid "'begin' unconditional block"
+msgstr "bloc inconditionnel 'begin'"
+
+#: parser.c:241
+msgid "Block created by the . builtin"
+msgstr "bloc créé par le .builtin"
+
+#: parser.c:246
+msgid "event handler block"
+msgstr "bloc de gestion d'événement"
+
+#: parser.c:252
+msgid "unknown/invalid block"
+msgstr "bloc inconnu/invalide"
+
+#: parser.c:893
+#, c-format
+msgid "Could not write profiling information to file '%s'"
+msgstr "Écriture des informations de profilage dans le fichier '%s' impossible"
+
+#: parser.c:899
+msgid "Time\tSum\tCommand\n"
+msgstr "Temps\tSomme\tCommande\n"
+
+#: parser.c:1025
+#, c-format
+msgid "in event handler: %ls\n"
+msgstr "dans le gestionnaire d'événement: %ls\n"
+
+#: parser.c:1039
+#, c-format
+msgid "in . (source) call of file '%ls',\n"
+msgstr "dans . (source) appel du fichier '%ls',\n"
+
+#: parser.c:1044
+#, c-format
+msgid "in function '%ls',\n"
+msgstr "dans la fonction '%ls',\n"
+
+#: parser.c:1049
+msgid "in command substitution\n"
+msgstr "dans la substitution de commande\n"
+
+#: parser.c:1059
+#, c-format
+msgid "\tcalled on line %d of file '%ls',\n"
+msgstr "\tappelé à la ligne %d du fichier '%ls',\n"
+
+#: parser.c:1066
+msgid "\tcalled on standard input,\n"
+msgstr "\tappelé sur l'entrée standard,\n"
+
+#: parser.c:1080
+#, c-format
+msgid "\twith parameter list '%ls'\n"
+msgstr "\tavec la liste de paramètres '%ls'\n"
+
+#: parser.c:1249
+#, c-format
+msgid "%ls (line %d): "
+msgstr "%ls (ligne %d): "
+
+#: parser.c:1457
+#, c-format
+msgid "Could not expand string '%ls'"
+msgstr "Développement de la chaîne '%ls' impossible"
+
+#: parser.c:1560
+msgid "Invalid IO redirection"
+msgstr "Redirection E/S invalide"
+
+#: parser.c:1603
+#, c-format
+msgid "Requested redirection to something that is not a file descriptor %ls"
+msgstr "Redirection demandée à quelque chose qui n'est pas un descripteur de fichier %ls"
+
+#: parser.c:2025
+#, c-format
+msgid ""
+"Variables may not be used as commands. Instead, define a function like "
+"'function %ls; %ls $argv; end'. See the help section for the function "
+"command by typing 'help function'."
+msgstr ""
+"Les variables ne peuvent pas être utilisées comme des commandes. À la "
+"place, définissez une fonction 'function %ls; %ls $argv; end'. Lisez "
+"l'aide pour la commande 'function' en tapant 'help function'."
+
+#: parser.c:2033
+msgid ""
+"Variables may not be used as commands. Instead, define a function. See the "
+"help section for the function command by typing 'help function'."
+msgstr ""
+"Les variables ne peuvent pas être utilisées comme des commandes. À la place, définissez"
+" une fonction. Lisez l'aide pour la commande 'function' en tapant 'help function'."
+
+#: parser.c:2040
+#, c-format
+msgid ""
+"Commands may not contain variables. Use the eval builtin instead, like 'eval "
+"%ls'. See the help section for the eval command by typing 'help eval'."
+msgstr ""
+"Les commandes ne peuvent pas contenir des variables. Utilisez la commande interne "
+"'eval', comme 'eval %ls'. Lisez l'aide sur la commande 'eval' en tapant 'help eval'."
+
+#: parser.c:2047
+#, c-format
+msgid "Unknown command '%ls'"
+msgstr "Commande inconnue '%ls'"
+
+#: parser.c:2489
+msgid "End of block mismatch. Program terminating."
+msgstr "Fin du bloc incohérente. Fin du programme."
+
+#: proc.c:137
+msgid "Job inconsistency"
+msgstr "Inconsistance de tâche"
+
+#: proc.c:455
+#, c-format
+msgid "Job %d, '%ls' has %ls"
+msgstr "La tâche %d, '%ls' a %ls"
+
+#: proc.c:541
+#, c-format
+msgid "%ls: Job %d, '%ls' terminated by signal %ls (%ls)"
+msgstr "%ls: Tâche %d, '%ls' terminée par le signal %ls (%ls)"
+
+#: proc.c:549
+#, c-format
+msgid "%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
+msgstr "%ls: Processus %d, '%ls' de la tâche %d, '%ls' terminé par le signal %ls (%ls)"
+
+#: proc.c:580
+msgid "ended"
+msgstr "terminé"
+
+#: proc.c:804
+msgid "An error occured while reading output from code block"
+msgstr "Une erreur est survenue lors de la lecture de la sortie du bloc de code"
+
+#: proc.c:981 proc.c:991 proc.c:1001
+msgid "Could not return shell to foreground"
+msgstr "Impossible de remettre le shell en premier plan"
+
+#: proc.c:1024
+msgid "Job command"
+msgstr "Commande de tâche"
+
+#: proc.c:1027 proc.c:1054
+msgid "Process list pointer"
+msgstr "Pointeur de la liste des processus"
+
+#: proc.c:1030
+msgid "Job list pointer"
+msgstr "Pointeur de la liste des tâches"
+
+#: proc.c:1041
+#, c-format
+msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
+msgstr "Plus d'une tâche en premier plan: tâche 1: '%ls' tâche 2: '%ls'"
+
+#: proc.c:1052
+msgid "Process argument list"
+msgstr "Liste des arguments du processus"
+
+#: proc.c:1053
+msgid "Process name"
+msgstr "Nom du processus"
+
+#: proc.c:1055
+msgid "Process command"
+msgstr "Commande du processus"
+
+#: proc.c:1060
+#, c-format
+msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
+msgstr "Tâche '%ls', le processus '%ls' a un état inconsistant 'arrêté'=%d"
+
+#: proc.c:1070
+#, c-format
+msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
+msgstr "Tâche '%ls', le processus '%ls' a un état inconsistant 'complété'=%d"
+
+#: reader.c:328
+msgid "Could not set terminal mode for new job"
+msgstr "Impossible de définir le mode du terminal pour la nouvelle tâche"
+
+#: reader.c:352
+msgid "Could not set terminal mode for shell"
+msgstr "Impossible de définir le mode du terminal pour le shell"
+
+#: reader.c:1636
+msgid "Couldn't put the shell in its own process group"
+msgstr "Mise impossible du shell dans son propre groupe de processus"
+
+#: reader.c:1646
+msgid "Couldn't grab control of terminal"
+msgstr "Ne peut pas saisir le contrôle du terminal"
+
+#: reader.c:2151
+msgid "Pop null reader block"
+msgstr "Pop null reader block"
+
+#: reader.c:2300
+msgid "There are stopped jobs\n"
+msgstr "Il y a des tâches arrêtées\n"
+
+#: reader.c:2846
+#, c-format
+msgid "Unknown keybinding %d"
+msgstr "Combinaison de touches inconnue %d"
+
+#: reader.c:2921
+msgid "Error while reading commands"
+msgstr "Erreur lors de la lecture des commandes"
+
+#: reader.c:2940
+msgid "Error while closing input stream"
+msgstr "Erreur lors de la fermeture du flux d'entrée"
+
+#: reader.c:2965
+#, c-format
+msgid "Could not convert input. Read %d bytes."
+msgstr "Impossible de convertir l'entrée. %d octets lus."
+
+#: reader.c:2971
+msgid "Could not read input stream"
+msgstr "Impossible de lire le flux d'entrée"
+
+#: reader.c:2980
+msgid "Error while opening input stream"
+msgstr "Erreur d'ouverture du flux d'entrée"
+
+#: sanity.c:37
+msgid "Errors detected, shutting down"
+msgstr "Erreurs détectées, fermeture"
+
+#: sanity.c:65
+#, c-format
+msgid "The pointer '%ls' is invalid"
+msgstr "Le pointeur '%ls' est invalide"
+
+#: sanity.c:71
+#, c-format
+msgid "The pointer '%ls' is null"
+msgstr "Le pointeur '%ls' est nul"
+
+#: set_color.c:250
+#, c-format
+msgid "%s: Too many arguments\n"
+msgstr "%s: Trop d'arguments\n"
+
+#: set_color.c:257
+#, c-format
+msgid "%s: Expected an argument\n"
+msgstr "%s: Un argument attendu\n"
+
+#: set_color.c:266 set_color.c:274
+#, c-format
+msgid "%s: Unknown color '%s'\n"
+msgstr "%s: Couleur inconnue '%s'\n"
+
+#: signal.c:62
+msgid "Terminal hung up"
+msgstr "Le terminal a raccroché"
+
+#: signal.c:70
+msgid "Quit request from job control (^C)"
+msgstr "Requête de sortie du contrôle des tâches (^C)"
+
+#: signal.c:78
+msgid "Quit request from job control with core dump (^\\)"
+msgstr "Requête de sortie du contrôle des tâches avec core dump (^\\)"
+
+#: signal.c:86
+msgid "Illegal instruction"
+msgstr "Instruction illégale"
+
+#: signal.c:94
+msgid "Trace or breakpoint trap"
+msgstr "Déroutement de suivi/point d'arrêt"
+
+#: signal.c:102
+msgid "Abort"
+msgstr "Abandon"
+
+#: signal.c:110
+msgid "Misaligned address error"
+msgstr "Erreur de mauvaise adresse"
+
+#: signal.c:118
+msgid "Floating point exception"
+msgstr "Exception de virgule flottante"
+
+#: signal.c:126
+msgid "Forced quit"
+msgstr "Forcé à quitter"
+
+#: signal.c:134
+msgid "User defined signal 1"
+msgstr "Signal défini par l'utilisateur 1"
+
+#: signal.c:141
+msgid "User defined signal 2"
+msgstr "Signal défini par l'utilisateur 2"
+
+#: signal.c:149
+msgid "Address boundary error"
+msgstr "Erreur de frontière d'adresse"
+
+#: signal.c:157
+msgid "Broken pipe"
+msgstr "tube interrompu"
+
+#: signal.c:165
+msgid "Timer expired"
+msgstr "Expiration de l'horloge"
+
+#: signal.c:173
+msgid "Polite quit request"
+msgstr "Demande polie de quitter"
+
+#: signal.c:181
+msgid "Child process status changed"
+msgstr "L'état du processus fils a changé"
+
+#: signal.c:189
+msgid "Continue previously stopped process"
+msgstr "Continuer le processus précédemment arrêté"
+
+#: signal.c:197
+msgid "Forced stop"
+msgstr "Arrêt forcé"
+
+#: signal.c:205
+msgid "Stop request from job control (^Z)"
+msgstr "Demande d'arrêt du contrôle des tâches (^Z)"
+
+#: signal.c:213
+msgid "Stop from terminal input"
+msgstr "Arrêt de l'entrée du terminal"
+
+#: signal.c:221
+msgid "Stop from terminal output"
+msgstr "Arrêt de la sortie du terminal"
+
+#: signal.c:229
+msgid "Urgent socket condition"
+msgstr "Condition urgente de socket"
+
+#: signal.c:237
+msgid "CPU time limit exceeded"
+msgstr "Limite de temps CPU dépassée"
+
+#: signal.c:245
+msgid "File size limit exceeded"
+msgstr "Limite de taille de fichier dépassée"
+
+#: signal.c:253
+msgid "Virtual timer expired"
+msgstr "Horloge virtuelle expirée"
+
+#: signal.c:261
+msgid "Profiling timer expired"
+msgstr "Horloge de profilage expirée"
+
+#: signal.c:269 signal.c:277
+msgid "Window size change"
+msgstr "Changement de dimension de fenêtre"
+
+#: signal.c:285
+msgid "I/O on asynchronous file descriptor is possible"
+msgstr "E/S sur un descripteur de fichier asynchrone possible"
+
+#: signal.c:293
+msgid "Power failure"
+msgstr "Panne de courant"
+
+#: signal.c:301
+msgid "Bad system call"
+msgstr "Mauvais appel système"
+
+#: signal.c:309
+msgid "Information request"
+msgstr "Demande d'information"
+
+#: signal.c:317
+msgid "Stack fault"
+msgstr "Faute de pile"
+
+#: signal.c:325
+msgid "Emulator trap"
+msgstr "Déroutement d'émulation"
+
+#: signal.c:333
+msgid "Abort (Alias for SIGABRT)"
+msgstr "Abandon (Alias pour SIGABRT)"
+
+#: signal.c:341
+msgid "Unused signal"
+msgstr "Signal inutilisé"
+
+#: signal.c:400 signal.c:415
+msgid "Unknown"
+msgstr "Inconnu"
+
+#: tokenizer.c:31
+msgid "Unexpected end of token"
+msgstr "Fin de jeton attendue"
+
+#: tokenizer.c:35
+msgid "Parenthesis mismatch"
+msgstr "Incohérence de parenthèses"
+
+#: tokenizer.c:39
+msgid "Invalid redirection"
+msgstr "Redirection invalide"
+
+#: tokenizer.c:43
+msgid "Invalid input"
+msgstr "Entrée invalide"
+
+#: tokenizer.c:48
+msgid "Can not use fd 0 as pipe output"
+msgstr "Impossible d'utiliser fd 0 comme sortie de tube"
+
+#: tokenizer.c:65
+msgid "Tokenizer not yet initialized"
+msgstr "Analyseur lexical pas encore initialisé"
+
+#: tokenizer.c:66
+msgid "Tokenizer error"
+msgstr "Erreur d'analyseur lexical"
+
+#: tokenizer.c:67
+msgid "Invalid token"
+msgstr "Jeton invalide"
+
+#: tokenizer.c:68
+msgid "String"
+msgstr "Chaîne"
+
+#: tokenizer.c:69
+msgid "Pipe"
+msgstr "Tube"
+
+#: tokenizer.c:70
+msgid "End of command"
+msgstr "Fin de commande"
+
+#: tokenizer.c:71
+msgid "Redirect output to file"
+msgstr "Redirige la sortie vers un fichier"
+
+#: tokenizer.c:72
+msgid "Append output to file"
+msgstr "Concatène la sortie à un fichier"
+
+#: tokenizer.c:73
+msgid "Redirect input to file"
+msgstr "Redirige l'entrée depuis un fichier"
+
+#: tokenizer.c:74
+msgid "Redirect to file descriptor"
+msgstr "Redirige vers un descripteur de fichier"
+
+#: tokenizer.c:75
+msgid "Run job in background"
+msgstr "Exécuter la tâche en arrière-plan"
+
+#: tokenizer.c:76
+msgid "Comment"
+msgstr "Commentaire"
+
+#: wgetopt.c:539
+#, c-format
+msgid "%ls: Option '%ls' is ambiguous\n"
+msgstr "%ls: Option '%ls' ambiguë\n"
+
+#: wgetopt.c:563
+#, c-format
+msgid "%ls: Option '--%ls' doesn't allow an argument\n"
+msgstr "%ls: L'option '--%ls' ne permet pas d'argument\n"
+
+#: wgetopt.c:568
+#, c-format
+msgid "%ls: Option '%lc%ls' doesn't allow an argument\n"
+msgstr "%ls: L'option '%lc%ls' ne permet pas d'argument\n"
+
+#: wgetopt.c:582
+#, c-format
+msgid "%ls: Option '%ls' requires an argument\n"
+msgstr "%ls: L'option '%ls' exige un argument\n"
+
+#: wgetopt.c:610
+#, c-format
+msgid "%ls: Unrecognized option '--%ls'\n"
+msgstr "%ls: Option '--%ls' non reconnue\n"
+
+#: wgetopt.c:614
+#, c-format
+msgid "%ls: Unrecognized option '%lc%ls'\n"
+msgstr "%ls: Option '%lc%ls' non reconnue\n"
+
+#: wgetopt.c:639
+#, c-format
+msgid "%ls: Illegal option -- %lc\n"
+msgstr "%ls: Option illégale -- %lc\n"
+
+#: wgetopt.c:641
+#, c-format
+msgid "%ls: Invalid option -- %lc\n"
+msgstr "%ls: Option invalide -- %lc\n"
+
+#: wgetopt.c:675
+#, c-format
+msgid "%ls: Option requires an argument -- %lc\n"
+msgstr "%ls: L'option exige un argument -- %lc\n"
+
+#: wildcard.c:350
+msgid "empty"
+msgstr "vide"
+
+#: builtin.h:23
+#, c-format
+msgid "%ls: Expected argument\n"
+msgstr "%ls: Argument attendu\n"
+
+#: builtin.h:33
+#, c-format
+msgid ""
+"%ls: Invalid combination of options,\n"
+"%ls\n"
+msgstr ""
+"%ls: Combinaison d'options invalide,\n"
+"%ls\n"
+
+#: builtin.h:38
+#, c-format
+msgid ""
+"%ls: Variable scope can only be one of universal, global and local\n"
+"%ls\n"
+msgstr ""
+"%ls: La portée des variables peut seulement être universelle, globale ou locale\n"
+"%ls\n"
+
+#: builtin.h:43
+#, c-format
+msgid ""
+"%ls: Variable can't be both exported and unexported\n"
+"%ls\n"
+msgstr ""
+"%ls: La variable ne peut pas être exportée et non exportée\n"
+"%ls\n"
+
+#: builtin.h:48
+#, c-format
+msgid "%ls: Unknown option '%ls'\n"
+msgstr "%ls: Option '%ls' inconnue\n"
+
+#: builtin.h:53
+#, c-format
+msgid ""
+"%ls: Invalid character '%lc' in variable name. Only alphanumerical "
+"characters and underscores are valid in a variable name.\n"
+msgstr ""
+"%ls: caractère '%lc' invalide dans le nom de variable. Seuls les caractères "
+"alphanumériques et '_' sont valides dans un nom de variable.\n"
+
+#: builtin.h:58
+#, c-format
+msgid "%ls: Variable name can not be the empty string\n"
+msgstr "%ls: Le nom de variable ne peut pas être une chaîne vide\n"
+
+#: builtin.h:63
+#, c-format
+msgid "%ls: Second argument must be 'in'\n"
+msgstr "%ls: Le second argument doit être 'in'\n"
+
+#: exec.h:19
+msgid "An error occurred while setting up pipe"
+msgstr "Une erreur est survenue lors du paramétrage du tube"
+
+#: expand.h:118
+#, c-format
+msgid ""
+"The '$' character begins a variable name. The character '%lc', which "
+"directly followed a '$', is not allowed as a part of a variable name, and "
+"variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type 'help expand-variable'."
+msgstr ""
+"Le caractère '$' commence un nom de variable. Le caractère '%lc', lorsque "
+"précédé d'un '$', n'est pas permis dans le nom de variable, et les noms de "
+"variables ne peuvent pas avoir une taille de 0. Pour en apprendre plus sur"
+" le développement de variables dans fish, tapez 'help expand-variable'."
+
+#: expand.h:123
+msgid ""
+"The '$' begins a variable name. It was given at the end of an argument. "
+"Variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type 'help expand-variable'."
+msgstr ""
+"Le caractère '$' commence un nom de variable. Il était donné à la fin d'un argument."
+" Les noms de variables ne peuvent pas avoir une taille de 0. Pour en apprendre "
+"plus sur le développement de variables dans fish, tapez 'help expand-variable'."
+
+#: expand.h:128
+msgid ""
+"Did you mean {$VARIABLE}? The '$' character begins a variable name. A "
+"bracket, which directly followed a '$', is not allowed as a part of a "
+"variable name, and variable names may not be zero characters long. To learn "
+"more about variable expansion in fish, type 'help expand-variable'."
+msgstr ""
+"Vouliez-vous dire {$VARIABLE}? Le caractère '$' commence un nom de variable. Un "
+"crochet, lorsque précédé par un '$', n'est pas permis dans le nom  de variable, "
+"et les noms de variables ne peuvent pas avoir une taille de 0. Pour en apprendre "
+"plus sur le développement de variables dans fish, tapez 'help expand-variable'."
+
+#: expand.h:133
+msgid ""
+"Did you mean (COMMAND)? In fish, the '$' character is only used for "
+"accessing variables. To learn more about command substitution in fish, type "
+"'help expand-command-substitution'."
+msgstr ""
+"Vouliez-vous dire (COMMANDE)? Dans fish, le caractère '$' est seulement "
+"utilisé pour accéder à des variables. Pour en apprendre plus sur la "
+"substitution de commande dans fish, tapez 'help expand-command-substitution'."
+
+
+

@@ -443,11 +443,19 @@ void parser_push_block( int type )
 	  blocks should always be skipped. Rather complicated... :-(
 	*/
 	new->skip=current_block?current_block->skip:0;
+	
+	/*
+	  Type TOP and SUBST are never skipped
+	*/
 	if( type == TOP || type == SUBST )
 	{
 		new->skip = 0;
 	}
-	if( type == FAKE )
+
+	/*
+	  Fake blocks and function definition blocks are never executed
+	*/
+	if( type == FAKE || type == FUNCTION_DEF )
 	{
 		new->skip = 1;
 	}
@@ -2065,11 +2073,12 @@ static int parse_job( process_t *p,
 
 			forbid = (wchar_t *)(al_get_count( forbidden_function)?al_peek( forbidden_function ):0);
 			nxt_forbidden = forbid && (wcscmp( forbid, nxt) == 0 );
-
+			
 			/*
 			  Make feeble attempt to avoid infinite recursion. Will at
 			  least catch some accidental infinite recursion calls.
 			*/
+			
 			if( function_exists( nxt ) && !nxt_forbidden)
 			{
 				/*

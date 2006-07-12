@@ -317,9 +317,6 @@ static void handle_locale()
 
 		if( is_interactive )
 		{
-			complete_destroy();
-			complete_init();
-			
 			debug( 0, _(L"Changing language to English") );
 		}
 	}

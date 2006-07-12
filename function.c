@@ -225,7 +225,7 @@ void function_remove( const wchar_t *name )
 	event_t ev;
 	
 	CHECK( name, );
-	
+
 	hash_remove( &function,
 				 name,
 				 &key,
@@ -241,6 +241,16 @@ void function_remove( const wchar_t *name )
 	event_remove( &ev );
 
 	clear_function_entry( key, d );
+
+	/*
+	  Notify the autoloader that the specified function is erased, but
+	  only if this call to fish_remove is not made by the autoloader
+	  itself.
+	*/
+	if( !is_autoload )
+	{
+		parse_util_unload( name, L"fish_function_path", 0 );
+	}
 }
 	
 const wchar_t *function_get_definition( const wchar_t *argv )

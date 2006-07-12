@@ -233,7 +233,6 @@ static hash_table_t *condition_cache=0;
 */
 static string_buffer_t *get_desc_buff=0;
 
-
 /**
    This command clears the cache of condition tests created by \c condition_test().
 */
@@ -354,7 +353,7 @@ void complete_destroy()
 		suffix_hash=0;
 	}
 	
-	parse_util_load_reset(L"fish_complete_path");
+	parse_util_load_reset( L"fish_complete_path", 0 );
 	
 }
 
@@ -1551,7 +1550,10 @@ static void complete_load_handler( const wchar_t *cmd )
 
 void complete_load( const wchar_t *name, int reload )
 {
-	parse_util_load( name, L"fish_complete_path", &complete_load_handler, reload );	
+	parse_util_load( name, 
+					 L"fish_complete_path",
+					 &complete_load_handler, 
+					 reload );	
 }
 
 /**
@@ -1955,20 +1957,18 @@ void complete( const wchar_t *cmd,
 	wchar_t *buff;
 	tokenizer tok;
 	wchar_t *current_token=0, *current_command=0, *prev_token=0;
-
 	int on_command=0;
 	int pos;
-
 	int done=0;
-
-	int cursor_pos = wcslen(cmd );
+	int cursor_pos;
 
 	CHECK( cmd, );
 	CHECK( comp, );
 
 //	debug( 1, L"Complete '%ls'", cmd );
-	
-		
+
+	cursor_pos = wcslen(cmd );
+
 	/**
 	   If we are completing a variable name or a tilde expansion user
 	   name, we do that and return. No need for any other competions.

@@ -95,10 +95,11 @@ int parse_util_lineno( const wchar_t *str, int len );
 
 /**
    Autoload the specified file, if it exists in the specified path. Do
-   not load it multiple times unless it's timestamp changes.
+   not load it multiple times unless it's timestamp changes or
+   parse_util_unload is called.
 
    \param cmd the filename to search for. The suffix '.fish' is always added to this name
-   \param path_var_name the name of an environment variable containing a search path
+   \param path_var_name the environment variable giving  the search path
    \param on_load a callback function to run if a suitable file is found, which has not already been run
    \param reload wheter to recheck file timestamps on already loaded files
 */
@@ -108,9 +109,28 @@ int parse_util_load( const wchar_t *cmd,
 					 int reload );
 
 /**
-   Reset the loader for the specified path variable
+   Reset the loader for the specified path variable. This will cause
+   all information on loaded files in the specified directory to be
+   reset.
+
+   \param path_var_name the environment variable giving  the search path
+   \param on_load the callback function to use when a file is reloaded
+   \param on_load the callback function to call if the file has been previously loaded
 */
-void parse_util_load_reset( const wchar_t *path_var );
+void parse_util_load_reset( const wchar_t *path_var_name,
+							void (*on_load)(const wchar_t *cmd) );
+
+/**
+   Tell the autoloader that the specified file, in the specified path,
+   is no longer loaded.
+
+   \param cmd the filename to search for. The suffix '.fish' is always added to this name
+   \param path_var_name the environment variable giving  the search path
+   \return non-zero if the file was removed, zero if the file had not yet been loaded
+*/
+int parse_util_unload( const wchar_t *cmd,
+					   const wchar_t *path_var_name,
+					   void (*on_load)(const wchar_t *cmd) );
 
 /**
    Set the argv environment variable to the specified null-terminated

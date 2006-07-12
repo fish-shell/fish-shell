@@ -13,6 +13,8 @@ into a block. The reason for this is usually either to introduce a new
 variable scope or to redirect the input to output of this set of
 commands as a group.
 
+The \c begin command does not change the current exit status.
+
 \subsection begin-example Example
 
 The following code sets a number of variables inside of a block

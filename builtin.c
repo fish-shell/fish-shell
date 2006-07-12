@@ -2476,7 +2476,7 @@ static int builtin_begin( wchar_t **argv )
 {
 	parser_push_block( BEGIN );
 	current_block->tok_pos = parser_get_pos();
-	return 0;
+	return proc_get_last_status();
 }
 
 

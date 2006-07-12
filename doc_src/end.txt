@@ -13,4 +13,4 @@ begin; [COMMANDS...] end
 documentation for the block constructs, such as \c if, \c for and \
 while.
 
-The end command does not change the current exit status.
+The \c end command does not change the current exit status.

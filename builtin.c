@@ -774,6 +774,7 @@ static int builtin_functions( wchar_t **argv )
 	int list=0;
 	int show_hidden=0;
 	int res = 0;
+	int query = 0;
 
 	woptind=0;
 
@@ -801,6 +802,10 @@ static int builtin_functions( wchar_t **argv )
 			}
 			,
 			{
+				L"query", no_argument, 0, 'q'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -812,7 +817,7 @@ static int builtin_functions( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"ed:nah",
+								L"ed:nahq",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -852,6 +857,10 @@ static int builtin_functions( wchar_t **argv )
 				builtin_print_help( argv[0], sb_out );
 				return 0;
 
+			case 'q':
+				query = 1;
+				break;
+
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
@@ -862,9 +871,9 @@ static int builtin_functions( wchar_t **argv )
 	}
 
 	/*
-	  Erase, desc and list are mutually exclusive
+	  Erase, desc, query and list are mutually exclusive
 	*/
-	if( (erase + (desc!=0) + list) > 1 )
+	if( (erase + (desc!=0) + list + query) > 1 )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Invalid combination of options\n" ),
@@ -951,22 +960,25 @@ static int builtin_functions( wchar_t **argv )
 		return 0;
 	}
 
-
 	switch( argc - woptind )
 	{
 		case 0:
 		{
-			sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );
-			al_init( &names );
-			function_get_names( &names, show_hidden );
-			sort_list( &names );
-			
-			for( i=0; i<al_get_count( &names ); i++ )
+			if( !query )
 			{
-				functions_def( (wchar_t *)al_get( &names, i ) );
+				sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );
+				al_init( &names );
+				function_get_names( &names, show_hidden );
+				sort_list( &names );
+				
+				for( i=0; i<al_get_count( &names ); i++ )
+				{
+					functions_def( (wchar_t *)al_get( &names, i ) );
+				}
+				
+				al_destroy( &names );
 			}
 			
-			al_destroy( &names );
 			break;
 		}
 
@@ -978,8 +990,11 @@ static int builtin_functions( wchar_t **argv )
 					res++;
 				else
 				{
-					functions_def( argv[i] );
-				}
+					if( !query )
+					{
+						functions_def( argv[i] );
+					}
+				}				
 			}
 
 			break;

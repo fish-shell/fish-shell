@@ -12,11 +12,16 @@ This builtin command is used to print or erase functions.
 - <code>-e</code> or <code>--erase</code> causes the specified functions to be erased.
 - <code>-h</code> or <code>--help</code> display a help message and exit
 - <code>-n</code> or <code>--names</code> list only the names of all defined functions
+- <code>-q</code> or <code>--query</code> test if the specified functions exist. Does not output anything, but the builtins exit status is the number of functions specified that were not defined.
 
-If \c functions is called with no arguments, the names and definition
-of all functions are printed, otherwise, the specified function
-definitions will be printed.
+The default behavior of \c functions when called with no arguments,
+is to print the names and definitions of all defined functions. If any
+non-switch parameters are given, only the definition of the specified
+functions are printed. 
 
-If a function is automatically loaded, using <code>functions -e</code>
-to erase it will not remove the function.
+Automatically loaded functions can not be removed using functions
+-e. Either remove the definition file or change the
+$fish_function_path variable to remove autoloaded functions.
 
+The exit status of the functions builtin is the number functions
+specified in the argument list that do not exist.

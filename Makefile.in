@@ -77,7 +77,7 @@ FISH_PAGER_OBJS := fish_pager.o output.o wutil.o		\
 	translate.o common.o
 
 # All objects that the system needs to build fish_tests
-FISH_TESTS_OBJS := common.o fish_tests.o
+FISH_TESTS_OBJS := $(FISH_OBJS) fish_tests.o
 
 # All objects that the system needs to build fishd
 FISHD_OBJS := fishd.o env_universal_common.o wutil.o	\

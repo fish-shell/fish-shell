@@ -118,9 +118,11 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 {
 
 	CHECK( tok, );
-	CHECK( b, );
 
 	memset( tok, 0, sizeof( tokenizer) );
+
+	CHECK( b, );
+
 
 	tok->accept_unfinished = flags & TOK_ACCEPT_UNFINISHED;
 	tok->show_comments = flags & TOK_SHOW_COMMENTS;
@@ -162,7 +164,8 @@ void tok_destroy( tokenizer *tok )
 
 int tok_last_type( tokenizer *tok )
 {
-	CHECK( tok, 0 );
+	CHECK( tok, TOK_ERROR );
+	CHECK( tok->buff, TOK_ERROR );
 	
 	return tok->last_type;
 }
@@ -176,6 +179,12 @@ wchar_t *tok_last( tokenizer *tok )
 
 int tok_has_next( tokenizer *tok )
 {
+	/*
+	  Return 1 on broken tokenizer
+	*/
+	CHECK( tok, 1 );
+	CHECK( tok->buff, 1 );
+
 /*	fwprintf( stderr, L"has_next is %ls \n", tok->has_next?L"true":L"false" );*/
 	return 	tok->has_next;
 }
@@ -496,6 +505,7 @@ void tok_next( tokenizer *tok )
 {
 
 	CHECK( tok, );
+	CHECK( tok->buff, );
 	
 	if( tok_last_type( tok ) == TOK_ERROR )
 	{

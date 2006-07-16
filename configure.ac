@@ -82,15 +82,6 @@ AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 
-# Check for doxygen, which is needed to build
-AC_CHECK_PROG( has_doxygen, [doxygen], "true")
-
-if ! test "$has_doxygen" = "true"; then
-	AC_MSG_ERROR( [cannot find the Doxygen program in your path.
-This program is needed to build fish.
-Please install it and try again.])
-fi
-
 # Check for seq command. If missing, make sure fallback shellscript
 # implementation is installed
 AC_CHECK_PROG( SEQ_FALLBACK, seq, [ ], [seq])

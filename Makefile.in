@@ -47,7 +47,6 @@ datadir = @datadir@
 bindir = @bindir@
 mandir = @mandir@
 sysconfdir = @sysconfdir@
-fishinputfile = @fishinputfile@
 docdir = @docdir@
 
 #etc files to install
@@ -184,7 +183,7 @@ TRANSLATIONS_SRC := $(wildcard po/*.po)
 TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
 #Make everything needed for installing fish
-all: $(PROGRAMS) user_doc
+all: $(PROGRAMS) user_doc etc/fish share/fish
 	@echo fish has now been built. 
 	@echo Use \'make install\' to install fish.
 .PHONY: all
@@ -249,6 +248,10 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	echo  "/** \page " `basename $*` >$@; 
 	cat $*.txt >>$@; 
 	echo "*/" >>$@
+
+%: %.in Makefile
+	sed <$@.in >$@ -e "s,@sysconfdir\@,$(sysconfdir)," -e "s,@datadir\@,$(datadir)," -e "s,@docdir\@,$(docdir)," -e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|" 
+#-e "s,@\@,$()," 
 
 # Compile translation file
 %.gmo:
@@ -511,7 +514,7 @@ set_color: set_color.o doc_src/set_color.o common.o
 
 # Test program for the tokenizer library
 tokenizer_test: tokenizer.c tokenizer.h wutil.o common.o
-	$(CC) ${CFLAGS} tokenizer.c wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) tokenizer.c wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
 
 # Neat little program to show output from terminal
 key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o

@@ -81,8 +81,6 @@ static int read_init()
 		return 0;
 	}
 
-	env_set( L"__fish_help_dir", DOCDIR, 0);	
-
 	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; and . fish 2>/dev/null", 0, TOP );
 	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; and . fish 2>/dev/null", 0, TOP );
 	eval( L"builtin cd 2>/dev/null; and . .fish 2>/dev/null", 0, TOP );

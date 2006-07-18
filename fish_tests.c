@@ -198,7 +198,7 @@ static int stack_test( int elements )
 /**
    Hash function for pointers
 */
-static int hash_func( const void *data )
+static int hash_func( void *data )
 {
 /*	srand( (int)data );
 	return rand();
@@ -210,7 +210,7 @@ static int hash_func( const void *data )
 /**
    Pointer hash comparison function
 */
-static int compare_func( const void *key1, const void *key2 )
+static int compare_func( void *key1, void *key2 )
 {
 	return key1==key2;
 }
@@ -577,7 +577,7 @@ static int expand_test( const wchar_t *in, int flags, ... )
 	}
 	va_end( va );
 	
-	al_foreach( &out, (void (*)(const void *))&free );
+	al_foreach( &out, &free );
 	return res;
 		
 }
@@ -642,7 +642,7 @@ void perf_complete()
 	
 		matches += al_get_count( &out );
 		
-		al_foreach( &out, (void (*)(const void *))&free );
+		al_foreach( &out, &free );
 		al_truncate( &out, 0 );
 	}
 	t2=get_time();
@@ -664,7 +664,7 @@ void perf_complete()
 	
 		matches += al_get_count( &out );
 		
-		al_foreach( &out, (void (*)(const void *))&free );
+		al_foreach( &out, &free );
 		al_truncate( &out, 0 );
 	}
 	t2=get_time();
@@ -713,12 +713,12 @@ int main( int argc, char **argv )
 //	say( L"Testing performance" );
 //	perf_complete();
 		
+	complete_destroy();
 	env_destroy();
 	reader_destroy();	
 	parser_destroy();
 	function_destroy();
 	builtin_destroy();
-	complete_destroy();
 	wutil_destroy();
 	event_destroy();
 	proc_destroy();

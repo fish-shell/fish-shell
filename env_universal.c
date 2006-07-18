@@ -256,11 +256,11 @@ void env_universal_destroy()
 			wperror( L"fcntl" );
 		}
 		try_send_all( &env_universal_server );	
-	}
-
-	if( close( env_universal_server.fd ) )
-	{
-		wperror( L"close" );
+		
+		if( close( env_universal_server.fd ) )
+		{
+			wperror( L"close" );
+		}
 	}
 	
 	env_universal_server.fd =-1;

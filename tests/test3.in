@@ -127,15 +127,3 @@ else
 end
 
 
-# Test universal variable erasing
-
-set -e foo
-../fish -c "set -U foo bar"
-
-if set -q foo
-	echo Test 11 pass
-else
-	echo Test 11 fail
-end
-
-set -eU foo

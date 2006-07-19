@@ -36,10 +36,6 @@
 CC := @CC@
 INSTALL:=@INSTALL@
 
-CFLAGS:=@CFLAGS@
-CPPFLAGS=@CPPFLAGS@
-LDFLAGS:= @LIBS@ @LDFLAGS@ 
-
 # Installation directories
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -48,6 +44,13 @@ bindir = @bindir@
 mandir = @mandir@
 sysconfdir = @sysconfdir@
 docdir = @docdir@
+localedir = @localedir@
+prefix = @prefix@
+
+CFLAGS:=@CFLAGS@ -DLOCALEDIR=L\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
+CPPFLAGS=@CPPFLAGS@
+LDFLAGS:= @LIBS@ @LDFLAGS@ 
+
 
 #etc files to install
 ETC_DIR_INSTALL = etc/fish_interactive.fish 

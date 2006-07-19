@@ -212,17 +212,11 @@ fi
 # it can make sure the fish installation directory is in the path
 # during startup.
 if [[ "$prefix" = NONE ]]; then
-	AC_DEFINE_UNQUOTED( [PREFIX], L"/usr/local", [Installation directory])
-	AC_SUBST( PREFIX, /usr/local)
 	export prefix=/usr/local
+	AC_SUBST( prefix, /usr/local)
 else
-	AC_DEFINE_UNQUOTED( [PREFIX], L"$prefix", [Installation directory])
-	AC_SUBST( PREFIX, [$prefix])
+	AC_SUBST( prefix, [$prefix])
 fi
-AC_DEFINE_UNQUOTED( SYSCONFDIR, [L"$(eval echo $sysconfdir)"], [System configuration directory] )
-AC_DEFINE_UNQUOTED( DATADIR, [L"$(eval echo $datadir)"], [System configuration directory] )
-AC_SUBST( SYSCONFDIR, ["$(eval echo $sysconfdir)"] )
-AC_SUBST( DATADIR, ["$(eval echo $datadir)"] )
 
 
 # Set up the directory where the documentation files should be
@@ -237,8 +231,7 @@ fi
 
 # Set up locale directory. This is where the .po files will be
 # installed.
-AC_DEFINE_UNQUOTED( [LOCALEDIR], "$(eval echo $datadir)/locale", [Locale directory])
-AC_SUBST( [LOCALEDIR], [$datadir/locale])
+AC_SUBST( [localedir], [$datadir/locale])
 
 # See if Linux procfs is present. This is used to get extra
 # information about running processes.

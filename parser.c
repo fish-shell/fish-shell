@@ -3198,11 +3198,16 @@ int parser_test( const  wchar_t * buff,
 
 							if( out )
 							{
+								char *h;
+
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   INVALID_CASE_ERR_MSG );
 
 								print_errors( out, prefix);
+								h = builtin_help_get( L"case" );
+								if( h )
+									sb_printf( out, L"%s", h );
 							}
 						}
 					}

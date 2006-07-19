@@ -8,7 +8,7 @@
 # Assign a temporary value here for performance reasons. The real
 # value should be set in /etc/fish.
 
-set -g fish_function_path @datadir@/functions/
+set -g fish_function_path @datadir@/fish/functions/
 set __fish_help_dir @docdir@
 
 

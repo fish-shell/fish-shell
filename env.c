@@ -31,6 +31,10 @@
 #include <ncurses/term.h>
 #endif
 
+#if HAVE_LIBINTL_H
+#include <libintl.h>
+#endif
+
 #include <errno.h>
 
 
@@ -305,16 +309,17 @@ static void handle_locale()
 	if( wcscmp( wsetlocale( LC_MESSAGES, (void *)0 ), old ) != 0 )
 	{
 
-		/* Try to make change known to gettext.  */
-#ifdef HAVE__NL_MSG_CAT_CNTR
-		{
-			extern int _nl_msg_cat_cntr;
-			++_nl_msg_cat_cntr;
-		}
-#elif HAVE_DCGETTEXT
-		dcgettext("fish","Changing language to English",LC_MESSAGES);
-#endif		
-
+		/* 
+		   Try to make change known to gettext. Both changing
+		   _nl_msg_cat_cntr and calling dcgettext might potentially
+		   tell some gettext implementation that the translation
+		   strings should be reloaded. We do both and hope for the
+		   best.
+		*/
+		extern int _nl_msg_cat_cntr;
+		++_nl_msg_cat_cntr;
+		dcgettext( "fish", "Changing language to English", LC_MESSAGES );
+		
 		if( is_interactive )
 		{
 			debug( 0, _(L"Changing language to English") );

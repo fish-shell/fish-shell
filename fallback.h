@@ -310,29 +310,61 @@ struct drand48_data
 /**
    Fallback implementation of lrand48_r. Internally uses rand_r, so it is pretty weak.
 */
-int lrand48_r(struct drand48_data *buffer, long int *result);
+int lrand48_r( struct drand48_data *buffer, long int *result );
 
 /**
    Fallback implementation of srand48_r, the seed function for lrand48_r.
 */
-int srand48_r(long int seedval, struct drand48_data *buffer);
+int srand48_r( long int seedval, struct drand48_data *buffer );
 
 #endif
 
 #ifndef HAVE_FUTIMES
 
-int futimes(int fd, const struct timeval *times);
+int futimes( int fd, const struct timeval *times );
 
 #endif
 
 #ifndef HAVE_GETTEXT
 
-char * gettext (const char * msgid);
-char * bindtextdomain (const char * domainname, const char * dirname);
-char * textdomain (const char * domainname);
+/**
+   Fallback implementation of gettext. Just returns the original string.
+*/
+char * gettext( const char * msgid );
+
+/**
+   Fallback implementation of bindtextdomain. Does nothing.
+*/
+char * bindtextdomain( const char * domainname, const char * dirname );
+
+/**
+   Fallback implementation of textdomain. Does nothing.
+*/
+char * textdomain( const char * domainname );
 
 #endif
 
+#ifndef HAVE_DCGETTEXT
+
+/**
+   Fallback implementation of dcgettext. Just returns the original string.
+*/
+char * dcgettext ( const char * domainname, 
+				   const char * msgid,
+				   int category );
+
+#endif
+
+#ifndef HAVE__NL_MSG_CAT_CNTR
+
+/**
+   Some gettext implementation use have this variable, and by
+   increasing it, one can tell the system that the translations need
+   to be reloaded.
+*/
+extern int _nl_msg_cat_cntr;
+
+#endif
 
 #endif
 

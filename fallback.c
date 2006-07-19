@@ -1050,4 +1050,21 @@ char * textdomain (const char * domainname)
 
 #endif
 
+#ifndef HAVE_DCGETTEXT
+
+char * dcgettext ( const char * domainname,
+				   const char * msgid,
+				   int category)
+{
+	return msgid;
+}
+
+
+#endif
+
+#ifndef HAVE__NL_MSG_CAT_CNTR
+
+int _nl_msg_cat_cntr=0;
+
+#endif
 

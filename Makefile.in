@@ -47,7 +47,7 @@ docdir = @docdir@
 localedir = @localedir@
 prefix = @prefix@
 
-CFLAGS:=@CFLAGS@ -DLOCALEDIR=L\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
+CFLAGS:=@CFLAGS@ -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS:= @LIBS@ @LDFLAGS@ 
 

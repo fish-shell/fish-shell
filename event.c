@@ -23,7 +23,7 @@
 #include "common.h"
 #include "event.h"
 #include "signal.h"
-#include "translate.h"
+
 #include "halloc_util.h"
 
 /**

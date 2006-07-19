@@ -26,7 +26,7 @@ Functions used for implementing the commandline builtin.
 #include "tokenizer.h"
 #include "input_common.h"
 #include "input.h"
-#include "translate.h"
+
 #include "parse_util.h"
 
 /**

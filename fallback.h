@@ -325,5 +325,14 @@ int futimes(int fd, const struct timeval *times);
 
 #endif
 
+#ifndef HAVE_GETTEXT
+
+char * gettext (const char * msgid);
+char * bindtextdomain (const char * domainname, const char * dirname);
+char * textdomain (const char * domainname);
+
+#endif
+
+
 #endif
 

@@ -39,7 +39,7 @@ Utilities for io redirection.
 #include "exec.h"
 #include "common.h"
 #include "io.h"
-#include "translate.h"
+
 #include "halloc.h"
 
 

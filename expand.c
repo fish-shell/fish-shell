@@ -42,7 +42,7 @@ parameter expansion.
 #include "signal.h"
 #include "tokenizer.h"
 #include "complete.h"
-#include "translate.h"
+
 #include "parse_util.h"
 #include "halloc_util.h"
 

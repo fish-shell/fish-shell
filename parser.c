@@ -37,7 +37,7 @@ The fish parser. Contains functions for parsing code.
 #include "sanity.h"
 #include "env_universal.h"
 #include "event.h"
-#include "translate.h"
+
 #include "intern.h"
 #include "parse_util.h"
 #include "halloc.h"

@@ -180,7 +180,7 @@ static char *posixly_correct;
    Use translation functions if available
 */
 #ifdef HAVE_TRANSLATE_H
-#include "translate.h"
+
 #define _(wstr) wgettext(wstr)
 #else
 #define _(wstr) wstr

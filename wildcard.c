@@ -29,7 +29,7 @@ wildcards using **.
 #include "complete.h"
 #include "reader.h"
 #include "expand.h"
-#include "translate.h"
+
 
 /**
    This flag is set in the flags parameter of wildcard_expand if the

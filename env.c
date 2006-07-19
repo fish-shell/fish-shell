@@ -49,7 +49,7 @@
 #include "env_universal.h"
 #include "input_common.h"
 #include "event.h"
-#include "translate.h"
+
 #include "complete.h"
 
 /**

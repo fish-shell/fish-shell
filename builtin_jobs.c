@@ -24,7 +24,7 @@
 #include "parser.h"
 #include "common.h"
 #include "wgetopt.h"
-#include "translate.h"
+
 
 /**
    Print modes for the jobs builtin

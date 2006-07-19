@@ -23,7 +23,7 @@
 #include "tokenizer.h"
 #include "common.h"
 #include "wildcard.h"
-#include "translate.h"
+
 
 /**
    Error string for unexpected end of string

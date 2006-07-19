@@ -25,7 +25,7 @@
 #include "reader.h"
 #include "kill.h"
 #include "wutil.h"
-#include "translate.h"
+
 
 /**
    Status from earlier sanity checks

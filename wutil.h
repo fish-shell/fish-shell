@@ -118,5 +118,14 @@ wchar_t *wdirname( const wchar_t *path );
 */
 wchar_t *wbasename( const wchar_t *path );
 
+/**
+   Wide character wrapper around the gettext function. For historic
+   reasons, unlike the real gettext function, wgettext takes care of
+   setting the correct domain, etc. using the textdomain and
+   bindtextdomain functions. This should probably be moved out of
+   wgettext, so that wgettext will be nothing more than a wrapper
+   around gettext, like all other functions in this file.
+*/
+const wchar_t *wgettext( const wchar_t *in );
 
 #endif

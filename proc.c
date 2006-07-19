@@ -55,7 +55,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "parser.h"
 #include "signal.h"
 #include "event.h"
-#include "translate.h"
+
 #include "halloc.h"
 #include "halloc_util.h"
 #include "output.h"

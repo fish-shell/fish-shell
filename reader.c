@@ -82,7 +82,7 @@ commence.
 #include "function.h"
 #include "output.h"
 #include "signal.h"
-#include "translate.h"
+
 #include "parse_util.h"
 
 /**

@@ -20,7 +20,7 @@ Functions used for implementing the ulimit builtin.
 #include "builtin.h"
 #include "common.h"
 #include "wgetopt.h"
-#include "translate.h"
+
 
 /**
    Struct describing a resource limit

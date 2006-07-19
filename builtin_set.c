@@ -24,7 +24,7 @@ Functions used for implementing the set builtin.
 #include "wgetopt.h"
 #include "proc.h"
 #include "parser.h"
-#include "translate.h"
+
 
 /**
    Error message for invalid path operations

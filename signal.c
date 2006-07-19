@@ -24,7 +24,7 @@ The library for various signal related issues
 #include "event.h"
 #include "reader.h"
 #include "proc.h"
-#include "translate.h"
+
 
 /**
    Struct describing an entry for the lookup table used to convert

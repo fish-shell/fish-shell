@@ -97,6 +97,16 @@ extern wchar_t *program_name;
 	}																	\
 		
 /**
+   Shorthand for wgettext call
+*/
+#define _(wstr) wgettext(wstr)
+
+/**
+   Noop, used to tell xgettext that a string should be translated, even though it is not directly sent to wgettext.
+*/
+#define N_(wstr) wstr
+
+/**
    Take an array_list_t containing wide strings and converts them to a
    single null-terminated wchar_t **. The array is allocated using
    halloc, and uses the \c context parameter as context. If \c context

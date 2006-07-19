@@ -23,7 +23,7 @@ Functions used for implementing the complete builtin.
 #include "wgetopt.h"
 #include "parser.h"
 #include "reader.h"
-#include "translate.h"
+
 
 /**
    Internal storage for the builtin_get_temporary_buffer() function.

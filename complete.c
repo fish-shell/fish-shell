@@ -39,7 +39,7 @@
 #include "reader.h"
 #include "history.h"
 #include "intern.h"
-#include "translate.h"
+
 #include "parse_util.h"
 #include "halloc.h"
 #include "halloc_util.h"

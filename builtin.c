@@ -60,7 +60,7 @@
 #include "intern.h"
 #include "event.h"
 #include "signal.h"
-#include "translate.h"
+
 #include "halloc.h"
 #include "halloc_util.h"
 #include "parse_util.h"

@@ -16,7 +16,6 @@
 
 #include "function.h"
 #include "proc.h"
-#include "translate.h"
 #include "parser.h"
 #include "common.h"
 #include "intern.h"

@@ -20,6 +20,9 @@
 #include <limits.h>
 #include <libgen.h>
 
+#if HAVE_LIBINTL_H
+#include <libintl.h>
+#endif
 
 #include "fallback.h"
 #include "util.h"
@@ -75,6 +78,38 @@ static int wutil_calls = 0;
    Storage for the wreaddir function
 */
 static struct wdirent my_wdirent;
+
+
+/**
+   For wgettext: Number of string_buffer_t in the ring of buffers
+*/
+#define BUFF_COUNT 64
+
+/**
+   For wgettext: The ring of string_buffer_t
+*/
+static string_buffer_t buff[BUFF_COUNT];
+/**
+   For wgettext: Current position in the ring
+*/
+static int curr_buff=0;
+
+/**
+   For wgettext: Buffer used by translate_wcs2str
+*/
+static char *wcs2str_buff=0;
+/**
+   For wgettext: Size of buffer used by translate_wcs2str
+*/
+static size_t wcs2str_buff_count=0;
+
+/**
+   For wgettext: Flag to tell whether the translation library has been initialized
+*/
+static int wgettext_is_init = 0;
+
+
+
 
 void wutil_init()
 {
@@ -403,4 +438,83 @@ wchar_t *wbasename( const wchar_t *path )
 }
 
 
+
+/**
+   For wgettext: Internal shutdown function. Automatically called on shutdown if the library has been initialized.
+*/
+static void wgettext_destroy()
+{
+	int i;
+
+	if( !wgettext_is_init )
+		return;
+	
+	wgettext_is_init = 0;
+	
+	for(i=0; i<BUFF_COUNT; i++ )
+		sb_destroy( &buff[i] );
+
+	free( wcs2str_buff );
+}
+
+/**
+   For wgettext: Internal init function. Automatically called when a translation is first requested.
+*/
+static void wgettext_init()
+{
+	int i;
+	
+	wgettext_is_init = 1;
+	
+	for(i=0; i<BUFF_COUNT; i++ )
+	{
+		sb_init( &buff[i] );
+	}
+	
+	halloc_register_function_void( global_context, &wgettext_destroy );
+	
+	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
+	textdomain( PACKAGE_NAME );
+}
+
+
+/**
+   For wgettext: Wide to narrow character conversion. Internal implementation that
+   avoids exessive calls to malloc
+*/
+static char *wgettext_wcs2str( const wchar_t *in )
+{
+	size_t len = MAX_UTF8_BYTES*wcslen(in)+1;
+	if( len > wcs2str_buff_count )
+	{
+		wcs2str_buff = realloc( wcs2str_buff, len );
+		if( !wcs2str_buff )
+		{
+			DIE_MEM();
+		}
+	}
+	
+	return wcs2str_internal( in, wcs2str_buff);
+}
+
+const wchar_t *wgettext( const wchar_t *in )
+{
+	if( !in )
+		return in;
+	
+	if( !wgettext_is_init )
+		wgettext_init();
+	
+	char *mbs_in = wgettext_wcs2str( in );	
+	char *out = gettext( mbs_in );
+	wchar_t *wres=0;
+	
+	sb_clear( &buff[curr_buff] );
+	
+	sb_printf( &buff[curr_buff], L"%s", out );
+	wres = (wchar_t *)buff[curr_buff].buff;
+	curr_buff = (curr_buff+1)%BUFF_COUNT;
+	
+	return wres;
+}
 

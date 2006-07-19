@@ -29,7 +29,7 @@
 #include "intern.h"
 #include "exec.h"
 #include "env.h"
-#include "translate.h"
+
 #include "wildcard.h"
 #include "halloc_util.h"
 

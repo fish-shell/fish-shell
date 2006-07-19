@@ -140,7 +140,7 @@ The fish parser. Contains functions for parsing code.
 /**
    Error message for Posix-style assignment
 */
-#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the help section on the set command by typing 'help set'.")
+#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? For information on assigning values to variables, see the help section on the set command by typing 'help set'.")
 
 /**
    Error for invalid redirection token
@@ -2161,7 +2161,7 @@ static int parse_job( process_t *p,
 						wchar_t *cmd = (wchar_t *)al_get( args, 0 );
 						
 						/* 
-						   We couln't find the specified command.
+						   We couldn't find the specified command.
 						   
 						   What we want to happen now is that the
 						   specified job won't get executed, and an
@@ -2176,9 +2176,16 @@ static int parse_job( process_t *p,
 						*/
 						if( wcschr( cmd, L'=' ) )
 						{
+							wchar_t *cpy = halloc_wcsdup( j, cmd );
+							wchar_t *valpart = wcschr( cpy, L'=' );
+							*valpart++=0;
+							
 							debug( 0,
 								   COMMAND_ASSIGN_ERR_MSG,
-								   (wchar_t *)al_get( args, 0 ) );
+								   cmd,
+								   cpy,
+								   valpart);
+							
 						}
 						else if(cmd[0]==L'$')
 						{

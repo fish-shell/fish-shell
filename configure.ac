@@ -257,9 +257,12 @@ AC_CHECK_HEADER([regex.h],
 				[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
 
 # Check for presense of various functions
-AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp gettext fwprintf )
+AC_CHECK_FUNCS( gettext wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r)
+
+# The Makefile also needs to know if we have gettext, so it knows if the translations should be installed.
+AC_CHECK_FUNC( gettext, AC_SUBST( HAVE_GETTEXT, 1 ), AC_SUBST( HAVE_GETTEXT, 0 ) )
 
 # Here follows a list of small programs used to test for various
 # features that Autoconf doesn't tell us about

@@ -186,7 +186,7 @@ TRANSLATIONS_SRC := $(wildcard po/*.po)
 TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
 #Make everything needed for installing fish
-all: $(PROGRAMS) user_doc etc/fish share/fish
+all: $(PROGRAMS) user_doc etc/fish share/fish $(TRANSLATIONS)
 	@echo fish has now been built. 
 	@echo Use \'make install\' to install fish.
 .PHONY: all

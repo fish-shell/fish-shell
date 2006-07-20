@@ -30,10 +30,10 @@ end
 # be exported, since the fish inputrc file plays nice with other files 
 # by including them when found.
 # Give priority to the default file installed with fish in 
-# @SYSCONFDIR@/fish_inputrc.
+# @sysconfdir@/fish_inputrc.
 #
 
-for i in ~/.fish_inputrc @SYSCONFDIR@/fish_inputrc ~/.inputrc /etc/inputrc
+for i in ~/.fish_inputrc @sysconfdir@/fish_inputrc ~/.inputrc /etc/inputrc
 	if test -f $i
 		set -xg INPUTRC $i
 		break

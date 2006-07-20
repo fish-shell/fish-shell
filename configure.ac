@@ -343,7 +343,7 @@ case $target_os in
 esac
 
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile etc/fish_interactive.fish seq])
+AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile seq])
 AC_OUTPUT
 
 echo "fish is now configured."

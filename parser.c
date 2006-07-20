@@ -2850,70 +2850,18 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 				case VARIABLE_EXPAND:
 				case VARIABLE_EXPAND_SINGLE:
 				{
-					switch( *(pos+1))
+					wchar_t n = *(pos+1);
+						
+					if( n != VARIABLE_EXPAND &&
+						n != VARIABLE_EXPAND_SINGLE &&
+						!wcsvarchr(n) )
 					{
-						case BRACKET_BEGIN:
+						err=1;
+						if( out )
 						{
-							err=1;
-							if( out )
-							{
-								error( SYNTAX_ERROR,
-									   offset,
-									   COMPLETE_VAR_BRACKET_DESC );
-
-								print_errors( out, prefix);
-							}
-							break;
+							expand_variable_error( unesc, pos-unesc, offset );
+							print_errors( out, prefix);
 						}
-
-						case INTERNAL_SEPARATOR:
-						{
-							err=1;
-							if( out )
-							{
-								error( SYNTAX_ERROR,
-									   offset,
-									   COMPLETE_VAR_PARAN_DESC );
-								print_errors( out, prefix);
-							}
-							break;
-						}
-
-						case 0:
-						{
-							err=1;
-							if( out )
-							{
-								error( SYNTAX_ERROR,
-									   offset,
-									   COMPLETE_VAR_NULL_DESC );
-								print_errors( out, prefix);
-							}
-							break;
-						}
-
-						default:
-						{
-							wchar_t n = *(pos+1);
-						
-							if( n != VARIABLE_EXPAND &&
-								n != VARIABLE_EXPAND_SINGLE &&
-								!wcsvarchr(n) )
-							{
-								err=1;
-								if( out )
-								{
-									error( SYNTAX_ERROR,
-										   offset,
-										   COMPLETE_VAR_DESC,
-										   *(pos+1) );
-									print_errors( out, prefix);
-								}
-							}
-						
-							break;
-						}
-					
 					}
 				
 					break;
@@ -3053,7 +3001,7 @@ int parser_test( const  wchar_t * buff,
 					int mark = tok_get_pos( &tok );
 					had_cmd = 1;
 					arg_count=0;
-							
+					
 					if( !(cmd = expand_one( context, 
 											wcsdup( tok_last( &tok ) ), 
 											EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES ) ) )

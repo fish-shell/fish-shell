@@ -113,26 +113,6 @@ enum
 #define ARRAY_SEP_STR L"\x1e"
 
 /**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_DESC _( L"The '$' character begins a variable name. The character '%lc', which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean {$VARIABLE}? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
-
-/**
    Error issued on array out of bounds
 */
 #define ARRAY_BOUNDS_ERR _(L"Array index out of bounds")
@@ -206,5 +186,18 @@ wchar_t *expand_tilde(wchar_t *in);
    \param in the string to test
 */
 int expand_is_clean( const wchar_t *in );
+
+/**
+   Perform error reporting for a syntax error related to the variable
+   expansion beginning at the specified character of the specified
+   token. This function will call the error function with an
+   explanatory string about what is wrong with the specified token.
+
+   \param token The token containing the error
+   \param token_pos The position where the expansion begins
+   \param error_pos The position on the line to report to the error function.
+*/
+void expand_variable_error( const wchar_t *token, int token_pos, int error_pos );
+
 
 #endif

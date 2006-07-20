@@ -12,7 +12,7 @@
 - <code>-s</code> or <code>--on-signal SIGSPEC</code> tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a signal number, or the signal name, such as SIGHUP (or just HUP)
 - <code>-v</code> or <code>--on-variable VARIABLE_NAME</code> tells fish to run this function when the variable VARIABLE_NAME changes value
 
-This builtin command is used to create a new function. A Function is a
+This builtin command is used to create a new function. A function is a
 list of commands that will be executed when the name of the function
 is entered. The function
 
@@ -25,7 +25,7 @@ end
 will write <code>hello</code> whenever the user enters \c hi.
 
 If the user enters any additional arguments after the function, they
-are inserted into the environment variable <a href="index.html#variables-arrays">array</a> argv.
+are inserted into the environment <a href="index.html#variables-arrays">variable array</a> argv.
 
 \subsection function-example Example
 

@@ -10,7 +10,7 @@ begin; [COMMANDS...] end
 
 \subsection end-description Description
 <tt>end</tt> ends a block of commands. For more information, read the
-documentation for the block constructs, such as \c if, \c for and \
+documentation for the block constructs, such as \c if, \c for and \c
 while.
 
 The \c end command does not change the current exit status.

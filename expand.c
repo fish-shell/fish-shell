@@ -59,7 +59,7 @@ parameter expansion.
 /**
    Error issued on invalid variable name
 */
-#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean {$VARIABLE}? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
+#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
 
 /**
    Error issued on invalid variable name
@@ -678,9 +678,43 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 	{
 		case BRACKET_BEGIN:
 		{
-			error( SYNTAX_ERROR,
-				   error_pos,
-				   COMPLETE_VAR_BRACKET_DESC );
+			wchar_t *cpy = wcsdup( token );
+			*(cpy+token_pos)=0;
+			wchar_t *name = &cpy[stop_pos+1];
+			wchar_t *end = wcschr( name, BRACKET_END );
+			wchar_t *post;
+			int is_var=0;
+			if( end )
+			{
+				post = end+1;
+				*end = 0;
+				
+				if( !wcsvarname( name ) )
+				{
+					is_var = 1;
+				}
+			}
+			
+			if( is_var )
+			{
+				error( SYNTAX_ERROR,
+					   error_pos,
+					   COMPLETE_VAR_BRACKET_DESC,
+					   cpy,
+					   name,
+					   post );				
+			}
+			else
+			{
+				error( SYNTAX_ERROR,
+					   error_pos,
+					   COMPLETE_VAR_BRACKET_DESC,
+					   L"",
+					   L"VARIABLE",
+					   L"" );
+			}
+			free( cpy );
+			
 			break;
 		}
 		
@@ -688,7 +722,7 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 		{
 			error( SYNTAX_ERROR,
 				   error_pos,
-				   COMPLETE_VAR_PARAN_DESC );
+				   COMPLETE_VAR_PARAN_DESC );	
 			break;
 		}
 		

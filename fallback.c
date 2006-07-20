@@ -1035,7 +1035,7 @@ int futimes(int fd, const struct timeval *times)
 
 char * gettext (const char * msgid)
 {
-	return msgid;
+	return (char *)msgid;
 }
 
 char * bindtextdomain (const char * domainname, const char * dirname)
@@ -1056,7 +1056,7 @@ char * dcgettext ( const char * domainname,
 				   const char * msgid,
 				   int category)
 {
-	return msgid;
+	return (char *)msgid;
 }
 
 

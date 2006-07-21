@@ -46,6 +46,7 @@ sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
 prefix = @prefix@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
 MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
 CFLAGS=@CFLAGS@ $(MACROS)

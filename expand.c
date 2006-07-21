@@ -595,12 +595,9 @@ static int expand_pid( wchar_t *in,
 					   array_list_t *out )
 {
 
-	if( !in || !out)
-	{
-		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
-	}
-
+	CHECK( in, 0 );
+	CHECK( out, 0 );
+	
 	if( *in != PROCESS_EXPAND )
 	{
 		al_push( out, in );
@@ -771,12 +768,9 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 	static string_buffer_t *var_tmp = 0;
 	static array_list_t *var_idx_list = 0;
 
-	if( !in || !out)
-	{
-		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
-	}
-
+	CHECK( in, 0 );
+	CHECK( out, 0 );
+	
 	if( !var_tmp )
 	{
 		var_tmp = sb_halloc( global_context );
@@ -1064,13 +1058,10 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 
 	wchar_t *item_begin;
 	int len1, len2, tot_len;
-	
-	if( !in || !out)
-	{
-		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
-	}
 
+	CHECK( in, 0 );
+	CHECK( out, 0 );
+	
 	for( pos=in;
 		 (*pos) && !syntax_error;
 		 pos++ )
@@ -1201,12 +1192,9 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 	int i, j;
 	const wchar_t *item_begin;
 
-	if( !in || !out)
-	{
-		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
-	}
-
+	CHECK( in, 0 );
+	CHECK( out, 0 );
+	
 	switch( parse_util_locate_cmdsubst(in,
 									   &paran_begin,
 									   &paran_end,
@@ -1308,6 +1296,8 @@ static wchar_t *expand_unescape( const wchar_t * in, int escape_special )
 static wchar_t * expand_tilde_internal( wchar_t *in )
 {
 
+	CHECK( in, 0 );
+
 	if( in[0] == HOME_DIRECTORY )
 	{
 		int tilde_error = 0;
@@ -1394,12 +1384,14 @@ wchar_t *expand_tilde( wchar_t *in)
 
 /**
    Remove any internal separators. Also optionally convert wildcard characters to
-   regular equivalents. This is done to support EXPAN_SKIP_WILDCARDS.
+   regular equivalents. This is done to support EXPAND_SKIP_WILDCARDS.
 */
 static void remove_internal_separator( const void *s, int conv )
 {
 	wchar_t *in = (wchar_t *)s;
 	wchar_t *out=in;
+	
+	CHECK( s, );
 
 	while( *in )
 	{

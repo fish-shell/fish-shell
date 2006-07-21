@@ -378,9 +378,9 @@ wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 
 wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 {
-	char *tmp =wutil_wcs2str(pathname);
-	char narrow[PATH_MAX];
-	char *narrow_res = realpath( tmp, narrow );
+	char *tmp = wutil_wcs2str(pathname);
+	char narrow_buff[PATH_MAX];
+	char *narrow_res = realpath( tmp, narrow_buff );
 	wchar_t *res;	
 
 	if( !narrow_res )
@@ -466,7 +466,7 @@ static void wgettext_init()
 	
 	wgettext_is_init = 1;
 	
-	for(i=0; i<BUFF_COUNT; i++ )
+	for( i=0; i<BUFF_COUNT; i++ )
 	{
 		sb_init( &buff[i] );
 	}

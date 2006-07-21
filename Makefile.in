@@ -47,9 +47,10 @@ docdir = @docdir@
 localedir = @localedir@
 prefix = @prefix@
 
-CFLAGS:=@CFLAGS@ -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
+MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
+CFLAGS=@CFLAGS@ $(MACROS)
 CPPFLAGS=@CPPFLAGS@
-LDFLAGS:= @LIBS@ @LDFLAGS@ 
+LDFLAGS= @LIBS@ @LDFLAGS@ 
 
 
 #etc files to install
@@ -198,7 +199,7 @@ Makefile: Makefile.in configure
 	./config.status
 
 debug:
-	make fish CFLAGS="@CFLAGS@ -O0 -Wno-unused -Werror -g"
+	make fish CFLAGS="@CFLAGS@ $(MACROS) -O0 -Wno-unused -Werror -g"
 .PHONY: debug
 
 # User documentation, describing the features of the fish shell.

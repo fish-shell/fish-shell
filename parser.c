@@ -1372,7 +1372,8 @@ wchar_t *parser_current_line()
 //	lineno = current_tokenizer_pos;
 	
 
-	current_line_width=printed_width(whole_str+current_line_start, current_tokenizer_pos-current_line_start );
+	current_line_width=printed_width( whole_str+current_line_start,
+									  current_tokenizer_pos-current_line_start );
 
 	if( (function_name = is_function()) )
 	{
@@ -1696,8 +1697,9 @@ static void parse_job_main_loop( process_t *p,
 								   tok_last( tok ) );
 
 						}
+						break;
 					}
-					break;
+
 					default:
 						error( SYNTAX_ERROR,
 							   tok_get_pos( tok ),
@@ -1738,6 +1740,7 @@ static void parse_job_main_loop( process_t *p,
 							break;
 
 						case TOK_REDIRECT_FD:
+						{
 							if( wcscmp( target, L"-" ) == 0 )
 							{
 								new_io->io_mode = IO_CLOSE;
@@ -1760,6 +1763,8 @@ static void parse_job_main_loop( process_t *p,
 								}
 							}
 							break;
+						}
+
 					}
 				}
 
@@ -1820,6 +1825,7 @@ static void parse_job_main_loop( process_t *p,
 }
 
 
+	
 /**
    Fully parse a single job. Does not call exec on it, but any command substitutions in the job will be executed.
 
@@ -2065,7 +2071,7 @@ static int parse_job( process_t *p,
 			*/
 			continue;
 		}
-
+		
 		if( use_function && !current_block->skip )
 		{
 			int nxt_forbidden;
@@ -2757,7 +2763,7 @@ static const wchar_t *parser_get_block_command( int type )
 
 /**
    Test if this argument contains any errors. Detected errors include
-   syntax errors in command substitutions, imporoper escaped
+   syntax errors in command substitutions, improperly escaped
    characters and improper use of the variable expansion operator.
 */
 static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset )
@@ -2967,17 +2973,39 @@ int parser_test( const  wchar_t * buff,
 	int previous_pos=current_tokenizer_pos;
 	static int block_pos[BLOCK_MAX_COUNT];
 	static int block_type[BLOCK_MAX_COUNT];
+
+	/*
+	  Set to 1 if the current command is inside a pipeline
+	*/
 	int is_pipeline = 0;
+
 	/*
 	  Set to one if the currently specified process can not be used inside a pipeline
 	*/
 	int forbid_pipeline = 0;
+
 	/* 
 	   Set to one if an additional process specification is needed 
 	*/
 	int needs_cmd=0; 
+
+	/*
+	  halloc context used for calls to expand() and other memory
+	  allocations. Free'd at end of this function.
+	*/
 	void *context;
+
+	/*
+	  Counter on the number of arguments this function has encountered
+	  so far. Is set to -1 when the count is unknown, i.e. after
+	  encountering an argument that contains substitutions that can
+	  expand to more/less arguemtns then 1.
+	*/
 	int arg_count=0;
+	
+	/*
+	  The currently validated command.
+	*/
 	wchar_t *cmd=0;
 		
 	CHECK( buff, 1 );

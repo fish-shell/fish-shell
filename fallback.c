@@ -2,6 +2,10 @@
    This file only contains fallback implementations of functions which
    have been found to be missing or broken by the configuration
    scripts.
+
+   Many of these functions are more or less broken and
+   incomplete. lrand28_r internally uses the regular (bad) rand_r
+   function, the gettext function doesn't actually do anything, etc.
 */
 
 #include "config.h"
@@ -65,7 +69,11 @@ int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t))
 
 #ifdef INTERNAL_FWPRINTF
 
-void pad( void (*writer)(wchar_t), int count)
+/**
+   Internal function for the wprintf fallbacks. USed to write the
+   specified number of spaces.
+*/
+static void pad( void (*writer)(wchar_t), int count)
 {
 	
 	int i;

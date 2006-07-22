@@ -499,6 +499,7 @@ static void clear_loaded_entry( void *key,
 				   &clear_hash_value,
 				   handler );
 	hash_destroy( &loaded->load_time );
+	hash_destroy( &loaded->is_loading );
 
 	free( loaded->old_path );
 	free( loaded );	

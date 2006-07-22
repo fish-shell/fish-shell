@@ -92,9 +92,7 @@ MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o		\
 	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o common.o
 
 #
-# Files containing documentation for builtins. Should be listed
-# alphabetically, since this is the order in which they will be written
-# in the help file.
+# Files containing documentation for builtins. 
 #
 BUILTIN_DOC_SRC := doc_src/source.txt doc_src/and.txt					\
 	doc_src/begin.txt doc_src/bg.txt doc_src/bind.txt					\
@@ -115,9 +113,7 @@ BUILTIN_DOC_SRC := doc_src/source.txt doc_src/and.txt					\
 BUILTIN_DOC_HDR := $(BUILTIN_DOC_SRC:.txt=.doxygen)
 
 #
-# Files containing documentation for external commands. Should be listed
-# alphabetically, since this is the order in which they will be written
-# in the help file.
+# Files containing documentation for external commands. 
 #
 CMD_DOC_SRC := doc_src/contains.txt doc_src/count.txt doc_src/dirh.txt	\
 	doc_src/dirs.txt doc_src/fish_pager.txt doc_src/fishd.txt			\
@@ -238,11 +234,11 @@ xsel-0.9.6/xsel: xsel-0.9.6
 doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	cat doc_src/doc.hdr >doc.h; 
 	echo "/** \page builtins Builtin commands" >>doc.h; 
-	cat $(BUILTIN_DOC_SRC) >>doc.h; 
+	cat `printf "%s\n" $(BUILTIN_DOC_SRC)|sort` >>doc.h; 
 	echo "*/" >>doc.h
 	echo "/** \page commands External commands" >>doc.h; 
 	echo "\c fish is shipped with commands which do not use any internal parts of the shell, and are therefore not written as builtins, but separate commands." >>doc.h
-	cat $(CMD_DOC_SRC) >>doc.h; 
+	cat `printf "%s\n" $(CMD_DOC_SRC)|sort` >>doc.h; 
 	echo "*/" >>doc.h
 
 # This rule creates complete doxygen headers from each of the various

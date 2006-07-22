@@ -81,9 +81,9 @@ static int read_init()
 		return 0;
 	}
 
-	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; and . fish 2>/dev/null", 0, TOP );
-	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; and . fish 2>/dev/null", 0, TOP );
-	eval( L"builtin cd 2>/dev/null; and . .fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; and builtin . fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; and builtin . fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd 2>/dev/null; and builtin . .fish 2>/dev/null", 0, TOP );
 
 	if( chdir( cwd ) == -1 )
 	{

@@ -66,15 +66,6 @@
 */
 #define PROG_COMPLETE_SEP L'\t'
 
-/**
-  Initializes various structures used for tab-completion.
-*/
-void complete_init();
-
-/**
-   Destroys various structures used for tab-completion and free()s the memory used by them.
-*/
-void complete_destroy();
 
 /**
 

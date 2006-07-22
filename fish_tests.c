@@ -696,7 +696,6 @@ int main( int argc, char **argv )
 	parser_init();
 	function_init();
 	builtin_init();
-	complete_init();
 	reader_init();
 	env_init();
 
@@ -713,7 +712,6 @@ int main( int argc, char **argv )
 //	say( L"Testing performance" );
 //	perf_complete();
 		
-	complete_destroy();
 	env_destroy();
 	reader_destroy();	
 	parser_destroy();

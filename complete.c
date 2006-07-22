@@ -233,6 +233,51 @@ static hash_table_t *condition_cache=0;
 */
 static string_buffer_t *get_desc_buff=0;
 
+
+static void complete_free_entry( complete_entry *c );
+static void clear_hash_entry( void *key, void *data );
+
+
+/**
+   Destroys various structures used for tab-completion and free()s the memory used by them.
+*/
+static void complete_destroy()
+{
+	complete_entry *i=first_entry, *prev;
+	
+	while( i )
+	{
+		prev = i;
+		i=i->next;
+		complete_free_entry( prev );
+	}
+	first_entry = 0;
+	
+	if( suffix_hash )
+	{
+		hash_foreach( suffix_hash, &clear_hash_entry );
+		hash_destroy( suffix_hash );
+		free( suffix_hash );
+		suffix_hash=0;
+	}
+	
+	parse_util_load_reset( L"fish_complete_path", 0 );
+	
+}
+
+/**
+   Make sure complete_destroy is called on exit
+*/
+static void complete_init()
+{
+	static int is_init = 0;
+	if( !is_init )
+	{
+		is_init = 1;
+		halloc_register_function_void( global_context, &complete_destroy );
+	}
+}
+
 /**
    This command clears the cache of condition tests created by \c condition_test().
 */
@@ -329,34 +374,6 @@ static void clear_hash_entry( void *key, void *data )
 	free( (void *)data );
 }
 
-void complete_init()
-{
-}
-
-void complete_destroy()
-{
-	complete_entry *i=first_entry, *prev;
-	
-	while( i )
-	{
-		prev = i;
-		i=i->next;
-		complete_free_entry( prev );
-	}
-	first_entry = 0;
-	
-	if( suffix_hash )
-	{
-		hash_foreach( suffix_hash, &clear_hash_entry );
-		hash_destroy( suffix_hash );
-		free( suffix_hash );
-		suffix_hash=0;
-	}
-	
-	parse_util_load_reset( L"fish_complete_path", 0 );
-	
-}
-
 /**
    Search for an exactly matching completion entry
 */
@@ -390,6 +407,8 @@ void complete_add( const wchar_t *cmd,
 
 	CHECK( cmd, );
 	
+	complete_init();
+
 	c = complete_find_exact_entry( cmd, cmd_type );
 
 	if( c == 0 )
@@ -934,6 +953,7 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 		
 	if( !get_desc_buff )
 	{
+		complete_init();
 		get_desc_buff = sb_halloc( global_context);
 	}
 	else
@@ -1964,6 +1984,8 @@ void complete( const wchar_t *cmd,
 
 	CHECK( cmd, );
 	CHECK( comp, );
+
+	complete_init();
 
 //	debug( 1, L"Complete '%ls'", cmd );
 

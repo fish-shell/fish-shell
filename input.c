@@ -121,7 +121,8 @@ static const wchar_t *name_arr[] =
 	L"history-token-search-forward",
 	L"self-insert",
 	L"null",
-	L"eof"
+	L"eof",
+	L"vi-arg-digit"
 }
 	;
 
@@ -159,7 +160,8 @@ static const wchar_t *desc_arr[] =
 	L"Search forward through list of previous commands for matching token",
 	L"Insert the pressed key",
 	L"Do nothing",
-	L"End of file"
+	L"End of file",
+	L"Repeat command"
 }
 	;
 */
@@ -196,7 +198,8 @@ static const wchar_t code_arr[] =
 	R_HISTORY_TOKEN_SEARCH_FORWARD,
 	R_SELF_INSERT,
 	R_NULL,
-	R_EOF
+	R_EOF,
+	R_VI_ARG_DIGIT
 }
 	;
 
@@ -238,6 +241,19 @@ static int inputrc_error = 0;
 */
 static int is_init = 0;
 
+
+/**
+   This is the variable telling us how many timew the next command
+   should bne repeated. Only actually used in vi-mode.
+*/
+static int repeat_count = 1;
+
+/**
+   This is the type of the first command in a vi-mode two-part combo
+   like 'dw' or '3d3l'.
+*/
+static wint_t first_command = 0;
+
 wchar_t input_get_code( const wchar_t *name )
 {
 
@@ -255,7 +271,7 @@ wchar_t input_get_code( const wchar_t *name )
 /**
    Returns the function name for the given function code.
 */
-/*
+
 static const wchar_t *input_get_name( wchar_t c )
 {
 
@@ -269,7 +285,7 @@ static const wchar_t *input_get_name( wchar_t c )
 	}
 	return 0;		
 }
-*/
+
 /**
    Returns the function description for the given function code.
 */
@@ -998,7 +1014,7 @@ void input_parse_inputrc_line( wchar_t *cmd )
 		{
 			if( wcscmp( key, L"editing-mode" ) == 0 )
 			{
-//				current_mode_mappings = get_mapping( value );
+				current_mode_mappings = get_mapping( value );
 			}
 		}
 		
@@ -1305,12 +1321,29 @@ static void add_vi_bindings()
 	add_mapping( L"vi-command", L"$", L"$", L"end-of-line" );
 	add_mapping( L"vi-command", L"^", L"^", L"beginning-of-line" );
 	add_mapping( L"vi-command", L"0", L"0", L"beginning-of-line" );
+
 	add_mapping( L"vi-command", L"b", L"b", L"backward-word" );
 	add_mapping( L"vi-command", L"B", L"B", L"backward-word" );
 	add_mapping( L"vi-command", L"w", L"w", L"forward-word" );
 	add_mapping( L"vi-command", L"W", L"W", L"forward-word" );
+
 	add_mapping( L"vi-command", L"x", L"x", L"delete-char" );
-	
+
+	add_mapping( L"vi-command", L"1", L"1", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"2", L"2", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"3", L"3", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"4", L"4", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"5", L"5", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"6", L"6", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"7", L"7", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"8", L"8", L"vi-arg-digit" );
+	add_mapping( L"vi-command", L"9", L"9", L"vi-arg-digit" );
+
+
+	add_mapping( L"vi-command", L"d", L"d", L"vi-delete-to" );
+	add_mapping( L"vi-command", L"D", L"D", L"vi-delete-to" );
+
+
 /*
   movement ("h", "l"), word movement
   ("b", "B", "w", "W", "e", "E"), moving to beginning and end of line
@@ -1456,6 +1489,8 @@ void input_destroy()
 */
 static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 {
+	int i;
+	
 //	fwprintf( stderr, L"Binding %ls\n", m->command );
 	wchar_t code = input_get_code( m->command );
 	if( code != -1 )
@@ -1464,15 +1499,63 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 		{
 			case R_DUMP_FUNCTIONS:
 			{
-				dump_functions();
+				for( i=0; i<repeat_count; i++ )
+					dump_functions();
+				repeat_count = 1;				
 				return R_NULL;							
 			}
+
 			case R_SELF_INSERT:
 			{
+				for( i=1; i<repeat_count; i++ )
+					input_unreadch( seq[0] );							
+				repeat_count = 1;				
 				return seq[0];							
 			}
+
+			case R_VI_ARG_DIGIT:
+			{
+				int repeat = seq[0]-L'0';
+				if( repeat > 0 && repeat <= 9 )
+					repeat_count *= repeat;
+				
+				return R_NULL;
+			}
+			
+			case R_VI_DELETE_TO:
+			{
+				first_command = R_VI_DELETE_TO;
+				return R_NULL;
+			}
+
 			default:
+			{
+				
+				if( first_command )
+				{
+					switch( first_command )
+					{
+						case R_VI_DELETE_TO:
+						{
+						
+							break;
+							
+						}
+					}
+				}
+				else
+				{
+					for( i=1; i<repeat_count; i++ )
+					{
+						input_unreadch( code );							
+					}
+				}
+				
+				repeat_count = 1;				
+				first_command = 0;
 				return code;
+			}
+			
 		}	
 	}
 	else
@@ -1511,6 +1594,13 @@ static wint_t input_try_mapping( mapping *m)
 {
 	int j, k;
 	wint_t c=0;
+
+	c = input_common_readch( 0 );
+	if( c == input_get_code( m->command ) )
+	{
+		return input_exec_binding( m, m->seq );
+	}
+	input_unreadch( c );
 	
 	if( m->seq != 0 )
 	{
@@ -1524,9 +1614,14 @@ static wint_t input_try_mapping( mapping *m)
 		}
 		else
 		{
+			/*
+			  Return the read characters
+			*/
 			input_unreadch(c);
-			for(k=j-1; k>=0; k--)
-				input_unreadch(m->seq[k]);
+			for( k=j-1; k>=0; k-- )
+			{
+				input_unreadch( m->seq[k] );
+			}
 		}
 	}		
 	return 0;

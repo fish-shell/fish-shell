@@ -46,6 +46,7 @@ sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
 prefix = @prefix@
+optbindirs = @optbindirs@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
 MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
@@ -251,7 +252,7 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	echo "*/" >>$@
 
 %: %.in Makefile
-	sed <$@.in >$@ -e "s,@sysconfdir\@,$(sysconfdir)," -e "s,@datadir\@,$(datadir)," -e "s,@docdir\@,$(docdir)," -e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|" 
+	sed <$@.in >$@ -e "s,@sysconfdir\@,$(sysconfdir)," -e "s,@datadir\@,$(datadir)," -e "s,@docdir\@,$(docdir)," -e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|" -e "s,@prefix\@,$(prefix)," -e "s,@optbindirs\@,$(optbindirs)," 
 #-e "s,@\@,$()," 
 
 # Compile translation file

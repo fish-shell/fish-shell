@@ -35,7 +35,7 @@ end
 # want this even for text-only terminals.
 #
 
-set -l path_list /bin /usr/bin /usr/X11R6/bin @PREFIX@/bin @optbindirs@
+set -l path_list /bin /usr/bin /usr/X11R6/bin @prefix@/bin @optbindirs@
 
 # Root should also have the sbin directories in the path
 if test "$USER" = root

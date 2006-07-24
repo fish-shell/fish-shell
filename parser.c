@@ -1468,8 +1468,10 @@ int parser_is_help( wchar_t *s, int min_match )
 {
 	int len = wcslen(s);
 
+	min_match = maxi( min_match, 3 );
+		
 	return ( wcscmp( L"-h", s ) == 0 ) ||
-		( len >= 3 && (wcsncmp( L"--help", s, len ) == 0) );
+		( len >= min_match && (wcsncmp( L"--help", s, len ) == 0) );
 }
 
 /**

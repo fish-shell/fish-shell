@@ -376,7 +376,6 @@ void parse_util_token_extent( const wchar_t *buff,
 	CHECK( buff, );
 		
 	assert( cursor_pos >= 0 );
-	
 
 	a = b = pa = pb = 0;
 	
@@ -432,11 +431,11 @@ void parse_util_token_extent( const wchar_t *buff,
 		  If cursor is inside the token, this is the token we are
 		  looking for. If so, set a and b and break
 		*/
-		if( tok_end >= pos )
-		{
+		if( (tok_last_type( &tok ) == TOK_STRING) && (tok_end >= pos ) )
+		{			
 			a = begin + tok_get_pos( &tok );
 			b = a + wcslen(tok_last(&tok));
-
+			
 //			fwprintf( stderr, L"Whee %ls\n", *a );
 
 			break;

@@ -7,7 +7,7 @@
 function __fish_complete_ls -d "Compleletions for ls and it's aliases"
 	
 	set -l is_gnu 
-	ls --version >/dev/null ^/dev/null; and set is_gnu --is-gnu
+	command ls --version >/dev/null ^/dev/null; and set is_gnu --is-gnu
 	
 	set -l cmds -c $argv
 	

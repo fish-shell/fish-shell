@@ -480,9 +480,9 @@ int hash_str_cmp( void *a, void *b )
 /**
    Helper function for hash_wcs_func
 */
-static uint rotl5( uint in )
+static unsigned long rotl5( unsigned long in )
 {
-	return (in<<5|in>>27);
+	return ((in<<5|in>>27))&0xffffffff;
 }
 
 

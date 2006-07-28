@@ -258,7 +258,7 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 # Compile translation file
 %.gmo:
 	if test $(HAVE_GETTEXT) = 1; then \
-		msgfmt $*.po -o $*.gmo; \
+		msgfmt -o $*.gmo $*.po; \
 	fi
 
 # Update existing po file or copy messages.pot

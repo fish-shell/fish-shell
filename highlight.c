@@ -32,6 +32,7 @@
 #include "output.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "wildcard.h"
 
 /**
    Number of elements in the highlight_var array
@@ -102,6 +103,9 @@ static int is_potential_path( const wchar_t *path )
 					case BRACKET_BEGIN:
 					case BRACKET_END:
 					case BRACKET_SEP:
+					case ANY_CHAR:
+					case ANY_STRING:
+					case ANY_STRING_RECURSIVE:
 					{
 						has_magic = 1;
 						break;		

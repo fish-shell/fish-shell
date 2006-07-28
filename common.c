@@ -7,6 +7,12 @@ parts of fish.
 #include "config.h"
 
 
+#include <unistd.h>
+
+#ifdef HAVE_STROPTS
+#include <stropts.h>
+#endif
+
 #include <stdlib.h>
 #include <termios.h>
 #include <wchar.h>

@@ -391,9 +391,9 @@ static int event_is_killed( event_t *e )
 
 /**
    Perform the specified event. Since almost all event firings will
-   not match a single event handler, we make sureto optimize the 'no
-   matches' path. This means that nothing is allocated/initialized
-   unless that is needed.
+   not be matched by even a single event handler, we make sure to
+   optimize the 'no matches' path. This means that nothing is
+   allocated/initialized unless needed.
 */
 static void event_fire_internal( event_t *event )
 {
@@ -473,7 +473,7 @@ static void event_fire_internal( event_t *event )
 		
 		/*
 		  Event handlers are not part of the main flow of code, so
-		  they are marked as non-interactive and as a subshell
+		  they are marked as non-interactive
 		*/
 		proc_push_interactive(0);
 		parser_push_block( EVENT );
@@ -510,6 +510,13 @@ static void event_fire_delayed()
 
 	int i;
 
+	/*
+	  If is_event is one, we are running the event-handler non-recursively. 
+
+	  When the event handler has called a piece of code that triggers
+	  another event, we do not want to fire delayed events because of
+	  concurrency problems.
+	*/
 	if( blocked && is_event==1)
 	{
 		array_list_t *new_blocked = 0;
@@ -594,7 +601,7 @@ void event_fire( event_t *event )
 		/*
 		  This means we are in a signal handler. We must be very
 		  careful not do do anything that could cause a memory
-		  allocation or something else that might be illegal in a
+		  allocation or something else that might be bad when in a
 		  signal handler.
 		*/
 		if( sig_list[active_list].count < SIG_UNHANDLED_MAX )

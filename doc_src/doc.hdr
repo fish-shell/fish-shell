@@ -261,20 +261,36 @@ the example above, these are simply passed on to the ls command. For
 more information on functions, see the documentation for the <a
 href='builtin.html#function'>function</a> builtin.
 
+\subsubsection Autoloading functions
+
 Functions can be defined on the commandline or in a configuration
-file, but they can also be automatically loaded. Fish automatically
-searches through any directories in the array variable
-\$fish_function_path, and any functions defined are automatically
-loaded when needed. A function definition file must have a filename
-consisting of the name of the function plus the suffix '.fish'.  
+file, but they can also be automatically loaded. This method of
+defining functions has several advantages. An autoloaded function
+becomes avaialble automatically to all running shells, if the function
+definition is changed, all running shells will automatically reload
+the altered version, startup time and memory usage is improved, etc.
+
+Fish automatically searches through any directories in the array
+variable \$fish_function_path, and any functions defined are
+automatically loaded when needed. A function definition file must have
+a filename consisting of the name of the function plus the suffix
+'.fish'.
 
 The default value for \$fish_function_path is \c ~/.fish.d/functions
-\c /etc/fish.d/functions \c /usr/share/fish/functions. The exact path to the
-last two of these may be slighly different depending on what install
-path prefix was chosen at configuration time. The rationale behind
-having three different directories is that the first one is for user
-specific functions, the second one is for system-wide additional
-functions and the last one is for default fish functions.
+\c /etc/fish.d/functions \c /usr/share/fish/functions. The exact path
+to the last two of these may be slighly different depending on what
+install path prefix was chosen at configuration time. The rationale
+behind having three different directories is that the first one is for
+user specific functions, the second one is for system-wide additional
+functions and the last one is for default fish functions. The path
+list is searched in order, meaning that by default, the system
+administrator can override default fish functions, and the user can
+override functions defined by the system administrator.
+
+It is very important that function definition files only contain the
+definition for the specified function and nothing else, otherwise it
+is possible that autoloading a function files requires that the
+function already be loaded, i.e. a circular dependency.
 
 \subsection syntax-words Some common words
 

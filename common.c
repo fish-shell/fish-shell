@@ -1412,10 +1412,15 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 
 void common_handle_winch( int signal )
 {
+#ifdef HAVE_WINSIZE
 	if (ioctl(1,TIOCGWINSZ,&termsize)!=0)
 	{
 		return;
 	}
+#else
+	termsize.ws_col = 80;
+	termsizews_row = 24;
+#endif
 }
 
 int common_get_width()

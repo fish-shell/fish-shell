@@ -286,6 +286,22 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+
+# Check if struct winsize exists
+AC_MSG_CHECKING([if struct winsize exists])
+AC_LINK_IFELSE(
+	[AC_LANG_PROGRAM([
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/ioctl.h>
+
+#ifdef HAVE_SIGINFO_H
+#include <siginfo.h>
+#endif],
+	[struct winsize termsize; ioctl(1,TIOCGWINSZ,&termsize);])], 
+	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct exists])], 
+	AC_MSG_RESULT(no))
+
 # If we have a fwprintf in libc, test that it actually works. As of
 # March 2006, it is broken under Dragonfly BSD.
 if test "$ac_cv_func_fwprintf" = yes; then

@@ -43,6 +43,16 @@ typedef int tputs_arg_t;
 typedef char tputs_arg_t;
 #endif
 
+#ifndef HAVE_WINSIZE
+struct winsize 
+{
+	unsigned short ws_row;	
+	unsigned short ws_col;
+}
+	;
+
+#endif
+
 #ifdef TPUTS_KLUDGE
 
 /**

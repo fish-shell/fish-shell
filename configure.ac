@@ -259,7 +259,7 @@ AC_CHECK_HEADER([regex.h],
 # Check for presense of various functions
 AC_CHECK_FUNCS( gettext wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r)
+AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r killpg)
 
 # The Makefile also needs to know if we have gettext, so it knows if the translations should be installed.
 AC_CHECK_FUNC( gettext, AC_SUBST( HAVE_GETTEXT, 1 ), AC_SUBST( HAVE_GETTEXT, 0 ) )

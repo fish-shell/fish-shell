@@ -376,5 +376,10 @@ extern int _nl_msg_cat_cntr;
 
 #endif
 
+
+#ifndef HAVE_KILLPG
+int killpg( int pgr, int sig );
+#endif
+
 #endif
 

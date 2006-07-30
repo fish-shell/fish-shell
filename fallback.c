@@ -25,6 +25,7 @@
 #include <dirent.h>
 #include <stdarg.h>
 #include <limits.h>
+#include <assert.h>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -1076,3 +1077,10 @@ int _nl_msg_cat_cntr=0;
 
 #endif
 
+#ifndef HAVE_KILLPG
+int killpg( int pgr, int sig )
+{
+	assert( pgr > 0 );
+	return kill( -pgr, sig );
+}
+#endif

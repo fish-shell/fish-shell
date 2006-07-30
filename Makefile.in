@@ -380,8 +380,12 @@ check-uninstall:
 	fi;
 .PHONY: check-uninstall
 
+install-sh:
+	if test ! -x install-sh; then chmod 755 install-sh; fi
+.PHONY: install-sh
+
 # Try to install after checking for incompatible installed versions
-install: all check-uninstall install-force
+install: all install-sh check-uninstall install-force
 .PHONY: install
 
 # Force installation, even in presense of incompatible previous

@@ -13,6 +13,10 @@ parts of fish.
 #include <stropts.h>
 #endif
 
+#ifdef HAVE_SIGINFO_H
+#include <siginfo.h>
+#endif
+
 #include <stdlib.h>
 #include <termios.h>
 #include <wchar.h>

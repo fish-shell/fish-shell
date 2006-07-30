@@ -21,6 +21,10 @@
 #include <assert.h>
 #include <dirent.h>
 
+#ifdef HAVE_SIGINFO_H
+#include <siginfo.h>
+#endif
+
 #include "config.h"
 
 #include "fallback.h"

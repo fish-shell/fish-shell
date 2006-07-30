@@ -51,6 +51,10 @@ commence.
 #include <ncurses/term.h>
 #endif
 
+#ifdef HAVE_SIGINFO_H
+#include <siginfo.h>
+#endif
+
 #include <signal.h>
 #include <fcntl.h>
 #include <dirent.h>

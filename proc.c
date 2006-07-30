@@ -42,6 +42,9 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <ncurses/term.h>
 #endif
 
+#ifdef HAVE_SIGINFO_H
+#include <siginfo.h>
+#endif
 
 #include "fallback.h"
 #include "util.h"

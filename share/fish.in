@@ -5,6 +5,15 @@
 #
 # @configure_input@
 
+# This is a Solaris-specific test to modify the PATH so that
+# Posix-conformant tools are used by default.
+
+if test -d /usr/bin/xpg4
+	if not echo $PATH | grep /usr/bin/xpg4 >/dev/null
+		set PATH /usr/bin/xpg4 $PATH 
+	end
+end   
+
 # Assign a temporary value here for performance reasons. The real
 # value should be set in /etc/fish.
 

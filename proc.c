@@ -1092,7 +1092,7 @@ void proc_sanity_check()
 void proc_push_interactive( int value )
 {
 	int old = is_interactive;
-	al_push( interactive_stack, (void *)(long)is_interactive );
+	al_push_long( interactive_stack, (long)is_interactive );
 	is_interactive = value;
 	if( old != value )
 		signal_set_handlers();
@@ -1101,7 +1101,7 @@ void proc_push_interactive( int value )
 void proc_pop_interactive()
 {
 	int old = is_interactive;
-	is_interactive= (int)(long)al_pop(interactive_stack);
+	is_interactive= (int)al_pop_long(interactive_stack);
 	if( is_interactive != old )
 		signal_set_handlers();
 }

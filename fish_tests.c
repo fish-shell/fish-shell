@@ -152,7 +152,7 @@ static void pq_test( int elements )
 */
 static int stack_test( int elements )
 {
-	int i;
+	long i;
 
 	int res=1;
 	
@@ -162,12 +162,12 @@ static int stack_test( int elements )
 
 	for( i=0; i<elements; i++ )
 	{
-		int foo;
+		long foo;
 
-		al_push( &s, (void*)i);
-		al_push( &s, (void*)i);
+		al_push_long( &s, i);
+		al_push_long( &s, i);
 		
-		if( (foo=(int)al_pop( &s )) != i )
+		if( (foo=al_pop_long( &s )) != i )
 		{
 			err( L"Unexpected data" );
 			res = 0;			
@@ -177,16 +177,14 @@ static int stack_test( int elements )
 
 	for( i=0; i<elements; i++ )
 	{
-		int foo;
+		long foo;
 		
-		if( (foo=(int)al_pop( &s )) != (elements-i-1) )
+		if( (foo=al_pop_long( &s )) != (elements-i-1) )
 		{
 			err( L"Unexpected data" );
 			res = 0;
 			break;
-		}
-		
-		
+		}		
 	}
 
 
@@ -297,22 +295,22 @@ static int hash_test( int elements )
 */
 static void al_test( int sz)
 {
-	int i;	
+	long i;	
 	array_list_t l;
 
 	
 
 	al_init( &l );
 	
-	al_set( &l, 1, (void *)7 );
-	al_set( &l, sz, (void *)7 );
+	al_set_long( &l, 1, 7L );
+	al_set_long( &l, sz, 7L );
 	
 	if( al_get_count( &l ) != maxi( sz+1, 2 ) )
 		err( L"Wrong number of elements in array list" );
 	
 	for( i=0; i<al_get_count( &l ); i++ )
 	{
-		int val = (int)((long) al_get( &l, i ));
+		long val = al_get_long( &l, i );
 		if( (i == 1) || (i==sz))
 		{
 			if( val != 7 )

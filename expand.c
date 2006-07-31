@@ -874,7 +874,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 							is_ok = 0;
 							break;
 						}
-						al_push( var_idx_list, (void *)tmp );
+						al_push_long( var_idx_list, tmp );
 						stop_pos = end-in;
 					}
 				}
@@ -887,7 +887,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 						int j;
 						for( j=0; j<al_get_count( var_idx_list ); j++)
 						{
-							long tmp = (long)al_get( var_idx_list, j );
+							long tmp = al_get_long( var_idx_list, j );
 							if( tmp < 0 )
 							{
 								tmp = al_get_count( &var_item_list)+tmp+1;

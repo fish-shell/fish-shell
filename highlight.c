@@ -960,7 +960,7 @@ static void highlight_universal_internal( wchar_t * buff,
 						if( level == 0 )
 						{
 							level++;
-							al_push( &l, (void *)(str-buff) );
+							al_push_long( &l, (long)(str-buff) );
 							prev_q = *str;
 						}
 						else
@@ -970,7 +970,7 @@ static void highlight_universal_internal( wchar_t * buff,
 								long pos1, pos2;
 							
 								level--;
-								pos1 = (long)al_pop( &l );
+								pos1 = al_pop_long( &l );
 								pos2 = str-buff;
 								if( pos1==pos || pos2==pos )
 								{
@@ -984,7 +984,7 @@ static void highlight_universal_internal( wchar_t * buff,
 							else
 							{
 								level++;
-								al_push( &l, (void *)(str-buff) );
+								al_push_long( &l, (long)(str-buff) );
 								prev_q = *str;
 							}
 						}

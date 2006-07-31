@@ -15,6 +15,17 @@
 #include <stdarg.h>
 #include <unistd.h>
 
+typedef void (*func_ptr_t)();
+
+typedef union 
+{
+	long long_val;
+	void *ptr_val;
+	func_ptr_t func_val;
+}
+	anything_t;
+
+
 /**
    Data structure for an automatically resizing dynamically allocated queue,
 */
@@ -29,7 +40,7 @@ typedef struct dyn_queue
 	/** Where to remove elements */
 	void **get_pos;
 }
-dyn_queue_t;
+	dyn_queue_t;
 
 /**
    Internal struct used by hash_table_t.
@@ -41,7 +52,7 @@ typedef struct
 	/** Value */
 	void *data;
 }
-hash_struct_t;
+	hash_struct_t;
 
 /**
    Data structure for the hash table implementaion. A hash table allows for
@@ -71,7 +82,7 @@ typedef struct hash_table
 	/** Comparison function */
 	int (*compare_func)( void *key1, void *key2 );
 }
-hash_table_t;
+	hash_table_t;
 
 /**
    Data structure for an automatically resizing dynamically allocated
@@ -99,7 +110,7 @@ priority_queue_t;
 typedef struct array_list
 {
 	/** Array containing the data */
-	void **arr;
+	anything_t *arr;
 	/** Position to append elements at*/
 	int pos;
 	/** Length of array */
@@ -384,6 +395,24 @@ void al_destroy( array_list_t *l );
    \return 1 if succesfull, 0 otherwise
 */
 int al_push( array_list_t *l, const void *o );
+/**
+   Append element to list
+
+   \param l The list
+   \param o The element
+   \return
+   \return 1 if succesfull, 0 otherwise
+*/
+int al_push_long( array_list_t *l, long o );
+/**
+   Append element to list
+
+   \param l The list
+   \param o The element
+   \return
+   \return 1 if succesfull, 0 otherwise
+*/
+int al_push_func( array_list_t *l, void (*f)() );
 
 /**
    Append all elements of a list to another
@@ -402,6 +431,22 @@ int al_push_all( array_list_t *a, array_list_t *b );
    \param o The element 
 */
 int al_set( array_list_t *l, int pos, const void *o );
+/**
+   Sets the element at the specified index
+
+   \param l The array_list_t
+   \param pos The index 
+   \param o The element 
+*/
+int al_set_long( array_list_t *l, int pos, long v );
+/**
+   Sets the element at the specified index
+
+   \param l The array_list_t
+   \param pos The index 
+   \param o The element 
+*/
+int al_set_func( array_list_t *l, int pos, void (*f)() );
 
 /**
    Returns the element at the specified index
@@ -411,6 +456,8 @@ int al_set( array_list_t *l, int pos, const void *o );
    \return The element 
 */
 void *al_get( array_list_t *l, int pos );
+long al_get_long( array_list_t *l, int pos );
+func_ptr_t al_get_func( array_list_t *l, int pos );
 
 /**
   Truncates the list to new_sz items.
@@ -421,6 +468,8 @@ void al_truncate( array_list_t *l, int new_sz );
   Removes and returns the last entry in the list
 */
 void *al_pop( array_list_t *l );
+long al_pop_long( array_list_t *l );
+func_ptr_t al_pop_func( array_list_t *l );
 
 /**
    Returns the number of elements in the list
@@ -431,6 +480,8 @@ int al_get_count( array_list_t *l );
   Returns the last entry in the list witout removing it.
 */
 void *al_peek( array_list_t *l );
+long al_peek_long( array_list_t *l );
+func_ptr_t al_peek_func( array_list_t *l );
 
 /**
    Returns 1 if the list is empty, 0 otherwise

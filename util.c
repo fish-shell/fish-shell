@@ -310,9 +310,14 @@ void *hash_get( hash_table_t *h,
 	
 	int pos = hash_search( h, (void *)key );	
 	if( h->arr[pos].key == 0 )
+	{
 		return 0;
+	}
 	else
-		return h->arr[pos].data;
+	{
+		void *res =h->arr[pos].data;
+		return res;
+	}
 }
 
 void *hash_get_key( hash_table_t *h,
@@ -680,20 +685,42 @@ void al_destroy( array_list_t *l )
 	free( l->arr );
 }
 
-int al_push( array_list_t *l, const void *o )
+static int al_push_generic( array_list_t *l, anything_t o )
 {
 	if( l->pos >= l->size )
 	{
 		int new_size = l->pos == 0 ? MIN_SIZE : 2 * l->pos;
-		void *tmp = realloc( l->arr, sizeof( void *)*new_size );
+		void *tmp = realloc( l->arr, sizeof( anything_t )*new_size );
 		if( tmp == 0 )
 			return 0;
 		l->arr = tmp;
 		l->size = new_size;		
 	}
-	l->arr[l->pos++] = (void *)o;
+	l->arr[l->pos++] = o;
 	return 1;
 }
+
+int al_push( array_list_t *l, const void *o )
+{
+	anything_t v;
+	v.ptr_val = (void *)o;
+	return al_push_generic( l, v );
+}
+
+int al_push_long( array_list_t *l, long val )
+{
+	anything_t v;
+	v.long_val = val;
+	return al_push_generic( l, v );
+}
+
+int al_push_func( array_list_t *l, func_ptr_t f )
+{
+	anything_t v;
+	v.func_val = f;
+	return al_push_generic( l, v );
+}
+
 
 int al_push_all( array_list_t *a, array_list_t *b )
 {
@@ -707,7 +734,7 @@ int al_push_all( array_list_t *a, array_list_t *b )
 }
 
 
-int al_set( array_list_t *l, int pos, const void *o )
+static int al_set_generic( array_list_t *l, int pos, anything_t v )
 {
 	int old_pos;
 	
@@ -715,48 +742,88 @@ int al_set( array_list_t *l, int pos, const void *o )
 		return 0;
 	if( pos < l->pos )
 	{
-		l->arr[pos] = (void *)o;
+		l->arr[pos]=v;
 		return 1;
 	}
 	old_pos=l->pos;
 	
 	l->pos = pos;
-	if( al_push( l, o ) )
+	if( al_push_generic( l, v ) )
 	{
 /*		fwprintf( stderr, L"Clearing from index %d to index %d\n", 
 				  old_pos, pos );
 */	
 		memset( &l->arr[old_pos], 
 				0,
-				sizeof(void *) * (pos - old_pos) );
+				sizeof(anything_t) * (pos - old_pos) );
 		return 1;		
 	}
 	return 0;	
 }
 
+int al_set( array_list_t *l, int pos, const void *o )
+{
+	anything_t v;
+	v.ptr_val = (void *)o;
+	return al_set_generic( l, pos, v );
+}
+
+int al_set_long( array_list_t *l, int pos, long o )
+{
+	anything_t v;
+	v.long_val = o;
+	return al_set_generic( l, pos, v );
+}
+
+int al_set_func( array_list_t *l, int pos, func_ptr_t o )
+{
+	anything_t v;
+	v.func_val = o;
+	return al_set_generic( l, pos, v );
+}
+
+static anything_t al_get_generic( array_list_t *l, int pos )
+{
+	anything_t res;
+	res.ptr_val=0;
+	
+	if( (pos >= 0) && (pos < l->pos) )
+		res = l->arr[pos];
+
+	return res;
+}
+
 void *al_get( array_list_t *l, int pos )
 {
-	if( pos < 0 )
-		return 0;
-	if( pos >= l->pos )
-		return 0;
-	return l->arr[pos];
+	return al_get_generic(l,pos).ptr_val;
 }
+
+long al_get_long( array_list_t *l, int pos )
+{
+	return al_get_generic(l,pos).long_val;
+}
+
+func_ptr_t al_get_func( array_list_t *l, int pos )
+{
+	return al_get_generic(l,pos).func_val;
+}
+
+
 
 void al_truncate( array_list_t *l, int new_sz )
 {
 	l->pos = new_sz;
 }
 
-void *al_pop( array_list_t *l )
+static anything_t al_pop_generic( array_list_t *l )
 {
-	void *e = l->arr[--l->pos];
+	anything_t e = l->arr[--l->pos];
 	if( (l->pos*3 < l->size) && (l->size < MIN_SIZE) )
 	{
-		void ** old_arr = l->arr;
+		anything_t *old_arr = l->arr;
 		int old_size = l->size;
 		l->size = l->size/2;
-		l->arr = realloc( l->arr, sizeof(void*)*l->size );
+		l->arr = realloc( l->arr, sizeof(anything_t)*l->size );
 		if( l->arr == 0 )
 		{
 			l->arr = old_arr;
@@ -766,10 +833,43 @@ void *al_pop( array_list_t *l )
 	return e;
 }
 
+void *al_pop( array_list_t *l )
+{
+	return al_pop_generic(l).ptr_val;	
+}
+
+long al_pop_long( array_list_t *l )
+{
+	return al_pop_generic(l).long_val;	
+}
+
+func_ptr_t al_pop_func( array_list_t *l )
+{
+	return al_pop_generic(l).func_val;	
+}
+
+static anything_t al_peek_generic( array_list_t *l )
+{
+	anything_t res;
+	res.ptr_val=0;
+	if( l->pos>0)
+		res = l->arr[l->pos-1];
+	return res;
+}
+
 void *al_peek( array_list_t *l )
 {
+	return al_peek_generic(l).ptr_val;	
+}
 
-	return l->pos>0?l->arr[l->pos-1]:0;
+long al_peek_long( array_list_t *l )
+{
+	return al_peek_generic(l).long_val;	
+}
+
+func_ptr_t al_peek_func( array_list_t *l )
+{
+	return al_peek_generic(l).func_val;	
 }
 
 int al_empty( array_list_t *l )
@@ -787,14 +887,14 @@ void al_foreach( array_list_t *l, void (*func)( void * ))
 {
 	int i;
 	for( i=0; i<l->pos; i++ )
-		func( l->arr[i] );
+		func( l->arr[i].ptr_val );
 }
 
 void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux)
 {
 	int i;
 	for( i=0; i<l->pos; i++ )
-		func( l->arr[i], aux );
+		func( l->arr[i].ptr_val, aux );
 }
 
 int wcsfilecmp( const wchar_t *a, const wchar_t *b )

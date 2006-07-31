@@ -892,7 +892,12 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 							{
 								tmp = al_get_count( &var_item_list)+tmp+1;
 							}
-							
+
+							/*
+							  Check that we are within array
+							  bounds. If not, truncate the list to
+							  exit.
+							*/
 							if( tmp < 1 || tmp > al_get_count( &var_item_list ) )
 							{
 								error( SYNTAX_ERROR,
@@ -904,12 +909,11 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 							}
 							else
 							{
-								/* Move string from list l to list idx */
-								al_set( var_idx_list, j, al_get( &var_item_list, tmp-1 ) );
-								al_set( &var_item_list, tmp-1, 0 );
+								/* Replace each index in var_idx_list inplace with the string value at the specified index */
+								al_set( var_idx_list, j, wcsdup(al_get( &var_item_list, tmp-1 ) ) );
 							}
 						}
-						/* Free remaining strings in list l and truncate it */
+						/* Free strings in list var_item_list and truncate it */
 						al_foreach( &var_item_list, &free );
 						al_truncate( &var_item_list, 0 );
 						/* Add items from list idx back to list l */

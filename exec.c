@@ -79,7 +79,6 @@ static array_list_t *open_fds=0;
 
 static int set_child_group( job_t *j, process_t *p, int print_errors );
 
-
 void exec_close( int fd )
 {
 	int i;
@@ -98,13 +97,12 @@ void exec_close( int fd )
 	{
 		for( i=0; i<al_get_count( open_fds ); i++ )
 		{
-			int n = (int)(long)al_get( open_fds, i );
+			int n = (int)al_get_long( open_fds, i );
 			if( n == fd )
 			{
-				al_set( open_fds,
-						i,
-						al_get( open_fds,
-								al_get_count( open_fds ) -1 ) );
+				al_set_long( open_fds,
+							 i,
+							 al_get_long( open_fds, al_get_count( open_fds ) -1 ) );
 				al_truncate( open_fds, 
 							 al_get_count( open_fds ) -1 );
 				break;
@@ -134,8 +132,8 @@ int exec_pipe( int fd[2])
 		open_fds = al_halloc( global_context );
 	}
 	
-	al_push( open_fds, (void *)(long)fd[0] );
-	al_push( open_fds, (void *)(long)fd[1] );		
+	al_push_long( open_fds, (long)fd[0] );
+	al_push_long( open_fds, (long)fd[1] );		
 	
 	return res;
 }
@@ -180,7 +178,7 @@ static void close_unused_internal_pipes( io_data_t *io )
 	{
 		for( ;i<al_get_count( open_fds ); i++ )
 		{
-			int n = (int)(long)al_get( open_fds, i );
+			int n = (long)al_get_long( open_fds, i );
 			if( !use_fd_in_pipe( n, io) )
 			{
 				debug( 4, L"Close fd %d, used in other context", n );

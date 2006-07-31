@@ -160,16 +160,6 @@ int maxi( int a, int b );
  */
 int mini( int a, int b );
 
-/**
-   Returns the larger of two floats
-*/
-float maxf( float a, float b );
-
-/**
-   Returns the smaller of two floats
-*/
-float minf( float a, float b );
-
 /*
   All the datastuctures below autoresize. The queue, stack and
   priority queue are all impemented using an array and are guaranteed

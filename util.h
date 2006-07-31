@@ -362,7 +362,8 @@ int pq_get_count( priority_queue_t *q );
 void pq_destroy(  priority_queue_t *q );
 
 /**
-   Allocate heap memory for creating a new list and initialize it
+   Allocate heap memory for creating a new list and initialize
+   it. Equivalent to calling malloc and al_init.
 */
 array_list_t *al_new();
 
@@ -446,7 +447,21 @@ int al_set_func( array_list_t *l, int pos, void (*f)() );
    \return The element 
 */
 void *al_get( array_list_t *l, int pos );
+/**
+   Returns the element at the specified index
+
+   \param l The array_list_t
+   \param pos The index 
+   \return The element 
+*/
 long al_get_long( array_list_t *l, int pos );
+/**
+   Returns the element at the specified index
+
+   \param l The array_list_t
+   \param pos The index 
+   \return The element 
+*/
 func_ptr_t al_get_func( array_list_t *l, int pos );
 
 /**
@@ -458,7 +473,13 @@ void al_truncate( array_list_t *l, int new_sz );
   Removes and returns the last entry in the list
 */
 void *al_pop( array_list_t *l );
+/**
+  Removes and returns the last entry in the list
+*/
 long al_pop_long( array_list_t *l );
+/**
+  Removes and returns the last entry in the list
+*/
 func_ptr_t al_pop_func( array_list_t *l );
 
 /**
@@ -470,7 +491,13 @@ int al_get_count( array_list_t *l );
   Returns the last entry in the list witout removing it.
 */
 void *al_peek( array_list_t *l );
+/**
+  Returns the last entry in the list witout removing it.
+*/
 long al_peek_long( array_list_t *l );
+/**
+  Returns the last entry in the list witout removing it.
+*/
 func_ptr_t al_peek_func( array_list_t *l );
 
 /**

@@ -279,8 +279,12 @@ void set_color( int c, int c2 )
 			writembs( exit_attribute_mode );
 			if( ( last_color != FISH_COLOR_NORMAL ) && fg )
 			{
-				writembs( tparm( fg, last_color ) );
+				if( fg )
+				{
+					writembs( tparm( fg, last_color ) );
+				}
 			}
+			
 
 			was_bold=0;
 			was_underline=0;
@@ -303,7 +307,10 @@ void set_color( int c, int c2 )
 	{
 		if( is_bold && !was_bold )
 		{
-			writembs( tparm( enter_bold_mode ) );
+			if( enter_bold_mode )
+			{
+				writembs( tparm( enter_bold_mode ) );
+			}
 		}
 		was_bold = is_bold;	
 	}

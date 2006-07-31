@@ -25,17 +25,19 @@ set __fish_help_dir @docdir@
 # Make sure there are no invalid entries in the PATH
 #
 
-set -l erase_idx
-for idx in (seq (count $PATH))
-   set i $PATH[$idx]
-   if not test -d $i
-       set erase_idx $erase_idx $idx
-       printf (_ '%s: Warning: The directory %s has been removed from your PATH because it does not exist\n') fish $i
-   end
-end
+if status --is-interactive
+	set -l erase_idx
+	for idx in (seq (count $PATH))
+		set i $PATH[$idx]
+		if not test -d $i
+			set erase_idx $erase_idx $idx
+			printf (_ '%s: Warning: The directory %s has been removed from your PATH because it does not exist\n') fish $i
+		end
+	end
 
-if count $erase_idx >/dev/null
-	set -e PATH[(echo $erase_idx)]
+	if count $erase_idx >/dev/null
+		set -e PATH[(echo $erase_idx)]
+	end
 end
 
 #

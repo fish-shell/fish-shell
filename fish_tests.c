@@ -307,7 +307,7 @@ static void al_test( int sz)
 	al_set( &l, 1, (void *)7 );
 	al_set( &l, sz, (void *)7 );
 	
-	if( al_get_count( &l ) != maxf( sz+1, 2 ) )
+	if( al_get_count( &l ) != maxi( sz+1, 2 ) )
 		err( L"Wrong number of elements in array list" );
 	
 	for( i=0; i<al_get_count( &l ); i++ )

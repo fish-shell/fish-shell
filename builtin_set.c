@@ -233,7 +233,6 @@ static int parse_index( array_list_t *indexes,
 	{
 		wchar_t *end;
 		long l_ind = wcstol(src, &end, 10);
-		int *ind;
 		
 		if (end == src) 
 		{
@@ -246,9 +245,7 @@ static int parse_index( array_list_t *indexes,
 			l_ind = var_count+l_ind+1;
 		}
 		
-		ind = (int *) calloc(1, sizeof(int));
-		*ind = (int) l_ind;
-		al_push(indexes, ind);
+		al_push_long(indexes, l_ind);
 		src = end;
 		count++;
 		while (iswspace(*src)) src++;
@@ -275,7 +272,11 @@ static int update_values( array_list_t *list,
 	/* Replace values where needed */
 	for( i = 0; i < al_get_count(indexes); i++ ) 
 	{
-		int ind = *(int *) al_get(indexes, i) - 1;
+		/*
+		  The '- 1' below is because the indices in fish are
+		  one-based, but the array_lsit_t uses zero-based indices
+		*/
+		long ind = al_get_long(indexes, i) - 1;
 		void *new = (void *) al_get(values, i);
 		if( ind <= 0 )
 		{
@@ -291,18 +292,18 @@ static int update_values( array_list_t *list,
 
 
 /**
-   Return 1 if an array list of int* pointers contains the specified
+   Return 1 if an array list of longs contains the specified
    value, 0 otherwise
 */
-static int al_contains_int( array_list_t *list,
-							int val)
+static int al_contains_long( array_list_t *list,
+							long val)
 {
 	int i;
 
 	for (i = 0; i < al_get_count(list); i++) 
 	{
-		int *current = (int *) al_get(list, i);
-		if( current != 0 && *current == val ) 
+		long current = al_get_long(list, i);
+		if( current != 0 && current == val ) 
 		{
 			return 1;
 		}
@@ -324,7 +325,7 @@ static void erase_values(array_list_t *list, array_list_t *indexes)
 
 	for (i = 0; i < al_get_count(list); i++) 
 	{
-		if (!al_contains_int(indexes, i + 1)) 
+		if (!al_contains_long(indexes, (long)i + 1)) 
 		{
 			al_push(&result, al_get(list, i));
 		}
@@ -749,7 +750,6 @@ static int builtin_set( wchar_t **argv )
 		al_foreach( &result, &free );
 		al_destroy( &result );
 
-		al_foreach( &indexes, &free );
 		al_destroy(&indexes);
 		al_destroy(&values);
 		

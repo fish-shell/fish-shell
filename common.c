@@ -9,7 +9,7 @@ parts of fish.
 
 #include <unistd.h>
 
-#ifdef HAVE_STROPTS
+#ifdef HAVE_STROPTS_H
 #include <stropts.h>
 #endif
 

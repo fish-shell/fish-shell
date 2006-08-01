@@ -54,7 +54,7 @@ if test "$USER" = root
 end
 
 # Make a regular expression that matches any component in the PATH. A
-# trailing slash is ok. The sed call is to remove the last '\|'.  
+# trailing slash is ok. The sed call is to remove the last '|'.  
 set -l tmp (printf "%s" \^$PATH'/?$|')
 set -l path_regexp \((echo $tmp | sed -e "s/.\$//")\)
 

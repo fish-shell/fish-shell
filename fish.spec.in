@@ -1,5 +1,3 @@
-%define xinclude %( if test -d /usr/X11R6/include; then echo /usr/X11R6/include; else echo /usr/include; fi )
-
 Summary:                A friendly interactive shell
 Name:                   @PACKAGE_NAME@
 
@@ -14,9 +12,37 @@ Source0:                http://roo.no-ip.org/%{name}/files/%{version}/%{name}-%{
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:          ncurses-devel gettext groff 
-BuildRequires:          %{xinclude}/X11/StringDefs.h, %{xinclude}/X11/Xlib.h
-BuildRequires:          %{xinclude}/X11/Intrinsic.h, %{xinclude}/X11/Xatom.h
 
+
+# Locate correct build-dependencies for providing X headers
+%if "%fedora" >= "5"
+
+	# Modern Fedora version, has modular X.org
+BuildRequires:          xorg-x11-proto-devel libX11-devel libXt-devel
+
+%else
+	%if "%fedora" >= "3"
+
+		# Semi-old Fedora version, has non-modular X.org
+BuildRequires:          xorg-x11-devel
+
+   %else
+       %if 0%{?fedora}
+
+			# Ancient Fedora version, has XFree86
+BuildRequires:          XFree86-devel
+
+       %else
+
+			# This is not a Fedora system, try guessing BuildRequires by 
+			# looking at the directory structure
+			%define xinclude /usr%(if [ -d /usr/X11R6/include ]; then echo /X11R6; fi)/include
+BuildRequires:          %{xinclude}/X11/StringDefs.h, %{xinclude}/X11/Xlib.h
+BuildRequires:          %{xinclude}/X11/Intrinsic.h,  %{xinclude}/X11/Xatom.h
+
+       %endif
+   %endif
+%endif
 
 
 %description 
@@ -53,6 +79,7 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %post
+# Add fish to the list of allowed shells in /etc/shells
 if ! grep %_bindir/fish %_sysconfdir/shells >/dev/null; then
 	echo %_bindir/fish >>%_sysconfdir/shells
 fi
@@ -61,6 +88,7 @@ fi
 
 
 %postun
+# Remove fish from the list of allowed shells in /etc/shells
 if [ "$1" = 0 ]; then
 	grep -v %_bindir/fish %_sysconfdir/shells >%_sysconfdir/fish.tmp
 	mv %_sysconfdir/fish.tmp %_sysconfdir/shells

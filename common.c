@@ -1419,7 +1419,7 @@ void common_handle_winch( int signal )
 	}
 #else
 	termsize.ws_col = 80;
-	termsizews_row = 24;
+	termsize.ws_row = 24;
 #endif
 }
 

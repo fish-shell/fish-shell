@@ -395,7 +395,7 @@ static int test_flags( wchar_t *filename,
 		return 0;
 	}
 		
-	if( S_IFDIR & buf.st_mode )
+	if( S_ISDIR( buf.st_mode ) )
 		return 1;
 	
 	if( flags & EXECUTABLES_ONLY )
@@ -684,7 +684,7 @@ int wildcard_expand( const wchar_t *wc,
 					
 					if( !stat_res )
 					{
-						if( buf.st_mode & S_IFDIR )
+						if( S_ISDIR(buf.st_mode) )
 						{
 							new_len = wcslen( new_dir );
 							new_dir[new_len] = L'/';

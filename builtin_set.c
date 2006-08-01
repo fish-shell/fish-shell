@@ -81,7 +81,7 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 				show_perror = 1;
 			}
 
-			if( !( S_IFDIR & buff.st_mode ) )
+			if( !( S_ISDIR(buff.st_mode) ) )
 			{
 				error = 1;
 				

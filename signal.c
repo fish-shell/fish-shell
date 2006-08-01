@@ -285,7 +285,7 @@ const static struct lookup_entry lookup[] =
 	}
 	,
 #endif
-#ifdef SIGWIO
+#ifdef SIGIO
 	{
 		SIGIO,
 		L"SIGIO",

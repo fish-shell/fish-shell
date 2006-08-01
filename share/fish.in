@@ -8,9 +8,9 @@
 # This is a Solaris-specific test to modify the PATH so that
 # Posix-conformant tools are used by default.
 
-if test -d /usr/bin/xpg4
-	if not echo $PATH | grep /usr/bin/xpg4 >/dev/null
-		set PATH /usr/bin/xpg4 $PATH 
+if test -d /usr/xpg4/bin
+	if not contains /usr/xpg4/bin $PATH
+		set PATH /usr/xpg4/bin $PATH 
 	end
 end   
 

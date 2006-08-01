@@ -49,7 +49,7 @@ prefix = @prefix@
 optbindirs = @optbindirs@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
-MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -D_POSIX_C_SOURCE=200112L
+MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" 
 CFLAGS=@CFLAGS@ $(MACROS)
 CPPFLAGS=@CPPFLAGS@
 LDFLAGS= @LIBS@ @LDFLAGS@ 

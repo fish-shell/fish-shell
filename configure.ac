@@ -72,6 +72,8 @@ for i in /usr/pkg /sw /opt /opt/local; do
 
 done
 
+CFLAGS="$CFLAGS -D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"
+
 AC_SUBST( optbindirs, $optbindirs )
 
 # Tell autoconf to create config.h header 

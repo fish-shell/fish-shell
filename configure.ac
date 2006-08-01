@@ -206,6 +206,17 @@ if test $target_cpu = powerpc; then
    AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
 fi
 
+AC_MSG_CHECKING([if we are under Solaris])
+case $target_os in
+	 solaris*) 
+		CFLAGS="$CFLAGS -D__EXTENSIONS__=1"
+		AC_MSG_RESULT(yes)
+		;;
+	*)
+		AC_MSG_RESULT(no)
+		;;
+esac
+
 
 # Set up PREFIX and related preprocessor symbols. Fish needs to know
 # where it will be installed. One of the reasons for this is so that

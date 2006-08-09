@@ -43,6 +43,10 @@ typedef int tputs_arg_t;
 typedef char tputs_arg_t;
 #endif
 
+#ifndef SIGIO
+#define SIGIO SIGUSR1
+#endif
+
 #ifndef HAVE_WINSIZE
 struct winsize 
 {

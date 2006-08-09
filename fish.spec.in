@@ -14,34 +14,39 @@ BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_
 BuildRequires:          ncurses-devel gettext groff 
 
 
-# Locate correct build-dependencies for providing X headers
+# Locate correct build time-dependencies for providing X headers
 %if "%fedora" >= "5"
 
-	# Modern Fedora version, has modular X.org
-BuildRequires:          xorg-x11-proto-devel libX11-devel libXt-devel
+# Modern Fedora version, has modular X.org
+BuildRequires:          xorg-x11-proto-devel libX11-devel libXt-devel libXext-devel
 
-%else
-	%if "%fedora" >= "3"
+%endif
 
-		# Semi-old Fedora version, has non-modular X.org
+%if "%fedora" < "5"
+%if "%fedora" >= "3"
+
+# Semi-old Fedora version, has non-modular X.org
 BuildRequires:          xorg-x11-devel
 
-   %else
-       %if 0%{?fedora}
+%endif
+%endif
 
-			# Ancient Fedora version, has XFree86
+%if 0%{?fedora}
+%if "%fedora" < "3"
+
+# Ancient Fedora version, has XFree86
 BuildRequires:          XFree86-devel
 
-       %else
+%endif
+%else
 
-			# This is not a Fedora system, try guessing BuildRequires by 
-			# looking at the directory structure
-			%define xinclude /usr%(if [ -d /usr/X11R6/include ]; then echo /X11R6; fi)/include
+# The %fedora variable has not been correctly defined, or this is is
+# not a Fedora system, try guessing BuildRequires by looking at the
+# directory structure
+%define xinclude /usr%(if [ -d /usr/X11R6/include ]; then echo /X11R6; fi)/include
 BuildRequires:          %{xinclude}/X11/StringDefs.h, %{xinclude}/X11/Xlib.h
 BuildRequires:          %{xinclude}/X11/Intrinsic.h,  %{xinclude}/X11/Xatom.h
 
-       %endif
-   %endif
 %endif
 
 
@@ -59,6 +64,9 @@ is simple but incompatible with other shell languages.
 
 
 %build
+# The docdir argument is to make the name of the cosumantation
+# directory 'fish-VERSION', instead of the default, which is simply
+# 'fish'.
 %configure docdir=%_datadir/doc/%{name}-%{version}
 make %{?_smp_mflags}
 
@@ -69,6 +77,8 @@ make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR="$RPM_BUILD_ROOT" 
 
+# Find translation files
+%find_lang %{name}.\*
 
 
 
@@ -97,11 +107,14 @@ fi
 
 
 
-%files
+%files -f %{name}.\*.lang
+
 %defattr(-,root,root,-)
 
+# The documentation directory
 %doc %_datadir/doc/%{name}-%{version}
 
+# man files
 %_mandir/man1/fish.1*
 %_mandir/man1/xsel.1x*
 %_mandir/man1/mimedb.1*
@@ -110,6 +123,7 @@ fi
 %_mandir/man1/fishd.1*
 %_mandir/man1/fish_pager.1*
 
+# The program binaries
 %attr(0755,root,root) %_bindir/fish
 %attr(0755,root,root) %_bindir/fishd
 %attr(0755,root,root) %_bindir/fish_pager
@@ -118,26 +132,37 @@ fi
 %attr(0755,root,root) %_bindir/mimedb
 %attr(0755,root,root) %_bindir/count
 
+# Configuration files
 %config %_sysconfdir/fish
 %config %_sysconfdir/fish_inputrc
 %dir %_sysconfdir/fish.d
 %config %_sysconfdir/fish.d/fish_*.fish
 
+# Non-configuration initialization files
 %dir %_datadir/fish
 %_datadir/fish/fish
 
+# Program specific tab-completions
 %dir %_datadir/fish/completions
 %_datadir/fish/completions/*.fish
 
+# Dynamically loaded shellscript functions
 %dir %_datadir/fish/functions
 %_datadir/fish/functions/*.fish
 
-%_datadir/locale/*/LC_MESSAGES/fish.mo
 
 
 
 
 %changelog
+* Fri Aug 4 2006 Axel Liljencrantz<axel@liljencrantz.se> 1.21.10-4
+- Add better translation finding code from fedora spec to main spec. Thank you to Michael Schwendt.
+- Add missing dependency libXext-devel.
+- Remove one nesting level from dependency checking code.
+
+* Tue Aug 1 2006 Axel Liljencrantz<axel@liljencrantz.se> 1.21.10-1
+- Improved the dependency check for X headers. Thank you to Michael Schwendt for pointers on how to do this
+
 * Mon Jul 31 2006 Axel Liljencrantz<axel@liljencrantz.se> 1.21.10-1
 - Fixed spelling and punctuation as a per patch from Paul Howarth
 - Fixed dependencies as per patch from Paul Howarth

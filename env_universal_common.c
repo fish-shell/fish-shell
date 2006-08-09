@@ -28,6 +28,10 @@
 #include <signal.h>
 #include <sys/stat.h>
 
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+
 #include "fallback.h"
 #include "util.h"
 

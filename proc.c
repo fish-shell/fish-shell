@@ -46,6 +46,10 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <siginfo.h>
 #endif
 
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+
 #include "fallback.h"
 #include "util.h"
 

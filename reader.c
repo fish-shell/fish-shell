@@ -55,6 +55,10 @@ commence.
 #include <siginfo.h>
 #endif
 
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+
 #include <signal.h>
 #include <fcntl.h>
 #include <dirent.h>

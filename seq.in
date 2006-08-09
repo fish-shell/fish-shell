@@ -39,7 +39,7 @@ switch (count $argv)
 end
 
 for i in $from $step $to
-	if not echo $i | grep -E ^-?[0-9]*([0-9]*|\.[0-9]+)$' >/dev/null
+	if not echo $i | grep -E '^-?[0-9]*([0-9]*|\.[0-9]+)$' >/dev/null
 		printf (_ "%s: '%s' is not a number\n") seq $i
 		exit 1
 	end

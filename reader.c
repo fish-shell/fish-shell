@@ -655,12 +655,15 @@ void reader_write_title()
 	if( exec_subshell( title, &l ) != -1 )
 	{
 		int i;
-		writestr( L"\e]2;" );
-		for( i=0; i<al_get_count( &l ); i++ )
+		if( al_get_count( &l ) > 0 )
 		{
-			writestr( (wchar_t *)al_get( &l, i ) );
+			writestr( L"\e]2;" );
+			for( i=0; i<al_get_count( &l ); i++ )
+			{
+				writestr( (wchar_t *)al_get( &l, i ) );
+			}
+			writestr( L"\7" );
 		}
-		writestr( L"\7" );
 	}
 	proc_pop_interactive();
 		

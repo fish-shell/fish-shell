@@ -493,7 +493,7 @@ shells allow you to specify a variable name using '$VARNAME' or
 '${VARNAME}'. Fish supports the former, and has no support whatsoever
 for the latter or anything like it. So what is '{$VARNAME}' then?
 Well, '{WHATEVER}' is <a href='#brace'>brace expansion</a>, identical
-to that supported by Posix shells, i.e.  'a{b,c}d' -> 'abd acd' works
+to that supported by e.g. bash.  'a{b,c}d' -> 'abd acd' works
 both in bash and on fish. So '{$VARNAME}' is a bracket-expansion with
 only a single element, i.e.  it becomes expanded to '$VARNAME', which
 will be variable expanded to the value of the variable 'VARNAME'. So
@@ -2454,6 +2454,7 @@ DAMAGES.
 - <a href='#faq-cd-implicit'>I accidentally entered a directory path and fish changed directory. What happened?</a>
 - <a href='#faq-open'>The open command doesn't work.</a>
 - <a href='#faq-default'>How do I make fish my default shell?</a>
+- <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
 
 <hr>
 
@@ -2524,6 +2525,34 @@ If you installed fish manually (e.g. by compiling it, not by using a
 package manager), you first need to add fish to the list of shells by
 executing the following command (assuming you installed fish in
 /usr/local) as root:
+
+\section faq-titlebar I'm seeing weird output before each prompt when using screen. What's wrong?
+
+Quick answer:
+
+Add 
+
+<pre>
+function fish_title;end
+</pre>
+
+To your ~/.fish file. Problem solved.
+
+The long answer:
+
+Fish is trying to set the titlebar message of your terminal. While
+screen itself supports this feature, your terminal does
+not. Unfortuntaly, when the underlying terminal doesn't support
+setting the titlebar, screen simply passes through the escape codes
+and text to the underlying terminal instead of ignoring them. It is
+impossible detect and resolve this problem from inside fish since fish
+has no way of knowing what the underlying terminal type is. For now,
+the only way to fix this is to unset the titlebar message, as
+suggested above.
+
+Note that fish has a default titlebar message, so simply unsetting the
+fish_title function will not work.
+
 
 <code>echo /usr/local/bin/fish >>/etc/shells</code>
 

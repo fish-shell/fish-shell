@@ -20,7 +20,15 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_SYS_TERMIOS_H
+#include <sys/termios.h>
+#endif
+
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+
 #include <unistd.h>
 #include <signal.h>
 #include <dirent.h>

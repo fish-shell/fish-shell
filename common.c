@@ -24,7 +24,15 @@ parts of fish.
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/types.h>
+
+#ifdef HAVE_SYS_TERMIOS_H
+#include <sys/termios.h>
+#endif
+
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wctype.h>

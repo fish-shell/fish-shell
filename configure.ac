@@ -263,7 +263,7 @@ AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, need
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
 
 # Check for presense of various header files
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h stropts.h siginfo.h sys/select.h])
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h])
 
 AC_CHECK_HEADER([regex.h],
 				[AC_DEFINE([HAVE_REGEX_H], [1], [Define to 1 if you have the <regex.h> header file.])],
@@ -301,18 +301,25 @@ fi
 
 
 # Check if struct winsize exists
-AC_MSG_CHECKING([if struct winsize exists])
+AC_MSG_CHECKING([if struct winsize and TIOCGWINSZ exist])
 AC_LINK_IFELSE(
 	[AC_LANG_PROGRAM([
 #include <sys/types.h>
 #include <signal.h>
+
+#ifdef HAVE_SYS_TERMIOS_H
+#include <sys/termios.h>
+#endif
+
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
 
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif],
-	[struct winsize termsize; ioctl(1,TIOCGWINSZ,&termsize);])], 
-	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct exists])], 
+	[struct winsize termsize = {0}; TIOCGWINSZ;])], 
+	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct and TIOCGWINSZ macro exist])], 
 	AC_MSG_RESULT(no))
 
 # If we have a fwprintf in libc, test that it actually works. As of

@@ -196,6 +196,9 @@ configure: configure.ac
 Makefile: Makefile.in configure
 	./config.status
 
+fish.spec: fish.spec.in
+	./config.status
+
 debug:
 	make fish CFLAGS="@CFLAGS@ $(MACROS) -O0 -Wno-unused -Werror -g"
 .PHONY: debug
@@ -578,7 +581,7 @@ dist: fish-@PACKAGE_VERSION@.tar.bz2
 
 # Create .rpm file for the current systems architecture and an
 # .src.rpm file.
-rpm: fish-@PACKAGE_VERSION@.tar.bz2
+rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 	@if ! which rpmbuild; then \
 		echo Could not find the rpmbuild command, needed to build an rpm; \
 		echo You may be able to install it using the following command:; \

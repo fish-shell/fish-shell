@@ -444,14 +444,17 @@ uninstall: uninstall-translations
 	rm -f $(DESTDIR)$(bindir)/xsel
 	rm -f $(DESTDIR)$(sysconfdir)/fish
 	rm -f $(DESTDIR)$(sysconfdir)/fish_inputrc
+	if test -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish; then \
+		rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish; \
+	fi
 	if test -d $(DESTDIR)$(datadir)/fish; then \
 		rm -r $(DESTDIR)$(datadir)/fish; \
 	fi
 	if test -d $(DESTDIR)$(docdir); then \
 		rm -r $(DESTDIR)$(docdir);\
 	fi
-	for i in fish.1 @XSEL_MAN@ mimedb.1 fishd.1 set_color.1 count.1; do \
-		rm -f $(DESTDIR)$(mandir)/man1/$$i*; \
+	for i in $(MANUALS); do
+		rm -f $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;
 .PHONY: uninstall
 

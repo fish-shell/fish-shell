@@ -304,9 +304,6 @@ fi
 AC_MSG_CHECKING([if struct winsize and TIOCGWINSZ exist])
 AC_LINK_IFELSE(
 	[AC_LANG_PROGRAM([
-#include <sys/types.h>
-#include <signal.h>
-
 #ifdef HAVE_SYS_TERMIOS_H
 #include <sys/termios.h>
 #endif
@@ -315,8 +312,8 @@ AC_LINK_IFELSE(
 #include <sys/ioctl.h>
 #endif
 
-#ifdef HAVE_SIGINFO_H
-#include <siginfo.h>
+#ifdef HAVE_STROPTS_H
+#include <stropts.h>
 #endif],
 	[struct winsize termsize = {0}; TIOCGWINSZ;])], 
 	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct and TIOCGWINSZ macro exist])], 

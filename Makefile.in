@@ -278,7 +278,7 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 messages.pot: *.c *.h etc/*.in share/fish share/completions/*.fish share/functions/*.fish seq
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ *.c *.h -o messages.pot; \
-		if ! xgettext -j -k_ -kN_ -LShell etc/*.in share/fish share/completions/*.fish share/functions/*.fish seq -o messages.pot; then \
+		if xgettext -j -k_ -kN_ -LShell etc/*.in share/fish share/completions/*.fish share/functions/*.fish seq -o messages.pot; then true; else \
 			echo "Your xgettext version is too old to build the messages.pot file"\
 			rm messages.pot\
 			false;\
@@ -334,7 +334,7 @@ doc_src/builtin_doc: $(BUILTIN_DOC_SRC) doc_src/count.txt builtin_help.hdr $(CMD
 builtin_help.c: doc_src/builtin_doc gen_hdr.sh
 	$(MAKE) gen_hdr2 # Don't depend on gen_hdr2, because then we would need to rebuild the docs whenever we use a fresh tarball
 	cp builtin_help.hdr builtin_help.c; 
-	if ! test -x gen_hdr.sh; then chmod 755 gen_hdr.sh; fi
+	if test -x gen_hdr.sh; then true; else chmod 755 gen_hdr.sh; fi
 	for i in $(BUILTIN_DOC_HDR) doc_src/count.doxygen ; do \
 		echo '	hash_put( &tbl, L"'`basename $$i .doxygen`'",' >>$@; \
 		./gen_hdr.sh $$i >>$@; \
@@ -384,7 +384,7 @@ check-uninstall:
 .PHONY: check-uninstall
 
 install-sh:
-	if test ! -x install-sh; then chmod 755 install-sh; fi
+	if test -x install-sh; then true; else chmod 755 install-sh; fi
 .PHONY: install-sh
 
 # Try to install after checking for incompatible installed versions
@@ -585,7 +585,7 @@ dist: fish-@PACKAGE_VERSION@.tar.bz2
 # Create .rpm file for the current systems architecture and an
 # .src.rpm file.
 rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
-	@if ! which rpmbuild; then \
+	@if which rpmbuild; then true; else \
 		echo Could not find the rpmbuild command, needed to build an rpm; \
 		echo You may be able to install it using the following command:; \
 		echo \'yum install rpm-build\'; \

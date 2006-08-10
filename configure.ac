@@ -208,10 +208,25 @@ if test $target_cpu = powerpc; then
    AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
 fi
 
+# Solaris-specific flags go here
 AC_MSG_CHECKING([if we are under Solaris])
 case $target_os in
 	 solaris*) 
 		CFLAGS="$CFLAGS -D__EXTENSIONS__=1"
+		AC_MSG_RESULT(yes)
+		;;
+	*)
+		AC_MSG_RESULT(no)
+		;;
+esac
+
+
+# BSD-specific flags go here
+AC_MSG_CHECKING([if we are under BSD])
+case $target_os in
+	 *bsd*) 
+		AC_DEFINE( __BSD_VISIBLE, 1, [Macro to enable additional prototypes under BSD])
+		AC_DEFINE( _NETBSD_SOURCE, 1, [Macro to enable additional prototypes under BSD])
 		AC_MSG_RESULT(yes)
 		;;
 	*)

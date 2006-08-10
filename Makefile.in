@@ -453,7 +453,7 @@ uninstall: uninstall-translations
 	if test -d $(DESTDIR)$(docdir); then \
 		rm -r $(DESTDIR)$(docdir);\
 	fi
-	for i in $(MANUALS); do
+	for i in $(MANUALS); do \
 		rm -f $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;
 .PHONY: uninstall

@@ -14,7 +14,9 @@ Implementation file for the low level input library
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
-
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 #include "fallback.h"
 #include "util.h"

@@ -136,7 +136,10 @@ static int is_potential_path( const wchar_t *path )
 				{
 					dir = wopendir( unescaped );
 					res = !!dir;
-					closedir( dir );
+					if( dir )
+					{
+						closedir( dir );
+					}
 				}
 				else
 				{

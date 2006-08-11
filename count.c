@@ -2,6 +2,8 @@
    The length command, used for determining the number of items in an
    environment variable array.
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 

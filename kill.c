@@ -6,6 +6,8 @@
 	with the X clipboard.
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -16,8 +18,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

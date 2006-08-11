@@ -3,6 +3,8 @@
 
 	These functions are used for storing and retrieving tab-completion data, as well as for performing tab-completion.
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
@@ -20,7 +22,6 @@
 #include <signal.h>
 #include <wchar.h>
 
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

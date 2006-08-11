@@ -5,6 +5,8 @@ parameter expansion.
 
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -25,8 +27,6 @@ parameter expansion.
 #ifdef SunOS
 #include <procfs.h>
 #endif
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

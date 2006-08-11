@@ -3,6 +3,8 @@
 	Functions for handling event triggers
 
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -10,8 +12,6 @@
 #include <termios.h>
 #include <signal.h>
 #include <string.h>
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

@@ -5,13 +5,14 @@
 	various help files in the doc_src directory.
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <wchar.h>
 #include <sys/types.h>
 
-#include "config.h"
 #include "util.h"
 #include "common.h"
 #include "halloc_util.h"

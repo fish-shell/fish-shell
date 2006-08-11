@@ -1,6 +1,8 @@
 /** \file highlight.c
 	Functions for syntax highlighting
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -10,8 +12,6 @@
 #include <wctype.h>
 #include <termios.h>
 #include <signal.h>
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

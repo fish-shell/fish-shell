@@ -1,6 +1,8 @@
 /** \file sanity.c
 	Functions for performing sanity checks on the program state
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <wchar.h>
 #include <stdio.h>
@@ -12,8 +14,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

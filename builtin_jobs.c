@@ -1,6 +1,7 @@
 /** \file builtin_jobs.c
 	Functions for executing the jobs builtin.
 */
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,8 +13,6 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <wctype.h>
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

@@ -1,14 +1,15 @@
 /** \file function.c
   Functions for storing and retrieving function information.
 */
+
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <unistd.h>
 #include <termios.h>
 #include <signal.h>
-
-#include "config.h"
 
 #include "wutil.h"
 #include "fallback.h"

@@ -1,6 +1,8 @@
 /** \file history.c
   History functions, part of the user interface.
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -10,8 +12,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

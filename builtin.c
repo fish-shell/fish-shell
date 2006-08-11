@@ -21,6 +21,8 @@
 
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -36,8 +38,6 @@
 #include <wctype.h>
 #include <sys/time.h>
 #include <time.h>
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

@@ -5,6 +5,8 @@
 	manual, though I the changes performed have been massive.
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -24,8 +26,6 @@
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

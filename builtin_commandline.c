@@ -3,6 +3,8 @@
 Functions used for implementing the commandline builtin. 
 
 */
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -10,8 +12,6 @@ Functions used for implementing the commandline builtin.
 #include <sys/types.h>
 #include <termios.h>
 #include <signal.h>
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

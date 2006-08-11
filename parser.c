@@ -4,6 +4,8 @@ The fish parser. Contains functions for parsing code.
 
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -16,8 +18,6 @@ The fish parser. Contains functions for parsing code.
 #include <pwd.h>
 #include <dirent.h>
 #include <signal.h>
-
-#include "config.h"
 
 #include "fallback.h"
 #include "util.h"

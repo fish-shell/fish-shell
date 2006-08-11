@@ -279,7 +279,7 @@ wchar_t input_get_code( const wchar_t *name )
 /**
    Returns the function name for the given function code.
 */
-
+/*
 static const wchar_t *input_get_name( wchar_t c )
 {
 
@@ -293,7 +293,7 @@ static const wchar_t *input_get_name( wchar_t c )
 	}
 	return 0;		
 }
-
+*/
 /**
    Returns the function description for the given function code.
 */

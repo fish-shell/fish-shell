@@ -329,7 +329,7 @@ AC_LINK_IFELSE(
 #include <sys/ioctl.h>
 #endif
 
-,
+],
 	[struct winsize termsize = {0}; TIOCGWINSZ;])], 
 	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct and TIOCGWINSZ macro exist])], 
 	AC_MSG_RESULT(no))

@@ -128,4 +128,10 @@ wchar_t *wbasename( const wchar_t *path );
 */
 const wchar_t *wgettext( const wchar_t *in );
 
+/**
+   Wide character version of getenv
+*/
+wchar_t *wgetenv( const wchar_t *name );
+
+
 #endif

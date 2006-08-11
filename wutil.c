@@ -53,12 +53,14 @@
    the \c wutil_wcs2str() function.
 */
 static char *tmp=0;
+
 /**
    Buffer for converting narrow results to wide ones, used by the \c
    wutil_str2wcs() function. Avoid usign this without thinking about
-   it, since sebseuent calls will overwrite previous values.
+   it, since subsequent calls will overwrite previous values.
 */
 static wchar_t *tmp2;
+
 /**
    Length of the \c tmp buffer.
 */
@@ -516,5 +518,29 @@ const wchar_t *wgettext( const wchar_t *in )
 	curr_buff = (curr_buff+1)%BUFF_COUNT;
 	
 	return wres;
+}
+
+wchar_t *wgetenv( const wchar_t *name )
+{
+	char *name_narrow =wutil_wcs2str(name);
+	char *res_narrow = getenv( name_narrow );
+	static string_buffer_t *out = 0;
+
+	if( !res_narrow )
+		return 0;
+	
+	if( !out )
+	{
+		out = sb_halloc( global_context );
+	}
+	else
+	{
+		sb_clear( out );
+	}
+
+	sb_printf( out, L"%s", res_narrow );
+	
+	return (wchar_t *)out->buff;
+	
 }
 

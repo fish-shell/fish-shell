@@ -138,14 +138,21 @@ typedef struct
 
 static int get_color( int highlight )
 {
+	wchar_t *val;
+
 	if( highlight < 0 )
 		return FISH_COLOR_NORMAL;
 	if( highlight >= (4) )
 		return FISH_COLOR_NORMAL;
 	
-	wchar_t *val = env_universal_get( hightlight_var[highlight]);
+	val = wgetenv( hightlight_var[highlight]);
+
+	if( !val )
+	{
+		val = env_universal_get( hightlight_var[highlight]);
+	}
 	
-	if( val == 0 )
+	if( !val )
 	{
 		return FISH_COLOR_NORMAL;
 	}

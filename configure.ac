@@ -72,7 +72,9 @@ for i in /usr/pkg /sw /opt /opt/local; do
 
 done
 
-CFLAGS="$CFLAGS -D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"
+# These help out with getting better prototypes on some platforms
+AC_DEFINE( _XOPEN_SOURCE, 600, [Macro to enable additional prototypes under Posix] )
+AC_DEFINE( _POSIX_C_SOURCE, 200112L, [Macro to enable additional prototypes under Posix] )
 
 AC_SUBST( optbindirs, $optbindirs )
 
@@ -187,8 +189,8 @@ if test "$glibc" = yes; then
 	# fallback.h, in order to keep fish working on non-gnu platforms.
 	#
 
-	CFLAGS="$CFLAGS -D _GNU_SOURCE -D _ISOC99_SOURCE"
-
+	AC_DEFINE( _GNU_SOURCE, 1, [Macro to enable additional prototypes under Glibc])
+	AC_DEFINE( _ISOC99_SOURCE, 1, [Macro to enable additional prototypes under Glibc])
 else
 	AC_MSG_RESULT(no)
 fi
@@ -211,8 +213,8 @@ fi
 # Solaris-specific flags go here
 AC_MSG_CHECKING([if we are under Solaris])
 case $target_os in
-	 solaris*) 
-		CFLAGS="$CFLAGS -D__EXTENSIONS__=1"
+	solaris*) 
+		AC_DEFINE( __EXTENSIONS__, 1, [Macro to enable additional prototypes under Solaris])
 		AC_MSG_RESULT(yes)
 		;;
 	*)
@@ -224,7 +226,7 @@ esac
 # BSD-specific flags go here
 AC_MSG_CHECKING([if we are under BSD])
 case $target_os in
-	 *bsd*) 
+	*bsd*) 
 		AC_DEFINE( __BSD_VISIBLE, 1, [Macro to enable additional prototypes under BSD])
 		AC_DEFINE( _NETBSD_SOURCE, 1, [Macro to enable additional prototypes under BSD])
 		AC_MSG_RESULT(yes)

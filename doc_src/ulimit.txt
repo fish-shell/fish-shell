@@ -22,7 +22,7 @@ value. Other options are interpreted as follows:
 
 - <code>-a</code> or <code>--all</code> Set or get all current limits
 - <code>-c</code> or <code>--core-size</code> The maximum size of core files created
-- <code>-d</code> or <code>--data-size</code> The maximum size of a process’s data segment
+- <code>-d</code> or <code>--data-size</code> The maximum size of a process's data segment
 - <code>-f</code> or <code>--file-size</code> The maximum size of files created by the shell
 - <code>-l</code> or <code>--lock-size</code> The maximum size that may be locked into memory
 - <code>-m</code> or <code>--resident-set-size</code> The maximum resident set size

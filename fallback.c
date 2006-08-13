@@ -1006,14 +1006,6 @@ wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz)
 
 #endif
 
-#ifdef HAVE_BROKEN_DEL_CURTERM
-
-int del_curterm(TERMINAL *oterm)
-{
-}
-
-#endif
-
 #ifndef HAVE_LRAND48_R
 
 int lrand48_r(struct drand48_data *buffer, long int *result)

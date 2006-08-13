@@ -72,10 +72,6 @@ for i in /usr/pkg /sw /opt /opt/local; do
 
 done
 
-# These help out with getting better prototypes on some platforms
-AC_DEFINE( _XOPEN_SOURCE, 600, [Macro to enable additional prototypes under Posix] )
-AC_DEFINE( _POSIX_C_SOURCE, 200112L, [Macro to enable additional prototypes under Posix] )
-
 AC_SUBST( optbindirs, $optbindirs )
 
 # Tell autoconf to create config.h header 
@@ -107,15 +103,22 @@ else
     AC_SUBST( XSEL_MAN_PATH,[ ])
 fi
 
+# These help out with getting better prototypes on some platforms
+
 #
 # Test if the compiler accepts the -std=c99 flag. If so, using it
 # increases the odds of correct compilation, since we want to use the
-# *wprintf functions, which where defined in C99.
-#
+# *wprintf functions, which where defined in C99. On some platforms
+# (Solaris 10) adding -std=c99 in turn requires that _POSIX_C_SOURCE
+# be defined to 200112L otherwise several POSIX-specific, non-ISO-C99 
+# types/prototypes are made unavailable e.g. siginfo_t.  Finally,
+# defining _XOPEN_SOURCE to 600 is compatible with the
+# _POSIX_C_SOURCE value and provides a little assurance that
+# extension functions' prototypes are available, e.g. killpg().
 
 XCFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -std=c99"
-AC_MSG_CHECKING(if -std=c99 works)
+CFLAGS="$CFLAGS -std=c99 -D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"
+AC_MSG_CHECKING(if -std=c99 -D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L works)
 AC_CACHE_VAL(local_cv_has__std_c99,[
 AC_TRY_RUN([
 #include <stdlib.h>

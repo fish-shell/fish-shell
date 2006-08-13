@@ -1489,7 +1489,11 @@ void input_destroy()
 	hash_foreach( &all_mappings, &destroy_mapping );	
 	hash_destroy( &all_mappings );
 	
-	del_curterm( cur_term );
+	if( del_curterm( cur_term ) == ERR )
+	{
+		debug( 0, _(L"Error while closing terminfo") );
+	}
+	
 }
 
 /**

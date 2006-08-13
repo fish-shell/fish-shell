@@ -337,6 +337,9 @@ int main( int argc, char **argv )
 		}
 	}
 
-	del_curterm( cur_term );
+	if( del_curterm( cur_term ) == ERR )
+	{
+		debug( 0, _(L"Error while closing terminfo") );		
+	}
 
 }

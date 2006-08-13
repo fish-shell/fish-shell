@@ -963,7 +963,11 @@ void destroy()
 	env_universal_destroy();
 	input_common_destroy();
 	halloc_util_destroy();
-	del_curterm( cur_term );
+	if( del_curterm( cur_term ) == ERR )
+	{
+		debug( 0, _(L"Error while closing terminfo") );		
+	}
+	
 	sb_destroy( &out_buff );
 	fclose( out_file );
 }

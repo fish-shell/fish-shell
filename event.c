@@ -540,7 +540,7 @@ static void event_fire_delayed()
 		free( blocked );
 		blocked = new_blocked;
 	}
-
+	
 	while( sig_list[active_list].count > 0 )
 	{
 		signal_list_t *lst;

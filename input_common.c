@@ -36,7 +36,7 @@ Implementation file for the low level input library
 /**
    Characters that have been read and returned by the sequence matching code
 */
-static wint_t lookahead_arr[32];
+static wint_t lookahead_arr[1024];
 
 /**
    Number of entries in lookahead_arr

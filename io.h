@@ -44,6 +44,17 @@ typedef struct io_data
 		
 	} param2
 	;
+
+	union 
+	{
+		/**
+		   This will be non-zero if this is a buffer of input, not
+		   output
+		*/
+		int is_input;
+	}
+		param3;
+	
 	
 	/** Pointer to the next IO redirection */
 	struct io_data *next;
@@ -80,9 +91,14 @@ void io_buffer_destroy( io_data_t *io_buffer );
 
 /**
    Create a IO_BUFFER type io redirection, complete with a pipe and a
-   buffer_t for output.
+   buffer_t for output. The default file descriptor used is 1 for
+   output buffering and 0 for input buffering.
+
+   \param is_input set this parameter to zero if the buffer should be
+   used to buffer the output of a command, or non-zero to buffer the
+   input to a command.
 */
-io_data_t *io_buffer_create();
+io_data_t *io_buffer_create( int is_input );
 
 /**
    Close output pipe, and read from input pipe until eof.

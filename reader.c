@@ -1462,7 +1462,9 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 {
 	int i;
 	string_buffer_t cmd;
+	string_buffer_t msg;
 	wchar_t * prefix_esc;
+	char *foo;
 
 	if( !prefix || (wcslen(prefix)==0))
 		prefix_esc = wcsdup(L"\"\"");
@@ -1470,6 +1472,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 		prefix_esc = escape( prefix,1);
 
 	sb_init( &cmd );
+	sb_init( &msg );
 	sb_printf( &cmd,
 			   L"fish_pager %d %ls",
 //			   L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
@@ -1478,24 +1481,32 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 
 	free( prefix_esc );
 
+	io_data_t *in= io_buffer_create( 1 );
+	
 	for( i=0; i<al_get_count( comp); i++ )
 	{
 		wchar_t *el = escape( (wchar_t*)al_get( comp, i ),1);
-		sb_printf( &cmd, L" %ls", el );
+		sb_printf( &msg, L"%ls\n", el );
 		free(el);
 	}
-
+	
+	foo = wcs2str( (wchar_t *)msg.buff );
+	b_append( in->param2.out_buffer, foo, strlen(foo) );
+	free( foo );
+	
 	term_donate();
-
-	io_data_t *out = io_buffer_create();
-
+	
+	io_data_t *out = io_buffer_create( 0 );
+	out->next = in;
+	out->fd = 1;
+	
 	eval( (wchar_t *)cmd.buff, out, TOP);
 	term_steal();
 
 	io_buffer_read( out );
 
 	sb_destroy( &cmd );
-
+	sb_destroy( &msg );
 
 	int nil=0;
 	b_append( out->param2.out_buffer, &nil, 1 );
@@ -1512,7 +1523,9 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 		free( str );
 	}
 
+
 	io_buffer_destroy( out);
+	io_buffer_destroy( in);
 
 }
 

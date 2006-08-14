@@ -1156,9 +1156,9 @@ When defining a new function in fish, it is possible to make it into an
 event handler, i.e. a function that is automatically run when a
 specific event takes place. Events that can trigger a handler currently are:
 
-* When a signal is delivered
-* When a process or job exits
-* When the value of a variable is updated
+- When a signal is delivered
+- When a process or job exits
+- When the value of a variable is updated
 
 Example:
 

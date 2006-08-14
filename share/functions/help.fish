@@ -92,6 +92,16 @@ function help -d (N_ "Show help for the fish shell")
 	end
 
 	if test $fish_browser_bg
+
+		switch $fish_browser
+			case 'htmlview' 'x-www-browser'
+				printf (_ 'help: Help is being displayed in your default browser\n')
+
+			case '*'
+				printf (_ 'help: Help is being displayed in %s\n') $fish_browser
+
+		end
+
 		eval $fish_browser file://$__fish_help_dir/$fish_help_page \&
 	else
 		eval $fish_browser file://$__fish_help_dir/$fish_help_page

@@ -1485,10 +1485,11 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	
 	for( i=0; i<al_get_count( comp); i++ )
 	{
-	    wchar_t *el = (wchar_t*)al_get( comp, i );
+	    wchar_t *el = escape((wchar_t*)al_get( comp, i ), 0);
+		
 		sb_printf( &msg, L"%ls\n", el );
+		free( el );		
 	}
-	sb_printf( &msg, PAGER_EOT_STR );
 	
 	foo = wcs2str( (wchar_t *)msg.buff );
 	b_append( in->param2.out_buffer, foo, strlen(foo) );

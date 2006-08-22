@@ -990,9 +990,9 @@ void destroy()
 void read_array( FILE* file, array_list_t *comp )
 {
 	char buffer[BUFSIZE];
-	char c;
+	int c;
 	int i;
-	wchar_t *wcs;
+	wchar_t *wcs, *unescaped;
 
 	while( !feof( file ) )
 	{
@@ -1000,24 +1000,28 @@ void read_array( FILE* file, array_list_t *comp )
 		while( i < BUFSIZE-1 )
 		{
 		    c = getc( file );
-			if( c == '\n' || c == PAGER_EOT ) 
+			if( c == EOF ) 
 			{
-				    break;
+				return;
+				
+			}
+			if( c == '\n' )
+			{
+				break;
 			}
 			
 			buffer[ i++ ] = c;
 		}
+
 		buffer[ i ] = '\0';
 
 		wcs = str2wcs( buffer );
 		if( wcs ) 
-		    {
-			al_push( comp, wcs );
-		    }
-		if( c == PAGER_EOT )
-		    {
-			break;
-		    }
+		{
+			unescaped = unescape( wcs, 0 );
+			al_push( comp, unescaped );
+			free( wcs );
+		}
 	}
 }
 
@@ -1042,7 +1046,7 @@ int main( int argc, char **argv )
 		debug( 3, L"prefix is '%ls'", prefix );
 		
 	    if( argc > 3 )
-         	{
+		{
 		    for( i=3; i<argc; i++ )
 			{
 			    wchar_t *wcs = str2wcs( argv[i] );

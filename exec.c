@@ -1055,8 +1055,6 @@ void exec( job_t *j )
 			case INTERNAL_BUFFER:
 			{
 		
-				debug( 0, L"fork internal buffer" );		
-		
 				pid = fork();
 				
 				if( pid == 0 )

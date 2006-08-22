@@ -238,11 +238,17 @@ xsel-0.9.6/xsel: xsel-0.9.6
 doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	cat doc_src/doc.hdr >doc.h; 
 	echo "/** \page builtins Builtin commands" >>doc.h; 
-	cat `printf "%s\n" $(BUILTIN_DOC_SRC)|sort` >>doc.h; 
+	for i in `printf "%s\n" $(BUILTIN_DOC_SRC)|sort`; do \
+		echo "<hr>" >>doc.h; \
+		cat $$i >>doc.h; \
+	done 
 	echo "*/" >>doc.h
 	echo "/** \page commands External commands" >>doc.h; 
 	echo "\c fish is shipped with commands which do not use any internal parts of the shell, and are therefore not written as builtins, but separate commands." >>doc.h
-	cat `printf "%s\n" $(CMD_DOC_SRC)|sort` >>doc.h; 
+	for i in `printf "%s\n" $(CMD_DOC_SRC)|sort`; do \
+		echo "<hr>" >>doc.h; \
+		cat $$i >>doc.h; \
+	done 
 	echo "*/" >>doc.h
 
 # This rule creates complete doxygen headers from each of the various

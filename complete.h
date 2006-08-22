@@ -54,6 +54,17 @@
 #define COMPLETE_SEP_STR L"\004"
 
 /**
+   Sent to the fish_pager to signify the end of input
+*/
+
+#define PAGER_EOT '\003'
+
+/**
+   Sent to the fish_pager to signify the end of input
+*/
+#define PAGER_EOT_STR L"\003"
+
+/**
    Separator between completion items in fish_pager. This is used for
    completion grouping, e.g. when putting completions with the same
    descriptions on the same line.
@@ -66,6 +77,10 @@
 */
 #define PROG_COMPLETE_SEP L'\t'
 
+/**
+   Terminator for completions sent to the fish_pager
+*/
+#define COMPLETE_TERMINATOR L'\006'
 
 /**
 

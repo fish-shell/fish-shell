@@ -895,15 +895,29 @@ static void init()
 	  the resulting output back to the caller
 	*/
 	int out = dup( 1 );
+	int in = dup( 0 );
 	close(1);
-	if( open( ttyname(0), O_WRONLY ) != 1 )
+	close(0);
+
+	if( (in = open( ttyname(2), O_RDWR )) != -1 )
 	{
 		if( dup2( 2, 1 ) == -1 )
 		{			
-			debug( 0, L"Could not set up file descriptors for pager" );
+			debug( 0, L"Could not set up output file descriptors for pager" );
+			exit( 1 );
+		}
+		
+		if( dup2( in, 0 ) == -1 )
+		{			
+			debug( 0, L"Could not set up input file descriptors for pager %d", in );
 			exit( 1 );
 		}
 	}
+	else
+	    {
+		debug( 0, L"Could not open tty for pager" );
+		exit( 1 );
+	    }
 	out_file = fdopen( out, "w" );
 
 	/**
@@ -972,6 +986,41 @@ void destroy()
 	fclose( out_file );
 }
 
+#define BUFSIZE 1024
+void read_array( FILE* file, array_list_t *comp )
+{
+	char buffer[BUFSIZE];
+	char c;
+	int i;
+	wchar_t *wcs;
+
+	while( !feof( file ) )
+	{
+		i = 0;
+		while( i < BUFSIZE-1 )
+		{
+		    c = getc( file );
+			if( c == '\n' || c == PAGER_EOT ) 
+			{
+				    break;
+			}
+			
+			buffer[ i++ ] = c;
+		}
+		buffer[ i ] = '\0';
+
+		wcs = str2wcs( buffer );
+		if( wcs ) 
+		    {
+			al_push( comp, wcs );
+		    }
+		if( c == PAGER_EOT )
+		    {
+			break;
+		    }
+	}
+}
+
 int main( int argc, char **argv )
 {
 	int i;
@@ -979,8 +1028,6 @@ int main( int argc, char **argv )
 	array_list_t *comp;
 	wchar_t *prefix;
 		
-	init();
-	
 	if( argc < 3 )
 	{
 		debug( 0, L"Insufficient arguments" );
@@ -994,19 +1041,29 @@ int main( int argc, char **argv )
 		
 		debug( 3, L"prefix is '%ls'", prefix );
 		
-		for( i=3; i<argc; i++ )
-		{
-			wchar_t *wcs = str2wcs( argv[i] );
-			if( wcs )
+	    if( argc > 3 )
+         	{
+		    for( i=3; i<argc; i++ )
 			{
-				al_push( comp, wcs );
+			    wchar_t *wcs = str2wcs( argv[i] );
+			    if( wcs )
+				{
+				    al_push( comp, wcs );
+				}
 			}
 		}
-		
-		mangle_descriptions( comp );
-		if( wcscmp( prefix, L"-" ) == 0 )
-			join_completions( comp );
-		mangle_completions( comp, prefix );
+	    else
+		{
+		    read_array( stdin, comp );
+		}
+
+
+	    init();
+
+	    mangle_descriptions( comp );
+	    if( wcscmp( prefix, L"-" ) == 0 )
+		join_completions( comp );
+	    mangle_completions( comp, prefix );
 	
 		for( i = 6; i>0; i-- )
 		{

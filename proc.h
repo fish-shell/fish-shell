@@ -45,6 +45,11 @@ enum
 	   The exec builtin
 	*/
 	INTERNAL_EXEC,
+	/**
+	   A buffer
+	*/
+	INTERNAL_BUFFER,
+      
 }
 	;
 
@@ -66,7 +71,7 @@ enum
 	be the result of an exec command. The role of this process_t is
 	determined by the type field, which can be one of EXTERNAL,
 	INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK and
-	INTERNAL_EXEC.
+	INTERNAL_EXEC, INTERNAL_BUFFER
 
 	The process_t contains information on how the process should be
 	started, such as command name and arguments, as well as runtime
@@ -79,13 +84,13 @@ enum
 	argument array and actual_cmd is the absolute path of the command
 	to execute.
 
-	If the process is of type ITERNAL_BUILTIN, argv is the argument
+	If the process is of type INTERNAL_BUILTIN, argv is the argument
 	vector, and argv[0] is the name of the builtin command.
 
-	If the process is of type ITERNAL_FUNCTION, argv is the argument
+	If the process is of type INTERNAL_FUNCTION, argv is the argument
 	vector, and argv[0] is the name of the shellscript function.
 
-	If the process is of type ITERNAL_BLOCK, argv has exactly one
+	If the process is of type INTERNAL_BLOCK, argv has exactly one
 	element, which is the block of commands to execute.
 
 */
@@ -93,8 +98,8 @@ typedef struct process
 {
 	/** 
 		Type of process. Can be one of \c EXTERNAL, \c
-		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK or
-		INTERNAL_EXEC
+		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
+		INTERNAL_EXEC, or INTERNAL_BUFFER
 	*/
 	int type;
 	/** argv parameter for for execv, builtin_run, etc. */

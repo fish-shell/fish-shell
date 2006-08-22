@@ -18,6 +18,12 @@ function help -d (N_ "Show help for the fish shell")
 	set h $h expand-variable expand-home expand-brace expand-wildcard 
 	set -l help_topics $h expand-command-substitution expand-process 
 
+	# 'help -h' should launch 'help help'
+	switch $argv[1]
+		case -h --h --he --hel --help
+			set argv help
+	end
+
 	#
 	# Find a suitable browser for viewing the help pages. This is needed
 	# by the help function defined below.

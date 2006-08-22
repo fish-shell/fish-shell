@@ -1863,7 +1863,7 @@ static int parse_job( process_t *p,
 			{
 				nxt = expand_one( j,
 								  wcsdup(tok_last( tok )),
-								  EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
+								  EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
 				
 				if( nxt == 0 )
 				{
@@ -2747,7 +2747,7 @@ static int parser_get_block_type( const wchar_t *cmd )
 }
 
 /**
-   \return the block type created by the specified builtin, or -1 on error.
+   \return the block command that createa the specified block type, or null on error.
 */
 static const wchar_t *parser_get_block_command( int type )
 {
@@ -2800,7 +2800,7 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 				}
 				free( arg_cpy );
 				return 1;
-								
+				
 			case 0:
 				do_loop = 0;
 				break;
@@ -3034,7 +3034,7 @@ int parser_test( const  wchar_t * buff,
 					
 					if( !(cmd = expand_one( context, 
 											wcsdup( tok_last( &tok ) ), 
-											EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES ) ) )
+											EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES ) ) )
 					{
 						err=1;
 						if( out )

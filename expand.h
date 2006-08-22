@@ -20,9 +20,9 @@
 #include "util.h"
 
 /**
-   Flag specifying that subshell expansion should be skipped
+   Flag specifying that cmdsubst expansion should be skipped
 */
-#define EXPAND_SKIP_SUBSHELL 1
+#define EXPAND_SKIP_CMDSUBST 1
 
 /**
    Flag specifying that variable expansion should be skipped
@@ -122,7 +122,7 @@ enum
    Perform various forms of expansion on in, such as tilde expansion
    (\~USER becomes the users home directory), variable expansion
    (\$VAR_NAME becomes the value of the environment variable VAR_NAME),
-   subshell expansion and wildcard expansion. The results are inserted
+   cmdsubst expansion and wildcard expansion. The results are inserted
    into the list out.
    
    If the parameter does not need expansion, it is copied into the list
@@ -135,7 +135,7 @@ enum
  
    \param context the halloc context to use for automatic deallocation
    \param in The parameter to expand
-   \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+   \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \param out The list to which the result will be appended.
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
@@ -151,7 +151,7 @@ int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
  
    \param context the halloc context to use for automatic deallocation   
    \param in The parameter to expand
-   \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_SUBSHELL EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+   \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return The expanded parameter, or 0 on failiure
 */
 wchar_t *expand_one( void *context, wchar_t *in, int flag );

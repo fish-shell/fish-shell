@@ -586,7 +586,7 @@ void highlight_shell( wchar_t * buff,
 					{
 						wchar_t *dir = expand_one( context, 
 												   wcsdup(tok_last( &tok )),
-												   EXPAND_SKIP_SUBSHELL );
+												   EXPAND_SKIP_CMDSUBST );
 						if( dir )
 						{
 							if( !parser_cdpath_get( context, dir ) )
@@ -612,7 +612,7 @@ void highlight_shell( wchar_t * buff,
 					*/
 					cmd = expand_one( context, 
 									  wcsdup(tok_last( &tok )),
-									  EXPAND_SKIP_SUBSHELL | EXPAND_SKIP_VARIABLES);
+									  EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
 					
 					if( cmd == 0 )
 					{
@@ -729,9 +729,9 @@ void highlight_shell( wchar_t * buff,
 				{
 					case TOK_STRING:
 					{
-						target = expand_one( context, wcsdup( tok_last( &tok ) ), EXPAND_SKIP_SUBSHELL);
+						target = expand_one( context, wcsdup( tok_last( &tok ) ), EXPAND_SKIP_CMDSUBST);
 						/*
-						  Redirect filename may contain a subshell. 
+						  Redirect filename may contain a cmdsubst. 
 						  If so, it will be ignored/not flagged.
 						*/
 					}
@@ -832,7 +832,7 @@ void highlight_shell( wchar_t * buff,
 	tok_destroy( &tok );	
 			 
 	/*
-	  Locate and syntax highlight subshells recursively
+	  Locate and syntax highlight cmdsubsts recursively
 	*/
 
 	wchar_t *buffcpy = halloc_wcsdup( context, buff );

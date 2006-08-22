@@ -179,9 +179,9 @@ enum parser_error
 	*/
 	EVAL_ERROR,
 	/**
-	   Error while evaluating subshell
+	   Error while evaluating cmdsubst
 	*/
-	SUBSHELL_ERROR,
+	CMDSUBST_ERROR,
 }
 ;
 
@@ -217,7 +217,7 @@ wchar_t *parser_get_filename( void *context, const wchar_t *cmd );
 int eval( const wchar_t *cmd, io_data_t *io, int block_type );
 
 /**
-  Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and subshell execution on the tokens.
+  Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
   The output is inserted into output, and should be freed by the caller.
 
   \param line Line to evaluate

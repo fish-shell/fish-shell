@@ -1184,9 +1184,9 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 }
 
 /**
-   Perform subshell expansion
+   Perform cmdsubst expansion
 */
-static int expand_subshell( wchar_t *in, array_list_t *out )
+static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 {
 	wchar_t *paran_begin=0, *paran_end=0;
 	int len1, len2;
@@ -1241,7 +1241,7 @@ static int expand_subshell( wchar_t *in, array_list_t *out )
 	}
 
 	al_init( &tail_expand );
-	expand_subshell( wcsdup(paran_end+1), &tail_expand );
+	expand_cmdsubst( wcsdup(paran_end+1), &tail_expand );
 
     for( i=0; i<al_get_count( &sub_res ); i++ )
     {
@@ -1434,7 +1434,7 @@ int expand_string( void *context,
 	array_list_t *in, *out;
 
 	int i;
-	int subshell_ok = 1;
+	int cmdsubst_ok = 1;
 	int res = EXPAND_OK;
 	int start_count = al_get_count( end_out );
 
@@ -1451,7 +1451,7 @@ int expand_string( void *context,
 	al_init( &list1 );
 	al_init( &list2 );
 
-	if( EXPAND_SKIP_SUBSHELL & flags )
+	if( EXPAND_SKIP_CMDSUBST & flags )
 	{
 		wchar_t *begin, *end;
 		
@@ -1460,7 +1460,7 @@ int expand_string( void *context,
 										&end,
 										1 ) != 0 )
 		{
-			error( SUBSHELL_ERROR, -1, L"Subshells not allowed" );
+			error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
 			free( str );
 			al_destroy( &list1 );
 			al_destroy( &list2 );
@@ -1470,10 +1470,10 @@ int expand_string( void *context,
 	}
 	else
 	{
-		subshell_ok = expand_subshell( str, &list1 );
+		cmdsubst_ok = expand_cmdsubst( str, &list1 );
 	}
 
-	if( !subshell_ok )
+	if( !cmdsubst_ok )
 	{
 		al_destroy( &list1 );
 		return EXPAND_ERROR;

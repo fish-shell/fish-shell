@@ -335,6 +335,9 @@ doc_src/builtin_doc: $(BUILTIN_DOC_SRC) doc_src/count.txt builtin_help.hdr $(CMD
 		echo "*/" >>$$FILE; \
 	done
 	cd doc_src; doxygen; cd ..;
+	for i in doc_src/builtin_doc/man/man1/*.1; do \
+		sed -i -e "s/\(.\)\\.SH/\1/" $$i; \
+	done 
 	touch doc_src/builtin_doc
 
 builtin_help.c: doc_src/builtin_doc gen_hdr.sh

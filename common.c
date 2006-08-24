@@ -843,9 +843,27 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							break;
 						}
 						
+						case L'a':
+						{
+							in[out_pos]=L'\a';
+							break;
+						}
+						
+						case L'f':
+						{
+							in[out_pos]=L'\f';
+							break;
+						}
+						
+						case L'v':
+						{
+							in[out_pos]=L'\v';
+							break;
+						}
+						
 						case L'e':
 						{
-							in[out_pos]=L'\e';
+							in[out_pos]=L'\x1b';
 							break;
 						}
 						

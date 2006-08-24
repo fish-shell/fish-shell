@@ -44,6 +44,7 @@ parameter expansion.
 #include "complete.h"
 
 #include "parse_util.h"
+#include "halloc.h"
 #include "halloc_util.h"
 
 /**
@@ -743,6 +744,55 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 }
 
 
+static int parse_slice( wchar_t *in, wchar_t **end_ptr, array_list_t *idx )
+{
+	
+	
+	wchar_t *end;
+	
+	int pos = 1;
+
+//	debug( 0, L"parse_slice on '%ls'", in );
+	
+
+	while( 1 )
+	{
+		long tmp;
+		
+		while( iswspace(in[pos]) || (in[pos]==INTERNAL_SEPARATOR))
+			pos++;		
+		
+		if( in[pos] == L']' )
+		{
+			pos++;
+			break;
+		}
+		
+		errno=0;
+		tmp = wcstol( &in[pos], &end, 10 );
+		if( ( errno ) || ( end == &in[pos] ) )
+		{
+			return 1;
+		}
+//		debug( 0, L"Push idx %d", tmp );
+		
+		al_push_long( idx, tmp );
+		pos = end-in;
+	}
+	
+	if( end_ptr )
+	{
+//		debug( 0, L"Remainder is '%ls', slice def was %d characters long", in+pos, pos );
+		
+		*end_ptr = in+pos;
+	}
+//	debug( 0, L"ok, done" );
+	
+	return 0;
+}
+
+
+
 /**
    Expand all environment variables in the string *ptr.
 
@@ -841,44 +891,22 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 				int all_vars=1;
 				array_list_t var_item_list;
 				al_init( &var_item_list );
-				
+
 				if( in[stop_pos] == L'[' )
 				{
-					wchar_t *end;
-
-					all_vars = 0;
-
-					stop_pos++;
-					while( 1 )
+					wchar_t *slice_end;
+					all_vars=0;
+					
+					if( parse_slice( &in[stop_pos], &slice_end, var_idx_list ) )
 					{
-						long tmp;
-
-						while( iswspace(in[stop_pos]) || (in[stop_pos]==INTERNAL_SEPARATOR))
-							stop_pos++;
-
-
-						if( in[stop_pos] == L']' )
-						{
-							stop_pos++;
-							break;
-						}
-
-						errno=0;
-						tmp = wcstol( &in[stop_pos], &end, 10 );
-						if( ( errno ) || ( end == &in[stop_pos] ) )
-						{
-							error( SYNTAX_ERROR,
-								   -1,
-								   L"Expected integer or \']\'" );
-
-							is_ok = 0;
-							break;
-						}
-						al_push_long( var_idx_list, tmp );
-						stop_pos = end-in;
-					}
-				}
-
+						error( SYNTAX_ERROR,
+							   -1,
+							   L"Invalid index value" );						
+						is_ok = 0;
+					}					
+					stop_pos = (slice_end-in);
+				}				
+					
 				if( is_ok )
 				{
 					tokenize_variable_array( var_val, &var_item_list );
@@ -1189,16 +1217,20 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 {
 	wchar_t *paran_begin=0, *paran_end=0;
-	int len1, len2;
+	int len1;
 	wchar_t prev=0;
 	wchar_t *subcmd;
-	array_list_t sub_res, tail_expand;
+	array_list_t *sub_res, *tail_expand;
 	int i, j;
 	const wchar_t *item_begin;
+	wchar_t *tail_begin = 0;	
+	void *context;
 
 	CHECK( in, 0 );
 	CHECK( out, 0 );
 	
+
+
 	switch( parse_util_locate_cmdsubst(in,
 									   &paran_begin,
 									   &paran_end,
@@ -1217,38 +1249,93 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 			break;
 	}
 
+	context = halloc( 0, 0 );
+
 	len1 = (paran_begin-in);
-	len2 = wcslen(paran_end)-1;
 	prev=0;
 	item_begin = paran_begin+1;
 
-	al_init( &sub_res );
-	if( !(subcmd = malloc( sizeof(wchar_t)*(paran_end-paran_begin) )))
+	sub_res = al_halloc( context );
+	if( !(subcmd = halloc( context, sizeof(wchar_t)*(paran_end-paran_begin) )))
 	{
-		al_destroy( &sub_res );
+		halloc_free( context );	
 		return 0;
 	}
 
 	wcslcpy( subcmd, paran_begin+1, paran_end-paran_begin );
 	subcmd[ paran_end-paran_begin-1]=0;
 
-	exec_subshell( subcmd, &sub_res);
+	exec_subshell( subcmd, sub_res);
 
-	al_init( &tail_expand );
-	expand_cmdsubst( wcsdup(paran_end+1), &tail_expand );
+	tail_begin = paran_end + 1;
+	if( *tail_begin == L'[' )
+	{
+		array_list_t *slice_idx = al_halloc( context );
+		wchar_t *slice_end;
+		
+		if( parse_slice( tail_begin, &slice_end, slice_idx ) )
+		{
+			halloc_free( context );	
+			error( SYNTAX_ERROR, -1, L"Invalid index value" );
+			return 0;
+		}
+		else
+		{
+			array_list_t *sub_res2 = al_halloc( context );
+			tail_begin = slice_end;
+			for( i=0; i<al_get_count( slice_idx ); i++ )
+			{
+				long idx = al_get_long( slice_idx, i );
+				if( idx < 0 )
+				{
+					idx = al_get_count( sub_res ) + idx + 1;
+				}
+				
+				if( idx < 1 || idx > al_get_count( sub_res ) )
+				{
+					halloc_free( context );
+					error( SYNTAX_ERROR, -1, L"Invalid index value" );
+					return 0;
+				}
+				
+				idx = idx-1;
+				
+				al_push( sub_res2, al_get( sub_res, idx ) );
+//				debug( 0, L"Pushing item '%ls' with index %d onto sliced result", al_get( sub_res, idx ), idx );
+				
+				al_set( sub_res, idx, 0 );
+			}
+			al_foreach( sub_res, &free );
+			sub_res = sub_res2;			
+		}		
+		
+	}
 
-    for( i=0; i<al_get_count( &sub_res ); i++ )
+	tail_expand = al_halloc( context );
+
+	/*
+	  Recursively call ourselves to expand any remaining command
+	  substitutions. The result of this recusrive call usiung the tail
+	  of the string is inserted into the tail_expand array list
+	*/
+	expand_cmdsubst( wcsdup(tail_begin), tail_expand );
+
+	/*
+	  Combine the result of the current command substitution with the
+	  result of the recusrive tail expansion
+	*/
+    for( i=0; i<al_get_count( sub_res ); i++ )
     {
         wchar_t *sub_item, *sub_item2;
-        sub_item = (wchar_t *)al_get( &sub_res, i );
+        sub_item = (wchar_t *)al_get( sub_res, i );
         sub_item2 = escape( sub_item, 1 );
 		free(sub_item);
         int item_len = wcslen( sub_item2 );
 
-        for( j=0; j<al_get_count( &tail_expand ); j++ )
+        for( j=0; j<al_get_count( tail_expand ); j++ )
         {
             string_buffer_t whole_item;
-            wchar_t *tail_item = (wchar_t *)al_get( &tail_expand, j );
+            wchar_t *tail_item = (wchar_t *)al_get( tail_expand, j );
 
             sb_init( &whole_item );
 
@@ -1265,12 +1352,8 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
     }
 	free(in);
 
-	al_destroy( &sub_res );
-
-	al_foreach( &tail_expand, &free );
-	al_destroy( &tail_expand );
-
-	free( subcmd );
+	al_foreach( tail_expand, &free );
+	halloc_free( context );	
 	return 1;
 }
 

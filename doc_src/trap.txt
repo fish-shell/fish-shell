@@ -7,8 +7,8 @@
 \subsection trap-description Description
 
 Trap is a shellscript wrapper around the fish event delivery
-framework. IT is defined for backwards compatibility reasons. For
-other uses, it is recommended to define a <a
+framework. It exists for backwards compatibility with Posix
+shells. For other uses, it is recommended to define a <a
 href='index.html#event'>event handler</a>.
 
 - ARG is the command to be executed on signal delivery

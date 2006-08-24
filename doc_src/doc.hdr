@@ -105,11 +105,14 @@ would remove the two files 'cumbersome' and 'filename.txt'.
 Some characters can not be written directly on the command line. For
 these characters, so called escape sequences are provided. These are:
 
-- <code>'\\n'</code>, escapes a newline character
-- <code>'\\t'</code>, escapes the tab character
+- <code>'\\a'</code>, escapes the alert character
 - <code>'\\b'</code>, escapes the backspace character
-- <code>'\\r'</code>, escapes the carriage return character
 - <code>'\\e'</code>, escapes the escape character
+- <code>'\\f'</code>, escapes the form feed character
+- <code>'\\n'</code>, escapes a newline character
+- <code>'\\r'</code>, escapes the carriage return character
+- <code>'\\t'</code>, escapes the tab character
+- <code>'\\v'</code>, escapes the vertical tab character
 - <code>'\\ '</code>, escapes the space character
 - <code>'\\$'</code>, escapes the dollar character
 - <code>'\\\\'</code>, escapes the backslash character
@@ -259,7 +262,7 @@ $argv</code> should be called when ll is invoked. $argv is an array
 variable, which always contains all arguments sent to the function. In
 the example above, these are simply passed on to the ls command. For
 more information on functions, see the documentation for the <a
-href='builtin.html#function'>function</a> builtin.
+href='builtins.html#function'>function</a> builtin.
 
 \subsubsection Autoloading functions
 

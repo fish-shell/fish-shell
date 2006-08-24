@@ -649,7 +649,7 @@ void reader_write_title()
 	  as that of a virtual terminal, we assume it supports setting the
 	  title. Otherwise we check the ttyname.
 	*/
-	if( !term || !contains_str( term, L"xterm", L"screen", L"nxterm", L"rxvt", 0 ) )
+	if( !term || !contains_str( term, L"xterm", L"screen", L"nxterm", L"rxvt", (wchar_t *)0 ) )
 	{
 		char *n = ttyname( STDIN_FILENO );
 		if( strstr( n, "tty" ) || strstr( n, "/vc/") )

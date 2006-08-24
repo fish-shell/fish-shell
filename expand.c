@@ -1232,13 +1232,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 	wcslcpy( subcmd, paran_begin+1, paran_end-paran_begin );
 	subcmd[ paran_end-paran_begin-1]=0;
 
-	if( exec_subshell( subcmd, &sub_res)==-1 )
-	{
-		al_foreach( &sub_res, &free );
-		al_destroy( &sub_res );
-		free( subcmd );
-		return 0;
-	}
+	exec_subshell( subcmd, &sub_res);
 
 	al_init( &tail_expand );
 	expand_cmdsubst( wcsdup(paran_end+1), &tail_expand );

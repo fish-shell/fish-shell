@@ -810,7 +810,13 @@ static int calc_prompt_width( array_list_t *arr )
 			}
 			else if( next[j] == L'\t' )
 			{
-				res=(res+8)&~7;				
+				/*
+				  Assume tab stops every 8 characters if undefined
+				*/
+				if( init_tabs <= 0 )
+					init_tabs = 8;
+				
+				res=( (res/init_tabs)+1 )*init_tabs;
 			}
 			else
 			{
@@ -894,6 +900,7 @@ static void write_cmdline()
 
 void reader_init()
 {
+
 	tcgetattr(0,&shell_modes);        /* get the current terminal modes */
 	memcpy( &saved_modes,
 			&shell_modes,

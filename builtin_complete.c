@@ -364,7 +364,7 @@ static int builtin_complete( wchar_t **argv )
 				}
 				,
 				{
-					L"do-complete", required_argument, 0, 'C'
+					L"do-complete", optional_argument, 0, 'C'
 				}
 				,
 				{

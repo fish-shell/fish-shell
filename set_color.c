@@ -339,7 +339,7 @@ int main( int argc, char **argv )
 
 	if( del_curterm( cur_term ) == ERR )
 	{
-		debug( 0, _(L"Error while closing terminfo") );		
+		fprintf( stderr, _("Error while closing terminfo") );		
 	}
 
 }

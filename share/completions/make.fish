@@ -1,9 +1,18 @@
-#Completions for make
+# Completions for make
 
 function __fish_print_make_targets
 	set files Makefile makefile GNUmakefile
 	grep -h -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $files | cut -d ":" -f 1 | sed -e 's/^ *//;s/ *$//;s/  */\n/g' ^/dev/null
 end
+
+# This completion is a bit ugly.  It reenables file completion on
+# assignments, so e.g. 'make foo FILES=<tab>' will recive standard
+# filename completion.  Unfortunatly, this turns out to be a bit
+# complicated to do.
+
+set -l is_assignment "commandline -ct|grep '..*='" 
+set -l complete_file_assignment '(commandline -ct)(complete --do-complete=this_command_does_not_exist\ (commandline -ct|sed -e \'s/.*=//\'))'
+complete -c make --condition $is_assignment -a $complete_file_assignment
 
 complete -x -c make -a "(__fish_print_make_targets)" -d (N_ "Target")
 complete -r -c make -s f -d (N_ "Use file as makefile") -r

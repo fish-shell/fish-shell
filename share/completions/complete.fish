@@ -12,4 +12,4 @@ complete -c complete -s u -l unauthorative -d (N_ "Option list is not complete")
 complete -c complete -s e -l erase -d (N_ "Remove completion")
 complete -c complete -s h -l help -d (N_ "Display help and exit")
 complete -c complete -s C -l do-complete -d (N_ "Print all completions for the specified commandline")
-complete -c complete -s n -l complete -d (N_ "The completion should only be used if the specified command has a zero exit status") -r
+complete -c complete -s n -l condition -d (N_ "The completion should only be used if the specified command has a zero exit status") -r

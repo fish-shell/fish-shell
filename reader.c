@@ -939,13 +939,14 @@ void reader_exit( int do_exit, int forced )
 	
 }
 
-void repaint()
+void repaint( int skip_return )
 {
 	int steps;
 
 	calc_output();
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
-	writech('\r');
+	if( !skip_return )
+		writech('\r');
 	writembs(clr_eol);
 	write_prompt();
 	write_cmdline();
@@ -975,7 +976,7 @@ static void check_colors()
 	{
 		memcpy( data->color, data->new_color,  sizeof(int)*data->buff_len );
 
-		repaint();
+		repaint( 0 );
 	}
 }
 
@@ -1047,7 +1048,7 @@ static void reader_check_status()
 
 	if( changed )
 	{
-		repaint();
+		repaint( 0 );
 		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 	}
 }
@@ -1108,7 +1109,7 @@ static void remove_backward()
 				data->new_color,
 				sizeof(int) * data->buff_len );
 
-		repaint();
+		repaint( 0 );
 	}
 }
 
@@ -1198,7 +1199,7 @@ static int insert_char( int c )
 		/* Nope, colors are off, so we repaint the entire command line */
 		memcpy( data->color, data->new_color, sizeof(int) * data->buff_len );
 
-		repaint();
+		repaint( 0 );
 	}
 //	wcscpy(data->search_buff,data->buff);
 	return 1;
@@ -1245,7 +1246,7 @@ static int insert_str(wchar_t *str)
 
 		/* repaint */
 
-		repaint();
+		repaint( 0 );
 
 	}
 	return 1;
@@ -1654,7 +1655,7 @@ static int handle_completions( array_list_t *comp )
 			}
 
 			free( prefix );
-			repaint();
+			repaint( 0 );
 
 		}
 
@@ -1800,7 +1801,7 @@ static void handle_history( const wchar_t *new_str )
 	data->buff_pos=wcslen(data->buff);
 	reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
 
-	repaint();
+	repaint( 0 );
 }
 
 /**
@@ -1885,7 +1886,7 @@ static void handle_token_history( int forward, int reset )
 
 		reader_replace_current_token( str );
 		reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
-		repaint();
+		repaint( 0 );
 	}
 	else
 	{
@@ -1958,7 +1959,7 @@ static void handle_token_history( int forward, int reset )
 		{
 			reader_replace_current_token( str );
 			reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
-			repaint();
+			repaint( 0 );
 			al_push( &data->search_prev, str );
 			data->search_pos = al_get_count( &data->search_prev )-1;
 		}
@@ -2051,7 +2052,7 @@ static void move_word( int dir, int erase )
 
 		reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
 
-		repaint();
+		repaint( 0 );
 	}
 	else
 	{
@@ -2076,7 +2077,7 @@ static void move_word( int dir, int erase )
 			}
 		}
 
-		repaint();
+		repaint( 0 );
 //		check_colors();
 	}
 }
@@ -2430,7 +2431,7 @@ wchar_t *reader_readline()
 	data->exec_prompt=1;
 
 	reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
-	repaint();
+	repaint( 1 );
 
 	tcgetattr(0,&old_modes);        /* get the current terminal modes */
 	if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
@@ -2515,7 +2516,7 @@ wchar_t *reader_readline()
 			{
 				data->buff_pos = 0;
 
-				repaint();
+				repaint( 0 );
 				break;
 			}
 
@@ -2524,14 +2525,14 @@ wchar_t *reader_readline()
 			{
 				data->buff_pos = data->buff_len;
 
-				repaint();
+				repaint( 0 );
 				break;
 			}
 
 			case R_NULL:
 			{
 				data->exec_prompt=1;
-				repaint();
+				repaint( 0 );
 				break;
 			}
 
@@ -2600,7 +2601,7 @@ wchar_t *reader_readline()
 				data->buff[data->buff_len]=L'\0';
 
 
-				repaint();
+				repaint( 0 );
 				break;
 			}
 
@@ -2619,7 +2620,7 @@ wchar_t *reader_readline()
 				data->buff_pos=0;
 				reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
 
-				repaint();
+				repaint( 0 );
 				break;
 			}
 
@@ -2630,7 +2631,7 @@ wchar_t *reader_readline()
 				data->buff[data->buff_len]=L'\0';
 				reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
 
-				repaint();
+				repaint( 0 );
 				break;
 			}
 
@@ -2728,7 +2729,7 @@ wchar_t *reader_readline()
 					writech('\r');
 					writembs(clr_eol);
 					writech('\n');
-					repaint();
+					repaint( 0 );
 				}
 
 				break;
@@ -2812,7 +2813,7 @@ wchar_t *reader_readline()
 					}
 					else
 					{
-						repaint();
+						repaint( 0 );
 					}
 				}
 				break;
@@ -2833,7 +2834,7 @@ wchar_t *reader_readline()
 					{
 						data->buff_pos++;
 
-						repaint();
+						repaint( 0 );
 					}
 				}
 				break;
@@ -2844,7 +2845,7 @@ wchar_t *reader_readline()
 				data->buff[0]=0;
 				data->buff_len=0;
 				data->buff_pos=0;
-				repaint();
+				repaint( 0 );
 				break;
 			}
 
@@ -2880,7 +2881,7 @@ wchar_t *reader_readline()
 			{
 				if( clear_screen )
 					writembs( clear_screen );
-				repaint();
+				repaint( 0 );
 				break;
 			}
 

@@ -588,7 +588,7 @@ static void parse_cmd_string( void *context,
 		   Use the empty string as the 'path' for commands that can
 		   not be found.
 		*/
-		path = wcsdup(L"");
+		path = halloc_wcsdup( context, L"");
 	}
 	
 	/* Make sure the path is not included in the command */

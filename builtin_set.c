@@ -455,6 +455,8 @@ static int builtin_set( wchar_t **argv )
 	int slice=0;
 	int i;
 	
+	wchar_t *bad_char;
+	
 	
 	/* Parse options to obtain the requested operation and the modifiers */
 	woptind = 0;
@@ -629,7 +631,7 @@ static int builtin_set( wchar_t **argv )
 		print_variables(0, 0, scope);
 		return 0;
 	} 
-
+	
 	if( !(dest = wcsdup(argv[woptind])))
 	{
 		DIE_MEM();		
@@ -648,6 +650,15 @@ static int builtin_set( wchar_t **argv )
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
+
+	if( (bad_char = wcsvarname( dest ) ) )
+	{
+		sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *bad_char );
+		builtin_print_help( argv[0], sb_err );
+		free( dest );
+		return 1;
+	}
+	
 
 	if( slice && erase && (scope != ENV_USER) )
 	{
@@ -678,7 +689,7 @@ static int builtin_set( wchar_t **argv )
 		al_init(&result);
 
 		tokenize_variable_array( env_get(dest), &result );
-	
+		
 		for( ; woptind<argc; woptind++ )
 		{			
 			if( !parse_index( &indexes, argv[woptind], dest, al_get_count( &result ) ) )

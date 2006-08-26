@@ -1820,20 +1820,27 @@ static int complete_variable( const wchar_t *var,
 
 		if( wcsncmp( var, name, varlen) == 0 )
 		{
-			wchar_t *value = expand_escape_variable( env_get( name ));
+			wchar_t *value_unescaped, *value;
+			
 			wchar_t *blarg;
-			/*
-			  Variable description is 'Variable: VALUE
-			*/
-			blarg = wcsdupcat2( &name[varlen], COMPLETE_SEP_STR, COMPLETE_VAR_DESC_VAL, value, 0 );
 
-			if( blarg )
+			value_unescaped = env_get( name );
+			if( value_unescaped )
 			{
-				res =1;
-				al_push( comp, blarg );
+				value = expand_escape_variable( value_unescaped );
+				/*
+				  Variable description is 'Variable: VALUE
+				*/
+				blarg = wcsdupcat2( &name[varlen], COMPLETE_SEP_STR, COMPLETE_VAR_DESC_VAL, value, 0 );
+				
+				if( blarg )
+				{
+					res =1;
+					al_push( comp, blarg );
+				}
+				free( value );
 			}
-			free( value );
-
+			
 		}
 	}
 

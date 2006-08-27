@@ -336,7 +336,8 @@ doc_src/builtin_doc: $(BUILTIN_DOC_SRC) doc_src/count.txt builtin_help.hdr $(CMD
 	done
 	cd doc_src; doxygen; cd ..;
 	for i in doc_src/builtin_doc/man/man1/*.1; do \
-		sed -i -e "s/\(.\)\\.SH/\1/" $$i; \
+		sed -e "s/\(.\)\\.SH/\1/" <$$i >$$i.tmp; \
+		mv $$i.tmp $$i; \
 	done 
 	touch doc_src/builtin_doc
 

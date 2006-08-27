@@ -441,7 +441,9 @@ static void launch_process( process_t *p )
 {
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 		
-	execve (wcs2str(p->actual_cmd), wcsv2strv( (const wchar_t **) p->argv), env_export_arr( 0 ) );
+	execve ( wcs2str(p->actual_cmd), 
+			 wcsv2strv( (const wchar_t **) p->argv), 
+			 env_export_arr( 0 ) );
 	debug( 0, 
 		   _( L"Failed to execute process '%ls'" ),
 		   p->actual_cmd );
@@ -609,21 +611,21 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 	
 	if( j->job_control )
 	{
-		int new_pgid=0;
-		
 		if (!j->pgid)
 		{
-			new_pgid=1;			
 			j->pgid = p->pid;
 		}
 		
 		if( setpgid (p->pid, j->pgid) )
-		{						
+		{
 			if( getpgid( p->pid) != j->pgid && print_errors )
 			{
 				debug( 1, 
-					   _( L"Could not send process %d from group %d to group %d" ),
-					   p->pid, 
+					   _( L"Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d" ),
+					   p->pid,
+					   p->argv[0],
+					   j->job_id,
+					   j->command,
 					   getpgid( p->pid),
 					   j->pgid );
 				wperror( L"setpgid" );
@@ -670,6 +672,10 @@ void exec( job_t *j )
 	  Set to 1 if something goes wrong while exec:ing the job, in which case the cleanup code will kick in.
 	*/
 	int exec_error=0;
+
+	int needs_keepalive = 0;
+	process_t keepalive;
+	
 
 	CHECK( j, );
 		
@@ -753,6 +759,53 @@ void exec( job_t *j )
 	j->io = io_add( j->io, &pipe_write );
 	
 	signal_block();
+
+	/*
+	  See if we need to create a group keepalive process. This is a
+	  process that we create to make sure that the process group
+	  doesn't die accidentally, and is needed when a block/function is
+	  inside a pipeline.
+	*/
+	
+	if( j->job_control )
+	{
+		for( p=j->first_process; p; p = p->next )
+		{
+			if( (p->type == INTERNAL_BLOCK ) || 
+				(p->type == INTERNAL_FUNCTION ) )
+			{
+				if( p->next )
+				{
+					needs_keepalive = 1;
+					break;
+				}
+			}
+		}
+	}
+		
+	if( needs_keepalive )
+	{
+		keepalive.pid = fork();
+
+		if( keepalive.pid == 0 )
+		{
+			keepalive.pid = getpid();
+			set_child_group( j, &keepalive, 1 );
+			pause();			
+			exit(0);
+		}
+		else if( keepalive.pid < 0 )
+		{
+			/* The fork failed. */
+			debug( 0, FORK_ERROR );
+			wperror (L"fork");
+			exit (1);
+		}
+		else
+		{
+			set_child_group( j, &keepalive, 0 );			
+		}
+	}
 	
 	/*
 	  This loop loops over every process_t in the job, starting it as
@@ -761,7 +814,7 @@ void exec( job_t *j )
 
 	  The loop also has to handle pipelining between the jobs.
 	*/
-	
+
 	for( p=j->first_process; p; p = p->next )
 	{
 		mypipe[1]=-1;
@@ -1190,7 +1243,7 @@ void exec( job_t *j )
 					p->pid = getpid();
 					setup_child_process( j, p );
 					launch_process( p );
-
+					
 					/*
 					  launch_process _never_ returns...
 					*/
@@ -1246,6 +1299,15 @@ void exec( job_t *j )
 		}		
 	}
 
+	/*
+	  The keepalive process is no longer needed, so we terminate it
+	  with extreme prejudice
+	*/
+	if( needs_keepalive )
+	{
+		kill( keepalive.pid, SIGKILL );
+	}
+	
 	signal_unblock();	
 
 	debug( 3, L"Job is constructed" );

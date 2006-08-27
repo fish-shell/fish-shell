@@ -2137,6 +2137,14 @@ void complete( const wchar_t *cmd,
 				int do_file;
 				
 				do_file = complete_param( current_command, prev_token, current_token, comp );
+				
+				/*
+				  If we have found no command specific completions at
+				  all, fall back to using file completions.
+				*/
+				if( !al_get_count( comp ) )
+					do_file = 1;
+				
 				complete_param_expand( current_token, comp, do_file );
 			}
 		}

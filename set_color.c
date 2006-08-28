@@ -153,7 +153,6 @@ int main( int argc, char **argv )
 			
 	while( 1 )
 	{
-#ifdef HAVE_WORKING_GETOPT_LONG
 		static struct option
 			long_options[] =
 			{
@@ -194,11 +193,7 @@ int main( int argc, char **argv )
 							   GETOPT_STRING, 
 							   long_options, 
 							   &opt_index );
-#else
-		int opt = getopt( argc,
-						  argv, 
-						  GETOPT_STRING );
-#endif
+
 		if( opt == -1 )
 			break;
 			

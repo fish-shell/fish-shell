@@ -252,11 +252,6 @@ The fish parser. Contains functions for parsing code.
 
 
 /**
-   Size of the error string buffer
-*/
-#define ERR_STR_SZ 1024
-
-/**
    Datastructure to describe a block type, like while blocks, command substitution blocks, etc.
 */
 struct block_lookup_entry
@@ -350,7 +345,7 @@ io_data_t *block_io;
 static int err_pos;
 
 /** Description of last error */
-static wchar_t err_str[ERR_STR_SZ];
+static string_buffer_t *err_buff=0;
 
 /** Pointer to the current tokenizer */
 static tokenizer *current_tokenizer;
@@ -756,11 +751,17 @@ void error( int ec, int p, const wchar_t *str, ... )
 {
 	va_list va;
 
+	if( !err_buff )
+		err_buff = sb_halloc( global_context );
+	
+
 	error_code = ec;
 	err_pos = p;
 
 	va_start( va, str );
-	vswprintf( err_str, ERR_STR_SZ, str, va );
+	
+	sb_vprintf( err_buff, str, va );
+	
 	va_end( va );
 
 }
@@ -1007,11 +1008,11 @@ void parser_destroy()
 */
 static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 {
-	if( error_code )
+	if( error_code && err_buff )
 	{
 		int tmp;
 
-		sb_printf( target, L"%ls: %ls\n", prefix, err_str );
+		sb_printf( target, L"%ls: %ls\n", prefix, (wchar_t *)err_buff->buff );
 
 		tmp = current_tokenizer_pos;
 		current_tokenizer_pos = err_pos;
@@ -1027,9 +1028,9 @@ static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 */
 static void print_errors_stderr()
 {
-	if( error_code )
+	if( error_code && err_buff )
 	{
-		debug( 0, L"%ls", err_str );
+		debug( 0, L"%ls", (wchar_t *)err_buff->buff );
 		int tmp;
 		
 		tmp = current_tokenizer_pos;

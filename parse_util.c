@@ -592,7 +592,7 @@ int parse_util_load( const wchar_t *cmd,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload )
 {
-	static array_list_t *path_list=0;
+	array_list_t *path_list=0;
 
 	autoload_t *loaded;
 
@@ -678,14 +678,11 @@ int parse_util_load( const wchar_t *cmd,
 	}
 
 
-	if( !path_list )
-		path_list = al_halloc( global_context);
-	
-	al_truncate( path_list, 0 );
+	path_list = al_new( global_context);
 	
 	tokenize_variable_array( path_var, path_list );
 	
-	c = hash_get_count( &loaded->is_loading );
+	c = al_get_count( path_list );
 	
 	hash_put( &loaded->is_loading, cmd, cmd );
 
@@ -700,14 +697,16 @@ int parse_util_load( const wchar_t *cmd,
 	*/
 	hash_remove( &loaded->is_loading, cmd, 0, 0 );
 
+	c2 = al_get_count( path_list );
+
 	al_foreach( path_list, &free );
-	al_truncate( path_list, 0 );
-	
+	al_destroy( path_list );
+	free( path_list );
+
 	/**
 	   Make sure we didn't 'drop' something
 	*/
-
-	c2 = hash_get_count( &loaded->is_loading );
+	
 	assert( c == c2 );
 	
 	return res;

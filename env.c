@@ -457,6 +457,8 @@ void env_init()
 	char **p;
 	struct passwd *pw;
 	wchar_t *uname;
+	wchar_t *version;
+	
 
 	sb_init( &dyn_var );
 	b_init( &export_buffer );
@@ -468,6 +470,7 @@ void env_init()
 	
 	hash_put( &env_read_only, L"status", L"" );
 	hash_put( &env_read_only, L"history", L"" );
+	hash_put( &env_read_only, L"version", L"" );
 	hash_put( &env_read_only, L"_", L"" );
 	hash_put( &env_read_only, L"LINES", L"" );
 	hash_put( &env_read_only, L"COLUMNS", L"" );
@@ -555,6 +558,13 @@ void env_init()
 		env_set( L"USER", uname, ENV_GLOBAL | ENV_EXPORT );
 		free( uname );
 	}
+
+	/*
+	  Set up the version variable
+	*/
+	version = str2wcs( PACKAGE_VERSION );
+	env_set( L"version", version, ENV_GLOBAL );
+	free( version );
 	
 	env_universal_init( env_get( L"FISHD_SOCKET_DIR"), 
 						env_get( L"USER" ),

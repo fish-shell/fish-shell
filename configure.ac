@@ -1,4 +1,14 @@
-# Process this file with autoconf to produce a configure script.
+
+#
+# This file is the main build configuration file for fish. It is used
+# to determine your systems capabilities, and tried to adapt fish to
+# take maximum advantage of the services your system offers.
+#
+# Process this file using the 'autoconf' to produce a working
+# configure script, which should in turn be executed in order to
+# configure the build process. 
+#
+
 AC_INIT(fish,1.21.11,fish-users@lists.sf.net)
 
 # If needed, run autoconf to regenerate the configure file
@@ -11,12 +21,15 @@ if test configure -ot configure.ac; then
 		AC_MSG_NOTICE([running autoconf])
 		if autoconf; then
 			./configure "$@"
+			exit
 		fi
-		exit	
+		exit 1
 	else
-		AC_MSG_ERROR( [cannot find the autoconf program in your path.
+		AC_MSG_ERROR( 
+			[cannot find the autoconf program in your path.
 This program needs to be run whenever the configure.ac file is modified.
-Please install it and try again.])
+Please install it and try again.]
+		)
 	fi
 else
 	AC_MSG_RESULT([no])
@@ -29,11 +42,13 @@ if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
 	AC_MSG_RESULT([yes])
 	if which autoheader >/dev/null; then
 		AC_MSG_NOTICE([running autoheader])
-		autoheader
+		autoheader || exit 1
 	else
-		AC_MSG_ERROR( [cannot find the autoheader program in your path.
+		AC_MSG_ERROR( 
+			[cannot find the autoheader program in your path.
 This program needs to be run whenever the configure.ac file is modified.
-Please install it and try again.])
+Please install it and try again.]
+	   )
 	fi
 else
 	AC_MSG_RESULT([no])
@@ -87,11 +102,15 @@ AC_PROG_INSTALL
 AC_CHECK_PROG( SEQ_FALLBACK, seq, [ ], [seq])
 
 # Optionally drop xsel command
-AC_ARG_WITH( xsel, 
-			 AC_HELP_STRING([--without-xsel],
-             [do not build the xsel program needed for X clipboard integration]),
-			 [xsel=$withval],
-			 [xsel=with_xsel] )
+AC_ARG_WITH( 
+	xsel, 
+	AC_HELP_STRING(
+		[--without-xsel],
+		[do not build the xsel program needed for X clipboard integration]
+	),
+	[xsel=$withval],
+	[xsel=with_xsel] 
+)
 
 if [[ "$xsel" = "with_xsel" ]]; then
     AC_SUBST( XSEL,[xsel-0.9.6/xsel])
@@ -108,32 +127,38 @@ fi
 #
 # Test if the compiler accepts the -std=c99 flag. If so, using it
 # increases the odds of correct compilation, since we want to use the
-# *wprintf functions, which where defined in C99. On some platforms
-# (Solaris 10) adding -std=c99 in turn requires that _POSIX_C_SOURCE
-# be defined to 200112L otherwise several POSIX-specific, non-ISO-C99 
-# types/prototypes are made unavailable e.g. siginfo_t.  Finally,
-# defining _XOPEN_SOURCE to 600 is compatible with the
-# _POSIX_C_SOURCE value and provides a little assurance that
-# extension functions' prototypes are available, e.g. killpg().
+# *wprintf functions, which where defined in C99. 
 
 XCFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -std=c99 -D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"
-AC_MSG_CHECKING(if -std=c99 -D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L works)
-AC_CACHE_VAL(local_cv_has__std_c99,[
-AC_TRY_RUN([
-#include <stdlib.h>
-#include <stdio.h>
+CFLAGS="$CFLAGS -std=c99"
+XCPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS -std=c99"
+AC_MSG_CHECKING(if -std=c99 works)
+AC_CACHE_VAL(
+	local_cv_has__std_c99,
+	[
+		AC_TRY_RUN(
+			[
+				#include <stdlib.h>
+				#include <stdio.h>
 
-int main() {
-return 0;
-}],
-local_cv_has__std_c99=yes,
-local_cv_has__std_c99=no,
-)])
+				int main() 
+				{
+					return 0;
+				}
+			],
+			local_cv_has__std_c99=yes,
+			local_cv_has__std_c99=no,
+		)
+	]
+)
 AC_MSG_RESULT($local_cv_has__std_c99)
 case x$local_cv_has__std_c99 in
-xno) CFLAGS="$XCFLAGS" ;;
+xno) 
+	CFLAGS="$XCFLAGS" 
+	CPPFLAGS="$XCPPFLAGS" ;;
 esac
+
 
 #
 # If we are using gcc, set some flags that increase the odds of the
@@ -144,7 +169,7 @@ if test "$CC" = gcc; then
 
 	#
 	# -fno-optimize-sibling-calls seems to work around a bug where
-	# sending a SIGWINCH to fish on NetBSD causes fish to exit when
+	# sending a SIGWINCH to fish on NetBSD 3.0 causes fish to exit when
 	# compiled with GCC 3.3.3. This is probably either a compiler bug
 	# or a libc bug, but adding this flag seems to fix things for
 	# now. Long term, the real problem should be tracked down and
@@ -171,16 +196,24 @@ fi
 
 AC_MSG_CHECKING([if we are compiling against glibc])
 AC_RUN_IFELSE(
-	[AC_LANG_PROGRAM([
-#include <stdlib.h>
-#ifdef __GLIBC__
-#define STATUS 0
-#else
-#define STATUS 1
-#endif],
-		[return STATUS;])], 
+	[
+		AC_LANG_PROGRAM(
+			[
+				#include <stdlib.h>
+				#ifdef __GLIBC__
+				#define STATUS 0
+				#else
+				#define STATUS 1
+				#endif
+			],
+			[
+				return STATUS;
+			]
+		)
+	], 
 	[glibc=yes], 
-	[glibc=no] )
+	[glibc=no] 
+)
 
 if test "$glibc" = yes; then
 	AC_MSG_RESULT(yes)
@@ -240,6 +273,7 @@ case $target_os in
 esac
 
 
+
 # Set up PREFIX and related preprocessor symbols. Fish needs to know
 # where it will be installed. One of the reasons for this is so that
 # it can make sure the fish installation directory is in the path
@@ -273,8 +307,11 @@ AC_CHECK_FILES([/proc/self/stat])
 # This is ued to tell the wgetopt library to translate strings. This
 # way wgetopt can be dropped into any project without requiring i18n.
 
-AC_DEFINE([HAVE_TRANSLATE_H], [1],
-			  [Define to 1 if the wgettext function should be used for translating strings.])
+AC_DEFINE(
+	[HAVE_TRANSLATE_H], 
+	[1],
+	[Define to 1 if the wgettext function should be used for translating strings.]
+)
 
 # Check for presense of various libraries
 AC_SEARCH_LIBS( gettext, intl,,)
@@ -285,9 +322,135 @@ AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a c
 # Check for presense of various header files
 AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h])
 
-AC_CHECK_HEADER([regex.h],
-				[AC_DEFINE([HAVE_REGEX_H], [1], [Define to 1 if you have the <regex.h> header file.])],
-				[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])])
+AC_CHECK_HEADER(
+	[regex.h],
+	[
+		AC_DEFINE(
+			[HAVE_REGEX_H], 
+			[1], 
+			[Define to 1 if you have the <regex.h> header file.]
+		)],
+		[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])
+	]
+)
+
+#
+# On some platforms (Solaris 10) adding -std=c99 in turn requires that
+# _POSIX_C_SOURCE be defined to 200112L otherwise several
+# POSIX-specific, non-ISO-C99 types/prototypes are made unavailable
+# e.g. siginfo_t.  Defining _XOPEN_SOURCE to 600 is compatible with
+# the _POSIX_C_SOURCE value and provides a little assurance that
+# extension functions' prototypes are available, e.g. killpg().
+#
+# Some other platforms (OS X), will remove types/prototypes/macros
+# e.g. SIGWINCH if either _POSIX_C_SOURCE or _XOPEN_SOURCE is defined.
+#
+# This test adds these macros only if they enable a program that uses
+# both Posix and non-standard features to compile, and that program
+# does not compile without these macros.
+#
+# We try to make everyone happy.
+#
+# The ordering of the various autoconf tests is very critical as well:
+#
+# * This test needs to be run _after_ header detection tests, so that
+# the proper headers are included.
+#
+# * This test needs to be run _before_ testing for the presense of any
+# prototypes or other language functinality.
+#
+# * This test should be (but does not need to be) run after the
+# conditional definition of __EXTENSIONS__, to avoid redundant tests.
+
+XCFLAGS="$CFLAGS"
+
+echo Checking how to use -D_XOPEN_SOURCE=600 and -D_POSIX_C_SOURCE=200112L...
+local_found_posix_switch=no
+
+for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"; do
+
+	AC_MSG_CHECKING( if switches \"$i\" works)
+	CFLAGS="$XCFLAGS $i"
+
+	#
+	# Try to run this program, which should test various extensions
+	# and Posix functionality. If this program works, then everything
+	# should work. Hopefully.
+	#
+
+	AC_TRY_LINK(
+		[
+			#include <stdlib.h>
+			#include <stdio.h>
+			#include <sys/types.h>
+
+			/* POSIX, C89 and C99: POSIX extends this header.
+			 * For: kill(), killpg(), siginfo_t, sigset_t,
+			 * struct sigaction, sigemptyset(), sigaction(),
+			 * SIGIO and SIGWINCH.  */
+			#include <signal.h>
+
+			#ifdef HAVE_SIGINFO_H
+			/* Neither POSIX, C89 nor C99: Solaris-specific (others?).
+			 * For: siginfo_t (also defined by signal.h when in
+			 * POSIX/extensions mode). */
+			#include <siginfo.h>
+			#endif
+
+			#ifdef HAVE_SYS_TERMIOS_H
+			/* Neither POSIX, C89 nor C99: a common extension.
+			 * For: TIOCGWINSZ and struct winsize (under at least
+			 * Solaris, NetBSD and (dual-listed) FreeBSD). */
+			#include <sys/termios.h>
+			#endif
+
+			#ifdef HAVE_SYS_IOCTL_H
+			/* As above (under at least Linux and FreeBSD). */
+			#include <sys/ioctl.h>
+			#endif
+		],
+		[
+			/* Avert high-level optimisation, by making the program's
+			 * return value depend on all tested identifiers. */
+			int ret = 0;
+			/* POSIX only: might be unhidden by _POSIX_C_SOURCE. */
+			struct sigaction sa;
+			sigset_t ss;
+			siginfo_t info;
+			ret += (int)(void *)&info + kill( 0, 0 ) +
+				sigaction( 0, &sa, 0 ) + sigemptyset( &ss );
+			/* Extended-POSIX: might be unhidden by _XOPEN_SOURCE. */
+			ret += killpg( 0, 0 );
+			/* Non-standard: might be hidden by the macros. */
+			{ 
+				struct winsize termsize;
+				ret += (int)(void *)&termsize;
+				ret += SIGWINCH + TIOCGWINSZ + SIGIO; 
+			}
+			return ret;
+
+		],
+		local_cv_use__posix_c_source=yes,
+		local_cv_use__posix_c_source=no,
+	)
+	
+	if test x$local_cv_use__posix_c_source = xyes; then
+		AC_MSG_RESULT( yes )
+		local_found_posix_switch=yes
+		break;
+	else
+		AC_MSG_RESULT( no )
+	fi
+
+done
+
+# We didn't find any combination of switches that worked - revert to
+# no switches and hope that the fallbacks work.  A warning will be
+# printed at the end of the configure script.
+
+if test ! x$local_found_posix_switch = xyes; then
+	CFLAGS="$XCFLAGS"
+fi
 
 # Check for presense of various functions
 AC_CHECK_FUNCS( gettext wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
@@ -303,18 +466,33 @@ AC_CHECK_FUNC( gettext, AC_SUBST( HAVE_GETTEXT, 1 ), AC_SUBST( HAVE_GETTEXT, 0 )
 # Check if realpath accepts null for its second argument
 AC_MSG_CHECKING([if realpath accepts null for its second argument])
 AC_RUN_IFELSE(
-	[AC_LANG_PROGRAM([
-#include <limits.h>
-#include <errno.h>
-#include <stdlib.h>],
-		[int status; char *res; res = realpath( "somefile", 0 ); status = !(res != 0 || errno == ENOENT); exit( status );])], 
+	[
+		AC_LANG_PROGRAM(
+			[
+				#include <limits.h>
+				#include <errno.h>
+				#include <stdlib.h>
+			],
+			[
+				int status; 
+				char *res; 
+				res = realpath( "somefile", 0 ); 
+				status = !(res != 0 || errno == ENOENT); 
+				exit( status );
+			]
+		)
+	], 
 	[have_realpath_null=yes], 
-	[have_realpath_null=no] )
+	[have_realpath_null=no] 
+)
 
 if test "$have_realpath_null" = yes; then
 	AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE_REALPATH_NULL], [1],
-		[Define to 1 if realpath accepts null for its second argument.])
+	AC_DEFINE(
+		[HAVE_REALPATH_NULL], 
+		[1],
+		[Define to 1 if realpath accepts null for its second argument.]
+	)
 else
 	AC_MSG_RESULT(no)
 fi
@@ -323,19 +501,31 @@ fi
 # Check if struct winsize exists
 AC_MSG_CHECKING([if struct winsize and TIOCGWINSZ exist])
 AC_LINK_IFELSE(
-	[AC_LANG_PROGRAM([
-#ifdef HAVE_SYS_TERMIOS_H
-#include <sys/termios.h>
-#endif
+	[
+		AC_LANG_PROGRAM(
+			[
+				#ifdef HAVE_SYS_TERMIOS_H
+				#include <sys/termios.h>
+				#endif
 
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-
-],
-	[struct winsize termsize = {0}; TIOCGWINSZ;])], 
-	[AC_MSG_RESULT(yes); AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct and TIOCGWINSZ macro exist])], 
-	AC_MSG_RESULT(no))
+				#ifdef HAVE_SYS_IOCTL_H
+				#include <sys/ioctl.h>
+				#endif
+			],
+			[
+				struct winsize termsize = {0}; 
+				TIOCGWINSZ;
+			]
+		)
+	], 
+	[
+		AC_MSG_RESULT(yes); 
+		AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct and TIOCGWINSZ macro exist])
+	], 
+	[
+		AC_MSG_RESULT(no)
+	]
+)
 
 # If we have a fwprintf in libc, test that it actually works. As of
 # March 2006, it is broken under Dragonfly BSD.
@@ -343,38 +533,55 @@ if test "$ac_cv_func_fwprintf" = yes; then
 
 	AC_MSG_CHECKING([if fwprintf is broken])
 	AC_RUN_IFELSE(
-		[AC_LANG_PROGRAM([
-#include <stdlib.h>
-#include <stdio.h>
-#include <locale.h>
-#include <wchar.h>
-			],
-			[
-				setlocale( LC_ALL, "" );
-				fwprintf( stderr, L"%ls%ls", L"", L"fish:" );
-			])],
+		[
+			AC_LANG_PROGRAM(
+				[
+					#include <stdlib.h>
+					#include <stdio.h>
+					#include <locale.h>
+					#include <wchar.h>
+				],
+				[
+					setlocale( LC_ALL, "" );
+					fwprintf( stderr, L"%ls%ls", L"", L"fish:" );
+				]
+			)
+		],
 	    [
 			AC_MSG_RESULT(no)
 		],
 	    [
 			AC_MSG_RESULT([yes])
 			AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1], [Define to 1 one if the implemented fwprintf is broken])
-		] )
+		] 
+	)
 
 fi
 
 
 # Check for _nl_msg_cat_cntr symbol
 AC_MSG_CHECKING([for _nl_msg_cat_cntr symbol])
-AC_TRY_LINK([#if HAVE_LIBINTL_H]
-[#include <libintl.h>]
-[#endif],
-[extern int  _nl_msg_cat_cntr;]
-[int tmp = _nl_msg_cat_cntr; exit(tmp);], have__nl_msg_cat_cntr=yes, have__nl_msg_cat_cntr=no)
+AC_TRY_LINK(
+	[
+		#if HAVE_LIBINTL_H
+		#include <libintl.h>
+		#endif
+	],
+	[
+		extern int  _nl_msg_cat_cntr;
+		int tmp = _nl_msg_cat_cntr; 
+		exit(tmp);
+	],
+	have__nl_msg_cat_cntr=yes, 
+	have__nl_msg_cat_cntr=no
+)
 if test "$have__nl_msg_cat_cntr" = yes; then
 	AC_MSG_RESULT(yes)
-	AC_DEFINE([HAVE__NL_MSG_CAT_CNTR], [1],
-	          [Define to 1 if the _nl_msg_cat_cntr symbol is exported.])	
+	AC_DEFINE(
+		[HAVE__NL_MSG_CAT_CNTR], 
+		[1],
+		[Define to 1 if the _nl_msg_cat_cntr symbol is exported.]
+	)	
 else
     AC_MSG_RESULT(no)
 fi
@@ -386,7 +593,11 @@ AC_MSG_CHECKING([If del_curterm is broken])
 case $target_os in
 	*bsd*)
 		AC_MSG_RESULT(yes)
-		AC_DEFINE([HAVE_BROKEN_DEL_CURTERM],[1],[del_curterm si broken, redefine it to a no-op to avoid a double-free bug])
+		AC_DEFINE(
+			[HAVE_BROKEN_DEL_CURTERM],
+			[1],
+			[del_curterm is broken, redefine it to a no-op to avoid a double-free bug]
+		)
 		;;
 	*)
 		AC_MSG_RESULT(no)
@@ -397,5 +608,11 @@ esac
 AC_CONFIG_FILES([Makefile fish.spec doc_src/fish.1 doc_src/Doxyfile seq])
 AC_OUTPUT
 
+if test ! x$local_found_posix_switch = xyes; then
+	echo "Can't find a combination of switches to enable common extensions like detecting window size."
+	echo "Some fish features may be disabled."
+fi
+
 echo "fish is now configured."
 echo "Use 'make' and 'make install' to build and install fish."
+

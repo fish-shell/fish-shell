@@ -9,6 +9,8 @@
 #include <wchar.h>
 #include <limits.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <signal.h>
 
 #ifndef WCHAR_MAX
 /**
@@ -45,6 +47,10 @@ typedef char tputs_arg_t;
 
 #ifndef SIGIO
 #define SIGIO SIGUSR1
+#endif
+
+#ifndef SIGWINCH
+#define SIGIO SIGUSR2
 #endif
 
 #ifndef HAVE_WINSIZE

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-12 17:47+0200\n"
+"POT-Creation-Date: 2006-08-28 14:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: English <fish-users@lists.sf.net>\n"
@@ -16,37 +16,37 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: builtin.c:84
+#: builtin.c:85
 #, c-format
 msgid "Send job %d, '%ls' to foreground\n"
 msgstr "Send job %d, “%ls” to foreground\n"
 
-#: builtin.c:417
+#: builtin.c:463
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
 msgstr "%ls: Can not specify scope when removing block\n"
 
-#: builtin.c:423
+#: builtin.c:469
 #, c-format
 msgid "%ls: No blocks defined\n"
 msgstr "%ls: No blocks defined\n"
 
-#: builtin.c:824 builtin.h:28
+#: builtin.c:879 builtin.h:28
 #, c-format
 msgid "%ls: Invalid combination of options\n"
 msgstr "%ls: Invalid combination of options\n"
 
-#: builtin.c:847
+#: builtin.c:902
 #, c-format
 msgid "%ls: Expected exactly one function name\n"
 msgstr "%ls: Expected exactly one function name\n"
 
-#: builtin.c:857
+#: builtin.c:912
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"
 msgstr "%ls: Function “%ls” does not exist\n"
 
-#: builtin.c:913
+#: builtin.c:969
 msgid ""
 "Current function definitions are:\n"
 "\n"
@@ -54,37 +54,37 @@ msgstr ""
 "Current function definitions are:\n"
 "\n"
 
-#: builtin.c:1060
+#: builtin.c:1121
 #, c-format
 msgid "%ls: Unknown signal '%ls'\n"
 msgstr "%ls: Unknown signal “%ls”\n"
 
-#: builtin.c:1084
+#: builtin.c:1145
 #, c-format
 msgid "%ls: Invalid variable name '%ls'\n"
 msgstr "%ls: Invalid variable name “%ls”\n"
 
-#: builtin.c:1137
+#: builtin.c:1198
 #, c-format
 msgid "%ls: Cannot find calling job for event handler\n"
 msgstr "%ls: Cannot find calling job for event handler\n"
 
-#: builtin.c:1155
+#: builtin.c:1216
 #, c-format
 msgid "%ls: Invalid process id %ls\n"
 msgstr "%ls: Invalid process id %ls\n"
 
-#: builtin.c:1196
+#: builtin.c:1257
 #, c-format
 msgid "%ls: Expected one argument, got %d\n"
 msgstr "%ls: Expected one argument, got %d\n"
 
-#: builtin.c:1204
+#: builtin.c:1265
 #, c-format
 msgid "%ls: Illegal function name '%ls'\n"
 msgstr "%ls: Illegal function name “%ls”\n"
 
-#: builtin.c:1214
+#: builtin.c:1275
 #, c-format
 msgid ""
 "%ls: The name '%ls' is reserved,\n"
@@ -93,116 +93,117 @@ msgstr ""
 "%ls: The name “%ls” is reserved,\n"
 "and can not be used as a function name\n"
 
-#: builtin.c:1229
+#: builtin.c:1290
 msgid "Current functions are: "
 msgstr "Current functions are: "
 
-#: builtin.c:1362
+#: builtin.c:1429
 #, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
 msgstr "%ls: Seed value “%ls” is not a valid number\n"
 
-#: builtin.c:1376
+#: builtin.c:1443
 #, c-format
 msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Expected zero or one argument, got %d\n"
 
-#: builtin.c:1810 main.c:337 parser.c:1328
+#: builtin.c:1877 main.c:345 parser.c:1415
 msgid "Standard input"
 msgstr "Standard input"
 
-#: builtin.c:1853
+#: builtin.c:1920
 msgid "This is a login shell\n"
 msgstr "This is a login shell\n"
 
-#: builtin.c:1855
+#: builtin.c:1922
 msgid "This is not a login shell\n"
 msgstr "This is not a login shell\n"
 
-#: builtin.c:1857
+#: builtin.c:1924
 #, c-format
 msgid "Job control: %ls\n"
 msgstr "Job control: %ls\n"
 
-#: builtin.c:1858
+#: builtin.c:1925
 msgid "Only on interactive jobs"
 msgstr "Only on interactive jobs"
 
-#: builtin.c:1859
+#: builtin.c:1926
 msgid "Never"
 msgstr "Never"
 
-#: builtin.c:1859
+#: builtin.c:1926
 msgid "Always"
 msgstr "Always"
 
-#: builtin.c:1917 builtin.c:2642
+#: builtin.c:1985 builtin.c:2723
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
 msgstr "%ls: Argument “%ls” must be an integer\n"
 
-#: builtin.c:1976
+#: builtin.c:2045
 #, c-format
 msgid "%ls: Could not find home directory\n"
 msgstr "%ls: Could not find home directory\n"
 
-#: builtin.c:1988
+#: builtin.c:2057
 #, c-format
 msgid ""
 "%ls: '%ls' is not a directory or you do not have permission to enter it\n"
 msgstr ""
 "%ls: “%ls” is not a directory or you do not have permission to enter it\n"
 
-#: builtin.c:2003
+#: builtin.c:2072
 #, c-format
 msgid "%ls: '%ls' is not a directory\n"
 msgstr "%ls: “%ls” is not a directory\n"
 
-#: builtin.c:2018
+#: builtin.c:2087
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Could not set PWD variable\n"
 
-#: builtin.c:2042
+#: builtin.c:2111
 #, c-format
 msgid "%ls: Expected at least one argument, got %d\n"
 msgstr "%ls: Expected at least one argument, got %d\n"
 
-#: builtin.c:2055
+#: builtin.c:2124
 #, c-format
 msgid "%ls: '%ls' is not a file\n"
 msgstr "%ls: “%ls” is not a file\n"
 
-#: builtin.c:2093
+#: builtin.c:2162
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
 msgstr "%ls: Error while reading file “%ls”\n"
 
-#: builtin.c:2162 builtin.c:2328
+#: builtin.c:2231 builtin.c:2397
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: There are no suitable jobs\n"
 
-#: builtin.c:2180
+#: builtin.c:2249
 #, c-format
 msgid "%ls: Ambiguous job\n"
 msgstr "%ls: Ambiguous job\n"
 
-#: builtin.c:2186 builtin_jobs.c:302
+#: builtin.c:2255 builtin_jobs.c:304
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
 msgstr "%ls: “%ls” is not a job\n"
 
-#: builtin.c:2203
+#: builtin.c:2272
+#, c-format
 msgid "%ls: Argument '%ls' is not a number\n"
 msgstr "%ls: Argument “%ls” is not a number\n"
 
-#: builtin.c:2214 builtin_jobs.c:317
+#: builtin.c:2283 builtin_jobs.c:319
 #, c-format
 msgid "%ls: No suitable job: %d\n"
 msgstr "%ls: No suitable job: %d\n"
 
-#: builtin.c:2223
+#: builtin.c:2292
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
@@ -211,12 +212,12 @@ msgstr ""
 "%ls: Can't put job %d, “%ls” to foreground because it is not under job "
 "control\n"
 
-#: builtin.c:2277
+#: builtin.c:2346
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
 msgstr "%ls: Unknown job “%ls”\n"
 
-#: builtin.c:2286
+#: builtin.c:2355
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
@@ -225,239 +226,243 @@ msgstr ""
 "%ls: Can't put job %d, “%ls” to background because it is not under job "
 "control\n"
 
-#: builtin.c:2296
+#: builtin.c:2365
 #, c-format
 msgid "Send job %d '%ls' to background\n"
 msgstr "Send job %d “%ls” to background\n"
 
-#: builtin.c:2334
+#: builtin.c:2403
 msgid "(default)"
 msgstr "(default)"
 
-#: builtin.c:2361
+#: builtin.c:2430
 #, c-format
 msgid "%ls: Expected at least two arguments, got %d\n"
 msgstr "%ls: Expected at least two arguments, got %d\n"
 
-#: builtin.c:2369
+#: builtin.c:2438
 #, c-format
 msgid "%ls: '%ls' is not a valid variable name\n"
 msgstr "%ls: “%ls” is not a valid variable name\n"
 
-#: builtin.c:2439
+#: builtin.c:2508
 #, c-format
 msgid "%ls: Not inside of block\n"
 msgstr "%ls: Not inside of block\n"
 
-#: builtin.c:2550
+#: builtin.c:2619
 #, c-format
 msgid "%ls: Not inside of 'if' block\n"
 msgstr "%ls: Not inside of “if” block\n"
 
-#: builtin.c:2602
+#: builtin.c:2671
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Not inside of loop\n"
 
-#: builtin.c:2652 builtin_complete.c:531 builtin.h:65
+#: builtin.c:2733 builtin_complete.c:562 builtin.h:68
 #, c-format
 msgid "%ls: Too many arguments\n"
 msgstr "%ls: Too many arguments\n"
 
-#: builtin.c:2668
+#: builtin.c:2749
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Not inside of function\n"
 
-#: builtin.c:2697
+#: builtin.c:2778
 #, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
 msgstr "%ls: Expected exactly one argument, got %d\n"
 
-#: builtin.c:2728
+#: builtin.c:2809
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
 msgstr "%ls: “case” command while not in switch block\n"
 
-#: builtin.c:2769
+#: builtin.c:2853
 msgid "Exit the shell"
 msgstr "Exit the shell"
 
-#: builtin.c:2773
+#: builtin.c:2857
 msgid "Temporarily block delivery of events"
 msgstr "Temporarily block delivery of events"
 
-#: builtin.c:2777
+#: builtin.c:2861
 msgid "Run a builtin command instead of a function"
 msgstr "Run a builtin command instead of a function"
 
-#: builtin.c:2781
+#: builtin.c:2865
 msgid "Change working directory"
 msgstr "Change working directory"
 
-#: builtin.c:2785
+#: builtin.c:2869
 msgid "Define a new function"
 msgstr "Define a new function"
 
-#: builtin.c:2789
+#: builtin.c:2873
 msgid "List or remove functions"
 msgstr "List or remove functions"
 
-#: builtin.c:2793
+#: builtin.c:2877
 msgid "Edit command specific completions"
 msgstr "Edit command specific completions"
 
-#: builtin.c:2797
+#: builtin.c:2881
 msgid "End a block of commands"
 msgstr "End a block of commands"
 
-#: builtin.c:2801
+#: builtin.c:2885
 msgid "Evaluate block if condition is false"
 msgstr "Evaluate block if condition is false"
 
-#: builtin.c:2805
+#: builtin.c:2889
 msgid "Evaluate parameters as a command"
 msgstr "Evaluate parameters as a command"
 
-#: builtin.c:2809
+#: builtin.c:2893
 msgid "Perform a set of commands multiple times"
 msgstr "Perform a set of commands multiple times"
 
-#: builtin.c:2813
+#: builtin.c:2897
 msgid "Evaluate contents of file"
 msgstr "Evaluate contents of file"
 
-#: builtin.c:2817
+#: builtin.c:2901
 msgid "Handle environment variables"
 msgstr "Handle environment variables"
 
-#: builtin.c:2821
+#: builtin.c:2905
 msgid "Send job to foreground"
 msgstr "Send job to foreground"
 
-#: builtin.c:2825
+#: builtin.c:2909
 msgid "Send job to background"
 msgstr "Send job to background"
 
-#: builtin.c:2829
+#: builtin.c:2913
 msgid "Print currently running jobs"
 msgstr "Print currently running jobs"
 
-#: builtin.c:2833
+#: builtin.c:2917
 msgid "Read a line of input into variables"
 msgstr "Read a line of input into variables"
 
-#: builtin.c:2837
+#: builtin.c:2921
 msgid "Stop the innermost loop"
 msgstr "Stop the innermost loop"
 
-#: builtin.c:2841
+#: builtin.c:2925
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Skip the rest of the current lap of the innermost loop"
 
-#: builtin.c:2845
+#: builtin.c:2929
 msgid "Stop the currently evaluated function"
 msgstr "Stop the currently evaluated function"
 
-#: builtin.c:2849
+#: builtin.c:2933
 msgid "Set or get the commandline"
 msgstr "Set or get the commandline"
 
-#: builtin.c:2853 builtin.c:2857
+#: builtin.c:2937 builtin.c:2941
 msgid "Conditionally execute a block of commands"
 msgstr "Conditionally execute a block of commands"
 
-#: builtin.c:2861
+#: builtin.c:2945
 msgid "Handle fish key bindings"
 msgstr "Handle fish key bindings"
 
-#: builtin.c:2865
+#: builtin.c:2949
 msgid "Generate random number"
 msgstr "Generate random number"
 
-#: builtin.c:2869
+#: builtin.c:2953
 msgid "Return status information about fish"
 msgstr "Return status information about fish"
 
-#: builtin.c:2873
+#: builtin.c:2957
 msgid "Set or get the shells resource usage limits"
 msgstr "Set or get the shells resource usage limits"
 
-#: builtin.c:2877
+#: builtin.c:2961
 msgid "Create a block of code"
 msgstr "Create a block of code"
 
-#: builtin.c:2887
+#: builtin.c:2965
+msgid "Temporarily halt execution and launch a new prompt"
+msgstr "Temporarily halt execution and launch a new prompt"
+
+#: builtin.c:2975
 msgid "Run a program instead of a function or builtin"
 msgstr "Run a program instead of a function or builtin"
 
-#: builtin.c:2891
+#: builtin.c:2979
 msgid "Evaluate block if condition is true"
 msgstr "Evaluate block if condition is true"
 
-#: builtin.c:2895
+#: builtin.c:2983
 msgid "Perform a command multiple times"
 msgstr "Perform a command multiple times"
 
-#: builtin.c:2899
+#: builtin.c:2987
 msgid "Negate exit status of job"
 msgstr "Negate exit status of job"
 
-#: builtin.c:2903
+#: builtin.c:2991
 msgid "Execute command if previous command suceeded"
 msgstr "Execute command if previous command suceeded"
 
-#: builtin.c:2907
+#: builtin.c:2995
 msgid "Execute command if previous command failed"
 msgstr "Execute command if previous command failed"
 
-#: builtin.c:2911
+#: builtin.c:2999
 msgid "Run command in current process"
 msgstr "Run command in current process"
 
-#: builtin.c:3028
+#: builtin.c:3106
 #, c-format
 msgid "Unknown builtin '%ls'"
 msgstr "Unknown builtin “%ls”"
 
-#: builtin_complete.c:273
+#: builtin_complete.c:296
 #, c-format
 msgid "%ls: Command only available in interactive sessions"
 msgstr "%ls: Command only available in interactive sessions"
 
-#: builtin_jobs.c:88
+#: builtin_jobs.c:87
 msgid "Job\tGroup\t"
 msgstr "Job\tGroup\t"
 
-#: builtin_jobs.c:90
+#: builtin_jobs.c:89
 msgid "CPU\t"
 msgstr "CPU\t"
 
-#: builtin_jobs.c:92
+#: builtin_jobs.c:91
 msgid "State\tCommand\n"
 msgstr "State\tCommand\n"
 
-#: builtin_jobs.c:101 proc.c:596
+#: builtin_jobs.c:100 proc.c:612
 msgid "stopped"
 msgstr "stopped"
 
-#: builtin_jobs.c:101
+#: builtin_jobs.c:100
 msgid "running"
 msgstr "running"
 
-#: builtin_jobs.c:116
+#: builtin_jobs.c:115
 msgid "Group\n"
 msgstr "Group\n"
 
-#: builtin_jobs.c:129
+#: builtin_jobs.c:128
 msgid "Procces\n"
 msgstr "Procces\n"
 
-#: builtin_jobs.c:146
+#: builtin_jobs.c:145
 msgid "Command\n"
 msgstr "Command\n"
 
-#: builtin_jobs.c:343
+#: builtin_jobs.c:345
 #, c-format
 msgid "%ls: There are no jobs\n"
 msgstr "%ls: There are no jobs\n"
@@ -468,10 +473,11 @@ msgid "%ls: Tried to change the read-only variable '%ls'\n"
 msgstr "%ls: Tried to change the read-only variable “%ls”\n"
 
 #: builtin_set.c:165
+#, c-format
 msgid "%ls: Unknown error"
 msgstr "%ls: Unknown error"
 
-#: builtin_set.c:216
+#: builtin_set.c:217
 #, c-format
 msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
 msgstr ""
@@ -482,7 +488,7 @@ msgstr ""
 msgid "%ls: Invalid index starting at '%ls'\n"
 msgstr "%ls: Invalid index starting at “%ls”\n"
 
-#: builtin_set.c:609
+#: builtin_set.c:613
 #, c-format
 msgid ""
 "%ls: Erase needs a variable name\n"
@@ -491,11 +497,12 @@ msgstr ""
 "%ls: Erase needs a variable name\n"
 "%ls\n"
 
-#: builtin_set.c:653
+#: builtin_set.c:665
+#, c-format
 msgid "%ls: Can not specify scope when erasing array slice\n"
 msgstr "%ls: Can not specify scope when erasing array slice\n"
 
-#: builtin_set.c:768
+#: builtin_set.c:779
 #, c-format
 msgid ""
 "%ls: Values cannot be specfied with erase\n"
@@ -504,82 +511,82 @@ msgstr ""
 "%ls: Values cannot be specfied with erase\n"
 "%ls\n"
 
-#: complete.c:60
+#: complete.c:61
 msgid "User home"
 msgstr "User home"
 
-#: complete.c:65
+#: complete.c:66
 msgid "Variable: "
 msgstr "Variable: "
 
-#: complete.c:70
+#: complete.c:71
 msgid "Executable"
 msgstr "Executable"
 
-#: complete.c:74
+#: complete.c:75
 msgid "Executable link"
 msgstr "Executable link"
 
-#: complete.c:79
+#: complete.c:80
 msgid "File"
 msgstr "File"
 
-#: complete.c:83
+#: complete.c:84
 msgid "Character device"
 msgstr "Character device"
 
-#: complete.c:87
+#: complete.c:88
 msgid "Block device"
 msgstr "Block device"
 
-#: complete.c:91
+#: complete.c:92
 msgid "Fifo"
 msgstr "Fifo"
 
-#: complete.c:95
+#: complete.c:96
 msgid "Symbolic link"
 msgstr "Symbolic link"
 
-#: complete.c:99
+#: complete.c:100
 msgid "Rotten symbolic link"
 msgstr "Rotten symbolic link"
 
-#: complete.c:103
+#: complete.c:104
 msgid "Symbolic link loop"
 msgstr "Symbolic link loop"
 
-#: complete.c:107
+#: complete.c:108
 msgid "Socket"
 msgstr "Socket"
 
-#: complete.c:111 share/completions/ruby.fish:23
+#: complete.c:112 share/completions/ruby.fish:23
 #: share/functions/__fish_complete_directory.fish:9
 msgid "Directory"
 msgstr "Directory"
 
-#: complete.c:116 share/completions/function.fish:2
+#: complete.c:117 share/completions/function.fish:2
 #: share/completions/functions.fish:2 share/completions/type.fish:10
 msgid "Function"
 msgstr "Function"
 
-#: complete.c:120 share/completions/function.fish:3
+#: complete.c:121 share/completions/function.fish:3
 #: share/completions/type.fish:9
 msgid "Builtin"
 msgstr "Builtin"
 
-#: complete.c:810 complete.c:828
+#: complete.c:818 complete.c:836
 msgid "Unknown option: "
 msgstr "Unknown option: "
 
-#: complete.c:833
+#: complete.c:841
 msgid "Multiple matches for option: "
 msgstr "Multiple matches for option: "
 
-#: env.c:220
+#: env.c:228
 msgid "Could not get user information"
 msgstr "Could not get user information"
 
-#: env.c:311 env.c:319
+#: env.c:321 env.c:325
 msgid "Changing language to English"
 msgstr "Changing language to English"
 
@@ -587,80 +594,85 @@ msgstr "Changing language to English"
 msgid "Tried to pop empty environment stack."
 msgstr "Tried to pop empty environment stack."
 
-#: event.c:212
+#: event.c:215
 #, c-format
 msgid "signal handler for %ls (%ls)"
 msgstr "signal handler for %ls (%ls)"
 
-#: event.c:216
+#: event.c:219
 #, c-format
 msgid "handler for variable '%ls'"
 msgstr "handler for variable “%ls”"
 
-#: event.c:222
+#: event.c:225
 #, c-format
 msgid "exit handler for process %d"
 msgstr "exit handler for process %d"
 
-#: event.c:228 event.c:239
+#: event.c:231 event.c:242
 #, c-format
 msgid "exit handler for job %d, '%ls'"
 msgstr "exit handler for job %d, “%ls”"
 
-#: event.c:230
+#: event.c:233
 #, c-format
 msgid "exit handler for job with process group %d"
 msgstr "exit handler for job with process group %d"
 
-#: event.c:241
+#: event.c:244
 #, c-format
 msgid "exit handler for job with job id %d"
 msgstr "exit handler for job with job id %d"
 
-#: event.c:551
+#: event.c:567
 msgid "Signal list overflow. Signals have been ignored."
 msgstr "Signal list overflow. Signals have been ignored."
 
-#: exec.c:58
+#: exec.c:62
 #, c-format
 msgid "An error occurred while redirecting file descriptor %d"
 msgstr "An error occurred while redirecting file descriptor %d"
 
-#: exec.c:62
+#: exec.c:66
 #, c-format
 msgid "An error occurred while redirecting file '%ls'"
 msgstr "An error occurred while redirecting file “%ls”"
 
-#: exec.c:66
+#: exec.c:70
 msgid "Could not create child process - exiting"
 msgstr "Could not create child process - exiting"
 
-#: exec.c:427
+#: exec.c:268
+#, c-format
+msgid "Failed to close file descriptor %d"
+msgstr "Failed to close file descriptor %d"
+
+#: exec.c:448
 #, c-format
 msgid "Failed to execute process '%ls'"
 msgstr "Failed to execute process “%ls”"
 
-#: exec.c:606
+#: exec.c:624
 #, c-format
-msgid "Could not send process %d from group %d to group %d"
-msgstr "Could not send process %d from group %d to group %d"
+msgid  "Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d"
+msgstr "Could not send process %d, “%ls” in job %d, “%ls” from group %d to group %d"
 
-#: exec.c:624 proc.c:844 proc.c:856
+#: exec.c:645 proc.c:864 proc.c:876
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Could not send job %d (“%ls”) to foreground"
 
-#: exec.c:786
+#: exec.c:876
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Unknown function “%ls”"
 
-#: exec.c:875
+#: exec.c:965
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Unknown input redirection type %d"
 
-#: exec.c:1206
+#: exec.c:1346
 #, c-format
 msgid ""
 "Sent null command to subshell. This is a fish bug. If it can be reproduced, "
@@ -669,229 +681,281 @@ msgstr ""
 "Sent null command to subshell. This is a fish bug. If it can be reproduced, "
 "please send a bug report to %s."
 
-#: expand.c:52
+#: expand.c:53
+#, c-format
+msgid ""
+"The '$' character begins a variable name. The character '%lc', which "
+"directly followed a '$', is not allowed as a part of a variable name, and "
+"variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type 'help expand-variable'."
+msgstr ""
+"The '$' character begins a variable name. The character “%lc”, which "
+"directly followed a '$', is not allowed as a part of a variable name, and "
+"variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type “help expand-variable”."
+
+#: expand.c:58
+msgid ""
+"The '$' begins a variable name. It was given at the end of an argument. "
+"Variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type 'help expand-variable'."
+msgstr ""
+"The '$' begins a variable name. It was given at the end of an argument. "
+"Variable names may not be zero characters long. To learn more about variable "
+"expansion in fish, type “help expand-variable”."
+
+#: expand.c:63
+#, c-format
+msgid ""
+"Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A "
+"bracket, which directly followed a '$', is not allowed as a part of a "
+"variable name, and variable names may not be zero characters long. To learn "
+"more about variable expansion in fish, type 'help expand-variable'."
+msgstr ""
+"Did you mean %ls{$%ls}%ls? The “$” character begins a variable name. A "
+"bracket, which directly followed a “$”, is not allowed as a part of a "
+"variable name, and variable names may not be zero characters long. To learn "
+"more about variable expansion in fish, type “help expand-variable”."
+
+#: expand.c:68
+msgid ""
+"Did you mean (COMMAND)? In fish, the '$' character is only used for "
+"accessing variables. To learn more about command substitution in fish, type "
+"'help expand-command-substitution'."
+msgstr ""
+"Did you mean (COMMAND)? In fish, the '$' character is only used for "
+"accessing variables. To learn more about command substitution in fish, type "
+"“help expand-command-substitution”."
+
+#: expand.c:73
 msgid "Child process"
 msgstr "Child process"
 
-#: expand.c:57
+#: expand.c:78
 msgid "Process"
 msgstr "Process"
 
-#: expand.c:62
+#: expand.c:83
 msgid "Job"
 msgstr "Job"
 
-#: expand.c:67
+#: expand.c:88
 msgid "Job: "
 msgstr "Job: "
 
-#: expand.c:72
+#: expand.c:93
 msgid "Shell process"
 msgstr "Shell process"
 
-#: expand.c:77
+#: expand.c:98
 msgid "Last background job"
 msgstr "Last background job"
 
-#: expand.c:1056
+#: expand.c:1164
 msgid "Mismatched brackets"
 msgstr "Mismatched brackets"
 
-#: input.c:435
+#: fish_pager.c:982 input.c:1494 set_color.c:331
+#,  c-format
+msgid "Error while closing terminfo"
+msgstr "Error while closing terminfo"
+
+#: input.c:462
 msgid "Invalid Control sequence"
 msgstr "Invalid Control sequence"
 
-#: input.c:547
+#: input.c:574
 #, c-format
 msgid "Could not parse sequence '%ls'"
 msgstr "Could not parse sequence “%ls”"
 
-#: input.c:713
+#: input.c:740
 msgid "Invalid sequence - no dash after control\n"
 msgstr "Invalid sequence - no dash after control\n"
 
-#: input.c:743
+#: input.c:770
 msgid "Invalid sequence - Control-nothing?\n"
 msgstr "Invalid sequence - Control-nothing?\n"
 
-#: input.c:758
+#: input.c:785
 msgid "Invalid sequence - no dash after meta\n"
 msgstr "Invalid sequence - no dash after meta\n"
 
-#: input.c:763
+#: input.c:790
 msgid "Invalid sequence - Meta-nothing?"
 msgstr "Invalid sequence - Meta-nothing?"
 
-#: input.c:808
+#: input.c:835
 #, c-format
 msgid "Invalid sequence - '%ls' expanded to zero characters"
 msgstr "Invalid sequence - “%ls” expanded to zero characters"
 
-#: input.c:872
+#: input.c:899
 msgid "Mismatched $endif in inputrc file"
 msgstr "Mismatched $endif in inputrc file"
 
-#: input.c:924
+#: input.c:951
 msgid "Mismatched quote"
 msgstr "Mismatched quote"
 
-#: input.c:938
+#: input.c:965
 msgid "Expected a ':'"
 msgstr "Expected a ':'"
 
-#: input.c:983
+#: input.c:1010
 #, c-format
 msgid "I don't know what '%ls' means"
 msgstr "I don't know what “%ls” means"
 
-#: input.c:987
+#: input.c:1014
 #, c-format
 msgid "Expected end of line, got '%ls'"
 msgstr "Expected end of line, got “%ls”"
 
-#: input.c:992
+#: input.c:1019
 msgid "Syntax: set KEY VALUE"
 msgstr "Syntax: set KEY VALUE"
 
-#: input.c:1058
+#: input.c:1085
 msgid "Unable to parse key binding"
 msgstr "Unable to parse key binding"
 
-#: input.c:1084
+#: input.c:1111
 #, c-format
 msgid "I don't know what %ls means"
 msgstr "I don't know what %ls means"
 
-#: input.c:1110
+#: input.c:1137
 #, c-format
 msgid "Error while reading input information from file '%ls'"
 msgstr "Error while reading input information from file “%ls”"
 
-#: input.c:1363
+#: input.c:1417
 msgid "Could not set up terminal"
 msgstr "Could not set up terminal"
 
-#: io.c:80
+#: io.c:88
 #, c-format
 msgid ""
 "An error occured while reading output from code block on file descriptor %d"
 msgstr ""
 "An error occured while reading output from code block on file descriptor %d"
 
-#: main.c:205
+#: main.c:202
 #, c-format
 msgid "Invalid value '%s' for debug level switch"
 msgstr "Invalid value “%s” for debug level switch"
 
-#: main.c:233 mimedb.c:1274 set_color.c:223
+#: main.c:241 mimedb.c:1265 set_color.c:222
 #, c-format
 msgid "%s, version %s\n"
 msgstr "%s, version %s\n"
 
-#: main.c:258
+#: main.c:269
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Can not use the no-execute mode when running an interactive session"
 
-#: main.c:336
+#: main.c:344
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Error while reading file %ls\n"
 
-#: mimedb.c:161 mimedb.c:175 mimedb.c:1094
+#: mimedb.c:157 mimedb.c:171 mimedb.c:1093
 #, c-format
 msgid "%s: Out of memory\n"
 msgstr "%s: Out of memory\n"
 
-#: mimedb.c:410
+#: mimedb.c:406
 #, c-format
 msgid "%s: Unknown error in munge()\n"
 msgstr "%s: Unknown error in munge()\n"
 
-#: mimedb.c:428
+#: mimedb.c:424
 #, c-format
 msgid "%s: Locale string too long\n"
 msgstr "%s: Locale string too long\n"
 
-#: mimedb.c:490
+#: mimedb.c:486
 #, c-format
 msgid "%s: Could not compile regular expressions\n"
 msgstr "%s: Could not compile regular expressions\n"
 
-#: mimedb.c:596
+#: mimedb.c:595
 #, c-format
 msgid "%s: No description for type %s\n"
 msgstr "%s: No description for type %s\n"
 
-#: mimedb.c:660
+#: mimedb.c:659
 #, c-format
 msgid "%s: Could not parse launcher string '%s'\n"
 msgstr "%s: Could not parse launcher string “%s”\n"
 
-#: mimedb.c:693
+#: mimedb.c:692
 #, c-format
 msgid "%s: Default launcher '%s' does not specify how to start\n"
 msgstr "%s: Default launcher “%s” does not specify how to start\n"
 
-#: mimedb.c:1073
+#: mimedb.c:1072
 #, c-format
 msgid "%s: Unsupported switch '%c' in launch string '%s'\n"
 msgstr "%s: Unsupported switch “%c” in launch string “%s”\n"
 
-#: mimedb.c:1285
+#: mimedb.c:1276
 #, c-format
 msgid "%s: Can not launch a mimetype\n"
 msgstr "%s: Can not launch a mimetype\n"
 
-#: mimedb.c:1317
+#: mimedb.c:1308
 #, c-format
 msgid "%s: Could not parse mimetype from argument '%s'\n"
 msgstr "%s: Could not parse mimetype from argument “%s”\n"
 
-#: mimedb.c:1395
+#: mimedb.c:1386
 #, c-format
 msgid "%s: Unknown error\n"
 msgstr "%s: Unknown error\n"
 
-#: parser.c:63
+#: parser.c:62
 #, c-format
 msgid "If this error can be reproduced, please send a bug report to %s."
 msgstr "If this error can be reproduced, please send a bug report to %s."
 
-#: parser.c:68
+#: parser.c:67
 msgid "This command can not be used in a pipeline"
 msgstr "This command can not be used in a pipeline"
 
-#: parser.c:74
+#: parser.c:73
 #, c-format
 msgid "Tokenizer error: '%ls'"
 msgstr "Tokenizer error: “%ls”"
 
-#: parser.c:79
+#: parser.c:78
 msgid "An additional command is required"
 msgstr "An additional command is required"
 
-#: parser.c:84
+#: parser.c:83
 msgid "Maximum recursion depth reached. Accidental infinite loop?"
 msgstr "Maximum recursion depth reached. Accidental infinite loop?"
 
-#: parser.c:89
+#: parser.c:88
 msgid ""
 "Could not locate end of block. The 'end' command is missing, misspelled or a "
 "';' is missing."
 msgstr ""
 "Could not locate end of block. The “end” command is missing, misspelled or a "
-"';' is missing."
+"“;” is missing."
 
-#: parser.c:94
+#: parser.c:93
 msgid "Maximum number of nested blocks reached."
 msgstr "Maximum number of nested blocks reached."
 
-#: parser.c:99
+#: parser.c:98
 #, c-format
 msgid "Expected a command name, got token of type '%ls'"
 msgstr "Expected a command name, got token of type “%ls”"
 
-#: parser.c:104
+#: parser.c:103
+#, c-format
 msgid ""
 "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or "
 "COMMAND'? See the help section for the 'or' builtin command by typing 'help "
@@ -901,7 +965,8 @@ msgstr ""
 "COMMAND”? See the help section for the “or” builtin command by typing “help "
 "or”."
 
-#: parser.c:109
+#: parser.c:108
+#, c-format
 msgid ""
 "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and "
 "COMMAND'? See the help section for the 'and' builtin command by typing 'help "
@@ -911,50 +976,51 @@ msgstr ""
 "COMMAND”? See the help section for the “and” builtin command by typing “help "
 "and”."
 
-#: parser.c:114
+#: parser.c:113
 #, c-format
 msgid "Illegal command name '%ls'"
 msgstr "Illegal command name “%ls”"
 
-#: parser.c:119
+#: parser.c:118
 #, c-format
 msgid "Warning: No match for wildcard '%ls'. The command will not be executed."
 msgstr ""
 "Warning: No match for wildcard “%ls”. The command will not be executed."
 
-#: parser.c:124
+#: parser.c:123
 msgid "'case' builtin not inside of switch block"
 msgstr "“case” builtin not inside of switch block"
 
-#: parser.c:129
+#: parser.c:128
 msgid "Loop control command while not inside of loop"
 msgstr "Loop control command while not inside of loop"
 
-#: parser.c:134
+#: parser.c:133
 msgid "'else' builtin not inside of if block"
 msgstr "“else” builtin not inside of if block"
 
-#: parser.c:139
+#: parser.c:138
 msgid "'end' command outside of block"
 msgstr "“end” command outside of block"
 
-#: parser.c:144
+#: parser.c:143
 #, c-format
 msgid ""
-"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on "
-"setting variable values, see the help section on the set command by typing "
-"'help set'."
+"Unknown command '%ls'. Did you mean 'set %ls %ls'? For information on "
+"assigning values to variables, see the help section on the set command by "
+"typing 'help set'."
 msgstr ""
-"Unknown command “%ls”. Did you mean “set VARIABLE VALUE”? For information on "
-"setting variable values, see the help section on the set command by typing "
-"“help set”."
+"Unknown command “%ls”. Did you mean “set %ls %ls”? For information on "
+"assigning values to variables, see the help section on the set command by "
+"typing “help set”."
 
-#: parser.c:149
+
+#: parser.c:148
 #, c-format
 msgid "Expected redirection specification, got token of type '%ls'"
 msgstr "Expected redirection specification, got token of type “%ls”"
 
-#: parser.c:154
+#: parser.c:153
 msgid ""
 "Encountered redirection when expecting a command name. Fish does not allow a "
 "redirection operation before a command."
@@ -962,139 +1028,144 @@ msgstr ""
 "Encountered redirection when expecting a command name. Fish does not allow a "
 "redirection operation before a command."
 
-#: parser.c:159
+#: parser.c:158
 msgid "Tried to evaluate null pointer."
 msgstr "Tried to evaluate null pointer."
 
-#: parser.c:164
+#: parser.c:163
 #, c-format
 msgid "Tried to evaluate commands using invalid block type '%ls'"
 msgstr "Tried to evaluate commands using invalid block type “%ls”"
 
-#: parser.c:170
+#: parser.c:169
 #, c-format
 msgid "Unexpected token of type '%ls'"
 msgstr "Unexpected token of type “%ls”"
 
-#: parser.c:175
+#: parser.c:174
 #, c-format
 msgid "Error while searching for command '%ls'"
 msgstr "Error while searching for command “%ls”"
 
-#: parser.c:181
+#: parser.c:180
 msgid "'while' block"
 msgstr "“while” block"
 
-#: parser.c:187
+#: parser.c:185
+#, 
+msgid "Block created by breakpoint"
+msgstr "Block created by breakpoint"
+
+#: parser.c:191
 msgid "'for' block"
 msgstr "“for” block"
 
-#: parser.c:193
+#: parser.c:197
 msgid "'if' conditional block"
 msgstr "“if” conditional block"
 
-#: parser.c:199
+#: parser.c:203
 msgid "function definition block"
 msgstr "function definition block"
 
-#: parser.c:205
+#: parser.c:209
 msgid "function invocation block"
 msgstr "function invocation block"
 
-#: parser.c:211
+#: parser.c:215
 msgid "'switch' block"
 msgstr "“switch” block"
 
-#: parser.c:217
+#: parser.c:221
 msgid "unexecutable block"
 msgstr "unexecutable block"
 
-#: parser.c:223
+#: parser.c:227
 msgid "global root block"
 msgstr "global root block"
 
-#: parser.c:229
+#: parser.c:233
 msgid "command substitution block"
 msgstr "command substitution block"
 
-#: parser.c:235
+#: parser.c:239
 msgid "'begin' unconditional block"
 msgstr "“begin” unconditional block"
 
-#: parser.c:241
+#: parser.c:245
 msgid "Block created by the . builtin"
 msgstr "Block created by the . builtin"
 
-#: parser.c:246
+#: parser.c:250
 msgid "event handler block"
 msgstr "event handler block"
 
-#: parser.c:252
+#: parser.c:256
 msgid "unknown/invalid block"
 msgstr "unknown/invalid block"
 
-#: parser.c:898
+#: parser.c:975
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Could not write profiling information to file “%s”"
 
-#: parser.c:904
+#: parser.c:981
 msgid "Time\tSum\tCommand\n"
 msgstr "Time\tSum\tCommand\n"
 
-#: parser.c:1070
+#: parser.c:1156
 #, c-format
 msgid "in event handler: %ls\n"
 msgstr "in event handler: %ls\n"
 
-#: parser.c:1097
+#: parser.c:1183
 #, c-format
 msgid "in . (source) call of file '%ls',\n"
 msgstr "in . (source) call of file “%ls”,\n"
 
-#: parser.c:1102
+#: parser.c:1188
 #, c-format
 msgid "in function '%ls',\n"
 msgstr "in function “%ls”,\n"
 
-#: parser.c:1107
+#: parser.c:1193
 msgid "in command substitution\n"
 msgstr "in command substitution\n"
 
-#: parser.c:1117
+#: parser.c:1203
 #, c-format
 msgid "\tcalled on line %d of file '%ls',\n"
 msgstr "\tcalled on line %d of file “%ls”,\n"
 
-#: parser.c:1124
+#: parser.c:1210
 msgid "\tcalled on standard input,\n"
 msgstr "\tcalled on standard input,\n"
 
-#: parser.c:1138
+#: parser.c:1224
 #, c-format
 msgid "\twith parameter list '%ls'\n"
 msgstr "\twith parameter list “%ls”\n"
 
-#: parser.c:1322
+#: parser.c:1409
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (line %d): "
 
-#: parser.c:1533
+#: parser.c:1622
 #, c-format
 msgid "Could not expand string '%ls'"
 msgstr "Could not expand string “%ls”"
 
-#: parser.c:1636
+#: parser.c:1726
 msgid "Invalid IO redirection"
 msgstr "Invalid IO redirection"
 
-#: parser.c:1679
+#: parser.c:1770
 #, c-format
 msgid "Requested redirection to something that is not a file descriptor %ls"
 msgstr "Requested redirection to something that is not a file descriptor %ls"
 
-#: parser.c:2100
+#: parser.c:2221
 #, c-format
 msgid ""
 "Variables may not be used as commands. Instead, define a function like "
@@ -1105,7 +1176,7 @@ msgstr ""
 "'function %ls; %ls $argv; end'. See the help section for the function "
 "command by typing “help function”."
 
-#: parser.c:2108
+#: parser.c:2229
 msgid ""
 "Variables may not be used as commands. Instead, define a function. See the "
 "help section for the function command by typing 'help function'."
@@ -1113,7 +1184,7 @@ msgstr ""
 "Variables may not be used as commands. Instead, define a function. See the "
 "help section for the function command by typing “help function”."
 
-#: parser.c:2115
+#: parser.c:2236
 #, c-format
 msgid ""
 "Commands may not contain variables. Use the eval builtin instead, like 'eval "
@@ -1122,134 +1193,143 @@ msgstr ""
 "Commands may not contain variables. Use the eval builtin instead, like 'eval "
 "%ls'. See the help section for the eval command by typing “help eval”."
 
-#: parser.c:2122
+#: parser.c:2243
 #, c-format
 msgid "Unknown command '%ls'"
 msgstr "Unknown command “%ls”"
 
-#: parser.c:2567
+#: parser.c:2688
 msgid "End of block mismatch. Program terminating."
 msgstr "End of block mismatch. Program terminating."
 
-#: proc.c:137
+#: parse_util.c:644
+#, c-format
+msgid ""
+"Could not autoload item '%ls', it is already being autoloaded. This is a "
+"circular dependency in the autoloading scripts, please remove it."
+msgstr "Could not autoload item “%ls”, it is already being autoloaded. This is a "
+"circular dependency in the autoloading scripts, please remove it."
+
+
+#: proc.c:155
 msgid "Job inconsistency"
 msgstr "Job inconsistency"
 
-#: proc.c:455
+#: proc.c:471
 #, c-format
 msgid "Job %d, '%ls' has %ls"
 msgstr "Job %d, “%ls” has %ls"
 
-#: proc.c:541
+#: proc.c:557
 #, c-format
 msgid "%ls: Job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: Job %d, “%ls” terminated by signal %ls (%ls)"
 
-#: proc.c:549
+#: proc.c:565
 #, c-format
 msgid ""
 "%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr ""
 "%ls: Process %d, “%ls” from job %d, “%ls” terminated by signal %ls (%ls)"
 
-#: proc.c:580
+#: proc.c:596
 msgid "ended"
 msgstr "ended"
 
-#: proc.c:804
+#: proc.c:824
 msgid "An error occured while reading output from code block"
 msgstr "An error occured while reading output from code block"
 
-#: proc.c:981 proc.c:991 proc.c:1001
+#: proc.c:1001 proc.c:1011 proc.c:1021
 msgid "Could not return shell to foreground"
 msgstr "Could not return shell to foreground"
 
-#: proc.c:1024
+#: proc.c:1045
 msgid "Job command"
 msgstr "Job command"
 
-#: proc.c:1027 proc.c:1054
+#: proc.c:1048 proc.c:1075
 msgid "Process list pointer"
 msgstr "Process list pointer"
 
-#: proc.c:1030
+#: proc.c:1051
 msgid "Job list pointer"
 msgstr "Job list pointer"
 
-#: proc.c:1041
+#: proc.c:1062
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
 msgstr "More than one job in foreground: job 1: “%ls” job 2: “%ls”"
 
-#: proc.c:1052
+#: proc.c:1073
 msgid "Process argument list"
 msgstr "Process argument list"
 
-#: proc.c:1053
+#: proc.c:1074
 msgid "Process name"
 msgstr "Process name"
 
-#: proc.c:1055
+#: proc.c:1076
 msgid "Process command"
 msgstr "Process command"
 
-#: proc.c:1060
+#: proc.c:1081
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
 msgstr "Job “%ls”, process “%ls” has inconsistent state “stopped”=%d"
 
-#: proc.c:1070
+#: proc.c:1091
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
 msgstr "Job “%ls”, process “%ls” has inconsistent state “completed”=%d"
 
-#: reader.c:328
+#: reader.c:354
 msgid "Could not set terminal mode for new job"
 msgstr "Could not set terminal mode for new job"
 
-#: reader.c:352
+#: reader.c:378
 msgid "Could not set terminal mode for shell"
 msgstr "Could not set terminal mode for shell"
 
-#: reader.c:1636
+#: reader.c:1710
 msgid "Couldn't put the shell in its own process group"
 msgstr "Couldn't put the shell in its own process group"
 
-#: reader.c:1646
+#: reader.c:1720
 msgid "Couldn't grab control of terminal"
 msgstr "Couldn't grab control of terminal"
 
-#: reader.c:2156
+#: reader.c:2258
 msgid "Pop null reader block"
 msgstr "Pop null reader block"
 
-#: reader.c:2305
+#: reader.c:2420
 msgid "There are stopped jobs\n"
 msgstr "There are stopped jobs\n"
 
-#: reader.c:2851
+#: reader.c:2965
 #, c-format
 msgid "Unknown keybinding %d"
 msgstr "Unknown keybinding %d"
 
-#: reader.c:2926
+#: reader.c:3040
 msgid "Error while reading commands"
 msgstr "Error while reading commands"
 
-#: reader.c:2945
+#: reader.c:3059
 msgid "Error while closing input stream"
 msgstr "Error while closing input stream"
 
-#: reader.c:2973
+#: reader.c:3087
 #, c-format
 msgid "Could not convert input. Read %d bytes."
 msgstr "Could not convert input. Read %d bytes."
 
-#: reader.c:2979
+#: reader.c:3093
 msgid "Could not read input stream"
 msgstr "Could not read input stream"
 
-#: reader.c:2988
+#: reader.c:3102
 msgid "Error while opening input stream"
 msgstr "Error while opening input stream"
 
@@ -1267,162 +1347,162 @@ msgstr "The pointer “%ls” is invalid"
 msgid "The pointer '%ls' is null"
 msgstr "The pointer “%ls” is null"
 
-#: set_color.c:250
+#: set_color.c:249
 #, c-format
 msgid "%s: Too many arguments\n"
 msgstr "%s: Too many arguments\n"
 
-#: set_color.c:257
+#: set_color.c:256
 #, c-format
 msgid "%s: Expected an argument\n"
 msgstr "%s: Expected an argument\n"
 
-#: set_color.c:266 set_color.c:274
+#: set_color.c:265 set_color.c:273
 #, c-format
 msgid "%s: Unknown color '%s'\n"
 msgstr "%s: Unknown color “%s”\n"
 
-#: signal.c:62
+#: signal.c:69
 msgid "Terminal hung up"
 msgstr "Terminal hung up"
 
-#: signal.c:70
+#: signal.c:77
 msgid "Quit request from job control (^C)"
 msgstr "Quit request from job control (^C)"
 
-#: signal.c:78
+#: signal.c:85
 msgid "Quit request from job control with core dump (^\\)"
 msgstr "Quit request from job control with core dump (^\\)"
 
-#: signal.c:86
+#: signal.c:93
 msgid "Illegal instruction"
 msgstr "Illegal instruction"
 
-#: signal.c:94
+#: signal.c:101
 msgid "Trace or breakpoint trap"
 msgstr "Trace or breakpoint trap"
 
-#: signal.c:102
+#: signal.c:109
 msgid "Abort"
 msgstr "Abort"
 
-#: signal.c:110
+#: signal.c:117
 msgid "Misaligned address error"
 msgstr "Misaligned address error"
 
-#: signal.c:118
+#: signal.c:125
 msgid "Floating point exception"
 msgstr "Floating point exception"
 
-#: signal.c:126
+#: signal.c:133
 msgid "Forced quit"
 msgstr "Forced quit"
 
-#: signal.c:134
+#: signal.c:141
 msgid "User defined signal 1"
 msgstr "User defined signal 1"
 
-#: signal.c:141
+#: signal.c:148
 msgid "User defined signal 2"
 msgstr "User defined signal 2"
 
-#: signal.c:149
+#: signal.c:156
 msgid "Address boundary error"
 msgstr "Address boundary error"
 
-#: signal.c:157
+#: signal.c:164
 msgid "Broken pipe"
 msgstr "Broken pipe"
 
-#: signal.c:165
+#: signal.c:172
 msgid "Timer expired"
 msgstr "Timer expired"
 
-#: signal.c:173
+#: signal.c:180
 msgid "Polite quit request"
 msgstr "Polite quit request"
 
-#: signal.c:181
+#: signal.c:188
 msgid "Child process status changed"
 msgstr "Child process status changed"
 
-#: signal.c:189
+#: signal.c:196
 msgid "Continue previously stopped process"
 msgstr "Continue previously stopped process"
 
-#: signal.c:197
+#: signal.c:204
 msgid "Forced stop"
 msgstr "Forced stop"
 
-#: signal.c:205
+#: signal.c:212
 msgid "Stop request from job control (^Z)"
 msgstr "Stop request from job control (^Z)"
 
-#: signal.c:213
+#: signal.c:220
 msgid "Stop from terminal input"
 msgstr "Stop from terminal input"
 
-#: signal.c:221
+#: signal.c:228
 msgid "Stop from terminal output"
 msgstr "Stop from terminal output"
 
-#: signal.c:229
+#: signal.c:236
 msgid "Urgent socket condition"
 msgstr "Urgent socket condition"
 
-#: signal.c:237
+#: signal.c:244
 msgid "CPU time limit exceeded"
 msgstr "CPU time limit exceeded"
 
-#: signal.c:245
+#: signal.c:252
 msgid "File size limit exceeded"
 msgstr "File size limit exceeded"
 
-#: signal.c:253
+#: signal.c:260
 msgid "Virtual timer expired"
 msgstr "Virtual timer expired"
 
-#: signal.c:261
+#: signal.c:268
 msgid "Profiling timer expired"
 msgstr "Profiling timer expired"
 
-#: signal.c:269 signal.c:277
+#: signal.c:276 signal.c:284
 msgid "Window size change"
 msgstr "Window size change"
 
-#: signal.c:285
+#: signal.c:292
 msgid "I/O on asynchronous file descriptor is possible"
 msgstr "I/O on asynchronous file descriptor is possible"
 
-#: signal.c:293
+#: signal.c:300
 msgid "Power failure"
 msgstr "Power failure"
 
-#: signal.c:301
+#: signal.c:308
 msgid "Bad system call"
 msgstr "Bad system call"
 
-#: signal.c:309
+#: signal.c:316
 msgid "Information request"
 msgstr "Information request"
 
-#: signal.c:317
+#: signal.c:324
 msgid "Stack fault"
 msgstr "Stack fault"
 
-#: signal.c:325
+#: signal.c:332
 msgid "Emulator trap"
 msgstr "Emulator trap"
 
-#: signal.c:333
+#: signal.c:340
 msgid "Abort (Alias for SIGABRT)"
 msgstr "Abort (Alias for SIGABRT)"
 
-#: signal.c:341
+#: signal.c:348
 msgid "Unused signal"
 msgstr "Unused signal"
 
-#: signal.c:400 signal.c:415
+#: signal.c:407 signal.c:422
 msgid "Unknown"
 msgstr "Unknown"
 
@@ -1430,69 +1510,70 @@ msgstr "Unknown"
 msgid "Unexpected end of token"
 msgstr "Unexpected end of token"
 
-#: tokenizer.c:35
+#: tokenizer.c:36
 msgid "Parenthesis mismatch"
 msgstr "Parenthesis mismatch"
 
-#: tokenizer.c:39
+#: tokenizer.c:41
 msgid "Invalid redirection"
 msgstr "Invalid redirection"
 
-#: tokenizer.c:43
-msgid "Invalid input"
-msgstr "Invalid input"
-
-#: tokenizer.c:48
+#: tokenizer.c:46
 msgid "Can not use fd 0 as pipe output"
 msgstr "Can not use fd 0 as pipe output"
 
-#: tokenizer.c:65
+#: tokenizer.c:63
 msgid "Tokenizer not yet initialized"
 msgstr "Tokenizer not yet initialized"
 
-#: tokenizer.c:66
+#: tokenizer.c:64
 msgid "Tokenizer error"
 msgstr "Tokenizer error"
 
-#: tokenizer.c:67
+#: tokenizer.c:65
 msgid "Invalid token"
 msgstr "Invalid token"
 
-#: tokenizer.c:68
+#: tokenizer.c:66
 msgid "String"
 msgstr "String"
 
-#: tokenizer.c:69
+#: tokenizer.c:67
 msgid "Pipe"
 msgstr "Pipe"
 
-#: tokenizer.c:70
+#: tokenizer.c:68
 msgid "End of command"
 msgstr "End of command"
 
-#: tokenizer.c:71
+#: tokenizer.c:69
 msgid "Redirect output to file"
 msgstr "Redirect output to file"
 
-#: tokenizer.c:72
+#: tokenizer.c:70
 msgid "Append output to file"
 msgstr "Append output to file"
 
-#: tokenizer.c:73
+#: tokenizer.c:71
 msgid "Redirect input to file"
 msgstr "Redirect input to file"
 
-#: tokenizer.c:74
+#: tokenizer.c:72
 msgid "Redirect to file descriptor"
 msgstr "Redirect to file descriptor"
 
-#: tokenizer.c:75
+#: tokenizer.c:73
 msgid "Run job in background"
 msgstr "Run job in background"
 
-#: tokenizer.c:76
+#: tokenizer.c:74
 msgid "Comment"
 msgstr "Comment"
+
+#: tokenizer.c:498
+#, 
+msgid "Invalid token type"
+msgstr "Invalid token type"
 
 #: wgetopt.c:539
 #, c-format
@@ -1539,7 +1620,7 @@ msgstr "%ls: Invalid option -- %lc\n"
 msgid "%ls: Option requires an argument -- %lc\n"
 msgstr "%ls: Option requires an argument -- %lc\n"
 
-#: wildcard.c:350
+#: wildcard.c:352
 msgid "empty"
 msgstr "empty"
 
@@ -1604,51 +1685,6 @@ msgid "An error occurred while setting up pipe"
 msgstr "An error occurred while setting up pipe"
 
 #: expand.h:118
-#, c-format
-msgid ""
-"The '$' character begins a variable name. The character '%lc', which "
-"directly followed a '$', is not allowed as a part of a variable name, and "
-"variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type 'help expand-variable'."
-msgstr ""
-"The '$' character begins a variable name. The character “%lc”, which "
-"directly followed a '$', is not allowed as a part of a variable name, and "
-"variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type “help expand-variable”."
-
-#: expand.h:123
-msgid ""
-"The '$' begins a variable name. It was given at the end of an argument. "
-"Variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type 'help expand-variable'."
-msgstr ""
-"The '$' begins a variable name. It was given at the end of an argument. "
-"Variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type “help expand-variable”."
-
-#: expand.h:128
-msgid ""
-"Did you mean {$VARIABLE}? The '$' character begins a variable name. A "
-"bracket, which directly followed a '$', is not allowed as a part of a "
-"variable name, and variable names may not be zero characters long. To learn "
-"more about variable expansion in fish, type 'help expand-variable'."
-msgstr ""
-"Did you mean {$VARIABLE}? The '$' character begins a variable name. A "
-"bracket, which directly followed a '$', is not allowed as a part of a "
-"variable name, and variable names may not be zero characters long. To learn "
-"more about variable expansion in fish, type “help expand-variable”."
-
-#: expand.h:133
-msgid ""
-"Did you mean (COMMAND)? In fish, the '$' character is only used for "
-"accessing variables. To learn more about command substitution in fish, type "
-"'help expand-command-substitution'."
-msgstr ""
-"Did you mean (COMMAND)? In fish, the '$' character is only used for "
-"accessing variables. To learn more about command substitution in fish, type "
-"“help expand-command-substitution”."
-
-#: expand.h:135
 msgid "Array index out of bounds"
 msgstr "Array index out of bounds"
 
@@ -1668,7 +1704,7 @@ msgstr "Commands to execute when fish exits"
 msgid "Good bye\\n"
 msgstr "Good bye\\n"
 
-#: share/fish:22
+#: share/fish:34
 msgid ""
 "%s: Warning: The directory %s has been removed from your PATH because it "
 "does not exist\\n"
@@ -1676,23 +1712,23 @@ msgstr ""
 "%s: Warning: The directory %s has been removed from your PATH because it "
 "does not exist\\n"
 
-#: share/fish:108
+#: share/fish:120
 msgid "Start service"
 msgstr "Start service"
 
-#: share/fish:109
+#: share/fish:121
 msgid "Stop service"
 msgstr "Stop service"
 
-#: share/fish:110
+#: share/fish:122
 msgid "Print service status"
 msgstr "Print service status"
 
-#: share/fish:111
+#: share/fish:123
 msgid "Stop and then start service"
 msgstr "Stop and then start service"
 
-#: share/fish:112
+#: share/fish:124
 msgid "Reload service configuration"
 msgstr "Reload service configuration"
 
@@ -1718,7 +1754,7 @@ msgstr "Reload service configuration"
 #: share/completions/fusermount.fish:14 share/completions/gprof.fish:32
 #: share/completions/grep.fish:43 share/completions/gunzip.fish:18
 #: share/completions/gzip.fish:20 share/completions/id.fish:7
-#: share/completions/less.fish:41 share/completions/make.fish:26
+#: share/completions/less.fish:41 share/completions/make.fish:35
 #: share/completions/mimedb.fish:9 share/completions/modprobe.fish:14
 #: share/completions/mount.fish:8 share/completions/mplayer.fish:83
 #: share/completions/mv.fish:11 share/completions/nice.fish:4
@@ -1727,14 +1763,15 @@ msgstr "Reload service configuration"
 #: share/completions/python.fish:12 share/completions/rmdir.fish:7
 #: share/completions/rm.fish:9 share/completions/rpm.fish:5
 #: share/completions/ruby.fish:21 share/completions/sed.fish:28
-#: share/completions/sort.fish:20 share/completions/sshfs.fish:24
-#: share/completions/su.fish:11 share/completions/tar.fish:51
-#: share/completions/test.fish:3 share/completions/time.fish:10
-#: share/completions/top.fish:13 share/completions/touch.fish:11
-#: share/completions/umount.fish:10 share/completions/uname.fish:11
-#: share/completions/uniq.fish:14 share/completions/valgrind.fish:26
-#: share/completions/wc.fish:7 share/completions/w.fish:5
-#: share/completions/wget.fish:5 share/completions/who.fish:19
+#: share/completions/set_color.fish:5 share/completions/sort.fish:20
+#: share/completions/sshfs.fish:24 share/completions/su.fish:11
+#: share/completions/tar.fish:51 share/completions/test.fish:3
+#: share/completions/time.fish:10 share/completions/top.fish:13
+#: share/completions/touch.fish:11 share/completions/umount.fish:10
+#: share/completions/uname.fish:11 share/completions/uniq.fish:14
+#: share/completions/valgrind.fish:26 share/completions/wc.fish:7
+#: share/completions/w.fish:5 share/completions/wget.fish:5
+#: share/completions/which.fish:12 share/completions/who.fish:19
 #: share/completions/xargs.fish:18 share/completions/xsel.fish:18
 #: share/completions/yum.fish:54 share/completions/zcat.fish:9
 #: share/functions/__fish_complete_ls.fish:91
@@ -1804,16 +1841,17 @@ msgstr "whatis entry"
 #: share/completions/python.fish:4 share/completions/read.fish:1
 #: share/completions/rmdir.fish:6 share/completions/rm.fish:8
 #: share/completions/rpm.fish:4 share/completions/ruby.fish:8
-#: share/completions/sed.fish:27 share/completions/set.fish:65
-#: share/completions/sort.fish:19 share/completions/sshfs.fish:32
-#: share/completions/sudo.fish:7 share/completions/su.fish:10
-#: share/completions/test.fish:2 share/completions/time.fish:9
-#: share/completions/top.fish:5 share/completions/touch.fish:10
-#: share/completions/trap.fish:4 share/completions/type.fish:2
-#: share/completions/ulimit.fish:13 share/completions/umount.fish:11
-#: share/completions/uname.fish:10 share/completions/uniq.fish:13
-#: share/completions/valgrind.fish:24 share/completions/vared.fish:2
-#: share/completions/wc.fish:6 share/completions/wget.fish:6
+#: share/completions/sed.fish:27 share/completions/set_color.fish:6
+#: share/completions/set.fish:65 share/completions/sort.fish:19
+#: share/completions/sshfs.fish:32 share/completions/sudo.fish:7
+#: share/completions/su.fish:10 share/completions/test.fish:2
+#: share/completions/time.fish:9 share/completions/top.fish:5
+#: share/completions/touch.fish:10 share/completions/trap.fish:4
+#: share/completions/type.fish:2 share/completions/ulimit.fish:13
+#: share/completions/umount.fish:11 share/completions/uname.fish:10
+#: share/completions/uniq.fish:13 share/completions/valgrind.fish:24
+#: share/completions/vared.fish:2 share/completions/wc.fish:6
+#: share/completions/wget.fish:6 share/completions/which.fish:13
 #: share/completions/who.fish:18 share/completions/xargs.fish:8
 #: share/completions/xprop.fish:2 share/completions/xsel.fish:16
 #: share/completions/yum.fish:46 share/completions/zcat.fish:7
@@ -1830,9 +1868,9 @@ msgstr "Print debugging info"
 #: share/completions/apt-listchanges.fish:4
 #: share/completions/apt-proxy-import.fish:4
 #: share/completions/apt-show-source.fish:10 share/completions/arp.fish:2
-#: share/completions/cp.fish:13 share/completions/darcs.fish:64
-#: share/completions/darcs.fish:144 share/completions/darcs.fish:155
-#: share/completions/darcs.fish:160 share/completions/makedepend.fish:11
+#: share/completions/cp.fish:13 share/completions/darcs.fish:47
+#: share/completions/darcs.fish:127 share/completions/darcs.fish:138
+#: share/completions/darcs.fish:143 share/completions/makedepend.fish:11
 #: share/completions/mount.fish:10 share/completions/mv.fish:9
 #: share/completions/ping.fish:26 share/completions/python.fish:11
 #: share/completions/rmdir.fish:5 share/completions/rpm.fish:7
@@ -2043,7 +2081,7 @@ msgstr "Select file to store source cache"
 #: share/completions/apt-cache.fish:21
 #: share/completions/apt-ftparchive.fish:10 share/completions/apt-get.fish:39
 #: share/completions/configure.fish:3 share/completions/gpg.fish:130
-#: share/completions/make.fish:23 share/completions/ping.fish:17
+#: share/completions/make.fish:32 share/completions/ping.fish:17
 #: share/completions/rpm.fish:6 share/completions/ssh.fish:37
 #: share/completions/valgrind.fish:27 share/completions/wget.fish:12
 #: share/completions/zip.fish:13
@@ -2499,7 +2537,7 @@ msgstr "Read filenames from pipe"
 msgid "Select frontend interface"
 msgstr "Select frontend interface"
 
-#: share/completions/apt-listchanges.fish:6 share/completions/darcs.fish:171
+#: share/completions/apt-listchanges.fish:6 share/completions/darcs.fish:154
 msgid "Specify email address"
 msgstr "Specify email address"
 
@@ -2955,7 +2993,7 @@ msgstr "Limiting load factor"
 msgid "Minimum interval in seconds"
 msgstr "Minimum interval in seconds"
 
-#: share/completions/atd.fish:4 share/completions/make.fish:11
+#: share/completions/atd.fish:4 share/completions/make.fish:20
 msgid "Debug mode"
 msgstr "Debug mode"
 
@@ -3711,7 +3749,7 @@ msgid "Same as --preserve=mode,ownership,timestamps"
 msgstr "Same as --preserve=mode,ownership,timestamps"
 
 #: share/completions/cp.fish:19
-msgid  "Preserve the specified attributes and security contexts, if possible"
+msgid "Preserve the specified attributes and security contexts, if possible"
 msgstr "Preserve the specified attributes and security contexts, if possible"
 
 #: share/completions/cp.fish:20
@@ -3978,7 +4016,7 @@ msgstr "Retrieve files even when no match for tag/date"
 msgid "Alter default keyword processing"
 msgstr "Alter default keyword processing"
 
-#: share/completions/cvs.fish:85 share/completions/svn.fish:52
+#: share/completions/cvs.fish:85 share/completions/svn.fish:40
 msgid "Don't recurse"
 msgstr "Don't recurse"
 
@@ -4338,156 +4376,156 @@ msgstr "Create any missing directories"
 msgid "Specify files to ignore"
 msgstr "Specify files to ignore"
 
-#: share/completions/darcs.fish:28
+#: share/completions/darcs.fish:11
 msgid "Create new project"
 msgstr "Create new project"
 
-#: share/completions/darcs.fish:29
+#: share/completions/darcs.fish:12
 msgid "Create a local copy of another repository"
 msgstr "Create a local copy of another repository"
 
-#: share/completions/darcs.fish:30
+#: share/completions/darcs.fish:13
 msgid "Add one or more new files or directories"
 msgstr "Add one or more new files or directories"
 
-#: share/completions/darcs.fish:31
+#: share/completions/darcs.fish:14
 msgid "Remove one or more files or directories from the repository"
 msgstr "Remove one or more files or directories from the repository"
 
-#: share/completions/darcs.fish:32
+#: share/completions/darcs.fish:15
 msgid "Move/rename one or more files or directories"
 msgstr "Move/rename one or more files or directories"
 
-#: share/completions/darcs.fish:33
+#: share/completions/darcs.fish:16
 msgid "Replace a token with a new value for that token"
 msgstr "Replace a token with a new value for that token"
 
-#: share/completions/darcs.fish:34
+#: share/completions/darcs.fish:17
 msgid "Save changes in the working copy to the repository as a patch"
 msgstr "Save changes in the working copy to the repository as a patch"
 
-#: share/completions/darcs.fish:35
+#: share/completions/darcs.fish:18
 msgid "Copy and apply patches from another repository to this one"
 msgstr "Copy and apply patches from another repository to this one"
 
-#: share/completions/darcs.fish:36
+#: share/completions/darcs.fish:19
 msgid "Send by email a bundle of one or more patches"
 msgstr "Send by email a bundle of one or more patches"
 
-#: share/completions/darcs.fish:37
+#: share/completions/darcs.fish:20
 msgid "Apply patches (from an email bundle) to the repository"
 msgstr "Apply patches (from an email bundle) to the repository"
 
-#: share/completions/darcs.fish:38
+#: share/completions/darcs.fish:21
 msgid "Copy and apply patches from this repository to another one"
 msgstr "Copy and apply patches from this repository to another one"
 
-#: share/completions/darcs.fish:39
+#: share/completions/darcs.fish:22
 msgid "Display unrecorded changes in the working copy"
 msgstr "Display unrecorded changes in the working copy"
 
-#: share/completions/darcs.fish:40
+#: share/completions/darcs.fish:23
 msgid "Gives a changelog style summary of the repo history"
 msgstr "Gives a changelog style summary of the repo history"
 
-#: share/completions/darcs.fish:41
+#: share/completions/darcs.fish:24
 msgid "Remove recorded patches without changing the working copy"
 msgstr "Remove recorded patches without changing the working copy"
 
-#: share/completions/darcs.fish:42
+#: share/completions/darcs.fish:25
 msgid "Replace a recorded patch with a better version"
 msgstr "Replace a recorded patch with a better version"
 
-#: share/completions/darcs.fish:43
+#: share/completions/darcs.fish:26
 msgid "Revert to the recorded version (safe the first time only)"
 msgstr "Revert to the recorded version (safe the first time only)"
 
-#: share/completions/darcs.fish:44
+#: share/completions/darcs.fish:27
 msgid "Undo the last revert (may fail if changes after the revert)"
 msgstr "Undo the last revert (may fail if changes after the revert)"
 
-#: share/completions/darcs.fish:45
+#: share/completions/darcs.fish:28
 msgid "Opposite of pull; unsafe if the patch is not in remote repo"
 msgstr "Opposite of pull; unsafe if the patch is not in remote repo"
 
-#: share/completions/darcs.fish:46
+#: share/completions/darcs.fish:29
 msgid "Record an inverse patch without changing the working copy"
 msgstr "Record an inverse patch without changing the working copy"
 
-#: share/completions/darcs.fish:47
+#: share/completions/darcs.fish:30
 msgid "Tag the contents of the repository with a version name"
 msgstr "Tag the contents of the repository with a version name"
 
-#: share/completions/darcs.fish:48
+#: share/completions/darcs.fish:31
 msgid "Set a value for a preference (test, predist, ...)"
 msgstr "Set a value for a preference (test, predist, ...)"
 
-#: share/completions/darcs.fish:49
+#: share/completions/darcs.fish:32
 msgid "Create a diff between two versions of the repository"
 msgstr "Create a diff between two versions of the repository"
 
-#: share/completions/darcs.fish:50
+#: share/completions/darcs.fish:33
 msgid "Display which patch last modified something"
 msgstr "Display which patch last modified something"
 
-#: share/completions/darcs.fish:51
+#: share/completions/darcs.fish:34
 msgid "Optimize the repository"
 msgstr "Optimize the repository"
 
-#: share/completions/darcs.fish:52
+#: share/completions/darcs.fish:35
 msgid "Check the repository for consistency"
 msgstr "Check the repository for consistency"
 
-#: share/completions/darcs.fish:53
+#: share/completions/darcs.fish:36
 msgid "Mark any conflicts to the working copy for manual resolution"
 msgstr "Mark any conflicts to the working copy for manual resolution"
 
-#: share/completions/darcs.fish:54
+#: share/completions/darcs.fish:37
 msgid "Create a distribution tarball"
 msgstr "Create a distribution tarball"
 
-#: share/completions/darcs.fish:55
+#: share/completions/darcs.fish:38
 msgid "Locate the most recent version lacking an error"
 msgstr "Locate the most recent version lacking an error"
 
-#: share/completions/darcs.fish:56
+#: share/completions/darcs.fish:39
 msgid "Repair the corrupted repository"
 msgstr "Repair the corrupted repository"
 
-#: share/completions/darcs.fish:61
+#: share/completions/darcs.fish:44
 msgid "Shows brief description of command and its arguments"
 msgstr "Shows brief description of command and its arguments"
 
-#: share/completions/darcs.fish:62
+#: share/completions/darcs.fish:45
 msgid "Disable this command"
 msgstr "Disable this command"
 
-#: share/completions/darcs.fish:63
+#: share/completions/darcs.fish:46
 msgid "Specify the repository directory in which to run"
 msgstr "Specify the repository directory in which to run"
 
-#: share/completions/darcs.fish:65
+#: share/completions/darcs.fish:48
 msgid "Neither verbose nor quiet output"
 msgstr "Neither verbose nor quiet output"
 
-#: share/completions/darcs.fish:72
+#: share/completions/darcs.fish:55
 msgid "Name of patch"
 msgstr "Name of patch"
 
-#: share/completions/darcs.fish:73 share/completions/darcs.fish:165
+#: share/completions/darcs.fish:56 share/completions/darcs.fish:148
 msgid "Specify author id"
 msgstr "Specify author id"
 
-#: share/completions/darcs.fish:74
+#: share/completions/darcs.fish:57
 msgid "Give patch name and comment in file"
 msgstr "Give patch name and comment in file"
 
-#: share/completions/darcs.fish:75 share/completions/darcs.fish:98
-#: share/completions/darcs.fish:119 share/completions/darcs.fish:164
+#: share/completions/darcs.fish:58 share/completions/darcs.fish:81
+#: share/completions/darcs.fish:102 share/completions/darcs.fish:147
 msgid "Answer yes to all patches"
 msgstr "Answer yes to all patches"
 
-#: share/completions/darcs.fish:76
+#: share/completions/darcs.fish:59
 msgid ""
 "In addition to modifications, look for files that are not boring, and thus "
 "are potentially pending addition"
@@ -4495,75 +4533,75 @@ msgstr ""
 "In addition to modifications, look for files that are not boring, and thus "
 "are potentially pending addition"
 
-#: share/completions/darcs.fish:77
+#: share/completions/darcs.fish:60
 msgid "Delete the logfile when done"
 msgstr "Delete the logfile when done"
 
-#: share/completions/darcs.fish:78 share/completions/darcs.fish:107
-#: share/completions/darcs.fish:134 share/completions/darcs.fish:148
+#: share/completions/darcs.fish:61 share/completions/darcs.fish:90
+#: share/completions/darcs.fish:117 share/completions/darcs.fish:131
 msgid "Don't run the test script"
 msgstr "Don't run the test script"
 
-#: share/completions/darcs.fish:79 share/completions/darcs.fish:106
-#: share/completions/darcs.fish:135 share/completions/darcs.fish:149
+#: share/completions/darcs.fish:62 share/completions/darcs.fish:89
+#: share/completions/darcs.fish:118 share/completions/darcs.fish:132
 msgid "Run the test script"
 msgstr "Run the test script"
 
-#: share/completions/darcs.fish:80 share/completions/darcs.fish:137
-#: share/completions/darcs.fish:150
+#: share/completions/darcs.fish:63 share/completions/darcs.fish:120
+#: share/completions/darcs.fish:133
 msgid "Don't remove the test directory"
 msgstr "Don't remove the test directory"
 
-#: share/completions/darcs.fish:81 share/completions/darcs.fish:138
-#: share/completions/darcs.fish:151
+#: share/completions/darcs.fish:64 share/completions/darcs.fish:121
+#: share/completions/darcs.fish:134
 msgid "Remove the test directory"
 msgstr "Remove the test directory"
 
-#: share/completions/darcs.fish:82 share/completions/darcs.fish:104
-#: share/completions/darcs.fish:128
+#: share/completions/darcs.fish:65 share/completions/darcs.fish:87
+#: share/completions/darcs.fish:111
 msgid "Create compressed patches"
 msgstr "Create compressed patches"
 
-#: share/completions/darcs.fish:83 share/completions/darcs.fish:105
-#: share/completions/darcs.fish:129
+#: share/completions/darcs.fish:66 share/completions/darcs.fish:88
+#: share/completions/darcs.fish:112
 msgid "Don't create compressed patches"
 msgstr "Don't create compressed patches"
 
-#: share/completions/darcs.fish:84
+#: share/completions/darcs.fish:67
 msgid "Expect to receive input from a pipe"
 msgstr "Expect to receive input from a pipe"
 
-#: share/completions/darcs.fish:85 share/completions/darcs.fish:103
-#: share/completions/darcs.fish:130 share/completions/darcs.fish:170
+#: share/completions/darcs.fish:68 share/completions/darcs.fish:86
+#: share/completions/darcs.fish:113 share/completions/darcs.fish:153
 msgid "Prompt user interactively"
 msgstr "Prompt user interactively"
 
-#: share/completions/darcs.fish:86
+#: share/completions/darcs.fish:69
 msgid "Ask for extra dependencies"
 msgstr "Ask for extra dependencies"
 
-#: share/completions/darcs.fish:87
+#: share/completions/darcs.fish:70
 msgid "Don't ask for extra dependencies"
 msgstr "Don't ask for extra dependencies"
 
-#: share/completions/darcs.fish:88
+#: share/completions/darcs.fish:71
 msgid "Edit the long comment by default"
 msgstr "Edit the long comment by default"
 
-#: share/completions/darcs.fish:89
+#: share/completions/darcs.fish:72
 msgid "Don't give a long comment"
 msgstr "Don't give a long comment"
 
-#: share/completions/darcs.fish:90
+#: share/completions/darcs.fish:73
 msgid "Prompt for whether to edit the long comment"
 msgstr "Prompt for whether to edit the long comment"
 
-#: share/completions/darcs.fish:91 share/completions/darcs.fish:110
-#: share/completions/darcs.fish:127
+#: share/completions/darcs.fish:74 share/completions/darcs.fish:93
+#: share/completions/darcs.fish:110
 msgid "Don't trust the file modification times"
 msgstr "Don't trust the file modification times"
 
-#: share/completions/darcs.fish:92
+#: share/completions/darcs.fish:75
 msgid ""
 "Don't look for any files or directories that could be added, and don't add "
 "them automatically"
@@ -4571,247 +4609,247 @@ msgstr ""
 "Don't look for any files or directories that could be added, and don't add "
 "them automatically"
 
-#: share/completions/darcs.fish:96 share/completions/darcs.fish:162
-#: share/completions/darcs.fish:213
+#: share/completions/darcs.fish:79 share/completions/darcs.fish:145
+#: share/completions/darcs.fish:196
 msgid "Select patches matching REGEXP"
 msgstr "Select patches matching REGEXP"
 
-#: share/completions/darcs.fish:97 share/completions/darcs.fish:163
-#: share/completions/darcs.fish:214
+#: share/completions/darcs.fish:80 share/completions/darcs.fish:146
+#: share/completions/darcs.fish:197
 msgid "Select tags matching REGEXP"
 msgstr "Select tags matching REGEXP"
 
-#: share/completions/darcs.fish:99 share/completions/darcs.fish:168
-#: share/completions/darcs.fish:193 share/completions/darcs.fish:218
+#: share/completions/darcs.fish:82 share/completions/darcs.fish:151
+#: share/completions/darcs.fish:176 share/completions/darcs.fish:201
 msgid "Summarize changes"
 msgstr "Summarize changes"
 
-#: share/completions/darcs.fish:100 share/completions/darcs.fish:145
-#: share/completions/darcs.fish:161 share/completions/darcs.fish:220
-#: share/completions/darcs.fish:232 share/completions/darcs.fish:234
+#: share/completions/darcs.fish:83 share/completions/darcs.fish:128
+#: share/completions/darcs.fish:144 share/completions/darcs.fish:203
+#: share/completions/darcs.fish:215 share/completions/darcs.fish:217
 msgid "Suppress informational output"
 msgstr "Suppress informational output"
 
-#: share/completions/darcs.fish:101 share/completions/darcs.fish:169
-#: share/completions/darcs.fish:212
+#: share/completions/darcs.fish:84 share/completions/darcs.fish:152
+#: share/completions/darcs.fish:195
 msgid "Select patches matching PATTERN"
 msgstr "Select patches matching PATTERN"
 
-#: share/completions/darcs.fish:102 share/completions/darcs.fish:125
+#: share/completions/darcs.fish:85 share/completions/darcs.fish:108
 msgid "Use external tool to merge conflicts"
 msgstr "Use external tool to merge conflicts"
 
-#: share/completions/darcs.fish:108 share/completions/darcs.fish:178
-#: share/completions/darcs.fish:233
+#: share/completions/darcs.fish:91 share/completions/darcs.fish:161
+#: share/completions/darcs.fish:216
 msgid "Don't actually take the action"
 msgstr "Don't actually take the action"
 
-#: share/completions/darcs.fish:109 share/completions/darcs.fish:179
-#: share/completions/darcs.fish:194 share/completions/darcs.fish:219
+#: share/completions/darcs.fish:92 share/completions/darcs.fish:162
+#: share/completions/darcs.fish:177 share/completions/darcs.fish:202
 msgid "Don't summarize changes"
 msgstr "Don't summarize changes"
 
-#: share/completions/darcs.fish:111
+#: share/completions/darcs.fish:94
 msgid "Don't automatically fulfill dependencies"
 msgstr "Don't automatically fulfill dependencies"
 
-#: share/completions/darcs.fish:112 share/completions/darcs.fish:182
+#: share/completions/darcs.fish:95 share/completions/darcs.fish:165
 msgid "Set default repository [DEFAULT]"
 msgstr "Set default repository [DEFAULT]"
 
-#: share/completions/darcs.fish:113 share/completions/darcs.fish:183
+#: share/completions/darcs.fish:96 share/completions/darcs.fish:166
 msgid "Don't set default repository"
 msgstr "Don't set default repository"
 
-#: share/completions/darcs.fish:114 share/completions/darcs.fish:139
+#: share/completions/darcs.fish:97 share/completions/darcs.fish:122
 msgid "Make scripts executable"
 msgstr "Make scripts executable"
 
-#: share/completions/darcs.fish:115 share/completions/darcs.fish:140
+#: share/completions/darcs.fish:98 share/completions/darcs.fish:123
 msgid "Don't make scripts executable"
 msgstr "Don't make scripts executable"
 
-#: share/completions/darcs.fish:120
+#: share/completions/darcs.fish:103
 msgid "Verify that the patch was signed by a key in PUBRING"
 msgstr "Verify that the patch was signed by a key in PUBRING"
 
-#: share/completions/darcs.fish:121
+#: share/completions/darcs.fish:104
 msgid "Verify using openSSL with authorized keys from specified file"
 msgstr "Verify using openSSL with authorized keys from specified file"
 
-#: share/completions/darcs.fish:122 share/completions/darcs.fish:184
+#: share/completions/darcs.fish:105 share/completions/darcs.fish:167
 msgid "Specify sendmail command"
 msgstr "Specify sendmail command"
 
-#: share/completions/darcs.fish:123
+#: share/completions/darcs.fish:106
 msgid "Reply to email-based patch using FROM address"
 msgstr "Reply to email-based patch using FROM address"
 
-#: share/completions/darcs.fish:124 share/completions/darcs.fish:173
+#: share/completions/darcs.fish:107 share/completions/darcs.fish:156
 msgid "Mail results to additional EMAIL(s). Requires --reply"
 msgstr "Mail results to additional EMAIL(s). Requires --reply"
 
-#: share/completions/darcs.fish:126
+#: share/completions/darcs.fish:109
 msgid "Don't verify patch signature"
 msgstr "Don't verify patch signature"
 
-#: share/completions/darcs.fish:131
+#: share/completions/darcs.fish:114
 msgid "Mark conflicts"
 msgstr "Mark conflicts"
 
-#: share/completions/darcs.fish:132
+#: share/completions/darcs.fish:115
 msgid "Allow conflicts, but don't mark them"
 msgstr "Allow conflicts, but don't mark them"
 
-#: share/completions/darcs.fish:133
+#: share/completions/darcs.fish:116
 msgid "Fail on patches that create conflicts [DEFAULT]"
 msgstr "Fail on patches that create conflicts [DEFAULT]"
 
-#: share/completions/darcs.fish:136
+#: share/completions/darcs.fish:119
 msgid "Forward unsigned messages without extra header"
 msgstr "Forward unsigned messages without extra header"
 
-#: share/completions/darcs.fish:146
+#: share/completions/darcs.fish:129
 msgid "Check the entire repository"
 msgstr "Check the entire repository"
 
-#: share/completions/darcs.fish:147
+#: share/completions/darcs.fish:130
 msgid "Check patches since latest checkpoint"
 msgstr "Check patches since latest checkpoint"
 
-#: share/completions/darcs.fish:156 share/completions/darcs.fish:227
+#: share/completions/darcs.fish:139 share/completions/darcs.fish:210
 msgid "Don't refuse to add files differing only in case"
 msgstr "Don't refuse to add files differing only in case"
 
-#: share/completions/darcs.fish:166
+#: share/completions/darcs.fish:149
 msgid "Specify output filename"
 msgstr "Specify output filename"
 
-#: share/completions/darcs.fish:167 share/completions/darcs.fish:195
+#: share/completions/darcs.fish:150 share/completions/darcs.fish:178
 msgid "Output patch in a darcs-specific format similar to diff -u"
 msgstr "Output patch in a darcs-specific format similar to diff -u"
 
-#: share/completions/darcs.fish:172
+#: share/completions/darcs.fish:155
 msgid "Specify destination email"
 msgstr "Specify destination email"
 
-#: share/completions/darcs.fish:174
+#: share/completions/darcs.fish:157
 msgid "Sign the patch with your gpg key"
 msgstr "Sign the patch with your gpg key"
 
-#: share/completions/darcs.fish:175
+#: share/completions/darcs.fish:158
 msgid "Sign the patch with a given keyid"
 msgstr "Sign the patch with a given keyid"
 
-#: share/completions/darcs.fish:176
+#: share/completions/darcs.fish:159
 msgid "Sign the patch using openssl with a given private key"
 msgstr "Sign the patch using openssl with a given private key"
 
-#: share/completions/darcs.fish:177
+#: share/completions/darcs.fish:160
 msgid "Do not sign the patch"
 msgstr "Do not sign the patch"
 
-#: share/completions/darcs.fish:180
+#: share/completions/darcs.fish:163
 msgid "Send to context stored in FILENAME"
 msgstr "Send to context stored in FILENAME"
 
-#: share/completions/darcs.fish:181
+#: share/completions/darcs.fish:164
 msgid "Edit the patch bundle description"
 msgstr "Edit the patch bundle description"
 
-#: share/completions/darcs.fish:188
+#: share/completions/darcs.fish:171
 msgid "Use a plain pristine tree [DEFAULT]"
 msgstr "Use a plain pristine tree [DEFAULT]"
 
-#: share/completions/darcs.fish:189
+#: share/completions/darcs.fish:172
 msgid "Use no pristine tree"
 msgstr "Use no pristine tree"
 
-#: share/completions/darcs.fish:196
+#: share/completions/darcs.fish:179
 msgid "Give human readable output"
 msgstr "Give human readable output"
 
-#: share/completions/darcs.fish:197 share/completions/darcs.fish:216
+#: share/completions/darcs.fish:180 share/completions/darcs.fish:199
 msgid "Generate XML formatted output"
 msgstr "Generate XML formatted output"
 
-#: share/completions/darcs.fish:198
+#: share/completions/darcs.fish:181
 msgid "Select patch matching PATTERN"
 msgstr "Select patch matching PATTERN"
 
-#: share/completions/darcs.fish:199
+#: share/completions/darcs.fish:182
 msgid "Select patch matching REGEXP"
 msgstr "Select patch matching REGEXP"
 
-#: share/completions/darcs.fish:200
+#: share/completions/darcs.fish:183
 msgid "Select tag matching REGEXP"
 msgstr "Select tag matching REGEXP"
 
-#: share/completions/darcs.fish:201
+#: share/completions/darcs.fish:184
 msgid "Specify hash of creator patch (see docs)"
 msgstr "Specify hash of creator patch (see docs)"
 
-#: share/completions/darcs.fish:205
+#: share/completions/darcs.fish:188
 msgid "Select changes up to a patch matching PATTERN"
 msgstr "Select changes up to a patch matching PATTERN"
 
-#: share/completions/darcs.fish:206
+#: share/completions/darcs.fish:189
 msgid "Select changes up to a patch matching REGEXP"
 msgstr "Select changes up to a patch matching REGEXP"
 
-#: share/completions/darcs.fish:207
+#: share/completions/darcs.fish:190
 msgid "Select changes up to a tag matching REGEXP"
 msgstr "Select changes up to a tag matching REGEXP"
 
-#: share/completions/darcs.fish:208
+#: share/completions/darcs.fish:191
 msgid "Select changes starting with a patch matching PATTERN"
 msgstr "Select changes starting with a patch matching PATTERN"
 
-#: share/completions/darcs.fish:209
+#: share/completions/darcs.fish:192
 msgid "Select changes starting with a patch matching REGEXP"
 msgstr "Select changes starting with a patch matching REGEXP"
 
-#: share/completions/darcs.fish:210
+#: share/completions/darcs.fish:193
 msgid "Select changes starting with a tag matching REGEXP"
 msgstr "Select changes starting with a tag matching REGEXP"
 
-#: share/completions/darcs.fish:211
+#: share/completions/darcs.fish:194
 msgid "Select the last NUMBER patches"
 msgstr "Select the last NUMBER patches"
 
-#: share/completions/darcs.fish:215
+#: share/completions/darcs.fish:198
 msgid "Give output suitable for get --context"
 msgstr "Give output suitable for get --context"
 
-#: share/completions/darcs.fish:217
+#: share/completions/darcs.fish:200
 msgid "Give human-readable output"
 msgstr "Give human-readable output"
 
-#: share/completions/darcs.fish:221
+#: share/completions/darcs.fish:204
 msgid "Show changes in reverse order"
 msgstr "Show changes in reverse order"
 
-#: share/completions/darcs.fish:222
+#: share/completions/darcs.fish:205
 msgid "Specify the repository URL"
 msgstr "Specify the repository URL"
 
-#: share/completions/darcs.fish:226
+#: share/completions/darcs.fish:209
 msgid "Don't skip boring files"
 msgstr "Don't skip boring files"
 
-#: share/completions/darcs.fish:228
+#: share/completions/darcs.fish:211
 msgid "Add contents of subdirectories"
 msgstr "Add contents of subdirectories"
 
-#: share/completions/darcs.fish:229
+#: share/completions/darcs.fish:212
 msgid "Don't add contents of subdirectories"
 msgstr "Don't add contents of subdirectories"
 
-#: share/completions/darcs.fish:230
+#: share/completions/darcs.fish:213
 msgid "Add files with date appended to avoid conflict. [EXPERIMENTAL]"
 msgstr "Add files with date appended to avoid conflict. [EXPERIMENTAL]"
 
-#: share/completions/darcs.fish:231
+#: share/completions/darcs.fish:214
 msgid "Don't use experimental date appending trick. [DEFAULT]"
 msgstr "Don't use experimental date appending trick. [DEFAULT]"
 
@@ -5270,7 +5308,8 @@ msgstr "Merge specified packages, but don't merge any dependencies"
 msgid ""
 "Skip the packages specified on the command-line that have already been "
 "installed"
-msgstr "Skip the packages specified on the command-line that have already been "
+msgstr ""
+"Skip the packages specified on the command-line that have already been "
 "installed"
 
 #: share/completions/emerge.fish:55
@@ -5285,7 +5324,8 @@ msgstr "Emerge as normal, but don't add packages to the world profile"
 msgid ""
 "Only merge (or pretend to merge) the dependencies of the specified packages, "
 "not the packages themselves"
-msgstr "Only merge (or pretend to merge) the dependencies of the specified packages, "
+msgstr ""
+"Only merge (or pretend to merge) the dependencies of the specified packages, "
 "not the packages themselves"
 
 #: share/completions/emerge.fish:58
@@ -5304,14 +5344,16 @@ msgstr "Resumes the last merge operation"
 msgid ""
 "Matches the search string against the description field as well the "
 "package's name"
-msgstr "Matches the search string against the description field as well the "
+msgstr ""
+"Matches the search string against the description field as well the "
 "package's name"
 
 #: share/completions/emerge.fish:62
 msgid ""
 "Remove the first package in the resume list so that a merge may continue in "
 "the presence of an uncorrectable or inconsequential error"
-msgstr "Remove the first package in the resume list so that a merge may continue in "
+msgstr ""
+"Remove the first package in the resume list so that a merge may continue in "
 "the presence of an uncorrectable or inconsequential error"
 
 #: share/completions/emerge.fish:63
@@ -5327,7 +5369,8 @@ msgid ""
 "Like --usepkg, except this only allows the use of binary packages, and it "
 "will abort the emerge if the package is not available at the time of "
 "dependency calculation"
-msgstr "Like --usepkg, except this only allows the use of binary packages, and it "
+msgstr ""
+"Like --usepkg, except this only allows the use of binary packages, and it "
 "will abort the emerge if the package is not available at the time of "
 "dependency calculation"
 
@@ -5339,7 +5382,8 @@ msgstr "Increased or expanded display of content in portage's displays"
 msgid ""
 "Displays the currently installed version of portage along with other "
 "information useful for quick reference on a system"
-msgstr "Displays the currently installed version of portage along with other "
+msgstr ""
+"Displays the currently installed version of portage along with other "
 "information useful for quick reference on a system"
 
 #: share/completions/fish.fish:1
@@ -5393,6 +5437,11 @@ msgstr "Erase function"
 #: share/completions/functions.fish:3
 msgid "Show hidden functions"
 msgstr "Show hidden functions"
+
+#: share/completions/functions.fish:6
+#, 
+msgid "Test if function is defined"
+msgstr "Test if function is defined"
 
 #: share/completions/fusermount.fish:15 share/completions/sshfs.fish:27
 #: share/completions/sshfs.fish:31
@@ -6297,7 +6346,8 @@ msgstr "Do not fail on MDC integrity protection failure"
 msgid ""
 "Lock the databases the first time a lock is requested and do not release the "
 "lock until the process terminates"
-msgstr "Lock the databases the first time a lock is requested and do not release the "
+msgstr ""
+"Lock the databases the first time a lock is requested and do not release the "
 "lock until the process terminates"
 
 #: share/completions/gpg.fish:276
@@ -6307,7 +6357,8 @@ msgstr "Release the locks every time a lock is no longer needed"
 #: share/completions/gpg.fish:278
 msgid ""
 "Do not create an internal pool file for quicker generation of random numbers"
-msgstr "Do not create an internal pool file for quicker generation of random numbers"
+msgstr ""
+"Do not create an internal pool file for quicker generation of random numbers"
 
 #: share/completions/gpg.fish:279
 msgid "Reset verbose level to 0"
@@ -6325,7 +6376,8 @@ msgstr "Suppress the warning about “using insecure memory”"
 msgid ""
 "Suppress the warning about unsafe file and home directory (--homedir) "
 "permissions"
-msgstr "Suppress the warning about unsafe file and home directory (--homedir) "
+msgstr ""
+"Suppress the warning about unsafe file and home directory (--homedir) "
 "permissions"
 
 #: share/completions/gpg.fish:283
@@ -6360,14 +6412,16 @@ msgstr "Print key listings delimited by colons"
 msgid ""
 "Print key listings delimited by colons (like --with-colons) and print the "
 "public key data"
-msgstr "Print key listings delimited by colons (like --with-colons) and print the "
+msgstr ""
+"Print key listings delimited by colons (like --with-colons) and print the "
 "public key data"
 
 #: share/completions/gpg.fish:296
 msgid ""
 "Same as the command --fingerprint but changes only the format of the output "
 "and may be used together with another command"
-msgstr "Same as the command --fingerprint but changes only the format of the output "
+msgstr ""
+"Same as the command --fingerprint but changes only the format of the output "
 "and may be used together with another command"
 
 #: share/completions/gpg.fish:298
@@ -6378,13 +6432,15 @@ msgstr "Changes the output of the list commands to work faster"
 msgid ""
 "Do not merge primary user ID and primary key in --with-colon listing mode "
 "and print all timestamps as UNIX timestamps"
-msgstr "Do not merge primary user ID and primary key in --with-colon listing mode "
+msgstr ""
+"Do not merge primary user ID and primary key in --with-colon listing mode "
 "and print all timestamps as UNIX timestamps"
 
 #: share/completions/gpg.fish:301
 msgid ""
 "Changes the behaviour of some commands. This is like --dry-run but different"
-msgstr "Changes the behaviour of some commands. This is like --dry-run but different"
+msgstr ""
+"Changes the behaviour of some commands. This is like --dry-run but different"
 
 #: share/completions/gpg.fish:303
 msgid "Display the session key used for one message"
@@ -6406,7 +6462,8 @@ msgstr "Do not prompt for an expiration time"
 msgid ""
 "Don't look at the key ID as stored in the message but try all secret keys in "
 "turn to find the right decryption key"
-msgstr "Don't look at the key ID as stored in the message but try all secret keys in "
+msgstr ""
+"Don't look at the key ID as stored in the message but try all secret keys in "
 "turn to find the right decryption key"
 
 #: share/completions/gpg.fish:313
@@ -6414,7 +6471,8 @@ msgid ""
 "Enable a mode in which filenames of the form -&n, where n is a non-negative "
 "decimal number, refer to the file descriptor n and not to a file with that "
 "name"
-msgstr "Enable a mode in which filenames of the form -&n, where n is a non-negative "
+msgstr ""
+"Enable a mode in which filenames of the form -&n, where n is a non-negative "
 "decimal number, refer to the file descriptor n and not to a file with that "
 "name"
 
@@ -6433,7 +6491,8 @@ msgstr "Remove all entries from the --group list"
 #: share/completions/gpg.fish:319
 msgid ""
 "Don't change the permissions of a secret keyring back to user read/write only"
-msgstr "Don't change the permissions of a secret keyring back to user read/write only"
+msgstr ""
+"Don't change the permissions of a secret keyring back to user read/write only"
 
 #: share/completions/gpg.fish:321
 msgid "Set the list of personal cipher preferences to the specified string"
@@ -6446,7 +6505,8 @@ msgstr "Set the list of personal digest preferences to the specified string"
 #: share/completions/gpg.fish:323
 msgid ""
 "Set the list of personal compression preferences to the specified string"
-msgstr "Set the list of personal compression preferences to the specified string"
+msgstr ""
+"Set the list of personal compression preferences to the specified string"
 
 #: share/completions/gpg.fish:324
 msgid "Set the list of default preferences to the specified string"
@@ -7126,77 +7186,77 @@ msgstr "Line width"
 msgid "Warn about multiple inclusion"
 msgstr "Warn about multiple inclusion"
 
-#: share/completions/make.fish:8
+#: share/completions/make.fish:17
 msgid "Target"
 msgstr "Target"
 
-#: share/completions/make.fish:9
+#: share/completions/make.fish:18
 msgid "Use file as makefile"
 msgstr "Use file as makefile"
 
-#: share/completions/make.fish:10 share/completions/tar.fish:15
+#: share/completions/make.fish:19 share/completions/tar.fish:15
 #: share/functions/cd.fish:5
 msgid "Change directory"
 msgstr "Change directory"
 
-#: share/completions/make.fish:12
+#: share/completions/make.fish:21
 msgid "Environment before makefile"
 msgstr "Environment before makefile"
 
-#: share/completions/make.fish:13
+#: share/completions/make.fish:22
 msgid "Ignore errors"
 msgstr "Ignore errors"
 
-#: share/completions/make.fish:14
+#: share/completions/make.fish:23
 msgid "Search directory for makefile"
 msgstr "Search directory for makefile"
 
-#: share/completions/make.fish:15
+#: share/completions/make.fish:24
 msgid "Number of concurrent jobs"
 msgstr "Number of concurrent jobs"
 
-#: share/completions/make.fish:16
+#: share/completions/make.fish:25
 msgid "Continue after an error"
 msgstr "Continue after an error"
 
-#: share/completions/make.fish:17
+#: share/completions/make.fish:26
 msgid "Start when load drops"
 msgstr "Start when load drops"
 
-#: share/completions/make.fish:18
+#: share/completions/make.fish:27
 msgid "Do not execute commands"
 msgstr "Do not execute commands"
 
-#: share/completions/make.fish:19
+#: share/completions/make.fish:28
 msgid "Ignore specified file"
 msgstr "Ignore specified file"
 
-#: share/completions/make.fish:20
+#: share/completions/make.fish:29
 msgid "Print database"
 msgstr "Print database"
 
-#: share/completions/make.fish:21
+#: share/completions/make.fish:30
 msgid "Question mode"
 msgstr "Question mode"
 
-#: share/completions/make.fish:22
+#: share/completions/make.fish:31
 msgid "Eliminate implicit rules"
 msgstr "Eliminate implicit rules"
 
-#: share/completions/make.fish:24
+#: share/completions/make.fish:33
 msgid "Don't continue after an error"
 msgstr "Don't continue after an error"
 
-#: share/completions/make.fish:25
+#: share/completions/make.fish:34
 msgid "Touch files, don't run commands"
 msgstr "Touch files, don't run commands"
 
-#: share/completions/make.fish:27 share/functions/pwd.fish:7
+#: share/completions/make.fish:36 share/functions/pwd.fish:7
 #: share/functions/pwd.fish:11
 msgid "Print working directory"
 msgstr "Print working directory"
 
-#: share/completions/make.fish:28
+#: share/completions/make.fish:37
 msgid "Pretend file is modified"
 msgstr "Pretend file is modified"
 
@@ -7601,7 +7661,8 @@ msgstr "Increment priority by specified number first"
 msgid ""
 "Make backup files, when patching a file, rename or copy the original instead "
 "of removing it"
-msgstr "Make backup files, when patching a file, rename or copy the original instead "
+msgstr ""
+"Make backup files, when patching a file, rename or copy the original instead "
 "of removing it"
 
 #: share/completions/patch.fish:6
@@ -7635,7 +7696,8 @@ msgstr "Use the #ifdef ... #endif construct to mark changes"
 #: share/completions/patch.fish:13
 msgid ""
 "Print the results of applying the patches without actually changing any files"
-msgstr "Print the results of applying the patches without actually changing any files"
+msgstr ""
+"Print the results of applying the patches without actually changing any files"
 
 #: share/completions/patch.fish:14
 msgid "Interpret the patch file as an ed script"
@@ -7649,7 +7711,8 @@ msgstr "Remove output files that are empty after the patches have been applied"
 msgid ""
 "Assume that the user knows exactly what he/she is doing, and do not ask "
 "questions"
-msgstr "Assume that the user knows exactly what he/she is doing, and do not ask "
+msgstr ""
+"Assume that the user knows exactly what he/she is doing, and do not ask "
 "questions"
 
 #: share/completions/patch.fish:17
@@ -7661,7 +7724,8 @@ msgid ""
 "This option controls patch's actions when a file is under RCS or SCCS "
 "control, and does not exist or is read-only and matches the default version, "
 "or when a file is under ClearCase control and does not exist"
-msgstr "This option controls patch's actions when a file is under RCS or SCCS "
+msgstr ""
+"This option controls patch's actions when a file is under RCS or SCCS "
 "control, and does not exist or is read-only and matches the default version, "
 "or when a file is under ClearCase control and does not exist"
 
@@ -7672,7 +7736,8 @@ msgstr "Read the patch from patchfile"
 #: share/completions/patch.fish:21
 msgid ""
 "Match patterns loosely, in case tabs or spaces have been munged in your files"
-msgstr "Match patterns loosely, in case tabs or spaces have been munged in your files"
+msgstr ""
+"Match patterns loosely, in case tabs or spaces have been munged in your files"
 
 #: share/completions/patch.fish:22
 msgid "Interpret the patch file as a normal diff"
@@ -7690,7 +7755,8 @@ msgstr "Send output to outfile instead of patching files in place"
 msgid ""
 "Strip the smallest prefix containing num leading slashes from each file name "
 "found in the patch file"
-msgstr "Strip the smallest prefix containing num leading slashes from each file name "
+msgstr ""
+"Strip the smallest prefix containing num leading slashes from each file name "
 "found in the patch file"
 
 #: share/completions/patch.fish:26
@@ -7721,7 +7787,8 @@ msgstr "Suppress questions like -f, but make some different assumptions"
 msgid ""
 "Set the modification and access times of patched files from time stamps "
 "given in context diff headers, local time"
-msgstr "Set the modification and access times of patched files from time stamps "
+msgstr ""
+"Set the modification and access times of patched files from time stamps "
 "given in context diff headers, local time"
 
 #: share/completions/patch.fish:33
@@ -7744,7 +7811,8 @@ msgstr "Set internal debugging flags of interest only to patch patchers"
 msgid ""
 "Prefix pref to the basename of a file name when generating its simple backup "
 "file name"
-msgstr "Prefix pref to the basename of a file name when generating its simple backup "
+msgstr ""
+"Prefix pref to the basename of a file name when generating its simple backup "
 "file name"
 
 #: share/completions/patch.fish:39
@@ -7755,7 +7823,8 @@ msgstr "Use suffix as the simple backup suffix"
 msgid ""
 "Set the modification and access times of patched files from time stamps "
 "given in context diff headers, UTC, GMT"
-msgstr "Set the modification and access times of patched files from time stamps "
+msgstr ""
+"Set the modification and access times of patched files from time stamps "
 "given in context diff headers, UTC, GMT"
 
 #: share/completions/perl.fish:1 share/completions/ruby.fish:2
@@ -7964,7 +8033,8 @@ msgstr "Record route"
 msgid ""
 "Bypass the normal routing tables and send directly to a host on an attached "
 "interface"
-msgstr "Bypass the normal routing tables and send directly to a host on an attached "
+msgstr ""
+"Bypass the normal routing tables and send directly to a host on an attached "
 "interface"
 
 #: share/completions/ping.fish:20
@@ -7995,7 +8065,8 @@ msgstr "Print full user-to-user latency"
 msgid ""
 "Specify  a timeout, in seconds, before ping exits regardless of how many "
 "packets have been sent or received"
-msgstr "Specify  a timeout, in seconds, before ping exits regardless of how many "
+msgstr ""
+"Specify  a timeout, in seconds, before ping exits regardless of how many "
 "packets have been sent or received"
 
 #: share/completions/ping.fish:29
@@ -8162,7 +8233,8 @@ msgstr "Make variable scope local"
 msgid ""
 "Make variable scope universal, i.e. share variable with all the users fish "
 "processes on this computer"
-msgstr "Make variable scope universal, i.e. share variable with all the users fish "
+msgstr ""
+"Make variable scope universal, i.e. share variable with all the users fish "
 "processes on this computer"
 
 #: share/completions/read.fish:7 share/completions/set.fish:60
@@ -8233,14 +8305,16 @@ msgstr "Add suggested packages to the transaction set when needed"
 msgid ""
 "Installs or upgrades all the files in the package, even if they aren't "
 "needed (missingok) and don't exist"
-msgstr "Installs or upgrades all the files in the package, even if they aren't "
+msgstr ""
+"Installs or upgrades all the files in the package, even if they aren't "
 "needed (missingok) and don't exist"
 
 #: share/completions/rpm.fish:24
 msgid ""
 "Used with --relocate, permit relocations on all file paths, not just those "
 "OLD-PATH's included in the binary package relocation hint(s)"
-msgstr "Used with --relocate, permit relocations on all file paths, not just those "
+msgstr ""
+"Used with --relocate, permit relocations on all file paths, not just those "
 "OLD-PATH's included in the binary package relocation hint(s)"
 
 #: share/completions/rpm.fish:25
@@ -8267,14 +8341,16 @@ msgstr "Don't check for sufficient disk space before installation"
 msgid ""
 "Allow installation or upgrading even if the architectures of the binary "
 "package and host don't match"
-msgstr "Allow installation or upgrading even if the architectures of the binary "
+msgstr ""
+"Allow installation or upgrading even if the architectures of the binary "
 "package and host don't match"
 
 #: share/completions/rpm.fish:31
 msgid ""
 "Allow installation or upgrading even if the operating systems of the binary "
 "package and host don't match"
-msgstr "Allow installation or upgrading even if the operating systems of the binary "
+msgstr ""
+"Allow installation or upgrading even if the operating systems of the binary "
 "package and host don't match"
 
 #: share/completions/rpm.fish:32
@@ -8349,7 +8425,8 @@ msgstr "Allow an upgrade to replace a newer package with an older one"
 msgid ""
 "Print percentages as files are unpacked from the package archive. This is "
 "intended to make rpm easy to run from other tools"
-msgstr "Print percentages as files are unpacked from the package archive. This is "
+msgstr ""
+"Print percentages as files are unpacked from the package archive. This is "
 "intended to make rpm easy to run from other tools"
 
 #: share/completions/rpm.fish:50
@@ -8446,7 +8523,8 @@ msgstr "List the package specific scriptlets"
 msgid ""
 "Display the states of files in the package. The state of each file is one of "
 "normal, not installed, or replaced"
-msgstr "Display the states of files in the package. The state of each file is one of "
+msgstr ""
+"Display the states of files in the package. The state of each file is one of "
 "normal, not installed, or replaced"
 
 #: share/completions/rpm.fish:71 share/completions/rpm.fish:72
@@ -8465,7 +8543,8 @@ msgstr "Query package owning specified file"
 msgid ""
 "Query package that contains a given file identifier, i.e. the MD5 digest of "
 "the file contents"
-msgstr "Query package that contains a given file identifier, i.e. the MD5 digest of "
+msgstr ""
+"Query package that contains a given file identifier, i.e. the MD5 digest of "
 "the file contents"
 
 #: share/completions/rpm.fish:81
@@ -8476,7 +8555,8 @@ msgstr "Query packages with the specified group"
 msgid ""
 "Query package that contains a given header identifier, i.e. the SHA1 digest "
 "of the immutable header region"
-msgstr "Query package that contains a given header identifier, i.e. the SHA1 digest "
+msgstr ""
+"Query package that contains a given header identifier, i.e. the SHA1 digest "
 "of the immutable header region"
 
 #: share/completions/rpm.fish:83
@@ -8487,7 +8567,8 @@ msgstr "Query an (uninstalled) package in specified file"
 msgid ""
 "Query package that contains a given package identifier, i.e. the MD5 digest "
 "of the combined header and payload contents"
-msgstr "Query package that contains a given package identifier, i.e. the MD5 digest "
+msgstr ""
+"Query package that contains a given package identifier, i.e. the MD5 digest "
 "of the combined header and payload contents"
 
 #: share/completions/rpm.fish:85
@@ -8509,7 +8590,8 @@ msgstr "Query all packages that provide the specified capability"
 #: share/completions/rpm.fish:89
 msgid ""
 "Query all packages that requires the specified capability for functioning"
-msgstr "Query all packages that requires the specified capability for functioning"
+msgstr ""
+"Query all packages that requires the specified capability for functioning"
 
 #: share/completions/rpm.fish:93
 msgid "Don't verify dependencies of packages"
@@ -8631,7 +8713,8 @@ msgstr "Port"
 #: share/completions/scp.fish:31
 msgid ""
 "Preserves modification times, access times, and modes from the original file"
-msgstr "Preserves modification times, access times, and modes from the original file"
+msgstr ""
+"Preserves modification times, access times, and modes from the original file"
 
 #: share/completions/scp.fish:33
 msgid "Recursively copy"
@@ -8681,7 +8764,8 @@ msgstr "Use minimal IO buffers"
 msgid ""
 "Delay opening files until a command containing the related 'w' function is "
 "applied"
-msgstr "Delay opening files until a command containing the related “w” function is "
+msgstr ""
+"Delay opening files until a command containing the related “w” function is "
 "applied"
 
 #: share/completions/service.fish:3
@@ -8699,6 +8783,15 @@ msgstr "Change background color"
 #: share/completions/set_color.fish:3 share/completions/set.fish:73
 msgid "Make font bold"
 msgstr "Make font bold"
+
+#: share/completions/set_color.fish:4
+msgid "Underline text"
+msgstr ""
+
+#: share/completions/set_color.fish:7
+#, 
+msgid "Print a list of all accepted color names"
+msgstr "Print a list of all accepted color names"
 
 #: share/completions/set.fish:58
 msgid "Erase variable"
@@ -8911,7 +9004,8 @@ msgstr "Set which jobs are out under job control"
 #: share/completions/status.fish:10
 msgid ""
 "Print a list of all function calls leading up to running the current command"
-msgstr "Print a list of all function calls leading up to running the current command"
+msgstr ""
+"Print a list of all function calls leading up to running the current command"
 
 #: share/completions/sudo.fish:5
 msgid "Command to run"
@@ -8937,235 +9031,235 @@ msgstr "Pass -f to the shell"
 msgid "Preserve environment"
 msgstr "Preserve environment"
 
-#: share/completions/svn.fish:21
+#: share/completions/svn.fish:9
 msgid "Place files or directories under version control"
 msgstr "Place files or directories under version control"
 
-#: share/completions/svn.fish:22
+#: share/completions/svn.fish:10
 msgid "Output files/URLs with revision and author information inline"
 msgstr "Output files/URLs with revision and author information inline"
 
-#: share/completions/svn.fish:23
+#: share/completions/svn.fish:11
 msgid "Output content of files/URLs"
 msgstr "Output content of files/URLs"
 
-#: share/completions/svn.fish:24
+#: share/completions/svn.fish:12
 msgid "Check out a working copy from the repository"
 msgstr "Check out a working copy from the repository"
 
-#: share/completions/svn.fish:25
+#: share/completions/svn.fish:13
 msgid "Recursively clean up the working copy"
 msgstr "Recursively clean up the working copy"
 
-#: share/completions/svn.fish:26
+#: share/completions/svn.fish:14
 msgid "Send changes from your working copy to the repository"
 msgstr "Send changes from your working copy to the repository"
 
-#: share/completions/svn.fish:27
+#: share/completions/svn.fish:15
 msgid "Commit an unversioned file or tree into the repository"
 msgstr "Commit an unversioned file or tree into the repository"
 
-#: share/completions/svn.fish:28
+#: share/completions/svn.fish:16
 msgid "Display information about a local or remote item"
 msgstr "Display information about a local or remote item"
 
-#: share/completions/svn.fish:29
+#: share/completions/svn.fish:17
 msgid "List directory entries in the repository"
 msgstr "List directory entries in the repository"
 
-#: share/completions/svn.fish:30
+#: share/completions/svn.fish:18
 msgid "Lock working copy paths or URLs in the repository"
 msgstr "Lock working copy paths or URLs in the repository"
 
-#: share/completions/svn.fish:31
+#: share/completions/svn.fish:19
 msgid "Show the log messages for a set of revision(s) and/or file(s)"
 msgstr "Show the log messages for a set of revision(s) and/or file(s)"
 
-#: share/completions/svn.fish:32
+#: share/completions/svn.fish:20
 msgid "Apply the differences between two sources to a working copy path"
 msgstr "Apply the differences between two sources to a working copy path"
 
-#: share/completions/svn.fish:33
+#: share/completions/svn.fish:21
 msgid "Create a new directory under version control"
 msgstr "Create a new directory under version control"
 
-#: share/completions/svn.fish:34
+#: share/completions/svn.fish:22
 msgid "Move and/or rename something in working copy or repository"
 msgstr "Move and/or rename something in working copy or repository"
 
-#: share/completions/svn.fish:35
+#: share/completions/svn.fish:23
 msgid "Remove a property from files, dirs, or revisions"
 msgstr "Remove a property from files, dirs, or revisions"
 
-#: share/completions/svn.fish:36
+#: share/completions/svn.fish:24
 msgid "Edit a property with an external editor on targets"
 msgstr "Edit a property with an external editor on targets"
 
-#: share/completions/svn.fish:37
+#: share/completions/svn.fish:25
 msgid "Print value of a property on files, dirs, or revisions"
 msgstr "Print value of a property on files, dirs, or revisions"
 
-#: share/completions/svn.fish:38
+#: share/completions/svn.fish:26
 msgid "List all properties on files, dirs, or revisions"
 msgstr "List all properties on files, dirs, or revisions"
 
-#: share/completions/svn.fish:39
+#: share/completions/svn.fish:27
 msgid "Remove conflicted state on working copy files or directories"
 msgstr "Remove conflicted state on working copy files or directories"
 
-#: share/completions/svn.fish:40
+#: share/completions/svn.fish:28
 msgid "Restore pristine working copy file"
 msgstr "Restore pristine working copy file"
 
-#: share/completions/svn.fish:41
+#: share/completions/svn.fish:29
 msgid "Print the status of working copy files and directories"
 msgstr "Print the status of working copy files and directories"
 
-#: share/completions/svn.fish:42
+#: share/completions/svn.fish:30
 msgid "Update the working copy to a different URL"
 msgstr "Update the working copy to a different URL"
 
-#: share/completions/svn.fish:43
+#: share/completions/svn.fish:31
 msgid "Unlock working copy paths or URLs"
 msgstr "Unlock working copy paths or URLs"
 
-#: share/completions/svn.fish:44
+#: share/completions/svn.fish:32
 msgid "Bring changes from the repository into the working copy"
 msgstr "Bring changes from the repository into the working copy"
 
-#: share/completions/svn.fish:45
+#: share/completions/svn.fish:33
 msgid "Describe the usage of this program or its subcommands"
 msgstr "Describe the usage of this program or its subcommands"
 
-#: share/completions/svn.fish:48
+#: share/completions/svn.fish:36
 msgid "Specify revision"
 msgstr "Specify revision"
 
-#: share/completions/svn.fish:50
+#: share/completions/svn.fish:38
 msgid "Pass contents of file as additional args"
 msgstr "Pass contents of file as additional args"
 
-#: share/completions/svn.fish:54
+#: share/completions/svn.fish:42
 msgid "Print as little as possible"
 msgstr "Print as little as possible"
 
-#: share/completions/svn.fish:56
+#: share/completions/svn.fish:44
 msgid "Force operation to run"
 msgstr "Force operation to run"
 
-#: share/completions/svn.fish:58
+#: share/completions/svn.fish:46
 msgid "Enable automatic properties"
 msgstr "Enable automatic properties"
 
-#: share/completions/svn.fish:60
+#: share/completions/svn.fish:48
 msgid "Disable automatic properties"
 msgstr "Disable automatic properties"
 
-#: share/completions/svn.fish:62
+#: share/completions/svn.fish:50
 msgid "Print extra info"
 msgstr "Print extra info"
 
-#: share/completions/svn.fish:64
+#: share/completions/svn.fish:52
 msgid "Specify a username"
 msgstr "Specify a username"
 
-#: share/completions/svn.fish:66
+#: share/completions/svn.fish:54
 msgid "Specify a password"
 msgstr "Specify a password"
 
-#: share/completions/svn.fish:68
+#: share/completions/svn.fish:56
 msgid "Don't cache auth tokens"
 msgstr "Don't cache auth tokens"
 
-#: share/completions/svn.fish:70
+#: share/completions/svn.fish:58
 msgid "Do no interactive prompting"
 msgstr "Do no interactive prompting"
 
-#: share/completions/svn.fish:72
+#: share/completions/svn.fish:60
 msgid "Read user config files from named directory"
 msgstr "Read user config files from named directory"
 
-#: share/completions/svn.fish:74
+#: share/completions/svn.fish:62
 msgid "Don't unlock targets"
 msgstr "Don't unlock targets"
 
-#: share/completions/svn.fish:76
+#: share/completions/svn.fish:64
 msgid "Specify commit message"
 msgstr "Specify commit message"
 
-#: share/completions/svn.fish:78
+#: share/completions/svn.fish:66
 msgid "Read commit message from file"
 msgstr "Read commit message from file"
 
-#: share/completions/svn.fish:80
+#: share/completions/svn.fish:68
 msgid "Force log message source validity"
 msgstr "Force log message source validity"
 
-#: share/completions/svn.fish:82
+#: share/completions/svn.fish:70
 msgid "Specify external editor"
 msgstr "Specify external editor"
 
-#: share/completions/svn.fish:84
+#: share/completions/svn.fish:72
 msgid "Descend recursively"
 msgstr "Descend recursively"
 
-#: share/completions/svn.fish:86
+#: share/completions/svn.fish:74
 msgid "Give output suitable for concatenation"
 msgstr "Give output suitable for concatenation"
 
-#: share/completions/svn.fish:88
+#: share/completions/svn.fish:76
 msgid "Output in XML"
 msgstr "Output in XML"
 
-#: share/completions/svn.fish:90
+#: share/completions/svn.fish:78
 msgid "Specify merge command"
 msgstr "Specify merge command"
 
-#: share/completions/svn.fish:92
+#: share/completions/svn.fish:80
 msgid "Force encoding"
 msgstr "Force encoding"
 
-#: share/completions/svn.fish:94
+#: share/completions/svn.fish:82
 msgid "Operate on revision property"
 msgstr "Operate on revision property"
 
-#: share/completions/svn.fish:96
+#: share/completions/svn.fish:84
 msgid "Use strict semantics"
 msgstr "Use strict semantics"
 
-#: share/completions/svn.fish:98
+#: share/completions/svn.fish:86
 msgid "Ignore externals definitions"
 msgstr "Ignore externals definitions"
 
-#: share/completions/svn.fish:104
+#: share/completions/svn.fish:92
 msgid "Do not cross copies"
 msgstr "Do not cross copies"
 
-#: share/completions/svn.fish:105
+#: share/completions/svn.fish:93
 msgid "Maximum number of log entries"
 msgstr "Maximum number of log entries"
 
-#: share/completions/svn.fish:111
+#: share/completions/svn.fish:99
 msgid "Make no changes"
 msgstr "Make no changes"
 
-#: share/completions/svn.fish:112
+#: share/completions/svn.fish:100
 msgid "Ignore ancestry when calculating merge"
 msgstr "Ignore ancestry when calculating merge"
 
-#: share/completions/svn.fish:118
+#: share/completions/svn.fish:106
 msgid "Display update information"
 msgstr "Display update information"
 
-#: share/completions/svn.fish:119
+#: share/completions/svn.fish:107
 msgid "Disregard ignores"
 msgstr "Disregard ignores"
 
-#: share/completions/svn.fish:125
+#: share/completions/svn.fish:113
 msgid "Relocate VIA URL-rewriting"
 msgstr "Relocate VIA URL-rewriting"
 
-#: share/completions/svn.fish:131
+#: share/completions/svn.fish:119
 msgid "Print client version info"
 msgstr "Print client version info"
 
@@ -9362,7 +9456,7 @@ msgid "Filter through specified program"
 msgstr "Filter through specified program"
 
 #: share/completions/telnet.fish:9 share/completions/telnet.fish:14
-msgid  "Specifies an 8-bit data path"
+msgid "Specifies an 8-bit data path"
 msgstr "Specifies an 8-bit data path"
 
 #: share/completions/telnet.fish:10
@@ -9724,7 +9818,8 @@ msgstr "In case unmounting fails, try to remount read-only"
 #: share/completions/umount.fish:15
 msgid ""
 "In case the unmounted device was a loop device, also free this loop device"
-msgstr "In case the unmounted device was a loop device, also free this loop device"
+msgstr ""
+"In case the unmounted device was a loop device, also free this loop device"
 
 #: share/completions/umount.fish:16
 msgid "Don't call the /sbin/umount.<filesystem> helper even if it exists"
@@ -9742,7 +9837,8 @@ msgstr "Actions should only be taken on file systems of the specified type"
 msgid ""
 "Actions should only be taken on file systems with the specified options in /"
 "etc/fstab"
-msgstr "Actions should only be taken on file systems with the specified options in /"
+msgstr ""
+"Actions should only be taken on file systems with the specified options in /"
 "etc/fstab"
 
 #: share/completions/umount.fish:20
@@ -10300,6 +10396,52 @@ msgstr "Specify a comma-separated list of directories you wish to exclude"
 #: share/completions/wget.fish:111 share/completions/wget.fish:112
 msgid "Do not ever ascend to the parent directory"
 msgstr "Do not ever ascend to the parent directory"
+
+#: share/completions/which.fish:2
+msgid "Print all matching executables in PATH, not just the first"
+msgstr ""
+
+#: share/completions/which.fish:3
+msgid "Read aliases from stdin, reporting matching ones on stdout"
+msgstr ""
+
+#: share/completions/which.fish:4
+msgid "Ignore option '--read-alias'"
+msgstr ""
+
+#: share/completions/which.fish:5
+msgid ""
+"Read shell function definitions from stdin, reporting matching ones on stdout"
+msgstr ""
+
+#: share/completions/which.fish:6
+#, 
+msgid "Ignore option '--read-functions'"
+msgstr "Ignore option “--read-functions”"
+
+#: share/completions/which.fish:7
+msgid "Skip directories in PATH that start with a dot"
+msgstr ""
+
+#: share/completions/which.fish:8
+msgid ""
+"Skip directories in PATH that start with a tilde and executables which "
+"reside in the HOME directory"
+msgstr ""
+
+#: share/completions/which.fish:9
+msgid ""
+"If a directory in PATH starts with a dot and a matching executable was found "
+"for that path, then print './programname'"
+msgstr ""
+
+#: share/completions/which.fish:10
+msgid "Output a tilde when a directory matches the HOME directory"
+msgstr ""
+
+#: share/completions/which.fish:11
+msgid "Stop processing options on the right if not on tty"
+msgstr ""
 
 #: share/completions/who.fish:1
 msgid "Same as -b -d --login -p -r -t -T -u"
@@ -11090,16 +11232,24 @@ msgstr "Write out the prompt"
 msgid "Show help for the fish shell"
 msgstr "Show help for the fish shell"
 
-#: share/functions/help.fish:59
+#: share/functions/help.fish:65
 msgid "%s: Could not find a web browser.\\n"
 msgstr "%s: Could not find a web browser.\\n"
 
-#: share/functions/help.fish:60
+#: share/functions/help.fish:66
 #, sh-format
 msgid ""
 "Please set the variable $BROWSER to a suitable browser and try again\\n\\n"
 msgstr ""
 "Please set the variable $BROWSER to a suitable browser and try again\\n\\n"
+
+#: share/functions/help.fish:104
+msgid "help: Help is being displayed in your default browser\\n"
+msgstr ""
+
+#: share/functions/help.fish:107
+msgid "help: Help is being displayed in %s\\n"
+msgstr ""
 
 #: share/functions/la.fish:4
 msgid ""
@@ -11169,6 +11319,10 @@ msgstr "%s: Unknown argument “%s”\\n"
 #: share/functions/pushd.fish:3
 msgid "Push directory to stack"
 msgstr "Push directory to stack"
+
+#: share/functions/setenv.fish:2
+msgid "Set global variable. Alias for set -g, made for csh compatibility"
+msgstr ""
 
 #: share/functions/type.fish:2
 msgid "Print the type of a command"
@@ -11246,6 +11400,9 @@ msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 #: seq:43
 msgid "%s: '%s' is not a number\\n"
 msgstr "%s: “%s” is not a number\\n"
+
+#~ msgid "Invalid input"
+#~ msgstr "Invalid input"
 
 #~ msgid "%ls: Argument must be a number: %ls\n"
 #~ msgstr "%ls: Argument must be a number: %ls\n"

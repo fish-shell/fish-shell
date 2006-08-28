@@ -454,7 +454,7 @@ fi
 
 # Check for presense of various functions
 AC_CHECK_FUNCS( gettext wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
-AC_CHECK_FUNCS( futimes wcwidth wcswidth getopt_long wcstok fputwc fgetwc )
+AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r killpg)
 
 # The Makefile also needs to know if we have gettext, so it knows if the translations should be installed.
@@ -581,6 +581,42 @@ if test "$have__nl_msg_cat_cntr" = yes; then
 		[HAVE__NL_MSG_CAT_CNTR], 
 		[1],
 		[Define to 1 if the _nl_msg_cat_cntr symbol is exported.]
+	)	
+else
+    AC_MSG_RESULT(no)
+fi
+
+# Check if getopt_long actually works
+AC_MSG_CHECKING([if getopt_long works])
+AC_TRY_LINK(
+	[
+		#if HAVE_GETOPT_H
+		#include <getopt.h>
+		#endif
+	],
+	[
+		static struct option
+			long_options[] =
+			{
+				0, 0, 0, 0 
+			}
+		;
+		int opt = getopt_long( 0,
+							   0, 
+							   0,
+							   long_options, 
+							   0 );
+		
+	],
+	have_working_getopt_long=yes, 
+	have_working_getopt_long=no
+)
+if test "$have_working_getopt_long" = yes; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(
+		[HAVE_WORKING_GETOPT_LONG], 
+		[1],
+		[Define to 1 if getopt_long actually works.]
 	)	
 else
     AC_MSG_RESULT(no)

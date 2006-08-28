@@ -159,7 +159,7 @@ int main( int argc, char **argv )
 			
 	while( 1 )
 	{
-#ifdef HAVE_GETOPT_LONG
+#ifdef HAVE_WORKING_GETOPT_LONG
 		static struct option
 			long_options[] =
 			{

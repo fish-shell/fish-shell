@@ -931,7 +931,7 @@ static void init()
 	output_set_writer( &pager_buffered_writer );
 	pager_buffer = halloc( global_context, sizeof( buffer_t ) );
 	halloc_register_function( global_context, (void (*)(void *))&b_destroy, pager_buffer );
-	
+
 	sigemptyset( & act.sa_mask );
 	act.sa_flags=0;
 	act.sa_handler=SIG_DFL;
@@ -944,7 +944,7 @@ static void init()
 	}
 	
 	handle_winch( 0 );                /* Set handler for window change events */
-	
+
 	tcgetattr(0,&pager_modes);        /* get the current terminal modes */
 	memcpy( &saved_modes,
 			&pager_modes,

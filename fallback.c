@@ -1079,11 +1079,11 @@ int killpg( int pgr, int sig )
 
 #ifndef HAVE_WORKING_GETOPT_LONG
 
-int getopt_long(int argc, 
-				char * const argv[],
-				const char *optstring,
-				const struct option *longopts, 
-				int *longindex)
+int getopt_long( int argc, 
+				 char * const argv[],
+				 const char *optstring,
+				 const struct option *longopts, 
+				 int *longindex )
 {
 	return getopt( argc, argv, optstring );
 }

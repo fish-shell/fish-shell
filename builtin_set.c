@@ -650,7 +650,7 @@ static int builtin_set( wchar_t **argv )
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
-
+	
 	if( (bad_char = wcsvarname( dest ) ) )
 	{
 		sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *bad_char );
@@ -659,7 +659,6 @@ static int builtin_set( wchar_t **argv )
 		return 1;
 	}
 	
-
 	if( slice && erase && (scope != ENV_USER) )
 	{
 		free( dest );
@@ -687,7 +686,7 @@ static int builtin_set( wchar_t **argv )
 		al_init(&values);
 		al_init(&indexes);
 		al_init(&result);
-
+		
 		tokenize_variable_array( env_get(dest), &result );
 		
 		for( ; woptind<argc; woptind++ )

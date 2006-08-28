@@ -454,7 +454,7 @@ void job_handle_signal ( int signal, siginfo_t *info, void *con )
 				handle_child_status( pid, status );
 				break;
 		}
-	}
+	}	
 	kill( 0, SIGIO );
 	errno=errno_old;
 }

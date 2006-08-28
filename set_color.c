@@ -56,11 +56,7 @@
 */
 #define GETOPT_STRING "b:hvocu"
 
-#if HAVE_GETTEXT
 #define _(string) gettext(string)
-#else
-#define _(string) (string)
-#endif
 
 char *col[]=
 {
@@ -141,10 +137,8 @@ static void check_locale_init()
 	
 	is_init = 1;
 	setlocale( LC_ALL, "" );
-#if HAVE_GETTEXT
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );
-#endif
 }
 
 

@@ -135,14 +135,10 @@ static int launch_len=0;
 */
 static int launch_pos=0;
 
-#if HAVE_GETTEXT
 /**
    gettext alias
 */
 #define _(string) gettext(string)
-#else
-#define _(string) (string)
-#endif
 
 /**
    Dynamically generated function, made from the documentation in doc_src.
@@ -1145,10 +1141,8 @@ static void clear_entry( void *key, void *val )
 static void locale_init()
 {
 	setlocale( LC_ALL, "" );
-#if HAVE_GETTEXT
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );
-#endif
 }
 
 

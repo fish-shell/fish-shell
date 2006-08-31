@@ -976,6 +976,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 
 						default:
 						{
+							in[out_pos++] = INTERNAL_SEPARATOR;							
 							in[out_pos]=in[in_pos];
 							break;
 						}

@@ -366,9 +366,12 @@ static void print_variables(int include_values, int esc, int scope)
 		{
 			wchar_t *value = env_get(key);
 			wchar_t *e_value;
-			e_value = esc ? expand_escape_variable(value) : wcsdup(value);
-			sb_append2(sb_out, L" ", e_value, (void *)0);
-			free(e_value);
+			if( value )
+			{
+				e_value = esc ? expand_escape_variable(value) : wcsdup(value);
+				sb_append2(sb_out, L" ", e_value, (void *)0);
+				free(e_value);
+			}
 		}
 		
 		sb_append(sb_out, L"\n");
@@ -601,6 +604,13 @@ static int builtin_set( wchar_t **argv )
 		return retcode;
 	}
 	
+	if( list ) 
+	{
+		/* Maybe we should issue an error if there are any other arguments? */
+		print_variables(0, 0, scope);
+		return 0;
+	} 
+	
 	if( woptind == argc )
 	{
 		/*
@@ -625,13 +635,6 @@ static int builtin_set( wchar_t **argv )
 		return retcode;
 	}
 
-	if( list ) 
-	{
-		/* Maybe we should issue an error if there are any other arguments? */
-		print_variables(0, 0, scope);
-		return 0;
-	} 
-	
 	if( !(dest = wcsdup(argv[woptind])))
 	{
 		DIE_MEM();		

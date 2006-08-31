@@ -63,6 +63,8 @@ complete -c set -n '__fish_is_first_token' -s l -l local -d (N_ "Make variable s
 complete -c set -n '__fish_is_first_token' -s U -l universal -d (N_ "Make variable scope universal, i.e. share variable with all the users fish processes on this computer")
 complete -c set -n '__fish_is_first_token' -s q -l query -d (N_ "Test if variable is defined")
 complete -c set -n '__fish_is_first_token' -s h -l help -d (N_ "Display help and exit")
+complete -c set -n '__fish_is_first_token' -s n -l names -d (N_ "List the names of the variables, but not their value")
+
 
 # Complete using preexisting variable names
 complete -c set -n '__fish_is_first_token' -x -a "(set|sed -e 's/ /'\t'Variable: /')"

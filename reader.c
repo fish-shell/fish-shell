@@ -1984,11 +1984,25 @@ static void handle_token_history( int forward, int reset )
 static void move_word( int dir, int erase )
 {
 	int end_buff_pos=data->buff_pos;
-	int mode=0;
 	int step = dir?1:-1;
 
-	while( mode < 2 )
+	/*
+	  If we are beyond the last character and moving left, start by
+	  moving one step, since otehrwise we'll start on the \0, which
+	  should be ignored.
+	*/
+	if( !dir && (end_buff_pos == data->buff_len) )
 	{
+		if( !end_buff_pos )
+			return;
+		
+		end_buff_pos--;
+	}
+	
+	while( 1 )
+	{
+		wchar_t c;
+
 		if( !dir )
 		{
 			if( end_buff_pos == 0 )
@@ -1999,41 +2013,46 @@ static void move_word( int dir, int erase )
 			if( end_buff_pos == data->buff_len )
 				break;
 		}
-		end_buff_pos+=step;
 
-		if( end_buff_pos < data->buff_len )
+		c = data->buff[end_buff_pos];
+
+		if( !iswspace( c ) )
 		{
-			switch( mode )
-			{
-				case 0:
-					if( iswalnum(data->buff[end_buff_pos] ) )
-						mode++;
-					break;
-
-				case 1:
-					if( !iswalnum(data->buff[end_buff_pos] ) )
-					{
-						if( !dir )
-							end_buff_pos -= step;
-						mode++;
-					}
-					break;
-/*
-  case 2:
-  if( !iswspace(data->buff[end_buff_pos] ) )
-  {
-  mode++;
-  if( !dir )
-  end_buff_pos-=step;
-  }
-  break;
-*/
-			}
+			break;
+		}
+		
+		end_buff_pos+=step;
+	}
+	
+	while( 1 )
+	{
+		wchar_t c;
+		
+		if( !dir )
+		{
+			if( end_buff_pos == 0 )
+				break;
+		}
+		else
+		{
+			if( end_buff_pos == data->buff_len )
+				break;
 		}
 
-		if( mode==2)
-			break;
+		c = data->buff[end_buff_pos];
 
+		if( !iswalnum( c ) )
+		{
+			/*
+			  Don't gobble the boundary character if it was a
+			  whitespace, but do for all other non-alphabetic
+			  characters
+			*/
+			if( iswspace( c ) )
+				end_buff_pos -= step;
+			break;
+		}
+		end_buff_pos+=step;
 	}
 
 	if( erase )

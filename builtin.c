@@ -2743,11 +2743,11 @@ static int builtin_return( wchar_t **argv )
 	b = current_block;
 	while( ( b->type != FUNCTION_CALL))
 	{
+		b->type = FAKE;
 		b->skip=1;
 		b = b->outer;
 	}
 	b->skip=1;
-//	proc_set_last_status( status );
 
 	return status;
 }

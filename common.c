@@ -866,6 +866,29 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							in[out_pos]=L'\x1b';
 							break;
 						}
+
+						case L'c':
+						{
+							in_pos++;
+							if( in[in_pos] >= L'a' &&
+								in[in_pos] <= (L'a'+32) )
+							{
+								in[out_pos]=in[in_pos]-L'a'+1;
+							}
+							else if( in[in_pos] >= L'A' &&
+									 in[in_pos] <= (L'A'+32) )
+							{
+								in[out_pos]=in[in_pos]-L'A'+1;
+							}
+							else
+							{
+								free(in);	
+								return 0;
+							}
+							break;
+							
+						}
+						
 						
 						case L'u':
 						case L'U':

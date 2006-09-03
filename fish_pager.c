@@ -583,14 +583,13 @@ static int completion_try_print( int cols,
 			*/
 			while(do_loop)
 			{
-				wchar_t msg[10];
-				int percent = 100*pos/(rows-termsize.ws_row+1);
+				wchar_t msg[30];
+				int percent = 100*(pos+rows)/(2*rows-termsize.ws_row+1);
 				set_color( FISH_COLOR_BLACK,
 						   get_color(HIGHLIGHT_PAGER_PROGRESS) );
-				swprintf( msg, 12,
-						  L" %ls(%d%%) \r",
-						  percent==100?L"":(percent >=10?L" ": L"  "),
-						  percent );
+				swprintf( msg, 30,
+						  L" %d to %d of %d \r",
+						  pos, pos+termsize.ws_row-1, rows );
 				writestr(msg);
 				set_color( FISH_COLOR_NORMAL, FISH_COLOR_NORMAL );
 				pager_flush();

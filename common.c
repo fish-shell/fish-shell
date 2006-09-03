@@ -296,7 +296,10 @@ char *wcs2str_internal( const wchar_t *in, char *out )
 	
 	while( in[in_pos] )
 	{
-		if( ( in[in_pos] >= ENCODE_DIRECT_BASE) &&
+		if( in[in_pos] == INTERNAL_SEPARATOR )
+		{
+		}
+		else if( ( in[in_pos] >= ENCODE_DIRECT_BASE) &&
 			( in[in_pos] < ENCODE_DIRECT_BASE+256) )
 		{
 			out[out_pos++] = in[in_pos]- ENCODE_DIRECT_BASE;
@@ -307,7 +310,7 @@ char *wcs2str_internal( const wchar_t *in, char *out )
 			
 			if( res == (size_t)(-1) )
 			{
-				debug( 1, L"Wide character has no narrow representation" );
+				debug( 1, L"Wide character %d has no narrow representation", in[in_pos] );
 				memset( &state, 0, sizeof(state) );
 			}
 			else

@@ -74,7 +74,7 @@ typedef struct halloc
 	size_t scratch_free;
 #if __STDC_VERSION__ < 199901L
 	/**
-	   The actual data. MAde to be of type long long to make sure memory alignment is in order.
+	   The actual data. Made to be of type long long to make sure memory alignment is in order.
 	*/
 	long long data[1]; // Waste one byte on non-C99 compilers... :-( 
 #else

@@ -813,87 +813,22 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 				{
 					switch( in[++in_pos] )
 					{
+						
+						/*
+						  A null character after a backslash is an
+						  error, return null
+						*/
 						case L'\0':
 						{
 							free(in);
 							return 0;
 						}
 						
-						case L'n':
-						{
-							in[out_pos]=L'\n';
-							break;
-						}
+						/*
+						  Numeric escape sequences. No prefix means
+						  octal escape, otherwise hexadecimal.
+						*/
 						
-						case L'r':
-						{
-							in[out_pos]=L'\r';
-							break;
-						}
-
-						case L't':
-						{
-							in[out_pos]=L'\t';
-							break;
-						}
-
-						case L'b':
-						{
-							in[out_pos]=L'\b';
-							break;
-						}
-						
-						case L'a':
-						{
-							in[out_pos]=L'\a';
-							break;
-						}
-						
-						case L'f':
-						{
-							in[out_pos]=L'\f';
-							break;
-						}
-						
-						case L'v':
-						{
-							in[out_pos]=L'\v';
-							break;
-						}
-						
-						case L'e':
-						{
-							in[out_pos]=L'\x1b';
-							break;
-						}
-
-						case L'c':
-						{
-							in_pos++;
-							if( in[in_pos] >= L'a' &&
-								in[in_pos] <= (L'a'+32) )
-							{
-								in[out_pos]=in[in_pos]-L'a'+1;
-							}
-							else if( in[in_pos] >= L'A' &&
-									 in[in_pos] <= (L'A'+32) )
-							{
-								in[out_pos]=in[in_pos]-L'A'+1;
-							}
-							else
-							{
-								free(in);	
-								return 0;
-							}
-							break;
-							
-						}
-						
-						
-						case L'u':
-						case L'U':
-						case L'x':
-						case L'X':
 						case L'0':
 						case L'1':
 						case L'2':
@@ -902,6 +837,10 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 						case L'5':
 						case L'6':
 						case L'7':
+						case L'u':
+						case L'U':
+						case L'x':
+						case L'X':
 						{
 							int i;
 							long long res=0;
@@ -974,6 +913,103 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							break;
 						}
 
+						/*
+						  \a means bell (alert)
+						*/
+						case L'a':
+						{
+							in[out_pos]=L'\a';
+							break;
+						}
+						
+						/*
+						  \b means backspace
+						*/
+						case L'b':
+						{
+							in[out_pos]=L'\b';
+							break;
+						}
+						
+						/*
+						  \cX means control sequence X
+						*/
+						case L'c':
+						{
+							in_pos++;
+							if( in[in_pos] >= L'a' &&
+								in[in_pos] <= (L'a'+32) )
+							{
+								in[out_pos]=in[in_pos]-L'a'+1;
+							}
+							else if( in[in_pos] >= L'A' &&
+									 in[in_pos] <= (L'A'+32) )
+							{
+								in[out_pos]=in[in_pos]-L'A'+1;
+							}
+							else
+							{
+								free(in);	
+								return 0;
+							}
+							break;
+							
+						}
+						
+						/*
+						  \e means escape
+						*/
+						case L'e':
+						{
+							in[out_pos]=L'\x1b';
+							break;
+						}
+						
+						/*
+						  \f means form feed
+						*/
+						case L'f':
+						{
+							in[out_pos]=L'\f';
+							break;
+						}
+
+						/*
+						  \n means newline
+						*/
+						case L'n':
+						{
+							in[out_pos]=L'\n';
+							break;
+						}
+						
+						/*
+						  \r means carriage return
+						*/
+						case L'r':
+						{
+							in[out_pos]=L'\r';
+							break;
+						}
+						
+						/*
+						  \t means tab
+						 */
+						case L't':
+						{
+							in[out_pos]=L'\t';
+							break;
+						}
+
+						/*
+						  \v means vetrical tab
+						*/
+						case L'v':
+						{
+							in[out_pos]=L'\v';
+							break;
+						}
+						
 						default:
 						{
 							in[out_pos++] = INTERNAL_SEPARATOR;							
@@ -984,7 +1020,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 				}
 				else 
 				{
-					switch( in[in_pos]){
+					switch( in[in_pos])
+					{
 						case L'~':
 						{
 							if( unescape_special && (in_pos == 0) )

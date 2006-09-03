@@ -778,6 +778,7 @@ static int path_util_load_internal( const wchar_t *cmd,
 			{
 				wchar_t *esc = escape( (wchar_t *)path->buff, 1 );
 				wchar_t *src_cmd = wcsdupcat( L". ", esc );
+				free( esc );
 				
 				if( !tm )
 				{
@@ -792,7 +793,6 @@ static int path_util_load_internal( const wchar_t *cmd,
 						  intern( cmd ),
 						  tm );
 
-				free( esc );
 
 				if( on_load )
 					on_load(cmd );

@@ -586,8 +586,8 @@ else
     AC_MSG_RESULT(no)
 fi
 
-# Check if getopt_long actually works
-AC_MSG_CHECKING([if getopt_long works])
+# Check if getopt_long exists and works
+AC_MSG_CHECKING([if getopt_long exists and works])
 AC_TRY_LINK(
 	[
 		#if HAVE_GETOPT_H
@@ -616,7 +616,7 @@ if test "$have_working_getopt_long" = yes; then
 	AC_DEFINE(
 		[HAVE_WORKING_GETOPT_LONG], 
 		[1],
-		[Define to 1 if getopt_long actually works.]
+		[Define to 1 if getopt_long exists and works.]
 	)	
 else
     AC_MSG_RESULT(no)

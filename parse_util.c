@@ -728,7 +728,7 @@ static int path_util_load_internal( const wchar_t *cmd,
 	time_t *tm;
 	int i;
 	int reloaded = 0;
-		
+
 	/*
 	  Get modification time of file
 	*/
@@ -770,6 +770,7 @@ static int path_util_load_internal( const wchar_t *cmd,
 		wchar_t *next = (wchar_t *)al_get( path_list, i );
 		sb_clear( path );
 		sb_append2( path, next, L"/", cmd, L".fish", (void *)0 );
+
 		if( (wstat( (wchar_t *)path->buff, &buf )== 0) &&
 			(waccess( (wchar_t *)path->buff, R_OK ) == 0) )
 		{
@@ -802,8 +803,8 @@ static int path_util_load_internal( const wchar_t *cmd,
 				exec_subshell( src_cmd, 0 );
 				free(src_cmd);
 				reloaded = 1;
-				break;
 			}
+			break;
 		}
 	}
 

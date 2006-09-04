@@ -19,9 +19,11 @@ function help -d (N_ "Show help for the fish shell")
 	set -l help_topics $h expand-command-substitution expand-process 
 
 	# 'help -h' should launch 'help help'
-	switch $argv[1]
-		case -h --h --he --hel --help
-			set argv help
+	if count $argv >/dev/null
+		switch $argv[1]
+			case -h --h --he --hel --help
+				set argv help
+		end
 	end
 
 	#

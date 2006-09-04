@@ -9,7 +9,7 @@
 # configure the build process. 
 #
 
-AC_INIT(fish,1.21.11,fish-users@lists.sf.net)
+AC_INIT(fish,1.21.12,fish-users@lists.sf.net)
 
 # If needed, run autoconf to regenerate the configure file
 AC_MSG_CHECKING([if autoconf needs to be run])

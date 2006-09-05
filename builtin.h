@@ -68,6 +68,16 @@ enum
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _( L"%ls: Too many arguments\n" )
 
 /**
+   Error message when block types mismatch in the end builtin, e.g. 'begin; end for'
+*/
+#define BUILTIN_END_BLOCK_MISMATCH _( L"%ls: Block mismatch: '%ls' vs. '%ls'\n" )
+
+/**
+   Error message for unknown block type in the end builtin, e.g. 'begin; end beggin'
+*/
+#define BUILTIN_END_BLOCK_UNKNOWN _( L"%ls: Unknown block type '%ls'\n" )
+
+/**
    Stringbuffer used to represent standard output
 */
 extern string_buffer_t *sb_out;

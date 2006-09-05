@@ -2260,30 +2260,45 @@ static int parse_job( process_t *p,
 
 		if( !make_sub_block )
 		{
-
-			tok_init( &subtok, end, 0 );
-			switch( tok_last_type( &subtok ) )
+			int done=0;
+			
+			for( tok_init( &subtok, end, 0 ); 
+				 !done && tok_has_next( &subtok ); 
+				 tok_next( &subtok ) )
 			{
-				case TOK_END:
-					break;
-
-				case TOK_REDIRECT_OUT:
-				case TOK_REDIRECT_APPEND:
-				case TOK_REDIRECT_IN:
-				case TOK_REDIRECT_FD:
-				case TOK_PIPE:
+				
+				switch( tok_last_type( &subtok ) )
 				{
-					make_sub_block = 1;
-					break;
-				}
-
-				default:
-				{
-					error( SYNTAX_ERROR,
-						   current_tokenizer_pos,
-						   BLOCK_END_ERR_MSG );
+					case TOK_END:
+						done = 1;
+						break;
+						
+					case TOK_REDIRECT_OUT:
+					case TOK_REDIRECT_APPEND:
+					case TOK_REDIRECT_IN:
+					case TOK_REDIRECT_FD:
+					case TOK_PIPE:
+					{
+						done = 1;
+						make_sub_block = 1;
+						break;
+					}
+					
+					case TOK_STRING:
+					{
+						break;
+					}
+					
+					default:
+					{
+						done = 1;
+						error( SYNTAX_ERROR,
+							   current_tokenizer_pos,
+							   BLOCK_END_ERR_MSG );
+					}
 				}
 			}
+			
 			tok_destroy( &subtok );
 		}
 		
@@ -2733,7 +2748,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 /**
    \return the block type created by the specified builtin, or -1 on error.
 */
-static int parser_get_block_type( const wchar_t *cmd )
+int parser_get_block_type( const wchar_t *cmd )
 {
 	int i;
 	
@@ -2750,7 +2765,7 @@ static int parser_get_block_type( const wchar_t *cmd )
 /**
    \return the block command that createa the specified block type, or null on error.
 */
-static const wchar_t *parser_get_block_command( int type )
+const wchar_t *parser_get_block_command( int type )
 {
 	int i;
 	
@@ -3302,6 +3317,59 @@ int parser_test( const  wchar_t * buff,
 							}
 						}
 					}
+
+					/*
+					  Try to make sure that arguments passed to 'end' is always the type of block to close
+					*/
+					if( wcscmp( cmd, L"end" ) == 0 )
+					{
+						if( (arg_count == 1) /*&& (count > 0)*/ )
+						{
+							
+							int t = parser_get_block_type( tok_last( &tok ) );
+
+							/*
+							  This is ugly. We peek at the element
+							  past the current element on the
+							  block_type stack. It will always contain
+							  the type of the block that just went out
+							  of scope, which is what we need, but it
+							  is not nice coding practice to search
+							  through the 'junk pile' like that...
+							*/
+							if( t != block_type[count] )
+							{
+								err=1;
+								if( out )
+								{
+									if( t == -1 )
+									{
+										error( SYNTAX_ERROR,
+											   tok_get_pos( &tok ),
+											   BUILTIN_END_BLOCK_UNKNOWN,
+											   L"end",
+											   tok_last( &tok ) );
+									}
+									else
+									{
+										error( SYNTAX_ERROR,
+											   tok_get_pos( &tok ),
+											   BUILTIN_END_BLOCK_MISMATCH,
+											   L"end",
+											   tok_last( &tok ), 
+											   parser_get_block_command( block_type[count-1] ) );
+									}
+				
+									print_errors( out, prefix );
+
+								}
+							}
+							
+						}
+						
+					}
+					
+
 				}
 				
 				break;

@@ -377,5 +377,8 @@ const wchar_t *parser_current_filename();
 */
 void parser_stack_trace( block_t *b, string_buffer_t *buff);
 
+int parser_get_block_type( const wchar_t *cmd );
+const wchar_t *parser_get_block_command( int type );
+
 
 #endif

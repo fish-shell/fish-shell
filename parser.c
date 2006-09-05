@@ -753,7 +753,7 @@ void error( int ec, int p, const wchar_t *str, ... )
 
 	if( !err_buff )
 		err_buff = sb_halloc( global_context );
-	
+	sb_clear( err_buff );	
 
 	error_code = ec;
 	err_pos = p;

@@ -19,7 +19,7 @@ function __fish_move_last -d "Move the last element of a directory history from 
 	builtin cd $ssrc[$size_src]
 
 	# Keep all but the last from the source dir-hist 
-	set -e (echo $src)[$size_src]
+	set -e (echo $src)\[$size_src]
 
 	# All ok, return success
 	return 0

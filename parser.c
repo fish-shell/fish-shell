@@ -3294,25 +3294,29 @@ int parser_test( const  wchar_t * buff,
 						arg_count = -1;
 					}
 					
-					/*
-					  Try to make sure the second argument to 'for' is 'in'
-					*/
-					if( wcscmp( cmd, L"for" ) == 0 )
+					if( cmd )
 					{
-						if( arg_count == 2 )
+						
+						/*
+						  Try to make sure the second argument to 'for' is 'in'
+						*/
+						if( wcscmp( cmd, L"for" ) == 0 )
 						{
-							if( wcscmp( tok_last( &tok ), L"in" ) != 0 )
+							if( arg_count == 2 )
 							{
-								err = 1;
-															
-								if( out )
+								if( wcscmp( tok_last( &tok ), L"in" ) != 0 )
 								{
-									error( SYNTAX_ERROR,
-										   tok_get_pos( &tok ),
-										   BUILTIN_FOR_ERR_IN,
-										   L"for" );
+									err = 1;
 									
-									print_errors( out, prefix );
+									if( out )
+									{
+										error( SYNTAX_ERROR,
+											   tok_get_pos( &tok ),
+											   BUILTIN_FOR_ERR_IN,
+											   L"for" );
+										
+										print_errors( out, prefix );
+									}
 								}
 							}
 						}

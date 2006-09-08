@@ -1177,7 +1177,7 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 			}
 			case FUNCTION_CALL:
 			{
-				sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_name );
+				sb_printf( buff, _(L"in function '%ls',\n"), b->param1.function_call_name );
 				break;
 			}
 			case SUBST:
@@ -1245,7 +1245,7 @@ static const wchar_t *is_function()
 		}
 		if( b->type == FUNCTION_CALL )
 		{
-			return b->param1.function_name;
+			return b->param1.function_call_name;
 		}
 		b=b->outer;
 	}
@@ -1293,7 +1293,7 @@ const wchar_t *parser_current_filename()
 		}
 		if( b->type == FUNCTION_CALL )
 		{
-			return function_get_definition_file(b->param1.function_name );
+			return function_get_definition_file(b->param1.function_call_name );
 		}
 		b=b->outer;
 	}
@@ -3323,7 +3323,8 @@ int parser_test( const  wchar_t * buff,
 					}
 
 					/*
-					  Try to make sure that arguments passed to 'end' is always the type of block to close
+					  Try to make sure that arguments passed to 'end'
+					  is always the type of block to close
 					*/
 					if( wcscmp( cmd, L"end" ) == 0 )
 					{

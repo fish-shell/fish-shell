@@ -54,6 +54,11 @@ typedef struct block
 	   The job that is currently evaluated in the specified block.
 	*/
 	job_t *job;
+
+	/**
+	   Block type-specific data
+	*/
+	void *data;
 	
 	/**
 	   First block type specific variable
@@ -62,11 +67,11 @@ typedef struct block
 	{
 		int while_state;  /**< True if the loop condition has not yet been evaluated*/
 		wchar_t *for_variable; /**< Name of the variable to loop over */
-		int if_state; /**< The state of the if block */
+		int if_state; /**< The state of the if block, can be one of IF_STATE_UNTESTED, IF_STATE_FALSE, IF_STATE_TRUE */
 		wchar_t *switch_value; /**< The value to test in a switch block */
-		wchar_t *function_name; /**< The name of the function to define or the function called*/
 		const wchar_t *source_dest; /**< The name of the file to source*/
 		event_t *event; /**<The event that triggered this block */		
+		wchar_t *function_call_name;
 	} param1;
 
 	/**
@@ -76,25 +81,9 @@ typedef struct block
 	{
 		array_list_t for_vars; /**< List of values for a for block */	
 		int switch_taken; /**< Whether a switch match has already been found */
-		wchar_t *function_description; /**< The description of the function to define */
 		process_t *function_call_process;		/**< The process representing this function call */
 	} param2;
 
-	/**
-	   Third block type specific variable
-	*/
-	union
-	{
-		int function_is_binding; /**< Whether a function is a keybinding */
-	} param3;
-
-	/**
-	   Fourth block type specific variable
-	*/
-	union
-	{
-		array_list_t *function_events;
-	} param4;
 
 	/**
 	   Name of file that created this block

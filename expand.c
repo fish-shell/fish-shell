@@ -1307,22 +1307,21 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 			}
 			al_foreach( sub_res, &free );
 			sub_res = sub_res2;			
-		}		
-		
+		}
 	}
 
 	tail_expand = al_halloc( context );
 
 	/*
 	  Recursively call ourselves to expand any remaining command
-	  substitutions. The result of this recusrive call usiung the tail
+	  substitutions. The result of this recursive call usiung the tail
 	  of the string is inserted into the tail_expand array list
 	*/
 	expand_cmdsubst( wcsdup(tail_begin), tail_expand );
 
 	/*
 	  Combine the result of the current command substitution with the
-	  result of the recusrive tail expansion
+	  result of the recursive tail expansion
 	*/
     for( i=0; i<al_get_count( sub_res ); i++ )
     {

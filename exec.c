@@ -869,18 +869,17 @@ void exec( job_t *j )
 		{
 			case INTERNAL_FUNCTION:
 			{
-				
 				wchar_t * def = halloc_register( j, wcsdup( function_get_definition( p->argv[0] )));
 				if( def == 0 )
 				{
 					debug( 0, _( L"Unknown function '%ls'" ), p->argv[0] );
 					break;
 				}
-				
+
 				parser_push_block( FUNCTION_CALL );
 				
 				current_block->param2.function_call_process = p;
-				current_block->param1.function_name = halloc_register( current_block, wcsdup( p->argv[0] ) );
+				current_block->param1.function_call_name = halloc_register( current_block, wcsdup( p->argv[0] ) );
 						
 				parse_util_set_argv( p->argv+1 );
 								

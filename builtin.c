@@ -678,10 +678,10 @@ static int builtin_generic( wchar_t **argv )
 }
 
 /**
-   Output a definition of the specified function to the sb_out
+   Output a definition of the specified function to the specified
    stringbuffer. Used by the functions builtin.
 */
-static void functions_def( wchar_t *name )
+static void functions_def( wchar_t *name, string_buffer_t *out )
 {
 	const wchar_t *desc = function_get_desc( name );
 	const wchar_t *def = function_get_definition(name);
@@ -697,7 +697,7 @@ static void functions_def( wchar_t *name )
 	al_init( &ev );
 	event_get( &search, &ev );
 
-	sb_append2( sb_out,
+	sb_append2( out,
 				L"function ",
 				name,
 				(void *)0);
@@ -706,7 +706,7 @@ static void functions_def( wchar_t *name )
 	{
 		wchar_t *esc_desc = escape( desc, 1 );
 
-		sb_append2( sb_out, L" --description ", esc_desc, (void *)0 );
+		sb_append2( out, L" --description ", esc_desc, (void *)0 );
 		free( esc_desc );
 	}
 
@@ -717,22 +717,22 @@ static void functions_def( wchar_t *name )
 		{
 			case EVENT_SIGNAL:
 			{
-				sb_printf( sb_out, L" --on-signal %ls", sig2wcs( next->param1.signal ) );
+				sb_printf( out, L" --on-signal %ls", sig2wcs( next->param1.signal ) );
 				break;
 			}
 
 			case EVENT_VARIABLE:
 			{
-				sb_printf( sb_out, L" --on-variable %ls", next->param1.variable );
+				sb_printf( out, L" --on-variable %ls", next->param1.variable );
 				break;
 			}
 
 			case EVENT_EXIT:
 			{
 				if( next->param1.pid > 0 )
-					sb_printf( sb_out, L" --on-process-exit %d", next->param1.pid );
+					sb_printf( out, L" --on-process-exit %d", next->param1.pid );
 				else
-					sb_printf( sb_out, L" --on-job-exit %d", -next->param1.pid );
+					sb_printf( out, L" --on-job-exit %d", -next->param1.pid );
 				break;
 			}
 
@@ -740,7 +740,7 @@ static void functions_def( wchar_t *name )
 			{
 				job_t *j = job_get( next->param1.job_id );
 				if( j )
-					sb_printf( sb_out, L" --on-job-exit %d", j->pgid );
+					sb_printf( out, L" --on-job-exit %d", j->pgid );
 				break;
 			}
 
@@ -750,7 +750,7 @@ static void functions_def( wchar_t *name )
 
 	al_destroy( &ev );
 
-	sb_append2( sb_out,
+	sb_append2( out,
 				L"\n\t",
 				def,
 				L"\nend\n\n",
@@ -973,7 +973,7 @@ static int builtin_functions( wchar_t **argv )
 				
 				for( i=0; i<al_get_count( &names ); i++ )
 				{
-					functions_def( (wchar_t *)al_get( &names, i ) );
+					functions_def( (wchar_t *)al_get( &names, i ), sb_out );
 				}
 				
 				al_destroy( &names );
@@ -992,7 +992,7 @@ static int builtin_functions( wchar_t **argv )
 				{
 					if( !query )
 					{
-						functions_def( argv[i] );
+						functions_def( argv[i], sb_out );
 					}
 				}				
 			}
@@ -1020,6 +1020,17 @@ static int wcsbindingname( wchar_t *str )
 	return 1;
 }
 
+typedef struct function_data
+{
+	wchar_t *name;
+	wchar_t *description;
+	int is_binding;
+	int do_save;
+	array_list_t *events;
+}
+	function_data_t;
+
+
 
 /**
    The function builtin, used for providing subroutines.
@@ -1031,6 +1042,7 @@ static int builtin_function( wchar_t **argv )
 	int res=0;
 	wchar_t *desc=0;
 	int is_binding=0;
+	int do_save=0;
 	array_list_t *events;
 	int i;
 
@@ -1071,6 +1083,10 @@ static int builtin_function( wchar_t **argv )
 			}
 			,
 			{
+				L"save", no_argument, 0, 'S'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -1082,7 +1098,7 @@ static int builtin_function( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"bd:s:j:p:v:h",
+								L"bd:s:j:p:v:hS",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1236,6 +1252,11 @@ static int builtin_function( wchar_t **argv )
 				break;
 			}
 
+			case 'S':
+				do_save = 1;
+				break;
+		
+
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return 0;
@@ -1316,16 +1337,22 @@ static int builtin_function( wchar_t **argv )
 	}
 	else
 	{
-		current_block->param1.function_name=halloc_wcsdup( current_block, argv[woptind]);
-		current_block->param2.function_description=desc?halloc_wcsdup( current_block, desc):0;
-		current_block->param3.function_is_binding = is_binding;
-		current_block->param4.function_events = events;
+		function_data_t * d = halloc( current_block, sizeof( function_data_t ));
+		
+		d->name=halloc_wcsdup( current_block, argv[woptind]);
+		d->description=desc?halloc_wcsdup( current_block, desc):0;
+		d->is_binding = is_binding;
+		d->events = events;
+		d->do_save = do_save;
 		
 		for( i=0; i<al_get_count( events ); i++ )
 		{
 			event_t *e = (event_t *)al_get( events, i );
-			e->function_name = current_block->param1.function_name;
+			e->function_name = d->name;
 		}
+
+		current_block->data = d;
+		
 	}
 	
 	current_block->tok_pos = parser_get_pos();
@@ -2494,6 +2521,201 @@ static int builtin_begin( wchar_t **argv )
 	return proc_get_last_status();
 }
 
+static void builtin_end_add_function_def( function_data_t *d )
+{
+	/**
+	   Copy the text from the beginning of the function
+				   until the end command and use as the new definition
+				   for the specified function
+	*/
+	void *context = halloc( 0, 0 );
+
+	wchar_t *def = halloc_wcsndup( context,
+								   parser_get_buffer()+current_block->tok_pos,
+								   parser_get_job_pos()-current_block->tok_pos );
+	
+	function_add( d->name,
+				  def,
+				  d->description,
+				  d->events,
+				  d->is_binding );
+	
+	if( d->do_save )
+	{
+		wchar_t *func_path;
+		array_list_t func_path_list;
+
+		func_path = env_get( L"fish_function_path" );
+		
+		if( !func_path )
+		{
+			sb_printf( sb_err, 
+					   _(L"%ls: Can't save the function '%ls' because the function path is undefined. Define the variable $fish_function_path to a suitable directory and retry"), 
+					   L"function", 
+					   d->name );
+			
+		}
+		else
+		{
+			wchar_t *target_dir=0;
+			int i;
+			struct stat buf;
+			
+			al_init( &func_path_list );
+		
+			tokenize_variable_array( func_path, &func_path_list );
+			
+			for( i=0; i<al_get_count( &func_path_list ); i++ )
+			{
+				wchar_t *dir = (wchar_t *)al_get( &func_path_list, i );
+				if( !wstat( dir, &buf ) )
+				{
+					if( S_ISDIR( buf.st_mode ) && 
+						(waccess( dir, W_OK ) == 0 ) )
+					{
+						/*
+						  We have found the first writeable directory
+						  in the path
+						*/	
+						target_dir = dir;
+						break;
+
+					}
+					
+				}
+				else
+				{
+					if( errno == ENOENT )
+					{
+
+
+						wchar_t *dir_copy = halloc_wcsdup( context, dir );
+						array_list_t *subdirs = al_halloc( context );
+
+						//debug( 0, L"Directory %ls doesn't exist. Check if parent is writeable by us", dir );
+						
+						while( 1 )
+						{
+							wchar_t *sub = halloc_wcsdup( context, dir_copy );
+							al_push( subdirs, sub );
+
+							dir_copy = wdirname( dir_copy );
+							
+							if( !wstat( dir_copy, &buf ) )
+							{
+															
+								if( S_ISDIR( buf.st_mode ) && 
+									(waccess( dir_copy, W_OK ) == 0 ) )
+								{
+									int j;
+									int create_err = 0;
+									
+									for( j = al_get_count( subdirs ) -1; j >= 0; j-- )
+									{
+										wchar_t *cre = (wchar_t *)al_get( subdirs, j);
+										if( wmkdir( cre, 0700 ) )
+										{
+											create_err = 1;
+											break;
+										}
+																				
+									}
+
+									if( !create_err )
+										target_dir = dir;
+									
+									
+									break;
+								}
+								else
+								{
+									break;									
+								}
+								
+							}
+							else
+							{
+								if( errno != ENOENT )
+								{
+									break;
+								}
+							}
+							
+							if( wcslen( dir_copy ) <= 1 )
+								break;
+
+						}
+						
+						if( target_dir )
+							break;
+					}
+					
+				}
+				
+				
+			}
+
+			//debug( 0, L"target directory is %ls", target_dir );
+			
+			if( target_dir )
+			{
+				int err=0;
+				string_buffer_t filename;
+				FILE *out;
+				wchar_t *efunc = L"unknown";
+				
+
+				sb_init( &filename );
+				
+				sb_printf( &filename, 
+						   L"%ls/%ls.fish",
+						   target_dir, 
+						   d->name );
+				
+				if( (out = wfopen( (wchar_t *)filename.buff, "w" )))
+				{
+					string_buffer_t *tmp = sb_halloc( context );
+					functions_def( d->name, tmp );
+					
+					fwprintf( out, L"%ls", (wchar_t *)tmp->buff );
+					if( fclose( out ) )
+					{
+						efunc = L"fclose";
+						err = 1;
+					}
+				}
+				else
+				{
+					efunc = L"wfopen";
+					err=1;
+				}
+
+				sb_destroy( &filename );
+				
+				if( err )
+				{
+					sb_printf( sb_err, 
+							   _(L"%ls: Unexpected error while saving function %ls\n"), 
+							   L"function",
+							   d->name );
+					builtin_wperror( efunc );
+					
+				}
+				
+			}
+			
+			
+			al_foreach( &func_path_list, &free );
+			al_destroy( &func_path_list );
+		}
+		
+	}
+
+	halloc_free( context );
+	
+}
+
+
 
 /**
    Builtin for ending a block of code, such as a for-loop or an if statement.
@@ -2605,21 +2827,21 @@ static int builtin_end( wchar_t **argv )
 
 			case FUNCTION_DEF:
 			{
-				/**
-				   Copy the text from the beginning of the function
-				   until the end command and use as the new definition
-				   for the specified function
-				*/
-				wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
-										parser_get_job_pos()-current_block->tok_pos );
 				
-				function_add( current_block->param1.function_name,
-							  def,
-							  current_block->param2.function_description,
-							  current_block->param4.function_events,
-							  current_block->param3.function_is_binding );
+				function_data_t *d = (function_data_t *)current_block->data;
+				
+				if( d )
+				{
+					builtin_end_add_function_def( d );
+				}
+				else
+				{
+					debug(0, 
+						  _(L"%ls: Missing function definition information. This is a fish bug. If you can reproduce it, please file a bug report to %s."), 
+						  argv[0], 
+						  PACKAGE_BUGREPORT);
+				}
 
-				free(def);
 			}
 			break;
 

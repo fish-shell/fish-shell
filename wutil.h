@@ -133,5 +133,9 @@ const wchar_t *wgettext( const wchar_t *in );
 */
 wchar_t *wgetenv( const wchar_t *name );
 
+/**
+   Wide character version of mkdir
+*/
+int wmkdir( const wchar_t *dir, int mode );
 
 #endif

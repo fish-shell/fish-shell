@@ -544,3 +544,8 @@ wchar_t *wgetenv( const wchar_t *name )
 	
 }
 
+int wmkdir( const wchar_t *name, int mode )
+{
+	char *name_narrow =wutil_wcs2str(name);
+	return mkdir( name_narrow, mode );
+}

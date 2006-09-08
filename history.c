@@ -23,6 +23,8 @@
 #include "env.h"
 #include "sanity.h"
 #include "signal.h"
+#include "halloc.h"
+#include "halloc_util.h"
 
 /*
   The history is implemented using a linked list. Searches are done
@@ -57,7 +59,7 @@ typedef struct
 	*/
 	int is_loaded;
 }
-	history_data;
+	history_data_t;
 
 
 static ll_node_t /** Last item in history */ *history_last=0, /** Current search position*/ *history_current =0;
@@ -99,6 +101,31 @@ static hash_table_t history_table;
    Flag, set to 1 once the history file has been loaded
 */
 static int is_loaded=0;
+
+static ll_node_t *unused = 0;
+
+static ll_node_t *history_create_node()
+{
+	ll_node_t *res;
+	
+	if( !unused )
+	{
+		return halloc( global_context, sizeof( ll_node_t ) );
+	}
+
+	res = unused;
+	unused = unused->next;
+	return res;
+	
+}
+
+static void history_free_node( ll_node_t *n )
+{
+	n->next = unused;
+	unused = n;
+}
+
+
 
 /**
    Load history from file
@@ -157,12 +184,7 @@ static int history_load()
 			{
 				history_count++;		
 				
-				history_current = malloc( sizeof( ll_node_t ) );
-				if( !history_current )
-				{
-					DIE_MEM();
-					
-				}
+				history_current = history_create_node();
 				
 				history_current->data=wcsdup( buff );
 
@@ -217,17 +239,17 @@ void history_init()
 */
 static void history_to_hash()
 {
-	history_data *d;
+	history_data_t *d;
 	
 	if( !mode_name )
 		return;
 	
 
-	d = (history_data *)hash_get( &history_table, 
+	d = (history_data_t *)hash_get( &history_table, 
 								  mode_name );
 	
 	if( !d )
-		d = malloc( sizeof(history_data));
+		d = malloc( sizeof(history_data_t));
 	d->last=history_last;
 	d->last_loaded=last_loaded;
 	d->count=history_count;
@@ -242,7 +264,7 @@ static void history_to_hash()
 
 void history_set_mode( wchar_t *name )
 {
-	history_data *curr;
+	history_data_t *curr;
 	
 	if( mode_name )
 	{		
@@ -255,7 +277,7 @@ void history_set_mode( wchar_t *name )
 	/*
 	  See if the new history already exists
 	*/
-	curr = (history_data *)hash_get( &history_table,
+	curr = (history_data_t *)hash_get( &history_table,
 									 name );
 	if( curr )
 	{
@@ -328,63 +350,63 @@ static void history_save()
 	if( !history_load() )
 	{
 		
-	if( real_pos != 0 )
-	{
-		/* 
-		   Rewind the session history to the first item which was
-		   added in this session
-		*/
-		while( (real_pos->prev != 0) && (real_pos->prev != real_first) )
+		if( real_pos != 0 )
 		{
-			real_pos = real_pos->prev;
-		}
-		
-		/* Free old history entries */
-		ll_node_t *kill_node_t = real_pos->prev;
-		while( kill_node_t != 0 )
-		{
-			ll_node_t *tmp = kill_node_t;
-			free( kill_node_t->data );
-			kill_node_t = kill_node_t->prev;
-			free( tmp );		
-		}	
-
-		/* 
-		   Add all the history entries from this session to the global
-		   history, free the old version
-		*/
-		while( real_pos != 0 )
-		{
-			ll_node_t *next = real_pos->next;
-			history_add( (wchar_t *)real_pos->data );
+			/* 
+			   Rewind the session history to the first item which was
+			   added in this session
+			*/
+			while( (real_pos->prev != 0) && (real_pos->prev != real_first) )
+			{
+				real_pos = real_pos->prev;
+			}
 			
-			free( real_pos->data );
-			free( real_pos );
-			real_pos = next;
+			/* Free old history entries */
+			ll_node_t *kill_node_t = real_pos->prev;
+			while( kill_node_t != 0 )
+			{
+				ll_node_t *tmp = kill_node_t;
+				free( kill_node_t->data );
+				kill_node_t = kill_node_t->prev;
+				history_free_node( tmp );		
+			}	
+			
+			/* 
+			   Add all the history entries from this session to the global
+			   history, free the old version
+			*/
+			while( real_pos != 0 )
+			{
+				ll_node_t *next = real_pos->next;
+				history_add( (wchar_t *)real_pos->data );
+				
+				free( real_pos->data );
+				history_free_node( real_pos );
+				real_pos = next;
+			}
 		}
-	}
-
-	/* Save the global history */
-	{
-		fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", 0 );
 		
-		out_stream = wfopen( fn, "w" );
-		if( out_stream )
+		/* Save the global history */
 		{
-			history_save_node( history_last, out_stream );
-			if( fclose( out_stream ) )
+			fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", 0 );
+			
+			out_stream = wfopen( fn, "w" );
+			if( out_stream )
+			{
+				history_save_node( history_last, out_stream );
+				if( fclose( out_stream ) )
+				{
+					debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
+					wperror( L"fopen" );
+				}			
+			}
+			else
 			{
 				debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
 				wperror( L"fopen" );
-			}			
+			}
+			free( fn );	
 		}
-		else
-		{
-			debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
-			wperror( L"fopen" );
-		}
-		free( fn );	
-	}
 	}
 	
 	
@@ -397,7 +419,7 @@ static void history_save()
 static void history_destroy_mode( void *name, void *link )
 {
 	mode_name = (wchar_t *)name;
-	history_data *d = (history_data *)link;
+	history_data_t *d = (history_data_t *)link;
 	history_last = history_current = d->last;
 	last_loaded = d->last_loaded;
 	history_count = d->count;
@@ -414,7 +436,7 @@ static void history_destroy_mode( void *name, void *link )
 			ll_node_t *tmp = history_current;
 			free( history_current->data );
 			history_current = history_current->prev;
-			free( tmp );		
+			history_free_node( tmp );		
 		}	
 	}
 	free( d );
@@ -490,7 +512,7 @@ void history_add( const wchar_t *str )
 	if( old_node == 0 )
 	{
 		history_count++;		
-		history_current = malloc( sizeof( ll_node_t ) );
+		history_current = history_create_node();
 		history_current->data=wcsdup( str );
 	}
 	else

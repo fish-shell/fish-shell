@@ -404,7 +404,7 @@ wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 #endif
 
 
-wchar_t *wdirname( const wchar_t *path )
+wchar_t *wdirname( wchar_t *path )
 {
 	static string_buffer_t *sb = 0;
 	if( sb )
@@ -418,7 +418,8 @@ wchar_t *wdirname( const wchar_t *path )
 		return 0;
 	
 	sb_printf( sb, L"%s", narrow_res );
-	return (wchar_t *)sb->buff;
+	wcscpy( path, (wchar_t *)sb->buff );
+	return path;
 }
 
 wchar_t *wbasename( const wchar_t *path )

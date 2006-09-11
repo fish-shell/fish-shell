@@ -2324,6 +2324,9 @@ static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int po
 			}
 		}
 	}
+
+	color[pos] = 0;
+		
 }
 
 

@@ -1,4 +1,5 @@
 function __fish_complete_subcommand  -d "Complete subcommand"
+
 	set -l res ""
 	set -l had_cmd 0
 	set -l cmd (commandline -cop) (commandline -ct)
@@ -29,8 +30,8 @@ function __fish_complete_subcommand  -d "Complete subcommand"
 			end
 		end
 	end
-	
-	printf "%s\n" (commandline -ct)(complete -C $res)
+
+	printf "%s\n" (commandline -ct)(complete -C$res)
 
 end
 

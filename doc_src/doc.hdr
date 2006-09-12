@@ -1256,11 +1256,10 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 konsole, gnome-terminal, dcop, cron,
 rlogin, rsync, arch, finger, nice, locate, 
 bibtex, aspell, xpdf,
-compress, wine, xmms, dig, wine, batch, cron, 
+compress, wine, xmms, dig, batch, cron, 
 g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Undo support
 - Check keybinding commands for output - if nothing has happened, don't repaint to reduce flicker
-- Syntax highlighting should mark cd to non-existing directories as an error
 - wait shellscript
 - Support for the screen clipboard
 
@@ -1284,6 +1283,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Descriptions for variables using 'set -d'.
 - Parse errors should when possible honor IO redirections
 - Support for writing strings like /u/l/b/foo and have them expand to /usr/local/bin/foo - perhaps through tab expansion
+- Autoreload inputrc-file on updates
 
 
 \subsection bugs Known bugs
@@ -1291,6 +1291,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Completion for gcc -\#\#\# option doesn't work.
 - Yanking weird characters from the clipboard prints Unicode escapes
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
+- line wrapping issues on xterm
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se

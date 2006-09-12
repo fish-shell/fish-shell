@@ -1284,6 +1284,8 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Parse errors should when possible honor IO redirections
 - Support for writing strings like /u/l/b/foo and have them expand to /usr/local/bin/foo - perhaps through tab expansion
 - Autoreload inputrc-file on updates
+- Right-side prompt
+- Selectable completions in the pager
 
 
 \subsection bugs Known bugs

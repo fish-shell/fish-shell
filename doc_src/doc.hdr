@@ -1286,7 +1286,10 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Autoreload inputrc-file on updates
 - Right-side prompt
 - Selectable completions in the pager
-
+- Access to the whole history in $history
+- Saving of the history in intervals to not loose to much on crashes
+- Per process output redirection
+- Reduce the space of the pager by one line to allow the commandline to remain visible.
 
 \subsection bugs Known bugs
 
@@ -1294,6 +1297,8 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Yanking weird characters from the clipboard prints Unicode escapes
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 - line wrapping issues on xterm
+- The search token is invisible on long commandlines
+- Remove --indicator-style=classify from ls function (or use something to detect whether the function is used interactively or not)
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se

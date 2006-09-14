@@ -1274,28 +1274,36 @@ static wchar_t get_quote( wchar_t *cmd, int l )
 	int i=0;
 	wchar_t res=0;
 
-//	fwprintf( stderr, L"Woot %ls\n", cmd );
-
 	while( 1 )
 	{
 		if( !cmd[i] )
 			break;
 
-		if( cmd[i] == L'\'' || cmd[i] == L'\"' )
+		if( cmd[i] == L'\\' )
 		{
-			const wchar_t *end = quote_end( &cmd[i] );
-			//fwprintf( stderr, L"Jump %d\n",  end-cmd );
-			if(( end == 0 ) || (!*end) || (end-cmd > l))
-			{
-				res = cmd[i];
+			i++;
+			if( !cmd[i] )
 				break;
-			}
-			i = end-cmd+1;
+			i++;			
 		}
 		else
-			i++;
-
+		{
+			if( cmd[i] == L'\'' || cmd[i] == L'\"' )
+			{
+				const wchar_t *end = quote_end( &cmd[i] );
+				//fwprintf( stderr, L"Jump %d\n",  end-cmd );
+				if(( end == 0 ) || (!*end) || (end-cmd > l))
+				{
+					res = cmd[i];
+					break;
+				}
+				i = end-cmd+1;
+			}
+			else
+				i++;
+		}
 	}
+
 	return res;
 }
 

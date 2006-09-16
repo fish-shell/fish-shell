@@ -2006,7 +2006,10 @@ static void move_word( int dir, int erase )
 		
 		end_buff_pos--;
 	}
-	
+
+	/*
+	  Remove all whitespace characters before finding a word
+	*/
 	while( 1 )
 	{
 		wchar_t c;
@@ -2022,16 +2025,28 @@ static void move_word( int dir, int erase )
 				break;
 		}
 
-		c = data->buff[end_buff_pos];
-
-		if( !iswspace( c ) )
+		/*
+		  Always eat at least one character
+		*/
+		if( end_buff_pos != data->buff_pos )
 		{
-			break;
+			
+			c = data->buff[end_buff_pos];
+			
+			if( !iswspace( c ) )
+			{
+				break;
+			}
 		}
 		
 		end_buff_pos+=step;
+
+
 	}
 	
+	/*
+	  Remove until we find a character that is not alphanumeric
+	*/
 	while( 1 )
 	{
 		wchar_t c;
@@ -2056,7 +2071,7 @@ static void move_word( int dir, int erase )
 			  whitespace, but do for all other non-alphabetic
 			  characters
 			*/
-			if( iswspace( c ) )
+			if( iswspace( c ) /* && ( abs( end_buff_pos-data->buff_pos ) > 1 ) */)
 				end_buff_pos -= step;
 			break;
 		}

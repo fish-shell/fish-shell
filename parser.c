@@ -128,6 +128,11 @@ The fish parser. Contains functions for parsing code.
 #define INVALID_LOOP_ERR_MSG _( L"Loop control command while not inside of loop" )
 
 /**
+   Error when using return builtin outside of function definition
+*/
+#define INVALID_RETURN_ERR_MSG _( L"'return' command command outside of function definition" )
+
+/**
    Error when using else builtin outside of if block
 */
 #define INVALID_ELSE_ERR_MSG _( L"'else' builtin not inside of if block" )
@@ -3207,6 +3212,67 @@ int parser_test( const  wchar_t * buff,
 					}
 
 					/*
+					  Test that the return bultin is only used within function definitions
+					*/
+					if( wcscmp( cmd, L"return" ) == 0 )
+					{
+						int found_func=0;
+						int i;
+						for( i=count-1; i>=0; i-- )
+						{
+							if( block_type[i]==FUNCTION_DEF )
+							{
+								found_func=1;
+								break;
+							}
+						}
+
+						if( !found_func )
+						{
+							/*
+							  Peek to see if the next argument is
+							  --help, in which case we'll allow it to
+							  show the help.
+							*/
+
+							wchar_t *first_arg;
+							int old_pos = tok_get_pos( &tok );
+							int is_help = 0;
+							
+							tok_next( &tok );
+							if( tok_last_type( &tok ) == TOK_STRING )
+							{
+								first_arg = expand_one( context,
+														wcsdup( tok_last( &tok ) ), 
+														EXPAND_SKIP_CMDSUBST);
+								
+								if( first_arg && parser_is_help( first_arg, 3) )
+								{
+									is_help = 1;
+								}
+							}
+							
+							tok_set_pos( &tok, old_pos );
+							
+							if( !is_help )
+							{
+								err=1;
+
+								if( out )
+								{
+									error( SYNTAX_ERROR,
+										   tok_get_pos( &tok ),
+										   INVALID_RETURN_ERR_MSG );
+									print_errors( out, prefix );
+								}
+							}
+						}
+
+
+					}
+					
+
+					/*
 					  Test that break and continue are only used within loop blocks
 					*/
 					if( contains_str( cmd, L"break", L"continue", (void *)0 ) )
@@ -3225,16 +3291,45 @@ int parser_test( const  wchar_t * buff,
 
 						if( !found_loop )
 						{
-							err=1;
+							/*
+							  Peek to see if the next argument is
+							  --help, in which case we'll allow it to
+							  show the help.
+							*/
 
-							if( out )
+							wchar_t *first_arg;
+							int old_pos = tok_get_pos( &tok );
+							int is_help = 0;
+							
+							tok_next( &tok );
+							if( tok_last_type( &tok ) == TOK_STRING )
 							{
-								error( SYNTAX_ERROR,
-									   tok_get_pos( &tok ),
-									   INVALID_LOOP_ERR_MSG );
-								print_errors( out, prefix );
+								first_arg = expand_one( context,
+														wcsdup( tok_last( &tok ) ), 
+														EXPAND_SKIP_CMDSUBST);
+								
+								if( first_arg && parser_is_help( first_arg, 3 ) ) 
+								{
+									is_help = 1;
+								}
+							}
+							
+							tok_set_pos( &tok, old_pos );
+							
+							if( !is_help )
+							{
+								err=1;
+
+								if( out )
+								{
+									error( SYNTAX_ERROR,
+										   tok_get_pos( &tok ),
+										   INVALID_LOOP_ERR_MSG );
+									print_errors( out, prefix );
+								}
 							}
 						}
+						
 					}
 
 					/*
@@ -3494,10 +3589,8 @@ int parser_test( const  wchar_t * buff,
 					}
 				}
 				
-				if( had_cmd )
-				{
-					had_cmd = 0;
-				}
+				had_cmd = 0;
+				
 				break;
 			}
 

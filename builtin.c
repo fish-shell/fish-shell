@@ -2455,8 +2455,8 @@ static int builtin_for( wchar_t **argv )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Expected at least two arguments, got %d\n"),
-				   argc ,
-				   argv[0] );
+				   argv[0] ,
+				   argc );
 		builtin_print_help( argv[0], sb_err );
 	}
 	else if ( wcsvarname(argv[1]) )

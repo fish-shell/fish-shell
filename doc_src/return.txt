@@ -1,8 +1,7 @@
-
 \section return return - Stop the innermost currently evaluated function
 
 \subsection return-synopsis Synopsis
- <tt>function NAME; [COMMANDS...] return [STATUS]; [COMMANDS...] end</tt>
+<tt>function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end</tt>
 
 \subsection return-description Description 
 
@@ -17,9 +16,11 @@ function.
 
 \subsection return-example Example
 The following code is an implementation of the false command as a fish function
-<p>
-<pre>function false
+
+<pre>
+function false
 	return 1
-end</pre>
-</p>
+end
+</pre>
+
 

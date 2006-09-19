@@ -1,4 +1,3 @@
-
 \section and and - Conditionally execute a command
 
 \subsection and-synopsis Synopsis
@@ -7,7 +6,7 @@
 \subsection and-description Description
 
 The \c and builtin is used to execute a command if the current exit
-status (as set by the last previous command) is zero
+status (as set by the last previous command) is 0.
 
 The and command does not change the current exit status.
 

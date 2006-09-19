@@ -1,7 +1,7 @@
 \section case case - conditionally execute a block of commands
 
 \subsection case-synopsis Synopsis
-<tt>switch VALUE; [case [WILDCARD...]; [COMMANDS...];...] end</tt>
+<tt>switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end</tt>
 
 \subsection case-description Description
 
@@ -32,7 +32,6 @@ forms of parameter expansion have been performed for the case command.
 If the variable \$animal contains the name of an animal, the following
 code would attempt to classify it:
 
-<p>
 <pre>
 switch $animal
     case cat
@@ -47,7 +46,7 @@ switch $animal
         echo I have no idea what a $animal is
 end
 </pre>
-</p>
-<p>
-If the above code was run with \c \$animal set to \c whale, the output would be \c mammal.
-</p>
+
+If the above code was run with \c \$animal set to \c whale, the output
+would be \c mammal.
+

@@ -1,4 +1,3 @@
-
 \section type type - Indicate how a name would be interpreted if used as a command name
 
 \subsection type-synopsis Synopsis

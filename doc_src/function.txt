@@ -29,7 +29,8 @@ are inserted into the environment <a href="index.html#variables-arrays">variable
 
 \subsection function-example Example
 
-<pre>function ll
+<pre>
+function ll
 	ls -l $argv
 end
 </pre>

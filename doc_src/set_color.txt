@@ -1,4 +1,3 @@
-
 \section set_color set_color - Set the terminal color
 
 \subsection set_color-synopsis Synopsis

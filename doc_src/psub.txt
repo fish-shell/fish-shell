@@ -1,4 +1,3 @@
-
 \section psub psub - Perform process substitution
 
 \subsection psub-synopsis Synopsis

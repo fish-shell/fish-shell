@@ -1,4 +1,3 @@
-
 \section ulimit ulimit - Set or get the shells resource usage limits
 
 \subsection ulimit-synopsis Synopsis

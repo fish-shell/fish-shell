@@ -1,4 +1,3 @@
-
 \section random random - Generate random number
 
 \subsection random-synopsis Synopsis

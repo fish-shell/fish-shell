@@ -1,4 +1,3 @@
-
 \section open open - Open file in it's default application
 
 \subsection open-synopsis Synopsis

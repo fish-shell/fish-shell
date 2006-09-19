@@ -1,4 +1,3 @@
-
 \section contains contains - Test if a word is present in a list
 
 \subsection contains-synopsis Synopsis

@@ -1,4 +1,3 @@
-
 \section count count - Count the number of elements of an array
 
 \subsection count-synopsis Synopsis

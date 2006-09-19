@@ -1,4 +1,3 @@
-
 \section fishd fishd - Universal variable daemon
 
 \subsection fishd-synopsis Synopsis

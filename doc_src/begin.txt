@@ -1,8 +1,7 @@
-
 \section begin begin - Start a new block of code
 
 \subsection begin-synopsis Synopsis
- <tt>begin; [COMMAND;...] end </tt>
+ <tt>begin; [COMMANDS...;] end</tt>
 
 \subsection begin-description Description
 

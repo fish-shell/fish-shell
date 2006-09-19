@@ -1,13 +1,19 @@
 \section while while - perform a command multiple times
 
 \subsection while-synopsis Synopsis
-<tt>while CONDITION; COMMANDS; end</tt>
+<tt>while CONDITION; COMMANDS...; end</tt>
 
 \subsection while-synopsis Synopsis
-The <tt>while</tt> builtin causes fish to continually execute the command COMMANDS while the command CONDITION returns with status 0.
+The <tt>while</tt> builtin causes fish to continually execute CONDITION and
+execute COMMANDS as long as CONDITION returned with status 0. If CONDITION is
+false on the first time, COMMANDS will not be executed at all. Hints: use
+<a href="#begin"><tt>begin; ...; end</tt></a> for complex conditions; more
+complex control can be achieved with <tt>while true</tt> containing a
+<a href="#break">break</a>.
 
 \subsection while-example Example
 
 <tt>while test -f foo.txt; echo file exists; sleep 10; end</tt>
 
-causes fish to print the line 'file exists' at 10 second intervals as long as the file foo.txt exists.
+causes fish to print the line 'file exists' at 10 second intervals as long as
+the file foo.txt exists.

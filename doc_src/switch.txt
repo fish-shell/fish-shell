@@ -1,8 +1,7 @@
-
 \section switch switch - conditionally execute a block of commands
 
 \subsection switch-synopsis Synopsis
- <tt>switch VALUE; [case [WILDCARD...]; [COMMANDS...];...] end</tt>
+<tt>switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end</tt>
 
 \subsection switch-description Description
 
@@ -22,12 +21,17 @@ Note that fish does not fall through on case statements. Though the
 syntax may look a bit like C switch statements, it behaves more like
 the case stamantes of traditional shells.
 
+Also note that command substitutions in a case statement will be
+evaluated even if it's body is not taken. This may seem
+counterintuitive at first, but it is unavoidable, since it would be
+impossible to know if a case command will evaluate to true before all
+forms of parameter expansion have been performed for the case command.
+
 \subsection switch-example Example
 
-If the variable \$animal contains the name of an animal, the
-following code would attempt to classify it:
+If the variable \$animal contains the name of an animal, the following
+code would attempt to classify it:
 
-<p>
 <pre>
 switch $animal
     case cat
@@ -42,10 +46,7 @@ switch $animal
         echo I have no idea what a $animal is
 end
 </pre>
-</p>
-<p>
 
 If the above code was run with \c \$animal set to \c whale, the output
 would be \c mammal.
 
-</p>

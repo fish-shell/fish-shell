@@ -1,4 +1,3 @@
-
 \section block block - Temporarily block delivery of events
 
 \subsection block-synopsis Synopsis
@@ -12,7 +11,8 @@
 
 \subsection block-example Example
 
-<pre>block -g
+<pre>
+block -g
 \#Do something that should not be interrupted
 block -e
 </pre>

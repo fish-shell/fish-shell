@@ -1,4 +1,3 @@
-
 \section break break - stop the innermost currently evaluated loop
 
 \subsection break-synopsis Synopsis
@@ -9,13 +8,12 @@ The \c break builtin is used to halt a currently running loop, such as a <a href
 
 \subsection break-example Example
 The following code searches all .c files for smurfs, and halts at the first occurrence.
-<p>
-<tt>for i in *.c;
-<br>&nbsp;&nbsp;&nbsp;&nbsp;if grep smurf $i;
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;echo Smurfs are present in $i;
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
-<br>&nbsp;&nbsp;&nbsp;&nbsp;end;
-<br>end;
-</tt>
-</p>
 
+<pre>
+for i in *.c
+    if grep smurf $i
+        echo Smurfs are present in $i
+        break
+    end
+end
+</pre>

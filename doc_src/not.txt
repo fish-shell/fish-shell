@@ -1,13 +1,11 @@
-
 \section not not - Negate the exit status of a job
 
 \subsection not-synopsis Synopsis
- <tt>not COMMAND [OPTIONS...]</tt>
+<tt>not COMMAND [OPTIONS...]</tt>
 
 \subsection not-description Description
 
 The \c not builtin is used to negate the exit status of another command. 
-
 
 \subsection not-example Example
 

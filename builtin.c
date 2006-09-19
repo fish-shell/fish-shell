@@ -1842,7 +1842,7 @@ static int builtin_status( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"hjt",
+								L"hj:t",
 								long_options,
 								&opt_index );
 		if( opt == -1 )

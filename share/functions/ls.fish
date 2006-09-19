@@ -5,7 +5,11 @@
 if command ls --version 1>/dev/null 2>/dev/null
 	# This is GNU ls
 	function ls -d (N_ "List contents of directory")
-		command ls --color=auto --indicator-style=classify $argv
+		set -l param --color=auto
+		if isatty 1
+			set param $param --indicator-style=classify
+		end
+		command ls $argv
 	end
 
 	set -l color_document 35

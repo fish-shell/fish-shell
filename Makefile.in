@@ -615,12 +615,12 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 
 distclean: clean
 	rm -f fish.spec doc_src/fish.1 doc_src/Doxyfile 
-	rm -f etc/fish etc/fish_interactive.fish seq
+	rm -f etc/fish etc/fish_interactive.fish seq share/fish
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
 clean:
-	rm -f *.o doc.h doc_src/*.doxygen doc_src/*.c builtin_help.c doc_src/*.o
+	rm -f *.o doc.h doc_src/*.doxygen doc_src/*.c doc_src/*.o
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f tokenizer_test fish key_reader set_color gen_hdr2 mimedb
 	rm -f fishd fish_pager count fish_tests 
@@ -628,8 +628,6 @@ clean:
 	rm -f fish-@PACKAGE_VERSION@.tar.gz 
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2
 	rm -rf doc; 
-	rm -rf user_doc; 
-	rm -rf doc_src/builtin_doc
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -rf xsel-0.9.6/
 	rm -f $(TRANSLATIONS)

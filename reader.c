@@ -318,7 +318,7 @@ static struct termios saved_modes;
 
 static void reader_save_status();
 static void reader_check_status();
-static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int pos, array_list_t *error );
+static void reader_super_highlight_me_plenty( int *color, int pos, array_list_t *error );
 
 /**
    Variable to keep track of forced exits - see \c reader_exit_forced();
@@ -945,8 +945,10 @@ void repaint( int skip_return )
 
 	calc_output();
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
+
 	if( !skip_return )
 		writech('\r');
+
 	writembs(clr_eol);
 	write_prompt();
 	write_cmdline();
@@ -971,7 +973,7 @@ void repaint( int skip_return )
 */
 static void check_colors()
 {
-	reader_super_highlight_me_plenty( data->buff, data->new_color, data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->new_color, data->buff_pos, 0 );
 	if( memcmp( data->new_color, data->color, sizeof(int)*data->buff_len )!=0 )
 	{
 		memcpy( data->color, data->new_color,  sizeof(int)*data->buff_len );
@@ -1082,8 +1084,7 @@ static void remove_backward()
 	data->buff[data->buff_len]='\0';
 //	wcscpy(data->search_buff,data->buff);
 
-	reader_super_highlight_me_plenty( data->buff,
-									  data->new_color,
+	reader_super_highlight_me_plenty( data->new_color,
 									  data->buff_pos,
 									  0 );
 	if( (!force_repaint()) && ( memcmp( data->new_color,
@@ -1159,8 +1160,7 @@ static int insert_char( int c )
 
 	/* Syntax highlight */
 
-	reader_super_highlight_me_plenty( data->buff,
-									  data->new_color,
+	reader_super_highlight_me_plenty( data->new_color,
 									  data->buff_pos-1,
 									  0 );
 	data->color[data->buff_pos-1] = data->new_color[data->buff_pos-1];
@@ -1238,8 +1238,7 @@ static int insert_str(wchar_t *str)
 
 		/* Syntax highlight */
 
-		reader_super_highlight_me_plenty( data->buff,
-										  data->new_color,
+		reader_super_highlight_me_plenty( data->new_color,
 										  data->buff_pos-1,
 										  0 );
 		memcpy( data->color, data->new_color, sizeof(int) * data->buff_len );
@@ -1647,8 +1646,10 @@ static int handle_completions( array_list_t *comp )
 				wchar_t quote;
 				get_param( data->buff, data->buff_pos, &quote, 0, 0, 0 );
 				is_quoted = (quote != L'\0');
-
+				
 				writech(L'\n');
+
+				
 
 				run_pager( prefix, is_quoted, comp );
 
@@ -1807,7 +1808,7 @@ static void handle_history( const wchar_t *new_str )
 	check_size();
 	wcscpy( data->buff, new_str );
 	data->buff_pos=wcslen(data->buff);
-	reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
 
 	repaint( 0 );
 }
@@ -1893,7 +1894,7 @@ static void handle_token_history( int forward, int reset )
 		}
 
 		reader_replace_current_token( str );
-		reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
+		reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
 		repaint( 0 );
 	}
 	else
@@ -1966,7 +1967,7 @@ static void handle_token_history( int forward, int reset )
 		if( str )
 		{
 			reader_replace_current_token( str );
-			reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
+			reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
 			repaint( 0 );
 			al_push( &data->search_prev, str );
 			data->search_pos = al_get_count( &data->search_prev )-1;
@@ -2092,7 +2093,7 @@ static void move_word( int dir, int erase )
 		data->buff_pos = first_char;
 		data->buff[data->buff_len]=0;
 
-		reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
+		reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
 
 		repaint( 0 );
 	}
@@ -2150,8 +2151,7 @@ void reader_set_buffer( wchar_t *b, int p )
 		data->buff_pos=l;
 	}
 
-	reader_super_highlight_me_plenty( data->buff,
-									  data->color,
+	reader_super_highlight_me_plenty( data->color,
 									  data->buff_pos,
 									  0 );
 }
@@ -2320,17 +2320,23 @@ void reader_set_test_function( int (*f)( wchar_t * ) )
 
 /**
    Call specified external highlighting function and then do search
-   highlighting.
+   highlighting. Lastly, clear the background color under the cursor
+   to avoid confusion.
+
+   \param buff the buffer to syntax highlight. This is always the same as data->buff
+   \param color the array of color values to insert the results into
+   \param match_highlight_pos the position to use for bracket matching. This need not be the same as the surrent cursor position
+   \param if non-null, any possibly errors in the buffer are further descibed by the strings inserted into the specified arraylist
 */
-static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int pos, array_list_t *error )
+static void reader_super_highlight_me_plenty( int *color, int match_highlight_pos, array_list_t *error )
 {
-	data->highlight_func( buff, color, pos, error );
+	data->highlight_func( data->buff, color, match_highlight_pos, error );
 	if( wcslen(data->search_buff) )
 	{
-		wchar_t * match = wcsstr( buff, data->search_buff );
+		wchar_t * match = wcsstr( data->buff, data->search_buff );
 		if( match )
 		{
-			int start = match-buff;
+			int start = match-data->buff;
 			int count = wcslen(data->search_buff );
 			int i;
 //			fwprintf( stderr, L"WEE color from %d to %d\n", start, start+count );
@@ -2348,7 +2354,7 @@ static void reader_super_highlight_me_plenty( wchar_t * buff, int *color, int po
 		}
 	}
 
-	color[pos] = 0;
+	color[data->buff_pos] = 0;
 		
 }
 
@@ -2475,7 +2481,7 @@ wchar_t *reader_readline()
 
 	data->exec_prompt=1;
 
-	reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
 	repaint( 1 );
 
 	tcgetattr(0,&old_modes);        /* get the current terminal modes */
@@ -2663,7 +2669,7 @@ wchar_t *reader_readline()
 				memmove( data->buff, data->buff +data->buff_pos, sizeof(wchar_t)*data->buff_len );
 				data->buff[data->buff_len]=L'\0';
 				data->buff_pos=0;
-				reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
+				reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
 
 				repaint( 0 );
 				break;
@@ -2674,7 +2680,7 @@ wchar_t *reader_readline()
 				kill_add( data->buff );
 				data->buff_len = data->buff_pos = 0;
 				data->buff[data->buff_len]=L'\0';
-				reader_super_highlight_me_plenty( data->buff, data->color, data->buff_pos, 0 );
+				reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
 
 				repaint( 0 );
 				break;

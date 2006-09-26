@@ -3043,6 +3043,8 @@ int parser_test( const  wchar_t * buff,
 		current_tokenizer_pos = tok_get_pos( &tok );
 
 		int last_type = tok_last_type( &tok );
+		int end_of_cmd = 0;
+		
 		switch( last_type )
 		{
 			case TOK_STRING:
@@ -3512,6 +3514,8 @@ int parser_test( const  wchar_t * buff,
 				had_cmd = 0;
 				is_pipeline=0;
 				forbid_pipeline=0;
+				end_of_cmd = 1;
+				
 				break;
 			}
 
@@ -3558,6 +3562,8 @@ int parser_test( const  wchar_t * buff,
 					needs_cmd=1;
 					is_pipeline=1;
 					had_cmd=0;
+					end_of_cmd = 1;
+					
 				}
 				break;
 			}
@@ -3590,6 +3596,7 @@ int parser_test( const  wchar_t * buff,
 				}
 				
 				had_cmd = 0;
+				end_of_cmd = 1;
 				
 				break;
 			}
@@ -3610,6 +3617,35 @@ int parser_test( const  wchar_t * buff,
 				}
 				break;
 		}
+
+		if( end_of_cmd )
+		{
+			if( cmd && wcscmp( cmd, L"for" ) == 0 )
+			{
+				if( arg_count >= 0 && arg_count < 2 )
+				{
+					/*
+					  Not enough arguments to the for builtin
+					*/
+					err = 1;
+					
+					if( out )
+					{
+						error( SYNTAX_ERROR,
+							   tok_get_pos( &tok ),
+							   BUILTIN_FOR_ERR_COUNT,
+							   L"for",
+							   arg_count );
+						
+						print_errors( out, prefix );
+					}
+				}
+				
+			}
+			
+		}
+		
+		
 	}
 
 	if( needs_cmd )

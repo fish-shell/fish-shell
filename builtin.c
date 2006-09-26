@@ -2454,7 +2454,7 @@ static int builtin_for( wchar_t **argv )
 	if( argc < 3)
 	{
 		sb_printf( sb_err,
-				   _( L"%ls: Expected at least two arguments, got %d\n"),
+				   BUILTIN_FOR_ERR_COUNT,
 				   argv[0] ,
 				   argc );
 		builtin_print_help( argv[0], sb_err );

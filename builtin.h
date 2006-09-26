@@ -63,6 +63,11 @@ enum
 #define BUILTIN_FOR_ERR_IN _( L"%ls: Second argument must be 'in'\n" )
 
 /**
+   Error message for insufficient number of arguments 
+*/
+#define BUILTIN_FOR_ERR_COUNT _( L"%ls: Expected at least two arguments, got %d\n")
+
+/**
    Error message when too many arguments are supplied to a builtin
 */
 #define BUILTIN_ERR_TOO_MANY_ARGUMENTS _( L"%ls: Too many arguments\n" )

@@ -2072,7 +2072,7 @@ static void move_word( int dir, int erase )
 			  whitespace, but do for all other non-alphabetic
 			  characters
 			*/
-			if( iswspace( c ) /* && ( abs( end_buff_pos-data->buff_pos ) > 1 ) */)
+			if( iswspace( c ) /* && ( abs( end_buff_pos-data->buff_pos ) > 1 ) */ && (step < 0))
 				end_buff_pos -= step;
 			break;
 		}

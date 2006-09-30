@@ -24,9 +24,12 @@
 #define HALLOC_BLOCK_SIZE 128
 
 /**
-   Maximum size of trailing halloc space to refuse to discard
+   Maximum size of trailing halloc space to refuse to discard. This is
+   set to be larger on 64-bit platforms, since we don't want to get
+   'stuck' with an unusably small slice of memory, and what is
+   unusably small often depends on pointer size.
 */
-#define HALLOC_SCRAP_SIZE 16
+#define HALLOC_SCRAP_SIZE (4*sizeof(void *))
 
 #ifdef HALLOC_DEBUG
 /**
@@ -71,24 +74,32 @@ typedef struct halloc
 	/**
 	   Amount of free space in the scratch area
 	*/
-	size_t scratch_free;
-#if __STDC_VERSION__ < 199901L
-	/**
-	   The actual data. Made to be of type long long to make sure memory alignment is in order.
-	*/
-	long long data[1]; // Waste one byte on non-C99 compilers... :-( 
-#else
-	long long data[];
-#endif
+	ssize_t scratch_free;
 }
 	halloc_t;
+
+static void *align_ptr( void *in )
+{
+	unsigned long step = maxi(sizeof(double),sizeof(void *));
+	unsigned long inc = step-1;
+	unsigned long long_in = (long)in;
+	unsigned long long_out = ((long_in+inc)/step)*step;
+	return (void *)long_out;
+}
+
+static size_t align_sz( size_t in )
+{
+	size_t step = maxi(sizeof(double),sizeof(void *));
+	size_t inc = step-1;
+	return ((in+inc)/step)*step;
+}
 
 /**
    Get the offset of the halloc structure before a data block
 */
 static halloc_t *halloc_from_data( void *data )
 {
-	return (halloc_t *)(((char *)data) - sizeof( halloc_t ) );
+	return (halloc_t *)(((char *)data) - align_sz(sizeof( halloc_t ) ));
 }
 
 /**
@@ -104,7 +115,7 @@ static void late_free( void *data)
    statistics, like number of allocations and number of internal calls
    to malloc.
 */
-static void woot()
+static void halloc_report()
 {
 	if( getpid() == pid )
 	{
@@ -115,25 +126,40 @@ static void woot()
 }
 #endif
 
+
 void *halloc( void *context, size_t size )
 {	
 	halloc_t *me, *parent;
 	if( context )
 	{
 		void *res;
+		void *aligned;
 		
 #ifdef HALLOC_DEBUG
 			
 		if( !child_count )
 		{
 			pid = getpid();
-			atexit( woot );
+			atexit( &halloc_report );
 		}
 		
 		child_count++;
 		child_size += size;
 #endif	
 		parent = halloc_from_data( context );
+
+		/*
+		  Align memory address 
+		*/
+		aligned = align_ptr( parent->scratch );
+
+		parent->scratch_free -= (aligned-parent->scratch);
+
+		if( parent->scratch_free < 0 )
+			parent->scratch_free=0;
+		
+		parent->scratch = aligned;
+
 		if( size <= parent->scratch_free )
 		{
 			res = parent->scratch;
@@ -169,18 +195,18 @@ void *halloc( void *context, size_t size )
 	}
 	else
 	{
-		me = (halloc_t *)calloc( 1, sizeof(halloc_t) + size + HALLOC_BLOCK_SIZE );
+		me = (halloc_t *)calloc( 1, align_sz(sizeof(halloc_t)) + align_sz(size) + HALLOC_BLOCK_SIZE );
 		
 		if( !me )
 			return 0;
 #ifdef HALLOC_DEBUG
 		parent_count++;
 #endif		
-		me->scratch = ((char *)me) + sizeof(halloc_t) + size;
+		me->scratch = ((char *)me) + align_sz(sizeof(halloc_t)) + align_sz(size);
 		me->scratch_free = HALLOC_BLOCK_SIZE;
 		
 		al_init( &me->children );
-		return &me->data;
+		return ((char *)me) + align_sz(sizeof(halloc_t));
 	}
 }
 

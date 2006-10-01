@@ -186,7 +186,7 @@ static int history_load()
 				
 				history_current = history_create_node();
 				
-				history_current->data=wcsdup( buff );
+				history_current->data=halloc_wcsdup( global_context, buff );
 
 				hash_put( &used,
 						  history_current->data, 
@@ -366,7 +366,6 @@ static void history_save()
 			while( kill_node_t != 0 )
 			{
 				ll_node_t *tmp = kill_node_t;
-				free( kill_node_t->data );
 				kill_node_t = kill_node_t->prev;
 				history_free_node( tmp );		
 			}	
@@ -380,7 +379,6 @@ static void history_save()
 				ll_node_t *next = real_pos->next;
 				history_add( (wchar_t *)real_pos->data );
 				
-				free( real_pos->data );
 				history_free_node( real_pos );
 				real_pos = next;
 			}
@@ -434,7 +432,6 @@ static void history_destroy_mode( void *name, void *link )
 		while( history_current != 0 )
 		{
 			ll_node_t *tmp = history_current;
-			free( history_current->data );
 			history_current = history_current->prev;
 			history_free_node( tmp );		
 		}	
@@ -513,7 +510,7 @@ void history_add( const wchar_t *str )
 	{
 		history_count++;		
 		history_current = history_create_node();
-		history_current->data=wcsdup( str );
+		history_current->data=halloc_wcsdup( global_context, str );
 	}
 	else
 	{

@@ -135,7 +135,7 @@ commence.
 typedef struct reader_data
 {
 	/**
-	   Buffer containing the current commandline
+	   Buffer containing the whole current commandline
 	*/
 	wchar_t *buff;
 
@@ -153,6 +153,7 @@ typedef struct reader_data
 	   Buffer containing the current search item
 	*/
 	wchar_t *search_buff;
+
 	/**
 	   Saved position used by token history search
 	*/

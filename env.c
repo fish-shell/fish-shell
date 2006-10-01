@@ -693,7 +693,7 @@ int env_set( const wchar_t *key,
 		
 		env_universal_set( key, val, export );
 		is_universal = 1;
-		
+
 	}
 	else
 	{
@@ -721,6 +721,7 @@ int env_set( const wchar_t *key,
 			(var_mode & ENV_GLOBAL) )
 		{
 			node = ( var_mode & ENV_GLOBAL )?global_env:top;
+		
 		}
 		else
 		{
@@ -946,7 +947,7 @@ wchar_t *env_get( const wchar_t *key )
 	wchar_t *item;
 	
 	CHECK( key, 0 );
-		
+
 	if( wcscmp( key, L"history" ) == 0 )
 	{
 		wchar_t *current;
@@ -966,10 +967,6 @@ wchar_t *env_get( const wchar_t *key )
 			wchar_t *next = history_get( i-add_current );
 			if( !next )
 			{
-				/*
-				  This is not an error - it simply means the user has
-				  a short history
-				*/
 				break;
 			}
 			
@@ -977,6 +974,7 @@ wchar_t *env_get( const wchar_t *key )
 				sb_append( &dyn_var, ARRAY_SEP_STR );
 			sb_append( &dyn_var, next );
 		}
+
 		return (wchar_t *)dyn_var.buff;
 	}
 	else if( wcscmp( key, L"COLUMNS" )==0 )

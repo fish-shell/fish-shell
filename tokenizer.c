@@ -1,9 +1,9 @@
 /** \file tokenizer.c
 
-    A specialized tokenizer for tokenizing the fish language. In the
-    future, the tokenizer should be extended to support marks,
-    tokenizing multiple strings and disposing of unused string
-    segments.
+A specialized tokenizer for tokenizing the fish language. In the
+future, the tokenizer should be extended to support marks,
+tokenizing multiple strings and disposing of unused string
+segments.
 */
 
 #include "config.h"
@@ -46,7 +46,7 @@
 #define PIPE_ERROR _( L"Can not use fd 0 as pipe output" )
 
 /**
-  Characters that separate tokens. They are ordered by frequency of occurrence to increase parsing speed.
+   Characters that separate tokens. They are ordered by frequency of occurrence to increase parsing speed.
 */
 #define SEP L" \n|\t;#\r<>^&"
 

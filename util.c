@@ -21,7 +21,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
-
+#include <assert.h>
 
 #include "fallback.h"
 #include "util.h"

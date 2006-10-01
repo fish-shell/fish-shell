@@ -543,7 +543,7 @@ void signal_set_handlers()
 		   Interactive mode. Ignore interactive signals.  We are a
 		   shell, we know whats best for the user. ;-)
 		*/
-
+		
 		act.sa_handler=SIG_IGN;
 		
 		sigaction( SIGINT, &act, 0);

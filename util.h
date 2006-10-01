@@ -109,7 +109,9 @@ priority_queue_t;
 */
 typedef struct array_list
 {
-	/** Array containing the data */
+	/** 
+		Array containing the data
+	*/
 	anything_t *arr;
 	/** Position to append elements at*/
 	int pos;
@@ -517,8 +519,8 @@ void al_foreach( array_list_t *l, void (*func)( void * ));
 void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux);
 
 /**
-   Compares two wide character strings without case but with  
-   a logical ordering for numbers.
+   Compares two wide character strings with an (arguably) intuitive
+   ordering.
 
    This function tries to order strings in a way which is intuitive to
    humans with regards to sorting strings containing numbers.
@@ -542,6 +544,13 @@ void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux);
    This won't return the optimum results for numbers in bases higher
    than ten, such as hexadecimal, but at least a stable sort order
    will result.
+
+   This function performs a two-tiered sort, where difference in case
+   and in number of leading zeroes in numbers only have effect if no
+   other differences between strings are found. This way, a 'file1'
+   and 'File1' will not be considered identical, and hence their
+   internal sort order is not arbitrary, but the names 'file1',
+   'File2' and 'file3' will still be sorted in the order given above.
 */
 int wcsfilecmp( const wchar_t *a, const wchar_t *b );
 

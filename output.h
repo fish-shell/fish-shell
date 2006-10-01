@@ -82,7 +82,7 @@ void set_color( int c, int c2 );
 int writembs( char *str );
 
 /**
-   Write a wide character to fd 1.
+   Write a wide character using the output method specified using output_set_writer().
 */
 int writech( wint_t ch );
 

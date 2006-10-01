@@ -1,3 +1,11 @@
+/** \file screen.c High level library for handling the terminal screen
+
+	The screen library allows the interactive reader to write its
+	output to screen efficiently by keeping an inetrnal representation
+	of the current screen contents and trying to find the most
+	efficient way for transforming that to the desired screen content.
+*/
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -43,6 +51,11 @@
 #include "highlight.h"
 #include "screen.h"
 
+/**
+   Ugly kludge. The internal buffer used to store output of
+   tputs. Since tputs external function can only take an integer and
+   not a pointer as parameter we need a static storage buffer.
+*/
 static buffer_t *s_writeb_buffer=0;
 
 /**
@@ -186,22 +199,23 @@ static int calc_prompt_width( wchar_t *prompt )
 	return res;
 }
 
-
+/**
+   Free all memory used by one line_t struct. 
+*/
 
 static void free_line( void *l )
 {
 	line_t *line = (line_t *)l;
-//	debug( 0, L"Free line at %d", l);
 	al_destroy( &line->text );
 	al_destroy( &line->color );
 	free( line );
 }
 
-
+/**
+   Clear the specified array of line_t structs.
+*/
 static void s_reset_arr( array_list_t *l )
 {
-//	debug( 0, L"I have %d lines", al_get_count( l ));
-	
 	al_foreach( l, &free_line );
 	al_truncate( l, 0 );
 }
@@ -209,18 +223,21 @@ static void s_reset_arr( array_list_t *l )
 void s_init( screen_t *s )
 {
 	memset( s, 0, sizeof(screen_t));
-	sb_init( &s->prompt_buff );
+	sb_init( &s->actual_prompt );
 }
 
 
 void s_destroy( screen_t *s )
 {
-	s_reset_arr( &s->screen );
-	al_destroy( &s->screen );
-	s_reset_arr( &s->output );
-	al_destroy( &s->output );
+	s_reset_arr( &s->actual );
+	al_destroy( &s->actual );
+	s_reset_arr( &s->desired );
+	al_destroy( &s->desired );
 }
 
+/**
+   Allocate a new line_t struct.
+*/
 static line_t *s_create_line()
 {
 	line_t *current = malloc( sizeof( line_t ));
@@ -229,12 +246,17 @@ static line_t *s_create_line()
 	return current;
 }
 
-/*
-  Appends a character to the end of the line that the output cursor is on
+/**
+  Appends a character to the end of the line that the output cursor is
+  on. This function automatically handles linebreaks and lines longer
+  than the screen width. 
 */
-static void s_output_append_char( screen_t *s, wchar_t b, int c, int prompt_width )
+static void s_desired_append_char( screen_t *s, 
+								   wchar_t b, 
+								   int c, 
+								   int prompt_width )
 {
-	int line_no = s->output_cursor[1];
+	int line_no = s->desired_cursor[1];
 	
 	switch( b )
 	{
@@ -242,12 +264,12 @@ static void s_output_append_char( screen_t *s, wchar_t b, int c, int prompt_widt
 		{
 			int i;
 			line_t *current = s_create_line();
-			al_push( &s->output, current );
-			s->output_cursor[1]++;
-			s->output_cursor[0]=0;
+			al_push( &s->desired, current );
+			s->desired_cursor[1]++;
+			s->desired_cursor[0]=0;
 			for( i=0; i < prompt_width; i++ )
 			{
-				s_output_append_char( s, L' ', 0, prompt_width );
+				s_desired_append_char( s, L' ', 0, prompt_width );
 			}
 			break;
 		}
@@ -255,10 +277,10 @@ static void s_output_append_char( screen_t *s, wchar_t b, int c, int prompt_widt
 		case L'\r':
 		{
 			line_t *current;
-			current = (line_t *)al_get( &s->output, line_no );
+			current = (line_t *)al_get( &s->desired, line_no );
 			al_truncate( &current->text, 0 );
 			al_truncate( &current->color, 0 );			
-			s->output_cursor[0]=0;
+			s->desired_cursor[0]=0;
 			break;			
 		}		
 
@@ -270,46 +292,55 @@ static void s_output_append_char( screen_t *s, wchar_t b, int c, int prompt_widt
 			int ew = wcwidth( ellipsis_char );
 			int i;
 			
-			current = (line_t *)al_get( &s->output, line_no );
+			current = (line_t *)al_get( &s->desired, line_no );
 			
 			if( !current )
 			{
 				current = s_create_line();
-				al_push( &s->output, current );
+				al_push( &s->desired, current );
 			}
 
-			if( s->output_cursor[0] + cw + ew > screen_width )
+			/*
+			  Check if we are at the end of the line. If so, print an
+			  ellipsis character and continue on the next line.
+			*/
+			if( s->desired_cursor[0] + cw + ew > screen_width )
 			{
 				al_push_long( &current->text, ellipsis_char );
 				al_push_long( &current->color, 0 );
 								
 				current = s_create_line();
-				al_push( &s->output, current );
-				s->output_cursor[1]++;
-				s->output_cursor[0]=0;
+				al_push( &s->desired, current );
+				s->desired_cursor[1]++;
+				s->desired_cursor[0]=0;
 				for( i=0; i < (prompt_width-ew); i++ )
 				{
-					s_output_append_char( s, L' ', 0, prompt_width );
+					s_desired_append_char( s, L' ', 0, prompt_width );
 				}				
-				s_output_append_char( s, ellipsis_char, 0, prompt_width );
+				s_desired_append_char( s, ellipsis_char, 0, prompt_width );
 			}
 			
 			al_push_long( &current->text, b );
 			al_push_long( &current->color, c );
-			s->output_cursor[0]+= cw;
+			s->desired_cursor[0]+= cw;
 			break;
 		}
 	}
 	
 }
 
+/**
+   The writeb function offered to tputs.
+*/
 static int s_writeb( char c )
 {
 	b_append( s_writeb_buffer, &c, 1 );
 	return 0;
 }
 
-
+/**
+   Move screen cursor to the specified position. 
+*/
 static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 {
 	int i;
@@ -326,7 +357,7 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 	output_set_writer( &s_writeb );
 	s_writeb_buffer = b;
 	
-	y_steps = new_y - s->screen_cursor[1];
+	y_steps = new_y - s->actual_cursor[1];
 
 	if( y_steps > 0 && (strcmp( cursor_down, "\n")==0))
 	{	
@@ -336,7 +367,7 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 		  course move the cursor to the beginning of the line as
 		  well. The cursor_up does not have this behaviour...
 		*/
-		s->screen_cursor[0]=0;
+		s->actual_cursor[0]=0;
 	}
 	
 	if( y_steps < 0 )
@@ -355,14 +386,13 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 	}
 
 
-	x_steps = new_x - s->screen_cursor[0];
+	x_steps = new_x - s->actual_cursor[0];
 	
 	if( x_steps && new_x == 0 )
 	{
 		char c = '\r';
 		b_append( b, &c, 1 );
 		x_steps = 0;
-//		debug( 0, L"return to first" );		
 	}
 		
 	if( x_steps < 0 ){
@@ -379,13 +409,16 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 	}
 
 
-	s->screen_cursor[0] = new_x;
-	s->screen_cursor[1] = new_y;
+	s->actual_cursor[0] = new_x;
+	s->actual_cursor[1] = new_y;
 	
 	output_set_writer( writer_old );
 	
 }
 
+/**
+   Set the pen color for the terminal
+*/
 static void s_set_color( screen_t *s, buffer_t *b, int c )
 {
 	
@@ -401,19 +434,26 @@ static void s_set_color( screen_t *s, buffer_t *b, int c )
 	
 }
 
+/**
+   Convert a wide character to a multibyte string and append it to the
+   buffer.
+*/
 static void s_write_char( screen_t *s, buffer_t *b, wchar_t c )
 {
 	int (*writer_old)(char) = output_get_writer();
 
 	output_set_writer( &s_writeb );
 	s_writeb_buffer = b;
-	s->screen_cursor[0]+=wcwidth( c );
+	s->actual_cursor[0]+=wcwidth( c );
 	
 	writech( c );
 	
 	output_set_writer( writer_old );
 }
-
+/**
+   Send the specified string through tputs and append the output to
+   the specified buffer.
+*/
 static void s_write_mbs( buffer_t *b, char *s )
 {
 	int (*writer_old)(char) = output_get_writer();
@@ -426,7 +466,10 @@ static void s_write_mbs( buffer_t *b, char *s )
 	output_set_writer( writer_old );
 }
 
-
+/**
+   Convert a wide string to a multibyte string and append it to the
+   buffer.
+*/
 static void s_write_str( buffer_t *b, wchar_t *s )
 {
 	int (*writer_old)(char) = output_get_writer();
@@ -439,7 +482,9 @@ static void s_write_str( buffer_t *b, wchar_t *s )
 	output_set_writer( writer_old );
 }
 
-
+/**
+   Update the screen to match the desired output.
+*/
 static void s_update( screen_t *scr, wchar_t *prompt )
 {
 	int i, j;
@@ -448,25 +493,24 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 	buffer_t output;
 	b_init( &output );
 
-	if( wcscmp( prompt, (wchar_t *)scr->prompt_buff.buff ) )
+	if( wcscmp( prompt, (wchar_t *)scr->actual_prompt.buff ) )
 	{
 		s_move( scr, &output, 0, 0 );
 		s_write_str( &output, prompt );
-		sb_clear( &scr->prompt_buff );
-		sb_append( &scr->prompt_buff, prompt );		
-//		debug( 0, L"YAY %d", prompt_width );
-		scr->screen_cursor[0] = prompt_width;
+		sb_clear( &scr->actual_prompt );
+		sb_append( &scr->actual_prompt, prompt );		
+		scr->actual_cursor[0] = prompt_width;
 	}
 	
-	for( i=0; i< al_get_count( &scr->output ); i++ )
+	for( i=0; i< al_get_count( &scr->desired ); i++ )
 	{
-		line_t *o_line = (line_t *)al_get( &scr->output, i );
-		line_t *s_line = (line_t *)al_get( &scr->screen, i );
+		line_t *o_line = (line_t *)al_get( &scr->desired, i );
+		line_t *s_line = (line_t *)al_get( &scr->actual, i );
 		
 		if( !s_line )
 		{
 			s_line = s_create_line();
-			al_push( &scr->screen, s_line );
+			al_push( &scr->actual, s_line );
 		}
 		for( j=(i==0?prompt_width:0); j<al_get_count( &o_line->text ); j++ )
 		{
@@ -494,25 +538,24 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 				}
 			}
 		}
-//		debug( 0, L"frum frum %d %d", al_get_count( &o_line->text ), al_get_count( &s_line->text ) );
+
 		if( al_get_count( &s_line->text ) > al_get_count( &o_line->text ) )
 		{
 			s_move( scr, &output, al_get_count( &o_line->text ), i );
 			s_write_mbs( &output, clr_eol);
 			al_truncate( &s_line->text, al_get_count( &o_line->text ) );
-//			debug( 0, L"YAY DELETE from %d", al_get_count( &o_line->text ) );			
 		}
 		
 	}
-	for( i=al_get_count( &scr->output ); i< al_get_count( &scr->screen ); i++ )
+	for( i=al_get_count( &scr->desired ); i< al_get_count( &scr->actual ); i++ )
 	{
-		line_t *s_line = (line_t *)al_get( &scr->screen, i );
+		line_t *s_line = (line_t *)al_get( &scr->actual, i );
 		s_move( scr, &output, 0, i );
 		s_write_mbs( &output, clr_eol);
 		al_truncate( &s_line->text, 0 );
 	}
 	
-	s_move( scr, &output, scr->output_cursor[0], scr->output_cursor[1] );
+	s_move( scr, &output, scr->desired_cursor[0], scr->desired_cursor[1] );
 	
 	s_set_color( scr, &output, 0xffffffff);
 
@@ -555,12 +598,12 @@ void s_write( screen_t *s,
 		return;
 	}
 
-	s_reset_arr( &s->output );
-	s->output_cursor[0] = s->output_cursor[1] = 0;
+	s_reset_arr( &s->desired );
+	s->desired_cursor[0] = s->desired_cursor[1] = 0;
 	
 	for( i=0; i<prompt_width; i++ )
 	{
-		s_output_append_char( s, L' ', 0, prompt_width );
+		s_desired_append_char( s, L' ', 0, prompt_width );
 	}
 	
 	for( i=0; b[i]; i++ )
@@ -569,27 +612,27 @@ void s_write( screen_t *s,
 		
 		if( i == cursor )
 		{
-			memcpy(cursor_arr, s->output_cursor, sizeof(int)*2);
+			memcpy(cursor_arr, s->desired_cursor, sizeof(int)*2);
 			col = 0;
 		}
 
-		s_output_append_char( s, b[i], col, prompt_width );
+		s_desired_append_char( s, b[i], col, prompt_width );
 		
 	}
 	if( i == cursor )
 	{
-		memcpy(cursor_arr, s->output_cursor, sizeof(int)*2);
+		memcpy(cursor_arr, s->desired_cursor, sizeof(int)*2);
 	}
 	
-	memcpy( s->output_cursor, cursor_arr, sizeof(int)*2 );
+	memcpy( s->desired_cursor, cursor_arr, sizeof(int)*2 );
 	s_update( s, prompt );
 	
 }
 
 void s_reset( screen_t *s )
 {
-	s_reset_arr( &s->screen );
-	s->screen_cursor[0] = s->screen_cursor[1] = 0;
-	sb_clear( &s->prompt_buff );
+	s_reset_arr( &s->actual );
+	s->actual_cursor[0] = s->actual_cursor[1] = 0;
+	sb_clear( &s->actual_prompt );
 }
 

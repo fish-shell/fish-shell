@@ -24,7 +24,11 @@ typedef struct
 void s_init( screen_t *s );
 void s_destroy( screen_t *s );
 
-void s_write( screen_t *s, wchar_t *prompt, wchar_t *b, int *c, int cursor, int flags );
+void s_write( screen_t *s, 
+			  wchar_t *prompt, 
+			  wchar_t *b,
+			  int *c, 
+			  int cursor );
 void s_reset( screen_t *s );
 
 #endif

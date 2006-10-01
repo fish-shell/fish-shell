@@ -265,17 +265,38 @@ static void s_output_append_char( screen_t *s, wchar_t b, int c, int prompt_widt
 		default:
 		{
 			line_t *current;
+			int screen_width = common_get_width();
+			int cw = wcwidth(b);
+			int ew = wcwidth( ellipsis_char );
+			int i;
+			
 			current = (line_t *)al_get( &s->output, line_no );
-
+			
 			if( !current )
 			{
 				current = s_create_line();
 				al_push( &s->output, current );
 			}
+
+			if( s->output_cursor[0] + cw + ew > screen_width )
+			{
+				al_push_long( &current->text, ellipsis_char );
+				al_push_long( &current->color, 0 );
+								
+				current = s_create_line();
+				al_push( &s->output, current );
+				s->output_cursor[1]++;
+				s->output_cursor[0]=0;
+				for( i=0; i < (prompt_width-ew); i++ )
+				{
+					s_output_append_char( s, L' ', 0, prompt_width );
+				}				
+				s_output_append_char( s, ellipsis_char, 0, prompt_width );
+			}
 			
 			al_push_long( &current->text, b );
 			al_push_long( &current->color, c );
-			s->output_cursor[0]+= wcwidth(b);
+			s->output_cursor[0]+= cw;
 			break;
 		}
 	}
@@ -505,15 +526,35 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 }
 
 
-void s_write( screen_t *s, wchar_t *prompt, wchar_t *b, int *c, int cursor, int flags )
+void s_write( screen_t *s,
+			  wchar_t *prompt,
+			  wchar_t *b, 
+			  int *c, 
+			  int cursor )
 {
 	int i;
 	int cursor_arr[2];
 
 	int prompt_width = calc_prompt_width( prompt );
+	int screen_width = common_get_width();
 
-//	debug( 0, L"Prompt width is %d", prompt_width );
+	/*
+	  Ignore huge prompts on small screens
+	*/
+	if( prompt_width > (screen_width - 8) )
+	{
+		prompt = L"";
+		prompt_width = 0;
+	}
 	
+	/*
+	  Ignore impossibly small screens
+	*/
+	if( screen_width < 4 )
+	{
+		return;
+	}
+
 	s_reset_arr( &s->output );
 	s->output_cursor[0] = s->output_cursor[1] = 0;
 	

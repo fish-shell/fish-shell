@@ -103,21 +103,9 @@ void writestr_ellipsis( const wchar_t *str, int max_width );
 int write_escaped_str( const wchar_t *str, int max_len );
 
 /**
-   parm_ich seems to often be undefined, so we use this
-   workalike. Writes the specified number of spaces.
-*/
-int writespace( int c );
-
-/**
    Return the internal color code representing the specified color
 */
 int output_color_code( const wchar_t *val );
-
-/**
-   perm_left_cursor and parm_right_cursor don't seem to be defined
-   very often so we use cursor_left and cursor_right as a fallback.
-*/
-void move_cursor( int steps );
 
 /**
    This is for writing process notification messages. Has to write to

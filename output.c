@@ -341,34 +341,6 @@ void set_color( int c, int c2 )
 	
 }
 
-
-/**
-   perm_left_cursor and parm_right_cursor don't seem to be properly
-   emulated by many terminal emulators, so we only use plain
-   curor_left, curor_right...
-*/
-void move_cursor( int steps )
-{
-	int i;
-	
-	if( !steps )
-		return;
-	
-	if( steps < 0 ){
-		for( i=0; i>steps; i--)
-		{
-			writembs(cursor_left);
-		}
-	}
-	else
-	{
-		for( i=0; i<steps; i++)
-		{
-			writembs(cursor_right);
-		}
-	}
-}
-
 /**
    Default output method, simply calls write() on stdout
 */
@@ -555,25 +527,6 @@ int write_escaped_str( const wchar_t *str, int max_len )
 
 	free( out );
 	return written;
-}
-
-
-int writespace( int c )
-{
-	if( repeat_char && strlen(repeat_char) )
-	{
-		writembs( tparm( repeat_char, ' ', c ) );
-	}
-	else
-	{
-		int i;
-		
-		for( i=0; i<c; i++ )
-		{
-			out( ' ' );
-		}
-	}
-	return 0;
 }
 
 

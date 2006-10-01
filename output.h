@@ -134,5 +134,9 @@ int writeb( tputs_arg_t b );
 */
 void output_set_writer( int (*writer)(char) );
 
+//typedef int (*func_ptr_t)(char);
+
+int (*output_get_writer())(char) ;
+
 
 #endif

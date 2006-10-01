@@ -2996,7 +2996,8 @@ int parser_test( const  wchar_t * buff,
 	int previous_pos=current_tokenizer_pos;
 	static int block_pos[BLOCK_MAX_COUNT];
 	static int block_type[BLOCK_MAX_COUNT];
-
+	int res;
+	
 	/*
 	  Set to 1 if the current command is inside a pipeline
 	*/
@@ -3037,7 +3038,7 @@ int parser_test( const  wchar_t * buff,
 	current_tokenizer = &tok;
 
 	for( tok_init( &tok, buff, 0 );
-		 tok_has_next( &tok );
+		 ;
 		 tok_next( &tok ) )
 	{
 		current_tokenizer_pos = tok_get_pos( &tok );
@@ -3666,6 +3667,8 @@ int parser_test( const  wchar_t * buff,
 			
 		}
 		
+		if( !tok_has_next( &tok ) )
+			break;
 		
 	}
 
@@ -3709,14 +3712,20 @@ int parser_test( const  wchar_t * buff,
 
 	tok_destroy( &tok );
 
-
 	current_tokenizer=previous_tokenizer;
 	current_tokenizer_pos = previous_pos;
-
+	
 	error_code=0;
-
+	
 	halloc_free( context );
-
-	return err | ((count!=0)<<1);
+	
+	res = 0;
+	if( err )
+		res |= PARSER_TEST_ERROR;
+	if( count!= 0 )
+		res |= PARSER_TEST_INCOMPLETE;
+	
+	return res;
+	
 }
 

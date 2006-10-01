@@ -98,6 +98,7 @@ commence.
 #include "function.h"
 #include "output.h"
 #include "signal.h"
+#include "screen.h"
 
 #include "parse_util.h"
 
@@ -139,15 +140,7 @@ typedef struct reader_data
 	*/
 	wchar_t *buff;
 
-	/**
-	   The output string, may be different than buff if buff can't fit on one line.
-	*/
-	wchar_t *output;
-
-	/**
-	   The number of characters used by the prompt
-	*/
-	int prompt_width;
+	screen_t screen;
 
 	/**
 	   Buffer containing the current search item
@@ -192,18 +185,16 @@ typedef struct reader_data
 	size_t buff_pos;
 
 	/**
-	   The current position of the cursor in output buffer.
-	*/
-	size_t output_pos;
-
-	/**
 	   Name of the current application
 	*/
 	wchar_t *name;
 
-	/** The prompt text */
+	/** The prompt command */
 	wchar_t *prompt;
 
+	/** The output of the last evaluation of the prompt command */
+	string_buffer_t prompt_buff;
+	
 	/**
 	   Color is the syntax highlighting for buff.  The format is that
 	   color[i] is the classification (according to the enum in
@@ -215,11 +206,6 @@ typedef struct reader_data
 	   New color buffer, used for syntax highlighting.
 	*/
 	int *new_color;
-
-	/**
-	   Color for the actual output string.
-	*/
-	int *output_color;
 
 	/**
 	   Should the prompt command be reexecuted on the next repaint
@@ -249,6 +235,7 @@ typedef struct reader_data
 	   When this is true, the reader will exit
 	*/
 	int end_loop;
+
 	/**
 	   If this is true, exit reader even if there are running
 	   jobs. This happens if we press e.g. ^D twice.
@@ -451,15 +438,12 @@ static int check_size()
 							  sizeof(wchar_t)*data->buff_sz);
 		data->search_buff = realloc( data->search_buff,
 									 sizeof(wchar_t)*data->buff_sz);
-		data->output = realloc( data->output,
-								sizeof(wchar_t)*data->buff_sz);
 
 		data->color = realloc( data->color,
 							   sizeof(int)*data->buff_sz);
+
 		data->new_color = realloc( data->new_color,
 								   sizeof(int)*data->buff_sz);
-		data->output_color = realloc( data->output_color,
-									  sizeof(int)*data->buff_sz);
 
 		if( data->buff==0 ||
 			data->search_buff==0 ||
@@ -467,110 +451,10 @@ static int check_size()
 			data->new_color == 0 )
 		{
 			DIE_MEM();
-
 		}
 	}
 	return 1;
 }
-
-/**
-   Check if the screen is not wide enough for the buffer, which means
-   the buffer must be scrolled on input and cursor movement.
-*/
-static int force_repaint()
-{
-	int max_width = common_get_width() - data->prompt_width;
-	int pref_width = my_wcswidth( data->buff ) + (data->buff_pos==data->buff_len);
-	return pref_width >= max_width;
-}
-
-
-/**
-   Calculate what part of the buffer should be visible
-
-   \return returns 1 screen needs repainting, 0 otherwise
-*/
-static int calc_output()
-{
-	int max_width = common_get_width() - data->prompt_width;
-	int pref_width = my_wcswidth( data->buff ) + (data->buff_pos==data->buff_len);
-	if( pref_width <= max_width )
-	{
-		wcscpy( data->output, data->buff );
-		memcpy( data->output_color, data->color, sizeof(int) * data->buff_len );
-		data->output_pos=data->buff_pos;
-
-		return 1;
-	}
-	else
-	{
-		int offset = data->buff_pos;
-		int offset_end = data->buff_pos;
-		int w = 0;
-		wchar_t *pos=data->output;
-		*pos=0;
-
-
-		w = (data->buff_pos==data->buff_len)?1:wcwidth( data->buff[offset] );
-		while( 1 )
-		{
-			int inc=0;
-			int ellipsis_width;
-
-			ellipsis_width = wcwidth(ellipsis_char)*((offset?1:0)+(offset_end<data->buff_len?1:0));
-
-			if( offset > 0 && (ellipsis_width + w + wcwidth( data->buff[offset-1] ) <= max_width ) )
-			{
-				inc=1;
-				offset--;
-				w+= wcwidth( data->buff[offset]);
-			}
-
-			ellipsis_width = wcwidth(ellipsis_char)*((offset?1:0)+(offset_end<data->buff_len?1:0));
-
-			if( offset_end < data->buff_len && (ellipsis_width + w + wcwidth( data->buff[offset_end+1] ) <= max_width ) )
-			{
-				inc = 1;
-				offset_end++;
-				w+= wcwidth( data->buff[offset_end]);
-			}
-
-			if( !inc )
-				break;
-
-		}
-
-		data->output_pos = data->buff_pos - offset + (offset?1:0);
-
-		if( offset )
-		{
-			data->output[0]=ellipsis_char;
-			data->output[1]=0;
-
-		}
-
-		wcsncat( data->output,
-				 data->buff+offset,
-				 offset_end-offset );
-
-		if( offset_end<data->buff_len )
-		{
-			int l = wcslen(data->output);
-
-			data->output[l]=ellipsis_char;
-			data->output[l+1]=0;
-
-		}
-
-		*data->output_color=HIGHLIGHT_NORMAL;
-
-		memcpy( data->output_color+(offset?1:0),
-				data->color+offset,
-				sizeof(int) * (data->buff_len-offset) );
-		return 1;
-	}
-}
-
 
 /**
    Compare two completions, ignoring their description.
@@ -624,6 +508,7 @@ static void remove_duplicates( array_list_t *l )
    Translate a highlighting code ()Such as  as returned by the highlight function
    into a color code which is then passed on to set_color.
 */
+
 static void set_color_translated( int c )
 {
 	set_color( highlight_get_color( c & 0xffff ),
@@ -685,162 +570,15 @@ void reader_write_title()
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 }
 
-/**
-   Tests if the specified narrow character sequence is present at the
-   specified position of the specified wide character string. All of
-   \c seq must match, but str may be longer than seq.
-*/
-static int try_sequence( char *seq, wchar_t *str )
-{
-	int i;
-
-	for( i=0;; i++ )
-	{
-		if( !seq[i] )
-			return i;
-
-		if( seq[i] != str[i] )
-			return 0;
-	}
-
-	return 0;
-}
-
-/**
-   Calculate the width of the specified prompt. Does some clever magic
-   to detect common escape sequences that may be embeded in a prompt,
-   such as color codes.
-*/
-static int calc_prompt_width( array_list_t *arr )
-{
-	int res = 0;
-	int i, j, k;
-
-	for( i=0; i<al_get_count( arr ); i++ )
-	{
-		wchar_t *next = (wchar_t *)al_get( arr, i );
-
-		for( j=0; next[j]; j++ )
-		{
-			if( next[j] == L'\e' )
-			{
-				/*
-				  This is the start of an escape code. Try to guess it's width.
-				*/
-				int l;
-				int len=0;
-				int found = 0;
-
-				/*
-				  Detect these terminfo color escapes with parameter
-				  value 0..7, all of which don't move the cursor
-				*/
-				char * esc[] =
-					{
-						set_a_foreground,
-						set_a_background,
-						set_foreground,
-						set_background,
-					}
-				;
-
-				/*
-				  Detect these semi-common terminfo escapes without any
-				  parameter values, all of which don't move the cursor
-				*/
-				char *esc2[] =
-					{
-						enter_bold_mode,
-						exit_attribute_mode,
-						enter_underline_mode,
-						exit_underline_mode,
-						enter_standout_mode,
-						exit_standout_mode,
-						flash_screen,
-						enter_subscript_mode,
-						exit_subscript_mode,
-						enter_superscript_mode,
-						exit_superscript_mode,
-						enter_blink_mode,
-						enter_italics_mode,
-						exit_italics_mode,
-						enter_reverse_mode,
-						enter_shadow_mode,
-						exit_shadow_mode,
-						enter_standout_mode,
-						exit_standout_mode,
-						enter_secure_mode
-					}
-				;
-
-				for( l=0; l < (sizeof(esc)/sizeof(char *)) && !found; l++ )
-				{
-					if( !esc[l] )
-						continue;
-
-					for( k=0; k<8; k++ )
-					{
-						len = try_sequence( tparm(esc[l],k), &next[j] );
-						if( len )
-						{
-							j += (len-1);
-							found = 1;
-							break;
-						}
-					}
-				}
-
-				for( l=0; l < (sizeof(esc2)/sizeof(char *)) && !found; l++ )
-				{
-					if( !esc2[l] )
-						continue;
-					/*
-					  Test both padded and unpadded version, just to
-					  be safe. Most versions of tparm don't actually
-					  seem to do anything these days.
-					*/
-					len = maxi( try_sequence( tparm(esc2[l]), &next[j] ),
-								try_sequence( esc2[l], &next[j] ));
-					
-					if( len )
-					{
-						j += (len-1);
-						found = 1;
-					}
-				}
-			}
-			else if( next[j] == L'\t' )
-			{
-				/*
-				  Assume tab stops every 8 characters if undefined
-				*/
-				if( init_tabs <= 0 )
-					init_tabs = 8;
-				
-				res=( (res/init_tabs)+1 )*init_tabs;
-			}
-			else
-			{
-				/*
-				  Ordinary decent character. Just add width.
-				*/
-				res += wcwidth( next[j] );
-			}
-		}
-	}
-	return res;
-}
-
 
 /**
    Write the prompt to screen. If data->exec_prompt is set, the prompt
    command is first evaluated, and the title will be reexecuted as
    well.
 */
-static void write_prompt()
+static void calc_prompt()
 {
 	int i;
-	set_color( FISH_COLOR_NORMAL, FISH_COLOR_NORMAL );
 
 	/*
 	  Check if we need to reexecute the prompt command
@@ -865,21 +603,17 @@ static void write_prompt()
 			proc_pop_interactive();
 		}
 
-		data->prompt_width=calc_prompt_width( &prompt_list );
-
 		data->exec_prompt = 0;
 		reader_write_title();
-	}
 
-	/*
-	  Write out the prompt strings
-	*/
+		sb_clear( &data->prompt_buff );
+		
+		for( i=0; i<al_get_count( &prompt_list); i++ )
+		{
+			sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ) );
+		}
 
-	for( i=0; i<al_get_count( &prompt_list); i++ )
-	{
-		writestr( (wchar_t *)al_get( &prompt_list, i ) );
 	}
-	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 
 }
 
@@ -887,7 +621,7 @@ static void write_prompt()
    Write the whole command line (but not the prompt) to the screen. Do
    not set the cursor correctly afterwards.
 */
-static void write_cmdline()
+/*static void write_cmdline()
 {
 	int i;
 
@@ -897,7 +631,7 @@ static void write_cmdline()
 		writech( data->output[i] );
 	}
 }
-
+*/
 
 void reader_init()
 {
@@ -942,45 +676,18 @@ void reader_exit( int do_exit, int forced )
 
 void repaint( int skip_return )
 {
-	int steps;
+	int flags = 0;
+	
+	if( skip_return )
+		flags |= SCREEN_SKIP_RETURN;
+		
+	calc_prompt();
 
-	calc_output();
-	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
+//	assert( wcslen( (wchar_t *)data->prompt_buff.buff));
 
-	if( !skip_return )
-		writech('\r');
-
-	writembs(clr_eol);
-	write_prompt();
-	write_cmdline();
-
-/*
-  fwprintf( stderr, L"Width of \'%ls\' (length is %d): ",
-  &data->buff[data->buff_pos],
-  wcslen(&data->buff[data->buff_pos]));
-  fwprintf( stderr, L"%d\n", my_wcswidth(&data->buff[data->buff_pos]));
-*/
-
-	steps = my_wcswidth( &data->output[data->output_pos]);
-	if( steps )
-		move_cursor( -steps );
-
-	set_color( FISH_COLOR_NORMAL, FISH_COLOR_IGNORE );
+	s_write( &data->screen, (wchar_t *)data->prompt_buff.buff, data->buff, data->color, data->buff_pos, flags );
+	
 	reader_save_status();
-}
-
-/**
-   Make sure color values are correct, and repaint if they are not.
-*/
-static void check_colors()
-{
-	reader_super_highlight_me_plenty( data->new_color, data->buff_pos, 0 );
-	if( memcmp( data->new_color, data->color, sizeof(int)*data->buff_len )!=0 )
-	{
-		memcpy( data->color, data->new_color,  sizeof(int)*data->buff_len );
-
-		repaint( 0 );
-	}
 }
 
 /**
@@ -1052,7 +759,6 @@ static void reader_check_status()
 	if( changed )
 	{
 		repaint( 0 );
-		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 	}
 }
 
@@ -1062,7 +768,6 @@ static void reader_check_status()
 */
 static void remove_backward()
 {
-	int wdt;
 
 	if( data->buff_pos <= 0 )
 		return;
@@ -1072,47 +777,17 @@ static void remove_backward()
 		memmove( &data->buff[data->buff_pos-1],
 				 &data->buff[data->buff_pos],
 				 sizeof(wchar_t)*(data->buff_len-data->buff_pos+1) );
-
-		memmove( &data->color[data->buff_pos-1],
-				 &data->color[data->buff_pos],
-				 sizeof(wchar_t)*(data->buff_len-data->buff_pos+1) );
 	}
 	data->buff_pos--;
 	data->buff_len--;
+	data->buff[data->buff_len]=0;
 
-	wdt=wcwidth(data->buff[data->buff_pos]);
-	move_cursor(-wdt);
-	data->buff[data->buff_len]='\0';
-//	wcscpy(data->search_buff,data->buff);
-
-	reader_super_highlight_me_plenty( data->new_color,
+	reader_super_highlight_me_plenty( data->color,
 									  data->buff_pos,
 									  0 );
-	if( (!force_repaint()) && ( memcmp( data->new_color,
-										data->color,
-										sizeof(int)*data->buff_len )==0 ) &&
-		( delete_character != 0) && (wdt==1) )
-	{
-		/*
-		  Only do this if delete mode functions, and only for a column
-		  wide characters, since terminfo seems to break for other
-		  characters. This last check should be removed when terminfo
-		  is fixed.
-		*/
-		if( enter_delete_mode != 0 )
-			writembs(enter_delete_mode);
-		writembs(delete_character);
-		if( exit_delete_mode != 0 )
-			writembs(exit_delete_mode);
-	}
-	else
-	{
-		memcpy( data->color,
-				data->new_color,
-				sizeof(int) * data->buff_len );
 
-		repaint( 0 );
-	}
+	repaint( 0 );
+
 }
 
 /**
@@ -1124,9 +799,7 @@ static void remove_forward()
 	if( data->buff_pos >= data->buff_len )
 		return;
 
-	move_cursor(wcwidth(data->buff[data->buff_pos]));
 	data->buff_pos++;
-
 	remove_backward();
 }
 
@@ -1146,10 +819,6 @@ static int insert_char( int c )
 		memmove( &data->buff[data->buff_pos+1],
 				 &data->buff[data->buff_pos],
 				 sizeof(wchar_t)*(data->buff_len-data->buff_pos) );
-
-		memmove( &data->color[data->buff_pos+1],
-				 &data->color[data->buff_pos],
-				 sizeof(int)*(data->buff_len-data->buff_pos) );
 	}
 	/* Set character */
 	data->buff[data->buff_pos]=c;
@@ -1161,48 +830,12 @@ static int insert_char( int c )
 
 	/* Syntax highlight */
 
-	reader_super_highlight_me_plenty( data->new_color,
+	reader_super_highlight_me_plenty( data->color,
 									  data->buff_pos-1,
 									  0 );
-	data->color[data->buff_pos-1] = data->new_color[data->buff_pos-1];
 
-	/* Check if the coloring has changed */
-	if( (!force_repaint()) && ( memcmp( data->new_color,
-										data->color,
-										sizeof(int)*data->buff_len )==0 ) &&
-		( insert_character ||
-		  ( data->buff_pos == data->buff_len ) ||
-		  enter_insert_mode) )
-	{
-		/*
-		  Colors look ok, so we set the right color and insert a
-		  character
-		*/
-		set_color_translated( data->color[data->buff_pos-1] );
-		if( data->buff_pos < data->buff_len )
-		{
-			if( enter_insert_mode != 0 )
-				writembs(enter_insert_mode);
-			else
-				writembs(insert_character);
-			writech(c);
-			if( insert_padding != 0 )
-				writembs(insert_padding);
-			if( exit_insert_mode != 0 )
-				writembs(exit_insert_mode);
-		}
-		else
-			writech(c);
-		set_color( FISH_COLOR_NORMAL, FISH_COLOR_IGNORE );
-	}
-	else
-	{
-		/* Nope, colors are off, so we repaint the entire command line */
-		memcpy( data->color, data->new_color, sizeof(int) * data->buff_len );
+	repaint( 0 );
 
-		repaint( 0 );
-	}
-//	wcscpy(data->search_buff,data->buff);
 	return 1;
 }
 
@@ -1213,42 +846,31 @@ static int insert_char( int c )
 static int insert_str(wchar_t *str)
 {
 	int len = wcslen( str );
-	if( len < 4 )
+	int old_len = data->buff_len;
+	
+	data->buff_len += len;
+	check_size();
+	
+	/* Insert space for extra characters at the right position */
+	if( data->buff_pos < old_len )
 	{
-		while( (*str)!=0 )
-			if(!insert_char( *str++ ))
-				return 0;
+		memmove( &data->buff[data->buff_pos+len],
+				 &data->buff[data->buff_pos],
+				 sizeof(wchar_t)*(data->buff_len-data->buff_pos) );
 	}
-	else
-	{
-		int old_len = data->buff_len;
-
-		data->buff_len += len;
-		check_size();
-
-		/* Insert space for extra characters at the right position */
-		if( data->buff_pos < old_len )
-		{
-			memmove( &data->buff[data->buff_pos+len],
-					 &data->buff[data->buff_pos],
-					 sizeof(wchar_t)*(data->buff_len-data->buff_pos) );
-		}
-		memmove( &data->buff[data->buff_pos], str, sizeof(wchar_t)*len );
-		data->buff_pos += len;
-		data->buff[data->buff_len]='\0';
-
-		/* Syntax highlight */
-
-		reader_super_highlight_me_plenty( data->new_color,
-										  data->buff_pos-1,
-										  0 );
-		memcpy( data->color, data->new_color, sizeof(int) * data->buff_len );
-
-		/* repaint */
-
-		repaint( 0 );
-
-	}
+	memmove( &data->buff[data->buff_pos], str, sizeof(wchar_t)*len );
+	data->buff_pos += len;
+	data->buff[data->buff_len]='\0';
+	
+	/* Syntax highlight */
+	
+	reader_super_highlight_me_plenty( data->color,
+									  data->buff_pos-1,
+									  0 );
+	
+	/* repaint */
+	
+	repaint( 0 );
 	return 1;
 }
 
@@ -1501,7 +1123,10 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	
 	for( i=0; i<al_get_count( comp); i++ )
 	{
-	    wchar_t *el = escape((wchar_t*)al_get( comp, i ), 0);
+	    wchar_t *el = escape((wchar_t*)al_get( comp, i ), 1);
+
+//		debug( 0, L"Escaped '%ls' to '%ls'", al_get( comp, i ), el );
+		
 		
 		sb_printf( &msg, L"%ls\n", el );
 		free( el );		
@@ -2103,24 +1728,7 @@ static void move_word( int dir, int erase )
 /*		move_cursor(end_buff_pos-data->buff_pos);
   data->buff_pos = end_buff_pos;
 */
-		if( end_buff_pos < data->buff_pos )
-		{
-			while( data->buff_pos != end_buff_pos )
-			{
-				data->buff_pos--;
-				move_cursor( -wcwidth(data->buff[data->buff_pos]));
-			}
-		}
-		else
-		{
-			while( data->buff_pos != end_buff_pos )
-			{
-				move_cursor( wcwidth(data->buff[data->buff_pos]));
-				data->buff_pos++;
-				check_colors();
-			}
-		}
-
+		data->buff_pos = end_buff_pos;
 		repaint( 0 );
 //		check_colors();
 	}
@@ -2204,18 +1812,22 @@ void reader_run_command( const wchar_t *cmd )
 
 static int shell_test( wchar_t *b )
 {
-	if( parser_test( b, 0, 0 ) )
+	int res = parser_test( b, 0, 0 );
+	
+	if( res & PARSER_TEST_ERROR )
 	{
 		string_buffer_t sb;
 		sb_init( &sb );
+
+		int tmp[1];
 		
-		writech( L'\n' );
+		s_write( &data->screen, L"", L"", tmp, 0, 0 );
+		
 		parser_test( b, &sb, L"fish" );
 		fwprintf( stderr, L"%ls", sb.buff );
 		sb_destroy( &sb );
-		return 1;
 	}
-	return 0;
+	return res;
 }
 
 /**
@@ -2233,7 +1845,12 @@ void reader_push( wchar_t *name )
 	reader_data_t *n = calloc( 1, sizeof( reader_data_t ) );
 	n->name = wcsdup( name );
 	n->next = data;
+
 	data=n;
+
+	s_init( &data->screen );
+	sb_init( &data->prompt_buff );
+
 	check_size();
 	data->buff[0]=data->search_buff[0]=0;
 	data->exec_prompt=1;
@@ -2271,8 +1888,9 @@ void reader_pop()
 	free( n->color );
 	free( n->new_color );
 	free( n->search_buff );
-	free( n->output );
-	free( n->output_color );
+	
+	s_destroy( &n->screen );
+	sb_destroy( &n->prompt_buff );
 
 	/*
 	  Clean up after history search
@@ -2355,8 +1973,6 @@ static void reader_super_highlight_me_plenty( int *color, int match_highlight_po
 		}
 	}
 
-	color[data->buff_pos] = 0;
-		
 }
 
 
@@ -2380,7 +1996,7 @@ static int read_i()
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &shell_test );
 
-	data->prompt_width=60;
+//	data->prompt_width=60;
 	data->prev_end_loop=0;
 
 	while( (!data->end_loop) && (!sanity_check()) )
@@ -2417,7 +2033,7 @@ static int read_i()
 			if( !reader_exit_forced() && !data->prev_end_loop && has_job )
 			{
 				writestr(_( L"There are stopped jobs\n" ));
-				write_prompt();
+				repaint( 0 );
 				data->end_loop = 0;
 				data->prev_end_loop=1;
 			}
@@ -2480,6 +2096,8 @@ wchar_t *reader_readline()
 
 	al_init( &comp );
 
+	s_reset( &data->screen );
+	
 	data->exec_prompt=1;
 
 	reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
@@ -2584,6 +2202,7 @@ wchar_t *reader_readline()
 			case R_NULL:
 			{
 				data->exec_prompt=1;
+				s_reset( &data->screen );
 				repaint( 0 );
 				break;
 			}
@@ -2726,7 +2345,8 @@ wchar_t *reader_readline()
 						reader_replace_current_token( data->search_buff );
 					}
 					*data->search_buff=0;
-					check_colors();
+					repaint(0);
+					//check_colors();
 
 				}
 
@@ -2761,29 +2381,56 @@ wchar_t *reader_readline()
 			/* Newline, evaluate*/
 			case L'\n':
 			{
-				data->buff[data->buff_len]=L'\0';
-
-				if( !data->test_func( data->buff ) )
+				/*
+				  Allow backslash-escaped newlines
+				*/
+				if( data->buff_len && data->buff[data->buff_len-1]==L'\\' )
+				{
+					insert_char( '\n' );
+					break;
+				}
+				
+				switch( data->test_func( data->buff ) )
 				{
 
-					if( wcslen( data->buff ) )
+					case 0:
 					{
+						/*
+						  Finished commend, execute it
+						*/
+						if( wcslen( data->buff ) )
+						{
 //						wcscpy(data->search_buff,L"");
-						history_add( data->buff );
+							history_add( data->buff );
+						}
+						finished=1;
+						data->buff_pos=data->buff_len;
+						repaint(0);
+						writestr( L"\n" );
+						break;
 					}
-					finished=1;
-					data->buff_pos=data->buff_len;
-					check_colors();
-					writestr( L"\n" );
-				}
-				else
-				{
-					writech('\r');
-					writembs(clr_eol);
-					writech('\n');
-					repaint( 0 );
-				}
+					
+					/*
+					  We are incomplete, continue editing
+					*/
+					case PARSER_TEST_INCOMPLETE:
+					{						
+						insert_char( '\n' );
+						break;
+					}
 
+					/*
+					  Result must be some combination including an error. The error message will already be printed, all we need to do is repaint
+					*/
+					default:
+					{
+						s_reset( &data->screen );
+						repaint( 0 );
+						break;
+					}
+
+				}
+				
 				break;
 			}
 
@@ -2858,15 +2505,7 @@ wchar_t *reader_readline()
 				if( data->buff_pos > 0 )
 				{
 					data->buff_pos--;
-					if( !force_repaint() )
-					{
-						move_cursor( -wcwidth(data->buff[data->buff_pos]));
-						check_colors();
-					}
-					else
-					{
-						repaint( 0 );
-					}
+					repaint( 0 );
 				}
 				break;
 			}
@@ -2876,18 +2515,8 @@ wchar_t *reader_readline()
 			{
 				if( data->buff_pos < data->buff_len )
 				{
-					if( !force_repaint() )
-					{
-						move_cursor( wcwidth(data->buff[data->buff_pos]));
-						data->buff_pos++;
-						check_colors();
-					}
-					else
-					{
-						data->buff_pos++;
-
-						repaint( 0 );
-					}
+					data->buff_pos++;					
+					repaint( 0 );
 				}
 				break;
 			}
@@ -2933,6 +2562,7 @@ wchar_t *reader_readline()
 			{
 				if( clear_screen )
 					writembs( clear_screen );
+				s_reset( &data->screen );
 				repaint( 0 );
 				break;
 			}

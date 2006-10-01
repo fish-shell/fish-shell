@@ -234,132 +234,140 @@ static void read_string( tokenizer *tok )
 		{
 //			debug(1, L"%lc", *tok->buff );
 
-		if( *tok->buff == L'\\' )
-		{
-			tok->buff++;
-			if( *tok->buff == L'\0' )
+			if( *tok->buff == L'\\' )
 			{
-				tok_error( tok, EOL_ERROR );
-				return;
-			}
-			tok->buff++;
-			continue;
-		}
-
-		/*
-		  The modes are as follows:
-
-		  0: regular text
-		  1: inside of subshell
-		  2: inside of array brackets
-		  3: inside of array brackets and subshell, like in '$foo[(ech'
-		*/
-		switch( mode )
-		{
-			case 0:
-			{
-				switch( *tok->buff )
+				tok->buff++;
+				if( *tok->buff == L'\0' )
 				{
-					case L'(':
+					tok_error( tok, EOL_ERROR );
+					return;
+				}
+				else if( *tok->buff == L'\n' && mode == 0)
+				{
+					tok->buff--;
+					do_loop = 0;
+					break;
+				}
+				
+				tok->buff++;
+				continue;
+			}
+			
+			
+			/*
+			  The modes are as follows:
+			  
+			  0: regular text
+			  1: inside of subshell
+			  2: inside of array brackets
+			  3: inside of array brackets and subshell, like in '$foo[(ech'
+			*/
+			switch( mode )
+			{
+				case 0:
+				{
+					switch( *tok->buff )
 					{
-						paran_count=1;
-						mode = 1;
-						break;
-					}
-
-					case L'[':
-					{
-						if( tok->buff != start )
-							mode=2;
-						break;
-					}
-
-					case L'\'':
-					case L'"':
-					{
-
-						const wchar_t *end = quote_end( tok->buff );
-						tok->last_quote = *tok->buff;
-						if( end )
+						case L'(':
 						{
-							tok->buff=(wchar_t *)end;
+							paran_count=1;
+							mode = 1;
+							break;
 						}
-						else
+						
+						case L'[':
 						{
-							tok->buff += wcslen( tok->buff );
-
-							if( (!tok->accept_unfinished) )
+							if( tok->buff != start )
+								mode=2;
+							break;
+						}
+						
+						case L'\'':
+						case L'"':
+						{
+							
+							const wchar_t *end = quote_end( tok->buff );
+							tok->last_quote = *tok->buff;
+							if( end )
 							{
-								tok_error( tok, EOL_ERROR );
-								return;
+								tok->buff=(wchar_t *)end;
 							}
-							do_loop = 0;
+							else
+							{
+								tok->buff += wcslen( tok->buff );
+								
+								if( (!tok->accept_unfinished) )
+								{
+									tok_error( tok, EOL_ERROR );
+									return;
+								}
+								do_loop = 0;
 
+							}
+							break;
 						}
-						break;
-					}
 
-					default:
-					{
-						if( !is_string_char(*(tok->buff)) )
+						default:
 						{
-							do_loop=0;
+							if( !is_string_char(*(tok->buff)) )
+							{
+								do_loop=0;
+							}
 						}
 					}
+					break;
 				}
-				break;
+
+				case 3:
+				case 1:
+					switch( *tok->buff )
+					{
+						case L'\'':
+						case L'\"':
+						{
+							const wchar_t *end = quote_end( tok->buff );
+							if( end )
+							{
+								tok->buff=(wchar_t *)end;
+							}
+							else
+								do_loop = 0;
+							break;
+						}
+
+						case L'(':
+							paran_count++;
+							break;
+						case L')':
+							paran_count--;
+							if( paran_count == 0 )
+							{
+								mode--;
+							}
+							break;
+						case L'\0':
+							do_loop = 0;
+							break;
+					}
+					break;
+				case 2:
+					switch( *tok->buff )
+					{
+						case L'(':
+							paran_count=1;
+							mode = 3;
+							break;
+
+						case L']':
+							mode=0;
+							break;
+
+						case L'\0':
+							do_loop = 0;
+							break;
+					}
+					break;
 			}
-
-			case 3:
-			case 1:
-				switch( *tok->buff )
-				{
-					case L'\'':
-					case L'\"':
-					{
-						const wchar_t *end = quote_end( tok->buff );
-						if( end )
-						{
-							tok->buff=(wchar_t *)end;
-						}
-						else
-							do_loop = 0;
-						break;
-					}
-
-					case L'(':
-						paran_count++;
-						break;
-					case L')':
-						paran_count--;
-						if( paran_count == 0 )
-						{
-							mode--;
-						}
-						break;
-					case L'\0':
-						do_loop = 0;
-						break;
-				}
-				break;
-			case 2:
-				switch( *tok->buff )
-				{
-					case L'(':
-						paran_count=1;
-						mode = 3;
-						break;
-
-					case L']':
-						mode=0;
-						break;
-
-					case L'\0':
-						do_loop = 0;
-						break;
-				}
-				break;
-		}
 		}
 
 
@@ -531,6 +539,8 @@ void tok_next( tokenizer *tok )
 			if(( *(tok->buff) == L'\\') &&( *(tok->buff+1) == L'\n') )
 			{
 				tok->buff+=2;
+				tok->last_type = TOK_END;
+				return;
 			}
 			break;
 		}
@@ -594,7 +604,6 @@ void tok_next( tokenizer *tok )
 
 		default:
 		{
-
 			if( iswdigit( *tok->buff ) )
 			{
 				wchar_t *orig = tok->buff;

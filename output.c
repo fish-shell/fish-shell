@@ -135,6 +135,11 @@ void output_set_writer( int (*writer)(char) )
 	out = writer;
 }
 
+int (*output_get_writer())(char)
+{
+	return out;
+}
+
 
 void set_color( int c, int c2 )
 {

@@ -923,16 +923,21 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 	}
 
 	int res = wcsfilecmp( a+1, b+1 );
-	switch( abs(res) )
-	{
-		case 2:
-			return res;
-		default:
-			if( secondary_diff )
-				return secondary_diff>0?1:-1;
-	}
-	return 0;
 
+	if( abs(res) < 2 )
+	{
+		/*
+		  No primary difference in rest of string.
+		  Use secondary difference on this element if found.
+		*/
+		if( secondary_diff )
+		{
+			return secondary_diff>0?1:-1;
+		}
+	}
+	
+	return res;
+	
 }
 
 void sb_init( string_buffer_t * b)

@@ -113,10 +113,20 @@ typedef struct array_list
 		Array containing the data
 	*/
 	anything_t *arr;
-	/** Position to append elements at*/
-	int pos;
-	/** Length of array */
-	int size;
+	
+	/** 
+		Internal cursor position of the array_list_t. This is the
+		position to append elements at. This is also what the
+		array_list_t considers to be its true size, as reported by
+		al_get_count(), etc. Calls to e.g. al_insert will preserve the
+		values of all elements up to pos.
+	*/
+	size_t pos;
+
+	/** 
+		Amount of memory allocated in arr, expressed in number of elements.
+	*/
+	size_t size;
 }
 array_list_t;
 

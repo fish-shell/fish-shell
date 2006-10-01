@@ -70,7 +70,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o	\
 	expand.o highlight.o history.o kill.o parser.o proc.o reader.o		\
 	sanity.o tokenizer.o wildcard.o wgetopt.o wutil.o input.o	\
 	output.o intern.o env_universal.o env_universal_common.o			\
-	input_common.o event.o signal.o io.o parse_util.o common.o \
+	input_common.o event.o signal.o io.o parse_util.o common.o  screen.o\
 
 # Additional files used by builtin.o
 BUILTIN_FILES := builtin_help.c builtin_set.c builtin_commandline.c	\

@@ -12,6 +12,9 @@
 #include "parser.h"
 #include "event.h"
 
+#define PARSER_TEST_ERROR 1
+#define PARSER_TEST_INCOMPLETE 2
+
 /**
    event_block_t represents a block on events of the specified type
 */

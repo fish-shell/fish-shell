@@ -2462,7 +2462,7 @@ static int builtin_for( wchar_t **argv )
 	else if ( wcsvarname(argv[1]) )
 	{
 		sb_printf( sb_err,
-				   _( L"%ls: '%ls' is not a valid variable name\n" ),
+				   BUILTIN_FOR_ERR_NAME,
 				   argv[0],
 				   argv[1] );
 		builtin_print_help( argv[0], sb_err );
@@ -2521,12 +2521,16 @@ static int builtin_begin( wchar_t **argv )
 	return proc_get_last_status();
 }
 
+/**
+   Define the function specified by the function_data_t structure. If
+   the do_save flag is set, also write it out to file.
+*/
 static void builtin_end_add_function_def( function_data_t *d )
 {
 	/**
 	   Copy the text from the beginning of the function
-				   until the end command and use as the new definition
-				   for the specified function
+	   until the end command and use as the new definition
+	   for the specified function
 	*/
 	void *context = halloc( 0, 0 );
 
@@ -3006,7 +3010,8 @@ static int builtin_return( wchar_t **argv )
 }
 
 /**
-   Builtin for executing one of several blocks of commands depending on the value of an argument.
+   Builtin for executing one of several blocks of commands depending
+   on the value of an argument.
 */
 static int builtin_switch( wchar_t **argv )
 {
@@ -3036,7 +3041,8 @@ static int builtin_switch( wchar_t **argv )
 }
 
 /**
-   Builtin used together with the switch builtin for conditional execution
+   Builtin used together with the switch builtin for conditional
+   execution
 */
 static int builtin_case( wchar_t **argv )
 {

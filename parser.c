@@ -3399,7 +3399,28 @@ int parser_test( const  wchar_t * buff,
 						*/
 						if( wcscmp( cmd, L"for" ) == 0 )
 						{
-							if( arg_count == 2 )
+							if( arg_count == 1 )
+							{
+								
+								if( wcsvarname( tok_last( &tok )) )
+								{
+									
+									err = 1;
+										
+									if( out )
+									{
+										error( SYNTAX_ERROR,
+											   tok_get_pos( &tok ),
+											   BUILTIN_FOR_ERR_NAME,
+											   L"for",
+											   tok_last( &tok ) );
+										
+										print_errors( out, prefix );
+									}									
+								}
+															
+							}
+							else if( arg_count == 2 )
 							{
 								if( wcscmp( tok_last( &tok ), L"in" ) != 0 )
 								{

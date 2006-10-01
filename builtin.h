@@ -67,6 +67,8 @@ enum
 */
 #define BUILTIN_FOR_ERR_COUNT _( L"%ls: Expected at least two arguments, got %d\n")
 
+#define BUILTIN_FOR_ERR_NAME _( L"%ls: '%ls' is not a valid variable name\n" )
+
 /**
    Error message when too many arguments are supplied to a builtin
 */

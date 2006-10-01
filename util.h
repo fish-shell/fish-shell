@@ -426,6 +426,8 @@ int al_push_func( array_list_t *l, void (*f)() );
 */
 int al_push_all( array_list_t *a, array_list_t *b );
 
+int al_insert( array_list_t *a, int pos, int count );
+
 /**
    Sets the element at the specified index
 

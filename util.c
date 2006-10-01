@@ -721,6 +721,51 @@ int al_push_all( array_list_t *a, array_list_t *b )
 	return 1;
 }
 
+int al_insert( array_list_t *a, int pos, int count )
+{
+
+	assert( pos >= 0 );
+	assert( count >= 0 );
+	assert( a );
+	
+	if( !count )
+		return 0;
+	
+	/*
+	  Reallocate, if needed
+	*/
+	if( maxi( pos, a->pos) + count > a->size )
+	{
+		/*
+		  If we reallocate, add a few extra elements just in case we
+		  want to do some more reallocating any time soon
+		*/
+		size_t new_size = maxi( maxi( pos, a->pos ) + count +32, a->size*2); 
+		void *tmp = realloc( a->arr, sizeof( anything_t )*new_size );
+		if( tmp )
+		{
+			a->arr = tmp;
+		}
+		else
+		{
+			DIE_MEM();
+		}
+					
+	}
+	
+	if( a->pos > pos )
+	{
+		memmove( &a->arr[pos],
+				 &a->arr[pos+count], 
+				 sizeof(anything_t ) * (a->pos-pos) );
+	}
+	
+	memset( &a->arr[pos], 0, sizeof(anything_t)*count );
+	a->pos += count;
+	
+	return 1;
+}
+
 
 static int al_set_generic( array_list_t *l, int pos, anything_t v )
 {

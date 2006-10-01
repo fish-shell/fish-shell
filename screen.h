@@ -44,7 +44,10 @@ typedef struct
 typedef struct
 {
 	/**
-	   The text contents of the line
+	   The text contents of the line. Each element of the array
+	   represents on column of output. Because some characters are two
+	   columns wide, it is perfectly possible for some of the comumns
+	   to be empty. 
 	*/
 	array_list_t text;
 	/**

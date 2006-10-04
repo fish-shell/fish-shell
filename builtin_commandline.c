@@ -52,15 +52,15 @@ enum
 }
 	;
 
+static wchar_t *current_buffer=0;
+static int current_cursor_pos = -1;
+
 /**
    Returns the current commandline buffer.
 */
 static const wchar_t *get_buffer()
 {
-	const wchar_t *buff = builtin_complete_get_temporary_buffer();
-	if( !buff )
-		buff = reader_get_buffer();
-	return buff;
+	return current_buffer;
 }
 
 /**
@@ -68,11 +68,7 @@ static const wchar_t *get_buffer()
 */
 static int get_cursor_pos()
 {
-	const wchar_t *buff = builtin_complete_get_temporary_buffer();
-	if( buff )
-		return wcslen( buff );
-	else
-		return reader_get_cursor_pos();
+	return current_cursor_pos;
 }
 
 
@@ -211,6 +207,17 @@ static int builtin_commandline( wchar_t **argv )
 	
 	int tokenize = 0;	
 
+	current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
+	if( current_buffer )
+	{
+		current_cursor_pos = wcslen( current_buffer );
+	}
+	else
+	{
+		current_buffer = reader_get_buffer();
+		current_cursor_pos = reader_get_cursor_pos();
+	}
+
 	if( !get_buffer() )
 	{
 		sb_append2( sb_err,
@@ -272,6 +279,10 @@ static int builtin_commandline( wchar_t **argv )
 					L"help", no_argument, 0, 'h'
 				}
 				,
+				{					
+					L"input", required_argument, 0, 'I'
+				}
+				,
 				{
 					0, 0, 0, 0 
 				}
@@ -282,7 +293,7 @@ static int builtin_commandline( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"aijpctwforh", 
+								L"aijpctwforhI:", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -336,6 +347,12 @@ static int builtin_commandline( wchar_t **argv )
 			case 'o':
 				tokenize=1;
 				break;
+
+			case 'I':
+				current_buffer = woptarg;
+				current_cursor_pos = wcslen( woptarg );
+				break;
+				
 
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
@@ -470,7 +487,7 @@ static int builtin_commandline( wchar_t **argv )
 	{
 		case STRING_MODE:
 		{			
-			begin = (wchar_t *)get_buffer();
+			begin = get_buffer();
 			end = begin+wcslen(begin);
 			break;			
 		}

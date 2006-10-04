@@ -95,10 +95,10 @@ void reader_set_buffer( wchar_t *b, int p );
 int reader_get_cursor_pos();
 
 /**
-   Return the value of the interupted flag, which is set by the sigint
+   Return the value of the interrupted flag, which is set by the sigint
    handler, and clear it if it was set.
 */
-int reader_interupted();
+int reader_interrupted();
 
 /**
    Read one line of input. Before calling this function, reader_push()
@@ -158,7 +158,7 @@ int exit_status();
 void reader_replace_current_token( wchar_t *new_token );
 
 /**
-   The readers interupt signal handler. Cancels all currently running blocks.
+   The readers interrupt signal handler. Cancels all currently running blocks.
 */
 void reader_handle_int( int signal );
 

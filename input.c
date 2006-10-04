@@ -1390,7 +1390,7 @@ static int interrupt_handler()
 	/*
 	  Tell the reader an event occured
 	*/
-	if( reader_interupted() )
+	if( reader_interrupted() )
 	{
 		/*
 		  Return 3, i.e. the character read by a Control-C.
@@ -1654,7 +1654,7 @@ wint_t input_readch()
 	/*
 	  Clear the interrupted flag
 	*/
-	reader_interupted();
+	reader_interrupted();
 
 	/*
 	  Search for sequence in various mapping tables

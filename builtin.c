@@ -2268,9 +2268,20 @@ static int builtin_fg( wchar_t **argv )
 		  since we want to know if this is an ambigous job
 		  specification or if this is an malformed job id
 		*/
-		int pid = wcstol( argv[1], 0, 10 );
-		j = job_get_from_pid( pid );
-		if( j != 0 )
+		wchar_t *endptr;
+		int pid;
+		int found_job = 0;
+		
+		errno = 0;
+		pid = wcstol( argv[1], &endptr, 10 );
+		if( !( *endptr || errno )  )
+		{			
+			j = job_get_from_pid( pid );
+			if( j )
+				found_job = 1;
+		}
+		
+		if( found_job )
 		{
 			sb_printf( sb_err,
 					   _( L"%ls: Ambiguous job\n" ),
@@ -2283,6 +2294,7 @@ static int builtin_fg( wchar_t **argv )
 					   argv[0],
 					   argv[1] );
 		}
+
 		builtin_print_help( argv[0], sb_err );
 
 		j=0;
@@ -2291,9 +2303,11 @@ static int builtin_fg( wchar_t **argv )
 	else
 	{
 		wchar_t *end;		
-		int pid = abs(wcstol( argv[1], &end, 10 ));
+		int pid;
+		errno = 0;
+		pid = abs(wcstol( argv[1], &end, 10 ));
 		
-		if( *end )
+		if( *end || errno )
 		{
 				sb_printf( sb_err,
 						   BUILTIN_ERR_NOT_NUMBER,

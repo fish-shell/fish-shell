@@ -287,7 +287,7 @@ static pid_t original_pid;
 /**
    This variable is set to true by the signal handler when ^C is pressed
 */
-static int interupted=0;
+static int interrupted=0;
 
 /**
    Original terminal mode when fish was started
@@ -403,8 +403,8 @@ void reader_handle_int( int sig )
 		c->skip=1;
 		c=c->outer;
 	}
-	interupted = 1;
-
+	interrupted = 1;
+	
 }
 
 wchar_t *reader_current_filename()
@@ -504,11 +504,11 @@ static void remove_duplicates( array_list_t *l )
 }
 
 
-int reader_interupted()
+int reader_interrupted()
 {
-	int res=interupted;
+	int res=interrupted;
 	if( res )
-		interupted=0;
+		interrupted=0;
 	return res;
 }
 
@@ -574,10 +574,7 @@ static void calc_prompt()
 	*/
 	if( data->exec_prompt )
 	{
-
-		al_foreach( &prompt_list, &free );
-		al_truncate( &prompt_list, 0 );
-
+		
 		if( data->prompt )
 		{
 			proc_push_interactive( 0 );
@@ -591,17 +588,20 @@ static void calc_prompt()
 			}
 			proc_pop_interactive();
 		}
-
+		
 		data->exec_prompt = 0;
 		reader_write_title();
-
+		
 		sb_clear( &data->prompt_buff );
 		
 		for( i=0; i<al_get_count( &prompt_list); i++ )
 		{
 			sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ) );
 		}
-
+		
+		al_foreach( &prompt_list, &free );
+		al_truncate( &prompt_list, 0 );
+		
 	}
 
 }
@@ -1287,7 +1287,7 @@ static void reader_interactive_init()
 	/* Loop until we are in the foreground.  */
 	while (tcgetpgrp( 0 ) != shell_pgid)
 	{
-		kill (- shell_pgid, SIGTTIN);
+		killpg( shell_pgid, SIGTTIN);
 	}
 
 	/* Put ourselves in our own process group.  */
@@ -1372,8 +1372,6 @@ void reader_replace_current_token( wchar_t *new_token )
 
 	if( !begin || !end )
 		return;
-
-//	fwprintf( stderr, L"%d %d, %d\n", begin-data->buff, end-data->buff, data->buff_len );
 
 	/*
 	  Make new string
@@ -1915,7 +1913,7 @@ void reader_set_test_function( int (*f)( wchar_t * ) )
 static void reader_super_highlight_me_plenty( int *color, int match_highlight_pos, array_list_t *error )
 {
 	data->highlight_func( data->buff, color, match_highlight_pos, error );
-	if( wcslen(data->search_buff) )
+	if( data->search_buff && wcslen(data->search_buff) )
 	{
 		wchar_t * match = wcsstr( data->buff, data->search_buff );
 		if( match )
@@ -2093,6 +2091,7 @@ wchar_t *reader_readline()
 		while( 1 )
 		{
 			c=input_readch();
+			
 			if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
 			{
 				if( can_read(0) )

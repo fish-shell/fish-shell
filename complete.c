@@ -1288,40 +1288,44 @@ static void complete_cmd( const wchar_t *cmd,
 	else
 	{
 		path = env_get(L"PATH");
-		path_cpy = wcsdup( path );
-
-		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-			 nxt_path != 0;
-			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+		if( path )
 		{
-			nxt_completion = wcsdupcat2( nxt_path,
-										 (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
-										 cmd,
-										 0 );
-			if( ! nxt_completion )
-				continue;
-
-			al_init( &tmp );
-
-			if( expand_string( 0,
-							   nxt_completion,
-							   &tmp,
-							   ACCEPT_INCOMPLETE |
-							   EXECUTABLES_ONLY ) != EXPAND_ERROR )
+			
+			path_cpy = wcsdup( path );
+			
+			for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
+				 nxt_path != 0;
+				 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 			{
-				for( i=0; i<al_get_count(&tmp); i++ )
+				nxt_completion = wcsdupcat2( nxt_path,
+											 (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
+											 cmd,
+											 0 );
+				if( ! nxt_completion )
+					continue;
+				
+				al_init( &tmp );
+				
+				if( expand_string( 0,
+								   nxt_completion,
+								   &tmp,
+								   ACCEPT_INCOMPLETE |
+								   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 				{
-					al_push( comp, al_get( &tmp, i ) );
+					for( i=0; i<al_get_count(&tmp); i++ )
+					{
+						al_push( comp, al_get( &tmp, i ) );
+					}
 				}
+				
+				al_destroy( &tmp );
+				
 			}
-
-			al_destroy( &tmp );
-
+			free( path_cpy );
+			
+			complete_cmd_desc( cmd, comp );
 		}
-		free( path_cpy );
-
-		complete_cmd_desc( cmd, comp );
-
+		
 		/*
 		  These return the original strings - don't free them
 		*/
@@ -1334,7 +1338,6 @@ static void complete_cmd( const wchar_t *cmd,
 		builtin_get_names( &possible_comp );
 		copy_strings_with_prefix( comp, cmd, COMPLETE_BUILTIN_DESC, &builtin_get_desc, &possible_comp );
 		al_destroy( &possible_comp );
-
 
 	}
 

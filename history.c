@@ -125,8 +125,6 @@ static void history_free_node( ll_node_t *n )
 	unused = n;
 }
 
-
-
 /**
    Load history from file
 */
@@ -422,9 +420,9 @@ static void history_destroy_mode( void *name, void *link )
 	last_loaded = d->last_loaded;
 	history_count = d->count;
 	past_end=1;
-
+	
 //	fwprintf( stderr, L"Destroy history mode \'%ls\'\n", mode_name );
-
+	
 	if( history_last )
 	{
 		history_save();	
@@ -455,7 +453,6 @@ void history_destroy()
 				  &history_destroy_mode );
 
 	hash_destroy( &history_table );
-	
 }
 
 

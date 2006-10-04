@@ -368,9 +368,23 @@ static void print_variables(int include_values, int esc, int scope)
 			wchar_t *e_value;
 			if( value )
 			{
+				int shorten = 0;
+				
+				if( wcslen( value ) > 64 )
+				{
+					shorten = 1;
+					value = wcsndup( value, 60 );
+					if( !value )
+						DIE_MEM();
+				}
 				e_value = esc ? expand_escape_variable(value) : wcsdup(value);
 				sb_append2(sb_out, L" ", e_value, (void *)0);
 				free(e_value);
+				if( shorten )
+				{
+					sb_append(sb_out, L"\u2026");
+					free( value );
+				}
 			}
 		}
 		

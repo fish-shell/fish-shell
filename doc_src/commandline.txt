@@ -9,8 +9,22 @@
 - \c CMD is the new value of the commandline. If unspecified, the
   current value of the commandline is written to standard output.
 
+The following switches change what the commandline builtin does
+
+- \c -C or \c --cursor set or get the current cursor position, not 
+  the contents of the buffer. If no argument is given, the current
+  cursor position is printed, otherwise the argument is interpreted 
+  as the new cursor position.
+- \c -f or \c --function inject readline functions into the
+  reader. This option can not be combined with any other option. It
+  will cause any additional arguments to be interpreted as readline
+  functions, and these functions will be injected into the reader, so
+  that they will be returned to the reader before any additional
+  actual keypresses are read.
+
+
 The following switches change the way \c commandline updates the
-commandline
+commandline buffer
 
 - \c -a or \c --append do not remove the current commandline, append
   the specified string at the end of it
@@ -28,20 +42,12 @@ or updated
 - \c -t or \c --current_token select the current token.
 
 The following switch changes the way \c commandline prints the current
-commandline
+commandline buffer 
 
 - \c -c or \c --cut-at-cursor only print selection up until the
   current cursor position
 - \c -o or \c --tokenize tokenize the selection and print one string-type token per line
 
-Other switches
-
-- \c -f or \c --function inject readline functions into the
-  reader. This option can not be combined with any other option. It
-  will cause any additional arguments to be interpreted as readline
-  functions, and these functions will be injected into the reader, so
-  that they will be returned to the reader before any additional
-  actual keypresses are read.
 
 If commandline is called during a call to complete a given string
 using <code>complete -C STRING</code>, commandline will consider the

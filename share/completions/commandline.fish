@@ -10,3 +10,6 @@ complete -c commandline -s b -l current-buffer -d (N_ "Select entire command lin
 complete -c commandline -s c -l cut-at-cursor -d (N_ "Only return that part of the command line before the cursor")
 complete -c commandline -s f -l function -d (N_ "Inject readline functions to reader")
 
+complete -c commandline -s I -l input -d (N_ "Specify command to operate on")
+complete -c commandline -s C -l cursor -d (N_ "Set/get cursor position, not buffer contents")
+

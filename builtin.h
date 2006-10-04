@@ -84,6 +84,7 @@ enum
 */
 #define BUILTIN_END_BLOCK_UNKNOWN _( L"%ls: Unknown block type '%ls'\n" )
 
+#define BUILTIN_ERR_NOT_NUMBER _( L"%ls: Argument '%ls' is not a number\n" )
 /**
    Stringbuffer used to represent standard output
 */

@@ -1253,8 +1253,6 @@ static int handle_completions( array_list_t *comp )
 				  columns, then four, etc. completion_try_print always
 				  succeeds with one column.
 				*/
-/*
- */
 			}
 
 			free( prefix );
@@ -1714,11 +1712,13 @@ void reader_set_buffer( wchar_t *b, int p )
 
 	data->buff_len = l;
 	check_size();
-	wcscpy( data->buff, b );
+
+	if( data->buff != b )
+		wcscpy( data->buff, b );
 
 	if( p>=0 )
 	{
-		data->buff_pos=p;
+		data->buff_pos=mini( p, l );
 	}
 	else
 	{

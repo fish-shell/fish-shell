@@ -1258,6 +1258,7 @@ static int handle_completions( array_list_t *comp )
 			}
 
 			free( prefix );
+			s_reset( &data->screen );
 			repaint();
 
 		}

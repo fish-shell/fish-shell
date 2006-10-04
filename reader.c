@@ -70,7 +70,6 @@ commence.
 #include <signal.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include <time.h>
 #include <wchar.h>
 
 #include <assert.h>
@@ -266,14 +265,6 @@ static int end_loop = 0;
 static array_list_t current_filename;
 
 /**
-   These status buffers are used to check if any output has occurred
-   other than from fish's main loop, in which case we need to redraw.
-*/
-static struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
-
-
-
-/**
    List containing strings which make up the prompt
 */
 static array_list_t prompt_list;
@@ -304,8 +295,6 @@ static struct termios old_modes;
 */
 static struct termios saved_modes;
 
-static void reader_save_status();
-static void reader_check_status();
 static void reader_super_highlight_me_plenty( int *color, int pos, array_list_t *error );
 
 /**
@@ -370,18 +359,6 @@ static void term_steal()
 		exit(1);
 	}
 
-}
-
-/**
-   Test if there is space between the time fields of struct stat to
-   use for sub second information. If so, we assume this space
-   contains the desired information.
-*/
-static int room_for_usec(struct stat *st)
-{
-	int res = ((&(st->st_atime) + 2) == &(st->st_mtime) &&
-			   (&(st->st_atime) + 4) == &(st->st_ctime));
-	return res;
 }
 
 int reader_exit_forced()
@@ -655,79 +632,6 @@ void repaint()
 
 	s_write( &data->screen, (wchar_t *)data->prompt_buff.buff, data->buff, data->color, data->buff_pos );
 	
-	reader_save_status();
-}
-
-/**
-   Stat stdout and stderr and save result.
-
-   This should be done before calling a function that may cause output.
-*/
-
-static void reader_save_status()
-{
-
-	/*
-	  This futimes call tries to trick the system into using st_mtime
-	  as a tampering flag. This of course only works on systems where
-	  futimes is defined, but it should make the status saving stuff
-	  failsafe.
-	*/
-	struct timeval t[]=
-		{
-			{
-				time(0)-1,
-				0
-			}
-			,
-			{
-				time(0)-1,
-				0
-			}
-		}
-	;
-
-	/*
-	  Don't check return value on these. We don't care if they fail,
-	  really.  This is all just to make the prompt look ok, which is
-	  impossible to do 100% reliably. We try, at least.
-	*/
-	futimes( 1, t );
-	futimes( 2, t );
-
-	fstat( 1, &prev_buff_1 );
-	fstat( 2, &prev_buff_2 );
-}
-
-/**
-   Stat stdout and stderr and compare result to previous result in
-   reader_save_status. Repaint if modification time has changed.
-
-   Unfortunately, for some reason this call seems to give a lot of
-   false positives, at least under Linux.
-*/
-
-static void reader_check_status()
-{
-	fflush( stdout );
-	fflush( stderr );
-
-	fstat( 1, &post_buff_1 );
-	fstat( 2, &post_buff_2 );
-
-	int changed = ( prev_buff_1.st_mtime != post_buff_1.st_mtime ) ||
-		( prev_buff_2.st_mtime != post_buff_2.st_mtime );
-
-	if (room_for_usec( &post_buff_1))
-	{
-		changed = changed || ( (&prev_buff_1.st_mtime)[1] != (&post_buff_1.st_mtime)[1] ) ||
-			( (&prev_buff_2.st_mtime)[1] != (&post_buff_2.st_mtime)[1] );
-	}
-
-	if( changed )
-	{
-		repaint();
-	}
 }
 
 /**
@@ -2076,11 +1980,6 @@ wchar_t *reader_readline()
 	while( !finished && !data->end_loop)
 	{
 
-		/*
-		  Save the terminal status so we know if we have to redraw
-		*/
-
-		reader_save_status();
 
 		/*
 		  Sometimes strange input sequences seem to generate a zero
@@ -2130,8 +2029,6 @@ wchar_t *reader_readline()
 				break;
 		}
 
-		reader_check_status();
-
 		if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
 		{
 			al_foreach( &comp, &free );
@@ -2141,7 +2038,7 @@ wchar_t *reader_readline()
 
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank=0;
-
+		
 		switch( c )
 		{
 
@@ -2214,9 +2111,7 @@ wchar_t *reader_readline()
 					len = data->buff_pos - (begin-data->buff);
 					buffcpy = wcsndup( begin, len );
 
-					reader_save_status();
 					data->complete_func( buffcpy, &comp );
-					reader_check_status();
 
 					sort_list( &comp );
 					remove_duplicates( &comp );

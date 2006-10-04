@@ -40,6 +40,12 @@ typedef struct
 	  write.
 	*/
 	int actual_width;	
+
+	/**
+	   These status buffers are used to check if any output has occurred
+	   other than from fish's main loop, in which case we need to redraw.
+	*/
+	struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
 }
 	screen_t;
 

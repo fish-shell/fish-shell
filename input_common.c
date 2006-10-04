@@ -186,7 +186,7 @@ wchar_t input_common_readch( int timed )
 			
 			int sz;
 			
-			if( (b == R_NULL) || (b == R_EOF) )
+			if( (b >= R_NULL) && (b < R_NULL + 1000) )
 				return b;
 
 			bb=b;

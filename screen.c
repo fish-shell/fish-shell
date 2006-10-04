@@ -39,6 +39,7 @@
 #endif
 
 #include <wchar.h>
+#include <time.h>
 
 #include <assert.h>
 
@@ -197,6 +198,90 @@ static int calc_prompt_width( wchar_t *prompt )
 			}
 		}
 	return res;
+}
+
+/**
+   Test if there is space between the time fields of struct stat to
+   use for sub second information. If so, we assume this space
+   contains the desired information.
+*/
+static int room_for_usec(struct stat *st)
+{
+	int res = ((&(st->st_atime) + 2) == &(st->st_mtime) &&
+			   (&(st->st_atime) + 4) == &(st->st_ctime));
+	return res;
+}
+
+/**
+   Stat stdout and stderr and save result.
+
+   This should be done before calling a function that may cause output.
+*/
+
+static void s_save_status( screen_t *s)
+{
+
+	/*
+	  This futimes call tries to trick the system into using st_mtime
+	  as a tampering flag. This of course only works on systems where
+	  futimes is defined, but it should make the status saving stuff
+	  failsafe.
+	*/
+	struct timeval t[]=
+		{
+			{
+				time(0)-1,
+				0
+			}
+			,
+			{
+				time(0)-1,
+				0
+			}
+		}
+	;
+
+	/*
+	  Don't check return value on these. We don't care if they fail,
+	  really.  This is all just to make the prompt look ok, which is
+	  impossible to do 100% reliably. We try, at least.
+	*/
+	futimes( 1, t );
+	futimes( 2, t );
+
+	fstat( 1, &s->prev_buff_1 );
+	fstat( 2, &s->prev_buff_2 );
+}
+
+/**
+   Stat stdout and stderr and compare result to previous result in
+   reader_save_status. Repaint if modification time has changed.
+
+   Unfortunately, for some reason this call seems to give a lot of
+   false positives, at least under Linux.
+*/
+
+static void s_check_status( screen_t *s)
+{
+	fflush( stdout );
+	fflush( stderr );
+
+	fstat( 1, &s->post_buff_1 );
+	fstat( 2, &s->post_buff_2 );
+
+	int changed = ( s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime ) ||
+		( s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime );
+
+	if (room_for_usec( &s->post_buff_1))
+	{
+		changed = changed || ( (&s->prev_buff_1.st_mtime)[1] != (&s->post_buff_1.st_mtime)[1] ) ||
+			( (&s->prev_buff_2.st_mtime)[1] != (&s->post_buff_2.st_mtime)[1] );
+	}
+
+	if( changed )
+	{
+		s_reset( s );
+	}
 }
 
 /**
@@ -491,12 +576,14 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 	int prompt_width = calc_prompt_width( prompt );
 	int current_width=0;
 	int screen_width = common_get_width();
+	int resize = 0;
 	
 	buffer_t output;
 	b_init( &output );
-
+	
 	if( scr->actual_width != screen_width )
 	{
+		resize = 1;
 		s_move( scr, &output, 0, 0 );
 		scr->actual_width = screen_width;
 		s_reset( scr );
@@ -518,6 +605,12 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		int start_pos = (i==0?prompt_width:0);
 		current_width = start_pos;
 
+		if( resize )
+		{
+			s_move( scr, &output, start_pos, i );
+			s_write_mbs( &output, clr_eol);
+		}
+		
 		if( !s_line )
 		{
 			s_line = s_create_line();
@@ -528,6 +621,7 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		{
 			wchar_t o = (wchar_t)al_get( &o_line->text, j );
 			int o_c = (int)al_get( &o_line->color, j );
+
 			
 			if( !o )
 				continue;
@@ -601,6 +695,8 @@ void s_write( screen_t *s,
 	int prompt_width = calc_prompt_width( prompt );
 	int screen_width = common_get_width();
 
+	s_check_status( s );
+
 	/*
 	  Ignore huge prompts on small screens
 	*/
@@ -652,7 +748,7 @@ void s_write( screen_t *s,
 	
 	memcpy( s->desired_cursor, cursor_arr, sizeof(int)*2 );
 	s_update( s, prompt );
-	
+	s_save_status( s );
 }
 
 void s_reset( screen_t *s )

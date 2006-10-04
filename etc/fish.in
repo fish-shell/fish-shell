@@ -4,13 +4,6 @@
 # @configure_input@
 
 #
-# Set default search paths for completions and shellscript functions
-#
-
-set -g fish_function_path ~/.fish.d/functions    @sysconfdir@/fish.d/functions    @datadir@/fish/functions 
-set -g fish_complete_path ~/.fish.d/completions  @sysconfdir@/fish.d/completions  @datadir@/fish/completions 
-
-#
 # Set default field separators
 #
 

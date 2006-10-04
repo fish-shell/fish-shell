@@ -5,10 +5,20 @@
 #
 # @configure_input@
 
-# Assign a temporary value here for performance reasons. The real
-# value should be set in /etc/fish.
+#
+# Set default search paths for completions and shellscript functions
+# unless they already exist
+#
 
-set -g fish_function_path @datadir@/fish/functions/
+if not set -q fish_function_path 
+	set -U fish_function_path ~/.fish.d/functions    @sysconfdir@/fish.d/functions    @datadir@/fish/functions 
+end
+
+if not set -q fish_complete_path 
+	set -U fish_complete_path ~/.fish.d/completions  @sysconfdir@/fish.d/completions  @datadir@/fish/completions 
+end
+
+
 set __fish_help_dir @docdir@
 
 # This is a Solaris-specific test to modify the PATH so that

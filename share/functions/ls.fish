@@ -9,7 +9,7 @@ if command ls --version 1>/dev/null 2>/dev/null
 		if isatty 1
 			set param $param --indicator-style=classify
 		end
-		command ls $argv
+		command ls $param $argv
 	end
 
 	set -l color_document 35

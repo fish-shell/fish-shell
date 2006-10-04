@@ -490,10 +490,18 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 	int i, j, k;
 	int prompt_width = calc_prompt_width( prompt );
 	int current_width=0;
+	int screen_width = common_get_width();
 	
 	buffer_t output;
 	b_init( &output );
 
+	if( scr->actual_width != screen_width )
+	{
+		s_move( scr, &output, 0, 0 );
+		scr->actual_width = screen_width;
+		s_reset( scr );
+	}
+	
 	if( wcscmp( prompt, (wchar_t *)scr->actual_prompt.buff ) )
 	{
 		s_move( scr, &output, 0, 0 );

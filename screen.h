@@ -34,6 +34,12 @@ typedef struct
 	   the screen.
 	*/
 	string_buffer_t actual_prompt;
+
+	/*
+	  The actual width of the screen at the time of the last screen
+	  write.
+	*/
+	int actual_width;	
 }
 	screen_t;
 

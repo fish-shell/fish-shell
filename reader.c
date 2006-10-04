@@ -2171,6 +2171,12 @@ wchar_t *reader_readline()
 				break;
 			}
 
+			case R_WINCH:
+			{
+				repaint();
+				break;
+			}
+
 			case R_EOF:
 			{
 				exit_forced = 1;
@@ -2518,15 +2524,6 @@ wchar_t *reader_readline()
 			case R_FORWARD_WORD:
 			{
 				move_word( 1,0);
-				break;
-			}
-
-			case R_CLEAR_SCREEN:
-			{
-				if( clear_screen )
-					writembs( clear_screen );
-				s_reset( &data->screen );
-				repaint();
 				break;
 			}
 

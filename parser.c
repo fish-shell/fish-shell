@@ -3441,59 +3441,6 @@ int parser_test( const  wchar_t * buff,
 						}
 					}
 
-					/*
-					  Try to make sure that arguments passed to 'end'
-					  is always the type of block to close
-					*/
-					if( wcscmp( cmd, L"end" ) == 0 )
-					{
-						if( (arg_count == 1) /*&& (count > 0)*/ )
-						{
-							
-							int t = parser_get_block_type( tok_last( &tok ) );
-
-							/*
-							  This is ugly. We peek at the element
-							  past the current element on the
-							  block_type stack. It will always contain
-							  the type of the block that just went out
-							  of scope, which is what we need, but it
-							  is not nice coding practice to search
-							  through the 'junk pile' like that...
-							*/
-							if( t != block_type[count] )
-							{
-								err=1;
-								if( out )
-								{
-									if( t == -1 )
-									{
-										error( SYNTAX_ERROR,
-											   tok_get_pos( &tok ),
-											   BUILTIN_END_BLOCK_UNKNOWN,
-											   L"end",
-											   tok_last( &tok ) );
-									}
-									else
-									{
-										error( SYNTAX_ERROR,
-											   tok_get_pos( &tok ),
-											   BUILTIN_END_BLOCK_MISMATCH,
-											   L"end",
-											   tok_last( &tok ), 
-											   parser_get_block_command( block_type[count-1] ) );
-									}
-				
-									print_errors( out, prefix );
-
-								}
-							}
-							
-						}
-						
-					}
-					
-
 				}
 				
 				break;

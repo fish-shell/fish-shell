@@ -2759,37 +2759,6 @@ static int builtin_end( wchar_t **argv )
 		   variables in the current loop scope won't die between laps.
 		*/
 		int kill_block = 1;
-		wchar_t *type = argv[1];
-		if( type )
-		{
-			int  t = parser_get_block_type( type );
-			if( t != current_block->type )
-			{
-				if( t == -1 )
-				{
-					sb_printf( sb_err,
-							   BUILTIN_END_BLOCK_UNKNOWN,
-							   argv[0],
-							   type, 
-							   parser_get_block_command( current_block->type ) );
-				}
-				else
-				{
-					sb_printf( sb_err,
-							   BUILTIN_END_BLOCK_MISMATCH,
-							   argv[0],
-							   type, 
-							   parser_get_block_command( current_block->type ) );
-				}
-				
-				builtin_print_help( argv[0], sb_err );
-				return 1;
-				
-				
-			}
-			
-		}
-		
 
 		switch( current_block->type )
 		{

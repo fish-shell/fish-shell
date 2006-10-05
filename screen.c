@@ -392,7 +392,7 @@ static void s_desired_append_char( screen_t *s,
 			if( s->desired_cursor[0] + cw + ew > screen_width )
 			{
 				al_set_long( &current->text, s->desired_cursor[0], ellipsis_char );
-				al_set_long( &current->color, s->desired_cursor[0], 0 );
+				al_set_long( &current->color, s->desired_cursor[0], HIGHLIGHT_COMMENT );
 								
 				current = s_create_line();
 				al_push( &s->desired, current );
@@ -402,7 +402,7 @@ static void s_desired_append_char( screen_t *s,
 				{
 					s_desired_append_char( s, L' ', 0, prompt_width );
 				}				
-				s_desired_append_char( s, ellipsis_char, 0, prompt_width );
+				s_desired_append_char( s, ellipsis_char, HIGHLIGHT_COMMENT, prompt_width );
 			}
 			
 			al_set_long( &current->text, s->desired_cursor[0], b );

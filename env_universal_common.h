@@ -50,6 +50,11 @@ enum
 	;
 
 /**
+   The size of the buffer used for reading from the socket
+*/
+#define ENV_UNIVERSAL_BUFFER_SIZE 1024
+
+/**
    This struct represents a connection between a universal variable server/client
 */
 typedef struct connection
@@ -76,6 +81,22 @@ typedef struct connection
 	*/
 	string_buffer_t input;
 	
+	/**
+	   The read buffer. 
+	*/
+	char buffer[ENV_UNIVERSAL_BUFFER_SIZE];
+
+	/**
+	   Number of bytes that have already been consumed.
+	*/
+	int buffer_consumed;
+	
+	/**
+	   Number of bytes that have been read into the buffer. 
+	*/
+	int buffer_used;
+	
+
 	/**
 	   Link to the next connection
 	*/

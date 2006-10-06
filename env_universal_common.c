@@ -70,6 +70,21 @@
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
 
 /**
+   ERROR string for internal buffered reader
+*/
+#define ENV_UNIVERSAL_ERROR 0x100
+
+/**
+   EAGAIN string for internal buffered reader
+*/
+#define ENV_UNIVERSAL_AGAIN 0x101
+
+/**
+   EOF string for internal buffered reader
+*/
+#define ENV_UNIVERSAL_EOF   0x102
+
+/**
    A variable entry. Stores the value of a variable and whether it
    should be exported. Obviously, it needs to be allocated large
    enough to fit the value string.
@@ -134,38 +149,83 @@ void env_universal_common_destroy()
 	hash_destroy( &env_universal_var );
 }
 
+static int read_byte( connection_t *src )
+{
+
+	if( src->buffer_consumed >= src->buffer_used )
+	{
+
+		int res;
+
+		res = read( src->fd, src->buffer, ENV_UNIVERSAL_BUFFER_SIZE );
+		
+		if( res < 0 )
+		{
+
+			if( errno == EAGAIN ||
+				errno == EINTR )
+			{
+				return ENV_UNIVERSAL_AGAIN;
+			}
+		
+			return ENV_UNIVERSAL_ERROR;
+
+		}
+		
+		if( res == 0 )
+		{
+			return ENV_UNIVERSAL_EOF;
+		}
+		
+		src->buffer_consumed = 0;
+		src->buffer_used = res;
+	}
+	
+	return src->buffer[src->buffer_consumed++];
+
+}
+
 
 void read_message( connection_t *src )
 {
 	while( 1 )
 	{
-		char b;		
-		int read_res = read( src->fd, &b, 1 );
-		wchar_t res=0;
 		
-		if( read_res < 0 )
+		int ib = read_byte( src );
+		char b;
+		
+		wchar_t res=0;
+
+		switch( ib )
 		{
-			if( errno != EAGAIN && 
-				errno != EINTR )
+			case ENV_UNIVERSAL_AGAIN:
+			{
+				return;
+			}
+
+			case ENV_UNIVERSAL_ERROR:
 			{
 				debug( 2, L"Read error on fd %d, set killme flag", src->fd );
 				wperror( L"read" );
 				src->killme = 1;
+				return;
 			}
-			return;
-		}
-		if( read_res == 0 )
-		{
-			src->killme = 1;
-			debug( 3, L"Fd %d has reached eof, set killme flag", src->fd );
-			if( src->input.used > 0 )
+
+			case ENV_UNIVERSAL_EOF:
 			{
-				debug( 1, 
-				       L"Universal variable connection closed while reading command. Partial command recieved: '%ls'", 
-				       (wchar_t *)src->input.buff  );
+				src->killme = 1;
+				debug( 3, L"Fd %d has reached eof, set killme flag", src->fd );
+				if( src->input.used > 0 )
+				{
+					debug( 1, 
+						   L"Universal variable connection closed while reading command. Partial command recieved: '%ls'", 
+						   (wchar_t *)src->input.buff  );
+				}
+				return;
 			}
-			return;
 		}
+		
+		b = (char)ib;
 		
 		int sz = mbrtowc( &res, &b, 1, &src->wstate );
 		

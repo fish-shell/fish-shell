@@ -204,7 +204,7 @@ typedef struct reader_data
 	/**
 	   New color buffer, used for syntax highlighting.
 	*/
-	int *new_color;
+	int *indent;
 
 	/**
 	   Should the prompt command be reexecuted on the next repaint
@@ -419,13 +419,13 @@ static int check_size()
 		data->color = realloc( data->color,
 							   sizeof(int)*data->buff_sz);
 
-		data->new_color = realloc( data->new_color,
-								   sizeof(int)*data->buff_sz);
+		data->indent = realloc( data->indent,
+								sizeof(int)*data->buff_sz);
 
 		if( data->buff==0 ||
 			data->search_buff==0 ||
 			data->color==0 ||
-			data->new_color == 0 )
+			data->indent == 0 )
 		{
 			DIE_MEM();
 		}
@@ -627,10 +627,10 @@ void reader_exit( int do_exit, int forced )
 void repaint()
 {
 	calc_prompt();
+	
+	parser_test( data->buff, data->indent, 0, 0 );
 
-//	assert( wcslen( (wchar_t *)data->prompt_buff.buff));
-
-	s_write( &data->screen, (wchar_t *)data->prompt_buff.buff, data->buff, data->color, data->buff_pos );
+	s_write( &data->screen, (wchar_t *)data->prompt_buff.buff, data->buff, data->color, data->indent, data->buff_pos );
 	
 }
 
@@ -1679,7 +1679,7 @@ void reader_run_command( const wchar_t *cmd )
 
 static int shell_test( wchar_t *b )
 {
-	int res = parser_test( b, 0, 0 );
+	int res = parser_test( b, 0, 0, 0 );
 	
 	if( res & PARSER_TEST_ERROR )
 	{
@@ -1687,10 +1687,11 @@ static int shell_test( wchar_t *b )
 		sb_init( &sb );
 
 		int tmp[1];
+		int tmp2[1];
 		
-		s_write( &data->screen, L"", L"", tmp, 0 );
+		s_write( &data->screen, L"", L"", tmp, tmp2, 0 );
 		
-		parser_test( b, &sb, L"fish" );
+		parser_test( b, 0, &sb, L"fish" );
 		fwprintf( stderr, L"%ls", sb.buff );
 		sb_destroy( &sb );
 	}
@@ -1753,7 +1754,7 @@ void reader_pop()
 	free( n->prompt );
 	free( n->buff );
 	free( n->color );
-	free( n->new_color );
+	free( n->indent );
 	free( n->search_buff );
 	
 	s_destroy( &n->screen );
@@ -2550,7 +2551,7 @@ static int read_ni( int fd )
 		string_buffer_t sb;
 		sb_init( &sb );
 		
-		if( !parser_test( str, &sb, L"fish" ) )
+		if( !parser_test( str, 0, &sb, L"fish" ) )
 		{
 			eval( str, 0, TOP );
 		}

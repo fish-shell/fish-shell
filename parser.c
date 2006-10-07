@@ -2839,7 +2839,7 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 				
 //				debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
 	
-				err |= parser_test( subst, out, prefix );
+				err |= parser_test( subst, 0, out, prefix );
 				
 				free( subst );
 				free( arg_cpy );
@@ -2981,6 +2981,7 @@ int parser_test_args(const  wchar_t * buff,
 }
 
 int parser_test( const  wchar_t * buff,
+				 int *block_level, 
 				 string_buffer_t *out,
 				 const wchar_t *prefix )
 {
@@ -2992,6 +2993,8 @@ int parser_test( const  wchar_t * buff,
 	int had_cmd=0; 
 	int count = 0;
 	int err=0;
+	int unfinished = 0;
+	
 	tokenizer *previous_tokenizer=current_tokenizer;
 	int previous_pos=current_tokenizer_pos;
 	static int block_pos[BLOCK_MAX_COUNT];
@@ -3033,6 +3036,17 @@ int parser_test( const  wchar_t * buff,
 	wchar_t *cmd=0;
 		
 	CHECK( buff, 1 );
+
+	if( block_level )
+	{
+		int i;
+		int len = wcslen(buff);
+		for( i=0; i<len; i++ )
+		{
+			block_level[i] = -1;
+		}
+		
+	}
 		
 	context = halloc( 0, 0 );
 	current_tokenizer = &tok;
@@ -3107,6 +3121,17 @@ int parser_test( const  wchar_t * buff,
 						count--;
 						tok_set_pos( &tok, mark );
 					}
+
+					/*
+					  Store the block level. This needs to be done
+					  _after_ checking for end commands, but _before_
+					  shecking for block opening commands.
+					*/
+					if( block_level )
+					{
+						block_level[tok_get_pos( &tok )] = count;
+					}
+					
 
 					/*
 					  Handle block commands
@@ -3572,18 +3597,25 @@ int parser_test( const  wchar_t * buff,
 
 			case TOK_ERROR:
 			default:
-				err = 1;
-				if( out )
+				if( tok_get_error( &tok ) == TOK_UNTERMINATED_QUOTE )
 				{
-					error( SYNTAX_ERROR,
-						   tok_get_pos( &tok ),
-						   TOK_ERR_MSG,
-						   tok_last(&tok) );
-
-
-					print_errors( out, prefix );
-					//debug( 2, tok_last( &tok) );
+					unfinished = 1;
 				}
+				else
+				{
+					err = 1;
+					if( out )
+					{
+						error( SYNTAX_ERROR,
+							   tok_get_pos( &tok ),
+							   TOK_ERR_MSG,
+							   tok_last(&tok) );
+						
+						
+						print_errors( out, prefix );
+					}
+				}
+				
 				break;
 		}
 
@@ -3667,9 +3699,29 @@ int parser_test( const  wchar_t * buff,
 	halloc_free( context );
 	
 	res = 0;
+
+
+	if( block_level )
+	{
+		int last_level = 0;
+		int i;
+		int len = wcslen(buff);
+		for( i=0; i<len; i++ )
+		{
+			if( block_level[i] >= 0 )
+				last_level = block_level[i];
+			block_level[i] = last_level;
+		}
+		
+	}		
+
+	if( count!= 0 )
+		unfinished = 1;
+
 	if( err )
 		res |= PARSER_TEST_ERROR;
-	if( count!= 0 )
+
+	if( unfinished )
 		res |= PARSER_TEST_INCOMPLETE;
 	
 	return res;

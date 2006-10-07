@@ -489,14 +489,14 @@ static int builtin_complete( wchar_t **argv )
 	{
 		if( condition && wcslen( condition ) )
 		{
-			if( parser_test( condition, 0, 0 ) )
+			if( parser_test( condition, 0, 0, 0 ) )
 			{
 				sb_printf( sb_err,
 						   L"%ls: Condition '%ls' contained a syntax error\n", 
 						   argv[0],
 						   condition );
 				
-				parser_test( condition, sb_err, argv[0] );
+				parser_test( condition, 0, sb_err, argv[0] );
 				
 				res = 1;
 			}

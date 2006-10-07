@@ -337,8 +337,9 @@ static line_t *s_create_line()
   than the screen width. 
 */
 static void s_desired_append_char( screen_t *s, 
-								   wchar_t b, 
+								   wchar_t b,
 								   int c, 
+								   int indent,
 								   int prompt_width )
 {
 	int line_no = s->desired_cursor[1];
@@ -352,9 +353,9 @@ static void s_desired_append_char( screen_t *s,
 			al_push( &s->desired, current );
 			s->desired_cursor[1]++;
 			s->desired_cursor[0]=0;
-			for( i=0; i < prompt_width; i++ )
+			for( i=0; i < prompt_width+indent*4; i++ )
 			{
-				s_desired_append_char( s, L' ', 0, prompt_width );
+				s_desired_append_char( s, L' ', 0, indent, prompt_width );
 			}
 			break;
 		}
@@ -400,9 +401,9 @@ static void s_desired_append_char( screen_t *s,
 				s->desired_cursor[0]=0;
 				for( i=0; i < (prompt_width-ew); i++ )
 				{
-					s_desired_append_char( s, L' ', 0, prompt_width );
+					s_desired_append_char( s, L' ', 0, indent, prompt_width );
 				}				
-				s_desired_append_char( s, ellipsis_char, HIGHLIGHT_COMMENT, prompt_width );
+				s_desired_append_char( s, ellipsis_char, HIGHLIGHT_COMMENT, indent, prompt_width );
 			}
 			
 			al_set_long( &current->text, s->desired_cursor[0], b );
@@ -687,6 +688,7 @@ void s_write( screen_t *s,
 			  wchar_t *prompt,
 			  wchar_t *b, 
 			  int *c, 
+			  int *indent,
 			  int cursor )
 {
 	int i;
@@ -719,26 +721,42 @@ void s_write( screen_t *s,
 	
 	for( i=0; i<prompt_width; i++ )
 	{
-		s_desired_append_char( s, L' ', 0, prompt_width );
+		s_desired_append_char( s, L' ', 0, 0, prompt_width );
 	}
 	
 	for( i=0; b[i]; i++ )
 	{
 		int col = c[i];
+		int ind = indent[i];
 		
 		if( i == cursor )
 		{
 			col = 0;
 		}
 		
-		s_desired_append_char( s, b[i], col, prompt_width );
+		if( b[i] == L'\n' && b[i+1] )
+			ind = indent[i+1];
+		
 
 		if( i == cursor )
 		{
-			cursor_arr[0] = s->desired_cursor[0] - wcwidth(b[i]);
+			cursor_arr[0] = s->desired_cursor[0];
 			cursor_arr[1] = s->desired_cursor[1];
 		}
 		
+		s_desired_append_char( s, b[i], col, ind, prompt_width );
+
+		if( i== cursor && s->desired_cursor[1] != cursor_arr[1] && b[i] != L'\n' )
+		{
+			/**
+			   Ugh. We are placed exactly at the wrapping point of a
+			   wrapped line, move cursor to the line below so the
+			   cursor won't be on the ellipsis which looks
+			   unintuitive.
+			*/
+			cursor_arr[0] = s->desired_cursor[0] - wcwidth(b[i]);
+			cursor_arr[1] = s->desired_cursor[1];
+		}
 		
 	}
 	if( i == cursor )

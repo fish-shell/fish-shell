@@ -31,6 +31,11 @@ segments.
 #define EOL_ERROR _( L"Unexpected end of token" )
 
 /**
+   Error string for unexpected end of string
+*/
+#define QUOTE_ERROR _( L"Unterminated quote" )
+
+/**
    Error string for mismatched parenthesis
 */
 #define PARAN_ERROR _( L"Parenthesis mismatch" )
@@ -101,18 +106,25 @@ static int check_size( tokenizer *tok, size_t len )
 /**
    Set the latest tokens string to be the specified error message
 */
-static void tok_error( tokenizer *tok, const wchar_t *err )
+static void tok_error( tokenizer *tok, int error_type, const wchar_t *error_message )
 {
 	tok->last_type = TOK_ERROR;
-	if( !check_size( tok, wcslen( err)+1 ))
+	tok->error = error_type;
+	if( !check_size( tok, wcslen( error_message)+1 ))
 	{
 		if( tok->last != 0 )
 			*tok->last=0;
 		return;
 	}
 
-	wcscpy( tok->last, err );
+	wcscpy( tok->last, error_message );
 }
+
+int tok_get_error( tokenizer *tok )
+{
+	return tok->error;
+}
+
 
 void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 {
@@ -239,7 +251,7 @@ static void read_string( tokenizer *tok )
 				tok->buff++;
 				if( *tok->buff == L'\0' )
 				{
-					tok_error( tok, EOL_ERROR );
+					tok_error( tok, TOK_UNTERMINATED_ESCAPE, EOL_ERROR );
 					return;
 				}
 				else if( *tok->buff == L'\n' && mode == 0)
@@ -298,7 +310,7 @@ static void read_string( tokenizer *tok )
 								
 								if( (!tok->accept_unfinished) )
 								{
-									tok_error( tok, EOL_ERROR );
+									tok_error( tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR );
 									return;
 								}
 								do_loop = 0;
@@ -331,7 +343,16 @@ static void read_string( tokenizer *tok )
 								tok->buff=(wchar_t *)end;
 							}
 							else
+							{
+								tok->buff += wcslen( tok->buff );
+								if( (!tok->accept_unfinished) )
+								{
+									tok_error( tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR );
+									return;
+								}
 								do_loop = 0;
+							}
+							
 							break;
 						}
 
@@ -380,7 +401,7 @@ static void read_string( tokenizer *tok )
 
 	if( (!tok->accept_unfinished) && (mode!=0) )
 	{
-		tok_error( tok, PARAN_ERROR );
+		tok_error( tok, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR );
 		return;
 	}
 
@@ -441,7 +462,7 @@ static void read_redirect( tokenizer *tok, int fd )
 		{
 			if( fd == 0 )
 			{
-				tok_error( tok, PIPE_ERROR );
+				tok_error( tok, TOK_OTHER, PIPE_ERROR );
 				return;
 			}
 			check_size( tok, FD_STR_MAX_LEN );
@@ -458,7 +479,7 @@ static void read_redirect( tokenizer *tok, int fd )
 	}
 	else
 	{
-		tok_error( tok, REDIRECT_ERROR);
+		tok_error( tok, TOK_OTHER, REDIRECT_ERROR);
 	}
 
 	if( !check_size( tok, 2 ))

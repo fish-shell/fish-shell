@@ -305,11 +305,17 @@ const wchar_t *parser_get_block_desc( int block );
 
 /**
    Test if the specified string can be parsed, or if more bytes need
-   to be read first.  The result has the first bit set if the string
-   contains errors, and the second bit is set if the string contains
-   an unclosed block.
+   to be read first. The result will have the PARSER_TEST_ERROR bit
+   set if there is a syntax error in the code, and the
+   PARSER_TEST_INCOMPLETE bit set if the code contains unclosed
+   blocks.
+
+   \param buff the text buffer to test
+   \param block_level if non-null, the block nesting level will be filled out into this array
+   \param out if non-null, any errors in the command will be filled out into this buffer
+   \param prefix the prefix string to prepend to each error message written to the \c out buffer
 */
-int parser_test( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
+int parser_test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix );
 
 /**
    Test if the specified string can be parsed as an argument list,

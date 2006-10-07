@@ -90,6 +90,7 @@ void s_write( screen_t *s,
 			  wchar_t *prompt, 
 			  wchar_t *commandline,
 			  int *colors, 
+			  int *indent,
 			  int cursor_pos );
 
 /** 

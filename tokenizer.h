@@ -29,7 +29,20 @@ enum token_type
 	TOK_BACKGROUND,/**< send job to bg token */
 	TOK_COMMENT/**< comment token */
 }
-;
+	;
+
+/**
+   Tokenizer error types
+*/
+enum tokenizer_error
+{
+	TOK_UNTERMINATED_QUOTE,
+	TOK_UNTERMINATED_SUBSHELL,
+	TOK_UNTERMINATED_ESCAPE,
+	TOK_OTHER
+}
+	;
+
 
 /**
    Flag telling the tokenizer to accept incomplete parameters,
@@ -73,6 +86,8 @@ typedef struct
 	int free_orig;
 	/** Type of last quote, can be either ' or ".*/
 	wchar_t last_quote;
+	/** Last error */
+	int error;
 }
 tokenizer;
 
@@ -150,5 +165,11 @@ void tok_set_pos( tokenizer *tok, int pos );
    Returns a string description of the specified token type
 */
 const wchar_t *tok_get_desc( int type );
+
+/**
+   Get tokenizer error type. Should only be called if tok_last_tope returns TOK_ERROR.
+*/
+int tok_get_error( tokenizer *tok );
+
 
 #endif

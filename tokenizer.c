@@ -559,6 +559,7 @@ void tok_next( tokenizer *tok )
 		{
 			if(( *(tok->buff) == L'\\') &&( *(tok->buff+1) == L'\n') )
 			{
+				tok->last_pos = tok->buff - tok->orig_buff;
 				tok->buff+=2;
 				tok->last_type = TOK_END;
 				return;

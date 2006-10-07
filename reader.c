@@ -630,7 +630,12 @@ void repaint()
 	
 	parser_test( data->buff, data->indent, 0, 0 );
 
-	s_write( &data->screen, (wchar_t *)data->prompt_buff.buff, data->buff, data->color, data->indent, data->buff_pos );
+	s_write( &data->screen,
+			 (wchar_t *)data->prompt_buff.buff,
+			 data->buff,
+			 data->color, 
+			 data->indent, 
+			 data->buff_pos );
 	
 }
 
@@ -2249,7 +2254,7 @@ wchar_t *reader_readline()
 				/*
 				  Allow backslash-escaped newlines
 				*/
-				if( data->buff_len && data->buff[data->buff_len-1]==L'\\' )
+				if( data->buff_pos && data->buff[data->buff_pos-1]==L'\\' )
 				{
 					insert_char( '\n' );
 					break;

@@ -104,6 +104,11 @@ static int is_loaded=0;
 
 static ll_node_t *unused = 0;
 
+/**
+   Create a new ll_node_t struct. The struct is allocated using
+   halloc, and will be automatically free'd on shutdown, but not
+   before.
+*/
 static ll_node_t *history_create_node()
 {
 	ll_node_t *res;
@@ -119,11 +124,181 @@ static ll_node_t *history_create_node()
 	
 }
 
+/**
+   Return a ll_node_t struct to the pool of unused such structs, so
+   that it can later be reused by a call to history_create_node().
+*/
 static void history_free_node( ll_node_t *n )
 {
 	n->next = unused;
 	unused = n;
 }
+
+/**
+   Add backslashes to all newlines, so that the returning string is
+   suitable for writing to the history file. The memory for the return
+   value will be reused by subsequent calls to this function.
+*/
+static wchar_t *history_escape_newlines( wchar_t *in )
+{
+	static string_buffer_t *out = 0;
+	if( !out )
+	{
+		out = sb_halloc( global_context );
+		if( !out )
+		{
+			DIE_MEM();
+		}
+	}
+	else
+	{
+		sb_clear( out );
+	}
+	for( ; *in; in++ )
+	{
+		if( *in == L'\\' )
+		{
+			sb_append_char( out, *in );
+			if( *(in+1) )
+			{
+				in++;
+				sb_append_char( out, *in );
+			}
+			else
+			{
+				/*
+				  This is a weird special case. When we are trying to
+				  save a string that ends with a backslash, we need to
+				  handle it specially, otherwise this command would be
+				  combined with the one following it. We hack around
+				  this by adding an additional newline.
+				*/
+				sb_append_char( out, L'\n' );
+			}
+			
+		}
+		else if( *in == L'\n' )
+		{
+			sb_append_char( out, L'\\' );
+			sb_append_char( out, *in );
+		}
+		else
+		{
+			sb_append_char( out, *in );
+		}
+		
+	}
+	return (wchar_t *)out->buff;
+}
+
+/**
+   Remove backslashes from all newlines. This makes a string from the
+   history file better formated for on screen display. The memory for
+   the return value will be reused by subsequent calls to this
+   function.
+*/
+static wchar_t *history_unescape_newlines( wchar_t *in )
+{
+	static string_buffer_t *out = 0;
+	if( !out )
+	{
+		out = sb_halloc( global_context );
+		if( !out )
+		{
+			DIE_MEM();
+		}
+	}
+	else
+	{
+		sb_clear( out );
+	}
+	for( ; *in; in++ )
+	{
+		if( *in == L'\\' )
+		{
+			if( *(in+1)!= L'\n')
+			{
+				sb_append_char( out, *in );
+			}
+		}
+		else
+		{
+			sb_append_char( out, *in );
+		}
+		
+	}
+	return (wchar_t *)out->buff;
+}
+
+/**
+   Read a complete histor entry from the specified FILE.
+*/
+static wchar_t *history_load_entry( FILE *in )
+{
+	int was_backslash = 0;	
+	static string_buffer_t *out = 0;
+	int first_char = 1;	
+	int ignore = 0;
+	
+	if( !out )
+	{
+		out = sb_halloc( global_context );
+		if( !out )
+		{
+			DIE_MEM();
+		}
+	}
+	else
+	{
+		sb_clear( out );
+	}
+	
+	while( 1 )
+	{
+		wint_t c;
+		
+		c = getwc( in );
+	
+	
+		if( errno == EILSEQ )
+		{
+			getc( in );
+			continue;
+		}
+
+		if( c == WEOF )
+			break;
+
+
+		if( c == L'\n' )
+		{
+			if( ignore )
+			{
+				ignore = 0;
+				continue;
+			}
+			if( !was_backslash )
+				break;
+		}
+		
+		if( first_char )
+		{
+			if( c == L'#' ) 
+				ignore = 1;
+		}
+		
+		first_char = 0;
+		
+		if( !ignore )
+			sb_append_char( out, c );
+	
+		was_backslash = ( (c == L'\\') && !was_backslash);
+				
+	}
+
+	return (wchar_t *)out->buff;
+}
+
 
 /**
    Load history from file
@@ -132,7 +307,6 @@ static int history_load()
 {
 	wchar_t *fn;
 	wchar_t *buff=0;
-	int buff_len=0;
 	FILE *in_stream;
 	hash_table_t used;
 	int res = 0;
@@ -158,18 +332,7 @@ static int history_load()
 	{
 		while( !feof( in_stream ) )
 		{
-			int buff_read = fgetws2( &buff, &buff_len, in_stream );
-			if( buff_read == -1 )
-			{
-				debug( 1, L"The following non-fatal error occurred while reading command history from \'%ls\':", mode_name );
-				wperror( L"fgetws2" );
-				fclose( in_stream );
-				free( fn );
-				free( buff );
-				signal_unblock();				
-				return -1;
-			}
-
+			buff = history_unescape_newlines(history_load_entry( in_stream ));
 			/*
 			  We do not call history_add here, since that would make
 			  history_load() take quadratic time, and may be
@@ -206,7 +369,7 @@ static int history_load()
 	{
 		if( errno != ENOENT )
 		{
-			debug( 1, L"The following non-fatal error occurred while reading command history from \'%ls\':", mode_name );
+			debug( 1, _(L"The following non-fatal error occurred while reading command history from \'%ls\':"), mode_name );
 			wperror( L"fopen" );
 			res = -1;
 			
@@ -217,7 +380,6 @@ static int history_load()
 	
 	hash_destroy( &used );
 	
-	free( buff );
 	free( fn );
 	last_loaded = history_last;
 	signal_unblock();
@@ -309,10 +471,13 @@ void history_set_mode( wchar_t *name )
 */
 static void history_save_node( ll_node_t *n, FILE *out )
 {
+	wchar_t *escaped;
 	if( n==0 )
 		return;
 	history_save_node( n->prev, out );
-	fwprintf(out, L"%ls\n", (wchar_t *)(n->data) );
+
+	escaped = history_escape_newlines( (wchar_t *)(n->data) );
+	fwprintf(out, L"#\n%ls\n", escaped );
 }
 
 /**

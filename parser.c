@@ -1574,7 +1574,11 @@ static void parse_job_main_loop( process_t *p,
 			{
 				int skip=0;
 
-				if( current_block->skip )
+				if( j->skip )
+				{
+					skip = 1;
+				}
+				else if( current_block->skip )
 				{
 					/*
 					  If this command should be skipped, we do not expand the arguments

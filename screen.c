@@ -318,6 +318,7 @@ void s_destroy( screen_t *s )
 	al_destroy( &s->actual );
 	s_reset_arr( &s->desired );
 	al_destroy( &s->desired );
+	sb_destroy( &s->actual_prompt );		
 }
 
 /**

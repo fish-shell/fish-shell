@@ -3700,19 +3700,28 @@ int parser_test( const  wchar_t * buff,
 	
 	res = 0;
 
-
 	if( block_level )
 	{
 		int last_level = 0;
-		int i;
+		int i, j;
 		int len = wcslen(buff);
 		for( i=0; i<len; i++ )
 		{
 			if( block_level[i] >= 0 )
+			{
 				last_level = block_level[i];
+				/*
+				  Make all whitespace before a token have the new level.
+				*/
+				for( j=i-1; j>=0; j-- )
+				{
+					if( !wcschr( L" \n\t\r", buff[j] ) )
+						break;
+					block_level[j] = last_level;
+				}
+			}
 			block_level[i] = last_level;
 		}
-		
 	}		
 
 	if( count!= 0 )

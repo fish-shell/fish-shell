@@ -815,7 +815,7 @@ int complete_is_valid_option( const wchar_t *str,
 						str[0] = opt[j];
 						str[1]=0;
 						al_push( errors,
-								 wcsdupcat2(_( L"Unknown option: " ), L"'", str, L"'", 0) );
+								 wcsdupcat2(_( L"Unknown option: " ), L"'", str, L"'", (void *)0) );
 					}
 
 					opt_found = 0;
@@ -833,12 +833,12 @@ int complete_is_valid_option( const wchar_t *str,
 				if( hash_get_count( &gnu_match_hash )==0)
 				{
 					al_push( errors,
-							 wcsdupcat2( _(L"Unknown option: "), L"'", opt, L"\'", 0) );
+							 wcsdupcat2( _(L"Unknown option: "), L"'", opt, L"\'", (void *)0) );
 				}
 				else
 				{
 					al_push( errors,
-							 wcsdupcat2( _(L"Multiple matches for option: "), L"'", opt, L"\'", 0) );
+							 wcsdupcat2( _(L"Multiple matches for option: "), L"'", opt, L"\'", (void *)0) );
 				}
 			}
 		}
@@ -1214,7 +1214,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 			wchar_t *new_el = wcsdupcat2( el,
 										  COMPLETE_SEP_STR,
 										  new_desc,
-										  0 );
+										  (void *)0 );
 
 			al_set( comp, i, new_el );
 			free( el );
@@ -1300,7 +1300,7 @@ static void complete_cmd( const wchar_t *cmd,
 				nxt_completion = wcsdupcat2( nxt_path,
 											 (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
 											 cmd,
-											 0 );
+											 (void *)0 );
 				if( ! nxt_completion )
 					continue;
 				
@@ -1357,7 +1357,7 @@ static void complete_cmd( const wchar_t *cmd,
 				wcsdupcat2( nxt_path,
 							(nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
 							cmd,
-							0 );
+							(void *)0 );
 			if( ! nxt_completion )
 			{
 				continue;
@@ -1824,22 +1824,22 @@ static int complete_variable( const wchar_t *var,
 		if( wcsncmp( var, name, varlen) == 0 )
 		{
 			wchar_t *value_unescaped, *value;
-			
-			wchar_t *blarg;
 
 			value_unescaped = env_get( name );
 			if( value_unescaped )
 			{
+				wchar_t *desc;
+
 				value = expand_escape_variable( value_unescaped );
 				/*
 				  Variable description is 'Variable: VALUE
 				*/
-				blarg = wcsdupcat2( &name[varlen], COMPLETE_SEP_STR, COMPLETE_VAR_DESC_VAL, value, 0 );
+				desc = wcsdupcat2( &name[varlen], COMPLETE_SEP_STR, COMPLETE_VAR_DESC_VAL, value, (void *)0 );
 				
-				if( blarg )
+				if( desc )
 				{
 					res =1;
-					al_push( comp, blarg );
+					al_push( comp, desc );
 				}
 				free( value );
 			}

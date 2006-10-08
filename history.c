@@ -150,7 +150,7 @@ static int history_load()
 				&hash_wcs_cmp,
 				4096 );
 
-	fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", 0 );
+	fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", (void *)0 );
 	
 	in_stream = wfopen( fn, "r" );
 	
@@ -384,7 +384,7 @@ static void history_save()
 		
 		/* Save the global history */
 		{
-			fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", 0 );
+			fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", (void *)0 );
 			
 			out_stream = wfopen( fn, "w" );
 			if( out_stream )

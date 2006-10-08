@@ -712,7 +712,7 @@ wchar_t *parser_cdpath_get( void *context, wchar_t *dir )
 			whole_path =
 				wcsdupcat2( expanded_path,
 							( expanded_path[path_len-1] != L'/' )?L"/":L"",
-							dir, 0 );
+							dir, (void *)0 );
 
 			free(expanded_path );
 

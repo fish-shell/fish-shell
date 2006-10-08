@@ -1858,7 +1858,7 @@ static int parse_job( process_t *p,
 
 	block_t *prev_block = current_block;
 	int prev_tokenizer_pos = current_tokenizer_pos;	
-
+	
 	current_tokenizer_pos = tok_get_pos( tok );
 
 	while( al_get_count( args ) == 0 )
@@ -2190,7 +2190,10 @@ static int parse_job( process_t *p,
 						   execution of the file. Instead we let
 						   p->actual_command be 0 (null), which will
 						   cause the job to silently not execute. We
-						   also print an error message.
+						   also print an error message and set the
+						   status to 127 (This is the standard number
+						   for this, used by other shells like bash
+						   and zsh).
 						*/
 						if( wcschr( cmd, L'=' ) )
 						{
@@ -2244,7 +2247,7 @@ static int parse_job( process_t *p,
 						
 						current_tokenizer_pos=tmp;
 						j->skip=1;
-						
+						proc_set_last_status( STATUS_UNKNOWN_COMMAND );
 					}
 				}
 			}

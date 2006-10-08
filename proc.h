@@ -19,6 +19,10 @@
 #include "util.h"
 #include "io.h"
 
+/**
+   The status code use when a command was not found
+*/
+#define STATUS_UNKNOWN_COMMAND 127
 
 /**
    Types of processes

@@ -225,8 +225,7 @@ if test "$glibc" = yes; then
 	# fallback.h, in order to keep fish working on non-gnu platforms.
 	#
 
-	AC_DEFINE( _GNU_SOURCE, 1, [Macro to enable additional prototypes under Glibc])
-	AC_DEFINE( _ISOC99_SOURCE, 1, [Macro to enable additional prototypes under Glibc])
+	CFLAGS="$CFLAGS -D_GNU_SOURCE=1 -D_ISO99_SOURCE=1"
 else
 	AC_MSG_RESULT(no)
 fi
@@ -291,9 +290,9 @@ fi
 AC_ARG_VAR( [docdir], [Documentation direcotry] )
 
 if test -z $docdir; then
-   AC_SUBST(docdir, [$datadir/doc/fish] )
+	AC_SUBST(docdir, [$datadir/doc/fish] )
 else
-   AC_SUBST(docdir, [$docdir])
+	AC_SUBST(docdir, [$docdir])
 fi
 
 # Set up locale directory. This is where the .po files will be

@@ -2248,8 +2248,12 @@ wchar_t *reader_readline()
 				break;
 			}
 
-			/* Newline, evaluate*/
-			case L'\n':
+			/*
+			  Evaluate. If the current command is unfinished, or if
+			  the charater is escaped using a backslash, insert a
+			  newline
+			*/
+			case R_EXECUTE:
 			{
 				/*
 				  Allow backslash-escaped newlines
@@ -2443,8 +2447,10 @@ wchar_t *reader_readline()
 			/* Other, if a normal character, we add it to the command */
 			default:
 			{
-				if( (!wchar_private(c)) && (c>31) && (c != 127) )
+				if( (!wchar_private(c)) && (( (c>31) || (c=L'\n'))&& (c != 127)) )
+				{
 					insert_char( c );
+				}
 				else
 				{
 					/*

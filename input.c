@@ -130,7 +130,8 @@ static const wchar_t *name_arr[] =
 	L"self-insert",
 	L"null",
 	L"eof",
-	L"vi-arg-digit"
+	L"vi-arg-digit",
+	L"execute"
 }
 	;
 
@@ -207,7 +208,8 @@ static const wchar_t code_arr[] =
 	R_SELF_INSERT,
 	R_NULL,
 	R_EOF,
-	R_VI_ARG_DIGIT
+	R_VI_ARG_DIGIT,
+	R_EXECUTE
 }
 	;
 
@@ -1222,6 +1224,14 @@ static void add_common_bindings()
 	*/
 	for( i=0; i<3; i++ )
 	{
+		add_mapping( name[i], L"\n", L"Execute contents of commandline", L"execute" );
+		
+		/*
+		  This will make Meta-newline insert a newline, since
+		  self-insert ignored the escape character unless it is the
+		  only character of the sequence.
+		*/
+		add_mapping( name[i], L"\e\n", L"Meta-newline", L"self-insert" );
 		/*
 		  We need alternative keybidnings for arrowkeys, since
 		  terminfo sometimes specifies a different sequence than what
@@ -1509,6 +1519,7 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 	{				
 		switch( code )
 		{
+
 			case R_DUMP_FUNCTIONS:
 			{
 				for( i=0; i<repeat_count; i++ )
@@ -1519,10 +1530,17 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 
 			case R_SELF_INSERT:
 			{
+				int idx = 0;
+
+				if( seq[0] == L'\e' && seq[1] )
+				{
+					idx = 1;
+				}
+				
 				for( i=1; i<repeat_count; i++ )
-					input_unreadch( seq[0] );							
+					input_unreadch( seq[idx] );							
 				repeat_count = 1;				
-				return seq[0];							
+				return seq[idx];							
 			}
 
 			case R_VI_ARG_DIGIT:

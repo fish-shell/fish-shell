@@ -1312,6 +1312,8 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Reduce the space of the pager by one line to allow the commandline to remain visible.
 - down-arrow could be used to save the current command to the history. Or give the next command in-sequnce. Or both.
 - A pretty-printer.
+- Help messages for builtin should  not be compiled into fish, they should be kept in a separate directory
+- Shellscript functions should be able to show help on the commandline instead of launching a browser
 
 \subsection bugs Known bugs
 

@@ -3006,7 +3006,7 @@ int parser_test( const  wchar_t * buff,
 	int previous_pos=current_tokenizer_pos;
 	static int block_pos[BLOCK_MAX_COUNT];
 	static int block_type[BLOCK_MAX_COUNT];
-	int res;
+	int res = 0;
 	
 	/*
 	  Set to 1 if the current command is inside a pipeline
@@ -3696,16 +3696,11 @@ int parser_test( const  wchar_t * buff,
 		
 	}
 
-	tok_destroy( &tok );
-
-	current_tokenizer=previous_tokenizer;
-	current_tokenizer_pos = previous_pos;
-	
-	error_code=0;
-	
-	halloc_free( context );
-	
-	res = 0;
+	/*
+	  Fill in the unset block_level entries. Until now, only places
+	  where the block level _changed_ have been filled out. This fills
+	  in the rest.
+	*/
 
 	if( block_level )
 	{
@@ -3718,7 +3713,9 @@ int parser_test( const  wchar_t * buff,
 			{
 				last_level = block_level[i];
 				/*
-				  Make all whitespace before a token have the new level.
+				  Make all whitespace before a token have the new
+				  level. This avoid using the wrong indentation level
+				  if a new line starts with whitespace.
 				*/
 				for( j=i-1; j>=0; j-- )
 				{
@@ -3729,6 +3726,12 @@ int parser_test( const  wchar_t * buff,
 			}
 			block_level[i] = last_level;
 		}
+
+		/*
+		  Make all trailing whitespace have the block level that the
+		  validator had at exit. This makes sure a new line is
+		  correctly indented even if it is empty.
+		*/
 		for( j=len-1; j>=0; j-- )
 		{
 			if( !wcschr( L" \n\t\r", buff[j] ) )
@@ -3739,6 +3742,9 @@ int parser_test( const  wchar_t * buff,
 
 	}		
 
+	/*
+	  Calculate exit status
+	*/
 	if( count!= 0 )
 		unfinished = 1;
 
@@ -3747,7 +3753,21 @@ int parser_test( const  wchar_t * buff,
 
 	if( unfinished )
 		res |= PARSER_TEST_INCOMPLETE;
+
+	/*
+	  Cleanup
+	*/
 	
+	halloc_free( context );
+	
+	tok_destroy( &tok );
+
+	current_tokenizer=previous_tokenizer;
+	current_tokenizer_pos = previous_pos;
+	
+	error_code=0;
+	
+
 	return res;
 	
 }

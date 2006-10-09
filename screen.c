@@ -728,24 +728,19 @@ void s_write( screen_t *s,
 	for( i=0; b[i]; i++ )
 	{
 		int col = c[i];
-		int ind = indent[i];
 		
 		if( i == cursor )
 		{
 			col = 0;
 		}
 		
-		if( b[i] == L'\n' && b[i+1] )
-			ind = indent[i+1];
-		
-
 		if( i == cursor )
 		{
 			cursor_arr[0] = s->desired_cursor[0];
 			cursor_arr[1] = s->desired_cursor[1];
 		}
 		
-		s_desired_append_char( s, b[i], col, ind, prompt_width );
+		s_desired_append_char( s, b[i], col, indent[i], prompt_width );
 
 		if( i== cursor && s->desired_cursor[1] != cursor_arr[1] && b[i] != L'\n' )
 		{

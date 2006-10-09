@@ -430,7 +430,7 @@ static int builtin_commandline( wchar_t **argv )
 	/*
 	  Check for invalid switch combinations
 	*/
-	if( argc-woptind > 1 )
+	if( cursor_mode && (argc-woptind > 1) )
 	{
 		
 		sb_append2( sb_err,
@@ -570,7 +570,28 @@ static int builtin_commandline( wchar_t **argv )
 		case 1:
 		{
 			replace_part( begin, end, argv[woptind], append_mode );
-			break;					
+			break;
+		}		
+
+		default:
+		{
+			string_buffer_t sb;
+			int i;
+			
+			sb_init( &sb );
+			
+			sb_append( &sb, argv[woptind] );
+			
+			for( i=woptind+1; i<argc; i++ )
+			{
+				sb_append( &sb, L"\n" );
+				sb_append( &sb, argv[i] );
+			}
+			
+			replace_part( begin, end, (wchar_t *)sb.buff, append_mode );
+			sb_destroy( &sb );
+			
+			break;
 		}		
 	}
 	

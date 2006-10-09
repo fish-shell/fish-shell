@@ -777,6 +777,7 @@ certain environment variables.
 - \c BROWSER, which is the users preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 - \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
 - A large number of variable starting with the prefixes \c fish_color and \c fish_pager_color. See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
+- \c fish_greeting, which is the greeting message printed on startup.
 - \c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and \c LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 - \c PATH, which is an array of directories in which to search for commands
 - \c umask, which is the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask shellscript function</a>. An attempt to set umask to an invalid value will always fail.
@@ -2490,6 +2491,7 @@ DAMAGES.
 - <a href='#faq-open'>The open command doesn't work.</a>
 - <a href='#faq-default'>How do I make fish my default shell?</a>
 - <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
+- <a href='#faq-greeting'>How do I change the greeting message?</a>
 
 <hr>
 
@@ -2602,5 +2604,17 @@ You may need to adjust the above path to e.g. /usr/local/bin/fish.
 
 You will need to log out and back in again for the change to take
 effect.
+
+<hr>
+
+\section faq-greeting How do I change the greeting message?
+
+Change the value of the variable fish_greeting. For example, to remove
+the greeting use:
+
+<pre>
+set fish_greeting
+</pre>
+
 
 */

@@ -8,13 +8,6 @@ if not status --is-interactive
 end
 
 #
-# Print a greeting 
-#
-
-printf (_ 'Welcome to fish, the friendly interactive shell\n')
-printf (_ 'Type %shelp%s for instructions on how to use fish\n') (set_color green) (set_color normal)
-
-#
 # Set exit message
 #
 

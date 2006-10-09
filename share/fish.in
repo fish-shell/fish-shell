@@ -18,7 +18,6 @@ if not set -q fish_complete_path
 	set -U fish_complete_path ~/.fish.d/completions  @sysconfdir@/fish.d/completions  @datadir@/fish/completions 
 end
 
-
 set __fish_help_dir @docdir@
 
 # This is a Solaris-specific test to modify the PATH so that
@@ -73,6 +72,19 @@ for i in (printf "%s\n" $path_list|grep -E -v $path_regexp)
 		set PATH $PATH $i
 	end
 end
+
+#
+# Print a greeting 
+#
+
+if not set -q fish_greeting
+	set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
+	set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
+	set -U fish_greeting $line1\n$line2
+end
+
+echo $fish_greeting
+
 
 #
 # Don't need completions in non-interactive mode

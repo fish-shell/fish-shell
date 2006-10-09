@@ -1015,7 +1015,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 						
 						default:
 						{
-							in[out_pos++] = INTERNAL_SEPARATOR;							
+							if( unescape_special )
+								in[out_pos++] = INTERNAL_SEPARATOR;							
 							in[out_pos]=in[in_pos];
 							break;
 						}
@@ -1140,14 +1141,16 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 						case L'\'':
 						{
 							mode = 1;
-							in[out_pos] = INTERNAL_SEPARATOR;							
+							if( unescape_special )
+								in[out_pos] = INTERNAL_SEPARATOR;							
 							break;					
 						}
 				
 						case L'\"':
 						{
 							mode = 2;
-							in[out_pos] = INTERNAL_SEPARATOR;							
+							if( unescape_special )
+								in[out_pos] = INTERNAL_SEPARATOR;							
 							break;
 						}
 
@@ -1194,7 +1197,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 				}
 				if( c == L'\'' )
 				{
-					in[out_pos] = INTERNAL_SEPARATOR;							
+					if( unescape_special )
+						in[out_pos] = INTERNAL_SEPARATOR;							
 					mode = 0;
 				}
 				else
@@ -1215,7 +1219,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 					case '"':
 					{
 						mode = 0;
-						in[out_pos] = INTERNAL_SEPARATOR;							
+						if( unescape_special )
+							in[out_pos] = INTERNAL_SEPARATOR;							
 						break;
 					}
 				

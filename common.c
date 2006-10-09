@@ -1172,6 +1172,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 					{
 						case '\\':
 						case L'\'':
+						case L'\n':
 						{
 							in[out_pos]=in[in_pos];
 							break;
@@ -1231,6 +1232,7 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							case '\\':
 							case L'$':
 							case '"':
+							case '\n':
 							{
 								in[out_pos]=in[in_pos];
 								break;

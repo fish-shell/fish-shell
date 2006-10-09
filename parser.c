@@ -1816,7 +1816,7 @@ static void parse_job_main_loop( process_t *p,
 		if( unmatched_wildcard && !matched_wildcard )
 		{
 			j->wildcard_error = 1;
-			proc_set_last_status( 1 );
+			proc_set_last_status( STATUS_UNMATCHED_WILDCARD );
 			if( is_interactive && !is_block )
 			{
 				int tmp;

@@ -335,7 +335,7 @@ static int builtin_bind( wchar_t **argv )
 						   long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 			case 'M':
 				input_set_mode( woptarg );
@@ -348,7 +348,7 @@ static int builtin_bind( wchar_t **argv )
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 		}
 
@@ -430,7 +430,7 @@ static int builtin_block( wchar_t **argv )
 						   long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return 0;
@@ -450,7 +450,7 @@ static int builtin_block( wchar_t **argv )
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 		}
 
@@ -461,13 +461,13 @@ static int builtin_block( wchar_t **argv )
 		if( scope != UNSET )
 		{
 			sb_printf( sb_err, _( L"%ls: Can not specify scope when removing block\n" ), argv[0] );
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 		}
 
 		if( !global_event_block )
 		{
 			sb_printf( sb_err, _( L"%ls: No blocks defined\n" ), argv[0] );
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 		}
 
 		event_block_t *eb = global_event_block;
@@ -571,7 +571,7 @@ static int builtin_builtin(  wchar_t **argv )
 				builtin_print_help( argv[0], sb_err );
 
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return 0;
@@ -583,7 +583,7 @@ static int builtin_builtin(  wchar_t **argv )
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 		}
 
@@ -660,7 +660,7 @@ static int builtin_generic( wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
@@ -669,12 +669,12 @@ static int builtin_generic( wchar_t **argv )
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 		}
 
 	}
-	return 1;
+	return STATUS_BUILTIN_ERROR;
 }
 
 /**
@@ -835,7 +835,7 @@ static int builtin_functions( wchar_t **argv )
 				builtin_print_help( argv[0], sb_err );
 
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 			case 'e':
 				erase=1;
@@ -864,7 +864,7 @@ static int builtin_functions( wchar_t **argv )
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 		}
 
@@ -882,7 +882,7 @@ static int builtin_functions( wchar_t **argv )
 
 		builtin_print_help( argv[0], sb_err );
 
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	if( erase )
@@ -903,7 +903,7 @@ static int builtin_functions( wchar_t **argv )
 					   argv[0] );
 			builtin_print_help( argv[0], sb_err );
 
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 		}
 		func = argv[woptind];
 		if( !function_exists( func ) )
@@ -915,7 +915,7 @@ static int builtin_functions( wchar_t **argv )
 
 			builtin_print_help( argv[0], sb_err );
 
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 		}
 
 		function_set_desc( func, desc );
@@ -1410,7 +1410,7 @@ static int builtin_random( wchar_t **argv )
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
@@ -1419,7 +1419,7 @@ static int builtin_random( wchar_t **argv )
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 		}
 
@@ -1457,7 +1457,7 @@ static int builtin_random( wchar_t **argv )
 						   argv[0],
 						   argv[woptind] );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 			}
 			seeded=1;
 			srand48_r( foo, &seed_buffer);
@@ -1471,7 +1471,7 @@ static int builtin_random( wchar_t **argv )
 					   argv[0],
 					   argc-woptind );
 			builtin_print_help( argv[0], sb_err );
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 		}
 	}
 	return 0;
@@ -1558,7 +1558,7 @@ static int builtin_read( wchar_t **argv )
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 			case L'x':
 				place |= ENV_EXPORT;
@@ -1589,7 +1589,7 @@ static int builtin_read( wchar_t **argv )
 			case L'?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 		}
 
 	}
@@ -1603,7 +1603,7 @@ static int builtin_read( wchar_t **argv )
 
 
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	if( (place&ENV_LOCAL?1:0) + (place & ENV_GLOBAL?1:0) + (place & ENV_UNIVERSAL?1:0) > 1)
@@ -1614,7 +1614,7 @@ static int builtin_read( wchar_t **argv )
 				   parser_current_line() );
 		builtin_print_help( argv[0], sb_err );
 
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	/*
@@ -1627,7 +1627,7 @@ static int builtin_read( wchar_t **argv )
 		if( !wcslen( argv[i] ) )
 		{
 			sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 		}
 
 		for( src=argv[i]; *src; src++ )
@@ -1636,7 +1636,7 @@ static int builtin_read( wchar_t **argv )
 			{
 				sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *src );
 				sb_append2(sb_err, parser_current_line(), L"\n", (void *)0 );
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 			}
 		}
 
@@ -1859,7 +1859,7 @@ static int builtin_status( wchar_t **argv )
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
@@ -1885,7 +1885,7 @@ static int builtin_status( wchar_t **argv )
 			case '?':
 				builtin_print_help( argv[0], sb_err );
 
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 
 		}
 
@@ -2013,7 +2013,7 @@ static int builtin_exit( wchar_t **argv )
 						   argv[0],
 						   argv[1] );
 				builtin_print_help( argv[0], sb_err );
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 			}
 			break;
 		}
@@ -2025,7 +2025,7 @@ static int builtin_exit( wchar_t **argv )
 					   argv[0] );
 
 			builtin_print_help( argv[0], sb_err );
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 		}
 		
 	}
@@ -2137,13 +2137,13 @@ static int builtin_source( wchar_t ** argv )
 	{
 		sb_printf( sb_err, _( L"%ls: Expected at least one argument, got %d\n" ), argv[0], argc );
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	if( wstat(argv[1], &buf) == -1 )
 	{
 		builtin_wperror( L"stat" );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	if( !S_ISREG(buf.st_mode) )
@@ -2151,7 +2151,7 @@ static int builtin_source( wchar_t ** argv )
 		sb_printf( sb_err, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
 		builtin_print_help( argv[0], sb_err );
 
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 	if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
 	{
@@ -2388,7 +2388,7 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 				   L"bg",
 				   name );
 		builtin_print_help( L"bg", sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 	else if( !j->job_control )
 	{
@@ -2398,7 +2398,7 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 				   j->job_id,
 				   j->command );
 		builtin_print_help( L"bg", sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 	else
 	{
@@ -2749,7 +2749,7 @@ static int builtin_end( wchar_t **argv )
 				   argv[0] );
 
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 	else
 	{
@@ -2859,7 +2859,7 @@ static int builtin_else( wchar_t **argv )
 				   _( L"%ls: Not inside of 'if' block\n" ),
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 	else
 	{
@@ -2894,7 +2894,7 @@ static int builtin_break_continue( wchar_t **argv )
 				   argv[1] );
 
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 
@@ -2911,7 +2911,7 @@ static int builtin_break_continue( wchar_t **argv )
 				   _( L"%ls: Not inside of loop\n" ),
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	b = current_block;
@@ -2952,7 +2952,7 @@ static int builtin_return( wchar_t **argv )
 						   argv[0],
 						   argv[1] );
 				builtin_print_help( argv[0], sb_err );
-				return 1;
+				return STATUS_BUILTIN_ERROR;
 			}
 			break;
 		}
@@ -2961,7 +2961,7 @@ static int builtin_return( wchar_t **argv )
 					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
 			builtin_print_help( argv[0], sb_err );
-			return 1;
+			return STATUS_BUILTIN_ERROR;
 	}
 
 
@@ -2977,7 +2977,7 @@ static int builtin_return( wchar_t **argv )
 				   _( L"%ls: Not inside of function\n" ),
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	b = current_block;
@@ -3039,7 +3039,7 @@ static int builtin_case( wchar_t **argv )
 				   _( L"%ls: 'case' command while not in switch block\n" ),
 				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
-		return 1;
+		return STATUS_BUILTIN_ERROR;
 	}
 	
 	current_block->skip = 1;

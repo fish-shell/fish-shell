@@ -790,7 +790,7 @@ values of most of these variables.
 - \c history, which is an array containing the last commands that where entered.
 - \c HOME, which is the users home directory. This variable can only be changed by the root user.
 - \c PWD, which is the current working directory. 
-- \c status, which is the exit status of the last foreground job to exit. If a job contains pipelines, the status of the last command in the pipeline is the status for the job.
+- \c status, which is the exit status of the last foreground job to exit. 
 - \c USER, which is the username. This variable can only be changed by the root user.
 
 Variables whose name are in uppercase are exported to the commands
@@ -799,6 +799,26 @@ enforced by fish, but it is good coding practice to use casing to
 distinguish between exported and unexported variables. \c fish also
 uses several variables internally. Such variables are prefixed with
 the string __FISH or __fish. These should be ignored by the user.
+
+\subsection variables-status The status variable
+
+Whenever a process exits, an exit status is returned to the program
+that started it. This exit status is an integer number, which tells
+the calling application how the execution of the command went. In
+general, a zero exit status means that the command executed without
+problem, but a non-zero exit status means there was some form of
+problem.
+
+Fish stores the exit status of the last process in the last job to
+exit in the \c status variable.
+
+If fish encounters a problem while executing a command, the status
+variable may also be set to a specific value:
+
+- 1 is the generally the exit status from fish builtins if they where supplied with invalid arguments
+- 125 means an unknown error occured while trying to execute the command
+- 126 means that the command was not executed because none of the wildcards in the command produced any matches
+- 127 means that no command with the given name could be located
 
 \subsection variables-color Variables for changing highlighting colors
 

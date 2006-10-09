@@ -578,7 +578,7 @@ static void internal_exec_helper( const wchar_t *def,
 	*/
 	if( io && !io_internal )
 	{
-		proc_set_last_status( 1 );
+		proc_set_last_status( STATUS_EXEC_FAIL );
 		return;
 	}
 	
@@ -1041,7 +1041,7 @@ void exec( job_t *j )
 					*/
 					if( p->next == 0 )
 					{
-						proc_set_last_status( j->negate?(status?0:1):status);
+						proc_set_last_status( j->negate?(!status):status);
 					}
 					p->completed = 1;
 					break;
@@ -1091,7 +1091,7 @@ void exec( job_t *j )
 				{
 					if( p->next == 0 )
 					{
-						proc_set_last_status( j->negate?(status?0:1):status);
+						proc_set_last_status( j->negate?(!status):status);
 					}
 					p->completed = 1;
 				}
@@ -1182,7 +1182,7 @@ void exec( job_t *j )
 					{
 						debug( 3, L"Set status of %ls to %d using short circut", j->command, p->status );
 						
-						proc_set_last_status( j->negate?(p->status?0:1):p->status );
+						proc_set_last_status( j->negate?(!p->status):p->status );
 					}
 					break;
 					

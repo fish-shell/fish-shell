@@ -42,6 +42,14 @@ typedef struct
 	int actual_width;	
 
 	/**
+	   This flag is set to true when there is reason to suspect that
+	   the parts of the screen lines where the actual content is not
+	   filled in may be non-empty. This means that a clr_eol command
+	   has to be sent to the terminal at the end of each line.
+	*/
+	int need_clear;
+	
+	/**
 	   These status buffers are used to check if any output has occurred
 	   other than from fish's main loop, in which case we need to redraw.
 	*/

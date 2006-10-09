@@ -280,7 +280,18 @@ static void s_check_status( screen_t *s)
 
 	if( changed )
 	{
+		/*
+		  Ok, someone has been messing with our screen. We will want
+		  to repaint. However, we do not know where the cursor is. It
+		  is our best bet that we are still on the same line, so we
+		  move to the beginning of the line, reset the modelled screen
+		  contents, and then set the modeled curor y-pos to its
+		  earlier value. 
+		*/
+		int prev_line = s->actual_cursor[1];
+		write( 1, "\r", 1 );
 		s_reset( s );
+		s->actual_cursor[1] = prev_line;
 	}
 }
 
@@ -307,6 +318,8 @@ static void s_reset_arr( array_list_t *l )
 
 void s_init( screen_t *s )
 {
+	CHECK( s, );
+	
 	memset( s, 0, sizeof(screen_t));
 	sb_init( &s->actual_prompt );
 }
@@ -314,6 +327,8 @@ void s_init( screen_t *s )
 
 void s_destroy( screen_t *s )
 {
+	CHECK( s, );
+
 	s_reset_arr( &s->actual );
 	al_destroy( &s->actual );
 	s_reset_arr( &s->desired );
@@ -578,14 +593,17 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 	int prompt_width = calc_prompt_width( prompt );
 	int current_width=0;
 	int screen_width = common_get_width();
-	int resize = 0;
-	
+	int need_clear = scr->need_clear;
 	buffer_t output;
+
+	scr->need_clear = 0;
+	
 	b_init( &output );
+
 	
 	if( scr->actual_width != screen_width )
 	{
-		resize = 1;
+		need_clear = 1;
 		s_move( scr, &output, 0, 0 );
 		scr->actual_width = screen_width;
 		s_reset( scr );
@@ -607,7 +625,7 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		int start_pos = (i==0?prompt_width:0);
 		current_width = start_pos;
 
-		if( resize )
+		if( need_clear )
 		{
 			s_move( scr, &output, start_pos, i );
 			s_write_mbs( &output, clr_eol);
@@ -695,8 +713,17 @@ void s_write( screen_t *s,
 	int i;
 	int cursor_arr[2];
 
-	int prompt_width = calc_prompt_width( prompt );
-	int screen_width = common_get_width();
+	int prompt_width;
+	int screen_width;
+
+	CHECK( s, );
+	CHECK( prompt, );
+	CHECK( b, );
+	CHECK( c, );
+	CHECK( indent, );
+	
+	prompt_width = calc_prompt_width( prompt );
+	screen_width = common_get_width();
 
 	s_check_status( s );
 
@@ -767,8 +794,10 @@ void s_write( screen_t *s,
 
 void s_reset( screen_t *s )
 {
+	CHECK( s, );
 	s_reset_arr( &s->actual );
 	s->actual_cursor[0] = s->actual_cursor[1] = 0;
 	sb_clear( &s->actual_prompt );
+	s->need_clear=1;
 }
 

@@ -433,7 +433,7 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
 		local_cv_use__posix_c_source=yes,
 		local_cv_use__posix_c_source=no,
 	)
-	
+
 	if test x$local_cv_use__posix_c_source = xyes; then
 		AC_MSG_RESULT( yes )
 		local_found_posix_switch=yes

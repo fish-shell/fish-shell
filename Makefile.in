@@ -49,9 +49,9 @@ prefix = @prefix@
 optbindirs = @optbindirs@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
-MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" 
-CFLAGS=@CFLAGS@ $(MACROS)
-CPPFLAGS=@CPPFLAGS@
+MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DHAVE_CONFIG_H
+CFLAGS=@CFLAGS@ $(MACROS) 
+CPPFLAGS=@CPPFLAGS@ -I.
 LDFLAGS= @LIBS@ @LDFLAGS@ 
 
 

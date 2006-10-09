@@ -6,7 +6,7 @@ This is the documentation for \c fish, the friendly interactive
 shell. \c fish is a user friendly commandline shell intended
 mostly for interactive use. A shell is a program used to execute other
 programs. For the latest information on \c fish, please visit the <a
-href="http://roo.no-ip.org/fish/"><code>fish</code> homepage</a>.
+href="http://www.fishshell.org"><code>fish</code> homepage</a>.
 
 \section syntax Syntax overview
 
@@ -1213,7 +1213,7 @@ translated, a future version of fish should also include translated
 manuals.
 
 To make a translation of fish, you will first need the sourcecode,
-available from the <a href='http://roo.no-ip.org/fish'>fish
+available from the <a href='http://www.fishshell.org'>fish
 homepage</a>. Download the latest version, and then extract it using a
 command like <code>tar -zxf fish-VERSION.tar.gz</code>.
 

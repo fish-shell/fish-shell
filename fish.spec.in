@@ -6,9 +6,9 @@ Release:                0%{?dist}
 
 License:                GPL
 Group:                  System Environment/Shells
-URL:                    http://roo.no-ip.org/fish/
+URL:                    http://www.fishshell.org
 
-Source0:                http://roo.no-ip.org/%{name}/files/%{version}/%{name}-%{version}.tar.bz2
+Source0:                http://www.fishshell.org/files/%{version}/%{name}-%{version}.tar.bz2
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:          ncurses-devel gettext groff 

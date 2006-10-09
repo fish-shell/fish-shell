@@ -9,7 +9,7 @@
 
 	If you want to use this version of getopt in your program,
 	download the fish sourcecode, available at <a
-	href='http://roo.no-ip.org/fish/'>the fish homepage</a>. Extract
+	href='http://www.fishshell.org'>the fish homepage</a>. Extract
 	the sourcode, copy wgetopt.c and wgetopt.h into your program
 	directory, include wgetopt.h in your program, and use all the
 	regular getopt functions, prefixing every function, global

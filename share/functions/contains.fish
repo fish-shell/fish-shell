@@ -1,6 +1,6 @@
 
 function contains -d (N_ "Test if a key is contained in a set of values")
-	while set -q argv
+	while count $argv >/dev/null
 		switch $argv[1]
 			case '-h' '--h' '--he' '--hel' '--help'
 				help contains
@@ -24,7 +24,7 @@ function contains -d (N_ "Test if a key is contained in a set of values")
 		set -e argv[1]
 	end
 
-	if not set -q argv 
+	if not count $argv >/dev/null
 		printf (_ "%s: Key not specified\n") contains
 		return 1
 	end

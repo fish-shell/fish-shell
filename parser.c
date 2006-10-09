@@ -3729,6 +3729,14 @@ int parser_test( const  wchar_t * buff,
 			}
 			block_level[i] = last_level;
 		}
+		for( j=len-1; j>=0; j-- )
+		{
+			if( !wcschr( L" \n\t\r", buff[j] ) )
+				break;
+			block_level[j] = count;
+		}
+		
+
 	}		
 
 	if( count!= 0 )

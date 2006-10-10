@@ -98,14 +98,16 @@ int parse_util_lineno( const wchar_t *str, int len );
    not load it multiple times unless it's timestamp changes or
    parse_util_unload is called.
 
+   Autoloading one file may unload another. 
+
    \param cmd the filename to search for. The suffix '.fish' is always added to this name
    \param path_var_name the environment variable giving  the search path
-   \param on_load a callback function to run if a suitable file is found, which has not already been run
+   \param unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
    \param reload wheter to recheck file timestamps on already loaded files
 */
 int parse_util_load( const wchar_t *cmd,
 					 const wchar_t *path_var_name,
-					 void (*on_load)(const wchar_t *cmd),
+					 void (*unload)(const wchar_t *cmd),
 					 int reload );
 
 /**

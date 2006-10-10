@@ -34,6 +34,18 @@
 #include "halloc_util.h"
 
 /**
+   Maximum number of autoloaded items opf a specific type to keep in
+   memory at a time.
+*/
+#define AUTOLOAD_MAX 10
+
+/**
+   Minimum time, in seconds, before an autoloaded item will be
+   unloaded
+*/
+#define AUTOLOAD_MIN_AGE 60
+
+/**
    A structure representing the autoload state for a specific variable, e.g. fish_complete_path
 */
 typedef struct
@@ -580,7 +592,63 @@ int parse_util_unload( const wchar_t *cmd,
 	return !!val;
 }
 
-static int path_util_load_internal( const wchar_t *cmd,
+static void parse_util_autounload( wchar_t *path_var_name,
+								   wchar_t *skip,
+								   void (*on_load)(const wchar_t *cmd) )
+{
+	autoload_t *loaded;
+	int loaded_count=0;
+
+	if( !all_loaded )
+	{
+		return;
+	}
+	
+	loaded = (autoload_t *)hash_get( all_loaded, path_var_name );
+	if( !loaded )
+	{
+		return;
+	}
+	
+	if( hash_get_count( &loaded->load_time ) >= AUTOLOAD_MAX )
+	{
+		time_t oldest_access = time(0) - AUTOLOAD_MIN_AGE;
+		wchar_t *oldest_item=0;
+		int i;
+		array_list_t key;
+		al_init( &key );
+		hash_get_keys( &loaded->load_time, &key );
+		for( i=0; i<al_get_count( &key ); i++ )
+		{
+			wchar_t *item = (wchar_t *)al_get( &key, i );
+			time_t *tm = hash_get( &loaded->load_time, item );
+
+			if( wcscmp( item, skip ) == 0 )
+			{
+				continue;
+			}
+			
+			if( !tm[0] )
+				continue;
+			
+			loaded_count++;
+			
+			if( tm[1] < oldest_access )
+			{
+				oldest_access = tm[1];
+				oldest_item = item;
+			}
+		}
+		
+		if( oldest_item && loaded_count > AUTOLOAD_MAX)
+		{
+			parse_util_unload( oldest_item, path_var_name, on_load );
+		}
+	}
+}
+
+
+static int parse_util_load_internal( const wchar_t *cmd,
 									void (*on_load)(const wchar_t *cmd),
 									int reload,
 									autoload_t *loaded,
@@ -603,6 +671,8 @@ int parse_util_load( const wchar_t *cmd,
 	
 	CHECK( path_var_name, 0 );
 	CHECK( cmd, 0 );
+
+	parse_util_autounload( path_var_name, cmd, on_load );
 	
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
@@ -690,7 +760,7 @@ int parse_util_load( const wchar_t *cmd,
 	  Do the actual work in the internal helper function
 	*/
 
-	res = path_util_load_internal( cmd, on_load, reload, loaded, path_list );
+	res = parse_util_load_internal( cmd, on_load, reload, loaded, path_list );
 
 	/**
 	   Cleanup
@@ -718,7 +788,7 @@ int parse_util_load( const wchar_t *cmd,
    the code, and the caller can take care of various cleanup work.
 */
 
-static int path_util_load_internal( const wchar_t *cmd,
+static int parse_util_load_internal( const wchar_t *cmd,
 									void (*on_load)(const wchar_t *cmd),
 									int reload,
 									autoload_t *loaded,

@@ -83,8 +83,9 @@ if not set -q fish_greeting
 	set -U fish_greeting $line1\n$line2
 end
 
-echo $fish_greeting
-
+if status --is-interactive
+	echo $fish_greeting
+end
 
 #
 # Don't need completions in non-interactive mode

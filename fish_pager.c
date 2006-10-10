@@ -275,6 +275,7 @@ static int print_max( const wchar_t *str, int max, int has_more )
 	int written = 0;
 	for( i=0; str[i]; i++ )
 	{
+		
 		if( written + wcwidth(str[i]) > max )
 			break;
 		if( ( written + wcwidth(str[i]) == max) && (has_more || str[i+1]) )
@@ -1030,7 +1031,7 @@ int main( int argc, char **argv )
 	int is_quoted=0;	
 	array_list_t *comp;
 	wchar_t *prefix;
-		
+
 	if( argc < 3 )
 	{
 		debug( 0, L"Insufficient arguments" );

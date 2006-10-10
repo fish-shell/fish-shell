@@ -127,7 +127,6 @@ static int get_names_show_unexported;
 
 void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const wchar_t *val ) )
 {
-	debug( 3, L"Init env_universal_common" );
 	callback = cb;
 	hash_init( &env_universal_var, &hash_wcs_func, &hash_wcs_cmp );
 }
@@ -158,6 +157,8 @@ static int read_byte( connection_t *src )
 		int res;
 
 		res = read( src->fd, src->buffer, ENV_UNIVERSAL_BUFFER_SIZE );
+		
+//		debug(4, L"Read chunk '%.*s'", res, src->buffer );
 		
 		if( res < 0 )
 		{
@@ -296,7 +297,7 @@ static int match( const wchar_t *msg, const wchar_t *cmd )
 static void parse_message( wchar_t *msg, 
 						   connection_t *src )
 {
-	debug( 3, L"parse_message( %ls );", msg );
+//	debug( 3, L"parse_message( %ls );", msg );
 	
 	if( msg[0] == L'#' )
 		return;
@@ -403,7 +404,16 @@ static int try_send( message_t *msg,
 		   L"before write of %d chars to fd %d", strlen(msg->body), fd );	
 
 	int res = write( fd, msg->body, strlen(msg->body) );
-		
+
+	if( res != -1 )
+	{
+		debug( 4, L"Wrote message '%s'", msg->body );
+	}
+	else
+	{
+		debug( 4, L"Failed to write message '%s'", msg->body );
+	}
+	
 	if( res == -1 )
 	{
 		switch( errno )
@@ -412,7 +422,7 @@ static int try_send( message_t *msg,
 				return 0;
 				
 			default:
-				debug( 1,
+				debug( 0,
 					   L"Error while sending universal variable message to fd %d. Closing connection",
 					   fd );
 				wperror( L"write" );
@@ -431,9 +441,9 @@ static int try_send( message_t *msg,
 
 void try_send_all( connection_t *c )
 {
-	debug( 3,
+/*	debug( 3,
 		   L"Send all updates to connection on fd %d", 
-		   c->fd );
+		   c->fd );*/
 	while( !q_empty( &c->unsent) )
 	{
 		switch( try_send( (message_t *)q_peek( &c->unsent), c->fd ) )
@@ -443,7 +453,7 @@ void try_send_all( connection_t *c )
 				break;
 				
 			case 0:
-				debug( 1,
+				debug( 4,
 					   L"Socket full, send rest later" );	
 				return;
 								
@@ -462,6 +472,8 @@ message_t *create_message( int type,
 	
 	char *key=0;
 	size_t sz;
+
+//	debug( 4, L"Crete message of type %d", type );
 	
 	if( key_in )
 	{
@@ -555,6 +567,9 @@ message_t *create_message( int type,
 
 	if( msg )
 		msg->count=0;
+
+//	debug( 4, L"Message body is '%s'", msg->body );
+
 	return msg;	
 }
 

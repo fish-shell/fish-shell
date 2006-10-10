@@ -164,7 +164,6 @@ static void callback( int type, const wchar_t *name, const wchar_t *val )
 {	
 	if( type == BARRIER_REPLY )
 	{
-		debug( 3, L"Got barrier reply" );
 		barrier_reply = 1;
 	}
 	else
@@ -212,6 +211,7 @@ static void reconnect()
 	debug( 3, L"Get new fishd connection" );
 	
 	init = 0;
+	env_universal_server.buffer_consumed = env_universal_server.buffer_used = 0;
 	env_universal_server.fd = get_socket(1);
 	init = 1;
 	if( env_universal_server.fd >= 0 )
@@ -226,12 +226,13 @@ void env_universal_init( wchar_t * p,
 						 void (*sf)(),
 						 void (*cb)( int type, const wchar_t *name, const wchar_t *val ))
 {
-	debug( 3, L"env_universal_init()" );
 	path=p;
 	user=u;
 	start_fishd=sf;	
 	external_callback = cb;
 	
+	memset (&env_universal_server, 0, sizeof (connection_t));
+
 	env_universal_server.fd = -1;
 	env_universal_server.killme = 0;
 	env_universal_server.fd = get_socket(1);
@@ -245,7 +246,6 @@ void env_universal_init( wchar_t * p,
 	{
 		env_universal_barrier();
 	}
-	debug( 3, L"end env_universal_init()" );
 }
 
 void env_universal_destroy()
@@ -283,8 +283,6 @@ int env_universal_read_all()
 	if( !init)
 		return 0;
 
-	debug( 3, L"env_universal_read_all()" );
-
 	if( env_universal_server.fd == -1 )
 	{
 		reconnect();		
@@ -312,7 +310,6 @@ wchar_t *env_universal_get( const wchar_t *name )
 
 	CHECK( name, 0 );
 	
-	debug( 3, L"env_universal_get( \"%ls\" )", name );
 	return env_universal_common_get( name );
 }
 
@@ -323,7 +320,6 @@ int env_universal_get_export( const wchar_t *name )
 
 	CHECK( name, 0 );
 	
-	debug( 3, L"env_universal_get_export()" );
 	return env_universal_common_get_export( name );
 }
 
@@ -367,7 +363,7 @@ void env_universal_barrier()
 		FD_SET( env_universal_server.fd, &fds );
 		select( env_universal_server.fd+1, 0, &fds, 0, 0 );
 	}
-	
+
 	/*
 	  Wait for barrier reply
 	*/

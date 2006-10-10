@@ -604,7 +604,7 @@ int main( int argc, char ** argv )
 				}
 				else
 				{
-					connection_t *new = malloc( sizeof(connection_t));
+					connection_t *new = calloc( 1, sizeof(connection_t));
 					new->fd = child_socket;
 					new->next = conn;
 					q_init( &new->unsent );

@@ -1320,10 +1320,8 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 
 - Completion for gcc -\#\#\# option doesn't work.
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
-- xdg stuff expects posix functionality, e.g. strdup
-- Reading long history file takes way too much time
 - fishd should use utf-8, not whatever is the default character set
-- ^K should cut to end of line, not the entire buffer
+- screen handling code can't handle tabs in input
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se

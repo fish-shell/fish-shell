@@ -105,6 +105,64 @@ void kill_add( wchar_t *str )
 	}
 }
 
+/**
+   Remove the specified node from the circular list
+*/
+static void kill_remove_node( ll_node_t *n )
+{
+	if( n->prev == n )
+	{
+		kill_last=kill_current = 0;
+	}
+	else
+	{
+		ll_node_t *nxt = n->prev;
+		while( nxt->prev != n )
+		{
+			nxt=nxt->prev;
+		}
+		nxt->prev = n->prev;
+		if( kill_last == n )
+		{
+			kill_last = n->prev;
+		}
+		kill_current=kill_last;
+		free( n->data );
+		free( n );		
+	}	
+}
+
+/**
+   Remove first match for specified string from circular list
+*/
+static void kill_remove( wchar_t *s )
+{
+	ll_node_t *n, *next;
+	
+	if( !kill_last )
+	{
+		return;
+	}
+	
+	for( n=kill_last; 
+		 n!=kill_last || next == 0 ;
+		 n=n->prev )
+	{
+		if( wcscmp( (wchar_t *)n->data, s ) == 0 )
+		{
+			kill_remove_node( n );
+		}
+		next = n;
+	}
+}
+		
+		
+
+void kill_replace( wchar_t *old, wchar_t *new )
+{
+	kill_remove( old );
+	kill_add( new );	
+}
 
 wchar_t *kill_yank_rotate()
 {

@@ -10,6 +10,12 @@
 #include <wchar.h>
 
 /**
+   Replace the specified string in the killring
+*/
+void kill_replace( wchar_t *old, wchar_t *new );
+
+
+/**
    Add a string to the top of the killring
 */
 void kill_add( wchar_t *str );

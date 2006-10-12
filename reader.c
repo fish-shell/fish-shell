@@ -127,6 +127,9 @@ commence.
 */
 #define READAHEAD_MAX 256
 
+#define KILL_APPEND 0
+#define KILL_PREPEND 1
+
 /**
    A struct describing the state of the interactive reader. These
    states can be stacked, in case reader_readline is called from
@@ -240,6 +243,8 @@ typedef struct reader_data
 	   jobs. This happens if we press e.g. ^D twice.
 	*/
 	int prev_end_loop;
+
+	string_buffer_t kill_item;
 
 	/**
 	   Pointer to previous reader_data
@@ -366,6 +371,35 @@ int reader_exit_forced()
 	return exit_forced;
 }
 
+static void reader_kill( wchar_t *begin, int length, int mode, int new )
+{
+	if( new )
+	{
+		sb_clear( &data->kill_item );
+		sb_append_substring( &data->kill_item, begin, length );
+		kill_add( (wchar_t *)data->kill_item.buff );
+	}
+	else
+	{
+
+		wchar_t *old = wcsdup( (wchar_t *)data->kill_item.buff);
+
+		if( mode == KILL_APPEND )
+		{
+			sb_append_substring( &data->kill_item, begin, length );
+		}
+		else
+		{
+			sb_clear( &data->kill_item );
+			sb_append_substring( &data->kill_item, begin, length );
+			sb_append( &data->kill_item, old );
+		}
+
+		
+		kill_replace( old, (wchar_t *)data->kill_item.buff );
+		free( old );
+	}
+}
 
 /**
    string_buffer used as temporary storage for the reader_readline function
@@ -724,6 +758,10 @@ static int insert_str(wchar_t *str)
 {
 	int len = wcslen( str );
 	int old_len = data->buff_len;
+	
+	assert( data->buff_pos >= 0 );
+	assert( data->buff_pos <= data->buff_len );
+	assert( len >= 0 );
 	
 	data->buff_len += len;
 	check_size();
@@ -1150,9 +1188,7 @@ static int handle_completions( array_list_t *comp )
 				get_param( data->buff, data->buff_pos, &quote, 0, 0, 0 );
 				is_quoted = (quote != L'\0');
 				
-				writech(L'\n');
-
-				
+				write(1, "\n", 1 );
 
 				run_pager( prefix, is_quoted, comp );
 
@@ -1718,6 +1754,7 @@ void reader_push( wchar_t *name )
 	reader_data_t *n = calloc( 1, sizeof( reader_data_t ) );
 	n->name = wcsdup( name );
 	n->next = data;
+	sb_init( &n->kill_item );
 
 	data=n;
 
@@ -1761,6 +1798,7 @@ void reader_pop()
 	free( n->color );
 	free( n->indent );
 	free( n->search_buff );
+	sb_destroy( &n->kill_item );
 	
 	s_destroy( &n->screen );
 	sb_destroy( &n->prompt_buff );
@@ -2135,51 +2173,112 @@ wchar_t *reader_readline()
 				break;
 			}
 
-			/* kill*/
+			/* kill */
 			case R_KILL_LINE:
 			{
-				kill_add( &data->buff[data->buff_pos] );
-				data->buff_len = data->buff_pos;
-				data->buff[data->buff_len]=L'\0';
-
-
-				repaint();
+				wchar_t *begin = &data->buff[data->buff_pos];
+				wchar_t *end = begin;
+				int len;
+								
+				while( *end && *end != L'\n' )
+					end++;
+				
+				if( end==begin && *end )
+					end++;
+				
+				len = end-begin;
+				
+				if( len )
+				{
+									
+					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_LINE );
+					
+					memmove( begin, end, sizeof( wchar_t )*(wcslen( end )+1) );
+					data->buff_len -= len;
+					
+					reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+					repaint();
+				}
+				
 				break;
 			}
 
 			case R_BACKWARD_KILL_LINE:
 			{
-				wchar_t *str = wcsndup( data->buff, data->buff_pos );
-				if( !str )
-					DIE_MEM();
+				if( data->buff_pos > 0 )
+				{
+					wchar_t *end = &data->buff[data->buff_pos];
+					wchar_t *begin = end;
+					int len;
+					
+					while( begin > data->buff  && *begin != L'\n' )
+						begin--;
+					
+					if( *begin == L'\n' )
+						begin++;
+					
+					len = maxi( end-begin, 1 );
+					begin = end - len;
+										
+					reader_kill( begin, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
+					
+					memmove( begin, end, sizeof( wchar_t )*(wcslen( end )+1) );
+					data->buff_pos -= len;
+					data->buff_len -= len;
+				
 
-				kill_add( str );
-				free( str );
-
-				data->buff_len = wcslen(data->buff +data->buff_pos);
-				memmove( data->buff, data->buff +data->buff_pos, sizeof(wchar_t)*data->buff_len );
-				data->buff[data->buff_len]=L'\0';
-				data->buff_pos=0;
-				reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
-
-				repaint();
+					reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+					repaint();
+					
+				}
 				break;
+
 			}
 
 			case R_KILL_WHOLE_LINE:
 			{
-				kill_add( data->buff );
-				data->buff_len = data->buff_pos = 0;
-				data->buff[data->buff_len]=L'\0';
-				reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+				wchar_t *end = &data->buff[data->buff_pos];
+				wchar_t *begin = end;
+				int len;
+				//debug( 0, L"WOOOOOT" );
+				
+				while( begin > data->buff  && *begin != L'\n' )
+					begin--;
+				
+				if( *begin == L'\n' )
+					begin++;
+				
+				len = maxi( end-begin, 0 );
+				begin = end - len;
 
-				repaint();
+				while( *end && *end != L'\n' )
+					end++;
+				
+				if( begin == end && *end )
+					end++;
+				
+				len = end-begin;
+				
+				if( len )
+				{
+									
+					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );
+					
+					memmove( begin, end, sizeof( wchar_t )*(wcslen( end )+1) );
+					data->buff_pos = begin - data->buff;
+					data->buff_len -= len;
+					
+					reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+					repaint();
+				}
+				
 				break;
 			}
 
 			/* yank*/
 			case R_YANK:
-			{	yank_str = kill_yank();
+			{
+				yank_str = kill_yank();
 				insert_str( yank_str );
 				yank = wcslen( yank_str );
 				break;

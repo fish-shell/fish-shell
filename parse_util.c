@@ -639,6 +639,7 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 				oldest_item = item;
 			}
 		}
+		al_destroy( &key );
 		
 		if( oldest_item && loaded_count > AUTOLOAD_MAX)
 		{

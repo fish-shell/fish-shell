@@ -137,7 +137,7 @@ static void kill_remove_node( ll_node_t *n )
 */
 static void kill_remove( wchar_t *s )
 {
-	ll_node_t *n, *next;
+	ll_node_t *n, *next=0;
 	
 	if( !kill_last )
 	{

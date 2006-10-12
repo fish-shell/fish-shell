@@ -592,8 +592,8 @@ int parse_util_unload( const wchar_t *cmd,
 	return !!val;
 }
 
-static void parse_util_autounload( wchar_t *path_var_name,
-								   wchar_t *skip,
+static void parse_util_autounload( const wchar_t *path_var_name,
+								   const wchar_t *skip,
 								   void (*on_load)(const wchar_t *cmd) )
 {
 	autoload_t *loaded;
@@ -649,10 +649,10 @@ static void parse_util_autounload( wchar_t *path_var_name,
 
 
 static int parse_util_load_internal( const wchar_t *cmd,
-									void (*on_load)(const wchar_t *cmd),
-									int reload,
-									autoload_t *loaded,
-									array_list_t *path_list );
+									 void (*on_load)(const wchar_t *cmd),
+									 int reload,
+									 autoload_t *loaded,
+									 array_list_t *path_list );
 
 
 int parse_util_load( const wchar_t *cmd,
@@ -789,10 +789,10 @@ int parse_util_load( const wchar_t *cmd,
 */
 
 static int parse_util_load_internal( const wchar_t *cmd,
-									void (*on_load)(const wchar_t *cmd),
-									int reload,
-									autoload_t *loaded,
-									array_list_t *path_list )
+									 void (*on_load)(const wchar_t *cmd),
+									 int reload,
+									 autoload_t *loaded,
+									 array_list_t *path_list )
 {
 	static string_buffer_t *path=0;
 	time_t *tm;

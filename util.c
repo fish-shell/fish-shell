@@ -465,19 +465,122 @@ void hash_foreach2( hash_table_t *h,
 }
 
 
-int hash_str_cmp( void *a, void *b )
+/**
+   Helper function for hash_wcs_func
+*/
+static unsigned int rotl1( unsigned int in )
 {
-	return strcmp((char *)a,(char *)b) == 0;
+	return (in<<1|in>>31);
 }
 
 /**
    Helper function for hash_wcs_func
 */
-static unsigned long rotl5( unsigned long in )
+static unsigned int rotl5( unsigned int in )
 {
-	return ((in<<5|in>>27))&0xffffffff;
+	return (in<<5|in>>27);
 }
 
+/**
+   Helper function for hash_wcs_func
+*/
+static unsigned int rotl30( unsigned int in )
+{
+	return (in<<30|in>>2);
+}
+
+#define WORD_COUNT 16
+
+int hash_wcs_func( void *data )
+{
+	const wchar_t *in = (const wchar_t *)data;
+	unsigned int a,b,c,d,e;
+	int t;
+	unsigned int k0=0x5a827999u;	
+	unsigned int k1 =0x6ed9eba1u;
+	
+	unsigned int w[2*WORD_COUNT];	
+	
+	/*
+	  Same constants used by sha1
+	*/
+	a=0x67452301u;
+	b=0xefcdab89u;
+	c=0x98badcfeu;
+	d=0x10325476u;
+	e=0xc3d2e1f0u;
+	
+	if( data == 0 )
+		return 0;
+	
+	while( *in )
+	{
+		int i;
+
+		/*
+		  Read WORD_COUNT words of data into w
+		*/
+		for( i=0; i<WORD_COUNT; i++ )
+		{
+			if( *in==0)
+			{
+				for( ;i<WORD_COUNT; i++ )
+					w[i]=0;
+			}
+			else
+				w[i]=*in++;
+			
+		}
+		
+		/*
+		  And fill up the rest by rotating the previous content
+		*/
+		for( i=WORD_COUNT; i<(2*WORD_COUNT); i++ )
+		{
+			w[i]=rotl1(w[i-1]^w[i-(WORD_COUNT/2)]^w[i-(WORD_COUNT/2-1)]^w[i-WORD_COUNT]);
+		}
+
+		/*
+		  Only 2*WORD_COUNT laps, not 80 like in sha1. Only two types
+		  of laps, not 4 like in sha1
+		*/
+		for( t=0; t<WORD_COUNT; t++ )
+		{
+			unsigned int temp;
+			temp = (rotl5(a)+(b^c^d)+e+w[t]+k0);
+			e=d;
+			d=c;
+			c=rotl30(b);
+			b=a;
+			a=temp;
+		}
+		for( t=WORD_COUNT; t<(2*WORD_COUNT); t++ )
+		{
+			unsigned int temp;
+			temp = (rotl5(a)+((b&c)|(b&d)|(c&d))+e+w[t]+k1);
+			e=d;
+			d=c;
+			c=rotl30(b);
+			b=a;
+			a=temp;
+		}
+	}
+
+	/*
+	  Implode from 160 to 32 bit hash and return
+	*/
+	return a^b^c^d^e;
+}
+
+int hash_wcs_cmp( void *a, void *b )
+{
+	return wcscmp((wchar_t *)a,(wchar_t *)b) == 0;
+}
+
+int hash_str_cmp( void *a, void *b )
+{
+	return strcmp((char *)a,(char *)b) == 0;
+}
 
 int hash_str_func( void *data )
 {
@@ -488,23 +591,6 @@ int hash_str_func( void *data )
 		res = (18499*rotl5(res)) ^ *str++;
 	
 	return res;
-}
-
-int hash_wcs_func( void *data )
-{
-	int res = 0x67452301u;
-	const wchar_t *str = data;	
-
-	while( *str )
-		res = (18499*rotl5(res)) ^ *str++;
-	
-	return res;
-}
-
-
-int hash_wcs_cmp( void *a, void *b )
-{
-	return wcscmp((wchar_t *)a,(wchar_t *)b) == 0;
 }
 
 int hash_ptr_func( void *data )

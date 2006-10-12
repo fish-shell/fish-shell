@@ -1532,6 +1532,19 @@ static void move_word( int dir, int erase )
 	int step = dir?1:-1;
 
 	/*
+	  Return if we are already at the edge
+	*/
+	if( !dir && data->buff_pos == 0 )
+	{
+		return;
+	}
+	
+	if( dir && data->buff_pos == data->buff_len )
+	{
+		return;
+	}
+	
+	/*
 	  If we are beyond the last character and moving left, start by
 	  moving one step, since otehrwise we'll start on the \0, which
 	  should be ignored.
@@ -1542,6 +1555,14 @@ static void move_word( int dir, int erase )
 			return;
 		
 		end_buff_pos--;
+	}
+	
+	/*
+	  When moving left, ignore the character under the cursor
+	*/
+	if( !dir )
+	{
+		end_buff_pos+=2*step;
 	}
 
 	/*
@@ -1578,7 +1599,6 @@ static void move_word( int dir, int erase )
 		
 		end_buff_pos+=step;
 
-
 	}
 	
 	/*
@@ -1598,22 +1618,30 @@ static void move_word( int dir, int erase )
 			if( end_buff_pos == data->buff_len )
 				break;
 		}
-
+		
 		c = data->buff[end_buff_pos];
-
+		
 		if( !iswalnum( c ) )
 		{
 			/*
-			  Don't gobble the boundary character if it was a
-			  whitespace, but do for all other non-alphabetic
-			  characters
+			  Don't gobble the boundary character when moving to the
+			  right
 			*/
-			if( iswspace( c ) /* && ( abs( end_buff_pos-data->buff_pos ) > 1 ) */ && (step < 0))
+			if( !dir )
 				end_buff_pos -= step;
 			break;
 		}
 		end_buff_pos+=step;
 	}
+
+	/*
+	  Make sure we move at least one character
+	*/
+	if( end_buff_pos==data->buff_pos )
+	{
+		end_buff_pos+=step;
+	}
+		
 
 	if( erase )
 	{

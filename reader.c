@@ -399,6 +399,18 @@ static void reader_kill( wchar_t *begin, int length, int mode, int new )
 		kill_replace( old, (wchar_t *)data->kill_item.buff );
 		free( old );
 	}
+
+	if( data->buff_pos > (begin-data->buff) )
+	{
+		data->buff_pos = maxi( begin-data->buff, data->buff_pos-length );
+	}
+	
+	data->buff_len -= length;
+	memmove( begin, begin+length, sizeof( wchar_t )*(wcslen( begin+length )+1) );
+	
+	reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+	repaint();
+	
 }
 
 /**
@@ -1039,10 +1051,6 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	for( i=0; i<al_get_count( comp); i++ )
 	{
 	    wchar_t *el = escape((wchar_t*)al_get( comp, i ), 1);
-
-//		debug( 0, L"Escaped '%ls' to '%ls'", al_get( comp, i ), el );
-		
-		
 		sb_printf( &msg, L"%ls\n", el );
 		free( el );		
 	}
@@ -1524,9 +1532,9 @@ static void handle_token_history( int forward, int reset )
 
    \param dir Direction to move/erase. 0 means move left, 1 means move right.
    \param erase Whether to erase the characters along the way or only move past them.
-
+   \param do_append if erase is true, this flag decides if the new kill item should be appended to the previous kill item.
 */
-static void move_word( int dir, int erase )
+static void move_word( int dir, int erase, int new )
 {
 	int end_buff_pos=data->buff_pos;
 	int step = dir?1:-1;
@@ -1647,19 +1655,10 @@ static void move_word( int dir, int erase )
 	{
 		int remove_count = abs(data->buff_pos - end_buff_pos);
 		int first_char = mini( data->buff_pos, end_buff_pos );
-		wchar_t *woot = wcsndup( data->buff + first_char, remove_count);
 //		fwprintf( stderr, L"Remove from %d to %d\n", first_char, first_char+remove_count );
-
-		kill_add( woot );
-		free( woot );
-		memmove( data->buff + first_char, data->buff + first_char+remove_count, sizeof(wchar_t)*(data->buff_len-first_char-remove_count) );
-		data->buff_len -= remove_count;
-		data->buff_pos = first_char;
-		data->buff[data->buff_len]=0;
-
-		reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
-
-		repaint();
+		
+		reader_kill( data->buff + first_char, remove_count, dir?KILL_APPEND:KILL_PREPEND, new );
+		
 	}
 	else
 	{
@@ -2221,11 +2220,6 @@ wchar_t *reader_readline()
 									
 					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_LINE );
 					
-					memmove( begin, end, sizeof( wchar_t )*(wcslen( end )+1) );
-					data->buff_len -= len;
-					
-					reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
-					repaint();
 				}
 				
 				break;
@@ -2248,15 +2242,7 @@ wchar_t *reader_readline()
 					len = maxi( end-begin, 1 );
 					begin = end - len;
 										
-					reader_kill( begin, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
-					
-					memmove( begin, end, sizeof( wchar_t )*(wcslen( end )+1) );
-					data->buff_pos -= len;
-					data->buff_len -= len;
-				
-
-					reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
-					repaint();
+					reader_kill( begin, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );					
 					
 				}
 				break;
@@ -2292,12 +2278,6 @@ wchar_t *reader_readline()
 									
 					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );
 					
-					memmove( begin, end, sizeof( wchar_t )*(wcslen( end )+1) );
-					data->buff_pos = begin - data->buff;
-					data->buff_len -= len;
-					
-					reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
-					repaint();
 				}
 				
 				break;
@@ -2534,28 +2514,28 @@ wchar_t *reader_readline()
 			/* kill one word left */
 			case R_BACKWARD_KILL_WORD:
 			{
-				move_word(0,1);
+				move_word(0,1, last_char!=R_BACKWARD_KILL_WORD);
 				break;
 			}
 
 			/* kill one word right */
 			case R_KILL_WORD:
 			{
-				move_word(1,1);
+				move_word(1,1, last_char!=R_KILL_WORD);
 				break;
 			}
 
 			/* move one word left*/
 			case R_BACKWARD_WORD:
 			{
-				move_word(0,0);
+				move_word(0,0,0);
 				break;
 			}
 
 			/* move one word right*/
 			case R_FORWARD_WORD:
 			{
-				move_word( 1,0);
+				move_word( 1,0,0);
 				break;
 			}
 

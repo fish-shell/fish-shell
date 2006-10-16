@@ -1582,12 +1582,12 @@ static void move_word( int dir, int erase, int new )
 
 		if( !dir )
 		{
-			if( end_buff_pos == 0 )
+			if( end_buff_pos <= 0 )
 				break;
 		}
 		else
 		{
-			if( end_buff_pos == data->buff_len )
+			if( end_buff_pos >= data->buff_len )
 				break;
 		}
 
@@ -1618,12 +1618,12 @@ static void move_word( int dir, int erase, int new )
 		
 		if( !dir )
 		{
-			if( end_buff_pos == 0 )
+			if( end_buff_pos <= 0 )
 				break;
 		}
 		else
 		{
-			if( end_buff_pos == data->buff_len )
+			if( end_buff_pos >= data->buff_len )
 				break;
 		}
 		
@@ -1649,6 +1649,12 @@ static void move_word( int dir, int erase, int new )
 	{
 		end_buff_pos+=step;
 	}
+
+	/*
+	  Make sure we don't move beyond begining or end of buffer
+	*/
+	end_buff_pos = maxi( 0, mini( end_buff_pos, data->buff_len ) );
+	
 		
 
 	if( erase )

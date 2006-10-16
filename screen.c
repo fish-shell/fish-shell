@@ -441,7 +441,14 @@ static int s_writeb( char c )
 }
 
 /**
-   Move screen cursor to the specified position. 
+   Write the bytes needed to move screen cursor to the specified
+   position to the specified buffer. The actual_cursor field of the
+   specified screen_t will be updated.
+   
+   \param s the screen to operate on
+   \param b the buffer to send the output escape codes to
+   \param new_x the new x position
+   \param new_y the new y position
 */
 static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 {

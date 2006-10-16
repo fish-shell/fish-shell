@@ -205,14 +205,9 @@ typedef struct reader_data
 	int *color;
 
 	/**
-	   New color buffer, used for syntax highlighting.
+	   An array defining the block level at each character.
 	*/
 	int *indent;
-
-	/**
-	   Should the prompt command be reexecuted on the next repaint
-	*/
-	int exec_prompt;
 
 	/**
 	   Function for tab completion
@@ -269,11 +264,6 @@ static int end_loop = 0;
 */
 static array_list_t current_filename;
 
-/**
-   List containing strings which make up the prompt
-*/
-static array_list_t prompt_list;
-
 
 /**
    Store the pid of the parent process, so the exit function knows whether it should reset the terminal or not.
@@ -300,7 +290,7 @@ static struct termios old_modes;
 */
 static struct termios saved_modes;
 
-static void reader_super_highlight_me_plenty( int *color, int pos, array_list_t *error );
+static void reader_super_highlight_me_plenty( int pos, array_list_t *error );
 
 /**
    Variable to keep track of forced exits - see \c reader_exit_forced();
@@ -408,15 +398,10 @@ static void reader_kill( wchar_t *begin, int length, int mode, int new )
 	data->buff_len -= length;
 	memmove( begin, begin+length, sizeof( wchar_t )*(wcslen( begin+length )+1) );
 	
-	reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	repaint();
 	
 }
-
-/**
-   string_buffer used as temporary storage for the reader_readline function
-*/
-static string_buffer_t *readline_buffer=0;
 
 void reader_handle_int( int sig )
 {
@@ -582,51 +567,42 @@ void reader_write_title()
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 }
 
-
 /**
-   Write the prompt to screen. If data->exec_prompt is set, the prompt
-   command is first evaluated, and the title will be reexecuted as
-   well.
+   Reexecute the prompt command. The output is inserted into data->prompt_buff.
 */
-static void calc_prompt()
+static void exec_prompt()
 {
 	int i;
 
-	/*
-	  Check if we need to reexecute the prompt command
-	*/
-	if( data->exec_prompt )
+	array_list_t prompt_list;
+	al_init( &prompt_list );
+	
+	if( data->prompt )
 	{
+		proc_push_interactive( 0 );
 		
-		if( data->prompt )
+		if( exec_subshell( data->prompt, &prompt_list ) == -1 )
 		{
-			proc_push_interactive( 0 );
-			
-			if( exec_subshell( data->prompt, &prompt_list ) == -1 )
-			{
-				/* If executing the prompt fails, make sure we at least don't print any junk */
-				al_foreach( &prompt_list, &free );
-				al_destroy( &prompt_list );
-				al_init( &prompt_list );
-			}
-			proc_pop_interactive();
+			/* If executing the prompt fails, make sure we at least don't print any junk */
+			al_foreach( &prompt_list, &free );
+			al_destroy( &prompt_list );
+			al_init( &prompt_list );
 		}
-		
-		data->exec_prompt = 0;
-		reader_write_title();
-		
-		sb_clear( &data->prompt_buff );
-		
-		for( i=0; i<al_get_count( &prompt_list); i++ )
-		{
-			sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ) );
-		}
-		
-		al_foreach( &prompt_list, &free );
-		al_truncate( &prompt_list, 0 );
-		
+		proc_pop_interactive();
 	}
-
+	
+	reader_write_title();
+	
+	sb_clear( &data->prompt_buff );
+	
+	for( i=0; i<al_get_count( &prompt_list); i++ )
+	{
+		sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ) );
+	}
+	
+	al_foreach( &prompt_list, &free );
+	al_destroy( &prompt_list );
+	
 }
 
 void reader_init()
@@ -649,14 +625,7 @@ void reader_init()
 void reader_destroy()
 {
 	al_destroy( &current_filename);
-	if( readline_buffer )
-	{
-		sb_destroy( readline_buffer );
-		free( readline_buffer );
-		readline_buffer=0;
-	}
 	tcsetattr(0, TCSANOW, &saved_modes);
-
 }
 
 
@@ -672,8 +641,6 @@ void reader_exit( int do_exit, int forced )
 
 void repaint()
 {
-	calc_prompt();
-	
 	parser_test( data->buff, data->indent, 0, 0 );
 
 	s_write( &data->screen,
@@ -705,25 +672,11 @@ static void remove_backward()
 	data->buff_len--;
 	data->buff[data->buff_len]=0;
 
-	reader_super_highlight_me_plenty( data->color,
-									  data->buff_pos,
+	reader_super_highlight_me_plenty( data->buff_pos,
 									  0 );
 
 	repaint();
 
-}
-
-/**
-   Remove the current character in the character buffer and on the
-   screen using syntax highlighting, etc.
-*/
-static void remove_forward()
-{
-	if( data->buff_pos >= data->buff_len )
-		return;
-
-	data->buff_pos++;
-	remove_backward();
 }
 
 /**
@@ -753,8 +706,7 @@ static int insert_char( int c )
 
 	/* Syntax highlight */
 
-	reader_super_highlight_me_plenty( data->color,
-									  data->buff_pos-1,
+	reader_super_highlight_me_plenty( data->buff_pos-1,
 									  0 );
 
 	repaint();
@@ -791,8 +743,7 @@ static int insert_str(wchar_t *str)
 	
 	/* Syntax highlight */
 	
-	reader_super_highlight_me_plenty( data->color,
-									  data->buff_pos-1,
+	reader_super_highlight_me_plenty( data->buff_pos-1,
 									  0 );
 	
 	/* repaint */
@@ -1103,8 +1054,8 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
    space.
    - If the list contains multiple elements with a common prefix, write
    the prefix.
-   - If the list contains multiple elements without
-   a common prefix, call run_pager to display a list of completions
+   - If the list contains multiple elements without.
+   a common prefix, call run_pager to display a list of completions. Depending on terminal size and the length of the list, run_pager may either show less than a screenfull and exit or use an interactive pager to allow the user to scroll through the completions.
    
    \param comp the list of completion strings
 */
@@ -1199,13 +1150,6 @@ static int handle_completions( array_list_t *comp )
 				write(1, "\n", 1 );
 
 				run_pager( prefix, is_quoted, comp );
-
-
-				/*
-				  Try to print a list of completions. First try with five
-				  columns, then four, etc. completion_try_print always
-				  succeeds with one column.
-				*/
 			}
 
 			free( prefix );
@@ -1233,7 +1177,7 @@ static void reader_interactive_init()
 	shell_pgid = getpgrp ();
 
 	/*
-	  This should enable job control on fish, even if our parent did
+	  This should enable job control on fish, even if our parent process did
 	  not enable it for us.
 	*/
 
@@ -1265,9 +1209,6 @@ static void reader_interactive_init()
 		exit(1);
 	}
 
-
-	al_init( &prompt_list );
-
 	common_handle_winch(0);
 
     if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
@@ -1291,9 +1232,6 @@ static void reader_interactive_init()
 static void reader_interactive_destroy()
 {
 	kill_destroy();
-	al_foreach( &prompt_list, &free );
-	al_destroy( &prompt_list );
-
 	writestr( L"\n" );
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 	input_destroy();
@@ -1352,7 +1290,7 @@ static void handle_history( const wchar_t *new_str )
 	check_size();
 	wcscpy( data->buff, new_str );
 	data->buff_pos=wcslen(data->buff);
-	reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 
 	repaint();
 }
@@ -1438,7 +1376,7 @@ static void handle_token_history( int forward, int reset )
 		}
 
 		reader_replace_current_token( str );
-		reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+		reader_super_highlight_me_plenty( data->buff_pos, 0 );
 		repaint();
 	}
 	else
@@ -1511,7 +1449,7 @@ static void handle_token_history( int forward, int reset )
 		if( str )
 		{
 			reader_replace_current_token( str );
-			reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+			reader_super_highlight_me_plenty( data->buff_pos, 0 );
 			repaint();
 			al_push( &data->search_prev, str );
 			data->search_pos = al_get_count( &data->search_prev )-1;
@@ -1572,7 +1510,7 @@ static void move_word( int dir, int erase, int new )
 	{
 		end_buff_pos+=2*step;
 	}
-
+	
 	/*
 	  Remove all whitespace characters before finding a word
 	*/
@@ -1655,7 +1593,7 @@ static void move_word( int dir, int erase, int new )
 	*/
 	end_buff_pos = maxi( 0, mini( end_buff_pos, data->buff_len ) );
 	
-		
+
 
 	if( erase )
 	{
@@ -1701,8 +1639,7 @@ void reader_set_buffer( wchar_t *b, int p )
 		data->buff_pos=l;
 	}
 
-	reader_super_highlight_me_plenty( data->color,
-									  data->buff_pos,
+	reader_super_highlight_me_plenty( data->buff_pos,
 									  0 );
 }
 
@@ -1796,12 +1733,13 @@ void reader_push( wchar_t *name )
 
 	check_size();
 	data->buff[0]=data->search_buff[0]=0;
-	data->exec_prompt=1;
 
 	if( data->next == 0 )
 	{
 		reader_interactive_init();
 	}
+
+	exec_prompt();
 	reader_set_highlight_function( &highlight_universal );
 	reader_set_test_function( &default_test );
 	reader_set_prompt( L"" );
@@ -1852,7 +1790,7 @@ void reader_pop()
 	else
 	{
 		history_set_mode( data->name );
-		data->exec_prompt=1;
+		exec_prompt();
 	}
 }
 
@@ -1886,14 +1824,13 @@ void reader_set_test_function( int (*f)( wchar_t * ) )
    highlighting. Lastly, clear the background color under the cursor
    to avoid confusion.
 
-   \param buff the buffer to syntax highlight. This is always the same as data->buff
-   \param color the array of color values to insert the results into
    \param match_highlight_pos the position to use for bracket matching. This need not be the same as the surrent cursor position
-   \param if non-null, any possibly errors in the buffer are further descibed by the strings inserted into the specified arraylist
+   \param error if non-null, any possible errors in the buffer are further descibed by the strings inserted into the specified arraylist
 */
-static void reader_super_highlight_me_plenty( int *color, int match_highlight_pos, array_list_t *error )
+static void reader_super_highlight_me_plenty( int match_highlight_pos, array_list_t *error )
 {
-	data->highlight_func( data->buff, color, match_highlight_pos, error );
+	data->highlight_func( data->buff, data->color, match_highlight_pos, error );
+
 	if( data->search_buff && wcslen(data->search_buff) )
 	{
 		wchar_t * match = wcsstr( data->buff, data->search_buff );
@@ -1909,14 +1846,13 @@ static void reader_super_highlight_me_plenty( int *color, int match_highlight_po
 				/*
 				  Do not overwrite previous highlighting color
 				*/
-				if( color[start+i]>>8 == 0 )
+				if( data->color[start+i]>>8 == 0 )
 				{
-					color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
+					data->color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
 				}
 			}
 		}
 	}
-
 }
 
 
@@ -2042,9 +1978,9 @@ wchar_t *reader_readline()
 
 	s_reset( &data->screen );
 	
-	data->exec_prompt=1;
+	exec_prompt();
 
-	reader_super_highlight_me_plenty( data->color, data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	repaint();
 
 	tcgetattr(0,&old_modes);        /* get the current terminal modes */
@@ -2056,7 +1992,6 @@ wchar_t *reader_readline()
 
 	while( !finished && !data->end_loop)
 	{
-
 
 		/*
 		  Sometimes strange input sequences seem to generate a zero
@@ -2139,7 +2074,7 @@ wchar_t *reader_readline()
 
 			case R_NULL:
 			{
-				data->exec_prompt=1;
+				exec_prompt();
 				s_reset( &data->screen );
 				repaint();
 				break;
@@ -2162,7 +2097,6 @@ wchar_t *reader_readline()
 			case R_COMPLETE:
 			{
 
-//					fwprintf( stderr, L"aaa\n" );
 				if( !data->complete_func )
 					break;
 
@@ -2223,9 +2157,7 @@ wchar_t *reader_readline()
 				
 				if( len )
 				{
-									
 					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_LINE );
-					
 				}
 				
 				break;
@@ -2260,8 +2192,7 @@ wchar_t *reader_readline()
 				wchar_t *end = &data->buff[data->buff_pos];
 				wchar_t *begin = end;
 				int len;
-				//debug( 0, L"WOOOOOT" );
-				
+		
 				while( begin > data->buff  && *begin != L'\n' )
 					begin--;
 				
@@ -2281,9 +2212,7 @@ wchar_t *reader_readline()
 				
 				if( len )
 				{
-									
-					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );
-					
+					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );					
 				}
 				
 				break;
@@ -2346,7 +2275,15 @@ wchar_t *reader_readline()
 			/* delete forward*/
 			case R_DELETE_CHAR:
 			{
-				remove_forward();
+				/**
+				   Remove the current character in the character buffer and on the
+				   screen using syntax highlighting, etc.
+				*/
+				if( data->buff_pos < data->buff_len )
+				{
+					data->buff_pos++;
+					remove_backward();
+				}
 				break;
 			}
 

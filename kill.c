@@ -151,6 +151,7 @@ static void kill_remove( wchar_t *s )
 		if( wcscmp( (wchar_t *)n->data, s ) == 0 )
 		{
 			kill_remove_node( n );
+			break;
 		}
 		next = n;
 	}

@@ -630,6 +630,11 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 			
 			if( !tm[0] )
 				continue;
+
+			if( hash_get( &loaded->is_loading, item ) )
+			{
+				continue;
+			}
 			
 			loaded_count++;
 			

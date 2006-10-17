@@ -72,14 +72,10 @@ typedef struct connection
 	*/
 	int killme;
 	/**
-	   The state used for character conversions
-	*/
-	mbstate_t wstate;
-	/**
 	   The input string. Input from the socket goes here. When a
 	   newline is encountered, the buffer is parsed and cleared.
 	*/
-	string_buffer_t input;
+	buffer_t input;
 	
 	/**
 	   The read buffer. 

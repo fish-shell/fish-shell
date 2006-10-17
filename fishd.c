@@ -17,10 +17,12 @@ set_export KEY:VALUE
 
 These commands update the value of a variable. The only difference
 between the two is that <tt>set_export</tt>-variables should be
-exported to children of the process using them. The variable value may
-be escaped using C-style backslash escapes. In fact, this is required
-for newline characters, which would otherwise be interpreted as end of
-command.
+exported to children of the process using them. When sending messages,
+all values below 32 or above 127 must be escaped using C-style
+backslash escapes. This means that the over the wire protocol is
+ASCII. However, any conforming reader must also accept non-ascii
+characters and interpret them as UTF-8. Lines containing invalid UTF-8
+escape sequences must be ignored entirely.
 
 <pre>erase KEY
 </pre>
@@ -426,8 +428,7 @@ void load_or_save( int save)
 	}
 	debug( 4, L"File open on fd %d", c.fd );
 
-	sb_init( &c.input );
-	memset (&c.wstate, '\0', sizeof (mbstate_t));
+	b_init( &c.input );
 	q_init( &c.unsent );
 
 	if( save )
@@ -609,8 +610,7 @@ int main( int argc, char ** argv )
 					new->next = conn;
 					q_init( &new->unsent );
 					new->killme=0;				
-					sb_init( &new->input );
-					memset (&new->wstate, '\0', sizeof (mbstate_t));					
+					b_init( &new->input );
 					send( new->fd, GREETING, strlen(GREETING), MSG_DONTWAIT );
 					enqueue_all( new );				
 					conn=new;
@@ -686,6 +686,7 @@ int main( int argc, char ** argv )
 				c=c->next;
 			}
 		}
+
 		if( !conn )
 		{
 			debug( 0, L"No more clients. Quitting" );

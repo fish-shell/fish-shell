@@ -236,10 +236,9 @@ void env_universal_init( wchar_t * p,
 	env_universal_server.fd = -1;
 	env_universal_server.killme = 0;
 	env_universal_server.fd = get_socket(1);
-	memset (&env_universal_server.wstate, '\0', sizeof (mbstate_t));
 	q_init( &env_universal_server.unsent );
 	env_universal_common_init( &callback );
-	sb_init( &env_universal_server.input );	
+	b_init( &env_universal_server.input );	
 	env_universal_read_all();	
 	init = 1;	
 	if( env_universal_server.fd >= 0 )

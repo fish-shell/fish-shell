@@ -1167,12 +1167,13 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	{
 		wchar_t *el = (wchar_t *)al_get( &list, i );
 		wchar_t *key, *key_end, *val_begin;
-		key = el+wcslen(cmd);
 		
 		if( !el )
 			continue;
 
+		key = el+wcslen(cmd_start);
 		key_end = wcschr( el, L'\t' );
+
 		if( !key_end )
 			continue;
 		

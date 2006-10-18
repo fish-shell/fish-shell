@@ -164,5 +164,8 @@ int env_universal_common_get_export( const wchar_t *name );
 */
 void enqueue_all( connection_t *c );
 
+void connection_init( connection_t *c, int fd );
+void connection_destroy( connection_t *c);
+
 
 #endif

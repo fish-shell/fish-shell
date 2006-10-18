@@ -837,3 +837,22 @@ void enqueue_all( connection_t *c )
 	try_send_all( c );
 }
 
+
+void connection_init( connection_t *c, int fd )
+{
+	memset (c, 0, sizeof (connection_t));
+	c->fd = fd;
+	b_init( &c->input );
+	q_init( &c->unsent );
+	c->buffer_consumed = c->buffer_used = 0;	
+}
+
+void connection_destroy( connection_t *c)
+{
+	q_destroy( &c->unsent );
+	b_destroy( &c->input );
+	if( close( c->fd ) )
+	{
+		wperror( L"close" );
+	}
+}

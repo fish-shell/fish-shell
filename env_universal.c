@@ -193,7 +193,7 @@ static void check_connection()
 		
 		env_universal_server.fd = -1;
 		env_universal_server.killme=0;
-		sb_clear( &env_universal_server.input );	
+		env_universal_server.input.used=0;	
 		env_universal_read_all();
 	}	
 }
@@ -230,15 +230,11 @@ void env_universal_init( wchar_t * p,
 	user=u;
 	start_fishd=sf;	
 	external_callback = cb;
-	
-	memset (&env_universal_server, 0, sizeof (connection_t));
 
-	env_universal_server.fd = -1;
-	env_universal_server.killme = 0;
+	connection_init( &env_universal_server, -1 );
+	
 	env_universal_server.fd = get_socket(1);
-	q_init( &env_universal_server.unsent );
 	env_universal_common_init( &callback );
-	b_init( &env_universal_server.input );	
 	env_universal_read_all();	
 	init = 1;	
 	if( env_universal_server.fd >= 0 )
@@ -258,17 +254,11 @@ void env_universal_destroy()
 		{
 			wperror( L"fcntl" );
 		}
-		try_send_all( &env_universal_server );	
-		
-		if( close( env_universal_server.fd ) )
-		{
-			wperror( L"close" );
-		}
+		try_send_all( &env_universal_server );		
 	}
-	
+
+	connection_destroy( &env_universal_server );
 	env_universal_server.fd =-1;
-	q_destroy( &env_universal_server.unsent );
-	sb_destroy( &env_universal_server.input );	
 	env_universal_common_destroy();
 	init = 0;
 }

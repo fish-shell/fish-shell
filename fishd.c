@@ -391,13 +391,14 @@ static void daemonize()
 /**
    Load or save all variables
 */
-void load_or_save( int save)
+static void load_or_save( int save)
 {
 	struct passwd *pw;
 	char *name;
 	char *dir = getenv( "HOME" );
 	char hostname[HOSTNAME_LEN];
 	connection_t c;
+	int fd;
 	
 	if( !dir )
 	{
@@ -417,10 +418,11 @@ void load_or_save( int save)
 		   save?"saving":"loading", 
 		   name );
 	
-	c.fd = open( name, save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
+	fd = open( name, save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
+	
 	free( name );
 	
-	if( c.fd == -1 )
+	if( fd == -1 )
 	{
 		debug( 1, L"Could not open load/save file. No previous saves?" );
 		wperror( L"open" );
@@ -428,8 +430,7 @@ void load_or_save( int save)
 	}
 	debug( 4, L"File open on fd %d", c.fd );
 
-	b_init( &c.input );
-	q_init( &c.unsent );
+	connection_init( &c, fd );
 
 	if( save )
 	{
@@ -440,9 +441,7 @@ void load_or_save( int save)
 	else
 		read_message( &c );
 
-	q_destroy( &c.unsent );
-	sb_destroy( &c.input );
-	close( c.fd );
+	connection_destroy( &c );	
 }
 
 /**
@@ -548,7 +547,7 @@ int main( int argc, char ** argv )
 		connection_t *c;
 		int res;
 
-		t=sizeof( remote );		
+		t = sizeof( remote );		
 		
 		FD_ZERO( &read_fd );
 		FD_ZERO( &write_fd );
@@ -605,12 +604,9 @@ int main( int argc, char ** argv )
 				}
 				else
 				{
-					connection_t *new = calloc( 1, sizeof(connection_t));
-					new->fd = child_socket;
+					connection_t *new = malloc( sizeof(connection_t));
+					connection_init( new, child_socket );					
 					new->next = conn;
-					q_init( &new->unsent );
-					new->killme=0;				
-					b_init( &new->input );
 					send( new->fd, GREETING, strlen(GREETING), MSG_DONTWAIT );
 					enqueue_all( new );				
 					conn=new;
@@ -654,9 +650,6 @@ int main( int argc, char ** argv )
 			{
 				debug( 4, L"Close connection %d", c->fd );
 
-				close(c->fd );
-				sb_destroy( &c->input );
-
 				while( !q_empty( &c->unsent ) )
 				{
 					message_t *msg = (message_t *)q_get( &c->unsent );
@@ -665,7 +658,7 @@ int main( int argc, char ** argv )
 						free( msg );
 				}
 				
-				q_destroy( &c->unsent );				
+				connection_destroy( c );
 				if( prev )
 				{
 					prev->next=c->next;
@@ -695,5 +688,7 @@ int main( int argc, char ** argv )
 			exit(0);
 			c=c->next;
 		}		
+
 	}
 }
+

@@ -59,7 +59,7 @@
 /**
    Command used to start fishd
 */
-#define FISHD_CMD L"if which fishd 2>/dev/null >/dev/null; fishd ^/tmp/fishd.log.%s; end"
+#define FISHD_CMD L"fishd ^/tmp/fishd.log.%s"
 
 /**
    Value denoting a null string

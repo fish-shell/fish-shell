@@ -207,7 +207,7 @@ static int hash_search( hash_table_t *h,
 	int pos;
 
 	hv = h->hash_func( key );
-	pos = abs(hv) % h->size;
+	pos = (hv & 0x7fffffff) % h->size;
 	while(1)
 	{
 		if( (h->arr[pos].key == 0 ) ||
@@ -370,7 +370,7 @@ void hash_remove( hash_table_t *h,
 	{
 
 		int hv = h->hash_func( h->arr[next_pos].key );
-		int ideal_pos = abs( hv ) % h->size;
+		int ideal_pos = ( hv  & 0x7fffffff) % h->size;
 		int dist_old = (next_pos - ideal_pos + h->size)%h->size;
 		int dist_new = (pos - ideal_pos + h->size)%h->size;
 		if ( dist_new < dist_old )

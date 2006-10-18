@@ -168,8 +168,16 @@ void hash_init2( hash_table_t *h,
 				 size_t capacity)
 {
 	int i;
-	size_t sz = capacity*4/3+1;
+	size_t sz = 32;
+	while( sz < (capacity*4/3) )
+		sz*=2;
+	/*
+	  Make sure the size is a Mersenne number. Should hopfully be a
+	  reasonably good size with regard to avoiding patterns of collisions.
+	*/
+	sz--;
 	
+
 	h->arr = malloc( sizeof(hash_struct_t)*sz );
 	h->size = sz;
 	for( i=0; i< sz; i++ )
@@ -489,6 +497,10 @@ static unsigned int rotl30( unsigned int in )
 	return (in<<30|in>>2);
 }
 
+/**
+   The number of words of input used in each lap by the sha-like
+   string hashing algorithm. 
+*/
 #define WORD_COUNT 16
 
 int hash_wcs_func( void *data )

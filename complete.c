@@ -1271,9 +1271,11 @@ static void complete_cmd( const wchar_t *cmd,
 
 	wchar_t *cdpath = env_get(L"CDPATH");
 	wchar_t *cdpath_cpy = wcsdup( cdpath?cdpath:L"." );
+	int prev_count = al_get_count( comp );
 
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
 	{
+		
 		array_list_t tmp;
 		al_init( &tmp );
 
@@ -1282,7 +1284,10 @@ static void complete_cmd( const wchar_t *cmd,
 						   comp,
 						   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 		{
-			complete_cmd_desc( cmd, comp );
+			if( al_get_count( comp ) > prev_count )
+			{
+				complete_cmd_desc( cmd, comp );
+			}
 		}
 		al_destroy( &tmp );
 	}
@@ -1324,7 +1329,10 @@ static void complete_cmd( const wchar_t *cmd,
 			}
 			free( path_cpy );
 			
-			complete_cmd_desc( cmd, comp );
+			if( al_get_count( comp ) > prev_count )
+			{
+				complete_cmd_desc( cmd, comp );
+			}
 		}
 		
 		/*
@@ -1575,6 +1583,7 @@ static void complete_load_handler( const wchar_t *cmd )
 
 void complete_load( const wchar_t *name, int reload )
 {
+	CHECK( name, );
 	parse_util_load( name, 
 					 L"fish_complete_path",
 					 &complete_load_handler, 
@@ -2185,6 +2194,8 @@ static void append_switch( string_buffer_t *out,
 void complete_print( string_buffer_t *out )
 {
 	complete_entry *e;
+
+	CHECK( out, );
 
 	for( e = first_entry; e; e=e->next )
 	{

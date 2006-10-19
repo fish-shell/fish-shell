@@ -1281,7 +1281,7 @@ static int builtin_function( wchar_t **argv )
 					   argc-woptind );
 			res=1;
 		}
-		else if( !(is_binding?wcsbindingname( argv[woptind] ) : !wcsvarname( argv[woptind] ) ))
+		else if( wcsfuncname( argv[woptind] ) )
 		{
 			sb_printf( sb_err,
 					   _( L"%ls: Illegal function name '%ls'\n" ),

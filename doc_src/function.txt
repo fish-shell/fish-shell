@@ -5,7 +5,7 @@
 
 \subsection function-description Description
 
-- \c -b or \c --key-binding specifies that the function is a key biding. Key binding functions work exactly like regular functions except that they can not be tab-completed, and may contain the '-' character.
+- \c -b or \c --key-binding specifies that the function is a key biding. Key binding functions work exactly like regular functions except that they can not be tab-completed.
 - <code>-d DESCRIPTION</code> or \c --description=DESCRIPTION is a description of what the function does, suitable as a completion description
 - <code>-j PID</code> or <code> --on-job-exit PID</code> tells fish to run this function when the job with group id PID exits. Instead of PID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
 - <code>-p PID</code> or <code> --on-process-exit PID</code> tells fish to run this function when the fish child process with process id PID exits

@@ -421,6 +421,12 @@ wchar_t *wcsvarname( const wchar_t *str )
 	return 0;
 }
 
+wchar_t *wcsfuncname( const wchar_t *str )
+{
+	return wcschr( str, L'/' );
+}
+
+
 int wcsvarchr( wchar_t chr )
 {
 	return ( (iswalnum(chr)) || (chr == L'_' ));

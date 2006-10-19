@@ -211,6 +211,14 @@ wchar_t *wcsvarname( const wchar_t *str );
 
 
 /**
+   Test if the given string is a valid function name. 
+
+   \return null if this is a valid name, and a pointer to the first invalid character otherwise
+*/
+
+wchar_t *wcsfuncname( const wchar_t *str );
+
+/**
    Test if the given string is valid in a variable name 
 
    \return 1 if this is a valid name, 0 otherwise

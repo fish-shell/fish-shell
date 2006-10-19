@@ -1344,7 +1344,7 @@ int exec_subshell( const wchar_t *cmd,
 		debug( 1, 
 			   _( L"Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s." ), 
 			   PACKAGE_BUGREPORT );		
-		return 0;		
+		return -1;		
 	}
 	
 	is_subshell=1;	
@@ -1352,11 +1352,17 @@ int exec_subshell( const wchar_t *cmd,
 	
 	prev_status = proc_get_last_status();
 	
-	eval( cmd, io_buffer, SUBST );
+	if( eval( cmd, io_buffer, SUBST ) )
+	{
+		status = -1;
+	}
+	else
+	{
+		status = proc_get_last_status();
+	}
 	
 	io_buffer_read( io_buffer );
 	
-	status = proc_get_last_status();
 	proc_set_last_status( prev_status );
 	
 	is_subshell = prev_subshell;

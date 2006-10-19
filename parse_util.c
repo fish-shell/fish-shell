@@ -878,7 +878,13 @@ static int parse_util_load_internal( const wchar_t *cmd,
 				/*
 				  Source the completion file for the specified completion
 				*/
-				exec_subshell( src_cmd, 0 );
+				if( exec_subshell( src_cmd, 0 ) == -1 )
+				{
+					/*
+					  Do nothing on failiure
+					*/
+				}
+				
 				free(src_cmd);
 				reloaded = 1;
 			}

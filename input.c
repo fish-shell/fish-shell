@@ -1297,6 +1297,7 @@ static void add_common_bindings()
 		add_escaped_mapping( name[i], (L"\\C-y"), L"Control-y", L"yank" );
 		add_mapping( name[i], L"", L"Any key", L"self-insert" );
 	}		
+
 }
 
 /**
@@ -1421,7 +1422,7 @@ int input_init()
 	is_init = 1;
 
 	input_common_init( &interrupt_handler );
-	
+
 	if( setupterm( 0, STDOUT_FILENO, 0) == ERR )
 	{
 		debug( 0, _( L"Could not set up terminal" ) );

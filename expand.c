@@ -1265,7 +1265,12 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 	wcslcpy( subcmd, paran_begin+1, paran_end-paran_begin );
 	subcmd[ paran_end-paran_begin-1]=0;
 
-	exec_subshell( subcmd, sub_res);
+	if( exec_subshell( subcmd, sub_res) == -1 )
+	{
+		halloc_free( context );
+		error( CMDSUBST_ERROR, -1, L"Unknown error while evaulating command substitution" );
+		return 0;
+	}
 
 	tail_begin = paran_end + 1;
 	if( *tail_begin == L'[' )

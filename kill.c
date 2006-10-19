@@ -97,7 +97,13 @@ void kill_add( wchar_t *str )
 	{
 		wchar_t *escaped_str = escape( str, 1 );
 		wchar_t *cmd = wcsdupcat2(L"echo ", escaped_str, L"|xsel -b",(void *)0);
-		exec_subshell( cmd, 0 );
+		if( exec_subshell( cmd, 0 ) == -1 )
+		{
+			/* 
+			   Do nothing on failiure
+			*/
+		}
+		
 		free( cut_buffer );
 		free( cmd );
 	
@@ -192,49 +198,51 @@ static void kill_check_x_buffer()
 		wchar_t *new_cut_buffer=0;
 		array_list_t list;
 		al_init( &list );
-		exec_subshell( cmd, &list );
-		
-		for( i=0; i<al_get_count( &list ); i++ )
+		if( exec_subshell( cmd, &list ) != -1 )
 		{
-			wchar_t *next_line = escape( (wchar_t *)al_get( &list, i ), 0 );
-			if( i==0 )
+					
+			for( i=0; i<al_get_count( &list ); i++ )
 			{
-				new_cut_buffer = next_line;
-			}
-			else
-			{
-				wchar_t *old = new_cut_buffer;
-				new_cut_buffer= wcsdupcat2( new_cut_buffer, L"\\n", next_line, (void *)0 );
-				free( old );
-				free( next_line );	
-			}
-		}
-		
-		if( new_cut_buffer )
-		{
-			/*  
-				The buffer is inserted with backslash escapes,
-				since we don't really like tabs, newlines,
-				etc. anyway.
-			*/
-			
-			if( cut_buffer != 0 )
-			{      
-				if( wcscmp( new_cut_buffer, cut_buffer ) == 0 )
+				wchar_t *next_line = escape( (wchar_t *)al_get( &list, i ), 0 );
+				if( i==0 )
 				{
-					free( new_cut_buffer );
-					new_cut_buffer = 0;
+					new_cut_buffer = next_line;
 				}
 				else
 				{
-					free( cut_buffer );
-					cut_buffer = 0;								
+					wchar_t *old = new_cut_buffer;
+					new_cut_buffer= wcsdupcat2( new_cut_buffer, L"\\n", next_line, (void *)0 );
+					free( old );
+					free( next_line );	
 				}
 			}
-			if( cut_buffer == 0 )
+		
+			if( new_cut_buffer )
 			{
-				cut_buffer = new_cut_buffer;
-				kill_add_internal( cut_buffer );
+				/*  
+					The buffer is inserted with backslash escapes,
+					since we don't really like tabs, newlines,
+					etc. anyway.
+				*/
+				
+				if( cut_buffer != 0 )
+				{      
+					if( wcscmp( new_cut_buffer, cut_buffer ) == 0 )
+					{
+						free( new_cut_buffer );
+						new_cut_buffer = 0;
+					}
+					else
+					{
+						free( cut_buffer );
+						cut_buffer = 0;								
+				}
+				}
+				if( cut_buffer == 0 )
+				{
+					cut_buffer = new_cut_buffer;
+					kill_add_internal( cut_buffer );
+				}
 			}
 		}
 		

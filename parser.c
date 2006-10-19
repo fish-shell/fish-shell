@@ -2910,7 +2910,7 @@ int parser_test( const  wchar_t * buff,
 						*/
 						if( contains_str( cmd,
 										  L"end",
-										  0 ) )
+										  (void *)0 ) )
 						{
 							err=1;
 							if( out )
@@ -2985,7 +2985,7 @@ int parser_test( const  wchar_t * buff,
 					if( contains_str( cmd,
 									  L"or",
 									  L"and",
-									  0 ) )
+									  (void *)0 ) )
 					{
 						/*
 						  'or' and 'and' can not be used inside pipelines

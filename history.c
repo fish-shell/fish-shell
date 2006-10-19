@@ -243,7 +243,7 @@ static wchar_t *history_file_name( void *context )
 	halloc_register_function( context, &free, res );
 	return res;
 }
-		
+
 /**
    Read a complete histor entry from the specified FILE.
 */

@@ -909,24 +909,26 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 			array_list_t l;
 			al_init( &l );
 
-			exec_subshell( cmd, &l );
-			free(cmd);
-
-			if( al_get_count( &l )>0 )
+			if( exec_subshell( cmd, &l ) != -1 )
 			{
-				wchar_t *ln = (wchar_t *)al_get(&l, 0 );
-				if( wcscmp( ln, L"unknown" ) != 0 )
+				
+				if( al_get_count( &l )>0 )
 				{
-					desc = wcsdup( ln);
-					/*
-					  I have decided I prefer to have the description
-					  begin in uppercase and the whole universe will just
-					  have to accept it. Hah!
-					*/
-					desc[0]=towupper(desc[0]);
+					wchar_t *ln = (wchar_t *)al_get(&l, 0 );
+					if( wcscmp( ln, L"unknown" ) != 0 )
+					{
+						desc = wcsdup( ln);
+						/*
+						  I have decided I prefer to have the description
+						  begin in uppercase and the whole universe will just
+						  have to accept it. Hah!
+						*/
+						desc[0]=towupper(desc[0]);
+					}
 				}
 			}
-
+			
+			free(cmd);
 			al_foreach( &l, &free );
 			al_destroy( &l );
 		}
@@ -1155,79 +1157,82 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	  systems with a large set of manuals, but it should be ok
 	  since apropos is only called once.
 	*/
-	exec_subshell( lookup_cmd, &list );
+	if( exec_subshell( lookup_cmd, &list ) != -1 )
+	{
+		
 	
-	/*
-	  Then discard anything that is not a possible completion and put
-	  the result into a hashtable with the completion as key and the
-	  description as value.
-
-	  Should be reasonably fast, since no memory allocations are needed.
-	*/
-	for( i=0; i<al_get_count( &list); i++ )
-	{
-		wchar_t *el = (wchar_t *)al_get( &list, i );
-		wchar_t *key, *key_end, *val_begin;
-		
-		if( !el )
-			continue;
-
-		key = el+wcslen(cmd_start);
-		key_end = wcschr( el, L'\t' );
-
-		if( !key_end )
-			continue;
-		
-		*key_end = 0;
-		val_begin = key_end+1;
-		
 		/*
-		  And once again I make sure the first character is uppercased
-		  because I like it that way, and I get to decide these
-		  things.
+		  Then discard anything that is not a possible completion and put
+		  the result into a hashtable with the completion as key and the
+		  description as value.
+
+		  Should be reasonably fast, since no memory allocations are needed.
 		*/
-		val_begin[0]=towupper(val_begin[0]);
+		for( i=0; i<al_get_count( &list); i++ )
+		{
+			wchar_t *el = (wchar_t *)al_get( &list, i );
+			wchar_t *key, *key_end, *val_begin;
 		
-		hash_put( &lookup, key, val_begin );
-	}
+			if( !el )
+				continue;
 
-	/*
-	  Then do a lookup on every completion and if a match is found,
-	  change to the new description.
+			key = el+wcslen(cmd_start);
+			key_end = wcschr( el, L'\t' );
 
-	  This needs to do a reallocation for every description added, but
-	  there shouldn't be that many completions, so it should be ok.
-	*/
-	for( i=0; i<al_get_count(comp); i++ )
-	{
-		wchar_t *el = (wchar_t *)al_get( comp, i );
-		wchar_t *cmd_end = wcschr( el,
-								   COMPLETE_SEP );
-		wchar_t *new_desc;
-
-		if( cmd_end )
-			*cmd_end = 0;
-
-		new_desc = (wchar_t *)hash_get( &lookup,
-										el );
-
-		if( new_desc )
-		{
-			wchar_t *new_el = wcsdupcat2( el,
-										  COMPLETE_SEP_STR,
-										  new_desc,
-										  (void *)0 );
-
-			al_set( comp, i, new_el );
-			free( el );
+			if( !key_end )
+				continue;
+		
+			*key_end = 0;
+			val_begin = key_end+1;
+		
+			/*
+			  And once again I make sure the first character is uppercased
+			  because I like it that way, and I get to decide these
+			  things.
+			*/
+			val_begin[0]=towupper(val_begin[0]);
+		
+			hash_put( &lookup, key, val_begin );
 		}
-		else
+
+		/*
+		  Then do a lookup on every completion and if a match is found,
+		  change to the new description.
+
+		  This needs to do a reallocation for every description added, but
+		  there shouldn't be that many completions, so it should be ok.
+		*/
+		for( i=0; i<al_get_count(comp); i++ )
 		{
+			wchar_t *el = (wchar_t *)al_get( comp, i );
+			wchar_t *cmd_end = wcschr( el,
+									   COMPLETE_SEP );
+			wchar_t *new_desc;
+
 			if( cmd_end )
-				*cmd_end = COMPLETE_SEP;
+				*cmd_end = 0;
+
+			new_desc = (wchar_t *)hash_get( &lookup,
+											el );
+
+			if( new_desc )
+			{
+				wchar_t *new_el = wcsdupcat2( el,
+											  COMPLETE_SEP_STR,
+											  new_desc,
+											  (void *)0 );
+
+				al_set( comp, i, new_el );
+				free( el );
+			}
+			else
+			{
+				if( cmd_end )
+					*cmd_end = COMPLETE_SEP;
+			}
 		}
 	}
-
+	
 	hash_destroy( &lookup );
 	al_foreach( &list,
 				&free );
@@ -1448,29 +1453,29 @@ static void complete_from_args( const wchar_t *str,
 	  strings should be escaped!
 	*/
 	/*
-	for( i=0; i< al_get_count( &possible_comp ); i++ )
-	{
-		wchar_t *next = (wchar_t *)al_get( &possible_comp, i );
-		wchar_t *next_unescaped;
-		if( next )
-		{
-			next_unescaped = unescape( next, 0 );
-			if( next_unescaped )
-			{
-				al_set( &possible_comp , i, next_unescaped );
-			}
-			else
-			{
-				al_set( &possible_comp , i, 0 );
-				debug( 2, L"Could not expand string %ls on line %d of file %s", next, __LINE__, __FILE__ );
-			}
-			free( next );
-		}
-		else
-		{
-			debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		}
-	}
+	  for( i=0; i< al_get_count( &possible_comp ); i++ )
+	  {
+	  wchar_t *next = (wchar_t *)al_get( &possible_comp, i );
+	  wchar_t *next_unescaped;
+	  if( next )
+	  {
+	  next_unescaped = unescape( next, 0 );
+	  if( next_unescaped )
+	  {
+	  al_set( &possible_comp , i, next_unescaped );
+	  }
+	  else
+	  {
+	  al_set( &possible_comp , i, 0 );
+	  debug( 2, L"Could not expand string %ls on line %d of file %s", next, __LINE__, __FILE__ );
+	  }
+	  free( next );
+	  }
+	  else
+	  {
+	  debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+	  }
+	  }
 	*/
 
 	copy_strings_with_prefix( comp_out, str, desc, 0, &possible_comp );
@@ -1789,7 +1794,7 @@ static void complete_param_expand( wchar_t *str,
 								   int do_file )
 {
 	wchar_t *comp_str;
-
+	
 	if( (wcsncmp( str, L"--", 2 )) == 0 && (comp_str = wcschr(str, L'=' ) ) )
 	{
 		comp_str++;
@@ -1798,16 +1803,18 @@ static void complete_param_expand( wchar_t *str,
 	{
 		comp_str = str;
 	}
-	/*
-	debug( 3,
-		   L"expand_string( \"%ls\", comp_out, EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | %ls );",
-		   comp_str,
-		   do_file?L"0":L"EXPAND_SKIP_WILDCARDS" );
-	*/
-	expand_string( 0, 
-				   wcsdup(comp_str),
-				   comp_out,
-				   EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) );
+
+	if( expand_string( 0, 
+					   wcsdup(comp_str),
+					   comp_out,
+					   EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) ) )
+	{
+		/*
+		  Ignore errors - completions may fail, and that's ok
+		*/
+	}
+	
+	
 }
 
 /**
@@ -1974,7 +1981,7 @@ static int try_complete_user( const wchar_t *cmd,
 														 L"/",
 														 COMPLETE_SEP_STR,
 														 COMPLETE_USER_DESC,
-														 0 );
+														 (void *)0 );
 							if( blarg != 0 )
 							{
 								al_push( comp, blarg );

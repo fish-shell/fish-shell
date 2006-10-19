@@ -452,6 +452,27 @@ static void setup_path()
 	al_destroy( &l );
 }
 
+static void env_set_defaults()
+{
+	if( !env_get( L"USER" ) )
+	{
+		struct passwd *pw = getpwuid( getuid());
+		wchar_t *unam = str2wcs( pw->pw_name );
+		env_set( L"USER", unam, ENV_GLOBAL );
+		free( unam );
+	}
+	if( !env_get( L"HOME" ) )
+	{
+		wchar_t *unam = env_get( L"USER" );
+		char *unam_narrow = wcs2str( unam );
+		struct passwd *pw = getpwnam( unam_narrow );
+		wchar_t *dir = str2wcs( pw->pw_dir );
+		env_set( L"HOME", dir, ENV_GLOBAL );
+		free( dir );		
+		free( unam_narrow );
+	}	
+}
+
 void env_init()
 {
 	char **p;
@@ -570,7 +591,11 @@ void env_init()
 						env_get( L"USER" ),
 						&start_fishd,
 						&universal_callback );
-	
+
+	/*
+	  Set correct defaults for e.g. USER and HOME variables
+	*/
+	env_set_defaults();
 }
 
 void env_destroy()

@@ -51,8 +51,8 @@ void exec( job_t *j );
 
   \return the status of the last job to exit, or -1 if en error was encountered.
 */
-int exec_subshell( const wchar_t *cmd, 
-				   array_list_t *l );
+__warn_unused int exec_subshell( const wchar_t *cmd, 
+								 array_list_t *l );
 
 
 /**

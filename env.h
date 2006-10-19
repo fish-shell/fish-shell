@@ -80,8 +80,8 @@ void env_destroy();
 */
 
 int env_set( const wchar_t *key, 
-			  const wchar_t *val,
-			  int mode );
+			 const wchar_t *val,
+			 int mode );
 
 
 /**

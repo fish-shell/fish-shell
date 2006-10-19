@@ -92,6 +92,15 @@ AC_SUBST( optbindirs, $optbindirs )
 # Tell autoconf to create config.h header 
 AC_CONFIG_HEADERS(config.h)
 
+AH_BOTTOM([#if __GNUC__ >= 3
+#define __warn_unused __attribute__ ((warn_unused_result))
+#define __sentinel __attribute__ ((sentinel))
+#else
+#define __warn_unused 
+#define __sentinel 
+#endif])
+
+
 # Set up various programs needed for install
 AC_PROG_CC
 AC_PROG_CPP

@@ -607,7 +607,7 @@ void sb_append_char( string_buffer_t *, wchar_t );
 
    Do not forget to cast the last 0 to (void *), or you might encounter errors on 64-bit platforms!
 */
-void sb_append2( string_buffer_t *, ... );
+__sentinel void sb_append2( string_buffer_t *, ... );
 
 /**
    Append formated string data to the buffer. This function internally

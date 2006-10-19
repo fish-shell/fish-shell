@@ -106,6 +106,7 @@ extern wchar_t *program_name;
 */
 #define N_(wstr) wstr
 
+
 /**
    Take an array_list_t containing wide strings and converts them to a
    single null-terminated wchar_t **. The array is allocated using
@@ -193,7 +194,7 @@ wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b );
    Returns a newly allocated concatenation of the specified wide
    character strings. The last argument must be a null pointer.
 */
-wchar_t *wcsdupcat2( const wchar_t *a, ... );
+__sentinel wchar_t *wcsdupcat2( const wchar_t *a, ... );
 
 /**
    Test if the given string is a valid variable name
@@ -256,7 +257,7 @@ const wchar_t *wsetlocale( int category, const wchar_t *locale );
 
    \return zero is needle is not found, of if needle is null, non-zero otherwise
 */
-int contains_str( const wchar_t *needle, ... );
+__sentinel int contains_str( const wchar_t *needle, ... );
 
 /**
    Call read while blocking the SIGCHLD signal. Should only be called

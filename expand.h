@@ -139,7 +139,7 @@ enum
    \param out The list to which the result will be appended.
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
-int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
+__warn_unused int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
 
 /**
    expand_one is identical to expand_string, except it will fail if in

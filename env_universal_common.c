@@ -126,7 +126,7 @@ static int get_names_show_exported;
 static int get_names_show_unexported;
 
 
-wchar_t *utf2wcs( char *in )
+wchar_t *utf2wcs( const char *in )
 {
 	iconv_t cd=(iconv_t) -1;
 	int i,j;
@@ -185,7 +185,7 @@ wchar_t *utf2wcs( char *in )
 	}
 	
 	
-	nconv = iconv( cd, &in, &in_len, &nout, &out_len );
+	nconv = iconv( cd, (char **)&in, &in_len, &nout, &out_len );
 		
 	if (nconv == (size_t) -1)
 	{
@@ -201,7 +201,7 @@ wchar_t *utf2wcs( char *in )
 	return out;	
 }
 
-char *wcs2utf( wchar_t *in )
+char *wcs2utf( const wchar_t *in )
 {
 	iconv_t cd=(iconv_t) -1;
 	int i,j;

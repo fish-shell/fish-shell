@@ -1440,7 +1440,7 @@ static int builtin_random( wchar_t **argv )
 			}
 			lrand48_r( &seed_buffer, &res );
 			
-			sb_printf( sb_out, L"%d\n", res%32767 );
+			sb_printf( sb_out, L"%d\n", abs(res%32767) );
 			break;
 		}
 

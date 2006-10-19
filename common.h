@@ -207,7 +207,8 @@ __sentinel wchar_t *wcsdupcat2( const wchar_t *a, ... );
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
 
-wchar_t *wcsvarname( wchar_t *str );
+wchar_t *wcsvarname( const wchar_t *str );
+
 
 /**
    Test if the given string is valid in a variable name 

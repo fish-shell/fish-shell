@@ -50,7 +50,7 @@ typedef char tputs_arg_t;
 #endif
 
 #ifndef SIGWINCH
-#define SIGIO SIGUSR2
+#define SIGWINCH SIGUSR2
 #endif
 
 #ifndef HAVE_WINSIZE

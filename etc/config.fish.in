@@ -59,6 +59,8 @@ end
 # Load additional initialization files
 #
 
-for i in fish.d/*.fish
-	. $i
+if test -d include
+	for i in include/*.fish
+		. $i
+	end
 end

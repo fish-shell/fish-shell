@@ -25,6 +25,7 @@
 #include "signal.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "path.h"
 
 /*
   The history is implemented using a linked list. Searches are done
@@ -230,6 +231,19 @@ static wchar_t *history_unescape_newlines( wchar_t *in )
 	return (wchar_t *)out->buff;
 }
 
+static wchar_t *history_file_name( void *context )
+{
+	wchar_t *path = path_get_config( context );
+	wchar_t *res;
+	
+	if( !path )
+		return 0;
+	
+	res = wcsdupcat2( path, L"/", mode_name, L"_history", (void *)0 );
+	halloc_register_function( context, &free, res );
+	return res;
+}
+		
 /**
    Read a complete histor entry from the specified FILE.
 */
@@ -310,11 +324,14 @@ static int history_load()
 	FILE *in_stream;
 	hash_table_t used;
 	int res = 0;
+	void *context;
 	
 	if( !mode_name )
 	{
 		return -1;
 	}	
+
+	context = halloc( 0, 0 );
 
 	is_loaded = 1;
 		
@@ -324,8 +341,10 @@ static int history_load()
 				&hash_wcs_cmp,
 				4096 );
 
-	fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", (void *)0 );
-	
+	fn = history_file_name( context );
+	if( fn )
+	{
+		
 	in_stream = wfopen( fn, "r" );
 	
 	if( in_stream != 0 )
@@ -374,15 +393,15 @@ static int history_load()
 			res = -1;
 			
 		}
-		
-	}	
+	}
+	
 
+	last_loaded = history_last;
+	}
 	
 	hash_destroy( &used );
-	
-	free( fn );
-	last_loaded = history_last;
 	signal_unblock();
+	halloc_free( context );
 	return res;
 	
 }
@@ -549,24 +568,29 @@ static void history_save()
 		
 		/* Save the global history */
 		{
-			fn = wcsdupcat2( env_get(L"HOME"), L"/.", mode_name, L"_history", (void *)0 );
-			
-			out_stream = wfopen( fn, "w" );
-			if( out_stream )
+			void *context = halloc( 0, 0 );
+			fn = history_file_name( context );
+			if( fn )
 			{
-				history_save_node( history_last, out_stream );
-				if( fclose( out_stream ) )
+				out_stream = wfopen( fn, "w" );
+				
+				if( out_stream )
+				{
+					history_save_node( history_last, out_stream );
+					if( fclose( out_stream ) )
+					{
+						debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
+						wperror( L"fopen" );
+					}			
+				}
+				else
 				{
 					debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
 					wperror( L"fopen" );
-				}			
+				}
 			}
-			else
-			{
-				debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
-				wperror( L"fopen" );
-			}
-			free( fn );	
+			
+			halloc_free( context );
 		}
 	}
 	

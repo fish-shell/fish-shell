@@ -1,0 +1,86 @@
+#
+# Main file for fish command completions. This file contains various
+# common helper functions for the command completions. All actual
+# completions are located in the completions subdirectory.
+#
+# @configure_input@
+
+#
+# Set default search paths for completions and shellscript functions
+# unless they already exist
+#
+
+set -l configdir ~/.config
+if set -q XDG_CONFIG_HOME
+	set configdir $XDG_CONFIG_HOME
+end
+
+
+
+if not set -q fish_function_path 
+	set -U fish_function_path $configdir/fish/functions    @sysconfdir@/fish/functions    @datadir@/fish/functions 
+end
+
+if not set -q fish_complete_path 
+	set -U fish_complete_path $configdir/fish/completions  @sysconfdir@/fish/completions  @datadir@/fish/completions 
+end
+
+set __fish_help_dir @docdir@
+
+# This is a Solaris-specific test to modify the PATH so that
+# Posix-conformant tools are used by default.
+
+if test -d /usr/xpg4/bin
+	if not contains /usr/xpg4/bin $PATH
+		set PATH /usr/xpg4/bin $PATH 
+	end
+end   
+
+
+#
+# Make sure there are no invalid entries in the PATH
+#
+
+if status --is-interactive
+	set -l erase_idx
+	for idx in (seq (count $PATH))
+		set i $PATH[$idx]
+		if not test -d $i
+			set erase_idx $erase_idx $idx
+			printf (_ '%s: Warning: The directory %s has been removed from your PATH because it does not exist\n') fish $i
+		end
+	end
+
+	if count $erase_idx >/dev/null
+		set -e PATH[(echo $erase_idx)]
+	end
+end
+
+#
+# Add a few common directories to path, if they exists. Note that pure
+# console programs like makedep sometimes live in /usr/X11R6/bin, so we
+# want this even for text-only terminals.
+#
+
+set -l path_list /bin /usr/bin /usr/X11R6/bin @prefix@/bin @optbindirs@
+
+# Root should also have the sbin directories in the path
+if test "$USER" = root
+	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
+end
+
+# Make a regular expression that matches any component in the PATH. A
+# trailing slash is ok. The sed call is to remove the last '|'.  
+set -l tmp (printf "%s" \^$PATH'/?$|')
+set -l path_regexp \((echo $tmp | sed -e "s/.\$//")\)
+
+for i in (printf "%s\n" $path_list|grep -E -v $path_regexp)
+	if test -d $i
+		set PATH $PATH $i
+	end
+end
+
+
+if status --is-interactive
+	. config_interactive.fish
+end

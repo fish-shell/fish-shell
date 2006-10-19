@@ -65,6 +65,7 @@
 #include "halloc_util.h"
 #include "parse_util.h"
 #include "expand.h"
+#include "path.h"
 
 
 
@@ -2076,7 +2077,7 @@ static int builtin_cd( wchar_t **argv )
 	else
 		dir_in = argv[1];
 
-	dir = parser_cdpath_get( context, dir_in );
+	dir = path_get_cdpath( context, dir_in );
 
 	if( !dir )
 	{

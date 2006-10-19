@@ -54,10 +54,6 @@ CFLAGS=@CFLAGS@ $(MACROS)
 CPPFLAGS=@CPPFLAGS@ 
 LDFLAGS= @LIBS@ @LDFLAGS@ 
 
-
-#etc files to install
-ETC_DIR_INSTALL = etc/fish_interactive.fish 
-
 # Set to 1 if we have gettext
 HAVE_GETTEXT=@HAVE_GETTEXT@
 
@@ -71,6 +67,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o	\
 	sanity.o tokenizer.o wildcard.o wgetopt.o wutil.o input.o	\
 	output.o intern.o env_universal.o env_universal_common.o			\
 	input_common.o event.o signal.o io.o parse_util.o common.o  screen.o\
+	path.o
 
 # Additional files used by builtin.o
 BUILTIN_FILES := builtin_help.c builtin_set.c builtin_commandline.c	\
@@ -153,11 +150,11 @@ MAIN_DIR_FILES := Doxyfile Doxyfile.user Makefile.in configure		\
     main.c fish_pager.c fishd.c seq.in
 
 # Files in ./etc/
-ETC_DIR_FILES :=etc/fish.in etc/fish_inputrc	\
-	etc/fish_interactive.fish.in
+ETC_DIR_FILES :=etc/config.fish.in etc/fish_inputrc	
+
 
 # Files in ./share/
-SHARE_DIR_FILES :=share/fish.in
+SHARE_DIR_FILES :=share/config.fish.in share/config_interactive.fish.in
 
 # Files in ./tests/
 TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
@@ -185,7 +182,7 @@ TRANSLATIONS_SRC := $(wildcard po/*.po)
 TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
 #Make everything needed for installing fish
-all: $(PROGRAMS) user_doc etc/fish share/fish etc/fish_interactive.fish $(TRANSLATIONS)
+all: $(PROGRAMS) user_doc etc/config.fish share/config.fish share/config_interactive.fish $(TRANSLATIONS)
 	@echo fish has now been built. 
 	@echo Use \'make install\' to install fish.
 .PHONY: all
@@ -409,22 +406,20 @@ install-force: all install-translations
 	for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
 	done;
-	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish.d
+	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
-	$(INSTALL) -m 644 etc/fish $(DESTDIR)$(sysconfdir)/fish
-	$(INSTALL) -m 644 share/fish $(DESTDIR)$(datadir)/fish
-	for i in $(ETC_DIR_INSTALL); do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(sysconfdir)/fish.d; \
-	done;
+	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
+	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
+	$(INSTALL) -m 644 share/config_interactive.fish    $(DESTDIR)$(datadir)/fish/
 	for i in $(COMPLETIONS_DIR_FILES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 	done;
 	for i in $(FUNCTIONS_DIR_FILES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 	done;
-	$(INSTALL) -m 644 etc/fish_inputrc $(DESTDIR)$(sysconfdir)/fish_inputrc;
+	$(INSTALL) -m 644 etc/fish_inputrc $(DESTDIR)$(sysconfdir)/fish/fish_inputrc;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	for i in user_doc/html/* ChangeLog; do \
 		if test -f $$i; then \
@@ -453,11 +448,9 @@ uninstall: uninstall-translations
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
 	rm -f $(DESTDIR)$(bindir)/xsel
-	rm -f $(DESTDIR)$(sysconfdir)/fish
-	rm -f $(DESTDIR)$(sysconfdir)/fish_inputrc
-	if test -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish; then \
-		rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish; \
-	fi
+	rm -f $(DESTDIR)$(sysconfdir)/fish/config.fish
+	rm -f $(DESTDIR)$(sysconfdir)/fish/fish_inputrc
+	rmdir $(DESTDIR)$(sysconfdir)/fish; true
 	if test -d $(DESTDIR)$(datadir)/fish; then \
 		rm -r $(DESTDIR)$(datadir)/fish; \
 	fi
@@ -533,7 +526,7 @@ count: count.o
 	$(CC) count.o -o $@
 
 set_color: set_color.o doc_src/set_color.o common.o
-	$(CC) set_color.o doc_src/set_color.o common.o $(LDFLAGS) -o $@
+	$(CC) set_color.o doc_src/set_color.o common.o wutil.o $(LDFLAGS) -o $@
 
 # Test program for the tokenizer library
 tokenizer_test: tokenizer.c tokenizer.h wutil.o common.o
@@ -638,7 +631,7 @@ clean:
 builtin.o: config.h fallback.h util.h wutil.h builtin.h function.h complete.h
 builtin.o: proc.h io.h parser.h event.h reader.h env.h common.h wgetopt.h
 builtin.o: sanity.h tokenizer.h wildcard.h input_common.h input.h intern.h
-builtin.o: signal.h halloc.h halloc_util.h parse_util.h expand.h
+builtin.o: signal.h halloc.h halloc_util.h parse_util.h expand.h path.h
 builtin.o: builtin_help.c builtin_set.c builtin_commandline.c
 builtin.o: builtin_complete.c builtin_ulimit.c builtin_jobs.c
 builtin_commandline.o: config.h signal.h fallback.h util.h wutil.h builtin.h
@@ -660,7 +653,7 @@ common.o: fallback.c
 complete.o: config.h signal.h fallback.h util.h tokenizer.h wildcard.h proc.h
 complete.o: io.h parser.h event.h function.h complete.h builtin.h env.h
 complete.o: exec.h expand.h common.h reader.h history.h intern.h parse_util.h
-complete.o: halloc.h halloc_util.h wutil.h
+complete.o: halloc.h halloc_util.h wutil.h path.h
 count.o: config.h
 env.o: config.h signal.h fallback.h util.h wutil.h proc.h io.h common.h env.h
 env.o: sanity.h expand.h history.h reader.h parser.h event.h env_universal.h
@@ -680,14 +673,13 @@ expand.o: io.h parser.h event.h expand.h wildcard.h exec.h tokenizer.h
 expand.o: complete.h parse_util.h halloc.h halloc_util.h
 fallback.o: config.h fallback.h util.h
 fishd.o: config.h signal.h fallback.h util.h common.h wutil.h
-fishd.o: env_universal_common.h
+fishd.o: env_universal_common.h halloc.h halloc_util.h path.h
 fish_pager.o: config.h signal.h fallback.h util.h wutil.h common.h complete.h
 fish_pager.o: output.h input_common.h env_universal.h env_universal_common.h
 fish_pager.o: halloc.h halloc_util.h
 fish_tests.o: config.h signal.h fallback.h util.h common.h proc.h io.h
 fish_tests.o: reader.h builtin.h function.h complete.h wutil.h env.h expand.h
 fish_tests.o: parser.h event.h tokenizer.h output.h exec.h halloc_util.h
-foo.o: config.h signal.h
 function.o: config.h signal.h wutil.h fallback.h util.h function.h proc.h
 function.o: io.h parser.h event.h common.h intern.h reader.h parse_util.h
 function.o: env.h expand.h
@@ -696,9 +688,9 @@ halloc_util.o: config.h fallback.h util.h common.h halloc.h
 highlight.o: config.h signal.h fallback.h util.h wutil.h highlight.h
 highlight.o: tokenizer.h proc.h io.h parser.h event.h parse_util.h builtin.h
 highlight.o: function.h env.h expand.h sanity.h common.h complete.h output.h
-highlight.o: halloc.h halloc_util.h wildcard.h
+highlight.o: halloc.h halloc_util.h wildcard.h path.h
 history.o: config.h fallback.h util.h wutil.h history.h common.h reader.h
-history.o: env.h sanity.h signal.h halloc.h halloc_util.h
+history.o: env.h sanity.h signal.h halloc.h halloc_util.h path.h
 input.o: config.h signal.h fallback.h util.h wutil.h reader.h proc.h io.h
 input.o: common.h sanity.h input_common.h input.h parser.h event.h env.h
 input.o: expand.h output.h intern.h
@@ -708,10 +700,11 @@ intern.o: config.h fallback.h util.h wutil.h common.h intern.h
 io.o: config.h fallback.h util.h wutil.h exec.h proc.h io.h common.h halloc.h
 key_reader.o: config.h fallback.h input_common.h
 kill.o: config.h signal.h fallback.h util.h wutil.h kill.h proc.h io.h
-kill.o: sanity.h common.h env.h exec.h parser.h event.h halloc.h
+kill.o: sanity.h common.h env.h exec.h halloc.h path.h
 main.o: config.h signal.h fallback.h util.h common.h reader.h builtin.h
 main.o: function.h complete.h wutil.h env.h sanity.h proc.h io.h parser.h
-main.o: event.h expand.h intern.h exec.h output.h halloc_util.h history.h
+main.o: event.h expand.h intern.h exec.h output.h halloc.h halloc_util.h
+main.o: history.h path.h
 mimedb.o: config.h xdgmime.h fallback.h util.h
 output.o: config.h signal.h fallback.h util.h wutil.h expand.h common.h
 output.o: output.h halloc_util.h highlight.h
@@ -719,9 +712,12 @@ parser.o: config.h signal.h fallback.h util.h common.h wutil.h proc.h io.h
 parser.o: parser.h event.h tokenizer.h exec.h wildcard.h function.h builtin.h
 parser.o: env.h expand.h reader.h sanity.h env_universal.h
 parser.o: env_universal_common.h intern.h parse_util.h halloc.h halloc_util.h
+parser.o: path.h
 parse_util.o: config.h fallback.h util.h wutil.h common.h tokenizer.h
 parse_util.o: parse_util.h expand.h intern.h exec.h proc.h io.h env.h
 parse_util.o: wildcard.h halloc_util.h
+path.o: config.h fallback.h util.h common.h env.h wutil.h halloc.h
+path.o: halloc_util.h path.h expand.h
 proc.o: config.h signal.h fallback.h util.h wutil.h proc.h io.h common.h
 proc.o: reader.h sanity.h env.h parser.h event.h halloc.h halloc_util.h
 proc.o: output.h

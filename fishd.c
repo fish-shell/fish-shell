@@ -70,6 +70,9 @@ time the original barrier request was sent have been received.
 #include "common.h"
 #include "wutil.h"
 #include "env_universal_common.h"
+#include "halloc.h"
+#include "halloc_util.h"
+#include "path.h"
 
 /**
    Maximum length of socket filename
@@ -100,7 +103,7 @@ time the original barrier request was sent have been received.
 /**
    The name of the save file. The hostname is appended to this.
 */
-#define FILE ".fishd."
+#define FILE "fishd."
 
 /**
    Maximum length of hostname. Longer hostnames are truncated
@@ -389,22 +392,106 @@ static void daemonize()
 }
 
 /**
+   Get environment variable value. The resulting string needs to be free'd.
+*/
+static wchar_t *fishd_env_get( wchar_t *key )
+{
+	char *nres, *nkey;
+	wchar_t *res;
+	
+	nkey = wcs2str( key );
+	nres = getenv( nkey );
+	free( nkey );
+	if( nres )
+	{
+		return str2wcs( nres );
+	}
+	else
+	{
+		res = env_universal_common_get( key );
+		if( res )
+			res = wcsdup( res );
+		
+		return env_universal_common_get( key );
+	}
+}
+
+/**
+   Get the configuration directory. The resulting string needs to be
+   free'd. This is mostly the same code as path_get_config(), but had
+   to be rewritten to avoid dragging in additional library
+   dependencies.
+*/
+static wchar_t *fishd_get_config()
+{
+	wchar_t *xdg_dir, *home;
+	int done = 0;
+	wchar_t *res = 0;
+	
+	xdg_dir = fishd_env_get( L"XDG_CONFIG_HOME" );
+	if( xdg_dir )
+	{
+		res = wcsdupcat( xdg_dir, L"/fish" );
+		if( !create_directory( res ) )
+		{
+			done = 1;
+		}
+		else
+		{
+			free( res );
+		}
+		free( xdg_dir );
+	}
+	else
+	{		
+		home = fishd_env_get( L"HOME" );
+		if( home )
+		{
+			res = wcsdupcat( home, L"/.config/fish" );
+			if( !create_directory( res ) )
+			{
+				done = 1;
+			}
+			else
+			{
+				free( res );
+			}
+			free( home );
+		}
+	}
+	
+	if( done )
+	{
+		return res;
+	}
+	else
+	{
+		debug( 0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access." ));
+		return 0;
+	}
+	
+}
+
+/**
    Load or save all variables
 */
 static void load_or_save( int save)
 {
-	struct passwd *pw;
 	char *name;
-	char *dir = getenv( "HOME" );
+	wchar_t *wdir = fishd_get_config();
+	char *dir;	
 	char hostname[HOSTNAME_LEN];
 	connection_t c;
 	int fd;
 	
-	if( !dir )
+	if( !wdir )
 	{
-		pw = getpwuid( getuid() );
-		dir = pw->pw_dir;
+		return;
 	}
+	
+	dir = wcs2str( wdir );
+
+	free( wdir );
 	
 	gethostname( hostname, HOSTNAME_LEN );
 	
@@ -413,6 +500,9 @@ static void load_or_save( int save)
 	strcat( name, "/" );
 	strcat( name, FILE );
 	strcat( name, hostname );
+
+	free( dir );
+
 	
 	debug( 4, L"Open file for %s: '%s'", 
 		   save?"saving":"loading", 
@@ -485,6 +575,8 @@ int main( int argc, char ** argv )
 	int update_count=0;
 	
 	fd_set read_fd, write_fd;
+
+	halloc_util_init();
 	
 	program_name=L"fishd";
 	wsetlocale( LC_ALL, L"" );	
@@ -685,10 +777,10 @@ int main( int argc, char ** argv )
 			debug( 0, L"No more clients. Quitting" );
 			save();			
 			env_universal_common_destroy();
-			exit(0);
-			c=c->next;
+			break;
 		}		
 
 	}
+	halloc_util_destroy();
 }
 

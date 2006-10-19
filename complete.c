@@ -45,6 +45,7 @@
 #include "halloc.h"
 #include "halloc_util.h"
 #include "wutil.h"
+#include "path.h"
 
 
 /*
@@ -407,7 +408,7 @@ void complete_add( const wchar_t *cmd,
 	complete_entry_opt *opt;
 
 	CHECK( cmd, );
-	
+
 	complete_init();
 
 	c = complete_find_exact_entry( cmd, cmd_type );
@@ -581,7 +582,7 @@ static void parse_cmd_string( void *context,
     wchar_t *cmd, *path;
 
 	/* Get the path of the command */
-	path = parser_get_filename( context, str );
+	path = path_get_path( context, str );
 	if( path == 0 )
 	{
 		/**

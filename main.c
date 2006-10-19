@@ -58,9 +58,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "exec.h"
 #include "event.h"
 #include "output.h"
-
+#include "halloc.h"
 #include "halloc_util.h"
 #include "history.h"
+#include "path.h"
 
 /**
    The string describing the single-character options accepted by the main fish binary
@@ -75,23 +76,42 @@ static int read_init()
 	char cwd[4096];
 	wchar_t *wcwd;
 
+	wchar_t *config_dir;
+	wchar_t *config_dir_escaped;
+	void *context;
+	string_buffer_t *eval_buff;
+	
 	if( !getcwd( cwd, 4096 ) )
 	{
 		wperror( L"getcwd" );		
 		return 0;
 	}
 
-	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; and builtin . fish 2>/dev/null", 0, TOP );
-	eval( L"builtin cd " SYSCONFDIR L" 2>/dev/null; and builtin . fish 2>/dev/null", 0, TOP );
-	eval( L"builtin cd 2>/dev/null; and builtin . .fish 2>/dev/null", 0, TOP );
-
+	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; and builtin . config.fish 2>/dev/null", 0, TOP );
+	eval( L"builtin cd " SYSCONFDIR L"/fish 2>/dev/null; and builtin . config.fish 2>/dev/null", 0, TOP );
+	
+	/*
+	  We need to get the configuration directory before we can source the user configuration file
+	*/
+	context = halloc( 0, 0 );
+	eval_buff = sb_halloc( context );
+	config_dir = path_get_config( context );
+	config_dir_escaped = escape( config_dir, 1 );
+	sb_printf( eval_buff, L"builtin cd %ls 2>/dev/null; and builtin . config.fish 2>/dev/null", config_dir_escaped );
+	eval( (wchar_t *)eval_buff->buff, 0, TOP );
+	
+	halloc_free( context );
+	free( config_dir_escaped );
+	
 	if( chdir( cwd ) == -1 )
 	{
 		/*
-		  If we can't change back to previos directory, we'll stay in
+		  If we can't change back to previos directory, we go to
 		  ~. Should be a sane default behavior.
 		*/
+		eval( L"builtin cd", 0, TOP );
 	}	
+	
 	wcwd = str2wcs( cwd );
 	if( wcwd )
 	{
@@ -280,6 +300,7 @@ int main( int argc, char **argv )
 	env_init();
 	reader_init();
 	history_init();
+
 
 	if( read_init() )
 	{

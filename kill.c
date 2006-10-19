@@ -29,8 +29,8 @@
 #include "common.h"
 #include "env.h"
 #include "exec.h"
-#include "parser.h"
 #include "halloc.h"
+#include "path.h"
 
 /**
    Maximum entries in killring
@@ -50,7 +50,7 @@ static wchar_t *cut_buffer=0;
 static int has_xsel()
 {
 	void *context = halloc(0, 0);
-	wchar_t *path = parser_get_filename( context, L"xsel" );
+	wchar_t *path = path_get_path( context, L"xsel" );
 	int res = !!path;
 	halloc_free( context );
 	return res;

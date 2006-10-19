@@ -1557,3 +1557,42 @@ void tokenize_variable_array( const wchar_t *val, array_list_t *out )
 }
 
 
+int create_directory( wchar_t *d )
+{
+	int ok = 0;
+	struct stat buf;
+	int stat_res = 0;
+	
+	while( (stat_res = wstat(d, &buf ) ) != 0 )
+	{
+		if( errno != EAGAIN )
+			break;
+	}
+	
+	if( stat_res == 0 )
+	{
+		if( S_ISDIR( buf.st_mode ) )
+		{
+			ok = 1;
+		}
+	}
+	else
+	{
+		if( errno == ENOENT )
+		{
+			wchar_t *dir = wcsdup( d );
+			dir = wdirname( dir );
+			if( !create_directory( dir ) )
+			{
+				if( !wmkdir( d, 0700 ) )
+				{
+					ok = 1;
+				}
+			}
+			free(dir);
+		}
+	}
+	
+	return ok?0:-1;
+}
+

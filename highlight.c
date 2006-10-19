@@ -33,6 +33,7 @@
 #include "halloc.h"
 #include "halloc_util.h"
 #include "wildcard.h"
+#include "path.h"
 
 /**
    Number of elements in the highlight_var array
@@ -588,7 +589,7 @@ void highlight_shell( wchar_t * buff,
 												   EXPAND_SKIP_CMDSUBST );
 						if( dir )
 						{
-							if( !parser_cdpath_get( context, dir ) )
+							if( !path_get_cdpath( context, dir ) )
 							{
 								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
 							}
@@ -671,13 +672,13 @@ void highlight_shell( wchar_t * buff,
 							/*
 							  Check if this is a regular command
 							*/
-							is_cmd |= !!(tmp=parser_get_filename( context, cmd ));
+							is_cmd |= !!(tmp=path_get_path( context, cmd ));
 							
 							/* 
 							   Could not find the command. Maybe it is
 							   a path for a implicit cd command.
 							*/
-							is_cmd |= !!(tmp=parser_cdpath_get( context, cmd ));
+							is_cmd |= !!(tmp=path_get_cdpath( context, cmd ));
 														
 							if( is_cmd )
 							{								

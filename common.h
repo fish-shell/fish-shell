@@ -358,5 +358,12 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff );
 void tokenize_variable_array( const wchar_t *val, array_list_t *out );
 
 
+/**
+   Make sure the specified direcotry exists. If no, try to create it.
+
+   \return 0 if the directory exists, -1 otherwise.
+*/
+int create_directory( wchar_t *d );
+
 #endif
 

@@ -133,14 +133,14 @@ fi
 %attr(0755,root,root) %_bindir/count
 
 # Configuration files
-%config %_sysconfdir/fish
-%config %_sysconfdir/fish_inputrc
-%dir %_sysconfdir/fish.d
-%config %_sysconfdir/fish.d/fish_*.fish
+%config %_sysconfdir/fish/config.fish
+%config %_sysconfdir/fish/fish_inputrc
+%dir %_sysconfdir/fish
 
 # Non-configuration initialization files
 %dir %_datadir/fish
-%_datadir/fish/fish
+%_datadir/fish/config.fish
+%_datadir/fish/config_interactive.fish
 
 # Program specific tab-completions
 %dir %_datadir/fish/completions
@@ -155,6 +155,9 @@ fi
 
 
 %changelog
+* Sat Oct 14 2006 Axel Liljencrantz<axel@liljencrantz.se> 1.22.0-0
+- Update names of various configuration files
+
 * Fri Aug 4 2006 Axel Liljencrantz<axel@liljencrantz.se> 1.21.10-4
 - Add better translation finding code from fedora spec to main spec. Thank you to Michael Schwendt.
 - Add missing dependency libXext-devel.

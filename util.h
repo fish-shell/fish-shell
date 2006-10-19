@@ -307,7 +307,9 @@ int hash_str_cmp( void *a,
 				  void *b );
 
 /**
-   Hash function suitable for wide character strings. 
+   Hash function suitable for wide character strings. Uses a version
+   of the sha cryptographic function which is simplified in order to
+   returns a 32-bit number.
 */
 int hash_wcs_func( void *data );
 

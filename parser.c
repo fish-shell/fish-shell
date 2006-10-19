@@ -37,11 +37,11 @@ The fish parser. Contains functions for parsing code.
 #include "sanity.h"
 #include "env_universal.h"
 #include "event.h"
-
 #include "intern.h"
 #include "parse_util.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "path.h"
 
 /**
    Maximum number of block levels in code. This is not the same as
@@ -174,16 +174,9 @@ The fish parser. Contains functions for parsing code.
 #define UNEXPECTED_TOKEN_ERR_MSG _( L"Unexpected token of type '%ls'")
 
 /**
-   Unexpected error in parser_get_filename()
-*/
-#define MISSING_COMMAND_ERR_MSG _( L"Error while searching for command '%ls'" )
-
-
-/**
    While block description
-*/
+*/ 
 #define WHILE_BLOCK N_( L"'while' block" )
-
 
 /**
    For block description
@@ -652,87 +645,6 @@ static const wchar_t *parser_find_end( const wchar_t * buff )
 
 }
 
-wchar_t *parser_cdpath_get( void *context, wchar_t *dir )
-{
-	wchar_t *res = 0;
-
-	if( !dir )
-		return 0;
-
-
-	if( dir[0] == L'/'|| (wcsncmp( dir, L"./", 2 )==0) )
-	{
-		struct stat buf;
-		if( wstat( dir, &buf ) == 0 )
-		{
-			if( S_ISDIR(buf.st_mode) )
-			{
-				res = halloc_wcsdup( context, dir );
-			}
-		}
-	}
-	else
-	{
-		wchar_t *path;
-		wchar_t *path_cpy;
-		wchar_t *nxt_path;
-		wchar_t *state;
-		wchar_t *whole_path;
-
-		path = env_get(L"CDPATH");
-
-		if( !path || !wcslen(path) )
-		{
-			path = L".";
-		}
-
-		nxt_path = path;
-		path_cpy = wcsdup( path );
-
-		if( !path_cpy )
-		{
-			DIE_MEM();
-		}
-
-		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-			 nxt_path != 0;
-			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
-		{
-			wchar_t *expanded_path = expand_tilde( wcsdup(nxt_path) );
-
-//			debug( 2, L"woot %ls\n", expanded_path );
-
-			int path_len = wcslen( expanded_path );
-			if( path_len == 0 )
-			{
-				free(expanded_path );
-				continue;
-			}
-
-			whole_path =
-				wcsdupcat2( expanded_path,
-							( expanded_path[path_len-1] != L'/' )?L"/":L"",
-							dir, (void *)0 );
-
-			free(expanded_path );
-
-			struct stat buf;
-			if( wstat( whole_path, &buf ) == 0 )
-			{
-				if( S_ISDIR(buf.st_mode) )
-				{
-					res = whole_path;
-					halloc_register( context, whole_path );					
-					break;
-				}
-			}
-			free( whole_path );
-		}
-		free( path_cpy );
-	}
-	return res;
-}
-
 
 void parser_forbid_function( wchar_t *function )
 {
@@ -769,111 +681,6 @@ void error( int ec, int p, const wchar_t *str, ... )
 	
 	va_end( va );
 
-}
-
-wchar_t *parser_get_filename( void *context, const wchar_t *cmd )
-{
-	wchar_t *path;
-
-	CHECK( cmd, 0 );
-		
-	debug( 3, L"parser_get_filename( '%ls' )", cmd );
-
-	if(wcschr( cmd, L'/' ) != 0 )
-	{
-		if( waccess( cmd, X_OK )==0 )
-		{
-			struct stat buff;
-			wstat( cmd, &buff );
-			if( S_ISREG(buff.st_mode) )
-				return halloc_wcsdup( context, cmd );
-			else
-				return 0;
-		}
-	}
-	else
-	{
-		path = env_get(L"PATH");
-		if( path == 0 )
-		{
-			if( contains_str( PREFIX L"/bin", L"/bin", L"/usr/bin", (void *)0 ) )
-			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
-			}
-			else
-			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
-			}
-		}
-		
-		/*
-		  Allocate string long enough to hold the whole command
-		*/
-		wchar_t *new_cmd = halloc( context, sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
-		/*
-		  We tokenize a copy of the path, since strtok modifies
-		  its arguments
-		*/
-		wchar_t *path_cpy = wcsdup( path );
-		wchar_t *nxt_path = path;
-		wchar_t *state;
-			
-		if( (new_cmd==0) || (path_cpy==0) )
-		{
-			DIE_MEM();
-		}
-
-		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-			 nxt_path != 0;
-			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
-		{
-			int path_len = wcslen( nxt_path );
-			wcscpy( new_cmd, nxt_path );
-			if( new_cmd[path_len-1] != L'/' )
-			{
-				new_cmd[path_len++]=L'/';
-			}
-			wcscpy( &new_cmd[path_len], cmd );
-			if( waccess( new_cmd, X_OK )==0 )
-			{
-				struct stat buff;
-				if( wstat( new_cmd, &buff )==-1 )
-				{
-					if( errno != EACCES )
-					{
-						wperror( L"stat" );
-					}
-					continue;
-				}
-				if( S_ISREG(buff.st_mode) )
-				{
-					free( path_cpy );
-					return new_cmd;
-				}
-			}
-			else
-			{
-				switch( errno )
-				{
-					case ENOENT:
-					case ENAMETOOLONG:
-					case EACCES:
-					case ENOTDIR:
-						break;
-					default:
-					{
-						debug( 1,
-							   MISSING_COMMAND_ERR_MSG,
-							   new_cmd );
-						wperror( L"access" );
-					}
-				}
-			}
-		}
-		free( path_cpy );
-
-	}
-	return 0;
 }
 
 void parser_init()
@@ -2141,7 +1948,7 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
-				p->actual_cmd = parser_get_filename( j, (wchar_t *)al_get( args, 0 ) );
+				p->actual_cmd = path_get_path( j, (wchar_t *)al_get( args, 0 ) );
 				
 				/*
 				  Check if the specified command exists
@@ -2155,7 +1962,7 @@ static int parse_job( process_t *p,
 					  implicit command.
 					*/
 					wchar_t *pp =
-						parser_cdpath_get( j, (wchar_t *)al_get( args, 0 ) );
+						path_get_cdpath( j, (wchar_t *)al_get( args, 0 ) );
 					if( pp )
 					{
 						wchar_t *tmp;

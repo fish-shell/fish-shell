@@ -987,7 +987,7 @@ wchar_t *env_get( const wchar_t *key )
 			sb_append( &dyn_var, current );
 		}
 		
-		for( i=add_current; i<8; i++ )
+		for( i=add_current;; i++ )
 		{
 			wchar_t *next = history_get( i-add_current );
 			if( !next )

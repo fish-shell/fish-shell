@@ -452,6 +452,10 @@ this list is executed, and substituted by the output. If the output is
 more than one line long, each line will be expanded to a new
 parameter.
 
+A command substitution will not change the value of the <a
+href='#variables-status'>status</a> variable outside of the command
+substitution.
+
 Example:
 
 The command <code>echo (basename image.jpg .jpg).png</code> will
@@ -2564,13 +2568,13 @@ executing the following command (assuming you installed fish in
 
 Quick answer:
 
-Add 
+Run the following command in fish:
 
 <pre>
-function fish_title;end
+echo function fish_title;end ~/.config/fish/config.fish
 </pre>
 
-To your ~/.fish file. Problem solved.
+Problem solved!
 
 The long answer:
 
@@ -2584,7 +2588,8 @@ has no way of knowing what the underlying terminal type is. For now,
 the only way to fix this is to unset the titlebar message, as
 suggested above.
 
-Note that fish has a default titlebar message, so simply unsetting the
+Note that fish has a default titlebar message, which will be used if
+the fish_title function is undefined. So simply unsetting the
 fish_title function will not work.
 
 

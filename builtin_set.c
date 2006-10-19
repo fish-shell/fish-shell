@@ -358,7 +358,7 @@ static void print_variables(int include_values, int esc, int scope)
 	for( i = 0; i < al_get_count(&names); i++ )
 	{
 		wchar_t *key = (wchar_t *)al_get( &names, i );
-		wchar_t *e_key = esc ? escape(key, 1) : wcsdup(key);
+		wchar_t *e_key = esc ? escape(key, 0) : wcsdup(key);
 
 		sb_append(sb_out, e_key);
 		

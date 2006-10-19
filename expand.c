@@ -655,8 +655,8 @@ static int expand_pid( wchar_t *in,
 			free( in );
 		else
 		{
-			*in = L'%';
-			al_push( out, in );
+			free(in);
+			return 0;
 		}
 	}
 	else

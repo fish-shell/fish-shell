@@ -492,7 +492,8 @@ static void clear_hash_value( void *key, void *data, void *aux )
 	{
 		wchar_t *name = (wchar_t *)key;
 		void (*handler)(const wchar_t *)= (void (*)(const wchar_t *))aux;
-		handler( name );
+		if( handler )
+			handler( name );
 	}
 	
 	free( (void *)data );
@@ -717,7 +718,8 @@ int parse_util_load( const wchar_t *cmd,
 		if( hash_get( &loaded->is_loading, cmd ) )
 		{
 			debug( 0, 
-				   _(L"Could not autoload item '%ls', it is already being autoloaded. This is a circular dependency in the autoloading scripts, please remove it."), 
+				   _( L"Could not autoload item '%ls', it is already being autoloaded. " 
+					  L"This is a circular dependency in the autoloading scripts, please remove it."), 
 				   cmd );
 			return 1;
 		}

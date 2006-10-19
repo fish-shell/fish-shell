@@ -102,12 +102,12 @@ int parse_util_lineno( const wchar_t *str, int len );
 
    \param cmd the filename to search for. The suffix '.fish' is always added to this name
    \param path_var_name the environment variable giving  the search path
-   \param unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
+   \param on_unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
    \param reload wheter to recheck file timestamps on already loaded files
 */
 int parse_util_load( const wchar_t *cmd,
 					 const wchar_t *path_var_name,
-					 void (*unload)(const wchar_t *cmd),
+					 void (*on_unload)(const wchar_t *cmd),
 					 int reload );
 
 /**
@@ -116,11 +116,10 @@ int parse_util_load( const wchar_t *cmd,
    reset.
 
    \param path_var_name the environment variable giving  the search path
-   \param on_load the callback function to use when a file is reloaded
-   \param on_load the callback function to call if the file has been previously loaded
+   \param on_unload a callback function which will be called before (re)loading a file, may be used to unload the previous file.
 */
 void parse_util_load_reset( const wchar_t *path_var_name,
-							void (*on_load)(const wchar_t *cmd) );
+							void (*on_unload)(const wchar_t *cmd) );
 
 /**
    Tell the autoloader that the specified file, in the specified path,
@@ -128,11 +127,12 @@ void parse_util_load_reset( const wchar_t *path_var_name,
 
    \param cmd the filename to search for. The suffix '.fish' is always added to this name
    \param path_var_name the environment variable giving  the search path
+   \param on_unload a callback function which will be called before (re)loading a file, may be used to unload the previous file.
    \return non-zero if the file was removed, zero if the file had not yet been loaded
 */
 int parse_util_unload( const wchar_t *cmd,
 					   const wchar_t *path_var_name,
-					   void (*on_load)(const wchar_t *cmd) );
+					   void (*on_unload)(const wchar_t *cmd) );
 
 /**
    Set the argv environment variable to the specified null-terminated

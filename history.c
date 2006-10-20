@@ -11,7 +11,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <string.h>
+#include <time.h>
+#include <assert.h>
 
 #include "fallback.h"
 #include "util.h"
@@ -19,121 +23,55 @@
 #include "wutil.h"
 #include "history.h"
 #include "common.h"
+#include "halloc.h"
+#include "halloc_util.h"
+#include "intern.h"
+#include "path.h"
+
+/*
 #include "reader.h"
 #include "env.h"
 #include "sanity.h"
 #include "signal.h"
-#include "halloc.h"
-#include "halloc_util.h"
-#include "path.h"
-
-/*
-  The history is implemented using a linked list. Searches are done
-  using linear search. 
 */
 
+#define WIDE_MODE 0
+#define NARROW_MODE 1
 
 /**
-   A struct describing the state of the interactive history
-   list. Multiple states can be created. Use \c history_set_mode() to
-   change between history contexts.
+   Interval in seconds between automatic history save
 */
-typedef struct
+#define SAVE_INTERVAL (5*60)
+
+/**
+   Number of new history entries to add before automatic history save
+*/
+#define SAVE_COUNT 5
+
+typedef struct 
 {
-	/**
-	   Number of entries
-	*/
-	int count;
-
-	/**
-	   Last history item
-	*/
-	ll_node_t *last;
-
-	/**
-	   The last item loaded from file
-	*/
-	ll_node_t *last_loaded;
-
-	/**
-	   Set to one if the file containing the saved history has been loaded
-	*/
-	int is_loaded;
+	const wchar_t *name;
+	array_list_t item;
+	int pos;
+	int has_loaded;
+	char *mmap_start;
+	size_t mmap_length;
+	array_list_t used;	
+	time_t save_timestamp;
+	int new_count;
+	void *item_context;
 }
-	history_data_t;
+	history_mode_t;
 
-
-static ll_node_t /** Last item in history */ *history_last=0, /** Current search position*/ *history_current =0;
-
-/**
-   We only try to save the part of the history that was written in
-   this session. This pointer keeps track of where the cutoff is.
-
-   The reason for wanting to do this is so that when two concurrent
-   fish sessions have exited, the latter one to exit won't push the
-   added history items of the prior session to the top of the history.
-*/
-static ll_node_t *last_loaded=0;
-
-/**
-  past_end is a kludge. It is set when the current history item is
-  unset, i.e. a new entry is being typed.
-*/
-static int past_end =1;
-
-/**
-   Items in history
-*/
-static int history_count=0;
-
-/**
-   The name of the current history list. The name is used to switch
-   between history lists for different commands as sell as for
-   deciding the name of the file to save the history in.
-*/
-static wchar_t *mode_name;
-
-/**
-   Hash table for storing all the history lists.
-*/
-static hash_table_t history_table;
-
-/**
-   Flag, set to 1 once the history file has been loaded
-*/
-static int is_loaded=0;
-
-static ll_node_t *unused = 0;
-
-/**
-   Create a new ll_node_t struct. The struct is allocated using
-   halloc, and will be automatically free'd on shutdown, but not
-   before.
-*/
-static ll_node_t *history_create_node()
+typedef struct 
 {
-	ll_node_t *res;
-	
-	if( !unused )
-	{
-		return halloc( global_context, sizeof( ll_node_t ) );
-	}
-
-	res = unused;
-	unused = unused->next;
-	return res;
-	
+	wchar_t *data;
+	time_t timestamp;
 }
+	item_t;
 
-/**
-   Return a ll_node_t struct to the pool of unused such structs, so
-   that it can later be reused by a call to history_create_node().
-*/
-static void history_free_node( ll_node_t *n )
-{
-	n->next = unused;
-	unused = n;
-}
+static hash_table_t *mode_table=0;
+static history_mode_t *current_mode=0;
 
 /**
    Add backslashes to all newlines, so that the returning string is
@@ -226,503 +164,174 @@ static wchar_t *history_unescape_newlines( wchar_t *in )
 		{
 			sb_append_char( out, *in );
 		}
-		
 	}
 	return (wchar_t *)out->buff;
 }
 
-static wchar_t *history_file_name( void *context )
-{
-	wchar_t *path = path_get_config( context );
-	wchar_t *res;
+static int item_is_new( history_mode_t *m, void *d )
+{	
+	char *begin = (char *)d;
+
+	if( !m->has_loaded || !m->mmap_start || (m->mmap_start == MAP_FAILED ) )
+	{
+		return 1;		
+	}
 	
-	if( !path )
-		return 0;
-	
-	res = wcsdupcat2( path, L"/", mode_name, L"_history", (void *)0 );
-	halloc_register_function( context, &free, res );
-	return res;
+	if( (begin < m->mmap_start) || (begin > (m->mmap_start+m->mmap_length) ) )
+	{
+		return 1;
+	}
+	return 0;
 }
 
-/**
-   Read a complete histor entry from the specified FILE.
-*/
-static wchar_t *history_load_entry( FILE *in )
-{
-	int was_backslash = 0;	
-	static string_buffer_t *out = 0;
-	int first_char = 1;	
-	int ignore = 0;
-	
-	if( !out )
+static item_t *item_get( history_mode_t *m, void *d )
+{	
+	char *begin = (char *)d;
+
+	if( item_is_new( m, d ) )
 	{
-		out = sb_halloc( global_context );
+		return (item_t *)d;
+	}
+	else
+	{
+		
+		char *end = m->mmap_start + m->mmap_length;
+		char *pos=begin;
+		
+		int was_backslash = 0;	
+		static string_buffer_t *out = 0;
+		static item_t narrow_item;
+		int first_char = 1;	
+		int timestamp_mode = 0;
+
+		narrow_item.timestamp = 0;
+							
 		if( !out )
 		{
-			DIE_MEM();
-		}
-	}
-	else
-	{
-		sb_clear( out );
-	}
-	
-	while( 1 )
-	{
-		wint_t c;
-		
-		c = getwc( in );
-	
-	
-		if( errno == EILSEQ )
-		{
-			getc( in );
-			continue;
-		}
-
-		if( c == WEOF )
-			break;
-
-
-		if( c == L'\n' )
-		{
-			if( ignore )
+			out = sb_halloc( global_context );
+			if( !out )
 			{
-				ignore = 0;
+				DIE_MEM();
+			}
+		}
+		else
+		{
+			sb_clear( out );
+		}
+		
+		while( 1 )
+		{
+			wchar_t c;
+			mbstate_t state;
+			size_t res;
+			
+			memset( &state, 0, sizeof(state) );
+			
+			res = mbrtowc( &c, pos, end-pos, &state );
+			
+			if( res == (size_t)-1 )
+			{
+				pos++;
 				continue;
 			}
-			if( !was_backslash )
+			else if( res == (size_t)-2 )
+			{
 				break;
-		}
-		
-		if( first_char )
-		{
-			if( c == L'#' ) 
-				ignore = 1;
-		}
-		
-		first_char = 0;
-		
-		if( !ignore )
-			sb_append_char( out, c );
-	
-		was_backslash = ( (c == L'\\') && !was_backslash);
-				
-	}
-
-	return (wchar_t *)out->buff;
-}
-
-
-/**
-   Load history from file
-*/
-static int history_load()
-{
-	wchar_t *fn;
-	wchar_t *buff=0;
-	FILE *in_stream;
-	hash_table_t used;
-	int res = 0;
-	void *context;
-	
-	if( !mode_name )
-	{
-		return -1;
-	}	
-
-	context = halloc( 0, 0 );
-
-	is_loaded = 1;
-		
-	signal_block();
-	hash_init2( &used, 
-				&hash_wcs_func,
-				&hash_wcs_cmp,
-				4096 );
-
-	fn = history_file_name( context );
-	if( fn )
-	{
-		
-	in_stream = wfopen( fn, "r" );
-	
-	if( in_stream != 0 )
-	{
-		while( !feof( in_stream ) )
-		{
-			buff = history_unescape_newlines(history_load_entry( in_stream ));
-			/*
-			  We do not call history_add here, since that would make
-			  history_load() take quadratic time, and may be
-			  unacceptably on slow systems with a long history file.
-
-			  Use a hashtable to check for duplicates instead.
-			*/
-			if( wcslen(buff) && !hash_get( &used,
-										   buff ) )
+			}
+			else if( res == (size_t)0 )
 			{
-				history_count++;		
-				
-				history_current = history_create_node();
-				
-				history_current->data=halloc_wcsdup( global_context, buff );
-
-				hash_put( &used,
-						  history_current->data, 
-						  L"" );
-				
-				history_current->next=0;
-				history_current->prev = history_last;
-				if( history_last != 0 )
+				pos++;
+				continue;
+			}
+			pos += res;
+			
+			if( c == L'\n' )
+			{
+				if( timestamp_mode )
 				{
-					history_last->next = history_current;
-				}
-				history_last = history_current;
-			}
-		}
-		
-		fclose( in_stream );
-	}
-	else
-	{
-		if( errno != ENOENT )
-		{
-			debug( 1, _(L"The following non-fatal error occurred while reading command history from \'%ls\':"), mode_name );
-			wperror( L"fopen" );
-			res = -1;
-			
-		}
-	}
-	
-
-	last_loaded = history_last;
-	}
-	
-	hash_destroy( &used );
-	signal_unblock();
-	halloc_free( context );
-	return res;
-	
-}
-
-void history_init()
-{
-	hash_init( &history_table,
-			   &hash_wcs_func,
-			   &hash_wcs_cmp );
-}
-
-/**
-   Make sure the current history list is in the history_table.
-*/
-static void history_to_hash()
-{
-	history_data_t *d;
-	
-	if( !mode_name )
-		return;
-	
-
-	d = (history_data_t *)hash_get( &history_table, 
-								  mode_name );
-	
-	if( !d )
-		d = malloc( sizeof(history_data_t));
-	d->last=history_last;
-	d->last_loaded=last_loaded;
-	d->count=history_count;
-	d->is_loaded = is_loaded;
-	
-	hash_put( &history_table, 
-			  mode_name,
-			  d );	
-	
-}
-
-
-void history_set_mode( wchar_t *name )
-{
-	history_data_t *curr;
-	
-	if( mode_name )
-	{		
-		/*
-		  Move the current history to the hashtable
-		*/
-		history_to_hash();		
-	}
-	
-	/*
-	  See if the new history already exists
-	*/
-	curr = (history_data_t *)hash_get( &history_table,
-									 name );
-	if( curr )
-	{
-		/*
-		  Yes. Restore it.
-		*/
-		mode_name = (wchar_t *)hash_get_key( &history_table,
-											 name );
-		history_current = history_last = curr->last;
-		last_loaded = curr->last_loaded;
-		history_count = curr->count;
-		is_loaded = curr->is_loaded;
-	}
-	else
-	{
-		/*
-		  Nope. Create a new history list.
-		*/
-		history_count=0;
-		history_last = history_current = last_loaded=0;
-		mode_name = wcsdup( name );
-		is_loaded = 0;
-	}
-	
-	past_end=1;
-	
-}
-
-/**
-   Print history node 
-*/
-static void history_save_node( ll_node_t *n, FILE *out )
-{
-	wchar_t *escaped;
-	if( n==0 )
-		return;
-	history_save_node( n->prev, out );
-
-	escaped = history_escape_newlines( (wchar_t *)(n->data) );
-	fwprintf(out, L"#\n%ls\n", escaped );
-}
-
-/**
-   Merge the process history with the history on file, write to
-   disc. The merging operation is done so that two concurrently
-   running shells wont erase each others history.
-*/
-static void history_save()
-{
-	wchar_t *fn;
-	FILE *out_stream;
-	/* First we save this sessions history in local variables */
-	ll_node_t *real_pos = history_last, *real_first = last_loaded;
-
-	if( !is_loaded )
-		return;
-	
-	if( !real_first )
-	{
-		real_first = history_current;
-		while( real_first->prev )
-			real_first = real_first->prev;
-	}
-
-	if( real_pos == real_first )
-		return;
-	
-	/* Then we load the history from file into the global pointers */
-	history_last=history_current=last_loaded=0;
-	history_count=0;
-	past_end=1;
-
-	if( !history_load() )
-	{
-		
-		if( real_pos != 0 )
-		{
-			/* 
-			   Rewind the session history to the first item which was
-			   added in this session
-			*/
-			while( (real_pos->prev != 0) && (real_pos->prev != real_first) )
-			{
-				real_pos = real_pos->prev;
-			}
-			
-			/* Free old history entries */
-			ll_node_t *kill_node_t = real_pos->prev;
-			while( kill_node_t != 0 )
-			{
-				ll_node_t *tmp = kill_node_t;
-				kill_node_t = kill_node_t->prev;
-				history_free_node( tmp );		
-			}	
-			
-			/* 
-			   Add all the history entries from this session to the global
-			   history, free the old version
-			*/
-			while( real_pos != 0 )
-			{
-				ll_node_t *next = real_pos->next;
-				history_add( (wchar_t *)real_pos->data );
-				
-				history_free_node( real_pos );
-				real_pos = next;
-			}
-		}
-		
-		/* Save the global history */
-		{
-			void *context = halloc( 0, 0 );
-			fn = history_file_name( context );
-			if( fn )
-			{
-				out_stream = wfopen( fn, "w" );
-				
-				if( out_stream )
-				{
-					history_save_node( history_last, out_stream );
-					if( fclose( out_stream ) )
+					wchar_t *time_string = (wchar_t *)out->buff;
+					while( *time_string && !iswdigit(*time_string))
+						time_string++;
+					errno=0;
+					
+					if( *time_string )
 					{
-						debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
-						wperror( L"fopen" );
-					}			
+						time_t tm = (time_t)wcstol( time_string, 0, 10 );
+					
+						if( tm && !errno )
+						{
+							narrow_item.timestamp = tm;
+						}
+
+					}					
+
+					sb_clear( out );
+					timestamp_mode = 0;
+					continue;
 				}
-				else
-				{
-					debug( 1, L"The following non-fatal error occurred while saving command history to \'%ls\':", fn );
-					wperror( L"fopen" );
-				}
+				if( !was_backslash )
+					break;
 			}
 			
-			halloc_free( context );
+			if( first_char )
+			{
+				if( c == L'#' ) 
+					timestamp_mode = 1;
+			}
+			
+			first_char = 0;
+			
+			sb_append_char( out, c );
+			
+			was_backslash = ( (c == L'\\') && !was_backslash);
+			
 		}
-	}
-	
-	
-}
-
-/**
-   Save the specified mode to file
-*/
-
-static void history_destroy_mode( void *name, void *link )
-{
-	mode_name = (wchar_t *)name;
-	history_data_t *d = (history_data_t *)link;
-	history_last = history_current = d->last;
-	last_loaded = d->last_loaded;
-	history_count = d->count;
-	past_end=1;
-	
-//	fwprintf( stderr, L"Destroy history mode \'%ls\'\n", mode_name );
-	
-	if( history_last )
-	{
-		history_save();	
-		history_current = history_last;
-		while( history_current != 0 )
-		{
-			ll_node_t *tmp = history_current;
-			history_current = history_current->prev;
-			history_free_node( tmp );		
-		}	
-	}
-	free( d );
-	free( mode_name );
-}
-
-void history_destroy()
-{
-	
-	/**
-	   Make sure current mode is in table
-	*/
-	history_to_hash();		
 		
-	/**
-	   Save all modes in table
-	*/
-	hash_foreach( &history_table, 
-				  &history_destroy_mode );
+		narrow_item.data = history_unescape_newlines((wchar_t *)out->buff);
+		return &narrow_item;
+	}
 
-	hash_destroy( &history_table );
 }
 
-
-
-/**
-   Internal search function
-*/
-static ll_node_t *history_find( ll_node_t *n, const wchar_t *s )
+static void item_write( FILE *f, history_mode_t *m, void *v )
 {
-	if( !is_loaded )
-	{
-		if( history_load() )
-		{
-			return 0;
-		}
-	}
-	
-
-	if( n == 0 )
-		return 0;
-	
-	if( wcscmp( s, (wchar_t *)n->data ) == 0 )
-	{
-		return n;		
-	}
-	else
-		return history_find( n->prev, s );
+	item_t *i = item_get( m, v );
+	fwprintf( f, L"# %d\n%ls\n", i->timestamp, history_escape_newlines( i->data ) );
 }
 
-
-void history_add( const wchar_t *str )
+static void history_destroy_mode( wchar_t *name, history_mode_t *m )
 {
-	ll_node_t *old_node;
-
-	if( !is_loaded )
-	{
-		if( history_load() )
-		{
-			return;
-		}
-	}
+	halloc_free( m->item_context );
 	
-
-	if( wcslen( str ) == 0 )
-		return;
+	if( m->mmap_start && (m->mmap_start != MAP_FAILED ))
+	{
+		munmap( m->mmap_start, m->mmap_length);
+	}	
 	
-	past_end=1;
+	halloc_free( m );
+}
 
-	old_node = history_find( history_last, str );
-
-	if( old_node == 0 )
-	{
-		history_count++;		
-		history_current = history_create_node();
-		history_current->data=halloc_wcsdup( global_context, str );
-	}
-	else
-	{
-		if( old_node == last_loaded )
-		{
-			last_loaded = last_loaded->prev;
-		}
+static history_mode_t *history_create_mode( const wchar_t *name )
+{	
+	history_mode_t *new_mode = halloc( 0, sizeof( history_mode_t ));
+	new_mode->name = intern(name);
+	al_init( &new_mode->item );
+	al_init( &new_mode->used );
 	
-		history_current = old_node;
-		if( old_node == history_last )
-		{
-			return;
-		}
+	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->item );
+	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->used );
 
-		if( old_node->prev != 0 )
-			old_node->prev->next = old_node->next;
-		if( old_node->next != 0 )
-			old_node->next->prev = old_node->prev;
-	}
-	history_current->next=0;
-	history_current->prev = history_last;
-	if( history_last != 0 )
-	{
-		history_last->next = history_current;
-	}
-	history_last = history_current;
+	new_mode->pos = 0;
+	new_mode->has_loaded = 0;
+	new_mode->mmap_start=0;
+	new_mode->mmap_length=0;
+	new_mode->save_timestamp=time(0);
+	new_mode->new_count = 0;
+	
+	new_mode->item_context = halloc( 0,0 );
+
+	return new_mode;
+	
 }
 
 /**
@@ -730,174 +339,465 @@ void history_add( const wchar_t *str )
 */
 static int history_test( const wchar_t *needle, const wchar_t *haystack )
 {
-
-/*
-	return wcsncmp( haystack, needle, wcslen(needle) )==0;
-*/
 	return !!wcsstr( haystack, needle );
 }
 
-const wchar_t *history_prev_match( const wchar_t *str )
+
+static wchar_t *history_filename( void *context, const wchar_t *name, const wchar_t *suffix )
 {
-	if( !is_loaded )
+	wchar_t *path;
+	wchar_t *res;	
+
+	if( !current_mode )
+		return 0;
+	
+	path = path_get_config( context );
+
+	if( !path )
+		return 0;
+	
+	res = wcsdupcat2( path, L"/", name, L"_history", suffix?suffix:(void *)0, (void *)0 );
+	halloc_register_function( context, &free, res );
+	return res;
+}
+
+static void history_populate_from_mmap( history_mode_t *m )
+{	
+	char *begin = m->mmap_start;
+	char *end = begin + m->mmap_length;
+	char *pos;
+	
+	array_list_t tmp;
+	int ignore_newline = 0;
+	int do_push = 1;
+	
+	al_init( &tmp );
+	al_push_all( &tmp, &m->item );
+	al_truncate( &m->item, 0 );
+	
+	for( pos = begin; pos <end; pos++ )
 	{
-		if( history_load() )
+		
+		if( do_push )
 		{
-			return 0;
+			ignore_newline = *pos == '#';
+			al_push( &m->item, pos );
+//			debug( 0, L"Push item at offset %d", pos-begin );				
+			do_push = 0;
 		}
-	}
+		
+		switch( *pos )
+		{
+			case '\\':
+			{
+				pos++;
+				break;
+			}
+			
+			case '\n':
+			{
+				if( ignore_newline )
+				{
+					ignore_newline = 0;
+				}
+				else
+				{
+					do_push = 1;
+				}				
+				break;
+			}
+		}
+	}	
 	
-
-	if( history_current == 0 )
-		return str;
+	m->pos += al_get_count( &m->item );
+	al_push_all(  &m->item, &tmp );
+	al_destroy( &tmp );
+//	debug( 0, L"History has %d items", al_get_count( &m->item ));				
 	
-	if( history_current->prev == 0 )
-	{
-		return str;
-	}
-	if( past_end )
-		past_end = 0;
-	else
-		history_current = history_current->prev;
-
-	if( history_test( str, history_current->data) )
-		return (wchar_t *)history_current->data;
-	else
-		return history_prev_match( str );
 }
 
 
-const wchar_t *history_next_match( const wchar_t *str)
+static void history_load( history_mode_t *m )
 {
-	if( !is_loaded )
+	int fd;
+	int ok=0;
+	
+	void *context;
+	wchar_t *filename;
+
+	if( !m )
+		return;	
+	
+	context = halloc( 0, 0 );
+	filename = history_filename( context, m->name, 0 );
+	
+	if( filename )
 	{
-		if( history_load() )
+		if( ( fd = wopen( filename, O_RDONLY ) ) > 0 )
 		{
-			return 0;
+			off_t len = lseek( fd, 0, SEEK_END );
+			if( len != (off_t)-1)
+			{
+				m->mmap_length = (size_t)len;
+				if( lseek( fd, 0, SEEK_SET ) == 0 )
+				{
+					if( (m->mmap_start = mmap( 0, m->mmap_length, PROT_READ, MAP_SHARED, fd, 0 )) != MAP_FAILED )
+					{
+						ok = 1;
+//						debug( 0, L"mmap ok" );
+						history_populate_from_mmap( m );
+					}
+				}
+			}
+			close( fd );
 		}
 	}
 	
-
-	if( history_current == 0 )
-		return str;
-
-	if( history_current->next == 0 )
+	if( !ok )
 	{
-		past_end = 1;
-		return str;
+//		debug( 0, L"Could not load history file" );
 	}
-	history_current = history_current->next;
 	
-	if( history_test( str, history_current->data ) )
-		return (wchar_t *)history_current->data;
-	else
-		return history_next_match( str );	
+	m->has_loaded=1;
+
+	halloc_free( context );
+}
+
+static int hash_item_func( void *v )
+{
+	item_t *i = (item_t *)v;
+	return i->timestamp ^ hash_wcs_func( i->data );
+}
+
+static int hash_item_cmp( void *v1, void *v2 )
+{
+	item_t *i1 = (item_t *)v1;
+	item_t *i2 = (item_t *)v2;
+	return (i1->timestamp == i2->timestamp) && (wcscmp( i1->data, i2->data )==0);	
+}
+
+static void history_save_mode( void *n, history_mode_t *m )
+{
+	FILE *out;
+	void *context;
+	history_mode_t *on_disk;
+	int i;
+	int has_new;
+	wchar_t *tmp_name;
+
+	/*
+	  First check if there are any new entries to save. If not, thenm we can just return
+	*/
+	for( i=0; i<al_get_count(&m->item); i++ )
+	{
+		void *ptr = al_get( &m->item, i );
+		has_new = item_is_new( m, ptr );
+		if( has_new )
+		{
+			break;
+		}
+	}
+	
+	if( !has_new )
+	{
+		return;
+	}
+	
+	/*
+	  Set up on_disk variable to describe the current contents of the history file
+	*/
+	on_disk = history_create_mode( m->name );
+	history_load( on_disk );
+	
+	context = halloc( 0,0 );
+
+	tmp_name = history_filename( context, m->name, L".tmp" );
+
+	if( tmp_name )
+	{
+		tmp_name = wcsdup(tmp_name );
+		
+		if( (out=wfopen( history_filename( context, m->name, L".tmp" ), "w" ) ) )
+		{
+			hash_table_t mine;
+			
+			hash_init( &mine, &hash_item_func, &hash_item_cmp );
+			
+			for( i=0; i<al_get_count(&m->item); i++ )
+			{
+			void *ptr = al_get( &m->item, i );
+			int is_new = item_is_new( m, ptr );
+			if( is_new )
+			{
+				hash_put( &mine, item_get( m, ptr ), L"" );
+			}
+		}
+
+		/*
+		  Re-save the old history
+		*/
+		for( i=0; i<al_get_count(&on_disk->item); i++ )
+		{
+			void *ptr = al_get( &on_disk->item, i );
+			item_t *i = item_get( on_disk, ptr );
+//			assert( i );
+			if( !hash_get( &mine, i ) )
+				item_write( out, on_disk, ptr );
+		}
+
+		hash_destroy( &mine );
+		
+		/*
+		  Add our own items
+		*/		
+		for( i=0; i<al_get_count(&m->item); i++ )
+		{
+			void *ptr = al_get( &m->item, i );
+			int is_new = item_is_new( m, ptr );
+			if( is_new )
+				item_write( out, m, ptr );
+		}
+				
+		if( fclose( out ) )
+		{
+			
+		}
+		else
+		{
+			wrename( tmp_name, history_filename( context, m->name, 0 ) );
+		}
+		}
+		free( tmp_name );
+	}	
+
+	history_destroy_mode( 0, on_disk);
+	
+	if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
+		munmap( m->mmap_start, m->mmap_length );
+	
+	halloc_free( m->item_context );
+	m->item_context = halloc( 0, 0 );
+	al_truncate( &m->item, 0 );
+	al_truncate( &m->used, 0 );
+	m->pos = 0;
+	m->has_loaded = 0;
+	m->mmap_start=0;
+	m->mmap_length=0;
+	m->save_timestamp=time(0);
+	m->new_count = 0;
+
+	halloc_free( context );
+}
+
+
+void history_add( const wchar_t *str )
+{
+	item_t *i;
+	
+	if( !current_mode )
+		return;
+	
+	i = halloc( global_context, sizeof(item_t));
+	i->data = (wchar_t *)halloc_wcsdup( current_mode->item_context, str );
+	i->timestamp = time(0);
+	
+	al_push( &current_mode->item, i );
+	al_truncate( &current_mode->used, 0 );
+	current_mode->pos = al_get_count( &current_mode->item );
+
+	current_mode->new_count++;
+	
+	if( (time(0) > current_mode->save_timestamp+SAVE_INTERVAL) || (current_mode->new_count >= SAVE_COUNT) )
+	{
+		history_save_mode( 0, current_mode );
+	}
+	
+}
+
+/**
+   Check if the specified string has already been used a s a search match
+*/
+static int history_is_used( const wchar_t  *str )
+{
+	int i;
+	int res =0;
+	item_t *it = 0;
+
+	for( i=0; i<al_get_count( &current_mode->used); i++ )
+	{
+		long idx = al_get_long( &current_mode->used, i );
+		it = item_get( current_mode, al_get( &current_mode->item, (int)idx ) );
+		if( wcscmp( it->data, str ) == 0 )
+		{
+			res = 1;
+			break;			
+		}
+		
+	}
+	return res;
+}
+
+const wchar_t *history_prev_match( const wchar_t *needle )
+{
+	if( current_mode )
+	{
+		if( current_mode->pos > 0 )
+		{
+			for( current_mode->pos--; current_mode->pos>=0; current_mode->pos-- )
+			{
+				item_t *i = item_get( current_mode, al_get( &current_mode->item, current_mode->pos ) );
+				wchar_t *haystack = (wchar_t *)i->data;
+				
+				if( history_test( needle, haystack ) )
+				{
+					int is_used;
+					
+					/*
+					  This is ugly.  Whenever we call item_get(),
+					  there is a chance that the return value of any
+					  previous call to item_get will become
+					  invalid. The history_is_used function uses the
+					  istem_get() function. Therefore, we must create
+					  a copy of the haystack string, and if the string
+					  is unused, we must call item_get anew.
+					*/
+
+					haystack = wcsdup(haystack );
+					
+					is_used = history_is_used( haystack );
+					
+					free( haystack );
+					
+					if( !is_used )
+					{
+						i = item_get( current_mode, al_get( &current_mode->item, current_mode->pos ) );
+						al_push_long( &current_mode->used, current_mode->pos );
+						return i->data;
+					}
+				}
+			}
+		}
+		
+		if( !current_mode->has_loaded )
+		{
+			history_load( current_mode );
+			return history_prev_match( needle );
+		}
+		else
+		{
+			current_mode->pos=-1;
+			if( al_peek_long( &current_mode->used ) != -1 )
+				al_push_long( &current_mode->used, -1 );
+		}
+		
+	}
+	
+	return needle;
+}
+
+
+wchar_t *history_get( int idx )
+{
+	int len;
+
+	if( !current_mode )
+		return 0;
+	
+	len = al_get_count( &current_mode->item );
+
+	if( (idx >= len ) && !current_mode->has_loaded )
+	{
+		history_load( current_mode );
+		len = al_get_count( &current_mode->item );
+	}
+	
+	if( idx < 0 )
+		return 0;
+	
+	if( idx >= len )
+		return 0;
+	
+	return item_get( current_mode, al_get( &current_mode->item, len - 1 - idx ) )->data;
+}
+
+void history_first()
+{
+	if( current_mode )
+	{
+		if( !current_mode->has_loaded )
+		{
+			history_load( current_mode );
+		}
+		
+		current_mode->pos = 0;
+	}	
 }
 
 void history_reset()
 {
-	history_current = history_last;
-}
-
-/**
-   Move to first history item
-*/
-void history_first()
-{
-	if( is_loaded )
-		while( history_current->prev )
-			history_current = history_current->prev;
-	
-}
-
-wchar_t *history_get( int idx )
-{
-	ll_node_t *n;
-	int i;
-	
-	if( !is_loaded )
+	if( current_mode )
 	{
-		if( history_load() )
+		current_mode->pos = al_get_count( &current_mode->item );
+		al_truncate( &current_mode->used, 0 );
+	}	
+}
+
+const wchar_t *history_next_match( const wchar_t *needle)
+{
+	if( current_mode )
+	{
+		if( al_get_count( &current_mode->used ) )
 		{
-			return 0;
+			al_pop( &current_mode->used );
+			if( al_get_count( &current_mode->used ) )
+			{
+				current_mode->pos = (int) al_peek_long( &current_mode->used );
+				item_t *i = item_get( current_mode, al_get( &current_mode->item, current_mode->pos ) );
+				return i->data;
+			}
 		}
+
+		current_mode->pos = al_get_count( &current_mode->item );
+
 	}
-	
-	n = history_last;
-	
-	if( idx<0)
+	return needle;	
+}
+
+
+void history_set_mode( const wchar_t *name )
+{
+	if( !mode_table )
 	{
-		debug( 1, L"Tried to access negative history index %d", idx );
-		return 0;
+		mode_table = malloc( sizeof(hash_table_t ));
+		hash_init( mode_table, &hash_wcs_func, &hash_wcs_cmp );		
 	}
 	
-	for( i=0; i<idx; i++ )
+	current_mode = (history_mode_t *)hash_get( mode_table, name );
+	
+	if( !current_mode )
 	{
-		if( !n )
-			break;
-		n=n->prev;
-	}
-	return n?n->data:0;
+		current_mode = history_create_mode( name );
+		hash_put( mode_table, name, current_mode );		
+	}	
+}
+
+void history_init()
+{	
+}
+
+
+void history_destroy()
+{
+	hash_foreach( mode_table, (void (*)(void *, void *))&history_save_mode );
+	hash_foreach( mode_table, (void (*)(void *, void *))&history_destroy_mode );
+	hash_destroy( mode_table );
+	free( mode_table );
+	mode_table=0;
 }
 
 
 void history_sanity_check()
-{	
-	return;
+{
 	
-	if( history_current != 0 )
-	{
-		int i;
-		int history_ok = 1;
-		int found_current = 0;
-		
-		validate_pointer( history_last, L"History root", 1);
-		
-		ll_node_t *tmp = history_last;
-		for( i=0; i<history_count; i++ )
-		{
-			found_current |= tmp == history_current;
-
-			if( tmp == 0 )
-			{
-				history_ok = 0;
-				debug( 1, L"History items missing" );
-				break;
-			}
-
-			if( (tmp->prev != 0) && (tmp->prev->next != tmp ) )
-			{
-				history_ok = 0;
-				debug( 1, L"History items order is inconsistent" );
-				break;
-			}
-			
-			validate_pointer( tmp->data, L"History data", 1);
-			if( tmp->data == 0 )
-			{
-				history_ok = 0;
-				debug( 1, L"Empty history item" );
-				break;
-			}
-			validate_pointer( tmp->prev, L"History node", 1);
-			tmp = tmp->prev;
-		}
-		if( tmp != 0 )
-		{
-			history_ok = 0;
-			debug( 1, L"History list too long" );
-		}
-
-		if( (i!= history_count )|| (!found_current))
-		{
-			debug( 1, L"No history item selected" );
-			history_ok=0;
-		}
-		
-		if( !history_ok )
-		{
-			sanity_lose();			
-		}
-	}	
 }
 

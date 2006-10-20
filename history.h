@@ -43,7 +43,7 @@ wchar_t *history_get( int idx );
 void history_first();
 
 /**
-  Make current point to last history item
+   Make current point to last history item
 */
 void history_reset();
 
@@ -61,7 +61,7 @@ const wchar_t *history_next_match( const wchar_t *str);
    of the history.
 */
 
-void history_set_mode( wchar_t *name );
+void history_set_mode( const wchar_t *name );
 
 
 /**

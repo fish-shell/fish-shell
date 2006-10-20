@@ -84,7 +84,7 @@ static struct wdirent my_wdirent;
 /**
    For wgettext: Number of string_buffer_t in the ring of buffers
 */
-#define BUFF_COUNT 64
+#define BUFF_COUNT 4
 
 /**
    For wgettext: The ring of string_buffer_t

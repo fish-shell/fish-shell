@@ -27,16 +27,8 @@
 #include "halloc_util.h"
 #include "intern.h"
 #include "path.h"
-
-/*
-#include "reader.h"
-#include "env.h"
-#include "sanity.h"
 #include "signal.h"
-*/
 
-#define WIDE_MODE 0
-#define NARROW_MODE 1
 
 /**
    Interval in seconds between automatic history save
@@ -48,29 +40,93 @@
 */
 #define SAVE_COUNT 5
 
+/**
+   A struct representiong a history list
+*/
 typedef struct 
 {
+	/**
+	   The name of this list. Used for picking a suitable filename and for switching modes.
+	*/
 	const wchar_t *name;
+	
+	/**
+	   The items of the list. Each entry may be either a pointer to an
+	   item_t struct or a pointer to an mmaped memory region where a
+	   multibyte string representing the item is stored. Use the
+	   item_get function to always get an item_t.
+	*/
 	array_list_t item;
+
+	/**
+	   The current history position
+	*/
 	int pos;
+	
+	/**
+	   This flag is set nonzero if the file containing earlier saves has ben mmaped in
+	*/
 	int has_loaded;
+
+	/**
+	   The mmaped region for the history file
+	*/
 	char *mmap_start;
+
+	/**
+	   The size of the mmaped region
+	*/
 	size_t mmap_length;
+
+	/**
+	   A list of indices of all previous search maches. This is used to eliminate duplicate search results.
+	*/
 	array_list_t used;	
+	
+	/**
+	   Timestamp of last save
+	*/
 	time_t save_timestamp;
+
+	/**
+	   Number of entries that have been added since last save
+	*/
 	int new_count;
+
+	/**
+	   A halloc context. This context is free'd every time the history
+	   is saved. Therefore it is very well suited for use as the
+	   context for history item data.
+	*/
 	void *item_context;
 }
 	history_mode_t;
 
+/**
+   This struct represents a history item
+*/
 typedef struct 
 {
+	/**
+	   The actual contents of the entry
+	*/
 	wchar_t *data;
+	
+	/**
+	   Original creation time for the entry
+	*/
 	time_t timestamp;
 }
 	item_t;
 
+/**
+   Table of all history modes
+*/
 static hash_table_t *mode_table=0;
+
+/**
+   The surrent history mode
+*/
 static history_mode_t *current_mode=0;
 
 /**
@@ -184,6 +240,11 @@ static int item_is_new( history_mode_t *m, void *d )
 	return 0;
 }
 
+/**
+   Returns an item_t for the specified adress. The adress must come from the item list of the specified mode.
+
+   Later calls to this function may erase the output of a previous call to this function.
+*/
 static item_t *item_get( history_mode_t *m, void *d )
 {	
 	char *begin = (char *)d;
@@ -293,12 +354,18 @@ static item_t *item_get( history_mode_t *m, void *d )
 
 }
 
+/**
+   Write the specified item to the specified file.
+*/
 static void item_write( FILE *f, history_mode_t *m, void *v )
 {
 	item_t *i = item_get( m, v );
 	fwprintf( f, L"# %d\n%ls\n", i->timestamp, history_escape_newlines( i->data ) );
 }
 
+/**
+   Release all memory used by the specified history mode.
+*/
 static void history_destroy_mode( wchar_t *name, history_mode_t *m )
 {
 	halloc_free( m->item_context );
@@ -311,6 +378,9 @@ static void history_destroy_mode( wchar_t *name, history_mode_t *m )
 	halloc_free( m );
 }
 
+/**
+   Create a new empty mode with the specified name
+*/
 static history_mode_t *history_create_mode( const wchar_t *name )
 {	
 	history_mode_t *new_mode = halloc( 0, sizeof( history_mode_t ));
@@ -342,7 +412,13 @@ static int history_test( const wchar_t *needle, const wchar_t *haystack )
 	return !!wcsstr( haystack, needle );
 }
 
+/**
+   Returns the name of the save file for a mode.
 
+   \param context a halloc context used to allocate memory
+   \param name the name of the hstory mode
+   \param suffix an optional file suffix
+*/
 static wchar_t *history_filename( void *context, const wchar_t *name, const wchar_t *suffix )
 {
 	wchar_t *path;
@@ -361,6 +437,9 @@ static wchar_t *history_filename( void *context, const wchar_t *name, const wcha
 	return res;
 }
 
+/**
+   Go through the mmaped region and insert pointers to suitable loacations into the item list
+*/
 static void history_populate_from_mmap( history_mode_t *m )
 {	
 	char *begin = m->mmap_start;
@@ -416,7 +495,9 @@ static void history_populate_from_mmap( history_mode_t *m )
 	
 }
 
-
+/**
+   Load contents of the backing file to memory
+*/
 static void history_load( history_mode_t *m )
 {
 	int fd;
@@ -428,6 +509,8 @@ static void history_load( history_mode_t *m )
 	if( !m )
 		return;	
 	
+	signal_block();
+
 	context = halloc( 0, 0 );
 	filename = history_filename( context, m->name, 0 );
 	
@@ -444,7 +527,6 @@ static void history_load( history_mode_t *m )
 					if( (m->mmap_start = mmap( 0, m->mmap_length, PROT_READ, MAP_SHARED, fd, 0 )) != MAP_FAILED )
 					{
 						ok = 1;
-//						debug( 0, L"mmap ok" );
 						history_populate_from_mmap( m );
 					}
 				}
@@ -453,22 +535,24 @@ static void history_load( history_mode_t *m )
 		}
 	}
 	
-	if( !ok )
-	{
-//		debug( 0, L"Could not load history file" );
-	}
-	
 	m->has_loaded=1;
 
 	halloc_free( context );
+	signal_unblock();
 }
 
+/**
+   Hash function for item_t struct
+*/
 static int hash_item_func( void *v )
 {
 	item_t *i = (item_t *)v;
 	return i->timestamp ^ hash_wcs_func( i->data );
 }
 
+/**
+   Comparison function for item_t struct
+*/
 static int hash_item_cmp( void *v1, void *v2 )
 {
 	item_t *i1 = (item_t *)v1;
@@ -476,6 +560,9 @@ static int hash_item_cmp( void *v1, void *v2 )
 	return (i1->timestamp == i2->timestamp) && (wcscmp( i1->data, i2->data )==0);	
 }
 
+/**
+   Save the specified mode to file
+*/
 static void history_save_mode( void *n, history_mode_t *m )
 {
 	FILE *out;
@@ -503,6 +590,8 @@ static void history_save_mode( void *n, history_mode_t *m )
 		return;
 	}
 	
+	signal_block();
+
 	/*
 	  Set up on_disk variable to describe the current contents of the history file
 	*/
@@ -525,51 +614,50 @@ static void history_save_mode( void *n, history_mode_t *m )
 			
 			for( i=0; i<al_get_count(&m->item); i++ )
 			{
-			void *ptr = al_get( &m->item, i );
-			int is_new = item_is_new( m, ptr );
-			if( is_new )
-			{
-				hash_put( &mine, item_get( m, ptr ), L"" );
+				void *ptr = al_get( &m->item, i );
+				int is_new = item_is_new( m, ptr );
+				if( is_new )
+				{
+					hash_put( &mine, item_get( m, ptr ), L"" );
+				}
 			}
-		}
-
-		/*
-		  Re-save the old history
-		*/
-		for( i=0; i<al_get_count(&on_disk->item); i++ )
-		{
-			void *ptr = al_get( &on_disk->item, i );
-			item_t *i = item_get( on_disk, ptr );
-//			assert( i );
-			if( !hash_get( &mine, i ) )
-				item_write( out, on_disk, ptr );
-		}
-
-		hash_destroy( &mine );
-		
-		/*
-		  Add our own items
-		*/		
-		for( i=0; i<al_get_count(&m->item); i++ )
-		{
-			void *ptr = al_get( &m->item, i );
-			int is_new = item_is_new( m, ptr );
-			if( is_new )
-				item_write( out, m, ptr );
-		}
-				
-		if( fclose( out ) )
-		{
 			
-		}
-		else
-		{
-			wrename( tmp_name, history_filename( context, m->name, 0 ) );
-		}
+			/*
+			  Re-save the old history
+			*/
+			for( i=0; i<al_get_count(&on_disk->item); i++ )
+			{
+				void *ptr = al_get( &on_disk->item, i );
+				item_t *i = item_get( on_disk, ptr );
+				if( !hash_get( &mine, i ) )
+					item_write( out, on_disk, ptr );
+			}
+			
+			hash_destroy( &mine );
+		
+			/*
+			  Add our own items
+			*/		
+			for( i=0; i<al_get_count(&m->item); i++ )
+			{
+				void *ptr = al_get( &m->item, i );
+				int is_new = item_is_new( m, ptr );
+				if( is_new )
+					item_write( out, m, ptr );
+			}
+			
+			if( fclose( out ) )
+			{
+				
+			}
+			else
+			{
+				wrename( tmp_name, history_filename( context, m->name, 0 ) );
+			}
 		}
 		free( tmp_name );
 	}	
-
+	
 	history_destroy_mode( 0, on_disk);
 	
 	if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
@@ -586,6 +674,8 @@ static void history_save_mode( void *n, history_mode_t *m )
 	m->save_timestamp=time(0);
 	m->new_count = 0;
 
+	signal_unblock();
+
 	halloc_free( context );
 }
 
@@ -597,7 +687,7 @@ void history_add( const wchar_t *str )
 	if( !current_mode )
 		return;
 	
-	i = halloc( global_context, sizeof(item_t));
+	i = halloc( current_mode->item_context, sizeof(item_t));
 	i->data = (wchar_t *)halloc_wcsdup( current_mode->item_context, str );
 	i->timestamp = time(0);
 	

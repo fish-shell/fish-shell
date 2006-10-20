@@ -138,4 +138,9 @@ wchar_t *wgetenv( const wchar_t *name );
 */
 int wmkdir( const wchar_t *dir, int mode );
 
+/**
+   Wide character version of rename
+*/
+int wrename( const wchar_t *old, const wchar_t *new );
+
 #endif

@@ -549,3 +549,15 @@ int wmkdir( const wchar_t *name, int mode )
 	char *name_narrow =wutil_wcs2str(name);
 	return mkdir( name_narrow, mode );
 }
+
+int wrename( const wchar_t *old, const wchar_t *new )
+{
+	char *old_narrow =wutil_wcs2str(old);
+	char *new_narrow =wcs2str(new);
+	int res;
+	
+	res = rename( old_narrow, new_narrow );
+	free( new_narrow );
+
+	return res;
+}

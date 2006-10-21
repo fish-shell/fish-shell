@@ -366,7 +366,7 @@ static void item_write( FILE *f, history_mode_t *m, void *v )
 /**
    Release all memory used by the specified history mode.
 */
-static void history_destroy_mode( wchar_t *name, history_mode_t *m )
+static void history_destroy_mode( history_mode_t *m )
 {
 	halloc_free( m->item_context );
 	
@@ -375,11 +375,16 @@ static void history_destroy_mode( wchar_t *name, history_mode_t *m )
 		munmap( m->mmap_start, m->mmap_length);
 	}	
 	
+}
+
+static void history_destroy_mode_wrapper( void *n, history_mode_t *m )
+{
 	halloc_free( m );
 }
 
 /**
-   Create a new empty mode with the specified name
+   Create a new empty mode with the specified name. 
+   The mode is a halloc context, and the entire mode can be destroyed using halloc_free().
 */
 static history_mode_t *history_create_mode( const wchar_t *name )
 {	
@@ -394,6 +399,8 @@ static history_mode_t *history_create_mode( const wchar_t *name )
 
 	new_mode->save_timestamp=time(0);
 	new_mode->item_context = halloc( 0,0 );
+
+	halloc_register_function( new_mode, (void (*)(void *))&history_destroy_mode, new_mode );
 
 	return new_mode;	
 }
@@ -649,7 +656,7 @@ static void history_save_mode( void *n, history_mode_t *m )
 		free( tmp_name );
 	}	
 	
-	history_destroy_mode( 0, on_disk);
+	halloc_free( on_disk);
 /*	
 	if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
 		munmap( m->mmap_start, m->mmap_length );
@@ -862,17 +869,20 @@ void history_set_mode( const wchar_t *name )
 }
 
 void history_init()
-{	
+{
 }
 
 
 void history_destroy()
 {
-	hash_foreach( mode_table, (void (*)(void *, void *))&history_save_mode );
-	hash_foreach( mode_table, (void (*)(void *, void *))&history_destroy_mode );
-	hash_destroy( mode_table );
-	free( mode_table );
-	mode_table=0;
+	if( mode_table )
+	{
+		hash_foreach( mode_table, (void (*)(void *, void *))&history_save_mode );
+		hash_foreach( mode_table, (void (*)(void *, void *))&history_destroy_mode_wrapper );
+		hash_destroy( mode_table );
+		free( mode_table );
+		mode_table=0;
+	}
 }
 
 

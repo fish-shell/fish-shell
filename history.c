@@ -384,24 +384,18 @@ static void history_destroy_mode( wchar_t *name, history_mode_t *m )
 static history_mode_t *history_create_mode( const wchar_t *name )
 {	
 	history_mode_t *new_mode = halloc( 0, sizeof( history_mode_t ));
+
 	new_mode->name = intern(name);
+
 	al_init( &new_mode->item );
 	al_init( &new_mode->used );
-	
 	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->item );
 	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->used );
 
-	new_mode->pos = 0;
-	new_mode->has_loaded = 0;
-	new_mode->mmap_start=0;
-	new_mode->mmap_length=0;
 	new_mode->save_timestamp=time(0);
-	new_mode->new_count = 0;
-	
 	new_mode->item_context = halloc( 0,0 );
 
-	return new_mode;
-	
+	return new_mode;	
 }
 
 /**
@@ -524,7 +518,7 @@ static void history_load( history_mode_t *m )
 				m->mmap_length = (size_t)len;
 				if( lseek( fd, 0, SEEK_SET ) == 0 )
 				{
-					if( (m->mmap_start = mmap( 0, m->mmap_length, PROT_READ, MAP_SHARED, fd, 0 )) != MAP_FAILED )
+					if( (m->mmap_start = mmap( 0, m->mmap_length, PROT_READ, MAP_PRIVATE, fd, 0 )) != MAP_FAILED )
 					{
 						ok = 1;
 						history_populate_from_mmap( m );
@@ -566,7 +560,6 @@ static int hash_item_cmp( void *v1, void *v2 )
 static void history_save_mode( void *n, history_mode_t *m )
 {
 	FILE *out;
-	void *context;
 	history_mode_t *on_disk;
 	int i;
 	int has_new;
@@ -598,15 +591,13 @@ static void history_save_mode( void *n, history_mode_t *m )
 	on_disk = history_create_mode( m->name );
 	history_load( on_disk );
 	
-	context = halloc( 0,0 );
-
-	tmp_name = history_filename( context, m->name, L".tmp" );
+	tmp_name = history_filename( on_disk, m->name, L".tmp" );
 
 	if( tmp_name )
 	{
 		tmp_name = wcsdup(tmp_name );
 		
-		if( (out=wfopen( history_filename( context, m->name, L".tmp" ), "w" ) ) )
+		if( (out=wfopen( tmp_name, "w" ) ) )
 		{
 			hash_table_t mine;
 			
@@ -652,14 +643,14 @@ static void history_save_mode( void *n, history_mode_t *m )
 			}
 			else
 			{
-				wrename( tmp_name, history_filename( context, m->name, 0 ) );
+				wrename( tmp_name, history_filename( on_disk, m->name, 0 ) );
 			}
 		}
 		free( tmp_name );
 	}	
 	
 	history_destroy_mode( 0, on_disk);
-	
+/*	
 	if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
 		munmap( m->mmap_start, m->mmap_length );
 	
@@ -671,12 +662,11 @@ static void history_save_mode( void *n, history_mode_t *m )
 	m->has_loaded = 0;
 	m->mmap_start=0;
 	m->mmap_length=0;
+*/
 	m->save_timestamp=time(0);
 	m->new_count = 0;
 
 	signal_unblock();
-
-	halloc_free( context );
 }
 
 

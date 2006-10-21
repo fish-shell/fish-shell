@@ -89,14 +89,6 @@ static void err( wchar_t *blah, ... )
 }
 
 /**
-   Print ok message
-*/
-static void ok()
-{
-	wprintf( L"OK\n" );
-}
-
-/**
    Compare two pointers
 */
 static int pq_compare( void *e1, void *e2 )
@@ -120,7 +112,7 @@ static void pq_test( int elements )
 	
 	for( i=0; i<elements; i++ )
 	{
-		int foo = rand() % 100;
+		long foo = rand() % 100;
 //		printf( "Adding %d\n", foo );
 		pq_put( &q, (void *)foo );
 		count[foo]++;
@@ -130,7 +122,7 @@ static void pq_test( int elements )
 	
 	for( i=0; i<elements; i++ )
 	{
-		int pos = (int)pq_get( &q );
+		long pos = (long)pq_get( &q );
 		count[ pos ]--;
 		if( pos > prev )
 			err( L"Wrong order of elements in priority_queue_t" );
@@ -201,7 +193,7 @@ static int hash_func( void *data )
 /*	srand( (int)data );
 	return rand();
 */
-	int foo = (int)data;
+	int foo = (int)(long)data;
 	return 127*((foo^0xefc7e214)) ^(foo<<11);	
 }
 
@@ -217,9 +209,9 @@ static int compare_func( void *key1, void *key2 )
 /**
    Hashtable test
 */
-static int hash_test( int elements )
+static int hash_test( long elements )
 {
-	int i;
+	long i;
 	int res=1;
 		
 	hash_table_t h;
@@ -228,17 +220,17 @@ static int hash_test( int elements )
 	
 	for( i=1; i< elements+1; i++ )
 	{
-		hash_put( &h, (void*)i, (void*)100-i );
+		hash_put( &h, (void*)i, (void*)100l-i );
 	}
 	
 	for( i=1; i< elements+1; i++ )
 	{
-		if( (int)hash_get( &h, (void*)i ) != (100-i) )
+		if( (long)hash_get( &h, (void*)i ) != (100l-i) )
 		{
 			err( L"Key %d gave data %d, expected data %d",
 				 i, 
-				 (int)hash_get( &h, (void*)i ),
-				 100-i );
+				 (long)hash_get( &h, (void*)i ),
+				 100l-i );
 			res = 0;
 			
 			break;
@@ -271,7 +263,7 @@ static int hash_test( int elements )
 	
 	for( i=1; i<elements+1; i++ )
 	{
-		if( hash_contains( &h, (void*)i) != (i+1)%2 )
+		if( hash_contains( &h, (void*)i) != (i+1l)%2l )
 		{
 			if( i%2 )
 				err( L"Key %d remains, should be deleted",
@@ -553,7 +545,11 @@ static int expand_test( const wchar_t *in, int flags, ... )
 	wchar_t *arg;
 	
 	al_init( &out );
-	expand_string( 0, wcsdup(in), &out, flags);
+	if( expand_string( 0, wcsdup(in), &out, flags) )
+	{
+		
+	}
+	
 	
 	va_start( va, flags );
 

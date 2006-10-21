@@ -478,26 +478,13 @@ int wildcard_expand( const wchar_t *wc,
 	wc_recursive = wcschr( wc, ANY_STRING_RECURSIVE );
 	is_recursive = ( wc_recursive && (!wc_end || wc_recursive < wc_end));
 
-	/*
-	  This makes sure that the base
-	  directory of the recursive search is
-	  also searched for matching files.
-	*/
-	if( is_recursive && (wc_end==(wc+1)) && !(flags & WILDCARD_RECURSIVE ) )
-	{
-		wildcard_expand( wc_end + 1,
-						 base_dir,
-						 flags,
-						 out );
-	}
-	
 	if( flags & ACCEPT_INCOMPLETE )
 		sb_init( &sb_desc );
 
 	/*
 	  Is this segment of the wildcard the last?
 	*/
-	if( !wc_end && !is_recursive )
+	if( !wc_end )
 	{
 		/*
 		  Wildcard segment is the last segment,
@@ -583,15 +570,38 @@ int wildcard_expand( const wchar_t *wc,
 					if( wildcard_match2( name, wc, 1 ) )
 					{
 						wchar_t *long_name = make_path( base_dir, name );
+						int skip = 0;
 						
-						al_push_check( out, long_name );
+						if( is_recursive )
+						{
+							/*
+							  In recursive mode, we are only
+							  interested in adding files -directories
+							  will be added in the next pass.
+							*/
+							struct stat buf;
+							if( !wstat( long_name, &buf ) )
+							{
+								skip = S_ISDIR(buf.st_mode);
+							}							
+						}
+						
+						if( skip )
+						{
+							free( long_name );
+						}
+						else
+						{
+							al_push_check( out, long_name );
+						}
 						res = 1;
 					}
 				}
 			}
 		}
 	}
-	else
+
+	if( wc_end || is_recursive )
 	{
 		/*
 		  Wilcard segment is not the last segment.  Recursively call
@@ -615,7 +625,13 @@ int wildcard_expand( const wchar_t *wc,
 		*/
 		long ln=MAX_FILE_LENGTH;
 		char * narrow_dir_string = wcs2str( dir_string );
-		
+
+		/*
+		  In recursive mode, we look through the direcotry twice. If
+		  so, this rewind is needed.
+		*/
+		rewinddir( dir );
+
 		if( narrow_dir_string )
 		{
 			/* 

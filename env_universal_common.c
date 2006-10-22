@@ -361,7 +361,8 @@ void read_message( connection_t *src )
 			case ENV_UNIVERSAL_ERROR:
 			{
 				debug( 2, L"Read error on fd %d, set killme flag", src->fd );
-				wperror( L"read" );
+				if( debug_level > 2 )
+					wperror( L"read" );
 				src->killme = 1;
 				return;
 			}
@@ -579,10 +580,11 @@ static int try_send( message_t *msg,
 				return 0;
 				
 			default:
-				debug( 0,
+				debug( 2,
 					   L"Error while sending universal variable message to fd %d. Closing connection",
 					   fd );
-				wperror( L"write" );
+				if( debug_level > 2 )
+					wperror( L"write" );
 				
 				return -1;
 		}		

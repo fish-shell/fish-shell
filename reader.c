@@ -1822,7 +1822,8 @@ void reader_set_test_function( int (*f)( wchar_t * ) )
 /**
    Call specified external highlighting function and then do search
    highlighting. Lastly, clear the background color under the cursor
-   to avoid confusion.
+   to avoid repaint issues on terminals where e.g. syntax highligthing
+   maykes characters under the sursor unreadable.
 
    \param match_highlight_pos the position to use for bracket matching. This need not be the same as the surrent cursor position
    \param error if non-null, any possible errors in the buffer are further descibed by the strings inserted into the specified arraylist
@@ -1843,13 +1844,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 
 			for( i=0; i<count; i++ )
 			{
-				/*
-				  Do not overwrite previous highlighting color
-				*/
-				if( data->color[start+i]>>8 == 0 )
-				{
-					data->color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
-				}
+				data->color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
 			}
 		}
 	}

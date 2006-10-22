@@ -58,6 +58,15 @@ typedef struct
 	*/
 	array_list_t item;
 
+
+	/**
+	   A hash table containing all the items created by the current
+	   session as keys. This can be used as a lookup when loading the
+	   history list to ignore the on-file version of an entry from
+	   this session.
+	*/
+	hash_table_t session_item;
+	
 	/**
 	   The current history position
 	*/
@@ -81,7 +90,7 @@ typedef struct
 	/**
 	   A list of indices of all previous search maches. This is used to eliminate duplicate search results.
 	*/
-	array_list_t used;	
+	array_list_t used;
 	
 	/**
 	   Timestamp of last save
@@ -128,6 +137,25 @@ static hash_table_t *mode_table=0;
    The surrent history mode
 */
 static history_mode_t *current_mode=0;
+
+/**
+   Hash function for item_t struct
+*/
+static int hash_item_func( void *v )
+{
+	item_t *i = (item_t *)v;
+	return i->timestamp ^ hash_wcs_func( i->data );
+}
+
+/**
+   Comparison function for item_t struct
+*/
+static int hash_item_cmp( void *v1, void *v2 )
+{
+	item_t *i1 = (item_t *)v1;
+	item_t *i2 = (item_t *)v2;
+	return (i1->timestamp == i2->timestamp) && (wcscmp( i1->data, i2->data )==0);	
+}
 
 /**
    Add backslashes to all newlines, so that the returning string is
@@ -396,7 +424,10 @@ static history_mode_t *history_create_mode( const wchar_t *name )
 	al_init( &new_mode->used );
 	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->item );
 	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->used );
-
+	
+	hash_init( &new_mode->session_item, &hash_item_func, &hash_item_cmp );
+	halloc_register_function( new_mode, (void (*)(void *))&hash_destroy, &new_mode->session_item );
+	
 	new_mode->save_timestamp=time(0);
 	new_mode->item_context = halloc( 0,0 );
 
@@ -447,12 +478,14 @@ static void history_populate_from_mmap( history_mode_t *m )
 	char *end = begin + m->mmap_length;
 	char *pos;
 	
-	array_list_t tmp;
+	array_list_t old_item;
+	array_list_t session_item_list;
 	int ignore_newline = 0;
 	int do_push = 1;
 	
-	al_init( &tmp );
-	al_push_all( &tmp, &m->item );
+	al_init( &old_item );
+	al_init( &session_item_list );
+	al_push_all( &old_item, &m->item );
 	al_truncate( &m->item, 0 );
 	
 	for( pos = begin; pos <end; pos++ )
@@ -460,9 +493,23 @@ static void history_populate_from_mmap( history_mode_t *m )
 		
 		if( do_push )
 		{
+			item_t *i;
+			item_t *i_orig;
+
 			ignore_newline = *pos == '#';
-			al_push( &m->item, pos );
-//			debug( 0, L"Push item at offset %d", pos-begin );				
+
+			i = item_get( m, pos );
+			assert( i!=pos );
+			
+			if( (i_orig=hash_get( &current_mode->session_item, i ) ) )
+			{
+				al_push( &session_item_list, i_orig );				
+			}
+			else
+			{
+				al_push( &m->item, pos );
+			}
+			
 			do_push = 0;
 		}
 		
@@ -489,11 +536,13 @@ static void history_populate_from_mmap( history_mode_t *m )
 		}
 	}	
 	
+	al_push_all(  &m->item, &session_item_list );
 	m->pos += al_get_count( &m->item );
-	al_push_all(  &m->item, &tmp );
-	al_destroy( &tmp );
-//	debug( 0, L"History has %d items", al_get_count( &m->item ));				
-	
+	al_push_all(  &m->item, &old_item );
+
+
+	al_destroy( &session_item_list );
+	al_destroy( &old_item );
 }
 
 /**
@@ -510,6 +559,8 @@ static void history_load( history_mode_t *m )
 	if( !m )
 		return;	
 	
+	m->has_loaded=1;
+
 	signal_block();
 
 	context = halloc( 0, 0 );
@@ -536,29 +587,8 @@ static void history_load( history_mode_t *m )
 		}
 	}
 	
-	m->has_loaded=1;
-
 	halloc_free( context );
 	signal_unblock();
-}
-
-/**
-   Hash function for item_t struct
-*/
-static int hash_item_func( void *v )
-{
-	item_t *i = (item_t *)v;
-	return i->timestamp ^ hash_wcs_func( i->data );
-}
-
-/**
-   Comparison function for item_t struct
-*/
-static int hash_item_cmp( void *v1, void *v2 )
-{
-	item_t *i1 = (item_t *)v1;
-	item_t *i2 = (item_t *)v2;
-	return (i1->timestamp == i2->timestamp) && (wcscmp( i1->data, i2->data )==0);	
 }
 
 /**
@@ -657,19 +687,24 @@ static void history_save_mode( void *n, history_mode_t *m )
 	}	
 	
 	halloc_free( on_disk);
-/*	
+
+	/*
+	  Reset the history. The item_t entries created in this session
+	  are not lost or dropped, they are stored in the session_item
+	  hash table. On reload, they will be automatically inserted at
+	  the end of the history list.
+	*/
+	
 	if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
 		munmap( m->mmap_start, m->mmap_length );
 	
-	halloc_free( m->item_context );
-	m->item_context = halloc( 0, 0 );
 	al_truncate( &m->item, 0 );
 	al_truncate( &m->used, 0 );
 	m->pos = 0;
 	m->has_loaded = 0;
 	m->mmap_start=0;
 	m->mmap_length=0;
-*/
+	
 	m->save_timestamp=time(0);
 	m->new_count = 0;
 
@@ -689,6 +724,8 @@ void history_add( const wchar_t *str )
 	i->timestamp = time(0);
 	
 	al_push( &current_mode->item, i );
+	hash_put( &current_mode->session_item, i, i );
+	
 	al_truncate( &current_mode->used, 0 );
 	current_mode->pos = al_get_count( &current_mode->item );
 
@@ -744,7 +781,7 @@ const wchar_t *history_prev_match( const wchar_t *needle )
 					  there is a chance that the return value of any
 					  previous call to item_get will become
 					  invalid. The history_is_used function uses the
-					  istem_get() function. Therefore, we must create
+					  item_get() function. Therefore, we must create
 					  a copy of the haystack string, and if the string
 					  is unused, we must call item_get anew.
 					*/
@@ -825,6 +862,9 @@ void history_reset()
 	if( current_mode )
 	{
 		current_mode->pos = al_get_count( &current_mode->item );
+		/*
+		  Clear list of search matches
+		*/
 		al_truncate( &current_mode->used, 0 );
 	}	
 }
@@ -833,6 +873,11 @@ const wchar_t *history_next_match( const wchar_t *needle)
 {
 	if( current_mode )
 	{
+		/*
+		  The index of previous search matches are saved in the 'used'
+		  list. We just need to pop the top item and set the new
+		  position. Easy!
+		*/
 		if( al_get_count( &current_mode->used ) )
 		{
 			al_pop( &current_mode->used );
@@ -843,7 +888,11 @@ const wchar_t *history_next_match( const wchar_t *needle)
 				return i->data;
 			}
 		}
-
+		
+		/*
+		  The used-list is empty. Set position to 'past end of list'
+		  and return the search string.
+		*/
 		current_mode->pos = al_get_count( &current_mode->item );
 
 	}
@@ -888,6 +937,8 @@ void history_destroy()
 
 void history_sanity_check()
 {
-	
+	/*
+	  No sanity checking implemented yet...
+	*/
 }
 

@@ -91,6 +91,15 @@ enum
 }
 	;
 
+/**
+   The minimum number of columns the terminal may have for fish_pager to not refuse showing the completions
+*/
+#define PAGER_MIN_WIDTH 16
+
+/**
+   The maximum number of columns of completion to attempt to fit onto the screen
+*/
+#define PAGER_MAX_COLS 6
 
 /**
    This struct should be continually updated by signals as the term
@@ -326,7 +335,14 @@ static void pager_flush()
 	pager_buffer->used = 0;
 }
 
+/**
+   Print the specified string, but use at most the specified amount of
+   space. If the whole string can't be fitted, ellipsize it.
 
+   \param str the string to print
+   \param max the maximum space that may be used for printing
+   \param has_more if this flag is true, this is not the entire string, and the string should be ellisiszed even if the string fits but takes up the whole space.
+*/
 static int print_max( const wchar_t *str, int max, int has_more )
 {
 	int i;
@@ -349,6 +365,9 @@ static int print_max( const wchar_t *str, int max, int has_more )
 	return written;
 }
 
+/**
+   Print the specified item using at the specified amount of space
+*/
 static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 {
 	int comp_width=0, desc_width=0;
@@ -493,11 +512,11 @@ static int completion_try_print( int cols,
 	/*
 	  The calculated preferred width of each column
 	*/
-	int pref_width[32];
+	int pref_width[PAGER_MAX_COLS];
 	/*
 	  The calculated minimum width of each column
 	*/
-	int min_width[32];
+	int min_width[PAGER_MAX_COLS];
 	/*
 	  If the list can be printed with this width, width will contain the width of each column
 	*/
@@ -518,7 +537,7 @@ static int completion_try_print( int cols,
 	  Skip completions on tiny terminals
 	*/
 	
-	if( termsize.ws_col < 16 )
+	if( termsize.ws_col < PAGER_MIN_WIDTH )
 		return PAGER_DONE;
 	
 	memset( pref_width, 0, sizeof(pref_width) );
@@ -604,8 +623,6 @@ static int completion_try_print( int cols,
 		}
 	}
 
-//	return cols==1;
-	
 	if( print )
 	{
 		res=PAGER_DONE;
@@ -642,13 +659,19 @@ static int completion_try_print( int cols,
 			*/
 			while(do_loop)
 			{
-				wchar_t msg[30];
+				string_buffer_t msg;
+				sb_init( &msg );
+				
 				set_color( FISH_COLOR_BLACK,
 						   get_color(HIGHLIGHT_PAGER_PROGRESS) );
-				swprintf( msg, 30,
-						  _(L" %d to %d of %d \r"),
-						  pos, pos+termsize.ws_row-1, rows );
-				writestr(msg);
+				sb_printf( &msg,
+						   _(L" %d to %d of %d \r"),
+						   pos,
+						   pos+termsize.ws_row-1, 
+						   rows );
+				
+				writestr((wchar_t *)msg.buff);
+				sb_destroy( &msg );
 				set_color( FISH_COLOR_NORMAL, FISH_COLOR_NORMAL );
 				pager_flush();
 				int c = readch();
@@ -935,12 +958,21 @@ static void handle_winch( int sig )
 	}
 }
 
+/**
+   The callback function that the keyboard reading function calls when
+   an interrupt occurs. This makes sure that R_NULL is returned at
+   once when an interrupt has occured.
+*/
 static int interrupt_handler()
 {
 	return R_NULL;
 }
 
-
+/**
+   Initialize various subsystems. This also closes stdin and replaces
+   it with a copy of stderr, so the reading of completion strings must
+   be done before init is called.
+*/
 static void init()
 {
 	struct sigaction act;
@@ -1032,7 +1064,10 @@ static void init()
 
 }
 
-void destroy()
+/**
+   Free memory used by various subsystems.
+*/
+static void destroy()
 {
 	env_universal_destroy();
 	input_common_destroy();
@@ -1047,7 +1082,11 @@ void destroy()
 	fclose( out_file );
 }
 
-void read_array( FILE* file, array_list_t *comp )
+/**
+   Read lines of input from the specified file, unescape them and
+   insert them into the specified list.
+*/
+static void read_array( FILE* file, array_list_t *comp )
 {
 	buffer_t buffer;
 	int c;
@@ -1122,7 +1161,7 @@ int main( int argc, char **argv )
 		is_quoted = strcmp( "1", argv[1] )==0;
 		is_quoted = 0;
 		
-		debug( 3, L"prefix is '%ls'", prefix );
+//		debug( 3, L"prefix is '%ls'", prefix );
 		
 	    if( argc > 3 )
 		{
@@ -1148,8 +1187,14 @@ int main( int argc, char **argv )
 			join_completions( comp );
 
 	    mangle_completions( comp, prefix );
-	
-		for( i = 6; i>0; i-- )
+
+		/**
+		   Try to print the completions. Start by trying to print the
+		   list in PAGER_MAX_COLS columns, if the completions won't
+		   fit, reduce the number of columns by one. Printing a single
+		   column never fails.
+		*/
+		for( i = PAGER_MAX_COLS; i>0; i-- )
 		{
 			switch( completion_try_print( i, prefix, is_quoted, comp ) )
 			{
@@ -1163,9 +1208,12 @@ int main( int argc, char **argv )
 
 				case PAGER_RESIZE:
 					/*
-					  This means we got a resize event, so we start over from the beginning
+					  This means we got a resize event, so we start
+					  over from the beginning. Since it the screen got
+					  bigger, we might be able to fit all completions
+					  on-screen.
 					*/
-					i=7;
+					i=PAGER_MAX_COLS+1;
 					break;
 
 			}		

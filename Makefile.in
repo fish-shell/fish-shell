@@ -258,7 +258,7 @@ doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
 	echo "*/" >>$@
 
 %: %.in Makefile
-	sed <$@.in >$@ -e "s,@sysconfdir\@,$(sysconfdir)," -e "s,@datadir\@,$(datadir)," -e "s,@docdir\@,$(docdir)," -e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|" -e "s,@prefix\@,$(prefix)," -e "s,@optbindirs\@,$(optbindirs)," 
+	sed <$@.in >$@ -e "s,@sysconfdir\@,$(sysconfdir),g" -e "s,@datadir\@,$(datadir),g" -e "s,@docdir\@,$(docdir),g" -e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" -e "s,@prefix\@,$(prefix),g" -e "s,@optbindirs\@,$(optbindirs),g" 
 #-e "s,@\@,$()," 
 
 # Compile translation file

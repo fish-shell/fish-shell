@@ -195,7 +195,7 @@ typedef struct complete_entry_opt
 	/** Next option in the linked list */
 	struct complete_entry_opt *next;
 }
-	complete_entry_opt;
+	complete_entry_opt_t;
 
 /**
    Struct describing a command completion
@@ -210,16 +210,16 @@ typedef struct complete_entry
 	/** String containing all short option characters */
 	wchar_t *short_opt_str;
 	/** Linked list of all options */
-	complete_entry_opt *first_option;
+	complete_entry_opt_t *first_option;
 	/** Next command completion in the linked list */
 	struct complete_entry *next;
 	/** True if no other options than the ones supplied are possible */
 	int authorative;
 }
-	complete_entry;
+	complete_entry_t;
 
 /** First node in the linked list of all completion entries */
-static complete_entry *first_entry=0;
+static complete_entry_t *first_entry=0;
 
 /** Hashtable containing all descriptions that describe an executable */
 static hash_table_t *suffix_hash=0;
@@ -236,7 +236,7 @@ static hash_table_t *condition_cache=0;
 static string_buffer_t *get_desc_buff=0;
 
 
-static void complete_free_entry( complete_entry *c );
+static void complete_free_entry( complete_entry_t *c );
 static void clear_hash_entry( void *key, void *data );
 
 
@@ -245,7 +245,7 @@ static void clear_hash_entry( void *key, void *data );
 */
 static void complete_destroy()
 {
-	complete_entry *i=first_entry, *prev;
+	complete_entry_t *i=first_entry, *prev;
 	
 	while( i )
 	{
@@ -347,9 +347,9 @@ static int condition_test( const wchar_t *condition )
 
 
 /**
-   Recursively free all complete_entry_opt structs and their contents
+   Recursively free all complete_entry_opt_t structs and their contents
 */
-static void complete_free_opt_recursive( complete_entry_opt *o )
+static void complete_free_opt_recursive( complete_entry_opt_t *o )
 {
 	if( o->next != 0 )
 		complete_free_opt_recursive( o->next );
@@ -357,9 +357,9 @@ static void complete_free_opt_recursive( complete_entry_opt *o )
 }
 
 /**
-   Free a complete_entry and its contents
+   Free a complete_entry_t and its contents
 */
-static void complete_free_entry( complete_entry *c )
+static void complete_free_entry( complete_entry_t *c )
 {
 //	free( c->cmd );
 	free( c->short_opt_str );
@@ -379,10 +379,10 @@ static void clear_hash_entry( void *key, void *data )
 /**
    Search for an exactly matching completion entry
 */
-static complete_entry *complete_find_exact_entry( const wchar_t *cmd,
+static complete_entry_t *complete_find_exact_entry( const wchar_t *cmd,
 												  const int cmd_type )
 {
-	complete_entry *i;
+	complete_entry_t *i;
 	for( i=first_entry; i; i=i->next )
 	{
 		if( ( wcscmp(cmd, i->cmd)==0) && ( cmd_type == i->cmd_type ))
@@ -404,8 +404,8 @@ void complete_add( const wchar_t *cmd,
 				   const wchar_t *comp,
 				   const wchar_t *desc )
 {
-	complete_entry *c;
-	complete_entry_opt *opt;
+	complete_entry_t *c;
+	complete_entry_opt_t *opt;
 
 	CHECK( cmd, );
 
@@ -415,7 +415,7 @@ void complete_add( const wchar_t *cmd,
 
 	if( c == 0 )
 	{
-		if( !(c = malloc( sizeof(complete_entry) )))
+		if( !(c = malloc( sizeof(complete_entry_t) )))
 		{
 			DIE_MEM();
 		}
@@ -430,7 +430,7 @@ void complete_add( const wchar_t *cmd,
 		c->short_opt_str = wcsdup(L"");
 	}
 
-	if( !(opt = malloc( sizeof( complete_entry_opt ) )))
+	if( !(opt = malloc( sizeof( complete_entry_opt_t ) )))
 	{
 		DIE_MEM();
 	}
@@ -475,7 +475,7 @@ void complete_remove( const wchar_t *cmd,
 					  wchar_t short_opt,
 					  const wchar_t *long_opt )
 {
-	complete_entry *e, *eprev=0, *enext=0;
+	complete_entry_t *e, *eprev=0, *enext=0;
 
 	CHECK( cmd, );
 		
@@ -486,7 +486,7 @@ void complete_remove( const wchar_t *cmd,
 		if( (cmd_type == e->cmd_type ) &&
 			( wcscmp( cmd, e->cmd) == 0 ) )
 		{
-			complete_entry_opt *o, *oprev=0, *onext=0;
+			complete_entry_opt_t *o, *oprev=0, *onext=0;
 
 			if(( short_opt == 0 ) && (long_opt == 0 ) )
 			{
@@ -611,8 +611,8 @@ int complete_is_valid_option( const wchar_t *str,
 							  const wchar_t *opt,
 							  array_list_t *errors )
 {
-	complete_entry *i;
-	complete_entry_opt *o;
+	complete_entry_t *i;
+	complete_entry_opt_t *o;
 	wchar_t *cmd, *path;
 	int found_match = 0;
 	int authorative = 1;
@@ -1487,7 +1487,7 @@ static void complete_from_args( const wchar_t *str,
 /**
    Match against an old style long option
 */
-static int param_match_old( complete_entry_opt *e,
+static int param_match_old( complete_entry_opt_t *e,
 							wchar_t *optstr )
 {
 	return  (optstr[0] == L'-') && (wcscmp( e->long_opt, &optstr[1] ) == 0);
@@ -1496,7 +1496,7 @@ static int param_match_old( complete_entry_opt *e,
 /**
    Match a parameter
 */
-static int param_match( complete_entry_opt *e,
+static int param_match( complete_entry_opt_t *e,
 						wchar_t *optstr )
 {
 	if( e->short_opt != L'\0' &&
@@ -1517,7 +1517,7 @@ static int param_match( complete_entry_opt *e,
 /**
    Test if a string is an option with an argument, like --color=auto or -I/usr/include
 */
-static wchar_t *param_match2( complete_entry_opt *e,
+static wchar_t *param_match2( complete_entry_opt_t *e,
 							  wchar_t *optstr )
 {
 	if( e->short_opt != L'\0' && e->short_opt == optstr[1] )
@@ -1606,8 +1606,8 @@ static int complete_param( wchar_t *cmd_orig,
 						   wchar_t *str,
 						   array_list_t *comp_out )
 {
-	complete_entry *i;
-	complete_entry_opt *o;
+	complete_entry_t *i;
+	complete_entry_opt_t *o;
 
 	array_list_t matches;
 	wchar_t *cmd, *path;
@@ -1807,11 +1807,9 @@ static void complete_param_expand( wchar_t *str,
 	if( expand_string( 0, 
 					   wcsdup(comp_str),
 					   comp_out,
-					   EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) ) )
+					   EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) ) == EXPAND_ERROR )
 	{
-		/*
-		  Ignore errors - completions may fail, and that's ok
-		*/
+		debug( 3, L"Error while expanding string '%ls'", comp_str );
 	}
 	
 	
@@ -2201,13 +2199,13 @@ static void append_switch( string_buffer_t *out,
 
 void complete_print( string_buffer_t *out )
 {
-	complete_entry *e;
+	complete_entry_t *e;
 
 	CHECK( out, );
 
 	for( e = first_entry; e; e=e->next )
 	{
-		complete_entry_opt *o;
+		complete_entry_opt_t *o;
 		for( o= e->first_option; o; o=o->next )
 		{
 			wchar_t *modestr[] =

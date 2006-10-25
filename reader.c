@@ -1908,9 +1908,11 @@ static int read_i()
 			if( !reader_exit_forced() && !data->prev_end_loop && has_job )
 			{
 				writestr(_( L"There are stopped jobs\n" ));
-				repaint();
-				data->end_loop = 0;
+
+				reader_exit( 0, 0 );
 				data->prev_end_loop=1;
+
+				repaint();
 			}
 		}
 		else

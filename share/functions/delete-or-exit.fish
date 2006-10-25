@@ -5,7 +5,7 @@
 # fish-users.
 #
 
-function delete-or-exit --key-binding 
+function delete-or-exit
 	if test (commandline)
 		commandline -f delete-char
 	else

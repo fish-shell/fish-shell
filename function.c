@@ -44,10 +44,6 @@ typedef struct
 	   Line where definition started
 	*/
 	int definition_offset;	
-	/**
-	   Flag for specifying functions which are actually key bindings
-	*/
-	int is_binding;
 	
 	/**
 	   Flag for specifying that this function was automatically loaded
@@ -169,8 +165,7 @@ void function_destroy()
 void function_add( const wchar_t *name, 
 				   const wchar_t *val,
 				   const wchar_t *desc,
-				   array_list_t *events,
-				   int is_binding )
+				   array_list_t *events )
 {
 	int i;
 	wchar_t *cmd_end;
@@ -188,7 +183,6 @@ void function_add( const wchar_t *name,
 	cmd_end = d->cmd + wcslen(d->cmd)-1;
 	
 	d->desc = desc?wcsdup( desc ):0;
-	d->is_binding = is_binding;
 	d->definition_file = intern(reader_current_filename());
 	d->is_autoload = is_autoload;
 		
@@ -317,7 +311,7 @@ static void get_names_internal( void *key,
 	wchar_t *name = (wchar_t *)key;
 	function_data_t *f = (function_data_t *)val;
 	
-	if( name[0] != L'_' && !f->is_binding && !al_contains_str( (array_list_t *)aux, name ) )
+	if( name[0] != L'_' && !al_contains_str( (array_list_t *)aux, name ) )
 	{
 		al_push( (array_list_t *)aux, name );
 	}

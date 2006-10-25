@@ -215,10 +215,11 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 
 		if( is_interactive && !builtin_out_redirect && b==sb_err)
 		{
+			
 			/* Interactive mode help to screen - only print synopsis if the rest won't fit  */
 			
 			int screen_height, lines;
-			
+
 			screen_height = common_get_height();
 			lines = count_char( str, L'\n' );
 			if( lines > 2*screen_height/3 )
@@ -1005,27 +1006,10 @@ static int builtin_functions( wchar_t **argv )
 
 }
 
-/**
-   Test whether the specified string is a valid name for a keybinding
-*/
-static int wcsbindingname( wchar_t *str )
-{
-	while( *str )
-	{
-		if( (!iswalnum(*str)) && (*str != L'-' ) )
-		{
-			return 0;
-		}
-		str++;
-	}
-	return 1;
-}
-
 typedef struct function_data
 {
 	wchar_t *name;
 	wchar_t *description;
-	int is_binding;
 	array_list_t *events;
 }
 	function_data_t;
@@ -1041,7 +1025,6 @@ static int builtin_function( wchar_t **argv )
 	int argc = builtin_count_args( argv );
 	int res=0;
 	wchar_t *desc=0;
-	int is_binding=0;
 	array_list_t *events;
 	int i;
 
@@ -1055,10 +1038,6 @@ static int builtin_function( wchar_t **argv )
 		{
 			{
 				L"description", required_argument, 0, 'd'
-			}
-			,
-			{
-				L"key-binding", no_argument, 0, 'b'
 			}
 			,
 			{
@@ -1093,7 +1072,7 @@ static int builtin_function( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"bd:s:j:p:v:h",
+								L"d:s:j:p:v:h",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1108,17 +1087,12 @@ static int builtin_function( wchar_t **argv )
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( argv[0], sb_err );
 
 				res = 1;
 				break;
 
 			case 'd':
 				desc=woptarg;
-				break;
-
-			case 'b':
-				is_binding=1;
 				break;
 
 			case 's':
@@ -1252,7 +1226,7 @@ static int builtin_function( wchar_t **argv )
 				return 0;
 				
 			case '?':
-				builtin_print_help( argv[0], sb_err );
+				
 				res = 1;
 				break;
 
@@ -1331,7 +1305,6 @@ static int builtin_function( wchar_t **argv )
 		
 		d->name=halloc_wcsdup( current_block, argv[woptind]);
 		d->description=desc?halloc_wcsdup( current_block, desc):0;
-		d->is_binding = is_binding;
 		d->events = events;
 		
 		for( i=0; i<al_get_count( events ); i++ )
@@ -2542,8 +2515,7 @@ static void builtin_end_add_function_def( function_data_t *d )
 	function_add( d->name,
 				  def,
 				  d->description,
-				  d->events,
-				  d->is_binding );
+				  d->events );
 	
 	free( def );
 	

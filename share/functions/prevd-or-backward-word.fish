@@ -1,4 +1,4 @@
-function prevd-or-backward-word --key-binding
+function prevd-or-backward-word
     if test -z (commandline)
         prevd
     else

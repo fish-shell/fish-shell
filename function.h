@@ -27,8 +27,7 @@ void function_destroy();
 void function_add( const wchar_t *name,
 				   const wchar_t *val,
 				   const wchar_t *desc,
-				   array_list_t *events,
-				   int is_binding );
+				   array_list_t *events );
 
 /**
    Remove the function with the specified name.

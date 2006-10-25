@@ -1,5 +1,5 @@
 
-function nextd-or-forward-word --key-binding 
+function nextd-or-forward-word
 	if test -z (commandline)
 		nextd
 	else

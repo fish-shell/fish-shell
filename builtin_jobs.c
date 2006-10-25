@@ -276,7 +276,7 @@ static int builtin_jobs( wchar_t **argv )
 		*/
 		for( j=first_job; j; j=j->next )
 		{
-			if( j->constructed && !job_is_completed(j) )
+			if( (j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) )
 			{
 				builtin_jobs_print( j, mode, !found );
 				return 0;
@@ -330,7 +330,7 @@ static int builtin_jobs( wchar_t **argv )
 				/*
 				  Ignore unconstructed jobs, i.e. ourself.
 				*/
-				if( j->constructed && !job_is_completed(j) )
+				if( (j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) )
 				{
 					builtin_jobs_print( j, mode, !found );
 					found = 1;

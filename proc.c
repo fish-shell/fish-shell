@@ -211,8 +211,10 @@ job_t *job_create()
 	res->job_id = free_id;
 	first_job = res;
 
-	res->job_control = (job_control_mode==JOB_CONTROL_ALL) || 
-		((job_control_mode == JOB_CONTROL_INTERACTIVE) && (is_interactive));
+	job_set_flag( res, 
+				  JOB_CONTROL, 
+				  (job_control_mode==JOB_CONTROL_ALL) || 
+				  ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (is_interactive)) );
 
 //	if( res->job_id > 2 )
 //		fwprintf( stderr, L"Create job %d\n", res->job_id );	
@@ -286,6 +288,20 @@ int job_is_completed( const job_t *j )
 	return p->completed;
 	
 }
+
+void job_set_flag( job_t *j, int flag, int set )
+{
+	if( set )
+		j->flags |= flag;
+	else
+		j->flags = j->flags & (0xffffffff ^ flag);
+}
+
+int job_get_flag( job_t *j, int flag )
+{
+	return j->flags&flag?1:0;
+}
+
 
 /**
    Store the status of the process pid that was returned by waitpid.
@@ -521,7 +537,7 @@ int job_reap( int interactive )
 		  sent to the console, do not consider reaping jobs that need
 		  status messages
 		*/
-		if( (!j->skip_notification) && (!interactive) && (!j->fg))
+		if( (!job_get_flag( j, JOB_SKIP_NOTIFICATION ) ) && (!interactive) && (!job_get_flag( j, JOB_FOREGROUND )))
 		{
 			continue;
 		}
@@ -549,8 +565,8 @@ int job_reap( int interactive )
 				{	
 					int proc_is_job = ((p==j->first_process) && (p->next == 0));
 					if( proc_is_job )
-						j->notified = 1;
-					if( !j->skip_notification )
+						job_set_flag( j, JOB_NOTIFIED, 1 );
+					if( !job_get_flag( j, JOB_SKIP_NOTIFICATION ) )
 					{
 						if( proc_is_job )
 							fwprintf( stdout,
@@ -589,30 +605,27 @@ int job_reap( int interactive )
 		*/
 		if( job_is_completed( j ) ) 
 		{
-			if( !j->fg && !j->notified )
+			if( !job_get_flag( j, JOB_FOREGROUND) && !job_get_flag( j, JOB_NOTIFIED ) && !job_get_flag( j, JOB_SKIP_NOTIFICATION ) )
 			{
-				if( !j->skip_notification )
-				{
-					format_job_info( j, _( L"ended" ) );
-					found=1;
-				}
+				format_job_info( j, _( L"ended" ) );
+				found=1;
 			}
 			proc_fire_event( L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0 );			
 			proc_fire_event( L"JOB_EXIT", EVENT_JOB_ID, j->job_id, 0 );			
 
 			job_free(j);
 		}		
-		else if( job_is_stopped( j ) && !j->notified ) 
+		else if( job_is_stopped( j ) && !job_get_flag( j, JOB_NOTIFIED ) ) 
 		{
 			/* 
 			   Notify the user about newly stopped jobs. 
 			*/
-			if( !j->skip_notification )
+			if( !job_get_flag( j, JOB_SKIP_NOTIFICATION ) )
 			{
 				format_job_info( j, _( L"stopped" ) );
 				found=1;
 			}			
-			j->notified = 1;
+			job_set_flag( j, JOB_NOTIFIED, 1 );
 		}
 	}
 
@@ -843,7 +856,7 @@ void job_continue (job_t *j, int cont)
 	job_remove( j );
 	j->next = first_job;
 	first_job = j;
-	j->notified = 0;
+	job_set_flag( j, JOB_NOTIFIED, 0 );
 
 	debug( 4,
 		   L"Continue job %d (%ls), %ls, %ls",
@@ -854,7 +867,7 @@ void job_continue (job_t *j, int cont)
 	
 	if( !job_is_completed( j ) )
 	{
-		if( j->terminal && j->fg )
+		if( job_get_flag( j, JOB_TERMINAL ) && job_get_flag( j, JOB_FOREGROUND ) )
 		{							
 			/* Put the job into the foreground.  */
 			signal_block();
@@ -893,7 +906,7 @@ void job_continue (job_t *j, int cont)
 			for( p=j->first_process; p; p=p->next )
 				p->stopped=0;
 
-			if( j->job_control )
+			if( job_get_flag( j, JOB_CONTROL ) )
 			{
 				if( killpg( j->pgid, SIGCONT ) )
 				{
@@ -914,7 +927,7 @@ void job_continue (job_t *j, int cont)
 			}
 		}
 	
-		if( j->fg )
+		if( job_get_flag( j, JOB_FOREGROUND ) )
 		{
 			int quit = 0;
 		
@@ -968,7 +981,7 @@ void job_continue (job_t *j, int cont)
 		}	
 	}
 	
-	if( j->fg )
+	if( job_get_flag( j, JOB_FOREGROUND ) )
 	{
 		
 		if( job_is_completed( j ))
@@ -986,14 +999,14 @@ void job_continue (job_t *j, int cont)
 				if( p->pid )
 				{
 					debug( 3, L"Set status of %ls to %d", j->command, WEXITSTATUS(p->status) );
-					proc_set_last_status( j->negate?(WEXITSTATUS(p->status)?0:1):WEXITSTATUS(p->status) );
+					proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(WEXITSTATUS(p->status)?0:1):WEXITSTATUS(p->status) );
 				}
 			}			
 		}
 		/* 
 		   Put the shell back in the foreground.  
 		*/
-		if( j->terminal && j->fg )
+		if( job_get_flag( j, JOB_TERMINAL ) && job_get_flag( j, JOB_FOREGROUND ) )
 		{
 			signal_block();
 			if( tcsetpgrp (0, getpid()) )
@@ -1037,7 +1050,7 @@ void proc_sanity_check()
 	{
 		process_t *p;
 
-		if( !j->constructed )
+		if( !job_get_flag( j, JOB_CONSTRUCTED ) )
 			continue;
 		
 		
@@ -1054,7 +1067,7 @@ void proc_sanity_check()
 		/*
 		  More than one foreground job?
 		*/
-		if( j->fg && !(job_is_stopped(j) || job_is_completed(j) ) )
+		if( job_get_flag( j, JOB_FOREGROUND ) && !(job_is_stopped(j) || job_is_completed(j) ) )
 		{
 			if( fg_job != 0 )
 			{

@@ -2216,8 +2216,8 @@ static int builtin_fg( wchar_t **argv )
 		*/
 		for( j=first_job; j; j=j->next )
 		{
-			if( j->constructed && (!job_is_completed(j)) && 
-				( (job_is_stopped(j) || !j->fg) && (j->job_control) ) )
+			if( job_get_flag( j, JOB_CONSTRUCTED ) && (!job_is_completed(j)) && 
+				( (job_is_stopped(j) || (!job_get_flag(j, JOB_FOREGROUND)) ) && job_get_flag( j, JOB_CONTROL) ) )
 			{
 				break;
 			}
@@ -2288,7 +2288,7 @@ static int builtin_fg( wchar_t **argv )
 		else
 		{
 			j = job_get_from_pid( pid );
-			if( !j || !j->constructed || job_is_completed( j ))
+			if( !j || !job_get_flag( j, JOB_CONSTRUCTED ) || job_is_completed( j ))
 			{
 				sb_printf( sb_err,
 						   _( L"%ls: No suitable job: %d\n" ),
@@ -2297,7 +2297,7 @@ static int builtin_fg( wchar_t **argv )
 				builtin_print_help( argv[0], sb_err );
 				j=0;
 			}
-			else if( !j->job_control )
+			else if( !job_get_flag( j, JOB_CONTROL) )
 			{
 				sb_printf( sb_err,
 						   _( L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n" ),
@@ -2339,7 +2339,7 @@ static int builtin_fg( wchar_t **argv )
 		reader_write_title();
 
 		make_first( j );
-		j->fg=1;
+		job_set_flag( j, JOB_FOREGROUND, 1 );
 
 		job_continue( j, job_is_stopped(j) );
 	}
@@ -2360,7 +2360,7 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 		builtin_print_help( L"bg", sb_err );
 		return STATUS_BUILTIN_ERROR;
 	}
-	else if( !j->job_control )
+	else if( !job_get_flag( j, JOB_CONTROL ) )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n" ),
@@ -2378,7 +2378,7 @@ static int send_to_bg( job_t *j, const wchar_t *name )
 				   j->command );
 	}
 	make_first( j );
-	j->fg=0;
+	job_set_flag( j, JOB_FOREGROUND, 0 );
 	job_continue( j, job_is_stopped(j) );
 	return 0;
 }
@@ -2396,7 +2396,7 @@ static int builtin_bg( wchar_t **argv )
   		job_t *j;
 		for( j=first_job; j; j=j->next )
 		{
-			if( job_is_stopped(j) && j->job_control && (!job_is_completed(j)) )
+			if( job_is_stopped(j) && job_get_flag( j, JOB_CONTROL ) && (!job_is_completed(j)) )
 			{
 				break;
 			}
@@ -2518,7 +2518,6 @@ static void builtin_end_add_function_def( function_data_t *d )
 
 	wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
 							parser_get_job_pos()-current_block->tok_pos );
-	
 	
 	function_add( d->name,
 				  def,

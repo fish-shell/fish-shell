@@ -146,6 +146,64 @@ typedef struct process
 } 
 	process_t;
 
+/** 
+	Constant for the flag variable in the job struct
+
+	true if user was told about stopped job 
+*/
+#define JOB_NOTIFIED 1
+/** 
+	Constant for the flag variable in the job struct
+
+	Whether this job is in the foreground 
+*/
+#define JOB_FOREGROUND 2
+/** 
+	Constant for the flag variable in the job struct
+
+	Whether the specified job is completely constructed,
+	i.e. completely parsed, and every process in the job has been
+	forked, etc.
+*/
+#define JOB_CONSTRUCTED 4
+/**
+	Constant for the flag variable in the job struct
+
+   Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported
+*/
+#define JOB_SKIP_NOTIFICATION 8
+/** 
+	Constant for the flag variable in the job struct
+
+	Should the exit status be negated? This flag can only be set by the not builtin. 
+*/
+#define JOB_NEGATE 16
+/** 
+	Constant for the flag variable in the job struct
+
+	This flag is set to one on wildcard expansion errors. It means that the current command should not be executed 
+*/
+#define JOB_WILDCARD_ERROR 32
+
+/** 
+	Constant for the flag variable in the job struct
+
+	Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or 
+*/
+#define JOB_SKIP 64
+
+/** 
+	Constant for the flag variable in the job struct
+
+	Whether the job is under job control 
+*/
+#define JOB_CONTROL 128
+/** 
+	Constant for the flag variable in the job struct
+
+	Whether the job wants to own the terminal when in the foreground 
+*/
+#define JOB_TERMINAL 256
 
 /** A pipeline of one or more processes. */
 typedef struct job
@@ -156,45 +214,22 @@ typedef struct job
 	process_t *first_process;  
 	/** process group ID */
 	pid_t pgid;   
-	/** true if user was told about stopped job */
-	int notified;     
 	/** saved terminal modes */
 	struct termios tmodes;    
 	/** The job id of the job*/
 	int job_id;
-	/** Whether this job is in the foreground */
-	int fg;
-	/** 
-		Whether the specified job is completely constructed,
-		i.e. completely parsed, and every process in the job has been
-		forked, etc.
-	*/
-	int constructed;
-	/**
-	   Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported
-	*/
-	int skip_notification;
 	
 	/** List of IO redrections for the job */
 	io_data_t *io;
-	
-	/** Should the exit status be negated? This flag can only be set by the not builtin. */
-	int negate;	
-
-	/** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
-	int wildcard_error;
-	
-	/** Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or */
-	int skip;
-
-	/** Whether the job is under job control */
-	int job_control;
-			
-	/** Whether the job wants to own the terminal when in the foreground */
-	int terminal;
 			
 	/** Pointer to the next job */
 	struct job *next;           
+
+	/**
+	   Bitset containing information about the job. A combination of the JOB_* constants.
+	*/
+	int flags;
+	
 } 
 	job_t;
 
@@ -260,6 +295,9 @@ extern int job_control_mode;
 */
 extern int no_exec;
 
+void job_set_flag( job_t *j, int flag, int set );
+
+int job_get_flag( job_t *j, int flag );
 
 /**
    Sets the status of the last process to exit

@@ -1362,7 +1362,7 @@ static void parse_job_main_loop( process_t *p,
 			
 			case TOK_BACKGROUND:
 			{
-				j->fg = 0;
+				job_set_flag( j, JOB_FOREGROUND, 0 );
 			}
 			
 			case TOK_END:
@@ -1381,7 +1381,7 @@ static void parse_job_main_loop( process_t *p,
 			{
 				int skip=0;
 
-				if( j->skip )
+				if( job_get_flag( j, JOB_SKIP ) )
 				{
 					skip = 1;
 				}
@@ -1622,7 +1622,7 @@ static void parse_job_main_loop( process_t *p,
 	{
 		if( unmatched_wildcard && !matched_wildcard )
 		{
-			j->wildcard_error = 1;
+			job_set_flag( j, JOB_WILDCARD_ERROR, 1 );
 			proc_set_last_status( STATUS_UNMATCHED_WILDCARD );
 			if( is_interactive && !is_block )
 			{
@@ -1783,7 +1783,7 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
-				j->negate=1-j->negate;
+				job_set_flag( j, JOB_NEGATE, !job_get_flag( j, JOB_NEGATE ) );
 				consumed=1;
 			}
 		}
@@ -1796,7 +1796,7 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
-				j->skip = proc_get_last_status();
+				job_set_flag( j, JOB_SKIP, proc_get_last_status());
 				consumed=1;
 			}
 		}
@@ -1809,7 +1809,7 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
-				j->skip = !proc_get_last_status();
+				job_set_flag( j, JOB_SKIP, !proc_get_last_status());
 				consumed=1;
 			}
 		}
@@ -2053,7 +2053,8 @@ static int parse_job( process_t *p,
 						fwprintf( stderr, L"%ls", parser_current_line() );
 						
 						current_tokenizer_pos=tmp;
-						j->skip=1;
+
+						job_set_flag( j, JOB_SKIP, 1 );
 						proc_set_last_status( STATUS_UNKNOWN_COMMAND );
 					}
 				}
@@ -2258,9 +2259,10 @@ static void eval_job( tokenizer *tok )
 		case TOK_STRING:
 		{
 			j = job_create();
-			j->fg=1;
-			j->terminal = j->job_control && (!is_subshell && !is_event);
-			j->skip_notification = is_subshell || is_block || is_event || (!is_interactive);
+			job_set_flag( j, JOB_FOREGROUND, 1 );
+			job_set_flag( j, JOB_TERMINAL, job_get_flag( j, JOB_CONTROL ) );
+			job_set_flag( j, JOB_TERMINAL, job_get_flag( j, JOB_CONTROL ) && (!is_subshell && !is_event));
+			job_set_flag( j, JOB_SKIP_NOTIFICATION, is_subshell || is_block || is_event || (!is_interactive));
 			
 			current_block->job = j;
 			
@@ -2303,11 +2305,11 @@ static void eval_job( tokenizer *tok )
 					p->cmd = wcsdup( j->command );
 					p->skipped=current_block->skip;
 				}
-
+				
 				skip |= current_block->skip;
-				skip |= j->wildcard_error;
-				skip |= j->skip;
-
+				skip |= job_get_flag( j, JOB_WILDCARD_ERROR );
+				skip |= job_get_flag( j, JOB_SKIP );
+				
 				if(!skip )
 				{
 					int was_builtin = 0;

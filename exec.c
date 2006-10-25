@@ -609,7 +609,7 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 {
 	int res = 0;
 	
-	if( j->job_control )
+	if( job_get_flag( j, JOB_CONTROL ) )
 	{
 		if (!j->pgid)
 		{
@@ -638,7 +638,7 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 		j->pgid = getpid();
 	}
 
-	if( j->terminal && j->fg )
+	if( job_get_flag( j, JOB_TERMINAL ) && job_get_flag( j, JOB_FOREGROUND ) )
 	{
 		if( tcsetpgrp (0, j->pgid) && print_errors )
 		{
@@ -735,7 +735,7 @@ void exec( job_t *j )
 		}
 		else
 		{
-			j->constructed=1;
+			job_set_flag( j, JOB_CONSTRUCTED, 1 );
 			j->first_process->completed=1;
 			return;
 		}
@@ -767,7 +767,7 @@ void exec( job_t *j )
 	  inside a pipeline.
 	*/
 	
-	if( j->job_control )
+	if( job_get_flag( j, JOB_CONTROL ) )
 	{
 		for( p=j->first_process; p; p = p->next )
 		{
@@ -991,8 +991,8 @@ void exec( job_t *j )
 					
 					builtin_out_redirect = has_fd( j->io, 1 );
 					builtin_err_redirect = has_fd( j->io, 2 );		
-					fg = j->fg;
-					j->fg = 0;
+					fg = job_get_flag( j, JOB_FOREGROUND );
+					job_set_flag( j, JOB_FOREGROUND, 0 );
 					
 					signal_unblock();
 					
@@ -1005,7 +1005,7 @@ void exec( job_t *j )
 					  false during builtin execution so as not to confuse
 					  some job-handling builtins.
 					*/
-					j->fg = fg;
+					job_set_flag( j, JOB_FOREGROUND, fg );
 				}
 				
 				if( close_stdin )
@@ -1041,7 +1041,7 @@ void exec( job_t *j )
 					*/
 					if( p->next == 0 )
 					{
-						proc_set_last_status( j->negate?(!status):status);
+						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!status):status);
 					}
 					p->completed = 1;
 					break;
@@ -1091,7 +1091,7 @@ void exec( job_t *j )
 				{
 					if( p->next == 0 )
 					{
-						proc_set_last_status( j->negate?(!status):status);
+						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!status):status);
 					}
 					p->completed = 1;
 				}
@@ -1182,7 +1182,7 @@ void exec( job_t *j )
 					{
 						debug( 3, L"Set status of %ls to %d using short circut", j->command, p->status );
 						
-						proc_set_last_status( j->negate?(!p->status):p->status );
+						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!p->status):p->status );
 					}
 					break;
 					
@@ -1316,9 +1316,9 @@ void exec( job_t *j )
 	for( tmp = block_io; tmp; tmp=tmp->next )
 		j->io = io_remove( j->io, tmp );
 	
-	j->constructed = 1;
+	job_set_flag( j, JOB_CONSTRUCTED, 1 );
 
-	if( !j->fg )
+	if( !job_get_flag( j, JOB_FOREGROUND ) )
 	{
 		proc_last_bg_pid = j->pgid;
 	}

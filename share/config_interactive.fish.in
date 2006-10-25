@@ -28,7 +28,7 @@ if not set -q __fish_init_1_22_0
 				# These files are sometimes overwritten to by fish, so
 				# we want backups of them in case something goes wrong
 
-				cp ~/.fishd.(hostname)    $configdir/fish/fishh.(hostname).backup
+				cp ~/.fishd.(hostname)    $configdir/fish/fishd.(hostname).backup
 				cp ~/.fish_history        $configdir/fish/fish_history.backup
 
 				# Move the files

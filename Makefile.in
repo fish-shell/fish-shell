@@ -701,8 +701,10 @@ highlight.o: config.h signal.h fallback.h util.h wutil.h highlight.h
 highlight.o: tokenizer.h proc.h io.h parser.h event.h parse_util.h builtin.h
 highlight.o: function.h env.h expand.h sanity.h common.h complete.h output.h
 highlight.o: halloc.h halloc_util.h wildcard.h path.h
-history.o: config.h fallback.h util.h wutil.h history.h common.h reader.h
-history.o: env.h sanity.h signal.h halloc.h halloc_util.h path.h
+history2.o: config.h fallback.h util.h wutil.h history.h common.h halloc.h
+history2.o: halloc_util.h intern.h path.h
+history.o: config.h fallback.h util.h wutil.h history.h common.h halloc.h
+history.o: halloc_util.h intern.h path.h signal.h
 input.o: config.h signal.h fallback.h util.h wutil.h reader.h proc.h io.h
 input.o: common.h sanity.h input_common.h input.h parser.h event.h env.h
 input.o: expand.h output.h intern.h

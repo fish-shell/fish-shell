@@ -225,6 +225,7 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 			if( lines > 2*screen_height/3 )
 			{
 				wchar_t *pos;
+				int cut=0;
 				
 				/* Find first empty line */
 				for( pos=str; *pos; pos++ )
@@ -248,8 +249,15 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 						if( is_empty )
 						{
 							*(pos+1)=L'\0';
+							cut = 1;
+							break;
 						}
 					}
+				}
+				
+				if( !cut )
+				{
+					*str = 0;
 				}
 			}
 		}

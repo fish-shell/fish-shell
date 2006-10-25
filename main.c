@@ -122,24 +122,12 @@ static int read_init()
 	return 1;
 }
 
-/**
-   Calls a bunch of init functions, parses the init files and then
-   parses commands from stdin or files, depending on arguments
-*/
 
-int main( int argc, char **argv )
+static int fish_parse_opt( int argc, char **argv, char **cmd_ptr )
 {
-	int res=1;
-	int force_interactive=0;
 	int my_optind;
+	int force_interactive=0;
 	
-	char *cmd=0;	
-
-	halloc_util_init();	
-
-	wsetlocale( LC_ALL, L"" );
-	is_interactive_session=1;
-	program_name=L"fish";
 	
 	while( 1 )
 	{
@@ -204,7 +192,7 @@ int main( int argc, char **argv )
 			
 			case 'c':		
 			{
-				cmd = optarg;				
+				*cmd_ptr = optarg;				
 				is_interactive_session = 0;
 				break;
 			}
@@ -227,7 +215,7 @@ int main( int argc, char **argv )
 			
 			case 'h':
 			{
-				cmd = "help";
+				*cmd_ptr = "help";
 				break;
 			}
 			
@@ -266,7 +254,7 @@ int main( int argc, char **argv )
 			
 			case '?':
 			{
-				return 1;
+				exit( 1 );
 			}
 			
 		}		
@@ -276,10 +264,33 @@ int main( int argc, char **argv )
 	
 	is_login |= (strcmp( argv[0], "-fish") == 0);
 		
-	is_interactive_session &= (cmd == 0);
+	is_interactive_session &= (*cmd_ptr == 0);
 	is_interactive_session &= (my_optind == argc);
 	is_interactive_session &= isatty(STDIN_FILENO);	
 	is_interactive_session |= force_interactive;
+
+	return my_optind;
+}
+
+
+/**
+   Calls a bunch of init functions, parses the init files and then
+   parses commands from stdin or files, depending on arguments
+*/
+
+int main( int argc, char **argv )
+{
+	int res=1;
+	char *cmd=0;
+	int my_optind=0;
+
+	halloc_util_init();	
+
+	wsetlocale( LC_ALL, L"" );
+	is_interactive_session=1;
+	program_name=L"fish";
+
+	my_optind = fish_parse_opt( argc, argv, &cmd );
 
 	/*
 	  No-exec is prohibited when in interactive mode

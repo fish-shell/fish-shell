@@ -186,10 +186,6 @@ void function_add( const wchar_t *name,
 	d->cmd = wcsdup( val );
 	
 	cmd_end = d->cmd + wcslen(d->cmd)-1;
-	while( (cmd_end>d->cmd) && wcschr( L"\n\r\t ", *cmd_end ) )
-	{
-		*cmd_end-- = 0;
-	}
 	
 	d->desc = desc?wcsdup( desc ):0;
 	d->is_binding = is_binding;

@@ -382,10 +382,21 @@ check-uninstall:
 		echo ERROR;\
 		echo;\
 		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
-		echo You must uninstall this fish version before installing proceeding;\
+		echo You must uninstall this fish version before proceeding;\
 		echo type \'make uninstall-legacy\' to uninstall these files,;\
 		echo or type \'make force-install\' to force installation.;\
 		echo The latter may result in a broken installation.;\
+		echo;\
+		false;\
+	fi;
+	if test -f $(DESTDIR)$(sysconfdir)/fish; then \
+		echo;\
+		echo ERROR;\
+		echo;\
+		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
+		echo You must remove the file $(DESTDIR)$(sysconfdir)/fish before proceeding;\
+		echo type \'make uninstall-legacy\' to uninstall this file,;\
+		echo or remove it manually using \'rm $(DESTDIR)$(sysconfdir)/fish\'.;\
 		echo;\
 		false;\
 	fi;
@@ -406,7 +417,6 @@ install-force: all install-translations
 	for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
 	done;
-	rm $(DESTDIR)$(sysconfdir)/fish; true
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
@@ -445,20 +455,20 @@ install-force: all install-translations
 # Uninstall this fish version
 
 uninstall: uninstall-translations
-	for i in $(PROGRAMS); do \
+	-for i in $(PROGRAMS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
-	rm -f $(DESTDIR)$(bindir)/xsel
-	rm -f $(DESTDIR)$(sysconfdir)/fish/config.fish
-	rm -f $(DESTDIR)$(sysconfdir)/fish/fish_inputrc
-	rmdir $(DESTDIR)$(sysconfdir)/fish; true
-	if test -d $(DESTDIR)$(datadir)/fish; then \
+	-rm -f $(DESTDIR)$(bindir)/xsel
+	-rm -f $(DESTDIR)$(sysconfdir)/fish/config.fish
+	-rm -f $(DESTDIR)$(sysconfdir)/fish/fish_inputrc
+	-rmdir $(DESTDIR)$(sysconfdir)/fish
+	-if test -d $(DESTDIR)$(datadir)/fish; then \
 		rm -r $(DESTDIR)$(datadir)/fish; \
 	fi
-	if test -d $(DESTDIR)$(docdir); then \
+	-if test -d $(DESTDIR)$(docdir); then \
 		rm -r $(DESTDIR)$(docdir);\
 	fi
-	for i in $(MANUALS); do \
+	-for i in $(MANUALS); do \
 		rm -f $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;
 .PHONY: uninstall
@@ -468,10 +478,10 @@ uninstall: uninstall-translations
 # the sysadmin.
 
 uninstall-legacy: uninstall
-	rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish
-	rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish
-	rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish
-	if test -d $(DESTDIR)$(sysconfdir)/fish.d/completions; then \
+	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish
+	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish
+	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish
+	-if test -d $(DESTDIR)$(sysconfdir)/fish.d/completions; then \
 		for i in $(COMPLETIONS_DIR_FILES); do \
 			basename=`basename $$i`; \
 			if test -f $(DESTDIR)$(sysconfdir)/fish.d/completions/$$basename; then \
@@ -479,8 +489,9 @@ uninstall-legacy: uninstall
 			fi; \
 		done; \
 	fi;
-	rmdir $(DESTDIR)$(sysconfdir)/fish.d/completions; true
-	rmdir $(DESTDIR)$(sysconfdir)/fish.d; true
+	-rmdir $(DESTDIR)$(sysconfdir)/fish.d/completions
+	-rmdir $(DESTDIR)$(sysconfdir)/fish.d
+	-rm $(DESTDIR)$(sysconfdir)/fish
 	@echo The previous fish installation has been removed. 
 .PHONY: uninstall-legacy
 

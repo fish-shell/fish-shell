@@ -948,7 +948,16 @@ void al_truncate( array_list_t *l, int new_sz )
 
 static anything_t al_pop_generic( array_list_t *l )
 {
-	anything_t e = l->arr[--l->pos];
+	anything_t e;
+
+	if( l->pos <= 0 )
+	{
+		memset( &e, 0, sizeof(anything_t ) );
+		return e;
+	}
+	
+	
+	e = l->arr[--l->pos];
 	if( (l->pos*3 < l->size) && (l->size < MIN_SIZE) )
 	{
 		anything_t *old_arr = l->arr;

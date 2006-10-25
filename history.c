@@ -499,14 +499,19 @@ static void history_populate_from_mmap( history_mode_t *m )
 			ignore_newline = *pos == '#';
 
 			i = item_get( m, pos );
-			assert( i!=pos );
 			
 			if( (i_orig=hash_get( &current_mode->session_item, i ) ) )
 			{
+				/*
+				  This item comes from this session. Insert the original item at the end of the item list.
+				*/
 				al_push( &session_item_list, i_orig );				
 			}
 			else
 			{
+				/*
+				  Old item. Insert pointer directly to the item list
+				*/
 				al_push( &m->item, pos );
 			}
 			
@@ -664,7 +669,7 @@ static void history_save_mode( void *n, history_mode_t *m )
 			hash_destroy( &mine );
 		
 			/*
-			  Add our own items
+			  Add our own items last
 			*/		
 			for( i=0; i<al_get_count(&m->item); i++ )
 			{
@@ -676,7 +681,11 @@ static void history_save_mode( void *n, history_mode_t *m )
 			
 			if( fclose( out ) )
 			{
-				
+				/*
+				  This message does not have high enough priority to
+				  be shown by default.
+				*/
+				debug( 2, L"Error when writing history file" );
 			}
 			else
 			{
@@ -804,11 +813,20 @@ const wchar_t *history_prev_match( const wchar_t *needle )
 		
 		if( !current_mode->has_loaded )
 		{
+			/*
+			  We found no match in the list, try loading the history
+			  file and continue the search
+			*/
 			history_load( current_mode );
 			return history_prev_match( needle );
 		}
 		else
 		{
+			/*
+			  We found no match in the list, and the file is already
+			  loaded. Set poition before first element and return
+			  original search string.
+			*/
 			current_mode->pos=-1;
 			if( al_peek_long( &current_mode->used ) != -1 )
 				al_push_long( &current_mode->used, -1 );

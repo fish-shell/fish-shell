@@ -1026,7 +1026,6 @@ typedef struct function_data
 	wchar_t *name;
 	wchar_t *description;
 	int is_binding;
-	int do_save;
 	array_list_t *events;
 }
 	function_data_t;
@@ -1043,7 +1042,6 @@ static int builtin_function( wchar_t **argv )
 	int res=0;
 	wchar_t *desc=0;
 	int is_binding=0;
-	int do_save=0;
 	array_list_t *events;
 	int i;
 
@@ -1084,10 +1082,6 @@ static int builtin_function( wchar_t **argv )
 			}
 			,
 			{
-				L"save", no_argument, 0, 'S'
-			}
-			,
-			{
 				0, 0, 0, 0
 			}
 		}
@@ -1099,7 +1093,7 @@ static int builtin_function( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"bd:s:j:p:v:hS",
+								L"bd:s:j:p:v:h",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1253,11 +1247,6 @@ static int builtin_function( wchar_t **argv )
 				break;
 			}
 
-			case 'S':
-				do_save = 1;
-				break;
-		
-
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return 0;
@@ -1344,7 +1333,6 @@ static int builtin_function( wchar_t **argv )
 		d->description=desc?halloc_wcsdup( current_block, desc):0;
 		d->is_binding = is_binding;
 		d->events = events;
-		d->do_save = do_save;
 		
 		for( i=0; i<al_get_count( events ); i++ )
 		{
@@ -2537,8 +2525,7 @@ static int builtin_begin( wchar_t **argv )
 }
 
 /**
-   Define the function specified by the function_data_t structure. If
-   the do_save flag is set, also write it out to file.
+   Define the function specified by the function_data_t structure. 
 */
 static void builtin_end_add_function_def( function_data_t *d )
 {
@@ -2547,11 +2534,10 @@ static void builtin_end_add_function_def( function_data_t *d )
 	   until the end command and use as the new definition
 	   for the specified function
 	*/
-	void *context = halloc( 0, 0 );
 
-	wchar_t *def = halloc_wcsndup( context,
-								   parser_get_buffer()+current_block->tok_pos,
-								   parser_get_job_pos()-current_block->tok_pos );
+	wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
+							parser_get_job_pos()-current_block->tok_pos );
+	
 	
 	function_add( d->name,
 				  def,
@@ -2559,178 +2545,7 @@ static void builtin_end_add_function_def( function_data_t *d )
 				  d->events,
 				  d->is_binding );
 	
-	if( d->do_save )
-	{
-		wchar_t *func_path;
-		array_list_t func_path_list;
-
-		func_path = env_get( L"fish_function_path" );
-		
-		if( !func_path )
-		{
-			sb_printf( sb_err, 
-					   _(L"%ls: Can't save the function '%ls' because the function path is undefined. Define the variable $fish_function_path to a suitable directory and retry"), 
-					   L"function", 
-					   d->name );
-			
-		}
-		else
-		{
-			wchar_t *target_dir=0;
-			int i;
-			struct stat buf;
-			
-			al_init( &func_path_list );
-		
-			tokenize_variable_array( func_path, &func_path_list );
-			
-			for( i=0; i<al_get_count( &func_path_list ); i++ )
-			{
-				wchar_t *dir = (wchar_t *)al_get( &func_path_list, i );
-				if( !wstat( dir, &buf ) )
-				{
-					if( S_ISDIR( buf.st_mode ) && 
-						(waccess( dir, W_OK ) == 0 ) )
-					{
-						/*
-						  We have found the first writeable directory
-						  in the path
-						*/	
-						target_dir = dir;
-						break;
-
-					}
-					
-				}
-				else
-				{
-					if( errno == ENOENT )
-					{
-
-
-						wchar_t *dir_copy = halloc_wcsdup( context, dir );
-						array_list_t *subdirs = al_halloc( context );
-
-						//debug( 0, L"Directory %ls doesn't exist. Check if parent is writeable by us", dir );
-						
-						while( 1 )
-						{
-							wchar_t *sub = halloc_wcsdup( context, dir_copy );
-							al_push( subdirs, sub );
-
-							dir_copy = wdirname( dir_copy );
-							
-							if( !wstat( dir_copy, &buf ) )
-							{
-															
-								if( S_ISDIR( buf.st_mode ) && 
-									(waccess( dir_copy, W_OK ) == 0 ) )
-								{
-									int j;
-									int create_err = 0;
-									
-									for( j = al_get_count( subdirs ) -1; j >= 0; j-- )
-									{
-										wchar_t *cre = (wchar_t *)al_get( subdirs, j);
-										if( wmkdir( cre, 0700 ) )
-										{
-											create_err = 1;
-											break;
-										}
-																				
-									}
-
-									if( !create_err )
-										target_dir = dir;
-									
-									
-									break;
-								}
-								else
-								{
-									break;									
-								}
-								
-							}
-							else
-							{
-								if( errno != ENOENT )
-								{
-									break;
-								}
-							}
-							
-							if( wcslen( dir_copy ) <= 1 )
-								break;
-
-						}
-						
-						if( target_dir )
-							break;
-					}
-					
-				}
-				
-				
-			}
-
-			//debug( 0, L"target directory is %ls", target_dir );
-			
-			if( target_dir )
-			{
-				int err=0;
-				string_buffer_t filename;
-				FILE *out;
-				wchar_t *efunc = L"unknown";
-				
-
-				sb_init( &filename );
-				
-				sb_printf( &filename, 
-						   L"%ls/%ls.fish",
-						   target_dir, 
-						   d->name );
-				
-				if( (out = wfopen( (wchar_t *)filename.buff, "w" )))
-				{
-					string_buffer_t *tmp = sb_halloc( context );
-					functions_def( d->name, tmp );
-					
-					fwprintf( out, L"%ls", (wchar_t *)tmp->buff );
-					if( fclose( out ) )
-					{
-						efunc = L"fclose";
-						err = 1;
-					}
-				}
-				else
-				{
-					efunc = L"wfopen";
-					err=1;
-				}
-
-				sb_destroy( &filename );
-				
-				if( err )
-				{
-					sb_printf( sb_err, 
-							   _(L"%ls: Unexpected error while saving function %ls\n"), 
-							   L"function",
-							   d->name );
-					builtin_wperror( efunc );
-					
-				}
-				
-			}
-			
-			
-			al_foreach( &func_path_list, &free );
-			al_destroy( &func_path_list );
-		}
-		
-	}
-
-	halloc_free( context );
+	free( def );
 	
 }
 

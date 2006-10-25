@@ -167,5 +167,4 @@ void reader_handle_int( int signal );
 */
 int reader_exit_forced();
 
-
 #endif

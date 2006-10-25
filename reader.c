@@ -361,6 +361,9 @@ int reader_exit_forced()
 	return exit_forced;
 }
 
+/**
+   Internal helper function for handling killing parts of text.
+*/
 static void reader_kill( wchar_t *begin, int length, int mode, int new )
 {
 	if( new )
@@ -642,7 +645,7 @@ void reader_exit( int do_exit, int forced )
 void repaint()
 {
 	parser_test( data->buff, data->indent, 0, 0 );
-
+	
 	s_write( &data->screen,
 			 (wchar_t *)data->prompt_buff.buff,
 			 data->buff,
@@ -1286,13 +1289,16 @@ void reader_replace_current_token( wchar_t *new_token )
 */
 static void handle_history( const wchar_t *new_str )
 {
-	data->buff_len = wcslen( new_str );
-	check_size();
-	wcscpy( data->buff, new_str );
-	data->buff_pos=wcslen(data->buff);
-	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	if( new_str )
+	{
+		data->buff_len = wcslen( new_str );
+		check_size();
+		wcscpy( data->buff, new_str );
+		data->buff_pos=wcslen(data->buff);
+		reader_super_highlight_me_plenty( data->buff_pos, 0 );
 
-	repaint();
+		repaint();
+	}
 }
 
 /**
@@ -1840,7 +1846,6 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 			int start = match-data->buff;
 			int count = wcslen(data->search_buff );
 			int i;
-//			fwprintf( stderr, L"WEE color from %d to %d\n", start, start+count );
 
 			for( i=0; i<count; i++ )
 			{
@@ -1871,7 +1876,6 @@ static int read_i()
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &shell_test );
 
-//	data->prompt_width=60;
 	data->prev_end_loop=0;
 
 	while( (!data->end_loop) && (!sanity_check()) )
@@ -1980,7 +1984,8 @@ wchar_t *reader_readline()
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	repaint();
 
-	tcgetattr(0,&old_modes);        /* get the current terminal modes */
+	/* get the current terminal modes. These will be restored when the function returns. */
+	tcgetattr(0,&old_modes);        
 	if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
 	{
         wperror(L"tcsetattr");

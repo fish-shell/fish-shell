@@ -69,6 +69,10 @@ pid_t getpgid( pid_t pid );
 */
 #define FORK_ERROR _( L"Could not create child process - exiting" )
 
+/**
+   Base open mode to pass to calls to open
+*/
+#define BASE_MASK 0666
 
 /**
    List of all pipes used by internal pipes. These must be closed in
@@ -272,7 +276,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 			case IO_FILE:
 			{
 				if( (tmp=wopen( io->param1.filename,
-                                io->param2.flags, 0777 ) )==-1 )
+                                io->param2.flags, BASE_MASK ) )==-1 )
 				{
 					debug( 1, 
 						   FILE_ERROR,
@@ -527,7 +531,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		{
 			int fd;
 			
-			if( (fd=wopen( in->param1.filename, in->param2.flags, 0777 ) )==-1 )
+			if( (fd=wopen( in->param1.filename, in->param2.flags, BASE_MASK ) )==-1 )
 			{
 				debug( 1, 
 					   FILE_ERROR,
@@ -941,7 +945,7 @@ void exec( job_t *j )
 							case IO_FILE:
 							{
 								builtin_stdin=wopen( in->param1.filename,
-                                              in->param2.flags, 0777 );
+                                              in->param2.flags, BASE_MASK );
 								if( builtin_stdin == -1 )
 								{
 									debug( 1, 

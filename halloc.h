@@ -11,7 +11,8 @@
 
 /**
    Allocate new memory using specified parent memory context. Context
-   _must_ be either 0 or the result of a previous call to halloc.
+   _must_ be either 0 or the result of a previous call to halloc. The
+   resulting memory is set to zero.
 
    If \c context is null, the resulting block is a root block, and
    must be freed with a call to halloc_free().

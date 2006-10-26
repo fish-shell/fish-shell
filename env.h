@@ -94,7 +94,7 @@ int env_set( const wchar_t *key,
 wchar_t *env_get( const wchar_t *key );
 
 /**
-   Returns 1 if the specified key exists. This can't be reliable done
+   Returns 1 if the specified key exists. This can't be reliably done
    using env_get, since env_get returns null for 0-element arrays
 
    \param key The name of the variable to remove

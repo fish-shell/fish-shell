@@ -1642,8 +1642,16 @@ static void parse_job_main_loop( process_t *p,
 
 	return;
 }
-
-
+/*
+static void print_block_stack( block_t *b )
+{
+	if( !b )
+		return;
+	print_block_stack( b->outer );
+	
+	debug( 0, L"Block type %ls, skip: %d", parser_get_block_desc( b->type ), b->skip );	
+}
+*/
 	
 /**
    Fully parse a single job. Does not call exec on it, but any command substitutions in the job will be executed.

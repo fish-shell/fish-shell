@@ -318,20 +318,20 @@ static int al_contains_long( array_list_t *list,
 */
 static void erase_values(array_list_t *list, array_list_t *indexes) 
 {
-	int i;
+	long i;
 	array_list_t result;
 
 	al_init(&result);
 
 	for (i = 0; i < al_get_count(list); i++) 
 	{
-		if (!al_contains_long(indexes, (long)i + 1)) 
+		if (!al_contains_long(indexes, i + 1)) 
 		{
 			al_push(&result, al_get(list, i));
 		}
 		else 
 		{
-			free((void *) al_get(list, i));
+			free( (void *)al_get(list, i));
 		}
 	}
 	
@@ -375,16 +375,22 @@ static void print_variables(int include_values, int esc, int scope)
 					shorten = 1;
 					value = wcsndup( value, 60 );
 					if( !value )
+					{
 						DIE_MEM();
+					}
 				}
+				
 				e_value = esc ? expand_escape_variable(value) : wcsdup(value);
+				
 				sb_append2(sb_out, L" ", e_value, (void *)0);
 				free(e_value);
+				
 				if( shorten )
 				{
 					sb_append(sb_out, L"\u2026");
 					free( value );
 				}
+
 			}
 		}
 		

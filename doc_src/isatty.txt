@@ -6,7 +6,7 @@
 where FILE DESCRIPTOR may be either the number of a file descriptor, or one
 of the strings stdin, stdout and stderr.
 
-If he specified file descriptor is a tty, the exit status of the
+If the specified file descriptor is a tty, the exit status of the
 command is zero, otherwise, it is non-zero.
 
 

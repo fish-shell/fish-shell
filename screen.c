@@ -285,9 +285,10 @@ static void s_check_status( screen_t *s)
 		  to repaint. However, we do not know where the cursor is. It
 		  is our best bet that we are still on the same line, so we
 		  move to the beginning of the line, reset the modelled screen
-		  contents, and then set the modeled curor y-pos to its
+		  contents, and then set the modeled cursor y-pos to its
 		  earlier value. 
 		*/
+		
 		int prev_line = s->actual_cursor[1];
 		write( 1, "\r", 1 );
 		s_reset( s );

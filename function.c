@@ -309,8 +309,6 @@ static void get_names_internal( void *key,
 								void *aux )
 {
 	wchar_t *name = (wchar_t *)key;
-	function_data_t *f = (function_data_t *)val;
-	
 	if( name[0] != L'_' && !al_contains_str( (array_list_t *)aux, name ) )
 	{
 		al_push( (array_list_t *)aux, name );

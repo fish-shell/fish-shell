@@ -52,7 +52,8 @@ extern struct termios shell_modes;
 extern wchar_t ellipsis_char;
 
 /**
-   The verbosity of fish
+   The verbosity level of fish. If a call to debug has a severity
+   level higher than \c debug_level, it will not be printed.
 */
 extern int debug_level;
 

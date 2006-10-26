@@ -13,7 +13,7 @@
 
 	3). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
 
-	4). Add an entry to the BUILTIN_DOC_SRC variable of Makefile.in. Note that the entries should be sorted alphabetically!
+	4). Add an entry to the BUILTIN_DOC_SRC variable of Makefile.in.
 
 	5). Add an entry to the manual at the builtin-overview subsection of doc_src/doc.hdr. Note that the entries should be sorted alphabetically!
 

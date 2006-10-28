@@ -341,7 +341,7 @@ These are the general purpose tab completions that \c fish provides:
 - Completion of commands, both builtins, functions and regular programs.
 - Completion of environment variable names.
 - Completion of usernames for tilde expansion.
-- Completion of filenames, even on strings with wildcards such as '*' and '?'.
+- Completion of filenames, even on strings with wildcards such as '*', '**' and '?'.
 - Completion of job id, job name and process names for <a href="#expand-process">process expansion</a>.
 
 \c fish provides a large number of program specific completions. Most
@@ -430,13 +430,21 @@ parameter to be expanded. These include:
 
 If a star (*) or a question mark (?) is present in the parameter, \c
 fish attempts to match the given parameter to any files in such a
-way that '?' can match any character except '/' and '*' can match any
-string of characters not containing '/'.
+way that:
 
-Example:
+- '?' can match any character except '/'.
+- '*' can match any string of characters not containing '/'. This includes matching an empty string.
+- '**' matches any string of characters. This includes matching an empty string. The string may include the '/' character but does not need to.
+
+Examples:
+
 <code>a*</code> matches any files beginning with an 'a' in the current directory.
 
 <code>???</code> matches any file in the current directory whose name is exactly three characters long.
+
+<code>**</code> matches any files and directories in the current directory and all of its subdirectories.
+
+<code>**/</code> matches any directories in the current directory and all of its subdirectories.
 
 If no matches are found for a specific wildcard, it will expand into
 zero arguments, i.e. to nothing. If none of the wildcarded arguments
@@ -959,8 +967,8 @@ Here are some of the commands available in the editor:
 - Alt-left and Alt-right moves one word left or right, or moves forward/backward in the directory history if the commandline is empty
 - Up and down search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history </a>section for more information on history searching.
 - Alt-up and Alt-down search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history </a>section for more information on history searching.
-- Delete and backspace removes one character forwards or backwards
-- Ctrl-c delete entire line
+- Delete and backspace removes one character forwards or backwards respecitvely
+- Ctrl-c deletes entire line
 - Ctrl-d delete one character to the right of the cursor, unless the buffer is empty, in which case the shell will exit
 - Ctrl-k move contents from the cursor to the end of line to the <a href="#killring">killring</a>
 - Ctrl-u move contents from the beginning of line to the cursor to the <a href="#killring">killring</a>
@@ -1048,6 +1056,20 @@ Example:
 
 To search for previous entries containing the word 'make', type 'make'
 in the console and press the up key.
+
+\subsection multiline Multiline editing
+
+The fish commandline editor can be used to work on commands that are
+several lines long. There are three ways to make a command span more
+than a single line:
+
+- Pressing the enter key while a block of commands is unclosed, i.e. when one or more block commands such as 'for', 'begin' or 'if' do not have a corresponding 'end' command.
+- Pressing Alt-enter instead of pressing the enter key.
+- By backslash escaping a newline, i.e. by inserting a backslash (\\) character pefore pressing the enter key.
+
+The fish commandline editor works exactly the same in single line mode
+and in multiline mode. To move between lines use the left and right
+arrow keys and other such keyboard shortcuts.
 
 \section job-control Running multiple programs
 
@@ -1305,7 +1327,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - With a bit of tweakage, quite a few of the readline key-binding functions could be implemented in shellscript.
 - Highlight beginning/end of block when moving over a block command
 - Inclusion guards for the init files to make them evaluate only once, even if the user has installed fish both in /etc and in $HOME
-- Do not actually load/parse fish_history, only mmap it and use some clever string handling. Should save ~150 kB of memory permanently, but is very hard to implement.
 - command specific wildcarding (use case * instead of case '*', etc.)
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
 - Descriptions for variables using 'set -d'.
@@ -1322,6 +1343,10 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Shellscript functions should be able to show help on the commandline instead of launching a browser
 - Drop support for inputrc-files. Use shellscripts and the bind builtin. Also, redo the syntax for the bind builtin to something more sane.
 - History could reload itself when the file is updated. This would need to be done in a clever way to avoid chain reactions
+- The error function should probably be moved into it's own library, and be made mere general purpose.
+- The code validation functions should be moved from the parser to parse_util.
+- The parser_is_* functions should be moved to parse_util. Possibly, they should be made into a single function, i.e. parse_util_classify( "begin", BLOCK_COMMAND);
+- Try to remove more malloc calls to reduce memory usage. The time_t arrays used by the autoloader sound like a good candidate. 
 
 \subsection bugs Known bugs
 

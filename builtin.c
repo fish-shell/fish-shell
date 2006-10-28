@@ -2875,15 +2875,15 @@ static int builtin_case( wchar_t **argv )
 const static builtin_data_t builtin_data[]=
 {
 	{
-		L"exit",  &builtin_exit, N_( L"Exit the shell" )  
+		L"exit",  &builtin_exit, N_( L"Exit the shell" )
 	}
 	,
 	{
-		L"block",  &builtin_block, N_( L"Temporarily block delivery of events" )  
+		L"block",  &builtin_block, N_( L"Temporarily block delivery of events" )
 	}
 	,
 	{
-		L"builtin",  &builtin_builtin, N_( L"Run a builtin command instead of a function" )  
+		L"builtin",  &builtin_builtin, N_( L"Run a builtin command instead of a function" )
 	}
 	,
 	{
@@ -3085,6 +3085,8 @@ int builtin_exists( wchar_t *cmd )
 */
 static int internal_help( wchar_t *cmd )
 {
+	CHECK( cmd, 0 );
+	
 	if( wcscmp( cmd, L"for" ) == 0 ||
 		wcscmp( cmd, L"while" ) == 0 ||
 		wcscmp( cmd, L"function" ) == 0 ||

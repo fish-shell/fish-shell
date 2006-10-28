@@ -78,9 +78,9 @@ extern wchar_t *program_name;
 	if( !(arg) )														\
 	{																	\
 		debug( 1,														\
-			   L"function %s called with null value for argument %s. "	\
-			   L"This is a bug. "										\
-			   L"If you can reproduce it, please send a bug report to %s.", \
+			   _( L"function %s called with null value for argument %s. " \
+				  L"This is a bug. "									\
+				  L"If you can reproduce it, please send a bug report to %s." ), \
 			   __func__,												\
 			   #arg,													\
 			   PACKAGE_BUGREPORT );										\
@@ -96,7 +96,7 @@ extern wchar_t *program_name;
 		fwprintf( stderr, L"fish: Out of memory on line %d of file %s, shutting down fish\n", __LINE__, __FILE__ );	\
 		exit(1);														\
 	}																	\
-		
+
 /**
    Shorthand for wgettext call
 */

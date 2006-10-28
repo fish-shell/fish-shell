@@ -1321,10 +1321,10 @@ int parser_is_help( wchar_t *s, int min_match )
    \param tok the tokenizer to read options from
    \param args the argument list to insert options into
 */
-static void parse_job_main_loop( process_t *p,
-								 job_t *j,
-								 tokenizer *tok,
-								 array_list_t *args )
+static void parse_job_argument_list( process_t *p,
+									 job_t *j,
+									 tokenizer *tok,
+									 array_list_t *args )
 {
 	int is_finished=0;
 
@@ -2193,7 +2193,7 @@ static int parse_job( process_t *p,
 		}
 		else
 		{
-			parse_job_main_loop( p, j, tok, args );
+			parse_job_argument_list( p, j, tok, args );
 		}
 	}
 

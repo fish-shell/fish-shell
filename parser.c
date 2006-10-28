@@ -470,6 +470,17 @@ void parser_push_block( int type )
 void parser_pop_block()
 {
 	block_t *old = current_block;
+	if( !current_block )
+	{
+		debug( 1,
+			   L"function %s called on empty block stack. "
+			   L"This is a bug. "
+			   L"If you can reproduce it, please send a bug report to %s.",
+			   __func__,
+			   PACKAGE_BUGREPORT );										\
+		return;
+	}
+	
 	current_block = current_block->outer;
 	halloc_free( old );
 }
@@ -495,7 +506,6 @@ const wchar_t *parser_get_block_desc( int block )
 */
 static int parser_skip_arguments( const wchar_t *cmd )
 {
-
 	return contains_str( cmd,
 						 L"else",
 						 L"begin",
@@ -568,6 +578,8 @@ static const wchar_t *parser_find_end( const wchar_t * buff )
 	int count = 0;
 	int error=0;
 	int mark=0;
+
+	CHECK( buff, 0 );
 
 	for( tok_init( &tok, buff, 0 );
 		 tok_has_next( &tok ) && !error;
@@ -652,6 +664,7 @@ void parser_forbid_function( wchar_t *function )
   if( function )
   debug( 2, L"Forbid %ls\n", function );
 */
+	CHECK( function, );
 	al_push( forbidden_function, function?wcsdup(function):0 );
 }
 
@@ -668,6 +681,8 @@ void error( int ec, int p, const wchar_t *str, ... )
 {
 	va_list va;
 
+	CHECK( str, );
+	
 	if( !err_buff )
 		err_buff = sb_halloc( global_context );
 	sb_clear( err_buff );	
@@ -820,6 +835,9 @@ void parser_destroy()
 */
 static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 {
+	CHECK( target, );
+	CHECK( prefix, );
+	
 	if( error_code && err_buff )
 	{
 		int tmp;
@@ -1042,9 +1060,10 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 }
 
 /**
-   Returns true if we are currently evaluating a function. This is
-   tested by moving down the block-scope-stack, checking every block
-   if it is of type FUNCTION_CALL.
+   Returns the name of the currently evaluated function if we are
+   currently evaluating a function, null otherwise. This is tested by
+   moving down the block-scope-stack, checking every block if it is of
+   type FUNCTION_CALL.
 */
 static const wchar_t *is_function()
 {
@@ -1121,6 +1140,9 @@ static int printed_width( const wchar_t *str, int len )
 {
 	int res=0;
 	int i;
+
+	CHECK( str, 0 );
+
 	for( i=0; str[i] && i<len; i++ )
 	{
 		if( str[i] == L'\t' )
@@ -1279,7 +1301,11 @@ const wchar_t *parser_get_buffer()
 
 int parser_is_help( wchar_t *s, int min_match )
 {
-	int len = wcslen(s);
+	int len;
+
+	CHECK( s, 0 );
+
+	len = wcslen(s);
 
 	min_match = maxi( min_match, 3 );
 		
@@ -1901,18 +1927,21 @@ static int parse_job( process_t *p,
 		
 		if( use_function && !current_block->skip )
 		{
-			int nxt_forbidden;
+			int nxt_forbidden=0;
 			wchar_t *forbid;
 
-			forbid = (wchar_t *)(al_get_count( forbidden_function)?al_peek( forbidden_function ):0);
-			nxt_forbidden = forbid && (wcscmp( forbid, nxt) == 0 );
+			if( current_block->type == FUNCTION_CALL )
+			{
+				forbid = (wchar_t *)(al_get_count( forbidden_function)?al_peek( forbidden_function ):0);
+				nxt_forbidden = forbid && (wcscmp( forbid, nxt) == 0 );
+			}
 			
 			/*
 			  Make feeble attempt to avoid infinite recursion. Will at
 			  least catch some accidental infinite recursion calls.
 			*/
-			
-			if( function_exists( nxt ) && !nxt_forbidden)
+		
+			if( !nxt_forbidden && function_exists( nxt ) )
 			{
 				/*
 				  Check if we have reached the maximum recursion depth

@@ -2,6 +2,10 @@
 
     Various mostly unrelated utility functions related to parsing,
     loading and evaluating fish code.
+
+	This library can be seen as a 'toolbox' for functions that are
+	used in many places in fish and that are somehow related to
+	parsing the code. 
 */
 
 #include "config.h"
@@ -491,9 +495,18 @@ static void clear_hash_value( void *key, void *data, void *aux )
 	if( aux )
 	{
 		wchar_t *name = (wchar_t *)key;
+		time_t *time = (time_t *)data;
 		void (*handler)(const wchar_t *)= (void (*)(const wchar_t *))aux;
-		if( handler )
+
+		/*
+		  If time[0] is 0, that means the file really doesn't exist,
+		  it's simply been checked before. We should not unload it.
+		*/
+		if( time[0] && handler )
+		{
+//			debug( 0, L"Unloading function %ls", name );
 			handler( name );
+		}
 	}
 	
 	free( (void *)data );
@@ -540,14 +553,8 @@ static void parse_util_destroy()
 void parse_util_load_reset( const wchar_t *path_var_name,
 							void (*on_load)(const wchar_t *cmd) )
 {
-	wchar_t *path_var;
-	
 	CHECK( path_var_name, );
-	path_var = env_get( path_var_name );	
 
-	if( !path_var )
-		return;
-		
 	if( all_loaded )
 	{
 		void *key, *data;
@@ -654,7 +661,6 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 	}
 }
 
-
 static int parse_util_load_internal( const wchar_t *cmd,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
@@ -679,10 +685,10 @@ int parse_util_load( const wchar_t *cmd,
 	CHECK( path_var_name, 0 );
 	CHECK( cmd, 0 );
 
-	parse_util_autounload( path_var_name, cmd, on_load );
-	
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
+	parse_util_autounload( path_var_name, cmd, on_load );
+	
 	path_var = env_get( path_var_name );	
 	
 	/*
@@ -712,6 +718,18 @@ int parse_util_load( const wchar_t *cmd,
 
 	if( loaded )
 	{
+		/*
+		  Check if the lookup path has changed. If so, drop all loaded
+		  files and start from scratch.
+		*/
+		if( wcscmp( path_var, loaded->old_path ) != 0 )
+		{
+			debug( 0, L"path change, new path is %ls", path_var );			
+			parse_util_load_reset( path_var_name, on_load);
+			reload = parse_util_load( cmd, path_var_name, on_load, reload );
+			return reload;
+		}
+
 		/**
 		   Warn and fail on infinite recursion
 		*/
@@ -724,17 +742,7 @@ int parse_util_load( const wchar_t *cmd,
 			return 1;
 		}
 		
-		/*
-		  Check if the lookup path has changed. If so, drop all loaded
-		  files and start from scratch.
-		*/
-		if( wcscmp( path_var, loaded->old_path ) != 0 )
-		{
-			parse_util_load_reset( path_var_name, on_load);
-			reload = parse_util_load( cmd, path_var_name, on_load, reload );
-//			debug( 0, L"Reload" );
-			return reload;
-		}
+
 	}
 	else
 	{
@@ -742,6 +750,7 @@ int parse_util_load( const wchar_t *cmd,
 		  We have never tried to autoload using this path name before,
 		  set up initial data
 		*/
+//		debug( 0, L"Create brand new autoload_t for %ls->%ls", path_var_name, path_var );
 		loaded = malloc( sizeof( autoload_t ) );
 		if( !loaded )
 		{
@@ -819,7 +828,6 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	{
 		if(time(0)-tm[1]<=1)
 		{
-//			debug( 0, L"Cached" );
 			return 0;
 		}
 	}
@@ -829,8 +837,6 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	*/
 	if( !reload && tm )
 	{
-//		debug( 0, L"Weak check" );
-
 		return 0;
 	}
 	
@@ -871,9 +877,9 @@ static int parse_util_load_internal( const wchar_t *cmd,
 						  intern( cmd ),
 						  tm );
 
-
 				if( on_load )
 					on_load(cmd );
+
 
 				/*
 				  Source the completion file for the specified completion
@@ -888,6 +894,15 @@ static int parse_util_load_internal( const wchar_t *cmd,
 				free(src_cmd);
 				reloaded = 1;
 			}
+			else if( tm )
+			{
+				/*
+				  If we are rechecking an autoload file, and it hasn't
+				  changed, update the 'last check' timestamp.
+				*/
+				tm[1] = time(0);				
+			}
+			
 			break;
 		}
 	}
@@ -907,8 +922,6 @@ static int parse_util_load_internal( const wchar_t *cmd,
 		tm[1] = time(0);
 		hash_put( &loaded->load_time, intern( cmd ), tm );
 	}
-
-//	debug( 0, L"Regular return" );
 
 	return reloaded;	
 }

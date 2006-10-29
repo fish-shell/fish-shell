@@ -3,6 +3,8 @@
 The library for various signal related issues
 
 */
+#ifndef FISH_SIGNALH
+#define FISH_SIGNALH
 
 /**
    Get the integer signal value representing the specified signal, or
@@ -47,3 +49,10 @@ void signal_block();
    Unblock all signals
 */
 void signal_unblock();
+
+/**
+   Returns true if signals are being blocked
+*/
+int signal_is_blocked();
+
+#endif

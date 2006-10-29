@@ -42,6 +42,7 @@ The fish parser. Contains functions for parsing code.
 #include "halloc.h"
 #include "halloc_util.h"
 #include "path.h"
+#include "signal.h"
 
 /**
    Maximum number of block levels in code. This is not the same as
@@ -1699,7 +1700,7 @@ static int parse_job( process_t *p,
 
 	block_t *prev_block = current_block;
 	int prev_tokenizer_pos = current_tokenizer_pos;	
-	
+
 	current_tokenizer_pos = tok_get_pos( tok );
 
 	while( al_get_count( args ) == 0 )
@@ -2481,6 +2482,8 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	{
 		forbidden_function = al_new();
 	}
+	
+	CHECK_BLOCK( 1 );
 	
 	forbid_count = al_get_count( forbidden_function );
 

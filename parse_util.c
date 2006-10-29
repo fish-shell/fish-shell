@@ -685,6 +685,8 @@ int parse_util_load( const wchar_t *cmd,
 	CHECK( path_var_name, 0 );
 	CHECK( cmd, 0 );
 
+	CHECK_BLOCK( 0 );
+	
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
 	parse_util_autounload( path_var_name, cmd, on_load );
@@ -724,7 +726,6 @@ int parse_util_load( const wchar_t *cmd,
 		*/
 		if( wcscmp( path_var, loaded->old_path ) != 0 )
 		{
-			debug( 0, L"path change, new path is %ls", path_var );			
 			parse_util_load_reset( path_var_name, on_load);
 			reload = parse_util_load( cmd, path_var_name, on_load, reload );
 			return reload;
@@ -779,11 +780,15 @@ int parse_util_load( const wchar_t *cmd,
 
 	res = parse_util_load_internal( cmd, on_load, reload, loaded, path_list );
 
-	/**
-	   Cleanup
-	*/
-	hash_remove( &loaded->is_loading, cmd, 0, 0 );
-
+	autoload_t *loaded2 = (autoload_t *)hash_get( all_loaded, path_var_name );
+	if( loaded2 == loaded )
+	{
+		/**
+		   Cleanup
+		*/
+		hash_remove( &loaded->is_loading, cmd, 0, 0 );
+	}
+	
 	c2 = al_get_count( path_list );
 
 	al_foreach( path_list, &free );

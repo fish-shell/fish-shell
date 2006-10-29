@@ -858,7 +858,7 @@ void job_continue (job_t *j, int cont)
 	first_job = j;
 	job_set_flag( j, JOB_NOTIFIED, 0 );
 
-	debug( 4,
+	debug( 3,
 		   L"Continue job %d (%ls), %ls, %ls",
 		   j->job_id, 
 		   j->command, 
@@ -895,7 +895,7 @@ void job_continue (job_t *j, int cont)
 			}
 			signal_unblock();		
 		}
-
+		
 		/* 
 		   Send the job a continue signal, if necessary.  
 		*/
@@ -931,7 +931,6 @@ void job_continue (job_t *j, int cont)
 		{
 			int quit = 0;
 		
-//			debug( 1, L"wait loop" );	
 			/* 
 			   Wait for job to report. Looks a bit ugly because it has to
 			   handle the possibility that a signal is dispatched while

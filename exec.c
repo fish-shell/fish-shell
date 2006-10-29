@@ -682,12 +682,11 @@ void exec( job_t *j )
 	
 
 	CHECK( j, );
-		
+	CHECK_BLOCK();
+	
 	if( no_exec )
 		return;
 	
-	
-
 	sigemptyset( &chldset );
 	sigaddset( &chldset, SIGCHLD );
 	
@@ -873,7 +872,17 @@ void exec( job_t *j )
 		{
 			case INTERNAL_FUNCTION:
 			{
-				wchar_t * def = halloc_register( j, wcsdup( function_get_definition( p->argv[0] )));
+				const wchar_t * orig_def;
+				wchar_t * def=0;
+
+				signal_unblock();
+				orig_def = function_get_definition( p->argv[0] );
+				signal_block();
+				
+				if( orig_def )
+				{
+					def = halloc_register( j, wcsdup(orig_def) );
+				}
 				if( def == 0 )
 				{
 					debug( 0, _( L"Unknown function '%ls'" ), p->argv[0] );

@@ -74,7 +74,7 @@ extern wchar_t *program_name;
    failiure, the current function is ended at once. The second
    parameter is the exit status of the current function on failiure.
 */
-#define CHECK( arg, retval )					\
+#define CHECK( arg, retval )											\
 	if( !(arg) )														\
 	{																	\
 		debug( 1,														\
@@ -85,18 +85,44 @@ extern wchar_t *program_name;
 			   #arg,													\
 			   PACKAGE_BUGREPORT );										\
 		return retval;													\
-	}																	\
-		
+	}
 
 /**
    Exit program at once, leaving an error message about running out of memory
 */
-#define DIE_MEM()								\
+#define DIE_MEM()														\
 	{																	\
-		fwprintf( stderr, L"fish: Out of memory on line %d of file %s, shutting down fish\n", __LINE__, __FILE__ );	\
+		fwprintf( stderr,												\
+				  L"fish: Out of memory on line %d of file %s, shutting down fish\n", \
+				  __LINE__,												\
+				  __FILE__ );											\
 		exit(1);														\
-	}																	\
+	}
 
+/**
+   Cause fish to crash. This should only be usd for debugging.
+*/
+#define CRASH()									\
+	{											\
+		int *n = 0;								\
+		*n = 1;									\
+	}
+
+/**
+   Check if signals are blocked
+*/
+#define CHECK_BLOCK( retval )													\
+	if( signal_is_blocked() )											\
+	{																	\
+		debug( 0,														\
+			   L"function %s called while blocking signals. "			\
+			   L"This is a bug. "										\
+			   L"If you can reproduce it, please send a bug report to %s.",	\
+			   __func__,												\
+			   PACKAGE_BUGREPORT );										\
+		return retval;														\
+	}
+		
 /**
    Shorthand for wgettext call
 */

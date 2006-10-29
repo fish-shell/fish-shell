@@ -353,10 +353,6 @@ const wchar_t *function_get_definition_file( const wchar_t *argv )
 
 	CHECK( argv, 0 );
 		
-	if( is_autoload )
-		return 0;
-
-	load( argv );
 	data = (function_data_t *)hash_get( &function, argv );
 	if( data == 0 )
 		return 0;
@@ -371,10 +367,6 @@ int function_get_definition_offset( const wchar_t *argv )
 
 	CHECK( argv, -1 );
 		
-	if( is_autoload )
-		return -1;
-
-	load( argv );
 	data = (function_data_t *)hash_get( &function, argv );
 	if( data == 0 )
 		return -1;

@@ -12,4 +12,4 @@ complete -c which -l tty-only -d (N_ "Stop processing options on the right if no
 complete -c which -s v -s V -l version -d (N_ "Display version and exit")
 complete -c which -l help -d (N_ "Display help and exit")
 
-complete -c which -a "(__fish_complete_command)" -d "Command" -x
+complete -c which -a "(commandline -ct)(complete -C(commandline -ct))" -x

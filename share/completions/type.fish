@@ -8,5 +8,5 @@ complete -c type -s P -l force-path -d (N_ "Print path to command")
 
 complete -c type -a "(builtin -n)" -d (N_ "Builtin")
 complete -c type -a "(functions -n)" -d (N_ "Function")
-complete -c type -a "(__fish_complete_command)" -d (N_ "Command")
 
+complete -c type -a "(commandline -ct)(complete -C(commandline -ct))" -x

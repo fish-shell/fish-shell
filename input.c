@@ -131,7 +131,9 @@ static const wchar_t *name_arr[] =
 	L"null",
 	L"eof",
 	L"vi-arg-digit",
-	L"execute"
+	L"execute",
+	L"beginning-of-buffer",
+	L"end-of-buffer"
 }
 	;
 
@@ -209,7 +211,9 @@ static const wchar_t code_arr[] =
 	R_NULL,
 	R_EOF,
 	R_VI_ARG_DIGIT,
-	R_EXECUTE
+	R_EXECUTE,
+	R_BEGINNING_OF_BUFFER,
+	R_END_OF_BUFFER,
 }
 	;
 
@@ -1321,6 +1325,8 @@ static void add_emacs_bindings()
 	add_escaped_mapping( L"emacs", (L"\ed"), L"Alt-d", L"forward-kill-word" );
 	add_terminfo_mapping( L"emacs", (key_ppage), L"Page Up", L"beginning-of-history" );
 	add_terminfo_mapping( L"emacs", (key_npage), L"Page Down", L"end-of-history" );
+	add_escaped_mapping( L"emacs", (L"\e<"), L"Alt-<", L"beginning-of-buffer" );
+	add_escaped_mapping( L"emacs", (L"\e>"), L"Alt->", L"end-of-buffer" );
 }
 
 /**

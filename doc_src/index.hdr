@@ -1,4 +1,3 @@
-
 \section introduction Introduction
 
 This is the documentation for \c fish, the friendly interactive
@@ -1352,7 +1351,6 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Completion for gcc -\#\#\# option doesn't work.
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 - screen handling code can't handle tabs in input.
-- begining-of-line and end-of-line move to begining/end of buffer, and there are no macros for moving to beginning/end of buffer.
 
 
 If you think you have found a bug not described here, please send a

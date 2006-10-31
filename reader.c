@@ -2059,6 +2059,25 @@ wchar_t *reader_readline()
 			/* go to beginning of line*/
 			case R_BEGINNING_OF_LINE:
 			{
+				while( data->buff_pos>0 && data->buff[data->buff_pos-1] != L'\n' )
+					data->buff_pos--;
+				
+				repaint();
+				break;
+			}
+
+			case R_END_OF_LINE:
+			{
+				while( data->buff[data->buff_pos] && data->buff[data->buff_pos] != L'\n' )
+					data->buff_pos++;
+				
+				repaint();
+				break;
+			}
+
+			
+			case R_BEGINNING_OF_BUFFER:
+			{
 				data->buff_pos = 0;
 
 				repaint();
@@ -2066,7 +2085,7 @@ wchar_t *reader_readline()
 			}
 
 			/* go to EOL*/
-			case R_END_OF_LINE:
+			case R_END_OF_BUFFER:
 			{
 				data->buff_pos = data->buff_len;
 

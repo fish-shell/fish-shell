@@ -1,4 +1,4 @@
-\section fish_pager fish_pager - Internal command used by fish
+\section fish_pager fish_pager - internal command used by fish
 
 \subsection fish_pager-description Description
 

@@ -1,4 +1,4 @@
-\section if if - Conditionally execute a command
+\section if if - conditionally execute a command
 
 \subsection if-synopsis Synopsis
 <tt>if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end</tt>

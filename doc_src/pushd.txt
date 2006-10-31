@@ -1,4 +1,4 @@
-\section pushd pushd
+\section pushd pushd - push directory to directory stack
 
 \subsection pushd-synopsis Synopsis
 <tt>pushd [DIRECTORY]</tt>

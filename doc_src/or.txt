@@ -1,4 +1,4 @@
-\section or or - Conditionally execute a command
+\section or or - conditionally execute a command
 
 \subsection or-synopsis Synopsis
  <tt>COMMAND1; or COMMAND2</tt>

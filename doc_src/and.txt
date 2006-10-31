@@ -1,4 +1,4 @@
-\section and and - Conditionally execute a command
+\section and and - conditionally execute a command
 
 \subsection and-synopsis Synopsis
 <tt>COMMAND1; and COMMAND2</tt>

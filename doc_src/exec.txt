@@ -1,4 +1,4 @@
-\section exec exec - Execute command in current process
+\section exec exec - execute command in current process
 
 \subsection exec-synopsis Synopsis
  <tt>exec COMMAND [OPTIONS...]</tt>

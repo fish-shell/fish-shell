@@ -1,4 +1,4 @@
-\section dirh dirh
+\section dirh dirh - print directory history
 
 \subsection dirh-synopsis Synopsis
 <tt>dirh</tt>

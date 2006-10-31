@@ -1,4 +1,4 @@
-\section commandline commandline - Set or get the current commandline buffer
+\section commandline commandline - set or get the current commandline buffer
 
 \subsection commandline-synopsis Synopsis
 <tt>commandline [OPTIONS] [CMD]</tt>

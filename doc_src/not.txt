@@ -1,4 +1,4 @@
-\section not not - Negate the exit status of a job
+\section not not - negate the exit status of a job
 
 \subsection not-synopsis Synopsis
 <tt>not COMMAND [OPTIONS...]</tt>

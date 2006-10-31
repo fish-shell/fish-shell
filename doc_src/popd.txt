@@ -1,4 +1,4 @@
-\section popd popd
+\section popd popd - move through directory stack
 
 \subsection popd-synopsis Synopsis
 <tt>popd</tt>

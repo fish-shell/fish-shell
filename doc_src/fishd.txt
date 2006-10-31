@@ -1,4 +1,4 @@
-\section fishd fishd - Universal variable daemon
+\section fishd fishd - universal variable daemon
 
 \subsection fishd-synopsis Synopsis
  <tt>fishd [(-h|--help|-v|--version)]</tt>

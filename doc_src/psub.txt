@@ -1,4 +1,4 @@
-\section psub psub - Perform process substitution
+\section psub psub - perform process substitution
 
 \subsection psub-synopsis Synopsis
  <tt>COMMAND1 (COMMAND2|psub) </tt>

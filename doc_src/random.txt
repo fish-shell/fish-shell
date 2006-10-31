@@ -1,4 +1,4 @@
-\section random random - Generate random number
+\section random random - generate random number
 
 \subsection random-synopsis Synopsis
  <tt>random [SEED]</tt>

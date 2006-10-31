@@ -1,4 +1,4 @@
-\section set set - Handle environment variables.
+\section set set - handle environment variables.
 
 \subsection set-synopsis Synopsis
 <pre>

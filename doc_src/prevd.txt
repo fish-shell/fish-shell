@@ -1,4 +1,4 @@
-\section prevd prevd
+\section prevd prevd - move backward through direcotry history
 
 \subsection prevd-synopsis Synopsis
 <tt>prevd [-l | --list] [pos]</tt>

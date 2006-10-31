@@ -1,4 +1,4 @@
-\section dirs dirs
+\section dirs dirs - print directory stack
 
 \subsection dirs-synopsis Synopsis
 <tt>dirs</tt>

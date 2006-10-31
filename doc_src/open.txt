@@ -1,4 +1,4 @@
-\section open open - Open file in it's default application
+\section open open - open file in it's default application
 
 \subsection open-synopsis Synopsis
  <tt>open FILES...</tt>

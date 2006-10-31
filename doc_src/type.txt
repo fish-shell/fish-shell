@@ -1,4 +1,4 @@
-\section type type - Indicate how a name would be interpreted if used as a command name
+\section type type - indicate how a name would be interpreted if used as a command name
 
 \subsection type-synopsis Synopsis
  <tt>type [OPTIONS] name [name ...]</tt>

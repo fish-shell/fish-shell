@@ -1,4 +1,4 @@
-\section begin begin - Start a new block of code
+\section begin begin - start a new block of code
 
 \subsection begin-synopsis Synopsis
  <tt>begin; [COMMANDS...;] end</tt>

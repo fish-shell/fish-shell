@@ -1,4 +1,4 @@
-\section nextd nextd
+\section nextd nextd - move forward through directory history
 
 \subsection nextd-synopsis Synopsis
 <tt>nextd [-l | --list] [pos]</tt>

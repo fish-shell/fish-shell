@@ -1,4 +1,4 @@
-\section count count - Count the number of elements of an array
+\section count count - count the number of elements of an array
 
 \subsection count-synopsis Synopsis
  <tt>count $VARIABLE</tt>

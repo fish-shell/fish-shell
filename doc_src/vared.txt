@@ -1,4 +1,4 @@
-\section vared vared - Interactively edit the value of an environment variable 
+\section vared vared - interactively edit the value of an environment variable 
 
 \subsection vared-synopsis Synopsis
  <tt>vared VARIABLE_NAME</tt>

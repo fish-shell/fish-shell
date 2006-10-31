@@ -1,4 +1,4 @@
-\section bind bind - Handle key bindings.
+\section bind bind - handle key bindings
 
 \subsection bind-synopsis Synopsis
 <tt>bind [OPTIONS] [BINDINGS...]</tt>

@@ -1,4 +1,4 @@
-\section source . - Evaluate contents of file.
+\section source . - evaluate contents of file.
 
 \subsection source-synopsis Synopsis
 <tt>. FILENAME</tt>

@@ -1,4 +1,4 @@
-\section fish fish - The friendly interactive shell
+\section fish fish - the friendly interactive shell
 
 \subsection fish-synopsis Synopsis
 fish [-h] [-v] [-c command] [FILE [ARGUMENTS...]]

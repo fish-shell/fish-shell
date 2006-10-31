@@ -1,4 +1,4 @@
-\section block block - Temporarily block delivery of events
+\section block block - temporarily block delivery of events
 
 \subsection block-synopsis Synopsis
  <tt>block [OPTIONS...]</tt>

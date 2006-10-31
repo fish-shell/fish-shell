@@ -1,4 +1,4 @@
-\section mimedb mimedb - Lookup file information via the mime database
+\section mimedb mimedb - lookup file information via the mime database
 
 \subsection mimedb-synopsis Synopsis
 <tt>mimedb [OPTIONS] FILES...</tt>

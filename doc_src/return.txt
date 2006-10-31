@@ -1,4 +1,4 @@
-\section return return - Stop the innermost currently evaluated function
+\section return return - stop the innermost currently evaluated function
 
 \subsection return-synopsis Synopsis
 <tt>function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end</tt>

@@ -1,4 +1,4 @@
-\section status status - Query fish runtime information
+\section status status - query fish runtime information
 
 \subsection status-synopsis Synopsis
  <tt>status [OPTION]</tt>

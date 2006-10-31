@@ -1,4 +1,4 @@
-\section umask umask - Set or get the shells resource usage limits
+\section umask umask - set or get the shells resource usage limits
 
 \subsection umask-synopsis Synopsis
 <code>umask [OPTIONS] [MASK]</code>

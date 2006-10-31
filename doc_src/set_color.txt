@@ -1,4 +1,4 @@
-\section set_color set_color - Set the terminal color
+\section set_color set_color - set the terminal color
 
 \subsection set_color-synopsis Synopsis
  <tt>set_color [-v --version] [-h --help] [-b --background COLOR] [COLOR]</tt>

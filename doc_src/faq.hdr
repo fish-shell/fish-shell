@@ -1,0 +1,136 @@
+/** \page faq Frequently asked questions
+
+- <a href='#faq-cwd-symlink'>Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?</a>
+- <a href='#faq-cd-autocomplete'>Why does the cd command autocompletion list the subdirectories of my home directory as completions?</a>
+- <a href='#faq-cd-implicit'>I accidentally entered a directory path and fish changed directory. What happened?</a>
+- <a href='#faq-open'>The open command doesn't work.</a>
+- <a href='#faq-default'>How do I make fish my default shell?</a>
+- <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
+- <a href='#faq-greeting'>How do I change the greeting message?</a>
+
+<hr>
+
+\section faq-cwd-symlink Why does cd, $PWD and and various fish commands always resolve symlinked directories to their canonical path?
+
+<i>
+For example if ~/images is a symlink to ~/Documents/Images, if I write
+'cd images', my prompt will say ~/D/Images, not ~/images.
+</i>
+
+Because it is impossible to consistently keep symlinked directories
+unresolved. It is indeed possible to do this partially, and many other
+shells do so. But it was felt there are enough serious corner cases
+that this is a bad idea. Most such issues have to do with how '..' is
+handled, and are varitations of the following example:
+
+Writing <code>cd images; ls ..</code> given the above directory
+structure would list the contents of ~/Documents, not of ~, even
+though using <code>cd ..</code> changes the current direcotry to ~,
+and the prompt, the pwd builtin and many other directory information
+sources suggest that the the current directory is ~/images and it's
+parent is ~. This issue is not possible to fix without either making
+every single command into a builtin, breaking Unix semantics or
+implementing kludges in every single command.
+
+This issue can also be seen when doing IO redirection. 
+
+Another related issue is that many programs that operate on recursive
+directory trees, like the find command, silently ignore symlinked
+directories. For example, <code>find $PWD -name '*.txt'</code>
+silently fails in shells that don't resolve symlinked paths.
+
+<hr>
+
+\section faq-cd-autocomplete Why does the cd command autocompletion list the subdirectories of my home directory as completions?
+
+Because they are completions. In fish, if you specify a relative
+directory to the cd command, i.e. any path that does not start with
+either './' or '/', the environment variable CDPATH will be examined, and any
+directories in this path is used as a base direcotry. To disable this
+feature, write <code>set CDPATH .</code> on the commandline.
+
+<hr>
+
+\section faq-cd-implicit I accidentally entered a directory path and fish changed directory. What happened?
+
+If fish is unable to locate a command with a given name, fish will
+test if a directory of that name exists. If it does, it is implicitly
+assumed that you want to change working directory. For example, the 
+fastest way to switch to your home directory is to simply type
+<code>~</code>.
+
+<hr>
+
+\section faq-open The open command doesn't work.
+
+The open command uses the mimetype database and the .desktop files
+used by Gnome and KDE to identify filetypes and default actions. If
+at least one of these two desktops are installed, but the open command is
+not working, this probably means that the relevant files are installed
+in a nonstandard location. Please contact the <a
+href='mailto:fish-users@lists.sf.net'>fish mailing list</a>, and
+hopefully this can be resolved.
+
+\section faq-default How do I make fish my default shell?
+
+If you installed fish manually (e.g. by compiling it, not by using a
+package manager), you first need to add fish to the list of shells by
+executing the following command (assuming you installed fish in
+/usr/local) as root:
+
+\section faq-titlebar I'm seeing weird output before each prompt when using screen. What's wrong?
+
+Quick answer:
+
+Run the following command in fish:
+
+<pre>
+echo function fish_title;end ~/.config/fish/config.fish
+</pre>
+
+Problem solved!
+
+The long answer:
+
+Fish is trying to set the titlebar message of your terminal. While
+screen itself supports this feature, your terminal does
+not. Unfortuntaly, when the underlying terminal doesn't support
+setting the titlebar, screen simply passes through the escape codes
+and text to the underlying terminal instead of ignoring them. It is
+impossible detect and resolve this problem from inside fish since fish
+has no way of knowing what the underlying terminal type is. For now,
+the only way to fix this is to unset the titlebar message, as
+suggested above.
+
+Note that fish has a default titlebar message, which will be used if
+the fish_title function is undefined. So simply unsetting the
+fish_title function will not work.
+
+
+<code>echo /usr/local/bin/fish >>/etc/shells</code>
+
+If you installed a prepackaged version of fish, the package manager
+should have already done this for you.
+
+In order to change your default shell, type:
+
+<code>chsh -s /usr/bin/fish</code>
+
+You may need to adjust the above path to e.g. /usr/local/bin/fish.
+
+You will need to log out and back in again for the change to take
+effect.
+
+<hr>
+
+\section faq-greeting How do I change the greeting message?
+
+Change the value of the variable fish_greeting. For example, to remove
+the greeting use:
+
+<pre>
+set fish_greeting
+</pre>
+
+
+*/

@@ -156,6 +156,7 @@ BUILTIN_DOC_SRC := doc_src/source.txt doc_src/and.txt					\
 
 BUILTIN_DOC_HDR := $(BUILTIN_DOC_SRC:.txt=.doxygen)
 
+HDR_FILES := doc_src/index.hdr doc_src/commands.hdr doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr
 
 #
 # Files containing documentation for external commands. 
@@ -311,7 +312,7 @@ debug:
 # User documentation, describing the features of the fish shell.
 #
 
-user_doc: doc_src/doc.hdr Doxyfile.user user_doc.head.html $(CMD_DOC_SRC) $(BUILTIN_DOC_SRC)
+user_doc: $(HDR_FILES) Doxyfile.user user_doc.head.html $(CMD_DOC_SRC) $(BUILTIN_DOC_SRC)
 	$(MAKE) doc.h # Depend on the source (doc.hdr) and manually make the intermediate as needed
 	doxygen Doxyfile.user
 	touch user_doc
@@ -358,27 +359,45 @@ xsel-0.9.6/xsel: xsel-0.9.6
 
 
 #
+# commands.hdr collects documentation on all commands, functions and
+# builtins
+#
+
+doc_src/commands.hdr:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) 
+	rm -f commands.tmp; 
+	echo "/** \page commands Commands" >>commands.tmp; 
+	echo "Fish ships with a large number of builtin commands, shellscript functions and external commandss. These are all described below. " >>commands.tmp; 
+	for i in `printf "%s\n" $(BUILTIN_DOC_SRC) $(CMD_DOC_SRC)|sort`; do \
+		echo "<hr>" >>commands.tmp; \
+		cat $$i >>commands.tmp; \
+		echo >>commands.tmp; \
+		echo >>commands.tmp; \
+		echo "Back to <a href='index.html#toc-commands'>index</a>". >>commands.tmp; \
+	done 
+	echo "*/" >>commands.tmp
+	mv commands.tmp doc_src/commands.hdr
+
+
+#
 # doc.h is a compilation of the various snipptes of text used both for
 # the user documentation and for internal help functions into a single
 # file that can be parsed dy Doxygen to generate the user
 # documentation.
 #
 
-doc.h:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) doc_src/doc.hdr
-	cat doc_src/doc.hdr >doc.h; 
-	echo "/** \page builtins Builtin commands" >>doc.h; 
-	for i in `printf "%s\n" $(BUILTIN_DOC_SRC)|sort`; do \
-		echo "<hr>" >>doc.h; \
-		cat $$i >>doc.h; \
-	done 
-	echo "*/" >>doc.h
-	echo "/** \page commands External commands and functions" >>doc.h; 
-	echo "\c fish is shipped with commands which do not use any internal parts of the shell, and are therefore not written as builtins, but separate commands. Fish also features a large number of shellscript functions." >>doc.h
-	for i in `printf "%s\n" $(CMD_DOC_SRC)|sort`; do \
-		echo "<hr>" >>doc.h; \
-		cat $$i >>doc.h; \
-	done 
-	echo "*/" >>doc.h
+doc.h:$(HDR_FILES)
+	rm -f doc.h
+	echo "/** \mainpage Fish user documentation" >doc.tmp
+	echo "\section toc Table of contents" >>doc.tmp
+	echo '- <a href="index.html" name="toc-index">Fish user documentation</a>' >>doc.tmp
+	for i in $(HDR_FILES); do\
+		sed <$$i >>doc.tmp -n \
+			-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'`basename $$i .hdr`'.html" name="toc-'`basename $$i .hdr`'">\2</a>,p' \
+			-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'`basename $$i .hdr`'.html#\1" name="toc-'`basename $$i .hdr`'">\2</a>,p' \
+#			-e 's,.*\\subsection *\([^ ]*\) *\(.*\)$$,    - <a href="'`basename $$i .hdr`'.html#\1" name="toc-'`basename $$i .hdr`'">\2</a>,p'; \
+	done
+	cat $(HDR_FILES) >>doc.tmp; 
+	mv doc.tmp doc.h
 
 
 #
@@ -860,18 +879,29 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 	mv /usr/src/redhat/SRPMS/fish*@PACKAGE_VERSION@*.src.rpm .
 .PHONY: rpm
 
+
 #
 # Cleanup targets
 #
 
+#
+# distclean should restore the tree to the state right after extracting a tarball.
+#
+
 distclean: clean
 	rm -f fish.spec doc_src/Doxyfile 
-	rm -f etc/fish etc/fish_interactive.fish seq share/fish
+	rm -f etc/config.fish share/config_interactive.fish seq share/config.fish
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
+
+#
+# clean removes everything built by the makefile, but not things that
+# are created by the configure script.
+#
+
 clean:
-	rm -f *.o doc.h doc_src/*.doxygen doc_src/*.c doc_src/*.o
+	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.c doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f tokenizer_test fish key_reader set_color gen_hdr2 mimedb
 	rm -f fishd fish_pager count fish_tests 
@@ -883,6 +913,7 @@ clean:
 	rm -rf xsel-0.9.6/
 	rm -f $(TRANSLATIONS)
 .PHONY: clean
+
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 

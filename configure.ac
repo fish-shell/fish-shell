@@ -1,17 +1,25 @@
 
 #
 # This file is the main build configuration file for fish. It is used
-# to determine your systems capabilities, and tried to adapt fish to
+# to determine your systems capabilities, and tries to adapt fish to
 # take maximum advantage of the services your system offers.
 #
-# Process this file using the 'autoconf' to produce a working
+# Process this file using the 'autoconf' command to produce a working
 # configure script, which should in turn be executed in order to
-# configure the build process. 
+# configure the build process.
 #
 
 AC_INIT(fish,1.22.0,fish-users@lists.sf.net)
 
+
+#
 # If needed, run autoconf to regenerate the configure file
+#
+# This makes sure that after running autoconf once to create the first
+# version of configure, we never again need to worry about manually
+# running autoconf to handle an updates configure.ac.
+#
+
 AC_MSG_CHECKING([if autoconf needs to be run])
 if test configure -ot configure.ac; then
 	AC_MSG_RESULT([yes])
@@ -36,7 +44,13 @@ else
 fi
 
 
+#
 # If needed, run autoheader to regenerate config.h.in
+#
+# This makes sure we never ever have to run autoheader manually. It
+# will be run whenever needed automatically.
+#
+
 AC_MSG_CHECKING([if autoheader needs to be run])
 if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
 	AC_MSG_RESULT([yes])
@@ -55,9 +69,15 @@ else
 fi
 
 
+#
 # Detect directories which may contain additional headers, libraries
 # and commands. This needs to be done early - before Autoconf starts
 # to mess with CFLAGS and all the other environemnt variables.
+#
+# This mostly helps OS X users, since fink usually installs out of
+# tree and doesn't update CFLAGS.
+#
+
 for i in /usr/pkg /sw /opt /opt/local; do
 
 	AC_MSG_CHECKING([for $i/include include directory])
@@ -89,8 +109,17 @@ done
 
 AC_SUBST( optbindirs, $optbindirs )
 
+
+#
 # Tell autoconf to create config.h header 
+#
 AC_CONFIG_HEADERS(config.h)
+
+
+#
+# This adds markup to the code that results in a few extra compile
+# time checks on recent GCC versions. It helps stop a few common bugs.
+#
 
 AH_BOTTOM([#if __GNUC__ >= 3
 #define __warn_unused __attribute__ ((warn_unused_result))
@@ -101,16 +130,27 @@ AH_BOTTOM([#if __GNUC__ >= 3
 #endif])
 
 
+#
 # Set up various programs needed for install
+#
+
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_INSTALL
 
+
+#
 # Check for seq command. If missing, make sure fallback shellscript
-# implementation is installed
+# implementation is installed.
+#
+
 AC_CHECK_PROG( SEQ_FALLBACK, seq, [ ], [seq])
 
+
+#
 # Optionally drop xsel command
+#
+
 AC_ARG_WITH( 
 	xsel, 
 	AC_HELP_STRING(
@@ -131,18 +171,19 @@ else
     AC_SUBST( XSEL_MAN_PATH,[ ])
 fi
 
-# These help out with getting better prototypes on some platforms
 
 #
 # Test if the compiler accepts the -std=c99 flag. If so, using it
 # increases the odds of correct compilation, since we want to use the
 # *wprintf functions, which where defined in C99. 
+#
 
 XCFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -std=c99"
 XCPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -std=c99"
 AC_MSG_CHECKING(if -std=c99 works)
+
 AC_CACHE_VAL(
 	local_cv_has__std_c99,
 	[
@@ -161,6 +202,7 @@ AC_CACHE_VAL(
 		)
 	]
 )
+
 AC_MSG_RESULT($local_cv_has__std_c99)
 case x$local_cv_has__std_c99 in
 xno) 
@@ -196,6 +238,7 @@ if test "$CC" = gcc; then
 	CFLAGS="$CFLAGS -Wall"
 
 fi
+
 
 #
 # If we are compiling against glibc, set some flags to work around
@@ -239,6 +282,8 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+
+#
 # Test cpu for special handling of ppc
 #
 # This is used to skip use of tputs on ppc systems, since it seemed to
@@ -248,13 +293,18 @@ fi
 # hardware available to narrow this problem down, and in practice, it
 # seems that tputs is never really needed.
 #
+
 AC_CANONICAL_TARGET
 
 if test $target_cpu = powerpc; then
    AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
 fi
 
+
+#
 # Solaris-specific flags go here
+#
+
 AC_MSG_CHECKING([if we are under Solaris])
 case $target_os in
 	solaris*) 
@@ -267,7 +317,10 @@ case $target_os in
 esac
 
 
+#
 # BSD-specific flags go here
+#
+
 AC_MSG_CHECKING([if we are under BSD])
 case $target_os in
 	*bsd*) 
@@ -281,11 +334,13 @@ case $target_os in
 esac
 
 
-
+#
 # Set up PREFIX and related preprocessor symbols. Fish needs to know
 # where it will be installed. One of the reasons for this is so that
 # it can make sure the fish installation directory is in the path
 # during startup.
+#
+
 if [[ "$prefix" = NONE ]]; then
 	export prefix=/usr/local
 	AC_SUBST( prefix, /usr/local)
@@ -294,8 +349,11 @@ else
 fi
 
 
+#
 # Set up the directory where the documentation files should be
 # installed
+#
+
 AC_ARG_VAR( [docdir], [Documentation direcotry] )
 
 if test -z $docdir; then
@@ -304,16 +362,27 @@ else
 	AC_SUBST(docdir, [$docdir])
 fi
 
+
+#
 # Set up locale directory. This is where the .po files will be
 # installed.
+#
+
 AC_SUBST( [localedir], [$datadir/locale])
 
+
+#
 # See if Linux procfs is present. This is used to get extra
 # information about running processes.
+#
+
 AC_CHECK_FILES([/proc/self/stat])
 
+
+#
 # This is ued to tell the wgetopt library to translate strings. This
 # way wgetopt can be dropped into any project without requiring i18n.
+#
 
 AC_DEFINE(
 	[HAVE_TRANSLATE_H], 
@@ -321,13 +390,21 @@ AC_DEFINE(
 	[Define to 1 if the wgettext function should be used for translating strings.]
 )
 
-# Check for presense of various libraries
+
+#
+# Check presense of various libraries
+#
+
 AC_SEARCH_LIBS( gettext, intl,,)
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
 
-# Check for presense of various header files
+
+#
+# Check presense of various header files
+#
+
 AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h])
 
 AC_CHECK_HEADER(
@@ -341,6 +418,7 @@ AC_CHECK_HEADER(
 		[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])
 	]
 )
+
 
 #
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that
@@ -369,6 +447,7 @@ AC_CHECK_HEADER(
 #
 # * This test should be (but does not need to be) run after the
 # conditional definition of __EXTENSIONS__, to avoid redundant tests.
+#
 
 XCFLAGS="$CFLAGS"
 
@@ -452,26 +531,43 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
 
 done
 
+#
 # We didn't find any combination of switches that worked - revert to
 # no switches and hope that the fallbacks work.  A warning will be
 # printed at the end of the configure script.
+#
 
 if test ! x$local_found_posix_switch = xyes; then
 	CFLAGS="$XCFLAGS"
 fi
 
-# Check for presense of various functions
+
+#
+# Check for presense of various functions used by fish
+#
+
 AC_CHECK_FUNCS( gettext wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r killpg)
 
-# The Makefile also needs to know if we have gettext, so it knows if the translations should be installed.
+
+#
+# The Makefile also needs to know if we have gettext, so it knows if
+# the translations should be installed.
+#
+
 AC_CHECK_FUNC( gettext, AC_SUBST( HAVE_GETTEXT, 1 ), AC_SUBST( HAVE_GETTEXT, 0 ) )
 
+#
 # Here follows a list of small programs used to test for various
 # features that Autoconf doesn't tell us about
+#
 
+
+#
 # Check if realpath accepts null for its second argument
+#
+
 AC_MSG_CHECKING([if realpath accepts null for its second argument])
 AC_RUN_IFELSE(
 	[
@@ -506,7 +602,10 @@ else
 fi
 
 
-# Check if struct winsize exists
+#
+# Check if struct winsize and TIOCGWINSZ exist
+#
+
 AC_MSG_CHECKING([if struct winsize and TIOCGWINSZ exist])
 AC_LINK_IFELSE(
 	[
@@ -535,8 +634,12 @@ AC_LINK_IFELSE(
 	]
 )
 
+
+#
 # If we have a fwprintf in libc, test that it actually works. As of
 # March 2006, it is broken under Dragonfly BSD.
+#
+
 if test "$ac_cv_func_fwprintf" = yes; then
 
 	AC_MSG_CHECKING([if fwprintf is broken])

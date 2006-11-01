@@ -33,7 +33,7 @@
 #include "intern.h"
 #include "exec.h"
 #include "env.h"
-
+#include "signal.h"
 #include "wildcard.h"
 #include "halloc_util.h"
 

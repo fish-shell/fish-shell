@@ -393,8 +393,7 @@ doc.h:$(HDR_FILES)
 	for i in $(HDR_FILES); do\
 		sed <$$i >>doc.tmp -n \
 			-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'`basename $$i .hdr`'.html" name="toc-'`basename $$i .hdr`'">\2</a>,p' \
-			-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'`basename $$i .hdr`'.html#\1" name="toc-'`basename $$i .hdr`'">\2</a>,p' \
-#			-e 's,.*\\subsection *\([^ ]*\) *\(.*\)$$,    - <a href="'`basename $$i .hdr`'.html#\1" name="toc-'`basename $$i .hdr`'">\2</a>,p'; \
+			-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'`basename $$i .hdr`'.html#\1" name="toc-'`basename $$i .hdr`'">\2</a>,p'; \
 	done
 	cat $(HDR_FILES) >>doc.tmp; 
 	mv doc.tmp doc.h

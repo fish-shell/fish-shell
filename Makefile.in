@@ -193,8 +193,9 @@ TEST_IN := $(wildcard tests/test*.in)
 # Files in ./doc_src/
 #
 
-DOC_SRC_DIR_FILES := doc_src/Doxyfile.in doc_src/doc.hdr	\
-	$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) 
+DOC_SRC_DIR_FILES := doc_src/Doxyfile.in doc_src/index.hdr	\
+	doc_src/license.hdr doc_src/faq.hdr doc_src/design.hdr	\
+	$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC)
 
 
 #
@@ -313,7 +314,7 @@ debug:
 #
 
 user_doc: $(HDR_FILES) Doxyfile.user user_doc.head.html $(CMD_DOC_SRC) $(BUILTIN_DOC_SRC)
-	$(MAKE) doc.h # Depend on the source (doc.hdr) and manually make the intermediate as needed
+	$(MAKE) doc.h # Depend on the sources (*.hdr) and manually make the intermediate as needed
 	doxygen Doxyfile.user
 	touch user_doc
 

@@ -3,8 +3,9 @@
 \subsection prevd-synopsis Synopsis
 <tt>prevd [-l | --list] [pos]</tt>
 
-\subsection prevd-description Description <tt>prevd</tt> moves
-backwards <tt>pos</tt> positions in the history of visited
-directories; if the beginning of the history has been hit, a warning
-is printed. If the <code>-l</code> or <code>--list</code> flag is
-specified, the current history is also displayed.
+\subsection prevd-description Description 
+
+<tt>prevd</tt> moves backwards <tt>pos</tt> positions in the history
+of visited directories; if the beginning of the history has been hit,
+a warning is printed. If the <code>-l</code> or <code>--list</code>
+flag is specified, the current history is also displayed.

@@ -191,7 +191,7 @@ void proc_set_last_status( int s )
 {
 
 	last_status = s;
-	//	fwprintf( stderr, L"Set last status to %d\n", s );
+//	debug( 0, L"Set last status to %d\n", s );
 }
 
 int proc_get_last_status()

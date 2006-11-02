@@ -444,7 +444,8 @@ static void event_fire_internal( event_t *event )
 	for( i=0; i<al_get_count( fire ); i++ )
 	{
 		event_t *criterion = (event_t *)al_get( fire, i );
-		
+		int prev_status;
+
 		/*
 		  Check if this event has been removed, if so, dont fire it
 		*/
@@ -476,11 +477,13 @@ static void event_fire_internal( event_t *event )
 		  they are marked as non-interactive
 		*/
 		proc_push_interactive(0);
+		prev_status = proc_get_last_status();
 		parser_push_block( EVENT );
 		current_block->param1.event = event;
 		eval( (wchar_t *)b->buff, 0, TOP );
 		parser_pop_block();
 		proc_pop_interactive();					
+		proc_set_last_status( prev_status );
 	}
 
 	if( b )

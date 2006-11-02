@@ -382,7 +382,6 @@ int main( int argc, char **argv )
 	}
 
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
-	
 
 	history_destroy();
 	proc_destroy();
@@ -399,6 +398,5 @@ int main( int argc, char **argv )
 
 	intern_free_all();
 
-
-	return res;	
+	return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();	
 }

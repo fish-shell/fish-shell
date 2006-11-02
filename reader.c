@@ -682,40 +682,6 @@ static void remove_backward()
 
 }
 
-/**
-   Insert the character into the command line buffer and print it to
-   the screen using syntax highlighting, etc.
-*/
-static int insert_char( int c )
-{
-
-	if( !check_size() )
-		return 0;
-
-	/* Insert space for extra character at the right position */
-	if( data->buff_pos < data->buff_len )
-	{
-		memmove( &data->buff[data->buff_pos+1],
-				 &data->buff[data->buff_pos],
-				 sizeof(wchar_t)*(data->buff_len-data->buff_pos) );
-	}
-	/* Set character */
-	data->buff[data->buff_pos]=c;
-
-    /* Update lengths, etc */
-	data->buff_pos++;
-	data->buff_len++;
-	data->buff[data->buff_len]='\0';
-
-	/* Syntax highlight */
-
-	reader_super_highlight_me_plenty( data->buff_pos-1,
-									  0 );
-
-	repaint();
-
-	return 1;
-}
 
 /**
    Insert the characters of the string into the command line buffer
@@ -744,16 +710,32 @@ static int insert_str(wchar_t *str)
 	data->buff_pos += len;
 	data->buff[data->buff_len]='\0';
 	
-	/* Syntax highlight */
-	
+	/*
+	  Syntax highlight 
+	*/
 	reader_super_highlight_me_plenty( data->buff_pos-1,
 									  0 );
-	
-	/* repaint */
 	
 	repaint();
 	return 1;
 }
+
+
+/**
+   Insert the character into the command line buffer and print it to
+   the screen using syntax highlighting, etc.
+*/
+static int insert_char( int c )
+{
+	wchar_t str[]=
+		{
+			0, 0 
+		}
+	;
+	str[0] = c;
+	return insert_str( str );
+}
+
 
 /**
    Calculate the length of the common prefix substring of two strings.
@@ -769,10 +751,11 @@ static int comp_len( wchar_t *a, wchar_t *b )
 }
 
 /**
-   Find the outermost quoting style of current token. Returns 0 if token is not quoted.
+   Find the outermost quoting style of current token. Returns 0 if
+   token is not quoted.
 
 */
-static wchar_t get_quote( wchar_t *cmd, int l )
+static wchar_t get_quote( wchar_t *cmd, int len )
 {
 	int i=0;
 	wchar_t res=0;
@@ -795,7 +778,7 @@ static wchar_t get_quote( wchar_t *cmd, int l )
 			{
 				const wchar_t *end = quote_end( &cmd[i] );
 				//fwprintf( stderr, L"Jump %d\n",  end-cmd );
-				if(( end == 0 ) || (!*end) || (end-cmd > l))
+				if(( end == 0 ) || (!*end) || (end-cmd > len))
 				{
 					res = cmd[i];
 					break;
@@ -956,13 +939,18 @@ static void completion_insert( wchar_t *val, int is_complete )
 
 	if( insert_str( replaced ) )
 	{
-
-		if( is_complete ) /* Print trailing space since this is the only completion */
+		/*
+		  Print trailing space since this is the only completion 
+		*/
+		if( is_complete ) 
 		{
 
 			if( (quote) &&
-				(data->buff[data->buff_pos] != quote ) ) /* This is a quoted parameter, first print a quote */
+				(data->buff[data->buff_pos] != quote ) ) 
 			{
+				/* 
+				   This is a quoted parameter, first print a quote 
+				*/
 				insert_char( quote );
 			}
 			insert_char( L' ' );
@@ -973,8 +961,13 @@ static void completion_insert( wchar_t *val, int is_complete )
 }
 
 /**
-   Run the fish_pager command to display the completion list, and
-   insert the result into the backbuffer.
+   Run the fish_pager command to display the completion list. If the
+   fish_pager outputs any text, it is inserted into the input
+   backbuffer.
+
+   \param prefix the string to display before every completion. 
+   \param is_quoted should be set if the argument is quoted. This will change the display style.
+   \param comp the list of completions to display
 */
 
 static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
@@ -1984,9 +1977,13 @@ wchar_t *reader_readline()
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	repaint();
 
-	/* get the current terminal modes. These will be restored when the function returns. */
+	/* 
+	   get the current terminal modes. These will be restored when the
+	   function returns.
+	*/
 	tcgetattr(0,&old_modes);        
-	if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
+	/* set the new modes */
+	if( tcsetattr(0,TCSANOW,&shell_modes))      
 	{
         wperror(L"tcsetattr");
         exit(1);
@@ -2059,8 +2056,11 @@ wchar_t *reader_readline()
 			/* go to beginning of line*/
 			case R_BEGINNING_OF_LINE:
 			{
-				while( data->buff_pos>0 && data->buff[data->buff_pos-1] != L'\n' )
+				while( ( data->buff_pos>0 ) && 
+					   ( data->buff[data->buff_pos-1] != L'\n' ) )
+				{
 					data->buff_pos--;
+				}
 				
 				repaint();
 				break;
@@ -2068,8 +2068,11 @@ wchar_t *reader_readline()
 
 			case R_END_OF_LINE:
 			{
-				while( data->buff[data->buff_pos] && data->buff[data->buff_pos] != L'\n' )
+				while( data->buff[data->buff_pos] && 
+					   data->buff[data->buff_pos] != L'\n' )
+				{
 					data->buff_pos++;
+				}
 				
 				repaint();
 				break;
@@ -2365,7 +2368,9 @@ wchar_t *reader_readline()
 					}
 
 					/*
-					  Result must be some combination including an error. The error message will already be printed, all we need to do is repaint
+					  Result must be some combination including an
+					  error. The error message will already be
+					  printed, all we need to do is repaint
 					*/
 					default:
 					{

@@ -47,7 +47,8 @@ typedef struct block
 	int type; /**< Type of block. Can be one of WHILE, FOR, IF and FUNCTION */
 	int skip; /**< Whether execution of the commands in this block should be skipped */
 	int tok_pos; /**< The start index of the block */
-
+	int had_command; /**< Set to non-zero once a command has been executed in this block */
+	
 	/**
 	   Status for the current loop block. Can be any of the values from the loop_status enum.
 	*/
@@ -210,7 +211,7 @@ int eval_args( const wchar_t *line,
 				array_list_t *output );
 
 /**
-   Sets the current error
+   Sets the current evaluation error. This function should only be used by libraries that are called by 
 
    \param ec The new error code
    \param p The character offset at which the error occured

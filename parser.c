@@ -1669,6 +1669,7 @@ static void parse_job_argument_list( process_t *p,
 
 	return;
 }
+
 /*
 static void print_block_stack( block_t *b )
 {
@@ -1931,16 +1932,31 @@ static int parse_job( process_t *p,
 			int nxt_forbidden=0;
 			wchar_t *forbid;
 
-			if( current_block->type == FUNCTION_CALL )
+			int is_function_call=0;
+
+			/*
+			  This is a bit fragile. It is a test to see if we are
+			  inside of function call, but not inside a block in that
+			  function call. If, in the future, the rules for what
+			  block scopes are pushed on function invocation changes,
+			  then this check will break.
+			*/
+			if( ( current_block->type == TOP ) && 
+				( current_block->outer ) && 
+				( current_block->outer->type == FUNCTION_CALL ) )
+				is_function_call = 1;
+			
+			/*
+			  If we are directly in a function, and this is the first
+			  command of the block, then the function we are executing
+			  may not be called, since that would mean an infinite
+			  recursion.
+			*/
+			if( is_function_call && !current_block->had_command )
 			{
 				forbid = (wchar_t *)(al_get_count( forbidden_function)?al_peek( forbidden_function ):0);
 				nxt_forbidden = forbid && (wcscmp( forbid, nxt) == 0 );
 			}
-			
-			/*
-			  Make feeble attempt to avoid infinite recursion. Will at
-			  least catch some accidental infinite recursion calls.
-			*/
 		
 			if( !nxt_forbidden && function_exists( nxt ) )
 			{
@@ -2195,6 +2211,14 @@ static int parse_job( process_t *p,
 		else
 		{
 			parse_job_argument_list( p, j, tok, args );
+		}
+	}
+
+	if( !error_code )
+	{
+		if( !is_new_block )
+		{
+			current_block->had_command = 1;
 		}
 	}
 

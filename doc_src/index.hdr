@@ -812,11 +812,11 @@ the string __FISH or __fish. These should be ignored by the user.
 \subsection variables-status The status variable
 
 Whenever a process exits, an exit status is returned to the program
-that started it. This exit status is an integer number, which tells
-the calling application how the execution of the command went. In
-general, a zero exit status means that the command executed without
-problem, but a non-zero exit status means there was some form of
-problem.
+that started it (usually the shell). This exit status is an integer
+number, which tells the calling application how the execution of the
+command went. In general, a zero exit status means that the command
+executed without problem, but a non-zero exit status means there was
+some form of problem.
 
 Fish stores the exit status of the last process in the last job to
 exit in the \c status variable.
@@ -827,7 +827,7 @@ variable may also be set to a specific value:
 - 1 is the generally the exit status from fish builtins if they where supplied with invalid arguments
 - 125 means an unknown error occured while trying to execute the command
 - 126 means that the command was not executed because none of the wildcards in the command produced any matches
-- 127 means that no command with the given name could be located
+- 127 means that no function, builtin or command with the given name could be located
 
 \subsection variables-color Variables for changing highlighting colors
 
@@ -893,61 +893,10 @@ code duplication, and to avoid the confusion of subtly differing
 versions of the same command, \c fish only implements builtins for
 actions which cannot be performed by a regular command.
 
-\section bundle Commands bundled with fish 
-
-The following commands are distributed with fish. Many of them are
-builtins or shellscript functions, and can only be used inside fish.
-
-- <a href="commands.html#source">.</a>, read and execute the commands in a file 
-- <a href="commands.html#and">and</a>, execute command if previous command suceeded
-- <a href="commands.html#bg">bg</a>, set a command to the background
-- <a href="commands.html#begin">begin</a>, execute a block of commands
-- <a href="commands.html#bind">bind</a>, change keyboard bindings
-- <a href="commands.html#break">break</a>, stop the execution of a loop
-- <a href="commands.html#block">block</a>, Temporarily block delivery of events
-- <a href="commands.html#builtin">builtin</a>, execute a builtin command
-- <a href="commands.html#case">case</a>, conditionally execute a block of commands
-- <a href="commands.html#cd">cd</a>, change the current directory
-- <a href="commands.html#command">command</a>, execute an external program
-- <a href="commands.html#commandline">commandline</a>, set or get the contents of the commandline buffer
-- <a href="commands.html#complete">complete</a>, add and remove completions
-- <a href="commands.html#continue">continue</a>, skip the rest of the current lap of a loop
-- <a href="commands.html#count">count</a>, count the number of arguments
-- <a href="commands.html#dirh">dirh</a>, view the directory history
-- <a href="commands.html#dirs">dirs</a>, view the directory stack
-- <a href="commands.html#end">end</a>, end a block of commands
-- <a href="commands.html#else">else</a>, conditionally execute a block of commands
-- <a href="commands.html#eval">eval</a>, evaluate a string as a command
-- <a href="commands.html#exec">exec</a>, replace the current process image with a new command
-- <a href="commands.html#exit">exit</a>, causes \c fish to quit
-- <a href="commands.html#fg">fg</a>, set a command to the foreground
-- <a href="commands.html#fishd">fishd</a>, the universal variable daemon
-- <a href="commands.html#for">for</a>, perform a block of commands once for every element in a list
-- <a href="commands.html#function">function</a>, define a new function
-- <a href="commands.html#functions">functions</a>, print or erase functions
-- <a href="commands.html#help">help</a>, show the fish documentation
-- <a href="commands.html#if">if</a>, conditionally execute a block of commands
-- <a href="commands.html#jobs">jobs</a>, print the currently running jobs
-- <a href="commands.html#mimedb">mimedb</a>, view mimedata about a file
-- <a href="commands.html#nextd">nextd</a>, move forward in the directory history
-- <a href="commands.html#not">not</a>, negates the exit status of any command
-- <a href="commands.html#or">or</a>, execute a command if previous command failed
-- <a href="commands.html#popd">popd</a>, move to the topmost directory on the directory stack
-- <a href="commands.html#prevd">prevd</a>, move backwards in the direcotry stack
-- <a href="commands.html#pushd">pushd</a>, push the surrent directory onto the directory stack
-- <a href="commands.html#random">random</a>, calculate a pseudo-random number
-- <a href="commands.html#return">return</a>, return from a function
-- <a href="commands.html#read">read</a>, read from a stream into an environment variable
-- <a href="commands.html#set">set</a>, set environment variables
-- <a href="commands.html#set_color">set_color</a>, change the terminal colors
-- <a href="commands.html#switch">switch</a>, conditionally execute a block of commands
-- <a href="commands.html#tokenize">tokenize</a>, split a string up into multiple tokens
-- <a href="commands.html#ulimit">ulimit</a>, set or get the shells resurce usage limits
-- <a href="commands.html#umask">umask</a>, set or get the file creation mask
-- <a href="commands.html#while">while</a>, perform a block of commands while a condition is met
-
-For more information about these commands, use the <code>--help</code>
-option of the command to display a longer explanation.
+For a list of all builtins, functions and commands shipped with fish,
+see the <a href="#toc-commands">table of contents</a>. The
+documentation is also available by using the <code>--help</code>
+switch of the command.
 
 \section editor Command Line editor
 
@@ -1308,7 +1257,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Check keybinding commands for output - if nothing has happened, don't repaint to reduce flicker
 - wait shellscript
 - Support for the screen clipboard
-
+- Files begining with '-' should not be colored red if a '--' argument has been given
 
 \subsection todo-possible Possible features
 
@@ -1344,18 +1293,20 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Try to remove more malloc calls to reduce memory usage. The time_t arrays used by the autoloader sound like a good candidate. 
 - The code validator should warn about unknown commands.
 - The large number of interned strings means that autounloading frees less memory than it should. Completion strings should probably be either refcounted or not shared at all.
+- Auto-newlines
 
-
-\subsection bugs Known bugs
+\subsection bugs Known bugs and issues
 
 - Completion for gcc -\#\#\# option doesn't work.
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 - screen handling code can't handle tabs in input.
-
+- The completion pager doesn't work if stderr is redirected.
+- Can't complete directories as commands unless there is a slash
+- ls should use dircolors
+- Doxygen called when it shouldn't?
 
 If you think you have found a bug not described here, please send a
-report to <a href="mailto:axel@liljencrantz.se"> axel@liljencrantz.se
-</a>.
+report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.
 
 
 \subsection issues Known issues

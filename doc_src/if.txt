@@ -4,10 +4,15 @@
 <tt>if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end</tt>
 
 \subsection if-description Description
+
 <tt>if</tt> will execute the command CONDITION.  If the condition's exit
 status is 0, the commands COMMANDS_TRUE will execute.  If it is not 0 and
 <tt>else</tt> is given, COMMANDS_FALSE will be executed.  Hint: use
 <a href="#begin"><tt>begin; ...; end</tt></a> for complex conditions.
+
+The exit status of the last foreground command to exit can always be
+accessed using the <a href="index.html#variables-status">$status</a>
+variable.
 
 \subsection if-example Example
 

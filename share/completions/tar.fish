@@ -1,3 +1,7 @@
+
+# Peek inside of archives and list all files
+complete -c tar -a "(__fish_complete_tar)"
+
 complete -c tar -s A -l catenate -d (N_ "Append archive to archive")
 complete -c tar -l concatenate -d (N_ "Append archive to archive")
 complete -c tar -s c -l create -d (N_ "Create archive")

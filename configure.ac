@@ -147,6 +147,29 @@ AC_PROG_INSTALL
 AC_CHECK_PROG( SEQ_FALLBACK, seq, [ ], [seq])
 
 
+if test "$SEQ_FALLBACK"; then
+
+	#
+	# We already have seq. Check if the seq version is installed by an
+	# earlier fish version. If it is, we'll replace it.
+	#
+
+	file=`which seq`
+	if test -f "$file"; then
+
+		AC_MSG_CHECKING([if seq comes from a previous fish version])
+		shebang=`grep "\(^#!/.*/fish\|^#!/usr/bin/env fish\)" $file`
+
+		if test "$shebang"; then
+			AC_SUBST( SEQ_FALLBACK, seq )
+			AC_MSG_RESULT(yes, replace it)
+		else
+			AC_MSG_RESULT(no, keep it)
+		fi
+	fi
+fi
+
+
 #
 # Optionally drop xsel command
 #

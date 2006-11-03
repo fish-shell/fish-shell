@@ -95,7 +95,7 @@ end
 # by including them when found.
 #
 
-for i in ~/$config_dir/fish/fish_inputrc @sysconfdir@/fish/fish_inputrc ~/.inputrc /etc/inputrc
+for i in $configdir/fish/fish_inputrc @sysconfdir@/fish/fish_inputrc ~/.inputrc /etc/inputrc
 	if test -f $i
 		set -xg INPUTRC $i
 		break

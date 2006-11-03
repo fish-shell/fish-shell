@@ -2001,6 +2001,7 @@ wchar_t *reader_readline()
 		while( 1 )
 		{
 			c=input_readch();
+
 			
 			if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
 			{
@@ -2523,7 +2524,7 @@ wchar_t *reader_readline()
 			/* Other, if a normal character, we add it to the command */
 			default:
 			{
-				if( (!wchar_private(c)) && (( (c>31) || (c=L'\n'))&& (c != 127)) )
+				if( (!wchar_private(c)) && (( (c>31) || (c==L'\n'))&& (c != 127)) )
 				{
 					insert_char( c );
 				}

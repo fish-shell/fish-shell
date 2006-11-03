@@ -32,17 +32,22 @@ separate build directories or any other fancy configure options.
 Simple install procedure
 ========================
 
-If you have downloaded the darcs repository of fish, you need to run
-the autoconf command first. Then use the following commands to compile
-fish:
+Always begin by uninstalling any previous fish versions. This is done
+by running the command 'make uninstall' in the source directory of
+your previous fish installation.
 
- % ./configure
- % make                                   # Compile fish
- % make install                           # Install fish
- % echo /usr/local/bin/fish >>/etc/shells # Add fish to list of shells
+Next, if you have downloaded a fresh copy of the darcs repository of
+fish, you need to run the 'autoconf' command.
 
-If you wish to use fish as your default shell, use the following
-command:
+Then, use following commands to compile fish:
+
+   ./configure
+   make                                   # Compile fish
+   make install                           # Install fish
+   echo /usr/local/bin/fish >>/etc/shells # Add fish to list of shells
+
+Finally, if you wish to use fish as your default shell, use the
+following command:
 
  % chsh -s /usr/local/bin/fish			 
 

@@ -75,17 +75,15 @@ function help -d (N_ "Show help for the fish shell")
 		case ""
 			set fish_help_page index.html
 		case "."
-			set fish_help_page "builtins.html\#source"
+			set fish_help_page "commands.html\#source"
 		case difference
 			set fish_help_page difference.html
 		case globbing
 			set fish_help_page "index.html\#expand"
-		case (builtin -n)
-			set fish_help_page "builtins.html\#$fish_help_item"
 
 		# This command substitution should locate all commands with
 		# documentation.  It's a bit of a hack, since it relies on the
-		# Doxygen markup format to never change...
+		# Doxygen markup format to never change.
 
 		case (sed -n < $__fish_help_dir/commands.html -e "s/.*<h2><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
 			set fish_help_page "commands.html\#$fish_help_item"

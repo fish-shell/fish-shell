@@ -1748,24 +1748,22 @@ static int complete_param( wchar_t *cmd_orig,
 
 						if( wcsncmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0)
 						{
+							int has_arg=0;
+							int req_arg=0;
+							
 							/*
-							  If the option requires arguments, add
-							  option with an appended '=' . If the
-							  option does not accept arguments, add
-							  option. If option accepts but does not
-							  require arguments, add both.
+							  If the switch has an _optional_
+							  argument, it needs to be specified using
+							  '=', otherwise we complete without the
+							  '=' since quite a few programs don't
+							  support it. 
+
 							*/
 
-							if( o->old_mode || !(o->result_mode & NO_COMMON ) )
-							{
-								al_push( comp_out,
-										 wcsdupcat2( &((wchar_t *)whole_opt->buff)[wcslen(str)], 
-													 COMPLETE_SEP_STR, 
-													 C_(o->desc), 
-													 (void *)0) );
-							}
+							has_arg = !!wcslen( o->comp );
+							req_arg = (o->result_mode & NO_COMMON );
 
-							if( !o->old_mode && ( wcslen(o->comp) || (o->result_mode & NO_COMMON ) ) )
+							if( !o->old_mode && ( has_arg && !req_arg ) )
 							{
 								al_push( comp_out,
 										 wcsdupcat2( &((wchar_t *)whole_opt->buff)[wcslen(str)], 
@@ -1774,6 +1772,12 @@ static int complete_param( wchar_t *cmd_orig,
 													 C_(o->desc), 
 													 (void *)0) );
 							}
+							
+							al_push( comp_out,
+									 wcsdupcat2( &((wchar_t *)whole_opt->buff)[wcslen(str)], 
+												 COMPLETE_SEP_STR, 
+												 C_(o->desc), 
+												 (void *)0) );
 						}
 					}
 				}

@@ -1,68 +1,74 @@
-#Completions for emerge
+# Completions for emerge
 
-function __fish_emerge_use_package -d (N_ 'Test if emerge command should have packages as potential completion')
-	for i in (commandline -opc)
-		if contains -- $i -a --ask -p --pretend --oneshot -O --nodeps -f --fetchonly
-			return 0
-		end
-	end
-	return 1
-end
-
-function __fish_emerge_manipulate_package -d (N_ 'Tests if emerge command should have package as potential completion for removal')
-	for i in (commandline -opc)
-		if contains -- $i -u --update -C --unmerge -P --prune
-			return 0
-		end
-	end
-	return 1
-end
+# Author: Tassilo Horn <tassilo@member.fsf.org>
 
 function __fish_emerge_print_installed_pkgs -d (N_ 'Prints completions for installed packages on the system from /var/db/pkg')
-	if test -d /var/db/pkg 
-		find /var/db/pkg/ -type d | cut -d'/' -f6 | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//'
-		return
-	end
+ if test -d /var/db/pkg
+   find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//'
+   return
+ end
 end
 
-complete -f -c emerge -n '__fish_emerge_use_package' -a '(__fish_print_packages)' -d (N_ 'Package')
-complete -f -c emerge -n '__fish_emerge_manipulate_package' -a '(__fish_emerge_print_installed_pkgs)' -d (N_ 'Package')
-complete -c emerge -s h -l help -d (N_ "Display help and exit")
-complete -c emerge -s c -l clean -d (N_ "Cleans the system by removing outdated packages")
-complete -c emerge -l depclean -d (N_ "Cleans the system by removing packages that are not associated with explicitly merged packages")
-complete -c emerge -l info -d (N_ "Displays important portage variables that will be exported to ebuild.sh when performing merges")
-complete -c emerge -l metadata -d (N_ "Causes portage to process all the metacache files as is normally done on the tail end of an rsync update using emerge --sync")
-complete -c emerge -s P -l prune -d (N_ "Removes all but the most recently installed version of a package from your system")
-complete -c emerge -l regen -d (N_ "Causes portage to check and update the dependency cache of all ebuilds in the portage tree")
-complete -c emerge -s s -l search -d (N_ "Searches for matches of the supplied string in the current local portage tree")
-complete -c emerge -s C -l unmerge -d (N_ "Removes all matching packages completely from your system")
-complete -c emerge -s a -l ask -d (N_ "Before performing the merge, display what ebuilds and tbz2s will be installed, in the same format as when using --pretend")
-complete -c emerge -s b -l buildpkg -d (N_ "Tell emerge to build binary packages for all ebuilds processed in addition to actually merging the packages")
-complete -c emerge -s B -l buildpkgonly -d (N_ "Creates a binary package, but does not merge it to the system")
-complete -c emerge -s l -l changelog -d (N_ "When pretending, also display the ChangeLog entries for packages that will be upgraded")
-complete -c emerge -l columns -d (N_ "Display the pretend output in a tabular form")
-complete -c emerge -s d -l debug -d (N_ "Tell emerge to run the ebuild command in --debug mode")
-complete -c emerge -s D -l deep -d (N_ "When used in conjunction with --update, this flag forces emerge to consider the entire dependency tree of packages, instead of checking only the immediate dependencies of the packages")
-complete -c emerge -s e -l emptytree -d (N_ "Virtually tweaks the tree of installed packages to contain nothing")
-complete -c emerge -s f -l fetchonly -d (N_ "Instead of doing any package building, just perform fetches for all packages (main package as well as all dependencies)")
-complete -c emerge -l fetch-all-uri -d (N_ "Same as --fetchonly except that all package files, including those not required to build the package, will be processed")
-complete -c emerge -s g -l getbinpkg -d (N_ "Using the server and location defined in PORTAGE_BINHOST, portage will download the information from each binary file there and it will use that information to help build the dependency list")
-complete -c emerge -s G -l getbinpkgonly -d (N_ "This option is identical to -g, except it will not use ANY information from the local machine")
-complete -c emerge -s N -l newuse -d (N_ "Tells emerge to include installed packages where USE flags have changed since installation")
-complete -c emerge -l noconfmem -d (N_ "Merge files in CONFIG_PROTECT to the live fs instead of silently dropping them")
-complete -c emerge -s O -l nodeps -d (N_ "Merge specified packages, but don't merge any dependencies")
-complete -c emerge -s n -l noreplace -d (N_ "Skip the packages specified on the command-line that have already been installed")
-complete -c emerge -l nospinner -d (N_ "Disables the spinner regardless of terminal type")
-complete -c emerge -l oneshot -d (N_ "Emerge as normal, but don't add packages to the world profile")
-complete -c emerge -s o -l onlydeps -d (N_ "Only merge (or pretend to merge) the dependencies of the specified packages, not the packages themselves")
-complete -c emerge -s p -l pretend -d (N_ "Do not merge, display what ebuilds and tbz2s would have been installed")
-complete -c emerge -s q -l quiet -d (N_ "Reduced output from portage's displays")
-complete -c emerge -l resume -d (N_ "Resumes the last merge operation")
-complete -c emerge -s S -l searchdesc -d (N_ "Matches the search string against the description field as well the package's name")
-complete -c emerge -l skipfirst -d (N_ "Remove the first package in the resume list so that a merge may continue in the presence of an uncorrectable or inconsequential error")
-complete -c emerge -s t -l tree -d (N_ "Shows the dependency tree using indentation for dependencies")
-complete -c emerge -s u -l update -d (N_ "Updates packages to the best version available")
-complete -c emerge -s k -l usepkg -d (N_ "Tell emerge to use binary packages (from $PKGDIR) if they are available, thus possibly avoiding some time-consuming compiles")
-complete -c emerge -s K -l usepkgonly -d (N_ "Like --usepkg, except this only allows the use of binary packages, and it will abort the emerge if the package is not available at the time of dependency calculation")
-complete -c emerge -s v -l verbose -d (N_ "Increased or expanded display of content in portage's displays")
-complete -c emerge -s V -l version -d (N_ "Displays the currently installed version of portage along with other information useful for quick reference on a system")
+function __fish_emerge_print_all_pkgs -d (N_ 'Prints completions for all available packages on the system from /usr/portage')
+ if test -d /usr/portage
+   find /usr/portage/ -maxdepth 2 -type d | cut -d'/' -f4-5 | sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//'
+   return
+ end
+end
+
+#########################
+# Actions
+complete -c emerge -xua "(__fish_emerge_print_all_pkgs)"
+complete -c emerge -l sync -d "Synchronize the portage tree"
+complete -c emerge -l info -d "Get informations to include in bug reports"
+complete -c emerge -s V -l version -d "Displays the version number of emerge"
+complete -c emerge -s h -l help -xa '""\t"'(_ "Usage overview of emerge")'" system\t"'(_ "Help on subject system")'" config\t"'(_ "Help on subject config")'" sync\t"'(_ "Help on subject sync")'"' -d "Displays help information for emerge"
+complete -c emerge -s c -l clean -d "Remove packages that will not affect the functionality of the system"
+complete -c emerge -l config -xa "(__fish_emerge_print_installed_pkgs)" -d "Run package specific actions needed to be executed after the emerge process"
+complete -c emerge -l depclean -d "WARNING: Delete all packages that are neither deps nor in world"
+complete -c emerge -l metadata -d "Process all meta-cache files"
+complete -c emerge -s P -l prune -xa "(__fish_emerge_print_installed_pkgs)" -d "WARNING: Remove all but the latest version of package"
+complete -c emerge -l regen -d "Check and update the dependency cache"
+complete -c emerge -l resume -d "Resume the last merge operation"
+complete -c emerge -s s -l search -d "Search for matches in the portage tree"
+complete -c emerge -s S -l searchdesc -d "Search for matches in package names and descriptions"
+complete -c emerge -s C -l unmerge -xa "(__fish_emerge_print_installed_pkgs)" -d "WARNING: Remove the given package"
+complete -c emerge -s u -l update -xa "(__fish_emerge_print_installed_pkgs)" -d "Update the given package"
+# END Actions
+#########################
+
+#########################
+# Options
+complete -c emerge -l alphabetical -d "Sort flag lists alphabetically"
+complete -c emerge -s a -l ask -d "Prompt the user before peforming the merge"
+complete -c emerge -s b -l buildpkg -d "Build a binary package additionally"
+complete -c emerge -s B -l buildpkgonly -d "Only build a binary package"
+complete -c emerge -s l -l changelog -d "Show changelog of package. Use with --pretend"
+complete -c emerge -l color -xa 'y\t"'(_ "Use colors in output")'" n\t"'(_ "Don't use colors in output")'"' -d "Toggle colorized output"
+complete -c emerge -l colums -d "Align output. Use with --pretend"
+complete -c emerge -s d -l debug -d "Run in debug mode"
+complete -c emerge -s D -l deep -d "Consider the whole dependency tree"
+complete -c emerge -s e -l emptytree -d "Reinstall all world packages"
+complete -c emerge -s f -l fetchonly -d "Only download the packages but don't install them"
+complete -c emerge -s F -l fetch-all-uri -d "Same as --fetchonly and grab all potential files"
+complete -c emerge -s g -l getbinpkg -d "Download infos from each binary package. Implies -k"
+complete -c emerge -s G -l getbinpkgonly -d "As -g but don't use local infos"
+complete -c emerge -l ignore-default-opts -d "Ignore EMERGE_DEFAULT_OPTS"
+complete -c emerge -s N -l newuse -d "Include installed packages with changed USE flags"
+complete -c emerge -l noconfmem -d "Disregard merge records"
+complete -c emerge -s O -l nodeps -d "Don't merge dependencies"
+complete -c emerge -s n -l noreplace -d "Skip already installed packages"
+complete -c emerge -l nospinner -d "Disable the spinner"
+complete -c emerge -s 1 -l oneshot -d "Don't add packages to world"
+complete -c emerge -s o -l onlydeps -d "Only merge dependencies"
+complete -c emerge -s p -l pretend -d "Display what would be done without doing it"
+complete -c emerge -s q -l quit -d "Use a condensed output"
+complete -c emerge -l skipfirst -d "Remove the first package in the resume list. Use with --resume"
+complete -c emerge -s t -l tree -d "Show the dependency tree"
+complete -c emerge -s k -l usepkg -d "Use binary package if available"
+complete -c emerge -s K -l usepkgonly -d "Only use binary packages"
+complete -c emerge -s v -l verbose -d "Run  in  verbose  mode"
+complete -c emerge -l with-bdeps -xa 'y\t"'(_ "Pull in build time dependencies")'" n\t"'(_ "Don't pull in build time dependencies")'"' -d "Toggle build time dependencies"
+# END Options
+#########################
+

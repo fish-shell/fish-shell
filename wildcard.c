@@ -305,7 +305,12 @@ static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 	const wchar_t *desc;
 	
 	struct stat buf;
-	off_t sz;
+
+	/*
+	  This is a long long, not an off_t since we really need to know
+	  exactly how large it is when using *printf() to output it.
+	*/
+	long long sz; 
 	wchar_t *sz_name[]=
 		{
 			L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0
@@ -326,7 +331,7 @@ static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 	}
 	else
 	{
-		sz = buf.st_size;
+		sz = (long long)buf.st_size;
 	}
 						
 	desc = complete_get_desc( fn );

@@ -72,7 +72,7 @@ extern wchar_t *program_name;
    This macro is used to check that an input argument is not null. It
    is a bit lika a non-fatal form of assert. Instead of exit-ing on
    failiure, the current function is ended at once. The second
-   parameter is the exit status of the current function on failiure.
+   parameter is the return value of the current function on failiure.
 */
 #define CHECK( arg, retval )											\
 	if( !(arg) )														\
@@ -88,7 +88,7 @@ extern wchar_t *program_name;
 	}
 
 /**
-   Exit program at once, leaving an error message about running out of memory
+   Exit program at once, leaving an error message about running out of memory.
 */
 #define DIE_MEM()														\
 	{																	\
@@ -100,7 +100,8 @@ extern wchar_t *program_name;
 	}
 
 /**
-   Cause fish to crash. This should only be usd for debugging.
+   Cause fish to crash. This should only be used for debugging. If
+   this function is ever called in shipped code, this is a bug.
 */
 #define CRASH()									\
 	{											\
@@ -109,7 +110,8 @@ extern wchar_t *program_name;
 	}
 
 /**
-   Check if signals are blocked
+   Check if signals are blocked. If so, print an error message and
+   return from the function performing this check.
 */
 #define CHECK_BLOCK( retval )													\
 	if( signal_is_blocked() )											\
@@ -120,7 +122,7 @@ extern wchar_t *program_name;
 			   L"If you can reproduce it, please send a bug report to %s.",	\
 			   __func__,												\
 			   PACKAGE_BUGREPORT );										\
-		return retval;														\
+		return retval;											\
 	}
 		
 /**
@@ -129,7 +131,8 @@ extern wchar_t *program_name;
 #define _(wstr) wgettext(wstr)
 
 /**
-   Noop, used to tell xgettext that a string should be translated, even though it is not directly sent to wgettext.
+   Noop, used to tell xgettext that a string should be translated,
+   even though it is not directly sent to wgettext. 
 */
 #define N_(wstr) wstr
 

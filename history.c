@@ -503,7 +503,8 @@ static void history_populate_from_mmap( history_mode_t *m )
 			if( (i_orig=hash_get( &current_mode->session_item, i ) ) )
 			{
 				/*
-				  This item comes from this session. Insert the original item at the end of the item list.
+				  This item comes from this session. Insert the
+				  original item at the end of the item list.
 				*/
 				al_push( &session_item_list, i_orig );				
 			}
@@ -608,7 +609,8 @@ static void history_save_mode( void *n, history_mode_t *m )
 	wchar_t *tmp_name;
 
 	/*
-	  First check if there are any new entries to save. If not, thenm we can just return
+	  First check if there are any new entries to save. If not, then
+	  we can just return
 	*/
 	for( i=0; i<al_get_count(&m->item); i++ )
 	{
@@ -628,7 +630,8 @@ static void history_save_mode( void *n, history_mode_t *m )
 	signal_block();
 
 	/*
-	  Set up on_disk variable to describe the current contents of the history file
+	  Set up on_disk variable to describe the current contents of the
+	  history file
 	*/
 	on_disk = history_create_mode( m->name );
 	history_load( on_disk );

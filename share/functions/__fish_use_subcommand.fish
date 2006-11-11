@@ -1,6 +1,6 @@
 
 function __fish_use_subcommand -d "Test if a non-switch argument has been given in the current commandline"
-	set -l -- cmd (commandline -poc)
+	set -l cmd (commandline -poc)
 	set -e cmd[1]
 	for i in $cmd
 		switch $i

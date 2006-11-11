@@ -80,6 +80,14 @@ static int try_sequence( char *seq, wchar_t *str )
 	return 0;
 }
 
+static int next_tab_stop( int in )
+{
+	if( init_tabs <= 0 )
+		init_tabs = 8;
+				
+	return ( (in/init_tabs)+1 )*init_tabs;
+}
+
 /**
    Calculate the width of the specified prompt. Does some clever magic
    to detect common escape sequences that may be embeded in a prompt,
@@ -184,10 +192,7 @@ static int calc_prompt_width( wchar_t *prompt )
 				/*
 				  Assume tab stops every 8 characters if undefined
 				*/
-				if( init_tabs <= 0 )
-					init_tabs = 8;
-				
-				res=( (res/init_tabs)+1 )*init_tabs;
+				res = next_tab_stop( res );
 			}
 			else
 			{

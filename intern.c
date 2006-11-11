@@ -31,6 +31,8 @@ static hash_table_t *intern_static_table=0;
 const wchar_t *intern( const wchar_t *in )
 {
 	const wchar_t *res=0;
+
+//	debug( 0, L"intern %ls", in );
 	
 	if( !in )
 		return 0;

@@ -2843,6 +2843,18 @@ static int builtin_break_continue( wchar_t **argv )
 	return STATUS_BUILTIN_OK;
 }
 
+static int builtin_breakpoint( wchar_t **argv )
+{
+	parser_push_block( BREAKPOINT );		
+	
+	reader_read( 0 );
+	
+	parser_pop_block();		
+	
+	return proc_get_last_status();
+}
+
+
 /**
    Function for handling the \c return builtin
 */
@@ -3106,6 +3118,10 @@ const static builtin_data_t builtin_data[]=
 	,
 	{
 		L"begin",  &builtin_begin, N_( L"Create a block of code" )  
+	}
+	,
+	{
+		L"breakpoint",  &builtin_breakpoint, N_( L"Temporarily halt execution and launch a new prompt" )  
 	}
 	,
 

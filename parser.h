@@ -138,6 +138,7 @@ enum block_type
 	BEGIN, /**< Unconditional block */
 	SOURCE, /**< Block created by the . (source) builtin */
 	EVENT, /**< Block created on event notifier invocation */
+	BREAKPOINT, /**< Breakpoint block */
 }
 ;
 

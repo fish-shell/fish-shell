@@ -188,6 +188,12 @@ The fish parser. Contains functions for parsing and evaluating code.
 */
 #define FOR_BLOCK N_( L"'for' block" )
 
+/**   
+   Breakpoint block 
+*/
+#define BREAKPOINT_BLOCK N_( L"Block created by breakpoint" ) 
+
+
 
 /**
    If block description
@@ -331,7 +337,11 @@ const static struct block_lookup_entry block_lookup[]=
 	}
 	,
 	{
-		0,0,0
+		BREAKPOINT, L"breakpoint", BREAKPOINT_BLOCK 
+	}
+	,
+	{
+		0, 0, 0
 	}
 }
 	;

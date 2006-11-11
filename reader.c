@@ -1983,6 +1983,19 @@ static int read_i()
 		{
 			job_t *j;
 			int has_job=0;
+			int is_breakpoint=0;
+			block_t *b;
+			
+			for( b = current_block; 
+				 b; 
+				 b = b->outer )
+			{
+				if( b->type == BREAKPOINT )
+				{
+					is_breakpoint = 1;
+					break;
+				}
+			}
 			
 			for( j=first_job; j; j=j->next )
 			{
@@ -1992,8 +2005,8 @@ static int read_i()
 					break;
 				}
 			}
-			
-			if( !reader_exit_forced() && !data->prev_end_loop && has_job )
+						
+			if( !reader_exit_forced() && !data->prev_end_loop && has_job && !is_breakpoint )
 			{
 				writestr(_( L"There are stopped jobs\n" ));
 

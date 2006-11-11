@@ -459,7 +459,7 @@ static void handle_hup( int sig, siginfo_t *info, void *context )
 	e.type=EVENT_SIGNAL;
 	e.param1.signal = SIGHUP;
 	e.function_name=0;
-
+	
 	if( event_get( &e, 0 ) )
 	{
 		default_handler( sig, 0, 0 );	

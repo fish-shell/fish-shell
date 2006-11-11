@@ -290,6 +290,7 @@ int main( int argc, char **argv )
 	is_interactive_session=1;
 	program_name=L"fish";
 
+
 	my_optind = fish_parse_opt( argc, argv, &cmd );
 
 	/*

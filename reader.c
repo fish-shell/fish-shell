@@ -275,10 +275,6 @@ static pid_t original_pid;
 */
 static int interrupted=0;
 
-/**
-   Original terminal mode when fish was started
-*/
-static struct termios old_modes;
 
 /*
   Prototypes for a bunch of functions defined later on.
@@ -303,8 +299,6 @@ static int exit_forced;
 */
 static void term_donate()
 {
-	tcgetattr(0,&old_modes);        /* get the current terminal modes */
-
 	set_color(FISH_COLOR_NORMAL, FISH_COLOR_NORMAL);
 
 	while( 1 )
@@ -347,12 +341,6 @@ static void term_steal()
 	}
 
 	common_handle_winch(0 );
-
-	if( tcsetattr(0,TCSANOW,&old_modes))/* return to previous mode */
-	{
-		wperror(L"tcsetattr");
-		exit(1);
-	}
 
 }
 
@@ -1210,7 +1198,6 @@ static void reader_interactive_init()
     if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
     {
         wperror(L"tcsetattr");
-        exit(1);
     }
 
 	/* 
@@ -1911,6 +1898,34 @@ static int read_i()
 
 				repaint();
 			}
+			else
+			{
+				pid_t my_pid = getpid();
+				for( j = first_job; j; j=j->next )
+				{
+					if( ! job_is_completed( j ) )
+					{
+						if( j->pgid != my_pid )
+						{
+							killpg( j->pgid, SIGHUP );
+						}
+						else
+						{
+							process_t *p;
+							for( p = j->first_process; p; p=p->next )
+							{
+								if( ! p->completed )
+								{
+									if( p->pid )
+									{
+										kill( p->pid, SIGHUP );
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 		else
 		{
@@ -1986,7 +2001,6 @@ wchar_t *reader_readline()
 	if( tcsetattr(0,TCSANOW,&shell_modes))      
 	{
         wperror(L"tcsetattr");
-        exit(1);
     }
 
 	while( !finished && !data->end_loop)
@@ -2564,7 +2578,6 @@ wchar_t *reader_readline()
 		if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */
 		{
 			wperror(L"tcsetattr");
-			exit(1);
 		}
 		
 		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );

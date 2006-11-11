@@ -189,7 +189,6 @@ void proc_destroy()
 
 void proc_set_last_status( int s )
 {
-
 	last_status = s;
 //	debug( 0, L"Set last status to %d\n", s );
 }
@@ -312,6 +311,8 @@ static void mark_process_status( job_t *j,
 								 int status )
 {
 	p->status = status;
+//	debug( 0, L"Process %ls %ls", p->argv[0], WIFSTOPPED (status)?L"stopped":(WIFEXITED( status )?L"exited":(WIFSIGNALED( status )?L"signaled to exit":L"BLARGH")) );
+	
 	if (WIFSTOPPED (status))
 	{
 		p->stopped = 1;
@@ -319,6 +320,7 @@ static void mark_process_status( job_t *j,
 	else
 	{
 		p->completed = 1;
+
 		
 		if (( !WIFEXITED( status ) ) &&
 			(! WIFSIGNALED( status )) )
@@ -848,6 +850,70 @@ static void read_try( job_t *j )
 }
 
 
+static int terminal_give_to_job( job_t *j, int cont )
+{
+	
+	if( tcsetpgrp (0, j->pgid) )
+	{
+		debug( 1, 
+			   _( L"Could not send job %d ('%ls') to foreground" ), 
+			   j->job_id, 
+			   j->command );
+		wperror( L"tcsetpgrp" );
+		return 0;
+	}
+	
+	if( cont )
+	{  
+		if( tcsetattr (0, TCSADRAIN, &j->tmodes))
+		{
+			debug( 1,
+				   _( L"Could not send job %d ('%ls') to foreground" ),
+				   j->job_id,
+				   j->command );
+			wperror( L"tcsetattr" );
+			return 0;
+		}
+	}
+	return 1;
+}
+
+/**
+   REturns contol of the terminal 
+*/
+static int terminal_return_from_job( job_t *j)
+{
+		
+	if( tcsetpgrp (0, getpid()) )
+	{
+		debug( 1, _( L"Could not return shell to foreground" ) );
+		wperror( L"tcsetpgrp" );
+		return 0;
+	}
+	
+	/* 
+	   Save jobs terminal modes.  
+	*/
+	if( tcgetattr (0, &j->tmodes) )
+	{
+		debug( 1, _( L"Could not return shell to foreground" ) );
+		wperror( L"tcgetattr" );
+		return 0;
+	}
+	
+	/* 
+	   Restore the shell's terminal modes.  
+	*/
+	if( tcsetattr (0, TCSADRAIN, &shell_modes))
+	{
+		debug( 1, _( L"Could not return shell to foreground" ) );
+		wperror( L"tcsetattr" );
+		return 0;
+	}
+
+	return 1;
+}
+
 void job_continue (job_t *j, int cont)
 {
 	/*
@@ -858,9 +924,12 @@ void job_continue (job_t *j, int cont)
 	first_job = j;
 	job_set_flag( j, JOB_NOTIFIED, 0 );
 
-	debug( 3,
-		   L"Continue job %d (%ls), %ls, %ls",
+	CHECK_BLOCK();
+	
+	debug( 4,
+		   L"Continue job %d, gid %d (%ls), %ls, %ls",
 		   j->job_id, 
+		   j->pgid,
 		   j->command, 
 		   job_is_completed( j )?L"COMPLETED":L"UNCOMPLETED", 
 		   is_interactive?L"INTERACTIVE":L"NON-INTERACTIVE" );
@@ -870,30 +939,17 @@ void job_continue (job_t *j, int cont)
 		if( job_get_flag( j, JOB_TERMINAL ) && job_get_flag( j, JOB_FOREGROUND ) )
 		{							
 			/* Put the job into the foreground.  */
-			signal_block();
-			if( tcsetpgrp (0, j->pgid) )
-			{
-				debug( 1, 
-					   _( L"Could not send job %d ('%ls') to foreground" ), 
-					   j->job_id, 
-					   j->command );
-				wperror( L"tcsetpgrp" );
-				return;
-			}
+			int ok;
 			
-			if( cont )
-			{  
-				if( tcsetattr (0, TCSADRAIN, &j->tmodes))
-				{
-					debug( 1,
-						   _( L"Could not send job %d ('%ls') to foreground" ),
-						   j->job_id,
-						   j->command );
-					wperror( L"tcsetattr" );
-					return;
-				}										
-			}
+			signal_block();
+			
+			ok = terminal_give_to_job( j, cont );
+			
 			signal_unblock();		
+
+			if( !ok )
+				return;
+			
 		}
 		
 		/* 
@@ -967,10 +1023,27 @@ void job_continue (job_t *j, int cont)
 							  short-lived jobs.
 							*/
 							int status;						
-//							debug( 1, L"waitpid" );	
 							pid_t pid = waitpid(-1, &status, WUNTRACED );
 							if( pid > 0 )
+							{
 								handle_child_status( pid, status );
+							}
+							else
+							{
+								/*
+								  This probably means we got a
+								  signal. A signal might mean that the
+								  terminal emulator sent us a hup
+								  signal to tell is to close. If so,
+								  we should exit.
+								*/
+								if( reader_exit_forced() )
+								{
+									quit = 1;
+								}
+								
+							}
+							
 							break;
 						}
 								
@@ -1007,34 +1080,17 @@ void job_continue (job_t *j, int cont)
 		*/
 		if( job_get_flag( j, JOB_TERMINAL ) && job_get_flag( j, JOB_FOREGROUND ) )
 		{
+			int ok;
+			
 			signal_block();
-			if( tcsetpgrp (0, getpid()) )
-			{
-				debug( 1, _( L"Could not return shell to foreground" ) );
-				wperror( L"tcsetpgrp" );
-				return;
-			}
+
+			ok = terminal_return_from_job( j );
 			
-			/* 
-			   Save jobs terminal modes.  
-			*/
-			if( tcgetattr (0, &j->tmodes) )
-			{
-				debug( 1, _( L"Could not return shell to foreground" ) );
-				wperror( L"tcgetattr" );
-				return;
-			}
-			
-			/* 
-			   Restore the shell's terminal modes.  
-			*/
-			if( tcsetattr (0, TCSADRAIN, &shell_modes))
-			{
-				debug( 1, _( L"Could not return shell to foreground" ) );
-				wperror( L"tcsetattr" );
-				return;
-			}
 			signal_unblock();
+			
+			if( !ok )
+				return;
+			
 		}
 	}
 	

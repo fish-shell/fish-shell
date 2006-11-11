@@ -217,3 +217,25 @@ complete $add_opt -l dry-run -d (N_ "Don't actually take the action")
 complete $add_opt -s q -l quiet -d (N_ "Suppress informational output")
 
 
+set -l optimize_opt -c darcs -n 'contains optimize (commandline -poc)'
+complete $optimize_opt -l checkpoint -d (N_ "Create a checkpoint file")
+complete $optimize_opt -l compress -d (N_ "Create compressed patches")
+complete $optimize_opt -l dont-compress -d (N_ "Don't create compressed patches")
+complete $optimize_opt -l uncompress -d (N_ "Uncompress patches")
+complete $optimize_opt -s t -l tag -r -d (N_ "Name of version to checkpoint")
+complete $optimize_opt -l modernize-patches -d (N_ "Rewrite all patches in current darcs format")
+complete $optimize_opt -l reorder-patches -d (N_ "Reorder the patches in the repository")
+complete $optimize_opt -l sibling -r -d (N_ "Specify a sibling directory")
+complete $optimize_opt -l relink -d (N_ "Relink random internal data to a sibling")
+complete $optimize_opt -l relink-pristine -d (N_ "Relink pristine tree (not recommended)")
+complete $optimize_opt -l posthook -r -d (N_ "Specify command to run after this darcs command.")
+complete $optimize_opt -l no-posthook -d (N_ "Do not run posthook command.B")
+complete $optimize_opt -l prompt-posthook -d (N_ "Prompt before running posthook. [DEFAULT]")
+complete $optimize_opt -l run-posthook -d (N_ "Run posthook command without prompting.")
+
+set -l setpref_opt -c darcs -n 'contains setpref (commandline -poc)'
+complete $setpref_opt -l posthook -r -d (N_ "Specify command to run after this darcs command.")
+complete $setpref_opt -l no-posthook -d (N_ "Do not run posthook command.B")
+complete $setpref_opt -l prompt-posthook -d (N_ "Prompt before running posthook. [DEFAULT]")
+complete $setpref_opt -l run-posthook -d (N_ "Run posthook command without prompting.")
+

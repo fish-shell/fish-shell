@@ -1,4 +1,4 @@
-#
+
 # Copyright (C) 2005-2006 Axel Liljencrantz
 #
 # This program is free software; you can redistribute it and/or modify
@@ -312,7 +312,7 @@ debug:
 # User documentation, describing the features of the fish shell.
 #
 
-user_doc: $(HDR_FILES) Doxyfile.user user_doc.head.html $(CMD_DOC_SRC) $(BUILTIN_DOC_SRC)
+user_doc: doc_src/index.hdr doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr Doxyfile.user user_doc.head.html $(CMD_DOC_SRC) $(BUILTIN_DOC_SRC)
 	$(MAKE) doc.h # Depend on the sources (*.hdr) and manually make the intermediate as needed
 	doxygen Doxyfile.user
 	touch user_doc
@@ -365,8 +365,8 @@ xsel-0.9.6/xsel: xsel-0.9.6
 
 doc_src/commands.hdr:$(BUILTIN_DOC_SRC) $(CMD_DOC_SRC) 
 	rm -f commands.tmp; 
-	echo "/** \page commands Commands" >>commands.tmp; 
-	echo "Fish ships with a large number of builtin commands, shellscript functions and external commandss. These are all described below. " >>commands.tmp; 
+	echo "/** \page commands Commands, functions and builtins bundled with fish" >>commands.tmp; 
+	echo "Fish ships with a large number of builtin commands, shellscript functions and external commands. These are all described below. " >>commands.tmp; 
 	for i in `printf "%s\n" $(BUILTIN_DOC_SRC) $(CMD_DOC_SRC)|sort`; do \
 		echo "<hr>" >>commands.tmp; \
 		cat $$i >>commands.tmp; \
@@ -412,7 +412,13 @@ doc.h:$(HDR_FILES)
 	echo "*/" >>$@
 
 %: %.in Makefile
-	sed <$@.in >$@ -e "s,@sysconfdir\@,$(sysconfdir),g" -e "s,@datadir\@,$(datadir),g" -e "s,@docdir\@,$(docdir),g" -e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" -e "s,@prefix\@,$(prefix),g" -e "s,@optbindirs\@,$(optbindirs),g" 
+	sed <$@.in >$@ \
+		-e "s,@sysconfdir\@,$(sysconfdir),g" \
+		-e "s,@datadir\@,$(datadir),g" \
+		-e "s,@docdir\@,$(docdir),g" \
+		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
+		-e "s,@prefix\@,$(prefix),g" \
+		-e "s,@optbindirs\@,$(optbindirs),g" 
 #-e "s,@\@,$()," 
 
 

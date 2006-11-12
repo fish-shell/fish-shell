@@ -592,7 +592,7 @@ int parse_util_unload( const wchar_t *cmd,
 	{
 		if( on_load )
 		{
-			on_load( (wchar_t *)val );
+			on_load( cmd );
 		}
 		free( val );
 	}

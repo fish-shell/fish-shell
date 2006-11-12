@@ -704,7 +704,7 @@ void exec( job_t *j )
 	
 	if( input_redirect && 
 		(input_redirect->io_mode == IO_BUFFER) && 
-		input_redirect->param3.is_input )
+		input_redirect->is_input )
 	{
 		/*
 		  Input redirection - create a new gobetween process to take

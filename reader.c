@@ -965,7 +965,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	string_buffer_t msg;
 	wchar_t * prefix_esc;
 	char *foo;
-
+	
 	if( !prefix || (wcslen(prefix)==0))
 		prefix_esc = wcsdup(L"\"\"");
 	else
@@ -1026,7 +1026,6 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 
 	io_buffer_destroy( out);
 	io_buffer_destroy( in);
-
 }
 
 /**

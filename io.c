@@ -53,9 +53,8 @@ Utilities for io redirection.
 
 void io_buffer_read( io_data_t *d )
 {
-
 	exec_close(d->param1.pipe_fd[1] );
-	
+
 	if( d->io_mode == IO_BUFFER )
 	{		
 /*		if( fcntl( d->param1.pipe_fd[0], F_SETFL, 0 ) )
@@ -108,7 +107,7 @@ io_data_t *io_buffer_create( int is_input )
 	buffer_redirect->io_mode=IO_BUFFER;
 	buffer_redirect->next=0;
 	buffer_redirect->param2.out_buffer= malloc( sizeof(buffer_t));
-	buffer_redirect->param3.is_input = is_input;
+	buffer_redirect->is_input = is_input;
 	b_init( buffer_redirect->param2.out_buffer );
 	buffer_redirect->fd=is_input?0:1;
 	
@@ -135,7 +134,16 @@ io_data_t *io_buffer_create( int is_input )
 
 void io_buffer_destroy( io_data_t *io_buffer )
 {
-	
+
+	/**
+	   If this is an input buffer, then io_read_buffer will not have
+	   been called, and we need to close the output fd as well.
+	*/
+	if( io_buffer->is_input )
+	{
+		exec_close(io_buffer->param1.pipe_fd[1] );
+	}
+
 	exec_close( io_buffer->param1.pipe_fd[0] );
 
 	/*

@@ -45,16 +45,7 @@ typedef struct io_data
 	} param2
 	;
 
-	union 
-	{
-		/**
-		   This will be non-zero if this is a buffer of input, not
-		   output
-		*/
-		int is_input;
-	}
-		param3;
-	
+	int is_input;
 	
 	/** Pointer to the next IO redirection */
 	struct io_data *next;

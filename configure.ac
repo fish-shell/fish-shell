@@ -9,7 +9,7 @@
 # configure the build process.
 #
 
-AC_INIT(fish,1.22.0,fish-users@lists.sf.net)
+AC_INIT(fish,1.22.1,fish-users@lists.sf.net)
 
 
 #

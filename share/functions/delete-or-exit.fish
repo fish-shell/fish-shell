@@ -9,7 +9,7 @@ function delete-or-exit
 	if test (commandline)
 		commandline -f delete-char
 	else
-		exit
+		exit 0
 	end
 end
 

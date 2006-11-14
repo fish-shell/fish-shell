@@ -1,9 +1,9 @@
 /** \file screen.c High level library for handling the terminal screen
 
-	The screen library allows the interactive reader to write its
-	output to screen efficiently by keeping an inetrnal representation
-	of the current screen contents and trying to find the most
-	efficient way for transforming that to the desired screen content.
+The screen library allows the interactive reader to write its
+output to screen efficiently by keeping an inetrnal representation
+of the current screen contents and trying to find the most
+efficient way for transforming that to the desired screen content.
 */
 
 #include "config.h"
@@ -105,103 +105,129 @@ static int calc_prompt_width( wchar_t *prompt )
 			/*
 			  This is the start of an escape code. Try to guess it's width.
 			*/
-				int l;
-				int len=0;
-				int found = 0;
-
-				/*
-				  Detect these terminfo color escapes with parameter
-				  value 0..7, all of which don't move the cursor
-				*/
-				char * esc[] =
-					{
-						set_a_foreground,
-						set_a_background,
-						set_foreground,
-						set_background,
-					}
-				;
-
-				/*
-				  Detect these semi-common terminfo escapes without any
-				  parameter values, all of which don't move the cursor
-				*/
-				char *esc2[] =
-					{
-						enter_bold_mode,
-						exit_attribute_mode,
-						enter_underline_mode,
-						exit_underline_mode,
-						enter_standout_mode,
-						exit_standout_mode,
-						flash_screen,
-						enter_subscript_mode,
-						exit_subscript_mode,
-						enter_superscript_mode,
-						exit_superscript_mode,
-						enter_blink_mode,
-						enter_italics_mode,
-						exit_italics_mode,
-						enter_reverse_mode,
-						enter_shadow_mode,
-						exit_shadow_mode,
-						enter_standout_mode,
-						exit_standout_mode,
-						enter_secure_mode
-					}
-				;
-
-				for( l=0; l < (sizeof(esc)/sizeof(char *)) && !found; l++ )
+			int l;
+			int len=0;
+			int found = 0;
+			
+			/*
+			  Detect these terminfo color escapes with parameter
+			  value 0..7, all of which don't move the cursor
+			*/
+			char * esc[] =
 				{
-					if( !esc[l] )
-						continue;
-
-					for( k=0; k<8; k++ )
-					{
-						len = try_sequence( tparm(esc[l],k), &prompt[j] );
-						if( len )
-						{
-							j += (len-1);
-							found = 1;
-							break;
-						}
-					}
+					set_a_foreground,
+					set_a_background,
+					set_foreground,
+					set_background,
 				}
+			;
 
-				for( l=0; l < (sizeof(esc2)/sizeof(char *)) && !found; l++ )
+			/*
+			  Detect these semi-common terminfo escapes without any
+			  parameter values, all of which don't move the cursor
+			*/
+			char *esc2[] =
 				{
-					if( !esc2[l] )
-						continue;
-					/*
-					  Test both padded and unpadded version, just to
-					  be safe. Most versions of tparm don't actually
-					  seem to do anything these days.
-					*/
-					len = maxi( try_sequence( tparm(esc2[l]), &prompt[j] ),
-								try_sequence( esc2[l], &prompt[j] ));
-					
+					enter_bold_mode,
+					exit_attribute_mode,
+					enter_underline_mode,
+					exit_underline_mode,
+					enter_standout_mode,
+					exit_standout_mode,
+					flash_screen,
+					enter_subscript_mode,
+					exit_subscript_mode,
+					enter_superscript_mode,
+					exit_superscript_mode,
+					enter_blink_mode,
+					enter_italics_mode,
+					exit_italics_mode,
+					enter_reverse_mode,
+					enter_shadow_mode,
+					exit_shadow_mode,
+					enter_standout_mode,
+					exit_standout_mode,
+					enter_secure_mode
+				}
+			;
+
+			for( l=0; l < (sizeof(esc)/sizeof(char *)) && !found; l++ )
+			{
+				if( !esc[l] )
+					continue;
+
+				for( k=0; k<8; k++ )
+				{
+					len = try_sequence( tparm(esc[l],k), &prompt[j] );
 					if( len )
 					{
 						j += (len-1);
 						found = 1;
+						break;
 					}
 				}
 			}
-			else if( prompt[j] == L'\t' )
+
+			for( l=0; l < (sizeof(esc2)/sizeof(char *)) && !found; l++ )
 			{
+				if( !esc2[l] )
+					continue;
 				/*
-				  Assume tab stops every 8 characters if undefined
+				  Test both padded and unpadded version, just to
+				  be safe. Most versions of tparm don't actually
+				  seem to do anything these days.
 				*/
-				res = next_tab_stop( res );
+				len = maxi( try_sequence( tparm(esc2[l]), &prompt[j] ),
+							try_sequence( esc2[l], &prompt[j] ));
+					
+				if( len )
+				{
+					j += (len-1);
+					found = 1;
+				}
 			}
-			else
+				
+			if( !found )
+
 			{
-				/*
-				  Ordinary decent character. Just add width.
-				*/
-				res += wcwidth( prompt[j] );
+				wchar_t *term_name = env_get( L"TERM" );
+					
+				if( term_name && wcscmp( term_name, L"screen" ) == 0 )
+				{
+					if( prompt[j+1] == L'k' )
+					{
+						wchar_t *end;
+						j+=2;
+						found = 1;
+						end = wcsstr( &prompt[j], L"\e\\" );
+						if( end )
+						{
+							j = (end-prompt)+1;
+						}
+						else
+						{
+							break;
+						}
+					}						
+				}					
 			}
+				
 		}
+		else if( prompt[j] == L'\t' )
+		{
+			/*
+			  Assume tab stops every 8 characters if undefined
+			*/
+			res = next_tab_stop( res );
+		}
+		else
+		{
+			/*
+			  Ordinary decent character. Just add width.
+			*/
+			res += wcwidth( prompt[j] );
+		}
+	}
 	return res;
 }
 
@@ -354,9 +380,9 @@ static line_t *s_create_line()
 }
 
 /**
-  Appends a character to the end of the line that the output cursor is
-  on. This function automatically handles linebreaks and lines longer
-  than the screen width. 
+   Appends a character to the end of the line that the output cursor is
+   on. This function automatically handles linebreaks and lines longer
+   than the screen width. 
 */
 static void s_desired_append_char( screen_t *s, 
 								   wchar_t b,
@@ -465,9 +491,9 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 
 	char *str;
 /*
-	debug( 0, L"move from %d %d to %d %d", 
-		   s->screen_cursor[0], s->screen_cursor[1],  
-		   new_x, new_y );
+  debug( 0, L"move from %d %d to %d %d", 
+  s->screen_cursor[0], s->screen_cursor[1],  
+  new_x, new_y );
 */
 	output_set_writer( &s_writeb );
 	s_writeb_buffer = b;

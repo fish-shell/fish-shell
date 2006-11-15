@@ -1,8 +1,10 @@
 /** \file function.h 
 
     Prototypes for functions for storing and retrieving function
-	information. Actual function evaluation is taken care of by the
-	parser and to some degree the builtin handling library.
+	information. These functions also take care of autoloading
+	functions in the $fish_function_path. Actual function evaluation
+	is taken care of by the parser and to some degree the builtin
+	handling library.
 */
 
 #ifndef FISH_FUNCTION_H
@@ -16,13 +18,15 @@
    Initialize function data   
 */
 void function_init();
+
 /**
    Destroy function data
 */
 void function_destroy();
 
 /**
-   Add an function. The parameters values are copied and should be freed by the caller.
+   Add an function. The parameters values are copied and should be
+   freed by the caller.
 */
 void function_add( const wchar_t *name,
 				   const wchar_t *val,
@@ -33,11 +37,6 @@ void function_add( const wchar_t *name,
    Remove the function with the specified name.
 */
 void function_remove( const wchar_t *name );
-
-/**
-   Returns true if the function with the name name uses internal variables, false otherwise.
-*/
-int function_use_vars( const wchar_t *name );
 
 /**
    Returns the definition of the function with the name \c name.
@@ -55,12 +54,13 @@ const wchar_t *function_get_desc( const wchar_t *name );
 void function_set_desc( const wchar_t *name, const wchar_t *desc );
 
 /**
-   Returns true if the function witrh the name name exists.
+   Returns true if the function with the name name exists.
 */
 int function_exists( const wchar_t *name );
 
 /**
-   Insert all function names into l. These are not copies of the strings and should not be freed after use.
+   Insert all function names into l. These are not copies of the
+   strings and should not be freed after use.
    
    \param list the list to add the names to
    \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore
@@ -71,11 +71,18 @@ void function_get_names( array_list_t *list,
 /**
    Returns tha absolute path of the file where the specified function
    was defined. Returns 0 if the file was defined on the commandline.
+
+   This function does not autoload functions, it will only work on
+   functions that have already been defined.
 */
 const wchar_t *function_get_definition_file( const wchar_t *name );
 
 /**
-   Returns the linenumber where the definition of the specified function started
+   Returns the linenumber where the definition of the specified
+   function started.
+
+   This function does not autoload functions, it will only work on
+   functions that have already been defined.
 */
 int function_get_definition_offset( const wchar_t *name );
 

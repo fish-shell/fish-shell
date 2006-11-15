@@ -1,5 +1,10 @@
 /** \file function.c
-  Functions for storing and retrieving function information.
+
+    Prototypes for functions for storing and retrieving function
+	information. These functions also take care of autoloading
+	functions in the $fish_function_path. Actual function evaluation
+	is taken care of by the parser and to some degree the builtin
+	handling library.
 */
 
 #include "config.h"
@@ -25,6 +30,8 @@
 #include "parse_util.h"
 #include "env.h"
 #include "expand.h"
+#include "halloc.h"
+#include "halloc_util.h"
 
 
 /**
@@ -135,19 +142,6 @@ static void autoload_names( array_list_t *out, int get_hidden )
 	al_destroy( &path_list );
 }
 
-
-/**
-   Free all contents of an entry to the function hash table
-*/
-static void clear_function_entry( void *key, 
-								  void *data )
-{
-	function_data_t *d = (function_data_t *)data;
-	free( (void *)d->cmd );
-	free( (void *)d->desc );
-	free( (void *)d );
-}
-
 void function_init()
 {
 	hash_init( &function,
@@ -155,9 +149,14 @@ void function_init()
 			   &hash_wcs_cmp );
 }
 
+static void clear_entry( void *key, void *value )
+{
+	halloc_free( value );
+}
+
 void function_destroy()
 {
-	hash_foreach( &function, &clear_function_entry );
+	hash_foreach( &function, &clear_entry );
 	hash_destroy( &function );
 }
 
@@ -176,13 +175,13 @@ void function_add( const wchar_t *name,
 	
 	function_remove( name );
 	
-	d = malloc( sizeof( function_data_t ) );
+	d = halloc( 0, sizeof( function_data_t ) );
 	d->definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
-	d->cmd = wcsdup( val );
+	d->cmd = halloc_wcsdup( d, val );
 	
 	cmd_end = d->cmd + wcslen(d->cmd)-1;
 	
-	d->desc = desc?wcsdup( desc ):0;
+	d->desc = desc?halloc_wcsdup( d, desc ):0;
 	d->definition_file = intern(reader_current_filename());
 	d->is_autoload = is_autoload;
 		
@@ -230,7 +229,7 @@ void function_remove( const wchar_t *name )
 	ev.function_name=name;	
 	event_remove( &ev );
 
-	clear_function_entry( key, d );
+	halloc_free( d );
 
 	/*
 	  Notify the autoloader that the specified function is erased, but
@@ -282,7 +281,7 @@ void function_set_desc( const wchar_t *name, const wchar_t *desc )
 	if( data == 0 )
 		return;
 
-	data->desc =wcsdup(desc);
+	data->desc = halloc_wcsdup( data, desc );
 }
 
 /**
@@ -294,9 +293,9 @@ static int al_contains_str( array_list_t *list, const wchar_t * str )
 	for( i=0; i<al_get_count( list ); i++ )
 	{
 		if( wcscmp( al_get( list, i ), str) == 0 )
-			{
-				return 1;
-			}
+		{
+			return 1;
+		}
 	}
 	return 0;
 }

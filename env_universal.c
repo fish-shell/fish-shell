@@ -144,7 +144,7 @@ static int get_socket( int fork_ok )
 		return -1;
 	}
 	
-	if( fcntl( s, F_SETFL, O_NONBLOCK ) != 0 )
+	if( (fcntl( s, F_SETFL, O_NONBLOCK ) != 0) || (fcntl( s, F_SETFD, FD_CLOEXEC ) != 0) ) 
 	{
 		wperror( L"fcntl" );
 		close( s );		

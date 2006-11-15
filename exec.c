@@ -42,7 +42,6 @@
 #include "sanity.h"
 #include "expand.h"
 #include "signal.h"
-#include "env_universal.h"
 
 #include "halloc.h"
 #include "halloc_util.h"
@@ -387,9 +386,6 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 			
 		}
 	}
-
-	if( env_universal_server.fd >= 0 )
-		exec_close( env_universal_server.fd );
 
 	return 0;
 	

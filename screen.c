@@ -82,6 +82,9 @@ static int try_sequence( char *seq, wchar_t *str )
 
 static int next_tab_stop( int in )
 {
+	/*
+	  Assume tab stops every 8 characters if undefined
+	*/
 	if( init_tabs <= 0 )
 		init_tabs = 8;
 				
@@ -188,13 +191,11 @@ static int calc_prompt_width( wchar_t *prompt )
 			}
 				
 			if( !found )
-
 			{
-				wchar_t *term_name = env_get( L"TERM" );
-					
-				if( term_name && wcscmp( term_name, L"screen" ) == 0 )
+				if( prompt[j+1] == L'k' )
 				{
-					if( prompt[j+1] == L'k' )
+					wchar_t *term_name = env_get( L"TERM" );
+					if( term_name && wcscmp( term_name, L"screen" ) == 0 )
 					{
 						wchar_t *end;
 						j+=2;
@@ -202,6 +203,14 @@ static int calc_prompt_width( wchar_t *prompt )
 						end = wcsstr( &prompt[j], L"\e\\" );
 						if( end )
 						{
+							/*
+							  You'd thing this should be
+							  '(end-prompt)+2', in order to move j
+							  past the end of the string, but there is
+							  a 'j++' at the end of each lap, so j
+							  should always point to the last menged
+							  character, e.g. +1.
+							*/
 							j = (end-prompt)+1;
 						}
 						else
@@ -215,9 +224,6 @@ static int calc_prompt_width( wchar_t *prompt )
 		}
 		else if( prompt[j] == L'\t' )
 		{
-			/*
-			  Assume tab stops every 8 characters if undefined
-			*/
 			res = next_tab_stop( res );
 		}
 		else
@@ -330,7 +336,6 @@ static void s_check_status( screen_t *s)
 /**
    Free all memory used by one line_t struct. 
 */
-
 static void free_line( void *l )
 {
 	line_t *line = (line_t *)l;
@@ -503,10 +508,11 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 	if( y_steps > 0 && (strcmp( cursor_down, "\n")==0))
 	{	
 		/*
-		  This is very strange - it seems all (most) consoles use a
+		  This is very strange - it seems some (all?) consoles use a
 		  simple newline as the cursor down escape. This will of
-		  course move the cursor to the beginning of the line as
-		  well. The cursor_up does not have this behaviour...
+		  course move the cursor to the beginning of the line as well
+		  as moving it down one step. The cursor_up does not have this
+		  behaviour...
 		*/
 		s->actual_cursor[0]=0;
 	}
@@ -591,6 +597,7 @@ static void s_write_char( screen_t *s, buffer_t *b, wchar_t c )
 	
 	output_set_writer( writer_old );
 }
+
 /**
    Send the specified string through tputs and append the output to
    the specified buffer.

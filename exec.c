@@ -22,6 +22,7 @@
 #include <sys/wait.h>
 #include <assert.h>
 #include <dirent.h>
+#include <time.h>
 
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
@@ -61,9 +62,14 @@
 #define FORK_ERROR _( L"Could not create child process - exiting" )
 
 /**
+   The number of times to try to call fork() before giving up
+*/
+#define FORK_LAPS 5
+
+/**
    Base open mode to pass to calls to open
 */
-#define BASE_MASK 0666
+#define OPEN_MASK 0666
 
 /**
    List of all pipes used by internal pipes. These must be closed in
@@ -77,6 +83,12 @@ static int set_child_group( job_t *j, process_t *p, int print_errors );
 void exec_close( int fd )
 {
 	int i;
+
+	if( fd < 0 )
+	{
+		debug( 0, L"Called close on invalid file descriptor " );
+		return;
+	}
 	
 	while( close(fd) == -1 )
 	{
@@ -104,7 +116,6 @@ void exec_close( int fd )
 			}
 		}
 	}
-
 }
 
 int exec_pipe( int fd[2])
@@ -267,7 +278,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 			case IO_FILE:
 			{
 				if( (tmp=wopen( io->param1.filename,
-                                io->param2.flags, BASE_MASK ) )==-1 )
+                                io->param2.flags, OPEN_MASK ) )==-1 )
 				{
 					debug( 1, 
 						   FILE_ERROR,
@@ -385,15 +396,19 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 
 /**
    Initialize a new child process. This should be called right away
-   after forking in the child process. If job control is suitable, the
-   process is put in the jobs group, all signal handlers are reset,
-   SIGCHLD is unblocked (the exec call blocks blocks SIGCHLD), and all
-   IO redirections and other file descriptor actions are performed.
+   after forking in the child process. If job control is enabled for
+   this job, the process is put in the process group of the job, all
+   signal handlers are reset, signals are unblocked (this function may
+   only be called inside the exec function, which blocks all signals),
+   and all IO redirections and other file descriptor actions are
+   performed.
 
    \param j the job to set up the IO for
    \param p the child process to set up
 
-   \return 0 on sucess, -1 on failiure
+   \return 0 on sucess, -1 on failiure. When this function returns,
+   signals are always unblocked. On failiure, signal handlers, io
+   redirections and process group of the process is undefined.
 */
 static int setup_child_process( job_t *j, process_t *p )
 {
@@ -478,7 +493,8 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
    Make a copy of the specified io redirection chain, but change file
    redirection into fd redirection. This makes the redirection chain
    suitable for use as block-level io, since the file won't be
-   repeatedly reopened for every command in the block.
+   repeatedly reopened for every command in the block, which would
+   reset the cursor position.
 
    \return the transmogrified chain on sucess, or 0 on failiure
 */
@@ -519,7 +535,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		{
 			int fd;
 			
-			if( (fd=wopen( in->param1.filename, in->param2.flags, BASE_MASK ) )==-1 )
+			if( (fd=wopen( in->param1.filename, in->param2.flags, OPEN_MASK ) )==-1 )
 			{
 				debug( 1, 
 					   FILE_ERROR,
@@ -645,6 +661,48 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 	return res;
 }
 
+/**
+   This function is a wrapper around fork. If the fork calls fails
+   with EAGAIN, it is retried FORK_LAPS times, with a very slight
+   delay between each lap. If fork fails even then, the process will
+   exit with an error message.
+*/
+static pid_t exec_fork()
+{
+	pid_t pid;
+	struct timespec pollint;
+	int i;
+	
+	for( i=0; i<FORK_LAPS; i++ )
+	{
+		pid = fork();
+		if( pid >= 0)
+		{
+			return pid;
+		}
+		
+		if( errno != EAGAIN )
+		{
+			break;
+		}
+
+		pollint.tv_sec = 0;
+		pollint.tv_nsec = 1000000;
+
+		/*
+		  Don't sleep on the final lap - sleeping might change the
+		  value of errno, which will break the error reporting below.
+		*/
+		if( i != FORK_LAPS-1 )
+		{
+			nanosleep( &pollint, NULL );
+		}
+	}
+	
+	debug( 0, FORK_ERROR );
+	wperror (L"fork");
+	exit( 1 );
+}
 
 
 void exec( job_t *j )
@@ -661,7 +719,8 @@ void exec( job_t *j )
 	io_data_t *io_buffer =0;
 
 	/*
-	  Set to 1 if something goes wrong while exec:ing the job, in which case the cleanup code will kick in.
+	  Set to 1 if something goes wrong while exec:ing the job, in
+	  which case the cleanup code will kick in.
 	*/
 	int exec_error=0;
 
@@ -776,7 +835,7 @@ void exec( job_t *j )
 		
 	if( needs_keepalive )
 	{
-		keepalive.pid = fork();
+		keepalive.pid = exec_fork();
 
 		if( keepalive.pid == 0 )
 		{
@@ -784,13 +843,6 @@ void exec( job_t *j )
 			set_child_group( j, &keepalive, 1 );
 			pause();			
 			exit(0);
-		}
-		else if( keepalive.pid < 0 )
-		{
-			/* The fork failed. */
-			debug( 0, FORK_ERROR );
-			wperror (L"fork");
-			exit (1);
 		}
 		else
 		{
@@ -814,10 +866,13 @@ void exec( job_t *j )
 		pipe_write.fd = p->pipe_fd;
 
 		/* 
-		   This call is used so the global environment variable array is
-		   regenerated, if needed, before the fork. That way, we avoid a
-		   lot of duplicate work where EVERY child would need to generate
-		   it
+		   This call is used so the global environment variable array
+		   is regenerated, if needed, before the fork. That way, we
+		   avoid a lot of duplicate work where EVERY child would need
+		   to generate it, since that result would not get written
+		   back to the parent. This call could be safely removed, but
+		   it would result in slightly lower performance - at least on
+		   uniprocessor systems.
 		*/
 		if( p->type == EXTERNAL )
 			env_export_arr( 1 );
@@ -918,7 +973,12 @@ void exec( job_t *j )
 				int builtin_stdin=0;
 				int fg;
 				int close_stdin=0;
-				
+
+				/*
+				  If this is the first process, check the io
+				  redirections and see where we should be reading
+				  from.
+				*/
 				if( p == j->first_process )
 				{
 					io_data_t *in = io_get( j->io, 0 );
@@ -942,7 +1002,7 @@ void exec( job_t *j )
 							case IO_FILE:
 							{
 								builtin_stdin=wopen( in->param1.filename,
-                                              in->param2.flags, BASE_MASK );
+                                              in->param2.flags, OPEN_MASK );
 								if( builtin_stdin == -1 )
 								{
 									debug( 1, 
@@ -985,9 +1045,18 @@ void exec( job_t *j )
 					builtin_push_io( builtin_stdin );
 					
 					/* 
-					   Since this may be the foreground job, and since a
-					   builtin may execute another foreground job, we need to
-					   pretend to suspend this job while running the builtin.
+					   Since this may be the foreground job, and since
+					   a builtin may execute another foreground job,
+					   we need to pretend to suspend this job while
+					   running the builtin, in order to avoid a
+					   situation where two jobs are running at once.
+
+					   The reason this is done here, and not by the
+					   relevant builtins, is that this way, the
+					   builtin does not need to know what job it is
+					   part of. It could probably figure that out by
+					   walking the job list, but it seems more robust
+					   to make exec handle things.
 					*/
 					
 					builtin_out_redirect = has_fd( j->io, 1 );
@@ -1009,6 +1078,10 @@ void exec( job_t *j )
 					job_set_flag( j, JOB_FOREGROUND, fg );
 				}
 				
+				/*
+				  If stdin has been redirected, close the redirection
+				  stream.
+				*/
 				if( close_stdin )
 				{
 					exec_close( builtin_stdin );
@@ -1054,7 +1127,7 @@ void exec( job_t *j )
 				
 				if( io_buffer->param2.out_buffer->used != 0 )
 				{
-					pid = fork();
+					pid = exec_fork();
 
 					if( pid == 0 )
 					{
@@ -1067,13 +1140,6 @@ void exec( job_t *j )
 							   io_buffer->param2.out_buffer->buff, 
 							   io_buffer->param2.out_buffer->used );
 						exit( status );
-					}
-					else if( pid < 0 )
-					{
-						/* The fork failed. */
-						debug( 0, FORK_ERROR );
-						wperror (L"fork");
-						exit (1);
 					}
 					else
 					{
@@ -1108,7 +1174,7 @@ void exec( job_t *j )
 			case INTERNAL_BUFFER:
 			{
 		
-				pid = fork();
+				pid = exec_fork();
 				
 				if( pid == 0 )
 				{
@@ -1122,13 +1188,6 @@ void exec( job_t *j )
 						   input_redirect->param2.out_buffer->buff, 
 						   input_redirect->param2.out_buffer->used );
 					exit( 0 );
-				}
-				else if( pid < 0 )
-				{
-					/* The fork failed. */
-					debug( 0, FORK_ERROR );
-					wperror (L"fork");
-					exit (1);
 				}
 				else
 				{
@@ -1149,7 +1208,17 @@ void exec( job_t *j )
 				int skip_fork=0;
 				
 				/*
-				  If a builtin didn't produce any output, and it is not inside a pipeline, there is no need to fork 
+				  Handle output from builtin commands. In the general
+				  case, this means forking of a worker process, that
+				  will write out the contents of the stdout and stderr
+				  buffers to the correct file descriptor. Since
+				  forking is expensive, fish tries to avoid it wehn
+				  possible.
+				*/
+
+				/*
+				  If a builtin didn't produce any output, and it is
+				  not inside a pipeline, there is no need to fork
 				*/
 				skip_fork =
 					( !sb_out->used ) &&
@@ -1157,7 +1226,7 @@ void exec( job_t *j )
 					( !p->next );
 				
 				/*
-				  If the output of a builtin is to be sent to an internal
+				  If the output of a builtin is to be sent to aninternal
 				  buffer, there is no need to fork. This helps out the
 				  performance quite a bit in complex completion code.
 				*/
@@ -1188,8 +1257,12 @@ void exec( job_t *j )
 					break;
 					
 				}
-				
-				pid = fork();
+
+				/*
+				  Ok, unfortunatly, we have to do a real fork. Bummer.
+				*/
+								
+				pid = exec_fork();
 				if( pid == 0 )
 				{
 
@@ -1209,13 +1282,6 @@ void exec( job_t *j )
 					exit( p->status );
 						
 				}
-				else if( pid < 0 )
-				{
-					/* The fork failed. */
-					debug( 0, FORK_ERROR );
-					wperror (L"fork");
-					exit (1);
-				}
 				else
 				{
 					/* 
@@ -1234,7 +1300,7 @@ void exec( job_t *j )
 			
 			case EXTERNAL:
 			{
-				pid = fork();
+				pid = exec_fork();
 				if( pid == 0 )
 				{
 					/*
@@ -1247,13 +1313,6 @@ void exec( job_t *j )
 					/*
 					  launch_process _never_ returns...
 					*/
-				}
-				else if( pid < 0 )
-				{
-					/* The fork failed. */
-					debug( 0, FORK_ERROR );
-					wperror( L"fork" );
-					exit( 1 );
 				}
 				else
 				{
@@ -1276,12 +1335,14 @@ void exec( job_t *j )
 			builtin_pop_io();
 				
 		/* 
-		   Close the pipe the current process uses to read from the previous process_t 
+		   Close the pipe the current process uses to read from the
+		   previous process_t
 		*/
 		if( pipe_read.param1.pipe_fd[0] >= 0 )
 			exec_close( pipe_read.param1.pipe_fd[0] );
 		/* 
-		   Set up the pipe the next process uses to read from the current process_t 
+		   Set up the pipe the next process uses to read from the
+		   current process_t
 		*/
 		if( p->next )
 			pipe_read.param1.pipe_fd[0] = mypipe[0];
@@ -1332,7 +1393,7 @@ void exec( job_t *j )
 }
 
 int exec_subshell( const wchar_t *cmd, 
-				   array_list_t *l )
+				   array_list_t *lst )
 {
 	char *begin, *end;
 	char z=0;
@@ -1340,14 +1401,8 @@ int exec_subshell( const wchar_t *cmd,
 	int status, prev_status;
 	io_data_t *io_buffer;
 
-	if( !cmd )
-	{
-		debug( 1, 
-			   _( L"Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s." ), 
-			   PACKAGE_BUGREPORT );		
-		return -1;		
-	}
-	
+	CHECK( cmd, -1 );
+		
 	is_subshell=1;	
 	io_buffer= io_buffer_create( 0 );
 	
@@ -1372,7 +1427,7 @@ int exec_subshell( const wchar_t *cmd,
 	
 	begin=end=io_buffer->param2.out_buffer->buff;	
 
-	if( l )
+	if( lst )
 	{
 		while( 1 )
 		{
@@ -1385,7 +1440,7 @@ int exec_subshell( const wchar_t *cmd,
 						wchar_t *el = str2wcs( begin );
 						if( el )
 						{
-							al_push( l, el );
+							al_push( lst, el );
 						}
 						else
 						{
@@ -1403,7 +1458,7 @@ int exec_subshell( const wchar_t *cmd,
 					el = str2wcs( begin );
 					if( el )
 					{
-						al_push( l, el );
+						al_push( lst, el );
 					}
 					else
 					{

@@ -48,14 +48,6 @@
 #include "parse_util.h"
 
 /**
-   Prototype for the getpgid library function. The prototype for this
-   function seems to be missing in glibc, at least I've not found any
-   combination of includes, macros and compiler switches that will
-   include it.
-*/
-pid_t getpgid( pid_t pid );
-
-/**
    file descriptor redirection error message
 */
 #define FD_ERROR   _( L"An error occurred while redirecting file descriptor %d" )

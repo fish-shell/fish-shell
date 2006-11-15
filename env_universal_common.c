@@ -423,7 +423,7 @@ void read_message( connection_t *src )
 /**
    Remove variable with specified name
 */
-static void remove_entry( wchar_t *name )
+void env_universal_common_remove( const wchar_t *name )
 {
 	void *k, *v;
 	hash_remove( &env_universal_var, 
@@ -449,6 +449,34 @@ static int match( const wchar_t *msg, const wchar_t *cmd )
 	return 1;
 }
 
+void env_universal_common_set( const wchar_t *key, const wchar_t *val, int export )
+{
+	var_uni_entry_t *entry;
+	wchar_t *name;
+
+	CHECK( key, );
+	CHECK( val, );
+	
+	entry = malloc( sizeof(var_uni_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
+	name = wcsdup(key);
+	
+	if( !entry || !name )
+		DIE_MEM();
+	
+	entry->export=export;
+	
+	wcscpy( entry->val, val );
+	env_universal_common_remove( name );
+	
+	hash_put( &env_universal_var, name, entry );
+			
+	if( callback )
+	{
+		callback( export?SET_EXPORT:SET, name, val );
+	}
+}
+
+
 /**
    Parse message msg
 */
@@ -462,7 +490,7 @@ static void parse_message( wchar_t *msg,
 	
 	if( match( msg, SET_STR ) || match( msg, SET_EXPORT_STR ))
 	{
-		wchar_t *name, *val, *tmp;
+		wchar_t *name, *tmp;
 		int export = match( msg, SET_EXPORT_STR );
 		
 		name = msg+(export?wcslen(SET_EXPORT_STR):wcslen(SET_STR));
@@ -472,31 +500,20 @@ static void parse_message( wchar_t *msg,
 		tmp = wcschr( name, L':' );
 		if( tmp )
 		{
-			wchar_t *key =malloc( sizeof( wchar_t)*(tmp-name+1));
+			wchar_t *key;
+			wchar_t *val;
+			
+			key = malloc( sizeof( wchar_t)*(tmp-name+1));
 			memcpy( key, name, sizeof( wchar_t)*(tmp-name));
 			key[tmp-name]=0;
 			
 			val = tmp+1;
-			
-
 			val = unescape( val, 0 );
 			
-			var_uni_entry_t *entry = 
-				malloc( sizeof(var_uni_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
-			if( !entry )
-				DIE_MEM();
-			entry->export=export;
+			env_universal_common_set( key, val, export );
 			
-			wcscpy( entry->val, val );
-			remove_entry( key );
-			
-			hash_put( &env_universal_var, key, entry );
-			
-			if( callback )
-			{
-				callback( export?SET_EXPORT:SET, key, val );
-			}
-			free(val );
+			free( val );
+			free( key );
 		}
 		else
 		{
@@ -522,7 +539,7 @@ static void parse_message( wchar_t *msg,
 			debug( 1, PARSE_ERR, msg );
 		}
 
-		remove_entry( name );
+		env_universal_common_remove( name );
 		
 		if( callback )
 		{
@@ -853,8 +870,16 @@ void connection_destroy( connection_t *c)
 {
 	q_destroy( &c->unsent );
 	b_destroy( &c->input );
-	if( close( c->fd ) )
+
+	/*
+	  A connection need not always be open - we only try to close it
+	  if it is open.
+	*/
+	if( c->fd >= 0 )
 	{
-		wperror( L"close" );
+		if( close( c->fd ) )
+		{
+			wperror( L"close" );
+		}
 	}
 }

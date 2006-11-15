@@ -143,19 +143,50 @@ void env_universal_common_destroy();
 
 /**
    Add all variable names to the specified list
+
+   This function operate agains the local copy of all universal
+   variables, it does not communicate with any other process.
 */
 void env_universal_common_get_names( array_list_t *l,
 									 int show_exported,
 									 int show_unexported );
 
 /**
+   Perform the specified variable assignment.
+
+   This function operate agains the local copy of all universal
+   variables, it does not communicate with any other process.
+
+   Do not call this function. Create a message to do it. This function
+   is only to be used when fishd is dead.
+*/
+void env_universal_common_set( const wchar_t *key, const wchar_t *val, int export );
+
+/**
+   Remove the specified variable. 
+
+   This function operate agains the local copy of all universal
+   variables, it does not communicate with any other process.
+
+   Do not call this function. Create a message to do it. This function
+   is only to be used when fishd is dead.
+*/
+void env_universal_common_remove( const wchar_t *key );
+
+/**
    Get the value of the variable with the specified name
+
+   This function operate agains the local copy of all universal
+   variables, it does not communicate with any other process.
 */
 wchar_t *env_universal_common_get( const wchar_t *name );
 
 /**
    Get the export flag of the variable with the specified
    name. Returns 0 if the variable doesn't exist.
+
+   This function operate agains the local copy of all universal
+   variables, it does not communicate with any other process.
 */
 int env_universal_common_get_export( const wchar_t *name );
 
@@ -164,8 +195,17 @@ int env_universal_common_get_export( const wchar_t *name );
 */
 void enqueue_all( connection_t *c );
 
+/**
+   Fill in the specified connection_t struct. Use the specified file
+   descriptor for communication.
+*/
 void connection_init( connection_t *c, int fd );
-void connection_destroy( connection_t *c);
 
+/**
+   Close and destroy the specified connection struct. This frees
+   allstructures allocated by the connection, such as ques of unsent
+   messages.
+*/
+void connection_destroy( connection_t *c);
 
 #endif

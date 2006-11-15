@@ -70,6 +70,11 @@ static int barrier_reply = 0;
 
 void env_universal_barrier();
 
+static int is_dead()
+{
+	return env_universal_server.fd < 0;
+}
+
 
 /**
    Get a socket for reading from the server
@@ -140,7 +145,7 @@ static int get_socket( int fork_ok )
 			return get_socket( 0 );
 		}
 		
-		debug( 2, L"Could not connect to socket %d, already tried manual restart (or no command supplied), giving up", s );
+		debug( 1, L"Could not connect to universal variable server, already tried manual restart (or no command supplied). You will not be able to share variable values between fish sessions. Is fish properly installed?" );
 		return -1;
 	}
 	
@@ -151,7 +156,7 @@ static int get_socket( int fork_ok )
 		
 		return -1;
 	}
-	
+
 	debug( 3, L"Connected to fd %d", s );
 	
 	return s;
@@ -199,6 +204,31 @@ static void check_connection()
 }
 
 /**
+   Remove all universal variables.
+*/
+static void env_universal_remove_all()
+{
+	array_list_t lst;
+	int i;
+	
+	al_init( &lst );
+	
+	env_universal_common_get_names( &lst, 
+									1,
+									1 );
+
+	for( i=0; i<al_get_count( &lst ); i++ )
+	{
+		wchar_t *key = (wchar_t *)al_get( &lst, i );
+		env_universal_common_remove( key );
+	}
+
+	al_destroy( &lst );
+	
+}
+
+
+/**
    Try to establish a new connection to fishd. If successfull, end
    with call to env_universal_barrier(), to make sure everything is in
    sync.
@@ -216,6 +246,7 @@ static void reconnect()
 	init = 1;
 	if( env_universal_server.fd >= 0 )
 	{
+		env_universal_remove_all();
 		env_universal_barrier();
 	}
 }
@@ -317,7 +348,7 @@ void env_universal_barrier()
 	message_t *msg;
 	fd_set fds;
 
-	if( !init || ( env_universal_server.fd == -1 ))
+	if( !init || is_dead() )
 		return;
 
 	barrier_reply = 0;
@@ -384,20 +415,27 @@ void env_universal_set( const wchar_t *name, const wchar_t *value, int export )
 	CHECK( name, );
 		
 	debug( 3, L"env_universal_set( \"%ls\", \"%ls\" )", name, value );
-	
-	msg = create_message( export?SET_EXPORT:SET, 
-						  name, 
-						  value);
 
-	if( !msg )
+	if( is_dead() )
 	{
-		debug( 1, L"Could not create universal variable message" );
-		return;
+		env_universal_common_set( name, value, export );
 	}
-	
-	msg->count=1;
-	q_put( &env_universal_server.unsent, msg );
-	env_universal_barrier();
+	else
+	{
+		msg = create_message( export?SET_EXPORT:SET, 
+							  name, 
+							  value);
+
+		if( !msg )
+		{
+			debug( 1, L"Could not create universal variable message" );
+			return;
+		}
+		
+		msg->count=1;
+		q_put( &env_universal_server.unsent, msg );
+		env_universal_barrier();
+	}
 }
 
 int env_universal_remove( const wchar_t *name )
@@ -411,16 +449,22 @@ int env_universal_remove( const wchar_t *name )
 	CHECK( name, 1 );
 
 	res = !env_universal_common_get( name );
-	
 	debug( 3,
 		   L"env_universal_remove( \"%ls\" )",
 		   name );
-
-	msg= create_message( ERASE, name, 0);
-	msg->count=1;
-	q_put( &env_universal_server.unsent, msg );
-	env_universal_barrier();
-
+		
+	if( is_dead() )
+	{
+		env_universal_common_remove( name );
+	}
+	else
+	{
+		msg= create_message( ERASE, name, 0);
+		msg->count=1;
+		q_put( &env_universal_server.unsent, msg );
+		env_universal_barrier();
+	}
+	
 	return res;
 }
 
@@ -430,6 +474,8 @@ void env_universal_get_names( array_list_t *l,
 {
 	if( !init )
 		return;
+
+	CHECK( l, );
 	
 	env_universal_common_get_names( l, 
 									show_exported,

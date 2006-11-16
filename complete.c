@@ -1115,7 +1115,8 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	array_list_t list;
 	hash_table_t lookup;
 	wchar_t *esc;
-
+	int skip;
+	
 	if( !cmd )
 		return;
 
@@ -1141,6 +1142,35 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 		return;
 	}
 
+	skip = 1;
+	
+	for( i=0; i<al_get_count( comp ); i++ )
+	{
+		wchar_t *el = (wchar_t *)al_get( comp, i );
+		wchar_t *cmd_end = wcschr( el,
+								   COMPLETE_SEP );
+		if( !cmd_end )
+		{
+			skip = 0;
+			break;
+		}
+	
+		cmd_end++;
+		
+		if( wcscmp( cmd_end, COMPLETE_DIRECTORY_DESC ) != 0 )
+		{
+			skip = 0;
+			break;
+		}
+		
+	}
+	
+	if( skip )
+	{
+		return;
+	}
+	
+
 	esc = escape( cmd_start, 1 );
 
 	lookup_cmd = wcsdupcat( L"__fish_describe_command ", esc );
@@ -1159,7 +1189,6 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	*/
 	if( exec_subshell( lookup_cmd, &list ) != -1 )
 	{
-		
 	
 		/*
 		  Then discard anything that is not a possible completion and put
@@ -1290,10 +1319,7 @@ static void complete_cmd( const wchar_t *cmd,
 						   comp,
 						   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 		{
-			if( al_get_count( comp ) > prev_count )
-			{
-				complete_cmd_desc( cmd, comp );
-			}
+			complete_cmd_desc( cmd, comp );
 		}
 		al_destroy( &tmp );
 	}

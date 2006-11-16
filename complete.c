@@ -353,7 +353,7 @@ static void complete_free_opt_recursive( complete_entry_opt_t *o )
 {
 	if( o->next != 0 )
 		complete_free_opt_recursive( o->next );
-	free(o);
+	halloc_free( o );
 }
 
 /**
@@ -430,10 +430,7 @@ void complete_add( const wchar_t *cmd,
 		c->short_opt_str = wcsdup(L"");
 	}
 
-	if( !(opt = malloc( sizeof( complete_entry_opt_t ) )))
-	{
-		DIE_MEM();
-	}
+	opt = halloc( 0, sizeof( complete_entry_opt_t ) );
 	
 	opt->next = c->first_option;
 	c->first_option = opt;
@@ -456,13 +453,13 @@ void complete_add( const wchar_t *cmd,
 	opt->result_mode = result_mode;
 	opt->old_mode=old_mode;
 
-	opt->comp = intern(comp?comp:L"");
-	opt->condition = intern(condition?condition:L"");
-	opt->long_opt = intern( long_opt?long_opt:L"" );
+	opt->comp      = comp?halloc_wcsdup(opt, comp):L"";
+	opt->condition = condition?halloc_wcsdup(opt, condition):L"";
+	opt->long_opt  = long_opt?halloc_wcsdup(opt, long_opt):L"" ;
 
 	if( desc && wcslen( desc ) )
 	{
-		opt->desc = intern( desc );
+		opt->desc = halloc_wcsdup( opt, desc );
 	}
 	else
 	{

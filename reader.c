@@ -2296,6 +2296,7 @@ wchar_t *reader_readline()
 						reader_replace_current_token( data->search_buff );
 					}
 					*data->search_buff=0;
+					reader_super_highlight_me_plenty( data->buff_pos, 0 );
 					repaint();
 
 				}

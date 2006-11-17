@@ -1439,7 +1439,7 @@ static void handle_token_history( int forward, int reset )
 			al_push( &data->search_prev, str );
 			data->search_pos = al_get_count( &data->search_prev )-1;
 		}
-		else
+		else if( ! reader_interrupted() )
 		{
 			data->token_history_pos=-1;
 			handle_token_history( 0, 0 );

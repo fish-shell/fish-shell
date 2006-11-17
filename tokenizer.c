@@ -28,22 +28,17 @@ segments.
 /**
    Error string for unexpected end of string
 */
-#define EOL_ERROR _( L"Unexpected end of token" )
-
-/**
-   Error string for unexpected end of string
-*/
-#define QUOTE_ERROR _( L"Unterminated quote" )
+#define QUOTE_ERROR _( L"Unexpected end of string, quotes are not balanced" )
 
 /**
    Error string for mismatched parenthesis
 */
-#define PARAN_ERROR _( L"Parenthesis mismatch" )
+#define PARAN_ERROR _( L"Unexpected end of string, parenthesis do not match" )
 
 /**
    Error string for invalid redirections
 */
-#define REDIRECT_ERROR _( L"Invalid redirection" )
+#define REDIRECT_ERROR _( L"Invalid input/output redirection" )
 
 /**
    Error string for when trying to pipe from fd 0
@@ -251,7 +246,7 @@ static void read_string( tokenizer *tok )
 				tok->buff++;
 				if( *tok->buff == L'\0' )
 				{
-					tok_error( tok, TOK_UNTERMINATED_ESCAPE, EOL_ERROR );
+					tok_error( tok, TOK_UNTERMINATED_ESCAPE, QUOTE_ERROR );
 					return;
 				}
 				else if( *tok->buff == L'\n' && mode == 0)

@@ -51,6 +51,7 @@ efficient way for transforming that to the desired screen content.
 #include "output.h"
 #include "highlight.h"
 #include "screen.h"
+#include "env.h"
 
 /**
    Ugly kludge. The internal buffer used to store output of

@@ -77,13 +77,11 @@ extern wchar_t *program_name;
 #define CHECK( arg, retval )											\
 	if( !(arg) )														\
 	{																	\
-		debug( 1,														\
-			   _( L"function %s called with null value for argument %s. " \
-				  L"This is a bug. "									\
-				  L"If you can reproduce it, please send a bug report to %s." ), \
+		debug( 0,														\
+			   _( L"function %s called with null value for argument %s. " ), \
 			   __func__,												\
-			   #arg,													\
-			   PACKAGE_BUGREPORT );										\
+			   #arg );													\
+		bugreport();													\
 		return retval;													\
 	}
 
@@ -113,16 +111,14 @@ extern wchar_t *program_name;
    Check if signals are blocked. If so, print an error message and
    return from the function performing this check.
 */
-#define CHECK_BLOCK( retval )													\
+#define CHECK_BLOCK( retval )											\
 	if( signal_is_blocked() )											\
 	{																	\
 		debug( 0,														\
-			   L"function %s called while blocking signals. "			\
-			   L"This is a bug. "										\
-			   L"If you can reproduce it, please send a bug report to %s.",	\
-			   __func__,												\
-			   PACKAGE_BUGREPORT );										\
-		return retval;											\
+			   _( L"function %s called while blocking signals. " ),		\
+			   __func__);												\
+		bugreport();													\
+		return retval;													\
 	}
 		
 /**
@@ -404,6 +400,11 @@ void tokenize_variable_array( const wchar_t *val, array_list_t *out );
    \return 0 if the directory exists, -1 otherwise.
 */
 int create_directory( wchar_t *d );
+
+/**
+   Print a short message about how to file a bug report to stderr
+*/
+void bugreport();
 
 #endif
 

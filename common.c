@@ -1601,3 +1601,11 @@ int create_directory( wchar_t *d )
 	return ok?0:-1;
 }
 
+void bugreport()
+{
+	debug( 1,
+		   _( L"This is a bug. "
+			  L"If you can reproduce it, please send a bug report to %s." ),
+		PACKAGE_BUGREPORT );
+}
+

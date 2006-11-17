@@ -57,12 +57,6 @@ The fish parser. Contains functions for parsing code.
 #define MAX_RECURSION_DEPTH 128
 
 /**
-   Message about reporting bugs, used on weird internal error to
-   hopefully get them to report stuff.
-*/
-#define BUGREPORT_MSG _( L"If this error can be reproduced, please send a bug report to %s.")
-
-/**
    Error message for improper use of the exec builtin
 */
 #define EXEC_ERR_MSG _(L"This command can not be used in a pipeline")
@@ -474,11 +468,9 @@ void parser_pop_block()
 	if( !current_block )
 	{
 		debug( 1,
-			   L"function %s called on empty block stack. "
-			   L"This is a bug. "
-			   L"If you can reproduce it, please send a bug report to %s.",
-			   __func__,
-			   PACKAGE_BUGREPORT );										\
+			   L"function %s called on empty block stack.",
+			   __func__);
+		bugreport();
 		return;
 	}
 	
@@ -2521,9 +2513,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	{
 		debug( 1,
 			   EVAL_NULL_ERR_MSG );
-		debug( 1,
-			   BUGREPORT_MSG,
-			   PACKAGE_BUGREPORT );
+		bugreport();
 		return 1;
 	}
 
@@ -2533,10 +2523,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		debug( 1,
 			   INVALID_SCOPE_ERR_MSG,
 			   parser_get_block_desc( block_type ) );
-
-		debug( 1,
-			   BUGREPORT_MSG,
-			   PACKAGE_BUGREPORT );
+		bugreport();
 		return 1;
 	}
 
@@ -2570,9 +2557,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		{
 			debug( 0,
 				   _(L"End of block mismatch. Program terminating.") );
-			debug( 0,
-				   BUGREPORT_MSG,
-				   PACKAGE_BUGREPORT );
+			bugreport();
 			exit(1);
 			break;
 		}

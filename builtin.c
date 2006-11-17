@@ -2619,9 +2619,9 @@ static int builtin_end( wchar_t **argv )
 				else
 				{
 					debug(0, 
-						  _(L"%ls: Missing function definition information. This is a fish bug. If you can reproduce it, please file a bug report to %s."), 
-						  argv[0], 
-						  PACKAGE_BUGREPORT);
+						  _(L"%ls: Missing function definition information."),
+						  argv[0] );
+					bugreport();
 				}
 
 			}
@@ -2632,7 +2632,6 @@ static int builtin_end( wchar_t **argv )
 		{
 			parser_pop_block();
 		}
-
 
 		/*
 		  If everything goes ok, return status of last command to execute.

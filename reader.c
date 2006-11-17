@@ -1368,12 +1368,31 @@ static void handle_token_history( int forward, int reset )
 	{
 		if( current_pos == -1 )
 		{
+			wchar_t *item;
+			
 			/*
 			  Move to previous line
 			*/
-			free( (void *)data->token_history_buff );
-			data->token_history_buff = wcsdup( history_prev_match(L"") );
+			free( (void *)data->token_history_buff );		
+
+			/*
+			  Search for previous item that contains this substring
+			*/
+			item = history_prev_match(data->search_buff);
+
+			/*
+			  If there is no match, the original string is returned
+
+			  If so, we clear the match string to avoid infinite loop
+			*/
+			if( wcscmp( item, data->search_buff ) == 0 )
+			{
+				item=L"";
+			}
+
+			data->token_history_buff = wcsdup( item );
 			current_pos = wcslen(data->token_history_buff);
+
 		}
 
 		if( ! wcslen( data->token_history_buff ) )

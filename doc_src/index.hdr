@@ -1334,20 +1334,18 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - The parser_is_* functions should be moved to parse_util. Possibly, they should be made into a single function, i.e. parse_util_classify( "begin", BLOCK_COMMAND);
 - Try to remove more malloc calls to reduce memory usage. The time_t arrays used by the autoloader sound like a good candidate. 
 - The code validator should warn about unknown commands.
-- The large number of interned strings means that autounloading frees less memory than it should. Completion strings should probably be either refcounted or not shared at all.
 - Auto-newlines
-- Completions for uncompressing archives, like unrar could look into the compressed file and allow you to select what files to extract
+- A fault injector could be written to increase robustness and testing of error recovery paths
 
 \subsection bugs Known bugs and issues
 
 - Completion for gcc -\#\#\# option doesn't work.
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
-- screen handling code can't handle tabs in input.
 - The completion pager doesn't work if stderr is redirected.
-- Can't complete directories as commands unless there is a slash
+- Can't complete directories as commands unless there is a slash - maybe this is a symlink issue?
 - ls should use dircolors
-- Doxygen called when it shouldn't?
-- Delete-word is broken on the commandline 'sudo update-alternatives --config x-'
+- delete-word is broken on the commandline 'sudo update-alternatives --config x-'
+- Multiple backslashes at the end of a line is interpreted as not executing, this should only happen for an odd number of backslashes
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

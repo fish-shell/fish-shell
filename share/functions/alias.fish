@@ -1,5 +1,14 @@
 
 function alias -d (_ "Legacy function for creating shellscript functions using an alias-like syntax")
+
+	if count $argv >/dev/null
+		switch $argv[1]
+			case -h --h --he --hel --help
+				__fish_print_help alias
+				return 0
+		end
+	end
+
 	set -l name
 	set -l body
 	switch (count $argv)

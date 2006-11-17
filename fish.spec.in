@@ -150,6 +150,10 @@ fi
 %dir %_datadir/fish/functions
 %_datadir/fish/functions/*.fish
 
+# Documentation for builtins and shellscript functions
+%dir %_datadir/fish/man
+%_datadir/fish/man/*.1
+
 
 
 

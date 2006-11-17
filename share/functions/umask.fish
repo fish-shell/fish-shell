@@ -155,7 +155,7 @@ function umask -d (N_ "Set default file permission mask")
 
 		switch $opt[1]
 			case -h --help
-				help umask
+				__fish_print_help umask
 				return 0
 
 			case -p --as-command

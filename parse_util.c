@@ -885,7 +885,6 @@ static int parse_util_load_internal( const wchar_t *cmd,
 				if( on_load )
 					on_load(cmd );
 
-
 				/*
 				  Source the completion file for the specified completion
 				*/

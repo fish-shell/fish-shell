@@ -1,6 +1,14 @@
 
 function save_function -d (N_ "Save the current definition of all specified functions to file")
 
+	if count $argv >/dev/null
+		switch $argv[1]
+			case -h --h --he --hel --help
+				__fish_print_help save_function
+				return 0
+		end
+	end
+
 	set -l res 0
 
 	set -l configdir ~/.config

@@ -8,8 +8,7 @@ function psub -d (N_ "Read from stdin into a file and output the filename. Remov
 	if count $argv >/dev/null
 		switch $argv[1]
 			case '-h*' --h --he --hel --help
-
-				help psub
+				__fish_print_help psub
 				return 0
 
 			case '*'

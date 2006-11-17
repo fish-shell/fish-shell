@@ -2564,7 +2564,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 
 		if( (!error_code) && (!exit_status()) && (!proc_get_last_status()) )
 		{
-			char *h;
+			wchar_t *h;
 
 			//debug( 2, L"Status %d\n", proc_get_last_status() );
 
@@ -2576,7 +2576,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 
 			h = builtin_help_get( L"end" );
 			if( h )
-				fwprintf( stderr, L"%s", h );
+				fwprintf( stderr, L"%ls", h );
 			break;
 
 		}
@@ -3090,7 +3090,7 @@ int parser_test( const  wchar_t * buff,
 
 							if( out )
 							{
-								char *h;
+								wchar_t *h;
 
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
@@ -3099,7 +3099,7 @@ int parser_test( const  wchar_t * buff,
 								print_errors( out, prefix);
 								h = builtin_help_get( L"case" );
 								if( h )
-									sb_printf( out, L"%s", h );
+									sb_printf( out, L"%ls", h );
 							}
 						}
 					}
@@ -3253,7 +3253,7 @@ int parser_test( const  wchar_t * buff,
 						err = 1;
 						if( out )
 						{
-							char *h;
+							wchar_t *h;
 							
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
@@ -3261,7 +3261,7 @@ int parser_test( const  wchar_t * buff,
 							print_errors( out, prefix );
 							h = builtin_help_get( L"end" );
 							if( h )
-								sb_printf( out, L"%s", h );
+								sb_printf( out, L"%ls", h );
 						}
 					}
 					
@@ -3532,7 +3532,7 @@ int parser_test( const  wchar_t * buff,
 
 	if( out && count>0 )
 	{
-		const char *h;
+		const wchar_t *h;
 		const wchar_t *cmd;
 		
 		error( SYNTAX_ERROR,
@@ -3547,7 +3547,7 @@ int parser_test( const  wchar_t * buff,
 			h = builtin_help_get( cmd );
 			if( cmd )
 			{
-				sb_printf( out, L"%s", h );
+				sb_printf( out, L"%ls", h );
 			}
 		}
 		

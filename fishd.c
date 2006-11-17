@@ -73,6 +73,7 @@ time the original barrier request was sent have been received.
 #include "halloc.h"
 #include "halloc_util.h"
 #include "path.h"
+#include "print_help.h"
 
 /**
    Maximum length of socket filename
@@ -139,11 +140,6 @@ static int sock;
    Set to one when fishd should save and exit
 */
 static int quit=0;
-
-/**
-   Dynamically generated function, made from the documentation in doc_src.
-*/
-void print_help();
 
 /**
    Constructs the fish socket filename
@@ -620,7 +616,7 @@ int main( int argc, char ** argv )
 				break;				
 
 			case 'h':
-				print_help();
+				print_help( argv[0], 1 );
 				exit(0);				
 								
 			case 'v':

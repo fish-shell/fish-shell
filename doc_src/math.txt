@@ -1,0 +1,15 @@
+
+\section math math - Perform mathematics calculations
+
+\subsection math-synopsis Synopsis
+ <tt>math EXPRESSION</tt>
+
+\subsection math-description Description
+
+math is used to perform mathematical calcualtions. It is only a very
+thin wrapper for the bc program, that makes it possible to specify an
+expression from the commandline without using non-standard extensions
+or a pipeline. Simply use a command like <code>math 1+1</code>. 
+
+For a description of the syntax supported by math, see the manual for
+the bc program.

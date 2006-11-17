@@ -22,7 +22,8 @@ function help -d (N_ "Show help for the fish shell")
 	if count $argv >/dev/null
 		switch $argv[1]
 			case -h --h --he --hel --help
-				set argv help
+				__fish_print_help help
+				return 0
 		end
 	end
 

@@ -6,6 +6,14 @@
 
 if not test (uname) = Darwin
 	function open -d (N_ "Open file in default application")
+		if count $argv >/dev/null
+			switch $argv[1]
+				case -h --h --he --hel --help
+					__fish_print_help dirh
+					return 0
+			end
+		end
+
 		if type -f xdg-open >/dev/null
 			xdg-open $argv
 		else

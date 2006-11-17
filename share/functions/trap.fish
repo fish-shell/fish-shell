@@ -45,7 +45,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 	while count $opt >/dev/null
 		switch $opt[1]
 			case -h --help
-				help trap
+				__fish_print_help trap
 				return 0
 			
 			case -p --print

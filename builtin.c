@@ -60,6 +60,7 @@
 #include "intern.h"
 #include "event.h"
 #include "signal.h"
+#include "exec.h"
 
 #include "halloc.h"
 #include "halloc_util.h"
@@ -193,10 +194,53 @@ static int count_char( const wchar_t *str, wchar_t c )
 
 */
 
+wchar_t *builtin_help_get( const wchar_t *name )
+{
+	array_list_t lst;
+	string_buffer_t cmd;
+	wchar_t *name_esc;
+	
+	static string_buffer_t *out = 0;
+	int i;
+	
+	al_init( &lst );
+	sb_init( &cmd );
+	
+	if( !out )
+	{
+		out = sb_halloc( global_context );
+	}
+	else
+	{
+		sb_clear( out );
+	}
+
+	name_esc = escape( name, 1 );
+	sb_printf( &cmd, L"__fish_print_help %ls", name_esc );
+	
+
+	exec_subshell( (wchar_t *)cmd.buff, &lst );
+	
+	for( i=0; i<al_get_count( &lst); i++ )
+	{
+		sb_append( out, (wchar_t *)al_get( &lst, i ) );
+		sb_append( out, L"\n" );
+	}
+	
+	al_destroy( &lst );
+	sb_destroy( &cmd );
+	free( name_esc );
+	
+
+	return (wchar_t *)out->buff;
+	
+}
+
 
 static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 {
-	const char *h;
+	
+	const wchar_t *h;
 
 	if( b == sb_err )
 	{
@@ -209,14 +253,17 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 	if( !h )
 		return;
 
-	wchar_t *str = str2wcs( h );
+	wchar_t *str = wcsdup( h );
 	if( str )
 	{
 
 		if( is_interactive && !builtin_out_redirect && b==sb_err)
 		{
 			
-			/* Interactive mode help to screen - only print synopsis if the rest won't fit  */
+			/*
+			  Interactive mode help to screen - only print synopsis if
+			  the rest won't fit  
+			*/
 			
 			int screen_height, lines;
 
@@ -226,39 +273,67 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 			{
 				wchar_t *pos;
 				int cut=0;
+				int i;
+
+				/*
+				  First move down 4 lines
+				*/
 				
-				/* Find first empty line */
-				for( pos=str; *pos; pos++ )
+				pos = str;
+				for( i=0; i<4; i++ )
 				{
-					if( *pos == L'\n' )
-					{
-						wchar_t *pos2;
-						int is_empty = 1;
+					pos = wcschr( pos+1, L'\n' );
+					if( !pos )
+						break;
+				}
+				
+				if( pos )
+				{
 						
-						for( pos2 = pos+1; *pos2; pos2++ )
+					/* 
+					   Then find the next empty line 
+					*/
+					for( ; *pos; pos++ )
+					{
+						if( *pos == L'\n' )
 						{
-							if( *pos2 == L'\n' )
-								break;
+							wchar_t *pos2;
+							int is_empty = 1;
 							
-							if( *pos2 != L'\t' && *pos2 !=L' ' )
+							for( pos2 = pos+1; *pos2; pos2++ )
 							{
-								is_empty = 0;
+								if( *pos2 == L'\n' )
+									break;
+								
+								if( *pos2 != L'\t' && *pos2 !=L' ' )
+								{
+									is_empty = 0;
+									break;
+								}
+							}
+							if( is_empty )
+							{
+								/*
+								  And cut it
+								*/
+								*(pos2+1)=L'\0';
+								cut = 1;
 								break;
 							}
-						}
-						if( is_empty )
-						{
-							*(pos+1)=L'\0';
-							cut = 1;
-							break;
 						}
 					}
 				}
 				
+				/*
+				  We did not find a good place to cut message to
+				  shorten it - so we make sure we don't print
+				  anything.
+				*/
 				if( !cut )
 				{
 					*str = 0;
 				}
+
 			}
 		}
 		
@@ -287,7 +362,6 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 */
 
 
-#include "builtin_help.c"
 #include "builtin_set.c"
 #include "builtin_commandline.c"
 #include "builtin_complete.c"

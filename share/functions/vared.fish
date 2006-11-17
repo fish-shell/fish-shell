@@ -9,10 +9,12 @@ function vared -d (N_ "Edit variable value")
 		switch $argv
 
 			case '-h' '--h' '--he' '--hel' '--help'
-				help vared
+				__fish_print_help vared
+				return 0
 
 			case '-*'
 				printf (_ "%s: Unknown option %s\n") vared $argv
+				return 1
 
 			case '*'
 				if test (count $$argv ) -lt 2

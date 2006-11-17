@@ -1,5 +1,13 @@
 
 function popd -d (N_ "Pop dir from stack")
+	if count $argv >/dev/null
+		switch $argv[1]
+			case -h --h --he --hel --help
+				__fish_print_help popd
+				return 0
+		end
+	end
+
 	if test $dirstack[1]
 		cd $dirstack[1]
 	else

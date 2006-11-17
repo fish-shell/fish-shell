@@ -1,0 +1,15 @@
+\section alias alias - create a function
+
+\subsection alias-synopsis Synopsis
+<tt>alias NAME DEFINITION</tt><br/> 
+<tt>alias NAME=DEFINITION</tt>
+
+\subsection alias-description Description
+
+Alias is a shellscript wrapper around the function builtin.
+It exists for backwards compatibility with Posix
+shells. For other uses, it is recommended to define a <a
+href='#function'>function</a>.
+
+- NAME is the name of the function to define
+- DEFINITION is the body of the function. The string " $argv" will be appended to the body.

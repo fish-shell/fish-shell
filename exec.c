@@ -800,11 +800,7 @@ void exec( job_t *j )
 	pipe_write.io_mode=IO_PIPE;
 	pipe_read.next=0;
 	pipe_write.next=0;
-	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=-1;	
-
-
-	
-	//fwprintf( stderr, L"Run command %ls\n", j->command );
+	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=-1;
 	
 	j->io = io_add( j->io, &pipe_write );
 	
@@ -917,6 +913,12 @@ void exec( job_t *j )
 			{
 				const wchar_t * orig_def;
 				wchar_t * def=0;
+
+				/*
+				  Calls to function_get_definition might need to
+				  source a file as a part of autoloading, hence there
+				  must be no blocks.
+				*/
 
 				signal_unblock();
 				orig_def = function_get_definition( p->argv[0] );
@@ -1042,8 +1044,9 @@ void exec( job_t *j )
 				}
 				else
 				{
-					builtin_push_io( builtin_stdin );
-					
+					int old_out = builtin_out_redirect;
+					int old_err = builtin_err_redirect;
+
 					/* 
 					   Since this may be the foreground job, and since
 					   a builtin may execute another foreground job,
@@ -1059,14 +1062,20 @@ void exec( job_t *j )
 					   to make exec handle things.
 					*/
 					
+					builtin_push_io( builtin_stdin );
+					
 					builtin_out_redirect = has_fd( j->io, 1 );
 					builtin_err_redirect = has_fd( j->io, 2 );		
+
 					fg = job_get_flag( j, JOB_FOREGROUND );
 					job_set_flag( j, JOB_FOREGROUND, 0 );
 					
 					signal_unblock();
 					
 					p->status = builtin_run( p->argv );
+					
+					builtin_out_redirect=old_out;
+					builtin_err_redirect=old_err;
 					
 					signal_block();
 					

@@ -37,6 +37,7 @@
 #endif
 
 #include "fallback.h"
+#include "print_help.h"
 
 /*
   Small utility for setting the color.
@@ -89,8 +90,6 @@ int col_idx[]=
 	8
 }
 ;
-
-void print_help();
 
 int translate_color( char *str )
 {
@@ -206,7 +205,7 @@ int main( int argc, char **argv )
 				bgcolor = optarg;
 				break;
 			case 'h':
-				print_help();
+				print_help( argv[0], 1 );
 				exit(0);				
 								
 			case 'o':
@@ -254,7 +253,7 @@ int main( int argc, char **argv )
 	{
 		check_locale_init();
 		fprintf( stderr, _("%s: Expected an argument\n"), SET_COLOR );
-		print_help();		
+		print_help( argv[0], 2 );		
 		return 1;
 	}
 	

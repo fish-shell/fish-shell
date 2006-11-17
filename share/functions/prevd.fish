@@ -1,5 +1,14 @@
 
 function prevd -d (N_ "Move back in the directory history")
+
+	if count $argv >/dev/null
+		switch $argv[1]
+			case -h --h --he --hel --help
+				__fish_print_help prevd
+				return 0
+		end
+	end
+
 	# Parse arguments
 	set -l show_hist 0 
 	set -l times 1

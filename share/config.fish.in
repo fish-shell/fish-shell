@@ -15,7 +15,9 @@ if set -q XDG_CONFIG_HOME
 	set configdir $XDG_CONFIG_HOME
 end
 
-
+if not set -q __fish_datadir
+	set -U __fish_datadir @datadir@/fish
+end
 
 if not set -q fish_function_path 
 	set -U fish_function_path $configdir/fish/functions    @sysconfdir@/fish/functions    @datadir@/fish/functions 

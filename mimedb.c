@@ -46,6 +46,7 @@ license. Read the source code of the library for more information.
 #include "xdgmime.h"
 #include "fallback.h"
 #include "util.h"
+#include "print_help.h"
 
 
 /**
@@ -140,10 +141,6 @@ static int launch_pos=0;
 */
 #define _(string) gettext(string)
 
-/**
-   Dynamically generated function, made from the documentation in doc_src.
-*/
-void print_help();
 
 /**
    Call malloc, set error flag and print message on failure
@@ -1258,7 +1255,7 @@ int main (int argc, char *argv[])
 				break;
 
 			case 'h':
-				print_help();
+				print_help( argv[0], 1 );
 				exit(0);				
 								
 			case 'v':
@@ -1274,7 +1271,7 @@ int main (int argc, char *argv[])
 	if( ( output_type == LAUNCH )&&(input_type==MIMETYPE))
 	{
 		fprintf( stderr, _("%s: Can not launch a mimetype\n"), MIMEDB );
-		print_help();
+		print_help( argv[0], 2 );
 		exit(1);
 	}
 

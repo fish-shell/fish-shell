@@ -96,7 +96,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 # Additional files used by builtin.o
 #
 
-BUILTIN_FILES := builtin_help.c builtin_set.c builtin_commandline.c	\
+BUILTIN_FILES := builtin_set.c builtin_commandline.c	\
 	builtin_ulimit.c builtin_complete.c builtin_jobs.c
 
 
@@ -119,16 +119,17 @@ FISH_TESTS_OBJS := $(FISH_OBJS) fish_tests.o
 # All objects that the system needs to build fishd
 #
 
-FISHD_OBJS := fishd.o env_universal_common.o wutil.o	\
-	doc_src/fishd.o common.o
+FISHD_OBJS := fishd.o env_universal_common.o wutil.o print_help.o	\
+	common.o
 
 
 #
 # All objects needed to build mimedb
 #
 
-MIME_OBJS := mimedb.o xdgmimealias.o xdgmime.o xdgmimeglob.o		\
-	xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o common.o
+MIME_OBJS := mimedb.o print_help.o xdgmimealias.o xdgmime.o				\
+	xdgmimeglob.o xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o	\
+	common.o
 
 
 #
@@ -205,10 +206,10 @@ DOC_SRC_DIR_FILES := doc_src/Doxyfile.in doc_src/index.hdr	\
 
 MAIN_DIR_FILES := Doxyfile Doxyfile.user Makefile.in configure		\
     configure.ac config.h.in install-sh set_color.c count.c			\
-    key_reader.c gen_hdr.sh gen_hdr2.c $(MIME_OBJS:.o=.h)			\
+    key_reader.c $(MIME_OBJS:.o=.h)			\
     $(MIME_OBJS:.o=.c) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)			\
     $(COMMON_FILES) $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c)		\
-    builtin_help.hdr fish.spec.in INSTALL README user_doc.head.html	\
+    fish.spec.in INSTALL README user_doc.head.html	\
     xsel-0.9.6.tar ChangeLog config.sub config.guess fish_tests.c	\
     main.c fish_pager.c fishd.c seq.in
 
@@ -312,6 +313,7 @@ debug:
 # User documentation, describing the features of the fish shell.
 #
 
+
 user_doc: doc_src/index.hdr doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr Doxyfile.user user_doc.head.html $(CMD_DOC_SRC) $(BUILTIN_DOC_SRC)
 	$(MAKE) doc.h # Depend on the sources (*.hdr) and manually make the intermediate as needed
 	doxygen Doxyfile.user
@@ -322,7 +324,7 @@ user_doc: doc_src/index.hdr doc_src/design.hdr doc_src/license.hdr doc_src/faq.h
 # Source code documentation. Also includes user documentation.
 #
 
-doc: *.h *.c doc.h Doxyfile builtin_help.c
+doc: *.h *.c doc.h Doxyfile 
 	doxygen; 
 
 
@@ -467,8 +469,7 @@ common.o: $(COMMON_FILES)
 
 #
 # Generate the internal help functions by making doxygen create
-# man-pages which are then converted into C code. The convertion path
-# looks like this: 
+# man-pages. The convertion path looks like this:
 #
 #   .txt file
 #       ||
@@ -480,26 +481,20 @@ common.o: $(COMMON_FILES)
 #    (doxygen)
 #       ||
 #       \/
-#    man file
+#    roff file
 #       ||
-#      (man)
+# (__fish_print_help)
 #       ||
 #       \/
 #   formated text 
 #   with escape 
 #    sequences
-#       ||
-#       \/
-#   (gen_hdr2)
-#       ||
-#       \/
-#    .c file
 #
-# Which is an awful, clunky and ugly way of producing
-# documentation. There ought to be something simpler.
+#
+# There ought to be something simpler.
 #
 
-doc_src/builtin_doc: $(BUILTIN_DOC_SRC) doc_src/count.txt builtin_help.hdr $(CMD_DOC_SRC)
+doc_src/builtin_doc: $(BUILTIN_DOC_SRC) doc_src/count.txt $(CMD_DOC_SRC)
 	for i in $(BUILTIN_DOC_SRC) $(CMD_DOC_SRC); do \
 		FILE=doc_src/`basename $$i .txt`.doxygen; \
 		echo  "/** \page" `basename $$i .txt` >$$FILE; \
@@ -513,37 +508,6 @@ doc_src/builtin_doc: $(BUILTIN_DOC_SRC) doc_src/count.txt builtin_help.hdr $(CMD
 		mv $$i.tmp $$i; \
 	done 
 	touch doc_src/builtin_doc
-
-builtin_help.c: doc_src/builtin_doc gen_hdr.sh
-	$(MAKE) gen_hdr2 # Don't depend on gen_hdr2, because then we would need to rebuild the docs whenever we use a fresh tarball
-	cp builtin_help.hdr builtin_help.c; 
-	if test -x gen_hdr.sh; then true; else chmod 755 gen_hdr.sh; fi
-	for i in $(BUILTIN_DOC_HDR) doc_src/count.doxygen ; do \
-		echo '	hash_put( &tbl, L"'`basename $$i .doxygen`'",' >>$@; \
-		./gen_hdr.sh $$i >>$@; \
-		printf " );\n\n" >>$@; \
-	done;
-	echo "}" >>builtin_help.c
-
-
-#
-# Generate help texts for external fish commands, like set_color and
-# mimedb. 
-#
-
-%.c : %.doxygen 
-	$(MAKE) gen_hdr2 builtin_help.c # These should really be filed as dependencis for %.c above instead, but that seems to confuse make
-	echo "// This file was automatically generated, do not edit" >$@
-	echo "#include <stdlib.h>" >>$@
-	echo "#include <stdio.h>" >>$@
-	echo >>$@
-	echo "void print_help()" >>$@
-	echo "{" >>$@
-	echo '    printf( "%s",' >>$@
-	chmod 755 gen_hdr.sh
-	./gen_hdr.sh $*.doxygen >>$@
-	echo ");" >>$@
-	echo "}" >>$@
 
 #
 # The build rules for installing/uninstalling fish
@@ -614,6 +578,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
 	$(INSTALL) -m 644 share/config_interactive.fish    $(DESTDIR)$(datadir)/fish/
@@ -622,6 +587,9 @@ install-force: all install-translations
 	done;
 	for i in $(FUNCTIONS_DIR_FILES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
+	done;
+	for i in share/man/*.1; do \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/; \
 	done;
 	$(INSTALL) -m 644 etc/fish_inputrc $(DESTDIR)$(sysconfdir)/fish/fish_inputrc;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
@@ -755,8 +723,8 @@ fish_tests: $(FISH_TESTS_OBJS)
 # mimedb does not need any libraries, so we don't use LDFLAGS here.
 #
 
-mimedb: $(MIME_OBJS) doc_src/mimedb.o
-	$(CC) $(MIME_OBJS) doc_src/mimedb.o $(LDFLAGS) -o $@
+mimedb: $(MIME_OBJS)
+	$(CC) $(MIME_OBJS) $(LDFLAGS) -o $@
 
 
 #
@@ -773,8 +741,8 @@ count: count.o
 # Build the set_color program
 #
 
-set_color: set_color.o doc_src/set_color.o common.o
-	$(CC) set_color.o doc_src/set_color.o common.o wutil.o $(LDFLAGS) -o $@
+set_color: set_color.o print_help.o common.o
+	$(CC) set_color.o print_help.o common.o wutil.o $(LDFLAGS) -o $@
 
 
 #
@@ -801,7 +769,6 @@ depend:
 	./config.status
 .PHONY: depend
 
-
 #
 # Copy all the source files into a new directory and use tar to create
 # an archive from it. Simplest way I could think of to make an archive
@@ -820,6 +787,7 @@ fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FIL
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/share
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/share/completions
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/share/functions
+	$(INSTALL) -d fish-@PACKAGE_VERSION@/share/man
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/tests
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/po
 	cp -f $(DOC_SRC_DIR_FILES) fish-@PACKAGE_VERSION@/doc_src
@@ -830,6 +798,7 @@ fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FIL
 	cp -f $(FUNCTIONS_DIR_FILES) fish-@PACKAGE_VERSION@/share/functions/
 	cp -f $(TESTS_DIR_FILES) fish-@PACKAGE_VERSION@/tests/
 	cp -f $(TRANSLATIONS_SRC) fish-@PACKAGE_VERSION@/po/
+	cp -f doc_src/builtin_doc/man/man1/*.1 fish-@PACKAGE_VERSION@/share/man/
 	cp -rf user_doc fish-@PACKAGE_VERSION@/
 	cp -rf doc_src/builtin_doc fish-@PACKAGE_VERSION@/doc_src/
 	tar -c fish-@PACKAGE_VERSION@ >fish-@PACKAGE_VERSION@.tar
@@ -908,7 +877,7 @@ distclean: clean
 clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.c doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
-	rm -f tokenizer_test fish key_reader set_color gen_hdr2 mimedb
+	rm -f tokenizer_test fish key_reader set_color mimedb
 	rm -f fishd fish_pager count fish_tests 
 	rm -f fish-@PACKAGE_VERSION@.tar 
 	rm -f fish-@PACKAGE_VERSION@.tar.gz 
@@ -926,8 +895,8 @@ builtin.o: config.h fallback.h util.h wutil.h builtin.h function.h complete.h
 builtin.o: proc.h io.h parser.h event.h reader.h env.h common.h wgetopt.h
 builtin.o: sanity.h tokenizer.h wildcard.h input_common.h input.h intern.h
 builtin.o: signal.h halloc.h halloc_util.h parse_util.h expand.h path.h
-builtin.o: builtin_help.c builtin_set.c builtin_commandline.c
-builtin.o: builtin_complete.c builtin_ulimit.c builtin_jobs.c
+builtin.o: builtin_set.c builtin_commandline.c builtin_complete.c
+builtin.o: builtin_ulimit.c builtin_jobs.c
 builtin_commandline.o: config.h signal.h fallback.h util.h wutil.h builtin.h
 builtin_commandline.o: common.h wgetopt.h reader.h proc.h io.h parser.h
 builtin_commandline.o: event.h tokenizer.h input_common.h input.h
@@ -935,7 +904,6 @@ builtin_commandline.o: parse_util.h
 builtin_complete.o: config.h signal.h fallback.h util.h wutil.h builtin.h
 builtin_complete.o: common.h complete.h wgetopt.h parser.h proc.h io.h
 builtin_complete.o: event.h reader.h
-builtin_help.o: config.h util.h common.h halloc_util.h
 builtin_jobs.o: config.h fallback.h util.h wutil.h builtin.h proc.h io.h
 builtin_jobs.o: parser.h event.h common.h wgetopt.h
 builtin_set.o: config.h signal.h fallback.h util.h wutil.h builtin.h env.h
@@ -960,8 +928,7 @@ event.o: config.h signal.h fallback.h util.h wutil.h function.h proc.h io.h
 event.o: parser.h event.h common.h halloc_util.h
 exec.o: config.h signal.h fallback.h util.h common.h wutil.h proc.h io.h
 exec.o: exec.h parser.h event.h builtin.h function.h env.h wildcard.h
-exec.o: sanity.h expand.h env_universal.h env_universal_common.h halloc.h
-exec.o: halloc_util.h parse_util.h
+exec.o: sanity.h expand.h halloc.h halloc_util.h parse_util.h
 expand.o: config.h signal.h fallback.h util.h common.h wutil.h env.h proc.h
 expand.o: io.h parser.h event.h expand.h wildcard.h exec.h tokenizer.h
 expand.o: complete.h parse_util.h halloc.h halloc_util.h
@@ -976,7 +943,7 @@ fish_tests.o: reader.h builtin.h function.h complete.h wutil.h env.h expand.h
 fish_tests.o: parser.h event.h tokenizer.h output.h exec.h halloc_util.h
 function.o: config.h signal.h wutil.h fallback.h util.h function.h proc.h
 function.o: io.h parser.h event.h common.h intern.h reader.h parse_util.h
-function.o: env.h expand.h
+function.o: env.h expand.h halloc.h halloc_util.h
 halloc.o: config.h fallback.h util.h common.h halloc.h
 halloc_util.o: config.h fallback.h util.h common.h halloc.h
 highlight.o: config.h signal.h fallback.h util.h wutil.h highlight.h
@@ -1011,7 +978,7 @@ parser.o: env_universal_common.h intern.h parse_util.h halloc.h halloc_util.h
 parser.o: path.h
 parse_util.o: config.h fallback.h util.h wutil.h common.h tokenizer.h
 parse_util.o: parse_util.h expand.h intern.h exec.h proc.h io.h env.h
-parse_util.o: wildcard.h halloc_util.h
+parse_util.o: signal.h wildcard.h halloc_util.h
 path.o: config.h fallback.h util.h common.h env.h wutil.h halloc.h
 path.o: halloc_util.h path.h expand.h
 proc.o: config.h signal.h fallback.h util.h wutil.h proc.h io.h common.h
@@ -1024,8 +991,8 @@ reader.o: function.h output.h screen.h parse_util.h
 sanity.o: config.h signal.h fallback.h util.h common.h sanity.h proc.h io.h
 sanity.o: history.h reader.h kill.h wutil.h
 screen.o: config.h fallback.h common.h util.h wutil.h output.h highlight.h
-screen.o: screen.h
-set_color.o: config.h fallback.h
+screen.o: screen.h env.h
+set_color.o: config.h fallback.h print_help.h
 signal.o: config.h signal.h common.h util.h fallback.h wutil.h event.h
 signal.o: reader.h proc.h io.h
 test.o: stringtab.h

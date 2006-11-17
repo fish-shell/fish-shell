@@ -1,5 +1,14 @@
 
 function dirh -d (N_ "Print the current directory history (the back- and fwd- lists)") 
+
+	if count $argv >/dev/null
+		switch $argv[1]
+			case -h --h --he --hel --help
+				__fish_print_help dirh
+				return 0
+		end
+	end
+
 	# Avoid set comment
 	set -l current (command pwd)
 	set -l separator "  "

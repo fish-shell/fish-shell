@@ -5,7 +5,8 @@ function isatty -d "Tests if a file descriptor is a tty"
 		switch $argv[1]
 
 			case -h --h --he --hel --help
-				help isatty
+				__fish_print_help isatty
+				return 0
 
 			case stdin
 				set fd 0

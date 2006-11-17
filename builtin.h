@@ -164,12 +164,10 @@ const wchar_t *builtin_complete_get_temporary_buffer();
 
 
 /**
-   Return the help text for the specified builtin command. Use
-   non-wide characters since wide characters have some issues with
-   string formating escape sequences sometimes.
+   Return the help text for the specified builtin command.
 
    \param cmd The command for which to obtain help text
 */
-char *builtin_help_get( const wchar_t *cmd );
+wchar_t *builtin_help_get( const wchar_t *cmd );
 
 #endif

@@ -1,5 +1,5 @@
 /** \file env_universal.h
-	Universal variable client library
+	Universal variable client library.
 */
 
 #ifndef ENV_UNIVERSAL_H

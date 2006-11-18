@@ -1368,7 +1368,7 @@ static void handle_token_history( int forward, int reset )
 	{
 		if( current_pos == -1 )
 		{
-			wchar_t *item;
+			const wchar_t *item;
 			
 			/*
 			  Move to previous line

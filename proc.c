@@ -879,7 +879,7 @@ static int terminal_give_to_job( job_t *j, int cont )
 }
 
 /**
-   REturns contol of the terminal 
+   Returns contol of the terminal to the shell
 */
 static int terminal_return_from_job( job_t *j)
 {

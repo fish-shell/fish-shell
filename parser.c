@@ -1,6 +1,6 @@
 /** \file parser.c
 
-The fish parser. Contains functions for parsing code.
+The fish parser. Contains functions for parsing and evaluating code.
 
 */
 

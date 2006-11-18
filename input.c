@@ -1675,6 +1675,8 @@ wint_t input_readch()
 {
 	
 	int i;
+
+	CHECK_BLOCK();
 	
 	/*
 	  Clear the interrupted flag

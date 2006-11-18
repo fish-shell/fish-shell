@@ -98,6 +98,11 @@ static wint_t readb()
 						{
 							return res;
 						}
+						if( lookahead_count )
+						{
+							return lookahead_arr[--lookahead_count];
+						}
+						
 					}
 					
 					
@@ -107,7 +112,7 @@ static wint_t readb()
 				default:
 				{
 					/*
-					  The teminal has been closed. Save and exit.
+					  The terminal has been closed. Save and exit.
 					*/
 					return R_EOF;
 				}
@@ -122,6 +127,11 @@ static wint_t readb()
 					debug( 3, L"Wake up on universal variable event" );					
 					env_universal_read_all();
 					do_loop = 1;
+
+					if( lookahead_count )
+					{
+						return lookahead_arr[--lookahead_count];
+					}
 				}				
 			}
 			if( FD_ISSET( 0, &fd ) )

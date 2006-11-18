@@ -162,6 +162,17 @@ set_default CDPATH . ~
 functions -e set_default
 
 #
+# This event handler makes sure the prompt is repainted when
+# fish_color_cwd changes value. Like all event handlers, it can't be
+# autoloaded.
+#
+
+function __fish_repaint --on-variable fish_color_cwd -d (N_ "Event handler, repaints the prompt when fish_color_cwd changes")
+	set -e __fish_prompt_cwd
+	commandline -f null
+end
+
+#
 # A few minor convenience functions
 #
 # The naming heuristic is that __fish_complete_* prints completions

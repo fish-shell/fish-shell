@@ -1,0 +1,12 @@
+\section save_function save_function - save the definition of a function to the users autoload directory
+
+\subsection save_function-synopsis Synopsis
+ <tt>save_function FUNCTION_NAME</tt>
+
+\subsection save_function-description Description
+
+save_function is used to save the current definition of a function to
+a file which will be autoloaded by current and future fish
+sessions. This can be useful if you have interactively created a new
+function and wish to save it for later use.
+

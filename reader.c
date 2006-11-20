@@ -1416,7 +1416,7 @@ static void handle_token_history( int forward, int reset )
 		else
 		{
 
-			debug( 3, L"new '%ls'", data->token_history_buff );
+			//debug( 3, L"new '%ls'", data->token_history_buff );
 
 			for( tok_init( &tok, data->token_history_buff, TOK_ACCEPT_UNFINISHED );
 				 tok_has_next( &tok);
@@ -1428,12 +1428,12 @@ static void handle_token_history( int forward, int reset )
 					{
 						if( wcsstr( tok_last( &tok ), data->search_buff ) )
 						{
-							debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
+							//debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
 							if( tok_get_pos( &tok ) >= current_pos )
 							{
 								break;
 							}
-							debug( 3, L"ok pos" );
+							//debug( 3, L"ok pos" );
 
 							if( !contains( tok_last( &tok ), &data->search_prev ) )
 							{
@@ -2019,9 +2019,9 @@ wchar_t *reader_readline()
 	*/
 	tcgetattr(0,&old_modes);        
 	/* set the new modes */
-	if( tcsetattr(0,TCSANOW,&shell_modes))      
+	if( tcsetattr(0,TCSANOW,&shell_modes))
 	{
-        wperror(L"tcsetattr");
+		wperror(L"tcsetattr");
     }
 
 	while( !finished && !data->end_loop)

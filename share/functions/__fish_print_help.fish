@@ -6,9 +6,9 @@ function __fish_print_help -d (N_ "Print help message for the specified fish fun
 	set -l cmd2 s/'\(.\)'\x08_/(set_color --underline)\\1(set_color normal)/g
 
 	# This expression should take care of bold characters. It's not
-    # waterproof, since it doesn't check that the same character is
-    # used both before and after the backspace, since regular
-    # languages don't allow backreferences.
+	# waterproof, since it doesn't check that the same character is
+	# used both before and after the backspace, since regular
+	# languages don't allow backreferences.
 	set -l cmd3 s/.\x08'\(.\)'/(set_color --bold)\\1(set_color normal)/g
 
 	# Combine all expressions in a single variable
@@ -22,6 +22,6 @@ function __fish_print_help -d (N_ "Print help message for the specified fish fun
 	echo
 
 	# Filter and print help
-	printf "%s\n" $help| tail -n (expr $lines - 5 ) | head -n (expr $lines - 8) | sed $sed_cmd
+	printf "%s\n" $help| tail -n (expr $lines - 5) | head -n (expr $lines - 8) | sed $sed_cmd
 
 end

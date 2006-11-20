@@ -1918,29 +1918,11 @@ static int read_i()
 			}
 			else
 			{
-				pid_t my_pid = getpid();
 				for( j = first_job; j; j=j->next )
 				{
 					if( ! job_is_completed( j ) )
 					{
-						if( j->pgid != my_pid )
-						{
-							killpg( j->pgid, SIGHUP );
-						}
-						else
-						{
-							process_t *p;
-							for( p = j->first_process; p; p=p->next )
-							{
-								if( ! p->completed )
-								{
-									if( p->pid )
-									{
-										kill( p->pid, SIGHUP );
-									}
-								}
-							}
-						}
+						job_signal( j, SIGHUP );						
 					}
 				}
 			}

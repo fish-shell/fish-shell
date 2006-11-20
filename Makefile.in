@@ -160,9 +160,8 @@ TEST_IN := $(wildcard tests/test*.in)
 # Files in ./doc_src/
 #
 
-DOC_SRC_DIR_FILES := doc_src/Doxyfile.in doc_src/index.hdr	\
-	doc_src/license.hdr doc_src/faq.hdr doc_src/design.hdr	\
-	$(DOC_SRC) 
+DOC_SRC_DIR_FILES := doc_src/index.hdr doc_src/license.hdr	\
+	doc_src/faq.hdr doc_src/design.hdr $(DOC_SRC)
 
 
 #
@@ -171,14 +170,13 @@ DOC_SRC_DIR_FILES := doc_src/Doxyfile.in doc_src/index.hdr	\
 # are specified more than once.
 #
 
-MAIN_DIR_FILES := Doxyfile Doxyfile.user Makefile.in configure		\
-    configure.ac config.h.in install-sh set_color.c count.c			\
-    key_reader.c $(MIME_OBJS:.o=.h)			\
-    $(MIME_OBJS:.o=.c) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)			\
-    $(COMMON_FILES) $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c)		\
-    fish.spec.in INSTALL README user_doc.head.html	\
-    xsel-0.9.6.tar ChangeLog config.sub config.guess fish_tests.c	\
-    main.c fish_pager.c fishd.c seq.in
+MAIN_DIR_FILES := Doxyfile Doxyfile.user Doxyfile.help.in Makefile.in	\
+    configure configure.ac config.h.in install-sh set_color.c count.c	\
+    key_reader.c $(MIME_OBJS:.o=.h) $(MIME_OBJS:.o=.c)					\
+    $(FISH_OBJS:.o=.h) $(BUILTIN_FILES) $(COMMON_FILES)					\
+    $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c) fish.spec.in INSTALL		\
+    README user_doc.head.html xsel-0.9.6.tar ChangeLog config.sub		\
+    config.guess fish_tests.c main.c fish_pager.c fishd.c seq.in
 
 
 #
@@ -228,12 +226,9 @@ PROGRAMS:=fish set_color @XSEL@ @SEQ_FALLBACK@ mimedb count fish_pager fishd
 # Manual pagess to install
 #
 
-MANUALS:=doc_src/builtin_doc/man/man1/fish.1 @XSEL_MAN_PATH@	\
-	doc_src/builtin_doc/man/man1/mimedb.1						\
-	doc_src/builtin_doc/man/man1/set_color.1					\
-	doc_src/builtin_doc/man/man1/count.1						\
-	doc_src/builtin_doc/man/man1/fishd.1						\
-	doc_src/builtin_doc/man/man1/fish_pager.1
+MANUALS:=share/man/fish.1 @XSEL_MAN_PATH@ share/man/mimedb.1	\
+	share/man/set_color.1 share/man/count.1 share/man/fishd.1	\
+	share/man/fish_pager.1
 
 
 #
@@ -248,7 +243,7 @@ TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) user_doc etc/config.fish share/config.fish share/config_interactive.fish $(TRANSLATIONS)
+all: $(PROGRAMS) user_doc share/man etc/config.fish share/config.fish share/config_interactive.fish $(TRANSLATIONS)
 	@echo fish has now been built. 
 	@echo Use \'make install\' to install fish.
 .PHONY: all
@@ -461,20 +456,23 @@ common.o: $(COMMON_FILES)
 # There ought to be something simpler.
 #
 
-doc_src/builtin_doc: $(DOC_SRC) doc_src/count.txt
+share/man: $(DOC_SRC) doc_src/count.txt
 	for i in $(DOC_SRC); do \
 		FILE=doc_src/`basename $$i .txt`.doxygen; \
 		echo  "/** \page" `basename $$i .txt` >$$FILE; \
 		cat $$i >>$$FILE; \
 		echo "*/" >>$$FILE; \
 	done
-	cd doc_src; doxygen; cd ..;
-	for i in doc_src/builtin_doc/man/man1/*.1; do \
+	doxygen Doxyfile.help
+	for i in help_doc/man/man1/*.1; do \
 		CMD_NAME=`basename $$i .1`; \
 		sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <$$i >$$i.tmp; \
 		mv $$i.tmp $$i; \
 	done 
-	touch doc_src/builtin_doc
+	-mkdir share/man
+	cp help_doc/man/man1/*.1 share/man
+	touch share/man
+
 
 #
 # The build rules for installing/uninstalling fish
@@ -745,7 +743,7 @@ depend:
 # exists
 #
 
-fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FILES) $(TEST_DIR_FILES) $(SHARE_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog user_doc doc_src/builtin_doc
+fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FILES) $(TEST_DIR_FILES) $(SHARE_DIR_FILES) $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) ChangeLog user_doc share/man
 	rm -rf fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@
 	$(INSTALL) -d fish-@PACKAGE_VERSION@/doc_src
@@ -765,9 +763,8 @@ fish-@PACKAGE_VERSION@.tar: $(DOC_SRC_DIR_FILES) $(MAIN_DIR_FILES) $(ETC_DIR_FIL
 	cp -f $(FUNCTIONS_DIR_FILES) fish-@PACKAGE_VERSION@/share/functions/
 	cp -f $(TESTS_DIR_FILES) fish-@PACKAGE_VERSION@/tests/
 	cp -f $(TRANSLATIONS_SRC) fish-@PACKAGE_VERSION@/po/
-	cp -f doc_src/builtin_doc/man/man1/*.1 fish-@PACKAGE_VERSION@/share/man/
+	cp -f share/man/*.1 fish-@PACKAGE_VERSION@/share/man/
 	cp -rf user_doc fish-@PACKAGE_VERSION@/
-	cp -rf doc_src/builtin_doc fish-@PACKAGE_VERSION@/doc_src/
 	tar -c fish-@PACKAGE_VERSION@ >fish-@PACKAGE_VERSION@.tar
 	rm -rf fish-@PACKAGE_VERSION@
 
@@ -830,7 +827,7 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 #
 
 distclean: clean
-	rm -f fish.spec doc_src/Doxyfile 
+	rm -f fish.spec Doxyfile.help 
 	rm -f etc/config.fish share/config_interactive.fish seq share/config.fish
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean

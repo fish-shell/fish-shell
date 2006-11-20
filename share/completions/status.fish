@@ -1,4 +1,5 @@
 
+complete -c status -s h -l help -d (N_ "Display help and exit" )
 complete -c status -l is-command-substitution -d (N_ "Test if a command substitution is currently evaluated")
 complete -c status -l is-block -d (N_ "Test if a code block is currently evaluated")
 complete -c status -l is-interactive -d (N_ "Test if this is an interactive shell")

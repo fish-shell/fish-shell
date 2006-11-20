@@ -1,3 +1,5 @@
+
+complete -c commandline -s h -l help -d (N_ "Display help and exit")
 complete -c commandline -s a -l append -d (N_ "Add text to the end of the selected area")
 complete -c commandline -s i -l insert -d (N_ "Add text at cursor")
 complete -c commandline -s r -l replace -d (N_ "Replace selected part")

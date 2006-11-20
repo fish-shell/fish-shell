@@ -1,5 +1,6 @@
 
 
+complete -c jobs -s h -l help -d (N_ "Display help and exit" )
 complete -c jobs -s p -l pid -d (N_ "Show the process id of each process in the job")
 complete -c jobs -s g -l group -d (N_ "Show group id of job")
 complete -c jobs -s c -l command -d (N_ "Show commandname of each job")

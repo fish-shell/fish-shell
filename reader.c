@@ -1985,6 +1985,27 @@ static int wchar_private( wchar_t c )
 	return ( (c >= 0xe000) && (c <= 0xf8ff ) );
 }
 
+/**
+   Test if the specified character in the specified string is
+   backslashed.
+*/
+static int is_backslashed( const wchar_t *str, int pos )
+{
+	int count = 0;
+	int i;
+	
+	for( i=pos-1; i>=0; i-- )
+	{
+		if( str[i] != L'\\' )
+			break;
+		
+		count++;
+	}
+
+	return count %2;
+}
+
+
 wchar_t *reader_readline()
 {
 
@@ -2366,7 +2387,7 @@ wchar_t *reader_readline()
 				/*
 				  Allow backslash-escaped newlines
 				*/
-				if( data->buff_pos && data->buff[data->buff_pos-1]==L'\\' )
+				if( is_backslashed( data->buff, data->buff_pos ) )
 				{
 					insert_char( '\n' );
 					break;

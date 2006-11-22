@@ -1,3 +1,10 @@
+/** \mainpage Fish user documentation
+
+\section toc Table of contents
+
+- <a href="index.html" name="toc-index">Fish user documentation</a>
+@toc@
+
 \section introduction Introduction
 
 This is the documentation for \c fish, the friendly interactive

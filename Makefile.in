@@ -136,13 +136,24 @@ MIME_OBJS := mimedb.o print_help.o xdgmimealias.o xdgmime.o				\
 # Files containing user documentation
 #
 
-HDR_FILES := doc_src/index.hdr doc_src/commands.hdr doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr
+#
+# These files are the source files, they contain a few @FOO@-style substitutions
+#
+
+HDR_FILES_SRC := doc_src/index.hdr.in doc_src/commands.hdr.in doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr
+
+
+#
+# These are the generated result files
+#
+
+HDR_FILES := $(subst .hdr.in,.hdr,$(HDR_FILES_SRC))
 
 #
 # Files containing documentation for external commands. 
 #
 
-DOC_SRC := $(wildcard doc_src/*.txt)
+HELP_SRC := $(wildcard doc_src/*.txt)
 
 
 #
@@ -160,23 +171,29 @@ TEST_IN := $(wildcard tests/test*.in)
 # Files in ./doc_src/
 #
 
-DOC_SRC_DIR_FILES := doc_src/index.hdr doc_src/license.hdr	\
-	doc_src/faq.hdr doc_src/design.hdr $(DOC_SRC)
+DOC_SRC_DIR_FILES := $(HDR_FILES_SRC) $(HELP_SRC)
 
 
 #
-# Files in ./. There is some overlap between the variables in the
-# list, so when copying these files, cp will complain that some files
-# are specified more than once.
+# Files in ./
 #
 
-MAIN_DIR_FILES := Doxyfile Doxyfile.user Doxyfile.help.in Makefile.in	\
-    configure configure.ac config.h.in install-sh set_color.c count.c	\
-    key_reader.c $(MIME_OBJS:.o=.h) $(MIME_OBJS:.o=.c)					\
-    $(FISH_OBJS:.o=.h) $(BUILTIN_FILES) $(COMMON_FILES)					\
-    $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c) fish.spec.in INSTALL		\
-    README user_doc.head.html xsel-0.9.6.tar ChangeLog config.sub		\
-    config.guess fish_tests.c main.c fish_pager.c fishd.c seq.in
+MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help.in		\
+    Makefile.in configure configure.ac config.h.in install-sh			\
+    set_color.c count.c key_reader.c $(MIME_OBJS:.o=.h)					\
+    $(MIME_OBJS:.o=.c) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)				\
+    $(COMMON_FILES) $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c)			\
+    fish.spec.in INSTALL README user_doc.head.html xsel-0.9.6.tar		\
+    ChangeLog config.sub config.guess fish_tests.c main.c fish_pager.c	\
+    fishd.c seq.in
+
+#
+# The sorting is not meaningful in itself, but it has the side effect
+# of removing duplicates, which means there will be fewer warnings
+# during building.
+#
+
+MAIN_DIR_FILES := $(sort $(MAIN_DIR_FILES_UNSORTED))
 
 
 #
@@ -219,16 +236,16 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-PROGRAMS:=fish set_color @XSEL@ @SEQ_FALLBACK@ mimedb count fish_pager fishd
+SIMPLE_PROGRAMS := fish set_color mimedb count fish_pager fishd
+PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL@ @SEQ_FALLBACK@ 
 
 
 #
-# Manual pagess to install
+# Manual pages to install
 #
 
-MANUALS:=share/man/fish.1 @XSEL_MAN_PATH@ share/man/mimedb.1	\
-	share/man/set_color.1 share/man/count.1 share/man/fishd.1	\
-	share/man/fish_pager.1
+MANUALS := $(addsuffix .1, $(addprefix share/man/,	\
+	$(SIMPLE_PROGRAMS))) @XSEL_MAN_PATH@
 
 
 #
@@ -276,8 +293,8 @@ debug:
 #
 
 
-user_doc: doc_src/index.hdr doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr Doxyfile.user user_doc.head.html $(DOC_SRC) 
-	$(MAKE) doc.h # Depend on the sources (*.hdr) and manually make the intermediate as needed
+user_doc: $(HDR_FILES) Doxyfile.user user_doc.head.html
+	$(MAKE) doc.h # Depend on the sources (*.hdr) and manually make the intermediate doc.h file if needed
 	doxygen Doxyfile.user
 	touch user_doc
 
@@ -327,19 +344,32 @@ xsel-0.9.6/xsel: xsel-0.9.6
 # builtins
 #
 
-doc_src/commands.hdr:$(DOC_SRC) 
-	rm -f commands.tmp; 
-	echo "/** \page commands Commands, functions and builtins bundled with fish" >>commands.tmp; 
-	echo "Fish ships with a large number of builtin commands, shellscript functions and external commands. These are all described below. " >>commands.tmp; 
-	for i in `printf "%s\n" $(DOC_SRC)|sort`; do \
-		echo "<hr>" >>commands.tmp; \
-		cat $$i >>commands.tmp; \
-		echo >>commands.tmp; \
-		echo >>commands.tmp; \
-		echo "Back to <a href='index.html#toc-commands'>index</a>". >>commands.tmp; \
+doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
+	-rm command_list.tmp $@
+	for i in `printf "%s\n" $(HELP_SRC)|sort`; do \
+		echo "<hr>" >>command_list.tmp; \
+		cat $$i >>command_list.tmp; \
+		echo >>command_list.tmp; \
+		echo >>command_list.tmp; \
+		echo "Back to <a href='index.html#toc-commands'>index</a>". >>command_list.tmp; \
 	done 
-	echo "*/" >>commands.tmp
-	mv commands.tmp doc_src/commands.hdr
+	mv command_list.tmp command_list.txt
+	cat $@.in | awk '{if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
+
+
+toc.txt: $(subst index.hdr,index.hdr.in,$(HDR_FILES))
+	-rm toc.tmp $@
+	for i in $(subst index.hdr,index.hdr.in,$(HDR_FILES)); do\
+		NAME=`basename $$i .hdr`; \
+		NAME=`basename $$NAME .hdr.in`; \
+		sed <$$i >>toc.tmp -n \
+		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" name="toc-'$$NAME'">\2</a>,p' \
+		-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'$$NAME'.html#\1" name="toc-'$$NAME'">\2</a>,p'; \
+	done
+	mv toc.tmp $@
+
+doc_src/index.hdr: toc.txt doc_src/index.hdr.in
+	cat $@.in | awk '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
 
 
 #
@@ -349,19 +379,8 @@ doc_src/commands.hdr:$(DOC_SRC)
 # documentation.
 #
 
-doc.h:$(HDR_FILES)
-	rm -f doc.h
-	echo "/** \mainpage Fish user documentation" >doc.tmp
-	echo "\section toc Table of contents" >>doc.tmp
-	echo '- <a href="index.html" name="toc-index">Fish user documentation</a>' >>doc.tmp
-	for i in $(HDR_FILES); do\
-		sed <$$i >>doc.tmp -n \
-			-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'`basename $$i .hdr`'.html" name="toc-'`basename $$i .hdr`'">\2</a>,p' \
-			-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'`basename $$i .hdr`'.html#\1" name="toc-'`basename $$i .hdr`'">\2</a>,p'; \
-	done
-	cat $(HDR_FILES) >>doc.tmp; 
-	mv doc.tmp doc.h
-
+doc.h: $(HDR_FILES)
+	cat $(HDR_FILES) >$@
 
 #
 # This rule creates complete doxygen headers from each of the various
@@ -456,8 +475,12 @@ common.o: $(COMMON_FILES)
 # There ought to be something simpler.
 #
 
-share/man: $(DOC_SRC) doc_src/count.txt
-	for i in $(DOC_SRC); do \
+share/man: $(HELP_SRC)
+	-rm doc_src/*.doxygen # Remove temp files from previous run
+	-rm -r help_doc
+	-mkdir share/man
+	touch share/man
+	for i in $(HELP_SRC); do \
 		FILE=doc_src/`basename $$i .txt`.doxygen; \
 		echo  "/** \page" `basename $$i .txt` >$$FILE; \
 		cat $$i >>$$FILE; \
@@ -466,13 +489,10 @@ share/man: $(DOC_SRC) doc_src/count.txt
 	doxygen Doxyfile.help
 	for i in help_doc/man/man1/*.1; do \
 		CMD_NAME=`basename $$i .1`; \
-		sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <$$i >$$i.tmp; \
-		mv $$i.tmp $$i; \
+		sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <$$i >share/man/$$CMD_NAME.1; \
 	done 
-	-mkdir share/man
-	cp help_doc/man/man1/*.1 share/man
-	touch share/man
-
+	rm doc_src/*.doxygen   # Clean up intermediate files in doc_src/
+	rm -r help_doc         # Clean up intermediate help_doc tree
 
 #
 # The build rules for installing/uninstalling fish

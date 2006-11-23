@@ -96,6 +96,10 @@
 */
 #define COMPLETE_SYMLINK_DESC _( L"Symbolic link" )
 /**
+   Description for symlink
+*/
+#define COMPLETE_DIRECTORY_SYMLINK_DESC _( L"Symbolic link to directory" )
+/**
    Description for Rotten symlink
 */
 #define COMPLETE_ROTTEN_SYMLINK_DESC _( L"Rotten symbolic link" )
@@ -980,7 +984,7 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 			{
 				if( S_ISDIR(buf2.st_mode) )
 				{
-					sb_printf( get_desc_buff, L"/%lc%ls", COMPLETE_SEP, COMPLETE_SYMLINK_DESC );
+					sb_printf( get_desc_buff, L"/%lc%ls", COMPLETE_SEP, COMPLETE_DIRECTORY_SYMLINK_DESC );
 				}
 				else if( waccess( filename, X_OK ) == 0 )
 					sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_EXEC_LINK_DESC );

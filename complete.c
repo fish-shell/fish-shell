@@ -1389,8 +1389,6 @@ static void complete_cmd( const wchar_t *cmd,
 			 nxt_path != 0;
 			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 		{
-			int i;
-			array_list_t tmp;
 			wchar_t *nxt_completion=
 				wcsdupcat2( nxt_path,
 							(nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
@@ -1401,36 +1399,15 @@ static void complete_cmd( const wchar_t *cmd,
 				continue;
 			}
 			
-			al_init( &tmp );
-
 			if( expand_string( 0,
-							   nxt_completion,
-							   &tmp,
+						   nxt_completion,
+						   comp,
 							   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 			{
-
-				for( i=0; i<al_get_count(&tmp); i++ )
-				{
-					wchar_t *nxt = (wchar_t *)al_get( &tmp, i );
-
-					wchar_t *desc = wcsrchr( nxt, COMPLETE_SEP );
-					if( desc )
-					{
-						int is_valid = desc && (wcscmp(desc+1,
-													   COMPLETE_DIRECTORY_DESC)==0);
-						if( is_valid )
-						{
-							al_push( comp, nxt );
-						}
-						else
-						{
-							free(nxt);
-						}
-					}
-				}
+				/*
+				  Don't care if we fail - completions are just hints
+				*/
 			}
-
-			al_destroy( &tmp );
 		}
 	
 	}

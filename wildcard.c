@@ -391,22 +391,28 @@ static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 static int test_flags( wchar_t *filename,
 					   int flags )
 {
-	if( !(flags & EXECUTABLES_ONLY) && !(flags & DIRECTORIES_ONLY) )
-		return 1;
-	
-	struct stat buf;
-	if( wstat( filename, &buf ) == -1 )
+	if( flags & DIRECTORIES_ONLY )
 	{
-		return 0;
+		struct stat buf;
+		if( wstat( filename, &buf ) == -1 )
+		{
+			return 0;
+		}
+
+		if( !S_ISDIR( buf.st_mode ) )
+		{
+			return 0;
+		}
 	}
-		
-	if( S_ISDIR( buf.st_mode ) )
-		return 1;
+	
 	
 	if( flags & EXECUTABLES_ONLY )
-		return ( waccess( filename, X_OK ) == 0);
-
-	return 0;
+	{
+		if ( waccess( filename, X_OK ) != 0)
+			return 0;
+	}
+	
+	return 1;
 }
 
 

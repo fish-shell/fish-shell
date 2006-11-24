@@ -71,6 +71,8 @@ in a nonstandard location. Please contact the <a
 href='mailto:fish-users@lists.sf.net'>fish mailing list</a>, and
 hopefully this can be resolved.
 
+<hr>
+
 \section faq-default How do I make fish my default shell?
 
 If you installed fish manually (e.g. by compiling it, not by using a
@@ -93,7 +95,7 @@ You may need to adjust the above path to e.g. /usr/bin/fish. Use the command <co
 You will need to log out and back in again for the change to take
 effect.
 
-
+<hr>
 
 \section faq-titlebar I'm seeing weird output before each prompt when using screen. What's wrong?
 

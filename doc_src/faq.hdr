@@ -78,6 +78,23 @@ package manager), you first need to add fish to the list of shells by
 executing the following command (assuming you installed fish in
 /usr/local) as root:
 
+
+<code>echo /usr/local/bin/fish >>/etc/shells</code>
+
+If you installed a prepackaged version of fish, the package manager
+should have already done this for you.
+
+In order to change your default shell, type:
+
+<code>chsh -s /usr/local/bin/fish</code>
+
+You may need to adjust the above path to e.g. /usr/bin/fish. Use the command <code>which fish</code> if you are unsure of where fish is installed.
+
+You will need to log out and back in again for the change to take
+effect.
+
+
+
 \section faq-titlebar I'm seeing weird output before each prompt when using screen. What's wrong?
 
 Quick answer:
@@ -105,21 +122,6 @@ suggested above.
 Note that fish has a default titlebar message, which will be used if
 the fish_title function is undefined. So simply unsetting the
 fish_title function will not work.
-
-
-<code>echo /usr/local/bin/fish >>/etc/shells</code>
-
-If you installed a prepackaged version of fish, the package manager
-should have already done this for you.
-
-In order to change your default shell, type:
-
-<code>chsh -s /usr/bin/fish</code>
-
-You may need to adjust the above path to e.g. /usr/local/bin/fish.
-
-You will need to log out and back in again for the change to take
-effect.
 
 <hr>
 

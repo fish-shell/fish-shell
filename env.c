@@ -1314,15 +1314,30 @@ void env_get_names( array_list_t *l, int flags )
 static void export_func1( void *k, void *v, void *aux )
 {
 	var_entry_t *val_entry = (var_entry_t *)v;
+	hash_table_t *h = (hash_table_t *)aux;
+
+	hash_remove( h, k, 0, 0 );
+
 	if( val_entry->export )
-	{
-		hash_table_t *h = (hash_table_t *)aux;
-		
-		if( !hash_get( h, k ) )
-			hash_put( h, k, val_entry->val );
+	{	
+		hash_put( h, k, val_entry->val );
 	}
 	
 }
+
+static void get_exported( env_node_t *n, hash_table_t *h )
+{
+	if( !n )
+		return;
+	
+	if( n->new_scope )
+		get_exported( global_env, h );
+	else
+		get_exported( n->next, h );
+
+	hash_foreach2( &n->env, &export_func1, h );	
+}		
+
 
 /**
    Function used by env_export_arr to iterate over hashtable of variables
@@ -1376,7 +1391,6 @@ char **env_export_arr( int recalc )
 	{
 		array_list_t uni;
 		hash_table_t vals;
-		env_node_t *n=top;
 		int prev_was_null=1;
 		int pos=0;		
 		int i;
@@ -1385,15 +1399,7 @@ char **env_export_arr( int recalc )
 				
 		hash_init( &vals, &hash_wcs_func, &hash_wcs_cmp );
 		
-		while( n )
-		{
-			hash_foreach2( &n->env, &export_func1, &vals );
-			
-			if( n->new_scope )
-				n = global_env;
-			else
-				n = n->next;			
-		}		
+		get_exported( top, &vals );
 		
 		al_init( &uni );
 		env_universal_get_names( &uni, 1, 0 );

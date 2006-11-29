@@ -1,7 +1,6 @@
-/** \file complete.c
-	Functions related to tab-completion.
+/** \file complete.c Functions related to tab-completion.
 
-	These functions are used for storing and retrieving tab-completion data, as well as for performing tab-completion.
+These functions are used for storing and retrieving tab-completion data, as well as for performing tab-completion.
 */
 #include "config.h"
 
@@ -389,7 +388,7 @@ static void clear_hash_entry( void *key, void *data )
    Search for an exactly matching completion entry
 */
 static complete_entry_t *complete_find_exact_entry( const wchar_t *cmd,
-												  const int cmd_type )
+													const int cmd_type )
 {
 	complete_entry_t *i;
 	for( i=first_entry; i; i=i->next )
@@ -1409,8 +1408,8 @@ static void complete_cmd( const wchar_t *cmd,
 			}
 			
 			if( expand_string( 0,
-						   nxt_completion,
-						   comp,
+							   nxt_completion,
+							   comp,
 							   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 			{
 				/*

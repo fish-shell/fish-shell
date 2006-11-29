@@ -70,7 +70,8 @@
 
   Add a completion. 
 
-  Values are copied and should be freed by the caller.
+  All supplied values are copied, they should be freed by or otherwise
+  disposed by the caller.
 
   Examples: 
   

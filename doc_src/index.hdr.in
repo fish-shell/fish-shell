@@ -1341,16 +1341,16 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - The code validator should warn about unknown commands.
 - Auto-newlines
 - A fault injector could be written to increase robustness and testing of error recovery paths
+- The parser/validator could be more clever in order to make things like writing 'function --help' work as expected
 
 \subsection bugs Known bugs and issues
 
 - Completion for gcc -\#\#\# option doesn't work.
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 - The completion pager doesn't work if stderr is redirected.
-- Can't complete directories as commands unless there is a slash - maybe this is a symlink issue?
 - ls should use dircolors
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
-- Multiple backslashes at the end of a line is interpreted as not executing, this should only happen for an odd number of backslashes
+- kill highlights signal numbers as errors
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

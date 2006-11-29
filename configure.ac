@@ -339,7 +339,7 @@ fi
 AC_CANONICAL_TARGET
 
 if test $target_cpu = powerpc; then
-   AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
+	AC_DEFINE([TPUTS_KLUDGE],[1],[Evil kludge to get Power based machines to work])
 fi
 
 

@@ -1,5 +1,5 @@
 
-if valgrind --version | grep -- '-2\.[012]\.' >/dev/null ^/dev/null
+if valgrind --version | sgrep -- '-2\.[012]\.' >/dev/null ^/dev/null
 	# In older versions of Valgrind, the skin selection option was
     # '--skin'
 	set -g skin skin

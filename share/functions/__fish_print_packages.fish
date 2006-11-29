@@ -18,7 +18,7 @@ function __fish_print_packages
 		# 2) Remove package names that are .so files, since these seem to not correspond to actual packages as reported by rpm
 		# 3) Remove path information such as /usr/bin/, as rpm packages do not have paths
 
-		apt-cache --no-generate pkgnames (commandline -tc)|grep -v \( |grep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/'\t$package'/'
+		apt-cache --no-generate pkgnames (commandline -tc)|sgrep -v \( |sgrep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/'\t$package'/'
 		return
 	end
 
@@ -47,7 +47,7 @@ function __fish_print_packages
 	# True for installing new packages. Function for printing 
 	# installed on the system packages is in completions/emerge.fish
 	if type -f emerge >/dev/null
-		emerge -s \^(commandline -tc) |grep "^*" |cut -d\  -f3 |cut -d/ -f2
+		emerge -s \^(commandline -tc) |sgrep "^*" |cut -d\  -f3 |cut -d/ -f2
 		return
 	end
 

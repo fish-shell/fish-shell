@@ -9,4 +9,4 @@ complete -c chown -s v -l verbose -d (N_ "Output diagnostic for every file")
 complete -c chown -s h -l help -d (N_ "Display help and exit")
 complete -c chown -l version -d (N_ "Display version and exit")
 complete -c chown -d (N_ "Username") -a "(__fish_print_users):"
-complete -c chown -d (N_ "Username") -a "(echo (commandline -ct)|grep -o '.*:')(cat /etc/group |cut -d : -f 1)"
+complete -c chown -d (N_ "Username") -a "(echo (commandline -ct)|sgrep -o '.*:')(cat /etc/group |cut -d : -f 1)"

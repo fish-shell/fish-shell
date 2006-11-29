@@ -32,14 +32,11 @@ function contains -d (N_ "Test if a key is contained in a set of values")
 	set -- key $argv[1]
 	set -e argv[1]	
 
-	# Don't use any grep options!
-	set -l GREP_OPTIONS
-
 	#
 	# Loop through values
 	#
 
-	printf "%s\n" $argv|grep -Fx -- $key >/dev/null
+	printf "%s\n" $argv|sgrep -Fx -- $key >/dev/null
 	return $status
 end
 

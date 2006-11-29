@@ -76,7 +76,7 @@ end
 set -l tmp (printf "%s" \^$PATH'/?$|')
 set -l path_regexp \((echo $tmp | sed -e "s/.\$//")\)
 
-for i in (printf "%s\n" $path_list|grep -E -v $path_regexp)
+for i in (printf "%s\n" $path_list|sgrep -E -v $path_regexp)
 	if test -d $i
 		set PATH $PATH $i
 	end

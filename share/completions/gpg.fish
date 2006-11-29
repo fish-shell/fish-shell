@@ -37,7 +37,7 @@ function __fish_print_gpg_algo -d "Complete using all algorithms of the type spe
 	# expire when the function goes out of scope, and the original locale
 	# will take effect again.
 	set -lx LC_ALL C
-	gpg --version | grep "$argv:"| grep -v "Home:"|cut -d : -f 2 |tr , \n|tr -d " "
+	gpg --version | sgrep "$argv:"| sgrep -v "Home:"|cut -d : -f 2 |tr , \n|tr -d " "
 end
 
 

@@ -113,7 +113,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 			if count $opt >/dev/null
 				set -- names $opt
 			else
-				set -- names (functions -na|grep "^__trap_handler_"|sed -e 's/__trap_handler_//' )
+				set -- names (functions -na|sgrep "^__trap_handler_"|sed -e 's/__trap_handler_//' )
 			end
 
 			for i in $names

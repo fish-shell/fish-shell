@@ -57,25 +57,25 @@ complete -c mplayer -o utf8 -d (N_ "Handle subtitlefile as utf8")
 
 complete -c mplayer -o vo -x -d (N_ "Video output") -a "
 (
-	mplayer -vo help|grep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
+	mplayer -vo help|sgrep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
 )
 "
 
 complete -c mplayer -o ao -x -d (N_ "Audio output") -a "
 (
-	mplayer -ao help|grep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
+	mplayer -ao help|sgrep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/'
 )
 "
 
 complete -c mplayer -o afm -x -d (N_ "Audio output") -a "
 (
-	__fish_append ',' (mplayer -afm help|grep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
+	__fish_append ',' (mplayer -afm help|sgrep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
 )
 "
 
 complete -c mplayer -o vfm -x -d (N_ "Video output") -a "
 (
-	__fish_append ',' (mplayer -vfm help|grep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
+	__fish_append ',' (mplayer -vfm help|sgrep \t.\*\t'\|^ *[a-zA-Z0-9][a-zA-Z0-9]*  '|sed -e 's/[\t ]*\([a-zA-Z0-9]*\)[\t ]*\(.*\)/\1'\t'\2/')
 )
 "
 

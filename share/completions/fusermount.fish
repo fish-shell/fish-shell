@@ -5,8 +5,8 @@
 #
 complete -c fusermount -d (N_ "Mount point") -x -a '
 (
-	cat /etc/mtab | grep "^sshfs" | cut -d " " -f 1-2|tr " " \n|sed -e "s/[0-9\.]*:\//\//"|grep "^/"
-	cat /etc/mtab | grep "^fuseiso" | cut -d " " -f 1-2|tr " " \n|sed -e "s/[0-9\.]*:\//\//"|grep "^/"
+	cat /etc/mtab | sgrep "^sshfs" | cut -d " " -f 1-2|tr " " \n|sed -e "s/[0-9\.]*:\//\//"|sgrep "^/"
+	cat /etc/mtab | sgrep "^fuseiso" | cut -d " " -f 1-2|tr " " \n|sed -e "s/[0-9\.]*:\//\//"|sgrep "^/"
 )
 '
 

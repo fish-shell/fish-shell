@@ -20,7 +20,7 @@ complete -c ssh -s a -d (N_ "Disables forwarding of the authentication agent")
 complete -c ssh -s A -d (N_ "Enables forwarding of the authentication agent")
 complete -x -c ssh -s b -d (N_ "Interface to transmit from") -a "
 (
-	cat /proc/net/arp ^/dev/null| grep -v '^IP'|cut -d ' ' -f 1 ^/dev/null
+	cat /proc/net/arp ^/dev/null| sgrep -v '^IP'|cut -d ' ' -f 1 ^/dev/null
 )
 "
 

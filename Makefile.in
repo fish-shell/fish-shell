@@ -262,7 +262,7 @@ TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
 all: $(PROGRAMS) user_doc share/man etc/config.fish share/config.fish share/config_interactive.fish $(TRANSLATIONS)
 	@echo fish has now been built. 
-	@echo Use \'make install\' to install fish.
+	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
 
 
@@ -284,7 +284,7 @@ Makefile: Makefile.in configure
 #
 
 debug:
-	make fish CFLAGS="@CFLAGS@ $(MACROS) -O0 -Wno-unused -Werror -g"
+	$(MAKE) fish CFLAGS="@CFLAGS@ $(MACROS) -O0 -Wno-unused -Werror -g"
 .PHONY: debug
 
 
@@ -510,8 +510,8 @@ check-uninstall:
 		echo;\
 		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
 		echo You must uninstall this fish version before proceeding;\
-		echo type \'make uninstall-legacy\' to uninstall these files,;\
-		echo or type \'make force-install\' to force installation.;\
+		echo type \'$(MAKE) uninstall-legacy\' to uninstall these files,;\
+		echo or type \'$(MAKE) force-install\' to force installation.;\
 		echo The latter may result in a broken installation.;\
 		echo;\
 		false;\
@@ -522,7 +522,7 @@ check-uninstall:
 		echo;\
 		echo An older fish installation using an incompatible filesystem hierarchy was detected;\
 		echo You must remove the file $(DESTDIR)$(sysconfdir)/fish before proceeding;\
-		echo type \'make uninstall-legacy\' to uninstall this file,;\
+		echo type \'$(MAKE) uninstall-legacy\' to uninstall this file,;\
 		echo or remove it manually using \'rm $(DESTDIR)$(sysconfdir)/fish\'.;\
 		echo;\
 		false;\

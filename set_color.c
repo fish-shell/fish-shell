@@ -57,7 +57,11 @@
 */
 #define GETOPT_STRING "b:hvocu"
 
+#ifdef USE_GETTEXT
 #define _(string) gettext(string)
+#else
+#define _(string) (string)
+#endif
 
 char *col[]=
 {

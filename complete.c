@@ -165,7 +165,12 @@
    not be translated. (Gettext returns the version information as the
    response)
 */
+#ifdef USE_GETTEXT
 #define C_(wstr) ((wstr==L"")?L"":wgettext(wstr))
+#else
+#define C_(string) (string)
+#endif
+
 
 /**
    Struct describing a completion option entry.

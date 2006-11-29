@@ -196,6 +196,25 @@ fi
 
 
 #
+# Optionally drop gettext support
+#
+
+AC_ARG_WITH(
+	gettext,
+	AC_HELP_STRING(
+		[--without-gettext],
+		[do not translate messages, even if gettext is available]
+	),
+	[local_gettext=$withval],
+	[local_gettext=yes]
+)
+
+if test x$local_gettext != xno; then 
+	AC_DEFINE([USE_GETTEXT],[1],[Perform string translations with gettext])
+fi
+
+
+#
 # Test if the compiler accepts the -std=c99 flag. If so, using it
 # increases the odds of correct compilation, since we want to use the
 # *wprintf functions, which where defined in C99. 
@@ -418,7 +437,10 @@ AC_DEFINE(
 # Check presense of various libraries
 #
 
-AC_SEARCH_LIBS( gettext, intl,,)
+# Only link with gettext if we are using it
+if test x$local_gettext != xno; then 
+	AC_SEARCH_LIBS( gettext, intl,,)
+fi
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
@@ -429,7 +451,7 @@ AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv impl
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h libintl.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h])
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h libintl.h])
 
 AC_CHECK_HEADER(
 	[regex.h],
@@ -570,9 +592,9 @@ fi
 # Check for presense of various functions used by fish
 #
 
-AC_CHECK_FUNCS( gettext wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
+AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r killpg)
+AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg gettext dcgettext )
 
 
 #
@@ -580,7 +602,9 @@ AC_CHECK_FUNCS( wcstol dcgettext wcslcat wcslcpy lrand48_r killpg)
 # the translations should be installed.
 #
 
-AC_CHECK_FUNC( gettext, AC_SUBST( HAVE_GETTEXT, 1 ), AC_SUBST( HAVE_GETTEXT, 0 ) )
+if test x$local_gettext != xno; then 
+	AC_CHECK_FUNC( gettext, AC_SUBST( HAVE_GETTEXT, 1 ), AC_SUBST( HAVE_GETTEXT, 0 ) )
+fi
 
 #
 # Here follows a list of small programs used to test for various

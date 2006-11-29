@@ -139,8 +139,11 @@ static int launch_pos=0;
 /**
    gettext alias
 */
+#ifdef USE_GETTEXT
 #define _(string) gettext(string)
-
+#else
+#define _(string) (string)
+#endif
 
 /**
    Call malloc, set error flag and print message on failure

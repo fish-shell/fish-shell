@@ -180,8 +180,11 @@ static char *posixly_correct;
    Use translation functions if available
 */
 #ifdef HAVE_TRANSLATE_H
-
-#define _(wstr) wgettext(wstr)
+#ifdef USE_GETTEXT
+#define _(string) wgettext(string)
+#else
+#define _(string) (string)
+#endif
 #else
 #define _(wstr) wstr
 #endif

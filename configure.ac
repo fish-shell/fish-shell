@@ -62,7 +62,7 @@ if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
 			[cannot find the autoheader program in your path.
 This program needs to be run whenever the configure.ac file is modified.
 Please install it and try again.]
-	   )
+		)
 	fi
 else
 	AC_MSG_RESULT([no])
@@ -86,7 +86,7 @@ for i in /usr/pkg /sw /opt /opt/local; do
 		CPPFLAGS="$CPPFLAGS -I$i/include/"
 		CFLAGS="$CFLAGS -I$i/include/"
 	else
-   	AC_MSG_RESULT(no)
+	AC_MSG_RESULT(no)
 	fi
 
 	AC_MSG_CHECKING([for $i/lib library directory])
@@ -94,7 +94,7 @@ for i in /usr/pkg /sw /opt /opt/local; do
 		AC_MSG_RESULT(yes)
 		LDFLAGS="$LDFLAGS -L$i/lib/ -R$i/lib/"
 	else
-    	AC_MSG_RESULT(no)
+		AC_MSG_RESULT(no)
 	fi
 
 	AC_MSG_CHECKING([for $i/bin command directory])
@@ -102,7 +102,7 @@ for i in /usr/pkg /sw /opt /opt/local; do
 		AC_MSG_RESULT(yes)
 		optbindirs="$optbindirs $i/bin"
 	else
-    	AC_MSG_RESULT(no)
+		AC_MSG_RESULT(no)
 	fi
 
 done
@@ -185,13 +185,13 @@ AC_ARG_WITH(
 )
 
 if [[ "$xsel" = "with_xsel" ]]; then
-    AC_SUBST( XSEL,[xsel-0.9.6/xsel])
-    AC_SUBST( XSEL_MAN,[xsel.1x])
-    AC_SUBST( XSEL_MAN_PATH,[xsel-0.9.6/xsel.1x])
+	AC_SUBST( XSEL,[xsel-0.9.6/xsel])
+	AC_SUBST( XSEL_MAN,[xsel.1x])
+	AC_SUBST( XSEL_MAN_PATH,[xsel-0.9.6/xsel.1x])
 else
-    AC_SUBST( XSEL,[ ])
-    AC_SUBST( XSEL_MAN,[ ])
-    AC_SUBST( XSEL_MAN_PATH,[ ])
+	AC_SUBST( XSEL,[ ])
+	AC_SUBST( XSEL_MAN,[ ])
+	AC_SUBST( XSEL_MAN_PATH,[ ])
 fi
 
 
@@ -460,9 +460,9 @@ AC_CHECK_HEADER(
 			[HAVE_REGEX_H], 
 			[1], 
 			[Define to 1 if you have the <regex.h> header file.]
-		)],
-		[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])
-	]
+		)
+	],
+	[AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])]
 )
 
 
@@ -470,7 +470,7 @@ AC_CHECK_HEADER(
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that
 # _POSIX_C_SOURCE be defined to 200112L otherwise several
 # POSIX-specific, non-ISO-C99 types/prototypes are made unavailable
-# e.g. siginfo_t.  Defining _XOPEN_SOURCE to 600 is compatible with
+# e.g. siginfo_t. Defining _XOPEN_SOURCE to 600 is compatible with
 # the _POSIX_C_SOURCE value and provides a little assurance that
 # extension functions' prototypes are available, e.g. killpg().
 #
@@ -706,10 +706,10 @@ if test "$ac_cv_func_fwprintf" = yes; then
 				]
 			)
 		],
-	    [
+		[
 			AC_MSG_RESULT(no)
 		],
-	    [
+		[
 			AC_MSG_RESULT([yes])
 			AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1], [Define to 1 one if the implemented fwprintf is broken])
 		] 
@@ -742,7 +742,7 @@ if test "$have__nl_msg_cat_cntr" = yes; then
 		[Define to 1 if the _nl_msg_cat_cntr symbol is exported.]
 	)	
 else
-    AC_MSG_RESULT(no)
+	AC_MSG_RESULT(no)
 fi
 
 # Check if getopt_long exists and works
@@ -778,7 +778,7 @@ if test "$have_working_getopt_long" = yes; then
 		[Define to 1 if getopt_long exists and works.]
 	)	
 else
-    AC_MSG_RESULT(no)
+	AC_MSG_RESULT(no)
 fi
 
 # Check if del_curterm is broken - in that case we redefine

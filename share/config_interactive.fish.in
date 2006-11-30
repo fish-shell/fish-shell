@@ -112,9 +112,6 @@ function set_default -d "Set an universal variable, unless it has already been s
 	if not set -q $argv[1]
 		set -U -- $argv	
 	end
-	if not set -q $argv[1]
-		set -g -- $argv	
-	end
 end
 
 # Regular syntax highlighting colors

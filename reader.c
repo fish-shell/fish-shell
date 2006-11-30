@@ -37,6 +37,7 @@ commence.
 #include <sys/ioctl.h>
 #endif
 
+#include <time.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <sys/poll.h>
@@ -1028,6 +1029,35 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	io_buffer_destroy( in);
 }
 
+/*
+  Flash the screen. This function only changed the color of the
+  current line, since the flash_screen sequnce is rather painful to
+  look at in most terminal emulators.
+*/
+static void reader_flash()
+{
+	struct timespec pollint;
+
+	int i;
+	
+	for( i=0; i<data->buff_pos; i++ )
+	{
+		data->color[i] = HIGHLIGHT_SEARCH_MATCH<<16;
+	}
+	
+	repaint();
+	
+	pollint.tv_sec = 0;
+	pollint.tv_nsec = 100 * 1000000;
+	nanosleep( &pollint, NULL );
+
+	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	repaint();
+	
+	
+}
+
+
 /**
    Handle the list of completions. This means the following:
    
@@ -1050,8 +1080,7 @@ static int handle_completions( array_list_t *comp )
 	
 	if( al_get_count( comp ) == 0 )
 	{
-		if( flash_screen != 0 )
-			writembs( flash_screen );
+		reader_flash();
 		return 0;
 	}
 	else if( al_get_count( comp ) == 1 )

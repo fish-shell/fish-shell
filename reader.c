@@ -2189,10 +2189,7 @@ wchar_t *reader_readline()
 				if( !data->complete_func )
 					break;
 
-				if( !comp_empty && last_char == R_COMPLETE )
-					break;
-
- 				if( comp_empty )
+ 				if( comp_empty || last_char != R_COMPLETE)
 				{
 					wchar_t *begin, *end;
 					wchar_t *token_begin, *token_end;

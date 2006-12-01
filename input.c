@@ -1610,13 +1610,14 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 		write( 1, "\r", 1 );
 		tputs(clr_eol,1,&writeb);
 		
-		reader_run_command( m->command );
-		
+		eval( m->command, 0, TOP );
+
 		/*
 		  We still need to return something to the caller, R_NULL
-		  tells the reader that nothing happened, but it might be a
-		  godd idea to redraw and reexecute the prompt.
+		  tells the reader that no key press needs to be handled, but
+		  it might be a good idea to redraw.
 		*/
+		
 		return R_NULL;
 	}
 	

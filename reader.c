@@ -2134,7 +2134,7 @@ wchar_t *reader_readline()
 
 			case R_NULL:
 			{
-				exec_prompt();
+//				exec_prompt();
 				s_reset( &data->screen );
 				repaint();
 				break;

@@ -1,5 +1,5 @@
 #Completions for rmdir
-complete -x -c rmdir -a "(__fish_complete_directory (commandline -ct))"
+complete -x -c rmdir -a "(__fish_complete_directories (commandline -ct))"
 complete -c rmdir -l ignore-fail-on-non-empty -d (N_ "Ignore errors from non-empty directories")
 complete -c rmdir -s p -l parents -d (N_ "Remove each component of path")
 complete -c rmdir -s v -l verbose -d (N_ "Verbose mode")

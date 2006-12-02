@@ -43,7 +43,7 @@ complete -c darcs -n '__fish_use_subcommand' -xa 'repair\t"'(_ "Repair the corru
 #
 complete -c darcs -s h -l help -d (N_ "Shows brief description of command and its arguments")
 complete -c darcs -l disable -d (N_ "Disable this command")
-complete -c darcs -l repodir -d (N_ "Specify the repository directory in which to run") -x -a '(__fish_complete_directory (commandline -ct))'
+complete -c darcs -l repodir -d (N_ "Specify the repository directory in which to run") -x -a '(__fish_complete_directories (commandline -ct))'
 complete -c darcs -s v -l verbose -d (N_ "Verbose mode")
 complete -c darcs -l standard-verbosity -d (N_ "Neither verbose nor quiet output")
 

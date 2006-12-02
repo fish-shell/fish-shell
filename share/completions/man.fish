@@ -16,7 +16,7 @@ complete -xc man -a l -d (N_ "Local section")
 complete -xc man -a p
 complete -xc man -a o -d (N_ "Old section")
 complete -rc man -s C -d (N_ "Configuration file")
-complete -xc man -s M -a "(__fish_complete_directory (commandline -ct))" -d (N_ "Manpath")
+complete -xc man -s M -a "(__fish_complete_directories (commandline -ct))" -d (N_ "Manpath")
 complete -rc man -s P -d (N_ "Pager")
 complete -xc man -s S -d (N_ "Manual sections")
 complete -c man -s a -d (N_ "Display all matches")

@@ -1,7 +1,7 @@
 function __fish_complete_cd -d "Completions for the cd command"
 
 	#
-	# We can't simply use __fish_complete_directory because of the CDPATH
+	# We can't simply use __fish_complete_directories because of the CDPATH
 	#
 
 	set -l wd $PWD

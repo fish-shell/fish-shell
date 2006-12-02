@@ -9,12 +9,12 @@ complete -c rpm -l rcfile -d (N_ "List of rpm configuration files") -f
 complete -c rpm -l pipe -d (N_ "Pipe output through specified command") -r
 complete -c rpm -l dbpath -d (N_ "Specify directory for rpm database") -a "
 (
-	__fish_complete_directory (commandline -ct) 'Rpm database directory'
+	__fish_complete_directories (commandline -ct) 'Rpm database directory'
 )
 "
 complete -c rpm -l root -d (N_ "Specify root directory for rpm operations") -a "
 (
-	__fish_complete_directory (commandline -ct) 'Root directory for rpm operations'
+	__fish_complete_directories (commandline -ct) 'Root directory for rpm operations'
 )
 "
 
@@ -22,7 +22,7 @@ set -- rpm_install -c rpm -n "__fish_contains_opt -s i -s U -s F install upgrade
 complete $rpm_install -l aid -d (N_ "Add suggested packages to the transaction set when needed")
 complete $rpm_install -l allfiles -d (N_ "Installs or upgrades all the files in the package, even if they aren't needed (missingok) and don't exist")
 complete $rpm_install -l badreloc -d (N_ "Used with --relocate, permit relocations on all file paths, not just those OLD-PATH's included in the binary package relocation hint(s)")
-complete $rpm_install -l excludepath -d (N_ "Don't install files whose name begins with specified path") -xa "(__fish_complete_directory (commandline -ct) 'Skip installation of files in this directory')"
+complete $rpm_install -l excludepath -d (N_ "Don't install files whose name begins with specified path") -xa "(__fish_complete_directories (commandline -ct) 'Skip installation of files in this directory')"
 complete $rpm_install -l excludedocs -d (N_ "Don't install any files which are marked as documentation")
 complete $rpm_install -l force -d (N_ 'Same as using --replacepkgs, --replacefiles, and --oldpackage')
 complete $rpm_install -s h -l hash -d (N_ 'Print 50 hash marks as the package archive is unpacked')
@@ -47,7 +47,7 @@ complete $rpm_install -l notriggerun -d (N_ "Don't execute triggerun scriptlets"
 complete $rpm_install -l notriggerpostun -d (N_ "Don't execute triggerpostun scriptlets")
 complete $rpm_install -l oldpackage -d (N_ 'Allow an upgrade to replace a newer package with an older one')
 complete $rpm_install -l percent -d (N_ 'Print percentages as files are unpacked from the package archive. This is intended to make rpm easy to run from other tools')
-complete $rpm_install -l prefix -d (N_ 'For relocatable binary packages, translate all file paths that start with the installation prefix in the package relocation hint(s) to NEWPATH') -xa "(__fish_complete_directory (commandline -ct) 'Directory prefix for relocatable packages')"
+complete $rpm_install -l prefix -d (N_ 'For relocatable binary packages, translate all file paths that start with the installation prefix in the package relocation hint(s) to NEWPATH') -xa "(__fish_complete_directories (commandline -ct) 'Directory prefix for relocatable packages')"
 complete $rpm_install -l relocate -x -d (N_ "Translate all paths that start with first half of following parameter to second half of following parameter" )
 complete $rpm_install -l repackage -d (N_ 'Re-package the files before erasing')
 complete $rpm_install -l replacefiles -d (N_ 'Install the packages even if they replace files from other, already installed, packages')

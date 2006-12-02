@@ -16,11 +16,11 @@ complete -c make --condition $is_assignment -a $complete_file_assignment
 
 complete -x -c make -a "(__fish_print_make_targets)" -d (N_ "Target")
 complete -r -c make -s f -d (N_ "Use file as makefile") -r
-complete -x -c make -s C -x -a "(__fish_complete_directory (commandline -ct))" -d (N_ "Change directory")
+complete -x -c make -s C -x -a "(__fish_complete_directories (commandline -ct))" -d (N_ "Change directory")
 complete -c make -s d -d (N_ "Debug mode")
 complete -c make -s e -d (N_ "Environment before makefile")
 complete -c make -s i -d (N_ "Ignore errors")
-complete -x -c make -s I -d (N_ "Search directory for makefile") -a "(__fish_complete_directory (commandline -ct))"
+complete -x -c make -s I -d (N_ "Search directory for makefile") -a "(__fish_complete_directories (commandline -ct))"
 complete -x -c make -s j -d (N_ "Number of concurrent jobs")
 complete -c make -s k -d (N_ "Continue after an error")
 complete -c make -s l -d (N_ "Start when load drops")

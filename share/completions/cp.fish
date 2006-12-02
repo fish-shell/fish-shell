@@ -8,7 +8,7 @@ complete -c cp -s H -d (N_ "Follow command-line symbolic links")
 complete -c cp -s l -l link -d (N_ "Link files instead of copying")
 complete -c cp -l strip-trailing-slashes -d (N_ "Remove trailing slashes from source")
 complete -c cp -s S -l suffix -r -d (N_ "Backup suffix")
-complete -c cp -s t -l target-directory -d (N_ "Target directory") -x -a "(__fish_complete_directory (commandline -ct) 'Target directory')"
+complete -c cp -s t -l target-directory -d (N_ "Target directory") -x -a "(__fish_complete_directories (commandline -ct) 'Target directory')"
 complete -c cp -s u -l update -d (N_ "Do not overwrite newer files")
 complete -c cp -s v -l verbose -d (N_ "Verbose mode")
 complete -c cp -l help -d (N_ "Display help and exit")

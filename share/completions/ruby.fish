@@ -20,6 +20,6 @@ complete -c ruby -s v -l verbose -d (N_ 'Verbose mode')
 complete -c ruby -s w -d (N_ 'Verbose mode without message')
 complete -c ruby -l version -d (N_ 'Display version and exit')
 complete -c ruby -s x -d (N_ 'Extract script')
-complete -c ruby -s X -x -a '(__fish_complete_directory (commandline -ct))' -d (N_ 'Directory')
+complete -c ruby -s X -x -a '(__fish_complete_directories (commandline -ct))' -d (N_ 'Directory')
 complete -c ruby -s y -l yydebug -d (N_ 'Compiler debug mode')
 

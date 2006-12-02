@@ -21,6 +21,6 @@ function __fish_complete_suffix -d "Complete using files"
 	# with the correct suffix in a subdirectory
 	#
 
-	__fish_complete_directory $comp
+	__fish_complete_directories $comp
 
 end

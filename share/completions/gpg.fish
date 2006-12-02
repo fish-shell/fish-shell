@@ -176,7 +176,7 @@ complete -c gpg -l secret-keyring -r -d (N_ "Add specified file to the current l
 complete -c gpg -l primary-keyring -r -d (N_ "Designate specified file as the primary public keyring")
 
 complete -c gpg -l trustdb-name -r -d (N_ "Use specified file instead of the default trustdb")
-complete -c gpg -l homedir -xa "(__fish_complete_directory (commandline -ct))" -d (N_ "Set the home directory")
+complete -c gpg -l homedir -xa "(__fish_complete_directories (commandline -ct))" -d (N_ "Set the home directory")
 complete -c gpg -l display-charset -xa " iso-8859-1 iso-8859-2 iso-8859-15 koi8-r utf-8 " -d (N_ "Set the native character set")
 
 complete -c gpg -l utf8-strings -d (N_ "Assume that following command line arguments are given in UTF8")

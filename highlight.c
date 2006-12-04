@@ -540,6 +540,7 @@ void highlight_shell( wchar_t * buff,
 
 	void *context;
 	wchar_t *cmd=0;
+	int accept_switches = 1;		
 	
 	CHECK( buff, );
 	CHECK( color, );
@@ -572,10 +573,22 @@ void highlight_shell( wchar_t * buff,
 					wchar_t *param = tok_last( &tok );
 					if( param[0] == L'-' )
 					{
-						if( complete_is_valid_option( last_cmd, param, error ))
+						if (wcscmp( param, L"--" ) == 0 )
+						{
+							accept_switches = 0;
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+						}
+						else if( accept_switches )
+						{
+							if( complete_is_valid_option( last_cmd, param, error ) )
+								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+							else
+								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+						}
 						else
-							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+						{
+							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+						}
 					}
 					else
 					{
@@ -791,6 +804,7 @@ void highlight_shell( wchar_t * buff,
 				{
 					color[ tok_get_pos( &tok ) ] = HIGHLIGHT_END;
 					had_cmd = 0;
+					accept_switches = 1;
 				}
 				else
 				{
@@ -806,6 +820,7 @@ void highlight_shell( wchar_t * buff,
 			{
 				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_END;
 				had_cmd = 0;
+				accept_switches = 1;
 				break;
 			}
 			

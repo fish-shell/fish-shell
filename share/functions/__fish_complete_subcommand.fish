@@ -23,6 +23,7 @@ function __fish_complete_subcommand  -d "Complete subcommand"
 
 			switch $i
 				case '-*'
+				case '*=*'
 					 
 				case '*'
 					set had_cmd 1

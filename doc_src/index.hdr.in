@@ -438,6 +438,65 @@ For examples of how to write your own complex completions, study the
 completions in /usr/share/fish/completions. (The exact path depends on
 your chosen installation prefix and may be slightly different)
 
+\subsection completion-func Useful functions for writing completions
+
+Fish ships with several functions that are very useful when writing
+command specific completions. Most of these functions name begins with
+the string '__fish_'. Such functions are internal to fish and their
+name and interface may change in future fish versions. Still, some of
+them may be very useful when writing completions. A few of these
+functions are described here. Be aware that they may be removed or
+changed in future versions of fish.
+
+Functions begining with the string '__fish_print_' print a
+newline-separated list of strings. For example,
+__fish_print_filesystems prints a list of all known filesystems. Functions
+beginning with '__fish_complete_' print out a newline separated list of
+completions with descriptions. The description is separated from the
+completion by a tab character.
+
+<pre>__fish_complete_directories STRING DESCIPTION</pre>
+
+performs path completion on STRING, allowing only directories, and giving them the description DESCRIPTION.
+
+<pre>__fish_complete_groups</pre>
+
+prints a list of all user groups with the groups members as description.
+
+<pre>__fish_complete_pids</pre>
+
+prints a list of all procceses IDs with the command name as description.
+
+<pre>__fish_complete_suffix STRING SUFFIX DESCIPTION</pre>
+
+performs path completion on STRING, allowing only files ending in SUFFIX, and giving them the description DESCRIPTION.
+
+<pre>__fish_complete_users</pre>
+
+prints a list of all users with their full name as description.
+
+<pre>__fish_print_filesystems</pre>
+
+prints a list of all known filesystems. Currently, this is a static
+list, and not dependent on what filesystems the host operating system
+actually understands.
+
+<pre>__fish_print_hostnames</pre>
+
+prints a list of all known hostnames. This functions searches the
+fstab for nfs servers, ssh for known hosts and checks the /etc/hosts file.
+
+<pre>__fish_print_interfaces</pre>
+
+prints a list of all known network interfaces.
+
+<pre>__fish_print_packages</pre>
+
+prints a list of all installed packages. This function currently handles
+debian, rpm and gentoo packages.
+
+
+
 \subsection completion-path Where to put completions
 
 Completions can be defined on the commandline or in a configuration
@@ -466,8 +525,11 @@ href='mailto: fish-users@lists.sf.net'>the fish mailinglist</a>.
 
 When an argument for a program is given on the commandline, it
 undergoes the process of parameter expansion before it is sent on to
-the command.  There are many ways in which the user can specify a
-parameter to be expanded. These include:
+the command. Parameter expansion is a powerful set of mechamisms that
+allow you to expand the parameter in various ways, including
+performing wildcard matching on files, inserting the value of
+environment variables into the parameter or even using the output of
+another command as a parameter list.
 
 \subsection expand-wildcard Wildcards 
 
@@ -478,6 +540,10 @@ way that:
 - '?' can match any single character except '/'.
 - '*' can match any string of characters not containing '/'. This includes matching an empty string.
 - '**' matches any string of characters. This includes matching an empty string. The string may include the '/' character but does not need to.
+
+Wildcard matches are sorted case insensitively. When sorting matches
+containing numbers, the entire numbers are considered, so that the
+strings '1' '5' and '12' would be sorted in the order given.
 
 File names beginning with a dot are not considered when wildcarding
 unless a dot is specifically given as the first character of the file
@@ -500,7 +566,7 @@ warning will also be printed.
 \subsection expand-command-substitution Command substitution
 
 If a parameter contains a set of parenthesis, the text enclosed by the
-parenthesis will be interpreted as a list of commands. Om expansion,
+parenthesis will be interpreted as a list of commands. On expansion,
 this list is executed, and substituted by the output. If the output is
 more than one line long, each line will be expanded to a new
 parameter.
@@ -595,7 +661,7 @@ end
 </pre>
 
 The above code demonstrates how to use multiple '$' symbols to expand
-the value of a variable as a variable name. One can simply think of
+the value of a variable as a variable name. One can think of
 the $-symbol as a variable dereference operator. When using this
 feature together with array brackets, the brackets will always match
 the innermost $ dereference. Thus, $$foo[5] will always mean the fift
@@ -641,6 +707,17 @@ with job id 3.
 All of the above expansions can be combined. If several expansions
 result in more than one parameter, all possible combinations are
 created.
+
+When combining multiple parameter expansions, expansions are performed in the following order:
+
+- Command substitutions
+- Variable expansions
+- Bracket expansion
+- Pid expansion
+- Wildcard expansion
+
+Expansions are performed from right to left, nested bracket expansions
+are performed from the inside and out.
 
 Example:
 
@@ -1298,15 +1375,14 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 - Complete vi-mode key bindings
 - More completions (for example xterm, vim, 
 konsole, gnome-terminal, dcop, cron,
-rlogin, rsync, arch, finger, nice, locate, 
+rlogin, rsync, arch, finger, 
 bibtex, aspell, xpdf,
 compress, wine, xmms, dig, batch, cron, 
-g++, javac, java, gcj, lpr, doxygen, whois, find)
+g++, javac, java, gcj, lpr, doxygen, whois)
 - Undo support
 - Check keybinding commands for output - if nothing has happened, don't repaint to reduce flicker
 - wait shellscript
 - Support for the screen clipboard
-- Files begining with '-' should not be colored red if a '--' argument has been given
 
 \subsection todo-possible Possible features
 
@@ -1348,9 +1424,7 @@ g++, javac, java, gcj, lpr, doxygen, whois, find)
 - Completion for gcc -\#\#\# option doesn't work.
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 - The completion pager doesn't work if stderr is redirected.
-- ls should use dircolors
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
-- kill highlights signal numbers as errors
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

@@ -6,7 +6,8 @@
 #
 
 function delete-or-exit
-	if test (commandline)
+	set -l cmd (commandline)
+	if test "$cmd"
 		commandline -f delete-char
 	else
 		exit 0

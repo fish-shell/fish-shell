@@ -274,11 +274,11 @@ static int update_values( array_list_t *list,
 	{
 		/*
 		  The '- 1' below is because the indices in fish are
-		  one-based, but the array_lsit_t uses zero-based indices
+		  one-based, but the array_list_t uses zero-based indices
 		*/
 		long ind = al_get_long(indexes, i) - 1;
 		void *new = (void *) al_get(values, i);
-		if( ind <= 0 )
+		if( ind < 0 )
 		{
 			return 1;
 		}

@@ -447,7 +447,38 @@ static int setup_child_process( job_t *j, process_t *p )
 static void launch_process( process_t *p )
 {
 //	debug( 1, L"exec '%ls'", p->argv[0] );
-		
+
+    /* check for a ":\n", and run system() if so */
+
+    FILE* f = wfopen(p->actual_cmd, "r");
+    if (f != NULL)
+    {
+        char begin[1] = {0};
+        fread(begin, 1, 1, f);
+        if (begin[0] == ':')
+        {
+            int count = 0;
+            int i = 1;
+            int j = 2;
+            while( p->argv[count] != 0 )
+            count++;
+            wchar_t **res = malloc( sizeof(wchar_t*)*(count+2));
+            res[0] = L"/bin/sh";
+            res[1] = p->actual_cmd;
+            while( p->argv[i] != 0 )
+            {
+                res[j] = p->argv[i];
+                i++;
+                j++;
+            }
+            res[j] = NULL;
+            free(p->argv);
+            p->argv = res;
+            p->actual_cmd = L"/bin/sh";
+        }
+
+    }
+    
 	execve ( wcs2str(p->actual_cmd), 
 			 wcsv2strv( (const wchar_t **) p->argv), 
 			 env_export_arr( 0 ) );

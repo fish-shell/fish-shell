@@ -33,7 +33,7 @@ assigning variables, commands for treating a group of commands as a
 single command, etc.. And every single command follows the same simple
 syntax.
 
-If you wish to find out more about the echo command used above, read
+If you want to find out more about the echo command used above, read
 the manual page for the echo command by writing:
 
 <code>man echo</code>
@@ -542,8 +542,9 @@ way that:
 - '**' matches any string of characters. This includes matching an empty string. The string may include the '/' character but does not need to.
 
 Wildcard matches are sorted case insensitively. When sorting matches
-containing numbers, the entire numbers are considered, so that the
-strings '1' '5' and '12' would be sorted in the order given.
+containing numbers, consecutive digits are considered to be one
+element, so that the strings '1' '5' and '12' would be sorted in the
+order given.
 
 File names beginning with a dot are not considered when wildcarding
 unless a dot is specifically given as the first character of the file
@@ -1395,7 +1396,6 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - suggest a completion on unique matches by writing it out in an understated color
 - With a bit of tweakage, quite a few of the readline key-binding functions could be implemented in shellscript.
 - Highlight beginning/end of block when moving over a block command
-- Inclusion guards for the init files to make them evaluate only once, even if the user has installed fish both in /etc and in $HOME
 - command specific wildcarding (use case * instead of case '*', etc.)
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
 - Descriptions for variables using 'set -d'.
@@ -1425,6 +1425,7 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 - The completion pager doesn't work if stderr is redirected.
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
+- tab completion of process expansion doesn't properly complete commands with stripped paths.
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

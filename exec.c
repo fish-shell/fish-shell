@@ -446,42 +446,57 @@ static int setup_child_process( job_t *j, process_t *p )
 */
 static void launch_process( process_t *p )
 {
+    FILE* f;
+
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
-    /* check for a ":\n", and run system() if so */
-
-    FILE* f = wfopen(p->actual_cmd, "r");
-    if (f != NULL)
+	execve ( wcs2str(p->actual_cmd), 
+			 wcsv2strv( (const wchar_t **) p->argv), 
+			 env_export_arr( 0 ) );
+    
+	/* 
+	Something went wrong with execve, check for a ":", and run
+	/bin/sh if encountered. This is a weird predecessor to the shebang
+	that is still sometimes used since it is supported on Windows.
+	*/
+	f = wfopen(p->actual_cmd, "r");
+    if( f )
     {
         char begin[1] = {0};
-        fread(begin, 1, 1, f);
-        if (begin[0] == ':')
+		size_t read;
+
+		read = fread(begin, 1, 1, f);
+		fclose( f );
+		
+        if( (read==1) && (begin[0] == ':') )
         {
             int count = 0;
             int i = 1;
             int j = 2;
+            wchar_t **res;
+
             while( p->argv[count] != 0 )
-            count++;
-            wchar_t **res = malloc( sizeof(wchar_t*)*(count+2));
-            res[0] = L"/bin/sh";
+				count++;
+            
+			res = malloc( sizeof(wchar_t*)*(count+2));
+            
+			res[0] = L"/bin/sh";
             res[1] = p->actual_cmd;
-            while( p->argv[i] != 0 )
-            {
-                res[j] = p->argv[i];
-                i++;
-                j++;
+            
+			for( i=1;  p->argv[i]; i++ ){
+                res[i+1] = p->argv[i];
             }
-            res[j] = NULL;
-            free(p->argv);
+
+            res[i+1] = 0;
             p->argv = res;
             p->actual_cmd = L"/bin/sh";
+			
+			execve ( wcs2str(p->actual_cmd), 
+					 wcsv2strv( (const wchar_t **) p->argv), 
+					 env_export_arr( 0 ) );
         }
-
     }
     
-	execve ( wcs2str(p->actual_cmd), 
-			 wcsv2strv( (const wchar_t **) p->argv), 
-			 env_export_arr( 0 ) );
 	debug( 0, 
 		   _( L"Failed to execute process '%ls'" ),
 		   p->actual_cmd );

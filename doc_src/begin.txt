@@ -23,11 +23,11 @@ scope, they will be automatically deleted when the block ends.
 
 <pre>
 begin
-	set -x PIRATE Yarrr
+	set -l PIRATE Yarrr
 	...
 end
-# This will not output anything, since PIRATE went out of scope at the end of
-# the block and was killed
+# This will not output anything, since the PIRATE variable went out
+# of scope at the end of the block
 echo $PIRATE
 </pre>
 

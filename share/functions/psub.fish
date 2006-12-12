@@ -48,6 +48,6 @@ function psub -d (N_ "Read from stdin into a file and output the filename. Remov
 	end
 
 	# Make sure we erase file when caller exits
-	eval function $funcname --on-job-exit caller\; rm $filename\; functions -e $funcname\; end	
+	eval function $funcname --on-job-exit caller\; command rm $filename\; functions -e $funcname\; end	
 
 end

@@ -18,7 +18,7 @@ complete -c rpm -l root -d (N_ "Specify root directory for rpm operations") -a "
 )
 "
 
-set -- rpm_install -c rpm -n "__fish_contains_opt -s i -s U -s F install upgrade freshen"
+set rpm_install -c rpm -n "__fish_contains_opt -s i -s U -s F install upgrade freshen"
 complete $rpm_install -l aid -d (N_ "Add suggested packages to the transaction set when needed")
 complete $rpm_install -l allfiles -d (N_ "Installs or upgrades all the files in the package, even if they aren't needed (missingok) and don't exist")
 complete $rpm_install -l badreloc -d (N_ "Used with --relocate, permit relocations on all file paths, not just those OLD-PATH's included in the binary package relocation hint(s)")
@@ -55,7 +55,7 @@ complete $rpm_install -l replacepkgs -d (N_ 'Install the packages even if some o
 complete $rpm_install -l test -d (N_ "Don't install the package, simply check for and report potential conflicts")
 set -e rpm_install
 
-set -- rpm_query -c rpm -n "__fish_contains_opt -s q query"
+set rpm_query -c rpm -n "__fish_contains_opt -s q query"
 complete $rpm_query -l changelog -d (N_ 'Display change information for the package')
 complete $rpm_query -s c -l configfiles -d (N_ 'List only configuration files (implies -l)')
 complete $rpm_query -s d -l docfiles -d (N_ 'List only documentation files (implies -l)')
@@ -72,7 +72,7 @@ complete $rpm_query -l triggers -d (N_ 'Display the trigger scripts contained in
 complete $rpm_query -l triggerscripts -d (N_ 'Display the trigger scripts contained in the package')
 set -e rpm_query
 
-set -- rpm_select -c rpm -n "__fish_contains_opt -s q -s V query verify"
+set rpm_select -c rpm -n "__fish_contains_opt -s q -s V query verify"
 
 complete $rpm_select -a "(__fish_print_packages)"
 complete $rpm_select -s a -l all -d (N_ 'Query all installed packages')
@@ -89,7 +89,7 @@ complete $rpm_select -l whatprovides -d (N_ 'Query all packages that provide the
 complete $rpm_select -l whatrequires -d (N_ 'Query all packages that requires the specified capability for functioning') -x
 set -e rpm_select
 
-set -- rpm_verify -c rpm -n "__fish_contains_opt -s V verify"
+set rpm_verify -c rpm -n "__fish_contains_opt -s V verify"
 complete $rpm_verify -l nodeps -d (N_ "Don't verify dependencies of packages")
 complete $rpm_verify -l nodigest -d (N_ "Don't verify package or header digests when reading")
 complete $rpm_verify -l nofiles -d (N_ "Don't verify any attributes of package files")
@@ -105,7 +105,7 @@ complete $rpm_verify -l nomode -d (N_ "Don't verify mode attribute")
 complete $rpm_verify -l nordev -d (N_ "Don't verify dev attribute")
 set -e rpm_verify
 
-set -- rpm_erase -c rpm -n "__fish_contains_opt -s e erase"
+set rpm_erase -c rpm -n "__fish_contains_opt -s e erase"
 complete $rpm_erase -a "(__fish_print_packages)"
 complete $rpm_erase -l allmatches -d (N_ 'Remove all versions of the package which match specified string')
 complete $rpm_erase -l nodeps -d (N_ "Don't check dependencies before uninstalling the packages")
@@ -119,7 +119,7 @@ complete $rpm_erase -l repackage -d (N_ 'Re-package the files before erasing')
 complete $rpm_erase -l test -d (N_ "Don't really uninstall anything" )
 set -e rpm_erase
 
-set -- rpm_mode -c rpm -n '__fish_contains_opt -s e -s i -s F -s V -s U -s q erase install freshen verify upgrade query; if test $status = 0; false; else; true; end'
+set rpm_mode -c rpm -n '__fish_contains_opt -s e -s i -s F -s V -s U -s q erase install freshen verify upgrade query; if test $status = 0; false; else; true; end'
 complete $rpm_mode -s i -l install -d (N_ 'Install new package')
 complete $rpm_mode -s U -l upgrade -d (N_ 'Upgrade existing package')
 complete $rpm_mode -s F -l freshen -d (N_ 'Upgrade package if already installed')

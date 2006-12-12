@@ -5,14 +5,14 @@
 
 function __fish_complete_directories -d "Complete using directories"
 
-	set -- comp $argv[1]
-	set -- desc (_ Directory)
+	set comp $argv[1]
+	set desc (_ Directory)
 
 	if test (count $argv) -gt 1
 		set desc $argv[2]
 	end
 
-	eval "set -- dirs "$comp"*/"
+	eval "set dirs "$comp"*/"
 
 	if test $dirs[1]
 		printf "%s\t$desc\n" $dirs

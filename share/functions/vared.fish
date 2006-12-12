@@ -20,7 +20,7 @@ function vared -d (N_ "Edit variable value")
 				if test (count $$argv ) -lt 2
 					set init ''
 					if test $$argv
-						set -- init $$argv
+						set init $$argv
 					end
 					set prompt 'set_color green; echo '$argv'; set_color normal; echo "> "'
 					read -p $prompt -c $init tmp

@@ -5,12 +5,12 @@
 
 function __fish_complete_suffix -d "Complete using files"
 
-	set -- comp $argv[1]
-	set -- suff $argv[2]
-	set -- desc $argv[3]
+	set comp $argv[1]
+	set suff $argv[2]
+	set desc $argv[3]
 
-	set -- base (echo $comp |sed -e 's/\.[a-zA-Z0-9]*$//')
-	eval "set -- files $base*$suff"
+	set base (echo $comp |sed -e 's/\.[a-zA-Z0-9]*$//')
+	eval "set files $base*$suff"
 
 	if test $files[1]
 		printf "%s\t$desc\n" $files

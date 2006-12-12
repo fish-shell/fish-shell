@@ -29,7 +29,7 @@ function contains -d (N_ "Test if a key is contained in a set of values")
 		return 1
 	end
 
-	set -- key $argv[1]
+	set key $argv[1]
 	set -e argv[1]	
 
 	#

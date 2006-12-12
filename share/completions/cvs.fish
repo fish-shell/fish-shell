@@ -6,7 +6,7 @@
 
 function __fish_no_cvs_subcommand
 	set -l cvscommands add admin annotate checkout commit diff edit editors export history import init kserver log login logout pserver rannotate rdiff release remove rlog rtag server status tag unedit update version watch watchers
-	set -l -- cmd (commandline -poc)
+	set -l cmd (commandline -poc)
 	set -e cmd[1]
 	for i in $cmd
 		if contains -- $i $cvscommands

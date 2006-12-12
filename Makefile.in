@@ -487,9 +487,9 @@ share/man: $(HELP_SRC)
 		echo "*/" >>$$FILE; \
 	done
 	doxygen Doxyfile.help
-	for i in help_doc/man/man1/*.1; do \
-		CMD_NAME=`basename $$i .1`; \
-		sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <$$i >share/man/$$CMD_NAME.1; \
+	for i in $(HELP_SRC); do \
+		CMD_NAME=`basename $$i .txt`; \
+		sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <help_doc/man/man1/$$CMD_NAME.1 >share/man/$$CMD_NAME.1; \
 	done 
 	rm doc_src/*.doxygen   # Clean up intermediate files in doc_src/
 	rm -r help_doc         # Clean up intermediate help_doc tree

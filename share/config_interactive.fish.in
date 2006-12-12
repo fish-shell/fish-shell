@@ -166,7 +166,7 @@ functions -e set_default
 
 function __fish_repaint --on-variable fish_color_cwd -d (N_ "Event handler, repaints the prompt when fish_color_cwd changes")
 	set -e __fish_prompt_cwd
-	commandline -f null
+	commandline -f repaint
 end
 
 #

@@ -2164,6 +2164,16 @@ wchar_t *reader_readline()
 			case R_NULL:
 			{
 //				exec_prompt();
+				write( 1, "\r", 1 );
+				s_reset( &data->screen );
+				repaint();
+				break;
+			}
+
+			case R_REPAINT:
+			{
+				exec_prompt();
+				write( 1, "\r", 1 );
 				s_reset( &data->screen );
 				repaint();
 				break;

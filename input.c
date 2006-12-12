@@ -133,7 +133,8 @@ static const wchar_t *name_arr[] =
 	L"vi-arg-digit",
 	L"execute",
 	L"beginning-of-buffer",
-	L"end-of-buffer"
+	L"end-of-buffer",
+	L"repaint"
 }
 	;
 
@@ -214,6 +215,7 @@ static const wchar_t code_arr[] =
 	R_EXECUTE,
 	R_BEGINNING_OF_BUFFER,
 	R_END_OF_BUFFER,
+	R_REPAINT
 }
 	;
 
@@ -254,7 +256,6 @@ static int inputrc_error = 0;
    Set to one when the input subsytem has been initialized. 
 */
 static int is_init = 0;
-
 
 /**
    This is the variable telling us how many timew the next command

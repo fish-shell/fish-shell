@@ -85,7 +85,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 	switch $mode
 		case clear
 			for i in $opt
-				set -- sig (__trap_translate_signal $i)
+				set sig (__trap_translate_signal $i)
 				if test $sig
 					functions -e __trap_handler_$sig				
 				end
@@ -97,8 +97,8 @@ function trap -d 'Perform an action when the shell recives a signal'
 
 			for i in $opt
 
-				set -l -- sig (__trap_translate_signal $i)
-				set -- sw (__trap_switch $sig)
+				set -l sig (__trap_translate_signal $i)
+				set sw (__trap_switch $sig)
 
 				if test $sig
 					eval "function __trap_handler_$sig $sw; $cmd; end"
@@ -111,14 +111,14 @@ function trap -d 'Perform an action when the shell recives a signal'
 			set -l names 
 
 			if count $opt >/dev/null
-				set -- names $opt
+				set names $opt
 			else
-				set -- names (functions -na|sgrep "^__trap_handler_"|sed -e 's/__trap_handler_//' )
+				set names (functions -na|sgrep "^__trap_handler_"|sed -e 's/__trap_handler_//' )
 			end
 
 			for i in $names
 
-				set -- sig (__trap_translate_signal $i)
+				set sig (__trap_translate_signal $i)
 
 				if test sig
 					functions __trap_handler_$i

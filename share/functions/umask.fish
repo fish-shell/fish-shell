@@ -2,7 +2,8 @@
 function __fish_umask_parse -d "Internal umask function"
 	# Test if already a valid octal mask, and pad it with zeros
 	if echo $argv | sgrep -E '^(0|)[0-7]{1,3}$' >/dev/null
-		for i in (seq (echo 5-(echo $argv|wc -c)|bc)); set argv 0$argv; end
+		set -l char_count (echo $argv| wc -c)
+		for i in (seq (math 5 - $char_count)); set argv 0$argv; end
 		echo $argv 
 	else
 		# Test if argument really is a valid symbolic mask
@@ -22,7 +23,8 @@ function __fish_umask_parse -d "Internal umask function"
 
 		for i in 1 2 3
 			set tmp (echo $tmp|cut -c 2-)
-			set res[$i] (echo 7-(echo $tmp|cut -c 1)|bc)
+			set -l char_count (echo $tmp|cut -c 1)
+			set res[$i] (math 7 - $char_count)
 		end
 				
 		set -l el (echo $argv|tr , \n)
@@ -80,10 +82,10 @@ function __fish_umask_parse -d "Internal umask function"
 				set val 4
 			end
 			if echo $i |sgrep 'w' >/dev/null
-				set val (echo $val + 2|bc)
+				set val (math $val + 2)
 			end
 			if echo $i |sgrep 'x' >/dev/null
-				set val (echo $val + 1|bc)
+				set val (math $val + 1)
 			end
 
 			for j in $idx
@@ -101,7 +103,7 @@ function __fish_umask_parse -d "Internal umask function"
 		end
 
 		for i in 1 2 3
-			set res[$i] (echo 7-$res[$i]|bc)
+			set res[$i] (math 7 - $res[$i])
 		end
 		echo 0$res[1]$res[2]$res[3]
 	end

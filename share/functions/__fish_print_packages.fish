@@ -32,7 +32,7 @@ function __fish_print_packages
 		set cache_file /tmp/.rpm-cache.$USER
 			if test -f $cache_file 
 			cat $cache_file
-			set age (echo (date +%s) - (stat -c '%Y' $cache_file) | bc)
+			set age (math (date +%s) - (stat -c '%Y' $cache_file))
 			set max_age 250
 			if test $age -lt $max_age
 				return

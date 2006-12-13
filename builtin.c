@@ -957,12 +957,11 @@ static int builtin_functions( wchar_t **argv )
 	/*
 	  Erase, desc, query and list are mutually exclusive
 	*/
-	if( (erase + (desc!=0) + list + query) > 1 )
+	if( (erase + (!!desc) + list + query) > 1 )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Invalid combination of options\n" ),
 				   argv[0] );
-
 
 		builtin_print_help( argv[0], sb_err );
 
@@ -1006,7 +1005,7 @@ static int builtin_functions( wchar_t **argv )
 
 		return 0;
 	}
-	else if( list )
+	else if( list || (argc==woptind))
 	{
 		int is_screen = !builtin_out_redirect && isatty(1);
 
@@ -1044,46 +1043,19 @@ static int builtin_functions( wchar_t **argv )
 		return 0;
 	}
 
-	switch( argc - woptind )
+	for( i=woptind; i<argc; i++ )
 	{
-		case 0:
+		if( !function_exists( argv[i] ) )
+			res++;
+		else
 		{
 			if( !query )
 			{
-				sb_append( sb_out, _( L"Current function definitions are:\n\n" ) );
-				al_init( &names );
-				function_get_names( &names, show_hidden );
-				sort_list( &names );
-				
-				for( i=0; i<al_get_count( &names ); i++ )
-				{
-					functions_def( (wchar_t *)al_get( &names, i ), sb_out );
-				}
-				
-				al_destroy( &names );
+				functions_def( argv[i], sb_out );
 			}
-			
-			break;
-		}
-
-		default:
-		{
-			for( i=woptind; i<argc; i++ )
-			{
-				if( !function_exists( argv[i] ) )
-					res++;
-				else
-				{
-					if( !query )
-					{
-						functions_def( argv[i], sb_out );
-					}
-				}				
-			}
-
-			break;
-		}
+		}				
 	}
+
 	return res;
 
 }

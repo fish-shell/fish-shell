@@ -505,6 +505,28 @@ static int parser_skip_arguments( const wchar_t *cmd )
 						 (void *)0 );
 }
 
+enum 
+{
+	ARG_NON_SWITCH,
+	ARG_SWITCH,
+	ARG_SKIP
+}
+	;
+
+
+/**
+   Check if the specified argument is a switch. Return ARG_SWITCH if yes,
+   ARG_NON_SWITCH if no and ARG_SKIP if the argument is '--'
+*/
+static int parser_is_switch( const wchar_t *cmd )
+{
+	if( wcscmp( cmd, L"--" ) == 0 )
+		return ARG_SKIP;
+	else 
+		return cmd[0] == L'-';
+}
+
+
 int parser_is_subcommand( const wchar_t *cmd )
 {
 
@@ -1770,80 +1792,19 @@ static int parse_job( process_t *p,
 		
 		mark = tok_get_pos( tok );
 
-		/*
-		  Test if this command is one of the many special builtins
-		  that work directly on the parser, like e.g. 'not', that
-		  simply flips the status inversion flag in the job.
-		*/
-		if( wcscmp( L"command", nxt )==0 )
-		{
-			tok_next( tok );
-			if( parser_is_help( tok_last( tok ), 0 ) )
-			{
-				tok_set_pos( tok, mark);
-			}
-			else
-			{
-				use_function = 0;
-				use_builtin=0;
-				consumed=1;
-			}
-		}
-		else if(  wcscmp( L"builtin", nxt )==0 )
-		{
-			tok_next( tok );
-			if( tok_last(tok)[0] == L'-' )
-			{
-				tok_set_pos( tok, mark);
-			}
-			else
-			{
-				use_function = 0;
-				consumed=1;
-			}
-		}
-		else if(  wcscmp( L"not", nxt )==0 )
-		{
-			tok_next( tok );
-			if( tok_last(tok)[0] == L'-' )
-			{
-				tok_set_pos( tok, mark);
-			}
-			else
-			{
-				job_set_flag( j, JOB_NEGATE, !job_get_flag( j, JOB_NEGATE ) );
-				consumed=1;
-			}
-		}
-		else if(  wcscmp( L"and", nxt )==0 )
-		{
-			tok_next( tok );
-			if( tok_last(tok)[0] == L'-' )
-			{
-				tok_set_pos( tok, mark);
-			}
-			else
-			{
-				job_set_flag( j, JOB_SKIP, proc_get_last_status());
-				consumed=1;
-			}
-		}
-		else if(  wcscmp( L"or", nxt )==0 )
-		{
-			tok_next( tok );
-			if( tok_last(tok)[0] == L'-' )
-			{
-				tok_set_pos( tok, mark);
-			}
-			else
-			{
-				job_set_flag( j, JOB_SKIP, !proc_get_last_status());
-				consumed=1;
-			}
-		}
-		else if(  wcscmp( L"exec", nxt )==0 )
-		{
-			if( p != j->first_process )
+		if( contains_str( nxt,
+						  L"command",
+						  L"builtin",
+						  L"not",
+						  L"and",
+						  L"or",
+						  L"exec",
+						  (void *)0 ) )
+		{			
+			int sw;
+			int is_exec = (wcscmp( L"exec", nxt )==0);
+			
+			if( is_exec && (p != j->first_process) )
 			{
 				error( SYNTAX_ERROR,
 					   tok_get_pos( tok ),
@@ -1853,17 +1814,47 @@ static int parse_job( process_t *p,
 			}
 
 			tok_next( tok );
-			if( tok_last(tok)[0] == L'-' )
+			sw = parser_is_switch( tok_last( tok ) );
+			
+			if( sw == ARG_SWITCH )
 			{
 				tok_set_pos( tok, mark);
 			}
 			else
 			{
-				use_function = 0;
-				use_builtin=0;
-				p->type=INTERNAL_EXEC;
+				if( sw == ARG_SKIP )
+				{
+					tok_next( tok );
+				}
+								
 				consumed=1;
-				current_tokenizer_pos = prev_tokenizer_pos;	
+
+				if( ( wcscmp( L"command", nxt )==0 ) ||
+					( wcscmp( L"builtin", nxt )==0 ) )
+				{
+					use_function = 0;
+					if( wcscmp( L"command", nxt )==0 )
+						use_builtin=0;
+				}
+				else if(  wcscmp( L"not", nxt )==0 )
+				{
+					job_set_flag( j, JOB_NEGATE, !job_get_flag( j, JOB_NEGATE ) );
+				}
+				else if(  wcscmp( L"and", nxt )==0 )
+				{
+					job_set_flag( j, JOB_SKIP, proc_get_last_status());
+				}
+				else if(  wcscmp( L"or", nxt )==0 )
+				{
+					job_set_flag( j, JOB_SKIP, !proc_get_last_status());
+				}
+				else if( is_exec )
+				{
+					use_function = 0;
+					use_builtin=0;
+					p->type=INTERNAL_EXEC;
+					current_tokenizer_pos = prev_tokenizer_pos;	
+				}
 			}
 		}
 		else if( wcscmp( L"while", nxt ) ==0 )

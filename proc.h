@@ -35,7 +35,12 @@
 #define STATUS_EXEC_FAIL 125
 
 /**
-   The status code use for erroneous argument combinations in a builtin
+   The status code used for normal exit in a  builtin
+*/
+#define STATUS_BUILTIN_OK 0
+
+/**
+   The status code used for erroneous argument combinations in a builtin
 */
 #define STATUS_BUILTIN_ERROR 1
 

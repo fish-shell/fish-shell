@@ -475,6 +475,85 @@ void complete_add( const wchar_t *cmd,
 	}
 }
 
+/**
+   Remove all completion options in the specified entry that match the
+   specified short / long option strings.
+*/
+static  complete_entry_t *complete_remove_entry( complete_entry_t *e,
+												 wchar_t short_opt,
+												 const wchar_t *long_opt )
+{
+
+	complete_entry_opt_t *o, *oprev=0, *onext=0;
+	
+	if(( short_opt == 0 ) && (long_opt == 0 ) )
+	{
+		complete_free_opt_recursive( e->first_option );
+		e->first_option=0;
+	}
+	else
+	{
+		
+		for( o= e->first_option; o; o=onext )
+		{
+			onext=o->next;
+			
+			if( ( short_opt==o->short_opt ) ||
+				( wcscmp( long_opt, o->long_opt ) == 0 ) )
+			{
+				wchar_t *pos;
+				/*			fwprintf( stderr,
+				  L"remove option -%lc --%ls\n",
+				  o->short_opt?o->short_opt:L' ',
+				  o->long_opt );
+				*/
+				if( o->short_opt )
+				{
+					pos = wcschr( e->short_opt_str,
+								  o->short_opt );
+					if( pos )
+					{
+						wchar_t *pos2 = pos+1;
+						while( *pos2 == L':' )
+						{
+							pos2++;
+						}
+						
+						memmove( pos,
+								 pos2,
+								 sizeof(wchar_t)*wcslen(pos2) );
+					}
+				}
+				
+				if( oprev == 0 )
+				{
+					e->first_option = o->next;
+				}
+				else
+				{
+					oprev->next = o->next;
+				}
+				free( o );
+			}
+			else
+			{
+				oprev = o;
+			}
+		}
+	}
+	
+	if( e && (e->first_option == 0) )
+	{
+		free( e->short_opt_str );
+		free( e );
+		e=0;
+	}
+	
+	return e;
+
+}
+
+
 void complete_remove( const wchar_t *cmd,
 					  int cmd_type,
 					  wchar_t short_opt,
@@ -491,86 +570,25 @@ void complete_remove( const wchar_t *cmd,
 		if( (cmd_type == e->cmd_type ) &&
 			( wcscmp( cmd, e->cmd) == 0 ) )
 		{
-			complete_entry_opt_t *o, *oprev=0, *onext=0;
-
-			if(( short_opt == 0 ) && (long_opt == 0 ) )
-			{
-				complete_free_opt_recursive( e->first_option );
-				e->first_option=0;
-			}
-			else
-			{
-
-				for( o= e->first_option; o; o=onext )
-				{
-					onext=o->next;
-
-					if( ( short_opt==o->short_opt ) ||
-						( wcscmp( long_opt, o->long_opt ) == 0 ) )
-					{
-						wchar_t *pos;
-						/*			fwprintf( stderr,
-						  L"remove option -%lc --%ls\n",
-						  o->short_opt?o->short_opt:L' ',
-						  o->long_opt );
-						*/
-						if( o->short_opt )
-						{
-							pos = wcschr( e->short_opt_str,
-										  o->short_opt );
-							if( pos )
-							{
-								wchar_t *pos2 = pos+1;
-								while( *pos2 == L':' )
-								{
-									pos2++;
-								}
-								
-								memmove( pos,
-										 pos2,
-										 sizeof(wchar_t)*wcslen(pos2) );
-							}
-						}
-
-						if( oprev == 0 )
-						{
-							e->first_option = o->next;
-						}
-						else
-						{
-							oprev->next = o->next;
-						}
-						free( o );
-					}
-					else
-					{
-						oprev = o;
-					}
-				}
-			}
-
-			if( e && (e->first_option == 0) )
-			{
-				if( eprev == 0 )
-				{
-					first_entry = e->next;
-				}
-				else
-				{
-					eprev->next = e->next;
-				}
-
-				free( e->short_opt_str );
-				free( e );
-				e=0;
-			}
-
+			e = complete_remove_entry( e, short_opt, long_opt );
 		}
 
 		if( e )
 		{
 			eprev = e;
 		}
+		else
+		{
+			if( eprev )
+			{
+				eprev->next = enext;
+			}
+			else
+			{
+				first_entry = enext;
+			}
+		}
+		
 	}
 }
 
@@ -864,6 +882,53 @@ int complete_is_valid_argument( const wchar_t *str,
 	return 1;
 }
 
+static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
+{
+
+	wchar_t *suff = wcsdup( suff_orig );
+	wchar_t *cmd = wcsdupcat( SUFFIX_CMD_STR, suff );
+	wchar_t *desc = 0;
+	array_list_t l;
+
+	if( !suff || !cmd )
+		DIE_MEM();
+	
+	al_init( &l );
+	
+	if( exec_subshell( cmd, &l ) != -1 )
+	{
+		
+		if( al_get_count( &l )>0 )
+		{
+			wchar_t *ln = (wchar_t *)al_get(&l, 0 );
+			if( wcscmp( ln, L"unknown" ) != 0 )
+			{
+				desc = wcsdup( ln);
+				/*
+				  I have decided I prefer to have the description
+				  begin in uppercase and the whole universe will just
+				  have to accept it. Hah!
+				*/
+				desc[0]=towupper(desc[0]);
+			}
+		}
+	}
+	
+	free(cmd);
+	al_foreach( &l, &free );
+	al_destroy( &l );
+		
+	if( !desc )
+	{
+		desc = wcsdup(COMPLETE_FILE_DESC);
+	}
+	
+	hash_put( suffix_hash, suff, desc );
+
+	return desc;
+}
+
+
 /**
    Use the mimedb command to look up a description for a given suffix
 */
@@ -907,48 +972,10 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 
 	if( !desc )
 	{
-		wchar_t *cmd = wcsdupcat( SUFFIX_CMD_STR, suff );
-
-		if( cmd )
-		{
-			array_list_t l;
-			al_init( &l );
-
-			if( exec_subshell( cmd, &l ) != -1 )
-			{
-				
-				if( al_get_count( &l )>0 )
-				{
-					wchar_t *ln = (wchar_t *)al_get(&l, 0 );
-					if( wcscmp( ln, L"unknown" ) != 0 )
-					{
-						desc = wcsdup( ln);
-						/*
-						  I have decided I prefer to have the description
-						  begin in uppercase and the whole universe will just
-						  have to accept it. Hah!
-						*/
-						desc[0]=towupper(desc[0]);
-					}
-				}
-			}
-			
-			free(cmd);
-			al_foreach( &l, &free );
-			al_destroy( &l );
-		}
-
-		if( !desc )
-		{
-			desc = wcsdup(COMPLETE_FILE_DESC);
-		}
-
-		hash_put( suffix_hash, suff!=suff_orig?suff:wcsdup(suff), desc );
+		desc = complete_get_desc_suffix_internal( suff );
 	}
-	else
-	{
-		free( suff );
-	}
+	
+	free( suff );
 
 	return desc;
 }
@@ -1005,26 +1032,16 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 						break;
 					}
 					
-					case EACCES:
+					case ELOOP:
 					{
-						break;
-					}
-					
-					default:
-					{
-						if( errno == ELOOP )
-						{
-							sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_LOOP_SYMLINK_DESC );
-						}
-
-						/*
-						  Some kind of unknown broken symlink. We
-						  ignore it here, and it will get a 'file'
-						  description, or one based on suffix.
-						*/
+						sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_LOOP_SYMLINK_DESC );
 						break;
 					}
 				}
+				/*
+				  On unknown errors we do nothing. The file will be
+				  given the default 'File' description.
+				*/
 			}
 
 		}

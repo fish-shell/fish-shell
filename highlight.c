@@ -641,12 +641,11 @@ void highlight_shell( wchar_t * buff,
 						if( parser_is_subcommand( cmd ) )
 						{
 							tok_next( &tok );
-							if( ( ! parser_is_block( cmd ) ) &&
-								( ( wcscmp( L"-h", tok_last( &tok ) ) == 0 ) ||
-								  ( wcsncmp( L"--help", tok_last( &tok ), wcslen( tok_last( &tok ) ) ) == 0 && wcslen( tok_last( &tok ) ) >= 3 ) ) )							
+							if( !parser_is_block( cmd ) &&
+								parser_is_help( tok_last( &tok ), 3) )
 							{
 								/* 
-								   The builtin and command builtins
+								   The 'builtin' and 'command' builtins
 								   are normally followed by another
 								   command, but if they are invoked
 								   with the -h option, their help text

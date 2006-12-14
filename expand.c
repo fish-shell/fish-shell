@@ -272,16 +272,18 @@ static int iswnumeric( const wchar_t *n )
 */
 static int match_pid( const wchar_t *cmd,
 					  const wchar_t *proc,
-					  int flags )
+					  int flags,
+					  int *offset)
 {
 	/* Test for direct match */
-
+	
 	if( wcsncmp( cmd, proc, wcslen( proc ) ) == 0 )
+	{
+		if( offset )
+			*offset = 0;
 		return 1;
-
-	if( flags & ACCEPT_INCOMPLETE )
-		return 0;
-
+	}
+	
 	/*
 	  Test if the commandline is a path to the command, if so we try
 	  to match against only the command part
@@ -309,7 +311,11 @@ static int match_pid( const wchar_t *cmd,
 
 		if( wcsncmp( start+1, proc, wcslen( proc ) ) == 0 )
 		{
+			if( offset )
+				*offset = start+1-first_token;
+			
 			free( first_token );
+
 			return 1;
 		}
 	}
@@ -403,14 +409,16 @@ static int find_process( const wchar_t *proc,
 
 	for( j=first_job; j != 0; j=j->next )
 	{
+		int offset;
+		
 		if( j->command == 0 )
 			continue;
-
-		if( match_pid( j->command, proc, flags ) )
+		
+		if( match_pid( j->command, proc, flags, &offset ) )
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
-				wchar_t *res = wcsdupcat2( j->command + wcslen(proc),
+				wchar_t *res = wcsdupcat2( j->command + offset + wcslen(proc),
 										   COMPLETE_SEP_STR,
 										   COMPLETE_JOB_DESC,
 										   (void *)0 );
@@ -438,15 +446,16 @@ static int find_process( const wchar_t *proc,
 			continue;
 		for( p=j->first_process; p; p=p->next )
 		{
-
+			int offset;
+			
 			if( p->actual_cmd == 0 )
 				continue;
 
-			if( match_pid( p->actual_cmd, proc, flags ) )
+			if( match_pid( p->actual_cmd, proc, flags, &offset ) )
 			{
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					wchar_t *res = wcsdupcat2( p->actual_cmd + wcslen(proc),
+					wchar_t *res = wcsdupcat2( p->actual_cmd + offset + wcslen(proc),
 											   COMPLETE_SEP_STR,
 											   COMPLETE_CHILD_PROCESS_DESC,
 											   (void *)0);
@@ -556,16 +565,19 @@ static int find_process( const wchar_t *proc,
 
 		if( cmd != 0 )
 		{
-			if( match_pid( cmd, proc, flags ) )
+			int offset;
+			
+			if( match_pid( cmd, proc, flags, &offset ) )
 			{
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					wchar_t *res = wcsdupcat2( cmd + wcslen(proc),
+					wchar_t *res = wcsdupcat2( cmd + offset + wcslen(proc),
 											   COMPLETE_SEP_STR,
 											   COMPLETE_PROCESS_DESC,
 											   (void *)0);
 					if( res )
 						al_push( out, res );
+
 				}
 				else
 				{

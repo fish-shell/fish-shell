@@ -305,6 +305,10 @@ int read_blocked(int fd, void *buf, size_t count);
    Issue a debug message with printf-style string formating and
    automatic line breaking. The string will begin with the string \c
    program_name, followed by a colon and a whitespace.
+
+   Because debug is often called to tell the user about an error,
+   before using wperror to give a specific error message, debug will
+   never ever modify the value of errno.
    
    \param level the priority of the message. Lower number means higher priority. Messages with a priority_number higher than \c debug_level will be ignored..
    \param msg the message format string. 

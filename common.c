@@ -548,14 +548,17 @@ int read_blocked(int fd, void *buf, size_t count)
 void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
+
 	string_buffer_t sb;
 	string_buffer_t sb2;
+
+	int errno_old = errno;
 	
-	CHECK( msg, );
-		
 	if( level > debug_level )
 		return;
 
+	CHECK( msg, );
+		
 	sb_init( &sb );
 	sb_init( &sb2 );
 
@@ -570,6 +573,8 @@ void debug( int level, const wchar_t *msg, ... )
 
 	sb_destroy( &sb );	
 	sb_destroy( &sb2 );	
+
+	errno = errno_old;
 }
 
 void write_screen( const wchar_t *msg, string_buffer_t *buff )

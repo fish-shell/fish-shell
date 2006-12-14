@@ -19,11 +19,11 @@ if not set -q __fish_init_1_22_0
 		# Perform upgrade of configuration file hierarchy
 
 		if not test -d $configdir
-			builtin mkdir $configdir >/dev/null
+			command mkdir $configdir >/dev/null
 		end
 
 		if test -d $configdir
-			if builtin mkdir $configdir/fish 
+			if command mkdir $configdir/fish 
 
 				# These files are sometimes overwritten to by fish, so
 				# we want backups of them in case something goes wrong

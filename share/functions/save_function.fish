@@ -18,7 +18,7 @@ function save_function -d (N_ "Save the current definition of all specified func
 
 	for i in $configdir $configdir/fish $configdir/fish/functions
 		if not test -d $i
-			if not builtin mkdir $i >/dev/null
+			if not command mkdir $i >/dev/null
 				printf (_ "%s: Could not create configuration directory\n") save_function
 				return 1
 			end

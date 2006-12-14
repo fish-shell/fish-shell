@@ -57,6 +57,11 @@ The fish parser. Contains functions for parsing and evaluating code.
 #define MAX_RECURSION_DEPTH 128
 
 /**
+   Error message for unknown builtin
+*/
+#define UNKNOWN_BUILTIN_ERR_MSG _(L"Unknown builtin '%ls'")
+
+/**
    Error message for improper use of the exec builtin
 */
 #define EXEC_ERR_MSG _(L"This command can not be used in a pipeline")
@@ -1711,6 +1716,7 @@ static int parse_job( process_t *p,
 	array_list_t *args = al_halloc( j );      // The list that will become the argc array for the program
 	int use_function = 1;   // May functions be considered when checking what action this command represents
 	int use_builtin = 1;    // May builtins be considered when checking what action this command represents
+	int use_command = 1;    // May commands be considered when checking what action this command represents
 	int is_new_block=0;     // Does this command create a new block?
 
 	block_t *prev_block = current_block;
@@ -1834,7 +1840,15 @@ static int parse_job( process_t *p,
 				{
 					use_function = 0;
 					if( wcscmp( L"command", nxt )==0 )
-						use_builtin=0;
+					{
+						use_builtin = 0;
+						use_command = 1;
+					}					
+					else
+					{
+						use_builtin = 1;						
+						use_command = 0;					
+					}
 				}
 				else if(  wcscmp( L"not", nxt )==0 )
 				{
@@ -1972,8 +1986,8 @@ static int parse_job( process_t *p,
 				is_new_block |= parser_is_block( (wchar_t *)al_get( args, 0 ) );
 			}
 		}
-
-		if( !p->type || (p->type == INTERNAL_EXEC) )
+		
+		if( (!p->type || (p->type == INTERNAL_EXEC) ) )
 		{
 			/*
 			  If we are not executing the current block, allow
@@ -2012,7 +2026,7 @@ static int parse_job( process_t *p,
 						  If we have defined a wrapper around cd, use it,
 						  otherwise use the cd builtin
 						*/
-						if( function_exists( L"cd" ) )
+						if( use_function && function_exists( L"cd" ) )
 							p->type = INTERNAL_FUNCTION;
 						else
 							p->type = INTERNAL_BUILTIN;
@@ -2097,7 +2111,16 @@ static int parse_job( process_t *p,
 				}
 			}
 		}
+		
+		if( (p->type == EXTERNAL) && !use_command )
+		{
+			error( SYNTAX_ERROR,
+				   tok_get_pos( tok ),
+				   UNKNOWN_BUILTIN_ERR_MSG,
+				   al_get( args, al_get_count( args ) -1 ) );
+		}
 	}
+	
 	
 	if( is_new_block )
 	{

@@ -1315,7 +1315,10 @@ static const wchar_t *complete_function_desc( const wchar_t *fn )
    \param comp the list to add all completions to
 */
 static void complete_cmd( const wchar_t *cmd,
-						  array_list_t *comp )
+						  array_list_t *comp,
+						  int use_function,
+						  int use_builtin,
+						  int use_command )
 {
 	wchar_t *path;
 	wchar_t *path_cpy;
@@ -1332,60 +1335,68 @@ static void complete_cmd( const wchar_t *cmd,
 
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
 	{
-		
-		array_list_t tmp;
-		al_init( &tmp );
 
-		if( expand_string( 0,
-						   wcsdup(cmd),
-						   comp,
-						   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
+		if( use_command )
 		{
-			complete_cmd_desc( cmd, comp );
+			
+			array_list_t tmp;
+			al_init( &tmp );
+			
+			if( expand_string( 0,
+							   wcsdup(cmd),
+							   comp,
+							   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
+			{
+				complete_cmd_desc( cmd, comp );
+			}
+			al_destroy( &tmp );
 		}
-		al_destroy( &tmp );
 	}
 	else
 	{
-		path = env_get(L"PATH");
-		if( path )
+		if( use_command )
 		{
 			
-			path_cpy = wcsdup( path );
-			
-			for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-				 nxt_path != 0;
-				 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+			path = env_get(L"PATH");
+			if( path )
 			{
-				nxt_completion = wcsdupcat2( nxt_path,
-											 (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
-											 cmd,
-											 (void *)0 );
-				if( ! nxt_completion )
-					continue;
-				
-				al_init( &tmp );
-				
-				if( expand_string( 0,
-								   nxt_completion,
-								   &tmp,
-								   ACCEPT_INCOMPLETE |
-								   EXECUTABLES_ONLY ) != EXPAND_ERROR )
+			
+				path_cpy = wcsdup( path );
+			
+				for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
+					 nxt_path != 0;
+					 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 				{
-					for( i=0; i<al_get_count(&tmp); i++ )
+					nxt_completion = wcsdupcat2( nxt_path,
+												 (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
+												 cmd,
+												 (void *)0 );
+					if( ! nxt_completion )
+						continue;
+				
+					al_init( &tmp );
+				
+					if( expand_string( 0,
+									   nxt_completion,
+									   &tmp,
+									   ACCEPT_INCOMPLETE |
+									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 					{
-						al_push( comp, al_get( &tmp, i ) );
+						for( i=0; i<al_get_count(&tmp); i++ )
+						{
+							al_push( comp, al_get( &tmp, i ) );
+						}
 					}
+				
+					al_destroy( &tmp );
+				
 				}
-				
-				al_destroy( &tmp );
-				
-			}
-			free( path_cpy );
+				free( path_cpy );
 			
-			if( al_get_count( comp ) > prev_count )
-			{
-				complete_cmd_desc( cmd, comp );
+				if( al_get_count( comp ) > prev_count )
+				{
+					complete_cmd_desc( cmd, comp );
+				}
 			}
 		}
 		
@@ -1394,47 +1405,59 @@ static void complete_cmd( const wchar_t *cmd,
 		*/
 
 		al_init( &possible_comp );
-		function_get_names( &possible_comp, cmd[0] == L'_' );
-		copy_strings_with_prefix( comp, cmd, COMPLETE_FUNCTION_DESC, &complete_function_desc, &possible_comp );
-		al_truncate( &possible_comp, 0 );
 
-		builtin_get_names( &possible_comp );
-		copy_strings_with_prefix( comp, cmd, COMPLETE_BUILTIN_DESC, &builtin_get_desc, &possible_comp );
+		if( use_function )
+		{
+			
+			function_get_names( &possible_comp, cmd[0] == L'_' );
+			copy_strings_with_prefix( comp, cmd, COMPLETE_FUNCTION_DESC, &complete_function_desc, &possible_comp );
+		}
+
+		al_truncate( &possible_comp, 0 );
+		
+		if( use_builtin )
+		{
+			
+			builtin_get_names( &possible_comp );
+			copy_strings_with_prefix( comp, cmd, COMPLETE_BUILTIN_DESC, &builtin_get_desc, &possible_comp );
+
+		}
 		al_destroy( &possible_comp );
 
 	}
 
-	/*
-	  Tab complete implicit cd for directories in CDPATH
-	*/
-	if( cmd[0] != L'/' && ( wcsncmp( cmd, L"./", 2 )!=0) )
+	if( use_builtin || (use_function && function_exists( L"cd") ) )
 	{
-		
-		for( nxt_path = wcstok( cdpath_cpy, ARRAY_SEP_STR, &state );
-			 nxt_path != 0;
-			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+		/*
+		  Tab complete implicit cd for directories in CDPATH
+		*/
+		if( cmd[0] != L'/' && ( wcsncmp( cmd, L"./", 2 )!=0) )
 		{
-			wchar_t *nxt_completion=
-				wcsdupcat2( nxt_path,
-							(nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
-							cmd,
-							(void *)0 );
-			if( ! nxt_completion )
+			for( nxt_path = wcstok( cdpath_cpy, ARRAY_SEP_STR, &state );
+				 nxt_path != 0;
+				 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 			{
-				continue;
-			}
+				wchar_t *nxt_completion=
+					wcsdupcat2( nxt_path,
+								(nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
+								cmd,
+								(void *)0 );
+				if( ! nxt_completion )
+				{
+					continue;
+				}
 			
-			if( expand_string( 0,
-							   nxt_completion,
-							   comp,
-							   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
-			{
-				/*
-				  Don't care if we fail - completions are just hints
-				*/
+				if( expand_string( 0,
+								   nxt_completion,
+								   comp,
+								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
+				{
+					/*
+					  Don't care if we fail - completions are just hints
+					*/
+				}
 			}
 		}
-	
 	}
 
 	free( cdpath_cpy );
@@ -1672,10 +1695,9 @@ static int complete_param( wchar_t *cmd_orig,
 		}
 		else if( popt[0] == L'-' )
 		{
-			/* Check if the previous option has any specified
-			   arguments to match against */
-			int found_old = 0;
-
+			/* Set to true if we found a matching old-style switch */
+			int old_style_match = 0;
+			
 			/*
 			  If we are using old style long options, check for them
 			  first
@@ -1686,7 +1708,7 @@ static int complete_param( wchar_t *cmd_orig,
 				{
 					if( param_match_old( o, popt ) && condition_test( o->condition ))
 					{
-						found_old = 1;
+						old_style_match = 1;
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
 						complete_from_args( str, o->comp, C_(o->desc), comp_out );
@@ -1699,7 +1721,7 @@ static int complete_param( wchar_t *cmd_orig,
 			  style options. We check if any short (or gnu style
 			  options do.
 			*/
-			if( !found_old )
+			if( !old_style_match )
 			{
 				for( o = i->first_option; o; o=o->next )
 				{
@@ -2037,7 +2059,10 @@ void complete( const wchar_t *cmd,
 	int pos;
 	int done=0;
 	int cursor_pos;
-
+	int use_command = 1;
+	int use_function = 1;
+	int use_builtin = 1;
+	
 	CHECK( cmd, );
 	CHECK( comp, );
 
@@ -2098,25 +2123,52 @@ void complete( const wchar_t *cmd,
 			switch( tok_last_type( &tok ) )
 			{
 				case TOK_STRING:
+				{
 					if( !had_cmd )
 					{
-						if( parser_is_subcommand( tok_last( &tok ) ) )
+						wchar_t *ncmd = tok_last( &tok );
+						if( parser_is_subcommand( ncmd ) )
+						{
+							if( wcscmp( ncmd, L"builtin" )==0)
+							{
+								use_function = 0;
+								use_command  = 0;
+								use_builtin  = 1;
+							}
+							else if( wcscmp( ncmd, L"command" )==0)
+							{
+								use_command  = 1;
+								use_function = 0;
+								use_builtin  = 0;
+							}
 							break;
-						
-						free( current_command );
-						current_command = wcsdup( tok_last( &tok ) );
+						}
 
-						on_command = (pos <= tok_get_pos( &tok) + wcslen( tok_last( &tok ) ) );
-						had_cmd=1;
+						int is_ddash = wcscmp( ncmd, L"--" ) != 0;
+						
+						if( is_ddash ||
+							( (use_command && use_function && use_builtin ) ) )
+						{
+							
+							free( current_command );
+							current_command = wcsdup( tok_last( &tok ) );
+
+							on_command = (pos <= tok_get_pos( &tok) + wcslen( tok_last( &tok ) ) );
+							had_cmd=1;
+						}
+
 					}
 					break;
-
+				}
+					
 				case TOK_END:
 				case TOK_PIPE:
 				case TOK_BACKGROUND:
 					had_cmd=0;
+					use_command  = 1;
+					use_function = 1;
+					use_builtin  = 1;
 					break;
-
 
 				case TOK_ERROR:
 					end_loop=1;
@@ -2144,11 +2196,40 @@ void complete( const wchar_t *cmd,
 		prev_token = prev_begin ? wcsndup( prev_begin, prev_end - prev_begin ): wcsdup(L"");
 		
 //		debug( 0, L"on_command: %d, %ls %ls\n", on_command, current_command, current_token );
+
+		/*
+		  Check if we are using the 'command' or 'builtin' builtins
+		  _and_ we are writing a switch ionstead of a command. In that
+		  case, complete using the builtins completions, not using a
+		  subcommand.
+		*/
+		
+		if( (on_command || (wcscmp( current_token, L"--" ) == 0 ) ) &&
+			(current_token[0] == L'-') && 
+			!(use_command && use_function && use_builtin ) )
+		{
+			free( current_command );
+			if( use_command == 0 )
+				current_command = wcsdup( L"builtin" );
+			else
+				current_command = wcsdup( L"command" );
+			
+			had_cmd = 1;
+			on_command = 0;
+		}
+		
+		/*
+		  Use command completions if in between commands
+		*/
 		if( !had_cmd )
 		{
 			on_command=1;
 		}
 		
+		/*
+		  We don't want these to be null
+		*/
+
 		if( !current_token )
 		{
 			current_token = wcsdup(L"");
@@ -2163,14 +2244,14 @@ void complete( const wchar_t *cmd,
 		{
 			prev_token = wcsdup(L"");
 		}
-	
+
 		if( current_token && current_command && prev_token )
 		{
 			if( on_command )
 			{
 				/* Complete command filename */
 				complete_cmd( current_token,
-							  comp );
+							  comp, use_function, use_builtin, use_command );
 			}
 			else
 			{

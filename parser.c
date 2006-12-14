@@ -510,20 +510,7 @@ static int parser_skip_arguments( const wchar_t *cmd )
 						 (void *)0 );
 }
 
-enum 
-{
-	ARG_NON_SWITCH,
-	ARG_SWITCH,
-	ARG_SKIP
-}
-	;
-
-
-/**
-   Check if the specified argument is a switch. Return ARG_SWITCH if yes,
-   ARG_NON_SWITCH if no and ARG_SKIP if the argument is '--'
-*/
-static int parser_is_switch( const wchar_t *cmd )
+int parser_is_switch( const wchar_t *cmd )
 {
 	if( wcscmp( cmd, L"--" ) == 0 )
 		return ARG_SKIP;

@@ -644,6 +644,9 @@ void highlight_shell( wchar_t * buff,
 
 						if( parser_is_subcommand( cmd ) )
 						{
+							
+							int sw;
+							
 							if( wcscmp( cmd, L"builtin" )==0)
 							{
 								use_function = 0;
@@ -658,20 +661,26 @@ void highlight_shell( wchar_t * buff,
 							}
 
 							tok_next( &tok );
+							
+							sw = parser_is_switch( tok_last( &tok ) );
+							
 							if( !parser_is_block( cmd ) &&
-								parser_is_help( tok_last( &tok ), 3) )
+								sw == ARG_SWITCH )
 							{
 								/* 
 								   The 'builtin' and 'command' builtins
 								   are normally followed by another
 								   command, but if they are invoked
-								   with the -h option, their help text
-								   is displayed instead
+								   with a switch, they aren't.
+
 								*/
+								use_command  = 1;
+								use_function = 1;
+								use_builtin  = 2;
 							}
 							else
 							{
-								if( wcscmp( tok_last( &tok ), L"--" ) == 0 )
+								if( sw == ARG_SKIP )
 								{
 									color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
 									mark = tok_get_pos( &tok );

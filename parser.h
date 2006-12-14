@@ -16,6 +16,17 @@
 #define PARSER_TEST_INCOMPLETE 2
 
 /**
+   REturn valuse for parser_is_switch()
+*/
+enum 
+{
+	ARG_NON_SWITCH,
+	ARG_SWITCH,
+	ARG_SKIP
+}
+	;
+
+/**
    event_block_t represents a block on events of the specified type
 */
 typedef struct event_block
@@ -218,6 +229,13 @@ int eval_args( const wchar_t *line,
    \param str The printf-style error message filter
 */
 void error( int ec, int p, const wchar_t *str, ... );
+
+
+/**
+   Check if the specified argument is a switch. Return ARG_SWITCH if yes,
+   ARG_NON_SWITCH if no and ARG_SKIP if the argument is '--'
+*/
+int parser_is_switch( const wchar_t *cmd );
 
 
 /**

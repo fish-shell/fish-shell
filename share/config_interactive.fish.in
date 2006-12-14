@@ -202,15 +202,6 @@ function __fish_print_users -d "Print a list of local users"
 end
 
 #
-# Completions for the shell and it's builtin commands and functions
-#
-
-for i in (builtin -n|sgrep -E -v '(while|for|if|function|switch)' )
-	complete -c $i -s h -l help -d "Display help and exit"
-end
-
-
-#
 # Completions for SysV startup scripts
 #
 

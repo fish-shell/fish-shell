@@ -542,6 +542,10 @@ void highlight_shell( wchar_t * buff,
 	wchar_t *cmd=0;
 	int accept_switches = 1;		
 	
+	int use_function = 1;
+	int use_command = 1;
+	int use_builtin = 1;
+	
 	CHECK( buff, );
 	CHECK( color, );
 	
@@ -640,6 +644,19 @@ void highlight_shell( wchar_t * buff,
 
 						if( parser_is_subcommand( cmd ) )
 						{
+							if( wcscmp( cmd, L"builtin" )==0)
+							{
+								use_function = 0;
+								use_command  = 0;
+								use_builtin  = 1;
+							}
+							else if( wcscmp( cmd, L"command" )==0)
+							{
+								use_command  = 1;
+								use_function = 0;
+								use_builtin  = 0;
+							}
+
 							tok_next( &tok );
 							if( !parser_is_block( cmd ) &&
 								parser_is_help( tok_last( &tok ), 3) )
@@ -654,6 +671,12 @@ void highlight_shell( wchar_t * buff,
 							}
 							else
 							{
+								if( wcscmp( tok_last( &tok ), L"--" ) == 0 )
+								{
+									color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+									mark = tok_get_pos( &tok );
+								}
+								
 								is_subcommand = 1;
 							}
 							tok_set_pos( &tok, mark );
@@ -674,8 +697,11 @@ void highlight_shell( wchar_t * buff,
 							  function, since we don't have to stat
 							  any files for that
 							*/
-							is_cmd |= builtin_exists( cmd );
-							is_cmd |= function_exists( cmd );
+							if( use_builtin )
+								is_cmd |= builtin_exists( cmd );
+							
+							if( use_function )
+								is_cmd |= function_exists( cmd );
 
 							/*
 							  Moving on to expensive tests
@@ -684,13 +710,15 @@ void highlight_shell( wchar_t * buff,
 							/*
 							  Check if this is a regular command
 							*/
-							is_cmd |= !!(tmp=path_get_path( context, cmd ));
+							if( use_command )
+								is_cmd |= !!(tmp=path_get_path( context, cmd ));
 							
 							/* 
 							   Could not find the command. Maybe it is
 							   a path for a implicit cd command.
 							*/
-							is_cmd |= !!(tmp=path_get_cdpath( context, cmd ));
+							if( use_builtin || (use_function && function_exists( L"cd") ) )
+								is_cmd |= !!(tmp=path_get_cdpath( context, cmd ));
 														
 							if( is_cmd )
 							{								
@@ -803,6 +831,9 @@ void highlight_shell( wchar_t * buff,
 				{
 					color[ tok_get_pos( &tok ) ] = HIGHLIGHT_END;
 					had_cmd = 0;
+					use_command  = 1;
+					use_function = 1;
+					use_builtin  = 1;
 					accept_switches = 1;
 				}
 				else
@@ -819,6 +850,9 @@ void highlight_shell( wchar_t * buff,
 			{
 				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_END;
 				had_cmd = 0;
+				use_command  = 1;
+				use_function = 1;
+				use_builtin  = 1;
 				accept_switches = 1;
 				break;
 			}

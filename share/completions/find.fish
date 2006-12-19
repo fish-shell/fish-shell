@@ -71,12 +71,13 @@ complete -c find -o size -d (N_ "File uses specified units of space") -r
 complete -c find -o true -d (N_ "Always true")
 
 set -l type_comp 'b\t"Block device" c\t"Character device" d\t"Directory" p\t"Named pipe" f\t"File" l\t"Symbolic link" s\t"Socket"'
+
 complete -c find -o type -d (N_ "File is of specified type") -x -a  $type_comp
 
 complete -c find -o uid -d (N_ "File's owner has specified numeric user ID") -r
 complete -c find -o used -d (N_ "File was last accessed specified number of days after its status was last changed") -r
 complete -c find -o user -d (N_ "File's owner") -a "(__fish_complete_users)" -r
-complete -c find -o xtype -d (N_ "Check type of file - in case of symlink, check the file that is not checked by -type") -x $type_comp
+complete -c find -o xtype -d (N_ "Check type of file - in case of symlink, check the file that is not checked by -type") -x -a $type_comp
 complete -c find -o context -d (N_ "File's security context matches specified pattern") -r
 
 

@@ -12,6 +12,7 @@ complete -c svn -n '__fish_use_subcommand' -xa 'cat\t"'(_ "Output content of fil
 complete -c svn -n '__fish_use_subcommand' -xa 'checkout\t"'(_ "Check out a working copy from the repository")'"'
 complete -c svn -n '__fish_use_subcommand' -xa 'cleanup\t"'(_ "Recursively clean up the working copy")'"'
 complete -c svn -n '__fish_use_subcommand' -xa 'commit\t"'(_ "Send changes from your working copy to the repository")'"'
+complete -c svn -n '__fish_use_subcommand' -xa 'delete\t"'(_ "Remove file or directory from version control")'"'
 complete -c svn -n '__fish_use_subcommand' -xa 'import\t"'(_ "Commit an unversioned file or tree into the repository")'"'
 complete -c svn -n '__fish_use_subcommand' -xa 'info\t"'(_ "Display information about a local or remote item")'"'
 complete -c svn -n '__fish_use_subcommand' -xa 'list\t"'(_ "List directory entries in the repository")'"'
@@ -117,3 +118,11 @@ complete $switchopt -l relocate -d (N_ "Relocate VIA URL-rewriting")
 #
 set -l helpopt -c svn -n 'contains help (commandline -poc)'
 complete $helpopt -l version -d (N_ "Print client version info")
+
+#
+# Flags for svn delete
+#
+set -l deleteopt -c svn -n 'contains delete (commandline -poc)'
+complete $deleteopt -l force -d (N_ "force operation to run")
+complete $deleteopt -s q -l quiet -d (N_ "print as little as possible")
+complete $deleteopt -l targets -d (N_ "pass contents of file ARG as additional args")

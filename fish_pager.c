@@ -916,6 +916,7 @@ static void mangle_completions( array_list_t *l, const wchar_t *prefix )
 			{
 				*end = 0;
 				wchar_t * str = escape( start, 1 );
+				
 				comp->comp_width += my_wcswidth( str );
 				halloc_register( global_context, str );
 				al_push( comp->comp, str );
@@ -981,7 +982,6 @@ static void init()
 
 
 	program_name = L"fish_pager";
-	wsetlocale( LC_ALL, L"" );
 
 	/*
 	  Make fd 1 output to screen, and use some other fd for writing
@@ -1156,6 +1156,7 @@ int main( int argc, char **argv )
 	else
 	{
 
+		wsetlocale( LC_ALL, L"" );
 		comp = al_halloc( global_context );
 		prefix = str2wcs( argv[2] );
 		is_quoted = strcmp( "1", argv[1] )==0;

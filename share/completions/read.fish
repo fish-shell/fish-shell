@@ -5,4 +5,4 @@ complete -c read -s g -l global -d (N_ "Make variable scope global")
 complete -c read -s l -l local -d (N_ "Make variable scope local")
 complete -c read -s U -l universal -d (N_ "Make variable scope universal, i.e. share variable with all the users fish processes on this computer")
 complete -c read -s u -l unexport -d (N_ "Do not export variable to subprocess")
-
+complete -c read -s m -l mode-name -d (N_ "Name to load/save history under") -r -a "read fish"

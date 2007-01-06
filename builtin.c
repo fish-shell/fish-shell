@@ -357,7 +357,8 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 
   Several other builtins, including jobs, ulimit and set are so big
   that they have been given their own file. These files are all named
-  'builtin_NAME.c', where NAME is the name of the builtin.
+  'builtin_NAME.c', where NAME is the name of the builtin. These files
+  are included directly below.
 
 */
 
@@ -1507,6 +1508,7 @@ static int builtin_read( wchar_t **argv )
 	wchar_t *prompt = DEFAULT_READ_PROMPT;
 	wchar_t *commandline = L"";
 	int exit_res=0;
+	wchar_t *mode_name = READ_MODE_NAME;
 	
 	woptind=0;
 	
@@ -1544,6 +1546,10 @@ static int builtin_read( wchar_t **argv )
 				}
 				,
 				{
+					L"mode-name", required_argument, 0, 'm'
+				}
+				,
+				{
 					L"help", no_argument, 0, 'h'
 				}
 				,
@@ -1557,7 +1563,7 @@ static int builtin_read( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"xglUup:c:h",
+								L"xglUup:c:hm:",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1579,23 +1585,33 @@ static int builtin_read( wchar_t **argv )
 			case L'x':
 				place |= ENV_EXPORT;
 				break;
+
 			case L'g':
 				place |= ENV_GLOBAL;
 				break;
+
 			case L'l':
 				place |= ENV_LOCAL;
 				break;
+
 			case L'U':
 				place |= ENV_UNIVERSAL;
 				break;
+
 			case L'u':
 				place |= ENV_UNEXPORT;
 				break;
+
 			case L'p':
 				prompt = woptarg;
 				break;
+
 			case L'c':
 				commandline = woptarg;
+				break;
+
+			case L'm':
+				mode_name = woptarg;
 				break;
 
 			case 'h':
@@ -1668,7 +1684,7 @@ static int builtin_read( wchar_t **argv )
 	*/
 	if( isatty(0) && builtin_stdin == 0 )
 	{
-		reader_push( READ_MODE_NAME );
+		reader_push( mode_name );
 		reader_set_prompt( prompt );
 
 		reader_set_buffer( commandline, wcslen( commandline ) );

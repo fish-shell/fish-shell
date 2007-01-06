@@ -11,6 +11,7 @@ input and store the result in one or more environment variables.
 - <tt>-c CMD</tt> or <tt>--command=CMD</tt> specifies that the initial string in the interactive mode command buffer should be CMD.
 - <tt>-e</tt> or <tt>--export</tt> specifies that the variables will be exported to subshells.
 - <tt>-g</tt> or <tt>--global</tt> specifies that the variables will be made global.
+- <tt>-m NAME</tt> or <tt>--mode-name=NAME</tt> specifies that the name NAME should be used to save/load the hiustory file. If NAME is fish, the regular fish history will be available. 
 - <tt>-p PROMPT_CMD</tt> or <tt>--prompt=PROMPT_CMD</tt> specifies that the output of the shell command PROMPT_CMD should be used as the prompt for the interactive mode prompt. The default prompt command is <tt>set_color green; echo read; set_color normal; echo "> "</tt>.
 - <code>-u</code> or <code>--unexport</code> causes the specified environment not to be exported to child processes
 - <code>-U</code> or <code>--universal</code> causes the specified environment variable to be made universal. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.

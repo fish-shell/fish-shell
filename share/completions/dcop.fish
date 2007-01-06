@@ -7,7 +7,7 @@ function __fish_complete_dcop -d "Completions for kde dcop"
 
     if eval "$com >/dev/null 2>&1"
 	# use dcop output if available
-	eval "$com | sed -e 's/^\w[^ ]* \(\w*\)([^)]*)\$/\1/'"
+	eval "$com | sed -e 's/ (default)//; s/^\w[^ ]* \(\w*\)([^)]*)\$/\1/'"
 
     else
 	set -l op (commandline -o)
@@ -25,7 +25,7 @@ function __fish_complete_dcop -d "Completions for kde dcop"
 
 	    set -l idx (seq 2 (expr (count $o) - 1))
 	    # list only function names
-	    dcop $o[$idx] | grep -- $o[-1] | sed -e 's/^\w[^ ]* \(\w*\)([^)]*)$/\1/'
+	    dcop $o[$idx] | grep -- $o[-1] | sed -e 's/ (default)//; s/^\w[^ ]* \(\w*\)([^)]*)$/\1/'
 	end
     end
 end

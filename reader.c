@@ -693,7 +693,7 @@ static int insert_str(wchar_t *str)
 	{
 		memmove( &data->buff[data->buff_pos+len],
 				 &data->buff[data->buff_pos],
-				 sizeof(wchar_t)*(data->buff_len-data->buff_pos) );
+				 sizeof(wchar_t)*(old_len-data->buff_pos) );
 	}
 	memmove( &data->buff[data->buff_pos], str, sizeof(wchar_t)*len );
 	data->buff_pos += len;

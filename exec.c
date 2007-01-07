@@ -450,13 +450,16 @@ static int setup_child_process( job_t *j, process_t *p )
 static void launch_process( process_t *p )
 {
     FILE* f;
-
+	int err;
+	
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
 	execve ( wcs2str(p->actual_cmd), 
 			 wcsv2strv( (const wchar_t **) p->argv), 
 			 env_export_arr( 0 ) );
-    
+
+    err = errno;
+	
 	/* 
 	Something went wrong with execve, check for a ":", and run
 	/bin/sh if encountered. This is a weird predecessor to the shebang
@@ -475,8 +478,7 @@ static void launch_process( process_t *p )
         {
             int count = 0;
             int i = 1;
-            int j = 2;
-            wchar_t **res;
+			wchar_t **res;
 
             while( p->argv[count] != 0 )
 				count++;
@@ -503,6 +505,9 @@ static void launch_process( process_t *p )
 	debug( 0, 
 		   _( L"Failed to execute process '%ls'" ),
 		   p->actual_cmd );
+
+	errno = err;
+	
 	wperror( L"execve" );
 	exit(1);
 }

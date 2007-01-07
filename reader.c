@@ -975,14 +975,15 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	sb_init( &cmd );
 	sb_init( &msg );
 	sb_printf( &cmd,
-			   L"fish_pager %d %ls",
+			   L"fish_pager -c 3 -r 4 %ls -p %ls",
 //			   L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
-			   is_quoted,
+			   is_quoted?L"-q":L"",
 			   prefix_esc );
 
 	free( prefix_esc );
 
 	io_data_t *in= io_buffer_create( 1 );
+	in->fd = 3;
 	
 	for( i=0; i<al_get_count( comp); i++ )
 	{
@@ -999,7 +1000,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	
 	io_data_t *out = io_buffer_create( 0 );
 	out->next = in;
-	out->fd = 1;
+	out->fd = 4;
 	
 	eval( (wchar_t *)cmd.buff, out, TOP);
 	term_steal();

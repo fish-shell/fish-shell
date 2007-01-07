@@ -42,6 +42,11 @@
 
 #include <signal.h>
 
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+
+#include <errno.h>
 
 #include "fallback.h"
 #include "util.h"
@@ -54,6 +59,7 @@
 #include "env_universal.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "print_help.h"
 
 enum 
 {
@@ -100,6 +106,13 @@ enum
    The maximum number of columns of completion to attempt to fit onto the screen
 */
 #define PAGER_MAX_COLS 6
+
+/**
+   The string describing the single-character options accepted by fish_pager
+*/
+#define GETOPT_STRING "c:hr:qvp:"
+
+#define ERR_NOT_FD _( L"%ls: Argument '%s' is not a valid file descriptor\n" )
 
 /**
    This struct should be continually updated by signals as the term
@@ -151,7 +164,7 @@ static FILE *out_file;
 
 /**
    Data structure describing one or a group of related completions
- */
+*/
 typedef struct 
 {
 	/**
@@ -974,44 +987,52 @@ static int interrupt_handler()
    it with a copy of stderr, so the reading of completion strings must
    be done before init is called.
 */
-static void init()
+static void init( int mangle_descriptors, int out )
 {
 	struct sigaction act;
 
 	static struct termios pager_modes;
 
 
-	program_name = L"fish_pager";
-
-	/*
-	  Make fd 1 output to screen, and use some other fd for writing
-	  the resulting output back to the caller
-	*/
-	int out = dup( 1 );
-	int in = dup( 0 );
-	close(1);
-	close(0);
-
-	if( (in = open( ttyname(2), O_RDWR )) != -1 )
+	if( mangle_descriptors )
 	{
-		if( dup2( 2, 1 ) == -1 )
-		{			
-			debug( 0, _(L"Could not set up output file descriptors for pager") );
-			exit( 1 );
-		}
 		
-		if( dup2( in, 0 ) == -1 )
-		{			
-			debug( 0, _(L"Could not set up input file descriptors for pager %d"), in );
+		/*
+		  Make fd 1 output to screen, and use some other fd for writing
+		  the resulting output back to the caller
+		*/
+		int in;
+		out = dup( 1 );
+		close(1);
+		close(0);
+
+		if( (in = open( ttyname(2), O_RDWR )) != -1 )
+		{
+			if( dup2( 2, 1 ) == -1 )
+			{			
+				debug( 0, _(L"Could not set up output file descriptors for pager") );
+				exit( 1 );
+			}
+			
+			if( dup2( in, 0 ) == -1 )
+			{			
+				debug( 0, _(L"Could not set up input file descriptors for pager") );
+				exit( 1 );
+			}
+		}
+		else
+		{
+			debug( 0, _(L"Could not open tty for pager") );
 			exit( 1 );
 		}
 	}
-	else
+	
+	if( !(out_file = fdopen( out, "w" )) )
 	{
-		debug( 0, _(L"Could not open tty for pager") );
+		debug( 0, _(L"Could not initialize result pipe" ) );
 		exit( 1 );
 	}
-	out_file = fdopen( out, "w" );
+	
 
 	/**
 	   Init the stringbuffer used to keep any output in
@@ -1071,7 +1092,6 @@ static void destroy()
 {
 	env_universal_destroy();
 	input_common_destroy();
-	halloc_util_destroy();
 	wutil_destroy();
 	if( del_curterm( cur_term ) == ERR )
 	{
@@ -1136,51 +1156,223 @@ static void read_array( FILE* file, array_list_t *comp )
 
 }
 
+static int get_fd( const char *str )
+{
+	char *end;	
+	long fd = strtol( str, &end, 10 );
+	if( fd < 0 || *end || errno )
+	{
+		debug( 0, ERR_NOT_FD, program_name, optarg );
+		exit( 1 );
+	}
+	return (int)fd;
+}
+
+
 int main( int argc, char **argv )
 {
 	int i;
 	int is_quoted=0;	
 	array_list_t *comp;
-	wchar_t *prefix;
+	wchar_t *prefix = 0;
 
+	int mangle_descriptors = 0;
+	int result_fd = -1;
+		
 	/*
 	  This initialization is made early, so that the other init code
 	  can use global_context for memory managment
 	*/
 	halloc_util_init();
+	program_name = L"fish_pager";
 
-	if( argc < 3 )
-	{
-		debug( 0, _(L"Insufficient arguments") );
-	}
-	else
-	{
 
-		wsetlocale( LC_ALL, L"" );
-		comp = al_halloc( global_context );
-		prefix = str2wcs( argv[2] );
-		is_quoted = strcmp( "1", argv[1] )==0;
-		is_quoted = 0;
+	wsetlocale( LC_ALL, L"" );
+	comp = al_halloc( global_context );
+
+	/*
+	  The call signature for fish_pager is a mess. Because we want
+	  to be able to upgrade fish without breaking running
+	  instances, we need to support all previous
+	  modes. Unfortunatly, the two previous ones are a mess. The
+	  third one is designed to be extensible, so hopefully it will
+	  be the last.
+	*/
+
+	if( argc > 1 && argv[1][0] == '-' )
+	{
+		/*
+		  Third mode
+		*/
+			
+			int completion_fd = -1;
+			FILE *completion_file;
+			
+			while( 1 )
+			{
+				static struct option
+					long_options[] =
+					{
+						{
+							"result-fd", required_argument, 0, 'r' 
+						}
+						,
+						{
+							"completion-fd", required_argument, 0, 'c' 
+						}
+						,
+						{
+							"prefix", required_argument, 0, 'p' 
+						}
+						,
+						{
+							"is-quoted", no_argument, 0, 'q' 
+						}
+						,
+						{
+							"help", no_argument, 0, 'h' 
+						}
+						,
+						{
+							"version", no_argument, 0, 'v' 
+						}
+						,
+						{ 
+							0, 0, 0, 0 
+						}
+					}
+				;
+		
+				int opt_index = 0;
+		
+				int opt = getopt_long( argc,
+									   argv, 
+									   GETOPT_STRING,
+									   long_options, 
+									   &opt_index );
+		
+				if( opt == -1 )
+					break;
+		
+				switch( opt )
+				{
+					case 0:
+					{
+						break;
+					}
+			
+					case 'r':
+					{
+						result_fd = get_fd( optarg );
+						break;
+					}
+			
+					case 'c':
+					{
+						completion_fd = get_fd( optarg );
+						break;
+					}
+
+					case 'p':
+					{
+						prefix = str2wcs(optarg);
+						break;
+					}
+
+					case 'h':
+					{
+						print_help( argv[0], 1 );
+						exit(0);						
+					}
+
+					case 'v':
+					{
+						debug( 0, L"%ls, version %s\n", program_name, PACKAGE_VERSION );
+						exit( 0 );				
+					}
+					
+					case 'q':
+					{
+						is_quoted = 1;
+					}
+			
+				}
+			}
+
+			if( completion_fd == -1 || result_fd == -1 )
+			{
+				debug( 0, _(L"Unspecified file descriptors") );
+				exit( 1 );
+			}
+			
+
+			if( (completion_file = fdopen( completion_fd, "r" ) ) )
+			{
+				read_array( completion_file, comp );
+				fclose( completion_file );
+			}
+			else
+			{
+				debug( 0, _(L"Could not read completions") );
+				wperror( L"fdopen" );
+				exit( 1 );
+			}
+
+			if( !prefix )
+			{
+				prefix = wcsdup( L"" );
+			}
+			
+			
+		}
+		else
+		{
+			/*
+			  Second or first mode. These suck, but we need to support
+			  them for backwards compatibility. At least for some
+			  time.
+			*/
+			
+			if( argc < 3 )
+			{
+				print_help( argv[0], 1 );
+				exit( 0 );
+			}
+			else
+			{
+				mangle_descriptors = 1;
+			
+			prefix = str2wcs( argv[2] );
+			is_quoted = strcmp( "1", argv[1] )==0;
+			
+			if( argc > 3 )
+			{
+				/*
+				  First mode
+				*/
+				for( i=3; i<argc; i++ )
+				{
+					wchar_t *wcs = str2wcs( argv[i] );
+					if( wcs )
+					{
+						al_push( comp, wcs );
+					}
+				}
+			}
+			else
+			{
+				/*
+				  Second mode
+				*/
+				read_array( stdin, comp );
+			}
+			}
+			
+		}
 		
 //		debug( 3, L"prefix is '%ls'", prefix );
 		
-	    if( argc > 3 )
-		{
-		    for( i=3; i<argc; i++ )
-			{
-			    wchar_t *wcs = str2wcs( argv[i] );
-			    if( wcs )
-				{
-				    al_push( comp, wcs );
-				}
-			}
-		}
-	    else
-		{
-		    read_array( stdin, comp );
-		}
-
-	    init();
+	    init( mangle_descriptors, result_fd );
 
 	    mangle_descriptions( comp );
 
@@ -1228,8 +1420,9 @@ int main( int argc, char **argv )
 			writembs(exit_ca_mode);
 			pager_flush();
 		}
-	}
+		destroy();
+
+	halloc_util_destroy();
 	
-	destroy();
 }
 

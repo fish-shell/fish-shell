@@ -133,7 +133,9 @@ typedef struct process
 	/** process ID */
 	pid_t pid;
 	/** File descriptor that pipe output should bind to */
-	int pipe_fd;
+	int pipe_write_fd;
+	/** File descriptor that the _next_ process pipe input should bind to */
+	int pipe_read_fd;
 	/** true if process has completed */
 	volatile int completed;
 	/** true if process has stopped */

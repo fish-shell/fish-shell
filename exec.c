@@ -354,15 +354,19 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 			case IO_BUFFER:
 			case IO_PIPE:
 			{
-				int fd_to_dup = io->fd;
-
-				/*
-				  This call will sometimes fail, but that is ok,
-				  this is just a precausion.
-				*/
-				close(io->fd);
+				int write_pipe;
 				
-				if( dup2( io->param1.pipe_fd[fd_to_dup?1:0], io->fd ) == -1 )
+				write_pipe = !io->is_input;
+/*
+				debug( 0,
+					   L"%ls %ls on fd %d (%d %d)", 
+					   write_pipe?L"write":L"read", 
+					   (io->io_mode == IO_BUFFER)?L"buffer":L"pipe",
+					   io->fd,
+					   io->param1.pipe_fd[0],
+					   io->param1.pipe_fd[1]);
+*/
+				if( dup2( io->param1.pipe_fd[write_pipe], io->fd ) != io->fd )
 				{
 					debug( 1, PIPE_ERROR );
 					wperror( L"dup2" );
@@ -377,7 +381,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 
 				}
 
-				if( fd_to_dup != 0 )
+				if( write_pipe ) 
 				{
 					exec_close( io->param1.pipe_fd[0]);
 					exec_close( io->param1.pipe_fd[1]);
@@ -386,7 +390,6 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 				{
 					exec_close( io->param1.pipe_fd[0] );
 				}
-				
 				break;
 			}
 			
@@ -801,24 +804,28 @@ void exec( job_t *j )
 			j->io=io_duplicate( j, block_io);				
 	}
 
-	io_data_t *input_redirect = io_get( j->io, 0 );
 	
-	if( input_redirect && 
-		(input_redirect->io_mode == IO_BUFFER) && 
-		input_redirect->is_input )
-	{
-		/*
-		  Input redirection - create a new gobetween process to take
-		  care of buffering
-		*/
-		
-		process_t *fake = halloc( j, sizeof(process_t) );
-		fake->type = INTERNAL_BUFFER;
-		fake->pipe_fd = 1;
-		fake->next = j->first_process;
-		j->first_process = fake;
-	}
+	io_data_t *input_redirect;
 
+	for( input_redirect = j->io; input_redirect; input_redirect = input_redirect->next )
+	{
+		if( (input_redirect->io_mode == IO_BUFFER) && 
+			input_redirect->is_input )
+		{
+			/*
+			  Input redirection - create a new gobetween process to take
+			  care of buffering
+			*/
+			process_t *fake = halloc( j, sizeof(process_t) );
+			fake->type = INTERNAL_BUFFER;
+			fake->pipe_write_fd = 1;
+			j->first_process->pipe_read_fd = input_redirect->fd;
+			fake->next = j->first_process;
+			j->first_process = fake;
+			break;
+		}
+	}
+	
 	if( j->first_process->type==INTERNAL_EXEC )
 	{
 		/*
@@ -851,7 +858,10 @@ void exec( job_t *j )
 	pipe_read.io_mode=IO_PIPE;
 	pipe_read.param1.pipe_fd[0] = -1;
 	pipe_read.param1.pipe_fd[1] = -1;
+	pipe_read.is_input = 1;
+
 	pipe_write.io_mode=IO_PIPE;
+	pipe_write.is_input = 0;
 	pipe_read.next=0;
 	pipe_write.next=0;
 	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=-1;
@@ -913,7 +923,10 @@ void exec( job_t *j )
 		mypipe[1]=-1;
 		skip_fork=0;
 		
-		pipe_write.fd = p->pipe_fd;
+		pipe_write.fd = p->pipe_write_fd;
+		pipe_read.fd = p->pipe_read_fd;
+//		debug( 0, L"Pipe created from fd %d to fd %d", pipe_write.fd, pipe_read.fd );
+		
 
 		/* 
 		   This call is used so the global environment variable array
@@ -1242,7 +1255,8 @@ void exec( job_t *j )
 				if( pid == 0 )
 				{
 					/*
-					  This is the child process. Write out the contents of the pipeline.
+					  This is the child process. Write out the
+					  contents of the pipeline.
 					*/
 					p->pid = getpid();
 					setup_child_process( j, p );

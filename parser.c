@@ -1373,7 +1373,7 @@ static void parse_job_argument_list( process_t *p,
 						   EXEC_ERR_MSG );
 					return;
 				}
-				p->pipe_fd = wcstol( tok_last( tok ), 0, 10 );
+				p->pipe_write_fd = wcstol( tok_last( tok ), 0, 10 );
 				if( !p->argv )
 					halloc_register( j, p->argv = list_to_char_arr( args ) );
 				p->next = halloc( j, sizeof( process_t ) );

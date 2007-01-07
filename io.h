@@ -41,7 +41,6 @@ typedef struct io_data
 		buffer_t *out_buffer;		
 		/** Whether to close old_fd for IO_FD */
 		int close_old;
-		
 	} param2
 	;
 

@@ -3137,7 +3137,7 @@ int builtin_exists( wchar_t *cmd )
 	if( wcscmp( cmd, L"count" )==0)
 		return 0;
 
-	return (hash_get(&builtin, cmd) != 0 );
+	return !!hash_get(&builtin, cmd);
 }
 
 /**

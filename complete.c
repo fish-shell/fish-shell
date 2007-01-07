@@ -1228,14 +1228,14 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 				continue;
 
 			key = el+wcslen(cmd_start);
-			key_end = wcschr( el, L'\t' );
+			key_end = wcschr( key, L'\t' );
 
 			if( !key_end )
 				continue;
 		
 			*key_end = 0;
 			val_begin = key_end+1;
-		
+
 			/*
 			  And once again I make sure the first character is uppercased
 			  because I like it that way, and I get to decide these

@@ -203,7 +203,7 @@ void free_fd( io_data_t *io, int fd )
 	if( !io )
 		return;
 	
-	if( io->io_mode == IO_PIPE )
+	if( ( io->io_mode == IO_PIPE ) || ( io->io_mode == IO_BUFFER ) )
 	{
 		int i;
 		for( i=0; i<2; i++ )
@@ -214,7 +214,7 @@ void free_fd( io_data_t *io, int fd )
 				{
 					if( (io->param1.pipe_fd[i] = dup(fd)) == -1)
 					{
-						if( errno != EINTR )
+						 if( errno != EINTR )
 						{
 							debug( 1, 
 								   FD_ERROR,
@@ -224,11 +224,14 @@ void free_fd( io_data_t *io, int fd )
 						}
 					}
 					else
+					{
 						break;
+					}
 				}
 			}
 		}
 	}
+	free_fd( io->next, fd );
 }
 
 /**

@@ -1418,6 +1418,8 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Auto-newlines
 - A fault injector could be written to increase robustness and testing of error recovery paths
 - The parser/validator could be more clever in order to make things like writing 'function --help' work as expected
+- Some event handler functions make much more sense as oneshots - maybe they should be automatically deleted after firing?
+
 
 \subsection bugs Known bugs and issues
 
@@ -1425,7 +1427,7 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
 - The completion pager doesn't work if stderr is redirected.
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
-- tab completion of process expansion doesn't properly complete commands with stripped paths.
+
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

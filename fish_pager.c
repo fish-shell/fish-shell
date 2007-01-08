@@ -1175,7 +1175,10 @@ static void read_array( FILE* file, array_list_t *comp )
 static int get_fd( const char *str )
 {
 	char *end;	
-	long fd = strtol( str, &end, 10 );
+	long fd;
+	
+	errno = 0;
+	fd = strtol( str, &end, 10 );
 	if( fd < 0 || *end || errno )
 	{
 		debug( 0, ERR_NOT_FD, program_name, optarg );

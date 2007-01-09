@@ -60,7 +60,7 @@ enum
 	\param flags flags for the search. Can be any combination of ACCEPT_INCOMPLETE and EXECUTABLES_ONLY
 	\param out The list in which to put the output
 
-	\return 1 if matches where found, 0 otherwise.
+	\return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
    
 */
 int wildcard_expand( const wchar_t *wc, 

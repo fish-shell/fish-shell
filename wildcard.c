@@ -447,6 +447,11 @@ int wildcard_expand( const wchar_t *wc,
 	
 	//	debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
 
+	if( reader_interrupted() )
+	{
+		return -1;
+	}
+	
 	if( !wc || !base_dir || !out)
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
@@ -700,6 +705,7 @@ int wildcard_expand( const wchar_t *wc,
 				struct stat buf;			
 				char *dir_str;
 				int stat_res;
+				int new_res;
 
 				wcscpy(&new_dir[base_len], name );
 				dir_str = wcs2str( new_dir );
@@ -735,10 +741,18 @@ int wildcard_expand( const wchar_t *wc,
 									}
 								}
 								
-								res |= wildcard_expand( new_wc,
-														new_dir, 
-														flags, 
-														out );
+								new_res = wildcard_expand( new_wc,
+														   new_dir, 
+														   flags, 
+														   out );
+
+								if( new_res == -1 )
+								{
+									res = -1;
+									break;
+								}								
+								res |= new_res;
+								
 							}
 							
 							/*
@@ -746,10 +760,17 @@ int wildcard_expand( const wchar_t *wc,
 							*/
 							if( partial_match )
 							{
-								res |= wildcard_expand( wcschr( wc, ANY_STRING_RECURSIVE ), 
+								new_res = wildcard_expand( wcschr( wc, ANY_STRING_RECURSIVE ), 
 														new_dir,
 														flags | WILDCARD_RECURSIVE, 
 														out );
+								if( new_res == -1 )
+								{
+									res = -1;
+									break;
+								}								
+								res |= new_res;
+								
 							}
 						}								
 					}

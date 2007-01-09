@@ -1747,6 +1747,15 @@ int expand_string( void *context,
 						al_truncate( out, 0 );
 						break;
 					}
+
+					case -1:
+					{
+						al_foreach( out, &free );
+						al_destroy( in );
+						al_destroy( out );
+						return EXPAND_ERROR;
+					}
+					
 				}
 			}
 			else

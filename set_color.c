@@ -102,10 +102,11 @@ int translate_color( char *str )
 
 	if( !str )
 		return -1;
-	
 
+	errno = 0;
 	color = strtol( str, &endptr, 10 );
-	if(endptr<=str)
+
+	if( *endptr || color<0 || errno )
 	{
 		int i;
 		color = -1;

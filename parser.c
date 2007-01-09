@@ -113,6 +113,11 @@ The fish parser. Contains functions for parsing and evaluating code.
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")
 
 /**
+   Error message when encountering an illegal file descriptor
+*/
+#define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor '%ls'")
+
+/**
    Error message for wildcards with no matches
 */
 #define WILDCARD_ERR_MSG _( L"Warning: No match for wildcard '%ls'. The command will not be executed.")
@@ -1366,6 +1371,8 @@ static void parse_job_argument_list( process_t *p,
 		{
 			case TOK_PIPE:
 			{
+				wchar_t *end;
+				
 				if( (p->type == INTERNAL_EXEC) )
 				{
 					error( SYNTAX_ERROR,
@@ -1373,14 +1380,22 @@ static void parse_job_argument_list( process_t *p,
 						   EXEC_ERR_MSG );
 					return;
 				}
-				p->pipe_write_fd = wcstol( tok_last( tok ), 0, 10 );
+
+				errno = 0;
+				p->pipe_write_fd = wcstol( tok_last( tok ), &end, 10 );
+				if( p->pipe_write_fd < 0 || errno || *end )
+				{
+					error( SYNTAX_ERROR,
+						   tok_get_pos( tok ),
+						   ILLEGAL_FD_ERR_MSG,
+						   tok_last( tok ) );
+					return;
+				}
+				
 				if( !p->argv )
 					halloc_register( j, p->argv = list_to_char_arr( args ) );
 				p->next = halloc( j, sizeof( process_t ) );
-				if( p->next == 0 )
-				{
-					DIE_MEM();
-				}
+
 				tok_next( tok );
 				
 				/*
@@ -1505,7 +1520,8 @@ static void parse_job_argument_list( process_t *p,
 				int type = tok_last_type( tok );
 				io_data_t *new_io;
 				wchar_t *target = 0;
-
+				wchar_t *end;
+				
 				/*
 				  Don't check redirections in skipped part
 
@@ -1530,93 +1546,104 @@ static void parse_job_argument_list( process_t *p,
 				if( !new_io )
 					DIE_MEM();
 
+				errno = 0;
 				new_io->fd = wcstol( tok_last( tok ),
-									 0,
+									 &end,
 									 10 );
-				tok_next( tok );
-
-				switch( tok_last_type( tok ) )
+				if( new_io->fd < 0 || errno || *end )
 				{
-					case TOK_STRING:
-					{
-						target = (wchar_t *)expand_one( j, wcsdup( tok_last( tok ) ), 0);
-
-						if( target == 0 && error_code == 0 )
-						{
-							error( SYNTAX_ERROR,
-								   tok_get_pos( tok ),
-								   REDIRECT_TOKEN_ERR_MSG,
-								   tok_last( tok ) );
-
-						}
-						break;
-					}
-
-					default:
-						error( SYNTAX_ERROR,
-							   tok_get_pos( tok ),
-							   REDIRECT_TOKEN_ERR_MSG,
-							   tok_get_desc( tok_last_type(tok)) );
-				}
-
-				if( target == 0 || wcslen( target )==0 )
-				{
-					if( error_code == 0 )
-						error( SYNTAX_ERROR,
-							   tok_get_pos( tok ),
-							   _(L"Invalid IO redirection") );
-					tok_next(tok);
+					error( SYNTAX_ERROR,
+						   tok_get_pos( tok ),
+						   ILLEGAL_FD_ERR_MSG,
+						   tok_last( tok ) );
 				}
 				else
 				{
+					
+					tok_next( tok );
 
-
-					switch( type )
+					switch( tok_last_type( tok ) )
 					{
-						case TOK_REDIRECT_APPEND:
-							new_io->io_mode = IO_FILE;
-							new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
-							new_io->param1.filename = target;
-							break;
-
-						case TOK_REDIRECT_OUT:
-							new_io->io_mode = IO_FILE;
-							new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
-							new_io->param1.filename = target;
-							break;
-
-						case TOK_REDIRECT_IN:
-							new_io->io_mode = IO_FILE;
-							new_io->param2.flags = O_RDONLY;
-							new_io->param1.filename = target;
-							break;
-
-						case TOK_REDIRECT_FD:
+						case TOK_STRING:
 						{
-							if( wcscmp( target, L"-" ) == 0 )
-							{
-								new_io->io_mode = IO_CLOSE;
-							}
-							else
-							{
-								new_io->io_mode = IO_FD;
-								new_io->param1.old_fd = wcstol( target,
-																0,
-																10 );
-								if( ( new_io->param1.old_fd < 0 ) ||
-									( new_io->param1.old_fd > 10 ) )
-								{
-									error( SYNTAX_ERROR,
-										   tok_get_pos( tok ),
-										   _(L"Requested redirection to something that is not a file descriptor %ls"),
-										   target );
+							target = (wchar_t *)expand_one( j, wcsdup( tok_last( tok ) ), 0);
 
-									tok_next(tok);
-								}
+							if( target == 0 && error_code == 0 )
+							{
+								error( SYNTAX_ERROR,
+									   tok_get_pos( tok ),
+									   REDIRECT_TOKEN_ERR_MSG,
+									   tok_last( tok ) );
+
 							}
 							break;
 						}
 
+						default:
+							error( SYNTAX_ERROR,
+								   tok_get_pos( tok ),
+								   REDIRECT_TOKEN_ERR_MSG,
+								   tok_get_desc( tok_last_type(tok)) );
+					}
+
+					if( target == 0 || wcslen( target )==0 )
+					{
+						if( error_code == 0 )
+							error( SYNTAX_ERROR,
+								   tok_get_pos( tok ),
+								   _(L"Invalid IO redirection") );
+						tok_next(tok);
+					}
+					else
+					{
+
+						switch( type )
+						{
+							case TOK_REDIRECT_APPEND:
+								new_io->io_mode = IO_FILE;
+								new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
+								new_io->param1.filename = target;
+								break;
+
+							case TOK_REDIRECT_OUT:
+								new_io->io_mode = IO_FILE;
+								new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
+								new_io->param1.filename = target;
+								break;
+
+							case TOK_REDIRECT_IN:
+								new_io->io_mode = IO_FILE;
+								new_io->param2.flags = O_RDONLY;
+								new_io->param1.filename = target;
+								break;
+
+							case TOK_REDIRECT_FD:
+							{
+								if( wcscmp( target, L"-" ) == 0 )
+								{
+									new_io->io_mode = IO_CLOSE;
+								}
+								else
+								{
+									new_io->io_mode = IO_FD;
+									new_io->param1.old_fd = wcstol( target,
+																	0,
+																	10 );
+									if( ( new_io->param1.old_fd < 0 ) ||
+										( new_io->param1.old_fd > 10 ) )
+									{
+										error( SYNTAX_ERROR,
+											   tok_get_pos( tok ),
+											   _(L"Requested redirection to something that is not a file descriptor %ls"),
+											   target );
+
+										tok_next(tok);
+									}
+								}
+								break;
+							}
+						}
+					
 					}
 				}
 
@@ -1677,14 +1704,14 @@ static void parse_job_argument_list( process_t *p,
 }
 
 /*
-static void print_block_stack( block_t *b )
-{
-	if( !b )
-		return;
-	print_block_stack( b->outer );
+  static void print_block_stack( block_t *b )
+  {
+  if( !b )
+  return;
+  print_block_stack( b->outer );
 	
-	debug( 0, L"Block type %ls, skip: %d", parser_get_block_desc( b->type ), b->skip );	
-}
+  debug( 0, L"Block type %ls, skip: %d", parser_get_block_desc( b->type ), b->skip );	
+  }
 */
 	
 /**

@@ -130,7 +130,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error when using return builtin outside of function definition
 */
-#define INVALID_RETURN_ERR_MSG _( L"'return' command command outside of function definition" )
+#define INVALID_RETURN_ERR_MSG _( L"'return' builtin command outside of function definition" )
 
 /**
    Error when using else builtin outside of if block

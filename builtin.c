@@ -219,19 +219,19 @@ wchar_t *builtin_help_get( const wchar_t *name )
 	sb_printf( &cmd, L"__fish_print_help %ls", name_esc );
 	
 
-	exec_subshell( (wchar_t *)cmd.buff, &lst );
-	
-	for( i=0; i<al_get_count( &lst); i++ )
-	{
-		sb_append( out, (wchar_t *)al_get( &lst, i ) );
-		sb_append( out, L"\n" );
+	if( exec_subshell( (wchar_t *)cmd.buff, &lst ) >= 0 )
+	{	
+		for( i=0; i<al_get_count( &lst); i++ )
+		{
+			sb_append( out, (wchar_t *)al_get( &lst, i ) );
+			sb_append( out, L"\n" );
+		}
 	}
-	
+		
 	al_destroy( &lst );
 	sb_destroy( &cmd );
 	free( name_esc );
 	
-
 	return (wchar_t *)out->buff;
 	
 }

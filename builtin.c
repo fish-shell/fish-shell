@@ -2478,12 +2478,36 @@ static int builtin_bg( wchar_t **argv )
 	}
 	else
 	{
-		for( argv++; !res && *argv != 0; argv++ )
+		wchar_t *end;
+		int i;
+		int pid;
+		int err = 0;
+		
+		for( i=1; argv[i]; i++ )
 		{
-			int pid = wcstol( *argv, 0, 10 );
-			res |= send_to_bg( job_get_from_pid( pid ), *argv);
+			errno=0;
+			pid = (int)wcstol( argv[i], &end, 10 );
+			if( errno || pid < 0 || *end || !job_get_from_pid( pid ) )
+			{
+				sb_printf( sb_err,
+						   _( L"%ls: '%ls' is not a job\n" ),
+						   argv[0],
+						   argv[i] );
+				err = 1;
+				break;
+			}		
+		}
+
+		if( !err )
+		{
+			for( i=1; !res && argv[i]; i++ )
+			{
+				pid = (int)wcstol( argv[i], 0, 10 );
+				res |= send_to_bg( job_get_from_pid( pid ), *argv);
+			}
 		}
 	}
+	
 	return res;
 }
 

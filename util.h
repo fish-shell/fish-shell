@@ -160,7 +160,20 @@ buffer_t;
 */
 typedef buffer_t string_buffer_t;
 
-	
+/**
+   Set the out of memory handler callback function. If a memory
+   allocation fails, this function will be called. 
+*/	
+void (*util_set_oom_handler( void (*h)(void *) ))(void *);
+
+/**
+   This is a possible out of memory handler that will kill the current
+   process in response to any out of memory event, while also printing
+   an error message describing what allocation failed.
+
+   This is the default out of memory handler.
+*/
+void util_die_on_oom( void * );
 
 /**
    Returns the larger of two ints
@@ -648,8 +661,10 @@ void b_destroy( buffer_t *b );
 
 /**
    Add data of the specified length to the specified buffer_t
+
+   \return 0 on error, non-zero otherwise
 */
-void b_append( buffer_t *b, const void *d, ssize_t len );
+int b_append( buffer_t *b, const void *d, ssize_t len );
 
 /**
    Get the current time in microseconds since Jan 1, 1970

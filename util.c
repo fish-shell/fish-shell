@@ -50,6 +50,36 @@
 */
 #define SB_MAX_SIZE 32767
 
+#define oom_handler( p )						\
+	{											\
+		if( oom_handler_internal == util_die_on_oom )	\
+		{												\
+			DIE_MEM();									\
+		}												\
+		oom_handler_internal( p );						\
+	}													\
+		
+
+
+void util_die_on_oom( void * p);
+
+void (*oom_handler_internal)(void *) = &util_die_on_oom;
+
+void (*util_set_oom_handler( void (*h)(void *) ))(void *)
+{
+	void (*old)(void *) = oom_handler_internal;
+	
+	if( h )
+		oom_handler_internal = h;
+	else
+		oom_handler_internal = &util_die_on_oom;
+
+	return old;
+}
+
+void util_die_on_oom( void * p)
+{
+}
 
 int mini( int a,
 		  int b )
@@ -71,6 +101,11 @@ int maxi( int a,
 void q_init( dyn_queue_t *q )
 {
 	q->start = (void **)malloc( sizeof(void*)*1 );
+	if( !q->start )
+	{
+		oom_handler( q );
+		return;
+	}
 	q->stop = &q->start[1];
 	q->put_pos = q->get_pos = q->start;
 }
@@ -112,9 +147,10 @@ static int q_realloc( dyn_queue_t *q )
 	new_size = 2*(q->stop-q->start);
 	
 	q->start=(void**)realloc( q->start, sizeof(void*)*new_size );
-	if( q->start == 0 )
+	if( !q->start )
 	{
 		q->start = old_start;
+		oom_handler( q );
 		return 0;
 	}
 	
@@ -179,6 +215,12 @@ void hash_init2( hash_table_t *h,
 	
 
 	h->arr = malloc( sizeof(hash_struct_t)*sz );
+	if( !h->arr )
+	{
+		oom_handler( h );
+		return;
+	}
+	
 	h->size = sz;
 	for( i=0; i< sz; i++ )
 		h->arr[i].key = 0;
@@ -249,6 +291,7 @@ static int hash_realloc( hash_table_t *h,
 	if( h->arr == 0 )
 	{
 		h->arr = old_arr;
+		oom_handler( h );
 		return 0;
 	}
 
@@ -668,6 +711,7 @@ int pq_put( priority_queue_t *q,
 		q->arr = (void **)realloc( q->arr, sizeof(void*)*q->size );
 		if( q->arr == 0 )
 		{
+			oom_handler( q );
 			q->arr = old_arr;
 			q->size = old_size;
 			return 0;
@@ -754,8 +798,13 @@ void pq_destroy(  priority_queue_t *q )
 array_list_t *al_new()
 {
 	array_list_t *res = malloc( sizeof( array_list_t ) );
+
 	if( !res )
-		DIE_MEM();
+	{
+		oom_handler( 0 );
+		return 0;
+	}
+
 	al_init( res );
 	return res;
 }
@@ -778,7 +827,10 @@ static int al_push_generic( array_list_t *l, anything_t o )
 		int new_size = l->pos == 0 ? MIN_SIZE : 2 * l->pos;
 		void *tmp = realloc( l->arr, sizeof( anything_t )*new_size );
 		if( tmp == 0 )
+		{
+			oom_handler( l );
 			return 0;
+		}
 		l->arr = tmp;
 		l->size = new_size;		
 	}
@@ -846,7 +898,8 @@ int al_insert( array_list_t *a, int pos, int count )
 		}
 		else
 		{
-			DIE_MEM();
+			oom_handler( a );
+			return 0;
 		}
 					
 	}
@@ -968,6 +1021,11 @@ static anything_t al_pop_generic( array_list_t *l )
 		{
 			l->arr = old_arr;
 			l->size = old_size;
+			/*
+			  We are _shrinking_ the list here, so if the allocation
+			  fails (it never should, but hey) then we can keep using
+			  the old list - no need to flag any error...
+			*/
 		}
 	}
 	return e;
@@ -1109,8 +1167,13 @@ void sb_init( string_buffer_t * b)
 string_buffer_t *sb_new()
 {
 	string_buffer_t *res = malloc( sizeof( string_buffer_t ) );
+
 	if( !res )
-		DIE_MEM();
+	{
+		oom_handler( 0 );
+		return 0;
+	}
+	
 	sb_init( res );
 	return res;
 }
@@ -1217,9 +1280,11 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 		buffer->length = MIN_SIZE;
 		buffer->buff = malloc( MIN_SIZE );
 		if( !buffer->buff )
-			DIE_MEM();
-	}
-	
+		{
+			oom_handler( buffer );
+			return -1;
+		}
+	}	
 
 	while( 1 )
 	{
@@ -1256,8 +1321,13 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 			break;
 
 		buffer->buff = realloc( buffer->buff, 2*buffer->length );
+
 		if( !buffer->buff )
-			DIE_MEM();
+		{
+			oom_handler( buffer );
+			return -1;
+		}
+		
 		buffer->length *= 2;				
 	}
 	return res;	
@@ -1298,27 +1368,24 @@ void b_destroy( buffer_t *b )
 }
 
 
-void b_append( buffer_t *b, const void *d, ssize_t len )
+int b_append( buffer_t *b, const void *d, ssize_t len )
 {
 	if( len<=0 )
-		return;
+		return 0;
 
 	if( !b )
 	{
-		debug( 2, L"Copy to null buffer" );
-		return;
+		return 0;
 	}
 
 	if( !d )
 	{
-		debug( 2, L"Copy from null pointer" );
-		return;
+		return 0;
 	}
 
 	if( len < 0 )
 	{
-		debug( 2, L"Negative number of characters to be copied" );
-		return;
+		return 0;
 	}
 
 
@@ -1330,8 +1397,8 @@ void b_append( buffer_t *b, const void *d, ssize_t len )
 		void *d = realloc( b->buff, l );
 		if( !d )
 		{
-			DIE_MEM();
-			
+			oom_handler( b );
+			return -1;			
 		}
 		b->buff=d;
 		b->length = l;
@@ -1342,6 +1409,8 @@ void b_append( buffer_t *b, const void *d, ssize_t len )
 
 //	fwprintf( stderr, L"Copy %s, new value %s\n", d, b->buff );
 	b->used+=len;
+
+	return 1;
 }
 
 long long get_time()

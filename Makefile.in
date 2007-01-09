@@ -434,7 +434,7 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 
-messages.pot: *.c *.h etc/*.in share/fish share/completions/*.fish share/functions/*.fish seq
+messages.pot: *.c *.h etc/*.in share/*.in share/completions/*.fish share/functions/*.fish seq
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ *.c *.h -o messages.pot; \
 		if xgettext -j -k_ -kN_ -LShell etc/*.in share/*.in share/completions/*.fish share/functions/*.fish seq -o messages.pot; then true; else \

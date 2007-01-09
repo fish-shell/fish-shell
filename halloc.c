@@ -179,12 +179,16 @@ void *halloc( void *context, size_t size )
 				alloc_spill += parent->scratch_free;
 #endif
 				res = calloc( 1, size + HALLOC_BLOCK_SIZE );
+				if( !res )
+					DIE_MEM();
 				parent->scratch = (char *)res + size;
 				parent->scratch_free = HALLOC_BLOCK_SIZE;
 			}
 			else
 			{
 				res = calloc( 1, size );
+				if( !res )
+					DIE_MEM();
 			}
 			al_push( &parent->children, &late_free );
 			al_push( &parent->children, res );
@@ -198,7 +202,7 @@ void *halloc( void *context, size_t size )
 		me = (halloc_t *)calloc( 1, align_sz(sizeof(halloc_t)) + align_sz(size) + HALLOC_BLOCK_SIZE );
 		
 		if( !me )
-			return 0;
+			DIE_MEM();
 #ifdef HALLOC_DEBUG
 		parent_count++;
 #endif		

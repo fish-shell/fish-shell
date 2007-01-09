@@ -2303,6 +2303,8 @@ static void eval_job( tokenizer *tok )
 	if( profile )
 	{
 		p=malloc( sizeof(profile_element_t));
+		if( !p )
+			DIE_MEM();
 		p->cmd=0;
 		al_push( &profile_data, p );
 		p->skipped=1;

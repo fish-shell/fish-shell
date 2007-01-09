@@ -808,6 +808,9 @@ int env_set( const wchar_t *key,
 			entry = malloc( sizeof( var_entry_t ) + 
 							sizeof(wchar_t )*(wcslen(val)+1));
 	
+			if( !entry )
+				DIE_MEM();
+
 			if( var_mode & ENV_EXPORT)
 			{
 				entry->export = 1;

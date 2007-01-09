@@ -1547,6 +1547,7 @@ void tokenize_variable_array( const wchar_t *val, array_list_t *out )
 	{
 		wchar_t *cpy = wcsdup( val );
 		wchar_t *pos, *start;
+		wchar_t *next;
 
 		if( !cpy )
 		{
@@ -1557,12 +1558,19 @@ void tokenize_variable_array( const wchar_t *val, array_list_t *out )
 		{
 			if( *pos == ARRAY_SEP )
 			{
+				
 				*pos=0;
-				al_push( out, start==cpy?cpy:wcsdup(start) );
+				next = start==cpy?cpy:wcsdup(start);
+				if( !next )
+					DIE_MEM();
+				al_push( out, next );
 				start=pos+1;
 			}
 		}
-		al_push( out, start==cpy?cpy:wcsdup(start) );
+		next = start==cpy?cpy:wcsdup(start);
+		if( !next )
+			DIE_MEM();
+		al_push( out, next );
 	}
 }
 

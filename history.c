@@ -345,9 +345,13 @@ static item_t *item_get( history_mode_t *m, void *d )
 					
 					if( *time_string )
 					{
-						time_t tm = (time_t)wcstol( time_string, 0, 10 );
-					
-						if( tm && !errno )
+						time_t tm;
+						wchar_t *end;
+						
+						errno = 0;
+						tm = (time_t)wcstol( time_string, &end, 10 );
+				
+						if( tm && !errno && !*end )
 						{
 							narrow_item.timestamp = tm;
 						}

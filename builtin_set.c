@@ -232,9 +232,14 @@ static int parse_index( array_list_t *indexes,
 	while (*src != L']') 
 	{
 		wchar_t *end;
-		long l_ind = wcstol(src, &end, 10);
 		
-		if (end == src) 
+		long l_ind;
+
+		errno = 0;
+		
+		l_ind = wcstol(src, &end, 10);
+		
+		if( end==src || errno ) 
 		{
 			sb_printf(sb_err, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
 			return 0;

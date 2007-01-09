@@ -387,8 +387,12 @@ static int find_process( const wchar_t *proc,
 		else
 		{
 
-			int jid = wcstol( proc, 0, 10 );
-			if( jid > 0 )
+			int jid;
+			wchar_t *end;
+			
+			errno = 0;
+			jid = wcstol( proc, &end, 10 );
+			if( jid > 0 && !errno && !*end )
 			{
 				j = job_get( jid );
 				if( (j != 0) && (j->command != 0 ) )

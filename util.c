@@ -1112,9 +1112,23 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 	if( iswdigit( *a ) && iswdigit( *b ) )
 	{
 		wchar_t *aend, *bend;
-		long al = wcstol( a, &aend, 10 );
-		long bl = wcstol( b, &bend, 10 );
-		int diff = al - bl;
+		long al;
+		long bl;
+		int diff;
+
+		errno = 0;		
+		al = wcstol( a, &aend, 10 );
+		bl = wcstol( b, &bend, 10 );
+
+		if( errno )
+		{
+			/*
+			  Huuuuuuuuge numbers - fall back to regular string comparison
+			*/
+			return wcscmp( a, b );
+		}
+		
+		diff = al - bl;
 		if( diff )
 			return diff>0?2:-2;
 

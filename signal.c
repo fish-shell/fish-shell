@@ -385,7 +385,7 @@ int wcs2sig( const wchar_t *str )
 	}
 	errno=0;
 	res = wcstol( str, &end, 10 );
-	if( !errno && end && !*end )
+	if( !errno && res>=0 && !*end )
 		return res;
 	
 	return -1;	

@@ -58,7 +58,7 @@ These functions are used for storing and retrieving tab-completion data, as well
 /**
    Description for ~USER completion
 */
-#define COMPLETE_USER_DESC _( L"User home" )
+#define COMPLETE_USER_DESC _( L"%ls/%lcHome for %s" )
 
 /**
    Description for short variables. The value is concatenated to this description
@@ -2033,16 +2033,16 @@ static int try_complete_user( const wchar_t *cmd,
 					{
 						if( wcsncmp( user_name, pw_name, name_len )==0 )
 						{
-							wchar_t *blarg = wcsdupcat2( &pw_name[name_len],
-														 L"/",
-														 COMPLETE_SEP_STR,
-														 COMPLETE_USER_DESC,
-														 (void *)0 );
-							if( blarg != 0 )
-							{
-								al_push( comp, blarg );
-								res=1;
-							}
+							string_buffer_t sb;
+							sb_init( &sb );
+							sb_printf( &sb,
+							           COMPLETE_USER_DESC,
+							           &pw_name[name_len],
+							           COMPLETE_SEP,
+							           pw->pw_gecos );
+							
+							al_push( comp, (wchar_t *)sb.buff );
+							res=1;
 						}
 						free( pw_name );
 					}
@@ -2085,12 +2085,7 @@ void complete( const wchar_t *cmd,
 	   name, we do that and return. No need for any other competions.
 	*/
 
-	if( try_complete_variable( cmd, comp ))
-	{
-		done=1;
-
-	}
-	else if( try_complete_user( cmd, comp ))
+	if( try_complete_variable( cmd, comp ) ||  try_complete_user( cmd, comp ))
 	{
 		done=1;
 	}
@@ -2128,15 +2123,19 @@ void complete( const wchar_t *cmd,
 
 		while( tok_has_next( &tok) && !end_loop )
 		{
+
 			switch( tok_last_type( &tok ) )
 			{
+
 				case TOK_STRING:
 				{
+
 					wchar_t *ncmd = tok_last( &tok );
 					int is_ddash = wcscmp( ncmd, L"--" ) == 0;
 					
 					if( !had_cmd )
 					{
+
 						if( parser_is_subcommand( ncmd ) )
 						{
 							if( wcscmp( ncmd, L"builtin" )==0)
@@ -2156,13 +2155,16 @@ void complete( const wchar_t *cmd,
 
 						
 						if( !is_ddash ||
-							( (use_command && use_function && use_builtin ) ) )
+						    ( (use_command && use_function && use_builtin ) ) )
 						{
+							int token_end;
 							
 							free( current_command );
-							current_command = wcsdup( tok_last( &tok ) );
-
-							on_command = (pos <= tok_get_pos( &tok) + wcslen( tok_last( &tok ) ) );
+							current_command = wcsdup( ncmd );
+							
+							token_end = tok_get_pos( &tok ) + wcslen( ncmd );
+							
+							on_command = (pos <= token_end );
 							had_cmd=1;
 						}
 
@@ -2181,21 +2183,28 @@ void complete( const wchar_t *cmd,
 				case TOK_END:
 				case TOK_PIPE:
 				case TOK_BACKGROUND:
+				{
 					had_cmd=0;
 					had_ddash = 0;
 					use_command  = 1;
 					use_function = 1;
 					use_builtin  = 1;
 					break;
-
+				}
+				
 				case TOK_ERROR:
+				{
 					end_loop=1;
 					break;
-
+				}
+				
 			}
-			if( tok_get_pos( &tok ) >= pos )
-				end_loop=1;
 
+			if( tok_get_pos( &tok ) >= pos )
+			{
+				end_loop=1;
+			}
+			
 			tok_next( &tok );
 
 		}
@@ -2217,7 +2226,7 @@ void complete( const wchar_t *cmd,
 
 		/*
 		  Check if we are using the 'command' or 'builtin' builtins
-		  _and_ we are writing a switch ionstead of a command. In that
+		  _and_ we are writing a switch instead of a command. In that
 		  case, complete using the builtins completions, not using a
 		  subcommand.
 		*/

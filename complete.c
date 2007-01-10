@@ -1652,6 +1652,7 @@ void complete_load( const wchar_t *name, int reload )
 static int complete_param( wchar_t *cmd_orig,
 						   wchar_t *popt,
 						   wchar_t *str,
+						   int use_switches,
 						   array_list_t *comp_out )
 {
 	complete_entry_t *i;
@@ -1662,7 +1663,7 @@ static int complete_param( wchar_t *cmd_orig,
 	int use_common=1, use_files=1;
 
 	void *context = halloc( 0, 0 );
-	
+		
 	parse_cmd_string( context, cmd_orig, &path, &cmd );
 
 	complete_load( cmd, 1 );
@@ -1674,76 +1675,82 @@ static int complete_param( wchar_t *cmd_orig,
 		wchar_t *match = i->cmd_type?path:cmd;
 
 		if( ( (!wildcard_match( match, i->cmd ) ) ) )
+		{
 			continue;
-
-		use_common=1;
-		if( str[0] == L'-' )
-		{
-			/* Check if we are entering a combined option and argument
-			   (like --color=auto or -I/usr/include) */
-			for( o = i->first_option; o; o=o->next )
-			{
-				wchar_t *arg;
-				if( (arg=param_match2( o, str ))!=0 && condition_test( o->condition ))
-				{
-					use_common &= ((o->result_mode & NO_COMMON )==0);
-					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( arg, o->comp, C_(o->desc), comp_out );
-				}
-
-			}
 		}
-		else if( popt[0] == L'-' )
+		
+		use_common=1;
+		if( use_switches )
 		{
-			/* Set to true if we found a matching old-style switch */
-			int old_style_match = 0;
 			
-			/*
-			  If we are using old style long options, check for them
-			  first
-			*/
-			for( o = i->first_option; o; o=o->next )
+			if( str[0] == L'-' )
 			{
-				if( o->old_mode )
-				{
-					if( param_match_old( o, popt ) && condition_test( o->condition ))
-					{
-						old_style_match = 1;
-						use_common &= ((o->result_mode & NO_COMMON )==0);
-						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( str, o->comp, C_(o->desc), comp_out );
-					}
-				}
-			}
-
-			/*
-			  No old style option matched, or we are not using old
-			  style options. We check if any short (or gnu style
-			  options do.
-			*/
-			if( !old_style_match )
-			{
+				/* Check if we are entering a combined option and argument
+				   (like --color=auto or -I/usr/include) */
 				for( o = i->first_option; o; o=o->next )
 				{
-					/*
-					  Gnu-style options with _optional_ arguments must
-					  be specified as a single token, so that it can
-					  be differed from a regular argument.
-					*/
-					if( !o->old_mode && wcslen(o->long_opt) && !(o->result_mode & NO_COMMON) )
-						continue;
-
-					if( param_match( o, popt ) && condition_test( o->condition  ))
+					wchar_t *arg;
+					if( (arg=param_match2( o, str ))!=0 && condition_test( o->condition ))
 					{
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( str, o->comp, C_(o->desc), comp_out );
+						complete_from_args( arg, o->comp, C_(o->desc), comp_out );
+					}
 
+				}
+			}
+			else if( popt[0] == L'-' )
+			{
+				/* Set to true if we found a matching old-style switch */
+				int old_style_match = 0;
+			
+				/*
+				  If we are using old style long options, check for them
+				  first
+				*/
+				for( o = i->first_option; o; o=o->next )
+				{
+					if( o->old_mode )
+					{
+						if( param_match_old( o, popt ) && condition_test( o->condition ))
+						{
+							old_style_match = 1;
+							use_common &= ((o->result_mode & NO_COMMON )==0);
+							use_files &= ((o->result_mode & NO_FILES )==0);
+							complete_from_args( str, o->comp, C_(o->desc), comp_out );
+						}
+					}
+				}
+						
+				/*
+				  No old style option matched, or we are not using old
+				  style options. We check if any short (or gnu style
+				  options do.
+				*/
+				if( !old_style_match )
+				{
+					for( o = i->first_option; o; o=o->next )
+					{
+						/*
+						  Gnu-style options with _optional_ arguments must
+						  be specified as a single token, so that it can
+						  be differed from a regular argument.
+						*/
+						if( !o->old_mode && wcslen(o->long_opt) && !(o->result_mode & NO_COMMON) )
+							continue;
+
+						if( param_match( o, popt ) && condition_test( o->condition  ))
+						{
+							use_common &= ((o->result_mode & NO_COMMON )==0);
+							use_files &= ((o->result_mode & NO_FILES )==0);
+							complete_from_args( str, o->comp, C_(o->desc), comp_out );
+
+						}
 					}
 				}
 			}
 		}
-
+		
 		if( use_common )
 		{
 
@@ -1763,8 +1770,8 @@ static int complete_param( wchar_t *cmd_orig,
 					use_files &= ((o->result_mode & NO_FILES )==0);
 					complete_from_args( str, o->comp, C_(o->desc), comp_out );
 				}
-
-				if( wcslen(str) > 0 )
+				
+				if( wcslen(str) > 0 && use_switches )
 				{
 					/*
 					  Check if the short style option matches
@@ -2062,6 +2069,7 @@ void complete( const wchar_t *cmd,
 	int use_command = 1;
 	int use_function = 1;
 	int use_builtin = 1;
+	int had_ddash = 0;
 	
 	CHECK( cmd, );
 	CHECK( comp, );
@@ -2124,9 +2132,11 @@ void complete( const wchar_t *cmd,
 			{
 				case TOK_STRING:
 				{
+					wchar_t *ncmd = tok_last( &tok );
+					int is_ddash = wcscmp( ncmd, L"--" ) == 0;
+					
 					if( !had_cmd )
 					{
-						wchar_t *ncmd = tok_last( &tok );
 						if( parser_is_subcommand( ncmd ) )
 						{
 							if( wcscmp( ncmd, L"builtin" )==0)
@@ -2144,9 +2154,8 @@ void complete( const wchar_t *cmd,
 							break;
 						}
 
-						int is_ddash = wcscmp( ncmd, L"--" ) != 0;
 						
-						if( is_ddash ||
+						if( !is_ddash ||
 							( (use_command && use_function && use_builtin ) ) )
 						{
 							
@@ -2158,6 +2167,14 @@ void complete( const wchar_t *cmd,
 						}
 
 					}
+					else
+					{
+						if( is_ddash )
+						{
+							had_ddash = 1;
+						}
+					}
+					
 					break;
 				}
 					
@@ -2165,6 +2182,7 @@ void complete( const wchar_t *cmd,
 				case TOK_PIPE:
 				case TOK_BACKGROUND:
 					had_cmd=0;
+					had_ddash = 0;
 					use_command  = 1;
 					use_function = 1;
 					use_builtin  = 1;
@@ -2263,10 +2281,10 @@ void complete( const wchar_t *cmd,
 				  expanded. This is potentially very slow.
 				*/
 
-				int do_file;
+				int do_file=0;
 				
-				do_file = complete_param( current_command, prev_token, current_token, comp );
-				
+				do_file = complete_param( current_command, prev_token, current_token, !had_ddash, comp );
+
 				/*
 				  If we have found no command specific completions at
 				  all, fall back to using file completions.

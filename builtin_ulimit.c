@@ -123,7 +123,9 @@ static int get_multiplier( int what )
 }
 
 /**
-   Return the value for the specified resource limit
+   Return the value for the specified resource limit. This function
+   does _not_ multiply the limit value by the multiplier constant used
+   by the commandline ulimit.
 */
 static rlim_t get( int resource, int hard )
 {
@@ -144,7 +146,7 @@ static void print( int resource, int hard )
 	if( l == RLIM_INFINITY )
 		sb_append( sb_out, L"unlimited\n" );
 	else
-		sb_printf( sb_out, L"%d\n", l );
+		sb_printf( sb_out, L"%d\n", l / get_multiplier( resource ) );
 	
 }
 
@@ -178,10 +180,15 @@ static void print_all( int hard )
 				   resource_arr[i].switch_char);
 		
 		if( l == RLIM_INFINITY )
+		{
 			sb_append( sb_out, L"unlimited\n" );
+		}
 		else
-			sb_printf( sb_out, L"%d\n", l );
+		{
+			sb_printf( sb_out, L"%d\n", l/get_multiplier(resource_arr[i].resource) );
+		}
 	}
+		
 }
 
 /**
@@ -202,14 +209,14 @@ static const wchar_t *get_desc( int what )
 }
 
 /**
-   Set the new value of the specified resource limit
+   Set the new value of the specified resource limit. This function
+   does _not_ multiply the limit value by the multiplier constant used
+   by the commandline ulimit.
 */
 static int set( int resource, int hard, int soft, rlim_t value )
 {
 	struct rlimit ls;
 	getrlimit( resource, &ls );
-	if( value != RLIM_INFINITY )
-		value *= get_multiplier( resource );
 	
 	if( hard )
 	{
@@ -239,22 +246,6 @@ static int set( int resource, int hard, int soft, rlim_t value )
 		return 1;
 	}	
 	return 0;	
-}
-
-/**
-   Set all resource limits
-*/
-static int set_all( int hard, int soft, rlim_t value )
-{
-	int i;
-	int res=0;
-	
-	for( i=0; resource_arr[i].desc; i++ )
-	{
-		if( set( resource_arr[i].resource, hard, soft, value ) )
-			res = 1;
-	}
-	return res;
 }
 
 /**
@@ -315,7 +306,7 @@ static int builtin_ulimit( wchar_t ** argv )
 				}
 				,
 				{
-					L"pipe-size", no_argument, 0, 'p'
+					L"stack-size", no_argument, 0, 's'
 				}
 				,
 				{
@@ -345,7 +336,7 @@ static int builtin_ulimit( wchar_t ** argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"aHScdflmnptuvh", 
+								L"aHScdflmnstuvh", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -433,23 +424,36 @@ static int builtin_ulimit( wchar_t ** argv )
 		}
 	}		
 
+	if( report_all )
+	{
+		if( argc - woptind == 0 )
+		{
+			print_all( hard );
+		}
+		else
+		{
+			sb_append2( sb_err,
+						argv[0],
+						L": Too many arguments\n",
+						(void *)0 );
+			builtin_print_help( argv[0], sb_err );
+			return 1;
+		}
+
+		return 0;
+	}
+	
 	switch( argc - woptind )
 	{
 		case 0:
+		{
 			/*
 			  Show current limit value
 			*/
-			if( report_all )
-			{
-				print_all( hard );
-			}
-			else
-			{
-				print( what, hard );
-			}
-			
+			print( what, hard );
 			break;
-			
+		}
+		
 		case 1:
 		{
 			/*
@@ -457,7 +461,7 @@ static int builtin_ulimit( wchar_t ** argv )
 			*/
 			rlim_t new_limit;
 			wchar_t *end;
-			
+
 			/*
 			  Set both hard and soft limits if nothing else was specified
 			*/
@@ -466,7 +470,6 @@ static int builtin_ulimit( wchar_t ** argv )
 				hard=soft=1;
 			}
 			
-
 			if( wcscasecmp( argv[woptind], L"unlimited" )==0)
 			{
 				new_limit = RLIM_INFINITY;
@@ -492,30 +495,22 @@ static int builtin_ulimit( wchar_t ** argv )
 					builtin_print_help( argv[0], sb_err );
 					return 1;
 				}
+				new_limit *= get_multiplier( what );
 			}
 			
-			if( report_all )
-			{
-				return set_all( hard, soft, new_limit );
-			}
-			else 
-			{
-				return set( what, hard, soft, new_limit );
-			}
-			
-			
-			break;
+			return set( what, hard, soft, new_limit );
 		}
 		
 		default:
+		{
 			sb_append2( sb_err,
 						argv[0],
 						L": Too many arguments\n",
 						(void *)0 );
 			builtin_print_help( argv[0], sb_err );
 			return 1;
-			
-			break;
+		}
+		
 	}
 	return 0;	
 }

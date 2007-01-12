@@ -389,10 +389,10 @@ static item_t *item_get( history_mode_t *m, void *d )
 /**
    Write the specified item to the specified file.
 */
-static void item_write( FILE *f, history_mode_t *m, void *v )
+static int item_write( FILE *f, history_mode_t *m, void *v )
 {
 	item_t *i = item_get( m, v );
-	fwprintf( f, L"# %d\n%ls\n", i->timestamp, history_escape_newlines( i->data ) );
+	return fwprintf( f, L"# %d\n%ls\n", i->timestamp, history_escape_newlines( i->data ) );
 }
 
 /**
@@ -649,6 +649,7 @@ static void history_save_mode( void *n, history_mode_t *m )
 		if( (out=wfopen( tmp_name, "w" ) ) )
 		{
 			hash_table_t mine;
+			int ok = 1;
 			
 			hash_init( &mine, &hash_item_func, &hash_item_cmp );
 			
@@ -665,12 +666,19 @@ static void history_save_mode( void *n, history_mode_t *m )
 			/*
 			  Re-save the old history
 			*/
-			for( i=0; i<al_get_count(&on_disk->item); i++ )
+			for( i=0; ok && (i<al_get_count(&on_disk->item)); i++ )
 			{
 				void *ptr = al_get( &on_disk->item, i );
 				item_t *i = item_get( on_disk, ptr );
 				if( !hash_get( &mine, i ) )
-					item_write( out, on_disk, ptr );
+				{
+					if( item_write( out, on_disk, ptr ) == -1 )
+					{
+						ok = 0;
+						break;
+					}
+				}
+				
 			}
 			
 			hash_destroy( &mine );
@@ -678,15 +686,20 @@ static void history_save_mode( void *n, history_mode_t *m )
 			/*
 			  Add our own items last
 			*/		
-			for( i=0; i<al_get_count(&m->item); i++ )
+			for( i=0; ok && (i<al_get_count(&m->item)); i++ )
 			{
 				void *ptr = al_get( &m->item, i );
 				int is_new = item_is_new( m, ptr );
 				if( is_new )
-					item_write( out, m, ptr );
+				{
+					if( item_write( out, m, ptr ) == -1 )
+					{						
+						ok = 0;
+					}
+				}
 			}
 			
-			if( fclose( out ) )
+			if( fclose( out ) || !ok )
 			{
 				/*
 				  This message does not have high enough priority to

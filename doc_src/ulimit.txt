@@ -5,21 +5,12 @@
 
 \subsection ulimit-description Description
 
-The ulimit builtin provides control over the resources available to
-the shell and to processes started by it. The -H and -S options
-specify that the hard or soft limit is set for the given resource. A
-hard limit cannot be increased once it is set; a soft limit may be
-increased up to the value of the hard limit. If neither -H nor -S is
-specified, both the soft and hard limits are set. The value of limit
-can be a number in the unit specified for the resource or one of the
-special values hard, soft, or unlimited, which stand for the current
-hard limit, the current soft limit, and no limit, respectively. If
-limit is omitted, the current value of the soft limit of the resource
-is printed, unless the -H option is given.  When more than one
-resource is specified, the limit name and unit are printed before the
-value. Other options are interpreted as follows:
+The ulimit builtin is used to set the resource usage limits of the
+shell and any processes spawned by it.  If a new limit value is
+omitted, the current value of the limit of the resource is printed.
 
-- <code>-a</code> or <code>--all</code> Set or get all current limits
+Use one of the following switches to specify which resource limit to set or report:
+
 - <code>-c</code> or <code>--core-size</code> The maximum size of core files created
 - <code>-d</code> or <code>--data-size</code> The maximum size of a process's data segment
 - <code>-f</code> or <code>--file-size</code> The maximum size of files created by the shell
@@ -31,17 +22,41 @@ value. Other options are interpreted as follows:
 - <code>-u</code> or <code>--process-count</code> The maximum number of processes available to a single user
 - <code>-v</code> or <code>--virtual-memory-size</code> The maximum amount of virtual memory available to the shell. If supported by OS.
 
+Note that not all these limits are available in all operating systems.
+
+The value of limit can be a number in the unit specified for
+the resource or one of the special values hard, soft, or unlimited,
+which stand for the current hard limit, the current soft limit, and no
+limit, respectively. 
+
 If limit is given, it is the new value of the specified resource. If
 no option is given, then -f is assumed. Values are in kilobytes,
 except for -t, which is in seconds and -n and -u, which are unscaled
 values. The return status is 0 unless an invalid option or argument is
 supplied, or an error occurs while setting a new limit.
 
-The fish implementation of ulimit should behave identically to the implementation in bash, except for these differences:
+ulimit also accepts the following switches that determine what type of limit to set:
+
+- <code>-H</code> or <code>--hard</code> Set hard resource limit
+- <code>-S</code> or <code>--soft</code> Set soft resource limit
+
+A hard limit cannot be increased once it is set; a soft limit may be
+increased up to the value of the hard limit. If neither -H nor -S is
+specified, both the soft and hard limits are updated when assigning a
+new limit value, and the soft limit is used when reporting the current
+value. 
+
+The following additional options are also understood by ulimit:
+
+- <code>-a</code> or <code>--all</code> Print all current limits
+- <code>-h</code> or <code>--help</code> Display help and exit
+
+The fish implementation of ulimit should behave identically to the
+implementation in bash, except for these differences:
 
 - Fish ulimit supports GNU-style long options for all switches
-- Fish ulimit does not support the -p option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE.
-- Fish ulimit does not support getting the values of multiple limits in one command, except by using the -a switch
+- Fish ulimit does not support the -p option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE. Depending on bash version, there may also be further additional limits to set in bash that do not exist in fish.
+- Fish ulimit does not support getting or setting multiple limits in one command, except reporting all values using the -a switch
 
 \subsection ulimit-example Example
 

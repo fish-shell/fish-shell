@@ -126,5 +126,4 @@ void output_set_writer( int (*writer)(char) );
 
 int (*output_get_writer())(char) ;
 
-
 #endif

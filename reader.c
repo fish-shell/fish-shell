@@ -115,6 +115,8 @@ commence.
 */
 #define DEFAULT_PROMPT L"whoami; echo @; hostname|cut -d . -f 1; echo \" \"; pwd; printf '> ';"
 
+#define PROMPT_FUNCTION_NAME L"fish_prompt"
+
 /**
    The default title for the reader. This is used by reader_readline.
 */
@@ -1910,8 +1912,8 @@ static int read_i()
 	{
 		wchar_t *tmp;
 
-		if( function_exists( L"fish_prompt" ) )
-			reader_set_prompt( L"fish_prompt" );
+		if( function_exists( PROMPT_FUNCTION_NAME ) )
+			reader_set_prompt( PROMPT_FUNCTION_NAME );
 		else
 			reader_set_prompt( DEFAULT_PROMPT );
 

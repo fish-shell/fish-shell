@@ -97,7 +97,6 @@ int parse_util_lineno( const wchar_t *str, int len )
 	static int res2 = 1;
 
 	CHECK( str, 0 );
-	
 
 	if( str != prev_str || i>len )
 	{
@@ -129,7 +128,9 @@ int parse_util_lineno( const wchar_t *str, int len )
 	for( ; str[i] && i<len; i++ )
 	{
 		if( str[i] == L'\n' )
+		{
 			res++;
+		}
 	}
 	return res;
 }
@@ -169,13 +170,17 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 				if( *pos == '(' )
 				{
 					if(( paran_count == 0)&&(paran_begin==0))
+					{
 						paran_begin = pos;
+					}
 					
 					paran_count++;
 				}
 				else if( *pos == ')' )
 				{
+
 					paran_count--;
+
 					if( (paran_count == 0) && (paran_end == 0) )
 					{
 						paran_end = pos;
@@ -208,9 +213,14 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 	}
 
 	if( begin )
+	{
 		*begin = paran_begin;
+	}
+
 	if( end )
+	{
 		*end = paran_count?(wchar_t *)in+wcslen(in):paran_end;
+	}
 	
 	return 1;
 }
@@ -228,9 +238,14 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 	CHECK( buff, );
 
 	if( a )
+	{
 		*a = (wchar_t *)buff;
+	}
+
 	if( b )
+	{
 		*b = (wchar_t *)buff+wcslen(buff);
+	}
 	
 	pos = (wchar_t *)buff;
 	
@@ -255,10 +270,17 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 		if(( begin < cursor ) && (end >= cursor) )
 		{
 			begin++;
+
 			if( a )
+			{
 				*a = begin;
+			}
+
 			if( b )
+			{
 				*b = end;
+			}
+
 			break;
 		}
 
@@ -291,14 +313,21 @@ static void job_or_process_extent( const wchar_t *buff,
 	CHECK( buff, );
 	
 	if( a )
+	{
 		*a=0;
+	}
+
 	if( b )
+	{
 		*b = 0;
+	}
 	
 	parse_util_cmdsubst_extent( buff, cursor_pos, &begin, &end );
 	if( !end || !begin )
+	{
 		return;
-
+	}
+	
 	pos = cursor_pos - (begin - buff);
 
 	if( a )
@@ -327,9 +356,13 @@ static void job_or_process_extent( const wchar_t *buff,
 		switch( tok_last_type( &tok ) )
 		{
 			case TOK_PIPE:
+			{
 				if( !process )
+				{
 					break;
-				
+				}
+			}
+			
 			case TOK_END:
 			case TOK_BACKGROUND:
 			{
@@ -338,15 +371,19 @@ static void job_or_process_extent( const wchar_t *buff,
 				{
 					finished=1;					
 					if( b )
+					{
 						*b = (wchar_t *)buff + tok_begin;
+					}
 				}
 				else
 				{
 					if( a )
+					{
 						*a = (wchar_t *)buff + tok_begin+1;
+					}
 				}
-				break;
-				
+
+				break;				
 			}
 		}
 	}
@@ -398,7 +435,9 @@ void parse_util_token_extent( const wchar_t *buff,
 	parse_util_cmdsubst_extent( buff, cursor_pos, &begin, &end );
 
 	if( !end || !begin )
+	{
 		return;
+	}
 	
 	pos = cursor_pos - (begin - buff);
 	
@@ -430,7 +469,9 @@ void parse_util_token_extent( const wchar_t *buff,
 		  Calculate end of token
 		*/
 		if( tok_last_type( &tok ) == TOK_STRING )
+		{
 			tok_end +=wcslen(tok_last(&tok));
+		}
 		
 		/*
 		  Cursor was before beginning of this token, means that the
@@ -472,14 +513,25 @@ void parse_util_token_extent( const wchar_t *buff,
 	tok_destroy( &tok );
 
 	if( tok_begin )
+	{
 		*tok_begin = a;
-	if( tok_end )
-		*tok_end = b;
-	if( prev_begin )
-		*prev_begin = pa;
-	if( prev_end )
-		*prev_end = pb;
+	}
 
+	if( tok_end )
+	{
+		*tok_end = b;
+	}
+
+	if( prev_begin )
+	{
+		*prev_begin = pa;
+	}
+
+	if( prev_end )
+	{
+		*prev_end = pb;
+	}
+	
 	assert( pa >= buff );
 	assert( pa <= (buff+wcslen(buff) ) );
 	assert( pb >= pa );
@@ -560,7 +612,9 @@ void parse_util_load_reset( const wchar_t *path_var_name,
 		void *key, *data;
 		hash_remove( all_loaded, path_var_name, &key, &data );
 		if( key )
+		{
 			clear_loaded_entry( key, data, (void *)on_load );
+		}
 	}
 	
 }
@@ -600,6 +654,16 @@ int parse_util_unload( const wchar_t *cmd,
 	return !!val;
 }
 
+/**
+
+   Unload all autoloaded items that have expired, that where loaded in
+   the specified path.
+
+   \param path_var_name The variable containing the path to autoload in
+   \param skip unloading the the specified file
+   \param on_load the callback function to call for every unloaded file
+
+*/
 static void parse_util_autounload( const wchar_t *path_var_name,
 								   const wchar_t *skip,
 								   void (*on_load)(const wchar_t *cmd) )
@@ -637,8 +701,10 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 			}
 			
 			if( !tm[0] )
+			{
 				continue;
-
+			}
+			
 			if( hash_get( &loaded->is_loading, item ) )
 			{
 				continue;
@@ -690,7 +756,6 @@ int parse_util_load( const wchar_t *cmd,
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
 	parse_util_autounload( path_var_name, cmd, on_load );
-	
 	path_var = env_get( path_var_name );	
 	
 	/*
@@ -698,7 +763,6 @@ int parse_util_load( const wchar_t *cmd,
 	*/
 	if( !path_var )
 	{
-//		debug( 0, L"Path null" );
 		return 0;
 	}
 
@@ -846,9 +910,13 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	}
 	
 	if( !path )
+	{
 		path = sb_halloc( global_context );
+	}
 	else
+	{
 		sb_clear( path );
+	}
 	
 	/*
 	  Iterate over path searching for suitable completion files
@@ -873,7 +941,9 @@ static int parse_util_load_internal( const wchar_t *cmd,
 				{
 					tm = malloc(sizeof(time_t)*2);
 					if( !tm )
+					{
 						DIE_MEM();
+					}
 				}
 
 				tm[0] = buf.st_mtime;
@@ -883,8 +953,10 @@ static int parse_util_load_internal( const wchar_t *cmd,
 						  tm );
 
 				if( on_load )
+				{
 					on_load(cmd );
-
+				}
+				
 				/*
 				  Source the completion file for the specified completion
 				*/
@@ -920,7 +992,9 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	{
 		tm = malloc(sizeof(time_t)*2);
 		if( !tm )
+		{
 			DIE_MEM();
+		}
 		
 		tm[0] = 0;
 		tm[1] = time(0);
@@ -941,7 +1015,9 @@ void parse_util_set_argv( wchar_t **argv )
 		for( arg=argv; *arg; arg++ )
 		{
 			if( arg != argv )
+			{
 				sb_append( &sb, ARRAY_SEP_STR );
+			}
 			sb_append( &sb, *arg );
 		}
 			
@@ -964,13 +1040,16 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 	unescaped = wcsdup(str);
 
 	if( !unescaped )
+	{
 		DIE_MEM();
+	}
 	
 	for( in=out=unescaped; *in; in++ )
 	{
 		switch( *in )
 		{
 			case L'\\':
+			{
 				if( *(in+1) )
 				{
 					in++;
@@ -978,20 +1057,26 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 				}
 				*(out++)=*in;
 				break;
-				
+			}
+			
 			case L'*':
+			{
 				*(out++)=ANY_STRING;					
 				break;
-				
+			}
+			
 			case L'?':
+			{
 				*(out++)=ANY_CHAR;					
 				break;
-				
+			}
+			
 			default:
+			{
 				*(out++)=*in;
 				break;
-		}
-		
+			}
+		}		
 	}
 	return unescaped;
 }

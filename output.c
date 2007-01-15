@@ -153,6 +153,16 @@ void set_color( int c, int c2 )
 	int is_bold = 0;
 	int is_underline = 0;
 
+	/*
+	  Test if we have at least basic support for setting fonts, colors
+	  and related bits - otherwise just give up...
+	*/
+	if( !exit_attribute_mode )
+	{
+		return;
+	}
+	
+
 	is_bold |= (c&FISH_COLOR_BOLD)!=0;
 	is_bold |= (c2&FISH_COLOR_BOLD)!=0;
 

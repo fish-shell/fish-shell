@@ -47,7 +47,7 @@ complete -c darcs -l repodir -d (N_ "Specify the repository directory in which t
 complete -c darcs -s v -l verbose -d (N_ "Verbose mode")
 complete -c darcs -l standard-verbosity -d (N_ "Neither verbose nor quiet output")
 
-complete -c darcs -n 'not __fish_use_subcommand' -a "(cat _darcs/prefs/repos)" -d (N_ "Darcs repo")
+complete -c darcs -n 'not __fish_use_subcommand' -a "(test -f _darcs/prefs/repos; and cat _darcs/prefs/repos)" -d (N_ "Darcs repo")
 
 #
 # Here follows a huge list of subcommand-specific completions. These are incomplete.
@@ -237,7 +237,7 @@ complete $optimize_opt -l run-posthook -d (N_ "Run posthook command without prom
 
 set -l setpref_opt -c darcs -n 'contains setpref (commandline -poc)'
 complete $setpref_opt -l posthook -r -d (N_ "Specify command to run after this darcs command.")
-complete $setpref_opt -l no-posthook -d (N_ "Do not run posthook command.B")
+complete $setpref_opt -l no-posthook -d (N_ "Do not run posthook command.")
 complete $setpref_opt -l prompt-posthook -d (N_ "Prompt before running posthook. [DEFAULT]")
 complete $setpref_opt -l run-posthook -d (N_ "Run posthook command without prompting.")
 

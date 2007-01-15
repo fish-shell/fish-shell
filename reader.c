@@ -135,8 +135,8 @@ commence.
 
 /**
    A struct describing the state of the interactive reader. These
-   states can be stacked, in case reader_readline is called from
-   input_read().
+   states can be stacked, in case reader_readline() calls are
+   nested. This happens when the 'read' builtin is used.
 */
 typedef struct reader_data
 {
@@ -1950,16 +1950,24 @@ static int read_i()
 			}
 			else
 			{
-				for( j = first_job; j; j=j->next )
+				if( !isatty(0) )
 				{
-					if( ! job_is_completed( j ) )
+					/*
+					  We already know that stdin is a tty since we're
+					  in interactive mode. If isatty returns false, it
+					  means stdin must have been closed. 
+					*/
+					for( j = first_job; j; j=j->next )
 					{
-						job_signal( j, SIGHUP );						
+						if( ! job_is_completed( j ) )
+						{
+							job_signal( j, SIGHUP );						
+						}
 					}
 				}
 			}
 		}
-		else
+		else if( tmp )
 		{
 			tmp = wcsdup( tmp );
 			
@@ -2644,7 +2652,7 @@ wchar_t *reader_readline()
 		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 	}
 	
-	return data->buff;
+	return finished ? data->buff : 0;
 }
 
 /**

@@ -1507,7 +1507,7 @@ static int builtin_read( wchar_t **argv )
 	wchar_t *nxt;
 	wchar_t *prompt = DEFAULT_READ_PROMPT;
 	wchar_t *commandline = L"";
-	int exit_res=0;
+	int exit_res=STATUS_BUILTIN_OK;
 	wchar_t *mode_name = READ_MODE_NAME;
 	
 	woptind=0;
@@ -1684,11 +1684,21 @@ static int builtin_read( wchar_t **argv )
 	*/
 	if( isatty(0) && builtin_stdin == 0 )
 	{
+		wchar_t *line;
+		
 		reader_push( mode_name );
 		reader_set_prompt( prompt );
 
 		reader_set_buffer( commandline, wcslen( commandline ) );
-		buff = wcsdup(reader_readline( ));
+		line = reader_readline( );
+		if( line )
+		{
+			buff = wcsdup( line );
+		}
+		else
+		{
+			exit_res = STATUS_BUILTIN_ERROR;
+		}
 		reader_pop();
 	}
 	else
@@ -1756,7 +1766,7 @@ static int builtin_read( wchar_t **argv )
 		sb_destroy( &sb );
 	}
 
-	if( i != argc )
+	if( i != argc && !exit_res )
 	{
 		
 		wchar_t *state;

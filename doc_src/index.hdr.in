@@ -1375,9 +1375,8 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 
 - Complete vi-mode key bindings
 - More completions (for example xterm, vim, 
-konsole, gnome-terminal, dcop, cron,
-rlogin, rsync, arch, finger, 
-bibtex, aspell, xpdf,
+konsole, gnome-terminal, cron,
+rlogin, rsync, arch, finger, bibtex, aspell, xpdf,
 compress, wine, xmms, dig, batch, cron, 
 g++, javac, java, gcj, lpr, doxygen, whois)
 - Undo support
@@ -1388,13 +1387,9 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 \subsection todo-possible Possible features
 
 - tab completion could use smart casing
-- Completions could support options beginning with a plus (like xterm
-  +fbx) and options without dashes (like top p) Do we really want to
-  complicate the code additionally for such a small number of programs?
 - mouse support like zsh has with http://stchaz.free.fr/mouse.zsh 
   installed would be awesome
 - suggest a completion on unique matches by writing it out in an understated color
-- With a bit of tweakage, quite a few of the readline key-binding functions could be implemented in shellscript.
 - Highlight beginning/end of block when moving over a block command
 - command specific wildcarding (use case * instead of case '*', etc.)
 - Map variables. (export only the values. When expanding with no key specified, expand to all values.)
@@ -1419,13 +1414,13 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - A fault injector could be written to increase robustness and testing of error recovery paths
 - The parser/validator could be more clever in order to make things like writing 'function --help' work as expected
 - Some event handler functions make much more sense as oneshots - maybe they should be automatically deleted after firing?
+- It should be possible to specify to the read builtin that shell syntax highlighting and tab completions should be used. 
 
 
 \subsection bugs Known bugs and issues
 
 - Completion for gcc -\#\#\# option doesn't work.
 - Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
-- The completion pager doesn't work if stderr is redirected.
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
 
 

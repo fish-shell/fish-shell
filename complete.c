@@ -2131,7 +2131,7 @@ void complete( const wchar_t *cmd,
 				{
 
 					wchar_t *ncmd = tok_last( &tok );
-					int is_ddash = wcscmp( ncmd, L"--" ) == 0;
+					int is_ddash = (wcscmp( ncmd, L"--" ) == 0) && ( (tok_get_pos( &tok )+2) < pos );
 					
 					if( !had_cmd )
 					{

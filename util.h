@@ -73,6 +73,8 @@ typedef struct hash_table
 {
 	/** The array containing the data */
 	hash_struct_t *arr;
+	/** A simple one item cache. This should always point to the index of the last item to be used */
+	int cache;	
 	/** Number of elements */
 	int count;
 	/** Length of array */

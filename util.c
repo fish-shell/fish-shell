@@ -208,6 +208,7 @@ void hash_init2( hash_table_t *h,
 	h->count=0;
 	h->hash_func = hash_func;
 	h->compare_func = compare_func;
+	h->cache=-1;
 }
 
 void hash_init( hash_table_t *h,
@@ -219,6 +220,7 @@ void hash_init( hash_table_t *h,
 	h->count=0;
 	h->hash_func = hash_func;
 	h->compare_func = compare_func;
+	h->cache=-1;
 }
 
 
@@ -237,6 +239,14 @@ static int hash_search( hash_table_t *h,
 	int hv;
 	int pos;
 
+	if( h->cache>=0 && h->arr[h->cache].key)
+	{
+		if( h->compare_func( h->arr[h->cache].key, key ) )
+		{
+			return h->cache;
+		}
+	}
+
 	hv = h->hash_func( key );
 	pos = (hv & 0x7fffffff) % h->size;
 	while(1)
@@ -244,6 +254,7 @@ static int hash_search( hash_table_t *h,
 		if( (h->arr[pos].key == 0 ) ||
 			( h->compare_func( h->arr[pos].key, key ) ) )
 		{
+			h->cache = pos;
 			return pos;
 		}
 		pos++;
@@ -268,6 +279,7 @@ static int hash_realloc( hash_table_t *h,
 	
 	int i;
 
+	h->cache = -1;
 	h->arr = malloc( sizeof( hash_struct_t) * sz );
 	if( h->arr == 0 )
 	{

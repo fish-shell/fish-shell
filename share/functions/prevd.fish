@@ -1,5 +1,5 @@
 
-function prevd -d (N_ "Move back in the directory history")
+function prevd --description "Move back in the directory history"
 
 	if count $argv >/dev/null
 		switch $argv[1]

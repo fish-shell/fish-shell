@@ -134,7 +134,7 @@ function __fish_umask_print_symbolic
 	echo $res|cut -c 2-
 end
 
-function umask -d (N_ "Set default file permission mask")
+function umask --description "Set default file permission mask"
 
 	set -l as_command 0
 	set -l symbolic 0

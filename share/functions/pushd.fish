@@ -1,6 +1,6 @@
 
 
-function pushd -d (N_ "Push directory to stack")
+function pushd --description "Push directory to stack"
 	if count $argv >/dev/null
 		switch $argv[1]
 			case -h --h --he --hel --help

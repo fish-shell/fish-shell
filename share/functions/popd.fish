@@ -1,5 +1,5 @@
 
-function popd -d (N_ "Pop dir from stack")
+function popd --description "Pop dir from stack"
 	if count $argv >/dev/null
 		switch $argv[1]
 			case -h --h --he --hel --help

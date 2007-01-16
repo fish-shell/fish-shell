@@ -1,5 +1,5 @@
 
-function contains -d (N_ "Test if a key is contained in a set of values")
+function contains --description "Test if a key is contained in a set of values"
 	while count $argv >/dev/null
 		switch $argv[1]
 			case '-h' '--h' '--he' '--hel' '--help'

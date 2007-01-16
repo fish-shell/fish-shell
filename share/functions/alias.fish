@@ -1,5 +1,5 @@
 
-function alias -d (_ "Legacy function for creating shellscript functions using an alias-like syntax")
+function alias --description "Legacy function for creating shellscript functions using an alias-like syntax"
 
 	if count $argv >/dev/null
 		switch $argv[1]

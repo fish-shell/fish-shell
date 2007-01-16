@@ -1,5 +1,5 @@
 
-function dirh -d (N_ "Print the current directory history (the back- and fwd- lists)") 
+function dirh --description "Print the current directory history (the back- and fwd- lists)" 
 
 	if count $argv >/dev/null
 		switch $argv[1]

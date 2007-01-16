@@ -5,11 +5,11 @@
 
 set -l path (which $i ^/dev/null)
 if test -x (echo $path)
-	function _ -d "Alias for the gettext command"
+	function _ --description "Alias for the gettext command"
 		gettext fish $argv
 	end
 else
-	function _ -d "Alias for the gettext command"
+	function _ --description "Alias for the gettext command"
 		printf "%s" $argv
 	end
 end

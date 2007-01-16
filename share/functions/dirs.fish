@@ -1,4 +1,4 @@
-function dirs -d (N_ "Print directory stack")
+function dirs --description "Print directory stack"
 	echo -n (command pwd)"  "
 	for i in $dirstack
 		echo -n $i"  "

@@ -1,5 +1,5 @@
 
-function type -d (N_ "Print the type of a command")
+function type --description "Print the type of a command"
 
 	# Initialize
 	set -l res 1

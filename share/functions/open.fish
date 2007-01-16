@@ -5,7 +5,7 @@
 #
 
 if not test (uname) = Darwin
-	function open -d (N_ "Open file in default application")
+	function open --description "Open file in default application"
 		if count $argv >/dev/null
 			switch $argv[1]
 				case -h --h --he --hel --help

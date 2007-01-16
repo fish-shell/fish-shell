@@ -4,11 +4,11 @@
 #
 
 if test (uname) = Darwin
-	function pwd -d (N_ "Print working directory")
+	function pwd --description "Print working directory"
 		echo $PWD | sed -e 's|/private||' -e "s|^$HOME|~|"
 	end
 else
-	function pwd -d (N_ "Print working directory")
+	function pwd --description "Print working directory"
 		echo $PWD | sed -e "s|^$HOME|~|"
 	end
 end

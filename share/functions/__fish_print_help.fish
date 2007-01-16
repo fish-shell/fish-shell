@@ -1,5 +1,5 @@
 
-function __fish_print_help -d (N_ "Print help message for the specified fish function or builtin")
+function __fish_print_help --description "Print help message for the specified fish function or builtin"
 
 	# These two expressions take care of underlines (Should be italic)
 	set -l cmd1 s/_\x08'\(.\)'/(set_color --underline)\\1(set_color normal)/g

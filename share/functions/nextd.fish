@@ -1,5 +1,5 @@
 
-function nextd -d (N_ "Move forward in the directory history")
+function nextd --description "Move forward in the directory history"
 
 	if count $argv >/dev/null
 		switch $argv[1]

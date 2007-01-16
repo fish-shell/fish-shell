@@ -1,5 +1,5 @@
 
-function math -d (N_ "Perform math calculations in bc")
+function math --description "Perform math calculations in bc"
 	if count $argv >/dev/null
 		switch $argv[1]
 			case -h --h --he --hel --help

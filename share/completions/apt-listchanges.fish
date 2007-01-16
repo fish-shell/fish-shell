@@ -1,13 +1,13 @@
 #apt-listchanges
-complete -c apt-listchanges -l help -d (N_ "Display help and exit")
-complete -c apt-listchanges -l apt -d (N_ "Read filenames from pipe")
-complete -f -c apt-listchanges -s v -l verbose -d (N_ "Verbose mode")
-complete -f -c apt-listchanges -s f -l frontend -a "pager browser xterm-pager xterm-browser text mail none" -d (N_ "Select frontend interface")
-complete -r -f -c apt-listchanges -l email-address -d (N_ "Specify email address")
-complete -f -c apt-listchanges -s c -l confirm -d (N_ "Ask confirmation")
-complete -f -c apt-listchanges -s a -l all -d (N_ "Display all changelogs")
-complete -r -c apt-listchanges -l save_seen -d (N_ "Avoid changelogs from db in named file")
-complete -r -f -c apt-listchanges -l which -a "news changelogs both" -d (N_ "Select display")
-complete -f -c apt-listchanges -s h -l headers -d (N_ "Insert header")
-complete -f -c apt-listchanges -l debug -d (N_ "Display debug info")
-complete -r -c apt-listchanges -l profile -d (N_ "Select an option profile")
+complete -c apt-listchanges -l help --description "Display help and exit"
+complete -c apt-listchanges -l apt --description "Read filenames from pipe"
+complete -f -c apt-listchanges -s v -l verbose --description "Verbose mode"
+complete -f -c apt-listchanges -s f -l frontend -a "pager browser xterm-pager xterm-browser text mail none" --description "Select frontend interface"
+complete -r -f -c apt-listchanges -l email-address --description "Specify email address"
+complete -f -c apt-listchanges -s c -l confirm --description "Ask confirmation"
+complete -f -c apt-listchanges -s a -l all --description "Display all changelogs"
+complete -r -c apt-listchanges -l save_seen --description "Avoid changelogs from db in named file"
+complete -r -f -c apt-listchanges -l which -a "news changelogs both" --description "Select display"
+complete -f -c apt-listchanges -s h -l headers --description "Insert header"
+complete -f -c apt-listchanges -l debug --description "Display debug info"
+complete -r -c apt-listchanges -l profile --description "Select an option profile"

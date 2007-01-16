@@ -1,9 +1,9 @@
-complete -c mimedb -s t -l input-file-data -d (N_ "Input is a file, use name and contents to determine mimetype")
-complete -c mimedb -s f -l input-filename -d (N_ "Input is a file, use name to determine mimetype")
-complete -c mimedb -s i -l input-mime -d (N_ "Input is a mimetype")
-complete -c mimedb -s m -l output-mime -d (N_ "Output mimetype")
-complete -c mimedb -s d -l output-description -d (N_ "Output description of mimetype")
-complete -c mimedb -s a -l output-action -d (N_ "Output default action for mimetype")
-complete -c mimedb -s l -l launch -d (N_ "Launch default action for each file")
-complete -c mimedb -s h -l help -d (N_ "Display help and exit")
-complete -c mimedb -s v -l version -d (N_ "Display version and exit")
+complete -c mimedb -s t -l input-file-data --description "Input is a file, use name and contents to determine mimetype"
+complete -c mimedb -s f -l input-filename --description "Input is a file, use name to determine mimetype"
+complete -c mimedb -s i -l input-mime --description "Input is a mimetype"
+complete -c mimedb -s m -l output-mime --description "Output mimetype"
+complete -c mimedb -s d -l output-description --description "Output description of mimetype"
+complete -c mimedb -s a -l output-action --description "Output default action for mimetype"
+complete -c mimedb -s l -l launch --description "Launch default action for each file"
+complete -c mimedb -s h -l help --description "Display help and exit"
+complete -c mimedb -s v -l version --description "Display version and exit"

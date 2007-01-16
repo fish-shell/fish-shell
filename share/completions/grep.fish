@@ -2,49 +2,49 @@
 # Completions for the grep command
 #
 
-complete -c grep -s A -l after-context -d (N_ "Print NUM lines of trailing context")
-complete -c grep -s a -l text -d (N_ "Process binary file as text")
-complete -c grep -s B -l before-context -d (N_ "Print NUM lines of leading context")
-complete -c grep -s C -l context -d (N_ "Print NUM lines of context")
-complete -c grep -s b -l byte-offset -d (N_ "Print byte offset of matches")
-complete -c grep -l binary-files -d (N_ "Assume data type for binary files") -x -a "binary text"
+complete -c grep -s A -l after-context --description "Print NUM lines of trailing context"
+complete -c grep -s a -l text --description "Process binary file as text"
+complete -c grep -s B -l before-context --description "Print NUM lines of leading context"
+complete -c grep -s C -l context --description "Print NUM lines of context"
+complete -c grep -s b -l byte-offset --description "Print byte offset of matches"
+complete -c grep -l binary-files --description "Assume data type for binary files" -x -a "binary text"
 complete -c grep -l colour -x -a "never always auto"
 complete -c grep -l color -x -a "never always auto"
-complete -c grep -s c -l count -d (N_ "Only print number of matches")
-complete -c grep -s D -l devices -x -a "read skip" -d (N_ "Action for devices")
-complete -c grep -s d -l directories -x -a "read skip recurse" -d (N_ "Action for directories")
-complete -c grep -s E -l extended-regexp -d (N_ "Pattern is extended regexp")
-complete -xc grep -s e -l regexp -d (N_ "Pattern is a regexp")
-complete -c grep -s F -l fixed -d (N_ "Pattern is a fixed string")
-complete -c grep -s f -l file -r -d (N_ "Use pattern from file")
-complete -c grep -s G -l basic-regexp -d (N_ "Pattern is basic regex")
-complete -c grep -s H -l with-filename -d (N_ "Print filename")
-complete -c grep -s h -l no-filename -d (N_ "Supress printing filename")
-complete -c grep -l help -d (N_ "Display help and exit")
-complete -c grep -s I -d (N_ "Skip binary files")
-complete -c grep -s i -l ignore-case -d (N_ "Ignore case")
-complete -c grep -s L -l files-without-match -d (N_ "Print first non-matching file")
-complete -c grep -s l -l files-with-match -d (N_ "Print first matching file")
-complete -c grep -s m -l max-count -d (N_ "Stop reading after NUM matches")
-complete -c grep -l mmap -d (N_ "Use the mmap system call to read input")
-complete -c grep -s n -l line-number -d (N_ "Print linenumber")
-complete -c grep -s o -l only-matching -d (N_ "Show only matching part")
-complete -c grep -l label -d (N_ "Rename stdin")
-complete -c grep -l line-buffered -d (N_ "Use line buffering")
-complete -c grep -s q -l quiet -d (N_ "Do not write anything")
-complete -c grep -l silent -d (N_ "Do not write anything")
-complete -c grep -s R -l recursive -d (N_ "Read files under each directory")
-complete -c grep -s r -d (N_ "Read files under each directory")
-complete -c grep -l include -d (N_ "Recurse, search file matching PATTERN")
-complete -c grep -l exclude -d (N_ "Recurse, skip file matching PATTERN")
-complete -c grep -s s -l no-messages -d (N_ "Suppress error messages")
-complete -c grep -s U -l binary -d (N_ "Treat files as binary")
-complete -c grep -s u -l unix-byte-offsets -d (N_ "Report Unix-style byte offsets")
-complete -c grep -s V -l version -d (N_ "Display version and exit")
-complete -c grep -s v -l invert-match -d (N_ "Invert the sense of matching")
-complete -c grep -s w -l word-regexp -d (N_ "Only whole matching words")
-complete -c grep -s x -l line-regexp -d (N_ "Only whole matching lines")
-complete -c grep -s y -d (N_ "Synonym for -i")
-complete -c grep -s Z -l null -d (N_ "Output a zero byte after filename")
+complete -c grep -s c -l count --description "Only print number of matches"
+complete -c grep -s D -l devices -x -a "read skip" --description "Action for devices"
+complete -c grep -s d -l directories -x -a "read skip recurse" --description "Action for directories"
+complete -c grep -s E -l extended-regexp --description "Pattern is extended regexp"
+complete -xc grep -s e -l regexp --description "Pattern is a regexp"
+complete -c grep -s F -l fixed --description "Pattern is a fixed string"
+complete -c grep -s f -l file -r --description "Use pattern from file"
+complete -c grep -s G -l basic-regexp --description "Pattern is basic regex"
+complete -c grep -s H -l with-filename --description "Print filename"
+complete -c grep -s h -l no-filename --description "Supress printing filename"
+complete -c grep -l help --description "Display help and exit"
+complete -c grep -s I --description "Skip binary files"
+complete -c grep -s i -l ignore-case --description "Ignore case"
+complete -c grep -s L -l files-without-match --description "Print first non-matching file"
+complete -c grep -s l -l files-with-match --description "Print first matching file"
+complete -c grep -s m -l max-count --description "Stop reading after NUM matches"
+complete -c grep -l mmap --description "Use the mmap system call to read input"
+complete -c grep -s n -l line-number --description "Print linenumber"
+complete -c grep -s o -l only-matching --description "Show only matching part"
+complete -c grep -l label --description "Rename stdin"
+complete -c grep -l line-buffered --description "Use line buffering"
+complete -c grep -s q -l quiet --description "Do not write anything"
+complete -c grep -l silent --description "Do not write anything"
+complete -c grep -s R -l recursive --description "Read files under each directory"
+complete -c grep -s r --description "Read files under each directory"
+complete -c grep -l include --description "Recurse, search file matching PATTERN"
+complete -c grep -l exclude --description "Recurse, skip file matching PATTERN"
+complete -c grep -s s -l no-messages --description "Suppress error messages"
+complete -c grep -s U -l binary --description "Treat files as binary"
+complete -c grep -s u -l unix-byte-offsets --description "Report Unix-style byte offsets"
+complete -c grep -s V -l version --description "Display version and exit"
+complete -c grep -s v -l invert-match --description "Invert the sense of matching"
+complete -c grep -s w -l word-regexp --description "Only whole matching words"
+complete -c grep -s x -l line-regexp --description "Only whole matching lines"
+complete -c grep -s y --description "Synonym for -i"
+complete -c grep -s Z -l null --description "Output a zero byte after filename"
 
 

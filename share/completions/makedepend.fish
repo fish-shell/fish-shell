@@ -1,13 +1,13 @@
-complete -c makedepend -s D -r -d (N_ "Define")
-complete -c makedepend -s I -r -d (N_ "Include directory")
-complete -c makedepend -s Y -r -d (N_ "Replace include directories")
-complete -c makedepend -s a -d (N_ "Append dependencies to makefile")
-complete -c makedepend -s f -r -d (N_ "Specify makefile")
-complete -c makedepend -o include -r -d (N_ "Prepend file to input")
-complete -c makedepend -s o -r -d (N_ "Object file suffix")
-complete -c makedepend -s p -r -d (N_ "Object file prefix")
-complete -c makedepend -s s -r -d (N_ "Starting string delimiter")
-complete -c makedepend -s w -r -d (N_ "Line width")
-complete -c makedepend -s v -d (N_ "Verbose mode")
-complete -c makedepend -s m -d (N_ "Warn about multiple inclusion")
+complete -c makedepend -s D -r --description "Define"
+complete -c makedepend -s I -r --description "Include directory"
+complete -c makedepend -s Y -r --description "Replace include directories"
+complete -c makedepend -s a --description "Append dependencies to makefile"
+complete -c makedepend -s f -r --description "Specify makefile"
+complete -c makedepend -o include -r --description "Prepend file to input"
+complete -c makedepend -s o -r --description "Object file suffix"
+complete -c makedepend -s p -r --description "Object file prefix"
+complete -c makedepend -s s -r --description "Starting string delimiter"
+complete -c makedepend -s w -r --description "Line width"
+complete -c makedepend -s v --description "Verbose mode"
+complete -c makedepend -s m --description "Warn about multiple inclusion"
 

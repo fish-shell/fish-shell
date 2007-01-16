@@ -1,39 +1,39 @@
 
 #completions for wpa_cli
-complete -x -c wpa_cli -a status -d (N_ 'get current WPA/EAPOL/EAP status')
-complete -x -c wpa_cli -a mib -d (N_ 'get MIB variables (dot1x, dot11)')
-complete -x -c wpa_cli -a help -d (N_ 'show this usage help')
-complete -x -c wpa_cli -a interface -d (N_ 'show interfaces/select interface')
-complete -x -c wpa_cli -a level -d (N_ 'change debug level')
-complete -x -c wpa_cli -a license -d (N_ 'show full wpa_cli license')
-complete -x -c wpa_cli -a logoff -d (N_ 'IEEE 802.1X EAPOL state machine logoff')
-complete -x -c wpa_cli -a logon -d (N_ 'IEEE 802.1X EAPOL state machine logon')
-complete -x -c wpa_cli -a set -d (N_ 'set/list variables')
-complete -x -c wpa_cli -a pmksa -d (N_ 'show PMKSA cache')
-complete -x -c wpa_cli -a reassociate -d (N_ 'force reassociation')
-complete -x -c wpa_cli -a reconfigure -d (N_ 'force wpa_supplicant to re-read its config file')
-complete -x -c wpa_cli -a preauthenticate -d (N_ 'force preauthentication')
-complete -x -c wpa_cli -a identity -d (N_ 'configure identity for an SSID')
-complete -x -c wpa_cli -a password -d (N_ 'configure password for an SSID')
-complete -x -c wpa_cli -a new_password -d (N_ 'change password for an SSID')
-complete -x -c wpa_cli -a pin -d (N_ 'configure pin for an SSID')
-complete -x -c wpa_cli -a otp -d (N_ 'configure one-time-password for an SSID')
-complete -x -c wpa_cli -a passphrase -d (N_ 'configure private key passphrase for an SSID')
-complete -x -c wpa_cli -a bssid -d (N_ 'set preferred BSSID for an SSID')
-complete -x -c wpa_cli -a list_networks -d (N_ 'list configured networks')
-complete -x -c wpa_cli -a select_network -d (N_ 'select a network (disable others)')
-complete -x -c wpa_cli -a enable_network -d (N_ 'enable a network')
-complete -x -c wpa_cli -a disable_network -d (N_ 'disable a network')
-complete -x -c wpa_cli -a add_network -d (N_ 'add a network')
-complete -x -c wpa_cli -a remove_network -d (N_ 'remove a network')
-complete -x -c wpa_cli -a set_network -d (N_ 'set/list network variables')
-complete -x -c wpa_cli -a get_network -d (N_ 'get network variables')
-complete -x -c wpa_cli -a save_config -d (N_ 'save the current configuration')
-complete -x -c wpa_cli -a disconnect -d (N_ 'disconnect and wait for reassociate command before connecting')
-complete -x -c wpa_cli -a scan -d (N_ 'request new BSS scan')
-complete -x -c wpa_cli -a scan_results -d (N_ 'get latest scan results')
-complete -x -c wpa_cli -a get_capability -d (N_ 'get capabilies')
-complete -x -c wpa_cli -a stakey-request -d (N_ 'request STAKey negotiation with <addr>')
-complete -x -c wpa_cli -a ap_scan -d (N_ 'set ap_scan parameter')
-complete -x -c wpa_cli -a stkstart -d (N_ 'request STK negotiation with <addr>')
-complete -x -c wpa_cli -a terminate -d (N_ 'terminate wpa_supplicant')
+complete -x -c wpa_cli -a status --description 'get current WPA/EAPOL/EAP status'
+complete -x -c wpa_cli -a mib --description 'get MIB variables (dot1x, dot11)'
+complete -x -c wpa_cli -a help --description 'show this usage help'
+complete -x -c wpa_cli -a interface --description 'show interfaces/select interface'
+complete -x -c wpa_cli -a level --description 'change debug level'
+complete -x -c wpa_cli -a license --description 'show full wpa_cli license'
+complete -x -c wpa_cli -a logoff --description 'IEEE 802.1X EAPOL state machine logoff'
+complete -x -c wpa_cli -a logon --description 'IEEE 802.1X EAPOL state machine logon'
+complete -x -c wpa_cli -a set --description 'set/list variables'
+complete -x -c wpa_cli -a pmksa --description 'show PMKSA cache'
+complete -x -c wpa_cli -a reassociate --description 'force reassociation'
+complete -x -c wpa_cli -a reconfigure --description 'force wpa_supplicant to re-read its config file'
+complete -x -c wpa_cli -a preauthenticate --description 'force preauthentication'
+complete -x -c wpa_cli -a identity --description 'configure identity for an SSID'
+complete -x -c wpa_cli -a password --description 'configure password for an SSID'
+complete -x -c wpa_cli -a new_password --description 'change password for an SSID'
+complete -x -c wpa_cli -a pin --description 'configure pin for an SSID'
+complete -x -c wpa_cli -a otp --description 'configure one-time-password for an SSID'
+complete -x -c wpa_cli -a passphrase --description 'configure private key passphrase for an SSID'
+complete -x -c wpa_cli -a bssid --description 'set preferred BSSID for an SSID'
+complete -x -c wpa_cli -a list_networks --description 'list configured networks'
+complete -x -c wpa_cli -a select_network --description 'select a network (disable others)'
+complete -x -c wpa_cli -a enable_network --description 'enable a network'
+complete -x -c wpa_cli -a disable_network --description 'disable a network'
+complete -x -c wpa_cli -a add_network --description 'add a network'
+complete -x -c wpa_cli -a remove_network --description 'remove a network'
+complete -x -c wpa_cli -a set_network --description 'set/list network variables'
+complete -x -c wpa_cli -a get_network --description 'get network variables'
+complete -x -c wpa_cli -a save_config --description 'save the current configuration'
+complete -x -c wpa_cli -a disconnect --description 'disconnect and wait for reassociate command before connecting'
+complete -x -c wpa_cli -a scan --description 'request new BSS scan'
+complete -x -c wpa_cli -a scan_results --description 'get latest scan results'
+complete -x -c wpa_cli -a get_capability --description 'get capabilies'
+complete -x -c wpa_cli -a stakey-request --description 'request STAKey negotiation with <addr>'
+complete -x -c wpa_cli -a ap_scan --description 'set ap_scan parameter'
+complete -x -c wpa_cli -a stkstart --description 'request STK negotiation with <addr>'
+complete -x -c wpa_cli -a terminate --description 'terminate wpa_supplicant'

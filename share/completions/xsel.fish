@@ -1,18 +1,18 @@
-complete -c xsel -s a -l append -d (N_ "Append input to selection")
-complete -c xsel -s f -l follow -d (N_ "Append to selection as input grows")
-complete -c xsel -s i -l input -d (N_ "Read into selection")
-complete -c xsel -s o -l output -d (N_ "Write selection")
-complete -c xsel -s c -l clear -d (N_ "Clear selection")
-complete -c xsel -s d -l delete -d (N_ "Delete selection")
-complete -c xsel -s p -l primary -d (N_ "Use primary selection")
-complete -c xsel -s s -l secondary -d (N_ "Use secondary selection")
-complete -c xsel -s b -l clipboard -d (N_ "Use clipboard selection")
-complete -c xsel -s k -l keep -d (N_ "Make current selections persistent after program exit")
-complete -c xsel -s x -l exchange -d (N_ "Exchange primary and secondary selections")
-complete -c xsel -l display -x -d (N_ "X server display")
-complete -c xsel -s t -l selectionTimeout -d (N_ "Timeout for retrieving selection")
-complete -c xsel -s l -l logfile -f -d (N_ "Error log")
-complete -c xsel -s n -l nodetach -d (N_ "Do not detach from the controlling terminal")
-complete -c xsel -s h -l help -d (N_ "Display help and exit")
-complete -c xsel -s v -l verbose -d (N_ "Print informative messages")
-complete -c xsel -l version -d (N_ "Display version and exit")
+complete -c xsel -s a -l append --description "Append input to selection"
+complete -c xsel -s f -l follow --description "Append to selection as input grows"
+complete -c xsel -s i -l input --description "Read into selection"
+complete -c xsel -s o -l output --description "Write selection"
+complete -c xsel -s c -l clear --description "Clear selection"
+complete -c xsel -s d -l delete --description "Delete selection"
+complete -c xsel -s p -l primary --description "Use primary selection"
+complete -c xsel -s s -l secondary --description "Use secondary selection"
+complete -c xsel -s b -l clipboard --description "Use clipboard selection"
+complete -c xsel -s k -l keep --description "Make current selections persistent after program exit"
+complete -c xsel -s x -l exchange --description "Exchange primary and secondary selections"
+complete -c xsel -l display -x --description "X server display"
+complete -c xsel -s t -l selectionTimeout --description "Timeout for retrieving selection"
+complete -c xsel -s l -l logfile -f --description "Error log"
+complete -c xsel -s n -l nodetach --description "Do not detach from the controlling terminal"
+complete -c xsel -s h -l help --description "Display help and exit"
+complete -c xsel -s v -l verbose --description "Print informative messages"
+complete -c xsel -l version --description "Display version and exit"

@@ -1,14 +1,14 @@
-complete -c python -s c -x -d (N_ "Execute argument as command")
-complete -c python -s d -d (N_ "Debug on")
-complete -c python -s E -d (N_ "Ignore environment variables")
-complete -c python -s h -d (N_ "Display help and exit")
-complete -c python -s i -d (N_ "Interactive mode after executing commands")
-complete -c python -s O -d (N_ "Enable optimizations")
-complete -c python -s Q -x -a "old new" -d (N_ "Division control")
-complete -c python -s S -d (N_ "Disable import of site module")
-complete -c python -s t -d (N_ "Warn on mixed tabs and spaces")
-complete -c python -s u -d (N_ "Unbuffered input and output")
-complete -c python -s v -d (N_ "Verbose mode")
-complete -c python -s V -d (N_ "Display version and exit")
-complete -c python -s W -x -d (N_ "Warning control") -a "ignore default all module once error"
-complete -c python -s x -d (N_ "Ignore first line of input")
+complete -c python -s c -x --description "Execute argument as command"
+complete -c python -s d --description "Debug on"
+complete -c python -s E --description "Ignore environment variables"
+complete -c python -s h --description "Display help and exit"
+complete -c python -s i --description "Interactive mode after executing commands"
+complete -c python -s O --description "Enable optimizations"
+complete -c python -s Q -x -a "old new" --description "Division control"
+complete -c python -s S --description "Disable import of site module"
+complete -c python -s t --description "Warn on mixed tabs and spaces"
+complete -c python -s u --description "Unbuffered input and output"
+complete -c python -s v --description "Verbose mode"
+complete -c python -s V --description "Display version and exit"
+complete -c python -s W -x --description "Warning control" -a "ignore default all module once error"
+complete -c python -s x --description "Ignore first line of input"

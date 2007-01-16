@@ -1,21 +1,21 @@
-complete -c sort -s b -l ignore-leading-blanks -d (N_ "Ignore leading blanks")
-complete -c sort -s d -l dictionary-order -d (N_ "Consider only blanks and alphanumerics")
-complete -c sort -s f -l ignore-case -d (N_ "Ignore case")
-complete -c sort -s g -l general-numeric-sort -d (N_ "Compare general numeric value")
-complete -c sort -s i -l ignore-nonprinting -d (N_ "Consider only printable")
-complete -c sort -s M -l month-sort -d (N_ "Compare month names")
-complete -c sort -s n -l numeric-sort -d (N_ "Compare string numerical value")
-complete -c sort -s r -l reverse -d (N_ "Reverse results")
-complete -c sort -s c -l check -d (N_ "Only check if sorted")
-complete -c sort -s k -l key -d (N_ "Define key")
-complete -c sort -s m -l merge -d (N_ "Merge sorted files")
-complete -c sort -s o -l output -f -d (N_ "Write to file")
-complete -c sort -s s -l stable -d (N_ "Stabilize sort")
-complete -c sort -s S -l buffer-size -r -d (N_ "Set memory buffer size")
-complete -c sort -s t -l field-separator -d (N_ "Field separator")
-complete -c sort -s T -l temporary-directory -r -d (N_ "Set temporary directory")
-complete -c sort -s u -l unique -d (N_ "Output only first of equal lines")
-complete -c sort -s z -l zero-terminated -d (N_ "Lines end with 0 byte")
-complete -c sort -l help -d (N_ "Display help and exit")
-complete -c sort -l version -d (N_ "Display version and exit")
+complete -c sort -s b -l ignore-leading-blanks --description "Ignore leading blanks"
+complete -c sort -s d -l dictionary-order --description "Consider only blanks and alphanumerics"
+complete -c sort -s f -l ignore-case --description "Ignore case"
+complete -c sort -s g -l general-numeric-sort --description "Compare general numeric value"
+complete -c sort -s i -l ignore-nonprinting --description "Consider only printable"
+complete -c sort -s M -l month-sort --description "Compare month names"
+complete -c sort -s n -l numeric-sort --description "Compare string numerical value"
+complete -c sort -s r -l reverse --description "Reverse results"
+complete -c sort -s c -l check --description "Only check if sorted"
+complete -c sort -s k -l key --description "Define key"
+complete -c sort -s m -l merge --description "Merge sorted files"
+complete -c sort -s o -l output -f --description "Write to file"
+complete -c sort -s s -l stable --description "Stabilize sort"
+complete -c sort -s S -l buffer-size -r --description "Set memory buffer size"
+complete -c sort -s t -l field-separator --description "Field separator"
+complete -c sort -s T -l temporary-directory -r --description "Set temporary directory"
+complete -c sort -s u -l unique --description "Output only first of equal lines"
+complete -c sort -s z -l zero-terminated --description "Lines end with 0 byte"
+complete -c sort -l help --description "Display help and exit"
+complete -c sort -l version --description "Display version and exit"
 

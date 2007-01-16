@@ -2,21 +2,21 @@
 
 # Author: Tassilo Horn <tassilo@member.fsf.org>
 
-function __fish_emerge_print_installed_pkgs -d (N_ 'Prints completions for installed packages on the system from /var/db/pkg')
+function __fish_emerge_print_installed_pkgs --description 'Prints completions for installed packages on the system from /var/db/pkg'
  if test -d /var/db/pkg
    find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
    return
  end
 end
 
-function __fish_emerge_print_all_pkgs -d (N_ 'Prints completions for all available packages on the system from /usr/portage')
+function __fish_emerge_print_all_pkgs --description 'Prints completions for all available packages on the system from /usr/portage'
  if test -d /usr/portage
    find /usr/portage/ -maxdepth 2 -type d | cut -d'/' -f4-5 | sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
    return
  end
 end
 
-function __fish_emerge_use_installed_package -d (N_ 'Tests if emerge command should have an installed package as potential completion')
+function __fish_emerge_use_installed_package --description 'Tests if emerge command should have an installed package as potential completion'
   for i in (commandline -opc)
     if contains -- $i -u --update -C --unmerge -P --prune --config
       return 0

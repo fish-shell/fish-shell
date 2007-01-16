@@ -1,20 +1,20 @@
-complete -c perl -s 0 -d (N_ 'Specify record separator')
-complete -c perl -s a -d (N_ 'Turn on autosplit mode')
-complete -c perl -s c -d (N_ 'Check syntax')
-complete -c perl -s d -d (N_ 'Debugger')
-complete -c perl -s D -x -d (N_ 'Debug option')
-complete -c perl -s e -x -d (N_ 'Execute command')
-complete -c perl -s F -d (N_ 'Set regexp used to split input')
-complete -c perl -s i -d (N_ 'Edit files in-place')
-complete -c perl -s I -d (N_ 'Include path')
-complete -c perl -s l -d (N_ 'Automatic line ending processing')
-complete -c perl -s n -d (N_ 'Loop script')
-complete -c perl -s p -d (N_ 'Loop script, print $_')
-complete -c perl -s P -d (N_ 'Invoke CPP')
-complete -c perl -s s -d (N_ 'Define custom switches')
-complete -c perl -s S -d (N_ 'Search $PATH for script')
-complete -c perl -s T -d (N_ 'Taint checking')
-complete -c perl -s U -d (N_ 'Unsafe mode')
-complete -c perl -s v -d (N_ 'Display version and exit')
-complete -c perl -s x -d (N_ 'Extract script')
+complete -c perl -s 0 --description 'Specify record separator'
+complete -c perl -s a --description 'Turn on autosplit mode'
+complete -c perl -s c --description 'Check syntax'
+complete -c perl -s d --description 'Debugger'
+complete -c perl -s D -x --description 'Debug option'
+complete -c perl -s e -x --description 'Execute command'
+complete -c perl -s F --description 'Set regexp used to split input'
+complete -c perl -s i --description 'Edit files in-place'
+complete -c perl -s I --description 'Include path'
+complete -c perl -s l --description 'Automatic line ending processing'
+complete -c perl -s n --description 'Loop script'
+complete -c perl -s p --description 'Loop script, print $_'
+complete -c perl -s P --description 'Invoke CPP'
+complete -c perl -s s --description 'Define custom switches'
+complete -c perl -s S --description 'Search $PATH for script'
+complete -c perl -s T --description 'Taint checking'
+complete -c perl -s U --description 'Unsafe mode'
+complete -c perl -s v --description 'Display version and exit'
+complete -c perl -s x --description 'Extract script'
 

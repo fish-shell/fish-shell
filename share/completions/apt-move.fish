@@ -1,22 +1,22 @@
 #apt-move
-complete -c apt-move -a get -d (N_ "Generate master file")
-complete -c apt-move -a getlocal -d (N_ "Alias for 'get'")
-complete -f -c apt-move -a move -d (N_ "Move packages to local tree")
-complete -f -c apt-move -a delete -d (N_ "Delete obsolete package files")
-complete -f -c apt-move -a packages -d (N_ "Build new local files")
-complete -f -c apt-move -a fsck -d (N_ "Rebuild index files")
-complete -f -c apt-move -a update -d (N_ "Move packages from cache to local mirror")
-complete -f -c apt-move -a local -d (N_ "Alias for 'move delete packages'")
-complete -f -c apt-move -a localupdate -d (N_ "Alias for 'update'")
-complete -f -c apt-move -a mirror -d (N_ "Download package missing from mirror")
-complete -f -c apt-move -a sync -d (N_ "Sync packages installed")
+complete -c apt-move -a get --description "Generate master file"
+complete -c apt-move -a getlocal --description "Alias for 'get'"
+complete -f -c apt-move -a move --description "Move packages to local tree"
+complete -f -c apt-move -a delete --description "Delete obsolete package files"
+complete -f -c apt-move -a packages --description "Build new local files"
+complete -f -c apt-move -a fsck --description "Rebuild index files"
+complete -f -c apt-move -a update --description "Move packages from cache to local mirror"
+complete -f -c apt-move -a local --description "Alias for 'move delete packages'"
+complete -f -c apt-move -a localupdate --description "Alias for 'update'"
+complete -f -c apt-move -a mirror --description "Download package missing from mirror"
+complete -f -c apt-move -a sync --description "Sync packages installed"
 complete -f -c apt-move -a exclude -d 'test $LOCALDIR/.exclude file'
-complete -c apt-move -a movefile -d (N_ "Move file specified on commandline")
+complete -c apt-move -a movefile --description "Move file specified on commandline"
 complete -f -c apt-move -a listbin -d (N_ "List packages that may serve as input to mirrorbin or mirrorsource" )
-complete -f -c apt-move -a mirrorbin -d (N_ "Fetch package from STDIN")
-complete -f -c apt-move -a mirrorsrc -d (N_ "Fetch source package from STDIN")
-complete -f -c apt-move -s a -d (N_ "Process all packages")
-complete -c apt-move -s c -d (N_ "Use specific conffile")
-complete -f -c apt-move -s f -d (N_ "Force deletion")
-complete -f -c apt-move -s q -d (N_ "Suppresses normal output")
-complete -f -c apt-move -s t -d (N_ "Test run")
+complete -f -c apt-move -a mirrorbin --description "Fetch package from STDIN"
+complete -f -c apt-move -a mirrorsrc --description "Fetch source package from STDIN"
+complete -f -c apt-move -s a --description "Process all packages"
+complete -c apt-move -s c --description "Use specific conffile"
+complete -f -c apt-move -s f --description "Force deletion"
+complete -f -c apt-move -s q --description "Suppresses normal output"
+complete -f -c apt-move -s t --description "Test run"

@@ -1,25 +1,25 @@
 #Completions for ruby
-complete -c ruby -s 0 -d (N_ 'Specify record separator')
-complete -c ruby -s a -d (N_ 'Turn on autosplit mode')
-complete -c ruby -s c -d (N_ 'Check syntax')
-complete -c ruby -s K -d (N_ 'Kanji code-set')
-complete -c ruby -s d -l debug -d (N_ 'Debugger')
-complete -c ruby -s e -x -d (N_ 'Execute command')
-complete -c ruby -s h -l help -d (N_ 'Display help and exit')
-complete -c ruby -s F -d (N_ 'Set regexp used to split input')
-complete -c ruby -s i -d (N_ 'Edit files in-place')
-complete -c ruby -s I -d (N_ 'Include path')
-complete -c ruby -s l -d (N_ 'Automatic line ending processing')
-complete -c ruby -s n -d (N_ 'Loop script')
-complete -c ruby -s p -d (N_ 'Loop script, print $_')
-complete -c ruby -s r -r -d (N_ 'Require file')
-complete -c ruby -s s -d (N_ 'Define custom switches')
-complete -c ruby -s S -d (N_ 'Search $PATH for script')
-complete -c ruby -s T -d (N_ 'Taint checking')
-complete -c ruby -s v -l verbose -d (N_ 'Verbose mode')
-complete -c ruby -s w -d (N_ 'Verbose mode without message')
-complete -c ruby -l version -d (N_ 'Display version and exit')
-complete -c ruby -s x -d (N_ 'Extract script')
-complete -c ruby -s X -x -a '(__fish_complete_directories (commandline -ct))' -d (N_ 'Directory')
-complete -c ruby -s y -l yydebug -d (N_ 'Compiler debug mode')
+complete -c ruby -s 0 --description 'Specify record separator'
+complete -c ruby -s a --description 'Turn on autosplit mode'
+complete -c ruby -s c --description 'Check syntax'
+complete -c ruby -s K --description 'Kanji code-set'
+complete -c ruby -s d -l debug --description 'Debugger'
+complete -c ruby -s e -x --description 'Execute command'
+complete -c ruby -s h -l help --description 'Display help and exit'
+complete -c ruby -s F --description 'Set regexp used to split input'
+complete -c ruby -s i --description 'Edit files in-place'
+complete -c ruby -s I --description 'Include path'
+complete -c ruby -s l --description 'Automatic line ending processing'
+complete -c ruby -s n --description 'Loop script'
+complete -c ruby -s p --description 'Loop script, print $_'
+complete -c ruby -s r -r --description 'Require file'
+complete -c ruby -s s --description 'Define custom switches'
+complete -c ruby -s S --description 'Search $PATH for script'
+complete -c ruby -s T --description 'Taint checking'
+complete -c ruby -s v -l verbose --description 'Verbose mode'
+complete -c ruby -s w --description 'Verbose mode without message'
+complete -c ruby -l version --description 'Display version and exit'
+complete -c ruby -s x --description 'Extract script'
+complete -c ruby -s X -x -a '(__fish_complete_directories (commandline -ct))' --description 'Directory'
+complete -c ruby -s y -l yydebug --description 'Compiler debug mode'
 

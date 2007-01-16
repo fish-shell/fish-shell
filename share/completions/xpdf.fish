@@ -3,34 +3,34 @@
 # Vikas Gorur <vikas@80x25.org>
 #
 
-complete -c xpdf -s g -d (N_ "Set the initial window geometry")
-complete -c xpdf -o title -d (N_ "Set the window title")
-complete -c xpdf -o cmap -d (N_ "Install a private colormap")
-complete -c xpdf -o rgb -d (N_ "Set the size of the largest RGB cube xpdf will try to allocate")
-complete -c xpdf -o rv -d (N_ "Set reverse video mode")
-complete -c xpdf -o papercolor -d (N_ "Set the background of the page display")
-complete -c xpdf -o mattecolor -d (N_ "Set the color for background outside the page area")
-complete -c xpdf -s z -d (N_ "Set the initial zoom factor")
-complete -c xpdf -o cont -d (N_ "Start in continuous view mode")
-complete -c xpdf -o t1lib -a "yes no" -d (N_ "Enable or disable t1lib (Default: yes)")
-complete -c xpdf -o freetype -a "yes no" -d (N_ "Enable or disable FreeType (Default: yes)")
-complete -c xpdf -o aa -a "yes no" -d (N_ "Enable or disable font anti-aliasing (Default: yes)")
-complete -c xpdf -o ps -d (N_ "Set the default file name for PostScript output")
-complete -c xpdf -o paper -a "letter legal A4 A3 match" -d (N_ "Set the paper size")
-complete -c xpdf -o paperw -d (N_ "Set the paper width, in points")
-complete -c xpdf -o paperh -d (N_ "Set the paper height, in points")
-complete -c xpdf -o level1 -d (N_ "Generate Level 1 PostScript")
-complete -c xpdf -o enc -d (N_ "Sets the encoding to use for text output")
-complete -c xpdf -o eol -a "unix dos mac" -d (N_ "Sets the end-of-line convention to use")
-complete -c xpdf -o opw -d (N_ "Specify the owner password for the PDF file")
-complete -c xpdf -o upw -d (N_ "Specify the user password for the PDF file")
-complete -c xpdf -o fullscreen -d (N_ "Open xpdf in full-screen mode")
-complete -c xpdf -o remote -d (N_ "Start/contact xpdf remote server")
-complete -c xpdf -o reload -d (N_ "Reload xpdf remote server window")
-complete -c xpdf -o raise -d (N_ "Raise xpdf remote server window")
-complete -c xpdf -o quit -d (N_ "Kill xpdf remote server")
-complete -c xpdf -o cmd -d (N_ "Print commands as they're executed")
-complete -c xpdf -s q -d (N_ "Don't print any messages or errors")
-complete -c xpdf -o cfg -d (N_ "Specify config file to use instead of ~/.xpdfrc")
-complete -c xpdf -s v -d (N_ "Print copyright and version information")
-complete -c xpdf -s h -d (N_ "Print usage information")
+complete -c xpdf -s g --description "Set the initial window geometry"
+complete -c xpdf -o title --description "Set the window title"
+complete -c xpdf -o cmap --description "Install a private colormap"
+complete -c xpdf -o rgb --description "Set the size of the largest RGB cube xpdf will try to allocate"
+complete -c xpdf -o rv --description "Set reverse video mode"
+complete -c xpdf -o papercolor --description "Set the background of the page display"
+complete -c xpdf -o mattecolor --description "Set the color for background outside the page area"
+complete -c xpdf -s z --description "Set the initial zoom factor"
+complete -c xpdf -o cont --description "Start in continuous view mode"
+complete -c xpdf -o t1lib -a "yes no" --description "Enable or disable t1lib (Default: yes)"
+complete -c xpdf -o freetype -a "yes no" --description "Enable or disable FreeType (Default: yes)"
+complete -c xpdf -o aa -a "yes no" --description "Enable or disable font anti-aliasing (Default: yes)"
+complete -c xpdf -o ps --description "Set the default file name for PostScript output"
+complete -c xpdf -o paper -a "letter legal A4 A3 match" --description "Set the paper size"
+complete -c xpdf -o paperw --description "Set the paper width, in points"
+complete -c xpdf -o paperh --description "Set the paper height, in points"
+complete -c xpdf -o level1 --description "Generate Level 1 PostScript"
+complete -c xpdf -o enc --description "Sets the encoding to use for text output"
+complete -c xpdf -o eol -a "unix dos mac" --description "Sets the end-of-line convention to use"
+complete -c xpdf -o opw --description "Specify the owner password for the PDF file"
+complete -c xpdf -o upw --description "Specify the user password for the PDF file"
+complete -c xpdf -o fullscreen --description "Open xpdf in full-screen mode"
+complete -c xpdf -o remote --description "Start/contact xpdf remote server"
+complete -c xpdf -o reload --description "Reload xpdf remote server window"
+complete -c xpdf -o raise --description "Raise xpdf remote server window"
+complete -c xpdf -o quit --description "Kill xpdf remote server"
+complete -c xpdf -o cmd --description "Print commands as they're executed"
+complete -c xpdf -s q --description "Don't print any messages or errors"
+complete -c xpdf -o cfg --description "Specify config file to use instead of ~/.xpdfrc"
+complete -c xpdf -s v --description "Print copyright and version information"
+complete -c xpdf -s h --description "Print usage information"

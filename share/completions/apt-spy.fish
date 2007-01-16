@@ -1,20 +1,20 @@
 #apt-spy
-complete -c apt-spy -s h -d (N_ "Display help and exit")
-complete -f -c apt-spy -s d -a "stable testing unstable" -d (N_ "Debian distribution")
-complete -f -c apt-spy -s a -a "Africa Asia Europe North-America Oceania South-America" -d (N_ "Servers in the areas")
-complete -c apt-spy -s c -d (N_ "Conf file")
-complete -f -c apt-spy -s e -d (N_ "Finish after number of servers")
-complete -c apt-spy -s f -d (N_ "File to grab servers")
-complete -c apt-spy -s i -d (N_ "File as input")
-complete -c apt-spy -s m -d (N_ "Mirror-list file")
-complete -c apt-spy -s o -d (N_ "Output sources.list file")
-complete -f -c apt-spy -s p -d (N_ "Use proxy server")
-complete -f -c apt-spy -s s -d (N_ "Comma separated country list")
-complete -f -c apt-spy -s t -d (N_ "How long in sec to download")
-complete -f -c apt-spy -s u -d (N_ "Custom URL to get mirror list")
-complete -c apt-spy -s w -d (N_ "Write top servers to file")
-complete -f -c apt-spy -s n -d (N_ "Number of top servers")
-complete -f -c apt-spy -a "update" -d (N_ "Update mirror list")
-complete -f -c apt-spy -s v -d (N_ "Version number")
+complete -c apt-spy -s h --description "Display help and exit"
+complete -f -c apt-spy -s d -a "stable testing unstable" --description "Debian distribution"
+complete -f -c apt-spy -s a -a "Africa Asia Europe North-America Oceania South-America" --description "Servers in the areas"
+complete -c apt-spy -s c --description "Conf file"
+complete -f -c apt-spy -s e --description "Finish after number of servers"
+complete -c apt-spy -s f --description "File to grab servers"
+complete -c apt-spy -s i --description "File as input"
+complete -c apt-spy -s m --description "Mirror-list file"
+complete -c apt-spy -s o --description "Output sources.list file"
+complete -f -c apt-spy -s p --description "Use proxy server"
+complete -f -c apt-spy -s s --description "Comma separated country list"
+complete -f -c apt-spy -s t --description "How long in sec to download"
+complete -f -c apt-spy -s u --description "Custom URL to get mirror list"
+complete -c apt-spy -s w --description "Write top servers to file"
+complete -f -c apt-spy -s n --description "Number of top servers"
+complete -f -c apt-spy -a "update" --description "Update mirror list"
+complete -f -c apt-spy -s v --description "Version number"
 
 

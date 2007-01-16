@@ -3,7 +3,7 @@
 #
 
 for i in case (sed -n < $__fish_help_dir/commands.html -e "s/.*<h2><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
-	complete -c help -x -a $i -d (N_ "Help for the specified command")
+	complete -c help -x -a $i --description "Help for the specified command"
 end
 
 complete -c help -x -a syntax -d (N_ "Introduction to the fish syntax" )
@@ -11,22 +11,22 @@ complete -c help -x -a todo -d (N_ "Incomplete aspects of fish" )
 complete -c help -x -a bugs -d (N_ "Known fish bugs" )
 complete -c help -x -a history -d (N_ "Help on how to reuse previously entered commands" )
 
-complete -c help -x -a completion -d (N_ "Help on how tab-completion works")
-complete -c help -x -a job-control -d (N_ "Help on how job control works")
-complete -c help -x -a difference -d (N_ "Summary on how fish differs from other shells")
+complete -c help -x -a completion --description "Help on how tab-completion works"
+complete -c help -x -a job-control --description "Help on how job control works"
+complete -c help -x -a difference --description "Summary on how fish differs from other shells"
 
-complete -c help -x -a prompt -d (N_ "Help on how to set the prompt")
-complete -c help -x -a title -d (N_ "Help on how to set the titlebar message")
-complete -c help -x -a killring -d (N_ "Help on how to copy and paste")
-complete -c help -x -a editor -d (N_ "Help on editor shortcuts")
-complete -c help -x -a variables -d (N_ "Help on environment variables")
-complete -c help -x -a color -d (N_ "Help on setting syntax highlighting colors")
+complete -c help -x -a prompt --description "Help on how to set the prompt"
+complete -c help -x -a title --description "Help on how to set the titlebar message"
+complete -c help -x -a killring --description "Help on how to copy and paste"
+complete -c help -x -a editor --description "Help on editor shortcuts"
+complete -c help -x -a variables --description "Help on environment variables"
+complete -c help -x -a color --description "Help on setting syntax highlighting colors"
 
-complete -c help -x -a globbing -d (N_ "Help on parameter expansion (Globbing)")
-complete -c help -x -a expand -d (N_ "Help on parameter expansion (Globbing)")
-complete -c help -x -a expand-variable -d (N_ "Help on variable expansion \$VARNAME")
-complete -c help -x -a expand-home -d (N_ "Help on home directory expansion ~USER")
-complete -c help -x -a expand-brace -d (N_ "Help on brace expansion {a,b,c}")
-complete -c help -x -a expand-wildcard -d (N_ "Help on wildcard expansion *.*")
-complete -c help -x -a expand-command-substitution -d (N_ "Help on command substitution (SUBCOMMAND)")
-complete -c help -x -a expand-process -d (N_ "Help on process expansion %JOB")
+complete -c help -x -a globbing --description "Help on parameter expansion (Globbing)"
+complete -c help -x -a expand --description "Help on parameter expansion (Globbing)"
+complete -c help -x -a expand-variable --description "Help on variable expansion \$VARNAME"
+complete -c help -x -a expand-home --description "Help on home directory expansion ~USER"
+complete -c help -x -a expand-brace --description "Help on brace expansion {a,b,c}"
+complete -c help -x -a expand-wildcard --description "Help on wildcard expansion *.*"
+complete -c help -x -a expand-command-substitution --description "Help on command substitution (SUBCOMMAND)"
+complete -c help -x -a expand-process --description "Help on process expansion %JOB"

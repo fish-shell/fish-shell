@@ -17,17 +17,17 @@ complete -x -c sshfs -d Hostname -a "
 #
 # Mount Points, for neatness, I am only mounting under ~/mnt/
 #
-complete -c sshfs -d (N_ "Mount point") -x -a '(find ~/mnt -type d)'
+complete -c sshfs --description "Mount point" -x -a '(find ~/mnt -type d)'
 #
 # Command options
 #
-complete -c sshfs -s V -d (N_ "Display version and exit")
-complete -c sshfs -s p -x -d (N_ "Port")
-complete -c sshfs -s C -d (N_ "Compression")
-complete -c sshfs -s o -x -d (N_ "Mount options")
-complete -c sshfs -s d -d (N_ "Enable debug")
-complete -c sshfs -s f -d (N_ "Foreground operation")
-complete -c sshfs -s s -d (N_ "Disable multi-threaded operation")
-complete -c sshfs -s r -d (N_ "Mount options")
-complete -c sshfs -s h -d (N_ "Display help and exit")
+complete -c sshfs -s V --description "Display version and exit"
+complete -c sshfs -s p -x --description "Port"
+complete -c sshfs -s C --description "Compression"
+complete -c sshfs -s o -x --description "Mount options"
+complete -c sshfs -s d --description "Enable debug"
+complete -c sshfs -s f --description "Foreground operation"
+complete -c sshfs -s s --description "Disable multi-threaded operation"
+complete -c sshfs -s r --description "Mount options"
+complete -c sshfs -s h --description "Display help and exit"
 

@@ -14,25 +14,25 @@ set -l is_assignment "commandline -ct|sgrep '..*='"
 set -l complete_file_assignment '(commandline -ct)(complete --do-complete=this_command_does_not_exist\ (commandline -ct|sed -e \'s/.*=//\'))'
 complete -c make --condition $is_assignment -a $complete_file_assignment
 
-complete -x -c make -a "(__fish_print_make_targets)" -d (N_ "Target")
-complete -r -c make -s f -d (N_ "Use file as makefile") -r
-complete -x -c make -s C -x -a "(__fish_complete_directories (commandline -ct))" -d (N_ "Change directory")
-complete -c make -s d -d (N_ "Debug mode")
-complete -c make -s e -d (N_ "Environment before makefile")
-complete -c make -s i -d (N_ "Ignore errors")
-complete -x -c make -s I -d (N_ "Search directory for makefile") -a "(__fish_complete_directories (commandline -ct))"
-complete -x -c make -s j -d (N_ "Number of concurrent jobs")
-complete -c make -s k -d (N_ "Continue after an error")
-complete -c make -s l -d (N_ "Start when load drops")
-complete -c make -s n -d (N_ "Do not execute commands")
-complete -c make -s o -r -d (N_ "Ignore specified file")
-complete -c make -s p -d (N_ "Print database")
-complete -c make -s q -d (N_ "Question mode")
-complete -c make -s r -d (N_ "Eliminate implicit rules")
-complete -c make -s s -d (N_ "Quiet mode")
-complete -c make -s S -d (N_ "Don't continue after an error")
-complete -c make -s t -d (N_ "Touch files, don't run commands")
-complete -c make -s v -d (N_ "Display version and exit")
-complete -c make -s w -d (N_ "Print working directory")
-complete -c make -s W -r -d (N_ "Pretend file is modified")
+complete -x -c make -a "(__fish_print_make_targets)" --description "Target"
+complete -r -c make -s f --description "Use file as makefile" -r
+complete -x -c make -s C -x -a "(__fish_complete_directories (commandline -ct))" --description "Change directory"
+complete -c make -s d --description "Debug mode"
+complete -c make -s e --description "Environment before makefile"
+complete -c make -s i --description "Ignore errors"
+complete -x -c make -s I --description "Search directory for makefile" -a "(__fish_complete_directories (commandline -ct))"
+complete -x -c make -s j --description "Number of concurrent jobs"
+complete -c make -s k --description "Continue after an error"
+complete -c make -s l --description "Start when load drops"
+complete -c make -s n --description "Do not execute commands"
+complete -c make -s o -r --description "Ignore specified file"
+complete -c make -s p --description "Print database"
+complete -c make -s q --description "Question mode"
+complete -c make -s r --description "Eliminate implicit rules"
+complete -c make -s s --description "Quiet mode"
+complete -c make -s S --description "Don't continue after an error"
+complete -c make -s t --description "Touch files, don't run commands"
+complete -c make -s v --description "Display version and exit"
+complete -c make -s w --description "Print working directory"
+complete -c make -s W -r --description "Pretend file is modified"
 

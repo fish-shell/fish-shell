@@ -1,11 +1,11 @@
-complete -c uname -s a -l all -d (N_ "Print all information")
-complete -c uname -s s -l kernel-name -d (N_ "Print kernel name")
-complete -c uname -s n -l nodename -d (N_ "Print network node hostname")
-complete -c uname -s r -l kernel-release -d (N_ "Print kernel release")
-complete -c uname -s v -l kernel-version -d (N_ "Print kernel version")
-complete -c uname -s m -l machine -d (N_ "Print machine name")
-complete -c uname -s p -l processor -d (N_ "Print processor")
-complete -c uname -s i -l hardware-platform -d (N_ "Print hardware platform")
-complete -c uname -s o -l operating-system -d (N_ "Print operating system")
-complete -c uname -l help -d (N_ "Display help and exit")
-complete -c uname -l verion -d (N_ "Display version and exit")
+complete -c uname -s a -l all --description "Print all information"
+complete -c uname -s s -l kernel-name --description "Print kernel name"
+complete -c uname -s n -l nodename --description "Print network node hostname"
+complete -c uname -s r -l kernel-release --description "Print kernel release"
+complete -c uname -s v -l kernel-version --description "Print kernel version"
+complete -c uname -s m -l machine --description "Print machine name"
+complete -c uname -s p -l processor --description "Print processor"
+complete -c uname -s i -l hardware-platform --description "Print hardware platform"
+complete -c uname -s o -l operating-system --description "Print operating system"
+complete -c uname -l help --description "Display help and exit"
+complete -c uname -l verion --description "Display version and exit"

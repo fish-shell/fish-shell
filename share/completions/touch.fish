@@ -1,11 +1,11 @@
-complete -c touch -s a -d (N_ "Change access time")
-complete -c touch -s B -l backward -x -d (N_ "Set date back")
-complete -c touch -s c -l no-create -d (N_ "Do not create file")
-complete -c touch -s d -l date -x -d (N_ "Set date")
-complete -c touch -s f -l forward -x -d (N_ "Set date forward")
-complete -c touch -s m -d (N_ "Change modification time")
-complete -c touch -s r -l reference -d (N_ "Use this files times")
-complete -c touch -s t -d (N_ "Set date")
-complete -c touch -l time -x -d (N_ "Set time")
-complete -c touch -l help -d (N_ "Display help and exit")
-complete -c touch -l version -d (N_ "Display version and exit")
+complete -c touch -s a --description "Change access time"
+complete -c touch -s B -l backward -x --description "Set date back"
+complete -c touch -s c -l no-create --description "Do not create file"
+complete -c touch -s d -l date -x --description "Set date"
+complete -c touch -s f -l forward -x --description "Set date forward"
+complete -c touch -s m --description "Change modification time"
+complete -c touch -s r -l reference --description "Use this files times"
+complete -c touch -s t --description "Set date"
+complete -c touch -l time -x --description "Set time"
+complete -c touch -l help --description "Display help and exit"
+complete -c touch -l version --description "Display version and exit"

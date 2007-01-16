@@ -1,20 +1,20 @@
-complete -c du -s a -l all -d (N_ "Write size for all files")
-complete -c du -l apparent-size -d (N_ "Print file size, not disk usage")
-complete -c du -s B -l block-size -d (N_ "Block size")
-complete -c du -s b -l bytes -d (N_ "Use 1B block size")
-complete -c du -s c -l total -d (N_ "Produce grand total")
-complete -c du -s D -l dereference-args -d (N_ "Dereference file symlinks")
-complete -c du -s h -l human-readable -d (N_ "Human readable sizes")
-complete -c du -s H -l si -d (N_ "Human readable sizes, powers of 1000")
-complete -c du -s k -d (N_ "Use 1kB block size")
-complete -c du -s l -l count-links -d (N_ "Count hard links multiple times")
-complete -c du -s L -l dereference -d (N_ "Dereference all symlinks")
-complete -c du -s S -l separate-dirs -d (N_ "Do not include subdirectory size")
-complete -c du -s s -l summarize -d (N_ "Display only a total for each argument")
-complete -c du -s x -l one-file-system -d (N_ "Skip other filesystems")
-complete -c du -s X -l exclude-from -r -d (N_ "Exclude files thet match pattern in file")
-complete -c du -l exclude -r -d (N_ "Exclude files that match pattern")
-complete -c du -l max-depth -r -d (N_ "Recursion limit")
-complete -c du -l help -d (N_ "Display help and exit")
-complete -c du -l version -d (N_ "Display version and exit")
+complete -c du -s a -l all --description "Write size for all files"
+complete -c du -l apparent-size --description "Print file size, not disk usage"
+complete -c du -s B -l block-size --description "Block size"
+complete -c du -s b -l bytes --description "Use 1B block size"
+complete -c du -s c -l total --description "Produce grand total"
+complete -c du -s D -l dereference-args --description "Dereference file symlinks"
+complete -c du -s h -l human-readable --description "Human readable sizes"
+complete -c du -s H -l si --description "Human readable sizes, powers of 1000"
+complete -c du -s k --description "Use 1kB block size"
+complete -c du -s l -l count-links --description "Count hard links multiple times"
+complete -c du -s L -l dereference --description "Dereference all symlinks"
+complete -c du -s S -l separate-dirs --description "Do not include subdirectory size"
+complete -c du -s s -l summarize --description "Display only a total for each argument"
+complete -c du -s x -l one-file-system --description "Skip other filesystems"
+complete -c du -s X -l exclude-from -r --description "Exclude files thet match pattern in file"
+complete -c du -l exclude -r --description "Exclude files that match pattern"
+complete -c du -l max-depth -r --description "Recursion limit"
+complete -c du -l help --description "Display help and exit"
+complete -c du -l version --description "Display version and exit"
 

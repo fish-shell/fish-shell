@@ -1,34 +1,34 @@
-complete -c gprof -s A -l annoted-source -d (N_ "Print annotated source")
-complete -c gprof -s b -l brief -d (N_ "Do not print explanations")
-complete -c gprof -s C -l exec-counts -d (N_ "Print tally")
-complete -c gprof -s i -l file-info -d (N_ "Display summary")
-complete -c gprof -s I -l directory-path -d (N_ "Search directories for source")
-complete -c gprof -s J -l no-annotated-source -d (N_ "No annotated source")
-complete -c gprof -s L -l print-path -d (N_ "Print full path of source")
-complete -c gprof -s p -l flat-profile -d (N_ "Print flat profile")
-complete -c gprof -s P -l no-flat-profile -d (N_ "No flat profile")
-complete -c gprof -s q -l graph -d (N_ "Print call graph")
-complete -c gprof -s Q -l no-graph -d (N_ "No call graph")
-complete -c gprof -s y -l separate-files -d (N_ "Annotate to file")
-complete -c gprof -s Z -l no-exec-counts -d (N_ "No tally")
-complete -c gprof -l function-ordering -d (N_ "Suggest function ordering")
-complete -rc gprof -l file-ordering -d (N_ "Suggest file ordering")
-complete -c gprof -s T -l traditional -d (N_ "Traditional mode")
-complete -xc gprof -s w -l width -d (N_ "Set width of output")
-complete -c gprof -s x -l all-lines -d (N_ "Annotate every line")
-complete -xc gprof -l demangle -d (N_ "Set demangling style")
-complete -c gprof -l no-demangle -d (N_ "Turn of demangling")
-complete -xc gprof -s a -l no-static -d (N_ "Supress static functions")
+complete -c gprof -s A -l annoted-source --description "Print annotated source"
+complete -c gprof -s b -l brief --description "Do not print explanations"
+complete -c gprof -s C -l exec-counts --description "Print tally"
+complete -c gprof -s i -l file-info --description "Display summary"
+complete -c gprof -s I -l directory-path --description "Search directories for source"
+complete -c gprof -s J -l no-annotated-source --description "No annotated source"
+complete -c gprof -s L -l print-path --description "Print full path of source"
+complete -c gprof -s p -l flat-profile --description "Print flat profile"
+complete -c gprof -s P -l no-flat-profile --description "No flat profile"
+complete -c gprof -s q -l graph --description "Print call graph"
+complete -c gprof -s Q -l no-graph --description "No call graph"
+complete -c gprof -s y -l separate-files --description "Annotate to file"
+complete -c gprof -s Z -l no-exec-counts --description "No tally"
+complete -c gprof -l function-ordering --description "Suggest function ordering"
+complete -rc gprof -l file-ordering --description "Suggest file ordering"
+complete -c gprof -s T -l traditional --description "Traditional mode"
+complete -xc gprof -s w -l width --description "Set width of output"
+complete -c gprof -s x -l all-lines --description "Annotate every line"
+complete -xc gprof -l demangle --description "Set demangling style"
+complete -c gprof -l no-demangle --description "Turn of demangling"
+complete -xc gprof -s a -l no-static --description "Supress static functions"
 complete -xc gprof -s c -l static-call-graph 
-complete -xc gprof -s D -l ignore-non-functions -d (N_ "Ignore symbols not known to be functions")
-complete -xc gprof -s k -r -d (N_ "Delete arcs from callgraph")
-complete -xc gprof -s l -l line -d (N_ "Line by line profiling")
-complete -xc gprof -s m -l min-count -r -d (N_ "Supress output when executed less than specified times")
-complete -xc gprof -s n -l time -d (N_ "Only propagate times for matching symbols")
-complete -xc gprof -s N -l no-time -d (N_ "Do not propagate times for matching symbols")
-complete -xc gprof -s z -l display-unused-functions -d (N_ "Mention unused functions in flat profile")
-complete -xc gprof -s d -l debug -d (N_ "Specify debugging options")
-complete -xc gprof -s h -l help -d (N_ "Display help and exit")
-complete -xc gprof -s v -l version -d (N_ "Display version and exit")
-complete -xc gprof -s O -l file-format -x -a "auto bsd 4.4bsd magic prof" -d (N_ "Profile data format")
-complete -xc gprof -s s -l sum -d (N_ "Print summary")
+complete -xc gprof -s D -l ignore-non-functions --description "Ignore symbols not known to be functions"
+complete -xc gprof -s k -r --description "Delete arcs from callgraph"
+complete -xc gprof -s l -l line --description "Line by line profiling"
+complete -xc gprof -s m -l min-count -r --description "Supress output when executed less than specified times"
+complete -xc gprof -s n -l time --description "Only propagate times for matching symbols"
+complete -xc gprof -s N -l no-time --description "Do not propagate times for matching symbols"
+complete -xc gprof -s z -l display-unused-functions --description "Mention unused functions in flat profile"
+complete -xc gprof -s d -l debug --description "Specify debugging options"
+complete -xc gprof -s h -l help --description "Display help and exit"
+complete -xc gprof -s v -l version --description "Display version and exit"
+complete -xc gprof -s O -l file-format -x -a "auto bsd 4.4bsd magic prof" --description "Profile data format"
+complete -xc gprof -s s -l sum --description "Print summary"

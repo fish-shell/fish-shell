@@ -2,40 +2,40 @@
 # Completions for patch
 #
 
-complete -c patch -s b -l backup -d (N_ "Make backup files, when patching a file, rename or copy the original instead of removing it")
-complete -c patch -l backup-if-mismatch -d (N_ "Back up a file if the patch does not match the file exactly")
-complete -c patch -l no-backup-if-mismatch -d (N_ "Do not back up a file if the patch does not match the file exactly")
-complete -c patch -s B -l prefix -r -f -d (N_ "Prefix pref to a file name when generating its simple backup file name")
-complete -c patch -l binary -d (N_ "Read and write all files in binary mode")
-complete -c patch -s c -l context -d (N_ "Interpret the patch file as a ordinary context diff")
-complete -c patch -s d -l directory -r -f -d (N_ "Change to the directory dir immediately")
-complete -c patch -s D -l ifdef -r -f -d (N_ "Use the #ifdef ... #endif construct to mark changes")
-complete -c patch -l dry-run -d (N_ "Print the results of applying the patches without actually changing any files")
-complete -c patch -s e -l ed -d (N_ "Interpret the patch file as an ed script")
-complete -c patch -s E -l remove-empty-files -d (N_ "Remove output files that are empty after the patches have been applied")
-complete -c patch -s f -l force -d (N_ "Assume that the user knows exactly what he/she is doing, and do not ask questions")
-complete -c patch -s F -l fuzz -r -f -d (N_ "Set the maximum fuzz factor")
-complete -c patch -s g -l get -r -f -d (N_ "This option controls patch's actions when a file is under RCS or SCCS control, and does not exist or is read-only and matches the default version, or when a file is under ClearCase control and does not exist")
-complete -c patch -l help -d (N_ "Display help and exit")
-complete -c patch -s i -l input -r -f -d (N_ "Read the patch from patchfile")
-complete -c patch -s l -l ignore-whitespace -d (N_ "Match patterns loosely, in case tabs or spaces have been munged in your files")
-complete -c patch -s n -l normal -d (N_ "Interpret the patch file as a normal diff")
-complete -c patch -s N -l forward -d (N_ "Ignore patches that seem to be reversed or already applied")
-complete -c patch -s o -l output -r -f -d (N_ "Send output to outfile instead of patching files in place")
-complete -c patch -s p -l strip -r -f -d (N_ "Strip the smallest prefix containing num leading slashes from each file name found in the patch file")
-complete -c patch -l posix -d (N_ "Conform more strictly to the POSIX standard")
-complete -c patch -l quoting-style -r -f -d (N_ "Use style word to quote output names") -a "literal shell shell-always c escape"
-complete -c patch -s r -l reject-file -r -f -d (N_ "Put rejects into rejectfile instead of the default .rej file")
-complete -c patch -s R -l reverse -d (N_ "Assume that this patch was created with the old and new files swapped")
-complete -c patch -s s -l silent -l quiet -d (N_ "Work silently, unless an error occurs")
-complete -c patch -s t -l batch -d (N_ "Suppress questions like -f, but make some different assumptions")
-complete -c patch -s T -l set-time -d (N_ "Set the modification and access times of patched files from time stamps given in context diff headers, local time")
-complete -c patch -s u -l unified -d (N_ "Interpret the patch file as a unified context diff")
-complete -c patch -s v -l version -d (N_ "Display version and exit")
-complete -c patch -s V -l version-control -r -f -d (N_ "Use method to determine backup file names")
-complete -c patch -l verbose -d (N_ "Output extra information about the work being done")
-complete -c patch -s x -l debug -r -f -d (N_ "Set internal debugging flags of interest only to patch patchers")
-complete -c patch -s Y -l basename-prefix -r -f -d (N_ "Prefix pref to the basename of a file name when generating its simple backup file name")
-complete -c patch -s z -l suffix -r -f -d (N_ "Use suffix as the simple backup suffix")
-complete -c patch -s Z -l set-utc -d (N_ "Set the modification and access times of patched files from time stamps given in context diff headers, UTC, GMT")
+complete -c patch -s b -l backup --description "Make backup files, when patching a file, rename or copy the original instead of removing it"
+complete -c patch -l backup-if-mismatch --description "Back up a file if the patch does not match the file exactly"
+complete -c patch -l no-backup-if-mismatch --description "Do not back up a file if the patch does not match the file exactly"
+complete -c patch -s B -l prefix -r -f --description "Prefix pref to a file name when generating its simple backup file name"
+complete -c patch -l binary --description "Read and write all files in binary mode"
+complete -c patch -s c -l context --description "Interpret the patch file as a ordinary context diff"
+complete -c patch -s d -l directory -r -f --description "Change to the directory dir immediately"
+complete -c patch -s D -l ifdef -r -f --description "Use the #ifdef ... #endif construct to mark changes"
+complete -c patch -l dry-run --description "Print the results of applying the patches without actually changing any files"
+complete -c patch -s e -l ed --description "Interpret the patch file as an ed script"
+complete -c patch -s E -l remove-empty-files --description "Remove output files that are empty after the patches have been applied"
+complete -c patch -s f -l force --description "Assume that the user knows exactly what he/she is doing, and do not ask questions"
+complete -c patch -s F -l fuzz -r -f --description "Set the maximum fuzz factor"
+complete -c patch -s g -l get -r -f --description "This option controls patch's actions when a file is under RCS or SCCS control, and does not exist or is read-only and matches the default version, or when a file is under ClearCase control and does not exist"
+complete -c patch -l help --description "Display help and exit"
+complete -c patch -s i -l input -r -f --description "Read the patch from patchfile"
+complete -c patch -s l -l ignore-whitespace --description "Match patterns loosely, in case tabs or spaces have been munged in your files"
+complete -c patch -s n -l normal --description "Interpret the patch file as a normal diff"
+complete -c patch -s N -l forward --description "Ignore patches that seem to be reversed or already applied"
+complete -c patch -s o -l output -r -f --description "Send output to outfile instead of patching files in place"
+complete -c patch -s p -l strip -r -f --description "Strip the smallest prefix containing num leading slashes from each file name found in the patch file"
+complete -c patch -l posix --description "Conform more strictly to the POSIX standard"
+complete -c patch -l quoting-style -r -f --description "Use style word to quote output names" -a "literal shell shell-always c escape"
+complete -c patch -s r -l reject-file -r -f --description "Put rejects into rejectfile instead of the default .rej file"
+complete -c patch -s R -l reverse --description "Assume that this patch was created with the old and new files swapped"
+complete -c patch -s s -l silent -l quiet --description "Work silently, unless an error occurs"
+complete -c patch -s t -l batch --description "Suppress questions like -f, but make some different assumptions"
+complete -c patch -s T -l set-time --description "Set the modification and access times of patched files from time stamps given in context diff headers, local time"
+complete -c patch -s u -l unified --description "Interpret the patch file as a unified context diff"
+complete -c patch -s v -l version --description "Display version and exit"
+complete -c patch -s V -l version-control -r -f --description "Use method to determine backup file names"
+complete -c patch -l verbose --description "Output extra information about the work being done"
+complete -c patch -s x -l debug -r -f --description "Set internal debugging flags of interest only to patch patchers"
+complete -c patch -s Y -l basename-prefix -r -f --description "Prefix pref to the basename of a file name when generating its simple backup file name"
+complete -c patch -s z -l suffix -r -f --description "Use suffix as the simple backup suffix"
+complete -c patch -s Z -l set-utc --description "Set the modification and access times of patched files from time stamps given in context diff headers, UTC, GMT"
 

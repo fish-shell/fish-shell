@@ -1,5 +1,5 @@
-complete -c echo -s n -d (N_ "No newline")
-complete -c echo -s e -d (N_ "Use backslash escaped characters")
-complete -c echo -s E -d (N_ "Do not use backslash escaped characters")
-complete -c echo -l help -d (N_ "Display help and exit")
-complete -c echo -l version -d (N_ "Display version and exit")
+complete -c echo -s n --description "No newline"
+complete -c echo -s e --description "Use backslash escaped characters"
+complete -c echo -s E --description "Do not use backslash escaped characters"
+complete -c echo -l help --description "Display help and exit"
+complete -c echo -l version --description "Display version and exit"

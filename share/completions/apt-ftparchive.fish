@@ -1,17 +1,17 @@
 #apt-ftparchive
-complete -c apt-ftparchive -s h -l help -d (N_ "Display help and exit")
-complete -f -c apt-ftparchive -a packages -d (N_ "Generate package from source")
-complete -f -c apt-ftparchive -a sources -d (N_ "Generate source index file")
-complete -f -c apt-ftparchive -a contents -d (N_ "Generate contents file")
-complete -f -c apt-ftparchive -a release -d (N_ "Generate release file")
-complete -f -c apt-ftparchive -a clean -d (N_ "Remove records")
-complete -f -c apt-ftparchive -l md5 -d (N_ "Generate MD5 sums")
-complete -f -c apt-ftparchive -s d -l db -d (N_ "Use a binary db")
-complete -f -c apt-ftparchive -s q -l quiet -d (N_ "Quiet mode")
-complete -f -c apt-ftparchive -l delink -d (N_ "Perform delinking")
-complete -f -c apt-ftparchive -l contents -d (N_ "Perform contents generation")
-complete -c apt-ftparchive -s s -l source-override -d (N_ "Use source override")
-complete -f -c apt-ftparchive -l readonly -d (N_ "Make caching db readonly")
-complete -f -c apt-ftparchive -s v -l version -d (N_ "Display version and exit")
-complete -r -c apt-ftparchive -s c -l config-file -d (N_ "Use config file")
-complete -r -c apt-ftparchive -s o -l option -d (N_ "Set config options")
+complete -c apt-ftparchive -s h -l help --description "Display help and exit"
+complete -f -c apt-ftparchive -a packages --description "Generate package from source"
+complete -f -c apt-ftparchive -a sources --description "Generate source index file"
+complete -f -c apt-ftparchive -a contents --description "Generate contents file"
+complete -f -c apt-ftparchive -a release --description "Generate release file"
+complete -f -c apt-ftparchive -a clean --description "Remove records"
+complete -f -c apt-ftparchive -l md5 --description "Generate MD5 sums"
+complete -f -c apt-ftparchive -s d -l db --description "Use a binary db"
+complete -f -c apt-ftparchive -s q -l quiet --description "Quiet mode"
+complete -f -c apt-ftparchive -l delink --description "Perform delinking"
+complete -f -c apt-ftparchive -l contents --description "Perform contents generation"
+complete -c apt-ftparchive -s s -l source-override --description "Use source override"
+complete -f -c apt-ftparchive -l readonly --description "Make caching db readonly"
+complete -f -c apt-ftparchive -s v -l version --description "Display version and exit"
+complete -r -c apt-ftparchive -s c -l config-file --description "Use config file"
+complete -r -c apt-ftparchive -s o -l option --description "Set config options"

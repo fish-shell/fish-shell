@@ -1,17 +1,17 @@
 #apt-file
-complete -c apt-file -s h -l help -d (N_ "Display help and exit")
-complete -x -c apt-file -a update -d (N_ "Resync package contents from source")
-complete -r -c apt-file -a search -d (N_ "Search package containing pattern")
-complete -r -c apt-file -a list -d (N_ "List contents of a package matching pattern")
-complete -x -c apt-file -a purge -d (N_ "Remove all gz files from cache")
-complete -r -c apt-file -s c -l cache -d (N_ "Set cache dir")
-complete -f -c apt-file -s v -l verbose -d (N_ "Verbose mode")
-complete -c apt-file -s d -l cdrom-mount -d (N_ "Use cdrom-mount-point")
-complete -f -c apt-file -s i -l ignore-case -d (N_ "Do not expand pattern")
-complete -f -c apt-file -s x -l regexp -d (N_ "Pattern is regexp")
-complete -f -c apt-file -s V -l version -d (N_ "Display version and exit")
-complete -f -c apt-file -s a -l architecture -d (N_ "Set arch")
-complete -r -c apt-file -s s -l sources-list -a "(ls /etc/apt)" -d (N_ "Set sources.list file")
-complete -f -c apt-file -s l -l package-only -d (N_ "Only display package name")
-complete -f -c apt-file -s F -l fixed-string -d (N_ "Do not expand pattern")
-complete -f -c apt-file -s y -l dummy -d (N_ "Run in dummy mode")
+complete -c apt-file -s h -l help --description "Display help and exit"
+complete -x -c apt-file -a update --description "Resync package contents from source"
+complete -r -c apt-file -a search --description "Search package containing pattern"
+complete -r -c apt-file -a list --description "List contents of a package matching pattern"
+complete -x -c apt-file -a purge --description "Remove all gz files from cache"
+complete -r -c apt-file -s c -l cache --description "Set cache dir"
+complete -f -c apt-file -s v -l verbose --description "Verbose mode"
+complete -c apt-file -s d -l cdrom-mount --description "Use cdrom-mount-point"
+complete -f -c apt-file -s i -l ignore-case --description "Do not expand pattern"
+complete -f -c apt-file -s x -l regexp --description "Pattern is regexp"
+complete -f -c apt-file -s V -l version --description "Display version and exit"
+complete -f -c apt-file -s a -l architecture --description "Set arch"
+complete -r -c apt-file -s s -l sources-list -a "(ls /etc/apt)" --description "Set sources.list file"
+complete -f -c apt-file -s l -l package-only --description "Only display package name"
+complete -f -c apt-file -s F -l fixed-string --description "Do not expand pattern"
+complete -f -c apt-file -s y -l dummy --description "Run in dummy mode"

@@ -1,36 +1,36 @@
 
 complete -xc man -a "(__fish_complete_man)"
 
-complete -xc man -a 1 -d (N_ "Program section")
-complete -xc man -a 2 -d (N_ "Syscall section")
-complete -xc man -a 3 -d (N_ "Library section")
-complete -xc man -a 4 -d (N_ "Device section")
-complete -xc man -a 5 -d (N_ "File format section")
-complete -xc man -a 6 -d (N_ "Games section")
-complete -xc man -a 7 -d (N_ "Misc section")
-complete -xc man -a 8 -d (N_ "Admin section")
-complete -xc man -a 9 -d (N_ "Kernel section")
-complete -xc man -a tcl -d (N_ "Tcl section")
-complete -xc man -a n -d (N_ "New section")
-complete -xc man -a l -d (N_ "Local section")
+complete -xc man -a 1 --description "Program section"
+complete -xc man -a 2 --description "Syscall section"
+complete -xc man -a 3 --description "Library section"
+complete -xc man -a 4 --description "Device section"
+complete -xc man -a 5 --description "File format section"
+complete -xc man -a 6 --description "Games section"
+complete -xc man -a 7 --description "Misc section"
+complete -xc man -a 8 --description "Admin section"
+complete -xc man -a 9 --description "Kernel section"
+complete -xc man -a tcl --description "Tcl section"
+complete -xc man -a n --description "New section"
+complete -xc man -a l --description "Local section"
 complete -xc man -a p
-complete -xc man -a o -d (N_ "Old section")
-complete -rc man -s C -d (N_ "Configuration file")
-complete -xc man -s M -a "(__fish_complete_directories (commandline -ct))" -d (N_ "Manpath")
-complete -rc man -s P -d (N_ "Pager")
-complete -xc man -s S -d (N_ "Manual sections")
-complete -c man -s a -d (N_ "Display all matches")
-complete -c man -s c -d (N_ "Always reformat")
-complete -c man -s d -d (N_ "Debug")
-complete -c man -s D -d (N_ "Debug and run")
-complete -c man -s f -d (N_ "Show whatis information")
-complete -c man -s F -l preformat -d (N_ "Format only")
-complete -c man -s h -d (N_ "Display help and exit")
-complete -c man -s k -d (N_ "Show apropos information")
-complete -c man -s K -d (N_ "Search in all man pages")
-complete -xc man -s m -d (N_ "Set system")
-complete -xc man -s p -d (N_ "Preprocessors")
-complete -c man -s t -d (N_ "Format for printing")
-complete -c man -s w -l path -d (N_ "Only print locations")
-complete -c man -s W -d (N_ "Only print locations")
+complete -xc man -a o --description "Old section"
+complete -rc man -s C --description "Configuration file"
+complete -xc man -s M -a "(__fish_complete_directories (commandline -ct))" --description "Manpath"
+complete -rc man -s P --description "Pager"
+complete -xc man -s S --description "Manual sections"
+complete -c man -s a --description "Display all matches"
+complete -c man -s c --description "Always reformat"
+complete -c man -s d --description "Debug"
+complete -c man -s D --description "Debug and run"
+complete -c man -s f --description "Show whatis information"
+complete -c man -s F -l preformat --description "Format only"
+complete -c man -s h --description "Display help and exit"
+complete -c man -s k --description "Show apropos information"
+complete -c man -s K --description "Search in all man pages"
+complete -xc man -s m --description "Set system"
+complete -xc man -s p --description "Preprocessors"
+complete -c man -s t --description "Format for printing"
+complete -c man -s w -l path --description "Only print locations"
+complete -c man -s W --description "Only print locations"
 

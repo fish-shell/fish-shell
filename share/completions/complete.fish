@@ -1,15 +1,15 @@
-complete -c complete -s c -l command -d (N_ "Command to add completion to") -r
-complete -c complete -s p -l path -d (N_ "Path to add completion to")
-complete -c complete -s s -l short-option -d (N_ "Posix-style option to complete")
-complete -c complete -s l -l long-option -d (N_ "GNU-style option to complete")
-complete -c complete -s o -l old-option -d (N_ "Old style long option to complete")
-complete -c complete -s f -l no-files -d (N_ "Do not use file completion")
-complete -c complete -s r -l require-parameter -d (N_ "Require parameter")
-complete -c complete -s x -l exclusive -d (N_ "Require parameter and do not use file completion")
-complete -c complete -s a -l arguments -d (N_ "A list of possible arguments")
-complete -c complete -s d -l description -d (N_ "Description of this completions")
-complete -c complete -s u -l unauthorative -d (N_ "Option list is not complete")
-complete -c complete -s e -l erase -d (N_ "Remove completion")
-complete -c complete -s h -l help -d (N_ "Display help and exit")
-complete -c complete -s C -l do-complete -d (N_ "Print all completions for the specified commandline")
-complete -c complete -s n -l condition -d (N_ "The completion should only be used if the specified command has a zero exit status") -r
+complete -c complete -s c -l command --description "Command to add completion to" -r
+complete -c complete -s p -l path --description "Path to add completion to"
+complete -c complete -s s -l short-option --description "Posix-style option to complete"
+complete -c complete -s l -l long-option --description "GNU-style option to complete"
+complete -c complete -s o -l old-option --description "Old style long option to complete"
+complete -c complete -s f -l no-files --description "Do not use file completion"
+complete -c complete -s r -l require-parameter --description "Require parameter"
+complete -c complete -s x -l exclusive --description "Require parameter and do not use file completion"
+complete -c complete -s a -l arguments --description "A list of possible arguments"
+complete -c complete -s d -l description --description "Description of this completions"
+complete -c complete -s u -l unauthorative --description "Option list is not complete"
+complete -c complete -s e -l erase --description "Remove completion"
+complete -c complete -s h -l help --description "Display help and exit"
+complete -c complete -s C -l do-complete --description "Print all completions for the specified commandline"
+complete -c complete -s n -l condition --description "The completion should only be used if the specified command has a zero exit status" -r

@@ -1,20 +1,20 @@
-complete -c who -s a -l all -d (N_ "Same as -b -d --login -p -r -t -T -u")
-complete -c who -s b -l boot -d (N_ "Print time of last boot")
-complete -c who -s d -l dead -d (N_ "Print dead processes")
-complete -c who -s H -l heading -d (N_ "Print line of headings")
-complete -c who -s i -l idle -d (N_ "Print idle time")
-complete -c who -s l -l login -d (N_ "Print login process")
-complete -c who -l lookup -d (N_ "Canonicalize hostnames via DNS")
-complete -c who -s m -d (N_ "Print hostname and user for stdin")
-complete -c who -s p -l process -d (N_ "Print active processes spawned by init")
-complete -c who -s q -l count -d (N_ "Print all login names and number of users logged on")
-complete -c who -s r -l runlevel -d (N_ "Print current runlevel")
-complete -c who -s s -l short -d (N_ "Print name, line, and time")
-complete -c who -s t -l time -d (N_ "Print last system clock change")
-complete -c who -s T -l mesg -d (N_ "Print users message status as +, - or ?")
-complete -c who -s w -l writable -d (N_ "Print users message status as +, - or ?")
-complete -c who -l message -d (N_ "Print users message status as +, - or ?")
-complete -c who -s u -l users -d (N_ "List users logged in")
-complete -c who -l help -d (N_ "Display help and exit")
-complete -c who -l version -d (N_ "Display version and exit")
+complete -c who -s a -l all --description "Same as -b -d --login -p -r -t -T -u"
+complete -c who -s b -l boot --description "Print time of last boot"
+complete -c who -s d -l dead --description "Print dead processes"
+complete -c who -s H -l heading --description "Print line of headings"
+complete -c who -s i -l idle --description "Print idle time"
+complete -c who -s l -l login --description "Print login process"
+complete -c who -l lookup --description "Canonicalize hostnames via DNS"
+complete -c who -s m --description "Print hostname and user for stdin"
+complete -c who -s p -l process --description "Print active processes spawned by init"
+complete -c who -s q -l count --description "Print all login names and number of users logged on"
+complete -c who -s r -l runlevel --description "Print current runlevel"
+complete -c who -s s -l short --description "Print name, line, and time"
+complete -c who -s t -l time --description "Print last system clock change"
+complete -c who -s T -l mesg --description "Print users message status as +, - or ?"
+complete -c who -s w -l writable --description "Print users message status as +, - or ?"
+complete -c who -l message --description "Print users message status as +, - or ?"
+complete -c who -s u -l users --description "List users logged in"
+complete -c who -l help --description "Display help and exit"
+complete -c who -l version --description "Display version and exit"
 

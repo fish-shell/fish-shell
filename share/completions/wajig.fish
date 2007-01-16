@@ -1,4 +1,4 @@
-function __fish_wajig_no_subcommand -d (N_ 'Test if wajig has yet to be given the subcommand')
+function __fish_wajig_no_subcommand --description 'Test if wajig has yet to be given the subcommand'
 	for i in (commandline -opc)
 		if contains -- $i addcdrom auto-alts auto-clean auto-download auto-install available bug build build-depend changelog clean commands daily-upgrade dependents describe describe-new detail detail-new dist-upgrade docs download file-download file-install file-remove find-file find-pkg fix-configure fix-install fix-missing force help hold init install installr installrs installs integrity large last-update list list-all list-alts list-cache list-commands list-daemons list-files list-hold list-installed list-log list-names list-orphans list-scripts list-section list-section list-status list-wide local-dist-upgrade local-upgrade madison move new news new-upgrades non-free orphans package policy purge purge-depend purge-orphans readme recursive recommended reconfigure reinstall reload remove remove-depend remove-orphans repackage reset restart rpminstall rpmtodeb search search-apt setup show showdistupgrade showinstall showremove showupgrade size sizes snapshot source start status status-match status-search stop suggested tasksel toupgrade unhold unofficial update update-alts update-pci-ids update-usb-ids upgrade versions whatis whichpkg
 			return 1
@@ -7,7 +7,7 @@ function __fish_wajig_no_subcommand -d (N_ 'Test if wajig has yet to be given th
 	return 0
 end
 
-function __fish_wajig_use_package -d (N_ 'Test if wajig command should have packages as potential completion')
+function __fish_wajig_use_package --description 'Test if wajig command should have packages as potential completion'
 	for i in (commandline -opc)
 		if contains -- $i contains bug build build-depend changelog dependents describe detail hold install installr installrs installs list list-files news package purge purge-depend readme recursive recommended reconfigure reinstall remove remove-depend repackage show showinstall showremove showupgrade size sizes source suggested unhold upgrade versions whatis
 			return 0
@@ -16,12 +16,12 @@ function __fish_wajig_use_package -d (N_ 'Test if wajig command should have pack
 	return 1
 end
 
-complete -c wajig -n '__fish_wajig_use_package' -a '(__fish_print_packages)' -d (N_ 'Package')h
-complete -c wajig -s q -l quiet -d (N_ 'Do system commands everything quietly.')
-complete -c wajig -s n -l noauth -d (N_ 'Allow packages from unathenticated archives.')
-complete -c wajig -s s -l simulate -d (N_ 'Trace but don\'t execute the sequence of underlying commands.')
-complete -c wajig -s t -l teaching -d (N_ 'Trace the sequence of commands performed.')
-complete -c wajig -s y -l yes -d (N_ 'Assume yes for any questions asked.')
+complete -c wajig -n '__fish_wajig_use_package' -a '(__fish_print_packages)' --description 'Package'h
+complete -c wajig -s q -l quiet --description 'Do system commands everything quietly.'
+complete -c wajig -s n -l noauth --description 'Allow packages from unathenticated archives.'
+complete -c wajig -s s -l simulate --description 'Trace but don\'t execute the sequence of underlying commands.'
+complete -c wajig -s t -l teaching --description 'Trace the sequence of commands performed.'
+complete -c wajig -s y -l yes --description 'Assume yes for any questions asked.'
 complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'addcdrom' -d(N_ 'Add a CD-ROM to the list of available sources of packages')
 complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-alts' -d(N_ 'Mark the alternative to be auto set (using set priorities)')
 complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-clean' -d(N_ 'Remove superseded deb files from the download cache')

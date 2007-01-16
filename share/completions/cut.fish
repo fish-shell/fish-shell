@@ -1,10 +1,10 @@
-complete -c cut -s b -l bytes -x -d (N_ "Output byte range")
-complete -c cut -s c -l characters -x -d (N_ "Output character range")
-complete -c cut -s d -l delimiter -x -d (N_ "Select field delimiter")
-complete -c cut -s d -l fields -x -d (N_ "Select fields")
-complete -c cut -s n -d (N_ "Dont split mutibyte characters")
-complete -c cut -s s -l only-delimited -d (N_ "Do not print lines without delimiter")
-complete -c cut -l output-delimiter -d (N_ "Select output delimiter")
-complete -c cut -l help -d (N_ "Display help and exit")
-complete -c cut -l version -d (N_ "Display version and exit")
+complete -c cut -s b -l bytes -x --description "Output byte range"
+complete -c cut -s c -l characters -x --description "Output character range"
+complete -c cut -s d -l delimiter -x --description "Select field delimiter"
+complete -c cut -s d -l fields -x --description "Select fields"
+complete -c cut -s n --description "Dont split mutibyte characters"
+complete -c cut -s s -l only-delimited --description "Do not print lines without delimiter"
+complete -c cut -l output-delimiter --description "Select output delimiter"
+complete -c cut -l help --description "Display help and exit"
+complete -c cut -l version --description "Display version and exit"
 

@@ -9,7 +9,6 @@ function __fish_gnu_complete -d "Wrapper for the complete builtin. Skips the lon
 			
 			case -g --is-gnu
 				set is_gnu 1
-				break
 
 			case '*'
 				 set argv_out $argv_out $i

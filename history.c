@@ -609,7 +609,7 @@ static void history_save_mode( void *n, history_mode_t *m )
 	FILE *out;
 	history_mode_t *on_disk;
 	int i;
-	int has_new;
+	int has_new=0;
 	wchar_t *tmp_name;
 
 	/*

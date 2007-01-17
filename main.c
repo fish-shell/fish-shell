@@ -214,7 +214,7 @@ static int fish_parse_opt( int argc, char **argv, char **cmd_ptr )
 			
 			case 'h':
 			{
-				*cmd_ptr = "help";
+				*cmd_ptr = "__fish_print_help fish";
 				break;
 			}
 			

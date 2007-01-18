@@ -7,7 +7,7 @@
 
 - <tt>-n</tt> or <tt>--names</tt> List the names of all defined builtins
 
-Prefixing a command with the word 'builtin' forces fish to ignore any aliases with the same name.
+Prefixing a command with the word 'builtin' forces fish to ignore any functions with the same name.
 
 \subsection builtin-example Example
 

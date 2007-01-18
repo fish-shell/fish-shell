@@ -40,6 +40,10 @@
 */
 #define BYTE_MAX 0xffu
 
+#define UNESCAPE_SPECIAL 1
+#define UNESCAPE_INCOMPLETE 2
+
+
 /** 
 	Save the shell mode on startup so we can restore them on exit
 */

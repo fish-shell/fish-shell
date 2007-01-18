@@ -791,7 +791,7 @@ wchar_t *escape( const wchar_t *in,
 }
 
 
-wchar_t *unescape( const wchar_t * orig, int unescape_special )
+wchar_t *unescape( const wchar_t * orig, int flags )
 {
 	
 	int mode = 0; 
@@ -800,7 +800,9 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 	int bracket_count=0;
 	wchar_t prev=0;	
 	wchar_t *in;
-
+	int unescape_special = flags & UNESCAPE_SPECIAL;
+	int allow_incomplete = flags & UNESCAPE_INCOMPLETE;
+	
 	CHECK( orig, 0 );
 		
 	len = wcslen( orig );
@@ -1153,6 +1155,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							mode = 1;
 							if( unescape_special )
 								in[out_pos] = INTERNAL_SEPARATOR;							
+							else
+								out_pos--;						
 							break;					
 						}
 				
@@ -1161,6 +1165,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 							mode = 2;
 							if( unescape_special )
 								in[out_pos] = INTERNAL_SEPARATOR;							
+							else
+								out_pos--;						
 							break;
 						}
 
@@ -1209,6 +1215,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 				{
 					if( unescape_special )
 						in[out_pos] = INTERNAL_SEPARATOR;							
+					else
+						out_pos--;						
 					mode = 0;
 				}
 				else
@@ -1231,6 +1239,8 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 						mode = 0;
 						if( unescape_special )
 							in[out_pos] = INTERNAL_SEPARATOR;							
+						else
+							out_pos--;						
 						break;
 					}
 				
@@ -1287,6 +1297,13 @@ wchar_t *unescape( const wchar_t * orig, int unescape_special )
 			}
 		}
 	}
+
+	if( !allow_incomplete && mode )
+	{
+		free( in );
+		return 0;
+	}
+	
 	in[out_pos]=L'\0';
 	return in;	
 }

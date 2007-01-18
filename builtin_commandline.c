@@ -146,7 +146,6 @@ static void write_part( const wchar_t *begin,
 
 	if( tokenize )
 	{
-					
 		buff = wcsndup( begin, end-begin );
 //		fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
 		sb_init( &out );
@@ -159,20 +158,21 @@ static void write_part( const wchar_t *begin,
 				(tok_get_pos( &tok)+wcslen(tok_last( &tok)) >= pos) )
 				break;
 		
-//			fwprintf( stderr, L"Next token %ls\n", tok_last( &tok ) );
-
 			switch( tok_last_type( &tok ) )
 			{
 				case TOK_STRING:
-					sb_append2( &out, tok_last( &tok), L"\n", (void *)0 );
+				{
+					wchar_t *tmp = unescape( tok_last( &tok ), UNESCAPE_INCOMPLETE );
+					sb_append2( &out, tmp, L"\n", (void *)0 );
+					free( tmp );
 					break;
-								
+				}
+				
 			}						
 		}
-					
-		if( out.buff )
-			sb_append( sb_out,
-					   (wchar_t *)out.buff );
+
+		sb_append( sb_out,
+				   (wchar_t *)out.buff );
 					
 		free( buff );
 		tok_destroy( &tok );
@@ -180,12 +180,24 @@ static void write_part( const wchar_t *begin,
 	}
 	else
 	{
+		wchar_t *buff, *esc;
+		
 		if( cut_at_cursor )
 		{
 			end = begin+pos;			
 		}
-		sb_append_substring( sb_out, begin, end-begin );		
-		sb_append( sb_out, L"\n" );		
+
+		buff = wcsndup( begin, end-begin );
+		esc = unescape( buff, UNESCAPE_INCOMPLETE );
+
+//		debug( 0, L"woot2 %ls -> %ls", buff, esc );
+
+		sb_append( sb_out, esc );
+		sb_append( sb_out, L"\n" );
+		
+		free( esc );
+		free( buff );
+		
 	}
 }
 

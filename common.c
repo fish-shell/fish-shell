@@ -1303,7 +1303,7 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 		free( in );
 		return 0;
 	}
-	
+
 	in[out_pos]=L'\0';
 	return in;	
 }

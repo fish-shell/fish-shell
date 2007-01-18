@@ -1584,8 +1584,14 @@ int expand_string( void *context,
 		{
 			wchar_t *next;
 
-			next = expand_unescape( (wchar_t *)al_get( in, i ),
-									1);
+			/*
+			  We accept incomplete strings here, since complete uses
+			  expand_string to expand incomplete strings from the
+			  commandline.
+			*/
+			int unescape_flags = UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE;
+
+			next = expand_unescape( (wchar_t *)al_get( in, i ), unescape_flags );
 
 			free( (void *)al_get( in, i ) );
 

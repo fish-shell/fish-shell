@@ -202,11 +202,7 @@ int tok_has_next( tokenizer *tok )
 
 static int is_string_char( wchar_t c )
 {
-	if( !c ||  wcschr( SEP, c ) )
-	{
-		return 0;
-	}
-	return 1;
+	return !( !c ||  wcschr( SEP, c ) );
 }
 
 /**

@@ -108,6 +108,8 @@ typedef struct env_node
 typedef struct var_entry
 {
 	int export; /**< Whether the variable should be exported */
+	size_t size; /**< The maximum length (excluding the NULL) that will fit into this var_entry_t */
+	
 #if __STDC_VERSION__ < 199901L
 	wchar_t val[1]; /**< The value of the variable */
 #else
@@ -723,14 +725,6 @@ int env_set( const wchar_t *key,
 	else
 	{
 		
-		if( val == 0 )
-		{
-			wchar_t *prev_val;
-			free_val = 1;
-			prev_val = env_get( key );
-			val = wcsdup( prev_val?prev_val:L"" );
-		}
-
 		node = env_get_node( key );
 		if( node && &node->env != 0 )
 		{
@@ -788,7 +782,9 @@ int env_set( const wchar_t *key,
 				{
 					/*
 					  New variable with unspecified scope. The default
-					  scope is the innermost scope that is shadowing
+					  scope is the innermost scope that is shadowing,
+					  which will be either the current function or the
+					  global scope.				   
 					*/
 					node = top;
 					while( node->next && !node->new_scope )
@@ -801,27 +797,50 @@ int env_set( const wchar_t *key,
 		if( !done )
 		{
 			void *k, *v;
+			var_entry_t *old_entry;
+			size_t val_len = wcslen(val);
+
 			hash_remove( &node->env, key, &k, &v );
-			free( k );
-			free( v );
 
-			entry = malloc( sizeof( var_entry_t ) + 
-							sizeof(wchar_t )*(wcslen(val)+1));
-	
-			if( !entry )
-				DIE_MEM();
+			/*
+			  Try to reuse previous key string
+			*/
+			if( !k )
+				k = wcsdup(key);
 
-			if( var_mode & ENV_EXPORT)
+			old_entry = (var_entry_t *)v;
+			if( old_entry && old_entry->size >= val_len )
 			{
-				entry->export = 1;
-				has_changed_new = 1;		
+				entry = old_entry;
+
+				if( !!(var_mode & ENV_EXPORT) || entry->export )
+				{
+					entry->export = !!(var_mode & ENV_EXPORT);
+					has_changed_new = 1;		
+				}
 			}
 			else
-				entry->export = 0;
+			{
+				free( v );
+
+				entry = malloc( sizeof( var_entry_t ) + 
+								sizeof(wchar_t )*(val_len+1));
+	
+				if( !entry )
+					DIE_MEM();
+
+				entry->size = val_len;
+				
+				if( var_mode & ENV_EXPORT)
+				{
+					entry->export = 1;
+					has_changed_new = 1;		
+				}
+			}
 
 			wcscpy( entry->val, val );
-
-			hash_put( &node->env, wcsdup(key), entry );
+			
+			hash_put( &node->env, k, entry );
 
 			if( entry->export )
 			{
@@ -1321,7 +1340,7 @@ static void export_func1( void *k, void *v, void *aux )
 
 	hash_remove( h, k, 0, 0 );
 
-	if( val_entry->export )
+	if( val_entry->export && wcscmp( val_entry->val, ENV_NULL ) )
 	{	
 		hash_put( h, k, val_entry->val );
 	}
@@ -1410,7 +1429,7 @@ char **env_export_arr( int recalc )
 		{
 			wchar_t *key = (wchar_t *)al_get( &uni, i );
 			wchar_t *val = env_universal_get( key );
-			if( !hash_get( &vals, key ) )
+			if( wcscmp( val, ENV_NULL) && !hash_get( &vals, key ) )
 				hash_put( &vals, key, val );
 		}
 		al_destroy( &uni );

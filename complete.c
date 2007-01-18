@@ -1536,7 +1536,7 @@ static void complete_from_args( const wchar_t *str,
    Match against an old style long option
 */
 static int param_match_old( complete_entry_opt_t *e,
-							wchar_t *optstr )
+							const wchar_t *optstr )
 {
 	return  (optstr[0] == L'-') && (wcscmp( e->long_opt, &optstr[1] ) == 0);
 }
@@ -1544,8 +1544,8 @@ static int param_match_old( complete_entry_opt_t *e,
 /**
    Match a parameter
 */
-static int param_match( complete_entry_opt_t *e,
-						wchar_t *optstr )
+static int param_match( const complete_entry_opt_t *e,
+						const wchar_t *optstr )
 {
 	if( e->short_opt != L'\0' &&
 		e->short_opt == optstr[1] )
@@ -1565,11 +1565,11 @@ static int param_match( complete_entry_opt_t *e,
 /**
    Test if a string is an option with an argument, like --color=auto or -I/usr/include
 */
-static wchar_t *param_match2( complete_entry_opt_t *e,
-							  wchar_t *optstr )
+static wchar_t *param_match2( const complete_entry_opt_t *e,
+							  const wchar_t *optstr )
 {
 	if( e->short_opt != L'\0' && e->short_opt == optstr[1] )
-		return &optstr[2];
+		return (wchar_t *)&optstr[2];
 	if( !e->old_mode && (wcsncmp( L"--", optstr, 2 ) == 0) )
 	{
 		int len = wcslen( e->long_opt );
@@ -1577,7 +1577,7 @@ static wchar_t *param_match2( complete_entry_opt_t *e,
 		if( wcsncmp( e->long_opt, &optstr[2],len ) == 0 )
 		{
 			if( optstr[len+2] == L'=' )
-				return &optstr[len+3];
+				return (wchar_t *)&optstr[len+3];
 		}
 	}
 	return 0;
@@ -1586,11 +1586,11 @@ static wchar_t *param_match2( complete_entry_opt_t *e,
 /**
    Tests whether a short option is a viable completion
 */
-static int short_ok( wchar_t *arg,
+static int short_ok( const wchar_t *arg,
 					 wchar_t nextopt,
-					 wchar_t *allopt )
+					 const wchar_t *allopt )
 {
-	wchar_t *ptr;
+	const wchar_t *ptr;
 
 	if( arg[0] != L'-')
 		return arg[0] == L'\0';
@@ -1649,9 +1649,9 @@ void complete_load( const wchar_t *name, int reload )
    previous option popt. Insert results into comp_out. Return 0 if file
    completion should be disabled, 1 otherwise.
 */
-static int complete_param( wchar_t *cmd_orig,
-						   wchar_t *popt,
-						   wchar_t *str,
+static int complete_param( const wchar_t *cmd_orig,
+						   const wchar_t *popt,
+						   const wchar_t *str,
 						   int use_switches,
 						   array_list_t *comp_out )
 {
@@ -2282,18 +2282,22 @@ void complete( const wchar_t *cmd,
 			}
 			else
 			{
-				/*
-				  Complete parameter. Parameter expansion should be
-				  performed against both the globbed and the unglobbed
-				  version of the string, so we create a list containing
-				  all possible versions of the string that is to be
-				  expanded. This is potentially very slow.
-				*/
-
 				int do_file=0;
 				
-				do_file = complete_param( current_command, prev_token, current_token, !had_ddash, comp );
+				wchar_t *current_command_unescape = unescape( current_command, 0 );
+				wchar_t *prev_token_unescape = unescape( prev_token, 0 );
+				wchar_t *current_token_unescape = unescape( current_token, UNESCAPE_INCOMPLETE );
+				
+				do_file = complete_param( current_command_unescape, 
+										  prev_token_unescape, 
+										  current_token_unescape, 
+										  !had_ddash, 
+										  comp );
 
+				free( current_command_unescape );
+				free( prev_token_unescape );
+				free( current_token_unescape );
+				
 				/*
 				  If we have found no command specific completions at
 				  all, fall back to using file completions.
@@ -2301,6 +2305,9 @@ void complete( const wchar_t *cmd,
 				if( !al_get_count( comp ) )
 					do_file = 1;
 				
+				/*
+				  This function wants the unescaped string
+				*/
 				complete_param_expand( current_token, comp, do_file );
 			}
 		}

@@ -17,27 +17,34 @@ function __fish_gnu_complete -d "Wrapper for the complete builtin. Skips the lon
 
 	set argv $argv_out
 	set argv_out
+	set -l skip_next 0
 
 	# Remove long option if not on a gnu system
-	if test $is_gnu = 0
-		for i in $argv
+	switch $is_gnu
+		case 0
+			for i in $argv
 
-			if set -q __fish_gnu_complete_skip_next
-				set -e __fish_gnu_complete_skip_next
-				continue
-			end
+				switch $skip_next
+
+					case 1
+						 set skip_next 0
+						 continue
+
+				end
 	
-			switch $i
-				case -l --long
-					set __fish_gnu_complete_skip_next 1
-					continue
-			end
+				switch $i
 
-			set argv_out $argv_out $i
-		end
-		set argv $argv_out
+					case -l --long
+						set skip_next 1
+						continue
+
+				end
+
+				set argv_out $argv_out $i
+			end
+			set argv $argv_out
+
 	end
-	set -e __fish_gnu_complete_skip_next
 	
 	complete $argv
 

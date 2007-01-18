@@ -70,7 +70,7 @@ A switch is a very common special type of argument. Switches almost
 always start with one or more hyphens (-) and alter the way a command
 operates. For example, the \c ls command usually lists all the files
 and directories in the current working directory, but by using the \c
--l switch, the behaviour of ls is changed to not only display the
+-l switch, the behavior of ls is changed to not only display the
 filename, but also the size, permissions, owner and modification time
 of each file. Switches differ between commands and are documented in
 the manual page for each command. Some switches are common to most
@@ -273,7 +273,7 @@ href='commands.html#function'>function</a> builtin.
 \subsubsection syntax-function-wrappers Defining wrapper functions
 
 One of the most common used for functions is to slightly alter the
-behaviour of an already existing command. For example, one might want
+behavior of an already existing command. For example, one might want
 to redefine the \c ls command to display colors. The switch for
 turning on colors on GNU systems is \c '--color=auto'. A wrapper
 around \c ls might look like this:
@@ -294,7 +294,7 @@ functions:
 Functions can be defined on the commandline or in a configuration
 file, but they can also be automatically loaded. This method of
 defining functions has several advantages. An autoloaded function
-becomes avaialble automatically to all running shells, if the function
+becomes available automatically to all running shells, if the function
 definition is changed, all running shells will automatically reload
 the altered version, startup time and memory usage is improved, etc.
 
@@ -350,7 +350,7 @@ This is a short explanation of some of the commonly used words in fish.
 - job, a running pipeline or command
 - pipeline, a set of commands stringed together so that the output of one command is the input of the next command
 - redirection, a operation that changes one of the input/output streams associated with a job
-- switch, a special flag sent as an argument to a command that will alter the behavious of the command. A switch almost always begins with one or two hyphens.
+- switch, a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
 
 \section help Help
 
@@ -449,14 +449,14 @@ them may be very useful when writing completions. A few of these
 functions are described here. Be aware that they may be removed or
 changed in future versions of fish.
 
-Functions begining with the string '__fish_print_' print a
+Functions beginning with the string '__fish_print_' print a
 newline-separated list of strings. For example,
-__fish_print_filesystems prints a list of all known filesystems. Functions
+__fish_print_filesystems prints a list of all known file systems. Functions
 beginning with '__fish_complete_' print out a newline separated list of
 completions with descriptions. The description is separated from the
 completion by a tab character.
 
-<pre>__fish_complete_directories STRING DESCIPTION</pre>
+<pre>__fish_complete_directories STRING DESCRIPTION</pre>
 
 performs path completion on STRING, allowing only directories, and giving them the description DESCRIPTION.
 
@@ -468,7 +468,7 @@ prints a list of all user groups with the groups members as description.
 
 prints a list of all procceses IDs with the command name as description.
 
-<pre>__fish_complete_suffix STRING SUFFIX DESCIPTION</pre>
+<pre>__fish_complete_suffix STRING SUFFIX DESCRIPTION</pre>
 
 performs path completion on STRING, allowing only files ending in SUFFIX, and giving them the description DESCRIPTION.
 
@@ -478,8 +478,8 @@ prints a list of all users with their full name as description.
 
 <pre>__fish_print_filesystems</pre>
 
-prints a list of all known filesystems. Currently, this is a static
-list, and not dependent on what filesystems the host operating system
+prints a list of all known file systems. Currently, this is a static
+list, and not dependent on what file systems the host operating system
 actually understands.
 
 <pre>__fish_print_hostnames</pre>
@@ -666,8 +666,8 @@ The above code demonstrates how to use multiple '$' symbols to expand
 the value of a variable as a variable name. One can think of
 the $-symbol as a variable dereference operator. When using this
 feature together with array brackets, the brackets will always match
-the innermost $ dereference. Thus, $$foo[5] will always mean the fift
-element of the foo variable should be dereferenced and never that the fift
+the innermost $ dereference. Thus, $$foo[5] will always mean the fifth
+element of the foo variable should be dereferenced and never that the fifth
 element of the doubly dereferenced variable foo. The latter can
 instead be expressed as $$foo[1][5].
 
@@ -999,7 +999,7 @@ To make errors highlighted and red, use:
 \subsection variables-locale Locale variables
 
 The most common way to set the locale to use a command like 'set -x
-LANG en_GB.utf8', which sets the current locale to be the english
+LANG en_GB.utf8', which sets the current locale to be the English
 language, as used in Great Britain, using the UTF-8 character set. For
 a list of available locales, use 'locale -a'.
 
@@ -1055,7 +1055,7 @@ Here are some of the commands available in the editor:
 You can change these key bindings by making an inputrc file. To do
 this, copy the file /etc/fish/fish_inputrc to your home directory and
 rename it to '.config/fish/fish_inputrc'. Now you can edit the file
-to change your key bindings. The fileformat of this file is described
+to change your key bindings. The file format of this file is described
 in the manual page for readline. Use the command <code>man readline</code>
 to read up on this syntax. Please note that the list of key binding
 functions in fish is different to that offered by readline. Currently,
@@ -1117,7 +1117,7 @@ the string entered into the command line are shown.
 By pressing Alt-up and Alt-down, a history search is also performed,
 but instead of searching for a complete commandline, each commandline
 is tokenized into separate elements just like it would be before
-execution, and each such token is matched agains the token under the
+execution, and each such token is matched against the token under the
 cursor when the search began.
 
 History searches can be aborted by pressing the escape key.
@@ -1152,7 +1152,7 @@ fish will be stopped until the program finishes. Sometimes this is not
 desirable. For example, you may wish to start an application with a
 graphical user interface from the terminal, and then be able to
 continue using the shell. In such cases, there are several ways in
-which the user can change <code>fish</code>'s behaviour.
+which the user can change <code>fish</code>'s behavior.
 
 -# By ending a command with the \& (ampersand) symbol, the user tells \c fish to put the specified command into the background. A background process will be run simultaneous with \c fish. \c fish will retain control of the terminal, so the program will not be able to read from the keyboard. 
 -# By pressing ^Z, the user stops a currently running foreground  program and returns control to \c fish. Some programs do not support this feature, or remap it to another key. Gnu emacs uses ^X z to stop running.
@@ -1247,7 +1247,7 @@ function fish_prompt -d "Write out the prompt"
 end
 </pre>
 
-where \c prompt_pwd is a shellscript function that displays a condensed version of the current working direcotry.
+where \c prompt_pwd is a shellscript function that displays a condensed version of the current working directory.
 
 </p>
 
@@ -1350,7 +1350,7 @@ msgid "%ls: No suitable job\n"
 msgstr ""
 </pre>
 
-The first line is the english string to translate, the second line
+The first line is the English string to translate, the second line
 should contain your translation. For example, in swedish the above
 might become:
 

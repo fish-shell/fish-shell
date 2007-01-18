@@ -11,6 +11,7 @@ complete -c commandline -s b -l current-buffer --description "Select entire comm
 
 complete -c commandline -s c -l cut-at-cursor --description "Only return that part of the command line before the cursor"
 complete -c commandline -s f -l function --description "Inject readline functions to reader"
+complete -c commandline -s o -l tokenize --description "Print each token on a separate line"
 
 complete -c commandline -s I -l input --description "Specify command to operate on"
 complete -c commandline -s C -l cursor --description "Set/get cursor position, not buffer contents"

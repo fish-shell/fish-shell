@@ -7,6 +7,8 @@ function save_function --description "Save the current definition of all specifi
 				__fish_print_help save_function
 				return 0
 		end
+	else
+		__fish_print_help save_function
 	end
 
 	set -l res 0

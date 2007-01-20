@@ -279,6 +279,12 @@ if test "$CC" = gcc; then
 
 	CFLAGS="$CFLAGS -Wall"
 
+	#
+	# This is needed in order to get the really cool backtraces
+	#
+
+	LDFLAGS="$LDFLAGS -rdynamic"
+
 fi
 
 
@@ -451,7 +457,7 @@ AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv impl
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h libintl.h])
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h libintl.h execinfo.h])
 
 AC_CHECK_HEADER(
 	[regex.h],
@@ -594,8 +600,8 @@ fi
 
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg gettext dcgettext )
-
+AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg gettext )
+AC_CHECK_FUNCS( dcgettext backtrace backtrace_symbols)
 
 #
 # The Makefile also needs to know if we have gettext, so it knows if

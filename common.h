@@ -86,8 +86,21 @@ extern wchar_t *program_name;
 			   __func__,												\
 			   #arg );													\
 		bugreport();													\
+		show_stackframe();												\
 		return retval;													\
 	}
+
+/**
+   Cause fish to crash. If supported, print a backtrace first.
+*/
+#define CRASH()									\
+	{											\
+		char c;									\
+		show_stackframe();						\
+		read( 0, &c, 1 );						\
+		exit(1 );								\
+	}											\
+		
 
 /**
    Exit program at once, leaving an error message about running out of memory.
@@ -98,17 +111,7 @@ extern wchar_t *program_name;
 				  L"fish: Out of memory on line %d of file %s, shutting down fish\n", \
 				  __LINE__,												\
 				  __FILE__ );											\
-		exit(1);														\
-	}
-
-/**
-   Cause fish to crash. This should only be used for debugging. If
-   this function is ever called in shipped code, this is a bug.
-*/
-#define CRASH()									\
-	{											\
-		int *n = 0;								\
-		*n = 1;									\
+		CRASH();														\
 	}
 
 /**
@@ -122,6 +125,7 @@ extern wchar_t *program_name;
 			   _( L"function %s called while blocking signals. " ),		\
 			   __func__);												\
 		bugreport();													\
+		show_stackframe();												\
 		return retval;													\
 	}
 		
@@ -136,6 +140,8 @@ extern wchar_t *program_name;
 */
 #define N_(wstr) wstr
 
+
+void show_stackframe();
 
 /**
    Take an array_list_t containing wide strings and converts them to a

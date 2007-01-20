@@ -312,7 +312,6 @@ int main( int argc, char **argv )
 	reader_init();
 	history_init();
 
-
 	if( read_init() )
 	{
 		if( cmd != 0 )

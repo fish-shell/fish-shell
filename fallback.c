@@ -1091,3 +1091,16 @@ int getopt_long( int argc,
 
 #endif
 
+#ifndef HAVE_BACKTRACE
+int backtrace (void **buffer, int size)
+{
+	return 0;
+}
+#endif
+
+#ifndef HAVE_BACKTRACE_SYMBOLS
+char ** backtrace_symbols (void *const *buffer, int size)
+{
+	return 0;
+}
+#endif

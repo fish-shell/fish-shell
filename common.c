@@ -44,6 +44,10 @@ parts of fish.
 #include <sys/time.h>
 #include <fcntl.h>
 
+#ifdef HAVE_EXECINFO_H
+#include <execinfo.h>
+#endif
+
 #ifndef HOST_NAME_MAX
 /**
    Maximum length of hostname return. It is ok if this is too short,
@@ -109,6 +113,28 @@ static struct winsize termsize;
    String buffer used by the wsetlocale function
 */
 static string_buffer_t *setlocale_buff=0;
+
+
+void show_stackframe() 
+{
+	void *trace[32];
+	char **messages = (char **)NULL;
+	int i, trace_size = 0;
+
+	trace_size = backtrace(trace, 32);
+	messages = backtrace_symbols(trace, trace_size);
+
+	if( messages )
+	{
+		debug( 0, L"Backtrace:" );
+		for( i=0; i<trace_size; i++ )
+		{
+			fwprintf( stderr, L"%s\n", messages[i]);
+		}
+		free( messages );
+	}
+}
+
 
 wchar_t **list_to_char_arr( array_list_t *l )
 {

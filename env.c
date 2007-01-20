@@ -665,7 +665,7 @@ int env_set( const wchar_t *key,
 
 	event_t ev;
 	int is_universal = 0;	
-
+	
 	CHECK( key, ENV_INVALID );
 		
 	if( (var_mode & ENV_USER ) && 

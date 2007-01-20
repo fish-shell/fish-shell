@@ -8,35 +8,35 @@
 # If no subcommand has been specified, complete using all available subcommands
 #
 
-complete -c darcs -n '__fish_use_subcommand' -xa 'initialize\t"'(_ "Create new project")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'get\t"'(_ "Create a local copy of another repository")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'add\t"'(_ "Add one or more new files or directories")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'remove\t"'(_ "Remove one or more files or directories from the repository")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'mv\t"'(_ "Move/rename one or more files or directories")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'replace\t"'(_ "Replace a token with a new value for that token")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'record\t"'(_ "Save changes in the working copy to the repository as a patch")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'pull\t"'(_ "Copy and apply patches from another repository to this one")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'send\t"'(_ "Send by email a bundle of one or more patches")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'apply\t"'(_ "Apply patches (from an email bundle) to the repository")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'push\t"'(_ "Copy and apply patches from this repository to another one")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'whatsnew\t"'(_ "Display unrecorded changes in the working copy")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'changes\t"'(_ "Gives a changelog style summary of the repo history")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'unrecord\t"'(_ "Remove recorded patches without changing the working copy")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'amend-record\t"'(_ "Replace a recorded patch with a better version")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'revert\t"'(_ "Revert to the recorded version (safe the first time only)" )'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'unrevert\t"'(_ "Undo the last revert (may fail if changes after the revert)")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'unpull\t"'(_ "Opposite of pull; unsafe if the patch is not in remote repo")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'rollback\t"'(_ "Record an inverse patch without changing the working copy" )'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'tag\t"'(_ "Tag the contents of the repository with a version name")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'setpref\t"'(_ "Set a value for a preference (test, predist, ...)")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'diff\t"'(_ "Create a diff between two versions of the repository")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'annotate\t"'(_ "Display which patch last modified something")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'optimize\t"'(_ "Optimize the repository")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'check\t"'(_ "Check the repository for consistency")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'resolve\t"'(_ "Mark any conflicts to the working copy for manual resolution")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'dist\t"'(_ "Create a distribution tarball")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'trackdown\t"'(_ "Locate the most recent version lacking an error")'"'
-complete -c darcs -n '__fish_use_subcommand' -xa 'repair\t"'(_ "Repair the corrupted repository")'"'
+complete -c darcs -n '__fish_use_subcommand' -xa 'initialize' --description "Create new project"
+complete -c darcs -n '__fish_use_subcommand' -xa 'get' --description "Create a local copy of another repository"
+complete -c darcs -n '__fish_use_subcommand' -xa 'add' --description "Add one or more new files or directories"
+complete -c darcs -n '__fish_use_subcommand' -xa 'remove' --description "Remove one or more files or directories from the repository"
+complete -c darcs -n '__fish_use_subcommand' -xa 'mv' --description "Move/rename one or more files or directories"
+complete -c darcs -n '__fish_use_subcommand' -xa 'replace' --description "Replace a token with a new value for that token"
+complete -c darcs -n '__fish_use_subcommand' -xa 'record' --description "Save changes in the working copy to the repository as a patch"
+complete -c darcs -n '__fish_use_subcommand' -xa 'pull' --description "Copy and apply patches from another repository to this one"
+complete -c darcs -n '__fish_use_subcommand' -xa 'send' --description "Send by email a bundle of one or more patches"
+complete -c darcs -n '__fish_use_subcommand' -xa 'apply' --description "Apply patches (from an email bundle) to the repository"
+complete -c darcs -n '__fish_use_subcommand' -xa 'push' --description "Copy and apply patches from this repository to another one"
+complete -c darcs -n '__fish_use_subcommand' -xa 'whatsnew' --description "Display unrecorded changes in the working copy"
+complete -c darcs -n '__fish_use_subcommand' -xa 'changes' --description "Gives a changelog style summary of the repo history"
+complete -c darcs -n '__fish_use_subcommand' -xa 'unrecord' --description "Remove recorded patches without changing the working copy"
+complete -c darcs -n '__fish_use_subcommand' -xa 'amend-record' --description "Replace a recorded patch with a better version"
+complete -c darcs -n '__fish_use_subcommand' -xa 'revert' --description "Revert to the recorded version (safe the first time only)"
+complete -c darcs -n '__fish_use_subcommand' -xa 'unrevert' --description "Undo the last revert (may fail if changes after the revert)"
+complete -c darcs -n '__fish_use_subcommand' -xa 'unpull' --description "Opposite of pull; unsafe if the patch is not in remote repo"
+complete -c darcs -n '__fish_use_subcommand' -xa 'rollback' --description "Record an inverse patch without changing the working copy"
+complete -c darcs -n '__fish_use_subcommand' -xa 'tag' --description "Tag the contents of the repository with a version name"
+complete -c darcs -n '__fish_use_subcommand' -xa 'setpref' --description "Set a value for a preference (test, predist, ...)"
+complete -c darcs -n '__fish_use_subcommand' -xa 'diff' --description "Create a diff between two versions of the repository"
+complete -c darcs -n '__fish_use_subcommand' -xa 'annotate' --description "Display which patch last modified something"
+complete -c darcs -n '__fish_use_subcommand' -xa 'optimize' --description "Optimize the repository"
+complete -c darcs -n '__fish_use_subcommand' -xa 'check' --description "Check the repository for consistency"
+complete -c darcs -n '__fish_use_subcommand' -xa 'resolve' --description "Mark any conflicts to the working copy for manual resolution"
+complete -c darcs -n '__fish_use_subcommand' -xa 'dist' --description "Create a distribution tarball"
+complete -c darcs -n '__fish_use_subcommand' -xa 'trackdown' --description "Locate the most recent version lacking an error"
+complete -c darcs -n '__fish_use_subcommand' -xa 'repair' --description "Repair the corrupted repository"
  
 #
 # These switches are universal

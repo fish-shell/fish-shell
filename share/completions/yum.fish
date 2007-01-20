@@ -2,20 +2,9 @@
 # Completions for the yum command
 #
 
-#All yum commands
+# All yum commands
 
-#Test if the yum command has been specified
-function __fish_yum_has_command 
-	set modes install update check-update upgrade remove erase list provides whatprovides search info clean generate-rss
-	for i in (commandline -poc);
-		if contains $i $modes
-			return 1
-		end
-	end
-	return 0;
-end
-
-#Test if completing using package names is appropriate
+# Test if completing using package names is appropriate
 function __fish_yum_package_ok
 	for i in (commandline -poc)
 		if contains $i update upgrade remove erase 
@@ -25,21 +14,16 @@ function __fish_yum_package_ok
 	return 1
 end
 
-complete -c yum -n '__fish_yum_has_command' -xa "
-    install\t'Install the latest version of a package'
-    update\t'Update specified packages (defaults to all packages)'
-    check-update\t'Print list of available updates'
-    upgrade\t'Update specified packages including obsoletes (defaults to all packages)'
-    remove\t'remove the specified packages and packages that depend on them'
-	erase\t'remove the specified packages and packages that depend on them'
-	list\t'List information about avaialble packages'
-	provides\t'Find package providing a feature or file'
-	whatprovides\t'Find package providing a feature or file'
-    search\t'find packages matching description regexp'
-    info\t'List information about available packages'
-    clean\t'Clean up cache directory'
-    generate-rss\t'Generate rss changelog'
-"
+complete -c yum -n '__fish_use_subcommand' -xa install --description "Install the latest version of a package"
+complete -c yum -n '__fish_use_subcommand' -xa 'update upgrade' --description "Update specified packages (defaults to all packages)"
+complete -c yum -n '__fish_use_subcommand' -xa check-update --description "Print list of available updates"
+complete -c yum -n '__fish_use_subcommand' -xa 'remove erase' --description "Remove the specified packages and packages that depend on them"
+complete -c yum -n '__fish_use_subcommand' -xa list --description "List avaialble packages"
+complete -c yum -n '__fish_use_subcommand' -xa info --description "Describe avaialble packages"
+complete -c yum -n '__fish_use_subcommand' -xa 'provides whatprovides' --description "Find package providing a feature or file"
+complete -c yum -n '__fish_use_subcommand' -xa search --description "find packages matching description regexp"
+complete -c yum -n '__fish_use_subcommand' -xa clean --description "Clean up cache directory"
+complete -c yum -n '__fish_use_subcommand' -xa generate-rss --description "Generate rss changelog"
 
 complete -c yum -n '__fish_yum_package_ok' -a "(__fish_print_packages)"
 
@@ -59,17 +43,13 @@ complete -c yum -l obsoletes --description "Enables obsolets processing logic"
 complete -c yum -l rss-filename --description "Output rss-data to file" -r 
 complete -c yum -l exclude --description "Exclude specified package from updates" -a "(__fish_print_packages)" 
 
-complete -c yum -n 'contains list (commandline -poc)' -a "
-	all\t'List all packages'
-	available\t'List packages available for installation'
-	updates\t'List packages with updates available'
-	installed\t'List installed packages'
-	extras\t'List packages not available in repositories'
-	obsoletes\t'List packages that are obsoleted by packages in repositories'
-"
+complete -c yum -n 'contains list (commandline -poc)' -a all --description 'List all packages'
+complete -c yum -n 'contains list (commandline -poc)' -a available --description 'List packages available for installation'
+complete -c yum -n 'contains list (commandline -poc)' -a updates --description 'List packages with updates available'
+complete -c yum -n 'contains list (commandline -poc)' -a installed --description 'List installed packages'
+complete -c yum -n 'contains list (commandline -poc)' -a extras --description 'List packages not available in repositories'
+complete -c yum -n 'contains list (commandline -poc)' -a obsoletes --description 'List packages that are obsoleted by packages in repositories'
 
-complete -c yum -n 'contains clean (commandline -poc)' -x -a "
-	packages\t'Delete cached package files'
-	headers\t'Delete cached header files'
-	all\t'Delete all cache contents'
-"
+complete -c yum -n 'contains clean (commandline -poc)' -x -a packages --description 'Delete cached package files'
+complete -c yum -n 'contains clean (commandline -poc)' -x -a headers --description 'Delete cached header files'
+complete -c yum -n 'contains clean (commandline -poc)' -x -a all --description 'Delete all cache contents'

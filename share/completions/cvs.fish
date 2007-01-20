@@ -20,43 +20,43 @@ end
 # If no subcommand has been specified, complete using all available subcommands
 #
 
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'add\t"'(_ "Add a new file/directory to the repository")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'admin\t"'(_ "Administration front end for rcs")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'annotate\t"'(_ "Show last revision where each line was modified")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'checkout\t"'(_ "Checkout sources for editing")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'commit\t"'(_ "Check files into the repository")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'diff\t"'(_ "Show differences between revisions")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'edit\t"'(_ "Get ready to edit a watched file")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'editors\t"'(_ "See who is editing a watched file")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'export\t"'(_ "Export sources from CVS, similar to checkout")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'history\t"'(_ "Show repository access history")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'import\t"'(_ "Import sources into CVS, using vendor branches")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'init\t"'(_ "Create a CVS repository if it doesnt exist")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'kserver\t"'(_ "Kerberos server mode")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'log\t"'(_ "Print out history information for files")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'login\t"'(_ "Prompt for password for authenticating server")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'logout\t"'(_ "Removes entry in .cvspass for remote repository")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'pserver\t"'(_ "Password server mode")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rannotate\t"'(_ "Show last revision where each line of module was modified")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rdiff\t"'(_ "Create "patch" format diffs between releases")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'release\t"'(_ "Indicate that a Module is no longer in use")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'remove\t"'(_ "Remove an entry from the repository")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rlog\t"'(_ "Print out history information for a module")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rtag\t"'(_ "Add a symbolic tag to a module")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'server\t"'(_ "Server mode")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'status\t"'(_ "Display status information on checked out files")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'tag\t"'(_ "Add a symbolic tag to checked out version of files")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'unedit\t"'(_ "Undo an edit command")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'update\t"'(_ "Bring work tree in sync with repository")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'version\t"'(_ "Display version and exit")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'watch\t"'(_ "Set watches")'"'
-complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'watchers\t"'(_ "See who is watching a file")'"'
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'add' --description "Add a new file/directory to the repository"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'admin' --description "Administration front end for rcs"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'annotate' --description "Show last revision where each line was modified"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'checkout' --description "Checkout sources for editing"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'commit' --description "Check files into the repository"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'diff' --description "Show differences between revisions"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'edit' --description "Get ready to edit a watched file"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'editors' --description "See who is editing a watched file"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'export' --description "Export sources from CVS, similar to checkout"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'history' --description "Show repository access history"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'import' --description "Import sources into CVS, using vendor branches"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'init' --description "Create a CVS repository if it doesnt exist"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'kserver' --description "Kerberos server mode"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'log' --description "Print out history information for files"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'login' --description "Prompt for password for authenticating server"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'logout' --description "Removes entry in .cvspass for remote repository"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'pserver' --description "Password server mode"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rannotate' --description "Show last revision where each line of module was modified"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rdiff' --description "Create "patch" format diffs between releases"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'release' --description "Indicate that a Module is no longer in use"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'remove' --description "Remove an entry from the repository"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rlog' --description "Print out history information for a module"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'rtag' --description "Add a symbolic tag to a module"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'server' --description "Server mode"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'status' --description "Display status information on checked out files"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'tag' --description "Add a symbolic tag to checked out version of files"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'unedit' --description "Undo an edit command"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'update' --description "Bring work tree in sync with repository"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'version' --description "Display version and exit"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'watch' --description "Set watches"
+complete -c cvs -n '__fish_no_cvs_subcommand' -xa 'watchers' --description "See who is watching a file"
 
 #
 # cvs_options switches, which must be specified before a command.
 # 
 
-complete -c cvs -n '__fish_no_cvs_subcommand' -x -l allow-root -d (N_ "Specify legal cvsroot directory." )
+complete -c cvs -n '__fish_no_cvs_subcommand' -x -l allow-root --description "Specify legal cvsroot directory."
 complete -c cvs -n '__fish_no_cvs_subcommand' -s a --description "Authenticate all net traffic"
 complete -c cvs -n '__fish_no_cvs_subcommand' -r -s T --description "Use "tmpdir" for temporary files"
 complete -c cvs -n '__fish_no_cvs_subcommand' -x -s d --description "Overrides $CVSROOT as the root of the CVS tree"

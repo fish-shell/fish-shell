@@ -6,32 +6,37 @@
 # If no subcommand has been specified, complete using all available subcommands
 #
 
-complete -c svn -n '__fish_use_subcommand' -xa 'add\t"'(_ "Place files or directories under version control")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'blame\t"'(_ "Output files/URLs with revision and author information inline")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'cat\t"'(_ "Output content of files/URLs")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'checkout\t"'(_ "Check out a working copy from the repository")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'cleanup\t"'(_ "Recursively clean up the working copy")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'commit\t"'(_ "Send changes from your working copy to the repository")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'delete\t"'(_ "Remove file or directory from version control")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'import\t"'(_ "Commit an unversioned file or tree into the repository")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'info\t"'(_ "Display information about a local or remote item")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'list\t"'(_ "List directory entries in the repository")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'lock\t"'(_ "Lock working copy paths or URLs in the repository")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'log\t"'(_ "Show the log messages for a set of revision(s) and/or file(s)")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'merge\t"'(_ "Apply the differences between two sources to a working copy path")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'mkdir\t"'(_ "Create a new directory under version control")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'move\t"'(_ "Move and/or rename something in working copy or repository")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'propdel\t"'(_ "Remove a property from files, dirs, or revisions")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'propedit\t"'(_ "Edit a property with an external editor on targets")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'propget\t"'(_ "Print value of a property on files, dirs, or revisions")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'proplist\t"'(_ "List all properties on files, dirs, or revisions")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'resolved\t"'(_ "Remove conflicted state on working copy files or directories")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'revert\t"'(_ "Restore pristine working copy file")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'status\t"'(_ "Print the status of working copy files and directories")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'switch\t"'(_ "Update the working copy to a different URL")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'unlock\t"'(_ "Unlock working copy paths or URLs")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'update\t"'(_ "Bring changes from the repository into the working copy")'"'
-complete -c svn -n '__fish_use_subcommand' -xa 'help\t"'(_ "Describe the usage of this program or its subcommands")'"'
+complete -c svn -n '__fish_use_subcommand' -xa 'add' --description "Place files or directories under version control"
+complete -c svn -n '__fish_use_subcommand' -xa 'blame praise annotate ann' --description "Output files/URLs with revision and author information inline"
+complete -c svn -n '__fish_use_subcommand' -xa 'cat' --description "Output content of files/URLs"
+complete -c svn -n '__fish_use_subcommand' -xa 'checkout co' --description "Check out a working copy from the repository"
+complete -c svn -n '__fish_use_subcommand' -xa 'cleanup' --description "Recursively clean up the working copy"
+complete -c svn -n '__fish_use_subcommand' -xa 'commit ci' --description "Send changes from your working copy to the repository"
+complete -c svn -n '__fish_use_subcommand' -xa 'copy cp' --description "Duplicate something in working copy or repository, remembering history"
+complete -c svn -n '__fish_use_subcommand' -xa 'delete del remove rm' --description "Remove file or directory from version control"
+complete -c svn -n '__fish_use_subcommand' -xa 'diff di' --description "Display the differences between two paths"
+complete -c svn -n '__fish_use_subcommand' -xa 'export' --description "Create an unversioned copy of a tree"
+complete -c svn -n '__fish_use_subcommand' -xa 'help h \\?' --description "Describe the usage of this program or its subcommands"
+complete -c svn -n '__fish_use_subcommand' -xa 'import' --description "Commit an unversioned file or tree into the repository"
+complete -c svn -n '__fish_use_subcommand' -xa 'info' --description "Display information about a local or remote item"
+complete -c svn -n '__fish_use_subcommand' -xa 'list ls' --description "List directory entries in the repository"
+complete -c svn -n '__fish_use_subcommand' -xa 'lock' --description "Lock working copy paths or URLs in the repository"
+complete -c svn -n '__fish_use_subcommand' -xa 'log' --description "Show the log messages for a set of revision(s) and/or file(s)"
+complete -c svn -n '__fish_use_subcommand' -xa 'merge' --description "Apply the differences between two sources to a working copy path"
+complete -c svn -n '__fish_use_subcommand' -xa 'mkdir' --description "Create a new directory under version control"
+complete -c svn -n '__fish_use_subcommand' -xa 'move mv rename ren' --description "Move and/or rename something in working copy or repository"
+complete -c svn -n '__fish_use_subcommand' -xa 'propdel pdel pd' --description "Remove a property from files, dirs, or revisions"
+complete -c svn -n '__fish_use_subcommand' -xa 'propedit pedit pe' --description "Edit a property with an external editor on targets"
+complete -c svn -n '__fish_use_subcommand' -xa 'propget pget pg' --description "Print value of a property on files, dirs, or revisions"
+complete -c svn -n '__fish_use_subcommand' -xa 'proplist plist pl' --description "List all properties on files, dirs, or revisions"
+complete -c svn -n '__fish_use_subcommand' -xa 'propset pset ps' --description "Set the value of a property on files, dirs, or revisions"
+complete -c svn -n '__fish_use_subcommand' -xa 'resolved' --description "Remove conflicted state on working copy files or directories"
+complete -c svn -n '__fish_use_subcommand' -xa 'revert' --description "Restore pristine working copy file"
+complete -c svn -n '__fish_use_subcommand' -xa 'status stat st' --description "Print the status of working copy files and directories"
+complete -c svn -n '__fish_use_subcommand' -xa 'switch sw' --description "Update the working copy to a different URL"
+complete -c svn -n '__fish_use_subcommand' -xa 'unlock' --description "Unlock working copy paths or URLs"
+complete -c svn -n '__fish_use_subcommand' -xa 'update up' --description "Bring changes from the repository into the working copy"
+
 
 # -s/--revision
 complete -c svn -n '__fish_seen_subcommand_from blame cat checkout info list log merge move propdel propedit propget proplist switch update' -x -s r -l revision --description "Specify revision"

@@ -1,5 +1,5 @@
 /** \file history.c
-  History functions, part of the user interface.
+	History functions, part of the user interface.
 */
 #include "config.h"
 
@@ -612,6 +612,8 @@ static void history_save_mode( void *n, history_mode_t *m )
 	int has_new=0;
 	wchar_t *tmp_name;
 
+	int ok = 1;
+
 	/*
 	  First check if there are any new entries to save. If not, then
 	  we can just return
@@ -649,7 +651,6 @@ static void history_save_mode( void *n, history_mode_t *m )
 		if( (out=wfopen( tmp_name, "w" ) ) )
 		{
 			hash_table_t mine;
-			int ok = 1;
 			
 			hash_init( &mine, &hash_item_func, &hash_item_cmp );
 			
@@ -717,26 +718,32 @@ static void history_save_mode( void *n, history_mode_t *m )
 	
 	halloc_free( on_disk);
 
-	/*
-	  Reset the history. The item_t entries created in this session
-	  are not lost or dropped, they are stored in the session_item
-	  hash table. On reload, they will be automatically inserted at
-	  the end of the history list.
-	*/
-	
-	if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
-		munmap( m->mmap_start, m->mmap_length );
-	
-	al_truncate( &m->item, 0 );
-	al_truncate( &m->used, 0 );
-	m->pos = 0;
-	m->has_loaded = 0;
-	m->mmap_start=0;
-	m->mmap_length=0;
-	
-	m->save_timestamp=time(0);
-	m->new_count = 0;
+	if( ok )
+	{
 
+		/*
+		  Reset the history. The item_t entries created in this session
+		  are not lost or dropped, they are stored in the session_item
+		  hash table. On reload, they will be automatically inserted at
+		  the end of the history list.
+		*/
+			
+		if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
+		{
+			munmap( m->mmap_start, m->mmap_length );
+		}
+		
+		al_truncate( &m->item, 0 );
+		al_truncate( &m->used, 0 );
+		m->pos = 0;
+		m->has_loaded = 0;
+		m->mmap_start=0;
+		m->mmap_length=0;
+	
+		m->save_timestamp=time(0);
+		m->new_count = 0;
+	}
+	
 	signal_unblock();
 }
 

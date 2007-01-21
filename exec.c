@@ -762,6 +762,34 @@ static pid_t exec_fork()
 }
 
 
+static void do_builtin_io( wchar_t *out, wchar_t *err )
+{
+
+	if( out )
+	{
+		if( fwprintf( stdout, L"%ls", out ) == -1 || fflush( stdout ) == EOF )
+		{
+			debug( 0, L"Error while writing to stdout" );
+			wperror( L"fwprintf" );
+			show_stackframe();
+		}
+	}
+	
+	if( err )
+	{
+		if( fwprintf( stderr, L"%ls", err ) == -1 || fflush( stderr ) == EOF )
+		{
+			/*
+			  Can't really show any error message here, since stderr is
+			  dead. Complain a bit on stdout.
+			*/
+			fwprintf( stdout, L"fish: Error while writing to stderr\n" );
+		}
+	}
+	
+} 
+
+
 void exec( job_t *j )
 {
 	process_t *p;
@@ -1351,10 +1379,7 @@ void exec( job_t *j )
 
 					p->pid = getpid();
 					setup_child_process( j, p );
-					if( sb_out->used )
-						fwprintf( stdout, L"%ls", sb_out->buff );
-					if( sb_err->used )
-						fwprintf( stderr, L"%ls", sb_err->buff );
+					do_builtin_io( sb_out->used ? (wchar_t *)sb_out->buff : 0, sb_err->used ? (wchar_t *)sb_err->buff : 0 );
 					
 					exit( p->status );
 						

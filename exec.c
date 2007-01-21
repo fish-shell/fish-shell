@@ -67,6 +67,11 @@
 #define FORK_LAPS 5
 
 /**
+   The number of nanoseconds to sleep between attempts to call fork()
+*/
+#define FORK_SLEEP_TIME 1000000
+
+/**
    Base open mode to pass to calls to open
 */
 #define OPEN_MASK 0666
@@ -721,7 +726,7 @@ static pid_t exec_fork()
 		}
 
 		pollint.tv_sec = 0;
-		pollint.tv_nsec = 1000000;
+		pollint.tv_nsec = FORK_SLEEP_TIME;
 
 		/*
 		  Don't sleep on the final lap - sleeping might change the

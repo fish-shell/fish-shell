@@ -763,9 +763,8 @@ static void do_builtin_io( wchar_t *out, wchar_t *err )
 		{
 			/*
 			  Can't really show any error message here, since stderr is
-			  dead. Complain a bit on stdout.
+			  dead.
 			*/
-			fwprintf( stdout, L"fish: Error while writing to stderr\n" );
 		}
 	}
 	

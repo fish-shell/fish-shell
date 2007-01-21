@@ -539,7 +539,7 @@ static int builtin_set( wchar_t **argv )
 				return 0;
 
 			case '?':
-				builtin_print_help( argv[0], sb_err );
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return 1;
 
 			default:

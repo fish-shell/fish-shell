@@ -139,7 +139,6 @@ static hash_table_t *desc=0;
 /**
    Counts the number of non null pointers in the specified array
 */
-
 static int builtin_count_args( wchar_t **argv )
 {
 	int argc = 1;
@@ -237,7 +236,7 @@ wchar_t *builtin_help_get( const wchar_t *name )
 }
 
 
-static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
+static void builtin_print_help( const wchar_t *cmd, string_buffer_t *b )
 {
 	
 	const wchar_t *h;
@@ -342,6 +341,20 @@ static void builtin_print_help( wchar_t *cmd, string_buffer_t *b )
 	}
 }
 
+/**
+   Perform error reporting for encounter with unknown option
+*/
+static void builtin_unknown_option( const wchar_t *cmd, const wchar_t *opt )
+{
+	sb_printf( sb_err,
+			   BUILTIN_ERR_UNKNOWN,
+			   cmd,
+			   opt );
+	sb_append( sb_err,
+			   parser_current_line() );
+	builtin_print_help( cmd, sb_err );
+}
+
 /*
   Here follows the definition of all builtin commands. The function
   names are all on the form builtin_NAME where NAME is the name of the
@@ -431,8 +444,7 @@ static int builtin_bind( wchar_t **argv )
 				return STATUS_BUILTIN_OK;
 				
 			case '?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
@@ -533,8 +545,7 @@ static int builtin_block( wchar_t **argv )
 				break;
 
 			case '?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
@@ -666,8 +677,7 @@ static int builtin_builtin(  wchar_t **argv )
 				break;
 
 			case '?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
@@ -752,8 +762,7 @@ static int builtin_generic( wchar_t **argv )
 				return STATUS_BUILTIN_OK;
 
 			case '?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
@@ -947,8 +956,7 @@ static int builtin_functions( wchar_t **argv )
 				break;
 
 			case '?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
@@ -1281,7 +1289,7 @@ static int builtin_function( wchar_t **argv )
 				return STATUS_BUILTIN_OK;
 				
 			case '?':
-				
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				res = 1;
 				break;
 
@@ -1434,8 +1442,7 @@ static int builtin_random( wchar_t **argv )
 				break;
 
 			case '?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
@@ -1619,8 +1626,7 @@ static int builtin_read( wchar_t **argv )
 				return STATUS_BUILTIN_OK;
 
 			case L'?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 		}
 
@@ -1925,8 +1931,7 @@ static int builtin_status( wchar_t **argv )
 				break;
 
 			case '?':
-				builtin_print_help( argv[0], sb_err );
-
+				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
@@ -3137,6 +3142,8 @@ void builtin_init()
 	
 	int i;
 	
+	wopterr = 0;
+
 	al_init( &io_stack );
 	hash_init( &builtin, &hash_wcs_func, &hash_wcs_cmp );
 

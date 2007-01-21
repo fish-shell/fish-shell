@@ -220,7 +220,7 @@ void free_fd( io_data_t *io, int fd )
 								   FD_ERROR,
 								   fd );							
 							wperror( L"dup" );
-							exit(1);
+							FATAL_EXIT();
 						}
 					}
 					else
@@ -515,7 +515,7 @@ static void launch_process( process_t *p )
 	errno = err;
 	
 	wperror( L"execve" );
-	exit(1);
+	FATAL_EXIT();
 }
 
 
@@ -761,7 +761,7 @@ static pid_t exec_fork()
 	
 	debug( 0, FORK_ERROR );
 	wperror (L"fork");
-	exit( 1 );
+	FATAL_EXIT();
 }
 
 

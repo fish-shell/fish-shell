@@ -91,9 +91,9 @@ extern wchar_t *program_name;
 	}
 
 /**
-   Cause fish to crash. If supported, print a backtrace first.
+   Pause for input, then exit the program. If supported, print a backtrace first.
 */
-#define CRASH()									\
+#define FATAL_EXIT()							\
 	{											\
 		char c;									\
 		show_stackframe();						\
@@ -111,7 +111,7 @@ extern wchar_t *program_name;
 				  L"fish: Out of memory on line %d of file %s, shutting down fish\n", \
 				  __LINE__,												\
 				  __FILE__ );											\
-		CRASH();														\
+		FATAL_EXIT();														\
 	}
 
 /**

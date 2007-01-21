@@ -557,7 +557,7 @@ void signal_set_handlers()
 		if( sigaction( SIGINT, &act, 0) )
 		{
 			wperror( L"sigaction" );
-			exit(1);
+			FATAL_EXIT();
 		}
 
 		act.sa_sigaction = &handle_chld;
@@ -565,7 +565,7 @@ void signal_set_handlers()
 		if( sigaction( SIGCHLD, &act, 0) )
 		{
 			wperror( L"sigaction" );
-			exit(1);
+			FATAL_EXIT();
 		}
 		
 #ifdef SIGWINCH
@@ -574,7 +574,7 @@ void signal_set_handlers()
 		if( sigaction( SIGWINCH, &act, 0 ) )
 		{
 			wperror( L"sigaction" );
-			exit(1);
+			FATAL_EXIT();
 		}
 #endif
 
@@ -583,7 +583,7 @@ void signal_set_handlers()
 		if( sigaction( SIGHUP, &act, 0 ) )
 		{
 			wperror( L"sigaction" );
-			exit(1);
+			FATAL_EXIT();
 		}
 
 	}
@@ -661,6 +661,13 @@ void signal_unblock()
 
 	block_count--;
 
+	if( block_count < 0 )
+	{
+		debug( 0, _( L"Signal block mismatch" ) );
+		bugreport();
+		FATAL_EXIT();
+	}
+	
 	if( !block_count )
 	{
 		sigfillset( &chldset );

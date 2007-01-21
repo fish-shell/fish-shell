@@ -2588,7 +2588,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 			debug( 0,
 				   _(L"End of block mismatch. Program terminating.") );
 			bugreport();
-			exit(1);
+			FATAL_EXIT();
 			break;
 		}
 

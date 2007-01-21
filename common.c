@@ -704,7 +704,7 @@ wchar_t *escape( const wchar_t *in,
 	if( !in )
 	{
 		debug( 0, L"%s called with null input", __func__ );
-		exit(1);
+		FATAL_EXIT();
 	}
 	
 	out = malloc( sizeof(wchar_t)*(wcslen(in)*4 + 1));

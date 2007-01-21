@@ -243,11 +243,10 @@ void free_fd( io_data_t *io, int fd )
    redirections described by \c io.
 
    \param io the list of IO redirections for the child
-   \param exit_on_error whether to call exit() on errors
 
    \return 0 on sucess, -1 on failiure
 */
-static int handle_child_io( io_data_t *io, int exit_on_error )
+static int handle_child_io( io_data_t *io )
 {
 
 	close_unused_internal_pipes( io );
@@ -291,15 +290,8 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 						   io->param1.filename );
 					
 					wperror( L"open" );
-					if( exit_on_error )
-					{
-						exit(1);
-					}
-					else
-					{
-						return -1;
-					}					
-				}				
+					return -1;
+				}
 				else if( tmp != io->fd)
 				{
 					/*
@@ -314,14 +306,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 							   FD_ERROR,
 							   io->fd );
 						wperror( L"dup2" );
-						if( exit_on_error )
-						{
-							exit(1);
-						}
-						else
-						{
-							return -1;
-						}
+						return -1;
 					}
 					exec_close( tmp );
 				}				
@@ -342,14 +327,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 						   FD_ERROR,
 						   io->fd );
 					wperror( L"dup2" );
-					if( exit_on_error )
-					{
-						exit(1);
-					}
-					else
-					{
-						return -1;
-					}
+					return -1;
 				}
 				break;
 			}
@@ -373,15 +351,7 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 				{
 					debug( 1, PIPE_ERROR );
 					wperror( L"dup2" );
-					if( exit_on_error )
-					{
-						exit(1);
-					}
-					else
-					{
-						return -1;
-					}					
-
+					return -1;
 				}
 
 				if( write_pipe ) 
@@ -430,7 +400,11 @@ static int setup_child_process( job_t *j, process_t *p )
 	
 	if( !res )	
 	{
-		res = handle_child_io( j->io, (p!=0) );
+		res = handle_child_io( j->io );
+		if( p != 0 && res )
+		{
+			exit( 1 );
+		}
 	}
 	
 	/* Set the handling for job control signals back to the default.  */

@@ -272,12 +272,15 @@ static int handle_child_io( io_data_t *io, int exit_on_error )
 		switch( io->io_mode )
 		{
 			case IO_CLOSE:
+			{
 				if( close(io->fd) )
 				{
 					debug( 0, _(L"Failed to close file descriptor %d"), io->fd );
 					wperror( L"close" );
 				}
 				break;
+			}
+
 			case IO_FILE:
 			{
 				if( (tmp=wopen( io->param1.filename,
@@ -827,9 +830,13 @@ void exec( job_t *j )
 	if( block_io )
 	{
 		if( j->io )
+		{
 			j->io = io_add( io_duplicate( j, block_io), j->io );
+		}
 		else
+		{
 			j->io=io_duplicate( j, block_io);				
+		}
 	}
 
 	
@@ -868,7 +875,7 @@ void exec( job_t *j )
 		if( !setup_child_process( j, 0 ) )
 		{
 			/*
-			  launch_process never returns
+			  launch_process _never_ returns
 			*/
 			launch_process( j->first_process );
 		}
@@ -1195,8 +1202,10 @@ void exec( job_t *j )
 		}
 		
 		if( exec_error )
+		{
 			break;
-
+		}
+		
 		switch( p->type )
 		{
 
@@ -1331,7 +1340,7 @@ void exec( job_t *j )
 					( !p->next );
 				
 				/*
-				  If the output of a builtin is to be sent to aninternal
+				  If the output of a builtin is to be sent to an internal
 				  buffer, there is no need to fork. This helps out the
 				  performance quite a bit in complex completion code.
 				*/
@@ -1360,7 +1369,6 @@ void exec( job_t *j )
 						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!p->status):p->status );
 					}
 					break;
-					
 				}
 
 				/*
@@ -1376,7 +1384,6 @@ void exec( job_t *j )
 					  print correct output to stdout and stderr, and
 					  then exit.
 					*/
-
 					p->pid = getpid();
 					setup_child_process( j, p );
 					do_builtin_io( sb_out->used ? (wchar_t *)sb_out->buff : 0, sb_err->used ? (wchar_t *)sb_err->buff : 0 );

@@ -20,7 +20,7 @@ The following switches change what the commandline builtin does
   will cause any additional arguments to be interpreted as readline
   functions, and these functions will be injected into the reader, so
   that they will be returned to the reader before any additional
-  actual keypresses are read.
+  actual key presses are read.
 
 
 The following switches change the way \c commandline updates the

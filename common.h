@@ -98,7 +98,7 @@ extern wchar_t *program_name;
 		char c;									\
 		show_stackframe();						\
 		read( 0, &c, 1 );						\
-		exit(1 );								\
+		exit( 1 );								\
 	}											\
 		
 
@@ -140,15 +140,15 @@ extern wchar_t *program_name;
 */
 #define N_(wstr) wstr
 
-
+/*
+  Print a stack trace to stderr
+*/
 void show_stackframe();
 
 /**
    Take an array_list_t containing wide strings and converts them to a
    single null-terminated wchar_t **. The array is allocated using
-   halloc, and uses the \c context parameter as context. If \c context
-   is not noll, all elements of the \c array_list_t are also
-   registered to \c context using \c halloc_register().
+   malloc, and needs to be fred's by the caller.
 */
 wchar_t **list_to_char_arr( array_list_t *l );
 

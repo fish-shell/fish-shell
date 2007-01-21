@@ -568,6 +568,7 @@ void signal_set_handlers()
 			exit(1);
 		}
 		
+#ifdef SIGWINCH
 		act.sa_flags = SA_SIGINFO;
 		act.sa_sigaction= &handle_winch;
 		if( sigaction( SIGWINCH, &act, 0 ) )
@@ -575,6 +576,7 @@ void signal_set_handlers()
 			wperror( L"sigaction" );
 			exit(1);
 		}
+#endif
 
 		act.sa_flags = SA_SIGINFO;
 		act.sa_sigaction= &handle_hup;

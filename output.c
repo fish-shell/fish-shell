@@ -377,7 +377,7 @@ int writech( wint_t ch )
 {
 	mbstate_t state;
 	int i;
-	char buff[MB_CUR_MAX+1];
+	char buff[MB_LEN_MAX+1];
 	size_t bytes;
 
 	if( ( ch >= ENCODE_DIRECT_BASE) &&

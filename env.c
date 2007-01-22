@@ -888,6 +888,11 @@ int env_set( const wchar_t *key,
 					entry->export = 1;
 					has_changed_new = 1;		
 				}
+				else
+				{
+					entry->export = 0;
+				}
+				
 			}
 
 			wcscpy( entry->val, val );

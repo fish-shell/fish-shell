@@ -2224,6 +2224,11 @@ wchar_t *reader_readline()
 					
 					cursor_steps = token_end - data->buff- data->buff_pos;
 					data->buff_pos += cursor_steps;
+					if( is_backslashed( data->buff, data->buff_pos ) )
+					{
+						remove_backward();
+					}
+					
 					repaint();
 					
 					len = data->buff_pos - (begin-data->buff);

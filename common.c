@@ -861,10 +861,13 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 						*/
 						case L'\0':
 						{
-							free(in);
-							return 0;
+							if( !allow_incomplete )
+							{
+								free(in);
+								return 0;
+							}
 						}
-						
+												
 						/*
 						  Numeric escape sequences. No prefix means
 						  octal escape, otherwise hexadecimal.
@@ -1225,8 +1228,13 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 						
 						case 0:
 						{
-							free(in);
-							return 0;
+							if( !allow_incomplete )
+							{
+								free(in);
+								return 0;
+							}
+							else
+								out_pos--;						
 						}
 						
 						default:
@@ -1276,8 +1284,13 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 						{
 							case L'\0':
 							{
-								free(in);
-								return 0;
+								if( !allow_incomplete )
+								{
+									free(in);
+									return 0;
+								}
+								else
+									out_pos--;						
 							}
 							
 							case '\\':

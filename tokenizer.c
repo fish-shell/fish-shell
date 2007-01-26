@@ -137,27 +137,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 
 	tok->has_next = (*b != L'\0');
 	tok->orig_buff = tok->buff = (wchar_t *)(b);
-
-	if( tok->accept_unfinished )
-	{
-		int l = wcslen( tok->orig_buff );
-		if( l != 0 )
-		{
-			if( tok->orig_buff[l-1] == L'\\' )
-			{
-				tok->free_orig = 1;
-				tok->orig_buff = tok->buff = wcsdup( tok->orig_buff );
-				if( !tok->orig_buff )
-				{
-					DIE_MEM();
-				}
-				tok->orig_buff[l-1] = L'\0';
-			}
-		}
-	}
-
 	tok_next( tok );
-
 }
 
 void tok_destroy( tokenizer *tok )
@@ -242,8 +222,17 @@ static void read_string( tokenizer *tok )
 				tok->buff++;
 				if( *tok->buff == L'\0' )
 				{
-					tok_error( tok, TOK_UNTERMINATED_ESCAPE, QUOTE_ERROR );
-					return;
+					if( (!tok->accept_unfinished) )
+					{
+						tok_error( tok, TOK_UNTERMINATED_ESCAPE, QUOTE_ERROR );
+						return;
+					}
+					else
+					{
+						do_loop = 0;
+					}
+					
+
 				}
 				else if( *tok->buff == L'\n' && mode == 0)
 				{
@@ -674,7 +663,7 @@ int tok_get_pos( tokenizer *tok )
 {
 	CHECK( tok, 0 );
 	
-	return tok->last_pos + (tok->free_orig?1:0);
+	return tok->last_pos;
 }
 
 

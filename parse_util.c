@@ -492,9 +492,6 @@ void parse_util_token_extent( const wchar_t *buff,
 		{			
 			a = begin + tok_get_pos( &tok );
 			b = a + wcslen(tok_last(&tok));
-			
-//			fwprintf( stderr, L"Whee %ls\n", *a );
-
 			break;
 		}
 		

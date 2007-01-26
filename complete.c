@@ -2288,12 +2288,15 @@ void complete( const wchar_t *cmd,
 				wchar_t *prev_token_unescape = unescape( prev_token, 0 );
 				wchar_t *current_token_unescape = unescape( current_token, UNESCAPE_INCOMPLETE );
 				
-				do_file = complete_param( current_command_unescape, 
-										  prev_token_unescape, 
-										  current_token_unescape, 
-										  !had_ddash, 
-										  comp );
-
+				if( current_token_unescape && prev_token_unescape && current_token_unescape )
+				{
+					do_file = complete_param( current_command_unescape, 
+											  prev_token_unescape, 
+											  current_token_unescape, 
+											  !had_ddash, 
+											  comp );
+				}
+				
 				free( current_command_unescape );
 				free( prev_token_unescape );
 				free( current_token_unescape );

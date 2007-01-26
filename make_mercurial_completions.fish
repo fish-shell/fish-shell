@@ -14,6 +14,77 @@ function esc
 end
 
 
+#
+# This function formats a list of completion information into a set of fish completions
+# 
+# The first argument is the condition string, which will be copied to
+# the resulting commandline verbatim
+#
+# Remaining arguments are tab separated lists of completion
+# information. Each list contains four elements, the short switch, the
+# long switch, the argument and the description.
+#
+
+function complete_from_list
+
+	set condition $argv[1]
+	set -e argv[1]
+
+	for j in $argv
+		set exploded (echo $j|tr \t \n)
+		set short $exploded[1]
+		set long $exploded[2]
+		set arg $exploded[3]
+		set desc (cap (esc $exploded[4]))
+
+		set str 
+
+		switch $short
+			case '-?'
+				set str $str -s (printf "%s\n" $short|cut -c 2)
+		end
+
+		switch $long
+			case '--?*'
+				set str $str -l (printf "%s\n" $long|cut -c 3-)
+		end
+
+		switch $arg
+			case '=DIRECTORY' ' dir'
+				set str $str -x -a "'(__fish_complete_directories (commandline -ct))'"
+
+			case '=COMMAND'
+				set str $str -x -a "'(__fish_complete_command)'"
+
+			case '=USERNAME' ' <user>'
+				set str $str -x -a "'(__fish_complete_users)'"
+
+			case '=FILENAME' '=FILE' ' <file>'
+				set str $str -r 
+
+			case ' arg'
+				set str $str -x
+
+			case ' (*):'
+				 set str $str -x -a \'(echo $arg| sed -e "s/ (\(.*\)):/\1/" |tr '/' ' ')\'
+
+			case '?*'
+				set str $str -x
+				echo "Don't know how to handle arguments of type '$arg'" >&2
+		end
+
+		switch $desc
+			case '?*'
+				set str $str --description \'$desc\'
+		end
+
+		echo complete -c $cmd $condition $str 
+
+	end
+
+end
+
+
 set cmd $argv[1]; or exit 1
 
 echo '
@@ -35,12 +106,6 @@ while count $argv >/dev/null
 end
 
 
-echo '
-#
-# subcommands
-#
-'
-
 eval "function cmd; $cmd \$argv; end"
 
 set -l cmd_str
@@ -56,6 +121,15 @@ switch $cmd
 			cmd help|sed -ne 's/'$svn_re'/\1\n\3\n\5\n\7/p'| grep .
 		end
 
+		function list_subcommand_help
+			set short_exp '\(-.\|\)'
+			set long_exp '\(--[^ =,]*\)'
+			set arg_exp '\(\|[= ][^ ][^ ]*\)'
+			set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*\)'
+			set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\$"
+			cmd help $argv | sed -n -e 's/'$re'/\1\t\2\t\3\t\5/p'
+		end
+
 
 		for i in (list_subcommand)
 			set desc (cmd help $i|head -n 1|sed -e 's/[^:]*: *\(.*\)$/\1/')
@@ -63,14 +137,62 @@ switch $cmd
 			set cmd_str $cmd_str "-a $i --description '$desc'"
 		end
 
+	case cvs
+
+		function list_subcommand 
+		 	cmd --help-commands 2>| sed -n -e 's/^  *\([^ ][^ ]*\) .*$/\1/p'
+		end
+
+		set short_exp '\(-.\)'
+		set arg_exp '\(\| [^ \t][^ \t]*\)'
+		set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*\)'
+		set re '^[ \t]*'$short_exp$arg_exp'[ \t]*'$desc_exp'$'
+
+		function list_subcommand_help
+#'s/^[ \t]*\(-.\)[ \t]\([^- \t][^ \t]*\)*[ \t]*\([^-].*\)$/\1\t\2\t\3/p'
+
+			cmd -H $argv 2>| sed -n -e 's/'$re'/\1\t\t\2\t\4/p' 
+		end
+
+		echo '
+#
+# Global switches
+#
+'
+
+		complete_from_list "-n '__fish_use_subcommand'" (cmd --help-options 2>| sed -n -e 's/'$re'/\1\t\t\2\t\4/p')
+
+		set cmd_str_internal (cmd --help-commands 2>| sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*\)$/\1\t\2/p')
+		for i in $cmd_str_internal
+			set exploded (echo $i|tr \t \n)
+			set cmd_str $cmd_str "-a $exploded[1] --description '"(esc $exploded[2])"'"		 
+		end
+
 	case '*'
 
 		function list_subcommand 
 		 	cmd help | sed -n -e 's/^  *\([^ ][^ ]*\) .*$/\1/p'
 		end
-		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ] *\([^ ].*\)$/-a \1 --description \'\2\'/p')
+
+		function list_subcommand_help
+			set short_exp '\(-.\|\)'
+			set long_exp '\(--[^ =,]*\)'
+			set arg_exp '\(\|[= ][^ ][^ ]*\)'
+			set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*\)'
+			set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\$"
+
+			cmd help $argv | sed -n -e 's/'$re'/\1\t\2\t\3\t\5/p'
+		end
+
+		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*\)$/-a \1 --description \'\2\'/p')
 
 end
+
+echo '
+#
+# subcommands
+#
+'
 
 printf "complete -c $cmd -n '__fish_use_subcommand' -x %s\n" $cmd_str
 
@@ -82,62 +204,9 @@ for i in (list_subcommand)
 # Completions for the \''$i'\' subcommand
 #
 '
-	set -l cmd_str "complete -c $cmd -n 'contains $i (commandline -poc)' %s\n"
 
-	set short_exp '\(-.\|\)'
-	set long_exp '--\([^ =,]*\)'
-	set arg_exp '\(\|[= ][^ ][^ ]*\)'
-	set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*\)'
-	set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\$"
+	complete_from_list "-n 'contains $i (commandline -poc)'" (list_subcommand_help $i)
 
-	for j in (cmd help $i | sed -n -e 's/'$re'/\1\t\2\t\3\t\5/p')
-		set exploded (echo $j|tr \t \n)
-		set short $exploded[1]
-		set long $exploded[2]
-		set arg $exploded[3]
-		set desc (cap (esc $exploded[4]))
-
-		set str 
-
-		switch $short
-			case '-?'
-				set str $str -s (echo $short|cut -c 2)
-		end
-
-		switch $long
-			case '?*'
-				set str $str -l $long
-		end
-
-		switch $arg
-			case '=DIRECTORY'
-				set str $str -x -a "(__fish_complete_directories (commandline -ct))"
-
-			case '=COMMAND'
-				set str $str -x -a "(__fish_complete_command)"
-
-			case '=USERNAME'
-				set str $str -x -a "(__fish_complete_users)"
-
-			case '=FILENAME' '=FILE'
-				set str $str -r 
-
-			case ' arg'
-				set str $str -x
-
-			case '?*'
-				set str $str -x
-				echo "Don't know how to handle arguments of type $arg" >&2
-		end
-
-		switch $desc
-			case '?*'
-				set str $str --description \'$desc\'
-		end
-
-		echo complete -c $cmd -n "'contains $i (commandline -poc)'" $str
-
-	end
 
 end
 

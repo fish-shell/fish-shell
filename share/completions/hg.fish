@@ -64,7 +64,7 @@ complete -c hg -n '__fish_use_subcommand' -x -a version --description 'output ve
 
 complete -c hg -n 'contains add (commandline -poc)' -s I -l include --description 'Include names matching the given patterns'
 complete -c hg -n 'contains add (commandline -poc)' -s X -l exclude --description 'Exclude names matching the given patterns'
-complete -c hg -n 'contains add (commandline -poc)' -s -l dry-run --description 'Do not perform actions, just print output'
+complete -c hg -n 'contains add (commandline -poc)' -s n -l dry-run --description 'Do not perform actions, just print output'
 
 
 #
@@ -75,7 +75,7 @@ complete -c hg -n 'contains annotate (commandline -poc)' -s r -l rev --descripti
 complete -c hg -n 'contains annotate (commandline -poc)' -s a -l text --description 'Treat all files as text'
 complete -c hg -n 'contains annotate (commandline -poc)' -s u -l user --description 'List the author'
 complete -c hg -n 'contains annotate (commandline -poc)' -s d -l date --description 'List the date'
-complete -c hg -n 'contains annotate (commandline -poc)' -s -l number --description 'List the revision number (default)'
+complete -c hg -n 'contains annotate (commandline -poc)' -s n -l number --description 'List the revision number (default)'
 complete -c hg -n 'contains annotate (commandline -poc)' -s c -l changeset --description 'List the changeset'
 complete -c hg -n 'contains annotate (commandline -poc)' -s I -l include --description 'Include names matching the given patterns'
 complete -c hg -n 'contains annotate (commandline -poc)' -s X -l exclude --description 'Exclude names matching the given patterns'
@@ -132,7 +132,7 @@ complete -c hg -n 'contains clone (commandline -poc)' -s U -l noupdate --descrip
 complete -c hg -n 'contains clone (commandline -poc)' -s r -l rev --description 'A changeset you would like to have after cloning'
 complete -c hg -n 'contains clone (commandline -poc)' -l pull --description 'Use pull protocol to copy metadata'
 complete -c hg -n 'contains clone (commandline -poc)' -l uncompressed --description 'Use uncompressed transfer (fast over LAN)'
-complete -c hg -n 'contains clone (commandline -poc)' -s  -l ssh --description 'Specify ssh command to use'
+complete -c hg -n 'contains clone (commandline -poc)' -s e -l ssh --description 'Specify ssh command to use'
 complete -c hg -n 'contains clone (commandline -poc)' -l remotecmd --description 'Specify hg command to run on the remote side'
 
 
@@ -157,7 +157,7 @@ complete -c hg -n 'contains copy (commandline -poc)' -s A -l after --description
 complete -c hg -n 'contains copy (commandline -poc)' -s f -l force --description 'Forcibly copy over an existing managed file'
 complete -c hg -n 'contains copy (commandline -poc)' -s I -l include --description 'Include names matching the given patterns'
 complete -c hg -n 'contains copy (commandline -poc)' -s X -l exclude --description 'Exclude names matching the given patterns'
-complete -c hg -n 'contains copy (commandline -poc)' -s -l dry-run --description 'Do not perform actions, just print output'
+complete -c hg -n 'contains copy (commandline -poc)' -s n -l dry-run --description 'Do not perform actions, just print output'
 
 
 #
@@ -191,7 +191,7 @@ complete -c hg -n 'contains grep (commandline -poc)' -s 0 -l print0 --descriptio
 complete -c hg -n 'contains grep (commandline -poc)' -l all --description 'Print all revisions that match'
 complete -c hg -n 'contains grep (commandline -poc)' -s i -l ignore-case --description 'Ignore case when matching'
 complete -c hg -n 'contains grep (commandline -poc)' -s l -l files-with-matches --description 'Print only filenames and revs that match'
-complete -c hg -n 'contains grep (commandline -poc)' -s -l line-number --description 'Print matching line numbers'
+complete -c hg -n 'contains grep (commandline -poc)' -s n -l line-number --description 'Print matching line numbers'
 complete -c hg -n 'contains grep (commandline -poc)' -s r -l rev --description 'Search in given revision range'
 complete -c hg -n 'contains grep (commandline -poc)' -s u -l user --description 'Print user who committed change'
 complete -c hg -n 'contains grep (commandline -poc)' -s I -l include --description 'Include names matching the given patterns'
@@ -237,12 +237,12 @@ complete -c hg -n 'contains import (commandline -poc)' -s f -l force --descripti
 complete -c hg -n 'contains incoming (commandline -poc)' -s M -l no-merges --description 'Do not show merges'
 complete -c hg -n 'contains incoming (commandline -poc)' -s f -l force --description 'Run even when remote repository is unrelated'
 complete -c hg -n 'contains incoming (commandline -poc)' -l style --description 'Display using template map file'
-complete -c hg -n 'contains incoming (commandline -poc)' -s -l newest-first --description 'Show newest record first'
+complete -c hg -n 'contains incoming (commandline -poc)' -s n -l newest-first --description 'Show newest record first'
 complete -c hg -n 'contains incoming (commandline -poc)' -l bundle --description 'File to store the bundles into'
 complete -c hg -n 'contains incoming (commandline -poc)' -s p -l patch --description 'Show patch'
 complete -c hg -n 'contains incoming (commandline -poc)' -s r -l rev --description 'A specific revision you would like to pull'
 complete -c hg -n 'contains incoming (commandline -poc)' -l template --description 'Display with template'
-complete -c hg -n 'contains incoming (commandline -poc)' -s  -l ssh --description 'Specify ssh command to use'
+complete -c hg -n 'contains incoming (commandline -poc)' -s e -l ssh --description 'Specify ssh command to use'
 complete -c hg -n 'contains incoming (commandline -poc)' -l remotecmd --description 'Specify hg command to run on the remote side'
 
 
@@ -250,7 +250,7 @@ complete -c hg -n 'contains incoming (commandline -poc)' -l remotecmd --descript
 # Completions for the 'init' subcommand
 #
 
-complete -c hg -n 'contains init (commandline -poc)' -s  -l ssh --description 'Specify ssh command to use'
+complete -c hg -n 'contains init (commandline -poc)' -s e -l ssh --description 'Specify ssh command to use'
 complete -c hg -n 'contains init (commandline -poc)' -l remotecmd --description 'Specify hg command to run on the remote side'
 
 
@@ -305,9 +305,9 @@ complete -c hg -n 'contains outgoing (commandline -poc)' -s f -l force --descrip
 complete -c hg -n 'contains outgoing (commandline -poc)' -s p -l patch --description 'Show patch'
 complete -c hg -n 'contains outgoing (commandline -poc)' -l style --description 'Display using template map file'
 complete -c hg -n 'contains outgoing (commandline -poc)' -s r -l rev --description 'A specific revision you would like to push'
-complete -c hg -n 'contains outgoing (commandline -poc)' -s -l newest-first --description 'Show newest record first'
+complete -c hg -n 'contains outgoing (commandline -poc)' -s n -l newest-first --description 'Show newest record first'
 complete -c hg -n 'contains outgoing (commandline -poc)' -l template --description 'Display with template'
-complete -c hg -n 'contains outgoing (commandline -poc)' -s  -l ssh --description 'Specify ssh command to use'
+complete -c hg -n 'contains outgoing (commandline -poc)' -s e -l ssh --description 'Specify ssh command to use'
 complete -c hg -n 'contains outgoing (commandline -poc)' -l remotecmd --description 'Specify hg command to run on the remote side'
 
 
@@ -332,7 +332,7 @@ complete -c hg -n 'contains parents (commandline -poc)' -l template --descriptio
 #
 
 complete -c hg -n 'contains pull (commandline -poc)' -s u -l update --description 'Update the working directory to tip after pull'
-complete -c hg -n 'contains pull (commandline -poc)' -s  -l ssh --description 'Specify ssh command to use'
+complete -c hg -n 'contains pull (commandline -poc)' -s e -l ssh --description 'Specify ssh command to use'
 complete -c hg -n 'contains pull (commandline -poc)' -s f -l force --description 'Run even when remote repository is unrelated'
 complete -c hg -n 'contains pull (commandline -poc)' -s r -l rev --description 'A specific revision you would like to pull'
 complete -c hg -n 'contains pull (commandline -poc)' -l remotecmd --description 'Specify hg command to run on the remote side'
@@ -343,7 +343,7 @@ complete -c hg -n 'contains pull (commandline -poc)' -l remotecmd --description 
 #
 
 complete -c hg -n 'contains push (commandline -poc)' -s f -l force --description 'Force push'
-complete -c hg -n 'contains push (commandline -poc)' -s  -l ssh --description 'Specify ssh command to use'
+complete -c hg -n 'contains push (commandline -poc)' -s e -l ssh --description 'Specify ssh command to use'
 complete -c hg -n 'contains push (commandline -poc)' -s r -l rev --description 'A specific revision you would like to push'
 complete -c hg -n 'contains push (commandline -poc)' -l remotecmd --description 'Specify hg command to run on the remote side'
 
@@ -372,7 +372,7 @@ complete -c hg -n 'contains rename (commandline -poc)' -s A -l after --descripti
 complete -c hg -n 'contains rename (commandline -poc)' -s f -l force --description 'Forcibly copy over an existing managed file'
 complete -c hg -n 'contains rename (commandline -poc)' -s I -l include --description 'Include names matching the given patterns'
 complete -c hg -n 'contains rename (commandline -poc)' -s X -l exclude --description 'Exclude names matching the given patterns'
-complete -c hg -n 'contains rename (commandline -poc)' -s -l dry-run --description 'Do not perform actions, just print output'
+complete -c hg -n 'contains rename (commandline -poc)' -s n -l dry-run --description 'Do not perform actions, just print output'
 
 
 #
@@ -383,7 +383,7 @@ complete -c hg -n 'contains revert (commandline -poc)' -s r -l rev --description
 complete -c hg -n 'contains revert (commandline -poc)' -l no-backup --description 'Do not save backup copies of files'
 complete -c hg -n 'contains revert (commandline -poc)' -s I -l include --description 'Include names matching given patterns'
 complete -c hg -n 'contains revert (commandline -poc)' -s X -l exclude --description 'Exclude names matching given patterns'
-complete -c hg -n 'contains revert (commandline -poc)' -s -l dry-run --description 'Do not perform actions, just print output'
+complete -c hg -n 'contains revert (commandline -poc)' -s n -l dry-run --description 'Do not perform actions, just print output'
 
 
 #
@@ -405,10 +405,10 @@ complete -c hg -n 'contains revert (commandline -poc)' -s -l dry-run --descripti
 complete -c hg -n 'contains serve (commandline -poc)' -s A -l accesslog --description 'Name of access log file to write to'
 complete -c hg -n 'contains serve (commandline -poc)' -s d -l daemon --description 'Run server in background'
 complete -c hg -n 'contains serve (commandline -poc)' -l daemon-pipefds --description 'Used internally by daemon mode'
-complete -c hg -n 'contains serve (commandline -poc)' -s  -l errorlog --description 'Name of error log file to write to'
+complete -c hg -n 'contains serve (commandline -poc)' -s E -l errorlog --description 'Name of error log file to write to'
 complete -c hg -n 'contains serve (commandline -poc)' -s p -l port --description 'Port to use (default: 8000)'
 complete -c hg -n 'contains serve (commandline -poc)' -s a -l address --description 'Address to use'
-complete -c hg -n 'contains serve (commandline -poc)' -s -l name --description 'Name to show in web pages (default: working dir)'
+complete -c hg -n 'contains serve (commandline -poc)' -s n -l name --description 'Name to show in web pages (default: working dir)'
 complete -c hg -n 'contains serve (commandline -poc)' -l webdir-conf --description 'Name of the webdir config file (serve more than one repo)'
 complete -c hg -n 'contains serve (commandline -poc)' -l pid-file --description 'Name of file to write process ID to'
 complete -c hg -n 'contains serve (commandline -poc)' -l stdio --description 'For remote clients'
@@ -427,7 +427,7 @@ complete -c hg -n 'contains status (commandline -poc)' -s r -l removed --descrip
 complete -c hg -n 'contains status (commandline -poc)' -s d -l deleted --description 'Show only deleted (but tracked) files'
 complete -c hg -n 'contains status (commandline -poc)' -s u -l unknown --description 'Show only unknown (not tracked) files'
 complete -c hg -n 'contains status (commandline -poc)' -s i -l ignored --description 'Show ignored files'
-complete -c hg -n 'contains status (commandline -poc)' -s -l no-status --description 'Hide status prefix'
+complete -c hg -n 'contains status (commandline -poc)' -s n -l no-status --description 'Hide status prefix'
 complete -c hg -n 'contains status (commandline -poc)' -s C -l copies --description 'Show source of copied files'
 complete -c hg -n 'contains status (commandline -poc)' -s 0 -l print0 --description 'End filenames with NUL, for use with xargs'
 complete -c hg -n 'contains status (commandline -poc)' -s I -l include --description 'Include names matching the given patterns'

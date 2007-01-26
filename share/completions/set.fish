@@ -70,7 +70,7 @@ complete -c set -n '__fish_is_first_token' -s n -l names --description "List the
 complete -c set -n '__fish_is_first_token' -x -a "(set|sed -e 's/ /'\t'Variable: /')"
 
 # Color completions
-complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' -d (N_ Color)
+complete -c set -n '__fish_set_is_color' -x -a '(set_color --print-colors)' --description Color
 complete -c set -n '__fish_set_is_color' -s b -l background -x -a '(set_color --print-colors)' --description "Change background color"
 complete -c set -n '__fish_set_is_color' -s o -l bold --description 'Make font bold'
 

@@ -1,3 +1,3 @@
 
-complete -c builtin -s h -l help -d (N_ "Display help and exit" )
-complete -c builtin -s n -l names -d (N_ "Print names of all existing builtins" )
+complete -c builtin -s h -l help --description 'Display help and exit'
+complete -c builtin -s n -l names --description 'Print names of all existing builtins'

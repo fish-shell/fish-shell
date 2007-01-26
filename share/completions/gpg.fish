@@ -79,13 +79,13 @@ complete -c gpg -l delete-secret-and-public-key -xa "(__fish_complete_gpg_user_i
 complete -c gpg -l gen-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a revocation certificate for the complete key" 
 complete -c gpg -l desig-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a designated revocation certificate for a key"
 
-complete -c gpg -l export -xa "(__fish_append , (__fish_complete_gpg_user_id))" -d (N_ "Export all or the given keys from all keyrings" )
+complete -c gpg -l export -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description 'Export all or the given keys from all keyrings'
 complete -c gpg -l send-keys -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description "Same as --export but sends the keys to a keyserver"
 complete -c gpg -l export-secret-keys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 complete -c gpg -l export-secret-subkeys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 
-complete -c gpg -l import -xa "(__fish_complete_gpg_user_id)" -d (N_ "Import/merge keys" )
-complete -c gpg -l fast-import -xa "(__fish_complete_gpg_user_id)" -d (N_ "Import/merge keys" )
+complete -c gpg -l import -xa "(__fish_complete_gpg_user_id)" --description 'Import/merge keys'
+complete -c gpg -l fast-import -xa "(__fish_complete_gpg_user_id)" --description 'Import/merge keys'
 
 complete -c gpg -l recv-keys -xa "(__fish_complete_gpg_key_id)" --description "Import the keys with the given key IDs from a keyserver"
 complete -c gpg -l refresh-keys -xa "(__fish_complete_gpg_key_id)" --description "Request updates from a keyserver for keys that already exist on the local keyring"
@@ -228,7 +228,7 @@ complete -c gpg -l s2k-cipher-algo -xa "(__fish_print_gpg_algo Cipher)" --descri
 complete -c gpg -l s2k-digest-algo -xa "(__fish_print_gpg_algo Hash)" --description "Use specified digest algorithm to mangle the passphrases"
 complete -c gpg -l s2k-mode -xa "0\t'Plain passphrase' 1\t'Salted passphrase' 3\t'Repeated salted mangling'" --description "Selects how passphrases are mangled"
 
-complete -c gpg -l simple-sk-checksum -d (N_ "Integrity protect secret keys by using a SHA-1 checksum" )
+complete -c gpg -l simple-sk-checksum --description 'Integrity protect secret keys by using a SHA-1 checksum'
 
 complete -c gpg -l disable-cipher-algo -xa "(__fish_print_gpg_algo Cipher)" --description "Never allow the use of specified cipher algorithm"
 complete -c gpg -l disable-pubkey-algo -xa "(__fish_print_gpg_algo Pubkey)" --description "Never allow the use of specified public key algorithm"

@@ -22,118 +22,118 @@ complete -c wajig -s n -l noauth --description 'Allow packages from unathenticat
 complete -c wajig -s s -l simulate --description 'Trace but don\'t execute the sequence of underlying commands.'
 complete -c wajig -s t -l teaching --description 'Trace the sequence of commands performed.'
 complete -c wajig -s y -l yes --description 'Assume yes for any questions asked.'
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'addcdrom' -d(N_ 'Add a CD-ROM to the list of available sources of packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-alts' -d(N_ 'Mark the alternative to be auto set (using set priorities)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-clean' -d(N_ 'Remove superseded deb files from the download cache')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-download' -d(N_ 'Do an update followed by a download of all updated packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-install' -d(N_ 'Perform an install without asking questions (non-interactive)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'available' -d(N_ 'List versions of packages available for installation')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'bug' -d(N_ 'Check reported bugs in package using the Debian Bug Tracker')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'build' -d(N_ 'Retrieve/unpack sources and build .deb for the named packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'build-depend' -d(N_ 'Retrieve packages required to build listed packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'changelog' -d(N_ 'Retrieve latest changelog for the package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'clean' -d(N_ 'Remove all deb files from the download cache')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'commands' -d(N_ 'List all the JIG commands and one line descriptions for each')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'daily-upgrade' -d(N_ 'Perform an update then a dist-upgrade')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'dependents' -d(N_ 'List of packages which depend/recommend/suggest the package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'describe' -d(N_ 'One line description of packages (-v and -vv for more detail)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'describe-new' -d(N_ 'One line description of new packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'detail' -d(N_ 'Provide a detailed description of package (describe -vv)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'detail-new' -d(N_ 'Provide a detailed description of new packages (describe -vv)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'dist-upgrade' -d(N_ 'Upgrade to new distribution (installed and new rqd packages)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'docs' -d(N_ 'Equivalent to help with -verbose=2')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'download' -d(N_ 'Download package files ready for an install')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'file-download' -d(N_ 'Download packages listed in file ready for an install')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'file-install' -d(N_ 'Install packages listed in a file')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'file-remove' -d(N_ 'Remove packages listed in a file')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'find-file' -d(N_ 'Search for a file within installed packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'find-pkg' -d(N_ 'Search for an unofficial Debian package at apt-get.org')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'fix-configure' -d(N_ 'Perform dpkg --configure -a (to fix interrupted configure)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'fix-install' -d(N_ 'Perform apt-get -f install (to fix broken dependencies)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'fix-missing' -d(N_ 'Perform apt-get --fix-missing upgrade')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'force' -d(N_ 'Install packages and ignore file overwrites and depends')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'help' -d(N_ 'Print documentation (detail depends on --verbose)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'hold' -d(N_ 'Place listed packages on hold so they are not upgraded')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'init' -d(N_ 'Initialise or reset the JIG archive files')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'install' -d(N_ 'Install (or upgrade) one or more packages or .deb files')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'installr' -d(N_ 'Install package and associated recommended packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'installrs' -d(N_ 'Install package and recommended and suggested packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'installs' -d(N_ 'Install package and associated suggested packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'integrity' -d(N_ 'Check the integrity of installed packages (through checksums)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'large' -d(N_ 'List size of all large (>10MB) installed packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'last-update' -d(N_ 'Identify when an update was last performed')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list' -d(N_ 'List the status and description of installed packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-all' -d(N_ 'List a one line description of given or all packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-alts' -d(N_ 'List the objects that can have alternatives configured')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-cache' -d(N_ 'List the contents of the download cache')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-commands' -d(N_ 'List all the JIG commands and one line descriptions for each')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-daemons' -d(N_ 'List the daemons that JIG can start/stop/restart')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-files' -d(N_ 'List the files that are supplied by the named package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-hold' -d(N_ 'List those packages on hold')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-installed' -d(N_ 'List packages (with optional argument substring) installed')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-log' -d(N_ 'List the contents of the install/remove log file (filtered)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-names' -d(N_ 'List all known packages or those containing supplied string')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-orphans' -d(N_ 'List libraries not required by any installed package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-scripts' -d(N_ 'List the control scripts of the package of deb file')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-section' -d(N_ 'List packages that belong to a specific section')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-section' -d(N_ 'List the sections that are available')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-status' -d(N_ 'Same as list but only prints first two columns, not truncated')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-wide' -d(N_ 'Same as list but avoids truncating package names')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'local-dist-upgrade' -d(N_ 'Dist-upgrade using packages already downloaded')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'local-upgrade' -d(N_ 'Upgrade using packages already downloaded, but not any others')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'madison' -d(N_ 'Runs the madison command of apt-cache.')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'move' -d(N_ 'Move packages in the download cache to a local Debian mirror')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'new' -d(N_ 'List packages that became available since last update')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'news' -d(N_ 'Obtain the latest news about the package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'new-upgrades' -d(N_ 'List packages newly available for upgrading')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'non-free' -d(N_ 'List installed packages that do not meet the DFSG')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'orphans' -d(N_ 'List libraries not required by any installed package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'package' -d(N_ 'Generate a .deb file for an installed package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'policy' -d(N_ 'From preferences file show priorities/policy (available)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'purge' -d(N_ 'Remove one or more packages and configuration files')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'purge-depend' -d(N_ 'Purge package and those it depend on and not required by others')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'purge-orphans' -d(N_ 'Purge orphaned libraries (not required by installed packages)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'readme' -d(N_ 'Display the package\'s README file from /usr/share/doc')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'recursive' -d(N_ 'Download package and any packages it depends on')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'recommended' -d(N_ 'Install package and associated recommended packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reconfigure' -d(N_ 'Reconfigure the named installed packages or run gkdebconf')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reinstall' -d(N_ 'Reinstall each of the named packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reload' -d(N_ 'Reload daemon configs, e.g., gdm, apache (see list-daemons)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'remove' -d(N_ 'Remove one or more packages (see also purge)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'remove-depend' -d(N_ 'Remove package and its dependees not required by others')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'remove-orphans' -d(N_ 'Remove orphaned libraries (not required by installed packages)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'repackage' -d(N_ 'Generate a .deb file for an installed package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reset' -d(N_ 'Initialise or reset the JIG archive files')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'restart' -d(N_ 'Stop then start a daemon, e.g., gdm, apache (see list-daemons)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'rpminstall' -d(N_ 'Install a RedHat .rpm package')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'rpmtodeb' -d(N_ 'Convert a RedHat .rpm file to a Debian .deb file')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'search' -d(N_ 'Search for packages containing listed words')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'search-apt' -d(N_ 'Find local Debian archives suitable for sources.list')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'setup' -d(N_ 'Configure the sources.list file which locates Debian archives')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'show' -d(N_ 'Provide a detailed description of package [same as detail]')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showdistupgrade' -d(N_ 'Trace the steps that a dist-upgrade would perform')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showinstall' -d(N_ 'Trace the steps that an install would perform')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showremove' -d(N_ 'Trace the steps that a remove would perform')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showupgrade' -d(N_ 'Trace the steps that an upgrade would perform')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'size' -d(N_ 'Print out the size (in K) of all, or listed, installed packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'sizes' -d(N_ 'Print out the size (in K) of all, or listed, installed packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'snapshot' -d(N_ 'Generates list of package=version for all installed packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'source' -d(N_ 'Retrieve and unpack sources for the named packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'start' -d(N_ 'Start a daemon, e.g., gdm, apache (see list-daemons)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'status' -d(N_ 'Show the version and available version of packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'status-match' -d(N_ 'Show the version and available version of matching packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'status-search' -d(N_ 'Show the version and available version of matching packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'stop' -d(N_ 'Stop a daemon, e.g., gdm, apache (see list-daemons)')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'suggested' -d(N_ 'Install package and associated suggested packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'tasksel' -d(N_ 'Run the Gnome task selector to install groups of packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'toupgrade' -d(N_ 'List packages with newer versions available for upgrading')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'unhold' -d(N_ 'Remove listed packages from hold so they are again upgraded')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'unofficial' -d(N_ 'Search for an unofficial Debian package at apt-get.org')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update' -d(N_ 'Update the list of down-loadable packages')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update-alts' -d(N_ 'Update default alternative for things like x-window-manager')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update-pci-ids' -d(N_ 'Updates the local list of PCI ids from the internet master list')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update-usb-ids' -d(N_ 'Updates the local list of USB ids from the internet master list')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'upgrade' -d(N_ 'Upgrade all of the installed packages or just those listed')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'versions' -d(N_ 'List version and distribution of (all) packages.')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'whatis' -d(N_ 'A synonym for describe')
-complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'whichpkg' -d(N_ 'Find the package that supplies the given command or file')
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'addcdrom' --description 'Add a CD-ROM to the list of available sources of packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-alts' --description 'Mark the alternative to be auto set (using set priorities)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-clean' --description 'Remove superseded deb files from the download cache'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-download' --description 'Do an update followed by a download of all updated packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'auto-install' --description 'Perform an install without asking questions (non-interactive)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'available' --description 'List versions of packages available for installation'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'bug' --description 'Check reported bugs in package using the Debian Bug Tracker'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'build' --description 'Retrieve/unpack sources and build .deb for the named packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'build-depend' --description 'Retrieve packages required to build listed packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'changelog' --description 'Retrieve latest changelog for the package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'clean' --description 'Remove all deb files from the download cache'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'commands' --description 'List all the JIG commands and one line descriptions for each'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'daily-upgrade' --description 'Perform an update then a dist-upgrade'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'dependents' --description 'List of packages which depend/recommend/suggest the package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'describe' --description 'One line description of packages (-v and -vv for more detail)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'describe-new' --description 'One line description of new packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'detail' --description 'Provide a detailed description of package (describe -vv)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'detail-new' --description 'Provide a detailed description of new packages (describe -vv)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'dist-upgrade' --description 'Upgrade to new distribution (installed and new rqd packages)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'docs' --description 'Equivalent to help with -verbose=2'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'download' --description 'Download package files ready for an install'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'file-download' --description 'Download packages listed in file ready for an install'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'file-install' --description 'Install packages listed in a file'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'file-remove' --description 'Remove packages listed in a file'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'find-file' --description 'Search for a file within installed packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'find-pkg' --description 'Search for an unofficial Debian package at apt-get.org'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'fix-configure' --description 'Perform dpkg --configure -a (to fix interrupted configure)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'fix-install' --description 'Perform apt-get -f install (to fix broken dependencies)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'fix-missing' --description 'Perform apt-get --fix-missing upgrade'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'force' --description 'Install packages and ignore file overwrites and depends'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'help' --description 'Print documentation (detail depends on --verbose)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'hold' --description 'Place listed packages on hold so they are not upgraded'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'init' --description 'Initialise or reset the JIG archive files'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'install' --description 'Install (or upgrade) one or more packages or .deb files'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'installr' --description 'Install package and associated recommended packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'installrs' --description 'Install package and recommended and suggested packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'installs' --description 'Install package and associated suggested packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'integrity' --description 'Check the integrity of installed packages (through checksums)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'large' --description 'List size of all large (>10MB) installed packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'last-update' --description 'Identify when an update was last performed'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list' --description 'List the status and description of installed packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-all' --description 'List a one line description of given or all packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-alts' --description 'List the objects that can have alternatives configured'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-cache' --description 'List the contents of the download cache'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-commands' --description 'List all the JIG commands and one line descriptions for each'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-daemons' --description 'List the daemons that JIG can start/stop/restart'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-files' --description 'List the files that are supplied by the named package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-hold' --description 'List those packages on hold'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-installed' --description 'List packages (with optional argument substring) installed'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-log' --description 'List the contents of the install/remove log file (filtered)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-names' --description 'List all known packages or those containing supplied string'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-orphans' --description 'List libraries not required by any installed package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-scripts' --description 'List the control scripts of the package of deb file'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-section' --description 'List packages that belong to a specific section'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-section' --description 'List the sections that are available'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-status' --description 'Same as list but only prints first two columns, not truncated'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'list-wide' --description 'Same as list but avoids truncating package names'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'local-dist-upgrade' --description 'Dist-upgrade using packages already downloaded'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'local-upgrade' --description 'Upgrade using packages already downloaded, but not any others'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'madison' --description 'Runs the madison command of apt-cache.'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'move' --description 'Move packages in the download cache to a local Debian mirror'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'new' --description 'List packages that became available since last update'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'news' --description 'Obtain the latest news about the package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'new-upgrades' --description 'List packages newly available for upgrading'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'non-free' --description 'List installed packages that do not meet the DFSG'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'orphans' --description 'List libraries not required by any installed package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'package' --description 'Generate a .deb file for an installed package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'policy' --description 'From preferences file show priorities/policy (available)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'purge' --description 'Remove one or more packages and configuration files'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'purge-depend' --description 'Purge package and those it depend on and not required by others'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'purge-orphans' --description 'Purge orphaned libraries (not required by installed packages)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'readme' --description 'Display the package\'s README file from /usr/share/doc'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'recursive' --description 'Download package and any packages it depends on'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'recommended' --description 'Install package and associated recommended packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reconfigure' --description 'Reconfigure the named installed packages or run gkdebconf'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reinstall' --description 'Reinstall each of the named packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reload' --description 'Reload daemon configs, e.g., gdm, apache (see list-daemons)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'remove' --description 'Remove one or more packages (see also purge)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'remove-depend' --description 'Remove package and its dependees not required by others'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'remove-orphans' --description 'Remove orphaned libraries (not required by installed packages)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'repackage' --description 'Generate a .deb file for an installed package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'reset' --description 'Initialise or reset the JIG archive files'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'restart' --description 'Stop then start a daemon, e.g., gdm, apache (see list-daemons)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'rpminstall' --description 'Install a RedHat .rpm package'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'rpmtodeb' --description 'Convert a RedHat .rpm file to a Debian .deb file'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'search' --description 'Search for packages containing listed words'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'search-apt' --description 'Find local Debian archives suitable for sources.list'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'setup' --description 'Configure the sources.list file which locates Debian archives'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'show' --description 'Provide a detailed description of package [same as detail]'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showdistupgrade' --description 'Trace the steps that a dist-upgrade would perform'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showinstall' --description 'Trace the steps that an install would perform'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showremove' --description 'Trace the steps that a remove would perform'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'showupgrade' --description 'Trace the steps that an upgrade would perform'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'size' --description 'Print out the size (in K) of all, or listed, installed packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'sizes' --description 'Print out the size (in K) of all, or listed, installed packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'snapshot' --description 'Generates list of package=version for all installed packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'source' --description 'Retrieve and unpack sources for the named packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'start' --description 'Start a daemon, e.g., gdm, apache (see list-daemons)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'status' --description 'Show the version and available version of packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'status-match' --description 'Show the version and available version of matching packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'status-search' --description 'Show the version and available version of matching packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'stop' --description 'Stop a daemon, e.g., gdm, apache (see list-daemons)'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'suggested' --description 'Install package and associated suggested packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'tasksel' --description 'Run the Gnome task selector to install groups of packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'toupgrade' --description 'List packages with newer versions available for upgrading'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'unhold' --description 'Remove listed packages from hold so they are again upgraded'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'unofficial' --description 'Search for an unofficial Debian package at apt-get.org'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update' --description 'Update the list of down-loadable packages'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update-alts' --description 'Update default alternative for things like x-window-manager'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update-pci-ids' --description 'Updates the local list of PCI ids from the internet master list'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'update-usb-ids' --description 'Updates the local list of USB ids from the internet master list'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'upgrade' --description 'Upgrade all of the installed packages or just those listed'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'versions' --description 'List version and distribution of (all) packages.'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'whatis' --description 'A synonym for describe'
+complete -f -n '__fish_wajig_no_subcommand' -c wajig -a 'whichpkg' --description 'Find the package that supplies the given command or file'

@@ -6,10 +6,10 @@ for i in case (sed -n < $__fish_help_dir/commands.html -e "s/.*<h2><a class=\"an
 	complete -c help -x -a $i --description "Help for the specified command"
 end
 
-complete -c help -x -a syntax -d (N_ "Introduction to the fish syntax" )
-complete -c help -x -a todo -d (N_ "Incomplete aspects of fish" )
-complete -c help -x -a bugs -d (N_ "Known fish bugs" )
-complete -c help -x -a history -d (N_ "Help on how to reuse previously entered commands" )
+complete -c help -x -a syntax --description 'Introduction to the fish syntax'
+complete -c help -x -a todo --description 'Incomplete aspects of fish'
+complete -c help -x -a bugs --description 'Known fish bugs'
+complete -c help -x -a history --description 'Help on how to reuse previously entered commands'
 
 complete -c help -x -a completion --description "Help on how tab-completion works"
 complete -c help -x -a job-control --description "Help on how job control works"

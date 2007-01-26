@@ -35,7 +35,7 @@ complete $rpm_install -l nodigest --description "Don't verify package or header 
 complete $rpm_install -l nosignature --description "Don't verify package or header signatures when reading"
 complete $rpm_install -l nodeps --description "Don't do a dependency check"
 complete $rpm_install -l nosuggest --description "Don't suggest package(s) that provide a missing dependency"
-complete $rpm_install -l noorder -d (N_ "Don't change the package installation order" )
+complete $rpm_install -l noorder --description "Don't change the package installation order"
 complete $rpm_install -l noscripts --description "Don't execute scripts"
 complete $rpm_install -l nopre --description "Don't execute pre scripts"
 complete $rpm_install -l nopost --description "Don't execute post scripts"
@@ -48,7 +48,7 @@ complete $rpm_install -l notriggerpostun --description "Don't execute triggerpos
 complete $rpm_install -l oldpackage --description 'Allow an upgrade to replace a newer package with an older one'
 complete $rpm_install -l percent --description 'Print percentages as files are unpacked from the package archive. This is intended to make rpm easy to run from other tools'
 complete $rpm_install -l prefix --description 'For relocatable binary packages, translate all file paths that start with the installation prefix in the package relocation hint(s) to NEWPATH' -xa "(__fish_complete_directories (commandline -ct) 'Directory prefix for relocatable packages')"
-complete $rpm_install -l relocate -x -d (N_ "Translate all paths that start with first half of following parameter to second half of following parameter" )
+complete $rpm_install -l relocate -x --description "Translate all paths that start with first half of following parameter to second half of following parameter"
 complete $rpm_install -l repackage --description 'Re-package the files before erasing'
 complete $rpm_install -l replacefiles --description 'Install the packages even if they replace files from other, already installed, packages'
 complete $rpm_install -l replacepkgs --description 'Install the packages even if some of them are already installed on this system'
@@ -116,7 +116,7 @@ complete $rpm_erase -l notriggers --description "Don't execute trigger scriptlet
 complete $rpm_erase -l notriggerun --description "Don't execute triggerun scriptlets"
 complete $rpm_erase -l notriggerpostun --description "Don't execute triggerpostun scriptlets"
 complete $rpm_erase -l repackage --description 'Re-package the files before erasing'
-complete $rpm_erase -l test -d (N_ "Don't really uninstall anything" )
+complete $rpm_erase -l test --description "Don't really uninstall anything"
 set -e rpm_erase
 
 set rpm_mode -c rpm -n '__fish_contains_opt -s e -s i -s F -s V -s U -s q erase install freshen verify upgrade query; if test $status = 0; false; else; true; end'

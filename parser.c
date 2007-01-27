@@ -1625,12 +1625,17 @@ static void parse_job_argument_list( process_t *p,
 								}
 								else
 								{
+									wchar_t *end;
+									
 									new_io->io_mode = IO_FD;
+									errno = 0;
+									
 									new_io->param1.old_fd = wcstol( target,
-																	0,
+																	&end,
 																	10 );
+									
 									if( ( new_io->param1.old_fd < 0 ) ||
-										( new_io->param1.old_fd > 10 ) )
+										errno || *end )
 									{
 										error( SYNTAX_ERROR,
 											   tok_get_pos( tok ),

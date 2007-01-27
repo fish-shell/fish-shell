@@ -116,15 +116,6 @@ These functions are used for storing and retrieving tab-completion data, as well
 #define COMPLETE_DIRECTORY_DESC _( L"Directory" )
 
 /**
-   Generic description for functions
-*/
-#define COMPLETE_FUNCTION_DESC _( L"Function" )
-/**
-   Generic description for builtin commands
-*/
-#define COMPLETE_BUILTIN_DESC _( L"Builtin" )
-
-/**
    The command to run to get a description from a file suffix
 */
 #define SUFFIX_CMD_STR L"mimedb 2>/dev/null -fd "
@@ -1408,19 +1399,16 @@ static void complete_cmd( const wchar_t *cmd,
 
 		if( use_function )
 		{
-			
 			function_get_names( &possible_comp, cmd[0] == L'_' );
-			copy_strings_with_prefix( comp, cmd, COMPLETE_FUNCTION_DESC, &complete_function_desc, &possible_comp );
+			copy_strings_with_prefix( comp, cmd, 0, &complete_function_desc, &possible_comp );
 		}
 
 		al_truncate( &possible_comp, 0 );
 		
 		if( use_builtin )
 		{
-			
 			builtin_get_names( &possible_comp );
-			copy_strings_with_prefix( comp, cmd, COMPLETE_BUILTIN_DESC, &builtin_get_desc, &possible_comp );
-
+			copy_strings_with_prefix( comp, cmd, 0, &builtin_get_desc, &possible_comp );
 		}
 		al_destroy( &possible_comp );
 

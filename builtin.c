@@ -3127,7 +3127,7 @@ const static builtin_data_t builtin_data[]=
 	  displays the help for count, but 'count (echo -h)' does not.
 	*/
 	{
-		L"count",  &builtin_generic, 0 
+		L"count",  &builtin_generic, N_( L"Count the number of arguments" ) 
 	}
 	,
 	{

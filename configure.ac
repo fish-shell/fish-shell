@@ -751,6 +751,31 @@ else
 	AC_MSG_RESULT(no)
 fi
 
+# Check for __environ symbol
+AC_MSG_CHECKING([for __environ symbol])
+AC_TRY_LINK(
+	[
+		#include <unistd.h>
+	],
+	[
+		extern char **__environ;
+		char **tmp = __environ; 
+		exit(tmp!=0);
+	],
+	have___environ=yes, 
+	have___environ=no
+)
+if test "$have___environ" = yes; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(
+		[HAVE___ENVIRON], 
+		[1],
+		[Define to 1 if the __environ symbol is exported.]
+	)	
+else
+	AC_MSG_RESULT(no)
+fi
+
 # Check if getopt_long exists and works
 AC_MSG_CHECKING([if getopt_long exists and works])
 AC_TRY_LINK(

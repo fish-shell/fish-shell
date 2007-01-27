@@ -47,6 +47,12 @@
 #include "util.h"
 
 
+#ifndef HAVE___ENVIRON
+
+char **__environ = 0;
+
+#endif
+
 #ifdef TPUTS_KLUDGE
 
 int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t))

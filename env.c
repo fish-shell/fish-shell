@@ -1,7 +1,6 @@
 /** \file env.c
 	Functions for setting and getting environment variables.
 */
-
 #include "config.h"
 
 #include <stdlib.h>
@@ -67,9 +66,13 @@
 #define ENV_NULL L"\x1d"
 
 /**
-   At init, we read all the environment variables from this array 
+   At init, we read all the environment variables from this array.
 */
 extern char **environ;
+/**
+   This should be the same thing as \c environ, but it is possible only one of the two work...
+*/
+extern char **__environ;
 
 
 /**
@@ -511,7 +514,6 @@ void env_init()
 	wchar_t *uname;
 	wchar_t *version;
 	
-
 	sb_init( &dyn_var );
 	b_init( &export_buffer );
 	
@@ -553,7 +555,7 @@ void env_init()
 	hash_init( &top->env, &hash_wcs_func, &hash_wcs_cmp );
 	global_env = top;
 	global = &top->env;	
-
+	
 	/*
 	  Now the environemnt variable handling is set up, the next step
 	  is to insert valid data
@@ -562,7 +564,7 @@ void env_init()
 	/*
 	  Import environment variables
 	*/
-	for( p=environ; *p; p++ )
+	for( p=environ?environ:__environ; p && *p; p++ )
 	{
 		wchar_t *key, *val;
 		wchar_t *pos;
@@ -575,7 +577,6 @@ void env_init()
 		}
 		
 		val = wcschr( key, L'=' );
-		
 
 		if( val == 0 )
 		{
@@ -600,7 +601,7 @@ void env_init()
 		}		
 		free(key);
 	}
-
+	
 	/*
 	  Set up the PATH variable
 	*/

@@ -183,8 +183,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 		
 		if( errno == EILSEQ )
 		{
-
-			getc( f );
 			continue;
 		}
 	

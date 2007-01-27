@@ -229,11 +229,6 @@ static hash_table_t *suffix_hash=0;
 */
 static hash_table_t *condition_cache=0;
 
-/**
-   String buffer used by complete_get_desc
-*/
-static string_buffer_t *get_desc_buff=0;
-
 
 static void complete_free_entry( complete_entry_t *c );
 static void clear_hash_entry( void *key, void *data );
@@ -267,7 +262,8 @@ static void complete_destroy()
 }
 
 /**
-   Make sure complete_destroy is called on exit
+   The init function for the completion code. Currently, all it really
+   does is make sure complete_destroy is called on exit.
 */
 static void complete_init()
 {
@@ -974,6 +970,8 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 
 const wchar_t *complete_get_desc( const wchar_t *filename )
 {
+
+	static string_buffer_t *get_desc_buff=0;
 	struct stat buf;
 
 	CHECK( filename, 0 );

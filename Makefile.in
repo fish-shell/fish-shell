@@ -829,6 +829,12 @@ share/completions/darcs.fish: make_mercurial_completions.fish
 share/completions/hg.fish: make_mercurial_completions.fish
 	./make_mercurial_completions.fish hg >$@
 
+share/completions/svn.fish: make_mercurial_completions.fish
+	./make_mercurial_completions.fish svn >$@
+
+share/completions/cvs.fish: make_mercurial_completions.fish
+	./make_mercurial_completions.fish cvs >$@
+
 #
 # Create .rpm file for the current systems architecture and an
 # .src.rpm file.

@@ -83,7 +83,7 @@ end
 # Set exit message
 #
 
-function fish_on_exit -d (_ "Commands to execute when fish exits") --on-process %self
+function fish_on_exit --description "Commands to execute when fish exits" --on-process %self
 	printf (_ "Good bye\n")
 end
 
@@ -164,7 +164,7 @@ functions -e set_default
 # autoloaded.
 #
 
-function __fish_repaint --on-variable fish_color_cwd -d (N_ "Event handler, repaints the prompt when fish_color_cwd changes")
+function __fish_repaint --on-variable fish_color_cwd --description "Event handler, repaints the prompt when fish_color_cwd changes"
 	set -e __fish_prompt_cwd
 	commandline -f repaint
 end
@@ -177,27 +177,27 @@ end
 # and no descriptions
 #
 
-function __fish_complete_users -d "Print a list of local users, with the real user name as a description"
+function __fish_complete_users --description "Print a list of local users, with the real user name as a description"
 	cat /etc/passwd | sed -e "s/^\([^:]*\):[^:]*:[^:]*:[^:]*:\([^:]*\):.*/\1\t\2/"
 end
 
-function __fish_complete_groups -d "Print a list of local groups, with group members as the description"
+function __fish_complete_groups --description "Print a list of local groups, with group members as the description"
 	cat /etc/group | sed -e "s/^\([^:]*\):[^:]*:[^:]*:\(.*\)/\1\tMembers: \2/"
 end
 
-function __fish_complete_command -d "Complete using all available commands"
+function __fish_complete_command --description "Complete using all available commands"
 	printf "%s\n" (commandline -ct)(complete -C (commandline -ct))
 end
 
-function __fish_print_interfaces -d "Print a list of known network interfaces"
+function __fish_print_interfaces --description "Print a list of known network interfaces"
 	netstat -i -n -a | awk 'NR>2'|awk '{print $1}'
 end
 
-function __fish_print_addresses -d "Print a list of known network addresses"
+function __fish_print_addresses --description "Print a list of known network addresses"
 	/sbin/ifconfig |sgrep 'inet addr'|cut -d : -f 2|cut -d ' ' -f 1
 end
 
-function __fish_print_users -d "Print a list of local users"
+function __fish_print_users --description "Print a list of local users"
 	cat /etc/passwd | cut -d : -f 1
 end
 
@@ -205,9 +205,9 @@ end
 # Completions for SysV startup scripts
 #
 
-complete -x -p "/etc/init.d/*" -a start\t(_ 'Start service')
-complete -x -p "/etc/init.d/*" -a stop\t(_ 'Stop service')
-complete -x -p "/etc/init.d/*" -a status\t(_ 'Print service status')
-complete -x -p "/etc/init.d/*" -a restart\t(_ 'Stop and then start service')
-complete -x -p "/etc/init.d/*" -a reload\t(_ 'Reload service configuration')
+complete -x -p "/etc/init.d/*" -a start --description 'Start service'
+complete -x -p "/etc/init.d/*" -a stop --description 'Stop service'
+complete -x -p "/etc/init.d/*" -a status --description 'Print service status'
+complete -x -p "/etc/init.d/*" -a restart --description 'Stop and then start service'
+complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
 

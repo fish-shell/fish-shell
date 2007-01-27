@@ -1,4 +1,4 @@
-\section isatty isatty - test if the specidied file descriptor is a tty
+\section isatty isatty - test if the specified file descriptor is a tty
 
 \subsection isatty-synopsis Synopsis
  <tt>isatty [FILE DESCRIPTOR]</tt>

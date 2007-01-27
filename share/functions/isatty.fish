@@ -23,7 +23,6 @@ function isatty -d "Tests if a file descriptor is a tty"
 		end
 	end
 
-	eval "tty 0>&$fd >/dev/null"; and return 0
+	eval "tty 0>&$fd >/dev/null"
 
-	return 1
 end

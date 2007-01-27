@@ -80,807 +80,807 @@ complete -c svn -n '__fish_use_subcommand' -x -a up --description 'Bring changes
 # Completions for the 'add' subcommand
 #
 
-complete -c svn -n 'contains add (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains add (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains add (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains add (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
-complete -c svn -n 'contains add (commandline -poc)' -l auto-props --description 'Enable automatic properties'
-complete -c svn -n 'contains add (commandline -poc)' -l no-auto-props --description 'Disable automatic properties'
+complete -c svn -n 'contains \'add\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'add\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'add\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'add\' (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
+complete -c svn -n 'contains \'add\' (commandline -poc)' -l auto-props --description 'Enable automatic properties'
+complete -c svn -n 'contains \'add\' (commandline -poc)' -l no-auto-props --description 'Disable automatic properties'
 
 
 #
 # Completions for the 'blame' subcommand
 #
 
-complete -c svn -n 'contains blame (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains blame (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains blame (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains blame (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains blame (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains blame (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains blame (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'praise' subcommand
 #
 
-complete -c svn -n 'contains praise (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains praise (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains praise (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains praise (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains praise (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains praise (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains praise (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'annotate' subcommand
 #
 
-complete -c svn -n 'contains annotate (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains annotate (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains annotate (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains annotate (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains annotate (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains annotate (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains annotate (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'ann' subcommand
 #
 
-complete -c svn -n 'contains ann (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains ann (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains ann (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains ann (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains ann (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains ann (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains ann (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'cat' subcommand
 #
 
-complete -c svn -n 'contains cat (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains cat (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains cat (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains cat (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains cat (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'cat\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'cat\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'cat\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'cat\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'cat\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'checkout' subcommand
 #
 
-complete -c svn -n 'contains checkout (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains checkout (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains checkout (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains checkout (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains checkout (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains checkout (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'checkout\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'checkout\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'checkout\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'checkout\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'checkout\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'checkout\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 #
 # Completions for the 'co' subcommand
 #
 
-complete -c svn -n 'contains co (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains co (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains co (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains co (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains co (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains co (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'co\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'co\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'co\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'co\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'co\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'co\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 #
 # Completions for the 'cleanup' subcommand
 #
 
-complete -c svn -n 'contains cleanup (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
-complete -c svn -n 'contains cleanup (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'cleanup\' (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
+complete -c svn -n 'contains \'cleanup\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'commit' subcommand
 #
 
-complete -c svn -n 'contains commit (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains commit (commandline -poc)' -l no-unlock --description 'Don\'t unlock the targets'
-complete -c svn -n 'contains commit (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains commit (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains commit (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains commit (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains commit (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains commit (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains commit (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains commit (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l no-unlock --description 'Don\'t unlock the targets'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'commit\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'ci' subcommand
 #
 
-complete -c svn -n 'contains ci (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains ci (commandline -poc)' -l no-unlock --description 'Don\'t unlock the targets'
-complete -c svn -n 'contains ci (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains ci (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains ci (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains ci (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains ci (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains ci (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains ci (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains ci (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l no-unlock --description 'Don\'t unlock the targets'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'ci\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'copy' subcommand
 #
 
-complete -c svn -n 'contains copy (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains copy (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains copy (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains copy (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains copy (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains copy (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains copy (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains copy (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'copy\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'cp' subcommand
 #
 
-complete -c svn -n 'contains cp (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains cp (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains cp (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains cp (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains cp (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains cp (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains cp (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains cp (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'cp\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'delete' subcommand
 #
 
-complete -c svn -n 'contains delete (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains delete (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains delete (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains delete (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains delete (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains delete (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains delete (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains delete (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains delete (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains delete (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'delete\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'del' subcommand
 #
 
-complete -c svn -n 'contains del (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains del (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains del (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains del (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains del (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains del (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains del (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains del (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains del (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains del (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'del\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'remove' subcommand
 #
 
-complete -c svn -n 'contains remove (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains remove (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains remove (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains remove (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains remove (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains remove (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains remove (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains remove (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains remove (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains remove (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'remove\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'rm' subcommand
 #
 
-complete -c svn -n 'contains rm (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains rm (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains rm (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains rm (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains rm (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains rm (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains rm (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains rm (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains rm (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains rm (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'rm\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'diff' subcommand
 #
 
-complete -c svn -n 'contains diff (commandline -poc)' -l old -x --description 'Use ARG as the older target'
-complete -c svn -n 'contains diff (commandline -poc)' -l new -x --description 'Use ARG as the newer target'
-complete -c svn -n 'contains diff (commandline -poc)' -l diff-cmd -x --description 'Use ARG as diff command'
-complete -c svn -n 'contains diff (commandline -poc)' -l no-diff-deleted --description 'Do not print differences for deleted files'
-complete -c svn -n 'contains diff (commandline -poc)' -l notice-ancestry --description 'Notice ancestry when calculating differences'
-complete -c svn -n 'contains diff (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains diff (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains diff (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains diff (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains diff (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains diff (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l old -x --description 'Use ARG as the older target'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l new -x --description 'Use ARG as the newer target'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l diff-cmd -x --description 'Use ARG as diff command'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l no-diff-deleted --description 'Do not print differences for deleted files'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l notice-ancestry --description 'Notice ancestry when calculating differences'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'di' subcommand
 #
 
-complete -c svn -n 'contains di (commandline -poc)' -l old -x --description 'Use ARG as the older target'
-complete -c svn -n 'contains di (commandline -poc)' -l new -x --description 'Use ARG as the newer target'
-complete -c svn -n 'contains di (commandline -poc)' -l diff-cmd -x --description 'Use ARG as diff command'
-complete -c svn -n 'contains di (commandline -poc)' -l no-diff-deleted --description 'Do not print differences for deleted files'
-complete -c svn -n 'contains di (commandline -poc)' -l notice-ancestry --description 'Notice ancestry when calculating differences'
-complete -c svn -n 'contains di (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains di (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains di (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains di (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains di (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains di (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l old -x --description 'Use ARG as the older target'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l new -x --description 'Use ARG as the newer target'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l diff-cmd -x --description 'Use ARG as diff command'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l no-diff-deleted --description 'Do not print differences for deleted files'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l notice-ancestry --description 'Notice ancestry when calculating differences'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'export' subcommand
 #
 
-complete -c svn -n 'contains export (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains export (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains export (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains export (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains export (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains export (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains export (commandline -poc)' -l native-eol -x --description 'Use a different EOL marker than the standard'
-complete -c svn -n 'contains export (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l native-eol -x --description 'Use a different EOL marker than the standard'
+complete -c svn -n 'contains \'export\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 #
 # Completions for the 'help' subcommand
 #
 
-complete -c svn -n 'contains help (commandline -poc)' -l version --description 'Print client version info'
-complete -c svn -n 'contains help (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'help\' (commandline -poc)' -l version --description 'Print client version info'
+complete -c svn -n 'contains \'help\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the '?' subcommand
 #
 
-complete -c svn -n 'contains ? (commandline -poc)' -l version --description 'Print client version info'
-complete -c svn -n 'contains ? (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'?\' (commandline -poc)' -l version --description 'Print client version info'
+complete -c svn -n 'contains \'?\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'h' subcommand
 #
 
-complete -c svn -n 'contains h (commandline -poc)' -l version --description 'Print client version info'
-complete -c svn -n 'contains h (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'h\' (commandline -poc)' -l version --description 'Print client version info'
+complete -c svn -n 'contains \'h\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'import' subcommand
 #
 
-complete -c svn -n 'contains import (commandline -poc)' -l auto-props --description 'Enable automatic properties'
-complete -c svn -n 'contains import (commandline -poc)' -l no-auto-props --description 'Disable automatic properties'
-complete -c svn -n 'contains import (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains import (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains import (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains import (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
-complete -c svn -n 'contains import (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains import (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains import (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains import (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains import (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l auto-props --description 'Enable automatic properties'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l no-auto-props --description 'Disable automatic properties'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'import\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'info' subcommand
 #
 
-complete -c svn -n 'contains info (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains info (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains info (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains info (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains info (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains info (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains info (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains info (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'info\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'list' subcommand
 #
 
-complete -c svn -n 'contains list (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains list (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains list (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains list (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains list (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains list (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains list (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'list\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'list\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'list\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'list\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'list\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'list\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'list\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'ls' subcommand
 #
 
-complete -c svn -n 'contains ls (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains ls (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains ls (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains ls (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains ls (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains ls (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains ls (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'ls\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'ls\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'ls\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'ls\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'ls\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'ls\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'ls\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'lock' subcommand
 #
 
-complete -c svn -n 'contains lock (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains lock (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains lock (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains lock (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains lock (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains lock (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains lock (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains lock (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains lock (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'lock\' (commandline -poc)' -l force --description 'Force operation to run'
 
 
 #
 # Completions for the 'log' subcommand
 #
 
-complete -c svn -n 'contains log (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains log (commandline -poc)' -l stop-on-copy --description 'Do not cross copies while traversing history'
-complete -c svn -n 'contains log (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains log (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains log (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains log (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains log (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains log (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains log (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains log (commandline -poc)' -l limit -x --description 'Maximum number of log entries'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l stop-on-copy --description 'Do not cross copies while traversing history'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'log\' (commandline -poc)' -l limit -x --description 'Maximum number of log entries'
 
 
 #
 # Completions for the 'merge' subcommand
 #
 
-complete -c svn -n 'contains merge (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains merge (commandline -poc)' -l dry-run --description 'Try operation but make no changes'
-complete -c svn -n 'contains merge (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
-complete -c svn -n 'contains merge (commandline -poc)' -l ignore-ancestry --description 'Ignore ancestry when calculating merges'
-complete -c svn -n 'contains merge (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains merge (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains merge (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains merge (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains merge (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l dry-run --description 'Try operation but make no changes'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l ignore-ancestry --description 'Ignore ancestry when calculating merges'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'merge\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'mkdir' subcommand
 #
 
-complete -c svn -n 'contains mkdir (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains mkdir (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains mkdir (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains mkdir (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains mkdir (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains mkdir (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains mkdir (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains mkdir (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'mkdir\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'move' subcommand
 #
 
-complete -c svn -n 'contains move (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains move (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains move (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains move (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains move (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains move (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains move (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains move (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains move (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'move\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'mv' subcommand
 #
 
-complete -c svn -n 'contains mv (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains mv (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains mv (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains mv (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains mv (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains mv (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains mv (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains mv (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains mv (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'mv\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'rename' subcommand
 #
 
-complete -c svn -n 'contains rename (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains rename (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains rename (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains rename (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains rename (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains rename (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains rename (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains rename (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains rename (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'rename\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'ren' subcommand
 #
 
-complete -c svn -n 'contains ren (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains ren (commandline -poc)' -l force-log --description 'Force validity of log message source'
-complete -c svn -n 'contains ren (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains ren (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains ren (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains ren (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains ren (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains ren (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains ren (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l force-log --description 'Force validity of log message source'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'ren\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'propdel' subcommand
 #
 
-complete -c svn -n 'contains propdel (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains propdel (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains propdel (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains propdel (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains propdel (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains propdel (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'propdel\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'propdel\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'propdel\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'propdel\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'propdel\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'propdel\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pdel' subcommand
 #
 
-complete -c svn -n 'contains pdel (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pdel (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pdel (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pdel (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pdel (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pdel (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pdel\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pdel\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pdel\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pdel\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pdel\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pdel\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pd' subcommand
 #
 
-complete -c svn -n 'contains pd (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pd (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pd (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pd (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pd (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pd (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pd\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pd\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pd\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pd\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pd\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pd\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'propedit' subcommand
 #
 
-complete -c svn -n 'contains propedit (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains propedit (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains propedit (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains propedit (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains propedit (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains propedit (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains propedit (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains propedit (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains propedit (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'propedit\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pedit' subcommand
 #
 
-complete -c svn -n 'contains pedit (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pedit (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pedit (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pedit (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pedit (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pedit (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains pedit (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains pedit (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains pedit (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'pedit\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pe' subcommand
 #
 
-complete -c svn -n 'contains pe (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pe (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pe (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pe (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pe (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pe (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains pe (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
-complete -c svn -n 'contains pe (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains pe (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l editor-cmd -x --description 'Use ARG as external editor'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'pe\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'propget' subcommand
 #
 
-complete -c svn -n 'contains propget (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains propget (commandline -poc)' -l strict --description 'Use strict semantics'
-complete -c svn -n 'contains propget (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains propget (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains propget (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains propget (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains propget (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'propget\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'propget\' (commandline -poc)' -l strict --description 'Use strict semantics'
+complete -c svn -n 'contains \'propget\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'propget\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'propget\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'propget\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'propget\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pget' subcommand
 #
 
-complete -c svn -n 'contains pget (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pget (commandline -poc)' -l strict --description 'Use strict semantics'
-complete -c svn -n 'contains pget (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pget (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pget (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pget (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pget (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pget\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pget\' (commandline -poc)' -l strict --description 'Use strict semantics'
+complete -c svn -n 'contains \'pget\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pget\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pget\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pget\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pget\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pg' subcommand
 #
 
-complete -c svn -n 'contains pg (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pg (commandline -poc)' -l strict --description 'Use strict semantics'
-complete -c svn -n 'contains pg (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pg (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pg (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pg (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pg (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pg\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pg\' (commandline -poc)' -l strict --description 'Use strict semantics'
+complete -c svn -n 'contains \'pg\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pg\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pg\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pg\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pg\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'proplist' subcommand
 #
 
-complete -c svn -n 'contains proplist (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains proplist (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains proplist (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains proplist (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains proplist (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains proplist (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'proplist\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'proplist\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'proplist\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'proplist\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'proplist\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'proplist\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'plist' subcommand
 #
 
-complete -c svn -n 'contains plist (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains plist (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains plist (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains plist (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains plist (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains plist (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'plist\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'plist\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'plist\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'plist\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'plist\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'plist\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pl' subcommand
 #
 
-complete -c svn -n 'contains pl (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pl (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pl (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pl (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pl (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pl (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pl\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pl\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pl\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pl\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pl\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pl\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'propset' subcommand
 #
 
-complete -c svn -n 'contains propset (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains propset (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains propset (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains propset (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains propset (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains propset (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains propset (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains propset (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains propset (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'propset\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'pset' subcommand
 #
 
-complete -c svn -n 'contains pset (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains pset (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains pset (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains pset (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains pset (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains pset (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains pset (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains pset (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains pset (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'pset\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'ps' subcommand
 #
 
-complete -c svn -n 'contains ps (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
-complete -c svn -n 'contains ps (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains ps (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
-complete -c svn -n 'contains ps (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains ps (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains ps (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains ps (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains ps (commandline -poc)' -l force --description 'Force operation to run'
-complete -c svn -n 'contains ps (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l encoding -x --description 'Treat value as being in charset encoding ARG'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l revprop --description 'Operate on a revision property (use with -r)'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'ps\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'resolved' subcommand
 #
 
-complete -c svn -n 'contains resolved (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains resolved (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'resolved\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'resolved\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'revert' subcommand
 #
 
-complete -c svn -n 'contains revert (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains revert (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'revert\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'revert\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'status' subcommand
 #
 
-complete -c svn -n 'contains status (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
-complete -c svn -n 'contains status (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains status (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains status (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains status (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains status (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains status (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains status (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains status (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'status\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 #
 # Completions for the 'stat' subcommand
 #
 
-complete -c svn -n 'contains stat (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
-complete -c svn -n 'contains stat (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains stat (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains stat (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains stat (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains stat (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains stat (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains stat (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains stat (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'stat\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 #
 # Completions for the 'st' subcommand
 #
 
-complete -c svn -n 'contains st (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
-complete -c svn -n 'contains st (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
-complete -c svn -n 'contains st (commandline -poc)' -l xml --description 'Output in XML'
-complete -c svn -n 'contains st (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains st (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains st (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains st (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains st (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains st (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l no-ignore --description 'Disregard default and svn:ignore property ignores'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'st\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 #
 # Completions for the 'switch' subcommand
 #
 
-complete -c svn -n 'contains switch (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
-complete -c svn -n 'contains switch (commandline -poc)' -l relocate --description 'Relocate via URL-rewriting'
-complete -c svn -n 'contains switch (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains switch (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains switch (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains switch (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains switch (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'switch\' (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
+complete -c svn -n 'contains \'switch\' (commandline -poc)' -l relocate --description 'Relocate via URL-rewriting'
+complete -c svn -n 'contains \'switch\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'switch\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'switch\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'switch\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'switch\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'sw' subcommand
 #
 
-complete -c svn -n 'contains sw (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
-complete -c svn -n 'contains sw (commandline -poc)' -l relocate --description 'Relocate via URL-rewriting'
-complete -c svn -n 'contains sw (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains sw (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains sw (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains sw (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains sw (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'sw\' (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
+complete -c svn -n 'contains \'sw\' (commandline -poc)' -l relocate --description 'Relocate via URL-rewriting'
+complete -c svn -n 'contains \'sw\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'sw\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'sw\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'sw\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'sw\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
 #
 # Completions for the 'unlock' subcommand
 #
 
-complete -c svn -n 'contains unlock (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
-complete -c svn -n 'contains unlock (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains unlock (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains unlock (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains unlock (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains unlock (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains unlock (commandline -poc)' -l force --description 'Force operation to run'
+complete -c svn -n 'contains \'unlock\' (commandline -poc)' -l targets -x --description 'Pass contents of file ARG as additional args'
+complete -c svn -n 'contains \'unlock\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'unlock\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'unlock\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'unlock\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'unlock\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'unlock\' (commandline -poc)' -l force --description 'Force operation to run'
 
 
 #
 # Completions for the 'update' subcommand
 #
 
-complete -c svn -n 'contains update (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
-complete -c svn -n 'contains update (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains update (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains update (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains update (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains update (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains update (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'update\' (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
+complete -c svn -n 'contains \'update\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'update\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'update\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'update\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'update\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'update\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 #
 # Completions for the 'up' subcommand
 #
 
-complete -c svn -n 'contains up (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
-complete -c svn -n 'contains up (commandline -poc)' -l username -x --description 'Specify a username ARG'
-complete -c svn -n 'contains up (commandline -poc)' -l password -x --description 'Specify a password ARG'
-complete -c svn -n 'contains up (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
-complete -c svn -n 'contains up (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
-complete -c svn -n 'contains up (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
-complete -c svn -n 'contains up (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
+complete -c svn -n 'contains \'up\' (commandline -poc)' -l diff3-cmd -x --description 'Use ARG as merge command'
+complete -c svn -n 'contains \'up\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
+complete -c svn -n 'contains \'up\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
+complete -c svn -n 'contains \'up\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
+complete -c svn -n 'contains \'up\' (commandline -poc)' -l non-interactive --description 'Do no interactive prompting'
+complete -c svn -n 'contains \'up\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
+complete -c svn -n 'contains \'up\' (commandline -poc)' -l ignore-externals --description 'Ignore externals definitions'
 
 
 

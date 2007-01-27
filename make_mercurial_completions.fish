@@ -175,13 +175,13 @@ switch $cmd
 		end
 
 		function list_subcommand_help
-			set short_exp '\(-.\|\)'
+			set short_exp '\(-.\|\)\( [^ -][^ ]*\|\)'
 			set long_exp '\(--[^ =,]*\)'
 			set arg_exp '\(\|[= ][^ ][^ ]*\)'
 			set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*\)'
 			set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\$"
 
-			cmd help $argv | sed -n -e 's/'$re'/\1\t\2\t\3\t\5/p'
+			cmd help $argv | sed -n -e 's/'$re'/\1\t\3\t\4\t\6/p'
 		end
 
 		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*\)$/-a \1 --description \'\2\'/p')
@@ -205,9 +205,7 @@ for i in (list_subcommand)
 #
 '
 
-	complete_from_list "-n 'contains $i (commandline -poc)'" (list_subcommand_help $i)
-
-
+	complete_from_list "-n 'contains \\'$i\\' (commandline -poc)'" (list_subcommand_help $i)
 end
 
 echo \n\n

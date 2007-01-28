@@ -141,7 +141,8 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 	{
 		for( i=0; i<al_get_count( val ); i++ )
 		{
-			sb_append( &sb, (wchar_t *)al_get( val, i ) );
+			wchar_t *next =(wchar_t *)al_get( val, i );
+			sb_append( &sb, next?next:L"" );
 			if( i<al_get_count( val )-1 )
 			{
 				sb_append( &sb, ARRAY_SEP_STR );

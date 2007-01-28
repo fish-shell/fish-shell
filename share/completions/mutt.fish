@@ -1,0 +1,26 @@
+#completion for mutt
+
+complete -c mutt -s D --description 'Print the value of all configuration options to stdout'
+complete -c mutt -s h --description 'Display help'
+complete -c mutt -s n --description 'Bypass the system configuration file'
+complete -c mutt -s p --description 'Resume a postponed message'
+complete -c mutt -s R --description 'Open a mailbox in read-only mode'
+complete -c mutt -s v --description 'Display the Mutt version number and compile-time definitions'
+complete -c mutt -s x --description 'Emulate the mailx compose mode'
+complete -c mutt -s y --description 'Start Mutt with a listing of all mailboxes'
+complete -c mutt -s z --description 'When used with -f, causes Mutt not to start if there are no messages'
+complete -c mutt -s Z --description 'Open the first mailbox which contains new mail'
+
+complete -r -c mutt -s A --description 'An expanded version of the given alias is passed to stdout'
+complete -r -c mutt -s a --description 'Attach a file to your message using MIME'
+complete -r -c mutt -s b --description 'Specify a blind-carbon-copy (BCC) recipient'
+complete -r -c mutt -s c --description 'Specify a carbon-copy (CC) recipient'
+complete -r -c mutt -s e --description 'Run command after processing of initialization files'
+complete -r -c mutt -s f --description 'Specify which mailbox to load'
+complete -r -c mutt -s F --description 'Specify an initialization file to read instead of ~/.muttrc'
+complete -r -c mutt -s H --description 'Specify a draft file containing header and body for the message'
+complete -r -c mutt -s i --description 'Specify a file to include into the body of a message'
+complete -r -c mutt -s m --description 'Specify a default mailbox type'
+complete -r -c mutt -s Q --description 'Query a configuration variables value'
+complete -r -c mutt -s s --description 'Specify the subject of the message'
+

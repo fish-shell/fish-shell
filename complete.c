@@ -346,8 +346,10 @@ static int condition_test( const wchar_t *condition )
 */
 static void complete_free_opt_recursive( complete_entry_opt_t *o )
 {
-	if( o->next != 0 )
-		complete_free_opt_recursive( o->next );
+	if( !o )
+		return;
+	
+	complete_free_opt_recursive( o->next );
 	halloc_free( o );
 }
 
@@ -425,41 +427,48 @@ void complete_add( const wchar_t *cmd,
 		c->short_opt_str = wcsdup(L"");
 	}
 
-	opt = halloc( 0, sizeof( complete_entry_opt_t ) );
-	
-	opt->next = c->first_option;
-	c->first_option = opt;
 	c->authorative = authorative;
-	if( short_opt != L'\0' )
+
+	if( short_opt != L'\0'  || long_opt )
 	{
-		int len = 1 + ((result_mode & NO_COMMON) != 0);
-		c->short_opt_str =
-			realloc( c->short_opt_str,
-					 sizeof(wchar_t)*(wcslen( c->short_opt_str ) + 1 + len) );
-		wcsncat( c->short_opt_str,
-				 &short_opt, 1 );
-		if( len == 2 )
+		
+		opt = halloc( 0, sizeof( complete_entry_opt_t ) );
+	
+		opt->next = c->first_option;
+		c->first_option = opt;
+		if( short_opt != L'\0' )
 		{
-			wcscat( c->short_opt_str, L":" );
+			int len = 1 + ((result_mode & NO_COMMON) != 0);
+			c->short_opt_str =
+				realloc( c->short_opt_str,
+						 sizeof(wchar_t)*(wcslen( c->short_opt_str ) + 1 + len) );
+			wcsncat( c->short_opt_str,
+					 &short_opt, 1 );
+			if( len == 2 )
+			{
+				wcscat( c->short_opt_str, L":" );
+			}
 		}
+	
+		opt->short_opt = short_opt;
+		opt->result_mode = result_mode;
+		opt->old_mode=old_mode;
+
+		opt->comp      = comp?halloc_wcsdup(opt, comp):L"";
+		opt->condition = condition?halloc_wcsdup(opt, condition):L"";
+		opt->long_opt  = long_opt?halloc_wcsdup(opt, long_opt):L"" ;
+
+		if( desc && wcslen( desc ) )
+		{
+			opt->desc = halloc_wcsdup( opt, desc );
+		}
+		else
+		{
+			opt->desc = L"";
+		}
+	
 	}
 	
-	opt->short_opt = short_opt;
-	opt->result_mode = result_mode;
-	opt->old_mode=old_mode;
-
-	opt->comp      = comp?halloc_wcsdup(opt, comp):L"";
-	opt->condition = condition?halloc_wcsdup(opt, condition):L"";
-	opt->long_opt  = long_opt?halloc_wcsdup(opt, long_opt):L"" ;
-
-	if( desc && wcslen( desc ) )
-	{
-		opt->desc = halloc_wcsdup( opt, desc );
-	}
-	else
-	{
-		opt->desc = L"";
-	}
 }
 
 /**

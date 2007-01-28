@@ -128,35 +128,73 @@ static void	builtin_complete_add( array_list_t *cmd,
 								  const wchar_t *desc )
 {
 	int i;
+	int has_content =( wcslen( short_opt ) || 
+					   al_get_count( gnu_opt ) || 
+					   al_get_count( old_opt )  ||
+					   comp );
 	
 	for( i=0; i<al_get_count( cmd ); i++ )
 	{
-		builtin_complete_add2( al_get( cmd, i ),
-							   COMMAND,
-							   short_opt, 
-							   gnu_opt,
-							   old_opt, 
-							   result_mode, 
-							   authorative,
-							   condition, 
-							   comp, 
-							   desc );
+		if( has_content )
+		{
+					
+			builtin_complete_add2( al_get( cmd, i ),
+								   COMMAND,
+								   short_opt, 
+								   gnu_opt,
+								   old_opt, 
+								   result_mode, 
+								   authorative,
+								   condition, 
+								   comp, 
+								   desc );
+		}
+		else
+		{
+			complete_add( al_get( cmd, i ),
+						  COMMAND,
+						  0,
+						  0,
+						  0,
+						  0,
+						  authorative,
+						  0,
+						  0,
+						  0 );			
+		}
+		
 	}
 	
 	for( i=0; i<al_get_count( path ); i++ )
 	{
-		builtin_complete_add2( al_get( path, i ),
-							   PATH,
-							   short_opt, 
-							   gnu_opt,
-							   old_opt, 
-							   result_mode, 
-							   authorative,
-							   condition, 
-							   comp, 
-							   desc );
-	}
-	
+		if( has_content )
+		{
+					
+			builtin_complete_add2( al_get( path, i ),
+								   PATH,
+								   short_opt, 
+								   gnu_opt,
+								   old_opt, 
+								   result_mode, 
+								   authorative,
+								   condition, 
+								   comp, 
+								   desc );
+		}
+		else
+		{
+			complete_add( al_get( cmd, i ),
+						  PATH,
+						  0,
+						  0,
+						  0,
+						  0,
+						  authorative,
+						  0,
+						  0,
+						  0 );			
+		}
+	}	
 }
 
 /**

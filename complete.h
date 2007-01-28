@@ -105,7 +105,6 @@
   file completion is not performed.
   \param comp A space separated list of completions which may contain subshells.
   \param desc A description of the completion.
-  \param authorative Whether there list of completions for this command is complete. If true, any options not matching one of the provided options will be flagged as an error by syntax highlighting.
   \param condition a command to be run to check it this completion should be used. If \c condition is empty, the completion is always used.
 
 */
@@ -115,10 +114,17 @@ void complete_add( const wchar_t *cmd,
 				   const wchar_t *long_opt,
 				   int long_mode, 
 				   int result_mode, 
-				   int authorative,
 				   const wchar_t *condition,
 				   const wchar_t *comp,
 				   const wchar_t *desc ); 
+/**
+  Sets whether the completion list for this command is complete. If
+  true, any options not matching one of the provided options will be
+  flagged as an error by syntax highlighting.
+*/
+void complete_set_authorative( const wchar_t *cmd,
+							   int cmd_type,
+							   int authorative );
 
 /**
   Remove a previously defined completion

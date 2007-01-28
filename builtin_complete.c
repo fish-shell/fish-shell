@@ -48,7 +48,6 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 								   array_list_t *gnu_opt,
 								   array_list_t *old_opt, 
 								   int result_mode, 
-								   int authorative,
 								   const wchar_t *condition,
 								   const wchar_t *comp,
 								   const wchar_t *desc )
@@ -64,7 +63,6 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  0,
 					  0,
 					  result_mode,
-					  authorative,
 					  condition,
 					  comp,
 					  desc );
@@ -78,7 +76,6 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  (wchar_t *)al_get(gnu_opt, i ),
 					  0,
 					  result_mode,
-					  authorative,
 					  condition,
 					  comp,
 					  desc );
@@ -92,7 +89,6 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  (wchar_t *)al_get(old_opt, i ),
 					  1,
 					  result_mode,
-					  authorative,
 					  condition,
 					  comp,
 					  desc );
@@ -106,7 +102,6 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  0,
 					  0,
 					  result_mode,
-					  authorative,
 					  condition,
 					  comp,
 					  desc );
@@ -128,72 +123,47 @@ static void	builtin_complete_add( array_list_t *cmd,
 								  const wchar_t *desc )
 {
 	int i;
-	int has_content =( wcslen( short_opt ) || 
-					   al_get_count( gnu_opt ) || 
-					   al_get_count( old_opt )  ||
-					   comp );
 	
 	for( i=0; i<al_get_count( cmd ); i++ )
 	{
-		if( has_content )
+		builtin_complete_add2( al_get( cmd, i ),
+							   COMMAND,
+							   short_opt, 
+							   gnu_opt,
+							   old_opt, 
+							   result_mode, 
+							   condition, 
+							   comp, 
+							   desc );
+
+		if( authorative != -1 )
 		{
-					
-			builtin_complete_add2( al_get( cmd, i ),
-								   COMMAND,
-								   short_opt, 
-								   gnu_opt,
-								   old_opt, 
-								   result_mode, 
-								   authorative,
-								   condition, 
-								   comp, 
-								   desc );
-		}
-		else
-		{
-			complete_add( al_get( cmd, i ),
-						  COMMAND,
-						  0,
-						  0,
-						  0,
-						  0,
-						  authorative,
-						  0,
-						  0,
-						  0 );			
+			complete_set_authorative( al_get( cmd, i ),
+									  COMMAND,
+									  authorative );
 		}
 		
 	}
 	
 	for( i=0; i<al_get_count( path ); i++ )
 	{
-		if( has_content )
+		builtin_complete_add2( al_get( path, i ),
+							   PATH,
+							   short_opt, 
+							   gnu_opt,
+							   old_opt, 
+							   result_mode, 
+							   condition, 
+							   comp, 
+							   desc );
+
+		if( authorative != -1 )
 		{
-					
-			builtin_complete_add2( al_get( path, i ),
-								   PATH,
-								   short_opt, 
-								   gnu_opt,
-								   old_opt, 
-								   result_mode, 
-								   authorative,
-								   condition, 
-								   comp, 
-								   desc );
+			complete_set_authorative( al_get( path, i ),
+									  PATH,
+									  authorative );
 		}
-		else
-		{
-			complete_add( al_get( cmd, i ),
-						  PATH,
-						  0,
-						  0,
-						  0,
-						  0,
-						  authorative,
-						  0,
-						  0,
-						  0 );			
-		}
+		
 	}	
 }
 
@@ -316,7 +286,7 @@ static int builtin_complete( wchar_t **argv )
 	int argc=0;
 	int result_mode=SHARED;
 	int remove = 0;
-	int authorative = 1;
+	int authorative = -1;
 	
 	string_buffer_t short_opt;
 	array_list_t gnu_opt, old_opt;
@@ -398,6 +368,10 @@ static int builtin_complete( wchar_t **argv )
 				}
 				,
 				{
+					L"authorative", no_argument, 0, 'A'
+				}
+				,
+				{
 					L"condition", required_argument, 0, 'n'
 				}
 				,
@@ -419,7 +393,7 @@ static int builtin_complete( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"a:c:p:s:l:o:d:frxeun:C::h", 
+								L"a:c:p:s:l:o:d:frxeuAn:C::h", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -477,6 +451,10 @@ static int builtin_complete( wchar_t **argv )
 				
 			case 'u':
 				authorative=0;
+				break;
+				
+			case 'A':
+				authorative=1;
 				break;
 				
 			case 's':

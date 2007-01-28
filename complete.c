@@ -390,21 +390,13 @@ static complete_entry_t *complete_find_exact_entry( const wchar_t *cmd,
 	return 0;
 }
 
-void complete_add( const wchar_t *cmd,
-				   int cmd_type,
-				   wchar_t short_opt,
-				   const wchar_t *long_opt,
-				   int old_mode,
-				   int result_mode,
-				   int authorative,
-				   const wchar_t *condition,
-				   const wchar_t *comp,
-				   const wchar_t *desc )
+/**
+   Locate the specified entry. Create it if it doesn't exist.
+*/
+static complete_entry_t *complete_get_exact_entry( const wchar_t *cmd,
+												   int cmd_type )
 {
 	complete_entry_t *c;
-	complete_entry_opt_t *opt;
-
-	CHECK( cmd, );
 
 	complete_init();
 
@@ -427,46 +419,72 @@ void complete_add( const wchar_t *cmd,
 		c->short_opt_str = wcsdup(L"");
 	}
 
+	return c;
+}
+
+
+void complete_set_authorative( const wchar_t *cmd,
+							   int cmd_type,
+							   int authorative )
+{
+	complete_entry_t *c;
+
+	CHECK( cmd, );
+	c = complete_get_exact_entry( cmd, cmd_type );
 	c->authorative = authorative;
+}
 
-	if( short_opt != L'\0'  || long_opt )
+
+void complete_add( const wchar_t *cmd,
+				   int cmd_type,
+				   wchar_t short_opt,
+				   const wchar_t *long_opt,
+				   int old_mode,
+				   int result_mode,
+				   const wchar_t *condition,
+				   const wchar_t *comp,
+				   const wchar_t *desc )
+{
+	complete_entry_t *c;
+	complete_entry_opt_t *opt;
+
+	CHECK( cmd, );
+
+	c = complete_get_exact_entry( cmd, cmd_type );
+
+	opt = halloc( 0, sizeof( complete_entry_opt_t ) );
+	
+	opt->next = c->first_option;
+	c->first_option = opt;
+	if( short_opt != L'\0' )
 	{
-		
-		opt = halloc( 0, sizeof( complete_entry_opt_t ) );
-	
-		opt->next = c->first_option;
-		c->first_option = opt;
-		if( short_opt != L'\0' )
+		int len = 1 + ((result_mode & NO_COMMON) != 0);
+		c->short_opt_str =
+			realloc( c->short_opt_str,
+					 sizeof(wchar_t)*(wcslen( c->short_opt_str ) + 1 + len) );
+		wcsncat( c->short_opt_str,
+				 &short_opt, 1 );
+		if( len == 2 )
 		{
-			int len = 1 + ((result_mode & NO_COMMON) != 0);
-			c->short_opt_str =
-				realloc( c->short_opt_str,
-						 sizeof(wchar_t)*(wcslen( c->short_opt_str ) + 1 + len) );
-			wcsncat( c->short_opt_str,
-					 &short_opt, 1 );
-			if( len == 2 )
-			{
-				wcscat( c->short_opt_str, L":" );
-			}
+			wcscat( c->short_opt_str, L":" );
 		}
+	}
 	
-		opt->short_opt = short_opt;
-		opt->result_mode = result_mode;
-		opt->old_mode=old_mode;
+	opt->short_opt = short_opt;
+	opt->result_mode = result_mode;
+	opt->old_mode=old_mode;
 
-		opt->comp      = comp?halloc_wcsdup(opt, comp):L"";
-		opt->condition = condition?halloc_wcsdup(opt, condition):L"";
-		opt->long_opt  = long_opt?halloc_wcsdup(opt, long_opt):L"" ;
+	opt->comp      = comp?halloc_wcsdup(opt, comp):L"";
+	opt->condition = condition?halloc_wcsdup(opt, condition):L"";
+	opt->long_opt  = long_opt?halloc_wcsdup(opt, long_opt):L"" ;
 
-		if( desc && wcslen( desc ) )
-		{
-			opt->desc = halloc_wcsdup( opt, desc );
-		}
-		else
-		{
-			opt->desc = L"";
-		}
-	
+	if( desc && wcslen( desc ) )
+	{
+		opt->desc = halloc_wcsdup( opt, desc );
+	}
+	else
+	{
+		opt->desc = L"";
 	}
 	
 }

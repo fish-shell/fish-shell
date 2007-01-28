@@ -8,3 +8,5 @@ complete -c env -s u -l unset --description "Remove variable from the environmen
 complete -c env -l help --description "Display help and exit"
 complete -c env -l version --description "Display version and exit"
 
+# Since env runs subcommands, it can accept any switches
+complete -c env -u

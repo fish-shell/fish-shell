@@ -1820,11 +1820,9 @@ void reader_pop()
 	}
 	else
 	{
+		end_loop = 0;
 		history_set_mode( data->name );
-		exec_prompt();
-		write( 1, "\r", 1 );
 		s_reset( &data->screen );
-		repaint();
 	}
 }
 
@@ -2403,7 +2401,6 @@ wchar_t *reader_readline()
 			{
 				if( data->buff_len == 0 )
 				{
-					writestr( L"\n" );
 					data->end_loop=1;
 				}
 				break;
@@ -2441,7 +2438,6 @@ wchar_t *reader_readline()
 						finished=1;
 						data->buff_pos=data->buff_len;
 						repaint();
-						writestr( L"\n" );
 						break;
 					}
 					
@@ -2644,6 +2640,7 @@ wchar_t *reader_readline()
 		last_char = c;
 	}
 
+	writestr( L"\n" );
 	al_destroy( &comp );
 	if( !reader_exit_forced() )
 	{

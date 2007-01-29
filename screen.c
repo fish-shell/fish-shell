@@ -676,6 +676,11 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		{
 			s_move( scr, &output, start_pos, i );
 			s_write_mbs( &output, clr_eol);
+			if( s_line )
+			{
+				al_truncate( &s_line->text, 0 );
+				al_truncate( &s_line->color, 0 );
+			}
 		}
 		
 		if( !s_line )

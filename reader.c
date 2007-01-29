@@ -1719,12 +1719,7 @@ void reader_run_command( const wchar_t *cmd )
 }
 
 
-/**
-   Test if the given shell command contains errors. Uses parser_test
-   for testing.
-*/
-
-static int shell_test( wchar_t *b )
+int reader_shell_test( wchar_t *b )
 {
 	int res = parser_test( b, 0, 0, 0 );
 	
@@ -1904,7 +1899,7 @@ static int read_i()
 	reader_push(L"fish");
 	reader_set_complete_function( &complete );
 	reader_set_highlight_function( &highlight_shell );
-	reader_set_test_function( &shell_test );
+	reader_set_test_function( &reader_shell_test );
 
 	data->prev_end_loop=0;
 

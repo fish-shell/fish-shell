@@ -167,4 +167,10 @@ void reader_handle_int( int signal );
 */
 int reader_exit_forced();
 
+/**
+   Test if the given shell command contains errors. Uses parser_test
+   for testing. Suitable for reader_set_test_function().
+*/
+int reader_shell_test( wchar_t *b );
+
 #endif

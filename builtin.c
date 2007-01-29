@@ -61,6 +61,7 @@
 #include "event.h"
 #include "signal.h"
 #include "exec.h"
+#include "highlight.h"
 
 #include "halloc.h"
 #include "halloc_util.h"
@@ -1516,6 +1517,7 @@ static int builtin_read( wchar_t **argv )
 	wchar_t *commandline = L"";
 	int exit_res=STATUS_BUILTIN_OK;
 	wchar_t *mode_name = READ_MODE_NAME;
+	int shell = 0;
 	
 	woptind=0;
 	
@@ -1557,6 +1559,10 @@ static int builtin_read( wchar_t **argv )
 				}
 				,
 				{
+					L"shell", required_argument, 0, 's'
+				}
+				,
+				{
 					L"help", no_argument, 0, 'h'
 				}
 				,
@@ -1570,7 +1576,7 @@ static int builtin_read( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"xglUup:c:hm:",
+								L"xglUup:c:hm:s",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1621,6 +1627,10 @@ static int builtin_read( wchar_t **argv )
 				mode_name = woptarg;
 				break;
 
+			case 's':
+				shell = 1;
+				break;
+				
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return STATUS_BUILTIN_OK;
@@ -1694,7 +1704,13 @@ static int builtin_read( wchar_t **argv )
 		
 		reader_push( mode_name );
 		reader_set_prompt( prompt );
-
+		if( shell )
+		{
+			reader_set_complete_function( &complete );
+			reader_set_highlight_function( &highlight_shell );
+			reader_set_test_function( &reader_shell_test );
+		}
+		
 		reader_set_buffer( commandline, wcslen( commandline ) );
 		line = reader_readline( );
 		if( line )

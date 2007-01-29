@@ -1753,6 +1753,12 @@ static int default_test( wchar_t *b )
 void reader_push( wchar_t *name )
 {
 	reader_data_t *n = calloc( 1, sizeof( reader_data_t ) );
+
+	if( !n )
+	{
+		DIE_MEM();
+	}
+	
 	n->name = wcsdup( name );
 	n->next = data;
 	sb_init( &n->kill_item );

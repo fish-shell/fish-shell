@@ -125,14 +125,14 @@ switch $cmd
 			set short_exp '\(-.\|\)'
 			set long_exp '\(--[^ =,]*\)'
 			set arg_exp '\(\|[= ][^ ][^ ]*\)'
-			set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*\)'
-			set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\$"
+			set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*[^.]\)'
+			set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\(\|\\.\)\$"
 			cmd help $argv | sed -n -e 's/'$re'/\1\t\2\t\3\t\5/p'
 		end
 
 
 		for i in (list_subcommand)
-			set desc (cmd help $i|head -n 1|sed -e 's/[^:]*: *\(.*\)$/\1/')
+			set desc (cmd help $i|head -n 1|sed -e 's/[^:]*: *\(.*[^.]\)\(\|\\.\)$/\1/')
 			set desc (esc $desc)
 			set cmd_str $cmd_str "-a $i --description '$desc'"
 		end
@@ -178,13 +178,13 @@ switch $cmd
 			set short_exp '\(-.\|\)\( [^ -][^ ]*\|\)'
 			set long_exp '\(--[^ =,]*\)'
 			set arg_exp '\(\|[= ][^ ][^ ]*\)'
-			set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*\)'
-			set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\$"
+			set desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*[^.]\)'
+			set re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\(\|\\.\)\$"
 
 			cmd help $argv | sed -n -e 's/'$re'/\1\t\3\t\4\t\6/p'
 		end
 
-		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*\)$/-a \1 --description \'\2\'/p')
+		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*[^.]\)\(\|\\.\)$/-a \1 --description \'\2\'/p')
 
 end
 

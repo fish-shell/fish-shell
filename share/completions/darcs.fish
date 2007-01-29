@@ -15,39 +15,39 @@ complete -c darcs -n "not __fish_use_subcommand" -a "(test -f _darcs/prefs/repos
 # subcommands
 #
 
-complete -c darcs -n '__fish_use_subcommand' -x -a help --description 'Display help for darcs or a single commands.'
-complete -c darcs -n '__fish_use_subcommand' -x -a add --description 'Add one or more new files or directories.'
-complete -c darcs -n '__fish_use_subcommand' -x -a remove --description 'Remove one or more files or directories from the repository.'
-complete -c darcs -n '__fish_use_subcommand' -x -a mv --description 'Move/rename one or more files or directories.'
-complete -c darcs -n '__fish_use_subcommand' -x -a replace --description 'Replace a token with a new value for that token.'
-complete -c darcs -n '__fish_use_subcommand' -x -a revert --description 'Revert to the recorded version (safe the first time only).'
-complete -c darcs -n '__fish_use_subcommand' -x -a unrevert --description 'Undo the last revert (may fail if changes after the revert).'
-complete -c darcs -n '__fish_use_subcommand' -x -a whatsnew --description 'Display unrecorded changes in the working copy.'
-complete -c darcs -n '__fish_use_subcommand' -x -a record --description 'Save changes in the working copy to the repository as a patch.'
-complete -c darcs -n '__fish_use_subcommand' -x -a unrecord --description 'Remove recorded patches without changing the working copy.'
-complete -c darcs -n '__fish_use_subcommand' -x -a amend-record --description 'Replace a patch with a better version before it leaves your repository.'
-complete -c darcs -n '__fish_use_subcommand' -x -a resolve --description 'Mark any conflicts to the working copy for manual resolution.'
-complete -c darcs -n '__fish_use_subcommand' -x -a tag --description 'Tag the contents of the repository with a version name.'
-complete -c darcs -n '__fish_use_subcommand' -x -a setpref --description 'Set a value for a preference (test, predist, ...).'
-complete -c darcs -n '__fish_use_subcommand' -x -a rollback --description 'Record an inverse patch without changing the working directory.'
-complete -c darcs -n '__fish_use_subcommand' -x -a diff --description 'Create a diff between two versions of the repository.'
-complete -c darcs -n '__fish_use_subcommand' -x -a changes --description 'Gives a changelog-style summary of the repository history.'
-complete -c darcs -n '__fish_use_subcommand' -x -a annotate --description 'Display which patch last modified something.'
-complete -c darcs -n '__fish_use_subcommand' -x -a dist --description 'Create a distribution tarball.'
-complete -c darcs -n '__fish_use_subcommand' -x -a trackdown --description 'Locate the most recent version lacking an error.'
-complete -c darcs -n '__fish_use_subcommand' -x -a query --description 'Query information which is stored by darcs.'
-complete -c darcs -n '__fish_use_subcommand' -x -a pull --description 'Copy and apply patches from another repository to this one.'
-complete -c darcs -n '__fish_use_subcommand' -x -a unpull --description 'Opposite of pull; unsafe if patch is not in remote repository.'
+complete -c darcs -n '__fish_use_subcommand' -x -a help --description 'Display help for darcs or a single commands'
+complete -c darcs -n '__fish_use_subcommand' -x -a add --description 'Add one or more new files or directories'
+complete -c darcs -n '__fish_use_subcommand' -x -a remove --description 'Remove one or more files or directories from the repository'
+complete -c darcs -n '__fish_use_subcommand' -x -a mv --description 'Move/rename one or more files or directories'
+complete -c darcs -n '__fish_use_subcommand' -x -a replace --description 'Replace a token with a new value for that token'
+complete -c darcs -n '__fish_use_subcommand' -x -a revert --description 'Revert to the recorded version (safe the first time only)'
+complete -c darcs -n '__fish_use_subcommand' -x -a unrevert --description 'Undo the last revert (may fail if changes after the revert)'
+complete -c darcs -n '__fish_use_subcommand' -x -a whatsnew --description 'Display unrecorded changes in the working copy'
+complete -c darcs -n '__fish_use_subcommand' -x -a record --description 'Save changes in the working copy to the repository as a patch'
+complete -c darcs -n '__fish_use_subcommand' -x -a unrecord --description 'Remove recorded patches without changing the working copy'
+complete -c darcs -n '__fish_use_subcommand' -x -a amend-record --description 'Replace a patch with a better version before it leaves your repository'
+complete -c darcs -n '__fish_use_subcommand' -x -a resolve --description 'Mark any conflicts to the working copy for manual resolution'
+complete -c darcs -n '__fish_use_subcommand' -x -a tag --description 'Tag the contents of the repository with a version name'
+complete -c darcs -n '__fish_use_subcommand' -x -a setpref --description 'Set a value for a preference (test, predist, ...)'
+complete -c darcs -n '__fish_use_subcommand' -x -a rollback --description 'Record an inverse patch without changing the working directory'
+complete -c darcs -n '__fish_use_subcommand' -x -a diff --description 'Create a diff between two versions of the repository'
+complete -c darcs -n '__fish_use_subcommand' -x -a changes --description 'Gives a changelog-style summary of the repository history'
+complete -c darcs -n '__fish_use_subcommand' -x -a annotate --description 'Display which patch last modified something'
+complete -c darcs -n '__fish_use_subcommand' -x -a dist --description 'Create a distribution tarball'
+complete -c darcs -n '__fish_use_subcommand' -x -a trackdown --description 'Locate the most recent version lacking an error'
+complete -c darcs -n '__fish_use_subcommand' -x -a query --description 'Query information which is stored by darcs'
+complete -c darcs -n '__fish_use_subcommand' -x -a pull --description 'Copy and apply patches from another repository to this one'
+complete -c darcs -n '__fish_use_subcommand' -x -a unpull --description 'Opposite of pull; unsafe if patch is not in remote repository'
 complete -c darcs -n '__fish_use_subcommand' -x -a obliterate --description 'Delete selected patches from the repository. (UNSAFE!)'
-complete -c darcs -n '__fish_use_subcommand' -x -a push --description 'Copy and apply patches from this repository to another one.'
-complete -c darcs -n '__fish_use_subcommand' -x -a send --description 'Send by email a bundle of one or more patches.'
-complete -c darcs -n '__fish_use_subcommand' -x -a apply --description 'Apply patches (from an email bundle) to the repository.'
-complete -c darcs -n '__fish_use_subcommand' -x -a get --description 'Create a local copy of another repository.'
+complete -c darcs -n '__fish_use_subcommand' -x -a push --description 'Copy and apply patches from this repository to another one'
+complete -c darcs -n '__fish_use_subcommand' -x -a send --description 'Send by email a bundle of one or more patches'
+complete -c darcs -n '__fish_use_subcommand' -x -a apply --description 'Apply patches (from an email bundle) to the repository'
+complete -c darcs -n '__fish_use_subcommand' -x -a get --description 'Create a local copy of another repository'
 complete -c darcs -n '__fish_use_subcommand' -x -a put --description 'Makes a copy of the repository'
-complete -c darcs -n '__fish_use_subcommand' -x -a initialize --description 'Initialize a new source tree as a darcs repository.'
-complete -c darcs -n '__fish_use_subcommand' -x -a optimize --description 'Optimize the repository.'
-complete -c darcs -n '__fish_use_subcommand' -x -a check --description 'Check the repository for consistency.'
-complete -c darcs -n '__fish_use_subcommand' -x -a repair --description 'Repair the corrupted repository.'
+complete -c darcs -n '__fish_use_subcommand' -x -a initialize --description 'Initialize a new source tree as a darcs repository'
+complete -c darcs -n '__fish_use_subcommand' -x -a optimize --description 'Optimize the repository'
+complete -c darcs -n '__fish_use_subcommand' -x -a check --description 'Check the repository for consistency'
+complete -c darcs -n '__fish_use_subcommand' -x -a repair --description 'Repair the corrupted repository'
 
 
 #
@@ -58,10 +58,10 @@ complete -c darcs -n 'contains \'help\' (commandline -poc)' -s v -l verbose --de
 complete -c darcs -n 'contains \'help\' (commandline -poc)' -l standard-verbosity --description 'Don\'t give verbose output'
 complete -c darcs -n 'contains \'help\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'help\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'help\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'help\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'help\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'help\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'help\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'help\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'help\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -81,10 +81,10 @@ complete -c darcs -n 'contains \'add\' (commandline -poc)' -l repodir -x -a '(__
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l dry-run --description 'Don\'t actually take the action'
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'add\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'add\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'add\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'add\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'add\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'add\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'add\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -96,10 +96,10 @@ complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l standard-verbos
 complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'remove\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'remove\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -112,10 +112,10 @@ complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l standard-verbosity 
 complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'mv\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'mv\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -130,10 +130,10 @@ complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l standard-verbo
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'replace\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -148,10 +148,10 @@ complete -c darcs -n 'contains \'revert\' (commandline -poc)' -s i -l interactiv
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'revert\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -166,10 +166,10 @@ complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -s i -l interact
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'unrevert\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -188,10 +188,10 @@ complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l boring --desc
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'whatsnew\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -224,10 +224,10 @@ complete -c darcs -n 'contains \'record\' (commandline -poc)' -l dont-look-for-a
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'record\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'record\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'record\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'record\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'record\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'record\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'record\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -248,10 +248,10 @@ complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l dont-compress
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'unrecord\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -276,10 +276,10 @@ complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l dont-look
 complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'amend-record\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -292,10 +292,10 @@ complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l ignore-times -
 complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'resolve\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -314,10 +314,10 @@ complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l standard-verbosity
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -327,10 +327,10 @@ complete -c darcs -n 'contains \'tag\' (commandline -poc)' -l run-posthook --des
 complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'setpref\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -346,10 +346,10 @@ complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l standard-verb
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'rollback\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -371,10 +371,10 @@ complete -c darcs -n 'contains \'diff\' (commandline -poc)' -s u -l unified --de
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'diff\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -406,10 +406,10 @@ complete -c darcs -n 'contains \'changes\' (commandline -poc)' -s a -l all --des
 complete -c darcs -n 'contains \'changes\' (commandline -poc)' -s i -l interactive --description 'Prompt user interactively'
 complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'changes\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'changes\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -430,10 +430,10 @@ complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l creator-hash 
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'annotate\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -446,10 +446,10 @@ complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l standard-verbosit
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'dist\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -461,10 +461,10 @@ complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l standard-ver
 complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'trackdown\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -506,10 +506,10 @@ complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l dont-set-scripts-
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l disable-ssh-cm --description 'Disable use of SSH ControlMaster feature'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'pull\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -531,10 +531,10 @@ complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l ignore-times --
 complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'unpull\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -556,10 +556,10 @@ complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l ignore-time
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'obliterate\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -589,10 +589,10 @@ complete -c darcs -n 'contains \'push\' (commandline -poc)' -l set-default --des
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l no-set-default --description 'Don\'t set default repository'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'push\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'push\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'push\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'push\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'push\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'push\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'push\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -632,10 +632,10 @@ complete -c darcs -n 'contains \'send\' (commandline -poc)' -l repodir -x -a '(_
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l sendmail-command -x -a '(__fish_complete_command)' --description 'Specify sendmail command'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'send\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'send\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'send\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'send\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'send\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'send\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'send\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -670,10 +670,10 @@ complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l set-scripts-exec
 complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l dont-set-scripts-executable --description 'Don\'t make scripts executable'
 complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'apply\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'apply\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -700,10 +700,10 @@ complete -c darcs -n 'contains \'get\' (commandline -poc)' -l repodir -x -a '(__
 complete -c darcs -n 'contains \'get\' (commandline -poc)' -l disable-ssh-cm --description 'Disable use of SSH ControlMaster feature'
 complete -c darcs -n 'contains \'get\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'get\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'get\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'get\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'get\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'get\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'get\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'get\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'get\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -725,10 +725,10 @@ complete -c darcs -n 'contains \'put\' (commandline -poc)' -l no-pristine-tree -
 complete -c darcs -n 'contains \'put\' (commandline -poc)' -l disable-ssh-cm --description 'Disable use of SSH ControlMaster feature'
 complete -c darcs -n 'contains \'put\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'put\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'put\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'put\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'put\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'put\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'put\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'put\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'put\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -740,10 +740,10 @@ complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l no-pristine
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'initialize\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -765,10 +765,10 @@ complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l relink --desc
 complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l relink-pristine --description 'Relink pristine tree (not recommended)'
 complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'optimize\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -787,10 +787,10 @@ complete -c darcs -n 'contains \'check\' (commandline -poc)' -l remove-test-dire
 complete -c darcs -n 'contains \'check\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'check\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'check\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'check\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'check\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'check\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'check\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'check\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'check\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'check\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 #
@@ -803,10 +803,10 @@ complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l standard-verbos
 complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l repodir -x -a '(__fish_complete_directories (commandline -ct))' --description 'Specify the repository directory in which to run'
 complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l disable --description 'Disable this command'
 complete -c darcs -n 'contains \'repair\' (commandline -poc)' -s h -l help --description 'Shows brief description of command and its arguments'
-complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command.'
-complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command.'
+complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l posthook -x -a '(__fish_complete_command)' --description 'Specify command to run after this darcs command'
+complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l no-posthook --description 'Do not run posthook command'
 complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l prompt-posthook --description 'Prompt before running posthook. [DEFAULT]'
-complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting.'
+complete -c darcs -n 'contains \'repair\' (commandline -poc)' -l run-posthook --description 'Run posthook command without prompting'
 
 
 

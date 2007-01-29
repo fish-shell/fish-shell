@@ -1822,6 +1822,9 @@ void reader_pop()
 	{
 		history_set_mode( data->name );
 		exec_prompt();
+		write( 1, "\r", 1 );
+		s_reset( &data->screen );
+		repaint();
 	}
 }
 

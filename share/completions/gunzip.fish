@@ -1,7 +1,7 @@
 complete -c gunzip -s c -l stdout --description "Compress to stdout"
 complete -c gunzip -x -a "(
-	__fish_complete_suffix (commandline -ct) .gz 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .tgz 'Compressed archive'
+	__fish_complete_suffix .gz
+	__fish_complete_suffix .tgz
 )
 "
 complete -c gunzip -s f -l force --description "Overwrite"
@@ -16,10 +16,4 @@ complete -c gunzip -s S -l suffix -r --description "Suffix"
 complete -c gunzip -s t -l test --description "Check integrity"
 complete -c gunzip -s v -l verbose --description "Display compression ratios"
 complete -c gunzip -s V -l version --description "Display version and exit"
-
-complete -c gunzip -x -a "(
-	__fish_complete_suffix (commandline -ct) .gz 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .tgz 'Compressed archive'
-)
-"
 

@@ -1,8 +1,12 @@
 complete -c bunzip2 -x -a "(
-	__fish_complete_suffix (commandline -ct) .bz 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .bz2 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .tbz 'Compressed archive'
-	__fish_complete_suffix (commandline -ct) .tbz2 'Compressed archive'
+	__fish_complete_suffix .tbz
+	__fish_complete_suffix .tbz2
+)
+"
+
+complete -c bunzip2 -x -a "(
+	__fish_complete_suffix .bz 
+	__fish_complete_suffix .bz2 
 )
 "
 

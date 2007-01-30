@@ -1,11 +1,16 @@
 complete -c bzip2 -s c -l stdout --description "Compress to stdout"
 complete -c bzip2 -s d -l decompress -x -a "(
-	__fish_complete_suffix (commandline -ct) .bz 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .bz2 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .tbz 'Compressed archive'
-	__fish_complete_suffix (commandline -ct) .tbz2 'Compressed archive'
+	__fish_complete_suffix .tbz
+	__fish_complete_suffix .tbz2
 )
 "
+
+complete -c bzip2 -s d -l decompress -x -a "(
+	__fish_complete_suffix .bz 
+	__fish_complete_suffix .bz2 
+)
+"
+
 complete -c bzip2 -s z -l compress --description "Compress file"
 complete -c bzip2 -s t -l test --description "Check integrity"
 complete -c bzip2 -s f -l force --description "Overwrite"

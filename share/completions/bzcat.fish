@@ -1,8 +1,13 @@
 complete -c bzcat -x -a "(
-	__fish_complete_suffix (commandline -ct) .bz 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .bz2 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .tbz 'Compressed archive'
-	__fish_complete_suffix (commandline -ct) .tbz2 'Compressed archive'
+	__fish_complete_suffix .tbz
+	__fish_complete_suffix .tbz2
 )
 "
+
+complete -c bzcat -x -a "(
+	__fish_complete_suffix .bz 
+	__fish_complete_suffix .bz2 
+)
+"
+
 complete -c bzcat -s s -l small --description "Reduce memory usage"

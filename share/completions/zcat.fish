@@ -1,6 +1,6 @@
 complete -c zcat -x -a "(
-	__fish_complete_suffix (commandline -ct) .gz 'Compressed file'
-	__fish_complete_suffix (commandline -ct) .tgz 'Compressed archive'
+	__fish_complete_suffix .gz
+	__fish_complete_suffix .tgz
 )
 "
 complete -c zcat -s f -l force --description "Overwrite"

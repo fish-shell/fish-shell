@@ -1,0 +1,75 @@
+#completion for vim
+
+
+
+# todo
+# +[num]        : Position the cursor on line number
+# +/{pat}       : Position the cursor on the first occurence of {pat}
+# +{command}    : Execute Ex command after the first file has been read
+
+complete -c vim -n '__fish_test_arg "-"' -a - --description 'The file to edit is read from stdin. Commands are read from stderr, which should be a tty'
+
+complete -r -c vim -s c --description 'Execute Ex command after the first file has been read'
+complete -r -c vim -s S --description 'Source file after the first file has been read'
+complete -r -c vim -l cmd --description 'Execute Ex command before loading any vimrc'
+complete -r -c vim -s d --description 'Use device as terminal (Amiga only)'
+complete -r -c vim -s i --description 'Set the viminfo file location'
+complete -r -c vim -s o --description 'Open stacked windows for each file'
+complete -r -c vim -s O --description 'Open side by side windows for each file'
+complete -r -c vim -s p --description 'Open tab pages for each file'
+complete -r -c vim -s q --description 'Start  in  quickFix  mode'
+complete -r -c vim -s r --description 'Use swap files for recovery'
+complete -r -c vim -s s --description 'Source and execute script file'
+complete -r -c vim -s t --description 'Set the cursor to tag'
+complete -r -c vim -s T --description 'Termninal name'
+complete -r -c vim -s u --description 'Use alternative vimrc'
+complete -r -c vim -s U --description 'Use alternative vimrc in GUI mode'
+complete -r -c vim -s w --description 'Record all typed characters'
+complete -r -c vim -s W --description 'Record all typed characters (overwrite file)'
+
+complete -c vim -s A --description 'Start in Arabic mode'
+complete -c vim -s b --description 'Start in binary mode'
+complete -c vim -s C --description 'Behave mostly like vi'
+complete -c vim -s d --description 'Start in diff mode'
+complete -c vim -s D --description 'Debugging mode'
+complete -c vim -s e --description 'Start in Ex mode'
+complete -c vim -s E --description 'Start in improved Ex mode'
+complete -c vim -s f --description 'Start in foreground mode'
+complete -c vim -s F --description 'Start in Farsi mode'
+complete -c vim -s g --description 'Start in GUI mode'
+complete -c vim -s h --description 'Print help message and exit'
+complete -c vim -s H --description 'Start in Hebrew mode'
+complete -c vim -s L --description 'List swap files'
+complete -c vim -s l --description 'Start in lisp mode'
+complete -c vim -s m --description 'Disable file modification'
+complete -c vim -s M --description 'Disallow file modification'
+complete -c vim -s N --description 'Reset compatibility mode'
+complete -c vim -s n --description 'Don\'t use swap files'
+complete -c vim -s R --description 'Read only mode'
+complete -c vim -s r --description 'List swap files'
+complete -c vim -s s --description 'Start in silent mode'
+complete -c vim -s V --description 'Start in verbose mode'
+complete -c vim -s v --description 'Start in vi mode'
+complete -c vim -s x --description 'Use encription when writing files'
+complete -c vim -s X --description 'Don\'t connect to X server'
+complete -c vim -s y --description 'Start in easy mode'
+complete -c vim -s Z --description 'Start in restricted mode'
+
+complete -c vim -o nb --description 'Become an editor server for NetBeans'
+
+complete -c vim -l no-fork --description 'Start in foreground mode'
+complete -c vim -l echo-wid --description 'Echo the Window ID on stdout (GTK GUI only)'
+complete -c vim -l help --description 'Print help message and exit'
+complete -c vim -l literal --description 'Do not expand wildcards'
+complete -c vim -l noplugin --description 'Skip loading plugins'
+complete -c vim -l remote --description 'Edit files on Vim server'
+complete -c vim -l remote-expr --description 'Evaluate expr on Vim server'
+complete -c vim -l remote-send --description 'Send keys to Vim server'
+complete -c vim -l remote-silent --description 'Edit files on Vim server'
+complete -c vim -l remote-wait --description 'Edit files on Vim server'
+complete -c vim -l remote-wait-silent --description 'Edit files on Vim server'
+complete -c vim -l serverlist --description 'List all Vim servers that can be found'
+complete -c vim -l servername --description 'Set server name'
+complete -c vim -l version --description 'Print version information and exit'
+
+complete -r -c vim -l socketid --description 'Run gvim in another window (GTK GUI only)'

@@ -621,10 +621,55 @@ static int builtin_set( wchar_t **argv )
 		int i;
 		for( i=woptind; i<argc; i++ )
 		{
-			if( !env_exist( argv[i], scope ) )
+			wchar_t *arg = argv[i];
+			int slice=0;
+
+			if( !(dest = wcsdup(arg)))
 			{
-				retcode++;
+				DIE_MEM();		
 			}
+
+			if( wcschr( dest, L'[' ) )
+			{
+				slice = 1;
+				*wcschr( dest, L'[' )=0;
+			}
+			
+			if( slice )
+			{
+				array_list_t indexes;
+				array_list_t result;
+				int j;
+				
+				al_init( &result );
+				al_init( &indexes );
+
+				tokenize_variable_array( env_get( dest ), &result );
+								
+				if( !parse_index( &indexes, arg, dest, al_get_count( &result ) ) )
+				{
+					builtin_print_help( argv[0], sb_err );
+					retcode = 1;
+					break;
+				}
+				for( j=0; j<al_get_count( &indexes ); j++ )
+				{
+					long idx = al_get_long( &indexes, j );
+					if( idx < 1 || idx > al_get_count( &result ) )
+					{
+						retcode++;
+					}
+				}
+			}
+			else
+			{
+				if( !env_exist( arg, scope ) )
+				{
+					retcode++;
+				}
+			}
+			
+			free( dest );
 			
 		}
 		return retcode;

@@ -2966,6 +2966,7 @@ int parser_test( const  wchar_t * buff,
 			{
 				if( !had_cmd )
 				{
+					int is_else;
 					int mark = tok_get_pos( &tok );
 					had_cmd = 1;
 					arg_count=0;
@@ -3022,6 +3023,8 @@ int parser_test( const  wchar_t * buff,
 						tok_set_pos( &tok, mark );
 					}
 
+					is_else = wcscmp(cmd, L"else")==0;
+					
 					/*
 					  Store the block level. This needs to be done
 					  _after_ checking for end commands, but _before_
@@ -3029,10 +3032,9 @@ int parser_test( const  wchar_t * buff,
 					*/
 					if( block_level )
 					{
-						block_level[tok_get_pos( &tok )] = count;
+						block_level[tok_get_pos( &tok )] = count + (is_else?-1:0);
 					}
 					
-
 					/*
 					  Handle block commands
 					*/

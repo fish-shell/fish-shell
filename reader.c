@@ -256,6 +256,12 @@ typedef struct reader_data
 */
 static reader_data_t *data=0;
 
+/**
+   This flag is set to true when fish is interactively reading from
+   stdin. It changes how a ^C is handled by the fish interrupt
+   handler.
+*/
+static int is_interactive_read;
 
 /**
    Flag for ending non-interactive shell
@@ -400,11 +406,17 @@ static void reader_kill( wchar_t *begin, int length, int mode, int new )
 void reader_handle_int( int sig )
 {
 	block_t *c = current_block;
-	while( c )
+	
+	if( !is_interactive_read )
 	{
-		c->skip=1;
-		c=c->outer;
+		while( c )
+		{
+			c->type=FAKE;
+			c->skip=1;
+			c=c->outer;
+		}
 	}
+	
 	interrupted = 1;
 	
 }
@@ -2077,9 +2089,11 @@ wchar_t *reader_readline()
 		*/
 		while( 1 )
 		{
+			int was_interactive_read = is_interactive_read;
+			is_interactive_read = 1;
 			c=input_readch();
-
-			
+			is_interactive_read = was_interactive_read;
+						
 			if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
 			{
 				if( can_read(0) )

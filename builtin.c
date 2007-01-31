@@ -241,7 +241,8 @@ static void builtin_print_help( const wchar_t *cmd, string_buffer_t *b )
 {
 	
 	const wchar_t *h;
-
+	int is_short = 0;
+	
 	if( b == sb_err )
 	{
 		sb_append( sb_err,
@@ -257,7 +258,7 @@ static void builtin_print_help( const wchar_t *cmd, string_buffer_t *b )
 	if( str )
 	{
 
-		if( is_interactive && !builtin_out_redirect && b==sb_err)
+		if( b==sb_err )
 		{
 			
 			/*
@@ -269,12 +270,14 @@ static void builtin_print_help( const wchar_t *cmd, string_buffer_t *b )
 
 			screen_height = common_get_height();
 			lines = count_char( str, L'\n' );
-			if( lines > 2*screen_height/3 )
+			if( !is_interactive || (lines > 2*screen_height/3) )
 			{
 				wchar_t *pos;
 				int cut=0;
 				int i;
-
+				
+				is_short = 1;
+								
 				/*
 				  First move down 4 lines
 				*/
@@ -338,6 +341,11 @@ static void builtin_print_help( const wchar_t *cmd, string_buffer_t *b )
 		}
 		
 		sb_append( b, str );
+		if( is_short )
+		{
+			sb_printf( b, _(L"%ls: Type 'help %ls' for related documentation\n\n"), cmd, cmd );
+		}
+				
 		free( str );
 	}
 }
@@ -351,8 +359,6 @@ static void builtin_unknown_option( const wchar_t *cmd, const wchar_t *opt )
 			   BUILTIN_ERR_UNKNOWN,
 			   cmd,
 			   opt );
-	sb_append( sb_err,
-			   parser_current_line() );
 	builtin_print_help( cmd, sb_err );
 }
 
@@ -1646,8 +1652,7 @@ static int builtin_read( wchar_t **argv )
 	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_EXPUNEXP,
-				   argv[0],
-				   parser_current_line() );
+				   argv[0] );
 
 
 		builtin_print_help( argv[0], sb_err );
@@ -1658,8 +1663,7 @@ static int builtin_read( wchar_t **argv )
 	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_GLOCAL,
-				   argv[0],
-				   parser_current_line() );
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 
 		return STATUS_BUILTIN_ERROR;
@@ -1683,7 +1687,7 @@ static int builtin_read( wchar_t **argv )
 			if( (!iswalnum(*src)) && (*src != L'_' ) )
 			{
 				sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *src );
-				sb_append2(sb_err, parser_current_line(), L"\n", (void *)0 );
+				builtin_print_help( argv[0], sb_err );
 				return STATUS_BUILTIN_ERROR;
 			}
 		}

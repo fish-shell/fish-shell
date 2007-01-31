@@ -560,9 +560,8 @@ static int builtin_set( wchar_t **argv )
 	if( query && (erase || list || global || local || universal || export || unexport ) )
 	{
 		sb_printf(sb_err,
-				  BUILTIN_ERR_COMBO2,
-				  argv[0],
-				  parser_current_line() );
+				  BUILTIN_ERR_COMBO,
+				  argv[0] );
 		
 		builtin_print_help( argv[0], sb_err );
 		return 1;
@@ -573,9 +572,8 @@ static int builtin_set( wchar_t **argv )
 	if( erase && list ) 
 	{
 		sb_printf(sb_err,
-				  BUILTIN_ERR_COMBO2,
-				  argv[0],
-				  parser_current_line() );		
+				  BUILTIN_ERR_COMBO,
+				  argv[0] );		
 
 		builtin_print_help( argv[0], sb_err );
 		return 1;
@@ -588,8 +586,7 @@ static int builtin_set( wchar_t **argv )
 	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_GLOCAL,
-				   argv[0],
-				   parser_current_line() );
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -601,8 +598,7 @@ static int builtin_set( wchar_t **argv )
 	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_EXPUNEXP,
-				   argv[0],
-				   parser_current_line() );
+				   argv[0] );
 		builtin_print_help( argv[0], sb_err );
 		return 1;
 	}
@@ -692,8 +688,7 @@ static int builtin_set( wchar_t **argv )
 		{
 			sb_printf( sb_err,
 					   _(L"%ls: Erase needs a variable name\n%ls\n"), 
-					   argv[0],
-					   parser_current_line() );
+					   argv[0] );
 			
 			builtin_print_help( argv[0], sb_err );
 			retcode = 1;
@@ -850,9 +845,8 @@ static int builtin_set( wchar_t **argv )
 			if( woptind != argc )
 			{
 				sb_printf( sb_err, 
-						   _(L"%ls: Values cannot be specfied with erase\n%ls\n"),
-						   argv[0],
-						   parser_current_line() );
+						   _(L"%ls: Values cannot be specfied with erase\n"),
+						   argv[0] );
 				builtin_print_help( argv[0], sb_err );
 				retcode=1;
 			}

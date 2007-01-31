@@ -408,9 +408,6 @@ static int builtin_complete( wchar_t **argv )
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				sb_append( sb_err, 
-						   parser_current_line() );
-				
 				builtin_print_help( argv[0], sb_err );
 
 				
@@ -574,8 +571,6 @@ static int builtin_complete( wchar_t **argv )
 			sb_printf( sb_err, 
 					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
-			sb_append( sb_err, 
-					   parser_current_line() );
 			builtin_print_help( argv[0], sb_err );
 
 			res = 1;

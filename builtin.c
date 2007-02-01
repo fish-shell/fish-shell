@@ -1716,7 +1716,9 @@ static int builtin_read( wchar_t **argv )
 		}
 		
 		reader_set_buffer( commandline, wcslen( commandline ) );
+		proc_push_interactive( 1 );
 		line = reader_readline( );
+		proc_pop_interactive();
 		if( line )
 		{
 			buff = wcsdup( line );

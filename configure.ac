@@ -245,6 +245,14 @@ AC_CACHE_VAL(
 	]
 )
 
+#
+# Try to enale large file support. This will make sure that on systems
+# where off_t can be either 32 or 64 bit, the latter size is used. On
+# other systems, this should do nothing. (Hopefully)
+#
+
+CFLAGS="$CFLAGS -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
+
 AC_MSG_RESULT($local_cv_has__std_c99)
 case x$local_cv_has__std_c99 in
 xno) 

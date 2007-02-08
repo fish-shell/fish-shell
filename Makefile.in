@@ -538,8 +538,12 @@ check-uninstall:
 #
 
 install-sh:
-	if test -x install-sh; then true; else chmod 755 install-sh; fi
+	if test -x $@; then true; else chmod 755 $@; fi
 .PHONY: install-sh
+
+make_mercurial_completions.fish:
+	if test -x $@; then true; else chmod 755 $@; fi
+.PHONY: make_mercurial_completions.fish
 
 
 #

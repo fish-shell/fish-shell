@@ -1374,6 +1374,9 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 
 \subsection todo-features Missing features
 
+- A limited interactive mode for really dumb terminals
+- The completion autoloader does not remember which completions where actually autoloaded, and may unload manually specified completions. 
+- Use a struct to describe a possible completion instead of a weirdly formated string
 - Complete vi-mode key bindings
 - More completions (for example xterm, vim, 
 konsole, gnome-terminal, cron,
@@ -1384,6 +1387,11 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Check keybinding commands for output - if nothing has happened, don't repaint to reduce flicker
 - wait shellscript
 - Support for the screen clipboard
+- It should be possible to test in a script if a function is autoloaded or manually defined
+- A pretty-printer. It should among other things be able to indent a piece of code.
+- Up/down to move between lines in multiline mode
+- a 'funced' function, which works like the vared function. Needs the above three features in order to work well.
+- The validator should be better about error reporting unclosed quotes. They are usually reported as something else.
 
 \subsection todo-possible Possible features
 
@@ -1403,7 +1411,6 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Per process output redirection
 - Reduce the space of the pager by one line to allow the commandline to remain visible.
 - down-arrow could be used to save the current command to the history. Or give the next command in-sequnce. Or both.
-- A pretty-printer.
 - Drop support for inputrc-files. Use shellscripts and the bind builtin. Also, redo the syntax for the bind builtin to something more sane.
 - History could reload itself when the file is updated. This would need to be done in a clever way to avoid chain reactions
 - The error function should probably be moved into it's own library, and be made mere general purpose.
@@ -1415,14 +1422,16 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - A fault injector could be written to increase robustness and testing of error recovery paths
 - The parser/validator could be more clever in order to make things like writing 'function --help' work as expected
 - Some event handler functions make much more sense as oneshots - maybe they should be automatically deleted after firing?
-- It should be possible to specify to the read builtin that shell syntax highlighting and tab completions should be used. 
-
+- exec_subshell should be either merged with eval or moved to parser.c
 
 \subsection bugs Known bugs and issues
 
-- Completion for gcc -\#\#\# option doesn't work.
-- Suspending and then resuming pipelines containing a builtin is broken. How should this be handled?
+- Suspending and then resuming pipelines containing a builtin or a shellscript function is broken. Ideally, the exec function in exec.c should be able to resume execution of a partially executed job.
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
+- When a builtin has its output redirected to a file, and the builtin does not produce any IO, then the file is never opened. Thus tha file may not be cleared.
+- No '--' completion
+- else is not indented properly
+- if an if fails inside an if, the out if's else may trigger
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

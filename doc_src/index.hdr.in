@@ -468,9 +468,9 @@ prints a list of all user groups with the groups members as description.
 
 prints a list of all procceses IDs with the command name as description.
 
-<pre>__fish_complete_suffix STRING SUFFIX DESCRIPTION</pre>
+<pre>__fish_complete_suffix SUFFIX</pre>
 
-performs path completion on STRING, allowing only files ending in SUFFIX, and giving them the description DESCRIPTION.
+performs file completion allowing only files ending in SUFFIX. The mimetype database is usded to find a suitable description.
 
 <pre>__fish_complete_users</pre>
 

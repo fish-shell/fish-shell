@@ -417,6 +417,7 @@ static complete_entry_t *complete_get_exact_entry( const wchar_t *cmd,
 		c->cmd = intern( cmd );
 		c->cmd_type = cmd_type;
 		c->short_opt_str = wcsdup(L"");
+		c->authorative = 1;
 	}
 
 	return c;

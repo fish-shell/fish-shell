@@ -67,6 +67,44 @@
 #define PROG_COMPLETE_SEP L'\t'
 
 /**
+   Do not insert space afterwards if this is the only completion. (The
+   default is to try insert a space)
+*/
+#define COMPLETE_NO_SPACE 1
+
+/**
+   This compeltion is case insensitive
+*/
+
+#define COMPLETE_NO_CASE 2
+/**
+   This compeltion is the whole argument, not just the remainder. This
+   flag must never be set on completions returned from the complete()
+   function. It is strictly for internal use in the completion code.
+*/
+#define COMPLETE_WHOLE_ARGUMENT 4
+
+typedef struct
+{
+	/**
+	   The completion string
+	*/
+	const wchar_t *completion;
+	/**
+	   The description for this completion
+	*/
+	const wchar_t *description;
+	/**
+	   Determines whether a spece should be inserted after this
+	   compeltion if it is the only possible completion. Can be one of
+	   COMPLETE_SPACE_YES, COMPLETE_SPACE_NO and COMPLETE_SPACE_AUTO.
+	*/
+	int flags;
+}
+	completion_t;
+
+
+/**
 
   Add a completion. 
 

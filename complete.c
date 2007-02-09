@@ -2069,6 +2069,49 @@ static int try_complete_user( const wchar_t *cmd,
 	return res;
 }
 
+static completion_t *completion_allocate( void *context, 
+										  const wchar_t *comp,
+										  const wchar_t *desc,
+										  int flags )
+{
+	completion_t *res = halloc( context, sizeof( completion_t) );
+	res->completion = halloc_wcsdup( context, comp );
+	res->description = halloc_wcsdup( context, desc );
+	res->flags = flags;
+	return res;
+}
+
+
+static void glorf( array_list_t *comp )
+{
+	int i;
+	for( i=0; i<al_get_count( comp ); i++ )
+	{
+		wchar_t *next = (wchar_t *)al_get( comp, i );
+		wchar_t *desc;
+		completion_t *item;
+		int flags = 0;
+		
+		
+		desc = wcschr( next, COMPLETE_SEP );
+		
+		if( desc )
+		{
+			*desc = 0;
+			desc++;
+		}
+
+		if( ( wcslen(next) > 0 ) && ( wcschr( L"/=@:", next[wcslen(next)-1] ) != 0 ) )
+			flags |= COMPLETE_NO_SPACE;
+
+		item = completion_allocate( comp, next, desc, flags );
+		free( next );
+		al_set( comp, i, item );
+		
+	}
+}
+
+
 void complete( const wchar_t *cmd,
 			   array_list_t *comp )
 {
@@ -2336,6 +2379,9 @@ void complete( const wchar_t *cmd,
 	free( prev_token );
 
 	condition_cache_clear();
+
+
+	glorf( comp );
 
 }
 

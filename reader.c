@@ -99,6 +99,8 @@ commence.
 #include "output.h"
 #include "signal.h"
 #include "screen.h"
+#include "halloc.h"
+#include "halloc_util.h"
 
 #include "parse_util.h"
 
@@ -980,12 +982,18 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	string_buffer_t msg;
 	wchar_t * prefix_esc;
 	char *foo;
+	io_data_t *in;
+	wchar_t *escaped_separator;
 	
 	if( !prefix || (wcslen(prefix)==0))
+	{
 		prefix_esc = wcsdup(L"\"\"");
+	}
 	else
+	{
 		prefix_esc = escape( prefix,1);
-
+	}
+	
 	sb_init( &cmd );
 	sb_init( &msg );
 	sb_printf( &cmd,
@@ -996,15 +1004,53 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 
 	free( prefix_esc );
 
-	io_data_t *in= io_buffer_create( 1 );
+	in= io_buffer_create( 1 );
 	in->fd = 3;
+
+	escaped_separator = escape( COMPLETE_SEP_STR, 1);
 	
-	for( i=0; i<al_get_count( comp); i++ )
+	for( i=0; i<al_get_count( comp ); i++ )
 	{
-	    wchar_t *el = escape((wchar_t*)al_get( comp, i ), 1);
-		sb_printf( &msg, L"%ls\n", el );
-		free( el );		
+
+	    completion_t *el = (completion_t *)al_get( comp, i );
+
+		wchar_t *foo=0;
+		wchar_t *baz=0;
+
+		if( el && el->completion )
+		{
+			foo = escape( el->completion, 1 );
+		}
+
+		if( el && el->description )
+		{
+			baz = escape( el->description, 1 );
+		}
+		
+		if( !foo )
+		{
+			debug( 0, L"Run pager called with bad argument." );
+			bugreport();
+			show_stackframe();
+		}
+		else if( baz )
+		{
+			sb_printf( &msg, L"%ls%ls%ls\n", 
+					   foo,
+					   escaped_separator,
+					   baz );
+		}
+		else
+		{
+			sb_printf( &msg, L"%ls\n", 
+					   foo );
+		}
+
+		free( foo );		
+		free( baz );		
 	}
+
+	free( escaped_separator );		
 	
 	foo = wcs2str( (wchar_t *)msg.buff );
 	b_append( in->param2.out_buffer, foo, strlen(foo) );
@@ -1100,24 +1146,21 @@ static int handle_completions( array_list_t *comp )
 	}
 	else if( al_get_count( comp ) == 1 )
 	{
-		wchar_t *comp_str = wcsdup((wchar_t *)al_get( comp, 0 ));
-		wchar_t *woot = wcschr( comp_str, COMPLETE_SEP );
-		if( woot != 0 )
-			*woot = L'\0';
-		completion_insert( comp_str,
-						   ( wcslen(comp_str) == 0 ) ||
-						   ( wcschr( L"/=@:",
-									 comp_str[wcslen(comp_str)-1] ) == 0 ) );
-		free( comp_str );
+		completion_t *c = (completion_t *)al_get( comp, 0 );
+		completion_insert( c->completion,
+						   !(c->flags & COMPLETE_NO_SPACE) );			
 		return 1;
 	}
 	else
 	{
-		wchar_t *base = wcsdup( (wchar_t *)al_get( comp, 0 ) );
+		completion_t *c = (completion_t *)al_get( comp, 0 );
+		wchar_t *base = wcsdup( c->completion );
 		int len = wcslen( base );
+		
 		for( i=1; i<al_get_count( comp ); i++ )
 		{
-			int new_len = comp_len( base, (wchar_t *)al_get( comp, i ) );
+			completion_t *c = (completion_t *)al_get( comp, i );
+			int new_len = comp_len( base, c->completion );
 			len = new_len < len ? new_len: len;
 		}
 		if( len > 0 )
@@ -2049,16 +2092,13 @@ wchar_t *reader_readline()
 	int i;
 	int last_char=0, yank=0;
 	wchar_t *yank_str;
-	array_list_t comp;
+	array_list_t *comp=0;
 	int comp_empty=1;
 	int finished=0;
 	struct termios old_modes;
 
 	check_size();
 	data->search_buff[0]=data->buff[data->buff_len]='\0';
-
-
-	al_init( &comp );
 
 	s_reset( &data->screen );
 	
@@ -2131,14 +2171,13 @@ wchar_t *reader_readline()
 			if( c != 0 )
 				break;
 		}
-
+/*
 		if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
 		{
-			al_foreach( &comp, &free );
-			al_truncate( &comp, 0 );
-			comp_empty = 1;
+			halloc_destroy( comp );
+			comp = 0;
 		}
-
+*/
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank=0;
 		
@@ -2233,7 +2272,7 @@ wchar_t *reader_readline()
 					wchar_t *buffcpy;
 					int len;
 					int cursor_steps;
-					
+
 					parse_util_cmdsubst_extent( data->buff, data->buff_pos, &begin, &end );
 
 					parse_util_token_extent( begin, data->buff_pos - (begin-data->buff), &token_begin, &token_end, 0, 0 );
@@ -2250,19 +2289,17 @@ wchar_t *reader_readline()
 					len = data->buff_pos - (begin-data->buff);
 					buffcpy = wcsndup( begin, len );
 
-					data->complete_func( buffcpy, &comp );
+					comp = al_halloc( 0 );
+					data->complete_func( buffcpy, comp );
 
-					sort_list( &comp );
-					remove_duplicates( &comp );
+//					sort_list( comp );
+//					remove_duplicates( comp );
 
 					free( buffcpy );
+					comp_empty = handle_completions( comp );
 
-				}
-				if( (comp_empty =
-					 handle_completions( &comp ) ) )
-				{
-					al_foreach( &comp, &free );
-					al_truncate( &comp, 0 );
+					halloc_free( comp );
+					comp = 0;
 				}
 
 				break;
@@ -2661,7 +2698,10 @@ wchar_t *reader_readline()
 	}
 
 	writestr( L"\n" );
-	al_destroy( &comp );
+/*
+	if( comp )
+		halloc_free( comp );
+*/
 	if( !reader_exit_forced() )
 	{
 		if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */

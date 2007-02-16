@@ -395,7 +395,7 @@ doc.h: $(HDR_FILES)
 	cat $*.txt >>$@; 
 	echo "*/" >>$@
 
-%: %.in Makefile
+%: %.in 
 	sed <$@.in >$@ \
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \

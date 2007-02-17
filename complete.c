@@ -58,12 +58,12 @@ These functions are used for storing and retrieving tab-completion data, as well
 /**
    Description for ~USER completion
 */
-#define COMPLETE_USER_DESC _( L"%ls/%lcHome for %s" )
+#define COMPLETE_USER_DESC _( L"Home for %s" )
 
 /**
    Description for short variables. The value is concatenated to this description
 */
-#define COMPLETE_VAR_DESC_VAL _( L"Variable: " )
+#define COMPLETE_VAR_DESC_VAL _( L"Variable: %ls" )
 
 /**
    Description for generic executable
@@ -232,6 +232,45 @@ static hash_table_t *condition_cache=0;
 
 static void complete_free_entry( complete_entry_t *c );
 static void clear_hash_entry( void *key, void *data );
+
+
+/**
+   Create a new completion entry
+
+*/
+static void completion_allocate( array_list_t *context,
+								 const wchar_t *comp,
+								 const wchar_t *desc,
+								 int flags )
+{
+	completion_t *res = halloc( context, sizeof( completion_t) );
+	res->completion = halloc_wcsdup( context, comp );
+	res->description = halloc_wcsdup( context, desc );
+	res->flags = flags;
+	al_push( context, res );
+}
+
+static void completion_allocate2( array_list_t *context,
+								  wchar_t *comp,
+								  wchar_t sep )
+{
+	completion_t *res = halloc( context, sizeof( completion_t) );
+	wchar_t *sep_pos = wcschr( comp, sep );
+	int flags = 0;
+	
+	if( sep_pos )
+	{
+		*sep_pos = 0;
+		res->description = halloc_wcsdup( context, sep_pos+1 );
+	}
+	
+	res->completion = halloc_wcsdup( context, comp );
+
+	if( ( wcslen(comp) > 0 ) && ( wcschr( L"/=@:", comp[wcslen(comp)-1] ) != 0 ) )
+		flags |= COMPLETE_NO_SPACE;
+	res->flags = flags;
+	al_push( context, res );
+}
 
 
 /**
@@ -1141,6 +1180,53 @@ static void copy_strings_with_prefix( array_list_t *comp_out,
 
 }
 
+
+static void completion_convert_list( array_list_t *src, array_list_t *dest )
+{
+	int i;
+	
+	for( i=0; i<al_get_count( src ); i++ )
+	{
+		wchar_t *next = (wchar_t *)al_get( src, i );
+		completion_allocate2( dest, next, COMPLETE_SEP );
+		free( next );
+	}
+}
+
+
+static void complete_strings( array_list_t *comp_out,
+							  const wchar_t *wc_escaped,
+							  const wchar_t *desc,
+							  const wchar_t *(*desc_func)(const wchar_t *),
+							  array_list_t *possible_comp )
+{
+	int i;
+	wchar_t *wc, *tmp;
+	array_list_t lst;
+
+	al_init( &lst );
+	
+
+	tmp = expand_one( 0,
+					  wcsdup(wc_escaped), EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS);
+	if(!tmp)
+		return;
+
+	wc = parse_util_unescape_wildcards( tmp );
+	free(tmp);
+	
+	for( i=0; i<al_get_count( possible_comp ); i++ )
+	{
+		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
+		if( next_str )
+			wildcard_complete( next_str, wc, desc, desc_func, &lst );
+	}
+
+	completion_convert_list( &lst, comp_out );
+	al_destroy( &lst );
+	free( wc );
+}
+
 /**
    If command to complete is short enough, substitute
    the description with the whatis information for the executable.
@@ -1348,7 +1434,6 @@ static void complete_cmd( const wchar_t *cmd,
 
 	wchar_t *cdpath = env_get(L"CDPATH");
 	wchar_t *cdpath_cpy = wcsdup( cdpath?cdpath:L"." );
-	int prev_count = al_get_count( comp );
 
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
 	{
@@ -1361,10 +1446,11 @@ static void complete_cmd( const wchar_t *cmd,
 			
 			if( expand_string( 0,
 							   wcsdup(cmd),
-							   comp,
+							   &tmp,
 							   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 			{
-				complete_cmd_desc( cmd, comp );
+				complete_cmd_desc( cmd, &tmp );
+				completion_convert_list( &tmp, comp );
 			}
 			al_destroy( &tmp );
 		}
@@ -1399,10 +1485,8 @@ static void complete_cmd( const wchar_t *cmd,
 									   ACCEPT_INCOMPLETE |
 									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 					{
-						for( i=0; i<al_get_count(&tmp); i++ )
-						{
-							al_push( comp, al_get( &tmp, i ) );
-						}
+						complete_cmd_desc( cmd, &tmp );
+						completion_convert_list( &tmp, comp );
 					}
 				
 					al_destroy( &tmp );
@@ -1410,10 +1494,6 @@ static void complete_cmd( const wchar_t *cmd,
 				}
 				free( path_cpy );
 			
-				if( al_get_count( comp ) > prev_count )
-				{
-					complete_cmd_desc( cmd, comp );
-				}
 			}
 		}
 		
@@ -1426,7 +1506,7 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_function )
 		{
 			function_get_names( &possible_comp, cmd[0] == L'_' );
-			copy_strings_with_prefix( comp, cmd, 0, &complete_function_desc, &possible_comp );
+			complete_strings( comp, cmd, 0, &complete_function_desc, &possible_comp );
 		}
 
 		al_truncate( &possible_comp, 0 );
@@ -1434,7 +1514,7 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_builtin )
 		{
 			builtin_get_names( &possible_comp );
-			copy_strings_with_prefix( comp, cmd, 0, &builtin_get_desc, &possible_comp );
+			complete_strings( comp, cmd, 0, &builtin_get_desc, &possible_comp );
 		}
 		al_destroy( &possible_comp );
 
@@ -1461,15 +1541,18 @@ static void complete_cmd( const wchar_t *cmd,
 					continue;
 				}
 			
+				al_init( &tmp );
 				if( expand_string( 0,
 								   nxt_completion,
-								   comp,
+								   &tmp,
 								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 				{
 					/*
 					  Don't care if we fail - completions are just hints
 					*/
+					completion_convert_list( &tmp, comp );
 				}
+				al_destroy( &tmp );
 			}
 		}
 	}
@@ -1887,6 +1970,7 @@ static void complete_param_expand( wchar_t *str,
 	
 }
 
+
 /**
    Complete the specified string as an environment variable
 */
@@ -1916,20 +2000,21 @@ static int complete_variable( const wchar_t *var,
 			value_unescaped = env_get( name );
 			if( value_unescaped )
 			{
-				wchar_t *desc;
+				string_buffer_t desc;
 
 				value = expand_escape_variable( value_unescaped );
-				/*
-				  Variable description is 'Variable: VALUE
-				*/
-				desc = wcsdupcat2( &name[varlen], COMPLETE_SEP_STR, COMPLETE_VAR_DESC_VAL, value, (void *)0 );
+
+				sb_init( &desc );
+				sb_printf( &desc, COMPLETE_VAR_DESC_VAL, value );
 				
-				if( desc )
-				{
-					res =1;
-					al_push( comp, desc );
-				}
+				completion_allocate( comp, 
+									 &name[varlen],
+									 (wchar_t *)desc.buff,
+									 0 );
+				res =1;
+				
 				free( value );
+				sb_destroy( &desc );
 			}
 			
 		}
@@ -2047,16 +2132,29 @@ static int try_complete_user( const wchar_t *cmd,
 					{
 						if( wcsncmp( user_name, pw_name, name_len )==0 )
 						{
-							string_buffer_t sb;
-							sb_init( &sb );
-							sb_printf( &sb,
-							           COMPLETE_USER_DESC,
-							           &pw_name[name_len],
-							           COMPLETE_SEP,
-							           pw->pw_gecos );
+							string_buffer_t desc;							
+							string_buffer_t name;
+
+							sb_init( &name );
+							sb_printf( &name,
+							           L"%ls/",
+									   &pw_name[name_len] );
 							
-							al_push( comp, (wchar_t *)sb.buff );
+							sb_init( &desc );
+							sb_printf( &desc,
+							           COMPLETE_USER_DESC,
+							           pw->pw_gecos );
+
+							completion_allocate( comp, 
+												 (wchar_t *)name.buff,
+												 (wchar_t *)desc.buff,
+												 0 );
+							
 							res=1;
+							
+							sb_destroy( &desc );
+							sb_destroy( &name );
+							
 						}
 						free( pw_name );
 					}
@@ -2069,18 +2167,6 @@ static int try_complete_user( const wchar_t *cmd,
 	return res;
 }
 
-static completion_t *completion_allocate( void *context, 
-										  const wchar_t *comp,
-										  const wchar_t *desc,
-										  int flags )
-{
-	completion_t *res = halloc( context, sizeof( completion_t) );
-	res->completion = halloc_wcsdup( context, comp );
-	res->description = halloc_wcsdup( context, desc );
-	res->flags = flags;
-	return res;
-}
-
 
 static void glorf( array_list_t *comp )
 {
@@ -2089,7 +2175,7 @@ static void glorf( array_list_t *comp )
 	{
 		wchar_t *next = (wchar_t *)al_get( comp, i );
 		wchar_t *desc;
-		completion_t *item;
+		void *item;
 		int flags = 0;
 		
 		
@@ -2104,9 +2190,10 @@ static void glorf( array_list_t *comp )
 		if( ( wcslen(next) > 0 ) && ( wcschr( L"/=@:", next[wcslen(next)-1] ) != 0 ) )
 			flags |= COMPLETE_NO_SPACE;
 
-		item = completion_allocate( comp, next, desc, flags );
-		free( next );
+		completion_allocate( comp, next, desc, flags );
+		item = al_pop( comp );
 		al_set( comp, i, item );
+		free( next );
 		
 	}
 }
@@ -2369,9 +2456,9 @@ void complete( const wchar_t *cmd,
 				  This function wants the unescaped string
 				*/
 				complete_param_expand( current_token, comp, do_file );
+				glorf( comp );
 			}
 		}
-
 	}
 	
 	free( current_token );
@@ -2381,7 +2468,6 @@ void complete( const wchar_t *cmd,
 	condition_cache_clear();
 
 
-	glorf( comp );
 
 }
 

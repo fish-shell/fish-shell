@@ -1428,7 +1428,6 @@ static void complete_cmd( const wchar_t *cmd,
 	wchar_t *nxt_path;
 	wchar_t *state;
 	array_list_t possible_comp;
-	int i;
 	array_list_t tmp;
 	wchar_t *nxt_completion;
 
@@ -1587,43 +1586,7 @@ static void complete_from_args( const wchar_t *str,
 	eval_args( args, &possible_comp );
 	proc_pop_interactive();
 	
-	/*
-	  Completion results where previously unescaped by the
-	  code below. I have no idea why that was done, but I have
-	  not removed this since I'm not sure if this might be
-	  correct, though I can't think of any reason why it
-	  should be.
-
-	  If this code is readded - add an explanation of _why_ completion
-	  strings should be escaped!
-	*/
-	/*
-	  for( i=0; i< al_get_count( &possible_comp ); i++ )
-	  {
-	  wchar_t *next = (wchar_t *)al_get( &possible_comp, i );
-	  wchar_t *next_unescaped;
-	  if( next )
-	  {
-	  next_unescaped = unescape( next, 0 );
-	  if( next_unescaped )
-	  {
-	  al_set( &possible_comp , i, next_unescaped );
-	  }
-	  else
-	  {
-	  al_set( &possible_comp , i, 0 );
-	  debug( 2, L"Could not expand string %ls on line %d of file %s", next, __LINE__, __FILE__ );
-	  }
-	  free( next );
-	  }
-	  else
-	  {
-	  debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-	  }
-	  }
-	*/
-
-	copy_strings_with_prefix( comp_out, str, desc, 0, &possible_comp );
+	complete_strings( comp_out, str, desc, 0, &possible_comp );
 
 	al_foreach( &possible_comp, &free );
 	al_destroy( &possible_comp );
@@ -1877,16 +1840,12 @@ static int complete_param( const wchar_t *cmd_orig,
 						short_ok( str, o->short_opt, i->short_opt_str ) )
 					{
 						const wchar_t *desc = C_(o->desc );
-						wchar_t *next_opt =
-							malloc( sizeof(wchar_t)*(3 + wcslen(desc)));
-						if( !next_opt )
-							DIE_MEM();
+						wchar_t completion[2];
+						completion[0] = o->short_opt;
+						completion[1] = 0;
+						
+						completion_allocate( comp_out, completion, desc, 0 );
 
-						next_opt[0]=o->short_opt;
-						next_opt[1]=COMPLETE_SEP;
-						next_opt[2]=L'\0';
-						wcscat( next_opt, desc );
-						al_push( comp_out, next_opt );
 					}
 
 					/*
@@ -1899,37 +1858,43 @@ static int complete_param( const wchar_t *cmd_orig,
 
 						if( wcsncmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0)
 						{
-							int has_arg=0;
-							int req_arg=0;
-							
-							/*
-							  If the switch has an _optional_
-							  argument, it needs to be specified using
-							  '=', otherwise we complete without the
-							  '=' since quite a few programs don't
-							  support it. 
-
-							*/
+							int has_arg=0; /* Does this switch have any known arguments  */
+							int req_arg=0; /* Does this switch _require_ an argument */
 
 							has_arg = !!wcslen( o->comp );
 							req_arg = (o->result_mode & NO_COMMON );
 
 							if( !o->old_mode && ( has_arg && !req_arg ) )
 							{
-								al_push( comp_out,
-										 wcsdupcat2( &((wchar_t *)whole_opt->buff)[wcslen(str)], 
-													 L"=", 
-													 COMPLETE_SEP_STR, 
-													 C_(o->desc), 
-													 (void *)0) );
+								/*
+								  Optional arguments to a switch can
+								  only be handled using the '=', so we
+								  add it as a completion. By default
+								  we avoid using '=' and instead rely
+								  on '--switch switch-arg', since it
+								  is more commonly supported by
+								  homebrew getopt-like functions.
+								*/
+								string_buffer_t completion;
+								sb_init( &completion );
+								sb_printf( &completion,
+										   L"%ls=", 
+										   ((wchar_t *)whole_opt->buff)+wcslen(str) );
+								
+								completion_allocate( comp_out,
+													 (wchar_t *)completion.buff,
+													 C_(o->desc),
+													 0 );
+								sb_destroy( &completion );
+								
 							}
 							
-							al_push( comp_out,
-									 wcsdupcat2( &((wchar_t *)whole_opt->buff)[wcslen(str)], 
-												 COMPLETE_SEP_STR, 
-												 C_(o->desc), 
-												 (void *)0) );
-						}
+							completion_allocate( comp_out,
+												 ((wchar_t *)whole_opt->buff) + wcslen(str),
+												 C_(o->desc),
+												 0 );
+						
+						}					
 					}
 				}
 			}
@@ -1949,6 +1914,8 @@ static void complete_param_expand( wchar_t *str,
 								   int do_file )
 {
 	wchar_t *comp_str;
+	array_list_t tmp;
+	al_init( &tmp );
 	
 	if( (wcsncmp( str, L"--", 2 )) == 0 && (comp_str = wcschr(str, L'=' ) ) )
 	{
@@ -1961,12 +1928,17 @@ static void complete_param_expand( wchar_t *str,
 
 	if( expand_string( 0, 
 					   wcsdup(comp_str),
-					   comp_out,
-					   EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) ) == EXPAND_ERROR )
+					   &tmp,
+					   EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) ) != EXPAND_ERROR )
+	{
+		completion_convert_list( &tmp, comp_out );
+	}
+	else
 	{
 		debug( 3, L"Error while expanding string '%ls'", comp_str );
 	}
 	
+	al_destroy( &tmp );
 	
 }
 
@@ -2456,7 +2428,6 @@ void complete( const wchar_t *cmd,
 				  This function wants the unescaped string
 				*/
 				complete_param_expand( current_token, comp, do_file );
-				glorf( comp );
 			}
 		}
 	}

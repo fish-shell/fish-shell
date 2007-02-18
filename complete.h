@@ -86,20 +86,29 @@
 
 typedef struct
 {
+
 	/**
 	   The completion string
 	*/
 	const wchar_t *completion;
+
 	/**
 	   The description for this completion
 	*/
 	const wchar_t *description;
+
 	/**
-	   Determines whether a spece should be inserted after this
-	   compeltion if it is the only possible completion. Can be one of
-	   COMPLETE_SPACE_YES, COMPLETE_SPACE_NO and COMPLETE_SPACE_AUTO.
+	   Flags determining the completion behaviour. 
+
+	   Determines whether a space should be inserted after this
+	   compeltion if it is the only possible completion using the
+	   COMPLETE_NO_SPACE flag.
+
+	   The COMPLETE_NO_CASE can be used to signal that this completion
+	   is case insensitive.
 	*/
 	int flags;
+
 }
 	completion_t;
 
@@ -226,5 +235,30 @@ int complete_is_valid_argument( const wchar_t *str,
    \param reload should the commands completions be reloaded, even if they where previously loaded. (This is set to true on actual completions, so that changed completion are updated in running shells)
 */
 void complete_load( const wchar_t *cmd, int reload );
+
+/**
+   Create a new completion entry
+
+   \param context The halloc context to use for allocating new memory
+   \pram comp The completion string
+   \param desc The description of the completion
+   \param flags completion flags
+*/
+void completion_allocate( array_list_t *context,
+						  const wchar_t *comp,
+						  const wchar_t *desc,
+						  int flags );
+
+
+/**
+   Create a new completion entry from an existing text entry
+
+   \param context The halloc context to use for allocating new memory
+   \param comp the completion and possibly the description for it
+   \param sep the separator character between completion and description
+*/
+void completion_allocate2( array_list_t *context,
+						   wchar_t *comp,
+						   wchar_t sep );
 
 #endif

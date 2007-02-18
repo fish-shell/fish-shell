@@ -238,10 +238,10 @@ static void clear_hash_entry( void *key, void *data );
    Create a new completion entry
 
 */
-static void completion_allocate( array_list_t *context,
-								 const wchar_t *comp,
-								 const wchar_t *desc,
-								 int flags )
+void completion_allocate( array_list_t *context,
+						  const wchar_t *comp,
+						  const wchar_t *desc,
+						  int flags )
 {
 	completion_t *res = halloc( context, sizeof( completion_t) );
 	res->completion = halloc_wcsdup( context, comp );
@@ -250,9 +250,9 @@ static void completion_allocate( array_list_t *context,
 	al_push( context, res );
 }
 
-static void completion_allocate2( array_list_t *context,
-								  wchar_t *comp,
-								  wchar_t sep )
+void completion_allocate2( array_list_t *context,
+						   wchar_t *comp,
+						   wchar_t sep )
 {
 	completion_t *res = halloc( context, sizeof( completion_t) );
 	wchar_t *sep_pos = wcschr( comp, sep );
@@ -1135,9 +1135,28 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 	return (wchar_t *)get_desc_buff->buff;
 }
 
+
+/**
+   Convert all string completions in src into completion_t structs in
+   dest. All source strings will be free'd.
+*/
+static void completion_convert_list( array_list_t *src, array_list_t *dest )
+{
+	int i;
+	
+	for( i=0; i<al_get_count( src ); i++ )
+	{
+		wchar_t *next = (wchar_t *)al_get( src, i );
+		completion_allocate2( dest, next, COMPLETE_SEP );
+		free( next );
+	}
+}
+
+
 /**
    Copy any strings in possible_comp which have the specified prefix
-   to the list comp_out. The prefix may contain wildcards.
+   to the list comp_out. The prefix may contain wildcards. The output
+   will consist of completion_t structs.
 
    There are three ways to specify descriptions for each
    completion. Firstly, if a description has already been added to the
@@ -1152,47 +1171,6 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
    \param desc_func the function that generates a description for those completions witout an embedded description
    \param possible_comp the list of possible completions to iterate over
 */
-static void copy_strings_with_prefix( array_list_t *comp_out,
-									  const wchar_t *wc_escaped,
-									  const wchar_t *desc,
-									  const wchar_t *(*desc_func)(const wchar_t *),
-									  array_list_t *possible_comp )
-{
-	int i;
-	wchar_t *wc, *tmp;
-
-	tmp = expand_one( 0,
-					  wcsdup(wc_escaped), EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS);
-	if(!tmp)
-		return;
-
-	wc = parse_util_unescape_wildcards( tmp );
-	free(tmp);
-	
-	for( i=0; i<al_get_count( possible_comp ); i++ )
-	{
-		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
-		if( next_str )
-			wildcard_complete( next_str, wc, desc, desc_func, comp_out );
-	}
-
-	free( wc );
-
-}
-
-
-static void completion_convert_list( array_list_t *src, array_list_t *dest )
-{
-	int i;
-	
-	for( i=0; i<al_get_count( src ); i++ )
-	{
-		wchar_t *next = (wchar_t *)al_get( src, i );
-		completion_allocate2( dest, next, COMPLETE_SEP );
-		free( next );
-	}
-}
-
 
 static void complete_strings( array_list_t *comp_out,
 							  const wchar_t *wc_escaped,
@@ -1271,18 +1249,9 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	
 	for( i=0; i<al_get_count( comp ); i++ )
 	{
-		wchar_t *el = (wchar_t *)al_get( comp, i );
-		wchar_t *cmd_end = wcschr( el,
-								   COMPLETE_SEP );
-		if( !cmd_end )
-		{
-			skip = 0;
-			break;
-		}
-	
-		cmd_end++;
-		
-		if( wcscmp( cmd_end, COMPLETE_DIRECTORY_DESC ) != 0 )
+		completion_t *c = (completion_t *)al_get( comp, i );
+			
+		if( wcscmp( c->description, COMPLETE_DIRECTORY_DESC ) != 0 )
 		{
 			skip = 0;
 			break;
@@ -1358,31 +1327,17 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 		*/
 		for( i=0; i<al_get_count(comp); i++ )
 		{
-			wchar_t *el = (wchar_t *)al_get( comp, i );
-			wchar_t *cmd_end = wcschr( el,
-									   COMPLETE_SEP );
-			wchar_t *new_desc;
+			completion_t *c = (completion_t *)al_get( comp, i );
+			const wchar_t *el = c->completion;
 
-			if( cmd_end )
-				*cmd_end = 0;
+			wchar_t *new_desc;
 
 			new_desc = (wchar_t *)hash_get( &lookup,
 											el );
-
+			
 			if( new_desc )
 			{
-				wchar_t *new_el = wcsdupcat2( el,
-											  COMPLETE_SEP_STR,
-											  new_desc,
-											  (void *)0 );
-
-				al_set( comp, i, new_el );
-				free( el );
-			}
-			else
-			{
-				if( cmd_end )
-					*cmd_end = COMPLETE_SEP;
+				c->description = halloc_wcsdup( comp, new_desc );
 			}
 		}
 	}
@@ -1428,7 +1383,6 @@ static void complete_cmd( const wchar_t *cmd,
 	wchar_t *nxt_path;
 	wchar_t *state;
 	array_list_t possible_comp;
-	array_list_t tmp;
 	wchar_t *nxt_completion;
 
 	wchar_t *cdpath = env_get(L"CDPATH");
@@ -1440,18 +1394,13 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_command )
 		{
 			
-			array_list_t tmp;
-			al_init( &tmp );
-			
 			if( expand_string( 0,
 							   wcsdup(cmd),
-							   &tmp,
+							   comp,
 							   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 			{
-				complete_cmd_desc( cmd, &tmp );
-				completion_convert_list( &tmp, comp );
+				complete_cmd_desc( cmd, comp );
 			}
-			al_destroy( &tmp );
 		}
 	}
 	else
@@ -1476,19 +1425,14 @@ static void complete_cmd( const wchar_t *cmd,
 					if( ! nxt_completion )
 						continue;
 				
-					al_init( &tmp );
-				
 					if( expand_string( 0,
 									   nxt_completion,
-									   &tmp,
+									   comp,
 									   ACCEPT_INCOMPLETE |
 									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 					{
-						complete_cmd_desc( cmd, &tmp );
-						completion_convert_list( &tmp, comp );
+						complete_cmd_desc( cmd, comp );
 					}
-				
-					al_destroy( &tmp );
 				
 				}
 				free( path_cpy );
@@ -1540,18 +1484,12 @@ static void complete_cmd( const wchar_t *cmd,
 					continue;
 				}
 			
-				al_init( &tmp );
 				if( expand_string( 0,
 								   nxt_completion,
-								   &tmp,
+								   comp,
 								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 				{
-					/*
-					  Don't care if we fail - completions are just hints
-					*/
-					completion_convert_list( &tmp, comp );
 				}
-				al_destroy( &tmp );
 			}
 		}
 	}
@@ -1914,8 +1852,7 @@ static void complete_param_expand( wchar_t *str,
 								   int do_file )
 {
 	wchar_t *comp_str;
-	array_list_t tmp;
-	al_init( &tmp );
+	int flags;
 	
 	if( (wcsncmp( str, L"--", 2 )) == 0 && (comp_str = wcschr(str, L'=' ) ) )
 	{
@@ -1926,19 +1863,17 @@ static void complete_param_expand( wchar_t *str,
 		comp_str = str;
 	}
 
+	flags = EXPAND_SKIP_CMDSUBST | 
+		ACCEPT_INCOMPLETE | 
+		(do_file?0:EXPAND_SKIP_WILDCARDS);
+	
 	if( expand_string( 0, 
 					   wcsdup(comp_str),
-					   &tmp,
-					   EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | (do_file?0:EXPAND_SKIP_WILDCARDS) ) != EXPAND_ERROR )
-	{
-		completion_convert_list( &tmp, comp_out );
-	}
-	else
+					   comp_out,
+					   flags ) == EXPAND_ERROR )
 	{
 		debug( 3, L"Error while expanding string '%ls'", comp_str );
 	}
-	
-	al_destroy( &tmp );
 	
 }
 
@@ -2136,39 +2071,8 @@ static int try_complete_user( const wchar_t *cmd,
 		}
 	}
 
-	return res;
-}
+	return res;}
 
-
-static void glorf( array_list_t *comp )
-{
-	int i;
-	for( i=0; i<al_get_count( comp ); i++ )
-	{
-		wchar_t *next = (wchar_t *)al_get( comp, i );
-		wchar_t *desc;
-		void *item;
-		int flags = 0;
-		
-		
-		desc = wcschr( next, COMPLETE_SEP );
-		
-		if( desc )
-		{
-			*desc = 0;
-			desc++;
-		}
-
-		if( ( wcslen(next) > 0 ) && ( wcschr( L"/=@:", next[wcslen(next)-1] ) != 0 ) )
-			flags |= COMPLETE_NO_SPACE;
-
-		completion_allocate( comp, next, desc, flags );
-		item = al_pop( comp );
-		al_set( comp, i, item );
-		free( next );
-		
-	}
-}
 
 
 void complete( const wchar_t *cmd,

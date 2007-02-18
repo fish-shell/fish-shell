@@ -472,22 +472,22 @@ static int check_size()
 	return 1;
 }
 
-/**
-   Compare two completions, ignoring their description.
-*/
-static int fldcmp( wchar_t *a, wchar_t *b )
-{
-	while( 1 )
-	{
-		if( *a != *b )
-			return *a-*b;
-		if( ( (*a == COMPLETE_SEP) || (*a == L'\0') ) &&
-			( (*b == COMPLETE_SEP) || (*b == L'\0') ) )
-			return 0;
-		a++;
-		b++;
-	}
 
+static int completion_cmp( const void *a, const void *b )
+{
+	completion_t *c= *((completion_t **)a);
+	completion_t *d= *((completion_t **)b);
+
+	return wcsfilecmp( c->completion, d->completion );
+
+}
+
+static void sort_completion_list( array_list_t *comp )
+{
+	qsort( comp->arr, 
+		   al_get_count( comp ),
+		   sizeof( void*),
+		   &completion_cmp );
 }
 
 /**
@@ -497,23 +497,19 @@ static int fldcmp( wchar_t *a, wchar_t *b )
 static void remove_duplicates( array_list_t *l )
 {
 	int in, out;
-	wchar_t *prev;
+	const wchar_t *prev;
 	if( al_get_count( l ) == 0 )
 		return;
 
 	prev = (wchar_t *)al_get( l, 0 );
 	for( in=1, out=1; in < al_get_count( l ); in++ )
 	{		
-		wchar_t *curr = (wchar_t *)al_get( l, in );
+		completion_t *curr = (completion_t *)al_get( l, in );
 
-		if( fldcmp( prev, curr )==0 )
-		{
-			free( curr );			
-		}
-		else
+		if( wcscmp( prev, curr->completion )!=0 )
 		{
 			al_set( l, out++, curr );
-			prev = curr;
+			prev = curr->completion;
 		}
 	}
 	al_truncate( l, out );
@@ -745,7 +741,7 @@ static int insert_char( int c )
 /**
    Calculate the length of the common prefix substring of two strings.
 */
-static int comp_len( wchar_t *a, wchar_t *b )
+static int comp_len( const wchar_t *a, const wchar_t *b )
 {
 	int i;
 	for( i=0;
@@ -891,7 +887,7 @@ static void get_param( wchar_t *cmd,
    just the common prefix of several completions. If the former, end by
    printing a space (and an end quote if the parameter is quoted).
 */
-static void completion_insert( wchar_t *val, int is_complete )
+static void completion_insert( const wchar_t *val, int is_complete )
 {
 	wchar_t *replaced;
 
@@ -910,7 +906,8 @@ static void completion_insert( wchar_t *val, int is_complete )
 	{
 		int unescapable=0;
 
-		wchar_t *pin, *pout;
+		const wchar_t *pin;
+		wchar_t *pout;
 
 		replaced = pout =
 			malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
@@ -2292,8 +2289,8 @@ wchar_t *reader_readline()
 					comp = al_halloc( 0 );
 					data->complete_func( buffcpy, comp );
 
-//					sort_list( comp );
-//					remove_duplicates( comp );
+					sort_completion_list( comp );
+					remove_duplicates( comp );
 
 					free( buffcpy );
 					comp_empty = handle_completions( comp );

@@ -1519,6 +1519,37 @@ static void remove_internal_separator( const void *s, int conv )
 	*out=0;
 }
 
+static void glorf( array_list_t *comp, int from )
+{
+	int i;
+	for( i=from; i<al_get_count( comp ); i++ )
+	{
+		wchar_t *next = (wchar_t *)al_get( comp, i );
+		wchar_t *desc;
+		void *item;
+		int flags = 0;
+		
+		
+		desc = wcschr( next, COMPLETE_SEP );
+		
+		if( desc )
+		{
+			*desc = 0;
+			desc++;
+		}
+
+		if( ( wcslen(next) > 0 ) && ( wcschr( L"/=@:", next[wcslen(next)-1] ) != 0 ) )
+			flags |= COMPLETE_NO_SPACE;
+
+		completion_allocate( comp, next, desc, flags );
+		item = al_pop( comp );
+		al_set( comp, i, item );
+		free( next );
+	}
+}
+
+
+
 /**
    The real expansion function. expand_one is just a wrapper around this one.
 */
@@ -1534,6 +1565,8 @@ int expand_string( void *context,
 	int cmdsubst_ok = 1;
 	int res = EXPAND_OK;
 	int start_count = al_get_count( end_out );
+
+	int end_out_count = al_get_count( end_out );
 
 	CHECK( str, EXPAND_ERROR );
 	CHECK( end_out, EXPAND_ERROR );
@@ -1787,6 +1820,13 @@ int expand_string( void *context,
 			halloc_register( context, (void *)al_get( end_out, i ) );
 		}
 	}
+
+	if( flags & ACCEPT_INCOMPLETE)
+	{
+		glorf( end_out, end_out_count );
+	}
+
+
 	
 	return res;
 

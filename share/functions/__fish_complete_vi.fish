@@ -7,7 +7,7 @@ function __fish_complete_vi -d "Compleletions for vi and its aliases"
 	
 	set -l cmds -c $argv
 
-	complete $cmds -x -a "(__fish_complete_text)"
+	complete $cmds -x -a "(__fish_complete_mime 'text/*')"
 
 	# vim
 	if test -n "$is_vim"

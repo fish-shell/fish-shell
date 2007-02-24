@@ -10,6 +10,7 @@
 #
 
 complete -c darcs -n "not __fish_use_subcommand" -a "(test -f _darcs/prefs/repos; and cat _darcs/prefs/repos)" --description "Darcs repo"
+complete -c darcs -a "test predist boringfile binariesfile" -n "contains setpref (commandline -poc)" --description "Set the specified option" -x
 
 #
 # subcommands

@@ -31,8 +31,8 @@ complete -c svn -n '__fish_use_subcommand' -x -a delete --description 'Remove fi
 complete -c svn -n '__fish_use_subcommand' -x -a del --description 'Remove files and directories from version control'
 complete -c svn -n '__fish_use_subcommand' -x -a remove --description 'Remove files and directories from version control'
 complete -c svn -n '__fish_use_subcommand' -x -a rm --description 'Remove files and directories from version control'
-complete -c svn -n '__fish_use_subcommand' -x -a diff --description 'Display the differences between two paths'
-complete -c svn -n '__fish_use_subcommand' -x -a di --description 'Display the differences between two paths'
+complete -c svn -n '__fish_use_subcommand' -x -a diff --description 'Display the differences between two revisions or paths'
+complete -c svn -n '__fish_use_subcommand' -x -a di --description 'Display the differences between two revisions or paths'
 complete -c svn -n '__fish_use_subcommand' -x -a export --description 'Create an unversioned copy of a tree'
 complete -c svn -n '__fish_use_subcommand' -x -a help --description 'Describe the usage of this program or its subcommands'
 complete -c svn -n '__fish_use_subcommand' -x -a ? --description 'Describe the usage of this program or its subcommands'
@@ -94,6 +94,7 @@ complete -c svn -n 'contains \'add\' (commandline -poc)' -l no-auto-props --desc
 
 complete -c svn -n 'contains \'blame\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
 complete -c svn -n 'contains \'blame\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'blame\' (commandline -poc)' -l force --description 'Force operation to run'
 complete -c svn -n 'contains \'blame\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
 complete -c svn -n 'contains \'blame\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
 complete -c svn -n 'contains \'blame\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
@@ -107,6 +108,7 @@ complete -c svn -n 'contains \'blame\' (commandline -poc)' -l config-dir -x --de
 
 complete -c svn -n 'contains \'praise\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
 complete -c svn -n 'contains \'praise\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'praise\' (commandline -poc)' -l force --description 'Force operation to run'
 complete -c svn -n 'contains \'praise\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
 complete -c svn -n 'contains \'praise\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
 complete -c svn -n 'contains \'praise\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
@@ -120,6 +122,7 @@ complete -c svn -n 'contains \'praise\' (commandline -poc)' -l config-dir -x --d
 
 complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
 complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l force --description 'Force operation to run'
 complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
 complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
 complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
@@ -133,6 +136,7 @@ complete -c svn -n 'contains \'annotate\' (commandline -poc)' -l config-dir -x -
 
 complete -c svn -n 'contains \'ann\' (commandline -poc)' -l incremental --description 'Give output suitable for concatenation'
 complete -c svn -n 'contains \'ann\' (commandline -poc)' -l xml --description 'Output in XML'
+complete -c svn -n 'contains \'ann\' (commandline -poc)' -l force --description 'Force operation to run'
 complete -c svn -n 'contains \'ann\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
 complete -c svn -n 'contains \'ann\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
 complete -c svn -n 'contains \'ann\' (commandline -poc)' -l no-auth-cache --description 'Do not cache authentication tokens'
@@ -316,6 +320,7 @@ complete -c svn -n 'contains \'diff\' (commandline -poc)' -l new -x --descriptio
 complete -c svn -n 'contains \'diff\' (commandline -poc)' -l diff-cmd -x --description 'Use ARG as diff command'
 complete -c svn -n 'contains \'diff\' (commandline -poc)' -l no-diff-deleted --description 'Do not print differences for deleted files'
 complete -c svn -n 'contains \'diff\' (commandline -poc)' -l notice-ancestry --description 'Notice ancestry when calculating differences'
+complete -c svn -n 'contains \'diff\' (commandline -poc)' -l summarize --description 'Show a summary of the results'
 complete -c svn -n 'contains \'diff\' (commandline -poc)' -l force --description 'Force operation to run'
 complete -c svn -n 'contains \'diff\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
 complete -c svn -n 'contains \'diff\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
@@ -333,6 +338,7 @@ complete -c svn -n 'contains \'di\' (commandline -poc)' -l new -x --description 
 complete -c svn -n 'contains \'di\' (commandline -poc)' -l diff-cmd -x --description 'Use ARG as diff command'
 complete -c svn -n 'contains \'di\' (commandline -poc)' -l no-diff-deleted --description 'Do not print differences for deleted files'
 complete -c svn -n 'contains \'di\' (commandline -poc)' -l notice-ancestry --description 'Notice ancestry when calculating differences'
+complete -c svn -n 'contains \'di\' (commandline -poc)' -l summarize --description 'Show a summary of the results'
 complete -c svn -n 'contains \'di\' (commandline -poc)' -l force --description 'Force operation to run'
 complete -c svn -n 'contains \'di\' (commandline -poc)' -l username -x --description 'Specify a username ARG'
 complete -c svn -n 'contains \'di\' (commandline -poc)' -l password -x --description 'Specify a password ARG'
@@ -359,7 +365,6 @@ complete -c svn -n 'contains \'export\' (commandline -poc)' -l ignore-externals 
 # Completions for the 'help' subcommand
 #
 
-complete -c svn -n 'contains \'help\' (commandline -poc)' -l version --description 'Print client version info'
 complete -c svn -n 'contains \'help\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
@@ -367,7 +372,6 @@ complete -c svn -n 'contains \'help\' (commandline -poc)' -l config-dir -x --des
 # Completions for the '?' subcommand
 #
 
-complete -c svn -n 'contains \'?\' (commandline -poc)' -l version --description 'Print client version info'
 complete -c svn -n 'contains \'?\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 
@@ -375,7 +379,6 @@ complete -c svn -n 'contains \'?\' (commandline -poc)' -l config-dir -x --descri
 # Completions for the 'h' subcommand
 #
 
-complete -c svn -n 'contains \'h\' (commandline -poc)' -l version --description 'Print client version info'
 complete -c svn -n 'contains \'h\' (commandline -poc)' -l config-dir -x --description 'Read user configuration files from directory ARG'
 
 

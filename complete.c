@@ -245,7 +245,8 @@ void completion_allocate( array_list_t *context,
 {
 	completion_t *res = halloc( context, sizeof( completion_t) );
 	res->completion = halloc_wcsdup( context, comp );
-	res->description = halloc_wcsdup( context, desc );
+	if( desc )
+		res->description = halloc_wcsdup( context, desc );
 	res->flags = flags;
 	al_push( context, res );
 }
@@ -1135,24 +1136,6 @@ const wchar_t *complete_get_desc( const wchar_t *filename )
 	return (wchar_t *)get_desc_buff->buff;
 }
 
-
-/**
-   Convert all string completions in src into completion_t structs in
-   dest. All source strings will be free'd.
-*/
-static void completion_convert_list( array_list_t *src, array_list_t *dest )
-{
-	int i;
-	
-	for( i=0; i<al_get_count( src ); i++ )
-	{
-		wchar_t *next = (wchar_t *)al_get( src, i );
-		completion_allocate2( dest, next, COMPLETE_SEP );
-		free( next );
-	}
-}
-
-
 /**
    Copy any strings in possible_comp which have the specified prefix
    to the list comp_out. The prefix may contain wildcards. The output
@@ -1180,10 +1163,6 @@ static void complete_strings( array_list_t *comp_out,
 {
 	int i;
 	wchar_t *wc, *tmp;
-	array_list_t lst;
-
-	al_init( &lst );
-	
 
 	tmp = expand_one( 0,
 					  wcsdup(wc_escaped), EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS);
@@ -1197,11 +1176,11 @@ static void complete_strings( array_list_t *comp_out,
 	{
 		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
 		if( next_str )
-			wildcard_complete( next_str, wc, desc, desc_func, &lst );
+		{
+			wildcard_complete( next_str, wc, desc, desc_func, comp_out );
+		}
 	}
 
-	completion_convert_list( &lst, comp_out );
-	al_destroy( &lst );
 	free( wc );
 }
 

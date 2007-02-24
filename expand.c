@@ -85,7 +85,7 @@ parameter expansion.
 /**
    Description for short job. The job command is concatenated
 */
-#define COMPLETE_JOB_DESC_VAL _( L"Job: ")
+#define COMPLETE_JOB_DESC_VAL _( L"Job: %ls")
 
 /**
    Description for the shells own pid
@@ -329,14 +329,14 @@ static int match_pid( const wchar_t *cmd,
    Searches for a job with the specified job id, or a job or process
    which has the string \c proc as a prefix of its commandline.
 
-   If accept_incomplete is true, the remaining string for any matches
+   If the ACCEPT_INCOMPLETE flag is set, the remaining string for any matches
    are inserted.
 
-   If accept_incomplete is false, any job matching the specified
-   string is matched, and the job pgid is returned. If no job
-   matches, all child processes are searched. If no child processes
-   match, and <tt>fish</tt> can understand the contents of the /proc
-   filesystem, all the users processes are searched for matches.
+   Otherwise, any job matching the specified string is matched, and
+   the job pgid is returned. If no job matches, all child processes
+   are searched. If no child processes match, and <tt>fish</tt> can
+   understand the contents of the /proc filesystem, all the users
+   processes are searched for matches.
 */
 
 static int find_process( const wchar_t *proc,
@@ -372,14 +372,20 @@ static int find_process( const wchar_t *proc,
 
 				if( wcsncmp( proc, jid, wcslen(proc ) )==0 )
 				{
-					al_push( out,
-							 wcsdupcat2( jid+wcslen(proc),
-										 COMPLETE_SEP_STR,
-										 COMPLETE_JOB_DESC_VAL,
-										 j->command,
-										 (void *)0 ) );
+					string_buffer_t desc_buff;
+					
+					sb_init( &desc_buff );
+					
+					sb_printf( &desc_buff, 
+							   COMPLETE_JOB_DESC_VAL,
+							   j->command );
+					
+					completion_allocate( out, 
+										 jid+wcslen(proc),
+										 (wchar_t *)desc_buff.buff,
+										 0 );
 
-
+					sb_destroy( &desc_buff );
 				}
 			}
 
@@ -422,11 +428,10 @@ static int find_process( const wchar_t *proc,
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
-				wchar_t *res = wcsdupcat2( j->command + offset + wcslen(proc),
-										   COMPLETE_SEP_STR,
-										   COMPLETE_JOB_DESC,
-										   (void *)0 );
-				al_push( out, res );
+				completion_allocate( out, 
+									 j->command + offset + wcslen(proc),
+									 COMPLETE_JOB_DESC,
+									 0 );
 			}
 			else
 			{
@@ -459,11 +464,10 @@ static int find_process( const wchar_t *proc,
 			{
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					wchar_t *res = wcsdupcat2( p->actual_cmd + offset + wcslen(proc),
-											   COMPLETE_SEP_STR,
-											   COMPLETE_CHILD_PROCESS_DESC,
-											   (void *)0);
-					al_push( out, res );
+					completion_allocate( out, 
+										 p->actual_cmd + offset + wcslen(proc),
+										 COMPLETE_CHILD_PROCESS_DESC,
+										 0 );
 				}
 				else
 				{
@@ -575,13 +579,10 @@ static int find_process( const wchar_t *proc,
 			{
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					wchar_t *res = wcsdupcat2( cmd + offset + wcslen(proc),
-											   COMPLETE_SEP_STR,
-											   COMPLETE_PROCESS_DESC,
-											   (void *)0);
-					if( res )
-						al_push( out, res );
-
+					completion_allocate( out, 
+										 cmd + offset + wcslen(proc),
+										 COMPLETE_PROCESS_DESC,
+										 0 );
 				}
 				else
 				{
@@ -625,13 +626,17 @@ static int expand_pid( wchar_t *in,
 	{
 		if( wcsncmp( in+1, SELF_STR, wcslen(in+1) )==0 )
 		{
-			wchar_t *res = wcsdupcat2( SELF_STR+wcslen(in+1), COMPLETE_SEP_STR, COMPLETE_SELF_DESC, (void *)0 );
-			al_push( out, res );
+			completion_allocate( out, 
+								 SELF_STR+wcslen(in+1),
+								 COMPLETE_SELF_DESC, 
+								 0 );
 		}
 		else if( wcsncmp( in+1, LAST_STR, wcslen(in+1) )==0 )
 		{
-			wchar_t *res = wcsdupcat2( LAST_STR+wcslen(in+1), COMPLETE_SEP_STR, COMPLETE_LAST_DESC, (void *)0 );
-			al_push( out, res );
+			completion_allocate( out, 
+								 LAST_STR+wcslen(in+1), 
+								 COMPLETE_LAST_DESC, 
+								 0 );
 		}
 	}
 	else
@@ -1519,36 +1524,6 @@ static void remove_internal_separator( const void *s, int conv )
 	*out=0;
 }
 
-static void glorf( array_list_t *comp, int from )
-{
-	int i;
-	for( i=from; i<al_get_count( comp ); i++ )
-	{
-		wchar_t *next = (wchar_t *)al_get( comp, i );
-		wchar_t *desc;
-		void *item;
-		int flags = 0;
-		
-		
-		desc = wcschr( next, COMPLETE_SEP );
-		
-		if( desc )
-		{
-			*desc = 0;
-			desc++;
-		}
-
-		if( ( wcslen(next) > 0 ) && ( wcschr( L"/=@:", next[wcslen(next)-1] ) != 0 ) )
-			flags |= COMPLETE_NO_SPACE;
-
-		completion_allocate( comp, next, desc, flags );
-		item = al_pop( comp );
-		al_set( comp, i, item );
-		free( next );
-	}
-}
-
-
 
 /**
    The real expansion function. expand_one is just a wrapper around this one.
@@ -1565,8 +1540,6 @@ int expand_string( void *context,
 	int cmdsubst_ok = 1;
 	int res = EXPAND_OK;
 	int start_count = al_get_count( end_out );
-
-	int end_out_count = al_get_count( end_out );
 
 	CHECK( str, EXPAND_ERROR );
 	CHECK( end_out, EXPAND_ERROR );
@@ -1712,7 +1685,9 @@ int expand_string( void *context,
 					return EXPAND_OK;
 				}
 				else
+				{
 					al_push( out, next );
+				}
 			}
 			else
 			{
@@ -1745,57 +1720,75 @@ int expand_string( void *context,
 			if( ((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
 				wildcard_has( next, 1 ) )
 			{
+				wchar_t *start, *rest;
+				array_list_t *list = out;
 
 				if( next[0] == '/' )
 				{
-					wc_res = wildcard_expand( &next[1], L"/",flags, out );
+					start = L"/";
+					rest = &next[1];
 				}
 				else
 				{
-					wc_res = wildcard_expand( next, L"", flags, out );
+					start = L"";
+					rest = next;
 				}
-				free( next );
-				switch( wc_res )
+
+				if( flags & ACCEPT_INCOMPLETE )
 				{
-					case 0:
+					list = end_out;
+				}
+					
+				wc_res = wildcard_expand( rest, start, flags, list );
+
+				free( next );
+
+				if( !(flags & ACCEPT_INCOMPLETE) )
+				{
+									
+					switch( wc_res )
 					{
-						if( !(flags & ACCEPT_INCOMPLETE) )
+						case 0:
 						{
-							if( res == EXPAND_OK )
-								res = EXPAND_WILDCARD_NO_MATCH;
+							if( !(flags & ACCEPT_INCOMPLETE) )
+							{
+								if( res == EXPAND_OK )
+									res = EXPAND_WILDCARD_NO_MATCH;
+								break;
+							}
+						}
+					
+						case 1:
+						{
+							int j;
+							res = EXPAND_WILDCARD_MATCH;
+							sort_list( out );
+
+							for( j=0; j<al_get_count( out ); j++ )
+							{
+								wchar_t *next = (wchar_t *)al_get( out, j );
+								if( !next )
+								{
+									debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+									continue;				
+								}	
+								al_push( end_out, next );
+							}
+							al_truncate( out, 0 );
 							break;
 						}
-					}
-					
-					case 1:
-					{
-						int j;
-						res = EXPAND_WILDCARD_MATCH;
-						sort_list( out );
 
-						for( j=0; j<al_get_count( out ); j++ )
+						case -1:
 						{
-							wchar_t *next = (wchar_t *)al_get( out, j );
-							if( !next )
-							{
-								debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-								continue;				
-							}	
-							al_push( end_out, next );
+							al_foreach( out, &free );
+							al_destroy( in );
+							al_destroy( out );
+							return EXPAND_ERROR;
 						}
-						al_truncate( out, 0 );
-						break;
-					}
-
-					case -1:
-					{
-						al_foreach( out, &free );
-						al_destroy( in );
-						al_destroy( out );
-						return EXPAND_ERROR;
-					}
 					
+					}
 				}
+				
 			}
 			else
 			{
@@ -1808,6 +1801,7 @@ int expand_string( void *context,
 					al_push( end_out, next );
 				}
 			}
+
 		}
 		al_destroy( in );
 		al_destroy( out );
@@ -1820,12 +1814,6 @@ int expand_string( void *context,
 			halloc_register( context, (void *)al_get( end_out, i ) );
 		}
 	}
-
-	if( flags & ACCEPT_INCOMPLETE)
-	{
-		glorf( end_out, end_out_count );
-	}
-
 
 	
 	return res;

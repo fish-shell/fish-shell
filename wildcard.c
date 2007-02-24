@@ -177,7 +177,9 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	if( *wc == 0 &&
 		( ( *str != L'.') || (!is_first)) )
 	{
-		wchar_t *new;
+		wchar_t *out_completion = 0;
+		const wchar_t *out_desc = desc;
+		
 		if( !out )
 		{
 			return 1;
@@ -190,14 +192,13 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			*/
 			wchar_t *sep;
 			
-			new = wcsdup( str );
-			sep = wcschr(new, PROG_COMPLETE_SEP );
-			*sep = COMPLETE_SEP;			
+			out_completion = wcsdup( str );
+			sep = wcschr(out_completion, PROG_COMPLETE_SEP );
+			*sep = 0;
+			out_desc = sep + 1;
 		}
 		else
 		{
-			const wchar_t *this_desc = desc;
-			
 			if( desc_func )
 			{
 				/*
@@ -207,30 +208,25 @@ static int wildcard_complete_internal( const wchar_t *orig,
 				*/
 				const wchar_t *func_desc = desc_func( orig );
 				if( func_desc )
-					this_desc = func_desc;
+					out_desc = func_desc;
 			}
 			
 			/*
 			  Append description to item, if a description exists
 			*/
-			if( this_desc && wcslen(this_desc) )
-			{
-				/*
-				  Check if the description already contains a separator character, if not, prepend it
-				*/
-				if( wcschr( this_desc, COMPLETE_SEP ) )
-					new = wcsdupcat2( str, this_desc, (void *)0 );
-				else
-					new = wcsdupcat2( str, COMPLETE_SEP_STR, this_desc, (void *)0 );
-			}
-			else
-				new = wcsdup( str );
+			out_completion = wcsdup( str );
 		}
 
-		if( new )
+		if( out_completion )
 		{
-			al_push( out, new );
+			completion_allocate( out, 
+								 out_completion,
+								 out_desc,
+								 0 );
 		}
+
+		free ( out_completion );
+		
 		return 1;
 	}
 	
@@ -336,11 +332,6 @@ static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 						
 	desc = complete_get_desc( fn );
 
-	if( wcschr( desc, COMPLETE_SEP )==0 )
-	{
-		sb_append( sb, COMPLETE_SEP_STR );
-	}
-		
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{
 		sb_append( sb, desc );
@@ -527,8 +518,11 @@ int wildcard_expand( const wchar_t *wc,
 							get_desc( long_name,
 									  &sb_desc,
 									  flags & EXECUTABLES_ONLY );
-							al_push( out,
-									 wcsdupcat(name, (wchar_t *)sb_desc.buff) );
+							completion_allocate( out,
+												 name,
+												 (wchar_t *)sb_desc.buff,
+												 0 );
+							
 						}
 						
 						free( long_name );

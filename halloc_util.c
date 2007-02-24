@@ -37,7 +37,7 @@ array_list_t *al_halloc( void *context )
 	if( !res )
 		DIE_MEM();
 	al_init( res );
-	halloc_register_function( context, (void (*)(void *)) &al_destroy, res );
+	halloc_register_function( context?context:res, (void (*)(void *)) &al_destroy, res );
 	return res;
 }
 
@@ -47,7 +47,7 @@ string_buffer_t *sb_halloc( void *context )
 	if( !res )
 		DIE_MEM();
 	sb_init( res );
-	halloc_register_function( context, (void (*)(void *)) &sb_destroy, res );
+	halloc_register_function( context?context:res, (void (*)(void *)) &sb_destroy, res );
 	return res;
 }
 

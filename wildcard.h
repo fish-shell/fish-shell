@@ -87,9 +87,10 @@ int wildcard_has( const wchar_t *str, int internal );
    Test wildcard completion
 */
 int wildcard_complete( const wchar_t *str,
-						const wchar_t *wc,
-						const wchar_t *desc,						
-						const wchar_t *(*desc_func)(const wchar_t *),
-						array_list_t *out );
+					   const wchar_t *wc,
+					   const wchar_t *desc,						
+					   const wchar_t *(*desc_func)(const wchar_t *),
+					   array_list_t *out,
+					   int flags );
 
 #endif

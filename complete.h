@@ -201,15 +201,6 @@ void complete( const wchar_t *cmd, array_list_t *out );
 void complete_print( string_buffer_t *out );
 
 /**
-   Obtain a description string for the file specified by the filename.
-
-   The returned value is a string constant and should not be freed.
-
-   \param filename The file for which to find a description string
-*/
-const wchar_t *complete_get_desc( const wchar_t *filename );
-
-/**
    Tests if the specified option is defined for the specified command
 */
 int complete_is_valid_option( const wchar_t *str, 

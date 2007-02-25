@@ -66,61 +66,6 @@ These functions are used for storing and retrieving tab-completion data, as well
 #define COMPLETE_VAR_DESC_VAL _( L"Variable: %ls" )
 
 /**
-   Description for generic executable
-*/
-#define COMPLETE_EXEC_DESC _( L"Executable" )
-/**
-   Description for link to executable
-*/
-#define COMPLETE_EXEC_LINK_DESC _( L"Executable link" )
-
-/**
-   Description for regular file
-*/
-#define COMPLETE_FILE_DESC _( L"File" )
-/**
-   Description for character device
-*/
-#define COMPLETE_CHAR_DESC _( L"Character device" )
-/**
-   Description for block device
-*/
-#define COMPLETE_BLOCK_DESC _( L"Block device" )
-/**
-   Description for fifo buffer
-*/
-#define COMPLETE_FIFO_DESC _( L"Fifo" )
-/**
-   Description for symlink
-*/
-#define COMPLETE_SYMLINK_DESC _( L"Symbolic link" )
-/**
-   Description for symlink
-*/
-#define COMPLETE_DIRECTORY_SYMLINK_DESC _( L"Symbolic link to directory" )
-/**
-   Description for Rotten symlink
-*/
-#define COMPLETE_ROTTEN_SYMLINK_DESC _( L"Rotten symbolic link" )
-/**
-   Description for symlink loop
-*/
-#define COMPLETE_LOOP_SYMLINK_DESC _( L"Symbolic link loop" )
-/**
-   Description for socket files
-*/
-#define COMPLETE_SOCKET_DESC _( L"Socket" )
-/**
-   Description for directories
-*/
-#define COMPLETE_DIRECTORY_DESC _( L"Directory" )
-
-/**
-   The command to run to get a description from a file suffix
-*/
-#define SUFFIX_CMD_STR L"mimedb 2>/dev/null -fd "
-
-/**
    The maximum number of commands on which to perform description
    lookup. The lookup process is quite time consuming, so this should
    be set to a pretty low number.
@@ -220,19 +165,13 @@ typedef struct complete_entry
 /** First node in the linked list of all completion entries */
 static complete_entry_t *first_entry=0;
 
-/** Hashtable containing all descriptions that describe an executable */
-static hash_table_t *suffix_hash=0;
-
 /**
    Table of completions conditions that have already been tested and
    the corresponding test results
 */
 static hash_table_t *condition_cache=0;
 
-
 static void complete_free_entry( complete_entry_t *c );
-static void clear_hash_entry( void *key, void *data );
-
 
 /**
    Create a new completion entry
@@ -288,14 +227,6 @@ static void complete_destroy()
 		complete_free_entry( prev );
 	}
 	first_entry = 0;
-	
-	if( suffix_hash )
-	{
-		hash_foreach( suffix_hash, &clear_hash_entry );
-		hash_destroy( suffix_hash );
-		free( suffix_hash );
-		suffix_hash=0;
-	}
 	
 	parse_util_load_reset( L"fish_complete_path", 0 );
 	
@@ -402,15 +333,6 @@ static void complete_free_entry( complete_entry_t *c )
 	free( c->short_opt_str );
 	complete_free_opt_recursive( c->first_option );
 	free( c );
-}
-
-/**
-   Free hash key and hash value
-*/
-static void clear_hash_entry( void *key, void *data )
-{
-	free( (void *)key );
-	free( (void *)data );
 }
 
 /**
@@ -937,204 +859,6 @@ int complete_is_valid_argument( const wchar_t *str,
 	return 1;
 }
 
-static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
-{
-
-	wchar_t *suff = wcsdup( suff_orig );
-	wchar_t *cmd = wcsdupcat( SUFFIX_CMD_STR, suff );
-	wchar_t *desc = 0;
-	array_list_t l;
-
-	if( !suff || !cmd )
-		DIE_MEM();
-	
-	al_init( &l );
-	
-	if( exec_subshell( cmd, &l ) != -1 )
-	{
-		
-		if( al_get_count( &l )>0 )
-		{
-			wchar_t *ln = (wchar_t *)al_get(&l, 0 );
-			if( wcscmp( ln, L"unknown" ) != 0 )
-			{
-				desc = wcsdup( ln);
-				/*
-				  I have decided I prefer to have the description
-				  begin in uppercase and the whole universe will just
-				  have to accept it. Hah!
-				*/
-				desc[0]=towupper(desc[0]);
-			}
-		}
-	}
-	
-	free(cmd);
-	al_foreach( &l, &free );
-	al_destroy( &l );
-		
-	if( !desc )
-	{
-		desc = wcsdup(COMPLETE_FILE_DESC);
-	}
-	
-	hash_put( suffix_hash, suff, desc );
-
-	return desc;
-}
-
-
-/**
-   Use the mimedb command to look up a description for a given suffix
-*/
-static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
-{
-
-	int len;
-	wchar_t *suff;
-	wchar_t *pos;
-	wchar_t *tmp;
-	wchar_t *desc;
-
-	len = wcslen(suff_orig );
-	
-	if( len == 0 )
-		return COMPLETE_FILE_DESC;
-
-	if( !suffix_hash )
-	{
-		suffix_hash = malloc( sizeof( hash_table_t) );
-		if( !suffix_hash )
-			DIE_MEM();
-		hash_init( suffix_hash, &hash_wcs_func, &hash_wcs_cmp );
-	}
-
-	suff = wcsdup(suff_orig);
-
-	for( pos=suff; *pos; pos++ )
-	{
-		if( wcschr( L"?;#~@&", *pos ) )
-		{
-			*pos=0;
-			break;
-		}
-	}
-
-	tmp = escape( suff, 1 );
-	free(suff);
-	suff = tmp;
-	desc = (wchar_t *)hash_get( suffix_hash, suff );
-
-	if( !desc )
-	{
-		desc = complete_get_desc_suffix_internal( suff );
-	}
-	
-	free( suff );
-
-	return desc;
-}
-
-
-const wchar_t *complete_get_desc( const wchar_t *filename )
-{
-
-	static string_buffer_t *get_desc_buff=0;
-	struct stat buf;
-
-	CHECK( filename, 0 );
-		
-	if( !get_desc_buff )
-	{
-		complete_init();
-		get_desc_buff = sb_halloc( global_context);
-	}
-	else
-	{
-		sb_clear( get_desc_buff );
-	}
-	
-	if( lwstat( filename, &buf )==0)
-	{
-		if( S_ISCHR(buf.st_mode) )
-		{
-			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_CHAR_DESC );
-		}
-		else if( S_ISBLK(buf.st_mode) )
-			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_BLOCK_DESC );
-		else if( S_ISFIFO(buf.st_mode) )
-			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_FIFO_DESC );
-		else if( S_ISLNK(buf.st_mode))
-		{
-			struct stat buf2;
-
-			if( wstat( filename, &buf2 ) == 0 )
-			{
-				if( S_ISDIR(buf2.st_mode) )
-				{
-					sb_printf( get_desc_buff, L"/%lc%ls", COMPLETE_SEP, COMPLETE_DIRECTORY_SYMLINK_DESC );
-				}
-				else if( waccess( filename, X_OK ) == 0 )
-					sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_EXEC_LINK_DESC );
-				else
-					sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_SYMLINK_DESC );
-			}
-			else
-			{
-				switch( errno )
-				{
-					case ENOENT:
-					{
-						sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_ROTTEN_SYMLINK_DESC );
-						break;
-					}
-					
-					case ELOOP:
-					{
-						sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_LOOP_SYMLINK_DESC );
-						break;
-					}
-				}
-				/*
-				  On unknown errors we do nothing. The file will be
-				  given the default 'File' description.
-				*/
-			}
-
-		}
-		else if( S_ISSOCK(buf.st_mode))
-			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_SOCKET_DESC );
-		else if( S_ISDIR(buf.st_mode) )
-			sb_printf( get_desc_buff, L"/%lc%ls", COMPLETE_SEP, COMPLETE_DIRECTORY_DESC );
-		else if( waccess( filename, X_OK ) == 0 )
-		{
-			sb_printf( get_desc_buff, L"%lc%ls", COMPLETE_SEP, COMPLETE_EXEC_DESC );
-		}
-
-	}
-
-	if( wcslen((wchar_t *)get_desc_buff->buff) == 0 )
-	{
-		wchar_t *suffix = wcsrchr( filename, L'.' );
-		if( suffix != 0 && !wcsrchr( suffix, L'/' ) )
-		{
-			sb_printf( get_desc_buff,
-					   L"%lc%ls",
-					   COMPLETE_SEP,
-					   complete_get_desc_suffix( suffix ) );
-		}
-		else
-		{
-			sb_printf( get_desc_buff,
-					   L"%lc%ls",
-					   COMPLETE_SEP,
-					   COMPLETE_FILE_DESC );
-		}
-
-	}
-
-	return (wchar_t *)get_desc_buff->buff;
-}
 
 /**
    Copy any strings in possible_comp which have the specified prefix
@@ -1177,7 +901,7 @@ static void complete_strings( array_list_t *comp_out,
 		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
 		if( next_str )
 		{
-			wildcard_complete( next_str, wc, desc, desc_func, comp_out );
+			wildcard_complete( next_str, wc, desc, desc_func, comp_out, 0 );
 		}
 	}
 
@@ -1230,7 +954,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 	{
 		completion_t *c = (completion_t *)al_get( comp, i );
 			
-		if( wcscmp( c->description, COMPLETE_DIRECTORY_DESC ) != 0 )
+		if( !wcslen( c->completion) || (c->completion[wcslen(c->completion)-1] != L'/' )) 
 		{
 			skip = 0;
 			break;

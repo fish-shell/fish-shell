@@ -17,6 +17,7 @@ wildcards using **.
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
+#include <string.h>
 
 
 #include "fallback.h"
@@ -29,6 +30,8 @@ wildcards using **.
 #include "complete.h"
 #include "reader.h"
 #include "expand.h"
+#include "exec.h"
+#include "halloc_util.h"
 
 
 /**
@@ -43,6 +46,64 @@ wildcards using **.
    an attempt to find the true value using patchconf is always made. 
 */
 #define MAX_FILE_LENGTH 1024
+
+/**
+   The command to run to get a description from a file suffix
+*/
+#define SUFFIX_CMD_STR L"mimedb 2>/dev/null -fd "
+
+/**
+   Description for generic executable
+*/
+#define COMPLETE_EXEC_DESC _( L"Executable" )
+/**
+   Description for link to executable
+*/
+#define COMPLETE_EXEC_LINK_DESC _( L"Executable link" )
+
+/**
+   Description for regular file
+*/
+#define COMPLETE_FILE_DESC _( L"File" )
+/**
+   Description for character device
+*/
+#define COMPLETE_CHAR_DESC _( L"Character device" )
+/**
+   Description for block device
+*/
+#define COMPLETE_BLOCK_DESC _( L"Block device" )
+/**
+   Description for fifo buffer
+*/
+#define COMPLETE_FIFO_DESC _( L"Fifo" )
+/**
+   Description for symlink
+*/
+#define COMPLETE_SYMLINK_DESC _( L"Symbolic link" )
+/**
+   Description for symlink
+*/
+#define COMPLETE_DIRECTORY_SYMLINK_DESC _( L"Symbolic link to directory" )
+/**
+   Description for Rotten symlink
+*/
+#define COMPLETE_ROTTEN_SYMLINK_DESC _( L"Rotten symbolic link" )
+/**
+   Description for symlink loop
+*/
+#define COMPLETE_LOOP_SYMLINK_DESC _( L"Symbolic link loop" )
+/**
+   Description for socket files
+*/
+#define COMPLETE_SOCKET_DESC _( L"Socket" )
+/**
+   Description for directories
+*/
+#define COMPLETE_DIRECTORY_DESC _( L"Directory" )
+
+/** Hashtable containing all descriptions that describe an executable */
+static hash_table_t *suffix_hash=0;
 
 /**
    Push the specified argument to the list if an identical string is
@@ -66,6 +127,15 @@ static void al_push_check( array_list_t *l, const wchar_t *new )
 	al_push( l, new );
 }
 
+
+/**
+   Free hash key and hash value
+*/
+static void clear_hash_entry( void *key, void *data )
+{
+	free( (void *)key );
+	free( (void *)data );
+}
 
 int wildcard_has( const wchar_t *str, int internal )
 {
@@ -166,7 +236,8 @@ static int wildcard_complete_internal( const wchar_t *orig,
 									   int is_first,
 									   const wchar_t *desc,
 									   const wchar_t *(*desc_func)(const wchar_t *),
-									   array_list_t *out )
+									   array_list_t *out,
+									   int flags )
 {
 	if( !wc || !str || !orig)
 	{
@@ -222,7 +293,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			completion_allocate( out, 
 								 out_completion,
 								 out_desc,
-								 0 );
+								 flags );
 		}
 
 		free ( out_completion );
@@ -242,7 +313,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 		/* Try all submatches */
 		do
 		{
-			res |= wildcard_complete_internal( orig, str, wc+1, 0, desc, desc_func, out );
+			res |= wildcard_complete_internal( orig, str, wc+1, 0, desc, desc_func, out, flags );
 			if( res && !out )
 				break;
 		}
@@ -252,11 +323,11 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	}
 	else if( *wc == ANY_CHAR )
 	{
-		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out );
+		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags );
 	}	
 	else if( *wc == *str )
 	{
-		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out );
+		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags );
 	}
 	return 0;	
 }
@@ -265,9 +336,10 @@ int wildcard_complete( const wchar_t *str,
 					   const wchar_t *wc,
 					   const wchar_t *desc,						
 					   const wchar_t *(*desc_func)(const wchar_t *),
-					   array_list_t *out )
+					   array_list_t *out,
+					   int flags )
 {
-	return wildcard_complete_internal( str, str, wc, 1, desc, desc_func, out );	
+	return wildcard_complete_internal( str, str, wc, 1, desc, desc_func, out, flags );	
 }
 
 
@@ -293,15 +365,246 @@ static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
 	return long_name;
 }
 
+
+static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
+{
+
+	wchar_t *suff = wcsdup( suff_orig );
+	wchar_t *cmd = wcsdupcat( SUFFIX_CMD_STR, suff );
+	wchar_t *desc = 0;
+	array_list_t l;
+
+	if( !suff || !cmd )
+		DIE_MEM();
+	
+	al_init( &l );
+	
+	if( exec_subshell( cmd, &l ) != -1 )
+	{
+		
+		if( al_get_count( &l )>0 )
+		{
+			wchar_t *ln = (wchar_t *)al_get(&l, 0 );
+			if( wcscmp( ln, L"unknown" ) != 0 )
+			{
+				desc = wcsdup( ln);
+				/*
+				  I have decided I prefer to have the description
+				  begin in uppercase and the whole universe will just
+				  have to accept it. Hah!
+				*/
+				desc[0]=towupper(desc[0]);
+			}
+		}
+	}
+	
+	free(cmd);
+	al_foreach( &l, &free );
+	al_destroy( &l );
+		
+	if( !desc )
+	{
+		desc = wcsdup(COMPLETE_FILE_DESC);
+	}
+	
+	hash_put( suffix_hash, suff, desc );
+
+	return desc;
+}
+
+static void complete_get_desc_destroy_suffix_hash()
+{
+	hash_foreach( suffix_hash, &clear_hash_entry );
+	hash_destroy( suffix_hash );
+	free( suffix_hash );
+}
+
+
+
 /**
-   Get the description of the specified filename. If this is a regular file, append the filesize to the description.
+   Use the mimedb command to look up a description for a given suffix
 */
-static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
+static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
+{
+
+	int len;
+	wchar_t *suff;
+	wchar_t *pos;
+	wchar_t *tmp;
+	wchar_t *desc;
+
+	len = wcslen(suff_orig );
+	
+	if( len == 0 )
+		return COMPLETE_FILE_DESC;
+
+	if( !suffix_hash )
+	{
+		suffix_hash = malloc( sizeof( hash_table_t) );
+		if( !suffix_hash )
+			DIE_MEM();
+		hash_init( suffix_hash, &hash_wcs_func, &hash_wcs_cmp );
+		halloc_register_function_void( global_context, &complete_get_desc_destroy_suffix_hash );
+	}
+
+	suff = wcsdup(suff_orig);
+
+	/*
+	  Drop characters that are commonly used as backup suffixes from the suffix
+	*/
+	for( pos=suff; *pos; pos++ )
+	{
+		if( wcschr( L"?;#~@&", *pos ) )
+		{
+			*pos=0;
+			break;
+		}
+	}
+
+	tmp = escape( suff, 1 );
+	free(suff);
+	suff = tmp;
+	desc = (wchar_t *)hash_get( suffix_hash, suff );
+
+	if( !desc )
+	{
+		desc = complete_get_desc_suffix_internal( suff );
+	}
+	
+	free( suff );
+
+	return desc;
+}
+
+
+/**
+   Obtain a description string for the file specified by the filename.
+
+   The returned value is a string constant and should not be free'd.
+
+   \param filename The file for which to find a description string
+   \param lstat_res The result of calling lstat on the file
+   \param lbuf The struct buf output of calling lstat on the file
+   \param stat_res The result of calling stat on the file
+   \param buf The struct buf output of calling stat on the file
+   \param err The errno value after a failed stat call on the file. 
+*/
+
+static const wchar_t *file_get_desc( const wchar_t *filename, 
+									 int lstat_res,
+									 struct stat lbuf, 
+									 int stat_res, 
+									 struct stat buf, 
+									 int err )
+{
+	wchar_t *suffix;
+
+	CHECK( filename, 0 );
+		
+	if( !lstat_res )
+	{
+		if( S_ISLNK(lbuf.st_mode))
+		{
+			if( !stat_res )
+			{
+				if( S_ISDIR(buf.st_mode) )
+				{
+					return COMPLETE_DIRECTORY_SYMLINK_DESC;
+				}
+				else if( waccess( filename, X_OK ) == 0 )
+				{
+					return COMPLETE_EXEC_LINK_DESC;
+				}
+				
+				return COMPLETE_SYMLINK_DESC;
+
+			}
+			else
+			{
+				switch( err )
+				{
+					case ENOENT:
+					{
+						return COMPLETE_ROTTEN_SYMLINK_DESC;
+					}
+					
+					case ELOOP:
+					{
+						return COMPLETE_LOOP_SYMLINK_DESC;
+					}
+				}
+				/*
+				  On unknown errors we do nothing. The file will be
+				  given the default 'File' description or one based on the suffix.
+				*/
+			}
+
+		}
+		else if( S_ISCHR(buf.st_mode) )
+		{
+			return COMPLETE_CHAR_DESC;
+		}
+		else if( S_ISBLK(buf.st_mode) )
+		{
+			return COMPLETE_BLOCK_DESC;
+		}
+		else if( S_ISFIFO(buf.st_mode) )
+		{
+			return COMPLETE_FIFO_DESC;
+		}
+		else if( S_ISSOCK(buf.st_mode))
+		{
+			return COMPLETE_SOCKET_DESC;
+		}
+		else if( S_ISDIR(buf.st_mode) )
+		{
+			return COMPLETE_DIRECTORY_DESC;
+		}
+		else if( waccess( filename, X_OK ) == 0 )
+		{
+			return COMPLETE_EXEC_DESC;
+		}
+	}
+	
+	suffix = wcsrchr( filename, L'.' );
+	if( suffix != 0 && !wcsrchr( suffix, L'/' ) )
+	{
+		return complete_get_desc_suffix( suffix );
+	}
+	
+	return COMPLETE_FILE_DESC ;
+}
+
+
+/**
+   Add the specified filename if it matches the specified wildcard. 
+
+   If the filename matches, first get the description of the specified
+   filename. If this is a regular file, append the filesize to the
+   description.
+
+   \param list the list to add he completion to
+   \param fullname the full filename of the file
+   \param completion the completion part of the file name
+   \param wc the wildcard to match against
+   \param is_cmd whether we are performing command completion
+*/
+static void wildcard_completion_allocate( array_list_t *list, 
+										  wchar_t *fullname, 
+										  wchar_t *completion,
+										  wchar_t *wc,
+										  int is_cmd )
 {
 	const wchar_t *desc;
+	struct stat buf, lbuf;
+	static string_buffer_t *sb = 0;
 	
-	struct stat buf;
-
+	int free_completion = 0;
+	
+	int flags = 0;
+	int stat_res, lstat_res;
+	int stat_errno=0;
+	
 	/*
 	  This is a long long, not an off_t since we really need to know
 	  exactly how large it is when using *printf() to output it.
@@ -312,28 +615,66 @@ static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 			L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0
 		}
 	;
-	
-	if( !fn || !sb )
+
+	if( !sb )
 	{
-		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return;		
-	}
-	
-	sb_clear( sb );
-	
-	if( wstat( fn, &buf ) )
-	{
-		sz=-1;
+		sb = sb_halloc( global_context );
 	}
 	else
 	{
-		sz = (long long)buf.st_size;
+		sb_clear( sb );
 	}
-						
-	desc = complete_get_desc( fn );
 
+	CHECK( fullname, );
+		
+	sb_clear( sb );
+
+	/*
+	  If the file is a symlink, we need to stat both the file itself
+	  _and_ the destination file. But we try to avoid this with
+	  non-symlinks by first doing an lstat, and if the file is not a
+	  link we copy the results over to the regular stat buffer.
+	*/
+	if( ( lstat_res = lwstat( fullname, &lbuf ) ) )
+	{
+		sz=-1;
+		stat_res = lstat_res;
+	}
+	else
+	{
+		if( S_ISLNK(lbuf.st_mode))
+		{
+			
+			if( ( stat_res = wstat( fullname, &buf ) ) )
+			{
+				sz=-1;
+			}
+			else
+			{
+				sz = (long long)buf.st_size;
+			}
+			
+			/*
+			  In order to differentiate between e.g. rotten symlinks
+			  and symlink loops, we also need to know the error status of wstat.
+			*/
+			stat_errno = errno;
+		}
+		else
+		{
+			stat_res = lstat_res;
+			memcpy( &buf, &lbuf, sizeof( struct stat ) );
+			sz = (long long)buf.st_size;
+		}
+	}
+	
+	desc = file_get_desc( fullname, lstat_res, lbuf, stat_res, buf, stat_errno );
+		
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{
+		free_completion = 1;
+		flags = flags | COMPLETE_NO_SPACE;
+		completion = wcsdupcat( completion, L"/" );
 		sb_append( sb, desc );
 	}
 	else
@@ -372,6 +713,11 @@ static void get_desc( wchar_t *fn, string_buffer_t *sb, int is_cmd )
 			}
 		}		
 	}
+
+	wildcard_complete( completion, wc, (wchar_t *)sb->buff, 0, list, flags );
+
+	if( free_completion )
+		free( completion );
 }
 
 /**
@@ -515,14 +861,11 @@ int wildcard_expand( const wchar_t *wc,
 						
 						if( test_flags( long_name, flags ) )
 						{
-							get_desc( long_name,
-									  &sb_desc,
-									  flags & EXECUTABLES_ONLY );
-							completion_allocate( out,
-												 name,
-												 (wchar_t *)sb_desc.buff,
-												 0 );
-							
+							wildcard_completion_allocate( out,
+														  long_name,
+														  name,
+														  L"",
+														  flags & EXECUTABLES_ONLY );
 						}
 						
 						free( long_name );
@@ -556,19 +899,17 @@ int wildcard_expand( const wchar_t *wc,
 										   wc,
 										   L"",
 										   0,
+										   0,
 										   0 ) )
 					{
 						if( test_flags( long_name, flags ) )
 						{
-							get_desc( long_name,
-									  &sb_desc, 
-									  flags & EXECUTABLES_ONLY );
+							wildcard_completion_allocate( out,
+														  long_name,
+                                                          name,
+														  wc,
+                                                          flags & EXECUTABLES_ONLY );
 							
-							wildcard_complete( name,
-											   wc,
-											   (wchar_t *)sb_desc.buff,
-											   0,
-											   out );
 						}
 					}
 					

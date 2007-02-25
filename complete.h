@@ -247,15 +247,4 @@ void completion_allocate( array_list_t *context,
 						  int flags );
 
 
-/**
-   Create a new completion entry from an existing text entry
-
-   \param context The halloc context to use for allocating new memory
-   \param comp the completion and possibly the description for it
-   \param sep the separator character between completion and description
-*/
-void completion_allocate2( array_list_t *context,
-						   wchar_t *comp,
-						   wchar_t sep );
-
 #endif

@@ -202,29 +202,6 @@ void completion_allocate( array_list_t *context,
 	al_push( context, res );
 }
 
-void completion_allocate2( array_list_t *context,
-						   wchar_t *comp,
-						   wchar_t sep )
-{
-	completion_t *res = halloc( context, sizeof( completion_t) );
-	wchar_t *sep_pos = wcschr( comp, sep );
-	int flags = 0;
-	
-	if( sep_pos )
-	{
-		*sep_pos = 0;
-		res->description = halloc_wcsdup( context, sep_pos+1 );
-	}
-	
-	res->completion = halloc_wcsdup( context, comp );
-
-	if( ( wcslen(comp) > 0 ) && ( wcschr( L"/=@:", comp[wcslen(comp)-1] ) != 0 ) )
-		flags |= COMPLETE_NO_SPACE;
-	res->flags = flags;
-	al_push( context, res );
-}
-
-
 /**
    Destroys various structures used for tab-completion and free()s the memory used by them.
 */

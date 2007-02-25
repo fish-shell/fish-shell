@@ -7,7 +7,9 @@
 
 
 - \c CMD is the new value of the commandline. If unspecified, the
-  current value of the commandline is written to standard output.
+  current value of the commandline is written to standard output. All
+  output from the commandline builtin is escaped, i.e. quotes are
+  removed, backslash escapes are expanded, etc..
 
 The following switches change what the commandline builtin does
 

@@ -511,9 +511,27 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 				{
 					return COMPLETE_DIRECTORY_SYMLINK_DESC;
 				}
-				else if( waccess( filename, X_OK ) == 0 )
+				else
 				{
-					return COMPLETE_EXEC_LINK_DESC;
+
+					if( ( buf.st_mode & S_IXUSR ) ||
+						( buf.st_mode & S_IXGRP ) ||
+						( buf.st_mode & S_IXOTH ) )
+					{
+		
+						if( waccess( filename, X_OK ) == 0 )
+						{
+							/*
+							  Weird group permissions and other such
+							  issues make it non-trivial to find out
+							  if we can actually execute a file using
+							  the result from stat. It is much safer
+							  to use the access function, since it
+							  tells us exactly what we want to know.
+							*/
+							return COMPLETE_EXEC_LINK_DESC;
+						}
+					}
 				}
 				
 				return COMPLETE_SYMLINK_DESC;
@@ -560,9 +578,26 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 		{
 			return COMPLETE_DIRECTORY_DESC;
 		}
-		else if( waccess( filename, X_OK ) == 0 )
+		else 
 		{
-			return COMPLETE_EXEC_DESC;
+			if( ( buf.st_mode & S_IXUSR ) ||
+				( buf.st_mode & S_IXGRP ) ||
+				( buf.st_mode & S_IXOTH ) )
+			{
+		
+				if( waccess( filename, X_OK ) == 0 )
+				{
+					/*
+					  Weird group permissions and other such issues
+					  make it non-trivial to find out if we can
+					  actually execute a file using the result from
+					  stat. It is much safer to use the access
+					  function, since it tells us exactly what we want
+					  to know.
+					*/
+					return COMPLETE_EXEC_DESC;
+				}
+			}
 		}
 	}
 	
@@ -590,9 +625,9 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
    \param is_cmd whether we are performing command completion
 */
 static void wildcard_completion_allocate( array_list_t *list, 
-										  wchar_t *fullname, 
-										  wchar_t *completion,
-										  wchar_t *wc,
+										  const wchar_t *fullname, 
+										  const wchar_t *completion,
+										  const wchar_t *wc,
 										  int is_cmd )
 {
 	const wchar_t *desc;
@@ -717,7 +752,7 @@ static void wildcard_completion_allocate( array_list_t *list,
 	wildcard_complete( completion, wc, (wchar_t *)sb->buff, 0, list, flags );
 
 	if( free_completion )
-		free( completion );
+		free( (void *)completion );
 }
 
 /**

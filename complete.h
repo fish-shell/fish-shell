@@ -84,6 +84,12 @@
 */
 #define COMPLETE_WHOLE_ARGUMENT 4
 
+/**
+   This completion may or may not want a space at the end - guess by
+   checking the last character of the completion.
+*/
+#define COMPLETE_AUTO_SPACE 8
+
 typedef struct
 {
 

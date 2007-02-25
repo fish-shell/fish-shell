@@ -186,6 +186,18 @@ void completion_allocate( array_list_t *context,
 	res->completion = halloc_wcsdup( context, comp );
 	if( desc )
 		res->description = halloc_wcsdup( context, desc );
+
+	if( flags & COMPLETE_AUTO_SPACE )
+	{
+		int len = wcslen(comp);
+
+		flags = flags & (~COMPLETE_AUTO_SPACE);
+	
+		if( ( len > 0 ) && ( wcschr( L"/=@:", comp[ len - 1 ] ) != 0 ) )
+			flags |= COMPLETE_NO_SPACE;
+		
+	}
+	
 	res->flags = flags;
 	al_push( context, res );
 }
@@ -883,7 +895,8 @@ static void complete_strings( array_list_t *comp_out,
 							  const wchar_t *wc_escaped,
 							  const wchar_t *desc,
 							  const wchar_t *(*desc_func)(const wchar_t *),
-							  array_list_t *possible_comp )
+							  array_list_t *possible_comp,
+							  int flags )
 {
 	int i;
 	wchar_t *wc, *tmp;
@@ -901,7 +914,7 @@ static void complete_strings( array_list_t *comp_out,
 		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
 		if( next_str )
 		{
-			wildcard_complete( next_str, wc, desc, desc_func, comp_out, 0 );
+			wildcard_complete( next_str, wc, desc, desc_func, comp_out, flags );
 		}
 	}
 
@@ -1152,7 +1165,7 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_function )
 		{
 			function_get_names( &possible_comp, cmd[0] == L'_' );
-			complete_strings( comp, cmd, 0, &complete_function_desc, &possible_comp );
+			complete_strings( comp, cmd, 0, &complete_function_desc, &possible_comp, 0 );
 		}
 
 		al_truncate( &possible_comp, 0 );
@@ -1160,7 +1173,7 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_builtin )
 		{
 			builtin_get_names( &possible_comp );
-			complete_strings( comp, cmd, 0, &builtin_get_desc, &possible_comp );
+			complete_strings( comp, cmd, 0, &builtin_get_desc, &possible_comp, 0 );
 		}
 		al_destroy( &possible_comp );
 
@@ -1219,7 +1232,6 @@ static void complete_from_args( const wchar_t *str,
 {
 
 	array_list_t possible_comp;
-/*	int i; */
 
 	al_init( &possible_comp );
 
@@ -1227,7 +1239,7 @@ static void complete_from_args( const wchar_t *str,
 	eval_args( args, &possible_comp );
 	proc_pop_interactive();
 	
-	complete_strings( comp_out, str, desc, 0, &possible_comp );
+	complete_strings( comp_out, str, desc, 0, &possible_comp, COMPLETE_AUTO_SPACE );
 
 	al_foreach( &possible_comp, &free );
 	al_destroy( &possible_comp );

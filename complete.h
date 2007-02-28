@@ -75,8 +75,8 @@
 /**
    This compeltion is case insensitive
 */
-
 #define COMPLETE_NO_CASE 2
+
 /**
    This compeltion is the whole argument, not just the remainder. This
    flag must never be set on completions returned from the complete()
@@ -169,7 +169,8 @@ void complete_add( const wchar_t *cmd,
 				   int result_mode, 
 				   const wchar_t *condition,
 				   const wchar_t *comp,
-				   const wchar_t *desc ); 
+				   const wchar_t *desc,
+				   int flags ); 
 /**
   Sets whether the completion list for this command is complete. If
   true, any options not matching one of the provided options will be

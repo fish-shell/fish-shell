@@ -50,7 +50,8 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 								   int result_mode, 
 								   const wchar_t *condition,
 								   const wchar_t *comp,
-								   const wchar_t *desc )
+								   const wchar_t *desc,
+								   int flags )
 {
 	int i;
 	const wchar_t *s;
@@ -65,7 +66,8 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  result_mode,
 					  condition,
 					  comp,
-					  desc );
+					  desc,
+					  flags );
 	}
 	
 	for( i=0; i<al_get_count( gnu_opt ); i++ )
@@ -78,7 +80,8 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  result_mode,
 					  condition,
 					  comp,
-					  desc );
+					  desc,
+					  flags );
 	}
 	
 	for( i=0; i<al_get_count( old_opt ); i++ )
@@ -91,7 +94,8 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  result_mode,
 					  condition,
 					  comp,
-					  desc );
+					  desc,
+					  flags );
 	}	
 
 	if( al_get_count( old_opt )+al_get_count( gnu_opt )+wcslen(short_opt) == 0 )
@@ -104,7 +108,8 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  result_mode,
 					  condition,
 					  comp,
-					  desc );
+					  desc,
+					  flags );
 	}	
 }
 
@@ -120,7 +125,8 @@ static void	builtin_complete_add( array_list_t *cmd,
 								  int authorative,
 								  const wchar_t *condition,
 								  const wchar_t *comp,
-								  const wchar_t *desc )
+								  const wchar_t *desc,
+								  int flags )
 {
 	int i;
 	
@@ -134,7 +140,8 @@ static void	builtin_complete_add( array_list_t *cmd,
 							   result_mode, 
 							   condition, 
 							   comp, 
-							   desc );
+							   desc,
+							   flags );
 
 		if( authorative != -1 )
 		{
@@ -155,7 +162,8 @@ static void	builtin_complete_add( array_list_t *cmd,
 							   result_mode, 
 							   condition, 
 							   comp, 
-							   desc );
+							   desc,
+							   flags );
 
 		if( authorative != -1 )
 		{
@@ -287,6 +295,7 @@ static int builtin_complete( wchar_t **argv )
 	int result_mode=SHARED;
 	int remove = 0;
 	int authorative = -1;
+	int flags = COMPLETE_AUTO_SPACE;
 	
 	string_buffer_t short_opt;
 	array_list_t gnu_opt, old_opt;
@@ -602,7 +611,8 @@ static int builtin_complete( wchar_t **argv )
 									  authorative,
 									  condition,
 									  comp,
-									  desc ); 
+									  desc,
+									  flags ); 
 			}
 
 		}	

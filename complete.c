@@ -138,6 +138,8 @@ typedef struct complete_entry_opt
 	int old_mode;
 	/** Next option in the linked list */
 	struct complete_entry_opt *next;
+	/** Completion flags */
+	int flags;
 }
 	complete_entry_opt_t;
 
@@ -395,7 +397,8 @@ void complete_add( const wchar_t *cmd,
 				   int result_mode,
 				   const wchar_t *condition,
 				   const wchar_t *comp,
-				   const wchar_t *desc )
+				   const wchar_t *desc,
+				   int flags )
 {
 	complete_entry_t *c;
 	complete_entry_opt_t *opt;
@@ -429,7 +432,8 @@ void complete_add( const wchar_t *cmd,
 	opt->comp      = comp?halloc_wcsdup(opt, comp):L"";
 	opt->condition = condition?halloc_wcsdup(opt, condition):L"";
 	opt->long_opt  = long_opt?halloc_wcsdup(opt, long_opt):L"" ;
-
+	opt->flags = flags;
+	
 	if( desc && wcslen( desc ) )
 	{
 		opt->desc = halloc_wcsdup( opt, desc );
@@ -1022,9 +1026,9 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 		{
 			completion_t *c = (completion_t *)al_get( comp, i );
 			const wchar_t *el = c->completion;
-
+			
 			wchar_t *new_desc;
-
+			
 			new_desc = (wchar_t *)hash_get( &lookup,
 											el );
 			
@@ -1205,7 +1209,8 @@ static void complete_cmd( const wchar_t *cmd,
 static void complete_from_args( const wchar_t *str,
 								const wchar_t *args,
 								const wchar_t *desc,
-								array_list_t *comp_out )
+								array_list_t *comp_out,
+								int flags )
 {
 
 	array_list_t possible_comp;
@@ -1216,7 +1221,7 @@ static void complete_from_args( const wchar_t *str,
 	eval_args( args, &possible_comp );
 	proc_pop_interactive();
 	
-	complete_strings( comp_out, str, desc, 0, &possible_comp, COMPLETE_AUTO_SPACE );
+	complete_strings( comp_out, str, desc, 0, &possible_comp, flags );
 
 	al_foreach( &possible_comp, &free );
 	al_destroy( &possible_comp );
@@ -1384,7 +1389,7 @@ static int complete_param( const wchar_t *cmd_orig,
 					{
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( arg, o->comp, C_(o->desc), comp_out );
+						complete_from_args( arg, o->comp, C_(o->desc), comp_out, o->flags );
 					}
 
 				}
@@ -1407,7 +1412,7 @@ static int complete_param( const wchar_t *cmd_orig,
 							old_style_match = 1;
 							use_common &= ((o->result_mode & NO_COMMON )==0);
 							use_files &= ((o->result_mode & NO_FILES )==0);
-							complete_from_args( str, o->comp, C_(o->desc), comp_out );
+							complete_from_args( str, o->comp, C_(o->desc), comp_out, o->flags );
 						}
 					}
 				}
@@ -1433,7 +1438,7 @@ static int complete_param( const wchar_t *cmd_orig,
 						{
 							use_common &= ((o->result_mode & NO_COMMON )==0);
 							use_files &= ((o->result_mode & NO_FILES )==0);
-							complete_from_args( str, o->comp, C_(o->desc), comp_out );
+							complete_from_args( str, o->comp, C_(o->desc), comp_out, o->flags );
 
 						}
 					}
@@ -1458,7 +1463,7 @@ static int complete_param( const wchar_t *cmd_orig,
 				if( (o->short_opt == L'\0' ) && (o->long_opt[0]==L'\0'))
 				{
 					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( str, o->comp, C_(o->desc), comp_out );
+					complete_from_args( str, o->comp, C_(o->desc), comp_out, o->flags );
 				}
 				
 				if( wcslen(str) > 0 && use_switches )
@@ -1483,19 +1488,38 @@ static int complete_param( const wchar_t *cmd_orig,
 					*/
 					if( o->long_opt[0] != L'\0' )
 					{
+						int match=0, match_no_case=0;
+						
 						string_buffer_t *whole_opt = sb_halloc( context );
 						sb_append2( whole_opt, o->old_mode?L"-":L"--", o->long_opt, (void *)0 );
 
-						if( wcsncmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0)
+						match = wcsncmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0;
+
+						if( !match )
+						{
+							match_no_case = wcsncasecmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0;
+						}
+						
+						if( match || match_no_case )
 						{
 							int has_arg=0; /* Does this switch have any known arguments  */
 							int req_arg=0; /* Does this switch _require_ an argument */
+
+							int offset = 0;
+							int flags = 0;
+
+															
+							if( match )
+								offset = wcslen( str );
+							else
+								flags = COMPLETE_NO_CASE;
 
 							has_arg = !!wcslen( o->comp );
 							req_arg = (o->result_mode & NO_COMMON );
 
 							if( !o->old_mode && ( has_arg && !req_arg ) )
 							{
+								
 								/*
 								  Optional arguments to a switch can
 								  only be handled using the '=', so we
@@ -1507,23 +1531,24 @@ static int complete_param( const wchar_t *cmd_orig,
 								*/
 								string_buffer_t completion;
 								sb_init( &completion );
+
 								sb_printf( &completion,
 										   L"%ls=", 
-										   ((wchar_t *)whole_opt->buff)+wcslen(str) );
-								
+										   ((wchar_t *)whole_opt->buff)+offset );
+						
 								completion_allocate( comp_out,
 													 (wchar_t *)completion.buff,
 													 C_(o->desc),
-													 0 );
+													 flags );									
+								
 								sb_destroy( &completion );
 								
 							}
 							
 							completion_allocate( comp_out,
-												 ((wchar_t *)whole_opt->buff) + wcslen(str),
+												 ((wchar_t *)whole_opt->buff) + offset,
 												 C_(o->desc),
-												 0 );
-						
+												 flags );
 						}					
 					}
 				}

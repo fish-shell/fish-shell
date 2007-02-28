@@ -287,7 +287,13 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			*/
 			out_completion = wcsdup( str );
 		}
-
+		
+		if( flags & COMPLETE_NO_CASE )
+		{
+			free( out_completion );
+			out_completion = wcsdup( orig );
+		}
+		
 		if( out_completion )
 		{
 			completion_allocate( out, 
@@ -295,7 +301,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 								 out_desc,
 								 flags );
 		}
-
+		
 		free ( out_completion );
 		
 		return 1;
@@ -329,6 +335,10 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	{
 		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags );
 	}
+	else if( towlower(*wc) == towlower(*str) )
+	{
+		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags | COMPLETE_NO_CASE );
+	}
 	return 0;	
 }
 
@@ -339,7 +349,11 @@ int wildcard_complete( const wchar_t *str,
 					   array_list_t *out,
 					   int flags )
 {
-	return wildcard_complete_internal( str, str, wc, 1, desc, desc_func, out, flags );	
+	int res;
+	
+	res =  wildcard_complete_internal( str, str, wc, 1, desc, desc_func, out, flags );	
+
+	return res;
 }
 
 

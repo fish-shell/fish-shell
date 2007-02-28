@@ -752,6 +752,19 @@ static int comp_len( const wchar_t *a, const wchar_t *b )
 }
 
 /**
+   Calculate the case insensitive length of the common prefix substring of two strings.
+*/
+static int comp_ilen( const wchar_t *a, const wchar_t *b )
+{
+	int i;
+	for( i=0;
+		 a[i] != '\0' && b[i] != '\0' && towlower(a[i])==towlower(b[i]);
+		 i++ )
+		;
+	return i;
+}
+
+/**
    Find the outermost quoting style of current token. Returns 0 if
    token is not quoted.
 
@@ -887,12 +900,47 @@ static void get_param( wchar_t *cmd,
    just the common prefix of several completions. If the former, end by
    printing a space (and an end quote if the parameter is quoted).
 */
-static void completion_insert( const wchar_t *val, int is_complete )
+static void completion_insert( const wchar_t *val, int flags )
 {
 	wchar_t *replaced;
 
 	wchar_t quote;
+	int add_space = !(flags & COMPLETE_NO_SPACE);
+	int do_replace = (flags&COMPLETE_NO_CASE);
 
+	if( do_replace )
+	{
+		
+		int tok_start, tok_len;
+		wchar_t *begin, *end;
+		string_buffer_t sb;
+
+		parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
+		end = data->buff+data->buff_pos;
+
+		tok_start = begin - data->buff;
+		tok_len = end-begin;
+						
+		sb_init( &sb );
+		sb_append_substring( &sb, data->buff, begin - data->buff );
+		sb_append( &sb, val );
+		if( add_space ) 
+		{
+			sb_append( &sb, L" " );
+		}
+		
+		sb_append( &sb, end );
+						
+		reader_set_buffer( (wchar_t *)sb.buff, (begin-data->buff)+wcslen(val)+!!add_space );
+		sb_destroy( &sb );
+						
+		reader_super_highlight_me_plenty( data->buff_pos, 0 );
+		repaint();
+		
+	}
+	else
+	{
+		
 	get_param( data->buff,
 			   data->buff_pos,
 			   &quote,
@@ -944,7 +992,7 @@ static void completion_insert( const wchar_t *val, int is_complete )
 		/*
 		  Print trailing space since this is the only completion 
 		*/
-		if( is_complete ) 
+		if( add_space ) 
 		{
 
 			if( (quote) &&
@@ -960,6 +1008,9 @@ static void completion_insert( const wchar_t *val, int is_complete )
 	}
 
 	free(replaced);
+	
+	}
+	
 }
 
 /**
@@ -1009,6 +1060,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	for( i=0; i<al_get_count( comp ); i++ )
 	{
 
+		int base_len=-1;
 	    completion_t *el = (completion_t *)al_get( comp, i );
 
 		wchar_t *foo=0;
@@ -1016,9 +1068,27 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 
 		if( el && el->completion )
 		{
-			foo = escape( el->completion, 1 );
-		}
+			if( el->flags & COMPLETE_NO_CASE )
+			{
+				if( base_len == -1 )
+				{
+					wchar_t *begin;
+				
+					parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
+					base_len = data->buff_pos - (begin-data->buff);
+					
+				}
+				
+				
 
+				foo = escape( el->completion + base_len, 1 );
+			}
+			else
+			{
+				foo = escape( el->completion, 1 );
+			}
+		}
+		
 		if( el && el->description )
 		{
 			baz = escape( el->description, 1 );
@@ -1135,40 +1205,119 @@ static void reader_flash()
 static int handle_completions( array_list_t *comp )
 {
 	int i;
+	void *context = 0;
+	wchar_t *base = 0;
+	int len = 0;
+	int done = 0;
+	int count = 0;
+	int flags=0;
 	
 	if( al_get_count( comp ) == 0 )
 	{
 		reader_flash();
 		return 0;
 	}
-	else if( al_get_count( comp ) == 1 )
+	
+	if( al_get_count( comp ) == 1 )
 	{
 		completion_t *c = (completion_t *)al_get( comp, 0 );
 		completion_insert( c->completion,
-						   !(c->flags & COMPLETE_NO_SPACE) );			
+						   c->flags );			
 		return 1;
 	}
-	else
-	{
-		completion_t *c = (completion_t *)al_get( comp, 0 );
-		wchar_t *base = wcsdup( c->completion );
-		int len = wcslen( base );
+
+	context = halloc( 0, 0 );
 		
-		for( i=1; i<al_get_count( comp ); i++ )
+		for( i=0; i<al_get_count( comp ); i++ )
 		{
 			completion_t *c = (completion_t *)al_get( comp, i );
-			int new_len = comp_len( base, c->completion );
-			len = new_len < len ? new_len: len;
+			int new_len;
+
+			if( c->flags & COMPLETE_NO_CASE )
+				continue;
+			
+			count++;
+			
+			if( base )
+			{
+				new_len = comp_len( base, c->completion );
+				len = new_len < len ? new_len: len;
+			}
+			else
+			{
+				base = wcsdup( c->completion );
+				len = wcslen( base );
+				flags = c->flags;
+			}
 		}
+
 		if( len > 0 )
 		{
+			if( count > 1 )
+				flags = flags | COMPLETE_NO_SPACE;
+
 			base[len]=L'\0';
-			wchar_t *woot = wcschr( base, COMPLETE_SEP );
-			if( woot != 0 )
-				*woot = L'\0';
-			completion_insert(base, 0);
+			completion_insert(base, flags);
+			done = 1;
 		}
-		else
+
+		if( base == 0 )
+		{
+			wchar_t *begin, *end;
+
+			parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
+
+			if( begin )
+			{
+				end = data->buff+data->buff_pos;
+				wchar_t *tok = halloc_wcsndup( context, begin, end-begin );
+
+				if( expand_is_clean( tok ) )
+				{
+					int offset = wcslen( tok );
+					
+					count = 0;
+					
+					for( i=0; i<al_get_count( comp ); i++ )
+					{
+						completion_t *c = (completion_t *)al_get( comp, i );
+						int new_len;
+
+						if( !(c->flags & COMPLETE_NO_CASE) )
+							continue;
+			
+						count++;
+
+						if( base )
+						{
+							new_len = offset +  comp_ilen( base+offset, c->completion+offset );
+							len = new_len < len ? new_len: len;
+						}
+						else
+						{
+							base = wcsdup( c->completion );
+							len = wcslen( base );
+							flags = c->flags;
+							
+						}
+					}
+
+					if( len > offset )
+					{
+						if( count > 1 )
+							flags = flags | COMPLETE_NO_SPACE;
+
+						base[len]=L'\0';
+						completion_insert( base, flags );
+						done = 1;
+					}
+				}
+			}
+		}
+		
+		free( base );
+
+		if( !done )
 		{
 			/*
 			  There is no common prefix in the completions, and show_list
@@ -1225,9 +1374,12 @@ static int handle_completions( array_list_t *comp )
 
 		}
 
-		free( base );
-		return len;
-	}
+		
+		halloc_free( context );
+
+	return len;
+	
+
 }
 
 

@@ -1128,12 +1128,11 @@ static void complete_cmd( const wchar_t *cmd,
 									   ACCEPT_INCOMPLETE |
 									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 					{
-						complete_cmd_desc( cmd, comp );
 					}
 				
 				}
 				free( path_cpy );
-			
+				complete_cmd_desc( cmd, comp );
 			}
 		}
 		

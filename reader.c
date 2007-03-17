@@ -538,13 +538,29 @@ void reader_write_title()
 	  This is a pretty lame heuristic for detecting terminals that do
 	  not support setting the title. If we recognise the terminal name
 	  as that of a virtual terminal, we assume it supports setting the
-	  title. Otherwise we check the ttyname.
+	  title. If we recognise it as that of a console, we assume it
+	  does not support setting the title. Otherwise we check the
+	  ttyname and see if we belive it is a virtual terminal.
+
+	  One situation in which this breaks down is with screen, since
+	  screen supports setting the terminal title if the underlying
+	  terminal does so, but will print garbage on terminals that
+	  don't. Since we can't see the underlying terminal below screen
+	  there is no way to fix this.
 	*/
 	if( !term || !contains_str( term, L"xterm", L"screen", L"nxterm", L"rxvt", (wchar_t *)0 ) )
 	{
 		char *n = ttyname( STDIN_FILENO );
+
+		if( contains_str( term, L"linux" ) )
+		{
+			return;
+		}
+
 		if( strstr( n, "tty" ) || strstr( n, "/vc/") )
 			return;
+		
+			
 	}
 
 	title = function_exists( L"fish_title" )?L"fish_title":DEFAULT_TITLE;

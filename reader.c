@@ -498,19 +498,23 @@ static void remove_duplicates( array_list_t *l )
 {
 	int in, out;
 	const wchar_t *prev;
+	completion_t *first;
+	
 	if( al_get_count( l ) == 0 )
 		return;
-
-	prev = (wchar_t *)al_get( l, 0 );
+	
+	first = (completion_t *)al_get( l, 0 );
+	prev = first->completion;
+	
 	for( in=1, out=1; in < al_get_count( l ); in++ )
 	{		
 		completion_t *curr = (completion_t *)al_get( l, in );
-
+		
 		if( wcscmp( prev, curr->completion )!=0 )
 		{
 			al_set( l, out++, curr );
-			prev = curr->completion;
 		}
+		prev = curr->completion;
 	}
 	al_truncate( l, out );
 }

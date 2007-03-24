@@ -630,13 +630,9 @@ int complete_is_valid_option( const wchar_t *str,
 	{
 
 		case 0:
-		{
-			return 1;
-		}
-		
 		case 1:
 		{
-			return  opt[0] == L'-';
+			return 1;
 		}
 		
 		case 2:

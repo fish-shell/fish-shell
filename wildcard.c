@@ -802,10 +802,10 @@ static int test_flags( wchar_t *filename,
 }
 
 
-int wildcard_expand( const wchar_t *wc, 
-					 const wchar_t *base_dir,
-					 int flags,
-					 array_list_t *out )
+static int wildcard_expand_internal( const wchar_t *wc, 
+									 const wchar_t *base_dir,
+									 int flags,
+									 array_list_t *out )
 {
 	
 	/* Points to the end of the current wildcard segment */
@@ -854,7 +854,7 @@ int wildcard_expand( const wchar_t *wc,
 		{
 			wchar_t * foo = wcsdup( wc );
 			foo[len-1]=0;
-			int res = wildcard_expand( foo, base_dir, flags, out );
+			int res = wildcard_expand_internal( foo, base_dir, flags, out );
 			free( foo );
 			return res;			
 		}
@@ -1125,10 +1125,10 @@ int wildcard_expand( const wchar_t *wc,
 									}
 								}
 								
-								new_res = wildcard_expand( new_wc,
-														   new_dir, 
-														   flags, 
-														   out );
+								new_res = wildcard_expand_internal( new_wc,
+																	new_dir, 
+																	flags, 
+																	out );
 
 								if( new_res == -1 )
 								{
@@ -1144,10 +1144,12 @@ int wildcard_expand( const wchar_t *wc,
 							*/
 							if( partial_match )
 							{
-								new_res = wildcard_expand( wcschr( wc, ANY_STRING_RECURSIVE ), 
-														new_dir,
-														flags | WILDCARD_RECURSIVE, 
-														out );
+								
+								new_res = wildcard_expand_internal( wcschr( wc, ANY_STRING_RECURSIVE ), 
+																	new_dir,
+																	flags | WILDCARD_RECURSIVE, 
+																	out );
+
 								if( new_res == -1 )
 								{
 									res = -1;
@@ -1175,3 +1177,47 @@ int wildcard_expand( const wchar_t *wc,
 	return res;
 }
 
+
+int wildcard_expand( const wchar_t *wc, 
+					 const wchar_t *base_dir,
+					 int flags,
+					 array_list_t *out )
+{
+	int c = al_get_count( out );
+	int res = wildcard_expand_internal( wc, base_dir, flags, out );
+	int i;
+	
+	if( flags & ACCEPT_INCOMPLETE )
+	{
+		wchar_t *wc_base;
+		wchar_t *wc_base_ptr = wcsrchr( wc, L'/' );
+
+		if( wc_base_ptr )
+		{
+			string_buffer_t sb;
+
+			sb_init( &sb );
+			wc_base = wcsndup( wc, (wc_base_ptr-wc)+1 );
+			
+			for( i=c; i<al_get_count( out ); i++ )
+			{
+				completion_t *c = al_get( out, i );
+
+				if( c->flags & COMPLETE_NO_CASE )
+				{
+					sb_clear( &sb );
+					sb_printf( &sb, L"%ls%ls", wc_base, c->completion );
+
+					c->completion = halloc_wcsdup( out, (wchar_t *)sb.buff );
+				}
+			}
+			
+			sb_destroy( &sb );
+			free( wc_base );
+			
+		}
+		
+	}
+	
+	return res;
+}

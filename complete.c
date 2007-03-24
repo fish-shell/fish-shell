@@ -1593,13 +1593,14 @@ static void complete_param_expand( wchar_t *str,
 /**
    Complete the specified string as an environment variable
 */
-static int complete_variable( const wchar_t *var,
-							  array_list_t *comp )
+static int complete_variable( const wchar_t *whole_var,
+							  int start_offset,
+							  array_list_t *comp_list )
 {
 	int i;
+	const wchar_t *var = &whole_var[start_offset];
 	int varlen = wcslen( var );
 	int res = 0;
-
 	array_list_t names;
 	al_init( &names );
 	env_get_names( &names, 0 );
@@ -1608,11 +1609,19 @@ static int complete_variable( const wchar_t *var,
 	{
 		wchar_t *name = (wchar_t *)al_get( &names, i );
 		int namelen = wcslen( name );
+		int match=0, match_no_case=0;	
 
 		if( varlen > namelen )
 			continue;
 
-		if( wcsncmp( var, name, varlen) == 0 )
+		match = ( wcsncmp( var, name, varlen) == 0 );
+		
+		if( !match )
+		{
+			match_no_case = ( wcsncasecmp( var, name, varlen) == 0 );
+		}
+
+		if( match || match_no_case )
 		{
 			wchar_t *value_unescaped, *value;
 
@@ -1620,20 +1629,37 @@ static int complete_variable( const wchar_t *var,
 			if( value_unescaped )
 			{
 				string_buffer_t desc;
-
+				string_buffer_t comp;
+				int flags = 0;
+				int offset = 0;
+				
+				sb_init( &comp );
+				if( match )
+				{
+					sb_append( &comp, &name[varlen] );					
+					offset = varlen;
+				}
+				else
+				{
+					sb_append_substring( &comp, whole_var, start_offset );
+					sb_append( &comp, name );
+					flags = COMPLETE_NO_CASE;
+				}
+				
 				value = expand_escape_variable( value_unescaped );
 
 				sb_init( &desc );
 				sb_printf( &desc, COMPLETE_VAR_DESC_VAL, value );
 				
-				completion_allocate( comp, 
-									 &name[varlen],
+				completion_allocate( comp_list, 
+									 (wchar_t *)comp.buff,
 									 (wchar_t *)desc.buff,
-									 0 );
+									 flags );
 				res =1;
 				
 				free( value );
 				sb_destroy( &desc );
+				sb_destroy( &comp );
 			}
 			
 		}
@@ -1660,7 +1686,7 @@ static int try_complete_variable( const wchar_t *cmd,
 		if( cmd[i] == L'$' )
 		{
 /*			wprintf( L"Var prefix \'%ls\'\n", &cmd[i+1] );*/
-			return complete_variable( &cmd[i+1], comp );
+			return complete_variable( cmd, i+1, comp );
 		}
 		if( !isalnum(cmd[i]) && cmd[i]!=L'_' )
 		{
@@ -1790,7 +1816,7 @@ static int try_complete_user( const wchar_t *cmd,
 void complete( const wchar_t *cmd,
 			   array_list_t *comp )
 {
-	wchar_t *begin, *end, *prev_begin, *prev_end;
+	wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
 	wchar_t *buff;
 	tokenizer tok;
 	wchar_t *current_token=0, *current_command=0, *prev_token=0;
@@ -1802,7 +1828,7 @@ void complete( const wchar_t *cmd,
 	int use_function = 1;
 	int use_builtin = 1;
 	int had_ddash = 0;
-	
+
 	CHECK( cmd, );
 	CHECK( comp, );
 
@@ -1812,35 +1838,30 @@ void complete( const wchar_t *cmd,
 
 	cursor_pos = wcslen(cmd );
 
+	parse_util_cmdsubst_extent( cmd, cursor_pos, &cmdsubst_begin, &cmdsubst_end );
+	parse_util_token_extent( cmd, cursor_pos, &tok_begin, &tok_end, &prev_begin, &prev_end );
+
+	if( !cmdsubst_begin )
+		done=1;
+
 	/**
 	   If we are completing a variable name or a tilde expansion user
 	   name, we do that and return. No need for any other competions.
 	*/
 
-	if( try_complete_variable( cmd, comp ) ||  try_complete_user( cmd, comp ))
-	{
-		done=1;
-	}
-
-	/*
-	  Set on_command to true if cursor is over a command, and set the
-	  name of the current command, and various other parsing to find
-	  out what we should complete, and how it should be completed.
-	*/
-
 	if( !done )
 	{
-		parse_util_cmdsubst_extent( cmd, cursor_pos, &begin, &end );
-
-		if( !begin )
+		if( try_complete_variable( tok_begin, comp ) ||  try_complete_user( tok_begin, comp ))
+		{
 			done=1;
+		}
 	}
 
 	if( !done )
 	{
-		pos = cursor_pos-(begin-cmd);
+		pos = cursor_pos-(cmdsubst_begin-cmd);
 		
-		buff = wcsndup( begin, end-begin );
+		buff = wcsndup( cmdsubst_begin, cmdsubst_end-cmdsubst_begin );
 		
 		if( !buff )
 			done=1;
@@ -1948,9 +1969,7 @@ void complete( const wchar_t *cmd,
 		  Get the string to complete
 		*/
 
-		parse_util_token_extent( cmd, cursor_pos, &begin, &end, &prev_begin, &prev_end );
-
-		current_token = wcsndup( begin, cursor_pos-(begin-cmd) );
+		current_token = wcsndup( tok_begin, cursor_pos-(tok_begin-cmd) );
 
 		prev_token = prev_begin ? wcsndup( prev_begin, prev_end - prev_begin ): wcsdup(L"");
 		

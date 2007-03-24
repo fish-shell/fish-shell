@@ -961,73 +961,73 @@ static void completion_insert( const wchar_t *val, int flags )
 	else
 	{
 		
-	get_param( data->buff,
-			   data->buff_pos,
-			   &quote,
-			   0, 0, 0 );
+		get_param( data->buff,
+				   data->buff_pos,
+				   &quote,
+				   0, 0, 0 );
 
-	if( quote == L'\0' )
-	{
-		replaced = escape( val, 1 );
-	}
-	else
-	{
-		int unescapable=0;
-
-		const wchar_t *pin;
-		wchar_t *pout;
-
-		replaced = pout =
-			malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
-
-		for( pin=val; *pin; pin++ )
+		if( quote == L'\0' )
 		{
-			switch( *pin )
-			{
-				case L'\n':
-				case L'\t':
-				case L'\b':
-				case L'\r':
-					unescapable=1;
-					break;
-				default:
-					*pout++ = *pin;
-					break;
-			}
-		}
-		if( unescapable )
-		{
-			free( replaced );
-			wchar_t *tmp = escape( val, 1 );
-			replaced = wcsdupcat( L" ", tmp );
-			free( tmp);
-			replaced[0]=quote;
+			replaced = escape( val, 1 );
 		}
 		else
-			*pout = 0;
-	}
-
-	if( insert_str( replaced ) )
-	{
-		/*
-		  Print trailing space since this is the only completion 
-		*/
-		if( add_space ) 
 		{
+			int unescapable=0;
 
-			if( (quote) &&
-				(data->buff[data->buff_pos] != quote ) ) 
+			const wchar_t *pin;
+			wchar_t *pout;
+
+			replaced = pout =
+				malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
+
+			for( pin=val; *pin; pin++ )
 			{
-				/* 
-				   This is a quoted parameter, first print a quote 
-				*/
-				insert_char( quote );
+				switch( *pin )
+				{
+					case L'\n':
+					case L'\t':
+					case L'\b':
+					case L'\r':
+						unescapable=1;
+						break;
+					default:
+						*pout++ = *pin;
+						break;
+				}
 			}
-			insert_char( L' ' );
+			if( unescapable )
+			{
+				free( replaced );
+				wchar_t *tmp = escape( val, 1 );
+				replaced = wcsdupcat( L" ", tmp );
+				free( tmp);
+				replaced[0]=quote;
+			}
+			else
+				*pout = 0;
 		}
-	}
 
-	free(replaced);
+		if( insert_str( replaced ) )
+		{
+			/*
+			  Print trailing space since this is the only completion 
+			*/
+			if( add_space ) 
+			{
+
+				if( (quote) &&
+					(data->buff[data->buff_pos] != quote ) ) 
+				{
+					/* 
+					   This is a quoted parameter, first print a quote 
+					*/
+					insert_char( quote );
+				}
+				insert_char( L' ' );
+			}
+		}
+
+		free(replaced);
 	
 	}
 	
@@ -1231,22 +1231,42 @@ static int handle_completions( array_list_t *comp )
 	int done = 0;
 	int count = 0;
 	int flags=0;
+	wchar_t *begin, *end;
+	wchar_t *tok;
 	
-	if( al_get_count( comp ) == 0 )
-	{
-		reader_flash();
-		return 0;
-	}
+	parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
+	end = data->buff+data->buff_pos;
 	
-	if( al_get_count( comp ) == 1 )
-	{
-		completion_t *c = (completion_t *)al_get( comp, 0 );
-		completion_insert( c->completion,
-						   c->flags );			
-		return 1;
-	}
-
 	context = halloc( 0, 0 );
+	tok = halloc_wcsndup( context, begin, end-begin );
+	
+	switch( al_get_count( comp ) )
+	{
+		case 0:
+		{
+			reader_flash();
+			done = 1;
+			break;
+		}
+		
+		case 1:
+		{
+			
+			completion_t *c = (completion_t *)al_get( comp, 0 );
+		
+			if( !(c->flags & COMPLETE_NO_CASE) || expand_is_clean( tok ) )
+			{
+				completion_insert( c->completion,
+								   c->flags );			
+			}
+			done = 1;
+			len = 1;
+		}
+	}
+	
+		
+	if( !done )
+	{
 		
 		for( i=0; i<al_get_count( comp ); i++ )
 		{
@@ -1280,122 +1300,119 @@ static int handle_completions( array_list_t *comp )
 			completion_insert(base, flags);
 			done = 1;
 		}
+	}
+	
 
-		if( base == 0 )
+	if( !done && base == 0 )
+	{
+
+		if( begin )
 		{
-			wchar_t *begin, *end;
 
-			parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
-
-			if( begin )
+			if( expand_is_clean( tok ) )
 			{
-				end = data->buff+data->buff_pos;
-				wchar_t *tok = halloc_wcsndup( context, begin, end-begin );
-
-				if( expand_is_clean( tok ) )
+				int offset = wcslen( tok );
+					
+				count = 0;
+					
+				for( i=0; i<al_get_count( comp ); i++ )
 				{
-					int offset = wcslen( tok );
-					
-					count = 0;
-					
-					for( i=0; i<al_get_count( comp ); i++ )
-					{
-						completion_t *c = (completion_t *)al_get( comp, i );
-						int new_len;
+					completion_t *c = (completion_t *)al_get( comp, i );
+					int new_len;
 
-						if( !(c->flags & COMPLETE_NO_CASE) )
-							continue;
+					if( !(c->flags & COMPLETE_NO_CASE) )
+						continue;
 			
-						count++;
+					count++;
 
-						if( base )
-						{
-							new_len = offset +  comp_ilen( base+offset, c->completion+offset );
-							len = new_len < len ? new_len: len;
-						}
-						else
-						{
-							base = wcsdup( c->completion );
-							len = wcslen( base );
-							flags = c->flags;
-							
-						}
-					}
-
-					if( len > offset )
+					if( base )
 					{
-						if( count > 1 )
-							flags = flags | COMPLETE_NO_SPACE;
-
-						base[len]=L'\0';
-						completion_insert( base, flags );
-						done = 1;
+						new_len = offset +  comp_ilen( base+offset, c->completion+offset );
+						len = new_len < len ? new_len: len;
 					}
+					else
+					{
+						base = wcsdup( c->completion );
+						len = wcslen( base );
+						flags = c->flags;
+							
+					}
+				}
+
+				if( len > offset )
+				{
+					if( count > 1 )
+						flags = flags | COMPLETE_NO_SPACE;
+
+					base[len]=L'\0';
+					completion_insert( base, flags );
+					done = 1;
 				}
 			}
 		}
+	}
 		
-		free( base );
+	free( base );
 
-		if( !done )
+	if( !done )
+	{
+		/*
+		  There is no common prefix in the completions, and show_list
+		  is true, so we print the list
+		*/
+		int len;
+		wchar_t * prefix;
+		wchar_t * prefix_start;
+		get_param( data->buff,
+				   data->buff_pos,
+				   0,
+				   &prefix_start,
+				   0,
+				   0 );
+
+		len = &data->buff[data->buff_pos]-prefix_start+1;
+
+		if( len <= PREFIX_MAX_LEN )
 		{
-			/*
-			  There is no common prefix in the completions, and show_list
-			  is true, so we print the list
-			*/
-			int len;
-			wchar_t * prefix;
-			wchar_t * prefix_start;
-			get_param( data->buff,
-					   data->buff_pos,
-					   0,
-					   &prefix_start,
-					   0,
-					   0 );
+			prefix = malloc( sizeof(wchar_t)*(len+1) );
+			wcslcpy( prefix, prefix_start, len );
+			prefix[len]=L'\0';
+		}
+		else
+		{
+			wchar_t tmp[2]=
+				{
+					ellipsis_char,
+					0
+				}
+			;
 
-			len = &data->buff[data->buff_pos]-prefix_start+1;
-
-			if( len <= PREFIX_MAX_LEN )
-			{
-				prefix = malloc( sizeof(wchar_t)*(len+1) );
-				wcslcpy( prefix, prefix_start, len );
-				prefix[len]=L'\0';
-			}
-			else
-			{
-				wchar_t tmp[2]=
-					{
-						ellipsis_char,
-						0
-					}
-				;
-
-				prefix = wcsdupcat( tmp,
-									prefix_start + (len - PREFIX_MAX_LEN) );
-				prefix[PREFIX_MAX_LEN] = 0;
-
-			}
-
-			{
-				int is_quoted;
-
-				wchar_t quote;
-				get_param( data->buff, data->buff_pos, &quote, 0, 0, 0 );
-				is_quoted = (quote != L'\0');
-				
-				write(1, "\n", 1 );
-
-				run_pager( prefix, is_quoted, comp );
-			}
-
-			free( prefix );
-			s_reset( &data->screen );
-			repaint();
+			prefix = wcsdupcat( tmp,
+								prefix_start + (len - PREFIX_MAX_LEN) );
+			prefix[PREFIX_MAX_LEN] = 0;
 
 		}
 
+		{
+			int is_quoted;
+
+			wchar_t quote;
+			get_param( data->buff, data->buff_pos, &quote, 0, 0, 0 );
+			is_quoted = (quote != L'\0');
+				
+			write(1, "\n", 1 );
+
+			run_pager( prefix, is_quoted, comp );
+		}
+
+		free( prefix );
+		s_reset( &data->screen );
+		repaint();
+
+	}
+
 		
-		halloc_free( context );
+	halloc_free( context );
 
 	return len;
 	
@@ -2354,11 +2371,11 @@ wchar_t *reader_readline()
 				break;
 		}
 /*
-		if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
-		{
-			halloc_destroy( comp );
-			comp = 0;
-		}
+  if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
+  {
+  halloc_destroy( comp );
+  comp = 0;
+  }
 */
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank=0;
@@ -2881,8 +2898,8 @@ wchar_t *reader_readline()
 
 	writestr( L"\n" );
 /*
-	if( comp )
-		halloc_free( comp );
+  if( comp )
+  halloc_free( comp );
 */
 	if( !reader_exit_forced() )
 	{
@@ -2960,21 +2977,21 @@ static int read_ni( int fd )
 
 		if( str )
 		{
-		string_buffer_t sb;
-		sb_init( &sb );
+			string_buffer_t sb;
+			sb_init( &sb );
 		
-		if( !parser_test( str, 0, &sb, L"fish" ) )
-		{
-			eval( str, 0, TOP );
-		}
-		else
-		{
-			fwprintf( stderr, L"%ls", sb.buff );
-			res = 1;
-		}
-		sb_destroy( &sb );
+			if( !parser_test( str, 0, &sb, L"fish" ) )
+			{
+				eval( str, 0, TOP );
+			}
+			else
+			{
+				fwprintf( stderr, L"%ls", sb.buff );
+				res = 1;
+			}
+			sb_destroy( &sb );
 		
-		free( str );
+			free( str );
 		}
 		else
 		{

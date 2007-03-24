@@ -189,7 +189,7 @@ MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help.in		\
     $(COMMON_FILES) $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c)			\
     fish.spec.in INSTALL README user_doc.head.html xsel-0.9.6.tar		\
     ChangeLog config.sub config.guess fish_tests.c main.c fish_pager.c	\
-    fishd.c seq.in
+    fishd.c seq.in make_vcs_completions.fish
 
 #
 # The sorting is not meaningful in itself, but it has the side effect
@@ -545,10 +545,6 @@ check-uninstall:
 install-sh:
 	if test -x $@; then true; else chmod 755 $@; fi
 .PHONY: install-sh
-
-make_mercurial_completions.fish:
-	if test -x $@; then true; else chmod 755 $@; fi
-.PHONY: make_mercurial_completions.fish
 
 
 #

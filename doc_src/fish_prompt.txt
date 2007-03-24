@@ -1,0 +1,23 @@
+\section fish_prompt fish_prompt - define the apperance of the command line promp
+
+\subsection fish_promt-synopsis Synopsis
+<pre>function fish_prompt
+    ...
+end</pre>
+
+\subsection fish_prompt-description Description
+
+By defining the \c fish_prompt function, the user can choose a custom
+prompt. The \c fish_prompt function is executed when the prompt is to
+be shown, and the output is used as a prompt.
+
+\subsection fish_prompt-example Example
+
+A simple prompt:
+
+<pre>
+function fish_prompt -d "Write out the prompt"
+	printf '\%s\@\%s\%s\%s\%s> ' (whoami) (hostname|cut -d . -f 1) (set_color \$fish_color_cwd) (prompt_pwd) (set_color normal)
+end
+</pre>
+

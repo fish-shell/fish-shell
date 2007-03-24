@@ -1231,28 +1231,6 @@ Issuing <code>set fish_color_error black --background=red
 --bold</code> will make all commandline errors be written in a black,
 bold font, with a red background.
 
-\subsection prompt Programmable prompt
-
-By defining the \c fish_prompt function, the user can choose a custom
-prompt. The \c fish_prompt function is executed and the output is used
-as a prompt.
-
-Example: 
-<p>
-The default \c fish prompt is 
-</p>
-<p>
-<pre>
-function fish_prompt -d "Write out the prompt"
-	printf '\%s\@\%s\%s\%s\%s> ' (whoami) (hostname|cut -d . -f 1) (set_color \$fish_color_cwd) (prompt_pwd) (set_color normal)
-end
-</pre>
-
-where \c prompt_pwd is a shellscript function that displays a condensed version of the current working directory.
-
-</p>
-
-
 \subsection title Programmable title
 
 When using most virtual terminals, it is possible to set the message

@@ -552,7 +552,7 @@ void reader_write_title()
 	{
 		char *n = ttyname( STDIN_FILENO );
 
-		if( contains_str( term, L"linux" ) )
+		if( contains_str( term, L"linux", (void *)0 ) )
 		{
 			return;
 		}

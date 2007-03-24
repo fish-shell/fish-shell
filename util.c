@@ -1358,17 +1358,11 @@ int b_append( buffer_t *b, const void *d, ssize_t len )
 		return 0;
 	}
 
-	if( len < 0 )
-	{
-		return 0;
-	}
-
-
 	if( b->length <= (b->used + len) )
 	{
 		size_t l = maxi( b->length*2,
-						 maxi( b->used+len+MIN_SIZE,MIN_SIZE));
-
+						 b->used+len+MIN_SIZE );
+		
 		void *d = realloc( b->buff, l );
 		if( !d )
 		{

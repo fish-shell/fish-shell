@@ -9,8 +9,12 @@ function cap
 	echo $res
 end
 
+#
+# Escapes the single quote (') character and removes trailing whitespace from $argv
+#
+
 function esc
-	echo $argv | sed -e "s/'/\\\'/g"
+	echo $argv | sed -e "s/'/\\\'/g" | sed -e 's/ *$//'
 end
 
 
@@ -142,7 +146,8 @@ function write_completions
 		end
 
 		for i in (list_subcommand)
-			set desc (cmd help $i|head -n 1|sed -e 's/[^:]*: *\(.*[^.]\)\(\|\\.\)$/\1/')
+
+			set desc (cmd help $i|head -n 3| sed -e 's/usage:.*//'| tr \n \ | sed -e 's/[^:]*: *\(.*[^.]\)\(\|\\.\)$/\1/')
 			set desc (esc $desc)
 			set cmd_str $cmd_str "-a $i --description '$desc'"
 		end

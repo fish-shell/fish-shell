@@ -7,7 +7,7 @@
 Sends the specified job to the foreground. While a foreground job is
 executed, fish is suspended. If no job is specified, the last job to be used is put in the foreground. If PID is specified, the job with the specified group id is put in the foreground.
 
-The PID of the desired process is usually found by using process globbing.
+The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>.
 
 \subsection fg-example Example
 

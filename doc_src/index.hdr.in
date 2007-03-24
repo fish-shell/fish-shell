@@ -741,8 +741,8 @@ command</a>.
 
 Example: 
 
-To set the variable \c smurf to the value \c blue, use the command
-<code>set smurf blue</code>.
+To set the variable \c smurf_color to the value \c blue, use the command
+<code>set smurf_color blue</code>.
 
 After a variable has been set, you can use the value of a variable in
 the shell through <a href="expand-variable">variable expansion</a>.
@@ -751,7 +751,8 @@ Example:
 
 To use the value of a the variable \c smurf, write $ (dollar symbol)
 followed by the name of the variable, like <code>echo Smurfs are
-$smurf</code>, which would print the result 'Smurfs are blue'.
+usually $smurf_color</code>, which would print the result 'Smurfs are
+usually blue'.
 
 \subsection variables-scope Variable scope
 

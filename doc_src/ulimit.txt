@@ -11,7 +11,7 @@ omitted, the current value of the limit of the resource is printed.
 
 Use one of the following switches to specify which resource limit to set or report:
 
-- <code>-c</code> or <code>--core-size</code> The maximum size of core files created
+- <code>-c</code> or <code>--core-size</code> The maximum size of core files created. By setting this limit to zero, core dumps can be disabled.
 - <code>-d</code> or <code>--data-size</code> The maximum size of a process's data segment
 - <code>-f</code> or <code>--file-size</code> The maximum size of files created by the shell
 - <code>-l</code> or <code>--lock-size</code> The maximum size that may be locked into memory
@@ -40,11 +40,11 @@ ulimit also accepts the following switches that determine what type of limit to 
 - <code>-H</code> or <code>--hard</code> Set hard resource limit
 - <code>-S</code> or <code>--soft</code> Set soft resource limit
 
-A hard limit cannot be increased once it is set; a soft limit may be
-increased up to the value of the hard limit. If neither -H nor -S is
-specified, both the soft and hard limits are updated when assigning a
-new limit value, and the soft limit is used when reporting the current
-value. 
+A hard limit can only be decreased, once it is set it can not be
+increased; a soft limit may be increased up to the value of the hard
+limit. If neither -H nor -S is specified, both the soft and hard
+limits are updated when assigning a new limit value, and the soft
+limit is used when reporting the current value.
 
 The following additional options are also understood by ulimit:
 
@@ -55,7 +55,7 @@ The fish implementation of ulimit should behave identically to the
 implementation in bash, except for these differences:
 
 - Fish ulimit supports GNU-style long options for all switches
-- Fish ulimit does not support the -p option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE. Depending on bash version, there may also be further additional limits to set in bash that do not exist in fish.
+- Fish ulimit does not support the -p option for getting the pipe size. The bash implementation consists of a compile-time check that empirically guesses this number by writing to a pipe and waiting for SIGPIPE. Fish does not do this because it this method of determining pipe sixe is unreliable. Depending on bash version, there may also be further additional limits to set in bash that do not exist in fish.
 - Fish ulimit does not support getting or setting multiple limits in one command, except reporting all values using the -a switch
 
 \subsection ulimit-example Example

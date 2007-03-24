@@ -8,7 +8,7 @@ Sends the specified jobs to the background. A background job is
 executed simultaneously with fish, and does not have access to the
 keyboard. If no job is specified, the last job to be used is put in the background. If PID is specified, the jobs with the specified group ids are put in the background.
 
-The PID of the desired process is usually found by using process globbing.
+The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>.
 
 \subsection bg-example Example
 

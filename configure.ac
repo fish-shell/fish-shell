@@ -13,6 +13,26 @@ AC_INIT(fish,1.22.3,fish-users@lists.sf.net)
 
 
 #
+# List of output variables produced by this configure script
+#
+
+AC_SUBST( docdir )
+AC_SUBST( HAVE_GETTEXT )
+AC_SUBST( LDFLAGS_FISH )
+AC_SUBST( LIBS_FISH )
+AC_SUBST( LIBS_FISH_PAGER )
+AC_SUBST( LIBS_FISHD )
+AC_SUBST( LIBS_MIMEDB )
+AC_SUBST( LIBS_SET_COLOR )
+AC_SUBST( localedir )
+AC_SUBST( optbindirs )
+AC_SUBST( prefix )
+AC_SUBST( SEQ_FALLBACK )
+AC_SUBST( XSEL )
+AC_SUBST( XSEL_MAN )
+AC_SUBST( XSEL_MAN_PATH )
+
+#
 # If needed, run autoconf to regenerate the configure file
 #
 # This makes sure that after running autoconf once to create the first
@@ -107,8 +127,6 @@ for i in /usr/pkg /sw /opt /opt/local; do
 
 done
 
-AC_SUBST( optbindirs, $optbindirs )
-
 
 #
 # Tell autoconf to create config.h header 
@@ -161,7 +179,7 @@ if test "$SEQ_FALLBACK"; then
 		shebang=`grep "\(^#!/.*/fish\|^#!/usr/bin/env fish\)" $file`
 
 		if test "$shebang"; then
-			AC_SUBST( SEQ_FALLBACK, seq )
+			SEQ_FALLBACK=seq
 			AC_MSG_RESULT(yes, replace it)
 		else
 			AC_MSG_RESULT(no, keep it)
@@ -185,13 +203,9 @@ AC_ARG_WITH(
 )
 
 if [[ "$xsel" = "with_xsel" ]]; then
-	AC_SUBST( XSEL,[xsel-0.9.6/xsel])
-	AC_SUBST( XSEL_MAN,[xsel.1x])
-	AC_SUBST( XSEL_MAN_PATH,[xsel-0.9.6/xsel.1x])
-else
-	AC_SUBST( XSEL,[ ])
-	AC_SUBST( XSEL_MAN,[ ])
-	AC_SUBST( XSEL_MAN_PATH,[ ])
+	XSEL=xsel-0.9.6/xsel
+	XSEL_MAN=xsel.1x
+	XSEL_MAN_PATH=xsel-0.9.6/xsel.1x
 fi
 
 
@@ -291,7 +305,7 @@ if test "$CC" = gcc; then
 	# This is needed in order to get the really cool backtraces
 	#
 
-	LDFLAGS="$LDFLAGS -rdynamic"
+	LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
 
 fi
 
@@ -398,10 +412,7 @@ esac
 #
 
 if [[ "$prefix" = NONE ]]; then
-	export prefix=/usr/local
-	AC_SUBST( prefix, /usr/local)
-else
-	AC_SUBST( prefix, [$prefix])
+	prefix=/usr/local
 fi
 
 
@@ -413,9 +424,9 @@ fi
 AC_ARG_VAR( [docdir], [Documentation direcotry] )
 
 if test -z $docdir; then
-	AC_SUBST(docdir, [$datadir/doc/fish] )
+	docdir=$datadir/doc/fish
 else
-	AC_SUBST(docdir, [$docdir])
+	docdir=$docdir
 fi
 
 
@@ -424,7 +435,7 @@ fi
 # installed.
 #
 
-AC_SUBST( [localedir], [$datadir/locale])
+localedir=$datadir/locale
 
 
 #
@@ -448,10 +459,18 @@ AC_DEFINE(
 
 
 #
-# Check presense of various libraries
+# Check presense of various libraries. This is done on a per-binary
+# level, since including various extra libraries in all binaries only
+# because thay are used by some of them can cause extra bloat and
+# slower compiles when developing fish.
 #
 
-# Only link with gettext if we are using it
+#
+# Check for libraries needed by fish. 
+#
+
+LIBS_COMMON=$LIBS
+LIBS=""
 if test x$local_gettext != xno; then 
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
@@ -459,7 +478,64 @@ AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )
+LIBS_FISH=$LIBS
+LIBS=$LIBS_COMMON
 
+
+#
+# Check for libraries needed by fishd. 
+#
+
+LIBS_COMMON=$LIBS
+LIBS=""
+if test x$local_gettext != xno; then 
+	AC_SEARCH_LIBS( gettext, intl,,)
+fi
+AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
+LIBS_FISHD=$LIBS
+LIBS=$LIBS_COMMON
+
+
+#
+# Check for libraries needed by mimedb. 
+#
+
+LIBS_COMMON=$LIBS
+LIBS=""
+if test x$local_gettext != xno; then 
+	AC_SEARCH_LIBS( gettext, intl,,)
+fi
+LIBS_FISHD=$LIBS
+LIBS=$LIBS_COMMON
+
+
+#
+# Check for libraries needed by fish_pager. 
+#
+
+LIBS_COMMON=$LIBS
+LIBS=""
+if test x$local_gettext != xno; then 
+	AC_SEARCH_LIBS( gettext, intl,,)
+fi
+AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
+AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
+LIBS_FISH_PAGER=$LIBS
+LIBS=$LIBS_COMMON
+
+
+#
+# Check for libraries needed by set_color 
+#
+
+LIBS_COMMON=$LIBS
+LIBS=""
+if test x$local_gettext != xno; then 
+	AC_SEARCH_LIBS( gettext, intl,,)
+fi
+AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
+LIBS_SET_COLOR=$LIBS
+LIBS=$LIBS_COMMON
 
 #
 # Check presense of various header files
@@ -617,7 +693,7 @@ AC_CHECK_FUNCS( dcgettext backtrace backtrace_symbols)
 #
 
 if test x$local_gettext != xno; then 
-	AC_CHECK_FUNC( gettext, AC_SUBST( HAVE_GETTEXT, 1 ), AC_SUBST( HAVE_GETTEXT, 0 ) )
+	AC_CHECK_FUNC( gettext, HAVE_GETTEXT=1, HAVE_GETTEXT=0 )
 fi
 
 #

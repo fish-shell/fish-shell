@@ -53,18 +53,21 @@ sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
 prefix = @prefix@
-optbindirs = @optbindirs@
-
+optbindirs = @optbindirs@ 
 
 #
 # Various flags
 #
 
-MACROS=-DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" 
-CFLAGS=@CFLAGS@ $(MACROS) 
-CPPFLAGS=@CPPFLAGS@ 
-LDFLAGS= @LIBS@ @LDFLAGS@ 
-
+MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" 
+CFLAGS = @CFLAGS@ $(MACROS) 
+CPPFLAGS = @CPPFLAGS@ 
+LDFLAGS = @LIBS@ @LDFLAGS@ 
+LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
+LDFLAGS_FISH_PAGER = ${LDFLAGS} @LIBS_FISH_PAGER@
+LDFLAGS_FISHD = ${LDFLAGS} @LIBS_FISHD@
+LDFLAGS_MIMEDB = ${LDFLAGS} @LIBS_MIMEDB@
+LDFLAGS_SET_COLOR = ${LDFLAGS} @LIBS_SET_COLOR@
 
 #
 # Set to 1 if we have gettext
@@ -680,7 +683,7 @@ uninstall-translations:
 #
 
 fish: $(FISH_OBJS) main.o 
-	$(CC) $(FISH_OBJS) main.o $(LDFLAGS) -o $@
+	$(CC) $(FISH_OBJS) main.o $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -688,7 +691,7 @@ fish: $(FISH_OBJS) main.o
 #
 
 fish_pager: $(FISH_PAGER_OBJS)
-	$(CC) $(FISH_PAGER_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
 
 
 #
@@ -696,7 +699,7 @@ fish_pager: $(FISH_PAGER_OBJS)
 #
 
 fishd: $(FISHD_OBJS) 
-	$(CC) $(FISHD_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
 
 
 #
@@ -704,7 +707,7 @@ fishd: $(FISHD_OBJS)
 #
 
 fish_tests: $(FISH_TESTS_OBJS)
-	$(CC) $(FISH_TESTS_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -714,7 +717,7 @@ fish_tests: $(FISH_TESTS_OBJS)
 #
 
 mimedb: $(MIME_OBJS)
-	$(CC) $(MIME_OBJS) $(LDFLAGS) -o $@
+	$(CC) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
 
 
 #
@@ -732,7 +735,7 @@ count: count.o
 #
 
 set_color: set_color.o print_help.o common.o
-	$(CC) set_color.o print_help.o common.o wutil.o $(LDFLAGS) -o $@
+	$(CC) set_color.o print_help.o common.o wutil.o $(LDFLAGS_SET_COLOR) -o $@
 
 
 #

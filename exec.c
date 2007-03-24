@@ -1316,6 +1316,8 @@ void exec( job_t *j )
 					( !sb_out->used ) &&
 					( !sb_err->used ) &&
 					( !p->next );
+	
+				int has_file_redirect = 0;
 				
 				/*
 				  If the output of a builtin is to be sent to an internal
@@ -1337,6 +1339,14 @@ void exec( job_t *j )
 					free( res );				
 				}
 
+				for( io = j->io; io; io=io->next )
+				{
+					if( io->io_mode == IO_FILE )
+					{
+						skip_fork = 0;
+					}
+				}
+				
 				if( skip_fork )
 				{
 					p->completed=1;

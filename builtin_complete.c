@@ -544,7 +544,7 @@ static int builtin_complete( wchar_t **argv )
 	{
 		if( do_complete )
 		{
-			array_list_t comp;
+			array_list_t *comp;
 			int i;
 
 			const wchar_t *prev_temporary_buffer = temporary_buffer;
@@ -554,21 +554,24 @@ static int builtin_complete( wchar_t **argv )
 			{
 				recursion_level++;
 			
-				al_init( &comp );
+				comp = al_halloc( 0 );
 			
-				complete( do_complete, &comp );
+				complete( do_complete, comp );
 			
-				for( i=0; i<al_get_count( &comp ); i++ )
+				for( i=0; i<al_get_count( comp ); i++ )
 				{
-					wchar_t *next = (wchar_t *)al_get( &comp, i );
-					wchar_t *sep = wcschr( next, COMPLETE_SEP );
-					if( sep )
-						*sep = L'\t';
-					sb_printf( sb_out, L"%ls\n", next );
+					completion_t *next = (wchar_t *)al_get( comp, i );
+					if( next->description )
+					{
+						sb_printf( sb_out, L"%ls\t%ls\n", next->completion, next->description );
+					}
+					else
+					{
+						sb_printf( sb_out, L"%ls\n", next->completion );
+					}
 				}
 			
-				al_foreach( &comp, &free );
-				al_destroy( &comp );
+				halloc_free( comp );
 				recursion_level--;
 			}
 		

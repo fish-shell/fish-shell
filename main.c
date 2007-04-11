@@ -94,12 +94,20 @@ static int read_init()
 	context = halloc( 0, 0 );
 	eval_buff = sb_halloc( context );
 	config_dir = path_get_config( context );
-	config_dir_escaped = escape( config_dir, 1 );
-	sb_printf( eval_buff, L"builtin cd %ls 2>/dev/null; and builtin . config.fish 2>/dev/null", config_dir_escaped );
-	eval( (wchar_t *)eval_buff->buff, 0, TOP );
+
+	/*
+	  If config_dir is null then we have no configuration directory
+	  and no custom config to load.
+	*/
+	if( config_dir )
+	{
+		config_dir_escaped = escape( config_dir, 1 );
+		sb_printf( eval_buff, L"builtin cd %ls 2>/dev/null; and builtin . config.fish 2>/dev/null", config_dir_escaped );
+		eval( (wchar_t *)eval_buff->buff, 0, TOP );
+		free( config_dir_escaped );
+	}
 	
 	halloc_free( context );
-	free( config_dir_escaped );
 	
 	if( wchdir( cwd ) == -1 )
 	{
@@ -301,7 +309,6 @@ int main( int argc, char **argv )
 		no_exec = 0;
 	}
 	
-
 	proc_init();	
 	event_init();	
 	wutil_init();

@@ -23,7 +23,7 @@ function alias --description "Legacy function for creating shellscript functions
 			set body $argv[2]
 
 		case \*
-			printf ( _ "%s: Expected one or two arguments, got %d") alias (count $argv)
+			printf ( _ "%s: Expected one or two arguments, got %d\n") alias (count $argv)
 			return 1
 	end
 

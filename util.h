@@ -642,9 +642,22 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 void sb_destroy( string_buffer_t * );
 
 /**
-   Truncate the buffer. This will not deallocate the memory used, it will only set the contents of the string to L"\\0".
+   Completely truncate the buffer. This will not deallocate the memory
+   used, it will only set the contents of the string to L"\\0".
 */
 void sb_clear( string_buffer_t * );
+
+/**
+   Truncate the string to the specified number of characters. This
+   will not deallocate the memory used.
+*/
+void sb_truncate( string_buffer_t *, int chars_left );
+
+/**
+   Return the number of characters in the string
+*/
+ssize_t sb_length( string_buffer_t * );
+
 
 /*
   Buffer functions

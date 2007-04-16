@@ -1033,7 +1033,10 @@ void job_continue (job_t *j, int cont)
 					got_signal = 0;
 					quit = job_is_stopped( j ) || job_is_completed( j );
 				}
-				while( got_signal && !quit );
+
+				while( got_signal && !quit )
+					;
+
 				if( !quit )
 				{
 					
@@ -1077,7 +1080,6 @@ void job_continue (job_t *j, int cont)
 								}
 								
 							}
-							
 							break;
 						}
 								

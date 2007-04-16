@@ -1316,14 +1316,30 @@ void sb_destroy( string_buffer_t * b )
 
 void sb_clear( string_buffer_t * b )
 {
-	wchar_t c=0;
-
-	CHECK( b, );
-	
-	b->used=0;
-	b_append( b, &c, sizeof( wchar_t));
-	b->used -= sizeof(wchar_t);
+	sb_truncate( b, 0 );
+	assert( !wcslen( b->buff) );
 }
+
+void sb_truncate( string_buffer_t *b, int chars_left )
+{
+	wchar_t *arr;
+	
+	CHECK( b, );
+
+	b->used = (chars_left)*sizeof( wchar_t);
+	arr = (wchar_t *)b->buff;
+	arr[chars_left] = 0;
+	
+}
+
+ssize_t sb_length( string_buffer_t *b )
+{
+	CHECK( b, -1 );
+	return (b->used-1)/sizeof( wchar_t);
+	
+}
+
+
 
 
 void b_init( buffer_t *b)

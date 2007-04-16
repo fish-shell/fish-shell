@@ -283,14 +283,12 @@ static void builtin_print_help( const wchar_t *cmd, string_buffer_t *b )
 				*/
 				
 				pos = str;
-				for( i=0; i<4; i++ )
+				for( i=0; (i<4) && pos && *pos; i++ )
 				{
 					pos = wcschr( pos+1, L'\n' );
-					if( !pos )
-						break;
 				}
 				
-				if( pos )
+				if( pos && *pos )
 				{
 						
 					/* 

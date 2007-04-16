@@ -450,7 +450,8 @@ static void handle_winch( int sig, siginfo_t *info, void *context )
 }
 
 /**
-   Respond to a winch signal by checking the terminal size
+   Respond to a hup signal by exiting, unless it is vcaught by a
+   shellscript function, in which case we do nothing.
 */
 static void handle_hup( int sig, siginfo_t *info, void *context )
 {

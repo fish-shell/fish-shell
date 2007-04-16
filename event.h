@@ -97,6 +97,9 @@ void event_remove( event_t *event );
 /**
    Return all events which match the specified event class 
 
+   This function is safe to call from a signal handler _ONLY_ if the
+   out parameter is null.
+
    \param criterion Is the class of events to return. If the criterion has a non-null function_name, only events which trigger the specified function will return.
    \param out the list to add events to. May be 0, in which case no events will be added, but the result count will still be valid
    
@@ -110,6 +113,9 @@ int event_get( event_t *criterion, array_list_t *out );
    queued, and will be dispatched the next time event_fire is
    called. If event is a null-pointer, all pending events are
    dispatched.
+
+   This function is safe to call from a signal handler _ONLY_ if the
+   event parameter is for a signal.
 
    \param event the specific event whose handlers should fire
 */

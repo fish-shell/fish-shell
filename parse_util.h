@@ -138,7 +138,7 @@ int parse_util_unload( const wchar_t *cmd,
    Set the argv environment variable to the specified null-terminated
    array of strings. 
 */
-void parse_util_set_argv( wchar_t **argv );
+void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments );
 
 /**
    Make a duplicate of the specified string, unescape wildcard

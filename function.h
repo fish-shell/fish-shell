@@ -31,7 +31,8 @@ void function_destroy();
 void function_add( const wchar_t *name,
 				   const wchar_t *val,
 				   const wchar_t *desc,
-				   array_list_t *events );
+				   array_list_t *events,
+				   array_list_t *named_arguments );
 
 /**
    Remove the function with the specified name.
@@ -85,5 +86,10 @@ const wchar_t *function_get_definition_file( const wchar_t *name );
    functions that have already been defined.
 */
 int function_get_definition_offset( const wchar_t *name );
+
+/**
+   Returns a list of all named arguments of the specified function.
+*/
+array_list_t *function_get_named_arguments( const wchar_t *name );
 
 #endif

@@ -993,6 +993,8 @@ void exec( job_t *j )
 			{
 				const wchar_t * orig_def;
 				wchar_t * def=0;
+				array_list_t *named_arguments;
+				
 
 				/*
 				  Calls to function_get_definition might need to
@@ -1002,6 +1004,8 @@ void exec( job_t *j )
 
 				signal_unblock();
 				orig_def = function_get_definition( p->argv[0] );
+				named_arguments = function_get_named_arguments( p->argv[0] );
+
 				signal_block();
 				
 				if( orig_def )
@@ -1019,7 +1023,7 @@ void exec( job_t *j )
 				current_block->param2.function_call_process = p;
 				current_block->param1.function_call_name = halloc_register( current_block, wcsdup( p->argv[0] ) );
 						
-				parse_util_set_argv( p->argv+1 );
+				parse_util_set_argv( p->argv+1, named_arguments );
 								
 				parser_forbid_function( p->argv[0] );
 

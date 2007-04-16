@@ -1081,6 +1081,7 @@ typedef struct function_data
 	wchar_t *name;
 	wchar_t *description;
 	array_list_t *events;
+	array_list_t *named_arguments;
 }
 	function_data_t;
 
@@ -1097,7 +1098,10 @@ static int builtin_function( wchar_t **argv )
 	wchar_t *desc=0;
 	array_list_t *events;
 	int i;
-
+	array_list_t *named_arguments=0;
+	wchar_t *name = 0;
+	
+		
 	woptind=0;
 
 	parser_push_block( FUNCTION_DEF );
@@ -1131,6 +1135,10 @@ static int builtin_function( wchar_t **argv )
 			}
 			,
 			{
+				L"argument-names", no_argument, 0, 'a'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -1142,7 +1150,7 @@ static int builtin_function( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"d:s:j:p:v:h",
+								L"d:s:j:p:v:ha",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1291,6 +1299,12 @@ static int builtin_function( wchar_t **argv )
 				break;
 			}
 
+			case 'a':
+				if( !named_arguments )
+					named_arguments = al_halloc( current_block );
+				break;
+				
+
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return STATUS_BUILTIN_OK;
@@ -1306,12 +1320,12 @@ static int builtin_function( wchar_t **argv )
 
 	if( !res )
 	{
-		if( argc-woptind != 1 )
+		
+		if( argc == woptind )
 		{
 			sb_printf( sb_err,
-					   _( L"%ls: Expected one argument, got %d\n" ),
-					   argv[0],
-					   argc-woptind );
+					   _( L"%ls: Expected function name\n" ),
+					   argv[0] );
 			res=1;
 		}
 		else if( wcsfuncname( argv[woptind] ) )
@@ -1332,6 +1346,28 @@ static int builtin_function( wchar_t **argv )
 					   argv[woptind] );
 
 			res=1;
+		}
+		else
+		{
+
+			name = argv[woptind++];
+			
+			if( named_arguments )
+			{
+				while( woptind < argc )
+				{
+					al_push( named_arguments, halloc_wcsdup( current_block, argv[woptind++] ) );
+				}
+			}
+			else if( woptind != argc )
+			{
+				sb_printf( sb_err,
+						   _( L"%ls: Expected one argument, got %d\n" ),
+						   argv[0],
+						   argc );
+				res=1;
+				
+			}
 		}
 	}
 
@@ -1373,9 +1409,10 @@ static int builtin_function( wchar_t **argv )
 	{
 		function_data_t * d = halloc( current_block, sizeof( function_data_t ));
 		
-		d->name=halloc_wcsdup( current_block, argv[woptind]);
+		d->name=halloc_wcsdup( current_block, name);
 		d->description=desc?halloc_wcsdup( current_block, desc):0;
 		d->events = events;
+		d->named_arguments = named_arguments;
 		
 		for( i=0; i<al_get_count( events ); i++ )
 		{
@@ -2247,7 +2284,7 @@ static int builtin_source( wchar_t ** argv )
 
 		current_block->param1.source_dest = fn_intern;
 
-		parse_util_set_argv( argv+2);
+		parse_util_set_argv( argv+2, 0);
 
 		res = reader_read( fd );
 		
@@ -2645,7 +2682,8 @@ static void builtin_end_add_function_def( function_data_t *d )
 	function_add( d->name,
 				  def,
 				  d->description,
-				  d->events );
+				  d->events,
+				  d->named_arguments );
 	
 	free( def );
 	

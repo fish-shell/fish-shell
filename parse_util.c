@@ -1001,7 +1001,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	return reloaded;	
 }
 
-void parse_util_set_argv( wchar_t **argv )
+void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments )
 {
 	if( *argv )
 	{
@@ -1025,6 +1025,23 @@ void parse_util_set_argv( wchar_t **argv )
 	{
 		env_set( L"argv", 0, ENV_LOCAL );
 	}				
+
+	if( named_arguments )
+	{
+		wchar_t **arg;
+		int i;
+		
+		for( i=0, arg=argv; i < al_get_count( named_arguments ); i++ )
+		{
+			env_set( al_get( named_arguments, i ), *arg, ENV_LOCAL );
+
+			if( *arg )
+				arg++;
+		}
+			
+		
+	}
+	
 }
 
 wchar_t *parse_util_unescape_wildcards( const wchar_t *str )

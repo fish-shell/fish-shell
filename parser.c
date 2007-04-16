@@ -519,10 +519,9 @@ const wchar_t *parser_get_block_desc( int block )
 */
 static int parser_skip_arguments( const wchar_t *cmd )
 {
-	return contains_str( cmd,
-						 L"else",
-						 L"begin",
-						 (void *)0 );
+	return CONTAINS( cmd,
+					 L"else",
+					 L"begin" );
 }
 
 int parser_is_switch( const wchar_t *cmd )
@@ -538,42 +537,40 @@ int parser_is_subcommand( const wchar_t *cmd )
 {
 
 	return parser_skip_arguments( cmd ) ||
-		contains_str( cmd,
-					  L"command",
-					  L"builtin",
-					  L"while",
-					  L"exec",
-					  L"if",
-					  L"and",
-					  L"or",
-					  L"not",
-					  (void *)0 );
+		CONTAINS( cmd,
+				  L"command",
+				  L"builtin",
+				  L"while",
+				  L"exec",
+				  L"if",
+				  L"and",
+				  L"or",
+				  L"not" );
+	
 }
 
 int parser_is_block( const wchar_t *word)
 {
-	return contains_str( word,
-						 L"for",
-						 L"while",
-						 L"if",
-						 L"function",
-						 L"switch",
-						 L"begin",
-						 (void *)0 );
+	return CONTAINS( word,
+					 L"for",
+					 L"while",
+					 L"if",
+					 L"function",
+					 L"switch",
+					 L"begin" );
 }
 
 int parser_is_reserved( const wchar_t *word)
 {
 	return parser_is_block(word) ||
 		parser_is_subcommand( word ) ||
-		contains_str( word,
-					  L"end",
-					  L"case",
-					  L"else",
-					  L"return",
-					  L"continue",
-					  L"break",
-					  (void *)0 );
+		CONTAINS( word,
+				  L"end",
+				  L"case",
+				  L"else",
+				  L"return",
+				  L"continue",
+				  L"break" );
 }
 
 /**
@@ -581,13 +578,12 @@ int parser_is_reserved( const wchar_t *word)
 */
 static int parser_is_pipe_forbidden( wchar_t *word )
 {
-	return contains_str( word,
-						 L"exec",
-						 L"case",
-						 L"break",
-						 L"return",
-						 L"continue",
-						 (void *)0 );
+	return CONTAINS( word,
+					 L"exec",
+					 L"case",
+					 L"break",
+					 L"return",
+					 L"continue" );
 }
 
 /**
@@ -1827,14 +1823,13 @@ static int parse_job( process_t *p,
 		
 		mark = tok_get_pos( tok );
 
-		if( contains_str( nxt,
-						  L"command",
-						  L"builtin",
-						  L"not",
-						  L"and",
-						  L"or",
-						  L"exec",
-						  (void *)0 ) )
+		if( CONTAINS( nxt,
+					  L"command",
+					  L"builtin",
+					  L"not",
+					  L"and",
+					  L"or",
+					  L"exec" ) )
 		{			
 			int sw;
 			int is_exec = (wcscmp( L"exec", nxt )==0);
@@ -3005,9 +3000,8 @@ int parser_test( const  wchar_t * buff,
 						  command is needed, such as after 'and' or
 						  'while'
 						*/
-						if( contains_str( cmd,
-										  L"end",
-										  (void *)0 ) )
+						if( CONTAINS( cmd,
+									  L"end" ) )
 						{
 							err=1;
 							if( out )
@@ -3080,10 +3074,9 @@ int parser_test( const  wchar_t * buff,
 						had_cmd = 0;
 					}
 					
-					if( contains_str( cmd,
-									  L"or",
-									  L"and",
-									  (void *)0 ) )
+					if( CONTAINS( cmd,
+								  L"or",
+								  L"and" ) )
 					{
 						/*
 						  'or' and 'and' can not be used inside pipelines
@@ -3215,7 +3208,7 @@ int parser_test( const  wchar_t * buff,
 					/*
 					  Test that break and continue are only used within loop blocks
 					*/
-					if( contains_str( cmd, L"break", L"continue", (void *)0 ) )
+					if( CONTAINS( cmd, L"break", L"continue" ) )
 					{
 						int found_loop=0;
 						int i;

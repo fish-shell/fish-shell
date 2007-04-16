@@ -553,11 +553,11 @@ void reader_write_title()
 	  don't. Since we can't see the underlying terminal below screen
 	  there is no way to fix this.
 	*/
-	if( !term || !contains_str( term, L"xterm", L"screen", L"nxterm", L"rxvt", (wchar_t *)0 ) )
+	if( !term || !CONTAINS( term, L"xterm", L"screen", L"nxterm", L"rxvt" ) )
 	{
 		char *n = ttyname( STDIN_FILENO );
 
-		if( contains_str( term, L"linux", (void *)0 ) )
+		if( CONTAINS( term, L"linux" ) )
 		{
 			return;
 		}

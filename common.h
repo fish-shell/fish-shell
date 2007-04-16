@@ -140,6 +140,8 @@ extern wchar_t *program_name;
 */
 #define N_(wstr) wstr
 
+#define CONTAINS( str,... ) contains_str( str, __VA_ARGS__, (void *)0 )
+
 /*
   Print a stack trace to stderr
 */

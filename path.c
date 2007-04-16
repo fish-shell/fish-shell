@@ -52,7 +52,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		path = env_get(L"PATH");
 		if( path == 0 )
 		{
-			if( contains_str( PREFIX L"/bin", L"/bin", L"/usr/bin", (void *)0 ) )
+			if( CONTAINS( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
 			{
 				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
 			}

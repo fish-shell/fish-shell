@@ -560,7 +560,7 @@ static int builtin_complete( wchar_t **argv )
 			
 				for( i=0; i<al_get_count( comp ); i++ )
 				{
-					completion_t *next = (wchar_t *)al_get( comp, i );
+					completion_t *next = (completion_t *)al_get( comp, i );
 					if( next->description )
 					{
 						sb_printf( sb_out, L"%ls\t%ls\n", next->completion, next->description );

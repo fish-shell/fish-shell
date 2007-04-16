@@ -1189,35 +1189,36 @@ int wildcard_expand( const wchar_t *wc,
 	
 	if( flags & ACCEPT_INCOMPLETE )
 	{
-		wchar_t *wc_base;
+		wchar_t *wc_base=L"";
 		wchar_t *wc_base_ptr = wcsrchr( wc, L'/' );
+		string_buffer_t sb;
+		
 
 		if( wc_base_ptr )
 		{
-			string_buffer_t sb;
-
-			sb_init( &sb );
 			wc_base = wcsndup( wc, (wc_base_ptr-wc)+1 );
-			
-			for( i=c; i<al_get_count( out ); i++ )
-			{
-				completion_t *c = al_get( out, i );
-
-				if( c->flags & COMPLETE_NO_CASE )
-				{
-					sb_clear( &sb );
-					sb_printf( &sb, L"%ls%ls", wc_base, c->completion );
-
-					c->completion = halloc_wcsdup( out, (wchar_t *)sb.buff );
-				}
-			}
-			
-			sb_destroy( &sb );
-			free( wc_base );
-			
 		}
 		
+		sb_init( &sb );
+
+		for( i=c; i<al_get_count( out ); i++ )
+		{
+			completion_t *c = al_get( out, i );
+			
+			if( c->flags & COMPLETE_NO_CASE )
+			{
+				sb_clear( &sb );
+				sb_printf( &sb, L"%ls%ls%ls", base_dir, wc_base, c->completion );
+				
+				c->completion = halloc_wcsdup( out, (wchar_t *)sb.buff );
+			}
+		}
+		
+		sb_destroy( &sb );
+
+		if( wc_base_ptr )
+			free( wc_base );
+		
 	}
-	
 	return res;
 }

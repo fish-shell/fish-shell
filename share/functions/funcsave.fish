@@ -1,5 +1,5 @@
 
-function save_function --description "Save the current definition of all specified functions to file"
+function funcsave --description "Save the current definition of all specified functions to file"
 
 	if count $argv >/dev/null
 		switch $argv[1]

@@ -742,6 +742,7 @@ static void writer_hex( int num )
 	int a, b;
 	a = num /16;
 	b = num %16;
+
 	writer( a>9?('A'+a-10):('0'+a));
 	writer( b>9?('A'+b-10):('0'+b));
 }
@@ -830,7 +831,7 @@ static void write_url( char *file )
 		if( ((*str >= 'a') && (*str <='z')) ||
 			((*str >= 'A') && (*str <='Z')) ||
 			((*str >= '0') && (*str <='9')) ||
-			(strchr( "./_",*str) != 0) )
+			(strchr( "-_.~/",*str) != 0) )
 		{
 			writer(*str);			
 		}
@@ -842,7 +843,7 @@ static void write_url( char *file )
 		else
 		{
 			writer( '%' );
-			writer_hex( *str );
+			writer_hex( (unsigned char)*str );
 		}
 		str++;
 	}

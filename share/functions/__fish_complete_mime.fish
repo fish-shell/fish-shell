@@ -23,8 +23,5 @@ function __fish_complete_mime -d "Complete using text files"
 		printf "%s\n" $res
 	end
 
-	# Also do directory completion, since there might be files
-	# with the correct suffix in a subdirectory
-	__fish_complete_directories $comp
 end
 

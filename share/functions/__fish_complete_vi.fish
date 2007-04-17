@@ -22,7 +22,7 @@ function __fish_complete_vi -d "Compleletions for vi and its aliases"
 		# +{command}    : Execute Ex command after the first file has been read
 
 		# Complete gzip-compressed files
-		complete $cmds -x -a "(__fish_complete_suffix .gz)"
+		complete $cmds -x -a "(__fish_complete_mime 'application/x-gzip')"
 
 		complete $cmds -s c -r --description 'Execute Ex command after the first file has been read'
 		complete $cmds -s S -r --description 'Source file after the first file has been read'

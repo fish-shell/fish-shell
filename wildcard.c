@@ -256,6 +256,15 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			return 1;
 		}
 			
+		if( flags & COMPLETE_NO_CASE )
+		{
+			out_completion = wcsdup( orig );
+		}
+		else
+		{
+			out_completion = wcsdup( str );
+		}
+
 		if( wcschr( str, PROG_COMPLETE_SEP ) )
 		{
 			/*
@@ -263,10 +272,10 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			*/
 			wchar_t *sep;
 			
-			out_completion = wcsdup( str );
 			sep = wcschr(out_completion, PROG_COMPLETE_SEP );
 			*sep = 0;
 			out_desc = sep + 1;
+			
 		}
 		else
 		{
@@ -282,16 +291,6 @@ static int wildcard_complete_internal( const wchar_t *orig,
 					out_desc = func_desc;
 			}
 			
-			/*
-			  Append description to item, if a description exists
-			*/
-			out_completion = wcsdup( str );
-		}
-		
-		if( flags & COMPLETE_NO_CASE )
-		{
-			free( out_completion );
-			out_completion = wcsdup( orig );
 		}
 		
 		if( out_completion )
@@ -1217,7 +1216,9 @@ int wildcard_expand( const wchar_t *wc,
 		sb_destroy( &sb );
 
 		if( wc_base_ptr )
+		{
 			free( wc_base );
+		}
 		
 	}
 	return res;

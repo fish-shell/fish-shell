@@ -548,6 +548,11 @@ static int builtin_complete( wchar_t **argv )
 			int i;
 
 			const wchar_t *prev_temporary_buffer = temporary_buffer;
+
+			wchar_t *token;
+
+			parse_util_token_extent( do_complete, wcslen( do_complete ), &token, 0, 0, 0 );
+						
 			temporary_buffer = do_complete;		
 
 			if( recursion_level < 1 )
@@ -561,13 +566,25 @@ static int builtin_complete( wchar_t **argv )
 				for( i=0; i<al_get_count( comp ); i++ )
 				{
 					completion_t *next = (completion_t *)al_get( comp, i );
-					if( next->description )
+					wchar_t *prepend;
+					
+					if( next->flags & COMPLETE_NO_CASE )
 					{
-						sb_printf( sb_out, L"%ls\t%ls\n", next->completion, next->description );
+						prepend = L"";
 					}
 					else
 					{
-						sb_printf( sb_out, L"%ls\n", next->completion );
+						prepend = token;
+					}
+						
+
+					if( next->description )
+					{
+						sb_printf( sb_out, L"%ls%ls\t%ls\n", prepend, next->completion, next->description );
+					}
+					else
+					{
+						sb_printf( sb_out, L"%ls%ls\n", prepend, next->completion );
 					}
 				}
 			

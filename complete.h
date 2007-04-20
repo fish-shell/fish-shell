@@ -73,7 +73,11 @@
 #define COMPLETE_NO_SPACE 1
 
 /**
-   This compeltion is case insensitive
+   This compeltion is case insensitive. 
+
+   Warning: The contents of the completion_t structure is actually
+   different if this flag is set! Specifically, the completion string
+   contains the _entire_ completion token, not only the current
 */
 #define COMPLETE_NO_CASE 2
 

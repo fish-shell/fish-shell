@@ -9,4 +9,4 @@ complete -c type -s P -l force-path --description "Print path to command"
 complete -c type -a "(builtin -n)" --description "Builtin"
 complete -c type -a "(functions -n)" --description "Function"
 
-complete -c type -a "(commandline -ct)(complete -C(commandline -ct))" -x
+complete -c type -a "(complete -C(commandline -ct))" -x

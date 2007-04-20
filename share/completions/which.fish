@@ -12,4 +12,4 @@ complete -c which -l tty-only --description "Stop processing options on the righ
 complete -c which -s v -s V -l version --description "Display version and exit"
 complete -c which -l help --description "Display help and exit"
 
-complete -c which -a "(commandline -ct)(complete -C(commandline -ct))" -x
+complete -c which -a "(complete -C(commandline -ct))" -x

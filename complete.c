@@ -889,6 +889,7 @@ static void complete_strings( array_list_t *comp_out,
 	for( i=0; i<al_get_count( possible_comp ); i++ )
 	{
 		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
+
 		if( next_str )
 		{
 			wildcard_complete( next_str, wc, desc, desc_func, comp_out, flags );

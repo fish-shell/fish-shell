@@ -101,7 +101,7 @@ complete -c xterm -o wc --description 'Use wide characters'
 complete -c xterm -o wf --description 'Wait the first time for the window to be mapped'
 complete -c xterm -o Sccn --description 'Use as input/output channel for an existing program'
 
-complete -c xterm -s e -a "(commandline -ct)(complete -C(commandline -ct))" -x --description 'Run program in xterm'
+complete -c xterm -s e -a "(complete -C(commandline -ct))" -x --description 'Run program in xterm'
 
 complete -r -c xterm -o bcf --description 'Blinking cursor will be off for that many milliseconds'
 complete -r -c xterm -o bcn --description 'Blinking cursor will be on for that many milliseconds'

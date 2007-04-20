@@ -32,7 +32,7 @@ function __fish_complete_subcommand  -d "Complete subcommand"
 		end
 	end
 
-	printf "%s\n" (commandline -ct)(complete -C$res)
+	printf "%s\n" (complete -C$res)
 
 end
 

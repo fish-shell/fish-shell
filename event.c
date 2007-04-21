@@ -614,7 +614,9 @@ void event_fire( event_t *event )
 	}
 	else
 	{
-		
+		/*
+		  Fire events triggered by signals
+		*/
 		event_fire_delayed();
 			
 		if( event )

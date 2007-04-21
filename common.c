@@ -214,7 +214,7 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 /**
    Wrapper for wcsfilecmp
 */
-static int completion_cmp( const void *a, const void *b )
+static int str_cmp( const void *a, const void *b )
 {
 	wchar_t *c= *((wchar_t **)a);
 	wchar_t *d= *((wchar_t **)b);
@@ -226,7 +226,7 @@ void sort_list( array_list_t *comp )
 	qsort( comp->arr, 
 		   al_get_count( comp ),
 		   sizeof( void*),
-		   &completion_cmp );
+		   &str_cmp );
 }
 
 wchar_t *str2wcs( const char *in )

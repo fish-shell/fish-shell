@@ -28,6 +28,7 @@
 #include "event.h"
 #include "reader.h"
 #include "parse_util.h"
+#include "parser_keywords.h"
 #include "env.h"
 #include "expand.h"
 #include "halloc.h"
@@ -213,7 +214,7 @@ int function_exists( const wchar_t *cmd )
 	
 	CHECK( cmd, 0 );
 	
-	if( parser_is_reserved(cmd) )
+	if( parser_keywords_is_reserved(cmd) )
 		return 0;
 	
 	load( cmd );

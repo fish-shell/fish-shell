@@ -22,6 +22,7 @@
 #include "proc.h"
 #include "parser.h"
 #include "parse_util.h"
+#include "parser_keywords.h"
 #include "builtin.h"
 #include "function.h"
 #include "env.h"
@@ -642,7 +643,7 @@ void highlight_shell( wchar_t * buff,
 						int mark = tok_get_pos( &tok );
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;
 
-						if( parser_is_subcommand( cmd ) )
+						if( parser_keywords_is_subcommand( cmd ) )
 						{
 							
 							int sw;
@@ -662,9 +663,9 @@ void highlight_shell( wchar_t * buff,
 
 							tok_next( &tok );
 							
-							sw = parser_is_switch( tok_last( &tok ) );
+							sw = parser_keywords_is_switch( tok_last( &tok ) );
 							
-							if( !parser_is_block( cmd ) &&
+							if( !parser_keywords_is_block( cmd ) &&
 								sw == ARG_SWITCH )
 							{
 								/* 

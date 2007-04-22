@@ -26,6 +26,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "wutil.h"
 #include "proc.h"
 #include "parser.h"
+#include "parser_keywords.h"
 #include "tokenizer.h"
 #include "exec.h"
 #include "wildcard.h"
@@ -513,67 +514,6 @@ const wchar_t *parser_get_block_desc( int block )
 }
 
 /**
-   Check if the specified bcommand is one of the builtins that cannot
-   have arguments, any followin argument is interpreted as a new
-   command
-*/
-static int parser_skip_arguments( const wchar_t *cmd )
-{
-	return CONTAINS( cmd,
-					 L"else",
-					 L"begin" );
-}
-
-int parser_is_switch( const wchar_t *cmd )
-{
-	if( wcscmp( cmd, L"--" ) == 0 )
-		return ARG_SKIP;
-	else 
-		return cmd[0] == L'-';
-}
-
-
-int parser_is_subcommand( const wchar_t *cmd )
-{
-
-	return parser_skip_arguments( cmd ) ||
-		CONTAINS( cmd,
-				  L"command",
-				  L"builtin",
-				  L"while",
-				  L"exec",
-				  L"if",
-				  L"and",
-				  L"or",
-				  L"not" );
-	
-}
-
-int parser_is_block( const wchar_t *word)
-{
-	return CONTAINS( word,
-					 L"for",
-					 L"while",
-					 L"if",
-					 L"function",
-					 L"switch",
-					 L"begin" );
-}
-
-int parser_is_reserved( const wchar_t *word)
-{
-	return parser_is_block(word) ||
-		parser_is_subcommand( word ) ||
-		CONTAINS( word,
-				  L"end",
-				  L"case",
-				  L"else",
-				  L"return",
-				  L"continue",
-				  L"break" );
-}
-
-/**
    Returns 1 if the specified command is a builtin that may not be used in a pipeline
 */
 static int parser_is_pipe_forbidden( wchar_t *word )
@@ -614,7 +554,7 @@ static const wchar_t *parser_find_end( const wchar_t * buff )
 					{
 						count--;
 					}
-					else if( parser_is_block( tok_last(&tok) ) )
+					else if( parser_keywords_is_block( tok_last(&tok) ) )
 					{
 						count++;
 					}
@@ -1844,7 +1784,7 @@ static int parse_job( process_t *p,
 			}
 
 			tok_next( tok );
-			sw = parser_is_switch( tok_last( tok ) );
+			sw = parser_keywords_is_switch( tok_last( tok ) );
 			
 			if( sw == ARG_SWITCH )
 			{
@@ -2007,7 +1947,7 @@ static int parse_job( process_t *p,
 				builtin_exists( (wchar_t *)al_get( args, 0 ) ) )
 			{
 				p->type = INTERNAL_BUILTIN;
-				is_new_block |= parser_is_block( (wchar_t *)al_get( args, 0 ) );
+				is_new_block |= parser_keywords_is_block( (wchar_t *)al_get( args, 0 ) );
 			}
 		}
 		
@@ -2236,7 +2176,7 @@ static int parse_job( process_t *p,
 
 	if( !error_code )
 	{
-		if( p->type == INTERNAL_BUILTIN && parser_skip_arguments( (wchar_t *)al_get(args, 0) ) )
+		if( p->type == INTERNAL_BUILTIN && parser_keywords_skip_arguments( (wchar_t *)al_get(args, 0) ) )
 		{			
 			if( !p->argv )
 				halloc_register( j, p->argv = list_to_char_arr( args ) );
@@ -3045,7 +2985,7 @@ int parser_test( const  wchar_t * buff,
 					/*
 					  Handle block commands
 					*/
-					if( parser_is_block( cmd ) )
+					if( parser_keywords_is_block( cmd ) )
 					{
 						if( count >= BLOCK_MAX_COUNT )
 						{
@@ -3066,12 +3006,12 @@ int parser_test( const  wchar_t * buff,
 					}
 
 					/*
-					  If parser_is_subcommand is true, the command
+					  If parser_keywords_is_subcommand is true, the command
 					  accepts a second command as it's first
 					  argument. If parser_skip_arguments is true, the
 					  second argument is optional.
 					*/
-					if( parser_is_subcommand( cmd ) && !parser_skip_arguments(cmd ) )
+					if( parser_keywords_is_subcommand( cmd ) && !parser_keywords_skip_arguments(cmd ) )
 					{
 						needs_cmd = 1;
 						had_cmd = 0;

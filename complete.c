@@ -39,8 +39,8 @@ These functions are used for storing and retrieving tab-completion data, as well
 #include "reader.h"
 #include "history.h"
 #include "intern.h"
-
 #include "parse_util.h"
+#include "parser_keywords.h"
 #include "halloc.h"
 #include "halloc_util.h"
 #include "wutil.h"
@@ -1890,7 +1890,7 @@ void complete( const wchar_t *cmd,
 					if( !had_cmd )
 					{
 
-						if( parser_is_subcommand( ncmd ) )
+						if( parser_keywords_is_subcommand( ncmd ) )
 						{
 							if( wcscmp( ncmd, L"builtin" )==0)
 							{

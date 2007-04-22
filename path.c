@@ -66,6 +66,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		  Allocate string long enough to hold the whole command
 		*/
 		wchar_t *new_cmd = halloc( context, sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
+		
 		/*
 		  We tokenize a copy of the path, since strtok modifies
 		  its arguments

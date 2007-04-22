@@ -16,17 +16,6 @@
 #define PARSER_TEST_INCOMPLETE 2
 
 /**
-   REturn valuse for parser_is_switch()
-*/
-enum 
-{
-	ARG_NON_SWITCH,
-	ARG_SWITCH,
-	ARG_SKIP
-}
-	;
-
-/**
    event_block_t represents a block on events of the specified type
 */
 typedef struct event_block
@@ -231,39 +220,6 @@ int eval_args( const wchar_t *line,
 */
 void error( int ec, int p, const wchar_t *str, ... );
 
-
-/**
-   Check if the specified argument is a switch. Return ARG_SWITCH if yes,
-   ARG_NON_SWITCH if no and ARG_SKIP if the argument is '--'
-*/
-int parser_is_switch( const wchar_t *cmd );
-
-
-/**
-   Tests if the specified commands parameters should be interpreted as another command, which will be true if the command is either 'command', 'exec', 'if', 'while' or 'builtin'.  
-
-   \param cmd The command name to test
-   \return 1 of the command parameter is a command, 0 otherwise
-*/
-
-int parser_is_subcommand( const wchar_t *cmd );
-
-/**
-   Tests if the specified command is a reserved word, i.e. if it is
-   the name of one of the builtin functions that change the block or
-   command scope, like 'for', 'end' or 'command' or 'exec'. These
-   functions may not be overloaded, so their names are reserved.
-
-   \param word The command name to test
-   \return 1 of the command parameter is a command, 0 otherwise
-*/
-int parser_is_reserved( const wchar_t *word );
-
-/**
-   Test if the specified string is command that opens a new block
-*/
-
-int parser_is_block( const wchar_t *word);
 
 /**
    Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.

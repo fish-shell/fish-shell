@@ -228,6 +228,7 @@ wchar_t *builtin_help_get( const wchar_t *name )
 		}
 	}
 		
+	al_foreach( &lst, &free );
 	al_destroy( &lst );
 	sb_destroy( &cmd );
 	free( name_esc );

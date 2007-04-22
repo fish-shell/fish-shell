@@ -1364,6 +1364,16 @@ static int builtin_function( wchar_t **argv )
 			{
 				while( woptind < argc )
 				{
+					if( wcsvarname( argv[woptind] ) )
+					{
+						sb_printf( sb_err,
+								   _( L"%ls: Invalid variable name '%ls'\n" ),
+								   argv[0],
+								   argv[woptind] );
+						res = STATUS_BUILTIN_ERROR;
+						break;
+					}
+					
 					al_push( named_arguments, halloc_wcsdup( current_block, argv[woptind++] ) );
 				}
 			}

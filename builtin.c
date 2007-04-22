@@ -849,12 +849,7 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 	al_destroy( &ev );
 
-	sb_append2( out,
-				L"\n\t",
-				def,
-				L"\nend\n\n",
-				(void *)0);
-
+	sb_printf( out, L"\n\t%ls\nend\n", def );
 }
 
 
@@ -1065,6 +1060,9 @@ static int builtin_functions( wchar_t **argv )
 		{
 			if( !query )
 			{
+				if( i != woptind)
+					sb_append( sb_out, L"\n" );
+				
 				functions_def( argv[i], sb_out );
 			}
 		}				

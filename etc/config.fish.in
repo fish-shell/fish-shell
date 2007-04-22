@@ -4,12 +4,6 @@
 # @configure_input@
 
 #
-# Set default field separators
-#
-
-set -g IFS \ \t\n
-
-#
 # Some things should only be done for login terminals
 #
 

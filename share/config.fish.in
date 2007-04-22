@@ -6,6 +6,12 @@
 # @configure_input@
 
 #
+# Set default field separators
+#
+
+set -g IFS \n\ \t
+
+#
 # Set default search paths for completions and shellscript functions
 # unless they already exist
 #

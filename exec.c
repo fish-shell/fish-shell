@@ -1501,9 +1501,27 @@ int exec_subshell( const wchar_t *cmd,
 	int prev_subshell = is_subshell;
 	int status, prev_status;
 	io_data_t *io_buffer;
-
+	const wchar_t *ifs;
+	char sep=0;
+	
 	CHECK( cmd, -1 );
+	
+	ifs = env_get(L"IFS");
+
+	if( ifs && ifs[0] )
+	{
+		if( ifs[0] < 128 )
+		{
+			sep = '\n';//ifs[0];
+		}
+		else
+		{
+			sep = 0;
+			debug( 0, L"Warning - invalid command substitution separator '%lc'. Please change the firsta character of IFS", ifs[0] );
+		}
 		
+	}
+	
 	is_subshell=1;	
 	io_buffer= io_buffer_create( 0 );
 	
@@ -1532,31 +1550,11 @@ int exec_subshell( const wchar_t *cmd,
 	{
 		while( 1 )
 		{
-			switch( *end )
+			if( *end == 0 )
 			{
-				case 0:
-				
-					if( begin != end )
-					{
-						wchar_t *el = str2wcs( begin );
-						if( el )
-						{
-							al_push( lst, el );
-						}
-						else
-						{
-							debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-						}
-					}				
-					io_buffer_destroy( io_buffer );
-					
-					return status;
-				
-				case '\n':
+				if( begin != end )
 				{
-					wchar_t *el;
-					*end=0;
-					el = str2wcs( begin );
+					wchar_t *el = str2wcs( begin );
 					if( el )
 					{
 						al_push( lst, el );
@@ -1565,9 +1563,25 @@ int exec_subshell( const wchar_t *cmd,
 					{
 						debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
 					}
-					begin = end+1;
-					break;
+				}				
+				io_buffer_destroy( io_buffer );
+				
+				return status;
+			}
+			else if( *end == sep )
+			{
+				wchar_t *el;
+				*end=0;
+				el = str2wcs( begin );
+				if( el )
+				{
+					al_push( lst, el );
 				}
+				else
+				{
+					debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
+				}
+				begin = end+1;
 			}
 			end++;
 		}

@@ -1,10 +1,10 @@
-\section eval eval - eval the specified commands
+\section eval eval - evaluate the specified commands
 
 \subsection eval-synopsis Synopsis
 <tt>eval [COMMANDS...]</tt>
 
 \subsection eval-description Description
-The <tt>eval</tt> builtin causes fish to evaluate the specified parameters as a command. If more than one parameter is specified, all parameters will be joined using a space character as a separator.
+The <tt>eval</tt> function causes fish to evaluate the specified parameters as a command. If more than one parameter is specified, all parameters will be joined using a space character as a separator.
 
 \subsection eval-example Example
 

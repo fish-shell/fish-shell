@@ -2085,29 +2085,6 @@ static int builtin_status( wchar_t **argv )
 
 
 /**
-   The eval builtin. Concatenates the arguments and calls eval on the
-   result.
-*/
-static int builtin_eval( wchar_t **argv )
-{
-	string_buffer_t sb;
-	int i;
-	int argc = builtin_count_args( argv );
-	sb_init( &sb );
-
-	for( i=1; i<argc; i++ )
-	{
-		sb_append( &sb, argv[i] );
-		sb_append( &sb, L" " );
-	}
-
-	eval( (wchar_t *)sb.buff, block_io, TOP );
-	sb_destroy( &sb );
-
-	return proc_get_last_status();
-}
-
-/**
    The exit builtin. Calls reader_exit to exit and returns the value specified.
 */
 static int builtin_exit( wchar_t **argv )
@@ -3090,10 +3067,6 @@ const static builtin_data_t builtin_data[]=
 	,
 	{
 		L"else",  &builtin_else, N_( L"Evaluate block if condition is false" )  
-	}
-	,
-	{
-		L"eval",  &builtin_eval, N_( L"Evaluate parameters as a command" )  
 	}
 	,
 	{

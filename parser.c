@@ -2161,73 +2161,76 @@ static int parse_job( process_t *p,
 				   BLOCK_END_ERR_MSG );
 			
 		}
-
-		if( !make_sub_block )
+		else
 		{
-			int done=0;
 			
-			for( tok_init( &subtok, end, 0 ); 
-				 !done && tok_has_next( &subtok ); 
-				 tok_next( &subtok ) )
+			if( !make_sub_block )
 			{
-				
-				switch( tok_last_type( &subtok ) )
+				int done=0;
+			
+				for( tok_init( &subtok, end, 0 ); 
+					 !done && tok_has_next( &subtok ); 
+					 tok_next( &subtok ) )
 				{
-					case TOK_END:
-						done = 1;
-						break;
+				
+					switch( tok_last_type( &subtok ) )
+					{
+						case TOK_END:
+							done = 1;
+							break;
 						
-					case TOK_REDIRECT_OUT:
-					case TOK_REDIRECT_APPEND:
-					case TOK_REDIRECT_IN:
-					case TOK_REDIRECT_FD:
-					case TOK_PIPE:
-					{
-						done = 1;
-						make_sub_block = 1;
-						break;
-					}
+						case TOK_REDIRECT_OUT:
+						case TOK_REDIRECT_APPEND:
+						case TOK_REDIRECT_IN:
+						case TOK_REDIRECT_FD:
+						case TOK_PIPE:
+						{
+							done = 1;
+							make_sub_block = 1;
+							break;
+						}
 					
-					case TOK_STRING:
-					{
-						break;
-					}
+						case TOK_STRING:
+						{
+							break;
+						}
 					
-					default:
-					{
-						done = 1;
-						error( SYNTAX_ERROR,
-							   current_tokenizer_pos,
-							   BLOCK_END_ERR_MSG );
+						default:
+						{
+							done = 1;
+							error( SYNTAX_ERROR,
+								   current_tokenizer_pos,
+								   BLOCK_END_ERR_MSG );
+						}
 					}
 				}
-			}
 			
-			tok_destroy( &subtok );
+				tok_destroy( &subtok );
+			}
+		
+			if( make_sub_block )
+			{
+			
+				int end_pos = end-tok_string( tok );
+				wchar_t *sub_block= halloc_wcsndup( j,
+													tok_string( tok ) + current_tokenizer_pos,
+													end_pos - current_tokenizer_pos);
+			
+				p->type = INTERNAL_BLOCK;
+				al_set( args, 0, sub_block );
+			
+				tok_set_pos( tok,
+							 end_pos );
+
+				while( prev_block != current_block )
+				{
+					parser_pop_block();
+				}
+
+			}
+			else tok_next( tok );
 		}
 		
-		if( make_sub_block )
-		{
-			
-			int end_pos = end-tok_string( tok );
-			wchar_t *sub_block= halloc_wcsndup( j,
-												tok_string( tok ) + current_tokenizer_pos,
-												end_pos - current_tokenizer_pos);
-			
-			p->type = INTERNAL_BLOCK;
-			al_set( args, 0, sub_block );
-			
-			tok_set_pos( tok,
-						 end_pos );
-
-			while( prev_block != current_block )
-			{
-				parser_pop_block();
-			}
-
-		}
-		else tok_next( tok );
-
 	}
 	else tok_next( tok );
 

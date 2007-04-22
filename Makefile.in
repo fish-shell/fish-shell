@@ -64,6 +64,7 @@ CFLAGS = @CFLAGS@ $(MACROS)
 CPPFLAGS = @CPPFLAGS@ 
 LDFLAGS = @LIBS@ @LDFLAGS@ 
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
+LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
 LDFLAGS_FISH_PAGER = ${LDFLAGS} @LIBS_FISH_PAGER@
 LDFLAGS_FISHD = ${LDFLAGS} @LIBS_FISHD@
 LDFLAGS_MIMEDB = ${LDFLAGS} @LIBS_MIMEDB@
@@ -95,6 +96,8 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	signal.o io.o parse_util.o common.o screen.o path.o					\
 	parser_keywords.o
 
+FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
+parser_keywords.o wutil.o tokenizer.o
 
 #
 # Additional files used by builtin.o
@@ -190,7 +193,7 @@ MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help.in		\
     $(COMMON_FILES) $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c)			\
     fish.spec.in INSTALL README user_doc.head.html xsel-0.9.6.tar		\
     ChangeLog config.sub config.guess fish_tests.c main.c fish_pager.c	\
-    fishd.c seq.in make_vcs_completions.fish
+    fishd.c seq.in make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.c)
 
 #
 # The sorting is not meaningful in itself, but it has the side effect
@@ -241,7 +244,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-SIMPLE_PROGRAMS := fish set_color mimedb count fish_pager fishd
+SIMPLE_PROGRAMS := fish set_color mimedb count fish_pager fishd fish_indent
 PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL@ @SEQ_FALLBACK@ 
 
 
@@ -746,6 +749,14 @@ tokenizer_test: tokenizer.c tokenizer.h wutil.o common.o
 
 
 #
+# Build the fish_indent program.
+#
+
+fish_indent: $(FISH_INDENT_OBJS)
+	$(CC) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
+
+
+#
 # Neat little program to show output from terminal
 #
 
@@ -869,8 +880,7 @@ distclean: clean
 clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.c doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
-	rm -f tokenizer_test fish key_reader set_color mimedb
-	rm -f fishd fish_pager count fish_tests 
+	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader 
 	rm -f fish-@PACKAGE_VERSION@.tar 
 	rm -f fish-@PACKAGE_VERSION@.tar.gz 
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2

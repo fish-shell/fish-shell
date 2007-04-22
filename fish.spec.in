@@ -115,22 +115,24 @@ fi
 %doc %_datadir/doc/%{name}-%{version}
 
 # man files
+%_mandir/man1/count.1*
 %_mandir/man1/fish.1*
-%_mandir/man1/xsel.1x*
+%_mandir/man1/fish_pager.1*
+%_mandir/man1/fish_indent.1*
+%_mandir/man1/fishd.1*
 %_mandir/man1/mimedb.1*
 %_mandir/man1/set_color.1*
-%_mandir/man1/count.1*
-%_mandir/man1/fishd.1*
-%_mandir/man1/fish_pager.1*
+%_mandir/man1/xsel.1x*
 
 # The program binaries
-%attr(0755,root,root) %_bindir/fish
-%attr(0755,root,root) %_bindir/fishd
-%attr(0755,root,root) %_bindir/fish_pager
-%attr(0755,root,root) %_bindir/xsel
-%attr(0755,root,root) %_bindir/set_color
-%attr(0755,root,root) %_bindir/mimedb
 %attr(0755,root,root) %_bindir/count
+%attr(0755,root,root) %_bindir/fish
+%attr(0755,root,root) %_bindir/fish_indent
+%attr(0755,root,root) %_bindir/fish_pager
+%attr(0755,root,root) %_bindir/fishd
+%attr(0755,root,root) %_bindir/mimedb
+%attr(0755,root,root) %_bindir/set_color
+%attr(0755,root,root) %_bindir/xsel
 
 # Configuration files
 %config %_sysconfdir/fish/config.fish
@@ -156,9 +158,10 @@ fi
 
 
 
-
-
 %changelog
+* Sat Apr 21 2007 Axel Liljencrantz<axel@liljencrantz.se> 1.23.0-0
+- Add fish_indent command
+
 * Thu Feb 8 2007 Axel Liljencrantz<axel@liljencrantz.se> 1.22.3-0
 - Tell rpm about the help pages in %_datadir/fish/man/
 

@@ -20,6 +20,7 @@ AC_SUBST( docdir )
 AC_SUBST( HAVE_GETTEXT )
 AC_SUBST( LDFLAGS_FISH )
 AC_SUBST( LIBS_FISH )
+AC_SUBST( LIBS_FISH_INDENT )
 AC_SUBST( LIBS_FISH_PAGER )
 AC_SUBST( LIBS_FISHD )
 AC_SUBST( LIBS_MIMEDB )
@@ -481,6 +482,31 @@ AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv impl
 LIBS_FISH=$LIBS
 LIBS=$LIBS_COMMON
 
+#
+# Check for libraries needed by fish_indent. 
+#
+
+LIBS_COMMON=$LIBS
+LIBS=""
+if test x$local_gettext != xno; then 
+	AC_SEARCH_LIBS( gettext, intl,,)
+fi
+LIBS_FISH_INDENT=$LIBS
+LIBS=$LIBS_COMMON
+
+#
+# Check for libraries needed by fish_pager. 
+#
+
+LIBS_COMMON=$LIBS
+LIBS=""
+if test x$local_gettext != xno; then 
+	AC_SEARCH_LIBS( gettext, intl,,)
+fi
+AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
+AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
+LIBS_FISH_PAGER=$LIBS
+LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fishd. 
@@ -495,7 +521,6 @@ AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library
 LIBS_FISHD=$LIBS
 LIBS=$LIBS_COMMON
 
-
 #
 # Check for libraries needed by mimedb. 
 #
@@ -506,21 +531,6 @@ if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 LIBS_FISHD=$LIBS
-LIBS=$LIBS_COMMON
-
-
-#
-# Check for libraries needed by fish_pager. 
-#
-
-LIBS_COMMON=$LIBS
-LIBS=""
-if test x$local_gettext != xno; then 
-	AC_SEARCH_LIBS( gettext, intl,,)
-fi
-AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
-AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
-LIBS_FISH_PAGER=$LIBS
 LIBS=$LIBS_COMMON
 
 

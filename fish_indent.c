@@ -88,6 +88,8 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 	int is_command = 1;
 	int indent = 0;
 	int do_indent = 1;
+	int prev_type = 0;
+	int prev_prev_type = 0;
 
 	tok_init( &tok, in, TOK_SHOW_COMMENTS );
 	
@@ -127,14 +129,14 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 						insert_tabs( out, indent );
 					}
 					
-					sb_printf( out, L"%ls ", last );
+					sb_printf( out, L"%ls", last );
 					
 					indent = next_indent;
 					
 				}
 				else
 				{
-					sb_printf( out, L"%ls ", last );
+					sb_printf( out, L" %ls", last );
 				}
 				
 				break;
@@ -142,7 +144,8 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 			
 			case TOK_END:
 			{
-				sb_append( out, L"\n" );
+				if( prev_type != TOK_END || prev_prev_type != TOK_END ) 
+					sb_append( out, L"\n" );
 				do_indent = 1;
 				is_command = 1;
 				break;
@@ -195,6 +198,11 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 
 			case TOK_COMMENT:
 			{
+				if( do_indent && flags)
+				{
+					insert_tabs( out, indent );
+				}
+				
 				sb_printf( out, L"%ls", last );
 				do_indent = 1;
 				break;				
@@ -206,13 +214,44 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 				exit(1);
 			}			
 		}
-				
+		
+		prev_prev_type = prev_type;
+		prev_type = type;
+		
 	}
 	
 	tok_destroy( &tok );
 
 	return res;
 }
+
+wchar_t *trim( wchar_t *in )
+{
+	wchar_t *end;
+	
+	while( *in == L'\n' )
+	{
+		in++;
+	}
+	
+	end = in + wcslen(in);
+		
+	while( 1 )
+	{
+		if( end < in+2 )
+			break;
+
+		end--;
+		
+		if( (*end == L'\n' ) && ( *(end-1) == L'\n' ) )
+			*end=0;
+		else
+			break;
+	}
+	
+	return in;
+}
+
 
 
 int main( int argc, char **argv )
@@ -308,15 +347,14 @@ int main( int argc, char **argv )
 
 	if( !indent( &sb_out, (wchar_t *)sb_in.buff, do_indent ) )
 	{
-	
-		fwprintf( stdout, L"%ls", sb_out.buff );
+		fwprintf( stdout, L"%ls", trim( (wchar_t *)sb_out.buff) );
 	}
 	else
 	{
 		/*
 		  Indenting failed - print original input
 		*/
-		fwprintf( stdout, L"%ls", sb_in.buff );
+		fwprintf( stdout, L"%ls", (wchar_t *)sb_in.buff );
 	}
 	
 

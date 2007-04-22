@@ -994,6 +994,7 @@ void exec( job_t *j )
 				const wchar_t * orig_def;
 				wchar_t * def=0;
 				array_list_t *named_arguments;
+				int shadows;
 				
 
 				/*
@@ -1005,6 +1006,7 @@ void exec( job_t *j )
 				signal_unblock();
 				orig_def = function_get_definition( p->argv[0] );
 				named_arguments = function_get_named_arguments( p->argv[0] );
+				shadows = function_get_shadows( p->argv[0] );
 
 				signal_block();
 				
@@ -1018,7 +1020,7 @@ void exec( job_t *j )
 					break;
 				}
 
-				parser_push_block( FUNCTION_CALL );
+				parser_push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
 				
 				current_block->param2.function_call_process = p;
 				current_block->param1.function_call_name = halloc_register( current_block, wcsdup( p->argv[0] ) );

@@ -60,8 +60,10 @@ typedef struct
 	   Flag for specifying that this function was automatically loaded
 	*/
 	int is_autoload;
+
+	int shadows;
 }
-	function_data_t;
+	function_internal_data_t;
 
 /**
    Table containing all functions
@@ -83,8 +85,8 @@ static int load( const wchar_t *name )
 {
 	int was_autoload = is_autoload;
 	int res;
-	function_data_t *data;
-	data = (function_data_t *)hash_get( &function, name );
+	function_internal_data_t *data;
+	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data && !data->is_autoload )
 		return 0;
 	
@@ -165,46 +167,43 @@ void function_destroy()
 }
 
 
-void function_add( const wchar_t *name, 
-				   const wchar_t *val,
-				   const wchar_t *desc,
-				   array_list_t *events,
-				   array_list_t *named_arguments )
+void function_add( function_data_t *data )
 {
 	int i;
 	wchar_t *cmd_end;
-	function_data_t *d;
+	function_internal_data_t *d;
 	
-	CHECK( name, );
-	CHECK( val, );
+	CHECK( data->name, );
+	CHECK( data->definition, );
 	
-	function_remove( name );
+	function_remove( data->name );
 	
-	d = halloc( 0, sizeof( function_data_t ) );
+	d = halloc( 0, sizeof( function_internal_data_t ) );
 	d->definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
-	d->cmd = halloc_wcsdup( d, val );
+	d->cmd = halloc_wcsdup( d, data->definition );
 
-	if( named_arguments )
+	if( data->named_arguments )
 	{
 		d->named_arguments = al_halloc( d );
 
-		for( i=0; i<al_get_count( named_arguments ); i++ )
+		for( i=0; i<al_get_count( data->named_arguments ); i++ )
 		{
-			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( named_arguments, i ) ) );
+			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( data->named_arguments, i ) ) );
 		}
 	}
 	
 	cmd_end = d->cmd + wcslen(d->cmd)-1;
 	
-	d->desc = desc?halloc_wcsdup( d, desc ):0;
+	d->desc = data->description?halloc_wcsdup( d, data->description ):0;
 	d->definition_file = intern(reader_current_filename());
 	d->is_autoload = is_autoload;
-		
-	hash_put( &function, intern(name), d );
+	d->shadows = data->shadows;
 	
-	for( i=0; i<al_get_count( events ); i++ )
+	hash_put( &function, intern(data->name), d );
+	
+	for( i=0; i<al_get_count( data->events ); i++ )
 	{
-		event_add_handler( (event_t *)al_get( events, i ) );
+		event_add_handler( (event_t *)al_get( data->events, i ) );
 	}
 	
 }
@@ -225,7 +224,7 @@ void function_remove( const wchar_t *name )
 {
 	void *key;
 	void *dv;
-	function_data_t *d;
+	function_internal_data_t *d;
 	event_t ev;
 	
 	CHECK( name, );
@@ -235,7 +234,7 @@ void function_remove( const wchar_t *name )
 				 &key,
 				 &dv );
 
-	d=(function_data_t *)dv;
+	d=(function_internal_data_t *)dv;
 	
 	if( !key )
 		return;
@@ -259,12 +258,12 @@ void function_remove( const wchar_t *name )
 	
 const wchar_t *function_get_definition( const wchar_t *name )
 {
-	function_data_t *data;
+	function_internal_data_t *data;
 	
 	CHECK( name, 0 );
 	
 	load( name );
-	data = (function_data_t *)hash_get( &function, name );
+	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return 0;
 	return data->cmd;
@@ -272,26 +271,39 @@ const wchar_t *function_get_definition( const wchar_t *name )
 
 array_list_t *function_get_named_arguments( const wchar_t *name )
 {
-	function_data_t *data;
+	function_internal_data_t *data;
 	
 	CHECK( name, 0 );
 	
 	load( name );
-	data = (function_data_t *)hash_get( &function, name );
+	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return 0;
 	return data->named_arguments;
 }
 
+int function_get_shadows( const wchar_t *name )
+{
+	function_internal_data_t *data;
+	
+	CHECK( name, 0 );
+	
+	load( name );
+	data = (function_internal_data_t *)hash_get( &function, name );
+	if( data == 0 )
+		return 0;
+	return data->shadows;
+}
+
 	
 const wchar_t *function_get_desc( const wchar_t *name )
 {
-	function_data_t *data;
+	function_internal_data_t *data;
 	
 	CHECK( name, 0 );
 		
 	load( name );
-	data = (function_data_t *)hash_get( &function, name );
+	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return 0;
 	
@@ -300,13 +312,13 @@ const wchar_t *function_get_desc( const wchar_t *name )
 
 void function_set_desc( const wchar_t *name, const wchar_t *desc )
 {
-	function_data_t *data;
+	function_internal_data_t *data;
 	
 	CHECK( name, );
 	CHECK( desc, );
 	
 	load( name );
-	data = (function_data_t *)hash_get( &function, name );
+	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return;
 
@@ -377,11 +389,11 @@ void function_get_names( array_list_t *list, int get_hidden )
 
 const wchar_t *function_get_definition_file( const wchar_t *name )
 {
-	function_data_t *data;
+	function_internal_data_t *data;
 
 	CHECK( name, 0 );
 		
-	data = (function_data_t *)hash_get( &function, name );
+	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return 0;
 	
@@ -391,11 +403,11 @@ const wchar_t *function_get_definition_file( const wchar_t *name )
 
 int function_get_definition_offset( const wchar_t *name )
 {
-	function_data_t *data;
+	function_internal_data_t *data;
 
 	CHECK( name, -1 );
 		
-	data = (function_data_t *)hash_get( &function, name );
+	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return -1;
 	

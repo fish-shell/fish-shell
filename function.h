@@ -15,6 +15,21 @@
 #include "util.h"
 
 /**
+   Structure describing a function
+*/
+typedef struct function_data
+{
+	wchar_t *name;
+	wchar_t *description;
+	wchar_t *definition;
+	array_list_t *events;
+	array_list_t *named_arguments;
+	int shadows;
+}
+	function_data_t;
+
+
+/**
    Initialize function data   
 */
 void function_init();
@@ -28,11 +43,7 @@ void function_destroy();
    Add an function. The parameters values are copied and should be
    freed by the caller.
 */
-void function_add( const wchar_t *name,
-				   const wchar_t *val,
-				   const wchar_t *desc,
-				   array_list_t *events,
-				   array_list_t *named_arguments );
+void function_add( function_data_t *data );
 
 /**
    Remove the function with the specified name.
@@ -91,5 +102,10 @@ int function_get_definition_offset( const wchar_t *name );
    Returns a list of all named arguments of the specified function.
 */
 array_list_t *function_get_named_arguments( const wchar_t *name );
+
+/**
+   Returns whether this function shadows variables of the underlying function
+*/
+int function_get_shadows( const wchar_t *name );
 
 #endif

@@ -213,6 +213,11 @@ The fish parser. Contains functions for parsing and evaluating code.
 */
 #define FUNCTION_CALL_BLOCK N_( L"function invocation block" )
 
+/**
+   Function invocation block description
+*/
+#define FUNCTION_CALL_NO_SHADOW_BLOCK N_( L"function invocation block with no variable shadowing" )
+
 
 /**
    Switch block description
@@ -307,6 +312,10 @@ const static struct block_lookup_entry block_lookup[]=
 	,
 	{
 		FUNCTION_CALL, 0, FUNCTION_CALL_BLOCK 
+	}
+	,
+	{
+		FUNCTION_CALL_NO_SHADOW, 0, FUNCTION_CALL_NO_SHADOW_BLOCK 
 	}
 	,
 	{

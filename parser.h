@@ -120,6 +120,7 @@ enum block_type
 	IF, /**< If block */
 	FUNCTION_DEF, /**< Function definition block */
 	FUNCTION_CALL, /**< Function invocation block */
+	FUNCTION_CALL_NO_SHADOW, /**< Function invocation block with no variable shadowing */
 	SWITCH, /**< Switch block */
 	FAKE, /**< Fake block */
 	SUBST, /**< Command substitution scope */

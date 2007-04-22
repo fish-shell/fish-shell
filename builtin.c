@@ -1084,16 +1084,6 @@ static int builtin_functions( wchar_t **argv )
 
 }
 
-typedef struct function_data
-{
-	wchar_t *name;
-	wchar_t *description;
-	array_list_t *events;
-	array_list_t *named_arguments;
-}
-	function_data_t;
-
-
 
 /**
    The function builtin, used for providing subroutines.
@@ -1108,7 +1098,7 @@ static int builtin_function( wchar_t **argv )
 	int i;
 	array_list_t *named_arguments=0;
 	wchar_t *name = 0;
-	
+	int shadows = 1;
 		
 	woptind=0;
 
@@ -1147,6 +1137,10 @@ static int builtin_function( wchar_t **argv )
 			}
 			,
 			{
+				L"no-scope-shadowing", no_argument, 0, 'S'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -1158,7 +1152,7 @@ static int builtin_function( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"d:s:j:p:v:ha",
+								L"d:s:j:p:v:haS",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1312,7 +1306,10 @@ static int builtin_function( wchar_t **argv )
 					named_arguments = al_halloc( current_block );
 				break;
 				
-
+			case 'S':
+				shadows = 0;
+				break;
+				
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return STATUS_BUILTIN_OK;
@@ -1431,6 +1428,7 @@ static int builtin_function( wchar_t **argv )
 		d->description=desc?halloc_wcsdup( current_block, desc):0;
 		d->events = events;
 		d->named_arguments = named_arguments;
+		d->shadows = shadows;
 		
 		for( i=0; i<al_get_count( events ); i++ )
 		{
@@ -2691,31 +2689,6 @@ static int builtin_begin( wchar_t **argv )
 	return proc_get_last_status();
 }
 
-/**
-   Define the function specified by the function_data_t structure. 
-*/
-static void builtin_end_add_function_def( function_data_t *d )
-{
-	/**
-	   Copy the text from the beginning of the function
-	   until the end command and use as the new definition
-	   for the specified function
-	*/
-
-	wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
-							parser_get_job_pos()-current_block->tok_pos );
-	
-	function_add( d->name,
-				  def,
-				  d->description,
-				  d->events,
-				  d->named_arguments );
-	
-	free( def );
-	
-}
-
-
 
 /**
    Builtin for ending a block of code, such as a for-loop or an if statement.
@@ -2801,7 +2774,18 @@ static int builtin_end( wchar_t **argv )
 				
 				if( d )
 				{
-					builtin_end_add_function_def( d );
+					/**
+					   Copy the text from the beginning of the function
+					   until the end command and use as the new definition
+					   for the specified function
+					*/
+
+					wchar_t *def = wcsndup( parser_get_buffer()+current_block->tok_pos,
+											parser_get_job_pos()-current_block->tok_pos );
+					d->definition = def;
+		
+					function_add( d );	
+					free( def );
 				}
 				else
 				{

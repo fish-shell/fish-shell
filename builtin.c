@@ -2257,36 +2257,42 @@ static int builtin_source( wchar_t ** argv )
 
 	argc = builtin_count_args( argv );
 
-	if( argc < 2 )
-	{
-		sb_printf( sb_err, _( L"%ls: Expected at least one argument, got %d\n" ), argv[0], argc );
-		builtin_print_help( argv[0], sb_err );
-		return STATUS_BUILTIN_ERROR;
-	}
+	wchar_t *fn;
+	const wchar_t *fn_intern;
+		
 
-	if( wstat(argv[1], &buf) == -1 )
-	{
-		builtin_wperror( L"stat" );
-		return STATUS_BUILTIN_ERROR;
-	}
 
-	if( !S_ISREG(buf.st_mode) )
+	if( argc < 2 || (wcscmp( argv[1], L"-" ) == 0) )
 	{
-		sb_printf( sb_err, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
-		builtin_print_help( argv[0], sb_err );
-
-		return STATUS_BUILTIN_ERROR;
-	}
-	if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
-	{
-		builtin_wperror( L"open" );
-		res = STATUS_BUILTIN_ERROR;
+		fn = L"-";
+		fn_intern = fn;
+		fd = dup(builtin_stdin);
 	}
 	else
 	{
-		wchar_t *fn = wrealpath( argv[1], 0 );
-		const wchar_t *fn_intern;
-		
+
+		if( wstat(argv[1], &buf) == -1 )
+		{
+			builtin_wperror( L"stat" );
+			return STATUS_BUILTIN_ERROR;
+		}
+
+		if( !S_ISREG(buf.st_mode) )
+		{
+			sb_printf( sb_err, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
+			builtin_print_help( argv[0], sb_err );
+
+			return STATUS_BUILTIN_ERROR;
+		}
+
+		if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
+		{
+			builtin_wperror( L"open" );
+			return STATUS_BUILTIN_ERROR;
+		}
+
+		fn = wrealpath( argv[1], 0 );
+
 		if( !fn )
 		{
 			fn_intern = intern( argv[1] );
@@ -2296,32 +2302,34 @@ static int builtin_source( wchar_t ** argv )
 			fn_intern = intern(fn);
 			free( fn );
 		}
-		
-		parser_push_block( SOURCE );		
-		reader_push_current_filename( fn_intern );
 
-		current_block->param1.source_dest = fn_intern;
-
-		parse_util_set_argv( argv+2, 0);
-
-		res = reader_read( fd );
-		
-		parser_pop_block();
-		if( res )
-		{
-			sb_printf( sb_err,
-					   _( L"%ls: Error while reading file '%ls'\n" ),
-					   argv[0],
-					   argv[1] );
-		}
-
-		/*
-		  Do not close fd after calling reader_read. reader_read
-		  automatically closes it before calling eval.
-		*/
-
-		reader_pop_current_filename();
 	}
+		
+	parser_push_block( SOURCE );		
+	reader_push_current_filename( fn_intern );
+
+	current_block->param1.source_dest = fn_intern;
+
+	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), 0);
+
+	res = reader_read( fd );
+		
+	parser_pop_block();
+
+	if( res )
+	{
+		sb_printf( sb_err,
+				   _( L"%ls: Error while reading file '%ls'\n" ),
+				   argv[0],
+				   argv[1] );
+	}
+
+	/*
+	  Do not close fd after calling reader_read. reader_read
+	  automatically closes it before calling eval.
+	*/
+
+	reader_pop_current_filename();
 
 	return res;
 }

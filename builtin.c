@@ -788,8 +788,8 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 	array_list_t ev;
 	event_t search;
-
 	int i;
+	array_list_t *named;
 
 	search.function_name = name;
 	search.type = EVENT_ANY;
@@ -849,6 +849,17 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 	}
 
 	al_destroy( &ev );
+
+	named = function_get_named_arguments( name );
+	if( named )
+	{
+		sb_printf( out, L" --argument" );
+		for( i=0; i<al_get_count( named ); i++ )
+		{
+			sb_printf( out, L" %ls", (wchar_t *)al_get( named, i ) );
+		}
+	}
+	
 
 	sb_printf( out, L"\n\t%ls\nend\n", def );
 }
@@ -1205,7 +1216,7 @@ static int builtin_function( wchar_t **argv )
 							   _( L"%ls: Invalid variable name '%ls'\n" ),
 							   argv[0],
 							   woptarg );
-					res=1;
+					res=STATUS_BUILTIN_ERROR;
 					break;
 				}
 

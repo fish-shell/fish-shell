@@ -115,7 +115,6 @@ fi
 %doc %_datadir/doc/%{name}-%{version}
 
 # man files
-%_mandir/man1/count.1*
 %_mandir/man1/fish.1*
 %_mandir/man1/fish_pager.1*
 %_mandir/man1/fish_indent.1*
@@ -125,7 +124,6 @@ fi
 %_mandir/man1/xsel.1x*
 
 # The program binaries
-%attr(0755,root,root) %_bindir/count
 %attr(0755,root,root) %_bindir/fish
 %attr(0755,root,root) %_bindir/fish_indent
 %attr(0755,root,root) %_bindir/fish_pager

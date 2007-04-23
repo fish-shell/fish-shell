@@ -1309,16 +1309,8 @@ static void parse_job_argument_list( process_t *p,
 	  workaround and a huge hack, but as near as I can tell, the
 	  alternatives are worse.
 	*/
-	if( p->actual_cmd )
-	{
-		wchar_t *woot = wcsrchr( p->actual_cmd, L'/' );
-		if( !woot )
-			woot = p->actual_cmd;
-		else
-			woot++;
-		proc_is_count = wcscmp( woot, L"count" )==0;
-	}
-
+	proc_is_count = (wcscmp( (wchar_t *)al_get( args, 0 ), L"count" )==0);
+	
 	while( 1 )
 	{
 

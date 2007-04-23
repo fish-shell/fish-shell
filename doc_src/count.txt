@@ -5,10 +5,10 @@
 
 \subsection count-description Description
 
-<tt>count</tt> prints the number of arguments that were passed to
-it. This is usually used to find out how many elements an environment
-variable array contains, but this is not the only potential usage for
-the count command. 
+The <tt>count</tt> function prints the number of arguments that were
+passed to it. This is usually used to find out how many elements an
+environment variable array contains, but this is not the only
+potential usage for the count command.
 
 The count command does not accept any options, not even '-h'. This way
 the user does not have to worry about an array containing elements

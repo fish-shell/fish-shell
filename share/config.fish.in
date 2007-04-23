@@ -86,6 +86,10 @@ for i in (printf "%s\n" $path_list|sgrep -E -v $path_regexp)
 	end
 end
 
+# Launch debugger on SIGTRAP
+function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --description "Signal handler for the TRAP signal. Lanches a debug prompt."
+	breakpoint
+end
 
 if status --is-interactive
 	. config_interactive.fish

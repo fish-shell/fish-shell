@@ -2005,6 +2005,11 @@ static int builtin_status( wchar_t **argv )
 				mode = DONE;				
 				break;
 
+			case 't':
+				mode = STACK_TRACE;
+				break;
+				
+
 			case '?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;

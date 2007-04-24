@@ -1402,15 +1402,18 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - The parser/validator could be more clever in order to make things like writing 'function --help' work as expected
 - Some event handler functions make much more sense as oneshots - maybe they should be automatically deleted after firing?
 - exec_subshell should be either merged with eval or moved to parser.c
+- Don't use expand_string to perform completions. wildcard_complete can be called directly, the brace expansion handling should be universal, and the process expansion can be moved to complete.c.
+- Make the history serach support incremental searching
+- Named events, i.e. events that are identified by their name, and can be triggered manually by the user. System-provided named events would include the launching of an interactive prompt, system startup, the interactive execution of a command line.
 
 \subsection bugs Known bugs and issues
 
 - Suspending and then resuming pipelines containing a builtin or a shellscript function is broken. Ideally, the exec function in exec.c should be able to resume execution of a partially executed job.
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
-- When a builtin has its output redirected to a file, and the builtin does not produce any IO, then the file is never opened. Thus tha file may not be cleared.
-- No '--' completion
-- else is not indented properly
-- if an if fails inside an if, the out if's else may trigger
+- Sometimes autoheader needs to be run on a fresh tarball. Fix dates before creating tarballs.
+- If a char is inserted by fish_pager, the tab completion code doesn't notice and won't react to a new tab press.
+- Alt-P should honor PAGER, and possibly also check for the pager program.
+- output with no terminating newline is swallowed again
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

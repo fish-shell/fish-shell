@@ -2933,7 +2933,7 @@ wchar_t *reader_readline()
    the prompt, using syntax highlighting. This is used for reading
    scripts and init files.
 */
-static int read_ni( int fd )
+static int read_ni( int fd, io_data_t *io )
 {
 	FILE *in_stream;
 	wchar_t *buff=0;
@@ -2996,7 +2996,7 @@ static int read_ni( int fd )
 		
 			if( !parser_test( str, 0, &sb, L"fish" ) )
 			{
-				eval( str, 0, TOP );
+				eval( str, io, TOP );
 			}
 			else
 			{
@@ -3035,7 +3035,7 @@ static int read_ni( int fd )
 	return res;
 }
 
-int reader_read( int fd )
+int reader_read( int fd, io_data_t *io )
 {
 	int res;
 
@@ -3047,7 +3047,7 @@ int reader_read( int fd )
 
 	proc_push_interactive( ((fd == 0) && isatty(STDIN_FILENO)));
 	
-	res= is_interactive?read_i():read_ni( fd );
+	res= is_interactive?read_i():read_ni( fd, io );
 
 	/*
 	  If the exit command was called in a script, only exit the

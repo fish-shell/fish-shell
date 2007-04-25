@@ -138,6 +138,13 @@ static int builtin_stdin;
 static hash_table_t *desc=0;
 
 /**
+   The underyion IO redirections behind the current builtin. This
+   should normally not be used - sb_out and friends are already
+   configured to handle everything.
+*/
+static io_data_t *real_io;
+
+/**
    Counts the number of non null pointers in the specified array
 */
 static int builtin_count_args( wchar_t **argv )
@@ -2292,7 +2299,7 @@ static int builtin_source( wchar_t ** argv )
 
 	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), 0);
 
-	res = reader_read( fd );
+	res = reader_read( fd, real_io );
 		
 	parser_pop_block();
 
@@ -2877,7 +2884,7 @@ static int builtin_breakpoint( wchar_t **argv )
 {
 	parser_push_block( BREAKPOINT );		
 	
-	reader_read( 0 );
+	reader_read( 0, real_io );
 	
 	parser_pop_block();		
 	
@@ -3262,10 +3269,11 @@ static int internal_help( wchar_t *cmd )
 }
 
 
-int builtin_run( wchar_t **argv )
+int builtin_run( wchar_t **argv, io_data_t *io )
 {
 	int (*cmd)(wchar_t **argv)=0;
-	
+	real_io = io;
+		
 	CHECK( argv, STATUS_BUILTIN_ERROR );
 	CHECK( argv[0], STATUS_BUILTIN_ERROR );
 		

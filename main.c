@@ -332,7 +332,7 @@ int main( int argc, char **argv )
 		{
 			if( my_optind == argc )
 			{
-				res = reader_read( 0 );				
+				res = reader_read( 0, 0 );				
 			}
 			else
 			{
@@ -374,7 +374,7 @@ int main( int argc, char **argv )
 				free( rel_filename );
 				free( abs_filename );
 
-				res = reader_read( fd );
+				res = reader_read( fd, 0 );
 
 				if( res )
 				{

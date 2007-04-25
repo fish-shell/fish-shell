@@ -1158,7 +1158,7 @@ void exec( job_t *j )
 					
 					signal_unblock();
 					
-					p->status = builtin_run( p->argv );
+					p->status = builtin_run( p->argv, j->io );
 					
 					builtin_out_redirect=old_out;
 					builtin_err_redirect=old_err;

@@ -8,6 +8,7 @@
 #include <wchar.h>
 
 #include "util.h"
+#include "io.h"
 
 enum
 {
@@ -131,7 +132,7 @@ int builtin_exists( wchar_t *cmd );
 
   \return the exit status of the builtin command
 */
-int builtin_run( wchar_t **argv );
+int builtin_run( wchar_t **argv, io_data_t *io );
 
 /**
   Insert all builtin names into l. These are not copies of the strings and should not be freed after use.

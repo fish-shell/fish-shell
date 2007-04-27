@@ -312,7 +312,7 @@ static int builtin_commandline( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"aijpctwforhI:C", 
+								L"abijpctwforhI:C", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -334,6 +334,11 @@ static int builtin_commandline( wchar_t **argv )
 			case L'a':
 				append_mode = APPEND_MODE;
 				break;
+
+			case L'b':
+				buffer_part = STRING_MODE;
+				break;
+				
 				
 			case L'i':
 				append_mode = INSERT_MODE;

@@ -346,7 +346,7 @@ xsel-0.9.6:
 	tar -xf xsel-0.9.6.tar
 
 xsel-0.9.6/xsel: xsel-0.9.6
-	cd xsel-0.9.6; ./configure; make
+	cd xsel-0.9.6; ./configure && make || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 
 #

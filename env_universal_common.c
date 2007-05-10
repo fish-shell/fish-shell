@@ -133,15 +133,70 @@ wchar_t *utf2wcs( const char *in )
 
 	wchar_t *out;
 
-	char *to_name[]=
+	/*
+	  Try to convert to wchar_t. If that is not a valid character set,
+	  try various names for ucs-4. We can't be sure that ucs-4 is
+	  really the character set used by wchar_t, but it is the best
+	  assumption we can make.
+	*/
+	char *to_name1[]=
 	{
-		"wchar_t", "WCHAR_T", "wchar", "WCHAR", 0
+		"wchar_t", "WCHAR_T", 
+		"wchar", "WCHAR", 
+		0
 	}
 	;
 
+	char *to_name4[]=
+	{
+		"wchar_t", "WCHAR_T", 
+		"wchar", "WCHAR", 
+		"ucs-4", "UCS-4", 
+		"ucs4", "UCS4", 
+		"utf-32", "UTF-32", 
+		"utf32", "UTF32", 
+		0
+	}
+	;
+
+	char *to_name2[]=
+	{
+		"wchar_t", "WCHAR_T", 
+		"wchar", "WCHAR", 
+		"ucs-2", "UCS-2", 
+		"ucs2", "UCS2", 
+		"utf-16", "UTF-16", 
+		"utf16", "UTF16", 
+		0
+	}
+	;
+
+	char **to_name=0;
+
+	switch (sizeof (wchar_t))
+	{
+	
+		case 2:
+			to_name = to_name2;
+			break;
+
+		case 4:
+			to_name = to_name4;
+			break;
+			
+		default:
+			to_name = to_name1;
+			break;
+	}
+	
+
+	/*
+	  The line protocol fish uses is always utf-8. 
+	*/
 	char *from_name[]=
 	{
-		"utf-8", "UTF-8", "utf8", "UTF8", 0
+		"utf-8", "UTF-8",
+		"utf8", "UTF8", 0
 	}
 	;
 

@@ -266,3 +266,38 @@ wchar_t *path_get_config( void *context)
 	
 }
 
+wchar_t *path_make_canonical( void *context, const wchar_t *path )
+{
+	wchar_t *res = halloc_wcsdup( context, path );
+	wchar_t *in, *out;
+	
+	in = out = res;
+	
+	while( *in )
+	{
+		if( *in == L'/' )
+		{
+			while( *(in+1) == L'/' )
+			{
+				in++;
+			}
+		}
+		*out = *in;
+	
+		out++;
+		in++;
+	}
+
+	while( 1 )
+	{
+		if( out == res )
+			break;
+		if( *(out-1) != L'/' )
+			break;
+		out--;
+	}
+	*out = 0;
+		
+	return res;
+}
+

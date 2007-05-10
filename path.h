@@ -40,4 +40,8 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd );
 */
 wchar_t *path_get_cdpath( void *context, wchar_t *in );
 
+
+wchar_t *path_make_canonical( void *context, const wchar_t *path );
+
+
 #endif

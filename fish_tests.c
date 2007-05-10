@@ -44,6 +44,8 @@
 #include "output.h"
 #include "exec.h"
 #include "event.h"
+#include "path.h"
+#include "halloc.h"
 #include "halloc_util.h"
 
 /**
@@ -600,6 +602,26 @@ static void test_expand()
 	
 }
 
+static void test_path()
+{
+	say( L"Testing path functions" );
+
+	void *context = halloc( 0, 0 );
+	
+
+	wchar_t *can = path_make_canonical( context, L"//foo//////bar/" );
+	
+	if( wcscmp( can, L"/foo/bar" ) )
+	{
+		err( L"Bug in canonical PATH code" );
+	}
+	
+	halloc_free( context );
+	
+}
+
+
+
 /**
    Test speed of completion calculations
 */
@@ -673,6 +695,9 @@ void perf_complete()
 	
 }
 
+
+
+
 /**
    Main test 
 */
@@ -697,6 +722,7 @@ int main( int argc, char **argv )
 	test_tok();
 	test_parser();
 	test_expand();
+	test_path();
 		
 	say( L"Encountered %d errors in low-level tests", err_count );
 

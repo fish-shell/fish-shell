@@ -52,6 +52,9 @@
 #include "env_universal.h"
 #include "input_common.h"
 #include "event.h"
+#include "path.h"
+#include "halloc.h"
+#include "halloc_util.h"
 
 #include "complete.h"
 
@@ -710,6 +713,19 @@ int env_set( const wchar_t *key,
 	
 	CHECK( key, ENV_INVALID );
 		
+	if( val && CONTAINS( key, L"PWD", L"HOME" ) )
+	{
+		void *context = halloc( 0, 0 );
+		const wchar_t *val_canonical = path_make_canonical( context, val );
+		if( wcscmp( val_canonical, val ) )
+		{
+			int res = env_set( key, val_canonical, var_mode );
+			halloc_free( context );
+			return res;
+		}
+		halloc_free( context );
+	}
+
 	if( (var_mode & ENV_USER ) && 
 		hash_get( &env_read_only, key ) )
 	{

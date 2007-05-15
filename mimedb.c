@@ -418,7 +418,7 @@ static char *get_lang_re()
 	const char *lang = setlocale( LC_MESSAGES, 0 );
 	int close=0;
 	char *out=buff;
-
+    
 	if( (1+strlen(lang)*4) >= BUFF_SIZE )
 	{
 		fprintf( stderr, _( "%s: Locale string too long\n"), MIMEDB );
@@ -450,6 +450,7 @@ static char *get_lang_re()
 	if( close )
 		*out++ = ')';
 	*out++=0;
+
 	return buff;
 }
 
@@ -480,18 +481,32 @@ static char *get_description( const char *mimetype )
 		start_re = my_malloc( sizeof(regex_t));
 		stop_re = my_malloc( sizeof(regex_t));
 		
-		if( regcomp( start_re, buff, REG_EXTENDED ) || 
-			regcomp( stop_re, STOP_TAG, REG_EXTENDED ) )
-		{
-			fprintf( stderr, _( "%s: Could not compile regular expressions\n"), MIMEDB );
+        int reg_status;
+		if( ( reg_status = regcomp( start_re, buff, REG_EXTENDED ) ) )
+        {
+            char regerrbuf[BUFF_SIZE];
+            regerror(reg_status, start_re, regerrbuf, BUFF_SIZE);
+			fprintf( stderr, _( "%s: Could not compile regular expressions %s with error %s\n"), MIMEDB, buff, regerrbuf);
 			error=1;
+        
+        }
+        else if ( ( reg_status = regcomp( stop_re, STOP_TAG, REG_EXTENDED ) ) )
+		{
+            char regerrbuf[BUFF_SIZE];
+            regerror(reg_status, stop_re, regerrbuf, BUFF_SIZE);
+			fprintf( stderr, _( "%s: Could not compile regular expressions %s with error %s\n"), MIMEDB, buff, regerrbuf);
+			error=1;
+        
+        }
 
+        if( error )
+        {
 			free( start_re );
 			free( stop_re );
 			start_re = stop_re = 0;
 
 			return 0;
-		}
+        }
 	}
 	
 	fn_part = my_malloc( strlen(MIME_DIR) + strlen( mimetype) + strlen(MIME_SUFFIX) + 1 );

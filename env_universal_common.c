@@ -125,6 +125,58 @@ static int get_names_show_exported;
 */
 static int get_names_show_unexported;
 
+/**
+   List of names for the UTF-8 character set.
+ */
+static char *iconv_utf8_names[]=
+  {
+    "utf-8", "UTF-8",
+    "utf8", "UTF8",
+    0
+  }
+  ;
+
+/**
+    List of wide character names, undefined byte length.
+ */
+static char *iconv_wide_names_unknown[]=
+  {
+    "wchar_t", "WCHAR_T", 
+    "wchar", "WCHAR", 
+    0
+  }
+  ;
+
+/**
+   List of wide character names, 4 bytes long.
+ */
+static char *iconv_wide_names_4[]=
+  {
+    "wchar_t", "WCHAR_T", 
+    "wchar", "WCHAR", 
+    "ucs-4", "UCS-4", 
+    "ucs4", "UCS4", 
+    "utf-32", "UTF-32", 
+    "utf32", "UTF32", 
+    0
+  }
+  ;
+
+/**
+   List of wide character names, 2 bytes long.
+ */
+static char *iconv_wide_names_2[]=
+  {
+    "wchar_t", "WCHAR_T", 
+    "wchar", "WCHAR", 
+    "ucs-2", "UCS-2", 
+    "ucs2", "UCS2", 
+    "utf-16", "UTF-16", 
+    "utf16", "UTF16", 
+    0
+  }
+  ;
+
 
 wchar_t *utf2wcs( const char *in )
 {
@@ -139,53 +191,21 @@ wchar_t *utf2wcs( const char *in )
 	  really the character set used by wchar_t, but it is the best
 	  assumption we can make.
 	*/
-	char *to_name1[]=
-	{
-		"wchar_t", "WCHAR_T", 
-		"wchar", "WCHAR", 
-		0
-	}
-	;
-
-	char *to_name4[]=
-	{
-		"wchar_t", "WCHAR_T", 
-		"wchar", "WCHAR", 
-		"ucs-4", "UCS-4", 
-		"ucs4", "UCS4", 
-		"utf-32", "UTF-32", 
-		"utf32", "UTF32", 
-		0
-	}
-	;
-
-	char *to_name2[]=
-	{
-		"wchar_t", "WCHAR_T", 
-		"wchar", "WCHAR", 
-		"ucs-2", "UCS-2", 
-		"ucs2", "UCS2", 
-		"utf-16", "UTF-16", 
-		"utf16", "UTF16", 
-		0
-	}
-	;
-
 	char **to_name=0;
 
 	switch (sizeof (wchar_t))
 	{
 	
 		case 2:
-			to_name = to_name2;
+			to_name = iconv_wide_names_2;
 			break;
 
 		case 4:
-			to_name = to_name4;
+			to_name = iconv_wide_names_4;
 			break;
 			
 		default:
-			to_name = to_name1;
+			to_name = iconv_wide_names_unknown;
 			break;
 	}
 	
@@ -193,12 +213,7 @@ wchar_t *utf2wcs( const char *in )
 	/*
 	  The line protocol fish uses is always utf-8. 
 	*/
-	char *from_name[]=
-	{
-		"utf-8", "UTF-8",
-		"utf8", "UTF8", 0
-	}
-	;
+	char **from_name = iconv_utf8_names;
 
 	size_t in_len = strlen( in );
 	size_t out_len =  sizeof( wchar_t )*(in_len+1);
@@ -264,17 +279,31 @@ char *wcs2utf( const wchar_t *in )
 	char *char_in = (char *)in;
 	char *out;
 
-	char *from_name[]=
-	{
-		"wchar_t", "WCHAR_T", "wchar", "WCHAR", 0
-	}
-	;
+	/*
+	  Try to convert to wchar_t. If that is not a valid character set,
+	  try various names for ucs-4. We can't be sure that ucs-4 is
+	  really the character set used by wchar_t, but it is the best
+	  assumption we can make.
+	*/
+	char **from_name=0;
 
-	char *to_name[]=
+	switch (sizeof (wchar_t))
 	{
-		"utf-8", "UTF-8", "utf8", "UTF8", 0
+	
+		case 2:
+			from_name = iconv_wide_names_2;
+			break;
+
+		case 4:
+			from_name = iconv_wide_names_4;
+			break;
+			
+		default:
+			from_name = iconv_wide_names_unknown;
+			break;
 	}
-	;
+
+	char **to_name = iconv_utf8_names;
 
 	size_t in_len = wcslen( in );
 	size_t out_len =  sizeof( char )*( (MAX_UTF8_BYTES*in_len)+1);

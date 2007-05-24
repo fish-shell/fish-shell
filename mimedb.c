@@ -66,7 +66,7 @@ license. Read the source code of the library for more information.
 /**
    Start tag for langauge-specific comment
 */
-#define START_TAG "<comment *(| +xml:lang *= *(\"%s\"|'%s') *)>"
+#define START_TAG "<comment( +xml:lang *= *(\"%s\"|'%s'))? *>"
 
 /**
    End tab for comment
@@ -434,11 +434,13 @@ static char *get_lang_re()
 			case '.':
 			case '_':
 				if( close )
+				{
 					*out++ = ')';
+					*out++ = '?';
+				}
 				
 				close=1;
 				*out++ = '(';
-				*out++ = '|';
 				*out++ = *lang;
 				break;
 				
@@ -448,7 +450,10 @@ static char *get_lang_re()
 	}
 	
 	if( close )
+	{
 		*out++ = ')';
+		*out++ = '?';
+	}
 	*out++=0;
 
 	return buff;

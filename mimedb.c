@@ -1345,6 +1345,9 @@ int main (int argc, char *argv[])
 			case DESCRIPTION:
 			{
 				output = get_description( mimetype );				
+				if( !output )
+					output = strdup( _("Unknown") );
+				
 				break;
 			}
 			case ACTION:

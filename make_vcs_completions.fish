@@ -1,7 +1,8 @@
 #!/usr/bin/env fish
-
 #
-# This file produces command specific completions for either hg or darcs
+# This file produces command specific completions for hg, darcs and a
+# few other vcs systems. It uses the fact that all these systems have a
+# somewhat uniform command line help mechanism.
 #
 
 function cap
@@ -14,7 +15,7 @@ end
 #
 
 function esc
-	echo $argv | sed -e "s/'/\\\'/g" | sed -e 's/ *$//'
+	echo $argv | sed -e "s/\(['\\\]\)/\\\\\1/g" | sed -e 's/ *$//' | sed -e 's/     .*//'
 end
 
 

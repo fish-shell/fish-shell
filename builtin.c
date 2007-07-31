@@ -626,7 +626,10 @@ static int builtin_block( wchar_t **argv )
 }
 
 /**
-   The builtin builtin, used for given builtins precedence over functions. Mostly handled by the parser. All this code does is some additional operational modes, such as printing a list of all builtins.
+   The builtin builtin, used for given builtins precedence over
+   functions. Mostly handled by the parser. All this code does is some
+   additional operational modes, such as printing a list of all
+   builtins.
 */
 static int builtin_builtin(  wchar_t **argv )
 {
@@ -706,9 +709,6 @@ static int builtin_builtin(  wchar_t **argv )
 		{
 			wchar_t *el = (wchar_t *)al_get( &names, i );
 			
-			if( wcscmp( el, L"count" ) == 0 )
-				continue;
-
 			sb_append2( sb_out,
 						el,
 						L"\n",
@@ -2227,6 +2227,13 @@ static int builtin_cd( wchar_t **argv )
 }
 
 
+static int builtin_count( wchar_t ** argv )
+{
+	int argc;
+	argc = builtin_count_args( argv );
+	sb_printf( sb_out, L"%d\n", argc-1 );
+	return !argc;
+}
 
 /**
    The  . (dot) builtin, sometimes called source. Evaluates the contents of a file.
@@ -3058,6 +3065,10 @@ const static builtin_data_t builtin_data[]=
 	}
 	,
 	{
+		L"count",  &builtin_count, N_( L"Count the number of arguments" )  
+	}
+	,
+	{
 		L"function",  &builtin_function, N_( L"Define a new function" )  
 	}
 	,
@@ -3187,16 +3198,6 @@ const static builtin_data_t builtin_data[]=
 		L"exec",  &builtin_generic, N_( L"Run command in current process" ) 
 	}
 	,
-
-	/*
-	  This is not a builtin, but fish handles it's help display
-	  internally. So some ugly special casing to make sure 'count -h'
-	  displays the help for count, but 'count (echo -h)' does not.
-	*/
-	{
-		L"count",  &builtin_generic, N_( L"Count the number of arguments" ) 
-	}
-	,
 	{
 		0, 0, 0
 	}
@@ -3238,13 +3239,6 @@ int builtin_exists( wchar_t *cmd )
 {
 	CHECK( cmd, 0 );
 		
-	/*
-	  Count is not a builtin, but it's help is handled internally by
-	  fish, so it is in the hash_table_t.
-	*/
-	if( wcscmp( cmd, L"count" )==0)
-		return 0;
-
 	return !!hash_get(&builtin, cmd);
 }
 
@@ -3274,7 +3268,7 @@ int builtin_run( wchar_t **argv, io_data_t *io )
 	CHECK( argv[0], STATUS_BUILTIN_ERROR );
 		
 	cmd = (int (*)(wchar_t **))hash_get( &builtin, argv[0] );
-
+	
 	if( argv[1] != 0 && !internal_help(argv[0]) )
 	{
 		if( argv[2] == 0 && (parser_is_help( argv[1], 0 ) ) )

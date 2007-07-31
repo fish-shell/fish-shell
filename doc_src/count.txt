@@ -5,7 +5,7 @@
 
 \subsection count-description Description
 
-The <tt>count</tt> function prints the number of arguments that were
+The <tt>count</tt> builtin prints the number of arguments that were
 passed to it. This is usually used to find out how many elements an
 environment variable array contains, but this is not the only
 potential usage for the count command.

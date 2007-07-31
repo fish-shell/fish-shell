@@ -126,22 +126,34 @@ typedef struct process
 		INTERNAL_EXEC, or INTERNAL_BUFFER
 	*/
 	int type;
+
 	/** argv parameter for for execv, builtin_run, etc. */
 	wchar_t **argv;
+
 	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC */
 	wchar_t *actual_cmd;       
+
 	/** process ID */
 	pid_t pid;
+
 	/** File descriptor that pipe output should bind to */
 	int pipe_write_fd;
+
 	/** File descriptor that the _next_ process pipe input should bind to */
 	int pipe_read_fd;
+
 	/** true if process has completed */
 	volatile int completed;
+
 	/** true if process has stopped */
 	volatile int stopped;
+
 	/** reported status value */
 	volatile int status;
+
+	/** Special flag to tell the evaluation function for count to print the help information */
+	int count_help_magic;
+
 	/** next process in pipeline */
 	struct process *next;       	
 #ifdef HAVE__PROC_SELF_STAT

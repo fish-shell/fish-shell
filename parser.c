@@ -1401,17 +1401,16 @@ static void parse_job_argument_list( process_t *p,
 
 				if( !skip )
 				{
-					if( proc_is_count &&
-						(al_get_count( args) == 1) &&
-						( parser_is_help( tok_last(tok), 0) ) )
+					if( ( proc_is_count ) &&
+					    ( al_get_count( args) == 1) &&
+					    ( parser_is_help( tok_last(tok), 0) ) &&
+					    ( p->type == INTERNAL_BUILTIN ) )
 					{
 						/*
 						  Display help for count
 						*/
-						p->type = INTERNAL_BUILTIN;
-						p->actual_cmd = L"count";
+						p->count_help_magic = 1;
 					}
-
 
 					switch( expand_string( j, wcsdup(tok_last( tok )), args, 0 ) )
 					{
@@ -1421,9 +1420,9 @@ static void parse_job_argument_list( process_t *p,
 							if( error_code == 0 )
 							{
 								error( SYNTAX_ERROR,
-									   tok_get_pos( tok ),
-									   _(L"Could not expand string '%ls'"),
-									   tok_last(tok) );
+								       tok_get_pos( tok ),
+								       _(L"Could not expand string '%ls'"),
+								       tok_last(tok) );
 
 							}
 							break;

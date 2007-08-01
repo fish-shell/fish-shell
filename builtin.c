@@ -364,6 +364,18 @@ static void builtin_unknown_option( const wchar_t *cmd, const wchar_t *opt )
 	builtin_print_help( cmd, sb_err );
 }
 
+/**
+   Perform error reporting for encounter with missing argument
+*/
+static void builtin_missing_argument( const wchar_t *cmd, const wchar_t *opt )
+{
+	sb_printf( sb_err,
+			   BUILTIN_ERR_MISSING,
+			   cmd,
+			   opt );
+	builtin_print_help( cmd, sb_err );
+}
+
 /*
   Here follows the definition of all builtin commands. The function
   names are all on the form builtin_NAME where NAME is the name of the
@@ -1913,19 +1925,19 @@ static int builtin_status( wchar_t **argv )
 			}
 			,
 			{
-				L"is-command-substitution", no_argument, &mode, IS_SUBST
+				L"is-command-substitution", no_argument, 0, 'c'
 			}
 			,
 			{
-				L"is-block", no_argument, &mode, IS_BLOCK
+				L"is-block", no_argument, 0, 'b'
 			}
 			,
 			{
-				L"is-interactive", no_argument, &mode, IS_INTERACTIVE
+				L"is-interactive", no_argument, 0, 'i'
 			}
 			,
 			{
-				L"is-login", no_argument, &mode, IS_LOGIN
+				L"is-login", no_argument, 0, 'l'
 			}
 			,
 			{
@@ -1941,11 +1953,11 @@ static int builtin_status( wchar_t **argv )
 			}
 			,
 			{
-				L"current-filename", no_argument, &mode, CURRENT_FILENAME
+				L"current-filename", no_argument, 0, 'f'
 			}
 			,
 			{
-				L"current-line-number", no_argument, &mode, CURRENT_LINE_NUMBER
+				L"current-line-number", no_argument, 0, 'n'
 			}
 			,
 			{
@@ -1968,7 +1980,7 @@ static int builtin_status( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"hj:t",
+								L":cbilfnhj:t",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1984,8 +1996,31 @@ static int builtin_status( wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
-
 				return STATUS_BUILTIN_ERROR;
+
+			case 'c':
+				mode = IS_SUBST;
+				break;
+
+			case 'b':
+				mode = IS_BLOCK;
+				break;
+
+			case 'i':
+				mode = IS_INTERACTIVE;
+				break;
+
+			case 'l':
+				mode = IS_LOGIN;
+				break;
+
+			case 'f':
+				mode = CURRENT_FILENAME;
+				break;
+
+			case 'n':
+				mode = CURRENT_LINE_NUMBER;
+				break;
 
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
@@ -2012,6 +2047,14 @@ static int builtin_status( wchar_t **argv )
 				mode = STACK_TRACE;
 				break;
 				
+
+			case 't':
+				mode = STACK_TRACE;
+				break;
+
+			case ':':
+				builtin_missing_argument( argv[0], argv[woptind-1] );
+				return STATUS_BUILTIN_ERROR;
 
 			case '?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );

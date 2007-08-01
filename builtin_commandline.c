@@ -235,13 +235,23 @@ static int builtin_commandline( wchar_t **argv )
 
 	if( !get_buffer() )
 	{
+		if (is_interactive_session)
+		{
+			/*
+			  Prompt change requested while we don't have
+			  a prompt, most probably while reading the
+			  init files. Just ignore it.
+			*/
+			return 1;
+		}
+		
 		sb_append2( sb_err,
-					argv[0],
-					L": Can not set commandline in non-interactive mode\n",
-					(void *)0 );
+			    argv[0],
+			    L": Can not set commandline in non-interactive mode\n",
+			    (void *)0 );
 		builtin_print_help( argv[0], sb_err );
-		return 1;		
-	}	
+		return 1;
+	}
 
 	woptind=0;
 

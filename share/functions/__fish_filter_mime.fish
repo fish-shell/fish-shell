@@ -13,7 +13,7 @@ function __fish_filter_mime -d "Select files with a specific mimetype"
 	set -l mime (mimedb -f $argv)
 	set -l res
 
-	for i in (seq (count $argv))
+	for i in (seq (count $mime))
 		switch $mime[$i]
 			case $mime_search
 				set res $res $argv[$i]

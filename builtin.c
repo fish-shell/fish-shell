@@ -1893,6 +1893,7 @@ static int builtin_read( wchar_t **argv )
 */
 static int builtin_status( wchar_t **argv )
 {
+	
 	enum
 	{
 		NORMAL,
@@ -1916,6 +1917,7 @@ static int builtin_status( wchar_t **argv )
 	int res=STATUS_BUILTIN_OK;
 
 	woptind=0;
+
 
 	const struct woption
 		long_options[] =
@@ -2092,7 +2094,7 @@ static int builtin_status( wchar_t **argv )
 
 			case IS_SUBST:
 				return !is_subshell;
-
+				
 			case IS_BLOCK:
 				return !is_block;
 
@@ -2277,6 +2279,96 @@ static int builtin_count( wchar_t ** argv )
 	sb_printf( sb_out, L"%d\n", argc-1 );
 	return !argc;
 }
+
+static int builtin_contains( wchar_t ** argv )
+{
+	int argc;
+	argc = builtin_count_args( argv );
+	int i;
+	int res=STATUS_BUILTIN_OK;
+	wchar_t *needle;
+	wchar_t **haystack;
+	
+	woptind=0;
+
+	const struct woption
+		long_options[] =
+		{
+			{
+				L"help", no_argument, 0, 'h'
+			}
+			,
+			{
+				0, 0, 0, 0
+			}
+		}
+	;
+
+	while( 1 )
+	{
+		int opt_index = 0;
+
+		int opt = wgetopt_long( argc,
+					argv,
+					L"h",
+					long_options,
+					&opt_index );
+		if( opt == -1 )
+			break;
+
+		switch( opt )
+		{
+			case 0:
+				if(long_options[opt_index].flag != 0)
+					break;
+				sb_printf( sb_err,
+					   BUILTIN_ERR_UNKNOWN,
+					   argv[0],
+					   long_options[opt_index].name );
+				builtin_print_help( argv[0], sb_err );
+				return STATUS_BUILTIN_ERROR;
+
+
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return STATUS_BUILTIN_OK;
+
+
+			case ':':
+				builtin_missing_argument( argv[0], argv[woptind-1] );
+				return STATUS_BUILTIN_ERROR;
+
+			case '?':
+				builtin_unknown_option( argv[0], argv[woptind-1] );
+				return STATUS_BUILTIN_ERROR;
+
+		}
+		
+	}
+
+
+
+	needle = argv[woptind];
+	if (!needle)
+	{
+		sb_printf( sb_err, _( L"%ls: Key not specified\n" ), argv[0] );
+	}
+	
+
+	for( i=woptind+1; i<argc; i++ )
+	{
+		
+		if( !wcscmp( needle, argv[i]) )
+		{
+			return 0;
+		}
+	}
+	return 1;
+	
+	
+	
+}
+
 
 /**
    The  . (dot) builtin, sometimes called source. Evaluates the contents of a file.
@@ -3109,6 +3201,10 @@ const static builtin_data_t builtin_data[]=
 	,
 	{
 		L"count",  &builtin_count, N_( L"Count the number of arguments" )  
+	}
+	,
+	{
+		L"contains",  &builtin_contains, N_( L"Search for a specified string in a list" )  
 	}
 	,
 	{

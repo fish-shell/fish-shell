@@ -182,7 +182,7 @@ static int calc_prompt_width( wchar_t *prompt )
 				  seem to do anything these days.
 				*/
 				len = maxi( try_sequence( tparm(esc2[l]), &prompt[j] ),
-							try_sequence( esc2[l], &prompt[j] ));
+					    try_sequence( esc2[l], &prompt[j] ));
 					
 				if( len )
 				{
@@ -246,7 +246,7 @@ static int calc_prompt_width( wchar_t *prompt )
 static int room_for_usec(struct stat *st)
 {
 	int res = ((&(st->st_atime) + 2) == &(st->st_mtime) &&
-			   (&(st->st_atime) + 4) == &(st->st_ctime));
+		   (&(st->st_atime) + 4) == &(st->st_ctime));
 	return res;
 }
 
@@ -391,10 +391,10 @@ static line_t *s_create_line()
    than the screen width. 
 */
 static void s_desired_append_char( screen_t *s, 
-								   wchar_t b,
-								   int c, 
-								   int indent,
-								   int prompt_width )
+				   wchar_t b,
+				   int c, 
+				   int indent,
+				   int prompt_width )
 {
 	int line_no = s->desired_cursor[1];
 	
@@ -576,7 +576,7 @@ static void s_set_color( screen_t *s, buffer_t *b, int c )
 	s_writeb_buffer = b;
 	
 	set_color( highlight_get_color( c & 0xffff ),
-			   highlight_get_color( (c>>16)&0xffff ) );
+		   highlight_get_color( (c>>16)&0xffff ) );
 	
 	output_set_writer( writer_old );
 	
@@ -754,13 +754,19 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 	
 }
 
+static int is_dumb()
+{
+	return ( !cursor_up || !cursor_down || !cursor_left || !cursor_right );
+}
+
+
 
 void s_write( screen_t *s,
-			  wchar_t *prompt,
-			  wchar_t *b, 
-			  int *c, 
-			  int *indent,
-			  int cursor )
+	      wchar_t *prompt,
+	      wchar_t *b, 
+	      int *c, 
+	      int *indent,
+	      int cursor )
 {
 	int i;
 	int cursor_arr[2];
@@ -773,6 +779,23 @@ void s_write( screen_t *s,
 	CHECK( b, );
 	CHECK( c, );
 	CHECK( indent, );
+
+	if( is_dumb() )
+	{
+		char *prompt_narrow = wcs2str( prompt );
+		char *buffer_narrow = wcs2str( b );
+		
+		write( 1, "\r", 1 );
+		write( 1, prompt_narrow, strlen( prompt_narrow ) );
+		write( 1, buffer_narrow, strlen( buffer_narrow ) );
+
+		free( prompt_narrow );
+		free( buffer_narrow );
+		
+		return;
+		
+	}
+	
 	
 	prompt_width = calc_prompt_width( prompt );
 	screen_width = common_get_width();

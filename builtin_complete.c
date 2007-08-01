@@ -122,7 +122,7 @@ static void	builtin_complete_add( array_list_t *cmd,
 								  array_list_t *gnu_opt,
 								  array_list_t *old_opt, 
 								  int result_mode, 
-								  int authorative,
+								  int authoritative,
 								  const wchar_t *condition,
 								  const wchar_t *comp,
 								  const wchar_t *desc,
@@ -143,11 +143,11 @@ static void	builtin_complete_add( array_list_t *cmd,
 							   desc,
 							   flags );
 
-		if( authorative != -1 )
+		if( authoritative != -1 )
 		{
-			complete_set_authorative( al_get( cmd, i ),
+			complete_set_authoritative( al_get( cmd, i ),
 									  COMMAND,
-									  authorative );
+									  authoritative );
 		}
 		
 	}
@@ -165,11 +165,11 @@ static void	builtin_complete_add( array_list_t *cmd,
 							   desc,
 							   flags );
 
-		if( authorative != -1 )
+		if( authoritative != -1 )
 		{
-			complete_set_authorative( al_get( path, i ),
+			complete_set_authoritative( al_get( path, i ),
 									  PATH,
-									  authorative );
+									  authoritative );
 		}
 		
 	}	
@@ -294,7 +294,7 @@ static int builtin_complete( wchar_t **argv )
 	int argc=0;
 	int result_mode=SHARED;
 	int remove = 0;
-	int authorative = -1;
+	int authoritative = -1;
 	int flags = COMPLETE_AUTO_SPACE;
 	
 	string_buffer_t short_opt;
@@ -373,11 +373,11 @@ static int builtin_complete( wchar_t **argv )
 				}
 				,
 				{
-					L"unauthorative", no_argument, 0, 'u'
+					L"unauthoritative", no_argument, 0, 'u'
 				}
 				,
 				{
-					L"authorative", no_argument, 0, 'A'
+					L"authoritative", no_argument, 0, 'A'
 				}
 				,
 				{
@@ -456,11 +456,11 @@ static int builtin_complete( wchar_t **argv )
 				break;
 				
 			case 'u':
-				authorative=0;
+				authoritative=0;
 				break;
 				
 			case 'A':
-				authorative=1;
+				authoritative=1;
 				break;
 				
 			case 's':
@@ -628,7 +628,7 @@ static int builtin_complete( wchar_t **argv )
 									  &gnu_opt,
 									  &old_opt, 
 									  result_mode, 
-									  authorative,
+									  authoritative,
 									  condition,
 									  comp,
 									  desc,

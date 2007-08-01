@@ -21,8 +21,8 @@ the fish manual.
 - <tt>-o</tt> or <tt>--old-option</tt> implies that the command uses old long style options with only one dash
 - <tt>-p</tt> or <tt>--path</tt> implies that the string COMMAND is the full path of the command
 - <tt>-r</tt> or <tt>--require-parameter</tt> specifies that the option specified by this completion always must have an option argument, i.e. may not be followed by another option
-- <tt>-u</tt> or <tt>--unauthorative</tt> implies that there may be more options than the ones specified, and that fish should not assume that options not listed are spelling errors
-- <tt>-A</tt> or <tt>--authorative</tt> implies that there may be no more options than the ones specified, and that fish should assume that options not listed are spelling errors
+- <tt>-u</tt> or <tt>--unauthoritative</tt> implies that there may be more options than the ones specified, and that fish should not assume that options not listed are spelling errors
+- <tt>-A</tt> or <tt>--authoritative</tt> implies that there may be no more options than the ones specified, and that fish should assume that options not listed are spelling errors
 - <tt>-x</tt> or <tt>--exclusive</tt> implies both <tt>-r</tt> and <tt>-f</tt>
 
 Command specific tab-completions in \c fish are based on the notion

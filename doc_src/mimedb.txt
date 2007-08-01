@@ -18,7 +18,7 @@
 
 The mimedb command is used to query the mimetype database and the
 .desktop files installed on the system in order to find information on
-a file. The information that mimedb can retrive includes the mimetype
+a file. The information that mimedb can retrieve includes the mimetype
 for a file, a description of the type and what its default action
 is. mimedb can also be used to launch the default action for this
 file.

@@ -6,7 +6,7 @@
 
 \subsection math-description Description
 
-math is used to perform mathematical calcualtions. It is only a very
+math is used to perform mathematical calculations. It is only a very
 thin wrapper for the bc program, that makes it possible to specify an
 expression from the command line without using non-standard extensions
 or a pipeline. Simply use a command like <code>math 1+1</code>. 

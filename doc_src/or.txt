@@ -17,7 +17,7 @@ variable.
 \subsection or-example Example
 
 The following code runs the \c make command to build a program, if the
-build succceds, the program is installed. If either step fails,
+build succceeds, the program is installed. If either step fails,
 <tt>make clean</tt> is run, which removes the files created by the
 build process
 

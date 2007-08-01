@@ -19,7 +19,7 @@ regular wildcard expansion using filenames.
 
 Note that fish does not fall through on case statements. Though the
 syntax may look a bit like C switch statements, it behaves more like
-the case stamantes of traditional shells.
+the case statementes of traditional shells.
 
 Also note that command substitutions in a case statement will be
 evaluated even if it's body is not taken. This may seem

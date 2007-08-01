@@ -1,4 +1,4 @@
-\section prevd prevd - move backward through direcotry history
+\section prevd prevd - move backward through directory history
 
 \subsection prevd-synopsis Synopsis
 <tt>prevd [-l | --list] [pos]</tt>

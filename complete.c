@@ -160,7 +160,7 @@ typedef struct complete_entry
 	/** Next command completion in the linked list */
 	struct complete_entry *next;
 	/** True if no other options than the ones supplied are possible */
-	int authorative;
+	int authoritative;
 }
 	complete_entry_t;
 
@@ -370,22 +370,22 @@ static complete_entry_t *complete_get_exact_entry( const wchar_t *cmd,
 		c->cmd = intern( cmd );
 		c->cmd_type = cmd_type;
 		c->short_opt_str = wcsdup(L"");
-		c->authorative = 1;
+		c->authoritative = 1;
 	}
 
 	return c;
 }
 
 
-void complete_set_authorative( const wchar_t *cmd,
+void complete_set_authoritative( const wchar_t *cmd,
 							   int cmd_type,
-							   int authorative )
+							   int authoritative )
 {
 	complete_entry_t *c;
 
 	CHECK( cmd, );
 	c = complete_get_exact_entry( cmd, cmd_type );
-	c->authorative = authorative;
+	c->authoritative = authoritative;
 }
 
 
@@ -608,7 +608,7 @@ int complete_is_valid_option( const wchar_t *str,
 	complete_entry_opt_t *o;
 	wchar_t *cmd, *path;
 	int found_match = 0;
-	int authorative = 1;
+	int authoritative = 1;
 	int opt_found=0;
 	hash_table_t gnu_match_hash;
 	int is_gnu_opt=0;
@@ -702,9 +702,9 @@ int complete_is_valid_option( const wchar_t *str,
 		
 		found_match = 1;
 
-		if( !i->authorative )
+		if( !i->authoritative )
 		{
-			authorative = 0;
+			authoritative = 0;
 			break;
 		}
 
@@ -783,7 +783,7 @@ int complete_is_valid_option( const wchar_t *str,
 		}
 	}
 
-	if( authorative )
+	if( authoritative )
 	{
 
 		if( !is_gnu_opt && !is_old_opt )
@@ -838,7 +838,7 @@ int complete_is_valid_option( const wchar_t *str,
 
 	halloc_free( context );
 	
-	return (authorative && found_match)?opt_found:1;
+	return (authoritative && found_match)?opt_found:1;
 }
 
 int complete_is_valid_argument( const wchar_t *str,

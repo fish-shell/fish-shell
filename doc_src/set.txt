@@ -43,7 +43,7 @@ the last index of an array.
 The scoping rules when creating or updating a variable are:
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
--# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previos variable scope is used.
+-# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
 -# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing functions. If no function is executing, the variable will be global.
 
 The exporting rules when creating or updating a variable are identical

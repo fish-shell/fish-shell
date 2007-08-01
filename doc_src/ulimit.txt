@@ -35,7 +35,8 @@ except for -t, which is in seconds and -n and -u, which are unscaled
 values. The return status is 0 unless an invalid option or argument is
 supplied, or an error occurs while setting a new limit.
 
-ulimit also accepts the following switches that determine what type of limit to set:
+ulimit also accepts the following switches that determine what type of
+limit to set:
 
 - <code>-H</code> or <code>--hard</code> Set hard resource limit
 - <code>-S</code> or <code>--soft</code> Set soft resource limit

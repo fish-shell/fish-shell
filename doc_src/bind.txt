@@ -6,7 +6,7 @@
 The <tt>bind</tt> builtin causes fish to add the readline style bindings specified by BINDINGS to the list of key bindings, as if they appeared in your <tt>~/.fish_inputrc</tt> file.
 
 For more information on the syntax keyboard bindings, use <tt>man
-readline</tt> to access the readline documentation. The availiable commands
+readline</tt> to access the readline documentation. The available commands
 are listed in the <a href="index.html#editor">Command Line Editor</a> section
 of the fish manual - but you may also use any fish command! To write such
 commands, see the <a href="#commandline">commandline</a> builtin. It's good

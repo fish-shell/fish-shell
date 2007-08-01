@@ -180,9 +180,9 @@ void complete_add( const wchar_t *cmd,
   true, any options not matching one of the provided options will be
   flagged as an error by syntax highlighting.
 */
-void complete_set_authorative( const wchar_t *cmd,
+void complete_set_authoritative( const wchar_t *cmd,
 							   int cmd_type,
-							   int authorative );
+							   int authoritative );
 
 /**
   Remove a previously defined completion

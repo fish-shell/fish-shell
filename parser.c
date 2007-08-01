@@ -2059,7 +2059,8 @@ static int parse_job( process_t *p,
 						{			
 							debug( 0,
 								   _(L"Unknown command '%ls'"),
-								   cmd );
+								   cmd?cmd:L"UNKNOWN" );
+
 						}
 						
 						tmp = current_tokenizer_pos;

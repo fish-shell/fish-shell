@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 /** \file main.c
-	The main loop of <tt>fish</tt>.
+	The fish_indent proegram.
 */
 
 #include "config.h"
@@ -26,22 +26,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
 #include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
 #include <locale.h>
-#include <signal.h>
 
 #include "fallback.h"
 #include "util.h"
-
 #include "common.h"
 #include "wutil.h"
 #include "halloc.h"

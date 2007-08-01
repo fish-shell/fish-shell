@@ -1,6 +1,6 @@
 /** \file parser_keywords.c
 
-
+Functions having to do with parser keywords, like testing if a function is a block command.
 */
 
 #include "config.h"
@@ -10,9 +10,6 @@
 #include <stdio.h>
 
 #include "fallback.h"
-//#include "util.h"
-
-//#include "wutil.h"
 #include "common.h"
 #include "parser_keywords.h"
 

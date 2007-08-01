@@ -420,7 +420,7 @@ doc.h: $(HDR_FILES)
 #
 
 %.gmo:
-	if test $(HAVE_GETTEXT) = 1; then \
+	if test "$(HAVE_GETTEXT)" = 1; then \
 		msgfmt -o $*.gmo $*.po; \
 	fi
 

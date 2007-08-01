@@ -22,7 +22,6 @@ segments.
 #include "wutil.h"
 #include "tokenizer.h"
 #include "common.h"
-#include "wildcard.h"
 
 
 /**

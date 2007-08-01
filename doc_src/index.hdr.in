@@ -1394,7 +1394,6 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - History could reload itself when the file is updated. This would need to be done in a clever way to avoid chain reactions
 - The error function should probably be moved into it's own library, and be made mere general purpose.
 - The code validation functions should be moved from the parser to parse_util.
-- The parser_is_* functions should be moved to parse_util. Possibly, they should be made into a single function, i.e. parse_util_classify( "begin", BLOCK_COMMAND);
 - Try to remove more malloc calls to reduce memory usage. The time_t arrays used by the autoloader sound like a good candidate. 
 - The code validator should warn about unknown commands.
 - Auto-newlines

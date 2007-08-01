@@ -2962,16 +2962,18 @@ static int read_ni( int fd, io_data_t *io )
 			int c;
 
 			c = fread(buff, 1, 4096, in_stream);
-			if( ferror( in_stream ) )
+			
+			if( ferror( in_stream ) && ( errno != EINTR ) )
 			{
 				debug( 1,
-					   _( L"Error while reading commands" ) );
-
+					   _( L"Error while reading from file descriptor" ) );
+				
 				/*
 				  Reset buffer on error. We won't evaluate incomplete files.
 				*/
 				acc.used=0;
 				break;
+				
 			}
 
 			b_append( &acc, buff, c );

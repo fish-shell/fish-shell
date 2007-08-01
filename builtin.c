@@ -2050,10 +2050,6 @@ static int builtin_status( wchar_t **argv )
 				break;
 				
 
-			case 't':
-				mode = STACK_TRACE;
-				break;
-
 			case ':':
 				builtin_missing_argument( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;

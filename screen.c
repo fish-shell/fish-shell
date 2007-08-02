@@ -803,12 +803,12 @@ void s_write( screen_t *s,
 	s_check_status( s );
 
 	/*
-	  Ignore huge prompts on small screens
+	  Ignore huge prompts on small screens - only print a two character placeholder...
 	*/
-	if( prompt_width > (screen_width - 8) )
+	if( prompt_width > (screen_width/2) )
 	{
-		prompt = L"";
-		prompt_width = 0;
+		prompt = L"> ";
+		prompt_width = 2;
 	}
 	
 	/*

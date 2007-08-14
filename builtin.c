@@ -2306,7 +2306,7 @@ static int builtin_contains( wchar_t ** argv )
 
 		int opt = wgetopt_long( argc,
 					argv,
-					L"h",
+					L"+h",
 					long_options,
 					&opt_index );
 		if( opt == -1 )
@@ -2360,9 +2360,7 @@ static int builtin_contains( wchar_t ** argv )
 		}
 	}
 	return 1;
-	
-	
-	
+
 }
 
 

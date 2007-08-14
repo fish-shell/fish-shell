@@ -1483,7 +1483,7 @@ int acquire_lock_file( const char *lockfile, const int timeout, int force )
 		goto done;
 	}
 	(void)unlink( linkfile );
-	if( ( fd = open( linkfile, O_CREAT|O_RDONLY ) ) == -1 )
+	if( ( fd = open( linkfile, O_CREAT|O_RDONLY, 0600 ) ) == -1 )
 	{
 		debug( 1, L"acquire_lock_file: open: %s", strerror( errno ) );
 		goto done;

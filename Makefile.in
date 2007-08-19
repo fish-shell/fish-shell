@@ -215,7 +215,7 @@ ETC_DIR_FILES :=etc/config.fish.in etc/fish_inputrc
 # Files in ./share/
 #
 
-SHARE_DIR_FILES :=share/config.fish.in share/config_interactive.fish.in
+SHARE_DIR_FILES :=share/config.fish.in
 
 
 #
@@ -268,7 +268,7 @@ TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) user_doc share/man etc/config.fish share/config.fish share/config_interactive.fish $(TRANSLATIONS)
+all: $(PROGRAMS) user_doc share/man etc/config.fish share/config.fish $(TRANSLATIONS)
 	@echo fish has now been built. 
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
@@ -576,7 +576,6 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
-	$(INSTALL) -m 644 share/config_interactive.fish    $(DESTDIR)$(datadir)/fish/
 	for i in $(COMPLETIONS_DIR_FILES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 	done;
@@ -857,7 +856,7 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 
 distclean: clean
 	rm -f fish.spec Doxyfile.help 
-	rm -f etc/config.fish share/config_interactive.fish seq share/config.fish
+	rm -f etc/config.fish seq share/config.fish
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 

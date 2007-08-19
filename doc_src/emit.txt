@@ -1,0 +1,23 @@
+\section emit emit - Emit a generic event
+
+\subsection block-synopsis Synopsis
+ <tt>emit EVENT_NAME</tt>
+
+\subsection emit-description Description
+
+The emit builtin fires a generic fish event. Such events can be caught by special functions called event handlers. 
+
+\subsection emit-example Example
+
+The following code first defines an event handler for the generig
+event named 'test_event', and then emits an event of that type.
+
+<pre>
+function event_test --on-event test_event
+    echo event test!!!
+end
+
+emit test_event
+
+</pre>
+

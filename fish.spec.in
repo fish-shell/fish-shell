@@ -140,7 +140,6 @@ fi
 # Non-configuration initialization files
 %dir %_datadir/fish
 %_datadir/fish/config.fish
-%_datadir/fish/config_interactive.fish
 
 # Program specific tab-completions
 %dir %_datadir/fish/completions

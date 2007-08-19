@@ -1264,6 +1264,7 @@ specific event takes place. Events that can trigger a handler currently are:
 - When a signal is delivered
 - When a process or job exits
 - When the value of a variable is updated
+- When the prompt is about to be shown
 
 Example:
 

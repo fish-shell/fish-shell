@@ -91,6 +91,7 @@ static string_buffer_t *get_desc_buff=0;
 */
 static int event_match( event_t *class, event_t *instance )
 {
+
 	if( class->function_name && instance->function_name )
 	{
 		if( wcscmp( class->function_name, instance->function_name ) != 0 )
@@ -103,15 +104,15 @@ static int event_match( event_t *class, event_t *instance )
 	if( class->type != instance->type )
 		return 0;
 	
-	
+
 	switch( class->type )
 	{
-			
+		
 		case EVENT_SIGNAL:
 			if( class->param1.signal == EVENT_ANY_SIGNAL )
 				return 1;
 			return class->param1.signal == instance->param1.signal;
-		
+			
 		case EVENT_VARIABLE:
 			return wcscmp( instance->param1.variable,
 				       class->param1.variable )==0;
@@ -123,6 +124,11 @@ static int event_match( event_t *class, event_t *instance )
 
 		case EVENT_JOB_ID:
 			return class->param1.job_id == instance->param1.job_id;
+
+		case EVENT_GENERIC:
+			return wcscmp( instance->param1.param,
+				       class->param1.param )==0;
+
 	}
 	
 	/**
@@ -139,8 +145,10 @@ static int event_match( event_t *class, event_t *instance )
 static event_t *event_copy( event_t *event, int copy_arguments )
 {
 	event_t *e = malloc( sizeof( event_t ) );
+	
 	if( !e )
 		DIE_MEM();
+	
 	memcpy( e, event, sizeof(event_t));
 
 	if( e->function_name )
@@ -148,6 +156,8 @@ static event_t *event_copy( event_t *event, int copy_arguments )
 
 	if( e->type == EVENT_VARIABLE )
 		e->param1.variable = wcsdup( e->param1.variable );
+	else if( e->type == EVENT_GENERIC )
+		e->param1.param = wcsdup( e->param1.param );
 		
 	al_init( &e->arguments );
 	if( copy_arguments )
@@ -246,6 +256,14 @@ const wchar_t *event_get_desc( event_t *e )
 			break;
 		}
 		
+		case EVENT_GENERIC:
+			sb_printf( get_desc_buff, _(L"handler for generic event '%ls'"), e->param1.param );
+			break;
+			
+		default:
+			sb_printf( get_desc_buff, _(L"Unknown event type") );
+			break;
+			
 	}
 	
 	return (const wchar_t *)get_desc_buff->buff;
@@ -675,7 +693,30 @@ void event_free( event_t *e )
 
 	free( (void *)e->function_name );
 	if( e->type == EVENT_VARIABLE )
+	{
 		free( (void *)e->param1.variable );
+	}
+	else if( e->type == EVENT_GENERIC )
+	{
+		free( (void *)e->param1.param );
+	}
 	free( e );
 }
+
+
+void event_fire_generic(const wchar_t *name)
+{
+	event_t ev;
+
+	CHECK( name, );
+	
+	ev.type = EVENT_GENERIC;
+	ev.param1.param = name;
+	ev.function_name=0;
+	
+	al_init( &ev.arguments );
+	event_fire( &ev );
+}
+
+	
 

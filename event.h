@@ -27,6 +27,7 @@ enum
 	EVENT_VARIABLE, /**< An event triggered by a variable update */
 	EVENT_EXIT, /**< An event triggered by a job or process exit */
 	EVENT_JOB_ID, /**< An event triggered by a job exit */
+	EVENT_GENERIC, /**< A generic event */
 }
 	;
 
@@ -67,7 +68,11 @@ typedef struct
 		   Job id for EVENT_JOB_ID type events
 		*/
 		int job_id;
-		
+		/**
+		   The parameter describing this generic event
+		*/
+		const wchar_t *param;
+	
 	} param1;
 
 	/**
@@ -141,5 +146,11 @@ void event_free( event_t *e );
    not be freed.
 */
 const wchar_t *event_get_desc( event_t *e );
+
+/**
+   Fire a generic event with the specified name
+*/
+void event_fire_generic(const wchar_t *name);
+
 
 #endif

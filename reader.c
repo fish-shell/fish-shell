@@ -2149,12 +2149,13 @@ int exit_status()
 */
 static int read_i()
 {
-
+	event_fire_generic(L"fish_prompt");
+	
 	reader_push(L"fish");
 	reader_set_complete_function( &complete );
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &reader_shell_test );
-
+	
 	data->prev_end_loop=0;
 
 	while( (!data->end_loop) && (!sanity_check()) )

@@ -22,7 +22,11 @@ if set -q XDG_CONFIG_HOME
 end
 
 if not set -q __fish_datadir
-	set -U __fish_datadir @datadir@/fish
+	set -g __fish_datadir @datadir@/fish
+end
+
+if not set -q __fish_sysconfdir
+	set -g __fish_sysconfdir @sysconfdir@/fish
 end
 
 if not set -q fish_function_path 
@@ -44,24 +48,6 @@ if test -d /usr/xpg4/bin
 	end
 end   
 
-
-#
-# Make sure there are no invalid entries in the PATH
-#
-
-if status --is-interactive
-	set -l new_path
-	for i in $PATH
-		if not test -d $i
-			printf (_ '%s: Warning: The directory %s has been removed from your PATH because it does not exist\n') fish $i
-		else
-			set new_path $new_path $i
-		end
-	end
-
-	set PATH $new_path
-end
-
 #
 # Add a few common directories to path, if they exists. Note that pure
 # console programs like makedep sometimes live in /usr/X11R6/bin, so we
@@ -71,7 +57,8 @@ end
 set -l path_list /bin /usr/bin /usr/X11R6/bin @prefix@/bin @optbindirs@
 
 # Root should also have the sbin directories in the path
-if test "$USER" = root
+switch $USER
+	case root
 	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
 end
 
@@ -86,11 +73,18 @@ for i in (printf "%s\n" $path_list|sgrep -E -v $path_regexp)
 	end
 end
 
+#
 # Launch debugger on SIGTRAP
+#
 function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --description "Signal handler for the TRAP signal. Lanches a debug prompt."
 	breakpoint
 end
 
-if status --is-interactive
-	. config_interactive.fish
+#
+# Whenever a prompt is displayed, make sure that interactive
+# mode-specific initializations have been performed.
+#
+function __fish_on_interactive --on-event fish_prompt
+	__fish_config_interactive
 end
+

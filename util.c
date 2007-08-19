@@ -1317,7 +1317,7 @@ void sb_destroy( string_buffer_t * b )
 void sb_clear( string_buffer_t * b )
 {
 	sb_truncate( b, 0 );
-	assert( !wcslen( b->buff) );
+	assert( !wcslen( (wchar_t *)b->buff) );
 }
 
 void sb_truncate( string_buffer_t *b, int chars_left )

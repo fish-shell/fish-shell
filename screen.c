@@ -843,7 +843,7 @@ void s_write( screen_t *s,
 		}
 		
 		s_desired_append_char( s, b[i], col, indent[i], prompt_width );
-
+		
 		if( i== cursor && s->desired_cursor[1] != cursor_arr[1] && b[i] != L'\n' )
 		{
 			/**

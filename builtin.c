@@ -66,7 +66,6 @@
 #include "path.h"
 
 
-
 /**
    The default prompt for the read command
 */
@@ -731,6 +730,74 @@ static int builtin_builtin(  wchar_t **argv )
 	return STATUS_BUILTIN_OK;
 }
 
+
+static int builtin_emit( wchar_t **argv )
+{
+	int argc=builtin_count_args( argv );
+	
+	woptind=0;
+
+	const static struct woption
+		long_options[] =
+		{
+			{
+				L"help", no_argument, 0, 'h'
+			}
+			,
+			{
+				0, 0, 0, 0
+			}
+		}
+	;
+
+	while( 1 )
+	{
+		int opt_index = 0;
+
+		int opt = wgetopt_long( argc,
+								argv,
+								L"h",
+								long_options,
+								&opt_index );
+		if( opt == -1 )
+			break;
+
+		switch( opt )
+		{
+			case 0:
+				if(long_options[opt_index].flag != 0)
+					break;
+                sb_printf( sb_err,
+                           BUILTIN_ERR_UNKNOWN,
+                           argv[0],
+                           long_options[opt_index].name );
+				builtin_print_help( argv[0], sb_err );
+				return STATUS_BUILTIN_ERROR;
+
+			case 'h':
+				builtin_print_help( argv[0], sb_out );
+				return STATUS_BUILTIN_OK;
+
+			case '?':
+				builtin_unknown_option( argv[0], argv[woptind-1] );
+				return STATUS_BUILTIN_ERROR;
+
+		}
+
+	}
+
+	for (; woptind < argc; woptind++ )
+	{
+		event_fire_generic( argv[woptind] );
+	}
+
+	return STATUS_BUILTIN_OK;
+	
+	
+	
+}
+
+
 /**
    A generic bultin that only supports showing a help message. This is
    only a placeholder that prints the help message. Useful for
@@ -859,12 +926,18 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 				break;
 			}
 
+			case EVENT_GENERIC:
+			{
+				sb_printf( out, L" --on-event %ls", next->param1.param );
+				break;
+			}
+						
 		}
 
 	}
 
 	al_destroy( &ev );
-
+	
 	named = function_get_named_arguments( name );
 	if( named )
 	{
@@ -1144,6 +1217,10 @@ static int builtin_function( wchar_t **argv )
 			}
 			,
 			{
+				L"on-event", required_argument, 0, 'e'
+			}
+			,
+			{
 				L"help", no_argument, 0, 'h'
 			}
 			,
@@ -1166,10 +1243,10 @@ static int builtin_function( wchar_t **argv )
 		int opt_index = 0;
 
 		int opt = wgetopt_long( argc,
-								argv,
-								L"d:s:j:p:v:haS",
-								long_options,
-								&opt_index );
+					argv,
+					L"d:s:j:p:v:e:haS",
+					long_options,
+					&opt_index );
 		if( opt == -1 )
 			break;
 
@@ -1230,10 +1307,23 @@ static int builtin_function( wchar_t **argv )
 				}
 
 				e = halloc( current_block, sizeof(event_t));
-				if( !e )
-					DIE_MEM();
+
 				e->type = EVENT_VARIABLE;
 				e->param1.variable = halloc_wcsdup( current_block, woptarg );
+				e->function_name=0;
+				al_push( events, e );
+				break;
+			}
+
+
+			case 'e':
+			{
+				event_t *e;
+				
+				e = halloc( current_block, sizeof(event_t));
+				
+				e->type = EVENT_GENERIC;
+				e->param1.param = halloc_wcsdup( current_block, woptarg );
 				e->function_name=0;
 				al_push( events, e );
 				break;
@@ -2281,9 +2371,7 @@ static int builtin_contains( wchar_t ** argv )
 	int argc;
 	argc = builtin_count_args( argv );
 	int i;
-	int res=STATUS_BUILTIN_OK;
 	wchar_t *needle;
-	wchar_t **haystack;
 	
 	woptind=0;
 
@@ -3178,10 +3266,6 @@ static int builtin_case( wchar_t **argv )
 const static builtin_data_t builtin_data[]=
 {
 	{
-		L"exit",  &builtin_exit, N_( L"Exit the shell" )
-	}
-	,
-	{
 		L"block",  &builtin_block, N_( L"Temporarily block delivery of events" )
 	}
 	,
@@ -3199,6 +3283,14 @@ const static builtin_data_t builtin_data[]=
 	,
 	{
 		L"contains",  &builtin_contains, N_( L"Search for a specified string in a list" )  
+	}
+	,
+	{
+		L"emit",  &builtin_emit, N_( L"Emit an event" )
+	}
+	,
+	{
+		L"exit",  &builtin_exit, N_( L"Exit the shell" )
 	}
 	,
 	{

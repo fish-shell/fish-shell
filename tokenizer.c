@@ -597,11 +597,14 @@ void tok_next( tokenizer *tok )
 			break;
 
 		case L'>':
-			return read_redirect( tok, 1 );
+                        read_redirect( tok, 1 );
+			return;
 		case L'<':
-			return read_redirect( tok, 0 );
+                        read_redirect( tok, 0 );
+			return;
 		case L'^':
-			return read_redirect( tok, 2 );
+                        read_redirect( tok, 2 );
+			return;
 
 		default:
 		{

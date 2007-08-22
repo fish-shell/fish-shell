@@ -581,7 +581,7 @@ void reader_write_title()
 		int i;
 		if( al_get_count( &l ) > 0 )
 		{
-			writestr( L"\e]2;" );
+			writestr( L"\x1b]2;" );
 			for( i=0; i<al_get_count( &l ); i++ )
 			{
 				writestr( (wchar_t *)al_get( &l, i ) );
@@ -2619,7 +2619,7 @@ wchar_t *reader_readline()
 			}
 
 			/* Escape was pressed */
-			case L'\e':
+			case L'\x1b':
 			{
 				if( search_mode )
 				{

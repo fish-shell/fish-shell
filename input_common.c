@@ -28,7 +28,7 @@ Implementation file for the low level input library
 
 /**
    Time in milliseconds to wait for another byte to be available for
-   reading after \e is read before assuming that escape key was
+   reading after \x1b is read before assuming that escape key was
    pressed, and not an escape sequence.
 */
 #define WAIT_ON_ESCAPE 10

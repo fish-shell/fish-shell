@@ -755,11 +755,6 @@ wchar_t *escape( const wchar_t *in,
 					*(pos++) = L'r';					
 					break;
 					
-				case L'\e':
-					*(pos++) = L'\\';
-					*(pos++) = L'e';					
-					break;
-					
 				case L'\\':
 				case L'&':
 				case L'$':
@@ -999,9 +994,9 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 						}
 						
 						/*
-						  \e means escape
+						  \x1b means escape
 						*/
-						case L'e':
+						case L'\x1b':
 						{
 							in[out_pos]=L'\x1b';
 							break;

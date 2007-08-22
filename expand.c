@@ -168,7 +168,7 @@ static int is_quotable( wchar_t *str )
 		case L'\t':
 		case L'\r':
 		case L'\b':
-		case L'\e':
+		case L'\x1b':
 			return 0;
 
 		default:

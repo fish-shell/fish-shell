@@ -471,7 +471,7 @@ static wchar_t *input_symbolic_sequence( const wchar_t *in )
 		}
 		if( has_meta )
 		{
-			res = wcsdup( L"\ea" );
+			res = wcsdup( L"\x1ba" );
 			res[1]=1+c-L'a';
 		}
 		else
@@ -485,7 +485,7 @@ static wchar_t *input_symbolic_sequence( const wchar_t *in )
 	else if( wcsncmp( in, META_SYMBOL, wcslen(META_SYMBOL) ) == 0 )
 	{
 		in += wcslen(META_SYMBOL);
-		res = wcsdup( L"\e" );		
+		res = wcsdup( L"\x1b" );		
 		debug( 4, L"Got meta" );
 	}
 	else 
@@ -510,7 +510,7 @@ static wchar_t *input_symbolic_sequence( const wchar_t *in )
 			,
 			{
 				L"esc",
-				"\e"
+				"\x1b"
 			}
 			,
 			{
@@ -626,7 +626,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 						break;
 												
 					case L'e':
-						*(out++)=L'\e';
+						*(out++)=L'\x1b';
 						break;
 						
 					case L'\\':
@@ -761,7 +761,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 							(*in < L'a'+32) )
 						{
 							if( has_escape )
-								*(out++)=L'\e';							
+								*(out++)=L'\x1b';							
 							*(out++)=*in-L'a'+1;
 							break;
 						}
@@ -770,7 +770,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 							(*in < L'A'+32) )
 						{
 							if( has_escape )
-								*(out++)=L'\e';							
+								*(out++)=L'\x1b';							
 							*(out++)=*in-L'A'+1;
 							break;
 						}
@@ -798,7 +798,7 @@ static wchar_t *input_expand_sequence( const wchar_t *in )
 							error=1;
 							break;
 						}
-						*(out++)=L'\e';
+						*(out++)=L'\x1b';
 						
 						break;
 					}
@@ -1236,19 +1236,19 @@ static void add_common_bindings()
 		  self-insert ignored the escape character unless it is the
 		  only character of the sequence.
 		*/
-		add_mapping( name[i], L"\e\n", L"Meta-newline", L"self-insert" );
+		add_mapping( name[i], L"\x1b\n", L"Meta-newline", L"self-insert" );
 		/*
 		  We need alternative keybidnings for arrowkeys, since
 		  terminfo sometimes specifies a different sequence than what
 		  keypresses actually generate
 		*/
-		add_mapping( name[i], L"\e[A", L"Up", L"history-search-backward" );
-		add_mapping( name[i], L"\e[B", L"Down", L"history-search-forward" );
+		add_mapping( name[i], L"\x1b[A", L"Up", L"history-search-backward" );
+		add_mapping( name[i], L"\x1b[B", L"Down", L"history-search-forward" );
 		add_terminfo_mapping( name[i], (key_up), L"Up", L"history-search-backward" );
 		add_terminfo_mapping( name[i], (key_down), L"Down", L"history-search-forward" );
 
-		add_mapping( name[i], L"\e[C", L"Right", L"forward-char" );
-		add_mapping( name[i], L"\e[D", L"Left", L"backward-char" );
+		add_mapping( name[i], L"\x1b[C", L"Right", L"forward-char" );
+		add_mapping( name[i], L"\x1b[D", L"Left", L"backward-char" );
 		add_terminfo_mapping( name[i], (key_right), L"Right", L"forward-char" );
 		add_terminfo_mapping( name[i], (key_left), L"Left", L"backward-char" );
 		
@@ -1257,8 +1257,8 @@ static void add_common_bindings()
 		add_terminfo_mapping( name[i], (key_backspace), L"Backspace", L"backward-delete-char" );
 		add_mapping( name[i], L"\x7f", L"Backspace", L"backward-delete-char" );
 		
-		add_mapping( name[i], L"\e[H", L"Home", L"beginning-of-line" );
-		add_mapping( name[i], L"\e[F", L"End", L"end-of-line" );
+		add_mapping( name[i], L"\x1b[H", L"Home", L"beginning-of-line" );
+		add_mapping( name[i], L"\x1b[F", L"End", L"end-of-line" );
 		add_terminfo_mapping( name[i], (key_home), L"Home", L"beginning-of-line" );
 		add_terminfo_mapping( name[i], (key_end), L"End", L"end-of-line" );
 
@@ -1269,27 +1269,27 @@ static void add_common_bindings()
 		  generated
 		*/
 
-		add_mapping( name[i], L"\e\eOC", L"Alt-Right", L"nextd-or-forward-word" );
-		add_mapping( name[i], L"\e\eOD", L"Alt-Left", L"prevd-or-backward-word" );
-		add_mapping( name[i], L"\e\e[C", L"Alt-Right", L"nextd-or-forward-word" );
-		add_mapping( name[i], L"\e\e[D", L"Alt-Left", L"prevd-or-backward-word" );
-		add_mapping( name[i], L"\eO3C", L"Alt-Right", L"nextd-or-forward-word" );
-		add_mapping( name[i], L"\eO3D", L"Alt-Left", L"prevd-or-backward-word" );
-		add_mapping( name[i], L"\e[3C", L"Alt-Right", L"nextd-or-forward-word" );
-		add_mapping( name[i], L"\e[3D", L"Alt-Left", L"prevd-or-backward-word" );
-		add_mapping( name[i], L"\e[1;3C", L"Alt-Right", L"nextd-or-forward-word" );
-		add_mapping( name[i], L"\e[1;3D", L"Alt-Left", L"prevd-or-backward-word" );		
+		add_mapping( name[i], L"\x1b\x1bOC", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\x1b\x1bOD", L"Alt-Left", L"prevd-or-backward-word" );
+		add_mapping( name[i], L"\x1b\x1b[C", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\x1b\x1b[D", L"Alt-Left", L"prevd-or-backward-word" );
+		add_mapping( name[i], L"\x1bO3C", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\x1bO3D", L"Alt-Left", L"prevd-or-backward-word" );
+		add_mapping( name[i], L"\x1b[3C", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\x1b[3D", L"Alt-Left", L"prevd-or-backward-word" );
+		add_mapping( name[i], L"\x1b[1;3C", L"Alt-Right", L"nextd-or-forward-word" );
+		add_mapping( name[i], L"\x1b[1;3D", L"Alt-Left", L"prevd-or-backward-word" );		
 		
-		add_mapping( name[i], L"\e\eOA", L"Alt-Up", L"history-token-search-backward" );
-		add_mapping( name[i], L"\e\eOB", L"Alt-Down", L"history-token-search-forward" );
-		add_mapping( name[i], L"\e\e[A", L"Alt-Up", L"history-token-search-backward" );
-		add_mapping( name[i], L"\e\e[B", L"Alt-Down", L"history-token-search-forward" );
-		add_mapping( name[i], L"\eO3A", L"Alt-Up", L"history-token-search-backward" );
-		add_mapping( name[i], L"\eO3B", L"Alt-Down", L"history-token-search-forward" );
-		add_mapping( name[i], L"\e[3A", L"Alt-Up", L"history-token-search-backward" );
-		add_mapping( name[i], L"\e[3B", L"Alt-Down", L"history-token-search-forward" );
-		add_mapping( name[i], L"\e[1;3A", L"Alt-Up", L"history-token-search-backward" );
-		add_mapping( name[i], L"\e[1;3B", L"Alt-Down", L"history-token-search-forward" );
+		add_mapping( name[i], L"\x1b\x1bOA", L"Alt-Up", L"history-token-search-backward" );
+		add_mapping( name[i], L"\x1b\x1bOB", L"Alt-Down", L"history-token-search-forward" );
+		add_mapping( name[i], L"\x1b\x1b[A", L"Alt-Up", L"history-token-search-backward" );
+		add_mapping( name[i], L"\x1b\x1b[B", L"Alt-Down", L"history-token-search-forward" );
+		add_mapping( name[i], L"\x1bO3A", L"Alt-Up", L"history-token-search-backward" );
+		add_mapping( name[i], L"\x1bO3B", L"Alt-Down", L"history-token-search-forward" );
+		add_mapping( name[i], L"\x1b[3A", L"Alt-Up", L"history-token-search-backward" );
+		add_mapping( name[i], L"\x1b[3B", L"Alt-Down", L"history-token-search-forward" );
+		add_mapping( name[i], L"\x1b[1;3A", L"Alt-Up", L"history-token-search-backward" );
+		add_mapping( name[i], L"\x1b[1;3B", L"Alt-Down", L"history-token-search-forward" );
 	}
 
 	/*
@@ -1320,14 +1320,14 @@ static void add_emacs_bindings()
 	add_escaped_mapping( L"emacs", (L"\\C-n"), L"Control-n", L"history-search-forward" );
 	add_escaped_mapping( L"emacs", (L"\\C-f"), L"Control-f", L"forward-char" );
 	add_escaped_mapping( L"emacs", (L"\\C-b"), L"Control-b", L"backward-char" );
-	add_escaped_mapping( L"emacs", (L"\e\x7f"), L"Alt-backspace", L"backward-kill-word" );
-	add_escaped_mapping( L"emacs", (L"\eb"), L"Alt-b", L"backward-word" );
-	add_escaped_mapping( L"emacs", (L"\ef"), L"Alt-f", L"forward-word" );
-	add_escaped_mapping( L"emacs", (L"\ed"), L"Alt-d", L"forward-kill-word" );
+	add_escaped_mapping( L"emacs", (L"\x1b\x7f"), L"Alt-backspace", L"backward-kill-word" );
+	add_escaped_mapping( L"emacs", (L"\x1bb"), L"Alt-b", L"backward-word" );
+	add_escaped_mapping( L"emacs", (L"\x1bf"), L"Alt-f", L"forward-word" );
+	add_escaped_mapping( L"emacs", (L"\x1bd"), L"Alt-d", L"forward-kill-word" );
 	add_terminfo_mapping( L"emacs", (key_ppage), L"Page Up", L"beginning-of-history" );
 	add_terminfo_mapping( L"emacs", (key_npage), L"Page Down", L"end-of-history" );
-	add_escaped_mapping( L"emacs", (L"\e<"), L"Alt-<", L"beginning-of-buffer" );
-	add_escaped_mapping( L"emacs", (L"\e>"), L"Alt->", L"end-of-buffer" );
+	add_escaped_mapping( L"emacs", (L"\x1b<"), L"Alt-<", L"beginning-of-buffer" );
+	add_escaped_mapping( L"emacs", (L"\x1b>"), L"Alt->", L"end-of-buffer" );
 }
 
 /**
@@ -1335,7 +1335,7 @@ static void add_emacs_bindings()
 */
 static void add_vi_bindings()
 {
-	add_mapping( L"vi", L"\e", L"Escape", L"bind -M vi-command" );
+	add_mapping( L"vi", L"\x1b", L"Escape", L"bind -M vi-command" );
 	
 	add_mapping( L"vi-command", L"i", L"i", L"bind -M vi" );
 	add_mapping( L"vi-command", L"I", L"I", L"bind -M vi" );
@@ -1540,7 +1540,7 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 			{
 				int idx = 0;
 
-				if( seq[0] == L'\e' && seq[1] )
+				if( seq[0] == L'\x1b' && seq[1] )
 				{
 					idx = 1;
 				}

@@ -104,7 +104,7 @@ static int calc_prompt_width( wchar_t *prompt )
 
 	for( j=0; prompt[j]; j++ )
 	{
-		if( prompt[j] == L'\e' )
+		if( prompt[j] == L'\x1b' )
 		{
 			/*
 			  This is the start of an escape code. Try to guess it's width.
@@ -201,7 +201,7 @@ static int calc_prompt_width( wchar_t *prompt )
 						wchar_t *end;
 						j+=2;
 						found = 1;
-						end = wcsstr( &prompt[j], L"\e\\" );
+						end = wcsstr( &prompt[j], L"\x1b\\" );
 						if( end )
 						{
 							/*

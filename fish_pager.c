@@ -285,7 +285,7 @@ static wint_t readch()
 	struct mapping m[]=
 		{
 			{				
-				"\e[A", LINE_UP
+				"\x1b[A", LINE_UP
 			}
 			,
 			{
@@ -293,7 +293,7 @@ static wint_t readch()
 			}
 			,
 			{				
-				"\e[B", LINE_DOWN
+				"\x1b[B", LINE_DOWN
 			}
 			,
 			{

@@ -153,10 +153,12 @@ AH_BOTTOM([#if __GNUC__ >= 3
 # Set up various programs needed for install
 #
 
-AC_PROG_CC
+# Here we look for c99 before cc as Sun Studio compiler supports c99
+# through the c99 binary.
+
+AC_PROG_CC([gcc c99 cc])
 AC_PROG_CPP
 AC_PROG_INSTALL
-
 
 #
 # Check for seq command. If missing, make sure fallback shellscript
@@ -232,33 +234,44 @@ fi
 #
 # Test if the compiler accepts the -std=c99 flag. If so, using it
 # increases the odds of correct compilation, since we want to use the
-# *wprintf functions, which where defined in C99. 
+# *wprintf functions, which where defined in C99.
+#
+# NOTE: Never versions of autoconf has AC_CHECK_PROG_CC_C99
 #
 
-XCFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -std=c99"
-XCPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS -std=c99"
-AC_MSG_CHECKING(if -std=c99 works)
+if test "$CC" != "c99"; then
+  XCFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS -std=c99"
+	XCPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -std=c99"
+	AC_MSG_CHECKING(if -std=c99 works)
 
-AC_CACHE_VAL(
-	local_cv_has__std_c99,
-	[
-		AC_TRY_RUN(
-			[
-				#include <stdlib.h>
-				#include <stdio.h>
+	AC_CACHE_VAL(
+  	  local_cv_has__std_c99,
+    	[
+      	  AC_TRY_RUN(
+        	    [
+          	      #include <stdlib.h>
+            	    #include <stdio.h>
 
-				int main() 
-				{
-					return 0;
-				}
-			],
-			local_cv_has__std_c99=yes,
-			local_cv_has__std_c99=no,
-		)
-	]
-)
+              	  int main()
+                	{
+                  	  return 0;
+	                }
+	            ],
+	            local_cv_has__std_c99=yes,
+	            local_cv_has__std_c99=no,
+  	      )
+    	]
+	)
+
+	AC_MSG_RESULT($local_cv_has__std_c99)
+	case x$local_cv_has__std_c99 in
+	xno)
+  	  CFLAGS="$XCFLAGS"
+    	CPPFLAGS="$XCPPFLAGS" ;;
+	esac
+fi
 
 #
 # Try to enable large file support. This will make sure that on systems
@@ -268,20 +281,12 @@ AC_CACHE_VAL(
 
 CFLAGS="$CFLAGS -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
 
-AC_MSG_RESULT($local_cv_has__std_c99)
-case x$local_cv_has__std_c99 in
-xno) 
-	CFLAGS="$XCFLAGS" 
-	CPPFLAGS="$XCPPFLAGS" ;;
-esac
-
-
 #
 # If we are using gcc, set some flags that increase the odds of the
 # compiler producing a working binary...
 #
 
-if test "$CC" = gcc; then
+if test "$GCC" = yes; then
 
 	#
 	# -fno-optimize-sibling-calls seems to work around a bug where
@@ -387,6 +392,34 @@ case $target_os in
 		;;
 esac
 
+# Check for Solaris curses tputs having fixed length parameter list.
+AC_MSG_CHECKING([if we are using non varargs tparm.])
+AC_COMPILE_IFELSE(
+	[
+		AC_LANG_PROGRAM(
+			[			
+				#include <curses.h>
+				#include <term.h>
+			],
+			[
+				tparm( "" );
+			]
+		)
+	],
+	[tparm_solaris_kludge=no], 
+	[tparm_solaris_kludge=yes] 
+)
+if test "x$tparm_solaris_kludge" = "xyes"; then
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(
+		[TPARM_SOLARIS_KLUDGE],
+		[1],
+		[Define to 1 if tparm accepts a fixed amount of paramters.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
 
 #
 # BSD-specific flags go here
@@ -466,18 +499,26 @@ AC_DEFINE(
 # slower compiles when developing fish.
 #
 
+# Check for os dependant libraries for all binaries.
+LIBS_COMMON=$LIBS
+LIBS=""
+AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
+AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
+AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
+LIBS_SHARED=$LIBS
+LIBS=$LIBS_COMMON
+
 #
 # Check for libraries needed by fish. 
 #
 
 LIBS_COMMON=$LIBS
-LIBS=""
+LIBS="$LIBS_SHARED"
 if test x$local_gettext != xno; then 
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
-AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
-AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
-AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
+
+
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )
 LIBS_FISH=$LIBS
 LIBS=$LIBS_COMMON
@@ -487,7 +528,7 @@ LIBS=$LIBS_COMMON
 #
 
 LIBS_COMMON=$LIBS
-LIBS=""
+LIBS="$LIBS_SHARED"
 if test x$local_gettext != xno; then 
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
@@ -499,12 +540,10 @@ LIBS=$LIBS_COMMON
 #
 
 LIBS_COMMON=$LIBS
-LIBS=""
+LIBS="$LIBS_SHARED"
 if test x$local_gettext != xno; then 
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
-AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
-AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
 LIBS_FISH_PAGER=$LIBS
 LIBS=$LIBS_COMMON
 
@@ -513,11 +552,10 @@ LIBS=$LIBS_COMMON
 #
 
 LIBS_COMMON=$LIBS
-LIBS=""
+LIBS="$LIBS_SHARED"
 if test x$local_gettext != xno; then 
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
-AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 LIBS_FISHD=$LIBS
 LIBS=$LIBS_COMMON
 
@@ -526,11 +564,11 @@ LIBS=$LIBS_COMMON
 #
 
 LIBS_COMMON=$LIBS
-LIBS=""
+LIBS="$LIBS_SHARED"
 if test x$local_gettext != xno; then 
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
-LIBS_FISHD=$LIBS
+LIBS_MIMEDB=$LIBS
 LIBS=$LIBS_COMMON
 
 
@@ -539,11 +577,10 @@ LIBS=$LIBS_COMMON
 #
 
 LIBS_COMMON=$LIBS
-LIBS=""
+LIBS="$LIBS_SHARED"
 if test x$local_gettext != xno; then 
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
-AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish])] )
 LIBS_SET_COLOR=$LIBS
 LIBS=$LIBS_COMMON
 

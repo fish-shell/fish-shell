@@ -73,6 +73,18 @@ int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t));
 
 #endif
 
+#ifdef TPARM_SOLARIS_KLUDGE
+
+/**
+   Solaris tparm has a set fixed of paramters in it's curses implementation,
+   work around this here.
+*/
+
+#define tparm tparm_solaris_kludge
+char *tparm_solaris_kludge( char *str, ... );
+
+#endif
+
 #ifndef HAVE_FWPRINTF
 
 /**
@@ -424,4 +436,3 @@ int getopt_long(int argc,
 #endif
 
 #endif
-

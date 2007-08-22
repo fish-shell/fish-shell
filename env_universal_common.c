@@ -93,7 +93,7 @@
 typedef struct var_uni_entry
 {
 	int export; /**< Whether the variable should be exported */
-	wchar_t val[0]; /**< The value of the variable */
+	wchar_t val[1]; /**< The value of the variable */
 }
 var_uni_entry_t;
 
@@ -112,7 +112,6 @@ hash_table_t env_universal_var;
 void (*callback)( int type, 
 				  const wchar_t *key, 
 				  const wchar_t *val );
-
 
 /**
    Variable used by env_get_names to communicate auxiliary information

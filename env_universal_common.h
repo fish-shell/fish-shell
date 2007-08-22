@@ -112,7 +112,7 @@ typedef struct
 	/**
 	   Message body. The message must be allocated using enough memory to actually contain the message.
 	*/
-	char body[0];
+	char body[1];
 }
 	message_t;
 

@@ -2526,9 +2526,9 @@ static int builtin_source( wchar_t ** argv )
 	if( res )
 	{
 		sb_printf( sb_err,
-				   _( L"%ls: Error while reading file '%ls'\n" ),
-				   argv[0],
-				   argv[1] );
+			   _( L"%ls: Error while reading file '%ls'\n" ),
+			   argv[0],
+			   argv[1]?argv[1]:L"<stdin>" );
 	}
 
 	/*

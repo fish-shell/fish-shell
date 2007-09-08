@@ -58,3 +58,4 @@ if test -d include
 		. $i
 	end
 end
+

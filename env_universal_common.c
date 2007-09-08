@@ -215,7 +215,7 @@ wchar_t *utf2wcs( const char *in )
 	char **from_name = iconv_utf8_names;
 
 	size_t in_len = strlen( in );
-	size_t out_len =  sizeof( wchar_t )*(in_len+1);
+	size_t out_len =  sizeof( wchar_t )*(in_len+2);
 	size_t nconv;
 	char *nout;
 	
@@ -253,8 +253,7 @@ wchar_t *utf2wcs( const char *in )
 		return 0;		
 	}
 	
-	
-	nconv = iconv( cd, (char **)&in, &in_len, &nout, &out_len );
+	nconv = iconv( cd, (const char **)&in, &in_len, &nout, &out_len );
 		
 	if (nconv == (size_t) -1)
 	{
@@ -263,6 +262,24 @@ wchar_t *utf2wcs( const char *in )
 	}
 	     
 	*((wchar_t *) nout) = L'\0';
+
+	/*
+		Check for silly iconv behaviour inserting an bytemark in the output
+		string.
+	 */
+	if (*out == L'\xfeff' || *out == L'\xffef' || *out == L'\xefbbbf')
+	{
+		wchar_t *out_old = out;
+		out = wcsdup(out+1);
+		if (! out )
+		{
+			debug(0, L"FNORD!!!!");
+			free( out_old );
+			return 0;
+		}
+		free( out_old );
+	}
+	
 	
 	if (iconv_close (cd) != 0)
 		wperror (L"iconv_close");

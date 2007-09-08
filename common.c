@@ -996,7 +996,7 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 						/*
 						  \x1b means escape
 						*/
-						case L'\x1b':
+						case L'e':
 						{
 							in[out_pos]=L'\x1b';
 							break;
@@ -1039,7 +1039,7 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 						}
 
 						/*
-						  \v means vetrical tab
+						  \v means vertical tab
 						*/
 						case L'v':
 						{

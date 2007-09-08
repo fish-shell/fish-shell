@@ -70,7 +70,7 @@ typedef struct halloc
 	/**
 	   Memory scratch area used to fullfil smaller memory allocations
 	*/
-	void *scratch;
+	char *scratch;
 	/**
 	   Amount of free space in the scratch area
 	*/
@@ -78,13 +78,13 @@ typedef struct halloc
 }
 	halloc_t;
 
-static void *align_ptr( void *in )
+static char *align_ptr( char *in )
 {
 	unsigned long step = maxi(sizeof(double),sizeof(void *));
 	unsigned long inc = step-1;
 	unsigned long long_in = (long)in;
 	unsigned long long_out = ((long_in+inc)/step)*step;
-	return (void *)long_out;
+	return (char *)long_out;
 }
 
 static size_t align_sz( size_t in )
@@ -132,8 +132,8 @@ void *halloc( void *context, size_t size )
 	halloc_t *me, *parent;
 	if( context )
 	{
-		void *res;
-		void *aligned;
+		char *res;
+		char *aligned;
 		
 #ifdef HALLOC_DEBUG
 			
@@ -142,7 +142,7 @@ void *halloc( void *context, size_t size )
 			pid = getpid();
 			atexit( &halloc_report );
 		}
-		
+		 
 		child_count++;
 		child_size += size;
 #endif	
@@ -190,7 +190,7 @@ void *halloc( void *context, size_t size )
 				if( !res )
 					DIE_MEM();
 			}
-			al_push( &parent->children, &late_free );
+			al_push_func( &parent->children, &late_free );
 			al_push( &parent->children, res );
 			
 		}
@@ -221,7 +221,7 @@ void halloc_register_function( void *context, void (*func)(void *), void *data )
 		return;
 	
 	me = halloc_from_data( context );
-	al_push( &me->children, func );
+	al_push_func( &me->children, func );
 	al_push( &me->children, data );
 }
 
@@ -248,7 +248,7 @@ void halloc_free( void *context )
 	}
 	for( i=0; i<al_get_count(&me->children); i+=2 )
 	{
-		void (*func)(void *) = (void (*)(void *))al_get( &me->children, i );
+		void (*func)(void *) = (void (*)(void *))al_get_func( &me->children, i );
 		void * data = (void *)al_get( &me->children, i+1 );
 		if( func == &late_free )
 			free( data );

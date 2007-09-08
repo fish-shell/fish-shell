@@ -668,13 +668,14 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 			if( getpgid( p->pid) != j->pgid && print_errors )
 			{
 				debug( 1, 
-					   _( L"Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d" ),
-					   p->pid,
-					   p->argv[0],
-					   j->job_id,
-					   j->command,
-					   getpgid( p->pid),
-					   j->pgid );
+				       _( L"Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d" ),
+				       p->pid,
+				       p->argv[0],
+				       j->job_id,
+				       j->command,
+				       getpgid( p->pid),
+				       j->pgid );
+
 				wperror( L"setpgid" );
 				res = -1;
 			}

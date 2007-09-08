@@ -368,8 +368,12 @@ int main( int argc, char **argv )
 
 				rel_filename = str2wcs( file );
 				abs_filename = wrealpath( rel_filename, 0 );
+
 				if( !abs_filename )
+				{
 					abs_filename = wcsdup(rel_filename);
+				}
+
 				reader_push_current_filename( intern( abs_filename ) );
 				free( rel_filename );
 				free( abs_filename );
@@ -379,16 +383,16 @@ int main( int argc, char **argv )
 				if( res )
 				{
 					debug( 1, 
-						   _(L"Error while reading file %ls\n"), 
-						   reader_current_filename()?reader_current_filename(): _(L"Standard input") );
+					       _(L"Error while reading file %ls\n"), 
+					       reader_current_filename()?reader_current_filename(): _(L"Standard input") );
 				}				
 				reader_pop_current_filename();
 			}
 		}
 	}
-
+	
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
-
+	
 	history_destroy();
 	proc_destroy();
 	builtin_destroy();
@@ -397,12 +401,12 @@ int main( int argc, char **argv )
 	parser_destroy();
 	wutil_destroy();
 	event_destroy();
-
+	
 	halloc_util_destroy();
-
+	
 	env_destroy();
-
+	
 	intern_free_all();
-
+	
 	return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();	
 }

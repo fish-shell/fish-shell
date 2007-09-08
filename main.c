@@ -73,13 +73,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 static int read_init()
 {
-	wchar_t cwd[4096];
+#define CWD_SZ 8192
+
+	wchar_t cwd[CWD_SZ];
 	wchar_t *config_dir;
 	wchar_t *config_dir_escaped;
 	void *context;
 	string_buffer_t *eval_buff;
 	
-	if( !wgetcwd( cwd, 4096 ) )
+	if( !wgetcwd( cwd, CWD_SZ ) )
 	{
 		wperror( L"wgetcwd" );		
 		return 0;

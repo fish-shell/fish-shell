@@ -121,6 +121,9 @@ static char *writestr_buff = 0;
 
 static int (*out)(char c) = &writeb_internal;
 
+static wchar_t *current_term = 0;
+
+
 /**
    Cleanup function. Run automatically through halloc
 */
@@ -366,7 +369,7 @@ int writeb( tputs_arg_t b )
 	return 0;
 }
 
-int writembs( char *str )
+int writembs_internal( char *str )
 {
 	CHECK( str, 1 );
 		
@@ -580,3 +583,15 @@ int output_color_code( const wchar_t *val )
 	return color | (is_bold?FISH_COLOR_BOLD:0) | (is_underline?FISH_COLOR_UNDERLINE:0);
 	
 }
+
+void output_set_term( wchar_t *term )
+{
+	current_term = halloc_wcsdup(global_context, term);
+}
+
+wchar_t *output_get_term()
+{
+	return current_term ? current_term : L"<unknown>";
+}
+
+

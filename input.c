@@ -1435,6 +1435,8 @@ int input_init()
 		debug( 0, _( L"Could not set up terminal" ) );
 		exit(1);
 	}
+	output_set_term( env_get( L"TERM" ) );
+	
 	hash_init( &all_mappings, &hash_wcs_func, &hash_wcs_cmp );
 	
 	/* 

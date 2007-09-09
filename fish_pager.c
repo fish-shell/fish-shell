@@ -672,8 +672,17 @@ static int completion_try_print( int cols,
 			int npos, pos = 0;
 			int do_loop = 1;
 
-			is_ca_mode=1;
-			writembs(enter_ca_mode);
+			/*
+			  Enter ca_mode, which means that the terminal
+			  content will be restored to the current
+			  state on exit.
+			*/
+			if( enter_ca_mode && exit_ca_mode )
+			{
+				is_ca_mode=1;
+				writembs(enter_ca_mode);
+			}
+			
 
 			completion_print( cols,
 					  width,

@@ -2363,7 +2363,7 @@ static int builtin_count( wchar_t ** argv )
 	int argc;
 	argc = builtin_count_args( argv );
 	sb_printf( sb_out, L"%d\n", argc-1 );
-	return !argc;
+	return !(argc-1);
 }
 
 static int builtin_contains( wchar_t ** argv )

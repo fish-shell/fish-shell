@@ -137,7 +137,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 wchar_t *path_get_cdpath( void *context, wchar_t *dir )
 {
 	wchar_t *res = 0;
-
+	int err = ENOENT;
 	if( !dir )
 		return 0;
 
@@ -151,6 +151,11 @@ wchar_t *path_get_cdpath( void *context, wchar_t *dir )
 			{
 				res = halloc_wcsdup( context, dir );
 			}
+			else
+			{
+				err = ENOTDIR;
+			}
+
 		}
 	}
 	else
@@ -207,11 +212,21 @@ wchar_t *path_get_cdpath( void *context, wchar_t *dir )
 					halloc_register( context, whole_path );					
 					break;
 				}
+				else
+				{
+					err = ENOTDIR;
+				}
 			}
 			free( whole_path );
 		}
 		free( path_cpy );
 	}
+
+	if( !res )
+	{
+		errno = err;
+	}
+
 	return res;
 }
 

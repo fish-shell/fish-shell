@@ -2318,25 +2318,61 @@ static int builtin_cd( wchar_t **argv )
 
 	if( !dir )
 	{
-		sb_printf( sb_err,
-				   _( L"%ls: '%ls' is not a directory or you do not have permission to enter it\n" ),
+		if( errno == ENOTDIR )
+		{
+			sb_printf( sb_err,
+				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
 				   dir_in );
+		}
+		else if( errno == ENOENT )
+		{
+			sb_printf( sb_err,
+				   _( L"%ls: The directory '%ls' does not exist\n" ),
+				   argv[0],
+				   dir_in );			
+			
+		} else {
+			sb_printf( sb_err,
+				   _( L"%ls: Unknown error trying to locate directory '%ls'\n" ),
+				   argv[0],
+				   dir_in );			
+			
+		}
+		
+		
 		if( !is_interactive )
 		{
 			sb_append2( sb_err,
-						parser_current_line(),
-						(void *)0 );
+				    parser_current_line(),
+				    (void *)0 );
 		}
 		
 		res = 1;
 	}
 	else if( wchdir( dir ) != 0 )
 	{
-		sb_printf( sb_err,
+		struct stat buffer;
+		int status;
+		
+		status = wstat( dir, &buffer );
+		if( !status && S_ISDIR(buffer.st_mode))
+		{
+			sb_printf( sb_err,
+				   _( L"%ls: Permission denied: '%ls'\n" ),
+				   argv[0],
+				   dir );
+			
+		}
+		else
+		{
+			
+			sb_printf( sb_err,
 				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
 				   dir );
+		}
+		
 		if( !is_interactive )
 		{
 			sb_append2( sb_err,

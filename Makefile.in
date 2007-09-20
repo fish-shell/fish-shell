@@ -870,6 +870,7 @@ clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.c doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader 
+	rm -f share/config.fish etc/config.fish doc_src/index.hdr doc_src/commands.hdr
 	rm -f fish-@PACKAGE_VERSION@.tar 
 	rm -f fish-@PACKAGE_VERSION@.tar.gz 
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2

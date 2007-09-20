@@ -2331,8 +2331,17 @@ static int builtin_cd( wchar_t **argv )
 				   _( L"%ls: The directory '%ls' does not exist\n" ),
 				   argv[0],
 				   dir_in );			
+		}
+		else if( errno == EROTTEN )
+		{
+			sb_printf( sb_err,
+				   _( L"%ls: '%ls' is a rotten symlink\n" ),
+				   argv[0],
+				   dir_in );			
 			
-		} else {
+		} 
+		else 
+		{
 			sb_printf( sb_err,
 				   _( L"%ls: Unknown error trying to locate directory '%ls'\n" ),
 				   argv[0],

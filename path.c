@@ -217,6 +217,14 @@ wchar_t *path_get_cdpath( void *context, wchar_t *dir )
 					err = ENOTDIR;
 				}
 			}
+			else
+			{
+				if( lwstat( whole_path, &buf ) == 0 )
+				{
+					err = EROTTEN;
+				}
+			}
+			
 			free( whole_path );
 		}
 		free( path_cpy );

@@ -1,10 +1,5 @@
 # Completions for make
 
-function __fish_print_make_targets
-	set files Makefile makefile GNUmakefile
-	sgrep -h -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $files | cut -d ":" -f 1 | sed -e 's/^ *//;s/ *$//;s/  */\n/g' ^/dev/null
-end
-
 # This completion is a bit ugly.  It reenables file completion on
 # assignments, so e.g. 'make foo FILES=<tab>' will recive standard
 # filename completion.  Unfortunatly, this turns out to be a bit

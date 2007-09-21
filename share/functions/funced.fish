@@ -19,6 +19,8 @@ function funced --description "Edit function definition"
 				set -l IFS 
 				if functions -q $argv
 					set init (functions $argv | fish_indent --no-indent)
+				else
+					set init function $argv\nend
 				end
 
 				

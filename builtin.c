@@ -3431,7 +3431,7 @@ const static builtin_data_t builtin_data[]=
 	}
 	,
 	{
-		L"breakpoint",  &builtin_breakpoint, N_( L"Temporarily halt execution and launch a new prompt" )  
+		L"breakpoint",  &builtin_breakpoint, N_( L"Temporarily halt execution of a script and launch an interactive debug prompt" )  
 	}
 	,
 

@@ -1283,6 +1283,20 @@ For more information on how to define new event handlers, see the
 documentation for the <a href='commands.html#function'>function</a>
 command.
 
+\subsection debuging Debuging fish scripts
+
+Fish includes a built in debuger. The debuger allows you to stop
+execution of a script at an arbitrary point and launch a prompt. This
+prompt can then be used to check or change the value of any variables
+or perform any shellscript command. To resume normal execution of the
+script, simply exit the prompt.
+
+To start the debugger, simply call the builtin command
+'breakpoint'. The default action of the TRAP signal is to call this
+builtin, so a running script can be debuged by sending it the TRAP
+signal. Once in the debuger, it is easy to insert new breakpoints by
+using the funced function to edit the definition of a function.
+
 \section issues Common issues with fish
 
 If you install fish in your home directory, fish will not work

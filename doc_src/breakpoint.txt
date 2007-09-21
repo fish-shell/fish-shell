@@ -1,0 +1,10 @@
+\section breakpoint breakpoint - Launch debug mode
+
+\subsection breakpoint-synopsis Synopsis
+ <tt>breakpoint</tt>
+
+\subsection breakpoint-description Description
+
+The \c breakpoint builtin is used to halt a running script and launch
+an interactive debug prompt.
+

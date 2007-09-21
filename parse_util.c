@@ -208,7 +208,7 @@ int parse_util_get_offset( wchar_t *buff, int line, int line_offset )
 	
 	if( off2 < 0 )
 	{
-		off2 = wcslen( buff );
+		off2 = wcslen( buff )+1;
 	}
 	
 	if( line_offset2 < 0 )

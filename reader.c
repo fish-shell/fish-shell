@@ -2884,61 +2884,47 @@ wchar_t *reader_readline()
 			case R_UP_LINE:
 			case R_DOWN_LINE:
 			{
-				int line = parse_util_get_line_from_offset( data->buff,
-								 data->buff_pos );
-				int new_line;
+				int line_old = parse_util_get_line_from_offset( data->buff,
+										data->buff_pos );
+				int line_new;
 
 				if( c == R_UP_LINE )
-					new_line = line-1;
+					line_new = line_old-1;
 				else
-					new_line = line+1;
+					line_new = line_old+1;
 	
 				int line_count = parse_util_lineno( data->buff, data->buff_len )-1;
 				
-				if( new_line >= 0 && new_line <= line_count)
+				if( line_new >= 0 && line_new <= line_count)
 				{
-					int base_pos;
+					int base_pos_new;
+					int base_pos_old;
 					
 					int indent_old;
 					int indent_new;
-					int old_line_offset;
-					int new_total_offset;
+					int line_offset_old;
+					int total_offset_new;
 
-//					debug( 0, L"Move up one line to %d", new_line );
+//					debug( 0, L"Move up one line to %d", line_new );
 					
-					base_pos = parse_util_get_offset_from_line( data->buff, 
-										    new_line );
+					base_pos_new = parse_util_get_offset_from_line( data->buff, 
+										    line_new );
 /*					debug( 0, L"Old cursor offset is %d, new base offset is %d", 
 					       data->buff_pos, 
-					       base_pos );
+					       base_pos_new );
 */
+					base_pos_old = parse_util_get_offset_from_line( data->buff, 
+											line_old );
 					
-					if( data->buff_pos ==(data->buff_len) )
-					{
-						if( data->buff_pos == 0 )
-						{
-							indent_old = 0;
-						}
-						else
-						{
-							indent_old = data->indent[data->buff_pos-1];
-						}
-					}
-					else
-					{
-						if( data->buff[data->buff_pos] == L'\n' )
-							indent_old = data->indent[data->buff_pos-1];
-						else
-							indent_old = data->indent[data->buff_pos];
-					}
 					
-					indent_new = data->indent[base_pos];
+					indent_old = data->indent[base_pos_old];
+					indent_new = data->indent[base_pos_new];
 										    //				debug( 0, L"Old indent %d, new indent %d", indent_old, indent_new );
 					
-					old_line_offset = data->buff_pos - parse_util_get_offset_from_line( data->buff,
-												 line );
-					new_total_offset = parse_util_get_offset( data->buff, new_line, old_line_offset - 4*(indent_new-indent_old));
-					data->buff_pos = new_total_offset;
+					line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->buff,
+												 line_old );
+					total_offset_new = parse_util_get_offset( data->buff, line_new, line_offset_old - 4*(indent_new-indent_old));
+					data->buff_pos = total_offset_new;
 					repaint();
 				}
 				

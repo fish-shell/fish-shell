@@ -1,10 +1,8 @@
-#
-# Initializations that should only be performed when entering interactive mode.
-#
+# Initializations that should only be performed when entering
+# interactive mode.
 
-#
-# This function is called by the __fish_on_interactive function, which is defined in config.fish. 
-#
+# This function is called by the __fish_on_interactive function, which
+# is defined in config.fish.
 
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
 
@@ -119,7 +117,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	# Set various defaults using these throwaway functions
 	#
 
-	function set_default -d "Set an universal variable, unless it has already been set"
+	function set_default -d "Set a universal variable, unless it has already been set"
 		if not set -q $argv[1]
 			set -U -- $argv	
 		end
@@ -191,39 +189,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	end
 
 	#
-	# A few minor convenience functions
-	#
-	# The naming heuristic is that __fish_complete_* prints completions
-	# and descriptions, while __fish_print_* only prints the completions
-	# and no descriptions
-	#
-
-	function __fish_complete_users --description "Print a list of local users, with the real user name as a description"
-		cat /etc/passwd | sed -e "s/^\([^:]*\):[^:]*:[^:]*:[^:]*:\([^:]*\):.*/\1\t\2/"
-	end
-
-	function __fish_complete_groups --description "Print a list of local groups, with group members as the description"
-		cat /etc/group | sed -e "s/^\([^:]*\):[^:]*:[^:]*:\(.*\)/\1\tMembers: \2/"
-	end
-
-	function __fish_complete_command --description "Complete using all available commands"
-		printf "%s\n" (commandline -ct)(complete -C (commandline -ct))
-	end
-
-	function __fish_print_interfaces --description "Print a list of known network interfaces"
-		netstat -i -n -a | awk 'NR>2'|awk '{print $1}'
-	end
-
-	function __fish_print_addresses --description "Print a list of known network addresses"
-		/sbin/ifconfig |sgrep 'inet addr'|cut -d : -f 2|cut -d ' ' -f 1
-	end
-
-	function __fish_print_users --description "Print a list of local users"
-		cat /etc/passwd | cut -d : -f 1
-	end
-
-	#
-	# Completions for SysV startup scripts
+	# Completions for SysV startup scripts. These aren't bound to any 
+	# specific command, so they can't be autoloaded.
 	#
 
 	complete -x -p "/etc/init.d/*" -a start --description 'Start service'

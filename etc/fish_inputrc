@@ -9,15 +9,15 @@ $include /etc/inputrc
 
 $if fish
 	"\M-l": __fish_list_current_token
-	"\M-w": set tok (commandline -pt); if test $tok[1]; whatis $tok[1]; end
-	"\C-l": clear
+	"\M-w": set tok (commandline -pt); if test $tok[1]; whatis $tok[1]; commandline -f repaint; end
+	"\C-l": clear; commandline -f repaint
 	"\C-c": delete-line		
 	"\C-u": backward-kill-line
 	"\M-d": kill-word
 	"\C-w": backward-kill-word	
 	"\M-k": dump-functions
-	"\M-d": if test -z (commandline); dirh; else; commandline -f kill-word; end
-	"\C-d": delete-or-exit	
+	"\M-d": if test -z (commandline); dirh; commandline -f repaint; else; commandline -f kill-word; end
+	"\C-d": delete-or-exit
 # This will make sure the output of the current command is paged using the less pager when you press Meta-p
 	"\M-p": if commandline -j|grep -v 'less *$' >/dev/null; commandline -aj "|less;"; end
 $endif

@@ -16,5 +16,6 @@ function __fish_list_current_token -d "List contents of token under the cursor i
 			ls
 		end
 	end
+	commandline -f repaint
 end
 

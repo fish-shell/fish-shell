@@ -1346,7 +1346,7 @@ void exec( job_t *j )
 
 				for( io = j->io; io; io=io->next )
 				{
-					if( io->io_mode == IO_FILE )
+					if( io->io_mode == IO_FILE && wcscmp(io->param1.filename, L"/dev/null" ))
 					{
 						skip_fork = 0;
 					}

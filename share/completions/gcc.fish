@@ -464,9 +464,9 @@ complete -c gcc -o fdollars-in-identifiers --description '@anchor{fdollars-in-id
 complete -c gcc -o fextended-identifiers --description 'Accept universal character names in identifiers'
 complete -c gcc -o fpreprocessed --description 'Indicate to the preprocessor that the input file has already been preprocessed'
 complete -c gcc -o ftabstop --description 'Set the distance between tab stops'
-complete -c gcc -o fexec-charset --description 'Set the execution character set, used for string and character constants' -a "(iconv --list|sed -e 's|//||')"
-complete -c gcc -o fwide-exec-charset --description 'Set the wide execution character set, used for wide string and character constants' -a "(iconv --list|sed -e 's|//||')"
-complete -c gcc -o finput-charset --description 'Set the input character set, used for translation from the character set of the input file to the source character set used by GCC' -a "(iconv --list|sed -e 's|//||')"
+complete -c gcc -o fexec-charset --description 'Set the execution character set, used for string and character constants' -a "(__fish_print_encodings)"
+complete -c gcc -o fwide-exec-charset --description 'Set the wide execution character set, used for wide string and character constants' -a "(__fish_print_encodings)"
+complete -c gcc -o finput-charset --description 'Set the input character set, used for translation from the character set of the input file to the source character set used by GCC' -a "(__fish_print_encodings)"
 complete -c gcc -o fworking-directory --description 'Enable generation of linemarkers in the preprocessor output that will let the compiler know the current working directory at the time of preprocessing'
 complete -c gcc -o fno-show-column --description 'Do not print column numbers in diagnostics'
 complete -c gcc -s A --description 'Make an assertion with the predicate predicate and answer answer'

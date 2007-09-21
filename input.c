@@ -134,7 +134,9 @@ static const wchar_t *name_arr[] =
 	L"execute",
 	L"beginning-of-buffer",
 	L"end-of-buffer",
-	L"repaint"
+	L"repaint",
+	L"up-line",
+	L"down-line"
 }
 	;
 
@@ -215,7 +217,9 @@ static const wchar_t code_arr[] =
 	R_EXECUTE,
 	R_BEGINNING_OF_BUFFER,
 	R_END_OF_BUFFER,
-	R_REPAINT
+	R_REPAINT,
+	R_UP_LINE,
+	R_DOWN_LINE
 }
 	;
 
@@ -1242,10 +1246,10 @@ static void add_common_bindings()
 		  terminfo sometimes specifies a different sequence than what
 		  keypresses actually generate
 		*/
-		add_mapping( name[i], L"\x1b[A", L"Up", L"history-search-backward" );
-		add_mapping( name[i], L"\x1b[B", L"Down", L"history-search-forward" );
-		add_terminfo_mapping( name[i], (key_up), L"Up", L"history-search-backward" );
-		add_terminfo_mapping( name[i], (key_down), L"Down", L"history-search-forward" );
+		add_mapping( name[i], L"\x1b[A", L"Up", L"up-or-search" );
+		add_mapping( name[i], L"\x1b[B", L"Down", L"down-or-search" );
+		add_terminfo_mapping( name[i], (key_up), L"Up", L"up-or-search" );
+		add_terminfo_mapping( name[i], (key_down), L"Down", L"down-or-search" );
 
 		add_mapping( name[i], L"\x1b[C", L"Right", L"forward-char" );
 		add_mapping( name[i], L"\x1b[D", L"Left", L"backward-char" );

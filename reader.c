@@ -258,6 +258,12 @@ typedef struct reader_data
 	   Pointer to previous reader_data
 	*/
 	struct reader_data *next;
+
+	/**
+	   This variable keeps state on if we are in search mode, and
+	   if yes, what mode
+	 */
+	int search_mode;
 }
 	reader_data_t;
 
@@ -680,6 +686,7 @@ void repaint()
 			 data->buff_pos );
 	
 }
+
 
 /**
    Remove the previous character in the character buffer and on the
@@ -2304,12 +2311,12 @@ wchar_t *reader_readline()
 	int comp_empty=1;
 	int finished=0;
 	struct termios old_modes;
-	int search_mode = 0;
 
 	check_size();
 	sb_clear( &data->search_buff );
 	data->buff[data->buff_len]='\0';
-
+	data->search_mode = NO_SEARCH;
+	
 	s_reset( &data->screen );
 	
 	exec_prompt();
@@ -2621,9 +2628,9 @@ wchar_t *reader_readline()
 			/* Escape was pressed */
 			case L'\x1b':
 			{
-				if( search_mode )
+				if( data->search_mode )
 				{
-					search_mode= 0;
+					data->search_mode= NO_SEARCH;
 										
 					if( data->token_history_pos==-1 )
 					{
@@ -2745,23 +2752,23 @@ wchar_t *reader_readline()
 			{
 				int reset = 0;
 				
-				if( search_mode == NO_SEARCH )
+				if( data->search_mode == NO_SEARCH )
 				{
 					reset = 1;
 					if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
-						( c == R_HISTORY_SEARCH_FORWARD ) )
+					    ( c == R_HISTORY_SEARCH_FORWARD ) )
 					{
-						search_mode = LINE_SEARCH;
+						data->search_mode = LINE_SEARCH;
 					}
 					else
 					{
-						search_mode = TOKEN_SEARCH;
+						data->search_mode = TOKEN_SEARCH;
 					}
 					
 					sb_append( &data->search_buff, data->buff );
 				}
 
-				switch( search_mode )
+				switch( data->search_mode )
 				{
 
 					case LINE_SEARCH:
@@ -2874,6 +2881,72 @@ wchar_t *reader_readline()
 				break;
 			}
 
+			case R_UP_LINE:
+			case R_DOWN_LINE:
+			{
+				int line = parse_util_get_line_from_offset( data->buff,
+								 data->buff_pos );
+				int new_line;
+
+				if( c == R_UP_LINE )
+					new_line = line-1;
+				else
+					new_line = line+1;
+	
+				int line_count = parse_util_lineno( data->buff, data->buff_len )-1;
+				
+				if( new_line >= 0 && new_line <= line_count)
+				{
+					int base_pos;
+					
+					int indent_old;
+					int indent_new;
+					int old_line_offset;
+					int new_total_offset;
+
+//					debug( 0, L"Move up one line to %d", new_line );
+					
+					base_pos = parse_util_get_offset_from_line( data->buff, 
+										    new_line );
+/*					debug( 0, L"Old cursor offset is %d, new base offset is %d", 
+					       data->buff_pos, 
+					       base_pos );
+*/
+					
+					if( data->buff_pos ==(data->buff_len) )
+					{
+						if( data->buff_pos == 0 )
+						{
+							indent_old = 0;
+						}
+						else
+						{
+							indent_old = data->indent[data->buff_pos-1];
+						}
+					}
+					else
+					{
+						if( data->buff[data->buff_pos] == L'\n' )
+							indent_old = data->indent[data->buff_pos-1];
+						else
+							indent_old = data->indent[data->buff_pos];
+					}
+					
+					indent_new = data->indent[base_pos];
+										    //				debug( 0, L"Old indent %d, new indent %d", indent_old, indent_new );
+					
+					old_line_offset = data->buff_pos - parse_util_get_offset_from_line( data->buff,
+												 line );
+					new_total_offset = parse_util_get_offset( data->buff, new_line, old_line_offset - 4*(indent_new-indent_old));
+					data->buff_pos = new_total_offset;
+					repaint();
+				}
+				
+				
+				break;
+			}
+			
+
 			/* Other, if a normal character, we add it to the command */
 			default:
 			{
@@ -2896,18 +2969,19 @@ wchar_t *reader_readline()
 			}
 
 		}
-
+		
 		if( (c != R_HISTORY_SEARCH_BACKWARD) &&
-			(c != R_HISTORY_SEARCH_FORWARD) &&
-			(c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
-			(c != R_HISTORY_TOKEN_SEARCH_FORWARD) )
+		    (c != R_HISTORY_SEARCH_FORWARD) &&
+		    (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
+		    (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
+		    (c != R_NULL) )
 		{
-			search_mode = 0;
+			data->search_mode = NO_SEARCH;
 			sb_clear( &data->search_buff );
 			history_reset();
 			data->token_history_pos=-1;
 		}
-
+		
 		last_char = c;
 	}
 
@@ -2928,6 +3002,17 @@ wchar_t *reader_readline()
 	
 	return finished ? data->buff : 0;
 }
+
+int reader_search_mode()
+{
+	if( !data )
+	{
+		return -1;
+	}
+	
+	return !!data->search_mode;	
+}
+
 
 /**
    Read non-interactively.  Read input from stdin without displaying

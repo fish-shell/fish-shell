@@ -174,4 +174,12 @@ int reader_exit_forced();
 */
 int reader_shell_test( wchar_t *b );
 
+/**
+   Test whether the interactive reader is in search mode.
+
+   \return o if not in search mode, 1 if in search mode and -1 if not in interactive mode
+ */
+int reader_search_mode();
+
+
 #endif

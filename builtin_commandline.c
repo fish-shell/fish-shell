@@ -220,6 +220,8 @@ static int builtin_commandline( wchar_t **argv )
 	int tokenize = 0;	
 	
 	int cursor_mode = 0;
+	int line_mode = 0;
+	int search_mode = 0;
 	wchar_t *begin, *end;
 
 	current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
@@ -313,6 +315,14 @@ static int builtin_commandline( wchar_t **argv )
 				}
 				,
 				{
+					L"line", no_argument, 0, 'L'
+				}
+				,
+				{
+					L"search-mode", no_argument, 0, 'S'
+				}
+				,
+				{
 					0, 0, 0, 0 
 				}
 			}
@@ -322,7 +332,7 @@ static int builtin_commandline( wchar_t **argv )
 		
 		int opt = wgetopt_long( argc,
 								argv, 
-								L"abijpctwforhI:C", 
+								L"abijpctwforhI:CLS", 
 								long_options, 
 								&opt_index );
 		if( opt == -1 )
@@ -391,6 +401,14 @@ static int builtin_commandline( wchar_t **argv )
 				cursor_mode = 1;
 				break;
 				
+			case 'L':
+				line_mode = 1;
+				break;
+				
+			case 'S':
+				search_mode = 1;
+				break;
+				
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return 0;
@@ -408,7 +426,7 @@ static int builtin_commandline( wchar_t **argv )
 		/*
 		  Check for invalid switch combinations
 		*/
-		if( buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode )
+		if( buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode || search_mode )
 		{
 			sb_printf(sb_err,
 					  BUILTIN_ERR_COMBO,
@@ -457,7 +475,7 @@ static int builtin_commandline( wchar_t **argv )
 	/*
 	  Check for invalid switch combinations
 	*/
-	if( cursor_mode && (argc-woptind > 1) )
+	if( (search_mode || line_mode || cursor_mode) && (argc-woptind > 1) )
 	{
 		
 		sb_append2( sb_err,
@@ -468,7 +486,7 @@ static int builtin_commandline( wchar_t **argv )
 		return 1;
 	}
 
-	if( (buffer_part || tokenize || cut_at_cursor) && cursor_mode )
+	if( (buffer_part || tokenize || cut_at_cursor) && (cursor_mode || line_mode || search_mode) )
 	{		
 		sb_printf( sb_err,
 				   BUILTIN_ERR_COMBO,
@@ -527,9 +545,9 @@ static int builtin_commandline( wchar_t **argv )
 			if( *endptr || errno )
 			{
 				sb_printf( sb_err,
-						   BUILTIN_ERR_NOT_NUMBER,
-						   argv[0],
-						   argv[woptind] );
+					   BUILTIN_ERR_NOT_NUMBER,
+					   argv[0],
+					   argv[woptind] );
 				builtin_print_help( argv[0], sb_err );
 			}
 			
@@ -544,6 +562,20 @@ static int builtin_commandline( wchar_t **argv )
 			return 0;
 		}
 		
+	}
+	
+	if( line_mode )
+	{
+		int pos = reader_get_cursor_pos();
+		wchar_t *buff = reader_get_buffer();
+		sb_printf( sb_out, L"%d\n", parse_util_lineno( buff, pos ) );
+		return 0;
+			
+	}
+	
+	if( search_mode )
+	{
+		return !reader_search_mode();
 	}
 	
 		

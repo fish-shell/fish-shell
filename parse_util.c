@@ -135,6 +135,97 @@ int parse_util_lineno( const wchar_t *str, int len )
 	return res;
 }
 
+
+int parse_util_get_line_from_offset( wchar_t *buff, int pos )
+{
+	//	return parse_util_lineno( buff, pos );
+
+	int i;
+	int count = 0;
+	if( pos < 0 )
+	{
+		return -1;
+	}
+	
+	for( i=0; i<pos; i++ )
+	{
+		if( !buff[i] )
+		{
+			return -1;
+		}
+		
+		if( buff[i] == L'\n' )
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
+
+int parse_util_get_offset_from_line( wchar_t *buff, int line )
+{
+	int i;
+	int count = 0;
+	
+	if( line < 0 )
+	{
+		return -1;
+	}
+
+	if( line == 0 )
+		return 0;
+		
+	for( i=0;; i++ )
+	{
+		if( !buff[i] )
+		{
+			return -1;
+		}
+		
+		if( buff[i] == L'\n' )
+		{
+			count++;
+			if( count == line )
+			{
+				return i+1;
+			}
+			
+		}
+	}
+}
+
+int parse_util_get_offset( wchar_t *buff, int line, int line_offset )
+{
+	int off = parse_util_get_offset_from_line( buff, line );
+	int off2 = parse_util_get_offset_from_line( buff, line+1 );
+	int line_offset2 = line_offset;
+	
+	if( off < 0 )
+	{
+		return -1;
+	}
+	
+	if( off2 < 0 )
+	{
+		off2 = wcslen( buff );
+	}
+	
+	if( line_offset2 < 0 )
+	{
+		line_offset2 = 0;
+	}
+	
+	if( line_offset2 >= off2-off-1 )
+	{
+		line_offset2 = off2-off-1;
+	}
+	
+	return off + line_offset2;
+	
+}
+
+
 int parse_util_locate_cmdsubst( const wchar_t *in, 
 								wchar_t **begin, 
 								wchar_t **end,

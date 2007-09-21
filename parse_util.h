@@ -94,6 +94,23 @@ void parse_util_token_extent( const wchar_t *buff,
 int parse_util_lineno( const wchar_t *str, int len );
 
 /**
+   Calculate the line number of the specified cursor position
+ */
+int parse_util_get_line_from_offset( wchar_t *buff, int pos );
+
+/**
+   Get the offset of the first character on the specified line
+ */
+int parse_util_get_offset_from_line( wchar_t *buff, int line );
+
+
+/**
+   Return the total offset of the buffer for the cursor position nearest to the specified poition
+ */
+int parse_util_get_offset( wchar_t *buff, int line, int line_offset );
+
+
+/**
    Autoload the specified file, if it exists in the specified path. Do
    not load it multiple times unless it's timestamp changes or
    parse_util_unload is called.

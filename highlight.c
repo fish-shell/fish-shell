@@ -42,10 +42,9 @@
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
 static void highlight_universal_internal( wchar_t * buff, 
-										  int *color, 
-										  int pos, 
-										  array_list_t *error );
-
+					  int *color, 
+					  int pos, 
+					  array_list_t *error );
 
 /**
    The environment variables used to specify the color of different tokens.

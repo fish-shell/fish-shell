@@ -145,7 +145,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 
 			case TOK_PIPE:
 			{
-				sb_append( out, L"| " );
+				sb_append( out, L" | " );
 				is_command = 1;
 				break;
 			}
@@ -202,7 +202,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 			
 			default:
 			{
-				debug( 0, L"Unknown wha? %ls", last );
+				debug( 0, L"Unknown token '%ls'", last );
 				exit(1);
 			}			
 		}
@@ -282,10 +282,10 @@ int main( int argc, char **argv )
 		int opt_index = 0;
 		
 		int opt = getopt_long( argc,
-							   argv, 
-							   GETOPT_STRING,
-							   long_options, 
-							   &opt_index );
+				       argv, 
+				       GETOPT_STRING,
+				       long_options, 
+				       &opt_index );
 		
 		if( opt == -1 )
 			break;

@@ -1539,7 +1539,7 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 				for( i=0; i<repeat_count; i++ )
 					dump_functions();
 				repeat_count = 1;				
-				return R_NULL;							
+				return R_REPAINT;							
 			}
 
 			case R_SELF_INSERT:
@@ -1563,13 +1563,13 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 				if( repeat > 0 && repeat <= 9 )
 					repeat_count *= repeat;
 				
-				return R_NULL;
+				return R_REPAINT;
 			}
 			
 			case R_VI_DELETE_TO:
 			{
 				first_command = R_VI_DELETE_TO;
-				return R_NULL;
+				return R_REPAINT;
 			}
 
 			default:
@@ -1610,19 +1610,16 @@ static wint_t input_exec_binding( mapping *m, const wchar_t *seq )
 		  is sent to the parser for evaluation.
 		*/
 		
-		/*
-		  First clear the commandline. Do not issue a linebreak, since
-		  many shortcut commands do not procuce output.
-		*/
-		write( 1, "\r", 1 );
-		tputs(clr_eol,1,&writeb);
-		
 		eval( m->command, 0, TOP );
 
 		/*
 		  We still need to return something to the caller, R_NULL
-		  tells the reader that no key press needs to be handled, but
-		  it might be a good idea to redraw.
+		  tells the reader that no key press needs to be handled, 
+		  and no repaint is needed.
+
+		  Bindings that produce output should emit a R_REPAINT
+		  function by calling 'commandline -f repaint' to tell
+		  fish that a repaint is in order.
 		*/
 		
 		return R_NULL;

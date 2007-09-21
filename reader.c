@@ -2447,10 +2447,6 @@ wchar_t *reader_readline()
 
 			case R_NULL:
 			{
-//				exec_prompt();
-				write( 1, "\r", 1 );
-				s_reset( &data->screen );
-				repaint();
 				break;
 			}
 
@@ -2887,7 +2883,7 @@ wchar_t *reader_readline()
 				int line_old = parse_util_get_line_from_offset( data->buff,
 										data->buff_pos );
 				int line_new;
-
+				
 				if( c == R_UP_LINE )
 					line_new = line_old-1;
 				else
@@ -2905,21 +2901,15 @@ wchar_t *reader_readline()
 					int line_offset_old;
 					int total_offset_new;
 
-//					debug( 0, L"Move up one line to %d", line_new );
-					
 					base_pos_new = parse_util_get_offset_from_line( data->buff, 
 										    line_new );
-/*					debug( 0, L"Old cursor offset is %d, new base offset is %d", 
-					       data->buff_pos, 
-					       base_pos_new );
-*/
+
 					base_pos_old = parse_util_get_offset_from_line( data->buff, 
 											line_old );
 					
 					
 					indent_old = data->indent[base_pos_old];
 					indent_new = data->indent[base_pos_new];
-										    //				debug( 0, L"Old indent %d, new indent %d", indent_old, indent_new );
 					
 					line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->buff,
 												 line_old );
@@ -2927,8 +2917,7 @@ wchar_t *reader_readline()
 					data->buff_pos = total_offset_new;
 					repaint();
 				}
-				
-				
+								
 				break;
 			}
 			

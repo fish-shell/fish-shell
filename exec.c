@@ -1304,7 +1304,7 @@ void exec( job_t *j )
 			
 			case INTERNAL_BUILTIN:
 			{
-				int skip_fork=0;
+				int skip_fork;
 				
 				/*
 				  Handle output from builtin commands. In the general
@@ -1330,7 +1330,7 @@ void exec( job_t *j )
 				  performance quite a bit in complex completion code.
 				*/
 
-				io_data_t *io = io_get( j->io, 1 );		
+				io_data_t *io = io_get( j->io, 1 );
 				int buffer_stdout = io && io->io_mode == IO_BUFFER;
 				
 				if( ( !sb_err->used ) && 
@@ -1338,10 +1338,10 @@ void exec( job_t *j )
 					( sb_out->used ) && 
 					( buffer_stdout ) )
 				{
-					char *res = wcs2str( (wchar_t *)sb_out->buff );				
+					char *res = wcs2str( (wchar_t *)sb_out->buff );
 					b_append( io->param2.out_buffer, res, strlen( res ) );
 					skip_fork = 1;
-					free( res );				
+					free( res );
 				}
 
 				for( io = j->io; io; io=io->next )

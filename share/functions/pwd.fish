@@ -3,12 +3,16 @@
 # Also drop '/private' directories on OS X.
 #
 
-if test (uname) = Darwin
+switch (uname) 
+
+	case Darwin
 	function pwd --description "Print working directory"
 		echo $PWD | sed -e 's|/private||' -e "s|^$HOME|~|"
 	end
-else
+
+	case '*'
 	function pwd --description "Print working directory"
 		echo $PWD | sed -e "s|^$HOME|~|"
 	end
+
 end

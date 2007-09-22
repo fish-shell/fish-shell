@@ -83,7 +83,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		set -U fish_greeting $line1\n$line2
 	end
 
-	if test "$fish_greeting"
+	switch $fish_greeting
+		case ''
+		# If variable is empty, don't print anything, saves us a fork
+		
+		case '*'
 		echo $fish_greeting
 	end
 

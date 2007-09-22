@@ -880,9 +880,9 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 	event_get( &search, &ev );
 
 	sb_append2( out,
-				L"function ",
-				name,
-				(void *)0);
+		    L"function ",
+		    name,
+		    (void *)0);
 
 	if( desc && wcslen(desc) )
 	{
@@ -890,6 +890,11 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 		sb_append2( out, L" --description ", esc_desc, (void *)0 );
 		free( esc_desc );
+	}
+
+	if( !function_get_shadows( name ) )
+	{
+		sb_append2( out, L" --no-scope-shadowing", (void *)0 );	
 	}
 
 	for( i=0; i<al_get_count( &ev); i++ )

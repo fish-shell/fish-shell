@@ -693,11 +693,32 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff )
 	sb_append_char( buff, L'\n' );
 }
 
-wchar_t *escape( const wchar_t *in, 
-				 int escape_all )
+static wchar_t *escape_simple( const wchar_t *in )
 {
 	wchar_t *out;
+	size_t len = wcslen(in);
+	out = malloc( sizeof(wchar_t)*(len+3));
+	if( !out )
+		DIE_MEM();
+	
+	out[0] = L'\'';
+	wcscpy(&out[1], in );
+	out[len+1]=L'\'';
+	out[len+2]=0;
+	return out;
+}
+
+
+wchar_t *escape( const wchar_t *in_orig, 
+		 int escape_all )
+{
+	const wchar_t *in = in_orig;
+	
+	wchar_t *out;
 	wchar_t *pos;
+
+	int need_escape=0;
+	int need_complex_escape=0;
 
 	if( !in )
 	{
@@ -728,6 +749,7 @@ wchar_t *escape( const wchar_t *in,
 			
 			tmp = val%16;			
 			*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+			need_escape=need_complex_escape=1;
 			
 		}
 		else
@@ -738,24 +760,36 @@ wchar_t *escape( const wchar_t *in,
 				case L'\t':
 					*(pos++) = L'\\';
 					*(pos++) = L't';					
+					need_escape=need_complex_escape=1;
 					break;
 					
 				case L'\n':
 					*(pos++) = L'\\';
 					*(pos++) = L'n';					
+					need_escape=need_complex_escape=1;
 					break;
 					
 				case L'\b':
 					*(pos++) = L'\\';
 					*(pos++) = L'b';					
+					need_escape=need_complex_escape=1;
 					break;
 					
 				case L'\r':
 					*(pos++) = L'\\';
 					*(pos++) = L'r';					
+					need_escape=need_complex_escape=1;
 					break;
 					
 				case L'\\':
+				{
+					need_escape=need_complex_escape=1;
+					if( escape_all )
+						*pos++ = L'\\';
+					*pos++ = *in;
+					break;
+				}
+
 				case L'&':
 				case L'$':
 				case L' ':
@@ -778,6 +812,7 @@ wchar_t *escape( const wchar_t *in,
 				case L'%':
 				case L'~':
 				{
+					need_escape=1;
 					if( escape_all )
 						*pos++ = L'\\';
 					*pos++ = *in;
@@ -793,6 +828,7 @@ wchar_t *escape( const wchar_t *in,
 						*pos++ = L'x';
 						*pos++ = ((*in>15)? L'1' : L'0');
 						*pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+						need_escape=need_complex_escape=1;
 					}
 					else
 					{
@@ -806,6 +842,17 @@ wchar_t *escape( const wchar_t *in,
 		in++;
 	}
 	*pos = 0;
+
+	/*
+	  Use quoted escaping if possible, since most people find it
+	  easier to read. 
+	 */
+	if( need_escape && !need_complex_escape && escape_all )
+	{
+		free( out );
+		out = escape_simple( in_orig );
+	}
+	
 	return out;
 }
 

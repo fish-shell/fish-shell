@@ -258,15 +258,27 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 	len = strlen(in);
 
 	memset( &state, 0, sizeof(state) );
-	
+
 	while( in[in_pos] )
 	{
 		res = mbrtowc( &out[out_pos], &in[in_pos], len-in_pos, &state );
 
-		switch( res )
+		if( ( out[out_pos] >= ENCODE_DIRECT_BASE) &&
+		    ( out[out_pos] < ENCODE_DIRECT_BASE+256) ||
+			out[out_pos] == INTERNAL_SEPARATOR )
 		{
-			case (size_t)(-2):
-			case (size_t)(-1):
+			out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
+			in_pos++;
+			memset( &state, 0, sizeof(state) );
+			out_pos++;
+		}
+		else
+		{
+			
+			switch( res )
+			{
+				case (size_t)(-2):
+				case (size_t)(-1):
 				{
 					out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
 					in_pos++;
@@ -274,18 +286,20 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 					break;
 				}
 				
-			case 0:
-			{
-				return out;
-			}
+				case 0:
+				{
+					return out;
+				}
 		
-			default:
-			{
-				in_pos += res;
-				break;
+				default:
+				{
+					in_pos += res;
+					break;
+				}
 			}
+			out_pos++;
 		}
-		out_pos++;
+		
 	}
 	out[out_pos] = 0;
 	
@@ -324,7 +338,7 @@ char *wcs2str_internal( const wchar_t *in, char *out )
 		{
 		}
 		else if( ( in[in_pos] >= ENCODE_DIRECT_BASE) &&
-			( in[in_pos] < ENCODE_DIRECT_BASE+256) )
+			 ( in[in_pos] < ENCODE_DIRECT_BASE+256) )
 		{
 			out[out_pos++] = in[in_pos]- ENCODE_DIRECT_BASE;
 		}

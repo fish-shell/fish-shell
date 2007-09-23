@@ -26,6 +26,7 @@
 
 #include <locale.h>
 #include <dirent.h>
+#include <time.h>
 
 #include "fallback.h"
 #include "util.h"
@@ -47,6 +48,19 @@
 #include "path.h"
 #include "halloc.h"
 #include "halloc_util.h"
+
+/**
+   The number of tests to run
+ */
+#define ESCAPE_TEST_COUNT 1000000
+/**
+   The average length of strings to unescape
+ */
+#define ESCAPE_TEST_LENGTH 100
+/**
+   The higest character number of character to try and escape
+ */
+#define ESCAPE_TEST_CHAR 4000
 
 /**
    Number of laps to run performance testing loop
@@ -403,6 +417,140 @@ static void test_util()
 
 
 /**
+   Test the escaping/unescaping code by escaping/unescaping random
+   strings and verifying that the original string comes back.
+*/
+static void test_escape()
+{
+	int i;
+	string_buffer_t sb;
+	
+	say( L"Testing escaping and unescaping" );
+
+	sb_init( &sb );
+	
+	for( i=0; i<ESCAPE_TEST_COUNT; i++ )
+	{
+		wchar_t *o, *e, *u;
+		
+		sb_clear( &sb );
+		while( rand() % ESCAPE_TEST_LENGTH )
+		{
+			sb_append_char( &sb, (rand() %ESCAPE_TEST_CHAR) +1 );
+		}
+		o = (wchar_t *)sb.buff;
+		e = escape(o, 1);
+		u = unescape( e, 0 );
+		if( !o || !e || !u )
+		{
+			err( L"Escaping cycle of string %ls produced null pointer on %ls", o, e?L"unescaping":L"escaping" );
+			
+		}
+		
+			
+		if( wcscmp(o, u) )
+		{
+			err( L"Escaping cycle of string %ls produced different string %ls", o, u );
+			
+			
+		}
+		free( e );
+		free( u );
+		
+	}
+	
+
+		
+}
+
+/**
+   Test wide/narrow conversion by creating random strings and
+   verifying that the original string comes back thorugh double
+   conversion.
+*/
+static void test_convert()
+{
+/*	char o[] = 
+		{
+			-17, -128, -121, -68, 0
+		}
+	;
+	
+	wchar_t *w = str2wcs(o);
+	char *n = wcs2str(w);
+
+	int i;
+	
+	for( i=0; o[i]; i++ )
+	{
+		bitprint(o[i]);;
+		//wprintf(L"%d ", o[i]);
+	}
+	wprintf(L"\n");
+
+	for( i=0; w[i]; i++ )
+	{
+		wbitprint(w[i]);;
+		//wprintf(L"%d ", w[i]);
+	}
+	wprintf(L"\n");
+
+	for( i=0; n[i]; i++ )
+	{
+		bitprint(n[i]);;
+		//wprintf(L"%d ", n[i]);
+	}
+	wprintf(L"\n");
+
+	return;
+*/
+
+
+	int i;
+	buffer_t sb;
+	
+	say( L"Testing wide/narrow string conversion" );
+
+	b_init( &sb );
+	
+	for( i=0; i<ESCAPE_TEST_COUNT; i++ )
+	{
+		wchar_t *w;
+		char *o, *n;
+		
+		char c;
+		
+		sb.used=0;
+		
+		while( rand() % ESCAPE_TEST_LENGTH )
+		{
+			c = rand ();
+			b_append( &sb, &c, 1 );
+		}
+		c = 0;
+		b_append( &sb, &c, 1 );
+		
+		o = (char *)sb.buff;
+		w = str2wcs(o);
+		n = wcs2str(w);
+		
+		if( !o || !w || !n )
+		{
+			err( L"Conversion cycle of string %s produced null pointer on %s", o, w?L"str2wcs":L"wcs2str" );
+		}
+		
+		if( strcmp(o, n) )
+		{
+			err( L"%d: Conversion cycle of string %s produced different string %s", i, o, n );
+		}
+		free( w );
+		free( n );
+		
+	}
+
+}
+
+/**
    Test the tokenizer
 */
 static void test_tok()
@@ -703,6 +851,8 @@ void perf_complete()
 */
 int main( int argc, char **argv )
 {
+	setlocale( LC_ALL, "" );
+	srand( time( 0 ) );
 
 	program_name=L"(ignore)";
 	
@@ -719,11 +869,13 @@ int main( int argc, char **argv )
 	env_init();
 
 	test_util();
+	test_escape();
+	test_convert();
 	test_tok();
 	test_parser();
 	test_expand();
 	test_path();
-		
+	
 	say( L"Encountered %d errors in low-level tests", err_count );
 
 	/*

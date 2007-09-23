@@ -1180,7 +1180,10 @@ static void read_array( FILE* file, array_list_t *comp )
 			if( wcs ) 
 			{
 				unescaped = unescape( wcs, 0 );
-				al_push( comp, unescaped );
+				if( unescaped )
+				{
+					al_push( comp, unescaped );
+				}				
 				free( wcs );
 			}
 		}

@@ -3,9 +3,8 @@
 # with description $argv[2] if defined, otherwise use 'Directory'
 #
 
-function __fish_complete_directories -d "Complete using directories"
+function __fish_complete_directories -d "Complete using directories" --argument comp
 
-	set comp $argv[1]
 	set desc (_ Directory)
 
 	if test (count $argv) -gt 1

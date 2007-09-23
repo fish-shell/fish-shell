@@ -1,7 +1,5 @@
 
-function __fish_print_help --description "Print help message for the specified fish function or builtin"
-
-	set -l item
+function __fish_print_help --description "Print help message for the specified fish function or builtin" --argument item
 
 	switch $argv[1]
 		case '.'

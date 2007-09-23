@@ -782,6 +782,7 @@ wchar_t *escape( const wchar_t *in_orig,
 					break;
 					
 				case L'\\':
+				case L'\'':
 				{
 					need_escape=need_complex_escape=1;
 					if( escape_all )
@@ -807,7 +808,6 @@ wchar_t *escape( const wchar_t *in_orig,
 				case L'*':
 				case L'|':
 				case L';':
-				case L'\'':
 				case L'"':
 				case L'%':
 				case L'~':

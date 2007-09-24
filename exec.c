@@ -898,14 +898,19 @@ void exec( job_t *j )
 	{
 		for( p=j->first_process; p; p = p->next )
 		{
-			if( (p->type == INTERNAL_BLOCK ) || 
-				(p->type == INTERNAL_FUNCTION ) )
+			if( p->type != EXTERNAL )
 			{
 				if( p->next )
 				{
 					needs_keepalive = 1;
 					break;
 				}
+				if( p != j->first_process )
+				{
+					needs_keepalive = 1;
+					break;
+				}
+				
 			}
 			
 		}

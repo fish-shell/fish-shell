@@ -54,6 +54,11 @@ efficient way for transforming that to the desired screen content.
 #include "env.h"
 
 /**
+   The number of characters to indent new blocks
+ */
+#define INDENT_STEP 4
+
+/**
    Ugly kludge. The internal buffer used to store output of
    tputs. Since tputs external function can only take an integer and
    not a pointer as parameter we need a static storage buffer.
@@ -407,7 +412,7 @@ static void s_desired_append_char( screen_t *s,
 			al_push( &s->desired, current );
 			s->desired_cursor[1]++;
 			s->desired_cursor[0]=0;
-			for( i=0; i < prompt_width+indent*4; i++ )
+			for( i=0; i < prompt_width+indent*INDENT_STEP; i++ )
 			{
 				s_desired_append_char( s, L' ', 0, indent, prompt_width );
 			}
@@ -805,7 +810,7 @@ void s_write( screen_t *s,
 	/*
 	  Ignore huge prompts on small screens - only print a two character placeholder...
 	*/
-	if( prompt_width > (screen_width/2) )
+	if( prompt_width >= screen_width )
 	{
 		prompt = L"> ";
 		prompt_width = 2;
@@ -819,13 +824,45 @@ void s_write( screen_t *s,
 		return;
 	}
 
+	int max_line_width = 0;
+	int current_line_width = 0;
+	
+	for( i=0; b[i]; i++ )
+	{
+		if( b[i] == L'\n' )
+		{
+			if( current_line_width > max_line_width )
+				max_line_width = current_line_width;
+			current_line_width = indent[i]*INDENT_STEP;
+		}
+		else
+		{
+			current_line_width += wcwidth(b[i]);
+		}
+	}
+	if( current_line_width > max_line_width )
+		max_line_width = current_line_width;
+
 	s_reset_arr( &s->desired );
 	s->desired_cursor[0] = s->desired_cursor[1] = 0;
-	
-	for( i=0; i<prompt_width; i++ )
+
+	/*
+	  Check if we are overflowing. If so, give the prompt its own line to improve the situation.
+	 */
+	if( max_line_width + prompt_width >= screen_width )
 	{
-		s_desired_append_char( s, L' ', 0, 0, prompt_width );
+		s_desired_append_char( s, L'\n', 0, 0, 0 );
+		prompt_width=0;
 	}
+	else
+	{
+		for( i=0; i<prompt_width; i++ )
+		{
+			s_desired_append_char( s, L' ', 0, 0, prompt_width );
+		}
+	}
+	
+
 	
 	for( i=0; b[i]; i++ )
 	{

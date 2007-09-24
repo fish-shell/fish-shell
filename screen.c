@@ -779,12 +779,19 @@ void s_write( screen_t *s,
 	int prompt_width;
 	int screen_width;
 
+	int max_line_width = 0;
+	int current_line_width = 0;
+	
 	CHECK( s, );
 	CHECK( prompt, );
 	CHECK( b, );
 	CHECK( c, );
 	CHECK( indent, );
 
+	/*
+	  If we are using a dumb terminal, don't try any fancy stuff,
+	  just print out the text.
+	 */
 	if( is_dumb() )
 	{
 		char *prompt_narrow = wcs2str( prompt );
@@ -798,9 +805,7 @@ void s_write( screen_t *s,
 		free( buffer_narrow );
 		
 		return;
-		
 	}
-	
 	
 	prompt_width = calc_prompt_width( prompt );
 	screen_width = common_get_width();
@@ -808,7 +813,11 @@ void s_write( screen_t *s,
 	s_check_status( s );
 
 	/*
-	  Ignore huge prompts on small screens - only print a two character placeholder...
+	  Ignore prompts wider than the screen - only print a two
+	  character placeholder...
+
+	  It would be cool to truncate the prompt, but because it can
+	  contain escape sequences, this is harder than you'd think.
 	*/
 	if( prompt_width >= screen_width )
 	{
@@ -817,16 +826,17 @@ void s_write( screen_t *s,
 	}
 	
 	/*
-	  Ignore impossibly small screens
+	  Completely ignore impossibly small screens
 	*/
 	if( screen_width < 4 )
 	{
 		return;
 	}
 
-	int max_line_width = 0;
-	int current_line_width = 0;
-	
+	/*
+	  Check if we are overflowing
+	 */
+
 	for( i=0; b[i]; i++ )
 	{
 		if( b[i] == L'\n' )
@@ -847,7 +857,8 @@ void s_write( screen_t *s,
 	s->desired_cursor[0] = s->desired_cursor[1] = 0;
 
 	/*
-	  Check if we are overflowing. If so, give the prompt its own line to improve the situation.
+	  If overflowing, give the prompt its own line to improve the
+	  situation.
 	 */
 	if( max_line_width + prompt_width >= screen_width )
 	{
@@ -883,7 +894,7 @@ void s_write( screen_t *s,
 		
 		if( i== cursor && s->desired_cursor[1] != cursor_arr[1] && b[i] != L'\n' )
 		{
-			/**
+			/*
 			   Ugh. We are placed exactly at the wrapping point of a
 			   wrapped line, move cursor to the line below so the
 			   cursor won't be on the ellipsis which looks

@@ -885,10 +885,13 @@ void exec( job_t *j )
 	signal_block();
 
 	/*
-	  See if we need to create a group keepalive process. This is a
-	  process that we create to make sure that the process group
-	  doesn't die accidentally, and is needed when a block/function is
-	  inside a pipeline.
+	  See if we need to create a group keepalive process. This is
+	  a process that we create to make sure that the process group
+	  doesn't die accidentally, and is often needed when a
+	  builtin/block/function is inside a pipeline, since that
+	  usually means we have to wait for one program to exit before
+	  continuing in the pipeline, causing the group leader to
+	  exit.
 	*/
 	
 	if( job_get_flag( j, JOB_CONTROL ) )
@@ -904,6 +907,7 @@ void exec( job_t *j )
 					break;
 				}
 			}
+			
 		}
 	}
 		

@@ -106,6 +106,6 @@ void s_write( screen_t *s,
 	the contents of the screen. Use this function when some other
 	function than s_write has written to the screen.
 */
-void s_reset( screen_t *s );
+void s_reset( screen_t *s, int reset_cursor );
 
 #endif

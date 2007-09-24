@@ -1418,7 +1418,7 @@ static int handle_completions( array_list_t *comp )
 		}
 
 		free( prefix );
-		s_reset( &data->screen );
+		s_reset( &data->screen, 1 );
 		repaint();
 
 	}
@@ -2082,7 +2082,7 @@ void reader_pop()
 	{
 		end_loop = 0;
 		history_set_mode( data->name );
-		s_reset( &data->screen );
+		s_reset( &data->screen, 1 );
 	}
 }
 
@@ -2317,11 +2317,11 @@ wchar_t *reader_readline()
 	data->buff[data->buff_len]='\0';
 	data->search_mode = NO_SEARCH;
 	
-	s_reset( &data->screen );
 	
 	exec_prompt();
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	s_reset( &data->screen, 0 );
 	repaint();
 
 	/* 
@@ -2454,7 +2454,7 @@ wchar_t *reader_readline()
 			{
 				exec_prompt();
 				write( 1, "\r", 1 );
-				s_reset( &data->screen );
+				s_reset( &data->screen, 1 );
 				repaint();
 				break;
 			}
@@ -2730,7 +2730,7 @@ wchar_t *reader_readline()
 					*/
 					default:
 					{
-						s_reset( &data->screen );
+						s_reset( &data->screen, 1 );
 						repaint();
 						break;
 					}

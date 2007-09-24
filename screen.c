@@ -329,7 +329,7 @@ static void s_check_status( screen_t *s)
 		
 		int prev_line = s->actual_cursor[1];
 		write( 1, "\r", 1 );
-		s_reset( s );
+		s_reset( s, 0 );
 		s->actual_cursor[1] = prev_line;
 	}
 }
@@ -653,7 +653,7 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		need_clear = 1;
 		s_move( scr, &output, 0, 0 );
 		scr->actual_width = screen_width;
-		s_reset( scr );
+		s_reset( scr, 1 );
 	}
 	
 	if( wcscmp( prompt, (wchar_t *)scr->actual_prompt.buff ) )
@@ -867,12 +867,22 @@ void s_write( screen_t *s,
 	s_save_status( s );
 }
 
-void s_reset( screen_t *s )
+void s_reset( screen_t *s, int reset_cursor )
 {
 	CHECK( s, );
 	s_reset_arr( &s->actual );
 	s->actual_cursor[0] = s->actual_cursor[1] = 0;
 	sb_clear( &s->actual_prompt );
 	s->need_clear=1;
+
+	if( !reset_cursor )
+	{
+		/*
+		  This should prevent reseting the cursor position during the
+		  next repaint.
+		*/
+		fstat( 1, &s->prev_buff_1 );
+		fstat( 2, &s->prev_buff_2 );
+	}
 }
 

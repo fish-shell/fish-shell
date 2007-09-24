@@ -2527,24 +2527,25 @@ static int builtin_source( wchar_t ** argv )
 	}
 	else
 	{
-
+		
 		if( wstat(argv[1], &buf) == -1 )
 		{
-			builtin_wperror( L"stat" );
+			sb_printf( sb_err, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
+			builtin_wperror( L"." );
+					
 			return STATUS_BUILTIN_ERROR;
 		}
 
 		if( !S_ISREG(buf.st_mode) )
 		{
 			sb_printf( sb_err, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
-			builtin_print_help( argv[0], sb_err );
-
 			return STATUS_BUILTIN_ERROR;
 		}
 
 		if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
 		{
-			builtin_wperror( L"open" );
+			sb_printf( sb_err, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
+			builtin_wperror( L"." );
 			return STATUS_BUILTIN_ERROR;
 		}
 
@@ -2561,31 +2562,31 @@ static int builtin_source( wchar_t ** argv )
 		}
 
 	}
-		
+	
 	parser_push_block( SOURCE );		
 	reader_push_current_filename( fn_intern );
-
+	
 	current_block->param1.source_dest = fn_intern;
-
+	
 	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), 0);
-
+	
 	res = reader_read( fd, real_io );
 		
 	parser_pop_block();
-
+		
 	if( res )
 	{
 		sb_printf( sb_err,
 			   _( L"%ls: Error while reading file '%ls'\n" ),
 			   argv[0],
-			   argv[1]?argv[1]:L"<stdin>" );
+			   fn_intern == L"-" ? L"<stdin>" : fn_intern );
 	}
-
+	
 	/*
 	  Do not close fd after calling reader_read. reader_read
 	  automatically closes it before calling eval.
 	*/
-
+	
 	reader_pop_current_filename();
 
 	return res;

@@ -739,6 +739,15 @@ wchar_t *escape( const wchar_t *in_orig,
 		debug( 0, L"%s called with null input", __func__ );
 		FATAL_EXIT();
 	}
+
+	if( wcslen( in ) == 0 )
+	{
+		out = wcsdup(L"''");
+		if( !out )
+			DIE_MEM();
+		return out;
+	}
+	
 	
 	out = malloc( sizeof(wchar_t)*(wcslen(in)*4 + 1));
 	pos = out;

@@ -795,6 +795,13 @@ wchar_t *escape( const wchar_t *in_orig,
 					need_escape=need_complex_escape=1;
 					break;
 					
+				case L'\x1b':
+					*(pos++) = L'\\';
+					*(pos++) = L'e';					
+					need_escape=need_complex_escape=1;
+					break;
+					
+
 				case L'\\':
 				case L'\'':
 				{
@@ -837,6 +844,18 @@ wchar_t *escape( const wchar_t *in_orig,
 				{
 					if( *in < 32 )
 					{
+						if( *in <27 && *in > 0 )
+						{
+							*(pos++) = L'\\';
+							*(pos++) = L'c';
+							*(pos++) = L'a' + *in -1;
+							
+							need_escape=need_complex_escape=1;
+							break;
+								
+						}
+						
+
 						int tmp = (*in)%16;
 						*pos++ = L'\\';
 						*pos++ = L'x';

@@ -282,10 +282,15 @@ static void highlight_param( const wchar_t * buff,
 							color[in_pos+1] = normal_status;
 						}
 					}
-					else if( wcschr( L"nrtbe*?$(){}'\"<>^ \\#;|&", buff[in_pos] ) )
+					else if( wcschr( L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", buff[in_pos] ) )
 					{
 						color[start_pos]=HIGHLIGHT_ESCAPE;
 						color[in_pos+1]=normal_status;
+					}
+					else if( wcschr( L"c", buff[in_pos] ) )
+						{
+						color[start_pos]=HIGHLIGHT_ESCAPE;
+						color[in_pos+2]=normal_status;
 					}
 					else if( wcschr( L"uUxX01234567", buff[in_pos] ) )
 					{

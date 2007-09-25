@@ -402,26 +402,181 @@ static void builtin_missing_argument( const wchar_t *cmd, const wchar_t *opt )
 #include "builtin_ulimit.c"
 #include "builtin_jobs.c"
 
+static void builtin_bind_list()
+{
+	array_list_t lst;
+	int i;
+	
+	
+	al_init( &lst );
+	input_mapping_get_names( &lst );
+	
+	for( i=0; i<al_get_count(&lst); i++ )
+	{
+		wchar_t *seq = (wchar_t *)al_get( &lst, i );
+		
+		const wchar_t *tname = input_terminfo_get_name( seq );
+		wchar_t *ecmd = escape( input_mapping_get( seq ), 1 );
+		
+		if( tname )
+		{
+			sb_printf( sb_out, L"bind -k %ls %ls\n", tname, ecmd );
+		}
+		else
+		{
+			wchar_t *eseq = escape( seq, 1 );
+		
+			sb_printf( sb_out, L"bind %ls %ls\n", eseq, ecmd );
+			free( eseq );
+		}
+		
+		free( ecmd );
+		
+	}
+	
+	al_destroy( &lst );
+}
+
+static void builtin_bind_key_names( int all )
+{
+	array_list_t lst;
+	int i;
+	
+	al_init( &lst );
+	input_terminfo_get_names( &lst, !all );
+	
+	for( i=0; i<al_get_count(&lst); i++ )
+	{
+		wchar_t *seq = (wchar_t *)al_get( &lst, i );
+		
+		sb_printf( sb_out, L"%ls\n", seq );
+	}
+
+	al_destroy( &lst );
+}
+
+static void builtin_bind_function_names()
+{
+	array_list_t lst;
+	int i;
+	
+	al_init( &lst );
+	input_function_get_names( &lst );
+	
+	for( i=0; i<al_get_count(&lst); i++ )
+	{
+		wchar_t *seq = (wchar_t *)al_get( &lst, i );
+		
+		sb_printf( sb_out, L"%ls\n", seq );
+	}
+
+	al_destroy( &lst );
+}
+
+static int builtin_bind_add( wchar_t *seq, wchar_t *cmd, int terminfo )
+{
+
+	if( terminfo )
+	{
+		const wchar_t *seq2 = input_terminfo_get_sequence( seq );
+		if( seq2 )
+		{
+			input_mapping_add( seq2, cmd );
+		}
+		else
+		{
+			return 1;
+		}
+		
+	}
+	else
+	{
+		input_mapping_add( seq, cmd );
+	}
+	
+	return 0;
+	
+}
+
+static void builtin_bind_erase( wchar_t **seq, int all )
+{
+	if( all )
+	{
+		int i;
+		array_list_t lst;
+		al_init( &lst );
+		
+		input_mapping_get_names( &lst );
+		
+		for( i=0; i<al_get_count( &lst ); i++ )
+		{
+			input_mapping_erase( (wchar_t *)al_get( &lst, i ) );			
+		}		
+		
+		al_destroy( &lst );
+	}
+	else
+	{
+		while( *seq )
+		{
+			input_mapping_erase( *seq++ );
+		}
+		
+	}
+	
+}
+
 
 /**
    The bind builtin, used for setting character sequences
 */
 static int builtin_bind( wchar_t **argv )
 {
+
+	enum
+	{
+		BIND_INSERT,
+		BIND_ERASE,
+		BIND_KEY_NAMES,
+		BIND_FUNCTION_NAMES
+	}
+	;
+	
 	int i;
 	int argc=builtin_count_args( argv );
-
+	int mode = BIND_INSERT;
+	int res = STATUS_BUILTIN_OK;
+	int all = 0;
+	
+	int use_terminfo = 0;
+	
 	woptind=0;
 
 	const static struct woption
 		long_options[] =
 		{
 			{
-				L"set-mode", required_argument, 0, 'M'
+				L"all", no_argument, 0, 'a'
+			}
+			,
+			{
+				L"erase", no_argument, 0, 'e'
+			}
+			,
+			{
+				L"function-names", no_argument, 0, 'f'
 			}
 			,
 			{
 				L"help", no_argument, 0, 'h'
+			}
+			,
+			{
+				L"key", no_argument, 0, 'k'
+			}
+			,
+			{
+				L"key-names", no_argument, 0, 'K'
 			}
 			,
 			{
@@ -433,15 +588,15 @@ static int builtin_bind( wchar_t **argv )
 	while( 1 )
 	{
 		int opt_index = 0;
-
 		int opt = wgetopt_long( argc,
-								argv,
-								L"M:h",
-								long_options,
-								&opt_index );
+					argv,
+					L"aehkKf",
+					long_options,
+					&opt_index );
+		
 		if( opt == -1 )
 			break;
-
+		
 		switch( opt )
 		{
 			case 0:
@@ -455,28 +610,97 @@ static int builtin_bind( wchar_t **argv )
 
 				return STATUS_BUILTIN_ERROR;
 
-			case 'M':
-				input_set_mode( woptarg );
+			case 'a':
+				all = 1;
 				break;
+				
+			case 'e':
+				mode = BIND_ERASE;
+				break;
+				
 
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return STATUS_BUILTIN_OK;
+				
+			case 'k':
+				use_terminfo = 1;
+				break;
+				
+			case 'K':
+				mode = BIND_KEY_NAMES;
+				break;
+				
+			case 'f':
+				mode = BIND_FUNCTION_NAMES;
+				break;
 				
 			case '?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
 		}
-
+		
 	}
 
-	for( i=woptind; i<argc; i++ )
+	switch( mode )
 	{
-		input_parse_inputrc_line( argv[i] );
-	}
+		
+		case BIND_ERASE:
+		{
+			builtin_bind_erase( &argv[woptind], all);
+			break;
+		}
+		
+		case BIND_INSERT:
+		{
+			switch( argc-woptind )
+			{
+				case 0:
+				{
+					builtin_bind_list();
+					break;
+				}
 
-	return STATUS_BUILTIN_OK;
+				case 2:
+				{
+					builtin_bind_add(argv[woptind], argv[woptind+1], use_terminfo );
+					break;
+				}
+
+				default:
+				{
+					res = STATUS_BUILTIN_ERROR;
+					sb_printf( sb_err, _(L"%ls: Expected zero or two parameters, got %d"), argv[0], argc-woptind );
+					break;
+				}
+			}
+			break;
+		}
+
+		case BIND_KEY_NAMES:
+		{
+			builtin_bind_key_names( all );
+			break;
+		}
+
+		
+		case BIND_FUNCTION_NAMES:
+		{
+			builtin_bind_function_names();
+			break;
+		}
+
+		
+		default:
+		{
+			res = STATUS_BUILTIN_ERROR;
+			sb_printf( sb_err, _(L"%ls: Invalid state\n"), argv[0] );
+			break;
+		}
+	}
+	
+	return res;
 }
 
 /**

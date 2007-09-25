@@ -448,7 +448,7 @@ static int builtin_commandline( wchar_t **argv )
  		}
 		for( i=woptind; i<argc; i++ )
 		{
-			wint_t c = input_get_code( argv[i] );
+			wint_t c = input_function_get_code( argv[i] );
 			if( c != -1 )
 			{
 				/*

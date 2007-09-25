@@ -100,24 +100,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	end
 
 	#
-	# Set INPUTRC to something nice
-	#
-	# We override INPUTRC if already set, since it may be set by a shell 
-	# other than fish, which may use a different file. The new value should
-	# be exported, since the fish inputrc file plays nice with other files 
-	# by including them when found.
-	#
-
-	for i in $configdir/fish/fish_inputrc $__fish_sysconfdir/fish_inputrc ~/.inputrc /etc/inputrc
-		if test -f $i
-			set -xg INPUTRC $i
-			break
-		end
-	end
-
-
-
-	#
 	# Set various defaults using these throwaway functions
 	#
 
@@ -202,5 +184,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	complete -x -p "/etc/init.d/*" -a status --description 'Print service status'
 	complete -x -p "/etc/init.d/*" -a restart --description 'Stop and then start service'
 	complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
+
+	if not set -q fish_key_bindings
+		set -U fish_key_bindings fish_default_key_bindings
+	end
 	
+	eval $fish_key_bindings
+	
+	function __fish_reload_key_bindings -d "Reload keybindings when binding variable change"
+		eval $fish_key_bindings
+	end
 end
+
+

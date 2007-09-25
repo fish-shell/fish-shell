@@ -99,26 +99,42 @@ void input_unreadch( wint_t ch );
    \param d a description of the sequence
    \param cmd an input function that will be run whenever the key sequence occurs
 */
-void add_mapping( const wchar_t *mode, const wchar_t *s, const wchar_t * d, const wchar_t *cmd );
+void input_mapping_add( const wchar_t *sequence, const wchar_t *cmd );
+
+void input_mapping_get_names( array_list_t *list );
+
+int input_mapping_erase( const wchar_t *sequence );
+
+const wchar_t *input_mapping_get( const wchar_t *sequence );
 
 /**
-   Sets the mode keybindings. 
-*/
-void input_set_mode( wchar_t *name );
+   Return the sequence for the terminfo variable of the specified name.
+
+   If no terminfo variable of the specified name could be found, return 0 and set errno to ENOENT.
+   If the terminfo variable does not have a value, return 0 and set errno to EILSEQ.
+ */
+const wchar_t *input_terminfo_get_sequence( const wchar_t *name );
 
 /**
-   Sets the application keybindings
-*/
-void input_set_application( wchar_t *name );
+   Return the name of the terminfo variable with the specified sequence
+ */
+const wchar_t *input_terminfo_get_name( const wchar_t *seq );
 
 /**
-   Parse a single line of inputrc information. 
-*/
-void input_parse_inputrc_line( wchar_t *cmd );
+   Return a list of all known terminfo names
+ */
+void input_terminfo_get_names( array_list_t *lst, int skip_null );
+
 
 /**
-   Returns the function for the given function name.
+   Returns the input function code for the given input function name.
 */
-wchar_t input_get_code( const wchar_t *name );
+wchar_t input_function_get_code( const wchar_t *name );
+
+/**
+   Returns a list of all existing input function names
+ */
+void input_function_get_names( array_list_t *lst );
+
 
 #endif

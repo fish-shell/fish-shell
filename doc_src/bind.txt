@@ -1,23 +1,43 @@
-\section bind bind - handle key bindings
+\section bind bind - handle fish key bindings
 
 \subsection bind-synopsis Synopsis
-<tt>bind [OPTIONS] [BINDINGS...]</tt>
-
-The <tt>bind</tt> builtin causes fish to add the readline style bindings specified by BINDINGS to the list of key bindings, as if they appeared in your <tt>~/.fish_inputrc</tt> file.
-
-For more information on the syntax keyboard bindings, use <tt>man
-readline</tt> to access the readline documentation. The available commands
-are listed in the <a href="index.html#editor">Command Line Editor</a> section
-of the fish manual - but you may also use any fish command! To write such
-commands, see the <a href="#commandline">commandline</a> builtin. It's good
-practice to put the code into a <tt><a href="#function">function</a> -b</tt>
-and bind to the function name.
+<tt>bind [OPTIONS] SEQUENCE COMMAND</tt>
 
 \subsection bind-description Description
-- <tt>-M MODE</tt> or <tt>--set-mode=MODE</tt> sets the current input mode to MODE. 
+
+The <tt>bind</tt> builtin causes fish to add a key binding from the specified sequence.
+
+SEQUENCE is the character sequence to bind to. Usually, one would use
+fish escape sequences to express them. For example, Alt-w can be
+written as <tt>\\ew</tt>, and Control-x can be written as
+<tt>\\cx</tt>.
+
+If the -k switch is used, the name of the key (such as down, up or
+backspace) is used instead of a sequence. The names used are the same
+as the corresponding curses variables, but without the 'key_'
+prefix. (See man 5 terminfo for more information, or use <tt>bind
+--names</tt> for a list of all available named keys)
+
+COMMAND can be any fish command, but it can also be one of a set of
+special input functions. These include functions for moving the
+cursor, operating on the kill-ring, performing tab completion,
+etc. Use 'bind -N' for a complete list of these input functions.
+
+When COMMAND is a shellscript command, it is a good practice to put
+the actual code into a <a href="#function">function</a> and simply
+bind to the function name.
+
+- <tt>-a</tt> or <tt>--all</tt> If --print-key-names is specified, show all key names, not only the ones that actually are defined for the current terminal. If erase mode is specified, this switch will cause all current bindings to be erased.
+- <tt>-e</tt> or <tt>--erase</tt> Erase mode. All non-switch arguments are interpreted as character sequences and any commands associated with those sequences are erased.
+- <tt>-h</tt> or <tt>--help</tt> Display help and exit
+- <tt>-k</tt> or <tt>--key</tt> Specify a key name, such as 'left' or 'backspace' instead of a character sequence
+- <tt>-K</tt> or <tt>--key-names</tt> Display a list of available key names
+- <tt>-f</tt> or <tt>--function-names</tt> Display a list of available input functions
+
 
 \subsection bind-example Example
 
-<tt>bind -M vi</tt> changes to the vi input mode
+<tt>bind \cd 'exit'</tt> causes fish to exit on Control-d
 
-<tt>bind '"\\M-j": jobs'</tt> Binds the jobs command to the Alt-j keyboard shortcut
+<tt>bind -k ppage history-search-backward</tt> Causes fish to perform a history search when the page up key is pressed
+

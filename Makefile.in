@@ -111,7 +111,7 @@ BUILTIN_FILES := builtin_set.c builtin_commandline.c	\
 # All objects that the system needs to build fish_pager
 #
 
-FISH_PAGER_OBJS := fish_pager.o output.o wutil.o tokenizer.o		\
+FISH_PAGER_OBJS := fish_pager.o output.o wutil.o 		\
 	input_common.o env_universal.o env_universal_common.o common.o	\
 	print_help.o
 

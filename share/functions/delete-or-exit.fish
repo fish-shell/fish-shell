@@ -6,11 +6,18 @@
 #
 
 function delete-or-exit
+
 	set -l cmd (commandline)
-	if test "$cmd"
-		commandline -f delete-char
-	else
+
+	switch $cmd
+
+		case ''
 		exit 0
+
+		case '*'
+		commandline -f delete-char
+
 	end
+
 end
 

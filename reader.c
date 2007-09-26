@@ -2151,6 +2151,68 @@ int exit_status()
 }
 
 /**
+   This function is called when the main loop notices that end_loop
+   has been set while in interactive mode. It checks if it is ok to
+   exit.
+ */
+
+static void handle_end_loop()
+{
+	job_t *j;
+	int job_count=0;
+	int is_breakpoint=0;
+	block_t *b;
+	
+	for( b = current_block; 
+	     b; 
+	     b = b->outer )
+	{
+		if( b->type == BREAKPOINT )
+		{
+			is_breakpoint = 1;
+			break;
+		}
+	}
+	
+	for( j=first_job; j; j=j->next )
+	{
+		if( !job_is_completed(j) )
+		{
+			job_count++;
+			break;
+		}
+	}
+	
+	if( !reader_exit_forced() && !data->prev_end_loop && job_count && !is_breakpoint )
+	{
+		writestr(_( L"There are stopped jobs\n" ));
+		
+		reader_exit( 0, 0 );
+		data->prev_end_loop=1;
+	}
+	else
+	{
+		if( !isatty(0) )
+		{
+			/*
+			  We already know that stdin is a tty since we're
+			  in interactive mode. If isatty returns false, it
+			  means stdin must have been closed. 
+			*/
+			for( j = first_job; j; j=j->next )
+			{
+				if( ! job_is_completed( j ) )
+				{
+					job_signal( j, SIGHUP );						
+				}
+			}
+		}
+	}
+}
+
+
+
+/**
    Read interactively. Read input from stdin while providing editing
    facilities.
 */
@@ -2186,58 +2248,7 @@ static int read_i()
 
 		if( data->end_loop)
 		{
-			job_t *j;
-			int has_job=0;
-			int is_breakpoint=0;
-			block_t *b;
-			
-			for( b = current_block; 
-				 b; 
-				 b = b->outer )
-			{
-				if( b->type == BREAKPOINT )
-				{
-					is_breakpoint = 1;
-					break;
-				}
-			}
-			
-			for( j=first_job; j; j=j->next )
-			{
-				if( !job_is_completed(j) )
-				{
-					has_job = 1;
-					break;
-				}
-			}
-						
-			if( !reader_exit_forced() && !data->prev_end_loop && has_job && !is_breakpoint )
-			{
-				writestr(_( L"There are stopped jobs\n" ));
-
-				reader_exit( 0, 0 );
-				data->prev_end_loop=1;
-
-				repaint();
-			}
-			else
-			{
-				if( !isatty(0) )
-				{
-					/*
-					  We already know that stdin is a tty since we're
-					  in interactive mode. If isatty returns false, it
-					  means stdin must have been closed. 
-					*/
-					for( j = first_job; j; j=j->next )
-					{
-						if( ! job_is_completed( j ) )
-						{
-							job_signal( j, SIGHUP );						
-						}
-					}
-				}
-			}
+			handle_end_loop();
 		}
 		else if( tmp )
 		{
@@ -2247,9 +2258,16 @@ static int read_i()
 			data->buff[data->buff_len]=L'\0';
 			reader_run_command( tmp );
 			free( tmp );
-
-			data->prev_end_loop=0;
+			if( data->end_loop)
+			{
+				handle_end_loop();
+			}
+			else
+			{
+				data->prev_end_loop=0;
+			}
 		}
+		
 
 	}
 	reader_pop();
@@ -2447,6 +2465,7 @@ wchar_t *reader_readline()
 
 			case R_NULL:
 			{
+				repaint();
 				break;
 			}
 

@@ -96,7 +96,7 @@ void kill_add( wchar_t *str )
 	if( (disp = env_get( L"DISPLAY" )) )
 	{
 		wchar_t *escaped_str = escape( str, 1 );
-		wchar_t *cmd = wcsdupcat2(L"echo ", escaped_str, L"|xsel -b",(void *)0);
+		wchar_t *cmd = wcsdupcat(L"echo ", escaped_str, L"|xsel -b" );
 		if( exec_subshell( cmd, 0 ) == -1 )
 		{
 			/* 
@@ -211,7 +211,7 @@ static void kill_check_x_buffer()
 				else
 				{
 					wchar_t *old = new_cut_buffer;
-					new_cut_buffer= wcsdupcat2( new_cut_buffer, L"\\n", next_line, (void *)0 );
+					new_cut_buffer= wcsdupcat( new_cut_buffer, L"\\n", next_line );
 					free( old );
 					free( next_line );	
 				}

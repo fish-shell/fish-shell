@@ -618,6 +618,7 @@ const wchar_t *input_mapping_get( const wchar_t *sequence )
 	}
 	return 0;
 }
+
 /**
    Add all terminfo mappings
  */

@@ -468,7 +468,7 @@ static wchar_t *history_filename( void *context, const wchar_t *name, const wcha
 	if( !path )
 		return 0;
 	
-	res = wcsdupcat2( path, L"/", name, L"_history", suffix?suffix:(void *)0, (void *)0 );
+	res = wcsdupcat( path, L"/", name, L"_history", suffix?suffix:(void *)0);
 	halloc_register_function( context, &free, res );
 	return res;
 }

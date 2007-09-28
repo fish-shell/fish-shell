@@ -202,7 +202,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 
 			if( wcschr( el, L' ' ) && is_quotable( el ) )
 			{
-				sb_append2( &buff,
+				sb_append( &buff,
 							L"'",
 							el,
 							L"'",
@@ -228,7 +228,7 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 
 				if( is_quotable( el ) )
 				{
-					sb_append2( &buff,
+					sb_append( &buff,
 								L"'",
 								el,
 								L"'",

@@ -432,7 +432,7 @@ static int builtin_ulimit( wchar_t ** argv )
 		}
 		else
 		{
-			sb_append2( sb_err,
+			sb_append( sb_err,
 						argv[0],
 						L": Too many arguments\n",
 						(void *)0 );
@@ -503,7 +503,7 @@ static int builtin_ulimit( wchar_t ** argv )
 		
 		default:
 		{
-			sb_append2( sb_err,
+			sb_append( sb_err,
 						argv[0],
 						L": Too many arguments\n",
 						(void *)0 );

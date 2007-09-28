@@ -52,7 +52,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		path = env_get(L"PATH");
 		if( path == 0 )
 		{
-			if( CONTAINS( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
+			if( contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
 			{
 				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
 			}
@@ -197,9 +197,9 @@ wchar_t *path_get_cdpath( void *context, wchar_t *dir )
 			}
 
 			whole_path =
-				wcsdupcat2( expanded_path,
+				wcsdupcat( expanded_path,
 							( expanded_path[path_len-1] != L'/' )?L"/":L"",
-							dir, (void *)0 );
+							dir );
 
 			free(expanded_path );
 

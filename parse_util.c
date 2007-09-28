@@ -1014,7 +1014,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 		struct stat buf;
 		wchar_t *next = (wchar_t *)al_get( path_list, i );
 		sb_clear( path );
-		sb_append2( path, next, L"/", cmd, L".fish", (void *)0 );
+		sb_append( path, next, L"/", cmd, L".fish", (void *)0 );
 
 		if( (wstat( (wchar_t *)path->buff, &buf )== 0) &&
 			(waccess( (wchar_t *)path->buff, R_OK ) == 0) )

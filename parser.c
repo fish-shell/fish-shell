@@ -527,7 +527,7 @@ const wchar_t *parser_get_block_desc( int block )
 */
 static int parser_is_pipe_forbidden( wchar_t *word )
 {
-	return CONTAINS( word,
+	return contains( word,
 					 L"exec",
 					 L"case",
 					 L"break",
@@ -1008,7 +1008,7 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 				
 				for( i=1; b->param2.function_call_process->argv[i]; i++ )
 				{
-					sb_append2( &tmp, i>1?L" ":L"", b->param2.function_call_process->argv[i], (void *)0 );
+					sb_append( &tmp, i>1?L" ":L"", b->param2.function_call_process->argv[i], (void *)0 );
 				}
 				sb_printf( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
 				
@@ -1763,7 +1763,7 @@ static int parse_job( process_t *p,
 		
 		mark = tok_get_pos( tok );
 
-		if( CONTAINS( nxt,
+		if( contains( nxt,
 					  L"command",
 					  L"builtin",
 					  L"not",
@@ -2944,7 +2944,7 @@ int parser_test( const  wchar_t * buff,
 						  command is needed, such as after 'and' or
 						  'while'
 						*/
-						if( CONTAINS( cmd,
+						if( contains( cmd,
 									  L"end" ) )
 						{
 							err=1;
@@ -3018,7 +3018,7 @@ int parser_test( const  wchar_t * buff,
 						had_cmd = 0;
 					}
 					
-					if( CONTAINS( cmd,
+					if( contains( cmd,
 								  L"or",
 								  L"and" ) )
 					{
@@ -3152,7 +3152,7 @@ int parser_test( const  wchar_t * buff,
 					/*
 					  Test that break and continue are only used within loop blocks
 					*/
-					if( CONTAINS( cmd, L"break", L"continue" ) )
+					if( contains( cmd, L"break", L"continue" ) )
 					{
 						int found_loop=0;
 						int i;

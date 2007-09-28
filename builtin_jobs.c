@@ -96,7 +96,7 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 #ifdef HAVE__PROC_SELF_STAT
 			sb_printf( sb_out, L"%d%%\t", cpu_use(j) );
 #endif
-			sb_append2( sb_out,
+			sb_append( sb_out,
 						job_is_stopped(j)?_(L"stopped"):_(L"running"),
 						L"\t",
 						j->command,

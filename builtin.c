@@ -162,13 +162,13 @@ static void builtin_wperror( const wchar_t *s)
 {
 	if( s != 0 )
 	{
-		sb_append2( sb_err, s, L": ", (void *)0 );
+		sb_append( sb_err, s, L": ", (void *)0 );
 	}
 	char *err = strerror( errno );
 	wchar_t *werr = str2wcs( err );
 	if( werr )
 	{
-		sb_append2( sb_err,  werr, L"\n", (void *)0 );
+		sb_append( sb_err,  werr, L"\n", (void *)0 );
 		free( werr );
 	}
 }
@@ -944,7 +944,7 @@ static int builtin_builtin(  wchar_t **argv )
 		{
 			wchar_t *el = (wchar_t *)al_get( &names, i );
 			
-			sb_append2( sb_out,
+			sb_append( sb_out,
 						el,
 						L"\n",
 						(void *)0 );
@@ -1103,7 +1103,7 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 	al_init( &ev );
 	event_get( &search, &ev );
 
-	sb_append2( out,
+	sb_append( out,
 		    L"function ",
 		    name,
 		    (void *)0);
@@ -1112,13 +1112,13 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 	{
 		wchar_t *esc_desc = escape( desc, 1 );
 
-		sb_append2( out, L" --description ", esc_desc, (void *)0 );
+		sb_append( out, L" --description ", esc_desc, (void *)0 );
 		free( esc_desc );
 	}
 
 	if( !function_get_shadows( name ) )
 	{
-		sb_append2( out, L" --no-scope-shadowing", (void *)0 );	
+		sb_append( out, L" --no-scope-shadowing", (void *)0 );	
 	}
 
 	for( i=0; i<al_get_count( &ev); i++ )
@@ -1357,7 +1357,7 @@ static int builtin_functions( wchar_t **argv )
 
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
-				sb_append2( &buff,
+				sb_append( &buff,
 							al_get(&names, i),
 							L", ",
 							(void *)0 );
@@ -1370,7 +1370,7 @@ static int builtin_functions( wchar_t **argv )
 		{
 			for( i=0; i<al_get_count( &names ); i++ )
 			{
-				sb_append2( sb_out,
+				sb_append( sb_out,
 							al_get(&names, i),
 							L"\n",
 							(void *)0 );
@@ -1745,7 +1745,7 @@ static int builtin_function( wchar_t **argv )
 				sb_append(sb_err, L"\n" );
 			}
 
-			sb_append2( sb_err,
+			sb_append( sb_err,
 						nxt, L"  ", (void *)0 );
 		}
 		al_destroy( &names );
@@ -2581,7 +2581,7 @@ static int builtin_cd( wchar_t **argv )
 		
 		if( !is_interactive )
 		{
-			sb_append2( sb_err,
+			sb_append( sb_err,
 				    parser_current_line(),
 				    (void *)0 );
 		}
@@ -2613,7 +2613,7 @@ static int builtin_cd( wchar_t **argv )
 		
 		if( !is_interactive )
 		{
-			sb_append2( sb_err,
+			sb_append( sb_err,
 						parser_current_line(),
 						(void *)0 );
 		}

@@ -1175,16 +1175,6 @@ string_buffer_t *sb_new()
 	return res;
 }
 
-
-void sb_append( string_buffer_t *b, const wchar_t * s)
-{
-	CHECK( b, );
-	CHECK( s, );
-
-	b_append( b, s, sizeof(wchar_t)*(wcslen(s)+1) );
-	b->used -= sizeof(wchar_t);
-}
-
 void sb_append_substring( string_buffer_t *b, const wchar_t *s, size_t l )
 {
     wchar_t tmp=0;
@@ -1209,7 +1199,7 @@ void sb_append_char( string_buffer_t *b, wchar_t c )
     b->used -= sizeof(wchar_t);
 }
 
-void sb_append2( string_buffer_t *b, ... )
+void sb_append_internal( string_buffer_t *b, ... )
 {
 	va_list va;
 	wchar_t *arg;
@@ -1219,7 +1209,8 @@ void sb_append2( string_buffer_t *b, ... )
 	va_start( va, b );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 )
 	{
-		sb_append( b, arg );
+		b_append( b, arg, sizeof(wchar_t)*(wcslen(arg)+1) );
+		b->used -= sizeof(wchar_t);
 	}
 	va_end( va );
 }

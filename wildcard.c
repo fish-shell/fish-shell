@@ -727,7 +727,7 @@ static void wildcard_completion_allocate( array_list_t *list,
 	}
 	else
 	{							
-		sb_append2( sb, desc, L", ", (void *)0 );
+		sb_append( sb, desc, L", ", (void *)0 );
 		if( sz < 0 )
 		{
 			sb_append( sb, L"unknown" );

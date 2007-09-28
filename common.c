@@ -385,12 +385,7 @@ char **wcsv2strv( const wchar_t **in )
 
 }
 
-wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b )
-{
-	return wcsdupcat2( a, b, (void *)0 );
-}
-
-wchar_t *wcsdupcat2( const wchar_t *a, ... )
+wchar_t *wcsdupcat_internal( const wchar_t *a, ... )
 {
 	int len=wcslen(a);
 	int pos;
@@ -548,7 +543,7 @@ const wchar_t *wsetlocale(int category, const wchar_t *locale)
 	return (wchar_t *)setlocale_buff->buff;	
 }
 
-int contains_str( const wchar_t *a, ... )
+int contains_internal( const wchar_t *a, ... )
 {
 	wchar_t *arg;
 	va_list va;

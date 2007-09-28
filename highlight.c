@@ -741,7 +741,7 @@ void highlight_shell( wchar_t * buff,
 							else
 							{
 								if( error )
-									al_push( error, wcsdupcat2 ( L"Unknown command \'", cmd, L"\'", (void *)0 ));
+									al_push( error, wcsdupcat ( L"Unknown command \'", cmd, L"\'" ));
 								color[ tok_get_pos( &tok ) ] = (HIGHLIGHT_ERROR);
 							}
 							had_cmd = 1;
@@ -815,7 +815,7 @@ void highlight_shell( wchar_t * buff,
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )
-								al_push( error, wcsdupcat2( L"Directory \'", dir, L"\' does not exist", (void *)0 ) );
+								al_push( error, wcsdupcat( L"Directory \'", dir, L"\' does not exist" ) );
 							
 						}
 					}
@@ -831,7 +831,7 @@ void highlight_shell( wchar_t * buff,
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )
-								al_push( error, wcsdupcat2( L"File \'", target, L"\' does not exist", (void *)0 ) );
+								al_push( error, wcsdupcat( L"File \'", target, L"\' does not exist" ) );
 						}
 					}
 				}

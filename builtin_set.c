@@ -46,10 +46,9 @@ Functions used for implementing the set builtin.
 */
 static int is_path_variable( const wchar_t *env )
 {
-	return contains_str( env,
+	return contains( env,
 						 L"PATH",
-						 L"CDPATH",
-						 (void *)0 );
+						 L"CDPATH" );
 }
 
 /**
@@ -388,7 +387,7 @@ static void print_variables(int include_values, int esc, int scope)
 				
 				e_value = esc ? expand_escape_variable(value) : wcsdup(value);
 				
-				sb_append2(sb_out, L" ", e_value, (void *)0);
+				sb_append(sb_out, L" ", e_value, (void *)0);
 				free(e_value);
 				
 				if( shorten )

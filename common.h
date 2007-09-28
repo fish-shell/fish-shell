@@ -140,7 +140,8 @@ extern wchar_t *program_name;
 */
 #define N_(wstr) wstr
 
-#define CONTAINS( str,... ) contains_str( str, __VA_ARGS__, (void *)0 )
+#define contains( str,... ) contains_internal( str, __VA_ARGS__, (void *)0 )
+#define wcsdupcat( str,... ) wcsdupcat_internal( str, __VA_ARGS__, (void *)0 )
 
 /*
   Print a stack trace to stderr
@@ -222,17 +223,12 @@ char **wcsv2strv( const wchar_t **in );
 */
 wchar_t **strv2wcsv( const char **in );
 
-/**
-   Returns a newly allocated concatenation of the specified wide
-   character strings
-*/
-wchar_t *wcsdupcat( const wchar_t *a, const wchar_t *b );
 
 /**
    Returns a newly allocated concatenation of the specified wide
    character strings. The last argument must be a null pointer.
 */
-__sentinel wchar_t *wcsdupcat2( const wchar_t *a, ... );
+__sentinel wchar_t *wcsdupcat_internal( const wchar_t *a, ... );
 
 /**
    Test if the given string is a valid variable name
@@ -304,7 +300,7 @@ const wchar_t *wsetlocale( int category, const wchar_t *locale );
 
    \return zero if needle is not found, of if needle is null, non-zero otherwise
 */
-__sentinel int contains_str( const wchar_t *needle, ... );
+__sentinel int contains_internal( const wchar_t *needle, ... );
 
 /**
    Call read while blocking the SIGCHLD signal. Should only be called
@@ -409,7 +405,6 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff );
    \param out the list in which to place the elements. 
 */
 void tokenize_variable_array( const wchar_t *val, array_list_t *out );
-
 
 /**
    Make sure the specified direcotry exists. If needed, try to create

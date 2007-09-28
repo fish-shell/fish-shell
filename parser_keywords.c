@@ -24,7 +24,7 @@ int parser_keywords_is_switch( const wchar_t *cmd )
 
 int parser_keywords_skip_arguments( const wchar_t *cmd )
 {
-	return CONTAINS( cmd,
+	return contains( cmd,
 					 L"else",
 					 L"begin" );
 }
@@ -34,7 +34,7 @@ int parser_keywords_is_subcommand( const wchar_t *cmd )
 {
 
 	return parser_keywords_skip_arguments( cmd ) ||
-		CONTAINS( cmd,
+		contains( cmd,
 				  L"command",
 				  L"builtin",
 				  L"while",
@@ -48,7 +48,7 @@ int parser_keywords_is_subcommand( const wchar_t *cmd )
 
 int parser_keywords_is_block( const wchar_t *word)
 {
-	return CONTAINS( word,
+	return contains( word,
 					 L"for",
 					 L"while",
 					 L"if",
@@ -61,7 +61,7 @@ int parser_keywords_is_reserved( const wchar_t *word)
 {
 	return parser_keywords_is_block(word) ||
 		parser_keywords_is_subcommand( word ) ||
-		CONTAINS( word,
+		contains( word,
 				  L"end",
 				  L"case",
 				  L"else",

@@ -805,7 +805,7 @@ int complete_is_valid_option( const wchar_t *str,
 						str[0] = opt[j];
 						str[1]=0;
 						al_push( errors,
-								 wcsdupcat2(_( L"Unknown option: " ), L"'", str, L"'", (void *)0) );
+								 wcsdupcat(_( L"Unknown option: " ), L"'", str, L"'" ) );
 					}
 
 					opt_found = 0;
@@ -823,12 +823,12 @@ int complete_is_valid_option( const wchar_t *str,
 				if( hash_get_count( &gnu_match_hash )==0)
 				{
 					al_push( errors,
-							 wcsdupcat2( _(L"Unknown option: "), L"'", opt, L"\'", (void *)0) );
+							 wcsdupcat( _(L"Unknown option: "), L"'", opt, L"\'" ) );
 				}
 				else
 				{
 					al_push( errors,
-							 wcsdupcat2( _(L"Multiple matches for option: "), L"'", opt, L"\'", (void *)0) );
+							 wcsdupcat( _(L"Multiple matches for option: "), L"'", opt, L"\'" ) );
 				}
 			}
 		}
@@ -1112,10 +1112,9 @@ static void complete_cmd( const wchar_t *cmd,
 					 nxt_path != 0;
 					 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 				{
-					nxt_completion = wcsdupcat2( nxt_path,
+					nxt_completion = wcsdupcat( nxt_path,
 												 (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
-												 cmd,
-												 (void *)0 );
+												 cmd );
 					if( ! nxt_completion )
 						continue;
 				
@@ -1168,10 +1167,9 @@ static void complete_cmd( const wchar_t *cmd,
 				 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 			{
 				wchar_t *nxt_completion=
-					wcsdupcat2( nxt_path,
+					wcsdupcat( nxt_path,
 								(nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
-								cmd,
-								(void *)0 );
+								cmd );
 				if( ! nxt_completion )
 				{
 					continue;
@@ -1487,7 +1485,7 @@ static int complete_param( const wchar_t *cmd_orig,
 						int match=0, match_no_case=0;
 						
 						string_buffer_t *whole_opt = sb_halloc( context );
-						sb_append2( whole_opt, o->old_mode?L"-":L"--", o->long_opt, (void *)0 );
+						sb_append( whole_opt, o->old_mode?L"-":L"--", o->long_opt, (void *)0 );
 
 						match = wcsncmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0;
 

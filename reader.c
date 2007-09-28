@@ -559,11 +559,11 @@ void reader_write_title()
 	  don't. Since we can't see the underlying terminal below screen
 	  there is no way to fix this.
 	*/
-	if( !term || !CONTAINS( term, L"xterm", L"screen", L"nxterm", L"rxvt" ) )
+	if( !term || !contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" ) )
 	{
 		char *n = ttyname( STDIN_FILENO );
 
-		if( CONTAINS( term, L"linux" ) )
+		if( contains( term, L"linux" ) )
 		{
 			return;
 		}
@@ -1569,8 +1569,8 @@ static void handle_history( const wchar_t *new_str )
    Check if the specified string is contained in the list, using
    wcscmp as a comparison function
 */
-static int contains( const wchar_t *needle,
-					 array_list_t *haystack )
+static int contains_al( const wchar_t *needle,
+			array_list_t *haystack )
 {
 	int i;
 	for( i=0; i<al_get_count( haystack ); i++ )
@@ -1720,7 +1720,7 @@ static void handle_token_history( int forward, int reset )
 							}
 							//debug( 3, L"ok pos" );
 
-							if( !contains( tok_last( &tok ), &data->search_prev ) )
+							if( !contains_al( tok_last( &tok ), &data->search_prev ) )
 							{
 								free(str);
 								data->token_history_pos = tok_get_pos( &tok );

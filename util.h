@@ -599,11 +599,6 @@ void sb_init( string_buffer_t * );
 string_buffer_t *sb_new();
 
 /**
-   Append a string to the buffer
-*/
-void sb_append( string_buffer_t *, const wchar_t * );
-
-/**
    Append a part of a string to the buffer
 */
 void sb_append_substring( string_buffer_t *, const wchar_t *, size_t );
@@ -613,6 +608,7 @@ void sb_append_substring( string_buffer_t *, const wchar_t *, size_t );
 */
 void sb_append_char( string_buffer_t *, wchar_t );
 
+#define sb_append( sb,... ) sb_append_internal( sb, __VA_ARGS__, (void *)0 )
 
 /**
    Append a null terminated list of strings to the buffer.
@@ -622,7 +618,7 @@ void sb_append_char( string_buffer_t *, wchar_t );
 
    Do not forget to cast the last 0 to (void *), or you might encounter errors on 64-bit platforms!
 */
-__sentinel void sb_append2( string_buffer_t *, ... );
+__sentinel void sb_append_internal( string_buffer_t *, ... );
 
 /**
    Append formated string data to the buffer. This function internally

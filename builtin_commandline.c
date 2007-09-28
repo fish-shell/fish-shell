@@ -163,7 +163,7 @@ static void write_part( const wchar_t *begin,
 				case TOK_STRING:
 				{
 					wchar_t *tmp = unescape( tok_last( &tok ), UNESCAPE_INCOMPLETE );
-					sb_append2( &out, tmp, L"\n", (void *)0 );
+					sb_append( &out, tmp, L"\n", (void *)0 );
 					free( tmp );
 					break;
 				}
@@ -247,7 +247,7 @@ static int builtin_commandline( wchar_t **argv )
 			return 1;
 		}
 		
-		sb_append2( sb_err,
+		sb_append( sb_err,
 			    argv[0],
 			    L": Can not set commandline in non-interactive mode\n",
 			    (void *)0 );
@@ -478,7 +478,7 @@ static int builtin_commandline( wchar_t **argv )
 	if( (search_mode || line_mode || cursor_mode) && (argc-woptind > 1) )
 	{
 		
-		sb_append2( sb_err,
+		sb_append( sb_err,
 					argv[0],
 					L": Too many arguments\n",
 					(void *)0 );

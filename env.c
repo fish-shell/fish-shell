@@ -466,7 +466,7 @@ static void setup_path()
 				sb_append( &b, path );
 			}
 			
-			sb_append2( &b,
+			sb_append( &b,
 						ARRAY_SEP_STR,
 						path_el[j],
 						(void *)0 );
@@ -713,7 +713,7 @@ int env_set( const wchar_t *key,
 	
 	CHECK( key, ENV_INVALID );
 		
-	if( val && CONTAINS( key, L"PWD", L"HOME" ) )
+	if( val && contains( key, L"PWD", L"HOME" ) )
 	{
 		void *context = halloc( 0, 0 );
 		const wchar_t *val_canonical = path_make_canonical( context, val );

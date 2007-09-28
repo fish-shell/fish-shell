@@ -54,12 +54,12 @@ end
 # want this even for text-only terminals.
 #
 
-set -l path_list /bin /usr/bin /usr/X11R6/bin @prefix@/bin @optbindirs@
+set -l path_list /bin /usr/bin /usr/X11R6/bin /usr/local/bin @prefix@/bin @optbindirs@
 
 # Root should also have the sbin directories in the path
 switch $USER
 	case root
-	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
+	set path_list $path_list /sbin /usr/sbin /usr/local/sbin @prefix@/sbin
 end
 
 for i in $path_list

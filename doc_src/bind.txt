@@ -12,32 +12,43 @@ fish escape sequences to express them. For example, Alt-w can be
 written as <tt>\\ew</tt>, and Control-x can be written as
 <tt>\\cx</tt>.
 
+If SEQUENCE is the empty string, i.e. an empty set of quotes, this is
+interpreted as the default keybinding. It will be used whenever no
+other binding matches. For most key bindings, it makes sense to use
+the \c self-insert function (i.e. <tt>bind '' self-insert</tt> as the
+default keybining. This will insert any keystrokes not specifically
+bound to into the editor. Non-printable characters are ignored by the
+editor, so this will not result in e.g. control sequences being
+printable.
+
 If the -k switch is used, the name of the key (such as down, up or
 backspace) is used instead of a sequence. The names used are the same
 as the corresponding curses variables, but without the 'key_'
 prefix. (See man 5 terminfo for more information, or use <tt>bind
---names</tt> for a list of all available named keys)
+--key-names</tt> for a list of all available named keys)
 
 COMMAND can be any fish command, but it can also be one of a set of
 special input functions. These include functions for moving the
 cursor, operating on the kill-ring, performing tab completion,
-etc. Use 'bind -N' for a complete list of these input functions.
+etc. Use 'bind --function-names' for a complete list of these input
+functions.
 
 When COMMAND is a shellscript command, it is a good practice to put
 the actual code into a <a href="#function">function</a> and simply
-bind to the function name.
+bind to the function name. This way it becomes significantly easier to
+test the function while editing, and the result is usually more
+readable as well.
 
-- <tt>-a</tt> or <tt>--all</tt> If --print-key-names is specified, show all key names, not only the ones that actually are defined for the current terminal. If erase mode is specified, this switch will cause all current bindings to be erased.
+- <tt>-a</tt> or <tt>--all</tt> If --key-names is specified, show all key names, not only the ones that actually are defined for the current terminal. If erase mode is specified, this switch will cause all current bindings to be erased.
 - <tt>-e</tt> or <tt>--erase</tt> Erase mode. All non-switch arguments are interpreted as character sequences and any commands associated with those sequences are erased.
 - <tt>-h</tt> or <tt>--help</tt> Display help and exit
 - <tt>-k</tt> or <tt>--key</tt> Specify a key name, such as 'left' or 'backspace' instead of a character sequence
 - <tt>-K</tt> or <tt>--key-names</tt> Display a list of available key names
 - <tt>-f</tt> or <tt>--function-names</tt> Display a list of available input functions
 
-
 \subsection bind-example Example
 
-<tt>bind \cd 'exit'</tt> causes fish to exit on Control-d
+<tt>bind \\cd 'exit'</tt> causes fish to exit on Control-d
 
 <tt>bind -k ppage history-search-backward</tt> Causes fish to perform a history search when the page up key is pressed
 

@@ -1053,14 +1053,8 @@ Here are some of the commands available in the editor:
 - Alt-l lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed 
 - Alt-p adds the string '| less;' to the end of the job under the cursor. The result is that the output of the command will be paged.
 
-You can change these key bindings by making an inputrc file. To do
-this, copy the file /etc/fish/fish_inputrc to your home directory and
-rename it to '.config/fish/fish_inputrc'. Now you can edit the file
-to change your key bindings. The file format of this file is described
-in the manual page for readline. Use the command <code>man readline</code>
-to read up on this syntax. Please note that the list of key binding
-functions in fish is different to that offered by readline. Currently,
-the following functions are available:
+You can change these key bindings using the 
+<a href="commands.html#bind">bind</a> builtin command. 
 
 
 - \c backward-char, moves one character to the left
@@ -1086,12 +1080,6 @@ the following functions are available:
 - \c kill-word, move the next word to the killring
 - \c yank, insert the latest entry of the killring into the buffer
 - \c yank-pop, rotate to the previous entry of the killring
-
-You can also bind a pice of shellscript to a key using the same
-syntax. For example, the Alt-p functionality described above is
-implemented using the following keybinding.
-
-<pre>"\M-p": if commandline -j|grep -v 'less *$' &gt;/dev/null; commandline -aj "|less;"; end;</pre>
 
 If such a script produces output, the script needs to finish by
 calling 'commandline -f repaint' in order to tell fish that a repaint

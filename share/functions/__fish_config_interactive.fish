@@ -193,7 +193,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	
 	function __fish_reload_key_bindings -d "Reload keybindings when binding variable change"
 		eval $fish_key_bindings
-	end
+	end ^/dev/null
+
 end
 
 

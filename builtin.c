@@ -485,6 +485,29 @@ static int builtin_bind_add( wchar_t *seq, wchar_t *cmd, int terminfo )
 		}
 		else
 		{
+			switch( errno )
+			{
+
+				case ENOENT:
+				{
+					sb_printf( sb_err, _(L"%ls: No key with name '%ls' found\n"), L"bind", seq );
+					break;
+				}
+
+				case EILSEQ:
+				{
+					sb_printf( sb_err, _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", seq );
+					break;
+				}
+
+				default:
+				{
+					sb_printf( sb_err, _(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind", seq );
+					break;
+				}
+
+			}
+			
 			return 1;
 		}
 		

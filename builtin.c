@@ -2499,9 +2499,9 @@ static int builtin_exit( wchar_t **argv )
 			if( errno || *end != 0)
 			{
 				sb_printf( sb_err,
-						   _( L"%ls: Argument '%ls' must be an integer\n" ),
-						   argv[0],
-						   argv[1] );
+					   _( L"%ls: Argument '%ls' must be an integer\n" ),
+					   argv[0],
+					   argv[1] );
 				builtin_print_help( argv[0], sb_err );
 				return STATUS_BUILTIN_ERROR;
 			}
@@ -2511,8 +2511,8 @@ static int builtin_exit( wchar_t **argv )
 		default:
 		{
 			sb_printf( sb_err,
-					   BUILTIN_ERR_TOO_MANY_ARGUMENTS,
-					   argv[0] );
+				   BUILTIN_ERR_TOO_MANY_ARGUMENTS,
+				   argv[0] );
 
 			builtin_print_help( argv[0], sb_err );
 			return STATUS_BUILTIN_ERROR;
@@ -2524,7 +2524,8 @@ static int builtin_exit( wchar_t **argv )
 }
 
 /**
-   Helper function for builtin_cd, used for seting the current working directory
+   Helper function for builtin_cd, used for seting the current working
+   directory
 */
 static int set_pwd( wchar_t *env)
 {
@@ -2541,9 +2542,8 @@ static int set_pwd( wchar_t *env)
 
 /**
    The cd builtin. Changes the current directory to the one specified
-   or to $HOME if none is specified. If '-' is the directory specified,
-   the directory is changed to the previous working directory. The
-   directory can be relative to any directory in the CDPATH variable.
+   or to $HOME if none is specified. The directory can be relative to
+   any directory in the CDPATH variable.
 */
 static int builtin_cd( wchar_t **argv )
 {

@@ -136,7 +136,6 @@ static const wchar_t *name_arr[] =
 	L"backward-kill-word",
 	L"dump-functions",
 	L"winch",
-	L"exit",
 	L"history-token-search-backward",
 	L"history-token-search-forward",
 	L"self-insert",
@@ -220,7 +219,6 @@ static const wchar_t code_arr[] =
 	R_BACKWARD_KILL_WORD,
 	R_DUMP_FUNCTIONS,
 	R_WINCH,
-	R_EXIT,
 	R_HISTORY_TOKEN_SEARCH_BACKWARD,
 	R_HISTORY_TOKEN_SEARCH_FORWARD,
 	R_SELF_INSERT,
@@ -338,14 +336,6 @@ static int interrupt_handler()
 	*/
 	if( job_reap( 1 ) )
 		repaint();
-	
-	/*
-	  Check if we should exit
-	*/
-	if( exit_status() )
-	{
-		return R_EXIT;
-	}
 	
 	/*
 	  Tell the reader an event occured

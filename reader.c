@@ -2688,16 +2688,6 @@ wchar_t *reader_readline()
 				break;
 			}
 
-			/* exit, but only if line is empty */
-			case R_EXIT:
-			{
-				if( data->buff_len == 0 )
-				{
-					data->end_loop=1;
-				}
-				break;
-			}
-
 			/*
 			  Evaluate. If the current command is unfinished, or if
 			  the charater is escaped using a backslash, insert a

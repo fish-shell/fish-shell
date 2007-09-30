@@ -16,3 +16,4 @@ complete -c commandline -s o -l tokenize --description "Print each token on a se
 complete -c commandline -s I -l input --description "Specify command to operate on"
 complete -c commandline -s C -l cursor --description "Set/get cursor position, not buffer contents"
 
+complete -c commandline -n __fish_commandline_test -a '(bind --function-names)' -d 'Function name' -x

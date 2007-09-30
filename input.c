@@ -134,7 +134,6 @@ static const wchar_t *name_arr[] =
 	L"kill-word",
 	L"backward-kill-word",
 	L"dump-functions",
-	L"winch",
 	L"history-token-search-backward",
 	L"history-token-search-forward",
 	L"self-insert",
@@ -216,7 +215,6 @@ static const wchar_t code_arr[] =
 	R_KILL_WORD,
 	R_BACKWARD_KILL_WORD,
 	R_DUMP_FUNCTIONS,
-	R_WINCH,
 	R_HISTORY_TOKEN_SEARCH_BACKWARD,
 	R_HISTORY_TOKEN_SEARCH_FORWARD,
 	R_SELF_INSERT,
@@ -346,7 +344,7 @@ static int interrupt_handler()
 		return 3;
 	}
 
-	return R_WINCH;	
+	return R_NULL;	
 }
 
 int input_init()

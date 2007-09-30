@@ -658,7 +658,7 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		need_clear = 1;
 		s_move( scr, &output, 0, 0 );
 		scr->actual_width = screen_width;
-		s_reset( scr, 1 );
+		s_reset( scr, 0 );
 	}
 	
 	if( wcscmp( prompt, (wchar_t *)scr->actual_prompt.buff ) )
@@ -918,6 +918,8 @@ void s_write( screen_t *s,
 void s_reset( screen_t *s, int reset_cursor )
 {
 	CHECK( s, );
+
+	int prev_line = s->actual_cursor[1];
 	s_reset_arr( &s->actual );
 	s->actual_cursor[0] = s->actual_cursor[1] = 0;
 	sb_clear( &s->actual_prompt );
@@ -931,6 +933,8 @@ void s_reset( screen_t *s, int reset_cursor )
 		*/
 		fstat( 1, &s->prev_buff_1 );
 		fstat( 2, &s->prev_buff_2 );
+		write( 1, "\r", 1 );
+		s->actual_cursor[1] = prev_line;
 	}
 }
 

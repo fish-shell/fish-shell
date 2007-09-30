@@ -195,6 +195,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		eval $fish_key_bindings
 	end ^/dev/null
 
-end
+	function __fish_winch_handler --on-signal winch
+		commandline -f repaint
+	end
 
+end
 

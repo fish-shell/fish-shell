@@ -679,12 +679,11 @@ void repaint()
 	parser_test( data->buff, data->indent, 0, 0 );
 	
 	s_write( &data->screen,
-			 (wchar_t *)data->prompt_buff.buff,
-			 data->buff,
-			 data->color, 
-			 data->indent, 
-			 data->buff_pos );
-	
+		 (wchar_t *)data->prompt_buff.buff,
+		 data->buff,
+		 data->color, 
+		 data->indent, 
+		 data->buff_pos );
 }
 
 
@@ -2339,7 +2338,7 @@ wchar_t *reader_readline()
 	exec_prompt();
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
-	s_reset( &data->screen, 0 );
+	s_reset( &data->screen, 1 );
 	repaint();
 
 	/* 
@@ -2465,7 +2464,6 @@ wchar_t *reader_readline()
 
 			case R_NULL:
 			{
-				repaint();
 				break;
 			}
 
@@ -2473,13 +2471,7 @@ wchar_t *reader_readline()
 			{
 				exec_prompt();
 				write( 1, "\r", 1 );
-				s_reset( &data->screen, 1 );
-				repaint();
-				break;
-			}
-
-			case R_WINCH:
-			{
+				s_reset( &data->screen, 0 );
 				repaint();
 				break;
 			}

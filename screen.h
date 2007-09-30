@@ -102,9 +102,19 @@ void s_write( screen_t *s,
 			  int cursor_pos );
 
 /** 
-	This function resets the screen buffers internal knowledge about
-	the contents of the screen. Use this function when some other
-	function than s_write has written to the screen.
+    This function resets the screen buffers internal knowledge about
+    the contents of the screen. Use this function when some other
+    function than s_write has written to the screen.
+
+    \param s the screen to reset
+    \param reset_cursor whether the line on which the curor has changed should be assumed to have changed. If \c reset_cursor is set to 0, the library will attempt to make sure that the screen area does not seem to move up or down on repaint. 
+
+    If reset_cursor is incorreclt set to 0, this may result in screen
+    contents being erased. If it is incorrectly set to one, it may
+    result in one or more lines of garbage on screen on the next
+    repaint. If this happens during a loop, such as an interactive
+    resizing, there will be one line of garbage for every repaint,
+    which will quicly fill the screen.
 */
 void s_reset( screen_t *s, int reset_cursor );
 

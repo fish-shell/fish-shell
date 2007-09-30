@@ -2837,15 +2837,6 @@ wchar_t *reader_readline()
 				break;
 			}
 
-			case R_DELETE_LINE:
-			{
-				data->buff[0]=0;
-				data->buff_len=0;
-				data->buff_pos=0;
-				repaint();
-				break;
-			}
-
 			/* kill one word left */
 			case R_BACKWARD_KILL_WORD:
 			{

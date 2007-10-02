@@ -243,27 +243,6 @@ static int is_init = 0;
 static void input_terminfo_init();
 static void input_terminfo_destroy();
 
-
-
-
-/**
-   Returns the function name for the given function code.
-*/
-/*
-static const wchar_t *input_get_name( wchar_t c )
-{
-
-	int i;
-	for( i = 0; i<(sizeof( code_arr )/sizeof(wchar_t)) ; i++ )
-	{
-		if( c == code_arr[i] )
-		{
-			return name_arr[i];
-		}
-	}
-	return 0;		
-}
-*/
 /**
    Returns the function description for the given function code.
 */
@@ -427,7 +406,7 @@ static wint_t input_exec_binding( input_mapping_t *m, const wchar_t *seq )
 
 		  Bindings that produce output should emit a R_REPAINT
 		  function by calling 'commandline -f repaint' to tell
-		  fish that a repaint is in order.
+		  fish that a repaint is in order. 
 		*/
 		
 		return R_NULL;
@@ -534,7 +513,7 @@ wint_t input_readch()
 			;
 			arr[0] = input_common_readch(0);
 			
-			return input_exec_binding( m, arr );				
+			return input_exec_binding( generic, arr );				
 		}
 				
 		/*
@@ -660,9 +639,10 @@ static void input_terminfo_init()
        TERMINFO_ADD(key_f19);
        TERMINFO_ADD(key_f20);
        /*
-	 I know  of no key board  with more than 20  function keys, so
-	 adding the rest  here makes very little sense,  since it will
-	 take up a lot of room in any listings, but with no benefit.
+	 I know of no keyboard with more than 20 function keys, so
+	 adding the rest here makes very little sense, since it will
+	 take up a lot of room in any listings (like tab completions),
+	 but with no benefit.
 	*/
        /*
        TERMINFO_ADD(key_f21);

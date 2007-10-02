@@ -165,10 +165,11 @@ const wchar_t *builtin_complete_get_temporary_buffer();
 
 
 /**
-   Return the help text for the specified builtin command.
-
-   \param cmd The command for which to obtain help text
+   Run the __fish_print_help function to obtain the help information
+   for the specified command. The resulting string will be valid until
+   the next time this function is called, and must never be free'd manually.
 */
+
 wchar_t *builtin_help_get( const wchar_t *cmd );
 
 #endif

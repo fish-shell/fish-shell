@@ -263,9 +263,9 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 	{
 		res = mbrtowc( &out[out_pos], &in[in_pos], len-in_pos, &state );
 
-		if( ( out[out_pos] >= ENCODE_DIRECT_BASE) &&
-		    ( out[out_pos] < ENCODE_DIRECT_BASE+256) ||
-			out[out_pos] == INTERNAL_SEPARATOR )
+		if( ( ( out[out_pos] >= ENCODE_DIRECT_BASE) &&
+		      ( out[out_pos] < ENCODE_DIRECT_BASE+256)) ||
+		    ( out[out_pos] == INTERNAL_SEPARATOR ) )
 		{
 			out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
 			in_pos++;

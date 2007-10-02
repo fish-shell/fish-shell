@@ -186,22 +186,17 @@ static int count_char( const wchar_t *str, wchar_t c )
 	return res;
 }
 
-/**
-   Print help for the specified builtin. If \c b is sb_err, also print
-   the line information
-
-   If \c b is the buffer representing standard error, and the help
-   message is about to be printed to an interactive screen, it may be
-   shortened to fit the screen.
-
-*/
-
 wchar_t *builtin_help_get( const wchar_t *name )
 {
 	array_list_t lst;
 	string_buffer_t cmd;
 	wchar_t *name_esc;
 	
+	/*
+	  Because the contents of this buffer is returned by this
+	  function, it must not be free'd on exit, so we allocate it
+	  using halloc.
+	 */
 	static string_buffer_t *out = 0;
 	int i;
 	
@@ -239,6 +234,16 @@ wchar_t *builtin_help_get( const wchar_t *name )
 	
 }
 
+/**
+   Print help for the specified builtin. If \c b is sb_err, also print
+   the line information
+
+   If \c b is the buffer representing standard error, and the help
+   message is about to be printed to an interactive screen, it may be
+   shortened to fit the screen.
+
+   
+*/
 
 static void builtin_print_help( const wchar_t *cmd, string_buffer_t *b )
 {
@@ -565,7 +570,6 @@ static int builtin_bind( wchar_t **argv )
 	}
 	;
 	
-	int i;
 	int argc=builtin_count_args( argv );
 	int mode = BIND_INSERT;
 	int res = STATUS_BUILTIN_OK;
@@ -3772,13 +3776,8 @@ int builtin_exists( wchar_t *cmd )
 static int internal_help( wchar_t *cmd )
 {
 	CHECK( cmd, 0 );
-	
-	return ( wcscmp( cmd, L"for" ) == 0 ||
-			 wcscmp( cmd, L"while" ) == 0 ||
-			 wcscmp( cmd, L"function" ) == 0 ||
-			 wcscmp( cmd, L"if" ) == 0 ||
-			 wcscmp( cmd, L"end" ) == 0 ||
-			 wcscmp( cmd, L"switch" ) == 0 );
+	return contains( cmd, L"for", L"while", L"function",
+			 L"if", L"end", L"switch" );
 }
 
 
@@ -3819,8 +3818,7 @@ int builtin_run( wchar_t **argv, io_data_t *io )
 
 void builtin_get_names( array_list_t *list )
 {
-	CHECK( list, );
-		
+	CHECK( list, );		
  	hash_get_keys( &builtin, list );
 }
 

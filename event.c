@@ -79,11 +79,6 @@ static array_list_t *killme;
 static array_list_t *blocked;
 
 /**
-   String buffer used for formating event descriptions in event_get_desc()
-*/
-static string_buffer_t *get_desc_buff=0;
-
-/**
    Tests if one event instance matches the definition of a event
    class. If both the class and the instance name a function,
    they must name the same function.
@@ -206,6 +201,11 @@ static int event_is_blocked( event_t *e )
 
 const wchar_t *event_get_desc( event_t *e )
 {
+
+	/*
+	  String buffer used for formating event descriptions in event_get_desc()
+	*/
+	static string_buffer_t *get_desc_buff=0;
 
 	CHECK( e, 0 );
 

@@ -2,6 +2,12 @@
 
 	Functions for handling event triggers
 
+	Because most of these functions can be called by signal
+	handler, it is important to make it well defined when these
+	functions produce output or perform memory allocations, since
+	such functions may not be safely called by signal handlers.
+
+	
 */
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
@@ -91,11 +97,15 @@ typedef struct
 
 /**
    Add an event handler 
+
+   May not be called by a signal handler, since it may allocate new memory.
 */
 void event_add_handler( event_t *event );
 
 /**
    Remove all events matching the specified criterion. 
+
+   May not be called by a signal handler, since it may free allocated memory.
 */
 void event_remove( event_t *event );
 
@@ -120,9 +130,13 @@ int event_get( event_t *criterion, array_list_t *out );
    dispatched.
 
    This function is safe to call from a signal handler _ONLY_ if the
-   event parameter is for a signal.
+   event parameter is for a signal. Signal events not be fired, by the
+   call to event_fire, instead they will be fired the next time
+   event_fire is called with anull argument. This is needed to make
+   sure that no code evaluation is ever performed by a signal handler.
 
-   \param event the specific event whose handlers should fire
+   \param event the specific event whose handlers should fire. If
+   null, then all delayed events will be fired.
 */
 void event_fire( event_t *event );
 
@@ -137,7 +151,7 @@ void event_init();
 void event_destroy();
 
 /**
-   Free all memory used by event
+   Free all memory used by the specified event
 */
 void event_free( event_t *e );
 

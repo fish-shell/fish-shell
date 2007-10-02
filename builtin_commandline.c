@@ -461,9 +461,9 @@ static int builtin_commandline( wchar_t **argv )
 			else
 			{
 				sb_printf( sb_err,
-						   _(L"%ls: Unknown readline function '%ls'\n"),
-						   argv[0],
-						   argv[i] );
+					   _(L"%ls: Unknown input function '%ls'\n"),
+					   argv[0],
+					   argv[i] );
 				builtin_print_help( argv[0], sb_err );
 				return 1;
 			}

@@ -1,10 +1,6 @@
 /** \file input.c
 
-Functions for reading a character of input from stdin, using the
-inputrc information for key bindings.
-
-The inputrc file format was invented for the readline library. The
-implementation in fish is as of yet incomplete.
+    Functions for reading a character of input from stdin.
 
 */
 
@@ -109,7 +105,7 @@ typedef struct
 
 
 /**
-   Names of all the readline functions supported
+   Names of all the input functions supported
 */
 static const wchar_t *name_arr[] = 
 {
@@ -150,7 +146,7 @@ static const wchar_t *name_arr[] =
 	;
 
 /**
-   Description of each supported readline function
+   Description of each supported input function
 */
 /*
 static const wchar_t *desc_arr[] =
@@ -190,7 +186,7 @@ static const wchar_t *desc_arr[] =
 */
 
 /**
-   Internal code for each supported readline function
+   Internal code for each supported input function
 */
 static const wchar_t code_arr[] = 
 {
@@ -504,41 +500,45 @@ wint_t input_readch()
 	reader_interrupted();
 	
 	/*
-	  Search for sequence in various mapping tables
+	  Search for sequence in mapping tables
 	*/
 	
 	while( 1 )
 	{
+		input_mapping_t *generic = 0;
 		for( i=0; i<al_get_count( &mappings); i++ )
 		{
-			wint_t res = input_try_mapping( (input_mapping_t *)al_get( &mappings, i ));		
+			input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
+			wint_t res = input_try_mapping( m );		
 			if( res )
-				return res;		
+				return res;
+			
+			if( wcslen( m->seq) == 0 )
+			{
+				generic = m;
+			}
+			
 		}
 		
 		/*
 		  No matching exact mapping, try to find generic mapping.
 		*/
-		
-		for( i=0; i<al_get_count( &mappings); i++ )
-		{
-			input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
-			if( wcslen( m->seq) == 0 )
-			{	
-				wchar_t arr[2]=
-					{
-						0, 
-						0
-					}
-				;
-				arr[0] = input_common_readch(0);
-				
-				return input_exec_binding( m, arr );				
-			}
+
+		if( generic )
+		{	
+			wchar_t arr[2]=
+				{
+					0, 
+					0
+				}
+			;
+			arr[0] = input_common_readch(0);
+			
+			return input_exec_binding( m, arr );				
 		}
-		
+				
 		/*
-		  No action to take on specified character, ignoer it
+		  No action to take on specified character, ignore it
 		  and move to next one.
 		 */
 		input_common_readch( 0 );
@@ -659,7 +659,13 @@ static void input_terminfo_init()
        TERMINFO_ADD(key_f18);
        TERMINFO_ADD(key_f19);
        TERMINFO_ADD(key_f20);
-       /*       TERMINFO_ADD(key_f21);
+       /*
+	 I know  of no key board  with more than 20  function keys, so
+	 adding the rest  here makes very little sense,  since it will
+	 take up a lot of room in any listings, but with no benefit.
+	*/
+       /*
+       TERMINFO_ADD(key_f21);
        TERMINFO_ADD(key_f22);
        TERMINFO_ADD(key_f23);
        TERMINFO_ADD(key_f24);
@@ -762,32 +768,6 @@ static void input_terminfo_init()
        TERMINFO_ADD(key_suspend);
        TERMINFO_ADD(key_undo);
        TERMINFO_ADD(key_up);
-
-
-       /*
-
-
-	TERMINFO_ADD( key_down );
-	TERMINFO_ADD( key_up );
-	TERMINFO_ADD( key_left );
-	TERMINFO_ADD( key_right );
-	TERMINFO_ADD( key_dc );
-	TERMINFO_ADD( key_backspace );
-	TERMINFO_ADD( key_home );
-	TERMINFO_ADD( key_end );
-	TERMINFO_ADD( key_ppage );
-	TERMINFO_ADD( key_npage );
-	TERMINFO_ADD( key_clear );
-	TERMINFO_ADD( key_close );
-	TERMINFO_ADD( key_command );
-	TERMINFO_ADD( key_copy );
-	TERMINFO_ADD( key_create );
-	TERMINFO_ADD( key_dl );
-	TERMINFO_ADD( key_enter );
-	TERMINFO_ADD( key_undo );
-	TERMINFO_ADD( key_suspend );
-	TERMINFO_ADD( key_cancel );
-       */
 }
 
 static void input_terminfo_destroy()

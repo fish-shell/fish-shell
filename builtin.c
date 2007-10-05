@@ -2832,6 +2832,10 @@ static int builtin_source( wchar_t ** argv )
 			   argv[0],
 			   fn_intern == L"-" ? L"<stdin>" : fn_intern );
 	}
+	else
+	{
+		res = proc_get_last_status();
+	}
 	
 	/*
 	  Do not close fd after calling reader_read. reader_read

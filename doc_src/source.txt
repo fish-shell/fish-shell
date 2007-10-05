@@ -16,6 +16,10 @@ variable.
 If no file is specified, or if the file name '-' is used, stdin will
 be read.
 
+The return status of . is the return status of the last job to
+execute. If something goes wrong while opening or reading the file,
+. exits with a non-zero status.
+
 \subsection source-example Example
 
 <tt>. ~/.fish</tt>

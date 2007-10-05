@@ -1115,7 +1115,33 @@ void exec( job_t *j )
 								
 								break;
 							}
+	
+							case IO_CLOSE:
+							{
+								/*
+								  FIXME:
 
+								  When
+								  requesting
+								  that
+								  stdin
+								  be
+								  closed,
+								  we
+								  really
+								  don't
+								  do
+								  anything. How
+								  should
+								  this
+								  be
+								  handled?
+								 */
+								builtin_stdin = -1;
+								
+								break;
+							}
+							
 							default:
 							{
 								builtin_stdin=-1;

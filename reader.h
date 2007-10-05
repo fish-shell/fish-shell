@@ -63,11 +63,10 @@ wchar_t *reader_pop_current_filename();
 void reader_write_title();
 
 /**
-   Repaint the entire commandline. This means reset and clear the
-   commandline, write the prompt, perform syntax highlighting, write
-   the commandline and move the cursor.
-*/
-void repaint();
+   Call this function to tell the reader that a repaint is needed, and
+   should be performed when possible.
+ */
+void reader_repaint_needed();
 
 /**
    Run the specified command with the correct terminal modes, and

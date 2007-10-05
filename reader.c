@@ -264,6 +264,12 @@ typedef struct reader_data
 	   if yes, what mode
 	 */
 	int search_mode;
+
+	/**
+	   Keep track of whether any internal code has done something
+	   which is known to require a repaint.
+	 */
+	int repaint_needed;
 }
 	reader_data_t;
 
@@ -375,6 +381,25 @@ int reader_exit_forced()
 }
 
 /**
+   Repaint the entire commandline. This means reset and clear the
+   commandline, write the prompt, perform syntax highlighting, write
+   the commandline and move the cursor.
+*/
+
+static void reader_repaint()
+{
+	parser_test( data->buff, data->indent, 0, 0 );
+	
+	s_write( &data->screen,
+		 (wchar_t *)data->prompt_buff.buff,
+		 data->buff,
+		 data->color, 
+		 data->indent, 
+		 data->buff_pos );
+	data->repaint_needed = 0;
+}
+
+/**
    Internal helper function for handling killing parts of text.
 */
 static void reader_kill( wchar_t *begin, int length, int mode, int new )
@@ -415,7 +440,7 @@ static void reader_kill( wchar_t *begin, int length, int mode, int new )
 	memmove( begin, begin+length, sizeof( wchar_t )*(wcslen( begin+length )+1) );
 	
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
-	repaint();
+	reader_repaint();
 	
 }
 
@@ -674,17 +699,14 @@ void reader_exit( int do_exit, int forced )
 	
 }
 
-void repaint()
+void reader_repaint_needed()
 {
-	parser_test( data->buff, data->indent, 0, 0 );
-	
-	s_write( &data->screen,
-		 (wchar_t *)data->prompt_buff.buff,
-		 data->buff,
-		 data->color, 
-		 data->indent, 
-		 data->buff_pos );
+	if( data )
+	{
+		data->repaint_needed = 1;
+	}
 }
+
 
 
 /**
@@ -710,7 +732,7 @@ static void remove_backward()
 	reader_super_highlight_me_plenty( data->buff_pos,
 									  0 );
 
-	repaint();
+	reader_repaint();
 
 }
 
@@ -748,7 +770,7 @@ static int insert_str(wchar_t *str)
 	reader_super_highlight_me_plenty( data->buff_pos-1,
 									  0 );
 	
-	repaint();
+	reader_repaint();
 	return 1;
 }
 
@@ -966,7 +988,7 @@ static void completion_insert( const wchar_t *val, int flags )
 		sb_destroy( &sb );
 						
 		reader_super_highlight_me_plenty( data->buff_pos, 0 );
-		repaint();
+		reader_repaint();
 		
 	}
 	else
@@ -1204,14 +1226,14 @@ static void reader_flash()
 		data->color[i] = HIGHLIGHT_SEARCH_MATCH<<16;
 	}
 	
-	repaint();
+	reader_repaint();
 	
 	pollint.tv_sec = 0;
 	pollint.tv_nsec = 100 * 1000000;
 	nanosleep( &pollint, NULL );
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
-	repaint();
+	reader_repaint();
 	
 	
 }
@@ -1418,7 +1440,7 @@ static int handle_completions( array_list_t *comp )
 
 		free( prefix );
 		s_reset( &data->screen, 1 );
-		repaint();
+		reader_repaint();
 
 	}
 
@@ -1560,7 +1582,7 @@ static void handle_history( const wchar_t *new_str )
 		data->buff_pos=wcslen(data->buff);
 		reader_super_highlight_me_plenty( data->buff_pos, 0 );
 
-		repaint();
+		reader_repaint();
 	}
 }
 
@@ -1646,7 +1668,7 @@ static void handle_token_history( int forward, int reset )
 
 		reader_replace_current_token( str );
 		reader_super_highlight_me_plenty( data->buff_pos, 0 );
-		repaint();
+		reader_repaint();
 	}
 	else
 	{
@@ -1738,7 +1760,7 @@ static void handle_token_history( int forward, int reset )
 		{
 			reader_replace_current_token( str );
 			reader_super_highlight_me_plenty( data->buff_pos, 0 );
-			repaint();
+			reader_repaint();
 			al_push( &data->search_prev, str );
 			data->search_pos = al_get_count( &data->search_prev )-1;
 		}
@@ -1895,7 +1917,7 @@ static void move_word( int dir, int erase, int new )
 	else
 	{
 		data->buff_pos = end_buff_pos;
-		repaint();
+		reader_repaint();
 	}
 }
 
@@ -1928,7 +1950,8 @@ void reader_set_buffer( wchar_t *b, int p )
 	}
 
 	reader_super_highlight_me_plenty( data->buff_pos,
-									  0 );
+					  0 );
+	reader_repaint_needed();
 }
 
 
@@ -2339,7 +2362,7 @@ wchar_t *reader_readline()
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	s_reset( &data->screen, 1 );
-	repaint();
+	reader_repaint();
 
 	/* 
 	   get the current terminal modes. These will be restored when the
@@ -2428,7 +2451,7 @@ wchar_t *reader_readline()
 					data->buff_pos--;
 				}
 				
-				repaint();
+				reader_repaint();
 				break;
 			}
 
@@ -2440,7 +2463,7 @@ wchar_t *reader_readline()
 					data->buff_pos++;
 				}
 				
-				repaint();
+				reader_repaint();
 				break;
 			}
 
@@ -2449,7 +2472,7 @@ wchar_t *reader_readline()
 			{
 				data->buff_pos = 0;
 
-				repaint();
+				reader_repaint();
 				break;
 			}
 
@@ -2458,12 +2481,15 @@ wchar_t *reader_readline()
 			{
 				data->buff_pos = data->buff_len;
 
-				repaint();
+				reader_repaint();
 				break;
 			}
 
 			case R_NULL:
 			{
+				if( data->repaint_needed )
+					reader_repaint();
+				
 				break;
 			}
 
@@ -2472,7 +2498,7 @@ wchar_t *reader_readline()
 				exec_prompt();
 				write( 1, "\r", 1 );
 				s_reset( &data->screen, 0 );
-				repaint();
+				reader_repaint();
 				break;
 			}
 
@@ -2509,7 +2535,7 @@ wchar_t *reader_readline()
 						remove_backward();
 					}
 					
-					repaint();
+					reader_repaint();
 					
 					len = data->buff_pos - (begin-data->buff);
 					buffcpy = wcsndup( begin, len );
@@ -2651,7 +2677,7 @@ wchar_t *reader_readline()
 					}
 					sb_clear( &data->search_buff );
 					reader_super_highlight_me_plenty( data->buff_pos, 0 );
-					repaint();
+					reader_repaint();
 					
 				}
 
@@ -2711,7 +2737,7 @@ wchar_t *reader_readline()
 						}
 						finished=1;
 						data->buff_pos=data->buff_len;
-						repaint();
+						reader_repaint();
 						break;
 					}
 					
@@ -2732,7 +2758,7 @@ wchar_t *reader_readline()
 					default:
 					{
 						s_reset( &data->screen, 1 );
-						repaint();
+						reader_repaint();
 						break;
 					}
 
@@ -2813,7 +2839,7 @@ wchar_t *reader_readline()
 				if( data->buff_pos > 0 )
 				{
 					data->buff_pos--;
-					repaint();
+					reader_repaint();
 				}
 				break;
 			}
@@ -2824,7 +2850,7 @@ wchar_t *reader_readline()
 				if( data->buff_pos < data->buff_len )
 				{
 					data->buff_pos++;					
-					repaint();
+					reader_repaint();
 				}
 				break;
 			}
@@ -2907,7 +2933,7 @@ wchar_t *reader_readline()
 												 line_old );
 					total_offset_new = parse_util_get_offset( data->buff, line_new, line_offset_old - 4*(indent_new-indent_old));
 					data->buff_pos = total_offset_new;
-					repaint();
+					reader_repaint();
 				}
 								
 				break;

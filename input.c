@@ -306,7 +306,7 @@ static int interrupt_handler()
 	  Reap stray processes, including printing exit status messages
 	*/
 	if( job_reap( 1 ) )
-		repaint();
+		reader_repaint_needed();
 	
 	/*
 	  Tell the reader an event occured

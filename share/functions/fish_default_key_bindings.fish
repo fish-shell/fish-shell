@@ -77,7 +77,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \el __fish_list_current_token
 	bind \ew 'set tok (commandline -pt); if test $tok[1]; whatis $tok[1]; commandline -f repaint; end'
 	bind \cl 'clear; commandline -f repaint'
-	bind \cc 'commandline ""; commandline -f repaint'
+	bind \cc 'commandline ""'
 	bind \cu backward-kill-line
 	bind \ed kill-word
 	bind \cw backward-kill-word	

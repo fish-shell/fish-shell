@@ -85,7 +85,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \cd delete-or-exit
 	
 	# This will make sure the output of the current command is paged using the less pager when you press Meta-p
-	bind \ep 'if commandline -j|grep -v "less *\$" >/dev/null; commandline -aj "|less;"; end'
-	
+	bind \ep '__fish_paginate'
+
 end
 

@@ -1530,10 +1530,15 @@ void reader_sanity_check()
 {
 	if( is_interactive)
 	{
+		if( !data )
+			sanity_lose();
+
 		if(!( data->buff_pos <= data->buff_len ))
 			sanity_lose();
+
 		if(!( data->buff_len == wcslen( data->buff ) ))
 			sanity_lose();
+
 	}
 }
 

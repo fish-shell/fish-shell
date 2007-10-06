@@ -3131,7 +3131,8 @@ int reader_read( int fd, io_data_t *io )
 	  is handled by proc_push_interactive/proc_pop_interactive.
 	*/
 
-	proc_push_interactive( ((fd == 0) && isatty(STDIN_FILENO)));
+	int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
+	proc_push_interactive( inter );
 	
 	res= is_interactive?read_i():read_ni( fd, io );
 

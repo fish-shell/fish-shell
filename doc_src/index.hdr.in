@@ -936,7 +936,8 @@ started by fish, those in lowercase are not exported. This rule is not
 enforced by fish, but it is good coding practice to use casing to
 distinguish between exported and unexported variables. \c fish also
 uses several variables internally. Such variables are prefixed with
-the string __FISH or __fish. These should be ignored by the user.
+the string __FISH or __fish. These should never be used by the
+user. Changing their value may break fish.
 
 \subsection variables-status The status variable
 

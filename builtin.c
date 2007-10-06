@@ -133,7 +133,7 @@ static int builtin_stdin;
 static hash_table_t *desc=0;
 
 /**
-   The underyion IO redirections behind the current builtin. This
+   The underlying IO redirections behind the current builtin. This
    should normally not be used - sb_out and friends are already
    configured to handle everything.
 */

@@ -40,8 +40,23 @@
 */
 #define BYTE_MAX 0xffu
 
+/*
+  Escape special fish syntax characters liek the semicolon
+ */
 #define UNESCAPE_SPECIAL 1
+/*
+  Allow incomplete escape sequences
+ */
 #define UNESCAPE_INCOMPLETE 2
+
+/**
+   Escape all characters, including magic characters like the semicolon
+ */
+#define ESCAPE_ALL 1
+/**
+   Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty string
+ */
+#define ESCAPE_NO_QUOTED 2
 
 
 /** 

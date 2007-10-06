@@ -953,7 +953,7 @@ static void mangle_completions( array_list_t *l, const wchar_t *prefix )
 			if( (c == COMPLETE_ITEM_SEP) || (c==COMPLETE_SEP) || !c)
 			{
 				*end = 0;
-				wchar_t * str = escape( start, 1 );
+				wchar_t * str = escape( start, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 				
 				comp->comp_width += my_wcswidth( str );
 				halloc_register( global_context, str );

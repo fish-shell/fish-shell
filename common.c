@@ -719,9 +719,12 @@ static wchar_t *escape_simple( const wchar_t *in )
 
 
 wchar_t *escape( const wchar_t *in_orig, 
-		 int escape_all )
+		 int flags )
 {
 	const wchar_t *in = in_orig;
+	
+	int escape_all = flags & ESCAPE_ALL;
+	int no_quoted  = flags & ESCAPE_NO_QUOTED;
 	
 	wchar_t *out;
 	wchar_t *pos;
@@ -735,7 +738,7 @@ wchar_t *escape( const wchar_t *in_orig,
 		FATAL_EXIT();
 	}
 
-	if( wcslen( in ) == 0 )
+	if( !no_quoted && (wcslen( in ) == 0) )
 	{
 		out = wcsdup(L"''");
 		if( !out )
@@ -884,7 +887,7 @@ wchar_t *escape( const wchar_t *in_orig,
 	  Use quoted escaping if possible, since most people find it
 	  easier to read. 
 	 */
-	if( need_escape && !need_complex_escape && escape_all )
+	if( !no_quoted && need_escape && !need_complex_escape && escape_all )
 	{
 		free( out );
 		out = escape_simple( in_orig );

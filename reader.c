@@ -1001,7 +1001,7 @@ static void completion_insert( const wchar_t *val, int flags )
 
 		if( quote == L'\0' )
 		{
-			replaced = escape( val, 1 );
+			replaced = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 		}
 		else
 		{
@@ -1031,7 +1031,7 @@ static void completion_insert( const wchar_t *val, int flags )
 			if( unescapable )
 			{
 				free( replaced );
-				wchar_t *tmp = escape( val, 1 );
+				wchar_t *tmp = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 				replaced = wcsdupcat( L" ", tmp );
 				free( tmp);
 				replaced[0]=quote;
@@ -1134,11 +1134,11 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 				
 				
 
-				foo = escape( el->completion + base_len, 1 );
+				foo = escape( el->completion + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 			}
 			else
 			{
-				foo = escape( el->completion, 1 );
+				foo = escape( el->completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 			}
 		}
 		

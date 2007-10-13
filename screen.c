@@ -201,7 +201,7 @@ static int calc_prompt_width( wchar_t *prompt )
 				if( prompt[j+1] == L'k' )
 				{
 					wchar_t *term_name = env_get( L"TERM" );
-					if( term_name && wcscmp( term_name, L"screen" ) == 0 )
+					if( term_name && wcsstr( term_name, L"screen" ) == term_name )
 					{
 						wchar_t *end;
 						j+=2;

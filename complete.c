@@ -101,7 +101,7 @@ These functions are used for storing and retrieving tab-completion data, as well
    response)
 */
 #ifdef USE_GETTEXT
-#define C_(wstr) ((wstr==L"")?L"":wgettext(wstr))
+#define C_(wstr) ((wcscmp(wstr, L"")==0)?L"":wgettext(wstr))
 #else
 #define C_(string) (string)
 #endif
@@ -294,7 +294,7 @@ static int condition_test( const wchar_t *condition )
 		*/
 	}
 
-	if( test_res == CC_TRUE )
+	if( wcscmp( test_res, CC_TRUE ) == 0 )
 	{
 		return 1;
 	}
@@ -2087,7 +2087,7 @@ static void append_switch( string_buffer_t *out,
 {
 	wchar_t *esc;
 
-	if( !argument || argument==L"" )
+	if( !argument || wcscmp( argument, L"") == 0 )
 		return;
 
 	esc = escape( argument, 1 );

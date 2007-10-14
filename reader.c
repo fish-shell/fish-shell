@@ -2120,15 +2120,15 @@ void reader_set_prompt( wchar_t *new_prompt )
 }
 
 void reader_set_complete_function( void (*f)( const wchar_t *,
-											  array_list_t * ) )
+					      array_list_t * ) )
 {
 	data->complete_func = f;
 }
 
 void reader_set_highlight_function( void (*f)( wchar_t *,
-											   int *,
-											   int,
-											   array_list_t * ) )
+					       int *,
+					       int,
+					       array_list_t * ) )
 {
 	data->highlight_func = f;
 }

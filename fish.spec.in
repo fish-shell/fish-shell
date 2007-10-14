@@ -134,7 +134,6 @@ fi
 
 # Configuration files
 %config %_sysconfdir/fish/config.fish
-%config %_sysconfdir/fish/fish_inputrc
 %dir %_sysconfdir/fish
 
 # Non-configuration initialization files

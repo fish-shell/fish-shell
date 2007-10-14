@@ -208,7 +208,7 @@ MAIN_DIR_FILES := $(sort $(MAIN_DIR_FILES_UNSORTED))
 # Files in ./etc/
 #
 
-ETC_DIR_FILES :=etc/config.fish.in etc/fish_inputrc	
+ETC_DIR_FILES :=etc/config.fish.in	
 
 
 #
@@ -585,7 +585,6 @@ install-force: all install-translations
 	for i in share/man/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/; \
 	done;
-	$(INSTALL) -m 644 etc/fish_inputrc $(DESTDIR)$(sysconfdir)/fish/fish_inputrc;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	for i in user_doc/html/* ChangeLog; do \
 		if test -f $$i; then \
@@ -617,7 +616,6 @@ uninstall: uninstall-translations
 	done;
 	-rm -f $(DESTDIR)$(bindir)/xsel
 	-rm -f $(DESTDIR)$(sysconfdir)/fish/config.fish
-	-rm -f $(DESTDIR)$(sysconfdir)/fish/fish_inputrc
 	-rmdir $(DESTDIR)$(sysconfdir)/fish
 	-if test -d $(DESTDIR)$(datadir)/fish; then \
 		rm -r $(DESTDIR)$(datadir)/fish; \
@@ -642,6 +640,7 @@ uninstall-legacy: uninstall
 	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish
 	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish
 	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish
+	-rm -f $(DESTDIR)$(sysconfdir)/fish/fish_inputrc
 	-if test -d $(DESTDIR)$(sysconfdir)/fish.d/completions; then \
 		for i in $(COMPLETIONS_DIR_FILES); do \
 			basename=`basename $$i`; \

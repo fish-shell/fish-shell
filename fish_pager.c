@@ -324,8 +324,13 @@ static wint_t readch()
 	;
 	int i;
 	
-	for( i=0; m[i].seq; i++ )
+	for( i=0; m[i].bnd; i++ )
 	{
+		if( !m[i].seq )
+		{
+			continue;
+		}
+		
 		if( try_sequence(m[i].seq ) )
 			return m[i].bnd;
 	}

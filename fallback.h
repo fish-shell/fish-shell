@@ -435,4 +435,11 @@ int getopt_long(int argc,
 
 #endif
 
+#ifndef HAVE_SYSCONF
+
+#define _SC_ARG_MAX 1
+long sysconf(int name);
+
+#endif
+
 #endif

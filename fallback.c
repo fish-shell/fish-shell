@@ -1168,3 +1168,20 @@ char ** backtrace_symbols (void *const *buffer, int size)
 	return 0;
 }
 #endif
+
+#ifndef HAVE_SYSCONF
+
+long sysconf(int name)
+{
+	if( name == _SC_ARG_MAX )
+	{
+#ifdef ARG_MAX
+		return ARG_MAX;
+#endif
+	}
+
+	return -1;
+	
+}
+
+#endif

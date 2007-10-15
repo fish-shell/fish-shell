@@ -507,6 +507,8 @@ static void launch_process( process_t *p )
 			string_buffer_t sz1;
 			string_buffer_t sz2;
 			
+			long arg_max = -1;
+						
 			sb_init( &sz1 );
 			sb_init( &sz2 );
 						
@@ -521,19 +523,26 @@ static void launch_process( process_t *p )
 			}
 			
 			sb_format_size( &sz1, sz );
+
+			arg_max = sysconf( _SC_ARG_MAX );
 			
-#ifdef ARG_MAX
-			sb_format_size( &sz2, ARG_MAX );
+			if( arg_max > 0 )
+			{
+				
+				sb_format_size( &sz2, ARG_MAX );
+				
+				debug( 0,
+				       L"The total size of the argument and environment lists (%ls) exceeds the system limit of %ls.",
+				       (wchar_t *)sz1.buff,
+				       (wchar_t *)sz2.buff);
+			}
+			else
+			{
+				debug( 0,
+				       L"The total size of the argument and environment lists (%ls) exceeds the system limit.",
+				       (wchar_t *)sz1.buff);
+			}
 			
-			debug( 0,
-			       L"The total size of the argument and environment lists (%ls) exceeds the system limit of %ls.",
-			       (wchar_t *)sz1.buff,
-			       (wchar_t *)sz2.buff);
-#else
-			debug( 0,
-			       L"The total size of the argument and environment lists (%ls) exceeds the system limit.",
-			       (wchar_t *)sz1.buff);
-#endif
 			debug( 0, 
 			       L"Please try running the command again with fewer arguments.");
 			sb_destroy( &sz1 );

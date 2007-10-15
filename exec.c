@@ -1100,7 +1100,15 @@ void exec( job_t *j )
 				current_block->param2.function_call_process = p;
 				current_block->param1.function_call_name = halloc_register( current_block, wcsdup( p->argv[0] ) );
 						
+
+				/*
+				  set_argv might trigger an event
+				  handler, hence we need to unblock
+				  signals.
+				*/
+				signal_unblock();
 				parse_util_set_argv( p->argv+1, named_arguments );
+				signal_block();
 								
 				parser_forbid_function( p->argv[0] );
 

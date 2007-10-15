@@ -439,62 +439,105 @@ static void launch_process( process_t *p )
 	
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
+	char **argv = wcsv2strv( (const wchar_t **) p->argv);
+	char **envv = env_export_arr( 0 );
+	
 	execve ( wcs2str(p->actual_cmd), 
-			 wcsv2strv( (const wchar_t **) p->argv), 
-			 env_export_arr( 0 ) );
-
-    err = errno;
+		 argv,
+		 envv );
+	
+	err = errno;
 	
 	/* 
-	Something went wrong with execve, check for a ":", and run
-	/bin/sh if encountered. This is a weird predecessor to the shebang
-	that is still sometimes used since it is supported on Windows.
+	   Something went wrong with execve, check for a ":", and run
+	   /bin/sh if encountered. This is a weird predecessor to the shebang
+	   that is still sometimes used since it is supported on Windows.
 	*/
 	f = wfopen(p->actual_cmd, "r");
-    if( f )
-    {
-        char begin[1] = {0};
+	if( f )
+	{
+		char begin[1] = {0};
 		size_t read;
-
+		
 		read = fread(begin, 1, 1, f);
 		fclose( f );
 		
-        if( (read==1) && (begin[0] == ':') )
-        {
-            int count = 0;
-            int i = 1;
+		if( (read==1) && (begin[0] == ':') )
+		{
+			int count = 0;
+			int i = 1;
 			wchar_t **res;
-
-            while( p->argv[count] != 0 )
+			
+			while( p->argv[count] != 0 )
 				count++;
-            
+			
 			res = malloc( sizeof(wchar_t*)*(count+2));
-            
+			
 			res[0] = L"/bin/sh";
-            res[1] = p->actual_cmd;
-            
+			res[1] = p->actual_cmd;
+			
 			for( i=1;  p->argv[i]; i++ ){
-                res[i+1] = p->argv[i];
-            }
-
-            res[i+1] = 0;
-            p->argv = res;
-            p->actual_cmd = L"/bin/sh";
+				res[i+1] = p->argv[i];
+			}
+			
+			res[i+1] = 0;
+			p->argv = res;
+			p->actual_cmd = L"/bin/sh";
 			
 			execve ( wcs2str(p->actual_cmd), 
-					 wcsv2strv( (const wchar_t **) p->argv), 
-					 env_export_arr( 0 ) );
-        }
-    }
-    
-	debug( 0, 
-		   _( L"Failed to execute process '%ls'" ),
-		   p->actual_cmd );
-
-	errno = err;
+				 argv,
+				 envv );
+		}
+	}
 	
-	wperror( L"execve" );
-	FATAL_EXIT();
+	errno = err;
+
+	debug( 0, 
+	       _( L"Failed to execute process '%ls'. Reason:" ),
+	       p->actual_cmd );
+	
+	switch( errno )
+	{
+		
+		case E2BIG:
+		{
+			size_t sz = 0;
+			char **p;
+			
+			for(p=argv; *p; p++)
+			{
+				sz += strlen(*p)+1;
+			}
+			
+			for(p=envv; *p; p++)
+			{
+				sz += strlen(*p)+1;
+			}
+			
+#ifdef ARG_MAX
+			debug( 0,
+			       L"The total size of the argument and environment lists (%d bytes) exceeds the system limit of %d bytes.",
+			       sz,
+			       ARG_MAX );
+#else
+			debug( 0,
+			       L"The total size of the argument and environment lists (%d bytes) exceeds the system limit.",
+			       sz );
+#endif
+			debug( 0, 
+			       L"Please try running the command again with fewer arguments.");
+			exit(1);
+			
+			break;
+		}
+
+		default:
+		{
+			wperror( L"execve" );
+			FATAL_EXIT();
+		}
+	}
+	
 }
 
 

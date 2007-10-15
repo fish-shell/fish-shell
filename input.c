@@ -339,7 +339,19 @@ int input_init()
 	output_set_term( env_get( L"TERM" ) );
 	
 	input_terminfo_init();
-	
+
+	/*
+	  If we have no keybindings, add a few simple defaults
+	*/
+	if( !al_get_count( &mappings ) )
+	{
+		input_mapping_add( L"", L"self-insert" );
+		input_mapping_add( L"\n", L"execute" );
+		input_mapping_add( L"\t", L"complete" );
+		input_mapping_add( L"\x3", L"commandline \"\"" );
+		input_mapping_add( L"\x4", L"exit" );
+		input_mapping_add( L"\x5", L"bind" );
+	}
 
 	return 1;
 }
@@ -481,7 +493,7 @@ wint_t input_readch()
 	/*
 	  Search for sequence in mapping tables
 	*/
-	
+
 	while( 1 )
 	{
 		input_mapping_t *generic = 0;
@@ -519,10 +531,8 @@ wint_t input_readch()
 		/*
 		  No action to take on specified character, ignore it
 		  and move to next one.
-		 */
-		input_common_readch( 0 );
-
-	}	
+		*/
+		input_common_readch( 0 );	}	
 }
 
 void input_mapping_get_names( array_list_t *list )

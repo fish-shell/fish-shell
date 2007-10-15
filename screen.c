@@ -931,10 +931,10 @@ void s_reset( screen_t *s, int reset_cursor )
 		  This should prevent reseting the cursor position during the
 		  next repaint.
 		*/
-		fstat( 1, &s->prev_buff_1 );
-		fstat( 2, &s->prev_buff_2 );
 		write( 1, "\r", 1 );
 		s->actual_cursor[1] = prev_line;
 	}
+	fstat( 1, &s->prev_buff_1 );
+	fstat( 2, &s->prev_buff_2 );
 }
 

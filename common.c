@@ -1758,3 +1758,45 @@ void bugreport()
 		PACKAGE_BUGREPORT );
 }
 
+
+void sb_format_size( string_buffer_t *sb,
+		     long long sz )
+{
+	wchar_t *sz_name[]=
+		{
+			L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0
+		}
+	;
+
+	if( sz < 0 )
+	{
+		sb_append( sb, L"unknown" );
+	}
+	else if( sz < 1 )
+	{
+		sb_append( sb, _( L"empty" ) );
+	}
+	else if( sz < 1024 )
+	{
+		sb_printf( sb, L"%lldB", sz );
+	}
+	else
+	{
+		int i;
+		
+		for( i=0; sz_name[i]; i++ )
+		{
+			if( sz < (1024*1024) || !sz_name[i+1] )
+			{
+				int isz = sz/1024;
+				if( isz > 9 )
+					sb_printf( sb, L"%d%ls", isz, sz_name[i] );
+				else
+					sb_printf( sb, L"%.1f%ls", (double)sz/1024, sz_name[i] );
+				break;
+			}
+			sz /= 1024;
+			
+		}
+	}		
+}

@@ -638,10 +638,10 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
    \param is_cmd whether we are performing command completion
 */
 static void wildcard_completion_allocate( array_list_t *list, 
-										  const wchar_t *fullname, 
-										  const wchar_t *completion,
-										  const wchar_t *wc,
-										  int is_cmd )
+					  const wchar_t *fullname, 
+					  const wchar_t *completion,
+					  const wchar_t *wc,
+					  int is_cmd )
 {
 	const wchar_t *desc;
 	struct stat buf, lbuf;
@@ -653,16 +653,7 @@ static void wildcard_completion_allocate( array_list_t *list,
 	int stat_res, lstat_res;
 	int stat_errno=0;
 	
-	/*
-	  This is a long long, not an off_t since we really need to know
-	  exactly how large it is when using *printf() to output it.
-	*/
 	long long sz; 
-	wchar_t *sz_name[]=
-		{
-			L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0
-		}
-	;
 
 	if( !sb )
 	{
@@ -728,42 +719,10 @@ static void wildcard_completion_allocate( array_list_t *list,
 	else
 	{							
 		sb_append( sb, desc, L", ", (void *)0 );
-		if( sz < 0 )
-		{
-			sb_append( sb, L"unknown" );
-		}
-		else if( sz < 1 )
-		{
-			sb_append( sb, _( L"empty" ) );
-		}
-		else if( sz < 1024 )
-		{
-			sb_printf( sb, L"%lldB", sz );
-		}
-		else
-		{
-			int i;
-			
-			for( i=0; sz_name[i]; i++ )
-			{
-				if( sz < (1024*1024) || !sz_name[i+1] )
-				{
-					int isz = sz/1024;
-					if( isz > 9 )
-						sb_printf( sb, L"%d%ls", isz, sz_name[i] );
-					else
-						sb_printf( sb, L"%.1f%ls", (double)sz/1024, sz_name[i] );
-					
-					break;
-				}
-				sz /= 1024;
-
-			}
-		}		
+		sb_format_size( sb, sz );
 	}
 
 	wildcard_complete( completion, wc, (wchar_t *)sb->buff, 0, list, flags );
-
 	if( free_completion )
 		free( (void *)completion );
 }

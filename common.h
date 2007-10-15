@@ -434,5 +434,11 @@ int create_directory( wchar_t *d );
 */
 void bugreport();
 
+/**
+   Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
+*/
+void sb_format_size( string_buffer_t *sb,
+		     long long sz );
+
 #endif
 

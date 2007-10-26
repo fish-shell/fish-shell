@@ -757,6 +757,7 @@ void highlight_shell( wchar_t * buff,
 				break;
 			}
 		
+			case TOK_REDIRECT_NOCLOB:
 			case TOK_REDIRECT_OUT:
 			case TOK_REDIRECT_IN:
 			case TOK_REDIRECT_APPEND:
@@ -825,13 +826,22 @@ void highlight_shell( wchar_t * buff,
 					  if it exists.
 					*/
 					if( last_type == TOK_REDIRECT_IN || 
-						last_type == TOK_REDIRECT_APPEND )
+					    last_type == TOK_REDIRECT_APPEND )
 					{
 						if( wstat( target, &buff ) == -1 )
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )
 								al_push( error, wcsdupcat( L"File \'", target, L"\' does not exist" ) );
+						}
+					}
+					if( last_type == TOK_REDIRECT_NOCLOB )
+					{
+						if( wstat( target, &buff ) != -1 )
+						{
+							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+							if( error )
+								al_push( error, wcsdupcat( L"File \'", target, L"\' exists" ) );
 						}
 					}
 				}

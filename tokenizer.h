@@ -26,6 +26,7 @@ enum token_type
 	TOK_REDIRECT_APPEND,/**< redirection append token */
 	TOK_REDIRECT_IN,/**< input redirection token */
 	TOK_REDIRECT_FD,/**< redirection to new fd token */
+	TOK_REDIRECT_NOCLOB, /**<? redirection token */
 	TOK_BACKGROUND,/**< send job to bg token */
 	TOK_COMMENT/**< comment token */
 }

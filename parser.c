@@ -1462,6 +1462,7 @@ static void parse_job_argument_list( process_t *p,
 			case TOK_REDIRECT_IN:
 			case TOK_REDIRECT_APPEND:
 			case TOK_REDIRECT_FD:
+			case TOK_REDIRECT_NOCLOB:
 			{
 				int type = tok_last_type( tok );
 				io_data_t *new_io;
@@ -1554,6 +1555,12 @@ static void parse_job_argument_list( process_t *p,
 							case TOK_REDIRECT_OUT:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
+								new_io->param1.filename = target;
+								break;
+
+							case TOK_REDIRECT_NOCLOB:
+								new_io->io_mode = IO_FILE;
+								new_io->param2.flags = O_CREAT | O_EXCL | O_WRONLY;
 								new_io->param1.filename = target;
 								break;
 
@@ -2121,6 +2128,7 @@ static int parse_job( process_t *p,
 							break;
 						
 						case TOK_REDIRECT_OUT:
+						case TOK_REDIRECT_NOCLOB:
 						case TOK_REDIRECT_APPEND:
 						case TOK_REDIRECT_IN:
 						case TOK_REDIRECT_FD:
@@ -3324,6 +3332,7 @@ int parser_test( const  wchar_t * buff,
 			case TOK_REDIRECT_IN:
 			case TOK_REDIRECT_APPEND:
 			case TOK_REDIRECT_FD:
+			case TOK_REDIRECT_NOCLOB:
 			{
 				if( !had_cmd )
 				{

@@ -69,6 +69,7 @@ static const wchar_t *tok_desc[] =
 	N_( L"Append output to file" ),
 	N_( L"Redirect input to file" ),
 	N_( L"Redirect to file descriptor" ),
+	N_( L"Redirect output to file if file does not exist" ),
 	N_( L"Run job in background" ),
 	N_( L"Comment" )
 }
@@ -472,6 +473,11 @@ static void read_redirect( tokenizer *tok, int fd )
 	{
 		tok->buff++;
 		tok->last_type = TOK_REDIRECT_FD;
+	}
+	else if( *tok->buff == L'?' )
+	{
+		tok->buff++;
+		tok->last_type = TOK_REDIRECT_NOCLOB;
 	}
 	else
 	{

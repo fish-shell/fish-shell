@@ -52,10 +52,17 @@
    file descriptor redirection error message
 */
 #define FD_ERROR   _( L"An error occurred while redirecting file descriptor %d" )
+
 /**
    file redirection error message
 */
 #define FILE_ERROR _( L"An error occurred while redirecting file '%ls'" )
+
+/**
+   file redirection clobbering error message
+*/
+#define NOCLOB_ERROR _( L"The file '%ls' already exists" )
+
 /**
    fork error message
 */
@@ -113,10 +120,10 @@ void exec_close( int fd )
 			if( n == fd )
 			{
 				al_set_long( open_fds,
-							 i,
-							 al_get_long( open_fds, al_get_count( open_fds ) -1 ) );
+					     i,
+					     al_get_long( open_fds, al_get_count( open_fds ) -1 ) );
 				al_truncate( open_fds, 
-							 al_get_count( open_fds ) -1 );
+					     al_get_count( open_fds ) -1 );
 				break;
 			}
 		}
@@ -288,13 +295,24 @@ static int handle_child_io( io_data_t *io )
 			case IO_FILE:
 			{
 				if( (tmp=wopen( io->param1.filename,
-                                io->param2.flags, OPEN_MASK ) )==-1 )
+						io->param2.flags, OPEN_MASK ) )==-1 )
 				{
-					debug( 1, 
-						   FILE_ERROR,
-						   io->param1.filename );
+					if( ( io->param2.flags & O_EXCL ) &&
+					    ( errno ==EEXIST ) )
+					{
+						debug( 1, 
+						       NOCLOB_ERROR,
+						       io->param1.filename );
+					}
+					else
+					{
+						debug( 1, 
+						       FILE_ERROR,
+						       io->param1.filename );
+										
+						wperror( L"open" );
+					}
 					
-					wperror( L"open" );
 					return -1;
 				}
 				else if( tmp != io->fd)

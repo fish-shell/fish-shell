@@ -247,9 +247,9 @@ void complete_load( const wchar_t *cmd, int reload );
    \param flags completion flags
 */
 void completion_allocate( array_list_t *context,
-						  const wchar_t *comp,
-						  const wchar_t *desc,
-						  int flags );
+			  const wchar_t *comp,
+			  const wchar_t *desc,
+			  int flags );
 
 
 #endif

@@ -180,9 +180,9 @@ static void complete_free_entry( complete_entry_t *c );
 
 */
 void completion_allocate( array_list_t *context,
-						  const wchar_t *comp,
-						  const wchar_t *desc,
-						  int flags )
+			  const wchar_t *comp,
+			  const wchar_t *desc,
+			  int flags )
 {
 	completion_t *res = halloc( context, sizeof( completion_t) );
 	res->completion = halloc_wcsdup( context, comp );
@@ -1067,10 +1067,10 @@ static const wchar_t *complete_function_desc( const wchar_t *fn )
    \param comp the list to add all completions to
 */
 static void complete_cmd( const wchar_t *cmd,
-						  array_list_t *comp,
-						  int use_function,
-						  int use_builtin,
-						  int use_command )
+			  array_list_t *comp,
+			  int use_function,
+			  int use_builtin,
+			  int use_command )
 {
 	wchar_t *path;
 	wchar_t *path_cpy;
@@ -1109,23 +1109,43 @@ static void complete_cmd( const wchar_t *cmd,
 				path_cpy = wcsdup( path );
 			
 				for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-					 nxt_path != 0;
-					 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+				     nxt_path != 0;
+				     nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 				{
+					int prev_count;
+					int i;
+					int path_len = wcslen(nxt_path);
+					int add_slash;
+					
+					if( !path_len )
+					{
+						continue;
+					}
+					
+					add_slash = nxt_path[path_len-1]!=L'/';
 					nxt_completion = wcsdupcat( nxt_path,
-												 (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
-												 cmd );
+								    add_slash?L"/":L"",
+						 		    cmd );
 					if( ! nxt_completion )
 						continue;
-				
+					
+					prev_count = al_get_count( comp );
+					
 					if( expand_string( 0,
-									   nxt_completion,
-									   comp,
-									   ACCEPT_INCOMPLETE |
-									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
+							   nxt_completion,
+							   comp,
+							   ACCEPT_INCOMPLETE |
+							   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 					{
+						for( i=prev_count; i<al_get_count( comp ); i++ )
+						{
+							completion_t *c = (completion_t *)al_get( comp, i );
+							if(c->flags & COMPLETE_NO_CASE )
+							{
+								c->completion = halloc_wcsdup( comp, c->completion + path_len + add_slash );
+							}
+						}
 					}
-				
 				}
 				free( path_cpy );
 				complete_cmd_desc( cmd, comp );

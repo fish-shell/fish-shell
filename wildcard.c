@@ -1144,8 +1144,7 @@ int wildcard_expand( const wchar_t *wc,
 	int c = al_get_count( out );
 	int res = wildcard_expand_internal( wc, base_dir, flags, out );
 	int i;
-
-	
+			
 	if( flags & ACCEPT_INCOMPLETE )
 	{
 		wchar_t *wc_base=L"";

@@ -5,9 +5,6 @@
 # have been hand edited since.
 #
 
-complete -c bison -l defines --description '] [ -g ] [ --graph=graph-file ] [ -k ] [ --token-table ] [ -l ] [ --no-lines ] [ -n ] [ --no-parser ] [ -o out file ] [ --output-file=outfile ] [ -p prefix ] [ --name-prefix=prefix ] [ -t ] [ --debug ] [ -v ] [ --verbose ] [ -V ] [ --version ] [ -y ] [ --yacc ] [ -h ] [ --help ] [ --fixed-output-files ] file yacc [ similar options and operands ]'
-
-
 complete -c bison -s b -l file-prefix --description 'Specify a prefix to use for all bison output file names' -r
 
 complete -c bison -s d --description 'Write an extra output file containing macro definitions for the token type names defined in the grammar and the semantic value type YYSTYPE, as well as a few extern variable declarations'

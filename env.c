@@ -419,11 +419,6 @@ static void setup_path()
 	;
 
 	path = env_get( L"PATH" );
-	if( !path )
-	{
-		env_set( L"PATH", 0, ENV_EXPORT | ENV_GLOBAL );
-		path=0;
-	}	
 		
 	al_init( &l );
 	

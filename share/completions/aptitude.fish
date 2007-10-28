@@ -23,7 +23,7 @@ complete -c aptitude -n '__fish_apt_use_package' -a '(__fish_print_packages)'  -
 complete -c aptitude -s h -l help  --description 'Display a brief help message. Identical to the help action'
 complete -f -n '__fish_apt_no_subcommand' -c aptitude -a 'autoclean'  --description 'Remove any cached packages which can no longer be downloaded'
 complete -f -n '__fish_apt_no_subcommand' -c aptitude -a 'clean'  --description 'Remove all downloaded .deb files from the package cache directory'
-complete -f -n '__fish_apt_no_subcommand' -c aptitude -a 'forget-new'  --description 'Forget all internal information about what packages are “new”'
+complete -f -n '__fish_apt_no_subcommand' -c aptitude -a 'forget-new'  --description 'Forget all internal information about what packages are \'new\''
 complete -f -n '__fish_apt_no_subcommand' -c aptitude -a 'keep-all'  --description 'Cancel all scheduled actions on all packages'
 complete -f -n '__fish_apt_no_subcommand' -c aptitude -a 'update'  --description 'Update the list of available packages from the apt sources'
 complete -f -n '__fish_apt_no_subcommand' -c aptitude -a 'upgrade'  --description 'Upgrade installed packages to their most recent version'

@@ -258,7 +258,7 @@ complete -c gcc -o fsched-verbose --description 'On targets that use instruction
 complete -c gcc -o save-temps --description 'Store the usual "temporary" intermediate files permanently; place them in the current directory and name them based on the source file'
 complete -c gcc -o time --description 'Report the CPU time taken by each subprocess in the compilation sequence'
 complete -c gcc -o fvar-tracking --description 'Run variable tracking pass'
-complete -c gcc -o print-file-name -r --description 'Print the full absolute name of the library file library that would be used when linking---and don’t do anything else'
+complete -c gcc -o print-file-name -r --description 'Print the full absolute name of the library file library that would be used when linking---and don\'t do anything else'
 complete -c gcc -o print-multi-directory --description 'Print the directory name corresponding to the multilib selected by any other switches present in the command line'
 complete -c gcc -o print-multi-lib --description 'Print the mapping from multilib directory names to compiler switches that enable them'
 complete -c gcc -o print-prog-name -r --description 'Like -print-file-name, but searches for a program such as cpp'

@@ -708,11 +708,14 @@ static int completion_try_print( int cols,
 				set_color( FISH_COLOR_BLACK,
 					   get_color(HIGHLIGHT_PAGER_PROGRESS) );
 				sb_printf( &msg,
-					   _(L" %d to %d of %d \r"),
+					   _(L" %d to %d of %d"),
 					   pos,
 					   pos+termsize.ws_row-1, 
 					   rows );
 				
+				sb_printf( &msg,
+					   L"   \r" );
+								
 				writestr((wchar_t *)msg.buff);
 				sb_destroy( &msg );
 				set_color( FISH_COLOR_NORMAL, FISH_COLOR_NORMAL );

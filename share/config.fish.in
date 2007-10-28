@@ -38,8 +38,16 @@ if not set -q fish_function_path
 	set -U fish_function_path $configdir/fish/functions    @sysconfdir@/fish/functions    @datadir@/fish/functions 
 end
 
+if not contains @datadir@/fish/functions $fish_function_path 
+	set fish_function_path[-1] @datadir@/fish/functions 
+end
+
 if not set -q fish_complete_path 
 	set -U fish_complete_path $configdir/fish/completions  @sysconfdir@/fish/completions  @datadir@/fish/completions 
+end
+
+if not contains @datadir@/fish/completions $fish_complete_path 
+	set fish_complete_path[-1] @datadir@/fish/completions 
 end
 
 set __fish_help_dir @docdir@

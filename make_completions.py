@@ -6,10 +6,10 @@ import re
 
 # Regexes for performing cleanup
 
-cl = {re.compile(r"[ \n\t\r]+", re.MULTILINE):" ",
-      re.compile(r"^[ \n\t\r]"):"",
-      re.compile(r"[ \n\t\r]$"):"",
-      re.compile(r"-[ \t]*\n[ \t\r]+" ):""}
+cl = { re.compile(r"-[ \t]*\n[ \t\r]+" ):"",
+       re.compile(r"[ \n\t\r]+", re.MULTILINE):" ",
+       re.compile(r"^[ \n\t\r]"):"",
+       re.compile(r"[ \n\t\r]$"):"" }
 
 def header(cmd):
   print '''#
@@ -150,6 +150,9 @@ for c in man:
       
     else:
       desc += c
+
+  else:
+    print "Unknown mode", mode
       
   pc = c
 

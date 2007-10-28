@@ -17,10 +17,12 @@ set -g IFS \n\ \t
 #
 
 set -l configdir ~/.config
+
 if set -q XDG_CONFIG_HOME
 	set configdir $XDG_CONFIG_HOME
 end
 
+# These are used internally by fish in various places
 if not set -q __fish_datadir
 	set -g __fish_datadir @datadir@/fish
 end
@@ -28,6 +30,9 @@ end
 if not set -q __fish_sysconfdir
 	set -g __fish_sysconfdir @sysconfdir@/fish
 end
+
+# Set up function and completion paths. Make sure that the fish
+# default functions/completions are included in the respective path.
 
 if not set -q fish_function_path 
 	set -U fish_function_path $configdir/fish/functions    @sysconfdir@/fish/functions    @datadir@/fish/functions 
@@ -39,8 +44,13 @@ end
 
 set __fish_help_dir @docdir@
 
+#
 # This is a Solaris-specific test to modify the PATH so that
-# Posix-conformant tools are used by default.
+# Posix-conformant tools are used by default. It is separate from the
+# other PATH code because this directory needs to be prepended, not
+# appended, since it contains POSIX-compliant replacements for various
+# system utilities.
+#
 
 if test -d /usr/xpg4/bin
 	if not contains /usr/xpg4/bin $PATH

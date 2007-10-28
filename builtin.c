@@ -888,10 +888,10 @@ static int builtin_block( wchar_t **argv )
 }
 
 /**
-   The builtin builtin, used for given builtins precedence over
+   The builtin builtin, used for giving builtins precedence over
    functions. Mostly handled by the parser. All this code does is some
    additional operational modes, such as printing a list of all
-   builtins.
+   builtins, printing help, etc.
 */
 static int builtin_builtin(  wchar_t **argv )
 {

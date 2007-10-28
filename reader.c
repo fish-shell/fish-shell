@@ -1114,7 +1114,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	{
 
 		int base_len=-1;
-	    completion_t *el = (completion_t *)al_get( comp, i );
+		completion_t *el = (completion_t *)al_get( comp, i );
 
 		wchar_t *foo=0;
 		wchar_t *baz=0;
@@ -1129,11 +1129,8 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 				
 					parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
 					base_len = data->buff_pos - (begin-data->buff);
-					
 				}
 				
-				
-
 				foo = escape( el->completion + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 			}
 			else
@@ -1294,6 +1291,7 @@ static int handle_completions( array_list_t *comp )
 			}
 			done = 1;
 			len = 1;
+			break;
 		}
 	}
 	

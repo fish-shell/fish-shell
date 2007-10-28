@@ -467,9 +467,8 @@ static void setup_path()
 			}
 			
 			sb_append( &b,
-						ARRAY_SEP_STR,
-						path_el[j],
-						(void *)0 );
+				   ARRAY_SEP_STR,
+				   path_el[j] );
 			
 			env_set( L"PATH", (wchar_t *)b.buff, ENV_GLOBAL | ENV_EXPORT );
 			

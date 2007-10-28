@@ -1361,28 +1361,20 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 
 \subsection todo-features Missing features
 
-- A limited interactive mode for really dumb terminals
 - The completion autoloader does not remember which completions where actually autoloaded, and may unload manually specified completions. 
-- Use a struct to describe a possible completion instead of a weirdly formated string
 - Complete vi-mode key bindings
-- More completions (for example xterm, vim, 
-konsole, gnome-terminal, cron,
+- More completions (for example konsole, gnome-terminal, 
 rlogin, rsync, arch, finger, bibtex, aspell, xpdf,
-compress, wine, xmms, dig, batch, cron, 
+compress, wine, dig, batch, 
 g++, javac, java, gcj, lpr, doxygen, whois)
 - Undo support
-- Check keybinding commands for output - if nothing has happened, don't repaint to reduce flicker
 - wait shellscript
 - Support for the screen clipboard
 - It should be possible to test in a script if a function is autoloaded or manually defined
-- A pretty-printer. It should among other things be able to indent a piece of code.
-- Up/down to move between lines in multiline mode
-- a 'funced' function, which works like the vared function. Needs the above three features in order to work well.
 - The validator should be better about error reporting unclosed quotes. They are usually reported as something else.
 
 \subsection todo-possible Possible features
 
-- tab completion could use smart casing
 - mouse support like zsh has with http://stchaz.free.fr/mouse.zsh 
   installed would be awesome
 - suggest a completion on unique matches by writing it out in an understated color
@@ -1392,7 +1384,6 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Descriptions for variables using 'set -d'.
 - Parse errors should when possible honor IO redirections
 - Support for writing strings like /u/l/b/foo and have them expand to /usr/local/bin/foo - perhaps through tab expansion
-- Autoreload inputrc-file on updates
 - Right-side prompt
 - Selectable completions in the pager
 - Per process output redirection
@@ -1410,17 +1401,13 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Some event handler functions make much more sense as oneshots - maybe they should be automatically deleted after firing?
 - exec_subshell should be either merged with eval or moved to parser.c
 - Don't use expand_string to perform completions. wildcard_complete can be called directly, the brace expansion handling should be universal, and the process expansion can be moved to complete.c.
-- Make the history serach support incremental searching
-- Named events, i.e. events that are identified by their name, and can be triggered manually by the user. System-provided named events would include the launching of an interactive prompt, system startup, the interactive execution of a command line.
+- Make the history search support incremental searching
 
 \subsection bugs Known bugs and issues
 
 - Suspending and then resuming pipelines containing a builtin or a shellscript function is broken. Ideally, the exec function in exec.c should be able to resume execution of a partially executed job.
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
 - Sometimes autoheader needs to be run on a fresh tarball. Fix dates before creating tarballs.
-- If a char is inserted by fish_pager, the tab completion code doesn't notice and won't react to a new tab press.
-- Alt-P should honor PAGER, and possibly also check for the pager program.
-- output with no terminating newline is swallowed again
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

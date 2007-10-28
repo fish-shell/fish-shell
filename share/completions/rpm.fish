@@ -119,7 +119,7 @@ complete $rpm_erase -l repackage --description 'Re-package the files before eras
 complete $rpm_erase -l test --description "Don't really uninstall anything"
 set -e rpm_erase
 
-set rpm_mode -c rpm -n '__fish_contains_opt -s e -s i -s F -s V -s U -s q erase install freshen verify upgrade query; if test $status = 0; false; else; true; end'
+set rpm_mode -c rpm -n 'not __fish_contains_opt -s e -s i -s F -s V -s U -s q erase install freshen verify upgrade query'
 complete $rpm_mode -s i -l install --description 'Install new package'
 complete $rpm_mode -s U -l upgrade --description 'Upgrade existing package'
 complete $rpm_mode -s F -l freshen --description 'Upgrade package if already installed'

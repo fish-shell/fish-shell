@@ -485,6 +485,7 @@ static void launch_process( process_t *p )
 			int count = 0;
 			int i = 1;
 			wchar_t **res;
+            char **res_real;
 			
 			while( p->argv[count] != 0 )
 				count++;
@@ -501,9 +502,11 @@ static void launch_process( process_t *p )
 			res[i+1] = 0;
 			p->argv = res;
 			p->actual_cmd = L"/bin/sh";
+
+            res_real = wcsv2strv( (const wchar_t **) res);
 			
 			execve ( wcs2str(p->actual_cmd), 
-				 argv,
+				 res_real,
 				 envv );
 		}
 	}

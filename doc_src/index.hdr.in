@@ -912,7 +912,7 @@ The user can change the settings of \c fish by changing the values of
 certain environment variables.
 
 - \c BROWSER, which is the users preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
-- \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin.
+- \c CDPATH, which is an array of directories in which to search for the new directory for the \c cd builtin. The fish init files defined CDPATH to be a universal variable with the values . and ~.
 - A large number of variable starting with the prefixes \c fish_color and \c fish_pager_color. See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
 - \c fish_greeting, which is the greeting message printed on startup.
 - \c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and \c LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.

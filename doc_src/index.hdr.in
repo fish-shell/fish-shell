@@ -931,6 +931,13 @@ values of most of these variables.
 - \c status, which is the exit status of the last foreground job to exit. 
 - \c USER, which is the username. This variable can only be changed by the root user.
 
+The names of these variables are mostly derived from the csh family of
+shells and differ from the ones used by Bourne style shells such as
+bash. The csh names where chosen because Bourne style names, such as
+?, * and @ lead to significantly less readable code, and much larger
+discoverability problems, and given the existence of tab completion,
+the keystroke savings are minimal.
+
 Variables whose name are in uppercase are exported to the commands
 started by fish, those in lowercase are not exported. This rule is not
 enforced by fish, but it is good coding practice to use casing to

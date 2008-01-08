@@ -509,7 +509,6 @@ static void launch_process( process_t *p )
 	}
 	
 	errno = err;
-
 	debug( 0, 
 	       _( L"Failed to execute process '%ls'. Reason:" ),
 	       p->actual_cmd );
@@ -566,15 +565,15 @@ static void launch_process( process_t *p )
 			sb_destroy( &sz1 );
 			sb_destroy( &sz2 );
 			
-			exit(1);
+			exit(STATUS_EXEC_FAIL);
 			
 			break;
 		}
 
 		default:
 		{
-			wperror( L"execve" );
-			FATAL_EXIT();
+		  debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
+		  exit(STATUS_EXEC_FAIL);
 		}
 	}
 	
@@ -1632,7 +1631,7 @@ int exec_subshell( const wchar_t *cmd,
 	char sep=0;
 	
 	CHECK( cmd, -1 );
-	
+
 	ifs = env_get(L"IFS");
 
 	if( ifs && ifs[0] )
@@ -1664,7 +1663,7 @@ int exec_subshell( const wchar_t *cmd,
 	}
 	
 	io_buffer_read( io_buffer );
-	
+		
 	proc_set_last_status( prev_status );
 	
 	is_subshell = prev_subshell;

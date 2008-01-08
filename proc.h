@@ -25,14 +25,19 @@
 #define STATUS_UNKNOWN_COMMAND 127
 
 /**
-   The status code use when a wildcard had no matches
+   The status code use when an unknown error occured during execution of a command
 */
-#define STATUS_UNMATCHED_WILDCARD 126
+#define STATUS_NOT_EXECUTABLE 126
 
 /**
    The status code use when an unknown error occured during execution of a command
 */
 #define STATUS_EXEC_FAIL 125
+
+/**
+   The status code use when a wildcard had no matches
+*/
+#define STATUS_UNMATCHED_WILDCARD 124
 
 /**
    The status code used for normal exit in a  builtin

@@ -1970,7 +1970,10 @@ static int parse_job( process_t *p,
 			}
 			else
 			{
+				int err;
+			   
 				p->actual_cmd = path_get_path( j, (wchar_t *)al_get( args, 0 ) );
+				err = errno;
 				
 				/*
 				  Check if the specified command exists
@@ -2062,12 +2065,17 @@ static int parse_job( process_t *p,
 								   cmd,
 								   cmd );
 						}
+						else if( err!=ENOENT )
+						{
+							debug( 0,
+								   _(L"The file '%ls' is not executable by this user"),
+								   cmd?cmd:L"UNKNOWN" );
+						}
 						else
 						{			
 							debug( 0,
 								   _(L"Unknown command '%ls'"),
 								   cmd?cmd:L"UNKNOWN" );
-
 						}
 						
 						tmp = current_tokenizer_pos;
@@ -2078,7 +2086,7 @@ static int parse_job( process_t *p,
 						current_tokenizer_pos=tmp;
 
 						job_set_flag( j, JOB_SKIP, 1 );
-						proc_set_last_status( STATUS_UNKNOWN_COMMAND );
+						proc_set_last_status( err==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE );
 					}
 				}
 			}

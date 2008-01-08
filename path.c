@@ -31,8 +31,10 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 {
 	wchar_t *path;
 
+	int err = ENOENT;
+	
 	CHECK( cmd, 0 );
-		
+
 	debug( 3, L"path_get_path( '%ls' )", cmd );
 
 	if(wcschr( cmd, L'/' ) != 0 )
@@ -40,12 +42,26 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		if( waccess( cmd, X_OK )==0 )
 		{
 			struct stat buff;
-			wstat( cmd, &buff );
+			if(wstat( cmd, &buff ))
+			{
+				return 0;
+			}
+			
 			if( S_ISREG(buff.st_mode) )
 				return halloc_wcsdup( context, cmd );
 			else
+			{
+				errno = EACCES;
 				return 0;
+			}
 		}
+		else
+		{
+			struct stat buff;
+			wstat( cmd, &buff );
+			return 0;
+		}
+		
 	}
 	else
 	{
@@ -107,6 +123,8 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 					free( path_cpy );
 					return new_cmd;
 				}
+				err = EACCES;
+				
 			}
 			else
 			{
@@ -130,6 +148,8 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		free( path_cpy );
 
 	}
+
+	errno = err;
 	return 0;
 }
 

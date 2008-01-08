@@ -408,8 +408,11 @@ static wint_t input_exec_binding( input_mapping_t *m, const wchar_t *seq )
 		  This key sequence is bound to a command, which
 		  is sent to the parser for evaluation.
 		*/
-		
+		int last_status = proc_get_last_status();
+	  		
 		eval( m->command, 0, TOP );
+		
+		proc_set_last_status( last_status );
 		
 		/*
 		  We still need to return something to the caller, R_NULL

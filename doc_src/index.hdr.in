@@ -955,8 +955,9 @@ If fish encounters a problem while executing a command, the status
 variable may also be set to a specific value:
 
 - 1 is the generally the exit status from fish builtins if they where supplied with invalid arguments
-- 125 means an unknown error occured while trying to execute the command
-- 126 means that the command was not executed because none of the wildcards in the command produced any matches
+- 124 means that the command was not executed because none of the wildcards in the command produced any matches
+- 125 means that while an executable with the specified name was located, the operating system could not actually execute the command
+- 126 means that while a file with the specified name was located, it was not executable
 - 127 means that no function, builtin or command with the given name could be located
 
 \subsection variables-color Variables for changing highlighting colors

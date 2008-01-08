@@ -77,10 +77,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	# Print a greeting 
 	#
 
-	if not set -q fish_greeting
-		set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
-		set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
-		set -U fish_greeting $line1\n$line2
+	#
+	# If we are starting up for the first time, set the default greeting
+	# 
+	if not set -q __fish_init_1_23_0
+		if not set -q fish_greeting
+			set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
+			set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
+			set -U fish_greeting $line1\n$line2
+		end
+		set -U __fish_init_1_23_0
 	end
 
 	switch $fish_greeting

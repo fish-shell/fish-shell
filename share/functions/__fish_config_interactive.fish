@@ -74,12 +74,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	end
 
 	#
-	# Print a greeting 
-	#
-
-	#
-	# If we are starting up for the first time, set the default greeting
+	# If we are starting up for the first time, set various defaults
 	# 
+
 	if not set -q __fish_init_1_23_0
 		if not set -q fish_greeting
 			set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
@@ -87,7 +84,67 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			set -U fish_greeting $line1\n$line2
 		end
 		set -U __fish_init_1_23_0
+
+		#
+		# Set various defaults using these throwaway functions
+		#
+
+		function set_default -d "Set a universal variable, unless it has already been set"
+			if not set -q $argv[1]
+				set -U -- $argv	
+			end
+		end
+
+		# Regular syntax highlighting colors
+		set_default fish_color_normal normal
+		set_default fish_color_command green
+		set_default fish_color_redirection normal
+		set_default fish_color_comment red
+		set_default fish_color_error red --bold
+		set_default fish_color_escape cyan
+		set_default fish_color_operator cyan
+		set_default fish_color_quote brown
+		set_default fish_color_valid_path --underline
+
+		set_default fish_color_cwd green
+		set_default fish_color_cwd_root red
+
+		# Background color for matching quotes and parenthesis
+		set_default fish_color_match cyan
+
+		# Background color for search matches
+		set_default fish_color_search_match purple
+
+		# Pager colors
+		set_default fish_pager_color_prefix cyan
+		set_default fish_pager_color_completion normal
+		set_default fish_pager_color_description normal
+		set_default fish_pager_color_progress cyan
+
+		#
+		# Directory history colors
+		#
+
+		set_default fish_color_history_current cyan
+
+
+		#
+		# Setup the CDPATH variable
+		#
+
+		set_default CDPATH . ~
+
+		#
+		# Remove temporary functions for setting default variable values
+		#
+
+		functions -e set_default
+	
 	end
+
+	#
+	# Print a greeting 
+	#
 
 	switch $fish_greeting
 		case ''
@@ -104,61 +161,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	function fish_on_exit --description "Commands to execute when fish exits" --on-process %self
 		printf (_ "Good bye\n")
 	end
-
-	#
-	# Set various defaults using these throwaway functions
-	#
-
-	function set_default -d "Set a universal variable, unless it has already been set"
-		if not set -q $argv[1]
-			set -U -- $argv	
-		end
-	end
-
-	# Regular syntax highlighting colors
-	set_default fish_color_normal normal
-	set_default fish_color_command green
-	set_default fish_color_redirection normal
-	set_default fish_color_comment red
-	set_default fish_color_error red --bold
-	set_default fish_color_escape cyan
-	set_default fish_color_operator cyan
-	set_default fish_color_quote brown
-	set_default fish_color_valid_path --underline
-
-	set_default fish_color_cwd green
-	set_default fish_color_cwd_root red
-
-	# Background color for matching quotes and parenthesis
-	set_default fish_color_match cyan
-
-	# Background color for search matches
-	set_default fish_color_search_match purple
-
-	# Pager colors
-	set_default fish_pager_color_prefix cyan
-	set_default fish_pager_color_completion normal
-	set_default fish_pager_color_description normal
-	set_default fish_pager_color_progress cyan
-
-	#
-	# Directory history colors
-	#
-
-	set_default fish_color_history_current cyan
-
-
-	#
-	# Setup the CDPATH variable
-	#
-
-	set_default CDPATH . ~
-
-	#
-	# Remove temporary functions for setting default variable values
-	#
-
-	functions -e set_default
 
 	#
 	# This event handler makes sure the prompt is repainted when

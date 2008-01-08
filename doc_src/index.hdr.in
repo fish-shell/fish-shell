@@ -854,7 +854,7 @@ identical to the scoping rules for variables:
 
 -# If a variable is explicitly set to either be exported or not exported, that setting will be honored.
 -# If a variable is not explicitly set to be exported or not exported, but has been previously defined, the previous exporting rule for the variable is kept.
--# If a variable is not explicitly set to be either global or local and has never before been defined, the variable will not be exported.
+-# If a variable is not explicitly set to be either exported or not exported and has never before been defined, the variable will not be exported.
 
 
 \subsection variables-arrays Arrays

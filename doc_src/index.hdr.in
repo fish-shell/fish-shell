@@ -1369,7 +1369,6 @@ href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
 
 \subsection todo-features Missing features
 
-- The completion autoloader does not remember which completions where actually autoloaded, and may unload manually specified completions. 
 - Complete vi-mode key bindings
 - More completions (for example konsole, gnome-terminal, 
 rlogin, rsync, arch, finger, bibtex, aspell, xpdf,
@@ -1417,7 +1416,8 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Suspending and then resuming pipelines containing a builtin or a shellscript function is broken. Ideally, the exec function in exec.c should be able to resume execution of a partially executed job.
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
 - Sometimes autoheader needs to be run on a fresh tarball. Fix dates before creating tarballs.
-
+- The completion autoloader does not remember which completions where actually autoloaded, and may unload manually specified completions. 
+- Calling return in functions with no scope shadowing triggers a bug
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

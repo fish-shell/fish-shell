@@ -967,7 +967,8 @@ static void completion_insert( const wchar_t *val, int flags )
 		int tok_start, tok_len;
 		wchar_t *begin, *end;
 		string_buffer_t sb;
-
+		wchar_t *escaped;
+		
 		parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
 		end = data->buff+data->buff_pos;
 
@@ -976,7 +977,12 @@ static void completion_insert( const wchar_t *val, int flags )
 						
 		sb_init( &sb );
 		sb_append_substring( &sb, data->buff, begin - data->buff );
-		sb_append( &sb, val );
+		
+		escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+		
+		sb_append( &sb, escaped );
+		free( escaped );
+		
 		if( add_space ) 
 		{
 			sb_append( &sb, L" " );

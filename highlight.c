@@ -607,11 +607,14 @@ void highlight_shell( wchar_t * buff,
 					if( cmd && (wcscmp( cmd, L"cd" ) == 0) )
 					{
 						wchar_t *dir = expand_one( context, 
-												   wcsdup(tok_last( &tok )),
-												   EXPAND_SKIP_CMDSUBST );
+									   wcsdup(tok_last( &tok )),
+									   EXPAND_SKIP_CMDSUBST );
 						if( dir )
 						{
-							if( !path_get_cdpath( context, dir ) )
+							int is_long_help = wcsncmp(dir,L"--help", wcslen(dir) );
+							int is_short_help = wcsncmp(dir,L"-h", wcslen(dir) );
+							
+							if( !is_long_help && !is_short_help  && !path_get_cdpath( context, dir ) )
 							{
 								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
 							}

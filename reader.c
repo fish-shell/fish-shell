@@ -1091,7 +1091,8 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	char *foo;
 	io_data_t *in;
 	wchar_t *escaped_separator;
-	
+	int has_case_sensitive=0;
+
 	if( !prefix || (wcslen(prefix)==0))
 	{
 		prefix_esc = wcsdup(L"\"\"");
@@ -1118,12 +1119,23 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	
 	for( i=0; i<al_get_count( comp ); i++ )
 	{
+		completion_t *el = (completion_t *)al_get( comp, i );
+		has_case_sensitive |= !(el->flags & COMPLETE_NO_CASE );
+	}
+	
+	for( i=0; i<al_get_count( comp ); i++ )
+	{
 
 		int base_len=-1;
 		completion_t *el = (completion_t *)al_get( comp, i );
 
 		wchar_t *foo=0;
 		wchar_t *baz=0;
+
+		if( has_case_sensitive && (el->flags & COMPLETE_NO_CASE ))
+		{
+			continue;
+		}
 
 		if( el && el->completion )
 		{

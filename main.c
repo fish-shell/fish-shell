@@ -73,22 +73,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 static int read_init()
 {
-#define CWD_SZ 8192
-
-	wchar_t cwd[CWD_SZ];
 	wchar_t *config_dir;
 	wchar_t *config_dir_escaped;
 	void *context;
 	string_buffer_t *eval_buff;
-	
-	if( !wgetcwd( cwd, CWD_SZ ) )
-	{
-		wperror( L"wgetcwd" );		
-		return 0;
-	}
 
-	eval( L"builtin cd " DATADIR L"/fish 2>/dev/null; and builtin . config.fish 2>/dev/null", 0, TOP );
-	eval( L"builtin cd " SYSCONFDIR L"/fish 2>/dev/null; and builtin . config.fish 2>/dev/null", 0, TOP );
+	eval( L"builtin . " DATADIR "/fish/config.fish 2>/dev/null", 0, TOP );
+	eval( L"builtin . " SYSCONFDIR L"/fish/config.fish 2>/dev/null", 0, TOP );
 	
 	/*
 	  We need to get the configuration directory before we can source the user configuration file
@@ -104,26 +95,13 @@ static int read_init()
 	if( config_dir )
 	{
 		config_dir_escaped = escape( config_dir, 1 );
-		sb_printf( eval_buff, L"builtin cd %ls 2>/dev/null; and builtin . config.fish 2>/dev/null", config_dir_escaped );
+		sb_printf( eval_buff, L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped );
 		eval( (wchar_t *)eval_buff->buff, 0, TOP );
 		free( config_dir_escaped );
 	}
 	
 	halloc_free( context );
 	
-	if( wchdir( cwd ) == -1 )
-	{
-		/*
-		  If we can't change back to previos directory, we go to
-		  ~. Should be a sane default behavior.
-		*/
-		eval( L"builtin cd", 0, TOP );
-	}
-	else
-	{
-		env_set( L"PWD", cwd, ENV_EXPORT );
-	}
-
 	return 1;
 }
 

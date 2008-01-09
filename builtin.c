@@ -866,7 +866,9 @@ static int builtin_block( wchar_t **argv )
 			}
 			case UNSET:
 			{
-				while( block && block->type != FUNCTION_CALL )
+				while( block && 
+				       block->type != FUNCTION_CALL &&
+				       block->type != FUNCTION_CALL_NO_SHADOW )
 					block = block->outer;
 			}
 		}
@@ -3458,7 +3460,8 @@ static int builtin_return( wchar_t **argv )
 
 
 	while( (b != 0) &&
-		   ( b->type != FUNCTION_CALL)  )
+		   ( b->type != FUNCTION_CALL && 
+		     b->type != FUNCTION_CALL_NO_SHADOW) )
 	{
 		b = b->outer;
 	}
@@ -3473,7 +3476,8 @@ static int builtin_return( wchar_t **argv )
 	}
 
 	b = current_block;
-	while( ( b->type != FUNCTION_CALL))
+	while( ( b->type != FUNCTION_CALL &&
+		 b->type != FUNCTION_CALL_NO_SHADOW ) )
 	{
 		b->type = FAKE;
 		b->skip=1;

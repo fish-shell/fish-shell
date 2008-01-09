@@ -229,24 +229,53 @@ typedef struct process
 */
 #define JOB_TERMINAL 256
 
-/** A pipeline of one or more processes. */
+/** 
+    A struct represeting a job. A job is basically a pipeline of one
+    or more processes and a couple of flags.
+ */
 typedef struct job
 {
-	/** command line, used for messages */
+	/** 
+	    The original command which led to the creation of this
+	    job. It is used for displaying messages about job status
+	    on the terminal.
+	*/
 	wchar_t *command;              
-	/** list of processes in this job */
+	
+	/** 
+	    A linked list of all the processes in this job.
+	*/
 	process_t *first_process;  
-	/** process group ID */
+	
+	/** 
+	    process group ID for the process group that this job is
+	    running in. 
+	*/
 	pid_t pgid;   
-	/** saved terminal modes */
-	struct termios tmodes;    
-	/** The job id of the job*/
+	
+	/** 
+	    The saved terminal modes of this job. This needs to be
+	    saved so that we can restore the terminal to the same
+	    state after temporarily taking control over the terminal
+	    when a job stops. 
+	*/
+	struct termios tmodes;
+    
+	/**
+	   The job id of the job. This is a small integer that is a
+	   unique identifier of the job within this shell, and is
+	   used e.g. in process expansion.
+	*/
 	int job_id;
 	
-	/** List of IO redrections for the job */
+	/**
+	   List of all IO redirections for this job 
+	*/
 	io_data_t *io;
 			
-	/** Pointer to the next job */
+	/** 
+	    A pointer to the next job in the job queue 
+	*/
 	struct job *next;           
 
 	/**
@@ -283,21 +312,21 @@ extern int is_interactive_session;
 extern int is_login;
 
 /** 
-	Whether we are a event handler
+	Whether we are running an event handler
 */
 extern int is_event;
 
 /** 
-	Linked list of all jobs 
+	Linked list of all living jobs 
 */
 extern job_t *first_job;   
 
 /**
    Whether a universal variable barrier roundtrip has already been
-   made for this command. Such a roundtrip only needs to be done once
-   on a given command, unless a unversal variable value is
-   changed. Once this has been done, this variable is set to 1, so
-   that no more roundtrips need to be done.
+   made for the currently executing command. Such a roundtrip only
+   needs to be done once on a given command, unless a universal
+   variable value is changed. Once this has been done, this variable
+   is set to 1, so that no more roundtrips need to be done.
 
    Both setting it to one when it should be zero and the opposite may
    cause concurrency bugs.
@@ -310,17 +339,27 @@ extern int proc_had_barrier;
 extern pid_t proc_last_bg_pid;
 
 /**
-   Can be one of JOB_CONTROL_ALL, JOB_CONTROL_INTERACTIVE and JOB_CONTROL_NONE
+   The current job control mode.
+
+   Must be one of JOB_CONTROL_ALL, JOB_CONTROL_INTERACTIVE and JOB_CONTROL_NONE
 */
 extern int job_control_mode;
 
 /**
-   If this flag is set, fish will never fork or run execve.
-*/
+   If this flag is set, fish will never fork or run execve. It is used
+   to put fish into a syntax verifier mode where fish tries to validate
+   the syntax of a file but doesn't actually do anything.
+  */
 extern int no_exec;
 
+/**
+   Add the specified flag to the bitset of flags for the specified job
+ */
 void job_set_flag( job_t *j, int flag, int set );
 
+/**
+   Returns one if the specified flag is set in the specified job, 0 otherwise.
+ */
 int job_get_flag( job_t *j, int flag );
 
 /**

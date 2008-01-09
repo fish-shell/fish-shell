@@ -106,12 +106,16 @@ static int read_init()
 }
 
 
+/*
+  Parse the argument list, return the index of the first non-switch
+  arguments.
+
+ */
 static int fish_parse_opt( int argc, char **argv, char **cmd_ptr )
 {
 	int my_optind;
 	int force_interactive=0;
-	
-	
+		
 	while( 1 )
 	{
 		static struct option
@@ -251,9 +255,17 @@ static int fish_parse_opt( int argc, char **argv, char **cmd_ptr )
 	
 	is_login |= (strcmp( argv[0], "-fish") == 0);
 		
+	/*
+	  We are an interactive session if we have not been given an
+	  explicit command to execute, _and_ stdin is a tty.
+	 */
 	is_interactive_session &= (*cmd_ptr == 0);
 	is_interactive_session &= (my_optind == argc);
 	is_interactive_session &= isatty(STDIN_FILENO);	
+
+	/*
+	  We are also an interactive session if we have are forced-
+	 */
 	is_interactive_session |= force_interactive;
 
 	return my_optind;

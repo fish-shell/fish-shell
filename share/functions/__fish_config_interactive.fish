@@ -146,12 +146,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	# Print a greeting 
 	#
 
-	switch $fish_greeting
-		case ''
-		# If variable is empty, don't print anything, saves us a fork
+	if set -q fish_greeting
+		switch $fish_greeting
+			case ''
+			# If variable is empty, don't print anything, saves us a fork
 		
-		case '*'
-		echo $fish_greeting
+			case '*'
+			echo $fish_greeting
+		end
 	end
 
 	#

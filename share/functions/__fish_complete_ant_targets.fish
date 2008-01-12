@@ -2,7 +2,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
 	set -l buildfile "build.xml"
 	if test -f $buildfile
 		# show ant targets
-		__fish_print_ant_targets $buildfile
+		__fish_filter_ant_targets $buildfile
 
 		# find files with buildfile
 		set files (sed -n "s/^.*<import[^>]* file=[\"']\([^\"']*\)[\"'].*\$/\1/p" < $buildfile)

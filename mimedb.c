@@ -12,7 +12,7 @@ because of the performance implications of parsing xml. The current
 version only does a simple string search, which is much, much
 faster but it might fall on it's head.
 
-This code is Copyright 2005 Axel Liljencrantz.
+This code is Copyright 2005-2008 Axel Liljencrantz.
 It is released under the GPL.
 
 The xdgmime library is dual licensed under LGPL/artistic

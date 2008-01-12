@@ -159,7 +159,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	#
 
 	function fish_on_exit --description "Commands to execute when fish exits" --on-process %self
-		printf (_ "Good bye\n")
+		printf (_ "Goodbye\n")
 	end
 
 	#

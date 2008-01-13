@@ -94,6 +94,13 @@
 */
 #define COMPLETE_AUTO_SPACE 8
 
+/**
+   This completion should be inserted as-is, without escaping.
+*/
+#define COMPLETE_DONT_ESCAPE 16
+
+
+
 typedef struct
 {
 

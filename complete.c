@@ -58,7 +58,7 @@ These functions are used for storing and retrieving tab-completion data, as well
 /**
    Description for ~USER completion
 */
-#define COMPLETE_USER_DESC _( L"Home for %s" )
+#define COMPLETE_USER_DESC _( L"Home for %ls" )
 
 /**
    Description for short variables. The value is concatenated to this description
@@ -1613,8 +1613,8 @@ static void complete_param_expand( wchar_t *str,
    Complete the specified string as an environment variable
 */
 static int complete_variable( const wchar_t *whole_var,
-							  int start_offset,
-							  array_list_t *comp_list )
+			      int start_offset,
+			      array_list_t *comp_list )
 {
 	int i;
 	const wchar_t *var = &whole_var[start_offset];
@@ -1796,24 +1796,40 @@ static int try_complete_user( const wchar_t *cmd,
 					{
 						if( wcsncmp( user_name, pw_name, name_len )==0 )
 						{
-							string_buffer_t desc;							
-							string_buffer_t name;
-
-							sb_init( &name );
-							sb_printf( &name,
-							           L"%ls/",
-									   &pw_name[name_len] );
+							string_buffer_t desc;
 							
 							sb_init( &desc );
 							sb_printf( &desc,
 							           COMPLETE_USER_DESC,
-							           pw->pw_gecos );
+							           pw_name );
 
 							completion_allocate( comp, 
-												 (wchar_t *)name.buff,
-												 (wchar_t *)desc.buff,
-												 0 );
+									     &pw_name[name_len],
+									     (wchar_t *)desc.buff,
+									     COMPLETE_NO_SPACE );
 							
+							res=1;
+							
+							sb_destroy( &desc );
+						}
+						else if( wcsncasecmp( user_name, pw_name, name_len )==0 )
+						{
+							string_buffer_t name;							
+							string_buffer_t desc;							
+							
+							sb_init( &name );
+							sb_init( &desc );
+							sb_printf( &name,
+							           L"~%ls",
+							           pw_name );
+							sb_printf( &desc,
+							           COMPLETE_USER_DESC,
+							           pw_name );
+							
+							completion_allocate( comp, 
+									     (wchar_t *)name.buff,
+									     (wchar_t *)desc.buff,
+									     COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE );
 							res=1;
 							
 							sb_destroy( &desc );

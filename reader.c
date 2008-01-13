@@ -998,7 +998,10 @@ static void completion_insert( const wchar_t *val, int flags )
 
 	wchar_t quote;
 	int add_space = !(flags & COMPLETE_NO_SPACE);
-	int do_replace = (flags&COMPLETE_NO_CASE);
+	int do_replace = (flags & COMPLETE_NO_CASE);
+	int do_escape = !(flags & COMPLETE_DONT_ESCAPE);
+	
+	//	debug( 0, L"Insert completion %ls with flags %d", val, flags);
 
 	if( do_replace )
 	{
@@ -1017,11 +1020,18 @@ static void completion_insert( const wchar_t *val, int flags )
 		sb_init( &sb );
 		sb_append_substring( &sb, data->buff, begin - data->buff );
 		
-		escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+		if( do_escape )
+		{
+			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );		
+			sb_append( &sb, escaped );
+			free( escaped );
+		}
+		else
+		{
+			sb_append( &sb, val );
+		}
 		
-		sb_append( &sb, escaped );
-		free( escaped );
-		
+
 		if( add_space ) 
 		{
 			sb_append( &sb, L" " );
@@ -1039,52 +1049,60 @@ static void completion_insert( const wchar_t *val, int flags )
 	else
 	{
 		
-		get_param( data->buff,
+		if( do_escape )
+		{
+				
+			get_param( data->buff,
 				   data->buff_pos,
 				   &quote,
 				   0, 0, 0 );
 
-		if( quote == L'\0' )
-		{
-			replaced = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+			if( quote == L'\0' )
+			{
+				replaced = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+			}
+			else
+			{
+				int unescapable=0;
+
+				const wchar_t *pin;
+				wchar_t *pout;
+				
+				replaced = pout =
+					malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
+
+				for( pin=val; *pin; pin++ )
+				{
+					switch( *pin )
+					{
+						case L'\n':
+						case L'\t':
+						case L'\b':
+						case L'\r':
+							unescapable=1;
+							break;
+						default:
+							*pout++ = *pin;
+							break;
+					}
+				}
+				if( unescapable )
+				{
+					free( replaced );
+					wchar_t *tmp = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+					replaced = wcsdupcat( L" ", tmp );
+					free( tmp);
+					replaced[0]=quote;
+				}
+				else
+					*pout = 0;
+			}
 		}
 		else
 		{
-			int unescapable=0;
-
-			const wchar_t *pin;
-			wchar_t *pout;
-
-			replaced = pout =
-				malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
-
-			for( pin=val; *pin; pin++ )
-			{
-				switch( *pin )
-				{
-					case L'\n':
-					case L'\t':
-					case L'\b':
-					case L'\r':
-						unescapable=1;
-						break;
-					default:
-						*pout++ = *pin;
-						break;
-				}
-			}
-			if( unescapable )
-			{
-				free( replaced );
-				wchar_t *tmp = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-				replaced = wcsdupcat( L" ", tmp );
-				free( tmp);
-				replaced[0]=quote;
-			}
-			else
-				*pout = 0;
+			replaced = wcsdup(val);
 		}
-
+		
 		if( insert_str( replaced ) )
 		{
 			/*
@@ -1292,6 +1310,27 @@ static void reader_flash()
 	
 }
 
+#define UNCLEAN L"$*?({})"
+
+int reader_can_replace( const wchar_t *in )
+{
+
+	const wchar_t * str = in;
+
+	CHECK( in, 1 );
+
+	/*
+	  Test characters that have a special meaning in any character position
+	*/
+	while( *str )
+	{
+		if( wcschr( UNCLEAN, *str ) )
+			return 0;
+		str++;
+	}
+
+	return 1;
+}
 
 /**
    Handle the list of completions. This means the following:
@@ -1327,24 +1366,39 @@ static int handle_completions( array_list_t *comp )
 	context = halloc( 0, 0 );
 	tok = halloc_wcsndup( context, begin, end-begin );
 	
+	/*
+	  Check trivial cases
+	 */
 	switch( al_get_count( comp ) )
 	{
+		/*
+		  No suitable completions found, flash screen and retur
+		*/
 		case 0:
 		{
 			reader_flash();
 			done = 1;
 			break;
 		}
-		
+
+		/*
+		  Exactly one suitable completion found - insert it
+		 */
 		case 1:
 		{
 			
 			completion_t *c = (completion_t *)al_get( comp, 0 );
 		
-			if( !(c->flags & COMPLETE_NO_CASE) || expand_is_clean( tok ) )
+			/*
+			  If this is a replacement completion, check
+			  that we know how to replace it, e.g. that
+			  the token doesn't contain evil operators
+			  like {}
+			 */
+			if( !(c->flags & COMPLETE_NO_CASE) || reader_can_replace( tok ) )
 			{
 				completion_insert( c->completion,
-								   c->flags );			
+						   c->flags );			
 			}
 			done = 1;
 			len = 1;
@@ -1355,12 +1409,17 @@ static int handle_completions( array_list_t *comp )
 		
 	if( !done )
 	{
-		
+		/*
+		  Try to find something to insert whith the correct case
+		 */
 		for( i=0; i<al_get_count( comp ); i++ )
 		{
 			completion_t *c = (completion_t *)al_get( comp, i );
 			int new_len;
 
+			/*
+			  Ignore case insensitive completions for now
+			 */
 			if( c->flags & COMPLETE_NO_CASE )
 				continue;
 			
@@ -1379,6 +1438,9 @@ static int handle_completions( array_list_t *comp )
 			}
 		}
 
+		/*
+		  If we found something to insert, do it.
+		 */
 		if( len > 0 )
 		{
 			if( count > 1 )
@@ -1390,14 +1452,18 @@ static int handle_completions( array_list_t *comp )
 		}
 	}
 	
+	
 
 	if( !done && base == 0 )
 	{
+		/*
+		  Try to find something to insert ignoring case
+		*/
 
 		if( begin )
 		{
 
-			if( expand_is_clean( tok ) )
+			if( reader_can_replace( tok ) )
 			{
 				int offset = wcslen( tok );
 					
@@ -2602,9 +2668,11 @@ wchar_t *reader_readline()
 
 					comp = al_halloc( 0 );
 					data->complete_func( buffcpy, comp );
+					
 
 					sort_completion_list( comp );
 					remove_duplicates( comp );
+					
 
 					free( buffcpy );
 					comp_empty = handle_completions( comp );

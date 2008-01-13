@@ -5,11 +5,11 @@
 
 \subsection fish_indent-description Description
 
-\c fish_indent is used to indent or otherwise prettyfy a piece of fish
+\c fish_indent is used to indent or otherwise prettify a piece of fish
 code. \c fish_indent reads commands from standard input and outputs
 them to standard output.
 
-\c fish_indent underatands the following options:
+\c fish_indent understands the following options:
 
 - <tt>-h</tt> or <tt>--help</tt> displays this help message and then exits
 - <tt>-i</tt> or <tt>--no-indent</tt> do not indent commands

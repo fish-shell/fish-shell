@@ -1417,6 +1417,7 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - delete-word is broken on the commandline 'sudo update-alternatives --config x-'
 - Sometimes autoheader needs to be run on a fresh tarball. Fix dates before creating tarballs.
 - The completion autoloader does not remember which completions where actually autoloaded, and may unload manually specified completions. 
+- There have been stray reports of issues with strang values of the PATH variable during startup. 
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.

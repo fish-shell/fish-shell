@@ -73,7 +73,9 @@ enum
 
 void set_color( int c, int c2 );
 
-
+/**
+   Write specified multibyte string
+ */
 #define writembs( mbs )                         \
         {                                       \
                 char *tmp = mbs;                \
@@ -144,10 +146,18 @@ int writeb( tputs_arg_t b );
 void output_set_writer( int (*writer)(char) );
 
 //typedef int (*func_ptr_t)(char);
-
+/**
+   Return the current output writer
+ */
 int (*output_get_writer())(char) ;
 
+/**
+   Set the terminal name
+ */
 void output_set_term( wchar_t *term );
+/**
+   Return the terminal name
+ */
 wchar_t *output_get_term();
 
 #endif

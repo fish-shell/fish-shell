@@ -117,6 +117,9 @@ commence.
 */
 #define DEFAULT_PROMPT L"echo \"$USER@\"; hostname|cut -d . -f 1; echo \" \"; pwd; printf '> ';"
 
+/**
+   The name of the function that prints the fish prompt
+ */
 #define PROMPT_FUNCTION_NAME L"fish_prompt"
 
 /**
@@ -132,15 +135,40 @@ commence.
 */
 #define READAHEAD_MAX 256
 
+/**
+   A mode for calling the reader_kill function. In this mode, the new
+   string is appended to the current contents of the kill buffer.
+ */
 #define KILL_APPEND 0
+/**
+   A mode for calling the reader_kill function. In this mode, the new
+   string is prepended to the current contents of the kill buffer.
+ */
 #define KILL_PREPEND 1
 
-
+/**
+   History search mode. This value means that no search is currently
+   performed.
+ */
 #define NO_SEARCH 0
+/**
+   History search mode. This value means that we are perforing a line
+   history search.
+ */
 #define LINE_SEARCH 1
+/**
+   History search mode. This value means that we are perforing a token
+   history search.
+ */
 #define TOKEN_SEARCH 2
 
+/**
+   History search mode. This value means we are searching backwards.
+ */
 #define SEARCH_BACKWARD 0
+/**
+   History search mode. This value means we are searching forwards.
+ */
 #define SEARCH_FORWARD 1
 
 /**
@@ -155,6 +183,9 @@ typedef struct reader_data
 	*/
 	wchar_t *buff;
 
+	/**
+	   The representation of the current screen contents
+	 */
 	screen_t screen;
 
 	/**
@@ -252,6 +283,9 @@ typedef struct reader_data
 	*/
 	int prev_end_loop;
 
+	/**
+	   The current contents of the top item in the kill ring. 
+	 */
 	string_buffer_t kill_item;
 
 	/**
@@ -509,6 +543,9 @@ static int check_size()
 }
 
 
+/**
+   Compare two completion entrys
+ */
 static int completion_cmp( const void *a, const void *b )
 {
 	completion_t *c= *((completion_t **)a);
@@ -518,6 +555,9 @@ static int completion_cmp( const void *a, const void *b )
 
 }
 
+/**
+   Sort an array_list_t containing compltion_t structs.
+ */
 static void sort_completion_list( array_list_t *comp )
 {
 	qsort( comp->arr, 
@@ -949,9 +989,8 @@ static void get_param( wchar_t *cmd,
    string.
 
    \param val the string to insert
-   \param is_complete Whether this completion is the whole string or
-   just the common prefix of several completions. If the former, end by
-   printing a space (and an end quote if the parameter is quoted).
+   \param flags A union of all flags describing the completion to insert. See the completion_t struct for more information on possible values.
+
 */
 static void completion_insert( const wchar_t *val, int flags )
 {
@@ -1225,7 +1264,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	io_buffer_destroy( in);
 }
 
-/*
+/**
   Flash the screen. This function only changed the color of the
   current line, since the flash_screen sequnce is rather painful to
   look at in most terminal emulators.
@@ -1801,7 +1840,7 @@ static void handle_token_history( int forward, int reset )
 
    \param dir Direction to move/erase. 0 means move left, 1 means move right.
    \param erase Whether to erase the characters along the way or only move past them.
-   \param do_append if erase is true, this flag decides if the new kill item should be appended to the previous kill item.
+   \param new if the new kill item should be appended to the previous kill item or not.
 */
 static void move_word( int dir, int erase, int new )
 {

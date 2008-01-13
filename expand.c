@@ -764,7 +764,9 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 	}
 }
 
-
+/**
+   Parse an array slicing specification
+ */
 static int parse_slice( wchar_t *in, wchar_t **end_ptr, array_list_t *idx )
 {
 	

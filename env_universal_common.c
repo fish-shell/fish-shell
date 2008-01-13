@@ -99,7 +99,7 @@ var_uni_entry_t;
 
 
 static void parse_message( wchar_t *msg,
-						   connection_t *src );
+			   connection_t *src );
 
 /**
    The table of all universal variables
@@ -176,8 +176,10 @@ static char *iconv_wide_names_2[]=
   }
   ;
 
-
-wchar_t *utf2wcs( const char *in )
+/**
+   Convert utf-8 string to wide string
+ */
+static wchar_t *utf2wcs( const char *in )
 {
 	iconv_t cd=(iconv_t) -1;
 	int i,j;
@@ -287,7 +289,10 @@ wchar_t *utf2wcs( const char *in )
 	return out;	
 }
 
-char *wcs2utf( const wchar_t *in )
+/**
+   Convert wide string to utf-8
+ */
+static char *wcs2utf( const wchar_t *in )
 {
 	iconv_t cd=(iconv_t) -1;
 	int i,j;
@@ -404,6 +409,9 @@ void env_universal_common_destroy()
 	hash_destroy( &env_universal_var );
 }
 
+/**
+   Read one byte of date form the specified connection
+ */
 static int read_byte( connection_t *src )
 {
 
@@ -740,6 +748,9 @@ void try_send_all( connection_t *c )
 	}
 }
 
+/**
+   Escape specified string
+ */
 static wchar_t *full_escape( const wchar_t *in )
 {
 	string_buffer_t out;

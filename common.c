@@ -702,6 +702,11 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff )
 	sb_append_char( buff, L'\n' );
 }
 
+/**
+   Perform string escaping of a strinng by only quoting it. Assumes
+   the string has already been checked for characters that can not be
+   escaped this way.
+ */
 static wchar_t *escape_simple( const wchar_t *in )
 {
 	wchar_t *out;

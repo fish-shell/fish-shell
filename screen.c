@@ -86,6 +86,10 @@ static int try_sequence( char *seq, wchar_t *str )
 	return 0;
 }
 
+/**
+   Returns the number of columns left until the next tab stop, given
+   the current cursor postion.
+ */
 static int next_tab_stop( int in )
 {
 	/*
@@ -759,6 +763,9 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 	
 }
 
+/**
+   Returns non-zero if we are using a dumb terminal.
+ */
 static int is_dumb()
 {
 	return ( !cursor_up || !cursor_down || !cursor_left || !cursor_right );

@@ -15,12 +15,29 @@
 #include <stdarg.h>
 #include <unistd.h>
 
+/**
+   Typedef for a generic function pointer
+ */
 typedef void (*func_ptr_t)();
 
+/**
+   A union of all types that can be stored in an array_list_t. This is
+   used to make sure that the pointer type can fit whatever we want to
+   insert.
+ */
 typedef union 
 {
+	/**
+	   long value
+	 */
 	long long_val;
+	/**
+	   pointer value
+	 */
 	void *ptr_val;
+	/**
+	   function pointer value
+	 */
 	func_ptr_t func_val;
 }
 	anything_t;
@@ -163,7 +180,7 @@ buffer_t;
 typedef buffer_t string_buffer_t;
 
 /**
-   Set the out of memory handler callback function. If a memory
+   Set the out-of-memory handler callback function. If a memory
    allocation fails, this function will be called. 
 */	
 void (*util_set_oom_handler( void (*h)(void *) ))(void *);
@@ -175,7 +192,7 @@ void (*util_set_oom_handler( void (*h)(void *) ))(void *);
 
    This is the default out of memory handler.
 */
-void util_die_on_oom( void * );
+void util_die_on_oom( void *p );
 
 /**
    Returns the larger of two ints
@@ -428,11 +445,10 @@ int al_push_long( array_list_t *l, long o );
    Append element to list
 
    \param l The list
-   \param o The element
-   \return
+   \param f The element
    \return 1 if succesfull, 0 otherwise
 */
-int al_push_func( array_list_t *l, void (*f)() );
+int al_push_func( array_list_t *l, func_ptr_t f );
 
 /**
    Append all elements of a list to another
@@ -443,6 +459,9 @@ int al_push_func( array_list_t *l, void (*f)() );
 */
 int al_push_all( array_list_t *a, array_list_t *b );
 
+/**
+   Insert the specified number of new empty positions at the specified position in the list.
+ */
 int al_insert( array_list_t *a, int pos, int count );
 
 /**
@@ -458,7 +477,7 @@ int al_set( array_list_t *l, int pos, const void *o );
 
    \param l The array_list_t
    \param pos The index 
-   \param o The element 
+   \param v The element to set
 */
 int al_set_long( array_list_t *l, int pos, long v );
 /**
@@ -466,9 +485,9 @@ int al_set_long( array_list_t *l, int pos, long v );
 
    \param l The array_list_t
    \param pos The index 
-   \param o The element 
+   \param f The element to insert
 */
-int al_set_func( array_list_t *l, int pos, void (*f)() );
+int al_set_func( array_list_t *l, int pos, func_ptr_t f );
 
 /**
    Returns the element at the specified index
@@ -599,15 +618,18 @@ void sb_init( string_buffer_t * );
 string_buffer_t *sb_new();
 
 /**
-   Append a part of a string to the buffer
+   Append a part of a string to the buffer.
 */
 void sb_append_substring( string_buffer_t *, const wchar_t *, size_t );
 
 /**
-   Append a character to the buffer
+   Append a character to the buffer.
 */
 void sb_append_char( string_buffer_t *, wchar_t );
 
+/**
+   Append all specified items to buffer.
+ */
 #define sb_append( sb,... ) sb_append_internal( sb, __VA_ARGS__, (void *)0 )
 
 /**

@@ -52,7 +52,15 @@ enum
 }
 	;
 
+/**
+   Pointer to what the commandline builtin considers to be the current
+   contents of the command line buffer.
+ */
 static wchar_t *current_buffer=0;
+/**
+   What the commandline builtin considers to be the current cursor
+   position.
+ */
 static int current_cursor_pos = -1;
 
 /**

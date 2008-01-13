@@ -41,9 +41,9 @@
 typedef struct
 {
 	/** Function definition */
-	wchar_t *cmd;
+	wchar_t *definition;
 	/** Function description */
-	wchar_t *desc;	
+	wchar_t *description;	
 	/**
 	   File where this function was defined
 	*/
@@ -52,7 +52,10 @@ typedef struct
 	   Line where definition started
 	*/
 	int definition_offset;	
-
+	
+	/**
+	   List of all named arguments for this function
+	 */
 	array_list_t *named_arguments;
 	
 	
@@ -61,6 +64,10 @@ typedef struct
 	*/
 	int is_autoload;
 
+	/**
+	   Set to non-zero if invoking this function shadows the variables
+	   of the underlying function.
+	 */
 	int shadows;
 }
 	function_internal_data_t;
@@ -155,6 +162,9 @@ void function_init()
 			   &hash_wcs_cmp );
 }
 
+/**
+   Clear specified value, but not key
+ */
 static void clear_entry( void *key, void *value )
 {
 	halloc_free( value );
@@ -180,7 +190,7 @@ void function_add( function_data_t *data )
 	
 	d = halloc( 0, sizeof( function_internal_data_t ) );
 	d->definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
-	d->cmd = halloc_wcsdup( d, data->definition );
+	d->definition = halloc_wcsdup( d, data->definition );
 
 	if( data->named_arguments )
 	{
@@ -192,9 +202,9 @@ void function_add( function_data_t *data )
 		}
 	}
 	
-	cmd_end = d->cmd + wcslen(d->cmd)-1;
+	cmd_end = d->definition + wcslen(d->definition)-1;
 	
-	d->desc = data->description?halloc_wcsdup( d, data->description ):0;
+	d->description = data->description?halloc_wcsdup( d, data->description ):0;
 	d->definition_file = intern(reader_current_filename());
 	d->is_autoload = is_autoload;
 	d->shadows = data->shadows;
@@ -266,7 +276,7 @@ const wchar_t *function_get_definition( const wchar_t *name )
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return 0;
-	return data->cmd;
+	return data->definition;
 }
 
 array_list_t *function_get_named_arguments( const wchar_t *name )
@@ -307,7 +317,7 @@ const wchar_t *function_get_desc( const wchar_t *name )
 	if( data == 0 )
 		return 0;
 	
-	return _(data->desc);
+	return _(data->description);
 }
 
 void function_set_desc( const wchar_t *name, const wchar_t *desc )
@@ -322,7 +332,7 @@ void function_set_desc( const wchar_t *name, const wchar_t *desc )
 	if( data == 0 )
 		return;
 
-	data->desc = halloc_wcsdup( data, desc );
+	data->description = halloc_wcsdup( data, desc );
 }
 
 /**

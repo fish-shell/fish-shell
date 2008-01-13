@@ -480,6 +480,9 @@ static void setup_path()
 	al_destroy( &l );
 }
 
+/**
+   Set up default values for various variables if not defined.
+ */
 static void env_set_defaults()
 {
 
@@ -1442,6 +1445,9 @@ static void export_func1( void *k, void *v, void *aux )
 	
 }
 
+/**
+   Get list of all exported variables
+ */
 static void get_exported( env_node_t *n, hash_table_t *h )
 {
 	if( !n )

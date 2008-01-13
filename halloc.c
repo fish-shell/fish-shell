@@ -78,6 +78,9 @@ typedef struct halloc
 }
 	halloc_t;
 
+/**
+   Allign the specified pointer
+ */
 static char *align_ptr( char *in )
 {
 	unsigned long step = maxi(sizeof(double),sizeof(void *));
@@ -87,6 +90,9 @@ static char *align_ptr( char *in )
 	return (char *)long_out;
 }
 
+/**
+   Allign specifies size_t
+ */
 static size_t align_sz( size_t in )
 {
 	size_t step = maxi(sizeof(double),sizeof(void *));

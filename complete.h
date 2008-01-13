@@ -163,34 +163,34 @@ typedef struct
   \param comp A space separated list of completions which may contain subshells.
   \param desc A description of the completion.
   \param condition a command to be run to check it this completion should be used. If \c condition is empty, the completion is always used.
-
+  \param flags A set of completion flags
 */
 void complete_add( const wchar_t *cmd, 
-				   int cmd_type, 
-				   wchar_t short_opt,
-				   const wchar_t *long_opt,
-				   int long_mode, 
-				   int result_mode, 
-				   const wchar_t *condition,
-				   const wchar_t *comp,
-				   const wchar_t *desc,
-				   int flags ); 
+		   int cmd_type, 
+		   wchar_t short_opt,
+		   const wchar_t *long_opt,
+		   int long_mode, 
+		   int result_mode, 
+		   const wchar_t *condition,
+		   const wchar_t *comp,
+		   const wchar_t *desc,
+		   int flags ); 
 /**
   Sets whether the completion list for this command is complete. If
   true, any options not matching one of the provided options will be
   flagged as an error by syntax highlighting.
 */
 void complete_set_authoritative( const wchar_t *cmd,
-							   int cmd_type,
-							   int authoritative );
+				 int cmd_type,
+				 int authoritative );
 
 /**
   Remove a previously defined completion
 */
 void complete_remove( const wchar_t *cmd, 
-					  int cmd_type, 
-					  wchar_t short_opt,
-					  const wchar_t *long_opt );
+		      int cmd_type, 
+		      wchar_t short_opt,
+		      const wchar_t *long_opt );
 
 /**
   Find all completions of the command cmd, insert them into out. The
@@ -242,7 +242,7 @@ void complete_load( const wchar_t *cmd, int reload );
    Create a new completion entry
 
    \param context The halloc context to use for allocating new memory
-   \pram comp The completion string
+   \param comp The completion string
    \param desc The description of the completion
    \param flags completion flags
 */

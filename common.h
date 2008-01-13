@@ -40,11 +40,12 @@
 */
 #define BYTE_MAX 0xffu
 
-/*
-  Escape special fish syntax characters liek the semicolon
+/**
+  Escape special fish syntax characters like the semicolon
  */
 #define UNESCAPE_SPECIAL 1
-/*
+
+/**
   Allow incomplete escape sequences
  */
 #define UNESCAPE_INCOMPLETE 2
@@ -155,10 +156,16 @@ extern wchar_t *program_name;
 */
 #define N_(wstr) wstr
 
+/**
+   Check if the specified stringelement is a part of the specified string list
+ */
 #define contains( str,... ) contains_internal( str, __VA_ARGS__, (void *)0 )
+/**
+   Concatenate all the specified strings into a single newly allocated one
+ */
 #define wcsdupcat( str,... ) wcsdupcat_internal( str, __VA_ARGS__, (void *)0 )
 
-/*
+/**
   Print a stack trace to stderr
 */
 void show_stackframe();

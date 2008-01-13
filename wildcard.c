@@ -378,7 +378,11 @@ static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
 	return long_name;
 }
 
-
+/**
+   Return a description of a file based on its suffix. This function
+   does not perform any caching, it directly calls the mimedb command
+   to do a lookup.
+ */
 static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 {
 
@@ -425,12 +429,19 @@ static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 	return desc;
 }
 
+/**
+   Free the suffix_hash hash table and all memory used by it.
+ */
 static void complete_get_desc_destroy_suffix_hash()
 {
-	hash_foreach( suffix_hash, &clear_hash_entry );
-	hash_destroy( suffix_hash );
-	free( suffix_hash );
+	if( suffix_hash )
+	{
+		hash_foreach( suffix_hash, &clear_hash_entry );
+		hash_destroy( suffix_hash );
+		free( suffix_hash );
+	}
 }
+
 
 
 
@@ -759,7 +770,14 @@ static int test_flags( wchar_t *filename,
 	return 1;
 }
 
+/**
+   The real implementation of wildcard expansion is in this
+   function. Other functions are just wrappers around this one.
 
+   This function traverses the relevant directory tree looking for
+   matches, and recurses when needed to handle wildcrards spanning
+   multiple components and recursive wildcards. 
+ */
 static int wildcard_expand_internal( const wchar_t *wc, 
 									 const wchar_t *base_dir,
 									 int flags,

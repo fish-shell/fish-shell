@@ -750,6 +750,9 @@ static void test_expand()
 	
 }
 
+/**
+   Test path functions
+ */
 static void test_path()
 {
 	say( L"Testing path functions" );

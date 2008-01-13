@@ -44,6 +44,9 @@ typedef struct io_data
 	} param2
 	;
 
+	/**
+	  Set to true if this is an input io redirection
+	 */
 	int is_input;
 	
 	/** Pointer to the next IO redirection */

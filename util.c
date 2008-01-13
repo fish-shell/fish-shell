@@ -50,6 +50,10 @@
 */
 #define SB_MAX_SIZE 32767
 
+/**
+   Handle oom condition. Default action is to print a stack trace and
+   exit, but an alternative action can be specified.
+ */
 #define oom_handler( p )						\
 	{											\
 		if( oom_handler_internal == util_die_on_oom )	\
@@ -77,7 +81,7 @@ void (*util_set_oom_handler( void (*h)(void *) ))(void *)
 	return old;
 }
 
-void util_die_on_oom( void * p)
+void util_die_on_oom( void *p )
 {
 }
 
@@ -790,6 +794,10 @@ void al_destroy( array_list_t *l )
 	free( l->arr );
 }
 
+/**
+   Real implementation of all al_push_* versions. Pushes arbitrary
+   element to end of list.
+ */
 static int al_push_generic( array_list_t *l, anything_t o )
 {
 	if( l->pos >= l->size )
@@ -887,6 +895,10 @@ int al_insert( array_list_t *a, int pos, int count )
 	return 1;
 }
 
+/**
+   Real implementation of all al_set_* versions. Sets arbitrary
+   element of list.
+ */
 
 static int al_set_generic( array_list_t *l, int pos, anything_t v )
 {
@@ -926,13 +938,16 @@ int al_set_long( array_list_t *l, int pos, long o )
 	return al_set_generic( l, pos, v );
 }
 
-int al_set_func( array_list_t *l, int pos, func_ptr_t o )
+int al_set_func( array_list_t *l, int pos, func_ptr_t f )
 {
 	anything_t v;
-	v.func_val = o;
+	v.func_val = f;
 	return al_set_generic( l, pos, v );
 }
 
+/**
+   Real implementation of all al_get_* versions. Returns element from list.
+ */
 static anything_t al_get_generic( array_list_t *l, int pos )
 {
 	anything_t res;
@@ -967,6 +982,10 @@ void al_truncate( array_list_t *l, int new_sz )
 	l->pos = new_sz;
 }
 
+/**
+   Real implementation of all al_pop_* versions. Pops arbitrary
+   element from end of list.
+ */
 static anything_t al_pop_generic( array_list_t *l )
 {
 	anything_t e;
@@ -1014,6 +1033,10 @@ func_ptr_t al_pop_func( array_list_t *l )
 	return al_pop_generic(l).func_val;	
 }
 
+/**
+   Real implementation of all al_peek_* versions. Peeks last element
+   of list.
+ */
 static anything_t al_peek_generic( array_list_t *l )
 {
 	anything_t res;

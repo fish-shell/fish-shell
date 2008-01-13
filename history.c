@@ -252,6 +252,9 @@ static wchar_t *history_unescape_newlines( wchar_t *in )
 	return (wchar_t *)out->buff;
 }
 
+/**
+   Check if the specified item is already loaded
+ */
 static int item_is_new( history_mode_t *m, void *d )
 {	
 	char *begin = (char *)d;
@@ -409,6 +412,9 @@ static void history_destroy_mode( history_mode_t *m )
 	
 }
 
+/**
+   Free all memory used by specified mistory mode
+ */
 static void history_destroy_mode_wrapper( void *n, history_mode_t *m )
 {
 	halloc_free( m );

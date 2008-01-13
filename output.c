@@ -121,6 +121,9 @@ static char *writestr_buff = 0;
 
 static int (*out)(char c) = &writeb_internal;
 
+/**
+   Name of terminal
+ */
 static wchar_t *current_term = 0;
 
 

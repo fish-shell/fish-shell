@@ -89,19 +89,26 @@ void input_unreadch( wint_t ch );
 
 
 /**
-   Add a key mapping from the specified sequence
+   Add a key mapping from the specified sequence to the specified command
 
-   \param mode the name of the mapping mode to add this mapping to
-   \param s the sequence
-   \param d a description of the sequence
-   \param cmd an input function that will be run whenever the key sequence occurs
+   \param sequence the sequence to bind
+   \param command an input function that will be run whenever the key sequence occurs
 */
-void input_mapping_add( const wchar_t *sequence, const wchar_t *cmd );
+void input_mapping_add( const wchar_t *sequence, const wchar_t *command );
 
+/**
+   Insert all mapping names into the specified array_list_t
+ */
 void input_mapping_get_names( array_list_t *list );
 
+/**
+   Erase binding for specified key sequence
+ */
 int input_mapping_erase( const wchar_t *sequence );
 
+/**
+   Return the command bound to the specified key sequence
+ */
 const wchar_t *input_mapping_get( const wchar_t *sequence );
 
 /**

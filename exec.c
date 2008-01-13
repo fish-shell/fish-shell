@@ -830,6 +830,9 @@ static pid_t exec_fork()
 }
 
 
+/**
+   Perform output from builtins
+ */
 static void do_builtin_io( wchar_t *out, wchar_t *err )
 {
 

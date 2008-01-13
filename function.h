@@ -19,11 +19,30 @@
 */
 typedef struct function_data
 {
+	/**
+	   Name of function
+	 */
 	wchar_t *name;
+	/**
+	   Description of function
+	 */
 	wchar_t *description;
+	/**
+	   Function definition
+	 */
 	wchar_t *definition;
+	/**
+	   List of all event handlers for this function
+	 */
 	array_list_t *events;
+	/**
+	   List of all named arguments for this function
+	 */
 	array_list_t *named_arguments;
+	/**
+	   Set to non-zero if invoking this function shadows the variables
+	   of the underlying function.
+	 */
 	int shadows;
 }
 	function_data_t;

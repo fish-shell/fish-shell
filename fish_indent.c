@@ -16,7 +16,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 
-/** \file main.c
+/** \file fish_indent.c
 	The fish_indent proegram.
 */
 
@@ -48,7 +48,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #define GETOPT_STRING "hvi"
 
-void read_file( FILE *f, string_buffer_t *b )
+/**
+   Read the entire contents of a file into the specified string_Buffer_t
+ */
+static void read_file( FILE *f, string_buffer_t *b )
 {
 	while( 1 )
 	{
@@ -62,6 +65,9 @@ void read_file( FILE *f, string_buffer_t *b )
 	}
 }
 
+/**
+   Insert the specified number of tabe into the output buffer
+ */
 static void insert_tabs( string_buffer_t *out, int indent )
 {
 	int i;
@@ -73,6 +79,9 @@ static void insert_tabs( string_buffer_t *out, int indent )
 	
 }
 
+/**
+   Indent the specified input
+ */
 static int indent( string_buffer_t *out, wchar_t *in, int flags )
 {
 	tokenizer tok;
@@ -217,7 +226,12 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 	return res;
 }
 
-wchar_t *trim( wchar_t *in )
+/**
+   Remove any prefix and suffix newlines from the specified
+   string. Does not allocete a new string, edits the string in place
+   and returns a pointer somewhere into the string.
+ */
+static wchar_t *trim( wchar_t *in )
 {
 	wchar_t *end;
 	
@@ -245,7 +259,9 @@ wchar_t *trim( wchar_t *in )
 }
 
 
-
+/**
+   The main mathod. Run the program.
+ */
 int main( int argc, char **argv )
 {
 	string_buffer_t sb_in;

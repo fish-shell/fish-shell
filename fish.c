@@ -106,10 +106,9 @@ static int read_init()
 }
 
 
-/*
+/**
   Parse the argument list, return the index of the first non-switch
   arguments.
-
  */
 static int fish_parse_opt( int argc, char **argv, char **cmd_ptr )
 {

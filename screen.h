@@ -2,9 +2,13 @@
 
 	The screen library allows the interactive reader to write its
 	output to screen efficiently by keeping an inetrnal representation
-	of the current screen contents and trying to find the most
+	of the current screen contents and trying to find a reasonably
 	efficient way for transforming that to the desired screen content.
-*/
+
+	The current implementation is less smart than ncurses allows
+	and can not for example move blocks of text around to handle text
+	insertion.
+  */
 #ifndef FISH_SCREEN_H
 #define FISH_SCREEN_H
 
@@ -13,7 +17,7 @@
 */
 typedef struct
 {
-	/*
+	/**
 	  The internal representation of the desired screen contents.
 	*/
 	array_list_t desired;
@@ -35,7 +39,7 @@ typedef struct
 	*/
 	string_buffer_t actual_prompt;
 
-	/*
+	/**
 	  The actual width of the screen at the time of the last screen
 	  write.
 	*/

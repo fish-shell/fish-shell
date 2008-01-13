@@ -9,6 +9,9 @@
 #ifndef FISH_PATH_H
 #define FISH_PATH_H
 
+/**
+   Return value for path_cdpath_get when locatied a rotten symlink
+ */
 #define EROTTEN 1
 
 /**
@@ -48,6 +51,13 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd );
 */
 wchar_t *path_get_cdpath( void *context, wchar_t *in );
 
+/**
+   Remove doulbe slashes and trailing slashes from a path,
+   e.g. transform foo//bar/ into foo/bar.
+   
+   The returned string is allocated using the specified halloc
+   context.
+ */
 wchar_t *path_make_canonical( void *context, const wchar_t *path );
 
 

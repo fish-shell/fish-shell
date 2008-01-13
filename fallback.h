@@ -54,9 +54,18 @@ typedef char tputs_arg_t;
 #endif
 
 #ifndef HAVE_WINSIZE
+/**
+   Structure used to get the size of a terminal window
+ */
 struct winsize 
 {
+	/**
+	   Number of rows
+	 */
 	unsigned short ws_row;	
+	/**
+	   Number of columns
+	 */
 	unsigned short ws_col;
 }
 ;
@@ -400,17 +409,35 @@ extern int _nl_msg_cat_cntr;
 
 
 #ifndef HAVE_KILLPG
+/**
+   Send specified signal to specified process group.
+ */
 int killpg( int pgr, int sig );
 #endif
 
 
 #ifndef HAVE_WORKING_GETOPT_LONG
 
+/**
+   Struct describing a long getopt option
+ */
 struct option 
 {
+	/**
+	   Name of option
+	 */
 	const char *name;
+	/**
+	   Flag
+	 */
 	int has_arg;
+	/**
+	   Flag
+	 */
 	int *flag;
+	/**
+	   Return value
+	 */
 	int val;	
 }
 ;

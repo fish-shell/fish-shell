@@ -129,6 +129,7 @@ int builtin_exists( wchar_t *cmd );
   of the builtin.  The list is terminated by a
   null pointer. This syntax resembles the syntax 
   for exec.
+  \param io the io redirections to perform on this builtin.
 
   \return the exit status of the builtin command
 */

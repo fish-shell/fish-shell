@@ -232,6 +232,9 @@ static const wchar_t code_arr[] =
 */
 static array_list_t mappings = {0,0,0}; 
 
+/**
+   List of all terminfo mappings
+ */
 static array_list_t *terminfo_mappings = 0;
 
 
@@ -240,28 +243,18 @@ static array_list_t *terminfo_mappings = 0;
 */
 static int is_init = 0;
 
+/**
+   Initialize terminfo.
+ */
 static void input_terminfo_init();
+/**
+   Deallocate memory used by terminfo. Or at least try to. Terminfo leaks.
+ */
 static void input_terminfo_destroy();
 
 /**
    Returns the function description for the given function code.
 */
-/*
-static const wchar_t *input_get_desc( wchar_t c )
-{
-
-	int i;
-	for( i = 0; i<(sizeof( code_arr )/sizeof(wchar_t)) ; i++ )
-	{
-		if( c == code_arr[i] )
-		{
-			return desc_arr[i];
-		}
-	}
-	return 0;		
-}
-*/
-
 
 void input_mapping_add( const wchar_t *sequence,
 			const wchar_t *command )

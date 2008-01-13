@@ -55,9 +55,16 @@ static void read_file( FILE *f, string_buffer_t *b )
 {
 	while( 1 )
 	{
+		errno=0;
 		wint_t c = fgetwc( f );
 		if( c == WEOF )
 		{
+			if( errno )
+			{
+				wperror(L"fgetwc");
+				exit(1);
+			}
+			
 			break;
 		}
 		

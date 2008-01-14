@@ -45,10 +45,12 @@
    Maximum number of characters that can be inserted using a single
    call to sb_printf. This is needed since vswprintf doesn't tell us
    what went wrong. We don't know if we ran out of space or something
-   else went wrong. Therefore we assume that any error is an out of
-   memory-error and try again until we reach this size.
+   else went wrong. We assume that any error is an out of memory-error
+   and try again until we reach this size.  After this size has been
+   reached, it is instead assumed that something was wrong with the
+   format string.
 */
-#define SB_MAX_SIZE 32767
+#define SB_MAX_SIZE (128*1024*1024)
 
 /**
    Handle oom condition. Default action is to print a stack trace and

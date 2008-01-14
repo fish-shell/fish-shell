@@ -209,5 +209,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		commandline -f repaint
 	end
 
+	if test -f /usr/lib/command-not-found $argv
+		function fish_command_not_found_handler --on-event fish_command_not_found
+			/usr/lib/command-not-found $argv
+                end
+	end
+
 end
 

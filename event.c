@@ -704,9 +704,11 @@ void event_free( event_t *e )
 }
 
 
-void event_fire_generic(const wchar_t *name)
+void event_fire_generic_internal(const wchar_t *name, ...)
 {
 	event_t ev;
+	va_list va;
+	wchar_t *arg;
 
 	CHECK( name, );
 	
@@ -715,6 +717,13 @@ void event_fire_generic(const wchar_t *name)
 	ev.function_name=0;
 	
 	al_init( &ev.arguments );
+	va_start( va, name );
+	while( (arg=va_arg(va, wchar_t *) )!= 0 )
+	{
+		al_push( &ev.arguments, arg );
+	}
+	va_end( va );
+	
 	event_fire( &ev );
 }
 

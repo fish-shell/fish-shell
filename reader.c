@@ -1111,8 +1111,8 @@ static void completion_insert( const wchar_t *val, int flags )
 			if( add_space ) 
 			{
 
-				if( (quote) &&
-					(data->buff[data->buff_pos] != quote ) ) 
+				if( quote &&
+				    (data->buff[data->buff_pos] != quote ) ) 
 				{
 					/* 
 					   This is a quoted parameter, first print a quote 
@@ -1310,12 +1310,31 @@ static void reader_flash()
 	
 }
 
-#define UNCLEAN L"$*?({})"
+/**
+   Characters that may not be part of a token that is to be replaced
+   by a case insensitive completion.
+ */
+#define REPLACE_UNCLEAN L"$*?({})"
 
-int reader_can_replace( const wchar_t *in )
+/**
+   Check if the specified string can be replaced by a case insensitive
+   complition with the specified flags.
+
+   Advanced tokens like those containing {}-style expansion can not at
+   the moment be replaced, other than if the new token is already an
+   exact replacement, e.g. if the COMPLETE_DONT_ESCAPE flag is set.
+ */
+
+int reader_can_replace( const wchar_t *in, int flags )
 {
 
 	const wchar_t * str = in;
+
+	if( flags & COMPLETE_DONT_ESCAPE )
+	{
+		return 1;
+	}
+	
 
 	CHECK( in, 1 );
 
@@ -1324,7 +1343,7 @@ int reader_can_replace( const wchar_t *in )
 	*/
 	while( *str )
 	{
-		if( wcschr( UNCLEAN, *str ) )
+		if( wcschr( REPLACE_UNCLEAN, *str ) )
 			return 0;
 		str++;
 	}
@@ -1395,7 +1414,7 @@ static int handle_completions( array_list_t *comp )
 			  the token doesn't contain evil operators
 			  like {}
 			 */
-			if( !(c->flags & COMPLETE_NO_CASE) || reader_can_replace( tok ) )
+			if( !(c->flags & COMPLETE_NO_CASE) || reader_can_replace( tok, c->flags ) )
 			{
 				completion_insert( c->completion,
 						   c->flags );			
@@ -1463,46 +1482,51 @@ static int handle_completions( array_list_t *comp )
 		if( begin )
 		{
 
-			if( reader_can_replace( tok ) )
-			{
-				int offset = wcslen( tok );
-					
-				count = 0;
-					
-				for( i=0; i<al_get_count( comp ); i++ )
-				{
-					completion_t *c = (completion_t *)al_get( comp, i );
-					int new_len;
-
-					if( !(c->flags & COMPLETE_NO_CASE) )
-						continue;
+			int offset = wcslen( tok );
 			
-					count++;
+			count = 0;
+			
+			for( i=0; i<al_get_count( comp ); i++ )
+			{
+				completion_t *c = (completion_t *)al_get( comp, i );
+				int new_len;
 
-					if( base )
-					{
-						new_len = offset +  comp_ilen( base+offset, c->completion+offset );
-						len = new_len < len ? new_len: len;
-					}
-					else
-					{
-						base = wcsdup( c->completion );
-						len = wcslen( base );
-						flags = c->flags;
-							
-					}
+
+				if( !(c->flags & COMPLETE_NO_CASE) )
+					continue;
+			
+				if( !reader_can_replace( tok, c->flags ) )
+				{
+					len=0;
+					break;
 				}
 
-				if( len > offset )
-				{
-					if( count > 1 )
-						flags = flags | COMPLETE_NO_SPACE;
+				count++;
 
-					base[len]=L'\0';
-					completion_insert( base, flags );
-					done = 1;
+				if( base )
+				{
+					new_len = offset +  comp_ilen( base+offset, c->completion+offset );
+					len = new_len < len ? new_len: len;
+				}
+				else
+				{
+					base = wcsdup( c->completion );
+					len = wcslen( base );
+					flags = c->flags;
+					
 				}
 			}
+
+			if( len > offset )
+			{
+				if( count > 1 )
+					flags = flags | COMPLETE_NO_SPACE;
+				
+				base[len]=L'\0';
+				completion_insert( base, flags );
+				done = 1;
+			}
+			
 		}
 	}
 		

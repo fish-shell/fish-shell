@@ -1662,7 +1662,7 @@ static int complete_variable( const wchar_t *whole_var,
 				{
 					sb_append_substring( &comp, whole_var, start_offset );
 					sb_append( &comp, name );
-					flags = COMPLETE_NO_CASE;
+					flags = COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE;
 				}
 				
 				value = expand_escape_variable( value_unescaped );
@@ -1671,9 +1671,9 @@ static int complete_variable( const wchar_t *whole_var,
 				sb_printf( &desc, COMPLETE_VAR_DESC_VAL, value );
 				
 				completion_allocate( comp_list, 
-									 (wchar_t *)comp.buff,
-									 (wchar_t *)desc.buff,
-									 flags );
+						     (wchar_t *)comp.buff,
+						     (wchar_t *)desc.buff,
+						     flags );
 				res =1;
 				
 				free( value );

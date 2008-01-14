@@ -195,24 +195,29 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	complete -x -p "/etc/init.d/*" -a restart --description 'Stop and then start service'
 	complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
 
+	# Make sure some key bindings are set
 	if not set -q fish_key_bindings
 		set -U fish_key_bindings fish_default_key_bindings
 	end
 	
-	eval $fish_key_bindings ^/dev/null
-	
+	# Reload keybindings when binding variable change
 	function __fish_reload_key_bindings -d "Reload keybindings when binding variable change" --on-variable fish_key_bindings
 		eval $fish_key_bindings ^/dev/null
 	end 
 
+	# Load keybindings
+	__fish_reload_keybindings
+
+	# Repaint screen when window changes size
 	function __fish_winch_handler --on-signal winch
 		commandline -f repaint
 	end
 
-	if test -f /usr/lib/command-not-found $argv
+	# If the ubuntu command-not-found package can be found, add a handler for it
+	if test -f /usr/lib/command-not-found 
 		function fish_command_not_found_handler --on-event fish_command_not_found
 			/usr/lib/command-not-found $argv
-                end
+		end
 	end
 
 end

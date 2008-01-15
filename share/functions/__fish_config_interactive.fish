@@ -206,7 +206,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	end 
 
 	# Load keybindings
-	__fish_reload_keybindings
+	__fish_reload_key_bindings
 
 	# Repaint screen when window changes size
 	function __fish_winch_handler --on-signal winch

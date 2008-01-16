@@ -2555,23 +2555,6 @@ static int builtin_exit( wchar_t **argv )
 }
 
 /**
-   Helper function for builtin_cd, used for seting the current working
-   directory
-*/
-static int set_pwd( wchar_t *env)
-{
-	wchar_t dir_path[4096];
-	wchar_t *res = wgetcwd( dir_path, 4096 );
-	if( !res )
-	{
-		builtin_wperror( L"wgetcwd" );
-		return STATUS_BUILTIN_OK;
-	}
-	env_set( env, dir_path, ENV_EXPORT | ENV_GLOBAL );
-	return 1;
-}
-
-/**
    The cd builtin. Changes the current directory to the one specified
    or to $HOME if none is specified. The directory can be relative to
    any directory in the CDPATH variable.
@@ -2674,7 +2657,7 @@ static int builtin_cd( wchar_t **argv )
 		
 		res = 1;
 	}
-	else if( !set_pwd(L"PWD") )
+	else if( !env_set_pwd(L"PWD") )
 	{
 		res=1;
 		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );

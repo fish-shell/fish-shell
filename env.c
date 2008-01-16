@@ -480,6 +480,18 @@ static void setup_path()
 	al_destroy( &l );
 }
 
+int env_set_pwd()
+{
+	wchar_t dir_path[4096];
+	wchar_t *res = wgetcwd( dir_path, 4096 );
+	if( !res )
+	{
+		return 0;
+	}
+	env_set( L"PWD", dir_path, ENV_EXPORT | ENV_GLOBAL );
+	return 1;
+}
+
 /**
    Set up default values for various variables if not defined.
  */
@@ -505,6 +517,8 @@ static void env_set_defaults()
 		free( unam_narrow );
 	}	
 
+	env_set_pwd();
+	
 }
 
 void env_init()

@@ -132,4 +132,11 @@ char **env_export_arr( int recalc );
 */
 void env_get_names( array_list_t *l, int flags );
 
+/**
+   Update the PWD variable
+   directory
+*/
+int env_set_pwd();
+
+
 #endif

@@ -7,8 +7,6 @@ function __fish_complete_vi -d "Compleletions for vi and its aliases"
 	
 	set -l cmds -c $argv
 
-	complete $cmds -x -a "(__fish_complete_mime 'text/*')"
-
 	# vim
 	if test -n "$is_vim"
 
@@ -20,10 +18,6 @@ function __fish_complete_vi -d "Compleletions for vi and its aliases"
 		# +[num]        : Position the cursor on line number
 		# +/{pat}       : Position the cursor on the first occurence of {pat}
 		# +{command}    : Execute Ex command after the first file has been read
-
-		# Complete gzip-compressed files
-		complete $cmds -x -a "(__fish_complete_mime 'application/x-gzip')"
-
 		complete $cmds -s c -r --description 'Execute Ex command after the first file has been read'
 		complete $cmds -s S -r --description 'Source file after the first file has been read'
 		complete $cmds -l cmd -r --description 'Execute Ex command before loading any vimrc'

@@ -442,7 +442,41 @@ static int setup_child_process( job_t *j, process_t *p )
 	return res;
 	
 }
-								 
+
+/**
+   Returns the interpreter for the specified script. Returns 0 if file
+   is not a script with a shebang. This function leaks memory on every
+   call. Only use it in the execve error handler which calls exit
+   right afterwards, anyway.
+ */
+static wchar_t *get_interpreter( wchar_t *file )
+{
+	string_buffer_t sb;
+	FILE *fp = wfopen( file, "r" );
+	sb_init( &sb );
+	wchar_t *res = 0;
+	if( fp )
+	{
+		while( 1 )
+		{
+			wint_t ch = getwc( fp );
+			if( ch == WEOF )
+				break;
+			if( ch == L'\n' )
+				break;
+			sb_append_char( &sb, (wchar_t)ch );
+		}
+	}
+	
+	res = (wchar_t *)sb.buff;
+	
+	if( !wcsncmp( L"#! /", res, 4 ) )
+		return res+3;
+	if( !wcsncmp( L"#!/", res, 3 ) )
+		return res+2;
+	return 0;
+}
+
 								 
 /**
    This function is executed by the child process created by a call to
@@ -503,7 +537,7 @@ static void launch_process( process_t *p )
 			p->argv = res;
 			p->actual_cmd = L"/bin/sh";
 
-            res_real = wcsv2strv( (const wchar_t **) res);
+			res_real = wcsv2strv( (const wchar_t **) res);
 			
 			execve ( wcs2str(p->actual_cmd), 
 				 res_real,
@@ -552,19 +586,19 @@ static void launch_process( process_t *p )
 				sb_format_size( &sz2, ARG_MAX );
 				
 				debug( 0,
-				       L"The total size of the argument and environment lists (%ls) exceeds the system limit of %ls.",
+				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit of %ls.",
 				       (wchar_t *)sz1.buff,
 				       (wchar_t *)sz2.buff);
 			}
 			else
 			{
 				debug( 0,
-				       L"The total size of the argument and environment lists (%ls) exceeds the system limit.",
+				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit.",
 				       (wchar_t *)sz1.buff);
 			}
 			
 			debug( 0, 
-			       L"Please try running the command again with fewer arguments.");
+			       L"Try running the command again with fewer arguments.");
 			sb_destroy( &sz1 );
 			sb_destroy( &sz2 );
 			
@@ -573,10 +607,42 @@ static void launch_process( process_t *p )
 			break;
 		}
 
+		case ENOEXEC:
+		{
+			wperror(L"exec");
+			
+			debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
+			exit(STATUS_EXEC_FAIL);
+		}
+
+		case ENOENT:
+		{
+			wchar_t *interpreter = get_interpreter( p->actual_cmd );
+			
+			if( interpreter && waccess( interpreter, X_OK ) )
+			{
+				debug(0, L"The file '%ls' specified the interpreter '%ls', which is not an executable command.", p->actual_cmd, interpreter );
+			}
+			else
+			{
+				debug(0, L"The file '%ls' or a script or ELF interpreter does not exist, or a shared library needed for file or interpreter cannot be found.", p->actual_cmd);
+			}
+			
+			exit(STATUS_EXEC_FAIL);
+		}
+
+		case ENOMEM:
+		{
+			debug(0, L"Out of memory");
+			exit(STATUS_EXEC_FAIL);
+		}
+
 		default:
 		{
-		  debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
-		  exit(STATUS_EXEC_FAIL);
+			wperror(L"exec");
+			
+			//		debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
+			exit(STATUS_EXEC_FAIL);
 		}
 	}
 	

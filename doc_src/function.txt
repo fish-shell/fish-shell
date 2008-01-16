@@ -6,6 +6,7 @@
 \subsection function-description Description
 
 - <code>-d DESCRIPTION</code> or \c --description=DESCRIPTION is a description of what the function does, suitable as a completion description
+- <code>-e</code> or <code>--on-event EVENT_NAME</code> tells fish to run this function when the specified named event is emitted. Fish internally generates named events e.g. when showing the prompt.
 - <code>-j PID</code> or <code> --on-job-exit PID</code> tells fish to run this function when the job with group id PID exits. Instead of PID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
 - <code>-p PID</code> or <code> --on-process-exit PID</code> tells fish to run this function when the fish child process with process id PID exits
 - <code>-s</code> or <code>--on-signal SIGSPEC</code> tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a signal number, or the signal name, such as SIGHUP (or just HUP)
@@ -25,6 +26,11 @@ will write <code>hello</code> whenever the user enters \c hi.
 
 If the user enters any additional arguments after the function, they
 are inserted into the environment <a href="index.html#variables-arrays">variable array</a> argv.
+
+By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the <a href='#emit">emit</a> builtin. Fish generates the following named events:
+
+- \c fish_prompt, which is emitted whenever a new fish prompt is about to be displayed
+- \c fish_command_not_found, which is emitted whenever a command lookup failed
 
 \subsection function-example Example
 

@@ -2657,7 +2657,7 @@ static int builtin_cd( wchar_t **argv )
 		
 		res = 1;
 	}
-	else if( !env_set_pwd(L"PWD") )
+	else if( !env_set_pwd() )
 	{
 		res=1;
 		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );

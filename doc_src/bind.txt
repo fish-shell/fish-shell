@@ -8,9 +8,15 @@
 The <tt>bind</tt> builtin causes fish to add a key binding from the specified sequence.
 
 SEQUENCE is the character sequence to bind to. Usually, one would use
-fish escape sequences to express them. For example, Alt-w can be
-written as <tt>\\ew</tt>, and Control-x can be written as
-<tt>\\cx</tt>.
+fish escape sequences to express them. For example, because pressing
+the Alt key and another character sends that character prefixed with
+an escape character, Alt-based key bindings can be written using the
+\c \\e escape. For example, Alt-w can be written as
+<tt>\\ew</tt>. Control character can be written in much the same way
+using the \c \\c escape, for example Control-x can be written as
+<tt>\\cx</tt>. Note that Alt-based key bindings are case sensitive and
+Control base key bindings are not. This is not a design choice in
+fish, it is simply how terminals work.
 
 If SEQUENCE is the empty string, i.e. an empty set of quotes, this is
 interpreted as the default keybinding. It will be used whenever no

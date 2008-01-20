@@ -665,7 +665,7 @@ int hash_ptr_cmp( void *a,
 }
 
 void pq_init( priority_queue_t *q,
-			  int (*compare)(void *e1, void *e2) )
+	      int (*compare)(void *e1, void *e2) )
 {
 	q->arr=0;
 	q->size=0;
@@ -675,7 +675,7 @@ void pq_init( priority_queue_t *q,
 
 
 int pq_put( priority_queue_t *q,
-			void *e )
+	    void *e )
 {
 	int i;
 
@@ -1202,26 +1202,26 @@ string_buffer_t *sb_new()
 
 void sb_append_substring( string_buffer_t *b, const wchar_t *s, size_t l )
 {
-    wchar_t tmp=0;
+	wchar_t tmp=0;
 
 	CHECK( b, );
 	CHECK( s, );
 
-    b_append( b, s, sizeof(wchar_t)*l );
-    b_append( b, &tmp, sizeof(wchar_t) );
-    b->used -= sizeof(wchar_t);
+	b_append( b, s, sizeof(wchar_t)*l );
+	b_append( b, &tmp, sizeof(wchar_t) );
+	b->used -= sizeof(wchar_t);
 }
 
 
 void sb_append_char( string_buffer_t *b, wchar_t c )
 {
-    wchar_t tmp=0;
+	wchar_t tmp=0;
 
 	CHECK( b, );
 
 	b_append( b, &c, sizeof(wchar_t) );
-    b_append( b, &tmp, sizeof(wchar_t) );
-    b->used -= sizeof(wchar_t);
+	b_append( b, &tmp, sizeof(wchar_t) );
+	b->used -= sizeof(wchar_t);
 }
 
 void sb_append_internal( string_buffer_t *b, ... )
@@ -1298,15 +1298,20 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 		  small. In GLIBC, errno seems to be set to EINVAL either way. 
 
 		  Because of this, sb_printf will on failiure try to
-		  increase the buffer size until the free space is larger than
-		  SB_MAX_SIZE, at which point it will conclude that the error
-		  was probably due to a badly formated string option, and
-		  return an error. 
+		  increase the buffer size until the free space is
+		  larger than SB_MAX_SIZE, at which point it will
+		  conclude that the error was probably due to a badly
+		  formated string option, and return an error. Make
+		  sure to null terminate string before that, though.
 		*/
 	
 		if( buffer->length - buffer->used > SB_MAX_SIZE )
+		{
+			b_append( buffer, &tmp, sizeof(wchar_t) );
+			buffer->used -= sizeof(wchar_t);
 			break;
-
+		}
+		
 		buffer->buff = realloc( buffer->buff, 2*buffer->length );
 
 		if( !buffer->buff )

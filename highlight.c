@@ -530,6 +530,20 @@ static void highlight_param( const wchar_t * buff,
 	}
 }
 
+static int has_expand_reserved( wchar_t *str )
+{
+	while( *str )
+	{
+		if( *str >= EXPAND_RESERVED &&
+		    *str <= EXPAND_RESERVED_END )
+		{
+			return 1;
+		}
+		str++;
+	}
+	return 0;
+}
+
 
 void highlight_shell( wchar_t * buff, 
 					  int *color, 
@@ -636,10 +650,10 @@ void highlight_shell( wchar_t * buff,
 					  Command. First check that the command actually exists.
 					*/
 					cmd = expand_one( context, 
-									  wcsdup(tok_last( &tok )),
-									  EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+							  wcsdup(tok_last( &tok )),
+							  EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
 					
-					if( cmd == 0 )
+					if( (cmd == 0) || has_expand_reserved( cmd ) )
 					{
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 					}
@@ -698,7 +712,7 @@ void highlight_shell( wchar_t * buff,
 							}
 							tok_set_pos( &tok, mark );
 						}
-
+						
 						if( !is_subcommand )
 						{
 							wchar_t *tmp;

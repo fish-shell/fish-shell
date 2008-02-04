@@ -58,6 +58,10 @@
   Use unencoded private-use keycodes for internal characters
 */
 #define EXPAND_RESERVED 0xf000
+/**
+   End of range reserved for expand
+ */
+#define EXPAND_RESERVED_END 0xf000f
 
 enum
 {

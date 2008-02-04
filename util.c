@@ -1307,6 +1307,7 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 	
 		if( buffer->length - buffer->used > SB_MAX_SIZE )
 		{
+			wchar_t tmp=0;
 			b_append( buffer, &tmp, sizeof(wchar_t) );
 			buffer->used -= sizeof(wchar_t);
 			break;

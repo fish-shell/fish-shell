@@ -122,8 +122,8 @@ Examples:
 
 - There should only be one type of input to the shell, lists of commands. Loops, conditionals and variable assignments are all performed through regular commands.
 - The differences between builtin commands, shellscript functions and builtin commands should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
-- Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping
-- All blocks end with the \c end builtin
+- Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping.
+- All blocks end with the \c end builtin.
 
 \section disc The law of discoverability
 
@@ -147,7 +147,7 @@ until the next time she/he uses the same program.
 
 Examples:
 
-- Everything should be tab-completable, and every tab completion should have a description
+- Everything should be tab-completable, and every tab completion should have a description.
 - Every syntax error and error in a builtin command should contain an error message describing what went wrong and a relevant help page. Whenever possible, errors should be flagged red by the syntax highlighter.
 - The help manual should be easy to read, easily available from the shell, complete and contain many examples
 - The language should be uniform, so that once the user understands the command/argument syntax, he will know the whole language, and be able to use tab-completion to discover new featues.

@@ -1241,7 +1241,7 @@ fish_title function is executed before and after a new command is
 executed or put into the foreground and the output is used as a
 titlebar message. The $_ environment variable will always contain the
 name of the job to be put into the foreground (Or 'fish' if control is
-returning to the shell) when the fish_prompt function is called.
+returning to the shell) when the \c fish_prompt function is called.
 
 Example:
 <p>

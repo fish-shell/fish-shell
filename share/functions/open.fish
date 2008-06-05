@@ -9,7 +9,7 @@ if not test (uname) = Darwin
 		if count $argv >/dev/null
 			switch $argv[1]
 				case -h --h --he --hel --help
-					__fish_print_help dirh
+					__fish_print_help open
 					return 0
 			end
 		end

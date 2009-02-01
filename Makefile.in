@@ -749,7 +749,7 @@ fish_indent: $(FISH_INDENT_OBJS)
 #
 
 key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o
-	$(CC) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o $(LDFLAGS) -o $@
+	$(CC) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o $(LDFLAGS_FISH) -o $@
 
 
 #

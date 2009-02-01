@@ -20,7 +20,7 @@ if command ls --version 1>/dev/null 2>/dev/null
 
 else
 	# BSD, OS X and a few more support colors through the -G switch instead
-	if command ls / -G 1>/dev/null 2>/dev/null
+	if command ls -G / 1>/dev/null 2>/dev/null
 		function ls --description "List contents of directory"
 			command ls -G $argv
 		end

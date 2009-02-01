@@ -470,7 +470,7 @@ static char *get_description( const char *mimetype )
 	int fd;
 	struct stat st;
 	char *contents;
-	char *start=0, *stop=0;
+	char *start=0, *stop=0, *best_start=0;
 
 	if( !start_re )
 	{
@@ -583,6 +583,7 @@ static char *get_description( const char *mimetype )
 	while( !regexec(start_re, start, 1, match, 0) )
 	{
 		int new_w = match[0].rm_eo - match[0].rm_so;
+		start += match[0].rm_eo;
 		
 		if( new_w > w )
 		{
@@ -591,12 +592,13 @@ static char *get_description( const char *mimetype )
 			   match, so we use the new match
 			*/
 			w=new_w;
-			start += match[0].rm_eo;
+			best_start = start;
 		}
 	}
 	
 	if( w != -1 )
 	{
+		start = best_start;
 		if( !regexec(stop_re, start, 1, match, 0) )
 		{
 			/*

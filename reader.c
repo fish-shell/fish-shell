@@ -2357,7 +2357,7 @@ static void handle_end_loop()
 	
 	if( !reader_exit_forced() && !data->prev_end_loop && job_count && !is_breakpoint )
 	{
-		writestr(_( L"There are stopped jobs\n" ));
+		writestr(_( L"There are stopped jobs. A second attempt to exit will enforce their termination.\n" ));
 		
 		reader_exit( 0, 0 );
 		data->prev_end_loop=1;

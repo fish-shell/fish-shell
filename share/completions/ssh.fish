@@ -4,6 +4,11 @@
 
 __fish_complete_ssh ssh
 
+complete -x -c ssh -d Alias -a "
+
+(__fish_print_ssh_aliases)
+"
+
 complete -x -c ssh -d Hostname -a "
 
 (__fish_print_hostnames)
@@ -12,6 +17,9 @@ complete -x -c ssh -d Hostname -a "
 	#Prepend any username specified in the completion to the hostname
 	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
 )(__fish_print_hostnames)
+"
+
+complete -x -c ssh -d User -a "
 
 (__fish_print_users)@
 "

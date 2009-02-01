@@ -583,7 +583,7 @@ static void launch_process( process_t *p )
 			if( arg_max > 0 )
 			{
 				
-				sb_format_size( &sz2, ARG_MAX );
+				sb_format_size( &sz2, arg_max );
 				
 				debug( 0,
 				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit of %ls.",

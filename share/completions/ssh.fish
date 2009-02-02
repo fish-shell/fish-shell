@@ -4,11 +4,6 @@
 
 __fish_complete_ssh ssh
 
-complete -x -c ssh -d Alias -a "
-
-(__fish_print_ssh_aliases)
-"
-
 complete -x -c ssh -d Hostname -a "
 
 (__fish_print_hostnames)

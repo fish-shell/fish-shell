@@ -12,5 +12,10 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
 	# Print hosts with known ssh keys
 	cat ~/.ssh/known_hosts{,2} ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
+
+	# Print hosts from ssh configuration file
+	if [ -e ~/.ssh/config ]
+		grep '^ *Host' ~/.ssh/config | grep -v '[*?]' | cut -d ' ' -f 2
+	end
 end
 

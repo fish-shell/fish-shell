@@ -1805,3 +1805,18 @@ void sb_format_size( string_buffer_t *sb,
 		}
 	}		
 }
+
+double timef()
+{
+	int time_res;
+	struct timeval tv;
+	
+	time_res = gettimeofday(&tv, 0);
+	
+	if( time_res ) 
+	{
+		return NAN;
+	}
+	
+	return (double)tv.tv_sec + 0.000001*tv.tv_usec;
+}

@@ -447,5 +447,15 @@ void bugreport();
 void sb_format_size( string_buffer_t *sb,
 		     long long sz );
 
+/**
+   Return the number of seconds from the UNIX epoch, with subsecond
+   precision. This function uses the gettimeofday function, and will
+   have the same precision as that function.
+
+   If an error occurs, NAN is returned.
+ */
+double timef();
+
+
 #endif
 

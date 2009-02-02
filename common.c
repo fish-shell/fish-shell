@@ -1815,7 +1815,7 @@ double timef()
 	
 	if( time_res ) 
 	{
-		return NAN;
+		return nan(0);
 	}
 	
 	return (double)tv.tv_sec + 0.000001*tv.tv_usec;

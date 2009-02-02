@@ -469,8 +469,9 @@ long sysconf(int name);
 
 #endif
 
-#ifndef NAN
-#define NAN (0.0/0.0)
+#ifndef HAVE_NAN
+double nan(char *tagp);
 #endif
+
 
 #endif

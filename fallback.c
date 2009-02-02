@@ -1183,5 +1183,12 @@ long sysconf(int name)
 	return -1;
 	
 }
-
 #endif
+
+#ifndef HAVE_NAN
+double nan(char *tagp)
+{
+	return 0.0/0.0;
+}
+#endif
+

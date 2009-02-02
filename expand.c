@@ -1519,6 +1519,11 @@ static void remove_internal_separator( const void *s, int conv )
 				*out++ = conv?L'*':ANY_STRING;
 				break;
 
+			case ANY_STRING_RECURSIVE:
+				in++;
+				*out++ = conv?L'*':ANY_STRING;
+				break;
+
 			default:
 				*out++ = *in++;
 		}

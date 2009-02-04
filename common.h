@@ -109,13 +109,13 @@ extern wchar_t *program_name;
 /**
    Pause for input, then exit the program. If supported, print a backtrace first.
 */
-#define FATAL_EXIT()							\
-	{											\
-		char c;									\
-		show_stackframe();						\
-		read( 0, &c, 1 );						\
-		exit( 1 );								\
-	}											\
+#define FATAL_EXIT()											\
+	{															\
+		int exit_read_count;char exit_read_buff;				\
+		show_stackframe();										\
+		exit_read_count=read( 0, &exit_read_buff, 1 );			\
+		exit( 1 );												\
+	}															\
 		
 
 /**

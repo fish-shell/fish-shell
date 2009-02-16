@@ -15,7 +15,9 @@ if not test (uname) = Darwin
 		end
 
 		if type -f xdg-open >/dev/null
-			xdg-open $argv
+			for i in $argv
+				xdg-open $i
+			end
 		else
 			mimedb -l -- $argv
 		end

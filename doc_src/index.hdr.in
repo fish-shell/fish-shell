@@ -1256,6 +1256,12 @@ end
 </pre>
 </p>
 
+\subsection greeting Configurable greeting
+
+If a function named fish_greeting exists after initialization, it will
+be run when entering interactive mode. Otherwise,if an environment
+variable named fish_greeting exists, it will be printed.
+
 \subsection event Event handlers
 
 When defining a new function in fish, it is possible to make it into an

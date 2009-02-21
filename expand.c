@@ -109,11 +109,11 @@ parameter expansion.
 
 /**
    Characters which make a string unclean if they are the first
-   character of the string. See \c is_clean().
+   character of the string. See \c expand_is_clean().
 */
 #define UNCLEAN_FIRST L"~%"
 /**
-   Unclean characters. See \c is_clean().
+   Unclean characters. See \c expand_is_clean().
 */
 #define UNCLEAN L"$*?\\\"'({})"
 
@@ -1521,7 +1521,7 @@ static void remove_internal_separator( const void *s, int conv )
 
 			case ANY_STRING_RECURSIVE:
 				in++;
-				*out++ = conv?L'*':ANY_STRING;
+				*out++ = conv?L'*':ANY_STRING_RECURSIVE;
 				break;
 
 			default:

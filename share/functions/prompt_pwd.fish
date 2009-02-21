@@ -16,7 +16,7 @@ else
 
 			case '*'
 			printf "%s" (echo $PWD|sed -e "s|^$HOME|~|" -e 's-/\(\.\{0,1\}[^/]\)\([^/]*\)-/\1-g')
-			echo $PWD|sed -n -e 's-.*/\.\{0,1}.\([^/]*\)-\1-p'
+			echo $PWD|sed -n -e 's-.*/\.\{0,1\}.\([^/]*\)-\1-p'
 		end
 	end
 end

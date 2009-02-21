@@ -2099,6 +2099,10 @@ void reader_set_buffer( wchar_t *b, int p )
 		data->buff_pos=l;
 	}
 
+	data->search_mode = NO_SEARCH;
+	sb_clear( &data->search_buff );
+	history_reset();
+
 	reader_super_highlight_me_plenty( data->buff_pos,
 					  0 );
 	reader_repaint_needed();

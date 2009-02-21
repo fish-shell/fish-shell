@@ -485,4 +485,10 @@ void proc_push_interactive( int value );
 */
 void proc_pop_interactive();
 
+/**
+   Format an exit status code as returned by e.g. wait into a fish exit code number as accepted by proc_set_last_status.
+ */
+int proc_format_status(int status) ;
+
+
 #endif

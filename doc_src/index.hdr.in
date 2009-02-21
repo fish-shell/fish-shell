@@ -928,7 +928,7 @@ values of most of these variables.
 - \c history, which is an array containing the last commands that where entered.
 - \c HOME, which is the users home directory. This variable can only be changed by the root user.
 - \c PWD, which is the current working directory. 
-- \c status, which is the exit status of the last foreground job to exit. 
+- \c status, which is the exit status of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
 - \c USER, which is the username. This variable can only be changed by the root user.
 
 The names of these variables are mostly derived from the csh family of
@@ -966,6 +966,8 @@ variable may also be set to a specific value:
 - 125 means that while an executable with the specified name was located, the operating system could not actually execute the command
 - 126 means that while a file with the specified name was located, it was not executable
 - 127 means that no function, builtin or command with the given name could be located
+
+If a process exits through a signal, the exit status will be 128 plus the number of the signal.
 
 \subsection variables-color Variables for changing highlighting colors
 

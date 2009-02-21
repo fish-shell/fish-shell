@@ -343,30 +343,29 @@ static void mark_process_status( job_t *j,
 								 process_t *p,
 								 int status )
 {
-	p->status = status;
 //	debug( 0, L"Process %ls %ls", p->argv[0], WIFSTOPPED (status)?L"stopped":(WIFEXITED( status )?L"exited":(WIFSIGNALED( status )?L"signaled to exit":L"BLARGH")) );
+	p->status = status;
 	
 	if (WIFSTOPPED (status))
 	{
 		p->stopped = 1;
 	}
-	else
+	else if (WIFSIGNALED(status) || WIFEXITED(status)) 
 	{
 		p->completed = 1;
+	}
+	else
+	{
+		/* This should never be reached */
+		p->completed = 1;
 
+		char mess[MESS_SIZE];
+		snprintf( mess,
+				  MESS_SIZE,
+				  "Process %d exited abnormally\n",
+				  (int) p->pid );
 		
-		if (( !WIFEXITED( status ) ) &&
-			(! WIFSIGNALED( status )) )
-		{
-			/* This should never be reached */
-			char mess[MESS_SIZE];
-			snprintf( mess,
-					 MESS_SIZE,
-					 "Process %d exited abnormally\n",
-					 (int) p->pid );
-			
-			write( 2, mess, strlen(mess) );
-		}
+		write( 2, mess, strlen(mess) );
 	}
 }
 
@@ -1106,7 +1105,7 @@ void job_continue (job_t *j, int cont)
 			while( p->next )
 				p = p->next;
 
-			if( WIFEXITED( p->status ) )
+			if( WIFEXITED( p->status ) || WIFSIGNALED(p->status))
 			{
 				/* 
 				   Mark process status only if we are in the foreground
@@ -1114,8 +1113,9 @@ void job_continue (job_t *j, int cont)
 				*/
 				if( p->pid )
 				{
-					debug( 3, L"Set status of %ls to %d", j->command, WEXITSTATUS(p->status) );
-					proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(WEXITSTATUS(p->status)?0:1):WEXITSTATUS(p->status) );
+					int status = proc_format_status(p->status);
+					
+					proc_set_last_status( job_get_flag( j, JOB_NEGATE )?!status:status);
 				}
 			}			
 		}
@@ -1139,6 +1139,21 @@ void job_continue (job_t *j, int cont)
 	}
 	
 }
+
+int proc_format_status(int status) 
+{
+	if( WIFSIGNALED( status ) ) 
+	{
+		return 128+WTERMSIG(status);
+	} 
+	else if( WIFEXITED( status ) ) 
+	{
+		return WEXITSTATUS(status);
+	}
+	return status;
+	
+}
+
 
 void proc_sanity_check()
 {

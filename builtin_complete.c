@@ -308,11 +308,6 @@ static int builtin_complete( wchar_t **argv )
 
 	static int recursion_level=0;
 	
-	if( !is_interactive_session )
-	{
-		debug( 1, _(L"%ls: Command only available in interactive sessions"), argv[0] );
-	}
-	
 	al_init( &cmd );
 	al_init( &path );
 	sb_init( &short_opt );

@@ -1419,6 +1419,8 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Don't use expand_string to perform completions. wildcard_complete can be called directly, the brace expansion handling should be universal, and the process expansion can be moved to complete.c.
 - Make the history search support incremental searching
 - An automatic logout feature 
+- Make tab completions completely silent by default, i.e. kill stderr when running completion commands. This needs to be overridalbe for debugging purposes.
+- Move history to an environment variable
 
 \subsection bugs Known bugs and issues
 

@@ -14,5 +14,5 @@
 - <tt>-f</tt> or <tt>--current-filename</tt> prints the filename of the currently running script
 - <tt>-n</tt> or <tt>--current-line-number</tt> prints the line number of the currently running script
 - <tt>-j CONTROLTYPE</tt> or <tt>--job-control=CONTROLTYPE</tt> set the job control type.  Can be one of: none, full, interactive
-- <tt>-t</tt> or <tt>--print-stack-trace</tt>
+- <tt>-t</tt> or <tt>--print-stack-trace</tt> prints a stack trace of all function calls on the call stack
 - <tt>-h</tt> or <tt>--help</tt> display a help message and exit

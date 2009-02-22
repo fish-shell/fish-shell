@@ -57,8 +57,8 @@ feature, write <code>set CDPATH .</code> on the commandline.
 If fish is unable to locate a command with a given name, fish will
 test if a directory of that name exists. If it does, it is implicitly
 assumed that you want to change working directory. For example, the 
-fastest way to switch to your home directory is to simply type
-<code>~</code>.
+fastest way to switch to your home directory is to simply press
+<code>~</code> and enter.
 
 <hr>
 
@@ -93,8 +93,8 @@ In order to change your default shell, type:
 
 You may need to adjust the above path to e.g. /usr/bin/fish. Use the command <code>which fish</code> if you are unsure of where fish is installed.
 
-You will need to log out and back in again for the change to take
-effect.
+Unfortunatly, there is no way to make the changes take effect at once,
+you will need to log out and back in again.
 
 <hr>
 
@@ -105,7 +105,7 @@ Quick answer:
 Run the following command in fish:
 
 <pre>
-echo function fish_title;end ~/.config/fish/config.fish
+echo 'function fish_title;end' &gt; ~/.config/fish/config.fish
 </pre>
 
 Problem solved!

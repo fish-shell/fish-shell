@@ -26,5 +26,11 @@ in a grey font color, while <code>set_color --bold white</code> will
 result in a white font color.
 
 Not all terminal emulators support all these features. This is not a
-bug in set_color but a missing feature in the terminal emulator.
+bug in set_color but a missing feature in the terminal emulator. 
+
+set_color uses the terminfo database to look up how to change terminal
+colors on whatever terminal is in use. Some systems have old and
+incomplete terminfo databases, and may lack color information for
+terminals that support it. Download and install the latest version of
+ncurses and recompile fish against it in order to fix this issue.
 

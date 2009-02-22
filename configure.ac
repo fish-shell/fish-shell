@@ -519,7 +519,9 @@ if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 
-AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )
+# Check for libiconv_open if we can't find iconv_open. Silly OS X does
+# weird macro magic for the sole purpose of amusing me.
+AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 
 LIBS_FISH=$LIBS
 LIBS=$LIBS_COMMON

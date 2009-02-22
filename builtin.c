@@ -2158,6 +2158,8 @@ static int builtin_read( wchar_t **argv )
 		
 		reader_set_buffer( commandline, wcslen( commandline ) );
 		proc_push_interactive( 1 );
+		
+		event_fire_generic(L"fish_prompt");
 		line = reader_readline( );
 		proc_pop_interactive();
 		if( line )

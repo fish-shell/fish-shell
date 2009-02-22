@@ -331,6 +331,12 @@ __sentinel int contains_internal( const wchar_t *needle, ... );
 */
 int read_blocked(int fd, void *buf, size_t count);
 
+/**
+   Loop a write request while failiure is non-critical. Return -1 and set errno
+   in case of critical error.
+ */
+ssize_t write_loop(int fd, char *buff, size_t count);
+
 
 /**
    Issue a debug message with printf-style string formating and

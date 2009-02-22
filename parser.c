@@ -436,6 +436,7 @@ typedef struct
 /**
    Return the current number of block nestings
 */
+/*
 static int block_count( block_t *b )
 {
 
@@ -443,7 +444,7 @@ static int block_count( block_t *b )
 		return 0;
 	return( block_count(b->outer)+1);
 }
-
+*/
 
 void parser_push_block( int type )
 {

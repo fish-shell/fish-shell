@@ -521,7 +521,7 @@ static void load_or_save( int save)
 	if( save )
 	{
 		
-		write( c.fd, SAVE_MSG, strlen(SAVE_MSG) );
+		write_loop( c.fd, SAVE_MSG, strlen(SAVE_MSG) );
 		enqueue_all( &c );
 	}
 	else

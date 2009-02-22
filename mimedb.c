@@ -95,6 +95,17 @@ license. Read the source code of the library for more information.
 #define GETOPT_STRING "tfimdalhv"
 
 /**
+   Error message if system call goes wrong.
+*/
+#define ERROR_SYSTEM "%s: Could not execute command \"%s\"\n" 
+
+/**
+   Exit code if system call goes wrong.
+*/
+#define STATUS_ERROR_SYSTEM 1
+
+
+/**
    All types of input and output possible
 */
 enum
@@ -1127,8 +1138,12 @@ static void launch( char *filter, array_list_t *files, int fileno )
 			writer( '&' );
 			writer( '\0' );
 	
-//			fprintf( stderr, "mimedb: %s\n", launch_buff );
-			system( launch_buff );
+			if( system( launch_buff ) == -1 )
+			{
+				fprintf( stderr, _( ERROR_SYSTEM ), MIMEDB, launch_buff );
+				exit(STATUS_ERROR_SYSTEM);
+			}
+			
 			break;
 		}
 	}

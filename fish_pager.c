@@ -351,7 +351,7 @@ static int pager_buffered_writer( char c)
 */
 static void pager_flush()
 {
-	write( 1, pager_buffer->buff, pager_buffer->used );
+	write_loop( 1, pager_buffer->buff, pager_buffer->used );
 	pager_buffer->used = 0;
 }
 

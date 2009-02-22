@@ -578,6 +578,36 @@ int read_blocked(int fd, void *buf, size_t count)
 	return res;	
 }
 
+ssize_t write_loop(int fd, char *buff, size_t count)
+{
+	ssize_t out=0;
+	ssize_t out_cum=0;
+	while( 1 ) 
+	{
+		out = write( fd, 
+					 &buff[out_cum],
+					 count - out_cum );
+		if (out == -1) 
+		{
+			if( errno != EAGAIN &&
+				errno != EINTR ) 
+			{
+				return -1;
+			}
+		} else 
+		{
+			out_cum += out;
+		}
+		if( out_cum >= count ) 
+		{
+			break;
+		}
+	}						
+	return out_cum;
+}
+
+
+
 void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
@@ -1815,7 +1845,14 @@ double timef()
 	
 	if( time_res ) 
 	{
-		return nan(0);
+		/*
+		  Fixme: What on earth is the correct parameter value for NaN?
+		  The man pages and the standard helpfully state that this
+		  parameter is implementation defined. Gcc gives a warning if
+		  a null pointer is used. But not even all mighty Google gives
+		  a hint to what value should actually be returned.
+		 */
+		return nan("");
 	}
 	
 	return (double)tv.tv_sec + 0.000001*tv.tv_usec;

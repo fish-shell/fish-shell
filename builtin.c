@@ -2849,7 +2849,7 @@ static int builtin_source( wchar_t ** argv )
 		sb_printf( sb_err,
 			   _( L"%ls: Error while reading file '%ls'\n" ),
 			   argv[0],
-			   fn_intern == L"-" ? L"<stdin>" : fn_intern );
+				   fn_intern == intern_static(L"-") ? L"<stdin>" : fn_intern );
 	}
 	else
 	{

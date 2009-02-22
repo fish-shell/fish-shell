@@ -337,7 +337,7 @@ static void s_check_status( screen_t *s)
 		*/
 		
 		int prev_line = s->actual_cursor[1];
-		write( 1, "\r", 1 );
+		write_loop( 1, "\r", 1 );
 		s_reset( s, 0 );
 		s->actual_cursor[1] = prev_line;
 	}
@@ -756,7 +756,7 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 
 	if( output.used )
 	{
-		write( 1, output.buff, output.used );
+		write_loop( 1, output.buff, output.used );
 	}
 	
 	b_destroy( &output );
@@ -804,9 +804,9 @@ void s_write( screen_t *s,
 		char *prompt_narrow = wcs2str( prompt );
 		char *buffer_narrow = wcs2str( b );
 		
-		write( 1, "\r", 1 );
-		write( 1, prompt_narrow, strlen( prompt_narrow ) );
-		write( 1, buffer_narrow, strlen( buffer_narrow ) );
+		write_loop( 1, "\r", 1 );
+		write_loop( 1, prompt_narrow, strlen( prompt_narrow ) );
+		write_loop( 1, buffer_narrow, strlen( buffer_narrow ) );
 
 		free( prompt_narrow );
 		free( buffer_narrow );
@@ -938,7 +938,7 @@ void s_reset( screen_t *s, int reset_cursor )
 		  This should prevent reseting the cursor position during the
 		  next repaint.
 		*/
-		write( 1, "\r", 1 );
+		write_loop( 1, "\r", 1 );
 		s->actual_cursor[1] = prev_line;
 	}
 	fstat( 1, &s->prev_buff_1 );

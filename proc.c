@@ -356,6 +356,8 @@ static void mark_process_status( job_t *j,
 	}
 	else
 	{
+		ssize_t ignore;
+		
 		/* This should never be reached */
 		p->completed = 1;
 
@@ -364,8 +366,12 @@ static void mark_process_status( job_t *j,
 				  MESS_SIZE,
 				  "Process %d exited abnormally\n",
 				  (int) p->pid );
-		
-		write( 2, mess, strlen(mess) );
+		/*
+		  If write fails, do nothing. We're in a signal handlers error
+		  handler. If things aren't working properly, it's safer to
+		  give up.
+		 */
+		ignore = write( 2, mess, strlen(mess) );
 	}
 }
 

@@ -54,6 +54,11 @@
 #define FD_ERROR   _( L"An error occurred while redirecting file descriptor %d" )
 
 /**
+   file descriptor redirection error message
+*/
+#define WRITE_ERROR   _( L"An error occurred while writing output" )
+
+/**
    file redirection error message
 */
 #define FILE_ERROR _( L"An error occurred while redirecting file '%ls'" )
@@ -91,6 +96,18 @@
 static array_list_t *open_fds=0;
 
 static int set_child_group( job_t *j, process_t *p, int print_errors );
+
+static void exec_write_and_exit( int fd, char *buff, size_t count, int status )
+{
+	if( write_loop(fd, buff, count) == -1 ) 
+	{
+		debug( 0, WRITE_ERROR);
+		wperror( L"write" );
+		exit(status);
+	}
+	exit( status );
+}
+
 
 void exec_close( int fd )
 {
@@ -1426,15 +1443,17 @@ void exec( job_t *j )
 
 					if( pid == 0 )
 					{
+						
 						/*
 						  This is the child process. Write out the contents of the pipeline.
 						*/
 						p->pid = getpid();
 						setup_child_process( j, p );
-						write( io_buffer->fd, 
-							   io_buffer->param2.out_buffer->buff, 
-							   io_buffer->param2.out_buffer->used );
-						exit( status );
+
+						exec_write_and_exit(io_buffer->fd, 
+											io_buffer->param2.out_buffer->buff,
+											io_buffer->param2.out_buffer->used,
+											status);
 					}
 					else
 					{
@@ -1480,10 +1499,10 @@ void exec( job_t *j )
 					p->pid = getpid();
 					setup_child_process( j, p );
 					
-					write( 1,
-						   input_redirect->param2.out_buffer->buff, 
-						   input_redirect->param2.out_buffer->used );
-					exit( 0 );
+					exec_write_and_exit( 1,
+										 input_redirect->param2.out_buffer->buff, 
+										 input_redirect->param2.out_buffer->used,
+										 0);
 				}
 				else
 				{

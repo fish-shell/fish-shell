@@ -1577,9 +1577,9 @@ static int handle_completions( array_list_t *comp )
 			wchar_t quote;
 			get_param( data->buff, data->buff_pos, &quote, 0, 0, 0 );
 			is_quoted = (quote != L'\0');
-				
-			write(1, "\n", 1 );
-
+			
+			write_loop(1, "\n", 1 );
+			
 			run_pager( prefix, is_quoted, comp );
 		}
 
@@ -2650,7 +2650,7 @@ wchar_t *reader_readline()
 			case R_REPAINT:
 			{
 				exec_prompt();
-				write( 1, "\r", 1 );
+				write_loop( 1, "\r", 1 );
 				s_reset( &data->screen, 0 );
 				reader_repaint();
 				break;

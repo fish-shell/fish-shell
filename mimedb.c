@@ -678,7 +678,7 @@ static char *get_action( const char *mimetype )
 		  Core 3) we also test some common subclassings.
 		*/
 		
-		if( strncmp( mimetype, "text/", 5 ) == 0 )
+		if( strncmp( mimetype, "text/plain", 10) != 0 && strncmp( mimetype, "text/", 5 ) == 0 )
 			return get_action( "text/plain" );
 
 		return 0;

@@ -1405,7 +1405,6 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Per process output redirection
 - Reduce the space of the pager by one line to allow the commandline to remain visible.
 - down-arrow could be used to save the current command to the history. Or give the next command in-sequence. Or both.
-- Drop support for inputrc-files. Use shellscripts and the bind builtin. Also, redo the syntax for the bind builtin to something more sane.
 - History could reload itself when the file is updated. This would need to be done in a clever way to avoid chain reactions
 - The error function should probably be moved into it's own library, and be made mere general purpose.
 - The code validation functions should be moved from the parser to parse_util.
@@ -1429,15 +1428,13 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Sometimes autoheader needs to be run on a fresh tarball. Fix dates before creating tarballs.
 - The completion autoloader does not remember which completions where actually autoloaded, and may unload manually specified completions. 
 - There have been stray reports of issues with strange values of the PATH variable during startup. 
+- bindings in config.fish are overwritten by default key bindings.
+- Adding 'bind -k ...' doesn't overwrite non-keybinding binds of the same sequence.
+- History file does not remove duplicates.
+- History file should apply some kind of maximum history length.
+- Older versions of Doxygen has bugs in the man-page generation which cause the builtin help to render incorrectly. Version 1.2.14 is known to have this problem.
 
 If you think you have found a bug not described here, please send a
 report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.
-
-
-\subsection issues Known issues
-
-Older versions of Doxygen has bugs in the man-page generation which
-cause the builtin help to render incorrectly. Version 1.2.14 is known
-to have this problem.
 
 */

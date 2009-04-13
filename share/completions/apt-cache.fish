@@ -29,3 +29,14 @@ complete -f -c apt-cache -s v -l version --description "Display version and exit
 complete -r -c apt-cache -s c -l config-file --description "Specify config file"
 complete -x -c apt-cache -s o -l option --description "Specify options"
 
+function __fish_apt-cache_use_package --description 'Test if apt command should have packages as potential completion'
+	for i in (commandline -opc)
+		if contains -- $i contains show showpkg showsrc depends rdepends dotty policy
+			return 0
+		end
+	end
+	return 1
+end
+
+complete -c apt-cache -n '__fish_apt-cache_use_package' -a '(__fish_print_packages)' --description 'Package'
+

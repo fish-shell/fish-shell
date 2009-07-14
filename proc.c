@@ -822,8 +822,8 @@ static int select_try( job_t *j )
 		int retval;
 		struct timeval tv;
 		
-		tv.tv_sec=5;
-		tv.tv_usec=0;
+		tv.tv_sec=0;
+		tv.tv_usec=10000;
 		
 		retval =select( maxfd+1, &fds, 0, 0, &tv );
 		return retval > 0;

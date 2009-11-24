@@ -2162,11 +2162,42 @@ int reader_get_cursor_pos()
 	return data->buff_pos;
 }
 
+#define ENV_CMD_DURATION L"CMD_DURATION"
+
+void set_env_cmd_duration(struct timeval *after, struct timeval *before)
+{
+	time_t secs = after->tv_sec - before->tv_sec;
+	suseconds_t usecs = after->tv_usec - before->tv_usec;
+	wchar_t buf[16];
+
+	if (after->tv_usec < before->tv_usec) {
+		usecs += 1000000;
+		secs -= 1;
+	}
+
+	if (secs < 1) {
+		env_remove( ENV_CMD_DURATION, 0 );
+	} else {
+		if (secs < 10) { // 10 secs
+			swprintf(buf, 16, L"%lu.%02us", secs, usecs / 10000);
+		} else if (secs < 60) { // 1 min
+			swprintf(buf, 16, L"%lu.%01us", secs, usecs / 100000);
+		} else if (secs < 600) { // 10 mins
+			swprintf(buf, 16, L"%lum %lu.%01us", secs / 60, secs % 60, usecs / 100000);
+		} else if (secs < 5400) { // 1.5 hours
+			swprintf(buf, 16, L"%lum %lus", secs / 60, secs % 60);
+		} else {
+			swprintf(buf, 16, L"%.1fh", secs / 3600.0f);
+		}
+		env_set( ENV_CMD_DURATION, buf, ENV_EXPORT );
+	}
+}
 
 void reader_run_command( const wchar_t *cmd )
 {
 
 	wchar_t *ft;
+	struct timeval time_before, time_after;
 
 	ft= tok_first( cmd );
 
@@ -2178,8 +2209,13 @@ void reader_run_command( const wchar_t *cmd )
 
 	term_donate();
 
+	gettimeofday(&time_before, NULL);
+
 	eval( cmd, 0, TOP );
 	job_reap( 1 );
+
+	gettimeofday(&time_after, NULL);
+	set_env_cmd_duration(&time_after, &time_before);
 
 	term_steal();
 

@@ -255,7 +255,7 @@ static wchar_t *utf2wcs( const char *in )
 		return 0;		
 	}
 	
-	nconv = iconv( cd, (const char **)&in, &in_len, &nout, &out_len );
+	nconv = iconv( cd, (char **)&in, &in_len, &nout, &out_len );
 		
 	if (nconv == (size_t) -1)
 	{

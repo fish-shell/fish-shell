@@ -13,6 +13,10 @@
 
 #define HELP_ERR "Could not show help message\n"
 
+/* defined in common.h */
+ssize_t write_loop(int fd, char *buff, size_t count);
+
+
 void print_help( char *c, int fd )
 {
 	char cmd[ CMD_LEN];

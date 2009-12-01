@@ -700,8 +700,8 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		
 		for( j=start_pos; j<al_get_count( &o_line->text ); j++ )
 		{
-			wchar_t o = (wchar_t)al_get( &o_line->text, j );
-			int o_c = (int)al_get( &o_line->color, j );
+			wchar_t o = (wchar_t)(long)al_get( &o_line->text, j );
+			int o_c = (int)(long)al_get( &o_line->color, j );
 
 			
 			if( !o )
@@ -717,8 +717,8 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 			}
 			else
 			{
-				wchar_t s = (wchar_t)al_get( &s_line->text, j );
-				int s_c = (int)al_get( &s_line->color, j );
+				wchar_t s = (wchar_t)(long)al_get( &s_line->text, j );
+				int s_c = (int)(long)al_get( &s_line->color, j );
 				if( o != s || o_c != s_c )
 				{
 					s_move( scr, &output, current_width, i );

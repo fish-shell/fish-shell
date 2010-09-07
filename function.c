@@ -218,6 +218,69 @@ void function_add( function_data_t *data )
 	
 }
 
+int function_copy( const wchar_t *name, const wchar_t *new_name )
+{
+	int i;
+	function_internal_data_t *d, *orig_d;
+	event_t ev, *orig_ev;
+	array_list_t *fn_events;
+	
+	CHECK( name, 0 );
+	CHECK( new_name, 0 );
+
+	fn_events = 0;
+
+	orig_d = (function_internal_data_t *)hash_get(&function, name);
+	if( !orig_d )
+		return 0;
+
+	d = halloc(0, sizeof( function_internal_data_t ) );
+	d->definition_offset = orig_d->definition_offset;
+	d->definition = halloc_wcsdup( d, orig_d->definition );
+	if( orig_d->named_arguments )
+	{
+		d->named_arguments = al_halloc( d );
+		for( i=0; i<al_get_count( orig_d->named_arguments ); i++ )
+		{
+			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( orig_d->named_arguments, i ) ) );
+		}
+		d->description = orig_d->description?halloc_wcsdup(d, orig_d->description):0;
+		d->definition_file = 0;
+		d->is_autoload = 0;
+		d->shadows = orig_d->shadows;
+	}
+
+	hash_put( &function, intern(new_name), d );
+
+	// wire up the same events... if any.
+	ev.type = EVENT_ANY;
+	ev.function_name = name;
+	event_get(&ev, fn_events);
+
+	if( fn_events )
+	{
+		ev.function_name = new_name;
+
+		for( i=0; i<al_get_count( fn_events ); i++ )
+		{
+			orig_ev = (event_t *)al_get( fn_events, i );
+
+			// event_add_handler will deep-copy ev, so we can reuse.
+			ev.type = orig_ev->type;
+			ev.param1 = orig_ev->param1;
+			event_add_handler( &ev );
+		}
+	}
+	return 1;
+}
+
+void function_rename( const wchar_t *name, const wchar_t *new_name )
+{
+	if( function_copy( name, new_name ) )
+		function_remove( name );
+}
+
+
 int function_exists( const wchar_t *cmd )
 {
 	

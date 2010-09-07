@@ -1252,6 +1252,7 @@ static int builtin_functions( wchar_t **argv )
 	int show_hidden=0;
 	int res = STATUS_BUILTIN_OK;
 	int query = 0;
+	int rename = 0;
 
 	woptind=0;
 
@@ -1283,6 +1284,10 @@ static int builtin_functions( wchar_t **argv )
 			}
 			,
 			{
+				L"rename", no_argument, 0, 'r'
+			}
+			,
+			{
 				0, 0, 0, 0
 			}
 		}
@@ -1294,7 +1299,7 @@ static int builtin_functions( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"ed:nahq",
+								L"ed:nahqr",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1305,10 +1310,10 @@ static int builtin_functions( wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
-                           BUILTIN_ERR_UNKNOWN,
-                           argv[0],
-                           long_options[opt_index].name );
+				sb_printf( sb_err,
+						   BUILTIN_ERR_UNKNOWN,
+						   argv[0],
+						   long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
 
@@ -1338,6 +1343,10 @@ static int builtin_functions( wchar_t **argv )
 				query = 1;
 				break;
 
+			case 'r':
+				rename = 1;
+				break;
+
 			case '?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
@@ -1347,9 +1356,9 @@ static int builtin_functions( wchar_t **argv )
 	}
 
 	/*
-	  Erase, desc, query and list are mutually exclusive
+	  Erase, desc, query, rename and list are mutually exclusive
 	*/
-	if( (erase + (!!desc) + list + query) > 1 )
+	if( (erase + (!!desc) + list + query + rename) > 1 )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Invalid combination of options\n" ),
@@ -1432,6 +1441,50 @@ static int builtin_functions( wchar_t **argv )
 		}
 
 		al_destroy( &names );
+		return STATUS_BUILTIN_OK;
+	}
+	else if( rename )
+	{
+		wchar_t *current_func;
+		wchar_t *new_func;
+		
+		if( argc-woptind != 2 )
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: Expected exactly two names (current function name, and new function name)\n" ),
+					   argv[0] );
+			builtin_print_help ( argv[0], sb_err );
+			
+			return STATUS_BUILTIN_ERROR;
+		}
+		current_func = argv[woptind];
+		new_func = argv[woptind+1];
+		
+		if( !function_exists( current_func ) )
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: Function '%ls' does not exist\n" ),
+					   argv[0],
+					   current_func );
+			builtin_print_help( argv[0], sb_err );
+
+			return STATUS_BUILTIN_ERROR;
+		}
+
+		// keep things simple: don't allow existing names to be rename targets.
+		if( function_exists( new_func ) )
+		{
+			sb_printf( sb_err,
+					   _( L"%ls: Function '%ls' already exists. Cannot rename '%ls'\n" ),
+					   argv[0],
+					   new_func,
+					   current_func );            
+			builtin_print_help( argv[0], sb_err );
+
+			return STATUS_BUILTIN_ERROR;
+		}
+
+		function_rename( current_func, new_func );
 		return STATUS_BUILTIN_OK;
 	}
 

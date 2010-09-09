@@ -137,9 +137,4 @@ int function_get_shadows( const wchar_t *name );
 */
 int function_copy( const wchar_t *name, const wchar_t *new_name );
 
-/** 
-   Renames the specified function.
-*/
-void function_rename( const wchar_t *name, const wchar_t *new_name );
-
 #endif

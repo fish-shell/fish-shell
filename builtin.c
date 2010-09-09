@@ -1252,7 +1252,7 @@ static int builtin_functions( wchar_t **argv )
 	int show_hidden=0;
 	int res = STATUS_BUILTIN_OK;
 	int query = 0;
-	int rename = 0;
+	int copy = 0;
 
 	woptind=0;
 
@@ -1284,7 +1284,7 @@ static int builtin_functions( wchar_t **argv )
 			}
 			,
 			{
-				L"rename", no_argument, 0, 'r'
+				L"copy", no_argument, 0, 'c'
 			}
 			,
 			{
@@ -1299,7 +1299,7 @@ static int builtin_functions( wchar_t **argv )
 
 		int opt = wgetopt_long( argc,
 								argv,
-								L"ed:nahqr",
+								L"ed:nahqc",
 								long_options,
 								&opt_index );
 		if( opt == -1 )
@@ -1343,8 +1343,8 @@ static int builtin_functions( wchar_t **argv )
 				query = 1;
 				break;
 
-			case 'r':
-				rename = 1;
+			case 'c':
+				copy = 1;
 				break;
 
 			case '?':
@@ -1356,9 +1356,9 @@ static int builtin_functions( wchar_t **argv )
 	}
 
 	/*
-	  Erase, desc, query, rename and list are mutually exclusive
+	  Erase, desc, query, copy and list are mutually exclusive
 	*/
-	if( (erase + (!!desc) + list + query + rename) > 1 )
+	if( (erase + (!!desc) + list + query + copy) > 1 )
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Invalid combination of options\n" ),
@@ -1443,7 +1443,7 @@ static int builtin_functions( wchar_t **argv )
 		al_destroy( &names );
 		return STATUS_BUILTIN_OK;
 	}
-	else if( rename )
+	else if( copy )
 	{
 		wchar_t *current_func;
 		wchar_t *new_func;
@@ -1471,11 +1471,11 @@ static int builtin_functions( wchar_t **argv )
 			return STATUS_BUILTIN_ERROR;
 		}
 
-		// keep things simple: don't allow existing names to be rename targets.
+		// keep things simple: don't allow existing names to be copy targets.
 		if( function_exists( new_func ) )
 		{
 			sb_printf( sb_err,
-					   _( L"%ls: Function '%ls' already exists. Cannot rename '%ls'\n" ),
+					   _( L"%ls: Function '%ls' already exists. Cannot create copy '%ls'\n" ),
 					   argv[0],
 					   new_func,
 					   current_func );            
@@ -1484,8 +1484,9 @@ static int builtin_functions( wchar_t **argv )
 			return STATUS_BUILTIN_ERROR;
 		}
 
-		function_rename( current_func, new_func );
-		return STATUS_BUILTIN_OK;
+		if( function_copy( current_func, new_func ) )
+			return STATUS_BUILTIN_OK;
+		return STATUS_BUILTIN_ERROR;
 	}
 
 	for( i=woptind; i<argc; i++ )

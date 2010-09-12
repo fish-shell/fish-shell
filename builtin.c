@@ -1471,6 +1471,16 @@ static int builtin_functions( wchar_t **argv )
 			return STATUS_BUILTIN_ERROR;
 		}
 
+		if( (wcsfuncname( new_func ) != 0) || parser_keywords_is_reserved( new_func ) )
+		{
+			sb_printf( sb_err,
+			           _( L"%ls: Illegal function name '%ls'\n"),
+			           argv[0],
+			           new_func );
+			builtin_print_help( argv[0], sb_err );
+			return STATUS_BUILTIN_ERROR;
+		}
+
 		// keep things simple: don't allow existing names to be copy targets.
 		if( function_exists( new_func ) )
 		{

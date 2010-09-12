@@ -226,8 +226,6 @@ int function_copy( const wchar_t *name, const wchar_t *new_name )
 	CHECK( name, 0 );
 	CHECK( new_name, 0 );
 
-	fn_events = 0;
-
 	orig_d = (function_internal_data_t *)hash_get(&function, name);
 	if( !orig_d )
 		return 0;

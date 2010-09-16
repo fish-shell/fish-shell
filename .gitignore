@@ -13,6 +13,7 @@ doc.h
 doc_src/commands.hdr
 doc_src/index.hdr
 etc/config.fish
+po/*.gmo
 fish
 fish.spec
 fish_indent

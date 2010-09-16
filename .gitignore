@@ -1,4 +1,5 @@
 *.o
+*~
 
 Doxyfile.help
 Makefile

@@ -31,7 +31,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 			# in case the CDPATH directory is relative
 
 			builtin cd $wd
-			builtin cd $i
+			eval builtin cd $i
 
 			eval printf '"%s\tDirectory in "'$i'"\n"' (commandline -ct)\*/
 		end

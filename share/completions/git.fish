@@ -91,9 +91,9 @@ complete -c git -n '__fish_git_needs_command'    -a add -d 'Add file contents to
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'
-complete -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
-complete -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
-complete -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
+complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
+complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 # TODO options
 
 ### apply

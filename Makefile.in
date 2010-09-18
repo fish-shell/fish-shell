@@ -245,7 +245,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 #
 
 SIMPLE_PROGRAMS := fish set_color mimedb fish_pager fishd fish_indent
-PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL@ @SEQ_FALLBACK@
+PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@ @SEQ_FALLBACK@
 
 
 #
@@ -263,6 +263,13 @@ MANUALS := $(addsuffix .1, $(addprefix share/man/,	\
 TRANSLATIONS_SRC := $(wildcard po/*.po)
 TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
+
+#
+# Extra util
+#
+
+XSEL := @XSEL@
+XSEL_BIN := @XSEL_BIN@
 
 #
 # Make everything needed for installing fish
@@ -342,14 +349,14 @@ test: $(PROGRAMS) fish_tests
 # Build the xsel program, which is maintained in its own tarball
 #
 
-xsel-1.2.0:
-	tar -xf xsel-1.2.0.tar.gz
+${XSEL}:
+	tar -xf ${XSEL}.tar.gz
 
-xsel-1.2.0/Makefile: xsel-1.2.0
-	cd xsel-1.2.0 && ./configure
+${XSEL}/Makefile: ${XSEL}
+	cd ${XSEL} && ./configure
 
-xsel-1.2.0/xsel: xsel-1.2.0/Makefile
-	$(MAKE) -C xsel-1.2.0 || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
+${XSEL_BIN}: ${XSEL}/Makefile
+	$(MAKE) -C ${XSEL} || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 
 #

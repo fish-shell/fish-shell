@@ -206,9 +206,10 @@ AC_ARG_WITH(
 )
 
 if [[ "$xsel" = "with_xsel" ]]; then
-	XSEL=xsel-1.2.0/xsel
+	XSEL=xsel-1.2.0
+	XSEL_BIN=$XSEL/xsel
 	XSEL_MAN=xsel.1x
-	XSEL_MAN_PATH=xsel-1.2.0/xsel.1x
+	XSEL_MAN_PATH=$XSEL/xsel.1x
 fi
 
 

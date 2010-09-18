@@ -867,6 +867,7 @@ distclean: clean
 	rm -f fish.spec Doxyfile.help
 	rm -f etc/config.fish seq share/config.fish
 	rm -f config.status config.log config.h Makefile
+	rm -rf ${XSEL}
 .PHONY: distclean
 
 
@@ -885,8 +886,8 @@ clean:
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2
 	rm -rf doc;
 	rm -rf fish-@PACKAGE_VERSION@
-	rm -rf xsel-0.9.6/
 	rm -f $(TRANSLATIONS)
+	-make -C ${XSEL} clean
 .PHONY: clean
 
 

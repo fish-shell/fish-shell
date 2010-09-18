@@ -323,7 +323,7 @@ int main( int argc, char **argv )
 		{
 			if( my_optind == argc )
 			{
-				res = reader_read( 0, 0 );
+				res = reader_read( STDIN_FILENO, 0 );
 			}
 			else
 			{

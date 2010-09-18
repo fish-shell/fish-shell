@@ -3434,7 +3434,7 @@ static int builtin_breakpoint( wchar_t **argv )
 {
 	parser_push_block( BREAKPOINT );
 
-	reader_read( 0, real_io );
+	reader_read( STDIN_FILENO, real_io );
 
 	parser_pop_block();
 

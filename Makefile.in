@@ -345,8 +345,11 @@ test: $(PROGRAMS) fish_tests
 xsel-1.2.0:
 	tar -xf xsel-1.2.0.tar.gz
 
-xsel-1.2.0/xsel: xsel-1.2.0
-	cd xsel-1.2.0; ./configure && make || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
+xsel-1.2.0/Makefile: xsel-1.2.0
+	cd xsel-1.2.0 && ./configure
+
+xsel-1.2.0/xsel: xsel-1.2.0/Makefile
+	$(MAKE) -C xsel-1.2.0 || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 
 #

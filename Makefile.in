@@ -349,8 +349,8 @@ test: $(PROGRAMS) fish_tests
 # Build the xsel program, which is maintained in its own tarball
 #
 
-${XSEL_BIN}:
-	$(MAKE) -C ${XSEL} || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
+$(XSEL_BIN):
+	$(MAKE) -C $(XSEL) || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 
 #
@@ -861,7 +861,7 @@ distclean: clean
 	rm -f fish.spec Doxyfile.help
 	rm -f etc/config.fish seq share/config.fish
 	rm -f config.status config.log config.h Makefile
-	rm -rf ${XSEL}
+	rm -rf $(XSEL)
 .PHONY: distclean
 
 
@@ -881,7 +881,7 @@ clean:
 	rm -rf doc;
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
-	-make -C ${XSEL} clean
+	-make -C $(XSEL) clean
 .PHONY: clean
 
 

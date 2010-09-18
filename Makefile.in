@@ -342,11 +342,11 @@ test: $(PROGRAMS) fish_tests
 # Build the xsel program, which is maintained in its own tarball
 #
 
-xsel-0.9.6:
-	tar -xf xsel-0.9.6.tar
+xsel-1.2.0:
+	tar -xf xsel-1.2.0.tar.gz
 
-xsel-0.9.6/xsel: xsel-0.9.6
-	cd xsel-0.9.6; ./configure && make || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
+xsel-1.2.0/xsel: xsel-1.2.0
+	cd xsel-1.2.0; ./configure && make || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 
 #

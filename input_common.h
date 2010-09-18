@@ -1,5 +1,5 @@
 /** \file input_common.h
-	
+
 Header file for the low level input library
 
 */

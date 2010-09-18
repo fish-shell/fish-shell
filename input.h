@@ -83,7 +83,7 @@ wint_t input_readch();
 /**
    Push a character or a readline function onto the stack of unread
    characters that input_readch will return before actually reading from fd
-   0.   
+   0.
  */
 void input_unreadch( wint_t ch );
 

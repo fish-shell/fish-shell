@@ -78,7 +78,7 @@ time the original barrier request was sent have been received.
 /**
    Maximum length of socket filename
 */
-#ifndef UNIX_PATH_MAX 
+#ifndef UNIX_PATH_MAX
 #define UNIX_PATH_MAX 100
 #endif
 
@@ -182,7 +182,7 @@ static char *get_socket_filename()
 }
 
 /**
-   Signal handler for the term signal. 
+   Signal handler for the term signal.
 */
 static void handle_term( int signal )
 {
@@ -192,17 +192,17 @@ static void handle_term( int signal )
 
 /**
    Acquire the lock for the socket
-   Returns the name of the lock file if successful or 
+   Returns the name of the lock file if successful or
    NULL if unable to obtain lock.
-   The returned string must be free()d after unlink()ing the file to release 
+   The returned string must be free()d after unlink()ing the file to release
    the lock
 */
 static char *acquire_socket_lock( const char *sock_name )
 {
 	int len = strlen( sock_name );
 	char *lockfile = malloc( len + strlen( LOCKPOSTFIX ) + 1 );
-	
-	if( lockfile == NULL ) 
+
+	if( lockfile == NULL )
 	{
 		wperror( L"acquire_socket_lock" );
 		exit( EXIT_FAILURE );
@@ -237,13 +237,13 @@ static int get_socket()
 		exit( EXIT_FAILURE );
 	}
 	debug( 4, L"Acquired lockfile: %s", lockfile );
-	
+
 	local.sun_family = AF_UNIX;
 	strcpy( local.sun_path, sock_name );
 	len = sizeof(local);
-	
+
 	debug(1, L"Connect to socket at %s", sock_name);
-	
+
 	if( ( s = socket( AF_UNIX, SOCK_STREAM, 0 ) ) == -1 )
 	{
 		wperror( L"socket" );
@@ -262,7 +262,7 @@ static int get_socket()
 		exitcode = 0;
 		goto unlock;
 	}
-	
+
 	unlink( local.sun_path );
 	if( bind( s, (struct sockaddr *)&local, len ) == -1 )
 	{
@@ -288,9 +288,9 @@ unlock:
 	/*
 	   End critical section protected by lock
 	*/
-	
+
 	free( lockfile );
-	
+
 	free( sock_name );
 
 	if( doexit )
@@ -311,24 +311,24 @@ static void broadcast( int type, const wchar_t *key, const wchar_t *val )
 
 	if( !conn )
 		return;
-	
+
 	msg = create_message( type, key, val );
-	
+
 	/*
 	  Don't merge these loops, or try_send_all can free the message
 	  prematurely
 	*/
-	
+
 	for( c = conn; c; c=c->next )
 	{
 		msg->count++;
 		q_put( &c->unsent, msg );
-	}	
-	
+	}
+
 	for( c = conn; c; c=c->next )
 	{
 		try_send_all( c );
-	}	
+	}
 }
 
 /**
@@ -345,7 +345,7 @@ static void daemonize()
 			debug( 0, L"Could not put fishd in background. Quitting" );
 			wperror( L"fork" );
 			exit(1);
-			
+
 		case 0:
 		{
 			/*
@@ -366,19 +366,19 @@ static void daemonize()
 			sigaction( SIGTERM, &act, 0);
 			break;
 		}
-		
+
 		default:
-		{			
+		{
 			debug( 0, L"Parent process exiting (This is normal)" );
 			exit(0);
-		}		
+		}
 	}
-	
+
 	/*
 	  Put ourself in out own processing group
 	*/
 	setsid();
-	
+
 	/*
 	  Close stdin and stdout. We only use stderr, anyway.
 	*/
@@ -394,7 +394,7 @@ static wchar_t *fishd_env_get( wchar_t *key )
 {
 	char *nres, *nkey;
 	wchar_t *res;
-	
+
 	nkey = wcs2str( key );
 	nres = getenv( nkey );
 	free( nkey );
@@ -407,7 +407,7 @@ static wchar_t *fishd_env_get( wchar_t *key )
 		res = env_universal_common_get( key );
 		if( res )
 			res = wcsdup( res );
-		
+
 		return env_universal_common_get( key );
 	}
 }
@@ -423,7 +423,7 @@ static wchar_t *fishd_get_config()
 	wchar_t *xdg_dir, *home;
 	int done = 0;
 	wchar_t *res = 0;
-	
+
 	xdg_dir = fishd_env_get( L"XDG_CONFIG_HOME" );
 	if( xdg_dir )
 	{
@@ -439,7 +439,7 @@ static wchar_t *fishd_get_config()
 		free( xdg_dir );
 	}
 	else
-	{		
+	{
 		home = fishd_env_get( L"HOME" );
 		if( home )
 		{
@@ -455,7 +455,7 @@ static wchar_t *fishd_get_config()
 			free( home );
 		}
 	}
-	
+
 	if( done )
 	{
 		return res;
@@ -465,7 +465,7 @@ static wchar_t *fishd_get_config()
 		debug( 0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access." ));
 		return 0;
 	}
-	
+
 }
 
 /**
@@ -475,22 +475,22 @@ static void load_or_save( int save)
 {
 	char *name;
 	wchar_t *wdir = fishd_get_config();
-	char *dir;	
+	char *dir;
 	char hostname[HOSTNAME_LEN];
 	connection_t c;
 	int fd;
-	
+
 	if( !wdir )
 	{
 		return;
 	}
-	
+
 	dir = wcs2str( wdir );
 
 	free( wdir );
-	
+
 	gethostname( hostname, HOSTNAME_LEN );
-	
+
 	name = malloc( strlen(dir)+ strlen(FILE)+ strlen(hostname) + 2 );
 	strcpy( name, dir );
 	strcat( name, "/" );
@@ -499,20 +499,20 @@ static void load_or_save( int save)
 
 	free( dir );
 
-	
-	debug( 4, L"Open file for %s: '%s'", 
-		   save?"saving":"loading", 
+
+	debug( 4, L"Open file for %s: '%s'",
+		   save?"saving":"loading",
 		   name );
-	
+
 	fd = open( name, save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
-	
+
 	free( name );
-	
+
 	if( fd == -1 )
 	{
 		debug( 1, L"Could not open load/save file. No previous saves?" );
 		wperror( L"open" );
-		return;		
+		return;
 	}
 	debug( 4, L"File open on fd %d", c.fd );
 
@@ -520,14 +520,14 @@ static void load_or_save( int save)
 
 	if( save )
 	{
-		
+
 		write_loop( c.fd, SAVE_MSG, strlen(SAVE_MSG) );
 		enqueue_all( &c );
 	}
 	else
 		read_message( &c );
 
-	connection_destroy( &c );	
+	connection_destroy( &c );
 }
 
 /**
@@ -553,10 +553,10 @@ static void init()
 {
 
 	sock = get_socket();
-	daemonize();	
+	daemonize();
 	env_universal_common_init( &broadcast );
-	
-	load();	
+
+	load();
 }
 
 /**
@@ -569,13 +569,13 @@ int main( int argc, char ** argv )
 	socklen_t t;
 	int max_fd;
 	int update_count=0;
-	
+
 	fd_set read_fd, write_fd;
 
 	halloc_util_init();
-	
+
 	program_name=L"fishd";
-	wsetlocale( LC_ALL, L"" );	
+	wsetlocale( LC_ALL, L"" );
 
 	/*
 	  Parse options
@@ -586,57 +586,57 @@ int main( int argc, char ** argv )
 			long_options[] =
 			{
 				{
-					"help", no_argument, 0, 'h' 
+					"help", no_argument, 0, 'h'
 				}
 				,
 				{
-					"version", no_argument, 0, 'v' 
+					"version", no_argument, 0, 'v'
 				}
 				,
-				{ 
-					0, 0, 0, 0 
+				{
+					0, 0, 0, 0
 				}
 			}
 		;
-		
+
 		int opt_index = 0;
-		
+
 		int opt = getopt_long( argc,
-							   argv, 
+							   argv,
 							   GETOPT_STRING,
-							   long_options, 
+							   long_options,
 							   &opt_index );
-		
+
 		if( opt == -1 )
 			break;
-		
+
 		switch( opt )
 		{
 			case 0:
-				break;				
+				break;
 
 			case 'h':
 				print_help( argv[0], 1 );
-				exit(0);				
-								
+				exit(0);
+
 			case 'v':
 				debug( 0, L"%ls, version %s\n", program_name, PACKAGE_VERSION );
-				exit( 0 );				
-				
+				exit( 0 );
+
 			case '?':
 				return 1;
-				
-		}		
+
+		}
 	}
-	
+
 	init();
-	while(1) 
+	while(1)
 	{
 		connection_t *c;
 		int res;
 
-		t = sizeof( remote );		
-		
+		t = sizeof( remote );
+
 		FD_ZERO( &read_fd );
 		FD_ZERO( &write_fd );
 		FD_SET( sock, &read_fd );
@@ -645,7 +645,7 @@ int main( int argc, char ** argv )
 		{
 			FD_SET( c->fd, &read_fd );
 			max_fd = maxi( max_fd, c->fd+1);
-			
+
 			if( ! q_empty( &c->unsent ) )
 			{
 				FD_SET( c->fd, &write_fd );
@@ -661,22 +661,22 @@ int main( int argc, char ** argv )
 				save();
 				exit(0);
 			}
-			
+
 			if( res != -1 )
 				break;
-			
+
 			if( errno != EINTR )
 			{
 				wperror( L"select" );
 				exit(1);
 			}
 		}
-				
+
 		if( FD_ISSET( sock, &read_fd ) )
 		{
-			if( (child_socket = 
-				 accept( sock, 
-						 (struct sockaddr *)&remote, 
+			if( (child_socket =
+				 accept( sock,
+						 (struct sockaddr *)&remote,
 						 &t) ) == -1) {
 				wperror( L"accept" );
 				exit(1);
@@ -688,20 +688,20 @@ int main( int argc, char ** argv )
 				if( fcntl( child_socket, F_SETFL, O_NONBLOCK ) != 0 )
 				{
 					wperror( L"fcntl" );
-					close( child_socket );		
+					close( child_socket );
 				}
 				else
 				{
 					connection_t *new = malloc( sizeof(connection_t));
-					connection_init( new, child_socket );					
+					connection_init( new, child_socket );
 					new->next = conn;
 					send( new->fd, GREETING, strlen(GREETING), MSG_DONTWAIT );
-					enqueue_all( new );				
+					enqueue_all( new );
 					conn=new;
 				}
 			}
 		}
-		
+
 		for( c=conn; c; c=c->next )
 		{
 			if( FD_ISSET( c->fd, &write_fd ) )
@@ -709,7 +709,7 @@ int main( int argc, char ** argv )
 				try_send_all( c );
 			}
 		}
-		
+
 		for( c=conn; c; c=c->next )
 		{
 			if( FD_ISSET( c->fd, &read_fd ) )
@@ -728,10 +728,10 @@ int main( int argc, char ** argv )
 				}
 			}
 		}
-		
+
 		connection_t *prev=0;
 		c=conn;
-		
+
 		while( c )
 		{
 			if( c->killme )
@@ -745,7 +745,7 @@ int main( int argc, char ** argv )
 					if( !msg->count )
 						free( msg );
 				}
-				
+
 				connection_destroy( c );
 				if( prev )
 				{
@@ -755,11 +755,11 @@ int main( int argc, char ** argv )
 				{
 					conn=c->next;
 				}
-				
+
 				free(c);
-				
+
 				c=(prev?prev->next:conn);
-				
+
 			}
 			else
 			{
@@ -771,10 +771,10 @@ int main( int argc, char ** argv )
 		if( !conn )
 		{
 			debug( 0, L"No more clients. Quitting" );
-			save();			
+			save();
 			env_universal_common_destroy();
 			break;
-		}		
+		}
 
 	}
 	halloc_util_destroy();

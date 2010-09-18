@@ -43,13 +43,13 @@
 /**
    A struct representiong a history list
 */
-typedef struct 
+typedef struct
 {
 	/**
 	   The name of this list. Used for picking a suitable filename and for switching modes.
 	*/
 	const wchar_t *name;
-	
+
 	/**
 	   The items of the list. Each entry may be either a pointer to an
 	   item_t struct or a pointer to an mmaped memory region where a
@@ -66,12 +66,12 @@ typedef struct
 	   this session.
 	*/
 	hash_table_t session_item;
-	
+
 	/**
 	   The current history position
 	*/
 	int pos;
-	
+
 	/**
 	   This flag is set nonzero if the file containing earlier saves has ben mmaped in
 	*/
@@ -91,7 +91,7 @@ typedef struct
 	   A list of indices of all previous search maches. This is used to eliminate duplicate search results.
 	*/
 	array_list_t used;
-	
+
 	/**
 	   Timestamp of last save
 	*/
@@ -114,13 +114,13 @@ typedef struct
 /**
    This struct represents a history item
 */
-typedef struct 
+typedef struct
 {
 	/**
 	   The actual contents of the entry
 	*/
 	wchar_t *data;
-	
+
 	/**
 	   Original creation time for the entry
 	*/
@@ -154,7 +154,7 @@ static int hash_item_cmp( void *v1, void *v2 )
 {
 	item_t *i1 = (item_t *)v1;
 	item_t *i2 = (item_t *)v2;
-	return (i1->timestamp == i2->timestamp) && (wcscmp( i1->data, i2->data )==0);	
+	return (i1->timestamp == i2->timestamp) && (wcscmp( i1->data, i2->data )==0);
 }
 
 /**
@@ -198,7 +198,7 @@ static wchar_t *history_escape_newlines( wchar_t *in )
 				*/
 				sb_append_char( out, L'\n' );
 			}
-			
+
 		}
 		else if( *in == L'\n' )
 		{
@@ -209,7 +209,7 @@ static wchar_t *history_escape_newlines( wchar_t *in )
 		{
 			sb_append_char( out, *in );
 		}
-		
+
 	}
 	return (wchar_t *)out->buff;
 }
@@ -256,14 +256,14 @@ static wchar_t *history_unescape_newlines( wchar_t *in )
    Check if the specified item is already loaded
  */
 static int item_is_new( history_mode_t *m, void *d )
-{	
+{
 	char *begin = (char *)d;
 
 	if( !m->has_loaded || !m->mmap_start || (m->mmap_start == MAP_FAILED ) )
 	{
-		return 1;		
+		return 1;
 	}
-	
+
 	if( (begin < m->mmap_start) || (begin > (m->mmap_start+m->mmap_length) ) )
 	{
 		return 1;
@@ -277,7 +277,7 @@ static int item_is_new( history_mode_t *m, void *d )
    Later calls to this function may erase the output of a previous call to this function.
 */
 static item_t *item_get( history_mode_t *m, void *d )
-{	
+{
 	char *begin = (char *)d;
 
 	if( item_is_new( m, d ) )
@@ -286,18 +286,18 @@ static item_t *item_get( history_mode_t *m, void *d )
 	}
 	else
 	{
-		
+
 		char *end = m->mmap_start + m->mmap_length;
 		char *pos=begin;
-		
-		int was_backslash = 0;	
+
+		int was_backslash = 0;
 		static string_buffer_t *out = 0;
 		static item_t narrow_item;
-		int first_char = 1;	
+		int first_char = 1;
 		int timestamp_mode = 0;
 
 		narrow_item.timestamp = 0;
-							
+
 		if( !out )
 		{
 			out = sb_halloc( global_context );
@@ -310,17 +310,17 @@ static item_t *item_get( history_mode_t *m, void *d )
 		{
 			sb_clear( out );
 		}
-		
+
 		while( 1 )
 		{
 			wchar_t c;
 			mbstate_t state;
 			size_t res;
-			
+
 			memset( &state, 0, sizeof(state) );
-			
+
 			res = mbrtowc( &c, pos, end-pos, &state );
-			
+
 			if( res == (size_t)-1 )
 			{
 				pos++;
@@ -336,7 +336,7 @@ static item_t *item_get( history_mode_t *m, void *d )
 				continue;
 			}
 			pos += res;
-			
+
 			if( c == L'\n' )
 			{
 				if( timestamp_mode )
@@ -345,21 +345,21 @@ static item_t *item_get( history_mode_t *m, void *d )
 					while( *time_string && !iswdigit(*time_string))
 						time_string++;
 					errno=0;
-					
+
 					if( *time_string )
 					{
 						time_t tm;
 						wchar_t *end;
-						
+
 						errno = 0;
 						tm = (time_t)wcstol( time_string, &end, 10 );
-				
+
 						if( tm && !errno && !*end )
 						{
 							narrow_item.timestamp = tm;
 						}
 
-					}					
+					}
 
 					sb_clear( out );
 					timestamp_mode = 0;
@@ -368,21 +368,21 @@ static item_t *item_get( history_mode_t *m, void *d )
 				if( !was_backslash )
 					break;
 			}
-			
+
 			if( first_char )
 			{
-				if( c == L'#' ) 
+				if( c == L'#' )
 					timestamp_mode = 1;
 			}
-			
+
 			first_char = 0;
-			
+
 			sb_append_char( out, c );
-			
+
 			was_backslash = ( (c == L'\\') && !was_backslash);
-			
+
 		}
-		
+
 		narrow_item.data = history_unescape_newlines((wchar_t *)out->buff);
 		return &narrow_item;
 	}
@@ -404,12 +404,12 @@ static int item_write( FILE *f, history_mode_t *m, void *v )
 static void history_destroy_mode( history_mode_t *m )
 {
 	halloc_free( m->item_context );
-	
+
 	if( m->mmap_start && (m->mmap_start != MAP_FAILED ))
 	{
 		munmap( m->mmap_start, m->mmap_length);
-	}	
-	
+	}
+
 }
 
 /**
@@ -421,11 +421,11 @@ static void history_destroy_mode_wrapper( void *n, history_mode_t *m )
 }
 
 /**
-   Create a new empty mode with the specified name. 
+   Create a new empty mode with the specified name.
    The mode is a halloc context, and the entire mode can be destroyed using halloc_free().
 */
 static history_mode_t *history_create_mode( const wchar_t *name )
-{	
+{
 	history_mode_t *new_mode = halloc( 0, sizeof( history_mode_t ));
 
 	new_mode->name = intern(name);
@@ -434,16 +434,16 @@ static history_mode_t *history_create_mode( const wchar_t *name )
 	al_init( &new_mode->used );
 	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->item );
 	halloc_register_function( new_mode, (void (*)(void *))&al_destroy, &new_mode->used );
-	
+
 	hash_init( &new_mode->session_item, &hash_item_func, &hash_item_cmp );
 	halloc_register_function( new_mode, (void (*)(void *))&hash_destroy, &new_mode->session_item );
-	
+
 	new_mode->save_timestamp=time(0);
 	new_mode->item_context = halloc( 0,0 );
 
 	halloc_register_function( new_mode, (void (*)(void *))&history_destroy_mode, new_mode );
 
-	return new_mode;	
+	return new_mode;
 }
 
 /**
@@ -464,16 +464,16 @@ static int history_test( const wchar_t *needle, const wchar_t *haystack )
 static wchar_t *history_filename( void *context, const wchar_t *name, const wchar_t *suffix )
 {
 	wchar_t *path;
-	wchar_t *res;	
+	wchar_t *res;
 
 	if( !current_mode )
 		return 0;
-	
+
 	path = path_get_config( context );
 
 	if( !path )
 		return 0;
-	
+
 	res = wcsdupcat( path, L"/", name, L"_history", suffix?suffix:(void *)0);
 	halloc_register_function( context, &free, res );
 	return res;
@@ -483,24 +483,24 @@ static wchar_t *history_filename( void *context, const wchar_t *name, const wcha
    Go through the mmaped region and insert pointers to suitable loacations into the item list
 */
 static void history_populate_from_mmap( history_mode_t *m )
-{	
+{
 	char *begin = m->mmap_start;
 	char *end = begin + m->mmap_length;
 	char *pos;
-	
+
 	array_list_t old_item;
 	array_list_t session_item_list;
 	int ignore_newline = 0;
 	int do_push = 1;
-	
+
 	al_init( &old_item );
 	al_init( &session_item_list );
 	al_push_all( &old_item, &m->item );
 	al_truncate( &m->item, 0 );
-	
+
 	for( pos = begin; pos <end; pos++ )
 	{
-		
+
 		if( do_push )
 		{
 			item_t *i;
@@ -509,14 +509,14 @@ static void history_populate_from_mmap( history_mode_t *m )
 			ignore_newline = *pos == '#';
 
 			i = item_get( m, pos );
-			
+
 			if( (i_orig=hash_get( &current_mode->session_item, i ) ) )
 			{
 				/*
 				  This item comes from this session. Insert the
 				  original item at the end of the item list.
 				*/
-				al_push( &session_item_list, i_orig );				
+				al_push( &session_item_list, i_orig );
 			}
 			else
 			{
@@ -525,10 +525,10 @@ static void history_populate_from_mmap( history_mode_t *m )
 				*/
 				al_push( &m->item, pos );
 			}
-			
+
 			do_push = 0;
 		}
-		
+
 		switch( *pos )
 		{
 			case '\\':
@@ -536,7 +536,7 @@ static void history_populate_from_mmap( history_mode_t *m )
 				pos++;
 				break;
 			}
-			
+
 			case '\n':
 			{
 				if( ignore_newline )
@@ -546,12 +546,12 @@ static void history_populate_from_mmap( history_mode_t *m )
 				else
 				{
 					do_push = 1;
-				}				
+				}
 				break;
 			}
 		}
-	}	
-	
+	}
+
 	al_push_all(  &m->item, &session_item_list );
 	m->pos += al_get_count( &m->item );
 	al_push_all(  &m->item, &old_item );
@@ -568,20 +568,20 @@ static void history_load( history_mode_t *m )
 {
 	int fd;
 	int ok=0;
-	
+
 	void *context;
 	wchar_t *filename;
 
 	if( !m )
-		return;	
-	
+		return;
+
 	m->has_loaded=1;
 
 	signal_block();
 
 	context = halloc( 0, 0 );
 	filename = history_filename( context, m->name, 0 );
-	
+
 	if( filename )
 	{
 		if( ( fd = wopen( filename, O_RDONLY ) ) > 0 )
@@ -602,7 +602,7 @@ static void history_load( history_mode_t *m )
 			close( fd );
 		}
 	}
-	
+
 	halloc_free( context );
 	signal_unblock();
 }
@@ -633,12 +633,12 @@ static void history_save_mode( void *n, history_mode_t *m )
 			break;
 		}
 	}
-	
+
 	if( !has_new )
 	{
 		return;
 	}
-	
+
 	signal_block();
 
 	/*
@@ -647,19 +647,19 @@ static void history_save_mode( void *n, history_mode_t *m )
 	*/
 	on_disk = history_create_mode( m->name );
 	history_load( on_disk );
-	
+
 	tmp_name = history_filename( on_disk, m->name, L".tmp" );
 
 	if( tmp_name )
 	{
 		tmp_name = wcsdup(tmp_name );
-		
+
 		if( (out=wfopen( tmp_name, "w" ) ) )
 		{
 			hash_table_t mine;
-			
+
 			hash_init( &mine, &hash_item_func, &hash_item_cmp );
-			
+
 			for( i=0; i<al_get_count(&m->item); i++ )
 			{
 				void *ptr = al_get( &m->item, i );
@@ -669,7 +669,7 @@ static void history_save_mode( void *n, history_mode_t *m )
 					hash_put( &mine, item_get( m, ptr ), L"" );
 				}
 			}
-			
+
 			/*
 			  Re-save the old history
 			*/
@@ -685,14 +685,14 @@ static void history_save_mode( void *n, history_mode_t *m )
 						break;
 					}
 				}
-				
+
 			}
-			
+
 			hash_destroy( &mine );
-		
+
 			/*
 			  Add our own items last
-			*/		
+			*/
 			for( i=0; ok && (i<al_get_count(&m->item)); i++ )
 			{
 				void *ptr = al_get( &m->item, i );
@@ -700,12 +700,12 @@ static void history_save_mode( void *n, history_mode_t *m )
 				if( is_new )
 				{
 					if( item_write( out, m, ptr ) == -1 )
-					{						
+					{
 						ok = 0;
 					}
 				}
 			}
-			
+
 			if( fclose( out ) || !ok )
 			{
 				/*
@@ -720,8 +720,8 @@ static void history_save_mode( void *n, history_mode_t *m )
 			}
 		}
 		free( tmp_name );
-	}	
-	
+	}
+
 	halloc_free( on_disk);
 
 	if( ok )
@@ -733,23 +733,23 @@ static void history_save_mode( void *n, history_mode_t *m )
 		  hash table. On reload, they will be automatically inserted at
 		  the end of the history list.
 		*/
-			
+
 		if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
 		{
 			munmap( m->mmap_start, m->mmap_length );
 		}
-		
+
 		al_truncate( &m->item, 0 );
 		al_truncate( &m->used, 0 );
 		m->pos = 0;
 		m->has_loaded = 0;
 		m->mmap_start=0;
 		m->mmap_length=0;
-	
+
 		m->save_timestamp=time(0);
 		m->new_count = 0;
 	}
-	
+
 	signal_unblock();
 }
 
@@ -757,27 +757,27 @@ static void history_save_mode( void *n, history_mode_t *m )
 void history_add( const wchar_t *str )
 {
 	item_t *i;
-	
+
 	if( !current_mode )
 		return;
-	
+
 	i = halloc( current_mode->item_context, sizeof(item_t));
 	i->data = (wchar_t *)halloc_wcsdup( current_mode->item_context, str );
 	i->timestamp = time(0);
-	
+
 	al_push( &current_mode->item, i );
 	hash_put( &current_mode->session_item, i, i );
-	
+
 	al_truncate( &current_mode->used, 0 );
 	current_mode->pos = al_get_count( &current_mode->item );
 
 	current_mode->new_count++;
-	
+
 	if( (time(0) > current_mode->save_timestamp+SAVE_INTERVAL) || (current_mode->new_count >= SAVE_COUNT) )
 	{
 		history_save_mode( 0, current_mode );
 	}
-	
+
 }
 
 /**
@@ -796,9 +796,9 @@ static int history_is_used( const wchar_t  *str )
 		if( wcscmp( it->data, str ) == 0 )
 		{
 			res = 1;
-			break;			
+			break;
 		}
-		
+
 	}
 	return res;
 }
@@ -813,11 +813,11 @@ const wchar_t *history_prev_match( const wchar_t *needle )
 			{
 				item_t *i = item_get( current_mode, al_get( &current_mode->item, current_mode->pos ) );
 				wchar_t *haystack = (wchar_t *)i->data;
-				
+
 				if( history_test( needle, haystack ) )
 				{
 					int is_used;
-					
+
 					/*
 					  This is ugly.  Whenever we call item_get(),
 					  there is a chance that the return value of any
@@ -829,11 +829,11 @@ const wchar_t *history_prev_match( const wchar_t *needle )
 					*/
 
 					haystack = wcsdup(haystack );
-					
+
 					is_used = history_is_used( haystack );
-					
+
 					free( haystack );
-					
+
 					if( !is_used )
 					{
 						i = item_get( current_mode, al_get( &current_mode->item, current_mode->pos ) );
@@ -843,7 +843,7 @@ const wchar_t *history_prev_match( const wchar_t *needle )
 				}
 			}
 		}
-		
+
 		if( !current_mode->has_loaded )
 		{
 			/*
@@ -864,9 +864,9 @@ const wchar_t *history_prev_match( const wchar_t *needle )
 			if( al_peek_long( &current_mode->used ) != -1 )
 				al_push_long( &current_mode->used, -1 );
 		}
-		
+
 	}
-	
+
 	return needle;
 }
 
@@ -877,7 +877,7 @@ wchar_t *history_get( int idx )
 
 	if( !current_mode )
 		return 0;
-	
+
 	len = al_get_count( &current_mode->item );
 
 	if( (idx >= len ) && !current_mode->has_loaded )
@@ -885,13 +885,13 @@ wchar_t *history_get( int idx )
 		history_load( current_mode );
 		len = al_get_count( &current_mode->item );
 	}
-	
+
 	if( idx < 0 )
 		return 0;
-	
+
 	if( idx >= len )
 		return 0;
-	
+
 	return item_get( current_mode, al_get( &current_mode->item, len - 1 - idx ) )->data;
 }
 
@@ -903,9 +903,9 @@ void history_first()
 		{
 			history_load( current_mode );
 		}
-		
+
 		current_mode->pos = 0;
-	}	
+	}
 }
 
 void history_reset()
@@ -917,7 +917,7 @@ void history_reset()
 		  Clear list of search matches
 		*/
 		al_truncate( &current_mode->used, 0 );
-	}	
+	}
 }
 
 const wchar_t *history_next_match( const wchar_t *needle)
@@ -939,7 +939,7 @@ const wchar_t *history_next_match( const wchar_t *needle)
 				return i->data;
 			}
 		}
-		
+
 		/*
 		  The used-list is empty. Set position to 'past end of list'
 		  and return the search string.
@@ -947,7 +947,7 @@ const wchar_t *history_next_match( const wchar_t *needle)
 		current_mode->pos = al_get_count( &current_mode->item );
 
 	}
-	return needle;	
+	return needle;
 }
 
 
@@ -956,16 +956,16 @@ void history_set_mode( const wchar_t *name )
 	if( !mode_table )
 	{
 		mode_table = malloc( sizeof(hash_table_t ));
-		hash_init( mode_table, &hash_wcs_func, &hash_wcs_cmp );		
+		hash_init( mode_table, &hash_wcs_func, &hash_wcs_cmp );
 	}
-	
+
 	current_mode = (history_mode_t *)hash_get( mode_table, name );
-	
+
 	if( !current_mode )
 	{
 		current_mode = history_create_mode( name );
-		hash_put( mode_table, name, current_mode );		
-	}	
+		hash_put( mode_table, name, current_mode );
+	}
 }
 
 void history_init()

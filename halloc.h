@@ -1,4 +1,4 @@
-/** \file halloc.h 
+/** \file halloc.h
 
     A hierarchical memory allocation system. Works mostly like talloc
 	used in Samba, except that an arbitrary block allocated with

@@ -18,7 +18,7 @@ int parser_keywords_is_switch( const wchar_t *cmd )
 {
 	if( wcscmp( cmd, L"--" ) == 0 )
 		return ARG_SKIP;
-	else 
+	else
 		return cmd[0] == L'-';
 }
 
@@ -43,7 +43,7 @@ int parser_keywords_is_subcommand( const wchar_t *cmd )
 				  L"and",
 				  L"or",
 				  L"not" );
-	
+
 }
 
 int parser_keywords_is_block( const wchar_t *word)

@@ -134,9 +134,9 @@ void wutil_destroy()
 static char *wutil_wcs2str( const wchar_t *in )
 {
 	size_t new_sz;
-	
+
 	wutil_calls++;
-	
+
 	new_sz =MAX_UTF8_BYTES*wcslen(in)+1;
 	if( tmp_len < new_sz )
 	{
@@ -161,9 +161,9 @@ static char *wutil_wcs2str( const wchar_t *in )
 static wchar_t *wutil_str2wcs( const char *in )
 {
 	size_t new_sz;
-	
+
 	wutil_calls++;
-	
+
 	new_sz = sizeof(wchar_t)*(strlen(in)+1);
 	if( tmp2_len < new_sz )
 	{
@@ -175,7 +175,7 @@ static wchar_t *wutil_str2wcs( const char *in )
 		}
 		tmp2_len = new_sz;
 	}
-	
+
 	return str2wcs_internal( in, tmp2 );
 }
 
@@ -189,7 +189,7 @@ struct wdirent *wreaddir(DIR *dir )
 
 	my_wdirent.d_name = wutil_str2wcs( d->d_name );
 	return &my_wdirent;
-	
+
 }
 
 
@@ -198,24 +198,24 @@ wchar_t *wgetcwd( wchar_t *buff, size_t sz )
 	char *buffc = malloc( sz*MAX_UTF8_BYTES);
 	char *res;
 	wchar_t *ret = 0;
-		
+
 	if( !buffc )
 	{
 		errno = ENOMEM;
 		return 0;
 	}
-	
+
 	res = getcwd( buffc, sz*MAX_UTF8_BYTES );
 	if( res )
 	{
 		if( (size_t)-1 != mbstowcs( buff, buffc, sizeof( wchar_t ) * sz ) )
 		{
 			ret = buff;
-		}	
+		}
 	}
-	
+
 	free( buffc );
-	
+
 	return ret;
 }
 
@@ -227,15 +227,15 @@ int wchdir( const wchar_t * dir )
 
 FILE *wfopen(const wchar_t *path, const char *mode)
 {
-	
+
 	char *tmp =wutil_wcs2str(path);
 	FILE *res=0;
 	if( tmp )
 	{
 		res = fopen(tmp, mode);
-		
+
 	}
-	return res;	
+	return res;
 }
 
 FILE *wfreopen(const wchar_t *path, const char *mode, FILE *stream)
@@ -246,7 +246,7 @@ FILE *wfreopen(const wchar_t *path, const char *mode, FILE *stream)
 	{
 		res = freopen(tmp, mode, stream);
 	}
-	return res;	
+	return res;
 }
 
 
@@ -256,10 +256,10 @@ int wopen(const wchar_t *pathname, int flags, ...)
 	char *tmp =wutil_wcs2str(pathname);
 	int res=-1;
 	va_list argp;
-	
+
 	if( tmp )
 	{
-		
+
 		if( ! (flags & O_CREAT) )
 		{
 			res = open(tmp, flags);
@@ -271,7 +271,7 @@ int wopen(const wchar_t *pathname, int flags, ...)
 			va_end( argp );
 		}
 	}
-	
+
     return res;
 }
 
@@ -283,7 +283,7 @@ int wcreat(const wchar_t *pathname, mode_t mode)
 	{
 		res= creat(tmp, mode);
 	}
-	
+
     return res;
 }
 
@@ -291,11 +291,11 @@ DIR *wopendir(const wchar_t *name)
 {
 	char *tmp =wutil_wcs2str(name);
 	DIR *res = 0;
-	if( tmp ) 
+	if( tmp )
 	{
 		res = opendir(tmp);
 	}
-	
+
 	return res;
 }
 
@@ -308,8 +308,8 @@ int wstat(const wchar_t *file_name, struct stat *buf)
 	{
 		res = stat(tmp, buf);
 	}
-	
-	return res;	
+
+	return res;
 }
 
 int lwstat(const wchar_t *file_name, struct stat *buf)
@@ -321,8 +321,8 @@ int lwstat(const wchar_t *file_name, struct stat *buf)
 	{
 		res = lstat(tmp, buf);
 	}
-	
-	return res;	
+
+	return res;
 }
 
 
@@ -333,8 +333,8 @@ int waccess(const wchar_t *file_name, int mode)
 	if( tmp )
 	{
 		res= access(tmp, mode);
-	}	
-	return res;	
+	}
+	return res;
 }
 
 void wperror(const wchar_t *s)
@@ -352,18 +352,18 @@ void wperror(const wchar_t *s)
 wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 {
 	char *tmp = wutil_wcs2str(pathname);
-	char *narrow_res = realpath( tmp, 0 );	
-	wchar_t *res;	
+	char *narrow_res = realpath( tmp, 0 );
+	wchar_t *res;
 
 	if( !narrow_res )
 		return 0;
-		
+
 	if( resolved_path )
 	{
 		wchar_t *tmp2 = str2wcs( narrow_res );
 		wcslcpy( resolved_path, tmp2, PATH_MAX );
 		free( tmp2 );
-		res = resolved_path;		
+		res = resolved_path;
 	}
 	else
 	{
@@ -382,17 +382,17 @@ wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
 	char *tmp = wutil_wcs2str(pathname);
 	char narrow_buff[PATH_MAX];
 	char *narrow_res = realpath( tmp, narrow_buff );
-	wchar_t *res;	
+	wchar_t *res;
 
 	if( !narrow_res )
 		return 0;
-		
+
 	if( resolved_path )
 	{
 		wchar_t *tmp2 = str2wcs( narrow_res );
 		wcslcpy( resolved_path, tmp2, PATH_MAX );
 		free( tmp2 );
-		res = resolved_path;		
+		res = resolved_path;
 	}
 	else
 	{
@@ -409,14 +409,14 @@ wchar_t *wdirname( wchar_t *path )
 	static string_buffer_t *sb = 0;
 	if( sb )
 		sb_clear(sb);
-	else 
+	else
 		sb = sb_halloc( global_context );
-	
+
 	char *tmp =wutil_wcs2str(path);
 	char *narrow_res = dirname( tmp );
 	if( !narrow_res )
 		return 0;
-	
+
 	sb_printf( sb, L"%s", narrow_res );
 	wcscpy( path, (wchar_t *)sb->buff );
 	return path;
@@ -427,14 +427,14 @@ wchar_t *wbasename( const wchar_t *path )
 	static string_buffer_t *sb = 0;
 	if( sb )
 		sb_clear(sb);
-	else 
+	else
 		sb = sb_halloc( global_context );
-	
+
 	char *tmp =wutil_wcs2str(path);
 	char *narrow_res = basename( tmp );
 	if( !narrow_res )
 		return 0;
-	
+
 	sb_printf( sb, L"%s", narrow_res );
 	return (wchar_t *)sb->buff;
 }
@@ -450,9 +450,9 @@ static void wgettext_destroy()
 
 	if( !wgettext_is_init )
 		return;
-	
+
 	wgettext_is_init = 0;
-	
+
 	for(i=0; i<BUFF_COUNT; i++ )
 		sb_destroy( &buff[i] );
 
@@ -465,16 +465,16 @@ static void wgettext_destroy()
 static void wgettext_init()
 {
 	int i;
-	
+
 	wgettext_is_init = 1;
-	
+
 	for( i=0; i<BUFF_COUNT; i++ )
 	{
 		sb_init( &buff[i] );
 	}
-	
+
 	halloc_register_function_void( global_context, &wgettext_destroy );
-	
+
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );
 }
@@ -495,7 +495,7 @@ static char *wgettext_wcs2str( const wchar_t *in )
 			DIE_MEM();
 		}
 	}
-	
+
 	return wcs2str_internal( in, wcs2str_buff);
 }
 
@@ -503,20 +503,20 @@ const wchar_t *wgettext( const wchar_t *in )
 {
 	if( !in )
 		return in;
-	
+
 	if( !wgettext_is_init )
 		wgettext_init();
-	
-	char *mbs_in = wgettext_wcs2str( in );	
+
+	char *mbs_in = wgettext_wcs2str( in );
 	char *out = gettext( mbs_in );
 	wchar_t *wres=0;
-	
+
 	sb_clear( &buff[curr_buff] );
-	
+
 	sb_printf( &buff[curr_buff], L"%s", out );
 	wres = (wchar_t *)buff[curr_buff].buff;
 	curr_buff = (curr_buff+1)%BUFF_COUNT;
-	
+
 	return wres;
 }
 
@@ -528,7 +528,7 @@ wchar_t *wgetenv( const wchar_t *name )
 
 	if( !res_narrow )
 		return 0;
-	
+
 	if( !out )
 	{
 		out = sb_halloc( global_context );
@@ -539,9 +539,9 @@ wchar_t *wgetenv( const wchar_t *name )
 	}
 
 	sb_printf( out, L"%s", res_narrow );
-	
+
 	return (wchar_t *)out->buff;
-	
+
 }
 
 int wmkdir( const wchar_t *name, int mode )
@@ -555,7 +555,7 @@ int wrename( const wchar_t *old, const wchar_t *new )
 	char *old_narrow =wutil_wcs2str(old);
 	char *new_narrow =wcs2str(new);
 	int res;
-	
+
 	res = rename( old_narrow, new_narrow );
 	free( new_narrow );
 

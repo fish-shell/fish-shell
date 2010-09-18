@@ -11,7 +11,7 @@
 #include <wchar.h>
 
 /**
-   Constants for various colors as used by the set_color function. 
+   Constants for various colors as used by the set_color function.
 */
 enum
 {

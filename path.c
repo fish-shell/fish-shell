@@ -32,7 +32,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 	wchar_t *path;
 
 	int err = ENOENT;
-	
+
 	CHECK( cmd, 0 );
 
 	debug( 3, L"path_get_path( '%ls' )", cmd );
@@ -46,7 +46,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 			{
 				return 0;
 			}
-			
+
 			if( S_ISREG(buff.st_mode) )
 				return halloc_wcsdup( context, cmd );
 			else
@@ -61,7 +61,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 			wstat( cmd, &buff );
 			return 0;
 		}
-		
+
 	}
 	else
 	{
@@ -77,12 +77,12 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 				path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
 			}
 		}
-		
+
 		/*
 		  Allocate string long enough to hold the whole command
 		*/
 		wchar_t *new_cmd = halloc( context, sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
-		
+
 		/*
 		  We tokenize a copy of the path, since strtok modifies
 		  its arguments
@@ -90,7 +90,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		wchar_t *path_cpy = wcsdup( path );
 		wchar_t *nxt_path = path;
 		wchar_t *state;
-			
+
 		if( (new_cmd==0) || (path_cpy==0) )
 		{
 			DIE_MEM();
@@ -124,7 +124,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 					return new_cmd;
 				}
 				err = EACCES;
-				
+
 			}
 			else
 			{
@@ -229,7 +229,7 @@ wchar_t *path_get_cdpath( void *context, wchar_t *dir )
 				if( S_ISDIR(buf.st_mode) )
 				{
 					res = whole_path;
-					halloc_register( context, whole_path );					
+					halloc_register( context, whole_path );
 					break;
 				}
 				else
@@ -244,7 +244,7 @@ wchar_t *path_get_cdpath( void *context, wchar_t *dir )
 					err = EROTTEN;
 				}
 			}
-			
+
 			free( whole_path );
 		}
 		free( path_cpy );
@@ -264,7 +264,7 @@ wchar_t *path_get_config( void *context)
 	wchar_t *xdg_dir, *home;
 	int done = 0;
 	wchar_t *res = 0;
-	
+
 	xdg_dir = env_get( L"XDG_CONFIG_HOME" );
 	if( xdg_dir )
 	{
@@ -277,10 +277,10 @@ wchar_t *path_get_config( void *context)
 		{
 			free( res );
 		}
-		
+
 	}
 	else
-	{		
+	{
 		home = env_get( L"HOME" );
 		if( home )
 		{
@@ -295,7 +295,7 @@ wchar_t *path_get_config( void *context)
 			}
 		}
 	}
-	
+
 	if( done )
 	{
 		halloc_register_function( context, &free, res );
@@ -306,16 +306,16 @@ wchar_t *path_get_config( void *context)
 		debug( 0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access." ));
 		return 0;
 	}
-	
+
 }
 
 wchar_t *path_make_canonical( void *context, const wchar_t *path )
 {
 	wchar_t *res = halloc_wcsdup( context, path );
 	wchar_t *in, *out;
-	
+
 	in = out = res;
-	
+
 	while( *in )
 	{
 		if( *in == L'/' )
@@ -326,7 +326,7 @@ wchar_t *path_make_canonical( void *context, const wchar_t *path )
 			}
 		}
 		*out = *in;
-	
+
 		out++;
 		in++;
 	}
@@ -340,7 +340,7 @@ wchar_t *path_make_canonical( void *context, const wchar_t *path )
 		out--;
 	}
 	*out = 0;
-		
+
 	return res;
 }
 

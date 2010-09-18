@@ -81,7 +81,7 @@ char *col[]=
 
 int col_idx[]=
 {
-	0, 
+	0,
 	1,
 	2,
 	3,
@@ -112,16 +112,16 @@ int translate_color( char *str )
 		color = -1;
 		for( i=0; i<COLORS; i++ )
 		{
-			
+
 			if( strcasecmp( col[i], str ) == 0 )
 			{
-				color = col_idx[i];				
+				color = col_idx[i];
 				break;
 			}
 		}
-	}	
+	}
 	return color;
-	
+
 }
 
 void print_colors()
@@ -130,7 +130,7 @@ void print_colors()
 	for( i=0; i<COLORS; i++ )
 	{
 		printf( "%s\n", col[i] );
-	}	
+	}
 }
 
 static void check_locale_init()
@@ -138,7 +138,7 @@ static void check_locale_init()
 	static int is_init = 0;
 	if( is_init )
 		return;
-	
+
 	is_init = 1;
 	setlocale( LC_ALL, "" );
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
@@ -154,100 +154,100 @@ int main( int argc, char **argv )
 	int bold=0;
 	int underline=0;
 	char *bg_seq, *fg_seq;
-			
+
 	while( 1 )
 	{
 		static struct option
 			long_options[] =
 			{
 				{
-					"background", required_argument, 0, 'b' 
+					"background", required_argument, 0, 'b'
 				}
 				,
 				{
-					"help", no_argument, 0, 'h' 
+					"help", no_argument, 0, 'h'
 				}
 				,
 				{
-					"bold", no_argument, 0, 'o' 
+					"bold", no_argument, 0, 'o'
 				}
 				,
 				{
-					"underline", no_argument, 0, 'u' 
+					"underline", no_argument, 0, 'u'
 				}
 				,
 				{
-					"version", no_argument, 0, 'v' 
+					"version", no_argument, 0, 'v'
 				}
 				,
 				{
-					"print-colors", no_argument, 0, 'c' 
+					"print-colors", no_argument, 0, 'c'
 				}
 				,
-				{ 
-					0, 0, 0, 0 
+				{
+					0, 0, 0, 0
 				}
 			}
-		;		
-		
+		;
+
 		int opt_index = 0;
-		
+
 		int opt = getopt_long( argc,
-							   argv, 
-							   GETOPT_STRING, 
-							   long_options, 
+							   argv,
+							   GETOPT_STRING,
+							   long_options,
 							   &opt_index );
 
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
 				break;
-				
-			case 'b':				
+
+			case 'b':
 				bgcolor = optarg;
 				break;
 			case 'h':
 				print_help( argv[0], 1 );
-				exit(0);				
-								
+				exit(0);
+
 			case 'o':
 				bold=1;
 				break;
-				
+
 			case 'u':
 				underline=1;
 				break;
-				
+
 			case 'v':
 				check_locale_init();
 				fprintf( stderr, _("%s, version %s\n"), SET_COLOR, PACKAGE_VERSION );
-				exit( 0 );								
+				exit( 0 );
 
 			case 'c':
 				print_colors();
 				exit(0);
-				
+
 			case '?':
 				return 1;
-				
+
 		}
-		
-	}		
-	
+
+	}
+
 	switch( argc-optind)
 	{
 		case 0:
 //			printf( "no fg\n" );
 			break;
-			
+
 		case 1:
 			fgcolor=argv[optind];
 //			printf( "fg %s\n", fgcolor );
 			break;
-			
+
 		default:
 			check_locale_init();
 			printf( _("%s: Too many arguments\n"), SET_COLOR );
@@ -258,16 +258,16 @@ int main( int argc, char **argv )
 	{
 		check_locale_init();
 		fprintf( stderr, _("%s: Expected an argument\n"), SET_COLOR );
-		print_help( argv[0], 2 );		
+		print_help( argv[0], 2 );
 		return 1;
 	}
-	
+
 	fg = translate_color(fgcolor);
 	if( fgcolor && (fg==-1))
 	{
 		check_locale_init();
 		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, fgcolor );
-		return 1;		
+		return 1;
 	}
 
 	bg = translate_color(bgcolor);
@@ -275,14 +275,14 @@ int main( int argc, char **argv )
 	{
 		check_locale_init();
 		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, bgcolor );
-		return 1;		
+		return 1;
 	}
 
 	setupterm( 0, STDOUT_FILENO, 0);
 
 	fg_seq = set_a_foreground?set_a_foreground:set_foreground;
 	bg_seq = set_a_background?set_a_background:set_background;
-	
+
 
 	if( bold )
 	{
@@ -302,8 +302,8 @@ int main( int argc, char **argv )
 		{
 			if( bg_seq )
 				putp( tparm( bg_seq, 0) );
-			putp( tparm(exit_attribute_mode) );		
-		}	
+			putp( tparm(exit_attribute_mode) );
+		}
 	}
 
 	if( fgcolor )
@@ -312,15 +312,15 @@ int main( int argc, char **argv )
 		{
 			if( fg_seq )
 				putp( tparm( fg_seq, 0) );
-			putp( tparm(exit_attribute_mode) );		
-		}	
+			putp( tparm(exit_attribute_mode) );
+		}
 		else
 		{
 			if( fg_seq )
 				putp( tparm( fg_seq, fg) );
 		}
 	}
-	
+
 	if( bgcolor )
 	{
 		if( bg != 8 )

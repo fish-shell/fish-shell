@@ -16,39 +16,39 @@
 
 #include "util.h"
 
-/** 
-	Use all completions 
+/**
+	Use all completions
 */
 #define SHARED 0
-/** 
-	Do not use file completion 
+/**
+	Do not use file completion
 */
 #define NO_FILES 1
-/** 
-	Require a parameter after completion 
+/**
+	Require a parameter after completion
 */
 #define NO_COMMON 2
-/** 
+/**
 	Only use the argument list specifies with completion after
 	option. This is the same as (NO_FILES & NO_COMMON)
 */
 #define EXCLUSIVE 3
 
-/** 
-	Command is a path 
+/**
+	Command is a path
 */
 #define PATH 1
-/** 
-	Command is not a path 
+/**
+	Command is not a path
 */
 #define COMMAND 0
 
-/** 
+/**
 	Separator between completion and description
 */
 #define COMPLETE_SEP L'\004'
 
-/** 
+/**
 	Separator between completion and description
 */
 #define COMPLETE_SEP_STR L"\004"
@@ -73,7 +73,7 @@
 #define COMPLETE_NO_SPACE 1
 
 /**
-   This compeltion is case insensitive. 
+   This compeltion is case insensitive.
 
    Warning: The contents of the completion_t structure is actually
    different if this flag is set! Specifically, the completion string
@@ -115,7 +115,7 @@ typedef struct
 	const wchar_t *description;
 
 	/**
-	   Flags determining the completion behaviour. 
+	   Flags determining the completion behaviour.
 
 	   Determines whether a space should be inserted after this
 	   compeltion if it is the only possible completion using the
@@ -132,17 +132,17 @@ typedef struct
 
 /**
 
-  Add a completion. 
+  Add a completion.
 
   All supplied values are copied, they should be freed by or otherwise
   disposed by the caller.
 
-  Examples: 
-  
+  Examples:
+
   The command 'gcc -o' requires that a file follows it, so the
   NO_COMMON option is suitable. This can be done using the following
   line:
-  
+
   complete -c gcc -s o -r
 
   The command 'grep -d' required that one of the strings 'read',
@@ -159,7 +159,7 @@ typedef struct
   will be interpreted as the command name.
   \param short_opt The single character name of an option. (-a is a short option, --all and  -funroll are long options)
   \param long_opt The multi character name of an option. (-a is a short option, --all and  -funroll are long options)
-  \param long_mode Whether to use old style, single dash long options. 
+  \param long_mode Whether to use old style, single dash long options.
   \param result_mode Whether to search further completions when this
   completion has been succesfully matched. If result_mode is SHARED,
   any other completions may also be used. If result_mode is NO_FILES,
@@ -172,16 +172,16 @@ typedef struct
   \param condition a command to be run to check it this completion should be used. If \c condition is empty, the completion is always used.
   \param flags A set of completion flags
 */
-void complete_add( const wchar_t *cmd, 
-		   int cmd_type, 
+void complete_add( const wchar_t *cmd,
+		   int cmd_type,
 		   wchar_t short_opt,
 		   const wchar_t *long_opt,
-		   int long_mode, 
-		   int result_mode, 
+		   int long_mode,
+		   int result_mode,
 		   const wchar_t *condition,
 		   const wchar_t *comp,
 		   const wchar_t *desc,
-		   int flags ); 
+		   int flags );
 /**
   Sets whether the completion list for this command is complete. If
   true, any options not matching one of the provided options will be
@@ -194,8 +194,8 @@ void complete_set_authoritative( const wchar_t *cmd,
 /**
   Remove a previously defined completion
 */
-void complete_remove( const wchar_t *cmd, 
-		      int cmd_type, 
+void complete_remove( const wchar_t *cmd,
+		      int cmd_type,
 		      wchar_t short_opt,
 		      const wchar_t *long_opt );
 
@@ -212,7 +212,7 @@ void complete_remove( const wchar_t *cmd,
 void complete( const wchar_t *cmd, array_list_t *out );
 
 /**
-   Print a list of all current completions into the string_buffer_t. 
+   Print a list of all current completions into the string_buffer_t.
 
    \param out The string_buffer_t to write completions to
 */
@@ -221,16 +221,16 @@ void complete_print( string_buffer_t *out );
 /**
    Tests if the specified option is defined for the specified command
 */
-int complete_is_valid_option( const wchar_t *str, 
-							  const wchar_t *opt, 
+int complete_is_valid_option( const wchar_t *str,
+							  const wchar_t *opt,
 							  array_list_t *errors );
 
 /**
    Tests if the specified argument is valid for the specified option
    and command
 */
-int complete_is_valid_argument( const wchar_t *str, 
-								const wchar_t *opt, 
+int complete_is_valid_argument( const wchar_t *str,
+								const wchar_t *opt,
 								const wchar_t *arg );
 
 

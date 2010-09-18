@@ -64,10 +64,10 @@ static void read_file( FILE *f, string_buffer_t *b )
 				wperror(L"fgetwc");
 				exit(1);
 			}
-			
+
 			break;
 		}
-		
+
 		sb_append_char( b, c );
 	}
 }
@@ -78,12 +78,12 @@ static void read_file( FILE *f, string_buffer_t *b )
 static void insert_tabs( string_buffer_t *out, int indent )
 {
 	int i;
-	
+
 	for( i=0; i<indent; i++ )
 	{
 		sb_append( out, L"\t" );
 	}
-	
+
 }
 
 /**
@@ -100,12 +100,12 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 	int prev_prev_type = 0;
 
 	tok_init( &tok, in, TOK_SHOW_COMMENTS );
-	
+
 	for( ; tok_has_next( &tok ); tok_next( &tok ) )
 	{
 		int type = tok_last_type( &tok );
 		wchar_t *last = tok_last( &tok );
-		
+
 		switch( type )
 		{
 			case TOK_STRING:
@@ -116,7 +116,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 					is_command = 0;
 
 					wchar_t *unesc = unescape( last, UNESCAPE_SPECIAL );
-					
+
 					if( parser_keywords_is_block( unesc ) )
 					{
 						next_indent++;
@@ -130,29 +130,29 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 						indent--;
 						next_indent--;
 					}
-					
-	
+
+
 					if( do_indent && flags)
 					{
 						insert_tabs( out, indent );
 					}
-					
+
 					sb_printf( out, L"%ls", last );
-					
+
 					indent = next_indent;
-					
+
 				}
 				else
 				{
 					sb_printf( out, L" %ls", last );
 				}
-				
+
 				break;
 			}
-			
+
 			case TOK_END:
 			{
-				if( prev_type != TOK_END || prev_prev_type != TOK_END ) 
+				if( prev_type != TOK_END || prev_prev_type != TOK_END )
 					sb_append( out, L"\n" );
 				do_indent = 1;
 				is_command = 1;
@@ -165,7 +165,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 				is_command = 1;
 				break;
 			}
-			
+
 			case TOK_REDIRECT_OUT:
 			case TOK_REDIRECT_APPEND:
 			case TOK_REDIRECT_IN:
@@ -177,23 +177,23 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 					case TOK_REDIRECT_OUT:
 						sb_append( out, L"> " );
 						break;
-						
+
 					case TOK_REDIRECT_APPEND:
 						sb_append( out, L">> " );
 						break;
-						
+
 					case TOK_REDIRECT_IN:
 						sb_append( out, L"< " );
 						break;
-						
+
 					case TOK_REDIRECT_FD:
 						sb_append( out, L">& " );
 						break;
-															
+
 				}
 				break;
 			}
-			
+
 
 			case TOK_BACKGROUND:
 			{
@@ -202,7 +202,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 				is_command = 1;
 				break;
 			}
-			
+
 
 			case TOK_COMMENT:
 			{
@@ -210,24 +210,24 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 				{
 					insert_tabs( out, indent );
 				}
-				
+
 				sb_printf( out, L"%ls", last );
 				do_indent = 1;
-				break;				
+				break;
 			}
-			
+
 			default:
 			{
 				debug( 0, L"Unknown token '%ls'", last );
 				exit(1);
-			}			
+			}
 		}
-		
+
 		prev_prev_type = prev_type;
 		prev_type = type;
-		
+
 	}
-	
+
 	tok_destroy( &tok );
 
 	return res;
@@ -241,27 +241,27 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 static wchar_t *trim( wchar_t *in )
 {
 	wchar_t *end;
-	
+
 	while( *in == L'\n' )
 	{
 		in++;
 	}
-	
+
 	end = in + wcslen(in);
-		
+
 	while( 1 )
 	{
 		if( end < in+2 )
 			break;
 
 		end--;
-		
+
 		if( (*end == L'\n' ) && ( *(end-1) == L'\n' ) )
 			*end=0;
 		else
 			break;
 	}
-	
+
 	return in;
 }
 
@@ -273,9 +273,9 @@ int main( int argc, char **argv )
 {
 	string_buffer_t sb_in;
 	string_buffer_t sb_out;
-	
+
 	int do_indent=1;
-	
+
 	wsetlocale( LC_ALL, L"" );
 	program_name=L"fish_indent";
 
@@ -285,55 +285,55 @@ int main( int argc, char **argv )
 			long_options[] =
 			{
 				{
-					"no-indent", no_argument, 0, 'i' 
+					"no-indent", no_argument, 0, 'i'
 				}
 				,
 				{
-					"help", no_argument, 0, 'h' 
+					"help", no_argument, 0, 'h'
 				}
 				,
 				{
-					"version", no_argument, 0, 'v' 
+					"version", no_argument, 0, 'v'
 				}
 				,
-				{ 
-					0, 0, 0, 0 
+				{
+					0, 0, 0, 0
 				}
 			}
 		;
-		
+
 		int opt_index = 0;
-		
+
 		int opt = getopt_long( argc,
-				       argv, 
+				       argv,
 				       GETOPT_STRING,
-				       long_options, 
+				       long_options,
 				       &opt_index );
-		
+
 		if( opt == -1 )
 			break;
-		
+
 		switch( opt )
 		{
 			case 0:
 			{
 				break;
 			}
-			
+
 			case 'h':
 			{
 				print_help( "fish_indent", 1 );
-				exit( 0 );				
+				exit( 0 );
 				break;
 			}
-			
+
 			case 'v':
 			{
-				fwprintf( stderr, 
-						  _(L"%ls, version %s\n"), 
+				fwprintf( stderr,
+						  _(L"%ls, version %s\n"),
 						  program_name,
 						  PACKAGE_VERSION );
-				exit( 0 );				
+				exit( 0 );
 			}
 
 			case 'i':
@@ -341,23 +341,23 @@ int main( int argc, char **argv )
 				do_indent = 0;
 				break;
 			}
-			
-			
+
+
 			case '?':
 			{
 				exit( 1 );
 			}
-			
-		}		
+
+		}
 	}
 
-	halloc_util_init();	
+	halloc_util_init();
 
 	sb_init( &sb_in );
 	sb_init( &sb_out );
 
 	read_file( stdin, &sb_in );
-	
+
 	wutil_init();
 
 	if( !indent( &sb_out, (wchar_t *)sb_in.buff, do_indent ) )
@@ -371,7 +371,7 @@ int main( int argc, char **argv )
 		*/
 		fwprintf( stdout, L"%ls", (wchar_t *)sb_in.buff );
 	}
-	
+
 
 	wutil_destroy();
 

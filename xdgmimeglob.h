@@ -39,7 +39,7 @@ typedef enum
   XDG_GLOB_FULL     /* x*.[ch] */
 } XdgGlobType;
 
-  
+
 #ifdef XDG_PREFIX
 #define _xdg_mime_glob_read_from_file         XDG_ENTRY(glob_read_from_file)
 #define _xdg_glob_hash_new                    XDG_ENTRY(hash_new)

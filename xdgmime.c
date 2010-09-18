@@ -2,13 +2,13 @@
 /* xdgmime.c: XDG Mime Spec mime resolver.  Based on version 0.11 of the spec.
  *
  * More info can be found at http://www.freedesktop.org/standards/
- * 
+ *
  * Copyright (C) 2003,2004  Red Hat, Inc.
  * Copyright (C) 2003,2004  Jonathan Blandford <jrb@alum.mit.edu>
  *
  * Licensed under the Academic Free License version 2.0
  * Or under the following terms:
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -440,7 +440,7 @@ xdg_mime_get_mime_type_for_file (const char *file_name)
   data = malloc (max_extent);
   if (data == NULL)
     return XDG_MIME_TYPE_UNKNOWN;
-        
+
   file = fopen (file_name, "r");
   if (file == NULL)
     {
@@ -500,7 +500,7 @@ xdg_mime_shutdown (void)
       xdg_dir_time_list_free (dir_time_list);
       dir_time_list = NULL;
     }
-	
+
   if (global_hash)
     {
       _xdg_glob_hash_free (global_hash);
@@ -522,8 +522,8 @@ xdg_mime_shutdown (void)
 	{
 	  _xdg_mime_parent_list_free ( parent_list);
 	}
-  
-  
+
+
   for (list = callback_list; list; list = list->next)
     (list->callback) (list->data);
 
@@ -534,7 +534,7 @@ int
 xdg_mime_get_max_buffer_extents (void)
 {
   xdg_mime_init ();
-  
+
   return _xdg_mime_magic_get_buffer_extents (global_magic);
 }
 
@@ -577,7 +577,7 @@ xdg_mime_media_type_equal (const char *mime_a,
   xdg_mime_init ();
 
   sep = strchr (mime_a, '/');
-  
+
   if (sep && strncmp (mime_a, mime_b, sep - mime_a + 1) == 0)
     return 1;
 
@@ -616,7 +616,7 @@ xdg_mime_mime_type_subclass (const char *mime,
   if (strcmp (umime, ubase) == 0)
     return 1;
 
-#if 0  
+#if 0
   /* Handle supertypes */
   if (xdg_mime_is_super_type (ubase) &&
       xdg_mime_media_type_equal (umime, ubase))
@@ -624,13 +624,13 @@ xdg_mime_mime_type_subclass (const char *mime,
 #endif
 
   /*  Handle special cases text/plain and application/octet-stream */
-  if (strcmp (ubase, "text/plain") == 0 && 
+  if (strcmp (ubase, "text/plain") == 0 &&
       strncmp (umime, "text/", 5) == 0)
     return 1;
 
   if (strcmp (ubase, "application/octet-stream") == 0)
     return 1;
-  
+
   parents = _xdg_mime_parent_list_lookup (parent_list, umime);
   for (; parents && *parents; parents++)
     {
@@ -653,7 +653,7 @@ xdg_mime_get_mime_parents (const char *mime)
   return _xdg_mime_parent_list_lookup (parent_list, umime);
 }
 
-void 
+void
 xdg_mime_dump (void)
 {
   printf ("*** ALIASES ***\n\n");

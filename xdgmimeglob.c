@@ -302,11 +302,11 @@ _xdg_glob_hash_lookup_file_name (XdgGlobHash *glob_hash,
       mime_type = (_xdg_glob_hash_node_lookup_file_name (glob_hash->simple_node, ptr, FALSE));
       if (mime_type != NULL)
         return mime_type;
-      
+
       mime_type = (_xdg_glob_hash_node_lookup_file_name (glob_hash->simple_node, ptr, TRUE));
       if (mime_type != NULL)
         return mime_type;
-      
+
       ptr = strchr (ptr+1, '.');
     }
 

@@ -60,10 +60,10 @@
 #define ESCAPE_NO_QUOTED 2
 
 
-/** 
+/**
 	Save the shell mode on startup so we can restore them on exit
 */
-extern struct termios shell_modes;      
+extern struct termios shell_modes;
 
 /**
    The character to use where the text has been truncated. Is an
@@ -116,7 +116,7 @@ extern wchar_t *program_name;
 		exit_read_count=read( 0, &exit_read_buff, 1 );			\
 		exit( 1 );												\
 	}															\
-		
+
 
 /**
    Exit program at once, leaving an error message about running out of memory.
@@ -144,7 +144,7 @@ extern wchar_t *program_name;
 		show_stackframe();												\
 		return retval;													\
 	}
-		
+
 /**
    Shorthand for wgettext call
 */
@@ -152,7 +152,7 @@ extern wchar_t *program_name;
 
 /**
    Noop, used to tell xgettext that a string should be translated,
-   even though it is not directly sent to wgettext. 
+   even though it is not directly sent to wgettext.
 */
 #define N_(wstr) wstr
 
@@ -181,7 +181,7 @@ wchar_t **list_to_char_arr( array_list_t *l );
    Read a line from the stream f into the buffer buff of length len. If
    buff is to small, it will be reallocated, and both buff and len will
    be updated to reflect this. Returns the number of bytes read or -1
-   on failiure. 
+   on failiure.
 
    If the carriage return character is encountered, it is
    ignored. fgetws() considers the line to end if reading the file
@@ -258,7 +258,7 @@ __sentinel wchar_t *wcsdupcat_internal( const wchar_t *a, ... );
 
 
 /**
-   Test if the given string is a valid variable name. 
+   Test if the given string is a valid variable name.
 
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
@@ -267,7 +267,7 @@ wchar_t *wcsvarname( const wchar_t *str );
 
 
 /**
-   Test if the given string is a valid function name. 
+   Test if the given string is a valid function name.
 
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
@@ -275,7 +275,7 @@ wchar_t *wcsvarname( const wchar_t *str );
 wchar_t *wcsfuncname( const wchar_t *str );
 
 /**
-   Test if the given string is valid in a variable name 
+   Test if the given string is valid in a variable name
 
    \return 1 if this is a valid name, 0 otherwise
 */
@@ -311,14 +311,14 @@ void error_reset();
    This function behaves exactly like a wide character equivalent of
    the C function setlocale, except that it will also try to detect if
    the user is using a Unicode character set, and if so, use the
-   unicode ellipsis character as ellipsis, instead of '$'.      
+   unicode ellipsis character as ellipsis, instead of '$'.
 */
 const wchar_t *wsetlocale( int category, const wchar_t *locale );
 
 /**
    Checks if \c needle is included in the list of strings specified. A warning is printed if needle is zero.
 
-   \param needle the string to search for in the list 
+   \param needle the string to search for in the list
 
    \return zero if needle is not found, of if needle is null, non-zero otherwise
 */
@@ -346,9 +346,9 @@ ssize_t write_loop(int fd, char *buff, size_t count);
    Because debug is often called to tell the user about an error,
    before using wperror to give a specific error message, debug will
    never ever modify the value of errno.
-   
+
    \param level the priority of the message. Lower number means higher priority. Messages with a priority_number higher than \c debug_level will be ignored..
-   \param msg the message format string. 
+   \param msg the message format string.
 
    Example:
 
@@ -360,7 +360,7 @@ void debug( int level, const wchar_t *msg, ... );
 
 /**
    Replace special characters with backslash escape sequences. Newline is
-   replaced with \n, etc. 
+   replaced with \n, etc.
 
    \param in The string to be escaped
    \param escape_all Whether all characters wich hold special meaning in fish (Pipe, semicolon, etc,) should be escaped, or only unprintable characters
@@ -380,21 +380,21 @@ wchar_t *escape( const wchar_t *in, int escape_all );
    an invalid sequence is specified, 0 is returned.
 
 */
-wchar_t *unescape( const wchar_t * in, 
+wchar_t *unescape( const wchar_t * in,
 				   int escape_special );
 
 /**
-   Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
-   milliseconds between polls and timing out after timeout seconds, 
+   Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL
+   milliseconds between polls and timing out after timeout seconds,
    thereafter forcibly attempting to obtain the lock if force is non-zero.
    Returns 1 on success, 0 on failure.
    To release the lock the lockfile must be unlinked.
-   A unique temporary file named by appending characters to the lockfile name 
+   A unique temporary file named by appending characters to the lockfile name
    is used; any pre-existing file of the same name is subject to deletion.
 */
 int acquire_lock_file( const char *lockfile, const int timeout, int force );
 
-/** 
+/**
     Returns the width of the terminal window, so that not all
     functions that use these values continually have to keep track of
     it separately.
@@ -428,9 +428,9 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff );
    Tokenize the specified string into the specified array_list_t.
    Each new element is allocated using malloc and must be freed by the
    caller.
-   
+
    \param val the input string. The contents of this string is not changed.
-   \param out the list in which to place the elements. 
+   \param out the list in which to place the elements.
 */
 void tokenize_variable_array( const wchar_t *val, array_list_t *out );
 

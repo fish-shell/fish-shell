@@ -69,7 +69,7 @@ void *halloc_register( void *context, void *data )
 {
 	if( !data )
 		return 0;
-	
+
 	halloc_register_function( context, &free, data );
 	return data;
 }
@@ -78,7 +78,7 @@ wchar_t *halloc_wcsdup( void *context, const wchar_t *in )
 {
 	size_t len=wcslen(in);
 	wchar_t *out = halloc( context, sizeof( wchar_t)*(len+1));
-	
+
 	if( out == 0 )
 	{
 		DIE_MEM();
@@ -95,6 +95,6 @@ wchar_t *halloc_wcsndup( void * context, const wchar_t *in, int c )
 		DIE_MEM();
 	}
 	wcslcpy( res, in, c+1 );
-	res[c] = L'\0';	
-	return res;	
+	res[c] = L'\0';
+	return res;
 }

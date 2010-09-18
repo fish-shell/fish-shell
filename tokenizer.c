@@ -143,7 +143,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 void tok_destroy( tokenizer *tok )
 {
 	CHECK( tok, );
-	
+
 	free( tok->last );
 	if( tok->free_orig )
 		free( tok->orig_buff );
@@ -153,14 +153,14 @@ int tok_last_type( tokenizer *tok )
 {
 	CHECK( tok, TOK_ERROR );
 	CHECK( tok->buff, TOK_ERROR );
-	
+
 	return tok->last_type;
 }
 
 wchar_t *tok_last( tokenizer *tok )
 {
 	CHECK( tok, 0 );
-	
+
 	return tok->last;
 }
 
@@ -231,7 +231,7 @@ static void read_string( tokenizer *tok )
 					{
 						do_loop = 0;
 					}
-					
+
 
 				}
 				else if( *tok->buff == L'\n' && mode == 0)
@@ -240,15 +240,15 @@ static void read_string( tokenizer *tok )
 					do_loop = 0;
 					break;
 				}
-				
+
 				tok->buff++;
 				continue;
 			}
-			
-			
+
+
 			/*
 			  The modes are as follows:
-			  
+
 			  0: regular text
 			  1: inside of subshell
 			  2: inside of array brackets
@@ -266,18 +266,18 @@ static void read_string( tokenizer *tok )
 							mode = 1;
 							break;
 						}
-						
+
 						case L'[':
 						{
 							if( tok->buff != start )
 								mode=2;
 							break;
 						}
-						
+
 						case L'\'':
 						case L'"':
 						{
-							
+
 							const wchar_t *end = quote_end( tok->buff );
 							tok->last_quote = *tok->buff;
 							if( end )
@@ -287,7 +287,7 @@ static void read_string( tokenizer *tok )
 							else
 							{
 								tok->buff += wcslen( tok->buff );
-								
+
 								if( (!tok->accept_unfinished) )
 								{
 									tok_error( tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR );
@@ -332,7 +332,7 @@ static void read_string( tokenizer *tok )
 								}
 								do_loop = 0;
 							}
-							
+
 							break;
 						}
 
@@ -488,7 +488,7 @@ static void read_redirect( tokenizer *tok, int fd )
 wchar_t tok_last_quote( tokenizer *tok )
 {
 	CHECK( tok, 0 );
-	
+
 	return tok->last_quote;
 }
 
@@ -520,7 +520,7 @@ void tok_next( tokenizer *tok )
 
 	CHECK( tok, );
 	CHECK( tok->buff, );
-	
+
 	if( tok_last_type( tok ) == TOK_ERROR )
 	{
 		tok->has_next=0;
@@ -552,7 +552,7 @@ void tok_next( tokenizer *tok )
 			break;
 		}
 	}
-	
+
 
 	if( *tok->buff == L'#')
 	{
@@ -649,7 +649,7 @@ wchar_t *tok_first( const wchar_t *str )
 	wchar_t *res=0;
 
 	CHECK( str, 0 );
-	
+
 	tok_init( &t, str, 0 );
 
 	switch( tok_last_type( &t ) )
@@ -670,7 +670,7 @@ wchar_t *tok_first( const wchar_t *str )
 int tok_get_pos( tokenizer *tok )
 {
 	CHECK( tok, 0 );
-	
+
 	return tok->last_pos;
 }
 
@@ -678,7 +678,7 @@ int tok_get_pos( tokenizer *tok )
 void tok_set_pos( tokenizer *tok, int pos )
 {
 	CHECK( tok, );
-	
+
 	tok->buff = tok->orig_buff + pos;
 	tok->has_next = 1;
 	tok_next( tok );

@@ -65,7 +65,7 @@
 static int writeb_internal( char c );
 
 /**
-   Names of different colors. 
+   Names of different colors.
 */
 static wchar_t *col[]=
 {
@@ -91,7 +91,7 @@ static wchar_t *col[]=
 */
 static int col_idx[]=
 {
-	0, 
+	0,
 	1,
 	2,
 	3,
@@ -108,7 +108,7 @@ static int col_idx[]=
 /**
   Size of writestr_buff
 */
-static size_t writestr_buff_sz=0;	
+static size_t writestr_buff_sz=0;
 
 /**
    Temp buffer used for converting from wide to narrow strings
@@ -167,7 +167,7 @@ void set_color( int c, int c2 )
 	{
 		return;
 	}
-	
+
 
 	is_bold |= (c&FISH_COLOR_BOLD)!=0;
 	is_bold |= (c2&FISH_COLOR_BOLD)!=0;
@@ -210,7 +210,7 @@ void set_color( int c, int c2 )
 	if( was_bold && !is_bold )
 	{
 		/*
-		  Only way to exit bold mode is a reset of all attributes. 
+		  Only way to exit bold mode is a reset of all attributes.
 		*/
 		writembs( exit_attribute_mode );
 		last_color = FISH_COLOR_NORMAL;
@@ -218,7 +218,7 @@ void set_color( int c, int c2 )
 		was_bold=0;
 		was_underline=0;
 	}
-	
+
 	if( last_color2 != FISH_COLOR_NORMAL &&
 		last_color2 != FISH_COLOR_RESET &&
 		last_color2 != FISH_COLOR_IGNORE )
@@ -313,7 +313,7 @@ void set_color( int c, int c2 )
 					writembs( tparm( fg, last_color ) );
 				}
 			}
-			
+
 
 			was_bold=0;
 			was_underline=0;
@@ -341,20 +341,20 @@ void set_color( int c, int c2 )
 				writembs( tparm( enter_bold_mode ) );
 			}
 		}
-		was_bold = is_bold;	
+		was_bold = is_bold;
 	}
 
 	if( was_underline && !is_underline )
 	{
-		writembs( exit_underline_mode );		
+		writembs( exit_underline_mode );
 	}
-	
+
 	if( !was_underline && is_underline )
 	{
-		writembs( enter_underline_mode );		
+		writembs( enter_underline_mode );
 	}
 	was_underline = is_underline;
-	
+
 }
 
 /**
@@ -375,7 +375,7 @@ int writeb( tputs_arg_t b )
 int writembs_internal( char *str )
 {
 	CHECK( str, 1 );
-		
+
 	return tputs(str,1,&writeb)==ERR?1:0;
 }
 
@@ -396,7 +396,7 @@ int writech( wint_t ch )
 	{
 		memset( &state, 0, sizeof(state) );
 		bytes= wcrtomb( buff, ch, &state );
-		
+
 		switch( bytes )
 		{
 			case (size_t)(-1):
@@ -405,7 +405,7 @@ int writech( wint_t ch )
 			}
 		}
 	}
-	
+
 	for( i=0; i<bytes; i++ )
 	{
 		out( buff[i] );
@@ -418,7 +418,7 @@ void writestr( const wchar_t *str )
 	char *pos;
 
 	CHECK( str, );
-	
+
 //	while( *str )
 //		writech( *str++ );
 
@@ -426,15 +426,15 @@ void writestr( const wchar_t *str )
 	  Check amount of needed space
 	*/
 	size_t len = wcstombs( 0, str, 0 );
-		
+
 	if( len == (size_t)-1 )
 	{
 		debug( 1, L"Tried to print invalid wide character string" );
 		return;
 	}
-	
+
 	len++;
-	
+
 	/*
 	  Reallocate if needed
 	*/
@@ -444,7 +444,7 @@ void writestr( const wchar_t *str )
 		{
 			halloc_register_function_void( global_context, &output_destroy );
 		}
-		
+
 		writestr_buff = realloc( writestr_buff, len );
 		if( !writestr_buff )
 		{
@@ -452,11 +452,11 @@ void writestr( const wchar_t *str )
 		}
 		writestr_buff_sz = len;
 	}
-	
+
 	/*
 	  Convert
 	*/
-	wcstombs( writestr_buff, 
+	wcstombs( writestr_buff,
 			  str,
 			  writestr_buff_sz );
 
@@ -476,7 +476,7 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 	int tot;
 
 	CHECK( str, );
-	
+
 	tot = my_wcswidth(str);
 
 	if( tot <= max_width )
@@ -515,7 +515,7 @@ int write_escaped_str( const wchar_t *str, int max_len )
 	int written=0;
 
 	CHECK( str, 0 );
-	
+
 	out = escape( str, 1 );
 	len = my_wcswidth( out );
 
@@ -528,7 +528,7 @@ int write_escaped_str( const wchar_t *str, int max_len )
 		}
 		writech( ellipsis_char );
 		written += wcwidth( ellipsis_char );
-		
+
 		for( i=written; i<max_len; i++ )
 		{
 			writech( L' ' );
@@ -552,17 +552,17 @@ int output_color_code( const wchar_t *val )
 	array_list_t el;
 	int is_bold=0;
 	int is_underline=0;
-	
+
 	if( !val )
 		return FISH_COLOR_NORMAL;
-	
+
 	al_init( &el );
 	tokenize_variable_array( val, &el );
-	
+
 	for( j=0; j<al_get_count( &el ); j++ )
 	{
 		wchar_t *next = (wchar_t *)al_get( &el, j );
-		
+
 		is_bold |= (wcsncmp( next, L"--bold", wcslen(next) ) == 0 ) && wcslen(next)>=3;
 		is_bold |= wcscmp( next, L"-o" ) == 0;
 
@@ -577,14 +577,14 @@ int output_color_code( const wchar_t *val )
 				break;
 			}
 		}
-		
+
 	}
-	
+
 	al_foreach( &el, &free );
 	al_destroy( &el );
 
 	return color | (is_bold?FISH_COLOR_BOLD:0) | (is_underline?FISH_COLOR_UNDERLINE:0);
-	
+
 }
 
 void output_set_term( wchar_t *term )

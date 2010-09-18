@@ -248,7 +248,7 @@ static int builtin_jobs( wchar_t **argv )
 
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
-				return 0;				
+				return 0;
 
 			case '?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );

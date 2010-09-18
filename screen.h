@@ -43,7 +43,7 @@ typedef struct
 	  The actual width of the screen at the time of the last screen
 	  write.
 	*/
-	int actual_width;	
+	int actual_width;
 
 	/**
 	   This flag is set to true when there is reason to suspect that
@@ -52,7 +52,7 @@ typedef struct
 	   has to be sent to the terminal at the end of each line.
 	*/
 	int need_clear;
-	
+
 	/**
 	   These status buffers are used to check if any output has occurred
 	   other than from fish's main loop, in which case we need to redraw.
@@ -71,7 +71,7 @@ typedef struct
 	   The text contents of the line. Each element of the array
 	   represents on column of output. Because some characters are two
 	   columns wide, it is perfectly possible for some of the comumns
-	   to be empty. 
+	   to be empty.
 	*/
 	array_list_t text;
 	/**
@@ -98,20 +98,20 @@ void s_destroy( screen_t *s );
    order to render the desired output using as few terminal commands
    as possible.
 */
-void s_write( screen_t *s, 
-			  wchar_t *prompt, 
+void s_write( screen_t *s,
+			  wchar_t *prompt,
 			  wchar_t *commandline,
-			  int *colors, 
+			  int *colors,
 			  int *indent,
 			  int cursor_pos );
 
-/** 
+/**
     This function resets the screen buffers internal knowledge about
     the contents of the screen. Use this function when some other
     function than s_write has written to the screen.
 
     \param s the screen to reset
-    \param reset_cursor whether the line on which the curor has changed should be assumed to have changed. If \c reset_cursor is set to 0, the library will attempt to make sure that the screen area does not seem to move up or down on repaint. 
+    \param reset_cursor whether the line on which the curor has changed should be assumed to have changed. If \c reset_cursor is set to 0, the library will attempt to make sure that the screen area does not seem to move up or down on repaint.
 
     If reset_cursor is incorreclt set to 0, this may result in screen
     contents being erased. If it is incorrectly set to one, it may

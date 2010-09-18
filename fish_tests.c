@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdarg.h>		
+#include <stdarg.h>
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
@@ -85,7 +85,7 @@ static void say( wchar_t *blah, ... )
 	va_list va;
 	va_start( va, blah );
 	vwprintf( blah, va );
-	va_end( va );	
+	va_end( va );
 	wprintf( L"\n" );
 }
 
@@ -97,10 +97,10 @@ static void err( wchar_t *blah, ... )
 	va_list va;
 	va_start( va, blah );
 	err_count++;
-	
+
 	wprintf( L"Error: " );
 	vwprintf( blah, va );
-	va_end( va );	
+	va_end( va );
 	wprintf( L"\n" );
 }
 
@@ -119,13 +119,13 @@ static void pq_test( int elements )
 {
 	int i;
 	int prev;
-	
+
 	int *count = calloc( sizeof(int), 100 );
-	
+
 	priority_queue_t q;
 	pq_init( &q, pq_compare );
 
-	
+
 	for( i=0; i<elements; i++ )
 	{
 		long foo = rand() % 100;
@@ -133,9 +133,9 @@ static void pq_test( int elements )
 		pq_put( &q, (void *)foo );
 		count[foo]++;
 	}
-	
+
 	prev = 100;
-	
+
 	for( i=0; i<elements; i++ )
 	{
 		long pos = (long)pq_get( &q );
@@ -143,7 +143,7 @@ static void pq_test( int elements )
 		if( pos > prev )
 			err( L"Wrong order of elements in priority_queue_t" );
 		prev = pos;
-		
+
 	}
 
 	for( i=0; i<100; i++ )
@@ -163,10 +163,10 @@ static int stack_test( int elements )
 	long i;
 
 	int res=1;
-	
+
 	array_list_t s;
 
-	al_init( &s );	
+	al_init( &s );
 
 	for( i=0; i<elements; i++ )
 	{
@@ -174,11 +174,11 @@ static int stack_test( int elements )
 
 		al_push_long( &s, i);
 		al_push_long( &s, i);
-		
+
 		if( (foo=al_pop_long( &s )) != i )
 		{
 			err( L"Unexpected data" );
-			res = 0;			
+			res = 0;
 			break;
 		}
 	}
@@ -186,18 +186,18 @@ static int stack_test( int elements )
 	for( i=0; i<elements; i++ )
 	{
 		long foo;
-		
+
 		if( (foo=al_pop_long( &s )) != (elements-i-1) )
 		{
 			err( L"Unexpected data" );
 			res = 0;
 			break;
-		}		
+		}
 	}
 
 
 	al_destroy( &s );
-	
+
 	return res;
 }
 
@@ -210,7 +210,7 @@ static int hash_func( void *data )
 	return rand();
 */
 	int foo = (int)(long)data;
-	return 127*((foo^0xefc7e214)) ^(foo<<11);	
+	return 127*((foo^0xefc7e214)) ^(foo<<11);
 }
 
 /**
@@ -229,26 +229,26 @@ static int hash_test( long elements )
 {
 	long i;
 	int res=1;
-		
+
 	hash_table_t h;
 
 	hash_init( &h, hash_func, compare_func );
-	
+
 	for( i=1; i< elements+1; i++ )
 	{
 		hash_put( &h, (void*)i, (void*)100l-i );
 	}
-	
+
 	for( i=1; i< elements+1; i++ )
 	{
 		if( (long)hash_get( &h, (void*)i ) != (100l-i) )
 		{
 			err( L"Key %d gave data %d, expected data %d",
-				 i, 
+				 i,
 				 (long)hash_get( &h, (void*)i ),
 				 100l-i );
 			res = 0;
-			
+
 			break;
 		}
 	}
@@ -259,14 +259,14 @@ static int hash_test( long elements )
 			 hash_get_count( &h ),
 			 elements );
 		res = 0;
-		
+
 	}
-	
-	
+
+
 	for( i=1; i<elements+1; i+=2 )
 	{
 		hash_remove( &h, (void*)i, 0, 0 );
-				
+
 	}
 
 	if( hash_get_count( &h ) != ((elements)/2) )
@@ -276,7 +276,7 @@ static int hash_test( long elements )
 			 elements/2 );
 		res = 0;
 	}
-	
+
 	for( i=1; i<elements+1; i++ )
 	{
 		if( hash_contains( &h, (void*)i) != (i+1l)%2l )
@@ -295,7 +295,7 @@ static int hash_test( long elements )
 	hash_destroy( &h );
 
 	return res;
-	
+
 }
 
 /**
@@ -303,19 +303,19 @@ static int hash_test( long elements )
 */
 static void al_test( int sz)
 {
-	long i;	
+	long i;
 	array_list_t l;
 
-	
+
 
 	al_init( &l );
-	
+
 	al_set_long( &l, 1, 7L );
 	al_set_long( &l, sz, 7L );
-	
+
 	if( al_get_count( &l ) != maxi( sz+1, 2 ) )
 		err( L"Wrong number of elements in array list" );
-	
+
 	for( i=0; i<al_get_count( &l ); i++ )
 	{
 		long val = al_get_long( &l, i );
@@ -339,15 +339,15 @@ static void sb_test()
 {
 	string_buffer_t b;
 	int res;
-	
+
 	sb_init( &b );
-	
+
 	if( (res=sb_printf( &b, L"%ls%s", L"Testing ", "string_buffer_t " )) == -1 )
 	{
 		err( L"Error %d while testing stringbuffers", res );
 	}
-	
-	if( (res=sb_printf( &b, L"%ls", L"functionality" ))==-1)	
+
+	if( (res=sb_printf( &b, L"%ls", L"functionality" ))==-1)
 	{
 		err( L"Error %d while testing stringbuffers", res );
 	}
@@ -362,9 +362,9 @@ static void sb_test()
 		err( L"numerical formating is broken, '%ls' != '%ls'", (wchar_t *)b.buff, NUM_ANS );
 	}
 	else
-		say( L"numerical formating works" );	
+		say( L"numerical formating works" );
 
-	
+
 }
 
 /**
@@ -375,7 +375,7 @@ static void test_util()
 	int i;
 
 	say( L"Testing utility library" );
-	
+
 	for( i=0; i<18; i++ )
 	{
 		long t1, t2;
@@ -392,27 +392,27 @@ static void test_util()
 	}
 
 	sb_test();
-	
-	
+
+
 /*
 	int i;
 	for( i=2; i<10000000; i*=2 )
 	{
-		
+
 		printf( "%d", i );
-		
+
 		t1 = get_time();
-		
+
 		if(!hash_test(i))
 			exit(0);
-	
+
 		t2 = get_time();
-		
+
 		printf( " %d\n", (t2-t1)/i );
-		
-		
+
+
 	}
-*/	
+*/
 }
 
 
@@ -424,15 +424,15 @@ static void test_escape()
 {
 	int i;
 	string_buffer_t sb;
-	
+
 	say( L"Testing escaping and unescaping" );
 
 	sb_init( &sb );
-	
+
 	for( i=0; i<ESCAPE_TEST_COUNT; i++ )
 	{
 		wchar_t *o, *e, *u;
-		
+
 		sb_clear( &sb );
 		while( rand() % ESCAPE_TEST_LENGTH )
 		{
@@ -444,23 +444,23 @@ static void test_escape()
 		if( !o || !e || !u )
 		{
 			err( L"Escaping cycle of string %ls produced null pointer on %ls", o, e?L"unescaping":L"escaping" );
-			
+
 		}
-		
-			
+
+
 		if( wcscmp(o, u) )
 		{
 			err( L"Escaping cycle of string %ls produced different string %ls", o, u );
-			
-			
+
+
 		}
 		free( e );
 		free( u );
-		
-	}
-	
 
-		
+	}
+
+
+
 }
 
 /**
@@ -470,17 +470,17 @@ static void test_escape()
 */
 static void test_convert()
 {
-/*	char o[] = 
+/*	char o[] =
 		{
 			-17, -128, -121, -68, 0
 		}
 	;
-	
+
 	wchar_t *w = str2wcs(o);
 	char *n = wcs2str(w);
 
 	int i;
-	
+
 	for( i=0; o[i]; i++ )
 	{
 		bitprint(o[i]);;
@@ -508,20 +508,20 @@ static void test_convert()
 
 	int i;
 	buffer_t sb;
-	
+
 	say( L"Testing wide/narrow string conversion" );
 
 	b_init( &sb );
-	
+
 	for( i=0; i<ESCAPE_TEST_COUNT; i++ )
 	{
 		wchar_t *w;
 		char *o, *n;
-		
+
 		char c;
-		
+
 		sb.used=0;
-		
+
 		while( rand() % ESCAPE_TEST_LENGTH )
 		{
 			c = rand ();
@@ -529,23 +529,23 @@ static void test_convert()
 		}
 		c = 0;
 		b_append( &sb, &c, 1 );
-		
+
 		o = (char *)sb.buff;
 		w = str2wcs(o);
 		n = wcs2str(w);
-		
+
 		if( !o || !w || !n )
 		{
 			err( L"Conversion cycle of string %s produced null pointer on %s", o, w?L"str2wcs":L"wcs2str" );
 		}
-		
+
 		if( strcmp(o, n) )
 		{
 			err( L"%d: Conversion cycle of string %s produced different string %s", i, o, n );
 		}
 		free( w );
 		free( n );
-		
+
 	}
 
 }
@@ -556,10 +556,10 @@ static void test_convert()
 static void test_tok()
 {
 	tokenizer t;
-	
+
 	say( L"Testing tokenizer" );
 
-	
+
 	say( L"Testing invalid input" );
 	tok_init( &t, 0, 0 );
 
@@ -567,13 +567,13 @@ static void test_tok()
 	{
 		err(L"Invalid input to tokenizer was undetected" );
 	}
-	
+
 	say( L"Testing use of broken tokenizer" );
 	if( !tok_has_next( &t ) )
 	{
 		err( L"tok_has_next() should return 1 once on broken tokenizer" );
 	}
-	
+
 	tok_next( &t );
 	if( tok_last_type( &t ) != TOK_ERROR )
 	{
@@ -585,17 +585,17 @@ static void test_tok()
 	*/
 	say( L"Test destruction of broken tokenizer" );
 	tok_destroy( &t );
-	
+
 	{
 
 		wchar_t *str = L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ){and,brackets}$as[$well (as variable arrays)]";
-		const int types[] = 
+		const int types[] =
 		{
 			TOK_STRING, TOK_REDIRECT_IN, TOK_STRING, TOK_REDIRECT_FD, TOK_STRING, TOK_STRING, TOK_END
 		}
 		;
 		int i;
-		
+
 		say( L"Test correct tokenization" );
 
 		for( i=0, tok_init( &t, str, 0 ); i<(sizeof(types)/sizeof(int)); i++,tok_next( &t ) )
@@ -603,7 +603,7 @@ static void test_tok()
 			if( types[i] != tok_last_type( &t ) )
 			{
 				err( L"Tokenization error:");
-				wprintf( L"Token number %d of string \n'%ls'\n, expected token type %ls, got token '%ls' of type %ls\n", 
+				wprintf( L"Token number %d of string \n'%ls'\n, expected token type %ls, got token '%ls' of type %ls\n",
 						 i+1,
 						 str,
 						 tok_get_desc(types[i]),
@@ -612,9 +612,9 @@ static void test_tok()
 			}
 		}
 	}
-	
 
-		
+
+
 }
 
 /**
@@ -623,8 +623,8 @@ static void test_tok()
 static void test_parser()
 {
 	say( L"Testing parser" );
-	
-	
+
+
 	say( L"Testing null input to parser" );
 	if( !parser_test( 0, 0, 0, 0 ) )
 	{
@@ -634,51 +634,51 @@ static void test_parser()
 	say( L"Testing block nesting" );
 	if( !parser_test( L"if; end", 0, 0, 0 ) )
 	{
-		err( L"Incomplete if statement undetected" );			
+		err( L"Incomplete if statement undetected" );
 	}
 	if( !parser_test( L"if test; echo", 0, 0, 0 ) )
 	{
-		err( L"Missing end undetected" );			
+		err( L"Missing end undetected" );
 	}
 	if( !parser_test( L"if test; end; end", 0, 0, 0 ) )
 	{
-		err( L"Unbalanced end undetected" );			
+		err( L"Unbalanced end undetected" );
 	}
 
 	say( L"Testing detection of invalid use of builtin commands" );
 	if( !parser_test( L"case foo", 0, 0, 0 ) )
 	{
-		err( L"'case' command outside of block context undetected" );		
+		err( L"'case' command outside of block context undetected" );
 	}
 	if( !parser_test( L"switch ggg; if true; case foo;end;end", 0, 0, 0 ) )
 	{
-		err( L"'case' command outside of switch block context undetected" );		
+		err( L"'case' command outside of switch block context undetected" );
 	}
 	if( !parser_test( L"else", 0, 0, 0 ) )
 	{
-		err( L"'else' command outside of conditional block context undetected" );		
+		err( L"'else' command outside of conditional block context undetected" );
 	}
 	if( !parser_test( L"break", 0, 0, 0 ) )
 	{
-		err( L"'break' command outside of loop block context undetected" );		
+		err( L"'break' command outside of loop block context undetected" );
 	}
 	if( !parser_test( L"exec ls|less", 0, 0, 0 ) || !parser_test( L"echo|return", 0, 0, 0 ))
 	{
-		err( L"Invalid pipe command undetected" );		
-	}	
+		err( L"Invalid pipe command undetected" );
+	}
 
 	say( L"Testing basic evaluation" );
 	if( !eval( 0, 0, TOP ) )
 	{
 		err( L"Null input when evaluating undetected" );
-	}	
+	}
 	if( !eval( L"ls", 0, WHILE ) )
 	{
 		err( L"Invalid block mode when evaluating undetected" );
 	}
-	
+
 }
-	
+
 /**
    Perform parameter expansion and test if the output equals the zero-terminated parameter list supplied.
 
@@ -688,42 +688,42 @@ static void test_parser()
 
 static int expand_test( const wchar_t *in, int flags, ... )
 {
-	array_list_t out;	
+	array_list_t out;
 	va_list va;
 	int i=0;
 	int res=1;
 	wchar_t *arg;
-	
+
 	al_init( &out );
 	if( expand_string( 0, wcsdup(in), &out, flags) )
 	{
-		
+
 	}
-	
-	
+
+
 	va_start( va, flags );
 
-	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
+	while( (arg=va_arg(va, wchar_t *) )!= 0 )
 	{
 		if( al_get_count( &out ) == i )
 		{
 			res=0;
 			break;
 		}
-		
+
 		if( wcscmp( al_get( &out, i ),arg) != 0 )
 		{
 			res=0;
 			break;
 		}
-		
-		i++;		
+
+		i++;
 	}
 	va_end( va );
-	
+
 	al_foreach( &out, &free );
 	return res;
-		
+
 }
 
 /**
@@ -732,7 +732,7 @@ static int expand_test( const wchar_t *in, int flags, ... )
 static void test_expand()
 {
 	say( L"Testing parameter expansion" );
-	
+
 	if( !expand_test( L"foo", 0, L"foo", 0 ))
 	{
 		err( L"Strings do not expand to themselves" );
@@ -747,7 +747,7 @@ static void test_expand()
 	{
 		err( L"Cannot skip wildcard expansion" );
 	}
-	
+
 }
 
 /**
@@ -758,17 +758,17 @@ static void test_path()
 	say( L"Testing path functions" );
 
 	void *context = halloc( 0, 0 );
-	
+
 
 	wchar_t *can = path_make_canonical( context, L"//foo//////bar/" );
-	
+
 	if( wcscmp( can, L"/foo/bar" ) )
 	{
 		err( L"Bug in canonical PATH code" );
 	}
-	
+
 	halloc_free( context );
-	
+
 }
 
 
@@ -785,72 +785,72 @@ void perf_complete()
 	double t;
 	wchar_t str[3]=
 	{
-		0, 0, 0 
+		0, 0, 0
 	}
 	;
 	int i;
-	
-	
+
+
 	say( L"Testing completion performance" );
 	al_init( &out );
-	
+
 	reader_push(L"");
 	say( L"Here we go" );
-	 	
+
 	t1 = get_time();
-	
-	
+
+
 	for( c=L'a'; c<=L'z'; c++ )
 	{
 		str[0]=c;
 		reader_set_buffer( str, 0 );
-		
+
 		complete( str, &out );
-	
+
 		matches += al_get_count( &out );
-		
+
 		al_foreach( &out, &free );
 		al_truncate( &out, 0 );
 	}
 	t2=get_time();
-	
+
 	t = (double)(t2-t1)/(1000000*26);
-	
+
 	say( L"One letter command completion took %f seconds per completion, %f microseconds/match", t, (double)(t2-t1)/matches );
-	
+
 	matches=0;
 	t1 = get_time();
 	for( i=0; i<LAPS; i++ )
 	{
 		str[0]='a'+(rand()%26);
 		str[1]='a'+(rand()%26);
-		
+
 		reader_set_buffer( str, 0 );
-		
+
 		complete( str, &out );
-	
+
 		matches += al_get_count( &out );
-		
+
 		al_foreach( &out, &free );
 		al_truncate( &out, 0 );
 	}
 	t2=get_time();
-	
+
 	t = (double)(t2-t1)/(1000000*LAPS);
-	
+
 	say( L"Two letter command completion took %f seconds per completion, %f microseconds/match", t, (double)(t2-t1)/matches );
-	
+
 	al_destroy( &out );
 
 	reader_pop();
-	
+
 }
 
 
 
 
 /**
-   Main test 
+   Main test
 */
 int main( int argc, char **argv )
 {
@@ -858,13 +858,13 @@ int main( int argc, char **argv )
 	srand( time( 0 ) );
 
 	program_name=L"(ignore)";
-	
+
 	say( L"Testing low-level functionality");
 	say( L"Lines beginning with '(ignore):' are not errors, they are warning messages\ngenerated by the fish parser library when given broken input, and can be\nignored. All actual errors begin with 'Error:'." );
 
-	proc_init();	
+	proc_init();
 	halloc_util_init();
-	event_init();	
+	event_init();
 	parser_init();
 	function_init();
 	builtin_init();
@@ -878,7 +878,7 @@ int main( int argc, char **argv )
 	test_parser();
 	test_expand();
 	test_path();
-	
+
 	say( L"Encountered %d errors in low-level tests", err_count );
 
 	/*
@@ -886,9 +886,9 @@ int main( int argc, char **argv )
 	*/
 //	say( L"Testing performance" );
 //	perf_complete();
-		
+
 	env_destroy();
-	reader_destroy();	
+	reader_destroy();
 	parser_destroy();
 	function_destroy();
 	builtin_destroy();
@@ -896,5 +896,5 @@ int main( int argc, char **argv )
 	event_destroy();
 	proc_destroy();
 	halloc_util_destroy();
-	
+
 }

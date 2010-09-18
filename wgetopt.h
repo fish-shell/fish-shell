@@ -1,5 +1,5 @@
 /** \file wgetopt.h
-	A version of the getopt library for use with wide character strings. 
+	A version of the getopt library for use with wide character strings.
 
 	This is simply the gnu getopt library, but converted for use with
 	wchar_t instead of char. This is not usually useful since the argv
@@ -115,12 +115,12 @@ struct woption
 #else
   wchar_t *name;
 #endif
-	/** 
+	/**
 		Must be one of no_argument, required_argument and
 		optional_argument.
 
 		has_arg can't be an enum because some compilers complain about
-		type mismatches in all the code that assumes it is an int.  
+		type mismatches in all the code that assumes it is an int.
 	*/
   int has_arg;
 
@@ -153,7 +153,7 @@ struct woption
 
 #if defined (__STDC__) && __STDC__
 #ifdef __GNU_LIBRARY__
-/** 
+/**
 	Get options from argument list. See the glibc manual for information on how to use this function.
 */
 extern int wgetopt (int argc, wchar_t *const *argv, const wchar_t *shortopts);
@@ -161,20 +161,20 @@ extern int wgetopt (int argc, wchar_t *const *argv, const wchar_t *shortopts);
 
 extern int wgetopt ();
 #endif /* __GNU_LIBRARY__ */
-/** 
+/**
 	Get options from argument list. See the glibc manual for information on how to use this function.
  */
 extern int wgetopt_long (int argc, wchar_t *const *argv, const wchar_t *shortopts,
 		        const struct woption *longopts, int *longind);
-/** 
+/**
 	Get options from argument list. See the glibc manual for information on how to use this function.
  */
 extern int wgetopt_long_only (int argc, wchar_t *const *argv,
 			     const wchar_t *shortopts,
 		             const struct woption *longopts, int *longind);
 
-/** 
-	Internal only.  Users should not call this directly.  
+/**
+	Internal only.  Users should not call this directly.
 */
 extern int _wgetopt_internal (int argc, wchar_t *const *argv,
 			     const wchar_t *shortopts,
@@ -182,23 +182,23 @@ extern int _wgetopt_internal (int argc, wchar_t *const *argv,
 			     int long_only);
 #else /* not __STDC__ */
 
-/** 
+/**
 	Get options from argument list. See the glibc manual for information on how to use this function.
  */
 extern int wgetopt ();
 
-/** 
+/**
 	Get options from argument list. See the glibc manual for information on how to use this function.
  */
 extern int wgetopt_long ();
 
-/** 
+/**
 	Get options from argument list. See the glibc manual for information on how to use this function.
  */
 extern int wgetopt_long_only ();
 
-/** 
-	Internal only.  Users should not call this directly.  
+/**
+	Internal only.  Users should not call this directly.
 */
 extern int _wgetopt_internal ();
 #endif /* __STDC__ */

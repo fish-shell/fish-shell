@@ -64,7 +64,7 @@ enum
 #define BUILTIN_FOR_ERR_IN _( L"%ls: Second argument must be 'in'\n" )
 
 /**
-   Error message for insufficient number of arguments 
+   Error message for insufficient number of arguments
 */
 #define BUILTIN_FOR_ERR_COUNT _( L"%ls: Expected at least two arguments, got %d\n")
 
@@ -108,7 +108,7 @@ extern int builtin_err_redirect;
 
 
 /**
-   Initialize builtin data. 
+   Initialize builtin data.
 */
 void builtin_init();
 
@@ -123,11 +123,11 @@ void builtin_destroy();
 int builtin_exists( wchar_t *cmd );
 
 /**
-  Execute a builtin command 
+  Execute a builtin command
 
-  \param argv Array containing the command and parameters 
+  \param argv Array containing the command and parameters
   of the builtin.  The list is terminated by a
-  null pointer. This syntax resembles the syntax 
+  null pointer. This syntax resembles the syntax
   for exec.
   \param io the io redirections to perform on this builtin.
 

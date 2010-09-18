@@ -1,4 +1,4 @@
-/** \file tokenizer.h 
+/** \file tokenizer.h
 
     A specialized tokenizer for tokenizing the fish language. In the
     future, the tokenizer should be extended to support marks,
@@ -60,7 +60,7 @@ enum tokenizer_error
 
 
 /**
-   The tokenizer struct. 
+   The tokenizer struct.
 */
 typedef struct
 {
@@ -70,7 +70,7 @@ typedef struct
 	wchar_t *orig_buff;
 	/** A pointer to the last token*/
 	wchar_t *last;
-	
+
 	/** Type of last token*/
 	int last_type;
 	/** Length of last token*/
@@ -102,7 +102,7 @@ tokenizer;
   \param flags Flags to the tokenizer. Setting TOK_ACCEPT_UNFINISHED will cause the tokenizer
   to accept incomplete tokens, such as a subshell without a closing
   parenthesis, as a valid token. Setting TOK_SHOW_COMMENTS will return comments as tokens
-  
+
 */
 void tok_init( tokenizer *tok, const wchar_t *b, int flags );
 

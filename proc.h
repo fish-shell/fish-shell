@@ -1,11 +1,11 @@
-/** \file proc.h 
+/** \file proc.h
 
     Prototypes for utilities for keeping track of jobs, processes and subshells, as
 	well as signal handling functions for tracking children. These
 	functions do not themselves launch new processes, the exec library
 	will call proc to create representations of the running jobs as
 	needed.
-	
+
 */
 
 #ifndef FISH_PROC_H
@@ -78,19 +78,19 @@ enum
 	   A buffer
 	*/
 	INTERNAL_BUFFER,
-      
+
 }
 	;
 
 enum
 {
-	JOB_CONTROL_ALL, 
+	JOB_CONTROL_ALL,
 	JOB_CONTROL_INTERACTIVE,
 	JOB_CONTROL_NONE,
 }
 	;
 
-/** 
+/**
 	A structure representing a single fish process. Contains variables
 	for tracking process state and the process argument
 	list. Actually, a fish process can be either a regular externa
@@ -125,7 +125,7 @@ enum
 */
 typedef struct process
 {
-	/** 
+	/**
 		Type of process. Can be one of \c EXTERNAL, \c
 		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
 		INTERNAL_EXEC, or INTERNAL_BUFFER
@@ -136,7 +136,7 @@ typedef struct process
 	wchar_t **argv;
 
 	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC */
-	wchar_t *actual_cmd;       
+	wchar_t *actual_cmd;
 
 	/** process ID */
 	pid_t pid;
@@ -160,29 +160,29 @@ typedef struct process
 	int count_help_magic;
 
 	/** next process in pipeline */
-	struct process *next;       	
+	struct process *next;
 #ifdef HAVE__PROC_SELF_STAT
 	/** Last time of cpu time check */
 	struct timeval last_time;
 	/** Number of jiffies spent in process at last cpu time check */
-	unsigned long last_jiffies;	
+	unsigned long last_jiffies;
 #endif
-} 
+}
 	process_t;
 
-/** 
+/**
 	Constant for the flag variable in the job struct
 
-	true if user was told about stopped job 
+	true if user was told about stopped job
 */
 #define JOB_NOTIFIED 1
-/** 
+/**
 	Constant for the flag variable in the job struct
 
-	Whether this job is in the foreground 
+	Whether this job is in the foreground
 */
 #define JOB_FOREGROUND 2
-/** 
+/**
 	Constant for the flag variable in the job struct
 
 	Whether the specified job is completely constructed,
@@ -196,130 +196,130 @@ typedef struct process
    Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported
 */
 #define JOB_SKIP_NOTIFICATION 8
-/** 
+/**
 	Constant for the flag variable in the job struct
 
-	Should the exit status be negated? This flag can only be set by the not builtin. 
+	Should the exit status be negated? This flag can only be set by the not builtin.
 */
 #define JOB_NEGATE 16
-/** 
+/**
 	Constant for the flag variable in the job struct
 
-	This flag is set to one on wildcard expansion errors. It means that the current command should not be executed 
+	This flag is set to one on wildcard expansion errors. It means that the current command should not be executed
 */
 #define JOB_WILDCARD_ERROR 32
 
-/** 
+/**
 	Constant for the flag variable in the job struct
 
-	Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or 
+	Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or
 */
 #define JOB_SKIP 64
 
-/** 
+/**
 	Constant for the flag variable in the job struct
 
-	Whether the job is under job control 
+	Whether the job is under job control
 */
 #define JOB_CONTROL 128
-/** 
+/**
 	Constant for the flag variable in the job struct
 
-	Whether the job wants to own the terminal when in the foreground 
+	Whether the job wants to own the terminal when in the foreground
 */
 #define JOB_TERMINAL 256
 
-/** 
+/**
     A struct represeting a job. A job is basically a pipeline of one
     or more processes and a couple of flags.
  */
 typedef struct job
 {
-	/** 
+	/**
 	    The original command which led to the creation of this
 	    job. It is used for displaying messages about job status
 	    on the terminal.
 	*/
-	wchar_t *command;              
-	
-	/** 
+	wchar_t *command;
+
+	/**
 	    A linked list of all the processes in this job.
 	*/
-	process_t *first_process;  
-	
-	/** 
+	process_t *first_process;
+
+	/**
 	    process group ID for the process group that this job is
-	    running in. 
+	    running in.
 	*/
-	pid_t pgid;   
-	
-	/** 
+	pid_t pgid;
+
+	/**
 	    The saved terminal modes of this job. This needs to be
 	    saved so that we can restore the terminal to the same
 	    state after temporarily taking control over the terminal
-	    when a job stops. 
+	    when a job stops.
 	*/
 	struct termios tmodes;
-    
+
 	/**
 	   The job id of the job. This is a small integer that is a
 	   unique identifier of the job within this shell, and is
 	   used e.g. in process expansion.
 	*/
 	int job_id;
-	
+
 	/**
-	   List of all IO redirections for this job 
+	   List of all IO redirections for this job
 	*/
 	io_data_t *io;
-			
-	/** 
-	    A pointer to the next job in the job queue 
+
+	/**
+	    A pointer to the next job in the job queue
 	*/
-	struct job *next;           
+	struct job *next;
 
 	/**
 	   Bitset containing information about the job. A combination of the JOB_* constants.
 	*/
 	int flags;
-	
-} 
+
+}
 	job_t;
 
-/** 
-	Whether we are running a subshell command 
+/**
+	Whether we are running a subshell command
 */
 extern int is_subshell;
 
-/** 
-	Whether we are running a block of commands 
+/**
+	Whether we are running a block of commands
 */
 extern int is_block;
 
-/** 
+/**
 	Whether we are reading from the keyboard right now
 */
 extern int is_interactive;
 
-/** 
+/**
 	Whether this shell is attached to the keyboard at all
 */
 extern int is_interactive_session;
 
-/** 
+/**
 	Whether we are a login shell
 */
 extern int is_login;
 
-/** 
+/**
 	Whether we are running an event handler
 */
 extern int is_event;
 
-/** 
-	Linked list of all living jobs 
+/**
+	Linked list of all living jobs
 */
-extern job_t *first_job;   
+extern job_t *first_job;
 
 /**
    Whether a universal variable barrier roundtrip has already been
@@ -396,7 +396,7 @@ job_t *job_get(int id);
 job_t *job_get_from_pid(int pid);
 
 /**
-   Tests if the job is stopped 
+   Tests if the job is stopped
  */
 int job_is_stopped( const job_t *j );
 

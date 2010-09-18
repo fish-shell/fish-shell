@@ -293,7 +293,7 @@ static int interrupt_handler()
 	/*
 	  Fire any pending events
 	*/
-	event_fire( 0 );
+	event_fire( NULL );
 
 	/*
 	  Reap stray processes, including printing exit status messages

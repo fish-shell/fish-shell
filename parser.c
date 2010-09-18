@@ -2538,7 +2538,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 
 	error_code = 0;
 
-	event_fire( 0 );
+	event_fire( NULL );
 
 	while( tok_has_next( current_tokenizer ) &&
 		   !error_code &&
@@ -2546,7 +2546,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 		   !exit_status() )
 	{
 		eval_job( current_tokenizer );
-		event_fire( 0 );
+		event_fire( NULL );
 	}
 
 	int prev_block_type = current_block->type;

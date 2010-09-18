@@ -11,6 +11,11 @@
 
 AC_INIT(fish,1.23.1,fish-users@lists.sf.net)
 
+#
+# preserve configure arguments for xsel
+#
+
+conf_arg=$@
 
 #
 # List of output variables produced by this configure script
@@ -200,7 +205,8 @@ AC_ARG_WITH(
 	xsel,
 	AC_HELP_STRING(
 		[--without-xsel],
-		[do not build the xsel program needed for X clipboard integration]
+		[do not build the xsel program needed for X clipboard integration.
+		 If build xsel, it will be configured with the same options as fish.]
 	),
 	[xsel=$withval],
 	[xsel=with_xsel]
@@ -977,6 +983,12 @@ if test ! x$local_found_posix_switch = xyes; then
 	echo "Some fish features may be disabled."
 fi
 
+if [[ "$xsel" = "with_xsel" ]]; then
+	echo "Now configure xsel with $conf_arg"
+	rm -rf $XSEL
+	tar xf $XSEL.tar.gz
+	cd $XSEL && ./configure $conf_arg
+fi
 echo "fish is now configured."
 echo "Use 'make' and 'make install' to build and install fish."
 

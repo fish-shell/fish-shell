@@ -349,13 +349,7 @@ test: $(PROGRAMS) fish_tests
 # Build the xsel program, which is maintained in its own tarball
 #
 
-${XSEL}:
-	tar -xf ${XSEL}.tar.gz
-
-${XSEL}/Makefile: ${XSEL}
-	cd ${XSEL} && ./configure
-
-${XSEL_BIN}: ${XSEL}/Makefile
+${XSEL_BIN}:
 	$(MAKE) -C ${XSEL} || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 

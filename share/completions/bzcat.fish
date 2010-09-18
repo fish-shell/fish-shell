@@ -5,8 +5,8 @@ complete -c bzcat -x -a "(
 "
 
 complete -c bzcat -x -a "(
-	__fish_complete_suffix .bz 
-	__fish_complete_suffix .bz2 
+	__fish_complete_suffix .bz
+	__fish_complete_suffix .bz2
 )
 "
 

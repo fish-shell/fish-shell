@@ -1,5 +1,5 @@
 /** \page commands Commands, functions and builtins bundled with fish
-Fish ships with a large number of builtin commands, shellscript functions and external commands. These are all described below. 
+Fish ships with a large number of builtin commands, shellscript functions and external commands. These are all described below.
 
 @command_list@
 

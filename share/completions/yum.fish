@@ -7,7 +7,7 @@
 # Test if completing using package names is appropriate
 function __fish_yum_package_ok
 	for i in (commandline -poc)
-		if contains $i update upgrade remove erase 
+		if contains $i update upgrade remove erase
 			return 0
 		end
 	end
@@ -27,21 +27,21 @@ complete -c yum -n '__fish_use_subcommand' -xa generate-rss --description "Gener
 
 complete -c yum -n '__fish_yum_package_ok' -a "(__fish_print_packages)"
 
-complete -c yum -s h -l help --description "Display help and exit" 
-complete -c yum -s y --description "Assume yes to all questions" 
-complete -c yum -s c --description "Configuration file" -r 
-complete -c yum -s d --description "Set debug level" -x 
-complete -c yum -s e --description "Set error level" -x 
-complete -c yum -s t -l tolerant --description "Be tolerant of errors in commandline" 
+complete -c yum -s h -l help --description "Display help and exit"
+complete -c yum -s y --description "Assume yes to all questions"
+complete -c yum -s c --description "Configuration file" -r
+complete -c yum -s d --description "Set debug level" -x
+complete -c yum -s e --description "Set error level" -x
+complete -c yum -s t -l tolerant --description "Be tolerant of errors in commandline"
 complete -c yum -s R --description "Set maximum delay between commands" -x
-complete -c yum -s c --description "Run commands from cache" 
-complete -c yum -l version --description "Display version and exit" 
-complete -c yum -l installroot --description "Specify installroot" -r 
-complete -c yum -l enablerepo --description "Enable repository" -r 
+complete -c yum -s c --description "Run commands from cache"
+complete -c yum -l version --description "Display version and exit"
+complete -c yum -l installroot --description "Specify installroot" -r
+complete -c yum -l enablerepo --description "Enable repository" -r
 complete -c yum -l disablerepo --description "Disable repository" -r
-complete -c yum -l obsoletes --description "Enables obsolets processing logic" 
-complete -c yum -l rss-filename --description "Output rss-data to file" -r 
-complete -c yum -l exclude --description "Exclude specified package from updates" -a "(__fish_print_packages)" 
+complete -c yum -l obsoletes --description "Enables obsolets processing logic"
+complete -c yum -l rss-filename --description "Output rss-data to file" -r
+complete -c yum -l exclude --description "Exclude specified package from updates" -a "(__fish_print_packages)"
 
 complete -c yum -n 'contains list (commandline -poc)' -a all --description 'List all packages'
 complete -c yum -n 'contains list (commandline -poc)' -a available --description 'List packages available for installation'

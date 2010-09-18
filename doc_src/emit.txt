@@ -5,7 +5,7 @@
 
 \subsection emit-description Description
 
-The emit builtin fires a generic fish event. Such events can be caught by special functions called event handlers. 
+The emit builtin fires a generic fish event. Such events can be caught by special functions called event handlers.
 
 \subsection emit-example Example
 

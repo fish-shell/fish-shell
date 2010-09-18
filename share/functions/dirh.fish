@@ -1,5 +1,5 @@
 
-function dirh --description "Print the current directory history (the back- and fwd- lists)" 
+function dirh --description "Print the current directory history (the back- and fwd- lists)"
 
 	if count $argv >/dev/null
 		switch $argv[1]
@@ -25,7 +25,7 @@ function dirh --description "Print the current directory history (the back- and 
 	set_color $fish_color_history_current
 	echo -n -e $current$separator
 	set_color normal
-	
+
 	for i in (seq (echo (count $dirnext)) -1 1)
 		echo -n -e $dirnext[$i]$separator
 	end

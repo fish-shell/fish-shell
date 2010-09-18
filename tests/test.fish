@@ -1,7 +1,7 @@
 #!/usr/local/bin/fish
 #
 # Main loop of the test suite. I wrote this
-# instad of using autotest to provide additional 
+# instad of using autotest to provide additional
 # testing for fish. :-)
 
 echo Testing high level script functionality

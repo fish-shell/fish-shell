@@ -1,12 +1,12 @@
 function __fish_not_contain_opt -d "Checks that a specific option is not in the current commandline"
-	set -l next_short 
+	set -l next_short
 
 	set -l short_opt
-	set -l long_opt 
+	set -l long_opt
 
 	for i in $argv
-		if test $next_short 
-			set next_short 
+		if test $next_short
+			set next_short
 			set short_opt $short_opt $i
 		else
 			switch $i
@@ -31,7 +31,7 @@ function __fish_not_contain_opt -d "Checks that a specific option is not in the 
 		if commandline -cpo | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 1
 		end
-		
+
 		if commandline -ct | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 1
 		end

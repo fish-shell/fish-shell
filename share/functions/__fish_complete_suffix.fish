@@ -9,9 +9,9 @@ function __fish_complete_suffix -d "Complete using files"
 
 	# Variable declarations
 
-	set -l comp 
-	set -l suff 
-	set -l desc 
+	set -l comp
+	set -l suff
+	set -l desc
 	set -l files
 
 	switch (count $argv)

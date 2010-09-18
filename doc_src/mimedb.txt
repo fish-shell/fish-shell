@@ -5,7 +5,7 @@
 
 \subsection mimedb-description Description
 
-- \c FILES is a list of files to analyse 
+- \c FILES is a list of files to analyse
 - \c -t, \c --input-file-data the specified files type should be determined both by their filename and by their contents (Default)
 - \c -f, \c --input-filename the specified files type should be determined by their filename
 - \c -i, \c --input-mime the arguments are not files but mimetypes

@@ -2,30 +2,30 @@
 
 set -e smurf
 
-function setter 
+function setter
 set smurf green
 end
 
-function unsetter 
+function unsetter
 set -e smurf
 end
 
-function call1 
+function call1
 set smurf blue; setter; if test $smurf = blue; echo Test 1 pass; else; echo Test 1 fail; end
 end
 
-function call2 
+function call2
 set smurf blue; unsetter; if test $smurf = blue; echo Test 2 pass; else; echo Test 2 fail; end
 end
 
 call1
 call2
 
-function call3 
+function call3
 setter; if test $smurf = green; echo Test 3 pass; else; echo Test 3 fail; end
 end
 
-function call4 
+function call4
 unsetter; if not set -q smurf; echo Test 4 pass; else; echo Test 4 fail; end
 end
 

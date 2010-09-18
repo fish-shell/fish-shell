@@ -16,6 +16,6 @@ function math --description "Perform math calculations in bc"
 		return 0
 	end
 	return 2
-	
+
 end
 

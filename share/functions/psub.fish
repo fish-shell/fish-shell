@@ -9,7 +9,7 @@ function psub --description "Read from stdin into a file and output the filename
 	set -l longopt -l help,file
 
 	if getopt -T >/dev/null
-		set longopt 
+		set longopt
 	end
 
 	if not getopt -n psub -Q $shortopt $longopt -- $argv
@@ -57,7 +57,7 @@ function psub --description "Read from stdin into a file and output the filename
 		# Write output to pipe. This needs to be done in the background so
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit
-		mkfifo $filename 
+		mkfifo $filename
 		cat >$filename &
 	else
 		cat >$filename
@@ -75,6 +75,6 @@ function psub --description "Read from stdin into a file and output the filename
 	end
 
 	# Make sure we erase file when caller exits
-	eval function $funcname --on-job-exit caller\; command rm $filename\; functions -e $funcname\; end	
+	eval function $funcname --on-job-exit caller\; command rm $filename\; functions -e $funcname\; end
 
 end

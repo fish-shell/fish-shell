@@ -6,8 +6,8 @@ complete -c bzip2 -s d -l decompress -x -a "(
 "
 
 complete -c bzip2 -s d -l decompress -x -a "(
-	__fish_complete_suffix .bz 
-	__fish_complete_suffix .bz2 
+	__fish_complete_suffix .bz
+	__fish_complete_suffix .bz2
 )
 "
 

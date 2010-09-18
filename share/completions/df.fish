@@ -6,7 +6,7 @@
 # Test if we are using GNU sed
 #
 
-set -l is_gnu 
+set -l is_gnu
 df --version >/dev/null ^/dev/null; and set is_gnu --is-gnu
 
 __fish_gnu_complete -c df -s h -l human-readable --description "Human readable sizes" $is_gnu

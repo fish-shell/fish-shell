@@ -7,19 +7,19 @@
 #
 
 set mplayer_lang "
-	de\tGerman 
-	dk\tDanish 
-	en\tEnglish 
+	de\tGerman
+	dk\tDanish
+	en\tEnglish
 	es\tSpanish
-	fi\tFinnish 
-	fr\tFrench 
+	fi\tFinnish
+	fr\tFrench
 	gr\tGreek
 	hu\tHungarian
 	it\tItalian
-	jp\tJapanese 
-	no\tNorwegian 
-	hu\tHungarian 
-	pl\tPolish 
+	jp\tJapanese
+	no\tNorwegian
+	hu\tHungarian
+	pl\tPolish
 	pt\tPortugese
 	se\Swedish
 "

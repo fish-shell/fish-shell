@@ -117,7 +117,7 @@ complete -f -c git -n '__fish_git_using_command branch' -s M -d 'Force renaming 
 complete -f -c git -n '__fish_git_using_command branch' -s a -d 'Lists both local and remote branches'
 
 ### cherry-pick
-complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit' 
+complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches)' -d 'Branch'
 # TODO options
 

@@ -22,11 +22,11 @@ function __fish_set_is_color -d 'Test if We are specifying a color value for the
 				return 0
 
 			case '-*'
-				 
+
 			case '*'
 				 return 1
 		end
-	end	
+	end
 	return 1
 end
 
@@ -40,11 +40,11 @@ function __fish_set_is_locale -d 'Test if We are specifying a locale value for t
 				return 0
 
 			case '-*'
-				 
+
 			case '*'
 				 return 1
 		end
-	end	
+	end
 	return 1
 end
 

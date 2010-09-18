@@ -33,7 +33,7 @@ parent is ~. This issue is not possible to fix without either making
 every single command into a builtin, breaking Unix semantics or
 implementing kludges in every single command.
 
-This issue can also be seen when doing IO redirection. 
+This issue can also be seen when doing IO redirection.
 
 Another related issue is that many programs that operate on recursive
 directory trees, like the find command, silently ignore symlinked
@@ -56,7 +56,7 @@ feature, write <code>set CDPATH .</code> on the commandline.
 
 If fish is unable to locate a command with a given name, fish will
 test if a directory of that name exists. If it does, it is implicitly
-assumed that you want to change working directory. For example, the 
+assumed that you want to change working directory. For example, the
 fastest way to switch to your home directory is to simply press
 <code>~</code> and enter.
 
@@ -141,21 +141,21 @@ set fish_greeting
 
 \section faq-history Why doesn't history substitution ("!$" etc.) work?
 
-Because history substitution is an awkward interface that was invented before 
-interactive line editing was even possible.  Fish drops it in favor of 
-perfecting the interactive history recall interface.  Switching requires a 
-small change of habits: if you want to modify an old line/word, first recall 
-it, then edit.  E.g. don't type "sudo !!" - first press Up, then Home, then 
+Because history substitution is an awkward interface that was invented before
+interactive line editing was even possible.  Fish drops it in favor of
+perfecting the interactive history recall interface.  Switching requires a
+small change of habits: if you want to modify an old line/word, first recall
+it, then edit.  E.g. don't type "sudo !!" - first press Up, then Home, then
 type "sudo ".
 
 Fish history recall is very simple yet effective:
 
  - As in any modern shell, the Up arrow recalls whole lines, starting from the last line executed.  A single press replaces "!!", later presses replace "!-3" and the like.
-    - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will constrain the recall to lines that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like. 
+    - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will constrain the recall to lines that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
  - Alt+Up recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like.
     - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press Alt+Up.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
     - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (Alt+D and Alt+Backspace are your friends).
-  
+
 See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
 
 */

@@ -6,7 +6,7 @@ function __fish_paginate -d "Paginate the current command using the users defaul
 	end
 
 	if commandline -j|grep -v "$cmd *\$" >/dev/null
-	
+
 		commandline -aj "|$cmd;"
 	end
 

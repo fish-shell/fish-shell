@@ -49,7 +49,7 @@ Then, use following commands to compile fish:
 Finally, if you wish to use fish as your default shell, use the
 following command:
 
- % chsh -s /usr/local/bin/fish			 
+ % chsh -s /usr/local/bin/fish
 
 chsh will prompt you for your password, and change your default shell.
 

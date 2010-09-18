@@ -62,9 +62,9 @@ end
 
 # Test that scope is preserved in double blocks
 
-for i in 1 
+for i in 1
   set t6 $i
-  for j in a 
+  for j in a
 	if test $t6$j = 1a
 		echo Test 6 pass
 	else
@@ -105,7 +105,7 @@ end
 
 # Test if exported variables go out of scope
 
-if test (../fish -c "echo $t8") 
+if test (../fish -c "echo $t8")
 	echo Test 9 fail
 else
 	echo Test 9 pass

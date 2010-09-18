@@ -25,12 +25,12 @@ function __fish_print_packages
 	# Rpm is too slow for this job, so we set it up to do completions
     # as a background job and cache the results.
 
-	if type -f rpm >/dev/null 
+	if type -f rpm >/dev/null
 
 		# If the cache is less than five minutes old, we do not recalculate it
 
 		set cache_file /tmp/.rpm-cache.$USER
-			if test -f $cache_file 
+			if test -f $cache_file
 			cat $cache_file
 			set age (math (date +%s) - (stat -c '%Y' $cache_file))
 			set max_age 250
@@ -43,8 +43,8 @@ function __fish_print_packages
 		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/'\t$package'/' &
 	end
 
-	# This completes the package name from the portage tree. 
-	# True for installing new packages. Function for printing 
+	# This completes the package name from the portage tree.
+	# True for installing new packages. Function for printing
 	# installed on the system packages is in completions/emerge.fish
 	if type -f emerge >/dev/null
 		emerge -s \^(commandline -tc) |sgrep "^*" |cut -d\  -f3 |cut -d/ -f2

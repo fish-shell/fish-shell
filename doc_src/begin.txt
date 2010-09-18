@@ -37,7 +37,7 @@ In the following code, all output is redirected to the file out.html.
 begin
 	echo $xml_header
 	echo $html_header
-	if test -e $file 
+	if test -e $file
 		...
 	end
 	...

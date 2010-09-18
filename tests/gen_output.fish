@@ -3,7 +3,7 @@
 #
 # Generate output for a test script
 #
-# It is important that you verify that the generated 
+# It is important that you verify that the generated
 # output is correct!
 #
 

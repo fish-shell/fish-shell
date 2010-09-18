@@ -74,7 +74,7 @@ complete -c flac -l no-replay-gain -d "Don't calculate ReplayGain & store in Vor
 complete -c flac -l no-residual-gnuplot -d "Don't generate gnuplot files of residual distribution"
 complete -c flac -l no-residual-text -d "Don't include residual signal in text output"
 complete -c flac -l no-sector-align -d "Don't align multiple files on sector boundaries"
-complete -c flac -l no-seektable 
+complete -c flac -l no-seektable
 complete -c flac -l no-silent -d "Write runtime encode/decode statistics"
 complete -c flac -l no-force -d "Don't force overwriting of output files"
 complete -c flac -l no-verify -d "Don't verify a correct encoding"

@@ -14,7 +14,7 @@ Version 2, June 1991
 </P>
 
 <PRE>
-Copyright (C) 1989, 1991 Free Software Foundation, Inc.  
+Copyright (C) 1989, 1991 Free Software Foundation, Inc.
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
 Everyone is permitted to copy and distribute verbatim copies
@@ -447,7 +447,7 @@ PERFORMANCE OF THIS SOFTWARE.
 <h2>License for XSel</h2>
 
 The XSel command, written and copyrighted by Conrad Parker, is
-distributed together with \c fish. 
+distributed together with \c fish.
 
 
 It is Copyright (C) 2001 Conrad Parker <conrad@vergenet.net>
@@ -802,7 +802,7 @@ of these things:
     that the user who changes the contents of definitions files in the
     Library will not necessarily be able to recompile the application
     to use the modified definitions.)
-	 
+
     <LI><STRONG>b)</STRONG> Use a suitable shared library mechanism for linking with the
     Library.  A suitable mechanism is one that (1) uses at run time a
     copy of the library already present on the user's computer system,

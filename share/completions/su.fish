@@ -2,7 +2,7 @@
 
 complete -x -c su -a "(__fish_complete_users)"
 complete -c su -s l -l login --description "Make login shell"
-complete -r -c su -s c -l command --description "Pass command to shell" -xa "(__fish_complete_command)" 
+complete -r -c su -s c -l command --description "Pass command to shell" -xa "(__fish_complete_command)"
 complete -c su -s f -l fast --description "Pass -f to the shell"
 complete -c su -s m -l preserve_environment --description "Preserve environment"
 complete -c su -s p --description "Preserve environment"

@@ -12,8 +12,8 @@ complete -c scons -l cache-force -l cache-populate --description 'When using Cac
 complete -c scons -l cache-show --description 'When using CacheDir() and retrieving a derived file from the cache, show the command that would have been executed to build the file, instead of the usual report, "Retrieved file from cache'
 
 complete -c scons -l config --description 'This specifies how the Configure call should use or generate the results of configuration tests' -a '
-	auto\t"Use normal dependency mechanism" 
-	force\t"Rerun all tests" 
+	auto\t"Use normal dependency mechanism"
+	force\t"Rerun all tests"
 	cache\t"Take all results from cache"' -x
 
 complete -c scons -s C --description 'Directory, --directory=directory Change to the specified directory before searching for the SCon struct, Sconstruct, or sconstruct file, or doing anything else'

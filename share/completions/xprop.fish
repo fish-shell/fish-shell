@@ -9,7 +9,7 @@ complete -c xprop -o display --description "Specify X server"
 complete -c xprop -o len -x --description "Maximum display length"
 complete -c xprop -o notype --description "Do not show property type"
 complete -c xprop -o fs -r --description "Set format file"
-complete -c xprop -o frame --description "Select a window by clicking on its frame" 
+complete -c xprop -o frame --description "Select a window by clicking on its frame"
 complete -c xprop -o remove --description "Remove property" -x -a "
 (
 	xprop -root -notype|cut -d ' ' -f 1|cut -d \t -f 1

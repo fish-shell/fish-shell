@@ -13,9 +13,9 @@
 
 The following switches change what the commandline builtin does
 
-- \c -C or \c --cursor set or get the current cursor position, not 
+- \c -C or \c --cursor set or get the current cursor position, not
   the contents of the buffer. If no argument is given, the current
-  cursor position is printed, otherwise the argument is interpreted 
+  cursor position is printed, otherwise the argument is interpreted
   as the new cursor position.
 - \c -f or \c --function inject readline functions into the
   reader. This option can not be combined with any other option. It
@@ -44,7 +44,7 @@ or updated
 - \c -t or \c --current-token select the current token.
 
 The following switch changes the way \c commandline prints the current
-commandline buffer 
+commandline buffer
 
 - \c -c or \c --cut-at-cursor only print selection up until the
   current cursor position

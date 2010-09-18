@@ -2,7 +2,7 @@
 # Completions for Cdrecord
 #
 
-complete -c cdrecord -o version --description "Display version and exit" 
+complete -c cdrecord -o version --description "Display version and exit"
 complete -c cdrecord -s v --description "Increment the level of general verbosity by one"
 complete -c cdrecord -s V --description "Increment the verbose level in respect of SCSI command transport by one"
 complete -c cdrecord -a "debug={1,2,3,4,5}" --description "Set the misc debug value to #"
@@ -30,7 +30,7 @@ complete -c cdrecord -o waiti --description "Wait for input to become available 
 complete -c cdrecord -o load --description "Load the media and exit"
 complete -c cdrecord -o lock --description "Load the media, lock the door and exit"
 complete -c cdrecord -o eject --description "Eject disk after doing the work"
-complete -c cdrecord -a "speed={0,150,172,1385}" --description "Set the speed factor of the writing process to #" 
+complete -c cdrecord -a "speed={0,150,172,1385}" --description "Set the speed factor of the writing process to #"
 complete -c cdrecord -a "blank={help,all,fast,track,unreserve,trtail,unclose,session}" --description "Blank a CD-RW and exit or blank a CD-RW before writing"
 complete -c cdrecord -o format --description "Format a CD-RW/DVD-RW/DVD+RW disc"
 complete -c cdrecord -a "fs=" --description "Set the FIFO (ring buffer) size to #"

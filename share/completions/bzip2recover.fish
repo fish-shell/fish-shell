@@ -5,7 +5,7 @@ complete -c bzip2recover -x -a "(
 "
 
 complete -c bzip2recover -x -a "(
-	__fish_complete_suffix .bz 
-	__fish_complete_suffix .bz2 
+	__fish_complete_suffix .bz
+	__fish_complete_suffix .bz2
 )
 "

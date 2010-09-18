@@ -21,7 +21,7 @@ end
 
 #
 # This function formats a list of completion information into a set of fish completions
-# 
+#
 # The first argument is the condition string, which will be copied to
 # the resulting commandline verbatim
 #
@@ -42,7 +42,7 @@ function complete_from_list
 		set arg $exploded[3]
 		set desc (cap (esc $exploded[4]))
 
-		set str 
+		set str
 
 		switch $short
 			case '-?'
@@ -65,7 +65,7 @@ function complete_from_list
 				set str $str -x -a "'(__fish_complete_users)'"
 
 			case '=FILENAME' '=FILE' ' <file>'
-				set str $str -r 
+				set str $str -r
 
 			case ' arg'
 				set str $str -x
@@ -89,7 +89,7 @@ function complete_from_list
 				set str $str --description \'$desc\'
 		end
 
-		echo complete -c $cmd $condition $str 
+		echo complete -c $cmd $condition $str
 
 	end
 
@@ -101,7 +101,7 @@ function write_completions
 	set -g cmd $argv[1]; or return 1
 
 	echo "Making completions for $cmd" >&2
-	
+
 
 	echo '
 #
@@ -129,7 +129,7 @@ function write_completions
 	switch $cmd
 		case svn
 
-		function list_subcommand 
+		function list_subcommand
 			set cmd1 '\([^ ]*\)'
 			set cmd2 '\([^,)]*\)'
 			set cmdn '\(, \([^,)]*\)\|\)'
@@ -155,7 +155,7 @@ function write_completions
 
 		case cvs
 
-		function list_subcommand 
+		function list_subcommand
 			cmd --help-commands 2>| sed -n -e 's/^   *\([^ ][^ ]*\) .*$/\1/p'
 		end
 
@@ -167,7 +167,7 @@ function write_completions
 		function list_subcommand_help
 #'s/^[ \t]*\(-.\)[ \t]\([^- \t][^ \t]*\)*[ \t]*\([^-].*\)$/\1\t\2\t\3/p'
 
-			cmd -H $argv 2>| sed -n -e 's/'$re'/\1\t\t\2\t\4/p' 
+			cmd -H $argv 2>| sed -n -e 's/'$re'/\1\t\t\2\t\4/p'
 		end
 
 		echo '
@@ -181,12 +181,12 @@ function write_completions
 		set cmd_str_internal (cmd --help-commands 2>| sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*\)$/\1\t\2/p')
 		for i in $cmd_str_internal
 			set exploded (echo $i|tr \t \n)
-			set cmd_str $cmd_str "-a $exploded[1] --description '"(esc $exploded[2])"'"		 
+			set cmd_str $cmd_str "-a $exploded[1] --description '"(esc $exploded[2])"'"
 		end
 
 		case '*'
 
-		function list_subcommand 
+		function list_subcommand
 			cmd help | sed -n -e 's/^  *\([^ ][^ ]*\) .*$/\1/p'
 		end
 
@@ -203,7 +203,7 @@ function write_completions
 		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*[^.]\)\(\|\\.\)$/-a \1 --description \'\2\'/p')
 
 	end
-	
+
 	echo '
 #
 # subcommands
@@ -228,8 +228,8 @@ function write_completions
 
 end
 
-set darcs_comp 'complete -c darcs -n "not __fish_use_subcommand" -a "(test -f _darcs/prefs/repos; and cat _darcs/prefs/repos)" --description "Darcs repo"' 
-set darcs_comp $darcs_comp 'complete -c darcs -a "test predist boringfile binariesfile" -n "contains setpref (commandline -poc)" --description "Set the specified option" -x' 
+set darcs_comp 'complete -c darcs -n "not __fish_use_subcommand" -a "(test -f _darcs/prefs/repos; and cat _darcs/prefs/repos)" --description "Darcs repo"'
+set darcs_comp $darcs_comp 'complete -c darcs -a "test predist boringfile binariesfile" -n "contains setpref (commandline -poc)" --description "Set the specified option" -x'
 
 write_completions darcs $darcs_comp >share/completions/darcs.fish
 write_completions hg >share/completions/hg.fish

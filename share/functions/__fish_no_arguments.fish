@@ -5,7 +5,7 @@ function __fish_no_arguments -d "Internal fish function"
 	for i in $cmd
 		switch $i
 			case '-*'
-				 
+
 			case '*'
 				 return 1
 		end

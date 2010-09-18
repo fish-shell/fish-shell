@@ -12,7 +12,7 @@ function __fish_complete_file_url
 
 	if test file:// = $prefix
 		set -l stripped (echo $comp|cut -c 8-)
-		printf "%s\n" file://(complete -C"echo $stripped") 
+		printf "%s\n" file://(complete -C"echo $stripped")
 	else
 		echo file://
 	end

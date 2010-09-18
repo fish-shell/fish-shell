@@ -6,7 +6,7 @@ function down-or-search -d "Depending on cursor position and current mode, eithe
 	end
 
 	# We are not already in search mode.
-	# If we are on the bottom line, start search mode, 
+	# If we are on the bottom line, start search mode,
 	# otherwise move down
 	set lineno (commandline -L)
 	set line_count (commandline|wc -l)
@@ -14,7 +14,7 @@ function down-or-search -d "Depending on cursor position and current mode, eithe
 	switch $lineno
 		case $line_count
 		commandline -f history-search-forward
-		
+
 		case '*'
 		commandline -f down-line
 	end

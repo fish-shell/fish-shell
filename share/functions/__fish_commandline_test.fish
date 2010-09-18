@@ -2,7 +2,7 @@
 function __fish_commandline_test
 
 set -l is_function no
-for i in (commandline -poc) 
+for i in (commandline -poc)
 	switch $i
 		case -f --f --fu --fun --func --funct --functi --functio --function
 		set is_function yes
@@ -10,7 +10,7 @@ for i in (commandline -poc)
 		case --
 		break
 
-		
+
 	end
 end
 

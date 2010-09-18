@@ -17,7 +17,7 @@ This builtin command is used to print or erase functions.
 The default behavior of \c functions when called with no arguments,
 is to print the names and definitions of all defined functions. If any
 non-switch parameters are given, only the definition of the specified
-functions are printed. 
+functions are printed.
 
 Automatically loaded functions can not be removed using functions
 -e. Either remove the definition file or change the

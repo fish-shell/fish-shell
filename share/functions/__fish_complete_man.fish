@@ -1,5 +1,5 @@
 
-function __fish_complete_man 
+function __fish_complete_man
 	if test (commandline -ct)
 
 		# Try to guess what section to search in. If we don't know, we
@@ -11,13 +11,13 @@ function __fish_complete_man
 		while count $prev
 			switch $prev[1]
 			case '-**'
-				
+
 			case '*'
 				set section $prev[1]
 			end
 			set -e prev[1]
 		end
-		
+
 		set section $section"[^)]*"
 
 		# Do the actual search

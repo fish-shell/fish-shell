@@ -8,6 +8,7 @@
 This builtin command is used to print or erase functions.
 
 - <code>-a</code> or <code>--all</code> list all functions, even those whose name start with an underscore.
+- <code>-c OLDNAME NEWNAME</code> or <code>--copy OLDNAME NEWNAME</code> creates a new function named NEWNAME, using the definition of the OLDNAME function.
 - <code>-d DESCRIPTION</code> or <code>--description=DESCRIPTION</code> change the description of this function
 - <code>-e</code> or <code>--erase</code> causes the specified functions to be erased.
 - <code>-h</code> or <code>--help</code> display a help message and exit
@@ -22,6 +23,9 @@ functions are printed.
 Automatically loaded functions can not be removed using functions
 -e. Either remove the definition file or change the
 $fish_function_path variable to remove autoloaded functions.
+
+Function copies, created with -c, will not have any event/signal/on-exit 
+notifications that the original may have had.
 
 The exit status of the functions builtin is the number functions
 specified in the argument list that do not exist.

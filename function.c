@@ -218,6 +218,43 @@ void function_add( function_data_t *data )
 
 }
 
+int function_copy( const wchar_t *name, const wchar_t *new_name )
+{
+	int i;
+	function_internal_data_t *d, *orig_d;
+	
+	CHECK( name, 0 );
+	CHECK( new_name, 0 );
+
+	orig_d = (function_internal_data_t *)hash_get(&function, name);
+	if( !orig_d )
+		return 0;
+
+	d = halloc(0, sizeof( function_internal_data_t ) );
+	d->definition_offset = orig_d->definition_offset;
+	d->definition = halloc_wcsdup( d, orig_d->definition );
+	if( orig_d->named_arguments )
+	{
+		d->named_arguments = al_halloc( d );
+		for( i=0; i<al_get_count( orig_d->named_arguments ); i++ )
+		{
+			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( orig_d->named_arguments, i ) ) );
+		}
+		d->description = orig_d->description?halloc_wcsdup(d, orig_d->description):0;
+		d->shadows = orig_d->shadows;
+
+		// This new instance of the function shouldn't be tied to the def 
+		// file of the original. 
+		d->definition_file = 0;
+		d->is_autoload = 0;
+	}
+
+	hash_put( &function, intern(new_name), d );
+
+	return 1;
+}
+
+
 int function_exists( const wchar_t *cmd )
 {
 

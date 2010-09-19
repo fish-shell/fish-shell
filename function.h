@@ -131,4 +131,10 @@ array_list_t *function_get_named_arguments( const wchar_t *name );
 */
 int function_get_shadows( const wchar_t *name );
 
+/**
+   Creates a new function using the same definition as the specified function.
+   Returns non-zero if copy is successful.
+*/
+int function_copy( const wchar_t *name, const wchar_t *new_name );
+
 #endif

@@ -43,8 +43,7 @@ end
 function __fish_git_using_command
   set cmd (commandline -opc)
   if [ (count $cmd) -gt 1 ]
-    set -e cmd[1]
-    if [ (echo $argv) = (echo $cmd) ]
+    if [ $argv[1] = $cmd[2] ]
       return 0
     end
   end

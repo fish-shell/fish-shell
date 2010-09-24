@@ -236,6 +236,10 @@ static int calc_prompt_width( wchar_t *prompt )
 		{
 			res = next_tab_stop( res );
 		}
+		else if( prompt[j] == L'\n' )
+		{
+			res = 0;
+		}
 		else
 		{
 			/*

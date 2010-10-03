@@ -66,7 +66,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /**
    The string describing the single-character options accepted by the main fish binary
 */
-#define GETOPT_STRING "hilnvc:p:d:"
+#define GETOPT_STRING "+hilnvc:p:d:"
 
 /**
    Parse init files
@@ -328,7 +328,7 @@ int main( int argc, char **argv )
 			else
 			{
 				char **ptr;
-				char *file = *(argv+1);
+				char *file = *(argv+(my_optind++));
 				int i;
 				string_buffer_t sb;
 				int fd;
@@ -340,11 +340,11 @@ int main( int argc, char **argv )
 					return 1;
 				}
 
-				if( *(argv+2))
+				if( *(argv+my_optind))
 				{
 					sb_init( &sb );
 
-					for( i=1,ptr = argv+2; *ptr; i++, ptr++ )
+					for( i=1,ptr = argv+my_optind; *ptr; i++, ptr++ )
 					{
 						if( i != 1 )
 							sb_append( &sb, ARRAY_SEP_STR );

@@ -29,7 +29,5 @@ share/man/
 toc.txt
 user_doc/
 xsel-0.9.6/
-tests/tmp.out
-tests/tmp.err
-tests/tmp.status
+tests/*tmp.*
 tests/foo.txt

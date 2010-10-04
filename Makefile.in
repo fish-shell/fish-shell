@@ -302,6 +302,9 @@ debug:
 	$(MAKE) all EXTRA_CFLAGS="-O0 -Wno-unused -Werror -g"
 .PHONY: debug
 
+prof:
+	$(MAKE) all EXTRA_CFLAGS="-pg" LDFLAGS="-pg"
+.PHONY: prof
 
 #
 # User documentation, describing the features of the fish shell.

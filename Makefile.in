@@ -60,7 +60,7 @@ optbindirs = @optbindirs@
 #
 
 MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
-CFLAGS = @CFLAGS@ $(MACROS)
+CFLAGS = @CFLAGS@ $(MACROS) $(EXTRA_CFLAGS)
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LIBS@ @LDFLAGS@
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
@@ -299,7 +299,7 @@ Makefile: Makefile.in configure
 #
 
 debug:
-	$(MAKE) fish CFLAGS="@CFLAGS@ $(MACROS) -O0 -Wno-unused -Werror -g"
+	$(MAKE) all EXTRA_CFLAGS="-O0 -Wno-unused -Werror -g"
 .PHONY: debug
 
 

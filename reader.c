@@ -624,9 +624,15 @@ void reader_write_title()
 	  don't. Since we can't see the underlying terminal below screen
 	  there is no way to fix this.
 	*/
-	if( !term || !contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" ) )
+	if ( !term )
+	{
+		return;
+	}
+
+	if( !contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" ) )
 	{
 		char *n = ttyname( STDIN_FILENO );
+
 
 		if( contains( term, L"linux" ) )
 		{
@@ -641,7 +647,7 @@ void reader_write_title()
 
 	title = function_exists( L"fish_title" )?L"fish_title":DEFAULT_TITLE;
 
-	if( wcslen( title ) ==0 )
+	if( wcslen( title ) == 0 )
 		return;
 
 	al_init( &l );

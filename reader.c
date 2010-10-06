@@ -695,14 +695,11 @@ static void exec_prompt()
 
 	sb_clear( &data->prompt_buff );
 
-	for( i=0; i<al_get_count( &prompt_list); i++ )
+	for( i = 0; i < al_get_count( &prompt_list )-1; i++ )
 	{
-		sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ) );
-		if (i + 1 < al_get_count( &prompt_list))
-		{
-			sb_append( &data->prompt_buff, L"\n" );
-		}
+		sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ), L"\n" );
 	}
+	sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ));
 
 	al_foreach( &prompt_list, &free );
 	al_destroy( &prompt_list );

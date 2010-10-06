@@ -1514,7 +1514,9 @@ static void parse_job_argument_list( process_t *p,
 					{
 						case TOK_STRING:
 						{
-							target = (wchar_t *)expand_one( j, wcsdup( tok_last( tok ) ), 0);
+							target = (wchar_t *)expand_one( j,
+											                wcsdup( tok_last( tok ) ),
+															no_exec ? EXPAND_SKIP_VARIABLES : 0);
 
 							if( target == 0 && error_code == 0 )
 							{

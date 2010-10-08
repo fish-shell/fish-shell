@@ -527,6 +527,7 @@ void env_init()
 	struct passwd *pw;
 	wchar_t *uname;
 	wchar_t *version;
+	wchar_t *shlvl;
 
 	sb_init( &dyn_var );
 	b_init( &export_buffer );
@@ -543,6 +544,7 @@ void env_init()
 	hash_put( &env_read_only, L"LINES", L"" );
 	hash_put( &env_read_only, L"COLUMNS", L"" );
 	hash_put( &env_read_only, L"PWD", L"" );
+	hash_put( &env_read_only, L"SHLVL", L"" );
 
 	/*
 	  Names of all dynamically calculated variables
@@ -643,6 +645,34 @@ void env_init()
 						env_get( L"USER" ),
 						&start_fishd,
 						&universal_callback );
+
+	/*
+	  Set up SHLVL variable
+	*/
+	shlvl = env_get( L"SHLVL" );
+	if ( shlvl )
+	{
+		wchar_t *nshlvl, **end_nshlvl;
+		/* add an extra space for digit dump (9+1=10) */
+		size_t i =  wcslen( shlvl ) + 2;
+		nshlvl = malloc(i);
+		end_nshlvl = calloc( 1, sizeof(nshlvl) );
+		if ( nshlvl && swprintf( nshlvl, i,
+								 L"%ld", wcstoul( shlvl, end_nshlvl, 10 )+1 ) != -1 )
+		{
+			env_set( L"SHLVL",
+				     nshlvl,
+				     ENV_GLOBAL | ENV_EXPORT );
+		}
+		free( end_nshlvl );
+		free( nshlvl );
+	}
+	else
+	{
+		env_set( L"SHLVL",
+				 L"1",
+				 ENV_GLOBAL | ENV_EXPORT );
+	}
 
 	/*
 	  Set correct defaults for e.g. USER and HOME variables

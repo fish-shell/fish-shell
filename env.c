@@ -655,8 +655,12 @@ void env_init()
 		wchar_t *nshlvl, **end_nshlvl;
 		/* add an extra space for digit dump (9+1=10) */
 		size_t i =  wcslen( shlvl ) + 2 * sizeof(wchar_t);
+
 		nshlvl = malloc(i);
 		end_nshlvl = calloc( 1, sizeof(nshlvl) );
+		if ( !nshlvl || !end_nshlvl )
+				DIE_MEM();
+
 		if ( nshlvl && swprintf( nshlvl, i,
 								 L"%ld", wcstoul( shlvl, end_nshlvl, 10 )+1 ) != -1 )
 		{

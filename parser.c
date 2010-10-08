@@ -292,7 +292,7 @@ struct block_lookup_entry
 /**
    List of all legal block types
 */
-const static struct block_lookup_entry block_lookup[]=
+static const struct block_lookup_entry block_lookup[]=
 {
 	{
 		WHILE, L"while", WHILE_BLOCK

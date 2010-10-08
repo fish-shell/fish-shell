@@ -28,7 +28,7 @@ Functions used for implementing the complete builtin.
 /**
    Internal storage for the builtin_get_temporary_buffer() function.
 */
-const static wchar_t *temporary_buffer;
+static const wchar_t *temporary_buffer;
 
 /*
   builtin_complete_* are a set of rather silly looping functions that
@@ -320,7 +320,7 @@ static int builtin_complete( wchar_t **argv )
 
 	while( res == 0 )
 	{
-		const static struct woption
+		static const struct woption
 			long_options[] =
 			{
 				{

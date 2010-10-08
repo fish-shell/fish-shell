@@ -60,7 +60,7 @@ static int block_count=0;
    Lookup table used to convert between signal names and signal ids,
    etc.
 */
-const static struct lookup_entry lookup[] =
+static const struct lookup_entry lookup[] =
 {
 #ifdef SIGHUP
 	{

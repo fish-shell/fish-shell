@@ -602,7 +602,7 @@ static int builtin_bind( wchar_t **argv )
 
 	woptind=0;
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -773,7 +773,7 @@ static int builtin_block( wchar_t **argv )
 
 	woptind=0;
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -925,7 +925,7 @@ static int builtin_builtin(  wchar_t **argv )
 
 	woptind=0;
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -1015,7 +1015,7 @@ static int builtin_emit( wchar_t **argv )
 
 	woptind=0;
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -1086,7 +1086,7 @@ static int builtin_generic( wchar_t **argv )
 	int argc=builtin_count_args( argv );
 	woptind=0;
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -1256,7 +1256,7 @@ static int builtin_functions( wchar_t **argv )
 
 	woptind=0;
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -1540,7 +1540,7 @@ static int builtin_function( wchar_t **argv )
 	parser_push_block( FUNCTION_DEF );
 	events=al_halloc( current_block );
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -1911,7 +1911,7 @@ static int builtin_random( wchar_t **argv )
 
 	woptind=0;
 
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{
@@ -2034,7 +2034,7 @@ static int builtin_read( wchar_t **argv )
 
 	while( 1 )
 	{
-		const static struct woption
+		static const struct woption
 			long_options[] =
 			{
 				{
@@ -3659,7 +3659,7 @@ static int builtin_case( wchar_t **argv )
 /**
    Data about all the builtin commands in fish
 */
-const static builtin_data_t builtin_data[]=
+static const builtin_data_t builtin_data[]=
 {
 	{
 		L"block",  &builtin_block, N_( L"Temporarily block delivery of events" )

@@ -417,7 +417,7 @@ static int builtin_set( wchar_t **argv )
 	/**
 	   Variables used for parsing the argument list
 	*/
-	const static struct woption
+	static const struct woption
 		long_options[] =
 		{
 			{

@@ -49,7 +49,7 @@ struct resource_t
 /**
    Array of resource_t structs, describing all known resource types.
 */
-const static struct resource_t resource_arr[] =
+static const struct resource_t resource_arr[] =
 {
 	{
 		RLIMIT_CORE, L"Maximum size of core files created", L'c', 1024
@@ -266,7 +266,7 @@ static int builtin_ulimit( wchar_t ** argv )
 
 	while( 1 )
 	{
-		const static struct woption
+		static const struct woption
 			long_options[] =
 			{
 				{

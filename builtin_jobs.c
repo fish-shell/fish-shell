@@ -173,7 +173,7 @@ static int builtin_jobs( wchar_t **argv )
 
 	while( 1 )
 	{
-		const static struct woption
+		static const struct woption
 			long_options[] =
 			{
 				{

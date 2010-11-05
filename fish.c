@@ -66,7 +66,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /**
    The string describing the single-character options accepted by the main fish binary
 */
-#define GETOPT_STRING "hilnvc:p:d:"
+#define GETOPT_STRING "+hilnvc:p:d:"
 
 /**
    Parse init files

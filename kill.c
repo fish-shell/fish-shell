@@ -45,18 +45,24 @@ static ll_node_t /** Last kill string */*kill_last=0, /** Current kill string */
 static wchar_t *cut_buffer=0;
 
 /**
-   Test if the xsel command is installed
+   Test if the xsel command is installed.  Since this is called often, 
+   cache the result.
 */
 static int has_xsel()
 {
-	void *context = halloc(0, 0);
-	wchar_t *path = path_get_path( context, L"xsel" );
-	int res = !!path;
-	halloc_free( context );
+    static int called=0;
+	static int res = 0;
+
+    if (!called) {
+	    void *context = halloc(0, 0);
+	    wchar_t *path = path_get_path( context, L"xsel" );
+	    res = !!path;
+	    halloc_free( context );
+        called = 1;
+    }
+
 	return res;
 }
-
-
 
 /**
    Add the string to the internal killring

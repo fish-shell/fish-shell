@@ -145,7 +145,7 @@ function umask --description "Set default file permission mask"
 		set longopt -l as-command,symbolic,help
 	end
 
-	if not getopt -n umask -Q $shortopt $longopt -- $argv
+	if not getopt -n umask -Q $shortopt $longopt -- $argv >/dev/null
 		return 1
 	end
 

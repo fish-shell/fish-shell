@@ -34,7 +34,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 		set longopt -l print,help,list-signals
 	end
 
-	if not getopt -n type -Q $shortopt $longopt -- $argv
+	if not getopt -n type -Q $shortopt $longopt -- $argv >/dev/null
 		return 1
 	end
 

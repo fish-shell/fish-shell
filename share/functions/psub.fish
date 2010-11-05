@@ -12,7 +12,7 @@ function psub --description "Read from stdin into a file and output the filename
 		set longopt 
 	end
 
-	if not getopt -n psub -Q $shortopt $longopt -- $argv
+	if not getopt -n psub -Q $shortopt $longopt -- $argv >/dev/null
 		return 1
 	end
 

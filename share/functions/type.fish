@@ -15,7 +15,7 @@ function type --description "Print the type of a command"
 		set longopt -l type,path,force-path,all,no-functions,help
 	end
 
-	if not getopt -n type -Q $shortopt $longopt -- $argv
+	if not getopt -n type -Q $shortopt $longopt -- $argv >/dev/null
 		return 1
 	end
 

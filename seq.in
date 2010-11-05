@@ -45,4 +45,8 @@ for i in $from $step $to
 	end
 end
 
-echo "for( i=$from; i<=$to ; i+=$step ) i;" | bc 
+if [ $step -ge 0 ]
+    echo "for( i=$from; i<=$to ; i+=$step ) i;" | bc 
+else
+    echo "for( i=$from; i>=$to ; i+=$step ) i;" | bc 
+end

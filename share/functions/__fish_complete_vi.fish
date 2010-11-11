@@ -4,13 +4,13 @@ function __fish_complete_vi -d "Compleletions for vi and its aliases"
 
 	set -l is_vim
 	command vi --version >/dev/null ^/dev/null; and set is_vim vim
-	
+
 	set -l cmds -c $argv
 
 	# vim
 	if test -n "$is_vim"
 
-		
+
 		# these don't work
 		#complete $cmds -a - --description 'The file to edit is read from stdin. Commands are read from stderr, which should be a tty'
 
@@ -105,7 +105,7 @@ function __fish_complete_vi -d "Compleletions for vi and its aliases"
 		complete $cmds -r -c t --description 'Begin editing by executing the specified  editor command'
 
 	end
-	
+
 end
 
 

@@ -10,7 +10,7 @@ function prevd --description "Move back in the directory history"
 	end
 
 	# Parse arguments
-	set -l show_hist 0 
+	set -l show_hist 0
 	set -l times 1
 	for i in (seq (count $argv))
 		switch $argv[$i]
@@ -56,5 +56,5 @@ function prevd --description "Move back in the directory history"
 
 	# All done
 	return $code
-end 
+end
 

@@ -1,7 +1,7 @@
 /** \file wutil.h
 
   Prototypes for wide character equivalents of various standard unix
-  functions. 
+  functions.
 */
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H
@@ -95,7 +95,7 @@ wchar_t *wgetcwd( wchar_t *buff, size_t sz );
 */
 int wchdir( const wchar_t * dir );
 
-/** 
+/**
 	Wide character version of realpath function. Just like the GNU
 	version of realpath, wrealpath will accept 0 as the value for the
 	second argument, in which case the result will be allocated using

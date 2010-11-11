@@ -5,7 +5,7 @@
 
 	This library can be seen as a 'toolbox' for functions that are
 	used in many places in fish and that are somehow related to
-	parsing the code. 
+	parsing the code.
 */
 
 #include "config.h"
@@ -108,7 +108,7 @@ int parse_util_lineno( const wchar_t *str, int len )
 			prev_str = prev_str2;
 			i=i2;
 			res=res2;
-			
+
 			prev_str2 = tmp_str;
 			i2 = tmp_i;
 			res2 = tmp_res;
@@ -118,13 +118,13 @@ int parse_util_lineno( const wchar_t *str, int len )
 			prev_str2 = prev_str;
 			i2 = i;
 			res2=res;
-				
+
 			prev_str = (wchar_t *)str;
 			i=0;
 			res=1;
 		}
 	}
-	
+
 	for( ; str[i] && i<len; i++ )
 	{
 		if( str[i] == L'\n' )
@@ -146,14 +146,14 @@ int parse_util_get_line_from_offset( wchar_t *buff, int pos )
 	{
 		return -1;
 	}
-	
+
 	for( i=0; i<pos; i++ )
 	{
 		if( !buff[i] )
 		{
 			return -1;
 		}
-		
+
 		if( buff[i] == L'\n' )
 		{
 			count++;
@@ -167,7 +167,7 @@ int parse_util_get_offset_from_line( wchar_t *buff, int line )
 {
 	int i;
 	int count = 0;
-	
+
 	if( line < 0 )
 	{
 		return -1;
@@ -175,14 +175,14 @@ int parse_util_get_offset_from_line( wchar_t *buff, int line )
 
 	if( line == 0 )
 		return 0;
-		
+
 	for( i=0;; i++ )
 	{
 		if( !buff[i] )
 		{
 			return -1;
 		}
-		
+
 		if( buff[i] == L'\n' )
 		{
 			count++;
@@ -190,7 +190,7 @@ int parse_util_get_offset_from_line( wchar_t *buff, int line )
 			{
 				return i+1;
 			}
-			
+
 		}
 	}
 }
@@ -200,46 +200,46 @@ int parse_util_get_offset( wchar_t *buff, int line, int line_offset )
 	int off = parse_util_get_offset_from_line( buff, line );
 	int off2 = parse_util_get_offset_from_line( buff, line+1 );
 	int line_offset2 = line_offset;
-	
+
 	if( off < 0 )
 	{
 		return -1;
 	}
-	
+
 	if( off2 < 0 )
 	{
 		off2 = wcslen( buff )+1;
 	}
-	
+
 	if( line_offset2 < 0 )
 	{
 		line_offset2 = 0;
 	}
-	
+
 	if( line_offset2 >= off2-off-1 )
 	{
 		line_offset2 = off2-off-1;
 	}
-	
+
 	return off + line_offset2;
-	
+
 }
 
 
-int parse_util_locate_cmdsubst( const wchar_t *in, 
-								wchar_t **begin, 
+int parse_util_locate_cmdsubst( const wchar_t *in,
+								wchar_t **begin,
 								wchar_t **end,
 								int allow_incomplete )
 {
 	wchar_t *pos;
 	wchar_t prev=0;
 	int syntax_error=0;
-	int paran_count=0;	
+	int paran_count=0;
 
 	wchar_t *paran_begin=0, *paran_end=0;
 
 	CHECK( in, 0 );
-	
+
 	for( pos = (wchar_t *)in; *pos; pos++ )
 	{
 		if( prev != '\\' )
@@ -264,7 +264,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 					{
 						paran_begin = pos;
 					}
-					
+
 					paran_count++;
 				}
 				else if( *pos == ')' )
@@ -277,7 +277,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 						paran_end = pos;
 						break;
 					}
-				
+
 					if( paran_count < 0 )
 					{
 						syntax_error = 1;
@@ -285,19 +285,19 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 					}
 				}
 			}
-			
+
 		}
 		prev = *pos;
 	}
-	
+
 	syntax_error |= (paran_count < 0 );
 	syntax_error |= ((paran_count>0)&&(!allow_incomplete));
-	
+
 	if( syntax_error )
 	{
 		return -1;
 	}
-	
+
 	if( paran_begin == 0 )
 	{
 		return 0;
@@ -312,20 +312,20 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 	{
 		*end = paran_count?(wchar_t *)in+wcslen(in):paran_end;
 	}
-	
+
 	return 1;
 }
 
 
 void parse_util_cmdsubst_extent( const wchar_t *buff,
 								 int cursor_pos,
-								 wchar_t **a, 
+								 wchar_t **a,
 								 wchar_t **b )
 {
 	wchar_t *begin, *end;
 	wchar_t *pos;
 	const wchar_t *cursor = buff + cursor_pos;
-	
+
 	CHECK( buff, );
 
 	if( a )
@@ -337,9 +337,9 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 	{
 		*b = (wchar_t *)buff+wcslen(buff);
 	}
-	
+
 	pos = (wchar_t *)buff;
-	
+
 	while( 1 )
 	{
 		if( parse_util_locate_cmdsubst( pos,
@@ -379,10 +379,10 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 		{
 			break;
 		}
-		
+
 		pos = end+1;
 	}
-	
+
 }
 
 /**
@@ -390,19 +390,19 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 */
 static void job_or_process_extent( const wchar_t *buff,
 								   int cursor_pos,
-								   wchar_t **a, 
-								   wchar_t **b, 
+								   wchar_t **a,
+								   wchar_t **b,
 								   int process )
 {
 	wchar_t *begin, *end;
 	int pos;
 	wchar_t *buffcpy;
 	int finished=0;
-	
+
 	tokenizer tok;
 
 	CHECK( buff, );
-	
+
 	if( a )
 	{
 		*a=0;
@@ -412,20 +412,20 @@ static void job_or_process_extent( const wchar_t *buff,
 	{
 		*b = 0;
 	}
-	
+
 	parse_util_cmdsubst_extent( buff, cursor_pos, &begin, &end );
 	if( !end || !begin )
 	{
 		return;
 	}
-	
+
 	pos = cursor_pos - (begin - buff);
 
 	if( a )
 	{
 		*a = begin;
 	}
-	
+
 	if( b )
 	{
 		*b = end;
@@ -453,14 +453,14 @@ static void job_or_process_extent( const wchar_t *buff,
 					break;
 				}
 			}
-			
+
 			case TOK_END:
 			case TOK_BACKGROUND:
 			{
-				
+
 				if( tok_begin >= pos )
 				{
-					finished=1;					
+					finished=1;
 					if( b )
 					{
 						*b = (wchar_t *)buff + tok_begin;
@@ -474,31 +474,31 @@ static void job_or_process_extent( const wchar_t *buff,
 					}
 				}
 
-				break;				
+				break;
 			}
 		}
 	}
 
 	free( buffcpy);
-	
+
 	tok_destroy( &tok );
 
 }
 
 void parse_util_process_extent( const wchar_t *buff,
 								int pos,
-								wchar_t **a, 
+								wchar_t **a,
 								wchar_t **b )
 {
-	job_or_process_extent( buff, pos, a, b, 1 );	
+	job_or_process_extent( buff, pos, a, b, 1 );
 }
 
 void parse_util_job_extent( const wchar_t *buff,
 							int pos,
-							wchar_t **a, 
+							wchar_t **a,
 							wchar_t **b )
 {
-	job_or_process_extent( buff,pos,a, b, 0 );	
+	job_or_process_extent( buff,pos,a, b, 0 );
 }
 
 
@@ -506,7 +506,7 @@ void parse_util_token_extent( const wchar_t *buff,
 							  int cursor_pos,
 							  wchar_t **tok_begin,
 							  wchar_t **tok_end,
-							  wchar_t **prev_begin, 
+							  wchar_t **prev_begin,
 							  wchar_t **prev_end )
 {
 	wchar_t *begin, *end;
@@ -516,34 +516,34 @@ void parse_util_token_extent( const wchar_t *buff,
 	tokenizer tok;
 
 	wchar_t *a, *b, *pa, *pb;
-	
+
 	CHECK( buff, );
-		
+
 	assert( cursor_pos >= 0 );
 
 	a = b = pa = pb = 0;
-	
+
 	parse_util_cmdsubst_extent( buff, cursor_pos, &begin, &end );
 
 	if( !end || !begin )
 	{
 		return;
 	}
-	
+
 	pos = cursor_pos - (begin - buff);
-	
+
 	a = (wchar_t *)buff + pos;
 	b = a;
 	pa = (wchar_t *)buff + pos;
 	pb = pa;
-	
+
 	assert( begin >= buff );
 	assert( begin <= (buff+wcslen(buff) ) );
 	assert( end >= begin );
 	assert( end <= (buff+wcslen(buff) ) );
-	
+
 	buffcpy = wcsndup( begin, end-begin );
-	
+
 	if( !buffcpy )
 	{
 		DIE_MEM();
@@ -563,7 +563,7 @@ void parse_util_token_extent( const wchar_t *buff,
 		{
 			tok_end +=wcslen(tok_last(&tok));
 		}
-		
+
 		/*
 		  Cursor was before beginning of this token, means that the
 		  cursor is between two tokens, so we set it to a zero element
@@ -580,12 +580,12 @@ void parse_util_token_extent( const wchar_t *buff,
 		  looking for. If so, set a and b and break
 		*/
 		if( (tok_last_type( &tok ) == TOK_STRING) && (tok_end >= pos ) )
-		{			
+		{
 			a = begin + tok_get_pos( &tok );
 			b = a + wcslen(tok_last(&tok));
 			break;
 		}
-		
+
 		/*
 		  Remember previous string token
 		*/
@@ -597,7 +597,7 @@ void parse_util_token_extent( const wchar_t *buff,
 	}
 
 	free( buffcpy);
-	
+
 	tok_destroy( &tok );
 
 	if( tok_begin )
@@ -619,7 +619,7 @@ void parse_util_token_extent( const wchar_t *buff,
 	{
 		*prev_end = pb;
 	}
-	
+
 	assert( pa >= buff );
 	assert( pa <= (buff+wcslen(buff) ) );
 	assert( pb >= pa );
@@ -648,14 +648,14 @@ static void clear_hash_value( void *key, void *data, void *aux )
 			handler( name );
 		}
 	}
-	
+
 	free( (void *)data );
 }
 
 /**
-   Part of the autoloader cleanup 
+   Part of the autoloader cleanup
 */
-static void clear_loaded_entry( void *key, 
+static void clear_loaded_entry( void *key,
 								void *data,
 								void *handler )
 {
@@ -667,7 +667,7 @@ static void clear_loaded_entry( void *key,
 	hash_destroy( &loaded->is_loading );
 
 	free( loaded->old_path );
-	free( loaded );	
+	free( loaded );
 	free( (void *)key );
 }
 
@@ -683,9 +683,9 @@ static void parse_util_destroy()
 		hash_foreach2( all_loaded,
 					   &clear_loaded_entry,
 					   0 );
-		
+
 		hash_destroy( all_loaded );
-		free( all_loaded );	
+		free( all_loaded );
 		all_loaded = 0;
 	}
 }
@@ -704,7 +704,7 @@ void parse_util_load_reset( const wchar_t *path_var_name,
 			clear_loaded_entry( key, data, (void *)on_load );
 		}
 	}
-	
+
 }
 
 int parse_util_unload( const wchar_t *cmd,
@@ -721,14 +721,14 @@ int parse_util_unload( const wchar_t *cmd,
 	{
 		return 0;
 	}
-	
+
 	loaded = (autoload_t *)hash_get( all_loaded, path_var_name );
-	
+
 	if( !loaded )
 	{
 		return 0;
 	}
-	
+
 	hash_remove( &loaded->load_time, cmd, 0, &val );
 	if( val )
 	{
@@ -738,7 +738,7 @@ int parse_util_unload( const wchar_t *cmd,
 		}
 		free( val );
 	}
-	
+
 	return !!val;
 }
 
@@ -763,13 +763,13 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 	{
 		return;
 	}
-	
+
 	loaded = (autoload_t *)hash_get( all_loaded, path_var_name );
 	if( !loaded )
 	{
 		return;
 	}
-	
+
 	if( hash_get_count( &loaded->load_time ) >= AUTOLOAD_MAX )
 	{
 		time_t oldest_access = time(0) - AUTOLOAD_MIN_AGE;
@@ -787,19 +787,19 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 			{
 				continue;
 			}
-			
+
 			if( !tm[0] )
 			{
 				continue;
 			}
-			
+
 			if( hash_get( &loaded->is_loading, item ) )
 			{
 				continue;
 			}
-			
+
 			loaded_count++;
-			
+
 			if( tm[1] < oldest_access )
 			{
 				oldest_access = tm[1];
@@ -807,7 +807,7 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 			}
 		}
 		al_destroy( &key );
-		
+
 		if( oldest_item && loaded_count > AUTOLOAD_MAX)
 		{
 			parse_util_unload( oldest_item, path_var_name, on_load );
@@ -835,17 +835,17 @@ int parse_util_load( const wchar_t *cmd,
 
 	int res;
 	int c, c2;
-	
+
 	CHECK( path_var_name, 0 );
 	CHECK( cmd, 0 );
 
 	CHECK_BLOCK( 0 );
-	
+
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
 	parse_util_autounload( path_var_name, cmd, on_load );
-	path_var = env_get( path_var_name );	
-	
+	path_var = env_get( path_var_name );
+
 	/*
 	  Do we know where to look?
 	*/
@@ -859,7 +859,7 @@ int parse_util_load( const wchar_t *cmd,
 	*/
 	if( !all_loaded )
 	{
-		all_loaded = malloc( sizeof( hash_table_t ) );		
+		all_loaded = malloc( sizeof( hash_table_t ) );
 		halloc_register_function_void( global_context, &parse_util_destroy );
 		if( !all_loaded )
 		{
@@ -867,7 +867,7 @@ int parse_util_load( const wchar_t *cmd,
 		}
 		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
  	}
-	
+
 	loaded = (autoload_t *)hash_get( all_loaded, path_var_name );
 
 	if( loaded )
@@ -888,13 +888,13 @@ int parse_util_load( const wchar_t *cmd,
 		*/
 		if( hash_get( &loaded->is_loading, cmd ) )
 		{
-			debug( 0, 
-				   _( L"Could not autoload item '%ls', it is already being autoloaded. " 
-					  L"This is a circular dependency in the autoloading scripts, please remove it."), 
+			debug( 0,
+				   _( L"Could not autoload item '%ls', it is already being autoloaded. "
+					  L"This is a circular dependency in the autoloading scripts, please remove it."),
 				   cmd );
 			return 1;
 		}
-		
+
 
 	}
 	else
@@ -911,7 +911,7 @@ int parse_util_load( const wchar_t *cmd,
 		}
 		hash_init( &loaded->load_time, &hash_wcs_func, &hash_wcs_cmp );
 		hash_put( all_loaded, wcsdup(path_var_name), loaded );
-		
+
 		hash_init( &loaded->is_loading, &hash_wcs_func, &hash_wcs_cmp );
 
 		loaded->old_path = wcsdup( path_var );
@@ -919,11 +919,11 @@ int parse_util_load( const wchar_t *cmd,
 
 
 	path_list = al_new( global_context);
-	
+
 	tokenize_variable_array( path_var, path_list );
-	
+
 	c = al_get_count( path_list );
-	
+
 	hash_put( &loaded->is_loading, cmd, cmd );
 
 	/*
@@ -940,7 +940,7 @@ int parse_util_load( const wchar_t *cmd,
 		*/
 		hash_remove( &loaded->is_loading, cmd, 0, 0 );
 	}
-	
+
 	c2 = al_get_count( path_list );
 
 	al_foreach( path_list, &free );
@@ -950,9 +950,9 @@ int parse_util_load( const wchar_t *cmd,
 	/**
 	   Make sure we didn't 'drop' something
 	*/
-	
+
 	assert( c == c2 );
-	
+
 	return res;
 }
 
@@ -977,7 +977,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	  Get modification time of file
 	*/
 	tm = (time_t *)hash_get( &loaded->load_time, cmd );
-	
+
 	/*
 	  Did we just check this?
 	*/
@@ -988,7 +988,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 			return 0;
 		}
 	}
-	
+
 	/*
 	  Return if already loaded and we are skipping reloading
 	*/
@@ -996,7 +996,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	{
 		return 0;
 	}
-	
+
 	if( !path )
 	{
 		path = sb_halloc( global_context );
@@ -1005,7 +1005,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	{
 		sb_clear( path );
 	}
-	
+
 	/*
 	  Iterate over path searching for suitable completion files
 	*/
@@ -1024,7 +1024,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 				wchar_t *esc = escape( (wchar_t *)path->buff, 1 );
 				wchar_t *src_cmd = wcsdupcat( L". ", esc );
 				free( esc );
-				
+
 				if( !tm )
 				{
 					tm = malloc(sizeof(time_t)*2);
@@ -1044,7 +1044,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 				{
 					on_load(cmd );
 				}
-				
+
 				/*
 				  Source the completion file for the specified completion
 				*/
@@ -1054,7 +1054,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 					  Do nothing on failiure
 					*/
 				}
-				
+
 				free(src_cmd);
 				reloaded = 1;
 			}
@@ -1064,9 +1064,9 @@ static int parse_util_load_internal( const wchar_t *cmd,
 				  If we are rechecking an autoload file, and it hasn't
 				  changed, update the 'last check' timestamp.
 				*/
-				tm[1] = time(0);				
+				tm[1] = time(0);
 			}
-			
+
 			break;
 		}
 	}
@@ -1083,13 +1083,13 @@ static int parse_util_load_internal( const wchar_t *cmd,
 		{
 			DIE_MEM();
 		}
-		
+
 		tm[0] = 0;
 		tm[1] = time(0);
 		hash_put( &loaded->load_time, intern( cmd ), tm );
 	}
 
-	return reloaded;	
+	return reloaded;
 }
 
 void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments )
@@ -1099,7 +1099,7 @@ void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments )
 		wchar_t **arg;
 		string_buffer_t sb;
 		sb_init( &sb );
-		
+
 		for( arg=argv; *arg; arg++ )
 		{
 			if( arg != argv )
@@ -1108,20 +1108,20 @@ void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments )
 			}
 			sb_append( &sb, *arg );
 		}
-			
+
 		env_set( L"argv", (wchar_t *)sb.buff, ENV_LOCAL );
 		sb_destroy( &sb );
 	}
 	else
 	{
 		env_set( L"argv", 0, ENV_LOCAL );
-	}				
+	}
 
 	if( named_arguments )
 	{
 		wchar_t **arg;
 		int i;
-		
+
 		for( i=0, arg=argv; i < al_get_count( named_arguments ); i++ )
 		{
 			env_set( al_get( named_arguments, i ), *arg, ENV_LOCAL );
@@ -1129,10 +1129,10 @@ void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments )
 			if( *arg )
 				arg++;
 		}
-			
-		
+
+
 	}
-	
+
 }
 
 wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
@@ -1141,14 +1141,14 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 	wchar_t *unescaped;
 
 	CHECK( str, 0 );
-	
+
 	unescaped = wcsdup(str);
 
 	if( !unescaped )
 	{
 		DIE_MEM();
 	}
-	
+
 	for( in=out=unescaped; *in; in++ )
 	{
 		switch( *in )
@@ -1163,25 +1163,25 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 				*(out++)=*in;
 				break;
 			}
-			
+
 			case L'*':
 			{
-				*(out++)=ANY_STRING;					
+				*(out++)=ANY_STRING;
 				break;
 			}
-			
+
 			case L'?':
 			{
-				*(out++)=ANY_CHAR;					
+				*(out++)=ANY_CHAR;
 				break;
 			}
-			
+
 			default:
 			{
 				*(out++)=*in;
 				break;
 			}
-		}		
+		}
 	}
 	return unescaped;
 }

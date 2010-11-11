@@ -97,7 +97,7 @@ static int next_tab_stop( int in )
 	*/
 	if( init_tabs <= 0 )
 		init_tabs = 8;
-				
+
 	return ( (in/init_tabs)+1 )*init_tabs;
 }
 
@@ -121,7 +121,7 @@ static int calc_prompt_width( wchar_t *prompt )
 			int l;
 			int len=0;
 			int found = 0;
-			
+
 			/*
 			  Detect these terminfo color escapes with parameter
 			  value 0..7, all of which don't move the cursor
@@ -192,14 +192,14 @@ static int calc_prompt_width( wchar_t *prompt )
 				*/
 				len = maxi( try_sequence( tparm(esc2[l]), &prompt[j] ),
 					    try_sequence( esc2[l], &prompt[j] ));
-					
+
 				if( len )
 				{
 					j += (len-1);
 					found = 1;
 				}
 			}
-				
+
 			if( !found )
 			{
 				if( prompt[j+1] == L'k' )
@@ -227,14 +227,18 @@ static int calc_prompt_width( wchar_t *prompt )
 						{
 							break;
 						}
-					}						
-				}					
+					}
+				}
 			}
-				
+
 		}
 		else if( prompt[j] == L'\t' )
 		{
 			res = next_tab_stop( res );
+		}
+		else if( prompt[j] == L'\n' )
+		{
+			res = 0;
 		}
 		else
 		{
@@ -333,9 +337,9 @@ static void s_check_status( screen_t *s)
 		  is our best bet that we are still on the same line, so we
 		  move to the beginning of the line, reset the modelled screen
 		  contents, and then set the modeled cursor y-pos to its
-		  earlier value. 
+		  earlier value.
 		*/
-		
+
 		int prev_line = s->actual_cursor[1];
 		write_loop( 1, "\r", 1 );
 		s_reset( s, 0 );
@@ -344,7 +348,7 @@ static void s_check_status( screen_t *s)
 }
 
 /**
-   Free all memory used by one line_t struct. 
+   Free all memory used by one line_t struct.
 */
 static void free_line( void *l )
 {
@@ -366,7 +370,7 @@ static void s_reset_arr( array_list_t *l )
 void s_init( screen_t *s )
 {
 	CHECK( s, );
-	
+
 	memset( s, 0, sizeof(screen_t));
 	sb_init( &s->actual_prompt );
 }
@@ -380,7 +384,7 @@ void s_destroy( screen_t *s )
 	al_destroy( &s->actual );
 	s_reset_arr( &s->desired );
 	al_destroy( &s->desired );
-	sb_destroy( &s->actual_prompt );		
+	sb_destroy( &s->actual_prompt );
 }
 
 /**
@@ -397,16 +401,16 @@ static line_t *s_create_line()
 /**
    Appends a character to the end of the line that the output cursor is
    on. This function automatically handles linebreaks and lines longer
-   than the screen width. 
+   than the screen width.
 */
-static void s_desired_append_char( screen_t *s, 
+static void s_desired_append_char( screen_t *s,
 				   wchar_t b,
-				   int c, 
+				   int c,
 				   int indent,
 				   int prompt_width )
 {
 	int line_no = s->desired_cursor[1];
-	
+
 	switch( b )
 	{
 		case L'\n':
@@ -422,16 +426,16 @@ static void s_desired_append_char( screen_t *s,
 			}
 			break;
 		}
-		
+
 		case L'\r':
 		{
 			line_t *current;
 			current = (line_t *)al_get( &s->desired, line_no );
 			al_truncate( &current->text, 0 );
-			al_truncate( &current->color, 0 );			
+			al_truncate( &current->color, 0 );
 			s->desired_cursor[0]=0;
-			break;			
-		}		
+			break;
+		}
 
 		default:
 		{
@@ -440,9 +444,9 @@ static void s_desired_append_char( screen_t *s,
 			int cw = wcwidth(b);
 			int ew = wcwidth( ellipsis_char );
 			int i;
-			
+
 			current = (line_t *)al_get( &s->desired, line_no );
-			
+
 			if( !current )
 			{
 				current = s_create_line();
@@ -457,7 +461,7 @@ static void s_desired_append_char( screen_t *s,
 			{
 				al_set_long( &current->text, s->desired_cursor[0], ellipsis_char );
 				al_set_long( &current->color, s->desired_cursor[0], HIGHLIGHT_COMMENT );
-								
+
 				current = s_create_line();
 				al_push( &s->desired, current );
 				s->desired_cursor[1]++;
@@ -465,17 +469,17 @@ static void s_desired_append_char( screen_t *s,
 				for( i=0; i < (prompt_width-ew); i++ )
 				{
 					s_desired_append_char( s, L' ', 0, indent, prompt_width );
-				}				
+				}
 				s_desired_append_char( s, ellipsis_char, HIGHLIGHT_COMMENT, indent, prompt_width );
 			}
-			
+
 			al_set_long( &current->text, s->desired_cursor[0], b );
 			al_set_long( &current->color, s->desired_cursor[0], c );
 			s->desired_cursor[0]+= cw;
 			break;
 		}
 	}
-	
+
 }
 
 /**
@@ -491,7 +495,7 @@ static int s_writeb( char c )
    Write the bytes needed to move screen cursor to the specified
    position to the specified buffer. The actual_cursor field of the
    specified screen_t will be updated.
-   
+
    \param s the screen to operate on
    \param b the buffer to send the output escape codes to
    \param new_x the new x position
@@ -501,22 +505,22 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 {
 	int i;
 	int x_steps, y_steps;
-	
+
 	int (*writer_old)(char) = output_get_writer();
 
 	char *str;
 /*
-  debug( 0, L"move from %d %d to %d %d", 
-  s->screen_cursor[0], s->screen_cursor[1],  
+  debug( 0, L"move from %d %d to %d %d",
+  s->screen_cursor[0], s->screen_cursor[1],
   new_x, new_y );
 */
 	output_set_writer( &s_writeb );
 	s_writeb_buffer = b;
-	
+
 	y_steps = new_y - s->actual_cursor[1];
 
 	if( y_steps > 0 && (strcmp( cursor_down, "\n")==0))
-	{	
+	{
 		/*
 		  This is very strange - it seems some (all?) consoles use a
 		  simple newline as the cursor down escape. This will of
@@ -526,7 +530,7 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 		*/
 		s->actual_cursor[0]=0;
 	}
-	
+
 	if( y_steps < 0 )
 	{
 		str = cursor_up;
@@ -534,9 +538,9 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 	else
 	{
 		str = cursor_down;
-		
+
 	}
-	
+
 	for( i=0; i<abs(y_steps); i++)
 	{
 		writembs(str);
@@ -544,14 +548,14 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 
 
 	x_steps = new_x - s->actual_cursor[0];
-	
+
 	if( x_steps && new_x == 0 )
 	{
 		char c = '\r';
 		b_append( b, &c, 1 );
 		x_steps = 0;
 	}
-		
+
 	if( x_steps < 0 ){
 		str = cursor_left;
 	}
@@ -559,7 +563,7 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 	{
 		str = cursor_right;
 	}
-	
+
 	for( i=0; i<abs(x_steps); i++)
 	{
 		writembs(str);
@@ -568,9 +572,9 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 
 	s->actual_cursor[0] = new_x;
 	s->actual_cursor[1] = new_y;
-	
+
 	output_set_writer( writer_old );
-	
+
 }
 
 /**
@@ -578,17 +582,17 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 */
 static void s_set_color( screen_t *s, buffer_t *b, int c )
 {
-	
+
 	int (*writer_old)(char) = output_get_writer();
 
 	output_set_writer( &s_writeb );
 	s_writeb_buffer = b;
-	
+
 	set_color( highlight_get_color( c & 0xffff ),
 		   highlight_get_color( (c>>16)&0xffff ) );
-	
+
 	output_set_writer( writer_old );
-	
+
 }
 
 /**
@@ -602,9 +606,9 @@ static void s_write_char( screen_t *s, buffer_t *b, wchar_t c )
 	output_set_writer( &s_writeb );
 	s_writeb_buffer = b;
 	s->actual_cursor[0]+=wcwidth( c );
-	
+
 	writech( c );
-	
+
 	output_set_writer( writer_old );
 }
 
@@ -620,7 +624,7 @@ static void s_write_mbs( buffer_t *b, char *s )
 	s_writeb_buffer = b;
 
 	writembs( s );
-	
+
 	output_set_writer( writer_old );
 }
 
@@ -636,7 +640,7 @@ static void s_write_str( buffer_t *b, wchar_t *s )
 	s_writeb_buffer = b;
 
 	writestr( s );
-	
+
 	output_set_writer( writer_old );
 }
 
@@ -653,10 +657,10 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 	buffer_t output;
 
 	scr->need_clear = 0;
-	
+
 	b_init( &output );
 
-	
+
 	if( scr->actual_width != screen_width )
 	{
 		need_clear = 1;
@@ -664,16 +668,16 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		scr->actual_width = screen_width;
 		s_reset( scr, 0 );
 	}
-	
+
 	if( wcscmp( prompt, (wchar_t *)scr->actual_prompt.buff ) )
 	{
 		s_move( scr, &output, 0, 0 );
 		s_write_str( &output, prompt );
 		sb_clear( &scr->actual_prompt );
-		sb_append( &scr->actual_prompt, prompt );		
+		sb_append( &scr->actual_prompt, prompt );
 		scr->actual_cursor[0] = prompt_width;
 	}
-	
+
 	for( i=0; i< al_get_count( &scr->desired ); i++ )
 	{
 		line_t *o_line = (line_t *)al_get( &scr->desired, i );
@@ -691,29 +695,29 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 				al_truncate( &s_line->color, 0 );
 			}
 		}
-		
+
 		if( !s_line )
 		{
 			s_line = s_create_line();
 			al_push( &scr->actual, s_line );
 		}
-		
+
 		for( j=start_pos; j<al_get_count( &o_line->text ); j++ )
 		{
 			wchar_t o = (wchar_t)(long)al_get( &o_line->text, j );
 			int o_c = (int)(long)al_get( &o_line->color, j );
 
-			
+
 			if( !o )
 				continue;
-			
+
 			if( al_get_count( &s_line->text ) == j )
 			{
 				s_move( scr, &output, current_width, i );
 				s_set_color( scr, &output, o_c );
 				s_write_char( scr, &output, o );
 				al_set_long( &s_line->text, j, o );
-				al_set_long( &s_line->color, j, o_c );				
+				al_set_long( &s_line->color, j, o_c );
 			}
 			else
 			{
@@ -728,7 +732,7 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 					al_set_long( &s_line->color, current_width, o_c );
 					for( k=1; k<wcwidth(o); k++ )
 						al_set_long( &s_line->text, current_width+k, L'\0' );
-						
+
 				}
 			}
 			current_width += wcwidth( o );
@@ -740,7 +744,7 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 			s_write_mbs( &output, clr_eol);
 			al_truncate( &s_line->text, al_get_count( &o_line->text ) );
 		}
-		
+
 	}
 	for( i=al_get_count( &scr->desired ); i< al_get_count( &scr->actual ); i++ )
 	{
@@ -749,18 +753,18 @@ static void s_update( screen_t *scr, wchar_t *prompt )
 		s_write_mbs( &output, clr_eol);
 		al_truncate( &s_line->text, 0 );
 	}
-	
+
 	s_move( scr, &output, scr->desired_cursor[0], scr->desired_cursor[1] );
-	
+
 	s_set_color( scr, &output, 0xffffffff);
 
 	if( output.used )
 	{
 		write_loop( 1, output.buff, output.used );
 	}
-	
+
 	b_destroy( &output );
-	
+
 }
 
 /**
@@ -775,8 +779,8 @@ static int is_dumb()
 
 void s_write( screen_t *s,
 	      wchar_t *prompt,
-	      wchar_t *b, 
-	      int *c, 
+	      wchar_t *b,
+	      int *c,
 	      int *indent,
 	      int cursor )
 {
@@ -788,7 +792,7 @@ void s_write( screen_t *s,
 
 	int max_line_width = 0;
 	int current_line_width = 0;
-	
+
 	CHECK( s, );
 	CHECK( prompt, );
 	CHECK( b, );
@@ -803,17 +807,17 @@ void s_write( screen_t *s,
 	{
 		char *prompt_narrow = wcs2str( prompt );
 		char *buffer_narrow = wcs2str( b );
-		
+
 		write_loop( 1, "\r", 1 );
 		write_loop( 1, prompt_narrow, strlen( prompt_narrow ) );
 		write_loop( 1, buffer_narrow, strlen( buffer_narrow ) );
 
 		free( prompt_narrow );
 		free( buffer_narrow );
-		
+
 		return;
 	}
-	
+
 	prompt_width = calc_prompt_width( prompt );
 	screen_width = common_get_width();
 
@@ -831,7 +835,7 @@ void s_write( screen_t *s,
 		prompt = L"> ";
 		prompt_width = 2;
 	}
-	
+
 	/*
 	  Completely ignore impossibly small screens
 	*/
@@ -879,26 +883,26 @@ void s_write( screen_t *s,
 			s_desired_append_char( s, L' ', 0, 0, prompt_width );
 		}
 	}
-	
 
-	
+
+
 	for( i=0; b[i]; i++ )
 	{
 		int col = c[i];
-		
+
 		if( i == cursor )
 		{
 			col = 0;
 		}
-		
+
 		if( i == cursor )
 		{
 			cursor_arr[0] = s->desired_cursor[0];
 			cursor_arr[1] = s->desired_cursor[1];
 		}
-		
+
 		s_desired_append_char( s, b[i], col, indent[i], prompt_width );
-		
+
 		if( i== cursor && s->desired_cursor[1] != cursor_arr[1] && b[i] != L'\n' )
 		{
 			/*
@@ -910,13 +914,13 @@ void s_write( screen_t *s,
 			cursor_arr[0] = s->desired_cursor[0] - wcwidth(b[i]);
 			cursor_arr[1] = s->desired_cursor[1];
 		}
-		
+
 	}
 	if( i == cursor )
 	{
 		memcpy(cursor_arr, s->desired_cursor, sizeof(int)*2);
 	}
-	
+
 	memcpy( s->desired_cursor, cursor_arr, sizeof(int)*2 );
 	s_update( s, prompt );
 	s_save_status( s );

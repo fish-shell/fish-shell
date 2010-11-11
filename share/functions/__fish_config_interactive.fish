@@ -32,8 +32,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			end
 
 			if test -d $configdir
-				if command mkdir $configdir/fish 
-	
+				if command mkdir $configdir/fish
+
 					# These files are sometimes overwritten to by fish, so
 					# we want backups of them in case something goes wrong
 
@@ -51,7 +51,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 					#
 					# Move the fishd stuff from another shell to avoid concurrency problems
 					#
-	
+
 					/bin/sh -c mv\ \~/.fishd.(hostname)\ $configdir/fish/fishd.(hostname)\;kill\ -9\ (echo %fishd)
 
 					# Update paths to point to new configuration locations
@@ -70,12 +70,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 		# Make sure this is only done once
 		set -U __fish_init_1_22_0
-   
+
 	end
 
 	#
 	# If we are starting up for the first time, set various defaults
-	# 
+	#
 
 	if not set -q __fish_init_1_23_0
 		if not set -q fish_greeting
@@ -91,7 +91,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 		function set_default -d "Set a universal variable, unless it has already been set"
 			if not set -q $argv[1]
-				set -U -- $argv	
+				set -U -- $argv
 			end
 		end
 
@@ -139,11 +139,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		#
 
 		functions -e set_default
-	
+
 	end
 
 	#
-	# Print a greeting 
+	# Print a greeting
 	#
 
 	if functions -q fish_greeting
@@ -153,7 +153,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			switch $fish_greeting
 				case ''
 				# If variable is empty, don't print anything, saves us a fork
-		
+
 				case '*'
 				echo $fish_greeting
 			end
@@ -189,7 +189,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	end
 
 	#
-	# Completions for SysV startup scripts. These aren't bound to any 
+	# Completions for SysV startup scripts. These aren't bound to any
 	# specific command, so they can't be autoloaded.
 	#
 
@@ -203,11 +203,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	if not set -q fish_key_bindings
 		set -U fish_key_bindings fish_default_key_bindings
 	end
-	
+
 	# Reload keybindings when binding variable change
 	function __fish_reload_key_bindings -d "Reload keybindings when binding variable change" --on-variable fish_key_bindings
 		eval $fish_key_bindings ^/dev/null
-	end 
+	end
 
 	# Load keybindings
 	__fish_reload_key_bindings
@@ -220,11 +220,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	# If the ubuntu command-not-found package can be found, add a handler for it
 
 	# First check in /usr/lib, this is where modern Ubuntus place this command
-	if test -f /usr/lib/command-not-found 
+	if test -f /usr/lib/command-not-found
 		function fish_command_not_found_handler --on-event fish_command_not_found
 			/usr/lib/command-not-found $argv
 		end
-	else 
+	else
 		# Ubuntu Feisty places this command in the regular path instead
 		if type -p command-not-found >/dev/null
 			function fish_command_not_found_handler --on-event fish_command_not_found

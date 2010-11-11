@@ -1,4 +1,4 @@
-/** \file function.h 
+/** \file function.h
 
     Prototypes for functions for storing and retrieving function
 	information. These functions also take care of autoloading
@@ -53,7 +53,7 @@ typedef struct function_data
 
 
 /**
-   Initialize function data   
+   Initialize function data
 */
 void function_init();
 
@@ -96,11 +96,11 @@ int function_exists( const wchar_t *name );
 /**
    Insert all function names into l. These are not copies of the
    strings and should not be freed after use.
-   
+
    \param list the list to add the names to
    \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore
 */
-void function_get_names( array_list_t *list, 
+void function_get_names( array_list_t *list,
 						 int get_hidden );
 
 /**
@@ -130,5 +130,11 @@ array_list_t *function_get_named_arguments( const wchar_t *name );
    Returns whether this function shadows variables of the underlying function
 */
 int function_get_shadows( const wchar_t *name );
+
+/**
+   Creates a new function using the same definition as the specified function.
+   Returns non-zero if copy is successful.
+*/
+int function_copy( const wchar_t *name, const wchar_t *new_name );
 
 #endif

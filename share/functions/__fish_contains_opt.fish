@@ -1,13 +1,13 @@
 
 function __fish_contains_opt -d "Checks if a specific option has been given in the current commandline"
-	set -l next_short 
+	set -l next_short
 
 	set -l short_opt
-	set -l long_opt 
+	set -l long_opt
 
 	for i in $argv
-		if test $next_short 
-			set next_short 
+		if test $next_short
+			set next_short
 			set short_opt $short_opt $i
 		else
 			switch $i
@@ -32,7 +32,7 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
 		if commandline -cpo | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 0
 		end
-		
+
 		if commandline -ct | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 0
 		end

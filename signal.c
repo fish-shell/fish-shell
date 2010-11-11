@@ -47,7 +47,7 @@ struct lookup_entry
 	/**
 	   Signal description
 	*/
-	const wchar_t *desc;	
+	const wchar_t *desc;
 };
 
 /**
@@ -60,11 +60,11 @@ static int block_count=0;
    Lookup table used to convert between signal names and signal ids,
    etc.
 */
-const static struct lookup_entry lookup[] =
+static const struct lookup_entry lookup[] =
 {
 #ifdef SIGHUP
 	{
-		SIGHUP, 
+		SIGHUP,
 		L"SIGHUP",
 		N_( L"Terminal hung up" )
 	}
@@ -96,7 +96,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGTRAP
 	{
-		SIGTRAP, 
+		SIGTRAP,
 		L"SIGTRAP",
 		N_( L"Trace or breakpoint trap" )
 	}
@@ -112,7 +112,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGBUS
 	{
-		SIGBUS, 
+		SIGBUS,
 		L"SIGBUS",
 		N_( L"Misaligned address error" )
 	}
@@ -120,7 +120,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGFPE
 	{
-		SIGFPE, 
+		SIGFPE,
 		L"SIGFPE",
 		N_( L"Floating point exception" )
 	}
@@ -128,7 +128,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGKILL
 	{
-		SIGKILL, 
+		SIGKILL,
 		L"SIGKILL",
 		N_( L"Forced quit" )
 	}
@@ -151,7 +151,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGSEGV
 	{
-		SIGSEGV, 
+		SIGSEGV,
 		L"SIGSEGV",
 		N_( L"Address boundary error" )
 	}
@@ -167,7 +167,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGALRM
 	{
-		SIGALRM, 
+		SIGALRM,
 		L"SIGALRM",
 		N_( L"Timer expired" )
 	}
@@ -215,7 +215,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGTTIN
 	{
-		SIGTTIN, 
+		SIGTTIN,
 		L"SIGTTIN",
 		N_( L"Stop from terminal input" )
 	}
@@ -231,7 +231,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGURG
 	{
-		SIGURG, 
+		SIGURG,
 		L"SIGURG",
 		N_( L"Urgent socket condition" )
 	}
@@ -247,7 +247,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGXFSZ
 	{
-		SIGXFSZ, 
+		SIGXFSZ,
 		L"SIGXFSZ",
 		N_( L"File size limit exceeded" )
 	}
@@ -295,7 +295,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGPWR
 	{
-		SIGPWR, 
+		SIGPWR,
 		L"SIGPWR",
 		N_( L"Power failure" )
 	}
@@ -303,7 +303,7 @@ const static struct lookup_entry lookup[] =
 #endif
 #ifdef SIGSYS
 	{
-		SIGSYS, 
+		SIGSYS,
 		L"SIGSYS",
 		N_( L"Bad system call" )
 	}
@@ -359,15 +359,15 @@ const static struct lookup_entry lookup[] =
 
 
 /**
-   Test if \c name is a string describing the signal named \c canonical. 
+   Test if \c name is a string describing the signal named \c canonical.
 */
-static int match_signal_name( const wchar_t *canonical, 
+static int match_signal_name( const wchar_t *canonical,
 							  const wchar_t *name )
 {
 	if( wcsncasecmp( name, L"sig", 3 )==0)
 		name +=3;
 
-	return wcscasecmp( canonical+3,name ) == 0;	
+	return wcscasecmp( canonical+3,name ) == 0;
 }
 
 
@@ -375,7 +375,7 @@ int wcs2sig( const wchar_t *str )
 {
 	int i, res;
 	wchar_t *end=0;
-	
+
 	for( i=0; lookup[i].desc ; i++ )
 	{
 		if( match_signal_name( lookup[i].name, str) )
@@ -387,8 +387,8 @@ int wcs2sig( const wchar_t *str )
 	res = wcstol( str, &end, 10 );
 	if( !errno && res>=0 && !*end )
 		return res;
-	
-	return -1;	
+
+	return -1;
 }
 
 
@@ -435,7 +435,7 @@ static void default_handler(int signal, siginfo_t *info, void *context)
 
 	if( event_get( &e, 0 ) )
 	{
-		
+
 		event_fire( &e );
 	}
 }
@@ -445,8 +445,8 @@ static void default_handler(int signal, siginfo_t *info, void *context)
 */
 static void handle_winch( int sig, siginfo_t *info, void *context )
 {
-	common_handle_winch( sig );	
-	default_handler( sig, 0, 0 );	
+	common_handle_winch( sig );
+	default_handler( sig, 0, 0 );
 }
 
 /**
@@ -460,16 +460,16 @@ static void handle_hup( int sig, siginfo_t *info, void *context )
 	e.type=EVENT_SIGNAL;
 	e.param1.signal = SIGHUP;
 	e.function_name=0;
-	
+
 	if( event_get( &e, 0 ) )
 	{
-		default_handler( sig, 0, 0 );	
+		default_handler( sig, 0, 0 );
 	}
 	else
 	{
 		reader_exit( 1, 1 );
 	}
-	
+
 }
 
 /**
@@ -479,7 +479,7 @@ static void handle_hup( int sig, siginfo_t *info, void *context )
 static void handle_int( int sig, siginfo_t *info, void *context )
 {
 	reader_handle_int( sig );
-	default_handler( sig, info, context);	
+	default_handler( sig, info, context);
 }
 
 /**
@@ -488,22 +488,22 @@ static void handle_int( int sig, siginfo_t *info, void *context )
 static void handle_chld( int sig, siginfo_t *info, void *context )
 {
 	job_handle_signal( sig, info, context );
-	default_handler( sig, info, context);	
+	default_handler( sig, info, context);
 }
 
 void signal_reset_handlers()
 {
 	int i;
-	
+
 	struct sigaction act;
 	sigemptyset( & act.sa_mask );
 	act.sa_flags=0;
 	act.sa_handler=SIG_DFL;
-	
+
 	for( i=0; lookup[i].desc ; i++ )
 	{
 		sigaction( lookup[i].signal, &act, 0);
-	}	
+	}
 }
 
 
@@ -516,11 +516,11 @@ void signal_set_handlers()
 
 	if( is_interactive == -1 )
 		return;
-	
+
 	sigemptyset( & act.sa_mask );
 	act.sa_flags=SA_SIGINFO;
 	act.sa_sigaction = &default_handler;
-	
+
 	/*
 	  First reset everything to a use default_handler, a function
 	  whose sole action is to fire of an event
@@ -531,7 +531,7 @@ void signal_set_handlers()
 	sigaction( SIGTTIN, &act, 0);
 	sigaction( SIGTTOU, &act, 0);
 	sigaction( SIGCHLD, &act, 0);
-	
+
 	/*
 	  Ignore sigpipe, it is generated if fishd dies, but we can
 	  recover.
@@ -544,9 +544,9 @@ void signal_set_handlers()
 		   Interactive mode. Ignore interactive signals.  We are a
 		   shell, we know whats best for the user. ;-)
 		*/
-		
+
 		act.sa_handler=SIG_IGN;
-		
+
 		sigaction( SIGINT, &act, 0);
 		sigaction( SIGQUIT, &act, 0);
 		sigaction( SIGTSTP, &act, 0);
@@ -568,7 +568,7 @@ void signal_set_handlers()
 			wperror( L"sigaction" );
 			FATAL_EXIT();
 		}
-		
+
 #ifdef SIGWINCH
 		act.sa_flags = SA_SIGINFO;
 		act.sa_sigaction= &handle_winch;
@@ -609,13 +609,13 @@ void signal_set_handlers()
 			exit(1);
 		}
 	}
-	
+
 }
 
 void signal_handle( int sig, int do_handle )
 {
 	struct sigaction act;
-	
+
 	/*
 	  These should always be handled
 	*/
@@ -626,7 +626,7 @@ void signal_handle( int sig, int do_handle )
 		(sig == SIGTTOU) ||
 		(sig == SIGCHLD) )
 		return;
-	
+
 	sigemptyset( &act.sa_mask );
 	if( do_handle )
 	{
@@ -638,27 +638,27 @@ void signal_handle( int sig, int do_handle )
 		act.sa_flags = 0;
 		act.sa_handler = SIG_DFL;
 	}
-	
+
 	sigaction( sig, &act, 0);
 }
 
 void signal_block()
 {
-	sigset_t chldset; 
-	
+	sigset_t chldset;
+
 	if( !block_count )
 	{
 		sigfillset( &chldset );
-		sigprocmask(SIG_BLOCK, &chldset, 0);	
+		sigprocmask(SIG_BLOCK, &chldset, 0);
 	}
-	
+
 	block_count++;
 //	debug( 0, L"signal block level increased to %d", block_count );
 }
 
 void signal_unblock()
 {
-	sigset_t chldset; 
+	sigset_t chldset;
 
 	block_count--;
 
@@ -668,11 +668,11 @@ void signal_unblock()
 		bugreport();
 		FATAL_EXIT();
 	}
-	
+
 	if( !block_count )
 	{
 		sigfillset( &chldset );
-		sigprocmask(SIG_UNBLOCK, &chldset, 0);	
+		sigprocmask(SIG_UNBLOCK, &chldset, 0);
 	}
 //	debug( 0, L"signal block level decreased to %d", block_count );
 }

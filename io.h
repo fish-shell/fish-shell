@@ -17,8 +17,8 @@ typedef struct io_data
 	int io_mode;
 	/** FD to redirect */
 	int fd;
-	/** 
-		Type-specific parameter for redirection 
+	/**
+		Type-specific parameter for redirection
 	*/
 	union
 	{
@@ -30,7 +30,7 @@ typedef struct io_data
 		int old_fd;
 	} param1
 	;
-	/** 
+	/**
 		Second type-specific paramter for redirection
 	*/
 	union
@@ -38,7 +38,7 @@ typedef struct io_data
 		/** file creation flags to send to open for IO_FILE */
 		int flags;
 		/** buffer to save output in for IO_BUFFER */
-		buffer_t *out_buffer;		
+		buffer_t *out_buffer;
 		/** Whether to close old_fd for IO_FD */
 		int close_old;
 	} param2
@@ -48,13 +48,13 @@ typedef struct io_data
 	  Set to true if this is an input io redirection
 	 */
 	int is_input;
-	
+
 	/** Pointer to the next IO redirection */
 	struct io_data *next;
 }
 io_data_t;
 
- 
+
 /**
    Join two chains of io redirections
 */

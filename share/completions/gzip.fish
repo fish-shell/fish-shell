@@ -1,7 +1,7 @@
 complete -c gzip -s c -l stdout --description "Compress to stdout"
 complete -c gzip -s d -l decompress -x -a "
 (
-	__fish_complete_suffix .gz 
+	__fish_complete_suffix .gz
 	__fish_complete_suffix .tgz
 )
 "

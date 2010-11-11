@@ -1,5 +1,5 @@
 /** \file input_common.c
-	
+
 Implementation file for the low level input library
 
 */
@@ -55,7 +55,7 @@ void input_common_init( int (*ih)() )
 
 void input_common_destroy()
 {
-	
+
 }
 
 /**
@@ -66,13 +66,13 @@ static wint_t readb()
 {
 	unsigned char arr[1];
 	int do_loop = 0;
-	
+
 	do
 	{
-		fd_set fd;	
+		fd_set fd;
 		int fd_max=1;
 		int res;
-		
+
 		FD_ZERO( &fd );
 		FD_SET( 0, &fd );
 		if( env_universal_server.fd > 0 )
@@ -80,9 +80,9 @@ static wint_t readb()
 			FD_SET( env_universal_server.fd, &fd );
 			fd_max = env_universal_server.fd+1;
 		}
-		
-		do_loop = 0;			
-		
+
+		do_loop = 0;
+
 		res = select( fd_max, &fd, 0, 0, 0 );
 		if( res==-1 )
 		{
@@ -102,10 +102,10 @@ static wint_t readb()
 						{
 							return lookahead_arr[--lookahead_count];
 						}
-						
+
 					}
-					
-					
+
+
 					do_loop = 1;
 					break;
 				}
@@ -116,7 +116,7 @@ static wint_t readb()
 					*/
 					return R_EOF;
 				}
-			}	
+			}
 		}
 		else
 		{
@@ -124,7 +124,7 @@ static wint_t readb()
 			{
 				if( FD_ISSET( env_universal_server.fd, &fd ) )
 				{
-					debug( 3, L"Wake up on universal variable event" );					
+					debug( 3, L"Wake up on universal variable event" );
 					env_universal_read_all();
 					do_loop = 1;
 
@@ -132,7 +132,7 @@ static wint_t readb()
 					{
 						return lookahead_arr[--lookahead_count];
 					}
-				}				
+				}
 			}
 			if( FD_ISSET( 0, &fd ) )
 			{
@@ -144,11 +144,11 @@ static wint_t readb()
 					return R_EOF;
 				}
 				do_loop = 0;
-			}				
+			}
 		}
 	}
 	while( do_loop );
-	
+
 	return arr[0];
 }
 
@@ -167,16 +167,16 @@ wchar_t input_common_readch( int timed )
 					1000 * WAIT_ON_ESCAPE
 				}
 			;
-			
+
 			FD_ZERO( &fds );
 			FD_SET( 0, &fds );
 			count = select(1, &fds, 0, 0, &tm);
-			
+
 			switch( count )
 			{
 				case 0:
 					return WEOF;
-					
+
 				case -1:
 					return WEOF;
 					break;
@@ -185,7 +185,7 @@ wchar_t input_common_readch( int timed )
 
 			}
 		}
-		
+
 		wchar_t res;
 		static mbstate_t state;
 
@@ -193,33 +193,33 @@ wchar_t input_common_readch( int timed )
 		{
 			wint_t b = readb();
 			char bb;
-			
+
 			int sz;
-			
+
 			if( (b >= R_NULL) && (b < R_NULL + 1000) )
 				return b;
 
 			bb=b;
-			
+
 			sz = mbrtowc( &res, &bb, 1, &state );
-			
+
 			switch( sz )
 			{
 				case -1:
 					memset (&state, '\0', sizeof (state));
-					debug( 2, L"Illegal input" );					
-					return R_NULL;					
+					debug( 2, L"Illegal input" );
+					return R_NULL;
 				case -2:
 					break;
 				case 0:
 					return 0;
 				default:
-					
+
 					return res;
 			}
 		}
 	}
-	else 
+	else
 	{
 		if( !timed )
 		{
@@ -228,7 +228,7 @@ wchar_t input_common_readch( int timed )
 			if( lookahead_count == 0 )
 				return input_common_readch(0);
 		}
-		
+
 		return lookahead_arr[--lookahead_count];
 	}
 }

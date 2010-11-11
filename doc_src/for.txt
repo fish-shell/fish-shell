@@ -11,7 +11,7 @@ not be executed at all.
 
 \subsection for-example Example
 
-The command 
+The command
 
 <tt>for i in foo bar baz; echo $i; end</tt>
 
@@ -21,5 +21,5 @@ would output:
 foo
 bar
 baz
-</pre>		
+</pre>
 

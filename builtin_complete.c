@@ -1,6 +1,6 @@
 /** \file builtin_complete.c Functions defining the complete builtin
 
-Functions used for implementing the complete builtin. 
+Functions used for implementing the complete builtin.
 
 */
 #include "config.h"
@@ -28,7 +28,7 @@ Functions used for implementing the complete builtin.
 /**
    Internal storage for the builtin_get_temporary_buffer() function.
 */
-const static wchar_t *temporary_buffer;
+static const wchar_t *temporary_buffer;
 
 /*
   builtin_complete_* are a set of rather silly looping functions that
@@ -46,8 +46,8 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 								   int cmd_type,
 								   const wchar_t *short_opt,
 								   array_list_t *gnu_opt,
-								   array_list_t *old_opt, 
-								   int result_mode, 
+								   array_list_t *old_opt,
+								   int result_mode,
 								   const wchar_t *condition,
 								   const wchar_t *comp,
 								   const wchar_t *desc,
@@ -55,10 +55,10 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 {
 	int i;
 	const wchar_t *s;
-	
+
 	for( s=short_opt; *s; s++ )
 	{
-		complete_add( cmd, 
+		complete_add( cmd,
 					  cmd_type,
 					  *s,
 					  0,
@@ -69,10 +69,10 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  desc,
 					  flags );
 	}
-	
+
 	for( i=0; i<al_get_count( gnu_opt ); i++ )
 	{
-		complete_add( cmd, 
+		complete_add( cmd,
 					  cmd_type,
 					  0,
 					  (wchar_t *)al_get(gnu_opt, i ),
@@ -83,10 +83,10 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  desc,
 					  flags );
 	}
-	
+
 	for( i=0; i<al_get_count( old_opt ); i++ )
 	{
-		complete_add( cmd, 
+		complete_add( cmd,
 					  cmd_type,
 					  0,
 					  (wchar_t *)al_get(old_opt, i ),
@@ -96,11 +96,11 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  comp,
 					  desc,
 					  flags );
-	}	
+	}
 
 	if( al_get_count( old_opt )+al_get_count( gnu_opt )+wcslen(short_opt) == 0 )
 	{
-		complete_add( cmd, 
+		complete_add( cmd,
 					  cmd_type,
 					  0,
 					  0,
@@ -110,18 +110,18 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  comp,
 					  desc,
 					  flags );
-	}	
+	}
 }
 
 /**
    Silly function
 */
-static void	builtin_complete_add( array_list_t *cmd, 
+static void	builtin_complete_add( array_list_t *cmd,
 								  array_list_t *path,
 								  const wchar_t *short_opt,
 								  array_list_t *gnu_opt,
-								  array_list_t *old_opt, 
-								  int result_mode, 
+								  array_list_t *old_opt,
+								  int result_mode,
 								  int authoritative,
 								  const wchar_t *condition,
 								  const wchar_t *comp,
@@ -129,17 +129,17 @@ static void	builtin_complete_add( array_list_t *cmd,
 								  int flags )
 {
 	int i;
-	
+
 	for( i=0; i<al_get_count( cmd ); i++ )
 	{
 		builtin_complete_add2( al_get( cmd, i ),
 							   COMMAND,
-							   short_opt, 
+							   short_opt,
 							   gnu_opt,
-							   old_opt, 
-							   result_mode, 
-							   condition, 
-							   comp, 
+							   old_opt,
+							   result_mode,
+							   condition,
+							   comp,
 							   desc,
 							   flags );
 
@@ -149,19 +149,19 @@ static void	builtin_complete_add( array_list_t *cmd,
 									  COMMAND,
 									  authoritative );
 		}
-		
+
 	}
-	
+
 	for( i=0; i<al_get_count( path ); i++ )
 	{
 		builtin_complete_add2( al_get( path, i ),
 							   PATH,
-							   short_opt, 
+							   short_opt,
 							   gnu_opt,
-							   old_opt, 
-							   result_mode, 
-							   condition, 
-							   comp, 
+							   old_opt,
+							   result_mode,
+							   condition,
+							   comp,
 							   desc,
 							   flags );
 
@@ -171,8 +171,8 @@ static void	builtin_complete_add( array_list_t *cmd,
 									  PATH,
 									  authoritative );
 		}
-		
-	}	
+
+	}
 }
 
 /**
@@ -181,17 +181,17 @@ static void	builtin_complete_add( array_list_t *cmd,
 static void builtin_complete_remove3( wchar_t *cmd,
 									  int cmd_type,
 									  wchar_t short_opt,
-									  array_list_t *long_opt )		
+									  array_list_t *long_opt )
 {
 	int i;
-	
+
 	for( i=0; i<al_get_count( long_opt ); i++ )
 	{
 		complete_remove( cmd,
 						 cmd_type,
 						 short_opt,
 						 (wchar_t *)al_get( long_opt, i ) );
-	}	
+	}
 }
 
 /**
@@ -214,7 +214,7 @@ static void	builtin_complete_remove2( wchar_t *cmd,
 								cmd_type,
 								*s,
 								0 );
-				
+
 			}
 			else
 			{
@@ -239,42 +239,42 @@ static void	builtin_complete_remove2( wchar_t *cmd,
 								  cmd_type,
 								  0,
 								  old_opt );
-										  
-	}				
 
-	
+	}
+
+
 }
 
 /**
    Silly function
 */
-static void	builtin_complete_remove( array_list_t *cmd, 
+static void	builtin_complete_remove( array_list_t *cmd,
 									 array_list_t *path,
 									 const wchar_t *short_opt,
 									 array_list_t *gnu_opt,
 									 array_list_t *old_opt )
 {
-	
+
 	int i;
-	
+
 	for( i=0; i<al_get_count( cmd ); i++ )
 	{
 		builtin_complete_remove2( (wchar_t *)al_get( cmd, i ),
 								  COMMAND,
-								  short_opt, 
+								  short_opt,
 								  gnu_opt,
 								  old_opt );
 	}
-	
+
 	for( i=0; i<al_get_count( path ); i++ )
 	{
 		builtin_complete_remove2( (wchar_t *)al_get( path, i ),
 								  PATH,
-								  short_opt, 
+								  short_opt,
 								  gnu_opt,
 								  old_opt );
 	}
-	
+
 }
 
 
@@ -296,55 +296,55 @@ static int builtin_complete( wchar_t **argv )
 	int remove = 0;
 	int authoritative = -1;
 	int flags = COMPLETE_AUTO_SPACE;
-	
+
 	string_buffer_t short_opt;
 	array_list_t gnu_opt, old_opt;
 	wchar_t *comp=L"", *desc=L"", *condition=L"";
 
 	wchar_t *do_complete = 0;
-	
+
 	array_list_t cmd;
 	array_list_t path;
 
 	static int recursion_level=0;
-	
+
 	al_init( &cmd );
 	al_init( &path );
 	sb_init( &short_opt );
 	al_init( &gnu_opt );
 	al_init( &old_opt );
-	
-	argc = builtin_count_args( argv );	
-	
+
+	argc = builtin_count_args( argv );
+
 	woptind=0;
-	
+
 	while( res == 0 )
 	{
-		const static struct woption
+		static const struct woption
 			long_options[] =
 			{
 				{
-					L"exclusive", no_argument, 0, 'x' 
+					L"exclusive", no_argument, 0, 'x'
 				}
 				,
 				{
-					L"no-files", no_argument, 0, 'f' 
+					L"no-files", no_argument, 0, 'f'
 				}
 				,
 				{
-					L"require-parameter", no_argument, 0, 'r' 
+					L"require-parameter", no_argument, 0, 'r'
 				}
 				,
 				{
 					L"path", required_argument, 0, 'p'
 				}
-				,					
+				,
 				{
-					L"command", required_argument, 0, 'c' 
+					L"command", required_argument, 0, 'c'
 				}
-				,					
+				,
 				{
-					L"short-option", required_argument, 0, 's' 
+					L"short-option", required_argument, 0, 's'
 				}
 				,
 				{
@@ -352,7 +352,7 @@ static int builtin_complete( wchar_t **argv )
 				}
 				,
 				{
-					L"old-option", required_argument, 0, 'o' 
+					L"old-option", required_argument, 0, 'o'
 				}
 				,
 				{
@@ -387,22 +387,22 @@ static int builtin_complete( wchar_t **argv )
 					L"help", no_argument, 0, 'h'
 				}
 				,
-				{ 
-					0, 0, 0, 0 
+				{
+					0, 0, 0, 0
 				}
 			}
-		;		
-		
+		;
+
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"a:c:p:s:l:o:d:frxeuAn:C::h", 
-								long_options, 
+								argv,
+								L"a:c:p:s:l:o:d:frxeuAn:C::h",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -414,23 +414,23 @@ static int builtin_complete( wchar_t **argv )
                            long_options[opt_index].name );
 				builtin_print_help( argv[0], sb_err );
 
-				
+
 				res = 1;
 				break;
-				
-			case 'x':					
+
+			case 'x':
 				result_mode |= EXCLUSIVE;
 				break;
-					
-			case 'f':					
+
+			case 'f':
 				result_mode |= NO_FILES;
 				break;
-				
-			case 'r':					
+
+			case 'r':
 				result_mode |= NO_COMMON;
 				break;
-					
-			case 'p':	
+
+			case 'p':
 			case 'c':
 			{
 				wchar_t *a = unescape( woptarg, 1);
@@ -441,31 +441,31 @@ static int builtin_complete( wchar_t **argv )
 				else
 				{
 					sb_printf( sb_err, L"%ls: Invalid token '%ls'\n", argv[0], woptarg );
-					res = 1;					
-				}				
+					res = 1;
+				}
 				break;
 			}
-				
+
 			case 'd':
 				desc = woptarg;
 				break;
-				
+
 			case 'u':
 				authoritative=0;
 				break;
-				
+
 			case 'A':
 				authoritative=1;
 				break;
-				
+
 			case 's':
 				sb_append( &short_opt, woptarg );
 				break;
-					
+
 			case 'l':
 				al_push( &gnu_opt, woptarg );
 				break;
-				
+
 			case 'o':
 				al_push( &old_opt, woptarg );
 				break;
@@ -473,7 +473,7 @@ static int builtin_complete( wchar_t **argv )
 			case 'a':
 				comp = woptarg;
 				break;
-				
+
 			case 'e':
 				remove = 1;
 				break;
@@ -481,22 +481,22 @@ static int builtin_complete( wchar_t **argv )
 			case 'n':
 				condition = woptarg;
 				break;
-				
+
 			case 'C':
 				do_complete = woptarg?woptarg:reader_get_buffer();
 				break;
-				
+
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return 0;
-				
+
 			case '?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );
 				res = 1;
 				break;
-				
+
 		}
-		
+
 	}
 
 	if( !res )
@@ -506,17 +506,17 @@ static int builtin_complete( wchar_t **argv )
 			if( parser_test( condition, 0, 0, 0 ) )
 			{
 				sb_printf( sb_err,
-						   L"%ls: Condition '%ls' contained a syntax error\n", 
+						   L"%ls: Condition '%ls' contained a syntax error\n",
 						   argv[0],
 						   condition );
-				
+
 				parser_test( condition, 0, sb_err, argv[0] );
-				
+
 				res = 1;
 			}
 		}
 	}
-	
+
 	if( !res )
 	{
 		if( comp && wcslen( comp ) )
@@ -524,12 +524,12 @@ static int builtin_complete( wchar_t **argv )
 			if( parser_test_args( comp, 0, 0 ) )
 			{
 				sb_printf( sb_err,
-						   L"%ls: Completion '%ls' contained a syntax error\n", 
+						   L"%ls: Completion '%ls' contained a syntax error\n",
 						   argv[0],
 						   comp );
-				
+
 				parser_test_args( comp, sb_err, argv[0] );
-				
+
 				res = 1;
 			}
 		}
@@ -547,22 +547,22 @@ static int builtin_complete( wchar_t **argv )
 			wchar_t *token;
 
 			parse_util_token_extent( do_complete, wcslen( do_complete ), &token, 0, 0, 0 );
-						
-			temporary_buffer = do_complete;		
+
+			temporary_buffer = do_complete;
 
 			if( recursion_level < 1 )
 			{
 				recursion_level++;
-			
+
 				comp = al_halloc( 0 );
-			
+
 				complete( do_complete, comp );
-			
+
 				for( i=0; i<al_get_count( comp ); i++ )
 				{
 					completion_t *next = (completion_t *)al_get( comp, i );
 					wchar_t *prepend;
-					
+
 					if( next->flags & COMPLETE_NO_CASE )
 					{
 						prepend = L"";
@@ -571,7 +571,7 @@ static int builtin_complete( wchar_t **argv )
 					{
 						prepend = token;
 					}
-						
+
 
 					if( next->description )
 					{
@@ -582,17 +582,17 @@ static int builtin_complete( wchar_t **argv )
 						sb_printf( sb_out, L"%ls%ls\n", prepend, next->completion );
 					}
 				}
-			
+
 				halloc_free( comp );
 				recursion_level--;
 			}
-		
-			temporary_buffer = prev_temporary_buffer;		
-		
+
+			temporary_buffer = prev_temporary_buffer;
+
 		}
 		else if( woptind != argc )
 		{
-			sb_printf( sb_err, 
+			sb_printf( sb_err,
 					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
 			builtin_print_help( argv[0], sb_err );
@@ -603,7 +603,7 @@ static int builtin_complete( wchar_t **argv )
 		{
 			/* No arguments specified, meaning we print the definitions of
 			 * all specified completions to stdout.*/
-			complete_print( sb_out );		
+			complete_print( sb_out );
 		}
 		else
 		{
@@ -613,26 +613,26 @@ static int builtin_complete( wchar_t **argv )
 										 &path,
 										 (wchar_t *)short_opt.buff,
 										 &gnu_opt,
-										 &old_opt );									 
+										 &old_opt );
 			}
 			else
 			{
-				builtin_complete_add( &cmd, 
+				builtin_complete_add( &cmd,
 									  &path,
 									  (wchar_t *)short_opt.buff,
 									  &gnu_opt,
-									  &old_opt, 
-									  result_mode, 
+									  &old_opt,
+									  result_mode,
 									  authoritative,
 									  condition,
 									  comp,
 									  desc,
-									  flags ); 
+									  flags );
 			}
 
-		}	
+		}
 	}
-	
+
 	al_foreach( &cmd, &free );
 	al_foreach( &path, &free );
 

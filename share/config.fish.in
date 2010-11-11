@@ -34,20 +34,20 @@ end
 # Set up function and completion paths. Make sure that the fish
 # default functions/completions are included in the respective path.
 
-if not set -q fish_function_path 
-	set -U fish_function_path $configdir/fish/functions    @sysconfdir@/fish/functions    @datadir@/fish/functions 
+if not set -q fish_function_path
+	set -U fish_function_path $configdir/fish/functions    @sysconfdir@/fish/functions    @datadir@/fish/functions
 end
 
-if not contains @datadir@/fish/functions $fish_function_path 
-	set fish_function_path[-1] @datadir@/fish/functions 
+if not contains @datadir@/fish/functions $fish_function_path
+	set fish_function_path[-1] @datadir@/fish/functions
 end
 
-if not set -q fish_complete_path 
-	set -U fish_complete_path $configdir/fish/completions  @sysconfdir@/fish/completions  @datadir@/fish/completions 
+if not set -q fish_complete_path
+	set -U fish_complete_path $configdir/fish/completions  @sysconfdir@/fish/completions  @datadir@/fish/completions
 end
 
-if not contains @datadir@/fish/completions $fish_complete_path 
-	set fish_complete_path[-1] @datadir@/fish/completions 
+if not contains @datadir@/fish/completions $fish_complete_path
+	set fish_complete_path[-1] @datadir@/fish/completions
 end
 
 set __fish_help_dir @docdir@
@@ -62,9 +62,9 @@ set __fish_help_dir @docdir@
 
 if test -d /usr/xpg4/bin
 	if not contains /usr/xpg4/bin $PATH
-		set PATH /usr/xpg4/bin $PATH 
+		set PATH /usr/xpg4/bin $PATH
 	end
-end   
+end
 
 #
 # Add a few common directories to path, if they exists. Note that pure

@@ -11,6 +11,11 @@
 
 AC_INIT(fish,1.23.1,fish-users@lists.sf.net)
 
+#
+# preserve configure arguments for xsel
+#
+
+conf_arg=$@
 
 #
 # List of output variables produced by this configure script
@@ -31,6 +36,7 @@ AC_SUBST(prefix)
 AC_SUBST(SEQ_FALLBACK)
 AC_SUBST(XSEL)
 AC_SUBST(XSEL_MAN)
+AC_SUBST(XSEL_BIN)
 AC_SUBST(XSEL_MAN_PATH)
 
 #
@@ -54,7 +60,7 @@ if test configure -ot configure.ac; then
 		fi
 		exit 1
 	else
-		AC_MSG_ERROR( 
+		AC_MSG_ERROR(
 			[cannot find the autoconf program in your path.
 This program needs to be run whenever the configure.ac file is modified.
 Please install it and try again.]
@@ -79,7 +85,7 @@ if test ! -f ./config.h.in -o config.h.in -ot configure.ac; then
 		AC_MSG_NOTICE([running autoheader])
 		autoheader || exit 1
 	else
-		AC_MSG_ERROR( 
+		AC_MSG_ERROR(
 			[cannot find the autoheader program in your path.
 This program needs to be run whenever the configure.ac file is modified.
 Please install it and try again.]
@@ -130,7 +136,7 @@ done
 
 
 #
-# Tell autoconf to create config.h header 
+# Tell autoconf to create config.h header
 #
 AC_CONFIG_HEADERS(config.h)
 
@@ -144,8 +150,8 @@ AH_BOTTOM([#if __GNUC__ >= 3
 #define __warn_unused __attribute__ ((warn_unused_result))
 #define __sentinel __attribute__ ((sentinel))
 #else
-#define __warn_unused 
-#define __sentinel 
+#define __warn_unused
+#define __sentinel
 #endif])
 
 
@@ -195,20 +201,22 @@ fi
 # Optionally drop xsel command
 #
 
-AC_ARG_WITH( 
-	xsel, 
+AC_ARG_WITH(
+	xsel,
 	AC_HELP_STRING(
 		[--without-xsel],
-		[do not build the xsel program needed for X clipboard integration]
+		[do not build the xsel program needed for X clipboard integration.
+		 If build xsel, it will be configured with the same options as fish.]
 	),
 	[xsel=$withval],
-	[xsel=with_xsel] 
+	[xsel=with_xsel]
 )
 
 if [[ "$xsel" = "with_xsel" ]]; then
-	XSEL=xsel-0.9.6/xsel
+	XSEL=xsel-1.2.0
+	XSEL_BIN=$XSEL/xsel
 	XSEL_MAN=xsel.1x
-	XSEL_MAN_PATH=xsel-0.9.6/xsel.1x
+	XSEL_MAN_PATH=$XSEL/xsel.1x
 fi
 
 
@@ -226,7 +234,7 @@ AC_ARG_WITH(
 	[local_gettext=yes]
 )
 
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_DEFINE([USE_GETTEXT],[1],[Perform string translations with gettext])
 fi
 
@@ -338,9 +346,9 @@ AC_RUN_IFELSE(
 				return STATUS;
 			]
 		)
-	], 
-	[glibc=yes], 
-	[glibc=no] 
+	],
+	[glibc=yes],
+	[glibc=no]
 )
 
 if test "$glibc" = yes; then
@@ -383,7 +391,7 @@ fi
 
 AC_MSG_CHECKING([if we are under Solaris])
 case $target_os in
-	solaris*) 
+	solaris*)
 		AC_DEFINE( __EXTENSIONS__, 1, [Macro to enable additional prototypes under Solaris])
 		AC_MSG_RESULT(yes)
 		;;
@@ -397,7 +405,7 @@ AC_MSG_CHECKING([if we are using non varargs tparm.])
 AC_COMPILE_IFELSE(
 	[
 		AC_LANG_PROGRAM(
-			[			
+			[
 				#include <curses.h>
 				#include <term.h>
 			],
@@ -406,8 +414,8 @@ AC_COMPILE_IFELSE(
 			]
 		)
 	],
-	[tparm_solaris_kludge=no], 
-	[tparm_solaris_kludge=yes] 
+	[tparm_solaris_kludge=no],
+	[tparm_solaris_kludge=yes]
 )
 if test "x$tparm_solaris_kludge" = "xyes"; then
 	AC_MSG_RESULT(yes)
@@ -427,7 +435,7 @@ fi
 
 AC_MSG_CHECKING([if we are under BSD])
 case $target_os in
-	*bsd*) 
+	*bsd*)
 		AC_DEFINE( __BSD_VISIBLE, 1, [Macro to enable additional prototypes under BSD])
 		AC_DEFINE( _NETBSD_SOURCE, 1, [Macro to enable additional prototypes under BSD])
 		AC_MSG_RESULT(yes)
@@ -486,7 +494,7 @@ AC_CHECK_FILES([/proc/self/stat])
 #
 
 AC_DEFINE(
-	[HAVE_TRANSLATE_H], 
+	[HAVE_TRANSLATE_H],
 	[1],
 	[Define to 1 if the wgettext function should be used for translating strings.]
 )
@@ -510,12 +518,12 @@ LIBS_SHARED=$LIBS
 LIBS=$LIBS_COMMON
 
 #
-# Check for libraries needed by fish. 
+# Check for libraries needed by fish.
 #
 
 LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 
@@ -527,24 +535,24 @@ LIBS_FISH=$LIBS
 LIBS=$LIBS_COMMON
 
 #
-# Check for libraries needed by fish_indent. 
+# Check for libraries needed by fish_indent.
 #
 
 LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 LIBS_FISH_INDENT=$LIBS
 LIBS=$LIBS_COMMON
 
 #
-# Check for libraries needed by fish_pager. 
+# Check for libraries needed by fish_pager.
 #
 
 LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )
@@ -552,12 +560,12 @@ LIBS_FISH_PAGER=$LIBS
 LIBS=$LIBS_COMMON
 
 #
-# Check for libraries needed by fishd. 
+# Check for libraries needed by fishd.
 #
 
 LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )
@@ -565,12 +573,12 @@ LIBS_FISHD=$LIBS
 LIBS=$LIBS_COMMON
 
 #
-# Check for libraries needed by mimedb. 
+# Check for libraries needed by mimedb.
 #
 
 LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 LIBS_MIMEDB=$LIBS
@@ -578,12 +586,12 @@ LIBS=$LIBS_COMMON
 
 
 #
-# Check for libraries needed by set_color 
+# Check for libraries needed by set_color
 #
 
 LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_SEARCH_LIBS( gettext, intl,,)
 fi
 LIBS_SET_COLOR=$LIBS
@@ -599,8 +607,8 @@ AC_CHECK_HEADER(
 	[regex.h],
 	[
 		AC_DEFINE(
-			[HAVE_REGEX_H], 
-			[1], 
+			[HAVE_REGEX_H],
+			[1],
 			[Define to 1 if you have the <regex.h> header file.]
 		)
 	],
@@ -697,10 +705,10 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
 			/* Extended-POSIX: might be unhidden by _XOPEN_SOURCE. */
 			ret += killpg( 0, 0 );
 			/* Non-standard: might be hidden by the macros. */
-			{ 
+			{
 				struct winsize termsize;
 				ret += (int)(void *)&termsize;
-				ret += SIGWINCH + TIOCGWINSZ + SIGIO; 
+				ret += SIGWINCH + TIOCGWINSZ + SIGIO;
 			}
 			return ret;
 
@@ -744,7 +752,7 @@ AC_CHECK_FUNCS( dcgettext backtrace backtrace_symbols sysconf )
 # the translations should be installed.
 #
 
-if test x$local_gettext != xno; then 
+if test x$local_gettext != xno; then
 	AC_CHECK_FUNC( gettext, HAVE_GETTEXT=1, HAVE_GETTEXT=0 )
 fi
 
@@ -768,22 +776,22 @@ AC_RUN_IFELSE(
 				#include <stdlib.h>
 			],
 			[
-				int status; 
-				char *res; 
-				res = realpath( "somefile", 0 ); 
-				status = !(res != 0 || errno == ENOENT); 
+				int status;
+				char *res;
+				res = realpath( "somefile", 0 );
+				status = !(res != 0 || errno == ENOENT);
 				exit( status );
 			]
 		)
-	], 
-	[have_realpath_null=yes], 
-	[have_realpath_null=no] 
+	],
+	[have_realpath_null=yes],
+	[have_realpath_null=no]
 )
 
 if test "$have_realpath_null" = yes; then
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(
-		[HAVE_REALPATH_NULL], 
+		[HAVE_REALPATH_NULL],
 		[1],
 		[Define to 1 if realpath accepts null for its second argument.]
 	)
@@ -810,15 +818,15 @@ AC_LINK_IFELSE(
 				#endif
 			],
 			[
-				struct winsize termsize = {0}; 
+				struct winsize termsize = {0};
 				TIOCGWINSZ;
 			]
 		)
-	], 
+	],
 	[
-		AC_MSG_RESULT(yes); 
+		AC_MSG_RESULT(yes);
 		AC_DEFINE([HAVE_WINSIZE], [1], [Define to 1 if the winsize struct and TIOCGWINSZ macro exist])
-	], 
+	],
 	[
 		AC_MSG_RESULT(no)
 	]
@@ -854,7 +862,7 @@ if test "$ac_cv_func_fwprintf" = yes; then
 		[
 			AC_MSG_RESULT([yes])
 			AC_DEFINE([HAVE_BROKEN_FWPRINTF], [1], [Define to 1 one if the implemented fwprintf is broken])
-		] 
+		]
 	)
 
 fi
@@ -870,19 +878,19 @@ AC_TRY_LINK(
 	],
 	[
 		extern int  _nl_msg_cat_cntr;
-		int tmp = _nl_msg_cat_cntr; 
+		int tmp = _nl_msg_cat_cntr;
 		exit(tmp);
 	],
-	have__nl_msg_cat_cntr=yes, 
+	have__nl_msg_cat_cntr=yes,
 	have__nl_msg_cat_cntr=no
 )
 if test "$have__nl_msg_cat_cntr" = yes; then
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(
-		[HAVE__NL_MSG_CAT_CNTR], 
+		[HAVE__NL_MSG_CAT_CNTR],
 		[1],
 		[Define to 1 if the _nl_msg_cat_cntr symbol is exported.]
-	)	
+	)
 else
 	AC_MSG_RESULT(no)
 fi
@@ -895,19 +903,19 @@ AC_TRY_LINK(
 	],
 	[
 		extern char **__environ;
-		char **tmp = __environ; 
+		char **tmp = __environ;
 		exit(tmp!=0);
 	],
-	have___environ=yes, 
+	have___environ=yes,
 	have___environ=no
 )
 if test "$have___environ" = yes; then
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(
-		[HAVE___ENVIRON], 
+		[HAVE___ENVIRON],
 		[1],
 		[Define to 1 if the __environ symbol is exported.]
-	)	
+	)
 else
 	AC_MSG_RESULT(no)
 fi
@@ -924,26 +932,26 @@ AC_TRY_LINK(
 		static struct option
 			long_options[] =
 			{
-				0, 0, 0, 0 
+				0, 0, 0, 0
 			}
 		;
 		int opt = getopt_long( 0,
-							   0, 
 							   0,
-							   long_options, 
+							   0,
+							   long_options,
 							   0 );
-		
+
 	],
-	have_working_getopt_long=yes, 
+	have_working_getopt_long=yes,
 	have_working_getopt_long=no
 )
 if test "$have_working_getopt_long" = yes; then
 	AC_MSG_RESULT(yes)
 	AC_DEFINE(
-		[HAVE_WORKING_GETOPT_LONG], 
+		[HAVE_WORKING_GETOPT_LONG],
 		[1],
 		[Define to 1 if getopt_long exists and works.]
-	)	
+	)
 else
 	AC_MSG_RESULT(no)
 fi
@@ -975,6 +983,12 @@ if test ! x$local_found_posix_switch = xyes; then
 	echo "Some fish features may be disabled."
 fi
 
+if [[ "$xsel" = "with_xsel" ]]; then
+	echo "Now configure xsel with $conf_arg"
+	rm -rf $XSEL
+	tar xf $XSEL.tar.gz
+	cd $XSEL && ./configure $conf_arg
+fi
 echo "fish is now configured."
 echo "Use 'make' and 'make install' to build and install fish."
 

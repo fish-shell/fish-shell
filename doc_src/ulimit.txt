@@ -27,7 +27,7 @@ Note that not all these limits are available in all operating systems.
 The value of limit can be a number in the unit specified for
 the resource or one of the special values hard, soft, or unlimited,
 which stand for the current hard limit, the current soft limit, and no
-limit, respectively. 
+limit, respectively.
 
 If limit is given, it is the new value of the specified resource. If
 no option is given, then -f is assumed. Values are in kilobytes,

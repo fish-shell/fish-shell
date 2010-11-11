@@ -17,21 +17,21 @@ function __fish_complete_cd -d "Completions for the cd command"
 		set mycdpath $CDPATH
 	end
 
-	
+
 	if echo (commandline -ct)|sgrep '^/\|^\./\|^\.\./' >/dev/null
 		# This is an absolute search path
 		eval printf '\%s\\tDirectory\\n' (commandline -ct)\*/
 	else
 		# This is a relative search path
-		# Iterate over every directory in CDPATH 
+		# Iterate over every directory in CDPATH
 		# and check for possible completions
 
 		for i in $mycdpath
-			# Move to the initial directory first, 
+			# Move to the initial directory first,
 			# in case the CDPATH directory is relative
 
 			builtin cd $wd
-			builtin cd $i
+			eval builtin cd $i
 
 			eval printf '"%s\tDirectory in "'$i'"\n"' (commandline -ct)\*/
 		end

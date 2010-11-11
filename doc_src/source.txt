@@ -3,7 +3,7 @@
 \subsection source-synopsis Synopsis
 <tt>. FILENAME [ARGUMENTS...]</tt>
 
-\subsection source-description Description 
+\subsection source-description Description
 
 Evaluates the commands of the specified file in the current
 shell. This is different from starting a new process to perform the

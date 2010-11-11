@@ -45,21 +45,21 @@ static ll_node_t /** Last kill string */*kill_last=0, /** Current kill string */
 static wchar_t *cut_buffer=0;
 
 /**
-   Test if the xsel command is installed.  Since this is called often, 
+   Test if the xsel command is installed.  Since this is called often,
    cache the result.
 */
 static int has_xsel()
 {
-    static int called=0;
+	static int called=0;
 	static int res = 0;
 
-    if (!called) {
-	    void *context = halloc(0, 0);
-	    wchar_t *path = path_get_path( context, L"xsel" );
-	    res = !!path;
-	    halloc_free( context );
-        called = 1;
-    }
+	if (!called) {
+		void *context = halloc(0, 0);
+		wchar_t *path = path_get_path( context, L"xsel" );
+		res = !!path;
+		halloc_free( context );
+		called = 1;
+	}
 
 	return res;
 }
@@ -71,7 +71,7 @@ static void kill_add_internal( wchar_t *str )
 {
 	if( wcslen( str ) == 0 )
 		return;
-	
+
 	if( kill_last == 0 )
 	{
 		kill_current = kill_last=malloc( sizeof( ll_node_t ) );
@@ -93,51 +93,51 @@ static void kill_add_internal( wchar_t *str )
 void kill_add( wchar_t *str )
 {
 	wchar_t *cmd = NULL;
-    wchar_t *escaped_str;
+	wchar_t *escaped_str;
 	kill_add_internal(str);
 
 
-    /*
-       Check to see if user has set the FISH_CLIPBOARD_CMD variable,
-       and, if so, use it instead of checking the display, etc.
- 
-       I couldn't think of a safe way to allow overide of the echo
-       command too, so, the command used must accept the input via stdin.
-    */
-    wchar_t *clipboard;
-    if( (clipboard = env_get(L"FISH_CLIPBOARD_CMD")) ) 
-    {
-        escaped_str = escape( str, 1 );
+	/*
+	   Check to see if user has set the FISH_CLIPBOARD_CMD variable,
+	   and, if so, use it instead of checking the display, etc.
+
+	   I couldn't think of a safe way to allow overide of the echo
+	   command too, so, the command used must accept the input via stdin.
+	*/
+	wchar_t *clipboard;
+	if( (clipboard = env_get(L"FISH_CLIPBOARD_CMD")) )
+	{
+		escaped_str = escape( str, 1 );
 		cmd = wcsdupcat(L"echo -n ", escaped_str, clipboard);
-    } 
-    else
-    {
-	    /* This is for sending the kill to the X copy-and-paste buffer */
-	    if( !has_xsel() ) {
-		    return;
-        }
+	}
+	else
+	{
+		/* This is for sending the kill to the X copy-and-paste buffer */
+		if( !has_xsel() ) {
+			return;
+		}
 
-	    wchar_t *disp;
-	    if( (disp = env_get( L"DISPLAY" )) )
-	    {
-            escaped_str = escape( str, 1 );
-		    cmd = wcsdupcat(L"echo ", escaped_str, L"|xsel -b" );
-        }
-    }
+		wchar_t *disp;
+		if( (disp = env_get( L"DISPLAY" )) )
+		{
+			escaped_str = escape( str, 1 );
+			cmd = wcsdupcat(L"echo ", escaped_str, L"|xsel -b" );
+		}
+	}
 
-    if (cmd != NULL)
-    {
-	    if( exec_subshell( cmd, 0 ) == -1 )
-	    {
-		    /* 
-		    Do nothing on failiure
-		    */
-	    }
-		    
-	    free( cut_buffer );
-	    free( cmd );
-	
-	    cut_buffer = escaped_str;
+	if (cmd != NULL)
+	{
+		if( exec_subshell( cmd, 0 ) == -1 )
+		{
+			/*
+			Do nothing on failiure
+			*/
+		}
+
+		free( cut_buffer );
+		free( cmd );
+
+		cut_buffer = escaped_str;
 	}
 }
 
@@ -164,8 +164,8 @@ static void kill_remove_node( ll_node_t *n )
 		}
 		kill_current=kill_last;
 		free( n->data );
-		free( n );		
-	}	
+		free( n );
+	}
 }
 
 /**
@@ -174,13 +174,13 @@ static void kill_remove_node( ll_node_t *n )
 static void kill_remove( wchar_t *s )
 {
 	ll_node_t *n, *next=0;
-	
+
 	if( !kill_last )
 	{
 		return;
 	}
-	
-	for( n=kill_last; 
+
+	for( n=kill_last;
 		 n!=kill_last || next == 0 ;
 		 n=n->prev )
 	{
@@ -192,13 +192,13 @@ static void kill_remove( wchar_t *s )
 		next = n;
 	}
 }
-		
-		
+
+
 
 void kill_replace( wchar_t *old, wchar_t *new )
 {
 	kill_remove( old );
-	kill_add( new );	
+	kill_add( new );
 }
 
 wchar_t *kill_yank_rotate()
@@ -214,13 +214,13 @@ wchar_t *kill_yank_rotate()
    clipboard contents to the fish killring.
 */
 static void kill_check_x_buffer()
-{	
+{
 	wchar_t *disp;
-	
+
 	if( !has_xsel() )
 		return;
-	
-	
+
+
 	if( (disp = env_get( L"DISPLAY" )) )
 	{
 		int i;
@@ -230,7 +230,7 @@ static void kill_check_x_buffer()
 		al_init( &list );
 		if( exec_subshell( cmd, &list ) != -1 )
 		{
-					
+
 			for( i=0; i<al_get_count( &list ); i++ )
 			{
 				wchar_t *next_line = escape( (wchar_t *)al_get( &list, i ), 0 );
@@ -243,20 +243,20 @@ static void kill_check_x_buffer()
 					wchar_t *old = new_cut_buffer;
 					new_cut_buffer= wcsdupcat( new_cut_buffer, L"\\n", next_line );
 					free( old );
-					free( next_line );	
+					free( next_line );
 				}
 			}
-		
+
 			if( new_cut_buffer )
 			{
-				/*  
+				/*
 					The buffer is inserted with backslash escapes,
 					since we don't really like tabs, newlines,
 					etc. anyway.
 				*/
-				
+
 				if( cut_buffer != 0 )
-				{      
+				{
 					if( wcscmp( new_cut_buffer, cut_buffer ) == 0 )
 					{
 						free( new_cut_buffer );
@@ -265,7 +265,7 @@ static void kill_check_x_buffer()
 					else
 					{
 						free( cut_buffer );
-						cut_buffer = 0;								
+						cut_buffer = 0;
 				}
 				}
 				if( cut_buffer == 0 )
@@ -275,7 +275,7 @@ static void kill_check_x_buffer()
 				}
 			}
 		}
-		
+
 		al_foreach( &list, &free );
 		al_destroy( &list );
 	}
@@ -307,22 +307,22 @@ void kill_sanity_check()
 					break;
 				if( tmp->data == 0 )
 					break;
-				
+
 				if( tmp == kill_current )
 				{
 					kill_ok = 1;
 					break;
 				}
-				tmp = tmp->prev;				
+				tmp = tmp->prev;
 			}
 			if( !kill_ok )
 			{
-				debug( 0, 
+				debug( 0,
 					   L"Killring inconsistent" );
 				sanity_lose();
 			}
 		}
-		
+
 	}
 }
 
@@ -334,12 +334,12 @@ void kill_destroy()
 {
 	if( cut_buffer )
 		free( cut_buffer );
-	
+
 	if( kill_current != 0 )
 	{
 		kill_current = kill_last->prev;
 		kill_last->prev = 0;
-		
+
 		while( kill_current )
 		{
 			ll_node_t *tmp = kill_current;
@@ -347,7 +347,7 @@ void kill_destroy()
 			free( tmp->data );
 			free( tmp );
 		}
-	}	
-	
+	}
+
 }
 

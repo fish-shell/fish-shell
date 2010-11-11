@@ -19,7 +19,7 @@ complete -c gprof -s x -l all-lines --description "Annotate every line"
 complete -xc gprof -l demangle --description "Set demangling style"
 complete -c gprof -l no-demangle --description "Turn of demangling"
 complete -xc gprof -s a -l no-static --description "Supress static functions"
-complete -xc gprof -s c -l static-call-graph 
+complete -xc gprof -s c -l static-call-graph
 complete -xc gprof -s D -l ignore-non-functions --description "Ignore symbols not known to be functions"
 complete -xc gprof -s k -r --description "Delete arcs from callgraph"
 complete -xc gprof -s l -l line --description "Line by line profiling"

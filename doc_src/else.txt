@@ -13,5 +13,5 @@ status is 0, the commands COMMANDS_TRUE will execute.  If it is not 0 and
 
 The command <tt>if test -f foo.txt; echo foo.txt exists; else; echo foo.txt does not exist; end</tt>
 will print <tt>foo.txt exists</tt> if the file foo.txt
-exists and is a regular file, otherwise it will print 
+exists and is a regular file, otherwise it will print
 <tt>foo.txt does not exist</tt>.

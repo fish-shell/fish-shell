@@ -5,14 +5,14 @@
 # Test if we are using GNU ls
 
 function __fish_complete_ls -d "Compleletions for ls and its aliases"
-	
-	set -l is_gnu 
+
+	set -l is_gnu
 	command ls --version >/dev/null ^/dev/null; and set is_gnu --is-gnu
-	
+
 	set -l cmds -c $argv
-	
+
 	# Shared ls switches
-	
+
 	__fish_gnu_complete $cmds -s a -l all --description "Show hidden" $is_gnu
 	__fish_gnu_complete $cmds -s A -l almost-all --description "Show hidden except . and .." $is_gnu
 	__fish_gnu_complete $cmds -s F -l classify --description "Append filetype indicator" $is_gnu
@@ -28,7 +28,7 @@ function __fish_complete_ls -d "Compleletions for ls and its aliases"
 	__fish_gnu_complete $cmds -s q -l hide-control-chars --description "Replace non-graphic characters with '?'" $is_gnu
 	__fish_gnu_complete $cmds -s r -l reverse --description "Reverse sort order" $is_gnu
 	__fish_gnu_complete $cmds -s s -l size --description "Print size of files" $is_gnu
-	
+
 	complete $cmds -s C --description "List by columns"
 	complete $cmds -s S --description "Sort by size"
 	complete $cmds -s c --description "Show and sort by ctime"
@@ -41,11 +41,11 @@ function __fish_complete_ls -d "Compleletions for ls and its aliases"
 	complete $cmds -s u --description "Show access time"
 	complete $cmds -s x --description "List entries by lines"
 	complete $cmds -s 1 --description "List one file per line"
-	
+
 	if test -n "$is_gnu"
-	   
+
 	   	# GNU specific ls switches
-	
+
 		complete $cmds -l hide --description "Do not list implied entries matching specified shell pattern" -r
 		complete $cmds -l lcontext --description "Display security context"
 		complete $cmds -l context -s Z --description "Display  security  context  so  it fits on most displays"
@@ -94,11 +94,11 @@ function __fish_complete_ls -d "Compleletions for ls and its aliases"
 		complete $cmds -s X --description "Sort by extension"
 		complete $cmds -l help --description "Display help and exit"
 		complete $cmds -l version --description "Display version and exit"
-	
+
 	else
-	
+
 		# If not a GNU system, assume we have standard BSD ls features instead
-	
+
 		complete $cmds -s B --description "Octal escapes for non graphic characters"
 		complete $cmds -s G --description "Use colors"
 		complete $cmds -s I --description "Prevent -A from being automatically set for root"
@@ -108,7 +108,7 @@ function __fish_complete_ls -d "Compleletions for ls and its aliases"
 		complete $cmds -s Z --description "Display each file's MAC label"
 		complete $cmds -s o --description "Include the file flags in a long (-l) output"
 		complete $cmds -s w --description "Print raw entry names"
-	
+
 	end
-	
+
 end

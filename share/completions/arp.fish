@@ -7,5 +7,5 @@ complete -x -c arp -s d -l delete -a "(__fish_print_hostnames)" --description "R
 complete -c arp -s D -l use-device --description "Use hardware address"
 complete -x -c arp -s i -l device -a "(__fish_print_interfaces)" --description "Select interface"
 complete -x -c arp -s s -l set --description "Manually create ARP address" -a "(__fish_print_hostnames)"
-complete -f -c arp -s f -l file --description "Take addr from filename, default /etc/ethers" 
+complete -f -c arp -s f -l file --description "Take addr from filename, default /etc/ethers"
 

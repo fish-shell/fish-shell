@@ -8,7 +8,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
 		set files (sed -n "s/^.*<import[^>]* file=[\"']\([^\"']*\)[\"'].*\$/\1/p" < $buildfile)
 
 		# iterate through files and display their targets
-		for file in $files; 
+		for file in $files;
 			__fish_filter_ant_targets $file
 		end
 	end

@@ -11,7 +11,7 @@
 
 /**
    Find the beginning and end of the first subshell in the specified string.
-   
+
    \param in the string to search for subshells
    \param begin the starting paranthesis of the subshell
    \param end the ending paranthesis of the subshell
@@ -19,8 +19,8 @@
    \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
 */
 
-int parse_util_locate_cmdsubst( const wchar_t *in, 
-								wchar_t **begin, 
+int parse_util_locate_cmdsubst( const wchar_t *in,
+								wchar_t **begin,
 								wchar_t **end,
 								int flags );
 
@@ -38,7 +38,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 */
 void parse_util_cmdsubst_extent( const wchar_t *buff,
 								 int cursor_pos,
-								 wchar_t **a, 
+								 wchar_t **a,
 								 wchar_t **b );
 
 /**
@@ -51,7 +51,7 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 */
 void parse_util_process_extent( const wchar_t *buff,
 								int cursor_pos,
-								wchar_t **a, 
+								wchar_t **a,
 								wchar_t **b );
 
 
@@ -65,7 +65,7 @@ void parse_util_process_extent( const wchar_t *buff,
 */
 void parse_util_job_extent( const wchar_t *buff,
 							int cursor_pos,
-							wchar_t **a, 
+							wchar_t **a,
 							wchar_t **b );
 
 /**
@@ -84,7 +84,7 @@ void parse_util_token_extent( const wchar_t *buff,
 							  int cursor_pos,
 							  wchar_t **tok_begin,
 							  wchar_t **tok_end,
-							  wchar_t **prev_begin, 
+							  wchar_t **prev_begin,
 							  wchar_t **prev_end );
 
 
@@ -115,7 +115,7 @@ int parse_util_get_offset( wchar_t *buff, int line, int line_offset );
    not load it multiple times unless it's timestamp changes or
    parse_util_unload is called.
 
-   Autoloading one file may unload another. 
+   Autoloading one file may unload another.
 
    \param cmd the filename to search for. The suffix '.fish' is always added to this name
    \param path_var_name the environment variable giving  the search path
@@ -153,7 +153,7 @@ int parse_util_unload( const wchar_t *cmd,
 
 /**
    Set the argv environment variable to the specified null-terminated
-   array of strings. 
+   array of strings.
 */
 void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments );
 

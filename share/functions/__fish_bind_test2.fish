@@ -4,7 +4,7 @@ set -l args
 for i in (commandline -poc)
 	switch $i
 		case "-*"
-		
+
 		case "*"
 		set args $args $i
 	end

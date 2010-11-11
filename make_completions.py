@@ -39,13 +39,13 @@ def print_completion( cmd, switch_arr, arg, desc ):
 
   if len(switch_arr)==0:
     return
-  
+
   res = "complete -c %s" % (cmd)
   for sw in switch_arr:
-    
+
     offset=1
     switch_type = "o"
-    
+
     if len(sw) == 2:
       switch_type = "s"
 
@@ -98,7 +98,7 @@ for c in man:
       can_be_switch = True
     elif before_switch.find(c)<0:
       can_be_switch = False
-      
+
 
   elif mode == MODE_SWITCH:
     if not switch_end.find(c)>=0:
@@ -106,7 +106,7 @@ for c in man:
     else:
       if len(sw) > 1:
         sw_arr.append(sw)
-      
+
       if switch_between_ignore.find(c) >= 0:
         mode=MODE_BETWEEN_IGNORE
       else:
@@ -124,7 +124,7 @@ for c in man:
     elif not switch_between_continue.find(c) >= 0:
       mode = MODE_DESC
       desc = c
-        
+
   elif mode == MODE_BETWEEN_IGNORE:
     if between_ignore.find(c)>=0:
       mode = MODE_BETWEEN
@@ -139,20 +139,20 @@ for c in man:
     if c == '\n' and pc == '\n':
       stop=True
 
-    if stop:      
+    if stop:
       mode=MODE_NONE
-      
+
       print_completion( cmd, sw_arr, None, desc )
 
       sw_arr = []
 
       desc = ''
-      
+
     else:
       desc += c
 
   else:
     print "Unknown mode", mode
-      
+
   pc = c
 

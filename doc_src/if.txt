@@ -8,7 +8,7 @@
 <tt>if</tt> will execute the command CONDITION.  If the condition's
 exit status is 0, the commands COMMANDS_TRUE will execute.  If the
 exit status is not 0 and <tt>else</tt> is given, COMMANDS_FALSE will
-be executed.  
+be executed.
 
 In order to use the exit status of multiple commands as the condition
 of an if block, use <a href="#begin"><tt>begin; ...; end</tt></a> and
@@ -29,5 +29,5 @@ else
 end
 </pre>
 will print <tt>foo.txt exists</tt> if the file foo.txt
-exists and is a regular file, otherwise it will print 
+exists and is a regular file, otherwise it will print
 <tt>foo.txt does not exist</tt>.

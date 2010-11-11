@@ -3,7 +3,7 @@
 \subsection pushd-synopsis Synopsis
 <tt>pushd [DIRECTORY]</tt>
 
-\subsection pushd-description Description 
+\subsection pushd-description Description
 The <tt>pushd</tt> function adds DIRECTORY to the top of the directory stack
 and makes it the current directory. Use <tt>popd</tt> to pop it off and and
 return to the original directory.

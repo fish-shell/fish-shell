@@ -61,7 +61,7 @@
 #include "halloc_util.h"
 #include "print_help.h"
 
-enum 
+enum
 {
 	LINE_UP = R_NULL+1,
 	LINE_DOWN,
@@ -146,7 +146,7 @@ static buffer_t *pager_buffer;
    The environment variables used to specify the color of different
    tokens.
 */
-static wchar_t *hightlight_var[] = 
+static wchar_t *hightlight_var[] =
 {
 	L"fish_pager_color_prefix",
 	L"fish_pager_color_completion",
@@ -167,7 +167,7 @@ static FILE *out_file;
 /**
    Data structure describing one or a group of related completions
 */
-typedef struct 
+typedef struct
 {
 	/**
 	   The list of all completin strings this entry applies to
@@ -180,11 +180,11 @@ typedef struct
 	/**
 	   On-screen width of the completion string
 	*/
-	int comp_width;	
+	int comp_width;
 	/**
 	   On-screen width of the description information
 	*/
-	int desc_width;	
+	int desc_width;
 	/**
 	   Preffered total width
 	*/
@@ -208,20 +208,20 @@ static int get_color( int highlight )
 		return FISH_COLOR_NORMAL;
 	if( highlight >= (4) )
 		return FISH_COLOR_NORMAL;
-	
+
 	val = wgetenv( hightlight_var[highlight]);
 
 	if( !val )
 	{
 		val = env_universal_get( hightlight_var[highlight]);
 	}
-	
+
 	if( !val )
 	{
 		return FISH_COLOR_NORMAL;
 	}
-	
-	return output_color_code( val );	
+
+	return output_color_code( val );
 }
 
 /**
@@ -236,11 +236,11 @@ static void recalc_width( array_list_t *l, const wchar_t *prefix )
 	for( i=0; i<al_get_count( l ); i++ )
 	{
 		comp_t *c = (comp_t *)al_get( l, i );
-		
+
 		c->min_width = mini( c->desc_width, maxi(0,termsize.ws_col/3 - 2)) +
 			mini( c->desc_width, maxi(0,termsize.ws_col/5 - 4)) +4;
 	}
-	
+
 }
 
 /**
@@ -251,14 +251,14 @@ static int try_sequence( char *seq )
 {
 	int j, k;
 	wint_t c=0;
-	
-	for( j=0; 
-	     seq[j] != '\0' && seq[j] == (c=input_common_readch( j>0 )); 
+
+	for( j=0;
+	     seq[j] != '\0' && seq[j] == (c=input_common_readch( j>0 ));
 	     j++ )
 		;
 
 	if( seq[j] == '\0' )
-	{		
+	{
 		return 1;
 	}
 	else
@@ -281,10 +281,10 @@ static wint_t readch()
 		wint_t bnd;
 	}
 	;
-	
+
 	struct mapping m[]=
 		{
-			{				
+			{
 				"\x1b[A", LINE_UP
 			}
 			,
@@ -292,7 +292,7 @@ static wint_t readch()
 				key_up, LINE_UP
 			}
 			,
-			{				
+			{
 				"\x1b[B", LINE_DOWN
 			}
 			,
@@ -319,18 +319,18 @@ static wint_t readch()
 			{
 				0, 0
 			}
-			
+
 		}
 	;
 	int i;
-	
+
 	for( i=0; m[i].bnd; i++ )
 	{
 		if( !m[i].seq )
 		{
 			continue;
 		}
-		
+
 		if( try_sequence(m[i].seq ) )
 			return m[i].bnd;
 	}
@@ -369,7 +369,7 @@ static int print_max( const wchar_t *str, int max, int has_more )
 	int written = 0;
 	for( i=0; str[i]; i++ )
 	{
-		
+
 		if( written + wcwidth(str[i]) > max )
 			break;
 		if( ( written + wcwidth(str[i]) == max) && (has_more || str[i+1]) )
@@ -378,7 +378,7 @@ static int print_max( const wchar_t *str, int max, int has_more )
 			written += wcwidth(ellipsis_char );
 			break;
 		}
-			
+
 		writech( str[i] );
 		written+= wcwidth( str[i] );
 	}
@@ -393,7 +393,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 	int comp_width=0, desc_width=0;
 	int i;
 	int written=0;
-	
+
 	if( c->pref_width <= width )
 	{
 		/*
@@ -411,7 +411,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 		  the description.
 		*/
 		int desc_all = c->desc_width?c->desc_width+4:0;
-		
+
 		comp_width = maxi( mini( c->comp_width,
 					 2*(width-4)/3 ),
 				   width - desc_all );
@@ -419,9 +419,9 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 			desc_width = width-comp_width-4;
 		else
 			c->desc_width=0;
-		
+
 	}
-	
+
 	for( i=0; i<al_get_count( c->comp ); i++ )
 	{
 		const wchar_t *comp = (const wchar_t *)al_get( c->comp, i );
@@ -455,7 +455,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 			writech( L' ');
 		}
 	}
-	
+
 }
 
 /**
@@ -490,14 +490,14 @@ static void completion_print( int cols,
 			comp_t *el;
 
 			int is_last = (j==(cols-1));
-			
+
 			if( al_get_count( l ) <= j*rows + i )
 				continue;
 
 			el = (comp_t *)al_get( l, j*rows + i );
-			
+
 			completion_print_item( prefix, el, width[j] - (is_last?0:2) );
-			
+
 			if( !is_last)
 				writestr( L"  " );
 		}
@@ -545,24 +545,24 @@ static int completion_try_print( int cols,
 	  Set to one if the list should be printed at this width
 	*/
 	int print=0;
-	
+
 	int i, j;
-	
+
 	int rows = (al_get_count( l )-1)/cols+1;
-	
+
 	int pref_tot_width=0;
 	int min_tot_width = 0;
 	int res=PAGER_RETRY;
 	/*
 	  Skip completions on tiny terminals
 	*/
-	
+
 	if( termsize.ws_col < PAGER_MIN_WIDTH )
 		return PAGER_DONE;
-	
+
 	memset( pref_width, 0, sizeof(pref_width) );
 	memset( min_width, 0, sizeof(min_width) );
-	
+
 	/* Calculate how wide the list would be */
 	for( j = 0; j < cols; j++ )
 	{
@@ -576,7 +576,7 @@ static int completion_try_print( int cols,
 			c = (comp_t *)al_get( l, j*rows + i );
 			pref = c->pref_width;
 			min = c->min_width;
-			
+
 			if( j != cols-1 )
 			{
 				pref += 2;
@@ -632,7 +632,7 @@ static int completion_try_print( int cols,
 			  be helped, but it is not uncommon for the completions to
 			  _almost_ fit on one screen. In those cases, it is almost
 			  always desirable to 'squeeze' the completions into a
-			  single page. 
+			  single page.
 
 			  If we are using N columns and can get everything to
 			  fit using squeezing, but everything would also fit
@@ -668,7 +668,7 @@ static int completion_try_print( int cols,
 				is_ca_mode = 0;
 				writembs(exit_ca_mode);
 			}
-			
+
 			completion_print( cols, width, 0, rows, prefix, is_quoted, l);
 			pager_flush();
 		}
@@ -687,7 +687,7 @@ static int completion_try_print( int cols,
 				is_ca_mode=1;
 				writembs(enter_ca_mode);
 			}
-			
+
 
 			completion_print( cols,
 					  width,
@@ -704,18 +704,18 @@ static int completion_try_print( int cols,
 			{
 				string_buffer_t msg;
 				sb_init( &msg );
-				
+
 				set_color( FISH_COLOR_BLACK,
 					   get_color(HIGHLIGHT_PAGER_PROGRESS) );
 				sb_printf( &msg,
 					   _(L" %d to %d of %d"),
 					   pos,
-					   pos+termsize.ws_row-1, 
+					   pos+termsize.ws_row-1,
 					   rows );
-				
+
 				sb_printf( &msg,
 					   L"   \r" );
-								
+
 				writestr((wchar_t *)msg.buff);
 				sb_destroy( &msg );
 				set_color( FISH_COLOR_NORMAL, FISH_COLOR_NORMAL );
@@ -817,15 +817,15 @@ static int completion_try_print( int cols,
 						do_loop=0;
 						res=PAGER_RESIZE;
 						break;
-						
+
 					}
-					
+
 					default:
 					{
 						sb_append_char( &out_buff, c );
 						do_loop = 0;
 						break;
-					}					
+					}
 				}
 			}
 			writembs(clr_eol);
@@ -847,31 +847,31 @@ static void mangle_descriptions( array_list_t *l )
 		wchar_t *next = (wchar_t *)al_get(l, i);
 		wchar_t *in, *out;
 		skip=1;
-		
+
 		while( *next != COMPLETE_SEP && *next )
 			next++;
-		
+
 		if( !*next )
 			continue;
-		
+
 		in=out=(next+1);
-		
+
 		while( *in != 0 )
 		{
 			if( *in == L' ' || *in==L'\t' || *in<32 )
 			{
 				if( !skip )
 					*out++=L' ';
-				skip=1;					
+				skip=1;
 			}
 			else
 			{
-				*out++ = *in;					
+				*out++ = *in;
 				skip=0;
 			}
 			in++;
 		}
-		*out=0;		
+		*out=0;
 	}
 }
 
@@ -883,7 +883,7 @@ static void join_completions( array_list_t *l )
 	long i;
 	int in, out;
 	hash_table_t desc_table;
-	
+
 	hash_init( &desc_table, &hash_wcs_func, &hash_wcs_cmp );
 
 	for( i=0; i<al_get_count(l); i++ )
@@ -891,7 +891,7 @@ static void join_completions( array_list_t *l )
 		wchar_t *item = (wchar_t *)al_get( l, i );
 		wchar_t *desc = wcschr( item, COMPLETE_SEP );
 		long prev_idx;
-		
+
 		if( !desc )
 			continue;
 		desc++;
@@ -905,11 +905,11 @@ static void join_completions( array_list_t *l )
 			string_buffer_t foo;
 			wchar_t *old = (wchar_t *)al_get( l, prev_idx );
 			wchar_t *old_end = wcschr( old, COMPLETE_SEP );
-			
+
 			if( old_end )
 			{
 				*old_end = 0;
-				
+
 				sb_init( &foo );
 				sb_append( &foo, old );
 				sb_append_char( &foo, COMPLETE_ITEM_SEP );
@@ -921,23 +921,23 @@ static void join_completions( array_list_t *l )
 				free( (void *)al_get( l, i ) );
 				al_set( l, i, 0 );
 			}
-			
+
 		}
-		
-	}	
+
+	}
 	hash_destroy( &desc_table );
 
 	out=0;
 	for( in=0; in < al_get_count(l); in++ )
 	{
 		const void * d =  al_get( l, in );
-		
+
 		if( d )
 		{
 			al_set( l, out++, d );
 		}
 	}
-	al_truncate( l, out );	
+	al_truncate( l, out );
 }
 
 /**
@@ -946,23 +946,23 @@ static void join_completions( array_list_t *l )
 static void mangle_completions( array_list_t *l, const wchar_t *prefix )
 {
 	int i;
-	
+
 	for( i=0; i<al_get_count( l ); i++ )
 	{
 		wchar_t *next = (wchar_t *)al_get( l, i );
 		wchar_t *start, *end;
 		comp_t *comp = halloc( global_context, sizeof( comp_t ) );
 		comp->comp = al_halloc( global_context );
-		
+
 		for( start=end=next; 1; end++ )
 		{
 			wchar_t c = *end;
-			
+
 			if( (c == COMPLETE_ITEM_SEP) || (c==COMPLETE_SEP) || !c)
 			{
 				*end = 0;
 				wchar_t * str = escape( start, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-				
+
 				comp->comp_width += my_wcswidth( str );
 				halloc_register( global_context, str );
 				al_push( comp->comp, str );
@@ -973,22 +973,22 @@ static void mangle_completions( array_list_t *l, const wchar_t *prefix )
 			{
 				comp->desc = halloc_wcsdup( global_context, start );
 				break;
-			}	
-			
+			}
+
 			if( !c )
 				break;
-			
+
 		}
 
 		comp->comp_width  += my_wcswidth(prefix)*al_get_count(comp->comp) + 2*(al_get_count(comp->comp)-1);
 		comp->desc_width = comp->desc?my_wcswidth( comp->desc ):0;
-		
+
 		comp->pref_width = comp->comp_width + comp->desc_width + (comp->desc_width?4:0);
-		
+
 		free( next );
 		al_set( l, i, comp );
 	}
-	
+
 	recalc_width( l, prefix );
 }
 
@@ -1026,10 +1026,10 @@ static void init( int mangle_descriptors, int out )
 
 	static struct termios pager_modes;
 	char *term;
-	
+
 	if( mangle_descriptors )
 	{
-		
+
 		/*
 		  Make fd 1 output to screen, and use some other fd for writing
 		  the resulting output back to the caller
@@ -1042,13 +1042,13 @@ static void init( int mangle_descriptors, int out )
 		if( (in = open( ttyname(2), O_RDWR )) != -1 )
 		{
 			if( dup2( 2, 1 ) == -1 )
-			{			
+			{
 				debug( 0, _(L"Could not set up output file descriptors for pager") );
 				exit( 1 );
 			}
-			
+
 			if( dup2( in, 0 ) == -1 )
-			{			
+			{
 				debug( 0, _(L"Could not set up input file descriptors for pager") );
 				exit( 1 );
 			}
@@ -1059,13 +1059,13 @@ static void init( int mangle_descriptors, int out )
 			exit( 1 );
 		}
 	}
-	
+
 	if( !(out_file = fdopen( out, "w" )) )
 	{
 		debug( 0, _(L"Could not initialize result pipe" ) );
 		exit( 1 );
 	}
-	
+
 
 	/**
 	   Init the stringbuffer used to keep any output in
@@ -1088,7 +1088,7 @@ static void init( int mangle_descriptors, int out )
 		wperror( L"sigaction" );
 		exit(1);
 	}
-	
+
 	handle_winch( 0 );                /* Set handler for window change events */
 
 	tcgetattr(0,&pager_modes);        /* get the current terminal modes */
@@ -1102,14 +1102,14 @@ static void init( int mangle_descriptors, int out )
 	pager_modes.c_cc[VTIME]=0;
 
 	/*
-	  
+
 	*/
 	if( tcsetattr(0,TCSANOW,&pager_modes))      /* set the new modes */
 	{
 		wperror(L"tcsetattr");
 		exit(1);
 	}
-        
+
 
 	if( setupterm( 0, STDOUT_FILENO, 0) == ERR )
 	{
@@ -1124,7 +1124,7 @@ static void init( int mangle_descriptors, int out )
 		output_set_term( wterm );
 		free( wterm );
 	}
-	
+
 }
 
 /**
@@ -1137,9 +1137,9 @@ static void destroy()
 	wutil_destroy();
 	if( del_curterm( cur_term ) == ERR )
 	{
-		debug( 0, _(L"Error while closing terminfo") );		
+		debug( 0, _(L"Error while closing terminfo") );
 	}
-	
+
 	sb_destroy( &out_buff );
 	fclose( out_file );
 }
@@ -1164,7 +1164,7 @@ static void read_array( FILE* file, array_list_t *comp )
 		while( 1 )
 		{
 			c = getc( file );
-			if( c == EOF ) 
+			if( c == EOF )
 			{
 				break;
 			}
@@ -1175,7 +1175,7 @@ static void read_array( FILE* file, array_list_t *comp )
 			}
 
 			cc=c;
-			
+
 			b_append( &buffer, &cc, 1 );
 		}
 
@@ -1183,15 +1183,15 @@ static void read_array( FILE* file, array_list_t *comp )
 		{
 			cc=0;
 			b_append( &buffer, &cc, 1 );
-			
+
 			wcs = str2wcs( buffer.buff );
-			if( wcs ) 
+			if( wcs )
 			{
 				unescaped = unescape( wcs, 0 );
 				if( unescaped )
 				{
 					al_push( comp, unescaped );
-				}				
+				}
 				free( wcs );
 			}
 		}
@@ -1203,9 +1203,9 @@ static void read_array( FILE* file, array_list_t *comp )
 
 static int get_fd( const char *str )
 {
-	char *end;	
+	char *end;
 	long fd;
-	
+
 	errno = 0;
 	fd = strtol( str, &end, 10 );
 	if( fd < 0 || *end || errno )
@@ -1220,13 +1220,13 @@ static int get_fd( const char *str )
 int main( int argc, char **argv )
 {
 	int i;
-	int is_quoted=0;	
+	int is_quoted=0;
 	array_list_t *comp;
 	wchar_t *prefix = 0;
 
 	int mangle_descriptors = 0;
 	int result_fd = -1;
-		
+
 	/*
 	  This initialization is made early, so that the other init code
 	  can use global_context for memory managment
@@ -1252,69 +1252,69 @@ int main( int argc, char **argv )
 		/*
 		  Third mode
 		*/
-			
+
 		int completion_fd = -1;
 		FILE *completion_file;
-			
+
 		while( 1 )
 		{
 			static struct option
 				long_options[] =
 				{
 					{
-						"result-fd", required_argument, 0, 'r' 
+						"result-fd", required_argument, 0, 'r'
 					}
 					,
 					{
-						"completion-fd", required_argument, 0, 'c' 
+						"completion-fd", required_argument, 0, 'c'
 					}
 					,
 					{
-						"prefix", required_argument, 0, 'p' 
+						"prefix", required_argument, 0, 'p'
 					}
 					,
 					{
-						"is-quoted", no_argument, 0, 'q' 
+						"is-quoted", no_argument, 0, 'q'
 					}
 					,
 					{
-						"help", no_argument, 0, 'h' 
+						"help", no_argument, 0, 'h'
 					}
 					,
 					{
-						"version", no_argument, 0, 'v' 
+						"version", no_argument, 0, 'v'
 					}
 					,
-					{ 
-						0, 0, 0, 0 
+					{
+						0, 0, 0, 0
 					}
 				}
 			;
-		
+
 			int opt_index = 0;
-		
+
 			int opt = getopt_long( argc,
-					       argv, 
+					       argv,
 					       GETOPT_STRING,
-					       long_options, 
+					       long_options,
 					       &opt_index );
-		
+
 			if( opt == -1 )
 				break;
-		
+
 			switch( opt )
 			{
 				case 0:
 				{
 					break;
 				}
-			
+
 				case 'r':
 				{
 					result_fd = get_fd( optarg );
 					break;
 				}
-			
+
 				case 'c':
 				{
 					completion_fd = get_fd( optarg );
@@ -1330,20 +1330,20 @@ int main( int argc, char **argv )
 				case 'h':
 				{
 					print_help( argv[0], 1 );
-					exit(0);						
+					exit(0);
 				}
 
 				case 'v':
 				{
 					debug( 0, L"%ls, version %s\n", program_name, PACKAGE_VERSION );
-					exit( 0 );				
+					exit( 0 );
 				}
-					
+
 				case 'q':
 				{
 					is_quoted = 1;
 				}
-			
+
 			}
 		}
 
@@ -1352,7 +1352,7 @@ int main( int argc, char **argv )
 			debug( 0, _(L"Unspecified file descriptors") );
 			exit( 1 );
 		}
-			
+
 
 		if( (completion_file = fdopen( completion_fd, "r" ) ) )
 		{
@@ -1370,8 +1370,8 @@ int main( int argc, char **argv )
 		{
 			prefix = wcsdup( L"" );
 		}
-			
-			
+
+
 	}
 	else
 	{
@@ -1385,7 +1385,7 @@ int main( int argc, char **argv )
 		  forward. A reasonable time frame for removal of the code
 		  below has yet to be determined.
 		*/
-			
+
 		if( argc < 3 )
 		{
 			print_help( argv[0], 1 );
@@ -1394,10 +1394,10 @@ int main( int argc, char **argv )
 		else
 		{
 			mangle_descriptors = 1;
-			
+
 			prefix = str2wcs( argv[2] );
 			is_quoted = strcmp( "1", argv[1] )==0;
-			
+
 			if( argc > 3 )
 			{
 				/*
@@ -1420,11 +1420,11 @@ int main( int argc, char **argv )
 				read_array( stdin, comp );
 			}
 		}
-			
+
 	}
-		
+
 //		debug( 3, L"prefix is '%ls'", prefix );
-		
+
 	init( mangle_descriptors, result_fd );
 
 	mangle_descriptions( comp );
@@ -1462,9 +1462,9 @@ int main( int argc, char **argv )
 				i=PAGER_MAX_COLS+1;
 				break;
 
-		}		
+		}
 	}
-	
+
 	free(prefix );
 
 	fwprintf( out_file, L"%ls", (wchar_t *)out_buff.buff );
@@ -1476,6 +1476,6 @@ int main( int argc, char **argv )
 	destroy();
 
 	halloc_util_destroy();
-	
+
 }
 

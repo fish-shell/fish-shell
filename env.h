@@ -63,7 +63,7 @@ void env_destroy();
 
 
 /**
-   Set the value of the environment variable whose name matches key to val. 
+   Set the value of the environment variable whose name matches key to val.
 
    Memory policy: All keys and values are copied, the parameters can and should be freed by the caller afterwards
 
@@ -79,7 +79,7 @@ void env_destroy();
    * ENV_INVALID, the variable name or mode was invalid
 */
 
-int env_set( const wchar_t *key, 
+int env_set( const wchar_t *key,
 			 const wchar_t *val,
 			 int mode );
 
@@ -104,7 +104,7 @@ int env_exist( const wchar_t *key, int mode );
 
 /**
    Remove environemnt variable
-   
+
    \param key The name of the variable to remove
    \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If this is a user request, read-only variables can not be removed. The mode may also specify the scope of the variable that should be erased.
 

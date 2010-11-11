@@ -25,7 +25,7 @@ typedef void (*func_ptr_t)();
    used to make sure that the pointer type can fit whatever we want to
    insert.
  */
-typedef union 
+typedef union
 {
 	/**
 	   long value
@@ -91,7 +91,7 @@ typedef struct hash_table
 	/** The array containing the data */
 	hash_struct_t *arr;
 	/** A simple one item cache. This should always point to the index of the last item to be used */
-	int cache;	
+	int cache;
 	/** Number of elements */
 	int count;
 	/** Length of array */
@@ -128,12 +128,12 @@ priority_queue_t;
 */
 typedef struct array_list
 {
-	/** 
+	/**
 		Array containing the data
 	*/
 	anything_t *arr;
-	
-	/** 
+
+	/**
 		Internal cursor position of the array_list_t. This is the
 		position to append elements at. This is also what the
 		array_list_t considers to be its true size, as reported by
@@ -142,7 +142,7 @@ typedef struct array_list
 	*/
 	size_t pos;
 
-	/** 
+	/**
 		Amount of memory allocated in arr, expressed in number of elements.
 	*/
 	size_t size;
@@ -181,8 +181,8 @@ typedef buffer_t string_buffer_t;
 
 /**
    Set the out-of-memory handler callback function. If a memory
-   allocation fails, this function will be called. 
-*/	
+   allocation fails, this function will be called.
+*/
 void (*util_set_oom_handler( void (*h)(void *) ))(void *);
 
 /**
@@ -207,38 +207,38 @@ int mini( int a, int b );
 /*
   All the datastuctures below autoresize. The queue, stack and
   priority queue are all impemented using an array and are guaranteed
-  to never be less than 50% full. 
+  to never be less than 50% full.
 */
 
-/** 
+/**
 	Initialize the queue. A queue is a FIFO buffer, i.e. the first
     element to be inserted into the buffer is the first element to be
-    returned. 
+    returned.
 */
 void q_init( dyn_queue_t *q );
 
 /**
-   Destroy the queue 
+   Destroy the queue
 */
 void q_destroy( dyn_queue_t *q );
 
 /**
-   Insert element into queue 
+   Insert element into queue
 */
 int q_put( dyn_queue_t *q, void *e );
 
 /**
-   Remove and return next element from queue 
+   Remove and return next element from queue
 */
 void *q_get( dyn_queue_t *q);
 
 /**
-   Return next element from queue without removing it 
+   Return next element from queue without removing it
 */
 void *q_peek( dyn_queue_t *q);
 
 /**
-   Returns 1 if the queue is empty, 0 otherwise 
+   Returns 1 if the queue is empty, 0 otherwise
 */
 int q_empty( dyn_queue_t *q );
 
@@ -262,9 +262,9 @@ void hash_init2( hash_table_t *h,
 */
 void hash_destroy( hash_table_t *h );
 /**
-   Set the key/value pair for the hashtable. 
+   Set the key/value pair for the hashtable.
 */
-int hash_put( hash_table_t *h, 
+int hash_put( hash_table_t *h,
 			  const void *key,
 			  const void *data );
 /**
@@ -275,7 +275,7 @@ void *hash_get( hash_table_t *h,
 /**
    Returns the hash tables version of the specified key
 */
-void *hash_get_key( hash_table_t *h, 
+void *hash_get_key( hash_table_t *h,
 					const void *key );
 
 /**
@@ -290,15 +290,15 @@ int hash_get_count( hash_table_t *h);
    \param old_key If not 0, a pointer to the old key will be stored at the specified address
    \param old_data If not 0, a pointer to the data will be stored at the specified address
 */
-void hash_remove( hash_table_t *h, 
-				  const void *key, 
+void hash_remove( hash_table_t *h,
+				  const void *key,
 				  void **old_key,
 				  void **old_data );
 
 /**
    Checks whether the specified key is in the hash table
 */
-int hash_contains( hash_table_t *h, 
+int hash_contains( hash_table_t *h,
 				   const void *key );
 
 /**
@@ -316,20 +316,20 @@ void hash_get_data( hash_table_t *h,
 /**
    Call the function func for each key/data pair in the table
 */
-void hash_foreach( hash_table_t *h, 
+void hash_foreach( hash_table_t *h,
 				   void (*func)( void *, void * ) );
 
 /**
    Same as hash_foreach, but the function func takes an additional
-   argument, which is provided by the caller in the variable aux 
+   argument, which is provided by the caller in the variable aux
 */
-void hash_foreach2( hash_table_t *h, void (*func)( void *, 
-												   void *, 
-												   void *), 
+void hash_foreach2( hash_table_t *h, void (*func)( void *,
+												   void *,
+												   void *),
 					void *aux );
 
 /**
-   Hash function suitable for character strings. 
+   Hash function suitable for character strings.
 */
 int hash_str_func( void *data );
 /**
@@ -348,7 +348,7 @@ int hash_wcs_func( void *data );
 /**
    Hash comparison function suitable for wide character strings
 */
-int hash_wcs_cmp( void *a, 
+int hash_wcs_cmp( void *a,
 				  void *b );
 
 /**
@@ -365,9 +365,9 @@ int hash_ptr_cmp( void *a,
 
 
 
-/** 
+/**
 	Initialize the priority queue
-	
+
 	\param q the queue to initialize
 	\param compare a comparison function that can compare two entries in the queue
 */
@@ -378,7 +378,7 @@ void pq_init( priority_queue_t *q,
 
    \param q the queue
    \param e the new element
- 
+
 */
 int pq_put( priority_queue_t *q,
 			void *e );
@@ -392,7 +392,7 @@ void *pq_get( priority_queue_t *q );
 */
 void *pq_peek( priority_queue_t *q );
 
-/** 
+/**
 	Returns 1 if the priority queue is empty, 0 otherwise.
 */
 int pq_empty( priority_queue_t *q );
@@ -402,7 +402,7 @@ int pq_empty( priority_queue_t *q );
 */
 int pq_get_count( priority_queue_t *q );
 
-/** 
+/**
 	Destroy the priority queue and free memory used by it.
 */
 void pq_destroy(  priority_queue_t *q );
@@ -413,12 +413,12 @@ void pq_destroy(  priority_queue_t *q );
 */
 array_list_t *al_new();
 
-/** 
-	Initialize the list. 
+/**
+	Initialize the list.
 */
 void al_init( array_list_t *l );
 
-/** 
+/**
 	Destroy the list and free memory used by it.
 */
 void al_destroy( array_list_t *l );
@@ -468,15 +468,15 @@ int al_insert( array_list_t *a, int pos, int count );
    Sets the element at the specified index
 
    \param l The array_list_t
-   \param pos The index 
-   \param o The element 
+   \param pos The index
+   \param o The element
 */
 int al_set( array_list_t *l, int pos, const void *o );
 /**
    Sets the element at the specified index
 
    \param l The array_list_t
-   \param pos The index 
+   \param pos The index
    \param v The element to set
 */
 int al_set_long( array_list_t *l, int pos, long v );
@@ -484,7 +484,7 @@ int al_set_long( array_list_t *l, int pos, long v );
    Sets the element at the specified index
 
    \param l The array_list_t
-   \param pos The index 
+   \param pos The index
    \param f The element to insert
 */
 int al_set_func( array_list_t *l, int pos, func_ptr_t f );
@@ -493,24 +493,24 @@ int al_set_func( array_list_t *l, int pos, func_ptr_t f );
    Returns the element at the specified index
 
    \param l The array_list_t
-   \param pos The index 
-   \return The element 
+   \param pos The index
+   \return The element
 */
 void *al_get( array_list_t *l, int pos );
 /**
    Returns the element at the specified index
 
    \param l The array_list_t
-   \param pos The index 
-   \return The element 
+   \param pos The index
+   \return The element
 */
 long al_get_long( array_list_t *l, int pos );
 /**
    Returns the element at the specified index
 
    \param l The array_list_t
-   \param pos The index 
-   \return The element 
+   \param pos The index
+   \return The element
 */
 func_ptr_t al_get_func( array_list_t *l, int pos );
 
@@ -555,12 +555,12 @@ func_ptr_t al_peek_func( array_list_t *l );
 */
 int al_empty( array_list_t *l);
 
-/** 
+/**
 	Call the function func for each entry in the list
 */
 void al_foreach( array_list_t *l, void (*func)( void * ));
 
-/** 
+/**
 	Same as al_foreach, but the function func takes an additional
 	argument, which is provided by the caller in the variable aux
 */

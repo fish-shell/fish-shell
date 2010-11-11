@@ -1,7 +1,7 @@
 
 function isatty -d "Tests if a file descriptor is a tty"
 	set -l fd 0
-	if count $argv >/dev/null 
+	if count $argv >/dev/null
 		switch $argv[1]
 
 			case -h --h --he --hel --help
@@ -19,7 +19,7 @@ function isatty -d "Tests if a file descriptor is a tty"
 
 			case '*'
 				set fd $argv[1]
-			
+
 		end
 	end
 

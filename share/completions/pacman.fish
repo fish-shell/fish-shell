@@ -32,9 +32,9 @@ complete -c pacman -n '__fish_contains_opt -s Q' -s l -d 'List all files owned b
 complete -c pacman -n '__fish_contains_opt -s Q' -s p -d 'Apply the query to a package file and not to an installed package'
 
 # Remove options
-complete -c pacman -n '__fish_contains_opt -s R' -s c -d 'Remove also the packages that depends on the target packages' 
-complete -c pacman -n '__fish_contains_opt -s R' -s k -d 'Remove the database entries only' 
-complete -c pacman -n '__fish_contains_opt -s R' -s n -d 'Ignore file backup designations' 
+complete -c pacman -n '__fish_contains_opt -s R' -s c -d 'Remove also the packages that depends on the target packages'
+complete -c pacman -n '__fish_contains_opt -s R' -s k -d 'Remove the database entries only'
+complete -c pacman -n '__fish_contains_opt -s R' -s n -d 'Ignore file backup designations'
 complete -c pacman -n '__fish_contains_opt -s R' -s s -d 'Remove also the dependencies of the target packages'
 
 # Sync options
@@ -54,6 +54,6 @@ complete -c pacman -n '__fish_contains_opt -s S' -l noprogressbar -d 'Do not sho
 # Complete with local packages
 complete -c pacman -n '__fish_contains_opt -s A -s F -s U' -a '(__fish_complete_suffix pkg.tar.gz)' -d 'Local package'
 # Complete with installed packages
-complete -c pacman -n '__fish_contains_opt -s Q -s R' -a '(pacman -Q | cut --delim " " --fields 1)' -d 'Installed package' 
+complete -c pacman -n '__fish_contains_opt -s Q -s R' -a '(pacman -Q | cut --delim " " --fields 1)' -d 'Installed package'
 # Complete with packages in the repos
 complete -c pacman -n '__fish_contains_opt -s S' -a '(pacman -Sl | cut --delim " " --fields 2 | sort)' -d 'Repo package'

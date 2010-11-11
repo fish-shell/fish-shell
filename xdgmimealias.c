@@ -47,7 +47,7 @@
 
 typedef struct XdgAlias XdgAlias;
 
-struct XdgAlias 
+struct XdgAlias
 {
   char *alias;
   char *mime_type;
@@ -72,7 +72,7 @@ _xdg_mime_alias_list_new (void)
   return list;
 }
 
-void         
+void
 _xdg_mime_alias_list_free (XdgAliasList *list)
 {
   int i;
@@ -147,20 +147,20 @@ _xdg_mime_alias_read_from_file (XdgAliasList *list,
       if (list->n_aliases == alloc)
 	{
 	  alloc <<= 1;
-	  list->aliases = realloc (list->aliases, 
+	  list->aliases = realloc (list->aliases,
 				   alloc * sizeof (XdgAlias));
 	}
       list->aliases[list->n_aliases].alias = strdup (line);
       list->aliases[list->n_aliases].mime_type = strdup (sep);
       list->n_aliases++;
     }
-  list->aliases = realloc (list->aliases, 
+  list->aliases = realloc (list->aliases,
 			   list->n_aliases * sizeof (XdgAlias));
 
-  fclose (file);  
-  
+  fclose (file);
+
   if (list->n_aliases > 1)
-    qsort (list->aliases, list->n_aliases, 
+    qsort (list->aliases, list->n_aliases,
            sizeof (XdgAlias), alias_entry_cmp);
 }
 
@@ -174,7 +174,7 @@ _xdg_mime_alias_list_dump (XdgAliasList *list)
     {
       for (i = 0; i < list->n_aliases; i++)
 	{
-	  printf ("%s %s\n", 
+	  printf ("%s %s\n",
 		  list->aliases[i].alias,
 		  list->aliases[i].mime_type);
 	}

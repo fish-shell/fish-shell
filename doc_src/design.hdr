@@ -7,8 +7,8 @@ design fish. The fish design has three high level goals. These are:
 
 -# Everything that can be done in other shell languages should be
 possible to do in fish, though fish may rely on external commands in
-doing so. 
--# Fish should be user friendly, but not at the expense of expressiveness. 
+doing so.
+-# Fish should be user friendly, but not at the expense of expressiveness.
 Most tradeoffs between power and ease of use can be avoided with careful design.
 -# Whenever possible without breaking the above goals, fish should
 follow the Posix syntax.
@@ -33,7 +33,7 @@ program harder to maintain and update.
 Examples:
 
 - Here documents are too similar to using echo inside of a pipeline.
-- Subshells, command substitution and process substitution are strongly related. \c fish only supports command substitution, the others can be achived either using a block or the psub shellscript function. 
+- Subshells, command substitution and process substitution are strongly related. \c fish only supports command substitution, the others can be achived either using a block or the psub shellscript function.
 - Having both aliases and functions is confusing, especially since both of them have limitations and problems. \c fish functions have none of the drawbacks of either syntax.
 - The many Posix quoting styles are silly, especially \$''.
 
@@ -57,14 +57,14 @@ take the whole system down.
 Examples:
 
 - Builtin commands should only be created when it cannot be
-avoided. \c echo, \c kill, \c printf and \c time are among the commands 
-that fish does not implement internally since they can be provided as 
-external commands. Several other commands that are commonly implemented 
+avoided. \c echo, \c kill, \c printf and \c time are among the commands
+that fish does not implement internally since they can be provided as
+external commands. Several other commands that are commonly implemented
 as builtins and can not be implemented as external commands,
 including \c type, \c vared, \c pushd and \c popd are implemented as shellscript
 functions in fish.
 - Mathematical calculations, regex matching, generating lists of numbers
-and many other funtions can easily be done in external programs. They 
+and many other funtions can easily be done in external programs. They
 should not be supported internally by the shell.
 
 The law of minimalism does not imply that a large feature set is

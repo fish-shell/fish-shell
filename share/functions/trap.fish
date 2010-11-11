@@ -13,18 +13,18 @@ function __trap_switch
 	switch $argv[1]
 		case EXIT
 			echo --on-exit %self
-		
+
 		case '*'
 			echo --on-signal $argv[1]
-	end	
+	end
 
 end
 
 function trap -d 'Perform an action when the shell recives a signal'
 
 	set -l mode
-	set -l cmd 
-	set -l sig 
+	set -l cmd
+	set -l sig
 	set -l shortopt
 	set -l longopt
 
@@ -47,13 +47,13 @@ function trap -d 'Perform an action when the shell recives a signal'
 			case -h --help
 				__fish_print_help trap
 				return 0
-			
+
 			case -p --print
 				set mode print
-			
+
 			case -l --list-signals
 				set mode list
-			
+
 			case --
 				 set -e opt[1]
 				 break
@@ -87,7 +87,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 			for i in $opt
 				set sig (__trap_translate_signal $i)
 				if test $sig
-					functions -e __trap_handler_$sig				
+					functions -e __trap_handler_$sig
 				end
 			end
 
@@ -108,7 +108,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 			end
 
 		case print
-			set -l names 
+			set -l names
 
 			if count $opt >/dev/null
 				set names $opt
@@ -130,7 +130,7 @@ function trap -d 'Perform an action when the shell recives a signal'
 
 		case list
 			kill -l
-			
+
 	end
 
 end

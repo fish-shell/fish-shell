@@ -1,7 +1,7 @@
 /** \file io.c
 
 Utilities for io redirection.
-	
+
 */
 #include "config.h"
 
@@ -56,7 +56,7 @@ void io_buffer_read( io_data_t *d )
 	exec_close(d->param1.pipe_fd[1] );
 
 	if( d->io_mode == IO_BUFFER )
-	{		
+	{
 /*		if( fcntl( d->param1.pipe_fd[0], F_SETFL, 0 ) )
 		{
 			wperror( L"fcntl" );
@@ -83,17 +83,17 @@ void io_buffer_read( io_data_t *d )
 				*/
 				if( errno != EAGAIN )
 				{
-					debug( 1, 
-						   _(L"An error occured while reading output from code block on file descriptor %d"), 
+					debug( 1,
+						   _(L"An error occured while reading output from code block on file descriptor %d"),
 						   d->param1.pipe_fd[0] );
-					wperror( L"io_buffer_read" );				
+					wperror( L"io_buffer_read" );
 				}
-				
-				break;				
+
+				break;
 			}
 			else
-			{				
-				b_append( d->param2.out_buffer, b, l );				
+			{
+				b_append( d->param2.out_buffer, b, l );
 			}
 		}
 	}
@@ -103,14 +103,14 @@ void io_buffer_read( io_data_t *d )
 io_data_t *io_buffer_create( int is_input )
 {
 	io_data_t *buffer_redirect = malloc( sizeof( io_data_t ));
-	
+
 	buffer_redirect->io_mode=IO_BUFFER;
 	buffer_redirect->next=0;
 	buffer_redirect->param2.out_buffer= malloc( sizeof(buffer_t));
 	buffer_redirect->is_input = is_input;
 	b_init( buffer_redirect->param2.out_buffer );
 	buffer_redirect->fd=is_input?0:1;
-	
+
 	if( exec_pipe( buffer_redirect->param1.pipe_fd ) == -1 )
 	{
 		debug( 1, PIPE_ERROR );
@@ -150,9 +150,9 @@ void io_buffer_destroy( io_data_t *io_buffer )
 	  Dont free fd for writing. This should already be free'd before
 	  calling exec_read_io_buffer on the buffer
 	*/
-	
+
 	b_destroy( io_buffer->param2.out_buffer );
-	
+
 	free( io_buffer->param2.out_buffer );
 	free( io_buffer );
 }
@@ -174,7 +174,7 @@ io_data_t *io_remove( io_data_t *list, io_data_t *element )
 {
 	io_data_t *curr, *prev=0;
 	for( curr=list; curr; curr = curr->next )
-	{		
+	{
 		if( element == curr )
 		{
 			if( prev == 0 )
@@ -198,32 +198,32 @@ io_data_t *io_remove( io_data_t *list, io_data_t *element )
 io_data_t *io_duplicate( void *context, io_data_t *l )
 {
 	io_data_t *res;
-	
+
 	if( l == 0 )
 		return 0;
 
 	res = halloc( context, sizeof( io_data_t) );
-	
+
 	if( !res )
 	{
 		DIE_MEM();
-		
+
 	}
-	
+
 	memcpy( res, l, sizeof(io_data_t ));
 	res->next=io_duplicate( context, l->next );
-	return res;	
+	return res;
 }
 
 io_data_t *io_get( io_data_t *io, int fd )
 {
 	if( io == 0 )
 		return 0;
-	
+
 	io_data_t *res = io_get( io->next, fd );
 	if( res )
 		return res;
-	
+
 	if( io->fd == fd )
 		return io;
 
@@ -237,14 +237,14 @@ void io_print( io_data_t *io )
 	{
 		return;
 	}
-	
+
 	debug( 1, L"IO fd %d, type ", io->fd );
 	switch( io->io_mode )
 	{
 		case IO_PIPE:
 			debug( 1, L"PIPE, data %d", io->param1.pipe_fd[io->fd?1:0] );
 			break;
-		
+
 		case IO_FD:
 			debug( 1, L"FD, copy %d", io->param1.old_fd );
 			break;
@@ -252,11 +252,11 @@ void io_print( io_data_t *io )
 		case IO_BUFFER:
 			debug( 1, L"BUFFER" );
 			break;
-			
+
 		default:
 			debug( 1, L"OTHER" );
 	}
 
 	io_print( io->next );
-	
+
 }

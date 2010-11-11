@@ -50,7 +50,7 @@ void history_reset();
 
 /**
   Find next history item starting with str. If this moves past
-  the end of the history, str is returned.  
+  the end of the history, str is returned.
 */
 const wchar_t *history_next_match( const wchar_t *str);
 

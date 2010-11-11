@@ -28,4 +28,6 @@ share/config.fish
 share/man/
 toc.txt
 user_doc/
-xsel-0.9.6/
+xsel-1.2.0/
+tests/*tmp.*
+tests/foo.txt

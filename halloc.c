@@ -125,37 +125,37 @@ static void halloc_report()
 {
 	if( getpid() == pid )
 	{
-		debug( 1, L"%d parents, %d children with average child size of %.2f bytes caused %d allocs, average spill of %.2f bytes", 
+		debug( 1, L"%d parents, %d children with average child size of %.2f bytes caused %d allocs, average spill of %.2f bytes",
 			   parent_count, child_count, (double)child_size/child_count,
-			   parent_count+alloc_count, (double)alloc_spill/(parent_count+alloc_count) );				
+			   parent_count+alloc_count, (double)alloc_spill/(parent_count+alloc_count) );
 	}
 }
 #endif
 
 
 void *halloc( void *context, size_t size )
-{	
+{
 	halloc_t *me, *parent;
 	if( context )
 	{
 		char *res;
 		char *aligned;
-		
+
 #ifdef HALLOC_DEBUG
-			
+
 		if( !child_count )
 		{
 			pid = getpid();
 			atexit( &halloc_report );
 		}
-		 
+
 		child_count++;
 		child_size += size;
-#endif	
+#endif
 		parent = halloc_from_data( context );
 
 		/*
-		  Align memory address 
+		  Align memory address
 		*/
 		aligned = align_ptr( parent->scratch );
 
@@ -163,7 +163,7 @@ void *halloc( void *context, size_t size )
 
 		if( parent->scratch_free < 0 )
 			parent->scratch_free=0;
-		
+
 		parent->scratch = aligned;
 
 		if( size <= parent->scratch_free )
@@ -177,8 +177,8 @@ void *halloc( void *context, size_t size )
 
 #ifdef HALLOC_DEBUG
 			alloc_count++;
-#endif	
-		
+#endif
+
 			if( parent->scratch_free < HALLOC_SCRAP_SIZE )
 			{
 #ifdef HALLOC_DEBUG
@@ -198,23 +198,23 @@ void *halloc( void *context, size_t size )
 			}
 			al_push_func( &parent->children, &late_free );
 			al_push( &parent->children, res );
-			
+
 		}
 		return res;
-	
+
 	}
 	else
 	{
 		me = (halloc_t *)calloc( 1, align_sz(sizeof(halloc_t)) + align_sz(size) + HALLOC_BLOCK_SIZE );
-		
+
 		if( !me )
 			DIE_MEM();
 #ifdef HALLOC_DEBUG
 		parent_count++;
-#endif		
+#endif
 		me->scratch = ((char *)me) + align_sz(sizeof(halloc_t)) + align_sz(size);
 		me->scratch_free = HALLOC_BLOCK_SIZE;
-		
+
 		al_init( &me->children );
 		return ((char *)me) + align_sz(sizeof(halloc_t));
 	}
@@ -225,7 +225,7 @@ void halloc_register_function( void *context, void (*func)(void *), void *data )
 	halloc_t *me;
 	if( !context )
 		return;
-	
+
 	me = halloc_from_data( context );
 	al_push_func( &me->children, func );
 	al_push( &me->children, data );
@@ -235,11 +235,11 @@ void halloc_free( void *context )
 {
 	halloc_t *me;
 	int i;
-	
+
 	if( !context )
 		return;
 
-	
+
 	me = halloc_from_data( context );
 
 #ifdef HALLOC_DEBUG

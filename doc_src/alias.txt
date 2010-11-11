@@ -12,7 +12,7 @@ shells. For other uses, it is recommended to define a <a
 href='#function'>function</a>.
 
 Alias does not keep track of which functions have been defined using
-alias, nor does it allow erasing of aliases. 
+alias, nor does it allow erasing of aliases.
 
 - NAME is the name of the function to define
 - DEFINITION is the body of the function. The string " $argv" will be appended to the body.

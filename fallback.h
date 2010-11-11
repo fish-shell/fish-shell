@@ -57,12 +57,12 @@ typedef char tputs_arg_t;
 /**
    Structure used to get the size of a terminal window
  */
-struct winsize 
+struct winsize
 {
 	/**
 	   Number of rows
 	 */
-	unsigned short ws_row;	
+	unsigned short ws_row;
 	/**
 	   Number of columns
 	 */
@@ -193,7 +193,7 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr);
 /**
    Return the number of columns used by a character. This is a libc
    function, but the prototype for this function is missing in some libc
-   implementations. 
+   implementations.
 
    Fish has a fallback implementation in case the implementation is
    missing altogether.  In locales without a native wcwidth, Unicode
@@ -320,7 +320,7 @@ size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
    wcslen(src); if retval >= siz, truncation occurred.
 
    This is the OpenBSD strlcpy function, modified for wide characters,
-   and renamed to reflect this change. 
+   and renamed to reflect this change.
 */
 size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
 
@@ -390,7 +390,7 @@ char * textdomain( const char * domainname );
 /**
    Fallback implementation of dcgettext. Just returns the original string.
 */
-char * dcgettext ( const char * domainname, 
+char * dcgettext ( const char * domainname,
 		   const char * msgid,
 		   int category );
 
@@ -421,7 +421,7 @@ int killpg( int pgr, int sig );
 /**
    Struct describing a long getopt option
  */
-struct option 
+struct option
 {
 	/**
 	   Name of option
@@ -438,7 +438,7 @@ struct option
 	/**
 	   Return value
 	 */
-	int val;	
+	int val;
 }
 ;
 
@@ -454,10 +454,10 @@ struct option
 #define	optional_argument 2
 #endif
 
-int getopt_long(int argc, 
+int getopt_long(int argc,
 		char * const argv[],
 		const char *optstring,
-		const struct option *longopts, 
+		const struct option *longopts,
 		int *longindex);
 
 #endif

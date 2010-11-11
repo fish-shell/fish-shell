@@ -43,7 +43,7 @@ typedef struct
 	/** Function definition */
 	wchar_t *definition;
 	/** Function description */
-	wchar_t *description;	
+	wchar_t *description;
 	/**
 	   File where this function was defined
 	*/
@@ -51,14 +51,14 @@ typedef struct
 	/**
 	   Line where definition started
 	*/
-	int definition_offset;	
-	
+	int definition_offset;
+
 	/**
 	   List of all named arguments for this function
 	 */
 	array_list_t *named_arguments;
-	
-	
+
+
 	/**
 	   Flag for specifying that this function was automatically loaded
 	*/
@@ -96,8 +96,8 @@ static int load( const wchar_t *name )
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data && !data->is_autoload )
 		return 0;
-	
-	is_autoload = 1;	
+
+	is_autoload = 1;
 	res = parse_util_load( name,
 						   L"fish_function_path",
 						   &function_remove,
@@ -113,13 +113,13 @@ static int load( const wchar_t *name )
 static void autoload_names( array_list_t *out, int get_hidden )
 {
 	int i;
-	
+
 	array_list_t path_list;
 	const wchar_t *path_var = env_get( L"fish_function_path" );
-	
+
 	if( ! path_var )
 		return;
-	
+
 	al_init( &path_list );
 
 	tokenize_variable_array( path_var, &path_list );
@@ -129,7 +129,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 		DIR *dir = wopendir( ndir );
 		if( !dir )
 			continue;
-		
+
 		struct wdirent *next;
 		while( (next=wreaddir(dir))!=0 )
 		{
@@ -137,7 +137,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 			wchar_t *suffix;
 			if( !get_hidden && fn[0] == L'_' )
 				continue;
-			
+
 			suffix = wcsrchr( fn, L'.' );
 			if( suffix && (wcscmp( suffix, L".fish" ) == 0 ) )
 			{
@@ -148,7 +148,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 					DIE_MEM();
 				al_push( out, dup );
 			}
-		}				
+		}
 		closedir(dir);
 	}
 	al_foreach( &path_list, &free );
@@ -182,12 +182,12 @@ void function_add( function_data_t *data )
 	int i;
 	wchar_t *cmd_end;
 	function_internal_data_t *d;
-	
+
 	CHECK( data->name, );
 	CHECK( data->definition, );
-	
+
 	function_remove( data->name );
-	
+
 	d = halloc( 0, sizeof( function_internal_data_t ) );
 	d->definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
 	d->definition = halloc_wcsdup( d, data->definition );
@@ -201,31 +201,68 @@ void function_add( function_data_t *data )
 			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( data->named_arguments, i ) ) );
 		}
 	}
-	
+
 	cmd_end = d->definition + wcslen(d->definition)-1;
-	
+
 	d->description = data->description?halloc_wcsdup( d, data->description ):0;
 	d->definition_file = intern(reader_current_filename());
 	d->is_autoload = is_autoload;
 	d->shadows = data->shadows;
-	
+
 	hash_put( &function, intern(data->name), d );
-	
+
 	for( i=0; i<al_get_count( data->events ); i++ )
 	{
 		event_add_handler( (event_t *)al_get( data->events, i ) );
 	}
-	
+
 }
+
+int function_copy( const wchar_t *name, const wchar_t *new_name )
+{
+	int i;
+	function_internal_data_t *d, *orig_d;
+	
+	CHECK( name, 0 );
+	CHECK( new_name, 0 );
+
+	orig_d = (function_internal_data_t *)hash_get(&function, name);
+	if( !orig_d )
+		return 0;
+
+	d = halloc(0, sizeof( function_internal_data_t ) );
+	d->definition_offset = orig_d->definition_offset;
+	d->definition = halloc_wcsdup( d, orig_d->definition );
+	if( orig_d->named_arguments )
+	{
+		d->named_arguments = al_halloc( d );
+		for( i=0; i<al_get_count( orig_d->named_arguments ); i++ )
+		{
+			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( orig_d->named_arguments, i ) ) );
+		}
+		d->description = orig_d->description?halloc_wcsdup(d, orig_d->description):0;
+		d->shadows = orig_d->shadows;
+
+		// This new instance of the function shouldn't be tied to the def 
+		// file of the original. 
+		d->definition_file = 0;
+		d->is_autoload = 0;
+	}
+
+	hash_put( &function, intern(new_name), d );
+
+	return 1;
+}
+
 
 int function_exists( const wchar_t *cmd )
 {
-	
+
 	CHECK( cmd, 0 );
-	
+
 	if( parser_keywords_is_reserved(cmd) )
 		return 0;
-	
+
 	load( cmd );
 	return (hash_get(&function, cmd) != 0 );
 }
@@ -236,7 +273,7 @@ void function_remove( const wchar_t *name )
 	void *dv;
 	function_internal_data_t *d;
 	event_t ev;
-	
+
 	CHECK( name, );
 
 	hash_remove( &function,
@@ -245,12 +282,12 @@ void function_remove( const wchar_t *name )
 				 &dv );
 
 	d=(function_internal_data_t *)dv;
-	
+
 	if( !key )
 		return;
 
 	ev.type=EVENT_ANY;
-	ev.function_name=name;	
+	ev.function_name=name;
 	event_remove( &ev );
 
 	halloc_free( d );
@@ -265,13 +302,13 @@ void function_remove( const wchar_t *name )
 		parse_util_unload( name, L"fish_function_path", 0 );
 	}
 }
-	
+
 const wchar_t *function_get_definition( const wchar_t *name )
 {
 	function_internal_data_t *data;
-	
+
 	CHECK( name, 0 );
-	
+
 	load( name );
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
@@ -282,9 +319,9 @@ const wchar_t *function_get_definition( const wchar_t *name )
 array_list_t *function_get_named_arguments( const wchar_t *name )
 {
 	function_internal_data_t *data;
-	
+
 	CHECK( name, 0 );
-	
+
 	load( name );
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
@@ -295,9 +332,9 @@ array_list_t *function_get_named_arguments( const wchar_t *name )
 int function_get_shadows( const wchar_t *name )
 {
 	function_internal_data_t *data;
-	
+
 	CHECK( name, 0 );
-	
+
 	load( name );
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
@@ -305,28 +342,28 @@ int function_get_shadows( const wchar_t *name )
 	return data->shadows;
 }
 
-	
+
 const wchar_t *function_get_desc( const wchar_t *name )
 {
 	function_internal_data_t *data;
-	
+
 	CHECK( name, 0 );
-		
+
 	load( name );
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return 0;
-	
+
 	return _(data->description);
 }
 
 void function_set_desc( const wchar_t *name, const wchar_t *desc )
 {
 	function_internal_data_t *data;
-	
+
 	CHECK( name, );
 	CHECK( desc, );
-	
+
 	load( name );
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
@@ -344,7 +381,7 @@ static int al_contains_str( array_list_t *list, const wchar_t * str )
 
 	CHECK( list, 0 );
 	CHECK( str, 0 );
-	
+
 	for( i=0; i<al_get_count( list ); i++ )
 	{
 		if( wcscmp( al_get( list, i ), str) == 0 )
@@ -354,9 +391,9 @@ static int al_contains_str( array_list_t *list, const wchar_t * str )
 	}
 	return 0;
 }
-	
+
 /**
-   Helper function for removing hidden functions 
+   Helper function for removing hidden functions
 */
 static void get_names_internal( void *key,
 								void *val,
@@ -370,14 +407,14 @@ static void get_names_internal( void *key,
 }
 
 /**
-   Helper function for removing hidden functions 
+   Helper function for removing hidden functions
 */
 static void get_names_internal_all( void *key,
 									void *val,
 									void *aux )
 {
 	wchar_t *name = (wchar_t *)key;
-	
+
 	if( !al_contains_str( (array_list_t *)aux, name ) )
 	{
 		al_push( (array_list_t *)aux, name );
@@ -387,9 +424,9 @@ static void get_names_internal_all( void *key,
 void function_get_names( array_list_t *list, int get_hidden )
 {
 	CHECK( list, );
-		
+
 	autoload_names( list, get_hidden );
-	
+
 	if( get_hidden )
 	{
 		hash_foreach2( &function, &get_names_internal_all, list );
@@ -398,7 +435,7 @@ void function_get_names( array_list_t *list, int get_hidden )
 	{
 		hash_foreach2( &function, &get_names_internal, list );
 	}
-	
+
 }
 
 const wchar_t *function_get_definition_file( const wchar_t *name )
@@ -406,11 +443,11 @@ const wchar_t *function_get_definition_file( const wchar_t *name )
 	function_internal_data_t *data;
 
 	CHECK( name, 0 );
-		
+
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return 0;
-	
+
 	return data->definition_file;
 }
 
@@ -420,11 +457,11 @@ int function_get_definition_offset( const wchar_t *name )
 	function_internal_data_t *data;
 
 	CHECK( name, -1 );
-		
+
 	data = (function_internal_data_t *)hash_get( &function, name );
 	if( data == 0 )
 		return -1;
-	
+
 	return data->definition_offset;
 }
 

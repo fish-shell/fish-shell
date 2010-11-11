@@ -28,14 +28,14 @@ function type --description "Print the type of a command"
 		switch $i
 			case -t --type
 				set mode type
-			
+
 			case -p --path
 				set mode path
-			
-			case -P --force-path 
+
+			case -P --force-path
 				set mode path
 				set selection files
-			
+
 			case -a --all
 				set selection multi
 
@@ -54,7 +54,7 @@ function type --description "Print the type of a command"
 
 	# Check all possible types for the remaining arguments
 	for i in $argv
-		
+
 		switch $i
 			case '-*'
 				 continue

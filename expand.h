@@ -6,7 +6,7 @@
    benefit from using a more clever memory allocation scheme, perhaps
    an evil combination of talloc, string buffers and reference
    counting.
-   
+
 */
 
 #ifndef FISH_EXPAND_H
@@ -70,7 +70,7 @@ enum
 
 	/** Character represeting process expansion */
 	PROCESS_EXPAND,
-	
+
 	/** Character representing variable expansion */
 	VARIABLE_EXPAND,
 
@@ -86,7 +86,7 @@ enum
 	/** Character representing separation between two bracket elements */
 	BRACKET_SEP,
 	/**
-	   Separate subtokens in a token with this character. 
+	   Separate subtokens in a token with this character.
 	*/
 	INTERNAL_SEPARATOR,
 
@@ -128,7 +128,7 @@ enum
    (\$VAR_NAME becomes the value of the environment variable VAR_NAME),
    cmdsubst expansion and wildcard expansion. The results are inserted
    into the list out.
-   
+
    If the parameter does not need expansion, it is copied into the list
    out. If expansion is performed, the original parameter is freed and
    newly allocated strings are inserted into the list out.
@@ -136,7 +136,7 @@ enum
    If \c context is non-null, all the strings contained in the
    array_list_t \c out will be registered to be free'd when context is
    free'd.
- 
+
    \param context the halloc context to use for automatic deallocation
    \param in The parameter to expand
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
@@ -152,8 +152,8 @@ __warn_unused int expand_string( void *context, wchar_t *in, array_list_t *out, 
 
    If \c context is non-null, the returning string ill be registered
    to be free'd when context is free'd.
- 
-   \param context the halloc context to use for automatic deallocation   
+
+   \param context the halloc context to use for automatic deallocation
    \param in The parameter to expand
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return The expanded parameter, or 0 on failiure

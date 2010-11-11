@@ -11,7 +11,7 @@ URL:                    http://www.fishshell.org
 Source0:                http://www.fishshell.org/files/%{version}/%{name}-%{version}.tar.bz2
 
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:          ncurses-devel gettext groff 
+BuildRequires:          ncurses-devel gettext groff
 
 
 # Locate correct build time-dependencies for providing X headers
@@ -50,10 +50,10 @@ BuildRequires:          %{xinclude}/X11/Intrinsic.h,  %{xinclude}/X11/Xatom.h
 %endif
 
 
-%description 
+%description
 
-fish is a shell geared towards interactive use. Its features are 
-focused on user friendliness and discoverability. The language syntax 
+fish is a shell geared towards interactive use. Its features are
+focused on user friendliness and discoverability. The language syntax
 is simple but incompatible with other shell languages.
 
 
@@ -75,7 +75,7 @@ make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make install DESTDIR="$RPM_BUILD_ROOT" 
+make install DESTDIR="$RPM_BUILD_ROOT"
 
 # Find translation files
 %find_lang %{name}.\*

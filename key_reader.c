@@ -29,7 +29,7 @@ int main( int argc, char **argv)
 {
 
 	setlocale( LC_ALL, "" );
-	
+
 
 	if( argc == 2 )
 	{
@@ -37,24 +37,24 @@ int main( int argc, char **argv)
 		char *termtype = getenv ("TERM");
 		char *tbuff = malloc( sizeof(char)*9999);
 		char *res;
-		
+
 		tgetent( term_buffer, termtype );
-		res = tgetstr( argv[1], &tbuff );		
+		res = tgetstr( argv[1], &tbuff );
 		if( res != 0 )
 		{
 			while( *res != 0 )
-			{ 
+			{
 				printf("%d ", *res );
 
 
 				res++;
 			}
-			printf( "\n" );		
+			printf( "\n" );
 		}
 		else
 		{
 			printf("Undefined sequence\n");
-		}		
+		}
 	}
 	else
 	{
@@ -65,11 +65,11 @@ int main( int argc, char **argv)
 			savemodes;  /* so we can reset the modes when we're done */
 
 		input_common_init(0);
-		
+
 
 		tcgetattr(0,&modes);        /* get the current terminal modes */
 		savemodes = modes;          /* save a copy so we can reset them */
-		
+
 		modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
 		modes.c_lflag &= ~ECHO;   /* turn off echo mode */
 		modes.c_cc[VMIN]=1;
@@ -83,13 +83,13 @@ int main( int argc, char **argv)
 				sprintf( scratch, "dec: %d hex: %x char: %c\n", c, c, c );
 			else
 				sprintf( scratch, "dec: %d hex: %x\n", c, c );
-			writestr( scratch );			
+			writestr( scratch );
 		}
 		/* reset the terminal to the saved mode */
-		tcsetattr(0,TCSANOW,&savemodes);  
+		tcsetattr(0,TCSANOW,&savemodes);
 
 		input_common_destroy();
-	}	
+	}
 
 	return 0;
 }

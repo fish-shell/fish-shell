@@ -21,7 +21,7 @@ function cd --description "Change directory"
 		end
 		return $status
 	end
-				
+
 	builtin cd $argv[1]
 	set -l cd_status $status
 

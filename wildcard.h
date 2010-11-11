@@ -1,4 +1,4 @@
-/** \file wildcard.h 
+/** \file wildcard.h
 
     My own globbing implementation. Needed to implement this instead
     of using libs globbing to support tab-expansion of globbed
@@ -39,7 +39,7 @@ enum
 	;
 
 /**
-    Expand the wildcard by matching against the filesystem. 
+    Expand the wildcard by matching against the filesystem.
 
 	New strings are allocated using malloc and should be freed by the caller.
 
@@ -61,11 +61,11 @@ enum
 	\param out The list in which to put the output
 
 	\return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
-   
+
 */
-int wildcard_expand( const wchar_t *wc, 
-					 const wchar_t *base_dir, 
-					 int flags, 
+int wildcard_expand( const wchar_t *wc,
+					 const wchar_t *base_dir,
+					 int flags,
 					 array_list_t *out );
 /**
    Test whether the given wildcard matches the string
@@ -74,7 +74,7 @@ int wildcard_expand( const wchar_t *wc,
    \param wc The wildcard to test against
    \return true if the wildcard matched
 */
-int wildcard_match( const wchar_t *str, 
+int wildcard_match( const wchar_t *str,
 					const wchar_t *wc );
 
 
@@ -88,7 +88,7 @@ int wildcard_has( const wchar_t *str, int internal );
 */
 int wildcard_complete( const wchar_t *str,
 					   const wchar_t *wc,
-					   const wchar_t *desc,						
+					   const wchar_t *desc,
 					   const wchar_t *(*desc_func)(const wchar_t *),
 					   array_list_t *out,
 					   int flags );

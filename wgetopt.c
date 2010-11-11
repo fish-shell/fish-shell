@@ -1,5 +1,5 @@
 /** \file wgetopt.c
-	A version of the getopt library for use with wide character strings. 
+	A version of the getopt library for use with wide character strings.
 
 	This is simply the gnu getopt library, but converted for use with
 	wchar_t instead of char. This is not usually useful since the argv
@@ -257,7 +257,7 @@ exchange (argv)
 	int middle = last_nonopt;
 	int top = woptind;
 	wchar_t *tem;
-  
+
 	/* Exchange the shorter segment with the far end of the longer segment.
 	   That puts the shorter segment into the right place.
 	   It leaves the longer segment in the right place overall,
@@ -712,7 +712,7 @@ wgetopt_long (argc, argv, options, long_options, opt_index)
 	int argc;
 wchar_t *const *argv;
 const wchar_t *options;
-const struct woption *long_options;	
+const struct woption *long_options;
 int *opt_index;
 {
 	return _wgetopt_internal (argc, argv, options, long_options, opt_index, 0);
@@ -723,7 +723,7 @@ wgetopt_long_only (argc, argv, options, long_options, opt_index)
 	int argc;
 wchar_t *const *argv;
 const wchar_t *options;
-const struct woption *long_options;	
+const struct woption *long_options;
 int *opt_index;
 {
 	return _wgetopt_internal (argc, argv, options, long_options, opt_index, 1);

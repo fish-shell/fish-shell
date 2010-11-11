@@ -76,9 +76,9 @@ typedef struct connection
 	   newline is encountered, the buffer is parsed and cleared.
 	*/
 	buffer_t input;
-	
+
 	/**
-	   The read buffer. 
+	   The read buffer.
 	*/
 	char buffer[ENV_UNIVERSAL_BUFFER_SIZE];
 
@@ -86,12 +86,12 @@ typedef struct connection
 	   Number of bytes that have already been consumed.
 	*/
 	int buffer_consumed;
-	
+
 	/**
-	   Number of bytes that have been read into the buffer. 
+	   Number of bytes that have been read into the buffer.
 	*/
 	int buffer_used;
-	
+
 
 	/**
 	   Link to the next connection
@@ -103,7 +103,7 @@ typedef struct connection
 /**
    A struct representing a message to be sent between client and server
 */
-typedef struct 
+typedef struct
 {
 	/**
 	   Number of queues that contain this message. Once this reaches zero, the message should be deleted
@@ -163,7 +163,7 @@ void env_universal_common_get_names( array_list_t *l,
 void env_universal_common_set( const wchar_t *key, const wchar_t *val, int export );
 
 /**
-   Remove the specified variable. 
+   Remove the specified variable.
 
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.

@@ -43,7 +43,7 @@ wildcards using **.
 
 /**
    The maximum length of a filename token. This is a fallback value,
-   an attempt to find the true value using patchconf is always made. 
+   an attempt to find the true value using patchconf is always made.
 */
 #define MAX_FILE_LENGTH 1024
 
@@ -115,9 +115,9 @@ static void al_push_check( array_list_t *l, const wchar_t *new )
 {
 	int i;
 
-	for( i = 0; i < al_get_count(l); i++ ) 
+	for( i = 0; i < al_get_count(l); i++ )
 	{
-		if( !wcscmp( al_get(l, i), new ) ) 
+		if( !wcscmp( al_get(l, i), new ) )
 		{
 			free( (void *)new );
 			return;
@@ -143,7 +143,7 @@ int wildcard_has( const wchar_t *str, int internal )
 	if( !str )
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
+		return 0;
 	}
 
 	if( internal )
@@ -164,33 +164,33 @@ int wildcard_has( const wchar_t *str, int internal )
 			prev = *str;
 		}
 	}
-	
+
 	return 0;
 }
 
 /**
    Check whether the string str matches the wildcard string wc.
-  
+
    \param str String to be matched.
    \param wc The wildcard.
-   \param is_first Whether files beginning with dots should not be matched against wildcards. 
+   \param is_first Whether files beginning with dots should not be matched against wildcards.
 */
-static int wildcard_match2( const wchar_t *str, 
-							const wchar_t *wc, 
+static int wildcard_match2( const wchar_t *str,
+							const wchar_t *wc,
 							int is_first )
 {
-	
+
 	if( *str == 0 && *wc==0 )
 		return 1;
-	
+
 	if( *wc == ANY_STRING || *wc == ANY_STRING_RECURSIVE)
-	{		
+	{
 		/* Ignore hidden file */
 		if( is_first && *str == L'.' )
 		{
 			return 0;
 		}
-		
+
 		/* Try all submatches */
 		do
 		{
@@ -215,10 +215,10 @@ static int wildcard_match2( const wchar_t *str,
 		{
 			return 0;
 		}
-		
+
 		return wildcard_match2( str+1, wc+1, 0 );
 	}
-	
+
 	if( *wc == *str )
 		return wildcard_match2( str+1, wc+1, 0 );
 
@@ -230,9 +230,9 @@ static int wildcard_match2( const wchar_t *str,
    possible completion of the string, the remainder of the string is
    inserted into the array_list_t.
 */
-static int wildcard_complete_internal( const wchar_t *orig, 
-									   const wchar_t *str, 
-									   const wchar_t *wc, 
+static int wildcard_complete_internal( const wchar_t *orig,
+									   const wchar_t *str,
+									   const wchar_t *wc,
 									   int is_first,
 									   const wchar_t *desc,
 									   const wchar_t *(*desc_func)(const wchar_t *),
@@ -242,7 +242,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	if( !wc || !str || !orig)
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
+		return 0;
 	}
 
 	if( *wc == 0 &&
@@ -250,12 +250,12 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	{
 		wchar_t *out_completion = 0;
 		const wchar_t *out_desc = desc;
-		
+
 		if( !out )
 		{
 			return 1;
 		}
-			
+
 		if( flags & COMPLETE_NO_CASE )
 		{
 			out_completion = wcsdup( orig );
@@ -271,11 +271,11 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			  This completion has an embedded description, du not use the generic description
 			*/
 			wchar_t *sep;
-			
+
 			sep = wcschr(out_completion, PROG_COMPLETE_SEP );
 			*sep = 0;
 			out_desc = sep + 1;
-			
+
 		}
 		else
 		{
@@ -290,31 +290,31 @@ static int wildcard_complete_internal( const wchar_t *orig,
 				if( func_desc )
 					out_desc = func_desc;
 			}
-			
+
 		}
-		
+
 		if( out_completion )
 		{
-			completion_allocate( out, 
+			completion_allocate( out,
 								 out_completion,
 								 out_desc,
 								 flags );
 		}
-		
+
 		free ( out_completion );
-		
+
 		return 1;
 	}
-	
-	
+
+
 	if( *wc == ANY_STRING )
-	{		
+	{
 		int res=0;
-		
+
 		/* Ignore hidden file */
 		if( is_first && str[0] == L'.' )
 			return 0;
-		
+
 		/* Try all submatches */
 		do
 		{
@@ -324,12 +324,12 @@ static int wildcard_complete_internal( const wchar_t *orig,
 		}
 		while( *str++ != 0 );
 		return res;
-		
+
 	}
 	else if( *wc == ANY_CHAR )
 	{
 		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags );
-	}	
+	}
 	else if( *wc == *str )
 	{
 		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags );
@@ -338,19 +338,19 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	{
 		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags | COMPLETE_NO_CASE );
 	}
-	return 0;	
+	return 0;
 }
 
 int wildcard_complete( const wchar_t *str,
 					   const wchar_t *wc,
-					   const wchar_t *desc,						
+					   const wchar_t *desc,
 					   const wchar_t *(*desc_func)(const wchar_t *),
 					   array_list_t *out,
 					   int flags )
 {
 	int res;
-	
-	res =  wildcard_complete_internal( str, str, wc, 1, desc, desc_func, out, flags );	
+
+	res =  wildcard_complete_internal( str, str, wc, 1, desc, desc_func, out, flags );
 
 	return res;
 }
@@ -358,21 +358,21 @@ int wildcard_complete( const wchar_t *str,
 
 int wildcard_match( const wchar_t *str, const wchar_t *wc )
 {
-	return wildcard_match2( str, wc, 1 );	
+	return wildcard_match2( str, wc, 1 );
 }
 
 /**
-   Creates a path from the specified directory and filename. 
+   Creates a path from the specified directory and filename.
 */
 static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
 {
-	
+
 	wchar_t *long_name;
 	int base_len = wcslen( base_dir );
 	if( !(long_name= malloc( sizeof(wchar_t)*(base_len+wcslen(name)+1) )))
 	{
 		DIE_MEM();
-	}					
+	}
 	wcscpy( long_name, base_dir );
 	wcscpy(&long_name[base_len], name );
 	return long_name;
@@ -393,12 +393,12 @@ static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 
 	if( !suff || !cmd )
 		DIE_MEM();
-	
+
 	al_init( &l );
-	
+
 	if( exec_subshell( cmd, &l ) != -1 )
 	{
-		
+
 		if( al_get_count( &l )>0 )
 		{
 			wchar_t *ln = (wchar_t *)al_get(&l, 0 );
@@ -414,16 +414,16 @@ static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 			}
 		}
 	}
-	
+
 	free(cmd);
 	al_foreach( &l, &free );
 	al_destroy( &l );
-		
+
 	if( !desc )
 	{
 		desc = wcsdup(COMPLETE_FILE_DESC);
 	}
-	
+
 	hash_put( suffix_hash, suff, desc );
 
 	return desc;
@@ -458,7 +458,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 	wchar_t *desc;
 
 	len = wcslen(suff_orig );
-	
+
 	if( len == 0 )
 		return COMPLETE_FILE_DESC;
 
@@ -494,7 +494,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 	{
 		desc = complete_get_desc_suffix_internal( suff );
 	}
-	
+
 	free( suff );
 
 	return desc;
@@ -511,20 +511,20 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
    \param lbuf The struct buf output of calling lstat on the file
    \param stat_res The result of calling stat on the file
    \param buf The struct buf output of calling stat on the file
-   \param err The errno value after a failed stat call on the file. 
+   \param err The errno value after a failed stat call on the file.
 */
 
-static const wchar_t *file_get_desc( const wchar_t *filename, 
+static const wchar_t *file_get_desc( const wchar_t *filename,
 									 int lstat_res,
-									 struct stat lbuf, 
-									 int stat_res, 
-									 struct stat buf, 
+									 struct stat lbuf,
+									 int stat_res,
+									 struct stat buf,
 									 int err )
 {
 	wchar_t *suffix;
 
 	CHECK( filename, 0 );
-		
+
 	if( !lstat_res )
 	{
 		if( S_ISLNK(lbuf.st_mode))
@@ -542,7 +542,7 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 						( buf.st_mode & S_IXGRP ) ||
 						( buf.st_mode & S_IXOTH ) )
 					{
-		
+
 						if( waccess( filename, X_OK ) == 0 )
 						{
 							/*
@@ -557,7 +557,7 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 						}
 					}
 				}
-				
+
 				return COMPLETE_SYMLINK_DESC;
 
 			}
@@ -569,7 +569,7 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 					{
 						return COMPLETE_ROTTEN_SYMLINK_DESC;
 					}
-					
+
 					case ELOOP:
 					{
 						return COMPLETE_LOOP_SYMLINK_DESC;
@@ -602,13 +602,13 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 		{
 			return COMPLETE_DIRECTORY_DESC;
 		}
-		else 
+		else
 		{
 			if( ( buf.st_mode & S_IXUSR ) ||
 				( buf.st_mode & S_IXGRP ) ||
 				( buf.st_mode & S_IXOTH ) )
 			{
-		
+
 				if( waccess( filename, X_OK ) == 0 )
 				{
 					/*
@@ -624,19 +624,19 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 			}
 		}
 	}
-	
+
 	suffix = wcsrchr( filename, L'.' );
 	if( suffix != 0 && !wcsrchr( suffix, L'/' ) )
 	{
 		return complete_get_desc_suffix( suffix );
 	}
-	
+
 	return COMPLETE_FILE_DESC ;
 }
 
 
 /**
-   Add the specified filename if it matches the specified wildcard. 
+   Add the specified filename if it matches the specified wildcard.
 
    If the filename matches, first get the description of the specified
    filename. If this is a regular file, append the filesize to the
@@ -648,8 +648,8 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
    \param wc the wildcard to match against
    \param is_cmd whether we are performing command completion
 */
-static void wildcard_completion_allocate( array_list_t *list, 
-					  const wchar_t *fullname, 
+static void wildcard_completion_allocate( array_list_t *list,
+					  const wchar_t *fullname,
 					  const wchar_t *completion,
 					  const wchar_t *wc,
 					  int is_cmd )
@@ -657,14 +657,14 @@ static void wildcard_completion_allocate( array_list_t *list,
 	const wchar_t *desc;
 	struct stat buf, lbuf;
 	static string_buffer_t *sb = 0;
-	
+
 	int free_completion = 0;
-	
+
 	int flags = 0;
 	int stat_res, lstat_res;
 	int stat_errno=0;
-	
-	long long sz; 
+
+	long long sz;
 
 	if( !sb )
 	{
@@ -676,7 +676,7 @@ static void wildcard_completion_allocate( array_list_t *list,
 	}
 
 	CHECK( fullname, );
-		
+
 	sb_clear( sb );
 
 	/*
@@ -694,7 +694,7 @@ static void wildcard_completion_allocate( array_list_t *list,
 	{
 		if( S_ISLNK(lbuf.st_mode))
 		{
-			
+
 			if( ( stat_res = wstat( fullname, &buf ) ) )
 			{
 				sz=-1;
@@ -703,7 +703,7 @@ static void wildcard_completion_allocate( array_list_t *list,
 			{
 				sz = (long long)buf.st_size;
 			}
-			
+
 			/*
 			  In order to differentiate between e.g. rotten symlinks
 			  and symlink loops, we also need to know the error status of wstat.
@@ -717,9 +717,9 @@ static void wildcard_completion_allocate( array_list_t *list,
 			sz = (long long)buf.st_size;
 		}
 	}
-	
+
 	desc = file_get_desc( fullname, lstat_res, lbuf, stat_res, buf, stat_errno );
-		
+
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{
 		free_completion = 1;
@@ -728,7 +728,7 @@ static void wildcard_completion_allocate( array_list_t *list,
 		sb_append( sb, desc );
 	}
 	else
-	{							
+	{
 		sb_append( sb, desc, L", ", (void *)0 );
 		sb_format_size( sb, sz );
 	}
@@ -759,14 +759,14 @@ static int test_flags( wchar_t *filename,
 			return 0;
 		}
 	}
-	
-	
+
+
 	if( flags & EXECUTABLES_ONLY )
 	{
 		if ( waccess( filename, X_OK ) != 0)
 			return 0;
 	}
-	
+
 	return 1;
 }
 
@@ -776,24 +776,24 @@ static int test_flags( wchar_t *filename,
 
    This function traverses the relevant directory tree looking for
    matches, and recurses when needed to handle wildcrards spanning
-   multiple components and recursive wildcards. 
+   multiple components and recursive wildcards.
  */
-static int wildcard_expand_internal( const wchar_t *wc, 
+static int wildcard_expand_internal( const wchar_t *wc,
 									 const wchar_t *base_dir,
 									 int flags,
 									 array_list_t *out )
 {
-	
+
 	/* Points to the end of the current wildcard segment */
 	wchar_t *wc_end;
 
 	/* Variables for traversing a directory */
 	struct wdirent *next;
 	DIR *dir;
-	
+
 	/* The result returned */
 	int res = 0;
-	
+
 	/* Length of the directory to search in */
 	int base_len;
 
@@ -806,24 +806,24 @@ static int wildcard_expand_internal( const wchar_t *wc,
 
 	/* Description for completions */
 	string_buffer_t sb_desc;
-	
+
 	//	debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
 
 	if( reader_interrupted() )
 	{
 		return -1;
 	}
-	
+
 	if( !wc || !base_dir || !out)
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
-		return 0;		
+		return 0;
 	}
 
 	if( flags & ACCEPT_INCOMPLETE )
-	{	
-		/* 
-		   Avoid excessive number of returned matches for wc ending with a * 
+	{
+		/*
+		   Avoid excessive number of returned matches for wc ending with a *
 		*/
 		int len = wcslen(wc);
 		if( len && (wc[len-1]==ANY_STRING) )
@@ -832,7 +832,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			foo[len-1]=0;
 			int res = wildcard_expand_internal( foo, base_dir, flags, out );
 			free( foo );
-			return res;			
+			return res;
 		}
 	}
 
@@ -841,7 +841,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 	*/
 
 	dir_string = base_dir[0]==L'\0'?L".":base_dir;
-	
+
 	if( !(dir = wopendir( dir_string )))
 	{
 		return 0;
@@ -852,7 +852,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 
 	/*
 	  Test for recursive match string in current segment
-	*/	
+	*/
 	wc_recursive = wcschr( wc, ANY_STRING_RECURSIVE );
 	is_recursive = ( wc_recursive && (!wc_end || wc_recursive < wc_end));
 
@@ -883,7 +883,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 					{
 						wchar_t *name = next->d_name;
 						wchar_t *long_name = make_path( base_dir, name );
-						
+
 						if( test_flags( long_name, flags ) )
 						{
 							wildcard_completion_allocate( out,
@@ -892,16 +892,16 @@ static int wildcard_expand_internal( const wchar_t *wc,
 														  L"",
 														  flags & EXECUTABLES_ONLY );
 						}
-						
+
 						free( long_name );
-					}					
+					}
 				}
 			}
 			else
-			{								
+			{
 				res = 1;
 				al_push_check( out, wcsdup( base_dir ) );
-			}							
+			}
 		}
 		else
 		{
@@ -911,14 +911,14 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			while( (next=wreaddir(dir))!=0 )
 			{
 				wchar_t *name = next->d_name;
-				
+
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					
+
 					wchar_t *long_name = make_path( base_dir, name );
 
 					/*
-					  Test for matches before stating file, so as to minimize the number of calls to the much slower stat function 
+					  Test for matches before stating file, so as to minimize the number of calls to the much slower stat function
 					*/
 					if( wildcard_complete( name,
 										   wc,
@@ -934,12 +934,12 @@ static int wildcard_expand_internal( const wchar_t *wc,
                                                           name,
 														  wc,
                                                           flags & EXECUTABLES_ONLY );
-							
+
 						}
 					}
-					
+
 					free( long_name );
-					
+
 				}
 				else
 				{
@@ -947,7 +947,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 					{
 						wchar_t *long_name = make_path( base_dir, name );
 						int skip = 0;
-						
+
 						if( is_recursive )
 						{
 							/*
@@ -959,9 +959,9 @@ static int wildcard_expand_internal( const wchar_t *wc,
 							if( !wstat( long_name, &buf ) )
 							{
 								skip = S_ISDIR(buf.st_mode);
-							}							
+							}
 						}
-						
+
 						if( skip )
 						{
 							free( long_name );
@@ -983,7 +983,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		  Wilcard segment is not the last segment.  Recursively call
 		  wildcard_expand for all matching subdirectories.
 		*/
-		
+
 		/*
 		  wc_str is the part of the wildcarded string from the
 		  beginning to the first slash
@@ -1010,17 +1010,17 @@ static int wildcard_expand_internal( const wchar_t *wc,
 
 		if( narrow_dir_string )
 		{
-			/* 
+			/*
 			   Find out how long the filename can be in a worst case
 			   scenario
 			*/
-			ln = pathconf( narrow_dir_string, _PC_NAME_MAX ); 
+			ln = pathconf( narrow_dir_string, _PC_NAME_MAX );
 
 			/*
 			  If not specified, use som large number as fallback
 			*/
 			if( ln < 0 )
-				ln = MAX_FILE_LENGTH;		
+				ln = MAX_FILE_LENGTH;
 			free( narrow_dir_string );
 		}
 		new_dir= malloc( sizeof(wchar_t)*(base_len+ln+2)  );
@@ -1033,19 +1033,19 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		}
 
 		wcscpy( new_dir, base_dir );
-		
+
 		while( (next=wreaddir(dir))!=0 )
 		{
 			wchar_t *name = next->d_name;
-			
+
 			/*
 			  Test if the file/directory name matches the whole
 			  wildcard element, i.e. regular matching.
 			*/
 			int whole_match = wildcard_match2( name, wc_str, 1 );
 			int partial_match = 0;
-			
-			/* 
+
+			/*
 			   If we are doing recursive matching, also check if this
 			   directory matches the part up to the recusrive
 			   wildcard, if so, then we can search all subdirectories
@@ -1057,24 +1057,24 @@ static int wildcard_expand_internal( const wchar_t *wc,
 				wchar_t *wc_sub = wcsndup( wc, end-wc+1);
 				partial_match = wildcard_match2( name, wc_sub, 1 );
 				free( wc_sub );
-			}			
+			}
 
 			if( whole_match || partial_match )
 			{
 				int new_len;
-				struct stat buf;			
+				struct stat buf;
 				char *dir_str;
 				int stat_res;
 				int new_res;
 
 				wcscpy(&new_dir[base_len], name );
 				dir_str = wcs2str( new_dir );
-				
+
 				if( dir_str )
 				{
 					stat_res = stat( dir_str, &buf );
 					free( dir_str );
-					
+
 					if( !stat_res )
 					{
 						if( S_ISDIR(buf.st_mode) )
@@ -1082,7 +1082,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 							new_len = wcslen( new_dir );
 							new_dir[new_len] = L'/';
 							new_dir[new_len+1] = L'\0';
-							
+
 							/*
 							  Regular matching
 							*/
@@ -1100,51 +1100,51 @@ static int wildcard_expand_internal( const wchar_t *wc,
 										new_wc++;
 									}
 								}
-								
+
 								new_res = wildcard_expand_internal( new_wc,
-																	new_dir, 
-																	flags, 
+																	new_dir,
+																	flags,
 																	out );
 
 								if( new_res == -1 )
 								{
 									res = -1;
 									break;
-								}								
+								}
 								res |= new_res;
-								
+
 							}
-							
+
 							/*
 							  Recursive matching
 							*/
 							if( partial_match )
 							{
-								
-								new_res = wildcard_expand_internal( wcschr( wc, ANY_STRING_RECURSIVE ), 
+
+								new_res = wildcard_expand_internal( wcschr( wc, ANY_STRING_RECURSIVE ),
 																	new_dir,
-																	flags | WILDCARD_RECURSIVE, 
+																	flags | WILDCARD_RECURSIVE,
 																	out );
 
 								if( new_res == -1 )
 								{
 									res = -1;
 									break;
-								}								
+								}
 								res |= new_res;
-								
+
 							}
-						}								
+						}
 					}
 				}
 			}
 		}
-		
+
 		free( wc_str );
 		free( new_dir );
 	}
 	closedir( dir );
-	
+
 	if( flags & ACCEPT_INCOMPLETE )
 	{
 		sb_destroy( &sb_desc );
@@ -1154,7 +1154,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 }
 
 
-int wildcard_expand( const wchar_t *wc, 
+int wildcard_expand( const wchar_t *wc,
 					 const wchar_t *base_dir,
 					 int flags,
 					 array_list_t *out )
@@ -1162,41 +1162,41 @@ int wildcard_expand( const wchar_t *wc,
 	int c = al_get_count( out );
 	int res = wildcard_expand_internal( wc, base_dir, flags, out );
 	int i;
-			
+
 	if( flags & ACCEPT_INCOMPLETE )
 	{
 		wchar_t *wc_base=L"";
 		wchar_t *wc_base_ptr = wcsrchr( wc, L'/' );
 		string_buffer_t sb;
-		
+
 
 		if( wc_base_ptr )
 		{
 			wc_base = wcsndup( wc, (wc_base_ptr-wc)+1 );
 		}
-		
+
 		sb_init( &sb );
 
 		for( i=c; i<al_get_count( out ); i++ )
 		{
 			completion_t *c = al_get( out, i );
-			
+
 			if( c->flags & COMPLETE_NO_CASE )
 			{
 				sb_clear( &sb );
 				sb_printf( &sb, L"%ls%ls%ls", base_dir, wc_base, c->completion );
-				
+
 				c->completion = halloc_wcsdup( out, (wchar_t *)sb.buff );
 			}
 		}
-		
+
 		sb_destroy( &sb );
 
 		if( wc_base_ptr )
 		{
 			free( wc_base );
 		}
-		
+
 	}
 	return res;
 }

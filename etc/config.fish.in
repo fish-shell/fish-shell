@@ -39,7 +39,7 @@ if status --is-login
 end
 
 #
-# There are variables that contain colons that are not arrays. This 
+# There are variables that contain colons that are not arrays. This
 # reverts them back to regular strings.
 #
 

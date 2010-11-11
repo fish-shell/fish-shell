@@ -4,12 +4,12 @@
 
 # Test if we are using GNU sed
 
-set -l is_gnu 
+set -l is_gnu
 sed --version >/dev/null ^/dev/null; and set is_gnu --is-gnu
 
 # Shared ls switches
 
-__fish_gnu_complete -c sed -s n -l quiet --description "Silent mode" $is_gnu 
+__fish_gnu_complete -c sed -s n -l quiet --description "Silent mode" $is_gnu
 __fish_gnu_complete -c sed -s e -l expression -x --description "Evaluate expression" $is_gnu
 __fish_gnu_complete -c sed -s f -l file -r --description "Evalute file" $is_gnu
 __fish_gnu_complete -c sed -s i -l in-place --description "Edit files in place" $is_gnu

@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# 
+#
 # Fallback implementation of the seq command
 #
 # @configure_input@
@@ -46,7 +46,7 @@ for i in $from $step $to
 end
 
 if [ $step -ge 0 ]
-    echo "for( i=$from; i<=$to ; i+=$step ) i;" | bc 
+	echo "for( i=$from; i<=$to ; i+=$step ) i;" | bc
 else
-    echo "for( i=$from; i>=$to ; i+=$step ) i;" | bc 
+	echo "for( i=$from; i>=$to ; i+=$step ) i;" | bc
 end

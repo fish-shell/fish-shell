@@ -53,16 +53,16 @@ sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
 prefix = @prefix@
-optbindirs = @optbindirs@ 
+optbindirs = @optbindirs@
 
 #
 # Various flags
 #
 
-MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" 
-CFLAGS = @CFLAGS@ $(MACROS) 
-CPPFLAGS = @CPPFLAGS@ 
-LDFLAGS = @LIBS@ @LDFLAGS@ 
+MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
+CFLAGS = @CFLAGS@ $(MACROS) $(EXTRA_CFLAGS)
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LIBS@ @LDFLAGS@
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
 LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
 LDFLAGS_FISH_PAGER = ${LDFLAGS} @LIBS_FISH_PAGER@
@@ -158,7 +158,7 @@ HDR_FILES_SRC := doc_src/index.hdr.in doc_src/commands.hdr.in doc_src/design.hdr
 HDR_FILES := $(subst .hdr.in,.hdr,$(HDR_FILES_SRC))
 
 #
-# Files containing documentation for external commands. 
+# Files containing documentation for external commands.
 #
 
 HELP_SRC := $(wildcard doc_src/*.txt)
@@ -208,7 +208,7 @@ MAIN_DIR_FILES := $(sort $(MAIN_DIR_FILES_UNSORTED))
 # Files in ./etc/
 #
 
-ETC_DIR_FILES :=etc/config.fish.in	
+ETC_DIR_FILES :=etc/config.fish.in
 
 
 #
@@ -245,7 +245,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 #
 
 SIMPLE_PROGRAMS := fish set_color mimedb fish_pager fishd fish_indent
-PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL@ @SEQ_FALLBACK@ 
+PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@ @SEQ_FALLBACK@
 
 
 #
@@ -265,11 +265,18 @@ TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
 
 #
+# Extra util
+#
+
+XSEL := @XSEL@
+XSEL_BIN := @XSEL_BIN@
+
+#
 # Make everything needed for installing fish
 #
 
 all: $(PROGRAMS) user_doc share/man etc/config.fish share/config.fish $(TRANSLATIONS)
-	@echo fish has now been built. 
+	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
 
@@ -292,15 +299,18 @@ Makefile: Makefile.in configure
 #
 
 debug:
-	$(MAKE) fish CFLAGS="@CFLAGS@ $(MACROS) -O0 -Wno-unused -Werror -g"
+	$(MAKE) all EXTRA_CFLAGS="-O0 -Wno-unused -Werror -g"
 .PHONY: debug
 
+prof:
+	$(MAKE) all EXTRA_CFLAGS="-pg" LDFLAGS="-pg"
+.PHONY: prof
 
 #
 # User documentation, describing the features of the fish shell.
 #
 
-# Depend on the sources (*.hdr.in) and manually make the 
+# Depend on the sources (*.hdr.in) and manually make the
 # intermediate *.hdr and doc.h files if needed
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC)
@@ -313,19 +323,19 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC)
 # Source code documentation. Also includes user documentation.
 #
 
-doc: *.h *.c doc.h Doxyfile 
-	doxygen; 
+doc: *.h *.c doc.h Doxyfile
+	doxygen;
 
 
 #
 # PDF version of the source code documentation.
 #
 
-doc/refman.pdf: doc 
-	cd doc/latex; 
-	make; 
-	mv refman.pdf ..; 
-	cd ../..; 
+doc/refman.pdf: doc
+	cd doc/latex;
+	make;
+	mv refman.pdf ..;
+	cd ../..;
 	rm -r doc/latex;
 
 
@@ -342,11 +352,8 @@ test: $(PROGRAMS) fish_tests
 # Build the xsel program, which is maintained in its own tarball
 #
 
-xsel-0.9.6:
-	tar -xf xsel-0.9.6.tar
-
-xsel-0.9.6/xsel: xsel-0.9.6
-	cd xsel-0.9.6; ./configure && make || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
+$(XSEL_BIN):
+	$(MAKE) -C $(XSEL) || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 
 #
@@ -362,7 +369,7 @@ doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
 		echo >>command_list.tmp; \
 		echo >>command_list.tmp; \
 		echo "Back to <a href='index.html#toc-commands'>index</a>". >>command_list.tmp; \
-	done 
+	done
 	mv command_list.tmp command_list.txt
 	cat $@.in | awk '{if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
@@ -400,19 +407,19 @@ doc.h: $(HDR_FILES)
 #
 
 %.doxygen:%.txt
-	echo  "/** \page " `basename $*` >$@; 
-	cat $*.txt >>$@; 
+	echo  "/** \page " `basename $*` >$@;
+	cat $*.txt >>$@;
 	echo "*/" >>$@
 
-%: %.in 
+%: %.in
 	sed <$@.in >$@ \
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \
 		-e "s,@docdir\@,$(docdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
-		-e "s,@optbindirs\@,$(optbindirs),g" 
-#-e "s,@\@,$()," 
+		-e "s,@optbindirs\@,$(optbindirs),g"
+#-e "s,@\@,$(),"
 
 
 #
@@ -477,8 +484,8 @@ common.o: $(COMMON_FILES)
 # (__fish_print_help)
 #       ||
 #       \/
-#   formated text 
-#   with escape 
+#   formated text
+#   with escape
 #    sequences
 #
 #
@@ -500,7 +507,7 @@ share/man: $(HELP_SRC)
 	for i in $(HELP_SRC); do \
 		CMD_NAME=`basename $$i .txt`; \
 		sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <help_doc/man/man1/$$CMD_NAME.1 >share/man/$$CMD_NAME.1; \
-	done 
+	done
 	rm doc_src/*.doxygen   # Clean up intermediate files in doc_src/
 	rm -r help_doc         # Clean up intermediate help_doc tree
 
@@ -565,7 +572,7 @@ install: all install-sh check-uninstall install-force
 #
 
 install-force: all install-translations
-	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir) 
+	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
 	done;
@@ -595,7 +602,7 @@ install-force: all install-translations
 	for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
 	done;
-	@echo fish is now installed on your system. 
+	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.
 	@echo
 	@echo To use fish as your login shell:
@@ -652,7 +659,7 @@ uninstall-legacy: uninstall
 	-rmdir $(DESTDIR)$(sysconfdir)/fish.d/completions
 	-rmdir $(DESTDIR)$(sysconfdir)/fish.d
 	-rm $(DESTDIR)$(sysconfdir)/fish
-	@echo The previous fish installation has been removed. 
+	@echo The previous fish installation has been removed.
 .PHONY: uninstall-legacy
 
 install-translations: $(TRANSLATIONS)
@@ -665,7 +672,7 @@ install-translations: $(TRANSLATIONS)
 	fi;
 .PHONY: install-translations
 
-uninstall-translations: 
+uninstall-translations:
 	if test $(HAVE_GETTEXT) = 1; then \
 		for i in $(TRANSLATIONS_SRC); do \
 			rm -f $(DESTDIR)$(datadir)/locale/*/LC_MESSAGES/fish.mo; \
@@ -682,7 +689,7 @@ uninstall-translations:
 # Build the fish program.
 #
 
-fish: $(FISH_OBJS) fish.o 
+fish: $(FISH_OBJS) fish.o
 	$(CC) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
 
 
@@ -698,7 +705,7 @@ fish_pager: $(FISH_PAGER_OBJS)
 # Build the fishd program.
 #
 
-fishd: $(FISHD_OBJS) 
+fishd: $(FISHD_OBJS)
 	$(CC) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
 
 
@@ -756,7 +763,7 @@ key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_c
 # Update dependencies
 #
 depend:
-	makedepend -fMakefile.in -Y *.c 
+	makedepend -fMakefile.in -Y *.c
 	./config.status
 .PHONY: depend
 
@@ -765,7 +772,7 @@ depend:
 # an archive from it. Simplest way I could think of to make an archive
 # witout backups, autogenerated files, etc.
 #
-# Uses install instead of mkdir so build won't fail if the directory 
+# Uses install instead of mkdir so build won't fail if the directory
 # exists
 #
 
@@ -817,7 +824,7 @@ dist: fish-@PACKAGE_VERSION@.tar.bz2
 .PHONY: dist
 
 #
-# Build the RPM spec file. 
+# Build the RPM spec file.
 #
 
 fish.spec: fish.spec.in
@@ -854,9 +861,10 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 #
 
 distclean: clean
-	rm -f fish.spec Doxyfile.help 
+	rm -f fish.spec Doxyfile.help
 	rm -f etc/config.fish seq share/config.fish
 	rm -f config.status config.log config.h Makefile
+	rm -rf $(XSEL)
 .PHONY: distclean
 
 
@@ -868,15 +876,15 @@ distclean: clean
 clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.c doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
-	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader 
+	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader
 	rm -f share/config.fish etc/config.fish doc_src/index.hdr doc_src/commands.hdr
-	rm -f fish-@PACKAGE_VERSION@.tar 
-	rm -f fish-@PACKAGE_VERSION@.tar.gz 
+	rm -f fish-@PACKAGE_VERSION@.tar
+	rm -f fish-@PACKAGE_VERSION@.tar.gz
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2
-	rm -rf doc; 
+	rm -rf doc;
 	rm -rf fish-@PACKAGE_VERSION@
-	rm -rf xsel-0.9.6/
 	rm -f $(TRANSLATIONS)
+	-make -C $(XSEL) clean
 .PHONY: clean
 
 

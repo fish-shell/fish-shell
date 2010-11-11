@@ -14,9 +14,9 @@ function help --description "Show help for the fish shell"
 	set -l fish_browser_bg
 
 	set -l h syntax completion editor job-control todo bugs history killring help
-	set h $h color prompt title variables builtin-overview changes expand 
-	set h $h expand-variable expand-home expand-brace expand-wildcard 
-	set -l help_topics $h expand-command-substitution expand-process 
+	set h $h color prompt title variables builtin-overview changes expand
+	set h $h expand-variable expand-home expand-brace expand-wildcard
+	set -l help_topics $h expand-command-substitution expand-process
 
 	# 'help -h' should launch 'help help'
 	if count $argv >/dev/null

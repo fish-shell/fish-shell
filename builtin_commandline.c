@@ -1,6 +1,6 @@
 /** \file builtin_commandline.c Functions defining the commandline builtin
 
-Functions used for implementing the commandline builtin. 
+Functions used for implementing the commandline builtin.
 
 */
 #include "config.h"
@@ -96,20 +96,20 @@ static void replace_part( const wchar_t *begin,
 	const wchar_t *buff = get_buffer();
 	string_buffer_t out;
 	int out_pos=get_cursor_pos();
-					
+
 	sb_init( &out );
 
 	sb_append_substring( &out, buff, begin-buff );
-					
+
 	switch( append_mode)
 	{
 		case REPLACE_MODE:
 		{
-							
+
 			sb_append( &out, insert );
-			out_pos = wcslen( insert ) + (begin-buff);							
+			out_pos = wcslen( insert ) + (begin-buff);
 			break;
-							
+
 		}
 		case APPEND_MODE:
 		{
@@ -123,7 +123,7 @@ static void replace_part( const wchar_t *begin,
 			sb_append_substring( &out, begin, cursor );
 			sb_append( &out, insert );
 			sb_append_substring( &out, begin+cursor, end-begin-cursor );
-			out_pos +=  wcslen( insert );							
+			out_pos +=  wcslen( insert );
 			break;
 		}
 	}
@@ -131,7 +131,7 @@ static void replace_part( const wchar_t *begin,
 	reader_set_buffer( (wchar_t *)out.buff, out_pos );
 	sb_destroy( &out );
 }
-	
+
 /**
    Output the specified selection.
 
@@ -140,11 +140,11 @@ static void replace_part( const wchar_t *begin,
    \param cut_at_cursor whether printing should stop at the surrent cursor position
    \param tokenize whether the string should be tokenized, printing one string token on every line and skipping non-string tokens
 */
-static void write_part( const wchar_t *begin, 
-						const wchar_t *end, 
-						int cut_at_cursor, 
+static void write_part( const wchar_t *begin,
+						const wchar_t *end,
+						int cut_at_cursor,
 						int tokenize )
-{	
+{
 	tokenizer tok;
 	string_buffer_t out;
 	wchar_t *buff;
@@ -157,7 +157,7 @@ static void write_part( const wchar_t *begin,
 		buff = wcsndup( begin, end-begin );
 //		fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
 		sb_init( &out );
-					
+
 		for( tok_init( &tok, buff, TOK_ACCEPT_UNFINISHED );
 			 tok_has_next( &tok );
 			 tok_next( &tok ) )
@@ -165,7 +165,7 @@ static void write_part( const wchar_t *begin,
 			if( (cut_at_cursor) &&
 				(tok_get_pos( &tok)+wcslen(tok_last( &tok)) >= pos) )
 				break;
-		
+
 			switch( tok_last_type( &tok ) )
 			{
 				case TOK_STRING:
@@ -175,13 +175,13 @@ static void write_part( const wchar_t *begin,
 					free( tmp );
 					break;
 				}
-				
-			}						
+
+			}
 		}
 
 		sb_append( sb_out,
 				   (wchar_t *)out.buff );
-					
+
 		free( buff );
 		tok_destroy( &tok );
 		sb_destroy( &out );
@@ -189,10 +189,10 @@ static void write_part( const wchar_t *begin,
 	else
 	{
 		wchar_t *buff, *esc;
-		
+
 		if( cut_at_cursor )
 		{
-			end = begin+pos;			
+			end = begin+pos;
 		}
 
 		buff = wcsndup( begin, end-begin );
@@ -202,10 +202,10 @@ static void write_part( const wchar_t *begin,
 
 		sb_append( sb_out, esc );
 		sb_append( sb_out, L"\n" );
-		
+
 		free( esc );
 		free( buff );
-		
+
 	}
 }
 
@@ -219,14 +219,14 @@ static int builtin_commandline( wchar_t **argv )
 
 	int buffer_part=0;
 	int cut_at_cursor=0;
-	
+
 	int argc = builtin_count_args( argv );
 	int append_mode=0;
 
 	int function_mode = 0;
-	
-	int tokenize = 0;	
-	
+
+	int tokenize = 0;
+
 	int cursor_mode = 0;
 	int line_mode = 0;
 	int search_mode = 0;
@@ -254,7 +254,7 @@ static int builtin_commandline( wchar_t **argv )
 			*/
 			return 1;
 		}
-		
+
 		sb_append( sb_err,
 			    argv[0],
 			    L": Can not set commandline in non-interactive mode\n",
@@ -267,7 +267,7 @@ static int builtin_commandline( wchar_t **argv )
 
 	while( 1 )
 	{
-		const static struct woption
+		static const struct woption
 			long_options[] =
 			{
 				{
@@ -293,11 +293,11 @@ static int builtin_commandline( wchar_t **argv )
 				{
 					L"current-token", no_argument, 0, 't'
 				}
-				,		
+				,
 				{
 					L"current-buffer", no_argument, 0, 'b'
 				}
-				,		
+				,
 				{
 					L"cut-at-cursor", no_argument, 0, 'c'
 				}
@@ -314,7 +314,7 @@ static int builtin_commandline( wchar_t **argv )
 					L"help", no_argument, 0, 'h'
 				}
 				,
-				{					
+				{
 					L"input", required_argument, 0, 'I'
 				}
 				,
@@ -331,21 +331,21 @@ static int builtin_commandline( wchar_t **argv )
 				}
 				,
 				{
-					0, 0, 0, 0 
+					0, 0, 0, 0
 				}
 			}
-		;		
-		
+		;
+
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"abijpctwforhI:CLS", 
-								long_options, 
+								argv,
+								L"abijpctwforhI:CLS",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -358,7 +358,7 @@ static int builtin_commandline( wchar_t **argv )
 				builtin_print_help( argv[0], sb_err );
 
 				return 1;
-				
+
 			case L'a':
 				append_mode = APPEND_MODE;
 				break;
@@ -366,8 +366,8 @@ static int builtin_commandline( wchar_t **argv )
 			case L'b':
 				buffer_part = STRING_MODE;
 				break;
-				
-				
+
+
 			case L'i':
 				append_mode = INSERT_MODE;
 				break;
@@ -375,11 +375,11 @@ static int builtin_commandline( wchar_t **argv )
 			case L'r':
 				append_mode = REPLACE_MODE;
 				break;
-								
+
 			case 'c':
 				cut_at_cursor=1;
 				break;
-				
+
 			case 't':
 				buffer_part = TOKEN_MODE;
 				break;
@@ -404,33 +404,33 @@ static int builtin_commandline( wchar_t **argv )
 				current_buffer = woptarg;
 				current_cursor_pos = wcslen( woptarg );
 				break;
-				
+
 			case 'C':
 				cursor_mode = 1;
 				break;
-				
+
 			case 'L':
 				line_mode = 1;
 				break;
-				
+
 			case 'S':
 				search_mode = 1;
 				break;
-				
+
 			case 'h':
 				builtin_print_help( argv[0], sb_out );
 				return 0;
 
 			case L'?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );
-				return 1;	
+				return 1;
 		}
-	}		
+	}
 
 	if( function_mode )
 	{
 		int i;
-		
+
 		/*
 		  Check for invalid switch combinations
 		*/
@@ -439,18 +439,18 @@ static int builtin_commandline( wchar_t **argv )
 			sb_printf(sb_err,
 					  BUILTIN_ERR_COMBO,
 					  argv[0] );
-			
+
 			builtin_print_help( argv[0], sb_err );
 			return 1;
 		}
-		
+
 
 		if( argc == woptind )
 		{
 			sb_printf( sb_err,
 					   BUILTIN_ERR_MISSING,
 					   argv[0] );
-			
+
 			builtin_print_help( argv[0], sb_err );
 			return 1;
  		}
@@ -476,16 +476,16 @@ static int builtin_commandline( wchar_t **argv )
 				return 1;
 			}
 		}
-		
-		return 0;		
+
+		return 0;
 	}
-	
+
 	/*
 	  Check for invalid switch combinations
 	*/
 	if( (search_mode || line_mode || cursor_mode) && (argc-woptind > 1) )
 	{
-		
+
 		sb_append( sb_err,
 					argv[0],
 					L": Too many arguments\n",
@@ -495,15 +495,15 @@ static int builtin_commandline( wchar_t **argv )
 	}
 
 	if( (buffer_part || tokenize || cut_at_cursor) && (cursor_mode || line_mode || search_mode) )
-	{		
+	{
 		sb_printf( sb_err,
 				   BUILTIN_ERR_COMBO,
 				   argv[0] );
 
 		builtin_print_help( argv[0], sb_err );
 		return 1;
-	}		
-	
+	}
+
 
 	if( (tokenize || cut_at_cursor) && (argc-woptind) )
 	{
@@ -511,7 +511,7 @@ static int builtin_commandline( wchar_t **argv )
 				   BUILTIN_ERR_COMBO2,
 				   argv[0],
 				   L"--cut-at-cursor and --tokenize can not be used when setting the commandline" );
-		
+
 
 		builtin_print_help( argv[0], sb_err );
 		return 1;
@@ -524,7 +524,7 @@ static int builtin_commandline( wchar_t **argv )
                     argv[0],
 				   L"insertion mode switches can not be used when not in insertion mode" );
 
-        builtin_print_help( argv[0], sb_err );		
+        builtin_print_help( argv[0], sb_err );
         return 1;
 	}
 
@@ -535,7 +535,7 @@ static int builtin_commandline( wchar_t **argv )
 	{
 		append_mode = REPLACE_MODE;
 	}
-	
+
 	if( !buffer_part )
 	{
 		buffer_part = STRING_MODE;
@@ -548,7 +548,7 @@ static int builtin_commandline( wchar_t **argv )
 			wchar_t *endptr;
 			int new_pos;
 			errno = 0;
-			
+
 			new_pos = wcstol( argv[woptind], &endptr, 10 );
 			if( *endptr || errno )
 			{
@@ -558,7 +558,7 @@ static int builtin_commandline( wchar_t **argv )
 					   argv[woptind] );
 				builtin_print_help( argv[0], sb_err );
 			}
-			
+
 			current_buffer = reader_get_buffer();
 			new_pos = maxi( 0, mini( new_pos, wcslen( current_buffer ) ) );
 			reader_set_buffer( current_buffer, new_pos );
@@ -569,98 +569,98 @@ static int builtin_commandline( wchar_t **argv )
 			sb_printf( sb_out, L"%d\n", reader_get_cursor_pos() );
 			return 0;
 		}
-		
+
 	}
-	
+
 	if( line_mode )
 	{
 		int pos = reader_get_cursor_pos();
 		wchar_t *buff = reader_get_buffer();
 		sb_printf( sb_out, L"%d\n", parse_util_lineno( buff, pos ) );
 		return 0;
-			
+
 	}
-	
+
 	if( search_mode )
 	{
 		return !reader_search_mode();
 	}
-	
-		
+
+
 	switch( buffer_part )
 	{
 		case STRING_MODE:
-		{			
+		{
 			begin = get_buffer();
 			end = begin+wcslen(begin);
-			break;			
+			break;
 		}
 
 		case PROCESS_MODE:
 		{
 			parse_util_process_extent( get_buffer(),
 									   get_cursor_pos(),
-									   &begin, 
+									   &begin,
 									   &end );
 			break;
 		}
-		
+
 		case JOB_MODE:
 		{
 			parse_util_job_extent( get_buffer(),
 								   get_cursor_pos(),
 								   &begin,
-								   &end );					
-			break;			
+								   &end );
+			break;
 		}
-		
+
 		case TOKEN_MODE:
 		{
 			parse_util_token_extent( get_buffer(),
 									 get_cursor_pos(),
-									 &begin, 
-									 &end, 
+									 &begin,
+									 &end,
 									 0, 0 );
-			break;			
+			break;
 		}
-				
+
 	}
 
 	switch(argc-woptind)
 	{
 		case 0:
-		{					
+		{
 			write_part( begin, end, cut_at_cursor, tokenize );
 			break;
 		}
-		
+
 		case 1:
 		{
 			replace_part( begin, end, argv[woptind], append_mode );
 			break;
-		}		
+		}
 
 		default:
 		{
 			string_buffer_t sb;
 			int i;
-			
+
 			sb_init( &sb );
-			
+
 			sb_append( &sb, argv[woptind] );
-			
+
 			for( i=woptind+1; i<argc; i++ )
 			{
 				sb_append( &sb, L"\n" );
 				sb_append( &sb, argv[i] );
 			}
-			
+
 			replace_part( begin, end, (wchar_t *)sb.buff, append_mode );
 			sb_destroy( &sb );
-			
+
 			break;
-		}		
+		}
 	}
-	
+
 	return 0;
 }

@@ -3,7 +3,7 @@
 \subsection return-synopsis Synopsis
 <tt>function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end</tt>
 
-\subsection return-description Description 
+\subsection return-description Description
 
 The \c return builtin is used to halt a currently running function. It
 is usually added inside of a conditional block such as an <a

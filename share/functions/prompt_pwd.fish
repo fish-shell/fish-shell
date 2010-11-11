@@ -10,7 +10,7 @@ if test (uname) = Darwin
 	end
 else
 	function prompt_pwd --description "Print the current working directory, shortend to fit the prompt"
-		switch "$PWD" 
+		switch "$PWD"
 			case "$HOME"
 			echo '~'
 

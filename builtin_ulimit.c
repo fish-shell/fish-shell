@@ -1,6 +1,6 @@
 /** \file builtin_ulimit.c Functions defining the ulimit builtin
 
-Functions used for implementing the ulimit builtin. 
+Functions used for implementing the ulimit builtin.
 
 */
 #include "config.h"
@@ -38,18 +38,18 @@ struct resource_t
 	/**
 	   Switch used on commandline to specify resource
 	*/
-	wchar_t switch_char;	
+	wchar_t switch_char;
 	/**
 	   The implicit multiplier used when setting getting values
 	*/
-	int multiplier;	
+	int multiplier;
 }
 	;
 
 /**
    Array of resource_t structs, describing all known resource types.
 */
-const static struct resource_t resource_arr[] =
+static const struct resource_t resource_arr[] =
 {
 	{
 		RLIMIT_CORE, L"Maximum size of core files created", L'c', 1024
@@ -96,7 +96,7 @@ const static struct resource_t resource_arr[] =
 #ifdef RLIMIT_AS
 	{
 		RLIMIT_AS, L"Maximum amount of virtual memory available to the shell", L'v', 1024
-	}	
+	}
 	,
 #endif
 	{
@@ -111,7 +111,7 @@ const static struct resource_t resource_arr[] =
 static int get_multiplier( int what )
 {
 	int i;
-	
+
 	for( i=0; resource_arr[i].desc; i++ )
 	{
 		if( resource_arr[i].resource == what )
@@ -130,9 +130,9 @@ static int get_multiplier( int what )
 static rlim_t get( int resource, int hard )
 {
 	struct rlimit ls;
-	
+
 	getrlimit( resource, &ls );
-	
+
 	return hard ? ls.rlim_max:ls.rlim_cur;
 }
 
@@ -147,7 +147,7 @@ static void print( int resource, int hard )
 		sb_append( sb_out, L"unlimited\n" );
 	else
 		sb_printf( sb_out, L"%d\n", l / get_multiplier( resource ) );
-	
+
 }
 
 /**
@@ -157,12 +157,12 @@ static void print_all( int hard )
 {
 	int i;
 	int w=0;
-	
+
 	for( i=0; resource_arr[i].desc; i++ )
 	{
 		w=maxi( w, my_wcswidth(resource_arr[i].desc));
 	}
-	
+
 	for( i=0; resource_arr[i].desc; i++ )
 	{
 		struct rlimit ls;
@@ -171,14 +171,14 @@ static void print_all( int hard )
 		l = hard ? ls.rlim_max:ls.rlim_cur;
 
 		wchar_t *unit = ((resource_arr[i].resource==RLIMIT_CPU)?L"(seconds, ":(get_multiplier(resource_arr[i].resource)==1?L"(":L"(kB, "));
-		
+
 		sb_printf( sb_out,
-				   L"%-*ls %10ls-%lc) ", 
-				   w, 
-				   resource_arr[i].desc, 
+				   L"%-*ls %10ls-%lc) ",
+				   w,
+				   resource_arr[i].desc,
 				   unit,
 				   resource_arr[i].switch_char);
-		
+
 		if( l == RLIM_INFINITY )
 		{
 			sb_append( sb_out, L"unlimited\n" );
@@ -188,7 +188,7 @@ static void print_all( int hard )
 			sb_printf( sb_out, L"%d\n", l/get_multiplier(resource_arr[i].resource) );
 		}
 	}
-		
+
 }
 
 /**
@@ -197,7 +197,7 @@ static void print_all( int hard )
 static const wchar_t *get_desc( int what )
 {
 	int i;
-	
+
 	for( i=0; resource_arr[i].desc; i++ )
 	{
 		if( resource_arr[i].resource == what )
@@ -217,26 +217,26 @@ static int set( int resource, int hard, int soft, rlim_t value )
 {
 	struct rlimit ls;
 	getrlimit( resource, &ls );
-	
+
 	if( hard )
 	{
 		ls.rlim_max = value;
 	}
-	
+
 	if( soft )
 	{
 		ls.rlim_cur = value;
-		
+
 		/*
 		  Do not attempt to set the soft limit higher than the hard limit
 		*/
-		if( ( value == RLIM_INFINITY && ls.rlim_max != RLIM_INFINITY ) || 
+		if( ( value == RLIM_INFINITY && ls.rlim_max != RLIM_INFINITY ) ||
 			( value != RLIM_INFINITY && ls.rlim_max != RLIM_INFINITY && value > ls.rlim_max))
 		{
 			ls.rlim_cur = ls.rlim_max;
-		}		
+		}
 	}
-	
+
 	if( setrlimit( resource, &ls ) )
 	{
 		if( errno == EPERM )
@@ -244,8 +244,8 @@ static int set( int resource, int hard, int soft, rlim_t value )
 		else
 			builtin_wperror( L"ulimit" );
 		return 1;
-	}	
-	return 0;	
+	}
+	return 0;
 }
 
 /**
@@ -256,17 +256,17 @@ static int builtin_ulimit( wchar_t ** argv )
 {
 	int hard=0;
 	int soft=0;
-	
+
 	int what = RLIMIT_FSIZE;
 	int report_all = 0;
 
 	int argc = builtin_count_args( argv );
-	
+
 	woptind=0;
-	
+
 	while( 1 )
 	{
-		const static struct woption
+		static const struct woption
 			long_options[] =
 			{
 				{
@@ -321,27 +321,27 @@ static int builtin_ulimit( wchar_t ** argv )
 					L"virtual-memory-size", no_argument, 0, 'v'
 				}
 				,
-				{ 
-					L"help", no_argument, 0, 'h' 
-				} 
+				{
+					L"help", no_argument, 0, 'h'
+				}
 				,
 				{
-					0, 0, 0, 0 
+					0, 0, 0, 0
 				}
 			}
-		;		
-		
+		;
+
 
 		int opt_index = 0;
-		
+
 		int opt = wgetopt_long( argc,
-								argv, 
-								L"aHScdflmnstuvh", 
-								long_options, 
+								argv,
+								L"aHScdflmnstuvh",
+								long_options,
 								&opt_index );
 		if( opt == -1 )
 			break;
-			
+
 		switch( opt )
 		{
 			case 0:
@@ -354,7 +354,7 @@ static int builtin_ulimit( wchar_t ** argv )
 				builtin_print_help( argv[0], sb_err );
 
 				return 1;
-				
+
 			case L'a':
 				report_all=1;
 				break;
@@ -364,17 +364,17 @@ static int builtin_ulimit( wchar_t ** argv )
 				break;
 
 			case L'S':
-				soft=1;				
+				soft=1;
 				break;
 
 			case L'c':
 				what=RLIMIT_CORE;
 				break;
-				
+
 			case L'd':
 				what=RLIMIT_DATA;
 				break;
-				
+
 			case L'f':
 				what=RLIMIT_FSIZE;
 				break;
@@ -384,45 +384,45 @@ static int builtin_ulimit( wchar_t ** argv )
 				break;
 #endif
 
-#ifdef RLIMIT_RSS				
+#ifdef RLIMIT_RSS
 			case L'm':
 				what=RLIMIT_RSS;
 				break;
 #endif
-				
+
 			case L'n':
 				what=RLIMIT_NOFILE;
 				break;
-				
+
 			case L's':
 				what=RLIMIT_STACK;
 				break;
-				
+
 			case L't':
 				what=RLIMIT_CPU;
 				break;
-			
-#ifdef RLIMIT_NPROC	
+
+#ifdef RLIMIT_NPROC
 			case L'u':
 				what=RLIMIT_NPROC;
 				break;
 #endif
-				
-#ifdef RLIMIT_AS				
+
+#ifdef RLIMIT_AS
 			case L'v':
 				what=RLIMIT_AS;
 				break;
 #endif
-				
+
 			case L'h':
-				builtin_print_help( argv[0], sb_out );				
+				builtin_print_help( argv[0], sb_out );
 				return 0;
 
 			case L'?':
 				builtin_unknown_option( argv[0], argv[woptind-1] );
-				return 1;	
+				return 1;
 		}
-	}		
+	}
 
 	if( report_all )
 	{
@@ -442,7 +442,7 @@ static int builtin_ulimit( wchar_t ** argv )
 
 		return 0;
 	}
-	
+
 	switch( argc - woptind )
 	{
 		case 0:
@@ -453,7 +453,7 @@ static int builtin_ulimit( wchar_t ** argv )
 			print( what, hard );
 			break;
 		}
-		
+
 		case 1:
 		{
 			/*
@@ -469,7 +469,7 @@ static int builtin_ulimit( wchar_t ** argv )
 			{
 				hard=soft=1;
 			}
-			
+
 			if( wcscasecmp( argv[woptind], L"unlimited" )==0)
 			{
 				new_limit = RLIM_INFINITY;
@@ -484,23 +484,23 @@ static int builtin_ulimit( wchar_t ** argv )
 			}
 			else
 			{
-				errno=0;				
+				errno=0;
 				new_limit = wcstol( argv[woptind], &end, 10 );
 				if( errno || *end )
 				{
-					sb_printf( sb_err, 
-							   L"%ls: Invalid limit '%ls'\n", 
-							   argv[0], 
+					sb_printf( sb_err,
+							   L"%ls: Invalid limit '%ls'\n",
+							   argv[0],
 							   argv[woptind] );
 					builtin_print_help( argv[0], sb_err );
 					return 1;
 				}
 				new_limit *= get_multiplier( what );
 			}
-			
+
 			return set( what, hard, soft, new_limit );
 		}
-		
+
 		default:
 		{
 			sb_append( sb_err,
@@ -510,7 +510,7 @@ static int builtin_ulimit( wchar_t ** argv )
 			builtin_print_help( argv[0], sb_err );
 			return 1;
 		}
-		
+
 	}
-	return 0;	
+	return 0;
 }

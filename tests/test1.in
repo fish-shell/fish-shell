@@ -3,7 +3,7 @@
 #
 
 for i in 1 2 #Comment on same line as command
-#Comment inside loop 
+#Comment inside loop
     for j in a b
 		#Double loop
         echo $i$j
@@ -12,7 +12,7 @@ end
 
 # Simple alias tests
 
-function foo 
+function foo
     echo >foo.txt $argv
 end
 
@@ -26,16 +26,16 @@ else
   echo Test 2 fail
 end
 
-function foo 
+function foo
     printf 'Test %s' $1; echo ' pass'
 end
 
-foo 3 
+foo 3
 
 for i in Test for continue break and switch builtins problems;
 	switch $i
 		case Test
-			printf "%s " $i 
+			printf "%s " $i
 		case "f??"
 			printf "%s " 3
 		case "c*"

@@ -9,7 +9,7 @@ complete -c find -s L -o follow --description "Follow symlinks"
 complete -c find -s H --description "Do  not  follow symbolic links, except while processing the command line arguments"
 
 
-# General options 
+# General options
 
 complete -c find -o daystart --description "Measure from the beginning of today rather than  from  24  hours ago"
 complete -c find -s d -o depth --description "Process subdirectories before the directory itself"
@@ -36,8 +36,8 @@ complete -c find -o cmin --description "File status last changed specified numbe
 complete -c find -o cnewer --description "File status last changed more recently than file was modified" -r
 complete -c find -o ctime --description "File status last changed specified number of days ago" -r
 
-complete -c find -o empty --description "File is empty and is either a regular file or a directory" 
-complete -c find -o false --description "Always false" 
+complete -c find -o empty --description "File is empty and is either a regular file or a directory"
+complete -c find -o false --description "Always false"
 complete -c find -o fstype --description "File is on filesystem of specified type" -a "(__fish_print_filesystems)" -r
 complete -c find -o gid --description "Numeric group id of file" -r
 complete -c find -o group --description "Group name of file" -a "(__fish_complete_groups)"
@@ -99,7 +99,7 @@ complete -c find -o prune --description "Do not recurse unless -depth is specifi
 complete -c find -o quit --description "Exit at once"
 complete -c find -o ls --description "List file in ls -dils format" -r
 
-# Grouping 
+# Grouping
 
 complete -c find -o not --description "Negate result of action"
 complete -c find -o and -s a --description "Result is only true if both previous and next action are true"

@@ -99,7 +99,7 @@ static int set_child_group( job_t *j, process_t *p, int print_errors );
 
 static void exec_write_and_exit( int fd, char *buff, size_t count, int status )
 {
-	if( write_loop(fd, buff, count) == -1 ) 
+	if( write_loop(fd, buff, count) == -1 )
 	{
 		debug( 0, WRITE_ERROR);
 		wperror( L"write" );
@@ -118,7 +118,7 @@ void exec_close( int fd )
 		debug( 0, L"Called close on invalid file descriptor " );
 		return;
 	}
-	
+
 	while( close(fd) == -1 )
 	{
 		if( errno != EINTR )
@@ -128,7 +128,7 @@ void exec_close( int fd )
 			break;
 		}
 	}
-	
+
 	if( open_fds )
 	{
 		for( i=0; i<al_get_count( open_fds ); i++ )
@@ -139,7 +139,7 @@ void exec_close( int fd )
 				al_set_long( open_fds,
 					     i,
 					     al_get_long( open_fds, al_get_count( open_fds ) -1 ) );
-				al_truncate( open_fds, 
+				al_truncate( open_fds,
 					     al_get_count( open_fds ) -1 );
 				break;
 			}
@@ -150,7 +150,7 @@ void exec_close( int fd )
 int exec_pipe( int fd[2])
 {
 	int res;
-	
+
 	while( ( res=pipe( fd ) ) )
 	{
 		if( errno != EINTR )
@@ -158,18 +158,18 @@ int exec_pipe( int fd[2])
 			wperror(L"pipe");
 			return res;
 		}
-	}	
-	
+	}
+
 	debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
-	
+
 	if( open_fds == 0 )
 	{
 		open_fds = al_halloc( global_context );
 	}
-	
+
 	al_push_long( open_fds, (long)fd[0] );
-	al_push_long( open_fds, (long)fd[1] );		
-	
+	al_push_long( open_fds, (long)fd[1] );
+
 	return res;
 }
 
@@ -181,18 +181,18 @@ int exec_pipe( int fd[2])
    \param io the set of io redirections to search in
 */
 static int use_fd_in_pipe( int fd, io_data_t *io )
-{	
+{
 	if( !io )
 		return 0;
-	
-	if( ( io->io_mode == IO_BUFFER ) || 
+
+	if( ( io->io_mode == IO_BUFFER ) ||
 		( io->io_mode == IO_PIPE ) )
 	{
 		if( io->param1.pipe_fd[0] == fd ||
 			io->param1.pipe_fd[1] == fd )
 			return 1;
 	}
-		
+
 	return use_fd_in_pipe( fd, io->next );
 }
 
@@ -201,14 +201,14 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
    Close all fds in open_fds, except for those that are mentioned in
    the redirection list io. This should make sure that there are no
    stray opened file descriptors in the child.
-   
+
    \param io the list of io redirections for this job. Pipes mentioned
    here should not be closed.
 */
 static void close_unused_internal_pipes( io_data_t *io )
 {
 	int i=0;
-	
+
 	if( open_fds )
 	{
 		for( ;i<al_get_count( open_fds ); i++ )
@@ -225,13 +225,13 @@ static void close_unused_internal_pipes( io_data_t *io )
 }
 
 /**
-   Make sure the fd used by this redirection is not used by i.e. a pipe. 
+   Make sure the fd used by this redirection is not used by i.e. a pipe.
 */
 void free_fd( io_data_t *io, int fd )
 {
 	if( !io )
 		return;
-	
+
 	if( ( io->io_mode == IO_PIPE ) || ( io->io_mode == IO_BUFFER ) )
 	{
 		int i;
@@ -245,9 +245,9 @@ void free_fd( io_data_t *io, int fd )
 					{
 						 if( errno != EINTR )
 						{
-							debug( 1, 
+							debug( 1,
 								   FD_ERROR,
-								   fd );							
+								   fd );
 							wperror( L"dup" );
 							FATAL_EXIT();
 						}
@@ -292,11 +292,11 @@ static int handle_child_io( io_data_t *io )
 		if( io->fd > 2 )
 		{
 			/*
-			  Make sure the fd used by this redirection is not used by e.g. a pipe. 
+			  Make sure the fd used by this redirection is not used by e.g. a pipe.
 			*/
 			free_fd( io, io->fd );
 		}
-				
+
 		switch( io->io_mode )
 		{
 			case IO_CLOSE:
@@ -317,19 +317,19 @@ static int handle_child_io( io_data_t *io )
 					if( ( io->param2.flags & O_EXCL ) &&
 					    ( errno ==EEXIST ) )
 					{
-						debug( 1, 
+						debug( 1,
 						       NOCLOB_ERROR,
 						       io->param1.filename );
 					}
 					else
 					{
-						debug( 1, 
+						debug( 1,
 						       FILE_ERROR,
 						       io->param1.filename );
-										
+
 						wperror( L"open" );
 					}
-					
+
 					return -1;
 				}
 				else if( tmp != io->fd)
@@ -339,20 +339,20 @@ static int handle_child_io( io_data_t *io )
 					  this is just a precausion.
 					*/
 					close(io->fd);
-							
+
 					if(dup2( tmp, io->fd ) == -1 )
 					{
-						debug( 1, 
+						debug( 1,
 							   FD_ERROR,
 							   io->fd );
 						wperror( L"dup2" );
 						return -1;
 					}
 					exec_close( tmp );
-				}				
+				}
 				break;
 			}
-			
+
 			case IO_FD:
 			{
 				/*
@@ -363,7 +363,7 @@ static int handle_child_io( io_data_t *io )
 
 				if( dup2( io->param1.old_fd, io->fd ) == -1 )
 				{
-					debug( 1, 
+					debug( 1,
 						   FD_ERROR,
 						   io->fd );
 					wperror( L"dup2" );
@@ -371,17 +371,17 @@ static int handle_child_io( io_data_t *io )
 				}
 				break;
 			}
-			
+
 			case IO_BUFFER:
 			case IO_PIPE:
 			{
 				int write_pipe;
-				
+
 				write_pipe = !io->is_input;
 /*
 				debug( 0,
-					   L"%ls %ls on fd %d (%d %d)", 
-					   write_pipe?L"write":L"read", 
+					   L"%ls %ls on fd %d (%d %d)",
+					   write_pipe?L"write":L"read",
 					   (io->io_mode == IO_BUFFER)?L"buffer":L"pipe",
 					   io->fd,
 					   io->param1.pipe_fd[0],
@@ -394,7 +394,7 @@ static int handle_child_io( io_data_t *io )
 					return -1;
 				}
 
-				if( write_pipe ) 
+				if( write_pipe )
 				{
 					exec_close( io->param1.pipe_fd[0]);
 					exec_close( io->param1.pipe_fd[1]);
@@ -405,12 +405,12 @@ static int handle_child_io( io_data_t *io )
 				}
 				break;
 			}
-			
+
 		}
 	}
 
 	return 0;
-	
+
 }
 
 /**
@@ -432,13 +432,13 @@ static int handle_child_io( io_data_t *io )
 static int setup_child_process( job_t *j, process_t *p )
 {
 	int res=0;
-	
+
 	if( p )
 	{
 		res = set_child_group( j, p, 1 );
 	}
-	
-	if( !res )	
+
+	if( !res )
 	{
 		res = handle_child_io( j->io );
 		if( p != 0 && res )
@@ -446,18 +446,18 @@ static int setup_child_process( job_t *j, process_t *p )
 			exit( 1 );
 		}
 	}
-	
+
 	/* Set the handling for job control signals back to the default.  */
 	if( !res )
 	{
 		signal_reset_handlers();
 	}
-	
+
 	/* Remove all signal blocks */
-	signal_unblock();	
-	
+	signal_unblock();
+
 	return res;
-	
+
 }
 
 /**
@@ -484,9 +484,9 @@ static wchar_t *get_interpreter( wchar_t *file )
 			sb_append_char( &sb, (wchar_t)ch );
 		}
 	}
-	
+
 	res = (wchar_t *)sb.buff;
-	
+
 	if( !wcsncmp( L"#! /", res, 4 ) )
 		return res+3;
 	if( !wcsncmp( L"#!/", res, 3 ) )
@@ -494,7 +494,7 @@ static wchar_t *get_interpreter( wchar_t *file )
 	return 0;
 }
 
-								 
+
 /**
    This function is executed by the child process created by a call to
    fork(). It should be called after \c setup_child_process. It calls
@@ -505,19 +505,19 @@ static void launch_process( process_t *p )
 {
     FILE* f;
 	int err;
-	
+
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
 	char **argv = wcsv2strv( (const wchar_t **) p->argv);
 	char **envv = env_export_arr( 0 );
-	
-	execve ( wcs2str(p->actual_cmd), 
+
+	execve ( wcs2str(p->actual_cmd),
 		 argv,
 		 envv );
-	
+
 	err = errno;
-	
-	/* 
+
+	/*
 	   Something went wrong with execve, check for a ":", and run
 	   /bin/sh if encountered. This is a weird predecessor to the shebang
 	   that is still sometimes used since it is supported on Windows.
@@ -527,49 +527,49 @@ static void launch_process( process_t *p )
 	{
 		char begin[1] = {0};
 		size_t read;
-		
+
 		read = fread(begin, 1, 1, f);
 		fclose( f );
-		
+
 		if( (read==1) && (begin[0] == ':') )
 		{
 			int count = 0;
 			int i = 1;
 			wchar_t **res;
             char **res_real;
-			
+
 			while( p->argv[count] != 0 )
 				count++;
-			
+
 			res = malloc( sizeof(wchar_t*)*(count+2));
-			
+
 			res[0] = L"/bin/sh";
 			res[1] = p->actual_cmd;
-			
+
 			for( i=1;  p->argv[i]; i++ ){
 				res[i+1] = p->argv[i];
 			}
-			
+
 			res[i+1] = 0;
 			p->argv = res;
 			p->actual_cmd = L"/bin/sh";
 
 			res_real = wcsv2strv( (const wchar_t **) res);
-			
-			execve ( wcs2str(p->actual_cmd), 
+
+			execve ( wcs2str(p->actual_cmd),
 				 res_real,
 				 envv );
 		}
 	}
-	
+
 	errno = err;
-	debug( 0, 
+	debug( 0,
 	       _( L"Failed to execute process '%ls'. Reason:" ),
 	       p->actual_cmd );
-	
+
 	switch( errno )
 	{
-		
+
 		case E2BIG:
 		{
 			size_t sz = 0;
@@ -577,31 +577,31 @@ static void launch_process( process_t *p )
 
 			string_buffer_t sz1;
 			string_buffer_t sz2;
-			
+
 			long arg_max = -1;
-						
+
 			sb_init( &sz1 );
 			sb_init( &sz2 );
-						
+
 			for(p=argv; *p; p++)
 			{
 				sz += strlen(*p)+1;
 			}
-			
+
 			for(p=envv; *p; p++)
 			{
 				sz += strlen(*p)+1;
 			}
-			
+
 			sb_format_size( &sz1, sz );
 
 			arg_max = sysconf( _SC_ARG_MAX );
-			
+
 			if( arg_max > 0 )
 			{
-				
+
 				sb_format_size( &sz2, arg_max );
-				
+
 				debug( 0,
 				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit of %ls.",
 				       (wchar_t *)sz1.buff,
@@ -613,21 +613,21 @@ static void launch_process( process_t *p )
 				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit.",
 				       (wchar_t *)sz1.buff);
 			}
-			
-			debug( 0, 
+
+			debug( 0,
 			       L"Try running the command again with fewer arguments.");
 			sb_destroy( &sz1 );
 			sb_destroy( &sz2 );
-			
+
 			exit(STATUS_EXEC_FAIL);
-			
+
 			break;
 		}
 
 		case ENOEXEC:
 		{
 			wperror(L"exec");
-			
+
 			debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
 			exit(STATUS_EXEC_FAIL);
 		}
@@ -635,7 +635,7 @@ static void launch_process( process_t *p )
 		case ENOENT:
 		{
 			wchar_t *interpreter = get_interpreter( p->actual_cmd );
-			
+
 			if( interpreter && waccess( interpreter, X_OK ) )
 			{
 				debug(0, L"The file '%ls' specified the interpreter '%ls', which is not an executable command.", p->actual_cmd, interpreter );
@@ -644,7 +644,7 @@ static void launch_process( process_t *p )
 			{
 				debug(0, L"The file '%ls' or a script or ELF interpreter does not exist, or a shared library needed for file or interpreter cannot be found.", p->actual_cmd);
 			}
-			
+
 			exit(STATUS_EXEC_FAIL);
 		}
 
@@ -657,12 +657,12 @@ static void launch_process( process_t *p )
 		default:
 		{
 			wperror(L"exec");
-			
+
 			//		debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
 			exit(STATUS_EXEC_FAIL);
 		}
 	}
-	
+
 }
 
 
@@ -691,7 +691,7 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 		case IO_FILE:
 			exec_close( out->param1.old_fd );
 			break;
-	}	
+	}
 	free(out);
 }
 
@@ -711,16 +711,16 @@ static io_data_t *io_transmogrify( io_data_t * in )
 
 	if( !in )
 		return 0;
-	
+
 	out = malloc( sizeof( io_data_t ) );
 	if( !out )
 		DIE_MEM();
-	
+
 	out->fd = in->fd;
 	out->io_mode = IO_FD;
 	out->param2.close_old = 1;
 	out->next=0;
-		
+
 	switch( in->io_mode )
 	{
 		/*
@@ -741,23 +741,23 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		case IO_FILE:
 		{
 			int fd;
-			
+
 			if( (fd=wopen( in->param1.filename, in->param2.flags, OPEN_MASK ) )==-1 )
 			{
-				debug( 1, 
+				debug( 1,
 					   FILE_ERROR,
 					   in->param1.filename );
-								
+
 				wperror( L"open" );
 				free( out );
 				return 0;
-			}	
+			}
 
 			out->param1.old_fd = fd;
 			break;
 		}
 	}
-	
+
 	if( in->next)
 	{
 		out->next = io_transmogrify( in->next );
@@ -767,7 +767,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 			return 0;
 		}
 	}
-	
+
 	return out;
 }
 
@@ -780,14 +780,14 @@ static io_data_t *io_transmogrify( io_data_t * in )
    \param io the io redirections to be performed on this block
 */
 
-static void internal_exec_helper( const wchar_t *def, 
+static void internal_exec_helper( const wchar_t *def,
 								 int block_type,
 								 io_data_t *io )
 {
 	io_data_t *io_internal = io_transmogrify( io );
 	int is_block_old=is_block;
 	is_block=1;
-	
+
 	/*
 	  Did the transmogrification fail - if so, set error status and return
 	*/
@@ -796,13 +796,13 @@ static void internal_exec_helper( const wchar_t *def,
 		proc_set_last_status( STATUS_EXEC_FAIL );
 		return;
 	}
-	
+
 	signal_unblock();
-	
-	eval( def, io_internal, block_type );		
-	
+
+	eval( def, io_internal, block_type );
+
 	signal_block();
-	
+
 	io_untransmogrify( io, io_internal );
 	job_reap( 0 );
 	is_block=is_block_old;
@@ -818,24 +818,24 @@ static void internal_exec_helper( const wchar_t *def,
    exit. The parent process may safely ignore the exit status of this
    call.
 
-   Returns 0 on sucess, -1 on failiure. 
+   Returns 0 on sucess, -1 on failiure.
 */
 static int set_child_group( job_t *j, process_t *p, int print_errors )
 {
 	int res = 0;
-	
+
 	if( job_get_flag( j, JOB_CONTROL ) )
 	{
 		if (!j->pgid)
 		{
 			j->pgid = p->pid;
 		}
-		
+
 		if( setpgid (p->pid, j->pgid) )
 		{
 			if( getpgid( p->pid) != j->pgid && print_errors )
 			{
-				debug( 1, 
+				debug( 1,
 				       _( L"Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d" ),
 				       p->pid,
 				       p->argv[0],
@@ -858,8 +858,8 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 	{
 		if( tcsetpgrp (0, j->pgid) && print_errors )
 		{
-			debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
-				   j->job_id, 
+			debug( 1, _( L"Could not send job %d ('%ls') to foreground" ),
+				   j->job_id,
 				   j->command );
 			wperror( L"tcsetpgrp" );
 			res = -1;
@@ -880,7 +880,7 @@ static pid_t exec_fork()
 	pid_t pid;
 	struct timespec pollint;
 	int i;
-	
+
 	for( i=0; i<FORK_LAPS; i++ )
 	{
 		pid = fork();
@@ -888,7 +888,7 @@ static pid_t exec_fork()
 		{
 			return pid;
 		}
-		
+
 		if( errno != EAGAIN )
 		{
 			break;
@@ -906,7 +906,7 @@ static pid_t exec_fork()
 			nanosleep( &pollint, NULL );
 		}
 	}
-	
+
 	debug( 0, FORK_ERROR );
 	wperror (L"fork");
 	FATAL_EXIT();
@@ -928,7 +928,7 @@ static void do_builtin_io( wchar_t *out, wchar_t *err )
 			show_stackframe();
 		}
 	}
-	
+
 	if( err )
 	{
 		if( fwprintf( stderr, L"%ls", err ) == -1 || fflush( stderr ) == EOF )
@@ -939,8 +939,8 @@ static void do_builtin_io( wchar_t *out, wchar_t *err )
 			*/
 		}
 	}
-	
-} 
+
+}
 
 
 void exec( job_t *j )
@@ -948,9 +948,9 @@ void exec( job_t *j )
 	process_t *p;
 	pid_t pid;
 	int mypipe[2];
-	sigset_t chldset; 
+	sigset_t chldset;
 	int skip_fork;
-	
+
 	io_data_t pipe_read, pipe_write;
 	io_data_t *tmp;
 
@@ -964,19 +964,19 @@ void exec( job_t *j )
 
 	int needs_keepalive = 0;
 	process_t keepalive;
-	
+
 
 	CHECK( j, );
 	CHECK_BLOCK();
-	
+
 	if( no_exec )
 		return;
-	
+
 	sigemptyset( &chldset );
 	sigaddset( &chldset, SIGCHLD );
-	
-	debug( 4, L"Exec job '%ls' with id %d", j->command, j->job_id );	
-	
+
+	debug( 4, L"Exec job '%ls' with id %d", j->command, j->job_id );
+
 	if( block_io )
 	{
 		if( j->io )
@@ -985,16 +985,16 @@ void exec( job_t *j )
 		}
 		else
 		{
-			j->io=io_duplicate( j, block_io);				
+			j->io=io_duplicate( j, block_io);
 		}
 	}
 
-	
+
 	io_data_t *input_redirect;
 
 	for( input_redirect = j->io; input_redirect; input_redirect = input_redirect->next )
 	{
-		if( (input_redirect->io_mode == IO_BUFFER) && 
+		if( (input_redirect->io_mode == IO_BUFFER) &&
 			input_redirect->is_input )
 		{
 			/*
@@ -1010,7 +1010,7 @@ void exec( job_t *j )
 			break;
 		}
 	}
-	
+
 	if( j->first_process->type==INTERNAL_EXEC )
 	{
 		/*
@@ -1036,7 +1036,7 @@ void exec( job_t *j )
 			return;
 		}
 
-	}	
+	}
 
 	pipe_read.fd=0;
 	pipe_write.fd=1;
@@ -1050,9 +1050,9 @@ void exec( job_t *j )
 	pipe_read.next=0;
 	pipe_write.next=0;
 	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=-1;
-	
+
 	j->io = io_add( j->io, &pipe_write );
-	
+
 	signal_block();
 
 	/*
@@ -1064,7 +1064,7 @@ void exec( job_t *j )
 	  continuing in the pipeline, causing the group leader to
 	  exit.
 	*/
-	
+
 	if( job_get_flag( j, JOB_CONTROL ) )
 	{
 		for( p=j->first_process; p; p = p->next )
@@ -1081,12 +1081,12 @@ void exec( job_t *j )
 					needs_keepalive = 1;
 					break;
 				}
-				
+
 			}
-			
+
 		}
 	}
-		
+
 	if( needs_keepalive )
 	{
 		keepalive.pid = exec_fork();
@@ -1095,15 +1095,15 @@ void exec( job_t *j )
 		{
 			keepalive.pid = getpid();
 			set_child_group( j, &keepalive, 1 );
-			pause();			
+			pause();
 			exit(0);
 		}
 		else
 		{
-			set_child_group( j, &keepalive, 0 );			
+			set_child_group( j, &keepalive, 0 );
 		}
 	}
-	
+
 	/*
 	  This loop loops over every process_t in the job, starting it as
 	  appropriate. This turns out to be rather complex, since a
@@ -1116,13 +1116,13 @@ void exec( job_t *j )
 	{
 		mypipe[1]=-1;
 		skip_fork=0;
-		
+
 		pipe_write.fd = p->pipe_write_fd;
 		pipe_read.fd = p->pipe_read_fd;
 //		debug( 0, L"Pipe created from fd %d to fd %d", pipe_write.fd, pipe_read.fd );
-		
 
-		/* 
+
+		/*
 		   This call is used so the global environment variable array
 		   is regenerated, if needed, before the fork. That way, we
 		   avoid a lot of duplicate work where EVERY child would need
@@ -1133,21 +1133,21 @@ void exec( job_t *j )
 		*/
 		if( p->type == EXTERNAL )
 			env_export_arr( 1 );
-		
-		
+
+
 		/*
-		  Set up fd:s that will be used in the pipe 
+		  Set up fd:s that will be used in the pipe
 		*/
-		
+
 		if( p == j->first_process->next )
 		{
 			j->io = io_add( j->io, &pipe_read );
 		}
-		
+
 		if( p->next )
 		{
 //			debug( 1, L"%ls|%ls" , p->argv[0], p->next->argv[0]);
-			
+
 			if( exec_pipe( mypipe ) == -1 )
 			{
 				debug( 1, PIPE_ERROR );
@@ -1165,7 +1165,7 @@ void exec( job_t *j )
 			  Remove the io redirection for pipe output.
 			*/
 			j->io = io_remove( j->io, &pipe_write );
-			
+
 		}
 
 		switch( p->type )
@@ -1176,7 +1176,7 @@ void exec( job_t *j )
 				wchar_t * def=0;
 				array_list_t *named_arguments;
 				int shadows;
-				
+
 
 				/*
 				  Calls to function_get_definition might need to
@@ -1190,7 +1190,7 @@ void exec( job_t *j )
 				shadows = function_get_shadows( p->argv[0] );
 
 				signal_block();
-				
+
 				if( orig_def )
 				{
 					def = halloc_register( j, wcsdup(orig_def) );
@@ -1202,10 +1202,10 @@ void exec( job_t *j )
 				}
 
 				parser_push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
-				
+
 				current_block->param2.function_call_process = p;
 				current_block->param1.function_call_name = halloc_register( current_block, wcsdup( p->argv[0] ) );
-						
+
 
 				/*
 				  set_argv might trigger an event
@@ -1215,34 +1215,34 @@ void exec( job_t *j )
 				signal_unblock();
 				parse_util_set_argv( p->argv+1, named_arguments );
 				signal_block();
-								
+
 				parser_forbid_function( p->argv[0] );
 
 				if( p->next )
 				{
-					io_buffer = io_buffer_create( 0 );					
+					io_buffer = io_buffer_create( 0 );
 					j->io = io_add( j->io, io_buffer );
 				}
-				
+
 				internal_exec_helper( def, TOP, j->io );
-				
+
 				parser_allow_function();
 				parser_pop_block();
-				
-				break;				
+
+				break;
 			}
-			
+
 			case INTERNAL_BLOCK:
 			{
 				if( p->next )
 				{
-					io_buffer = io_buffer_create( 0 );					
+					io_buffer = io_buffer_create( 0 );
 					j->io = io_add( j->io, io_buffer );
 				}
-								
-				internal_exec_helper( p->argv[0], TOP, j->io );			
+
+				internal_exec_helper( p->argv[0], TOP, j->io );
 				break;
-				
+
 			}
 
 			case INTERNAL_BUILTIN:
@@ -1259,12 +1259,12 @@ void exec( job_t *j )
 				if( p == j->first_process )
 				{
 					io_data_t *in = io_get( j->io, 0 );
-					
+
 					if( in )
 					{
 						switch( in->io_mode )
 						{
-							
+
 							case IO_FD:
 							{
 								builtin_stdin = in->param1.old_fd;
@@ -1275,14 +1275,14 @@ void exec( job_t *j )
 								builtin_stdin = in->param1.pipe_fd[0];
 								break;
 							}
-							
+
 							case IO_FILE:
 							{
 								builtin_stdin=wopen( in->param1.filename,
                                               in->param2.flags, OPEN_MASK );
 								if( builtin_stdin == -1 )
 								{
-									debug( 1, 
+									debug( 1,
 										   FILE_ERROR,
 										   in->param1.filename );
 									wperror( L"open" );
@@ -1291,10 +1291,10 @@ void exec( job_t *j )
 								{
 									close_stdin = 1;
 								}
-								
+
 								break;
 							}
-	
+
 							case IO_CLOSE:
 							{
 								/*
@@ -1317,19 +1317,19 @@ void exec( job_t *j )
 								  handled?
 								 */
 								builtin_stdin = -1;
-								
+
 								break;
 							}
-							
+
 							default:
 							{
 								builtin_stdin=-1;
-								debug( 1, 
+								debug( 1,
 									   _( L"Unknown input redirection type %d" ),
 									   in->io_mode);
 								break;
 							}
-						
+
 						}
 					}
 				}
@@ -1348,7 +1348,7 @@ void exec( job_t *j )
 					int old_out = builtin_out_redirect;
 					int old_err = builtin_err_redirect;
 
-					/* 
+					/*
 					   Since this may be the foreground job, and since
 					   a builtin may execute another foreground job,
 					   we need to pretend to suspend this job while
@@ -1362,24 +1362,24 @@ void exec( job_t *j )
 					   walking the job list, but it seems more robust
 					   to make exec handle things.
 					*/
-					
+
 					builtin_push_io( builtin_stdin );
-					
+
 					builtin_out_redirect = has_fd( j->io, 1 );
-					builtin_err_redirect = has_fd( j->io, 2 );		
+					builtin_err_redirect = has_fd( j->io, 2 );
 
 					fg = job_get_flag( j, JOB_FOREGROUND );
 					job_set_flag( j, JOB_FOREGROUND, 0 );
-					
+
 					signal_unblock();
-					
+
 					p->status = builtin_run( p->argv, j->io );
-					
+
 					builtin_out_redirect=old_out;
 					builtin_err_redirect=old_err;
-					
+
 					signal_block();
-					
+
 					/*
 					  Restore the fg flag, which is temporarily set to
 					  false during builtin execution so as not to confuse
@@ -1387,7 +1387,7 @@ void exec( job_t *j )
 					*/
 					job_set_flag( j, JOB_FOREGROUND, fg );
 				}
-				
+
 				/*
 				  If stdin has been redirected, close the redirection
 				  stream.
@@ -1395,16 +1395,16 @@ void exec( job_t *j )
 				if( close_stdin )
 				{
 					exec_close( builtin_stdin );
-				}				
-				break;				
+				}
+				break;
 			}
 		}
-		
+
 		if( exec_error )
 		{
 			break;
 		}
-		
+
 		switch( p->type )
 		{
 
@@ -1412,7 +1412,7 @@ void exec( job_t *j )
 			case INTERNAL_FUNCTION:
 			{
 				int status = proc_get_last_status();
-						
+
 				/*
 				  Handle output from a block or function. This usually
 				  means do nothing, but in the case of pipes, we have
@@ -1434,39 +1434,39 @@ void exec( job_t *j )
 				}
 
 				j->io = io_remove( j->io, io_buffer );
-				
+
 				io_buffer_read( io_buffer );
-				
+
 				if( io_buffer->param2.out_buffer->used != 0 )
 				{
 					pid = exec_fork();
 
 					if( pid == 0 )
 					{
-						
+
 						/*
 						  This is the child process. Write out the contents of the pipeline.
 						*/
 						p->pid = getpid();
 						setup_child_process( j, p );
 
-						exec_write_and_exit(io_buffer->fd, 
+						exec_write_and_exit(io_buffer->fd,
 											io_buffer->param2.out_buffer->buff,
 											io_buffer->param2.out_buffer->used,
 											status);
 					}
 					else
 					{
-						/* 
+						/*
 						   This is the parent process. Store away
 						   information on the child, and possibly give
 						   it control over the terminal.
 						*/
-						p->pid = pid;						
+						p->pid = pid;
 						set_child_group( j, p, 0 );
-												
-					}					
-					
+
+					}
+
 				}
 				else
 				{
@@ -1476,20 +1476,20 @@ void exec( job_t *j )
 					}
 					p->completed = 1;
 				}
-				
+
 				io_buffer_destroy( io_buffer );
-				
+
 				io_buffer=0;
 				break;
-				
+
 			}
 
 
 			case INTERNAL_BUFFER:
 			{
-		
+
 				pid = exec_fork();
-				
+
 				if( pid == 0 )
 				{
 					/*
@@ -1498,30 +1498,30 @@ void exec( job_t *j )
 					*/
 					p->pid = getpid();
 					setup_child_process( j, p );
-					
+
 					exec_write_and_exit( 1,
-										 input_redirect->param2.out_buffer->buff, 
+										 input_redirect->param2.out_buffer->buff,
 										 input_redirect->param2.out_buffer->used,
 										 0);
 				}
 				else
 				{
-					/* 
+					/*
 					   This is the parent process. Store away
 					   information on the child, and possibly give
 					   it control over the terminal.
 					*/
-					p->pid = pid;						
-					set_child_group( j, p, 0 );	
-				}	
+					p->pid = pid;
+					set_child_group( j, p, 0 );
+				}
 
-				break;				
+				break;
 			}
-			
+
 			case INTERNAL_BUILTIN:
 			{
 				int skip_fork;
-				
+
 				/*
 				  Handle output from builtin commands. In the general
 				  case, this means forking of a worker process, that
@@ -1539,7 +1539,7 @@ void exec( job_t *j )
 					( !sb_out->used ) &&
 					( !sb_err->used ) &&
 					( !p->next );
-	
+
 				/*
 				  If the output of a builtin is to be sent to an internal
 				  buffer, there is no need to fork. This helps out the
@@ -1548,10 +1548,10 @@ void exec( job_t *j )
 
 				io_data_t *io = io_get( j->io, 1 );
 				int buffer_stdout = io && io->io_mode == IO_BUFFER;
-				
-				if( ( !sb_err->used ) && 
+
+				if( ( !sb_err->used ) &&
 					( !p->next ) &&
-					( sb_out->used ) && 
+					( sb_out->used ) &&
 					( buffer_stdout ) )
 				{
 					char *res = wcs2str( (wchar_t *)sb_out->buff );
@@ -1567,14 +1567,14 @@ void exec( job_t *j )
 						skip_fork = 0;
 					}
 				}
-				
+
 				if( skip_fork )
 				{
 					p->completed=1;
 					if( p->next == 0 )
 					{
 						debug( 3, L"Set status of %ls to %d using short circut", j->command, p->status );
-						
+
 						int status = proc_format_status(p->status);
 						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!status):status );
 					}
@@ -1584,7 +1584,7 @@ void exec( job_t *j )
 				/*
 				  Ok, unfortunatly, we have to do a real fork. Bummer.
 				*/
-								
+
 				pid = exec_fork();
 				if( pid == 0 )
 				{
@@ -1597,45 +1597,45 @@ void exec( job_t *j )
 					p->pid = getpid();
 					setup_child_process( j, p );
 					do_builtin_io( sb_out->used ? (wchar_t *)sb_out->buff : 0, sb_err->used ? (wchar_t *)sb_err->buff : 0 );
-					
+
 					exit( p->status );
-						
+
 				}
 				else
 				{
-					/* 
+					/*
 					   This is the parent process. Store away
 					   information on the child, and possibly give
 					   it control over the terminal.
 					*/
 					p->pid = pid;
-						
+
 					set_child_group( j, p, 0 );
-										
-				}					
-				
+
+				}
+
 				break;
 			}
-			
+
 			case EXTERNAL:
 			{
 				pid = exec_fork();
 				if( pid == 0 )
 				{
 					/*
-					  This is the child process. 
+					  This is the child process.
 					*/
 					p->pid = getpid();
 					setup_child_process( j, p );
 					launch_process( p );
-					
+
 					/*
 					  launch_process _never_ returns...
 					*/
 				}
 				else
 				{
-					/* 
+					/*
 					   This is the parent process. Store away
 					   information on the child, and possibly fice
 					   it control over the terminal.
@@ -1643,30 +1643,30 @@ void exec( job_t *j )
 					p->pid = pid;
 
 					set_child_group( j, p, 0 );
-															
+
 				}
 				break;
 			}
-			
+
 		}
 
 		if( p->type == INTERNAL_BUILTIN )
 			builtin_pop_io();
-				
-		/* 
+
+		/*
 		   Close the pipe the current process uses to read from the
 		   previous process_t
 		*/
 		if( pipe_read.param1.pipe_fd[0] >= 0 )
 			exec_close( pipe_read.param1.pipe_fd[0] );
-		/* 
+		/*
 		   Set up the pipe the next process uses to read from the
 		   current process_t
 		*/
 		if( p->next )
 			pipe_read.param1.pipe_fd[0] = mypipe[0];
-		
-		/* 
+
+		/*
 		   If there is a next process in the pipeline, close the
 		   output end of the current pipe (the surrent child
 		   subprocess already has a copy of the pipe - this makes sure
@@ -1676,7 +1676,7 @@ void exec( job_t *j )
 		if( p->next )
 		{
 			exec_close(mypipe[1]);
-		}		
+		}
 	}
 
 	/*
@@ -1687,8 +1687,8 @@ void exec( job_t *j )
 	{
 		kill( keepalive.pid, SIGKILL );
 	}
-	
-	signal_unblock();	
+
+	signal_unblock();
 
 	debug( 3, L"Job is constructed" );
 
@@ -1696,7 +1696,7 @@ void exec( job_t *j )
 
 	for( tmp = block_io; tmp; tmp=tmp->next )
 		j->io = io_remove( j->io, tmp );
-	
+
 	job_set_flag( j, JOB_CONSTRUCTED, 1 );
 
 	if( !job_get_flag( j, JOB_FOREGROUND ) )
@@ -1708,10 +1708,10 @@ void exec( job_t *j )
 	{
 		job_continue (j, 0);
 	}
-	
+
 }
 
-int exec_subshell( const wchar_t *cmd, 
+int exec_subshell( const wchar_t *cmd,
 				   array_list_t *lst )
 {
 	char *begin, *end;
@@ -1721,7 +1721,7 @@ int exec_subshell( const wchar_t *cmd,
 	io_data_t *io_buffer;
 	const wchar_t *ifs;
 	char sep=0;
-	
+
 	CHECK( cmd, -1 );
 
 	ifs = env_get(L"IFS");
@@ -1737,14 +1737,14 @@ int exec_subshell( const wchar_t *cmd,
 			sep = 0;
 			debug( 0, L"Warning - invalid command substitution separator '%lc'. Please change the firsta character of IFS", ifs[0] );
 		}
-		
+
 	}
-	
-	is_subshell=1;	
+
+	is_subshell=1;
 	io_buffer= io_buffer_create( 0 );
-	
+
 	prev_status = proc_get_last_status();
-	
+
 	if( eval( cmd, io_buffer, SUBST ) )
 	{
 		status = -1;
@@ -1753,16 +1753,16 @@ int exec_subshell( const wchar_t *cmd,
 	{
 		status = proc_get_last_status();
 	}
-	
+
 	io_buffer_read( io_buffer );
-		
+
 	proc_set_last_status( prev_status );
-	
+
 	is_subshell = prev_subshell;
-	
+
 	b_append( io_buffer->param2.out_buffer, &z, 1 );
-	
-	begin=end=io_buffer->param2.out_buffer->buff;	
+
+	begin=end=io_buffer->param2.out_buffer->buff;
 
 	if( lst )
 	{
@@ -1781,9 +1781,9 @@ int exec_subshell( const wchar_t *cmd,
 					{
 						debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
 					}
-				}				
+				}
 				io_buffer_destroy( io_buffer );
-				
+
 				return status;
 			}
 			else if( *end == sep )
@@ -1804,8 +1804,8 @@ int exec_subshell( const wchar_t *cmd,
 			end++;
 		}
 	}
-	
+
 	io_buffer_destroy( io_buffer );
 
-	return status;	
+	return status;
 }

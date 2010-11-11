@@ -3,7 +3,7 @@
 \subsection prevd-synopsis Synopsis
 <tt>prevd [-l | --list] [pos]</tt>
 
-\subsection prevd-description Description 
+\subsection prevd-description Description
 
 <tt>prevd</tt> moves backwards <tt>pos</tt> positions in the history
 of visited directories; if the beginning of the history has been hit,

@@ -5,7 +5,7 @@
 
 \subsection not-description Description
 
-The \c not builtin is used to negate the exit status of another command. 
+The \c not builtin is used to negate the exit status of another command.
 
 \subsection not-example Example
 

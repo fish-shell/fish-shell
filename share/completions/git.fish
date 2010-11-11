@@ -90,9 +90,9 @@ complete -c git -n '__fish_git_needs_command'    -a add -d 'Add file contents to
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'
-complete -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
-complete -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
-complete -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
+complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
+complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 # TODO options
 
 ### apply
@@ -117,7 +117,7 @@ complete -f -c git -n '__fish_git_using_command branch' -s M -d 'Force renaming 
 complete -f -c git -n '__fish_git_using_command branch' -s a -d 'Lists both local and remote branches'
 
 ### cherry-pick
-complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit' 
+complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches)' -d 'Branch'
 # TODO options
 
@@ -222,5 +222,12 @@ complete -f -c git -n '__fish_git_needs_command' -a config -d 'Set and read git 
 complete -f -c git -n '__fish_git_needs_command' -a format-patch -d 'Generate patch series to send upstream'
 complete -f -c git -n '__fish_git_using_command format-patch' -a '(__fish_git_branches)' -d 'Branch'
 
-### aliases (custom user-definer commands)
+## git submodule
+complete -f -c git -n '__fish_git_needs_command' -a submodule -d 'Initialize, update or inspect submodules'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'add status init update summary foreach sync' -d 'Make a GPG-signed tag'
+
+## git whatchanged
+complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'
+
+## Aliases (custom user-defined commands)
 complete -c git -n '__fish_git_needs_command' -a '(git config --get-regexp alias | sed -e "s/^alias\.\(\S\+\).*/\1/")' -d 'Alias (user-defined command)'

@@ -88,7 +88,7 @@ typedef struct
 {
 	const wchar_t *seq; /**< Character sequence which generates this event */
 	const wchar_t *command; /**< command that should be evaluated by this mapping */
-		
+
 }
 	input_mapping_t;
 
@@ -99,7 +99,7 @@ typedef struct
 {
 	const wchar_t *name; /**< Name of key */
 	const char *seq; /**< Character sequence generated on keypress */
-		
+
 }
 	terminfo_mapping_t;
 
@@ -107,7 +107,7 @@ typedef struct
 /**
    Names of all the input functions supported
 */
-static const wchar_t *name_arr[] = 
+static const wchar_t *name_arr[] =
 {
 	L"beginning-of-line",
 	L"end-of-line",
@@ -188,7 +188,7 @@ static const wchar_t *desc_arr[] =
 /**
    Internal code for each supported input function
 */
-static const wchar_t code_arr[] = 
+static const wchar_t code_arr[] =
 {
 	R_BEGINNING_OF_LINE,
 	R_END_OF_LINE,
@@ -230,7 +230,7 @@ static const wchar_t code_arr[] =
 /**
    Mappings for the current input mode
 */
-static array_list_t mappings = {0,0,0}; 
+static array_list_t mappings = {0,0,0};
 
 /**
    List of all terminfo mappings
@@ -239,7 +239,7 @@ static array_list_t *terminfo_mappings = 0;
 
 
 /**
-   Set to one when the input subsytem has been initialized. 
+   Set to one when the input subsytem has been initialized.
 */
 static int is_init = 0;
 
@@ -263,9 +263,9 @@ void input_mapping_add( const wchar_t *sequence,
 
 	CHECK( sequence, );
 	CHECK( command, );
-	
+
 	//	debug( 0, L"Add mapping from %ls to %ls", escape(sequence, 1), escape(command, 1 ) );
-	
+
 
 	for( i=0; i<al_get_count( &mappings); i++ )
 	{
@@ -276,12 +276,12 @@ void input_mapping_add( const wchar_t *sequence,
 			return;
 		}
 	}
-	
+
 	input_mapping_t *m = malloc( sizeof( input_mapping_t ) );
 	m->seq = intern( sequence );
 	m->command = intern(command);
-	al_push( &mappings, m );	
-	
+	al_push( &mappings, m );
+
 }
 
 /**
@@ -293,14 +293,14 @@ static int interrupt_handler()
 	/*
 	  Fire any pending events
 	*/
-	event_fire( 0 );	
-	
+	event_fire( NULL );
+
 	/*
 	  Reap stray processes, including printing exit status messages
 	*/
 	if( job_reap( 1 ) )
 		reader_repaint_needed();
-	
+
 	/*
 	  Tell the reader an event occured
 	*/
@@ -312,14 +312,14 @@ static int interrupt_handler()
 		return 3;
 	}
 
-	return R_NULL;	
+	return R_NULL;
 }
 
 int input_init()
 {
 	if( is_init )
 		return 1;
-	
+
 	is_init = 1;
 
 	input_common_init( &interrupt_handler );
@@ -330,7 +330,7 @@ int input_init()
 		exit(1);
 	}
 	output_set_term( env_get( L"TERM" ) );
-	
+
 	input_terminfo_init();
 
 	/*
@@ -353,22 +353,22 @@ void input_destroy()
 {
 	if( !is_init )
 		return;
-	
+
 
 	is_init=0;
-	
-	al_foreach( &mappings, &free );		
+
+	al_foreach( &mappings, &free );
 	al_destroy( &mappings );
 
 	input_common_destroy();
-	
+
 	if( del_curterm( cur_term ) == ERR )
 	{
 		debug( 0, _(L"Error while closing terminfo") );
 	}
 
 	input_terminfo_destroy();
-	
+
 }
 
 /**
@@ -378,7 +378,7 @@ static wint_t input_exec_binding( input_mapping_t *m, const wchar_t *seq )
 {
 	wchar_t code = input_function_get_code( m->command );
 	if( code != -1 )
-	{				
+	{
 		switch( code )
 		{
 
@@ -386,37 +386,37 @@ static wint_t input_exec_binding( input_mapping_t *m, const wchar_t *seq )
 			{
 				return seq[0];
 			}
-			
+
 			default:
 			{
 				return code;
 			}
-			
+
 		}
 	}
 	else
 	{
-		
+
 		/*
 		  This key sequence is bound to a command, which
 		  is sent to the parser for evaluation.
 		*/
 		int last_status = proc_get_last_status();
-	  		
+
 		eval( m->command, 0, TOP );
-		
+
 		proc_set_last_status( last_status );
-		
+
 		/*
 		  We still need to return something to the caller, R_NULL
-		  tells the reader that no key press needs to be handled, 
+		  tells the reader that no key press needs to be handled,
 		  and no repaint is needed.
 
 		  Bindings that produce output should emit a R_REPAINT
 		  function by calling 'commandline -f repaint' to tell
-		  fish that a repaint is in order. 
+		  fish that a repaint is in order.
 		*/
-		
+
 		return R_NULL;
 
 	}
@@ -441,14 +441,14 @@ static wint_t input_try_mapping( input_mapping_t *m)
 		return input_exec_binding( m, m->seq );
 	}
 	input_unreadch( c );
-	
+
 	if( m->seq != 0 )
 	{
 
-		for( j=0; m->seq[j] != L'\0' && 
+		for( j=0; m->seq[j] != L'\0' &&
 			     m->seq[j] == (c=input_common_readch( j>0 )); j++ )
 			;
-		
+
 		if( m->seq[j] == L'\0' )
 		{
 			return input_exec_binding( m, m->seq );
@@ -466,7 +466,7 @@ static wint_t input_try_mapping( input_mapping_t *m)
 		}
 	}
 	return 0;
-		
+
 }
 
 void input_unreadch( wint_t ch )
@@ -476,16 +476,16 @@ void input_unreadch( wint_t ch )
 
 wint_t input_readch()
 {
-	
+
 	int i;
 
 	CHECK_BLOCK( R_NULL );
-	
+
 	/*
 	  Clear the interrupted flag
 	*/
 	reader_interrupted();
-	
+
 	/*
 	  Search for sequence in mapping tables
 	*/
@@ -496,51 +496,51 @@ wint_t input_readch()
 		for( i=0; i<al_get_count( &mappings); i++ )
 		{
 			input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
-			wint_t res = input_try_mapping( m );		
+			wint_t res = input_try_mapping( m );
 			if( res )
 				return res;
-			
+
 			if( wcslen( m->seq) == 0 )
 			{
 				generic = m;
 			}
-			
+
 		}
-		
+
 		/*
 		  No matching exact mapping, try to find generic mapping.
 		*/
 
 		if( generic )
-		{	
+		{
 			wchar_t arr[2]=
 				{
-					0, 
+					0,
 					0
 				}
 			;
 			arr[0] = input_common_readch(0);
-			
-			return input_exec_binding( generic, arr );				
+
+			return input_exec_binding( generic, arr );
 		}
-				
+
 		/*
 		  No action to take on specified character, ignore it
 		  and move to next one.
 		*/
-		input_common_readch( 0 );	}	
+		input_common_readch( 0 );	}
 }
 
 void input_mapping_get_names( array_list_t *list )
 {
 	int i;
-	
+
 	for( i=0; i<al_get_count( &mappings ); i++ )
 	{
 		input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
 		al_push( list, m->seq );
 	}
-	
+
 }
 
 
@@ -549,7 +549,7 @@ int input_mapping_erase( const wchar_t *sequence )
 	int ok = 0;
 	int i;
 	size_t sz = al_get_count( &mappings );
-	
+
 	for( i=0; i<sz; i++ )
 	{
 		input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
@@ -561,24 +561,24 @@ int input_mapping_erase( const wchar_t *sequence )
 			}
 			al_truncate( &mappings, sz-1 );
 			ok = 1;
-			
+
 			free( m );
-			
+
 			break;
-			
+
 		}
-		
+
 	}
 
 	return ok;
-	
+
 }
 
 const wchar_t *input_mapping_get( const wchar_t *sequence )
 {
 	int i;
 	size_t sz = al_get_count( &mappings );
-	
+
 	for( i=0; i<sz; i++ )
 	{
 		input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
@@ -596,7 +596,7 @@ const wchar_t *input_mapping_get( const wchar_t *sequence )
 static void input_terminfo_init()
 {
 	terminfo_mappings = al_halloc( 0 );
-	
+
 
        TERMINFO_ADD(key_a1);
        TERMINFO_ADD(key_a3);
@@ -758,7 +758,7 @@ static void input_terminfo_init()
 
 static void input_terminfo_destroy()
 {
-	
+
 	if( terminfo_mappings )
 	{
 		halloc_free( terminfo_mappings );
@@ -768,17 +768,17 @@ static void input_terminfo_destroy()
 const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 {
 	const char *res = 0;
-	int i;	
+	int i;
 	static string_buffer_t *buff = 0;
 	int err = ENOENT;
-	
+
 	CHECK( name, 0 );
 	input_init();
-	
+
 	for( i=0; i<al_get_count( terminfo_mappings ); i++ )
 	{
 		terminfo_mapping_t *m = (terminfo_mapping_t *)al_get( terminfo_mappings, i );
-		
+
 		if( !wcscmp( name, m->name ) )
 		{
 			res = m->seq;
@@ -786,71 +786,71 @@ const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 			break;
 		}
 	}
-	
+
 	if( !res )
 	{
 		errno = err;
 		return 0;
 	}
-	
+
 	if( !buff )
 	{
 		buff = sb_halloc( global_context );
 	}
-	
+
 	sb_clear( buff );
 	sb_printf( buff, L"%s", res );
 
 	return (wchar_t *)buff->buff;
-		
+
 }
 
 const wchar_t *input_terminfo_get_name( const wchar_t *seq )
 {
-	int i;	
+	int i;
 	static string_buffer_t *buff = 0;
 
 	CHECK( seq, 0 );
 	input_init();
-		
+
 	if( !buff )
 	{
 		buff = sb_halloc( global_context );
 	}
-	
+
 	for( i=0; i<al_get_count( terminfo_mappings ); i++ )
 	{
 		terminfo_mapping_t *m = (terminfo_mapping_t *)al_get( terminfo_mappings, i );
-		
+
 		if( !m->seq )
 		{
 			continue;
 		}
-		
+
 		sb_clear( buff );
 		sb_printf( buff, L"%s", m->seq );
-		
+
 		if( !wcscmp( seq, (wchar_t *)buff->buff ) )
 		{
 			return m->name;
 		}
 	}
-	
+
 	return 0;
-	
+
 }
 
 void input_terminfo_get_names( array_list_t *lst, int skip_null )
 {
-	int i;	
+	int i;
 
 	CHECK( lst, );
 	input_init();
-		
+
 	for( i=0; i<al_get_count( terminfo_mappings ); i++ )
 	{
 		terminfo_mapping_t *m = (terminfo_mapping_t *)al_get( terminfo_mappings, i );
-		
+
 		if( skip_null && !m->seq )
 		{
 			continue;
@@ -861,10 +861,10 @@ void input_terminfo_get_names( array_list_t *lst, int skip_null )
 
 void input_function_get_names( array_list_t *lst )
 {
-	int i;	
+	int i;
 
 	CHECK( lst, );
-		
+
 	for( i=0; i<(sizeof(name_arr)/sizeof(wchar_t *)); i++ )
 	{
 		al_push( lst, name_arr[i] );
@@ -882,6 +882,6 @@ wchar_t input_function_get_code( const wchar_t *name )
 			return code_arr[i];
 		}
 	}
-	return -1;		
+	return -1;
 }
 

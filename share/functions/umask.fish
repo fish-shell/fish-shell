@@ -4,7 +4,7 @@ function __fish_umask_parse -d "Internal umask function"
 	if echo $argv | sgrep -E '^(0|)[0-7]{1,3}$' >/dev/null
 		set -l char_count (echo $argv| wc -c)
 		for i in (seq (math 5 - $char_count)); set argv 0$argv; end
-		echo $argv 
+		echo $argv
 	else
 		# Test if argument really is a valid symbolic mask
 		if not echo $argv | sgrep -E '^(((u|g|o|a|)(=|\+|-)|)(r|w|x)*)(,(((u|g|o|a|)(=|\+|-)|)(r|w|x)*))*$' >/dev/null
@@ -26,7 +26,7 @@ function __fish_umask_parse -d "Internal umask function"
 			set -l char_count (echo $tmp|cut -c 1)
 			set res[$i] (math 7 - $char_count)
 		end
-				
+
 		set -l el (echo $argv|tr , \n)
 		for i in $el
 			switch $i
@@ -54,15 +54,15 @@ function __fish_umask_parse -d "Internal umask function"
 			switch $i
 				case '=*'
 					set mode set
-					set i (echo $i| cut -c 2-) 
+					set i (echo $i| cut -c 2-)
 
 				case '+*'
 					set mode add
-					set i (echo $i| cut -c 2-) 
+					set i (echo $i| cut -c 2-)
 
 				case '-*'
 					set mode remove
-					set i (echo $i| cut -c 2-) 
+					set i (echo $i| cut -c 2-)
 
 				case '*'
 					if not count $implicit_all >/dev/null
@@ -120,7 +120,7 @@ function __fish_umask_print_symbolic
 		if contains $val 0 1 2 3
 			set res {$res}r
 		end
-	
+
 		if contains $val 0 1 4 5
 			set res {$res}w
 		end
@@ -161,7 +161,7 @@ function umask --description "Set default file permission mask"
 				return 0
 
 			case -p --as-command
-				set as_command 1				 
+				set as_command 1
 
 			case -S --symbolic
 				set symbolic 1

@@ -1,5 +1,5 @@
 #
-# Completions for the gpg command. 
+# Completions for the gpg command.
 #
 # This program accepts an rather large number of switches. It allows
 # you to do things like changing what file descriptor errors should be
@@ -22,7 +22,7 @@
 function __fish_complete_gpg_user_id -d "Complete using gpg user ids"
 	# gpg doesn't seem to like it when you use the whole key name as a
 	# completion, so we skip the <EMAIL> part and use it a s a
-	# description.	
+	# description.
 	gpg --list-keys --with-colon|cut -d : -f 10|sed -ne 's/\(.*\) <\(.*\)>/\1'\t'\2/p'
 end
 
@@ -49,7 +49,7 @@ complete -c gpg -s s -l sign --description "Make a signature"
 complete -c gpg -l clearsign --description "Make a clear text signature"
 complete -c gpg -s b -l detach-sign --description "Make a detached signature"
 complete -c gpg -s e -l encrypt --description "Encrypt data"
-complete -c gpg -s c -l symmetric --description "Encrypt with a symmetric cipher using a passphrase" 
+complete -c gpg -s c -l symmetric --description "Encrypt with a symmetric cipher using a passphrase"
 complete -c gpg -l store --description "Store only (make a simple RFC1991 packet)"
 complete -c gpg -l decrypt --description "Decrypt specified file or stdin"
 complete -c gpg -l verify --description "Assume specified file or stdin is sigfile and verify it"
@@ -76,7 +76,7 @@ complete -c gpg -l delete-key -xa "(__fish_complete_gpg_user_id)" --description 
 complete -c gpg -l delete-secret-key -xa "(__fish_complete_gpg_user_id)" --description "Remove key from the secret and public keyring"
 complete -c gpg -l delete-secret-and-public-key -xa "(__fish_complete_gpg_user_id)" --description "Same as --delete-key, but if a secret key exists, it will be removed first"
 
-complete -c gpg -l gen-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a revocation certificate for the complete key" 
+complete -c gpg -l gen-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a revocation certificate for the complete key"
 complete -c gpg -l desig-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a designated revocation certificate for a key"
 
 complete -c gpg -l export -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description 'Export all or the given keys from all keyrings'
@@ -91,7 +91,7 @@ complete -c gpg -l recv-keys -xa "(__fish_complete_gpg_key_id)" --description "I
 complete -c gpg -l refresh-keys -xa "(__fish_complete_gpg_key_id)" --description "Request updates from a keyserver for keys that already exist on the local keyring"
 complete -c gpg -l search-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" --description "Search the keyserver for the given names"
 complete -c gpg -l update-trustdb --description "Do trust database maintenance"
-complete -c gpg -l check-trustdb --description "Do trust database maintenance without user interaction" 
+complete -c gpg -l check-trustdb --description "Do trust database maintenance without user interaction"
 
 complete -c gpg -l export-ownertrust --description "Send the ownertrust values to stdout"
 complete -c gpg -l import-ownertrust --description "Update the trustdb with the ownertrust values stored in specified files or stdin"
@@ -137,7 +137,7 @@ complete -c gpg -l bzip2-decompress-lowmem --description "Use a different decomp
 complete -c gpg -s t -l textmode --description "Treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
 complete -c gpg -l no-textmode --description "Don't treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
 
-complete -c gpg -s n -l dry-run --description "Don't make any changes (this is not completely implemented)" 
+complete -c gpg -s n -l dry-run --description "Don't make any changes (this is not completely implemented)"
 
 complete -c gpg -s i -l interactive --description "Prompt before overwrite"
 
@@ -210,7 +210,7 @@ complete -c gpg -l sig-keyserver-url -x --description "Use specified URL as a pr
 complete -c gpg -l set-filename -x --description "Use specified string as the filename which is stored inside messages"
 
 complete -c gpg -l for-your-eyes-only --description "Set the 'for your eyes only' flag in the message"
-complete -c gpg -l no-for-your-eyes-only --description "Clear the 'for your eyes only' flag in the message" 
+complete -c gpg -l no-for-your-eyes-only --description "Clear the 'for your eyes only' flag in the message"
 
 complete -c gpg -l use-embedded-filename --description "Create file with name as given in data"
 complete -c gpg -l no-use-embedded-filename --description "Don't create file with name as given in data"

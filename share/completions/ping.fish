@@ -13,7 +13,7 @@ complete -c ping -s l --description "Send the specified number of packets withou
 complete -c ping -s L --description "Suppress loopback of multicast packets"
 complete -c ping -s n --description "Numeric output only"
 complete -c ping -s p --description "Pad packet with empty bytes" -x
-complete -c ping -s Q --description "Set Quality of Service -related bits in ICMP datagrams" -x 
+complete -c ping -s Q --description "Set Quality of Service -related bits in ICMP datagrams" -x
 complete -c ping -s q --description "Quiet mode"
 complete -c ping -s R --description "Record route"
 complete -c ping -s r --description "Bypass the normal routing tables and send directly to a host on an attached interface"

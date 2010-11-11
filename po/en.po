@@ -562,7 +562,7 @@ msgid "%ls: Values cannot be specfied with erase\n"
 msgstr "%ls: Values cannot be specfied with erase\n"
 
 #: common.c:1756
-#, 
+#,
 msgid "This is a bug. "
 msgstr "This is a bug. "
 
@@ -637,7 +637,7 @@ msgid "handler for generic event '%ls'"
 msgstr "handler for generic event “%ls”"
 
 #: event.c:264
-#, 
+#,
 msgid "Unknown event type"
 msgstr "Unknown event type"
 
@@ -791,7 +791,7 @@ msgid "Could not set up output file descriptors for pager"
 msgstr ""
 
 #: fish_pager.c:1047
-#, 
+#,
 msgid "Could not set up input file descriptors for pager"
 msgstr "Could not set up input file descriptors for pager"
 
@@ -817,7 +817,7 @@ msgid "Unspecified file descriptors"
 msgstr "Unspecified file descriptors"
 
 #: fish_pager.c:1359
-#, 
+#,
 msgid "Could not read completions"
 msgstr "Could not read completions"
 
@@ -2609,7 +2609,7 @@ msgid "Specify a dir"
 msgstr "Specify a dir"
 
 #: share/completions/apt-src.fish:19
-#, 
+#,
 msgid "Omit debian version"
 msgstr "Omit debian version"
 

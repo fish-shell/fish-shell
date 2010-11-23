@@ -1,5 +1,5 @@
 #
-#Test aliases loops and conditionals
+#Test aliases, loops, conditionals and some basic elements
 #
 
 for i in 1 2 #Comment on same line as command
@@ -51,3 +51,14 @@ for i in Test for continue break and switch builtins problems;
 	end
 end
 
+set -l sta
+if eval true
+	if eval false
+		set sta fail
+	else
+		set sta pass
+	end
+else
+	set sta fail
+end
+echo Test 4 $sta

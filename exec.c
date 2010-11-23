@@ -1575,7 +1575,7 @@ void exec( job_t *j )
 					{
 						debug( 3, L"Set status of %ls to %d using short circut", j->command, p->status );
 
-						int status = proc_format_status(p->status);
+						int status = p->status;
 						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!status):status );
 					}
 					break;

@@ -62,3 +62,14 @@ else
 	set sta fail
 end
 echo Test 4 $sta
+
+function test_builtin_status
+	return 1
+end
+test_builtin_status
+if [ $status -eq 1 ]
+	set sta pass
+else
+	set sta fail
+end
+echo Test 5 $sta

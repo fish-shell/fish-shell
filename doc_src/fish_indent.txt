@@ -1,4 +1,4 @@
-\section fish_indent fish_indent - indenter and prettyfier
+\section fish_indent fish_indent - indenter and prettifier
 
 \subsection fish_indent-synopsis Synopsis
  <tt>fish_indent [options]</tt>

@@ -6,7 +6,7 @@
 \subsection complete-description Description
 
 For an introduction to how to specify completions, see the section <a
-href='index.html#completions-own'>Writing your own completions</a> of
+href='index.html#completion-own'>Writing your own completions</a> of
 the fish manual.
 
 - <tt>COMMAND</tt> is the name of the command for which to add a completion

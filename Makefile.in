@@ -31,6 +31,8 @@
 # hallucinations.
 #
 
+# Used by docdir
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
 #
 # Programs
@@ -46,6 +48,7 @@ INSTALL:=@INSTALL@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
+datarootdir = @datarootdir@
 datadir = @datadir@
 bindir = @bindir@
 mandir = @mandir@

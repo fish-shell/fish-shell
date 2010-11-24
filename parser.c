@@ -2319,8 +2319,12 @@ static void eval_job( tokenizer *tok )
 			j = job_create();
 			job_set_flag( j, JOB_FOREGROUND, 1 );
 			job_set_flag( j, JOB_TERMINAL, job_get_flag( j, JOB_CONTROL ) );
-			job_set_flag( j, JOB_TERMINAL, job_get_flag( j, JOB_CONTROL ) && (!is_subshell && !is_event));
-			job_set_flag( j, JOB_SKIP_NOTIFICATION, is_subshell || is_block || is_event || (!is_interactive));
+			job_set_flag( j, JOB_TERMINAL, job_get_flag( j, JOB_CONTROL ) \
+							               && (!is_subshell && !is_event));
+			job_set_flag( j, JOB_SKIP_NOTIFICATION, is_subshell \
+							                        || is_block \
+													|| is_event \
+													|| (!is_interactive));
 
 			current_block->job = j;
 

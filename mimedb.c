@@ -214,7 +214,7 @@ static char * search_ini( const char *filename, const char *match )
 			buf[0]=0;
 			done = 1;
 		}
-		else if( strncmp( buf, match,len )==0)
+		else if( strncmp( buf, match, len ) == 0 && buf[len] == '=' )
 		{
 			done=1;
 		}
@@ -721,7 +721,7 @@ static char *get_action( const char *mimetype )
 
 	free( launcher_full );
 
-	launcher_command_str = search_ini( launcher_filename, "Exec=" );
+	launcher_command_str = search_ini( launcher_filename, "Exec" );
 
 	if( !launcher_command_str )
 	{

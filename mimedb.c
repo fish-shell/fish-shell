@@ -289,9 +289,15 @@ static char *file_exists( const char *dir, const char *in )
    Try to find the specified file in any of the possible directories
    where mime files can be located.  This code is shamelessly stolen
    from xdg_run_command_on_dirs.
+
+   \param list Full file paths will be appended to this list.
+   \param f The relative filename search for the the data directories.
+   \param all If zero, then stop after the first filename.
+   \return The number of filenames added to the list.
 */
-static char *get_filename( char *f )
+static int append_filenames( array_list_t *list, char *f, int all )
 {
+	int prev_count = al_get_count( list );
 	char *result;
 	const char *xdg_data_home;
 	const char *xdg_data_dirs;
@@ -301,8 +307,12 @@ static char *get_filename( char *f )
 	if (xdg_data_home)
     {
 		result = file_exists( xdg_data_home, f );
-		if (result)
-			return result;
+		if ( result )
+		{
+			al_push( list, result );
+			if ( !all )
+				return 1;
+		}
     }
 	else
     {
@@ -322,8 +332,12 @@ static char *get_filename( char *f )
 			result = file_exists( guessed_xdg_home, f );
 			free (guessed_xdg_home);
 
-			if (result)
-				return result;
+			if ( result )
+			{
+				al_push( list, result );
+				if ( !all )
+					return 1;
+			}
 		}
     }
 
@@ -349,10 +363,7 @@ static char *get_filename( char *f )
 			continue;
 		}
 
-		if (*end_ptr == ':')
-			len = end_ptr - ptr;
-		else
-			len = end_ptr - ptr + 1;
+		len = end_ptr - ptr;
 		dir = my_malloc (len + 1);
 		if( !dir )
 			return 0;
@@ -363,12 +374,32 @@ static char *get_filename( char *f )
 
 		free (dir);
 
-		if (result)
-			return result;
+		if ( result )
+		{
+			al_push( list, result );
+			if ( !all ) {
+				return 1;
+			}
+		}
 
 		ptr = end_ptr;
     }
-	return 0;
+	return al_get_count( list ) - prev_count;
+}
+
+/**
+   Find at most one file relative to the XDG data directories.
+*/
+static char *get_filename( char *f )
+{
+	array_list_t list;
+	char *first = NULL;
+
+	al_init( &list );
+	append_filenames( &list, f, 0 );
+	first = al_pop( &list );
+	al_destroy( &list );
+	return first;
 }
 
 /**
@@ -642,22 +673,32 @@ static char *get_description( const char *mimetype )
 static char *get_action( const char *mimetype )
 {
 	char *res=0;
+	int i;
 
 	char *launcher;
 	char *end;
-	char *mime_filename;
+	array_list_t mime_filenames;
 
-	char *launcher_str;
+	char *launcher_str = NULL;
 	char *launcher_filename, *launcher_command_str, *launcher_command;
 	char *launcher_full;
 
-	mime_filename = get_filename( DESKTOP_DEFAULT );
-	if( !mime_filename )
+	al_init( &mime_filenames );
+	if( !append_filenames( &mime_filenames, DESKTOP_DEFAULT, 1 ) )
+	{
+		al_destroy( &mime_filenames );
 		return 0;
+	}
 
-	launcher_str = search_ini( mime_filename, mimetype );
+	for ( i = 0; i < al_get_count( &mime_filenames ); i++ )
+	{
+		launcher_str = search_ini( al_get( &mime_filenames, i ), mimetype );
+		if ( launcher_str )
+			break;
+	}
 
-	free( mime_filename );
+	al_foreach( &mime_filenames, free );
+	al_destroy( &mime_filenames );
 
 	if( !launcher_str )
 	{

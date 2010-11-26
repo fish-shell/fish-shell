@@ -3871,7 +3871,7 @@ static int internal_help( wchar_t *cmd )
 {
 	CHECK( cmd, 0 );
 	return contains( cmd, L"for", L"while", L"function",
-			 L"if", L"end", L"switch" );
+			 L"if", L"end", L"switch", L"count" );
 }
 
 

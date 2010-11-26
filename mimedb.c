@@ -240,7 +240,9 @@ static char * search_ini( const char *filename, const char *match )
 */
 static char *file_exists( const char *dir, const char *in )
 {
-	char *filename = my_malloc( strlen( dir ) + strlen(in) + 1 );
+	int dir_len = strlen( dir );
+	int need_sep = dir[dir_len - 1] != '/';
+	char *filename = my_malloc( dir_len + need_sep + strlen( in ) + 1 );
 	char *replaceme;
 	struct stat buf;
 
@@ -251,7 +253,9 @@ static char *file_exists( const char *dir, const char *in )
 		return 0;
 	}
 	strcpy( filename, dir );
-	strcat( filename, in );
+	if ( need_sep )
+		filename[dir_len++] = '/';
+	strcpy( filename + dir_len, in );
 
 	if( !stat( filename, &buf ) )
 		return filename;
@@ -309,12 +313,12 @@ static char *get_filename( char *f )
 		{
 			char *guessed_xdg_home;
 
-			guessed_xdg_home = my_malloc (strlen (home) + strlen ("/.local/share/") + 1);
+			guessed_xdg_home = my_malloc (strlen (home) + strlen ("/.local/share") + 1);
 			if( !guessed_xdg_home )
 				return 0;
 
 			strcpy (guessed_xdg_home, home);
-			strcat (guessed_xdg_home, "/.local/share/");
+			strcat (guessed_xdg_home, "/.local/share");
 			result = file_exists( guessed_xdg_home, f );
 			free (guessed_xdg_home);
 
@@ -325,7 +329,7 @@ static char *get_filename( char *f )
 
 	xdg_data_dirs = getenv ("XDG_DATA_DIRS");
 	if (xdg_data_dirs == NULL)
-		xdg_data_dirs = "/usr/local/share/:/usr/share/";
+		xdg_data_dirs = "/usr/local/share:/usr/share";
 
 	ptr = xdg_data_dirs;
 

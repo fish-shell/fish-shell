@@ -144,7 +144,9 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 				}
 				else
 				{
-					sb_printf( out, L" %ls", last );
+					if ( prev_type != TOK_REDIRECT_FD )
+						sb_append( out, L" " );
+					sb_append( out, last );
 				}
 
 				break;
@@ -161,39 +163,60 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 
 			case TOK_PIPE:
 			{
-				sb_append( out, L" | " );
+				sb_append( out, L" " );
+				if ( last[0] == '2' && !last[1] ) {
+					sb_append( out, L"^" );
+				} else if ( last[0] != '1' || last[1] ) {
+					sb_append( out, last, L">" );
+				}
+				sb_append( out, L"| " );
 				is_command = 1;
 				break;
 			}
 
 			case TOK_REDIRECT_OUT:
-			case TOK_REDIRECT_APPEND:
-			case TOK_REDIRECT_IN:
-			case TOK_REDIRECT_FD:
 			{
-				sb_append( out, last );
-				switch( type )
-				{
-					case TOK_REDIRECT_OUT:
-						sb_append( out, L"> " );
-						break;
-
-					case TOK_REDIRECT_APPEND:
-						sb_append( out, L">> " );
-						break;
-
-					case TOK_REDIRECT_IN:
-						sb_append( out, L"< " );
-						break;
-
-					case TOK_REDIRECT_FD:
-						sb_append( out, L">& " );
-						break;
-
+				sb_append( out, L" " );
+				if ( wcscmp( last, L"2" ) == 0 ) {
+					sb_append( out, L"^" );
+				} else {
+					if ( wcscmp( last, L"1" ) != 0 )
+						sb_append( out, last );
+					sb_append( out, L">" );
 				}
 				break;
 			}
 
+			case TOK_REDIRECT_APPEND:
+			{
+				sb_append( out, L" " );
+				if ( wcscmp( last, L"2" ) == 0 ) {
+					sb_append( out, L"^^" );
+				} else {
+					if ( wcscmp( last, L"1" ) != 0 )
+						sb_append( out, last );
+					sb_append( out, L">>" );
+				}
+				break;
+			}
+
+			case TOK_REDIRECT_IN:
+			{
+				sb_append( out, L" " );
+				if ( wcscmp( last, L"0" ) != 0 )
+					sb_append( out, last );
+				sb_append( out, L"<" );
+				break;
+			}
+
+			case TOK_REDIRECT_FD:
+			{
+				sb_append( out, L" " );
+				if ( wcscmp( last, L"1" ) != 0 )
+					sb_append( out, last );
+				sb_append( out, L">&" );
+				break;
+			}
 
 			case TOK_BACKGROUND:
 			{
@@ -202,7 +225,6 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 				is_command = 1;
 				break;
 			}
-
 
 			case TOK_COMMENT:
 			{

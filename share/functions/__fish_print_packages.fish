@@ -46,9 +46,17 @@ function __fish_print_packages
 	# This completes the package name from the portage tree.
 	# True for installing new packages. Function for printing
 	# installed on the system packages is in completions/emerge.fish
-	if type -f emerge >/dev/null
-		emerge -s \^(commandline -tc) |sgrep "^*" |cut -d\  -f3 |cut -d/ -f2
+
+	# eix is MUCH faster than emerge so use it if it is available
+	if type -f eix > /dev/null
+		eix --only-names "^"(commandline -tc) | cut -d/ -f2
 		return
+	else
+		# FIXME?  Seems to be broken
+		if type -f emerge >/dev/null
+			emerge -s \^(commandline -tc) |sgrep "^*" |cut -d\  -f3 |cut -d/ -f2
+			return
+		end
 	end
 
 end

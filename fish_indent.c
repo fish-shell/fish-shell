@@ -132,7 +132,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 					}
 
 
-					if( do_indent && flags)
+					if( do_indent && flags && prev_type != TOK_PIPE )
 					{
 						insert_tabs( out, indent );
 					}

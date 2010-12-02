@@ -125,6 +125,11 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 					{
 						indent--;
 					}
+					/* case should have the same indent level as switch*/
+					else if( wcscmp( unesc, L"case" ) == 0 )
+					{
+						indent--;
+					}
 					else if( wcscmp( unesc, L"end" ) == 0 )
 					{
 						indent--;

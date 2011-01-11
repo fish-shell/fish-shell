@@ -4,11 +4,13 @@ function funcsave --description "Save the current definition of all specified fu
 	if count $argv >/dev/null
 		switch $argv[1]
 			case -h --h --he --hel --help
-				__fish_print_help save_function
+				__fish_print_help funcsave
 				return 0
 		end
 	else
-		__fish_print_help save_function
+		printf (_ "%s: Expected function name\n") funcsave
+		__fish_print_help funcsave
+		return 1
 	end
 
 	set -l res 0
@@ -21,7 +23,7 @@ function funcsave --description "Save the current definition of all specified fu
 	for i in $configdir $configdir/fish $configdir/fish/functions
 		if not test -d $i
 			if not command mkdir $i >/dev/null
-				printf (_ "%s: Could not create configuration directory\n") save_function
+				printf (_ "%s: Could not create configuration directory\n") funcsave
 				return 1
 			end
 		end
@@ -32,7 +34,7 @@ function funcsave --description "Save the current definition of all specified fu
 			functions $i > $configdir/fish/functions/$i.fish
 			functions -e $i
 		else
-			printf (_ "%s: Unknown function '%s'\n") save_function $i
+			printf (_ "%s: Unknown function '%s'\n") funcsave $i
 			set res 1
 		end
 	end

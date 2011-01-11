@@ -68,6 +68,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \e\x7f backward-kill-word
 	bind \eb backward-word
 	bind \ef forward-word
+	bind \e\[1\;5C forward-word
+	bind \e\[1\;5D backward-word
 	bind \ed forward-kill-word
 	bind -k ppage beginning-of-history
 	bind -k npage end-of-history

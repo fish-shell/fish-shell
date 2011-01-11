@@ -887,7 +887,7 @@ clean:
 	rm -rf doc;
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
-	-make -C $(XSEL) clean
+	test ! -d "$(XSEL)" || make -C $(XSEL) clean
 .PHONY: clean
 
 

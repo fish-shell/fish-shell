@@ -135,6 +135,10 @@ these characters, so called escape sequences are provided. These are:
 - <code>'\\\<'</code>, escapes the less than character
 - <code>'\\\>'</code>, escapes the more than character
 - <code>'\\^'</code>, escapes the circumflex character
+- <code>'\\&'</code>, escapes the ampersand character
+- <code>'\\;'</code>, escapes the semicolon character
+- <code>'\\"'</code>, escapes the quote character
+- <code>'\\''</code>, escapes the apostrophe character
 - <code>'\\x<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes the ascii character with the specified value. For example, \\x9 is the tab character.
 - <code>'\\X<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes a byte of data with the specified value. If you are using a mutibyte encoding, this can be used to enter invalid strings. Only use this if you know what you are doing.
 - <code>'\\<i>ooo</i>'</code>, where <code><i>ooo</i></code> is an octal number, escapes the ascii character with the specified value. For example, \\011 is the tab character.
@@ -620,9 +624,8 @@ The {$USER}san syntax might need a bit of an elaboration.  Posix
 shells allow you to specify a variable name using '$VARNAME' or
 '${VARNAME}'. Fish supports the former, and has no support whatsoever
 for the latter or anything like it. So what is '{$VARNAME}' then?
-Well, '{WHATEVER}' is <a href='#brace'>brace expansion</a>, identical
-to that supported by e.g. bash.  'a{b,c}d' -> 'abd acd' works
-both in bash and on fish. So '{$VARNAME}' is a bracket-expansion with
+Well, '{WHATEVER}' is <a href='#brace'>brace expansion</a>, e.g. 'a{b,c}d' -> 'abd acd'.
+So '{$VARNAME}' is a bracket-expansion with
 only a single element, i.e.  it becomes expanded to '$VARNAME', which
 will be variable expanded to the value of the variable 'VARNAME'. So
 you might think that the brackets don't actually do anything, and that
@@ -684,7 +687,7 @@ The \% (percent) character at the beginning of a parameter followed by
 a string is expanded into a process id. The following expansions are
 performed:
 
-- If the string is the entire word \c self, the shells pid is the result
+- If the string is the entire word \c self, the shells pid is the result.
 - Otherwise, if the string is the id of a job, the result is the process
 group id of the job.
 - Otherwise, if any child processes match the specified string, their

@@ -5,7 +5,7 @@ function __fish_git_branch_prompt
     return 0
   end
 
-  set branch (git-symbolic-ref HEAD 2>/dev/null| cut -d / -f 3)
+  set branch (git symbolic-ref HEAD 2>/dev/null| cut -d / -f 3)
 
   # check for rebase, bisect, etc
   # TODO

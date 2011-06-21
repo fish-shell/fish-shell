@@ -33,7 +33,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 			builtin cd $wd
 			eval builtin cd $i
 
-			eval printf '"%s\tDirectory in "'$i'"\n"' (commandline -ct)\*/
+			eval printf '"%s\tDirectory in "'$i'"\n"' '(commandline -ct)'\*/
 		end
 	end
 

@@ -18,7 +18,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 	end
 
 
-	if echo (commandline -ct)|sgrep '^/\|^\./\|^\.\./' >/dev/null
+	if echo '(commandline -ct)'|sgrep '^/\|^\./\|^\.\./' >/dev/null
 		# This is an absolute search path
 		eval printf '\%s\\tDirectory\\n' '(commandline -ct)'\*/
 	else

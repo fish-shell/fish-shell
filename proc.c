@@ -931,7 +931,7 @@ static int terminal_give_to_job( job_t *j, int cont )
 static int terminal_return_from_job( job_t *j)
 {
 
-	if( tcsetpgrp (0, getpid()) )
+	if( tcsetpgrp (0, getpgrp()) )
 	{
 		debug( 1, _( L"Could not return shell to foreground" ) );
 		wperror( L"tcsetpgrp" );

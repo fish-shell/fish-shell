@@ -1013,7 +1013,7 @@ static void completion_insert( const wchar_t *val, int flags )
 	if( do_replace )
 	{
 
-		int tok_start, tok_len;
+		int tok_start, tok_len, move_cursor;
 		wchar_t *begin, *end;
 		string_buffer_t sb;
 		wchar_t *escaped;
@@ -1031,22 +1031,25 @@ static void completion_insert( const wchar_t *val, int flags )
 		{
 			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 			sb_append( &sb, escaped );
+			move_cursor = wcslen(escaped);
 			free( escaped );
 		}
 		else
 		{
 			sb_append( &sb, val );
+			move_cursor = wcslen(val);
 		}
 
 
 		if( add_space )
 		{
 			sb_append( &sb, L" " );
+			move_cursor += 1;
 		}
 
 		sb_append( &sb, end );
 
-		reader_set_buffer( (wchar_t *)sb.buff, (begin-data->buff)+wcslen(val)+!!add_space );
+		reader_set_buffer( (wchar_t *)sb.buff, (begin-data->buff)+move_cursor );
 		sb_destroy( &sb );
 
 		reader_super_highlight_me_plenty( data->buff_pos, 0 );

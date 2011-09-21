@@ -4,8 +4,8 @@
 
 #####
 # Global options
-complete -c gem -n 'not __subcommand_given' -s h -l help -d "Print usage informations and quit"
-complete -c gem -n 'not __subcommand_given' -s v -l version -d "Print the version and quit"
+complete -c gem -n 'not __fish_use_subcommand' -s h -l help -d "Print usage informations and quit"
+complete -c gem -n 'not __fish_use_subcommand' -s v -l version -d "Print the version and quit"
 
 #####
 # Subcommands
@@ -31,7 +31,7 @@ complete -c gem -n '__fish_use_subcommand' -xa 'update\t"'(_ "Update the named g
 # Subcommand switches
 
 # common opts
-set -l common_opt -c gem -n 'not __fish_use_subcommand' #'__subcommand_given'
+set -l common_opt -c gem -n 'not __fish_use_subcommand'
 complete $common_opt -l source --description "Use URL as the remote source for gems" -x
 complete $common_opt -s p -l http-proxy --description "Use the given HTTP proxy for remote operations" -x
 complete $common_opt -l no-http-proxy --description "Use no HTTP proxy for remote operations"

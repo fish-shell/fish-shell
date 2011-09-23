@@ -15,9 +15,9 @@ complete -x -c ssh -d Hostname -a "
 "
 
 complete -x -c ssh -d User -a "
-
 (__fish_print_users)@
 "
+complete -c ssh --description "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'
 
 complete -c ssh -s a --description "Disables forwarding of the authentication agent"
 complete -c ssh -s A --description "Enables forwarding of the authentication agent"
@@ -46,3 +46,6 @@ complete -c ssh -s X --description "Enable X11 forwarding"
 complete -c ssh -s L --description "Locally forwarded ports"
 complete -c ssh -s R --description "Remotely forwarded ports"
 complete -c ssh -s D --description "Dynamic port forwarding"
+
+# Since ssh runs subcommands, it can accept any switches
+complete -c ssh -u

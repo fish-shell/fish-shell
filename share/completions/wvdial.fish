@@ -1,1 +1,1 @@
-complete -x -c wvdial -a "(print_wvdial)" --description "wvdial connections"
+complete -x -c wvdial -a "(cat ~/.wvdialrc | grep '\[Dialer' | sed 's/\[Dialer \(.\+\)\]/\1/')" --description "wvdial connections"

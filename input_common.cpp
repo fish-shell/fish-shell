@@ -25,6 +25,7 @@ Implementation file for the low level input library
 #include "wutil.h"
 #include "input_common.h"
 #include "env_universal.h"
+#include "iothread.h"
 
 /**
    Time in milliseconds to wait for another byte to be available for
@@ -69,21 +70,27 @@ static wint_t readb()
 	
 	do
 	{
-		fd_set fd;
-		int fd_max=1;
+		fd_set fdset;	
+		int fd_max=0;
+		int ioport = iothread_port();
 		int res;
 		
-		FD_ZERO( &fd );
-		FD_SET( 0, &fd );
+		FD_ZERO( &fdset );
+		FD_SET( 0, &fdset );
 		if( env_universal_server.fd > 0 )
 		{
-			FD_SET( env_universal_server.fd, &fd );
-			fd_max = env_universal_server.fd+1;
+			FD_SET( env_universal_server.fd, &fdset );
+			if (fd_max < env_universal_server.fd) fd_max = env_universal_server.fd;
 		}
+		if (ioport > 0) {
+			FD_SET( ioport, &fdset );
+			if (fd_max < ioport) fd_max = ioport;
+		}
+		
 		
 		do_loop = 0;			
 		
-		res = select( fd_max, &fd, 0, 0, 0 );
+		res = select( fd_max + 1, &fdset, 0, 0, 0 );
 		if( res==-1 )
 		{
 			switch( errno )
@@ -122,7 +129,7 @@ static wint_t readb()
 		{
 			if( env_universal_server.fd > 0 )
 			{
-				if( FD_ISSET( env_universal_server.fd, &fd ) )
+				if( FD_ISSET( env_universal_server.fd, &fdset ) )
 				{
 					debug( 3, L"Wake up on universal variable event" );					
 					env_universal_read_all();
@@ -134,7 +141,17 @@ static wint_t readb()
 					}
 				}				
 			}
-			if( FD_ISSET( 0, &fd ) )
+			
+			if ( ioport > 0 )
+			{
+				if (FD_ISSET(ioport, &fdset) )
+				{
+					iothread_service_completion();
+				}
+                do_loop = 1;
+			}
+			
+			if( FD_ISSET( 0, &fdset ) )
 			{
 				if( read_blocked( 0, arr, 1 ) != 1 )
 				{
@@ -151,7 +168,6 @@ static wint_t readb()
 	
 	return arr[0];
 }
-
 
 wchar_t input_common_readch( int timed )
 {

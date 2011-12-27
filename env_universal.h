@@ -17,7 +17,10 @@ extern connection_t env_universal_server;
 /**
    Initialize the envuni library
 */
-void env_universal_init();
+void env_universal_init( wchar_t * p, 
+                        wchar_t *u, 
+                        void (*sf)(),
+                        void (*cb)( int type, const wchar_t *name, const wchar_t *val ));
 /**
   Free memory used by envuni
 */
@@ -37,10 +40,10 @@ int env_universal_get_export( const wchar_t *name );
 /**
    Set the value of a universal variable
 */
-void env_universal_set( const wchar_t *name, const wchar_t *val, int export );
+void env_universal_set( const wchar_t *name, const wchar_t *val, int exportv );
 /**
    Erase a universal variable
-
+   
    \return zero if the variable existed, and non-zero if the variable did not exist
 */
 int env_universal_remove( const wchar_t *name );
@@ -52,7 +55,7 @@ int env_universal_read_all();
 
 /**
    Get the names of all universal variables
-
+   
    \param l the list to insert the names into
    \param show_exported whether exported variables should be shown
    \param show_unexported whether unexported variables should be shown

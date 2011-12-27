@@ -7,7 +7,7 @@
 	functions produce output or perform memory allocations, since
 	such functions may not be safely called by signal handlers.
 
-
+	
 */
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
@@ -44,7 +44,7 @@ enum
    - When used as a parameter to event_add, it represents a class of events, and function_name is the name of the function which will be called whenever an event matching the specified class occurs. This is also how events are stored internally.
    - When used as a parameter to event_get, event_remove and event_fire, it represents a class of events, and if the function_name field is non-zero, only events which call the specified function will be returned.
 */
-typedef struct
+typedef struct 
 {
 	/**
 	   Type of event
@@ -78,13 +78,13 @@ typedef struct
 		   The parameter describing this generic event
 		*/
 		const wchar_t *param;
-
+	
 	} param1;
 
 	/**
 	   The name of the event handler function
 	*/
-	const wchar_t *function_name;
+	const wchar_t *function_name;	
 
 	/**
 	   The argument list. Only used when sending a new event using
@@ -96,28 +96,28 @@ typedef struct
 	event_t;
 
 /**
-   Add an event handler
+   Add an event handler 
 
    May not be called by a signal handler, since it may allocate new memory.
 */
 void event_add_handler( event_t *event );
 
 /**
-   Remove all events matching the specified criterion.
+   Remove all events matching the specified criterion. 
 
    May not be called by a signal handler, since it may free allocated memory.
 */
 void event_remove( event_t *event );
 
 /**
-   Return all events which match the specified event class
+   Return all events which match the specified event class 
 
    This function is safe to call from a signal handler _ONLY_ if the
    out parameter is null.
 
    \param criterion Is the class of events to return. If the criterion has a non-null function_name, only events which trigger the specified function will return.
    \param out the list to add events to. May be 0, in which case no events will be added, but the result count will still be valid
-
+   
    \return the number of found matches
 */
 int event_get( event_t *criterion, array_list_t *out );
@@ -164,7 +164,7 @@ const wchar_t *event_get_desc( event_t *e );
 /**
    Fire a generic event with the specified name
 */
-#define event_fire_generic( ... ) event_fire_generic_internal( __VA_ARGS__, (void *)0 )
+#define event_fire_generic( ... ) event_fire_generic_internal( __VA_ARGS__, NULL )
 
 void event_fire_generic_internal(const wchar_t *name,...);
 

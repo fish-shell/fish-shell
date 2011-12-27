@@ -91,7 +91,7 @@ struct XdgMimeMagic
 static XdgMimeMagicMatch *
 _xdg_mime_magic_match_new (void)
 {
-  return calloc (1, sizeof (XdgMimeMagicMatch));
+  return (XdgMimeMagicMatch *)calloc (1, sizeof (XdgMimeMagicMatch));
 }
 
 
@@ -100,7 +100,7 @@ _xdg_mime_magic_matchlet_new (void)
 {
   XdgMimeMagicMatchlet *matchlet;
 
-  matchlet = malloc (sizeof (XdgMimeMagicMatchlet));
+  matchlet = (XdgMimeMagicMatchlet *)malloc (sizeof (XdgMimeMagicMatchlet));
 
   matchlet->indent = 0;
   matchlet->offset = 0;
@@ -166,7 +166,7 @@ _xdg_mime_magic_read_to_newline (FILE *magic_file,
 
   len = 128;
   pos = 0;
-  retval = malloc (len);
+  retval = (char *)malloc (len);
   *end_of_file = FALSE;
 
   while (TRUE)
@@ -183,7 +183,7 @@ _xdg_mime_magic_read_to_newline (FILE *magic_file,
       if (pos % 128 == 127)
 	{
 	  len = len + 128;
-	  retval = realloc (retval, len);
+	  retval = (char *)realloc (retval, len);
 	}
     }
 
@@ -393,7 +393,7 @@ _xdg_mime_magic_parse_magic_line (FILE              *magic_file,
     }
   matchlet->value_length = matchlet->value_length + (c & 0xFF);
 
-  matchlet->value = malloc (matchlet->value_length);
+  matchlet->value = (unsigned char *)malloc (matchlet->value_length);
 
   /* OOM */
   if (matchlet->value == NULL)
@@ -414,7 +414,7 @@ _xdg_mime_magic_parse_magic_line (FILE              *magic_file,
   c = getc_unlocked (magic_file);
   if (c == '&')
     {
-      matchlet->mask = malloc (matchlet->value_length);
+      matchlet->mask = (unsigned char *)malloc (matchlet->value_length);
       /* OOM */
       if (matchlet->mask == NULL)
 	{
@@ -633,7 +633,7 @@ _xdg_mime_magic_insert_match (XdgMimeMagic      *mime_magic,
 XdgMimeMagic *
 _xdg_mime_magic_new (void)
 {
-  return calloc (1, sizeof (XdgMimeMagic));
+  return (XdgMimeMagic *)calloc (1, sizeof (XdgMimeMagic));
 }
 
 void

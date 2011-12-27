@@ -77,7 +77,7 @@ _xdg_glob_list_new (void)
 {
   XdgGlobList *new_element;
 
-  new_element = calloc (1, sizeof (XdgGlobList));
+  new_element = (XdgGlobList *)calloc (1, sizeof (XdgGlobList));
 
   return new_element;
 }
@@ -113,7 +113,7 @@ _xdg_glob_list_append (XdgGlobList *glob_list,
   XdgGlobList *tmp_element;
 
   new_element = _xdg_glob_list_new ();
-  new_element->data = data;
+  new_element->data = (const char *)data;
   new_element->mime_type = mime_type;
   if (glob_list == NULL)
     return new_element;
@@ -152,7 +152,7 @@ _xdg_glob_hash_node_new (void)
 {
   XdgGlobHashNode *glob_hash_node;
 
-  glob_hash_node = calloc (1, sizeof (XdgGlobHashNode));
+  glob_hash_node = (XdgGlobHashNode *)calloc (1, sizeof (XdgGlobHashNode));
 
   return glob_hash_node;
 }
@@ -302,11 +302,11 @@ _xdg_glob_hash_lookup_file_name (XdgGlobHash *glob_hash,
       mime_type = (_xdg_glob_hash_node_lookup_file_name (glob_hash->simple_node, ptr, FALSE));
       if (mime_type != NULL)
         return mime_type;
-
+      
       mime_type = (_xdg_glob_hash_node_lookup_file_name (glob_hash->simple_node, ptr, TRUE));
       if (mime_type != NULL)
         return mime_type;
-
+      
       ptr = strchr (ptr+1, '.');
     }
 
@@ -328,7 +328,7 @@ _xdg_glob_hash_new (void)
 {
   XdgGlobHash *glob_hash;
 
-  glob_hash = calloc (1, sizeof (XdgGlobHash));
+  glob_hash = (XdgGlobHash *)calloc (1, sizeof (XdgGlobHash));
 
   return glob_hash;
 }

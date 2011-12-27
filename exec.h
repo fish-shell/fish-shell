@@ -9,9 +9,11 @@
 #define FISH_EXEC_H
 
 #include <wchar.h>
+#include <vector>
 
 #include "proc.h"
 #include "util.h"
+#include "common.h"
 
 /**
    pipe redirection error message
@@ -19,7 +21,7 @@
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
 /**
-  Execute the processes specified by j.
+  Execute the processes specified by j. 
 
    I've put a fair bit of work into making builtins behave like other
    programs as far as pipes are concerned. Unlike i.e. bash, builtins
@@ -51,8 +53,10 @@ void exec( job_t *j );
 
   \return the status of the last job to exit, or -1 if en error was encountered.
 */
-__warn_unused int exec_subshell( const wchar_t *cmd,
+__warn_unused int exec_subshell( const wchar_t *cmd, 
 								 array_list_t *l );
+
+__warn_unused int exec_subshell2( const wcstring &cmd, std::vector<wcstring> &outputs );
 
 
 /**

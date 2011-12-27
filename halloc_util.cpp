@@ -33,7 +33,7 @@ void halloc_util_destroy()
 
 array_list_t *al_halloc( void *context )
 {
-	array_list_t *res = halloc( context, sizeof( array_list_t ) );
+	array_list_t *res = (array_list_t *)halloc( context, sizeof( array_list_t ) );
 	if( !res )
 		DIE_MEM();
 	al_init( res );
@@ -43,7 +43,7 @@ array_list_t *al_halloc( void *context )
 
 string_buffer_t *sb_halloc( void *context )
 {
-	string_buffer_t *res = halloc( context, sizeof( string_buffer_t ) );
+	string_buffer_t *res = (string_buffer_t *)halloc( context, sizeof( string_buffer_t ) );
 	if( !res )
 		DIE_MEM();
 	sb_init( res );
@@ -69,7 +69,7 @@ void *halloc_register( void *context, void *data )
 {
 	if( !data )
 		return 0;
-
+	
 	halloc_register_function( context, &free, data );
 	return data;
 }
@@ -77,8 +77,8 @@ void *halloc_register( void *context, void *data )
 wchar_t *halloc_wcsdup( void *context, const wchar_t *in )
 {
 	size_t len=wcslen(in);
-	wchar_t *out = halloc( context, sizeof( wchar_t)*(len+1));
-
+	wchar_t *out = (wchar_t *)halloc( context, sizeof( wchar_t)*(len+1));
+	
 	if( out == 0 )
 	{
 		DIE_MEM();
@@ -89,12 +89,12 @@ wchar_t *halloc_wcsdup( void *context, const wchar_t *in )
 
 wchar_t *halloc_wcsndup( void * context, const wchar_t *in, int c )
 {
-	wchar_t *res = halloc( context, sizeof(wchar_t)*(c+1) );
+	wchar_t *res = (wchar_t *)halloc( context, sizeof(wchar_t)*(c+1) );
 	if( res == 0 )
 	{
 		DIE_MEM();
 	}
 	wcslcpy( res, in, c+1 );
-	res[c] = L'\0';
-	return res;
+	res[c] = L'\0';	
+	return res;	
 }

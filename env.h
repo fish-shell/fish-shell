@@ -6,8 +6,10 @@
 #define FISH_ENV_H
 
 #include <wchar.h>
+#include <map>
 
 #include "util.h"
+#include "common.h"
 
 /**
    Flag for local (to the current block) variable
@@ -63,7 +65,7 @@ void env_destroy();
 
 
 /**
-   Set the value of the environment variable whose name matches key to val.
+   Set the value of the environment variable whose name matches key to val. 
 
    Memory policy: All keys and values are copied, the parameters can and should be freed by the caller afterwards
 
@@ -79,7 +81,7 @@ void env_destroy();
    * ENV_INVALID, the variable name or mode was invalid
 */
 
-int env_set( const wchar_t *key,
+int env_set( const wchar_t *key, 
 			 const wchar_t *val,
 			 int mode );
 
@@ -94,6 +96,11 @@ int env_set( const wchar_t *key,
 wchar_t *env_get( const wchar_t *key );
 
 /**
+ Gets the variable with the specified name, or an empty string if it does not exist.
+ */
+wcstring env_get_string( const wchar_t *key );
+
+/**
    Returns 1 if the specified key exists. This can't be reliably done
    using env_get, since env_get returns null for 0-element arrays
 
@@ -104,7 +111,7 @@ int env_exist( const wchar_t *key, int mode );
 
 /**
    Remove environemnt variable
-
+   
    \param key The name of the variable to remove
    \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If this is a user request, read-only variables can not be removed. The mode may also specify the scope of the variable that should be erased.
 
@@ -137,6 +144,19 @@ void env_get_names( array_list_t *l, int flags );
    directory
 */
 int env_set_pwd();
+
+class env_vars {
+    std::map<wcstring, wcstring> vars;
+
+public:
+    env_vars(const wchar_t * const * keys);
+    env_vars(void);
+    
+    const wchar_t *get(const wchar_t *key) const;
+    
+    // vars necessary for highlighting
+    static const wchar_t * const highlighting_keys[];
+};
 
 
 #endif

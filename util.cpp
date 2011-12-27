@@ -64,7 +64,7 @@
 		}												\
 		oom_handler_internal( p );						\
 	}													\
-
+		
 
 
 void util_die_on_oom( void * p);
@@ -74,7 +74,7 @@ void (*oom_handler_internal)(void *) = &util_die_on_oom;
 void (*util_set_oom_handler( void (*h)(void *) ))(void *)
 {
 	void (*old)(void *) = oom_handler_internal;
-
+	
 	if( h )
 		oom_handler_internal = h;
 	else
@@ -130,9 +130,9 @@ static int q_realloc( dyn_queue_t *q )
 	void **old_stop = q->stop;
 	int diff;
 	int new_size;
-
+	
 	new_size = 2*(q->stop-q->start);
-
+	
 	q->start=(void**)realloc( q->start, sizeof(void*)*new_size );
 	if( !q->start )
 	{
@@ -140,13 +140,13 @@ static int q_realloc( dyn_queue_t *q )
 		oom_handler( q );
 		return 0;
 	}
-
+	
 	diff = q->start - old_start;
 	q->get_pos += diff;
 	q->stop = &q->start[new_size];
 	memcpy( old_stop + diff, q->start, sizeof(void*)*(q->get_pos-q->start));
 	q->put_pos = old_stop + diff + (q->get_pos-q->start);
-
+	
 	return 1;
 }
 
@@ -155,7 +155,7 @@ int q_put( dyn_queue_t *q, void *e )
 	*q->put_pos = e;
 
 //	fprintf( stderr, "Put element %d to queue %d\n", e, q );
-
+	
 	if( ++q->put_pos == q->stop )
 		q->put_pos = q->start;
 	if( q->put_pos == q->get_pos )
@@ -175,7 +175,7 @@ void *q_peek( dyn_queue_t *q )
 {
 	return *q->get_pos;
 }
-
+ 
 int q_empty( dyn_queue_t *q )
 {
 //	fprintf( stderr, "Queue %d is %s\n", q, (q->put_pos == q->get_pos)?"empty":"non-empty" );
@@ -199,15 +199,15 @@ void hash_init2( hash_table_t *h,
 	  reasonably good size with regard to avoiding patterns of collisions.
 	*/
 	sz--;
+	
 
-
-	h->arr = malloc( sizeof(hash_struct_t)*sz );
+	h->arr = (hash_struct_t *)malloc( sizeof(hash_struct_t)*sz );
 	if( !h->arr )
 	{
 		oom_handler( h );
 		return;
 	}
-
+	
 	h->size = sz;
 	for( i=0; i< sz; i++ )
 		h->arr[i].key = 0;
@@ -279,14 +279,14 @@ static int hash_realloc( hash_table_t *h,
 	if( ( sz < h->size ) && (h->size < HASH_MIN_SIZE))
 		return 1;
 	sz = maxi( sz, HASH_MIN_SIZE );
-
+	
 	hash_struct_t *old_arr = h->arr;
 	int old_size = h->size;
-
+	
 	int i;
 
 	h->cache = -1;
-	h->arr = malloc( sizeof( hash_struct_t) * sz );
+	h->arr = (hash_struct_t *)malloc( sizeof( hash_struct_t) * sz );
 	if( h->arr == 0 )
 	{
 		h->arr = old_arr;
@@ -319,7 +319,7 @@ int hash_put( hash_table_t *h,
 			  const void *data )
 {
 	int pos;
-
+	
 	if( (float)(h->count+1)/h->size > 0.75f )
 	{
 		if( !hash_realloc( h, (h->size+1) * 2 -1 ) )
@@ -345,8 +345,8 @@ void *hash_get( hash_table_t *h,
 {
 	if( !h->count )
 		return 0;
-
-	int pos = hash_search( h, (void *)key );
+	
+	int pos = hash_search( h, (void *)key );	
 	if( h->arr[pos].key == 0 )
 	{
 		return 0;
@@ -360,10 +360,10 @@ void *hash_get( hash_table_t *h,
 
 void *hash_get_key( hash_table_t *h,
 					const void *key )
-{
+{	
 	if( !h->count )
 		return 0;
-
+	
 	int pos = hash_search( h, (void *)key );
 	if( h->arr[pos].key == 0 )
 		return 0;
@@ -449,7 +449,7 @@ int hash_contains( hash_table_t *h,
 {
 	if( !h->count )
 		return 0;
-
+	
 	int pos = hash_search( h, (void *)key );
 	return h->arr[pos].key != 0;
 }
@@ -541,7 +541,7 @@ static unsigned int rotl30( unsigned int in )
 
 /**
    The number of words of input used in each lap by the sha-like
-   string hashing algorithm.
+   string hashing algorithm. 
 */
 #define WORD_COUNT 16
 
@@ -550,11 +550,11 @@ int hash_wcs_func( void *data )
 	const wchar_t *in = (const wchar_t *)data;
 	unsigned int a,b,c,d,e;
 	int t;
-	unsigned int k0=0x5a827999u;
+	unsigned int k0=0x5a827999u;	
 	unsigned int k1 =0x6ed9eba1u;
-
-	unsigned int w[2*WORD_COUNT];
-
+	
+	unsigned int w[2*WORD_COUNT];	
+	
 	/*
 	  Same constants used by sha1
 	*/
@@ -563,10 +563,10 @@ int hash_wcs_func( void *data )
 	c=0x98badcfeu;
 	d=0x10325476u;
 	e=0xc3d2e1f0u;
-
+	
 	if( data == 0 )
 		return 0;
-
+	
 	while( *in )
 	{
 		int i;
@@ -586,9 +586,9 @@ int hash_wcs_func( void *data )
 			}
 			else
 				w[i]=*in++;
-
+			
 		}
-
+		
 		/*
 		  And fill up the rest by rotating the previous content
 		*/
@@ -642,11 +642,11 @@ int hash_str_cmp( void *a, void *b )
 int hash_str_func( void *data )
 {
 	int res = 0x67452301u;
-	const char *str = data;
+	const char *str = (const char *)data;	
 
 	while( *str )
 		res = (18499*rotl5(res)) ^ *str++;
-
+	
 	return res;
 }
 
@@ -773,7 +773,7 @@ void pq_destroy(  priority_queue_t *q )
 
 array_list_t *al_new()
 {
-	array_list_t *res = malloc( sizeof( array_list_t ) );
+	array_list_t *res = (array_list_t *)malloc( sizeof( array_list_t ) );
 
 	if( !res )
 	{
@@ -811,8 +811,8 @@ static int al_push_generic( array_list_t *l, anything_t o )
 			oom_handler( l );
 			return 0;
 		}
-		l->arr = tmp;
-		l->size = new_size;
+		l->arr = (anything_t *)tmp;
+		l->size = new_size;		
 	}
 	l->arr[l->pos++] = o;
 	return 1;
@@ -857,10 +857,10 @@ int al_insert( array_list_t *a, int pos, int count )
 	assert( pos >= 0 );
 	assert( count >= 0 );
 	assert( a );
-
+	
 	if( !count )
 		return 0;
-
+	
 	/*
 	  Reallocate, if needed
 	*/
@@ -870,30 +870,30 @@ int al_insert( array_list_t *a, int pos, int count )
 		  If we reallocate, add a few extra elements just in case we
 		  want to do some more reallocating any time soon
 		*/
-		size_t new_size = maxi( maxi( pos, a->pos ) + count +32, a->size*2);
+		size_t new_size = maxi( maxi( pos, a->pos ) + count +32, a->size*2); 
 		void *tmp = realloc( a->arr, sizeof( anything_t )*new_size );
 		if( tmp )
 		{
-			a->arr = tmp;
+			a->arr = (anything_t *)tmp;
 		}
 		else
 		{
 			oom_handler( a );
 			return 0;
 		}
-
+					
 	}
-
+	
 	if( a->pos > pos )
 	{
 		memmove( &a->arr[pos],
-				 &a->arr[pos+count],
+				 &a->arr[pos+count], 
 				 sizeof(anything_t ) * (a->pos-pos) );
 	}
-
+	
 	memset( &a->arr[pos], 0, sizeof(anything_t)*count );
 	a->pos += count;
-
+	
 	return 1;
 }
 
@@ -905,7 +905,7 @@ int al_insert( array_list_t *a, int pos, int count )
 static int al_set_generic( array_list_t *l, int pos, anything_t v )
 {
 	int old_pos;
-
+	
 	if( pos < 0 )
 		return 0;
 	if( pos < l->pos )
@@ -914,16 +914,16 @@ static int al_set_generic( array_list_t *l, int pos, anything_t v )
 		return 1;
 	}
 	old_pos=l->pos;
-
+	
 	l->pos = pos;
 	if( al_push_generic( l, v ) )
 	{
-		memset( &l->arr[old_pos],
+		memset( &l->arr[old_pos], 
 				0,
 				sizeof(anything_t) * (pos - old_pos) );
-		return 1;
+		return 1;		
 	}
-	return 0;
+	return 0;	
 }
 
 int al_set( array_list_t *l, int pos, const void *o )
@@ -954,7 +954,7 @@ static anything_t al_get_generic( array_list_t *l, int pos )
 {
 	anything_t res;
 	res.ptr_val=0;
-
+	
 	if( (pos >= 0) && (pos < l->pos) )
 		res = l->arr[pos];
 
@@ -997,15 +997,15 @@ static anything_t al_pop_generic( array_list_t *l )
 		memset( &e, 0, sizeof(anything_t ) );
 		return e;
 	}
-
-
+	
+	
 	e = l->arr[--l->pos];
 	if( (l->pos*3 < l->size) && (l->size < MIN_SIZE) )
 	{
 		anything_t *old_arr = l->arr;
 		int old_size = l->size;
 		l->size = l->size/2;
-		l->arr = realloc( l->arr, sizeof(anything_t)*l->size );
+		l->arr = (anything_t *)realloc( l->arr, sizeof(anything_t)*l->size );
 		if( l->arr == 0 )
 		{
 			l->arr = old_arr;
@@ -1022,17 +1022,17 @@ static anything_t al_pop_generic( array_list_t *l )
 
 void *al_pop( array_list_t *l )
 {
-	return al_pop_generic(l).ptr_val;
+	return al_pop_generic(l).ptr_val;	
 }
 
 long al_pop_long( array_list_t *l )
 {
-	return al_pop_generic(l).long_val;
+	return al_pop_generic(l).long_val;	
 }
 
 func_ptr_t al_pop_func( array_list_t *l )
 {
-	return al_pop_generic(l).func_val;
+	return al_pop_generic(l).func_val;	
 }
 
 /**
@@ -1050,17 +1050,17 @@ static anything_t al_peek_generic( array_list_t *l )
 
 void *al_peek( array_list_t *l )
 {
-	return al_peek_generic(l).ptr_val;
+	return al_peek_generic(l).ptr_val;	
 }
 
 long al_peek_long( array_list_t *l )
 {
-	return al_peek_generic(l).long_val;
+	return al_peek_generic(l).long_val;	
 }
 
 func_ptr_t al_peek_func( array_list_t *l )
 {
-	return al_peek_generic(l).func_val;
+	return al_peek_generic(l).func_val;	
 }
 
 int al_empty( array_list_t *l )
@@ -1093,7 +1093,7 @@ void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux)
 
 	CHECK( l, );
 	CHECK( func, );
-
+	
 	for( i=0; i<l->pos; i++ )
 		func( l->arr[i].ptr_val, aux );
 }
@@ -1102,7 +1102,7 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 {
 	CHECK( a, 0 );
 	CHECK( b, 0 );
-
+	
 	if( *a==0 )
 	{
 		if( *b==0)
@@ -1122,7 +1122,7 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 		long bl;
 		int diff;
 
-		errno = 0;
+		errno = 0;		
 		al = wcstol( a, &aend, 10 );
 		bl = wcstol( b, &bend, 10 );
 
@@ -1133,7 +1133,7 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 			*/
 			return wcscmp( a, b );
 		}
-
+		
 		diff = al - bl;
 		if( diff )
 			return diff>0?2:-2;
@@ -1165,9 +1165,9 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 			return secondary_diff>0?1:-1;
 		}
 	}
-
+	
 	return res;
-
+	
 }
 
 void sb_init( string_buffer_t * b)
@@ -1181,21 +1181,21 @@ void sb_init( string_buffer_t * b)
 		return;
 	}
 
-	memset( b, 0, sizeof(string_buffer_t) );
+	memset( b, 0, sizeof(string_buffer_t) );	
 	b_append( b, &c, sizeof( wchar_t));
 	b->used -= sizeof(wchar_t);
 }
 
 string_buffer_t *sb_new()
 {
-	string_buffer_t *res = malloc( sizeof( string_buffer_t ) );
+	string_buffer_t *res = (string_buffer_t *)malloc( sizeof( string_buffer_t ) );
 
 	if( !res )
 	{
 		oom_handler( 0 );
 		return 0;
 	}
-
+	
 	sb_init( res );
 	return res;
 }
@@ -1230,7 +1230,7 @@ void sb_append_internal( string_buffer_t *b, ... )
 	wchar_t *arg;
 
 	CHECK( b, );
-
+	
 	va_start( va, b );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 )
 	{
@@ -1244,47 +1244,47 @@ int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... )
 {
 	va_list va;
 	int res;
-
+	
 	CHECK( buffer, -1 );
 	CHECK( format, -1 );
-
+	
 	va_start( va, format );
-	res = sb_vprintf( buffer, format, va );
+	res = sb_vprintf( buffer, format, va );	
 	va_end( va );
-
-	return res;
+	
+	return res;	
 }
 
 int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig )
 {
 	int res;
-
+	
 	CHECK( buffer, -1 );
 	CHECK( format, -1 );
 
 	if( !buffer->length )
 	{
 		buffer->length = MIN_SIZE;
-		buffer->buff = malloc( MIN_SIZE );
+		buffer->buff = (char *)malloc( MIN_SIZE );
 		if( !buffer->buff )
 		{
 			oom_handler( buffer );
 			return -1;
 		}
-	}
+	}	
 
 	while( 1 )
 	{
 		va_list va;
 		va_copy( va, va_orig );
-
-		res = vswprintf( (wchar_t *)((char *)buffer->buff+buffer->used),
-						 (buffer->length-buffer->used)/sizeof(wchar_t),
+		
+		res = vswprintf( (wchar_t *)((char *)buffer->buff+buffer->used), 
+						 (buffer->length-buffer->used)/sizeof(wchar_t), 
 						 format,
 						 va );
+		
 
-
-		va_end( va );
+		va_end( va );		
 		if( res >= 0 )
 		{
 			buffer->used+= res*sizeof(wchar_t);
@@ -1295,7 +1295,7 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 		  As far as I know, there is no way to check if a
 		  vswprintf-call failed because of a badly formated string
 		  option or because the supplied destination string was to
-		  small. In GLIBC, errno seems to be set to EINVAL either way.
+		  small. In GLIBC, errno seems to be set to EINVAL either way. 
 
 		  Because of this, sb_printf will on failiure try to
 		  increase the buffer size until the free space is
@@ -1304,7 +1304,7 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 		  formated string option, and return an error. Make
 		  sure to null terminate string before that, though.
 		*/
-
+	
 		if( buffer->length - buffer->used > SB_MAX_SIZE )
 		{
 			wchar_t tmp=0;
@@ -1312,18 +1312,18 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 			buffer->used -= sizeof(wchar_t);
 			break;
 		}
-
-		buffer->buff = realloc( buffer->buff, 2*buffer->length );
+		
+		buffer->buff = (char *)realloc( buffer->buff, 2*buffer->length );
 
 		if( !buffer->buff )
 		{
 			oom_handler( buffer );
 			return -1;
 		}
-
-		buffer->length *= 2;
+		
+		buffer->length *= 2;				
 	}
-	return res;
+	return res;	
 }
 
 
@@ -1332,7 +1332,7 @@ int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig 
 void sb_destroy( string_buffer_t * b )
 {
 	CHECK( b, );
-
+	
 	free( b->buff );
 }
 
@@ -1345,20 +1345,20 @@ void sb_clear( string_buffer_t * b )
 void sb_truncate( string_buffer_t *b, int chars_left )
 {
 	wchar_t *arr;
-
+	
 	CHECK( b, );
 
 	b->used = (chars_left)*sizeof( wchar_t);
 	arr = (wchar_t *)b->buff;
 	arr[chars_left] = 0;
-
+	
 }
 
 ssize_t sb_length( string_buffer_t *b )
 {
 	CHECK( b, -1 );
 	return (b->used-1)/sizeof( wchar_t);
-
+	
 }
 
 
@@ -1384,7 +1384,7 @@ int b_append( buffer_t *b, const void *d, ssize_t len )
 	if( len<=0 )
 		return 0;
 
-	CHECK( b, -1 );
+	CHECK( b, -1 );	
 
 	if( !b )
 	{
@@ -1400,14 +1400,14 @@ int b_append( buffer_t *b, const void *d, ssize_t len )
 	{
 		size_t l = maxi( b->length*2,
 						 b->used+len+MIN_SIZE );
-
+		
 		void *d = realloc( b->buff, l );
 		if( !d )
 		{
 			oom_handler( b );
-			return -1;
+			return -1;			
 		}
-		b->buff=d;
+		b->buff=(char *)d;
 		b->length = l;
 	}
 	memcpy( ((char*)b->buff)+b->used,

@@ -101,6 +101,7 @@ commence.
 #include "screen.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "iothread.h"
 
 #include "parse_util.h"
 
@@ -240,7 +241,7 @@ typedef struct reader_data
 
 	/** The output of the last evaluation of the prompt command */
 	string_buffer_t prompt_buff;
-
+	
 	/**
 	   Color is the syntax highlighting for buff.  The format is that
 	   color[i] is the classification (according to the enum in
@@ -262,10 +263,7 @@ typedef struct reader_data
 	/**
 	   Function for syntax highlighting
 	*/
-	void (*highlight_func)( wchar_t *,
-							int *,
-							int,
-							array_list_t * );
+	highlight_function_t highlight_function;
 
 	/**
 	   Function for testing if the string can be returned
@@ -284,7 +282,7 @@ typedef struct reader_data
 	int prev_end_loop;
 
 	/**
-	   The current contents of the top item in the kill ring.
+	   The current contents of the top item in the kill ring. 
 	 */
 	string_buffer_t kill_item;
 
@@ -423,12 +421,12 @@ int reader_exit_forced()
 static void reader_repaint()
 {
 	parser_test( data->buff, data->indent, 0, 0 );
-
+	
 	s_write( &data->screen,
 		 (wchar_t *)data->prompt_buff.buff,
 		 data->buff,
-		 data->color,
-		 data->indent,
+		 data->color, 
+		 data->indent, 
 		 data->buff_pos );
 	data->repaint_needed = 0;
 }
@@ -436,9 +434,9 @@ static void reader_repaint()
 /**
    Internal helper function for handling killing parts of text.
 */
-static void reader_kill( wchar_t *begin, int length, int mode, int new )
+static void reader_kill( wchar_t *begin, int length, int mode, int newv )
 {
-	if( new )
+	if( newv )
 	{
 		sb_clear( &data->kill_item );
 		sb_append_substring( &data->kill_item, begin, length );
@@ -460,7 +458,7 @@ static void reader_kill( wchar_t *begin, int length, int mode, int new )
 			sb_append( &data->kill_item, old );
 		}
 
-
+		
 		kill_replace( old, (wchar_t *)data->kill_item.buff );
 		free( old );
 	}
@@ -469,19 +467,19 @@ static void reader_kill( wchar_t *begin, int length, int mode, int new )
 	{
 		data->buff_pos = maxi( begin-data->buff, data->buff_pos-length );
 	}
-
+	
 	data->buff_len -= length;
 	memmove( begin, begin+length, sizeof( wchar_t )*(wcslen( begin+length )+1) );
-
+	
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	reader_repaint();
-
+	
 }
 
 void reader_handle_int( int sig )
 {
 	block_t *c = current_block;
-
+	
 	if( !is_interactive_read )
 	{
 		while( c )
@@ -491,9 +489,9 @@ void reader_handle_int( int sig )
 			c=c->outer;
 		}
 	}
-
+	
 	interrupted = 1;
-
+	
 }
 
 wchar_t *reader_current_filename()
@@ -523,13 +521,13 @@ static int check_size()
 	{
 		data->buff_sz = maxi( 128, data->buff_len*2 );
 
-		data->buff = realloc( data->buff,
+		data->buff = (wchar_t *)realloc( data->buff,
 							  sizeof(wchar_t)*data->buff_sz);
 
-		data->color = realloc( data->color,
+		data->color = (int *)realloc( data->color,
 							   sizeof(int)*data->buff_sz);
 
-		data->indent = realloc( data->indent,
+		data->indent = (int *)realloc( data->indent,
 								sizeof(int)*data->buff_sz);
 
 		if( data->buff==0 ||
@@ -560,7 +558,7 @@ static int completion_cmp( const void *a, const void *b )
  */
 static void sort_completion_list( array_list_t *comp )
 {
-	qsort( comp->arr,
+	qsort( comp->arr, 
 		   al_get_count( comp ),
 		   sizeof( void*),
 		   &completion_cmp );
@@ -575,17 +573,17 @@ static void remove_duplicates( array_list_t *l )
 	int in, out;
 	const wchar_t *prev;
 	completion_t *first;
-
+	
 	if( al_get_count( l ) == 0 )
 		return;
-
+	
 	first = (completion_t *)al_get( l, 0 );
 	prev = first->completion;
-
+	
 	for( in=1, out=1; in < al_get_count( l ); in++ )
-	{
+	{		
 		completion_t *curr = (completion_t *)al_get( l, in );
-
+		
 		if( wcscmp( prev, curr->completion )!=0 )
 		{
 			al_set( l, out++, curr );
@@ -606,7 +604,7 @@ int reader_interrupted()
 
 void reader_write_title()
 {
-	wchar_t *title;
+	const wchar_t *title;
 	array_list_t l;
 	wchar_t *term = env_get( L"TERM" );
 
@@ -641,13 +639,13 @@ void reader_write_title()
 
 		if( strstr( n, "tty" ) || strstr( n, "/vc/") )
 			return;
-
-
+		
+			
 	}
 
 	title = function_exists( L"fish_title" )?L"fish_title":DEFAULT_TITLE;
 
-	if( wcslen( title ) == 0 )
+	if( wcslen( title ) ==0 )
 		return;
 
 	al_init( &l );
@@ -667,7 +665,7 @@ void reader_write_title()
 		}
 	}
 	proc_pop_interactive();
-
+		
 	al_foreach( &l, &free );
 	al_destroy( &l );
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
@@ -682,11 +680,11 @@ static void exec_prompt()
 
 	array_list_t prompt_list;
 	al_init( &prompt_list );
-
+	
 	if( data->prompt )
 	{
 		proc_push_interactive( 0 );
-
+		
 		if( exec_subshell( data->prompt, &prompt_list ) == -1 )
 		{
 			/* If executing the prompt fails, make sure we at least don't print any junk */
@@ -696,20 +694,20 @@ static void exec_prompt()
 		}
 		proc_pop_interactive();
 	}
-
+	
 	reader_write_title();
-
+	
 	sb_clear( &data->prompt_buff );
-
+	
 	for( i = 0; i < al_get_count( &prompt_list )-1; i++ )
 	{
 		sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ), L"\n" );
 	}
 	sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ));
-
+	
 	al_foreach( &prompt_list, &free );
 	al_destroy( &prompt_list );
-
+	
 }
 
 void reader_init()
@@ -719,7 +717,7 @@ void reader_init()
 	memcpy( &saved_modes,
 			&shell_modes,
 			sizeof(saved_modes));     /* save a copy so we can reset the terminal later */
-
+	
 	shell_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
 	shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
     shell_modes.c_cc[VMIN]=1;
@@ -743,7 +741,7 @@ void reader_exit( int do_exit, int forced )
 	end_loop=do_exit;
 	if( forced )
 		exit_forced = 1;
-
+	
 }
 
 void reader_repaint_needed()
@@ -792,14 +790,14 @@ static int insert_str(wchar_t *str)
 {
 	int len = wcslen( str );
 	int old_len = data->buff_len;
-
+	
 	assert( data->buff_pos >= 0 );
 	assert( data->buff_pos <= data->buff_len );
 	assert( len >= 0 );
-
+	
 	data->buff_len += len;
 	check_size();
-
+	
 	/* Insert space for extra characters at the right position */
 	if( data->buff_pos < old_len )
 	{
@@ -810,13 +808,13 @@ static int insert_str(wchar_t *str)
 	memmove( &data->buff[data->buff_pos], str, sizeof(wchar_t)*len );
 	data->buff_pos += len;
 	data->buff[data->buff_len]='\0';
-
+	
 	/*
-	  Syntax highlight
+	  Syntax highlight 
 	*/
 	reader_super_highlight_me_plenty( data->buff_pos-1,
 									  0 );
-
+	
 	reader_repaint();
 	return 1;
 }
@@ -830,7 +828,7 @@ static int insert_char( int c )
 {
 	wchar_t str[]=
 		{
-			0, 0
+			0, 0 
 		}
 	;
 	str[0] = c;
@@ -884,7 +882,7 @@ static wchar_t get_quote( wchar_t *cmd, int len )
 			i++;
 			if( !cmd[i] )
 				break;
-			i++;
+			i++;			
 		}
 		else
 		{
@@ -1007,29 +1005,29 @@ static void completion_insert( const wchar_t *val, int flags )
 	int add_space = !(flags & COMPLETE_NO_SPACE);
 	int do_replace = (flags & COMPLETE_NO_CASE);
 	int do_escape = !(flags & COMPLETE_DONT_ESCAPE);
-
+	
 	//	debug( 0, L"Insert completion %ls with flags %d", val, flags);
 
 	if( do_replace )
 	{
-
+		
 		int tok_start, tok_len, move_cursor;
 		wchar_t *begin, *end;
 		string_buffer_t sb;
 		wchar_t *escaped;
-
+		
 		parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
 		end = data->buff+data->buff_pos;
 
 		tok_start = begin - data->buff;
 		tok_len = end-begin;
-
+						
 		sb_init( &sb );
 		sb_append_substring( &sb, data->buff, begin - data->buff );
-
+		
 		if( do_escape )
 		{
-			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );		
 			sb_append( &sb, escaped );
 			move_cursor = wcslen(escaped);
 			free( escaped );
@@ -1039,29 +1037,29 @@ static void completion_insert( const wchar_t *val, int flags )
 			sb_append( &sb, val );
 			move_cursor = wcslen(val);
 		}
+		
 
-
-		if( add_space )
+		if( add_space ) 
 		{
 			sb_append( &sb, L" " );
 			move_cursor += 1;
 		}
-
+		
 		sb_append( &sb, end );
-
+						
 		reader_set_buffer( (wchar_t *)sb.buff, (begin-data->buff)+move_cursor );
 		sb_destroy( &sb );
-
+						
 		reader_super_highlight_me_plenty( data->buff_pos, 0 );
 		reader_repaint();
-
+		
 	}
 	else
 	{
-
+		
 		if( do_escape )
 		{
-
+				
 			get_param( data->buff,
 				   data->buff_pos,
 				   &quote,
@@ -1077,9 +1075,9 @@ static void completion_insert( const wchar_t *val, int flags )
 
 				const wchar_t *pin;
 				wchar_t *pout;
-
+				
 				replaced = pout =
-					malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
+					(wchar_t *)malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
 
 				for( pin=val; *pin; pin++ )
 				{
@@ -1112,20 +1110,20 @@ static void completion_insert( const wchar_t *val, int flags )
 		{
 			replaced = wcsdup(val);
 		}
-
+		
 		if( insert_str( replaced ) )
 		{
 			/*
-			  Print trailing space since this is the only completion
+			  Print trailing space since this is the only completion 
 			*/
-			if( add_space )
+			if( add_space ) 
 			{
 
 				if( quote &&
-				    (data->buff[data->buff_pos] != quote ) )
+				    (data->buff[data->buff_pos] != quote ) ) 
 				{
-					/*
-					   This is a quoted parameter, first print a quote
+					/* 
+					   This is a quoted parameter, first print a quote 
 					*/
 					insert_char( quote );
 				}
@@ -1134,9 +1132,9 @@ static void completion_insert( const wchar_t *val, int flags )
 		}
 
 		free(replaced);
-
+	
 	}
-
+	
 }
 
 /**
@@ -1144,7 +1142,7 @@ static void completion_insert( const wchar_t *val, int flags )
    fish_pager outputs any text, it is inserted into the input
    backbuffer.
 
-   \param prefix the string to display before every completion.
+   \param prefix the string to display before every completion. 
    \param is_quoted should be set if the argument is quoted. This will change the display style.
    \param comp the list of completions to display
 */
@@ -1168,7 +1166,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	{
 		prefix_esc = escape( prefix,1);
 	}
-
+	
 	sb_init( &cmd );
 	sb_init( &msg );
 	sb_printf( &cmd,
@@ -1183,13 +1181,13 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	in->fd = 3;
 
 	escaped_separator = escape( COMPLETE_SEP_STR, 1);
-
+	
 	for( i=0; i<al_get_count( comp ); i++ )
 	{
 		completion_t *el = (completion_t *)al_get( comp, i );
 		has_case_sensitive |= !(el->flags & COMPLETE_NO_CASE );
 	}
-
+	
 	for( i=0; i<al_get_count( comp ); i++ )
 	{
 
@@ -1211,11 +1209,11 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 				if( base_len == -1 )
 				{
 					wchar_t *begin;
-
+				
 					parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
 					base_len = data->buff_pos - (begin-data->buff);
 				}
-
+				
 				foo = escape( el->completion + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 			}
 			else
@@ -1223,12 +1221,12 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 				foo = escape( el->completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 			}
 		}
-
+		
 		if( el && el->description )
 		{
 			baz = escape( el->description, 1 );
 		}
-
+		
 		if( !foo )
 		{
 			debug( 0, L"Run pager called with bad argument." );
@@ -1237,33 +1235,33 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 		}
 		else if( baz )
 		{
-			sb_printf( &msg, L"%ls%ls%ls\n",
+			sb_printf( &msg, L"%ls%ls%ls\n", 
 					   foo,
 					   escaped_separator,
 					   baz );
 		}
 		else
 		{
-			sb_printf( &msg, L"%ls\n",
+			sb_printf( &msg, L"%ls\n", 
 					   foo );
 		}
 
-		free( foo );
-		free( baz );
+		free( foo );		
+		free( baz );		
 	}
 
-	free( escaped_separator );
-
+	free( escaped_separator );		
+	
 	foo = wcs2str( (wchar_t *)msg.buff );
 	b_append( in->param2.out_buffer, foo, strlen(foo) );
 	free( foo );
-
+	
 	term_donate();
-
+	
 	io_data_t *out = io_buffer_create( 0 );
 	out->next = in;
 	out->fd = 4;
-
+	
 	eval( (wchar_t *)cmd.buff, out, TOP);
 	term_steal();
 
@@ -1302,22 +1300,22 @@ static void reader_flash()
 	struct timespec pollint;
 
 	int i;
-
+	
 	for( i=0; i<data->buff_pos; i++ )
 	{
 		data->color[i] = HIGHLIGHT_SEARCH_MATCH<<16;
 	}
-
+	
 	reader_repaint();
-
+	
 	pollint.tv_sec = 0;
 	pollint.tv_nsec = 100 * 1000000;
 	nanosleep( &pollint, NULL );
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	reader_repaint();
-
-
+	
+	
 }
 
 /**
@@ -1344,7 +1342,7 @@ int reader_can_replace( const wchar_t *in, int flags )
 	{
 		return 1;
 	}
-
+	
 
 	CHECK( in, 1 );
 
@@ -1363,7 +1361,7 @@ int reader_can_replace( const wchar_t *in, int flags )
 
 /**
    Handle the list of completions. This means the following:
-
+   
    - If the list is empty, flash the terminal.
    - If the list contains one element, write the whole element, and if
    the element does not end on a '/', '@', ':', or a '=', also write a trailing
@@ -1372,7 +1370,7 @@ int reader_can_replace( const wchar_t *in, int flags )
    the prefix.
    - If the list contains multiple elements without.
    a common prefix, call run_pager to display a list of completions. Depending on terminal size and the length of the list, run_pager may either show less than a screenfull and exit or use an interactive pager to allow the user to scroll through the completions.
-
+   
    \param comp the list of completion strings
 */
 
@@ -1388,13 +1386,13 @@ static int handle_completions( array_list_t *comp )
 	int flags=0;
 	wchar_t *begin, *end;
 	wchar_t *tok;
-
+	
 	parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
 	end = data->buff+data->buff_pos;
-
+	
 	context = halloc( 0, 0 );
 	tok = halloc_wcsndup( context, begin, end-begin );
-
+	
 	/*
 	  Check trivial cases
 	 */
@@ -1415,9 +1413,9 @@ static int handle_completions( array_list_t *comp )
 		 */
 		case 1:
 		{
-
+			
 			completion_t *c = (completion_t *)al_get( comp, 0 );
-
+		
 			/*
 			  If this is a replacement completion, check
 			  that we know how to replace it, e.g. that
@@ -1427,15 +1425,15 @@ static int handle_completions( array_list_t *comp )
 			if( !(c->flags & COMPLETE_NO_CASE) || reader_can_replace( tok, c->flags ) )
 			{
 				completion_insert( c->completion,
-						   c->flags );
+						   c->flags );			
 			}
 			done = 1;
 			len = 1;
 			break;
 		}
 	}
-
-
+	
+		
 	if( !done )
 	{
 		/*
@@ -1451,9 +1449,9 @@ static int handle_completions( array_list_t *comp )
 			 */
 			if( c->flags & COMPLETE_NO_CASE )
 				continue;
-
+			
 			count++;
-
+			
 			if( base )
 			{
 				new_len = comp_len( base, c->completion );
@@ -1480,8 +1478,8 @@ static int handle_completions( array_list_t *comp )
 			done = 1;
 		}
 	}
-
-
+	
+	
 
 	if( !done && base == 0 )
 	{
@@ -1493,9 +1491,9 @@ static int handle_completions( array_list_t *comp )
 		{
 
 			int offset = wcslen( tok );
-
+			
 			count = 0;
-
+			
 			for( i=0; i<al_get_count( comp ); i++ )
 			{
 				completion_t *c = (completion_t *)al_get( comp, i );
@@ -1504,7 +1502,7 @@ static int handle_completions( array_list_t *comp )
 
 				if( !(c->flags & COMPLETE_NO_CASE) )
 					continue;
-
+			
 				if( !reader_can_replace( tok, c->flags ) )
 				{
 					len=0;
@@ -1523,7 +1521,7 @@ static int handle_completions( array_list_t *comp )
 					base = wcsdup( c->completion );
 					len = wcslen( base );
 					flags = c->flags;
-
+					
 				}
 			}
 
@@ -1531,15 +1529,15 @@ static int handle_completions( array_list_t *comp )
 			{
 				if( count > 1 )
 					flags = flags | COMPLETE_NO_SPACE;
-
+				
 				base[len]=L'\0';
 				completion_insert( base, flags );
 				done = 1;
 			}
-
+			
 		}
 	}
-
+		
 	free( base );
 
 	if( !done )
@@ -1562,7 +1560,7 @@ static int handle_completions( array_list_t *comp )
 
 		if( len <= PREFIX_MAX_LEN )
 		{
-			prefix = malloc( sizeof(wchar_t)*(len+1) );
+			prefix = (wchar_t *)malloc( sizeof(wchar_t)*(len+1) );
 			wcslcpy( prefix, prefix_start, len );
 			prefix[len]=L'\0';
 		}
@@ -1587,9 +1585,9 @@ static int handle_completions( array_list_t *comp )
 			wchar_t quote;
 			get_param( data->buff, data->buff_pos, &quote, 0, 0, 0 );
 			is_quoted = (quote != L'\0');
-
+			
 			write_loop(1, "\n", 1 );
-
+			
 			run_pager( prefix, is_quoted, comp );
 		}
 
@@ -1599,11 +1597,11 @@ static int handle_completions( array_list_t *comp )
 
 	}
 
-
+		
 	halloc_free( context );
 
 	return len;
-
+	
 
 }
 
@@ -1625,7 +1623,7 @@ static void reader_interactive_init()
 	  not enable it for us.
 	*/
 
-	/*
+	/* 
 	   Check if we are in control of the terminal, so that we don't do
 	   semi-expensive things like reset signal handlers unless we
 	   really have to, which we often don't.
@@ -1634,7 +1632,7 @@ static void reader_interactive_init()
 	{
 		int block_count = 0;
 		int i;
-
+		
 		/*
 		  Bummer, we are not in control of the terminal. Stop until
 		  parent has given us control of it. Stopping in fish is a bit
@@ -1646,13 +1644,13 @@ static void reader_interactive_init()
 		  signal deliveries. In practice, this code should only be run
 		  suring startup, when we're not waiting for any signals.
 		*/
-		while (signal_is_blocked())
+		while (signal_is_blocked()) 
 		{
 			signal_unblock();
 			block_count++;
 		}
 		signal_reset_handlers();
-
+	
 		/*
 		  Ok, signal handlers are taken out of the picture. Stop ourself in a loop
 		  until we are in control of the terminal.
@@ -1661,16 +1659,16 @@ static void reader_interactive_init()
 		{
 			killpg( shell_pgid, SIGTTIN);
 		}
-
+		
 		signal_set_handlers();
 
-		for( i=0; i<block_count; i++ )
+		for( i=0; i<block_count; i++ ) 
 		{
 			signal_block();
 		}
-
+		
 	}
-
+	
 
 	/* Put ourselves in our own process group.  */
 	shell_pgid = getpid ();
@@ -1701,9 +1699,9 @@ static void reader_interactive_init()
         wperror(L"tcsetattr");
     }
 
-	/*
+	/* 
 	   We need to know our own pid so we'll later know if we are a
-	   fork
+	   fork 
 	*/
 	original_pid = getpid();
 
@@ -1797,7 +1795,7 @@ static int contains_al( const wchar_t *needle,
 	int i;
 	for( i=0; i<al_get_count( haystack ); i++ )
 	{
-		if( !wcscmp( needle, al_get( haystack, i ) ) )
+		if( !wcscmp( needle, (const wchar_t *)al_get( haystack, i ) ) )
 			return 1;
 	}
 	return 0;
@@ -1812,7 +1810,7 @@ static void reset_token_history()
 	wchar_t *begin, *end;
 
 	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
-
+	
 	sb_clear( &data->search_buff );
 	if( begin )
 	{
@@ -1876,11 +1874,11 @@ static void handle_token_history( int forward, int reset )
 		if( current_pos == -1 )
 		{
 			const wchar_t *item;
-
+			
 			/*
 			  Move to previous line
 			*/
-			free( (void *)data->token_history_buff );
+			free( (void *)data->token_history_buff );		
 
 			/*
 			  Search for previous item that contains this substring
@@ -1910,7 +1908,7 @@ static void handle_token_history( int forward, int reset )
 			  return, otherwise add it.
 			*/
 
-			const wchar_t *last = al_get( &data->search_prev, al_get_count( &data->search_prev ) -1 );
+			const wchar_t *last = (const wchar_t *)al_get( &data->search_prev, al_get_count( &data->search_prev ) -1 );
 			if( wcscmp( last, (wchar_t *)data->search_buff.buff ) )
 			{
 				str = wcsdup( (wchar_t *)data->search_buff.buff );
@@ -1983,7 +1981,7 @@ static void handle_token_history( int forward, int reset )
    \param erase Whether to erase the characters along the way or only move past them.
    \param new if the new kill item should be appended to the previous kill item or not.
 */
-static void move_word( int dir, int erase, int new )
+static void move_word( int dir, int erase, int newv )
 {
 	int end_buff_pos=data->buff_pos;
 	int step = dir?1:-1;
@@ -1995,12 +1993,12 @@ static void move_word( int dir, int erase, int new )
 	{
 		return;
 	}
-
+	
 	if( dir && data->buff_pos == data->buff_len )
 	{
 		return;
 	}
-
+	
 	/*
 	  If we are beyond the last character and moving left, start by
 	  moving one step, since otehrwise we'll start on the \0, which
@@ -2010,10 +2008,10 @@ static void move_word( int dir, int erase, int new )
 	{
 		if( !end_buff_pos )
 			return;
-
+		
 		end_buff_pos--;
 	}
-
+	
 	/*
 	  When moving left, ignore the character under the cursor
 	*/
@@ -2021,7 +2019,7 @@ static void move_word( int dir, int erase, int new )
 	{
 		end_buff_pos+=2*step;
 	}
-
+	
 	/*
 	  Remove all whitespace characters before finding a word
 	*/
@@ -2045,26 +2043,26 @@ static void move_word( int dir, int erase, int new )
 		*/
 		if( end_buff_pos != data->buff_pos )
 		{
-
+			
 			c = data->buff[end_buff_pos];
-
+			
 			if( !iswspace( c ) )
 			{
 				break;
 			}
 		}
-
+		
 		end_buff_pos+=step;
 
 	}
-
+	
 	/*
 	  Remove until we find a character that is not alphanumeric
 	*/
 	while( 1 )
 	{
 		wchar_t c;
-
+		
 		if( !dir )
 		{
 			if( end_buff_pos <= 0 )
@@ -2075,9 +2073,9 @@ static void move_word( int dir, int erase, int new )
 			if( end_buff_pos >= data->buff_len )
 				break;
 		}
-
+		
 		c = data->buff[end_buff_pos];
-
+		
 		if( !iswalnum( c ) )
 		{
 			/*
@@ -2103,7 +2101,7 @@ static void move_word( int dir, int erase, int new )
 	  Make sure we don't move beyond begining or end of buffer
 	*/
 	end_buff_pos = maxi( 0, mini( end_buff_pos, data->buff_len ) );
-
+	
 
 
 	if( erase )
@@ -2111,9 +2109,9 @@ static void move_word( int dir, int erase, int new )
 		int remove_count = abs(data->buff_pos - end_buff_pos);
 		int first_char = mini( data->buff_pos, end_buff_pos );
 //		fwprintf( stderr, L"Remove from %d to %d\n", first_char, first_char+remove_count );
-
-		reader_kill( data->buff + first_char, remove_count, dir?KILL_APPEND:KILL_PREPEND, new );
-
+		
+		reader_kill( data->buff + first_char, remove_count, dir?KILL_APPEND:KILL_PREPEND, newv );
+		
 	}
 	else
 	{
@@ -2123,12 +2121,13 @@ static void move_word( int dir, int erase, int new )
 }
 
 
-wchar_t *reader_get_buffer()
+wchar_t *reader_get_buffer(void)
 {
-	return data?data->buff:0;
+    ASSERT_IS_MAIN_THREAD();
+	return data?data->buff:NULL;
 }
 
-void reader_set_buffer( wchar_t *b, int p )
+void reader_set_buffer( const wchar_t *b, int p )
 {
 	int l = wcslen( b );
 
@@ -2238,7 +2237,7 @@ void reader_run_command( const wchar_t *cmd )
 int reader_shell_test( wchar_t *b )
 {
 	int res = parser_test( b, 0, 0, 0 );
-
+	
 	if( res & PARSER_TEST_ERROR )
 	{
 		string_buffer_t sb;
@@ -2246,9 +2245,9 @@ int reader_shell_test( wchar_t *b )
 
 		int tmp[1];
 		int tmp2[1];
-
+		
 		s_write( &data->screen, L"", L"", tmp, tmp2, 0 );
-
+		
 		parser_test( b, 0, &sb, L"fish" );
 		fwprintf( stderr, L"%ls", sb.buff );
 		sb_destroy( &sb );
@@ -2266,15 +2265,15 @@ static int default_test( wchar_t *b )
 	return 0;
 }
 
-void reader_push( wchar_t *name )
+void reader_push( const wchar_t *name )
 {
-	reader_data_t *n = calloc( 1, sizeof( reader_data_t ) );
+	reader_data_t *n = (reader_data_t *)calloc( 1, sizeof( reader_data_t ) );
 
 	if( !n )
 	{
 		DIE_MEM();
 	}
-
+	
 	n->name = wcsdup( name );
 	n->next = data;
 	sb_init( &n->kill_item );
@@ -2324,7 +2323,7 @@ void reader_pop()
 	free( n->indent );
 	sb_destroy( &n->search_buff );
 	sb_destroy( &n->kill_item );
-
+	
 	s_destroy( &n->screen );
 	sb_destroy( &n->prompt_buff );
 
@@ -2349,7 +2348,7 @@ void reader_pop()
 	}
 }
 
-void reader_set_prompt( wchar_t *new_prompt )
+void reader_set_prompt( const wchar_t *new_prompt )
 {
  	free( data->prompt );
 	data->prompt=wcsdup(new_prompt);
@@ -2361,18 +2360,107 @@ void reader_set_complete_function( void (*f)( const wchar_t *,
 	data->complete_func = f;
 }
 
-void reader_set_highlight_function( void (*f)( wchar_t *,
-					       int *,
-					       int,
-					       array_list_t * ) )
+void reader_set_highlight_function( highlight_function_t func )
 {
-	data->highlight_func = f;
+	data->highlight_function = func;
 }
 
 void reader_set_test_function( int (*f)( wchar_t * ) )
 {
 	data->test_func = f;
 }
+
+
+/** A class as the context pointer for a background (threaded) highlight operation. */
+class background_highlight_context {
+public:
+    /**
+     The string to highlight
+     */
+	wcstring buff;
+	
+	/**
+	 Malloc'd color buffer (same size as buff)
+	 */
+	int *color;
+	
+	/**
+	  The position to use for bracket matching
+	 */
+	int match_highlight_pos;
+	
+	/**
+	 Function for syntax highlighting
+	 */
+	highlight_function_t highlight_function;
+    
+    /**
+     Environment variables
+    */
+    env_vars vars;
+
+    /**
+     When the request was made
+    */
+    double when;
+    
+    background_highlight_context() : vars(env_vars::highlighting_keys)
+    {
+        
+    }
+    
+    ~background_highlight_context()
+    {
+        free(color);
+    }
+};
+
+static void highlight_complete2( wchar_t *command, const int *colors, int position, void *ctx_ptr ) {
+	background_highlight_context *ctx = (background_highlight_context *)ctx_ptr;
+    if (ctx->buff == data->buff) {
+		/* The data hasn't changed, so swap in our colors */
+		free(data->color);
+		data->color = ctx->color;
+		ctx->color = NULL;
+		data->repaint_needed = 1;
+	}
+	
+	/* Free our context */
+	delete ctx;
+}
+
+static void highlight_complete(void *ctx_ptr, int result) {
+	background_highlight_context *ctx = (background_highlight_context *)ctx_ptr;
+	if (ctx->buff == data->buff) {
+		/* The data hasn't changed, so swap in our colors */
+		free(data->color);
+		data->color = ctx->color;
+		ctx->color = NULL;
+		//data->repaint_needed = 1;
+        //s_reset( &data->screen, 1 );
+        reader_repaint();
+	}
+	
+	/* Free our context */
+    delete ctx;
+}
+
+static int threaded_highlight(void *ctx_ptr) {
+	background_highlight_context *ctx = (background_highlight_context *)ctx_ptr;
+    array_list_t *error = 0;
+    const wchar_t *delayer = ctx->vars.get(L"HIGHLIGHT_DELAY");
+    double secDelay = 0;
+    if (delayer) {
+        wcstring tmp = delayer;
+        secDelay = from_string<double>(tmp);
+    }
+    if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
+    //write(0, "Start", 5);
+    ctx->highlight_function( ctx->buff.c_str(), ctx->color, ctx->match_highlight_pos, error, ctx->vars );
+    //write(0, "End", 3);
+    return 0;
+}
+
 
 /**
    Call specified external highlighting function and then do search
@@ -2385,7 +2473,24 @@ void reader_set_test_function( int (*f)( wchar_t * ) )
 */
 static void reader_super_highlight_me_plenty( int match_highlight_pos, array_list_t *error )
 {
-	data->highlight_func( data->buff, data->color, match_highlight_pos, error );
+	
+    /* Ensure we don't repaint with stale data */
+    size_t i;
+    for (i=0; i < data->buff_sz; i++) {
+        data->color[i] = HIGHLIGHT_NORMAL;
+    }
+    
+	background_highlight_context *ctx = new background_highlight_context;
+	ctx->buff = data->buff;
+	ctx->color = (int *)calloc(data->buff_sz, sizeof *ctx->color);
+	ctx->match_highlight_pos = match_highlight_pos;
+	ctx->highlight_function = data->highlight_function;
+    ctx->when = timef();
+#if 1
+	iothread_perform(threaded_highlight, highlight_complete, ctx);
+#else
+	data->highlight_function( ctx->buff, ctx->color, match_highlight_pos, error, highlight_complete2, ctx );
+#endif
 
 	if( wcslen((wchar_t *)data->search_buff.buff) )
 	{
@@ -2425,9 +2530,9 @@ static void handle_end_loop()
 	int job_count=0;
 	int is_breakpoint=0;
 	block_t *b;
-
-	for( b = current_block;
-	     b;
+	
+	for( b = current_block; 
+	     b; 
 	     b = b->outer )
 	{
 		if( b->type == BREAKPOINT )
@@ -2436,7 +2541,7 @@ static void handle_end_loop()
 			break;
 		}
 	}
-
+	
 	for( j=first_job; j; j=j->next )
 	{
 		if( !job_is_completed(j) )
@@ -2445,11 +2550,11 @@ static void handle_end_loop()
 			break;
 		}
 	}
-
+	
 	if( !reader_exit_forced() && !data->prev_end_loop && job_count && !is_breakpoint )
 	{
 		writestr(_( L"There are stopped jobs. A second attempt to exit will enforce their termination.\n" ));
-
+		
 		reader_exit( 0, 0 );
 		data->prev_end_loop=1;
 	}
@@ -2460,13 +2565,13 @@ static void handle_end_loop()
 			/*
 			  We already know that stdin is a tty since we're
 			  in interactive mode. If isatty returns false, it
-			  means stdin must have been closed.
+			  means stdin must have been closed. 
 			*/
 			for( j = first_job; j; j=j->next )
 			{
 				if( ! job_is_completed( j ) )
 				{
-					job_signal( j, SIGHUP );
+					job_signal( j, SIGHUP );						
 				}
 			}
 		}
@@ -2482,12 +2587,12 @@ static void handle_end_loop()
 static int read_i()
 {
 	event_fire_generic(L"fish_prompt");
-
+	
 	reader_push(L"fish");
 	reader_set_complete_function( &complete );
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &reader_shell_test );
-
+	
 	data->prev_end_loop=0;
 
 	while( (!data->end_loop) && (!sanity_check()) )
@@ -2505,9 +2610,9 @@ static int read_i()
 		  during evaluation.
 		*/
 
-
+	
 		tmp = reader_readline();
-
+	
 
 		if( data->end_loop)
 		{
@@ -2516,7 +2621,7 @@ static int read_i()
 		else if( tmp )
 		{
 			tmp = wcsdup( tmp );
-
+			
 			data->buff_pos=data->buff_len=0;
 			data->buff[data->buff_len]=L'\0';
 			reader_run_command( tmp );
@@ -2530,7 +2635,7 @@ static int read_i()
 				data->prev_end_loop=0;
 			}
 		}
-
+		
 
 	}
 	reader_pop();
@@ -2568,12 +2673,12 @@ static int is_backslashed( const wchar_t *str, int pos )
 {
 	int count = 0;
 	int i;
-
+	
 	for( i=pos-1; i>=0; i-- )
 	{
 		if( str[i] != L'\\' )
 			break;
-
+		
 		count++;
 	}
 
@@ -2597,19 +2702,19 @@ wchar_t *reader_readline()
 	sb_clear( &data->search_buff );
 	data->buff[data->buff_len]='\0';
 	data->search_mode = NO_SEARCH;
-
-
+	
+	
 	exec_prompt();
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	s_reset( &data->screen, 1 );
 	reader_repaint();
 
-	/*
+	/* 
 	   get the current terminal modes. These will be restored when the
 	   function returns.
 	*/
-	tcgetattr(0,&old_modes);
+	tcgetattr(0,&old_modes);        
 	/* set the new modes */
 	if( tcsetattr(0,TCSANOW,&shell_modes))
 	{
@@ -2619,7 +2724,7 @@ wchar_t *reader_readline()
 	while( !finished && !data->end_loop)
 	{
 		int regular_char = 0;
-
+		
 		/*
 		  Sometimes strange input sequences seem to generate a zero
 		  byte. I believe these simply mean a character was pressed
@@ -2632,7 +2737,7 @@ wchar_t *reader_readline()
 			is_interactive_read = 1;
 			c=input_readch();
 			is_interactive_read = was_interactive_read;
-
+						
 			if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
 			{
 				if( can_read(0) )
@@ -2679,36 +2784,36 @@ wchar_t *reader_readline()
 */
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank=0;
-
+		
 		switch( c )
 		{
 
 			/* go to beginning of line*/
 			case R_BEGINNING_OF_LINE:
 			{
-				while( ( data->buff_pos>0 ) &&
+				while( ( data->buff_pos>0 ) && 
 					   ( data->buff[data->buff_pos-1] != L'\n' ) )
 				{
 					data->buff_pos--;
 				}
-
+				
 				reader_repaint();
 				break;
 			}
 
 			case R_END_OF_LINE:
 			{
-				while( data->buff[data->buff_pos] &&
+				while( data->buff[data->buff_pos] && 
 					   data->buff[data->buff_pos] != L'\n' )
 				{
 					data->buff_pos++;
 				}
-
+				
 				reader_repaint();
 				break;
 			}
 
-
+			
 			case R_BEGINNING_OF_BUFFER:
 			{
 				data->buff_pos = 0;
@@ -2730,7 +2835,7 @@ wchar_t *reader_readline()
 			{
 				if( data->repaint_needed )
 					reader_repaint();
-
+				
 				break;
 			}
 
@@ -2768,26 +2873,26 @@ wchar_t *reader_readline()
 					parse_util_cmdsubst_extent( data->buff, data->buff_pos, &begin, &end );
 
 					parse_util_token_extent( begin, data->buff_pos - (begin-data->buff), &token_begin, &token_end, 0, 0 );
-
+					
 					cursor_steps = token_end - data->buff- data->buff_pos;
 					data->buff_pos += cursor_steps;
 					if( is_backslashed( data->buff, data->buff_pos ) )
 					{
 						remove_backward();
 					}
-
+					
 					reader_repaint();
-
+					
 					len = data->buff_pos - (begin-data->buff);
 					buffcpy = wcsndup( begin, len );
 
 					comp = al_halloc( 0 );
 					data->complete_func( buffcpy, comp );
-
+					
 
 					sort_completion_list( comp );
 					remove_duplicates( comp );
-
+					
 
 					free( buffcpy );
 					comp_empty = handle_completions( comp );
@@ -2805,20 +2910,20 @@ wchar_t *reader_readline()
 				wchar_t *begin = &data->buff[data->buff_pos];
 				wchar_t *end = begin;
 				int len;
-
+								
 				while( *end && *end != L'\n' )
 					end++;
-
+				
 				if( end==begin && *end )
 					end++;
-
+				
 				len = end-begin;
-
+				
 				if( len )
 				{
 					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_LINE );
 				}
-
+				
 				break;
 			}
 
@@ -2829,18 +2934,18 @@ wchar_t *reader_readline()
 					wchar_t *end = &data->buff[data->buff_pos];
 					wchar_t *begin = end;
 					int len;
-
+					
 					while( begin > data->buff  && *begin != L'\n' )
 						begin--;
-
+					
 					if( *begin == L'\n' )
 						begin++;
-
+					
 					len = maxi( end-begin, 1 );
 					begin = end - len;
-
-					reader_kill( begin, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
-
+										
+					reader_kill( begin, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );					
+					
 				}
 				break;
 
@@ -2851,29 +2956,29 @@ wchar_t *reader_readline()
 				wchar_t *end = &data->buff[data->buff_pos];
 				wchar_t *begin = end;
 				int len;
-
+		
 				while( begin > data->buff  && *begin != L'\n' )
 					begin--;
-
+				
 				if( *begin == L'\n' )
 					begin++;
-
+				
 				len = maxi( end-begin, 0 );
 				begin = end - len;
 
 				while( *end && *end != L'\n' )
 					end++;
-
+				
 				if( begin == end && *end )
 					end++;
-
+				
 				len = end-begin;
-
+				
 				if( len )
 				{
-					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );
+					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );					
 				}
-
+				
 				break;
 			}
 
@@ -2907,7 +3012,7 @@ wchar_t *reader_readline()
 				if( data->search_mode )
 				{
 					data->search_mode= NO_SEARCH;
-
+										
 					if( data->token_history_pos==-1 )
 					{
 						history_reset();
@@ -2921,7 +3026,7 @@ wchar_t *reader_readline()
 					sb_clear( &data->search_buff );
 					reader_super_highlight_me_plenty( data->buff_pos, 0 );
 					reader_repaint();
-
+					
 				}
 
 				break;
@@ -2964,7 +3069,7 @@ wchar_t *reader_readline()
 					insert_char( '\n' );
 					break;
 				}
-
+				
 				switch( data->test_func( data->buff ) )
 				{
 
@@ -2983,12 +3088,12 @@ wchar_t *reader_readline()
 						reader_repaint();
 						break;
 					}
-
+					
 					/*
 					  We are incomplete, continue editing
 					*/
 					case PARSER_TEST_INCOMPLETE:
-					{
+					{						
 						insert_char( '\n' );
 						break;
 					}
@@ -3006,7 +3111,7 @@ wchar_t *reader_readline()
 					}
 
 				}
-
+				
 				break;
 			}
 
@@ -3017,7 +3122,7 @@ wchar_t *reader_readline()
 			case R_HISTORY_TOKEN_SEARCH_FORWARD:
 			{
 				int reset = 0;
-
+				
 				if( data->search_mode == NO_SEARCH )
 				{
 					reset = 1;
@@ -3030,7 +3135,7 @@ wchar_t *reader_readline()
 					{
 						data->search_mode = TOKEN_SEARCH;
 					}
-
+					
 					sb_append( &data->search_buff, data->buff );
 				}
 
@@ -3040,7 +3145,7 @@ wchar_t *reader_readline()
 					case LINE_SEARCH:
 					{
 						const wchar_t *it = 0;
-
+						
 						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
 							( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
 						{
@@ -3050,12 +3155,12 @@ wchar_t *reader_readline()
 						{
 							it = history_next_match((wchar_t *)data->search_buff.buff);
 						}
-
+						
 						handle_history( it );
-
+						
 						break;
 					}
-
+					
 					case TOKEN_SEARCH:
 					{
 						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
@@ -3067,10 +3172,10 @@ wchar_t *reader_readline()
 						{
 							handle_token_history( SEARCH_FORWARD, reset );
 						}
-
+						
 						break;
 					}
-
+						
 				}
 				break;
 			}
@@ -3086,13 +3191,13 @@ wchar_t *reader_readline()
 				}
 				break;
 			}
-
+			
 			/* Move right*/
 			case R_FORWARD_CHAR:
 			{
 				if( data->buff_pos < data->buff_len )
 				{
-					data->buff_pos++;
+					data->buff_pos++;					
 					reader_repaint();
 				}
 				break;
@@ -3144,49 +3249,49 @@ wchar_t *reader_readline()
 				int line_old = parse_util_get_line_from_offset( data->buff,
 										data->buff_pos );
 				int line_new;
-
+				
 				if( c == R_UP_LINE )
 					line_new = line_old-1;
 				else
 					line_new = line_old+1;
-
+	
 				int line_count = parse_util_lineno( data->buff, data->buff_len )-1;
-
+				
 				if( line_new >= 0 && line_new <= line_count)
 				{
 					int base_pos_new;
 					int base_pos_old;
-
+					
 					int indent_old;
 					int indent_new;
 					int line_offset_old;
 					int total_offset_new;
 
-					base_pos_new = parse_util_get_offset_from_line( data->buff,
+					base_pos_new = parse_util_get_offset_from_line( data->buff, 
 										    line_new );
 
-					base_pos_old = parse_util_get_offset_from_line( data->buff,
+					base_pos_old = parse_util_get_offset_from_line( data->buff, 
 											line_old );
-
-
+					
+					
 					indent_old = data->indent[base_pos_old];
 					indent_new = data->indent[base_pos_new];
-
+					
 					line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->buff,
 												 line_old );
 					total_offset_new = parse_util_get_offset( data->buff, line_new, line_offset_old - 4*(indent_new-indent_old));
 					data->buff_pos = total_offset_new;
 					reader_repaint();
 				}
-
+								
 				break;
 			}
-
+			
 
 			/* Other, if a normal character, we add it to the command */
 			default:
 			{
-
+				
 				if( (!wchar_private(c)) && (( (c>31) || (c==L'\n'))&& (c != 127)) )
 				{
 					regular_char = 1;
@@ -3205,7 +3310,7 @@ wchar_t *reader_readline()
 			}
 
 		}
-
+		
 		if( (c != R_HISTORY_SEARCH_BACKWARD) &&
 		    (c != R_HISTORY_SEARCH_FORWARD) &&
 		    (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
@@ -3217,7 +3322,7 @@ wchar_t *reader_readline()
 			history_reset();
 			data->token_history_pos=-1;
 		}
-
+		
 		last_char = c;
 	}
 
@@ -3232,10 +3337,10 @@ wchar_t *reader_readline()
 		{
 			wperror(L"tcsetattr");
 		}
-
+		
 		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 	}
-
+	
 	return finished ? data->buff : 0;
 }
 
@@ -3245,8 +3350,8 @@ int reader_search_mode()
 	{
 		return -1;
 	}
-
-	return !!data->search_mode;
+	
+	return !!data->search_mode;	
 }
 
 
@@ -3284,18 +3389,18 @@ static int read_ni( int fd, io_data_t *io )
 			int c;
 
 			c = fread(buff, 1, 4096, in_stream);
-
+			
 			if( ferror( in_stream ) && ( errno != EINTR ) )
 			{
 				debug( 1,
 					   _( L"Error while reading from file descriptor" ) );
-
+				
 				/*
 				  Reset buffer on error. We won't evaluate incomplete files.
 				*/
 				acc.used=0;
 				break;
-
+				
 			}
 
 			b_append( &acc, buff, c );
@@ -3317,7 +3422,7 @@ static int read_ni( int fd, io_data_t *io )
 		{
 			string_buffer_t sb;
 			sb_init( &sb );
-
+		
 			if( !parser_test( str, 0, &sb, L"fish" ) )
 			{
 				eval( str, io, TOP );
@@ -3328,7 +3433,7 @@ static int read_ni( int fd, io_data_t *io )
 				res = 1;
 			}
 			sb_destroy( &sb );
-
+		
 			free( str );
 		}
 		else
@@ -3371,7 +3476,7 @@ int reader_read( int fd, io_data_t *io )
 
 	int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
 	proc_push_interactive( inter );
-
+	
 	res= is_interactive?read_i():read_ni( fd, io );
 
 	/*
@@ -3381,7 +3486,7 @@ int reader_read( int fd, io_data_t *io )
 	if( data )
 		data->end_loop = 0;
 	end_loop = 0;
-
+	
 	proc_pop_interactive();
 	return res;
 }

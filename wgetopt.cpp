@@ -1,5 +1,5 @@
 /** \file wgetopt.c
-	A version of the getopt library for use with wide character strings.
+	A version of the getopt library for use with wide character strings. 
 
 	This is simply the gnu getopt library, but converted for use with
 	wchar_t instead of char. This is not usually useful since the argv
@@ -204,9 +204,7 @@ static char *posixly_correct;
 char *getenv ();
 
 static wchar_t *
-my_index (str, chr)
-	const wchar_t *str;
-	int chr;
+my_index (const wchar_t *str, int chr)
 {
 	while (*str)
     {
@@ -250,14 +248,13 @@ static int last_nonopt;
    the new indices of the non-options in ARGV after they are moved.  */
 
 static void
-exchange (argv)
-	wchar_t **argv;
+exchange (wchar_t **argv)
 {
 	int bottom = first_nonopt;
 	int middle = last_nonopt;
 	int top = woptind;
 	wchar_t *tem;
-
+  
 	/* Exchange the shorter segment with the far end of the longer segment.
 	   That puts the shorter segment into the right place.
 	   It leaves the longer segment in the right place overall,
@@ -308,8 +305,7 @@ exchange (argv)
 /* Initialize the internal data when the first call is made.  */
 
 static const wchar_t *
-_wgetopt_initialize (optstring)
-	const wchar_t *optstring;
+_wgetopt_initialize (const wchar_t *optstring)
 {
 	/* Start processing options with ARGV-element 1 (since ARGV-element 0
 	   is the program name); the sequence of previously skipped
@@ -398,13 +394,7 @@ _wgetopt_initialize (optstring)
    long-named options.  */
 
 int
-_wgetopt_internal (argc, argv, optstring, longopts, longind, long_only)
-	int argc;
-wchar_t *const *argv;
-const wchar_t *optstring;
-const struct woption *longopts;
-int *longind;
-int long_only;
+_wgetopt_internal (int argc, wchar_t *const *argv, const wchar_t *optstring, const struct woption *longopts, int *longind, int long_only)
 {
 	woptarg = NULL;
 
@@ -696,10 +686,7 @@ int long_only;
 }
 
 int
-wgetopt (argc, argv, optstring)
-	int argc;
-	wchar_t *const *argv;
-	const wchar_t *optstring;
+wgetopt (int argc, wchar_t *const *argv, const wchar_t *optstring)
 {
 	return _wgetopt_internal (argc, argv, optstring,
 							  (const struct woption *) 0,
@@ -708,23 +695,13 @@ wgetopt (argc, argv, optstring)
 }
 
 int
-wgetopt_long (argc, argv, options, long_options, opt_index)
-	int argc;
-wchar_t *const *argv;
-const wchar_t *options;
-const struct woption *long_options;
-int *opt_index;
+wgetopt_long (int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
 {
 	return _wgetopt_internal (argc, argv, options, long_options, opt_index, 0);
 }
 
 int
-wgetopt_long_only (argc, argv, options, long_options, opt_index)
-	int argc;
-wchar_t *const *argv;
-const wchar_t *options;
-const struct woption *long_options;
-int *opt_index;
+wgetopt_long_only (int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
 {
 	return _wgetopt_internal (argc, argv, options, long_options, opt_index, 1);
 }

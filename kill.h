@@ -12,7 +12,7 @@
 /**
    Replace the specified string in the killring
 */
-void kill_replace( wchar_t *old, wchar_t *new );
+void kill_replace( wchar_t *old, wchar_t *newv );
 
 
 /**

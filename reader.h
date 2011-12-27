@@ -1,4 +1,4 @@
-/** \file reader.h
+/** \file reader.h 
 
     Prototypes for functions for reading data from stdin and passing
 	to the parser. If stdin is a keyboard, it supplies a killring,
@@ -46,7 +46,7 @@ wchar_t *reader_current_filename();
 
 /**
    Push a new filename on the stack of read files
-
+   
    \param fn The fileanme to push
 */
 void reader_push_current_filename( const wchar_t *fn );
@@ -86,7 +86,7 @@ wchar_t *reader_get_buffer();
    \param b the new buffer value
    \param p the cursor position. If \c p is less than zero, the cursor is placed on the last character.
 */
-void reader_set_buffer( wchar_t *b, int p );
+void reader_set_buffer( const wchar_t *b, int p );
 
 /**
    Get the current cursor position in the command line. If interactive
@@ -108,9 +108,9 @@ int reader_interrupted();
 wchar_t *reader_readline();
 
 /**
-   Push a new reader environment.
+   Push a new reader environment. 
 */
-void reader_push( wchar_t *name );
+void reader_push( const wchar_t *name );
 
 /**
    Return to previous reader environment
@@ -118,7 +118,7 @@ void reader_push( wchar_t *name );
 void reader_pop();
 
 /**
-   Specify function to use for finding possible tab completions. The function must take these arguments:
+   Specify function to use for finding possible tab completions. The function must take these arguments: 
 
    - The command to be completed as a null terminated array of wchar_t
    - An array_list_t in which completions will be inserted.
@@ -126,14 +126,23 @@ void reader_pop();
 void reader_set_complete_function( void (*f)( const wchar_t *, array_list_t * ) );
 
 /**
-   Specify function for syntax highlighting. The function must take these arguments:
+<<<<<<< upstream
+=======
+ The type of a highlight function.
+ */
+class env_vars;
+typedef void (*highlight_function_t)( const wchar_t *, int *, int, array_list_t *, const env_vars &vars );
 
-   - The command to be highlighted as a null terminated array of wchar_t
-   - The color code of each character as an array of ints
-   - The cursor position
-   - An array_list_t used for storing error messages
-*/
-void reader_set_highlight_function( void (*f)( wchar_t *, int *, int, array_list_t * ) );
+/**
+>>>>>>> HEAD~2
+ Specify function for syntax highlighting. The function must take these arguments:
+ 
+ - The command to be highlighted as a null terminated array of wchar_t
+ - The color code of each character as an array of ints
+ - The cursor position
+ - An array_list_t used for storing error messages
+ */
+void reader_set_highlight_function( highlight_function_t );
 
 /**
    Specify function for testing if the command buffer contains syntax
@@ -145,10 +154,10 @@ void reader_set_test_function( int (*f)( wchar_t * ) );
    Specify string of shell commands to be run in order to generate the
    prompt.
 */
-void reader_set_prompt( wchar_t *prompt );
+void reader_set_prompt( const wchar_t *prompt );
 
 /**
-   Returns true if the shell is exiting, 0 otherwise.
+   Returns true if the shell is exiting, 0 otherwise. 
 */
 int exit_status();
 

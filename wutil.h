@@ -1,7 +1,7 @@
 /** \file wutil.h
 
   Prototypes for wide character equivalents of various standard unix
-  functions.
+  functions. 
 */
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H
@@ -14,6 +14,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdarg.h>
+#include <string>
+
+
 
 /**
    Wide version of the dirent data structure
@@ -24,8 +27,7 @@ struct wdirent
 	   The name of the current directory
 	*/
 	wchar_t *d_name;
-}
-	;
+};
 
 
 /**
@@ -95,7 +97,7 @@ wchar_t *wgetcwd( wchar_t *buff, size_t sz );
 */
 int wchdir( const wchar_t * dir );
 
-/**
+/** 
 	Wide character version of realpath function. Just like the GNU
 	version of realpath, wrealpath will accept 0 as the value for the
 	second argument, in which case the result will be allocated using
@@ -106,17 +108,17 @@ wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path);
 /**
    Wide character version of readdir()
 */
-struct wdirent *wreaddir(DIR *dir );
+std::wstring *wreaddir(DIR *dir, std::wstring &outPath);
 
 /**
    Wide character version of dirname()
 */
-wchar_t *wdirname( wchar_t *path );
+std::wstring wdirname( const std::wstring &path);
 
 /**
    Wide character version of basename()
 */
-wchar_t *wbasename( const wchar_t *path );
+std::wstring wbasename( const std::wstring &path);
 
 /**
    Wide character wrapper around the gettext function. For historic
@@ -141,6 +143,6 @@ int wmkdir( const wchar_t *dir, int mode );
 /**
    Wide character version of rename
 */
-int wrename( const wchar_t *old, const wchar_t *new );
+int wrename( const wchar_t *oldName, const wchar_t *newName );
 
 #endif

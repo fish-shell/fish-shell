@@ -1,8 +1,8 @@
-/** \file mimedb.c
+/** \file mimedb.c 
 
 mimedb is a program for checking the mimetype, description and
 default action associated with a file or mimetype.  It uses the
-xdgmime library written by the fine folks at freedesktop.org. There does
+xdgmime library written by the fine folks at freedesktop.org. There does 
 not seem to be any standard way for the user to change the preferred
 application yet.
 
@@ -97,7 +97,7 @@ license. Read the source code of the library for more information.
 /**
    Error message if system call goes wrong.
 */
-#define ERROR_SYSTEM "%s: Could not execute command \"%s\"\n"
+#define ERROR_SYSTEM "%s: Could not execute command \"%s\"\n" 
 
 /**
    Exit code if system call goes wrong.
@@ -194,8 +194,8 @@ static char * search_ini( const char *filename, const char *match )
 	FILE *f = fopen( filename, "r" );
 	char buf[4096];
 	int len=strlen(match);
-	int done = 0;
-
+	int done = 0;	
+	
 	if(!f )
 	{
 		perror( "fopen" );
@@ -210,14 +210,14 @@ static char * search_ini( const char *filename, const char *match )
 			{
 				perror( "fgets" );
 				error=1;
-			}
+			}			
 			buf[0]=0;
 			done = 1;
 		}
 		else if( strncmp( buf, match, len ) == 0 && buf[len] == '=' )
 		{
 			done=1;
-		}
+		}		
 	}
 	fclose( f );
 	if( buf[0] )
@@ -242,36 +242,36 @@ static char *file_exists( const char *dir, const char *in )
 {
 	int dir_len = strlen( dir );
 	int need_sep = dir[dir_len - 1] != '/';
-	char *filename = my_malloc( dir_len + need_sep + strlen( in ) + 1 );
-	char *replaceme;
+	char *filename = (char *)my_malloc( dir_len + need_sep + strlen( in ) + 1 );
+    char *replaceme;
 	struct stat buf;
 
 //	fprintf( stderr, "Check %s%s\n", dir, in );
-
+	
 	if( !filename )
 	{
 		return 0;
-	}
+	}	
 	strcpy( filename, dir );
 	if ( need_sep )
 		filename[dir_len++] = '/';
 	strcpy( filename + dir_len, in );
-
+	
 	if( !stat( filename, &buf ) )
 		return filename;
 
 	free( filename );
-
+	
 	/*
 	  DOH! File does not exist. But all is not lost. KDE sometimes uses
 	  a slash in the name as a directory separator. We try to replace
-	  a dash with a slash and try again.
+	  a dash with a slash and try again. 
 	*/
-	replaceme = strchr( in, '-' );
+	replaceme = strchr( in, '-' ); 
 	if( replaceme )
 	{
 		char *res;
-
+		
 		*replaceme = '/';
 		res = file_exists( dir, in );
 		*replaceme = '-';
@@ -306,8 +306,8 @@ static int append_filenames( array_list_t *list, char *f, int all )
 	xdg_data_home = getenv ("XDG_DATA_HOME");
 	if (xdg_data_home)
     {
-		result = file_exists( xdg_data_home, f );
-		if ( result )
+		result = file_exists( xdg_data_home, f ); 
+		if (result)
 		{
 			al_push( list, result );
 			if ( !all )
@@ -323,16 +323,16 @@ static int append_filenames( array_list_t *list, char *f, int all )
 		{
 			char *guessed_xdg_home;
 
-			guessed_xdg_home = my_malloc (strlen (home) + strlen ("/.local/share") + 1);
+			guessed_xdg_home = (char *)my_malloc (strlen (home) + strlen ("/.local/share") + 1);
 			if( !guessed_xdg_home )
 				return 0;
-
+			
 			strcpy (guessed_xdg_home, home);
 			strcat (guessed_xdg_home, "/.local/share");
-			result = file_exists( guessed_xdg_home, f );
+			result = file_exists( guessed_xdg_home, f ); 
 			free (guessed_xdg_home);
 
-			if ( result )
+			if (result)
 			{
 				al_push( list, result );
 				if ( !all )
@@ -363,18 +363,18 @@ static int append_filenames( array_list_t *list, char *f, int all )
 			continue;
 		}
 
-		len = end_ptr - ptr;
-		dir = my_malloc (len + 1);
+        len = end_ptr - ptr;
+		dir = (char *)my_malloc (len + 1);
 		if( !dir )
 			return 0;
-
+		
 		strncpy (dir, ptr, len);
 		dir[len] = '\0';
-		result = file_exists( dir, f );
-
+		result = file_exists( dir, f ); 
+		
 		free (dir);
 
-		if ( result )
+		if (result)
 		{
 			al_push( list, result );
 			if ( !all ) {
@@ -397,7 +397,7 @@ static char *get_filename( char *f )
 
 	al_init( &list );
 	append_filenames( &list, f, 0 );
-	first = al_pop( &list );
+	first = (char *)al_pop( &list );
 	al_destroy( &list );
 	return first;
 }
@@ -409,7 +409,7 @@ static char *get_filename( char *f )
 */
 static char *munge( char *in )
 {
-	char *out = my_malloc( strlen( in )+1 );
+	char *out = (char *)my_malloc( strlen( in )+1 );
 	char *p=out;
 	int had_whitespace = 0;
 	int printed = 0;
@@ -417,11 +417,11 @@ static char *munge( char *in )
 	{
 		return 0;
 	}
-
+	
 	while( 1 )
 	{
 //		fprintf( stderr, "%c\n", *in );
-
+		
 		switch( *in )
 		{
 			case ' ':
@@ -442,7 +442,7 @@ static char *munge( char *in )
 					*(p++)=' ';
 				}
 				printed=1;
-				had_whitespace=0;
+				had_whitespace=0;				
 				*(p++)=*in;
 				break;
 			}
@@ -459,19 +459,19 @@ static char *munge( char *in )
 */
 static char *get_lang_re()
 {
-
+	
 	static char buff[BUFF_SIZE];
 	const char *lang = setlocale( LC_MESSAGES, 0 );
 	int close=0;
 	char *out=buff;
-
+    
 	if( (1+strlen(lang)*4) >= BUFF_SIZE )
 	{
 		fprintf( stderr, _( "%s: Locale string too long\n"), MIMEDB );
 		error = 1;
 		return 0;
 	}
-
+	
 	for( ; *lang; lang++ )
 	{
 		switch( *lang )
@@ -484,17 +484,17 @@ static char *get_lang_re()
 					*out++ = ')';
 					*out++ = '?';
 				}
-
+				
 				close=1;
 				*out++ = '(';
 				*out++ = *lang;
 				break;
-
+				
 			default:
 				*out++ = *lang;
 		}
 	}
-
+	
 	if( close )
 	{
 		*out++ = ')';
@@ -506,12 +506,12 @@ static char *get_lang_re()
 }
 
 /**
-   Get description for a specified mimetype.
+   Get description for a specified mimetype. 
 */
 static char *get_description( const char *mimetype )
 {
 	char *fn_part;
-
+	
 	char *fn;
 	int fd;
 	struct stat st;
@@ -526,12 +526,12 @@ static char *get_description( const char *mimetype )
 		lang = get_lang_re();
 		if( !lang )
 			return 0;
-
+		
 		snprintf( buff, BUFF_SIZE, START_TAG, lang, lang );
 
-		start_re = my_malloc( sizeof(regex_t));
-		stop_re = my_malloc( sizeof(regex_t));
-
+		start_re = (regex_t *)my_malloc( sizeof(regex_t));
+		stop_re = (regex_t *)my_malloc( sizeof(regex_t));
+		
         int reg_status;
 		if( ( reg_status = regcomp( start_re, buff, REG_EXTENDED ) ) )
         {
@@ -539,7 +539,7 @@ static char *get_description( const char *mimetype )
             regerror(reg_status, start_re, regerrbuf, BUFF_SIZE);
 			fprintf( stderr, _( "%s: Could not compile regular expressions %s with error %s\n"), MIMEDB, buff, regerrbuf);
 			error=1;
-
+        
         }
         else if ( ( reg_status = regcomp( stop_re, STOP_TAG, REG_EXTENDED ) ) )
 		{
@@ -547,7 +547,7 @@ static char *get_description( const char *mimetype )
             regerror(reg_status, stop_re, regerrbuf, BUFF_SIZE);
 			fprintf( stderr, _( "%s: Could not compile regular expressions %s with error %s\n"), MIMEDB, buff, regerrbuf);
 			error=1;
-
+        
         }
 
         if( error )
@@ -559,8 +559,8 @@ static char *get_description( const char *mimetype )
 			return 0;
         }
 	}
-
-	fn_part = my_malloc( strlen(MIME_DIR) + strlen( mimetype) + strlen(MIME_SUFFIX) + 1 );
+	
+	fn_part = (char *)my_malloc( strlen(MIME_DIR) + strlen( mimetype) + strlen(MIME_SUFFIX) + 1 );
 
 	if( !fn_part )
 	{
@@ -573,7 +573,7 @@ static char *get_description( const char *mimetype )
 
 	fn = get_filename(fn_part); //malloc( strlen(MIME_DIR) +strlen( MIME_SUFFIX)+ strlen( mimetype ) + 1 );
 	free(fn_part );
-
+	
 	if( !fn )
 	{
 		return 0;
@@ -582,14 +582,14 @@ static char *get_description( const char *mimetype )
 	fd = open( fn, O_RDONLY );
 
 //	fprintf( stderr, "%s\n", fn );
-
+	
 	if( fd == -1 )
 	{
 		perror( "open" );
 		error=1;
 		return 0;
 	}
-
+	
 	if( stat( fn, &st) )
 	{
 		perror( "stat" );
@@ -597,12 +597,12 @@ static char *get_description( const char *mimetype )
 		return 0;
 	}
 
-	contents = my_malloc( st.st_size + 1 );
+	contents = (char *)my_malloc( st.st_size + 1 );
 	if( !contents )
 	{
 		return 0;
 	}
-
+	
 	if( read( fd, contents, st.st_size ) != st.st_size )
 	{
 		perror( "read" );
@@ -619,9 +619,9 @@ static char *get_description( const char *mimetype )
 	contents[st.st_size]=0;
 	regmatch_t match[1];
 	int w = -1;
-
+	
 	start=contents;
-
+	
 	/*
 	  On multiple matches, use the longest match, should be a pretty
 	  good heuristic for best match...
@@ -630,10 +630,10 @@ static char *get_description( const char *mimetype )
 	{
 		int new_w = match[0].rm_eo - match[0].rm_so;
 		start += match[0].rm_eo;
-
+		
 		if( new_w > w )
 		{
-			/*
+			/* 
 			   New match is for a longer match then the previous
 			   match, so we use the new match
 			*/
@@ -641,7 +641,7 @@ static char *get_description( const char *mimetype )
 			best_start = start;
 		}
 	}
-
+	
 	if( w != -1 )
 	{
 		start = best_start;
@@ -668,46 +668,46 @@ static char *get_description( const char *mimetype )
 
 
 /**
-   Get default action for a specified mimetype.
+   Get default action for a specified mimetype. 
 */
 static char *get_action( const char *mimetype )
 {
 	char *res=0;
 	int i;
-
+	
 	char *launcher;
 	char *end;
 	array_list_t mime_filenames;
-
+	
 	char *launcher_str = NULL;
 	char *launcher_filename, *launcher_command_str, *launcher_command;
 	char *launcher_full;
-
+	
 	al_init( &mime_filenames );
 	if( !append_filenames( &mime_filenames, DESKTOP_DEFAULT, 1 ) )
 	{
 		al_destroy( &mime_filenames );
 		return 0;
 	}
-
+	
 	for ( i = 0; i < al_get_count( &mime_filenames ); i++ )
 	{
-		launcher_str = search_ini( al_get( &mime_filenames, i ), mimetype );
+		launcher_str = (char *)search_ini( (char *)al_get( &mime_filenames, i ), mimetype );
 		if ( launcher_str )
 			break;
 	}
 
 	al_foreach( &mime_filenames, free );
 	al_destroy( &mime_filenames );
-
+	
 	if( !launcher_str )
 	{
 		/*
 		  This type does not have a launcher. Try the supertype!
 		*/
-//		fprintf( stderr, "mimedb: %s does not have launcher, try supertype\n", mimetype );
+//		fprintf( stderr, "mimedb: %s does not have launcher, try supertype\n", mimetype );	
 		const char ** parents = xdg_mime_get_mime_parents(mimetype);
-
+		
 		const char **p;
 		if( parents )
 		{
@@ -722,65 +722,65 @@ static char *get_action( const char *mimetype )
 		  Just in case subclassing doesn't work, (It doesn't on Fedora
 		  Core 3) we also test some common subclassings.
 		*/
-
+		
 		if( strncmp( mimetype, "text/plain", 10) != 0 && strncmp( mimetype, "text/", 5 ) == 0 )
 			return get_action( "text/plain" );
 
 		return 0;
 	}
-
-//	fprintf( stderr, "WOOT %s\n", launcher_str );
+	
+//	fprintf( stderr, "WOOT %s\n", launcher_str );	
 	launcher = strchr( launcher_str, '=' );
-
+		
 	if( !launcher )
 	{
-		fprintf( stderr, _("%s: Could not parse launcher string '%s'\n"), MIMEDB, launcher_str );
+		fprintf( stderr, _("%s: Could not parse launcher string '%s'\n"), MIMEDB, launcher_str );	
 		error=1;
 		return 0;
 	}
-
+	
 	/* Skip the = */
 	launcher++;
-
+						
 	/* Only use first launcher */
 	end = strchr( launcher, ';' );
 	if( end )
 		*end = '\0';
 
-	launcher_full = my_malloc( strlen( launcher) + strlen( APPLICATIONS_DIR)+1 );
+	launcher_full = (char *)my_malloc( strlen( launcher) + strlen( APPLICATIONS_DIR)+1 );
 	if( !launcher_full )
 	{
 		free( launcher_str );
 		return 0;
 	}
-
+	
 	strcpy( launcher_full, APPLICATIONS_DIR );
 	strcat( launcher_full, launcher );
 	free( launcher_str );
-
+	
 	launcher_filename = get_filename( launcher_full );
-
+	
 	free( launcher_full );
-
+		
 	launcher_command_str = search_ini( launcher_filename, "Exec" );
-
+	
 	if( !launcher_command_str )
 	{
-		fprintf( stderr,
-				 _( "%s: Default launcher '%s' does not specify how to start\n"), MIMEDB,
+		fprintf( stderr, 
+				 _( "%s: Default launcher '%s' does not specify how to start\n"), MIMEDB, 
 				 launcher_filename );
 		free( launcher_filename );
-		return 0;
+		return 0;	
 	}
 
 	free( launcher_filename );
-
+	
 	launcher_command = strchr( launcher_command_str, '=' );
 	launcher_command++;
-
+	
 	res = my_strdup( launcher_command );
-
-	free( launcher_command_str );
+	
+	free( launcher_command_str );	
 
 	return res;
 }
@@ -793,11 +793,11 @@ static void writer( char c )
 {
 	if( launch_len == -1 )
 		return;
-
+	
 	if( launch_len <= launch_pos )
 	{
 		int new_len = launch_len?2*launch_len:256;
-		char *new_buff = realloc( launch_buff, new_len );
+		char *new_buff = (char *)realloc( launch_buff, new_len );
 		if( !new_buff )
 		{
 			free( launch_buff );
@@ -807,7 +807,7 @@ static void writer( char c )
 		}
 		launch_buff = new_buff;
 		launch_len = new_len;
-
+		
 	}
 	launch_buff[launch_pos++]=c;
 }
@@ -830,7 +830,7 @@ static void writer_hex( int num )
 */
 static char *my_getcwd ()
 {
-	size_t size = 100;
+	size_t size = 100;	
 	while (1)
 	{
 		char *buffer = (char *) malloc (size);
@@ -849,7 +849,7 @@ static char *my_getcwd ()
 static char *get_fullfile( char *file )
 {
 	char *fullfile;
-
+	
 	if( file[0] == '/' )
 	{
 		fullfile = file;
@@ -863,10 +863,10 @@ static char *get_fullfile( char *file )
 			perror( "getcwd" );
 			return 0;
 		}
-
+		
 		int l = strlen(cwd);
-
-		fullfile = my_malloc( l + strlen(file)+2 );
+		
+		fullfile = (char *)my_malloc( l + strlen(file)+2 );
 		if( !fullfile )
 		{
 			free(cwd);
@@ -876,7 +876,7 @@ static char *get_fullfile( char *file )
 		if( cwd[l-1] != '/' )
 			strcat(fullfile, "/" );
 		strcat( fullfile, file );
-
+		
 		free(cwd);
 	}
 	return fullfile;
@@ -890,13 +890,13 @@ static void write_url( char *file )
 {
 	char *fullfile = get_fullfile( file );
 	char *str = fullfile;
-
+	
 	if( str == 0 )
 	{
 		launch_len = -1;
 		return;
 	}
-
+	
 	writer( 'f');
 	writer( 'i');
 	writer( 'l');
@@ -911,9 +911,9 @@ static void write_url( char *file )
 			((*str >= '0') && (*str <='9')) ||
 			(strchr( "-_.~/",*str) != 0) )
 		{
-			writer(*str);
+			writer(*str);			
 		}
-		else if(strchr( "()?&=",*str) != 0)
+		else if(strchr( "()?&=",*str) != 0) 
 		{
 			writer('\\');
 			writer(*str);
@@ -927,7 +927,7 @@ static void write_url( char *file )
 	}
 	if( fullfile != file )
 		free( fullfile );
-
+	
 }
 
 /**
@@ -951,7 +951,7 @@ static void write_file( char *file, int print_path )
 		}
 		str = basename( fullfile );
 	}
-
+	
 	if( !str )
 	{
 		error = 1;
@@ -1024,7 +1024,7 @@ static void write_file( char *file, int print_path )
 }
 
 /**
-   Use the specified launch filter to launch all the files in the specified list.
+   Use the specified launch filter to launch all the files in the specified list. 
 
    \param filter the action to take
    \param files the list of files for which to perform the action
@@ -1035,11 +1035,11 @@ static void launch( char *filter, array_list_t *files, int fileno )
 	char *filter_org=filter;
 	int count=0;
 	int launch_again=0;
-
+	
 	if( al_get_count( files ) <= fileno )
 		return;
-
-
+	
+	
 	launch_pos=0;
 
 	for( ;*filter && !error; filter++)
@@ -1054,7 +1054,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 					launch_again = 1;
 					write_url( (char *)al_get( files, fileno ) );
 					break;
-				}
+				}				
 				case 'U':
 				{
 					int i;
@@ -1066,10 +1066,10 @@ static void launch( char *filter, array_list_t *files, int fileno )
 						if( error )
 							break;
 					}
-
+					
 					break;
 				}
-
+				
 				case 'f':
 				case 'n':
 				{
@@ -1077,7 +1077,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 					write_file( (char *)al_get( files, fileno ), *filter == 'f' );
 					break;
 				}
-
+				
 				case 'F':
 				case 'N':
 				{
@@ -1092,14 +1092,14 @@ static void launch( char *filter, array_list_t *files, int fileno )
 					}
 					break;
 				}
-
+				
 
 				case 'd':
 				{
 					char *cpy = get_fullfile( (char *)al_get( files, fileno ) );
 					char *dir;
 
-					launch_again=1;
+					launch_again=1;					
 					/*
 					  We wish to modify this string, make sure it is only a copy
 					*/
@@ -1113,16 +1113,16 @@ static void launch( char *filter, array_list_t *files, int fileno )
 					dir=dirname( cpy );
 					write_file( dir, 1 );
 					free( cpy );
-
+					
 					break;
 				}
-
+			
 				case 'D':
 				{
 					int i;
 					for( i=0; i<al_get_count( files ); i++ )
 					{
-						char *cpy = get_fullfile( (char *)al_get( files, i ) );
+						char *cpy = get_fullfile( (char *)al_get( files, i ) );					
 						char *dir;
 
 						/*
@@ -1136,7 +1136,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 							break;
 						}
 						dir=dirname( cpy );
-
+						
 						if( i != 0 )
 							writer( ' ' );
 
@@ -1144,14 +1144,14 @@ static void launch( char *filter, array_list_t *files, int fileno )
 						free( cpy );
 
 					}
-					break;
+					break;					
 				}
-
+				
 				default:
 					fprintf( stderr, _("%s: Unsupported switch '%c' in launch string '%s'\n"), MIMEDB, *filter, filter_org );
 					launch_len=0;
 					break;
-
+					
 			}
 		}
 		else
@@ -1163,7 +1163,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 
 	if( error )
 		return;
-
+	
 	switch( launch_len )
 	{
 		case -1:
@@ -1178,17 +1178,17 @@ static void launch( char *filter, array_list_t *files, int fileno )
 		}
 		default:
 		{
-
+			
 			writer( ' ' );
 			writer( '&' );
 			writer( '\0' );
-
+	
 			if( system( launch_buff ) == -1 )
 			{
 				fprintf( stderr, _( ERROR_SYSTEM ), MIMEDB, launch_buff );
 				exit(STATUS_ERROR_SYSTEM);
 			}
-
+			
 			break;
 		}
 	}
@@ -1196,7 +1196,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 	{
 		launch( filter_org, files, fileno+1 );
 	}
-
+	
 }
 
 /**
@@ -1233,19 +1233,19 @@ static void locale_init()
    Main function. Parses options and calls helper function for any heavy lifting.
 */
 int main (int argc, char *argv[])
-{
+{	
 	int input_type=FILEDATA;
 	int output_type=MIMETYPE;
-
+	
 	const char *mimetype;
 	char *output=0;
-
+	
 	int i;
 
 	hash_table_t launch_hash;
 
 	locale_init();
-
+	
 	/*
 	  Parse options
 	*/
@@ -1255,103 +1255,103 @@ int main (int argc, char *argv[])
 			long_options[] =
 			{
 				{
-					"input-file-data", no_argument, 0, 't'
+					"input-file-data", no_argument, 0, 't' 
 				}
 				,
 				{
-					"input-filename", no_argument, 0, 'f'
+					"input-filename", no_argument, 0, 'f' 
 				}
 				,
 				{
-					"input-mime", no_argument, 0, 'i'
+					"input-mime", no_argument, 0, 'i' 
 				}
 				,
 				{
-					"output-mime", no_argument, 0, 'm'
+					"output-mime", no_argument, 0, 'm' 
 				}
 				,
 				{
-					"output-description", no_argument, 0, 'd'
+					"output-description", no_argument, 0, 'd' 
 				}
 				,
 				{
-					"output-action", no_argument, 0, 'a'
+					"output-action", no_argument, 0, 'a' 
 				}
 				,
 				{
-					"help", no_argument, 0, 'h'
+					"help", no_argument, 0, 'h' 
 				}
 				,
 				{
-					"version", no_argument, 0, 'v'
+					"version", no_argument, 0, 'v' 
 				}
 				,
 				{
 					"launch", no_argument, 0, 'l'
 				}
 				,
-				{
-					0, 0, 0, 0
+				{ 
+					0, 0, 0, 0 
 				}
 			}
 		;
-
+		
 		int opt_index = 0;
-
+		
 		int opt = getopt_long( argc,
-							   argv,
+							   argv, 
 							   GETOPT_STRING,
-							   long_options,
+							   long_options, 
 							   &opt_index );
-
+		
 		if( opt == -1 )
 			break;
-
+		
 		switch( opt )
 		{
 			case 0:
-				break;
+				break;				
 
-			case 't':
+			case 't':		
 				input_type=FILEDATA;
 				break;
 
-			case 'f':
+			case 'f':		
 				input_type=FILENAME;
 				break;
 
-			case 'i':
+			case 'i':		
 				input_type=MIMETYPE;
 				break;
 
-			case 'm':
+			case 'm':		
 				output_type=MIMETYPE;
 				break;
 
-			case 'd':
+			case 'd':		
 				output_type=DESCRIPTION;
 				break;
 
-			case 'a':
+			case 'a':		
 				output_type=ACTION;
 				break;
 
-			case 'l':
+			case 'l':		
 				output_type=LAUNCH;
 				break;
 
 			case 'h':
 				print_help( argv[0], 1 );
-				exit(0);
-
+				exit(0);				
+								
 			case 'v':
 				printf( _("%s, version %s\n"), MIMEDB, PACKAGE_VERSION );
-				exit( 0 );
-
+				exit( 0 );				
+				
 			case '?':
 				return 1;
-
-		}
+				
+		}		
 	}
 
 	if( ( output_type == LAUNCH )&&(input_type==MIMETYPE))
@@ -1363,13 +1363,13 @@ int main (int argc, char *argv[])
 
 	if( output_type == LAUNCH )
 		hash_init( &launch_hash, &hash_str_func, &hash_str_cmp );
-
-
-	/*
+	
+	
+	/* 
 	   Loop over all non option arguments and do the specified lookup
 	*/
-
-	//fprintf( stderr, "Input %d, output %d\n", input_type, output_type );
+	
+	//fprintf( stderr, "Input %d, output %d\n", input_type, output_type );	
 
 	for (i = optind; (i < argc)&&(!error); i++)
     {
@@ -1392,7 +1392,7 @@ int main (int argc, char *argv[])
 			error=1;
 			return 1;
 		}
-
+		
 		/*
 		  Convert from mimetype to whatever, if needed
 		*/
@@ -1402,21 +1402,21 @@ int main (int argc, char *argv[])
 			{
 				output = (char *)mimetype;
 				break;
-
+				
 			}
 			case DESCRIPTION:
 			{
-				output = get_description( mimetype );
+				output = get_description( mimetype );				
 				if( !output )
 					output = strdup( _("Unknown") );
-
+				
 				break;
 			}
 			case ACTION:
 			{
 				output = get_action( mimetype );
 				break;
-			}
+			}			
 			case LAUNCH:
 			{
 				/*
@@ -1427,10 +1427,10 @@ int main (int argc, char *argv[])
 				*/
 				array_list_t *l= (array_list_t *)hash_get( &launch_hash, mimetype );
 				output = 0;
-
+				
 				if( !l )
 				{
-					l = my_malloc( sizeof( array_list_t ) );
+					l = (array_list_t *)my_malloc( sizeof( array_list_t ) );
 					if( l == 0 )
 					{
 						break;
@@ -1438,10 +1438,10 @@ int main (int argc, char *argv[])
 					al_init( l );
 					hash_put( &launch_hash, mimetype, l );
 				}
-				al_push( l, argv[i] );
+				al_push( l, argv[i] );				
 			}
 		}
-
+		
 		/*
 		  Print the glorious result
 		*/
@@ -1471,9 +1471,9 @@ int main (int argc, char *argv[])
 			{
 				fprintf( stderr, _( "%s: Unknown error\n"), MIMEDB );
 				error=1;
-				break;
+				break;				
 			}
-
+			
 			char *launcher = get_action( mimetype );
 
 			if( launcher )
@@ -1486,7 +1486,7 @@ int main (int argc, char *argv[])
 		hash_destroy( &launch_hash );
 		al_destroy( &mimes );
 	}
-
+	
 	if( launch_buff )
 		free( launch_buff );
 
@@ -1496,9 +1496,9 @@ int main (int argc, char *argv[])
 		regfree( stop_re );
 		free( start_re );
 		free( stop_re );
-	}
+	}	
 
 	xdg_mime_shutdown();
-
-	return error;
+	
+	return error;	
 }

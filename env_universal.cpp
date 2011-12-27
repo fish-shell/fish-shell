@@ -358,7 +358,7 @@ void env_universal_barrier()
 	*/
 	msg= create_message( BARRIER, 0, 0);
 	msg->count=1;
-	q_put( &env_universal_server.unsent, msg );
+    env_universal_server.unsent->push(msg);
 
 	/*
 	  Wait until barrier request has been sent
@@ -369,7 +369,7 @@ void env_universal_barrier()
 		try_send_all( &env_universal_server );	
 		check_connection();		
 		
-		if( q_empty( &env_universal_server.unsent ) )
+		if( env_universal_server.unsent->empty() )
 			break;
 		
 		if( env_universal_server.fd == -1 )
@@ -433,7 +433,7 @@ void env_universal_set( const wchar_t *name, const wchar_t *value, int exportv )
 		}
 		
 		msg->count=1;
-		q_put( &env_universal_server.unsent, msg );
+        env_universal_server.unsent->push(msg);
 		env_universal_barrier();
 	}
 }
@@ -461,7 +461,7 @@ int env_universal_remove( const wchar_t *name )
 	{
 		msg= create_message( ERASE, name, 0);
 		msg->count=1;
-		q_put( &env_universal_server.unsent, msg );
+        env_universal_server.unsent->push(msg);
 		env_universal_barrier();
 	}
 	

@@ -658,7 +658,7 @@ static void parse_message( wchar_t *msg,
 	{
 		message_t *msg = create_message( BARRIER_REPLY, 0, 0 );
 		msg->count = 1;
-		q_put( &src->unsent, msg );
+        src->unsent->push(msg);
 		try_send_all( src );
 	}
 	else if( match( msg, BARRIER_REPLY_STR ) )
@@ -728,12 +728,12 @@ void try_send_all( connection_t *c )
 /*	debug( 3,
 		   L"Send all updates to connection on fd %d", 
 		   c->fd );*/
-	while( !q_empty( &c->unsent) )
+	while( !c->unsent->empty() )
 	{
-		switch( try_send( (message_t *)q_peek( &c->unsent), c->fd ) )
+		switch( try_send( c->unsent->front(), c->fd ) )
 		{
 			case 1:
-				q_get( &c->unsent);
+				c->unsent->pop();
 				break;
 				
 			case 0:
@@ -951,19 +951,18 @@ static void enqueue( void *k,
 {
 	const wchar_t *key = (const wchar_t *)k;
 	const var_uni_entry_t *val = (const var_uni_entry_t *)v;
-	dyn_queue_t *queue = (dyn_queue_t *)q;
+	message_queue_t *queue = (message_queue_t *)q;
 	
 	message_t *msg = create_message( val->exportv?SET_EXPORT:SET, key, val->val );
 	msg->count=1;
-	
-	q_put( queue, msg );
+	queue->push(msg);
 }
 
 void enqueue_all( connection_t *c )
 {
 	hash_foreach2( &env_universal_var,
 	               &enqueue, 
-	               (void *)&c->unsent );
+	               (void *)c->unsent );
 	try_send_all( c );
 }
 
@@ -973,13 +972,13 @@ void connection_init( connection_t *c, int fd )
 	memset (c, 0, sizeof (connection_t));
 	c->fd = fd;
 	b_init( &c->input );
-	q_init( &c->unsent );
+    c->unsent = new std::queue<message_t *>;
 	c->buffer_consumed = c->buffer_used = 0;	
 }
 
 void connection_destroy( connection_t *c)
 {
-	q_destroy( &c->unsent );
+    if (c->unsent) delete c->unsent;
 	b_destroy( &c->input );
 
 	/*

@@ -2,7 +2,7 @@
 #define FISH_ENV_UNIVERSAL_COMMON_H
 
 #include <wchar.h>
-
+#include <queue>
 #include "util.h"
 
 /**
@@ -55,6 +55,25 @@ enum
 #define ENV_UNIVERSAL_BUFFER_SIZE 1024
 
 /**
+   A struct representing a message to be sent between client and server
+*/
+typedef struct 
+{
+	/**
+	   Number of queues that contain this message. Once this reaches zero, the message should be deleted
+	*/
+	int count;
+	/**
+	   Message body. The message must be allocated using enough memory to actually contain the message.
+	*/
+	char body[1];
+}
+	message_t;
+
+
+typedef std::queue<message_t *> message_queue_t;
+
+/**
    This struct represents a connection between a universal variable server/client
 */
 typedef struct connection
@@ -66,7 +85,7 @@ typedef struct connection
 	/**
 	   Queue of onsent messages
 	*/
-	dyn_queue_t unsent;
+    message_queue_t *unsent;
 	/**
 	   Set to one when this connection should be killed
 	*/
@@ -99,22 +118,6 @@ typedef struct connection
 	struct connection *next;
 }
 	connection_t;
-
-/**
-   A struct representing a message to be sent between client and server
-*/
-typedef struct 
-{
-	/**
-	   Number of queues that contain this message. Once this reaches zero, the message should be deleted
-	*/
-	int count;
-	/**
-	   Message body. The message must be allocated using enough memory to actually contain the message.
-	*/
-	char body[1];
-}
-	message_t;
 
 /**
    Read all available messages on this connection

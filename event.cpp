@@ -72,7 +72,7 @@ static std::vector<event_t *> events;
 /**
    List of event handlers that should be removed
 */
-static array_list_t *killme;
+static std::vector<event_t *> killme;
 
 /**
    List of events that have been sent but have not yet been delivered because they are blocked.
@@ -312,10 +312,7 @@ void event_remove( event_t *criterion )
 		event_t *n = events.at(i);
 		if( event_match( criterion, n ) )
 		{
-			if( !killme )
-				killme = al_new();
-			
-			al_push( killme, n );			
+            killme.push_back(n);
 
 			/*
 			  If this event was a signal handler and no other handler handles
@@ -370,16 +367,8 @@ int event_get( event_t *criterion, array_list_t *out )
 */
 static void event_free_kills()
 {
-	int i;
-	if( !killme )
-		return;
-	
-	for( i=0; i<al_get_count( killme ); i++ )
-	{
-		event_t *roadkill = (event_t *)al_get( killme, i );
-		event_free( roadkill );
-	}
-	al_truncate( killme, 0 );
+    for_each(killme.begin(), killme.end(), event_free);
+    killme.resize(0);
 }
 
 /**
@@ -387,18 +376,7 @@ static void event_free_kills()
 */
 static int event_is_killed( event_t *e )
 {
-	int i;
-	if( !killme )
-		return 0;
-	
-	for( i=0; i<al_get_count( killme ); i++ )
-	{
-		event_t *roadkill = (event_t *)al_get( killme, i );
-		if( roadkill ==e )
-			return 1;
-		
-	}
-	return 0;
+    return std::find(killme.begin(), killme.end(), e) != killme.end();
 }	
 
 /**
@@ -660,14 +638,9 @@ void event_destroy()
 
     for_each(events.begin(), events.end(), event_free);
     events.resize(0);
-
-	if( killme )
-	{
-		al_foreach( killme, (void (*)(void *))&event_free );
-		al_destroy( killme );
-		free( killme );		
-		killme=0;		
-	}	
+    
+    for_each(killme.begin(), killme.end(), event_free);
+    killme.resize(0);
 }
 
 void event_free( event_t *e )

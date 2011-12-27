@@ -123,6 +123,7 @@ static int is_autoload = 0;
 */
 static int load( const wchar_t *name )
 {
+    ASSERT_IS_MAIN_THREAD();
 	int was_autoload = is_autoload;
 	int res;
 	function_internal_data_t *data;
@@ -263,7 +264,7 @@ void function_add( function_data_t *data )
 	UNLOCK_FUNCTIONS();
 }
 
-static int function_exists_internal( const wchar_t *cmd, int autoload )
+static int function_exists_internal( const wchar_t *cmd, bool autoload )
 {
 	int res;
 	CHECK( cmd, 0 );
@@ -280,12 +281,12 @@ static int function_exists_internal( const wchar_t *cmd, int autoload )
 
 int function_exists( const wchar_t *cmd )
 {
-    return function_exists_internal( cmd, 1 );
+    return function_exists_internal( cmd, true );
 }
 
 int function_exists_no_autoload( const wchar_t *cmd )
 {
-    return function_exists_internal( cmd, 0 );    
+    return function_exists_internal( cmd, false );    
 }
 
 void function_remove( const wchar_t *name )

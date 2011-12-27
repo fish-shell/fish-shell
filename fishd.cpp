@@ -646,7 +646,7 @@ int main( int argc, char ** argv )
 			FD_SET( c->fd, &read_fd );
 			max_fd = maxi( max_fd, c->fd+1);
 			
-			if( ! q_empty( &c->unsent ) )
+			if( ! c->unsent->empty() )
 			{
 				FD_SET( c->fd, &write_fd );
 			}
@@ -738,7 +738,7 @@ int main( int argc, char ** argv )
 			{
 				debug( 4, L"Close connection %d", c->fd );
 
-				while( ! c->unsent->empty()) )
+				while( ! c->unsent->empty() )
 				{
 					message_t *msg = c->unsent->front();
                     c->unsent->pop();

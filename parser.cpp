@@ -383,7 +383,7 @@ static int current_tokenizer_pos;
 block_t *current_block=0;
 
 /** List of called functions, used to help prevent infinite recursion */
-static array_list_t *forbidden_function;
+static std::vector<wcstring> forbidden_function;
 
 /**
    String index where the current job started.
@@ -633,7 +633,7 @@ void parser_forbid_function( wchar_t *function )
   debug( 2, L"Forbid %ls\n", function );
 */
 	CHECK( function, );
-	al_push( forbidden_function, function?wcsdup(function):0 );
+    forbidden_function.push_back(wcstring(function));
 }
 
 void parser_allow_function()
@@ -642,7 +642,7 @@ void parser_allow_function()
   if( al_peek( &forbidden_function) )
   debug( 2, L"Allow %ls\n", al_peek( &forbidden_function)  );
 */
-	free( (void *) al_pop( forbidden_function ) );
+    forbidden_function.pop_back();
 }
 
 void error( int ec, int p, const wchar_t *str, ... )
@@ -672,7 +672,6 @@ void parser_init()
 	{
 		al_init( &profile_data);
 	}
-	forbidden_function = al_new();
 }
 
 /**
@@ -790,8 +789,7 @@ void parser_destroy()
 		lineinfo = 0;
 	}
 
-	al_destroy( forbidden_function );
-	free( forbidden_function );
+	forbidden_function.resize(0);
 
 }
 
@@ -1901,7 +1899,7 @@ static int parse_job( process_t *p,
 		if( use_function && !current_block->skip )
 		{
 			int nxt_forbidden=0;
-			wchar_t *forbid;
+			wcstring forbid;
 
 			int is_function_call=0;
 
@@ -1925,8 +1923,8 @@ static int parse_job( process_t *p,
 			*/
 			if( is_function_call && !current_block->had_command )
 			{
-				forbid = (wchar_t *)(al_get_count( forbidden_function)?al_peek( forbidden_function ):0);
-				nxt_forbidden = forbid && (wcscmp( forbid, nxt) == 0 );
+                forbid = forbidden_function.empty() ? wcstring(L"") : forbidden_function.back();
+				nxt_forbidden = (forbid == nxt);
 			}
 		
 			if( !nxt_forbidden && function_exists( nxt ) )
@@ -1934,7 +1932,7 @@ static int parse_job( process_t *p,
 				/*
 				  Check if we have reached the maximum recursion depth
 				*/
-				if( al_get_count( forbidden_function ) > MAX_RECURSION_DEPTH )
+				if( forbidden_function.size() > MAX_RECURSION_DEPTH )
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( tok ),
@@ -2495,21 +2493,21 @@ static void eval_job( tokenizer *tok )
 
 int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 {
-	int forbid_count;
+	size_t forbid_count;
 	int code;
 	tokenizer *previous_tokenizer=current_tokenizer;
 	block_t *start_current_block = current_block;
 	io_data_t *prev_io = block_io;
-	array_list_t *prev_forbidden = forbidden_function;
+    std::vector<wcstring> prev_forbidden = forbidden_function;
 
 	if( block_type == SUBST )
 	{
-		forbidden_function = al_new();
+		forbidden_function.resize(0);
 	}
 	
 	CHECK_BLOCK( 1 );
 	
-	forbid_count = al_get_count( forbidden_function );
+	forbid_count = forbidden_function.size();
 
 	block_io = io;
 
@@ -2597,14 +2595,8 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type )
 	tok_destroy( current_tokenizer );
 	free( current_tokenizer );
 
-	while( al_get_count( forbidden_function ) > forbid_count )
+    while (forbidden_function.size() > forbid_count)
 		parser_allow_function();
-
-	if( block_type == SUBST )
-	{
-		al_destroy( forbidden_function );
-		free( forbidden_function );
-	}
 
 	/*
 	  Restore previous eval state

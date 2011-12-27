@@ -391,7 +391,7 @@ static void event_fire_internal( event_t *event )
 {
 	int i, j;
 	string_buffer_t *b=0;
-	array_list_t *fire=0;
+	event_list_t fire;
 	
 	/*
 	  First we free all events that have been removed
@@ -417,25 +417,23 @@ static void event_fire_internal( event_t *event )
 		*/
 		if(event_match( criterion, event ) )
 		{
-			if( !fire )
-				fire = al_new();
-			al_push( fire, criterion );
+            fire.push_back(criterion);
 		}
 	}
 	
 	/*
 	  No matches. Time to return.
 	*/
-	if( !fire )
+	if( fire.empty() )
 		return;
 		
 	/*
 	  Iterate over our list of matching events
 	*/
 	
-	for( i=0; i<al_get_count( fire ); i++ )
+	for( i=0; i<fire.size(); i++ )
 	{
-		event_t *criterion = (event_t *)al_get( fire, i );
+		event_t *criterion = fire.at(i);
 		int prev_status;
 
 		/*
@@ -483,13 +481,7 @@ static void event_fire_internal( event_t *event )
 		sb_destroy( b );
 		free( b );		
 	}
-	
-	if( fire )
-	{
-		al_destroy( fire );
-		free( fire );
-	}
-	
+
 	/*
 	  Free killed events
 	*/

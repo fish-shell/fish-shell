@@ -148,6 +148,7 @@ enum
 __warn_unused int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
 __warn_unused int expand_string2( const wcstring &input, std::list<wcstring> &output, int flag );
 
+
 /**
    expand_one is identical to expand_string, except it will fail if in
    expands to more than one string. This is used for expanding command

@@ -458,11 +458,6 @@ long al_peek_long( array_list_t *l );
 */
 func_ptr_t al_peek_func( array_list_t *l );
 
-/**
-   Returns 1 if the list is empty, 0 otherwise
-*/
-int al_empty( array_list_t *l);
-
 /** 
 	Call the function func for each entry in the list
 */
@@ -473,6 +468,19 @@ void al_foreach( array_list_t *l, void (*func)( void * ));
 	argument, which is provided by the caller in the variable aux
 */
 void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux);
+
+template<typename T>
+T al_list_to(array_list_t *list)
+{
+    T result;
+    int i, c = al_get_count(list);
+    for (i=0; i < c; i++) {
+        void *val = al_get(list, i);
+        result.push_back(val);
+    }
+    return result;
+}
+
 
 /**
    Compares two wide character strings with an (arguably) intuitive

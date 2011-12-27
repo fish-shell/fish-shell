@@ -874,11 +874,6 @@ func_ptr_t al_peek_func( array_list_t *l )
 	return al_peek_generic(l).func_val;	
 }
 
-int al_empty( array_list_t *l )
-{
-	CHECK( l, 1 );
-	return l->pos == 0;
-}
 
 int al_get_count( array_list_t *l )
 

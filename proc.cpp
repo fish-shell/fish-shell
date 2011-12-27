@@ -132,7 +132,7 @@ void proc_init()
 {
 	interactive_stack = al_halloc( global_context );
 	proc_push_interactive( 0 );
-	al_init( &event.arguments );
+    event.arguments = new wcstring_list_t;
 	sb_init( &event_pid );
 	sb_init( &event_status );
 }
@@ -177,7 +177,8 @@ void job_free( job_t * j )
 
 void proc_destroy()
 {
-	al_destroy( &event.arguments );
+	delete event.arguments;
+    event.arguments = NULL;
 	sb_destroy( &event_pid );
 	sb_destroy( &event_status );
 	while( first_job )
@@ -535,19 +536,11 @@ void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status )
 	event.type=type;
 	event.param1.pid = pid;
 	
-	al_push( &event.arguments, msg );			
-
-	sb_printf( &event_pid, L"%d", pid );
-	al_push( &event.arguments, event_pid.buff );
-	
-	sb_printf( &event_status, L"%d", status );			
-	al_push( &event.arguments, event_status.buff );
-
+    event.arguments->push_back(msg);
+    event.arguments->push_back(format_val<int>(pid));
+    event.arguments->push_back(format_val<int>(status));
 	event_fire( &event );
-
-	al_truncate( &event.arguments, 0 );
-	sb_clear( &event_pid );	
-	sb_clear( &event_status );	
+    event.arguments->resize(0);
 }				
 
 int job_reap( int interactive )

@@ -12,6 +12,7 @@
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
 
+#include "common.h"
 
 /**
    The signal number that is used to match any signal
@@ -91,7 +92,7 @@ typedef struct
 	   event_fire. In all other situations, the value of this variable
 	   is ignored.
 	*/
-	array_list_t arguments;
+	wcstring_list_t *arguments;
 }
 	event_t;
 

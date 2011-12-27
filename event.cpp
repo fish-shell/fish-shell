@@ -156,16 +156,11 @@ static event_t *event_copy( event_t *event, int copy_arguments )
 		e->param1.variable = wcsdup( e->param1.variable );
 	else if( e->type == EVENT_GENERIC )
 		e->param1.param = wcsdup( e->param1.param );
-		
-	al_init( &e->arguments );
-	if( copy_arguments )
+    
+    e->arguments = new wcstring_list_t;
+	if( copy_arguments && event->arguments )
 	{
-		int i;
-		for( i=0; i<al_get_count( &event->arguments ); i++ )
-		{
-			al_push( &e->arguments, wcsdup( (wchar_t *)al_get( &event->arguments, i ) ) );
-		}
-				
+        *(e->arguments) = *(event->arguments);				
 	}
 	
 	return e;
@@ -389,8 +384,7 @@ static int event_is_killed( event_t *e )
 */
 static void event_fire_internal( event_t *event )
 {
-	int i, j;
-	string_buffer_t *b=0;
+	size_t i, j;
 	event_list_t fire;
 	
 	/*
@@ -445,20 +439,17 @@ static void event_fire_internal( event_t *event )
 		/*
 		  Fire event
 		*/
-		if( !b )
-			b = sb_new();
-		else
-			sb_clear( b );
+		wcstring buffer = criterion->function_name;
 		
-		sb_append( b, criterion->function_name );
-		
-		for( j=0; j<al_get_count(&event->arguments); j++ )
-		{
-			wchar_t *arg_esc = escape( (wchar_t *)al_get( &event->arguments, j), 1 );		
-			sb_append( b, L" " );
-			sb_append( b, arg_esc );
-			free( arg_esc );				
-		}
+        if (event->arguments)
+        {
+            for( j=0; j< event->arguments->size(); j++ )
+            {
+                wcstring arg_esc = escape_string( event->arguments->at(j), 1 );		
+                buffer += L" ";
+                buffer += arg_esc;
+            }
+        }
 
 //		debug( 1, L"Event handler fires command '%ls'", (wchar_t *)b->buff );
 		
@@ -470,16 +461,10 @@ static void event_fire_internal( event_t *event )
 		prev_status = proc_get_last_status();
 		parser_push_block( EVENT );
 		current_block->param1.event = event;
-		eval( (wchar_t *)b->buff, 0, TOP );
+		eval( buffer.c_str(), 0, TOP );
 		parser_pop_block();
 		proc_pop_interactive();					
 		proc_set_last_status( prev_status );
-	}
-
-	if( b )
-	{
-		sb_destroy( b );
-		free( b );		
 	}
 
 	/*
@@ -495,7 +480,7 @@ static void event_fire_internal( event_t *event )
 static void event_fire_delayed()
 {
 
-	int i;
+	size_t i;
 
 	/*
 	  If is_event is one, we are running the event-handler non-recursively. 
@@ -528,7 +513,7 @@ static void event_fire_delayed()
 	{
 		signal_list_t *lst;
 		event_t e;
-		al_init( &e.arguments );		
+        e.arguments = new wcstring_list_t(1); //one element
 
 		/*
 		  Switch signal lists
@@ -553,10 +538,10 @@ static void event_fire_delayed()
 		/*
 		  Send all signals in our private list
 		*/
-		for( i=0; i<lst->count; i++ )
+		for( i=0; i<(size_t)lst->count; i++ )
 		{
 			e.param1.signal = lst->signal[i];
-			al_set( &e.arguments, 0, sig2wcs( e.param1.signal ) );			
+            e.arguments->at(0) = sig2wcs( e.param1.signal );
 			if( event_is_blocked( &e ) )
 			{
                 blocked.push_back(event_copy(&e, 1));
@@ -567,7 +552,7 @@ static void event_fire_delayed()
 			}
 		}
 		
-		al_destroy( &e.arguments );
+        delete e.arguments;
 		
 	}	
 }
@@ -635,8 +620,8 @@ void event_free( event_t *e )
 	/*
 	  When apropriate, we clear the argument vector
 	*/
-	al_foreach( &e->arguments, &free );
-	al_destroy( &e->arguments );
+    if (e->arguments) delete e->arguments;
+    e->arguments = NULL;
 
 	free( (void *)e->function_name );
 	if( e->type == EVENT_VARIABLE )
@@ -663,15 +648,17 @@ void event_fire_generic_internal(const wchar_t *name, ...)
 	ev.param1.param = name;
 	ev.function_name=0;
 	
-	al_init( &ev.arguments );
+    ev.arguments = new wcstring_list_t;
 	va_start( va, name );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 )
 	{
-		al_push( &ev.arguments, arg );
+        ev.arguments->push_back(arg);
 	}
 	va_end( va );
 	
 	event_fire( &ev );
+    delete ev.arguments;
+    ev.arguments = NULL;
 }
 
 	

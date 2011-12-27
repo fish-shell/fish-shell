@@ -411,12 +411,13 @@ static void universal_callback( int type,
 		ev.param1.variable=name;
 		ev.function_name=0;
 		
-		al_init( &ev.arguments );
-		al_push( &ev.arguments, L"VARIABLE" );
-		al_push( &ev.arguments, str );
-		al_push( &ev.arguments, name );
-		event_fire( &ev );		
-		al_destroy( &ev.arguments );
+        ev.arguments = new wcstring_list_t();
+        ev.arguments->push_back(L"VARIABLE");
+        ev.arguments->push_back(str);
+        ev.arguments->push_back(name);
+		event_fire( &ev );
+        delete ev.arguments;
+        ev.arguments = NULL;
 	}
 }
 
@@ -1005,15 +1006,16 @@ int env_set( const wchar_t *key,
 		ev.param1.variable = key;
 		ev.function_name = 0;
 		
-		al_init( &ev.arguments );
-		al_push( &ev.arguments, L"VARIABLE" );
-		al_push( &ev.arguments, L"SET" );
-		al_push( &ev.arguments, key );
+        ev.arguments = new wcstring_list_t;
+        ev.arguments->push_back(L"VARIABLE");
+        ev.arguments->push_back(L"SET");
+        ev.arguments->push_back(key);
 		
 //	debug( 1, L"env_set: fire events on variable %ls", key );	
 		event_fire( &ev );
 //	debug( 1, L"env_set: return from event firing" );	
-		al_destroy( &ev.arguments );	
+        delete ev.arguments;
+        ev.arguments = NULL;
 	}
 
 	if( is_locale( key ) )
@@ -1110,14 +1112,15 @@ int env_remove( const wchar_t *key, int var_mode )
 			ev.param1.variable=key;
 			ev.function_name=0;
 			
-			al_init( &ev.arguments );
-			al_push( &ev.arguments, L"VARIABLE" );
-			al_push( &ev.arguments, L"ERASE" );
-			al_push( &ev.arguments, key );
+            ev.arguments = new wcstring_list_t;
+            ev.arguments->push_back(L"VARIABLE");
+            ev.arguments->push_back(L"ERASE");
+            ev.arguments->push_back(key);
 			
 			event_fire( &ev );	
 			
-			al_destroy( &ev.arguments );
+			delete ev.arguments;
+            ev.arguments = NULL;
 			erased = 1;
 		}
 	}

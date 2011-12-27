@@ -21,6 +21,7 @@
 
 /* Common string type */
 typedef std::wstring wcstring;
+typedef std::vector<wcstring> wcstring_list_t;
 
 /**
    Maximum number of bytes used by a single utf-8 character

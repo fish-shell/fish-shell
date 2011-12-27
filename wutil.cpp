@@ -181,7 +181,7 @@ int wstat(const wchar_t *file_name, struct stat *buf)
 
 int lwstat(const wchar_t *file_name, struct stat *buf)
 {
-    fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
+   // fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
     cstring tmp = wcs2string(file_name);
     return lstat(tmp.c_str(), buf);
 }

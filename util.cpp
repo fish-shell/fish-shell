@@ -582,21 +582,6 @@ int hash_ptr_cmp( void *a,
 	return a == b;
 }
 
-array_list_t *al_new()
-{
-	array_list_t *res = (array_list_t *)malloc( sizeof( array_list_t ) );
-
-	if( !res )
-	{
-		oom_handler( 0 );
-		return 0;
-	}
-
-	al_init( res );
-	return res;
-}
-
-
 void al_init( array_list_t *l )
 {
 	memset( l, 0, sizeof( array_list_t ) );

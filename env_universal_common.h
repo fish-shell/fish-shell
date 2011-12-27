@@ -70,7 +70,6 @@ typedef struct
 }
 	message_t;
 
-
 typedef std::queue<message_t *> message_queue_t;
 
 /**

@@ -315,12 +315,6 @@ int hash_ptr_cmp( void *a,
                   void *b );
 
 
-/**
-   Allocate heap memory for creating a new list and initialize
-   it. Equivalent to calling malloc and al_init.
-*/
-array_list_t *al_new();
-
 /** 
 	Initialize the list. 
 */

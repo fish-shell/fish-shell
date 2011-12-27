@@ -128,7 +128,7 @@ static int q_realloc( dyn_queue_t *q )
 {
 	void **old_start = q->start;
 	void **old_stop = q->stop;
-	int diff;
+	ptrdiff_t diff;
 	int new_size;
 	
 	new_size = 2*(q->stop-q->start);

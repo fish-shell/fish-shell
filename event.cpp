@@ -65,19 +65,21 @@ static signal_list_t sig_list[]={{0,0},{0,0}};
 */
 static int active_list=0;
 
+typedef std::vector<event_t *> event_list_t; 
+
 /**
    List of event handlers
 */
-static std::vector<event_t *> events;
+static event_list_t events;
 /**
    List of event handlers that should be removed
 */
-static std::vector<event_t *> killme;
+static event_list_t killme;
 
 /**
    List of events that have been sent but have not yet been delivered because they are blocked.
 */
-static array_list_t *blocked;
+static event_list_t blocked;
 
 /**
    Tests if one event instance matches the definition of a event
@@ -290,7 +292,7 @@ void event_add_handler( event_t *event )
 void event_remove( event_t *criterion )
 {
 	size_t i;
-	std::vector<event_t *> new_list;
+	event_list_t new_list;
 	event_t e;
 	
 	CHECK( criterion, );
@@ -510,18 +512,16 @@ static void event_fire_delayed()
 	  another event, we do not want to fire delayed events because of
 	  concurrency problems.
 	*/
-	if( blocked && is_event==1)
+	if( ! blocked.empty() && is_event==1)
 	{
-		array_list_t *new_blocked = 0;
+		event_list_t new_blocked;
 		
-		for( i=0; i<al_get_count( blocked ); i++ )
+		for( i=0; i<blocked.size(); i++ )
 		{
-			event_t *e = (event_t *)al_get( blocked, i );
+			event_t *e = blocked.at(i);
 			if( event_is_blocked( e ) )
 			{
-				if( !new_blocked )
-					new_blocked = al_new();
-				al_push( new_blocked, e );			
+                new_blocked.push_back(e);
 			}
 			else
 			{
@@ -529,9 +529,7 @@ static void event_fire_delayed()
 				event_free( e );
 			}
 		}		
-		al_destroy( blocked );
-		free( blocked );
-		blocked = new_blocked;
+        blocked.swap(new_blocked);
 	}
 	
 	while( sig_list[active_list].count > 0 )
@@ -569,9 +567,7 @@ static void event_fire_delayed()
 			al_set( &e.arguments, 0, sig2wcs( e.param1.signal ) );			
 			if( event_is_blocked( &e ) )
 			{
-				if( !blocked )
-					blocked = al_new();
-				al_push( blocked, event_copy(&e, 1) );			
+                blocked.push_back(event_copy(&e, 1));
 			}
 			else
 			{
@@ -613,10 +609,7 @@ void event_fire( event_t *event )
 		{
 			if( event_is_blocked( event ) )
 			{
-				if( !blocked )
-					blocked = al_new();
-				
-				al_push( blocked, event_copy(event, 1) );
+                blocked.push_back(event_copy(event, 1));
 			}
 			else
 			{

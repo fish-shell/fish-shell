@@ -819,7 +819,7 @@ static int parse_util_load_internal( const wchar_t *cmd,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
 									 autoload_t *loaded,
-									 array_list_t *path_list );
+									 const std::vector<wcstring> &path_list );
 
 
 int parse_util_load( const wchar_t *cmd,
@@ -827,8 +827,6 @@ int parse_util_load( const wchar_t *cmd,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload )
 {
-	array_list_t *path_list=0;
-
 	autoload_t *loaded;
 
 	wchar_t *path_var;
@@ -917,12 +915,10 @@ int parse_util_load( const wchar_t *cmd,
 		loaded->old_path = wcsdup( path_var );
 	}
 
-
-	path_list = (array_list_t *)al_new();
+    std::vector<wcstring> path_list;
+	tokenize_variable_array2( path_var, path_list );
 	
-	tokenize_variable_array( path_var, path_list );
-	
-	c = al_get_count( path_list );
+	c = path_list.size();
 	
 	hash_put( &loaded->is_loading, cmd, cmd );
 
@@ -941,11 +937,7 @@ int parse_util_load( const wchar_t *cmd,
 		hash_remove( &loaded->is_loading, cmd, 0, 0 );
 	}
 	
-	c2 = al_get_count( path_list );
-
-	al_foreach( path_list, &free );
-	al_destroy( path_list );
-	free( path_list );
+	c2 = path_list.size();
 
 	/**
 	   Make sure we didn't 'drop' something
@@ -966,11 +958,11 @@ static int parse_util_load_internal( const wchar_t *cmd,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
 									 autoload_t *loaded,
-									 array_list_t *path_list )
+									 const std::vector<wcstring> &path_list )
 {
 	static string_buffer_t *path=0;
 	time_t *tm;
-	int i;
+	size_t i;
 	int reloaded = 0;
 
 	/*
@@ -1009,12 +1001,12 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	/*
 	  Iterate over path searching for suitable completion files
 	*/
-	for( i=0; i<al_get_count( path_list ); i++ )
+	for( i=0; i<path_list.size(); i++ )
 	{
 		struct stat buf;
-		wchar_t *next = (wchar_t *)al_get( path_list, i );
+		wcstring next = path_list.at(i);
 		sb_clear( path );
-		sb_append( path, next, L"/", cmd, L".fish", NULL );
+		sb_append( path, next.c_str(), L"/", cmd, L".fish", NULL );
 
 		if( (wstat( (wchar_t *)path->buff, &buf )== 0) &&
 			(waccess( (wchar_t *)path->buff, R_OK ) == 0) )

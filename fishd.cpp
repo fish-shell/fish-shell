@@ -322,7 +322,7 @@ static void broadcast( int type, const wchar_t *key, const wchar_t *val )
 	for( c = conn; c; c=c->next )
 	{
 		msg->count++;
-		q_put( &c->unsent, msg );
+        c->unsent->push(msg);
 	}	
 	
 	for( c = conn; c; c=c->next )
@@ -738,9 +738,10 @@ int main( int argc, char ** argv )
 			{
 				debug( 4, L"Close connection %d", c->fd );
 
-				while( !q_empty( &c->unsent ) )
+				while( ! c->unsent->empty()) )
 				{
-					message_t *msg = (message_t *)q_get( &c->unsent );
+					message_t *msg = c->unsent->front();
+                    c->unsent->pop();
 					msg->count--;
 					if( !msg->count )
 						free( msg );

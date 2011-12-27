@@ -12,6 +12,7 @@
 #include <termios.h>
 #include <signal.h>
 #include <string.h>
+#include <algorithm>
 
 #include "fallback.h"
 #include "util.h"
@@ -67,7 +68,7 @@ static int active_list=0;
 /**
    List of event handlers
 */
-static array_list_t *events;
+static std::vector<event_t *> events;
 /**
    List of event handlers that should be removed
 */
@@ -278,21 +279,18 @@ void event_add_handler( event_t *event )
 	
 	e = event_copy( event, 0 );
 
-	if( !events )
-		events = al_new();
-
 	if( e->type == EVENT_SIGNAL )
 	{
 		signal_handle( e->param1.signal, 1 );
 	}
 	
-	al_push( events, e );	
+    events.push_back(e);
 }
 
 void event_remove( event_t *criterion )
 {
-	int i;
-	array_list_t *new_list=0;
+	size_t i;
+	std::vector<event_t *> new_list;
 	event_t e;
 	
 	CHECK( criterion, );
@@ -306,12 +304,12 @@ void event_remove( event_t *criterion )
 	  events-list.
 	*/
 	
-	if( !events )
+	if( events.empty() )
 		return;
 
-	for( i=0; i<al_get_count( events); i++ )
+	for( i=0; i<events.size(); i++ )
 	{
-		event_t *n = (event_t *)al_get( events, i );		
+		event_t *n = events.at(i);
 		if( event_match( criterion, n ) )
 		{
 			if( !killme )
@@ -338,29 +336,25 @@ void event_remove( event_t *criterion )
 		}
 		else
 		{
-			if( !new_list )
-				new_list = al_new();
-			al_push( new_list, n );
+            new_list.push_back(n);
 		}
 	}
-	al_destroy( events );
-	free( events );	
-	events = new_list;
+	events.swap(new_list);
 }
 
 int event_get( event_t *criterion, array_list_t *out )
 {
-	int i;
+	size_t i;
 	int found = 0;
 	
-	if( !events )
+	if( events.empty() )
 		return 0;	
 
 	CHECK( criterion, 0 );
 	
-	for( i=0; i<al_get_count( events); i++ )
+	for( i=0; i<events.size(); i++ )
 	{
-		event_t *n = (event_t *)al_get( events, i );		
+		event_t *n = events.at(i);
 		if( event_match(criterion, n ) )
 		{
 			found++;
@@ -399,7 +393,7 @@ static int event_is_killed( event_t *e )
 	
 	for( i=0; i<al_get_count( killme ); i++ )
 	{
-		event_t *roadkill = (event_t *)al_get( events, i );
+		event_t *roadkill = (event_t *)al_get( killme, i );
 		if( roadkill ==e )
 			return 1;
 		
@@ -424,7 +418,7 @@ static void event_fire_internal( event_t *event )
 	*/
 	event_free_kills();	
 
-	if( !events )
+	if( events.empty() )
 		return;
 
 	/*
@@ -434,9 +428,9 @@ static void event_fire_internal( event_t *event )
 	  event_add_handler, which will change the contents of the \c
 	  events list.
 	*/
-	for( i=0; i<al_get_count( events ); i++ )
+	for( i=0; i<events.size(); i++ )
 	{
-		event_t *criterion = (event_t *)al_get( events, i );
+		event_t *criterion = events.at(i);
 		
 		/*
 		  Check if this event is a match
@@ -664,13 +658,8 @@ void event_init()
 void event_destroy()
 {
 
-	if( events )
-	{
-		al_foreach( events, (void (*)(void *))&event_free );
-		al_destroy( events );
-		free( events );		
-		events=0;
-	}
+    for_each(events.begin(), events.end(), event_free);
+    events.resize(0);
 
 	if( killme )
 	{

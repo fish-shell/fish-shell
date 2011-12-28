@@ -177,8 +177,10 @@ commence.
    states can be stacked, in case reader_readline() calls are
    nested. This happens when the 'read' builtin is used.
 */
-typedef struct reader_data
+class reader_data_t
 {
+    public:
+    
 	/**
 	   Buffer containing the whole current commandline
 	*/
@@ -289,7 +291,7 @@ typedef struct reader_data
 	/**
 	   Pointer to previous reader_data
 	*/
-	struct reader_data *next;
+	reader_data_t *next;
 
 	/**
 	   This variable keeps state on if we are in search mode, and
@@ -302,8 +304,7 @@ typedef struct reader_data
 	   which is known to require a repaint.
 	 */
 	int repaint_needed;
-}
-	reader_data_t;
+};
 
 /**
    The current interactive reading context
@@ -2267,20 +2268,20 @@ static int default_test( wchar_t *b )
 
 void reader_push( const wchar_t *name )
 {
-	reader_data_t *n = (reader_data_t *)calloc( 1, sizeof( reader_data_t ) );
-
-	if( !n )
+    // use placement new to guarantee zero initialization :(
+	void *buff = calloc(1, sizeof(reader_data_t));
+	if( !buff )
 	{
 		DIE_MEM();
 	}
-	
+    reader_data_t *n = new(buff) reader_data_t;
+    
 	n->name = wcsdup( name );
 	n->next = data;
 	sb_init( &n->kill_item );
 
 	data=n;
 
-	s_init( &data->screen );
 	sb_init( &data->prompt_buff );
 
 	check_size();
@@ -2324,7 +2325,6 @@ void reader_pop()
 	sb_destroy( &n->search_buff );
 	sb_destroy( &n->kill_item );
 	
-	s_destroy( &n->screen );
 	sb_destroy( &n->prompt_buff );
 
 	/*
@@ -2334,6 +2334,8 @@ void reader_pop()
 	al_destroy( &n->search_prev );
     free( (void *)n->token_history_buff);
 
+    /* Invoke the destructor to balance our placement new */
+    n->~reader_data_t();
 	free(n);
 
 	if( data == 0 )

@@ -152,6 +152,9 @@ void env_universal_common_destroy();
 void env_universal_common_get_names( array_list_t *l,
 									 int show_exported,
 									 int show_unexported );
+void env_universal_common_get_names2( wcstring_list_t &lst,
+									 int show_exported,
+									 int show_unexported );
 
 /**
    Perform the specified variable assignment.

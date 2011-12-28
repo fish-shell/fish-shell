@@ -428,8 +428,9 @@ static void setup_path()
 {
 	wchar_t *path;
 	
-	int i, j;
-	array_list_t l;
+    size_t i;
+	int j;
+	wcstring_list_t lst;
 
 	const wchar_t *path_el[] = 
 		{
@@ -441,12 +442,10 @@ static void setup_path()
 	;
 
 	path = env_get( L"PATH" );
-		
-	al_init( &l );
 	
 	if( path )
 	{
-		tokenize_variable_array( path, &l );
+		tokenize_variable_array2( path, lst );
 	}
 	
 	for( j=0; path_el[j]; j++ )
@@ -454,10 +453,10 @@ static void setup_path()
 
 		int has_el=0;
 		
-		for( i=0; i<al_get_count( &l); i++ )
+		for( i=0; i<lst.size(); i++ )
 		{
-			wchar_t * el = (wchar_t *)al_get( &l, i );
-			size_t len = wcslen( el );
+			wcstring el = lst.at(i);
+			size_t len = el.size();
 
 			while( (len > 0) && (el[len-1]==L'/') )
 			{
@@ -465,7 +464,7 @@ static void setup_path()
 			}
 
 			if( (wcslen( path_el[j] ) == len) && 
-				(wcsncmp( el, path_el[j], len)==0) )
+				(wcsncmp( el.c_str(), path_el[j], len)==0) )
 			{
 				has_el = 1;
 			}
@@ -473,33 +472,25 @@ static void setup_path()
 		
 		if( !has_el )
 		{
-			string_buffer_t b;
+			wcstring buffer;
 
 			debug( 3, L"directory %ls was missing", path_el[j] );
 
-			sb_init( &b );
 			if( path )
 			{
-				sb_append( &b, path );
+                buffer += path;
 			}
 			
-			sb_append( &b,
-				   ARRAY_SEP_STR,
-				   path_el[j] );
+            buffer += ARRAY_SEP_STR;
+            buffer += path_el[j];
 			
-			env_set( L"PATH", (wchar_t *)b.buff, ENV_GLOBAL | ENV_EXPORT );
-			
-			sb_destroy( &b );
-			
-			al_foreach( &l, &free );
+			env_set( L"PATH", buffer.c_str(), ENV_GLOBAL | ENV_EXPORT );
+						
 			path = env_get( L"PATH" );
-			al_truncate( &l, 0 );
-			tokenize_variable_array( path, &l );			
+            lst.resize(0);
+			tokenize_variable_array2( path, lst );			
 		}
 	}
-	
-	al_foreach( &l, &free );
-	al_destroy( &l );
 }
 
 int env_set_pwd()

@@ -12,6 +12,79 @@
 #ifndef FISH_SCREEN_H
 #define FISH_SCREEN_H
 
+#include <vector>
+
+struct line_entry_t
+{
+    wchar_t text;
+    int color;
+};
+    
+
+/**
+   A class representing a single line of a screen.
+*/
+class line_t
+{
+    public:
+    std::vector<struct line_entry_t> entries;
+    
+    void resize(size_t size) {
+        entries.resize(size);
+    }
+    
+    line_entry_t &entry(size_t idx) {
+        return entries.at(idx);
+    }
+    
+    line_entry_t &create_entry(size_t idx) {
+        if (idx >= entries.size()) {
+            entries.resize(idx + 1);
+        }
+        return entries.at(idx);
+    }
+    
+    size_t entry_count(void) {
+        return entries.size();
+    }
+};
+
+/**
+ A class representing screen contents.
+*/
+class screen_data_t
+{
+    std::vector<line_t> line_datas;
+    
+    public:
+    
+    int cursor[2];
+    
+    line_t &add_line(void) {
+        line_datas.resize(line_datas.size() + 1);
+        return line_datas.back();
+    }
+    
+    void resize(size_t size) {
+        line_datas.resize(size);
+    }
+    
+    line_t &create_line(size_t idx) {
+        if (idx >= line_datas.size()) {
+            line_datas.resize(idx + 1);
+        }
+        return line_datas.at(idx);
+    }
+    
+    line_t &line(size_t idx) {
+        return line_datas.at(idx);
+    }
+    
+    size_t line_count(void) {
+        return line_datas.size();
+    }
+};
+
 /**
    The struct representing the current and desired screen contents.
 */
@@ -20,24 +93,17 @@ typedef struct
 	/**
 	  The internal representation of the desired screen contents.
 	*/
-	array_list_t desired;
+	screen_data_t desired;
 	/**
 	  The internal representation of the actual screen contents.
 	*/
-	array_list_t actual;
+	screen_data_t actual;
+
 	/**
-	   The desired cursor position.
-	 */
-	int desired_cursor[2];
-	/**
-	   The actual cursor position.
-	*/
-	int actual_cursor[2];
-	/**
-	   A stringbuffer containing the prompt which was last printed to
+	   A string containing the prompt which was last printed to
 	   the screen.
 	*/
-	string_buffer_t actual_prompt;
+	wcstring actual_prompt;
 
 	/**
 	  The actual width of the screen at the time of the last screen
@@ -60,36 +126,6 @@ typedef struct
 	struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
 }
 	screen_t;
-
-/**
-   A struct representing a single line of a screen. Consists of two
-   array_lists, which must always be of the same length.
-*/
-typedef struct
-{
-	/**
-	   The text contents of the line. Each element of the array
-	   represents on column of output. Because some characters are two
-	   columns wide, it is perfectly possible for some of the comumns
-	   to be empty. 
-	*/
-	array_list_t text;
-	/**
-	   Highlight information for the line
-	*/
-	array_list_t color;
-}
-	line_t;
-
-/**
-   Initialize a new screen struct
-*/
-void s_init( screen_t *s );
-
-/**
-   Free all memory used by the specified screen struct
-*/
-void s_destroy( screen_t *s );
 
 /**
    This is the main function for the screen putput library. It is used

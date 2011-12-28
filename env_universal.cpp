@@ -208,22 +208,17 @@ static void check_connection()
 */
 static void env_universal_remove_all()
 {
-	array_list_t lst;
-	int i;
+	size_t i;
 	
-	al_init( &lst );
-	
-	env_universal_common_get_names( &lst, 
+	wcstring_list_t lst;
+	env_universal_common_get_names2( lst, 
 									1,
 									1 );
-
-	for( i=0; i<al_get_count( &lst ); i++ )
+	for( i=0; i<lst.size(); i++ )
 	{
-		wchar_t *key = (wchar_t *)al_get( &lst, i );
-		env_universal_common_remove( key );
+		const wcstring &key = lst.at(i);
+		env_universal_common_remove( key.c_str() );
 	}
-
-	al_destroy( &lst );
 	
 }
 
@@ -478,6 +473,19 @@ void env_universal_get_names( array_list_t *l,
 	CHECK( l, );
 	
 	env_universal_common_get_names( l, 
+									show_exported,
+									show_unexported );	
+}
+
+
+void env_universal_get_names2( wcstring_list_t &lst,
+                              int show_exported,
+                              int show_unexported )
+{
+	if( !init )
+		return;
+
+	env_universal_common_get_names2( lst, 
 									show_exported,
 									show_unexported );	
 }

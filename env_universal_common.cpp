@@ -907,6 +907,17 @@ static void add_key_to_hash( void *key,
 		al_push( (array_list_t *)aux, key );
 }
 
+static void add_key_to_hash2( void *key, 
+							 void *data,
+							 void *aux )
+{
+    wcstring_list_t &lst = *(wcstring_list_t *)aux;
+	var_uni_entry_t *e = (var_uni_entry_t *)data;
+	if( ( e->exportv && get_names_show_exported) || 
+		( !e->exportv && get_names_show_unexported) )
+        lst.push_back((wchar_t *)key);
+}
+
 void env_universal_common_get_names( array_list_t *l,
 									 int show_exported,
 									 int show_unexported )
@@ -918,6 +929,19 @@ void env_universal_common_get_names( array_list_t *l,
 				   add_key_to_hash,
 				   l );
 }
+
+void env_universal_common_get_names2( wcstring_list_t &lst,
+									 int show_exported,
+									 int show_unexported )
+{
+	get_names_show_exported = show_exported;
+	get_names_show_unexported = show_unexported;
+	
+	hash_foreach2( &env_universal_var, 
+				   add_key_to_hash2,
+				   &lst );
+}
+
 
 wchar_t *env_universal_common_get( const wchar_t *name )
 {

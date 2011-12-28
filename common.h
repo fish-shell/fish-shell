@@ -531,7 +531,7 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff );
    \param out the list in which to place the elements. 
 */
 void tokenize_variable_array( const wchar_t *val, array_list_t *out );
-void tokenize_variable_array2( const wcstring &val, std::vector<wcstring> &out);
+void tokenize_variable_array2( const wcstring &val, wcstring_list_t &out);
 
 /**
    Make sure the specified direcotry exists. If needed, try to create

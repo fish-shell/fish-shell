@@ -135,10 +135,10 @@ typedef struct
    as possible.
 */
 void s_write( screen_t *s, 
-			  wchar_t *prompt, 
-			  wchar_t *commandline,
-			  int *colors, 
-			  int *indent,
+			  const wchar_t *prompt, 
+			  const wchar_t *commandline,
+			  const int *colors, 
+			  const int *indent,
 			  int cursor_pos );
 
 /** 

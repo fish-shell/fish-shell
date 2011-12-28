@@ -236,13 +236,13 @@ class reader_data_t
 	/**
 	   Name of the current application
 	*/
-	wchar_t *name;
+	wcstring app_name;
 
 	/** The prompt command */
-	wchar_t *prompt;
+	wcstring prompt;
 
 	/** The output of the last evaluation of the prompt command */
-	string_buffer_t prompt_buff;
+	wcstring prompt_buff;
 	
 	/**
 	   Color is the syntax highlighting for buff.  The format is that
@@ -424,7 +424,7 @@ static void reader_repaint()
 	parser_test( data->buff, data->indent, 0, 0 );
 	
 	s_write( &data->screen,
-		 (wchar_t *)data->prompt_buff.buff,
+		 data->prompt_buff.c_str(),
 		 data->buff,
 		 data->color, 
 		 data->indent, 
@@ -606,7 +606,6 @@ int reader_interrupted()
 void reader_write_title()
 {
 	const wchar_t *title;
-	array_list_t l;
 	wchar_t *term = env_get( L"TERM" );
 
 	/*
@@ -649,26 +648,23 @@ void reader_write_title()
 	if( wcslen( title ) ==0 )
 		return;
 
-	al_init( &l );
+    wcstring_list_t lst;
 
 	proc_push_interactive(0);
-	if( exec_subshell( title, &l ) != -1 )
+	if( exec_subshell2( title, lst ) != -1 )
 	{
 		int i;
-		if( al_get_count( &l ) > 0 )
+		if( lst.size() > 0 )
 		{
 			writestr( L"\x1b]2;" );
-			for( i=0; i<al_get_count( &l ); i++ )
+			for( i=0; i<lst.size(); i++ )
 			{
-				writestr( (wchar_t *)al_get( &l, i ) );
+				writestr( lst.at(i).c_str() );
 			}
 			writestr( L"\7" );
 		}
 	}
-	proc_pop_interactive();
-		
-	al_foreach( &l, &free );
-	al_destroy( &l );
+	proc_pop_interactive();		
 	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 }
 
@@ -682,11 +678,11 @@ static void exec_prompt()
 	array_list_t prompt_list;
 	al_init( &prompt_list );
 	
-	if( data->prompt )
+	if( data->prompt.size() )
 	{
 		proc_push_interactive( 0 );
 		
-		if( exec_subshell( data->prompt, &prompt_list ) == -1 )
+		if( exec_subshell( data->prompt.c_str(), &prompt_list ) == -1 )
 		{
 			/* If executing the prompt fails, make sure we at least don't print any junk */
 			al_foreach( &prompt_list, &free );
@@ -698,13 +694,13 @@ static void exec_prompt()
 	
 	reader_write_title();
 	
-	sb_clear( &data->prompt_buff );
+    data->prompt_buff.resize(0);
 	
-	for( i = 0; i < al_get_count( &prompt_list )-1; i++ )
+	for( i = 0; i < al_get_count( &prompt_list ); i++ )
 	{
-		sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ), L"\n" );
+        if (i > 0) data->prompt_buff += L"\n";
+        data->prompt_buff += (wchar_t *)al_get( &prompt_list, i );
 	}
-	sb_append( &data->prompt_buff, (wchar_t *)al_get( &prompt_list, i ));
 	
 	al_foreach( &prompt_list, &free );
 	al_destroy( &prompt_list );
@@ -2276,13 +2272,11 @@ void reader_push( const wchar_t *name )
 	}
     reader_data_t *n = new(buff) reader_data_t;
     
-	n->name = wcsdup( name );
+	n->app_name = name;
 	n->next = data;
 	sb_init( &n->kill_item );
 
 	data=n;
-
-	sb_init( &data->prompt_buff );
 
 	check_size();
 	data->buff[0]=0;
@@ -2317,16 +2311,12 @@ void reader_pop()
 
 	data=data->next;
 
-	free(n->name );
-	free( n->prompt );
 	free( n->buff );
 	free( n->color );
 	free( n->indent );
 	sb_destroy( &n->search_buff );
 	sb_destroy( &n->kill_item );
 	
-	sb_destroy( &n->prompt_buff );
-
 	/*
 	  Clean up after history search
 	*/
@@ -2345,15 +2335,14 @@ void reader_pop()
 	else
 	{
 		end_loop = 0;
-		history_set_mode( data->name );
+		history_set_mode( data->app_name.c_str() );
 		s_reset( &data->screen, 1 );
 	}
 }
 
 void reader_set_prompt( const wchar_t *new_prompt )
 {
- 	free( data->prompt );
-	data->prompt=wcsdup(new_prompt);
+    data->prompt = new_prompt;
 }
 
 void reader_set_complete_function( void (*f)( const wchar_t *,

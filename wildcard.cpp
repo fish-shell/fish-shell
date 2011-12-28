@@ -388,23 +388,21 @@ static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 
 	wchar_t *suff = wcsdup( suff_orig );
 	wchar_t *cmd = wcsdupcat( SUFFIX_CMD_STR, suff );
-	wchar_t *desc = 0;
-	array_list_t l;
 
 	if( !suff || !cmd )
 		DIE_MEM();
 	
-	al_init( &l );
+    wcstring_list_t lst;
+    wcstring desc;
 	
-	if( exec_subshell( cmd, &l ) != -1 )
+	if( exec_subshell2( cmd, lst ) != -1 )
 	{
-		
-		if( al_get_count( &l )>0 )
+		if( lst.size()>0 )
 		{
-			wchar_t *ln = (wchar_t *)al_get(&l, 0 );
-			if( wcscmp( ln, L"unknown" ) != 0 )
+            const wcstring & ln = lst.at(0);
+			if( ln.size() > 0 && ln != L"unknown" )
 			{
-				desc = wcsdup( ln);
+				desc = ln;
 				/*
 				  I have decided I prefer to have the description
 				  begin in uppercase and the whole universe will just
@@ -416,17 +414,16 @@ static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 	}
 	
 	free(cmd);
-	al_foreach( &l, &free );
-	al_destroy( &l );
 		
-	if( !desc )
+	if( ! desc.size() )
 	{
-		desc = wcsdup(COMPLETE_FILE_DESC);
+		desc = COMPLETE_FILE_DESC;
 	}
 	
-	hash_put( suffix_hash, suff, desc );
+    wchar_t *tmp = wcsdup(desc.c_str());
+	hash_put( suffix_hash, suff, tmp );
 
-	return desc;
+	return tmp;
 }
 
 /**

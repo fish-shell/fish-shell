@@ -70,7 +70,7 @@ static buffer_t *s_writeb_buffer=0;
    specified position of the specified wide character string. All of
    \c seq must match, but str may be longer than seq.
 */
-static int try_sequence( char *seq, wchar_t *str )
+static int try_sequence( const char *seq, const wchar_t *str )
 {
 	int i;
 
@@ -106,7 +106,7 @@ static int next_tab_stop( int in )
    to detect common escape sequences that may be embeded in a prompt,
    such as color codes.
 */
-static int calc_prompt_width( wchar_t *prompt )
+static int calc_prompt_width( const wchar_t *prompt )
 {
 	int res = 0;
 	int j, k;
@@ -573,7 +573,7 @@ static void s_write_mbs( buffer_t *b, char *s )
    Convert a wide string to a multibyte string and append it to the
    buffer.
 */
-static void s_write_str( buffer_t *b, wchar_t *s )
+static void s_write_str( buffer_t *b, const wchar_t *s )
 {
 	int (*writer_old)(char) = output_get_writer();
 
@@ -588,7 +588,7 @@ static void s_write_str( buffer_t *b, wchar_t *s )
 /**
    Update the screen to match the desired output.
 */
-static void s_update( screen_t *scr, wchar_t *prompt )
+static void s_update( screen_t *scr, const wchar_t *prompt )
 {
 	int i, j, k;
 	int prompt_width = calc_prompt_width( prompt );
@@ -710,10 +710,10 @@ static int is_dumb()
 
 
 void s_write( screen_t *s,
-	      wchar_t *prompt,
-	      wchar_t *b, 
-	      int *c, 
-	      int *indent,
+	      const wchar_t *prompt,
+	      const wchar_t *b, 
+	      const int *c, 
+	      const int *indent,
 	      int cursor )
 {
 	int i;

@@ -1678,7 +1678,6 @@ char **env_export_arr( int recalc )
 	
 	if( has_changed )
 	{
-		array_list_t uni;
 		hash_table_t vals;
 		int prev_was_null=1;
 		int pos=0;		
@@ -1690,16 +1689,15 @@ char **env_export_arr( int recalc )
 		
 		get_exported( top, &vals );
 		
-		al_init( &uni );
-		env_universal_get_names( &uni, 1, 0 );
-		for( i=0; i<al_get_count( &uni ); i++ )
+        wcstring_list_t uni;
+		env_universal_get_names2( uni, 1, 0 );
+		for( i=0; i<uni.size(); i++ )
 		{
-			wchar_t *key = (wchar_t *)al_get( &uni, i );
-			wchar_t *val = env_universal_get( key );
+			const wchar_t *key = uni.at(i).c_str();
+			const wchar_t *val = env_universal_get( key );
 			if( wcscmp( val, ENV_NULL) && !hash_get( &vals, key ) )
 				hash_put( &vals, key, val );
 		}
-		al_destroy( &uni );
 
 		export_buffer.used=0;
 		

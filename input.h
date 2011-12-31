@@ -97,19 +97,19 @@ void input_unreadch( wint_t ch );
 void input_mapping_add( const wchar_t *sequence, const wchar_t *command );
 
 /**
-   Insert all mapping names into the specified array_list_t
+   Insert all mapping names into the specified wcstring_list_t
  */
-void input_mapping_get_names( array_list_t *list );
+void input_mapping_get_names( wcstring_list_t &lst );
 
 /**
    Erase binding for specified key sequence
  */
-int input_mapping_erase( const wchar_t *sequence );
+bool input_mapping_erase( const wchar_t *sequence );
 
 /**
-   Return the command bound to the specified key sequence
+   Gets the command bound to the specified key sequence. Returns true if it exists, false if not.
  */
-const wchar_t *input_mapping_get( const wchar_t *sequence );
+bool input_mapping_get( const wcstring &sequence, wcstring &cmd );
 
 /**
    Return the sequence for the terminfo variable of the specified name.
@@ -122,7 +122,7 @@ const wchar_t *input_terminfo_get_sequence( const wchar_t *name );
 /**
    Return the name of the terminfo variable with the specified sequence
  */
-const wchar_t *input_terminfo_get_name( const wchar_t *seq );
+bool input_terminfo_get_name( const wcstring &seq, wcstring &name );
 
 /**
    Return a list of all known terminfo names
@@ -133,7 +133,7 @@ void input_terminfo_get_names( array_list_t *lst, int skip_null );
 /**
    Returns the input function code for the given input function name.
 */
-wchar_t input_function_get_code( const wchar_t *name );
+wchar_t input_function_get_code( const wcstring &name );
 
 /**
    Returns a list of all existing input function names

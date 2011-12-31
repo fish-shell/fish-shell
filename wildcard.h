@@ -70,7 +70,7 @@ int wildcard_expand( const wchar_t *wc,
 					 int flags, 
 					 array_list_t *out );
 
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, std::vector<wcstring> &out );
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, wcstring_list_t &out );
 /**
    Test whether the given wildcard matches the string
 

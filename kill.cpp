@@ -223,31 +223,21 @@ static void kill_check_x_buffer()
 	
 	if( (disp = env_get( L"DISPLAY" )) )
 	{
-		int i;
-		wchar_t *cmd = L"xsel -t 500 -b";
-		wchar_t *new_cut_buffer=0;
-		array_list_t list;
-		al_init( &list );
-		if( exec_subshell( cmd, &list ) != -1 )
+		size_t i;
+		wcstring cmd = L"xsel -t 500 -b";
+		wcstring new_cut_buffer=L"";
+        wcstring_list_t list;
+		if( exec_subshell2( cmd, list ) != -1 )
 		{
 					
-			for( i=0; i<al_get_count( &list ); i++ )
+			for( i=0; i<list.size(); i++ )
 			{
-				wchar_t *next_line = escape( (wchar_t *)al_get( &list, i ), 0 );
-				if( i==0 )
-				{
-					new_cut_buffer = next_line;
-				}
-				else
-				{
-					wchar_t *old = new_cut_buffer;
-					new_cut_buffer= wcsdupcat( new_cut_buffer, L"\\n", next_line );
-					free( old );
-					free( next_line );	
-				}
+				wcstring next_line = escape_string( list.at(i), 0 );
+                if (i > 0) new_cut_buffer += L"\\n";
+                new_cut_buffer += next_line;
 			}
 		
-			if( new_cut_buffer )
+			if( new_cut_buffer.size() > 0 )
 			{
 				/*  
 					The buffer is inserted with backslash escapes,
@@ -255,29 +245,14 @@ static void kill_check_x_buffer()
 					etc. anyway.
 				*/
 				
-				if( cut_buffer != 0 )
-				{      
-					if( wcscmp( new_cut_buffer, cut_buffer ) == 0 )
-					{
-						free( new_cut_buffer );
-						new_cut_buffer = 0;
-					}
-					else
-					{
-						free( cut_buffer );
-						cut_buffer = 0;								
-				}
-				}
-				if( cut_buffer == 0 )
-				{
-					cut_buffer = new_cut_buffer;
-					kill_add_internal( cut_buffer );
-				}
+                if (cut_buffer == NULL || cut_buffer != new_cut_buffer)
+                {
+                    free(cut_buffer);
+                    cut_buffer = wcsdup(new_cut_buffer.c_str());
+                    kill_add_internal( cut_buffer );
+                }
 			}
 		}
-		
-		al_foreach( &list, &free );
-		al_destroy( &list );
 	}
 }
 

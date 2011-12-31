@@ -84,13 +84,14 @@
 /**
    Struct representing a keybinding. Returned by input_get_mappings.
  */
-typedef struct
+struct input_mapping_t
 {
-	const wchar_t *seq; /**< Character sequence which generates this event */
-	const wchar_t *command; /**< command that should be evaluated by this mapping */
-		
-}
-	input_mapping_t;
+	wcstring seq; /**< Character sequence which generates this event */
+	wcstring command; /**< command that should be evaluated by this mapping */
+    
+    
+    input_mapping_t(const wcstring &s, const wcstring &c) : seq(s), command(c) {}
+};
 
 /**
    A struct representing the mapping from a terminfo key name to a terminfo character sequence
@@ -226,11 +227,10 @@ static const wchar_t code_arr[] =
 }
 	;
 
-
 /**
    Mappings for the current input mode
 */
-static array_list_t mappings = {0,0,0}; 
+std::vector<input_mapping_t> mapping_list;
 
 /**
    List of all terminfo mappings
@@ -259,7 +259,7 @@ static void input_terminfo_destroy();
 void input_mapping_add( const wchar_t *sequence,
 			const wchar_t *command )
 {
-	int i;
+	size_t i;
 
 	CHECK( sequence, );
 	CHECK( command, );
@@ -267,21 +267,16 @@ void input_mapping_add( const wchar_t *sequence,
 	//	debug( 0, L"Add mapping from %ls to %ls", escape(sequence, 1), escape(command, 1 ) );
 	
 
-	for( i=0; i<al_get_count( &mappings); i++ )
+	for( i=0; i<mapping_list.size(); i++ )
 	{
-		input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
-		if( wcscmp( m->seq, sequence ) == 0 )
+		input_mapping_t &m = mapping_list.at(i);
+		if(  m.seq == sequence )
 		{
-			m->command = intern(command);
+			m.command = command;
 			return;
 		}
 	}
-	
-	input_mapping_t *m = (input_mapping_t *)malloc( sizeof( input_mapping_t ) );
-	m->seq = intern( sequence );
-	m->command = intern(command);
-	al_push( &mappings, m );	
-	
+    mapping_list.push_back(input_mapping_t(sequence, command));	
 }
 
 /**
@@ -336,7 +331,7 @@ int input_init()
 	/*
 	  If we have no keybindings, add a few simple defaults
 	*/
-	if( !al_get_count( &mappings ) )
+	if( mapping_list.size() )
 	{
 		input_mapping_add( L"", L"self-insert" );
 		input_mapping_add( L"\n", L"execute" );
@@ -357,9 +352,6 @@ void input_destroy()
 
 	is_init=0;
 	
-	al_foreach( &mappings, &free );		
-	al_destroy( &mappings );
-
 	input_common_destroy();
 	
 	if( del_curterm( cur_term ) == ERR )
@@ -374,9 +366,9 @@ void input_destroy()
 /**
    Perform the action of the specified binding
 */
-static wint_t input_exec_binding( input_mapping_t *m, const wchar_t *seq )
+static wint_t input_exec_binding( const input_mapping_t &m, const wcstring &seq )
 {
-	wchar_t code = input_function_get_code( m->command );
+	wchar_t code = input_function_get_code( m.command );
 	if( code != -1 )
 	{				
 		switch( code )
@@ -403,7 +395,7 @@ static wint_t input_exec_binding( input_mapping_t *m, const wchar_t *seq )
 		*/
 		int last_status = proc_get_last_status();
 	  		
-		eval( m->command, 0, TOP );
+		eval( m.command.c_str(), 0, TOP );
 		
 		proc_set_last_status( last_status );
 		
@@ -427,7 +419,7 @@ static wint_t input_exec_binding( input_mapping_t *m, const wchar_t *seq )
 /**
    Try reading the specified function mapping
 */
-static wint_t input_try_mapping( input_mapping_t *m)
+static wint_t input_try_mapping( const input_mapping_t &m)
 {
 	int j, k;
 	wint_t c=0;
@@ -436,35 +428,32 @@ static wint_t input_try_mapping( input_mapping_t *m)
 	  Check if the actual function code of this mapping is on the stack
 	 */
 	c = input_common_readch( 0 );
-	if( c == input_function_get_code( m->command ) )
+	if( c == input_function_get_code( m.command ) )
 	{
-		return input_exec_binding( m, m->seq );
+		return input_exec_binding( m, m.seq );
 	}
 	input_unreadch( c );
-	
-	if( m->seq != 0 )
-	{
 
-		for( j=0; m->seq[j] != L'\0' && 
-			     m->seq[j] == (c=input_common_readch( j>0 )); j++ )
-			;
-		
-		if( m->seq[j] == L'\0' )
-		{
-			return input_exec_binding( m, m->seq );
-		}
-		else
-		{
-			/*
-			  Return the read characters
-			*/
-			input_unreadch(c);
-			for( k=j-1; k>=0; k-- )
-			{
-				input_unreadch( m->seq[k] );
-			}
-		}
-	}
+    const wchar_t *str = m.seq.c_str();
+    for( j=0; str[j] != L'\0' && 
+             str[j] == (c=input_common_readch( j>0 )); j++ )
+        ;
+    
+    if( str[j] == L'\0' )
+    {
+        return input_exec_binding( m, m.seq );
+    }
+    else
+    {
+        /*
+          Return the read characters
+        */
+        input_unreadch(c);
+        for( k=j-1; k>=0; k-- )
+        {
+            input_unreadch( m.seq[k] );
+        }
+    }
 	return 0;
 		
 }
@@ -477,7 +466,7 @@ void input_unreadch( wint_t ch )
 wint_t input_readch()
 {
 	
-	int i;
+	size_t i;
 
 	CHECK_BLOCK( R_NULL );
 	
@@ -492,17 +481,17 @@ wint_t input_readch()
 
 	while( 1 )
 	{
-		input_mapping_t *generic = 0;
-		for( i=0; i<al_get_count( &mappings); i++ )
+		const input_mapping_t *generic = 0;
+		for( i=0; i<mapping_list.size(); i++ )
 		{
-			input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
+			const input_mapping_t &m = mapping_list.at(i);
 			wint_t res = input_try_mapping( m );		
 			if( res )
 				return res;
 			
-			if( wcslen( m->seq) == 0 )
+			if( m.seq.length() == 0 )
 			{
-				generic = m;
+				generic = &m;
 			}
 			
 		}
@@ -521,7 +510,7 @@ wint_t input_readch()
 			;
 			arr[0] = input_common_readch(0);
 			
-			return input_exec_binding( generic, arr );				
+			return input_exec_binding( *generic, arr );				
 		}
 				
 		/*
@@ -531,63 +520,57 @@ wint_t input_readch()
 		input_common_readch( 0 );	}	
 }
 
-void input_mapping_get_names( array_list_t *list )
+void input_mapping_get_names( wcstring_list_t &lst )
 {
-	int i;
+	size_t i;
 	
-	for( i=0; i<al_get_count( &mappings ); i++ )
+	for( i=0; i<mapping_list.size(); i++ )
 	{
-		input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
-		al_push( list, m->seq );
+		const input_mapping_t &m = mapping_list.at(i);
+        lst.push_back(wcstring(m.seq));
 	}
 	
 }
 
 
-int input_mapping_erase( const wchar_t *sequence )
+bool input_mapping_erase( const wchar_t *sequence )
 {
-	int ok = 0;
-	int i;
-	size_t sz = al_get_count( &mappings );
+    ASSERT_IS_MAIN_THREAD();
+	bool result = false;
+	size_t i, sz = mapping_list.size();
 	
 	for( i=0; i<sz; i++ )
 	{
-		input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
-		if( !wcscmp( sequence, m->seq ) )
+		const input_mapping_t &m = mapping_list.at(i);
+		if( sequence == m.seq )
 		{
 			if( i != (sz-1 ) )
 			{
-				al_set( &mappings, i, al_get( &mappings, sz -1 ) );
+                mapping_list[i] = mapping_list[sz-1];
 			}
-			al_truncate( &mappings, sz-1 );
-			ok = 1;
-			
-			free( m );
-			
+            mapping_list.pop_back();
+			result = true;
 			break;
 			
 		}
-		
 	}
-
-	return ok;
-	
+	return result;
 }
 
-const wchar_t *input_mapping_get( const wchar_t *sequence )
+bool input_mapping_get( const wcstring &sequence, wcstring &cmd )
 {
-	int i;
-	size_t sz = al_get_count( &mappings );
+	size_t i, sz = mapping_list.size();
 	
 	for( i=0; i<sz; i++ )
 	{
-		input_mapping_t *m = (input_mapping_t *)al_get( &mappings, i );
-		if( !wcscmp( sequence, m->seq ) )
+		const input_mapping_t &m = mapping_list.at(i);
+		if( sequence == m.seq )
 		{
-			return m->command;
+			cmd = m.command;
+            return true;
 		}
 	}
-	return 0;
+	return false;
 }
 
 /**
@@ -805,18 +788,11 @@ const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 		
 }
 
-const wchar_t *input_terminfo_get_name( const wchar_t *seq )
+bool input_terminfo_get_name( const wcstring &seq, wcstring &name )
 {
 	int i;	
-	static string_buffer_t *buff = 0;
 
-	CHECK( seq, 0 );
 	input_init();
-		
-	if( !buff )
-	{
-		buff = sb_halloc( global_context );
-	}
 	
 	for( i=0; i<al_get_count( terminfo_mappings ); i++ )
 	{
@@ -827,17 +803,14 @@ const wchar_t *input_terminfo_get_name( const wchar_t *seq )
 			continue;
 		}
 		
-		sb_clear( buff );
-		sb_printf( buff, L"%s", m->seq );
-		
-		if( !wcscmp( seq, (wchar_t *)buff->buff ) )
-		{
-			return m->name;
-		}
-	}
+        const wcstring map_buf = format_string(L"%s",  m->seq);
+        if (map_buf == seq) {
+            name = m->name;
+            return true;
+        }
+    }
 	
-	return 0;
-	
+	return false;
 }
 
 void input_terminfo_get_names( array_list_t *lst, int skip_null )
@@ -861,7 +834,7 @@ void input_terminfo_get_names( array_list_t *lst, int skip_null )
 
 void input_function_get_names( array_list_t *lst )
 {
-	int i;	
+	size_t i;	
 
 	CHECK( lst, );
 		
@@ -871,13 +844,13 @@ void input_function_get_names( array_list_t *lst )
 	}
 }
 
-wchar_t input_function_get_code( const wchar_t *name )
+wchar_t input_function_get_code( const wcstring &name )
 {
 
-	int i;
+	size_t i;
 	for( i = 0; i<(sizeof( code_arr )/sizeof(wchar_t)) ; i++ )
 	{
-		if( wcscmp( name, name_arr[i] ) == 0 )
+		if( name == name_arr[i] )
 		{
 			return code_arr[i];
 		}

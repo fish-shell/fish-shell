@@ -30,6 +30,7 @@ static hash_table_t *intern_static_table=0;
 
 const wchar_t *intern( const wchar_t *in )
 {
+    ASSERT_IS_MAIN_THREAD();
 	const wchar_t *res=0;
 
 //	debug( 0, L"intern %ls", in );

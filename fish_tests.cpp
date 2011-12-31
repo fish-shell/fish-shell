@@ -112,48 +112,6 @@ static int pq_compare( void *e1, void *e2 )
 	return (intptr_t)e1-(intptr_t)e2;
 }
 
-/**
-   Test priority queue functionality
-*/
-static void pq_test( int elements )
-{
-	int i;
-	int prev;
-	
-	int *count = (int *)calloc( sizeof(int), 100 );
-	
-	priority_queue_t q;
-	pq_init( &q, pq_compare );
-
-	
-	for( i=0; i<elements; i++ )
-	{
-		long foo = rand() % 100;
-//		printf( "Adding %d\n", foo );
-		pq_put( &q, (void *)foo );
-		count[foo]++;
-	}
-	
-	prev = 100;
-	
-	for( i=0; i<elements; i++ )
-	{
-		long pos = (long)pq_get( &q );
-		count[ pos ]--;
-		if( pos > prev )
-			err( L"Wrong order of elements in priority_queue_t" );
-		prev = pos;
-		
-	}
-
-	for( i=0; i<100; i++ )
-	{
-		if( count[i] != 0 )
-		{
-			err( L"Wrong number of elements in priority_queue_t" );
-		}
-	}
-}
 
 /**
    Test stack functionality
@@ -379,7 +337,6 @@ static void test_util()
 	for( i=0; i<18; i++ )
 	{
 		long t1, t2;
-		pq_test( 1<<i );
 		stack_test( 1<<i );
 		t1 = get_time();
 		hash_test( 1<<i );

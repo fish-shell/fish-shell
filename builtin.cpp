@@ -188,7 +188,7 @@ static int count_char( const wchar_t *str, wchar_t c )
 
 wchar_t *builtin_help_get( const wchar_t *name )
 {
-	array_list_t lst;
+    wcstring_list_t lst;
 	string_buffer_t cmd;
 	wchar_t *name_esc;
 	
@@ -198,9 +198,8 @@ wchar_t *builtin_help_get( const wchar_t *name )
 	  using halloc.
 	 */
 	static string_buffer_t *out = 0;
-	int i;
+	size_t i;
 	
-	al_init( &lst );
 	sb_init( &cmd );
 	
 	if( !out )
@@ -216,17 +215,15 @@ wchar_t *builtin_help_get( const wchar_t *name )
 	sb_printf( &cmd, L"__fish_print_help %ls", name_esc );
 	
 
-	if( exec_subshell( (wchar_t *)cmd.buff, &lst ) >= 0 )
+	if( exec_subshell2( (wchar_t *)cmd.buff, lst ) >= 0 )
 	{	
-		for( i=0; i<al_get_count( &lst); i++ )
+		for( i=0; i<lst.size(); i++ )
 		{
-			sb_append( out, (wchar_t *)al_get( &lst, i ) );
+			sb_append( out, lst.at(i).c_str() );
 			sb_append( out, L"\n" );
 		}
 	}
 		
-	al_foreach( &lst, &free );
-	al_destroy( &lst );
 	sb_destroy( &cmd );
 	free( name_esc );
 	
@@ -412,37 +409,29 @@ static void builtin_missing_argument( const wchar_t *cmd, const wchar_t *opt )
  */
 static void builtin_bind_list()
 {
-	array_list_t lst;
-	int i;
+	size_t i;
+    wcstring_list_t lst;
+	input_mapping_get_names( lst );
 	
-	
-	al_init( &lst );
-	input_mapping_get_names( &lst );
-	
-	for( i=0; i<al_get_count(&lst); i++ )
+	for( i=0; i<lst.size(); i++ )
 	{
-		wchar_t *seq = (wchar_t *)al_get( &lst, i );
+		wcstring seq = lst.at(i);
 		
-		const wchar_t *tname = input_terminfo_get_name( seq );
-		wchar_t *ecmd = escape( input_mapping_get( seq ), 1 );
-		
-		if( tname )
+        wcstring ecmd;
+        input_mapping_get(seq, ecmd);
+        ecmd = escape_string(ecmd, 1);		
+        
+        wcstring tname; 
+		if( input_terminfo_get_name(seq, tname) )
 		{
-			sb_printf( sb_out, L"bind -k %ls %ls\n", tname, ecmd );
+			sb_printf( sb_out, L"bind -k %ls %ls\n", tname.c_str(), ecmd.c_str() );
 		}
 		else
 		{
-			wchar_t *eseq = escape( seq, 1 );
-		
-			sb_printf( sb_out, L"bind %ls %ls\n", eseq, ecmd );
-			free( eseq );
-		}
-		
-		free( ecmd );
-		
-	}
-	
-	al_destroy( &lst );
+			const wcstring eseq = escape_string( seq, 1 );	
+			sb_printf( sb_out, L"bind %ls %ls\n", eseq.c_str(), ecmd.c_str() );
+		}		
+	}	
 }
 
 /**
@@ -553,18 +542,15 @@ static void builtin_bind_erase( wchar_t **seq, int all )
 {
 	if( all )
 	{
-		int i;
-		array_list_t lst;
-		al_init( &lst );
+		size_t i;
+		wcstring_list_t lst;
+		input_mapping_get_names( lst );
 		
-		input_mapping_get_names( &lst );
-		
-		for( i=0; i<al_get_count( &lst ); i++ )
+		for( i=0; i<lst.size(); i++ )
 		{
-			input_mapping_erase( (wchar_t *)al_get( &lst, i ) );			
+			input_mapping_erase( lst.at(i).c_str() );			
 		}		
 		
-		al_destroy( &lst );
 	}
 	else
 	{

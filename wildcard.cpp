@@ -1200,7 +1200,7 @@ int wildcard_expand( const wchar_t *wc,
 	return res;
 }
 
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, std::vector<wcstring> &outputs )
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, wcstring_list_t &outputs )
 {
     array_list_t lst;
     al_init(&lst);

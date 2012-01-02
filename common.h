@@ -478,7 +478,7 @@ wcstring escape_string( const wcstring &in, int escape_all );
 wchar_t *unescape( const wchar_t * in, 
 				   int escape_special );
 
-void unescape_string( wcstring &str, 
+bool unescape_string( wcstring &str, 
                   int escape_special );
 
 /**

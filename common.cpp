@@ -1508,11 +1508,16 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 	return in;	
 }
 
-void unescape_string(wcstring &str, int escape_special)
+bool unescape_string(wcstring &str, int escape_special)
 {
+    bool success = false;
     wchar_t *result = unescape(str.c_str(), escape_special);
-    str.replace(str.begin(), str.end(), result);
-    free(result);
+    if ( result) {
+        str.replace(str.begin(), str.end(), result);
+        free(result);
+        success = true;
+    }
+    return success;
 }
 
 /**

@@ -72,18 +72,20 @@ static const wchar_t *highlight_var[] =
    \return zero it this is not a valid prefix, non-zero otherwise
 */
 // PCA DOES_IO
-static int is_potential_path( const wcstring &cpath )
+static bool is_potential_path( const wcstring &cpath )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
 	const wchar_t *unescaped, *in;
     wcstring cleaned_path;
 	int has_magic = 0;
-	int res = 0;
+	bool res = false;
     
     wcstring path(cpath);
     expand_tilde(path);
-    unescape_string(path, 1);
+    if (! unescape_string(path, 1))
+        return false;
+    
     unescaped = path.c_str();
     
     //	debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
@@ -142,7 +144,7 @@ static int is_potential_path( const wcstring &cpath )
             
             if( dir_name == L"/" && base_name == L"/" )
             {
-                res = 1;
+                res = true;
             }
             else if( (dir = wopendir( dir_name.c_str() )) )
             {
@@ -151,7 +153,7 @@ static int is_potential_path( const wcstring &cpath )
                 {
                     if( wcsncmp( base_name.c_str(), base_name.c_str(), base_name.length() ) == 0 )
                     {
-                        res = 1;
+                        res = true;
                         break;
                     }
                 }

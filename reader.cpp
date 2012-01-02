@@ -627,7 +627,11 @@ void reader_write_title()
 		return;
 	}
 
-	if( !contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" ) )
+    bool recognized = false;
+    recognized = recognized || contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" );
+    recognized = recognized || ! wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
+
+	if( ! recognized )
 	{
 		char *n = ttyname( STDIN_FILENO );
 

@@ -1113,7 +1113,7 @@ void job_continue (job_t *j, int cont)
 				if( p->pid )
 				{
 					int status = proc_format_status(p->status);
-					
+					//wprintf(L"setting status %d for %ls\n", job_get_flag( j, JOB_NEGATE )?!status:status, j->command);
 					proc_set_last_status( job_get_flag( j, JOB_NEGATE )?!status:status);
 				}
 			}			

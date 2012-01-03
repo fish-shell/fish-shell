@@ -279,7 +279,6 @@ static int fish_parse_opt( int argc, char **argv, char **cmd_ptr )
 int main( int argc, char **argv )
 {
     struct stat tmp;
-    stat("----------FISH_HIT_MAIN----------", &tmp);
 	int res=1;
 	char *cmd=0;
 	int my_optind=0;
@@ -290,6 +289,7 @@ int main( int argc, char **argv )
 	is_interactive_session=1;
 	program_name=L"fish";
 
+    stat("----------FISH_HIT_MAIN----------", &tmp);
 
 	my_optind = fish_parse_opt( argc, argv, &cmd );
 

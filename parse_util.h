@@ -122,8 +122,8 @@ int parse_util_get_offset( wchar_t *buff, int line, int line_offset );
    \param on_unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
    \param reload wheter to recheck file timestamps on already loaded files
 */
-int parse_util_load( const wchar_t *cmd,
-					 const wchar_t *path_var_name,
+int parse_util_load( const wcstring &cmd,
+					 const wcstring &path_var_name,
 					 void (*on_unload)(const wchar_t *cmd),
 					 int reload );
 

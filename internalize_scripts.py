@@ -72,7 +72,7 @@ fd.write("""struct builtin_script_t {
 
 fd.write('\n')
 fd.write('\n')
-fd.write('extern const struct builtin_script_t builtin_scripts[%d];\n' % len(funcs))
+fd.write('extern const struct builtin_script_t internal_function_scripts[%d];\n' % len(funcs))
 fd.write('\n')
 fd.close()
 
@@ -86,7 +86,7 @@ for func in funcs:
 
 # Output the refs
 func_refs = ["{%s, %s}" % (stringize(func.name), func.cfunc_name()) for func in funcs]
-fd.write('const struct builtin_script_t builtin_scripts[%d] =\n' % len(funcs))
+fd.write('const struct builtin_script_t internal_function_scripts[%d] =\n' % len(funcs))
 fd.write('{\n\t')
 fd.write(',\n\t'.join(func_refs))
 fd.write('\n};\n')

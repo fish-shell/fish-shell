@@ -36,6 +36,7 @@
 #include "signal.h"
 #include "wildcard.h"
 #include "halloc_util.h"
+#include "builtin_scripts.h"
 
 /**
    Maximum number of autoloaded items opf a specific type to keep in
@@ -816,14 +817,16 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 }
 
 static int parse_util_load_internal( const wchar_t *cmd,
+                                     const struct builtin_script_t *builtin_scripts,
+                                     size_t builtin_script_count,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
 									 autoload_t *loaded,
 									 const std::vector<wcstring> &path_list );
 
 
-int parse_util_load( const wchar_t *cmd,
-					 const wchar_t *path_var_name,
+int parse_util_load( const wcstring &cmd,
+					 const wcstring &path_var_name,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload )
 {
@@ -834,15 +837,12 @@ int parse_util_load( const wchar_t *cmd,
 	int res;
 	int c, c2;
 	
-	CHECK( path_var_name, 0 );
-	CHECK( cmd, 0 );
-
 	CHECK_BLOCK( 0 );
 	
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
-	parse_util_autounload( path_var_name, cmd, on_load );
-	path_var = env_get( path_var_name );	
+	parse_util_autounload( path_var_name.c_str(), cmd.c_str(), on_load );
+	path_var = env_get( path_var_name.c_str() );	
 	
 	/*
 	  Do we know where to look?
@@ -866,7 +866,7 @@ int parse_util_load( const wchar_t *cmd,
 		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
  	}
 	
-	loaded = (autoload_t *)hash_get( all_loaded, path_var_name );
+	loaded = (autoload_t *)hash_get( all_loaded, path_var_name.c_str() );
 
 	if( loaded )
 	{
@@ -876,7 +876,7 @@ int parse_util_load( const wchar_t *cmd,
 		*/
 		if( wcscmp( path_var, loaded->old_path ) != 0 )
 		{
-			parse_util_load_reset( path_var_name, on_load);
+			parse_util_load_reset( path_var_name.c_str(), on_load);
 			reload = parse_util_load( cmd, path_var_name, on_load, reload );
 			return reload;
 		}
@@ -884,12 +884,12 @@ int parse_util_load( const wchar_t *cmd,
 		/**
 		   Warn and fail on infinite recursion
 		*/
-		if( hash_get( &loaded->is_loading, cmd ) )
+		if( hash_get( &loaded->is_loading, cmd.c_str() ) )
 		{
 			debug( 0, 
 				   _( L"Could not autoload item '%ls', it is already being autoloaded. " 
 					  L"This is a circular dependency in the autoloading scripts, please remove it."), 
-				   cmd );
+				   cmd.c_str() );
 			return 1;
 		}
 		
@@ -908,7 +908,7 @@ int parse_util_load( const wchar_t *cmd,
 			DIE_MEM();
 		}
 		hash_init( &loaded->load_time, &hash_wcs_func, &hash_wcs_cmp );
-		hash_put( all_loaded, wcsdup(path_var_name), loaded );
+		hash_put( all_loaded, wcsdup(path_var_name.c_str()), loaded );
 		
 		hash_init( &loaded->is_loading, &hash_wcs_func, &hash_wcs_cmp );
 
@@ -920,21 +920,30 @@ int parse_util_load( const wchar_t *cmd,
 	
 	c = path_list.size();
 	
-	hash_put( &loaded->is_loading, cmd, cmd );
+	hash_put( &loaded->is_loading, cmd.c_str(), cmd.c_str() );
+
+    /* Figure out which builtin-scripts array to search (if any) */
+    const builtin_script_t *builtins = NULL;
+    size_t builtin_count = 0;
+    if (cmd == L"fish_function_path")
+    {
+        builtins = internal_function_scripts;
+        builtin_count = sizeof internal_function_scripts / sizeof *internal_function_scripts;
+    }
 
 	/*
 	  Do the actual work in the internal helper function
 	*/
 
-	res = parse_util_load_internal( cmd, on_load, reload, loaded, path_list );
+	res = parse_util_load_internal( cmd.c_str(), builtins, builtin_count, on_load, reload, loaded, path_list );
 
-	autoload_t *loaded2 = (autoload_t *)hash_get( all_loaded, path_var_name );
+	autoload_t *loaded2 = (autoload_t *)hash_get( all_loaded, path_var_name.c_str() );
 	if( loaded2 == loaded )
 	{
 		/**
 		   Cleanup
 		*/
-		hash_remove( &loaded->is_loading, cmd, 0, 0 );
+		hash_remove( &loaded->is_loading, cmd.c_str(), 0, 0 );
 	}
 	
 	c2 = path_list.size();
@@ -955,6 +964,8 @@ int parse_util_load( const wchar_t *cmd,
 */
 
 static int parse_util_load_internal( const wchar_t *cmd,
+                                     const struct builtin_script_t *builtin_scripts,
+                                     size_t builtin_script_count,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
 									 autoload_t *loaded,
@@ -998,6 +1009,11 @@ static int parse_util_load_internal( const wchar_t *cmd,
 		sb_clear( path );
 	}
 	
+    /*
+     Look for built-in scripts.
+    */
+    
+    
 	/*
 	  Iterate over path searching for suitable completion files
 	*/

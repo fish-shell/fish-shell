@@ -86,7 +86,6 @@ HAVE_GETTEXT=0
 
 COMMON_FILES := util.cpp halloc.cpp halloc_util.cpp fallback.cpp
 
-
 #
 # All objects that the system needs to build fish, except fish.o
 #
@@ -96,7 +95,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	tokenizer.o wildcard.o wgetopt.o wutil.o input.o output.o intern.o	\
 	env_universal.o env_universal_common.o input_common.o event.o		\
 	signal.o io.o parse_util.o common.o screen.o path.o					\
-	parser_keywords.o iothread.o
+	parser_keywords.o iothread.o builtin_scripts.o
 
 FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
 parser_keywords.o wutil.o tokenizer.o
@@ -158,6 +157,17 @@ HDR_FILES_SRC := doc_src/index.hdr.in doc_src/commands.hdr.in doc_src/design.hdr
 #
 
 HDR_FILES := $(subst .hdr.in,.hdr,$(HDR_FILES_SRC))
+
+#
+# Internalized scripts
+#
+
+GENERATED_INTERN_SCRIPT_FILES := builtin_scripts.h builtin_scripts.cpp
+
+# Use a pattern rule so that Make knows to only issue one invocation
+# per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
+builtin%scripts.h builtin%scripts.cpp: internalize_scripts.py
+	./internalize_scripts.py share/functions/*.fish
 
 #
 # Files containing documentation for external commands. 
@@ -876,6 +886,7 @@ distclean: clean
 
 clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
+	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader 
 	rm -f share/config.fish etc/config.fish doc_src/index.hdr doc_src/commands.hdr

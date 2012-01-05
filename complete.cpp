@@ -594,7 +594,7 @@ static void parse_cmd_string( void *context,
 	}
 	
 	/* Make sure the path is not included in the command */
-	cmd = wcsrchr( str, L'/' );
+	cmd = const_cast<wchar_t*>(wcsrchr( str, L'/' ));
 	if( cmd != 0 )
 	{
 		cmd++;
@@ -680,7 +680,7 @@ int complete_is_valid_option( const wchar_t *str,
 	is_gnu_opt = opt[1]==L'-';
 	if( is_gnu_opt )
 	{
-		wchar_t *opt_end = wcschr(opt, L'=' );
+		const wchar_t *opt_end = wcschr(opt, L'=' );
 		if( opt_end )
 		{
 			gnu_opt_len = (opt_end-opt)-2;
@@ -1319,7 +1319,7 @@ static int short_ok( const wchar_t *arg,
 
 	for( ptr = arg+1; *ptr; ptr++ )
 	{
-		wchar_t *tmp = wcschr( allopt, *ptr );
+		const wchar_t *tmp = wcschr( allopt, *ptr );
 		/* Unknown option */
 		if( tmp == 0 )
 		{
@@ -1739,7 +1739,7 @@ static int try_complete_user( const wchar_t *cmd,
 	if( *first_char ==L'~' && !wcschr(first_char, L'/'))
 	{
 		const wchar_t *user_name = first_char+1;
-		wchar_t *name_end = wcschr( user_name, L'~' );
+		const wchar_t *name_end = wcschr( user_name, L'~' );
 		if( name_end == 0 )
 		{
 			struct passwd *pw;

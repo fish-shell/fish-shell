@@ -97,6 +97,8 @@ parts of fish.
 
 struct termios shell_modes;      
 
+static pthread_t main_thread_id = 0;
+
 wchar_t ellipsis_char;
 
 char *profile=0;
@@ -494,7 +496,7 @@ wchar_t *wcsvarname( const wchar_t *str )
 	return 0;
 }
 
-wchar_t *wcsfuncname( const wchar_t *str )
+const wchar_t *wcsfuncname( const wchar_t *str )
 {
 	return wcschr( str, L'/' );
 }
@@ -1943,9 +1945,19 @@ extern "C" {
 __attribute__((noinline)) void debug_thread_error(void) {}
 }
 
+ 
+void set_main_thread() {
+ 	main_thread_id = pthread_self();
+}
+
+static bool is_main_thread() {
+ 	assert (main_thread_id != 0);
+ 	return main_thread_id == pthread_self();
+}
+
 void assert_is_main_thread(const char *who)
 {
-    if (! pthread_main_np()) {
+    if (! is_main_thread()) {
         fprintf(stderr, "Warning: %s called off of main thread. Break on debug_thread_error to debug.\n", who);
         debug_thread_error();
     }
@@ -1953,7 +1965,7 @@ void assert_is_main_thread(const char *who)
 
 void assert_is_background_thread(const char *who)
 {
-    if (pthread_main_np()) {
+    if (is_main_thread()) {
         fprintf(stderr, "Warning: %s called on the main thread (may block!). Break on debug_thread_error to debug.\n", who);
         debug_thread_error();
     }    

@@ -27,7 +27,7 @@ int writestr( char *str )
 
 int main( int argc, char **argv)
 {
-
+	set_main_thread();
 	setlocale( LC_ALL, "" );
 	
 

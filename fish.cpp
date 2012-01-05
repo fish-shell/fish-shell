@@ -284,6 +284,7 @@ int main( int argc, char **argv )
 	int my_optind=0;
 
 	halloc_util_init();	
+	set_main_thread();
 
 	wsetlocale( LC_ALL, L"" );
 	is_interactive_session=1;

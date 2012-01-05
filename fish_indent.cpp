@@ -302,7 +302,7 @@ int main( int argc, char **argv )
 	string_buffer_t sb_out;
 	
 	int do_indent=1;
-	
+	set_main_thread();	
 	wsetlocale( LC_ALL, L"" );
 	program_name=L"fish_indent";
 

@@ -518,7 +518,7 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
 									 struct stat buf, 
 									 int err )
 {
-	wchar_t *suffix;
+	const wchar_t *suffix;
 
 	CHECK( filename, 0 );
 		
@@ -782,7 +782,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 {
 	
 	/* Points to the end of the current wildcard segment */
-	wchar_t *wc_end;
+	const wchar_t *wc_end;
 
 	/* Variables for traversing a directory */
 	DIR *dir;
@@ -794,7 +794,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 	int base_len;
 
 	/* Variables for testing for presense of recursive wildcards */
-	wchar_t *wc_recursive;
+	const wchar_t *wc_recursive;
 	int is_recursive;
 
 	/* Sligtly mangled version of base_dir */
@@ -1052,8 +1052,8 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			*/
 			if( is_recursive )
 			{
-				wchar_t *end = wcschr( wc, ANY_STRING_RECURSIVE );
-				wchar_t *wc_sub = wcsndup( wc, end-wc+1);
+				const wchar_t *end = wcschr( wc, ANY_STRING_RECURSIVE );
+				wchar_t *wc_sub = const_cast<wchar_t*>(wcsndup( wc, end-wc+1));
 				partial_match = wildcard_match2( name, wc_sub, 1 );
 				free( wc_sub );
 			}			
@@ -1090,7 +1090,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 								wchar_t *new_wc = L"";
 								if( wc_end )
 								{
-									new_wc=wc_end+1;
+									new_wc=const_cast<wchar_t*>(wc_end+1);
 									/*
 									  Accept multiple '/' as a single direcotry separator
 									*/
@@ -1165,7 +1165,7 @@ int wildcard_expand( const wchar_t *wc,
 	if( flags & ACCEPT_INCOMPLETE )
 	{
 		wchar_t *wc_base=L"";
-		wchar_t *wc_base_ptr = wcsrchr( wc, L'/' );
+		wchar_t *wc_base_ptr = const_cast<wchar_t*>(wcsrchr( wc, L'/' ));
 		string_buffer_t sb;
 		
 

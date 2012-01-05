@@ -1238,12 +1238,7 @@ wcstring env_get_string( const wchar_t *key )
 wchar_t *env_get( const wchar_t *key )
 {
     ASSERT_IS_MAIN_THREAD();
-    
-    if (! pthread_main_np())
-    {
-        fwprintf(stderr, L"env_get(%ls)\n", key);
-    }
-    
+
 	var_entry_t *res;
 	env_node_t *env = top;
 	wchar_t *item;

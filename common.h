@@ -15,6 +15,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <pthread.h>
+#include <string.h>
 
 #include <errno.h>
 #include "util.h"
@@ -71,6 +73,7 @@ typedef std::vector<wcstring> wcstring_list_t;
  Helper macro for errors
  */
 #define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
+
 
 /** 
 	Save the shell mode on startup so we can restore them on exit
@@ -366,7 +369,7 @@ wchar_t *wcsvarname( const wchar_t *str );
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
 
-wchar_t *wcsfuncname( const wchar_t *str );
+const wchar_t *wcsfuncname( const wchar_t *str );
 
 /**
    Test if the given string is valid in a variable name 
@@ -560,6 +563,20 @@ void sb_format_size( string_buffer_t *sb,
    If an error occurs, NAN is returned.
  */
 double timef();
+
+/**
+	Call the following function early in main to set the main thread.
+    This is our replacement for pthread_main_np().
+ */
+void set_main_thread();
+
+/**
+
+*/
+
+/**
+
+ */
 
 
 #endif

@@ -267,7 +267,7 @@ static char *file_exists( const char *dir, const char *in )
 	  a slash in the name as a directory separator. We try to replace
 	  a dash with a slash and try again. 
 	*/
-	replaceme = strchr( in, '-' ); 
+	replaceme = const_cast<char*>(strchr( in, '-' )); 
 	if( replaceme )
 	{
 		char *res;

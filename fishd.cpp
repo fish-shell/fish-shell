@@ -573,6 +573,7 @@ int main( int argc, char ** argv )
 	fd_set read_fd, write_fd;
 
 	halloc_util_init();
+	set_main_thread();
 	
 	program_name=L"fishd";
 	wsetlocale( LC_ALL, L"" );	

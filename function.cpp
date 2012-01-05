@@ -176,7 +176,7 @@ static void autoload_names( array_list_t *out, int get_hidden )
 			if( !get_hidden && fn[0] == L'_' )
 				continue;
 			
-			suffix = wcsrchr( fn, L'.' );
+			suffix = const_cast<wchar_t*>(wcsrchr( fn, L'.' ));
 			if( suffix && (wcscmp( suffix, L".fish" ) == 0 ) )
 			{
 				const wchar_t *dup;

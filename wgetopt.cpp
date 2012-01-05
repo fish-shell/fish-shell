@@ -617,7 +617,7 @@ _wgetopt_internal (int argc, wchar_t *const *argv, const wchar_t *optstring, con
 
 	{
 		wchar_t c = *nextchar++;
-		wchar_t *temp = my_index (optstring, c);
+		wchar_t *temp = const_cast<wchar_t*>(my_index (optstring, c));
 
 		/* Increment `woptind' when we start to process its last character.  */
 		if (*nextchar == '\0')

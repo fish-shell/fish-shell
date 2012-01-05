@@ -20,6 +20,7 @@
 #include <wchar.h>
 #include <map>
 #include <set>
+#include <algorithm>
 
 #include <time.h>
 #include <assert.h>
@@ -871,7 +872,7 @@ int parse_util_load( const wcstring &cmd,
     /* Figure out which builtin-scripts array to search (if any) */
     const builtin_script_t *builtins = NULL;
     size_t builtin_count = 0;
-    if (cmd == L"fish_function_path")
+    if (path_var_name == L"fish_function_path")
     {
         builtins = internal_function_scripts;
         builtin_count = sizeof internal_function_scripts / sizeof *internal_function_scripts;
@@ -908,6 +909,11 @@ int parse_util_load( const wcstring &cmd,
 	return res;
 }
 
+static bool script_name_precedes_script_name(const builtin_script_t &script1, const builtin_script_t &script2)
+{
+    return wcscmp(script1.name, script2.name) < 0;
+}
+
 /**
    This internal helper function does all the real work. By using two
    functions, the internal function can return on various places in
@@ -915,7 +921,7 @@ int parse_util_load( const wcstring &cmd,
 */
 
 static int parse_util_load_internal( const wcstring &cmd,
-                                     const struct builtin_script_t *builtin_scripts,
+                                     const builtin_script_t *builtin_scripts,
                                      size_t builtin_script_count,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
@@ -929,7 +935,6 @@ static int parse_util_load_internal( const wcstring &cmd,
     /* Get the function */
     autoload_function_t * func = loaded.get_function_with_name(cmd);
 
-
     /* Return if already loaded and we are skipping reloading */
 	if( !reload && func )
 		return 0;
@@ -937,73 +942,99 @@ static int parse_util_load_internal( const wcstring &cmd,
     /* Nothing to do if we just checked it */
     if (func && time(NULL) - func->load_time <= 1)
         return 0;	
-	
-    /*
-     Look for built-in scripts.
-    */
     
-	/*
-	  Iterate over path searching for suitable completion files
-	*/
-	for( i=0; i<path_list.size(); i++ )
-	{
-		struct stat buf;
-		wcstring next = path_list.at(i);
-        wcstring path = next + L"/" + cmd + L".fish";
+    /* The source of the script will end up here */
+    wcstring script_source;
+    bool has_script_source = false;
+    
+    /*
+     Look for built-in scripts via a binary search
+    */
+    const builtin_script_t *matching_builtin_script = NULL;
+    if (builtin_script_count > 0)
+    {
+        const builtin_script_t test_script = {cmd.c_str(), NULL};
+        const builtin_script_t *array_end = builtin_scripts + builtin_script_count;
+        const builtin_script_t *found = std::lower_bound(builtin_scripts, array_end, test_script, script_name_precedes_script_name);
+        if (found != array_end && ! wcscmp(found->name, test_script.name))
+        {
+            /* We found it */
+            matching_builtin_script = found;
+        }
+    }
+    if (matching_builtin_script) {
+        has_script_source = true;
+        script_source = str2wcstring(matching_builtin_script->def);
+    }
+    
+    if (! has_script_source)
+    {
+        /*
+          Iterate over path searching for suitable completion files
+        */
+        for( i=0; i<path_list.size(); i++ )
+        {
+            struct stat buf;
+            wcstring next = path_list.at(i);
+            wcstring path = next + L"/" + cmd + L".fish";
 
-		if( (wstat( path.c_str(), &buf )== 0) &&
-			(waccess( path.c_str(), R_OK ) == 0) )
-		{
-			if( !func || (func->modification_time != buf.st_mtime ) )
-			{
-                wcstring esc = escape_string(path, 1);
-				wcstring src_cmd = L". " + esc;
-				
-				if( !func )
-                    func = loaded.create_function_with_name(cmd);
+            if( (wstat( path.c_str(), &buf )== 0) &&
+                (waccess( path.c_str(), R_OK ) == 0) )
+            {
+                if( !func || (func->modification_time != buf.st_mtime ) )
+                {
+                    wcstring esc = escape_string(path, 1);
+                    script_source = L". " + esc;
+                    has_script_source = true;
+                    
+                    if( !func )
+                        func = loaded.create_function_with_name(cmd);
 
-                func->modification_time = buf.st_mtime;
-                func->load_time = time(NULL);
+                    func->modification_time = buf.st_mtime;
+                    func->load_time = time(NULL);
+                    
+                    if( on_load )
+                        on_load(cmd.c_str());
+                    
+                    reloaded = 1;
+                }
+                else if( func )
+                {
+                    /*
+                      If we are rechecking an autoload file, and it hasn't
+                      changed, update the 'last check' timestamp.
+                    */
+                    func->load_time = time(NULL);				
+                }
                 
-				if( on_load )
-					on_load(cmd.c_str());
-				
-				/*
-				  Source the completion file for the specified completion
-				*/
-				if( exec_subshell( src_cmd.c_str(), 0 ) == -1 )
-				{
-					/*
-					  Do nothing on failiure
-					*/
-				}
-				
-				reloaded = 1;
-			}
-			else if( func )
-			{
-				/*
-				  If we are rechecking an autoload file, and it hasn't
-				  changed, update the 'last check' timestamp.
-				*/
-				func->load_time = time(NULL);				
-			}
-			
-			break;
-		}
-	}
+                break;
+            }
+        }
 
-	/*
-	  If no file was found we insert a placeholder function. Later we only
-	  research if the current time is at least five seconds later.
-	  This way, the files won't be searched over and over again.
-	*/
-	if( !func )
-	{
-        func = loaded.create_function_with_name(cmd);
-        func->load_time = time(NULL);
-        func->is_placeholder = true;
-	}
+        /*
+          If no file was found we insert a placeholder function. Later we only
+          research if the current time is at least five seconds later.
+          This way, the files won't be searched over and over again.
+        */
+        if( !func )
+        {
+            func = loaded.create_function_with_name(cmd);
+            func->load_time = time(NULL);
+            func->is_placeholder = true;
+        }
+    }
+    
+    /* If we have a script, either built-in or a file source, then run it */
+    if (has_script_source)
+    {
+        if( exec_subshell( script_source.c_str(), 0 ) == -1 )
+        {
+            /*
+              Do nothing on failiure
+            */
+        }
+
+    }
 
 	return reloaded;	
 }

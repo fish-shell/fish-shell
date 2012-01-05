@@ -55,18 +55,11 @@
 struct autoload_function_t
 {   
     bool is_placeholder; //whether we are a placeholder that stands in for "no such function"
-    wcstring name; //function name
     time_t modification_time; // st_mtime
     time_t load_time; // when function was loaded
     
-    struct compare_names
-    {
-        bool operator()(const autoload_function_t &a, const autoload_function_t &b) const {
-            return a.name < b.name;
-        }
-    };
     
-    autoload_function_t(const wcstring &the_name) : is_placeholder(false), name(the_name), modification_time(0), load_time(0) { }
+    autoload_function_t() : is_placeholder(false), modification_time(0), load_time(0) { }
 };
 
 /**
@@ -75,8 +68,8 @@ struct autoload_function_t
 struct autoload_t
 {    
 private:
-    typedef std::set<autoload_function_t, autoload_function_t::compare_names> autoload_function_set_t;
-    autoload_function_set_t functions_set;
+    typedef std::map<wcstring, autoload_function_t> autoload_functions_map_t;
+    autoload_functions_map_t autoload_functions;
 public:
 
 	/**
@@ -85,72 +78,73 @@ public:
 	*/
     std::set<wcstring> is_loading_set;
     
-    bool is_loading(const wcstring &name) {
+    bool is_loading(const wcstring &name) const {
         return is_loading_set.find(name) != is_loading_set.end();
     }
     
     autoload_function_t *create_function_with_name(const wcstring &name)
     {
-        const autoload_function_t func(name);
-        autoload_function_set_t::iterator iter = functions_set.insert(func).first;
-        return const_cast<autoload_function_t *>(&*iter);
+        return &autoload_functions[name];
     }
     
     bool remove_function_with_name(const wcstring &name)
     {
-        const autoload_function_t func(name);
-        size_t numErased = functions_set.erase(func);
-        return numErased > 0;
+        return autoload_functions.erase(name) > 0;
     }
     
     autoload_function_t *get_function_with_name(const wcstring &name)
     {
         autoload_function_t *result = NULL;
-        const autoload_function_t func(name);
-        autoload_function_set_t::iterator iter = functions_set.find(func);
-        if (iter != functions_set.end())
-            result = const_cast<autoload_function_t *>(&*iter);
+        autoload_functions_map_t::iterator iter = autoload_functions.find(name);
+        if (iter != autoload_functions.end())
+            result = &iter->second;
         return result;
     }
     
     void remove_all_functions(void)
     {
-        functions_set.clear();
+        autoload_functions.clear();
     }
     
     size_t function_count(void) const
     {
-        return functions_set.size();
+        return autoload_functions.size();
     }
     
-    /* Get the function least recently loaded, or NULL */ 
-    autoload_function_t *get_lru_function(const wcstring &skip)
+    /* Get the name of the function that was least recently loaded, if it was loaded before cutoff_access. Return NULL if no function qualifies. */ 
+    const wcstring *get_lru_function_name(const wcstring &skip, time_t cutoff_access) const
     {
-        autoload_function_t *result = NULL;
-        autoload_function_set_t::iterator iter;
-        for (iter = functions_set.begin(); iter != functions_set.end(); iter++)
+        const wcstring *resultName = NULL;
+        const autoload_function_t *resultFunction = NULL;
+        autoload_functions_map_t::const_iterator iter;
+        for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
         {
             /* Skip the skip */
-            if (iter->name == skip) continue;
-            
-            /* Skip items that aren't real */
-            if (iter->is_placeholder) continue;
+            if (iter->first == skip) continue;
             
             /* Skip items that are still loading */
-            if (is_loading(iter->name)) continue;
+            if (is_loading(iter->first)) continue;
+            
+            /* Skip placeholder items */
+            if (iter->second.is_placeholder) continue;
+            
+            /* Check cutoff_access */
+            if (iter->second.load_time > cutoff_access) continue;
 
-            /* C++ makes all std::set iterators const because it wants to annoy us. */
-            if (result == NULL || iter->load_time < result->load_time)
-                result = const_cast<autoload_function_t *>(&*iter);
+            /* Remember this if it was used earlier */
+            if (resultFunction == NULL || iter->second.load_time < resultFunction->load_time) {
+                resultName = &iter->first;
+                resultFunction = &iter->second;
+            }
         }
-        return result;
+        return resultName;
     }
     
     void apply_handler_to_nonplaceholder_function_names(void (*handler)(const wchar_t *cmd)) const
     {
-        autoload_function_set_t::iterator iter;
-        for (iter = functions_set.begin(); iter != functions_set.end(); iter++)
-            handler(iter->name.c_str());
+        autoload_functions_map_t::const_iterator iter;
+        for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
+            handler(iter->first.c_str());
     }
     
 	/**
@@ -785,12 +779,10 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 	
 	if( loaded.function_count() >= AUTOLOAD_MAX )
 	{
-        autoload_function_t *lru = loaded.get_lru_function(skip);
         time_t cutoff_access = time(0) - AUTOLOAD_MIN_AGE;
-        if (lru && lru->load_time < cutoff_access)
-        {
-            parse_util_unload( lru->name.c_str(), path_var_name, on_load );
-        }
+        const wcstring *lru = loaded.get_lru_function_name(skip, cutoff_access);
+        if (lru)
+            parse_util_unload( lru->c_str(), path_var_name, on_load );
     }
 }
 

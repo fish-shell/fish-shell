@@ -18,6 +18,8 @@
 #include <wctype.h>
 
 #include <wchar.h>
+#include <map>
+#include <set>
 
 #include <time.h>
 #include <assert.h>
@@ -50,36 +52,123 @@
 */
 #define AUTOLOAD_MIN_AGE 60
 
+struct autoload_function_t
+{   
+    bool is_placeholder; //whether we are a placeholder that stands in for "no such function"
+    wcstring name; //function name
+    time_t modification_time; // st_mtime
+    time_t load_time; // when function was loaded
+    
+    struct compare_names
+    {
+        bool operator()(const autoload_function_t &a, const autoload_function_t &b) const {
+            return a.name < b.name;
+        }
+    };
+    
+    autoload_function_t(const wcstring &the_name) : is_placeholder(false), name(the_name), modification_time(0), load_time(0) { }
+};
+
 /**
    A structure representing the autoload state for a specific variable, e.g. fish_complete_path
 */
-typedef struct
-{
+struct autoload_t
+{    
+private:
+    typedef std::set<autoload_function_t, autoload_function_t::compare_names> autoload_function_set_t;
+    autoload_function_set_t functions_set;
+public:
+
 	/**
-	   A table containing the modification times of all loaded
-	   files. Failed loads (non-existing files) have modification time
-	   0.
+	   A table containing all the files that are currently being
+	   loaded. This is here to help prevent recursion.
 	*/
-	hash_table_t load_time;
+    std::set<wcstring> is_loading_set;
+    
+    bool is_loading(const wcstring &name) {
+        return is_loading_set.find(name) != is_loading_set.end();
+    }
+    
+    autoload_function_t *create_function_with_name(const wcstring &name)
+    {
+        const autoload_function_t func(name);
+        autoload_function_set_t::iterator iter = functions_set.insert(func).first;
+        return const_cast<autoload_function_t *>(&*iter);
+    }
+    
+    bool remove_function_with_name(const wcstring &name)
+    {
+        const autoload_function_t func(name);
+        size_t numErased = functions_set.erase(func);
+        return numErased > 0;
+    }
+    
+    autoload_function_t *get_function_with_name(const wcstring &name)
+    {
+        autoload_function_t *result = NULL;
+        const autoload_function_t func(name);
+        autoload_function_set_t::iterator iter = functions_set.find(func);
+        if (iter != functions_set.end())
+            result = const_cast<autoload_function_t *>(&*iter);
+        return result;
+    }
+    
+    void remove_all_functions(void)
+    {
+        functions_set.clear();
+    }
+    
+    size_t function_count(void) const
+    {
+        return functions_set.size();
+    }
+    
+    /* Get the function least recently loaded, or NULL */ 
+    autoload_function_t *get_lru_function(const wcstring &skip)
+    {
+        autoload_function_t *result = NULL;
+        autoload_function_set_t::iterator iter;
+        for (iter = functions_set.begin(); iter != functions_set.end(); iter++)
+        {
+            /* Skip the skip */
+            if (iter->name == skip) continue;
+            
+            /* Skip items that aren't real */
+            if (iter->is_placeholder) continue;
+            
+            /* Skip items that are still loading */
+            if (is_loading(iter->name)) continue;
+
+            /* C++ makes all std::set iterators const because it wants to annoy us. */
+            if (result == NULL || iter->load_time < result->load_time)
+                result = const_cast<autoload_function_t *>(&*iter);
+        }
+        return result;
+    }
+    
+    void apply_handler_to_nonplaceholder_function_names(void (*handler)(const wchar_t *cmd)) const
+    {
+        autoload_function_set_t::iterator iter;
+        for (iter = functions_set.begin(); iter != functions_set.end(); iter++)
+            handler(iter->name.c_str());
+    }
+    
 	/**
 	   A string containg the path used to find any files to load. If
 	   this differs from the current environment variable, the
 	   autoloader needs to drop all loaded files and reload them.
 	*/
-	wchar_t *old_path;
-	/**
-	   A table containing all the files that are currently being
-	   loaded. This is here to help prevent recursion.
-	*/
-	hash_table_t is_loading;
-}
-	autoload_t;
+	wcstring old_path;
+
+};
 
 
 /**
    Set of files which have been autoloaded
 */
-static hash_table_t *all_loaded=0;
+
+typedef std::map<wcstring, autoload_t> autoload_map_t;
+static autoload_map_t all_loaded_map;
 
 int parse_util_lineno( const wchar_t *str, int len )
 {
@@ -628,83 +717,23 @@ void parse_util_token_extent( const wchar_t *buff,
 
 }
 
-/**
-   Free hash value, but not hash key
-*/
-static void clear_hash_value( void *key, void *data, void *aux )
-{
-	if( aux )
-	{
-		wchar_t *name = (wchar_t *)key;
-		time_t *time = (time_t *)data;
-		void (*handler)(const wchar_t *)= (void (*)(const wchar_t *))aux;
-
-		/*
-		  If time[0] is 0, that means the file really doesn't exist,
-		  it's simply been checked before. We should not unload it.
-		*/
-		if( time[0] && handler )
-		{
-//			debug( 0, L"Unloading function %ls", name );
-			handler( name );
-		}
-	}
-	
-	free( (void *)data );
-}
-
-/**
-   Part of the autoloader cleanup 
-*/
-static void clear_loaded_entry( void *key, 
-								void *data,
-								void *handler )
-{
-	autoload_t *loaded = (autoload_t *)data;
-	hash_foreach2( &loaded->load_time,
-				   &clear_hash_value,
-				   handler );
-	hash_destroy( &loaded->load_time );
-	hash_destroy( &loaded->is_loading );
-
-	free( loaded->old_path );
-	free( loaded );	
-	free( (void *)key );
-}
-
-/**
-   The autoloader cleanup function. It is run on shutdown and frees
-   any memory used by the autoloader code to keep track of loaded
-   files.
-*/
-static void parse_util_destroy()
-{
-	if( all_loaded )
-	{
-		hash_foreach2( all_loaded,
-					   &clear_loaded_entry,
-					   0 );
-		
-		hash_destroy( all_loaded );
-		free( all_loaded );	
-		all_loaded = 0;
-	}
-}
-
 void parse_util_load_reset( const wchar_t *path_var_name,
 							void (*on_load)(const wchar_t *cmd) )
 {
 	CHECK( path_var_name, );
 
-	if( all_loaded )
-	{
-		void *key, *data;
-		hash_remove( all_loaded, path_var_name, &key, &data );
-		if( key )
-		{
-			clear_loaded_entry( key, data, (void *)on_load );
-		}
-	}
+    autoload_map_t::iterator condemned = all_loaded_map.find(path_var_name);
+    if (condemned != all_loaded_map.end())
+    {
+        autoload_t &loaded = condemned->second;
+        if (on_load) {
+            /*  Call the on_load handler on each real function name. */
+            loaded.apply_handler_to_nonplaceholder_function_names(on_load);
+        }
+        /* Empty the functino set */
+        loaded.remove_all_functions();
+        all_loaded_map.erase(condemned);
+    }
 	
 }
 
@@ -712,35 +741,25 @@ int parse_util_unload( const wchar_t *cmd,
 					   const wchar_t *path_var_name,
 					   void (*on_load)(const wchar_t *cmd) )
 {
-	autoload_t *loaded;
-	void *val;
+	int result = 0;
 
 	CHECK( path_var_name, 0 );
 	CHECK( cmd, 0 );
 
-	if( !all_loaded )
-	{
-		return 0;
-	}
-	
-	loaded = (autoload_t *)hash_get( all_loaded, path_var_name );
-	
-	if( !loaded )
-	{
-		return 0;
-	}
-	
-	hash_remove( &loaded->load_time, cmd, 0, &val );
-	if( val )
-	{
-		if( on_load )
-		{
-			on_load( cmd );
-		}
-		free( val );
-	}
-	
-	return !!val;
+    autoload_map_t::iterator iter = all_loaded_map.find(path_var_name);
+    if (iter == all_loaded_map.end())
+    {
+        return 0;
+    }
+    
+    autoload_t &loaded = iter->second;
+    if (loaded.remove_function_with_name(cmd))
+    {
+        if (on_load)
+            on_load(cmd);
+        result = 1;
+    }
+    return result;
 }
 
 /**
@@ -757,71 +776,30 @@ static void parse_util_autounload( const wchar_t *path_var_name,
 								   const wchar_t *skip,
 								   void (*on_load)(const wchar_t *cmd) )
 {
-	autoload_t *loaded;
-	int loaded_count=0;
-
-	if( !all_loaded )
-	{
-		return;
-	}
+    autoload_map_t::iterator iter = all_loaded_map.find(path_var_name);
+    if (iter == all_loaded_map.end())
+    {
+        return;
+    }
+    autoload_t &loaded = iter->second;
 	
-	loaded = (autoload_t *)hash_get( all_loaded, path_var_name );
-	if( !loaded )
+	if( loaded.function_count() >= AUTOLOAD_MAX )
 	{
-		return;
-	}
-	
-	if( hash_get_count( &loaded->load_time ) >= AUTOLOAD_MAX )
-	{
-		time_t oldest_access = time(0) - AUTOLOAD_MIN_AGE;
-		wchar_t *oldest_item=0;
-		int i;
-		array_list_t key;
-		al_init( &key );
-		hash_get_keys( &loaded->load_time, &key );
-		for( i=0; i<al_get_count( &key ); i++ )
-		{
-			wchar_t *item = (wchar_t *)al_get( &key, i );
-			time_t *tm = (time_t *)hash_get( &loaded->load_time, item );
-
-			if( wcscmp( item, skip ) == 0 )
-			{
-				continue;
-			}
-			
-			if( !tm[0] )
-			{
-				continue;
-			}
-			
-			if( hash_get( &loaded->is_loading, item ) )
-			{
-				continue;
-			}
-			
-			loaded_count++;
-			
-			if( tm[1] < oldest_access )
-			{
-				oldest_access = tm[1];
-				oldest_item = item;
-			}
-		}
-		al_destroy( &key );
-		
-		if( oldest_item && loaded_count > AUTOLOAD_MAX)
-		{
-			parse_util_unload( oldest_item, path_var_name, on_load );
-		}
-	}
+        autoload_function_t *lru = loaded.get_lru_function(skip);
+        time_t cutoff_access = time(0) - AUTOLOAD_MIN_AGE;
+        if (lru && lru->load_time < cutoff_access)
+        {
+            parse_util_unload( lru->name.c_str(), path_var_name, on_load );
+        }
+    }
 }
 
-static int parse_util_load_internal( const wchar_t *cmd,
+static int parse_util_load_internal( const wcstring &cmd,
                                      const struct builtin_script_t *builtin_scripts,
                                      size_t builtin_script_count,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
-									 autoload_t *loaded,
+									 autoload_t &loaded,
 									 const std::vector<wcstring> &path_list );
 
 
@@ -830,12 +808,11 @@ int parse_util_load( const wcstring &cmd,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload )
 {
-	autoload_t *loaded;
-
 	wchar_t *path_var;
 
 	int res;
 	int c, c2;
+    autoload_t *loaded;
 	
 	CHECK_BLOCK( 0 );
 	
@@ -852,29 +829,16 @@ int parse_util_load( const wcstring &cmd,
 		return 0;
 	}
 
-	/**
-	   Init if this is the first time we try to autoload anything
-	*/
-	if( !all_loaded )
-	{
-		all_loaded = (hash_table_t *)malloc( sizeof( hash_table_t ) );		
-		halloc_register_function_void( global_context, &parse_util_destroy );
-		if( !all_loaded )
-		{
-			DIE_MEM();
-		}
-		hash_init( all_loaded, &hash_wcs_func, &hash_wcs_cmp );
- 	}
-	
-	loaded = (autoload_t *)hash_get( all_loaded, path_var_name.c_str() );
-
-	if( loaded )
-	{
+    autoload_map_t::iterator iter = all_loaded_map.find(path_var_name);
+    if (iter != all_loaded_map.end())
+    {
+        loaded = &iter->second;
+        
 		/*
 		  Check if the lookup path has changed. If so, drop all loaded
 		  files and start from scratch.
 		*/
-		if( wcscmp( path_var, loaded->old_path ) != 0 )
+		if( path_var != loaded->old_path )
 		{
 			parse_util_load_reset( path_var_name.c_str(), on_load);
 			reload = parse_util_load( cmd, path_var_name, on_load, reload );
@@ -884,7 +848,7 @@ int parse_util_load( const wcstring &cmd,
 		/**
 		   Warn and fail on infinite recursion
 		*/
-		if( hash_get( &loaded->is_loading, cmd.c_str() ) )
+        if (loaded->is_loading(cmd))
 		{
 			debug( 0, 
 				   _( L"Could not autoload item '%ls', it is already being autoloaded. " 
@@ -892,7 +856,6 @@ int parse_util_load( const wcstring &cmd,
 				   cmd.c_str() );
 			return 1;
 		}
-		
 
 	}
 	else
@@ -902,17 +865,8 @@ int parse_util_load( const wcstring &cmd,
 		  set up initial data
 		*/
 //		debug( 0, L"Create brand new autoload_t for %ls->%ls", path_var_name, path_var );
-		loaded = (autoload_t *)malloc( sizeof( autoload_t ) );
-		if( !loaded )
-		{
-			DIE_MEM();
-		}
-		hash_init( &loaded->load_time, &hash_wcs_func, &hash_wcs_cmp );
-		hash_put( all_loaded, wcsdup(path_var_name.c_str()), loaded );
-		
-		hash_init( &loaded->is_loading, &hash_wcs_func, &hash_wcs_cmp );
-
-		loaded->old_path = wcsdup( path_var );
+        loaded = &all_loaded_map[path_var_name];
+		loaded->old_path = path_var;
 	}
 
     std::vector<wcstring> path_list;
@@ -920,7 +874,7 @@ int parse_util_load( const wcstring &cmd,
 	
 	c = path_list.size();
 	
-	hash_put( &loaded->is_loading, cmd.c_str(), cmd.c_str() );
+    loaded->is_loading_set.insert(cmd);
 
     /* Figure out which builtin-scripts array to search (if any) */
     const builtin_script_t *builtins = NULL;
@@ -935,16 +889,21 @@ int parse_util_load( const wcstring &cmd,
 	  Do the actual work in the internal helper function
 	*/
 
-	res = parse_util_load_internal( cmd.c_str(), builtins, builtin_count, on_load, reload, loaded, path_list );
+	res = parse_util_load_internal( cmd, builtins, builtin_count, on_load, reload, *loaded, path_list );
 
-	autoload_t *loaded2 = (autoload_t *)hash_get( all_loaded, path_var_name.c_str() );
-	if( loaded2 == loaded )
-	{
-		/**
-		   Cleanup
-		*/
-		hash_remove( &loaded->is_loading, cmd.c_str(), 0, 0 );
-	}
+    autoload_map_t::iterator iter2 = all_loaded_map.find(path_var_name);
+    if (iter2 != all_loaded_map.end()) {
+        autoload_t *loaded2 = &iter2->second;
+        if( loaded2 == loaded )
+        {
+            /**
+               Cleanup
+            */
+            std::set<wcstring>::iterator condemned = loaded->is_loading_set.find(cmd);
+            assert(condemned != loaded->is_loading_set.end());
+            loaded->is_loading_set.erase(condemned);
+        }
+    }
 	
 	c2 = path_list.size();
 
@@ -963,56 +922,33 @@ int parse_util_load( const wcstring &cmd,
    the code, and the caller can take care of various cleanup work.
 */
 
-static int parse_util_load_internal( const wchar_t *cmd,
+static int parse_util_load_internal( const wcstring &cmd,
                                      const struct builtin_script_t *builtin_scripts,
                                      size_t builtin_script_count,
 									 void (*on_load)(const wchar_t *cmd),
 									 int reload,
-									 autoload_t *loaded,
+									 autoload_t &loaded,
 									 const std::vector<wcstring> &path_list )
 {
-	static string_buffer_t *path=0;
-	time_t *tm;
+
 	size_t i;
 	int reloaded = 0;
 
-	/*
-	  Get modification time of file
-	*/
-	tm = (time_t *)hash_get( &loaded->load_time, cmd );
-	
-	/*
-	  Did we just check this?
-	*/
-	if( tm )
-	{
-		if(time(0)-tm[1]<=1)
-		{
-			return 0;
-		}
-	}
-	
-	/*
-	  Return if already loaded and we are skipping reloading
-	*/
-	if( !reload && tm )
-	{
+    /* Get the function */
+    autoload_function_t * func = loaded.get_function_with_name(cmd);
+
+
+    /* Return if already loaded and we are skipping reloading */
+	if( !reload && func )
 		return 0;
-	}
-	
-	if( !path )
-	{
-		path = sb_halloc( global_context );
-	}
-	else
-	{
-		sb_clear( path );
-	}
+
+    /* Nothing to do if we just checked it */
+    if (func && time(NULL) - func->load_time <= 1)
+        return 0;	
 	
     /*
      Look for built-in scripts.
     */
-    
     
 	/*
 	  Iterate over path searching for suitable completion files
@@ -1021,58 +957,44 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	{
 		struct stat buf;
 		wcstring next = path_list.at(i);
-		sb_clear( path );
-		sb_append( path, next.c_str(), L"/", cmd, L".fish", NULL );
+        wcstring path = next + L"/" + cmd + L".fish";
 
-		if( (wstat( (wchar_t *)path->buff, &buf )== 0) &&
-			(waccess( (wchar_t *)path->buff, R_OK ) == 0) )
+		if( (wstat( path.c_str(), &buf )== 0) &&
+			(waccess( path.c_str(), R_OK ) == 0) )
 		{
-			if( !tm || (tm[0] != buf.st_mtime ) )
+			if( !func || (func->modification_time != buf.st_mtime ) )
 			{
-				wchar_t *esc = escape( (wchar_t *)path->buff, 1 );
-				wchar_t *src_cmd = wcsdupcat( L". ", esc );
-				free( esc );
+                wcstring esc = escape_string(path, 1);
+				wcstring src_cmd = L". " + esc;
 				
-				if( !tm )
-				{
-					tm = (time_t *)malloc(sizeof(time_t)*2);
-					if( !tm )
-					{
-						DIE_MEM();
-					}
-				}
+				if( !func )
+                    func = loaded.create_function_with_name(cmd);
 
-				tm[0] = buf.st_mtime;
-				tm[1] = time(0);
-				hash_put( &loaded->load_time,
-						  intern( cmd ),
-						  tm );
-
+                func->modification_time = buf.st_mtime;
+                func->load_time = time(NULL);
+                
 				if( on_load )
-				{
-					on_load(cmd );
-				}
+					on_load(cmd.c_str());
 				
 				/*
 				  Source the completion file for the specified completion
 				*/
-				if( exec_subshell( src_cmd, 0 ) == -1 )
+				if( exec_subshell( src_cmd.c_str(), 0 ) == -1 )
 				{
 					/*
 					  Do nothing on failiure
 					*/
 				}
 				
-				free(src_cmd);
 				reloaded = 1;
 			}
-			else if( tm )
+			else if( func )
 			{
 				/*
 				  If we are rechecking an autoload file, and it hasn't
 				  changed, update the 'last check' timestamp.
 				*/
-				tm[1] = time(0);				
+				func->load_time = time(NULL);				
 			}
 			
 			break;
@@ -1080,21 +1002,15 @@ static int parse_util_load_internal( const wchar_t *cmd,
 	}
 
 	/*
-	  If no file was found we insert the current time. Later we only
+	  If no file was found we insert a placeholder function. Later we only
 	  research if the current time is at least five seconds later.
 	  This way, the files won't be searched over and over again.
 	*/
-	if( !tm )
+	if( !func )
 	{
-		tm = (time_t *)malloc(sizeof(time_t)*2);
-		if( !tm )
-		{
-			DIE_MEM();
-		}
-		
-		tm[0] = 0;
-		tm[1] = time(0);
-		hash_put( &loaded->load_time, intern( cmd ), tm );
+        func = loaded.create_function_with_name(cmd);
+        func->load_time = time(NULL);
+        func->is_placeholder = true;
 	}
 
 	return reloaded;	

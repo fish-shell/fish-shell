@@ -650,19 +650,19 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
 		[
 			/* Avert high-level optimisation, by making the program's
 			 * return value depend on all tested identifiers. */
-			int ret = 0;
+			long ret = 0;
 			/* POSIX only: might be unhidden by _POSIX_C_SOURCE. */
 			struct sigaction sa;
 			sigset_t ss;
 			siginfo_t info;
-			ret += (int)(void *)&info + kill( 0, 0 ) +
+			ret += (long)(void *)&info + kill( 0, 0 ) +
 				sigaction( 0, &sa, 0 ) + sigemptyset( &ss );
 			/* Extended-POSIX: might be unhidden by _XOPEN_SOURCE. */
 			ret += killpg( 0, 0 );
 			/* Non-standard: might be hidden by the macros. */
 			{
 				struct winsize termsize;
-				ret += (int)(void *)&termsize;
+				ret += (long)(void *)&termsize;
 				ret += SIGWINCH + TIOCGWINSZ + SIGIO;
 			}
 			return ret;

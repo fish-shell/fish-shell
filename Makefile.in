@@ -38,7 +38,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 # Programs
 #
 
-CC := @CPP@
+CXX := @CXX@
 INSTALL:=@INSTALL@
 
 
@@ -313,7 +313,7 @@ Makefile: Makefile.in configure
 #
 
 debug:
-	$(MAKE) all EXTRA_CXXFLAGS="-O0 -Wno-unused -Werror -g"
+	$(MAKE) fish EXTRA_CXXFLAGS="-O0 -Wno-unused -g"
 .PHONY: debug
 
 prof:
@@ -704,7 +704,7 @@ uninstall-translations:
 #
 
 fish: $(FISH_OBJS) fish.o
-	$(CC) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
+	$(CXX) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -712,7 +712,7 @@ fish: $(FISH_OBJS) fish.o
 #
 
 fish_pager: $(FISH_PAGER_OBJS)
-	$(CC) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
+	$(CXX) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
 
 
 #
@@ -720,7 +720,7 @@ fish_pager: $(FISH_PAGER_OBJS)
 #
 
 fishd: $(FISHD_OBJS)
-	$(CC) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
+	$(CXX) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
 
 
 #
@@ -728,7 +728,7 @@ fishd: $(FISHD_OBJS)
 #
 
 fish_tests: $(FISH_TESTS_OBJS)
-	$(CC) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
+	$(CXX) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -738,7 +738,7 @@ fish_tests: $(FISH_TESTS_OBJS)
 #
 
 mimedb: $(MIME_OBJS)
-	$(CC) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
+	$(CXX) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
 
 
 #
@@ -746,7 +746,7 @@ mimedb: $(MIME_OBJS)
 #
 
 set_color: set_color.o print_help.o common.o
-	$(CC) set_color.o print_help.o common.o wutil.o $(LDFLAGS_SET_COLOR) -o $@
+	$(CXX) set_color.o print_help.o common.o wutil.o $(LDFLAGS_SET_COLOR) -o $@
 
 
 #
@@ -754,7 +754,7 @@ set_color: set_color.o print_help.o common.o
 #
 
 tokenizer_test: tokenizer.cpp tokenizer.h wutil.o common.o
-	$(CC) $(CXXFLAGS) tokenizer.cpp wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
+	$(CXX) $(CXXFLAGS) tokenizer.cpp wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
 
 
 #
@@ -762,7 +762,7 @@ tokenizer_test: tokenizer.cpp tokenizer.h wutil.o common.o
 #
 
 fish_indent: $(FISH_INDENT_OBJS)
-	$(CC) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
+	$(CXX) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
 
 
 #
@@ -770,7 +770,7 @@ fish_indent: $(FISH_INDENT_OBJS)
 #
 
 key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o
-	$(CC) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o $(LDFLAGS_FISH) -o $@
+	$(CXX) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o $(LDFLAGS_FISH) -o $@
 
 
 #

@@ -159,7 +159,7 @@ AH_BOTTOM([#if __GNUC__ >= 3
 # Set up various programs needed for install
 #
 
-AC_PROG_CC([g++ cpp])
+AC_PROG_CXX([g++ c++])
 AC_PROG_CPP
 AC_PROG_INSTALL
 
@@ -268,6 +268,7 @@ if test "$GCC" = yes; then
 	# -Wall is there to keep me on my toes
 	#
 
+	# Some day...
 	CXXFLAGS="$CXXFLAGS -Wall"
 
 	#

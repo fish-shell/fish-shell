@@ -38,7 +38,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 # Programs
 #
 
-CC := @CC@
+CC := @CPP@
 INSTALL:=@INSTALL@
 
 
@@ -63,8 +63,7 @@ optbindirs = @optbindirs@
 #
 
 MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
-CFLAGS = @CFLAGS@ $(MACROS) $(EXTRA_CFLAGS)
-CPPFLAGS = @CPPFLAGS@
+CXXFLAGS = @CXXFLAGS@ $(MACROS) $(EXTRA_CXXFLAGS)
 LDFLAGS = @LIBS@ @LDFLAGS@
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
 LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
@@ -81,11 +80,11 @@ HAVE_GETTEXT=@HAVE_GETTEXT@
 
 
 #
-#Additional .c files used by common.o. These also have a corresponding
+#Additional .cpp files used by common.o. These also have a corresponding
 #.h file.
 #
 
-COMMON_FILES := util.c halloc.c halloc_util.c fallback.c
+COMMON_FILES := util.cpp halloc.cpp halloc_util.cpp fallback.cpp
 
 
 #
@@ -97,7 +96,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	tokenizer.o wildcard.o wgetopt.o wutil.o input.o output.o intern.o	\
 	env_universal.o env_universal_common.o input_common.o event.o		\
 	signal.o io.o parse_util.o common.o screen.o path.o					\
-	parser_keywords.o
+	parser_keywords.o iothread.o builtin_scripts.o
 
 FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
 parser_keywords.o wutil.o tokenizer.o
@@ -106,8 +105,8 @@ parser_keywords.o wutil.o tokenizer.o
 # Additional files used by builtin.o
 #
 
-BUILTIN_FILES := builtin_set.c builtin_commandline.c	\
-	builtin_ulimit.c builtin_complete.c builtin_jobs.c
+BUILTIN_FILES := builtin_set.cpp builtin_commandline.cpp	\
+	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp
 
 
 #
@@ -116,7 +115,7 @@ BUILTIN_FILES := builtin_set.c builtin_commandline.c	\
 
 FISH_PAGER_OBJS := fish_pager.o output.o wutil.o 		\
 	input_common.o env_universal.o env_universal_common.o common.o	\
-	print_help.o
+	print_help.o iothread.o
 
 
 #
@@ -161,6 +160,18 @@ HDR_FILES_SRC := doc_src/index.hdr.in doc_src/commands.hdr.in doc_src/design.hdr
 HDR_FILES := $(subst .hdr.in,.hdr,$(HDR_FILES_SRC))
 
 #
+# Internalized scripts
+#
+
+GENERATED_INTERN_SCRIPT_FILES := builtin_scripts.h builtin_scripts.cpp
+
+# Use a pattern rule so that Make knows to only issue one invocation
+# per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
+builtin%scripts.h builtin%scripts.cpp: internalize_scripts.py
+	./internalize_scripts.py share/functions/*.fish
+
+
+#
 # Files containing documentation for external commands.
 #
 
@@ -191,12 +202,12 @@ DOC_SRC_DIR_FILES := $(HDR_FILES_SRC) $(HELP_SRC)
 
 MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help.in		\
     Makefile.in configure configure.ac config.h.in install-sh			\
-    set_color.c key_reader.c $(MIME_OBJS:.o=.h)					\
-    $(MIME_OBJS:.o=.c) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)				\
-    $(COMMON_FILES) $(COMMON_FILES:.c=.h) $(FISH_OBJS:.o=.c)			\
+    set_color.cpp key_reader.cpp $(MIME_OBJS:.o=.h)					\
+    $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)				\
+    $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)			\
     fish.spec.in INSTALL README user_doc.head.html xsel-0.9.6.tar		\
-    ChangeLog config.sub config.guess fish_tests.c fish.c fish_pager.c	\
-    fishd.c seq.in make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.c)
+    ChangeLog config.sub config.guess fish_tests.cpp fish.cpp fish_pager.cpp	\
+    fishd.cpp seq.in make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.cpp)
 
 #
 # The sorting is not meaningful in itself, but it has the side effect
@@ -302,11 +313,11 @@ Makefile: Makefile.in configure
 #
 
 debug:
-	$(MAKE) all EXTRA_CFLAGS="-O0 -Wno-unused -Werror -g"
+	$(MAKE) all EXTRA_CXXFLAGS="-O0 -Wno-unused -Werror -g"
 .PHONY: debug
 
 prof:
-	$(MAKE) all EXTRA_CFLAGS="-pg" LDFLAGS="-pg"
+	$(MAKE) all EXTRA_CXXFLAGS="-pg" LDFLAGS="-pg"
 .PHONY: prof
 
 #
@@ -326,7 +337,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC)
 # Source code documentation. Also includes user documentation.
 #
 
-doc: *.h *.c doc.h Doxyfile
+doc: *.h *.cpp doc.h Doxyfile
 	doxygen;
 
 
@@ -453,9 +464,9 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 
-messages.pot: *.c *.h etc/*.in share/*.in share/completions/*.fish share/functions/*.fish seq
+messages.pot: *.cpp *.h etc/*.in share/*.in share/completions/*.fish share/functions/*.fish seq
 	if test $(HAVE_GETTEXT) = 1;then \
-		xgettext -k_ -kN_ *.c *.h -o messages.pot; \
+		xgettext -k_ -kN_ *.cpp *.h -o messages.pot; \
 		if xgettext -j -k_ -kN_ -k--description -LShell etc/*.in share/*.in share/completions/*.fish share/functions/*.fish seq -o messages.pot; then true; else \
 			echo "Your xgettext version is too old to build the messages.pot file"\
 			rm messages.pot\
@@ -742,8 +753,8 @@ set_color: set_color.o print_help.o common.o
 # Test program for the tokenizer library
 #
 
-tokenizer_test: tokenizer.c tokenizer.h wutil.o common.o
-	$(CC) $(CFLAGS) tokenizer.c wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
+tokenizer_test: tokenizer.cpp tokenizer.h wutil.o common.o
+	$(CC) $(CXXFLAGS) tokenizer.cpp wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
 
 
 #
@@ -766,7 +777,7 @@ key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_c
 # Update dependencies
 #
 depend:
-	makedepend -fMakefile.in -Y *.c
+	makedepend -fMakefile.in -Y *.cpp
 	./config.status
 .PHONY: depend
 
@@ -877,7 +888,7 @@ distclean: clean
 #
 
 clean:
-	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.c doc_src/*.o doc_src/commands.hdr
+	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader
 	rm -f share/config.fish etc/config.fish doc_src/index.hdr doc_src/commands.hdr

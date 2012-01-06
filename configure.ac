@@ -110,7 +110,7 @@ for i in /usr/pkg /sw /opt /opt/local; do
 	AC_MSG_CHECKING([for $i/include include directory])
 	if test -d $i/include; then
 		AC_MSG_RESULT(yes)
-		CPPFLAGS="$CPPFLAGS -I$i/include/"
+		CXXFLAGS="$CXXFLAGS -I$i/include/"
 		CFLAGS="$CFLAGS -I$i/include/"
 	else
 	AC_MSG_RESULT(no)
@@ -159,10 +159,7 @@ AH_BOTTOM([#if __GNUC__ >= 3
 # Set up various programs needed for install
 #
 
-# Here we look for c99 before cc as Sun Studio compiler supports c99
-# through the c99 binary.
-
-AC_PROG_CC([gcc c99 cc])
+AC_PROG_CC([g++ cpp])
 AC_PROG_CPP
 AC_PROG_INSTALL
 
@@ -240,54 +237,12 @@ fi
 
 
 #
-# Test if the compiler accepts the -std=c99 flag. If so, using it
-# increases the odds of correct compilation, since we want to use the
-# *wprintf functions, which where defined in C99.
-#
-# NOTE: Never versions of autoconf has AC_CHECK_PROG_CC_C99
-#
-
-if test "$CC" != "c99"; then
-  XCFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -std=c99"
-	XCPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$CPPFLAGS -std=c99"
-	AC_MSG_CHECKING(if -std=c99 works)
-
-	AC_CACHE_VAL(
-  	  local_cv_has__std_c99,
-    	[
-      	  AC_TRY_RUN(
-        	    [
-          	      #include <stdlib.h>
-            	    #include <stdio.h>
-
-              	  int main()
-                	{
-                  	  return 0;
-	                }
-	            ],
-	            local_cv_has__std_c99=yes,
-	            local_cv_has__std_c99=no,
-  	      )
-    	]
-	)
-
-	AC_MSG_RESULT($local_cv_has__std_c99)
-	case x$local_cv_has__std_c99 in
-	xno)
-  	  CFLAGS="$XCFLAGS"
-    	CPPFLAGS="$XCPPFLAGS" ;;
-	esac
-fi
-
-#
 # Try to enable large file support. This will make sure that on systems
 # where off_t can be either 32 or 64 bit, the latter size is used. On
 # other systems, this should do nothing. (Hopefully)
 #
 
-CFLAGS="$CFLAGS -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
+CXXFLAGS="$CXXFLAGS -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
 
 #
 # If we are using gcc, set some flags that increase the odds of the
@@ -306,14 +261,14 @@ if test "$GCC" = yes; then
 	# bug has been verified to not exist on Linux using GCC 3.3.3.
 	#
 
-	CFLAGS="$CFLAGS -fno-optimize-sibling-calls"
+	CXXFLAGS="$CXXFLAGS -fno-optimize-sibling-calls"
 
 
 	#
 	# -Wall is there to keep me on my toes
 	#
 
-	CFLAGS="$CFLAGS -Wall"
+	CXXFLAGS="$CXXFLAGS -Wall"
 
 	#
 	# This is needed in order to get the really cool backtraces
@@ -645,7 +600,7 @@ AC_CHECK_HEADER(
 # conditional definition of __EXTENSIONS__, to avoid redundant tests.
 #
 
-XCFLAGS="$CFLAGS"
+XCFLAGS="$CXXFLAGS"
 
 echo Checking how to use -D_XOPEN_SOURCE=600 and -D_POSIX_C_SOURCE=200112L...
 local_found_posix_switch=no

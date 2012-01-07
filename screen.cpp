@@ -207,7 +207,7 @@ static int calc_prompt_width( const wchar_t *prompt )
 					wchar_t *term_name = env_get( L"TERM" );
 					if( term_name && wcsstr( term_name, L"screen" ) == term_name )
 					{
-						wchar_t *end;
+						const wchar_t *end;
 						j+=2;
 						found = 1;
 						end = wcsstr( &prompt[j], L"\x1b\\" );

@@ -2007,7 +2007,7 @@ static int builtin_read( wchar_t **argv )
 {
 	wchar_t *buff=0;
 	int i, argc = builtin_count_args( argv );
-	const wchar_t *ifs;
+	wcstring ifs;
 	int place = ENV_USER;
 	wchar_t *nxt;
 	const wchar_t *prompt = DEFAULT_READ_PROMPT;
@@ -2292,11 +2292,11 @@ static int builtin_read( wchar_t **argv )
 		
 		wchar_t *state;
 
-		ifs = env_get( L"IFS" );
-		if( ifs == 0 )
+		ifs = env_get_string( L"IFS" );
+		if( ifs.empty() )
 			ifs = L"";
 		
-		nxt = wcstok( buff, (i<argc-1)?ifs:L"", &state );
+		nxt = wcstok( buff, (i<argc-1)?ifs.c_str():L"", &state );
 		
 		while( i<argc )
 		{
@@ -2304,7 +2304,7 @@ static int builtin_read( wchar_t **argv )
 			
 			i++;
 			if( nxt != 0 )
-				nxt = wcstok( 0, (i<argc-1)?ifs:L"", &state);
+				nxt = wcstok( 0, (i<argc-1)?ifs.c_str():L"", &state);
 		}
 	}
 	

@@ -1199,7 +1199,7 @@ wcstring env_get_string( const wchar_t *key )
             {
                 if( wcscmp( res->val, ENV_NULL )==0) 
                 {
-                    return 0;
+                    return wcstring(L"");
                 }
                 else
                 {
@@ -1226,7 +1226,7 @@ wcstring env_get_string( const wchar_t *key )
         
         if( !item || (wcscmp( item, ENV_NULL )==0))
         {
-            return 0;
+            return wcstring(L"");
         }
         else
         {

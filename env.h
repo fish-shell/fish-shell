@@ -138,6 +138,7 @@ char **env_export_arr( int recalc );
   Insert all variable names into l. These are not copies of the strings and should not be freed after use.
 */
 void env_get_names( array_list_t *l, int flags );
+wcstring_list_t env_get_names( int flags );
 
 /**
    Update the PWD variable

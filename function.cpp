@@ -150,20 +150,20 @@ static int load( const wchar_t *name )
 */
 static void autoload_names( array_list_t *out, int get_hidden )
 {
-	int i;
+	size_t i;
 	
-	array_list_t path_list;
 	const wchar_t *path_var = env_get( L"fish_function_path" );
 	
 	if( ! path_var )
 		return;
 	
-	al_init( &path_list );
+    wcstring_list_t path_list;
 
-	tokenize_variable_array( path_var, &path_list );
-	for( i=0; i<al_get_count( &path_list ); i++ )
+	tokenize_variable_array2( path_var, path_list );
+	for( i=0; i<path_list.size(); i++ )
 	{
-		wchar_t *ndir = (wchar_t *)al_get( &path_list, i );
+        const wcstring &ndir_str = path_list.at(i);
+		const wchar_t *ndir = (wchar_t *)ndir_str.c_str();
 		DIR *dir = wopendir( ndir );
 		if( !dir )
 			continue;
@@ -189,8 +189,6 @@ static void autoload_names( array_list_t *out, int get_hidden )
 		}				
 		closedir(dir);
 	}
-	al_foreach( &path_list, &free );
-	al_destroy( &path_list );
 }
 
 void function_init()

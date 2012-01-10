@@ -677,21 +677,18 @@ void reader_write_title()
 */
 static void exec_prompt()
 {
-	int i;
+	size_t i;
 
-	array_list_t prompt_list;
-	al_init( &prompt_list );
+    wcstring_list_t prompt_list;
 	
 	if( data->prompt.size() )
 	{
 		proc_push_interactive( 0 );
 		
-		if( exec_subshell( data->prompt.c_str(), &prompt_list ) == -1 )
+		if( exec_subshell2( data->prompt.c_str(), prompt_list ) == -1 )
 		{
 			/* If executing the prompt fails, make sure we at least don't print any junk */
-			al_foreach( &prompt_list, &free );
-			al_destroy( &prompt_list );
-			al_init( &prompt_list );
+            prompt_list.clear();
 		}
 		proc_pop_interactive();
 	}
@@ -700,15 +697,11 @@ static void exec_prompt()
 	
     data->prompt_buff.resize(0);
 	
-	for( i = 0; i < al_get_count( &prompt_list ); i++ )
+	for( i = 0; i < prompt_list.size(); i++ )
 	{
-        if (i > 0) data->prompt_buff += L"\n";
-        data->prompt_buff += (wchar_t *)al_get( &prompt_list, i );
-	}
-	
-	al_foreach( &prompt_list, &free );
-	al_destroy( &prompt_list );
-	
+        if (i > 0) data->prompt_buff += L'\n';
+        data->prompt_buff += prompt_list.at(i);
+	}	
 }
 
 void reader_init()

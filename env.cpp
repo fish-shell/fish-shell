@@ -1589,6 +1589,97 @@ void env_get_names( array_list_t *l, int flags )
 	hash_destroy( &names );	
 }
 
+
+/**
+   Function used with hash_foreach to insert keys of one table into
+   a set::set<wcstring>
+*/
+static void add_key_to_string_set( void *key, 
+                                   void *data,
+                                   void *aux )
+{
+	var_entry_t *e = (var_entry_t *)data;
+	if( ( e->exportv && get_names_show_exported) || 
+		( !e->exportv && get_names_show_unexported) )
+	{
+        std::set<wcstring> *names = (std::set<wcstring> *)aux;
+        const wchar_t *keyStr = (const wchar_t *)key;
+        names->insert(keyStr);
+	}
+}
+
+wcstring_list_t env_get_names( int flags )
+{
+    wcstring_list_t result;
+    std::set<wcstring> names;
+    int show_local = flags & ENV_LOCAL;
+	int show_global = flags & ENV_GLOBAL;
+	int show_universal = flags & ENV_UNIVERSAL;
+
+	env_node_t *n=top;
+
+	
+	get_names_show_exported = 
+		flags & ENV_EXPORT|| (!(flags & ENV_UNEXPORT));
+	get_names_show_unexported = 
+		flags & ENV_UNEXPORT|| (!(flags & ENV_EXPORT));
+
+	if( !show_local && !show_global && !show_universal )
+	{
+		show_local =show_universal = show_global=1;
+	}
+	
+	if( show_local )
+	{
+		while( n )
+		{
+			if( n == global_env )
+				break;
+			
+			hash_foreach2( &n->env, 
+						   add_key_to_string_set,
+						   &names );
+
+			if( n->new_scope )
+				break;		
+			else
+				n = n->next;
+
+		}
+	}
+	
+	if( show_global )
+	{
+		hash_foreach2( &global_env->env, 
+					   add_key_to_string_set,
+					   &names );
+
+		if( get_names_show_unexported ) {
+            result.insert(result.end(), env_electric.begin(), env_electric.end());
+        }
+		
+		if( get_names_show_exported )
+		{
+            result.push_back(L"COLUMNS");
+            result.push_back(L"LINES");
+		}
+		
+	}
+	
+	if( show_universal )
+	{
+    
+        wcstring_list_t uni_list;
+        env_universal_get_names2(uni_list,
+                                 get_names_show_exported,
+                                 get_names_show_unexported);                                 
+        names.insert(uni_list.begin(), uni_list.end());
+	}
+	
+    result.insert(result.end(), names.begin(), names.end());
+    return result;
+}
+
 /**
    Function used by env_export_arr to iterate over hashtable of variables
 */

@@ -1740,7 +1740,7 @@ int exec_subshell( const wchar_t *cmd,
 	
 	CHECK( cmd, -1 );
 
-	ifs = env_get_string(L"IFS").empty()?NULL:env_get_string(L"IFS");
+	ifs = env_get_string(L"IFS").empty()?NULL:env_get_string(L"IFS").c_str();
 
 	if( ifs && ifs[0] )
 	{

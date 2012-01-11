@@ -300,8 +300,8 @@ static int is_locale( const wchar_t *key )
 */
 static void handle_locale()
 {
-	const wchar_t *lc_all = env_get( L"LC_ALL" );
-	const wchar_t *lang;
+	const wcstring lc_all = env_get_string( L"LC_ALL" );
+	wcstring lang;
 	int i;
 	wchar_t *old = wcsdup(wsetlocale( LC_MESSAGES, NULL ));
 
@@ -321,25 +321,25 @@ static void handle_locale()
 		}
 	;
 	
-	if( lc_all )
+	if( !lc_all.empty() )
 	{
-		wsetlocale( LC_ALL, lc_all );
+		wsetlocale( LC_ALL, lc_all.c_str() );
 	}
 	else
 	{
-		lang = env_get( L"LANG" );
-		if( lang )
+		lang = env_get_string( L"LANG" );
+		if( !lang.empty() )
 		{
-			wsetlocale( LC_ALL, lang );
+			wsetlocale( LC_ALL, lang.c_str() );
 		}
 		
 		for( i=2; locale_variable[i]; i++ )
 		{
-			const wchar_t *val = env_get( locale_variable[i] );
+			const wcstring val = env_get_string( locale_variable[i] );
 
-			if( val )
+			if( !val.empty() )
 			{
-				wsetlocale(  cat[i], val );
+				wsetlocale(  cat[i], val.c_str() );
 			}
 		}
 	}
@@ -426,7 +426,7 @@ static void universal_callback( int type,
 */
 static void setup_path()
 {
-	wchar_t *path;
+	wcstring path;
 	
     size_t i;
 	int j;
@@ -441,9 +441,9 @@ static void setup_path()
 		}
 	;
 
-	path = env_get( L"PATH" );
+	path = env_get_string( L"PATH" );
 	
-	if( path )
+	if( !path.empty() )
 	{
 		tokenize_variable_array2( path, lst );
 	}
@@ -476,18 +476,18 @@ static void setup_path()
 
 			debug( 3, L"directory %ls was missing", path_el[j] );
 
-			if( path )
+			if( !path.empty() )
 			{
-                buffer += path;
+		                buffer += path;
 			}
 			
-            buffer += ARRAY_SEP_STR;
-            buffer += path_el[j];
+		        buffer += ARRAY_SEP_STR;
+		        buffer += path_el[j];
 			
-			env_set( L"PATH", buffer.c_str(), ENV_GLOBAL | ENV_EXPORT );
+			env_set( L"PATH", buffer.empty()?NULL:buffer.c_str(), ENV_GLOBAL | ENV_EXPORT );
 						
-			path = env_get( L"PATH" );
-            lst.resize(0);
+			path = env_get_string( L"PATH" );
+		        lst.resize(0);
 			tokenize_variable_array2( path, lst );			
 		}
 	}
@@ -511,7 +511,7 @@ int env_set_pwd()
 static void env_set_defaults()
 {
 
-	if( !env_get( L"USER" ) )
+	if( env_get_string( L"USER" ).empty() )
 	{
 		struct passwd *pw = getpwuid( getuid());
 		wchar_t *unam = str2wcs( pw->pw_name );
@@ -519,10 +519,10 @@ static void env_set_defaults()
 		free( unam );
 	}
 
-	if( !env_get( L"HOME" ) )
+	if( env_get_string( L"HOME" ).empty() )
 	{
-		wchar_t *unam = env_get( L"USER" );
-		char *unam_narrow = wcs2str( unam );
+		const wcstring unam = env_get_string( L"USER" );
+		char *unam_narrow = wcs2str( unam.c_str() );
 		struct passwd *pw = getpwnam( unam_narrow );
 		wchar_t *dir = str2wcs( pw->pw_dir );
 		env_set( L"HOME", dir, ENV_GLOBAL );
@@ -540,7 +540,6 @@ void env_init()
 	struct passwd *pw;
 	wchar_t *uname;
 	wchar_t *version;
-	wchar_t *shlvl;
 	
 	sb_init( &dyn_var );
 	b_init( &export_buffer );
@@ -656,16 +655,19 @@ void env_init()
 	version = str2wcs( PACKAGE_VERSION );
 	env_set( L"version", version, ENV_GLOBAL );
 	free( version );
-	
-	env_universal_init( env_get( L"FISHD_SOCKET_DIR"), 
-						env_get( L"USER" ),
+
+	wchar_t * fishd_dir = const_cast<wchar_t*>(env_get_string( L"FISHD_SOCKET_DIR").c_str());
+	wchar_t * user_dir = const_cast<wchar_t*>(env_get_string( L"USER" ).c_str());
+
+	env_universal_init(fishd_dir , user_dir , 
 						&start_fishd,
 						&universal_callback );
 
 	/*
 	  Set up SHLVL variable
 	*/
-	shlvl = env_get( L"SHLVL" );
+	const wchar_t *shlvl = env_get_string( L"SHLVL" ).empty()?NULL:env_get_string( L"SHLVL" ).c_str();
+
 	if ( shlvl )
 	{
 		wchar_t *nshlvl, **end_nshlvl;
@@ -1722,9 +1724,9 @@ env_vars::env_vars(const wchar_t * const *keys)
 {
     ASSERT_IS_MAIN_THREAD();
     for (size_t i=0; keys[i]; i++) {
-        const wchar_t *val = env_get(keys[i]);
-        if (val) {
-            vars[keys[i]] = val;
+        const wcstring val = env_get_string(keys[i]);
+        if (!val.empty()) {
+            vars[keys[i]] = wcsdup(val.c_str());
         }
     }
 }

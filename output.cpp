@@ -587,7 +587,7 @@ int output_color_code( const wchar_t *val )
 	
 }
 
-void output_set_term( wchar_t *term )
+void output_set_term( const wchar_t *term )
 {
 	current_term = halloc_wcsdup(global_context, term);
 }

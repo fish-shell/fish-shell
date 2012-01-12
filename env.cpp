@@ -656,8 +656,11 @@ void env_init()
 	env_set( L"version", version, ENV_GLOBAL );
 	free( version );
 
-	wchar_t * fishd_dir = const_cast<wchar_t*>(env_get_string( L"FISHD_SOCKET_DIR").c_str());
-	wchar_t * user_dir = const_cast<wchar_t*>(env_get_string( L"USER" ).c_str());
+	const wcstring fishd_dir_wstr = env_get_string( L"FISHD_SOCKET_DIR");
+	const wcstring user_dir_wstr = env_get_string( L"USER" );
+
+	wchar_t * fishd_dir = fishd_dir_wstr.empty()?NULL:const_cast<wchar_t*>(fishd_dir_wstr.c_str());
+	wchar_t * user_dir = user_dir_wstr.empty()?NULL:const_cast<wchar_t*>(user_dir_wstr.c_str());
 
 	env_universal_init(fishd_dir , user_dir , 
 						&start_fishd,

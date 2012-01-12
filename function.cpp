@@ -153,8 +153,9 @@ static void autoload_names( array_list_t *out, int get_hidden )
 	int i;
 	
 	array_list_t path_list;
-	const wchar_t *path_var = env_get( L"fish_function_path" );
-	
+	const wcstring path_var_wstr =  env_get_string( L"fish_function_path" );
+	const wchar_t *path_var = path_var_wstr.empty()?NULL:path_var_wstr.c_str(); 
+
 	if( ! path_var )
 		return;
 	

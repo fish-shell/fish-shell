@@ -130,7 +130,7 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 
 wchar_t *path_get_path( void *context, const wchar_t *cmd )
 {
-	wchar_t *path;
+	const wchar_t *path;
 
 	int err = ENOENT;
 	
@@ -166,7 +166,8 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 	}
 	else
 	{
-		path = env_get(L"PATH");
+		const wcstring path_wstr = env_get_string(L"PATH");
+		path = path_wstr.empty()?NULL:path_wstr.c_str();
 		if( path == 0 )
 		{
 			if( contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
@@ -189,7 +190,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		  its arguments
 		*/
 		wchar_t *path_cpy = wcsdup( path );
-		wchar_t *nxt_path = path;
+		const wchar_t *nxt_path = path;
 		wchar_t *state;
 			
 		if( (new_cmd==0) || (path_cpy==0) )
@@ -356,20 +357,21 @@ wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
 	}
 	else
 	{
-		wchar_t *path;
+		const wchar_t *path;
 		wchar_t *path_cpy;
 		wchar_t *nxt_path;
 		wchar_t *state;
 		wchar_t *whole_path;
 
-		path = env_get(L"CDPATH");
+		const wcstring path_wstr = env_get_string(L"CDPATH");
+		path = path_wstr.empty()?NULL:path_wstr.c_str();
 
 		if( !path || !wcslen(path) )
 		{
 			path = L".";
 		}
 
-		nxt_path = path;
+		nxt_path = const_cast<wchar_t*>(path);
 		path_cpy = wcsdup( path );
 
 		if( !path_cpy )
@@ -437,11 +439,12 @@ wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
 
 wchar_t *path_get_config( void *context)
 {
-	wchar_t *xdg_dir, *home;
+	const wchar_t *xdg_dir, *home;
 	int done = 0;
 	wchar_t *res = 0;
 	
-	xdg_dir = env_get( L"XDG_CONFIG_HOME" );
+	const wcstring xdg_dir_wstr  = env_get_string( L"XDG_CONFIG_HOME" );
+	xdg_dir = xdg_dir_wstr.empty()?NULL:xdg_dir_wstr.c_str(); 
 	if( xdg_dir )
 	{
 		res = wcsdupcat( xdg_dir, L"/fish" );
@@ -457,7 +460,8 @@ wchar_t *path_get_config( void *context)
 	}
 	else
 	{		
-		home = env_get( L"HOME" );
+		const wcstring home_wstr = env_get_string( L"HOME" );
+		home = home_wstr.empty()?NULL:home_wstr.c_str();
 		if( home )
 		{
 			res = wcsdupcat( home, L"/.config/fish" );

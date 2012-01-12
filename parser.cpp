@@ -2043,7 +2043,9 @@ static int parse_job( process_t *p,
 						}
 						else if(cmd[0]==L'$')
 						{
-							wchar_t *val = env_get( cmd+1 );
+							
+							const wcstring val_wstr = env_get_string( cmd+1 );
+							const wchar_t *val = val_wstr.empty()?NULL:val_wstr.c_str();	
 							if( val )
 							{
 								debug( 0,

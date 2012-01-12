@@ -606,7 +606,8 @@ int reader_interrupted()
 void reader_write_title()
 {
 	const wchar_t *title;
-	wchar_t *term = env_get( L"TERM" );
+	const wcstring term_str = env_get_string( L"TERM" );
+	const wchar_t *term = term_str.empty()?NULL:term_str.c_str(); 
 
 	/*
 	  This is a pretty lame heuristic for detecting terminals that do

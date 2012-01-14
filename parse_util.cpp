@@ -800,7 +800,7 @@ int parse_util_load( const wcstring &cmd,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload )
 {
-	wchar_t *path_var;
+	wcstring path_var;
 
 	int res;
 	int c, c2;
@@ -811,12 +811,12 @@ int parse_util_load( const wcstring &cmd,
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
 	parse_util_autounload( path_var_name.c_str(), cmd.c_str(), on_load );
-	path_var = env_get( path_var_name.c_str() );	
+	path_var = env_get_string( path_var_name.c_str() );	
 	
 	/*
 	  Do we know where to look?
 	*/
-	if( !path_var )
+	if( path_var.empty() )
 	{
 		return 0;
 	}
@@ -856,9 +856,9 @@ int parse_util_load( const wcstring &cmd,
 		  We have never tried to autoload using this path name before,
 		  set up initial data
 		*/
-//		debug( 0, L"Create brand new autoload_t for %ls->%ls", path_var_name, path_var );
+//		debug( 0, L"Create brand new autoload_t for %ls->%ls", path_var_name, path_var.c_str() );
         loaded = &all_loaded_map[path_var_name];
-		loaded->old_path = path_var;
+		loaded->old_path = wcsdup(path_var.c_str());
 	}
 
     std::vector<wcstring> path_list;

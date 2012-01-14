@@ -324,7 +324,7 @@ int input_init()
 		debug( 0, _( L"Could not set up terminal" ) );
 		exit(1);
 	}
-	output_set_term( env_get( L"TERM" ) );
+	output_set_term( env_get_string( L"TERM" ).c_str() );
 	
 	input_terminfo_init();
 

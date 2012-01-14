@@ -154,7 +154,7 @@ int (*output_get_writer())(char) ;
 /**
    Set the terminal name
  */
-void output_set_term( wchar_t *term );
+void output_set_term( const wchar_t *term );
 /**
    Return the terminal name
  */

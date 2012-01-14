@@ -2007,7 +2007,7 @@ static int builtin_read( wchar_t **argv )
 {
 	wchar_t *buff=0;
 	int i, argc = builtin_count_args( argv );
-	const wchar_t *ifs;
+	wcstring ifs;
 	int place = ENV_USER;
 	wchar_t *nxt;
 	const wchar_t *prompt = DEFAULT_READ_PROMPT;
@@ -2292,11 +2292,11 @@ static int builtin_read( wchar_t **argv )
 		
 		wchar_t *state;
 
-		ifs = env_get( L"IFS" );
-		if( ifs == 0 )
+		ifs = env_get_string( L"IFS" );
+		if( ifs.empty() )
 			ifs = L"";
 		
-		nxt = wcstok( buff, (i<argc-1)?ifs:L"", &state );
+		nxt = wcstok( buff, (i<argc-1)?ifs.c_str():L"", &state );
 		
 		while( i<argc )
 		{
@@ -2304,7 +2304,7 @@ static int builtin_read( wchar_t **argv )
 			
 			i++;
 			if( nxt != 0 )
-				nxt = wcstok( 0, (i<argc-1)?ifs:L"", &state);
+				nxt = wcstok( 0, (i<argc-1)?ifs.c_str():L"", &state);
 		}
 	}
 	
@@ -2613,7 +2613,7 @@ static int builtin_exit( wchar_t **argv )
 */
 static int builtin_cd( wchar_t **argv )
 {
-	wchar_t *dir_in;
+	wcstring dir_in;
 	wchar_t *dir;
 	int res=STATUS_BUILTIN_OK;
 	void *context = halloc( 0, 0 );
@@ -2621,8 +2621,8 @@ static int builtin_cd( wchar_t **argv )
 	
 	if( argv[1]  == 0 )
 	{
-		dir_in = env_get( L"HOME" );
-		if( !dir_in )
+		dir_in = env_get_string( L"HOME" );
+		if( dir_in.empty() )
 		{
 			sb_printf( sb_err,
 					   _( L"%ls: Could not find home directory\n" ),
@@ -2632,7 +2632,7 @@ static int builtin_cd( wchar_t **argv )
 	else
 		dir_in = argv[1];
 
-	dir = path_get_cdpath( context, dir_in );
+	dir = path_get_cdpath( context, dir_in.empty()?0:dir_in.c_str() );
 
 	if( !dir )
 	{
@@ -2641,21 +2641,21 @@ static int builtin_cd( wchar_t **argv )
 			sb_printf( sb_err,
 				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
-				   dir_in );
+				   dir_in.c_str() );
 		}
 		else if( errno == ENOENT )
 		{
 			sb_printf( sb_err,
 				   _( L"%ls: The directory '%ls' does not exist\n" ),
 				   argv[0],
-				   dir_in );			
+				   dir_in.c_str() );			
 		}
 		else if( errno == EROTTEN )
 		{
 			sb_printf( sb_err,
 				   _( L"%ls: '%ls' is a rotten symlink\n" ),
 				   argv[0],
-				   dir_in );			
+				   dir_in.c_str() );			
 			
 		} 
 		else 
@@ -2663,7 +2663,7 @@ static int builtin_cd( wchar_t **argv )
 			sb_printf( sb_err,
 				   _( L"%ls: Unknown error trying to locate directory '%ls'\n" ),
 				   argv[0],
-				   dir_in );			
+				   dir_in.c_str() );			
 			
 		}
 		

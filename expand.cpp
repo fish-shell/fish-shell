@@ -176,7 +176,7 @@ int expand_is_clean( const wchar_t *in )
 /**
    Return the environment variable value for the string starting at \c in.
 */
-static wchar_t *expand_var( wchar_t *in )
+static const wchar_t* expand_var( wchar_t *in )
 {
 	if( !in )
 		return 0;
@@ -958,7 +958,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 			int start_pos = i+1;
 			int stop_pos;
 			int var_len, new_len;
-			wchar_t * var_val;
+			const wchar_t * var_val;
 			wchar_t * new_in;
 			int is_single = (c==VARIABLE_EXPAND_SINGLE);
 			int var_name_stop_pos;
@@ -990,7 +990,6 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 			}
 
 			sb_append_substring( var_tmp, &in[start_pos], var_len );
-
 			var_val = expand_var( (wchar_t *)var_tmp->buff );
 
 			if( var_val )

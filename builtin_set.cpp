@@ -12,7 +12,8 @@ Functions used for implementing the set builtin.
 #include <sys/types.h>
 #include <termios.h>
 #include <signal.h>
-
+#include <vector>
+#include <algorithm>
 #include "fallback.h"
 #include "util.h"
 
@@ -72,7 +73,7 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 			int show_hint = 0;
 			
 			struct stat buff;
-			wchar_t *dir = (wchar_t *)al_get( val, i );
+			const wchar_t *dir = (wchar_t *)al_get( val, i );
 			
 			if( wstat( dir, &buff ) )
 			{
@@ -88,7 +89,7 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 			
 			if( error )
 			{
-				wchar_t *colon;
+				const wchar_t *colon;
 				
 				sb_printf( sb_err, 
 						   _(BUILTIN_SET_PATH_ERROR),
@@ -172,6 +173,126 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 
 	return retcode;
 }
+
+static int my_env_set2( const wchar_t *key, wcstring_list_t &val, int scope )
+{
+	string_buffer_t sb;
+	int i;
+	int retcode = 0;
+	wchar_t *val_str=0;
+		
+	if( is_path_variable( key ) )
+	{
+		int error = 0;
+		
+		for( i=0; i< val.size() ; i++ )
+		{
+			int show_perror = 0;
+			int show_hint = 0;
+			
+			struct stat buff;
+			const wchar_t *dir = val[ i ].c_str();
+			
+			if( wstat( dir, &buff ) )
+			{
+				error = 1;
+				show_perror = 1;
+			}
+
+			if( !( S_ISDIR(buff.st_mode) ) )
+			{
+				error = 1;
+				
+			}
+			
+			if( error )
+			{
+				const wchar_t *colon;
+				
+				sb_printf( sb_err, 
+						   _(BUILTIN_SET_PATH_ERROR),
+						   L"set", 
+						   dir, 
+						   key );
+				
+				colon = wcschr( dir, L':' );
+				
+				if( colon && *(colon+1) ) 
+				{
+					show_hint = 1;
+				}
+				
+			}
+			
+			if( show_perror )
+			{
+				builtin_wperror( L"set" );
+			}
+			
+			if( show_hint )
+			{
+				sb_printf( sb_err, 
+						   _(BUILTIN_SET_PATH_HINT),
+						   L"set",
+						   key,
+						   key,
+						   wcschr( dir, L':' )+1);
+			}
+			
+			if( error )
+			{
+				break;
+			}
+			
+		}
+
+		if( error )
+		{
+			return 1;
+		}
+		
+	}
+
+	sb_init( &sb );
+
+	if(  val.size() )
+	{
+		for( i=0; i< val.size() ; i++ )
+		{
+			const wchar_t *next = val[ i ].c_str();
+			sb_append( &sb, next?next:L"" );
+			if( i<val.size() - 1 )
+			{
+				sb_append( &sb, ARRAY_SEP_STR );
+			}
+		}
+		val_str = (wchar_t *)sb.buff;
+		
+	}
+	
+	switch( env_set( key, val_str, scope | ENV_USER ) )
+	{
+		case ENV_PERM:
+		{
+			sb_printf( sb_err, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key );
+			retcode=1;
+			break;
+		}
+		
+		case ENV_INVALID:
+		{
+			sb_printf( sb_err, _(L"%ls: Unknown error"), L"set" );
+			retcode=1;
+			break;
+		}
+	}
+
+	sb_destroy( &sb );
+
+	return retcode;
+}
+
+
 
 /** 
 	Extract indexes from a destination argument of the form name[index1 index2...]
@@ -260,6 +381,82 @@ static int parse_index( array_list_t *indexes,
 }
 
 
+static int parse_index2( std::vector<long> &indexes,
+						const wchar_t *src,
+						const wchar_t *name,
+						int var_count )
+{
+	size_t len;
+	
+	int count = 0;
+	const wchar_t *src_orig = src;
+	
+	if (src == 0)
+	{
+		return 0;
+	}
+	
+	while (*src != L'\0' && (iswalnum(*src) || *src == L'_'))
+	{
+		src++;
+	}
+	
+	if (*src != L'[')
+	{
+		sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), L"set" );					
+		return 0;
+	}
+	
+	len = src-src_orig;
+	
+	if( (wcsncmp( src_orig, name, len )!=0) || (wcslen(name) != (len)) )
+	{
+		sb_printf( sb_err, 
+				   _(L"%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"),
+				   L"set", 
+				   name,
+				   len,
+				   src_orig);
+		return 0;
+	}
+
+	src++;	
+
+	while (iswspace(*src)) 
+	{
+		src++;
+	}
+	
+	while (*src != L']') 
+	{
+		wchar_t *end;
+		
+		long l_ind;
+
+		errno = 0;
+		
+		l_ind = wcstol(src, &end, 10);
+		
+		if( end==src || errno ) 
+		{
+			sb_printf(sb_err, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
+			return 0;
+		}
+
+		if( l_ind < 0 )
+		{
+			l_ind = var_count+l_ind+1;
+		}
+		
+		indexes.push_back( l_ind );
+		src = end;
+		count++;
+		while (iswspace(*src)) src++;
+	}
+
+	return count;
+}
+
 /**
    Update a list \c list by writing copies (using wcsdup) of the
    values specified by \c values to the indexes specified by \c
@@ -295,7 +492,32 @@ static int update_values( array_list_t *list,
 	return 0;
 }
 
+static int update_values2( wcstring_list_t &list, 
+						  std::vector<long> &indexes,
+						  wcstring_list_t &values ) 
+{
+	int i;
 
+	/* Replace values where needed */
+	for( i = 0; i < indexes.size(); i++ ) 
+	{
+		/*
+		  The '- 1' below is because the indices in fish are
+		  one-based, but the array_list_t uses zero-based indices
+		*/
+		long ind = indexes[i] - 1;
+		const wcstring newv = values[ i ];
+		if( ind < 0 )
+		{
+			return 1;
+		}
+		
+//		free((void *) al_get(list, ind));
+		list[ ind ] = newv; 
+	}
+  
+	return 0;
+}
 /**
    Return 1 if an array list of longs contains the specified
    value, 0 otherwise
@@ -345,6 +567,35 @@ static void erase_values(array_list_t *list, array_list_t *indexes)
 	al_destroy(&result);
 }
 
+/**
+   Erase from a list of wcstring values at specified indexes 
+*/
+static void erase_values2 (wcstring_list_t &list, std::vector<long> &indexes) 
+{
+	long i;
+	wcstring_list_t result;
+
+//	al_init(&result);
+
+	for (i = 0; i < list.size(); i++) 
+	{
+		if (std::find(indexes.begin(), indexes.end(),  i + 1) != indexes.end()) 
+		{
+			result.push_back( list[ i ] );
+		}
+		else 
+		{
+//			free( (void *)al_get(list, i));
+		}
+	}
+	
+//	al_truncate(list,0);	
+	list.clear();
+	copy(result.begin(),result.end(),back_inserter( list ) );
+
+//	al_destroy(&result);
+}
+
 
 /**
    Print the names of all environment variables in the scope, with or without values,
@@ -369,23 +620,23 @@ static void print_variables(int include_values, int esc, int scope)
 		
 		if( include_values ) 
 		{
-			wchar_t *value = env_get(key);
+			wcstring value = env_get_string(key);
 			wchar_t *e_value;
-			if( value )
+			if( !value.empty() )
 			{
 				int shorten = 0;
 				
-				if( wcslen( value ) > 64 )
+				if( value.length() > 64 )
 				{
 					shorten = 1;
-					value = wcsndup( value, 60 );
-					if( !value )
+					value = wcsndup( value.c_str(), 60 );
+					if( value.empty() )
 					{
 						DIE_MEM();
 					}
 				}
 				
-				e_value = esc ? expand_escape_variable(value) : wcsdup(value);
+				e_value = esc ? expand_escape_variable(value.c_str()) : wcsdup(value.c_str());
 				
 				sb_append(sb_out, L" ", e_value, NULL);
 				free(e_value);
@@ -393,7 +644,7 @@ static void print_variables(int include_values, int esc, int scope)
 				if( shorten )
 				{
 					sb_append(sb_out, L"\u2026");
-					free( value );
+//					free( value );
 				}
 
 			}
@@ -632,25 +883,25 @@ static int builtin_set( wchar_t **argv )
 			
 			if( slice )
 			{
-				array_list_t indexes;
-				array_list_t result;
+				std::vector<long> indexes;
+				wcstring_list_t result;
 				int j;
 				
-				al_init( &result );
-				al_init( &indexes );
+//				al_init( &result );
+//				al_init( &indexes );
 
-				tokenize_variable_array( env_get( dest ), &result );
+				tokenize_variable_array2( env_get_string( dest ), result );
 								
-				if( !parse_index( &indexes, arg, dest, al_get_count( &result ) ) )
+				if( !parse_index2( indexes, arg, dest, result.size() ) )
 				{
 					builtin_print_help( argv[0], sb_err );
 					retcode = 1;
 					break;
 				}
-				for( j=0; j<al_get_count( &indexes ); j++ )
+				for( j=0; j < indexes.size() ; j++ )
 				{
-					long idx = al_get_long( &indexes, j );
-					if( idx < 1 || idx > al_get_count( &result ) )
+					long idx = indexes[j];
+					if( idx < 1 || idx > result.size() )
 					{
 						retcode++;
 					}
@@ -747,19 +998,19 @@ static int builtin_set( wchar_t **argv )
 		  Slice mode
 		*/
 		int idx_count, val_count;
-		array_list_t values;
-		array_list_t indexes;
-		array_list_t result;
+		wcstring_list_t values;
+		std::vector<long> indexes;
+		wcstring_list_t result;
 		
-		al_init(&values);
-		al_init(&indexes);
-		al_init(&result);
+//		al_init(&values);
+//		al_init(&indexes);
+//		al_init(&result);
 		
-		tokenize_variable_array( env_get(dest), &result );
+		tokenize_variable_array2( env_get_string(dest), result );
 		
 		for( ; woptind<argc; woptind++ )
 		{			
-			if( !parse_index( &indexes, argv[woptind], dest, al_get_count( &result ) ) )
+			if( !parse_index2( indexes, argv[woptind], dest, result.size() ) )
 			{
 				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
@@ -767,7 +1018,7 @@ static int builtin_set( wchar_t **argv )
 			}
 			
 			val_count = argc-woptind-1;
-			idx_count = al_get_count( &indexes );
+			idx_count = indexes.size();
 
 			if( !erase )
 			{
@@ -794,42 +1045,42 @@ static int builtin_set( wchar_t **argv )
 
 			if( erase )
 			{
-				erase_values(&result, &indexes);
-				my_env_set( dest, &result, scope);
+				erase_values2(result, indexes);
+				my_env_set2( dest, result, scope);
 			}
 			else
 			{
-				array_list_t value;
-				al_init(&value);
+				wcstring_list_t value;
+//				al_init(&value);
 
 				while( woptind < argc ) 
 				{
-					al_push(&value, argv[woptind++]);
+					value.push_back( argv[woptind++] );
 				}
 
-				if( update_values( &result, 
-								   &indexes,
-								   &value ) )
+				if( update_values2( result, 
+								   indexes,
+								   value ) )
 				{
 					sb_printf( sb_err, L"%ls: ", argv[0] );
 					sb_printf( sb_err, ARRAY_BOUNDS_ERR );
 					sb_append( sb_err, L"\n" );
 				}
 				
-				my_env_set(dest,
-						   &result,
+				my_env_set2(dest,
+						   result,
 						   scope);
 								
-				al_destroy( &value );
+//				al_destroy( &value );
 								
 			}			
 		}
 
-		al_foreach( &result, &free );
-		al_destroy( &result );
+//		al_foreach( &result, &free );
+//		al_destroy( &result );
 
-		al_destroy(&indexes);
-		al_destroy(&values);
+//		al_destroy(&indexes);
+//		al_destroy(&values);
 		
 	}
 	else

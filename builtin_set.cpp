@@ -177,7 +177,7 @@ static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
 static int my_env_set2( const wchar_t *key, wcstring_list_t &val, int scope )
 {
 	string_buffer_t sb;
-	int i;
+	size_t i;
 	int retcode = 0;
 	wchar_t *val_str=0;
 		
@@ -304,84 +304,7 @@ static int my_env_set2( const wchar_t *key, wcstring_list_t &val, int scope )
 
 	\return the total number of indexes parsed, or -1 on error
 */
-static int parse_index( array_list_t *indexes,
-						const wchar_t *src,
-						const wchar_t *name,
-						int var_count )
-{
-	size_t len;
-	
-	int count = 0;
-	const wchar_t *src_orig = src;
-	
-	if (src == 0)
-	{
-		return 0;
-	}
-	
-	while (*src != L'\0' && (iswalnum(*src) || *src == L'_'))
-	{
-		src++;
-	}
-	
-	if (*src != L'[')
-	{
-		sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), L"set" );					
-		return 0;
-	}
-	
-	len = src-src_orig;
-	
-	if( (wcsncmp( src_orig, name, len )!=0) || (wcslen(name) != (len)) )
-	{
-		sb_printf( sb_err, 
-				   _(L"%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"),
-				   L"set", 
-				   name,
-				   len,
-				   src_orig);
-		return 0;
-	}
-
-	src++;	
-
-	while (iswspace(*src)) 
-	{
-		src++;
-	}
-	
-	while (*src != L']') 
-	{
-		wchar_t *end;
-		
-		long l_ind;
-
-		errno = 0;
-		
-		l_ind = wcstol(src, &end, 10);
-		
-		if( end==src || errno ) 
-		{
-			sb_printf(sb_err, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
-			return 0;
-		}
-
-		if( l_ind < 0 )
-		{
-			l_ind = var_count+l_ind+1;
-		}
-		
-		al_push_long(indexes, l_ind);
-		src = end;
-		count++;
-		while (iswspace(*src)) src++;
-	}
-
-	return count;
-}
-
-
-static int parse_index2( std::vector<long> &indexes,
+static int parse_index( std::vector<long> &indexes,
 						const wchar_t *src,
 						const wchar_t *name,
 						int var_count )
@@ -457,46 +380,11 @@ static int parse_index2( std::vector<long> &indexes,
 	return count;
 }
 
-/**
-   Update a list \c list by writing copies (using wcsdup) of the
-   values specified by \c values to the indexes specified by \c
-   indexes. The previous entries at the specidied position will be
-   free'd.
-
-   \return 0 if the operation was successfull, non-zero otherwise
-*/
-static int update_values( array_list_t *list, 
-						  array_list_t *indexes,
-						  array_list_t *values ) 
-{
-	int i;
-
-	/* Replace values where needed */
-	for( i = 0; i < al_get_count(indexes); i++ ) 
-	{
-		/*
-		  The '- 1' below is because the indices in fish are
-		  one-based, but the array_list_t uses zero-based indices
-		*/
-		long ind = al_get_long(indexes, i) - 1;
-		const wchar_t *newv = (const wchar_t*) al_get(values, i);
-		if( ind < 0 )
-		{
-			return 1;
-		}
-		
-		free((void *) al_get(list, ind));
-		al_set(list, ind, newv != 0 ? wcsdup(newv) : wcsdup(L""));
-	}
-  
-	return 0;
-}
-
-static int update_values2( wcstring_list_t &list, 
+static int update_values( wcstring_list_t &list, 
 						  std::vector<long> &indexes,
 						  wcstring_list_t &values ) 
 {
-	int i;
+	size_t i;
 
 	/* Replace values where needed */
 	for( i = 0; i < indexes.size(); i++ ) 
@@ -518,61 +406,13 @@ static int update_values2( wcstring_list_t &list,
   
 	return 0;
 }
-/**
-   Return 1 if an array list of longs contains the specified
-   value, 0 otherwise
-*/
-static int al_contains_long( array_list_t *list,
-							long val)
-{
-	int i;
-
-	for (i = 0; i < al_get_count(list); i++) 
-	{
-		long current = al_get_long(list, i);
-		if( current != 0 && current == val ) 
-		{
-			return 1;
-		}
-	}
-	
-	return 0;
-}
-
-
-/**
-   Erase from a list values at specified indexes 
-*/
-static void erase_values(array_list_t *list, array_list_t *indexes) 
-{
-	long i;
-	array_list_t result;
-
-	al_init(&result);
-
-	for (i = 0; i < al_get_count(list); i++) 
-	{
-		if (!al_contains_long(indexes, i + 1)) 
-		{
-			al_push(&result, al_get(list, i));
-		}
-		else 
-		{
-			free( (void *)al_get(list, i));
-		}
-	}
-	
-	al_truncate(list,0);	
-	al_push_all( list, &result );
-	al_destroy(&result);
-}
 
 /**
    Erase from a list of wcstring values at specified indexes 
 */
-static void erase_values2 (wcstring_list_t &list, std::vector<long> &indexes) 
+static void erase_values(wcstring_list_t &list, std::vector<long> &indexes) 
 {
-	long i;
+	size_t i;
 	wcstring_list_t result;
 
 //	al_init(&result);
@@ -878,7 +718,7 @@ static int builtin_set( wchar_t **argv )
 			{
 				std::vector<long> indexes;
 				wcstring_list_t result;
-				int j;
+				size_t j;
 				
 //				al_init( &result );
 //				al_init( &indexes );
@@ -886,7 +726,7 @@ static int builtin_set( wchar_t **argv )
                 if (! dest_str.missing())
                     tokenize_variable_array2( dest_str, result );
 								
-				if( !parse_index2( indexes, arg, dest, result.size() ) )
+				if( !parse_index( indexes, arg, dest, result.size() ) )
 				{
 					builtin_print_help( argv[0], sb_err );
 					retcode = 1;
@@ -895,7 +735,7 @@ static int builtin_set( wchar_t **argv )
 				for( j=0; j < indexes.size() ; j++ )
 				{
 					long idx = indexes[j];
-					if( idx < 1 || idx > result.size() )
+					if( idx < 1 || (size_t)idx > result.size() )
 					{
 						retcode++;
 					}
@@ -1006,7 +846,7 @@ static int builtin_set( wchar_t **argv )
 		
 		for( ; woptind<argc; woptind++ )
 		{			
-			if( !parse_index2( indexes, argv[woptind], dest, result.size() ) )
+			if( !parse_index( indexes, argv[woptind], dest, result.size() ) )
 			{
 				builtin_print_help( argv[0], sb_err );
 				retcode = 1;
@@ -1041,7 +881,7 @@ static int builtin_set( wchar_t **argv )
 
 			if( erase )
 			{
-				erase_values2(result, indexes);
+				erase_values(result, indexes);
 				my_env_set2( dest, result, scope);
 			}
 			else
@@ -1054,7 +894,7 @@ static int builtin_set( wchar_t **argv )
 					value.push_back( argv[woptind++] );
 				}
 
-				if( update_values2( result, 
+				if( update_values( result, 
 								   indexes,
 								   value ) )
 				{

@@ -620,16 +620,16 @@ int read_blocked(int fd, void *buf, size_t count)
 	return res;	
 }
 
-ssize_t write_loop(int fd, char *buff, size_t count)
+ssize_t write_loop(int fd, const char *buff, size_t count)
 {
-	ssize_t out=0;
-	ssize_t out_cum=0;
+	size_t out=0;
+	size_t out_cum=0;
 	while( 1 ) 
 	{
 		out = write( fd, 
 					 &buff[out_cum],
 					 count - out_cum );
-		if (out == -1) 
+		if (out < 0) 
 		{
 			if( errno != EAGAIN &&
 				errno != EINTR ) 
@@ -638,7 +638,7 @@ ssize_t write_loop(int fd, char *buff, size_t count)
 			}
 		} else 
 		{
-			out_cum += out;
+			out_cum += (size_t)out;
 		}
 		if( out_cum >= count ) 
 		{

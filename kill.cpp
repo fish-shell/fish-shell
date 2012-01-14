@@ -202,12 +202,12 @@ void kill_replace( wchar_t *old, wchar_t *newv )
 	kill_add( newv );	
 }
 
-wchar_t *kill_yank_rotate()
+const wchar_t *kill_yank_rotate()
 {
 	if( kill_current == 0 )
 		return L"";
 	kill_current = kill_current->prev;
-	return (wchar_t *)kill_current->data;
+	return (const wchar_t *)kill_current->data;
 }
 
 /**
@@ -256,7 +256,7 @@ static void kill_check_x_buffer()
 }
 
 
-wchar_t *kill_yank()
+const wchar_t *kill_yank()
 {
 	kill_check_x_buffer();
 	if( kill_current == 0 )

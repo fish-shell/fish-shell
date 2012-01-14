@@ -22,11 +22,11 @@ void kill_add( wchar_t *str );
 /**
    Rotate the killring
 */
-wchar_t *kill_yank_rotate();
+const wchar_t *kill_yank_rotate();
 /**
   Paste from the killring
 */
-wchar_t *kill_yank();
+const wchar_t *kill_yank();
 /**
    Sanity check
 */

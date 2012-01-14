@@ -779,7 +779,7 @@ static void remove_backward()
    Insert the characters of the string into the command line buffer
    and print them to the screen using syntax highlighting, etc.
 */
-static int insert_str(wchar_t *str)
+static int insert_str(const wchar_t *str)
 {
 	int len = wcslen( str );
 	int old_len = data->buff_len;
@@ -2679,7 +2679,7 @@ wchar_t *reader_readline()
 	wint_t c;
 	int i;
 	int last_char=0, yank=0;
-	wchar_t *yank_str;
+	const wchar_t *yank_str;
 	array_list_t *comp=0;
 	int comp_empty=1;
 	int finished=0;

@@ -380,7 +380,6 @@ static int find_process( const wchar_t *proc,
 						 array_list_t *out )
 {
 	DIR *dir;
-	struct wdirent *next;
 	wchar_t *pdir_name;
 	wchar_t *pfile_name;
 	wchar_t *cmd=0;
@@ -1775,7 +1774,6 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 	size_t i;
 	int cmdsubst_ok = 1;
 	int res = EXPAND_OK;
-    int start_count = output.size();
     
 	if( (!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean( input.c_str() ) )
 	{
@@ -2179,7 +2177,7 @@ int expand_string( void *context,
 			if( ((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
 				wildcard_has( next, 1 ) )
 			{
-				wchar_t *start, *rest;
+				const wchar_t *start, *rest;
 				array_list_t *list = out;
 
 				if( next[0] == '/' )

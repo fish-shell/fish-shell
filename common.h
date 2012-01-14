@@ -432,7 +432,7 @@ int read_blocked(int fd, void *buf, size_t count);
    Loop a write request while failiure is non-critical. Return -1 and set errno
    in case of critical error.
  */
-ssize_t write_loop(int fd, char *buff, size_t count);
+ssize_t write_loop(int fd, const char *buff, size_t count);
 
 
 /**

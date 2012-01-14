@@ -14,10 +14,10 @@
 #define HELP_ERR "Could not show help message\n"
 
 /* defined in common.h */
-ssize_t write_loop(int fd, char *buff, size_t count);
+ssize_t write_loop(int fd, const char *buff, size_t count);
 
 
-void print_help( char *c, int fd )
+void print_help( const char *c, int fd )
 {
 	char cmd[ CMD_LEN];
 	int printed = snprintf( cmd, CMD_LEN, "fish -c '__fish_print_help %s >&%d'", c, fd );

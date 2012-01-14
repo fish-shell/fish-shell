@@ -800,7 +800,7 @@ int complete_is_valid_option( const wchar_t *str,
 
 		if( is_short_opt )
 		{
-			int j;
+			size_t j;
 
 			opt_found=1;
 			for( j=1; j<wcslen(opt); j++)
@@ -1169,7 +1169,12 @@ static void complete_cmd( const wchar_t *cmd,
 
 		if( use_function )
 		{
-			function_get_names( &possible_comp, cmd[0] == L'_' );
+			//function_get_names( &possible_comp, cmd[0] == L'_' );
+            wcstring_list_t names = function_get_names(cmd[0] == L'_' );
+            for (size_t i=0; i < names.size(); i++) {
+                al_push(&possible_comp, names.at(i).c_str());
+            }
+            
 			complete_strings( comp, cmd, 0, &complete_function_desc, &possible_comp, 0 );
 		}
 
@@ -2111,7 +2116,7 @@ void complete_print( string_buffer_t *out )
 		complete_entry_opt_t *o;
 		for( o= e->first_option; o; o=o->next )
 		{
-			wchar_t *modestr[] =
+			const wchar_t *modestr[] =
 				{
 					L"",
 					L" --no-files",

@@ -1039,7 +1039,7 @@ static int parse_util_load_internal( const wcstring &cmd,
 	return reloaded;	
 }
 
-void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments )
+void parse_util_set_argv( wchar_t **argv, const wcstring_list_t &named_arguments )
 {
 	if( *argv )
 	{
@@ -1064,14 +1064,14 @@ void parse_util_set_argv( wchar_t **argv, array_list_t *named_arguments )
 		env_set( L"argv", 0, ENV_LOCAL );
 	}				
 
-	if( named_arguments )
+	if( named_arguments.size() )
 	{
 		wchar_t **arg;
-		int i;
+		size_t i;
 		
-		for( i=0, arg=argv; i < al_get_count( named_arguments ); i++ )
+		for( i=0, arg=argv; i < named_arguments.size(); i++ )
 		{
-			env_set( (const wchar_t *)al_get( named_arguments, i ), *arg, ENV_LOCAL );
+			env_set( named_arguments.at(i).c_str(), *arg, ENV_LOCAL );
 
 			if( *arg )
 				arg++;

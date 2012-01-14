@@ -18,6 +18,8 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <map>
+#include <set>
 
 #include "wutil.h"
 #include "fallback.h"
@@ -37,48 +39,47 @@
 #include "halloc.h"
 #include "halloc_util.h"
 
-
-/**
-   Struct describing a function
-*/
-typedef struct
+class function_internal_info_t
 {
-	/** Function definition */
-	wchar_t *definition;
-	/** Function description */
-	wchar_t *description;	
+public:
+    /** Function definition */
+    wcstring definition;
+    
+    /** Function description */
+    wcstring description;
+    
 	/**
 	   File where this function was defined
 	*/
-	const wchar_t *definition_file;
+    const wchar_t *definition_file;
+    
 	/**
 	   Line where definition started
 	*/
-	int definition_offset;	
-	
+	int definition_offset;
+    
 	/**
 	   List of all named arguments for this function
 	 */
-	array_list_t *named_arguments;
-	
-	
+    wcstring_list_t named_arguments;
+    
 	/**
 	   Flag for specifying that this function was automatically loaded
 	*/
-	int is_autoload;
-
+    bool is_autoload;
+    
 	/**
 	   Set to non-zero if invoking this function shadows the variables
 	   of the underlying function.
 	 */
-	int shadows;
-}
-	function_internal_data_t;
+	bool shadows;
+};
 
 /**
    Table containing all functions
 */
-static hash_table_t functions;
+typedef std::map<wcstring, function_internal_info_t> function_map_t;
+static function_map_t loaded_functions;
 
 /* Lock for functions */
 static pthread_mutex_t functions_lock;
@@ -126,10 +127,9 @@ static int load( const wchar_t *name )
     ASSERT_IS_MAIN_THREAD();
 	int was_autoload = is_autoload;
 	int res;
-	function_internal_data_t *data;
     LOCK_FUNCTIONS();
-	data = (function_internal_data_t *)hash_get( &functions, name );
-	if( data && !data->is_autoload ) {
+    function_map_t::iterator iter = loaded_functions.find(name);
+	if( iter !=  loaded_functions.end() && !iter->second.is_autoload ) {
         UNLOCK_FUNCTIONS();
 		return 0;
     }
@@ -148,7 +148,7 @@ static int load( const wchar_t *name )
    Insert a list of all dynamically loaded functions into the
    specified list.
 */
-static void autoload_names( array_list_t *out, int get_hidden )
+static void autoload_names( std::set<wcstring> &names, int get_hidden )
 {
 	size_t i;
 	
@@ -173,19 +173,15 @@ static void autoload_names( array_list_t *out, int get_hidden )
 		while (wreaddir(dir, name))
 		{
 			const wchar_t *fn = name.c_str();
-			wchar_t *suffix;
+			const wchar_t *suffix;
 			if( !get_hidden && fn[0] == L'_' )
 				continue;
 			
-			suffix = const_cast<wchar_t*>(wcsrchr( fn, L'.' ));
+            suffix = wcsrchr( fn, L'.' );
 			if( suffix && (wcscmp( suffix, L".fish" ) == 0 ) )
 			{
-				const wchar_t *dup;
-				*suffix = 0;
-				dup = intern( fn );
-				if( !dup )
-					DIE_MEM();
-				al_push( out, dup );
+                wcstring name(fn, suffix - fn);
+                names.insert(name);
 			}
 		}				
 		closedir(dir);
@@ -194,10 +190,6 @@ static void autoload_names( array_list_t *out, int get_hidden )
 
 void function_init()
 {
-	hash_init( &functions,
-			   &hash_wcs_func,
-			   &hash_wcs_cmp );
-    
     pthread_mutexattr_t a;
     VOMIT_ON_FAILURE(pthread_mutexattr_init(&a));
     VOMIT_ON_FAILURE(pthread_mutexattr_settype(&a,PTHREAD_MUTEX_RECURSIVE));
@@ -205,19 +197,10 @@ void function_init()
     VOMIT_ON_FAILURE(pthread_mutexattr_destroy(&a));
 }
 
-/**
-   Clear specified value, but not key
- */
-static void clear_entry( void *key, void *value )
-{
-	halloc_free( value );
-}
-
 void function_destroy()
 {
     LOCK_FUNCTIONS();
-	hash_foreach( &functions, &clear_entry );
-	hash_destroy( &functions );
+    loaded_functions.clear();
     UNLOCK_FUNCTIONS();
 }
 
@@ -225,36 +208,32 @@ void function_destroy()
 void function_add( function_data_t *data )
 {
 	int i;
-	wchar_t *cmd_end;
-	function_internal_data_t *d;
 	
 	CHECK( data->name, );
 	CHECK( data->definition, );
 	LOCK_FUNCTIONS();
 	function_remove( data->name );
-	
-	d = (function_internal_data_t *)halloc( 0, sizeof( function_internal_data_t ) );
-	d->definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
-	d->definition = halloc_wcsdup( d, data->definition );
+	    
+    function_internal_info_t &info = loaded_functions[data->name];
+    
+	info.definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
+	info.definition = data->definition;
 
 	if( data->named_arguments )
 	{
-		d->named_arguments = al_halloc( d );
-
 		for( i=0; i<al_get_count( data->named_arguments ); i++ )
 		{
-			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( data->named_arguments, i ) ) );
+            info.named_arguments.push_back((wchar_t *)al_get( data->named_arguments, i ));
 		}
 	}
 	
-	cmd_end = d->definition + wcslen(d->definition)-1;
 	
-	d->description = data->description?halloc_wcsdup( d, data->description ):0;
-	d->definition_file = intern(reader_current_filename());
-	d->is_autoload = is_autoload;
-	d->shadows = data->shadows;
+	if (data->description)
+        info.description = data->description;
+	info.definition_file = intern(reader_current_filename());
+	info.is_autoload = is_autoload;
+	info.shadows = data->shadows;
 	
-	hash_put( &functions, intern(data->name), d );
 	
 	for( i=0; i<al_get_count( data->events ); i++ )
 	{
@@ -273,7 +252,7 @@ static int function_exists_internal( const wchar_t *cmd, bool autoload )
 	
     LOCK_FUNCTIONS();
 	if ( autoload ) load( cmd );
-    res = (hash_get(&functions, cmd) != 0 );
+    res = loaded_functions.find(cmd) != loaded_functions.end();
 	UNLOCK_FUNCTIONS();
     return res;
 }
@@ -290,22 +269,14 @@ int function_exists_no_autoload( const wchar_t *cmd )
 
 void function_remove( const wchar_t *name )
 {
-	void *key;
-	void *dv;
-	function_internal_data_t *d;
 	event_t ev;
 	
 	CHECK( name, );
 
     LOCK_FUNCTIONS();
-	hash_remove( &functions,
-				 name,
-				 &key,
-				 &dv );
-
-	d=(function_internal_data_t *)dv;
+    bool erased = (loaded_functions.erase(name) > 0);
 	
-	if( !key ) {
+	if( !erased ) {
         UNLOCK_FUNCTIONS();
 		return;
     }
@@ -313,8 +284,6 @@ void function_remove( const wchar_t *name )
 	ev.type=EVENT_ANY;
 	ev.function_name=name;	
 	event_remove( &ev );
-
-	halloc_free( d );
 
 	/*
 	  Notify the autoloader that the specified function is erased, but
@@ -330,209 +299,141 @@ void function_remove( const wchar_t *name )
 	
 const wchar_t *function_get_definition( const wchar_t *name )
 {
-	function_internal_data_t *data;
-	
+    const wchar_t *result = NULL;
 	CHECK( name, 0 );
 	LOCK_FUNCTIONS();
 	load( name );
-	data = (function_internal_data_t *)hash_get( &functions, name );
+    function_map_t::iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end())
+        result = iter->second.definition.c_str();
     UNLOCK_FUNCTIONS();
-	if( data == 0 )
-		return 0;
-	return data->definition;
+    return result;
 }
 
-array_list_t *function_get_named_arguments( const wchar_t *name )
+wcstring_list_t function_get_named_arguments( const wchar_t *name )
 {
-	function_internal_data_t *data;
-	
-	CHECK( name, 0 );
+    wcstring_list_t result;
+	CHECK( name, result );
     LOCK_FUNCTIONS();
 	load( name );
-	data = (function_internal_data_t *)hash_get( &functions, name );
+    function_map_t::iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end())
+        result = iter->second.named_arguments;
     UNLOCK_FUNCTIONS();
-	if( data == 0 )
-		return 0;
-	return data->named_arguments;
+    return result;
 }
 
 int function_get_shadows( const wchar_t *name )
 {
-	function_internal_data_t *data;
-	
+	bool result = false;
 	CHECK( name, 0 );
 	LOCK_FUNCTIONS();
 	load( name );
-	data = (function_internal_data_t *)hash_get( &functions, name );
+    function_map_t::const_iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end())
+        result = iter->second.shadows;
     UNLOCK_FUNCTIONS();
-	if( data == 0 )
-		return 0;
-	return data->shadows;
+    return result;
 }
 
 	
 const wchar_t *function_get_desc( const wchar_t *name )
 {
-	function_internal_data_t *data;
-	
+    const wchar_t *result = NULL;
 	CHECK( name, 0 );
-		
 	load( name );
     LOCK_FUNCTIONS();
-	data = (function_internal_data_t *)hash_get( &functions, name );
+    function_map_t::const_iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end())
+        result = iter->second.description.c_str();
     UNLOCK_FUNCTIONS();
-	if( data == 0 )
-		return 0;
-	
-	return _(data->description);
+    
+    /* Empty length string goes to NULL */
+    if (result && ! result[0])
+        result = NULL;
+            
+    return result ? _(result) : NULL;
 }
 
 void function_set_desc( const wchar_t *name, const wchar_t *desc )
 {
-	function_internal_data_t *data;
-	
 	CHECK( name, );
 	CHECK( desc, );
 	
 	load( name );
     LOCK_FUNCTIONS();
-	data = (function_internal_data_t *)hash_get( &functions, name );
+    function_map_t::iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end())
+        iter->second.description = desc;
     UNLOCK_FUNCTIONS();
-	if( data == 0 )
-		return;
-
-	data->description = halloc_wcsdup( data, desc );
 }
 
 int function_copy( const wchar_t *name, const wchar_t *new_name )
 {
-	int i;
-	function_internal_data_t *d, *orig_d;
-	
-	CHECK( name, 0 );
-	CHECK( new_name, 0 );
-
-	orig_d = (function_internal_data_t *)hash_get(&functions, name);
-	if( !orig_d )
-		return 0;
-
-	d = (function_internal_data_t *)halloc(0, sizeof( function_internal_data_t ) );
-	d->definition_offset = orig_d->definition_offset;
-	d->definition = halloc_wcsdup( d, orig_d->definition );
-	if( orig_d->named_arguments )
-	{
-		d->named_arguments = al_halloc( d );
-		for( i=0; i<al_get_count( orig_d->named_arguments ); i++ )
-		{
-			al_push( d->named_arguments, halloc_wcsdup( d, (wchar_t *)al_get( orig_d->named_arguments, i ) ) );
-		}
-		d->description = orig_d->description?halloc_wcsdup(d, orig_d->description):0;
-		d->shadows = orig_d->shadows;
-
+    int result = 0;
+    LOCK_FUNCTIONS();
+    function_map_t::const_iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end()) {
+        function_internal_info_t &new_info = loaded_functions[new_name];
+        new_info = iter->second;
+        
 		// This new instance of the function shouldn't be tied to the def 
 		// file of the original. 
-		d->definition_file = 0;
-		d->is_autoload = 0;
-	}
-
-	hash_put( &functions, intern(new_name), d );
-
-	return 1;
-}
-
-/**
-   Search arraylist of strings for specified string
-*/
-static int al_contains_str( array_list_t *list, const wchar_t * str )
-{
-	int i;
-
-	CHECK( list, 0 );
-	CHECK( str, 0 );
-	
-	for( i=0; i<al_get_count( list ); i++ )
-	{
-		if( wcscmp( (const wchar_t *)al_get( list, i ), str) == 0 )
-		{
-			return 1;
-		}
-	}
-	return 0;
-}
-	
-/**
-   Helper function for removing hidden functions 
-*/
-static void get_names_internal( void *key,
-								void *val,
-								void *aux )
-{
-	wchar_t *name = (wchar_t *)key;
-	if( name[0] != L'_' && !al_contains_str( (array_list_t *)aux, name ) )
-	{
-		al_push( (array_list_t *)aux, name );
-	}
-}
-
-/**
-   Helper function for removing hidden functions 
-*/
-static void get_names_internal_all( void *key,
-									void *val,
-									void *aux )
-{
-	wchar_t *name = (wchar_t *)key;
-	
-	if( !al_contains_str( (array_list_t *)aux, name ) )
-	{
-		al_push( (array_list_t *)aux, name );
-	}
-}
-
-void function_get_names( array_list_t *list, int get_hidden )
-{
-	CHECK( list, );
-    LOCK_FUNCTIONS();
-	autoload_names( list, get_hidden );
-	
-	if( get_hidden )
-	{
-		hash_foreach2( &functions, &get_names_internal_all, list );
-	}
-	else
-	{
-		hash_foreach2( &functions, &get_names_internal, list );
-	}
+		new_info.definition_file = 0;
+		new_info.is_autoload = 0;
+        
+        result = 1;
+    }
     UNLOCK_FUNCTIONS();
+	return result;
+}
+
+wcstring_list_t function_get_names( int get_hidden )
+{
+    std::set<wcstring> names;
+    LOCK_FUNCTIONS();
+	autoload_names( names, get_hidden );
 	
+    function_map_t::const_iterator iter;
+    for (iter = loaded_functions.begin(); iter != loaded_functions.end(); iter++) {
+        const wcstring &name = iter->first;
+        
+        /* Maybe skip hidden */
+        if (! get_hidden) {
+            if (name.size() == 0 || name.at(0) == L'_') continue;
+        }
+        
+        names.insert(name);
+    }
+    UNLOCK_FUNCTIONS();
+    
+    return wcstring_list_t(names.begin(), names.end());
 }
 
 const wchar_t *function_get_definition_file( const wchar_t *name )
 {
-	function_internal_data_t *data;
+    const wchar_t *result = NULL;
 
 	CHECK( name, 0 );
     LOCK_FUNCTIONS();
-	data = (function_internal_data_t *)hash_get( &functions, name );
+    function_map_t::const_iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end())
+        result = iter->second.definition_file;
     UNLOCK_FUNCTIONS();
-	if( data == 0 )
-		return 0;
-	
-	return data->definition_file;
+    return result;
 }
 
 
 int function_get_definition_offset( const wchar_t *name )
 {
-	function_internal_data_t *data;
+    int result = -1;
 
 	CHECK( name, -1 );
     LOCK_FUNCTIONS();
-	data = (function_internal_data_t *)hash_get( &functions, name );
+    function_map_t::const_iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end())
+        result = iter->second.definition_offset;
     UNLOCK_FUNCTIONS();
-	if( data == 0 )
-		return -1;
-	
-	return data->definition_offset;
+    return result;
 }
 

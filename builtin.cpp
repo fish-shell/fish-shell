@@ -1135,7 +1135,6 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 	array_list_t ev;
 	event_t search;
 	int i;
-	array_list_t *named;
 
 	search.function_name = name;
 	search.type = EVENT_ANY;
@@ -1207,13 +1206,13 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 	al_destroy( &ev );
 	
-	named = function_get_named_arguments( name );
-	if( named )
+    wcstring_list_t named = function_get_named_arguments( name );
+	if( named.size() > 0 )
 	{
 		sb_printf( out, L" --argument" );
-		for( i=0; i<al_get_count( named ); i++ )
+		for( i=0; i<(int)named.size(); i++ )
 		{
-			sb_printf( out, L" %ls", (wchar_t *)al_get( named, i ) );
+			sb_printf( out, L" %ls", named.at(i).c_str() );
 		}
 	}
 	
@@ -1230,8 +1229,6 @@ static int builtin_functions( wchar_t **argv )
 	int i;
 	int erase=0;
 	wchar_t *desc=0;
-
-	array_list_t names;
 
 	int argc=builtin_count_args( argv );
 	int list=0;
@@ -1395,19 +1392,18 @@ static int builtin_functions( wchar_t **argv )
 	else if( list || (argc==woptind))
 	{
 		int is_screen = !builtin_out_redirect && isatty(1);
-
-		al_init( &names );
-		function_get_names( &names, show_hidden );
-		sort_list( &names );
+        size_t i;
+		wcstring_list_t names = function_get_names( show_hidden );
+        std::sort(names.begin(), names.end());
 		if( is_screen )
 		{
 			string_buffer_t buff;
 			sb_init( &buff );
 
-			for( i=0; i<al_get_count( &names ); i++ )
+			for( i=0; i<names.size(); i++ )
 			{
 				sb_append( &buff,
-							al_get(&names, i),
+							names.at(i).c_str(),
 							L", ",
 							NULL );
 			}
@@ -1417,16 +1413,15 @@ static int builtin_functions( wchar_t **argv )
 		}
 		else
 		{
-			for( i=0; i<al_get_count( &names ); i++ )
+			for( i=0; i<names.size(); i++ )
 			{
 				sb_append( sb_out,
-							al_get(&names, i),
+							names.at(i).c_str(),
 							L"\n",
 							NULL );
 			}
 		}
 
-		al_destroy( &names );
 		return STATUS_BUILTIN_OK;
 	}
 	else if( copy )
@@ -1826,8 +1821,7 @@ static int builtin_function( wchar_t **argv )
 
 	if( res )
 	{
-		int i;
-		array_list_t names;
+		size_t i;
 		int chars=0;
 
 		builtin_print_help( argv[0], sb_err );
@@ -1835,13 +1829,12 @@ static int builtin_function( wchar_t **argv )
 		sb_append( sb_err, cfa );
 		chars += wcslen( cfa );
 
-		al_init( &names );
-		function_get_names( &names, 0 );
-		sort_list( &names );
+        wcstring_list_t names = function_get_names(0);
+        sort(names.begin(), names.end());
 
-		for( i=0; i<al_get_count( &names ); i++ )
+		for( i=0; i<names.size(); i++ )
 		{
-			wchar_t *nxt = (wchar_t *)al_get( &names, i );
+			const wchar_t *nxt = names.at(i).c_str();
 			int l = wcslen( nxt + 2 );
 			if( chars+l > common_get_width() )
 			{
@@ -1852,7 +1845,6 @@ static int builtin_function( wchar_t **argv )
 			sb_append( sb_err,
 						nxt, L"  ", NULL );
 		}
-		al_destroy( &names );
 		sb_append( sb_err, L"\n" );
 
 		parser_pop_block();
@@ -2888,7 +2880,7 @@ static int builtin_source( wchar_t ** argv )
 	
 	current_block->param1.source_dest = fn_intern;
 	
-	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), 0);
+	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), wcstring_list_t());
 	
 	res = reader_read( fd, real_io );
 		

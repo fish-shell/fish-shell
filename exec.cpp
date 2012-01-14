@@ -1175,7 +1175,6 @@ void exec( job_t *j )
 			{
 				const wchar_t * orig_def;
 				wchar_t * def=0;
-				array_list_t *named_arguments;
 				int shadows;
 				
 
@@ -1187,14 +1186,20 @@ void exec( job_t *j )
 
 				signal_unblock();
 				orig_def = function_get_definition( p->argv[0] );
-				named_arguments = function_get_named_arguments( p->argv[0] );
+                
+                // function_get_named_arguments may trigger autoload, which deallocates the orig_def.
+                // We should make function_get_definition return a wcstring (but how to handle NULL...)
+                if (orig_def)
+                    orig_def = wcsdup(orig_def);
+                
+				wcstring_list_t named_arguments = function_get_named_arguments( p->argv[0] );
 				shadows = function_get_shadows( p->argv[0] );
 
 				signal_block();
 				
 				if( orig_def )
 				{
-					def = (wchar_t *)halloc_register( j, wcsdup(orig_def) );
+					def = (wchar_t *)halloc_register( j, const_cast<wchar_t *>(orig_def) );
 				}
 				if( def == 0 )
 				{

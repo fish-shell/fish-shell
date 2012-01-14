@@ -10,6 +10,7 @@
 #include <locale.h>
 #include <unistd.h>
 #include <signal.h>
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pthread.h>
@@ -300,7 +301,7 @@ static int is_locale( const wchar_t *key )
 */
 static void handle_locale()
 {
-	const wcstring lc_all = env_get_string( L"LC_ALL" );
+	const env_var_t lc_all = env_get_string( L"LC_ALL" );
 	wcstring lang;
 	int i;
 	wchar_t *old = wcsdup(wsetlocale( LC_MESSAGES, NULL ));
@@ -321,7 +322,7 @@ static void handle_locale()
 		}
 	;
 	
-	if( !lc_all.empty() )
+	if( !lc_all.missing() )
 	{
 		wsetlocale( LC_ALL, lc_all.c_str() );
 	}
@@ -669,7 +670,8 @@ void env_init()
 	/*
 	  Set up SHLVL variable
 	*/
-	const wchar_t *shlvl = env_get_string( L"SHLVL" ).empty()?NULL:env_get_string( L"SHLVL" ).c_str();
+	const wcstring shlvl_str = env_get_string( L"SHLVL" );
+	const wchar_t *shlvl = shlvl_str.empty() ? NULL : shlvl_str.c_str();
 
 	if ( shlvl )
 	{
@@ -1136,7 +1138,18 @@ int env_remove( const wchar_t *key, int var_mode )
 	return !erased;	
 }
 
-wcstring env_get_string( const wchar_t *key )
+env_var_t env_var_t::missing_var(void) {
+    env_var_t result(L"");
+    result.is_missing = true;
+    return result;
+}
+
+const wchar_t *env_var_t::c_str(void) const {
+    assert(! is_missing);
+    return wcstring::c_str();
+}
+
+env_var_t env_get_string( const wchar_t *key )
 {
     scoped_lock lock(env_lock);
     
@@ -1231,7 +1244,7 @@ wcstring env_get_string( const wchar_t *key )
         
         if( !item || (wcscmp( item, ENV_NULL )==0))
         {
-            return wcstring(L"");
+            return env_var_t::missing_var();
         }
         else
         {
@@ -1772,7 +1785,7 @@ char **env_export_arr( int recalc )
 		hash_table_t vals;
 		int prev_was_null=1;
 		int pos=0;		
-		int i;
+		size_t i;
 
 		debug( 4, L"env_export_arr() recalc" );
 				

@@ -95,10 +95,22 @@ int env_set( const wchar_t *key,
 */
 wchar_t *env_get( const wchar_t *key );
 
+class env_var_t : public wcstring {
+private:
+    bool is_missing;
+public:
+    static env_var_t missing_var(void);
+    env_var_t(const wcstring & x) : wcstring(x), is_missing(false) { }
+    env_var_t(const wchar_t *x) : wcstring(x), is_missing(false) { }
+    env_var_t() : wcstring(L""), is_missing(false) { }
+    bool missing(void) const { return is_missing; }
+    bool missing_or_empty(void) const { return missing() || empty(); }
+    const wchar_t *c_str(void) const;
+};
 /**
  Gets the variable with the specified name, or an empty string if it does not exist.
  */
-wcstring env_get_string( const wchar_t *key );
+env_var_t env_get_string( const wchar_t *key );
 
 /**
    Returns 1 if the specified key exists. This can't be reliably done

@@ -204,8 +204,8 @@ static int calc_prompt_width( const wchar_t *prompt )
 			{
 				if( prompt[j+1] == L'k' )
 				{
-					wcstring term_name = env_get_string( L"TERM" );
-					if( !term_name.empty() && wcsstr( term_name.c_str(), L"screen" ) == term_name )
+					const env_var_t term_name = env_get_string( L"TERM" );
+					if( !term_name.missing() && wcsstr( term_name.c_str(), L"screen" ) == term_name )
 					{
 						const wchar_t *end;
 						j+=2;

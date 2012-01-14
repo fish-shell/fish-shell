@@ -1999,7 +1999,6 @@ static int builtin_read( wchar_t **argv )
 {
 	wchar_t *buff=0;
 	int i, argc = builtin_count_args( argv );
-	wcstring ifs;
 	int place = ENV_USER;
 	wchar_t *nxt;
 	const wchar_t *prompt = DEFAULT_READ_PROMPT;
@@ -2284,8 +2283,8 @@ static int builtin_read( wchar_t **argv )
 		
 		wchar_t *state;
 
-		ifs = env_get_string( L"IFS" );
-		if( ifs.empty() )
+		env_var_t ifs = env_get_string( L"IFS" );
+		if( ifs.missing() )
 			ifs = L"";
 		
 		nxt = wcstok( buff, (i<argc-1)?ifs.c_str():L"", &state );
@@ -2605,7 +2604,7 @@ static int builtin_exit( wchar_t **argv )
 */
 static int builtin_cd( wchar_t **argv )
 {
-	wcstring dir_in;
+	env_var_t dir_in;
 	wchar_t *dir;
 	int res=STATUS_BUILTIN_OK;
 	void *context = halloc( 0, 0 );
@@ -2614,7 +2613,7 @@ static int builtin_cd( wchar_t **argv )
 	if( argv[1]  == 0 )
 	{
 		dir_in = env_get_string( L"HOME" );
-		if( dir_in.empty() )
+		if( dir_in.missing_or_empty() )
 		{
 			sb_printf( sb_err,
 					   _( L"%ls: Could not find home directory\n" ),
@@ -2624,7 +2623,7 @@ static int builtin_cd( wchar_t **argv )
 	else
 		dir_in = argv[1];
 
-	dir = path_get_cdpath( context, dir_in.empty()?0:dir_in.c_str() );
+	dir = path_get_cdpath( context, dir_in.missing() ? NULL : dir_in.c_str() );
 
 	if( !dir )
 	{

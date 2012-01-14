@@ -165,11 +165,12 @@ __warn_unused int expand_string2( const wcstring &input, std::list<wcstring> &ou
 wchar_t *expand_one( void *context, wchar_t *in, int flag );
 
 /**
-   Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing.
+   Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing. The result must be free'd!
 
    \param in the value to escape
 */
 wchar_t *expand_escape_variable( const wchar_t *in );
+wcstring expand_escape_variable2( const wcstring &in );
 
 /**
    Perform tilde expansion and nothing else on the specified string, which is modified in place.

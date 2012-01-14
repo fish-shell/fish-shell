@@ -106,6 +106,12 @@ public:
     bool missing(void) const { return is_missing; }
     bool missing_or_empty(void) const { return missing() || empty(); }
     const wchar_t *c_str(void) const;
+    env_var_t &operator=(const env_var_t &s) {
+        is_missing = s.is_missing;
+        wcstring::operator=(s);
+        return *this;
+    }
+
 };
 /**
  Gets the variable with the specified name, or an empty string if it does not exist.

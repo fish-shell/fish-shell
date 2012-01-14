@@ -152,11 +152,10 @@ static void autoload_names( std::set<wcstring> &names, int get_hidden )
 {
 	size_t i;
 	
-	const wcstring path_var_wstr =  env_get_string( L"fish_function_path" );
-	const wchar_t *path_var = path_var_wstr.empty()?NULL:path_var_wstr.c_str(); 
-
-	if( ! path_var )
-		return;
+	const env_var_t path_var_wstr =  env_get_string( L"fish_function_path" );
+    if (path_var_wstr.missing())
+        return;
+	const wchar_t *path_var = path_var_wstr.c_str(); 
 	
     wcstring_list_t path_list;
 

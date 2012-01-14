@@ -302,7 +302,6 @@ static int is_locale( const wchar_t *key )
 static void handle_locale()
 {
 	const env_var_t lc_all = env_get_string( L"LC_ALL" );
-	wcstring lang;
 	int i;
 	wchar_t *old = wcsdup(wsetlocale( LC_MESSAGES, NULL ));
 
@@ -328,17 +327,17 @@ static void handle_locale()
 	}
 	else
 	{
-		lang = env_get_string( L"LANG" );
-		if( !lang.empty() )
+		const env_var_t lang = env_get_string( L"LANG" );
+		if( !lang.missing() )
 		{
 			wsetlocale( LC_ALL, lang.c_str() );
 		}
 		
 		for( i=2; locale_variable[i]; i++ )
 		{
-			const wcstring val = env_get_string( locale_variable[i] );
+			const env_var_t val = env_get_string( locale_variable[i] );
 
-			if( !val.empty() )
+			if( !val.missing() )
 			{
 				wsetlocale(  cat[i], val.c_str() );
 			}
@@ -423,49 +422,47 @@ static void universal_callback( int type,
 }
 
 /**
-   Make sure the PATH variable contains the essaential directories
+   Make sure the PATH variable contains the essential directories
 */
 static void setup_path()
-{
-	wcstring path;
-	
+{	
     size_t i;
 	int j;
 	wcstring_list_t lst;
-
+    
 	const wchar_t *path_el[] = 
-		{
-			L"/bin",
-			L"/usr/bin",
-			PREFIX L"/bin",
-			0
-		}
+    {
+        L"/bin",
+        L"/usr/bin",
+        PREFIX L"/bin",
+        0
+    }
 	;
-
-	path = env_get_string( L"PATH" );
+    
+	env_var_t path = env_get_string( L"PATH" );
 	
-	if( !path.empty() )
+	if( !path.missing() )
 	{
 		tokenize_variable_array2( path, lst );
 	}
 	
 	for( j=0; path_el[j]; j++ )
 	{
-
+        
 		int has_el=0;
 		
 		for( i=0; i<lst.size(); i++ )
 		{
 			wcstring el = lst.at(i);
 			size_t len = el.size();
-
+            
 			while( (len > 0) && (el[len-1]==L'/') )
 			{
 				len--;
 			}
-
+            
 			if( (wcslen( path_el[j] ) == len) && 
-				(wcsncmp( el.c_str(), path_el[j], len)==0) )
+               (wcsncmp( el.c_str(), path_el[j], len)==0) )
 			{
 				has_el = 1;
 			}
@@ -474,21 +471,21 @@ static void setup_path()
 		if( !has_el )
 		{
 			wcstring buffer;
-
+            
 			debug( 3, L"directory %ls was missing", path_el[j] );
-
-			if( !path.empty() )
+            
+			if( !path.missing() )
 			{
-		                buffer += path;
+                buffer += path;
 			}
 			
-		        buffer += ARRAY_SEP_STR;
-		        buffer += path_el[j];
+            buffer += ARRAY_SEP_STR;
+            buffer += path_el[j];
 			
 			env_set( L"PATH", buffer.empty()?NULL:buffer.c_str(), ENV_GLOBAL | ENV_EXPORT );
-						
+            
 			path = env_get_string( L"PATH" );
-		        lst.resize(0);
+            lst.resize(0);
 			tokenize_variable_array2( path, lst );			
 		}
 	}
@@ -512,7 +509,7 @@ int env_set_pwd()
 static void env_set_defaults()
 {
 
-	if( env_get_string( L"USER" ).empty() )
+	if( env_get_string(L"USER").missing() )
 	{
 		struct passwd *pw = getpwuid( getuid());
 		wchar_t *unam = str2wcs( pw->pw_name );
@@ -520,9 +517,9 @@ static void env_set_defaults()
 		free( unam );
 	}
 
-	if( env_get_string( L"HOME" ).empty() )
+	if( env_get_string(L"HOME").missing() )
 	{
-		const wcstring unam = env_get_string( L"USER" );
+		const env_var_t unam = env_get_string( L"USER" );
 		char *unam_narrow = wcs2str( unam.c_str() );
 		struct passwd *pw = getpwnam( unam_narrow );
 		wchar_t *dir = str2wcs( pw->pw_dir );
@@ -657,11 +654,11 @@ void env_init()
 	env_set( L"version", version, ENV_GLOBAL );
 	free( version );
 
-	const wcstring fishd_dir_wstr = env_get_string( L"FISHD_SOCKET_DIR");
-	const wcstring user_dir_wstr = env_get_string( L"USER" );
+	const env_var_t fishd_dir_wstr = env_get_string( L"FISHD_SOCKET_DIR");
+	const env_var_t user_dir_wstr = env_get_string( L"USER" );
 
-	wchar_t * fishd_dir = fishd_dir_wstr.empty()?NULL:const_cast<wchar_t*>(fishd_dir_wstr.c_str());
-	wchar_t * user_dir = user_dir_wstr.empty()?NULL:const_cast<wchar_t*>(user_dir_wstr.c_str());
+	wchar_t * fishd_dir = fishd_dir_wstr.missing()?NULL:const_cast<wchar_t*>(fishd_dir_wstr.c_str());
+	wchar_t * user_dir = user_dir_wstr.missing()?NULL:const_cast<wchar_t*>(user_dir_wstr.c_str());
 
 	env_universal_init(fishd_dir , user_dir , 
 						&start_fishd,
@@ -670,8 +667,8 @@ void env_init()
 	/*
 	  Set up SHLVL variable
 	*/
-	const wcstring shlvl_str = env_get_string( L"SHLVL" );
-	const wchar_t *shlvl = shlvl_str.empty() ? NULL : shlvl_str.c_str();
+	const env_var_t shlvl_str = env_get_string( L"SHLVL" );
+	const wchar_t *shlvl = shlvl_str.missing() ? NULL : shlvl_str.c_str();
 
 	if ( shlvl )
 	{
@@ -1831,9 +1828,9 @@ env_vars::env_vars(const wchar_t * const *keys)
 {
     ASSERT_IS_MAIN_THREAD();
     for (size_t i=0; keys[i]; i++) {
-        const wcstring val = env_get_string(keys[i]);
-        if (!val.empty()) {
-            vars[keys[i]] = wcsdup(val.c_str());
+        const env_var_t val = env_get_string(keys[i]);
+        if (!val.missing()) {
+            vars[keys[i]] = val;
         }
     }
 }

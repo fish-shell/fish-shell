@@ -190,23 +190,20 @@ int highlight_get_color( int highlight )
 		}
 	}
 		
-	wcstring val_wstr = env_get_string( highlight_var[idx]); 
-	const wchar_t *val = val_wstr.empty()?NULL:val_wstr.c_str();
+	env_var_t val_wstr = env_get_string( highlight_var[idx]); 
 
 //	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
 	
-	if( val == 0 ) {
+	if (val_wstr.missing())
 		val_wstr = env_get_string( highlight_var[0]);
-		val = val_wstr.empty()?NULL:val_wstr.c_str();	
-	}
 	
-	if( val )
-		result = output_color_code( val );
+	if( ! val_wstr.missing() )
+		result = output_color_code( val_wstr.c_str() );
 	
 	if( highlight & HIGHLIGHT_VALID_PATH )
 	{
-		wcstring val2_wstr =  env_get_string( L"fish_color_valid_path" );
-		const wchar_t *val2 = val2_wstr.empty()?NULL:val2_wstr.c_str(); 
+		env_var_t val2_wstr =  env_get_string( L"fish_color_valid_path" );
+		const wchar_t *val2 = val2_wstr.missing() ? NULL : val2_wstr.c_str(); 
 
 		int result2 = output_color_code( val2 );
 		if( result == FISH_COLOR_NORMAL )

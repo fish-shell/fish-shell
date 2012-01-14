@@ -2044,8 +2044,8 @@ static int parse_job( process_t *p,
 						else if(cmd[0]==L'$')
 						{
 							
-							const wcstring val_wstr = env_get_string( cmd+1 );
-							const wchar_t *val = val_wstr.empty()?NULL:val_wstr.c_str();	
+							const env_var_t val_wstr = env_get_string( cmd+1 );
+							const wchar_t *val = val_wstr.missing() ? NULL : val_wstr.c_str();	
 							if( val )
 							{
 								debug( 0,

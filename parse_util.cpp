@@ -801,8 +801,6 @@ int parse_util_load( const wcstring &cmd,
 					 void (*on_load)(const wchar_t *cmd),
 					 int reload )
 {
-	wcstring path_var;
-
 	int res;
 	int c, c2;
     autoload_t *loaded;
@@ -812,7 +810,7 @@ int parse_util_load( const wcstring &cmd,
 //	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
 	parse_util_autounload( path_var_name.c_str(), cmd.c_str(), on_load );
-	path_var = env_get_string( path_var_name.c_str() );	
+	const env_var_t path_var = env_get_string( path_var_name.c_str() );	
 	
 	/*
 	  Do we know where to look?

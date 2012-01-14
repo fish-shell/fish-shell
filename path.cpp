@@ -166,9 +166,8 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 	}
 	else
 	{
-		const wcstring path_wstr = env_get_string(L"PATH");
-		path = path_wstr.empty()?NULL:path_wstr.c_str();
-		if( path == 0 )
+		env_var_t path = env_get_string(L"PATH");
+		if( path.missing() )
 		{
 			if( contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
 			{
@@ -183,14 +182,14 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		/*
 		  Allocate string long enough to hold the whole command
 		*/
-		wchar_t *new_cmd = (wchar_t *)halloc( context, sizeof(wchar_t)*(wcslen(cmd)+wcslen(path)+2) );
+		wchar_t *new_cmd = (wchar_t *)halloc( context, sizeof(wchar_t)*(wcslen(cmd)+path.size()+2) );
 		
 		/*
 		  We tokenize a copy of the path, since strtok modifies
 		  its arguments
 		*/
-		wchar_t *path_cpy = wcsdup( path );
-		const wchar_t *nxt_path = path;
+		wchar_t *path_cpy = wcsdup( path.c_str() );
+		const wchar_t *nxt_path = path.c_str();
 		wchar_t *state;
 			
 		if( (new_cmd==0) || (path_cpy==0) )
@@ -357,22 +356,17 @@ wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
 	}
 	else
 	{
-		const wchar_t *path;
 		wchar_t *path_cpy;
-		wchar_t *nxt_path;
+		const wchar_t *nxt_path;
 		wchar_t *state;
 		wchar_t *whole_path;
 
-		const wcstring path_wstr = env_get_string(L"CDPATH");
-		path = path_wstr.empty()?NULL:path_wstr.c_str();
-
-		if( !path || !wcslen(path) )
-		{
+		env_var_t path = env_get_string(L"CDPATH");
+		if( path.missing_or_empty() )
 			path = L".";
-		}
 
-		nxt_path = const_cast<wchar_t*>(path);
-		path_cpy = wcsdup( path );
+		nxt_path = path.c_str();
+		path_cpy = wcsdup( path.c_str() );
 
 		if( !path_cpy )
 		{
@@ -439,47 +433,36 @@ wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
 
 wchar_t *path_get_config( void *context)
 {
-	const wchar_t *xdg_dir, *home;
 	int done = 0;
-	wchar_t *res = 0;
+	wcstring res;
 	
-	const wcstring xdg_dir_wstr  = env_get_string( L"XDG_CONFIG_HOME" );
-	xdg_dir = xdg_dir_wstr.empty()?NULL:xdg_dir_wstr.c_str(); 
-	if( xdg_dir )
+	const env_var_t xdg_dir  = env_get_string( L"XDG_CONFIG_HOME" );
+	if( ! xdg_dir.missing() )
 	{
-		res = wcsdupcat( xdg_dir, L"/fish" );
-		if( !create_directory( res ) )
+		res = xdg_dir + L"/fish";
+		if( !create_directory( res.c_str() ) )
 		{
 			done = 1;
 		}
-		else
-		{
-			free( res );
-		}
-		
 	}
 	else
 	{		
-		const wcstring home_wstr = env_get_string( L"HOME" );
-		home = home_wstr.empty()?NULL:home_wstr.c_str();
-		if( home )
+		const env_var_t home = env_get_string( L"HOME" );
+		if( ! home.missing() )
 		{
-			res = wcsdupcat( home, L"/.config/fish" );
-			if( !create_directory( res ) )
+			res = home + L"/.config/fish";
+			if( !create_directory( res.c_str() ) )
 			{
 				done = 1;
-			}
-			else
-			{
-				free( res );
 			}
 		}
 	}
 	
 	if( done )
 	{
-		halloc_register_function( context, &free, res );
-		return res;
+        wchar_t *result = wcsdup(res.c_str());
+		halloc_register_function( context, &free, result );
+		return result;
 	}
 	else
 	{

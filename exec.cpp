@@ -1740,16 +1740,15 @@ int exec_subshell( const wchar_t *cmd,
 	int prev_subshell = is_subshell;
 	int status, prev_status;
 	io_data_t *io_buffer;
-	const wchar_t *ifs;
 	char sep=0;
 	
 	CHECK( cmd, -1 );
 //	ifs = env_get(L"IFS");
-	ifs = env_get_string(L"IFS").empty()?NULL:env_get_string(L"IFS").c_str();
+	const env_var_t ifs = env_get_string(L"IFS").empty()?NULL:env_get_string(L"IFS").c_str();
 
-	if( ifs && ifs[0] )
+	if( ! ifs.missing_or_empty() )
 	{
-		if( ifs[0] < 128 )
+		if( ifs.at(0) < 128 )
 		{
 			sep = '\n';//ifs[0];
 		}

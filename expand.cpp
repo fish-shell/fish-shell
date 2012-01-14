@@ -278,7 +278,13 @@ wchar_t *expand_escape_variable( const wchar_t *in )
 	al_destroy( &l );
 
 	return (wchar_t *)buff.buff;
+}
 
+wcstring expand_escape_variable2( const wcstring &in ) {
+    wchar_t *tmp = expand_escape_variable(in.c_str());
+    wcstring result(tmp ? tmp : L"");
+    free(tmp);
+    return result;
 }
 
 /**

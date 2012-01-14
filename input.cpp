@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include <string.h>
 #include <errno.h>
 #include <termios.h>
@@ -324,7 +325,9 @@ int input_init()
 		debug( 0, _( L"Could not set up terminal" ) );
 		exit(1);
 	}
-	output_set_term( env_get_string( L"TERM" ).c_str() );
+    const env_var_t term = env_get_string( L"TERM" );
+    assert(! term.missing());
+	output_set_term( term.c_str() );
 	
 	input_terminfo_init();
 

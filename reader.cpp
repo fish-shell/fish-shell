@@ -606,8 +606,7 @@ int reader_interrupted()
 void reader_write_title()
 {
 	const wchar_t *title;
-	const wcstring term_str = env_get_string( L"TERM" );
-	const wchar_t *term = term_str.empty()?NULL:term_str.c_str(); 
+	const env_var_t term_str = env_get_string( L"TERM" );
 
 	/*
 	  This is a pretty lame heuristic for detecting terminals that do
@@ -623,11 +622,10 @@ void reader_write_title()
 	  don't. Since we can't see the underlying terminal below screen
 	  there is no way to fix this.
 	*/
-	if ( !term )
-	{
+	if ( term_str.missing() )
 		return;
-	}
 
+	const wchar_t *term = term_str.c_str();
     bool recognized = false;
     recognized = recognized || contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" );
     recognized = recognized || ! wcsncmp(term, L"xterm-", wcslen(L"xterm-"));

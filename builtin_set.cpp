@@ -620,31 +620,24 @@ static void print_variables(int include_values, int esc, int scope)
 		
 		if( include_values ) 
 		{
-			wcstring value = env_get_string(key);
-			wchar_t *e_value;
-			if( !value.empty() )
+			env_var_t value = env_get_string(key);
+			if( !value.missing() )
 			{
 				int shorten = 0;
 				
 				if( value.length() > 64 )
 				{
 					shorten = 1;
-					value = wcsndup( value.c_str(), 60 );
-					if( value.empty() )
-					{
-						DIE_MEM();
-					}
+					value.resize(60);
 				}
 				
-				e_value = esc ? expand_escape_variable(value.c_str()) : wcsdup(value.c_str());
+				wcstring e_value = esc ? expand_escape_variable2(value) : value;
 				
-				sb_append(sb_out, L" ", e_value, NULL);
-				free(e_value);
+				sb_append(sb_out, L" ", e_value.c_str(), NULL);
 				
 				if( shorten )
 				{
 					sb_append(sb_out, L"\u2026");
-//					free( value );
 				}
 
 			}
@@ -889,8 +882,9 @@ static int builtin_set( wchar_t **argv )
 				
 //				al_init( &result );
 //				al_init( &indexes );
-
-				tokenize_variable_array2( env_get_string( dest ), result );
+                env_var_t dest_str = env_get_string(dest);
+                if (! dest_str.missing())
+                    tokenize_variable_array2( dest_str, result );
 								
 				if( !parse_index2( indexes, arg, dest, result.size() ) )
 				{
@@ -1006,7 +1000,9 @@ static int builtin_set( wchar_t **argv )
 //		al_init(&indexes);
 //		al_init(&result);
 		
-		tokenize_variable_array2( env_get_string(dest), result );
+        const env_var_t dest_str = env_get_string(dest);
+        if (! dest_str.missing())
+            tokenize_variable_array2( dest_str, result );
 		
 		for( ; woptind<argc; woptind++ )
 		{			

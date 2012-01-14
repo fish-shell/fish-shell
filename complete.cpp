@@ -1080,16 +1080,15 @@ static void complete_cmd( const wchar_t *cmd,
 						  int use_builtin,
 						  int use_command )
 {
-	wcstring path;
 	wchar_t *path_cpy;
 	wchar_t *nxt_path;
 	wchar_t *state;
 	array_list_t possible_comp;
 	wchar_t *nxt_completion;
 
-	const wcstring cdpath = env_get_string(L"CDPATH");
+	const env_var_t cdpath = env_get_string(L"CDPATH");
 //	wchar_t *cdpath_cpy = wcsdup( cdpath?cdpath:L"." );
-	wchar_t *cdpath_cpy = wcsdup( !cdpath.empty()?cdpath.c_str():L"." );
+	wchar_t *cdpath_cpy = wcsdup( !cdpath.missing()?cdpath.c_str():L"." );
 
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
 	{
@@ -1111,8 +1110,8 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_command )
 		{
 			
-			path = env_get_string(L"PATH");
-			if( !path.empty() )
+			const env_var_t path = env_get_string(L"PATH");
+			if( !path.missing() )
 			{
 			
 				path_cpy = wcsdup( path.c_str() );
@@ -1656,11 +1655,8 @@ static int complete_variable( const wchar_t *whole_var,
 
 		if( match || match_no_case )
 		{
-			wcstring value_unescaped; 
-			wchar_t *value;
-
-			value_unescaped = env_get_string( name );
-			if( !value_unescaped.empty() )
+			const env_var_t value_unescaped = env_get_string( name );
+			if( !value_unescaped.missing() )
 			{
 				string_buffer_t desc;
 				string_buffer_t comp;
@@ -1680,10 +1676,10 @@ static int complete_variable( const wchar_t *whole_var,
 					flags = COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE;
 				}
 				
-				value = expand_escape_variable( value_unescaped.c_str() );
+				wcstring value = expand_escape_variable2( value_unescaped );
 
 				sb_init( &desc );
-				sb_printf( &desc, COMPLETE_VAR_DESC_VAL, value );
+				sb_printf( &desc, COMPLETE_VAR_DESC_VAL, value.c_str() );
 				
 				completion_allocate( comp_list, 
 									 (wchar_t *)comp.buff,
@@ -1691,7 +1687,6 @@ static int complete_variable( const wchar_t *whole_var,
 									 flags );
 				res =1;
 				
-				free( value );
 				sb_destroy( &desc );
 				sb_destroy( &comp );
 			}

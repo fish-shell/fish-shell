@@ -105,9 +105,8 @@ void kill_add( wchar_t *str )
 	   command too, so, the command used must accept the input via stdin.
 	*/
 
-	const wcstring clipboard_wstr = env_get_string(L"FISH_CLIPBOARD_CMD");
-//	const wchar_t *clipboard = clipboard_wstr.empty()?NULL:clipboard.c_str();
-	if( !clipboard_wstr.empty() )
+	const env_var_t clipboard_wstr = env_get_string(L"FISH_CLIPBOARD_CMD");
+	if( !clipboard_wstr.missing() )
 	{
 		escaped_str = escape( str, 1 );
 		cmd = wcsdupcat(L"echo -n ", escaped_str, clipboard_wstr.c_str());
@@ -119,9 +118,8 @@ void kill_add( wchar_t *str )
 			return;
 		}
 
-	const wcstring disp_wstr = env_get_string( L"DISPLAY" );
-//	wchar_t *disp = disp_wstr.empty()?NULL:disp_wstr.c_str();
-	if( !disp_wstr.empty() )
+	const env_var_t disp_wstr = env_get_string( L"DISPLAY" );
+	if( !disp_wstr.missing() )
 	{
 			escaped_str = escape( str, 1 );
 			cmd = wcsdupcat(L"echo ", escaped_str, L"|xsel -b" );
@@ -217,14 +215,12 @@ wchar_t *kill_yank_rotate()
    clipboard contents to the fish killring.
 */
 static void kill_check_x_buffer()
-{	
-	wcstring disp;
-	
+{		
 	if( !has_xsel() )
 		return;
 	
-	
-	if( (!(disp = env_get_string( L"DISPLAY" )).empty()) )
+	const env_var_t disp = env_get_string(L"DISPLAY");
+	if( ! disp.missing())
 	{
 		size_t i;
 		wcstring cmd = L"xsel -t 500 -b";

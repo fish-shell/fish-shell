@@ -223,7 +223,8 @@ void complete_print( string_buffer_t *out );
 */
 int complete_is_valid_option( const wchar_t *str, 
 							  const wchar_t *opt, 
-							  array_list_t *errors );
+							  array_list_t *errors,
+							  bool allow_autoload );
 
 /**
    Tests if the specified argument is valid for the specified option

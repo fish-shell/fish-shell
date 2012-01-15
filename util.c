@@ -22,6 +22,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <assert.h>
+#include <stddef.h>
 
 #include "fallback.h"
 #include "util.h"

@@ -228,7 +228,7 @@ void error( int ec, int p, const wchar_t *str, ... );
 
    init.fish (line 127): ls|grep pancake
 */
-wchar_t *parser_current_line();
+const wchar_t *parser_current_line();
 
 /**
    Returns the current line number

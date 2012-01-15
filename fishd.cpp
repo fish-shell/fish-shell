@@ -147,7 +147,7 @@ static int quit=0;
 static char *get_socket_filename()
 {
 	char *name;
-	char *dir = getenv( "FISHD_SOCKET_DIR" );
+	const char *dir = getenv( "FISHD_SOCKET_DIR" );
 	char *uname = getenv( "USER" );
 
 	if( dir == NULL )

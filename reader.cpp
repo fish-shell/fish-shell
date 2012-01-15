@@ -656,7 +656,7 @@ void reader_write_title()
 	proc_push_interactive(0);
 	if( exec_subshell2( title, lst ) != -1 )
 	{
-		int i;
+		size_t i;
 		if( lst.size() > 0 )
 		{
 			writestr( L"\x1b]2;" );
@@ -782,7 +782,7 @@ static void remove_backward()
 static int insert_str(const wchar_t *str)
 {
 	int len = wcslen( str );
-	int old_len = data->buff_len;
+	size_t old_len = data->buff_len;
 	
 	assert( data->buff_pos >= 0 );
 	assert( data->buff_pos <= data->buff_len );

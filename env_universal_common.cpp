@@ -127,7 +127,7 @@ static int get_names_show_unexported;
 /**
    List of names for the UTF-8 character set.
  */
-static char *iconv_utf8_names[]=
+static const char *iconv_utf8_names[]=
   {
     "utf-8", "UTF-8",
     "utf8", "UTF8",
@@ -138,7 +138,7 @@ static char *iconv_utf8_names[]=
 /**
     List of wide character names, undefined byte length.
  */
-static char *iconv_wide_names_unknown[]=
+static const char *iconv_wide_names_unknown[]=
   {
     "wchar_t", "WCHAR_T", 
     "wchar", "WCHAR", 
@@ -149,7 +149,7 @@ static char *iconv_wide_names_unknown[]=
 /**
    List of wide character names, 4 bytes long.
  */
-static char *iconv_wide_names_4[]=
+static const char *iconv_wide_names_4[]=
   {
     "wchar_t", "WCHAR_T", 
     "wchar", "WCHAR", 
@@ -164,7 +164,7 @@ static char *iconv_wide_names_4[]=
 /**
    List of wide character names, 2 bytes long.
  */
-static char *iconv_wide_names_2[]=
+static const char *iconv_wide_names_2[]=
   {
     "wchar_t", "WCHAR_T", 
     "wchar", "WCHAR", 
@@ -192,7 +192,7 @@ static wchar_t *utf2wcs( const char *in )
 	  really the character set used by wchar_t, but it is the best
 	  assumption we can make.
 	*/
-	char **to_name=0;
+	const char **to_name=0;
 
 	switch (sizeof (wchar_t))
 	{
@@ -214,7 +214,7 @@ static wchar_t *utf2wcs( const char *in )
 	/*
 	  The line protocol fish uses is always utf-8. 
 	*/
-	char **from_name = iconv_utf8_names;
+	const char **from_name = iconv_utf8_names;
 
 	size_t in_len = strlen( in );
 	size_t out_len =  sizeof( wchar_t )*(in_len+2);
@@ -306,7 +306,7 @@ static char *wcs2utf( const wchar_t *in )
 	  really the character set used by wchar_t, but it is the best
 	  assumption we can make.
 	*/
-	char **from_name=0;
+	const char **from_name=0;
 
 	switch (sizeof (wchar_t))
 	{
@@ -324,7 +324,7 @@ static char *wcs2utf( const wchar_t *in )
 			break;
 	}
 
-	char **to_name = iconv_utf8_names;
+	const char **to_name = iconv_utf8_names;
 
 	size_t in_len = wcslen( in );
 	size_t out_len =  sizeof( char )*( (MAX_UTF8_BYTES*in_len)+1);

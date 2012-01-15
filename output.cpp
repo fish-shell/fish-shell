@@ -67,7 +67,7 @@ static int writeb_internal( char c );
 /**
    Names of different colors. 
 */
-static wchar_t *col[]=
+static const wchar_t *col[]=
 {
 	L"black",
 	L"red",
@@ -89,7 +89,7 @@ static wchar_t *col[]=
    in highlight.h. Non-ANSI terminals will display the wrong colors,
    since they use a different mapping.
 */
-static int col_idx[]=
+static const int col_idx[]=
 {
 	0, 
 	1,

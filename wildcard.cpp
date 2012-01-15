@@ -1087,10 +1087,10 @@ static int wildcard_expand_internal( const wchar_t *wc,
 							*/
 							if( whole_match )
 							{
-								wchar_t *new_wc = L"";
+								const wchar_t *new_wc = L"";
 								if( wc_end )
 								{
-									new_wc=const_cast<wchar_t*>(wc_end+1);
+									new_wc=wc_end+1;
 									/*
 									  Accept multiple '/' as a single direcotry separator
 									*/

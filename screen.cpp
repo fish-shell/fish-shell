@@ -109,7 +109,7 @@ static int next_tab_stop( int in )
 static int calc_prompt_width( const wchar_t *prompt )
 {
 	int res = 0;
-	int j, k;
+	size_t j, k;
 
 	for( j=0; prompt[j]; j++ )
 	{
@@ -118,7 +118,7 @@ static int calc_prompt_width( const wchar_t *prompt )
 			/*
 			  This is the start of an escape code. Try to guess it's width.
 			*/
-			int l;
+			size_t p;
 			int len=0;
 			int found = 0;
 			
@@ -164,14 +164,14 @@ static int calc_prompt_width( const wchar_t *prompt )
 				}
 			;
 
-			for( l=0; l < (sizeof(esc)/sizeof(char *)) && !found; l++ )
+			for( p=0; p < (sizeof(esc)/sizeof(char *)) && !found; p++ )
 			{
-				if( !esc[l] )
+				if( !esc[p] )
 					continue;
 
 				for( k=0; k<8; k++ )
 				{
-					len = try_sequence( tparm(esc[l],k), &prompt[j] );
+					len = try_sequence( tparm(esc[p],k), &prompt[j] );
 					if( len )
 					{
 						j += (len-1);
@@ -181,17 +181,17 @@ static int calc_prompt_width( const wchar_t *prompt )
 				}
 			}
 
-			for( l=0; l < (sizeof(esc2)/sizeof(char *)) && !found; l++ )
+			for( p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++ )
 			{
-				if( !esc2[l] )
+				if( !esc2[p] )
 					continue;
 				/*
 				  Test both padded and unpadded version, just to
 				  be safe. Most versions of tparm don't actually
 				  seem to do anything these days.
 				*/
-				len = maxi( try_sequence( tparm(esc2[l]), &prompt[j] ),
-					    try_sequence( esc2[l], &prompt[j] ));
+				len = maxi( try_sequence( tparm(esc2[p]), &prompt[j] ),
+					    try_sequence( esc2[p], &prompt[j] ));
 					
 				if( len )
 				{
@@ -590,7 +590,7 @@ static void s_write_str( buffer_t *b, const wchar_t *s )
 */
 static void s_update( screen_t *scr, const wchar_t *prompt )
 {
-	int i, j, k;
+	size_t i, j;
 	int prompt_width = calc_prompt_width( prompt );
 	int current_width=0;
 	int screen_width = common_get_width();
@@ -662,7 +662,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
                     
                     s_line.create_entry(current_width).text = o;
                     s_line.create_entry(current_width).color = o_c;
-					for( k=1; k<wcwidth(o); k++ )
+					for( int k=1; k<wcwidth(o); k++ )
                         s_line.create_entry(current_width+k).text = L'\0';
 						
 				}

@@ -507,7 +507,7 @@ static int my_iswspace( wchar_t c )
 
 const wchar_t *tok_get_desc( int type )
 {
-	if( type < 0 || type >= sizeof( tok_desc ) )
+	if( type < 0 || (size_t)type >= sizeof( tok_desc ) )
 	{
 		return _(L"Invalid token type");
 	}

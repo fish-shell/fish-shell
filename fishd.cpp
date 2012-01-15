@@ -390,7 +390,7 @@ static void daemonize()
 /**
    Get environment variable value. The resulting string needs to be free'd.
 */
-static wchar_t *fishd_env_get( wchar_t *key )
+static wchar_t *fishd_env_get( const wchar_t *key )
 {
 	char *nres, *nkey;
 	wchar_t *res;

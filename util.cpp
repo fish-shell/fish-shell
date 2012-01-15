@@ -108,7 +108,6 @@ void hash_init2( hash_table_t *h,
 				 int (*compare_func)(void *key1, void *key2),
 				 size_t capacity)
 {
-	int i;
 	size_t sz = 32;
 	while( sz < (capacity*4/3) )
 		sz*=2;
@@ -127,7 +126,7 @@ void hash_init2( hash_table_t *h,
 	}
 	
 	h->size = sz;
-	for( i=0; i< sz; i++ )
+	for( size_t i=0; i< sz; i++ )
 		h->arr[i].key = 0;
 	h->count=0;
 	h->hash_func = hash_func;

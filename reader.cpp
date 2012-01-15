@@ -464,7 +464,7 @@ static void reader_kill( wchar_t *begin, int length, int mode, int newv )
 		free( old );
 	}
 
-	if( data->buff_pos > (begin-data->buff) )
+	if( data->buff_pos > (size_t)(begin-data->buff) )
 	{
 		data->buff_pos = maxi( begin-data->buff, data->buff_pos-length );
 	}
@@ -1292,9 +1292,7 @@ static void reader_flash()
 {
 	struct timespec pollint;
 
-	int i;
-	
-	for( i=0; i<data->buff_pos; i++ )
+	for( size_t i=0; i<data->buff_pos; i++ )
 	{
 		data->color[i] = HIGHLIGHT_SEARCH_MATCH<<16;
 	}
@@ -1976,7 +1974,7 @@ static void handle_token_history( int forward, int reset )
 */
 static void move_word( int dir, int erase, int newv )
 {
-	int end_buff_pos=data->buff_pos;
+	size_t end_buff_pos=data->buff_pos;
 	int step = dir?1:-1;
 
 	/*

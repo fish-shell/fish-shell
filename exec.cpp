@@ -543,8 +543,9 @@ static void launch_process( process_t *p )
 				count++;
 			
 			res = (wchar_t **)malloc( sizeof(wchar_t*)*(count+2));
-			
-			res[0] = L"/bin/sh";
+			wchar_t sh_command[] = L"/bin/sh";
+            
+			res[0] = sh_command;
 			res[1] = p->actual_cmd;
 			
 			for( i=1;  p->argv[i]; i++ ){
@@ -553,7 +554,7 @@ static void launch_process( process_t *p )
 			
 			res[i+1] = 0;
 			p->argv = res;
-			p->actual_cmd = L"/bin/sh";
+			p->actual_cmd = sh_command;
 
 			res_real = wcsv2strv( (const wchar_t **) res);
 			

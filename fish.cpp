@@ -110,7 +110,7 @@ static int read_init()
   Parse the argument list, return the index of the first non-switch
   arguments.
  */
-static int fish_parse_opt( int argc, char **argv, char **cmd_ptr )
+static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
 {
 	int my_optind;
 	int force_interactive=0;
@@ -280,7 +280,7 @@ int main( int argc, char **argv )
 {
     struct stat tmp;
 	int res=1;
-	char *cmd=0;
+	const char *cmd=0;
 	int my_optind=0;
 
 	halloc_util_init();	

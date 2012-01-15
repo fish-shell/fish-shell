@@ -295,7 +295,7 @@ static char *file_exists( const char *dir, const char *in )
    \param all If zero, then stop after the first filename.
    \return The number of filenames added to the list.
 */
-static int append_filenames( array_list_t *list, char *f, int all )
+static int append_filenames( array_list_t *list, const char *f, int all )
 {
 	int prev_count = al_get_count( list );
 	char *result;

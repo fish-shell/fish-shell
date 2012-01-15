@@ -1039,7 +1039,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 										 int pos )
 {	
 
-	if( (pos >= 0) && (pos < wcslen(buff)) )
+	if( (pos >= 0) && ((size_t)pos < wcslen(buff)) )
 	{
 		
 		/*

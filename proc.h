@@ -240,7 +240,7 @@ typedef struct job
 	    job. It is used for displaying messages about job status
 	    on the terminal.
 	*/
-	wchar_t *command;              
+	const wchar_t *command;              
 	
 	/** 
 	    A linked list of all the processes in this job.

@@ -751,7 +751,7 @@ static anything_t al_get_generic( array_list_t *l, int pos )
 	anything_t res;
 	res.ptr_val=0;
 	
-	if( (pos >= 0) && (pos < l->pos) )
+	if( (pos >= 0) && ((size_t)pos < l->pos) )
 		res = l->arr[pos];
 
 	return res;

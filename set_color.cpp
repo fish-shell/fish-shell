@@ -63,7 +63,7 @@
 #define _(string) (string)
 #endif
 
-char *col[]=
+const char *col[]=
 {
 	"black",
 	"red",
@@ -79,7 +79,7 @@ char *col[]=
 }
 ;
 
-int col_idx[]=
+const int col_idx[]=
 {
 	0, 
 	1,
@@ -108,7 +108,7 @@ int translate_color( char *str )
 
 	if( *endptr || color<0 || errno )
 	{
-		int i;
+		size_t i;
 		color = -1;
 		for( i=0; i<COLORS; i++ )
 		{
@@ -126,7 +126,7 @@ int translate_color( char *str )
 
 void print_colors()
 {
-	int i;
+	size_t i;
 	for( i=0; i<COLORS; i++ )
 	{
 		printf( "%s\n", col[i] );

@@ -12,10 +12,11 @@
 */
 #define FISH_COMPLETE_H
 
+
 #include <wchar.h>
 
 #include "util.h"
-
+#include "common.h"
 /** 
 	Use all completions 
 */
@@ -101,18 +102,18 @@
 
 
 
-typedef struct
+struct completion_t
 {
 
 	/**
 	   The completion string
 	*/
-	const wchar_t *completion;
+	wcstring completion;
 
 	/**
 	   The description for this completion
 	*/
-	const wchar_t *description;
+	wcstring description;
 
 	/**
 	   Flags determining the completion behaviour. 
@@ -126,8 +127,11 @@ typedef struct
 	*/
 	int flags;
 
+	bool operator < (const completion_t& rhs) const { return this->completion < rhs.completion; }
+	bool operator == (const completion_t& rhs) const { return this->completion == rhs.completion; }
+	bool operator != (const completion_t& rhs) const { return this->completion != rhs.completion; }
 }
-	completion_t;
+;
 
 
 /**
@@ -209,7 +213,9 @@ void complete_remove( const wchar_t *cmd,
 
   Values returned by this function should be freed by the caller.
 */
-void complete( const wchar_t *cmd, array_list_t *out );
+//void complete( const wchar_t *cmd, array_list_t *out );
+
+void complete2( const wchar_t* cmd, std::vector<completion_t> &out);
 
 /**
    Print a list of all current completions into the string_buffer_t. 
@@ -253,7 +259,7 @@ void complete_load( const wchar_t *cmd, int reload );
    \param desc The description of the completion
    \param flags completion flags
 */
-void completion_allocate( array_list_t *context,
+void completion_allocate( std::vector<completion_t> &context,
 			  const wchar_t *comp,
 			  const wchar_t *desc,
 			  int flags );

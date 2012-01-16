@@ -65,6 +65,8 @@
  */
 #define EXPAND_RESERVED_END 0xf000f
 
+struct completion_t;
+
 enum
 {
 	/** Character represeting a home directory */
@@ -146,7 +148,7 @@ enum
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
 __warn_unused int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
-__warn_unused int expand_string2( const wcstring &input, std::list<wcstring> &output, int flag );
+__warn_unused int expand_string2( const wcstring &input, std::vector<completion_t> &output, int flag );
 
 
 /**

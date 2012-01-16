@@ -377,7 +377,7 @@ static int match_pid( const wchar_t *cmd,
 
 static int find_process( const wchar_t *proc,
 						 int flags,
-						 array_list_t *out )
+						 std::vector<completion_t> &out )
 {
 	DIR *dir;
 	wchar_t *pdir_name;
@@ -442,7 +442,9 @@ static int find_process( const wchar_t *proc,
 					{
 						result = (wchar_t *)malloc(sizeof(wchar_t)*16 );
 						swprintf( result, 16, L"%d", j->pgid );
-						al_push( out, result );
+						completion_t data_to_push;
+						data_to_push.completion = result;
+						out.push_back( data_to_push);
 						found = 1;
 					}
 				}
@@ -472,7 +474,9 @@ static int find_process( const wchar_t *proc,
 			{
 				result = (wchar_t *)malloc(sizeof(wchar_t)*16 );
 				swprintf( result, 16, L"%d", j->pgid );
-				al_push( out, result );
+				completion_t data_to_push;
+				data_to_push.completion = result;
+				out.push_back( data_to_push);
 				found = 1;
 			}
 		}
@@ -508,7 +512,9 @@ static int find_process( const wchar_t *proc,
 				{
 					result = (wchar_t *)malloc(sizeof(wchar_t)*16 );
 					swprintf( result, 16, L"%d", p->pid );
-					al_push( out, result );
+					completion_t data_to_push;
+					data_to_push.completion = result;
+					out.push_back( data_to_push );
 					found = 1;
 				}
 			}
@@ -623,8 +629,11 @@ static int find_process( const wchar_t *proc,
 				else
 				{
 					wchar_t *res = wcsdup(name);
-					if( res )
-						al_push( out, res );
+					if( res ) {
+						completion_t data_to_push;
+						data_to_push.completion = res;
+						out.push_back( data_to_push );
+					}
 				}
 			}
 		}
@@ -646,15 +655,17 @@ static int find_process( const wchar_t *proc,
 */
 static int expand_pid( wchar_t *in,
 					   int flags,
-					   array_list_t *out )
+					   std::vector<completion_t> &out )
 {
 
 	CHECK( in, 0 );
-	CHECK( out, 0 );
+//	CHECK( out, 0 );
 	
 	if( *in != PROCESS_EXPAND )
 	{
-		al_push( out, in );
+		completion_t data_to_push;
+		data_to_push.completion = in;
+		out.push_back( data_to_push );
 		return 1;
 	}
 
@@ -680,9 +691,13 @@ static int expand_pid( wchar_t *in,
 		if( wcscmp( (in+1), SELF_STR )==0 )
 		{
 			wchar_t *str= (wchar_t *)malloc( sizeof(wchar_t)*32);
-			free(in);
+//			free(in);
 			swprintf( str, 32, L"%d", getpid() );
-			al_push( out, str );
+	
+			completion_t data_to_push;
+			data_to_push.completion = str;
+			
+			out.push_back( data_to_push );
 
 			return 1;
 		}
@@ -695,18 +710,21 @@ static int expand_pid( wchar_t *in,
 				str = (wchar_t *)malloc( sizeof(wchar_t)*32);
 				free(in);
 				swprintf( str, 32, L"%d", proc_last_bg_pid );
-				al_push( out, str );
+				completion_t data_to_push;
+				data_to_push.completion = str;
+	
+				out.push_back( data_to_push);
 			}
 
 			return 1;
 		}
 	}
 
-	int prev = al_get_count( out );
+	int prev = out.size();
 	if( !find_process( in+1, flags, out ) )
 		return 0;
 
-	if( prev == al_get_count( out ) )
+	if( prev ==  out.size() )
 	{
 		if( flags & ACCEPT_INCOMPLETE )
 			free( in );
@@ -723,13 +741,13 @@ static int expand_pid( wchar_t *in,
 
 	return 1;
 }
-
-static int expand_pid2( const wcstring &in, int flags, std::vector<wcstring> &outputs )
+/*
+static int expand_pid2( const wcstring &in, int flags, std::vector<completion_t> &outputs )
 {
     wcstring_adapter adapter(in, outputs);
     return expand_pid(adapter.str, flags, &adapter.lst);
 }
-
+*/
 
 void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 {
@@ -1187,16 +1205,280 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 	return is_ok;
 }
 
-static int expand_variables2( const wcstring &in, std::vector<wcstring> &outputs, int last_idx )
+static int expand_variables2( wchar_t * in, std::vector<completion_t> &out, int last_idx )
 {
-    wcstring_adapter adapter(in, outputs);
-    return expand_variables(adapter.str, &adapter.lst, last_idx);
+	wchar_t c;
+	wchar_t prev_char=0;
+	int i, j;
+	int is_ok= 1;
+	int empty=0;
+	
+	static string_buffer_t *var_tmp = 0;
+	static array_list_t *var_idx_list = 0;
+
+	CHECK( in, 0 );
+//	CHECK( out, 0 );
+	
+	if( !var_tmp )
+	{
+		var_tmp = sb_halloc( global_context );
+		if( !var_tmp )
+			DIE_MEM();
+	}
+	else
+	{
+		sb_clear(var_tmp );
+	}
+
+	if( !var_idx_list )
+	{
+		var_idx_list = al_halloc( global_context );
+		if( !var_idx_list )
+			DIE_MEM();
+	}
+	else
+	{
+		al_truncate( var_idx_list, 0 );
+	}
+
+	for( i=last_idx; (i>=0) && is_ok && !empty; i-- )
+	{
+		c = in[i];
+		if( ( c == VARIABLE_EXPAND ) || (c == VARIABLE_EXPAND_SINGLE ) )
+		{
+			int start_pos = i+1;
+			int stop_pos;
+			int var_len, new_len;
+			const wchar_t * var_val;
+			wchar_t * new_in;
+			int is_single = (c==VARIABLE_EXPAND_SINGLE);
+			int var_name_stop_pos;
+			
+			stop_pos = start_pos;
+
+			while( 1 )
+			{
+				if( !(in[stop_pos ]) )
+					break;
+				if( !( iswalnum( in[stop_pos] ) ||
+					   (wcschr(L"_", in[stop_pos])!= 0)  ) )
+					break;
+
+				stop_pos++;
+			}
+			var_name_stop_pos = stop_pos;
+			
+/*			printf( "Stop for '%c'\n", in[stop_pos]);*/
+
+			var_len = stop_pos - start_pos;
+
+			if( var_len == 0 )
+			{
+				expand_variable_error( in, stop_pos-1, -1 );				
+				
+				is_ok = 0;
+				break;
+			}
+
+			sb_append_substring( var_tmp, &in[start_pos], var_len );
+			var_val = expand_var( (wchar_t *)var_tmp->buff );
+
+			if( var_val )
+			{
+				int all_vars=1;
+				array_list_t var_item_list;
+				al_init( &var_item_list );
+
+				if( in[stop_pos] == L'[' )
+				{
+					wchar_t *slice_end;
+					all_vars=0;
+					
+					if( parse_slice( &in[stop_pos], &slice_end, var_idx_list ) )
+					{
+						error( SYNTAX_ERROR,
+							   -1,
+							   L"Invalid index value" );						
+						is_ok = 0;
+					}					
+					stop_pos = (slice_end-in);
+				}				
+					
+				if( is_ok )
+				{
+					tokenize_variable_array( var_val, &var_item_list );
+					if( !all_vars )
+					{
+						int j;
+						for( j=0; j<al_get_count( var_idx_list ); j++)
+						{
+							long tmp = al_get_long( var_idx_list, j );
+							if( tmp < 0 )
+							{
+								tmp = al_get_count( &var_item_list)+tmp+1;
+							}
+
+							/*
+							  Check that we are within array
+							  bounds. If not, truncate the list to
+							  exit.
+							*/
+							if( tmp < 1 || tmp > al_get_count( &var_item_list ) )
+							{
+								error( SYNTAX_ERROR,
+									   -1,
+									   ARRAY_BOUNDS_ERR );
+								is_ok=0;
+								al_truncate( var_idx_list, j );
+								break;
+							}
+							else
+							{
+								/* Replace each index in var_idx_list inplace with the string value at the specified index */
+								al_set( var_idx_list, j, wcsdup((const wchar_t *)al_get( &var_item_list, tmp-1 ) ) );
+							}
+						}
+						/* Free strings in list var_item_list and truncate it */
+						al_foreach( &var_item_list, &free );
+						al_truncate( &var_item_list, 0 );
+						/* Add items from list idx back to list l */
+						al_push_all( &var_item_list, var_idx_list );
+					}
+				}
+
+				if( is_ok )
+				{
+					
+					if( is_single )
+					{
+						string_buffer_t res;
+						in[i]=0;
+						
+						sb_init( &res );
+						sb_append( &res, in );
+						sb_append_char( &res, INTERNAL_SEPARATOR );
+
+						for( j=0; j<al_get_count( &var_item_list); j++ )
+						{
+							wchar_t *next = (wchar_t *)al_get( &var_item_list, j );
+							
+							if( is_ok )
+							{
+								if( j != 0 )
+									sb_append( &res, L" " );
+								sb_append( &res, next );
+							}
+							free( next );
+						}
+						sb_append( &res, &in[stop_pos] );
+						is_ok &= expand_variables2( (wchar_t *)res.buff, out, i );
+					}
+					else
+					{
+						for( j=0; j<al_get_count( &var_item_list); j++ )
+						{
+							wchar_t *next = (wchar_t *)al_get( &var_item_list, j );
+							if( is_ok && (i == 0) && (!in[stop_pos]) )
+							{
+								completion_t data_to_push = { next }; 
+								out.push_back( data_to_push );
+							}
+							else
+							{
+								
+								if( is_ok )
+								{
+									new_len = wcslen(in) - (stop_pos-start_pos+1);
+									new_len += wcslen( next) +2;
+									
+									if( !(new_in = (wchar_t *)malloc( sizeof(wchar_t)*new_len )))
+									{
+										DIE_MEM();
+									}
+									else
+									{
+										
+										wcslcpy( new_in, in, start_pos );
+
+										if(start_pos>1 && new_in[start_pos-2]!=VARIABLE_EXPAND)
+										{
+											new_in[start_pos-1]=INTERNAL_SEPARATOR;
+											new_in[start_pos]=L'\0';
+										}
+										else
+											new_in[start_pos-1]=L'\0';
+										
+										wcscat( new_in, next );
+										wcscat( new_in, &in[stop_pos] );
+										
+										is_ok &= expand_variables2( new_in, out, i );
+									}
+								}
+								free( next );
+							}
+							
+						}
+					}
+				}
+				
+//				free(in);
+				al_destroy( &var_item_list );
+				return is_ok;
+			}
+			else
+			{
+				/*
+				  Expand a non-existing variable
+				*/
+				if( c == VARIABLE_EXPAND )
+				{
+					/*
+					  Regular expansion, i.e. expand this argument to nothing
+					*/
+					empty = 1;
+				}
+				else
+				{
+					/*
+					  Expansion to single argument.
+					*/
+					string_buffer_t res;
+					sb_init( &res );
+
+					in[i]=0;
+
+					sb_append( &res, in );
+					sb_append( &res, &in[stop_pos] );
+
+					is_ok &= expand_variables2( (wchar_t *)res.buff, out, i );
+					free(in);
+					return is_ok;
+				}
+			}
+
+
+		}
+
+		prev_char = c;
+	}
+
+	if( !empty )
+	{
+		completion_t data_to_push = { in };
+		out.push_back( data_to_push );
+	}
+	else
+	{
+//		free( in );
+	}
+
+	return is_ok;
 }
 
 /**
    Perform bracket expansion
 */
-static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
+static int expand_brackets( wchar_t *in, int flags, std::vector<completion_t> &out )
 {
 	wchar_t *pos;
 	int syntax_error=0;
@@ -1209,7 +1491,7 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	int len1, len2, tot_len;
 
 	CHECK( in, 0 );
-	CHECK( out, 0 );
+//	CHECK( out, 0 );
 	
 	for( pos=in;
 		 (*pos) && !syntax_error;
@@ -1284,7 +1566,8 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 
 	if( bracket_begin == 0 )
 	{
-		al_push( out, in );
+		completion_t data_to_push = { in };
+		out.push_back( data_to_push );
 		return 1;
 	}
 
@@ -1328,12 +1611,13 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	return 1;
 }
 
-static int expand_brackets2( const wcstring &in, int flags, std::vector<wcstring> outputs )
+/*
+static int expand_brackets2( const wcstring &in, int flags, std::vector<wcstring> &outputs )
 {
     wcstring_adapter adapter(in, outputs);
     return expand_brackets(adapter.str, flags, &adapter.lst);
 }
-
+*/
 /**
    Perform cmdsubst expansion
 */
@@ -1487,7 +1771,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 /**
  Perform cmdsubst expansion
  */
-static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outList )
+static int expand_cmdsubst2( const wcstring &input, std::vector<completion_t> &outList )
 {
 	wchar_t *paran_begin=0, *paran_end=0;
 	int len1;
@@ -1499,6 +1783,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
     
     const wchar_t * const in = input.c_str();
     
+	completion_t data_to_push;
 	switch( parse_util_locate_cmdsubst(in,
 									   &paran_begin,
 									   &paran_end,
@@ -1510,7 +1795,8 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
                   L"Mismatched parans" );
 			return 0;
 		case 0:
-            outList.push_back(input);
+			data_to_push.completion = input; 
+           		outList.push_back(data_to_push);
 			return 1;
 		case 1:
             
@@ -1574,7 +1860,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
      substitutions. The result of this recursive call using the tail
      of the string is inserted into the tail_expand array list
      */
-    std::vector<wcstring> tail_expand;
+    std::vector<completion_t> tail_expand;
 	expand_cmdsubst2( tail_begin, tail_expand );
     
 	/*
@@ -1591,7 +1877,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
             
             wcstring whole_item;
             
-            wcstring tail_item = tail_expand.at(j);
+            wcstring tail_item = tail_expand.at(j).completion;
             
             //sb_append_substring( &whole_item, in, len1 );
             whole_item.append(in, len1);
@@ -1609,7 +1895,9 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
             whole_item.append(tail_item);
 			
 			//al_push( out, whole_item.buff );
-            outList.push_back(whole_item);
+	 completion_t data_to_push;
+	data_to_push.completion = whole_item;	   
+         outList.push_back(data_to_push);
         }
     }
     
@@ -1766,10 +2054,10 @@ static void remove_internal_separator2( wcstring &s, int conv )
 }
 
 
-int expand_string2( const wcstring &input, std::vector<wcstring> &output, int flags )
+int expand_string2( const wcstring &input, std::vector<completion_t> &output, int flags )
 {
-    std::vector<wcstring> list1, list2;
-	std::vector<wcstring> *in, *out;
+    std::vector<completion_t> list1, list2;
+	std::vector<completion_t> *in, *out;
     
 	size_t i;
 	int cmdsubst_ok = 1;
@@ -1777,7 +2065,9 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
     
 	if( (!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean( input.c_str() ) )
 	{
-		output.push_back(input);
+		completion_t data_to_push;
+		data_to_push.completion = input;
+		output.push_back(data_to_push);
 		return EXPAND_OK;
 	}
         
@@ -1793,7 +2083,9 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 			error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
 			return EXPAND_ERROR;
 		}
-		list1.push_back(input);
+		completion_t data_to_push;
+		data_to_push.completion = input;
+		list1.push_back(data_to_push);
 	}
 	else
 	{
@@ -1817,7 +2109,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
              commandline.
              */
 			int unescape_flags = UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE;            
-			wcstring next = expand_unescape_string( in->at(i), unescape_flags );
+			wcstring next = expand_unescape_string( in->at(i).completion, unescape_flags );
 
 			if( EXPAND_SKIP_VARIABLES & flags )
 			{
@@ -1826,11 +2118,13 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
                         next[i] = L'$';
                     }
                 }
-                out->push_back(next);
+           	    completion_t data_to_push;
+		    data_to_push.completion = next; 
+		    out->push_back(data_to_push);
 			}
 			else
 			{
-				if(!expand_variables2( next, *out, next.size() - 1 ))
+				if(!expand_variables2( next.empty()?NULL:const_cast<wchar_t*>(next.c_str()), *out, next.size() - 1 ))
 				{
 					return EXPAND_ERROR;
 				}
@@ -1844,9 +2138,9 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
         
 		for( i=0; i < in->size(); i++ )
 		{
-            wcstring next = in->at(i);
+            wcstring next = in->at(i).completion;
             
-			if( !expand_brackets2( next, flags, *out ))
+			if( !expand_brackets( const_cast<wchar_t*>(next.c_str()), flags, *out ))
 			{
 				return EXPAND_ERROR;
 			}
@@ -1858,7 +2152,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
         
 		for( i=0; i < in->size(); i++ )
 		{
-			wcstring next = in->at(i);
+			wcstring next = in->at(i).completion;
             
             expand_tilde_internal(next);
             
@@ -1872,17 +2166,19 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
                      interested in other completions, so we
                      short-circut and return
                      */
-					expand_pid2( next, flags, output );
+					expand_pid( const_cast<wchar_t*>(next.c_str()), flags, output );
 					return EXPAND_OK;
 				}
 				else
 				{
-                    out->push_back(next);
+      					completion_t data_to_push;
+					data_to_push.completion = next; 
+	             			out->push_back(data_to_push);
 				}
 			}
 			else
 			{
-				if( !expand_pid2( next, flags, *out ) )
+				if( !expand_pid( const_cast<wchar_t*>(next.c_str()), flags, *out ) )
 				{
 					return EXPAND_ERROR;
 				}
@@ -1896,7 +2192,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
         
 		for( i=0; i < in->size(); i++ )
 		{
-			wcstring next_str = in->at(i);
+			wcstring next_str = in->at(i).completion;
 			int wc_res;
                         
 			remove_internal_separator2( next_str, EXPAND_SKIP_WILDCARDS & flags );			
@@ -1906,7 +2202,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
                wildcard_has( next, 1 ) )
 			{
 				const wchar_t *start, *rest;
-				std::vector<wcstring> *list = out;
+				std::vector<completion_t> *list = out;
                 
 				if( next[0] == '/' )
 				{
@@ -1924,7 +2220,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 					list = &output;
 				}
                 
-                wc_res = wildcard_expand_string(rest, start, flags, *list);
+                		wc_res = wildcard_expand_string(rest, start, flags, *list);
                 
 				if( !(flags & ACCEPT_INCOMPLETE) )
 				{
@@ -1945,12 +2241,11 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 						{
 							size_t j;
 							res = EXPAND_WILDCARD_MATCH;
-							sort_strings( *out );
+							sort_completions( *out );
                             
 							for( j=0; j< out->size(); j++ )
 							{
-                                wcstring next = out->at(j);
-                                output.push_back(next);
+			         				output.push_back( out->at(j) );
 							}
 							out->clear();
 							break;
@@ -1972,7 +2267,9 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 				}
 				else
 				{
-                    output.push_back(next);
+ 					completion_t data_to_push;
+					data_to_push.completion = next; 
+    					output.push_back(data_to_push);
 				}
 			}
             
@@ -1985,6 +2282,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 /**
    The real expansion function. expand_one is just a wrapper around this one.
 */
+/*
 int expand_string( void *context,
 				   wchar_t *str,
 				   array_list_t *end_out,
@@ -2020,7 +2318,7 @@ int expand_string( void *context,
 										&end,
 										1 ) != 0 )
 		{
-			error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
+			error( CMDSUBST_ERROR, 1, L"Command substitutions not allowed" );
 			free( str );
 			al_destroy( &list1 );
 			al_destroy( &list2 );
@@ -2046,13 +2344,13 @@ int expand_string( void *context,
 		for( i=0; i<al_get_count( in ); i++ )
 		{
 			wchar_t *next;
-
+*/
 			/*
 			  We accept incomplete strings here, since complete uses
 			  expand_string to expand incomplete strings from the
 			  commandline.
 			*/
-			int unescape_flags = UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE;
+/*			int unescape_flags = UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE;
 
 			next = expand_unescape( (wchar_t *)al_get( in, i ), unescape_flags );
 
@@ -2098,7 +2396,7 @@ int expand_string( void *context,
 				continue;				
 			}	
 
-			if( !expand_brackets( next, flags, out ))
+			if( !expand_brackets( next, flags, *out ))
 			{
 				al_destroy( in );
 				al_destroy( out );
@@ -2130,13 +2428,13 @@ int expand_string( void *context,
 			if( flags & ACCEPT_INCOMPLETE )
 			{
 				if( *next == PROCESS_EXPAND )
-				{
+				{*/
 					/*
 					  If process expansion matches, we are not
 					  interested in other completions, so we
 					  short-circut and return
 					*/
-					expand_pid( next, flags, end_out );
+/*					expand_pid( next, flags, end_out );
 					al_destroy( in );
 					al_destroy( out );
 					return EXPAND_OK;
@@ -2276,11 +2574,11 @@ int expand_string( void *context,
 	return res;
 
 }
-
+*/
 
 wchar_t *expand_one( void *context, wchar_t *string, int flags )
 {
-	array_list_t l;
+	std::vector<completion_t> l;
 	int res;
 	wchar_t *one;
 
@@ -2292,29 +2590,30 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
 		return string;
 	}
 	
-	al_init( &l );
-	res = expand_string( 0, string, &l, flags );
+//	al_init( &l );
+	res = expand_string2( string, l, flags );
 	if( !res )
 	{
 		one = 0;
 	}
 	else
 	{
-		if( al_get_count( &l ) != 1 )
+		if(  l.size() != 1 )
 		{
 			one=0;
 		}
 		else
 		{
-			one = (wchar_t *)al_get( &l, 0 );
-			al_set( &l, 0, 0 );
+			one = wcsdup( l.at(0).completion.c_str() );
+//			al_set( &l, 0, 0 );
 		}
 	}
 
-	al_foreach( &l, &free );
-	al_destroy( &l );
+//	al_foreach( &l, &free );
+//	al_destroy( &l );
 
 	halloc_register( context, one );
 	return one;
 }
+ 
 

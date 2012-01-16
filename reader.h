@@ -9,10 +9,13 @@
 #ifndef FISH_READER_H
 #define FISH_READER_H
 
+#include <vector>
 #include <wchar.h>
 
 #include "util.h"
 #include "io.h"
+
+struct completion_t;
 
 /**
   Read commands from \c fd until encountering EOF
@@ -123,7 +126,7 @@ void reader_pop();
    - The command to be completed as a null terminated array of wchar_t
    - An array_list_t in which completions will be inserted.
 */
-void reader_set_complete_function( void (*f)( const wchar_t *, array_list_t * ) );
+void reader_set_complete_function( void (*f)( const wchar_t *, std::vector<completion_t> & ) );
 
 /**
 <<<<<<< upstream

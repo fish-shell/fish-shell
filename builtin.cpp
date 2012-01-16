@@ -2192,7 +2192,7 @@ static int builtin_read( wchar_t **argv )
 		reader_set_prompt( prompt );
 		if( shell )
 		{
-			reader_set_complete_function( &complete );
+			reader_set_complete_function( &complete2 );
 			reader_set_highlight_function( &highlight_shell );
 			reader_set_test_function( &reader_shell_test );
 		}
@@ -3891,6 +3891,13 @@ void builtin_get_names( array_list_t *list )
 {
 	CHECK( list, );		
  	hash_get_keys( &builtin, list );
+}
+
+void builtin_get_names2(std::vector<completion_t> &list) {
+	for (int i=0;i<builtin.size; ++i) {
+		completion_t data_to_push = {  (wchar_t*)builtin.arr[i].key };
+		list.push_back( data_to_push );
+	}	
 }
 
 const wchar_t *builtin_get_desc( const wchar_t *b )

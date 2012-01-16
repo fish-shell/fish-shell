@@ -83,6 +83,7 @@ parts of fish.
 #include "proc.h"
 #include "wildcard.h"
 #include "parser.h"
+#include "complete.h"
 
 #include "util.cpp"
 #include "halloc.cpp"
@@ -154,6 +155,23 @@ wchar_t **list_to_char_arr( array_list_t *l )
 	res[i]='\0';
 	return res;	
 }
+
+wchar_t **completions_to_char_arr( std::vector<completion_t> &l )
+{
+	wchar_t ** res = (wchar_t **)malloc( sizeof(wchar_t *)*( l.size() + 1) );
+	int i;
+	if( res == 0 )
+	{
+		DIE_MEM();
+	}
+	for( i=0; i< l.size(); i++ )
+	{		
+		res[i] = (wchar_t *)l.at(i).completion.c_str();
+	}
+	res[i]='\0';
+	return res;	
+}
+
 
 int fgetws2( wchar_t **b, int *len, FILE *f )
 {
@@ -242,6 +260,10 @@ void sort_strings( std::vector<wcstring> &strings)
     std::sort(strings.begin(), strings.end(), string_sort_predicate);
 }
 
+void sort_completions( std::vector<completion_t> &completions)
+{
+    std::sort(completions.begin(), completions.end());
+}
 wchar_t *str2wcs( const char *in )
 {
 	wchar_t *out;

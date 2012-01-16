@@ -210,7 +210,7 @@ int eval( const wchar_t *cmd, io_data_t *io, int block_type );
   \param output List to insert output to
 */
 int eval_args( const wchar_t *line,
-				array_list_t *output );
+				std::vector<completion_t> &output );
 
 /**
    Sets the current evaluation error. This function should only be used by libraries that are called by 

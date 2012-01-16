@@ -1125,7 +1125,7 @@ static int printed_width( const wchar_t *str, int len )
 }
 
 
-wchar_t *parser_current_line()
+const wchar_t *parser_current_line()
 {
 	int lineno=1;
 

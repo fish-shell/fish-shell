@@ -146,7 +146,7 @@ static buffer_t *pager_buffer;
    The environment variables used to specify the color of different
    tokens.
 */
-static wchar_t *hightlight_var[] = 
+static const wchar_t *hightlight_var[] = 
 {
 	L"fish_pager_color_prefix",
 	L"fish_pager_color_completion",
@@ -247,7 +247,7 @@ static void recalc_width( array_list_t *l, const wchar_t *prefix )
    Test if the specified character sequence has been entered on the
    keyboard
 */
-static int try_sequence( char *seq )
+static int try_sequence( const char *seq )
 {
 	int j, k;
 	wint_t c=0;
@@ -277,7 +277,7 @@ static wint_t readch()
 {
 	struct mapping
 	{
-		char *seq;
+		const char *seq;
 		wint_t bnd;
 	}
 	;

@@ -870,10 +870,12 @@ int parse_util_load( const wcstring &cmd,
     /* Figure out which builtin-scripts array to search (if any) */
     const builtin_script_t *builtins = NULL;
     size_t builtin_count = 0;
-    if (path_var_name == L"fish_function_path")
-    {
+    if (path_var_name == L"fish_function_path") {
         builtins = internal_function_scripts;
         builtin_count = sizeof internal_function_scripts / sizeof *internal_function_scripts;
+    } else if (path_var_name == L"fish_complete_path") {
+        builtins = internal_completion_scripts;
+        builtin_count = sizeof internal_completion_scripts / sizeof *internal_completion_scripts;        
     }
 
 	/*

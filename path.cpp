@@ -130,8 +130,6 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 
 wchar_t *path_get_path( void *context, const wchar_t *cmd )
 {
-	const wchar_t *path;
-
 	int err = ENOENT;
 	
 	CHECK( cmd, 0 );

@@ -74,7 +74,7 @@ typedef struct
 	/** Type of last token*/
 	int last_type;
 	/** Length of last token*/
-	int last_len;
+	size_t last_len;
 	/** Offset of last token*/
 	int last_pos;
 	/** Whether there are more tokens*/

@@ -147,7 +147,7 @@ static int quit=0;
 static char *get_socket_filename()
 {
 	char *name;
-	char *dir = getenv( "FISHD_SOCKET_DIR" );
+	const char *dir = getenv( "FISHD_SOCKET_DIR" );
 	char *uname = getenv( "USER" );
 
 	if( dir == NULL )
@@ -390,7 +390,7 @@ static void daemonize()
 /**
    Get environment variable value. The resulting string needs to be free'd.
 */
-static wchar_t *fishd_env_get( wchar_t *key )
+static wchar_t *fishd_env_get( const wchar_t *key )
 {
 	char *nres, *nkey;
 	wchar_t *res;

@@ -1888,7 +1888,7 @@ void bugreport()
 void sb_format_size( string_buffer_t *sb,
 		     long long sz )
 {
-	wchar_t *sz_name[]=
+	const wchar_t *sz_name[]=
 		{
 			L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0
 		}

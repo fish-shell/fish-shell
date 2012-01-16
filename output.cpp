@@ -67,7 +67,7 @@ static int writeb_internal( char c );
 /**
    Names of different colors. 
 */
-static wchar_t *col[]=
+static const wchar_t *col[]=
 {
 	L"black",
 	L"red",
@@ -89,7 +89,7 @@ static wchar_t *col[]=
    in highlight.h. Non-ANSI terminals will display the wrong colors,
    since they use a different mapping.
 */
-static int col_idx[]=
+static const int col_idx[]=
 {
 	0, 
 	1,
@@ -382,7 +382,7 @@ int writembs_internal( char *str )
 int writech( wint_t ch )
 {
 	mbstate_t state;
-	int i;
+	size_t i;
 	char buff[MB_LEN_MAX+1];
 	size_t bytes;
 
@@ -548,20 +548,20 @@ int write_escaped_str( const wchar_t *str, int max_len )
 
 int output_color_code( const wchar_t *val )
 {
-	int j, i, color=FISH_COLOR_NORMAL;
-	array_list_t el;
+	size_t i;
+    int color=FISH_COLOR_NORMAL;
 	int is_bold=0;
 	int is_underline=0;
 	
 	if( !val )
 		return FISH_COLOR_NORMAL;
 	
-	al_init( &el );
-	tokenize_variable_array( val, &el );
+    wcstring_list_t el;
+	tokenize_variable_array2( val, el );
 	
-	for( j=0; j<al_get_count( &el ); j++ )
+	for(size_t j=0; j < el.size(); j++ )
 	{
-		wchar_t *next = (wchar_t *)al_get( &el, j );
+        const wchar_t *next = el.at(j).c_str();
 		
 		is_bold |= (wcsncmp( next, L"--bold", wcslen(next) ) == 0 ) && wcslen(next)>=3;
 		is_bold |= wcscmp( next, L"-o" ) == 0;
@@ -580,9 +580,6 @@ int output_color_code( const wchar_t *val )
 		
 	}
 	
-	al_foreach( &el, &free );
-	al_destroy( &el );
-
 	return color | (is_bold?FISH_COLOR_BOLD:0) | (is_underline?FISH_COLOR_UNDERLINE:0);
 	
 }

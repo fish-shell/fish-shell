@@ -612,7 +612,8 @@ static void parse_cmd_string( void *context,
 
 int complete_is_valid_option( const wchar_t *str,
 							  const wchar_t *opt,
-							  array_list_t *errors )
+							  array_list_t *errors,
+							  bool allow_autoload )
 {
 	complete_entry_t *i;
 	complete_entry_opt_t *o;
@@ -698,7 +699,7 @@ int complete_is_valid_option( const wchar_t *str,
 	/*
 	  Make sure completions are loaded for the specified command
 	*/
-	complete_load( cmd, 0 );
+	if (allow_autoload) complete_load( cmd, 0 );
 	
 	for( i=first_entry; i; i=i->next )
 	{
@@ -847,8 +848,7 @@ int complete_is_valid_option( const wchar_t *str,
 	hash_destroy( &gnu_match_hash );
 
 	halloc_free( context );
-	
-	return (authoritative && found_match)?opt_found:1;
+    return (authoritative && found_match)?opt_found:1;
 }
 
 int complete_is_valid_argument( const wchar_t *str,

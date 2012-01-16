@@ -1744,8 +1744,7 @@ int exec_subshell( const wchar_t *cmd,
 	char sep=0;
 	
 	CHECK( cmd, -1 );
-//	ifs = env_get(L"IFS");
-	const env_var_t ifs = env_get_string(L"IFS").empty()?NULL:env_get_string(L"IFS").c_str();
+	const env_var_t ifs = env_get_string(L"IFS");
 
 	if( ! ifs.missing_or_empty() )
 	{

@@ -2493,7 +2493,7 @@ static void eval_job( tokenizer *tok )
 
 }
 
-int eval( const wchar_t *cmd, io_data_t *io, int block_type )
+int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
 {
 	size_t forbid_count;
 	int code;

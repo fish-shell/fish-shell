@@ -11,6 +11,7 @@
 #include "util.h"
 #include "parser.h"
 #include "event.h"
+#include <vector>
 
 #define PARSER_TEST_ERROR 1
 #define PARSER_TEST_INCOMPLETE 2
@@ -113,7 +114,7 @@ typedef struct block
 /** 
 	Types of blocks
 */
-enum block_type
+enum block_type_t
 {
 	WHILE, /**< While loop block */
 	FOR,  /**< For loop block */
@@ -177,165 +178,166 @@ enum parser_error
 	   Error while evaluating cmdsubst
 	*/
 	CMDSUBST_ERROR,
+};
+
+class parser_t {
+    private:
+    std::vector<block_t> blocks;
+    
+    public:
+    /** The current innermost block */
+    const block_t &current_block(void);
+    
+    /** Global event blocks */
+    const block_t &global_event_block(void);
+    
+    /** Current block level io redirections  */
+    io_data_t &block_io(void);
+    
+    /**
+      Evaluate the expressions contained in cmd.
+
+      \param cmd the string to evaluate
+      \param io io redirections to perform on all started jobs
+      \param block_type The type of block to push on the block stack
+
+      \return 0 on success, 1 otherwise
+    */
+    int eval( const wcstring &cmd, io_data_t *io, enum block_type_t block_type );
+    
+    /**
+      Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
+      The output is inserted into output, and should be freed by the caller.
+
+      \param line Line to evaluate
+      \param output List to insert output to
+    */
+    int eval_args( const wchar_t *line, array_list_t *output );    
+    
+    /**
+       Sets the current evaluation error. This function should only be used by libraries that are called by 
+
+       \param ec The new error code
+       \param p The character offset at which the error occured
+       \param str The printf-style error message filter
+    */
+    void error( int ec, int p, const wchar_t *str, ... );
+    
+    /**
+       Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.
+       Example: 
+
+       init.fish (line 127): ls|grep pancake
+    */
+    const wchar_t *current_line();
+
+    /**
+       Returns the current line number
+    */
+    int get_lineno();
+
+    /**
+       Returns the current position in the latest string of the tokenizer.
+    */
+    int get_pos();
+
+    /**
+       Returns the position where the current job started in the latest string of the tokenizer.
+    */
+    int get_job_pos();
+
+    /**
+       Set the current position in the latest string of the tokenizer.
+    */
+    void set_pos( int p);
+
+    /**
+       Get the string currently parsed
+    */
+    const wchar_t *get_buffer();
+
+    /**
+       Create block of specified type
+    */
+    void push_block( int type);
+
+    /**
+       Remove the outermost block namespace
+    */
+    void pop_block();
+
+    /**
+       Return a description of the given blocktype
+    */
+    const wchar_t *get_block_desc( int block );
+
+
+    /**
+       Test if the specified string can be parsed, or if more bytes need
+       to be read first. The result will have the PARSER_TEST_ERROR bit
+       set if there is a syntax error in the code, and the
+       PARSER_TEST_INCOMPLETE bit set if the code contains unclosed
+       blocks.
+
+       \param buff the text buffer to test
+       \param block_level if non-null, the block nesting level will be filled out into this array
+       \param out if non-null, any errors in the command will be filled out into this buffer
+       \param prefix the prefix string to prepend to each error message written to the \c out buffer
+    */
+    int test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix );
+
+    /**
+       Test if the specified string can be parsed as an argument list,
+       e.g. sent to eval_args.  The result has the first bit set if the
+       string contains errors, and the second bit is set if the string
+       contains an unclosed block.
+    */
+    int test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
+
+    /**
+       Tell the parser that the specified function may not be run if not
+       inside of a conditional block. This is to remove some possibilities
+       of infinite recursion.
+    */
+    void forbid_function( wchar_t *function );
+    /**
+       Undo last call to parser_forbid_function().
+    */
+    void allow_function();
+
+    /**
+       Initialize static parser data
+    */
+    void init();
+
+    /**
+       Destroy static parser data
+    */
+    void destroy();
+
+    /**
+       This function checks if the specified string is a help option. 
+
+       \param s the string to test
+       \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
+    */
+    int is_help( wchar_t *s, int min_match );
+
+    /**
+       Returns the file currently evaluated by the parser. This can be
+       different than reader_current_filename, e.g. if we are evaulating a
+       function defined in a different file than the one curently read.
+    */
+    const wchar_t *current_filename();
+
+    /**
+       Write a stack trace starting at the specified block to the specified string_buffer_t
+    */
+    void stack_trace( block_t *b, string_buffer_t *buff);
+
+    int get_block_type( const wchar_t *cmd );
+    const wchar_t *get_block_command( int type );
 }
-;
-
-/** The current innermost block */
-extern block_t *current_block;
-
-/** Global event blocks */
-extern event_block_t *global_event_block;
-
-/**
-   Current block level io redirections 
-*/
-extern io_data_t *block_io;
-
-/**
-  Evaluate the expressions contained in cmd.
-
-  \param cmd the string to evaluate
-  \param io io redirections to perform on all started jobs
-  \param block_type The type of block to push on the block stack
-
-  \return 0 on success, 1 otherwise
-*/
-int eval( const wchar_t *cmd, io_data_t *io, int block_type );
-
-/**
-  Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
-  The output is inserted into output, and should be freed by the caller.
-
-  \param line Line to evaluate
-  \param output List to insert output to
-*/
-int eval_args( const wchar_t *line,
-				array_list_t *output );
-
-/**
-   Sets the current evaluation error. This function should only be used by libraries that are called by 
-
-   \param ec The new error code
-   \param p The character offset at which the error occured
-   \param str The printf-style error message filter
-*/
-void error( int ec, int p, const wchar_t *str, ... );
-
-
-/**
-   Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.
-   Example: 
-
-   init.fish (line 127): ls|grep pancake
-*/
-const wchar_t *parser_current_line();
-
-/**
-   Returns the current line number
-*/
-int parser_get_lineno();
-
-/**
-   Returns the current position in the latest string of the tokenizer.
-*/
-int parser_get_pos();
-
-/**
-   Returns the position where the current job started in the latest string of the tokenizer.
-*/
-int parser_get_job_pos();
-
-/**
-   Set the current position in the latest string of the tokenizer.
-*/
-void parser_set_pos( int p);
-
-/**
-   Get the string currently parsed
-*/
-const wchar_t *parser_get_buffer();
-
-/**
-   Create block of specified type
-*/
-void parser_push_block( int type);
-
-/**
-   Remove the outermost block namespace
-*/
-void parser_pop_block();
-
-/**
-   Return a description of the given blocktype
-*/
-const wchar_t *parser_get_block_desc( int block );
-
-
-/**
-   Test if the specified string can be parsed, or if more bytes need
-   to be read first. The result will have the PARSER_TEST_ERROR bit
-   set if there is a syntax error in the code, and the
-   PARSER_TEST_INCOMPLETE bit set if the code contains unclosed
-   blocks.
-
-   \param buff the text buffer to test
-   \param block_level if non-null, the block nesting level will be filled out into this array
-   \param out if non-null, any errors in the command will be filled out into this buffer
-   \param prefix the prefix string to prepend to each error message written to the \c out buffer
-*/
-int parser_test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix );
-
-/**
-   Test if the specified string can be parsed as an argument list,
-   e.g. sent to eval_args.  The result has the first bit set if the
-   string contains errors, and the second bit is set if the string
-   contains an unclosed block.
-*/
-int parser_test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
-
-/**
-   Tell the parser that the specified function may not be run if not
-   inside of a conditional block. This is to remove some possibilities
-   of infinite recursion.
-*/
-void parser_forbid_function( wchar_t *function );
-/**
-   Undo last call to parser_forbid_function().
-*/
-void parser_allow_function();
-
-/**
-   Initialize static parser data
-*/
-void parser_init();
-
-/**
-   Destroy static parser data
-*/
-void parser_destroy();
-
-/**
-   This function checks if the specified string is a help option. 
-
-   \param s the string to test
-   \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
-*/
-int parser_is_help( wchar_t *s, int min_match );
-
-/**
-   Returns the file currently evaluated by the parser. This can be
-   different than reader_current_filename, e.g. if we are evaulating a
-   function defined in a different file than the one curently read.
-*/
-const wchar_t *parser_current_filename();
-
-/**
-   Write a stack trace starting at the specified block to the specified string_buffer_t
-*/
-void parser_stack_trace( block_t *b, string_buffer_t *buff);
-
-int parser_get_block_type( const wchar_t *cmd );
-const wchar_t *parser_get_block_command( int type );
 
 
 #endif

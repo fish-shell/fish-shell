@@ -783,7 +783,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 */
 
 static void internal_exec_helper( const wchar_t *def, 
-								 int block_type,
+								 enum block_type_t block_type,
 								 io_data_t *io )
 {
 	io_data_t *io_internal = io_transmogrify( io );

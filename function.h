@@ -67,7 +67,7 @@ void function_destroy();
    Add an function. The parameters values are copied and should be
    freed by the caller.
 */
-void function_add( function_data_t *data );
+void function_add( function_data_t *data, const parser_t &parser );
 
 /**
    Remove the function with the specified name.

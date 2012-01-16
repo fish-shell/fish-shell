@@ -185,14 +185,15 @@ class parser_t {
     std::vector<block_t> blocks;
     
     public:
+    
     /** The current innermost block */
-    const block_t &current_block(void);
+    const block_t &current_block(void) const;
     
     /** Global event blocks */
-    const block_t &global_event_block(void);
+    const block_t &global_event_block(void) const;
     
     /** Current block level io redirections  */
-    io_data_t &block_io(void);
+    io_data_t &block_io(void) const;
     
     /**
       Evaluate the expressions contained in cmd.
@@ -229,32 +230,32 @@ class parser_t {
 
        init.fish (line 127): ls|grep pancake
     */
-    const wchar_t *current_line();
+    const wchar_t *current_line() const;
 
     /**
        Returns the current line number
     */
-    int get_lineno();
+    int get_lineno() const;
 
     /**
        Returns the current position in the latest string of the tokenizer.
     */
-    int get_pos();
+    int get_pos() const;
 
     /**
        Returns the position where the current job started in the latest string of the tokenizer.
     */
-    int get_job_pos();
+    int get_job_pos() const;
 
     /**
        Set the current position in the latest string of the tokenizer.
     */
-    void set_pos( int p);
+    void set_pos( int p) const;
 
     /**
        Get the string currently parsed
     */
-    const wchar_t *get_buffer();
+    const wchar_t *get_buffer() const;
 
     /**
        Create block of specified type
@@ -269,7 +270,7 @@ class parser_t {
     /**
        Return a description of the given blocktype
     */
-    const wchar_t *get_block_desc( int block );
+    const wchar_t *get_block_desc( int block ) const;
 
 
     /**
@@ -284,7 +285,7 @@ class parser_t {
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    int test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix );
+    int test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix ) const;
 
     /**
        Test if the specified string can be parsed as an argument list,
@@ -292,7 +293,7 @@ class parser_t {
        string contains errors, and the second bit is set if the string
        contains an unclosed block.
     */
-    int test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
+    int test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix ) const;
 
     /**
        Tell the parser that the specified function may not be run if not
@@ -321,23 +322,23 @@ class parser_t {
        \param s the string to test
        \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
     */
-    int is_help( wchar_t *s, int min_match );
+    int is_help( wchar_t *s, int min_match ) const;
 
     /**
        Returns the file currently evaluated by the parser. This can be
        different than reader_current_filename, e.g. if we are evaulating a
        function defined in a different file than the one curently read.
     */
-    const wchar_t *current_filename();
+    const wchar_t *current_filename() const;
 
     /**
        Write a stack trace starting at the specified block to the specified string_buffer_t
     */
     void stack_trace( block_t *b, string_buffer_t *buff);
 
-    int get_block_type( const wchar_t *cmd );
-    const wchar_t *get_block_command( int type );
-}
+    int get_block_type( const wchar_t *cmd ) const;
+    const wchar_t *get_block_command( int type ) const;
+};
 
 
 #endif

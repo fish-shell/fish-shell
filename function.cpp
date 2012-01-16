@@ -204,7 +204,7 @@ void function_destroy()
 }
 
 
-void function_add( function_data_t *data )
+void function_add( function_data_t *data, const parser_t &parser )
 {
 	int i;
 	
@@ -215,7 +215,7 @@ void function_add( function_data_t *data )
 	    
     function_internal_info_t &info = loaded_functions[data->name];
     
-	info.definition_offset = parse_util_lineno( parser_get_buffer(), current_block->tok_pos )-1;
+	info.definition_offset = parse_util_lineno( parser.get_buffer(), parser.current_block->tok_pos )-1;
 	info.definition = data->definition;
 
 	if( data->named_arguments )

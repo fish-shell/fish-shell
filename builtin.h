@@ -10,6 +10,8 @@
 #include "util.h"
 #include "io.h"
 
+class parser_t;
+
 enum
 {
 	COMMAND_NOT_BUILTIN,
@@ -125,6 +127,7 @@ int builtin_exists( wchar_t *cmd );
 /**
   Execute a builtin command 
 
+  \param parser The parser being used
   \param argv Array containing the command and parameters 
   of the builtin.  The list is terminated by a
   null pointer. This syntax resembles the syntax 
@@ -133,7 +136,7 @@ int builtin_exists( wchar_t *cmd );
 
   \return the exit status of the builtin command
 */
-int builtin_run( wchar_t **argv, io_data_t *io );
+int builtin_run( parser_t &parser, wchar_t **argv, io_data_t *io );
 
 /**
   Insert all builtin names into l. These are not copies of the strings and should not be freed after use.
@@ -143,18 +146,18 @@ void builtin_get_names( array_list_t *list );
 /**
    Pushes a new set of input/output to the stack. The new stdin is supplied, a new set of output string_buffer_ts is created.
 */
-void builtin_push_io( int stdin_fd );
+void builtin_push_io( parser_t &parser, int stdin_fd );
 
 /**
    Pops a set of input/output from the stack. The output string_buffer_ts are destroued, but the input file is not closed.
 */
-void builtin_pop_io();
+void builtin_pop_io(parser_t &parser);
 
 
 /**
    Return a one-line description of the specified builtin
 */
-const wchar_t *builtin_get_desc( const wchar_t *b );
+const wchar_t *builtin_get_desc( parser_t &parser, const wchar_t *b );
 
 
 /**
@@ -162,7 +165,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b );
    the commandline builtin operate on the string to complete instead
    of operating on whatever is to be completed.
 */
-const wchar_t *builtin_complete_get_temporary_buffer();
+const wchar_t *builtin_complete_get_temporary_buffer(parser_t &parser);
 
 
 /**
@@ -171,6 +174,6 @@ const wchar_t *builtin_complete_get_temporary_buffer();
    the next time this function is called, and must never be free'd manually.
 */
 
-wchar_t *builtin_help_get( const wchar_t *cmd );
+wchar_t *builtin_help_get( parser_t &parser, const wchar_t *cmd );
 
 #endif

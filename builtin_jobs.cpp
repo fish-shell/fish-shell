@@ -160,7 +160,7 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 /**
    The jobs builtin. Used fopr printing running jobs. Defined in builtin_jobs.c.
 */
-static int builtin_jobs( wchar_t **argv )
+static int builtin_jobs( parser_t &parser, wchar_t **argv )
 {
 	int argc=0;
 	int found=0;
@@ -222,7 +222,7 @@ static int builtin_jobs( wchar_t **argv )
                            argv[0],
                            long_options[opt_index].name );
 
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( parser, argv[0], sb_err );
 
 
 				return 1;
@@ -247,11 +247,11 @@ static int builtin_jobs( wchar_t **argv )
 			}
 
 			case 'h':
-				builtin_print_help( argv[0], sb_out );
+				builtin_print_help( parser, argv[0], sb_out );
 				return 0;				
 
 			case '?':
-				builtin_unknown_option( argv[0], argv[woptind-1] );
+				builtin_unknown_option( parser, argv[0], argv[woptind-1] );
 				return 1;
 
 		}

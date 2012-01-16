@@ -174,7 +174,7 @@ static int event_is_blocked( event_t *e )
 	block_t *block;
 	event_block_t *eb;
 	
-	for( block = current_block; block; block = block->outer )
+	for( block = parser.current_block; block; block = block->outer )
 	{
 		for( eb = block->first_event_block; eb; eb=eb->next )
 		{
@@ -459,10 +459,10 @@ static void event_fire_internal( event_t *event )
 		*/
 		proc_push_interactive(0);
 		prev_status = proc_get_last_status();
-		parser_push_block( EVENT );
-		current_block->param1.event = event;
+		parser.push_block( EVENT );
+		parser.current_block->param1.event = event;
 		eval( buffer.c_str(), 0, TOP );
-		parser_pop_block();
+		parser.pop_block();
 		proc_pop_interactive();					
 		proc_set_last_status( prev_status );
 	}

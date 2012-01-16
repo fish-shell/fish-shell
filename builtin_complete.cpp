@@ -289,7 +289,7 @@ const wchar_t *builtin_complete_get_temporary_buffer()
    tab-completions. Calls the functions in complete.c for any heavy
    lifting. Defined in builtin_complete.c
 */
-static int builtin_complete( wchar_t **argv )
+static int builtin_complete( parser_t &parser, wchar_t **argv )
 {
     ASSERT_IS_MAIN_THREAD();
 	int res=0;
@@ -414,7 +414,7 @@ static int builtin_complete( wchar_t **argv )
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( parser, argv[0], sb_err );
 
 				
 				res = 1;
@@ -489,11 +489,11 @@ static int builtin_complete( wchar_t **argv )
 				break;
 				
 			case 'h':
-				builtin_print_help( argv[0], sb_out );
+				builtin_print_help( parser, argv[0], sb_out );
 				return 0;
 				
 			case '?':
-				builtin_unknown_option( argv[0], argv[woptind-1] );
+				builtin_unknown_option( parser, argv[0], argv[woptind-1] );
 				res = 1;
 				break;
 				
@@ -505,14 +505,14 @@ static int builtin_complete( wchar_t **argv )
 	{
 		if( condition && wcslen( condition ) )
 		{
-			if( parser_test( condition, 0, 0, 0 ) )
+			if( parser.test( condition, 0, 0, 0 ) )
 			{
 				sb_printf( sb_err,
 						   L"%ls: Condition '%ls' contained a syntax error\n", 
 						   argv[0],
 						   condition );
 				
-				parser_test( condition, 0, sb_err, argv[0] );
+				parser.test( condition, 0, sb_err, argv[0] );
 				
 				res = 1;
 			}
@@ -523,14 +523,14 @@ static int builtin_complete( wchar_t **argv )
 	{
 		if( comp && wcslen( comp ) )
 		{
-			if( parser_test_args( comp, 0, 0 ) )
+			if( parser.test_args( comp, 0, 0 ) )
 			{
 				sb_printf( sb_err,
 						   L"%ls: Completion '%ls' contained a syntax error\n", 
 						   argv[0],
 						   comp );
 				
-				parser_test_args( comp, sb_err, argv[0] );
+				parser.test_args( comp, sb_err, argv[0] );
 				
 				res = 1;
 			}
@@ -597,7 +597,7 @@ static int builtin_complete( wchar_t **argv )
 			sb_printf( sb_err, 
 					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
-			builtin_print_help( argv[0], sb_err );
+			builtin_print_help( parser, argv[0], sb_err );
 
 			res = 1;
 		}

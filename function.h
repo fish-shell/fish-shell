@@ -15,6 +15,8 @@
 #include "util.h"
 #include "common.h"
 
+class parser_t;
+
 /**
    Structure describing a function. This is used by the parser to
    store data on a function while parsing it. It is not used

@@ -1208,10 +1208,10 @@ void exec( job_t *j )
 					break;
 				}
 
-				parser_push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
+				parser.push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
 				
-				current_block->param2.function_call_process = p;
-				current_block->param1.function_call_name = (wchar_t *)halloc_register( current_block, wcsdup( p->argv[0] ) );
+				parser.current_block->param2.function_call_process = p;
+				parser.current_block->param1.function_call_name = (wchar_t *)halloc_register( current_block, wcsdup( p->argv[0] ) );
 						
 
 				/*
@@ -1234,7 +1234,7 @@ void exec( job_t *j )
 				internal_exec_helper( def, TOP, j->io );
 				
 				parser_allow_function();
-				parser_pop_block();
+				parser.pop_block();
 				
 				break;				
 			}

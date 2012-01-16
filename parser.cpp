@@ -1863,7 +1863,7 @@ static int parse_job( process_t *p,
 
 			if( new_block )
 			{
-				parser_push_block( WHILE );
+				parser.push_block( WHILE );
 				current_block->param1.while_state=WHILE_TEST_FIRST;
 				current_block->tok_pos = mark;
 			}
@@ -1876,7 +1876,7 @@ static int parse_job( process_t *p,
 		{
 			tok_next( tok );
 
-			parser_push_block( IF );
+			parser.push_block( IF );
 
 			current_block->param1.if_state=0;
 			current_block->tok_pos = mark;
@@ -2251,7 +2251,7 @@ static void skipped_exec( job_t * j )
 			   ( wcscmp( p->argv[0], L"begin" )==0) ||
 			   ( wcscmp( p->argv[0], L"function" )==0))
 			{
-				parser_push_block( FAKE );
+				parser.push_block( FAKE );
 			}
 			else if( wcscmp( p->argv[0], L"end" )==0)
 			{
@@ -2537,7 +2537,7 @@ int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
 
 	eval_level++;
 
-	parser_push_block( block_type );
+	parser.push_block( block_type );
 
 	current_tokenizer = (tokenizer *)malloc( sizeof(tokenizer));
 	tok_init( current_tokenizer, cmd, 0 );

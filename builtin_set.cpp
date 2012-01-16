@@ -495,7 +495,7 @@ static void print_variables(int include_values, int esc, int scope)
    The set builtin. Creates, updates and erases environment variables
    and environemnt variable arrays.
 */
-static int builtin_set( wchar_t **argv ) 
+static int builtin_set( parser_t &parser, wchar_t **argv ) 
 {
 	
 	/**
@@ -619,11 +619,11 @@ static int builtin_set( wchar_t **argv )
 				break;
 
 			case 'h':
-				builtin_print_help( argv[0], sb_out );
+				builtin_print_help( parser, argv[0], sb_out );
 				return 0;
 
 			case '?':
-				builtin_unknown_option( argv[0], argv[woptind-1] );
+				builtin_unknown_option( parser, argv[0], argv[woptind-1] );
 				return 1;
 
 			default:
@@ -646,7 +646,7 @@ static int builtin_set( wchar_t **argv )
 				  BUILTIN_ERR_COMBO,
 				  argv[0] );
 		
-		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( parser, argv[0], sb_err );
 		return 1;
 	}
 	
@@ -658,7 +658,7 @@ static int builtin_set( wchar_t **argv )
 				  BUILTIN_ERR_COMBO,
 				  argv[0] );		
 
-		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( parser, argv[0], sb_err );
 		return 1;
 	}
 
@@ -670,7 +670,7 @@ static int builtin_set( wchar_t **argv )
 		sb_printf( sb_err,
 				   BUILTIN_ERR_GLOCAL,
 				   argv[0] );
-		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( parser, argv[0], sb_err );
 		return 1;
 	}
 
@@ -682,7 +682,7 @@ static int builtin_set( wchar_t **argv )
 		sb_printf( sb_err,
 				   BUILTIN_ERR_EXPUNEXP,
 				   argv[0] );
-		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( parser, argv[0], sb_err );
 		return 1;
 	}
 
@@ -728,7 +728,7 @@ static int builtin_set( wchar_t **argv )
 								
 				if( !parse_index( indexes, arg, dest, result.size() ) )
 				{
-					builtin_print_help( argv[0], sb_err );
+					builtin_print_help( parser, argv[0], sb_err );
 					retcode = 1;
 					break;
 				}
@@ -774,7 +774,7 @@ static int builtin_set( wchar_t **argv )
 					   _(L"%ls: Erase needs a variable name\n%ls\n"), 
 					   argv[0] );
 			
-			builtin_print_help( argv[0], sb_err );
+			builtin_print_help( parser, argv[0], sb_err );
 			retcode = 1;
 		}
 		else
@@ -800,14 +800,14 @@ static int builtin_set( wchar_t **argv )
 	{
 		free( dest );
 		sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
-		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( parser, argv[0], sb_err );
 		return 1;
 	}
 	
 	if( (bad_char = wcsvarname( dest ) ) )
 	{
 		sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *bad_char );
-		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( parser, argv[0], sb_err );
 		free( dest );
 		return 1;
 	}
@@ -816,7 +816,7 @@ static int builtin_set( wchar_t **argv )
 	{
 		free( dest );
 		sb_printf( sb_err, _(L"%ls: Can not specify scope when erasing array slice\n"), argv[0] );
-		builtin_print_help( argv[0], sb_err );
+		builtin_print_help( parser, argv[0], sb_err );
 		return 1;
 	}
 	
@@ -848,7 +848,7 @@ static int builtin_set( wchar_t **argv )
 		{			
 			if( !parse_index( indexes, argv[woptind], dest, result.size() ) )
 			{
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( parser, argv[0], sb_err );
 				retcode = 1;
 				break;
 			}
@@ -861,7 +861,7 @@ static int builtin_set( wchar_t **argv )
 				if( val_count < idx_count )
 				{
 					sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), argv[0] );
-					builtin_print_help( argv[0], sb_err );
+					builtin_print_help( parser, argv[0], sb_err );
 					retcode=1;
 					break;
 				}
@@ -933,7 +933,7 @@ static int builtin_set( wchar_t **argv )
 				sb_printf( sb_err, 
 						   _(L"%ls: Values cannot be specfied with erase\n"),
 						   argv[0] );
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( parser, argv[0], sb_err );
 				retcode=1;
 			}
 			else

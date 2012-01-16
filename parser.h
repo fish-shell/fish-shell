@@ -180,17 +180,31 @@ enum parser_error
 	CMDSUBST_ERROR,
 };
 
+enum parser_type_t {
+    PARSER_TYPE_NONE,
+    PARSER_TYPE_GENERAL,
+    PARSER_TYPE_FUNCTIONS_ONLY,
+    PARSER_TYPE_COMPLETIONS_ONLY
+};
+
 class parser_t {
     private:
     std::vector<block_t> blocks;
     
+    /* No copying allowed */
+    parser_t(const parser_t&);
+    parser_t& operator=(const parser_t&);
+    
     public:
     
+    /** Create a parser of the given type */
+    parser_t(enum parser_type_t type);
+    
     /** The current innermost block */
-    const block_t &current_block(void) const;
+    block_t *current_block;
     
     /** Global event blocks */
-    const block_t &global_event_block(void) const;
+    event_block_t *global_event_block;
     
     /** Current block level io redirections  */
     io_data_t &block_io(void) const;

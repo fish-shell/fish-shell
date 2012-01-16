@@ -252,7 +252,7 @@ static int set( int resource, int hard, int soft, rlim_t value )
    The ulimit builtin, used for setting resource limits. Defined in
    builtin_ulimit.c.
 */
-static int builtin_ulimit( wchar_t ** argv )
+static int builtin_ulimit( parser_t &parser, wchar_t ** argv )
 {
 	int hard=0;
 	int soft=0;
@@ -351,7 +351,7 @@ static int builtin_ulimit( wchar_t ** argv )
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( argv[0], sb_err );
+				builtin_print_help( parser, argv[0], sb_err );
 
 				return 1;
 				
@@ -415,11 +415,11 @@ static int builtin_ulimit( wchar_t ** argv )
 #endif
 				
 			case L'h':
-				builtin_print_help( argv[0], sb_out );				
+				builtin_print_help( parser, argv[0], sb_out );				
 				return 0;
 
 			case L'?':
-				builtin_unknown_option( argv[0], argv[woptind-1] );
+				builtin_unknown_option( parser, argv[0], argv[woptind-1] );
 				return 1;	
 		}
 	}		
@@ -436,7 +436,7 @@ static int builtin_ulimit( wchar_t ** argv )
 						argv[0],
 						L": Too many arguments\n",
 						NULL );
-			builtin_print_help( argv[0], sb_err );
+			builtin_print_help( parser, argv[0], sb_err );
 			return 1;
 		}
 
@@ -492,7 +492,7 @@ static int builtin_ulimit( wchar_t ** argv )
 							   L"%ls: Invalid limit '%ls'\n", 
 							   argv[0], 
 							   argv[woptind] );
-					builtin_print_help( argv[0], sb_err );
+					builtin_print_help( parser, argv[0], sb_err );
 					return 1;
 				}
 				new_limit *= get_multiplier( what );
@@ -507,7 +507,7 @@ static int builtin_ulimit( wchar_t ** argv )
 						argv[0],
 						L": Too many arguments\n",
 						NULL );
-			builtin_print_help( argv[0], sb_err );
+			builtin_print_help( parser, argv[0], sb_err );
 			return 1;
 		}
 		

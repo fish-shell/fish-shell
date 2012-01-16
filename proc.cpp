@@ -452,7 +452,7 @@ static void handle_child_status( pid_t pid, int status )
 		}
 		else
 		{
-			block_t *c = current_block;
+			block_t *c = parser.current_block;
 			if( p && found_proc )
 			{
 				while( c )

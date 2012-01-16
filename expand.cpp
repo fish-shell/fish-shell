@@ -1380,7 +1380,8 @@ static int expand_variables2( wchar_t * in, std::vector<completion_t> &out, int 
 							wchar_t *next = (wchar_t *)al_get( &var_item_list, j );
 							if( is_ok && (i == 0) && (!in[stop_pos]) )
 							{
-								completion_t data_to_push = { next }; 
+								completion_t data_to_push;
+								data_to_push.completion = next; 
 								out.push_back( data_to_push );
 							}
 							else
@@ -1464,7 +1465,8 @@ static int expand_variables2( wchar_t * in, std::vector<completion_t> &out, int 
 
 	if( !empty )
 	{
-		completion_t data_to_push = { in };
+		completion_t data_to_push;
+		data_to_push.completion = in;
 		out.push_back( data_to_push );
 	}
 	else
@@ -1566,7 +1568,8 @@ static int expand_brackets( wchar_t *in, int flags, std::vector<completion_t> &o
 
 	if( bracket_begin == 0 )
 	{
-		completion_t data_to_push = { in };
+		completion_t data_to_push;
+		data_to_push.completion = in;
 		out.push_back( data_to_push );
 		return 1;
 	}

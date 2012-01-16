@@ -1254,8 +1254,8 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 					   foo );
 		}
 
-		free( foo );		
-		free( baz );		
+//		free( foo );		
+//		free( baz );		
 	}
 
 	free( escaped_separator );		

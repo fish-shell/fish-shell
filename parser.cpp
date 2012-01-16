@@ -1944,7 +1944,8 @@ static int parse_job( process_t *p,
 				}
 			}
 		}
-		completion_t data_to_push = { nxt };
+		completion_t data_to_push;
+		data_to_push.completion = nxt;
 		args->push_back( data_to_push );
 	}
 
@@ -1998,9 +1999,11 @@ static int parse_job( process_t *p,
 //						al_truncate( args, 0 );
 						args->clear();
 //						al_push( args, halloc_wcsdup( j, L"cd" ) );
-						completion_t comp = { L"cd" };
+						completion_t comp;
+						comp.completion = L"cd";
 						args->push_back(comp);
-						completion_t comp2 = { tmp };
+						completion_t comp2;
+						comp2.completion = tmp;
 						args->push_back( comp2 );
 
 //						free(tmp);

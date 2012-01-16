@@ -1173,7 +1173,8 @@ static void complete_cmd( const wchar_t *cmd,
 			//function_get_names( &possible_comp, cmd[0] == L'_' );
             wcstring_list_t names = function_get_names(cmd[0] == L'_' );
             for (size_t i=0; i < names.size(); i++) {
-		completion_t data_to_push = { names.at(i) };        
+		completion_t data_to_push;        
+		data_to_push.completion = names.at(i);
        		possible_comp.push_back( data_to_push );
             }
             

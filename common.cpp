@@ -166,7 +166,7 @@ wchar_t **completions_to_char_arr( std::vector<completion_t> &l )
 	}
 	for( i=0; i< l.size(); i++ )
 	{		
-		res[i] = (wchar_t *)l.at(i).completion.c_str();
+		res[i] = const_cast<wchar_t*>(l.at(i).completion.c_str());
 	}
 	res[i]='\0';
 	return res;	

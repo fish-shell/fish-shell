@@ -810,7 +810,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		return -1;
 	}
 	
-	if( !wc || !base_dir || out.empty())
+	if( !wc || !base_dir )
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
 		return 0;		

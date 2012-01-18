@@ -3894,9 +3894,13 @@ void builtin_get_names( array_list_t *list )
 }
 
 void builtin_get_names2(std::vector<completion_t> &list) {
-	for (int i=0;i<builtin.size; ++i) {
+	for (int i=0;i<builtin.size ; ++i) {
 		completion_t data_to_push;
-		data_to_push.completion = (wchar_t*) builtin.arr[i].key;
+	
+		if (builtin.arr[i].key == 0)
+			continue;
+
+		data_to_push.completion = (wchar_t*)builtin.arr[i].key;
 		list.push_back( data_to_push );
 	}	
 }

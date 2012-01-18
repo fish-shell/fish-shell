@@ -1225,14 +1225,14 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 			else
 			{
 				wcstring foo_wstr = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-				foo = foo_wstr.empty()?NULL:const_cast<wchar_t*>(foo_wstr.c_str());
+				foo = wcsdup(foo_wstr.c_str());
 			}
 		}
 		
 		if( !el.description.empty() )
 		{
 			wcstring baz_wstr = escape_string( el.description, 1 );
-			baz = baz_wstr.empty()?NULL:const_cast<wchar_t*>(baz_wstr.c_str());
+			baz = wcsdup(baz_wstr.c_str());
 		}
 		
 		if( !foo )
@@ -1254,8 +1254,8 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 					   foo );
 		}
 
-//		free( foo );		
-//		free( baz );		
+		free( foo );		
+		free( baz );		
 	}
 
 	free( escaped_separator );		
@@ -2889,7 +2889,6 @@ wchar_t *reader_readline()
 //					comp = al_halloc( 0 );
 					data->complete_func( buffcpy, comp );
 					
-
 					sort_completion_list( comp );
 					remove_duplicates( comp );
 					

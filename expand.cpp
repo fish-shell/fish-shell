@@ -691,7 +691,7 @@ static int expand_pid( wchar_t *in,
 		if( wcscmp( (in+1), SELF_STR )==0 )
 		{
 			wchar_t *str= (wchar_t *)malloc( sizeof(wchar_t)*32);
-//			free(in);
+			free(in);
 			swprintf( str, 32, L"%d", getpid() );
 	
 			completion_t data_to_push;
@@ -1787,7 +1787,8 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<completion_t> &o
     const wchar_t * const in = input.c_str();
     
 	completion_t data_to_push;
-	switch( parse_util_locate_cmdsubst(in,
+	int parse_ret;
+	switch( parse_ret = parse_util_locate_cmdsubst(in,
 									   &paran_begin,
 									   &paran_end,
 									   0 ) )
@@ -2059,7 +2060,7 @@ static void remove_internal_separator2( wcstring &s, int conv )
 
 int expand_string2( const wcstring &input, std::vector<completion_t> &output, int flags )
 {
-    std::vector<completion_t> list1, list2;
+    	std::vector<completion_t> list1, list2;
 	std::vector<completion_t> *in, *out;
     
 	size_t i;
@@ -2127,7 +2128,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
 			}
 			else
 			{
-				if(!expand_variables2( next.empty()?NULL:const_cast<wchar_t*>(next.c_str()), *out, next.size() - 1 ))
+				if(!expand_variables2( const_cast<wchar_t*>(next.c_str()), *out, next.size() - 1 ))
 				{
 					return EXPAND_ERROR;
 				}
@@ -2143,7 +2144,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
 		{
             wcstring next = in->at(i).completion;
             
-			if( !expand_brackets( const_cast<wchar_t*>(next.c_str()), flags, *out ))
+			if( !expand_brackets( wcsdup(next.c_str()), flags, *out ))
 			{
 				return EXPAND_ERROR;
 			}
@@ -2169,7 +2170,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
                      interested in other completions, so we
                      short-circut and return
                      */
-					expand_pid( const_cast<wchar_t*>(next.c_str()), flags, output );
+					expand_pid( wcsdup(next.c_str()), flags, output );
 					return EXPAND_OK;
 				}
 				else
@@ -2181,7 +2182,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
 			}
 			else
 			{
-				if( !expand_pid( const_cast<wchar_t*>(next.c_str()), flags, *out ) )
+				if( !expand_pid( wcsdup(next.c_str()), flags, *out ) )
 				{
 					return EXPAND_ERROR;
 				}

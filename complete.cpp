@@ -1131,7 +1131,7 @@ static void complete_cmd( const wchar_t *cmd,
 					{
 						continue;
 					}
-					
+
 					add_slash = nxt_path[path_len-1]!=L'/';
 					nxt_completion = wcsdupcat( nxt_path,
 												add_slash?L"/":L"",

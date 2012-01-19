@@ -1422,7 +1422,7 @@ static int expand_variables2( wchar_t * in, std::vector<completion_t> &out, int 
 					}
 				}
 				
-//				free(in);
+				free(in);
 				al_destroy( &var_item_list );
 				return is_ok;
 			}
@@ -1471,7 +1471,7 @@ static int expand_variables2( wchar_t * in, std::vector<completion_t> &out, int 
 	}
 	else
 	{
-//		free( in );
+		free( in );
 	}
 
 	return is_ok;
@@ -2128,7 +2128,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
 			}
 			else
 			{
-				if(!expand_variables2( const_cast<wchar_t*>(next.c_str()), *out, next.size() - 1 ))
+				if(!expand_variables2( wcsdup(next.c_str()), *out, next.size() - 1 ))
 				{
 					return EXPAND_ERROR;
 				}

@@ -187,6 +187,8 @@ enum parser_type_t {
     PARSER_TYPE_COMPLETIONS_ONLY
 };
 
+struct profile_item_t;
+
 class parser_t {
     private:
     std::vector<block_t> blocks;
@@ -196,6 +198,7 @@ class parser_t {
     parser_t& operator=(const parser_t&);
     
     public:
+    std::vector<profile_item_t> profile_items;
     
     /** Create a parser of the given type */
     parser_t(enum parser_type_t type);

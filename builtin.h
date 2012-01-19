@@ -157,7 +157,7 @@ void builtin_pop_io(parser_t &parser);
 /**
    Return a one-line description of the specified builtin
 */
-const wchar_t *builtin_get_desc( parser_t &parser, const wchar_t *b );
+const wchar_t *builtin_get_desc( const wchar_t *b );
 
 
 /**

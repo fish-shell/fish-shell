@@ -391,11 +391,6 @@ static std::vector<wcstring> forbidden_function;
 static int job_start_pos;
 
 /**
-   List of all profiling data
-*/
-static array_list_t profile_data;
-
-/**
    Keeps track of how many recursive eval calls have been made. Eval
    doesn't call itself directly, recursion happens on blocks and on
    command substitutions.
@@ -432,6 +427,29 @@ typedef struct
 	*/
 	wchar_t *cmd;
 } profile_element_t;
+
+struct profile_item_t {
+	/**
+	   Time spent executing the specified command, including parse time for nested blocks.
+	*/
+	int exec;
+	/**
+	   Time spent parsing the specified command, including execution time for command substitutions.
+	*/
+	int parse;
+	/**
+	   The block level of the specified command. nested blocks and command substitutions both increase the block level.
+	*/
+	int level;
+	/**
+	   If the execution of this command was skipped.
+	*/
+	int skipped;
+	/**
+	   The command string.
+	*/
+	wcstring cmd;    
+};
 
 /**
    Return the current number of block nestings
@@ -666,14 +684,6 @@ void error( int ec, int p, const wchar_t *str, ... )
 
 }
 
-void parser_init()
-{
-	if( profile )
-	{
-		al_init( &profile_data);
-	}
-}
-
 /**
    Print profiling information to the specified stream
 */
@@ -765,7 +775,7 @@ void parser_destroy()
 		{
 			if( fwprintf( f,
 						  _(L"Time\tSum\tCommand\n"),
-						  al_get_count( &profile_data ) ) < 0 )
+						  profile_items.size() ) < 0 )
 			{
 				wperror( L"fwprintf" );
 			}
@@ -779,7 +789,6 @@ void parser_destroy()
 				wperror( L"fclose" );
 			}
 		}
-		al_destroy( &profile_data );
 	}
 
 	if( lineinfo )
@@ -2291,24 +2300,24 @@ static void skipped_exec( job_t * j )
    \param tok The tokenizer to read tokens from
 */
 
-static void eval_job( tokenizer *tok )
+static void eval_job( parser_t &parser, tokenizer *tok )
 {
 	job_t *j;
 
 	int start_pos = job_start_pos = tok_get_pos( tok );
 	long long t1=0, t2=0, t3=0;
-	profile_element_t *p=0;
+    
+    
+    profile_item_t *profile_item = NULL;
 	int skip = 0;
 	int job_begin_pos, prev_tokenizer_pos;
 	
 	if( profile )
 	{
-		p=(profile_element_t*)malloc( sizeof(profile_element_t));
-		if( !p )
-			DIE_MEM();
-		p->cmd=0;
-		al_push( &profile_data, p );
-		p->skipped=1;
+        parser.profile_items.resize(parser.profile_items.size() + 1);
+        profile_item = &parser.profile_items.back();
+        profile_item->cmd = L"";
+        profile_item->skipped = 1;        
 		t1 = get_time();
 	}
 
@@ -2364,8 +2373,8 @@ static void eval_job( tokenizer *tok )
 				if( profile )
 				{
 					t2 = get_time();
-					p->cmd = wcsdup( j->command );
-					p->skipped=current_block->skip;
+					profile_item->cmd = wcsdup( j->command );
+					profile_item->skipped=current_block->skip;
 				}
 				
 				skip |= current_block->skip;
@@ -2394,9 +2403,9 @@ static void eval_job( tokenizer *tok )
 				if( profile )
 				{
 					t3 = get_time();
-					p->level=eval_level;
-					p->parse = t2-t1;
-					p->exec=t3-t2;
+					profile_item->level=eval_level;
+					profile_item->parse = t2-t1;
+					profile_item->exec=t3-t2;
 				}
 
 				if( current_block->type == WHILE )
@@ -2551,7 +2560,7 @@ int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
 		   !sanity_check() &&
 		   !exit_status() )
 	{
-		eval_job( current_tokenizer );
+		eval_job( parser, current_tokenizer );
 		event_fire( NULL );
 	}
 

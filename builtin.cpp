@@ -2714,7 +2714,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
    Implementation of the builtin count command, used to count the
    number of arguments sent to it.
  */
-static int builtin_count( wchar_t ** argv )
+static int builtin_count( parser_t &parser, wchar_t ** argv )
 {
 	int argc;
 	argc = builtin_count_args( argv );
@@ -3851,19 +3851,19 @@ static int internal_help( wchar_t *cmd )
 }
 
 
-int builtin_run( wchar_t **argv, io_data_t *io )
+int builtin_run( parser_t &parser, wchar_t **argv, io_data_t *io )
 {
-	int (*cmd)(wchar_t **argv)=0;
+	int (*cmd)(parser_t &parser, wchar_t **argv)=0;
 	real_io = io;
 		
 	CHECK( argv, STATUS_BUILTIN_ERROR );
 	CHECK( argv[0], STATUS_BUILTIN_ERROR );
 		
-	cmd = (int (*)(wchar_t **))hash_get( &builtin, argv[0] );
+	cmd = (int (*)(parser_t &parser, wchar_t **))hash_get( &builtin, argv[0] );
 	
 	if( argv[1] != 0 && !internal_help(argv[0]) )
 	{
-		if( argv[2] == 0 && (parser_is_help( argv[1], 0 ) ) )
+		if( argv[2] == 0 && (parser.is_help( argv[1], 0 ) ) )
 		{
 			builtin_print_help( parser, argv[0], sb_out );
 			return STATUS_BUILTIN_OK;
@@ -3874,7 +3874,7 @@ int builtin_run( wchar_t **argv, io_data_t *io )
 	{
 		int status;
 
-		status = cmd(argv);
+		status = cmd(parser, argv);
 		return status;
 
 	}

@@ -1060,7 +1060,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			if( is_recursive )
 			{
 				const wchar_t *end = wcschr( wc, ANY_STRING_RECURSIVE );
-				wchar_t *wc_sub = const_cast<wchar_t*>(wcsndup( wc, end-wc+1));
+				wchar_t *wc_sub = wcsndup( wc, end-wc+1);
 				partial_match = wildcard_match2( name, wc_sub, 1 );
 				free( wc_sub );
 			}			

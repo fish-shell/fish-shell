@@ -204,7 +204,7 @@ int expand_is_clean( const wchar_t *in );
    \param token_pos The position where the expansion begins
    \param error_pos The position on the line to report to the error function.
 */
-void expand_variable_error( const wchar_t *token, int token_pos, int error_pos );
+void expand_variable_error( parser_t &parser, const wchar_t *token, int token_pos, int error_pos );
 
 
 #endif

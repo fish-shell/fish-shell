@@ -1243,9 +1243,9 @@ static void complete_from_args( const wchar_t *str,
 	array_list_t possible_comp;
 
 	al_init( &possible_comp );
-
+    parser_t parser(PARSER_TYPE_COMPLETIONS_ONLY);
 	proc_push_interactive(0);
-	eval_args( args, &possible_comp );
+	parser.eval_args( args, &possible_comp );
 	proc_pop_interactive();
 	
 	complete_strings( comp_out, str, desc, 0, &possible_comp, flags );

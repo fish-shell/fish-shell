@@ -247,11 +247,7 @@ static void clear_hash_entry( void *key, void *data )
 */
 static void start_fishd()
 {
-	string_buffer_t cmd;
-	struct passwd *pw;
-	
-	sb_init( &cmd );
-	pw = getpwuid(getuid());
+	struct passwd *pw = getpwuid(getuid());
 	
 	debug( 3, L"Spawning new copy of fishd" );
 	
@@ -261,12 +257,9 @@ static void start_fishd()
 		return;
 	}
 	
-	sb_printf( &cmd, FISHD_CMD, pw->pw_name );
-	
-	eval( (wchar_t *)cmd.buff,
-		  0,
-		  TOP );
-	sb_destroy( &cmd );
+    wcstring cmd = format_string(FISHD_CMD, pw->pw_name);	
+    parser_t parser(PARSER_TYPE_GENERAL);
+	parser.eval( cmd.c_str(), 0, TOP );
 }
 
 /**

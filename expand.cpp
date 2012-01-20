@@ -731,7 +731,7 @@ static int expand_pid2( const wcstring &in, int flags, std::vector<wcstring> &ou
 }
 
 
-void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
+void expand_variable_error( parser_t &parser, const wchar_t *token, int token_pos, int error_pos )
 {
 	int stop_pos = token_pos+1;
 	
@@ -758,7 +758,7 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 			
 			if( is_var )
 			{
-				error( SYNTAX_ERROR,
+				parser.error( SYNTAX_ERROR,
 					   error_pos,
 					   COMPLETE_VAR_BRACKET_DESC,
 					   cpy,
@@ -767,7 +767,7 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 			}
 			else
 			{
-				error( SYNTAX_ERROR,
+				parser.error( SYNTAX_ERROR,
 					   error_pos,
 					   COMPLETE_VAR_BRACKET_DESC,
 					   L"",
@@ -781,7 +781,7 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 		
 		case INTERNAL_SEPARATOR:
 		{
-			error( SYNTAX_ERROR,
+			parser.error( SYNTAX_ERROR,
 				   error_pos,
 				   COMPLETE_VAR_PARAN_DESC );	
 			break;
@@ -789,7 +789,7 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 		
 		case 0:
 		{
-			error( SYNTAX_ERROR,
+			parser.error( SYNTAX_ERROR,
 				   error_pos,
 				   COMPLETE_VAR_NULL_DESC );
 			break;
@@ -797,7 +797,7 @@ void expand_variable_error( const wchar_t *token, int token_pos, int error_pos )
 		
 		default:
 		{
-			error( SYNTAX_ERROR,
+			parser.error( SYNTAX_ERROR,
 				   error_pos,
 				   COMPLETE_VAR_DESC,
 				   token[stop_pos] );

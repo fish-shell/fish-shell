@@ -77,9 +77,10 @@ static int read_init()
 	wchar_t *config_dir_escaped;
 	void *context;
 	string_buffer_t *eval_buff;
+    parser_t parser();
 
-	eval( L"builtin . " DATADIR "/fish/config.fish 2>/dev/null", 0, TOP );
-	eval( L"builtin . " SYSCONFDIR L"/fish/config.fish 2>/dev/null", 0, TOP );
+	parser.eval( L"builtin . " DATADIR "/fish/config.fish 2>/dev/null", 0, TOP );
+	parser.eval( L"builtin . " SYSCONFDIR L"/fish/config.fish 2>/dev/null", 0, TOP );
 	
 	/*
 	  We need to get the configuration directory before we can source the user configuration file

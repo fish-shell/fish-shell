@@ -187,7 +187,28 @@ enum parser_type_t {
     PARSER_TYPE_COMPLETIONS_ONLY
 };
 
-struct profile_item_t;
+struct profile_item_t {
+	/**
+	   Time spent executing the specified command, including parse time for nested blocks.
+	*/
+	int exec;
+	/**
+	   Time spent parsing the specified command, including execution time for command substitutions.
+	*/
+	int parse;
+	/**
+	   The block level of the specified command. nested blocks and command substitutions both increase the block level.
+	*/
+	int level;
+	/**
+	   If the execution of this command was skipped.
+	*/
+	int skipped;
+	/**
+	   The command string.
+	*/
+	wcstring cmd;    
+};
 
 class parser_t {
     private:

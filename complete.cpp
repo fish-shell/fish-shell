@@ -1033,8 +1033,9 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 		for( i=0; i<comp.size(); i++ )
 		{
 			completion_t &c =  comp.at( i );
-			const wchar_t *el = c.completion.empty()?NULL:c.completion.c_str();
-			
+//			const wchar_t *el = c.completion.empty()?NULL:c.completion.c_str();
+			const wchar_t *el = c.completion.c_str();
+
 			wchar_t *new_desc;
 			
 			new_desc = (wchar_t *)hash_get( &lookup,

@@ -250,12 +250,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	{
 		wchar_t *out_completion = 0;
 		const wchar_t *out_desc = desc;
-		
-		if( out.empty() )
-		{
-			return 1;
-		}
-			
+
 		if( flags & COMPLETE_NO_CASE )
 		{
 			out_completion = wcsdup( orig );
@@ -319,7 +314,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 		do
 		{
 			res |= wildcard_complete_internal( orig, str, wc+1, 0, desc, desc_func, out, flags );
-			if( res && out.empty() )
+			if( res )
 				break;
 		}
 		while( *str++ != 0 );
@@ -1190,7 +1185,7 @@ int wildcard_expand( const wchar_t *wc,
 			if( c.flags & COMPLETE_NO_CASE )
 			{
 				sb_clear( &sb );
-				sb_printf( &sb, L"%ls%ls%ls", base_dir, wc_base, c.completion );
+				sb_printf( &sb, L"%ls%ls%ls", base_dir, wc_base, c.completion.c_str() );
 				
 				c.completion = (wchar_t *)sb.buff;
 			}

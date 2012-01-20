@@ -1208,27 +1208,30 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 			continue;
 		}
 
-		if( !el.completion.empty() )
-		{
-			if( el.flags & COMPLETE_NO_CASE )
-			{
-				if( base_len == -1 )
-				{
-					wchar_t *begin;
-				
-					parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
-					base_len = data->buff_pos - (begin-data->buff);
-				}
-				
-				foo = escape( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-			}
-			else
-			{
-				wcstring foo_wstr = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-				foo = wcsdup(foo_wstr.c_str());
-			}
+		if( el.completion.empty() ){
+			continue;
 		}
 		
+		if( el.flags & COMPLETE_NO_CASE )
+		  {
+		    if( base_len == -1 )
+		      {
+			wchar_t *begin;
+				
+			parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
+			base_len = data->buff_pos - (begin-data->buff);
+		      }
+								
+		    wcstring foo_wstr = escape_string( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+		    foo = wcsdup(foo_wstr.c_str());
+		  }
+		else
+		  {
+		    wcstring foo_wstr = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+		    foo = wcsdup(foo_wstr.c_str());
+		  }
+		
+	
 		if( !el.description.empty() )
 		{
 			wcstring baz_wstr = escape_string( el.description, 1 );

@@ -1765,7 +1765,7 @@ int exec_subshell( const wchar_t *cmd,
 	
 	prev_status = proc_get_last_status();
 	
-    parser_t parser(PARSER_TYPE_GENERAL);
+    parser_t &parser = parser_t::principal_parser();
 	if( parser.eval( cmd, io_buffer, SUBST ) )
 	{
 		status = -1;

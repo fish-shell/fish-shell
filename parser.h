@@ -217,9 +217,48 @@ class parser_t {
     enum parser_type_t parser_type;
     std::vector<block_t> blocks;
     
+    /** Last error code */
+    int error_code;
+    
+    /** Position of last error */
+    int err_pos;
+    
+    /** Description of last error */
+    string_buffer_t *err_buff;
+    
+    /** Pointer to the current tokenizer */
+    tokenizer *current_tokenizer;
+    
+    /** String for representing the current line */
+    string_buffer_t  *lineinfo;
+    
+    /** This is the position of the beginning of the currently parsed command */
+    int current_tokenizer_pos;
+    
+    /** List of called functions, used to help prevent infinite recursion */
+    std::vector<wcstring> forbidden_function;
+    
+    /** String index where the current job started. */
+    int job_start_pos;
+    
+    /**
+       Keeps track of how many recursive eval calls have been made. Eval
+       doesn't call itself directly, recursion happens on blocks and on
+       command substitutions.
+    */
+    int eval_level;
+    
     /* No copying allowed */
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
+    
+    /**
+       Returns the name of the currently evaluated function if we are
+       currently evaluating a function, null otherwise. This is tested by
+       moving down the block-scope-stack, checking every block if it is of
+       type FUNCTION_CALL.
+    */
+    const wchar_t *is_function() const;
     
     void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, array_list_t *args );
     int parse_job( process_t *p, job_t *j, tokenizer *tok );
@@ -227,6 +266,7 @@ class parser_t {
     void eval_job( tokenizer *tok );
     int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset );
     void print_errors( string_buffer_t *target, const wchar_t *prefix );
+    void print_errors_stderr();
     
     public:
     std::vector<profile_item_t> profile_items;

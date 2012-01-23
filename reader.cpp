@@ -1257,7 +1257,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	out->next = in;
 	out->fd = 4;
 	
-    parser_t parser(PARSER_TYPE_GENERAL);
+    parser_t &parser = parser_t::principal_parser();
 	parser.eval( (wchar_t *)cmd.buff, out, TOP);
 	term_steal();
 

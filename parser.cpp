@@ -353,51 +353,22 @@ static const struct block_lookup_entry block_lookup[]=
 	{
 		0, 0, 0
 	}
-}
-	;
+};
 
-/** Last error code */
-static int error_code;
 
-event_block_t *global_event_block=0;
-
-io_data_t *block_io;
-
-/** Position of last error */
-
-static int err_pos;
-
-/** Description of last error */
-static string_buffer_t *err_buff=0;
-
-/** Pointer to the current tokenizer */
-static tokenizer *current_tokenizer;
-
-/** String for representing the current line */
-static string_buffer_t  *lineinfo=0;
-
-/** This is the position of the beginning of the currently parsed command */
-static int current_tokenizer_pos;
-
-/** The current innermost block */
-block_t *current_block=0;
-
-/** List of called functions, used to help prevent infinite recursion */
-static std::vector<wcstring> forbidden_function;
-
-/**
-   String index where the current job started.
-*/
-static int job_start_pos;
-
-/**
-   Keeps track of how many recursive eval calls have been made. Eval
-   doesn't call itself directly, recursion happens on blocks and on
-   command substitutions.
-*/
-static int eval_level=-1;
-
-parser_t::parser_t(enum parser_type_t type) : parser_type(type)
+parser_t::parser_t(enum parser_type_t type) :
+    parser_type(type),
+    error_code(0),
+    err_pos(0),
+    err_buff(NULL),
+    current_tokenizer(NULL),
+    lineinfo(NULL),
+    current_tokenizer_pos(0),
+    job_start_pos(0),
+    eval_level(-1),
+    current_block(NULL),
+    global_event_block(NULL),
+    block_io(NULL)
 {
     
 }
@@ -787,7 +758,7 @@ void parser_t::print_errors( string_buffer_t *target, const wchar_t *prefix )
 /**
    Print error message to stderr if an error has occured while parsing
 */
-static void print_errors_stderr(parser_t &parser)
+void parser_t::print_errors_stderr()
 {
 	if( error_code && err_buff )
 	{
@@ -797,7 +768,7 @@ static void print_errors_stderr(parser_t &parser)
 		tmp = current_tokenizer_pos;
 		current_tokenizer_pos = err_pos;
 		
-		fwprintf( stderr, L"%ls", parser.current_line() );
+		fwprintf( stderr, L"%ls", this->current_line() );
 		
 		current_tokenizer_pos=tmp;
 	}
@@ -876,7 +847,7 @@ int parser_t::eval_args( const wchar_t *line, array_list_t *args )
 		}
 	}
 
-	print_errors_stderr(*this);
+	this->print_errors_stderr();
 	
 	tok_destroy( &tok );
 	
@@ -996,7 +967,7 @@ void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
    moving down the block-scope-stack, checking every block if it is of
    type FUNCTION_CALL.
 */
-static const wchar_t *is_function()
+const wchar_t *parser_t::is_function() const
 {
 	block_t *b = current_block;
 	while( 1 )
@@ -2558,7 +2529,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 		parser_t::pop_block();
 	}
 
-	print_errors_stderr(*this);
+	this->print_errors_stderr();
 
 	tok_destroy( current_tokenizer );
 	free( current_tokenizer );

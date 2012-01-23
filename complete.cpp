@@ -45,7 +45,7 @@
 #include "halloc_util.h"
 #include "wutil.h"
 #include "path.h"
-
+#include "builtin_scripts.h"
 
 /*
   Completion description strings, mostly for different types of files, such as sockets, block devices, etc.
@@ -181,6 +181,8 @@ static complete_entry_t *first_entry=0;
 */
 static hash_table_t *condition_cache=0;
 
+static autoload_t completion_autoloader(L"fish_complete_path", internal_completion_scripts, sizeof internal_completion_scripts / sizeof *internal_completion_scripts );
+
 static void complete_free_entry( complete_entry_t *c );
 
 /**
@@ -227,7 +229,7 @@ static void complete_destroy()
 	}
 	first_entry = 0;
 	
-	parse_util_load_reset( L"fish_complete_path", 0 );
+	completion_autoloader.reset( 0 );
 	
 }
 
@@ -1360,10 +1362,7 @@ static void complete_load_handler( const wchar_t *cmd )
 void complete_load( const wchar_t *name, int reload )
 {
 	CHECK( name, );
-	parse_util_load( name, 
-					 L"fish_complete_path",
-					 &complete_load_handler, 
-					 reload );	
+	completion_autoloader.load( name, &complete_load_handler, reload );
 }
 
 /**

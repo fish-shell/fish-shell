@@ -53,117 +53,43 @@
 */
 #define AUTOLOAD_MIN_AGE 60
 
-struct autoload_function_t
-{   
-    bool is_placeholder; //whether we are a placeholder that stands in for "no such function"
-    time_t modification_time; // st_mtime
-    time_t load_time; // when function was loaded
-    
-    
-    autoload_function_t() : is_placeholder(false), modification_time(0), load_time(0) { }
-};
 
-/**
-   A structure representing the autoload state for a specific variable, e.g. fish_complete_path
-*/
-struct autoload_t
-{    
-private:
-    typedef std::map<wcstring, autoload_function_t> autoload_functions_map_t;
-    autoload_functions_map_t autoload_functions;
-public:
+/* Get the name of the function that was least recently loaded, if it was loaded before cutoff_access. Return NULL if no function qualifies. */ 
+const wcstring *autoload_t::get_lru_function_name(const wcstring &skip, time_t cutoff_access) const
+{
+    const wcstring *resultName = NULL;
+    const autoload_function_t *resultFunction = NULL;
+    autoload_functions_map_t::const_iterator iter;
+    for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
+    {
+        /* Skip the skip */
+        if (iter->first == skip) continue;
+        
+        /* Skip items that are still loading */
+        if (is_loading(iter->first)) continue;
+        
+        /* Skip placeholder items */
+        if (iter->second.is_placeholder) continue;
+        
+        /* Check cutoff_access */
+        if (iter->second.load_time > cutoff_access) continue;
 
-	/**
-	   A table containing all the files that are currently being
-	   loaded. This is here to help prevent recursion.
-	*/
-    std::set<wcstring> is_loading_set;
-    
-    bool is_loading(const wcstring &name) const {
-        return is_loading_set.find(name) != is_loading_set.end();
-    }
-    
-    autoload_function_t *create_function_with_name(const wcstring &name)
-    {
-        return &autoload_functions[name];
-    }
-    
-    bool remove_function_with_name(const wcstring &name)
-    {
-        return autoload_functions.erase(name) > 0;
-    }
-    
-    autoload_function_t *get_function_with_name(const wcstring &name)
-    {
-        autoload_function_t *result = NULL;
-        autoload_functions_map_t::iterator iter = autoload_functions.find(name);
-        if (iter != autoload_functions.end())
-            result = &iter->second;
-        return result;
-    }
-    
-    void remove_all_functions(void)
-    {
-        autoload_functions.clear();
-    }
-    
-    size_t function_count(void) const
-    {
-        return autoload_functions.size();
-    }
-    
-    /* Get the name of the function that was least recently loaded, if it was loaded before cutoff_access. Return NULL if no function qualifies. */ 
-    const wcstring *get_lru_function_name(const wcstring &skip, time_t cutoff_access) const
-    {
-        const wcstring *resultName = NULL;
-        const autoload_function_t *resultFunction = NULL;
-        autoload_functions_map_t::const_iterator iter;
-        for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
-        {
-            /* Skip the skip */
-            if (iter->first == skip) continue;
-            
-            /* Skip items that are still loading */
-            if (is_loading(iter->first)) continue;
-            
-            /* Skip placeholder items */
-            if (iter->second.is_placeholder) continue;
-            
-            /* Check cutoff_access */
-            if (iter->second.load_time > cutoff_access) continue;
-
-            /* Remember this if it was used earlier */
-            if (resultFunction == NULL || iter->second.load_time < resultFunction->load_time) {
-                resultName = &iter->first;
-                resultFunction = &iter->second;
-            }
+        /* Remember this if it was used earlier */
+        if (resultFunction == NULL || iter->second.load_time < resultFunction->load_time) {
+            resultName = &iter->first;
+            resultFunction = &iter->second;
         }
-        return resultName;
     }
+    return resultName;
+}
     
-    void apply_handler_to_nonplaceholder_function_names(void (*handler)(const wchar_t *cmd)) const
-    {
-        autoload_functions_map_t::const_iterator iter;
-        for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
-            handler(iter->first.c_str());
-    }
-    
-	/**
-	   A string containg the path used to find any files to load. If
-	   this differs from the current environment variable, the
-	   autoloader needs to drop all loaded files and reload them.
-	*/
-	wcstring old_path;
+void autoload_t::apply_handler_to_nonplaceholder_function_names(void (*handler)(const wchar_t *cmd)) const
+{
+    autoload_functions_map_t::const_iterator iter;
+    for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
+        handler(iter->first.c_str());
+}
 
-};
-
-
-/**
-   Set of files which have been autoloaded
-*/
-
-typedef std::map<wcstring, autoload_t> autoload_map_t;
-static autoload_map_t all_loaded_map;
 
 int parse_util_lineno( const wchar_t *str, int len )
 {
@@ -712,43 +638,32 @@ void parse_util_token_extent( const wchar_t *buff,
 
 }
 
-void parse_util_load_reset( const wchar_t *path_var_name,
-							void (*on_load)(const wchar_t *cmd) )
+autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t * const scripts, size_t script_count) :
+                       env_var_name(env_var_name_var),
+                       builtin_scripts(scripts),
+                       builtin_script_count(script_count)
 {
-	CHECK( path_var_name, );
-
-    autoload_map_t::iterator condemned = all_loaded_map.find(path_var_name);
-    if (condemned != all_loaded_map.end())
-    {
-        autoload_t &loaded = condemned->second;
-        if (on_load) {
-            /*  Call the on_load handler on each real function name. */
-            loaded.apply_handler_to_nonplaceholder_function_names(on_load);
-        }
-        /* Empty the functino set */
-        loaded.remove_all_functions();
-        all_loaded_map.erase(condemned);
-    }
-	
 }
 
-int parse_util_unload( const wchar_t *cmd,
-					   const wchar_t *path_var_name,
-					   void (*on_load)(const wchar_t *cmd) )
+void autoload_t::reset( void (*on_load)(const wchar_t *cmd) )
+{
+    if (! autoload_functions.empty()) {
+        if (on_load) {
+            /*  Call the on_load handler on each real function name. */
+            this->apply_handler_to_nonplaceholder_function_names(on_load);
+        }
+        /* Empty the functino set */
+        this->remove_all_functions();
+    }
+}
+
+int autoload_t::unload( const wchar_t *cmd, void (*on_load)(const wchar_t *cmd) )
 {
 	int result = 0;
 
-	CHECK( path_var_name, 0 );
 	CHECK( cmd, 0 );
 
-    autoload_map_t::iterator iter = all_loaded_map.find(path_var_name);
-    if (iter == all_loaded_map.end())
-    {
-        return 0;
-    }
-    
-    autoload_t &loaded = iter->second;
-    if (loaded.remove_function_with_name(cmd))
+    if (this->remove_function_with_name(cmd))
     {
         if (on_load)
             on_load(cmd);
@@ -759,58 +674,36 @@ int parse_util_unload( const wchar_t *cmd,
 
 /**
 
-   Unload all autoloaded items that have expired, that where loaded in
+   Unload one autoloaded item that has expired, that where loaded in
    the specified path.
 
-   \param path_var_name The variable containing the path to autoload in
    \param skip unloading the the specified file
    \param on_load the callback function to call for every unloaded file
 
 */
-static void parse_util_autounload( const wchar_t *path_var_name,
-								   const wchar_t *skip,
-								   void (*on_load)(const wchar_t *cmd) )
+void autoload_t::autounload( const wchar_t *skip,
+                             void (*on_load)(const wchar_t *cmd) )
 {
-    autoload_map_t::iterator iter = all_loaded_map.find(path_var_name);
-    if (iter == all_loaded_map.end())
+    if( this->function_count() >= AUTOLOAD_MAX )
     {
-        return;
-    }
-    autoload_t &loaded = iter->second;
-	
-	if( loaded.function_count() >= AUTOLOAD_MAX )
-	{
         time_t cutoff_access = time(0) - AUTOLOAD_MIN_AGE;
-        const wcstring *lru = loaded.get_lru_function_name(skip, cutoff_access);
+        const wcstring *lru = this->get_lru_function_name(skip, cutoff_access);
         if (lru)
-            parse_util_unload( lru->c_str(), path_var_name, on_load );
+            unload( lru->c_str(), on_load );
     }
 }
 
-static int parse_util_load_internal( const wcstring &cmd,
-                                     const struct builtin_script_t *builtin_scripts,
-                                     size_t builtin_script_count,
-									 void (*on_load)(const wchar_t *cmd),
-									 int reload,
-									 autoload_t &loaded,
-									 const std::vector<wcstring> &path_list );
-
-
-int parse_util_load( const wcstring &cmd,
-					 const wcstring &path_var_name,
-					 void (*on_load)(const wchar_t *cmd),
-					 int reload )
+int autoload_t::load( const wcstring &cmd,
+                      void (*on_load)(const wchar_t *cmd),
+                      int reload )
 {
 	int res;
 	int c, c2;
-    autoload_t *loaded;
 	
 	CHECK_BLOCK( 0 );
-	
-//	debug( 0, L"Autoload %ls in %ls", cmd, path_var_name );
 
-	parse_util_autounload( path_var_name.c_str(), cmd.c_str(), on_load );
-	const env_var_t path_var = env_get_string( path_var_name.c_str() );	
+	autounload( cmd.c_str(), on_load );
+	const env_var_t path_var = env_get_string( env_var_name.c_str() );	
 	
 	/*
 	  Do we know where to look?
@@ -819,84 +712,45 @@ int parse_util_load( const wcstring &cmd,
 	{
 		return 0;
 	}
-
-    autoload_map_t::iterator iter = all_loaded_map.find(path_var_name);
-    if (iter != all_loaded_map.end())
+    
+    /*
+      Check if the lookup path has changed. If so, drop all loaded
+      files.
+    */
+    if( path_var != this->path )
     {
-        loaded = &iter->second;
-        
-		/*
-		  Check if the lookup path has changed. If so, drop all loaded
-		  files and start from scratch.
-		*/
-		if( path_var != loaded->old_path )
-		{
-			parse_util_load_reset( path_var_name.c_str(), on_load);
-			reload = parse_util_load( cmd, path_var_name, on_load, reload );
-			return reload;
-		}
+        this->path = path_var;
+        reset( on_load);
+    }
 
-		/**
-		   Warn and fail on infinite recursion
-		*/
-        if (loaded->is_loading(cmd))
-		{
-			debug( 0, 
-				   _( L"Could not autoload item '%ls', it is already being autoloaded. " 
-					  L"This is a circular dependency in the autoloading scripts, please remove it."), 
-				   cmd.c_str() );
-			return 1;
-		}
+    /**
+       Warn and fail on infinite recursion
+    */
+    if (this->is_loading(cmd))
+    {
+        debug( 0, 
+               _( L"Could not autoload item '%ls', it is already being autoloaded. " 
+                  L"This is a circular dependency in the autoloading scripts, please remove it."), 
+               cmd.c_str() );
+        return 1;
+    }
 
-	}
-	else
-	{
-		/*
-		  We have never tried to autoload using this path name before,
-		  set up initial data
-		*/
-//		debug( 0, L"Create brand new autoload_t for %ls->%ls", path_var_name, path_var.c_str() );
-        loaded = &all_loaded_map[path_var_name];
-		loaded->old_path = wcsdup(path_var.c_str());
-	}
+
 
     std::vector<wcstring> path_list;
 	tokenize_variable_array2( path_var, path_list );
 	
 	c = path_list.size();
 	
-    loaded->is_loading_set.insert(cmd);
-
-    /* Figure out which builtin-scripts array to search (if any) */
-    const builtin_script_t *builtins = NULL;
-    size_t builtin_count = 0;
-    if (path_var_name == L"fish_function_path") {
-        builtins = internal_function_scripts;
-        builtin_count = sizeof internal_function_scripts / sizeof *internal_function_scripts;
-    } else if (path_var_name == L"fish_complete_path") {
-        builtins = internal_completion_scripts;
-        builtin_count = sizeof internal_completion_scripts / sizeof *internal_completion_scripts;        
-    }
+    is_loading_set.insert(cmd);
 
 	/*
 	  Do the actual work in the internal helper function
 	*/
-
-	res = parse_util_load_internal( cmd, builtins, builtin_count, on_load, reload, *loaded, path_list );
-
-    autoload_map_t::iterator iter2 = all_loaded_map.find(path_var_name);
-    if (iter2 != all_loaded_map.end()) {
-        autoload_t *loaded2 = &iter2->second;
-        if( loaded2 == loaded )
-        {
-            /**
-               Cleanup
-            */
-            std::set<wcstring>::iterator condemned = loaded->is_loading_set.find(cmd);
-            assert(condemned != loaded->is_loading_set.end());
-            loaded->is_loading_set.erase(condemned);
-        }
-    }
+	res = this->load_internal( cmd, on_load, reload, path_list );
+    
+    int erased = is_loading_set.erase(cmd);
+    assert(erased);
 	
 	c2 = path_list.size();
 
@@ -920,20 +774,17 @@ static bool script_name_precedes_script_name(const builtin_script_t &script1, co
    the code, and the caller can take care of various cleanup work.
 */
 
-static int parse_util_load_internal( const wcstring &cmd,
-                                     const builtin_script_t *builtin_scripts,
-                                     size_t builtin_script_count,
-									 void (*on_load)(const wchar_t *cmd),
-									 int reload,
-									 autoload_t &loaded,
-									 const std::vector<wcstring> &path_list )
+int autoload_t::load_internal( const wcstring &cmd,
+                               void (*on_load)(const wchar_t *cmd),
+                               int reload,
+                               const wcstring_list_t &path_list )
 {
 
 	size_t i;
 	int reloaded = 0;
 
     /* Get the function */
-    autoload_function_t * func = loaded.get_function_with_name(cmd);
+    autoload_function_t * func = this->get_function_with_name(cmd);
 
     /* Return if already loaded and we are skipping reloading */
 	if( !reload && func )
@@ -988,7 +839,7 @@ static int parse_util_load_internal( const wcstring &cmd,
                     has_script_source = true;
                     
                     if( !func )
-                        func = loaded.create_function_with_name(cmd);
+                        func = this->create_function_with_name(cmd);
 
                     func->modification_time = buf.st_mtime;
                     func->load_time = time(NULL);
@@ -1018,7 +869,7 @@ static int parse_util_load_internal( const wcstring &cmd,
         */
         if( !func )
         {
-            func = loaded.create_function_with_name(cmd);
+            func = this->create_function_with_name(cmd);
             func->load_time = time(NULL);
             func->is_placeholder = true;
         }

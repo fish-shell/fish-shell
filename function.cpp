@@ -38,6 +38,7 @@
 #include "expand.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "builtin_scripts.h"
 
 class function_internal_info_t
 {
@@ -74,6 +75,9 @@ public:
 	 */
 	bool shadows;
 };
+
+/* Autoloader for functions */
+static autoload_t function_autoloader(L"fish_function_path", internal_function_scripts, sizeof internal_function_scripts / sizeof *internal_function_scripts);
 
 /**
    Table containing all functions
@@ -136,10 +140,7 @@ static int load( const wchar_t *name )
     UNLOCK_FUNCTIONS();
 	
 	is_autoload = 1;	
-	res = parse_util_load( name,
-						   L"fish_function_path",
-						   &function_remove,
-						   1 );
+	res = function_autoloader.load( name, &function_remove, 1 );
 	is_autoload = was_autoload;
 	return res;
 }
@@ -291,7 +292,7 @@ void function_remove( const wchar_t *name )
 	*/
 	if( !is_autoload )
 	{
-		parse_util_unload( name, L"fish_function_path", 0 );
+		function_autoloader.unload( name, 0 );
 	}
     UNLOCK_FUNCTIONS();
 }

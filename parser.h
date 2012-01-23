@@ -199,7 +199,7 @@ struct profile_item_t {
 	/**
 	   The block level of the specified command. nested blocks and command substitutions both increase the block level.
 	*/
-	int level;
+	size_t level;
 	/**
 	   If the execution of this command was skipped.
 	*/
@@ -210,6 +210,8 @@ struct profile_item_t {
 	wcstring cmd;    
 };
 
+struct tokenizer;
+
 class parser_t {
     private:
     std::vector<block_t> blocks;
@@ -217,6 +219,15 @@ class parser_t {
     /* No copying allowed */
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
+    
+    void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, array_list_t *args );
+    int parse_job( process_t *p, job_t *j, tokenizer *tok );
+    void skipped_exec( job_t * j );
+    void eval_job( tokenizer *tok );
+    int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset );
+    int parser_test( const  wchar_t * buff, int *block_level,  string_buffer_t *out, const wchar_t *prefix );
+    int parser_test_args(const  wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
+    void print_errors( string_buffer_t *target, const wchar_t *prefix );
     
     public:
     std::vector<profile_item_t> profile_items;
@@ -231,7 +242,7 @@ class parser_t {
     event_block_t *global_event_block;
     
     /** Current block level io redirections  */
-    io_data_t &block_io(void) const;
+    io_data_t *block_io;
     
     /**
       Evaluate the expressions contained in cmd.
@@ -268,7 +279,7 @@ class parser_t {
 
        init.fish (line 127): ls|grep pancake
     */
-    const wchar_t *current_line() const;
+    const wchar_t *current_line();
 
     /**
        Returns the current line number

@@ -186,7 +186,7 @@ static int count_char( const wchar_t *str, wchar_t c )
 	return res;
 }
 
-wchar_t *builtin_help_get( const wchar_t *name )
+wchar_t *builtin_help_get( parser_t &parser, const wchar_t *name )
 {
     wcstring_list_t lst;
 	string_buffer_t cmd;
@@ -254,7 +254,7 @@ static void builtin_print_help( parser_t &parser, const wchar_t *cmd, string_buf
 				   parser.current_line() );
 	}
 
-	h = builtin_help_get( cmd );
+	h = builtin_help_get( parser, cmd );
 
 	if( !h )
 		return;
@@ -3914,7 +3914,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b )
 	return _( hash_get( desc, b ));
 }
 
-void builtin_push_io( int in )
+void builtin_push_io( parser_t &parser, int in )
 {
 	if( builtin_stdin != -1 )
 	{

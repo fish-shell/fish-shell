@@ -461,7 +461,7 @@ static void event_fire_internal( event_t *event )
 		prev_status = proc_get_last_status();
 		parser.push_block( EVENT );
 		parser.current_block->param1.event = event;
-		eval( buffer.c_str(), 0, TOP );
+		parser.eval( buffer.c_str(), 0, TOP );
 		parser.pop_block();
 		proc_pop_interactive();					
 		proc_set_last_status( prev_status );

@@ -77,7 +77,7 @@ static int read_init()
 	wchar_t *config_dir_escaped;
 	void *context;
 	string_buffer_t *eval_buff;
-    parser_t parser();
+    parser_t parser(PARSER_TYPE_GENERAL);
 
 	parser.eval( L"builtin . " DATADIR "/fish/config.fish 2>/dev/null", 0, TOP );
 	parser.eval( L"builtin . " SYSCONFDIR L"/fish/config.fish 2>/dev/null", 0, TOP );
@@ -97,7 +97,7 @@ static int read_init()
 	{
 		config_dir_escaped = escape( config_dir, 1 );
 		sb_printf( eval_buff, L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped );
-		eval( (wchar_t *)eval_buff->buff, 0, TOP );
+		parser.eval( (wchar_t *)eval_buff->buff, 0, TOP );
 		free( config_dir_escaped );
 	}
 	
@@ -307,7 +307,7 @@ int main( int argc, char **argv )
 	proc_init();	
 	event_init();	
 	wutil_init();
-	parser_init();
+	//parser_init();
 	builtin_init();
 	function_init();
 	env_init();
@@ -318,8 +318,9 @@ int main( int argc, char **argv )
 	{
 		if( cmd != 0 )
 		{
+            parser_t parser(PARSER_TYPE_GENERAL);
 			wchar_t *cmd_wcs = str2wcs( cmd );
-			res = eval( cmd_wcs, 0, TOP );
+			res = parser.eval( cmd_wcs, 0, TOP );
 			free(cmd_wcs);
 			reader_exit(0, 0);
 		}

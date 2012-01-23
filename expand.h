@@ -123,6 +123,7 @@ enum
 */
 #define ARRAY_BOUNDS_ERR _(L"Array index out of bounds")
 
+class parser_t;
 
 /**
    Perform various forms of expansion on in, such as tilde expansion

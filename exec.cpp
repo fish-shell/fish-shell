@@ -782,9 +782,10 @@ static io_data_t *io_transmogrify( io_data_t * in )
    \param io the io redirections to be performed on this block
 */
 
-static void internal_exec_helper( const wchar_t *def, 
-								 enum block_type_t block_type,
-								 io_data_t *io )
+static void internal_exec_helper( parser_t &parser,
+                                  const wchar_t *def, 
+								  enum block_type_t block_type,
+								  io_data_t *io )
 {
 	io_data_t *io_internal = io_transmogrify( io );
 	int is_block_old=is_block;
@@ -801,7 +802,7 @@ static void internal_exec_helper( const wchar_t *def,
 	
 	signal_unblock();
 	
-	eval( def, io_internal, block_type );		
+	parser.eval( def, io_internal, block_type );		
 	
 	signal_block();
 	
@@ -945,7 +946,7 @@ static void do_builtin_io( wchar_t *out, wchar_t *err )
 } 
 
 
-void exec( job_t *j )
+void exec( parser_t &parser, job_t *j )
 {
 	process_t *p;
 	pid_t pid;
@@ -979,15 +980,15 @@ void exec( job_t *j )
 	
 	debug( 4, L"Exec job '%ls' with id %d", j->command, j->job_id );	
 	
-	if( block_io )
+	if( parser.block_io )
 	{
 		if( j->io )
 		{
-			j->io = io_add( io_duplicate( j, block_io), j->io );
+			j->io = io_add( io_duplicate( j, parser.block_io), j->io );
 		}
 		else
 		{
-			j->io=io_duplicate( j, block_io);				
+			j->io=io_duplicate( j, parser.block_io);				
 		}
 	}
 
@@ -1207,11 +1208,10 @@ void exec( job_t *j )
 					debug( 0, _( L"Unknown function '%ls'" ), p->argv[0] );
 					break;
 				}
-
 				parser.push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
 				
 				parser.current_block->param2.function_call_process = p;
-				parser.current_block->param1.function_call_name = (wchar_t *)halloc_register( current_block, wcsdup( p->argv[0] ) );
+				parser.current_block->param1.function_call_name = (wchar_t *)halloc_register( parser.current_block, wcsdup( p->argv[0] ) );
 						
 
 				/*
@@ -1223,7 +1223,7 @@ void exec( job_t *j )
 				parse_util_set_argv( p->argv+1, named_arguments );
 				signal_block();
 								
-				parser_forbid_function( p->argv[0] );
+				parser.forbid_function( p->argv[0] );
 
 				if( p->next )
 				{
@@ -1231,9 +1231,9 @@ void exec( job_t *j )
 					j->io = io_add( j->io, io_buffer );
 				}
 				
-				internal_exec_helper( def, TOP, j->io );
+				internal_exec_helper( parser, def, TOP, j->io );
 				
-				parser_allow_function();
+				parser.allow_function();
 				parser.pop_block();
 				
 				break;				
@@ -1246,8 +1246,8 @@ void exec( job_t *j )
 					io_buffer = io_buffer_create( 0 );					
 					j->io = io_add( j->io, io_buffer );
 				}
-								
-				internal_exec_helper( p->argv[0], TOP, j->io );			
+                
+				internal_exec_helper( parser, p->argv[0], TOP, j->io );			
 				break;
 				
 			}
@@ -1370,7 +1370,7 @@ void exec( job_t *j )
 					   to make exec handle things.
 					*/
 					
-					builtin_push_io( builtin_stdin );
+					builtin_push_io( parser, builtin_stdin );
 					
 					builtin_out_redirect = has_fd( j->io, 1 );
 					builtin_err_redirect = has_fd( j->io, 2 );		
@@ -1380,7 +1380,7 @@ void exec( job_t *j )
 					
 					signal_unblock();
 					
-					p->status = builtin_run( p->argv, j->io );
+					p->status = builtin_run( parser, p->argv, j->io );
 					
 					builtin_out_redirect=old_out;
 					builtin_err_redirect=old_err;
@@ -1658,7 +1658,7 @@ void exec( job_t *j )
 		}
 
 		if( p->type == INTERNAL_BUILTIN )
-			builtin_pop_io();
+			builtin_pop_io(parser);
 				
 		/* 
 		   Close the pipe the current process uses to read from the
@@ -1701,7 +1701,7 @@ void exec( job_t *j )
 
 	j->io = io_remove( j->io, &pipe_read );
 
-	for( tmp = block_io; tmp; tmp=tmp->next )
+	for( tmp = parser.block_io; tmp; tmp=tmp->next )
 		j->io = io_remove( j->io, tmp );
 	
 	job_set_flag( j, JOB_CONSTRUCTED, 1 );
@@ -1765,7 +1765,8 @@ int exec_subshell( const wchar_t *cmd,
 	
 	prev_status = proc_get_last_status();
 	
-	if( eval( cmd, io_buffer, SUBST ) )
+    parser_t parser(PARSER_TYPE_GENERAL);
+	if( parser.eval( cmd, io_buffer, SUBST ) )
 	{
 		status = -1;
 	}

@@ -62,7 +62,7 @@ enum tokenizer_error
 /**
    The tokenizer struct. 
 */
-typedef struct
+struct tokenizer
 {
 	/** A pointer into the original string, showing where the next token begins */
 	wchar_t *buff;
@@ -89,8 +89,7 @@ typedef struct
 	wchar_t last_quote;
 	/** Last error */
 	int error;
-}
-tokenizer;
+};
 
 /**
   Initialize the tokenizer. b is the string that is to be

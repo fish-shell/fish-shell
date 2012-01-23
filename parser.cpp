@@ -401,32 +401,6 @@ static int parse_job( process_t *p,
 					  job_t *j,
 					  tokenizer *tok );
 
-/**
-   Struct used to keep track of profiling data for a command
-*/
-typedef struct
-{
-	/**
-	   Time spent executing the specified command, including parse time for nested blocks.
-	*/
-	int exec;
-	/**
-	   Time spent parsing the specified command, including execution time for command substitutions.
-	*/
-	int parse;
-	/**
-	   The block level of the specified command. nested blocks and command substitutions both increase the block level.
-	*/
-	int level;
-	/**
-	   If the execution of this command was skipped.
-	*/
-	int skipped;
-	/**
-	   The command string.
-	*/
-	wchar_t *cmd;
-} profile_element_t;
 
 /**
    Return the current number of block nestings
@@ -441,12 +415,12 @@ static int block_count( block_t *b )
 }
 */
 
-void parser_push_block( int type )
+void parser_t::push_block( int type )
 {
 	block_t *newv = (block_t *)halloc( 0, sizeof( block_t ));
 	
-	newv->src_lineno = parser_get_lineno();
-	newv->src_filename = parser_current_filename()?intern(parser_current_filename()):0;
+	newv->src_lineno = parser_t::get_lineno();
+	newv->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
 	
 	newv->outer = current_block;
 	newv->type = (current_block && current_block->skip)?FAKE:type;
@@ -640,7 +614,7 @@ void parser_allow_function()
     forbidden_function.pop_back();
 }
 
-void error( int ec, int p, const wchar_t *str, ... )
+void parser_t::error( int ec, int p, const wchar_t *str, ... )
 {
 	va_list va;
 
@@ -664,27 +638,27 @@ void error( int ec, int p, const wchar_t *str, ... )
 /**
    Print profiling information to the specified stream
 */
-static void print_profile( array_list_t *p,
-						   int pos,
+static void print_profile( const std::vector<profile_item_t> &items,
+						   size_t pos,
 						   FILE *out )
 {
-	profile_element_t *me, *prev;
-	int i;
+	const profile_item_t *me, *prev;
+	size_t i;
 	int my_time;
 
-	if( pos >= al_get_count( p ) )
+	if( pos >= items.size() )
 	{
 		return;
 	}
 	
-	me= (profile_element_t *)al_get( p, pos );
+	me= &items.at(pos);
 	if( !me->skipped )
 	{
 		my_time=me->parse+me->exec;
 
-		for( i=pos+1; i<al_get_count(p); i++ )
+		for( i=pos+1; i<items.size(); i++ )
 		{
-			prev = (profile_element_t *)al_get( p, i );
+			prev = &items.at(i);
 			if( prev->skipped )
 			{
 				continue;
@@ -704,7 +678,7 @@ static void print_profile( array_list_t *p,
 			my_time -= prev->exec;
 		}
 
-		if( me->cmd )
+		if( me->cmd.size() > 0 )
 		{
 			if( fwprintf( out, L"%d\t%d\t", my_time, me->parse+me->exec ) < 0 )
 			{
@@ -721,7 +695,7 @@ static void print_profile( array_list_t *p,
 				}
 
 			}
-			if( fwprintf( out, L"> %ls\n", me->cmd ) < 0 )
+			if( fwprintf( out, L"> %ls\n", me->cmd.c_str() ) < 0 )
 			{
 				wperror( L"fwprintf" );
 				return;
@@ -729,12 +703,10 @@ static void print_profile( array_list_t *p,
 
 		}
 	}
-	print_profile( p, pos+1, out );
-	free( me->cmd );
-	free( me );
+	print_profile( items, pos+1, out );
 }
 
-void parser_destroy()
+void parser_t::destroy()
 {
 	if( profile )
 	{
@@ -758,7 +730,7 @@ void parser_destroy()
 			}
 			else
 			{
-				print_profile( &profile_data, 0, f );
+				print_profile( profile_items, 0, f );
 			}
 			
 			if( fclose( f ) )
@@ -785,7 +757,7 @@ void parser_destroy()
    \param target the buffer to write to
    \param prefix: The string token to prefix the ech line with. Usually the name of the command trying to parse something.
 */
-static void print_errors( string_buffer_t *target, const wchar_t *prefix )
+void parser_t::print_errors( string_buffer_t *target, const wchar_t *prefix )
 {
 	CHECK( target, );
 	CHECK( prefix, );
@@ -799,7 +771,7 @@ static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 		tmp = current_tokenizer_pos;
 		current_tokenizer_pos = err_pos;
 
-		sb_printf( target, L"%ls", parser_current_line() );
+		sb_printf( target, L"%ls", this->current_line() );
 
 		current_tokenizer_pos=tmp;
 	}
@@ -808,7 +780,7 @@ static void print_errors( string_buffer_t *target, const wchar_t *prefix )
 /**
    Print error message to stderr if an error has occured while parsing
 */
-static void print_errors_stderr()
+static void print_errors_stderr(parser_t &parser)
 {
 	if( error_code && err_buff )
 	{
@@ -818,14 +790,14 @@ static void print_errors_stderr()
 		tmp = current_tokenizer_pos;
 		current_tokenizer_pos = err_pos;
 		
-		fwprintf( stderr, L"%ls", parser_current_line() );
+		fwprintf( stderr, L"%ls", parser.current_line() );
 		
 		current_tokenizer_pos=tmp;
 	}
 	
 }
 
-int eval_args( const wchar_t *line, array_list_t *args )
+int parser_t::eval_args( const wchar_t *line, array_list_t *args )
 {
 	tokenizer tok;
 	/*
@@ -897,7 +869,7 @@ int eval_args( const wchar_t *line, array_list_t *args )
 		}
 	}
 
-	print_errors_stderr();
+	print_errors_stderr(*this);
 	
 	tok_destroy( &tok );
 	
@@ -1110,7 +1082,7 @@ static int printed_width( const wchar_t *str, int len )
 }
 
 
-const wchar_t *parser_current_line()
+const wchar_t *parser_t::current_line()
 {
 	int lineno=1;
 
@@ -1273,7 +1245,7 @@ int parser_is_help( wchar_t *s, int min_match )
    \param tok the tokenizer to read options from
    \param args the argument list to insert options into
 */
-static void parse_job_argument_list( process_t *p,
+void parser_t::parse_job_argument_list( process_t *p,
 									 job_t *j,
 									 tokenizer *tok,
 									 array_list_t *args )
@@ -1637,7 +1609,7 @@ static void parse_job_argument_list( process_t *p,
 				tmp = current_tokenizer_pos;
 				current_tokenizer_pos = unmatched_pos;
 
-				fwprintf( stderr, L"%ls", parser_current_line() );
+				fwprintf( stderr, L"%ls", parser_t::current_line() );
 
 				current_tokenizer_pos=tmp;
 			}
@@ -1668,7 +1640,7 @@ static void parse_job_argument_list( process_t *p,
 f
    \return 1 on success, 0 on error
 */
-static int parse_job( process_t *p,
+int parser_t::parse_job( process_t *p,
 					  job_t *j,
 					  tokenizer *tok )
 {
@@ -1849,7 +1821,7 @@ static int parse_job( process_t *p,
 
 			if( new_block )
 			{
-				parser.push_block( WHILE );
+				this->push_block( WHILE );
 				current_block->param1.while_state=WHILE_TEST_FIRST;
 				current_block->tok_pos = mark;
 			}
@@ -1862,7 +1834,7 @@ static int parse_job( process_t *p,
 		{
 			tok_next( tok );
 
-			parser.push_block( IF );
+			this->push_block( IF );
 
 			current_block->param1.if_state=0;
 			current_block->tok_pos = mark;
@@ -2070,7 +2042,7 @@ static int parse_job( process_t *p,
 						tmp = current_tokenizer_pos;
 						current_tokenizer_pos = tok_get_pos(tok);
 						
-						fwprintf( stderr, L"%ls", parser_current_line() );
+						fwprintf( stderr, L"%ls", parser_t::current_line() );
 						
 						current_tokenizer_pos=tmp;
 
@@ -2224,7 +2196,7 @@ static int parse_job( process_t *p,
    \param j the job to execute
 
 */
-static void skipped_exec( job_t * j )
+void parser_t::skipped_exec( job_t * j )
 {
 	process_t *p;
 
@@ -2237,13 +2209,13 @@ static void skipped_exec( job_t * j )
 			   ( wcscmp( p->argv[0], L"begin" )==0) ||
 			   ( wcscmp( p->argv[0], L"function" )==0))
 			{
-				parser.push_block( FAKE );
+				this->push_block( FAKE );
 			}
 			else if( wcscmp( p->argv[0], L"end" )==0)
 			{
 				if(!current_block->outer->skip )
 				{
-					exec( j );
+					exec( *this, j );
 					return;
 				}
 				parser_pop_block();
@@ -2253,7 +2225,7 @@ static void skipped_exec( job_t * j )
 				if( (current_block->type == IF ) &&
 					(current_block->param1.if_state != 0))
 				{
-					exec( j );
+					exec( *this, j );
 					return;
 				}
 			}
@@ -2261,7 +2233,7 @@ static void skipped_exec( job_t * j )
 			{
 				if( (current_block->type == SWITCH ) )
 				{
-					exec( j );
+					exec( *this, j );
 					return;
 				}
 			}
@@ -2277,7 +2249,7 @@ static void skipped_exec( job_t * j )
    \param tok The tokenizer to read tokens from
 */
 
-static void eval_job( parser_t &parser, tokenizer *tok )
+void parser_t::eval_job( tokenizer *tok )
 {
 	job_t *j;
 
@@ -2291,8 +2263,8 @@ static void eval_job( parser_t &parser, tokenizer *tok )
 	
 	if( profile )
 	{
-        parser.profile_items.resize(parser.profile_items.size() + 1);
-        profile_item = &parser.profile_items.back();
+        profile_items.resize(profile_items.size() + 1);
+        profile_item = &profile_items.back();
         profile_item->cmd = L"";
         profile_item->skipped = 1;        
 		t1 = get_time();
@@ -2365,7 +2337,7 @@ static void eval_job( parser_t &parser, tokenizer *tok )
 //						was_builtin = 1;
 					prev_tokenizer_pos = current_tokenizer_pos;
 					current_tokenizer_pos = job_begin_pos;		
-					exec( j );
+					exec( *this, j );
 					current_tokenizer_pos = prev_tokenizer_pos;
 					
 					/* Only external commands require a new fishd barrier */
@@ -2374,7 +2346,7 @@ static void eval_job( parser_t &parser, tokenizer *tok )
 				}
 				else
 				{
-					skipped_exec( j );
+					this->skipped_exec( j );
 				}
 
 				if( profile )
@@ -2479,8 +2451,9 @@ static void eval_job( parser_t &parser, tokenizer *tok )
 
 }
 
-int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
+int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t block_type )
 {
+    const wchar_t * const cmd = cmdStr.c_str();
 	size_t forbid_count;
 	int code;
 	tokenizer *previous_tokenizer=current_tokenizer;
@@ -2523,7 +2496,7 @@ int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
 
 	eval_level++;
 
-	parser.push_block( block_type );
+	this->push_block( block_type );
 
 	current_tokenizer = (tokenizer *)malloc( sizeof(tokenizer));
 	tok_init( current_tokenizer, cmd, 0 );
@@ -2537,7 +2510,7 @@ int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
 		   !sanity_check() &&
 		   !exit_status() )
 	{
-		eval_job( parser, current_tokenizer );
+		this->eval_job( current_tokenizer );
 		event_fire( NULL );
 	}
 
@@ -2566,9 +2539,9 @@ int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
 				   L"%ls", parser_get_block_desc( current_block->type ) );
 			debug( 1,
 				   BLOCK_END_ERR_MSG );
-			fwprintf( stderr, L"%ls", parser_current_line() );
+			fwprintf( stderr, L"%ls", parser_t::current_line() );
 
-			h = builtin_help_get( L"end" );
+			h = builtin_help_get( *this, L"end" );
 			if( h )
 				fwprintf( stderr, L"%ls", h );
 			break;
@@ -2578,7 +2551,7 @@ int eval( const wchar_t *cmd, io_data_t *io, enum block_type_t block_type )
 		parser_pop_block();
 	}
 
-	print_errors_stderr();
+	print_errors_stderr(*this);
 
 	tok_destroy( current_tokenizer );
 	free( current_tokenizer );
@@ -2642,7 +2615,7 @@ const wchar_t *parser_get_block_command( int type )
    syntax errors in command substitutions, improperly escaped
    characters and improper use of the variable expansion operator.
 */
-static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset )
+int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset )
 {
 	wchar_t *unesc;
 	wchar_t *pos;
@@ -2670,7 +2643,7 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 					error( SYNTAX_ERROR,
 						   offset,
 						   L"Mismatched parans" );
-					print_errors( out, prefix);
+					this->print_errors( out, prefix);
 				}
 				free( arg_cpy );
 				return 1;
@@ -2741,7 +2714,7 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 						err=1;
 						if( out )
 						{
-							expand_variable_error( unesc, pos-unesc, offset );
+							expand_variable_error( *this, unesc, pos-unesc, offset );
 							print_errors( out, prefix);
 						}
 					}
@@ -2759,7 +2732,7 @@ static int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const
 	
 }
 
-int parser_test_args(const  wchar_t * buff,
+int parser_t::parser_test_args(const  wchar_t * buff,
 					 string_buffer_t *out, const wchar_t *prefix )
 {
 	tokenizer tok;
@@ -2833,7 +2806,7 @@ int parser_test_args(const  wchar_t * buff,
 	return err;
 }
 
-int parser_test( const  wchar_t * buff,
+int parser_t::parser_test( const  wchar_t * buff,
 				 int *block_level, 
 				 string_buffer_t *out,
 				 const wchar_t *prefix )
@@ -3087,7 +3060,7 @@ int parser_test( const  wchar_t * buff,
 									   INVALID_CASE_ERR_MSG );
 
 								print_errors( out, prefix);
-								h = builtin_help_get( L"case" );
+								h = builtin_help_get( *this, L"case" );
 								if( h )
 									sb_printf( out, L"%ls", h );
 							}
@@ -3249,7 +3222,7 @@ int parser_test( const  wchar_t * buff,
 								   tok_get_pos( &tok ),
 								   INVALID_END_ERR_MSG );
 							print_errors( out, prefix );
-							h = builtin_help_get( L"end" );
+							h = builtin_help_get( *this, L"end" );
 							if( h )
 								sb_printf( out, L"%ls", h );
 						}
@@ -3535,7 +3508,7 @@ int parser_test( const  wchar_t * buff,
 		cmd = parser_get_block_command(  block_type[count -1] );
 		if( cmd )
 		{
-			h = builtin_help_get( cmd );
+			h = builtin_help_get( *this, cmd );
 			if( cmd )
 			{
 				sb_printf( out, L"%ls", h );

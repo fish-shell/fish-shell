@@ -919,7 +919,7 @@ static int parse_slice2( const wchar_t *in, wchar_t **end_ptr, std::vector<long>
    happens, don't edit it unless you know exactly what you are doing,
    and do proper testing afterwards.
 */
-static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
+static int expand_variables( parser_t &parser, wchar_t *in, array_list_t *out, int last_idx )
 {
 	wchar_t c;
 	wchar_t prev_char=0;
@@ -988,7 +988,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 
 			if( var_len == 0 )
 			{
-				expand_variable_error( in, stop_pos-1, -1 );				
+				expand_variable_error( parser, in, stop_pos-1, -1 );				
 				
 				is_ok = 0;
 				break;
@@ -1010,7 +1010,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 					
 					if( parse_slice( &in[stop_pos], &slice_end, var_idx_list ) )
 					{
-						error( SYNTAX_ERROR,
+						parser.error( SYNTAX_ERROR,
 							   -1,
 							   L"Invalid index value" );						
 						is_ok = 0;
@@ -1039,7 +1039,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 							*/
 							if( tmp < 1 || tmp > al_get_count( &var_item_list ) )
 							{
-								error( SYNTAX_ERROR,
+								parser.error( SYNTAX_ERROR,
 									   -1,
 									   ARRAY_BOUNDS_ERR );
 								is_ok=0;
@@ -1085,7 +1085,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 							free( next );
 						}
 						sb_append( &res, &in[stop_pos] );
-						is_ok &= expand_variables( (wchar_t *)res.buff, out, i );
+						is_ok &= expand_variables( parser, (wchar_t *)res.buff, out, i );
 					}
 					else
 					{
@@ -1124,7 +1124,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 										wcscat( new_in, next );
 										wcscat( new_in, &in[stop_pos] );
 										
-										is_ok &= expand_variables( new_in, out, i );
+										is_ok &= expand_variables( parser, new_in, out, i );
 									}
 								}
 								free( next );
@@ -1163,7 +1163,7 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 					sb_append( &res, in );
 					sb_append( &res, &in[stop_pos] );
 
-					is_ok &= expand_variables( (wchar_t *)res.buff, out, i );
+					is_ok &= expand_variables( parser, (wchar_t *)res.buff, out, i );
 					free(in);
 					return is_ok;
 				}
@@ -1187,16 +1187,16 @@ static int expand_variables( wchar_t *in, array_list_t *out, int last_idx )
 	return is_ok;
 }
 
-static int expand_variables2( const wcstring &in, std::vector<wcstring> &outputs, int last_idx )
+static int expand_variables2( parser_t &parser, const wcstring &in, std::vector<wcstring> &outputs, int last_idx )
 {
     wcstring_adapter adapter(in, outputs);
-    return expand_variables(adapter.str, &adapter.lst, last_idx);
+    return expand_variables(parser, adapter.str, &adapter.lst, last_idx);
 }
 
 /**
    Perform bracket expansion
 */
-static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
+static int expand_brackets( parser_t &parser, wchar_t *in, int flags, array_list_t *out )
 {
 	wchar_t *pos;
 	int syntax_error=0;
@@ -1270,13 +1270,13 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 				sb_append_char( &mod, BRACKET_END );
 			}
 
-			return expand_brackets( (wchar_t*)mod.buff, 1, out );
+			return expand_brackets( parser, (wchar_t*)mod.buff, 1, out );
 		}
 	}
 
 	if( syntax_error )
 	{
-		error( SYNTAX_ERROR,
+		parser.error( SYNTAX_ERROR,
 			   -1,
 			   _(L"Mismatched brackets") );
 		return 0;
@@ -1306,7 +1306,7 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 				wcslcpy( whole_item+len1, item_begin, item_len+1 );
 				wcscpy( whole_item+len1+item_len, bracket_end+1 );
 
-				expand_brackets( whole_item, flags, out );
+				expand_brackets( parser, whole_item, flags, out );
 
 				item_begin = pos+1;
 				if( pos == bracket_end )
@@ -1328,16 +1328,16 @@ static int expand_brackets( wchar_t *in, int flags, array_list_t *out )
 	return 1;
 }
 
-static int expand_brackets2( const wcstring &in, int flags, std::vector<wcstring> outputs )
+static int expand_brackets2( parser_t &parser, const wcstring &in, int flags, std::vector<wcstring> outputs )
 {
     wcstring_adapter adapter(in, outputs);
-    return expand_brackets(adapter.str, flags, &adapter.lst);
+    return expand_brackets(parser, adapter.str, flags, &adapter.lst);
 }
 
 /**
    Perform cmdsubst expansion
 */
-static int expand_cmdsubst( wchar_t *in, array_list_t *out )
+static int expand_cmdsubst( parser_t &parser, wchar_t *in, array_list_t *out )
 {
 	wchar_t *paran_begin=0, *paran_end=0;
 	int len1;
@@ -1360,7 +1360,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 									   0 ) )
 	{
 		case -1:
-			error( SYNTAX_ERROR,
+			parser.error( SYNTAX_ERROR,
 				   -1,
 				   L"Mismatched parans" );
 			return 0;
@@ -1391,7 +1391,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 	if( exec_subshell( subcmd, sub_res) == -1 )
 	{
 		halloc_free( context );
-		error( CMDSUBST_ERROR, -1, L"Unknown error while evaulating command substitution" );
+		parser.error( CMDSUBST_ERROR, -1, L"Unknown error while evaulating command substitution" );
 		return 0;
 	}
 
@@ -1404,7 +1404,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 		if( parse_slice( tail_begin, &slice_end, slice_idx ) )
 		{
 			halloc_free( context );	
-			error( SYNTAX_ERROR, -1, L"Invalid index value" );
+			parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 			return 0;
 		}
 		else
@@ -1422,7 +1422,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 				if( idx < 1 || idx > al_get_count( sub_res ) )
 				{
 					halloc_free( context );
-					error( SYNTAX_ERROR, -1, L"Invalid index value" );
+					parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 					return 0;
 				}
 				
@@ -1445,7 +1445,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 	  substitutions. The result of this recursive call usiung the tail
 	  of the string is inserted into the tail_expand array list
 	*/
-	expand_cmdsubst( wcsdup(tail_begin), tail_expand );
+	expand_cmdsubst( parser, wcsdup(tail_begin), tail_expand );
 
 	/*
 	  Combine the result of the current command substitution with the
@@ -1487,7 +1487,7 @@ static int expand_cmdsubst( wchar_t *in, array_list_t *out )
 /**
  Perform cmdsubst expansion
  */
-static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outList )
+static int expand_cmdsubst2( parser_t &parser, const wcstring &input, std::vector<wcstring> &outList )
 {
 	wchar_t *paran_begin=0, *paran_end=0;
 	int len1;
@@ -1505,7 +1505,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
 									   0 ) )
 	{
 		case -1:
-			error( SYNTAX_ERROR,
+			parser.error( SYNTAX_ERROR,
                   -1,
                   L"Mismatched parans" );
 			return 0;
@@ -1525,7 +1525,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
     
 	if( exec_subshell2( subcmd, sub_res) == -1 )
 	{
-		error( CMDSUBST_ERROR, -1, L"Unknown error while evaulating command substitution" );
+		parser.error( CMDSUBST_ERROR, -1, L"Unknown error while evaulating command substitution" );
 		return 0;
 	}
     
@@ -1537,7 +1537,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
 		
 		if( parse_slice2( tail_begin, &slice_end, slice_idx ) )
 		{
-			error( SYNTAX_ERROR, -1, L"Invalid index value" );
+			parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 			return 0;
 		}
 		else
@@ -1554,7 +1554,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
 				
 				if( idx < 1 || (size_t)idx > sub_res.size() )
 				{
-					error( SYNTAX_ERROR, -1, L"Invalid index value" );
+					parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 					return 0;
 				}
 				
@@ -1575,7 +1575,7 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
      of the string is inserted into the tail_expand array list
      */
     std::vector<wcstring> tail_expand;
-	expand_cmdsubst2( tail_begin, tail_expand );
+	expand_cmdsubst2( parser, tail_begin, tail_expand );
     
 	/*
      Combine the result of the current command substitution with the
@@ -1619,11 +1619,11 @@ static int expand_cmdsubst2( const wcstring &input, std::vector<wcstring> &outLi
 /**
    Wrapper around unescape funtion. Issues an error() on failiure.
 */
-static wchar_t *expand_unescape( const wchar_t * in, int escape_special )
+static wchar_t *expand_unescape( parser_t &parser, const wchar_t * in, int escape_special )
 {
 	wchar_t *res = unescape( in, escape_special );
 	if( !res )
-		error( SYNTAX_ERROR, -1, L"Unexpected end of string" );
+		parser.error( SYNTAX_ERROR, -1, L"Unexpected end of string" );
 	return res;
 }
 
@@ -1766,7 +1766,7 @@ static void remove_internal_separator2( wcstring &s, int conv )
 }
 
 
-int expand_string2( const wcstring &input, std::vector<wcstring> &output, int flags )
+int expand_string2( parser_t &parser, const wcstring &input, std::vector<wcstring> &output, int flags )
 {
     std::vector<wcstring> list1, list2;
 	std::vector<wcstring> *in, *out;
@@ -1790,14 +1790,14 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
                                        &end,
                                        1 ) != 0 )
 		{
-			error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
+			parser.error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
 			return EXPAND_ERROR;
 		}
 		list1.push_back(input);
 	}
 	else
 	{
-        cmdsubst_ok = expand_cmdsubst2(input, list1);
+        cmdsubst_ok = expand_cmdsubst2(parser, input, list1);
 	}
     
 	if( !cmdsubst_ok )
@@ -1830,7 +1830,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 			}
 			else
 			{
-				if(!expand_variables2( next, *out, next.size() - 1 ))
+				if(!expand_variables2( parser, next, *out, next.size() - 1 ))
 				{
 					return EXPAND_ERROR;
 				}
@@ -1846,7 +1846,7 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 		{
             wcstring next = in->at(i);
             
-			if( !expand_brackets2( next, flags, *out ))
+			if( !expand_brackets2( parser, next, flags, *out ))
 			{
 				return EXPAND_ERROR;
 			}
@@ -1985,7 +1985,8 @@ int expand_string2( const wcstring &input, std::vector<wcstring> &output, int fl
 /**
    The real expansion function. expand_one is just a wrapper around this one.
 */
-int expand_string( void *context,
+int expand_string( parser_t &parser,
+                   void *context,
 				   wchar_t *str,
 				   array_list_t *end_out,
 				   int flags )
@@ -2020,7 +2021,7 @@ int expand_string( void *context,
 										&end,
 										1 ) != 0 )
 		{
-			error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
+			parser.error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
 			free( str );
 			al_destroy( &list1 );
 			al_destroy( &list2 );
@@ -2030,7 +2031,7 @@ int expand_string( void *context,
 	}
 	else
 	{
-		cmdsubst_ok = expand_cmdsubst( str, &list1 );
+		cmdsubst_ok = expand_cmdsubst( parser, str, &list1 );
 	}
 
 	if( !cmdsubst_ok )
@@ -2054,7 +2055,7 @@ int expand_string( void *context,
 			*/
 			int unescape_flags = UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE;
 
-			next = expand_unescape( (wchar_t *)al_get( in, i ), unescape_flags );
+			next = expand_unescape( parser, (wchar_t *)al_get( in, i ), unescape_flags );
 
 			free( (void *)al_get( in, i ) );
 
@@ -2074,7 +2075,7 @@ int expand_string( void *context,
 			}
 			else
 			{
-				if(!expand_variables( next, out, wcslen(next)-1 ))
+				if(!expand_variables( parser, next, out, wcslen(next)-1 ))
 				{
 					al_destroy( in );
 					al_destroy( out );
@@ -2098,7 +2099,7 @@ int expand_string( void *context,
 				continue;				
 			}	
 
-			if( !expand_brackets( next, flags, out ))
+			if( !expand_brackets( parser, next, flags, out ))
 			{
 				al_destroy( in );
 				al_destroy( out );

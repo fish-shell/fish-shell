@@ -173,7 +173,7 @@ static int event_is_blocked( event_t *e )
 {
 	block_t *block;
 	event_block_t *eb;
-	
+	parser_t &parser = parser_t::principal_parser();
 	for( block = parser.current_block; block; block = block->outer )
 	{
 		for( eb = block->first_event_block; eb; eb=eb->next )
@@ -184,7 +184,7 @@ static int event_is_blocked( event_t *e )
 				return 1;
 		}
 	}
-	for( eb = global_event_block; eb; eb=eb->next )
+	for( eb = parser.global_event_block; eb; eb=eb->next )
 	{
 		if( eb->type & (1<<EVENT_ANY ) )
 			return 1;
@@ -459,6 +459,7 @@ static void event_fire_internal( event_t *event )
 		*/
 		proc_push_interactive(0);
 		prev_status = proc_get_last_status();
+        parser_t &parser = parser_t::principal_parser();
 		parser.push_block( EVENT );
 		parser.current_block->param1.event = event;
 		parser.eval( buffer.c_str(), 0, TOP );

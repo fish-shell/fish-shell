@@ -314,11 +314,12 @@ int main( int argc, char **argv )
 	reader_init();
 	history_init();
 
+    parser_t &parser = parser_t::principal_parser();
+
 	if( read_init() )
 	{
 		if( cmd != 0 )
 		{
-            parser_t parser(PARSER_TYPE_GENERAL);
 			wchar_t *cmd_wcs = str2wcs( cmd );
 			res = parser.eval( cmd_wcs, 0, TOP );
 			free(cmd_wcs);
@@ -394,7 +395,7 @@ int main( int argc, char **argv )
 	builtin_destroy();
 	function_destroy();
 	reader_destroy();
-	parser_destroy();
+	parser.destroy();
 	wutil_destroy();
 	event_destroy();
 	

@@ -1766,8 +1766,9 @@ static void remove_internal_separator2( wcstring &s, int conv )
 }
 
 
-int expand_string2( parser_t &parser, const wcstring &input, std::vector<wcstring> &output, int flags )
+int expand_string2( const wcstring &input, std::vector<wcstring> &output, int flags )
 {
+    parser_t &parser = parser_t::principal_parser();
     std::vector<wcstring> list1, list2;
 	std::vector<wcstring> *in, *out;
     
@@ -1985,14 +1986,14 @@ int expand_string2( parser_t &parser, const wcstring &input, std::vector<wcstrin
 /**
    The real expansion function. expand_one is just a wrapper around this one.
 */
-int expand_string( parser_t &parser,
-                   void *context,
+int expand_string( void *context,
 				   wchar_t *str,
 				   array_list_t *end_out,
 				   int flags )
 {
 	array_list_t list1, list2;
 	array_list_t *in, *out;
+    parser_t &parser = parser_t::principal_parser();
 
 	int i;
 	int cmdsubst_ok = 1;

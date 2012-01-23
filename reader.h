@@ -14,6 +14,8 @@
 #include "util.h"
 #include "io.h"
 
+class parser_t;
+
 /**
   Read commands from \c fd until encountering EOF
 */

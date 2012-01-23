@@ -397,10 +397,17 @@ static int job_start_pos;
 */
 static int eval_level=-1;
 
-static int parse_job( process_t *p,
-					  job_t *j,
-					  tokenizer *tok );
+parser_t::parser_t(enum parser_type_t type) : parser_type(type)
+{
+    
+}
 
+parser_t &parser_t::principal_parser(void)
+{
+    ASSERT_IS_MAIN_THREAD();
+    static parser_t parser(PARSER_TYPE_GENERAL);
+    return parser;
+}
 
 /**
    Return the current number of block nestings
@@ -462,7 +469,7 @@ void parser_t::push_block( int type )
 	}
 }
 
-void parser_pop_block()
+void parser_t::pop_block()
 {
 	block_t *old = current_block;
 	if( !current_block )
@@ -478,7 +485,7 @@ void parser_pop_block()
 	halloc_free( old );
 }
 
-const wchar_t *parser_get_block_desc( int block )
+const wchar_t *parser_t::get_block_desc( int block ) const
 {
 	int i;
 	
@@ -595,7 +602,7 @@ static const wchar_t *parser_find_end( const wchar_t * buff )
 }
 
 
-void parser_forbid_function( wchar_t *function )
+void parser_t::forbid_function( wchar_t *function )
 {
 /*
   if( function )
@@ -605,7 +612,7 @@ void parser_forbid_function( wchar_t *function )
     forbidden_function.push_back(wcstring(function));
 }
 
-void parser_allow_function()
+void parser_t::allow_function()
 {
 /*
   if( al_peek( &forbidden_function) )
@@ -880,7 +887,7 @@ int parser_t::eval_args( const wchar_t *line, array_list_t *args )
 	return 1;
 }
 
-void parser_stack_trace( block_t *b, string_buffer_t *buff)
+void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
 {
 	
 	/*
@@ -980,7 +987,7 @@ void parser_stack_trace( block_t *b, string_buffer_t *buff)
 	/*
 	  Recursively print the next block
 	*/
-	parser_stack_trace( b->outer, buff );
+	parser_t::stack_trace( b->outer, buff );
 }
 
 /**
@@ -1007,7 +1014,7 @@ static const wchar_t *is_function()
 }
 
 
-int parser_get_lineno()
+int parser_t::get_lineno() const
 {
 	const wchar_t *whole_str;
 	const wchar_t *function_name;
@@ -1036,7 +1043,7 @@ int parser_get_lineno()
 	return lineno;
 }
 
-const wchar_t *parser_current_filename()
+const wchar_t *parser_t::current_filename() const
 {
 	block_t *b = current_block;
 
@@ -1101,7 +1108,7 @@ const wchar_t *parser_t::current_line()
 		return L"";
 	}
 
-	file = parser_current_filename();
+	file = parser_t::current_filename();
 	whole_str = tok_string( current_tokenizer );
 	line = whole_str;
 
@@ -1196,34 +1203,34 @@ const wchar_t *parser_t::current_line()
 	}
 
 	free( line );
-	parser_stack_trace( current_block, lineinfo );
+	parser_t::stack_trace( current_block, lineinfo );
 
 	return (wchar_t *)lineinfo->buff;
 }
 
-int parser_get_pos()
+int parser_t::get_pos() const
 {
 	return tok_get_pos( current_tokenizer );
 }
 
-int parser_get_job_pos()
+int parser_t::get_job_pos() const
 {
 	return job_start_pos;
 }
 
 
-void parser_set_pos( int p)
+void parser_t::set_pos( int p)
 {
 	tok_set_pos( current_tokenizer, p );
 }
 
-const wchar_t *parser_get_buffer()
+const wchar_t *parser_t::get_buffer() const
 {
 	return tok_string( current_tokenizer );
 }
 
 
-int parser_is_help( wchar_t *s, int min_match )
+int parser_t::is_help( wchar_t *s, int min_match ) const
 {
 	int len;
 
@@ -1360,7 +1367,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 				{
 					if( ( proc_is_count ) &&
 					    ( al_get_count( args) == 1) &&
-					    ( parser_is_help( tok_last(tok), 0) ) &&
+					    ( parser_t::is_help( tok_last(tok), 0) ) &&
 					    ( p->type == INTERNAL_BUILTIN ) )
 					{
 						/*
@@ -2143,7 +2150,7 @@ int parser_t::parse_job( process_t *p,
 
 				while( prev_block != current_block )
 				{
-					parser_pop_block();
+					parser_t::pop_block();
 				}
 
 			}
@@ -2181,7 +2188,7 @@ int parser_t::parse_job( process_t *p,
 		*/
 		while( prev_block != current_block )
 		{
-			parser_pop_block();
+			parser_t::pop_block();
 		}
 	}
 	current_tokenizer_pos = prev_tokenizer_pos;	
@@ -2218,7 +2225,7 @@ void parser_t::skipped_exec( job_t * j )
 					exec( *this, j );
 					return;
 				}
-				parser_pop_block();
+				parser_t::pop_block();
 			}
 			else if( wcscmp( p->argv[0], L"else" )==0)
 			{
@@ -2489,7 +2496,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 	{
 		debug( 1,
 			   INVALID_SCOPE_ERR_MSG,
-			   parser_get_block_desc( block_type ) );
+			   parser_t::get_block_desc( block_type ) );
 		bugreport();
 		return 1;
 	}
@@ -2516,7 +2523,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 
 	int prev_block_type = current_block->type;
 
-	parser_pop_block();
+	parser_t::pop_block();
 
 	while( start_current_block != current_block )
 	{
@@ -2536,7 +2543,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 			//debug( 2, L"Status %d\n", proc_get_last_status() );
 
 			debug( 1,
-				   L"%ls", parser_get_block_desc( current_block->type ) );
+				   L"%ls", parser_t::get_block_desc( current_block->type ) );
 			debug( 1,
 				   BLOCK_END_ERR_MSG );
 			fwprintf( stderr, L"%ls", parser_t::current_line() );
@@ -2548,7 +2555,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 
 		}
 		prev_block_type = current_block->type;
-		parser_pop_block();
+		parser_t::pop_block();
 	}
 
 	print_errors_stderr(*this);
@@ -2557,7 +2564,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 	free( current_tokenizer );
 
     while (forbidden_function.size() > forbid_count)
-		parser_allow_function();
+		parser_t::allow_function();
 
 	/*
 	  Restore previous eval state
@@ -2665,7 +2672,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, co
 				
 //				debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
 	
-				err |= parser_test( subst, 0, out, prefix );
+				err |= parser_t::test( subst, 0, out, prefix );
 				
 				free( subst );
 				free( arg_cpy );
@@ -2732,7 +2739,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, co
 	
 }
 
-int parser_t::parser_test_args(const  wchar_t * buff,
+int parser_t::test_args(const  wchar_t * buff,
 					 string_buffer_t *out, const wchar_t *prefix )
 {
 	tokenizer tok;
@@ -2806,7 +2813,7 @@ int parser_t::parser_test_args(const  wchar_t * buff,
 	return err;
 }
 
-int parser_t::parser_test( const  wchar_t * buff,
+int parser_t::test( const  wchar_t * buff,
 				 int *block_level, 
 				 string_buffer_t *out,
 				 const wchar_t *prefix )
@@ -3102,7 +3109,7 @@ int parser_t::parser_test( const  wchar_t * buff,
 														wcsdup( tok_last( &tok ) ), 
 														EXPAND_SKIP_CMDSUBST);
 								
-								if( first_arg && parser_is_help( first_arg, 3) )
+								if( first_arg && parser_t::is_help( first_arg, 3) )
 								{
 									is_help = 1;
 								}
@@ -3164,7 +3171,7 @@ int parser_t::parser_test( const  wchar_t * buff,
 														wcsdup( tok_last( &tok ) ), 
 														EXPAND_SKIP_CMDSUBST);
 								
-								if( first_arg && parser_is_help( first_arg, 3 ) ) 
+								if( first_arg && parser_t::is_help( first_arg, 3 ) ) 
 								{
 									is_help = 1;
 								}

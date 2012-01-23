@@ -421,7 +421,8 @@ int reader_exit_forced()
 
 static void reader_repaint()
 {
-	parser_test( data->buff, data->indent, 0, 0 );
+    //PCA INSTANCED_PARSER what is this call for?
+	//parser_test( data->buff, data->indent, 0, 0 );
 	
 	s_write( &data->screen,
 		 data->prompt_buff.c_str(),
@@ -479,7 +480,8 @@ static void reader_kill( wchar_t *begin, int length, int mode, int newv )
 
 void reader_handle_int( int sig )
 {
-	block_t *c = current_block;
+    //PCA INSTANCED_PARSER what is this?
+	block_t *c = NULL;//current_block;
 	
 	if( !is_interactive_read )
 	{
@@ -1255,7 +1257,8 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 	out->next = in;
 	out->fd = 4;
 	
-	eval( (wchar_t *)cmd.buff, out, TOP);
+    parser_t parser(PARSER_TYPE_GENERAL);
+	parser.eval( (wchar_t *)cmd.buff, out, TOP);
 	term_steal();
 
 	io_buffer_read( out );
@@ -2189,7 +2192,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before)
 	}
 }
 
-void reader_run_command( const wchar_t *cmd )
+void reader_run_command( parser_t &parser, const wchar_t *cmd )
 {
 
 	wchar_t *ft;
@@ -2207,7 +2210,7 @@ void reader_run_command( const wchar_t *cmd )
 
 	gettimeofday(&time_before, NULL);
 
-	eval( cmd, 0, TOP );
+	parser.eval( cmd, 0, TOP );
 	job_reap( 1 );
 
 	gettimeofday(&time_after, NULL);
@@ -2227,7 +2230,7 @@ void reader_run_command( const wchar_t *cmd )
 
 int reader_shell_test( wchar_t *b )
 {
-	int res = parser_test( b, 0, 0, 0 );
+	int res = parser_t::principal_parser().test( b, 0, 0, 0 );
 	
 	if( res & PARSER_TEST_ERROR )
 	{
@@ -2239,7 +2242,7 @@ int reader_shell_test( wchar_t *b )
 		
 		s_write( &data->screen, L"", L"", tmp, tmp2, 0 );
 		
-		parser_test( b, 0, &sb, L"fish" );
+		parser_t::principal_parser().test( b, 0, &sb, L"fish" );
 		fwprintf( stderr, L"%ls", sb.buff );
 		sb_destroy( &sb );
 	}
@@ -2515,8 +2518,9 @@ static void handle_end_loop()
 	int job_count=0;
 	int is_breakpoint=0;
 	block_t *b;
-	
-	for( b = current_block; 
+	parser_t &parser = parser_t::principal_parser();
+    
+	for( b = parser.current_block; 
 	     b; 
 	     b = b->outer )
 	{
@@ -2577,7 +2581,8 @@ static int read_i()
 	reader_set_complete_function( &complete );
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &reader_shell_test );
-	
+	parser_t &parser = parser_t::principal_parser();
+    
 	data->prev_end_loop=0;
 
 	while( (!data->end_loop) && (!sanity_check()) )
@@ -2609,7 +2614,7 @@ static int read_i()
 			
 			data->buff_pos=data->buff_len=0;
 			data->buff[data->buff_len]=L'\0';
-			reader_run_command( tmp );
+			reader_run_command( parser, tmp );
 			free( tmp );
 			if( data->end_loop)
 			{
@@ -3347,6 +3352,7 @@ int reader_search_mode()
 */
 static int read_ni( int fd, io_data_t *io )
 {
+    parser_t &parser = parser_t::principal_parser();
 	FILE *in_stream;
 	wchar_t *buff=0;
 	buffer_t acc;
@@ -3408,9 +3414,9 @@ static int read_ni( int fd, io_data_t *io )
 			string_buffer_t sb;
 			sb_init( &sb );
 		
-			if( !parser_test( str, 0, &sb, L"fish" ) )
+			if( ! parser.test( str, 0, &sb, L"fish" ) )
 			{
-				eval( str, io, TOP );
+				parser.eval( str, io, TOP );
 			}
 			else
 			{

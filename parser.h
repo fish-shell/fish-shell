@@ -214,6 +214,7 @@ struct tokenizer;
 
 class parser_t {
     private:
+    enum parser_type_t parser_type;
     std::vector<block_t> blocks;
     
     /* No copying allowed */
@@ -225,12 +226,13 @@ class parser_t {
     void skipped_exec( job_t * j );
     void eval_job( tokenizer *tok );
     int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset );
-    int parser_test( const  wchar_t * buff, int *block_level,  string_buffer_t *out, const wchar_t *prefix );
-    int parser_test_args(const  wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
     void print_errors( string_buffer_t *target, const wchar_t *prefix );
     
     public:
     std::vector<profile_item_t> profile_items;
+    
+    /** Get the "principal" parser, whatever that is */
+    static parser_t &principal_parser();
     
     /** Create a parser of the given type */
     parser_t(enum parser_type_t type);
@@ -299,7 +301,7 @@ class parser_t {
     /**
        Set the current position in the latest string of the tokenizer.
     */
-    void set_pos( int p) const;
+    void set_pos( int p);
 
     /**
        Get the string currently parsed
@@ -334,7 +336,7 @@ class parser_t {
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    int test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix ) const;
+    int test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix );
 
     /**
        Test if the specified string can be parsed as an argument list,
@@ -342,7 +344,7 @@ class parser_t {
        string contains errors, and the second bit is set if the string
        contains an unclosed block.
     */
-    int test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix ) const;
+    int test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
 
     /**
        Tell the parser that the specified function may not be run if not

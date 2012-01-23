@@ -3929,7 +3929,7 @@ void builtin_push_io( parser_t &parser, int in )
 	sb_init( sb_err );
 }
 
-void builtin_pop_io()
+void builtin_pop_io(parser_t &parser)
 {
 	builtin_stdin = 0;
 	sb_destroy( sb_out );

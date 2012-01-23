@@ -232,7 +232,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	int search_mode = 0;
 	wchar_t *begin, *end;
 
-	current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer(parser);
+	current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
 	if( current_buffer )
 	{
 		current_cursor_pos = wcslen( current_buffer );

@@ -165,7 +165,7 @@ const wchar_t *builtin_get_desc( const wchar_t *b );
    the commandline builtin operate on the string to complete instead
    of operating on whatever is to be completed.
 */
-const wchar_t *builtin_complete_get_temporary_buffer(parser_t &parser);
+const wchar_t *builtin_complete_get_temporary_buffer();
 
 
 /**

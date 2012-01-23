@@ -398,7 +398,7 @@ static wint_t input_exec_binding( const input_mapping_t &m, const wcstring &seq 
 		*/
 		int last_status = proc_get_last_status();
 	  		
-		eval( m.command.c_str(), 0, TOP );
+		parser_t::principal_parser().eval( m.command.c_str(), 0, TOP );
 		
 		proc_set_last_status( last_status );
 		

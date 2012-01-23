@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 
 #define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
@@ -90,6 +91,11 @@ static void *iothread_worker(void *threadPtr) {
 	assert(threadPtr != NULL);
 	struct WorkerThread_t *thread = (struct WorkerThread_t *)threadPtr;
 	
+    // We don't want to receive signals on this thread
+    sigset_t set;
+    sigfillset(&set);
+    VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &set, NULL));
+    
 	/* Grab a request off of the queue */
 	struct ThreadedRequest_t *req;
 	VOMIT_ON_FAILURE(pthread_mutex_lock(&s_request_queue_lock));

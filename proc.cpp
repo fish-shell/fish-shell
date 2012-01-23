@@ -452,7 +452,8 @@ static void handle_child_status( pid_t pid, int status )
 		}
 		else
 		{
-			block_t *c = parser.current_block;
+            //PCA INSTANCED_PARSER what is this?
+			block_t *c = NULL;//parser.current_block;
 			if( p && found_proc )
 			{
 				while( c )

@@ -835,16 +835,10 @@ void input_terminfo_get_names( array_list_t *lst, int skip_null )
 	}
 }
 
-void input_function_get_names( array_list_t *lst )
+wcstring_list_t input_function_get_names( void )
 {
-	size_t i;	
-
-	CHECK( lst, );
-		
-	for( i=0; i<(sizeof(name_arr)/sizeof(wchar_t *)); i++ )
-	{
-		al_push( lst, name_arr[i] );
-	}
+    size_t count = sizeof name_arr / sizeof *name_arr;
+    return wcstring_list_t(name_arr, name_arr + count);
 }
 
 wchar_t input_function_get_code( const wcstring &name )

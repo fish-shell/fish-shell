@@ -138,7 +138,7 @@ wchar_t input_function_get_code( const wcstring &name );
 /**
    Returns a list of all existing input function names
  */
-void input_function_get_names( array_list_t *lst );
+wcstring_list_t input_function_get_names( void );
 
 
 #endif

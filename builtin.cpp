@@ -465,20 +465,13 @@ static void builtin_bind_key_names( int all )
  */
 static void builtin_bind_function_names()
 {
-	array_list_t lst;
-	int i;
+    wcstring_list_t names = input_function_get_names();
 	
-	al_init( &lst );
-	input_function_get_names( &lst );
-	
-	for( i=0; i<al_get_count(&lst); i++ )
+	for( size_t i=0; i<names.size(); i++ )
 	{
-		wchar_t *seq = (wchar_t *)al_get( &lst, i );
-		
+		const wchar_t *seq = names.at(i).c_str();		
 		sb_printf( sb_out, L"%ls\n", seq );
 	}
-
-	al_destroy( &lst );
 }
 
 /**

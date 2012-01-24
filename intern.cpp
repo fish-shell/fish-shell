@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <unistd.h>
+#include <set>
 
 #include "fallback.h"
 #include "util.h"
@@ -18,112 +19,43 @@
 #include "common.h"
 #include "intern.h"
 
-/**
-   Table of interned strings
-*/
-static hash_table_t *intern_table=0;
+/** Comparison function for intern'd strings */
+static bool string_table_compare(const wchar_t *a, const wchar_t *b) {
+    return wcscmp(a, b) < 0;
+}
 
-/**
-   Table of static interned strings
-*/
-static hash_table_t *intern_static_table=0;
+/** The table of intern'd strings */
+typedef std::set<const wchar_t *, bool (*)(const wchar_t *, const wchar_t *b)> string_table_t;
+static string_table_t string_table(string_table_compare);
+
+/** The lock to provide thread safety for intern'd strings */
+static pthread_mutex_t intern_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static const wchar_t *intern_with_dup( const wchar_t *in, bool dup )
+{
+	if( !in )
+		return NULL;
+        
+//	debug( 0, L"intern %ls", in );
+    scoped_lock lock(intern_lock);
+    const wchar_t *result;
+    string_table_t::const_iterator iter = string_table.find(in);
+    if (iter != string_table.end()) {
+        result = *iter; 
+    } else {
+        result = dup ? wcsdup(in) : in;
+        string_table.insert(result);
+    }
+    return result;
+}
 
 const wchar_t *intern( const wchar_t *in )
 {
-    ASSERT_IS_MAIN_THREAD();
-	const wchar_t *res=0;
-
-//	debug( 0, L"intern %ls", in );
-	
-	if( !in )
-		return 0;
-	
-	if( !intern_table )
-	{
-		intern_table = (hash_table_t *)malloc( sizeof( hash_table_t ) );
-		if( !intern_table )
-		{
-			DIE_MEM();
-		}
-		hash_init( intern_table, &hash_wcs_func, &hash_wcs_cmp );
-	}
-	
-	if( intern_static_table )
-	{
-		res = (const wchar_t *)hash_get( intern_static_table, in );
-	}
-	
-	if( !res )
-	{
-		res = (const wchar_t *)hash_get( intern_table, in );
-		
-		if( !res )
-		{
-			res = wcsdup( in );
-			if( !res )
-			{
-				DIE_MEM();
-			}
-			
-			hash_put( intern_table, res, res );
-		}
-	}
-	
-	return res;
+	return intern_with_dup(in, true);
 }
+
 
 const wchar_t *intern_static( const wchar_t *in )
 {
-	const wchar_t *res=0;
-	
-	if( !in )
-		return 0;
-	
-	if( !intern_static_table )
-	{
-		intern_static_table = (hash_table_t *)malloc( sizeof( hash_table_t ) );
-		if( !intern_static_table )
-		{
-			DIE_MEM();			
-		}
-		hash_init( intern_static_table, &hash_wcs_func, &hash_wcs_cmp );
-	}
-	
-	res = (const wchar_t *)hash_get( intern_static_table, in );
-	
-	if( !res )
-	{
-		res = in;
-		hash_put( intern_static_table, res, res );
-	}
-	
-	return res;
-}
-
-/**
-   Free the specified key/value pair. Should only be called by intern_free_all at shutdown
-*/
-static void clear_value( void *key, void *data )
-{
-	debug( 3,  L"interned string: '%ls'", data );	
-	free( (void *)data );
-}
-
-void intern_free_all()
-{
-	if( intern_table )
-	{
-		hash_foreach( intern_table, &clear_value );		
-		hash_destroy( intern_table );		
-		free( intern_table );
-		intern_table=0;		
-	}
-
-	if( intern_static_table )
-	{
-		hash_destroy( intern_static_table );		
-		free( intern_static_table );
-		intern_static_table=0;		
-	}
-	
+	return intern_with_dup(in, false);
 }

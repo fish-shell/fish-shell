@@ -403,7 +403,5 @@ int main( int argc, char **argv )
 	
 	env_destroy();
 	
-	intern_free_all();
-	
 	return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();	
 }

@@ -25,9 +25,4 @@ const wchar_t *intern( const wchar_t *in );
 */
 const wchar_t *intern_static( const wchar_t *in );
 
-/**
-   Free all interned strings. Only call this at shutdown.
-*/
-void intern_free_all();
-
 #endif

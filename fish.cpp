@@ -393,7 +393,6 @@ int main( int argc, char **argv )
 	history_destroy();
 	proc_destroy();
 	builtin_destroy();
-	function_destroy();
 	reader_destroy();
 	parser.destroy();
 	wutil_destroy();

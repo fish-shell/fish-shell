@@ -40,49 +40,13 @@
 #include "halloc_util.h"
 #include "builtin_scripts.h"
 
-class function_internal_info_t
-{
-public:
-    /** Function definition */
-    wcstring definition;
-    
-    /** Function description */
-    wcstring description;
-    
-	/**
-	   File where this function was defined
-	*/
-    const wchar_t *definition_file;
-    
-	/**
-	   Line where definition started
-	*/
-	int definition_offset;
-    
-	/**
-	   List of all named arguments for this function
-	 */
-    wcstring_list_t named_arguments;
-    
-	/**
-	   Flag for specifying that this function was automatically loaded
-	*/
-    bool is_autoload;
-    
-	/**
-	   Set to non-zero if invoking this function shadows the variables
-	   of the underlying function.
-	 */
-	bool shadows;
-};
-
 /* Autoloader for functions */
 static autoload_t function_autoloader(L"fish_function_path", internal_function_scripts, sizeof internal_function_scripts / sizeof *internal_function_scripts);
 
 /**
    Table containing all functions
 */
-typedef std::map<wcstring, function_internal_info_t> function_map_t;
+typedef std::map<wcstring, shared_ptr<function_info_t> > function_map_t;
 static function_map_t loaded_functions;
 
 /* Lock for functions */
@@ -90,30 +54,6 @@ static pthread_mutex_t functions_lock;
 
 /* Helper macro for vomiting */
 #define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
-
-static int kLockDepth = 0;
-static char kLockFunction[1024];
-
-/**
-   Lock and unlock the functions hash
-*/
-static void lock_functions(const char *func) {
-    VOMIT_ON_FAILURE(pthread_mutex_lock(&functions_lock));
-    if (! kLockDepth++) {
-        strcat(kLockFunction, func);
-    }
-}
-
-static void unlock_functions(void) {
-    if (! --kLockDepth) {
-        memset(kLockFunction, 0, sizeof kLockFunction);
-    }
-    VOMIT_ON_FAILURE(pthread_mutex_unlock(&functions_lock));
-}
-
-#define LOCK_FUNCTIONS() lock_functions(__FUNCTION__)
-#define UNLOCK_FUNCTIONS() unlock_functions()
-
 
 /**
    Kludgy flag set by the load function in order to tell function_add
@@ -129,15 +69,13 @@ static int is_autoload = 0;
 static int load( const wchar_t *name )
 {
     ASSERT_IS_MAIN_THREAD();
+    scoped_lock lock(functions_lock);
 	int was_autoload = is_autoload;
 	int res;
-    LOCK_FUNCTIONS();
     function_map_t::iterator iter = loaded_functions.find(name);
-	if( iter !=  loaded_functions.end() && !iter->second.is_autoload ) {
-        UNLOCK_FUNCTIONS();
+	if( iter !=  loaded_functions.end() && !iter->second->is_autoload ) {
 		return 0;
     }
-    UNLOCK_FUNCTIONS();
 	
 	is_autoload = 1;	
 	res = function_autoloader.load( name, &function_remove, 1 );
@@ -197,13 +135,6 @@ void function_init()
     VOMIT_ON_FAILURE(pthread_mutexattr_destroy(&a));
 }
 
-void function_destroy()
-{
-    LOCK_FUNCTIONS();
-    loaded_functions.clear();
-    UNLOCK_FUNCTIONS();
-}
-
 
 void function_add( function_data_t *data, const parser_t &parser )
 {
@@ -211,35 +142,37 @@ void function_add( function_data_t *data, const parser_t &parser )
 	
 	CHECK( data->name, );
 	CHECK( data->definition, );
-	LOCK_FUNCTIONS();
+	scoped_lock lock(functions_lock);
 	function_remove( data->name );
 	    
-    function_internal_info_t &info = loaded_functions[data->name];
+    shared_ptr<function_info_t> &info = loaded_functions[data->name];
+    if (! info) {
+        info.reset(new function_info_t);
+    }
     
-	info.definition_offset = parse_util_lineno( parser.get_buffer(), parser.current_block->tok_pos )-1;
-	info.definition = data->definition;
+	info->definition_offset = parse_util_lineno( parser.get_buffer(), parser.current_block->tok_pos )-1;
+	info->definition = data->definition;
 
 	if( data->named_arguments )
 	{
 		for( i=0; i<al_get_count( data->named_arguments ); i++ )
 		{
-            info.named_arguments.push_back((wchar_t *)al_get( data->named_arguments, i ));
+            info->named_arguments.push_back((wchar_t *)al_get( data->named_arguments, i ));
 		}
 	}
 	
 	
 	if (data->description)
-        info.description = data->description;
-	info.definition_file = intern(reader_current_filename());
-	info.is_autoload = is_autoload;
-	info.shadows = data->shadows;
+        info->description = data->description;
+	info->definition_file = intern(reader_current_filename());
+	info->is_autoload = is_autoload;
+	info->shadows = data->shadows;
 	
 	
 	for( i=0; i<al_get_count( data->events ); i++ )
 	{
 		event_add_handler( (event_t *)al_get( data->events, i ) );
 	}
-	UNLOCK_FUNCTIONS();
 }
 
 static int function_exists_internal( const wchar_t *cmd, bool autoload )
@@ -250,10 +183,9 @@ static int function_exists_internal( const wchar_t *cmd, bool autoload )
 	if( parser_keywords_is_reserved(cmd) )
 		return 0;
 	
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
 	if ( autoload ) load( cmd );
     res = loaded_functions.find(cmd) != loaded_functions.end();
-	UNLOCK_FUNCTIONS();
     return res;
 }
 
@@ -273,11 +205,10 @@ void function_remove( const wchar_t *name )
 	
 	CHECK( name, );
 
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
     bool erased = (loaded_functions.erase(name) > 0);
 	
 	if( !erased ) {
-        UNLOCK_FUNCTIONS();
 		return;
     }
 
@@ -294,19 +225,28 @@ void function_remove( const wchar_t *name )
 	{
 		function_autoloader.unload( name, 0 );
 	}
-    UNLOCK_FUNCTIONS();
+}
+
+shared_ptr<function_info_t> function_get(const wcstring &name)
+{
+    scoped_lock lock(functions_lock);
+    function_map_t::iterator iter = loaded_functions.find(name);
+    if (iter == loaded_functions.end()) {
+        return shared_ptr<function_info_t>();
+    } else {
+        return iter->second;
+    }
 }
 	
 const wchar_t *function_get_definition( const wchar_t *name )
 {
     const wchar_t *result = NULL;
 	CHECK( name, 0 );
-	LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
 	load( name );
     function_map_t::iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end())
-        result = iter->second.definition.c_str();
-    UNLOCK_FUNCTIONS();
+        result = iter->second->definition.c_str();
     return result;
 }
 
@@ -314,12 +254,11 @@ wcstring_list_t function_get_named_arguments( const wchar_t *name )
 {
     wcstring_list_t result;
 	CHECK( name, result );
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
 	load( name );
     function_map_t::iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end())
-        result = iter->second.named_arguments;
-    UNLOCK_FUNCTIONS();
+        result = iter->second->named_arguments;
     return result;
 }
 
@@ -327,12 +266,11 @@ int function_get_shadows( const wchar_t *name )
 {
 	bool result = false;
 	CHECK( name, 0 );
-	LOCK_FUNCTIONS();
+	scoped_lock lock(functions_lock);
 	load( name );
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end())
-        result = iter->second.shadows;
-    UNLOCK_FUNCTIONS();
+        result = iter->second->shadows;
     return result;
 }
 
@@ -341,12 +279,11 @@ const wchar_t *function_get_desc( const wchar_t *name )
 {
     const wchar_t *result = NULL;
 	CHECK( name, 0 );
+    scoped_lock lock(functions_lock);
 	load( name );
-    LOCK_FUNCTIONS();
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end())
-        result = iter->second.description.c_str();
-    UNLOCK_FUNCTIONS();
+        result = iter->second->description.c_str();
     
     /* Empty length string goes to NULL */
     if (result && ! result[0])
@@ -361,21 +298,20 @@ void function_set_desc( const wchar_t *name, const wchar_t *desc )
 	CHECK( desc, );
 	
 	load( name );
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
     function_map_t::iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end())
-        iter->second.description = desc;
-    UNLOCK_FUNCTIONS();
+        iter->second->description = desc;
 }
 
 int function_copy( const wchar_t *name, const wchar_t *new_name )
 {
     int result = 0;
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
-        function_internal_info_t &new_info = loaded_functions[new_name];
-        new_info = iter->second;
+        function_info_t &new_info = *loaded_functions[new_name];
+        new_info = *iter->second;
         
 		// This new instance of the function shouldn't be tied to the def 
 		// file of the original. 
@@ -384,14 +320,13 @@ int function_copy( const wchar_t *name, const wchar_t *new_name )
         
         result = 1;
     }
-    UNLOCK_FUNCTIONS();
 	return result;
 }
 
 wcstring_list_t function_get_names( int get_hidden )
 {
     std::set<wcstring> names;
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
 	autoload_names( names, get_hidden );
 	
     function_map_t::const_iterator iter;
@@ -405,7 +340,6 @@ wcstring_list_t function_get_names( int get_hidden )
         
         names.insert(name);
     }
-    UNLOCK_FUNCTIONS();
     
     return wcstring_list_t(names.begin(), names.end());
 }
@@ -415,11 +349,10 @@ const wchar_t *function_get_definition_file( const wchar_t *name )
     const wchar_t *result = NULL;
 
 	CHECK( name, 0 );
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end())
-        result = iter->second.definition_file;
-    UNLOCK_FUNCTIONS();
+        result = iter->second->definition_file;
     return result;
 }
 
@@ -429,11 +362,10 @@ int function_get_definition_offset( const wchar_t *name )
     int result = -1;
 
 	CHECK( name, -1 );
-    LOCK_FUNCTIONS();
+    scoped_lock lock(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end())
-        result = iter->second.definition_offset;
-    UNLOCK_FUNCTIONS();
+        result = iter->second->definition_offset;
     return result;
 }
 

@@ -15,6 +15,9 @@
 #include "util.h"
 #include "common.h"
 
+#include <tr1/memory>
+using std::tr1::shared_ptr;
+
 class parser_t;
 
 /**
@@ -51,8 +54,42 @@ typedef struct function_data
 	   of the underlying function.
 	 */
 	int shadows;
-}
-	function_data_t;
+} function_data_t;
+
+class function_info_t {
+public:
+    /** Function definition */
+    wcstring definition;
+    
+    /** Function description */
+    wcstring description;
+    
+	/**
+	   File where this function was defined (intern'd string)
+	*/
+    const wchar_t *definition_file;
+    
+	/**
+	   Line where definition started
+	*/
+	int definition_offset;
+    
+	/**
+	   List of all named arguments for this function
+	 */
+    wcstring_list_t named_arguments;
+    
+	/**
+	   Flag for specifying that this function was automatically loaded
+	*/
+    bool is_autoload;
+    
+	/**
+	   Set to non-zero if invoking this function shadows the variables
+	   of the underlying function.
+	 */
+	bool shadows;
+};
 
 
 /**
@@ -61,12 +98,7 @@ typedef struct function_data
 void function_init();
 
 /**
-   Destroy function data
-*/
-void function_destroy();
-
-/**
-   Add an function. The parameters values are copied and should be
+   Add a function. The parameters values are copied and should be
    freed by the caller.
 */
 void function_add( function_data_t *data, const parser_t &parser );
@@ -75,6 +107,11 @@ void function_add( function_data_t *data, const parser_t &parser );
    Remove the function with the specified name.
 */
 void function_remove( const wchar_t *name );
+
+/**
+    Gets a function by name.
+*/
+shared_ptr<function_info_t> function_get(const wcstring &name);
 
 /**
    Returns the definition of the function with the name \c name.

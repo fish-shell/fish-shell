@@ -847,7 +847,6 @@ int main( int argc, char **argv )
 	env_destroy();
 	reader_destroy();	
 	parser_destroy();
-	function_destroy();
 	builtin_destroy();
 	wutil_destroy();
 	event_destroy();

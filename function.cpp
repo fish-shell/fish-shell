@@ -240,56 +240,32 @@ shared_ptr<function_info_t> function_get(const wcstring &name)
 	
 const wchar_t *function_get_definition( const wchar_t *name )
 {
-    const wchar_t *result = NULL;
-	CHECK( name, 0 );
-    scoped_lock lock(functions_lock);
-	load( name );
-    function_map_t::iterator iter = loaded_functions.find(name);
-    if (iter != loaded_functions.end())
-        result = iter->second->definition.c_str();
-    return result;
+    shared_ptr<function_info_t> func = function_get(name);
+    return func ? func->definition.c_str() : NULL;
 }
 
 wcstring_list_t function_get_named_arguments( const wchar_t *name )
 {
-    wcstring_list_t result;
-	CHECK( name, result );
-    scoped_lock lock(functions_lock);
-	load( name );
-    function_map_t::iterator iter = loaded_functions.find(name);
-    if (iter != loaded_functions.end())
-        result = iter->second->named_arguments;
-    return result;
+    shared_ptr<function_info_t> func = function_get(name);
+    return func ? func->named_arguments : wcstring_list_t();
 }
 
 int function_get_shadows( const wchar_t *name )
 {
-	bool result = false;
-	CHECK( name, 0 );
-	scoped_lock lock(functions_lock);
-	load( name );
-    function_map_t::const_iterator iter = loaded_functions.find(name);
-    if (iter != loaded_functions.end())
-        result = iter->second->shadows;
-    return result;
+    shared_ptr<function_info_t> func = function_get(name);
+    return func ? func->shadows : false;
 }
 
 	
 const wchar_t *function_get_desc( const wchar_t *name )
 {
-    const wchar_t *result = NULL;
-	CHECK( name, 0 );
-    scoped_lock lock(functions_lock);
-	load( name );
-    function_map_t::const_iterator iter = loaded_functions.find(name);
-    if (iter != loaded_functions.end())
-        result = iter->second->description.c_str();
-    
     /* Empty length string goes to NULL */
-    if (result && ! result[0])
-        result = NULL;
-            
-    return result ? _(result) : NULL;
+    shared_ptr<function_info_t> func = function_get(name);
+    if (func && func->description.size()) {
+        return _(func->description.c_str());
+    } else {
+        return NULL;
+    }
 }
 
 void function_set_desc( const wchar_t *name, const wchar_t *desc )
@@ -298,10 +274,8 @@ void function_set_desc( const wchar_t *name, const wchar_t *desc )
 	CHECK( desc, );
 	
 	load( name );
-    scoped_lock lock(functions_lock);
-    function_map_t::iterator iter = loaded_functions.find(name);
-    if (iter != loaded_functions.end())
-        iter->second->description = desc;
+    shared_ptr<function_info_t> func = function_get(name);
+    if (func) func->description = desc;
 }
 
 int function_copy( const wchar_t *name, const wchar_t *new_name )
@@ -310,13 +284,13 @@ int function_copy( const wchar_t *name, const wchar_t *new_name )
     scoped_lock lock(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
-        function_info_t &new_info = *loaded_functions[new_name];
-        new_info = *iter->second;
+        shared_ptr<function_info_t> &new_info = loaded_functions[new_name];
+        new_info.reset(new function_info_t(*iter->second));
         
 		// This new instance of the function shouldn't be tied to the def 
 		// file of the original. 
-		new_info.definition_file = 0;
-		new_info.is_autoload = 0;
+		new_info->definition_file = 0;
+		new_info->is_autoload = 0;
         
         result = 1;
     }
@@ -346,26 +320,14 @@ wcstring_list_t function_get_names( int get_hidden )
 
 const wchar_t *function_get_definition_file( const wchar_t *name )
 {
-    const wchar_t *result = NULL;
-
-	CHECK( name, 0 );
-    scoped_lock lock(functions_lock);
-    function_map_t::const_iterator iter = loaded_functions.find(name);
-    if (iter != loaded_functions.end())
-        result = iter->second->definition_file;
-    return result;
+    shared_ptr<function_info_t> func = function_get(name);
+    return func ? func->definition_file : NULL;
 }
 
 
 int function_get_definition_offset( const wchar_t *name )
 {
-    int result = -1;
-
-	CHECK( name, -1 );
-    scoped_lock lock(functions_lock);
-    function_map_t::const_iterator iter = loaded_functions.find(name);
-    if (iter != loaded_functions.end())
-        result = iter->second->definition_offset;
-    return result;
+    shared_ptr<function_info_t> func = function_get(name);
+    return func ? func->definition_offset : -1;
 }
 

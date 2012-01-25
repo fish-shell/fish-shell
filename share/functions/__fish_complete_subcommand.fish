@@ -1,11 +1,11 @@
-function __fish_complete_subcommand  -d "Complete subcommand"
+function __fish_complete_subcommand	 -d "Complete subcommand"
 	set -l skip_next 1
-    switch "$argv[1]"
-        case '--fcs-skip=*'
-            set -l rest
-            echo $argv[1] | tr = ' ' | read test skip_next
-            set -e argv[1]
-    end
+	switch "$argv[1]"
+		case '--fcs-skip=*'
+			set -l rest
+			echo $argv[1] | tr = ' ' | read test skip_next
+			set -e argv[1]
+	end
 
 	set -l res ""
 	set -l had_cmd 0
@@ -14,7 +14,7 @@ function __fish_complete_subcommand  -d "Complete subcommand"
 	for i in $cmd
 
 		if test $skip_next -gt 0
-            set skip_next (expr $skip_next - 1)
+			set skip_next (expr $skip_next - 1)
 			continue
 		end
 
@@ -31,7 +31,7 @@ function __fish_complete_subcommand  -d "Complete subcommand"
 				case '-*'
 				case '*=*'
 				case '*'
-                    
+										
 					set had_cmd 1
 					set res $i
 			end

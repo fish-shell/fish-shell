@@ -110,12 +110,16 @@
 		D0A0856513B3ACEE0099B651 /* xdgmimeint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xdgmimeint.cpp; sourceTree = "<group>"; };
 		D0A0856613B3ACEE0099B651 /* xdgmimemagic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xdgmimemagic.cpp; sourceTree = "<group>"; };
 		D0A0856713B3ACEE0099B651 /* xdgmimeparent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xdgmimeparent.cpp; sourceTree = "<group>"; };
+		D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = autoload.cpp; sourceTree = "<group>"; };
+		D0C6FCCB14CFA4B7004CE8AD /* autoload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = autoload.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		D0A084F013B3AC130099B651 = {
 			isa = PBXGroup;
 			children = (
+				D0C6FCCB14CFA4B7004CE8AD /* autoload.h */,
+				D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */,
 				D0A0850313B3ACEE0099B651 /* builtin.h */,
 				D0A0853013B3ACEE0099B651 /* builtin_commandline.cpp */,
 				D0A0853113B3ACEE0099B651 /* builtin_complete.cpp */,

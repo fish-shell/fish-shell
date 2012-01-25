@@ -95,7 +95,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	highlight.o history.o kill.o parser.o proc.o reader.o sanity.o		\
 	tokenizer.o wildcard.o wgetopt.o wutil.o input.o output.o intern.o	\
 	env_universal.o env_universal_common.o input_common.o event.o		\
-	signal.o io.o parse_util.o common.o screen.o path.o					\
+	signal.o io.o parse_util.o common.o screen.o path.o autoload.o		\
 	parser_keywords.o iothread.o builtin_scripts.o
 
 FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
@@ -905,8 +905,9 @@ clean:
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
+autoload.o: autoload.h common.h util.h
 builtin.o: config.h fallback.h util.h wutil.h builtin.h io.h function.h
-builtin.o: complete.h proc.h parser.h event.h common.h reader.h env.h
+builtin.o: common.h complete.h proc.h parser.h event.h reader.h env.h
 builtin.o: wgetopt.h sanity.h tokenizer.h wildcard.h input_common.h input.h
 builtin.o: intern.h signal.h exec.h highlight.h halloc.h halloc_util.h
 builtin.o: parse_util.h parser_keywords.h expand.h path.h builtin_set.cpp
@@ -921,7 +922,6 @@ builtin_complete.o: io.h common.h complete.h wgetopt.h parser.h proc.h
 builtin_complete.o: event.h reader.h
 builtin_jobs.o: config.h fallback.h util.h wutil.h builtin.h io.h proc.h
 builtin_jobs.o: parser.h event.h common.h wgetopt.h
-builtin_scripts.o: builtin_scripts.h
 builtin_set.o: config.h signal.h fallback.h util.h wutil.h builtin.h io.h
 builtin_set.o: env.h common.h expand.h wgetopt.h proc.h parser.h event.h
 builtin_ulimit.o: config.h fallback.h util.h builtin.h io.h common.h
@@ -942,8 +942,8 @@ env_universal.o: config.h signal.h fallback.h util.h common.h wutil.h
 env_universal.o: env_universal_common.h env_universal.h
 env_universal_common.o: config.h signal.h fallback.h util.h common.h wutil.h
 env_universal_common.o: env_universal_common.h
-event.o: config.h signal.h fallback.h util.h wutil.h function.h proc.h io.h
-event.o: parser.h event.h common.h halloc_util.h
+event.o: config.h signal.h fallback.h util.h wutil.h function.h common.h
+event.o: proc.h io.h parser.h event.h halloc_util.h
 exec.o: config.h signal.h fallback.h util.h common.h wutil.h proc.h io.h
 exec.o: exec.h parser.h event.h builtin.h function.h env.h wildcard.h
 exec.o: sanity.h expand.h halloc.h halloc_util.h parse_util.h
@@ -966,8 +966,8 @@ fish_tests.o: parser.h event.h tokenizer.h output.h exec.h path.h halloc.h
 fish_tests.o: halloc_util.h
 fishd.o: config.h signal.h fallback.h util.h common.h wutil.h
 fishd.o: env_universal_common.h halloc.h halloc_util.h path.h print_help.h
-function.o: config.h signal.h wutil.h fallback.h util.h function.h proc.h
-function.o: io.h parser.h event.h common.h intern.h reader.h parse_util.h
+function.o: config.h signal.h wutil.h fallback.h util.h function.h common.h
+function.o: proc.h io.h parser.h event.h intern.h reader.h parse_util.h
 function.o: parser_keywords.h env.h expand.h halloc.h halloc_util.h
 halloc.o: config.h fallback.h util.h common.h halloc.h
 halloc_util.o: config.h fallback.h util.h common.h halloc.h
@@ -984,7 +984,7 @@ input_common.o: config.h fallback.h util.h common.h wutil.h input_common.h
 input_common.o: env_universal.h env_universal_common.h iothread.h
 intern.o: config.h fallback.h util.h wutil.h common.h intern.h
 io.o: config.h fallback.h util.h wutil.h exec.h proc.h io.h common.h halloc.h
-iothread.o: iothread.h
+iothread.o: iothread.h signal.h
 key_reader.o: config.h fallback.h input_common.h
 kill.o: config.h signal.h fallback.h util.h wutil.h kill.h proc.h io.h
 kill.o: sanity.h common.h env.h exec.h halloc.h path.h
@@ -993,7 +993,7 @@ output.o: config.h signal.h fallback.h util.h wutil.h expand.h common.h
 output.o: output.h halloc_util.h highlight.h env.h
 parse_util.o: config.h fallback.h util.h wutil.h common.h tokenizer.h
 parse_util.o: parse_util.h expand.h intern.h exec.h proc.h io.h env.h
-parse_util.o: signal.h wildcard.h halloc_util.h builtin_scripts.h
+parse_util.o: signal.h wildcard.h halloc_util.h
 parser.o: config.h signal.h fallback.h util.h common.h wutil.h proc.h io.h
 parser.o: parser.h event.h parser_keywords.h tokenizer.h exec.h wildcard.h
 parser.o: function.h builtin.h env.h expand.h reader.h sanity.h

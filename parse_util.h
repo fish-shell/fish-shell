@@ -7,19 +7,21 @@
 #ifndef FISH_PARSE_UTIL_H
 #define FISH_PARSE_UTIL_H
 
+#include "autoload.h"
 #include <wchar.h>
 #include <map>
 #include <set>
 
-struct autoload_function_t
+struct autoload_function_t : public lru_node_t
 {   
-    bool is_placeholder; //whether we are a placeholder that stands in for "no such function"
-    time_t modification_time; // st_mtime
-    time_t load_time; // when function was loaded
-    
-    
-    autoload_function_t() : is_placeholder(false), modification_time(0), load_time(0) { }
+    autoload_function_t(const wcstring &key) : lru_node_t(key), is_placeholder(false) { bzero(&access, sizeof access); }
+    virtual ~autoload_function_t();
+    virtual void evicted(void);
+
+    file_access_attempt_t access; /** The last access attempt */
+    bool is_placeholder; /** Whether we are a placeholder that stands in for "no such function" */
 };
+
 
 struct builtin_script_t;
 
@@ -28,6 +30,9 @@ struct builtin_script_t;
  */
 class autoload_t {
 private:
+    /** Access tracker */
+    lru_cache_t<autoload_function_t> function_cache;
+
     /** The environment variable name */
     const wcstring env_var_name;
     
@@ -54,10 +59,6 @@ private:
         return is_loading_set.find(name) != is_loading_set.end();
     }
 
-    autoload_function_t *create_function_with_name(const wcstring &name) {
-        return &autoload_functions[name];
-    }
-    
     bool remove_function_with_name(const wcstring &name) {
         return autoload_functions.erase(name) > 0;
     }
@@ -78,26 +79,9 @@ private:
     size_t function_count(void) const {
         return autoload_functions.size();
     }
-    
-    /** Returns the name of the function that was least recently loaded, if it was loaded before cutoff_access. Return NULL if no function qualifies. */ 
-    const wcstring *get_lru_function_name(const wcstring &skip, time_t cutoff_access) const;
-    
+        
     int load_internal( const wcstring &cmd, void (*on_load)(const wchar_t *cmd), int reload, const wcstring_list_t &path_list );
     
-    /**
-
-       Unload all autoloaded items that have expired, that where loaded in
-       the specified path.
-
-       \param skip unloading the the specified file
-       \param on_load the callback function to call for every unloaded file
-
-    */
-    void autounload( const wchar_t *skip,
-                     void (*on_load)(const wchar_t *cmd) );
-    
-    void apply_handler_to_nonplaceholder_function_names(void (*handler)(const wchar_t *cmd)) const;
-
     public:
     
     /** Create an autoload_t for the given environment variable name */

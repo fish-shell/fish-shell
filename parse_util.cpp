@@ -54,43 +54,6 @@
 #define AUTOLOAD_MIN_AGE 60
 
 
-/* Get the name of the function that was least recently loaded, if it was loaded before cutoff_access. Return NULL if no function qualifies. */ 
-const wcstring *autoload_t::get_lru_function_name(const wcstring &skip, time_t cutoff_access) const
-{
-    const wcstring *resultName = NULL;
-    const autoload_function_t *resultFunction = NULL;
-    autoload_functions_map_t::const_iterator iter;
-    for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
-    {
-        /* Skip the skip */
-        if (iter->first == skip) continue;
-        
-        /* Skip items that are still loading */
-        if (is_loading(iter->first)) continue;
-        
-        /* Skip placeholder items */
-        if (iter->second.is_placeholder) continue;
-        
-        /* Check cutoff_access */
-        if (iter->second.load_time > cutoff_access) continue;
-
-        /* Remember this if it was used earlier */
-        if (resultFunction == NULL || iter->second.load_time < resultFunction->load_time) {
-            resultName = &iter->first;
-            resultFunction = &iter->second;
-        }
-    }
-    return resultName;
-}
-    
-void autoload_t::apply_handler_to_nonplaceholder_function_names(void (*handler)(const wchar_t *cmd)) const
-{
-    autoload_functions_map_t::const_iterator iter;
-    for (iter = autoload_functions.begin(); iter != autoload_functions.end(); iter++)
-        handler(iter->first.c_str());
-}
-
-
 int parse_util_lineno( const wchar_t *str, int len )
 {
 	/**
@@ -638,6 +601,13 @@ void parse_util_token_extent( const wchar_t *buff,
 
 }
 
+autoload_function_t::~autoload_function_t() { }
+
+void autoload_function_t::evicted(void) {
+    delete this;
+}
+
+
 autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t * const scripts, size_t script_count) :
                        env_var_name(env_var_name_var),
                        builtin_scripts(scripts),
@@ -647,50 +617,14 @@ autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t 
 
 void autoload_t::reset( void (*on_load)(const wchar_t *cmd) )
 {
-    if (! autoload_functions.empty()) {
-        if (on_load) {
-            /*  Call the on_load handler on each real function name. */
-            this->apply_handler_to_nonplaceholder_function_names(on_load);
-        }
-        /* Empty the functino set */
-        this->remove_all_functions();
-    }
+    function_cache.evict_all_nodes();
+    /* TODO: Must call on_load on all non-placeholders */
 }
 
 int autoload_t::unload( const wchar_t *cmd, void (*on_load)(const wchar_t *cmd) )
 {
-	int result = 0;
-
 	CHECK( cmd, 0 );
-
-    if (this->remove_function_with_name(cmd))
-    {
-        if (on_load)
-            on_load(cmd);
-        result = 1;
-    }
-    return result;
-}
-
-/**
-
-   Unload one autoloaded item that has expired, that where loaded in
-   the specified path.
-
-   \param skip unloading the the specified file
-   \param on_load the callback function to call for every unloaded file
-
-*/
-void autoload_t::autounload( const wchar_t *skip,
-                             void (*on_load)(const wchar_t *cmd) )
-{
-    if( this->function_count() >= AUTOLOAD_MAX )
-    {
-        time_t cutoff_access = time(0) - AUTOLOAD_MIN_AGE;
-        const wcstring *lru = this->get_lru_function_name(skip, cutoff_access);
-        if (lru)
-            unload( lru->c_str(), on_load );
-    }
+    return function_cache.evict_node(cmd);
 }
 
 int autoload_t::load( const wcstring &cmd,
@@ -702,7 +636,6 @@ int autoload_t::load( const wcstring &cmd,
 	
 	CHECK_BLOCK( 0 );
 
-	autounload( cmd.c_str(), on_load );
 	const env_var_t path_var = env_get_string( env_var_name.c_str() );	
 	
 	/*
@@ -791,8 +724,8 @@ int autoload_t::load_internal( const wcstring &cmd,
 		return 0;
 
     /* Nothing to do if we just checked it */
-    if (func && time(NULL) - func->load_time <= 1)
-        return 0;	
+    if (func && time(NULL) - func->access.last_checked <= 1)
+        return 0;
     
     /* The source of the script will end up here */
     wcstring script_source;
@@ -825,24 +758,19 @@ int autoload_t::load_internal( const wcstring &cmd,
         */
         for( i=0; i<path_list.size(); i++ )
         {
-            struct stat buf;
             wcstring next = path_list.at(i);
             wcstring path = next + L"/" + cmd + L".fish";
 
-            if( (wstat( path.c_str(), &buf )== 0) &&
-                (waccess( path.c_str(), R_OK ) == 0) )
-            {
-                if( !func || (func->modification_time != buf.st_mtime ) )
-                {
+            const file_access_attempt_t access = access_file(path, R_OK);
+            if (access.accessible) {
+                if (! func || access.mod_time != func->access.mod_time) {
                     wcstring esc = escape_string(path, 1);
                     script_source = L". " + esc;
                     has_script_source = true;
                     
                     if( !func )
-                        func = this->create_function_with_name(cmd);
-
-                    func->modification_time = buf.st_mtime;
-                    func->load_time = time(NULL);
+                        func = new autoload_function_t(cmd);
+                    func->access = access;
                     
                     if( on_load )
                         on_load(cmd.c_str());
@@ -855,7 +783,7 @@ int autoload_t::load_internal( const wcstring &cmd,
                       If we are rechecking an autoload file, and it hasn't
                       changed, update the 'last check' timestamp.
                     */
-                    func->load_time = time(NULL);				
+                    func->access = access;
                 }
                 
                 break;
@@ -869,8 +797,8 @@ int autoload_t::load_internal( const wcstring &cmd,
         */
         if( !func )
         {
-            func = this->create_function_with_name(cmd);
-            func->load_time = time(NULL);
+            func = new autoload_function_t(cmd);
+            func->access.last_checked = time(NULL);
             func->is_placeholder = true;
         }
     }

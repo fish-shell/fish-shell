@@ -92,4 +92,112 @@ protected:
 };
 
 
+struct autoload_function_t : public lru_node_t
+{   
+    autoload_function_t(const wcstring &key) : lru_node_t(key), is_placeholder(false) { bzero(&access, sizeof access); }
+    file_access_attempt_t access; /** The last access attempt */
+    bool is_placeholder; /** Whether we are a placeholder that stands in for "no such function" */
+};
+
+
+struct builtin_script_t;
+
+/**
+  A class that represents a path from which we can autoload, and the autoloaded contents.
+ */
+class autoload_t : private lru_cache_t<autoload_function_t> {
+private:
+
+    /** The environment variable name */
+    const wcstring env_var_name;
+    
+    /** Builtin script array */
+    const struct builtin_script_t *const builtin_scripts;
+    
+    /** Builtin script count */
+    const size_t builtin_script_count;
+
+    /** The path from which we most recently autoloaded */
+    wcstring path;
+    
+    /** The map from function name to the function. */
+    typedef std::map<wcstring, autoload_function_t> autoload_functions_map_t;
+    autoload_functions_map_t autoload_functions;
+
+	/**
+	   A table containing all the files that are currently being
+	   loaded. This is here to help prevent recursion.
+	*/
+    std::set<wcstring> is_loading_set;
+
+    bool is_loading(const wcstring &name) const {
+        return is_loading_set.find(name) != is_loading_set.end();
+    }
+
+    bool remove_function_with_name(const wcstring &name) {
+        return autoload_functions.erase(name) > 0;
+    }
+    
+    autoload_function_t *get_function_with_name(const wcstring &name)
+    {
+        autoload_function_t *result = NULL;
+        autoload_functions_map_t::iterator iter = autoload_functions.find(name);
+        if (iter != autoload_functions.end())
+            result = &iter->second;
+        return result;
+    }
+    
+    void remove_all_functions(void) {
+        autoload_functions.clear();
+    }
+    
+    size_t function_count(void) const {
+        return autoload_functions.size();
+    }
+        
+    int load_internal( const wcstring &cmd, int reload, const wcstring_list_t &path_list );
+    
+    virtual void node_was_evicted(autoload_function_t *node);
+
+
+    protected:    
+    /** Overridable callback for when a command is removed */
+    virtual void command_removed(const wcstring &cmd) { }
+    
+    public:
+    
+    /** Create an autoload_t for the given environment variable name */
+    autoload_t(const wcstring &env_var_name_var, const builtin_script_t *scripts, size_t script_count );
+    
+    /**
+       Autoload the specified file, if it exists in the specified path. Do
+       not load it multiple times unless it's timestamp changes or
+       parse_util_unload is called.
+
+       Autoloading one file may unload another. 
+
+       \param cmd the filename to search for. The suffix '.fish' is always added to this name
+       \param on_unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
+       \param reload wheter to recheck file timestamps on already loaded files
+    */
+    int load( const wcstring &cmd, bool reload );
+    /**
+       Reset the loader for the specified path variable. This will cause
+       all information on loaded files in the specified directory to be
+       reset.
+    */
+    void reset();
+
+    /**
+       Tell the autoloader that the specified file, in the specified path,
+       is no longer loaded.
+
+       \param cmd the filename to search for. The suffix '.fish' is always added to this name
+       \param on_unload a callback function which will be called before (re)loading a file, may be used to unload the previous file.
+       \return non-zero if the file was removed, zero if the file had not yet been loaded
+    */
+    int unload( const wcstring &cmd );
+
+};
+
 #endif

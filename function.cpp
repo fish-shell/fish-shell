@@ -70,7 +70,7 @@ static bool function_remove_ignore_autoload(const wcstring &name);
 
 /** Callback when an autoloaded function is removed */
 void function_autoload_t::command_removed(const wcstring &cmd) {
-    function_remove(cmd);
+    function_remove_ignore_autoload(cmd);
 }
 
 /* Helper macro for vomiting */

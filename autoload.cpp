@@ -8,7 +8,7 @@ The classes responsible for autoloading functions and completions.
 #include "wutil.h"
 #include <assert.h>
 
-const size_t kLRULimit = 256;
+static const size_t kLRULimit = 16;
 
 file_access_attempt_t access_file(const wcstring &path, int mode) {
     file_access_attempt_t result = {0};
@@ -93,13 +93,17 @@ bool lru_cache_impl_t::add_node(lru_node_t *node) {
     if (! node_set.insert(node).second)
         return false;
     
-    /* Update the count */
-    node_count++;
-    
     /* Add the node after the mouth */
     node->next = mouth.next;
     node->prev = &mouth;
     mouth.next = node;
+    
+    /* Update the count */
+    node_count++;
+    
+    /* Evict */
+    while (node_count > kLRULimit)
+        evict_last_node();
     
     /* Success */
     return true;

@@ -84,13 +84,10 @@ public:
     /** Constructor */
     lru_node_t(const wcstring &keyVar) : prev(NULL), next(NULL), key(keyVar) { }
     bool operator<(const lru_node_t &other) const { return key < other.key; }
-    
-    /** Callback when the node is evicted from an LRU cache */
-    virtual void evicted(void) { }
 };
 
 class lru_cache_impl_t {
-    private:
+private:
     void promote_node(lru_node_t *);
     void evict_node(lru_node_t *node);
     void evict_last_node(void);
@@ -105,7 +102,11 @@ class lru_cache_impl_t {
     /** Head of the linked list */
     lru_node_t mouth;
     
-    public:
+protected:
+    /** Overridable callback for when a node is evicted */
+    virtual void node_was_evicted(lru_node_t *node);
+    
+public:
     /** Constructor */
     lru_cache_impl_t();
     
@@ -128,6 +129,9 @@ class lru_cache_t : public lru_cache_impl_t {
 public:
     node_type_t *get_node(const wcstring &key) { return static_cast<node_type_t>(lru_cache_impl_t::get_node(key)); }
     bool add_node(node_type_t *node) { return lru_cache_impl_t::add_node(node); }
+protected:
+    virtual void node_was_evicted(lru_node_t *node) { this->node_was_evicted(static_cast<node_type_t *>(node)); }
+    virtual void node_was_evicted(node_type_t *node) { }
 };
 
 

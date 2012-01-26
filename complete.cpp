@@ -181,7 +181,27 @@ static complete_entry_t *first_entry=0;
 */
 static hash_table_t *condition_cache=0;
 
-static autoload_t completion_autoloader(L"fish_complete_path", internal_completion_scripts, sizeof internal_completion_scripts / sizeof *internal_completion_scripts );
+/* Autoloader for completions */
+class completion_autoload_t : public autoload_t {
+public:
+    completion_autoload_t();
+    virtual void command_removed(const wcstring &cmd);
+};
+
+static completion_autoload_t completion_autoloader;
+
+/** Constructor */
+completion_autoload_t::completion_autoload_t() : autoload_t(L"fish_complete_path",
+                                                            internal_completion_scripts,
+                                                            sizeof internal_completion_scripts / sizeof *internal_completion_scripts)
+{
+}
+
+/** Callback when an autoloaded completion is removed */
+void completion_autoload_t::command_removed(const wcstring &cmd) {
+    complete_remove( cmd.c_str(), COMMAND, 0, 0 );
+}
+
 
 static void complete_free_entry( complete_entry_t *c );
 
@@ -229,7 +249,7 @@ static void complete_destroy()
 	}
 	first_entry = 0;
 	
-	completion_autoloader.reset( 0 );
+	completion_autoloader.reset();
 	
 }
 
@@ -1346,23 +1366,10 @@ static int short_ok( const wchar_t *arg,
 	return 1;
 }
 
-/**
-   This is an event handler triggered when the definition of a
-   specified function is changed. It automatcally removes the
-   specified function.
-
-   This is to make sure that the function disappears if the file is
-   removed or if it contains a syntax error.
-*/
-static void complete_load_handler( const wchar_t *cmd )
-{
-	complete_remove( cmd, COMMAND, 0, 0 );
-}
-
 void complete_load( const wchar_t *name, int reload )
 {
 	CHECK( name, );
-	completion_autoloader.load( name, &complete_load_handler, reload );
+	completion_autoloader.load( name, reload );
 }
 
 /**

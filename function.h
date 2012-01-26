@@ -106,7 +106,7 @@ void function_add( function_data_t *data, const parser_t &parser );
 /**
    Remove the function with the specified name.
 */
-void function_remove( const wchar_t *name );
+void function_remove( const wcstring &name );
 
 /**
     Gets a function by name.

@@ -601,13 +601,6 @@ void parse_util_token_extent( const wchar_t *buff,
 
 }
 
-autoload_function_t::~autoload_function_t() { }
-
-void autoload_function_t::evicted(void) {
-    delete this;
-}
-
-
 autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t * const scripts, size_t script_count) :
                        env_var_name(env_var_name_var),
                        builtin_scripts(scripts),
@@ -615,21 +608,24 @@ autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t 
 {
 }
 
-void autoload_t::reset( void (*on_load)(const wchar_t *cmd) )
-{
-    function_cache.evict_all_nodes();
-    /* TODO: Must call on_load on all non-placeholders */
+void autoload_t::node_was_evicted(autoload_function_t *node) {
+    // Tell ourselves that the command was removed, unless it was a placeholder
+    if (! node->is_placeholder)
+        this->command_removed(node->key);
+    delete node;
 }
 
-int autoload_t::unload( const wchar_t *cmd, void (*on_load)(const wchar_t *cmd) )
+void autoload_t::reset( )
 {
-	CHECK( cmd, 0 );
-    return function_cache.evict_node(cmd);
+    this->evict_all_nodes();
 }
 
-int autoload_t::load( const wcstring &cmd,
-                      void (*on_load)(const wchar_t *cmd),
-                      int reload )
+int autoload_t::unload( const wcstring &cmd )
+{
+    return this->evict_node(cmd);
+}
+
+int autoload_t::load( const wcstring &cmd, bool reload )
 {
 	int res;
 	int c, c2;
@@ -653,7 +649,7 @@ int autoload_t::load( const wcstring &cmd,
     if( path_var != this->path )
     {
         this->path = path_var;
-        reset( on_load);
+        this->reset();
     }
 
     /**
@@ -680,7 +676,7 @@ int autoload_t::load( const wcstring &cmd,
 	/*
 	  Do the actual work in the internal helper function
 	*/
-	res = this->load_internal( cmd, on_load, reload, path_list );
+	res = this->load_internal( cmd, reload, path_list );
     
     int erased = is_loading_set.erase(cmd);
     assert(erased);
@@ -708,7 +704,6 @@ static bool script_name_precedes_script_name(const builtin_script_t &script1, co
 */
 
 int autoload_t::load_internal( const wcstring &cmd,
-                               void (*on_load)(const wchar_t *cmd),
                                int reload,
                                const wcstring_list_t &path_list )
 {
@@ -772,9 +767,9 @@ int autoload_t::load_internal( const wcstring &cmd,
                         func = new autoload_function_t(cmd);
                     func->access = access;
                     
-                    if( on_load )
-                        on_load(cmd.c_str());
-                    
+                    // Remove this command because we are going to reload it
+                    command_removed(cmd);
+                                        
                     reloaded = 1;
                 }
                 else if( func )

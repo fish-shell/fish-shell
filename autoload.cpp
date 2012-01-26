@@ -172,6 +172,8 @@ lru_cache_impl_t::lru_cache_impl_t() : node_count(0), mouth(L"") {
     mouth.prev = mouth.next = &mouth;
 }
 
+void lru_cache_impl_t::node_was_evicted(lru_node_t *node) { }
+
 void lru_cache_impl_t::evict_node(lru_node_t *condemned_node) {
     /* We should never evict the mouth */
     assert(condemned_node != NULL && condemned_node != &mouth);
@@ -184,8 +186,8 @@ void lru_cache_impl_t::evict_node(lru_node_t *condemned_node) {
     node_set.erase(condemned_node);
     node_count--;
 
-    /* Tell it */
-    condemned_node->evicted();
+    /* Tell ourselves */
+    this->node_was_evicted(condemned_node);
 }
 
 void lru_cache_impl_t::evict_last_node(void) {

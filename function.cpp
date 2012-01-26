@@ -40,9 +40,6 @@
 #include "halloc_util.h"
 #include "builtin_scripts.h"
 
-/* Autoloader for functions */
-static autoload_t function_autoloader(L"fish_function_path", internal_function_scripts, sizeof internal_function_scripts / sizeof *internal_function_scripts);
-
 /**
    Table containing all functions
 */
@@ -51,6 +48,30 @@ static function_map_t loaded_functions;
 
 /* Lock for functions */
 static pthread_mutex_t functions_lock;
+
+/* Autoloader for functions */
+class function_autoload_t : public autoload_t {
+public:
+    function_autoload_t();
+    virtual void command_removed(const wcstring &cmd);
+};
+
+static function_autoload_t function_autoloader;
+
+/** Constructor */
+function_autoload_t::function_autoload_t() : autoload_t(L"fish_function_path",
+                                                        internal_function_scripts,
+                                                        sizeof internal_function_scripts / sizeof *internal_function_scripts)
+{
+}
+
+/** Removes a function from our internal table, returning true if it was found and false if not */
+static bool function_remove_ignore_autoload(const wcstring &name);
+
+/** Callback when an autoloaded function is removed */
+void function_autoload_t::command_removed(const wcstring &cmd) {
+    function_remove(cmd);
+}
 
 /* Helper macro for vomiting */
 #define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
@@ -78,7 +99,7 @@ static int load( const wchar_t *name )
     }
 	
 	is_autoload = 1;	
-	res = function_autoloader.load( name, &function_remove, 1 );
+	res = function_autoloader.load( name, true );
 	is_autoload = was_autoload;
 	return res;
 }
@@ -199,32 +220,25 @@ int function_exists_no_autoload( const wchar_t *cmd )
     return function_exists_internal( cmd, false );    
 }
 
-void function_remove( const wchar_t *name )
+static bool function_remove_ignore_autoload(const wcstring &name)
 {
-	event_t ev;
-	
-	CHECK( name, );
-
     scoped_lock lock(functions_lock);
     bool erased = (loaded_functions.erase(name) > 0);
 	
-	if( !erased ) {
-		return;
+	if (erased) {
+        event_t ev;
+        ev.type=EVENT_ANY;
+        ev.function_name=name.c_str();	
+        event_remove( &ev );
     }
+    return erased;
 
-	ev.type=EVENT_ANY;
-	ev.function_name=name;	
-	event_remove( &ev );
+}
 
-	/*
-	  Notify the autoloader that the specified function is erased, but
-	  only if this call to fish_remove is not made by the autoloader
-	  itself.
-	*/
-	if( !is_autoload )
-	{
-		function_autoloader.unload( name, 0 );
-	}
+void function_remove( const wcstring &name )
+{
+    if (function_remove_ignore_autoload(name))
+        function_autoloader.unload( name );
 }
 
 shared_ptr<function_info_t> function_get(const wcstring &name)

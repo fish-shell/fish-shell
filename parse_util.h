@@ -15,9 +15,6 @@
 struct autoload_function_t : public lru_node_t
 {   
     autoload_function_t(const wcstring &key) : lru_node_t(key), is_placeholder(false) { bzero(&access, sizeof access); }
-    virtual ~autoload_function_t();
-    virtual void evicted(void);
-
     file_access_attempt_t access; /** The last access attempt */
     bool is_placeholder; /** Whether we are a placeholder that stands in for "no such function" */
 };
@@ -28,10 +25,8 @@ struct builtin_script_t;
 /**
   A class that represents a path from which we can autoload, and the autoloaded contents.
  */
-class autoload_t {
+class autoload_t : private lru_cache_t<autoload_function_t> {
 private:
-    /** Access tracker */
-    lru_cache_t<autoload_function_t> function_cache;
 
     /** The environment variable name */
     const wcstring env_var_name;
@@ -80,7 +75,14 @@ private:
         return autoload_functions.size();
     }
         
-    int load_internal( const wcstring &cmd, void (*on_load)(const wchar_t *cmd), int reload, const wcstring_list_t &path_list );
+    int load_internal( const wcstring &cmd, int reload, const wcstring_list_t &path_list );
+    
+    virtual void node_was_evicted(autoload_function_t *node);
+
+
+    protected:    
+    /** Overridable callback for when a command is removed */
+    virtual void command_removed(const wcstring &cmd) { }
     
     public:
     
@@ -98,17 +100,13 @@ private:
        \param on_unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
        \param reload wheter to recheck file timestamps on already loaded files
     */
-    int load( const wcstring &cmd,
-              void (*on_unload)(const wchar_t *cmd),
-              int reload );
+    int load( const wcstring &cmd, bool reload );
     /**
        Reset the loader for the specified path variable. This will cause
        all information on loaded files in the specified directory to be
        reset.
-
-       \param on_unload a callback function which will be called before (re)loading a file, may be used to unload the previous file.
     */
-    void reset( void (*on_unload)(const wchar_t *cmd) );
+    void reset();
 
     /**
        Tell the autoloader that the specified file, in the specified path,
@@ -118,8 +116,7 @@ private:
        \param on_unload a callback function which will be called before (re)loading a file, may be used to unload the previous file.
        \return non-zero if the file was removed, zero if the file had not yet been loaded
     */
-    int unload( const wchar_t *cmd,
-                void (*on_unload)(const wchar_t *cmd) );
+    int unload( const wcstring &cmd );
 
 };
 

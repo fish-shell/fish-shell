@@ -12,8 +12,6 @@
 #include <list>
 #include "common.h"
 
-extern const time_t kFishDefaultStalenessInterval;
-
 /** A struct responsible for recording an attempt to access a file. */
 struct file_access_attempt_t {
     time_t mod_time; /** The modification time of the file */
@@ -23,8 +21,6 @@ struct file_access_attempt_t {
     int error; /** If we could not access the file, the error code */
 };
 
-class file_access_node_t;
-
 /** A predicate to compare dereferenced pointers */
 struct dereference_less_t {
     template <typename ptr_t>
@@ -32,45 +28,6 @@ struct dereference_less_t {
 };
 
 file_access_attempt_t access_file(const wcstring &path, int mode);
-
-/** A class responsible for tracking accesses to files, including auto-expiration. */
-class access_tracker_t {
-    private:
-        
-        file_access_node_t * while_locked_find_node(const wcstring &str) const;
-        void vacuum_one_node(void);
-        void promote_node(file_access_node_t *);
-        
-        file_access_attempt_t attempt_access(const wcstring& path) const;
-        
-        unsigned int node_count;
-        typedef std::set<file_access_node_t *, dereference_less_t> access_set_t;
-        access_set_t access_set;
-        file_access_node_t *mouth;
-        
-        /* Lock for thread safety */
-        pthread_mutex_t lock;
-        
-        /** How long until a file access attempt is considered stale. */
-        const time_t stale_interval;
-        
-        /** Mode for waccess calls */
-        const int mode;
-    
-    public:
-        
-        /** Constructor, that takes a staleness interval */
-        access_tracker_t(time_t stale, int the_mode);
-        
-        /** Destructor */
-        ~access_tracker_t();
-    
-        /** Attempt to access the given file, if the last cached access is stale. Caches and returns the access attempt. */
-        file_access_attempt_t access_file(const wcstring &path);
-        
-        /** Returns whether there is a cached access (even if stale), without touching the disk; if the result is true, return by reference that access attempt. */
-        bool access_file_only_cached(const wcstring &path, file_access_attempt_t &attempt);
-};
 
 class lru_node_t {
     friend class lru_cache_impl_t;

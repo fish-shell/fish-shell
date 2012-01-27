@@ -16,7 +16,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdarg.h>		
+#include <stdarg.h>
+#include <assert.h>
+#include <algorithm>
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
@@ -36,6 +38,7 @@
 #include "reader.h"
 #include "builtin.h"
 #include "function.h"
+#include "autoload.h"
 #include "complete.h"
 #include "wutil.h"
 #include "env.h"
@@ -102,14 +105,6 @@ static void err( const wchar_t *blah, ... )
 	vwprintf( blah, va );
 	va_end( va );	
 	wprintf( L"\n" );
-}
-
-/**
-   Compare two pointers
-*/
-static int pq_compare( void *e1, void *e2 )
-{
-	return (intptr_t)e1-(intptr_t)e2;
 }
 
 
@@ -581,59 +576,98 @@ static void test_parser()
 {
 	say( L"Testing parser" );
 	
-	
+	parser_t parser(PARSER_TYPE_GENERAL);
+    
 	say( L"Testing null input to parser" );
-	if( !parser_test( 0, 0, 0, 0 ) )
+	if( !parser.test( 0, 0, 0, 0 ) )
 	{
-		err( L"Null input to parser_test undetected" );
+		err( L"Null input to parser.test undetected" );
 	}
 
 	say( L"Testing block nesting" );
-	if( !parser_test( L"if; end", 0, 0, 0 ) )
+	if( !parser.test( L"if; end", 0, 0, 0 ) )
 	{
 		err( L"Incomplete if statement undetected" );			
 	}
-	if( !parser_test( L"if test; echo", 0, 0, 0 ) )
+	if( !parser.test( L"if test; echo", 0, 0, 0 ) )
 	{
 		err( L"Missing end undetected" );			
 	}
-	if( !parser_test( L"if test; end; end", 0, 0, 0 ) )
+	if( !parser.test( L"if test; end; end", 0, 0, 0 ) )
 	{
 		err( L"Unbalanced end undetected" );			
 	}
 
 	say( L"Testing detection of invalid use of builtin commands" );
-	if( !parser_test( L"case foo", 0, 0, 0 ) )
+	if( !parser.test( L"case foo", 0, 0, 0 ) )
 	{
 		err( L"'case' command outside of block context undetected" );		
 	}
-	if( !parser_test( L"switch ggg; if true; case foo;end;end", 0, 0, 0 ) )
+	if( !parser.test( L"switch ggg; if true; case foo;end;end", 0, 0, 0 ) )
 	{
 		err( L"'case' command outside of switch block context undetected" );		
 	}
-	if( !parser_test( L"else", 0, 0, 0 ) )
+	if( !parser.test( L"else", 0, 0, 0 ) )
 	{
 		err( L"'else' command outside of conditional block context undetected" );		
 	}
-	if( !parser_test( L"break", 0, 0, 0 ) )
+	if( !parser.test( L"break", 0, 0, 0 ) )
 	{
 		err( L"'break' command outside of loop block context undetected" );		
 	}
-	if( !parser_test( L"exec ls|less", 0, 0, 0 ) || !parser_test( L"echo|return", 0, 0, 0 ))
+	if( !parser.test( L"exec ls|less", 0, 0, 0 ) || !parser.test( L"echo|return", 0, 0, 0 ))
 	{
 		err( L"Invalid pipe command undetected" );		
 	}	
 
 	say( L"Testing basic evaluation" );
-	if( !eval( 0, 0, TOP ) )
+#if 0
+    /* This fails now since the parser takes a wcstring&, and NULL converts to wchar_t * converts to wcstring which crashes (thanks C++) */
+	if( !parser.eval( 0, 0, TOP ) )
 	{
 		err( L"Null input when evaluating undetected" );
-	}	
-	if( !eval( L"ls", 0, WHILE ) )
+	}
+#endif
+	if( !parser.eval( L"ls", 0, WHILE ) )
 	{
 		err( L"Invalid block mode when evaluating undetected" );
-	}
-	
+	}	
+}
+
+class test_lru_t : public lru_cache_t<lru_node_t> {
+    public:
+    test_lru_t() : lru_cache_t<lru_node_t>(16) { }
+    
+    std::vector<lru_node_t *> evicted_nodes;
+    
+    virtual void node_was_evicted(lru_node_t *node) {
+        assert(find(evicted_nodes.begin(), evicted_nodes.end(), node) == evicted_nodes.end());
+        evicted_nodes.push_back(node);
+    }
+};
+
+static void test_lru(void) {
+    say( L"Testing LRU cache" );
+    
+    test_lru_t cache;
+    std::vector<lru_node_t *> expected_evicted;
+    size_t total_nodes = 20;
+    for (size_t i=0; i < total_nodes; i++) {
+        assert(cache.size() == std::min(i, (size_t)16));
+        lru_node_t *node = new lru_node_t(format_val(i));
+        if (i < 4) expected_evicted.push_back(node);
+        // Adding the node the first time should work, and subsequent times should fail
+        assert(cache.add_node(node));
+        assert(! cache.add_node(node));
+    }
+    assert(cache.evicted_nodes == expected_evicted);
+    cache.evict_all_nodes();
+    assert(cache.evicted_nodes.size() == total_nodes);
+    while (! cache.evicted_nodes.empty()) {
+        lru_node_t *node = cache.evicted_nodes.back();
+        cache.evicted_nodes.pop_back();
+        delete node;
+    }
 }
 	
 /**
@@ -822,7 +856,6 @@ int main( int argc, char **argv )
 	proc_init();	
 	halloc_util_init();
 	event_init();	
-	parser_init();
 	function_init();
 	builtin_init();
 	reader_init();
@@ -833,6 +866,7 @@ int main( int argc, char **argv )
 	test_convert();
 	test_tok();
 	test_parser();
+	test_lru();
 	test_expand();
 	test_path();
 	
@@ -846,7 +880,6 @@ int main( int argc, char **argv )
 		
 	env_destroy();
 	reader_destroy();	
-	parser_destroy();
 	builtin_destroy();
 	wutil_destroy();
 	event_destroy();

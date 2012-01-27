@@ -13,8 +13,6 @@ The classes responsible for autoloading functions and completions.
 #include "exec.h"
 #include <assert.h>
 
-static const size_t kLRULimit = 16;
-
 file_access_attempt_t access_file(const wcstring &path, int mode) {
     file_access_attempt_t result = {0};
     struct stat statbuf;
@@ -35,7 +33,7 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
     return result;
 }
 
-lru_cache_impl_t::lru_cache_impl_t() : node_count(0), mouth(L"") {
+lru_cache_impl_t::lru_cache_impl_t(size_t size) : max_node_count(size), node_count(0), mouth(L"") {
     /* Hook up the mouth to itself: a one node circularly linked list */
     mouth.prev = mouth.next = &mouth;
 }
@@ -87,6 +85,7 @@ void lru_cache_impl_t::promote_node(lru_node_t *node) {
     
     /* Put us after the mouth */
     node->next = mouth.next;
+    node->next->prev = node;
     node->prev = &mouth;
     mouth.next = node;
 }
@@ -100,6 +99,7 @@ bool lru_cache_impl_t::add_node(lru_node_t *node) {
     
     /* Add the node after the mouth */
     node->next = mouth.next;
+    node->next->prev = node;
     node->prev = &mouth;
     mouth.next = node;
     
@@ -107,7 +107,7 @@ bool lru_cache_impl_t::add_node(lru_node_t *node) {
     node_count++;
     
     /* Evict */
-    while (node_count > kLRULimit)
+    while (node_count > max_node_count)
         evict_last_node();
     
     /* Success */
@@ -147,15 +147,10 @@ autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t 
 }
 
 void autoload_t::node_was_evicted(autoload_function_t *node) {
-    // Tell ourselves that the command was removed, unless it was a placeholder
-    if (! node->is_placeholder)
+    // Tell ourselves that the command was removed if it was loaded
+    if (! node->is_loaded)
         this->command_removed(node->key);
     delete node;
-}
-
-void autoload_t::reset( )
-{
-    this->evict_all_nodes();
 }
 
 int autoload_t::unload( const wcstring &cmd )
@@ -166,19 +161,16 @@ int autoload_t::unload( const wcstring &cmd )
 int autoload_t::load( const wcstring &cmd, bool reload )
 {
 	int res;
-	int c, c2;
 	
 	CHECK_BLOCK( 0 );
 
-	const env_var_t path_var = env_get_string( env_var_name.c_str() );	
+	const env_var_t path_var = env_get_string( env_var_name.c_str() );
 	
 	/*
 	  Do we know where to look?
 	*/
 	if( path_var.empty() )
-	{
 		return 0;
-	}
     
     /*
       Check if the lookup path has changed. If so, drop all loaded
@@ -187,7 +179,7 @@ int autoload_t::load( const wcstring &cmd, bool reload )
     if( path_var != this->path )
     {
         this->path = path_var;
-        this->reset();
+        this->evict_all_nodes();
     }
 
     /**
@@ -203,36 +195,37 @@ int autoload_t::load( const wcstring &cmd, bool reload )
     }
 
 
-
     std::vector<wcstring> path_list;
 	tokenize_variable_array2( path_var, path_list );
-	
-	c = path_list.size();
 	
     is_loading_set.insert(cmd);
 
 	/*
 	  Do the actual work in the internal helper function
 	*/
-	res = this->load_internal( cmd, reload, path_list );
+	res = this->locate_file_and_maybe_load_it( cmd, true, reload, path_list );
     
     int erased = is_loading_set.erase(cmd);
     assert(erased);
-	
-	c2 = path_list.size();
-
-	/**
-	   Make sure we didn't 'drop' something
-	*/
-	
-	assert( c == c2 );
-	
+		
 	return res;
+}
+
+bool autoload_t::can_load( const wcstring &cmd )
+{
+    const env_var_t path_var = env_get_string( env_var_name.c_str() );
+    std::vector<wcstring> path_list;
+	tokenize_variable_array2( path_var, path_list );
+    return this->locate_file_and_maybe_load_it( cmd, false, false, path_list );
 }
 
 static bool script_name_precedes_script_name(const builtin_script_t &script1, const builtin_script_t &script2)
 {
     return wcscmp(script1.name, script2.name) < 0;
+}
+
+void autoload_t::unload_all(void) {
+    this->evict_all_nodes();
 }
 
 /**
@@ -241,32 +234,28 @@ static bool script_name_precedes_script_name(const builtin_script_t &script1, co
    the code, and the caller can take care of various cleanup work.
 */
 
-int autoload_t::load_internal( const wcstring &cmd,
-                               int reload,
-                               const wcstring_list_t &path_list )
+bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list )
 {
 
 	size_t i;
-	int reloaded = 0;
+	bool reloaded = 0;
 
     /* Get the function */
-    autoload_function_t * func = this->get_function_with_name(cmd);
+    autoload_function_t * func = this->get_node(cmd);
 
     /* Return if already loaded and we are skipping reloading */
-	if( !reload && func )
+	if( !reload && func && func->is_loaded )
 		return 0;
 
     /* Nothing to do if we just checked it */
-    if (func && time(NULL) - func->access.last_checked <= 1)
+    if (func && func->is_loaded && time(NULL) - func->access.last_checked <= 1)
         return 0;
     
     /* The source of the script will end up here */
     wcstring script_source;
     bool has_script_source = false;
     
-    /*
-     Look for built-in scripts via a binary search
-    */
+    /* Look for built-in scripts via a binary search */
     const builtin_script_t *matching_builtin_script = NULL;
     if (builtin_script_count > 0)
     {
@@ -286,9 +275,7 @@ int autoload_t::load_internal( const wcstring &cmd,
     
     if (! has_script_source)
     {
-        /*
-          Iterate over path searching for suitable completion files
-        */
+        /* Iterate over path searching for suitable completion files */
         for( i=0; i<path_list.size(); i++ )
         {
             wcstring next = path_list.at(i);
@@ -301,14 +288,23 @@ int autoload_t::load_internal( const wcstring &cmd,
                     script_source = L". " + esc;
                     has_script_source = true;
                     
-                    if( !func )
+                    /* Remove this command because we are going to reload it */
+                    if (func && func->is_loaded) {
+                        command_removed(cmd);
+                        func->is_loaded = false;
+                        func->is_placeholder = false;
+                    }
+
+                    if (!func) {
                         func = new autoload_function_t(cmd);
-                    func->access = access;
+                        this->add_node(func);
+                        
+                    }
                     
-                    // Remove this command because we are going to reload it
-                    command_removed(cmd);
-                                        
-                    reloaded = 1;
+                    /* Record our access time */
+                    func->access = access;
+                                                            
+                    reloaded = true;
                 }
                 else if( func )
                 {
@@ -333,12 +329,14 @@ int autoload_t::load_internal( const wcstring &cmd,
             func = new autoload_function_t(cmd);
             func->access.last_checked = time(NULL);
             func->is_placeholder = true;
+            this->add_node(func);
         }
     }
     
     /* If we have a script, either built-in or a file source, then run it */
-    if (has_script_source)
+    if (really_load && has_script_source)
     {
+        if (func) func->is_loaded = true;
         if( exec_subshell( script_source.c_str(), 0 ) == -1 )
         {
             /*

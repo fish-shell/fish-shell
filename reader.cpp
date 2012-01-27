@@ -422,7 +422,7 @@ int reader_exit_forced()
 static void reader_repaint()
 {
     //PCA INSTANCED_PARSER what is this call for?
-	//parser_test( data->buff, data->indent, 0, 0 );
+	parser_t::principal_parser().test( data->buff, data->indent, 0, 0 );
 	
 	s_write( &data->screen,
 		 data->prompt_buff.c_str(),

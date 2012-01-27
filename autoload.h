@@ -49,8 +49,11 @@ private:
     void evict_node(lru_node_t *node);
     void evict_last_node(void);
     
+    /** Max node count */
+    const size_t max_node_count;
+    
     /** Count of nodes */
-    unsigned int node_count;
+    size_t node_count;
     
     /** The set of nodes */
     typedef std::set<lru_node_t *, dereference_less_t> node_set_t;
@@ -65,7 +68,7 @@ protected:
     
 public:
     /** Constructor */
-    lru_cache_impl_t();
+    lru_cache_impl_t(size_t max_size = 1024 );
     
     /** Returns the node for a given key, or NULL */
     lru_node_t *get_node(const wcstring &key);
@@ -76,6 +79,9 @@ public:
     /** Adds a node under the given key. Returns true if the node was added, false if the node was not because a node with that key is already in the set. */
     bool add_node(lru_node_t *node);
     
+    /** Counts nodes */
+    size_t size(void) { return node_count; }
+    
     /** Evicts all nodes */
     void evict_all_nodes(void);
 };
@@ -84,19 +90,17 @@ public:
 template<class node_type_t>
 class lru_cache_t : public lru_cache_impl_t {
 public:
-    node_type_t *get_node(const wcstring &key) { return static_cast<node_type_t>(lru_cache_impl_t::get_node(key)); }
+    node_type_t *get_node(const wcstring &key) { return static_cast<node_type_t *>(lru_cache_impl_t::get_node(key)); }
     bool add_node(node_type_t *node) { return lru_cache_impl_t::add_node(node); }
-protected:
-    virtual void node_was_evicted(lru_node_t *node) { this->node_was_evicted(static_cast<node_type_t *>(node)); }
-    virtual void node_was_evicted(node_type_t *node) { }
+    lru_cache_t(size_t max_size = 1024 ) : lru_cache_impl_t(max_size) { }
 };
-
 
 struct autoload_function_t : public lru_node_t
 {   
-    autoload_function_t(const wcstring &key) : lru_node_t(key), is_placeholder(false) { bzero(&access, sizeof access); }
+    autoload_function_t(const wcstring &key) : lru_node_t(key), is_loaded(false), is_placeholder(false) { bzero(&access, sizeof access); }
     file_access_attempt_t access; /** The last access attempt */
-    bool is_placeholder; /** Whether we are a placeholder that stands in for "no such function" */
+    bool is_loaded; /** Whether we have actually loaded this function */
+    bool is_placeholder; /** Whether we are a placeholder that stands in for "no such function". If this is true, then is_loaded must be false. */
 };
 
 
@@ -119,10 +123,6 @@ private:
 
     /** The path from which we most recently autoloaded */
     wcstring path;
-    
-    /** The map from function name to the function. */
-    typedef std::map<wcstring, autoload_function_t> autoload_functions_map_t;
-    autoload_functions_map_t autoload_functions;
 
 	/**
 	   A table containing all the files that are currently being
@@ -133,29 +133,12 @@ private:
     bool is_loading(const wcstring &name) const {
         return is_loading_set.find(name) != is_loading_set.end();
     }
-
-    bool remove_function_with_name(const wcstring &name) {
-        return autoload_functions.erase(name) > 0;
-    }
-    
-    autoload_function_t *get_function_with_name(const wcstring &name)
-    {
-        autoload_function_t *result = NULL;
-        autoload_functions_map_t::iterator iter = autoload_functions.find(name);
-        if (iter != autoload_functions.end())
-            result = &iter->second;
-        return result;
-    }
     
     void remove_all_functions(void) {
-        autoload_functions.clear();
-    }
-    
-    size_t function_count(void) const {
-        return autoload_functions.size();
+        this->evict_all_nodes();
     }
         
-    int load_internal( const wcstring &cmd, int reload, const wcstring_list_t &path_list );
+    bool locate_file_and_maybe_load_it( const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list );
     
     virtual void node_was_evicted(autoload_function_t *node);
 
@@ -181,12 +164,6 @@ private:
        \param reload wheter to recheck file timestamps on already loaded files
     */
     int load( const wcstring &cmd, bool reload );
-    /**
-       Reset the loader for the specified path variable. This will cause
-       all information on loaded files in the specified directory to be
-       reset.
-    */
-    void reset();
 
     /**
        Tell the autoloader that the specified file, in the specified path,
@@ -197,6 +174,14 @@ private:
        \return non-zero if the file was removed, zero if the file had not yet been loaded
     */
     int unload( const wcstring &cmd );
+    
+    /**
+       Unloads all files.
+    */
+    void unload_all( );
+    
+    /** Check whether the given command could be loaded, but do not load it. */
+    bool can_load( const wcstring &cmd );
 
 };
 

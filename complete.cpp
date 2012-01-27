@@ -249,7 +249,7 @@ static void complete_destroy()
 	}
 	first_entry = 0;
 	
-	completion_autoloader.reset();
+	completion_autoloader.unload_all();
 	
 }
 

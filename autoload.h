@@ -79,6 +79,9 @@ public:
     /** Adds a node under the given key. Returns true if the node was added, false if the node was not because a node with that key is already in the set. */
     bool add_node(lru_node_t *node);
     
+    /** Adds a node under the given key without triggering eviction. Returns true if the node was added, false if the node was not because a node with that key is already in the set. */
+    bool add_node_without_eviction(lru_node_t *node);
+    
     /** Counts nodes */
     size_t size(void) { return node_count; }
     
@@ -105,12 +108,16 @@ struct autoload_function_t : public lru_node_t
 
 
 struct builtin_script_t;
+class env_vars;
 
 /**
   A class that represents a path from which we can autoload, and the autoloaded contents.
  */
 class autoload_t : private lru_cache_t<autoload_function_t> {
 private:
+
+    /** Lock for thread safety */
+    pthread_mutex_t lock;
 
     /** The environment variable name */
     const wcstring env_var_name;
@@ -138,6 +145,8 @@ private:
         this->evict_all_nodes();
     }
         
+    bool file_already_autoloaded(const wcstring &cmd, bool require_loaded, bool allow_stale_functions);
+    
     bool locate_file_and_maybe_load_it( const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list );
     
     virtual void node_was_evicted(autoload_function_t *node);
@@ -151,6 +160,9 @@ private:
     
     /** Create an autoload_t for the given environment variable name */
     autoload_t(const wcstring &env_var_name_var, const builtin_script_t *scripts, size_t script_count );
+    
+    /** Destructor */
+    virtual ~autoload_t();
     
     /**
        Autoload the specified file, if it exists in the specified path. Do
@@ -181,7 +193,7 @@ private:
     void unload_all( );
     
     /** Check whether the given command could be loaded, but do not load it. */
-    bool can_load( const wcstring &cmd );
+    bool can_load( const wcstring &cmd, const env_vars &vars );
 
 };
 

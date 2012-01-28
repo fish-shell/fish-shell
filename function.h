@@ -19,6 +19,7 @@
 using std::tr1::shared_ptr;
 
 class parser_t;
+class env_vars;
 
 /**
    Structure describing a function. This is used by the parser to
@@ -136,7 +137,7 @@ int function_exists( const wchar_t *name );
 /**
    Returns true if the function with the name name exists, without triggering autoload.
 */
-int function_exists_no_autoload( const wchar_t *name );
+int function_exists_no_autoload( const wchar_t *name, const env_vars &vars );
 
 /**
    Returns all function names.

@@ -95,6 +95,7 @@ static int load( const wchar_t *name )
 	int res;
     function_map_t::iterator iter = loaded_functions.find(name);
 	if( iter !=  loaded_functions.end() && !iter->second->is_autoload ) {
+        /* We have a non-autoload version already */
 		return 0;
     }
 	
@@ -196,28 +197,23 @@ void function_add( function_data_t *data, const parser_t &parser )
 	}
 }
 
-static int function_exists_internal( const wchar_t *cmd, bool autoload )
-{
-	int res;
-	CHECK( cmd, 0 );
-	
-	if( parser_keywords_is_reserved(cmd) )
-		return 0;
-	
-    scoped_lock lock(functions_lock);
-	if ( autoload ) load( cmd );
-    res = loaded_functions.find(cmd) != loaded_functions.end();
-    return res;
-}
-
 int function_exists( const wchar_t *cmd )
 {
-    return function_exists_internal( cmd, true );
+	CHECK( cmd, 0 );
+	if( parser_keywords_is_reserved(cmd) )
+		return 0;
+    scoped_lock lock(functions_lock);
+    load(cmd);
+    return loaded_functions.find(cmd) != loaded_functions.end();            
 }
 
-int function_exists_no_autoload( const wchar_t *cmd )
+int function_exists_no_autoload( const wchar_t *cmd, const env_vars &vars )
 {
-    return function_exists_internal( cmd, false );    
+	CHECK( cmd, 0 );
+	if( parser_keywords_is_reserved(cmd) )
+		return 0;
+    scoped_lock lock(functions_lock);
+    return loaded_functions.find(cmd) != loaded_functions.end() || function_autoloader.can_load(cmd, vars);            
 }
 
 static bool function_remove_ignore_autoload(const wcstring &name)

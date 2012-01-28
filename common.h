@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include <errno.h>
+#include <assert.h>
 #include "util.h"
 
 /* Common string type */
@@ -289,14 +290,28 @@ T from_string(const wcstring &x) {
 }
 
 class scoped_lock {
-    pthread_mutex_t *lock;
+    pthread_mutex_t *lock_obj;
+    bool locked;
 public:
-    scoped_lock(pthread_mutex_t &mutex) : lock(&mutex) {
-        VOMIT_ON_FAILURE(pthread_mutex_lock(lock));
+
+    void lock(void) {
+        assert(! locked);
+        VOMIT_ON_FAILURE(pthread_mutex_lock(lock_obj));
+        locked = true;
+    }
+    
+    void unlock(void) {
+        assert(locked);
+        VOMIT_ON_FAILURE(pthread_mutex_unlock(lock_obj));
+        locked = false;
+    }
+    
+    scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(false) {
+        this->lock();
     }
     
     ~scoped_lock() {
-        VOMIT_ON_FAILURE(pthread_mutex_unlock(lock));
+        if (locked) this->unlock();
     }
 };
 

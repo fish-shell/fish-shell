@@ -716,7 +716,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 								is_cmd |= builtin_exists( cmd );
 							
 							if( use_function )
-								is_cmd |= function_exists_no_autoload( cmd );
+								is_cmd |= function_exists_no_autoload( cmd, vars );
 							
 							/*
 							 Moving on to expensive tests

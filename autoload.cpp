@@ -263,30 +263,6 @@ void autoload_t::unload_all(void) {
     this->evict_all_nodes();
 }
 
-bool autoload_t::file_already_autoloaded(const wcstring &cmd, bool require_loaded, bool allow_stale_functions) {
-    bool result = false;
-    
-    /* Take a lock */
-    scoped_lock locker(lock);
-    
-    /* Get the function */
-    autoload_function_t * func = this->get_node(cmd);
-    
-    if (func != NULL) {
-        if (require_loaded && ! func->is_loaded) {
-            /* If the function is not loaded, and we're only interested in loaded functions, return false */
-            result = false;
-        } else if (! allow_stale_functions && time(NULL) - func->access.last_checked > kAutoloadStalenessInterval) {
-            /* If the function is stale, and we are not interested in stale functions, we return false */
-            result = false;
-        } else {
-            /* Success */
-            result = true;
-        }
-    }
-    return result;
-}
-
 /**
    This internal helper function does all the real work. By using two
    functions, the internal function can return on various places in
@@ -305,11 +281,37 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
 	size_t i;
 	bool reloaded = 0;
 
-    /* Return if the file is already loaded. If we really want the function to be loaded, require that it be really loaded. If we're not reloading, allow stale functions. */
-    if (file_already_autoloaded(cmd, really_load, ! reload)) {
-        return true;
-    }
-    
+    /* Try using a cached function. If we really want the function to be loaded, require that it be really loaded. If we're not reloading, allow stale functions. */
+    {
+        bool allow_stale_functions = ! reload;
+        
+        /* Take a lock */
+        scoped_lock locker(lock);
+        
+        /* Get the function */
+        autoload_function_t * func = this->get_node(cmd);
+        
+        /* Determine if we can use this cached function */
+        bool use_cached;
+        if (! func) {
+            /* Can't use a function that doesn't exist */
+            use_cached = false;
+        } else if ( ! allow_stale_functions && time(NULL) - func->access.last_checked > kAutoloadStalenessInterval) {
+            /* Can't use a stale function */
+            use_cached = false;
+        } else if (really_load && ! func->is_loaded) {
+            /* Can't use an unloaded function */
+            use_cached = false;
+        } else {
+            /* I guess we can use it */
+            use_cached = true;
+        }
+        
+        /* If we can use this function, return whether we were able to access it */
+        if (use_cached) {
+            return func->access.accessible;
+        }
+    }    
     /* The source of the script will end up here */
     wcstring script_source;
     bool has_script_source = false;

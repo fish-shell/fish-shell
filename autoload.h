@@ -144,8 +144,6 @@ private:
     void remove_all_functions(void) {
         this->evict_all_nodes();
     }
-        
-    bool file_already_autoloaded(const wcstring &cmd, bool require_loaded, bool allow_stale_functions);
     
     bool locate_file_and_maybe_load_it( const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list );
     

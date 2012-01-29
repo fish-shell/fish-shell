@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-""" Run me like this: ./ManParser2.py /usr/share/man/man1/* > test2.out """
+""" Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > test2.out """
 
 import sys, re, os.path, gzip
 

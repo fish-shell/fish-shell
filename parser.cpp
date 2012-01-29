@@ -44,6 +44,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "halloc_util.h"
 #include "path.h"
 #include "signal.h"
+#include "complete.h"
 
 /**
    Maximum number of block levels in code. This is not the same as
@@ -775,7 +776,7 @@ void parser_t::print_errors_stderr()
 	
 }
 
-int parser_t::eval_args( const wchar_t *line, array_list_t *args )
+int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 {
 	tokenizer tok;
 	/*
@@ -787,7 +788,7 @@ int parser_t::eval_args( const wchar_t *line, array_list_t *args )
 	int do_loop=1;
 
 	CHECK( line, 1 );
-	CHECK( args, 1 );
+//	CHECK( args, 1 );
 		
 	proc_push_interactive(0);	
 	current_tokenizer = &tok;
@@ -810,7 +811,7 @@ int parser_t::eval_args( const wchar_t *line, array_list_t *args )
 					DIE_MEM();
 				}
 				
-				if( expand_string( 0, tmp, args, 0 ) == EXPAND_ERROR )
+				if( expand_string2( tmp, args, 0 ) == EXPAND_ERROR )
 				{
 					err_pos=tok_get_pos( &tok );
 					do_loop=0;
@@ -1226,7 +1227,7 @@ int parser_t::is_help( wchar_t *s, int min_match ) const
 void parser_t::parse_job_argument_list( process_t *p,
 									 job_t *j,
 									 tokenizer *tok,
-									 array_list_t *args )
+									 std::vector<completion_t> &args )
 {
 	int is_finished=0;
 
@@ -1244,7 +1245,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 	  workaround and a huge hack, but as near as I can tell, the
 	  alternatives are worse.
 	*/
-	proc_is_count = (wcscmp( (wchar_t *)al_get( args, 0 ), L"count" )==0);
+	proc_is_count = ( args.at(0).completion == L"count" );
 	
 	while( 1 )
 	{
@@ -1275,7 +1276,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 				}
 				
 				if( !p->argv )
-					halloc_register( j, p->argv = list_to_char_arr( args ) );
+					halloc_register( j, p->argv = completions_to_char_arr( args ) );
 				p->next = (process_t *)halloc( j, sizeof( process_t ) );
 
 				tok_next( tok );
@@ -1298,7 +1299,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 			case TOK_END:
 			{
 				if( !p->argv )
-					halloc_register( j, p->argv = list_to_char_arr( args ) );
+					halloc_register( j, p->argv = completions_to_char_arr( args ) );
 				if( tok_has_next(tok))
 					tok_next(tok);
 
@@ -1326,9 +1327,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 					  But if this is in fact a case statement, then it should be evaluated
 					*/
 
-					if( (current_block->type == SWITCH) &&
-						(wcscmp( (const wchar_t *)al_get( args, 0), L"case" )==0) &&
-						p->type == INTERNAL_BUILTIN )
+					if( (current_block->type == SWITCH) && args.at(0).completion == L"case" && p->type == INTERNAL_BUILTIN )
 					{
 						skip=0;
 					}
@@ -1337,7 +1336,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 				if( !skip )
 				{
 					if( ( proc_is_count ) &&
-					    ( al_get_count( args) == 1) &&
+					    (  args.size() == 1) &&
 					    ( parser_t::is_help( tok_last(tok), 0) ) &&
 					    ( p->type == INTERNAL_BUILTIN ) )
 					{
@@ -1347,7 +1346,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 						p->count_help_magic = 1;
 					}
 
-					switch( expand_string( j, wcsdup(tok_last( tok )), args, 0 ) )
+					switch( expand_string2( wcsdup(tok_last( tok )), args, 0 ) )
 					{
 						case EXPAND_ERROR:
 						{
@@ -1622,7 +1621,8 @@ int parser_t::parse_job( process_t *p,
 					  job_t *j,
 					  tokenizer *tok )
 {
-	array_list_t *args = al_halloc( j );      // The list that will become the argc array for the program
+//	array_list_t *args = al_halloc( j );      // The list that will become the argc array for the program
+	std::vector<completion_t> *args = new std::vector<completion_t>();	
 	int use_function = 1;   // May functions be considered when checking what action this command represents
 	int use_builtin = 1;    // May builtins be considered when checking what action this command represents
 	int use_command = 1;    // May commands be considered when checking what action this command represents
@@ -1633,7 +1633,7 @@ int parser_t::parse_job( process_t *p,
 
 	current_tokenizer_pos = tok_get_pos( tok );
 
-	while( al_get_count( args ) == 0 )
+	while( args->size() == 0 )
 	{
 		wchar_t *nxt=0;
 		int consumed = 0; // Set to one if the command requires a second command, like e.g. while does
@@ -1880,7 +1880,9 @@ int parser_t::parse_job( process_t *p,
 				}
 			}
 		}
-		al_push( args, nxt );
+		completion_t data_to_push;
+		data_to_push.completion = nxt;
+		args->push_back( data_to_push );
 	}
 
 	if( error_code == 0 )
@@ -1888,10 +1890,10 @@ int parser_t::parse_job( process_t *p,
 		if( !p->type )
 		{
 			if( use_builtin &&
-				builtin_exists( (wchar_t *)al_get( args, 0 ) ) )
+				builtin_exists(  const_cast<wchar_t*>(args->at(0).completion.c_str()) ) )
 			{
 				p->type = INTERNAL_BUILTIN;
-				is_new_block |= parser_keywords_is_block( (wchar_t *)al_get( args, 0 ) );
+				is_new_block |= parser_keywords_is_block( args->at( 0 ).completion.c_str() );
 			}
 		}
 		
@@ -1909,7 +1911,7 @@ int parser_t::parse_job( process_t *p,
 			{
 				int err;
 			   
-				p->actual_cmd = path_get_path( j, (wchar_t *)al_get( args, 0 ) );
+				p->actual_cmd = path_get_path( j, args->at(0).completion.c_str() );
 				err = errno;
 				
 				/*
@@ -1924,15 +1926,23 @@ int parser_t::parse_job( process_t *p,
 					  implicit command.
 					*/
 					wchar_t *pp =
-						path_get_cdpath( j, (wchar_t *)al_get( args, 0 ) );
+						path_get_cdpath( j, args->at(0).completion.c_str() );
 					if( pp )
 					{
 						wchar_t *tmp;
 
-						tmp = (wchar_t *)al_get( args, 0 );
-						al_truncate( args, 0 );
-						al_push( args, halloc_wcsdup( j, L"cd" ) );
-						al_push( args, tmp );
+						tmp = (wchar_t *)wcsdup(args->at( 0 ).completion.c_str());
+//						al_truncate( args, 0 );
+						args->clear();
+//						al_push( args, halloc_wcsdup( j, L"cd" ) );
+						completion_t comp;
+						comp.completion = L"cd";
+						args->push_back(comp);
+						completion_t comp2;
+						comp2.completion = tmp;
+						args->push_back( comp2 );
+
+//						free(tmp);
 						/*
 						  If we have defined a wrapper around cd, use it,
 						  otherwise use the cd builtin
@@ -1945,7 +1955,7 @@ int parser_t::parse_job( process_t *p,
 					else
 					{
 						int tmp;
-						wchar_t *cmd = (wchar_t *)al_get( args, 0 );
+						wchar_t *cmd = (wchar_t *)args->at( 0 ).completion.c_str();
 						
 						/* 
 						   We couldn't find the specified command.
@@ -2025,7 +2035,7 @@ int parser_t::parse_job( process_t *p,
 						current_tokenizer_pos=tmp;
 
 						job_set_flag( j, JOB_SKIP, 1 );
-						event_fire_generic(L"fish_command_not_found", (wchar_t *)al_get( args, 0 ) );
+						event_fire_generic(L"fish_command_not_found", (wchar_t *)( args->at( 0 ).completion.c_str() ) );
 						proc_set_last_status( err==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE );
 					}
 				}
@@ -2037,7 +2047,7 @@ int parser_t::parse_job( process_t *p,
 			error( SYNTAX_ERROR,
 				   tok_get_pos( tok ),
 				   UNKNOWN_BUILTIN_ERR_MSG,
-				   al_get( args, al_get_count( args ) -1 ) );
+				    args->at( args->size() -1 ) );
 		}
 	}
 	
@@ -2114,7 +2124,9 @@ int parser_t::parse_job( process_t *p,
 													end_pos - current_tokenizer_pos);
 			
 				p->type = INTERNAL_BLOCK;
-				al_set( args, 0, sub_block );
+				completion_t data_to_push;
+				data_to_push.completion = sub_block; 
+				args->at( 0 ) =  data_to_push;
 			
 				tok_set_pos( tok,
 							 end_pos );
@@ -2133,14 +2145,14 @@ int parser_t::parse_job( process_t *p,
 
 	if( !error_code )
 	{
-		if( p->type == INTERNAL_BUILTIN && parser_keywords_skip_arguments( (wchar_t *)al_get(args, 0) ) )
+		if( p->type == INTERNAL_BUILTIN && parser_keywords_skip_arguments( (wchar_t *)args->at( 0 ).completion.c_str() ) )
 		{			
 			if( !p->argv )
-				halloc_register( j, p->argv = list_to_char_arr( args ) );
+				halloc_register( j, p->argv = completions_to_char_arr( *args ) );
 		}
 		else
 		{
-			parse_job_argument_list( p, j, tok, args );
+			parse_job_argument_list( p, j, tok, *args );
 		}
 	}
 

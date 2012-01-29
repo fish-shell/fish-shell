@@ -209,15 +209,17 @@ static void complete_free_entry( complete_entry_t *c );
    Create a new completion entry
 
 */
-void completion_allocate( array_list_t *context,
+void completion_allocate( std::vector<completion_t> &context,
 						  const wchar_t *comp,
 						  const wchar_t *desc,
 						  int flags )
 {
-	completion_t *res = (completion_t *)halloc( context, sizeof( completion_t) );
-	res->completion = halloc_wcsdup( context, comp );
+//	completion_t *res = (completion_t *)halloc( context, sizeof( completion_t) );
+	completion_t res;
+
+	res.completion = comp; 
 	if( desc )
-		res->description = halloc_wcsdup( context, desc );
+		res.description = desc;
 
 	if( flags & COMPLETE_AUTO_SPACE )
 	{
@@ -230,8 +232,8 @@ void completion_allocate( array_list_t *context,
 		
 	}
 	
-	res->flags = flags;
-	al_push( context, res );
+	res.flags = flags;
+	context.push_back( res );
 }
 
 /**
@@ -898,11 +900,11 @@ int complete_is_valid_argument( const wchar_t *str,
    \param possible_comp the list of possible completions to iterate over
 */
 
-static void complete_strings( array_list_t *comp_out,
+static void complete_strings( std::vector<completion_t> &comp_out,
 							  const wchar_t *wc_escaped,
 							  const wchar_t *desc,
 							  const wchar_t *(*desc_func)(const wchar_t *),
-							  array_list_t *possible_comp,
+							  std::vector<completion_t> &possible_comp,
 							  int flags )
 {
 	int i;
@@ -916,9 +918,10 @@ static void complete_strings( array_list_t *comp_out,
 	wc = parse_util_unescape_wildcards( tmp );
 	free(tmp);
 	
-	for( i=0; i<al_get_count( possible_comp ); i++ )
+	for( i=0; i< possible_comp.size(); i++ )
 	{
-		wchar_t *next_str = (wchar_t *)al_get( possible_comp, i );
+		wcstring temp = possible_comp.at( i ).completion;
+		const wchar_t *next_str = temp.empty()?NULL:temp.c_str();
 
 		if( next_str )
 		{
@@ -933,7 +936,7 @@ static void complete_strings( array_list_t *comp_out,
    If command to complete is short enough, substitute
    the description with the whatis information for the executable.
 */
-static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
+static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &comp )
 {
 	int i;
 	const wchar_t *cmd_start;
@@ -971,11 +974,11 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 
 	skip = 1;
 	
-	for( i=0; i<al_get_count( comp ); i++ )
+	for( i=0; i< comp.size(); i++ )
 	{
-		completion_t *c = (completion_t *)al_get( comp, i );
+		const completion_t &c = comp.at ( i );
 			
-		if( !wcslen( c->completion) || (c->completion[wcslen(c->completion)-1] != L'/' )) 
+		if( c.completion.empty() || (c.completion[c.completion.size()-1] != L'/' )) 
 		{
 			skip = 0;
 			break;
@@ -1049,11 +1052,12 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 		  This needs to do a reallocation for every description added, but
 		  there shouldn't be that many completions, so it should be ok.
 		*/
-		for( i=0; i<al_get_count(comp); i++ )
+		for( i=0; i<comp.size(); i++ )
 		{
-			completion_t *c = (completion_t *)al_get( comp, i );
-			const wchar_t *el = c->completion;
-			
+			completion_t &c =  comp.at( i );
+//			const wchar_t *el = c.completion.empty()?NULL:c.completion.c_str();
+			const wchar_t *el = c.completion.c_str();
+
 			wchar_t *new_desc;
 			
 			new_desc = (wchar_t *)hash_get( &lookup,
@@ -1061,7 +1065,7 @@ static void complete_cmd_desc( const wchar_t *cmd, array_list_t *comp )
 			
 			if( new_desc )
 			{
-				c->description = halloc_wcsdup( comp, new_desc );
+				c.description = new_desc;
 			}
 		}
 	}
@@ -1097,7 +1101,7 @@ static const wchar_t *complete_function_desc( const wchar_t *fn )
    \param comp the list to add all completions to
 */
 static void complete_cmd( const wchar_t *cmd,
-						  array_list_t *comp,
+						  std::vector<completion_t> &comp,
 						  int use_function,
 						  int use_builtin,
 						  int use_command )
@@ -1105,7 +1109,7 @@ static void complete_cmd( const wchar_t *cmd,
 	wchar_t *path_cpy;
 	wchar_t *nxt_path;
 	wchar_t *state;
-	array_list_t possible_comp;
+	std::vector<completion_t> possible_comp;
 	wchar_t *nxt_completion;
 
 	const env_var_t cdpath = env_get_string(L"CDPATH");
@@ -1118,8 +1122,7 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_command )
 		{
 			
-			if( expand_string( 0,
-							   wcsdup(cmd),
+			if( expand_string2(		  wcsdup(cmd),
 							   comp,
 							   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 			{
@@ -1151,7 +1154,7 @@ static void complete_cmd( const wchar_t *cmd,
 					{
 						continue;
 					}
-					
+
 					add_slash = nxt_path[path_len-1]!=L'/';
 					nxt_completion = wcsdupcat( nxt_path,
 												add_slash?L"/":L"",
@@ -1159,20 +1162,20 @@ static void complete_cmd( const wchar_t *cmd,
 					if( ! nxt_completion )
 						continue;
 					
-					prev_count = al_get_count( comp );
+					prev_count =  comp.size() ;
 					
-					if( expand_string( 0,
+					if( expand_string2(
 									   nxt_completion,
 									   comp,
 									   ACCEPT_INCOMPLETE |
 									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 					{
-						for( i=prev_count; i<al_get_count( comp ); i++ )
+						for( i=prev_count; i< comp.size(); i++ )
 						{
-							completion_t *c = (completion_t *)al_get( comp, i );
-							if(c->flags & COMPLETE_NO_CASE )
+							completion_t &c =  comp.at( i );
+							if(c.flags & COMPLETE_NO_CASE )
 							{
-								c->completion = halloc_wcsdup( comp, c->completion + path_len + add_slash );
+								c.completion += add_slash ;
 							}
 						}
 					}
@@ -1186,27 +1189,29 @@ static void complete_cmd( const wchar_t *cmd,
 		  These return the original strings - don't free them
 		*/
 
-		al_init( &possible_comp );
+//		al_init( &possible_comp );
 
 		if( use_function )
 		{
 			//function_get_names( &possible_comp, cmd[0] == L'_' );
             wcstring_list_t names = function_get_names(cmd[0] == L'_' );
             for (size_t i=0; i < names.size(); i++) {
-                al_push(&possible_comp, names.at(i).c_str());
+		completion_t data_to_push;        
+		data_to_push.completion = names.at(i);
+       		possible_comp.push_back( data_to_push );
             }
             
-			complete_strings( comp, cmd, 0, &complete_function_desc, &possible_comp, 0 );
+			complete_strings( comp, cmd, 0, &complete_function_desc, possible_comp, 0 );
 		}
 
-		al_truncate( &possible_comp, 0 );
+		possible_comp.clear();
 		
 		if( use_builtin )
 		{
-			builtin_get_names( &possible_comp );
-			complete_strings( comp, cmd, 0, &builtin_get_desc, &possible_comp, 0 );
+			builtin_get_names2( possible_comp );
+			complete_strings( comp, cmd, 0, &builtin_get_desc, possible_comp, 0 );
 		}
-		al_destroy( &possible_comp );
+//		al_destroy( &possible_comp );
 
 	}
 
@@ -1230,8 +1235,7 @@ static void complete_cmd( const wchar_t *cmd,
 					continue;
 				}
 			
-				if( expand_string( 0,
-								   nxt_completion,
+				if( expand_string2(		   nxt_completion,
 								   comp,
 								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 				{
@@ -1258,22 +1262,22 @@ static void complete_cmd( const wchar_t *cmd,
 static void complete_from_args( const wchar_t *str,
 								const wchar_t *args,
 								const wchar_t *desc,
-								array_list_t *comp_out,
+								std::vector<completion_t> &comp_out,
 								int flags )
 {
 
-	array_list_t possible_comp;
+	std::vector<completion_t> possible_comp;
 
-	al_init( &possible_comp );
     parser_t parser(PARSER_TYPE_COMPLETIONS_ONLY);
 	proc_push_interactive(0);
-	parser.eval_args( args, &possible_comp );
+	parser.eval_args( args, possible_comp );
+
 	proc_pop_interactive();
 	
-	complete_strings( comp_out, str, desc, 0, &possible_comp, flags );
+	complete_strings( comp_out, str, desc, 0, possible_comp, flags );
 
-	al_foreach( &possible_comp, &free );
-	al_destroy( &possible_comp );
+//	al_foreach( &possible_comp, &free );
+//	al_destroy( &possible_comp );
 }
 
 /**
@@ -1381,7 +1385,7 @@ static int complete_param( const wchar_t *cmd_orig,
 						   const wchar_t *popt,
 						   const wchar_t *str,
 						   int use_switches,
-						   array_list_t *comp_out )
+						   std::vector<completion_t> &comp_out )
 {
 	complete_entry_t *i;
 	complete_entry_opt_t *o;
@@ -1598,7 +1602,7 @@ static int complete_param( const wchar_t *cmd_orig,
    Perform file completion on the specified string
 */
 static void complete_param_expand( wchar_t *str,
-								   array_list_t *comp_out,
+								   std::vector<completion_t> &comp_out,
 								   int do_file )
 {
 	wchar_t *comp_str;
@@ -1617,8 +1621,7 @@ static void complete_param_expand( wchar_t *str,
 		ACCEPT_INCOMPLETE | 
 		(do_file?0:EXPAND_SKIP_WILDCARDS);
 	
-	if( expand_string( 0, 
-					   wcsdup(comp_str),
+	if( expand_string2( 		wcsdup(comp_str),
 					   comp_out,
 					   flags ) == EXPAND_ERROR )
 	{
@@ -1633,7 +1636,7 @@ static void complete_param_expand( wchar_t *str,
 */
 static int complete_variable( const wchar_t *whole_var,
 							  int start_offset,
-							  array_list_t *comp_list )
+							  std::vector<completion_t> &comp_list )
 {
 	int i;
 	const wchar_t *var = &whole_var[start_offset];
@@ -1711,7 +1714,7 @@ static int complete_variable( const wchar_t *whole_var,
    \return 0 if unable to complete, 1 otherwise
 */
 static int try_complete_variable( const wchar_t *cmd,
-								  array_list_t *comp )
+								  std::vector<completion_t> &comp )
 {
 	int len = wcslen( cmd );
 	int i;
@@ -1738,7 +1741,7 @@ static int try_complete_variable( const wchar_t *cmd,
    \return 0 if unable to complete, 1 otherwise
 */
 static int try_complete_user( const wchar_t *cmd,
-							  array_list_t *comp )
+							  std::vector<completion_t> &comp )
 {
 	const wchar_t *first_char=cmd;
 	int res=0;
@@ -1821,10 +1824,8 @@ static int try_complete_user( const wchar_t *cmd,
 	return res;
 }
 
-
-
-void complete( const wchar_t *cmd,
-			   array_list_t *comp )
+void complete2( const wchar_t *cmd,
+			   std::vector<completion_t> &comp )
 {
 	wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
 	wchar_t *buff;
@@ -1840,7 +1841,7 @@ void complete( const wchar_t *cmd,
 	int had_ddash = 0;
 
 	CHECK( cmd, );
-	CHECK( comp, );
+//	CHECK( comp, );
 
 	complete_init();
 
@@ -2066,7 +2067,7 @@ void complete( const wchar_t *cmd,
 				  If we have found no command specific completions at
 				  all, fall back to using file completions.
 				*/
-				if( !al_get_count( comp ) )
+				if( comp.empty() )
 					do_file = 1;
 				
 				/*
@@ -2086,6 +2087,8 @@ void complete( const wchar_t *cmd,
 
 
 }
+
+
 
 /**
    Print the GNU longopt style switch \c opt, and the argument \c

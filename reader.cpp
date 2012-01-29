@@ -20,6 +20,7 @@ commence.
 */
 
 #include "config.h"
+#include <algorithm>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -260,7 +261,7 @@ class reader_data_t
 	   Function for tab completion
 	*/
 	void (*complete_func)( const wchar_t *,
-						   array_list_t * );
+						   std::vector<completion_t>& );
 
 	/**
 	   Function for syntax highlighting
@@ -547,6 +548,7 @@ static int check_size()
 /**
    Compare two completion entrys
  */
+/*
 static int completion_cmp( const void *a, const void *b )
 {
 	completion_t *c= *((completion_t **)a);
@@ -555,10 +557,11 @@ static int completion_cmp( const void *a, const void *b )
 	return wcsfilecmp( c->completion, d->completion );
 
 }
-
+*/
 /**
    Sort an array_list_t containing compltion_t structs.
  */
+/*
 static void sort_completion_list( array_list_t *comp )
 {
 	qsort( comp->arr, 
@@ -566,11 +569,16 @@ static void sort_completion_list( array_list_t *comp )
 		   sizeof( void*),
 		   &completion_cmp );
 }
+*/
+static void sort_completion_list( std::vector<completion_t> &comp ) {
+	sort(comp.begin(), comp.end());
+}
 
 /**
    Remove any duplicate completions in the list. This relies on the
    list first beeing sorted.
 */
+/*
 static void remove_duplicates( array_list_t *l )
 {
 	int in, out;
@@ -595,7 +603,12 @@ static void remove_duplicates( array_list_t *l )
 	}
 	al_truncate( l, out );
 }
+*/
 
+static void remove_duplicates(std::vector<completion_t> &l) {
+	
+	l.erase(std::unique( l.begin(), l.end()), l.end());
+}
 
 int reader_interrupted()
 {
@@ -1142,7 +1155,7 @@ static void completion_insert( const wchar_t *val, int flags )
    \param comp the list of completions to display
 */
 
-static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
+static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<completion_t> &comp )
 {
 	int i;
 	string_buffer_t cmd;
@@ -1177,49 +1190,54 @@ static void run_pager( wchar_t *prefix, int is_quoted, array_list_t *comp )
 
 	escaped_separator = escape( COMPLETE_SEP_STR, 1);
 	
-	for( i=0; i<al_get_count( comp ); i++ )
+	for( i=0; i< comp.size(); i++ )
 	{
-		completion_t *el = (completion_t *)al_get( comp, i );
-		has_case_sensitive |= !(el->flags & COMPLETE_NO_CASE );
+		const completion_t &el = comp.at( i );
+		has_case_sensitive |= !(el.flags & COMPLETE_NO_CASE );
 	}
 	
-	for( i=0; i<al_get_count( comp ); i++ )
+	for( i=0; i< comp.size(); i++ )
 	{
 
 		int base_len=-1;
-		completion_t *el = (completion_t *)al_get( comp, i );
+		const completion_t &el = comp.at( i );
 
 		wchar_t *foo=0;
 		wchar_t *baz=0;
 
-		if( has_case_sensitive && (el->flags & COMPLETE_NO_CASE ))
+		if( has_case_sensitive && (el.flags & COMPLETE_NO_CASE ))
 		{
 			continue;
 		}
 
-		if( el && el->completion )
-		{
-			if( el->flags & COMPLETE_NO_CASE )
-			{
-				if( base_len == -1 )
-				{
-					wchar_t *begin;
-				
-					parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
-					base_len = data->buff_pos - (begin-data->buff);
-				}
-				
-				foo = escape( el->completion + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-			}
-			else
-			{
-				foo = escape( el->completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-			}
+		if( el.completion.empty() ){
+			continue;
 		}
 		
-		if( el && el->description )
+		if( el.flags & COMPLETE_NO_CASE )
+		  {
+		    if( base_len == -1 )
+		      {
+			wchar_t *begin;
+				
+			parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
+			base_len = data->buff_pos - (begin-data->buff);
+		      }
+								
+		    wcstring foo_wstr = escape_string( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+		    foo = wcsdup(foo_wstr.c_str());
+		  }
+		else
+		  {
+		    wcstring foo_wstr = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+		    foo = wcsdup(foo_wstr.c_str());
+		  }
+		
+	
+		if( !el.description.empty() )
 		{
-			baz = escape( el->description, 1 );
+			wcstring baz_wstr = escape_string( el.description, 1 );
+			baz = wcsdup(baz_wstr.c_str());
 		}
 		
 		if( !foo )
@@ -1369,7 +1387,7 @@ int reader_can_replace( const wchar_t *in, int flags )
 */
 
 
-static int handle_completions( array_list_t *comp )
+static int handle_completions( std::vector<completion_t> &comp )
 {
 	int i;
 	void *context = 0;
@@ -1390,7 +1408,7 @@ static int handle_completions( array_list_t *comp )
 	/*
 	  Check trivial cases
 	 */
-	switch( al_get_count( comp ) )
+	switch( comp.size() )
 	{
 		/*
 		  No suitable completions found, flash screen and retur
@@ -1408,7 +1426,7 @@ static int handle_completions( array_list_t *comp )
 		case 1:
 		{
 			
-			completion_t *c = (completion_t *)al_get( comp, 0 );
+			const completion_t &c = comp.at( 0 );
 		
 			/*
 			  If this is a replacement completion, check
@@ -1416,10 +1434,10 @@ static int handle_completions( array_list_t *comp )
 			  the token doesn't contain evil operators
 			  like {}
 			 */
-			if( !(c->flags & COMPLETE_NO_CASE) || reader_can_replace( tok, c->flags ) )
+			if( !(c.flags & COMPLETE_NO_CASE) || reader_can_replace( tok, c.flags ) )
 			{
-				completion_insert( c->completion,
-						   c->flags );			
+				completion_insert( c.completion.c_str(),
+						   c.flags );			
 			}
 			done = 1;
 			len = 1;
@@ -1433,29 +1451,29 @@ static int handle_completions( array_list_t *comp )
 		/*
 		  Try to find something to insert whith the correct case
 		 */
-		for( i=0; i<al_get_count( comp ); i++ )
+		for( i=0; i< comp.size() ; i++ )
 		{
-			completion_t *c = (completion_t *)al_get( comp, i );
+			const completion_t &c =  comp.at( i );
 			int new_len;
 
 			/*
 			  Ignore case insensitive completions for now
 			 */
-			if( c->flags & COMPLETE_NO_CASE )
+			if( c.flags & COMPLETE_NO_CASE )
 				continue;
 			
 			count++;
 			
 			if( base )
 			{
-				new_len = comp_len( base, c->completion );
+				new_len = comp_len( base, c.completion.c_str() );
 				len = new_len < len ? new_len: len;
 			}
 			else
 			{
-				base = wcsdup( c->completion );
+				base = wcsdup( c.completion.c_str() );
 				len = wcslen( base );
-				flags = c->flags;
+				flags = c.flags;
 			}
 		}
 
@@ -1488,16 +1506,16 @@ static int handle_completions( array_list_t *comp )
 			
 			count = 0;
 			
-			for( i=0; i<al_get_count( comp ); i++ )
+			for( i=0; i< comp.size(); i++ )
 			{
-				completion_t *c = (completion_t *)al_get( comp, i );
+				const completion_t &c = comp.at( i );
 				int new_len;
 
 
-				if( !(c->flags & COMPLETE_NO_CASE) )
+				if( !(c.flags & COMPLETE_NO_CASE) )
 					continue;
 			
-				if( !reader_can_replace( tok, c->flags ) )
+				if( !reader_can_replace( tok, c.flags ) )
 				{
 					len=0;
 					break;
@@ -1507,14 +1525,14 @@ static int handle_completions( array_list_t *comp )
 
 				if( base )
 				{
-					new_len = offset +  comp_ilen( base+offset, c->completion+offset );
+					new_len = offset +  comp_ilen( base+offset, c.completion.c_str()+offset );
 					len = new_len < len ? new_len: len;
 				}
 				else
 				{
-					base = wcsdup( c->completion );
+					base = wcsdup( c.completion.c_str() );
 					len = wcslen( base );
-					flags = c->flags;
+					flags = c.flags;
 					
 				}
 			}
@@ -2343,7 +2361,7 @@ void reader_set_prompt( const wchar_t *new_prompt )
 }
 
 void reader_set_complete_function( void (*f)( const wchar_t *,
-					      array_list_t * ) )
+					      std::vector<completion_t>& ) )
 {
 	data->complete_func = f;
 }
@@ -2578,7 +2596,7 @@ static int read_i()
 	event_fire_generic(L"fish_prompt");
 	
 	reader_push(L"fish");
-	reader_set_complete_function( &complete );
+	reader_set_complete_function( &complete2 );
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &reader_shell_test );
 	parser_t &parser = parser_t::principal_parser();
@@ -2683,7 +2701,7 @@ wchar_t *reader_readline()
 	int i;
 	int last_char=0, yank=0;
 	const wchar_t *yank_str;
-	array_list_t *comp=0;
+	std::vector<completion_t> comp;
 	int comp_empty=1;
 	int finished=0;
 	struct termios old_modes;
@@ -2876,19 +2894,18 @@ wchar_t *reader_readline()
 					len = data->buff_pos - (begin-data->buff);
 					buffcpy = wcsndup( begin, len );
 
-					comp = al_halloc( 0 );
+//					comp = al_halloc( 0 );
 					data->complete_func( buffcpy, comp );
 					
-
 					sort_completion_list( comp );
 					remove_duplicates( comp );
 					
 
 					free( buffcpy );
 					comp_empty = handle_completions( comp );
-
-					halloc_free( comp );
-					comp = 0;
+					comp.clear();
+//					halloc_free( comp );
+//					comp = 0;
 				}
 
 				break;

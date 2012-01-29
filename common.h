@@ -22,6 +22,8 @@
 #include <assert.h>
 #include "util.h"
 
+struct completion_t;
+
 /* Common string type */
 typedef std::wstring wcstring;
 typedef std::vector<wcstring> wcstring_list_t;
@@ -193,6 +195,8 @@ void show_stackframe();
 */
 wchar_t **list_to_char_arr( array_list_t *l );
 
+wchar_t **completions_to_char_arr( std::vector<completion_t> &l );
+
 /**
    Read a line from the stream f into the buffer buff of length len. If
    buff is to small, it will be reallocated, and both buff and len will
@@ -213,6 +217,8 @@ int fgetws2( wchar_t **buff, int *len, FILE *f );
 void sort_list( array_list_t *comp );
 
 void sort_strings( std::vector<wcstring> &strings);
+
+void sort_completions( std::vector<completion_t> &strings);
 
 /**
    Returns a newly allocated wide character string equivalent of the

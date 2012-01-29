@@ -12,6 +12,7 @@ The classes responsible for autoloading functions and completions.
 #include "builtin_scripts.h"
 #include "exec.h"
 #include <assert.h>
+#include <algorithm>
 
 /* The time before we'll recheck an autoloaded file */
 static const int kAutoloadStalenessInterval = 1;

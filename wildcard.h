@@ -24,6 +24,7 @@
 
 #define WILDCARD_RESERVED 0xf400
 
+struct completion_t;
 /**
    Enumeration of all wildcard types
 */
@@ -70,7 +71,7 @@ int wildcard_expand( const wchar_t *wc,
 					 int flags, 
 					 array_list_t *out );
 
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, wcstring_list_t &out );
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, std::vector<completion_t> &out );
 /**
    Test whether the given wildcard matches the string
 
@@ -94,7 +95,7 @@ int wildcard_complete( const wchar_t *str,
 					   const wchar_t *wc,
 					   const wchar_t *desc,						
 					   const wchar_t *(*desc_func)(const wchar_t *),
-					   array_list_t *out,
+					   std::vector<completion_t> &out,
 					   int flags );
 
 #endif

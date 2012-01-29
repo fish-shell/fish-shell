@@ -7,7 +7,7 @@ wildcards using **.
 */
 
 #include "config.h"
-
+#include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
@@ -236,7 +236,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 									   int is_first,
 									   const wchar_t *desc,
 									   const wchar_t *(*desc_func)(const wchar_t *),
-									   array_list_t *out,
+									   std::vector<completion_t> &out,
 									   int flags )
 {
 	if( !wc || !str || !orig)
@@ -250,12 +250,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	{
 		wchar_t *out_completion = 0;
 		const wchar_t *out_desc = desc;
-		
-		if( !out )
-		{
-			return 1;
-		}
-			
+
 		if( flags & COMPLETE_NO_CASE )
 		{
 			out_completion = wcsdup( orig );
@@ -319,7 +314,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 		do
 		{
 			res |= wildcard_complete_internal( orig, str, wc+1, 0, desc, desc_func, out, flags );
-			if( res && !out )
+			if( res )
 				break;
 		}
 		while( *str++ != 0 );
@@ -345,7 +340,7 @@ int wildcard_complete( const wchar_t *str,
 					   const wchar_t *wc,
 					   const wchar_t *desc,						
 					   const wchar_t *(*desc_func)(const wchar_t *),
-					   array_list_t *out,
+					   std::vector<completion_t> &out,
 					   int flags )
 {
 	int res;
@@ -645,7 +640,7 @@ static const wchar_t *file_get_desc( const wchar_t *filename,
    \param wc the wildcard to match against
    \param is_cmd whether we are performing command completion
 */
-static void wildcard_completion_allocate( array_list_t *list, 
+static void wildcard_completion_allocate( std::vector<completion_t> &list, 
 					  const wchar_t *fullname, 
 					  const wchar_t *completion,
 					  const wchar_t *wc,
@@ -778,7 +773,7 @@ static int test_flags( const wchar_t *filename,
 static int wildcard_expand_internal( const wchar_t *wc, 
 									 const wchar_t *base_dir,
 									 int flags,
-									 array_list_t *out )
+									 std::vector<completion_t> &out )
 {
 	
 	/* Points to the end of the current wildcard segment */
@@ -810,7 +805,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		return -1;
 	}
 	
-	if( !wc || !base_dir || !out)
+	if( !wc || !base_dir )
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
 		return 0;		
@@ -897,7 +892,11 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			else
 			{								
 				res = 1;
-				al_push_check( out, wcsdup( base_dir ) );
+				completion_t data_to_push;
+				data_to_push.completion = base_dir; 
+				if ( std::find( out.begin(), out.end(), data_to_push ) != out.end() ){
+					 out.push_back( data_to_push);
+				}
 			}							
 		}
 		else
@@ -918,11 +917,12 @@ static int wildcard_expand_internal( const wchar_t *wc,
 					/*
 					  Test for matches before stating file, so as to minimize the number of calls to the much slower stat function 
 					*/
+					std::vector<completion_t> test;
 					if( wildcard_complete( name,
 										   wc,
 										   L"",
 										   0,
-										   0,
+										   test,
 										   0 ) )
 					{
 						if( test_flags( long_name, flags ) )
@@ -966,7 +966,9 @@ static int wildcard_expand_internal( const wchar_t *wc,
 						}
 						else
 						{
-							al_push_check( out, long_name );
+							completion_t data_to_push;
+							data_to_push.completion = long_name;
+							out.push_back( data_to_push );
 						}
 						res = 1;
 					}
@@ -1053,7 +1055,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			if( is_recursive )
 			{
 				const wchar_t *end = wcschr( wc, ANY_STRING_RECURSIVE );
-				wchar_t *wc_sub = const_cast<wchar_t*>(wcsndup( wc, end-wc+1));
+				wchar_t *wc_sub = wcsndup( wc, end-wc+1);
 				partial_match = wildcard_match2( name, wc_sub, 1 );
 				free( wc_sub );
 			}			
@@ -1156,9 +1158,9 @@ static int wildcard_expand_internal( const wchar_t *wc,
 int wildcard_expand( const wchar_t *wc, 
 					 const wchar_t *base_dir,
 					 int flags,
-					 array_list_t *out )
+					 std::vector<completion_t> &out )
 {
-	int c = al_get_count( out );
+	int c = out.size();
 	int res = wildcard_expand_internal( wc, base_dir, flags, out );
 	int i;
 			
@@ -1176,16 +1178,16 @@ int wildcard_expand( const wchar_t *wc,
 		
 		sb_init( &sb );
 
-		for( i=c; i<al_get_count( out ); i++ )
+		for( i=c; i<out.size(); i++ )
 		{
-			completion_t *c = (completion_t *)al_get( out, i );
+			completion_t &c = out.at( i );
 			
-			if( c->flags & COMPLETE_NO_CASE )
+			if( c.flags & COMPLETE_NO_CASE )
 			{
 				sb_clear( &sb );
-				sb_printf( &sb, L"%ls%ls%ls", base_dir, wc_base, c->completion );
+				sb_printf( &sb, L"%ls%ls%ls", base_dir, wc_base, c.completion.c_str() );
 				
-				c->completion = halloc_wcsdup( out, (wchar_t *)sb.buff );
+				c.completion = (wchar_t *)sb.buff;
 			}
 		}
 		
@@ -1200,19 +1202,17 @@ int wildcard_expand( const wchar_t *wc,
 	return res;
 }
 
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, wcstring_list_t &outputs )
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, std::vector<completion_t> &outputs )
 {
-    array_list_t lst;
-    al_init(&lst);
+    std::vector<completion_t> lst;
+//    al_init(&lst);
     
-    int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, &lst);
+    int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, lst);
     
-    int i, max = al_get_count(&lst);
+    int i, max = lst.size();
     for (i=0; i < max; i++) {
-        wchar_t *tmp = (wchar_t *)al_get(&lst, i);
-        outputs.push_back(tmp);
-        free(tmp);
+        outputs.push_back( lst.at(i));
     }
-    al_destroy(&lst);
+//    al_destroy(&lst);
     return res;
 }

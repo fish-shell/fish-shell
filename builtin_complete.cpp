@@ -541,7 +541,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	{
 		if( do_complete )
 		{
-			array_list_t *comp;
+			std::vector<completion_t> comp;
 			int i;
 
 			const wchar_t *prev_temporary_buffer = temporary_buffer;
@@ -556,16 +556,17 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			{
 				recursion_level++;
 			
-				comp = al_halloc( 0 );
+//				comp = al_halloc( 0 );
 			
-				complete( do_complete, comp );
+				complete2( do_complete, comp );
 			
-				for( i=0; i<al_get_count( comp ); i++ )
+				for( i=0; i< comp.size() ; i++ )
 				{
-					completion_t *next = (completion_t *)al_get( comp, i );
+					const completion_t &next =  comp.at( i );
+
 					const wchar_t *prepend;
 					
-					if( next->flags & COMPLETE_NO_CASE )
+					if( next.flags & COMPLETE_NO_CASE )
 					{
 						prepend = L"";
 					}
@@ -575,17 +576,17 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 					}
 						
 
-					if( next->description )
+					if( !(next.description).empty() )
 					{
-						sb_printf( sb_out, L"%ls%ls\t%ls\n", prepend, next->completion, next->description );
+						sb_printf( sb_out, L"%ls%ls\t%ls\n", prepend, next.completion.c_str(), next.description.c_str() );
 					}
 					else
 					{
-						sb_printf( sb_out, L"%ls%ls\n", prepend, next->completion );
+						sb_printf( sb_out, L"%ls%ls\n", prepend, next.completion.c_str() );
 					}
 				}
 			
-				halloc_free( comp );
+//				halloc_free( comp );
 				recursion_level--;
 			}
 		

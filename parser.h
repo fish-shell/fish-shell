@@ -260,7 +260,7 @@ class parser_t {
     */
     const wchar_t *is_function() const;
     
-    void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, array_list_t *args );
+    void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, std::vector<completion_t>& );
     int parse_job( process_t *p, job_t *j, tokenizer *tok );
     void skipped_exec( job_t * j );
     void eval_job( tokenizer *tok );
@@ -304,8 +304,12 @@ class parser_t {
       \param line Line to evaluate
       \param output List to insert output to
     */
-    int eval_args( const wchar_t *line, array_list_t *output );    
-    
+	/**
+	  \param line Line to evaluate
+	  \param output List to insert output to
+	*/
+	int eval_args( const wchar_t *line, std::vector<completion_t> &output );
+
     /**
        Sets the current evaluation error. This function should only be used by libraries that are called by 
 

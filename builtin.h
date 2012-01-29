@@ -9,6 +9,7 @@
 
 #include "util.h"
 #include "io.h"
+#include "common.h"
 
 class parser_t;
 
@@ -142,6 +143,8 @@ int builtin_run( parser_t &parser, wchar_t **argv, io_data_t *io );
   Insert all builtin names into l. These are not copies of the strings and should not be freed after use.
 */
 void builtin_get_names( array_list_t *list );
+
+void builtin_get_names2 (std::vector<completion_t>&);
 
 /**
    Pushes a new set of input/output to the stack. The new stdin is supplied, a new set of output string_buffer_ts is created.

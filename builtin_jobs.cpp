@@ -271,8 +271,11 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 		/*
 		  Ignore unconstructed jobs, i.e. ourself.
 		*/
-		for( j=first_job; j; j=j->next )
+        job_iterator_t jobs;
+        job_t *j;
+        while ((j = jobs.next()))
 		{
+            
 			if( (j->flags & JOB_CONSTRUCTED) && !job_is_completed(j) )
 			{
 				builtin_jobs_print( j, mode, !found );
@@ -322,8 +325,10 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 		}
 		else
 		{
-			for( j= first_job; j; j=j->next )
-			{
+            job_iterator_t jobs;
+            job_t *j;
+            while ((j = jobs.next()))
+            {
 				/*
 				  Ignore unconstructed jobs, i.e. ourself.
 				*/

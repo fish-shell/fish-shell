@@ -397,7 +397,8 @@ static int find_process( const wchar_t *proc,
 
 		if( flags & ACCEPT_INCOMPLETE )
 		{
-			for( j=first_job; j != 0; j=j->next )
+            job_iterator_t jobs;
+            while ((j = jobs.next()))
 			{
 				wchar_t jid[16];
 				if( j->command == 0 )
@@ -454,7 +455,8 @@ static int find_process( const wchar_t *proc,
 	if( found )
 		return 1;
 
-	for( j=first_job; j != 0; j=j->next )
+    job_iterator_t jobs;
+    while ((j = jobs.next()))
 	{
 		int offset;
 		
@@ -487,7 +489,8 @@ static int find_process( const wchar_t *proc,
 		return 1;
 	}
 
-	for( j=first_job; j; j=j->next )
+    jobs.reset();
+    while ((j = jobs.next()))
 	{
 		process_t *p;
 		if( j->command == 0 )

@@ -2519,7 +2519,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 int exit_status()
 {
 	if( is_interactive )
-		return first_job == 0 && data->end_loop;
+		return job_list().empty() && data->end_loop;
 	else
 		return end_loop;
 }
@@ -2549,7 +2549,8 @@ static void handle_end_loop()
 		}
 	}
 	
-	for( j=first_job; j; j=j->next )
+    job_iterator_t jobs;
+    while ((j = jobs.next()))
 	{
 		if( !job_is_completed(j) )
 		{
@@ -2574,7 +2575,8 @@ static void handle_end_loop()
 			  in interactive mode. If isatty returns false, it
 			  means stdin must have been closed. 
 			*/
-			for( j = first_job; j; j=j->next )
+			job_iterator_t jobs;
+			while ((j = jobs.next()))
 			{
 				if( ! job_is_completed( j ) )
 				{

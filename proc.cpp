@@ -95,7 +95,12 @@ static int last_status=0;
 */
 static sig_atomic_t got_signal=0;
 
-job_t *first_job=0;
+static std::list<job_t *> s_job_list;
+
+job_list_t &job_list(void) {
+    return s_job_list;
+}
+
 int is_interactive=-1;
 int is_interactive_session=0;
 int is_subshell=0;
@@ -143,25 +148,26 @@ void proc_init()
 */
 static int job_remove( job_t *j )
 {
-	job_t *prev=0, *curr=first_job;
-	while( (curr != 0) && (curr != j) )
-	{
-		prev = curr;
-		curr = curr->next;
-	}
-
-	if( j != curr )
-	{
+    job_list_t &jobs = job_list();
+    job_list_t::iterator iter = find(jobs.begin(), jobs.end(), j);
+    if (iter != jobs.end()) {
+        jobs.erase(iter);
+        return 1;
+    } else {
 		debug( 1, _( L"Job inconsistency" ) );
 		sanity_lose();
-		return 0;
-	}
-	
-	if( prev == 0 )
-		first_job = j->next;
-	else
-		prev->next = j->next;
-	return 1;
+        return 0;
+    }
+}
+
+void job_promote(job_t *job)
+{
+    job_list_t &jobs = job_list();
+    job_list_t::iterator loc = find(jobs.begin(), jobs.end(), job);
+    assert(loc != jobs.end());
+    
+    /* Move the job to the beginning */
+    jobs.splice(jobs.begin(), jobs, loc);
 }
 
 
@@ -181,10 +187,12 @@ void proc_destroy()
     event.arguments = NULL;
 	sb_destroy( &event_pid );
 	sb_destroy( &event_status );
-	while( first_job )
+    job_list_t &jobs = job_list();
+	while( ! jobs.empty() )
 	{
-		debug( 2, L"freeing leaked job %ls", first_job->command );
-		job_free( first_job );
+		job_t *job = jobs.front();
+		debug( 2, L"freeing leaked job %ls", job->command );
+		job_free( job );
 	}	
 }
 
@@ -206,10 +214,9 @@ job_t *job_create()
 	while( job_get( free_id ) != 0 )
 		free_id++;
 	res = (job_t *)halloc( 0, sizeof(job_t) );
-	res->next = first_job;
 	res->job_id = free_id;
-	first_job = res;
-
+    job_list().push_front(res);
+    
 	job_set_flag( res, 
 				  JOB_CONTROL, 
 				  (job_control_mode==JOB_CONTROL_ALL) || 
@@ -223,30 +230,22 @@ job_t *job_create()
  
 job_t *job_get( int id )
 {
-	job_t *res = first_job;
-	if( id <= 0 )
-	{
-		return res;
+    job_iterator_t jobs;
+    job_t *job;
+    while ((job = jobs.next())) {
+        if( id <= 0 || job->job_id == id)
+            return job;
 	}
-	
-	while( res != 0 )
-	{
-		if( res->job_id == id )
-			return res;
-		res = res->next;
-	}
-	return 0;
+	return NULL;
 }
 
 job_t *job_get_from_pid( int pid )
 {
-	job_t *res = first_job;
-	
-	while( res != 0 )
-	{
-		if( res->pgid == pid )
-			return res;
-		res = res->next;
+    job_iterator_t jobs;
+    job_t *job;
+    while ((job = jobs.next())) {
+		if( job->pgid == pid )
+			return job;
 	}
 	return 0;
 }
@@ -399,7 +398,8 @@ static void handle_child_status( pid_t pid, int status )
 	  write( 2, mess, strlen(mess ));
 	*/
 
-	for( j=first_job; j && !found_proc; j=j->next )
+    job_iterator_t jobs;
+	while ((j = jobs.next()))
 	{
 		process_t *prev=0;
 		for( p=j->first_process; p; p=p->next )
@@ -546,7 +546,7 @@ void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status )
 
 int job_reap( int interactive )
 {
-	job_t *j, *jnext;	
+	job_t *jnext;	
 	int found=0;
 	
 	static int locked = 0;
@@ -559,11 +559,14 @@ int job_reap( int interactive )
 	*/
 	if( locked>1 )
 		return 0;
-		
-	for( j=first_job; j; j=jnext)
-    {		
+    
+    job_iterator_t jobs;
+    jnext = jobs.next();
+	while (jnext)
+    {
+        job_t *j = jnext;
+        jnext = jobs.next();
 		process_t *p;
-		jnext = j->next;
 		
 		/*
 		  If we are reaping only jobs who do not need status messages
@@ -960,9 +963,7 @@ void job_continue (job_t *j, int cont)
 	/*
 	  Put job first in the job list
 	*/
-	job_remove( j );
-	j->next = first_job;
-	first_job = j;
+    job_promote(j);
 	job_set_flag( j, JOB_NOTIFIED, 0 );
 
 	CHECK_BLOCK();
@@ -1160,7 +1161,8 @@ void proc_sanity_check()
 	job_t *j;
 	job_t *fg_job=0;
 	
-	for( j = first_job; j ; j=j->next )
+    job_iterator_t jobs;
+    while ((j = jobs.next()))
 	{
 		process_t *p;
 
@@ -1174,9 +1176,6 @@ void proc_sanity_check()
 		validate_pointer( j->first_process,
 						  _( L"Process list pointer" ),
 						  0 );
-		validate_pointer( j->next, 
-						  _( L"Job list pointer" ),
-						  1 );
 
 		/*
 		  More than one foreground job?

@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <list>
 
 #include "util.h"
 #include "io.h"
@@ -233,14 +234,15 @@ typedef struct process
     A struct represeting a job. A job is basically a pipeline of one
     or more processes and a couple of flags.
  */
-typedef struct job
+class job_t
 {
+    public:
 	/** 
 	    The original command which led to the creation of this
 	    job. It is used for displaying messages about job status
 	    on the terminal.
 	*/
-	const wchar_t *command;              
+	const wchar_t *command;
 	
 	/** 
 	    A linked list of all the processes in this job.
@@ -276,15 +278,14 @@ typedef struct job
 	/** 
 	    A pointer to the next job in the job queue 
 	*/
-	struct job *next;           
+	//struct job *next;           
 
 	/**
 	   Bitset containing information about the job. A combination of the JOB_* constants.
 	*/
 	int flags;
 	
-} 
-	job_t;
+};
 
 /** 
 	Whether we are running a subshell command 
@@ -316,10 +317,35 @@ extern int is_login;
 */
 extern int is_event;
 
-/** 
-	Linked list of all living jobs 
-*/
-extern job_t *first_job;   
+
+/** List of all living jobs */
+typedef std::list<job_t *> job_list_t;
+job_list_t &job_list(void);
+
+/** A class to aid iteration over jobs list */
+class job_iterator_t {
+    job_list_t::iterator current, end;
+    public:
+    
+    void reset(void) {
+        job_list_t &jobs = job_list();
+        this->current = jobs.begin();
+        this->end = jobs.end();
+    }
+    
+    job_t *next() {
+        job_t *job = NULL;
+        if (current != end) {
+            job = *current;
+            ++current;
+        }
+        return job;
+    }
+    
+    job_iterator_t() {
+        this->reset();
+    }
+};
 
 /**
    Whether a universal variable barrier roundtrip has already been
@@ -378,6 +404,11 @@ int proc_get_last_status();
 void job_free( job_t* j );
 
 /**
+ Promotes a job to the front of the job list.
+*/
+void job_promote(job_t *job);
+
+/**
    Create a new job. Job struct is allocated using halloc, so anything
    that should be freed with the job can uset it as a halloc context
    when allocating.
@@ -389,6 +420,7 @@ job_t *job_create();
   If id is 0 or less, return the last job used.
 */
 job_t *job_get(int id);
+
 
 /**
   Return the job with the specified pid.

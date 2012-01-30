@@ -2906,25 +2906,7 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 */
 static void make_first( job_t *j )
 {
-	job_t *prev=0;
-	job_t *curr;
-	for( curr = first_job; curr != j; curr = curr->next )
-	{
-		prev=curr;
-	}
-	if( curr == j )
-	{
-		if( prev == 0 )
-		{
-			return;
-		}
-		else
-		{
-			prev->next = curr->next;
-			curr->next = first_job;
-			first_job = curr;
-		}
-	}
+    job_promote(j);
 }
 
 
@@ -2933,7 +2915,7 @@ static void make_first( job_t *j )
 */
 static int builtin_fg( parser_t &parser, wchar_t **argv )
 {
-	job_t *j=0;
+	job_t *j=NULL;
 
 	if( argv[1] == 0 )
 	{
@@ -2941,7 +2923,9 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 		  Select last constructed job (I.e. first job in the job que)
 		  that is possible to put in the foreground
 		*/
-		for( j=first_job; j; j=j->next )
+        
+        job_iterator_t jobs;
+        while ((j = jobs.next()))
 		{
 			if( job_get_flag( j, JOB_CONSTRUCTED ) && (!job_is_completed(j)) && 
 				( (job_is_stopped(j) || (!job_get_flag(j, JOB_FOREGROUND)) ) && job_get_flag( j, JOB_CONTROL) ) )
@@ -3121,8 +3105,9 @@ static int builtin_bg( parser_t &parser, wchar_t **argv )
 	if( argv[1] == 0 )
 	{
   		job_t *j;
-		for( j=first_job; j; j=j->next )
-		{
+        job_iterator_t jobs;
+        while ((j = jobs.next()))
+        {
 			if( job_is_stopped(j) && job_get_flag( j, JOB_CONTROL ) && (!job_is_completed(j)) )
 			{
 				break;

@@ -14,15 +14,15 @@ Functions having to do with parser keywords, like testing if a function is a blo
 #include "parser_keywords.h"
 
 
-int parser_keywords_is_switch( const wchar_t *cmd )
+bool parser_keywords_is_switch( const wcstring &cmd )
 {
-	if( wcscmp( cmd, L"--" ) == 0 )
+	if( cmd == L"--" )
 		return ARG_SKIP;
 	else 
-		return cmd[0] == L'-';
+		return ! cmd.empty() && cmd.at(0) == L'-';
 }
 
-int parser_keywords_skip_arguments( const wchar_t *cmd )
+bool parser_keywords_skip_arguments( const wcstring &cmd )
 {
 	return contains( cmd,
 					 L"else",
@@ -30,7 +30,7 @@ int parser_keywords_skip_arguments( const wchar_t *cmd )
 }
 
 
-int parser_keywords_is_subcommand( const wchar_t *cmd )
+bool parser_keywords_is_subcommand( const wcstring &cmd )
 {
 
 	return parser_keywords_skip_arguments( cmd ) ||
@@ -46,7 +46,7 @@ int parser_keywords_is_subcommand( const wchar_t *cmd )
 	
 }
 
-int parser_keywords_is_block( const wchar_t *word)
+bool parser_keywords_is_block( const wcstring &word)
 {
 	return contains( word,
 					 L"for",
@@ -57,7 +57,7 @@ int parser_keywords_is_block( const wchar_t *word)
 					 L"begin" );
 }
 
-int parser_keywords_is_reserved( const wchar_t *word)
+bool parser_keywords_is_reserved( const wcstring &word)
 {
 	return parser_keywords_is_block(word) ||
 		parser_keywords_is_subcommand( word ) ||

@@ -151,7 +151,7 @@ static bool is_potential_path( const wcstring &cpath )
                 wcstring ent;
                 while (wreaddir(dir, ent))
                 {
-                    if( wcsncmp( base_name.c_str(), base_name.c_str(), base_name.length() ) == 0 )
+                    if( wcsncmp( ent.c_str(), base_name.c_str(), base_name.length() ) == 0 )
                     {
                         res = true;
                         break;
@@ -646,7 +646,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 						int mark = tok_get_pos( &tok );
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;
 						
-						if( parser_keywords_is_subcommand( cmd.c_str() ) )
+						if( parser_keywords_is_subcommand( cmd ) )
 						{
 							
 							int sw;
@@ -668,7 +668,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 							
 							sw = parser_keywords_is_switch( tok_last( &tok ) );
 							
-							if( !parser_keywords_is_block( cmd.c_str() ) &&
+							if( !parser_keywords_is_block( cmd ) &&
 							   sw == ARG_SWITCH )
 							{
 								/* 

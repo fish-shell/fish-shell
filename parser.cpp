@@ -1887,7 +1887,7 @@ int parser_t::parse_job( process_t *p,
 				builtin_exists(args->at(0).completion.c_str()))
 			{
 				p->type = INTERNAL_BUILTIN;
-				is_new_block |= parser_keywords_is_block( args->at( 0 ).completion.c_str() );
+				is_new_block |= parser_keywords_is_block( args->at( 0 ).completion );
 			}
 		}
 		

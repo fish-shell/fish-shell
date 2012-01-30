@@ -781,6 +781,12 @@ depend:
 	./config.status
 .PHONY: depend
 
+
+#
+# Dependencies that makedepend misses
+#
+autoload.cpp function.cpp: $(GENERATED_INTERN_SCRIPT_FILES)
+
 #
 # Copy all the source files into a new directory and use tar to create
 # an archive from it. Simplest way I could think of to make an archive
@@ -905,35 +911,36 @@ clean:
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
-autoload.o: autoload.h common.h util.h
-builtin.o: config.h fallback.h util.h wutil.h builtin.h io.h function.h
-builtin.o: common.h complete.h proc.h parser.h event.h reader.h env.h
-builtin.o: wgetopt.h sanity.h tokenizer.h wildcard.h input_common.h input.h
-builtin.o: intern.h signal.h exec.h highlight.h halloc.h halloc_util.h
-builtin.o: parse_util.h parser_keywords.h expand.h path.h builtin_set.cpp
-builtin.o: builtin_commandline.cpp builtin_complete.cpp builtin_ulimit.cpp
-builtin.o: builtin_jobs.cpp
+autoload.o: config.h autoload.h common.h util.h wutil.h signal.h env.h exec.h
+autoload.o: proc.h io.h
+builtin.o: config.h signal.h fallback.h util.h wutil.h builtin.h io.h
+builtin.o: common.h function.h complete.h proc.h parser.h event.h reader.h
+builtin.o: env.h wgetopt.h sanity.h tokenizer.h wildcard.h input_common.h
+builtin.o: input.h intern.h exec.h highlight.h halloc.h halloc_util.h
+builtin.o: parse_util.h autoload.h parser_keywords.h expand.h path.h
+builtin.o: builtin_set.cpp builtin_commandline.cpp builtin_complete.cpp
+builtin.o: builtin_ulimit.cpp builtin_jobs.cpp
 builtin_commandline.o: config.h signal.h fallback.h util.h wutil.h builtin.h
 builtin_commandline.o: io.h common.h wgetopt.h reader.h proc.h parser.h
 builtin_commandline.o: event.h tokenizer.h input_common.h input.h
-builtin_commandline.o: parse_util.h
+builtin_commandline.o: parse_util.h autoload.h
 builtin_complete.o: config.h signal.h fallback.h util.h wutil.h builtin.h
 builtin_complete.o: io.h common.h complete.h wgetopt.h parser.h proc.h
 builtin_complete.o: event.h reader.h
-builtin_jobs.o: config.h fallback.h util.h wutil.h builtin.h io.h proc.h
-builtin_jobs.o: parser.h event.h common.h wgetopt.h
+builtin_jobs.o: config.h fallback.h signal.h util.h wutil.h builtin.h io.h
+builtin_jobs.o: common.h proc.h parser.h event.h wgetopt.h
 builtin_set.o: config.h signal.h fallback.h util.h wutil.h builtin.h io.h
-builtin_set.o: env.h common.h expand.h wgetopt.h proc.h parser.h event.h
-builtin_ulimit.o: config.h fallback.h util.h builtin.h io.h common.h
+builtin_set.o: common.h env.h expand.h wgetopt.h proc.h parser.h event.h
+builtin_ulimit.o: config.h fallback.h signal.h util.h builtin.h io.h common.h
 builtin_ulimit.o: wgetopt.h
-common.o: config.h fallback.h util.h wutil.h common.h expand.h proc.h io.h
-common.o: wildcard.h parser.h event.h util.cpp halloc.cpp halloc.h
-common.o: halloc_util.cpp fallback.cpp
+common.o: config.h fallback.h signal.h util.h wutil.h common.h expand.h
+common.o: proc.h io.h wildcard.h parser.h event.h complete.h util.cpp
+common.o: halloc.cpp halloc.h halloc_util.cpp fallback.cpp
 complete.o: config.h signal.h fallback.h util.h tokenizer.h wildcard.h
 complete.o: common.h proc.h io.h parser.h event.h function.h complete.h
 complete.o: builtin.h env.h exec.h expand.h reader.h history.h intern.h
-complete.o: parse_util.h parser_keywords.h halloc.h halloc_util.h wutil.h
-complete.o: path.h
+complete.o: parse_util.h autoload.h parser_keywords.h halloc.h halloc_util.h
+complete.o: wutil.h path.h
 env.o: config.h signal.h fallback.h util.h wutil.h proc.h io.h common.h env.h
 env.o: sanity.h expand.h history.h reader.h parser.h event.h env_universal.h
 env.o: env_universal_common.h input_common.h path.h halloc.h halloc_util.h
@@ -946,61 +953,66 @@ event.o: config.h signal.h fallback.h util.h wutil.h function.h common.h
 event.o: proc.h io.h parser.h event.h halloc_util.h
 exec.o: config.h signal.h fallback.h util.h common.h wutil.h proc.h io.h
 exec.o: exec.h parser.h event.h builtin.h function.h env.h wildcard.h
-exec.o: sanity.h expand.h halloc.h halloc_util.h parse_util.h
+exec.o: sanity.h expand.h halloc.h halloc_util.h parse_util.h autoload.h
 expand.o: config.h signal.h fallback.h util.h common.h wutil.h env.h proc.h
 expand.o: io.h parser.h event.h expand.h wildcard.h exec.h tokenizer.h
-expand.o: complete.h parse_util.h halloc.h halloc_util.h
-fallback.o: config.h fallback.h util.h
+expand.o: complete.h parse_util.h autoload.h halloc.h halloc_util.h
+fallback.o: config.h fallback.h signal.h util.h
 fish.o: config.h signal.h fallback.h util.h common.h reader.h io.h builtin.h
 fish.o: function.h complete.h wutil.h env.h sanity.h proc.h parser.h event.h
 fish.o: expand.h intern.h exec.h output.h halloc.h halloc_util.h history.h
 fish.o: path.h
-fish_indent.o: config.h fallback.h util.h common.h wutil.h halloc.h
+fish_indent.o: config.h fallback.h signal.h util.h common.h wutil.h halloc.h
 fish_indent.o: halloc_util.h tokenizer.h print_help.h parser_keywords.h
 fish_pager.o: config.h signal.h fallback.h util.h wutil.h common.h complete.h
 fish_pager.o: output.h input_common.h env_universal.h env_universal_common.h
 fish_pager.o: halloc.h halloc_util.h print_help.h
 fish_tests.o: config.h signal.h fallback.h util.h common.h proc.h io.h
-fish_tests.o: reader.h builtin.h function.h complete.h wutil.h env.h expand.h
-fish_tests.o: parser.h event.h tokenizer.h output.h exec.h path.h halloc.h
-fish_tests.o: halloc_util.h
+fish_tests.o: reader.h builtin.h function.h autoload.h complete.h wutil.h
+fish_tests.o: env.h expand.h parser.h event.h tokenizer.h output.h exec.h
+fish_tests.o: path.h halloc.h halloc_util.h
 fishd.o: config.h signal.h fallback.h util.h common.h wutil.h
 fishd.o: env_universal_common.h halloc.h halloc_util.h path.h print_help.h
 function.o: config.h signal.h wutil.h fallback.h util.h function.h common.h
 function.o: proc.h io.h parser.h event.h intern.h reader.h parse_util.h
-function.o: parser_keywords.h env.h expand.h halloc.h halloc_util.h
-halloc.o: config.h fallback.h util.h common.h halloc.h
-halloc_util.o: config.h fallback.h util.h common.h halloc.h
+function.o: autoload.h parser_keywords.h env.h expand.h halloc.h
+function.o: halloc_util.h
+halloc.o: config.h fallback.h signal.h util.h common.h halloc.h
+halloc_util.o: config.h fallback.h signal.h util.h common.h halloc.h
 highlight.o: config.h signal.h fallback.h util.h wutil.h highlight.h env.h
 highlight.o: common.h tokenizer.h proc.h io.h parser.h event.h parse_util.h
-highlight.o: parser_keywords.h builtin.h function.h expand.h sanity.h
-highlight.o: complete.h output.h halloc.h halloc_util.h wildcard.h path.h
-history.o: config.h fallback.h util.h wutil.h history.h common.h halloc.h
-history.o: halloc_util.h intern.h path.h signal.h
+highlight.o: autoload.h parser_keywords.h builtin.h function.h expand.h
+highlight.o: sanity.h complete.h output.h halloc.h halloc_util.h wildcard.h
+highlight.o: path.h
+history.o: config.h fallback.h signal.h util.h wutil.h history.h common.h
+history.o: halloc.h halloc_util.h intern.h path.h
 input.o: config.h signal.h fallback.h util.h wutil.h reader.h io.h proc.h
 input.o: common.h sanity.h input_common.h input.h parser.h event.h env.h
 input.o: expand.h output.h intern.h halloc.h halloc_util.h
-input_common.o: config.h fallback.h util.h common.h wutil.h input_common.h
-input_common.o: env_universal.h env_universal_common.h iothread.h
-intern.o: config.h fallback.h util.h wutil.h common.h intern.h
-io.o: config.h fallback.h util.h wutil.h exec.h proc.h io.h common.h halloc.h
+input_common.o: config.h fallback.h signal.h util.h common.h wutil.h
+input_common.o: input_common.h env_universal.h env_universal_common.h
+input_common.o: iothread.h
+intern.o: config.h fallback.h signal.h util.h wutil.h common.h intern.h
+io.o: config.h fallback.h signal.h util.h wutil.h exec.h proc.h io.h common.h
+io.o: halloc.h
 iothread.o: iothread.h signal.h
-key_reader.o: config.h fallback.h input_common.h
+key_reader.o: config.h fallback.h signal.h input_common.h
 kill.o: config.h signal.h fallback.h util.h wutil.h kill.h proc.h io.h
-kill.o: sanity.h common.h env.h exec.h halloc.h path.h
-mimedb.o: config.h xdgmime.h fallback.h util.h print_help.h
+kill.o: common.h sanity.h env.h exec.h halloc.h path.h
+mimedb.o: config.h xdgmime.h fallback.h signal.h util.h print_help.h
 output.o: config.h signal.h fallback.h util.h wutil.h expand.h common.h
 output.o: output.h halloc_util.h highlight.h env.h
-parse_util.o: config.h fallback.h util.h wutil.h common.h tokenizer.h
-parse_util.o: parse_util.h expand.h intern.h exec.h proc.h io.h env.h
-parse_util.o: signal.h wildcard.h halloc_util.h
+parse_util.o: config.h fallback.h signal.h util.h wutil.h common.h
+parse_util.o: tokenizer.h parse_util.h autoload.h expand.h intern.h exec.h
+parse_util.o: proc.h io.h env.h wildcard.h halloc_util.h
 parser.o: config.h signal.h fallback.h util.h common.h wutil.h proc.h io.h
 parser.o: parser.h event.h parser_keywords.h tokenizer.h exec.h wildcard.h
 parser.o: function.h builtin.h env.h expand.h reader.h sanity.h
 parser.o: env_universal.h env_universal_common.h intern.h parse_util.h
-parser.o: halloc.h halloc_util.h path.h
-parser_keywords.o: config.h fallback.h common.h util.h parser_keywords.h
-path.o: config.h fallback.h util.h common.h env.h wutil.h halloc.h
+parser.o: autoload.h halloc.h halloc_util.h path.h complete.h
+parser_keywords.o: config.h fallback.h signal.h common.h util.h
+parser_keywords.o: parser_keywords.h
+path.o: config.h fallback.h signal.h util.h common.h env.h wutil.h halloc.h
 path.o: halloc_util.h path.h expand.h
 print_help.o: print_help.h
 proc.o: config.h signal.h fallback.h util.h wutil.h proc.h io.h common.h
@@ -1010,20 +1022,21 @@ reader.o: config.h signal.h fallback.h util.h wutil.h highlight.h env.h
 reader.o: common.h reader.h io.h proc.h parser.h event.h complete.h history.h
 reader.o: sanity.h exec.h expand.h tokenizer.h kill.h input_common.h input.h
 reader.o: function.h output.h screen.h halloc.h halloc_util.h iothread.h
-reader.o: parse_util.h
+reader.o: parse_util.h autoload.h
 sanity.o: config.h signal.h fallback.h util.h common.h sanity.h proc.h io.h
 sanity.o: history.h reader.h kill.h wutil.h
-screen.o: config.h fallback.h common.h util.h wutil.h output.h highlight.h
-screen.o: env.h screen.h
-set_color.o: config.h fallback.h print_help.h
+screen.o: config.h fallback.h signal.h common.h util.h wutil.h output.h
+screen.o: highlight.h env.h screen.h
+set_color.o: config.h fallback.h signal.h print_help.h
 signal.o: config.h signal.h common.h util.h fallback.h wutil.h event.h
 signal.o: reader.h io.h proc.h
-tokenizer.o: config.h fallback.h util.h wutil.h tokenizer.h common.h
-util.o: config.h fallback.h util.h common.h wutil.h
-wgetopt.o: config.h wgetopt.h wutil.h fallback.h
-wildcard.o: config.h fallback.h util.h wutil.h complete.h common.h wildcard.h
-wildcard.o: reader.h io.h expand.h exec.h proc.h halloc_util.h
-wutil.o: config.h fallback.h util.h common.h wutil.h halloc.h halloc_util.h
+tokenizer.o: config.h fallback.h signal.h util.h wutil.h tokenizer.h common.h
+util.o: config.h fallback.h signal.h util.h common.h wutil.h
+wgetopt.o: config.h wgetopt.h wutil.h fallback.h signal.h
+wildcard.o: config.h fallback.h signal.h util.h wutil.h complete.h common.h
+wildcard.o: wildcard.h reader.h io.h expand.h exec.h proc.h halloc_util.h
+wutil.o: config.h fallback.h signal.h util.h common.h wutil.h halloc.h
+wutil.o: halloc_util.h
 xdgmime.o: xdgmime.h xdgmimeint.h xdgmimeglob.h xdgmimemagic.h xdgmimealias.h
 xdgmime.o: xdgmimeparent.h
 xdgmimealias.o: xdgmimealias.h xdgmime.h xdgmimeint.h

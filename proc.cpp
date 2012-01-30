@@ -213,8 +213,7 @@ job_t *job_create()
 	
 	while( job_get( free_id ) != 0 )
 		free_id++;
-	res = (job_t *)halloc( 0, sizeof(job_t) );
-	res->job_id = free_id;
+    res = new job_t(free_id);
     job_list().push_front(res);
     
 	job_set_flag( res, 

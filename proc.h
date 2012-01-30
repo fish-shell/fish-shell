@@ -124,8 +124,9 @@ enum
 	element, which is the block of commands to execute.
 
 */
-typedef struct process
+class process_t
 {
+    public:
 	/** 
 		Type of process. Can be one of \c EXTERNAL, \c
 		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
@@ -161,15 +162,14 @@ typedef struct process
 	int count_help_magic;
 
 	/** next process in pipeline */
-	struct process *next;       	
+	struct process_t *next;       	
 #ifdef HAVE__PROC_SELF_STAT
 	/** Last time of cpu time check */
 	struct timeval last_time;
 	/** Number of jiffies spent in process at last cpu time check */
 	unsigned long last_jiffies;	
 #endif
-} 
-	process_t;
+};
 
 /** 
 	Constant for the flag variable in the job struct
@@ -237,6 +237,19 @@ typedef struct process
 class job_t
 {
     public:
+    
+    job_t(int jobid) :
+        command(NULL),
+        first_process(NULL),
+        pgid(0),
+        tmodes(),
+        job_id(jobid),
+        io(NULL),
+        flags(0)
+    {
+    }
+        
+    
 	/** 
 	    The original command which led to the creation of this
 	    job. It is used for displaying messages about job status
@@ -247,7 +260,7 @@ class job_t
 	/** 
 	    A linked list of all the processes in this job.
 	*/
-	process_t *first_process;  
+	process_t *first_process;
 	
 	/** 
 	    process group ID for the process group that this job is
@@ -268,17 +281,12 @@ class job_t
 	   unique identifier of the job within this shell, and is
 	   used e.g. in process expansion.
 	*/
-	int job_id;
+	const int job_id;
 	
 	/**
 	   List of all IO redirections for this job 
 	*/
 	io_data_t *io;
-			
-	/** 
-	    A pointer to the next job in the job queue 
-	*/
-	//struct job *next;           
 
 	/**
 	   Bitset containing information about the job. A combination of the JOB_* constants.

@@ -175,7 +175,7 @@ int highlight_get_color( int highlight )
 	size_t i;
 	int idx=0;
 	int result = 0;
-	
+
 	if( highlight < 0 )
 		return FISH_COLOR_NORMAL;
 	if( highlight >= (1<<VAR_COUNT) )

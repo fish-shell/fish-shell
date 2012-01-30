@@ -1277,7 +1277,7 @@ static int expand_variables2( parser_t &parser, wchar_t * in, std::vector<comple
 
 			if( var_len == 0 )
 			{
-				expand_variable_error( parser_t::principal_parser(), in, stop_pos-1, -1 );				
+				expand_variable_error( parser, in, stop_pos-1, -1 );				
 				
 				is_ok = 0;
 				break;
@@ -1299,7 +1299,7 @@ static int expand_variables2( parser_t &parser, wchar_t * in, std::vector<comple
 					
 					if( parse_slice( &in[stop_pos], &slice_end, var_idx_list ) )
 					{
-						parser_t::principal_parser().error( SYNTAX_ERROR,
+						parser.error( SYNTAX_ERROR,
 							   -1,
 							   L"Invalid index value" );						
 						is_ok = 0;
@@ -1328,7 +1328,7 @@ static int expand_variables2( parser_t &parser, wchar_t * in, std::vector<comple
 							*/
 							if( tmp < 1 || tmp > al_get_count( &var_item_list ) )
 							{
-								parser_t::principal_parser().error( SYNTAX_ERROR,
+								parser.error( SYNTAX_ERROR,
 									   -1,
 									   ARRAY_BOUNDS_ERR );
 								is_ok=0;
@@ -1374,7 +1374,7 @@ static int expand_variables2( parser_t &parser, wchar_t * in, std::vector<comple
 							free( next );
 						}
 						sb_append( &res, &in[stop_pos] );
-						is_ok &= expand_variables2( parser_t::principal_parser(), (wchar_t *)res.buff, out, i );
+						is_ok &= expand_variables2( parser, (wchar_t *)res.buff, out, i );
 					}
 					else
 					{
@@ -1415,7 +1415,7 @@ static int expand_variables2( parser_t &parser, wchar_t * in, std::vector<comple
 										wcscat( new_in, next );
 										wcscat( new_in, &in[stop_pos] );
 										
-										is_ok &= expand_variables2( parser_t::principal_parser(), new_in, out, i );
+										is_ok &= expand_variables2( parser, new_in, out, i );
 									}
 								}
 								free( next );
@@ -1454,7 +1454,7 @@ static int expand_variables2( parser_t &parser, wchar_t * in, std::vector<comple
 					sb_append( &res, in );
 					sb_append( &res, &in[stop_pos] );
 
-					is_ok &= expand_variables2( parser_t::principal_parser(), (wchar_t *)res.buff, out, i );
+					is_ok &= expand_variables2( parser, (wchar_t *)res.buff, out, i );
 					free(in);
 					return is_ok;
 				}
@@ -1902,8 +1902,8 @@ static int expand_cmdsubst2( parser_t &parser, const wcstring &input, std::vecto
             whole_item.append(tail_item);
 			
 			//al_push( out, whole_item.buff );
-	 completion_t data_to_push;
-	data_to_push.completion = whole_item;	   
+	 	completion_t data_to_push;
+		data_to_push.completion = whole_item;	   
          outList.push_back(data_to_push);
         }
     }
@@ -2063,7 +2063,7 @@ static void remove_internal_separator2( wcstring &s, int conv )
 
 int expand_string2( const wcstring &input, std::vector<completion_t> &output, int flags )
 {
-    parser_t &parser = parser_t::principal_parser();
+	parser_t parser(PARSER_TYPE_ERRORS_ONLY);
    	std::vector<completion_t> list1, list2;
 	std::vector<completion_t> *in, *out;
     

@@ -151,7 +151,7 @@ static bool is_potential_path( const wcstring &cpath )
                 wcstring ent;
                 while (wreaddir(dir, ent))
                 {
-                    if( wcsncmp( base_name.c_str(), base_name.c_str(), base_name.length() ) == 0 )
+                    if( wcsncmp( ent.c_str(), base_name.c_str(), base_name.length() ) == 0 )
                     {
                         res = true;
                         break;

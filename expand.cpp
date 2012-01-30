@@ -656,21 +656,20 @@ static int find_process( const wchar_t *proc,
 /**
    Process id expansion
 */
-static int expand_pid( wchar_t *in,
+static int expand_pid( const wcstring &instr,
 					   int flags,
 					   std::vector<completion_t> &out )
 {
-
-	CHECK( in, 0 );
-//	CHECK( out, 0 );
-	
-	if( *in != PROCESS_EXPAND )
+ 
+	if( instr.empty() || instr.at(0) != PROCESS_EXPAND )
 	{
 		completion_t data_to_push;
-		data_to_push.completion = in;
+		data_to_push.completion = instr;
 		out.push_back( data_to_push );
 		return 1;
 	}
+    
+    const wchar_t * const in = instr.c_str();
 
 	if( flags & ACCEPT_INCOMPLETE )
 	{
@@ -693,8 +692,7 @@ static int expand_pid( wchar_t *in,
 	{
 		if( wcscmp( (in+1), SELF_STR )==0 )
 		{
-			wchar_t *str= (wchar_t *)malloc( sizeof(wchar_t)*32);
-			free(in);
+            wchar_t str[32];
 			swprintf( str, 32, L"%d", getpid() );
 	
 			completion_t data_to_push;
@@ -711,7 +709,6 @@ static int expand_pid( wchar_t *in,
 			if( proc_last_bg_pid > 0 )
 			{
 				str = (wchar_t *)malloc( sizeof(wchar_t)*32);
-				free(in);
 				swprintf( str, 32, L"%d", proc_last_bg_pid );
 				completion_t data_to_push;
 				data_to_push.completion = str;
@@ -729,21 +726,15 @@ static int expand_pid( wchar_t *in,
 
 	if( prev ==  out.size() )
 	{
-		if( flags & ACCEPT_INCOMPLETE )
-			free( in );
-		else
+		if(  ! (flags & ACCEPT_INCOMPLETE) )
 		{
-			free(in);
 			return 0;
 		}
-	}
-	else
-	{
-		free( in );
 	}
 
 	return 1;
 }
+
 /*
 static int expand_pid2( const wcstring &in, int flags, std::vector<completion_t> &outputs )
 {
@@ -2174,7 +2165,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
                      interested in other completions, so we
                      short-circut and return
                      */
-					expand_pid( wcsdup(next.c_str()), flags, output );
+					expand_pid( next, flags, output );
 					return EXPAND_OK;
 				}
 				else
@@ -2186,7 +2177,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
 			}
 			else
 			{
-				if( !expand_pid( wcsdup(next.c_str()), flags, *out ) )
+				if( !expand_pid( next, flags, *out ) )
 				{
 					return EXPAND_ERROR;
 				}

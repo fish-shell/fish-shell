@@ -1175,7 +1175,6 @@ void exec( parser_t &parser, job_t *j )
 		{
 			case INTERNAL_FUNCTION:
 			{
-				const wchar_t * orig_def;
 				wchar_t * def=0;
 				int shadows;
 				
@@ -1187,23 +1186,19 @@ void exec( parser_t &parser, job_t *j )
 				*/
 
 				signal_unblock();
-				orig_def = function_get_definition( p->argv0() );
+				const wchar_t * orig_def = function_get_definition( p->argv0() );
                 
                 // function_get_named_arguments may trigger autoload, which deallocates the orig_def.
                 // We should make function_get_definition return a wcstring (but how to handle NULL...)
                 if (orig_def)
-                    orig_def = wcsdup(orig_def);
+                    def = wcsdup(orig_def);
                 
 				wcstring_list_t named_arguments = function_get_named_arguments( p->argv0() );
 				shadows = function_get_shadows( p->argv0() );
 
 				signal_block();
 				
-				if( orig_def )
-				{
-					def = (wchar_t *)halloc_register( j, const_cast<wchar_t *>(orig_def) );
-				}
-				if( def == 0 )
+				if( def == NULL )
 				{
 					debug( 0, _( L"Unknown function '%ls'" ), p->argv0() );
 					break;
@@ -1235,6 +1230,7 @@ void exec( parser_t &parser, job_t *j )
 				
 				parser.allow_function();
 				parser.pop_block();
+                free(def);
 				
 				break;				
 			}

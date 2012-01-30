@@ -519,7 +519,7 @@ static void highlight_param( const wchar_t * buff,
 	}
 }
 
-static int has_expand_reserved( wchar_t *str )
+static int has_expand_reserved( const wchar_t *str )
 {
 	while( *str )
 	{
@@ -538,13 +538,13 @@ static int has_expand_reserved( wchar_t *str )
 // PCA DOES_IO
 void tokenize( const wchar_t * const buff, int * const color, const int pos, array_list_t *error, void *context, const env_vars &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
-    
+
+	wcstring cmd;    
 	int had_cmd=0;
 	int i;
-	wchar_t *last_cmd=0;
+	wcstring last_cmd;
 	int len;
 
-	wchar_t *cmd=0;
 	int accept_switches = 1;
 	
 	int use_function = 1;
@@ -588,7 +588,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 						}
 						else if( accept_switches )
 						{
-							if( complete_is_valid_option( last_cmd, param, error, false /* no autoload */ ) )
+							if( complete_is_valid_option( last_cmd.c_str(), param, error, false /* no autoload */ ) )
 								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
 							else
 								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
@@ -603,7 +603,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
 					}					
 					
-					if( cmd && (wcscmp( cmd, L"cd" ) == 0) )
+					if( cmd == L"cd" )
 					{
                         wcstring dir_str = tok_last( &tok );
                         if (expand_one(dir_str, EXPAND_SKIP_CMDSUBST))
@@ -633,11 +633,9 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 					/*
 					 Command. First check that the command actually exists.
 					 */
-					cmd = expand_one( context, 
-									 wcsdup(tok_last( &tok )),
-									 EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
-					
-					if( (cmd == 0) || has_expand_reserved( cmd ) )
+                    cmd = tok_last( &tok );
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+					if (! expanded || has_expand_reserved(cmd.c_str()))
 					{
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 					}
@@ -648,18 +646,18 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 						int mark = tok_get_pos( &tok );
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;
 						
-						if( parser_keywords_is_subcommand( cmd ) )
+						if( parser_keywords_is_subcommand( cmd.c_str() ) )
 						{
 							
 							int sw;
 							
-							if( wcscmp( cmd, L"builtin" )==0)
+							if( cmd == L"builtin")
 							{
 								use_function = 0;
 								use_command  = 0;
 								use_builtin  = 1;
 							}
-							else if( wcscmp( cmd, L"command" )==0)
+							else if( cmd == L"command")
 							{
 								use_command  = 1;
 								use_function = 0;
@@ -670,7 +668,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 							
 							sw = parser_keywords_is_switch( tok_last( &tok ) );
 							
-							if( !parser_keywords_is_block( cmd ) &&
+							if( !parser_keywords_is_block( cmd.c_str() ) &&
 							   sw == ARG_SWITCH )
 							{
 								/* 
@@ -712,10 +710,10 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 							 any files for that
 							 */
 							if( use_builtin )
-								is_cmd |= builtin_exists( cmd );
+								is_cmd |= builtin_exists( cmd.c_str() );
 							
 							if( use_function )
-								is_cmd |= function_exists_no_autoload( cmd, vars );
+								is_cmd |= function_exists_no_autoload( cmd.c_str(), vars );
 							
 							/*
 							 Moving on to expensive tests
@@ -747,7 +745,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 							else
 							{
 								if( error )
-									al_push( error, wcsdupcat ( L"Unknown command \'", cmd, L"\'" ));
+									al_push( error, wcsdupcat ( L"Unknown command \'", cmd.c_str(), L"\'" ));
 								color[ tok_get_pos( &tok ) ] = (HIGHLIGHT_ERROR);
 							}
 							had_cmd = 1;
@@ -755,7 +753,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 						
 						if( had_cmd )
 						{
-							last_cmd = halloc_wcsdup( context, tok_last( &tok ) );						
+							last_cmd = tok_last( &tok );
 						}
 					}
 					

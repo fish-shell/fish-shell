@@ -2626,16 +2626,20 @@ wchar_t *expand_one( void *context, const wchar_t *string, int flags )
 	return one;
 }
 
-bool expand_one( wcstring &in, int flag ) {
-    bool result = false;
-    wchar_t *res = expand_one(NULL, in.c_str(), flag);
-    if (res) {
-        in = res;
-        free(res);
-        result = true;
+bool expand_one(wcstring &string, int flags) {
+	std::vector<completion_t> completions;
+	bool result = false;
+	
+	if( (!(flags & ACCEPT_INCOMPLETE)) &&  expand_is_clean( string.c_str() ) )
+	{
+        return true;
+	}
+	
+    if (expand_string2(string, completions, flags)) {
+        if (completions.size() == 1) {
+            string = completions.at(0).completion;
+            result = true;
+        }
     }
-    return result;
+	return result;
 }
-
- 
-

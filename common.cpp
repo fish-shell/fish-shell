@@ -607,16 +607,16 @@ const wchar_t *wsetlocale(int category, const wchar_t *locale)
 	return (wchar_t *)setlocale_buff->buff;	
 }
 
-int contains_internal( const wchar_t *a, ... )
+bool contains_internal( const wchar_t *a, ... )
 {
-	wchar_t *arg;
+	const wchar_t *arg;
 	va_list va;
 	int res = 0;
 
 	CHECK( a, 0 );
 	
 	va_start( va, a );
-	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
+	while( (arg=va_arg(va, const wchar_t *) )!= 0 ) 
 	{
 		if( wcscmp( a,arg) == 0 )
 		{
@@ -626,7 +626,28 @@ int contains_internal( const wchar_t *a, ... )
 		
 	}
 	va_end( va );
-	return res;	
+	return res;
+}
+
+/* wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const wchar_t* */
+__sentinel bool contains_internal( const wcstring &needle, ... )
+{
+	const wchar_t *arg;
+	va_list va;
+	int res = 0;
+
+	va_start( va, needle );
+	while( (arg=va_arg(va, const wchar_t *) )!= 0 ) 
+	{
+		if( needle == arg)
+		{
+			res=1;
+			break;
+		}
+		
+	}
+	va_end( va );
+	return res;
 }
 
 int read_blocked(int fd, void *buf, size_t count)

@@ -440,7 +440,8 @@ const wchar_t *wsetlocale( int category, const wchar_t *locale );
 
    \return zero if needle is not found, of if needle is null, non-zero otherwise
 */
-__sentinel int contains_internal( const wchar_t *needle, ... );
+__sentinel bool contains_internal( const wchar_t *needle, ... );
+__sentinel bool contains_internal( const wcstring &needle, ... );
 
 /**
    Call read while blocking the SIGCHLD signal. Should only be called

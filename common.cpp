@@ -159,14 +159,14 @@ wchar_t **list_to_char_arr( array_list_t *l )
 wchar_t **completions_to_char_arr( std::vector<completion_t> &l )
 {
 	wchar_t ** res = (wchar_t **)malloc( sizeof(wchar_t *)*( l.size() + 1) );
-	int i;
+	size_t i;
 	if( res == 0 )
 	{
 		DIE_MEM();
 	}
 	for( i=0; i< l.size(); i++ )
 	{		
-		res[i] = const_cast<wchar_t*>(l.at(i).completion.c_str());
+		res[i] = wcsdup(l.at(i).completion.c_str());
 	}
 	res[i]='\0';
 	return res;	
@@ -414,7 +414,7 @@ char *wcs2str_internal( const wchar_t *in, char *out )
 	return out;	
 }
 
-char **wcsv2strv( const wchar_t **in )
+char **wcsv2strv( const wchar_t * const *in )
 {
 	int count =0;
 	int i;

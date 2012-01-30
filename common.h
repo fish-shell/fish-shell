@@ -356,7 +356,7 @@ wcstring format_string(const wchar_t *format, ...);
    Returns a newly allocated wide character string array equivalent of
    the specified multibyte character string array
 */
-char **wcsv2strv( const wchar_t **in );
+char **wcsv2strv( const wchar_t * const *in );
 
 /**
    Returns a newly allocated multibyte character string array equivalent of the specified wide character string array

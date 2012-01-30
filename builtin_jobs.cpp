@@ -99,7 +99,7 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 			sb_append( sb_out,
 						job_is_stopped(j)?_(L"stopped"):_(L"running"),
 						L"\t",
-						j->command,
+						j->command_cstr(),
 						L"\n",
 						NULL );
 			break;
@@ -147,7 +147,7 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 
 			for( p=j->first_process; p; p=p->next )
 			{
-				sb_printf( sb_out, L"%ls\n", p->argv[0] );
+				sb_printf( sb_out, L"%ls\n", p->argv0() );
 			}
 			break;
 		}

@@ -907,7 +907,6 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 							  std::vector<completion_t> &possible_comp,
 							  int flags )
 {
-	int i;
 	wchar_t *wc, *tmp;
 
 	tmp = expand_one( 0,
@@ -918,7 +917,7 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 	wc = parse_util_unescape_wildcards( tmp );
 	free(tmp);
 	
-	for( i=0; i< possible_comp.size(); i++ )
+	for( size_t i=0; i< possible_comp.size(); i++ )
 	{
 		wcstring temp = possible_comp.at( i ).completion;
 		const wchar_t *next_str = temp.empty()?NULL:temp.c_str();

@@ -542,7 +542,6 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		if( do_complete )
 		{
 			std::vector<completion_t> comp;
-			int i;
 
 			const wchar_t *prev_temporary_buffer = temporary_buffer;
 
@@ -560,7 +559,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			
 				complete2( do_complete, comp );
 			
-				for( i=0; i< comp.size() ; i++ )
+				for( size_t i=0; i< comp.size() ; i++ )
 				{
 					const completion_t &next =  comp.at( i );
 

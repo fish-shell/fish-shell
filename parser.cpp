@@ -574,14 +574,9 @@ static const wchar_t *parser_find_end( const wchar_t * buff )
 }
 
 
-void parser_t::forbid_function( wchar_t *function )
+void parser_t::forbid_function( const wcstring &function )
 {
-/*
-  if( function )
-  debug( 2, L"Forbid %ls\n", function );
-*/
-	CHECK( function, );
-    forbidden_function.push_back(wcstring(function));
+    forbidden_function.push_back(function);
 }
 
 void parser_t::allow_function()
@@ -937,14 +932,14 @@ void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
 		
 		if( b->type == FUNCTION_CALL )
 		{			
-			if( b->param2.function_call_process->argv[1] )
+			if( b->param2.function_call_process->argv(1) )
 			{
 				string_buffer_t tmp;
 				sb_init( &tmp );
 				
-				for( i=1; b->param2.function_call_process->argv[i]; i++ )
+				for( i=1; b->param2.function_call_process->argv(i); i++ )
 				{
-					sb_append( &tmp, i>1?L" ":L"", b->param2.function_call_process->argv[i], NULL );
+					sb_append( &tmp, i>1?L" ":L"", b->param2.function_call_process->argv(i), NULL );
 				}
 				sb_printf( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
 				
@@ -1202,7 +1197,7 @@ const wchar_t *parser_t::get_buffer() const
 }
 
 
-int parser_t::is_help( wchar_t *s, int min_match ) const
+int parser_t::is_help( const wchar_t *s, int min_match ) const
 {
 	int len;
 
@@ -1275,9 +1270,8 @@ void parser_t::parse_job_argument_list( process_t *p,
 					return;
 				}
 				
-				if( !p->argv )
-					halloc_register( j, p->argv = completions_to_char_arr( args ) );
-				p->next = (process_t *)halloc( j, sizeof( process_t ) );
+                p->set_argv(completions_to_char_arr(args));
+				p->next = new process_t();
 
 				tok_next( tok );
 				
@@ -1298,8 +1292,8 @@ void parser_t::parse_job_argument_list( process_t *p,
 			
 			case TOK_END:
 			{
-				if( !p->argv )
-					halloc_register( j, p->argv = completions_to_char_arr( args ) );
+				if( !p->get_argv() )
+					p->set_argv(completions_to_char_arr(args));
 				if( tok_has_next(tok))
 					tok_next(tok);
 
@@ -1447,7 +1441,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 					{
 						case TOK_STRING:
 						{
-							target = (wchar_t *)expand_one( j,
+							target =            expand_one( j,
 											                wcsdup( tok_last( tok ) ),
 															no_exec ? EXPAND_SKIP_VARIABLES : 0);
 
@@ -2047,7 +2041,7 @@ int parser_t::parse_job( process_t *p,
 			error( SYNTAX_ERROR,
 				   tok_get_pos( tok ),
 				   UNKNOWN_BUILTIN_ERR_MSG,
-				    args->at( args->size() -1 ) );
+				   args->back().completion.c_str() );
 		}
 	}
 	
@@ -2147,8 +2141,8 @@ int parser_t::parse_job( process_t *p,
 	{
 		if( p->type == INTERNAL_BUILTIN && parser_keywords_skip_arguments( (wchar_t *)args->at( 0 ).completion.c_str() ) )
 		{			
-			if( !p->argv )
-				halloc_register( j, p->argv = completions_to_char_arr( *args ) );
+			if( !p->get_argv() )
+                p->set_argv(completions_to_char_arr( *args ));
 		}
 		else
 		{
@@ -2194,14 +2188,14 @@ void parser_t::skipped_exec( job_t * j )
 	{
 		if( p->type == INTERNAL_BUILTIN )
 		{
-			if(( wcscmp( p->argv[0], L"for" )==0) ||
-			   ( wcscmp( p->argv[0], L"switch" )==0) ||
-			   ( wcscmp( p->argv[0], L"begin" )==0) ||
-			   ( wcscmp( p->argv[0], L"function" )==0))
+			if(( wcscmp( p->argv0(), L"for" )==0) ||
+			   ( wcscmp( p->argv0(), L"switch" )==0) ||
+			   ( wcscmp( p->argv0(), L"begin" )==0) ||
+			   ( wcscmp( p->argv0(), L"function" )==0))
 			{
 				this->push_block( FAKE );
 			}
-			else if( wcscmp( p->argv[0], L"end" )==0)
+			else if( wcscmp( p->argv0(), L"end" )==0)
 			{
 				if(!current_block->outer->skip )
 				{
@@ -2210,7 +2204,7 @@ void parser_t::skipped_exec( job_t * j )
 				}
 				parser_t::pop_block();
 			}
-			else if( wcscmp( p->argv[0], L"else" )==0)
+			else if( wcscmp( p->argv0(), L"else" )==0)
 			{
 				if( (current_block->type == IF ) &&
 					(current_block->param1.if_state != 0))
@@ -2219,7 +2213,7 @@ void parser_t::skipped_exec( job_t * j )
 					return;
 				}
 			}
-			else if( wcscmp( p->argv[0], L"case" )==0)
+			else if( wcscmp( p->argv0(), L"case" )==0)
 			{
 				if( (current_block->type == SWITCH ) )
 				{
@@ -2287,12 +2281,12 @@ void parser_t::eval_job( tokenizer *tok )
 				}
 			}
 
-			j->first_process = (process_t *)halloc( j, sizeof( process_t ) );
+			j->first_process = new process_t();
 
 			job_begin_pos = tok_get_pos( tok );
 			
 			if( parse_job( j->first_process, j, tok ) &&
-				j->first_process->argv )
+				j->first_process->get_argv() )
 			{
 				if( job_start_pos < tok_get_pos( tok ) )
 				{
@@ -2302,9 +2296,7 @@ void parser_t::eval_job( tokenizer *tok )
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );
 
-					j->command = halloc_wcsndup( j,
-												 tok_string(tok)+start_pos,
-												 stop_pos-start_pos );
+					j->command = wcstring(tok_string(tok)+start_pos, stop_pos-start_pos);
 				}
 				else
 					j->command = L"";
@@ -2312,7 +2304,7 @@ void parser_t::eval_job( tokenizer *tok )
 				if( profile )
 				{
 					t2 = get_time();
-					profile_item->cmd = wcsdup( j->command );
+					profile_item->cmd = wcsdup( j->command_cstr() );
 					profile_item->skipped=current_block->skip;
 				}
 				

@@ -467,7 +467,7 @@ static int setup_child_process( job_t *j, process_t *p )
    call. Only use it in the execve error handler which calls exit
    right afterwards, anyway.
  */
-static wchar_t *get_interpreter( wchar_t *file )
+static wchar_t *get_interpreter( const wchar_t *file )
 {
 	string_buffer_t sb;
 	FILE *fp = wfopen( file, "r" );
@@ -509,7 +509,7 @@ static void launch_process( process_t *p )
 	
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
-	char **argv = wcsv2strv( (const wchar_t **) p->argv);
+	char **argv = wcsv2strv(p->get_argv());
 	char **envv = env_export_arr( 0 );
 	
 	execve ( wcs2str(p->actual_cmd), 
@@ -539,21 +539,21 @@ static void launch_process( process_t *p )
 			wchar_t **res;
             char **res_real;
 			
-			while( p->argv[count] != 0 )
+			while( p->argv(count) != 0 )
 				count++;
 			
-			res = (wchar_t **)malloc( sizeof(wchar_t*)*(count+2));
-			wchar_t sh_command[] = L"/bin/sh";
+			res = (wchar_t **)malloc( sizeof(wchar_t*)*(count+3));
+			const wchar_t *sh_command = L"/bin/sh";
             
-			res[0] = sh_command;
-			res[1] = p->actual_cmd;
+			res[0] = wcsdup(sh_command);
+			res[1] = wcsdup(p->actual_cmd);
 			
-			for( i=1;  p->argv[i]; i++ ){
-				res[i+1] = p->argv[i];
+			for( i=1; p->argv(i) != NULL; i++ ){
+				res[i+1] = wcsdup(p->argv(i));
 			}
 			
 			res[i+1] = 0;
-			p->argv = res;
+			p->set_argv(res);
 			p->actual_cmd = sh_command;
 
 			res_real = wcsv2strv( (const wchar_t **) res);
@@ -841,9 +841,9 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 				debug( 1, 
 				       _( L"Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d" ),
 				       p->pid,
-				       p->argv[0],
+				       p->argv0(),
 				       j->job_id,
-				       j->command,
+				       j->command_cstr(),
 				       getpgid( p->pid),
 				       j->pgid );
 
@@ -863,7 +863,7 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 		{
 			debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
 				   j->job_id, 
-				   j->command );
+				   j->command_cstr() );
 			wperror( L"tcsetpgrp" );
 			res = -1;
 		}
@@ -978,7 +978,7 @@ void exec( parser_t &parser, job_t *j )
 	sigemptyset( &chldset );
 	sigaddset( &chldset, SIGCHLD );
 	
-	debug( 4, L"Exec job '%ls' with id %d", j->command, j->job_id );	
+	debug( 4, L"Exec job '%ls' with id %d", j->command_cstr(), j->job_id );	
 	
 	if( parser.block_io )
 	{
@@ -1004,8 +1004,8 @@ void exec( parser_t &parser, job_t *j )
 			  Input redirection - create a new gobetween process to take
 			  care of buffering
 			*/
-			process_t *fake = (process_t *)halloc( j, sizeof(process_t) );
-			fake->type = INTERNAL_BUFFER;
+			process_t *fake = new process_t();
+            fake->type  = INTERNAL_BUFFER;
 			fake->pipe_write_fd = 1;
 			j->first_process->pipe_read_fd = input_redirect->fd;
 			fake->next = j->first_process;
@@ -1187,31 +1187,33 @@ void exec( parser_t &parser, job_t *j )
 				*/
 
 				signal_unblock();
-				orig_def = function_get_definition( p->argv[0] );
+				orig_def = function_get_definition( p->argv0() );
                 
                 // function_get_named_arguments may trigger autoload, which deallocates the orig_def.
                 // We should make function_get_definition return a wcstring (but how to handle NULL...)
                 if (orig_def)
                     orig_def = wcsdup(orig_def);
                 
-				wcstring_list_t named_arguments = function_get_named_arguments( p->argv[0] );
-				shadows = function_get_shadows( p->argv[0] );
+				wcstring_list_t named_arguments = function_get_named_arguments( p->argv0() );
+				shadows = function_get_shadows( p->argv0() );
 
 				signal_block();
 				
 				if( orig_def )
 				{
-					def = (wchar_t *)halloc_register( j, const_cast<wchar_t *>(orig_def) );
+					//def = (wchar_t *)halloc_register( j, const_cast<wchar_t *>(orig_def) );
+                    // PCA LEAKS
+                    def = (wchar_t *)orig_def;
 				}
 				if( def == 0 )
 				{
-					debug( 0, _( L"Unknown function '%ls'" ), p->argv[0] );
+					debug( 0, _( L"Unknown function '%ls'" ), p->argv0() );
 					break;
 				}
 				parser.push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
 				
 				parser.current_block->param2.function_call_process = p;
-				parser.current_block->param1.function_call_name = (wchar_t *)halloc_register( parser.current_block, wcsdup( p->argv[0] ) );
+				parser.current_block->param1.function_call_name = (wchar_t *)halloc_register( parser.current_block, wcsdup( p->argv0() ) );
 						
 
 				/*
@@ -1220,10 +1222,10 @@ void exec( parser_t &parser, job_t *j )
 				  signals.
 				*/
 				signal_unblock();
-				parse_util_set_argv( p->argv+1, named_arguments );
+				parse_util_set_argv( p->get_argv()+1, named_arguments );
 				signal_block();
 								
-				parser.forbid_function( p->argv[0] );
+				parser.forbid_function( p->argv0() );
 
 				if( p->next )
 				{
@@ -1247,7 +1249,7 @@ void exec( parser_t &parser, job_t *j )
 					j->io = io_add( j->io, io_buffer );
 				}
                 
-				internal_exec_helper( parser, p->argv[0], TOP, j->io );			
+				internal_exec_helper( parser, p->argv0(), TOP, j->io );			
 				break;
 				
 			}
@@ -1380,7 +1382,7 @@ void exec( parser_t &parser, job_t *j )
 					
 					signal_unblock();
 					
-					p->status = builtin_run( parser, p->argv, j->io );
+					p->status = builtin_run( parser, p->get_argv(), j->io );
 					
 					builtin_out_redirect=old_out;
 					builtin_err_redirect=old_err;
@@ -1580,7 +1582,7 @@ void exec( parser_t &parser, job_t *j )
 					p->completed=1;
 					if( p->next == 0 )
 					{
-						debug( 3, L"Set status of %ls to %d using short circut", j->command, p->status );
+						debug( 3, L"Set status of %ls to %d using short circut", j->command_cstr(), p->status );
 						
 						int status = p->status;
 						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!status):status );

@@ -116,7 +116,7 @@ int parse_util_get_offset( wchar_t *buff, int line, int line_offset );
    Set the argv environment variable to the specified null-terminated
    array of strings. 
 */
-void parse_util_set_argv( wchar_t **argv, const wcstring_list_t &named_arguments );
+void parse_util_set_argv( const wchar_t * const *argv, const wcstring_list_t &named_arguments );
 
 /**
    Make a duplicate of the specified string, unescape wildcard

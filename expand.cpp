@@ -401,7 +401,7 @@ static int find_process( const wchar_t *proc,
             while ((j = jobs.next()))
 			{
 				wchar_t jid[16];
-				if( j->command == 0 )
+				if( j->command.size() == 0 )
 					continue;
 
 				swprintf( jid, 16, L"%d", j->job_id );
@@ -414,7 +414,7 @@ static int find_process( const wchar_t *proc,
 					
 					sb_printf( &desc_buff, 
 							   COMPLETE_JOB_DESC_VAL,
-							   j->command );
+							   j->command_cstr() );
 					
 					completion_allocate( out, 
 										 jid+wcslen(proc),
@@ -437,7 +437,7 @@ static int find_process( const wchar_t *proc,
 			if( jid > 0 && !errno && !*end )
 			{
 				j = job_get( jid );
-				if( (j != 0) && (j->command != 0 ) )
+				if( (j != 0) && (j->command_cstr() != 0 ) )
 				{
 					
 					{
@@ -460,15 +460,15 @@ static int find_process( const wchar_t *proc,
 	{
 		int offset;
 		
-		if( j->command == 0 )
+		if( j->command_cstr() == 0 )
 			continue;
 		
-		if( match_pid( j->command, proc, flags, &offset ) )
+		if( match_pid( j->command_cstr(), proc, flags, &offset ) )
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
 				completion_allocate( out, 
-									 j->command + offset + wcslen(proc),
+									 j->command_cstr() + offset + wcslen(proc),
 									 COMPLETE_JOB_DESC,
 									 0 );
 			}
@@ -493,7 +493,7 @@ static int find_process( const wchar_t *proc,
     while ((j = jobs.next()))
 	{
 		process_t *p;
-		if( j->command == 0 )
+		if( j->command.size() == 0 )
 			continue;
 		for( p=j->first_process; p; p=p->next )
 		{
@@ -2621,7 +2621,8 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
 //	al_foreach( &l, &free );
 //	al_destroy( &l );
 
-	halloc_register( context, one );
+    if (context)
+        halloc_register( context, one );
 	return one;
 }
  

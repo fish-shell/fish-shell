@@ -600,11 +600,11 @@ void parse_util_token_extent( const wchar_t *buff,
 
 }
 
-void parse_util_set_argv( wchar_t **argv, const wcstring_list_t &named_arguments )
+void parse_util_set_argv( const wchar_t * const *argv, const wcstring_list_t &named_arguments )
 {
 	if( *argv )
 	{
-		wchar_t **arg;
+		const wchar_t * const *arg;
 		string_buffer_t sb;
 		sb_init( &sb );
 		
@@ -627,7 +627,7 @@ void parse_util_set_argv( wchar_t **argv, const wcstring_list_t &named_arguments
 
 	if( named_arguments.size() )
 	{
-		wchar_t **arg;
+		const wchar_t * const *arg;
 		size_t i;
 		
 		for( i=0, arg=argv; i < named_arguments.size(); i++ )

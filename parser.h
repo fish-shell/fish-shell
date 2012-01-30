@@ -236,7 +236,7 @@ class parser_t {
     int current_tokenizer_pos;
     
     /** List of called functions, used to help prevent infinite recursion */
-    std::vector<wcstring> forbidden_function;
+    wcstring_list_t forbidden_function;
     
     /** String index where the current job started. */
     int job_start_pos;
@@ -395,7 +395,7 @@ class parser_t {
        inside of a conditional block. This is to remove some possibilities
        of infinite recursion.
     */
-    void forbid_function( wchar_t *function );
+    void forbid_function( const wcstring &function );
     /**
        Undo last call to parser_forbid_function().
     */
@@ -417,7 +417,7 @@ class parser_t {
        \param s the string to test
        \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
     */
-    int is_help( wchar_t *s, int min_match ) const;
+    int is_help( const wchar_t *s, int min_match ) const;
 
     /**
        Returns the file currently evaluated by the parser. This can be

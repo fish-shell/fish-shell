@@ -178,7 +178,8 @@ void job_promote(job_t *job)
 void job_free( job_t * j )
 {
 	job_remove( j );
-	halloc_free( j );
+    j->~job_t();
+    halloc_free( j );
 }
 
 void proc_destroy()
@@ -191,7 +192,7 @@ void proc_destroy()
 	while( ! jobs.empty() )
 	{
 		job_t *job = jobs.front();
-		debug( 2, L"freeing leaked job %ls", job->command );
+		debug( 2, L"freeing leaked job %ls", job->command_cstr() );
 		job_free( job );
 	}	
 }
@@ -209,11 +210,12 @@ int proc_get_last_status()
 job_t *job_create()
 {
 	int free_id=1;
-	job_t *res;
-	
+    	
 	while( job_get( free_id ) != 0 )
 		free_id++;
-    res = new job_t(free_id);
+        
+    void *buff = halloc( 0, sizeof(job_t) );
+    job_t *res = new (buff) job_t(free_id);
     job_list().push_front(res);
     
 	job_set_flag( res, 
@@ -524,7 +526,7 @@ void job_handle_signal ( int signal, siginfo_t *info, void *con )
 static void format_job_info( const job_t *j, const wchar_t *status )
 {
 	fwprintf (stdout, L"\r" );
-	fwprintf (stdout, _( L"Job %d, \'%ls\' has %ls" ), j->job_id, j->command, status);
+	fwprintf (stdout, _( L"Job %d, \'%ls\' has %ls" ), j->job_id, j->command_cstr(), status);
 	fflush( stdout );
 	tputs(clr_eol,1,&writeb);
 	fwprintf (stdout, L"\n" );
@@ -608,7 +610,7 @@ int job_reap( int interactive )
 									  _( L"%ls: Job %d, \'%ls\' terminated by signal %ls (%ls)" ),
 									  program_name,
 									  j->job_id, 
-									  j->command,
+									  j->command_cstr(),
 									  sig2wcs(WTERMSIG(p->status)),
 									  signal_get_desc( WTERMSIG(p->status) ) );
 						else
@@ -616,9 +618,9 @@ int job_reap( int interactive )
 									  _( L"%ls: Process %d, \'%ls\' from job %d, \'%ls\' terminated by signal %ls (%ls)" ),
 									  program_name,
 									  p->pid,
-									  p->argv[0],
+									  p->argv0(),
 									  j->job_id,
-									  j->command,
+									  j->command_cstr(),
 									  sig2wcs(WTERMSIG(p->status)),
 									  signal_get_desc( WTERMSIG(p->status) ) );
 						tputs(clr_eol,1,&writeb);
@@ -851,7 +853,7 @@ static void read_try( job_t *j )
 	
 	if( buff )
 	{
-		debug( 3, L"proc::read_try('%ls')\n", j->command );
+		debug( 3, L"proc::read_try('%ls')\n", j->command_cstr() );
 		while(1)
 		{
 			char b[BUFFER_SIZE];
@@ -899,7 +901,7 @@ static int terminal_give_to_job( job_t *j, int cont )
 		debug( 1, 
 			   _( L"Could not send job %d ('%ls') to foreground" ), 
 			   j->job_id, 
-			   j->command );
+			   j->command_cstr() );
 		wperror( L"tcsetpgrp" );
 		return 0;
 	}
@@ -911,7 +913,7 @@ static int terminal_give_to_job( job_t *j, int cont )
 			debug( 1,
 				   _( L"Could not send job %d ('%ls') to foreground" ),
 				   j->job_id,
-				   j->command );
+				   j->command_cstr() );
 			wperror( L"tcsetattr" );
 			return 0;
 		}
@@ -971,7 +973,7 @@ void job_continue (job_t *j, int cont)
 		   L"Continue job %d, gid %d (%ls), %ls, %ls",
 		   j->job_id, 
 		   j->pgid,
-		   j->command, 
+		   j->command_cstr(), 
 		   job_is_completed( j )?L"COMPLETED":L"UNCOMPLETED", 
 		   is_interactive?L"INTERACTIVE":L"NON-INTERACTIVE" );
 	
@@ -1169,9 +1171,6 @@ void proc_sanity_check()
 			continue;
 		
 		
-		validate_pointer( j->command, 
-						  _( L"Job command" ), 
-						  0 );
 		validate_pointer( j->first_process,
 						  _( L"Process list pointer" ),
 						  0 );
@@ -1185,8 +1184,8 @@ void proc_sanity_check()
 			{
 				debug( 0, 
 					   _( L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
-					   fg_job->command,
-					   j->command );
+					   fg_job->command_cstr(),
+					   j->command_cstr() );
 				sanity_lose();
 			}
 			fg_job = j;
@@ -1195,8 +1194,8 @@ void proc_sanity_check()
    		p = j->first_process;
 		while( p )
 		{			
-			validate_pointer( p->argv, _( L"Process argument list" ), 0 );
-			validate_pointer( p->argv[0], _( L"Process name" ), 0 );
+			validate_pointer( p->get_argv(), _( L"Process argument list" ), 0 );
+			validate_pointer( p->argv0(), _( L"Process name" ), 0 );
 			validate_pointer( p->next, _( L"Process list pointer" ), 1 );
 			validate_pointer( p->actual_cmd, _( L"Process command" ), 1 );
 			
@@ -1204,8 +1203,8 @@ void proc_sanity_check()
 			{
 				debug( 0,
 					   _( L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d" ),
-					   j->command, 
-					   p->argv[0],
+					   j->command_cstr(), 
+					   p->argv0(),
 					   p->stopped );
 				sanity_lose();
 			}
@@ -1214,8 +1213,8 @@ void proc_sanity_check()
 			{
 				debug( 0,
 					   _( L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d" ),
-					   j->command, 
-					   p->argv[0],
+					   j->command_cstr(), 
+					   p->argv0(),
 					   p->completed );
 				sanity_lose();
 			}

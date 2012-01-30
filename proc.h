@@ -19,6 +19,7 @@
 
 #include "util.h"
 #include "io.h"
+#include "common.h"
 
 /**
    The status code use when a command was not found
@@ -126,19 +127,84 @@ enum
 */
 class process_t
 {
+    private:
+	/** argv parameter for for execv, builtin_run, etc. This is allocated via malloc, and furthermore, each string within it is allocated via malloc as well . Null terminated. */
+	wchar_t **argv_array;
+
+    void free_argv(void) {
+        if (argv_array != NULL) {
+            for (size_t i = 0; argv_array[i] != NULL; i++) {
+                free(argv_array[i]);
+            }
+            free(argv_array);
+        }
+    }
+
     public:
+    
+    process_t() :
+        argv_array(NULL),    
+        type(0),
+        actual_cmd(NULL),
+        pid(0),
+        pipe_write_fd(0),
+        pipe_read_fd(0),
+        completed(0),
+        stopped(0),
+        status(0),
+        count_help_magic(0),
+        next(NULL)
+#ifdef HAVE__PROC_SELF_STAT
+        ,last_time(),
+        unsigned long last_jiffies(0)
+#endif
+    {
+    }
+    
+    ~process_t()
+    {
+        if (this->next != NULL)
+            delete this->next;
+        this->free_argv();
+    }
+    
 	/** 
 		Type of process. Can be one of \c EXTERNAL, \c
 		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
 		INTERNAL_EXEC, or INTERNAL_BUFFER
 	*/
 	int type;
+    
+    
+    /** Sets argv */
+    void set_argv(wchar_t **argv) { 
+        free_argv();
 
-	/** argv parameter for for execv, builtin_run, etc. */
-	wchar_t **argv;
+#if 0
+        // argv must be a malloc'd array of malloc'd strings. This bit of nonsense below can help catch if someone doesn't pass us something from malloc.
+        if (argv) {
+            for (size_t i=0; argv[i]; i++) {
+                wchar_t *tmp = wcsdup(argv[i]);
+                free(argv[i]);
+                argv[i] = tmp;
+            }
+        }
+#endif   
+        
+        this->argv_array = argv;
+    }
+    
+    /** Returns argv */
+    const wchar_t * const *get_argv(void) const { return argv_array; }
+    
+    /** Returns argv[0] */
+    const wchar_t *argv0(void) const { return argv_array[0]; }
+    
+    /** Returns argv[idx] */
+    const wchar_t *argv(size_t idx) const { return argv_array[idx]; }
 
 	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC */
-	wchar_t *actual_cmd;       
+	const wchar_t *actual_cmd;       
 
 	/** process ID */
 	pid_t pid;
@@ -161,8 +227,8 @@ class process_t
 	/** Special flag to tell the evaluation function for count to print the help information */
 	int count_help_magic;
 
-	/** next process in pipeline */
-	struct process_t *next;       	
+	/** Next process in pipeline. We own this and we are responsible for deleting it. */
+	struct process_t *next;
 #ifdef HAVE__PROC_SELF_STAT
 	/** Last time of cpu time check */
 	struct timeval last_time;
@@ -239,7 +305,7 @@ class job_t
     public:
     
     job_t(int jobid) :
-        command(NULL),
+        command(),
         first_process(NULL),
         pgid(0),
         tmodes(),
@@ -248,6 +314,11 @@ class job_t
         flags(0)
     {
     }
+    
+    ~job_t() {
+        if (first_process != NULL)
+            delete first_process;
+    }
         
     
 	/** 
@@ -255,10 +326,12 @@ class job_t
 	    job. It is used for displaying messages about job status
 	    on the terminal.
 	*/
-	const wchar_t *command;
+	wcstring command;
+    
+    const wchar_t *command_cstr() const { return command.c_str(); }
 	
 	/** 
-	    A linked list of all the processes in this job.
+	    A linked list of all the processes in this job. We are responsible for deleting this when we are deallocated.
 	*/
 	process_t *first_process;
 	

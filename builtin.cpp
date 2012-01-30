@@ -3014,7 +3014,7 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 						   _( L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n" ),
 						   argv[0],
 						   pid,
-						   j->command );
+						   j->command_cstr() );
 				builtin_print_help( parser, argv[0], sb_err );
 				j=0;
 			}
@@ -3028,7 +3028,7 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 			sb_printf( sb_err,
 					   FG_MSG,
 					   j->job_id,
-					   j->command );
+					   j->command_cstr() );
 		}
 		else
 		{
@@ -3040,10 +3040,10 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 			fwprintf( stderr,
 					  FG_MSG,
 					  j->job_id,
-					  j->command );
+					  j->command_cstr() );
 		}
 
-		wchar_t *ft = tok_first( j->command );
+		wchar_t *ft = tok_first( j->command_cstr() );
 		if( ft != 0 )
 			env_set( L"_", ft, ENV_EXPORT );
 		free(ft);
@@ -3077,7 +3077,7 @@ static int send_to_bg( parser_t &parser, job_t *j, const wchar_t *name )
 				   _( L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n" ),
 				   L"bg",
 				   j->job_id,
-				   j->command );
+				   j->command_cstr() );
 		builtin_print_help( parser, L"bg", sb_err );
 		return STATUS_BUILTIN_ERROR;
 	}
@@ -3086,7 +3086,7 @@ static int send_to_bg( parser_t &parser, job_t *j, const wchar_t *name )
 		sb_printf( sb_err,
 				   _(L"Send job %d '%ls' to background\n"),
 				   j->job_id,
-				   j->command );
+				   j->command_cstr() );
 	}
 	make_first( j );
 	job_set_flag( j, JOB_FOREGROUND, 0 );
@@ -3821,7 +3821,7 @@ int builtin_exists( wchar_t *cmd )
    Return true if the specified builtin should handle it's own help,
    false otherwise.
 */
-static int internal_help( wchar_t *cmd )
+static int internal_help( const wchar_t *cmd )
 {
 	CHECK( cmd, 0 );
 	return contains( cmd, L"for", L"while", L"function",
@@ -3829,15 +3829,15 @@ static int internal_help( wchar_t *cmd )
 }
 
 
-int builtin_run( parser_t &parser, wchar_t **argv, io_data_t *io )
+int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io )
 {
-	int (*cmd)(parser_t &parser, wchar_t **argv)=0;
+	int (*cmd)(parser_t &parser, const wchar_t * const *argv)=0;
 	real_io = io;
 		
 	CHECK( argv, STATUS_BUILTIN_ERROR );
 	CHECK( argv[0], STATUS_BUILTIN_ERROR );
 		
-	cmd = (int (*)(parser_t &parser, wchar_t **))hash_get( &builtin, argv[0] );
+	cmd = (int (*)(parser_t &parser, const wchar_t * const*))hash_get( &builtin, argv[0] );
 	
 	if( argv[1] != 0 && !internal_help(argv[0]) )
 	{

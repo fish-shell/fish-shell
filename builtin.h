@@ -137,7 +137,7 @@ int builtin_exists( wchar_t *cmd );
 
   \return the exit status of the builtin command
 */
-int builtin_run( parser_t &parser, wchar_t **argv, io_data_t *io );
+int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io );
 
 /**
   Insert all builtin names into l. These are not copies of the strings and should not be freed after use.

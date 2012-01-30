@@ -165,7 +165,10 @@ __warn_unused int expand_string2( const wcstring &input, std::vector<completion_
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return The expanded parameter, or 0 on failiure
 */
-wchar_t *expand_one( void *context, wchar_t *in, int flag );
+wchar_t *expand_one( void *context, const wchar_t *in, int flag );
+
+/** expand_one for a wcstring. Modifies the string in-place, returning true on success and false on failure */
+bool expand_one( wcstring &inout_str, int flag );
 
 /**
    Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing. The result must be free'd!

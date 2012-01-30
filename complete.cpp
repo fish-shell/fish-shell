@@ -907,15 +907,11 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 							  std::vector<completion_t> &possible_comp,
 							  int flags )
 {
-	wchar_t *wc, *tmp;
-
-	tmp = expand_one( 0,
-					  wcsdup(wc_escaped), EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS);
-	if(!tmp)
-		return;
-
-	wc = parse_util_unescape_wildcards( tmp );
-	free(tmp);
+    wcstring tmp = wc_escaped;
+    if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS))
+        return;
+    
+	const wchar_t *wc = parse_util_unescape_wildcards( tmp.c_str() );
 	
 	for( size_t i=0; i< possible_comp.size(); i++ )
 	{
@@ -928,7 +924,7 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 		}
 	}
 
-	free( wc );
+	free( (void *)wc );
 }
 
 /**

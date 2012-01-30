@@ -2585,7 +2585,7 @@ int expand_string( void *context,
 }
 */
 
-wchar_t *expand_one( void *context, wchar_t *string, int flags )
+wchar_t *expand_one( void *context, const wchar_t *string, int flags )
 {
 	std::vector<completion_t> l;
 	int res;
@@ -2595,8 +2595,8 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
 	
 	if( (!(flags & ACCEPT_INCOMPLETE)) &&  expand_is_clean( string ) )
 	{
-		halloc_register( context, string );
-		return string;
+		halloc_register( context, (void *)string );
+		return (wchar_t *)string;
 	}
 	
 //	al_init( &l );
@@ -2625,5 +2625,17 @@ wchar_t *expand_one( void *context, wchar_t *string, int flags )
         halloc_register( context, one );
 	return one;
 }
+
+bool expand_one( wcstring &in, int flag ) {
+    bool result = false;
+    wchar_t *res = expand_one(NULL, in.c_str(), flag);
+    if (res) {
+        in = res;
+        free(res);
+        result = true;
+    }
+    return result;
+}
+
  
 

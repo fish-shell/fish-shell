@@ -1969,7 +1969,7 @@ int parser_t::parse_job( process_t *p,
 						*/
 						if( wcschr( cmd, L'=' ) )
 						{
-							wchar_t *cpy = halloc_wcsdup( j, cmd );
+							wchar_t *cpy = wcsdup( cmd );
 							wchar_t *valpart = wcschr( cpy, L'=' );
 							*valpart++=0;
 							
@@ -1978,6 +1978,7 @@ int parser_t::parse_job( process_t *p,
 								   cmd,
 								   cpy,
 								   valpart);
+							free(cpy);
 							
 						}
 						else if(cmd[0]==L'$')
@@ -2112,9 +2113,7 @@ int parser_t::parse_job( process_t *p,
 			{
 			
 				int end_pos = end-tok_string( tok );
-				wchar_t *sub_block= halloc_wcsndup( j,
-													tok_string( tok ) + current_tokenizer_pos,
-													end_pos - current_tokenizer_pos);
+                const wcstring sub_block(tok_string( tok ) + current_tokenizer_pos, end_pos - current_tokenizer_pos);
 			
 				p->type = INTERNAL_BLOCK;
 				completion_t data_to_push;

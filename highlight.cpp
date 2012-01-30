@@ -605,11 +605,10 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 					
 					if( cmd && (wcscmp( cmd, L"cd" ) == 0) )
 					{
-						wchar_t *dir = expand_one( context, 
-												  wcsdup(tok_last( &tok )),
-												  EXPAND_SKIP_CMDSUBST );
-						if( dir )
+                        wcstring dir_str = tok_last( &tok );
+                        if (expand_one(dir_str, EXPAND_SKIP_CMDSUBST))
 						{
+                            const wchar_t *dir = dir_str.c_str();
 							int is_long_help = wcsncmp(dir,L"--help", wcslen(dir) );
 							int is_short_help = wcsncmp(dir,L"-h", wcslen(dir) );
 							

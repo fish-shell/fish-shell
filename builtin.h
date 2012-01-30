@@ -123,7 +123,7 @@ void builtin_destroy();
 /**
   Is there a builtin command with the given name?
 */
-int builtin_exists( wchar_t *cmd );
+int builtin_exists( const wchar_t *cmd );
 
 /**
   Execute a builtin command 

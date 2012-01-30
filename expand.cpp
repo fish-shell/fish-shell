@@ -723,7 +723,7 @@ static int expand_pid( wchar_t *in,
 		}
 	}
 
-	int prev = out.size();
+	size_t prev = out.size();
 	if( !find_process( in+1, flags, out ) )
 		return 0;
 

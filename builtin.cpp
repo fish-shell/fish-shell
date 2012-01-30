@@ -3810,7 +3810,7 @@ void builtin_destroy()
 	hash_destroy( &builtin );
 }
 
-int builtin_exists( wchar_t *cmd )
+int builtin_exists( const wchar_t *cmd )
 {
 	CHECK( cmd, 0 );
 		

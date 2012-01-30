@@ -166,6 +166,7 @@ class process_t
         if (this->next != NULL)
             delete this->next;
         this->free_argv();
+        free((void *)actual_cmd); //may be NULL
     }
     
 	/** 
@@ -178,7 +179,6 @@ class process_t
     
     /** Sets argv */
     void set_argv(wchar_t **argv) { 
-        free_argv();
 
 #if 0
         // argv must be a malloc'd array of malloc'd strings. This bit of nonsense below can help catch if someone doesn't pass us something from malloc.
@@ -191,6 +191,7 @@ class process_t
         }
 #endif   
         
+        free_argv();
         this->argv_array = argv;
     }
     
@@ -203,7 +204,7 @@ class process_t
     /** Returns argv[idx] */
     const wchar_t *argv(size_t idx) const { return argv_array[idx]; }
 
-	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC */
+	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. malloc'd! */
 	const wchar_t *actual_cmd;       
 
 	/** process ID */

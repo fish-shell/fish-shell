@@ -607,7 +607,7 @@ static void parse_cmd_string( void *context,
     wchar_t *cmd, *path;
 
 	/* Get the path of the command */
-	path = path_get_path( context, str );
+	path = (wchar_t *)halloc_register(context, path_get_path( str ));
 	if( path == 0 )
 	{
 		/**
@@ -937,7 +937,6 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 */
 static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &comp )
 {
-	int i;
 	const wchar_t *cmd_start;
 	int cmd_len;
 	wchar_t *lookup_cmd=0;
@@ -973,7 +972,7 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 
 	skip = 1;
 	
-	for( i=0; i< comp.size(); i++ )
+	for( size_t i=0; i< comp.size(); i++ )
 	{
 		const completion_t &c = comp.at ( i );
 			
@@ -1017,7 +1016,7 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 
 		  Should be reasonably fast, since no memory allocations are needed.
 		*/
-		for( i=0; i<al_get_count( &list); i++ )
+		for( int i=0; i<al_get_count( &list); i++ )
 		{
 			wchar_t *el = (wchar_t *)al_get( &list, i );
 			wchar_t *key, *key_end, *val_begin;
@@ -1051,7 +1050,7 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 		  This needs to do a reallocation for every description added, but
 		  there shouldn't be that many completions, so it should be ok.
 		*/
-		for( i=0; i<comp.size(); i++ )
+		for( size_t i=0; i<comp.size(); i++ )
 		{
 			completion_t &c =  comp.at( i );
 //			const wchar_t *el = c.completion.empty()?NULL:c.completion.c_str();
@@ -1144,8 +1143,7 @@ static void complete_cmd( const wchar_t *cmd,
 				     nxt_path != 0;
 				     nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 				{
-					int prev_count;
-					int i;
+					size_t prev_count;
 					int path_len = wcslen(nxt_path);
 					int add_slash;
 					
@@ -1169,7 +1167,7 @@ static void complete_cmd( const wchar_t *cmd,
 									   ACCEPT_INCOMPLETE |
 									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
 					{
-						for( i=prev_count; i< comp.size(); i++ )
+						for( size_t i=prev_count; i< comp.size(); i++ )
 						{
 							completion_t &c =  comp.at( i );
 							if(c.flags & COMPLETE_NO_CASE )

@@ -128,7 +128,7 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 
 }
 
-wchar_t *path_get_path( void *context, const wchar_t *cmd )
+wchar_t *path_get_path( const wchar_t *cmd )
 {
 	int err = ENOENT;
 	
@@ -147,7 +147,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 			}
 			
 			if( S_ISREG(buff.st_mode) )
-				return halloc_wcsdup( context, cmd );
+				return wcsdup( cmd );
 			else
 			{
 				errno = EACCES;
@@ -180,7 +180,7 @@ wchar_t *path_get_path( void *context, const wchar_t *cmd )
 		/*
 		  Allocate string long enough to hold the whole command
 		*/
-		wchar_t *new_cmd = (wchar_t *)halloc( context, sizeof(wchar_t)*(wcslen(cmd)+path.size()+2) );
+		wchar_t *new_cmd = (wchar_t *)calloc(wcslen(cmd)+path.size()+2, sizeof(wchar_t) );
 		
 		/*
 		  We tokenize a copy of the path, since strtok modifies

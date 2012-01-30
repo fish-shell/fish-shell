@@ -52,15 +52,14 @@ static int has_xsel()
 {
 	static int called=0;
 	static int res = 0;
-
+    
 	if (!called) {
-	void *context = halloc(0, 0);
-	wchar_t *path = path_get_path( context, L"xsel" );
+        wchar_t *path = path_get_path( L"xsel" );
 		res = !!path;
-	halloc_free( context );
+        free(path);
 		called = 1;
-}
-
+    }
+    
 	return res;
 }
 

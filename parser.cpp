@@ -1884,7 +1884,7 @@ int parser_t::parse_job( process_t *p,
 		if( !p->type )
 		{
 			if( use_builtin &&
-				builtin_exists(  const_cast<wchar_t*>(args->at(0).completion.c_str()) ) )
+				builtin_exists(args->at(0).completion.c_str()))
 			{
 				p->type = INTERNAL_BUILTIN;
 				is_new_block |= parser_keywords_is_block( args->at( 0 ).completion.c_str() );
@@ -1899,19 +1899,18 @@ int parser_t::parse_job( process_t *p,
 			*/
 			if( current_block->skip )
 			{
-				p->actual_cmd = L"";
+				p->actual_cmd = wcsdup(L"");
 			}
 			else
 			{
 				int err;
-			   
-				p->actual_cmd = path_get_path( j, args->at(0).completion.c_str() );
+				p->actual_cmd = path_get_path( args->at(0).completion.c_str() );
 				err = errno;
 				
 				/*
 				  Check if the specified command exists
 				*/
-				if( p->actual_cmd == 0 )
+				if( p->actual_cmd == NULL )
 				{
 
 					/*

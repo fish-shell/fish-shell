@@ -554,7 +554,7 @@ static void launch_process( process_t *p )
 			
 			res[i+1] = 0;
 			p->set_argv(res);
-			p->actual_cmd = sh_command;
+			p->actual_cmd = wcsdup(sh_command);
 
 			res_real = wcsv2strv( (const wchar_t **) res);
 			

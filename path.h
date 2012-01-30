@@ -28,9 +28,9 @@ wchar_t *path_get_config( void *context);
    
    \param cmd The name of the executable.
    \param context the halloc context to use for memory allocations
-   \return 0 if the command can not be found, the path of the command otherwise.
+   \return 0 if the command can not be found, the path of the command otherwise. The result should be freed with free().
 */
-wchar_t *path_get_path( void *context, const wchar_t *cmd );
+wchar_t *path_get_path( const wchar_t *cmd );
 
 class env_vars;
 bool path_get_path_string(const wcstring &cmd, wcstring &output, const env_vars &vars);

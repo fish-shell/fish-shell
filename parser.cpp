@@ -1340,7 +1340,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 						p->count_help_magic = 1;
 					}
 
-					switch( expand_string2( wcsdup(tok_last( tok )), args, 0 ) )
+					switch( expand_string2( tok_last( tok ), args, 0 ) )
 					{
 						case EXPAND_ERROR:
 						{

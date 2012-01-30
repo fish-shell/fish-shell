@@ -1201,9 +1201,7 @@ void exec( parser_t &parser, job_t *j )
 				
 				if( orig_def )
 				{
-					//def = (wchar_t *)halloc_register( j, const_cast<wchar_t *>(orig_def) );
-                    // PCA LEAKS
-                    def = (wchar_t *)orig_def;
+					def = (wchar_t *)halloc_register( j, const_cast<wchar_t *>(orig_def) );
 				}
 				if( def == 0 )
 				{

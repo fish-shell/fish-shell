@@ -20,6 +20,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <termios.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <algorithm>
 
 #ifdef HAVE_SYS_TERMIOS_H
 #include <sys/termios.h>
@@ -771,12 +772,13 @@ unsigned long proc_get_jiffies( process_t *p )
 */
 void proc_update_jiffies()
 {
-	job_t *j;
+	job_t* job;
 	process_t *p;
-	
-	for( j=first_job; j; j=j->next )
+	job_iterator_t j;
+
+	for( job = j.next(); job; job = j.next() )
 	{
-		for( p=j->first_process; p; p=p->next )
+		for( p=job->first_process; p; p=p->next )
 		{
 			gettimeofday( &p->last_time, 0 );
 			p->last_jiffies = proc_get_jiffies( p );

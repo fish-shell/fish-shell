@@ -156,7 +156,7 @@ class process_t
         next(NULL)
 #ifdef HAVE__PROC_SELF_STAT
         ,last_time(),
-        unsigned long last_jiffies(0)
+        last_jiffies(0)
 #endif
     {
     }

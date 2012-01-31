@@ -1820,10 +1820,11 @@ void tokenize_variable_array2( const wcstring &val, std::vector<wcstring> &out)
     size_t pos = 0, end = val.size();
     while (pos < end) {
         size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) next_pos = end;
+        if (next_pos == wcstring::npos) break;
         out.push_back(val.substr(pos, next_pos - pos));
         pos = next_pos + 1; //skip the separator
     }
+    out.push_back(val.substr(pos, end - pos));
 }
 
 void tokenize_variable_array( const wchar_t *val, array_list_t *out )

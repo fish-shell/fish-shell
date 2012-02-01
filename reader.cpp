@@ -2277,13 +2277,9 @@ static int default_test( wchar_t *b )
 
 void reader_push( const wchar_t *name )
 {
-    // use placement new to guarantee zero initialization :(
-	void *buff = calloc(1, sizeof(reader_data_t));
-	if( !buff )
-	{
-		DIE_MEM();
-	}
-    reader_data_t *n = new(buff) reader_data_t;
+    // use something nasty which guarantees value initialization (that is, all fields zero)
+    reader_data_t zerod = {};
+    reader_data_t *n = new reader_data_t(zerod);
     
 	n->app_name = name;
 	n->next = data;
@@ -2337,9 +2333,8 @@ void reader_pop()
 	al_destroy( &n->search_prev );
     free( (void *)n->token_history_buff);
 
-    /* Invoke the destructor to balance our placement new */
-    n->~reader_data_t();
-	free(n);
+    /* Invoke the destructor to balance our new */
+    delete n;
 
 	if( data == 0 )
 	{

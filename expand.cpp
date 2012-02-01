@@ -1809,47 +1809,6 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
 	return res;
 }
 
-wchar_t *expand_one( void *context, const wchar_t *string, int flags )
-{
-	std::vector<completion_t> l;
-	int res;
-	wchar_t *one;
-
-	CHECK( string, 0 );
-	
-	if( (!(flags & ACCEPT_INCOMPLETE)) &&  expand_is_clean( string ) )
-	{
-		halloc_register( context, (void *)string );
-		return (wchar_t *)string;
-	}
-	
-//	al_init( &l );
-	res = expand_string2( string, l, flags );
-	if( !res )
-	{
-		one = 0;
-	}
-	else
-	{
-		if(  l.size() != 1 )
-		{
-			one=0;
-		}
-		else
-		{
-			one = wcsdup( l.at(0).completion.c_str() );
-//			al_set( &l, 0, 0 );
-		}
-	}
-
-//	al_foreach( &l, &free );
-//	al_destroy( &l );
-
-    if (context)
-        halloc_register( context, one );
-	return one;
-}
-
 bool expand_one(wcstring &string, int flags) {
 	std::vector<completion_t> completions;
 	bool result = false;

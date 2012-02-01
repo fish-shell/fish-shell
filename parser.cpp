@@ -474,7 +474,7 @@ const wchar_t *parser_t::get_block_desc( int block ) const
 /**
    Returns 1 if the specified command is a builtin that may not be used in a pipeline
 */
-static int parser_is_pipe_forbidden( wchar_t *word )
+static int parser_is_pipe_forbidden( const wcstring &word )
 {
 	return contains( word,
 					 L"exec",
@@ -1394,7 +1394,8 @@ void parser_t::parse_job_argument_list( process_t *p,
 			{
 				int type = tok_last_type( tok );
 				io_data_t *new_io;
-				wchar_t *target = 0;
+                wcstring target;
+				bool has_target = false;
 				wchar_t *end;
 				
 				/*
@@ -1441,11 +1442,10 @@ void parser_t::parse_job_argument_list( process_t *p,
 					{
 						case TOK_STRING:
 						{
-							target =            expand_one( j,
-											                wcsdup( tok_last( tok ) ),
-															no_exec ? EXPAND_SKIP_VARIABLES : 0);
+                            target = tok_last( tok );
+                            has_target = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0);
 
-							if( target == 0 && error_code == 0 )
+							if( ! has_target && error_code == 0 )
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( tok ),
@@ -1463,7 +1463,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 								   tok_get_desc( tok_last_type(tok)) );
 					}
 
-					if( target == 0 || wcslen( target )==0 )
+					if( ! has_target || target.size() == 0 )
 					{
 						if( error_code == 0 )
 							error( SYNTAX_ERROR,
@@ -1479,30 +1479,30 @@ void parser_t::parse_job_argument_list( process_t *p,
 							case TOK_REDIRECT_APPEND:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
-								new_io->param1.filename = target;
+								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
 								break;
 
 							case TOK_REDIRECT_OUT:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
-								new_io->param1.filename = target;
+								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
 								break;
 
 							case TOK_REDIRECT_NOCLOB:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_EXCL | O_WRONLY;
-								new_io->param1.filename = target;
+								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
 								break;
 
 							case TOK_REDIRECT_IN:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_RDONLY;
-								new_io->param1.filename = target;
+								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
 								break;
 
 							case TOK_REDIRECT_FD:
 							{
-								if( wcscmp( target, L"-" ) == 0 )
+								if( target == L"-" )
 								{
 									new_io->io_mode = IO_CLOSE;
 								}
@@ -1513,7 +1513,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 									new_io->io_mode = IO_FD;
 									errno = 0;
 									
-									new_io->param1.old_fd = wcstol( target,
+									new_io->param1.old_fd = wcstol( target.c_str(),
 																	&end,
 																	10 );
 									
@@ -1523,7 +1523,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 										error( SYNTAX_ERROR,
 											   tok_get_pos( tok ),
 											   _(L"Requested redirection to something that is not a file descriptor %ls"),
-											   target );
+											   target.c_str() );
 
 										tok_next(tok);
 									}
@@ -1628,7 +1628,8 @@ int parser_t::parse_job( process_t *p,
 
 	while( args.size() == 0 )
 	{
-		wchar_t *nxt=0;
+		wcstring nxt;
+        bool has_nxt = false;
 		int consumed = 0; // Set to one if the command requires a second command, like e.g. while does
 		int mark;         // Use to save the position of the beginning of the token
 		
@@ -1636,11 +1637,10 @@ int parser_t::parse_job( process_t *p,
 		{
 			case TOK_STRING:
 			{
-				nxt = expand_one( j,
-								  wcsdup(tok_last( tok )),
-								  EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+                nxt = tok_last( tok );
+                has_nxt = expand_one(nxt, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
 				
-				if( nxt == 0 )
+				if( ! has_nxt)
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( tok ),
@@ -1709,7 +1709,7 @@ int parser_t::parse_job( process_t *p,
 					  L"exec" ) )
 		{			
 			int sw;
-			int is_exec = (wcscmp( L"exec", nxt )==0);
+			int is_exec = nxt == L"exec";
 			
 			if( is_exec && (p != j->first_process) )
 			{
@@ -1736,11 +1736,10 @@ int parser_t::parse_job( process_t *p,
 								
 				consumed=1;
 
-				if( ( wcscmp( L"command", nxt )==0 ) ||
-					( wcscmp( L"builtin", nxt )==0 ) )
+				if( nxt == L"command" || nxt == L"builtin" )
 				{
 					use_function = 0;
-					if( wcscmp( L"command", nxt )==0 )
+					if( nxt == L"command" )
 					{
 						use_builtin = 0;
 						use_command = 1;
@@ -1751,15 +1750,15 @@ int parser_t::parse_job( process_t *p,
 						use_command = 0;					
 					}
 				}
-				else if(  wcscmp( L"not", nxt )==0 )
+				else if( nxt == L"not" )
 				{
 					job_set_flag( j, JOB_NEGATE, !job_get_flag( j, JOB_NEGATE ) );
 				}
-				else if(  wcscmp( L"and", nxt )==0 )
+				else if( nxt == L"and" )
 				{
 					job_set_flag( j, JOB_SKIP, proc_get_last_status());
 				}
-				else if(  wcscmp( L"or", nxt )==0 )
+				else if( nxt == L"or" )
 				{
 					job_set_flag( j, JOB_SKIP, !proc_get_last_status());
 				}
@@ -1772,7 +1771,7 @@ int parser_t::parse_job( process_t *p,
 				}
 			}
 		}
-		else if( wcscmp( L"while", nxt ) ==0 )
+		else if( nxt == L"while" )
 		{
 			int new_block = 0;
 			tok_next( tok );
@@ -1801,7 +1800,7 @@ int parser_t::parse_job( process_t *p,
 			is_new_block=1;
 
 		}
-		else if( wcscmp( L"if", nxt ) ==0 )
+		else if( nxt == L"if" )
 		{
 			tok_next( tok );
 
@@ -1856,7 +1855,7 @@ int parser_t::parse_job( process_t *p,
 				nxt_forbidden = (forbid == nxt);
 			}
 		
-			if( !nxt_forbidden && function_exists( nxt ) )
+			if( !nxt_forbidden && has_nxt && function_exists( nxt.c_str() ) )
 			{
 				/*
 				  Check if we have reached the maximum recursion depth
@@ -2551,13 +2550,13 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 /**
    \return the block type created by the specified builtin, or -1 on error.
 */
-int parser_get_block_type( const wchar_t *cmd )
+int parser_get_block_type( const wcstring &cmd )
 {
 	int i;
 	
 	for( i=0; block_lookup[i].desc; i++ )
 	{
-		if( block_lookup[i].name && (wcscmp( block_lookup[i].name, cmd ) == 0) )
+		if( block_lookup[i].name && cmd == block_lookup[i].name )
 		{
 			return block_lookup[i].type;
 		}
@@ -2833,7 +2832,8 @@ int parser_t::test( const  wchar_t * buff,
 	/*
 	  The currently validated command.
 	*/
-	wchar_t *cmd=0;
+    wcstring command;
+    bool has_command = false;
 		
 	CHECK( buff, 1 );
 
@@ -2871,10 +2871,11 @@ int parser_t::test( const  wchar_t * buff,
 					had_cmd = 1;
 					arg_count=0;
 					
-					if( !(cmd = expand_one( context, 
-											wcsdup( tok_last( &tok ) ), 
-											EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES ) ) )
+                    command = tok_last(&tok);
+                    has_command = expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+					if( !has_command )
 					{
+                        command = L"";
 						err=1;
 						if( out )
 						{
@@ -2895,7 +2896,7 @@ int parser_t::test( const  wchar_t * buff,
 						  command is needed, such as after 'and' or
 						  'while'
 						*/
-						if( contains( cmd,
+						if( contains( command,
 									  L"end" ) )
 						{
 							err=1;
@@ -2915,14 +2916,14 @@ int parser_t::test( const  wchar_t * buff,
 					/*
 					  Decrement block count on end command
 					*/
-					if( wcscmp(cmd, L"end")==0)
+					if( command == L"end")
 					{
 						tok_next( &tok );
 						count--;
 						tok_set_pos( &tok, mark );
 					}
 
-					is_else = wcscmp(cmd, L"else")==0;
+					is_else = (command == L"else");
 					
 					/*
 					  Store the block level. This needs to be done
@@ -2937,7 +2938,7 @@ int parser_t::test( const  wchar_t * buff,
 					/*
 					  Handle block commands
 					*/
-					if( parser_keywords_is_block( cmd ) )
+					if( parser_keywords_is_block( command ) )
 					{
 						if( count >= BLOCK_MAX_COUNT )
 						{
@@ -2949,7 +2950,7 @@ int parser_t::test( const  wchar_t * buff,
 						}
 						else
 						{
-							block_type[count] = parser_get_block_type( cmd );
+							block_type[count] = parser_get_block_type( command );
 							block_pos[count] = current_tokenizer_pos;
 							tok_next( &tok );
 							count++;
@@ -2963,13 +2964,13 @@ int parser_t::test( const  wchar_t * buff,
 					  argument. If parser_skip_arguments is true, the
 					  second argument is optional.
 					*/
-					if( parser_keywords_is_subcommand( cmd ) && !parser_keywords_skip_arguments(cmd ) )
+					if( parser_keywords_is_subcommand( command ) && !parser_keywords_skip_arguments(command ) )
 					{
 						needs_cmd = 1;
 						had_cmd = 0;
 					}
 					
-					if( contains( cmd,
+					if( contains( command,
 								  L"or",
 								  L"and" ) )
 					{
@@ -2996,7 +2997,7 @@ int parser_t::test( const  wchar_t * buff,
 					  are forbidden, including when using the exec
 					  builtin.
 					*/
-					if( parser_is_pipe_forbidden( cmd ) )
+					if( parser_is_pipe_forbidden( command ) )
 					{
 						if( is_pipeline )
 						{
@@ -3017,7 +3018,7 @@ int parser_t::test( const  wchar_t * buff,
 					/*
 					  Test that the case builtin is only used directly in a switch block
 					*/
-					if( wcscmp( L"case", cmd )==0 )
+					if( command == L"case" )
 					{
 						if( !count || block_type[count-1]!=SWITCH )
 						{
@@ -3040,7 +3041,7 @@ int parser_t::test( const  wchar_t * buff,
 					/*
 					  Test that the return bultin is only used within function definitions
 					*/
-					if( wcscmp( cmd, L"return" ) == 0 )
+					if( command == L"return" )
 					{
 						int found_func=0;
 						int i;
@@ -3061,18 +3062,14 @@ int parser_t::test( const  wchar_t * buff,
 							  show the help.
 							*/
 
-							wchar_t *first_arg;
 							int old_pos = tok_get_pos( &tok );
 							int is_help = 0;
 							
 							tok_next( &tok );
 							if( tok_last_type( &tok ) == TOK_STRING )
 							{
-								first_arg = expand_one( context,
-														wcsdup( tok_last( &tok ) ), 
-														EXPAND_SKIP_CMDSUBST);
-								
-								if( first_arg && parser_t::is_help( first_arg, 3) )
+                                wcstring first_arg = tok_last(&tok);
+                                if (expand_one(first_arg, EXPAND_SKIP_CMDSUBST) && parser_t::is_help( first_arg.c_str(), 3))
 								{
 									is_help = 1;
 								}
@@ -3101,7 +3098,7 @@ int parser_t::test( const  wchar_t * buff,
 					/*
 					  Test that break and continue are only used within loop blocks
 					*/
-					if( contains( cmd, L"break", L"continue" ) )
+					if( contains( command, L"break", L"continue" ) )
 					{
 						int found_loop=0;
 						int i;
@@ -3123,18 +3120,14 @@ int parser_t::test( const  wchar_t * buff,
 							  show the help.
 							*/
 
-							wchar_t *first_arg;
 							int old_pos = tok_get_pos( &tok );
 							int is_help = 0;
 							
 							tok_next( &tok );
 							if( tok_last_type( &tok ) == TOK_STRING )
 							{
-								first_arg = expand_one( context,
-														wcsdup( tok_last( &tok ) ), 
-														EXPAND_SKIP_CMDSUBST);
-								
-								if( first_arg && parser_t::is_help( first_arg, 3 ) ) 
+                                wcstring first_arg = tok_last( &tok );
+								if( expand_one(first_arg, EXPAND_SKIP_CMDSUBST) && parser_t::is_help( first_arg.c_str(), 3 ) ) 
 								{
 									is_help = 1;
 								}
@@ -3161,7 +3154,7 @@ int parser_t::test( const  wchar_t * buff,
 					/*
 					  Test that else is only used directly in an if-block
 					*/
-					if( wcscmp( L"else", cmd )==0 )
+					if( command == L"else" )
 					{
 						if( !count || block_type[count-1]!=IF )
 						{
@@ -3213,13 +3206,13 @@ int parser_t::test( const  wchar_t * buff,
 						arg_count = -1;
 					}
 					
-					if( cmd )
+					if( has_command )
 					{
 						
 						/*
 						  Try to make sure the second argument to 'for' is 'in'
 						*/
-						if( wcscmp( cmd, L"for" ) == 0 )
+						if( command == L"for"  )
 						{
 							if( arg_count == 1 )
 							{
@@ -3418,7 +3411,7 @@ int parser_t::test( const  wchar_t * buff,
 
 		if( end_of_cmd )
 		{
-			if( cmd && wcscmp( cmd, L"for" ) == 0 )
+			if( has_command && command == L"for" )
 			{
 				if( arg_count >= 0 && arg_count < 2 )
 				{

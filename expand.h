@@ -156,18 +156,11 @@ __warn_unused int expand_string2( const wcstring &input, std::vector<completion_
    expand_one is identical to expand_string, except it will fail if in
    expands to more than one string. This is used for expanding command
    names.
-
-   If \c context is non-null, the returning string ill be registered
-   to be free'd when context is free'd.
  
-   \param context the halloc context to use for automatic deallocation   
-   \param in The parameter to expand
+   \param inout_str The parameter to expand in-place
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
-   \return The expanded parameter, or 0 on failiure
+   \return Whether expansion succeded
 */
-wchar_t *expand_one( void *context, const wchar_t *in, int flag );
-
-/** expand_one for a wcstring. Modifies the string in-place, returning true on success and false on failure */
 bool expand_one( wcstring &inout_str, int flag );
 
 /**

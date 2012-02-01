@@ -772,7 +772,8 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 					break;
 				}
 				
-				wchar_t *target=0;
+                wcstring target_str;
+				const wchar_t *target=NULL;
 				
 				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_REDIRECTION;
 				tok_next( &tok );
@@ -785,7 +786,10 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 				{
 					case TOK_STRING:
 					{
-						target = expand_one( context, wcsdup( tok_last( &tok ) ), EXPAND_SKIP_CMDSUBST);
+                        target_str = tok_last( &tok );
+                        if (expand_one(target_str, EXPAND_SKIP_CMDSUBST)) {
+                            target = target_str.c_str();
+                        }
 						/*
 						 Redirect filename may contain a cmdsubst. 
 						 If so, it will be ignored/not flagged.

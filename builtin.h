@@ -139,12 +139,13 @@ int builtin_exists( const wchar_t *cmd );
 */
 int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io );
 
-/**
-  Insert all builtin names into l. These are not copies of the strings and should not be freed after use.
-*/
-void builtin_get_names( array_list_t *list );
+/** Returns a list of all builtin names */
+wcstring_list_t builtin_get_names(void);
 
-void builtin_get_names2 (std::vector<completion_t>&);
+/**
+  Insert all builtin names into list.
+*/
+void builtin_get_names(std::vector<completion_t> &list);
 
 /**
    Pushes a new set of input/output to the stack. The new stdin is supplied, a new set of output string_buffer_ts is created.

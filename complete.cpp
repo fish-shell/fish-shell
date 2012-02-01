@@ -1201,7 +1201,7 @@ static void complete_cmd( const wchar_t *cmd,
 		
 		if( use_builtin )
 		{
-			builtin_get_names2( possible_comp );
+			builtin_get_names( possible_comp );
 			complete_strings( comp, cmd, 0, &builtin_get_desc, possible_comp, 0 );
 		}
 //		al_destroy( &possible_comp );

@@ -9,7 +9,7 @@
 
 	where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
 
-	2). Add a line like { L"NAME", &builtin_NAME, N_(L"Bla bla bla") }, to the builtin_data variable. The description is used by the completion system.
+	2). Add a line like { L"NAME", &builtin_NAME, N_(L"Bla bla bla") }, to the builtin_data_t variable. The description is used by the completion system. Note that this array is sorted!
 
 	3). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
 
@@ -85,7 +85,7 @@
 /**
    Datastructure to describe a builtin. 
 */
-typedef struct builtin_data
+struct builtin_data_t
 {
 	/**
 	   Name of the builtin
@@ -99,14 +99,20 @@ typedef struct builtin_data
 	   Description of what the builtin does
 	*/
 	const wchar_t *desc;
+    
+    bool operator<(const wchar_t *) const;
+    bool operator<(const builtin_data_t *) const;
+};
+
+bool builtin_data_t::operator<(const wchar_t *other) const
+{
+    return wcscmp(this->name, other) < 0;
 }
-	builtin_data_t;
 
-
-/**
-   Table of all builtins
-*/
-static hash_table_t builtin;
+bool builtin_data_t::operator<(const builtin_data_t *other) const
+{
+    return wcscmp(this->name, other->name) < 0;
+}
 
 int builtin_out_redirect;
 int builtin_err_redirect;
@@ -126,11 +132,6 @@ static array_list_t io_stack;
    instead of stdin.
 */
 static int builtin_stdin;
-
-/**
-   Table containing descriptions for all builtins
-*/
-static hash_table_t *desc=0;
 
 /**
    The underlying IO redirections behind the current builtin. This
@@ -963,23 +964,18 @@ static int builtin_builtin( parser_t &parser, wchar_t **argv )
 
 	if( list )
 	{
-		array_list_t names;
-		int i;
-
-		al_init( &names );
-		builtin_get_names( &names );
-		sort_list( &names );
+        wcstring_list_t names = builtin_get_names();
+        sort(names.begin(), names.end());
 		
-		for( i=0; i<al_get_count( &names ); i++ )
+		for( size_t i=0; i<names.size(); i++ )
 		{
-			wchar_t *el = (wchar_t *)al_get( &names, i );
+			const wchar_t *el = names.at(i).c_str();
 			
 			sb_append( sb_out,
 						el,
 						L"\n",
 						NULL );
 		}
-		al_destroy( &names );
 	}
 	return STATUS_BUILTIN_OK;
 }
@@ -1057,7 +1053,7 @@ static int builtin_emit( parser_t &parser, wchar_t **argv )
 /**
    A generic bultin that only supports showing a help message. This is
    only a placeholder that prints the help message. Useful for
-   commands that live in hte parser.
+   commands that live in the parser.
 */
 static int builtin_generic( parser_t &parser, wchar_t **argv )
 {
@@ -3606,214 +3602,90 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 
 /*
   END OF BUILTIN COMMANDS
-  Below are functions for handling the builtin commands
+  Below are functions for handling the builtin commands.
+  THESE MUST BE SORTED BY NAME! Completion lookup uses binary search.
 */
 
 /**
-   Data about all the builtin commands in fish
+   Data about all the builtin commands in fish.
+   Functions that are bound to builtin_generic are handled directly by the parser.
 */
-static const builtin_data_t builtin_data[]=
+static const builtin_data_t builtin_datas[]=
 {
-	{
-		L"block",  &builtin_block, N_( L"Temporarily block delivery of events" )
-	}
-	,
-	{
-		L"builtin",  &builtin_builtin, N_( L"Run a builtin command instead of a function" )
-	}
-	,
-	{
-		L"cd",  &builtin_cd, N_( L"Change working directory" )  
-	}
-	,
-	{
-		L"count",  &builtin_count, N_( L"Count the number of arguments" )  
-	}
-	,
-	{
-		L"contains",  &builtin_contains, N_( L"Search for a specified string in a list" )  
-	}
-	,
-	{
-		L"emit",  &builtin_emit, N_( L"Emit an event" )
-	}
-	,
-	{
-		L"exit",  &builtin_exit, N_( L"Exit the shell" )
-	}
-	,
-	{
-		L"function",  &builtin_function, N_( L"Define a new function" )  
-	}
-	,
-	{
-		L"functions",  &builtin_functions, N_( L"List or remove functions" )  
-	}
-	,
-	{
-		L"complete",  &builtin_complete, N_( L"Edit command specific completions" )  
-	}
-	,
-	{
-		L"end",  &builtin_end, N_( L"End a block of commands" )  
-	}
-	,
-	{
-		L"else",  &builtin_else, N_( L"Evaluate block if condition is false" )  
-	}
-	,
-	{
-		L"for",  &builtin_for, N_( L"Perform a set of commands multiple times" )  
-	}
-	,
-	{
-		L".",  &builtin_source, N_( L"Evaluate contents of file" )  
-	}
-	,
-	{
-		L"set",  &builtin_set, N_( L"Handle environment variables" )  
-	}
-	,
-	{
-		L"fg",  &builtin_fg, N_( L"Send job to foreground" )  
-	}
-	,
-	{
-		L"bg",  &builtin_bg, N_( L"Send job to background" )  
-	}
-	,
-	{
-		L"jobs",  &builtin_jobs, N_( L"Print currently running jobs" )  
-	}
-	,
-	{
-		L"read",  &builtin_read, N_( L"Read a line of input into variables" )  
-	}
-	,
-	{
-		L"break",  &builtin_break_continue, N_( L"Stop the innermost loop" )  
-	}
-	,
-	{
-		L"continue",  &builtin_break_continue, N_( L"Skip the rest of the current lap of the innermost loop" )  
-	}
-	,
-	{
-		L"return",  &builtin_return, N_( L"Stop the currently evaluated function" )  
-	}
-	,
-	{
-		L"commandline",  &builtin_commandline, N_( L"Set or get the commandline" )  
-	}
-	,
-	{
-		L"switch",  &builtin_switch, N_( L"Conditionally execute a block of commands" )  
-	}
-	,
-	{
-		L"case",  &builtin_case, N_( L"Conditionally execute a block of commands" )  
-	}
-	,
-	{
-		L"bind",  &builtin_bind, N_( L"Handle fish key bindings" ) 
-	}
-	,
-	{
-		L"random",  &builtin_random, N_( L"Generate random number" ) 
-	}
-	,
-	{
-		L"status",  &builtin_status, N_( L"Return status information about fish" ) 
-	}
-	,
-	{
-		L"ulimit",  &builtin_ulimit, N_( L"Set or get the shells resource usage limits" ) 
-	}
-	,
-	{
-		L"begin",  &builtin_begin, N_( L"Create a block of code" )  
-	}
-	,
-	{
-		L"breakpoint",  &builtin_breakpoint, N_( L"Temporarily halt execution of a script and launch an interactive debug prompt" )  
-	}
-	,
+	{ 		L".",  &builtin_source, N_( L"Evaluate contents of file" )   },
+	{ 		L"and",  &builtin_generic, N_( L"Execute command if previous command suceeded" )  },
+	{ 		L"begin",  &builtin_begin, N_( L"Create a block of code" )   },
+	{ 		L"bg",  &builtin_bg, N_( L"Send job to background" )   },
+	{ 		L"bind",  &builtin_bind, N_( L"Handle fish key bindings" )  },
+	{ 		L"block",  &builtin_block, N_( L"Temporarily block delivery of events" ) },
+	{ 		L"break",  &builtin_break_continue, N_( L"Stop the innermost loop" )   },
+	{ 		L"breakpoint",  &builtin_breakpoint, N_( L"Temporarily halt execution of a script and launch an interactive debug prompt" )   },
+	{ 		L"builtin",  &builtin_builtin, N_( L"Run a builtin command instead of a function" ) },
+	{ 		L"case",  &builtin_case, N_( L"Conditionally execute a block of commands" )   },
+	{ 		L"cd",  &builtin_cd, N_( L"Change working directory" )   },
+	{ 		L"command",   &builtin_generic, N_( L"Run a program instead of a function or builtin" )   },
+	{ 		L"commandline",  &builtin_commandline, N_( L"Set or get the commandline" )   },
+	{ 		L"complete",  &builtin_complete, N_( L"Edit command specific completions" )   },
+	{ 		L"contains",  &builtin_contains, N_( L"Search for a specified string in a list" )   },
+	{ 		L"continue",  &builtin_break_continue, N_( L"Skip the rest of the current lap of the innermost loop" )   },
+	{ 		L"count",  &builtin_count, N_( L"Count the number of arguments" )   },
+	{ 		L"else",  &builtin_else, N_( L"Evaluate block if condition is false" )   },
+	{ 		L"emit",  &builtin_emit, N_( L"Emit an event" ) },
+	{ 		L"end",  &builtin_end, N_( L"End a block of commands" )   },
+	{ 		L"exec",  &builtin_generic, N_( L"Run command in current process" )  },
+	{ 		L"exit",  &builtin_exit, N_( L"Exit the shell" ) },
+	{ 		L"fg",  &builtin_fg, N_( L"Send job to foreground" )   },
+	{ 		L"for",  &builtin_for, N_( L"Perform a set of commands multiple times" )   },
+	{ 		L"function",  &builtin_function, N_( L"Define a new function" )   },
+	{ 		L"functions",  &builtin_functions, N_( L"List or remove functions" )   },
+	{ 		L"if",  &builtin_generic, N_( L"Evaluate block if condition is true" )   },
+	{ 		L"jobs",  &builtin_jobs, N_( L"Print currently running jobs" )   },
+	{ 		L"not",  &builtin_generic, N_( L"Negate exit status of job" )  },
+	{ 		L"or",  &builtin_generic, N_( L"Execute command if previous command failed" )  },
+	{ 		L"random",  &builtin_random, N_( L"Generate random number" )  },
+	{ 		L"read",  &builtin_read, N_( L"Read a line of input into variables" )   },
+	{ 		L"return",  &builtin_return, N_( L"Stop the currently evaluated function" )   },
+	{ 		L"set",  &builtin_set, N_( L"Handle environment variables" )   },
+	{ 		L"status",  &builtin_status, N_( L"Return status information about fish" )  },
+	{ 		L"switch",  &builtin_switch, N_( L"Conditionally execute a block of commands" )   },
+	{ 		L"ulimit",  &builtin_ulimit, N_( L"Set or get the shells resource usage limits" )  },
+	{ 		L"while",  &builtin_generic, N_( L"Perform a command multiple times" )   }
+};
 
-	/*
-	  Builtins that are handled directly by the parser. They are
-	  bound to a noop function only so that they show up in the
-	  listings of builtin commands, etc..
-	*/
-	{
-		L"command",   &builtin_generic, N_( L"Run a program instead of a function or builtin" )  
-	}
-	,
-	{
-		L"if",  &builtin_generic, N_( L"Evaluate block if condition is true" )  
-	}
-	,
-	{
-		L"while",  &builtin_generic, N_( L"Perform a command multiple times" )  
-	}
-	,
-	{
-		L"not",  &builtin_generic, N_( L"Negate exit status of job" ) 
-	}
-	,
-	{
-		L"and",  &builtin_generic, N_( L"Execute command if previous command suceeded" ) 
-	}
-	,
-	{
-		L"or",  &builtin_generic, N_( L"Execute command if previous command failed" ) 
-	}
-	,
-	{
-		L"exec",  &builtin_generic, N_( L"Run command in current process" ) 
-	}
-	,
-	{
-		0, 0, 0
-	}
+#define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
+
+static const builtin_data_t *builtin_lookup(const wchar_t *name) {
+    const builtin_data_t *array_end = builtin_datas + BUILTIN_COUNT;
+    const builtin_data_t *found = std::lower_bound(builtin_datas, array_end, name);
+    if (found != array_end && ! wcscmp(found->name, name)) {
+        return found;
+    } else {
+        return NULL;
+    }
 }
-	;
-	
 
 void builtin_init()
 {
 	
-	int i;
-	
 	wopterr = 0;
-
 	al_init( &io_stack );
-	hash_init( &builtin, &hash_wcs_func, &hash_wcs_cmp );
 
-	for( i=0; builtin_data[i].name; i++ )
+	for( size_t i=0; i < BUILTIN_COUNT; i++ )
 	{
-		hash_put( &builtin, builtin_data[i].name, (void *)builtin_data[i].func );
-		intern_static( builtin_data[i].name );
+		intern_static( builtin_datas[i].name );
 	}
 }
 
 void builtin_destroy()
 {
-	if( desc )
-	{
-		hash_destroy( desc );
-		free( desc );
-		desc=0;
-	}
-
 	al_destroy( &io_stack );
-	hash_destroy( &builtin );
 }
 
 int builtin_exists( const wchar_t *cmd )
 {
 	CHECK( cmd, 0 );
-		
-	return !!hash_get(&builtin, cmd);
+    
+	return !!builtin_lookup(cmd);
 }
 
 /**
@@ -3835,8 +3707,9 @@ int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io )
 		
 	CHECK( argv, STATUS_BUILTIN_ERROR );
 	CHECK( argv[0], STATUS_BUILTIN_ERROR );
-		
-	cmd = (int (*)(parser_t &parser, const wchar_t * const*))hash_get( &builtin, argv[0] );
+    
+    const builtin_data_t *data = builtin_lookup(argv[0]);
+	cmd = (int (*)(parser_t &parser, const wchar_t * const*))(data ? data->func : NULL);
 	
 	if( argv[1] != 0 && !internal_help(argv[0]) )
 	{
@@ -3847,7 +3720,7 @@ int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io )
 		}
 	}
 
-	if( cmd != 0 )
+	if( data != NULL )
 	{
 		int status;
 
@@ -3863,44 +3736,29 @@ int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io )
 }
 
 
-void builtin_get_names( array_list_t *list )
+wcstring_list_t builtin_get_names(void)
 {
-	CHECK( list, );		
- 	hash_get_keys( &builtin, list );
+    wcstring_list_t result;
+    result.reserve(BUILTIN_COUNT);
+    for (size_t i=0; i < BUILTIN_COUNT; i++) {
+        result.push_back(builtin_datas[i].name);
+    }
+    return result;
 }
 
-void builtin_get_names2(std::vector<completion_t> &list) {
-	for (int i=0;i<builtin.size ; ++i) {
+void builtin_get_names(std::vector<completion_t> &list) {
+	for (size_t i=0; i < BUILTIN_COUNT; i++) {
 		completion_t data_to_push;
-	
-		if (builtin.arr[i].key == 0)
-			continue;
-
-		data_to_push.completion = (wchar_t*)builtin.arr[i].key;
+		data_to_push.completion = builtin_datas[i].name;
 		list.push_back( data_to_push );
-	}	
+	}
 }
 
-const wchar_t *builtin_get_desc( const wchar_t *b )
+const wchar_t *builtin_get_desc( const wchar_t *name )
 {
-	CHECK( b, 0 );
-	
-	if( !desc )
-	{
-		int i;
-		desc = (hash_table_t *)malloc( sizeof( hash_table_t ) );
-		if( !desc)
-			return 0;
-
-		hash_init( desc, &hash_wcs_func, &hash_wcs_cmp );
-
-		for( i=0; builtin_data[i].name; i++ )
-		{
-			hash_put( desc, builtin_data[i].name, builtin_data[i].desc );
-		}
-	}
-
-	return _( hash_get( desc, b ));
+	CHECK( name, 0 );
+	const builtin_data_t *builtin = builtin_lookup(name);
+    return builtin ? _(builtin->desc) : NULL;
 }
 
 void builtin_push_io( parser_t &parser, int in )

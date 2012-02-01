@@ -1429,16 +1429,16 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 /**
    Perform bracket expansion
 */
-static int expand_brackets(parser_t &parser, wchar_t *in, int flags, std::vector<completion_t> &out )
+static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::vector<completion_t> &out )
 {
-	wchar_t *pos;
+	const wchar_t *pos;
 	int syntax_error=0;
 	int bracket_count=0;
 
-	wchar_t *bracket_begin=0, *bracket_end=0;
-	wchar_t *last_sep=0;
+	const wchar_t *bracket_begin=0, *bracket_end=0;
+	const wchar_t *last_sep=0;
 
-	wchar_t *item_begin;
+	const wchar_t *item_begin;
 	int len1, len2, tot_len;
 
 	CHECK( in, 0 );
@@ -1559,7 +1559,6 @@ static int expand_brackets(parser_t &parser, wchar_t *in, int flags, std::vector
 			bracket_count--;
 		}
 	}
-	free(in);
 	return 1;
 }
 
@@ -2090,7 +2089,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
     {
         wcstring next = in->at(i).completion;
         
-        if( !expand_brackets( parser, wcsdup(next.c_str()), flags, *out ))
+        if( !expand_brackets( parser, next.c_str(), flags, *out ))
         {
             return EXPAND_ERROR;
         }

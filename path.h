@@ -49,10 +49,10 @@ bool path_get_path_string(const wcstring &cmd, wcstring &output, const env_vars 
    will be returned.
    
    \param in The name of the directory.
-   \param context the halloc context to use for memory allocations
-   \return 0 if the command can not be found, the path of the command otherwise.
+   \return 0 if the command can not be found, the path of the command otherwise. The path should be free'd with free().
 */
-wchar_t *path_get_cdpath( void *context, const wchar_t *in );
+wchar_t *path_allocate_cdpath( const wchar_t *in );
+bool path_can_get_cdpath(const wcstring &in);
 bool path_get_cdpath_string(const wcstring &in, wcstring &out, const env_vars &vars);
 
 /**

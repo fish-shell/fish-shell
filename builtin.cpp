@@ -2599,7 +2599,6 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 	env_var_t dir_in;
 	wchar_t *dir;
 	int res=STATUS_BUILTIN_OK;
-	void *context = halloc( 0, 0 );
 
 	
 	if( argv[1]  == 0 )
@@ -2615,7 +2614,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 	else
 		dir_in = argv[1];
 
-	dir = path_get_cdpath( context, dir_in.missing() ? NULL : dir_in.c_str() );
+	dir = path_allocate_cdpath( dir_in.missing() ? NULL : dir_in.c_str() );
 
 	if( !dir )
 	{
@@ -2698,7 +2697,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );
 	}
 
-	halloc_free( context );
+    free(dir);
 
 	return res;
 }

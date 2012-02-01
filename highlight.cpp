@@ -605,16 +605,13 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 					
 					if( cmd == L"cd" )
 					{
-                        wcstring dir_str = tok_last( &tok );
-                        if (expand_one(dir_str, EXPAND_SKIP_CMDSUBST))
+                        wcstring dir = tok_last( &tok );
+                        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
 						{
-                            const wchar_t *dir = dir_str.c_str();
-							int is_long_help = wcsncmp(dir,L"--help", wcslen(dir) );
-							int is_short_help = wcsncmp(dir,L"-h", wcslen(dir) );
-							
-							if( !is_long_help && !is_short_help  && !path_get_cdpath( context, dir ) )
+							int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
+							if( !is_help && ! path_can_get_cdpath(dir))
 							{
-								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
+                                color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
 							}
 						}
 					}

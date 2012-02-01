@@ -258,6 +258,9 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out );
 char *wcs2str( const wchar_t *in );
 std::string wcs2string(const wcstring &input);
 
+/** Test if a string prefixes another. Returns true if a is a prefix of b */
+bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
+
 void assert_is_main_thread(const char *who);
 #define ASSERT_IS_MAIN_THREAD_TRAMPOLINE(x) assert_is_main_thread(x)
 #define ASSERT_IS_MAIN_THREAD() ASSERT_IS_MAIN_THREAD_TRAMPOLINE(__FUNCTION__)

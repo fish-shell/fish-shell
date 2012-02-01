@@ -1860,6 +1860,10 @@ void tokenize_variable_array( const wchar_t *val, array_list_t *out )
 	}
 }
 
+bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value) {
+    size_t prefix_size = proposed_prefix.size();
+    return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
+}
 
 int create_directory( const wchar_t *d )
 {

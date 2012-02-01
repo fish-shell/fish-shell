@@ -328,7 +328,7 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 	return res;
 }
 
-wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
+wchar_t *path_allocate_cdpath( const wchar_t *dir )
 {
 	wchar_t *res = 0;
 	int err = ENOENT;
@@ -343,7 +343,7 @@ wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
 		{
 			if( S_ISDIR(buf.st_mode) )
 			{
-				res = halloc_wcsdup( context, dir );
+				res = wcsdup(dir);
 			}
 			else
 			{
@@ -399,7 +399,6 @@ wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
 				if( S_ISDIR(buf.st_mode) )
 				{
 					res = whole_path;
-					halloc_register( context, whole_path );					
 					break;
 				}
 				else
@@ -428,6 +427,12 @@ wchar_t *path_get_cdpath( void *context, const wchar_t *dir )
 	return res;
 }
 
+bool path_can_get_cdpath(const wcstring &in) {
+    wchar_t *tmp = path_allocate_cdpath(in.c_str());
+    bool result = (tmp != NULL);
+    free(tmp);
+    return result;
+}
 
 wchar_t *path_get_config( void *context)
 {

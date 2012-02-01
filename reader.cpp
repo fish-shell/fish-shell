@@ -1157,7 +1157,6 @@ static void completion_insert( const wchar_t *val, int flags )
 
 static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<completion_t> &comp )
 {
-	int i;
 	string_buffer_t cmd;
 	string_buffer_t msg;
 	wchar_t * prefix_esc;
@@ -1190,13 +1189,13 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 
 	escaped_separator = escape( COMPLETE_SEP_STR, 1);
 	
-	for( i=0; i< comp.size(); i++ )
+	for( size_t i=0; i< comp.size(); i++ )
 	{
 		const completion_t &el = comp.at( i );
 		has_case_sensitive |= !(el.flags & COMPLETE_NO_CASE );
 	}
 	
-	for( i=0; i< comp.size(); i++ )
+	for( size_t i=0; i< comp.size(); i++ )
 	{
 
 		int base_len=-1;
@@ -1389,7 +1388,6 @@ int reader_can_replace( const wchar_t *in, int flags )
 
 static int handle_completions( std::vector<completion_t> &comp )
 {
-	int i;
 	void *context = 0;
 	wchar_t *base = 0;
 	int len = 0;
@@ -1451,7 +1449,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 		/*
 		  Try to find something to insert whith the correct case
 		 */
-		for( i=0; i< comp.size() ; i++ )
+		for( size_t i=0; i< comp.size() ; i++ )
 		{
 			const completion_t &c =  comp.at( i );
 			int new_len;
@@ -1506,7 +1504,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 			
 			count = 0;
 			
-			for( i=0; i< comp.size(); i++ )
+			for( size_t i=0; i< comp.size(); i++ )
 			{
 				const completion_t &c = comp.at( i );
 				int new_len;
@@ -2421,6 +2419,7 @@ public:
     }
 };
 
+__attribute__((unused))
 static void highlight_complete2( wchar_t *command, const int *colors, int position, void *ctx_ptr ) {
 	background_highlight_context *ctx = (background_highlight_context *)ctx_ptr;
     if (ctx->buff == data->buff) {

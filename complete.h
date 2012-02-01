@@ -127,9 +127,7 @@ struct completion_t
 	*/
 	int flags;
 
-	completion_t () {
-		flags = 0;		
-	}
+	completion_t() : flags(0) { }
 
 	bool operator < (const completion_t& rhs) const { return this->completion < rhs.completion; }
 	bool operator == (const completion_t& rhs) const { return this->completion == rhs.completion; }

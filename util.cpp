@@ -646,52 +646,6 @@ int al_push_all( array_list_t *a, array_list_t *b )
 	return 1;
 }
 
-int al_insert( array_list_t *a, int pos, int count )
-{
-
-	assert( pos >= 0 );
-	assert( count >= 0 );
-	assert( a );
-	
-	if( !count )
-		return 0;
-	
-	/*
-	  Reallocate, if needed
-	*/
-	if( maxi( pos, a->pos) + count > a->size )
-	{
-		/*
-		  If we reallocate, add a few extra elements just in case we
-		  want to do some more reallocating any time soon
-		*/
-		size_t new_size = maxi( maxi( pos, a->pos ) + count +32, a->size*2); 
-		void *tmp = realloc( a->arr, sizeof( anything_t )*new_size );
-		if( tmp )
-		{
-			a->arr = (anything_t *)tmp;
-		}
-		else
-		{
-			oom_handler( a );
-			return 0;
-		}
-					
-	}
-	
-	if( a->pos > pos )
-	{
-		memmove( &a->arr[pos],
-				 &a->arr[pos+count], 
-				 sizeof(anything_t ) * (a->pos-pos) );
-	}
-	
-	memset( &a->arr[pos], 0, sizeof(anything_t)*count );
-	a->pos += count;
-	
-	return 1;
-}
-
 /**
    Real implementation of all al_set_* versions. Sets arbitrary
    element of list.
@@ -868,7 +822,7 @@ int al_get_count( array_list_t *l )
 
 void al_foreach( array_list_t *l, void (*func)( void * ))
 {
-	int i;
+	size_t i;
 
 	CHECK( l, );
 	CHECK( func, );
@@ -879,7 +833,7 @@ void al_foreach( array_list_t *l, void (*func)( void * ))
 
 void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux)
 {
-	int i;
+	size_t i;
 
 	CHECK( l, );
 	CHECK( func, );

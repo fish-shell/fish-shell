@@ -1615,8 +1615,7 @@ int parser_t::parse_job( process_t *p,
 					  job_t *j,
 					  tokenizer *tok )
 {
-//	array_list_t *args = al_halloc( j );      // The list that will become the argc array for the program
-    std::vector<completion_t> args;
+    std::vector<completion_t> args; // The list that will become the argc array for the program
 	int use_function = 1;   // May functions be considered when checking what action this command represents
 	int use_builtin = 1;    // May builtins be considered when checking what action this command represents
 	int use_command = 1;    // May commands be considered when checking what action this command represents

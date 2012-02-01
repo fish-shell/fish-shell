@@ -1860,6 +1860,7 @@ static int expand_cmdsubst2( parser_t &parser, const wcstring &input, std::vecto
 /**
    Wrapper around unescape funtion. Issues an error() on failiure.
 */
+__attribute__((unused))
 static wchar_t *expand_unescape( parser_t &parser, const wchar_t * in, int escape_special )
 {
 	wchar_t *res = unescape( in, escape_special );

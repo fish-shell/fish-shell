@@ -105,28 +105,6 @@ wildcards using **.
 /** Hashtable containing all descriptions that describe an executable */
 static hash_table_t *suffix_hash=0;
 
-/**
-   Push the specified argument to the list if an identical string is
-   not already in the list. This function iterates over the list,
-   which is quite slow if the list is large. It might make sense to
-   use a hashtable for this.
-*/
-static void al_push_check( array_list_t *l, const wchar_t *newv )
-{
-	int i;
-
-	for( i = 0; i < al_get_count(l); i++ ) 
-	{
-		if( !wcscmp( (const wchar_t *)al_get(l, i), newv ) ) 
-		{
-			free( (void *)newv );
-			return;
-		}
-	}
-
-	al_push( l, newv );
-}
-
 
 /**
    Free hash key and hash value
@@ -1160,14 +1138,13 @@ int wildcard_expand( const wchar_t *wc,
 					 int flags,
 					 std::vector<completion_t> &out )
 {
-	int c = out.size();
+	size_t c = out.size();
 	int res = wildcard_expand_internal( wc, base_dir, flags, out );
-	int i;
 			
 	if( flags & ACCEPT_INCOMPLETE )
 	{
-		wchar_t *wc_base=L"";
-		wchar_t *wc_base_ptr = const_cast<wchar_t*>(wcsrchr( wc, L'/' ));
+		const wchar_t *wc_base=L"";
+		const wchar_t *wc_base_ptr = wcsrchr( wc, L'/' );
 		string_buffer_t sb;
 		
 
@@ -1178,7 +1155,7 @@ int wildcard_expand( const wchar_t *wc,
 		
 		sb_init( &sb );
 
-		for( i=c; i<out.size(); i++ )
+		for( size_t i=c; i<out.size(); i++ )
 		{
 			completion_t &c = out.at( i );
 			
@@ -1195,7 +1172,7 @@ int wildcard_expand( const wchar_t *wc,
 
 		if( wc_base_ptr )
 		{
-			free( wc_base );
+			free( (void *)wc_base );
 		}
 		
 	}

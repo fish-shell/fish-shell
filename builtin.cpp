@@ -100,13 +100,13 @@ struct builtin_data_t
 	*/
 	const wchar_t *desc;
     
-    bool operator<(const wchar_t *) const;
+    bool operator<(const wcstring &) const;
     bool operator<(const builtin_data_t *) const;
 };
 
-bool builtin_data_t::operator<(const wchar_t *other) const
+bool builtin_data_t::operator<(const wcstring &other) const
 {
-    return wcscmp(this->name, other) < 0;
+    return wcscmp(this->name, other.c_str()) < 0;
 }
 
 bool builtin_data_t::operator<(const builtin_data_t *other) const
@@ -187,49 +187,21 @@ static int count_char( const wchar_t *str, wchar_t c )
 	return res;
 }
 
-wchar_t *builtin_help_get( parser_t &parser, const wchar_t *name )
+wcstring builtin_help_get( parser_t &parser, const wchar_t *name )
 {
     wcstring_list_t lst;
-	string_buffer_t cmd;
-	wchar_t *name_esc;
-	
-	/*
-	  Because the contents of this buffer is returned by this
-	  function, it must not be free'd on exit, so we allocate it
-	  using halloc.
-	 */
-	static string_buffer_t *out = 0;
-	size_t i;
-	
-	sb_init( &cmd );
-	
-	if( !out )
-	{
-		out = sb_halloc( global_context );
-	}
-	else
-	{
-		sb_clear( out );
-	}
-
-	name_esc = escape( name, 1 );
-	sb_printf( &cmd, L"__fish_print_help %ls", name_esc );
-	
-
-	if( exec_subshell2( (wchar_t *)cmd.buff, lst ) >= 0 )
+    wcstring out;
+    const wcstring name_esc = escape_string(name, 1);
+    const wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
+	if( exec_subshell2( cmd, lst ) >= 0 )
 	{	
-		for( i=0; i<lst.size(); i++ )
+		for( size_t i=0; i<lst.size(); i++ )
 		{
-			sb_append( out, lst.at(i).c_str() );
-			sb_append( out, L"\n" );
+            out.append(lst.at(i));
+            out.push_back(L'\n');
 		}
 	}
-		
-	sb_destroy( &cmd );
-	free( name_esc );
-	
-	return (wchar_t *)out->buff;
-	
+	return out;
 }
 
 /**
@@ -246,7 +218,6 @@ wchar_t *builtin_help_get( parser_t &parser, const wchar_t *name )
 static void builtin_print_help( parser_t &parser, const wchar_t *cmd, string_buffer_t *b )
 {
 	
-	const wchar_t *h;
 	int is_short = 0;
 	
 	if( b == sb_err )
@@ -255,12 +226,12 @@ static void builtin_print_help( parser_t &parser, const wchar_t *cmd, string_buf
 				   parser.current_line() );
 	}
 
-	h = builtin_help_get( parser, cmd );
+	const wcstring h = builtin_help_get( parser, cmd );
 
-	if( !h )
+	if( !h.size())
 		return;
 
-	wchar_t *str = wcsdup( h );
+	wchar_t *str = wcsdup( h.c_str() );
 	if( str )
 	{
 
@@ -3654,10 +3625,10 @@ static const builtin_data_t builtin_datas[]=
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
 
-static const builtin_data_t *builtin_lookup(const wchar_t *name) {
+static const builtin_data_t *builtin_lookup(const wcstring &name) {
     const builtin_data_t *array_end = builtin_datas + BUILTIN_COUNT;
     const builtin_data_t *found = std::lower_bound(builtin_datas, array_end, name);
-    if (found != array_end && ! wcscmp(found->name, name)) {
+    if (found != array_end && name == found->name) {
         return found;
     } else {
         return NULL;
@@ -3681,10 +3652,8 @@ void builtin_destroy()
 	al_destroy( &io_stack );
 }
 
-int builtin_exists( const wchar_t *cmd )
+int builtin_exists( const wcstring &cmd )
 {
-	CHECK( cmd, 0 );
-    
 	return !!builtin_lookup(cmd);
 }
 

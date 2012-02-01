@@ -123,7 +123,7 @@ void builtin_destroy();
 /**
   Is there a builtin command with the given name?
 */
-int builtin_exists( const wchar_t *cmd );
+int builtin_exists( const wcstring &cmd );
 
 /**
   Execute a builtin command 
@@ -142,9 +142,7 @@ int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io );
 /** Returns a list of all builtin names */
 wcstring_list_t builtin_get_names(void);
 
-/**
-  Insert all builtin names into list.
-*/
+/** Insert all builtin names into list. */
 void builtin_get_names(std::vector<completion_t> &list);
 
 /**
@@ -174,10 +172,9 @@ const wchar_t *builtin_complete_get_temporary_buffer();
 
 /**
    Run the __fish_print_help function to obtain the help information
-   for the specified command. The resulting string will be valid until
-   the next time this function is called, and must never be free'd manually.
+   for the specified command.
 */
 
-wchar_t *builtin_help_get( parser_t &parser, const wchar_t *cmd );
+wcstring builtin_help_get( parser_t &parser, const wchar_t *cmd );
 
 #endif

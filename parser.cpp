@@ -1883,7 +1883,7 @@ int parser_t::parse_job( process_t *p,
 		if( !p->type )
 		{
 			if( use_builtin &&
-				builtin_exists(args.at(0).completion.c_str()))
+				builtin_exists(args.at(0).completion))
 			{
 				p->type = INTERNAL_BUILTIN;
 				is_new_block |= parser_keywords_is_block( args.at( 0 ).completion );
@@ -2504,7 +2504,6 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 
 		if( (!error_code) && (!exit_status()) && (!proc_get_last_status()) )
 		{
-			wchar_t *h;
 
 			//debug( 2, L"Status %d\n", proc_get_last_status() );
 
@@ -2514,9 +2513,9 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 				   BLOCK_END_ERR_MSG );
 			fwprintf( stderr, L"%ls", parser_t::current_line() );
 
-			h = builtin_help_get( *this, L"end" );
-			if( h )
-				fwprintf( stderr, L"%ls", h );
+			const wcstring h = builtin_help_get( *this, L"end" );
+			if( h.size() )
+				fwprintf( stderr, L"%ls", h.c_str() );
 			break;
 
 		}
@@ -3026,16 +3025,14 @@ int parser_t::test( const  wchar_t * buff,
 
 							if( out )
 							{
-								wchar_t *h;
-
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
 									   INVALID_CASE_ERR_MSG );
 
 								print_errors( out, prefix);
-								h = builtin_help_get( *this, L"case" );
-								if( h )
-									sb_printf( out, L"%ls", h );
+								const wcstring h = builtin_help_get( *this, L"case" );
+								if( h.size() )
+									sb_printf( out, L"%ls", h.c_str() );
 							}
 						}
 					}
@@ -3189,15 +3186,13 @@ int parser_t::test( const  wchar_t * buff,
 						err = 1;
 						if( out )
 						{
-							wchar_t *h;
-							
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
 								   INVALID_END_ERR_MSG );
 							print_errors( out, prefix );
-							h = builtin_help_get( *this, L"end" );
-							if( h )
-								sb_printf( out, L"%ls", h );
+							const wcstring h = builtin_help_get( *this, L"end" );
+							if( h.size() )
+								sb_printf( out, L"%ls", h.c_str() );
 						}
 					}
 					
@@ -3469,7 +3464,6 @@ int parser_t::test( const  wchar_t * buff,
 
 	if( out && count>0 )
 	{
-		const wchar_t *h;
 		const wchar_t *cmd;
 		
 		error( SYNTAX_ERROR,
@@ -3481,10 +3475,10 @@ int parser_t::test( const  wchar_t * buff,
 		cmd = parser_get_block_command(  block_type[count -1] );
 		if( cmd )
 		{
-			h = builtin_help_get( *this, cmd );
-			if( cmd )
+			const wcstring h = builtin_help_get( *this, cmd );
+			if( h.size() )
 			{
-				sb_printf( out, L"%ls", h );
+				sb_printf( out, L"%ls", h.c_str() );
 			}
 		}
 		

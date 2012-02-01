@@ -707,7 +707,7 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 							 any files for that
 							 */
 							if( use_builtin )
-								is_cmd |= builtin_exists( cmd.c_str() );
+								is_cmd |= builtin_exists( cmd );
 							
 							if( use_function )
 								is_cmd |= function_exists_no_autoload( cmd.c_str(), vars );

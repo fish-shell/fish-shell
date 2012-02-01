@@ -573,12 +573,11 @@ wchar_t *quote_end( const wchar_t *pos )
 }
 
 				
-const wchar_t *wsetlocale(int category, const wchar_t *locale)
+wcstring wsetlocale(int category, const wchar_t *locale)
 {
 
 	char *lang = locale?wcs2str( locale ):0;
 	char * res = setlocale(category,lang);
-	
 	free( lang );
 
 	/*
@@ -588,17 +587,9 @@ const wchar_t *wsetlocale(int category, const wchar_t *locale)
 	ellipsis_char = (strstr( ctype, ".UTF")||strstr( ctype, ".utf") )?L'\x2026':L'$';	
 		
 	if( !res )
-		return 0;
-	
-	if( !setlocale_buff )
-	{
-		setlocale_buff = sb_halloc( global_context);
-	}
-	
-	sb_clear( setlocale_buff );
-	sb_printf( setlocale_buff, L"%s", res );
-	
-	return (wchar_t *)setlocale_buff->buff;	
+		return wcstring();
+    else
+		return format_string(L"%s", res);
 }
 
 bool contains_internal( const wchar_t *a, ... )

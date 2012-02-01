@@ -434,7 +434,7 @@ void error_reset();
    the user is using a Unicode character set, and if so, use the
    unicode ellipsis character as ellipsis, instead of '$'.      
 */
-const wchar_t *wsetlocale( int category, const wchar_t *locale );
+wcstring wsetlocale( int category, const wchar_t *locale );
 
 /**
    Checks if \c needle is included in the list of strings specified. A warning is printed if needle is zero.

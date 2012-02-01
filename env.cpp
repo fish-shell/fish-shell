@@ -296,7 +296,7 @@ static void handle_locale()
 {
 	const env_var_t lc_all = env_get_string( L"LC_ALL" );
 	int i;
-	wchar_t *old = wcsdup(wsetlocale( LC_MESSAGES, NULL ));
+    const wcstring old_locale = wsetlocale( LC_MESSAGES, NULL );
 
 	/*
 	  Array of locale constants corresponding to the local variable names defined in locale_variable
@@ -337,7 +337,8 @@ static void handle_locale()
 		}
 	}
 	
-	if( wcscmp( wsetlocale( LC_MESSAGES, NULL ), old ) != 0 )
+    const wcstring new_locale = wsetlocale(LC_MESSAGES, NULL);
+	if( old_locale != new_locale )
 	{
 
 		/* 
@@ -357,9 +358,7 @@ static void handle_locale()
 		{
 			debug( 0, _(L"Changing language to English") );
 		}
-	}
-	free( old );
-		
+	}	
 }
 
 

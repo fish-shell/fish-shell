@@ -2159,4 +2159,3 @@ void complete_print( string_buffer_t *out )
 		}
 	}
 }
-

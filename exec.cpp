@@ -534,29 +534,20 @@ static void launch_process( process_t *p )
 		
 		if( (read==1) && (begin[0] == ':') )
 		{
-			int count = 0;
-			int i = 1;
-			wchar_t **res;
-            char **res_real;
-			
-			while( p->argv(count) != 0 )
-				count++;
-			
-			res = (wchar_t **)malloc( sizeof(wchar_t*)*(count+3));
-			const wchar_t *sh_command = L"/bin/sh";
             
-			res[0] = wcsdup(sh_command);
-			res[1] = wcsdup(p->actual_cmd);
-			
-			for( i=1; p->argv(i) != NULL; i++ ){
-				res[i+1] = wcsdup(p->argv(i));
+            wcstring_list_t argv;
+
+			const wchar_t *sh_command = L"/bin/sh";
+            argv.push_back(sh_command);
+            argv.push_back(p->actual_cmd);
+			for(size_t i=1; p->argv(i) != NULL; i++ ){
+				argv.push_back(p->argv(i));
 			}
 			
-			res[i+1] = 0;
-			p->set_argv(res);
+			p->set_argv(argv);
 			p->actual_cmd = wcsdup(sh_command);
 
-			res_real = wcsv2strv( (const wchar_t **) res);
+			char **res_real = wcsv2strv( p->get_argv() );
 			
 			execve ( wcs2str(p->actual_cmd), 
 				 res_real,

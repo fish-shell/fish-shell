@@ -1270,7 +1270,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 					return;
 				}
 				
-                p->set_argv(completions_to_char_arr(args));
+                p->set_argv(completions_to_wcstring_list(args));
 				p->next = new process_t();
 
 				tok_next( tok );
@@ -1293,7 +1293,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 			case TOK_END:
 			{
 				if( !p->get_argv() )
-					p->set_argv(completions_to_char_arr(args));
+					p->set_argv(completions_to_wcstring_list(args));
 				if( tok_has_next(tok))
 					tok_next(tok);
 
@@ -2133,7 +2133,7 @@ int parser_t::parse_job( process_t *p,
 		if( p->type == INTERNAL_BUILTIN && parser_keywords_skip_arguments(args.at(0).completion))
 		{			
 			if( !p->get_argv() )
-                p->set_argv(completions_to_char_arr(args));
+                p->set_argv(completions_to_wcstring_list(args));
 		}
 		else
 		{

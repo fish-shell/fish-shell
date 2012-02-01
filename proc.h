@@ -128,17 +128,10 @@ enum
 class process_t
 {
     private:
-	/** argv parameter for for execv, builtin_run, etc. This is allocated via malloc, and furthermore, each string within it is allocated via malloc as well . Null terminated. */
+	/** argv parameter for for execv, builtin_run, etc. This is allocated via new, and furthermore, each string within it is allocated via new as well. Null terminated. */
 	wchar_t **argv_array;
 
-    void free_argv(void) {
-        if (argv_array != NULL) {
-            for (size_t i = 0; argv_array[i] != NULL; i++) {
-                free(argv_array[i]);
-            }
-            free(argv_array);
-        }
-    }
+    void free_argv(void);
 
     public:
     
@@ -178,22 +171,7 @@ class process_t
     
     
     /** Sets argv */
-    void set_argv(wchar_t **argv) { 
-
-#if 0
-        // argv must be a malloc'd array of malloc'd strings. This bit of nonsense below can help catch if someone doesn't pass us something from malloc.
-        if (argv) {
-            for (size_t i=0; argv[i]; i++) {
-                wchar_t *tmp = wcsdup(argv[i]);
-                free(argv[i]);
-                argv[i] = tmp;
-            }
-        }
-#endif   
-        
-        free_argv();
-        this->argv_array = argv;
-    }
+    void set_argv(const wcstring_list_t &argv);
     
     /** Returns argv */
     const wchar_t * const *get_argv(void) const { return argv_array; }

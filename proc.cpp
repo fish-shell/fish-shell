@@ -183,6 +183,31 @@ void job_free( job_t * j )
     halloc_free( j );
 }
 
+void process_t::free_argv(void) {
+    if (argv_array != NULL) {
+        for (size_t i = 0; argv_array[i] != NULL; i++) {
+            delete [] argv_array[i];
+        }
+        delete [] argv_array;
+    }
+    argv_array = NULL;
+}
+
+void process_t::set_argv(const wcstring_list_t &argv) {
+    /* Get rid of the old argv */
+    free_argv();
+
+    /* Allocate our null-terminated array of null-terminated strings */
+    size_t i, count = argv.size();
+    argv_array = new wchar_t* [count + 1];
+    for (i=0; i < count; i++) {
+        const wcstring &str = argv.at(i);
+        argv_array[i] = new wchar_t [1 + str.size()];
+        wcscpy(argv_array[i], str.c_str());
+    }
+    argv_array[i] = NULL;
+}
+
 void proc_destroy()
 {
 	delete event.arguments;

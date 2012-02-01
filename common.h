@@ -195,7 +195,7 @@ void show_stackframe();
 */
 wchar_t **list_to_char_arr( array_list_t *l );
 
-wchar_t **completions_to_char_arr( std::vector<completion_t> &l );
+wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &completions );
 
 /**
    Read a line from the stream f into the buffer buff of length len. If

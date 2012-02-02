@@ -24,7 +24,7 @@
 
 #define WILDCARD_RESERVED 0xf400
 
-struct completion_t;
+class completion_t;
 /**
    Enumeration of all wildcard types
 */

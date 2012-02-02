@@ -209,31 +209,9 @@ static void complete_free_entry( complete_entry_t *c );
    Create a new completion entry
 
 */
-void completion_allocate( std::vector<completion_t> &context,
-						  const wchar_t *comp,
-						  const wchar_t *desc,
-						  int flags )
+void completion_allocate(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, int flags)
 {
-//	completion_t *res = (completion_t *)halloc( context, sizeof( completion_t) );
-	completion_t res;
-
-	res.completion = comp; 
-	if( desc )
-		res.description = desc;
-
-	if( flags & COMPLETE_AUTO_SPACE )
-	{
-		int len = wcslen(comp);
-
-		flags = flags & (~COMPLETE_AUTO_SPACE);
-	
-		if( ( len > 0 ) && ( wcschr( L"/=@:", comp[ len - 1 ] ) != 0 ) )
-			flags |= COMPLETE_NO_SPACE;
-		
-	}
-	
-	res.flags = flags;
-	context.push_back( res );
+    completions.push_back(completion_t(comp, desc, flags));
 }
 
 /**
@@ -1116,9 +1094,7 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_command )
 		{
 			
-			if( expand_string2(		  wcsdup(cmd),
-							   comp,
-							   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
+			if( expand_string2(cmd, comp, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 			{
 				complete_cmd_desc( cmd, comp );
 			}
@@ -1189,9 +1165,7 @@ static void complete_cmd( const wchar_t *cmd,
 			//function_get_names( &possible_comp, cmd[0] == L'_' );
             wcstring_list_t names = function_get_names(cmd[0] == L'_' );
             for (size_t i=0; i < names.size(); i++) {
-		completion_t data_to_push;        
-		data_to_push.completion = names.at(i);
-       		possible_comp.push_back( data_to_push );
+                possible_comp.push_back(completion_t(names.at(i)));
             }
             
 			complete_strings( comp, cmd, 0, &complete_function_desc, possible_comp, 0 );
@@ -1383,7 +1357,6 @@ static int complete_param( const wchar_t *cmd_orig,
 	complete_entry_t *i;
 	complete_entry_opt_t *o;
 
-	array_list_t matches;
 	wchar_t *cmd, *path;
 	int use_common=1, use_files=1;
 
@@ -1392,8 +1365,6 @@ static int complete_param( const wchar_t *cmd_orig,
 	parse_cmd_string( context, cmd_orig, &path, &cmd );
 
 	complete_load( cmd, 1 );
-
-	al_init( &matches );
 
 	for( i=first_entry; i; i=i->next )
 	{
@@ -1631,72 +1602,61 @@ static int complete_variable( const wchar_t *whole_var,
 							  int start_offset,
 							  std::vector<completion_t> &comp_list )
 {
-	int i;
 	const wchar_t *var = &whole_var[start_offset];
 	int varlen = wcslen( var );
 	int res = 0;
-	array_list_t names;
-	al_init( &names );
-	env_get_names( &names, 0 );
-
-	for( i=0; i<al_get_count( &names ); i++ )
+    
+    const wcstring_list_t names = env_get_names(0);
+	for( size_t i=0; i<names.size(); i++ )
 	{
-		wchar_t *name = (wchar_t *)al_get( &names, i );
-		int namelen = wcslen( name );
+		const wcstring & env_name = names.at(i);
+		int namelen = env_name.size();
 		int match=0, match_no_case=0;	
 
 		if( varlen > namelen )
 			continue;
 
-		match = ( wcsncmp( var, name, varlen) == 0 );
+		match = string_prefixes_string(var, env_name);
 		
 		if( !match )
 		{
-			match_no_case = ( wcsncasecmp( var, name, varlen) == 0 );
+			match_no_case = ( wcsncasecmp( var, env_name.c_str(), varlen) == 0 );
 		}
 
 		if( match || match_no_case )
 		{
-			const env_var_t value_unescaped = env_get_string( name );
+			const env_var_t value_unescaped = env_get_string( env_name.c_str() );
 			if( !value_unescaped.missing() )
 			{
-				string_buffer_t desc;
-				string_buffer_t comp;
+				wcstring comp;
 				int flags = 0;
 				int offset = 0;
 				
-				sb_init( &comp );
 				if( match )
 				{
-					sb_append( &comp, &name[varlen] );					
+                    comp.append(env_name.c_str() + varlen);
 					offset = varlen;
 				}
 				else
 				{
-					sb_append_substring( &comp, whole_var, start_offset );
-					sb_append( &comp, name );
+                    comp.append(whole_var, start_offset);
+                    comp.append(env_name);
 					flags = COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE;
 				}
 				
 				wcstring value = expand_escape_variable2( value_unescaped );
-
-				sb_init( &desc );
-				sb_printf( &desc, COMPLETE_VAR_DESC_VAL, value.c_str() );
-				
+                
+                wcstring desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());				
 				completion_allocate( comp_list, 
-									 (wchar_t *)comp.buff,
-									 (wchar_t *)desc.buff,
+									 comp.c_str(),
+									 desc.c_str(),
 									 flags );
 				res =1;
-				
-				sb_destroy( &desc );
-				sb_destroy( &comp );
 			}
 			
 		}
 	}
 
-	al_destroy( &names );
 	return res;
 }
 

@@ -1872,9 +1872,7 @@ int parser_t::parse_job( process_t *p,
 				}
 			}
 		}
-		completion_t data_to_push;
-		data_to_push.completion = nxt;
-		args.push_back( data_to_push );
+		args.push_back(completion_t(nxt));
 	}
 
 	if( error_code == 0 )
@@ -1922,12 +1920,8 @@ int parser_t::parse_job( process_t *p,
 //						al_truncate( args, 0 );
 						args.clear();
 //						al_push( args, halloc_wcsdup( j, L"cd" ) );
-						completion_t comp;
-						comp.completion = L"cd";
-						args.push_back(comp);
-						completion_t comp2;
-						comp2.completion = tmp;
-						args.push_back( comp2 );
+						args.push_back(completion_t(L"cd"));
+						args.push_back(completion_t(tmp));
 						/*
 						  If we have defined a wrapper around cd, use it,
 						  otherwise use the cd builtin
@@ -2108,9 +2102,7 @@ int parser_t::parse_job( process_t *p,
                 const wcstring sub_block(tok_string( tok ) + current_tokenizer_pos, end_pos - current_tokenizer_pos);
 			
 				p->type = INTERNAL_BLOCK;
-				completion_t data_to_push;
-				data_to_push.completion = sub_block; 
-				args.at( 0 ) =  data_to_push;
+				args.at( 0 ) =  completion_t(sub_block);
 			
 				tok_set_pos( tok,
 							 end_pos );

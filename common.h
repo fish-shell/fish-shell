@@ -22,7 +22,7 @@
 #include <assert.h>
 #include "util.h"
 
-struct completion_t;
+class completion_t;
 
 /* Common string type */
 typedef std::wstring wcstring;
@@ -296,6 +296,13 @@ T from_string(const wcstring &x) {
     std::wstringstream stream(x);
     stream >> result;
     return result;
+}
+
+template<typename T>
+wcstring to_string(const T &x) {
+    std::wstringstream stream;
+    stream << x;
+    return stream.str();
 }
 
 class scoped_lock {

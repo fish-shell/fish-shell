@@ -870,8 +870,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			else
 			{								
 				res = 1;
-				completion_t data_to_push;
-				data_to_push.completion = base_dir; 
+				completion_t data_to_push(base_dir);
 				if ( std::find( out.begin(), out.end(), data_to_push ) != out.end() ){
 					 out.push_back( data_to_push);
 				}
@@ -944,9 +943,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 						}
 						else
 						{
-							completion_t data_to_push;
-							data_to_push.completion = long_name;
-							out.push_back( data_to_push );
+							out.push_back( completion_t(long_name) );
 						}
 						res = 1;
 					}

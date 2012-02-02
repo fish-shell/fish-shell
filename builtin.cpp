@@ -3717,9 +3717,7 @@ wcstring_list_t builtin_get_names(void)
 
 void builtin_get_names(std::vector<completion_t> &list) {
 	for (size_t i=0; i < BUILTIN_COUNT; i++) {
-		completion_t data_to_push;
-		data_to_push.completion = builtin_datas[i].name;
-		list.push_back( data_to_push );
+		list.push_back(completion_t(builtin_datas[i].name));
 	}
 }
 

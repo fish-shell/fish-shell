@@ -385,7 +385,6 @@ static int find_process( const wchar_t *proc,
 	wchar_t *cmd=0;
 	int sz=0;
 	int found = 0;
-	wchar_t *result;
 
 	job_t *j;
 
@@ -441,11 +440,8 @@ static int find_process( const wchar_t *proc,
 				{
 					
 					{
-						result = (wchar_t *)malloc(sizeof(wchar_t)*16 );
-						swprintf( result, 16, L"%d", j->pgid );
-						completion_t data_to_push;
-						data_to_push.completion = result;
-						out.push_back( data_to_push);
+                        wcstring result = format_string(L"%ld", (long)j->pgid);
+						out.push_back(completion_t(result));
 						found = 1;
 					}
 				}
@@ -474,11 +470,8 @@ static int find_process( const wchar_t *proc,
 			}
 			else
 			{
-				result = (wchar_t *)malloc(sizeof(wchar_t)*16 );
-				swprintf( result, 16, L"%d", j->pgid );
-				completion_t data_to_push;
-				data_to_push.completion = result;
-				out.push_back( data_to_push);
+                wcstring result = format_string(L"%ld", (long)j->pgid);
+                out.push_back(completion_t(result));
 				found = 1;
 			}
 		}
@@ -513,11 +506,8 @@ static int find_process( const wchar_t *proc,
 				}
 				else
 				{
-					result = (wchar_t *)malloc(sizeof(wchar_t)*16 );
-					swprintf( result, 16, L"%d", p->pid );
-					completion_t data_to_push;
-					data_to_push.completion = result;
-					out.push_back( data_to_push );
+                    wcstring result = to_string<int>(p->pid);
+					out.push_back(completion_t(result));
 					found = 1;
 				}
 			}
@@ -631,12 +621,8 @@ static int find_process( const wchar_t *proc,
 				}
 				else
 				{
-					wchar_t *res = wcsdup(name);
-					if( res ) {
-						completion_t data_to_push;
-						data_to_push.completion = res;
-						out.push_back( data_to_push );
-					}
+                    if (name)
+                        out.push_back(completion_t(name));
 				}
 			}
 		}
@@ -663,9 +649,7 @@ static int expand_pid( const wcstring &instr,
  
 	if( instr.empty() || instr.at(0) != PROCESS_EXPAND )
 	{
-		completion_t data_to_push;
-		data_to_push.completion = instr;
-		out.push_back( data_to_push );
+		out.push_back(completion_t(instr));
 		return 1;
 	}
     
@@ -692,28 +676,18 @@ static int expand_pid( const wcstring &instr,
 	{
 		if( wcscmp( (in+1), SELF_STR )==0 )
 		{
-            wchar_t str[32];
-			swprintf( str, 32, L"%d", getpid() );
-	
-			completion_t data_to_push;
-			data_to_push.completion = str;
-			
-			out.push_back( data_to_push );
+
+			const wcstring pid_str = to_string<int>(getpid());
+			out.push_back(completion_t(pid_str));
 
 			return 1;
 		}
 		if( wcscmp( (in+1), LAST_STR )==0 )
 		{
-			wchar_t *str;
-
 			if( proc_last_bg_pid > 0 )
 			{
-				str = (wchar_t *)malloc( sizeof(wchar_t)*32);
-				swprintf( str, 32, L"%d", proc_last_bg_pid );
-				completion_t data_to_push;
-				data_to_push.completion = str;
-	
-				out.push_back( data_to_push);
+                const wcstring pid_str = to_string<int>(proc_last_bg_pid);
+				out.push_back( completion_t(pid_str));
 			}
 
 			return 1;
@@ -821,54 +795,7 @@ void expand_variable_error( parser_t &parser, const wchar_t *token, int token_po
 /**
    Parse an array slicing specification
  */
-static int parse_slice( const wchar_t *in, wchar_t **end_ptr, array_list_t *idx )
-{
-	
-	
-	wchar_t *end;
-	
-	int pos = 1;
-
-//	debug( 0, L"parse_slice on '%ls'", in );
-	
-
-	while( 1 )
-	{
-		long tmp;
-		
-		while( iswspace(in[pos]) || (in[pos]==INTERNAL_SEPARATOR))
-			pos++;		
-		
-		if( in[pos] == L']' )
-		{
-			pos++;
-			break;
-		}
-		
-		errno=0;
-		tmp = wcstol( &in[pos], &end, 10 );
-		if( ( errno ) || ( end == &in[pos] ) )
-		{
-			return 1;
-		}
-//		debug( 0, L"Push idx %d", tmp );
-		
-		al_push_long( idx, tmp );
-		pos = end-in;
-	}
-	
-	if( end_ptr )
-	{
-//		debug( 0, L"Remainder is '%ls', slice def was %d characters long", in+pos, pos );
-		
-		*end_ptr = (wchar_t *)(in+pos);
-	}
-//	debug( 0, L"ok, done" );
-	
-	return 0;
-}
-
-static int parse_slice2( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx )
+static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx )
 {
 	
 	
@@ -1002,7 +929,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 					wchar_t *slice_end;
 					all_vars=0;
 					
-					if( parse_slice2( in + stop_pos, &slice_end, var_idx_list ) )
+					if( parse_slice( in + stop_pos, &slice_end, var_idx_list ) )
 					{
 						parser.error( SYNTAX_ERROR,
                                      -1,
@@ -1084,9 +1011,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 							const wcstring &next = var_item_list.at(j);
 							if( is_ok && (i == 0) && (!in[stop_pos]) )
 							{
-								completion_t data_to_push;
-								data_to_push.completion = next; 
-								out.push_back( data_to_push );
+								out.push_back(completion_t(next));
 							}
 							else
 							{
@@ -1150,9 +1075,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
     
 	if( !empty )
 	{
-		completion_t data_to_push;
-		data_to_push.completion = in;
-		out.push_back( data_to_push );
+		out.push_back(completion_t(in));
 	}
     
 	return is_ok;
@@ -1249,9 +1172,7 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 
 	if( bracket_begin == 0 )
 	{
-		completion_t data_to_push;
-		data_to_push.completion = in;
-		out.push_back( data_to_push );
+		out.push_back(completion_t(in));
 		return 1;
 	}
 
@@ -1316,21 +1237,19 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
     
     const wchar_t * const in = input.c_str();
     
-	completion_t data_to_push;
 	int parse_ret;
 	switch( parse_ret = parse_util_locate_cmdsubst(in,
-									   &paran_begin,
-									   &paran_end,
-									   0 ) )
+                                                   &paran_begin,
+                                                   &paran_end,
+                                                   0 ) )
 	{
 		case -1:
 			parser.error( SYNTAX_ERROR,
-                  -1,
-                  L"Mismatched parans" );
+                         -1,
+                         L"Mismatched parans" );
 			return 0;
 		case 0:
-			data_to_push.completion = input; 
-           		outList.push_back(data_to_push);
+            outList.push_back(completion_t(input));
 			return 1;
 		case 1:
             
@@ -1355,7 +1274,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
         std::vector<long> slice_idx;
 		wchar_t *slice_end;
 		
-		if( parse_slice2( tail_begin, &slice_end, slice_idx ) )
+		if( parse_slice( tail_begin, &slice_end, slice_idx ) )
 		{
 			parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 			return 0;
@@ -1429,9 +1348,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
             whole_item.append(tail_item);
 			
 			//al_push( out, whole_item.buff );
-	 	completion_t data_to_push;
-		data_to_push.completion = whole_item;	   
-         outList.push_back(data_to_push);
+            outList.push_back(completion_t(whole_item));
         }
     }
     
@@ -1600,9 +1517,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
     
 	if( (!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean( input.c_str() ) )
 	{
-		completion_t data_to_push;
-		data_to_push.completion = input;
-		output.push_back(data_to_push);
+		output.push_back(completion_t(input));
 		return EXPAND_OK;
 	}
     
@@ -1618,9 +1533,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
 			parser.error( CMDSUBST_ERROR, -1, L"Command substitutions not allowed" );
 			return EXPAND_ERROR;
 		}
-		completion_t data_to_push;
-		data_to_push.completion = input;
-		list1.push_back(data_to_push);
+		list1.push_back(completion_t(input));
 	}
 	else
 	{
@@ -1649,9 +1562,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
                     next[i] = L'$';
                 }
             }
-            completion_t data_to_push;
-            data_to_push.completion = next; 
-            out->push_back(data_to_push);
+            out->push_back(completion_t(next));
         }
         else
         {
@@ -1702,9 +1613,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
             }
             else
             {
-                completion_t data_to_push;
-                data_to_push.completion = next; 
-                out->push_back(data_to_push);
+                out->push_back(completion_t(next));
             }
         }
         else
@@ -1798,9 +1707,7 @@ int expand_string2( const wcstring &input, std::vector<completion_t> &output, in
             }
             else
             {
-                completion_t data_to_push;
-                data_to_push.completion = next; 
-                output.push_back(data_to_push);
+                output.push_back(completion_t(next));
             }
         }
         

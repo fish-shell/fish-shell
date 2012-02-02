@@ -102,8 +102,13 @@
 
 
 
-struct completion_t
+class completion_t
 {
+
+private:
+    /* No public default constructor */
+	completion_t(){ }
+public:
 
 	/**
 	   The completion string
@@ -126,12 +131,21 @@ struct completion_t
 	   is case insensitive.
 	*/
 	int flags;
-
-	completion_t() : flags(0) { }
+    
+    completion_t(const wcstring &comp, const wcstring &desc = L"", int flags_val = 0) : completion(comp), description(desc), flags(flags_val) {
+        if( flags & COMPLETE_AUTO_SPACE )
+        {
+            flags = flags & ~COMPLETE_AUTO_SPACE;
+            size_t len = completion.size();
+            if (len > 0  && ( wcschr( L"/=@:", comp.at(len-1)) != 0 ))
+                flags |= COMPLETE_NO_SPACE;
+            
+        }
+    }
 
 	bool operator < (const completion_t& rhs) const { return this->completion < rhs.completion; }
 	bool operator == (const completion_t& rhs) const { return this->completion == rhs.completion; }
-	bool operator != (const completion_t& rhs) const { return this->completion != rhs.completion; }
+	bool operator != (const completion_t& rhs) const { return ! (*this == rhs); }
 }
 ;
 
@@ -257,15 +271,13 @@ void complete_load( const wchar_t *cmd, int reload );
 /**
    Create a new completion entry
 
-   \param context The halloc context to use for allocating new memory
+   \param completions The array of completions to append to
    \param comp The completion string
    \param desc The description of the completion
    \param flags completion flags
+
 */
-void completion_allocate( std::vector<completion_t> &context,
-			  const wchar_t *comp,
-			  const wchar_t *desc,
-			  int flags );
+void completion_allocate(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, int flags);
 
 
 #endif

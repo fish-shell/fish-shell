@@ -16,7 +16,7 @@
 #include "io.h"
 
 class parser_t;
-struct completion_t;
+class completion_t;
 
 /**
   Read commands from \c fd until encountering EOF

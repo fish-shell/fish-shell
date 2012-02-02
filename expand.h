@@ -65,7 +65,7 @@
  */
 #define EXPAND_RESERVED_END 0xf000f
 
-struct completion_t;
+class completion_t;
 
 enum
 {

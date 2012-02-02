@@ -266,11 +266,11 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			
 		}
 		
-		if( out_completion )
+		if(out_completion)
 		{
 			completion_allocate( out, 
 								 out_completion,
-								 out_desc,
+								 out_desc ? out_desc : L"",
 								 flags );
 		}
 		

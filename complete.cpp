@@ -913,7 +913,6 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 {
 	const wchar_t *cmd_start;
 	int cmd_len;
-	wchar_t *esc;
 	int skip;
 	
 	if( !cmd )

@@ -46,7 +46,7 @@ void reader_destroy();
 /**
    Returns the filename of the file currently read
 */
-wchar_t *reader_current_filename();
+const wchar_t *reader_current_filename();
 
 /**
    Push a new filename on the stack of read files
@@ -57,7 +57,7 @@ void reader_push_current_filename( const wchar_t *fn );
 /**
    Pop the current filename from the stack of read files
  */
-wchar_t *reader_pop_current_filename();
+void reader_pop_current_filename();
 
 /**
    Write the title to the titlebar. This function is called just

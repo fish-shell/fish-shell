@@ -1012,6 +1012,10 @@ int parser_t::get_lineno() const
 
 const wchar_t *parser_t::current_filename() const
 {
+    /* We query a global array for the current file name, so it only makes sense to ask this on the principal parser. */
+    ASSERT_IS_MAIN_THREAD();
+    assert(this == &principal_parser());
+    
 	block_t *b = current_block;
 
 	while( 1 )

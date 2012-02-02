@@ -44,6 +44,7 @@ commence.
 #include <sys/poll.h>
 #include <unistd.h>
 #include <wctype.h>
+#include <stack>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -103,6 +104,7 @@ commence.
 #include "halloc.h"
 #include "halloc_util.h"
 #include "iothread.h"
+#include "intern.h"
 
 #include "parse_util.h"
 
@@ -325,9 +327,9 @@ static int is_interactive_read;
 static int end_loop = 0;
 
 /**
-   The list containing names of files that are being parsed
+   The stack containing names of files that are being parsed
 */
-static array_list_t current_filename;
+static std::stack<const wchar_t *> current_filename;
 
 
 /**
@@ -498,21 +500,24 @@ void reader_handle_int( int sig )
 	
 }
 
-wchar_t *reader_current_filename()
+const wchar_t *reader_current_filename()
 {
-	return al_get_count( &current_filename )?(wchar_t *)al_peek( &current_filename ):0;
+    ASSERT_IS_MAIN_THREAD();
+    return current_filename.empty() ? NULL : current_filename.top();
 }
 
 
 void reader_push_current_filename( const wchar_t *fn )
 {
-	al_push( &current_filename, fn );
+    ASSERT_IS_MAIN_THREAD();
+    current_filename.push(intern(fn));
 }
 
 
-wchar_t *reader_pop_current_filename()
+void reader_pop_current_filename()
 {
-	return (wchar_t *)al_pop( &current_filename );
+    ASSERT_IS_MAIN_THREAD();
+	current_filename.pop();
 }
 
 
@@ -730,14 +735,11 @@ void reader_init()
 	shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
     shell_modes.c_cc[VMIN]=1;
     shell_modes.c_cc[VTIME]=0;
-
-	al_init( &current_filename);
 }
 
 
 void reader_destroy()
 {
-	al_destroy( &current_filename);
 	tcsetattr(0, TCSANOW, &saved_modes);
 }
 

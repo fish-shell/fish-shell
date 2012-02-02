@@ -210,7 +210,7 @@ class reader_data_t
 	/**
 	   List for storing previous search results. Used to avoid duplicates.
 	*/
-	array_list_t search_prev;
+	wcstring_list_t search_prev;
 
 	/**
 	   The current position in search_prev
@@ -1746,7 +1746,7 @@ void reader_sanity_check()
 	}
 }
 
-void reader_replace_current_token( wchar_t *new_token )
+void reader_replace_current_token( const wchar_t *new_token )
 {
 
 	wchar_t *begin, *end;
@@ -1796,23 +1796,6 @@ static void handle_history( const wchar_t *new_str )
 }
 
 /**
-   Check if the specified string is contained in the list, using
-   wcscmp as a comparison function
-*/
-static int contains_al( const wchar_t *needle,
-			array_list_t *haystack )
-{
-	int i;
-	for( i=0; i<al_get_count( haystack ); i++ )
-	{
-		if( !wcscmp( needle, (const wchar_t *)al_get( haystack, i ) ) )
-			return 1;
-	}
-	return 0;
-
-}
-
-/**
    Reset the data structures associated with the token search
 */
 static void reset_token_history()
@@ -1829,9 +1812,8 @@ static void reset_token_history()
 
 	data->token_history_pos = -1;
 	data->search_pos=0;
-	al_foreach( &data->search_prev, &free );
-	al_truncate( &data->search_prev, 0 );
-	al_push( &data->search_prev, wcsdup( (wchar_t *)data->search_buff.buff ) );
+    data->search_prev.resize(0);
+    data->search_prev.push_back(reinterpret_cast<const wchar_t *>(data->search_buff.buff));
 }
 
 
@@ -1843,7 +1825,7 @@ static void reset_token_history()
 */
 static void handle_token_history( int forward, int reset )
 {
-	wchar_t *str=0;
+	const wchar_t *str=0;
 	int current_pos;
 	tokenizer tok;
 
@@ -1859,7 +1841,7 @@ static void handle_token_history( int forward, int reset )
 
 	current_pos  = data->token_history_pos;
 
-	if( forward || data->search_pos < (al_get_count( &data->search_prev )-1) )
+	if( forward || data->search_pos + 1 < (long)data->search_prev.size() )
 	{
 		if( forward )
 		{
@@ -1867,12 +1849,12 @@ static void handle_token_history( int forward, int reset )
 			{
 				data->search_pos--;
 			}
-			str = (wchar_t *)al_get( &data->search_prev, data->search_pos );
+            str = data->search_prev.at(data->search_pos).c_str();
 		}
 		else
 		{
 			data->search_pos++;
-			str = (wchar_t *)al_get( &data->search_prev, data->search_pos );
+            str = data->search_prev.at(data->search_pos).c_str();
 		}
 
 		reader_replace_current_token( str );
@@ -1918,7 +1900,7 @@ static void handle_token_history( int forward, int reset )
 			  return, otherwise add it.
 			*/
 
-			const wchar_t *last = (const wchar_t *)al_get( &data->search_prev, al_get_count( &data->search_prev ) -1 );
+			const wchar_t *last = data->search_prev.back().c_str();
 			if( wcscmp( last, (wchar_t *)data->search_buff.buff ) )
 			{
 				str = wcsdup( (wchar_t *)data->search_buff.buff );
@@ -1950,9 +1932,8 @@ static void handle_token_history( int forward, int reset )
 							}
 							//debug( 3, L"ok pos" );
 
-							if( !contains_al( tok_last( &tok ), &data->search_prev ) )
-							{
-								free(str);
+                            const wcstring last_tok = tok_last( &tok );
+                            if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) != data->search_prev.end()) {
 								data->token_history_pos = tok_get_pos( &tok );
 								str = wcsdup(tok_last( &tok ));
 							}
@@ -1970,8 +1951,8 @@ static void handle_token_history( int forward, int reset )
 			reader_replace_current_token( str );
 			reader_super_highlight_me_plenty( data->buff_pos, 0 );
 			reader_repaint();
-			al_push( &data->search_prev, str );
-			data->search_pos = al_get_count( &data->search_prev )-1;
+            data->search_prev.push_back(str);
+			data->search_pos = data->search_prev.size() - 1;
 		}
 		else if( ! reader_interrupted() )
 		{
@@ -2302,9 +2283,7 @@ void reader_push( const wchar_t *name )
 	reader_set_prompt( L"" );
 	history_set_mode( name );
 
-	al_init( &data->search_prev );
 	data->token_history_buff=0;
-
 }
 
 void reader_pop()
@@ -2329,8 +2308,6 @@ void reader_pop()
 	/*
 	  Clean up after history search
 	*/
-	al_foreach( &n->search_prev, &free );
-	al_destroy( &n->search_prev );
     free( (void *)n->token_history_buff);
 
     /* Invoke the destructor to balance our new */

@@ -165,7 +165,7 @@ int exit_status();
 /**
    Replace the current token with the specified string
 */
-void reader_replace_current_token( wchar_t *new_token );
+void reader_replace_current_token( const wchar_t *new_token );
 
 /**
    The readers interrupt signal handler. Cancels all currently running blocks.

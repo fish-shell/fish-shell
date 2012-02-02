@@ -1179,7 +1179,6 @@ int wildcard_expand( const wchar_t *wc,
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, std::vector<completion_t> &outputs )
 {
     std::vector<completion_t> lst;
-//    al_init(&lst);
     
     int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, lst);
     
@@ -1187,6 +1186,5 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int fla
     for (i=0; i < max; i++) {
         outputs.push_back( lst.at(i));
     }
-//    al_destroy(&lst);
     return res;
 }

@@ -913,9 +913,6 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 {
 	const wchar_t *cmd_start;
 	int cmd_len;
-	wchar_t *lookup_cmd=0;
-	array_list_t list;
-	hash_table_t lookup;
 	wchar_t *esc;
 	int skip;
 	
@@ -964,14 +961,10 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 	}
 	
 
-	esc = escape( cmd_start, 1 );
+    wcstring lookup_cmd(L"__fish_describe_command ");
+    lookup_cmd.append(escape_string(cmd_start, 1));
 
-	lookup_cmd = wcsdupcat( L"__fish_describe_command ", esc );
-	free(esc);
-
-	al_init( &list );
-	hash_init( &lookup, &hash_wcs_func, &hash_wcs_cmp );
-
+    std::map<wcstring, wcstring> lookup;
 
 	/*
 	  First locate a list of possible descriptions using a single
@@ -980,7 +973,8 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 	  systems with a large set of manuals, but it should be ok
 	  since apropos is only called once.
 	*/
-	if( exec_subshell( lookup_cmd, &list ) != -1 )
+    wcstring_list_t list;
+	if( exec_subshell2( lookup_cmd, list ) != -1 )
 	{
 	
 		/*
@@ -990,31 +984,28 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 
 		  Should be reasonably fast, since no memory allocations are needed.
 		*/
-		for( int i=0; i<al_get_count( &list); i++ )
+		for( size_t i=0; i < list.size(); i++ )
 		{
-			wchar_t *el = (wchar_t *)al_get( &list, i );
-			wchar_t *key, *key_end, *val_begin;
-		
-			if( !el )
+            const wcstring &elstr = list.at(i);
+            
+            const wcstring fullkey(elstr, wcslen(cmd_start));
+            
+            size_t tab_idx = fullkey.find(L'\t');
+			if( tab_idx == wcstring::npos )
 				continue;
-
-			key = el+wcslen(cmd_start);
-			key_end = wcschr( key, L'\t' );
-
-			if( !key_end )
-				continue;
-		
-			*key_end = 0;
-			val_begin = key_end+1;
+            
+            const wcstring key(fullkey, 0, tab_idx);
+            wcstring val(fullkey, tab_idx + 1);
 
 			/*
 			  And once again I make sure the first character is uppercased
 			  because I like it that way, and I get to decide these
 			  things.
 			*/
-			val_begin[0]=towupper(val_begin[0]);
+            if (! val.empty())
+                val[0]=towupper(val[0]);
 		
-			hash_put( &lookup, key, val_begin );
+            lookup[key] = val;
 		}
 
 		/*
@@ -1026,27 +1017,17 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 		*/
 		for( size_t i=0; i<comp.size(); i++ )
 		{
-			completion_t &c =  comp.at( i );
-//			const wchar_t *el = c.completion.empty()?NULL:c.completion.c_str();
-			const wchar_t *el = c.completion.c_str();
-
-			wchar_t *new_desc;
-			
-			new_desc = (wchar_t *)hash_get( &lookup,
-											el );
-			
-			if( new_desc )
-			{
-				c.description = new_desc;
-			}
+            completion_t &completion = comp.at(i);
+            const wcstring &el = completion.completion;
+            if (el.empty())
+                continue;
+            
+            std::map<wcstring, wcstring>::iterator new_desc_iter = lookup.find(el);
+            if (new_desc_iter != lookup.end())
+                completion.description = new_desc_iter->second;
 		}
 	}
 	
-	hash_destroy( &lookup );
-	al_foreach( &list,
-				&free );
-	al_destroy( &list );
-	free( lookup_cmd );
 }
 
 /**
@@ -1157,8 +1138,6 @@ static void complete_cmd( const wchar_t *cmd,
 		/*
 		  These return the original strings - don't free them
 		*/
-
-//		al_init( &possible_comp );
 
 		if( use_function )
 		{

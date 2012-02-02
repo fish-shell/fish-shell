@@ -146,8 +146,7 @@ public:
 	bool operator < (const completion_t& rhs) const { return this->completion < rhs.completion; }
 	bool operator == (const completion_t& rhs) const { return this->completion == rhs.completion; }
 	bool operator != (const completion_t& rhs) const { return ! (*this == rhs); }
-}
-;
+};
 
 
 /**

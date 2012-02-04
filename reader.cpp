@@ -195,9 +195,9 @@ class reader_data_t
 	screen_t screen;
 
 	/**
-	   Buffer containing the current search item
+	   String containing the current search item
 	*/
-	string_buffer_t search_buff;
+	wcstring search_buff;
 
 	/**
 	   Saved position used by token history search
@@ -714,7 +714,7 @@ static void exec_prompt()
 	
 	reader_write_title();
 	
-    data->prompt_buff.resize(0);
+    data->prompt_buff.clear();
 	
 	for( i = 0; i < prompt_list.size(); i++ )
 	{
@@ -1806,16 +1806,16 @@ static void reset_token_history()
 
 	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
 	
-	sb_clear( &data->search_buff );
+	data->search_buff.clear();
 	if( begin )
 	{
-		sb_append_substring( &data->search_buff, begin, end-begin);
+        data->search_buff.append(begin, end - begin);
 	}
 
 	data->token_history_pos = -1;
 	data->search_pos=0;
-    data->search_prev.resize(0);
-    data->search_prev.push_back(reinterpret_cast<const wchar_t *>(data->search_buff.buff));
+    data->search_prev.clear();
+    data->search_prev.push_back(data->search_buff);
 }
 
 
@@ -1877,14 +1877,14 @@ static void handle_token_history( int forward, int reset )
 			/*
 			  Search for previous item that contains this substring
 			*/
-			item = history_prev_match( (wchar_t *)data->search_buff.buff);
+			item = history_prev_match(data->search_buff.c_str());
 
 			/*
 			  If there is no match, the original string is returned
 
 			  If so, we clear the match string to avoid infinite loop
 			*/
-			if( wcscmp( item, (wchar_t *)data->search_buff.buff ) == 0 )
+			if( wcscmp( item, data->search_buff.c_str() ) == 0 )
 			{
 				item=L"";
 			}
@@ -1902,10 +1902,10 @@ static void handle_token_history( int forward, int reset )
 			  return, otherwise add it.
 			*/
 
-			const wchar_t *last = data->search_prev.back().c_str();
-			if( wcscmp( last, (wchar_t *)data->search_buff.buff ) )
+			const wcstring &last = data->search_prev.back();
+            if (data->search_buff != last) 
 			{
-				str = wcsdup( (wchar_t *)data->search_buff.buff );
+				str = wcsdup( data->search_buff.c_str() );
 			}
 			else
 			{
@@ -1925,7 +1925,7 @@ static void handle_token_history( int forward, int reset )
 				{
 					case TOK_STRING:
 					{
-						if( wcsstr( tok_last( &tok ), (wchar_t *)data->search_buff.buff ) )
+						if( wcsstr( tok_last( &tok ), data->search_buff.c_str() ) )
 						{
 							//debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
 							if( tok_get_pos( &tok ) >= current_pos )
@@ -2143,7 +2143,7 @@ void reader_set_buffer( const wchar_t *b, int p )
 	}
 
 	data->search_mode = NO_SEARCH;
-	sb_clear( &data->search_buff );
+	data->search_buff.clear();
 	history_reset();
 
 	reader_super_highlight_me_plenty( data->buff_pos,
@@ -2272,7 +2272,6 @@ void reader_push( const wchar_t *name )
 
 	check_size();
 	data->buff[0]=0;
-	sb_init( &data->search_buff );
 
 	if( data->next == 0 )
 	{
@@ -2304,7 +2303,6 @@ void reader_pop()
 	free( n->buff );
 	free( n->color );
 	free( n->indent );
-	sb_destroy( &n->search_buff );
 	sb_destroy( &n->kill_item );
 	
 	/*
@@ -2458,13 +2456,13 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 	data->highlight_function( ctx->buff, ctx->color, match_highlight_pos, error, highlight_complete2, ctx );
 #endif
 
-	if( wcslen((wchar_t *)data->search_buff.buff) )
+	if( ! data->search_buff.empty())
 	{
-		wchar_t * match = wcsstr( data->buff, (wchar_t *)data->search_buff.buff );
+		wchar_t * match = wcsstr( data->buff, data->search_buff.c_str() );
 		if( match )
 		{
 			int start = match-data->buff;
-			int count = wcslen( (wchar_t *)data->search_buff.buff );
+			int count = data->search_buff.size();
 			int i;
 
 			for( i=0; i<count; i++ )
@@ -2669,7 +2667,7 @@ wchar_t *reader_readline()
 	struct termios old_modes;
 
 	check_size();
-	sb_clear( &data->search_buff );
+	data->search_buff.clear();
 	data->buff[data->buff_len]='\0';
 	data->search_mode = NO_SEARCH;
 	
@@ -2985,14 +2983,13 @@ wchar_t *reader_readline()
 					if( data->token_history_pos==-1 )
 					{
 						history_reset();
-						reader_set_buffer( (wchar_t *)data->search_buff.buff,
-										   wcslen( (wchar_t *)data->search_buff.buff ) );
+						reader_set_buffer( data->search_buff.c_str(), data->search_buff.size() );
 					}
 					else
 					{
-						reader_replace_current_token( (wchar_t *)data->search_buff.buff );
+						reader_replace_current_token( data->search_buff.c_str() );
 					}
-					sb_clear( &data->search_buff );
+					data->search_buff.clear();
 					reader_super_highlight_me_plenty( data->buff_pos, 0 );
 					reader_repaint();
 					
@@ -3105,7 +3102,7 @@ wchar_t *reader_readline()
 						data->search_mode = TOKEN_SEARCH;
 					}
 					
-					sb_append( &data->search_buff, data->buff );
+                    data->search_buff.append(data->buff);
 				}
 
 				switch( data->search_mode )
@@ -3118,11 +3115,11 @@ wchar_t *reader_readline()
 						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
 							( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
 						{
-							it = history_prev_match((wchar_t *)data->search_buff.buff);
+							it = history_prev_match(data->search_buff.c_str());
 						}
 						else
 						{
-							it = history_next_match((wchar_t *)data->search_buff.buff);
+							it = history_next_match(data->search_buff.c_str());
 						}
 						
 						handle_history( it );
@@ -3287,7 +3284,7 @@ wchar_t *reader_readline()
 		    (c != R_NULL) )
 		{
 			data->search_mode = NO_SEARCH;
-			sb_clear( &data->search_buff );
+			data->search_buff.clear();
 			history_reset();
 			data->token_history_pos=-1;
 		}

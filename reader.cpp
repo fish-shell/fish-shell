@@ -2397,6 +2397,25 @@ public:
     }
 };
 
+/* Called to set the highlight flag for search results */
+static void highlight_search(void) {
+	if( ! data->search_buff.empty())
+	{
+		wchar_t * match = wcsstr( data->buff, data->search_buff.c_str() );
+		if( match )
+		{
+			int start = match-data->buff;
+			int count = data->search_buff.size();
+			int i;
+
+			for( i=0; i<count; i++ )
+			{
+				data->color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
+			}
+		}
+	}
+}
+
 static void highlight_complete(void *ctx_ptr, int result) {
 	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
 	if (ctx->buff == data->buff) {
@@ -2406,6 +2425,7 @@ static void highlight_complete(void *ctx_ptr, int result) {
 		ctx->color = NULL;
 		//data->repaint_needed = 1;
         //s_reset( &data->screen, 1 );
+        highlight_search();
         reader_repaint();
 	}
 	
@@ -2455,22 +2475,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 #else
 	data->highlight_function( ctx->buff, ctx->color, match_highlight_pos, error, highlight_complete2, ctx );
 #endif
-
-	if( ! data->search_buff.empty())
-	{
-		wchar_t * match = wcsstr( data->buff, data->search_buff.c_str() );
-		if( match )
-		{
-			int start = match-data->buff;
-			int count = data->search_buff.size();
-			int i;
-
-			for( i=0; i<count; i++ )
-			{
-				data->color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
-			}
-		}
-	}
+    highlight_search();
 }
 
 

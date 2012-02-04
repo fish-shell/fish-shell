@@ -2461,13 +2461,6 @@ static int threaded_highlight(void *ctx_ptr) {
 */
 static void reader_super_highlight_me_plenty( int match_highlight_pos, array_list_t *error )
 {
-	
-    /* Ensure we don't repaint with stale data */
-    size_t i;
-    for (i=0; i < data->buff_sz; i++) {
-        data->color[i] = HIGHLIGHT_NORMAL;
-    }
-    
     int *color = (int *)calloc(data->buff_sz, sizeof *color); 
 	background_highlight_context_t *ctx = new background_highlight_context_t(data->buff, color, match_highlight_pos, data->highlight_function);
 #if 1

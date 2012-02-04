@@ -2350,66 +2350,57 @@ void reader_set_test_function( int (*f)( wchar_t * ) )
 
 
 /** A class as the context pointer for a background (threaded) highlight operation. */
-class background_highlight_context {
+class background_highlight_context_t {
 public:
     /**
      The string to highlight
      */
-	wcstring buff;
+	const wcstring buff;
 	
 	/**
 	 Malloc'd color buffer (same size as buff)
 	 */
-	int *color;
+	int * color;
 	
 	/**
 	  The position to use for bracket matching
 	 */
-	int match_highlight_pos;
+	const int match_highlight_pos;
 	
 	/**
 	 Function for syntax highlighting
 	 */
-	highlight_function_t highlight_function;
+	const highlight_function_t highlight_function;
     
     /**
      Environment variables
     */
-    env_vars vars;
+    const env_vars vars;
 
     /**
      When the request was made
     */
-    double when;
+    const double when;
     
-    background_highlight_context() : vars(env_vars::highlighting_keys)
+    background_highlight_context_t(wcstring pbuff, int *pcolor, int phighlight_pos, highlight_function_t phighlight_func) :
+        buff(pbuff),
+        color(pcolor),
+        match_highlight_pos(phighlight_pos),
+        highlight_function(phighlight_func),
+        vars(env_vars::highlighting_keys),
+        when(timef())
     {
         
     }
     
-    ~background_highlight_context()
+    ~background_highlight_context_t()
     {
         free(color);
     }
 };
 
-__attribute__((unused))
-static void highlight_complete2( wchar_t *command, const int *colors, int position, void *ctx_ptr ) {
-	background_highlight_context *ctx = (background_highlight_context *)ctx_ptr;
-    if (ctx->buff == data->buff) {
-		/* The data hasn't changed, so swap in our colors */
-		free(data->color);
-		data->color = ctx->color;
-		ctx->color = NULL;
-		data->repaint_needed = 1;
-	}
-	
-	/* Free our context */
-	delete ctx;
-}
-
 static void highlight_complete(void *ctx_ptr, int result) {
-	background_highlight_context *ctx = (background_highlight_context *)ctx_ptr;
+	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
 	if (ctx->buff == data->buff) {
 		/* The data hasn't changed, so swap in our colors */
 		free(data->color);
@@ -2425,7 +2416,7 @@ static void highlight_complete(void *ctx_ptr, int result) {
 }
 
 static int threaded_highlight(void *ctx_ptr) {
-	background_highlight_context *ctx = (background_highlight_context *)ctx_ptr;
+	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
     array_list_t *error = 0;
     const wchar_t *delayer = ctx->vars.get(L"HIGHLIGHT_DELAY");
     double secDelay = 0;
@@ -2459,12 +2450,8 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
         data->color[i] = HIGHLIGHT_NORMAL;
     }
     
-	background_highlight_context *ctx = new background_highlight_context;
-	ctx->buff = data->buff;
-	ctx->color = (int *)calloc(data->buff_sz, sizeof *ctx->color);
-	ctx->match_highlight_pos = match_highlight_pos;
-	ctx->highlight_function = data->highlight_function;
-    ctx->when = timef();
+    int *color = (int *)calloc(data->buff_sz, sizeof *color); 
+	background_highlight_context_t *ctx = new background_highlight_context_t(data->buff, color, match_highlight_pos, data->highlight_function);
 #if 1
 	iothread_perform(threaded_highlight, highlight_complete, ctx);
 #else

@@ -414,18 +414,11 @@ static void erase_values(wcstring_list_t &list, std::vector<long> &indexes)
 {
 	size_t i;
 	wcstring_list_t result;
-
-//	al_init(&result);
-
 	for (i = 0; i < list.size(); i++) 
 	{
 		if (std::find(indexes.begin(), indexes.end(),  i + 1) != indexes.end()) 
 		{
 			result.push_back( list[ i ] );
-		}
-		else 
-		{
-//			free( (void *)al_get(list, i));
 		}
 	}
 	
@@ -443,24 +436,19 @@ static void erase_values(wcstring_list_t &list, std::vector<long> &indexes)
 */
 static void print_variables(int include_values, int esc, int scope) 
 {
-	array_list_t names;
-	int i;
+    wcstring_list_t names = env_get_names(scope);
+    sort(names.begin(), names.end());
 	
-	al_init( &names );
-	env_get_names( &names, scope );
-	
-	sort_list( &names );
-	
-	for( i = 0; i < al_get_count(&names); i++ )
+	for( size_t i = 0; i < names.size(); i++ )
 	{
-		wchar_t *key = (wchar_t *)al_get( &names, i );
-		wchar_t *e_key = esc ? escape(key, 0) : wcsdup(key);
+		const wcstring key = names.at(i);
+        const wcstring e_key = escape_string(key, 0);
 
-		sb_append(sb_out, e_key);
+		sb_append(sb_out, e_key.c_str());
 		
 		if( include_values ) 
 		{
-			env_var_t value = env_get_string(key);
+			env_var_t value = env_get_string(key.c_str());
 			if( !value.missing() )
 			{
 				int shorten = 0;
@@ -484,9 +472,7 @@ static void print_variables(int include_values, int esc, int scope)
 		}
 		
 		sb_append(sb_out, L"\n");
-		free(e_key);
 	}
-  	al_destroy(&names);
 }
 
 

@@ -1885,8 +1885,8 @@ static void handle_token_history( int forward, int reset )
                 /* No luck */
                 data->token_history_buff = wcsdup(L"");
             } else {
-                history_item_t item = data->history_search.current_item();
-                data->token_history_buff = wcsdup(item.str().c_str());
+                wcstring item = data->history_search.current_item();
+                data->token_history_buff = wcsdup(item.c_str());
             }
 			current_pos = wcslen(data->token_history_buff);
 
@@ -3131,7 +3131,7 @@ wchar_t *reader_readline()
 						
                         wcstring new_text;
                         if (success) {
-                            new_text = data->history_search.current_item().str();
+                            new_text = data->history_search.current_item();
                         } else {
                             new_text = data->search_buff;
                         }

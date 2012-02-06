@@ -9,6 +9,8 @@
 #include "common.h"
 #include "pthread.h"
 #include <vector>
+#include <deque>
+#include <utility>
 #include <tr1/memory>
 using std::tr1::shared_ptr;
 
@@ -100,14 +102,18 @@ class history_search_t {
 
     /** The history in which we are searching */
     history_t * history;
+    
+    /** Our list of previous matches as index, value. The end is the current match. */
+    typedef std::pair<size_t, wcstring> prev_match_t;
+    std::deque<prev_match_t> prev_matches;
+
+    /** Returns yes if a given term is in prev_matches. */
+    bool match_already_made(const wcstring &match) const;
 
     /** The search term */
     wcstring term;
-    
-    /** Current index into the history */
-    size_t idx;
         
-public:
+    public:
 
     /** Finds the next search term (forwards in time). Returns true if one was found. */
     bool go_forwards(void);
@@ -122,20 +128,18 @@ public:
     void go_to_beginning(void);
     
     /** Returns the current search result. asserts if there is no current item. */
-    history_item_t current_item(void) const;
+    wcstring current_item(void) const;
 
     /** Constructor */
     history_search_t(history_t &hist, const wcstring &str) :
         history(&hist),
-        term(str),
-        idx()
+        term(str)
     {}
     
     /* Default constructor */
     history_search_t() :
         history(),
-        term(),
-        idx()
+        term()
     {}
     
 };

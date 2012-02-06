@@ -34,7 +34,7 @@ static int insane;
 
 void sanity_lose()
 {
-	debug( 0, _(L"Errors detected, shutting down") );
+	debug( 0, _(L"Errors detected, shutting down. Break on sanity_lose() to debug.") );
 	insane = 1;
 }
 

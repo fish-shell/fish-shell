@@ -187,7 +187,7 @@ class reader_data_t
 	/**
 	   Buffer containing the whole current commandline
 	*/
-	wchar_t *buff;
+	wcstring command_line;
 
 	/**
 	   The representation of the current screen contents
@@ -279,7 +279,7 @@ class reader_data_t
 	/**
 	   Function for testing if the string can be returned
 	*/
-	int (*test_func)( wchar_t * );
+	int (*test_func)( const wchar_t * );
 
 	/**
 	   When this is true, the reader will exit
@@ -431,11 +431,11 @@ int reader_exit_forced()
 static void reader_repaint()
 {
     //PCA INSTANCED_PARSER what is this call for?
-	parser_t::principal_parser().test( data->buff, data->indent, 0, 0 );
+	parser_t::principal_parser().test( data->command_line.c_str(), data->indent, 0, 0 );
 	
 	s_write( &data->screen,
 		 data->prompt_buff.c_str(),
-		 data->buff,
+		 data->command_line.c_str(),
 		 data->color, 
 		 data->indent, 
 		 data->buff_pos );
@@ -445,8 +445,9 @@ static void reader_repaint()
 /**
    Internal helper function for handling killing parts of text.
 */
-static void reader_kill( wchar_t *begin, int length, int mode, int newv )
+static void reader_kill( size_t begin_idx, int length, int mode, int newv )
 {
+    const wchar_t *begin = data->command_line.c_str() + begin_idx;
 	if( newv )
 	{
 		sb_clear( &data->kill_item );
@@ -474,13 +475,12 @@ static void reader_kill( wchar_t *begin, int length, int mode, int newv )
 		free( old );
 	}
 
-	if( data->buff_pos > (size_t)(begin-data->buff) )
-	{
-		data->buff_pos = maxi( begin-data->buff, data->buff_pos-length );
+	if( data->buff_pos > begin_idx ) {
+		data->buff_pos = maxi( begin_idx, data->buff_pos-length );
 	}
 	
 	data->buff_len -= length;
-	memmove( begin, begin+length, sizeof( wchar_t )*(wcslen( begin+length )+1) );
+    data->command_line.erase(begin_idx, length);
 	
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	reader_repaint();
@@ -535,9 +535,8 @@ static int check_size()
 	if( data->buff_sz < data->buff_len + 2 )
 	{
 		data->buff_sz = maxi( 128, data->buff_len*2 );
-
-		data->buff = (wchar_t *)realloc( data->buff,
-							  sizeof(wchar_t)*data->buff_sz);
+        
+        data->command_line.reserve(data->buff_sz);
 
 		data->color = (int *)realloc( data->color,
 							   sizeof(int)*data->buff_sz);
@@ -545,8 +544,7 @@ static int check_size()
 		data->indent = (int *)realloc( data->indent,
 								sizeof(int)*data->buff_sz);
 
-		if( data->buff==0 ||
-			data->color==0 ||
+		if( data->color==0 ||
 			data->indent == 0 )
 		{
 			DIE_MEM();
@@ -779,16 +777,10 @@ static void remove_backward()
 
 	if( data->buff_pos <= 0 )
 		return;
-
-	if( data->buff_pos < data->buff_len )
-	{
-		memmove( &data->buff[data->buff_pos-1],
-				 &data->buff[data->buff_pos],
-				 sizeof(wchar_t)*(data->buff_len-data->buff_pos+1) );
-	}
+        
+    data->command_line.erase(data->buff_pos-1, 1);    
 	data->buff_pos--;
 	data->buff_len--;
-	data->buff[data->buff_len]=0;
 
 	reader_super_highlight_me_plenty( data->buff_pos,
 									  0 );
@@ -802,32 +794,14 @@ static void remove_backward()
    Insert the characters of the string into the command line buffer
    and print them to the screen using syntax highlighting, etc.
 */
-static int insert_str(const wchar_t *str)
+static int insert_str(const wcstring &str)
 {
-	int len = wcslen( str );
-	size_t old_len = data->buff_len;
-	
-	assert( data->buff_pos >= 0 );
-	assert( data->buff_pos <= data->buff_len );
-	assert( len >= 0 );
-	
+    size_t len = str.size();
 	data->buff_len += len;
 	check_size();
-	
-	/* Insert space for extra characters at the right position */
-	if( data->buff_pos < old_len )
-	{
-		memmove( &data->buff[data->buff_pos+len],
-				 &data->buff[data->buff_pos],
-				 sizeof(wchar_t)*(old_len-data->buff_pos) );
-	}
-	memmove( &data->buff[data->buff_pos], str, sizeof(wchar_t)*len );
-	data->buff_pos += len;
-	data->buff[data->buff_len]='\0';
-	
-	/*
-	  Syntax highlight 
-	*/
+    data->command_line.insert(data->buff_pos, str);
+    data->buff_pos += len;
+	/* Syntax highlight  */
 	reader_super_highlight_me_plenty( data->buff_pos-1,
 									  0 );
 	
@@ -931,10 +905,10 @@ static wchar_t get_quote( wchar_t *cmd, int len )
    \param string If not 0, get_parm will store a copy of the parameter string as returned by the tokenizer.
    \param type If not 0, get_param will store the token type as returned by tok_last.
 */
-static void get_param( wchar_t *cmd,
-					   int pos,
+static void get_param( const wchar_t *cmd,
+					   const int pos,
 					   wchar_t *quote,
-					   wchar_t **offset,
+					   const wchar_t **offset,
 					   wchar_t **string,
 					   int *type )
 {
@@ -963,10 +937,10 @@ static void get_param( wchar_t *cmd,
 	}
 
 	tok_destroy( &tok );
-
-	wchar_t c = cmd[pos];
-	cmd[pos]=0;
-	int cmdlen = wcslen( cmd );
+    
+    wchar_t *cmd_tmp = wcsdup(cmd);
+	cmd_tmp[pos]=0;
+	int cmdlen = wcslen( cmd_tmp );
 	unfinished = (cmdlen==0);
 	if( !unfinished )
 	{
@@ -974,9 +948,9 @@ static void get_param( wchar_t *cmd,
 
 		if( !unfinished )
 		{
-			if( wcschr( L" \t\n\r", cmd[cmdlen-1] ) != 0 )
+			if( wcschr( L" \t\n\r", cmd_tmp[cmdlen-1] ) != 0 )
 			{
-				if( ( cmdlen == 1) || (cmd[cmdlen-2] != L'\\') )
+				if( ( cmdlen == 1) || (cmd_tmp[cmdlen-2] != L'\\') )
 				{
 					unfinished=1;
 				}
@@ -991,7 +965,7 @@ static void get_param( wchar_t *cmd,
 	{
 		if( !unfinished )
 		{
-			while( (cmd[prev_pos] != 0) && (wcschr( L";|",cmd[prev_pos])!= 0) )
+			while( (cmd_tmp[prev_pos] != 0) && (wcschr( L";|",cmd_tmp[prev_pos])!= 0) )
 				prev_pos++;
 
 			*offset = cmd + prev_pos;
@@ -1001,7 +975,6 @@ static void get_param( wchar_t *cmd,
 			*offset = cmd + pos;
 		}
 	}
-	cmd[pos]=c;
 }
 
 /**
@@ -1032,14 +1005,15 @@ static void completion_insert( const wchar_t *val, int flags )
 		string_buffer_t sb;
 		wchar_t *escaped;
 		
-		parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
-		end = data->buff+data->buff_pos;
+        const wchar_t *buff = data->command_line.c_str();
+		parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
+		end = buff + data->buff_pos;
 
-		tok_start = begin - data->buff;
+		tok_start = begin - buff;
 		tok_len = end-begin;
 						
 		sb_init( &sb );
-		sb_append_substring( &sb, data->buff, begin - data->buff );
+		sb_append_substring( &sb, buff, begin - buff );
 		
 		if( do_escape )
 		{
@@ -1063,7 +1037,7 @@ static void completion_insert( const wchar_t *val, int flags )
 		
 		sb_append( &sb, end );
 						
-		reader_set_buffer( (wchar_t *)sb.buff, (begin-data->buff)+move_cursor );
+		reader_set_buffer( (wchar_t *)sb.buff, (begin-buff)+move_cursor );
 		sb_destroy( &sb );
 						
 		reader_super_highlight_me_plenty( data->buff_pos, 0 );
@@ -1075,8 +1049,7 @@ static void completion_insert( const wchar_t *val, int flags )
 		
 		if( do_escape )
 		{
-				
-			get_param( data->buff,
+			get_param( data->command_line.c_str(),
 				   data->buff_pos,
 				   &quote,
 				   0, 0, 0 );
@@ -1136,7 +1109,7 @@ static void completion_insert( const wchar_t *val, int flags )
 			{
 
 				if( quote &&
-				    (data->buff[data->buff_pos] != quote ) ) 
+				    (data->command_line.c_str()[data->buff_pos] != quote ) ) 
 				{
 					/* 
 					   This is a quoted parameter, first print a quote 
@@ -1224,21 +1197,21 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 		if( el.flags & COMPLETE_NO_CASE )
 		  {
 		    if( base_len == -1 )
-		      {
-			const wchar_t *begin;
-				
-			parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
-			base_len = data->buff_pos - (begin-data->buff);
-		      }
+            {
+                const wchar_t *begin, *buff = data->command_line.c_str();
+                
+                parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
+                base_len = data->buff_pos - (begin-buff);
+            }
 								
 		    wcstring foo_wstr = escape_string( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 		    foo = wcsdup(foo_wstr.c_str());
 		  }
 		else
-		  {
+        {
 		    wcstring foo_wstr = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 		    foo = wcsdup(foo_wstr.c_str());
-		  }
+        }
 		
 	
 		if( !el.description.empty() )
@@ -1402,11 +1375,11 @@ static int handle_completions( std::vector<completion_t> &comp )
 	int done = 0;
 	int count = 0;
 	int flags=0;
-	const wchar_t *begin, *end;
+	const wchar_t *begin, *end, *buff = data->command_line.c_str();
 	wchar_t *tok;
 	
-	parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
-	end = data->buff+data->buff_pos;
+	parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
+	end = buff+data->buff_pos;
 	
 	context = halloc( 0, 0 );
 	tok = halloc_wcsndup( context, begin, end-begin );
@@ -1566,15 +1539,16 @@ static int handle_completions( std::vector<completion_t> &comp )
 		*/
 		int len;
 		wchar_t * prefix;
-		wchar_t * prefix_start;
-		get_param( data->buff,
+		const wchar_t * prefix_start;
+        const wchar_t *buff = data->command_line.c_str();
+		get_param( buff,
 				   data->buff_pos,
 				   0,
 				   &prefix_start,
 				   0,
 				   0 );
 
-		len = &data->buff[data->buff_pos]-prefix_start+1;
+		len = &buff[data->buff_pos]-prefix_start+1;
 
 		if( len <= PREFIX_MAX_LEN )
 		{
@@ -1601,7 +1575,8 @@ static int handle_completions( std::vector<completion_t> &comp )
 			int is_quoted;
 
 			wchar_t quote;
-			get_param( data->buff, data->buff_pos, &quote, 0, 0, 0 );
+            const wchar_t *buff = data->command_line.c_str();
+			get_param( buff, data->buff_pos, &quote, 0, 0, 0 );
 			is_quoted = (quote != L'\0');
 			
 			write_loop(1, "\n", 1 );
@@ -1748,7 +1723,7 @@ void reader_sanity_check()
 		if(!( data->buff_pos <= data->buff_len ))
 			sanity_lose();
 
-		if(!( data->buff_len == wcslen( data->buff ) ))
+		if(!( data->buff_len == data->command_line.size() ))
 			sanity_lose();
 
 	}
@@ -1764,7 +1739,8 @@ void reader_replace_current_token( const wchar_t *new_token )
 	/*
 	  Find current token
 	*/
-	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
+    const wchar_t *buff = data->command_line.c_str();
+	parse_util_token_extent( (wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0 );
 
 	if( !begin || !end )
 		return;
@@ -1773,11 +1749,11 @@ void reader_replace_current_token( const wchar_t *new_token )
 	  Make new string
 	*/
 	sb_init( &sb );
-	sb_append_substring( &sb, data->buff, begin-data->buff );
+	sb_append_substring( &sb, buff, begin-buff );
 	sb_append( &sb, new_token );
 	sb_append( &sb, end );
 
-	new_pos = (begin-data->buff) + wcslen(new_token);
+	new_pos = (begin-buff) + wcslen(new_token);
 
 	reader_set_buffer( (wchar_t *)sb.buff, new_pos );
 	sb_destroy( &sb );
@@ -1793,8 +1769,8 @@ static void handle_history( const wcstring &new_str )
 {
     data->buff_len = new_str.size();
     check_size();
-    wcscpy( data->buff, new_str.c_str() );
-    data->buff_pos=wcslen(data->buff);
+    data->command_line = new_str;
+    data->buff_pos=data->command_line.size();
     reader_super_highlight_me_plenty( data->buff_pos, 0 );
     reader_repaint();
 }
@@ -1805,8 +1781,8 @@ static void handle_history( const wcstring &new_str )
 static void reset_token_history()
 {
 	const wchar_t *begin, *end;
-
-	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
+    const wchar_t *buff = data->command_line.c_str();
+	parse_util_token_extent( (wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0 );
 	
 	data->search_buff.clear();
 	if( begin )
@@ -2025,7 +2001,7 @@ static void move_word( int dir, int erase, int newv )
 		if( end_buff_pos != data->buff_pos )
 		{
 			
-			c = data->buff[end_buff_pos];
+			c = data->command_line.c_str()[end_buff_pos];
 			
 			if( !iswspace( c ) )
 			{
@@ -2055,7 +2031,7 @@ static void move_word( int dir, int erase, int newv )
 				break;
 		}
 		
-		c = data->buff[end_buff_pos];
+		c = data->command_line.c_str()[end_buff_pos];
 		
 		if( !iswalnum( c ) )
 		{
@@ -2091,7 +2067,7 @@ static void move_word( int dir, int erase, int newv )
 		int first_char = mini( data->buff_pos, end_buff_pos );
 //		fwprintf( stderr, L"Remove from %d to %d\n", first_char, first_char+remove_count );
 		
-		reader_kill( data->buff + first_char, remove_count, dir?KILL_APPEND:KILL_PREPEND, newv );
+		reader_kill( first_char, remove_count, dir?KILL_APPEND:KILL_PREPEND, newv );
 		
 	}
 	else
@@ -2102,10 +2078,10 @@ static void move_word( int dir, int erase, int newv )
 }
 
 
-wchar_t *reader_get_buffer(void)
+const wchar_t *reader_get_buffer(void)
 {
     ASSERT_IS_MAIN_THREAD();
-	return data?data->buff:NULL;
+	return data?data->command_line.c_str():NULL;
 }
 
 history_t *reader_get_history(void) {
@@ -2115,16 +2091,18 @@ history_t *reader_get_history(void) {
 
 void reader_set_buffer( const wchar_t *b, int p )
 {
-	int l = wcslen( b );
-
 	if( !data )
 		return;
+
+    /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
+	int l = wcslen( b );
+
 
 	data->buff_len = l;
 	check_size();
 
-	if( data->buff != b )
-		wcscpy( data->buff, b );
+    const wcstring tmp = b;
+    data->command_line = tmp;
 
 	if( p>=0 )
 	{
@@ -2139,8 +2117,7 @@ void reader_set_buffer( const wchar_t *b, int p )
 	data->search_buff.clear();
 	data->history_search.go_to_end();
 
-	reader_super_highlight_me_plenty( data->buff_pos,
-					  0 );
+	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	reader_repaint_needed();
 }
 
@@ -2220,7 +2197,7 @@ void reader_run_command( parser_t &parser, const wchar_t *cmd )
 }
 
 
-int reader_shell_test( wchar_t *b )
+int reader_shell_test( const wchar_t *b )
 {
 	int res = parser_t::principal_parser().test( b, 0, 0, 0 );
 	
@@ -2246,7 +2223,7 @@ int reader_shell_test( wchar_t *b )
    detection for general purpose, there are no invalid strings, so
    this function always returns false.
 */
-static int default_test( wchar_t *b )
+static int default_test( const wchar_t *b )
 {
 	return 0;
 }
@@ -2265,7 +2242,6 @@ void reader_push( const wchar_t *name )
 	data=n;
 
 	check_size();
-	data->buff[0]=0;
 
 	if( data->next == 0 )
 	{
@@ -2292,7 +2268,6 @@ void reader_pop()
 
 	data=data->next;
 
-	free( n->buff );
 	free( n->color );
 	free( n->indent );
 	sb_destroy( &n->kill_item );
@@ -2328,7 +2303,7 @@ void reader_set_highlight_function( highlight_function_t func )
 	data->highlight_function = func;
 }
 
-void reader_set_test_function( int (*f)( wchar_t * ) )
+void reader_set_test_function( int (*f)( const wchar_t * ) )
 {
 	data->test_func = f;
 }
@@ -2340,7 +2315,7 @@ public:
     /**
      The string to highlight
      */
-	const wcstring buff;
+	const wcstring string_to_highlight;
 	
 	/**
 	 Malloc'd color buffer (same size as buff)
@@ -2367,8 +2342,8 @@ public:
     */
     const double when;
     
-    background_highlight_context_t(wcstring pbuff, int *pcolor, int phighlight_pos, highlight_function_t phighlight_func) :
-        buff(pbuff),
+    background_highlight_context_t(const wcstring &pbuff, int *pcolor, int phighlight_pos, highlight_function_t phighlight_func) :
+        string_to_highlight(pbuff),
         color(pcolor),
         match_highlight_pos(phighlight_pos),
         highlight_function(phighlight_func),
@@ -2388,10 +2363,11 @@ public:
 static void highlight_search(void) {
 	if( ! data->search_buff.empty() && ! data->history_search.is_at_end())
 	{
-		wchar_t * match = wcsstr( data->buff, data->search_buff.c_str() );
+        const wchar_t *buff = data->command_line.c_str();
+		const wchar_t *match = wcsstr( buff, data->search_buff.c_str() );
 		if( match )
 		{
-			int start = match-data->buff;
+			int start = match-buff;
 			int count = data->search_buff.size();
 			int i;
 
@@ -2406,7 +2382,7 @@ static void highlight_search(void) {
 static void highlight_complete(void *ctx_ptr, int result) {
     ASSERT_IS_MAIN_THREAD();
 	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
-	if (ctx->buff == data->buff) {
+	if (ctx->string_to_highlight == data->command_line) {
 		/* The data hasn't changed, so swap in our colors */
 		free(data->color);
 		data->color = ctx->color;
@@ -2432,7 +2408,7 @@ static int threaded_highlight(void *ctx_ptr) {
     }
     if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
     //write(0, "Start", 5);
-    ctx->highlight_function( ctx->buff.c_str(), ctx->color, ctx->match_highlight_pos, error, ctx->vars );
+    ctx->highlight_function( ctx->string_to_highlight.c_str(), ctx->color, ctx->match_highlight_pos, error, ctx->vars );
     //write(0, "End", 3);
     return 0;
 }
@@ -2450,7 +2426,7 @@ static int threaded_highlight(void *ctx_ptr) {
 static void reader_super_highlight_me_plenty( int match_highlight_pos, array_list_t *error )
 {
     int *color = (int *)calloc(data->buff_sz, sizeof *color); 
-	background_highlight_context_t *ctx = new background_highlight_context_t(data->buff, color, match_highlight_pos, data->highlight_function);
+	background_highlight_context_t *ctx = new background_highlight_context_t(data->command_line, color, match_highlight_pos, data->highlight_function);
 #if 1
 	iothread_perform(threaded_highlight, highlight_complete, ctx);
 #else
@@ -2551,7 +2527,7 @@ static int read_i()
 
 	while( (!data->end_loop) && (!sanity_check()) )
 	{
-		wchar_t *tmp;
+		const wchar_t *tmp;
 
 		if( function_exists( PROMPT_FUNCTION_NAME ) )
 			reader_set_prompt( PROMPT_FUNCTION_NAME );
@@ -2577,9 +2553,9 @@ static int read_i()
 			tmp = wcsdup( tmp );
 			
 			data->buff_pos=data->buff_len=0;
-			data->buff[data->buff_len]=L'\0';
+            data->command_line.resize(data->buff_len);
 			reader_run_command( parser, tmp );
-			free( tmp );
+			free( (void *)tmp );
 			if( data->end_loop)
 			{
 				handle_end_loop();
@@ -2640,7 +2616,7 @@ static int is_backslashed( const wchar_t *str, int pos )
 }
 
 
-wchar_t *reader_readline()
+const wchar_t *reader_readline()
 {
 
 	wint_t c;
@@ -2654,7 +2630,7 @@ wchar_t *reader_readline()
 
 	check_size();
 	data->search_buff.clear();
-	data->buff[data->buff_len]='\0';
+    data->command_line.resize(data->buff_len);
 	data->search_mode = NO_SEARCH;
 	
 	
@@ -2738,7 +2714,7 @@ wchar_t *reader_readline()
 */
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank=0;
-		
+        const wchar_t *buff = data->command_line.c_str();
 		switch( c )
 		{
 
@@ -2746,7 +2722,7 @@ wchar_t *reader_readline()
 			case R_BEGINNING_OF_LINE:
 			{
 				while( ( data->buff_pos>0 ) && 
-					   ( data->buff[data->buff_pos-1] != L'\n' ) )
+					   ( buff[data->buff_pos-1] != L'\n' ) )
 				{
 					data->buff_pos--;
 				}
@@ -2757,8 +2733,8 @@ wchar_t *reader_readline()
 
 			case R_END_OF_LINE:
 			{
-				while( data->buff[data->buff_pos] && 
-					   data->buff[data->buff_pos] != L'\n' )
+				while( buff[data->buff_pos] && 
+					   buff[data->buff_pos] != L'\n' )
 				{
 					data->buff_pos++;
 				}
@@ -2820,24 +2796,25 @@ wchar_t *reader_readline()
 				{
 					const wchar_t *begin, *end;
 					const wchar_t *token_begin, *token_end;
+                    const wchar_t *buff = data->command_line.c_str();
 					wchar_t *buffcpy;
 					int len;
 					int cursor_steps;
 
-					parse_util_cmdsubst_extent( data->buff, data->buff_pos, &begin, &end );
+					parse_util_cmdsubst_extent( buff, data->buff_pos, &begin, &end );
 
-					parse_util_token_extent( begin, data->buff_pos - (begin-data->buff), &token_begin, &token_end, 0, 0 );
+					parse_util_token_extent( begin, data->buff_pos - (begin-buff), &token_begin, &token_end, 0, 0 );
 					
-					cursor_steps = token_end - data->buff- data->buff_pos;
+					cursor_steps = token_end - buff- data->buff_pos;
 					data->buff_pos += cursor_steps;
-					if( is_backslashed( data->buff, data->buff_pos ) )
+					if( is_backslashed( buff, data->buff_pos ) )
 					{
 						remove_backward();
 					}
 					
 					reader_repaint();
 					
-					len = data->buff_pos - (begin-data->buff);
+					len = data->buff_pos - (begin-buff);
 					buffcpy = wcsndup( begin, len );
 
 //					comp = al_halloc( 0 );
@@ -2860,8 +2837,9 @@ wchar_t *reader_readline()
 			/* kill */
 			case R_KILL_LINE:
 			{
-				wchar_t *begin = &data->buff[data->buff_pos];
-				wchar_t *end = begin;
+                const wchar_t *buff = data->command_line.c_str();
+				const wchar_t *begin = &buff[data->buff_pos];
+				const wchar_t *end = begin;
 				int len;
 								
 				while( *end && *end != L'\n' )
@@ -2874,7 +2852,7 @@ wchar_t *reader_readline()
 				
 				if( len )
 				{
-					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_LINE );
+					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE );
 				}
 				
 				break;
@@ -2884,11 +2862,12 @@ wchar_t *reader_readline()
 			{
 				if( data->buff_pos > 0 )
 				{
-					wchar_t *end = &data->buff[data->buff_pos];
-					wchar_t *begin = end;
+                    const wchar_t *buff = data->command_line.c_str();
+					const wchar_t *end = &buff[data->buff_pos];
+					const wchar_t *begin = end;
 					int len;
 					
-					while( begin > data->buff  && *begin != L'\n' )
+					while( begin > buff  && *begin != L'\n' )
 						begin--;
 					
 					if( *begin == L'\n' )
@@ -2897,7 +2876,7 @@ wchar_t *reader_readline()
 					len = maxi( end-begin, 1 );
 					begin = end - len;
 										
-					reader_kill( begin, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );					
+					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );					
 					
 				}
 				break;
@@ -2906,11 +2885,12 @@ wchar_t *reader_readline()
 
 			case R_KILL_WHOLE_LINE:
 			{
-				wchar_t *end = &data->buff[data->buff_pos];
-				wchar_t *begin = end;
+                const wchar_t *buff = data->command_line.c_str();
+				const wchar_t *end = &buff[data->buff_pos];
+				const wchar_t *begin = end;
 				int len;
 		
-				while( begin > data->buff  && *begin != L'\n' )
+				while( begin > buff  && *begin != L'\n' )
 					begin--;
 				
 				if( *begin == L'\n' )
@@ -2929,7 +2909,7 @@ wchar_t *reader_readline()
 				
 				if( len )
 				{
-					reader_kill( begin, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );					
+					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );					
 				}
 				
 				break;
@@ -3017,13 +2997,13 @@ wchar_t *reader_readline()
 				/*
 				  Allow backslash-escaped newlines
 				*/
-				if( is_backslashed( data->buff, data->buff_pos ) )
+				if( is_backslashed( data->command_line.c_str(), data->buff_pos ) )
 				{
 					insert_char( '\n' );
 					break;
 				}
 				
-				switch( data->test_func( data->buff ) )
+				switch( data->test_func( data->command_line.c_str() ) )
 				{
 
 					case 0:
@@ -3031,12 +3011,12 @@ wchar_t *reader_readline()
 						/*
 						  Finished commend, execute it
 						*/
-						if( wcslen( data->buff ) )
+						if( ! data->command_line.empty() )
 						{
 //						wcscpy(data->search_buff,L"");
 							//history_add( data->buff );
                             if (data->history)
-                                data->history->add(data->buff);
+                                data->history->add(data->command_line);
 						}
 						finished=1;
 						data->buff_pos=data->buff_len;
@@ -3091,7 +3071,7 @@ wchar_t *reader_readline()
 						data->search_mode = TOKEN_SEARCH;
 					}
 					
-                    data->search_buff.append(data->buff);
+                    data->search_buff.append(data->command_line);
                     data->history_search = history_search_t(*data->history, data->search_buff);
 				}
 
@@ -3209,8 +3189,7 @@ wchar_t *reader_readline()
 			case R_UP_LINE:
 			case R_DOWN_LINE:
 			{
-				int line_old = parse_util_get_line_from_offset( data->buff,
-										data->buff_pos );
+				int line_old = parse_util_get_line_from_offset( data->command_line.c_str(), data->buff_pos );
 				int line_new;
 				
 				if( c == R_UP_LINE )
@@ -3218,7 +3197,7 @@ wchar_t *reader_readline()
 				else
 					line_new = line_old+1;
 	
-				int line_count = parse_util_lineno( data->buff, data->buff_len )-1;
+				int line_count = parse_util_lineno( data->command_line.c_str(), data->buff_len )-1;
 				
 				if( line_new >= 0 && line_new <= line_count)
 				{
@@ -3230,19 +3209,16 @@ wchar_t *reader_readline()
 					int line_offset_old;
 					int total_offset_new;
 
-					base_pos_new = parse_util_get_offset_from_line( data->buff, 
-										    line_new );
+					base_pos_new = parse_util_get_offset_from_line( data->command_line, line_new );
 
-					base_pos_old = parse_util_get_offset_from_line( data->buff, 
-											line_old );
+					base_pos_old = parse_util_get_offset_from_line( data->command_line,  line_old );
 					
 					
 					indent_old = data->indent[base_pos_old];
 					indent_new = data->indent[base_pos_new];
 					
-					line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->buff,
-												 line_old );
-					total_offset_new = parse_util_get_offset( data->buff, line_new, line_offset_old - 4*(indent_new-indent_old));
+					line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->command_line, line_old );
+					total_offset_new = parse_util_get_offset( data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
 					data->buff_pos = total_offset_new;
 					reader_repaint();
 				}
@@ -3304,7 +3280,7 @@ wchar_t *reader_readline()
 		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
 	}
 	
-	return finished ? data->buff : 0;
+	return finished ? data->command_line.c_str() : 0;
 }
 
 int reader_search_mode()

@@ -83,7 +83,7 @@ void reader_run_command( const wchar_t *buff );
    Get the string of character currently entered into the command
    buffer, or 0 if interactive mode is uninitialized.
 */
-wchar_t *reader_get_buffer();
+const wchar_t *reader_get_buffer();
 
 /** Returns the current reader's history */
 history_t *reader_get_history(void);
@@ -113,7 +113,7 @@ int reader_interrupted();
    must have been called in order to set up a valid reader
    environment.
 */
-wchar_t *reader_readline();
+const wchar_t *reader_readline();
 
 /**
    Push a new reader environment. 
@@ -153,7 +153,7 @@ void reader_set_highlight_function( highlight_function_t );
    Specify function for testing if the command buffer contains syntax
    errors that must be corrected before returning.
 */
-void reader_set_test_function( int (*f)( wchar_t * ) );
+void reader_set_test_function( int (*f)( const wchar_t * ) );
 
 /**
    Specify string of shell commands to be run in order to generate the
@@ -185,7 +185,7 @@ int reader_exit_forced();
    Test if the given shell command contains errors. Uses parser_test
    for testing. Suitable for reader_set_test_function().
 */
-int reader_shell_test( wchar_t *b );
+int reader_shell_test( const wchar_t *b );
 
 /**
    Test whether the interactive reader is in search mode.

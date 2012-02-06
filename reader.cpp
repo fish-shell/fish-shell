@@ -175,6 +175,9 @@ commence.
  */
 #define SEARCH_FORWARD 1
 
+/* A color is an int */
+typedef int color_t;
+
 /**
    A struct describing the state of the interactive reader. These
    states can be stacked, in case reader_readline() calls are
@@ -184,10 +187,11 @@ class reader_data_t
 {
     public:
     
-	/**
-	   Buffer containing the whole current commandline
-	*/
+	/** String containing the whole current commandline */
 	wcstring command_line;
+    
+    /** String containing the autosuggestion */
+    wcstring autosuggestion;
 
 	/**
 	   The representation of the current screen contents
@@ -255,12 +259,10 @@ class reader_data_t
 	   color[i] is the classification (according to the enum in
 	   highlight.h) of buff[i].
 	*/
-	int *color;
+    std::vector<color_t> colors;
 
-	/**
-	   An array defining the block level at each character.
-	*/
-	int *indent;
+	/** An array defining the block level at each character. */
+	std::vector<int> indents;
 
 	/**
 	   Function for tab completion
@@ -427,15 +429,34 @@ int reader_exit_forced()
 
 static void reader_repaint()
 {
-    //PCA INSTANCED_PARSER what is this call for?
-	parser_t::principal_parser().test( data->command_line.c_str(), data->indent, 0, 0 );
-	
+    //Update the indentation
+	parser_t::principal_parser().test( data->command_line.c_str(), &data->indents[0], 0, 0 );
+	    
+#if 0
 	s_write( &data->screen,
 		 data->prompt_buff.c_str(),
 		 data->command_line.c_str(),
-		 data->color, 
-		 data->indent, 
+		 &data->colors[0],
+		 &data->indents[0], 
 		 data->buff_pos );
+#else
+
+    wcstring full_line = (data->autosuggestion.empty() ? data->command_line : data->autosuggestion);
+    size_t len = std::max((size_t)1, full_line.size());
+    
+    std::vector<color_t> colors = data->colors;
+    colors.resize(len, FISH_COLOR_NORMAL);
+    
+    std::vector<int> indents = data->indents;
+    indents.resize(len);
+
+	s_write( &data->screen,
+		 data->prompt_buff.c_str(),
+		 full_line.c_str(),
+		 &colors[0],
+		 &indents[0], 
+		 data->buff_pos );
+#endif
 	data->repaint_needed = 0;
 }
 
@@ -532,19 +553,9 @@ static int check_size()
 	{
 		data->buff_sz = maxi( 128, data->command_length()*2 );
         
-        data->command_line.reserve(data->buff_sz);
-
-		data->color = (int *)realloc( data->color,
-							   sizeof(int)*data->buff_sz);
-
-		data->indent = (int *)realloc( data->indent,
-								sizeof(int)*data->buff_sz);
-
-		if( data->color==0 ||
-			data->indent == 0 )
-		{
-			DIE_MEM();
-		}
+        data->command_line.reserve(data->buff_sz);        
+        data->colors.resize(data->buff_sz);
+        data->indents.resize(data->buff_sz);
 	}
 	return 1;
 }
@@ -777,8 +788,7 @@ static void remove_backward()
     data->command_line.erase(data->buff_pos-1, 1);    
 	data->buff_pos--;
 
-	reader_super_highlight_me_plenty( data->buff_pos,
-									  0 );
+	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 
 	reader_repaint();
 
@@ -796,8 +806,7 @@ static int insert_string(const wcstring &str)
     data->command_line.insert(data->buff_pos, str);
     data->buff_pos += len;
 	/* Syntax highlight  */
-	reader_super_highlight_me_plenty( data->buff_pos-1,
-									  0 );
+	reader_super_highlight_me_plenty( data->buff_pos-1, 0 );
 	
 	reader_repaint();
 	return 1;
@@ -808,9 +817,9 @@ static int insert_string(const wcstring &str)
    Insert the character into the command line buffer and print it to
    the screen using syntax highlighting, etc.
 */
-static int insert_char( int c )
+static int insert_char( wchar_t c )
 {
-	return insert_string( wcstring(1, (wchar_t)c) );
+	return insert_string( wcstring(1, c) );
 }
 
 
@@ -1272,6 +1281,17 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 	io_buffer_destroy( in);
 }
 
+static void update_autosuggestion(void) {
+    /* Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if we're not doing a history search.  */
+    data->autosuggestion.clear();
+    if (! data->command_line.empty() && data->history_search.is_at_end()) {
+        history_search_t searcher = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
+        if (searcher.go_backwards()) {
+            data->autosuggestion = searcher.current_item();
+        }
+    }
+}
+
 /**
   Flash the screen. This function only changed the color of the
   current line, since the flash_screen sequnce is rather painful to
@@ -1283,7 +1303,7 @@ static void reader_flash()
 
 	for( size_t i=0; i<data->buff_pos; i++ )
 	{
-		data->color[i] = HIGHLIGHT_SEARCH_MATCH<<16;
+		data->colors.at(i) = HIGHLIGHT_SEARCH_MATCH<<16;
 	}
 	
 	reader_repaint();
@@ -1293,6 +1313,7 @@ static void reader_flash()
 	nanosleep( &pollint, NULL );
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+    
 	reader_repaint();
 	
 	
@@ -2247,9 +2268,6 @@ void reader_pop()
 	}
 
 	data=data->next;
-
-	free( n->color );
-	free( n->indent );
 	sb_destroy( &n->kill_item );
 	
     /* Invoke the destructor to balance our new */
@@ -2353,7 +2371,7 @@ static void highlight_search(void) {
 
 			for( i=0; i<count; i++ )
 			{
-				data->color[start+i] |= HIGHLIGHT_SEARCH_MATCH<<16;
+				data->colors.at(start+i) |= HIGHLIGHT_SEARCH_MATCH<<16;
 			}
 		}
 	}
@@ -2364,9 +2382,13 @@ static void highlight_complete(void *ctx_ptr, int result) {
 	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
 	if (ctx->string_to_highlight == data->command_line) {
 		/* The data hasn't changed, so swap in our colors */
-		free(data->color);
-		data->color = ctx->color;
+        size_t len = ctx->string_to_highlight.size();
+        data->colors.clear();
+        data->colors.insert(data->colors.begin(), ctx->color, ctx->color + len);
+        
+        free(ctx->color);
 		ctx->color = NULL;
+        
 		//data->repaint_needed = 1;
         //s_reset( &data->screen, 1 );
         highlight_search();
@@ -2413,6 +2435,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 	data->highlight_function( ctx->buff, ctx->color, match_highlight_pos, error, highlight_complete2, ctx );
 #endif
     highlight_search();
+    update_autosuggestion();
 }
 
 
@@ -3051,7 +3074,7 @@ const wchar_t *reader_readline()
 					}
 					
                     data->search_buff.append(data->command_line);
-                    data->history_search = history_search_t(*data->history, data->search_buff);
+                    data->history_search = history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
 				}
 
 				switch( data->search_mode )
@@ -3193,8 +3216,8 @@ const wchar_t *reader_readline()
 					base_pos_old = parse_util_get_offset_from_line( data->command_line,  line_old );
 					
 					
-					indent_old = data->indent[base_pos_old];
-					indent_new = data->indent[base_pos_new];
+					indent_old = data->indents.at(base_pos_old);
+					indent_new = data->indents.at(base_pos_new);
 					
 					line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->command_line, line_old );
 					total_offset_new = parse_util_get_offset( data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));

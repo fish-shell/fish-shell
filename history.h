@@ -14,6 +14,14 @@
 #include <tr1/memory>
 using std::tr1::shared_ptr;
 
+enum history_search_type_t {
+    /** The history searches for strings containing the given string */
+    HISTORY_SEARCH_TYPE_CONTAINS,
+    
+    /** The history searches for strings starting with the given string */
+    HISTORY_SEARCH_TYPE_PREFIX
+};
+
 class history_item_t {
     friend class history_t;
 
@@ -31,8 +39,8 @@ class history_item_t {
     const wcstring &str() const { return contents; }
     bool empty() const { return contents.empty(); }
     
-    /* We consider equal strings to NOT match a search (so that you don't have to see history equal to what you typed) */
-    bool matches_search(const wcstring &val) const { return contents.size() > val.size() && contents.find(val) != wcstring::npos; }
+    /* Whether our contents matches a search term. */
+    bool matches_search(const wcstring &term, enum history_search_type_t type) const;
     
     time_t timestamp() const { return creation_timestamp; }
     
@@ -106,6 +114,9 @@ class history_search_t {
     /** The history in which we are searching */
     history_t * history;
     
+    /** Our type */
+    enum history_search_type_t search_type;
+    
     /** Our list of previous matches as index, value. The end is the current match. */
     typedef std::pair<size_t, wcstring> prev_match_t;
     std::deque<prev_match_t> prev_matches;
@@ -137,14 +148,16 @@ class history_search_t {
     wcstring current_item(void) const;
 
     /** Constructor */
-    history_search_t(history_t &hist, const wcstring &str) :
+    history_search_t(history_t &hist, const wcstring &str, enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS) :
         history(&hist),
+        search_type(type),
         term(str)
     {}
     
     /* Default constructor */
     history_search_t() :
         history(),
+        search_type(HISTORY_SEARCH_TYPE_CONTAINS),
         term()
     {}
     

@@ -19,6 +19,7 @@
 
 #include "fallback.h"
 #include "util.h"
+#include "sanity.h"
 
 #include "wutil.h"
 #include "history.h"
@@ -108,6 +109,23 @@ history_item_t::history_item_t(const wcstring &str) : contents(str), creation_ti
 
 history_item_t::history_item_t(const wcstring &str, time_t when) : contents(str), creation_timestamp(when)
 {
+}
+
+bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
+    switch (type) {
+    
+        case HISTORY_SEARCH_TYPE_CONTAINS:
+        /* We consider equal strings to NOT match a contains search (so that you don't have to see history equal to what you typed). The length check ensures that. */
+            return contents.size() > term.size() && contents.find(term) != wcstring::npos;
+            
+        case HISTORY_SEARCH_TYPE_PREFIX:
+            /* We consider equal strings to match a prefix search, so that autosuggest will allow suggesting what you've typed */
+            return string_prefixes_string(term, contents);
+            
+        default:
+            sanity_lose();
+            return false;
+    }
 }
 
 bool history_lru_node_t::write_to_file(FILE *f) const {
@@ -372,7 +390,7 @@ bool history_search_t::go_backwards() {
         }
 
         /* Look for a term that matches and that we haven't seen before */
-        if (item.matches_search(term) && ! match_already_made(item.str())) {
+        if (item.matches_search(term, search_type) && ! match_already_made(item.str())) {
             prev_matches.push_back(prev_match_t(idx, item.str()));
             return true;
         }

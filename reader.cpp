@@ -230,12 +230,9 @@ class reader_data_t
 	   Current size of the buffers
 	*/
 	size_t buff_sz;
-
-	/**
-	   Length of the command in buff. (Not the length of buff itself)
-	*/
-
-	size_t buff_len;
+    
+    /** Length of the command */
+    size_t command_length() const { return command_line.size(); }
 
 	/**
 	   The current position of the cursor in buff.
@@ -479,7 +476,6 @@ static void reader_kill( size_t begin_idx, int length, int mode, int newv )
 		data->buff_pos = maxi( begin_idx, data->buff_pos-length );
 	}
 	
-	data->buff_len -= length;
     data->command_line.erase(begin_idx, length);
 	
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
@@ -532,9 +528,9 @@ void reader_pop_current_filename()
 */
 static int check_size()
 {
-	if( data->buff_sz < data->buff_len + 2 )
+	if( data->buff_sz < data->command_length() + 2 )
 	{
-		data->buff_sz = maxi( 128, data->buff_len*2 );
+		data->buff_sz = maxi( 128, data->command_length()*2 );
         
         data->command_line.reserve(data->buff_sz);
 
@@ -780,7 +776,6 @@ static void remove_backward()
         
     data->command_line.erase(data->buff_pos-1, 1);    
 	data->buff_pos--;
-	data->buff_len--;
 
 	reader_super_highlight_me_plenty( data->buff_pos,
 									  0 );
@@ -797,7 +792,6 @@ static void remove_backward()
 static int insert_str(const wcstring &str)
 {
     size_t len = str.size();
-	data->buff_len += len;
 	check_size();
     data->command_line.insert(data->buff_pos, str);
     data->buff_pos += len;
@@ -1720,12 +1714,8 @@ void reader_sanity_check()
 		if( !data )
 			sanity_lose();
 
-		if(!( data->buff_pos <= data->buff_len ))
+		if(!( data->buff_pos <= data->command_length() ))
 			sanity_lose();
-
-		if(!( data->buff_len == data->command_line.size() ))
-			sanity_lose();
-
 	}
 }
 
@@ -1767,9 +1757,8 @@ void reader_replace_current_token( const wchar_t *new_token )
 */
 static void handle_history( const wcstring &new_str )
 {
-    data->buff_len = new_str.size();
-    check_size();
     data->command_line = new_str;
+    check_size();
     data->buff_pos=data->command_line.size();
     reader_super_highlight_me_plenty( data->buff_pos, 0 );
     reader_repaint();
@@ -1951,7 +1940,7 @@ static void move_word( int dir, int erase, int newv )
 		return;
 	}
 	
-	if( dir && data->buff_pos == data->buff_len )
+	if( dir && data->buff_pos == data->command_length() )
 	{
 		return;
 	}
@@ -1961,7 +1950,7 @@ static void move_word( int dir, int erase, int newv )
 	  moving one step, since otehrwise we'll start on the \0, which
 	  should be ignored.
 	*/
-	if( !dir && (end_buff_pos == data->buff_len) )
+	if( !dir && (end_buff_pos == data->command_length()) )
 	{
 		if( !end_buff_pos )
 			return;
@@ -1991,7 +1980,7 @@ static void move_word( int dir, int erase, int newv )
 		}
 		else
 		{
-			if( end_buff_pos >= data->buff_len )
+			if( end_buff_pos >= data->command_length() )
 				break;
 		}
 
@@ -2027,7 +2016,7 @@ static void move_word( int dir, int erase, int newv )
 		}
 		else
 		{
-			if( end_buff_pos >= data->buff_len )
+			if( end_buff_pos >= data->command_length() )
 				break;
 		}
 		
@@ -2057,7 +2046,7 @@ static void move_word( int dir, int erase, int newv )
 	/*
 	  Make sure we don't move beyond begining or end of buffer
 	*/
-	end_buff_pos = maxi( 0, mini( end_buff_pos, data->buff_len ) );
+	end_buff_pos = maxi( 0, mini( end_buff_pos, data->command_length() ) );
 	
 
 
@@ -2096,13 +2085,10 @@ void reader_set_buffer( const wchar_t *b, int p )
 
     /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
 	int l = wcslen( b );
-
-
-	data->buff_len = l;
-	check_size();
-
     const wcstring tmp = b;
     data->command_line = tmp;
+    
+    check_size();
 
 	if( p>=0 )
 	{
@@ -2552,8 +2538,8 @@ static int read_i()
 		{
 			tmp = wcsdup( tmp );
 			
-			data->buff_pos=data->buff_len=0;
-            data->command_line.resize(data->buff_len);
+			data->buff_pos=0;
+            data->command_line.clear();
 			reader_run_command( parser, tmp );
 			free( (void *)tmp );
 			if( data->end_loop)
@@ -2630,7 +2616,6 @@ const wchar_t *reader_readline()
 
 	check_size();
 	data->search_buff.clear();
-    data->command_line.resize(data->buff_len);
 	data->search_mode = NO_SEARCH;
 	
 	
@@ -2755,7 +2740,7 @@ const wchar_t *reader_readline()
 			/* go to EOL*/
 			case R_END_OF_BUFFER:
 			{
-				data->buff_pos = data->buff_len;
+				data->buff_pos = data->command_length();
 
 				reader_repaint();
 				break;
@@ -2979,7 +2964,7 @@ const wchar_t *reader_readline()
 				   Remove the current character in the character buffer and on the
 				   screen using syntax highlighting, etc.
 				*/
-				if( data->buff_pos < data->buff_len )
+				if( data->buff_pos < data->command_length() )
 				{
 					data->buff_pos++;
 					remove_backward();
@@ -3019,7 +3004,7 @@ const wchar_t *reader_readline()
                                 data->history->add(data->command_line);
 						}
 						finished=1;
-						data->buff_pos=data->buff_len;
+						data->buff_pos=data->command_length();
 						reader_repaint();
 						break;
 					}
@@ -3138,7 +3123,7 @@ const wchar_t *reader_readline()
 			/* Move right*/
 			case R_FORWARD_CHAR:
 			{
-				if( data->buff_pos < data->buff_len )
+				if( data->buff_pos < data->command_length() )
 				{
 					data->buff_pos++;					
 					reader_repaint();
@@ -3197,7 +3182,7 @@ const wchar_t *reader_readline()
 				else
 					line_new = line_old+1;
 	
-				int line_count = parse_util_lineno( data->command_line.c_str(), data->buff_len )-1;
+				int line_count = parse_util_lineno( data->command_line.c_str(), data->command_length() )-1;
 				
 				if( line_new >= 0 && line_new <= line_count)
 				{

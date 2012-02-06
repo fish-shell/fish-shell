@@ -190,10 +190,10 @@ static buffer_t export_buffer;
 static int has_changed = 1;
 
 /**
-   This stringbuffer is used to store the value of dynamically
+   This string is used to store the value of dynamically
    generated variables, such as history.
 */
-static string_buffer_t dyn_var;
+static wcstring dyn_var;
 
 /**
    Variable used by env_get_names to communicate auxiliary information
@@ -531,7 +531,6 @@ void env_init()
 	wchar_t *uname;
 	wchar_t *version;
 	
-	sb_init( &dyn_var );
 	b_init( &export_buffer );
 	
 	/*
@@ -700,8 +699,6 @@ void env_destroy()
 {
 	env_universal_destroy();
 	
-	sb_destroy( &dyn_var );
-
 	b_destroy( &export_buffer );
 	
 	while( &top->env != global )
@@ -1160,7 +1157,7 @@ env_var_t env_get_string( const wchar_t *key )
 		for( i=add_current;; i++ )
 		{
             // PCA This looks bad!
-			wchar_t *next = history_get( i-add_current );
+			wchar_t *next = NULL;//history_get( i-add_current );
 			if( !next )
 			{
 				break;
@@ -1242,7 +1239,7 @@ env_var_t env_get_string( const wchar_t *key )
     }
 }
 
-wchar_t *env_get( const wchar_t *key )
+const wchar_t *env_get( const wchar_t *key )
 {
     ASSERT_IS_MAIN_THREAD();
 
@@ -1255,58 +1252,52 @@ wchar_t *env_get( const wchar_t *key )
 	if( wcscmp( key, L"history" ) == 0 )
 	{
 		wchar_t *current;
-		int i;		
-		int add_current=0;
-		sb_clear( &dyn_var );						
+		dyn_var.clear();
 		
 		current = reader_get_buffer();
 		if( current && wcslen( current ) )
 		{
-			add_current=1;
-			sb_append( &dyn_var, current );
-		}
-		
-		for( i=add_current;; i++ )
-		{
-			wchar_t *next = history_get( i-add_current );
-			if( !next )
-			{
-				break;
-			}
-			
-			if( i!=0)
-			{
-				sb_append( &dyn_var, ARRAY_SEP_STR );
-			}
-
-			sb_append( &dyn_var, next );
-		}
-
-		return (wchar_t *)dyn_var.buff;
+            dyn_var.append(current);
+            dyn_var.append(ARRAY_SEP_STR);
+        }
+        
+        history_t *history = reader_get_history();
+        if (history) {
+            for (size_t idx = 1; idx < (size_t)(-1); idx++) {
+                history_item_t item = history->item_at_index(idx);
+                if (item.empty()) break;
+                
+                dyn_var.append(item.str());
+                dyn_var.append(ARRAY_SEP_STR);
+            }
+        }
+        
+        /* We always have a trailing ARRAY_SEP_STR; get rid of it */
+        if (dyn_var.size() >= wcslen(ARRAY_SEP_STR)) {
+            dyn_var.resize(dyn_var.size() - wcslen(ARRAY_SEP_STR));
+        }
+        
+		return dyn_var.c_str();
 	}
 	else if( wcscmp( key, L"COLUMNS" )==0 )
 	{
-		sb_clear( &dyn_var );						
-		sb_printf( &dyn_var, L"%d", common_get_width() );		
-		return (wchar_t *)dyn_var.buff;		
+        dyn_var = to_string<int>(common_get_width());
+		return dyn_var.c_str();		
 	}	
 	else if( wcscmp( key, L"LINES" )==0 )
 	{
-		sb_clear( &dyn_var );						
-		sb_printf( &dyn_var, L"%d", common_get_height() );		
-		return (wchar_t *)dyn_var.buff;
+        dyn_var = to_string<int>(common_get_height());
+		return dyn_var.c_str();
 	}
 	else if( wcscmp( key, L"status" )==0 )
 	{
-		sb_clear( &dyn_var );			
-		sb_printf( &dyn_var, L"%d", proc_get_last_status() );		
-		return (wchar_t *)dyn_var.buff;		
+        dyn_var = to_string<int>(proc_get_last_status());
+		return dyn_var.c_str();
 	}
 	else if( wcscmp( key, L"umask" )==0 )
 	{
-		sb_clear( &dyn_var );			
-		sb_printf( &dyn_var, L"0%0.3o", get_umask() );		
-		return (wchar_t *)dyn_var.buff;		
+        dyn_var = format_string(L"0%0.3o", get_umask());
+		return dyn_var.c_str();
 	}
 	
 	while( env != 0 )

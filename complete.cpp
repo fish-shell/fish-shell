@@ -1074,7 +1074,7 @@ static void complete_cmd( const wchar_t *cmd,
 		if( use_command )
 		{
 			
-			if( expand_string2(cmd, comp, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
+			if( expand_string(cmd, comp, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
 			{
 				complete_cmd_desc( cmd, comp );
 			}
@@ -1113,7 +1113,7 @@ static void complete_cmd( const wchar_t *cmd,
 					
 					prev_count =  comp.size() ;
 					
-					if( expand_string2(
+					if( expand_string(
 									   nxt_completion,
 									   comp,
 									   ACCEPT_INCOMPLETE |
@@ -1180,7 +1180,7 @@ static void complete_cmd( const wchar_t *cmd,
 					continue;
 				}
 			
-				if( expand_string2(		   nxt_completion,
+				if( expand_string(		   nxt_completion,
 								   comp,
 								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 				{
@@ -1563,7 +1563,7 @@ static void complete_param_expand( wchar_t *str,
 		ACCEPT_INCOMPLETE | 
 		(do_file?0:EXPAND_SKIP_WILDCARDS);
 	
-	if( expand_string2( 		wcsdup(comp_str),
+	if( expand_string( 		wcsdup(comp_str),
 					   comp_out,
 					   flags ) == EXPAND_ERROR )
 	{
@@ -1755,7 +1755,7 @@ static int try_complete_user( const wchar_t *cmd,
 	return res;
 }
 
-void complete2( const wchar_t *cmd,
+void complete( const wchar_t *cmd,
 			   std::vector<completion_t> &comp )
 {
 	wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;

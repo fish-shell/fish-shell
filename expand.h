@@ -138,18 +138,12 @@ class parser_t;
    out. If expansion is performed, the original parameter is freed and
    newly allocated strings are inserted into the list out.
 
-   If \c context is non-null, all the strings contained in the
-   array_list_t \c out will be registered to be free'd when context is
-   free'd.
- 
-   \param context the halloc context to use for automatic deallocation
-   \param in The parameter to expand
+   \param input The parameter to expand
+   \param output The list to which the result will be appended.
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
-   \param out The list to which the result will be appended.
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
-__warn_unused int expand_string( void *context, wchar_t *in, array_list_t *out, int flag );
-__warn_unused int expand_string2( const wcstring &input, std::vector<completion_t> &output, int flag );
+__warn_unused int expand_string( const wcstring &input, std::vector<completion_t> &output, int flag );
 
 
 /**

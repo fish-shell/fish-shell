@@ -22,6 +22,7 @@
    \return 0 if the no configuration directory can be located or created, the directory path otherwise.
 */
 wchar_t *path_get_config( void *context);
+bool path_get_config(wcstring &path);
 
 /**
    Finds the full path of an executable in a newly allocated string.

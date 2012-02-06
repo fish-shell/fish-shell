@@ -17,6 +17,7 @@
 
 class parser_t;
 class completion_t;
+class history_t;
 
 /**
   Read commands from \c fd until encountering EOF
@@ -83,6 +84,9 @@ void reader_run_command( const wchar_t *buff );
    buffer, or 0 if interactive mode is uninitialized.
 */
 wchar_t *reader_get_buffer();
+
+/** Returns the current reader's history */
+history_t *reader_get_history(void);
 
 /**
    Set the string of characters in the command buffer, as well as the cursor position.

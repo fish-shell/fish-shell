@@ -93,7 +93,7 @@ int env_set( const wchar_t *key,
   valid until the next call to env_get(), env_set(), env_push() or
   env_pop() takes place.
 */
-wchar_t *env_get( const wchar_t *key );
+const wchar_t *env_get( const wchar_t *key );
 
 class env_var_t : public wcstring {
 private:

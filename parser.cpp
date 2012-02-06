@@ -806,7 +806,7 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 					DIE_MEM();
 				}
 				
-				if( expand_string2( tmp, args, 0 ) == EXPAND_ERROR )
+				if( expand_string( tmp, args, 0 ) == EXPAND_ERROR )
 				{
 					err_pos=tok_get_pos( &tok );
 					do_loop=0;
@@ -1344,7 +1344,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 						p->count_help_magic = 1;
 					}
 
-					switch( expand_string2( tok_last( tok ), args, 0 ) )
+					switch( expand_string( tok_last( tok ), args, 0 ) )
 					{
 						case EXPAND_ERROR:
 						{

@@ -2151,7 +2151,7 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 		reader_set_prompt( prompt );
 		if( shell )
 		{
-			reader_set_complete_function( &complete2 );
+			reader_set_complete_function( &complete );
 			reader_set_highlight_function( &highlight_shell );
 			reader_set_test_function( &reader_shell_test );
 		}

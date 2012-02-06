@@ -1506,7 +1506,7 @@ static void remove_internal_separator2( wcstring &s, int conv )
 }
 
 
-int expand_string2( const wcstring &input, std::vector<completion_t> &output, int flags )
+int expand_string( const wcstring &input, std::vector<completion_t> &output, int flags )
 {
 	parser_t parser(PARSER_TYPE_ERRORS_ONLY);
    	std::vector<completion_t> list1, list2;
@@ -1725,7 +1725,7 @@ bool expand_one(wcstring &string, int flags) {
         return true;
 	}
 	
-    if (expand_string2(string, completions, flags)) {
+    if (expand_string(string, completions, flags)) {
         if (completions.size() == 1) {
             string = completions.at(0).completion;
             result = true;

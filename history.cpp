@@ -28,7 +28,327 @@
 #include "intern.h"
 #include "path.h"
 #include "signal.h"
+#include <map>
 
+static pthread_mutex_t hist_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static std::map<wcstring, history_t *> histories;
+
+static wcstring history_filename(const wcstring &name, const wcstring &suffix);
+
+static hash_table_t *mode_table=0;
+
+/* Unescapes newlines in-place */
+static void unescape_newlines(wcstring &str);
+
+/* Custom deleter for our shared_ptr */
+class history_item_data_deleter_t {
+    private:
+        const bool free_it;
+    public:
+    history_item_data_deleter_t(bool flag) : free_it(flag) { }
+    void operator()(const wchar_t *data) {
+        if (free_it)
+            free((void *)data);
+    }
+};
+
+history_item_t::history_item_t(const wcstring &str) : contents(str), timestamp(time(NULL))
+{
+}
+
+history_item_t::history_item_t(const wcstring &str, time_t when) : contents(str), timestamp(when)
+{
+}
+
+
+
+history_t & history_t::history_with_name(const wcstring &name) {
+    /* Note that histories are currently never deleted, so we can return a reference to them without using something like shared_ptr */
+    scoped_lock locker(hist_lock);
+    history_t *& current = histories[name];
+    if (current == NULL)
+        current = new history_t(name);
+    return *current;
+}
+
+history_t::history_t(const wcstring &pname) :
+    name(pname),
+    mmap_start(NULL),
+    mmap_length(0),
+    save_timestamp(0),
+    loaded_old(false)
+{
+    pthread_mutex_init(&lock, NULL);
+}
+
+history_t::~history_t()
+{
+    pthread_mutex_destroy(&lock);
+}
+
+void history_t::add(const wcstring &str)
+{
+    scoped_lock locker(lock);
+    new_items.push_back(history_item_t(str.c_str(), true));
+}
+
+history_item_t history_t::item_at_index(size_t idx) {
+    scoped_lock locker(lock);
+    
+    /* 0 is considered an invalid index */
+    assert(idx > 0);
+    idx--;
+    
+    /* idx=0 corresponds to last item in new_items */
+    size_t new_item_count = new_items.size();
+    if (idx < new_item_count) {
+        return new_items.at(new_item_count - idx - 1);
+    }
+    
+    /* Now look in our old items */
+    idx -= new_item_count;
+    load_old_if_needed();
+    size_t old_item_count = old_item_offsets.size();
+    if (idx < old_item_count) {
+        /* idx=0 corresponds to last item in old_item_offsets */
+        size_t offset = old_item_offsets.at(old_item_count - idx - 1);
+        return history_t::decode_item(mmap_start + offset, mmap_length - offset);
+    }
+    
+    /* Index past the valid range, so return an empty history item */
+    return history_item_t(wcstring(), 0);
+}
+
+history_item_t history_t::decode_item(const char *begin, size_t len)
+{
+    const char *pos = begin, *end = begin + len;
+    
+    int was_backslash = 0;
+    
+    wcstring output;
+    time_t timestamp = 0;
+    
+    int first_char = 1;	
+    bool timestamp_mode = false;
+    
+    while( 1 )
+    {
+        wchar_t c;
+        mbstate_t state;
+        bzero(&state, sizeof state);
+        
+        size_t res;
+        
+        res = mbrtowc( &c, pos, end-pos, &state );
+        
+        if( res == (size_t)-1 )
+        {
+            pos++;
+            continue;
+        }
+        else if( res == (size_t)-2 )
+        {
+            break;
+        }
+        else if( res == (size_t)0 )
+        {
+            pos++;
+            continue;
+        }
+        pos += res;
+        
+        if( c == L'\n' )
+        {
+            if( timestamp_mode )
+            {
+                const wchar_t *time_string = output.c_str();
+                while( *time_string && !iswdigit(*time_string))
+                    time_string++;
+                errno=0;
+                
+                if( *time_string )
+                {
+                    time_t tm;
+                    wchar_t *end;
+                    
+                    errno = 0;
+                    tm = (time_t)wcstol( time_string, &end, 10 );
+                    
+                    if( tm && !errno && !*end )
+                    {
+                        timestamp = tm;
+                    }
+                    
+                }					
+                
+                output.clear();
+                timestamp_mode = 0;
+                continue;
+            }
+            if( !was_backslash )
+                break;
+        }
+        
+        if( first_char )
+        {
+            if( c == L'#' ) 
+                timestamp_mode = 1;
+        }
+        
+        first_char = 0;
+        
+        output.push_back(c);
+        
+        was_backslash = ( (c == L'\\') && !was_backslash);
+        
+    }
+    
+    unescape_newlines(output);
+    return history_item_t(output, timestamp);
+}
+
+void history_t::populate_from_mmap(void)
+{
+	const char *begin = mmap_start;
+	const char *end = begin + mmap_length;
+	const char *pos;
+	
+	int ignore_newline = 0;
+	int do_push = 1;
+	
+	for( pos = begin; pos <end; pos++ )
+	{
+		
+		if( do_push )
+		{
+			ignore_newline = *pos == '#';
+            /* Need to unique-ize */
+            old_item_offsets.push_back(pos - begin);
+			do_push = 0;
+		}
+		
+		switch( *pos )
+		{
+			case '\\':
+			{
+				pos++;
+				break;
+			}
+			
+			case '\n':
+			{
+				if( ignore_newline )
+				{
+					ignore_newline = 0;
+				}
+				else
+				{
+					do_push = 1;
+				}				
+				break;
+			}
+		}
+	}	
+}
+
+void history_t::load_old_if_needed(void)
+{
+    if (loaded_old) return;
+    loaded_old = true;
+    
+	int fd;
+	int ok=0;
+	
+	signal_block();
+    wcstring filename = history_filename(name, L"");
+	
+	if( ! filename.empty() )
+	{
+		if( ( fd = wopen( filename.c_str(), O_RDONLY ) ) > 0 )
+		{
+			off_t len = lseek( fd, 0, SEEK_END );
+			if( len != (off_t)-1)
+			{
+				mmap_length = (size_t)len;
+				if( lseek( fd, 0, SEEK_SET ) == 0 )
+				{
+					if( (mmap_start = (char *)mmap( 0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0 )) != MAP_FAILED )
+					{
+						ok = 1;
+						this->populate_from_mmap();
+					}
+				}
+			}
+			close( fd );
+		}
+	}
+	signal_unblock();
+}
+
+bool history_search_t::go_forwards() {
+    /* Forwards means reducing our index. */
+    if (idx == 0)
+        return false;
+    
+    size_t i;
+    for (i=idx-1; i > 0; i--) {
+        const history_item_t item = history->item_at_index(i);
+        /* Skip if it's empty. Empty items only occur at the end of the history. */
+        if (item.empty())
+            continue;
+        
+        /* Look for term in item.data */
+        if (item.matches_search(term)) {
+            idx = i;
+            break;
+        }
+    }
+    return i > 0;
+}
+
+bool history_search_t::go_backwards() {
+    /* Backwards means increasing our index */
+    const size_t max_idx = (size_t)(-1);
+    if (idx == max_idx)
+        return false;
+    
+    size_t i;
+    for (i=idx+1;; i++) {
+        /* We're done if we reach the largest index */
+        if (i == max_idx)
+            return false;
+            
+        const history_item_t item = history->item_at_index(i);
+        /* We're done if it's empty */
+        if (item.empty()) {
+            return false;
+        }
+
+        /* Look for term in item.data */
+        if (item.matches_search(term)) {
+            idx = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Goes to the end (forwards) */
+void history_search_t::go_to_end(void) {
+    idx = 0;
+}
+
+/** Goes to the beginning (backwards) */
+void history_search_t::go_to_beginning(void) {
+    idx = (size_t)(-1);
+}
+
+
+history_item_t history_search_t::current_item() const {
+    assert(idx > 0 && idx < (size_t)(-1));
+    return history->item_at_index(idx);
+}
 
 /**
    Interval in seconds between automatic history save
@@ -125,13 +445,8 @@ typedef struct
 	   Original creation time for the entry
 	*/
 	time_t timestamp;
-}
-	item_t;
+} item_t;
 
-/**
-   Table of all history modes
-*/
-static hash_table_t *mode_table=0;
 
 /**
    The surrent history mode
@@ -212,6 +527,19 @@ static wchar_t *history_escape_newlines( wchar_t *in )
 		
 	}
 	return (wchar_t *)out->buff;
+}
+
+static void unescape_newlines(wcstring &str)
+{
+    /* Replace instances of backslash + newline with just the newline */
+    const wchar_t *needle = L"\\\n", *replacement = L"\n";
+    size_t needle_len = wcslen(needle);
+    size_t offset = 0;
+    while((offset = str.find(needle, offset)) != wcstring::npos)
+    {
+        str.replace(offset, needle_len, replacement);
+        offset += needle_len;
+    }
 }
 
 /**
@@ -479,6 +807,20 @@ static wchar_t *history_filename( void *context, const wchar_t *name, const wcha
 	return res;
 }
 
+static wcstring history_filename(const wcstring &name, const wcstring &suffix)
+{
+    wcstring path;
+    if (! path_get_config(path))
+        return L"";
+    
+    wcstring result = path;
+    result.append(L"/");
+    result.append(name);
+    result.append(L"_history");
+    result.append(suffix);
+    return result;
+}
+
 /**
    Go through the mmaped region and insert pointers to suitable loacations into the item list
 */
@@ -606,6 +948,131 @@ static void history_load( history_mode_t *m )
 	halloc_free( context );
 	signal_unblock();
 }
+
+#if 0
+/**
+   Save the specified mode to file
+*/
+void history_t::save( void *n, history_mode_t *m )
+{
+    scoped_lock locker(lock);
+    
+    /* Nothing to do if there's no new items */
+    if (new_items.empty())
+        return;
+    
+	FILE *out;
+	int i;
+	int has_new=0;
+	wchar_t *tmp_name;
+
+	int ok = 1;
+	
+	signal_block();
+    
+    wcstring tmp_name = history_filename(name, L".tmp");
+	
+	if( ! tmp_name.empty() )
+	{
+		if( (out=wfopen( tmp_name, "w" ) ) )
+		{
+			hash_table_t mine;
+			
+			hash_init( &mine, &hash_item_func, &hash_item_cmp );
+			
+			for( i=0; i<al_get_count(&m->item); i++ )
+			{
+				void *ptr = al_get( &m->item, i );
+				int is_new = item_is_new( m, ptr );
+				if( is_new )
+				{
+					hash_put( &mine, item_get( m, ptr ), L"" );
+				}
+			}
+			
+			/*
+			  Re-save the old history
+			*/
+			for( i=0; ok && (i<al_get_count(&on_disk->item)); i++ )
+			{
+				void *ptr = al_get( &on_disk->item, i );
+				item_t *i = item_get( on_disk, ptr );
+				if( !hash_get( &mine, i ) )
+				{
+					if( item_write( out, on_disk, ptr ) == -1 )
+					{
+						ok = 0;
+						break;
+					}
+				}
+				
+			}
+			
+			hash_destroy( &mine );
+		
+			/*
+			  Add our own items last
+			*/		
+			for( i=0; ok && (i<al_get_count(&m->item)); i++ )
+			{
+				void *ptr = al_get( &m->item, i );
+				int is_new = item_is_new( m, ptr );
+				if( is_new )
+				{
+					if( item_write( out, m, ptr ) == -1 )
+					{						
+						ok = 0;
+					}
+				}
+			}
+			
+			if( fclose( out ) || !ok )
+			{
+				/*
+				  This message does not have high enough priority to
+				  be shown by default.
+				*/
+				debug( 2, L"Error when writing history file" );
+			}
+			else
+			{
+				wrename( tmp_name, history_filename( on_disk, m->name, 0 ) );
+			}
+		}
+		free( tmp_name );
+	}	
+	
+	halloc_free( on_disk);
+
+	if( ok )
+	{
+
+		/*
+		  Reset the history. The item_t entries created in this session
+		  are not lost or dropped, they are stored in the session_item
+		  hash table. On reload, they will be automatically inserted at
+		  the end of the history list.
+		*/
+			
+		if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
+		{
+			munmap( m->mmap_start, m->mmap_length );
+		}
+		
+		al_truncate( &m->item, 0 );
+		al_truncate( &m->used, 0 );
+		m->pos = 0;
+		m->has_loaded = 0;
+		m->mmap_start=0;
+		m->mmap_length=0;
+	
+		m->save_timestamp=time(0);
+		m->new_count = 0;
+	}
+	
+	signal_unblock();
+}
+#endif
 
 /**
    Save the specified mode to file
@@ -950,23 +1417,6 @@ const wchar_t *history_next_match( const wchar_t *needle)
 	return needle;	
 }
 
-
-void history_set_mode( const wchar_t *name )
-{
-	if( !mode_table )
-	{
-		mode_table = (hash_table_t *)malloc( sizeof(hash_table_t ));
-		hash_init( mode_table, &hash_wcs_func, &hash_wcs_cmp );		
-	}
-	
-	current_mode = (history_mode_t *)hash_get( mode_table, name );
-	
-	if( !current_mode )
-	{
-		current_mode = history_create_mode( name );
-		hash_put( mode_table, name, current_mode );		
-	}	
-}
 
 void history_init()
 {

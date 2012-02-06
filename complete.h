@@ -219,18 +219,9 @@ void complete_remove( const wchar_t *cmd,
 		      const wchar_t *long_opt );
 
 /**
-  Find all completions of the command cmd, insert them into out. The
-  caller must free the variables returned in out.  The results are
-  returned in the array_list_t 'out', in the format of wide character
-  strings, with each element consisting of a suggested completion and
-  a description of what kind of object this completion represents,
-  separated by a separator of type COMPLETE_SEP.
-
-  Values returned by this function should be freed by the caller.
+  Find all completions of the command cmd, insert them into out. 
 */
-//void complete( const wchar_t *cmd, array_list_t *out );
-
-void complete2( const wchar_t* cmd, std::vector<completion_t> &out);
+void complete( const wchar_t* cmd, std::vector<completion_t> &out);
 
 /**
    Print a list of all current completions into the string_buffer_t. 

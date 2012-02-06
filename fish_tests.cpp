@@ -51,6 +51,7 @@
 #include "path.h"
 #include "halloc.h"
 #include "halloc_util.h"
+#include "history.h"
 
 /**
    The number of tests to run
@@ -679,14 +680,13 @@ static void test_lru(void) {
 
 static int expand_test( const wchar_t *in, int flags, ... )
 {
-	array_list_t out;	
+	std::vector<completion_t> output;
 	va_list va;
-	int i=0;
+	size_t i=0;
 	int res=1;
 	wchar_t *arg;
 	
-	al_init( &out );
-	if( expand_string( 0, wcsdup(in), &out, flags) )
+	if( expand_string( in, output, flags) )
 	{
 		
 	}
@@ -696,13 +696,13 @@ static int expand_test( const wchar_t *in, int flags, ... )
 
 	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
 	{
-		if( al_get_count( &out ) == i )
+		if( output.size() == i )
 		{
 			res=0;
 			break;
 		}
 		
-		if( wcscmp( (wchar_t *)al_get( &out, i ),arg) != 0 )
+        if (output.at(i).completion != arg)
 		{
 			res=0;
 			break;
@@ -712,7 +712,6 @@ static int expand_test( const wchar_t *in, int flags, ... )
 	}
 	va_end( va );
 	
-	al_foreach( &out, &free );
 	return res;
 		
 }
@@ -770,7 +769,7 @@ static void test_path()
 void perf_complete()
 {
 	wchar_t c;
-	array_list_t out;
+	std::vector<completion_t> out;
 	long long t1, t2;
 	int matches=0;
 	double t;
@@ -783,7 +782,6 @@ void perf_complete()
 	
 	
 	say( L"Testing completion performance" );
-	al_init( &out );
 	
 	reader_push(L"");
 	say( L"Here we go" );
@@ -796,12 +794,10 @@ void perf_complete()
 		str[0]=c;
 		reader_set_buffer( str, 0 );
 		
-		complete( str, &out );
+		complete( str, out );
 	
-		matches += al_get_count( &out );
-		
-		al_foreach( &out, &free );
-		al_truncate( &out, 0 );
+		matches += out.size();
+        out.clear();
 	}
 	t2=get_time();
 	
@@ -818,12 +814,10 @@ void perf_complete()
 		
 		reader_set_buffer( str, 0 );
 		
-		complete( str, &out );
+		complete( str, out );
 	
-		matches += al_get_count( &out );
-		
-		al_foreach( &out, &free );
-		al_truncate( &out, 0 );
+		matches += out.size();
+        out.clear();
 	}
 	t2=get_time();
 	
@@ -831,10 +825,40 @@ void perf_complete()
 	
 	say( L"Two letter command completion took %f seconds per completion, %f microseconds/match", t, (double)(t2-t1)/matches );
 	
-	al_destroy( &out );
-
 	reader_pop();
 	
+}
+
+static void test_history_matches(history_search_t &search, size_t matches) {
+    size_t i;
+    for (i=0; i < matches; i++) {
+        assert(search.go_backwards());
+    }
+    assert(! search.go_backwards());
+    
+    for (i=1; i < matches; i++) {
+        assert(search.go_forwards());
+    }
+    assert(! search.go_forwards());
+}
+
+static void test_history(void) {
+    say( L"Testing history");
+    
+    history_t &history = history_t::history_with_name(L"test_history");
+    history.add(L"Alpha");
+    history.add(L"Beta");
+    history.add(L"Gamma");
+
+    /* All three items match "a" */
+    history_search_t search1(history, L"a");
+    test_history_matches(search1, 3);
+    assert(search1.current_item().str() == L"Alpha");
+    
+    /* One item matches "et" */
+    history_search_t search2(history, L"et");
+    test_history_matches(search2, 1);
+    assert(search2.current_item().str() == L"Beta");
 }
 
 
@@ -869,6 +893,7 @@ int main( int argc, char **argv )
 	test_lru();
 	test_expand();
 	test_path();
+    test_history();
 	
 	say( L"Encountered %d errors in low-level tests", err_count );
 

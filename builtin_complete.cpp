@@ -557,7 +557,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			
 //				comp = al_halloc( 0 );
 			
-				complete2( do_complete, comp );
+				complete( do_complete, comp );
 			
 				for( size_t i=0; i< comp.size() ; i++ )
 				{

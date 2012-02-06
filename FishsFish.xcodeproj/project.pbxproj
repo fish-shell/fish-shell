@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		D03EE83714DF88B200FC7150 /* lru.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lru.cpp; sourceTree = "<group>"; };
+		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
 		D049018814B3802E003CEFBC /* builtin_scripts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_scripts.cpp; sourceTree = "<group>"; };
 		D049018914B3802E003CEFBC /* builtin_scripts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin_scripts.h; sourceTree = "<group>"; };
 		D0A0850313B3ACEE0099B651 /* builtin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin.h; sourceTree = "<group>"; };
@@ -176,6 +178,8 @@
 				D0A0851813B3ACEE0099B651 /* kill.h */,
 				D0A0854F13B3ACEE0099B651 /* kill.cpp */,
 				D0A0854E13B3ACEE0099B651 /* key_reader.cpp */,
+				D03EE83814DF88B200FC7150 /* lru.h */,
+				D03EE83714DF88B200FC7150 /* lru.cpp */,
 				D0A0851913B3ACEE0099B651 /* mimedb.h */,
 				D0A0855013B3ACEE0099B651 /* mimedb.cpp */,
 				D0A0851A13B3ACEE0099B651 /* output.h */,

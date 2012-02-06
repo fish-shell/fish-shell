@@ -11,6 +11,7 @@
 #include <set>
 #include <list>
 #include "common.h"
+#include "lru.h"
 
 /** A struct responsible for recording an attempt to access a file. */
 struct file_access_attempt_t {
@@ -21,82 +22,7 @@ struct file_access_attempt_t {
     int error; /** If we could not access the file, the error code */
 };
 
-/** A predicate to compare dereferenced pointers */
-struct dereference_less_t {
-    template <typename ptr_t>
-    bool operator()(ptr_t p1, ptr_t p2) const { return *p1 < *p2; }
-};
-
 file_access_attempt_t access_file(const wcstring &path, int mode);
-
-class lru_node_t {
-    friend class lru_cache_impl_t;
-    /** Our linked list pointer */
-    lru_node_t *prev, *next;
-    
-public:
-    /** The key used to look up in the cache */
-    const wcstring key;
-    
-    /** Constructor */
-    lru_node_t(const wcstring &keyVar) : prev(NULL), next(NULL), key(keyVar) { }
-    bool operator<(const lru_node_t &other) const { return key < other.key; }
-};
-
-class lru_cache_impl_t {
-private:
-    void promote_node(lru_node_t *);
-    void evict_node(lru_node_t *node);
-    void evict_last_node(void);
-    
-    /** Max node count */
-    const size_t max_node_count;
-    
-    /** Count of nodes */
-    size_t node_count;
-    
-    /** The set of nodes */
-    typedef std::set<lru_node_t *, dereference_less_t> node_set_t;
-    node_set_t node_set;
-    
-    /** Head of the linked list */
-    lru_node_t mouth;
-    
-protected:
-    /** Overridable callback for when a node is evicted */
-    virtual void node_was_evicted(lru_node_t *node);
-    
-public:
-    /** Constructor */
-    lru_cache_impl_t(size_t max_size = 1024 );
-    
-    /** Returns the node for a given key, or NULL */
-    lru_node_t *get_node(const wcstring &key);
-    
-    /** Evicts the node for a given key, returning true if a node was evicted. */
-    bool evict_node(const wcstring &key);
-    
-    /** Adds a node under the given key. Returns true if the node was added, false if the node was not because a node with that key is already in the set. */
-    bool add_node(lru_node_t *node);
-    
-    /** Adds a node under the given key without triggering eviction. Returns true if the node was added, false if the node was not because a node with that key is already in the set. */
-    bool add_node_without_eviction(lru_node_t *node);
-    
-    /** Counts nodes */
-    size_t size(void) { return node_count; }
-    
-    /** Evicts all nodes */
-    void evict_all_nodes(void);
-};
-
-/** Template cover to avoid casting */
-template<class node_type_t>
-class lru_cache_t : public lru_cache_impl_t {
-public:
-    node_type_t *get_node(const wcstring &key) { return static_cast<node_type_t *>(lru_cache_impl_t::get_node(key)); }
-    bool add_node(node_type_t *node) { return lru_cache_impl_t::add_node(node); }
-    lru_cache_t(size_t max_size = 1024 ) : lru_cache_impl_t(max_size) { }
-};
 
 struct autoload_function_t : public lru_node_t
 {   

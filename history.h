@@ -23,12 +23,15 @@ class history_item_t {
 	wcstring contents;
     	
 	/** Original creation time for the entry */
-	time_t timestamp;
+	time_t creation_timestamp;
     
     public:
     const wcstring &str() const { return contents; }
     bool empty() const { return contents.empty(); }
     bool matches_search(const wcstring &val) const { return contents.find(val) != wcstring::npos; }
+    time_t timestamp() const { return creation_timestamp; }
+    
+    bool write_to_file(FILE *f) const;
 };
 
 class history_t {
@@ -75,6 +78,9 @@ private:
     
     /** Loads old if necessary */
     void load_old_if_needed(void);
+    
+    /** Saves history */
+    void save_internal();
     
 public:
     /** Returns history with the given name, creating it if necessary */
@@ -123,16 +129,14 @@ public:
         history(&hist),
         term(str),
         idx()
-    {
-    }
+    {}
     
     /* Default constructor */
     history_search_t() :
         history(),
         term(),
         idx()
-    {
-    }
+    {}
     
 };
 

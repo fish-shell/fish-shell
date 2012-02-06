@@ -28,7 +28,55 @@
 #include "intern.h"
 #include "path.h"
 #include "signal.h"
+#include "autoload.h"
 #include <map>
+#include <algorithm>
+
+/** When we rewrite the history, the number of items we keep */
+#define HISTORY_SAVE_MAX (1024 * 256)
+
+/** Interval in seconds between automatic history save */
+#define SAVE_INTERVAL (5*60)
+
+/** Number of new history entries to add before automatic history save */
+#define SAVE_COUNT 5
+
+/* Our LRU cache is used for restricting the amount of history we have, and limiting how long we order it. */
+class history_lru_node_t : public lru_node_t {
+    public:
+    time_t timestamp;
+    history_lru_node_t(const history_item_t &item) : lru_node_t(item.str()), timestamp(item.timestamp())
+    {
+    }
+};
+
+class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
+    protected:
+    
+    /* Override to delete evicted nodes */
+    virtual void node_was_evicted(history_lru_node_t *node) {
+        delete node;
+    }
+
+    public:
+    history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) { }
+    
+    /* Function to add a history item */
+    void add_item(const history_item_t &item) {
+        /* Skip empty items */
+        if (item.empty())
+            return;
+            
+        /* See if it's in the cache. If it is, update the timestamp. If not, we create a new node and add it. Note that calling get_node promotes the node to the front. */
+        history_lru_node_t *node = this->get_node(item.str());
+        if (node != NULL) {
+            node->timestamp = std::max(node->timestamp, item.timestamp());
+        } else {
+            node = new history_lru_node_t(item);
+            this->add_node(node);
+        }
+    }
+};
 
 static pthread_mutex_t hist_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -36,10 +84,11 @@ static std::map<wcstring, history_t *> histories;
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix);
 
-static hash_table_t *mode_table=0;
-
 /* Unescapes newlines in-place */
 static void unescape_newlines(wcstring &str);
+
+/* Escapes newlines in-place */
+static void escape_newlines(wcstring &str);
 
 /* Custom deleter for our shared_ptr */
 class history_item_data_deleter_t {
@@ -53,15 +102,19 @@ class history_item_data_deleter_t {
     }
 };
 
-history_item_t::history_item_t(const wcstring &str) : contents(str), timestamp(time(NULL))
+history_item_t::history_item_t(const wcstring &str) : contents(str), creation_timestamp(time(NULL))
 {
 }
 
-history_item_t::history_item_t(const wcstring &str, time_t when) : contents(str), timestamp(when)
+history_item_t::history_item_t(const wcstring &str, time_t when) : contents(str), creation_timestamp(when)
 {
 }
 
-
+bool history_item_t::write_to_file(FILE *f) const {
+    wcstring escaped = contents;
+    escape_newlines(escaped);
+	return fwprintf( f, L"# %d\n%ls\n", creation_timestamp, escaped.c_str());
+}
 
 history_t & history_t::history_with_name(const wcstring &name) {
     /* Note that histories are currently never deleted, so we can return a reference to them without using something like shared_ptr */
@@ -91,6 +144,10 @@ void history_t::add(const wcstring &str)
 {
     scoped_lock locker(lock);
     new_items.push_back(history_item_t(str.c_str(), true));
+    
+    /* This might be a good candidate for moving to a background thread */
+    if((time(0) > save_timestamp + SAVE_INTERVAL) || (new_items.size() >= SAVE_COUNT))
+		this->save_internal();
 }
 
 history_item_t history_t::item_at_index(size_t idx) {
@@ -350,15 +407,6 @@ history_item_t history_search_t::current_item() const {
     return history->item_at_index(idx);
 }
 
-/**
-   Interval in seconds between automatic history save
-*/
-#define SAVE_INTERVAL (5*60)
-
-/**
-   Number of new history entries to add before automatic history save
-*/
-#define SAVE_COUNT 5
 
 /**
    A struct representiong a history list
@@ -529,10 +577,8 @@ static wchar_t *history_escape_newlines( wchar_t *in )
 	return (wchar_t *)out->buff;
 }
 
-static void unescape_newlines(wcstring &str)
+static void replace_all(wcstring &str, const wchar_t *needle, const wchar_t *replacement)
 {
-    /* Replace instances of backslash + newline with just the newline */
-    const wchar_t *needle = L"\\\n", *replacement = L"\n";
     size_t needle_len = wcslen(needle);
     size_t offset = 0;
     while((offset = str.find(needle, offset)) != wcstring::npos)
@@ -540,6 +586,22 @@ static void unescape_newlines(wcstring &str)
         str.replace(offset, needle_len, replacement);
         offset += needle_len;
     }
+}
+
+static void unescape_newlines(wcstring &str)
+{
+    /* Replace instances of backslash + newline with just the newline */
+    replace_all(str, L"\\\n", L"\n");
+}
+
+static void escape_newlines(wcstring &str)
+{
+    /* Replace instances of newline with backslash + newline with newline */
+    replace_all(str, L"\\\n", L"\n");
+    
+    /* If the string ends with a backslash, we'll combine it with the next line. Hack around that by appending a newline. */
+    if (! str.empty() && str.at(str.size() - 1) == L'\\')
+        str.push_back('\n');
 }
 
 /**
@@ -949,83 +1011,55 @@ static void history_load( history_mode_t *m )
 	signal_unblock();
 }
 
-#if 0
-/**
-   Save the specified mode to file
-*/
-void history_t::save( void *n, history_mode_t *m )
+/** Save the specified mode to file */
+void history_t::save_internal()
 {
-    scoped_lock locker(lock);
+    /* This must be called while locked */
     
     /* Nothing to do if there's no new items */
     if (new_items.empty())
         return;
     
-	FILE *out;
-	int i;
-	int has_new=0;
-	wchar_t *tmp_name;
-
-	int ok = 1;
+	bool ok = true;
 	
 	signal_block();
     
     wcstring tmp_name = history_filename(name, L".tmp");
-	
 	if( ! tmp_name.empty() )
 	{
-		if( (out=wfopen( tmp_name, "w" ) ) )
+        FILE *out;
+		if( (out=wfopen( tmp_name.c_str(), "w" ) ) )
 		{
-			hash_table_t mine;
-			
-			hash_init( &mine, &hash_item_func, &hash_item_cmp );
-			
-			for( i=0; i<al_get_count(&m->item); i++ )
-			{
-				void *ptr = al_get( &m->item, i );
-				int is_new = item_is_new( m, ptr );
-				if( is_new )
-				{
-					hash_put( &mine, item_get( m, ptr ), L"" );
-				}
-			}
-			
-			/*
-			  Re-save the old history
-			*/
-			for( i=0; ok && (i<al_get_count(&on_disk->item)); i++ )
-			{
-				void *ptr = al_get( &on_disk->item, i );
-				item_t *i = item_get( on_disk, ptr );
-				if( !hash_get( &mine, i ) )
-				{
-					if( item_write( out, on_disk, ptr ) == -1 )
-					{
-						ok = 0;
-						break;
-					}
-				}
-				
-			}
-			
-			hash_destroy( &mine );
-		
-			/*
-			  Add our own items last
-			*/		
-			for( i=0; ok && (i<al_get_count(&m->item)); i++ )
-			{
-				void *ptr = al_get( &m->item, i );
-				int is_new = item_is_new( m, ptr );
-				if( is_new )
-				{
-					if( item_write( out, m, ptr ) == -1 )
-					{						
-						ok = 0;
-					}
-				}
-			}
-			
+                
+            /* Load old */
+            load_old_if_needed();
+            
+            /* Make an LRU cache to save only the last N elements */
+            history_lru_cache_t lru(HISTORY_SAVE_MAX);
+            
+            /* Insert old items in, from old to new */
+            for (std::vector<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); iter++) {
+                size_t offset = *iter;
+                history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
+                lru.add_item(item);
+            }
+            
+            /* Insert new items */
+            for (std::vector<history_item_t>::iterator iter = new_items.begin(); iter != new_items.end(); iter++) {
+                lru.add_item(*iter);
+            }
+            
+            /* Write them out */
+            for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); iter++) {
+#if 0
+                if (! (*iter)->write_to_file(out)) {
+                    ok = false;
+                    break;
+                }
+#endif
+            }
+
+
 			if( fclose( out ) || !ok )
 			{
 				/*
@@ -1036,43 +1070,33 @@ void history_t::save( void *n, history_mode_t *m )
 			}
 			else
 			{
-				wrename( tmp_name, history_filename( on_disk, m->name, 0 ) );
+                wcstring new_name = history_filename(name, wcstring());
+				wrename(tmp_name.c_str(), new_name.c_str());
 			}
 		}
-		free( tmp_name );
 	}	
-	
-	halloc_free( on_disk);
 
 	if( ok )
 	{
-
-		/*
-		  Reset the history. The item_t entries created in this session
-		  are not lost or dropped, they are stored in the session_item
-		  hash table. On reload, they will be automatically inserted at
-		  the end of the history list.
-		*/
-			
-		if( m->mmap_start && (m->mmap_start != MAP_FAILED ) )
-		{
-			munmap( m->mmap_start, m->mmap_length );
-		}
-		
-		al_truncate( &m->item, 0 );
-		al_truncate( &m->used, 0 );
-		m->pos = 0;
-		m->has_loaded = 0;
-		m->mmap_start=0;
-		m->mmap_length=0;
-	
-		m->save_timestamp=time(0);
-		m->new_count = 0;
+		/* Our history has been written to the file, so clear our state so we can re-reference the file. */
+		if (mmap_start != NULL && mmap_start != MAP_FAILED) {
+			munmap((void *)mmap_start, mmap_length);
+        }
+        mmap_start = 0;
+        mmap_length = 0;
+        loaded_old = false;
+        new_items.clear();
+        old_item_offsets.clear();
+		save_timestamp=time(0);
 	}
 	
 	signal_unblock();
 }
-#endif
+
+void history_t::save(void) {
+    scoped_lock locker(lock);
+    this->save_internal();
+}
 
 /**
    Save the specified mode to file
@@ -1425,14 +1449,10 @@ void history_init()
 
 void history_destroy()
 {
-	if( mode_table )
-	{
-		hash_foreach( mode_table, (void (*)(void *, void *))&history_save_mode );
-		hash_foreach( mode_table, (void (*)(void *, void *))&history_destroy_mode_wrapper );
-		hash_destroy( mode_table );
-		free( mode_table );
-		mode_table=0;
-	}
+    /* Save all histories */
+    for (std::map<wcstring, history_t *>::iterator iter = histories.begin(); iter != histories.end(); iter++) {
+        iter->second->save();
+    }
 }
 
 

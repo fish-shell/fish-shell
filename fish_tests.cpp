@@ -635,13 +635,18 @@ static void test_parser()
 	}	
 }
 
-class test_lru_t : public lru_cache_t<lru_node_t> {
+class lru_node_test_t : public lru_node_t {
     public:
-    test_lru_t() : lru_cache_t<lru_node_t>(16) { }
+    lru_node_test_t(const wcstring &tmp) : lru_node_t(tmp) { }
+};
+
+class test_lru_t : public lru_cache_t<lru_node_test_t> {
+    public:
+    test_lru_t() : lru_cache_t<lru_node_test_t>(16) { }
     
-    std::vector<lru_node_t *> evicted_nodes;
+    std::vector<lru_node_test_t *> evicted_nodes;
     
-    virtual void node_was_evicted(lru_node_t *node) {
+    virtual void node_was_evicted(lru_node_test_t *node) {
         assert(find(evicted_nodes.begin(), evicted_nodes.end(), node) == evicted_nodes.end());
         evicted_nodes.push_back(node);
     }
@@ -651,11 +656,11 @@ static void test_lru(void) {
     say( L"Testing LRU cache" );
     
     test_lru_t cache;
-    std::vector<lru_node_t *> expected_evicted;
+    std::vector<lru_node_test_t *> expected_evicted;
     size_t total_nodes = 20;
     for (size_t i=0; i < total_nodes; i++) {
         assert(cache.size() == std::min(i, (size_t)16));
-        lru_node_t *node = new lru_node_t(format_val(i));
+        lru_node_test_t *node = new lru_node_test_t(format_val(i));
         if (i < 4) expected_evicted.push_back(node);
         // Adding the node the first time should work, and subsequent times should fail
         assert(cache.add_node(node));
@@ -846,19 +851,20 @@ static void test_history(void) {
     say( L"Testing history");
     
     history_t &history = history_t::history_with_name(L"test_history");
-    history.add(L"Alpha");
-    history.add(L"Beta");
     history.add(L"Gamma");
+    history.add(L"Beta");
+    history.add(L"Alpha");
+    
 
     /* All three items match "a" */
     history_search_t search1(history, L"a");
     test_history_matches(search1, 3);
-    assert(search1.current_item().str() == L"Alpha");
+    assert(search1.current_item() == L"Alpha");
     
     /* One item matches "et" */
     history_search_t search2(history, L"et");
     test_history_matches(search2, 1);
-    assert(search2.current_item().str() == L"Beta");
+    assert(search2.current_item() == L"Beta");
 }
 
 

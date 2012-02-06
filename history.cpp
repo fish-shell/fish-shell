@@ -345,10 +345,12 @@ void history_t::load_old_if_needed(void)
 }
 
 bool history_search_t::go_forwards() {
-    /* Pop the top index (if any) and return if we have any left */
-    if (! prev_matches.empty())
+    /* Pop the top index (if more than one) and return if we have any left */
+    if (prev_matches.size() > 1) {
         prev_matches.pop_back();
-    return ! prev_matches.empty();
+        return true;
+    }
+    return false;
 }
 
 bool history_search_t::go_backwards() {

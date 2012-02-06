@@ -3163,7 +3163,17 @@ const wchar_t *reader_readline()
 				{
 					data->buff_pos++;					
 					reader_repaint();
-				}
+				} else {
+                    /* We're at the end of our buffer, and the user hit right. Try autosuggestion. */
+                    if (! data->autosuggestion.empty()) {
+                        /* Accept the autosuggestion */
+                        data->command_line = data->autosuggestion;
+                        data->buff_pos = data->command_line.size();
+                        data->check_size();
+                        reader_super_highlight_me_plenty(data->buff_pos, 0);
+                        reader_repaint();
+                    }
+                }
 				break;
 			}
 

@@ -992,8 +992,7 @@ void highlight_shell( const wchar_t *buff, int *color, int pos, array_list_t *er
 	if( pos >= 0 && pos <= len )
 	{
 		
-		wchar_t *tok_begin, *tok_end;
-		wchar_t *token;
+		const wchar_t *tok_begin, *tok_end, *token;
 		
 		parse_util_token_extent( buff, pos, &tok_begin, &tok_end, 0, 0 );
 		if( tok_begin && tok_end )

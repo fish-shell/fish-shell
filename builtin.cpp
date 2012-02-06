@@ -2145,7 +2145,7 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 	*/
 	if( isatty(0) && builtin_stdin == 0 )
 	{
-		wchar_t *line;
+		const wchar_t *line;
 		
 		reader_push( mode_name );
 		reader_set_prompt( prompt );

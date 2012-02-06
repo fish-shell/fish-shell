@@ -41,8 +41,8 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 */
 void parse_util_cmdsubst_extent( const wchar_t *buff,
 								 int cursor_pos,
-								 wchar_t **a, 
-								 wchar_t **b );
+								 const wchar_t **a, 
+								 const wchar_t **b );
 
 /**
    Find the beginning and end of the process definition under the cursor
@@ -54,8 +54,8 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
 */
 void parse_util_process_extent( const wchar_t *buff,
 								int cursor_pos,
-								wchar_t **a, 
-								wchar_t **b );
+								const wchar_t **a, 
+								const wchar_t **b );
 
 
 /**
@@ -68,12 +68,12 @@ void parse_util_process_extent( const wchar_t *buff,
 */
 void parse_util_job_extent( const wchar_t *buff,
 							int cursor_pos,
-							wchar_t **a, 
-							wchar_t **b );
+							const wchar_t **a, 
+							const wchar_t **b );
 
 /**
    Find the beginning and end of the token under the cursor and the
-   toekn before the current token. Any combination of tok_begin,
+   token before the current token. Any combination of tok_begin,
    tok_end, prev_begin and prev_end may be null.
 
    \param buff the string to search for subshells
@@ -85,10 +85,10 @@ void parse_util_job_extent( const wchar_t *buff,
 */
 void parse_util_token_extent( const wchar_t *buff,
 							  int cursor_pos,
-							  wchar_t **tok_begin,
-							  wchar_t **tok_end,
-							  wchar_t **prev_begin, 
-							  wchar_t **prev_end );
+							  const wchar_t **tok_begin,
+							  const wchar_t **tok_end,
+							  const wchar_t **prev_begin, 
+							  const wchar_t **prev_end );
 
 
 /**
@@ -99,18 +99,18 @@ int parse_util_lineno( const wchar_t *str, int len );
 /**
    Calculate the line number of the specified cursor position
  */
-int parse_util_get_line_from_offset( wchar_t *buff, int pos );
+int parse_util_get_line_from_offset( const wcstring &str, int pos );
 
 /**
    Get the offset of the first character on the specified line
  */
-int parse_util_get_offset_from_line( wchar_t *buff, int line );
+int parse_util_get_offset_from_line( const wcstring &str, int line );
 
 
 /**
    Return the total offset of the buffer for the cursor position nearest to the specified poition
  */
-int parse_util_get_offset( wchar_t *buff, int line, int line_offset );
+int parse_util_get_offset( const wcstring &str, int line, int line_offset );
 
 /**
    Set the argv environment variable to the specified null-terminated

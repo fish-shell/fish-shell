@@ -303,7 +303,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	array_list_t gnu_opt, old_opt;
 	const wchar_t *comp=L"", *desc=L"", *condition=L"";
 
-	wchar_t *do_complete = 0;
+	const wchar_t *do_complete = 0;
 	
 	array_list_t cmd;
 	array_list_t path;
@@ -545,7 +545,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 
 			const wchar_t *prev_temporary_buffer = temporary_buffer;
 
-			wchar_t *token;
+			const wchar_t *token;
 
 			parse_util_token_extent( do_complete, wcslen( do_complete ), &token, 0, 0, 0 );
 						

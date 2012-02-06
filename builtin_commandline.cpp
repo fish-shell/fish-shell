@@ -56,7 +56,7 @@ enum
    Pointer to what the commandline builtin considers to be the current
    contents of the command line buffer.
  */
-static wchar_t *current_buffer=0;
+static const wchar_t *current_buffer=0;
 /**
    What the commandline builtin considers to be the current cursor
    position.
@@ -66,7 +66,7 @@ static int current_cursor_pos = -1;
 /**
    Returns the current commandline buffer.
 */
-static wchar_t *get_buffer()
+static const wchar_t *get_buffer()
 {
 	return current_buffer;
 }
@@ -230,7 +230,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	int cursor_mode = 0;
 	int line_mode = 0;
 	int search_mode = 0;
-	wchar_t *begin, *end;
+	const wchar_t *begin, *end;
 
 	current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
 	if( current_buffer )
@@ -575,7 +575,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	if( line_mode )
 	{
 		int pos = reader_get_cursor_pos();
-		wchar_t *buff = reader_get_buffer();
+		const wchar_t *buff = reader_get_buffer();
 		sb_printf( sb_out, L"%d\n", parse_util_lineno( buff, pos ) );
 		return 0;
 			

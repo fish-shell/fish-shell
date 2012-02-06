@@ -1143,7 +1143,7 @@ env_var_t env_get_string( const wchar_t *key )
 	if( wcscmp( key, L"history" ) == 0 )
 	{
         wcstring result;
-		wchar_t *current;
+		const wchar_t *current;
 		int i;		
 		int add_current=0;
 		
@@ -1251,7 +1251,7 @@ const wchar_t *env_get( const wchar_t *key )
 
 	if( wcscmp( key, L"history" ) == 0 )
 	{
-		wchar_t *current;
+		const wchar_t *current;
 		dyn_var.clear();
 		
 		current = reader_get_buffer();

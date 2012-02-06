@@ -1543,11 +1543,11 @@ static int complete_param( const wchar_t *cmd_orig,
 /**
    Perform file completion on the specified string
 */
-static void complete_param_expand( wchar_t *str,
+static void complete_param_expand( const wchar_t *str,
 								   std::vector<completion_t> &comp_out,
 								   int do_file )
 {
-	wchar_t *comp_str;
+	const wchar_t *comp_str;
 	int flags;
 	
 	if( (wcsncmp( str, L"--", 2 )) == 0 && (comp_str = wcschr(str, L'=' ) ) )
@@ -1758,10 +1758,10 @@ static int try_complete_user( const wchar_t *cmd,
 void complete( const wchar_t *cmd,
 			   std::vector<completion_t> &comp )
 {
-	wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
+	const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
 	wchar_t *buff;
 	tokenizer tok;
-	wchar_t *current_token=0, *current_command=0, *prev_token=0;
+	const wchar_t *current_token=0, *current_command=0, *prev_token=0;
 	int on_command=0;
 	int pos;
 	int done=0;
@@ -1854,7 +1854,7 @@ void complete( const wchar_t *cmd,
 						{
 							int token_end;
 							
-							free( current_command );
+							free( (void *)current_command );
 							current_command = wcsdup( ncmd );
 							
 							token_end = tok_get_pos( &tok ) + wcslen( ncmd );
@@ -1928,7 +1928,7 @@ void complete( const wchar_t *cmd,
 			(current_token[0] == L'-') && 
 			!(use_command && use_function && use_builtin ) )
 		{
-			free( current_command );
+			free( (void *)current_command );
 			if( use_command == 0 )
 				current_command = wcsdup( L"builtin" );
 			else
@@ -2009,9 +2009,9 @@ void complete( const wchar_t *cmd,
 		}
 	}
 	
-	free( current_token );
-	free( current_command );
-	free( prev_token );
+	free( (void *)current_token );
+	free( (void *)current_command );
+	free( (void *)prev_token );
 
 	condition_cache_clear();
 

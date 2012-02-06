@@ -1028,7 +1028,7 @@ static void completion_insert( const wchar_t *val, int flags )
 	{
 		
 		int tok_start, tok_len, move_cursor;
-		wchar_t *begin, *end;
+		const wchar_t *begin, *end;
 		string_buffer_t sb;
 		wchar_t *escaped;
 		
@@ -1225,7 +1225,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 		  {
 		    if( base_len == -1 )
 		      {
-			wchar_t *begin;
+			const wchar_t *begin;
 				
 			parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
 			base_len = data->buff_pos - (begin-data->buff);
@@ -1402,7 +1402,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 	int done = 0;
 	int count = 0;
 	int flags=0;
-	wchar_t *begin, *end;
+	const wchar_t *begin, *end;
 	wchar_t *tok;
 	
 	parse_util_token_extent( data->buff, data->buff_pos, &begin, 0, 0, 0 );
@@ -1757,7 +1757,7 @@ void reader_sanity_check()
 void reader_replace_current_token( const wchar_t *new_token )
 {
 
-	wchar_t *begin, *end;
+	const wchar_t *begin, *end;
 	string_buffer_t sb;
 	int new_pos;
 
@@ -1804,7 +1804,7 @@ static void handle_history( const wcstring &new_str )
 */
 static void reset_token_history()
 {
-	wchar_t *begin, *end;
+	const wchar_t *begin, *end;
 
 	parse_util_token_extent( data->buff, data->buff_pos, &begin, &end, 0, 0 );
 	
@@ -2818,8 +2818,8 @@ wchar_t *reader_readline()
 
  				if( comp_empty || last_char != R_COMPLETE)
 				{
-					wchar_t *begin, *end;
-					wchar_t *token_begin, *token_end;
+					const wchar_t *begin, *end;
+					const wchar_t *token_begin, *token_end;
 					wchar_t *buffcpy;
 					int len;
 					int cursor_steps;

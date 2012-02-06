@@ -231,12 +231,15 @@ class reader_data_t
 	int search_pos;
 
 	/**
-	   Current size of the buffers
+	   Current count of the buffers
 	*/
-	size_t buff_sz;
+	size_t buff_count;
     
     /** Length of the command */
     size_t command_length() const { return command_line.size(); }
+    
+    /** Ensures that our buffers are the right size */
+    void check_size(void);
 
 	/**
 	   The current position of the cursor in buff.
@@ -498,6 +501,7 @@ static void reader_kill( size_t begin_idx, int length, int mode, int newv )
 	}
 	
     data->command_line.erase(begin_idx, length);
+    data->check_size();
 	
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 	reader_repaint();
@@ -544,20 +548,15 @@ void reader_pop_current_filename()
 }
 
 
-/**
-   Make sure buffers are large enough to hold current data plus one extra character.
-*/
-static int check_size()
+/** Make sure buffers are large enough to hold the current string length */
+void reader_data_t::check_size()
 {
-	if( data->buff_sz < data->command_length() + 2 )
+	if( buff_count != command_length())
 	{
-		data->buff_sz = maxi( 128, data->command_length()*2 );
-        
-        data->command_line.reserve(data->buff_sz);        
-        data->colors.resize(data->buff_sz);
-        data->indents.resize(data->buff_sz);
+		buff_count = command_length();
+        colors.resize(buff_count);
+        indents.resize(buff_count);
 	}
-	return 1;
 }
 
 
@@ -787,6 +786,7 @@ static void remove_backward()
         
     data->command_line.erase(data->buff_pos-1, 1);    
 	data->buff_pos--;
+    data->check_size();
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 
@@ -802,9 +802,10 @@ static void remove_backward()
 static int insert_string(const wcstring &str)
 {
     size_t len = str.size();
-	check_size();
     data->command_line.insert(data->buff_pos, str);
     data->buff_pos += len;
+    data->check_size();
+    
 	/* Syntax highlight  */
 	reader_super_highlight_me_plenty( data->buff_pos-1, 0 );
 	
@@ -1731,6 +1732,13 @@ void reader_sanity_check()
 
 		if(!( data->buff_pos <= data->command_length() ))
 			sanity_lose();
+        
+        if (data->colors.size() != data->buff_count)
+            sanity_lose();
+            
+        if (data->indents.size() != data->buff_count)
+            sanity_lose();
+            
 	}
 }
 
@@ -1773,7 +1781,7 @@ void reader_replace_current_token( const wchar_t *new_token )
 static void handle_history( const wcstring &new_str )
 {
     data->command_line = new_str;
-    check_size();
+    data->check_size();
     data->buff_pos=data->command_line.size();
     reader_super_highlight_me_plenty( data->buff_pos, 0 );
     reader_repaint();
@@ -2103,7 +2111,7 @@ void reader_set_buffer( const wchar_t *b, int p )
     const wcstring tmp = b;
     data->command_line = tmp;
     
-    check_size();
+    data->check_size();
 
 	if( p>=0 )
 	{
@@ -2242,7 +2250,7 @@ void reader_push( const wchar_t *name )
 
 	data=n;
 
-	check_size();
+	data->check_size();
 
 	if( data->next == 0 )
 	{
@@ -2389,8 +2397,11 @@ static void highlight_complete(void *ctx_ptr, int result) {
         free(ctx->color);
 		ctx->color = NULL;
         
+        
 		//data->repaint_needed = 1;
         //s_reset( &data->screen, 1 );
+        
+        sanity_check();
         highlight_search();
         reader_repaint();
 	}
@@ -2427,7 +2438,9 @@ static int threaded_highlight(void *ctx_ptr) {
 */
 static void reader_super_highlight_me_plenty( int match_highlight_pos, array_list_t *error )
 {
-    int *color = (int *)calloc(data->buff_sz, sizeof *color); 
+    reader_sanity_check();
+    
+    int *color = (int *)calloc(data->buff_count, sizeof *color); 
 	background_highlight_context_t *ctx = new background_highlight_context_t(data->command_line, color, match_highlight_pos, data->highlight_function);
 #if 1
 	iothread_perform(threaded_highlight, highlight_complete, ctx);
@@ -2631,7 +2644,7 @@ const wchar_t *reader_readline()
 	int finished=0;
 	struct termios old_modes;
 
-	check_size();
+	data->check_size();
 	data->search_buff.clear();
 	data->search_mode = NO_SEARCH;
 	

@@ -385,6 +385,12 @@ void history_search_t::go_to_end(void) {
     prev_matches.clear();
 }
 
+/** Returns if we are at the end, which is where we start. */
+bool history_search_t::is_at_end(void) const {
+    return prev_matches.empty();
+}
+
+
 /** Goes to the beginning (backwards) */
 void history_search_t::go_to_beginning(void) {
     /* Just go backwards as far as we can */

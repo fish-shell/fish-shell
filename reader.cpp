@@ -213,7 +213,7 @@ class reader_data_t
 	/**
 	   Saved search string for token history search. Not handled by check_size.
 	*/
-	const wchar_t *token_history_buff;
+	wcstring token_history_buff;
 
 	/**
 	   List for storing previous search results. Used to avoid duplicates.
@@ -1789,18 +1789,14 @@ void reader_replace_current_token( const wchar_t *new_token )
    Set the specified string from the history as the current buffer. Do
    not modify prefix_width.
 */
-static void handle_history( const wchar_t *new_str )
+static void handle_history( const wcstring &new_str )
 {
-	if( new_str )
-	{
-		data->buff_len = wcslen( new_str );
-		check_size();
-		wcscpy( data->buff, new_str );
-		data->buff_pos=wcslen(data->buff);
-		reader_super_highlight_me_plenty( data->buff_pos, 0 );
-
-		reader_repaint();
-	}
+    data->buff_len = new_str.size();
+    check_size();
+    wcscpy( data->buff, new_str.c_str() );
+    data->buff_pos=wcslen(data->buff);
+    reader_super_highlight_me_plenty( data->buff_pos, 0 );
+    reader_repaint();
 }
 
 /**
@@ -1873,26 +1869,20 @@ static void handle_token_history( int forward, int reset )
 	{
 		if( current_pos == -1 )
 		{
-			/*
-			  Move to previous line
-			*/
-			free( (void *)data->token_history_buff );		
-
+            data->token_history_buff.clear();
+            
 			/*
 			  Search for previous item that contains this substring
 			*/
-            if (! data->history_search.go_backwards()) {
-                /* No luck */
-                data->token_history_buff = wcsdup(L"");
-            } else {
+            if (data->history_search.go_backwards()) {
                 wcstring item = data->history_search.current_item();
-                data->token_history_buff = wcsdup(item.c_str());
+                data->token_history_buff = data->history_search.current_item();
             }
-			current_pos = wcslen(data->token_history_buff);
+			current_pos = data->token_history_buff.size();
 
 		}
 
-		if( ! wcslen( data->token_history_buff ) )
+		if( data->token_history_buff.empty() )
 		{
 			/*
 			  We have reached the end of the history - check if the
@@ -1913,9 +1903,9 @@ static void handle_token_history( int forward, int reset )
 		else
 		{
 
-			//debug( 3, L"new '%ls'", data->token_history_buff );
+			//debug( 3, L"new '%ls'", data->token_history_buff.c_str() );
 
-			for( tok_init( &tok, data->token_history_buff, TOK_ACCEPT_UNFINISHED );
+			for( tok_init( &tok, data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED );
 				 tok_has_next( &tok);
 				 tok_next( &tok ))
 			{
@@ -2287,8 +2277,6 @@ void reader_push( const wchar_t *name )
 	reader_set_test_function( &default_test );
 	reader_set_prompt( L"" );
 	//history_set_mode( name );
-
-	data->token_history_buff=0;
 }
 
 void reader_pop()
@@ -2309,11 +2297,6 @@ void reader_pop()
 	free( n->indent );
 	sb_destroy( &n->kill_item );
 	
-	/*
-	  Clean up after history search
-	*/
-    free( (void *)n->token_history_buff);
-
     /* Invoke the destructor to balance our new */
     delete n;
 
@@ -2403,7 +2386,7 @@ public:
 
 /* Called to set the highlight flag for search results */
 static void highlight_search(void) {
-	if( ! data->search_buff.empty())
+	if( ! data->search_buff.empty() && ! data->history_search.is_at_end())
 	{
 		wchar_t * match = wcsstr( data->buff, data->search_buff.c_str() );
 		if( match )
@@ -3117,25 +3100,26 @@ wchar_t *reader_readline()
 
 					case LINE_SEARCH:
 					{
-						bool success;
-						
 						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
 							( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
 						{
-							success = data->history_search.go_backwards();
+							data->history_search.go_backwards();
 						}
 						else
 						{
-							success = data->history_search.go_forwards();
+							if (! data->history_search.go_forwards()) {
+                                /* If you try to go forwards past the end, we just go to the end */
+                                data->history_search.go_to_end();
+                            }
 						}
 						
                         wcstring new_text;
-                        if (success) {
-                            new_text = data->history_search.current_item();
-                        } else {
+                        if (data->history_search.is_at_end()) {
                             new_text = data->search_buff;
+                        } else {
+                            new_text = data->history_search.current_item();
                         }
-						handle_history( new_text.c_str() );
+						handle_history(new_text);
 						
 						break;
 					}

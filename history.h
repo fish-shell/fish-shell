@@ -30,7 +30,10 @@ class history_item_t {
     public:
     const wcstring &str() const { return contents; }
     bool empty() const { return contents.empty(); }
-    bool matches_search(const wcstring &val) const { return contents.find(val) != wcstring::npos; }
+    
+    /* We consider equal strings to NOT match a search (so that you don't have to see history equal to what you typed) */
+    bool matches_search(const wcstring &val) const { return contents.size() > val.size() && contents.find(val) != wcstring::npos; }
+    
     time_t timestamp() const { return creation_timestamp; }
     
     bool write_to_file(FILE *f) const;
@@ -123,6 +126,9 @@ class history_search_t {
     
     /** Goes to the end (forwards) */
     void go_to_end(void);
+    
+    /** Returns if we are at the end. We start out at the end. */
+    bool is_at_end(void) const;
     
     /** Goes to the beginning (backwards) */
     void go_to_beginning(void);

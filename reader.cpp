@@ -789,7 +789,7 @@ static void remove_backward()
    Insert the characters of the string into the command line buffer
    and print them to the screen using syntax highlighting, etc.
 */
-static int insert_str(const wcstring &str)
+static int insert_string(const wcstring &str)
 {
     size_t len = str.size();
 	check_size();
@@ -810,13 +810,7 @@ static int insert_str(const wcstring &str)
 */
 static int insert_char( int c )
 {
-	wchar_t str[]=
-		{
-			0, 0 
-		}
-	;
-	str[0] = c;
-	return insert_str( str );
+	return insert_string( wcstring(1, (wchar_t)c) );
 }
 
 
@@ -1094,7 +1088,7 @@ static void completion_insert( const wchar_t *val, int flags )
 			replaced = wcsdup(val);
 		}
 		
-		if( insert_str( replaced ) )
+		if( insert_string( replaced ) )
 		{
 			/*
 			  Print trailing space since this is the only completion 
@@ -2682,7 +2676,7 @@ const wchar_t *reader_readline()
 							break;
 					}
 
-					insert_str( arr );
+					insert_string( arr );
 
 				}
 			}
@@ -2904,7 +2898,7 @@ const wchar_t *reader_readline()
 			case R_YANK:
 			{
 				yank_str = kill_yank();
-				insert_str( yank_str );
+				insert_string( yank_str );
 				yank = wcslen( yank_str );
 				break;
 			}
@@ -2918,7 +2912,7 @@ const wchar_t *reader_readline()
 						remove_backward();
 
 					yank_str = kill_yank_rotate();
-					insert_str(yank_str);
+					insert_string(yank_str);
 					yank = wcslen(yank_str);
 				}
 				break;

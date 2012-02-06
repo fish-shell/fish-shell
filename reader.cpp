@@ -3088,6 +3088,12 @@ const wchar_t *reader_readline()
 					
                     data->search_buff.append(data->command_line);
                     data->history_search = history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
+                    
+                    /* Skip the autosuggestion as history */
+                    const wcstring &suggest = data->autosuggestion;
+                    if (! suggest.empty()) {
+                        data->history_search.skip_matches(wcstring_list_t(&suggest, 1 + &suggest));
+                    }
 				}
 
 				switch( data->search_mode )

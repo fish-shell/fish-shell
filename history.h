@@ -12,6 +12,7 @@
 #include <deque>
 #include <utility>
 #include <tr1/memory>
+#include <set>
 using std::tr1::shared_ptr;
 
 enum history_search_type_t {
@@ -126,8 +127,16 @@ class history_search_t {
 
     /** The search term */
     wcstring term;
-        
+    
+    /** Additional strings to skip (sorted) */
+    wcstring_list_t external_skips;
+    
+    bool should_skip_match(const wcstring &str) const;
+    
     public:
+
+    /** Sets additional string matches to skip */
+    void skip_matches(const wcstring_list_t &skips);
 
     /** Finds the next search term (forwards in time). Returns true if one was found. */
     bool go_forwards(void);

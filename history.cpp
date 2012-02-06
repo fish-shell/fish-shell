@@ -362,6 +362,15 @@ void history_t::load_old_if_needed(void)
 	signal_unblock();
 }
 
+void history_search_t::skip_matches(const wcstring_list_t &skips) {
+    external_skips = skips;
+    std::sort(external_skips.begin(), external_skips.end());
+}
+
+bool history_search_t::should_skip_match(const wcstring &str) const {
+    return std::binary_search(external_skips.begin(), external_skips.end(), str);
+}
+
 bool history_search_t::go_forwards() {
     /* Pop the top index (if more than one) and return if we have any left */
     if (prev_matches.size() > 1) {
@@ -390,7 +399,8 @@ bool history_search_t::go_backwards() {
         }
 
         /* Look for a term that matches and that we haven't seen before */
-        if (item.matches_search(term, search_type) && ! match_already_made(item.str())) {
+        const wcstring &str = item.str();
+        if (item.matches_search(term, search_type) && ! match_already_made(str) && ! should_skip_match(str)) {
             prev_matches.push_back(prev_match_t(idx, item.str()));
             return true;
         }

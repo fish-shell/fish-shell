@@ -19,7 +19,18 @@ struct line_entry_t
     wchar_t text;
     int color;
 };
+
+class rgb_color_t {
+    unsigned char rgb[3];
+    public:
     
+    rgb_color_t(unsigned char r, unsigned char g, unsigned char b)
+    {
+        rgb[0] = r;
+        rgb[1] = g;
+        rgb[2] = b;
+    }
+};
 
 /**
    A class representing a single line of a screen.

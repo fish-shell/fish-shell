@@ -2443,7 +2443,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 {
     reader_sanity_check();
     
-    int *color = (int *)calloc(data->buff_count, sizeof *color); 
+    int *color = (int *)calloc(data->buff_count + 1, sizeof *color); 
 	background_highlight_context_t *ctx = new background_highlight_context_t(data->command_line, color, match_highlight_pos, data->highlight_function);
 #if 1
 	iothread_perform(threaded_highlight, highlight_complete, ctx);

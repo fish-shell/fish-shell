@@ -3012,6 +3012,9 @@ const wchar_t *reader_readline()
 			*/
 			case R_EXECUTE:
 			{
+                /* Delete any autosuggestion */
+                data->autosuggestion.clear();
+                
 				/*
 				  Allow backslash-escaped newlines
 				*/

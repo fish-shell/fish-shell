@@ -48,7 +48,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 /**
    The environment variables used to specify the color of different tokens.
 */
-static const wchar_t *highlight_var[] = 
+static const wchar_t * const highlight_var[] = 
 {
 	L"fish_color_normal",
 	L"fish_color_error",
@@ -62,9 +62,9 @@ static const wchar_t *highlight_var[] =
 	L"fish_color_escape",
 	L"fish_color_quote",
 	L"fish_color_redirection",
-	L"fish_color_valid_path"
-}
-	;
+	L"fish_color_valid_path",
+    L"fish_color_autosuggestion"
+};
 
 /**
    Tests if the specified string is the prefix of any valid path in the system. 
@@ -170,7 +170,7 @@ static bool is_potential_path( const wcstring &cpath )
 
 
 
-int highlight_get_color( int highlight )
+int highlight_get_color( int highlight, bool is_background )
 {
 	size_t i;
 	int idx=0;
@@ -178,10 +178,9 @@ int highlight_get_color( int highlight )
 
 	if( highlight < 0 )
 		return FISH_COLOR_NORMAL;
-	if( highlight >= (1<<VAR_COUNT) )
+	if( highlight > (1<<VAR_COUNT) )
 		return FISH_COLOR_NORMAL;
-
-	for( i=0; i<(VAR_COUNT-1); i++ )
+	for( i=0; i<VAR_COUNT; i++ )
 	{
 		if( highlight & (1<<i ))
 		{
@@ -189,7 +188,7 @@ int highlight_get_color( int highlight )
 			break;
 		}
 	}
-		
+    
 	env_var_t val_wstr = env_get_string( highlight_var[idx]); 
 
 //	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
@@ -198,14 +197,14 @@ int highlight_get_color( int highlight )
 		val_wstr = env_get_string( highlight_var[0]);
 	
 	if( ! val_wstr.missing() )
-		result = output_color_code( val_wstr.c_str() );
+		result = output_color_code( val_wstr, is_background );
 	
 	if( highlight & HIGHLIGHT_VALID_PATH )
 	{
 		env_var_t val2_wstr =  env_get_string( L"fish_color_valid_path" );
 		const wchar_t *val2 = val2_wstr.missing() ? NULL : val2_wstr.c_str(); 
 
-		int result2 = output_color_code( val2 );
+		int result2 = output_color_code( val2, is_background );
 		if( result == FISH_COLOR_NORMAL )
 			result = result2;
 		else 

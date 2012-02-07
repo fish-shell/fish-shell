@@ -64,6 +64,11 @@
 #define HIGHLIGHT_VALID_PATH 0x1000
 
 /**
+   Internal value representing highlighting an autosuggestion
+*/
+#define HIGHLIGHT_AUTOSUGGESTION 0x2000
+
+/**
    Perform syntax highlighting for the shell commands in buff. The result is
    stored in the color array as a color_code from the HIGHLIGHT_ enum
    for each character in buff.
@@ -97,6 +102,6 @@ void highlight_universal( const wchar_t *buff, int *color, int pos, array_list_t
    call to highlight_get_color( HIGHLIGHT_ERROR) will return
    FISH_COLOR_RED.
 */
-int highlight_get_color( int highlight );
+int highlight_get_color( int highlight, bool is_background );
 
 #endif

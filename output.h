@@ -128,7 +128,7 @@ int write_escaped_str( const wchar_t *str, int max_len );
 /**
    Return the internal color code representing the specified color
 */
-int output_color_code( const wchar_t *val );
+int output_color_code( const wcstring &val, bool is_background );
 
 /**
    This is for writing process notification messages. Has to write to

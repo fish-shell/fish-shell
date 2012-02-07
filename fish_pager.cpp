@@ -221,7 +221,7 @@ static int get_color( int highlight )
 		return FISH_COLOR_NORMAL;
 	}
 	
-	return output_color_code( val );	
+	return output_color_code( val, false );	
 }
 
 /**

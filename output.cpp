@@ -149,7 +149,9 @@ int (*output_get_writer())(char)
 
 void set_color( int c, int c2 )
 {
-	static int last_color = FISH_COLOR_NORMAL;
+    ASSERT_IS_MAIN_THREAD();
+    
+    static int last_color = FISH_COLOR_NORMAL;
 	static int last_color2 = FISH_COLOR_NORMAL;
 	static int was_bold=0;
 	static int was_underline=0;
@@ -546,37 +548,47 @@ int write_escaped_str( const wchar_t *str, int max_len )
 }
 
 
-int output_color_code( const wchar_t *val )
-{
+int output_color_code( const wcstring &val, bool is_background ) {
 	size_t i;
     int color=FISH_COLOR_NORMAL;
 	int is_bold=0;
 	int is_underline=0;
 	
-	if( !val )
+	if (val.empty())
 		return FISH_COLOR_NORMAL;
 	
     wcstring_list_t el;
 	tokenize_variable_array2( val, el );
 	
-	for(size_t j=0; j < el.size(); j++ )
-	{
-        const wchar_t *next = el.at(j).c_str();
-		
-		is_bold |= (wcsncmp( next, L"--bold", wcslen(next) ) == 0 ) && wcslen(next)>=3;
-		is_bold |= wcscmp( next, L"-o" ) == 0;
-
-		is_underline |= (wcsncmp( next, L"--underline", wcslen(next) ) == 0 ) && wcslen(next)>=3;
-		is_underline |= wcscmp( next, L"-u" ) == 0;
-
-		for( i=0; i<COLORS; i++ )
-		{
-			if( wcscasecmp( col[i], next ) == 0 )
-			{
-				color = col_idx[i];
-				break;
-			}
-		}
+	for(size_t j=0; j < el.size(); j++ ) {
+        const wcstring &next = el.at(j);
+        wcstring color_name;
+        if (is_background) {
+            // look for something like "--background=red"
+            const wcstring prefix = L"--background=";
+            if (string_prefixes_string(prefix, next)) {
+                color_name = wcstring(next, prefix.size());
+            }
+            
+        } else {
+            if (next == L"--bold" || next == L"-o")
+                is_bold = true;
+            else if (next == L"--underline" || next == L"-u")
+                is_underline = true;
+            else
+                color_name = next;
+        }
+        
+        if (! color_name.empty()) {
+            for( i=0; i<COLORS; i++ )
+            {
+                if( wcscasecmp( col[i], color_name.c_str() ) == 0 )
+                {
+                    color = col_idx[i];
+                    break;
+                }
+            }
+        }
 		
 	}
 	

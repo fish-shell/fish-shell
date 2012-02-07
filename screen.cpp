@@ -529,8 +529,9 @@ static void s_set_color( screen_t *s, buffer_t *b, int c )
 	output_set_writer( &s_writeb );
 	s_writeb_buffer = b;
 	
-	set_color( highlight_get_color( c & 0xffff ),
-		   highlight_get_color( (c>>16)&0xffff ) );
+    unsigned int uc = (unsigned int)c;
+	set_color( highlight_get_color( uc & 0xffff, false ),
+		   highlight_get_color( (uc>>16)&0xffff, true ) );
 	
 	output_set_writer( writer_old );
 	

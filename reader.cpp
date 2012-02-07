@@ -193,9 +193,10 @@ class reader_data_t
     /** String containing the autosuggestion */
     wcstring autosuggestion;
 
-	/**
-	   The representation of the current screen contents
-	 */
+    /** When backspacing, we suppress autosuggestions */
+    bool suppress_autosuggestion;
+
+	/** The representation of the current screen contents */
 	screen_t screen;
     
     /** The history */
@@ -448,7 +449,7 @@ static void reader_repaint()
     size_t len = std::max((size_t)1, full_line.size());
     
     std::vector<color_t> colors = data->colors;
-    colors.resize(len, FISH_COLOR_NORMAL);
+    colors.resize(len, HIGHLIGHT_AUTOSUGGESTION);
     
     std::vector<int> indents = data->indents;
     indents.resize(len);
@@ -787,6 +788,7 @@ static void remove_backward()
     data->command_line.erase(data->buff_pos-1, 1);    
 	data->buff_pos--;
     data->check_size();
+    data->suppress_autosuggestion = true;
 
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
 
@@ -805,6 +807,7 @@ static int insert_string(const wcstring &str)
     data->command_line.insert(data->buff_pos, str);
     data->buff_pos += len;
     data->check_size();
+    data->suppress_autosuggestion = false;
     
 	/* Syntax highlight  */
 	reader_super_highlight_me_plenty( data->buff_pos-1, 0 );
@@ -1285,7 +1288,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 static void update_autosuggestion(void) {
     /* Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if we're not doing a history search.  */
     data->autosuggestion.clear();
-    if (! data->command_line.empty() && data->history_search.is_at_end()) {
+    if (! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end()) {
         history_search_t searcher = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
         if (searcher.go_backwards()) {
             data->autosuggestion = searcher.current_item();

@@ -35,10 +35,20 @@ typedef struct event_block
 	   The next event_block struct
 	*/
 	struct event_block *next;
-}
-	event_block_t;
+} event_block_t;
 
 
+/** Block state template, to replace the discriminated union */
+struct block_state_base_t {
+    public:
+    virtual ~block_state_base_t() {}
+};
+
+template<typename T>
+struct block_state_t : public block_state_base_t {
+    T value;    
+    block_state_t() : value() {}
+};
 
 /**
    block_t represents a block of commands. 
@@ -65,9 +75,7 @@ typedef struct block
 	*/
 	void *data;
 	
-	/**
-	   First block type specific variable
-	*/
+#if 0
 	union 
 	{
 		int while_state;  /**< True if the loop condition has not yet been evaluated*/
@@ -78,7 +86,42 @@ typedef struct block
 		event_t *event; /**<The event that triggered this block */		
 		wchar_t *function_call_name;
 	} param1;
+#endif
 
+	/** First block type specific variable	*/
+    block_state_base_t *state1_ptr;
+
+    template<typename T>
+    T& state1(void) {
+        block_state_t<T> *state;
+        if (state1_ptr == NULL) {
+            state = new block_state_t<T>();
+            state1_ptr = state;
+        } else {
+            state = dynamic_cast<block_state_t<T> *>(state1_ptr);
+            assert(state != NULL);
+        }
+        return state->value;
+    }
+
+	/** Second block type specific variable	*/
+    block_state_base_t *state2_ptr;
+
+    template<typename T>
+    T& state2(void) {
+        block_state_t<T> *state;
+        if (state2_ptr == NULL) {
+            state = new block_state_t<T>();
+            state2_ptr = state;
+        } else {
+            state = dynamic_cast<block_state_t<T> *>(state2_ptr);
+            assert(state != NULL);
+        }
+        return state->value;
+    }
+
+
+#if 0
 	/**
 	   Second block type specific variable
 	*/
@@ -88,6 +131,7 @@ typedef struct block
 		int switch_taken; /**< Whether a switch match has already been found */
 		process_t *function_call_process;		/**< The process representing this function call */
 	} param2;
+#endif
 
 
 	/**
@@ -99,6 +143,9 @@ typedef struct block
 	   Line number where this block was created
 	*/
 	int src_lineno;
+    
+    /** Whether we should pop the environment variable stack when we're popped */
+    bool wants_pop_env;
 	
 	/**
 	   Some naming confusion. This is a pointer to the first element in the list of all event blocks.
@@ -108,7 +155,16 @@ typedef struct block
     /**
 	   Next outer block 
 	*/
-	struct block *outer; 
+	struct block *outer;
+    
+    /** Destructor */
+    ~block()
+    {
+        if (state1_ptr != NULL)
+            delete state1_ptr;
+        if (state2_ptr != NULL)
+            delete state2_ptr;
+    }
 } block_t;
 
 /** 
@@ -278,7 +334,7 @@ class parser_t {
     /** Create a parser of the given type */
     parser_t(enum parser_type_t type);
     
-    /** The current innermost block */
+    /** The current innermost block, allocated with new */
     block_t *current_block;
     
     /** Global event blocks */

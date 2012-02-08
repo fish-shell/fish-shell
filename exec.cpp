@@ -1196,8 +1196,8 @@ void exec( parser_t &parser, job_t *j )
 				}
 				parser.push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
 				
-				parser.current_block->param2.function_call_process = p;
-				parser.current_block->param1.function_call_name = (wchar_t *)halloc_register( parser.current_block, wcsdup( p->argv0() ) );
+				parser.current_block->state2<process_t *>() = p;
+				parser.current_block->state1<wcstring>() = p->argv0();
 						
 
 				/*

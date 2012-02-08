@@ -336,7 +336,7 @@ void event_remove( event_t *criterion )
 	events.swap(new_list);
 }
 
-int event_get( event_t *criterion, array_list_t *out )
+int event_get( event_t *criterion, std::vector<event_t *> *out )
 {
 	size_t i;
 	int found = 0;
@@ -353,7 +353,7 @@ int event_get( event_t *criterion, array_list_t *out )
 		{
 			found++;
 			if( out )
-				al_push( out, n );
+                out->push_back(n);
 		}		
 	}
 	return found;
@@ -461,7 +461,7 @@ static void event_fire_internal( event_t *event )
 		prev_status = proc_get_last_status();
         parser_t &parser = parser_t::principal_parser();
 		parser.push_block( EVENT );
-		parser.current_block->param1.event = event;
+		parser.current_block->state1<event_t *>() = event;
 		parser.eval( buffer.c_str(), 0, TOP );
 		parser.pop_block();
 		proc_pop_interactive();					

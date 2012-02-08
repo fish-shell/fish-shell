@@ -415,20 +415,13 @@ static void builtin_bind_list()
  */
 static void builtin_bind_key_names( int all )
 {
-	array_list_t lst;
-	int i;
-	
-	al_init( &lst );
-	input_terminfo_get_names( &lst, !all );
-	
-	for( i=0; i<al_get_count(&lst); i++ )
+    const wcstring_list_t names = input_terminfo_get_names(!all);	
+	for( size_t i=0; i<names.size(); i++ )
 	{
-		wchar_t *seq = (wchar_t *)al_get( &lst, i );
+        const wcstring &name = names.at(i);
 		
-		sb_printf( sb_out, L"%ls\n", seq );
+		sb_printf( sb_out, L"%ls\n", name.c_str() );
 	}
-
-	al_destroy( &lst );
 }
 
 /**
@@ -1091,14 +1084,12 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 	const wchar_t *desc = function_get_desc( name );
 	const wchar_t *def = function_get_definition(name);
 
-	array_list_t ev;
 	event_t search;
-	int i;
 
 	search.function_name = name;
 	search.type = EVENT_ANY;
 
-	al_init( &ev );
+	std::vector<event_t *> ev;
 	event_get( &search, &ev );
 
 	sb_append( out,
@@ -1119,9 +1110,9 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 		sb_append( out, L" --no-scope-shadowing", NULL );	
 	}
 
-	for( i=0; i<al_get_count( &ev); i++ )
+	for( size_t i=0; i<ev.size(); i++ )
 	{
-		event_t *next = (event_t *)al_get( &ev, i );
+		event_t *next = ev.at(i);
 		switch( next->type )
 		{
 			case EVENT_SIGNAL:
@@ -1163,13 +1154,12 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 	}
 
-	al_destroy( &ev );
 	
     wcstring_list_t named = function_get_named_arguments( name );
 	if( named.size() > 0 )
 	{
 		sb_printf( out, L" --argument" );
-		for( i=0; i<(int)named.size(); i++ )
+		for( size_t i=0; i < named.size(); i++ )
 		{
 			sb_printf( out, L" %ls", named.at(i).c_str() );
 		}
@@ -2835,7 +2825,7 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 	parser.push_block( SOURCE );		
 	reader_push_current_filename( fn_intern );
 	
-	parser.current_block->param1.source_dest = fn_intern;
+    parser.current_block->state1<const wchar_t *>() = fn_intern;
 	
 	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), wcstring_list_t());
 	
@@ -3173,21 +3163,19 @@ static int builtin_for( parser_t &parser, wchar_t **argv )
 	else
 	{
 		parser.push_block( FOR );
-		al_init( &parser.current_block->param2.for_vars);
 
 		int i;
+        const wcstring for_variable = argv[1];
 		parser.current_block->tok_pos = parser.get_pos();
-		parser.current_block->param1.for_variable = halloc_wcsdup( parser.current_block, argv[1] );
+        parser.current_block->state1<wcstring>() = for_variable;
 
+        wcstring_list_t &for_vars = parser.current_block->state2<wcstring_list_t>();
 		for( i=argc-1; i>3; i-- )
-		{
-			al_push( &parser.current_block->param2.for_vars, halloc_wcsdup( parser.current_block, argv[ i ] ) );
-		}
-		halloc_register( parser.current_block, parser.current_block->param2.for_vars.arr );
+            for_vars.push_back(argv[i]);
 
 		if( argc > 3 )
 		{
-			env_set( parser.current_block->param1.for_variable, argv[3], ENV_LOCAL );
+			env_set( for_variable.c_str(), argv[3], ENV_LOCAL );
 		}
 		else
 		{
@@ -3247,7 +3235,7 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 					parser.current_block->skip = 0;
 					kill_block = 0;
 					parser.set_pos( parser.current_block->tok_pos);
-					parser.current_block->param1.while_state = WHILE_TEST_AGAIN;
+                    parser.current_block->state1<int>() = WHILE_TEST_AGAIN;
 				}
 
 				break;
@@ -3267,15 +3255,18 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 				/*
 				  set loop variable to next element, and rewind to the beginning of the block.
 				*/
+                wcstring_list_t &for_vars = parser.current_block->state2<wcstring_list_t>();
 				if( parser.current_block->loop_status == LOOP_BREAK )
 				{
-					al_truncate( &parser.current_block->param2.for_vars, 0 );
+                    for_vars.clear();
 				}
 
-				if( al_get_count( &parser.current_block->param2.for_vars ) )
+				if( ! for_vars.empty() )
 				{
-					wchar_t *val = (wchar_t *)al_pop( &parser.current_block->param2.for_vars );
-					env_set( parser.current_block->param1.for_variable, val,  ENV_LOCAL);
+                    const wcstring val = for_vars.back();
+                    for_vars.pop_back();
+                    const wcstring for_variable = parser.current_block->state1<wcstring>();
+					env_set( for_variable.c_str(), val.c_str(),  ENV_LOCAL);
 					parser.current_block->loop_status = LOOP_NORMAL;
 					parser.current_block->skip = 0;
 					
@@ -3336,7 +3327,7 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
 {
 	if( parser.current_block == 0 ||
 		parser.current_block->type != IF ||
-		parser.current_block->param1.if_state != 1)
+		parser.current_block->state1<int>() != 1)
 	{
 		sb_printf( sb_err,
 				   _( L"%ls: Not inside of 'if' block\n" ),
@@ -3346,7 +3337,8 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
 	}
 	else
 	{
-		parser.current_block->param1.if_state++;
+        int &if_state = parser.current_block->state1<int>();
+        if_state++;
 		parser.current_block->skip = !parser.current_block->skip;
 		env_pop();
 		env_push(0);
@@ -3517,9 +3509,9 @@ static int builtin_switch( parser_t &parser, wchar_t **argv )
 	else
 	{
 		parser.push_block( SWITCH );
-		parser.current_block->param1.switch_value = halloc_wcsdup( parser.current_block, argv[1]);
+		parser.current_block->state1<wcstring>() = argv[1];
 		parser.current_block->skip=1;
-		parser.current_block->param2.switch_taken=0;
+		parser.current_block->state2<int>() = 0;
 	}
 	
 	return res;
@@ -3546,7 +3538,7 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 	
 	parser.current_block->skip = 1;
 	
-	if( parser.current_block->param2.switch_taken )
+	if( parser.current_block->state2<int>() )
 	{
 		return STATUS_BUILTIN_OK;
 	}
@@ -3556,13 +3548,14 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 		int match;
 		
 		unescaped = parse_util_unescape_wildcards( argv[i] );
-		match = wildcard_match( parser.current_block->param1.switch_value, unescaped );
+        const wcstring &switch_value = parser.current_block->state1<wcstring>();
+		match = wildcard_match( switch_value, unescaped );
 		free( unescaped );
 		
 		if( match )
 		{
 			parser.current_block->skip = 0;
-			parser.current_block->param2.switch_taken = 1;
+			parser.current_block->state2<int>() = 1;
 			break;
 		}
 	}

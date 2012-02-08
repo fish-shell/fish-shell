@@ -153,10 +153,12 @@ int wildcard_has( const wchar_t *str, int internal )
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards. 
 */
-static int wildcard_match2( const wchar_t *str, 
-							const wchar_t *wc, 
+static int wildcard_match2( const wcstring &str_str, 
+							const wcstring &wc_str, 
 							int is_first )
 {
+    const wchar_t *str = str_str.c_str();
+    const wchar_t *wc = wc_str.c_str();
 	
 	if( *str == 0 && *wc==0 )
 		return 1;
@@ -329,7 +331,7 @@ int wildcard_complete( const wchar_t *str,
 }
 
 
-int wildcard_match( const wchar_t *str, const wchar_t *wc )
+int wildcard_match( const wcstring &str, const wcstring &wc )
 {
 	return wildcard_match2( str, wc, 1 );	
 }

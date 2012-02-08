@@ -121,7 +121,7 @@ void event_remove( event_t *event );
    
    \return the number of found matches
 */
-int event_get( event_t *criterion, array_list_t *out );
+int event_get( event_t *criterion, std::vector<event_t *> *out );
 
 /**
    Fire the specified event. The function_name field of the event must

@@ -822,10 +822,6 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		std::vector<long> indexes;
 		wcstring_list_t result;
 		
-//		al_init(&values);
-//		al_init(&indexes);
-//		al_init(&result);
-		
         const env_var_t dest_str = env_get_string(dest);
         if (! dest_str.missing())
             tokenize_variable_array2( dest_str, result );

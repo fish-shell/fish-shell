@@ -124,10 +124,8 @@ const wchar_t *input_terminfo_get_sequence( const wchar_t *name );
  */
 bool input_terminfo_get_name( const wcstring &seq, wcstring &name );
 
-/**
-   Return a list of all known terminfo names
- */
-void input_terminfo_get_names( array_list_t *lst, int skip_null );
+/** Return a list of all known terminfo names */
+wcstring_list_t input_terminfo_get_names( bool skip_null );
 
 
 /**

@@ -816,14 +816,14 @@ bool input_terminfo_get_name( const wcstring &seq, wcstring &name )
 	return false;
 }
 
-void input_terminfo_get_names( array_list_t *lst, int skip_null )
+wcstring_list_t input_terminfo_get_names( bool skip_null )
 {
-	int i;	
-
-	CHECK( lst, );
+    wcstring_list_t result;
+    result.reserve(al_get_count(terminfo_mappings));
+    
 	input_init();
 		
-	for( i=0; i<al_get_count( terminfo_mappings ); i++ )
+	for( int i=0; i<al_get_count( terminfo_mappings ); i++ )
 	{
 		terminfo_mapping_t *m = (terminfo_mapping_t *)al_get( terminfo_mappings, i );
 		
@@ -831,8 +831,9 @@ void input_terminfo_get_names( array_list_t *lst, int skip_null )
 		{
 			continue;
 		}
-		al_push( lst, m->name );
+        result.push_back(wcstring(m->name));
 	}
+    return result;
 }
 
 wcstring_list_t input_function_get_names( void )

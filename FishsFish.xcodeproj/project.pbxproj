@@ -65,7 +65,7 @@
 		D0A0853813B3ACEE0099B651 /* env_universal_common.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = env_universal_common.cpp; sourceTree = "<group>"; };
 		D0A0853913B3ACEE0099B651 /* env_universal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = env_universal.cpp; sourceTree = "<group>"; };
 		D0A0853A13B3ACEE0099B651 /* env.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = env.cpp; sourceTree = "<group>"; };
-		D0A0853B13B3ACEE0099B651 /* event.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = event.cpp; sourceTree = "<group>"; };
+		D0A0853B13B3ACEE0099B651 /* event.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = event.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D0A0853C13B3ACEE0099B651 /* exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = exec.cpp; sourceTree = "<group>"; };
 		D0A0853D13B3ACEE0099B651 /* expand.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = expand.cpp; sourceTree = "<group>"; };
 		D0A0853E13B3ACEE0099B651 /* fallback.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fallback.cpp; sourceTree = "<group>"; };
@@ -90,7 +90,7 @@
 		D0A0855113B3ACEE0099B651 /* output.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = output.cpp; sourceTree = "<group>"; };
 		D0A0855213B3ACEE0099B651 /* parse_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_util.cpp; sourceTree = "<group>"; };
 		D0A0855313B3ACEE0099B651 /* parser_keywords.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parser_keywords.cpp; sourceTree = "<group>"; };
-		D0A0855413B3ACEE0099B651 /* parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parser.cpp; sourceTree = "<group>"; };
+		D0A0855413B3ACEE0099B651 /* parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = parser.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D0A0855513B3ACEE0099B651 /* path.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = path.cpp; sourceTree = "<group>"; };
 		D0A0855613B3ACEE0099B651 /* print_help.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = print_help.cpp; sourceTree = "<group>"; };
 		D0A0855713B3ACEE0099B651 /* proc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = proc.cpp; sourceTree = "<group>"; };

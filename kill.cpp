@@ -29,7 +29,6 @@
 #include "common.h"
 #include "env.h"
 #include "exec.h"
-#include "halloc.h"
 #include "path.h"
 
 /**

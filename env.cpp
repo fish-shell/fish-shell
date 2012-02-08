@@ -57,8 +57,6 @@
 #include "input_common.h"
 #include "event.h"
 #include "path.h"
-#include "halloc.h"
-#include "halloc_util.h"
 
 #include "complete.h"
 

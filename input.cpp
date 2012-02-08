@@ -69,18 +69,7 @@
 #include "intern.h"
 #include "halloc.h"
 #include "halloc_util.h"
-
-/**
-   Add a new terminfo mapping
-*/
-#define TERMINFO_ADD(key)						\
-	{								\
-		terminfo_mapping_t *m = (terminfo_mapping_t *)halloc( terminfo_mappings, sizeof( terminfo_mapping_t ) ); \
-		m->name = halloc_wcsdup( terminfo_mappings, (L ## #key)+4 ); \
-		m->seq = key;						\
-		al_push( terminfo_mappings, m );			\
-	}
-
+#include <vector>
 
 /**
    Struct representing a keybinding. Returned by input_get_mappings.
@@ -97,13 +86,12 @@ struct input_mapping_t
 /**
    A struct representing the mapping from a terminfo key name to a terminfo character sequence
  */
-typedef struct
+struct terminfo_mapping_t
 {
 	const wchar_t *name; /**< Name of key */
-	const char *seq; /**< Character sequence generated on keypress */
+	const char *seq; /**< Character sequence generated on keypress. Constant string. */
 		
-}
-	terminfo_mapping_t;
+};
 
 
 /**
@@ -228,15 +216,26 @@ static const wchar_t code_arr[] =
 }
 	;
 
-/**
-   Mappings for the current input mode
-*/
-std::vector<input_mapping_t> mapping_list;
+/** Mappings for the current input mode */
+static std::vector<input_mapping_t> mapping_list;
+
+/* Terminfo map list */
+static std::vector<terminfo_mapping_t> terminfo_mappings;
+
+/** Add a new terminfo mapping */
+static inline void terminfo_add(const wchar_t *name, const char *seq)
+{
+    terminfo_mapping_t mapping = {name, seq};
+    terminfo_mappings.push_back(mapping);
+}
+#define TERMINFO_ADD(key) do { terminfo_add((L ## #key)+4, key); } while (0)
+
+
 
 /**
    List of all terminfo mappings
  */
-static array_list_t *terminfo_mappings = 0;
+static std::vector<terminfo_mapping_t> mappings;
 
 
 /**
@@ -248,10 +247,7 @@ static int is_init = 0;
    Initialize terminfo.
  */
 static void input_terminfo_init();
-/**
-   Deallocate memory used by terminfo. Or at least try to. Terminfo leaks.
- */
-static void input_terminfo_destroy();
+
 
 /**
    Returns the function description for the given function code.
@@ -361,9 +357,6 @@ void input_destroy()
 	{
 		debug( 0, _(L"Error while closing terminfo") );
 	}
-
-	input_terminfo_destroy();
-	
 }
 
 /**
@@ -581,9 +574,6 @@ bool input_mapping_get( const wcstring &sequence, wcstring &cmd )
  */
 static void input_terminfo_init()
 {
-	terminfo_mappings = al_halloc( 0 );
-	
-
        TERMINFO_ADD(key_a1);
        TERMINFO_ADD(key_a3);
        TERMINFO_ADD(key_b2);
@@ -742,32 +732,21 @@ static void input_terminfo_init()
        TERMINFO_ADD(key_up);
 }
 
-static void input_terminfo_destroy()
-{
-	
-	if( terminfo_mappings )
-	{
-		halloc_free( terminfo_mappings );
-	}
-}
-
 const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 {
 	const char *res = 0;
-	int i;	
 	static string_buffer_t *buff = 0;
 	int err = ENOENT;
 	
 	CHECK( name, 0 );
 	input_init();
 	
-	for( i=0; i<al_get_count( terminfo_mappings ); i++ )
+	for( size_t i=0; i<terminfo_mappings.size(); i++ )
 	{
-		terminfo_mapping_t *m = (terminfo_mapping_t *)al_get( terminfo_mappings, i );
-		
-		if( !wcscmp( name, m->name ) )
+		const terminfo_mapping_t &m = terminfo_mappings.at(i);
+		if( !wcscmp( name, m.name ) )
 		{
-			res = m->seq;
+			res = m.seq;
 			err = EILSEQ;
 			break;
 		}
@@ -793,22 +772,20 @@ const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 
 bool input_terminfo_get_name( const wcstring &seq, wcstring &name )
 {
-	int i;	
-
 	input_init();
 	
-	for( i=0; i<al_get_count( terminfo_mappings ); i++ )
+	for( size_t i=0; i<terminfo_mappings.size(); i++ )
 	{
-		terminfo_mapping_t *m = (terminfo_mapping_t *)al_get( terminfo_mappings, i );
+		terminfo_mapping_t &m = terminfo_mappings.at(i);
 		
-		if( !m->seq )
+		if( !m.seq )
 		{
 			continue;
 		}
 		
-        const wcstring map_buf = format_string(L"%s",  m->seq);
+        const wcstring map_buf = format_string(L"%s",  m.seq);
         if (map_buf == seq) {
-            name = m->name;
+            name = m.name;
             return true;
         }
     }
@@ -819,19 +796,19 @@ bool input_terminfo_get_name( const wcstring &seq, wcstring &name )
 wcstring_list_t input_terminfo_get_names( bool skip_null )
 {
     wcstring_list_t result;
-    result.reserve(al_get_count(terminfo_mappings));
+    result.reserve(terminfo_mappings.size());
     
 	input_init();
 		
-	for( int i=0; i<al_get_count( terminfo_mappings ); i++ )
+	for( size_t i=0; i<terminfo_mappings.size(); i++ )
 	{
-		terminfo_mapping_t *m = (terminfo_mapping_t *)al_get( terminfo_mappings, i );
+		terminfo_mapping_t &m = terminfo_mappings.at(i);
 		
-		if( skip_null && !m->seq )
+		if( skip_null && !m.seq )
 		{
 			continue;
 		}
-        result.push_back(wcstring(m->name));
+        result.push_back(wcstring(m.name));
 	}
     return result;
 }

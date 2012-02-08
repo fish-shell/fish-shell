@@ -31,8 +31,6 @@
 #include "common.h"
 #include "complete.h"
 #include "output.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "wildcard.h"
 #include "path.h"
 
@@ -535,7 +533,7 @@ static int has_expand_reserved( const wchar_t *str )
 
 
 // PCA DOES_IO
-void tokenize( const wchar_t * const buff, int * const color, const int pos, array_list_t *error, void *context, const env_vars &vars) {
+static void tokenize( const wchar_t * const buff, int * const color, const int pos, array_list_t *error, const env_vars &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
 
 	wcstring cmd;    
@@ -806,21 +804,21 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 				
 				if( target != 0 )
 				{
-					wchar_t *dir = halloc_wcsdup( context, target );
-					wchar_t *dir_end = wcsrchr( dir, L'/' );
+                    wcstring dir = target;
+                    size_t slash_idx = dir.find(L'/');
 					struct stat buff;
 					/* 
 					 If file is in directory other than '.', check
 					 that the directory exists.
 					 */
-					if( dir_end != 0 )
+					if( slash_idx != wcstring::npos )
 					{
-						*dir_end = 0;
-						if( wstat( dir, &buff ) == -1 )
+						dir.resize(slash_idx);
+						if( wstat( dir.c_str(), &buff ) == -1 )
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )
-								al_push( error, wcsdupcat( L"Directory \'", dir, L"\' does not exist" ) );
+								al_push( error, wcsdupcat( L"Directory \'", dir.c_str(), L"\' does not exist" ) );
 							
 						}
 					}
@@ -909,15 +907,13 @@ void tokenize( const wchar_t * const buff, int * const color, const int pos, arr
 
 
 // PCA DOES_IO (calls is_potential_path, path_get_path, maybe others)
-void highlight_shell( const wchar_t *buff, int *color, int pos, array_list_t *error, const env_vars &vars )
+void highlight_shell( const wchar_t * const buff, int *color, int pos, array_list_t *error, const env_vars &vars )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
     int i;
     int len;
 	int last_val;
-    
-	void *context;
 	
 	CHECK( buff, );
 	CHECK( color, );
@@ -927,30 +923,24 @@ void highlight_shell( const wchar_t *buff, int *color, int pos, array_list_t *er
 	if( !len )
 		return;
 	
-	context = halloc( 0, 0 );
-	
 	for( i=0; buff[i] != 0; i++ )
 		color[i] = -1;
 
     /* Tokenize the string */
-    tokenize(buff, color, pos, error, context, vars);
+    tokenize(buff, color, pos, error, vars);
 
 	/*
 	  Locate and syntax highlight cmdsubsts recursively
 	*/
 
-	wchar_t *buffcpy = halloc_wcsdup( context, buff );
-	wchar_t *subpos=buffcpy;
+	const wchar_t * subpos=buff;
 	int done=0;
 	
 	while( 1 )
 	{
 		wchar_t *begin, *end;
 	
-		if( parse_util_locate_cmdsubst( subpos, 
-										&begin, 
-										&end,
-										1) <= 0)
+		if( parse_util_locate_cmdsubst(subpos, &begin, &end, 1) <= 0)
 		{
 			break;
 		}
@@ -960,8 +950,8 @@ void highlight_shell( const wchar_t *buff, int *color, int pos, array_list_t *er
 		else
 			*end=0;
 		
-		highlight_shell( begin+1, color +(begin-buffcpy)+1, -1, error, vars );
-		color[end-buffcpy]=HIGHLIGHT_OPERATOR;
+		highlight_shell( begin+1, color +(begin-buff)+1, -1, error, vars );
+		color[end-buff]=HIGHLIGHT_OPERATOR;
 		
 		if( done )
 			break;
@@ -991,13 +981,11 @@ void highlight_shell( const wchar_t *buff, int *color, int pos, array_list_t *er
 	if( pos >= 0 && pos <= len )
 	{
 		
-		const wchar_t *tok_begin, *tok_end, *token;
-		
+		const wchar_t *tok_begin, *tok_end;
 		parse_util_token_extent( buff, pos, &tok_begin, &tok_end, 0, 0 );
 		if( tok_begin && tok_end )
 		{
-			token = halloc_wcsndup( context, tok_begin, tok_end-tok_begin );
-			
+            const wcstring token(tok_begin, tok_end-tok_begin);
 			if( is_potential_path( token ) )
 			{
 				for( i=tok_begin-buff; i < (tok_end-buff); i++ )
@@ -1021,8 +1009,6 @@ void highlight_shell( const wchar_t *buff, int *color, int pos, array_list_t *er
 			color[i]=0;
 		}
 	}
-
-	halloc_free( context );
 }
 
 

@@ -1043,9 +1043,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 		*/
 		if( (buff[pos] == L'\'') || (buff[pos] == L'\"') )
 		{
-
-			array_list_t l;
-			al_init( &l );
+			std::deque<long> lst;
 		
 			int level=0;
 			wchar_t prev_q=0;
@@ -1066,7 +1064,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 						if( level == 0 )
 						{
 							level++;
-							al_push_long( &l, (long)(str-buff) );
+                            lst.push_back((long)(str-buff));
 							prev_q = *str;
 						}
 						else
@@ -1076,7 +1074,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 								long pos1, pos2;
 							
 								level--;
-								pos1 = al_pop_long( &l );
+                                pos1 = lst.back();
 								pos2 = str-buff;
 								if( pos1==pos || pos2==pos )
 								{
@@ -1090,7 +1088,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 							else
 							{
 								level++;
-								al_push_long( &l, (long)(str-buff) );
+                                lst.push_back((long)(str-buff));
 								prev_q = *str;
 							}
 						}
@@ -1102,8 +1100,6 @@ static void highlight_universal_internal( const wchar_t * buff,
 
 				str++;
 			}
-
-			al_destroy( &l );
 		
 			if( !match_found )
 				color[pos] = HIGHLIGHT_ERROR<<16;

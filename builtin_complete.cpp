@@ -45,15 +45,15 @@ static const wchar_t *temporary_buffer;
 static void	builtin_complete_add2( const wchar_t *cmd,
 								   int cmd_type,
 								   const wchar_t *short_opt,
-								   array_list_t *gnu_opt,
-								   array_list_t *old_opt, 
+								   const wcstring_list_t &gnu_opt,
+								   const wcstring_list_t &old_opt, 
 								   int result_mode, 
 								   const wchar_t *condition,
 								   const wchar_t *comp,
 								   const wchar_t *desc,
 								   int flags )
 {
-	int i;
+	size_t i;
 	const wchar_t *s;
 	
 	for( s=short_opt; *s; s++ )
@@ -70,12 +70,12 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  flags );
 	}
 	
-	for( i=0; i<al_get_count( gnu_opt ); i++ )
+	for( i=0; i<gnu_opt.size(); i++ )
 	{
 		complete_add( cmd, 
 					  cmd_type,
 					  0,
-					  (wchar_t *)al_get(gnu_opt, i ),
+					  gnu_opt.at(i).c_str(),
 					  0,
 					  result_mode,
 					  condition,
@@ -84,12 +84,12 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  flags );
 	}
 	
-	for( i=0; i<al_get_count( old_opt ); i++ )
+	for( i=0; i<old_opt.size(); i++ )
 	{
 		complete_add( cmd, 
 					  cmd_type,
 					  0,
-					  (wchar_t *)al_get(old_opt, i ),
+					  old_opt.at(i).c_str(),
 					  1,
 					  result_mode,
 					  condition,
@@ -98,7 +98,7 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 					  flags );
 	}	
 
-	if( al_get_count( old_opt )+al_get_count( gnu_opt )+wcslen(short_opt) == 0 )
+	if( old_opt.size() == 0 && gnu_opt.size() == 0 && wcslen(short_opt) == 0 )
 	{
 		complete_add( cmd, 
 					  cmd_type,
@@ -116,11 +116,11 @@ static void	builtin_complete_add2( const wchar_t *cmd,
 /**
    Silly function
 */
-static void	builtin_complete_add( array_list_t *cmd, 
-								  array_list_t *path,
+static void	builtin_complete_add( const wcstring_list_t &cmd, 
+								  const wcstring_list_t &path,
 								  const wchar_t *short_opt,
-								  array_list_t *gnu_opt,
-								  array_list_t *old_opt, 
+								  wcstring_list_t &gnu_opt,
+								  wcstring_list_t &old_opt, 
 								  int result_mode, 
 								  int authoritative,
 								  const wchar_t *condition,
@@ -128,11 +128,9 @@ static void	builtin_complete_add( array_list_t *cmd,
 								  const wchar_t *desc,
 								  int flags )
 {
-	int i;
-	
-	for( i=0; i<al_get_count( cmd ); i++ )
+	for( size_t i=0; i<cmd.size(); i++ )
 	{
-		builtin_complete_add2( (const wchar_t *)al_get( cmd, i ),
+		builtin_complete_add2( cmd.at(i).c_str(),
 							   COMMAND,
 							   short_opt, 
 							   gnu_opt,
@@ -145,16 +143,16 @@ static void	builtin_complete_add( array_list_t *cmd,
 
 		if( authoritative != -1 )
 		{
-			complete_set_authoritative( (const wchar_t *)al_get( cmd, i ),
+			complete_set_authoritative( cmd.at(i).c_str(),
 									  COMMAND,
 									  authoritative );
 		}
 		
 	}
 	
-	for( i=0; i<al_get_count( path ); i++ )
+	for( size_t i=0; i<path.size(); i++ )
 	{
-		builtin_complete_add2( (const wchar_t *)al_get( path, i ),
+		builtin_complete_add2( path.at(i).c_str(),
 							   PATH,
 							   short_opt, 
 							   gnu_opt,
@@ -167,7 +165,7 @@ static void	builtin_complete_add( array_list_t *cmd,
 
 		if( authoritative != -1 )
 		{
-			complete_set_authoritative( (const wchar_t *)al_get( path, i ),
+			complete_set_authoritative( path.at(i).c_str(),
 									  PATH,
 									  authoritative );
 		}
@@ -178,37 +176,35 @@ static void	builtin_complete_add( array_list_t *cmd,
 /**
    Silly function
 */
-static void builtin_complete_remove3( wchar_t *cmd,
+static void builtin_complete_remove3( const wchar_t *cmd,
 									  int cmd_type,
 									  wchar_t short_opt,
-									  array_list_t *long_opt )		
+									  const wcstring_list_t &long_opt )
 {
-	int i;
-	
-	for( i=0; i<al_get_count( long_opt ); i++ )
+	for( size_t i=0; i<long_opt.size(); i++ )
 	{
 		complete_remove( cmd,
 						 cmd_type,
 						 short_opt,
-						 (wchar_t *)al_get( long_opt, i ) );
+						 long_opt.at(i).c_str());
 	}	
 }
 
 /**
    Silly function
 */
-static void	builtin_complete_remove2( wchar_t *cmd,
+static void	builtin_complete_remove2( const wchar_t *cmd,
 									  int cmd_type,
 									  const wchar_t *short_opt,
-									  array_list_t *gnu_opt,
-									  array_list_t *old_opt )
+									  const wcstring_list_t &gnu_opt,
+									  const wcstring_list_t &old_opt )
 {
 	const wchar_t *s = (wchar_t *)short_opt;
 	if( *s )
 	{
 		for( ; *s; s++ )
 		{
-			if( al_get_count( old_opt) + al_get_count( gnu_opt ) == 0 )
+			if( old_opt.size() == 0 && gnu_opt.size() == 0 )
 			{
 				complete_remove(cmd,
 								cmd_type,
@@ -248,27 +244,24 @@ static void	builtin_complete_remove2( wchar_t *cmd,
 /**
    Silly function
 */
-static void	builtin_complete_remove( array_list_t *cmd, 
-									 array_list_t *path,
+static void	builtin_complete_remove( const wcstring_list_t &cmd, 
+									 const wcstring_list_t &path,
 									 const wchar_t *short_opt,
-									 array_list_t *gnu_opt,
-									 array_list_t *old_opt )
-{
-	
-	int i;
-	
-	for( i=0; i<al_get_count( cmd ); i++ )
+									 const wcstring_list_t &gnu_opt,
+									 const wcstring_list_t &old_opt )
+{	
+	for( size_t i=0; i<cmd.size(); i++ )
 	{
-		builtin_complete_remove2( (wchar_t *)al_get( cmd, i ),
+		builtin_complete_remove2( cmd.at(i).c_str(),
 								  COMMAND,
 								  short_opt, 
 								  gnu_opt,
 								  old_opt );
 	}
 	
-	for( i=0; i<al_get_count( path ); i++ )
+	for( size_t i=0; i<path.size(); i++ )
 	{
-		builtin_complete_remove2( (wchar_t *)al_get( path, i ),
+		builtin_complete_remove2( path.at(i).c_str(),
 								  PATH,
 								  short_opt, 
 								  gnu_opt,
@@ -300,21 +293,17 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	int flags = COMPLETE_AUTO_SPACE;
 	
 	string_buffer_t short_opt;
-	array_list_t gnu_opt, old_opt;
+	wcstring_list_t gnu_opt, old_opt;
 	const wchar_t *comp=L"", *desc=L"", *condition=L"";
 
 	const wchar_t *do_complete = 0;
 	
-	array_list_t cmd;
-	array_list_t path;
+	wcstring_list_t cmd;
+	wcstring_list_t path;
 
 	static int recursion_level=0;
 	
-	al_init( &cmd );
-	al_init( &path );
 	sb_init( &short_opt );
-	al_init( &gnu_opt );
-	al_init( &old_opt );
 	
 	argc = builtin_count_args( argv );	
 	
@@ -438,7 +427,10 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				wchar_t *a = unescape( woptarg, 1);
 				if( a )
 				{
-					al_push( (opt=='p'?&path:&cmd), a );
+                    if (opt=='p')
+                        path.push_back(a);
+                    else
+                        cmd.push_back(a);
 				}
 				else
 				{
@@ -465,11 +457,11 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				break;
 					
 			case 'l':
-				al_push( &gnu_opt, woptarg );
+                gnu_opt.push_back(woptarg);
 				break;
 				
 			case 'o':
-				al_push( &old_opt, woptarg );
+                old_opt.push_back(woptarg);
 				break;
 
 			case 'a':
@@ -598,7 +590,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 
 			res = 1;
 		}
-		else if( (al_get_count( &cmd) == 0 ) && (al_get_count( &path) == 0 ) )
+		else if( cmd.empty() && path.empty() )
 		{
 			/* No arguments specified, meaning we print the definitions of
 			 * all specified completions to stdout.*/
@@ -608,19 +600,19 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		{
 			if( remove )
 			{
-				builtin_complete_remove( &cmd,
-										 &path,
+				builtin_complete_remove( cmd,
+										 path,
 										 (wchar_t *)short_opt.buff,
-										 &gnu_opt,
-										 &old_opt );									 
+										 gnu_opt,
+										 old_opt );									 
 			}
 			else
 			{
-				builtin_complete_add( &cmd, 
-									  &path,
+				builtin_complete_add( cmd, 
+									  path,
 									  (wchar_t *)short_opt.buff,
-									  &gnu_opt,
-									  &old_opt, 
+									  gnu_opt,
+									  old_opt, 
 									  result_mode, 
 									  authoritative,
 									  condition,
@@ -632,14 +624,5 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		}	
 	}
 	
-	al_foreach( &cmd, &free );
-	al_foreach( &path, &free );
-
-	al_destroy( &cmd );
-	al_destroy( &path );
-	sb_destroy( &short_opt );
-	al_destroy( &gnu_opt );
-	al_destroy( &old_opt );
-
 	return res;
 }

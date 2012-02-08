@@ -118,35 +118,6 @@ parameter expansion.
 */
 #define UNCLEAN L"$*?\\\"'({})"
 
-/* An adapter class for calling functions that expect a wchar_t * and array_list_t */
-class wcstring_adapter
-{
-private:
-    std::vector<wcstring> *outputs;
-public:
-    wchar_t *str;
-    array_list_t lst;
-    
-    wcstring_adapter(const wcstring &in, std::vector<wcstring> &outs)
-    {
-        outputs = &outs;
-        str = wcsdup(in.c_str());
-        al_init(&lst);
-    }
-    
-    ~wcstring_adapter()
-    {
-        int i, max = al_get_count(&lst);
-        for (i=0; i < max; i++) {
-            wchar_t *tmp = (wchar_t *)al_get(&lst, i);
-            outputs->push_back(tmp);
-            free(tmp);
-        }
-        al_destroy(&lst);
-        //str is free'd by the function we called
-    }
-};
-
 int expand_is_clean( const wchar_t *in )
 {
 
@@ -688,13 +659,6 @@ static int expand_pid( const wcstring &instr,
 	return 1;
 }
 
-/*
-static int expand_pid2( const wcstring &in, int flags, std::vector<completion_t> &outputs )
-{
-    wcstring_adapter adapter(in, outputs);
-    return expand_pid(adapter.str, flags, &adapter.lst);
-}
-*/
 
 void expand_variable_error( parser_t &parser, const wchar_t *token, int token_pos, int error_pos )
 {
@@ -1194,13 +1158,6 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 	return 1;
 }
 
-/*
-static int expand_brackets2( parser_t &parser, const wcstring &in, int flags, std::vector<wcstring> &outputs )
-{
-    wcstring_adapter adapter(in, outputs);
-    return expand_brackets(parser, adapter.str, flags, &adapter.lst);
-}
-*/
 /**
  Perform cmdsubst expansion
  */

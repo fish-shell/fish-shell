@@ -108,53 +108,6 @@ static void err( const wchar_t *blah, ... )
 	wprintf( L"\n" );
 }
 
-
-/**
-   Test stack functionality
-*/
-static int stack_test( int elements )
-{
-	long i;
-
-	int res=1;
-	
-	array_list_t s;
-
-	al_init( &s );	
-
-	for( i=0; i<elements; i++ )
-	{
-		long foo;
-
-		al_push_long( &s, i);
-		al_push_long( &s, i);
-		
-		if( (foo=al_pop_long( &s )) != i )
-		{
-			err( L"Unexpected data" );
-			res = 0;			
-			break;
-		}
-	}
-
-	for( i=0; i<elements; i++ )
-	{
-		long foo;
-		
-		if( (foo=al_pop_long( &s )) != (elements-i-1) )
-		{
-			err( L"Unexpected data" );
-			res = 0;
-			break;
-		}		
-	}
-
-
-	al_destroy( &s );
-	
-	return res;
-}
-
 /**
    Hash function for pointers
 */
@@ -253,40 +206,6 @@ static int hash_test( long elements )
 }
 
 /**
-   Arraylist test
-*/
-static void al_test( int sz)
-{
-	long i;	
-	array_list_t l;
-
-	
-
-	al_init( &l );
-	
-	al_set_long( &l, 1, 7L );
-	al_set_long( &l, sz, 7L );
-	
-	if( al_get_count( &l ) != maxi( sz+1, 2 ) )
-		err( L"Wrong number of elements in array list" );
-	
-	for( i=0; i<al_get_count( &l ); i++ )
-	{
-		long val = al_get_long( &l, i );
-		if( (i == 1) || (i==sz))
-		{
-			if( val != 7 )
-				err( L"Canary changed to %d at index %d", val, i );
-		}
-		else
-		{
-			if( val != 0 )
-				err( L"False canary %d found at index %d", val, i );
-		}
-	}
-}
-
-/**
    Stringbuffer test
 */
 static void sb_test()
@@ -333,7 +252,6 @@ static void test_util()
 	for( i=0; i<18; i++ )
 	{
 		long t1, t2;
-		stack_test( 1<<i );
 		t1 = get_time();
 		hash_test( 1<<i );
 		t2 = get_time();
@@ -341,7 +259,6 @@ static void test_util()
 			say( L"Hashtable uses %f microseconds per element at size %d",
 				 ((double)(t2-t1))/(1<<i),
 				1<<i );
-		al_test( 1<<i );
 	}
 
 	sb_test();

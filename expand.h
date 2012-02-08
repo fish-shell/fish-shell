@@ -162,8 +162,7 @@ bool expand_one( wcstring &inout_str, int flag );
 
    \param in the value to escape
 */
-wchar_t *expand_escape_variable( const wchar_t *in );
-wcstring expand_escape_variable2( const wcstring &in );
+wcstring expand_escape_variable( const wcstring &in );
 
 /**
    Perform tilde expansion and nothing else on the specified string, which is modified in place.

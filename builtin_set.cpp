@@ -341,7 +341,7 @@ static void print_variables(int include_values, int esc, int scope)
 					value.resize(60);
 				}
 				
-				wcstring e_value = esc ? expand_escape_variable2(value) : value;
+				wcstring e_value = esc ? expand_escape_variable(value) : value;
 				
 				sb_append(sb_out, L" ", e_value.c_str(), NULL);
 				

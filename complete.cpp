@@ -203,8 +203,6 @@ void completion_autoload_t::command_removed(const wcstring &cmd) {
 }
 
 
-static void complete_free_entry( complete_entry_t *c );
-
 /**
    Create a new completion entry
 
@@ -1594,7 +1592,7 @@ static int complete_variable( const wchar_t *whole_var,
 					flags = COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE;
 				}
 				
-				wcstring value = expand_escape_variable2( value_unescaped );
+				wcstring value = expand_escape_variable( value_unescaped );
                 
                 wcstring desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());				
 				completion_allocate( comp_list, 

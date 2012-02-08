@@ -187,7 +187,7 @@ static const wchar_t* expand_var(const wchar_t *in)
    Test if the specified string does not contain character which can
    not be used inside a quoted string.
 */
-static int is_quotable( wchar_t *str )
+static int is_quotable( const wchar_t *str )
 {
 	switch( *str )
 	{
@@ -208,83 +208,62 @@ static int is_quotable( wchar_t *str )
 
 }
 
-wchar_t *expand_escape_variable( const wchar_t *in )
+static int is_quotable(const wcstring &str) {
+    return is_quotable(str.c_str());
+}
+
+wcstring expand_escape_variable( const wcstring &in )
 {
 
-	array_list_t l;
-	string_buffer_t buff;
+	wcstring_list_t lst;
+	wcstring buff;
 
-	CHECK( in, 0 );
+	tokenize_variable_array2( in, lst );
 
-	al_init( &l );
-	tokenize_variable_array( in, &l );
-	sb_init( &buff );
-
-	switch( al_get_count( &l) )
+	switch( lst.size() )
 	{
 		case 0:
-			sb_append( &buff, L"''");
+			buff.append(L"''");
 			break;
 			
 		case 1:
 		{
-			wchar_t *el = (wchar_t *)al_get( &l, 0 );
+            const wcstring &el = lst.at(0);
 
-			if( wcschr( el, L' ' ) && is_quotable( el ) )
+			if( el.find(L' ') != wcstring::npos && is_quotable( el ) )
 			{
-				sb_append( &buff,
-							L"'",
-							el,
-							L"'",
-							NULL );
+                buff.append(L"'");
+                buff.append(el);
+                buff.append(L"'");
 			}
 			else
 			{
-				wchar_t *val = escape( el, 1 );
-				sb_append( &buff, val );
-				free( val );
+                buff.append(escape_string(el, 1));
 			}
-			free( el );
 			break;
 		}
 		default:
 		{
-			int j;
-			for( j=0; j<al_get_count( &l ); j++ )
+			for( size_t j=0; j<lst.size(); j++ )
 			{
-				wchar_t *el = (wchar_t *)al_get( &l, j );
+				const wcstring &el = lst.at(j);
 				if( j )
-					sb_append( &buff, L"  " );
+					buff.append(L"  " );
 
 				if( is_quotable( el ) )
 				{
-					sb_append( &buff,
-								L"'",
-								el,
-								L"'",
-								NULL );
+                    buff.append(L"'");
+                    buff.append(el);
+                    buff.append(L"'");
 				}
 				else
 				{
-					wchar_t *val = escape( el, 1 );
-					sb_append( &buff, val );
-					free( val );
+                    buff.append(escape_string(el, 1));
 				}
-
-				free( el );
 			}
 		}
 	}
-	al_destroy( &l );
-
-	return (wchar_t *)buff.buff;
-}
-
-wcstring expand_escape_variable2( const wcstring &in ) {
-    wchar_t *tmp = expand_escape_variable(in.c_str());
-    wcstring result(tmp ? tmp : L"");
-    free(tmp);
-    return result;
+	return buff;
 }
 
 /**

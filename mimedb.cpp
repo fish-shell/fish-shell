@@ -35,6 +35,8 @@ license. Read the source code of the library for more information.
 #include <locale.h>
 #include <vector>
 #include <string>
+#include <map>
+
 
 
 #ifdef HAVE_GETOPT_H
@@ -49,6 +51,8 @@ license. Read the source code of the library for more information.
 #include "fallback.h"
 #include "util.h"
 #include "print_help.h"
+
+typedef std::vector<std::string> string_list_t;
 
 /**
    Location of the applications .desktop file, relative to a base mime directory
@@ -296,7 +300,7 @@ static char *file_exists( const char *dir, const char *in )
    \param all If zero, then stop after the first filename.
    \return The number of filenames added to the list.
 */
-static int append_filenames( std::vector<std::string> &list, const char *f, int all )
+static int append_filenames( string_list_t &list, const char *f, int all )
 {
 	size_t prev_count = list.size();
 	char *result;
@@ -393,7 +397,7 @@ static int append_filenames( std::vector<std::string> &list, const char *f, int 
 */
 static std::string get_filename( char *f )
 {
-    std::vector<std::string> list;
+    string_list_t list;
 
 	append_filenames( list, f, 0 );
     if (list.empty()) {
@@ -676,7 +680,7 @@ static char *get_action( const char *mimetype )
 	
 	char *launcher;
 	char *end;
-	std::vector<std::string> mime_filenames;
+	string_list_t mime_filenames;
 	
 	const char *launcher_str = NULL;
 	const char *launcher_command_str, *launcher_command;
@@ -838,9 +842,9 @@ static char *my_getcwd ()
 /**
    Return absolute filename of specified file
  */
-static char *get_fullfile( char *file )
+static const char *get_fullfile( const char *file )
 {
-	char *fullfile;
+	const char *fullfile;
 	
 	if( file[0] == '/' )
 	{
@@ -858,18 +862,19 @@ static char *get_fullfile( char *file )
 		
 		int l = strlen(cwd);
 		
-		fullfile = (char *)my_malloc( l + strlen(file)+2 );
-		if( !fullfile )
+		char *tmp = (char *)my_malloc( l + strlen(file)+2 );
+		if( !tmp )
 		{
 			free(cwd);
 			return 0;
 		}
-		strcpy( fullfile, cwd );
+		strcpy( tmp, cwd );
 		if( cwd[l-1] != '/' )
-			strcat(fullfile, "/" );
-		strcat( fullfile, file );
+			strcat(tmp, "/" );
+		strcat( tmp, file );
 		
 		free(cwd);
+        fullfile = tmp;
 	}
 	return fullfile;
 }
@@ -878,10 +883,10 @@ static char *get_fullfile( char *file )
 /**
    Write specified file as an URL
 */
-static void write_url( char *file )
+static void write_url( const char *file )
 {
-	char *fullfile = get_fullfile( file );
-	char *str = fullfile;
+	const char *fullfile = get_fullfile( file );
+	const char *str = fullfile;
 	
 	if( str == 0 )
 	{
@@ -918,17 +923,17 @@ static void write_url( char *file )
 		str++;
 	}
 	if( fullfile != file )
-		free( fullfile );
+		free( (void *)fullfile );
 	
 }
 
 /**
    Write specified file
 */
-static void write_file( char *file, int print_path )
+static void write_file( const char *file, int print_path )
 {
-	char *fullfile;
-	char *str;
+	const char *fullfile;
+	const char *str;
 	if( print_path )
 	{
 		fullfile = get_fullfile( file );
@@ -936,12 +941,13 @@ static void write_file( char *file, int print_path )
 	}
 	else
 	{
-		fullfile = my_strdup( file );
-		if( !fullfile )
+		char *tmp = my_strdup( file );
+		if( !tmp )
 		{
 			return;
 		}
-		str = basename( fullfile );
+		str = basename( tmp );
+        fullfile = tmp;
 	}
 	
 	if( !str )
@@ -1012,7 +1018,7 @@ static void write_file( char *file, int print_path )
 	}
 
 	if( fullfile != file )
-		free( fullfile );
+		free( (void *)fullfile );
 }
 
 /**
@@ -1022,13 +1028,13 @@ static void write_file( char *file, int print_path )
    \param files the list of files for which to perform the action
    \param fileno an internal value. Should always be set to zero.
 */
-static void launch( char *filter, array_list_t *files, int fileno )
+static void launch( char *filter, const string_list_t &files, int fileno )
 {
 	char *filter_org=filter;
 	int count=0;
 	int launch_again=0;
 	
-	if( al_get_count( files ) <= fileno )
+	if( files.size() <= fileno )
 		return;
 	
 	
@@ -1044,17 +1050,16 @@ static void launch( char *filter, array_list_t *files, int fileno )
 				case 'u':
 				{
 					launch_again = 1;
-					write_url( (char *)al_get( files, fileno ) );
+					write_url( files.at(fileno).c_str() );
 					break;
 				}				
 				case 'U':
 				{
-					int i;
-					for( i=0; i<al_get_count( files ); i++ )
+					for( size_t i=0; i<files.size(); i++ )
 					{
 						if( i != 0 )
 							writer( ' ' );
-						write_url( (char *)al_get( files, i ) );
+						write_url( files.at(i).c_str() );
 						if( error )
 							break;
 					}
@@ -1066,7 +1071,7 @@ static void launch( char *filter, array_list_t *files, int fileno )
 				case 'n':
 				{
 					launch_again = 1;
-					write_file( (char *)al_get( files, fileno ), *filter == 'f' );
+					write_file( files.at(fileno).c_str(), *filter == 'f' );
 					break;
 				}
 				
@@ -1074,11 +1079,11 @@ static void launch( char *filter, array_list_t *files, int fileno )
 				case 'N':
 				{
 					int i;
-					for( i=0; i<al_get_count( files ); i++ )
+					for( i=0; i<files.size(); i++ )
 					{
 						if( i != 0 )
 							writer( ' ' );
-						write_file( (char *)al_get( files, i ), *filter == 'F' );
+						write_file( files.at(i).c_str(), *filter == 'F' );
 						if( error )
 							break;
 					}
@@ -1088,23 +1093,24 @@ static void launch( char *filter, array_list_t *files, int fileno )
 
 				case 'd':
 				{
-					char *cpy = get_fullfile( (char *)al_get( files, fileno ) );
+					const char *cpy = get_fullfile( files.at(fileno).c_str() );
 					char *dir;
 
 					launch_again=1;					
 					/*
 					  We wish to modify this string, make sure it is only a copy
 					*/
-					if( cpy == al_get( files, fileno ) )
+					if( cpy == files.at(fileno).c_str())
 						cpy = my_strdup( cpy );
 
 					if( cpy == 0 )
 					{
 						break;
 					}
-					dir=dirname( cpy );
+                    
+					dir=dirname( (char *)cpy );
 					write_file( dir, 1 );
-					free( cpy );
+					free( (void *)cpy );
 					
 					break;
 				}
@@ -1112,28 +1118,28 @@ static void launch( char *filter, array_list_t *files, int fileno )
 				case 'D':
 				{
 					int i;
-					for( i=0; i<al_get_count( files ); i++ )
+					for( i=0; i<files.size(); i++ )
 					{
-						char *cpy = get_fullfile( (char *)al_get( files, i ) );					
+						const char *cpy = get_fullfile( files.at(i).c_str() );					
 						char *dir;
 
 						/*
 						  We wish to modify this string, make sure it is only a copy
 						*/
-						if( cpy == al_get( files, i ) )
+						if( cpy == files.at(i).c_str() )
 							cpy = my_strdup( cpy );
 
 						if( cpy == 0 )
 						{
 							break;
 						}
-						dir=dirname( cpy );
+						dir=dirname( (char *)cpy );
 						
 						if( i != 0 )
 							writer( ' ' );
 
 						write_file( dir, 1 );
-						free( cpy );
+						free( (void *)cpy );
 
 					}
 					break;					
@@ -1234,7 +1240,8 @@ int main (int argc, char *argv[])
 	
 	int i;
 
-	hash_table_t launch_hash;
+    typedef std::map<std::string, string_list_t> launch_hash_t;
+    launch_hash_t launch_hash;
 
 	locale_init();
 	
@@ -1351,11 +1358,7 @@ int main (int argc, char *argv[])
 		fprintf( stderr, _("%s: Can not launch a mimetype\n"), MIMEDB );
 		print_help( argv[0], 2 );
 		exit(1);
-	}
-
-	if( output_type == LAUNCH )
-		hash_init( &launch_hash, &hash_str_func, &hash_str_cmp );
-	
+	}	
 	
 	/* 
 	   Loop over all non option arguments and do the specified lookup
@@ -1417,20 +1420,9 @@ int main (int argc, char *argv[])
 				  them together after all the arguments have been
 				  parsed.
 				*/
-				array_list_t *l= (array_list_t *)hash_get( &launch_hash, mimetype );
 				output = 0;
-				
-				if( !l )
-				{
-					l = (array_list_t *)my_malloc( sizeof( array_list_t ) );
-					if( l == 0 )
-					{
-						break;
-					}
-					al_init( l );
-					hash_put( &launch_hash, mimetype, l );
-				}
-				al_push( l, argv[i] );				
+                string_list_t &l = launch_hash[mimetype];
+                l.push_back(argv[i]);
 			}
 		}
 		
@@ -1451,20 +1443,10 @@ int main (int argc, char *argv[])
 	*/
 	if( output_type == LAUNCH && !error )
 	{
-		int i;
-		array_list_t mimes;
-		al_init( &mimes );
-		hash_get_keys( &launch_hash, &mimes );
-		for( i=0; i<al_get_count( &mimes ); i++ )
+		for( launch_hash_t::iterator iter = launch_hash.begin(); iter != launch_hash.end(); iter++)
 		{
-			char *mimetype = (char *)al_get( &mimes, i );
-			array_list_t *files = (array_list_t *)hash_get( &launch_hash, mimetype );
-			if( !files )
-			{
-				fprintf( stderr, _( "%s: Unknown error\n"), MIMEDB );
-				error=1;
-				break;				
-			}
+			const char *mimetype = iter->first.c_str();
+			string_list_t &files = iter->second;
 			
 			char *launcher = get_action( mimetype );
 
@@ -1474,9 +1456,6 @@ int main (int argc, char *argv[])
 				free( launcher );
 			}
 		}
-		hash_foreach( &launch_hash, &clear_entry );
-		hash_destroy( &launch_hash );
-		al_destroy( &mimes );
 	}
 	
 	if( launch_buff )

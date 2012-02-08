@@ -1930,31 +1930,7 @@ int parser_t::parse_job( process_t *p,
 				if( p->actual_cmd == NULL )
 				{
 
-					/*
-					  That is not a command! Test if it is a
-					  directory, in which case, we use 'cd' as the
-					  implicit command.
-					*/
-					if(path_can_get_cdpath(args.at(0).completion))
-					{
-						wcstring tmp = args.at(0).completion;
-//						al_truncate( args, 0 );
-						args.clear();
-//						al_push( args, halloc_wcsdup( j, L"cd" ) );
-						args.push_back(completion_t(L"cd"));
-						args.push_back(completion_t(tmp));
-						/*
-						  If we have defined a wrapper around cd, use it,
-						  otherwise use the cd builtin
-						*/
-						if( use_function && function_exists( L"cd" ) )
-							p->type = INTERNAL_FUNCTION;
-						else
-							p->type = INTERNAL_BUILTIN;
-					}
-					else
-					{
-						int tmp;
+					int tmp;
 						const wchar_t *cmd = args.at( 0 ).completion.c_str();
 						
 						/* 
@@ -2038,7 +2014,6 @@ int parser_t::parse_job( process_t *p,
 						job_set_flag( j, JOB_SKIP, 1 );
 						event_fire_generic(L"fish_command_not_found", (wchar_t *)( args.at( 0 ).completion.c_str() ) );
 						proc_set_last_status( err==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE );
-					}
 				}
 			}
 		}

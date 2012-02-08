@@ -48,8 +48,8 @@ Functions used for implementing the set builtin.
 static int is_path_variable( const wchar_t *env )
 {
 	return contains( env,
-						 L"PATH",
-						 L"CDPATH" );
+						 L"PATH"
+					);
 }
 
 /**

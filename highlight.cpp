@@ -722,16 +722,6 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 								is_cmd |= !!path_get_path_string( cmd, tmp, vars );
                             }
 							
-							/* 
-							 Could not find the command. Maybe it is
-							 a path for a implicit cd command.
-							 */
-							if( use_builtin || (use_function && function_exists( L"cd") ) )
-                            {
-                                wcstring tmp;
-								is_cmd |= !!path_get_cdpath_string( cmd, tmp, vars );
-                            }
-							
 							if( is_cmd )
 							{								
 								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;

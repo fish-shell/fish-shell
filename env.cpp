@@ -1715,4 +1715,4 @@ const wchar_t *env_vars::get(const wchar_t *key) const
     return (iter == vars.end() ? NULL : iter->second.c_str());
 }
 
-const wchar_t * const env_vars::highlighting_keys[] = {L"PATH", L"CDPATH", L"HIGHLIGHT_DELAY", L"fish_function_path", NULL};
+const wchar_t * const env_vars::highlighting_keys[] = {L"PATH", L"HIGHLIGHT_DELAY", L"fish_function_path", NULL};

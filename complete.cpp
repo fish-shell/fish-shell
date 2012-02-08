@@ -1035,9 +1035,7 @@ static void complete_cmd( const wchar_t *cmd,
 	std::vector<completion_t> possible_comp;
 	wchar_t *nxt_completion;
 
-	const env_var_t cdpath = env_get_string(L"CDPATH");
-//	wchar_t *cdpath_cpy = wcsdup( cdpath?cdpath:L"." );
-	wchar_t *cdpath_cpy = wcsdup( !cdpath.missing()?cdpath.c_str():L"." );
+	wchar_t *cdpath_cpy = wcsdup(L".");
 
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
 	{

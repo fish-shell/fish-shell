@@ -291,11 +291,8 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 	}
 	else
 	{
-		const wchar_t *path = vars.get(L"CDPATH");
-		if( !path || !wcslen(path) )
-		{
-			path = L".";
-		}
+
+		const wchar_t *path = L".";
                 
         wcstokenizer tokenizer(path, ARRAY_SEP_STR);
         wcstring next_path;
@@ -340,6 +337,7 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 	return res;
 }
 
+
 wchar_t *path_allocate_cdpath( const wchar_t *dir )
 {
 	wchar_t *res = 0;
@@ -371,9 +369,7 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir )
 		wchar_t *state;
 		wchar_t *whole_path;
 
-		env_var_t path = env_get_string(L"CDPATH");
-		if( path.missing_or_empty() )
-			path = L".";
+		env_var_t path = L".";
 
 		nxt_path = path.c_str();
 		path_cpy = wcsdup( path.c_str() );
@@ -439,6 +435,7 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir )
 	return res;
 }
 
+
 bool path_can_get_cdpath(const wcstring &in) {
     wchar_t *tmp = path_allocate_cdpath(in.c_str());
     bool result = (tmp != NULL);
@@ -485,6 +482,7 @@ wchar_t *path_get_config( void *context)
 		return 0;
 	}	
 }
+
 
 bool path_get_config(wcstring &path)
 {

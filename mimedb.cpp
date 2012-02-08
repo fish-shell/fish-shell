@@ -33,6 +33,8 @@ license. Read the source code of the library for more information.
 #include <errno.h>
 #include <regex.h>
 #include <locale.h>
+#include <vector>
+#include <string>
 
 
 #ifdef HAVE_GETOPT_H
@@ -47,7 +49,6 @@ license. Read the source code of the library for more information.
 #include "fallback.h"
 #include "util.h"
 #include "print_help.h"
-
 
 /**
    Location of the applications .desktop file, relative to a base mime directory
@@ -173,7 +174,7 @@ void *my_malloc( size_t s )
 /**
    Duplicate string, set error flag and print message on failure
 */
-char *my_strdup( char *s )
+char *my_strdup( const char *s )
 {
 	char *res = strdup( s );
 	if( !s )
@@ -189,7 +190,7 @@ char *my_strdup( char *s )
   Search the file \c filename for the first line starting with \c
   match, which is returned in a newly allocated string.
 */
-static char * search_ini( const char *filename, const char *match )
+static const char * search_ini( const char *filename, const char *match )
 {
 	FILE *f = fopen( filename, "r" );
 	char buf[4096];
@@ -295,9 +296,9 @@ static char *file_exists( const char *dir, const char *in )
    \param all If zero, then stop after the first filename.
    \return The number of filenames added to the list.
 */
-static int append_filenames( array_list_t *list, const char *f, int all )
+static int append_filenames( std::vector<std::string> &list, const char *f, int all )
 {
-	int prev_count = al_get_count( list );
+	size_t prev_count = list.size();
 	char *result;
 	const char *xdg_data_home;
 	const char *xdg_data_dirs;
@@ -309,7 +310,7 @@ static int append_filenames( array_list_t *list, const char *f, int all )
 		result = file_exists( xdg_data_home, f ); 
 		if (result)
 		{
-			al_push( list, result );
+            list.push_back(result);
 			if ( !all )
 				return 1;
 		}
@@ -334,7 +335,7 @@ static int append_filenames( array_list_t *list, const char *f, int all )
 
 			if (result)
 			{
-				al_push( list, result );
+                list.push_back(result);
 				if ( !all )
 					return 1;
 			}
@@ -376,7 +377,7 @@ static int append_filenames( array_list_t *list, const char *f, int all )
 
 		if (result)
 		{
-			al_push( list, result );
+            list.push_back(result);
 			if ( !all ) {
 				return 1;
 			}
@@ -384,22 +385,22 @@ static int append_filenames( array_list_t *list, const char *f, int all )
 
 		ptr = end_ptr;
     }
-	return al_get_count( list ) - prev_count;
+	return list.size() - prev_count;
 }
 
 /**
-   Find at most one file relative to the XDG data directories.
+   Find at most one file relative to the XDG data directories; returns the empty string on failure
 */
-static char *get_filename( char *f )
+static std::string get_filename( char *f )
 {
-	array_list_t list;
-	char *first = NULL;
+    std::vector<std::string> list;
 
-	al_init( &list );
-	append_filenames( &list, f, 0 );
-	first = (char *)al_pop( &list );
-	al_destroy( &list );
-	return first;
+	append_filenames( list, f, 0 );
+    if (list.empty()) {
+        return "";
+    } else {
+        return list.back();
+    }
 }
 
 /**
@@ -512,7 +513,7 @@ static char *get_description( const char *mimetype )
 {
 	char *fn_part;
 	
-	char *fn;
+	std::string fn;
 	int fd;
 	struct stat st;
 	char *contents;
@@ -574,12 +575,12 @@ static char *get_description( const char *mimetype )
 	fn = get_filename(fn_part); //malloc( strlen(MIME_DIR) +strlen( MIME_SUFFIX)+ strlen( mimetype ) + 1 );
 	free(fn_part );
 	
-	if( !fn )
+	if( fn.empty() )
 	{
 		return 0;
 	}
 
-	fd = open( fn, O_RDONLY );
+	fd = open( fn.c_str(), O_RDONLY );
 
 //	fprintf( stderr, "%s\n", fn );
 	
@@ -590,7 +591,7 @@ static char *get_description( const char *mimetype )
 		return 0;
 	}
 	
-	if( stat( fn, &st) )
+	if( stat( fn.c_str(), &st) )
 	{
 		perror( "stat" );
 		error=1;
@@ -614,7 +615,6 @@ static char *get_description( const char *mimetype )
 	  Don't need to check exit status of close on read-only file descriptors
 	*/
 	close( fd );
-	free( fn );
 
 	contents[st.st_size]=0;
 	regmatch_t match[1];
@@ -673,32 +673,27 @@ static char *get_description( const char *mimetype )
 static char *get_action( const char *mimetype )
 {
 	char *res=0;
-	int i;
 	
 	char *launcher;
 	char *end;
-	array_list_t mime_filenames;
+	std::vector<std::string> mime_filenames;
 	
-	char *launcher_str = NULL;
-	char *launcher_filename, *launcher_command_str, *launcher_command;
+	const char *launcher_str = NULL;
+	const char *launcher_command_str, *launcher_command;
 	char *launcher_full;
 	
-	al_init( &mime_filenames );
-	if( !append_filenames( &mime_filenames, DESKTOP_DEFAULT, 1 ) )
+	if( !append_filenames( mime_filenames, DESKTOP_DEFAULT, 1 ) )
 	{
-		al_destroy( &mime_filenames );
 		return 0;
 	}
 	
-	for ( i = 0; i < al_get_count( &mime_filenames ); i++ )
+	for ( size_t i = 0; i < mime_filenames.size(); i++ )
 	{
-		launcher_str = (char *)search_ini( (char *)al_get( &mime_filenames, i ), mimetype );
+		launcher_str = search_ini( mime_filenames.at(i).c_str(), mimetype );
 		if ( launcher_str )
 			break;
 	}
 
-	al_foreach( &mime_filenames, free );
-	al_destroy( &mime_filenames );
 	
 	if( !launcher_str )
 	{
@@ -750,37 +745,34 @@ static char *get_action( const char *mimetype )
 	launcher_full = (char *)my_malloc( strlen( launcher) + strlen( APPLICATIONS_DIR)+1 );
 	if( !launcher_full )
 	{
-		free( launcher_str );
+		free( (void *)launcher_str );
 		return 0;
 	}
 	
 	strcpy( launcher_full, APPLICATIONS_DIR );
 	strcat( launcher_full, launcher );
-	free( launcher_str );
+	free( (void *)launcher_str );
 	
-	launcher_filename = get_filename( launcher_full );
+	std::string launcher_filename = get_filename( launcher_full );
 	
 	free( launcher_full );
 		
-	launcher_command_str = search_ini( launcher_filename, "Exec" );
+	launcher_command_str = search_ini( launcher_filename.c_str(), "Exec" );
 	
 	if( !launcher_command_str )
 	{
 		fprintf( stderr, 
 				 _( "%s: Default launcher '%s' does not specify how to start\n"), MIMEDB, 
-				 launcher_filename );
-		free( launcher_filename );
+				 launcher_filename.c_str() );
 		return 0;	
 	}
-
-	free( launcher_filename );
 	
 	launcher_command = strchr( launcher_command_str, '=' );
 	launcher_command++;
 	
 	res = my_strdup( launcher_command );
 	
-	free( launcher_command_str );	
+	free( (void *)launcher_command_str );	
 
 	return res;
 }

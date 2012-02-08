@@ -24,8 +24,6 @@
 #include "wutil.h"
 #include "history.h"
 #include "common.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "intern.h"
 #include "path.h"
 #include "signal.h"

@@ -154,26 +154,24 @@ typedef struct complete_entry_opt
 /**
    Struct describing a command completion
 */
-typedef struct complete_entry
+struct completion_entry_t
 {
 	/** True if command is a path */
 	int cmd_type;
 
 	/** Command string */
-	const wchar_t *cmd;
+	wcstring cmd;
 	/** String containing all short option characters */
-	wchar_t *short_opt_str;
+	wcstring short_opt_str;
 	/** Linked list of all options */
 	complete_entry_opt_t *first_option;
-	/** Next command completion in the linked list */
-	struct complete_entry *next;
 	/** True if no other options than the ones supplied are possible */
 	int authoritative;
-}
-	complete_entry_t;
+};
 
-/** First node in the linked list of all completion entries */
-static complete_entry_t *first_entry=0;
+/** Linked list of all completion entries */
+typedef std::list<completion_entry_t *> completion_entry_list_t;
+static completion_entry_list_t completion_entries;
 
 /**
    Table of completions conditions that have already been tested and
@@ -301,47 +299,38 @@ static void complete_free_opt_recursive( complete_entry_opt_t *o )
 /**
    Search for an exactly matching completion entry
 */
-static complete_entry_t *complete_find_exact_entry( const wchar_t *cmd,
+static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd,
 													const int cmd_type )
 {
-	complete_entry_t *i;
-	for( i=first_entry; i; i=i->next )
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
 	{
-		if( ( wcscmp(cmd, i->cmd)==0) && ( cmd_type == i->cmd_type ))
-		{
-			return i;
-		}
+        completion_entry_t *entry = *iter;
+        if (entry->cmd == cmd && cmd_type == entry->cmd_type)
+			return entry;
 	}
-	return 0;
+	return NULL;
 }
 
 /**
    Locate the specified entry. Create it if it doesn't exist.
 */
-static complete_entry_t *complete_get_exact_entry( const wchar_t *cmd,
+static completion_entry_t *complete_get_exact_entry( const wchar_t *cmd,
 												   int cmd_type )
 {
-	complete_entry_t *c;
+	completion_entry_t *c;
 
 	complete_init();
 
 	c = complete_find_exact_entry( cmd, cmd_type );
 
-	if( c == 0 )
+	if( c == NULL )
 	{
-		if( !(c = (complete_entry_t *)malloc( sizeof(complete_entry_t) )))
-		{
-			DIE_MEM();
-		}
-		
-		c->next = first_entry;
-		first_entry = c;
-
+        c = new completion_entry_t();
+        completion_entries.push_front(c);
 		c->first_option = 0;
-
-		c->cmd = intern( cmd );
+        c->cmd = cmd;
 		c->cmd_type = cmd_type;
-		c->short_opt_str = wcsdup(L"");
+		c->short_opt_str = L"";
 		c->authoritative = 1;
 	}
 
@@ -353,7 +342,7 @@ void complete_set_authoritative( const wchar_t *cmd,
 								 int cmd_type,
 								 int authoritative )
 {
-	complete_entry_t *c;
+	completion_entry_t *c;
 
 	CHECK( cmd, );
 	c = complete_get_exact_entry( cmd, cmd_type );
@@ -372,7 +361,7 @@ void complete_add( const wchar_t *cmd,
 				   const wchar_t *desc,
 				   int flags )
 {
-	complete_entry_t *c;
+	completion_entry_t *c;
 	complete_entry_opt_t *opt;
 
 	CHECK( cmd, );
@@ -386,14 +375,11 @@ void complete_add( const wchar_t *cmd,
 	if( short_opt != L'\0' )
 	{
 		int len = 1 + ((result_mode & NO_COMMON) != 0);
-		c->short_opt_str =
-			(wchar_t *)realloc( c->short_opt_str,
-					 sizeof(wchar_t)*(wcslen( c->short_opt_str ) + 1 + len) );
-		wcsncat( c->short_opt_str,
-				 &short_opt, 1 );
+        
+        c->short_opt_str.push_back(short_opt);
 		if( len == 2 )
 		{
-			wcscat( c->short_opt_str, L":" );
+            c->short_opt_str.push_back(L':');
 		}
 	}
 	
@@ -419,11 +405,10 @@ void complete_add( const wchar_t *cmd,
 
 /**
    Remove all completion options in the specified entry that match the
-   specified short / long option strings.
+   specified short / long option strings. Returns true if it is now
+   empty and should be deleted, false if it's not empty.
 */
-static  complete_entry_t *complete_remove_entry( complete_entry_t *e,
-												 wchar_t short_opt,
-												 const wchar_t *long_opt )
+static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, const wchar_t *long_opt )
 {
 
 	complete_entry_opt_t *o, *oprev=0, *onext=0;
@@ -443,7 +428,6 @@ static  complete_entry_t *complete_remove_entry( complete_entry_t *e,
 			if( ( short_opt==o->short_opt ) ||
 				( wcscmp( long_opt, o->long_opt ) == 0 ) )
 			{
-				wchar_t *pos;
 				/*			fwprintf( stderr,
 							L"remove option -%lc --%ls\n",
 							o->short_opt?o->short_opt:L' ',
@@ -451,20 +435,15 @@ static  complete_entry_t *complete_remove_entry( complete_entry_t *e,
 				*/
 				if( o->short_opt )
 				{
-					pos = wcschr( e->short_opt_str,
-								  o->short_opt );
-					if( pos )
-					{
-						wchar_t *pos2 = pos+1;
-						while( *pos2 == L':' )
-						{
-							pos2++;
-						}
-						
-						memmove( pos,
-								 pos2,
-								 sizeof(wchar_t)*wcslen(pos2) );
-					}
+                    size_t idx = e->short_opt_str.find(o->short_opt);
+                    if (idx != wcstring::npos)
+                    {
+                        /* Consume all colons */
+                        size_t first_non_colon = idx + 1;
+                        while (first_non_colon < e->short_opt_str.size() && e->short_opt_str.at(first_non_colon) == L':')
+                            first_non_colon++;
+                        e->short_opt_str.erase(idx, first_non_colon - idx);
+                    }
 				}
 				
 				if( oprev == 0 )
@@ -483,16 +462,8 @@ static  complete_entry_t *complete_remove_entry( complete_entry_t *e,
 			}
 		}
 	}
-	
-	if( e && (e->first_option == 0) )
-	{
-		free( e->short_opt_str );
-		free( e );
-		e=0;
-	}
-	
-	return e;
-
+    
+    return e->first_option == 0;
 }
 
 
@@ -501,75 +472,23 @@ void complete_remove( const wchar_t *cmd,
 					  wchar_t short_opt,
 					  const wchar_t *long_opt )
 {
-	complete_entry_t *e, *eprev=0, *enext=0;
-
 	CHECK( cmd, );
-		
-	for( e = first_entry; e; e=enext )
-	{
-		enext=e->next;
-
-		if( (cmd_type == e->cmd_type ) &&
-			( wcscmp( cmd, e->cmd) == 0 ) )
-		{
-			e = complete_remove_entry( e, short_opt, long_opt );
-		}
-
-		if( e )
-		{
-			eprev = e;
-		}
-		else
-		{
-			if( eprev )
-			{
-				eprev->next = enext;
-			}
-			else
-			{
-				first_entry = enext;
-			}
-		}
-		
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ) {
+        completion_entry_t *e = *iter;
+        bool delete_it = false;
+		if(cmd_type == e->cmd_type && cmd == e->cmd) {
+            delete_it = complete_remove_entry( e, short_opt, long_opt );
+        }
+        
+        if (delete_it) {
+            /* Delete this entry */
+            iter = completion_entries.erase(iter);
+            delete e;
+        } else {
+            /* Don't delete it */
+            iter++;
+        }
 	}
-}
-
-/**
-   Find the full path and commandname from a command string. Both
-   pointers are allocated using halloc and will be free'd when\c
-   context is halloc_free'd.
-*/
-static void parse_cmd_string( void *context, 
-							  const wchar_t *str,
-							  wchar_t **pathp,
-							  wchar_t **cmdp )
-{
-    wchar_t *cmd, *path;
-
-	/* Get the path of the command */
-	path = (wchar_t *)halloc_register(context, path_get_path( str ));
-	if( path == 0 )
-	{
-		/**
-		   Use the empty string as the 'path' for commands that can
-		   not be found.
-		*/
-		path = halloc_wcsdup( context, L"");
-	}
-	
-	/* Make sure the path is not included in the command */
-	cmd = const_cast<wchar_t*>(wcsrchr( str, L'/' ));
-	if( cmd != 0 )
-	{
-		cmd++;
-	}
-	else
-	{
-		cmd = (wchar_t *)str;
-	}
-	
-	*pathp=path;
-	*cmdp=cmd;
 }
 
 /**
@@ -595,7 +514,6 @@ int complete_is_valid_option( const wchar_t *str,
 							  array_list_t *errors,
 							  bool allow_autoload )
 {
-	complete_entry_t *i;
 	complete_entry_opt_t *o;
     wcstring cmd, path;
 	int found_match = 0;
@@ -673,8 +591,9 @@ int complete_is_valid_option( const wchar_t *str,
 	*/
 	if (allow_autoload) complete_load( cmd, false );
 	
-	for( i=first_entry; i; i=i->next )
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
 	{
+        const completion_entry_t *i = *iter;
 		const wcstring &match = i->cmd_type?path:cmd;
 		const wchar_t *a;
 
@@ -739,7 +658,8 @@ int complete_is_valid_option( const wchar_t *str,
 			for( a = &opt[1]; *a; a++ )
 			{
 
-				wchar_t *str_pos = wcschr(i->short_opt_str, *a);
+                //PCA Rewrite this
+				wchar_t *str_pos = wcschr(i->short_opt_str.c_str(), *a);
 
 				if  (str_pos )
 				{
@@ -1248,10 +1168,10 @@ static wchar_t *param_match2( const complete_entry_opt_t *e,
 /**
    Tests whether a short option is a viable completion
 */
-static int short_ok( const wchar_t *arg,
-					 wchar_t nextopt,
-					 const wchar_t *allopt )
+static int short_ok( const wcstring &arg_str, wchar_t nextopt, const wcstring &allopt_str )
 {
+    const wchar_t *arg = arg_str.c_str();
+    const wchar_t *allopt = allopt_str.c_str();
 	const wchar_t *ptr;
 
 	if( arg[0] != L'-')
@@ -1300,21 +1220,19 @@ static int complete_param( const wchar_t *cmd_orig,
 						   int use_switches,
 						   std::vector<completion_t> &comp_out )
 {
-	complete_entry_t *i;
 	complete_entry_opt_t *o;
 
-	wchar_t *cmd, *path;
 	int use_common=1, use_files=1;
 
-	void *context = halloc( 0, 0 );
-		
-	parse_cmd_string( context, cmd_orig, &path, &cmd );
+    wcstring cmd, path;
+    parse_cmd_string(cmd_orig, path, cmd);
 
 	complete_load( cmd, true );
 
-	for( i=first_entry; i; i=i->next )
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
 	{
-		wchar_t *match = i->cmd_type?path:cmd;
+        completion_entry_t *i = *iter;
+		const wcstring &match = i->cmd_type?path:cmd;
 
 		if( ( (!wildcard_match( match, i->cmd ) ) ) )
 		{
@@ -1437,14 +1355,15 @@ static int complete_param( const wchar_t *cmd_orig,
 					{
 						int match=0, match_no_case=0;
 						
-						string_buffer_t *whole_opt = sb_halloc( context );
-						sb_append( whole_opt, o->old_mode?L"-":L"--", o->long_opt, NULL );
+                        wcstring whole_opt;
+                        whole_opt.append(o->old_mode?L"-":L"--");
+                        whole_opt.append(o->long_opt);
 
-						match = wcsncmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0;
+                        match = string_prefixes_string(str, whole_opt);
 
 						if( !match )
 						{
-							match_no_case = wcsncasecmp( str, (wchar_t *)whole_opt->buff, wcslen(str) )==0;
+							match_no_case = wcsncasecmp( str, whole_opt.c_str(), wcslen(str) )==0;
 						}
 						
 						if( match || match_no_case )
@@ -1481,7 +1400,7 @@ static int complete_param( const wchar_t *cmd_orig,
 
 								sb_printf( &completion,
 										   L"%ls=", 
-										   ((wchar_t *)whole_opt->buff)+offset );
+										   whole_opt.c_str()+offset );
 						
 								completion_allocate( comp_out,
 													 (wchar_t *)completion.buff,
@@ -1493,7 +1412,7 @@ static int complete_param( const wchar_t *cmd_orig,
 							}
 							
 							completion_allocate( comp_out,
-												 ((wchar_t *)whole_opt->buff) + offset,
+												 whole_opt.c_str() + offset,
 												 C_(o->desc),
 												 flags );
 						}					
@@ -1502,8 +1421,6 @@ static int complete_param( const wchar_t *cmd_orig,
 			}
 		}
 	}
-	
-	halloc_free( context );
 	
 	return use_files;
 }
@@ -1995,27 +1912,23 @@ void complete( const wchar_t *cmd,
    non-null and longer than 0 characters.
 */
 static void append_switch( string_buffer_t *out,
-						   const wchar_t *opt,
-						   const wchar_t *argument )
+						   const wcstring &opt,
+						   const wcstring &argument )
 {
-	wchar_t *esc;
-
-	if( !argument || wcscmp( argument, L"") == 0 )
+	if( argument.empty() )
 		return;
 
-	esc = escape( argument, 1 );
-	sb_printf( out, L" --%ls %ls", opt, esc );
-	free(esc);
+    wcstring esc = escape_string( argument, 1 );
+	sb_printf( out, L" --%ls %ls", opt.c_str(), esc.c_str() );
 }
 
 void complete_print( string_buffer_t *out )
 {
-	complete_entry_t *e;
-
 	CHECK( out, );
 
-	for( e = first_entry; e; e=e->next )
-	{
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
+    {
+        completion_entry_t *e = *iter;
 		complete_entry_opt_t *o;
 		for( o= e->first_option; o; o=o->next )
 		{

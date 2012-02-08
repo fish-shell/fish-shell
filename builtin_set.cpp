@@ -56,125 +56,7 @@ static int is_path_variable( const wchar_t *env )
    Call env_set. If this is a path variable, e.g. PATH, validate the
    elements. On error, print a description of the problem to stderr.
 */
-static int my_env_set( const wchar_t *key, array_list_t *val, int scope )
-{
-	string_buffer_t sb;
-	int i;
-	int retcode = 0;
-	wchar_t *val_str=0;
-		
-	if( is_path_variable( key ) )
-	{
-		int error = 0;
-		
-		for( i=0; i<al_get_count( val ); i++ )
-		{
-			int show_perror = 0;
-			int show_hint = 0;
-			
-			struct stat buff;
-			const wchar_t *dir = (wchar_t *)al_get( val, i );
-			
-			if( wstat( dir, &buff ) )
-			{
-				error = 1;
-				show_perror = 1;
-			}
-
-			if( !( S_ISDIR(buff.st_mode) ) )
-			{
-				error = 1;
-				
-			}
-			
-			if( error )
-			{
-				const wchar_t *colon;
-				
-				sb_printf( sb_err, 
-						   _(BUILTIN_SET_PATH_ERROR),
-						   L"set", 
-						   dir, 
-						   key );
-				
-				colon = wcschr( dir, L':' );
-				
-				if( colon && *(colon+1) ) 
-				{
-					show_hint = 1;
-				}
-				
-			}
-			
-			if( show_perror )
-			{
-				builtin_wperror( L"set" );
-			}
-			
-			if( show_hint )
-			{
-				sb_printf( sb_err, 
-						   _(BUILTIN_SET_PATH_HINT),
-						   L"set",
-						   key,
-						   key,
-						   wcschr( dir, L':' )+1);
-			}
-			
-			if( error )
-			{
-				break;
-			}
-			
-		}
-
-		if( error )
-		{
-			return 1;
-		}
-		
-	}
-
-	sb_init( &sb );
-
-	if( al_get_count( val ) )
-	{
-		for( i=0; i<al_get_count( val ); i++ )
-		{
-			wchar_t *next =(wchar_t *)al_get( val, i );
-			sb_append( &sb, next?next:L"" );
-			if( i<al_get_count( val )-1 )
-			{
-				sb_append( &sb, ARRAY_SEP_STR );
-			}
-		}
-		val_str = (wchar_t *)sb.buff;
-		
-	}
-	
-	switch( env_set( key, val_str, scope | ENV_USER ) )
-	{
-		case ENV_PERM:
-		{
-			sb_printf( sb_err, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key );
-			retcode=1;
-			break;
-		}
-		
-		case ENV_INVALID:
-		{
-			sb_printf( sb_err, _(L"%ls: Unknown error"), L"set" );
-			retcode=1;
-			break;
-		}
-	}
-
-	sb_destroy( &sb );
-
-	return retcode;
-}
-
-static int my_env_set2( const wchar_t *key, wcstring_list_t &val, int scope )
+static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 {
 	string_buffer_t sb;
 	size_t i;
@@ -864,7 +746,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 			if( erase )
 			{
 				erase_values(result, indexes);
-				my_env_set2( dest, result, scope);
+				my_env_set( dest, result, scope);
 			}
 			else
 			{
@@ -885,9 +767,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 					sb_append( sb_err, L"\n" );
 				}
 				
-				my_env_set2(dest,
-						   result,
-						   scope);
+				my_env_set(dest, result, scope);
 								
 //				al_destroy( &value );
 								
@@ -925,18 +805,10 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		}
 		else
 		{
-			array_list_t val;
-			al_init( &val );
-			
+            wcstring_list_t val;
 			for( i=woptind; i<argc; i++ )
-			{
-				al_push( &val, argv[i] );
-			}
-
-			retcode = my_env_set( dest, &val, scope );
-						
-			al_destroy( &val );			
-			
+                val.push_back(argv[i]);
+			retcode = my_env_set( dest, val, scope );
 		}		
 	}
 	

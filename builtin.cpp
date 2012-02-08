@@ -34,6 +34,7 @@
 #include <wctype.h>
 #include <sys/time.h>
 #include <time.h>
+#include <stack>
 
 #include "fallback.h"
 #include "util.h"
@@ -125,7 +126,12 @@ string_buffer_t *sb_out=0, *sb_err=0;
 /**
    Stack containing builtin I/O for recursive builtin calls.
 */
-static array_list_t io_stack;
+struct io_stack_elem_t {
+    int in;
+    string_buffer_t *out;
+    string_buffer_t *err;
+};
+static std::stack<io_stack_elem_t> io_stack;
 
 /**
    The file from which builtin functions should attempt to read, use
@@ -3623,8 +3629,6 @@ void builtin_init()
 {
 	
 	wopterr = 0;
-	al_init( &io_stack );
-
 	for( size_t i=0; i < BUILTIN_COUNT; i++ )
 	{
 		intern_static( builtin_datas[i].name );
@@ -3633,7 +3637,6 @@ void builtin_init()
 
 void builtin_destroy()
 {
-	al_destroy( &io_stack );
 }
 
 int builtin_exists( const wcstring &cmd )
@@ -3714,11 +3717,11 @@ const wchar_t *builtin_get_desc( const wchar_t *name )
 
 void builtin_push_io( parser_t &parser, int in )
 {
+    ASSERT_IS_MAIN_THREAD();
 	if( builtin_stdin != -1 )
 	{
-		al_push_long( &io_stack, (long)builtin_stdin );
-		al_push( &io_stack, sb_out );
-		al_push( &io_stack, sb_err );
+        struct io_stack_elem_t elem = {builtin_stdin, sb_out, sb_err};
+        io_stack.push(elem);
 	}
 	builtin_stdin = in;
 	sb_out = (string_buffer_t *)malloc(sizeof(string_buffer_t));
@@ -3729,17 +3732,20 @@ void builtin_push_io( parser_t &parser, int in )
 
 void builtin_pop_io(parser_t &parser)
 {
+    ASSERT_IS_MAIN_THREAD();
 	builtin_stdin = 0;
 	sb_destroy( sb_out );
 	sb_destroy( sb_err );
 	free( sb_out);
 	free(sb_err);
 
-	if( al_get_count( &io_stack ) >0 )
+	if( ! io_stack.empty() )
 	{
-		sb_err = (string_buffer_t *)al_pop( &io_stack );
-		sb_out = (string_buffer_t *)al_pop( &io_stack );
-		builtin_stdin = (int)al_pop_long( &io_stack );
+        struct io_stack_elem_t &elem = io_stack.top();
+		sb_err = elem.err;
+		sb_out = elem.out;
+		builtin_stdin = elem.in;
+        io_stack.pop();
 	}
 	else
 	{

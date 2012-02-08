@@ -1456,8 +1456,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	int argc = builtin_count_args( argv );
 	int res=STATUS_BUILTIN_OK;
 	wchar_t *desc=0;
-	array_list_t *events;
-	int i;
+	std::vector<event_t *> events;
 	array_list_t *named_arguments=0;
 	wchar_t *name = 0;
 	int shadows = 1;
@@ -1465,7 +1464,6 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	woptind=0;
 
 	parser.push_block( FUNCTION_DEF );
-	events=al_halloc( parser.current_block );
 
 	static const struct woption
 		long_options[] =
@@ -1562,7 +1560,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				e->type = EVENT_SIGNAL;
 				e->param1.signal = sig;
 				e->function_name=0;
-				al_push( events, e );
+                events.push_back(e);
 				break;
 			}
 
@@ -1585,7 +1583,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				e->type = EVENT_VARIABLE;
 				e->param1.variable = halloc_wcsdup( parser.current_block, woptarg );
 				e->function_name=0;
-				al_push( events, e );
+                events.push_back(e);
 				break;
 			}
 
@@ -1599,7 +1597,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				e->type = EVENT_GENERIC;
 				e->param1.param = halloc_wcsdup( parser.current_block, woptarg );
 				e->function_name=0;
-				al_push( events, e );
+                events.push_back(e);
 				break;
 			}
 
@@ -1675,7 +1673,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				else
 				{
 					e->function_name=0;
-					al_push( events, e );
+                    events.push_back(e);
 				}
 				break;
 			}
@@ -1800,15 +1798,15 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	{
 		function_data_t *d = new function_data_t();
 		
-		d->name=halloc_wcsdup( parser.current_block, name);
+        d->name=halloc_wcsdup( parser.current_block, name);
 		d->description=desc?halloc_wcsdup( parser.current_block, desc):0;
 		d->events = events;
 		d->named_arguments = named_arguments;
 		d->shadows = shadows;
 		
-		for( i=0; i<al_get_count( events ); i++ )
+		for( size_t i=0; i<events.size(); i++ )
 		{
-			event_t *e = (event_t *)al_get( events, i );
+			event_t *e = events.at(i);
 			e->function_name = d->name;
 		}
 

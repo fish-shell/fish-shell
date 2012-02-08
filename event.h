@@ -13,6 +13,7 @@
 #define FISH_EVENT_H
 
 #include "common.h"
+#include "event.h"
 
 /**
    The signal number that is used to match any signal
@@ -45,7 +46,7 @@ enum
    - When used as a parameter to event_add, it represents a class of events, and function_name is the name of the function which will be called whenever an event matching the specified class occurs. This is also how events are stored internally.
    - When used as a parameter to event_get, event_remove and event_fire, it represents a class of events, and if the function_name field is non-zero, only events which call the specified function will be returned.
 */
-typedef struct 
+struct event_t
 {
 	/**
 	   Type of event
@@ -93,8 +94,7 @@ typedef struct
 	   is ignored.
 	*/
 	wcstring_list_t *arguments;
-}
-	event_t;
+};
 
 /**
    Add an event handler 

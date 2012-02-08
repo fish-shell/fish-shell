@@ -14,6 +14,7 @@
 
 #include "util.h"
 #include "common.h"
+#include "event.h"
 
 #include <tr1/memory>
 using std::tr1::shared_ptr;
@@ -28,7 +29,7 @@ class env_vars;
    structure is used for that purpose. Parhaps these two should be
    merged.
   */
-typedef struct function_data
+struct function_data_t
 {
 	/**
 	   Name of function
@@ -45,7 +46,7 @@ typedef struct function_data
 	/**
 	   List of all event handlers for this function
 	 */
-	array_list_t *events;
+	std::vector<event_t *> events;
 	/**
 	   List of all named arguments for this function
 	 */
@@ -55,7 +56,7 @@ typedef struct function_data
 	   of the underlying function.
 	 */
 	int shadows;
-} function_data_t;
+};
 
 class function_info_t {
 public:

@@ -160,8 +160,6 @@ void function_init()
 
 void function_add( function_data_t *data, const parser_t &parser )
 {
-	int i;
-	
 	CHECK( data->name, );
 	CHECK( data->definition, );
 	scoped_lock lock(functions_lock);
@@ -177,7 +175,7 @@ void function_add( function_data_t *data, const parser_t &parser )
 
 	if( data->named_arguments )
 	{
-		for( i=0; i<al_get_count( data->named_arguments ); i++ )
+		for( size_t i=0; i<al_get_count( data->named_arguments ); i++ )
 		{
             info->named_arguments.push_back((wchar_t *)al_get( data->named_arguments, i ));
 		}
@@ -191,9 +189,9 @@ void function_add( function_data_t *data, const parser_t &parser )
 	info->shadows = data->shadows;
 	
 	
-	for( i=0; i<al_get_count( data->events ); i++ )
+	for( size_t i=0; i< data->events.size(); i++ )
 	{
-		event_add_handler( (event_t *)al_get( data->events, i ) );
+		event_add_handler( data->events.at(i) );
 	}
 }
 

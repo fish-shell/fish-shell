@@ -215,36 +215,10 @@ void completion_allocate(std::vector<completion_t> &completions, const wcstring 
 }
 
 /**
-   Destroys various structures used for tab-completion and free()s the memory used by them.
-*/
-static void complete_destroy()
-{
-	complete_entry_t *i=first_entry, *prev;
-	
-	while( i )
-	{
-		prev = i;
-		i=i->next;
-		complete_free_entry( prev );
-	}
-	first_entry = 0;
-	
-	completion_autoloader.unload_all();
-	
-}
-
-/**
-   The init function for the completion code. Currently, all it really
-   does is make sure complete_destroy is called on exit.
+   The init function for the completion code. Does nothing.
 */
 static void complete_init()
 {
-	static int is_init = 0;
-	if( !is_init )
-	{
-		is_init = 1;
-		halloc_register_function_void( global_context, &complete_destroy );
-	}
 }
 
 /**

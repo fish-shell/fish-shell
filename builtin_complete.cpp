@@ -555,8 +555,6 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			{
 				recursion_level++;
 			
-//				comp = al_halloc( 0 );
-			
 				complete( do_complete, comp );
 			
 				for( size_t i=0; i< comp.size() ; i++ )
@@ -585,7 +583,6 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 					}
 				}
 			
-//				halloc_free( comp );
 				recursion_level--;
 			}
 		

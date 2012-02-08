@@ -769,15 +769,12 @@ int env_set( const wchar_t *key,
 		
 	if( val && contains( key, L"PWD", L"HOME" ) )
 	{
-		void *context = halloc( 0, 0 );
-		const wchar_t *val_canonical = path_make_canonical( context, val );
-		if( wcscmp( val_canonical, val ) )
-		{
-			int res = env_set( key, val_canonical, var_mode );
-			halloc_free( context );
-			return res;
-		}
-		halloc_free( context );
+        /* Canoncalize our path; if it changes, recurse and try again. */
+        wcstring val_canonical = val;
+        path_make_canonical(val_canonical);
+        if (val != val_canonical) {
+            return env_set( key, val_canonical.c_str(), var_mode );
+        }
 	}
 
 	if( (var_mode & ENV_USER ) && is_read_only(key) )

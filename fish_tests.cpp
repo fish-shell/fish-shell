@@ -752,18 +752,13 @@ static void test_path()
 {
 	say( L"Testing path functions" );
 
-	void *context = halloc( 0, 0 );
-	
-
-	wchar_t *can = path_make_canonical( context, L"//foo//////bar/" );
-	
-	if( wcscmp( can, L"/foo/bar" ) )
+    wcstring path = L"//foo//////bar/";
+    wcstring canon = path;
+    path_make_canonical(canon);
+	if( canon != L"/foo/bar" ) )
 	{
 		err( L"Bug in canonical PATH code" );
-	}
-	
-	halloc_free( context );
-	
+	}	
 }
 
 

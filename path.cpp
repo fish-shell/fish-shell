@@ -514,38 +514,30 @@ bool path_get_config(wcstring &path)
 
 }
 
-wchar_t *path_make_canonical( void *context, const wchar_t *path )
+static void replace_all(wcstring &str, const wchar_t *needle, const wchar_t *replacement)
 {
-	wchar_t *res = halloc_wcsdup( context, path );
-	wchar_t *in, *out;
-	
-	in = out = res;
-	
-	while( *in )
-	{
-		if( *in == L'/' )
-		{
-			while( *(in+1) == L'/' )
-			{
-				in++;
-			}
-		}
-		*out = *in;
-	
-		out++;
-		in++;
-	}
+    size_t needle_len = wcslen(needle);
+    size_t offset = 0;
+    while((offset = str.find(needle, offset)) != wcstring::npos)
+    {
+        str.replace(offset, needle_len, replacement);
+        offset += needle_len;
+    }
+}
 
-	while( 1 )
-	{
-		if( out == res )
-			break;
-		if( *(out-1) != L'/' )
-			break;
-		out--;
-	}
-	*out = 0;
-		
-	return res;
+void path_make_canonical( wcstring &path )
+{
+
+    /* Remove double slashes */
+    replace_all(path, L"//", L"/");
+    
+    /* Remove trailing slashes */
+    size_t size = path.size();
+    while (size--) {
+        if (path.at(size) != L'/')
+            break;
+    }
+    /* Now size is either -1 (if the entire string was slashes) or is the index of the last non-slash character. Either way this will set it to the correct size. */
+    path.resize(size+1);
 }
 

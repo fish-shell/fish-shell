@@ -57,13 +57,10 @@ bool path_can_get_cdpath(const wcstring &in);
 bool path_get_cdpath_string(const wcstring &in, wcstring &out, const env_vars &vars);
 
 /**
-   Remove doulbe slashes and trailing slashes from a path,
-   e.g. transform foo//bar/ into foo/bar.
-   
-   The returned string is allocated using the specified halloc
-   context.
+   Remove double slashes and trailing slashes from a path,
+   e.g. transform foo//bar/ into foo/bar. The string is modified in-place.
  */
-wchar_t *path_make_canonical( void *context, const wchar_t *path );
+void path_make_canonical( wcstring &path );
 
 
 #endif

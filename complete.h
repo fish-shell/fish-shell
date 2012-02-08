@@ -256,7 +256,7 @@ int complete_is_valid_argument( const wchar_t *str,
    \param cmd the command for which to load command-specific completions
    \param reload should the commands completions be reloaded, even if they where previously loaded. (This is set to true on actual completions, so that changed completion are updated in running shells)
 */
-void complete_load( const wchar_t *cmd, int reload );
+void complete_load( const wcstring &cmd, bool reload );
 
 /**
    Create a new completion entry

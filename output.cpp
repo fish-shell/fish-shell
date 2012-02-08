@@ -102,18 +102,7 @@ static const int col_idx[]=
 	6,
 	7,
 	FISH_COLOR_NORMAL,
-}
-	;
-
-/**
-  Size of writestr_buff
-*/
-static size_t writestr_buff_sz=0;	
-
-/**
-   Temp buffer used for converting from wide to narrow strings
-*/
-static char *writestr_buff = 0;
+};
 
 /**
    The function used for output
@@ -126,14 +115,6 @@ static int (*out)(char c) = &writeb_internal;
  */
 static wchar_t *current_term = 0;
 
-
-/**
-   Cleanup function. Run automatically through halloc
-*/
-static void output_destroy()
-{
-	free( writestr_buff );
-}
 
 void output_set_writer( int (*writer)(char) )
 {
@@ -436,39 +417,30 @@ void writestr( const wchar_t *str )
 	}
 	
 	len++;
-	
-	/*
-	  Reallocate if needed
-	*/
-	if( writestr_buff_sz < len )
-	{
-		if( !writestr_buff )
-		{
-			halloc_register_function_void( global_context, &output_destroy );
-		}
 		
-		writestr_buff = (char *)realloc( writestr_buff, len );
-		if( !writestr_buff )
-		{
-			DIE_MEM();
-		}
-		writestr_buff_sz = len;
-	}
-	
 	/*
 	  Convert
 	*/
-	wcstombs( writestr_buff, 
+    char *buffer, static_buffer[256];
+    if (len <= sizeof static_buffer)
+        buffer = static_buffer;
+    else
+        buffer = new char[len];
+    
+	wcstombs( buffer, 
 			  str,
-			  writestr_buff_sz );
+			  len );
 
 	/*
 	  Write
 	*/
-	for( pos = writestr_buff; *pos; pos++ )
+	for( pos = buffer; *pos; pos++ )
 	{
 		out( *pos );
 	}
+    
+    if (buffer != static_buffer)
+        delete[] buffer;
 }
 
 

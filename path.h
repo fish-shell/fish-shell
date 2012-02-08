@@ -34,6 +34,7 @@ bool path_get_config(wcstring &path);
 wchar_t *path_get_path( const wchar_t *cmd );
 
 class env_vars;
+bool path_get_path_string(const wcstring &cmd, wcstring &output);
 bool path_get_path_string(const wcstring &cmd, wcstring &output, const env_vars &vars);
 
 /**

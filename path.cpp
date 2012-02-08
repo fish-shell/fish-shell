@@ -252,6 +252,18 @@ wchar_t *path_get_path( const wchar_t *cmd )
 	return 0;
 }
 
+bool path_get_path_string(const wcstring &cmd, wcstring &output)
+{
+    bool success = false;
+    wchar_t *tmp = path_get_path(cmd.c_str());
+    if (tmp) {
+        output = tmp;
+        free(tmp);
+        success = true;
+    }
+    return success;
+}
+
 
 bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env_vars &vars)
 {

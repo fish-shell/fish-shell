@@ -299,16 +299,6 @@ static void complete_free_opt_recursive( complete_entry_opt_t *o )
 	halloc_free( o );
 }
 
-/**
-   Free a complete_entry_t and its contents
-*/
-static void complete_free_entry( complete_entry_t *c )
-{
-//	free( c->cmd );
-	free( c->short_opt_str );
-	complete_free_opt_recursive( c->first_option );
-	free( c );
-}
 
 /**
    Search for an exactly matching completion entry
@@ -584,6 +574,24 @@ static void parse_cmd_string( void *context,
 	*cmdp=cmd;
 }
 
+/**
+   Find the full path and commandname from a command string 'str'.
+*/
+static void parse_cmd_string(const wcstring &str, wcstring &path, wcstring &cmd) {
+    if (! path_get_path_string(str, path)) {
+		/** Use the empty string as the 'path' for commands that can not be found. */
+        path = L"";
+    }
+    
+    /* Make sure the path is not included in the command */
+    size_t last_slash = str.find_last_of(L'/');
+    if (last_slash != wcstring::npos) {
+        cmd = str.substr(last_slash + 1);
+    } else {
+        cmd = str;
+    }
+}
+
 int complete_is_valid_option( const wchar_t *str,
 							  const wchar_t *opt,
 							  array_list_t *errors,
@@ -591,7 +599,7 @@ int complete_is_valid_option( const wchar_t *str,
 {
 	complete_entry_t *i;
 	complete_entry_opt_t *o;
-	wchar_t *cmd, *path;
+    wcstring cmd, path;
 	int found_match = 0;
 	int authoritative = 1;
 	int opt_found=0;
@@ -601,9 +609,9 @@ int complete_is_valid_option( const wchar_t *str,
 	int is_short_opt=0;
 	int is_gnu_exact=0;
 	int gnu_opt_len=0;
-	char *short_validated;
+    
+    std::vector<char> short_validated;
 
-	void *context;
 	
 	CHECK( str, 0 );
 	CHECK( opt, 0 );
@@ -639,17 +647,9 @@ int complete_is_valid_option( const wchar_t *str,
 		return 0;
 	}
 
-	context = halloc( 0, 0 );
 
-	if( !(short_validated = (char *)halloc( context, wcslen( opt ) )))
-	{
-		DIE_MEM();
-	}
-	
-
-
-	memset( short_validated, 0, wcslen( opt ) );
-
+    short_validated.resize(wcslen(opt), 0);	
+    
 	hash_init( &gnu_match_hash,
 			   &hash_wcs_func,
 			   &hash_wcs_cmp );
@@ -668,16 +668,16 @@ int complete_is_valid_option( const wchar_t *str,
 		}
 	}
 	
-	parse_cmd_string( context, str, &path, &cmd );
+	parse_cmd_string( str, path, cmd );
 
 	/*
 	  Make sure completions are loaded for the specified command
 	*/
-	if (allow_autoload) complete_load( cmd, 0 );
+	if (allow_autoload) complete_load( cmd, false );
 	
 	for( i=first_entry; i; i=i->next )
 	{
-		wchar_t *match = i->cmd_type?path:cmd;
+		const wcstring &match = i->cmd_type?path:cmd;
 		const wchar_t *a;
 
 		if( !wildcard_match( match, i->cmd ) )
@@ -756,12 +756,12 @@ int complete_is_valid_option( const wchar_t *str,
 						nopt[1]=opt[1];
 						nopt[2]=L'\0';
 
-						short_validated[a-opt] =
+						short_validated.at(a-opt) =
 							complete_is_valid_argument( str, nopt, &opt[2]);
 					}
 					else
 					{
-						short_validated[a-opt]=1;
+						short_validated.at(a-opt)=1;
 					}
 				}
 			}
@@ -782,7 +782,7 @@ int complete_is_valid_option( const wchar_t *str,
 			opt_found=1;
 			for( j=1; j<wcslen(opt); j++)
 			{
-				if ( !short_validated[j])
+				if ( !short_validated.at(j))
 				{
 					if( errors )
 					{
@@ -821,7 +821,6 @@ int complete_is_valid_option( const wchar_t *str,
 
 	hash_destroy( &gnu_match_hash );
 
-	halloc_free( context );
     return (authoritative && found_match)?opt_found:1;
 }
 
@@ -1289,9 +1288,8 @@ static int short_ok( const wchar_t *arg,
 	return 1;
 }
 
-void complete_load( const wchar_t *name, int reload )
+void complete_load( const wcstring &name, bool reload )
 {
-	CHECK( name, );
 	completion_autoloader.load( name, reload );
 }
 
@@ -1316,7 +1314,7 @@ static int complete_param( const wchar_t *cmd_orig,
 		
 	parse_cmd_string( context, cmd_orig, &path, &cmd );
 
-	complete_load( cmd, 1 );
+	complete_load( cmd, true );
 
 	for( i=first_entry; i; i=i->next )
 	{

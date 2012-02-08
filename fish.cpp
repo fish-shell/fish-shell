@@ -73,10 +73,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 static int read_init()
 {
-	wchar_t *config_dir;
-	wchar_t *config_dir_escaped;
-	void *context;
-	string_buffer_t *eval_buff;
     parser_t &parser = parser_t::principal_parser();
 
 	parser.eval( L"builtin . " DATADIR "/fish/config.fish 2>/dev/null", 0, TOP );
@@ -85,23 +81,18 @@ static int read_init()
 	/*
 	  We need to get the configuration directory before we can source the user configuration file
 	*/
-	context = halloc( 0, 0 );
-	eval_buff = sb_halloc( context );
-	config_dir = path_get_config( context );
+	wcstring config_dir;
 
 	/*
-	  If config_dir is null then we have no configuration directory
+	  If path_get_config returns false then we have no configuration directory
 	  and no custom config to load.
 	*/
-	if( config_dir )
+    if (path_get_config(config_dir))
 	{
-		config_dir_escaped = escape( config_dir, 1 );
-		sb_printf( eval_buff, L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped );
-		parser.eval( (wchar_t *)eval_buff->buff, 0, TOP );
-		free( config_dir_escaped );
+		wcstring config_dir_escaped = escape_string( config_dir, 1 );
+        wcstring eval_buff = format_string(L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
+		parser.eval( eval_buff.c_str(), 0, TOP );
 	}
-	
-	halloc_free( context );
 	
 	return 1;
 }

@@ -270,7 +270,7 @@ static int condition_test( const wchar_t *condition )
 
 	if (test_res == CC_NOT_TESTED )
 	{
-		test_res = exec_subshell( condition, 0 )?CC_FALSE:CC_TRUE;
+		test_res = exec_subshell( condition)?CC_FALSE:CC_TRUE;
 		hash_put( condition_cache, condition, test_res );
 
 		/*
@@ -946,7 +946,7 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 	  since apropos is only called once.
 	*/
     wcstring_list_t list;
-	if( exec_subshell2( lookup_cmd, list ) != -1 )
+	if( exec_subshell( lookup_cmd, list ) != -1 )
 	{
 	
 		/*

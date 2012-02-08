@@ -126,7 +126,7 @@ void kill_add( wchar_t *str )
 
 	if (cmd != NULL)
 	{
-		if( exec_subshell( cmd, 0 ) == -1 )
+		if( exec_subshell( cmd) == -1 )
 		{
 			/* 
 			   Do nothing on failiure
@@ -224,7 +224,7 @@ static void kill_check_x_buffer()
 		wcstring cmd = L"xsel -t 500 -b";
 		wcstring new_cut_buffer=L"";
         wcstring_list_t list;
-		if( exec_subshell2( cmd, list ) != -1 )
+		if( exec_subshell( cmd, list ) != -1 )
 		{
 					
 			for( i=0; i<list.size(); i++ )

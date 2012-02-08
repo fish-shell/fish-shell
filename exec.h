@@ -50,14 +50,12 @@ void exec( parser_t &parser, job_t *j );
   proc_gfet_last_status will not be changed.
 
   \param cmd the command to execute
-  \param l The list to insert output into.If \c l is zero, the output will be discarded.
+  \param outputs The list to insert output into.
 
   \return the status of the last job to exit, or -1 if en error was encountered.
 */
-__warn_unused int exec_subshell( const wchar_t *cmd, 
-								 array_list_t *l );
-
-__warn_unused int exec_subshell2( const wcstring &cmd, std::vector<wcstring> &outputs );
+__warn_unused int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs );
+__warn_unused int exec_subshell(const wcstring &cmd );
 
 
 /**

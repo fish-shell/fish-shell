@@ -685,7 +685,7 @@ void reader_write_title()
     wcstring_list_t lst;
 
 	proc_push_interactive(0);
-	if( exec_subshell2( title, lst ) != -1 )
+	if( exec_subshell( title, lst ) != -1 )
 	{
 		size_t i;
 		if( lst.size() > 0 )
@@ -715,7 +715,7 @@ static void exec_prompt()
 	{
 		proc_push_interactive( 0 );
 		
-		if( exec_subshell2( data->prompt.c_str(), prompt_list ) == -1 )
+		if( exec_subshell( data->prompt.c_str(), prompt_list ) == -1 )
 		{
 			/* If executing the prompt fails, make sure we at least don't print any junk */
             prompt_list.clear();

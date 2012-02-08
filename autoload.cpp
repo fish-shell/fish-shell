@@ -301,7 +301,7 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
     /* If we have a script, either built-in or a file source, then run it */
     if (really_load && has_script_source)
     {
-        if( exec_subshell( script_source.c_str(), 0 ) == -1 )
+        if( exec_subshell( script_source) == -1 )
         {
             /*
               Do nothing on failiure

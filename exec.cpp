@@ -1705,23 +1705,8 @@ void exec( parser_t &parser, job_t *j )
 	
 }
 
-int exec_subshell2( const wcstring &cmd, std::vector<wcstring> &outputs )
-{
-    array_list_t lst;
-    al_init(&lst);
-    int result = exec_subshell(cmd.c_str(), &lst);
-    int i, max = al_get_count(&lst);
-    for (i=0; i < max; i++) {
-        wchar_t *tmp = (wchar_t *)al_get(&lst, i);
-        outputs.push_back(tmp);
-        free(tmp);
-    }
-    al_destroy(&lst);
-    return result;
-}
 
-int exec_subshell( const wchar_t *cmd, 
-				   array_list_t *lst )
+static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 {
 	char *begin, *end;
 	char z=0;
@@ -1730,7 +1715,6 @@ int exec_subshell( const wchar_t *cmd,
 	io_data_t *io_buffer;
 	char sep=0;
 	
-	CHECK( cmd, -1 );
 	const env_var_t ifs = env_get_string(L"IFS");
 
 	if( ! ifs.missing_or_empty() )
@@ -1783,7 +1767,7 @@ int exec_subshell( const wchar_t *cmd,
 					wchar_t *el = str2wcs( begin );
 					if( el )
 					{
-						al_push( lst, el );
+						lst->push_back(el);
 					}
 					else
 					{
@@ -1801,7 +1785,7 @@ int exec_subshell( const wchar_t *cmd,
 				el = str2wcs( begin );
 				if( el )
 				{
-					al_push( lst, el );
+                    lst->push_back(el);
 				}
 				else
 				{
@@ -1816,4 +1800,14 @@ int exec_subshell( const wchar_t *cmd,
 	io_buffer_destroy( io_buffer );
 
 	return status;	
+}
+
+int exec_subshell( const wcstring &cmd, std::vector<wcstring> &outputs )
+{
+    return exec_subshell_internal(cmd, &outputs);
+}
+
+__warn_unused int exec_subshell( const wcstring &cmd )
+{
+    return exec_subshell_internal(cmd, NULL);
 }

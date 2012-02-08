@@ -797,26 +797,20 @@ static int builtin_block( parser_t &parser, wchar_t **argv )
 			sb_printf( sb_err, _( L"%ls: Can not specify scope when removing block\n" ), argv[0] );
 			return STATUS_BUILTIN_ERROR;
 		}
-
-        event_block_t *eb = parser.global_event_block;
-		if( ! eb )
+        
+        if (parser.global_event_blocks.empty())
 		{
 			sb_printf( sb_err, _( L"%ls: No blocks defined\n" ), argv[0] );
 			return STATUS_BUILTIN_ERROR;
 		}
-		parser.global_event_block = eb->next;
-		free( eb );
+		parser.global_event_blocks.pop_front();
 	}
 	else
 	{
 		block_t *block=parser.current_block;
 
-		event_block_t *eb = (event_block_t *)malloc( sizeof( event_block_t ) );
-
-		if( !eb )
-			DIE_MEM();
-
-		eb->type = type;
+        event_block_t eb = {};
+		eb.typemask = type;
 
 		switch( scope )
 		{
@@ -840,14 +834,11 @@ static int builtin_block( parser_t &parser, wchar_t **argv )
 		}
 		if( block )
 		{
-			eb->next = block->first_event_block;
-			block->first_event_block = eb;
-			halloc_register( block, eb );
+            block->event_blocks.push_front(eb);
 		}
 		else
 		{
-			eb->next = parser.global_event_block;
-			parser.global_event_block=eb;
+            parser.global_event_blocks.push_front(eb);
 		}
 	}
 

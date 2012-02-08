@@ -12,6 +12,7 @@
 #include "parser.h"
 #include "event.h"
 #include <vector>
+#include <deque>
 
 #define PARSER_TEST_ERROR 1
 #define PARSER_TEST_INCOMPLETE 2
@@ -19,7 +20,7 @@
 /**
    event_block_t represents a block on events of the specified type
 */
-typedef struct event_block
+struct event_block_t
 {
 	/**
 	   The types of events to block. This is interpreted as a bitset
@@ -29,13 +30,20 @@ typedef struct event_block
 
 	   Note that EVENT_ANY can be used to specify any event.
 	*/
-	int type;
-	
-	/**
-	   The next event_block struct
-	*/
-	struct event_block *next;
-} event_block_t;
+	unsigned int typemask;
+};
+
+typedef std::deque<event_block_t> event_block_list_t;
+
+inline bool event_block_list_blocks_type(const event_block_list_t &ebls, int type) {
+    for (event_block_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); iter++) {
+        if( iter->typemask & (1<<EVENT_ANY ) )
+            return true;
+        if( iter->typemask & (1<<type) )
+            return true;
+    }
+    return false;
+}
 
 
 /** Block state template, to replace the discriminated union */
@@ -144,13 +152,11 @@ typedef struct block
 	*/
 	int src_lineno;
     
-    /** Whether we should pop the environment variable stack when we're popped */
+    /** Whether we should pop the environment variable stack when we're popped off of the block stack */
     bool wants_pop_env;
 	
-	/**
-	   Some naming confusion. This is a pointer to the first element in the list of all event blocks.
-	*/
-	event_block_t *first_event_block;
+	/** List of event blocks. */
+	event_block_list_t event_blocks;
 	
     /**
 	   Next outer block 
@@ -338,7 +344,7 @@ class parser_t {
     block_t *current_block;
     
     /** Global event blocks */
-    event_block_t *global_event_block;
+    event_block_list_t global_event_blocks;
     
     /** Current block level io redirections  */
     io_data_t *block_io;

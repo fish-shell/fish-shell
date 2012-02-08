@@ -172,29 +172,13 @@ static event_t *event_copy( event_t *event, int copy_arguments )
 static int event_is_blocked( event_t *e )
 {
 	block_t *block;
-	event_block_t *eb;
 	parser_t &parser = parser_t::principal_parser();
 	for( block = parser.current_block; block; block = block->outer )
 	{
-		for( eb = block->first_event_block; eb; eb=eb->next )
-		{
-			if( eb->type & (1<<EVENT_ANY ) )
-				return 1;
-			if( eb->type & (1<<e->type) )
-				return 1;
-		}
+        if (event_block_list_blocks_type(block->event_blocks, e->type))
+            return true;
 	}
-	for( eb = parser.global_event_block; eb; eb=eb->next )
-	{
-		if( eb->type & (1<<EVENT_ANY ) )
-			return 1;
-		if( eb->type & (1<<e->type) )
-			return 1;
-		return 1;
-		
-	}
-	
-	return 0;
+    return event_block_list_blocks_type(parser.global_event_blocks, e->type);
 }
 
 const wchar_t *event_get_desc( event_t *e )

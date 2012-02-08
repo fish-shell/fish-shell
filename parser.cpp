@@ -368,7 +368,6 @@ parser_t::parser_t(enum parser_type_t type) :
     job_start_pos(0),
     eval_level(-1),
     current_block(NULL),
-    global_event_block(NULL),
     block_io(NULL)
 {
     

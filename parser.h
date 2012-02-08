@@ -11,8 +11,10 @@
 #include "util.h"
 #include "parser.h"
 #include "event.h"
+#include "function.h"
 #include <vector>
 #include <deque>
+#include <memory>
 
 #define PARSER_TEST_ERROR 1
 #define PARSER_TEST_INCOMPLETE 2
@@ -81,7 +83,7 @@ typedef struct block
 	/**
 	   Block type-specific data
 	*/
-	void *data;
+	std::auto_ptr<function_data_t> function_data;
 	
 #if 0
 	union 

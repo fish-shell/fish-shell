@@ -1792,7 +1792,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	}
 	else
 	{
-		function_data_t * d = (function_data_t *)halloc( parser.current_block, sizeof( function_data_t ));
+		function_data_t *d = new function_data_t();
 		
 		d->name=halloc_wcsdup( parser.current_block, name);
 		d->description=desc?halloc_wcsdup( parser.current_block, desc):0;
@@ -1806,7 +1806,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			e->function_name = d->name;
 		}
 
-		parser.current_block->data = d;
+		parser.current_block->function_data.reset(d);
 		
 	}
 	
@@ -3270,7 +3270,7 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 			case FUNCTION_DEF:
 			{
 				
-				function_data_t *d = (function_data_t *)parser.current_block->data;
+				function_data_t *d = parser.current_block->function_data.get();
 				
 				if( d )
 				{

@@ -67,8 +67,6 @@
 
 #include "output.h"
 #include "intern.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include <vector>
 
 /**
@@ -734,8 +732,10 @@ static void input_terminfo_init()
 
 const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 {
+    ASSERT_IS_MAIN_THREAD();
+    
 	const char *res = 0;
-	static string_buffer_t *buff = 0;
+    static wcstring buff;
 	int err = ENOENT;
 	
 	CHECK( name, 0 );
@@ -758,15 +758,8 @@ const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 		return 0;
 	}
 	
-	if( !buff )
-	{
-		buff = sb_halloc( global_context );
-	}
-	
-	sb_clear( buff );
-	sb_printf( buff, L"%s", res );
-
-	return (wchar_t *)buff->buff;
+    buff = format_string(L"%s", res);
+	return buff.c_str();
 		
 }
 

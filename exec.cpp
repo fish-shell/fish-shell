@@ -24,6 +24,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <vector>
+#include <deque>
 
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
@@ -94,7 +95,7 @@
    many situations in order to make sure that stray fds aren't lying
    around.
 */
-static array_list_t *open_fds=0;
+static std::vector<int> open_fds;
 
 static int set_child_group( job_t *j, process_t *p, int print_errors );
 
@@ -112,8 +113,6 @@ static void exec_write_and_exit( int fd, char *buff, size_t count, int status )
 
 void exec_close( int fd )
 {
-	int i;
-
 	if( fd < 0 )
 	{
 		debug( 0, L"Called close on invalid file descriptor " );
@@ -130,22 +129,8 @@ void exec_close( int fd )
 		}
 	}
 	
-	if( open_fds )
-	{
-		for( i=0; i<al_get_count( open_fds ); i++ )
-		{
-			int n = (int)al_get_long( open_fds, i );
-			if( n == fd )
-			{
-				al_set_long( open_fds,
-					     i,
-					     al_get_long( open_fds, al_get_count( open_fds ) -1 ) );
-				al_truncate( open_fds, 
-					     al_get_count( open_fds ) -1 );
-				break;
-			}
-		}
-	}
+    /* Maybe remove this form our set of open fds */
+    open_fds.erase(remove(open_fds.begin(), open_fds.end(), fd), open_fds.end());
 }
 
 int exec_pipe( int fd[2])
@@ -163,13 +148,8 @@ int exec_pipe( int fd[2])
 	
 	debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
 	
-	if( open_fds == 0 )
-	{
-		open_fds = al_halloc( global_context );
-	}
-	
-	al_push_long( open_fds, (long)fd[0] );
-	al_push_long( open_fds, (long)fd[1] );		
+    open_fds.push_back(fd[0]);
+    open_fds.push_back(fd[1]);
 	
 	return res;
 }
@@ -208,21 +188,16 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
 */
 static void close_unused_internal_pipes( io_data_t *io )
 {
-	int i=0;
-	
-	if( open_fds )
-	{
-		for( ;i<al_get_count( open_fds ); i++ )
-		{
-			int n = (long)al_get_long( open_fds, i );
-			if( !use_fd_in_pipe( n, io) )
-			{
-				debug( 4, L"Close fd %d, used in other context", n );
-				exec_close( n );
-				i--;
-			}
-		}
-	}
+    /* A call to exec_close will modify open_fds, so be careful how we walk */
+    for (size_t i=0; i < open_fds.size(); i++) {
+        int fd = open_fds.at(i);
+        if( !use_fd_in_pipe( fd, io) )
+        {
+            debug( 4, L"Close fd %d, used in other context", fd );
+            exec_close( fd );
+            i--;
+        }
+    }
 }
 
 /**

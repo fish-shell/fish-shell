@@ -88,9 +88,9 @@ static event_list_t blocked;
 static int event_match( event_t *classv, event_t *instance )
 {
 
-	if( classv->function_name && instance->function_name )
+	if( ! classv->function_name.empty() && ! instance->function_name.empty() )
 	{
-		if( wcscmp( classv->function_name, instance->function_name ) != 0 )
+		if( classv->function_name == instance->function_name )
 			return 0;
 	}
 
@@ -110,8 +110,7 @@ static int event_match( event_t *classv, event_t *instance )
 			return classv->param1.signal == instance->param1.signal;
 			
 		case EVENT_VARIABLE:
-			return wcscmp( instance->param1.variable,
-				       classv->param1.variable )==0;
+			return instance->str_param1 == classv->str_param1;
 			
 		case EVENT_EXIT:
 			if( classv->param1.pid == EVENT_ANY_PID )
@@ -122,8 +121,7 @@ static int event_match( event_t *classv, event_t *instance )
 			return classv->param1.job_id == instance->param1.job_id;
 
 		case EVENT_GENERIC:
-			return wcscmp( instance->param1.param,
-				       classv->param1.param )==0;
+			return instance->str_param1 == classv->str_param1;
 
 	}
 	
@@ -140,23 +138,10 @@ static int event_match( event_t *classv, event_t *instance )
 */
 static event_t *event_copy( event_t *event, int copy_arguments )
 {
-	event_t *e = (event_t *)malloc( sizeof( event_t ) );
-	
-	if( !e )
-		DIE_MEM();
-	
-	memcpy( e, event, sizeof(event_t));
-
-	if( e->function_name )
-		e->function_name = wcsdup( e->function_name );
-
-	if( e->type == EVENT_VARIABLE )
-		e->param1.variable = wcsdup( e->param1.variable );
-	else if( e->type == EVENT_GENERIC )
-		e->param1.param = wcsdup( e->param1.param );
+    event_t *e = new event_t(*event);
     
-    e->arguments = new wcstring_list_t;
-	if( copy_arguments && event->arguments )
+    e->arguments.reset(new wcstring_list_t);
+	if( copy_arguments && event->arguments.get() != NULL )
 	{
         *(e->arguments) = *(event->arguments);				
 	}
@@ -193,7 +178,7 @@ wcstring event_get_desc( event_t *e )
 			break;
 		
 		case EVENT_VARIABLE:
-			result = format_string(_(L"handler for variable '%ls'"), e->param1.variable );
+			result = format_string(_(L"handler for variable '%ls'"), e->str_param1.c_str() );
 			break;
 		
 		case EVENT_EXIT:
@@ -224,7 +209,7 @@ wcstring event_get_desc( event_t *e )
 		}
 		
 		case EVENT_GENERIC:
-			result = format_string(_(L"handler for generic event '%ls'"), e->param1.param );
+			result = format_string(_(L"handler for generic event '%ls'"), e->str_param1.c_str() );
 			break;
 			
 		default:
@@ -257,7 +242,6 @@ void event_remove( event_t *criterion )
 {
 	size_t i;
 	event_list_t new_list;
-	event_t e;
 	
 	CHECK( criterion, );
 
@@ -287,10 +271,7 @@ void event_remove( event_t *criterion )
 			*/
 			if( n->type == EVENT_SIGNAL )
 			{
-				e.type = EVENT_SIGNAL;
-				e.param1.signal = n->param1.signal;
-				e.function_name = 0;
-				
+                event_t e = event_t::signal_event(n->param1.signal);
 				if( event_get( &e, 0 ) == 1 )
 				{
 					signal_handle( e.param1.signal, 0 );
@@ -410,7 +391,7 @@ static void event_fire_internal( event_t *event )
 		*/
 		wcstring buffer = criterion->function_name;
 		
-        if (event->arguments)
+        if (event->arguments.get())
         {
             for( j=0; j< event->arguments->size(); j++ )
             {
@@ -482,8 +463,6 @@ static void event_fire_delayed()
 	while( sig_list[active_list].count > 0 )
 	{
 		signal_list_t *lst;
-		event_t e;
-        e.arguments = new wcstring_list_t(1); //one element
 
 		/*
 		  Switch signal lists
@@ -495,9 +474,8 @@ static void event_fire_delayed()
 		/*
 		  Set up 
 		*/
-		e.type=EVENT_SIGNAL;
-		e.function_name=0;
-		
+        event_t e = event_t::signal_event(0);
+        e.arguments.reset(new wcstring_list_t(1)); //one element
 		lst = &sig_list[1-active_list];
 		
 		if( lst->overflow )
@@ -522,7 +500,7 @@ static void event_fire_delayed()
 			}
 		}
 		
-        delete e.arguments;
+        e.arguments.reset(NULL);
 		
 	}	
 }
@@ -586,39 +564,20 @@ void event_destroy()
 void event_free( event_t *e )
 {
 	CHECK( e, );
-
-	/*
-	  When apropriate, we clear the argument vector
-	*/
-    if (e->arguments) delete e->arguments;
-    e->arguments = NULL;
-
-	free( (void *)e->function_name );
-	if( e->type == EVENT_VARIABLE )
-	{
-		free( (void *)e->param1.variable );
-	}
-	else if( e->type == EVENT_GENERIC )
-	{
-		free( (void *)e->param1.param );
-	}
-	free( e );
+    delete e;
 }
 
 
 void event_fire_generic_internal(const wchar_t *name, ...)
 {
-	event_t ev;
 	va_list va;
 	wchar_t *arg;
 
 	CHECK( name, );
-	
-	ev.type = EVENT_GENERIC;
-	ev.param1.param = name;
-	ev.function_name=0;
-	
-    ev.arguments = new wcstring_list_t;
+
+	event_t ev(EVENT_GENERIC);
+	ev.str_param1 = name;
+    ev.arguments.reset(new wcstring_list_t);
 	va_start( va, name );
 	while( (arg=va_arg(va, wchar_t *) )!= 0 )
 	{
@@ -627,9 +586,34 @@ void event_fire_generic_internal(const wchar_t *name, ...)
 	va_end( va );
 	
 	event_fire( &ev );
-    delete ev.arguments;
-    ev.arguments = NULL;
+    ev.arguments.reset(NULL);
 }
 
-	
+event_t event_t::signal_event(int sig) {
+    event_t event(EVENT_SIGNAL);
+    event.param1.signal = sig;
+    return event;
+}
 
+event_t event_t::variable_event(const wcstring &str) {
+    event_t event(EVENT_VARIABLE);
+    event.str_param1 = str;
+    return event;
+}
+
+event_t event_t::generic_event(const wcstring &str) {
+    event_t event(EVENT_GENERIC);
+    event.str_param1 = str;
+    return event;
+}
+
+event_t::event_t(const event_t &x) :
+                type(x.type),
+                param1(x.param1),
+                str_param1(x.str_param1),
+                function_name(x.function_name)
+{
+    const wcstring_list_t *ptr = x.arguments.get();
+    if (ptr)
+        arguments.reset(new wcstring_list_t(*ptr));
+}

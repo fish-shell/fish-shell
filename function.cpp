@@ -191,7 +191,7 @@ void function_add( function_data_t *data, const parser_t &parser )
 	
 	for( size_t i=0; i< data->events.size(); i++ )
 	{
-		event_add_handler( data->events.at(i) );
+		event_add_handler( &data->events.at(i) );
 	}
 }
 
@@ -220,8 +220,7 @@ static bool function_remove_ignore_autoload(const wcstring &name)
     bool erased = (loaded_functions.erase(name) > 0);
 	
 	if (erased) {
-        event_t ev;
-        ev.type=EVENT_ANY;
+        event_t ev(EVENT_ANY);
         ev.function_name=name.c_str();	
         event_remove( &ev );
     }

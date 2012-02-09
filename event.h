@@ -53,47 +53,45 @@ struct event_t
 	*/
 	int type;
 
-	/**
-	   The type-specific parameter
-	*/
-	union
-	{
-		/**
-		   Signal number for signal-type events.Use EVENT_ANY_SIGNAL
-		   to match any signal
-		*/
-		int signal;
-		/**
-		   Variable name for variable-type events.
-		*/
-		const wchar_t *variable;
-		/**
-		   Process id for process-type events. Use EVENT_ANY_PID to
-		   match any pid.
-		*/
-		pid_t pid;
-		/**
-		   Job id for EVENT_JOB_ID type events
-		*/
-		int job_id;
-		/**
-		   The parameter describing this generic event
-		*/
-		const wchar_t *param;
-	
-	} param1;
+	/** The type-specific parameter. The int types are one of the following:
+    
+		   signal: Signal number for signal-type events.Use EVENT_ANY_SIGNAL to match any signal
+           pid: Process id for process-type events. Use EVENT_ANY_PID to match any pid.
+           job_id: Job id for EVENT_JOB_ID type events
+    */     
+    union {
+        int signal;
+        int job_id;
+        pid_t pid;
+    } param1;
+    
+    /** The string types are one of the following:
+    
+          variable: Variable name for variable-type events.
+          param: The parameter describing this generic event.
+    */
+    wcstring str_param1;
 
 	/**
 	   The name of the event handler function
 	*/
-	const wchar_t *function_name;	
+	wcstring function_name;	
 
 	/**
 	   The argument list. Only used when sending a new event using
 	   event_fire. In all other situations, the value of this variable
 	   is ignored.
 	*/
-	wcstring_list_t *arguments;
+    std::auto_ptr<wcstring_list_t> arguments;
+    
+    event_t(int t) : type(t), param1() { }
+    
+    /** Copy constructor */
+    event_t(const event_t &x);
+    
+    static event_t signal_event(int sig);
+    static event_t variable_event(const wcstring &str);
+    static event_t generic_event(const wcstring &str);
 };
 
 /**

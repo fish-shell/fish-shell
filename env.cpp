@@ -393,21 +393,15 @@ static void universal_callback( int type,
 	
 	if( str )
 	{
-		event_t ev;
-		
 		has_changed=1;
 		
-		ev.type=EVENT_VARIABLE;
-		ev.param1.variable=name;
-		ev.function_name=0;
-		
-        ev.arguments = new wcstring_list_t();
+        event_t ev = event_t::variable_event(name);
+        ev.arguments.reset(new wcstring_list_t());
         ev.arguments->push_back(L"VARIABLE");
         ev.arguments->push_back(str);
         ev.arguments->push_back(name);
 		event_fire( &ev );
-        delete ev.arguments;
-        ev.arguments = NULL;
+        ev.arguments.reset(NULL);
 	}
 }
 
@@ -760,7 +754,6 @@ int env_set( const wchar_t *key,
 	var_entry_t *e=0;	
 	int done=0;
 
-	event_t ev;
 	int is_universal = 0;	
 	
 	CHECK( key, ENV_INVALID );
@@ -981,11 +974,8 @@ int env_set( const wchar_t *key,
 
 	if( !is_universal )
 	{
-		ev.type=EVENT_VARIABLE;
-		ev.param1.variable = key;
-		ev.function_name = 0;
-		
-        ev.arguments = new wcstring_list_t;
+        event_t ev = event_t::variable_event(key);		
+        ev.arguments.reset(new wcstring_list_t);
         ev.arguments->push_back(L"VARIABLE");
         ev.arguments->push_back(L"SET");
         ev.arguments->push_back(key);
@@ -993,8 +983,7 @@ int env_set( const wchar_t *key,
 //	debug( 1, L"env_set: fire events on variable %ls", key );	
 		event_fire( &ev );
 //	debug( 1, L"env_set: return from event firing" );	
-        delete ev.arguments;
-        ev.arguments = NULL;
+        ev.arguments.reset(NULL);
 	}
 
 	if( is_locale( key ) )
@@ -1085,21 +1074,15 @@ int env_remove( const wchar_t *key, int var_mode )
 		
 		if( try_remove( first_node, key, var_mode ) )
 		{		
-			event_t ev;
-			
-			ev.type=EVENT_VARIABLE;
-			ev.param1.variable=key;
-			ev.function_name=0;
-			
-            ev.arguments = new wcstring_list_t;
+			event_t ev = event_t::variable_event(key);
+            ev.arguments.reset(new wcstring_list_t);
             ev.arguments->push_back(L"VARIABLE");
             ev.arguments->push_back(L"ERASE");
             ev.arguments->push_back(key);
 			
 			event_fire( &ev );	
 			
-			delete ev.arguments;
-            ev.arguments = NULL;
+			ev.arguments.reset(NULL);
 			erased = 1;
 		}
 	}

@@ -46,7 +46,7 @@ struct function_data_t
 	/**
 	   List of all event handlers for this function
 	 */
-	std::vector<event_t *> events;
+	std::vector<event_t> events;
 	/**
 	   List of all named arguments for this function
 	 */

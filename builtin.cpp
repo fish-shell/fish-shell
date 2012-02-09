@@ -1081,10 +1081,9 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 	const wchar_t *desc = function_get_desc( name );
 	const wchar_t *def = function_get_definition(name);
 
-	event_t search;
+	event_t search(EVENT_ANY);
 
 	search.function_name = name;
-	search.type = EVENT_ANY;
 
 	std::vector<event_t *> ev;
 	event_get( &search, &ev );
@@ -1120,7 +1119,7 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 			case EVENT_VARIABLE:
 			{
-				sb_printf( out, L" --on-variable %ls", next->param1.variable );
+				sb_printf( out, L" --on-variable %ls", next->str_param1.c_str() );
 				break;
 			}
 
@@ -1143,7 +1142,7 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 			case EVENT_GENERIC:
 			{
-				sb_printf( out, L" --on-event %ls", next->param1.param );
+				sb_printf( out, L" --on-event %ls", next->str_param1.c_str() );
 				break;
 			}
 						
@@ -1456,7 +1455,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	int argc = builtin_count_args( argv );
 	int res=STATUS_BUILTIN_OK;
 	wchar_t *desc=0;
-	std::vector<event_t *> events;
+	std::vector<event_t> events;
 	array_list_t *named_arguments=0;
 	wchar_t *name = 0;
 	int shadows = 1;
@@ -1542,7 +1541,6 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			case 's':
 			{
 				int sig = wcs2sig( woptarg );
-				event_t *e;
 
 				if( sig < 0 )
 				{
@@ -1553,21 +1551,12 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 					res=1;
 					break;
 				}
-
-				e = (event_t *)halloc( parser.current_block, sizeof(event_t));
-				if( !e )
-					DIE_MEM();
-				e->type = EVENT_SIGNAL;
-				e->param1.signal = sig;
-				e->function_name=0;
-                events.push_back(e);
+                events.push_back(event_t::signal_event(sig));
 				break;
 			}
 
 			case 'v':
 			{
-				event_t *e;
-
 				if( wcsvarname( woptarg ) )
 				{
 					sb_printf( sb_err,
@@ -1578,26 +1567,14 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 					break;
 				}
 
-				e = (event_t *)halloc( parser.current_block, sizeof(event_t));
-
-				e->type = EVENT_VARIABLE;
-				e->param1.variable = halloc_wcsdup( parser.current_block, woptarg );
-				e->function_name=0;
-                events.push_back(e);
+                events.push_back(event_t::variable_event(woptarg));
 				break;
 			}
 
 
 			case 'e':
 			{
-				event_t *e;
-				
-				e = (event_t *)halloc( parser.current_block, sizeof(event_t));
-				
-				e->type = EVENT_GENERIC;
-				e->param1.param = halloc_wcsdup( parser.current_block, woptarg );
-				e->function_name=0;
-                events.push_back(e);
+                events.push_back(event_t::generic_event(woptarg));
 				break;
 			}
 
@@ -1606,11 +1583,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			{
 				pid_t pid;
 				wchar_t *end;
-				event_t *e;
-
-				e = (event_t *)halloc( parser.current_block, sizeof(event_t));
-				if( !e )
-					DIE_MEM();
+                event_t e(EVENT_ANY);
 				
 				if( ( opt == 'j' ) &&
 					( wcscasecmp( woptarg, L"caller" ) == 0 ) )
@@ -1643,8 +1616,8 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 					}
 					else
 					{
-						e->type = EVENT_JOB_ID;
-						e->param1.job_id = job_id;
+						e.type = EVENT_JOB_ID;
+						e.param1.job_id = job_id;
 					}
 
 				}
@@ -1663,16 +1636,15 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 					}
 
 
-					e->type = EVENT_EXIT;
-					e->param1.pid = (opt=='j'?-1:1)*abs(pid);
+					e.type = EVENT_EXIT;
+					e.param1.pid = (opt=='j'?-1:1)*abs(pid);
 				}
 				if( res )
 				{
-					free( e );
+                    /* nothing */
 				}
 				else
 				{
-					e->function_name=0;
                     events.push_back(e);
 				}
 				break;
@@ -1800,14 +1772,14 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 		
         d->name=halloc_wcsdup( parser.current_block, name);
 		d->description=desc?halloc_wcsdup( parser.current_block, desc):0;
-		d->events = events;
+		d->events.swap(events);
 		d->named_arguments = named_arguments;
 		d->shadows = shadows;
 		
-		for( size_t i=0; i<events.size(); i++ )
+		for( size_t i=0; i<d->events.size(); i++ )
 		{
-			event_t *e = events.at(i);
-			e->function_name = d->name;
+			event_t &e = d->events.at(i);
+			e.function_name = d->name;
 		}
 
 		parser.current_block->function_data.reset(d);

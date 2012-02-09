@@ -117,7 +117,7 @@ int no_exec=0;
 /**
    The event variable used to send all process event
 */
-static event_t event;
+static event_t event(0);
 
 /**
   Stringbuffer used to create arguments when firing events
@@ -138,7 +138,7 @@ void proc_init()
 {
 	interactive_stack = al_halloc( global_context );
 	proc_push_interactive( 0 );
-    event.arguments = new wcstring_list_t;
+    event.arguments.reset(new wcstring_list_t);
 	sb_init( &event_pid );
 	sb_init( &event_status );
 }
@@ -210,8 +210,7 @@ void process_t::set_argv(const wcstring_list_t &argv) {
 
 void proc_destroy()
 {
-	delete event.arguments;
-    event.arguments = NULL;
+    event.arguments.reset(NULL);
 	sb_destroy( &event_pid );
 	sb_destroy( &event_status );
     job_list_t &jobs = job_list();

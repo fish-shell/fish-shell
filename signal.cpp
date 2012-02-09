@@ -427,15 +427,9 @@ const wchar_t *signal_get_desc( int sig )
 */
 static void default_handler(int signal, siginfo_t *info, void *context)
 {
-	event_t e;
-
-	e.type=EVENT_SIGNAL;
-	e.param1.signal = signal;
-	e.function_name=0;
-
+	event_t e = event_t::signal_event(signal);
 	if( event_get( &e, 0 ) )
 	{
-		
 		event_fire( &e );
 	}
 }
@@ -455,12 +449,7 @@ static void handle_winch( int sig, siginfo_t *info, void *context )
 */
 static void handle_hup( int sig, siginfo_t *info, void *context )
 {
-	event_t e;
-
-	e.type=EVENT_SIGNAL;
-	e.param1.signal = SIGHUP;
-	e.function_name=0;
-	
+	event_t e = event_t::signal_event(SIGHUP);
 	if( event_get( &e, 0 ) )
 	{
 		default_handler( sig, 0, 0 );	

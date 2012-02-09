@@ -881,7 +881,8 @@ void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
 		/*
 		  This is an event handler
 		*/
-		sb_printf( buff, _(L"in event handler: %ls\n"), event_get_desc( b->state1<event_t *>() ));
+        wcstring description = event_get_desc( b->state1<event_t *>() );
+		sb_printf( buff, _(L"in event handler: %ls\n"), description.c_str());
 		sb_printf( buff,
 				   L"\n" );
 

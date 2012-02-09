@@ -25,8 +25,6 @@
 #include "event.h"
 #include "signal.h"
 
-#include "halloc_util.h"
-
 /**
    Number of signals that can be queued before an overflow occurs
 */
@@ -181,48 +179,35 @@ static int event_is_blocked( event_t *e )
     return event_block_list_blocks_type(parser.global_event_blocks, e->type);
 }
 
-const wchar_t *event_get_desc( event_t *e )
+wcstring event_get_desc( event_t *e )
 {
-
-	/*
-	  String buffer used for formating event descriptions in event_get_desc()
-	*/
-	static string_buffer_t *get_desc_buff=0;
 
 	CHECK( e, 0 );
 
-	if( !get_desc_buff )
-	{
-		get_desc_buff=sb_halloc( global_context );
-	}
-	else
-	{
-		sb_clear( get_desc_buff );
-	}
-	
+	wcstring result;	
 	switch( e->type )
 	{
 		
 		case EVENT_SIGNAL:
-			sb_printf( get_desc_buff, _(L"signal handler for %ls (%ls)"), sig2wcs(e->param1.signal ), signal_get_desc( e->param1.signal ) );
+            result = format_string(_(L"signal handler for %ls (%ls)"), sig2wcs(e->param1.signal ), signal_get_desc( e->param1.signal ));
 			break;
 		
 		case EVENT_VARIABLE:
-			sb_printf( get_desc_buff, _(L"handler for variable '%ls'"), e->param1.variable );
+			result = format_string(_(L"handler for variable '%ls'"), e->param1.variable );
 			break;
 		
 		case EVENT_EXIT:
 			if( e->param1.pid > 0 )
 			{
-				sb_printf( get_desc_buff, _(L"exit handler for process %d"), e->param1.pid );
+				result = format_string(_(L"exit handler for process %d"), e->param1.pid );
 			}
 			else
 			{
 				job_t *j = job_get_from_pid( -e->param1.pid );
 				if( j )
-					sb_printf( get_desc_buff, _(L"exit handler for job %d, '%ls'"), j->job_id, j->command_cstr() );
+					result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_cstr() );
 				else
-					sb_printf( get_desc_buff, _(L"exit handler for job with process group %d"), -e->param1.pid );
+					result = format_string(_(L"exit handler for job with process group %d"), -e->param1.pid );
 			}
 			
 			break;
@@ -231,24 +216,24 @@ const wchar_t *event_get_desc( event_t *e )
 		{
 			job_t *j = job_get( e->param1.job_id );
 			if( j )
-				sb_printf( get_desc_buff, _(L"exit handler for job %d, '%ls'"), j->job_id, j->command_cstr() );
+				result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_cstr() );
 			else
-				sb_printf( get_desc_buff, _(L"exit handler for job with job id %d"), j->job_id );
+				result = format_string(_(L"exit handler for job with job id %d"), j->job_id );
 
 			break;
 		}
 		
 		case EVENT_GENERIC:
-			sb_printf( get_desc_buff, _(L"handler for generic event '%ls'"), e->param1.param );
+			result = format_string(_(L"handler for generic event '%ls'"), e->param1.param );
 			break;
 			
 		default:
-			sb_printf( get_desc_buff, _(L"Unknown event type") );
+			result = format_string(_(L"Unknown event type") );
 			break;
 			
 	}
 	
-	return (const wchar_t *)get_desc_buff->buff;
+	return result;
 }
 
 

@@ -157,10 +157,9 @@ void event_destroy();
 void event_free( event_t *e );
 
 /**
-   Returns a string describing the specified event. The string should
-   not be freed.
+   Returns a string describing the specified event.
 */
-const wchar_t *event_get_desc( event_t *e );
+wcstring event_get_desc( event_t *e );
 
 /**
    Fire a generic event with the specified name

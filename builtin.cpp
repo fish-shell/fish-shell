@@ -1456,7 +1456,9 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	int res=STATUS_BUILTIN_OK;
 	wchar_t *desc=0;
 	std::vector<event_t> events;
-	array_list_t *named_arguments=0;
+    
+    std::auto_ptr<wcstring_list_t> named_arguments(NULL);
+
 	wchar_t *name = 0;
 	int shadows = 1;
 		
@@ -1651,8 +1653,8 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			}
 
 			case 'a':
-				if( !named_arguments )
-					named_arguments = al_halloc( parser.current_block );
+				if( named_arguments.get() == NULL )
+					named_arguments.reset(new wcstring_list_t);
 				break;
 				
 			case 'S':
@@ -1706,7 +1708,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 
 			name = argv[woptind++];
 			
-			if( named_arguments )
+			if( named_arguments.get() )
 			{
 				while( woptind < argc )
 				{
@@ -1720,7 +1722,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 						break;
 					}
 					
-					al_push( named_arguments, halloc_wcsdup( parser.current_block, argv[woptind++] ) );
+                    named_arguments->push_back(argv[woptind++]);
 				}
 			}
 			else if( woptind != argc )
@@ -1773,8 +1775,9 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
         d->name=halloc_wcsdup( parser.current_block, name);
 		d->description=desc?halloc_wcsdup( parser.current_block, desc):0;
 		d->events.swap(events);
-		d->named_arguments = named_arguments;
 		d->shadows = shadows;
+        if (named_arguments.get())
+            d->named_arguments.swap(*named_arguments);
 		
 		for( size_t i=0; i<d->events.size(); i++ )
 		{

@@ -50,7 +50,7 @@ struct function_data_t
 	/**
 	   List of all named arguments for this function
 	 */
-	array_list_t *named_arguments;
+	wcstring_list_t named_arguments;
 	/**
 	   Set to non-zero if invoking this function shadows the variables
 	   of the underlying function.

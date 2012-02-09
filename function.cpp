@@ -173,14 +173,9 @@ void function_add( function_data_t *data, const parser_t &parser )
 	info->definition_offset = parse_util_lineno( parser.get_buffer(), parser.current_block->tok_pos )-1;
 	info->definition = data->definition;
 
-	if( data->named_arguments )
-	{
-		for( size_t i=0; i<al_get_count( data->named_arguments ); i++ )
-		{
-            info->named_arguments.push_back((wchar_t *)al_get( data->named_arguments, i ));
-		}
-	}
-	
+    if (! data->named_arguments.empty()) {
+        info->named_arguments.insert(info->named_arguments.end(), data->named_arguments.begin(), data->named_arguments.end());
+    }	
 	
 	if (data->description)
         info->description = data->description;

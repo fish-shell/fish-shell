@@ -34,11 +34,11 @@ struct function_data_t
 	/**
 	   Name of function
 	 */
-	wchar_t *name;
+	wcstring name;
 	/**
 	   Description of function
 	 */
-	wchar_t *description;
+	wcstring description;
 	/**
 	   Function definition
 	 */

@@ -1772,8 +1772,9 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	{
 		function_data_t *d = new function_data_t();
 		
-        d->name=halloc_wcsdup( parser.current_block, name);
-		d->description=desc?halloc_wcsdup( parser.current_block, desc):0;
+        d->name = name;
+        if (desc)
+            d->description = desc;
 		d->events.swap(events);
 		d->shadows = shadows;
         if (named_arguments.get())

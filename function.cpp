@@ -160,7 +160,7 @@ void function_init()
 
 void function_add( function_data_t *data, const parser_t &parser )
 {
-	CHECK( data->name, );
+	CHECK( ! data->name.empty(), );
 	CHECK( data->definition, );
 	scoped_lock lock(functions_lock);
 	function_remove( data->name );
@@ -177,7 +177,7 @@ void function_add( function_data_t *data, const parser_t &parser )
         info->named_arguments.insert(info->named_arguments.end(), data->named_arguments.begin(), data->named_arguments.end());
     }	
 	
-	if (data->description)
+	if (! data->description.empty())
         info->description = data->description;
 	info->definition_file = intern(reader_current_filename());
 	info->is_autoload = is_autoload;

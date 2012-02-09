@@ -901,14 +901,13 @@ static void join_completions( wcstring_list_t lst )
 		else
 		{
 			const wchar_t *old = lst.at(i).c_str();
-			wchar_t *old_end = wcschr( old, COMPLETE_SEP );
+			const wchar_t *old_end = wcschr( old, COMPLETE_SEP );
 			
 			if( old_end )
 			{
-				*old_end = 0;
 				
                 wcstring foo;
-                foo.append(old);
+                foo.append(old, old_end - old);
                 foo.push_back(COMPLETE_ITEM_SEP);
                 foo.append(item);
                 

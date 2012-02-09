@@ -41,8 +41,6 @@
 #include "intern.h"
 #include "parse_util.h"
 #include "parser_keywords.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "wutil.h"
 #include "path.h"
 #include "builtin_scripts.h"
@@ -131,29 +129,33 @@ typedef struct complete_entry_opt
 	/** Short style option */
 	wchar_t short_opt;
 	/** Long style option */
-	const wchar_t *long_opt;
+	wcstring long_opt;
 	/** Arguments to the option */
-	const wchar_t *comp;
+	wcstring comp;
 	/** Description of the completion */
-	const wchar_t *desc;
+	wcstring desc;
 	/** Condition under which to use the option */
-	const wchar_t *condition;
+	wcstring condition;
 	/** Must be one of the values SHARED, NO_FILES, NO_COMMON,
 		EXCLUSIVE, and determines how completions should be performed
 		on the argument after the switch. */
 	int result_mode;
 	/** True if old style long options are used */
 	int old_mode;
-	/** Next option in the linked list */
-	struct complete_entry_opt *next;
 	/** Completion flags */
 	int flags;
-}
-	complete_entry_opt_t;
+    
+    const wchar_t *localized_desc() const
+    {
+        const wchar_t *tmp = desc.c_str();
+        return C_(tmp);
+    }
+} complete_entry_opt_t;
 
 /**
    Struct describing a command completion
 */
+typedef std::list<complete_entry_opt_t> option_list_t;
 struct completion_entry_t
 {
 	/** True if command is a path */
@@ -163,8 +165,10 @@ struct completion_entry_t
 	wcstring cmd;
 	/** String containing all short option characters */
 	wcstring short_opt_str;
-	/** Linked list of all options */
-	complete_entry_opt_t *first_option;
+    
+	/** List of all options */
+	option_list_t options;
+    
 	/** True if no other options than the ones supplied are possible */
 	int authoritative;
 };
@@ -177,7 +181,7 @@ static completion_entry_list_t completion_entries;
    Table of completions conditions that have already been tested and
    the corresponding test results
 */
-static hash_table_t *condition_cache=0;
+static std::map<wcstring, bool> condition_cache;
 
 /* Autoloader for completions */
 class completion_autoload_t : public autoload_t {
@@ -222,12 +226,7 @@ static void complete_init()
 */
 static void condition_cache_clear()
 {
-	if( condition_cache )
-	{
-		hash_destroy( condition_cache );
-		free( condition_cache );
-		condition_cache = 0;
-	}
+	condition_cache.clear();
 }
 
 /**
@@ -236,63 +235,27 @@ static void condition_cache_clear()
    be evaluated once. condition_cache_clear must be called after a
    completion run to make sure that there are no stale completions.
 */
-static int condition_test( const wchar_t *condition )
+static int condition_test( const wcstring &condition )
 {
-	const void *test_res;
-
-	if( !condition || !wcslen(condition) )
+    ASSERT_IS_MAIN_THREAD();
+    
+	if( condition.empty() )
 	{
 //		fwprintf( stderr, L"No condition specified\n" );
 		return 1;
 	}
-
-	if( !condition_cache )
-	{
-		condition_cache = (hash_table_t *)malloc( sizeof( hash_table_t ) );
-		if( !condition_cache )
-		{
-			DIE_MEM();
-
-		}
-
-		hash_init( condition_cache,
-				   &hash_wcs_func,
-				   &hash_wcs_cmp );
-
-
-	}
-
-	test_res = hash_get( condition_cache, condition );
-
-	if (test_res == CC_NOT_TESTED )
-	{
-		test_res = exec_subshell( condition)?CC_FALSE:CC_TRUE;
-		hash_put( condition_cache, condition, test_res );
-
-		/*
-		  Restore previous status information
-		*/
-	}
-
-	if( wcscmp( (const wchar_t *)test_res, CC_TRUE ) == 0 )
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
-
-/**
-   Recursively free all complete_entry_opt_t structs and their contents
-*/
-static void complete_free_opt_recursive( complete_entry_opt_t *o )
-{
-	if( !o )
-		return;
-	
-	complete_free_opt_recursive( o->next );
-	halloc_free( o );
+    
+    bool test_res;
+    std::map<wcstring, bool>::iterator cached_entry = condition_cache.find(condition);
+    if (cached_entry == condition_cache.end()) {
+        /* Compute new value and reinsert it */
+        test_res = (0 == exec_subshell( condition));
+        condition_cache[condition] = test_res;
+    } else {
+        /* Use the old value */
+        test_res = cached_entry->second;
+    }
+    return test_res;
 }
 
 
@@ -327,7 +290,6 @@ static completion_entry_t *complete_get_exact_entry( const wchar_t *cmd,
 	{
         c = new completion_entry_t();
         completion_entries.push_front(c);
-		c->first_option = 0;
         c->cmd = cmd;
 		c->cmd_type = cmd_type;
 		c->short_opt_str = L"";
@@ -361,17 +323,14 @@ void complete_add( const wchar_t *cmd,
 				   const wchar_t *desc,
 				   int flags )
 {
-	completion_entry_t *c;
-	complete_entry_opt_t *opt;
-
 	CHECK( cmd, );
 
+	completion_entry_t *c;
 	c = complete_get_exact_entry( cmd, cmd_type );
-
-	opt = (complete_entry_opt_t *)halloc( 0, sizeof( complete_entry_opt_t ) );
-	
-	opt->next = c->first_option;
-	c->first_option = opt;
+    
+    c->options.push_front(complete_entry_opt_t());
+    complete_entry_opt_t &opt = c->options.front();
+    
 	if( short_opt != L'\0' )
 	{
 		int len = 1 + ((result_mode & NO_COMMON) != 0);
@@ -383,24 +342,15 @@ void complete_add( const wchar_t *cmd,
 		}
 	}
 	
-	opt->short_opt = short_opt;
-	opt->result_mode = result_mode;
-	opt->old_mode=old_mode;
+	opt.short_opt = short_opt;
+	opt.result_mode = result_mode;
+	opt.old_mode=old_mode;
 
-	opt->comp      = comp?halloc_wcsdup(opt, comp):L"";
-	opt->condition = condition?halloc_wcsdup(opt, condition):L"";
-	opt->long_opt  = long_opt?halloc_wcsdup(opt, long_opt):L"" ;
-	opt->flags = flags;
-	
-	if( desc && wcslen( desc ) )
-	{
-		opt->desc = halloc_wcsdup( opt, desc );
-	}
-	else
-	{
-		opt->desc = L"";
-	}
-	
+    if (comp) opt.comp = comp;
+    if (condition) opt.condition = condition;
+    if (long_opt) opt.long_opt = long_opt;
+    if (desc) opt.desc = desc;
+	opt.flags = flags;
 }
 
 /**
@@ -411,31 +361,25 @@ void complete_add( const wchar_t *cmd,
 static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, const wchar_t *long_opt )
 {
 
-	complete_entry_opt_t *o, *oprev=0, *onext=0;
-	
 	if(( short_opt == 0 ) && (long_opt == 0 ) )
 	{
-		complete_free_opt_recursive( e->first_option );
-		e->first_option=0;
+        e->options.clear();
 	}
 	else
 	{
-		
-		for( o= e->first_option; o; o=onext )
+        for (option_list_t::iterator iter = e->options.begin(); iter != e->options.end(); )
 		{
-			onext=o->next;
-			
-			if( ( short_opt==o->short_opt ) ||
-				( wcscmp( long_opt, o->long_opt ) == 0 ) )
+            complete_entry_opt_t &o = *iter;
+			if(short_opt==o.short_opt || long_opt == o.long_opt)
 			{
 				/*			fwprintf( stderr,
 							L"remove option -%lc --%ls\n",
 							o->short_opt?o->short_opt:L' ',
 							o->long_opt );
 				*/
-				if( o->short_opt )
+				if( o.short_opt )
 				{
-                    size_t idx = e->short_opt_str.find(o->short_opt);
+                    size_t idx = e->short_opt_str.find(o.short_opt);
                     if (idx != wcstring::npos)
                     {
                         /* Consume all colons */
@@ -445,25 +389,18 @@ static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, con
                         e->short_opt_str.erase(idx, first_non_colon - idx);
                     }
 				}
-				
-				if( oprev == 0 )
-				{
-					e->first_option = o->next;
-				}
-				else
-				{
-					oprev->next = o->next;
-				}
-				free( o );
+                
+                /* Destroy this option and go to the next one */
+				iter = e->options.erase(iter);
 			}
 			else
 			{
-				oprev = o;
+                /* Just go to the next one */
+				iter++;
 			}
 		}
 	}
-    
-    return e->first_option == 0;
+    return e->options.empty();
 }
 
 
@@ -514,12 +451,11 @@ int complete_is_valid_option( const wchar_t *str,
 							  array_list_t *errors,
 							  bool allow_autoload )
 {
-	complete_entry_opt_t *o;
     wcstring cmd, path;
 	int found_match = 0;
 	int authoritative = 1;
 	int opt_found=0;
-	hash_table_t gnu_match_hash;
+	std::set<wcstring> gnu_match_set;
 	int is_gnu_opt=0;
 	int is_old_opt=0;
 	int is_short_opt=0;
@@ -566,10 +502,6 @@ int complete_is_valid_option( const wchar_t *str,
 
     short_validated.resize(wcslen(opt), 0);	
     
-	hash_init( &gnu_match_hash,
-			   &hash_wcs_func,
-			   &hash_wcs_cmp );
-
 	is_gnu_opt = opt[1]==L'-';
 	if( is_gnu_opt )
 	{
@@ -614,19 +546,20 @@ int complete_is_valid_option( const wchar_t *str,
 		if( is_gnu_opt )
 		{
 
-			for( o = i->first_option; o; o=o->next )
-			{
-				if( o->old_mode )
+            for (option_list_t::const_iterator iter = i->options.begin(); iter != i->options.end(); iter++)
+            {
+                const complete_entry_opt_t &o = *iter;
+				if( o.old_mode )
 				{
 					continue;
 				}
 				
-				if( wcsncmp( &opt[2], o->long_opt, gnu_opt_len )==0)
+				if( wcsncmp( &opt[2], o.long_opt.c_str(), gnu_opt_len )==0)
 				{
-					hash_put( &gnu_match_hash, o->long_opt, L"" );
+                    gnu_match_set.insert(o.long_opt);
 					if( (wcsncmp( &opt[2],
-								  o->long_opt,
-								  wcslen( o->long_opt) )==0) )
+								  o.long_opt.c_str(),
+                                  o.long_opt.size())==0) )
 					{
 						is_gnu_exact=1;
 					}
@@ -636,13 +569,15 @@ int complete_is_valid_option( const wchar_t *str,
 		else
 		{
 			/* Check for old style options */
-			for( o = i->first_option; o; o=o->next )
+            for (option_list_t::const_iterator iter = i->options.begin(); iter != i->options.end(); iter++)
 			{
-				if( !o->old_mode )
+                const complete_entry_opt_t &o = *iter;
+                
+				if( !o.old_mode )
 					continue;
 
 
-				if( wcscmp( &opt[1], o->long_opt )==0)
+				if( wcscmp( &opt[1], o.long_opt.c_str() )==0)
 				{
 					opt_found = 1;
 					is_old_opt = 1;
@@ -720,10 +655,10 @@ int complete_is_valid_option( const wchar_t *str,
 
 		if( is_gnu_opt )
 		{
-			opt_found = is_gnu_exact || (hash_get_count( &gnu_match_hash )==1);
+			opt_found = is_gnu_exact || (gnu_match_set.size() == 1);
 			if( errors && !opt_found )
 			{
-				if( hash_get_count( &gnu_match_hash )==0)
+				if( gnu_match_set.empty())
 				{
 					al_push( errors,
 							 wcsdupcat( _(L"Unknown option: "), L"'", opt, L"\'" ) );
@@ -736,8 +671,6 @@ int complete_is_valid_option( const wchar_t *str,
 			}
 		}
 	}
-
-	hash_destroy( &gnu_match_hash );
 
     return (authoritative && found_match)?opt_found:1;
 }
@@ -1093,9 +1026,9 @@ static void complete_cmd( const wchar_t *cmd,
    \param desc Description of the completion
    \param comp_out The list into which the results will be inserted
 */
-static void complete_from_args( const wchar_t *str,
-								const wchar_t *args,
-								const wchar_t *desc,
+static void complete_from_args( const wcstring &str,
+								const wcstring &args,
+								const wcstring &desc,
 								std::vector<completion_t> &comp_out,
 								int flags )
 {
@@ -1104,11 +1037,11 @@ static void complete_from_args( const wchar_t *str,
 
     parser_t parser(PARSER_TYPE_COMPLETIONS_ONLY);
 	proc_push_interactive(0);
-	parser.eval_args( args, possible_comp );
+	parser.eval_args( args.c_str(), possible_comp );
 
 	proc_pop_interactive();
 	
-	complete_strings( comp_out, str, desc, 0, possible_comp, flags );
+	complete_strings( comp_out, str.c_str(), desc.c_str(), 0, possible_comp, flags );
 
 //	al_foreach( &possible_comp, &free );
 //	al_destroy( &possible_comp );
@@ -1117,10 +1050,10 @@ static void complete_from_args( const wchar_t *str,
 /**
    Match against an old style long option
 */
-static int param_match_old( complete_entry_opt_t *e,
+static int param_match_old( const complete_entry_opt_t *e,
 							const wchar_t *optstr )
 {
-	return  (optstr[0] == L'-') && (wcscmp( e->long_opt, &optstr[1] ) == 0);
+	return  (optstr[0] == L'-') && (e->long_opt == &optstr[1]);
 }
 
 /**
@@ -1135,7 +1068,7 @@ static int param_match( const complete_entry_opt_t *e,
 
 	if( !e->old_mode && (wcsncmp( L"--", optstr, 2 ) == 0 ))
 	{
-		if( wcscmp( e->long_opt, &optstr[2] ) == 0 )
+		if( e->long_opt == &optstr[2])
 		{
 			return 1;
 		}
@@ -1154,9 +1087,9 @@ static wchar_t *param_match2( const complete_entry_opt_t *e,
 		return (wchar_t *)&optstr[2];
 	if( !e->old_mode && (wcsncmp( L"--", optstr, 2 ) == 0) )
 	{
-		int len = wcslen( e->long_opt );
+		size_t len = e->long_opt.size();
 
-		if( wcsncmp( e->long_opt, &optstr[2],len ) == 0 )
+		if( wcsncmp( e->long_opt.c_str(), &optstr[2],len ) == 0 )
 		{
 			if( optstr[len+2] == L'=' )
 				return (wchar_t *)&optstr[len+3];
@@ -1220,7 +1153,6 @@ static int complete_param( const wchar_t *cmd_orig,
 						   int use_switches,
 						   std::vector<completion_t> &comp_out )
 {
-	complete_entry_opt_t *o;
 
 	int use_common=1, use_files=1;
 
@@ -1247,14 +1179,15 @@ static int complete_param( const wchar_t *cmd_orig,
 			{
 				/* Check if we are entering a combined option and argument
 				   (like --color=auto or -I/usr/include) */
-				for( o = i->first_option; o; o=o->next )
+                for (option_list_t::const_iterator oiter = i->options.begin(); oiter != i->options.end(); oiter++)
 				{
+                	const complete_entry_opt_t *o = &*oiter;
 					wchar_t *arg;
 					if( (arg=param_match2( o, str ))!=0 && condition_test( o->condition ))
 					{
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( arg, o->comp, C_(o->desc), comp_out, o->flags );
+						complete_from_args( arg, o->comp, o->localized_desc(), comp_out, o->flags );
 					}
 
 				}
@@ -1268,8 +1201,9 @@ static int complete_param( const wchar_t *cmd_orig,
 				  If we are using old style long options, check for them
 				  first
 				*/
-				for( o = i->first_option; o; o=o->next )
+                for (option_list_t::const_iterator oiter = i->options.begin(); oiter != i->options.end(); oiter++)
 				{
+                    const complete_entry_opt_t *o = &*oiter;
 					if( o->old_mode )
 					{
 						if( param_match_old( o, popt ) && condition_test( o->condition ))
@@ -1277,7 +1211,7 @@ static int complete_param( const wchar_t *cmd_orig,
 							old_style_match = 1;
 							use_common &= ((o->result_mode & NO_COMMON )==0);
 							use_files &= ((o->result_mode & NO_FILES )==0);
-							complete_from_args( str, o->comp, C_(o->desc), comp_out, o->flags );
+							complete_from_args( str, o->comp, o->localized_desc(), comp_out, o->flags );
 						}
 					}
 				}
@@ -1289,21 +1223,22 @@ static int complete_param( const wchar_t *cmd_orig,
 				*/
 				if( !old_style_match )
 				{
-					for( o = i->first_option; o; o=o->next )
-					{
+                    for (option_list_t::const_iterator oiter = i->options.begin(); oiter != i->options.end(); oiter++)
+                    {
+                        const complete_entry_opt_t *o = &*oiter;
 						/*
 						  Gnu-style options with _optional_ arguments must
 						  be specified as a single token, so that it can
 						  be differed from a regular argument.
 						*/
-						if( !o->old_mode && wcslen(o->long_opt) && !(o->result_mode & NO_COMMON) )
+						if( !o->old_mode && ! o->long_opt.empty() && !(o->result_mode & NO_COMMON) )
 							continue;
 
 						if( param_match( o, popt ) && condition_test( o->condition  ))
 						{
 							use_common &= ((o->result_mode & NO_COMMON )==0);
 							use_files &= ((o->result_mode & NO_FILES )==0);
-							complete_from_args( str, o->comp, C_(o->desc), comp_out, o->flags );
+							complete_from_args( str, o->comp.c_str(), o->localized_desc(), comp_out, o->flags );
 
 						}
 					}
@@ -1314,8 +1249,9 @@ static int complete_param( const wchar_t *cmd_orig,
 		if( use_common )
 		{
 
-			for( o = i->first_option; o; o=o->next )
-			{
+            for (option_list_t::const_iterator oiter = i->options.begin(); oiter != i->options.end(); oiter++)
+            {
+                const complete_entry_opt_t *o = &*oiter;
 				/*
 				  If this entry is for the base command,
 				  check if any of the arguments match
@@ -1328,7 +1264,7 @@ static int complete_param( const wchar_t *cmd_orig,
 				if( (o->short_opt == L'\0' ) && (o->long_opt[0]==L'\0'))
 				{
 					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( str, o->comp, C_(o->desc), comp_out, o->flags );
+					complete_from_args( str, o->comp, o->localized_desc(), comp_out, o->flags );
 				}
 				
 				if( wcslen(str) > 0 && use_switches )
@@ -1339,7 +1275,7 @@ static int complete_param( const wchar_t *cmd_orig,
 					if( o->short_opt != L'\0' &&
 						short_ok( str, o->short_opt, i->short_opt_str ) )
 					{
-						const wchar_t *desc = C_(o->desc );
+						const wchar_t *desc = o->localized_desc();
 						wchar_t completion[2];
 						completion[0] = o->short_opt;
 						completion[1] = 0;
@@ -1380,7 +1316,7 @@ static int complete_param( const wchar_t *cmd_orig,
 							else
 								flags = COMPLETE_NO_CASE;
 
-							has_arg = !!wcslen( o->comp );
+							has_arg = ! o->comp.empty();
 							req_arg = (o->result_mode & NO_COMMON );
 
 							if( !o->old_mode && ( has_arg && !req_arg ) )
@@ -1404,7 +1340,7 @@ static int complete_param( const wchar_t *cmd_orig,
 						
 								completion_allocate( comp_out,
 													 (wchar_t *)completion.buff,
-													 C_(o->desc),
+													 C_(o->desc.c_str()),
 													 flags );									
 								
 								sb_destroy( &completion );
@@ -1413,7 +1349,7 @@ static int complete_param( const wchar_t *cmd_orig,
 							
 							completion_allocate( comp_out,
 												 whole_opt.c_str() + offset,
-												 C_(o->desc),
+												 C_(o->desc.c_str()),
 												 flags );
 						}					
 					}
@@ -1929,9 +1865,9 @@ void complete_print( string_buffer_t *out )
     for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
     {
         completion_entry_t *e = *iter;
-		complete_entry_opt_t *o;
-		for( o= e->first_option; o; o=o->next )
-		{
+        for (option_list_t::const_iterator oiter = e->options.begin(); oiter != e->options.end(); oiter++)
+        {
+            const complete_entry_opt_t *o = &*oiter;
 			const wchar_t *modestr[] =
 				{
 					L"",
@@ -1964,7 +1900,7 @@ void complete_print( string_buffer_t *out )
 
 			append_switch( out,
 						   L"description",
-						   C_(o->desc) );
+						   C_(o->desc.c_str()) );
 
 			append_switch( out,
 						   L"arguments",

@@ -943,7 +943,7 @@ static std::vector<comp_t *> mangle_completions( wcstring_list_t &lst, const wch
 			
 			if( (c == COMPLETE_ITEM_SEP) || (c==COMPLETE_SEP) || !c)
 			{
-                wcstring start2 = wcstring(start, end - start);
+                wcstring start2 = wcstring(next, start, end - start);
                 wcstring str = escape_string(start2, ESCAPE_ALL | ESCAPE_NO_QUOTED);
 				comp->comp_width += my_wcswidth( str.c_str() );
 				comp->comp.push_back(str);

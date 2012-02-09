@@ -628,7 +628,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 {
 	const wchar_t *desc;
 	struct stat buf, lbuf;
-	static string_buffer_t *sb = 0;
+    wcstring sb;
 	
 	int free_completion = 0;
 	
@@ -638,18 +638,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 	
 	long long sz; 
 
-	if( !sb )
-	{
-		sb = sb_halloc( global_context );
-	}
-	else
-	{
-		sb_clear( sb );
-	}
-
 	CHECK( fullname, );
-		
-	sb_clear( sb );
 
 	/*
 	  If the file is a symlink, we need to stat both the file itself
@@ -697,15 +686,16 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		free_completion = 1;
 		flags = flags | COMPLETE_NO_SPACE;
 		completion = wcsdupcat( completion, L"/" );
-		sb_append( sb, desc );
+        sb.append(desc);
 	}
 	else
-	{							
-		sb_append( sb, desc, L", ", NULL );
-		sb_format_size( sb, sz );
+	{
+        sb.append(desc);
+        sb.append(L", ");
+        sb.append(format_size(sz));
 	}
 
-	wildcard_complete( completion, wc, (wchar_t *)sb->buff, 0, list, flags );
+	wildcard_complete( completion, wc, sb.c_str(), NULL, list, flags );
 	if( free_completion )
 		free( (void *)completion );
 }

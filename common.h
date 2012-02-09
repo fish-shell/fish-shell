@@ -584,8 +584,8 @@ void bugreport();
 /**
    Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
 */
-void sb_format_size( string_buffer_t *sb,
-		     long long sz );
+void sb_format_size( string_buffer_t *sb, long long sz );
+wcstring format_size(long long sz);
 
 /**
    Return the number of seconds from the UNIX epoch, with subsecond

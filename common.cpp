@@ -1935,7 +1935,50 @@ void sb_format_size( string_buffer_t *sb,
 			sz /= 1024;
 			
 		}
-	}		
+	}	
+}
+
+wcstring format_size(long long sz)
+{
+    wcstring result;
+	const wchar_t *sz_name[]=
+		{
+			L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0
+		};
+
+	if( sz < 0 )
+	{
+		result.append( L"unknown" );
+	}
+	else if( sz < 1 )
+	{
+		result.append( _( L"empty" ) );
+	}
+	else if( sz < 1024 )
+	{
+		result.append(format_string( L"%lldB", sz ));
+	}
+	else
+	{
+		int i;
+		
+		for( i=0; sz_name[i]; i++ )
+		{
+			if( sz < (1024*1024) || !sz_name[i+1] )
+			{
+				int isz = sz/1024;
+				if( isz > 9 )
+					result.append( format_string( L"%d%ls", isz, sz_name[i] ));
+				else
+					result.append( format_string( L"%.1f%ls", (double)sz/1024, sz_name[i] ));
+				break;
+			}
+			sz /= 1024;
+			
+		}
+	}
+    
+    return result;
 }
 
 double timef()

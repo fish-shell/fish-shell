@@ -594,7 +594,7 @@ int complete_is_valid_option( const wchar_t *str,
 			{
 
                 //PCA Rewrite this
-				wchar_t *str_pos = wcschr(i->short_opt_str.c_str(), *a);
+				wchar_t *str_pos = const_cast<wchar_t*>(wcschr(i->short_opt_str.c_str(), *a));
 
 				if  (str_pos )
 				{

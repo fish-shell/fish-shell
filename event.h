@@ -12,8 +12,9 @@
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
 
+#include <memory>
+
 #include "common.h"
-#include "event.h"
 
 /**
    The signal number that is used to match any signal

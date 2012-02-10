@@ -25,6 +25,7 @@
 #include <time.h>
 #include <vector>
 #include <deque>
+#include <algorithm>
 
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
@@ -128,7 +129,7 @@ void exec_close( int fd )
 	}
 	
     /* Maybe remove this form our set of open fds */
-    open_fds.erase(remove(open_fds.begin(), open_fds.end(), fd), open_fds.end());
+    open_fds.erase(std::remove(open_fds.begin(), open_fds.end(), fd), open_fds.end());
 }
 
 int exec_pipe( int fd[2])

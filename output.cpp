@@ -113,7 +113,7 @@ static int (*out)(char c) = &writeb_internal;
 /**
    Name of terminal
  */
-static wchar_t *current_term = 0;
+static wcstring current_term;
 
 
 void output_set_writer( int (*writer)(char) )
@@ -570,12 +570,10 @@ int output_color_code( const wcstring &val, bool is_background ) {
 
 void output_set_term( const wchar_t *term )
 {
-	current_term = halloc_wcsdup(global_context, term);
+	current_term = term;
 }
 
-wchar_t *output_get_term()
+const wchar_t *output_get_term()
 {
-	return (wchar_t *)(current_term ? current_term : L"<unknown>");
+    return current_term.empty() ? L"<unknown>" : current_term.c_str();
 }
-
-

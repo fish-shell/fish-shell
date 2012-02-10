@@ -158,6 +158,6 @@ void output_set_term( const wchar_t *term );
 /**
    Return the terminal name
  */
-wchar_t *output_get_term();
+const wchar_t *output_get_term();
 
 #endif

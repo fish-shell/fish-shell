@@ -32,7 +32,7 @@ wildcards using **.
 #include "expand.h"
 #include "exec.h"
 #include "halloc_util.h"
-
+#include <map>
 
 /**
    This flag is set in the flags parameter of wildcard_expand if the
@@ -103,17 +103,8 @@ wildcards using **.
 #define COMPLETE_DIRECTORY_DESC _( L"Directory" )
 
 /** Hashtable containing all descriptions that describe an executable */
-static hash_table_t *suffix_hash=0;
+static std::map<wcstring, wcstring> suffix_map;
 
-
-/**
-   Free hash key and hash value
-*/
-static void clear_hash_entry( void *key, void *data )
-{
-	free( (void *)key );
-	free( (void *)data );
-}
 
 int wildcard_has( const wchar_t *str, int internal )
 {
@@ -358,15 +349,12 @@ static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
    does not perform any caching, it directly calls the mimedb command
    to do a lookup.
  */
-static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
+static wcstring complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 {
 
-	wchar_t *suff = wcsdup( suff_orig );
-	wchar_t *cmd = wcsdupcat( SUFFIX_CMD_STR, suff );
-
-	if( !suff || !cmd )
-		DIE_MEM();
-	
+    wcstring suff = suff_orig;
+    wcstring cmd = wcstring(SUFFIX_CMD_STR) + suff;
+    
     wcstring_list_t lst;
     wcstring desc;
 	
@@ -388,60 +376,31 @@ static wchar_t *complete_get_desc_suffix_internal( const wchar_t *suff_orig )
 		}
 	}
 	
-	free(cmd);
-		
-	if( ! desc.size() )
+	if( desc.empty() )
 	{
 		desc = COMPLETE_FILE_DESC;
 	}
 	
-    wchar_t *tmp = wcsdup(desc.c_str());
-	hash_put( suffix_hash, suff, tmp );
-
-	return tmp;
+    suffix_map[suff] = desc.c_str();
+	return desc;
 }
-
-/**
-   Free the suffix_hash hash table and all memory used by it.
- */
-static void complete_get_desc_destroy_suffix_hash()
-{
-	if( suffix_hash )
-	{
-		hash_foreach( suffix_hash, &clear_hash_entry );
-		hash_destroy( suffix_hash );
-		free( suffix_hash );
-	}
-}
-
-
 
 
 /**
    Use the mimedb command to look up a description for a given suffix
 */
-static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
+static wcstring complete_get_desc_suffix( const wchar_t *suff_orig )
 {
 
 	int len;
 	wchar_t *suff;
 	wchar_t *pos;
 	wchar_t *tmp;
-	wchar_t *desc;
 
 	len = wcslen(suff_orig );
 	
 	if( len == 0 )
 		return COMPLETE_FILE_DESC;
-
-	if( !suffix_hash )
-	{
-		suffix_hash = (hash_table_t *)malloc( sizeof( hash_table_t) );
-		if( !suffix_hash )
-			DIE_MEM();
-		hash_init( suffix_hash, &hash_wcs_func, &hash_wcs_cmp );
-		halloc_register_function_void( global_context, &complete_get_desc_destroy_suffix_hash );
-	}
 
 	suff = wcsdup(suff_orig);
 
@@ -456,17 +415,19 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
 			break;
 		}
 	}
-
+    
 	tmp = escape( suff, 1 );
 	free(suff);
 	suff = tmp;
-	desc = (wchar_t *)hash_get( suffix_hash, suff );
+    
+    std::map<wcstring, wcstring>::iterator iter = suffix_map.find(suff);
+    wcstring desc;
+    if (iter != suffix_map.end()) {
+        desc = iter->second;
+    } else {
+        desc = complete_get_desc_suffix_internal( suff );
+    }
 
-	if( !desc )
-	{
-		desc = complete_get_desc_suffix_internal( suff );
-	}
-	
 	free( suff );
 
 	return desc;
@@ -486,7 +447,7 @@ static const wchar_t *complete_get_desc_suffix( const wchar_t *suff_orig )
    \param err The errno value after a failed stat call on the file. 
 */
 
-static const wchar_t *file_get_desc( const wchar_t *filename, 
+static wcstring file_get_desc( const wchar_t *filename, 
 									 int lstat_res,
 									 struct stat lbuf, 
 									 int stat_res, 
@@ -626,7 +587,6 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 					  const wchar_t *wc,
 					  int is_cmd )
 {
-	const wchar_t *desc;
 	struct stat buf, lbuf;
     wcstring sb;
 	
@@ -679,7 +639,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		}
 	}
 	
-	desc = file_get_desc( fullname, lstat_res, lbuf, stat_res, buf, stat_errno );
+	wcstring desc = file_get_desc( fullname, lstat_res, lbuf, stat_res, buf, stat_errno );
 		
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{

@@ -583,12 +583,14 @@ install: all install-sh check-uninstall install-force
 #
 # Force installation, even in presense of incompatible previous
 # version. This may fail.
+# These 'true' lines are to prevent installs from failing for (e.g.) missing man pages.
 #
 
 install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
+		true ;\
 	done;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
@@ -599,12 +601,15 @@ install-force: all install-translations
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
 	for i in $(COMPLETIONS_DIR_FILES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
+		true; \
 	done;
 	for i in $(FUNCTIONS_DIR_FILES); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
+		true; \
 	done;
 	for i in share/man/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/; \
+		true; \
 	done;
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	for i in user_doc/html/* ChangeLog; do \
@@ -615,6 +620,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1
 	for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \
+		true; \
 	done;
 	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.

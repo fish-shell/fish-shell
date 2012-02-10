@@ -297,6 +297,12 @@ class job_t
     ~job_t() {
         if (first_process != NULL)
             delete first_process;
+        io_data_t *data = this->io;
+        while (data) {
+            io_data_t *tmp = data->next;
+            delete data;
+            data = tmp;
+        }
     }
         
     
@@ -336,7 +342,7 @@ class job_t
 	const int job_id;
 	
 	/**
-	   List of all IO redirections for this job 
+	   List of all IO redirections for this job. This linked list is allocated via new, and owned by the object, which should delete them.
 	*/
 	io_data_t *io;
 

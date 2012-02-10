@@ -443,46 +443,6 @@ bool path_can_get_cdpath(const wcstring &in) {
     return result;
 }
 
-wchar_t *path_get_config( void *context)
-{
-	int done = 0;
-	wcstring res;
-	
-	const env_var_t xdg_dir  = env_get_string( L"XDG_CONFIG_HOME" );
-	if( ! xdg_dir.missing() )
-	{
-		res = xdg_dir + L"/fish";
-		if( !create_directory( res.c_str() ) )
-		{
-			done = 1;
-		}
-	}
-	else
-	{		
-		const env_var_t home = env_get_string( L"HOME" );
-		if( ! home.missing() )
-		{
-			res = home + L"/.config/fish";
-			if( !create_directory( res.c_str() ) )
-			{
-				done = 1;
-			}
-		}
-	}
-	
-	if( done )
-	{
-        wchar_t *result = wcsdup(res.c_str());
-		halloc_register_function( context, &free, result );
-		return result;
-	}
-	else
-	{
-		debug( 0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access." ));
-		return 0;
-	}	
-}
-
 
 bool path_get_config(wcstring &path)
 {

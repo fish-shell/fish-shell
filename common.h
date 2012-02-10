@@ -361,6 +361,7 @@ public:
 void append_path_component(wcstring &path, const wcstring &component);
 
 wcstring format_string(const wchar_t *format, ...);
+wcstring vformat_string(const wchar_t *format, va_list va_orig);
 
 /**
    Returns a newly allocated wide character string array equivalent of

@@ -113,11 +113,6 @@ int debug_level=1;
 */
 static struct winsize termsize;
 
-/**
-   String buffer used by the wsetlocale function
-*/
-static string_buffer_t *setlocale_buff=0;
-
 
 void show_stackframe() 
 {
@@ -485,19 +480,25 @@ wchar_t **strv2wcsv( const char **in )
 	return res;
 
 }
-
 wcstring format_string(const wchar_t *format, ...)
 {
 	va_list va;
 	va_start( va, format );
-    string_buffer_t buffer;
-    sb_init(&buffer);
-    sb_vprintf(&buffer, format, va);
-    wcstring result = (wchar_t *)buffer.buff;
-    sb_destroy(&buffer);
+    wcstring result = vformat_string(format, va);
 	va_end( va );
     return result;
 }
+
+wcstring vformat_string(const wchar_t *format, va_list va_orig)
+{
+    string_buffer_t buffer;
+    sb_init(&buffer);
+    sb_vprintf(&buffer, format, va_orig);
+    wcstring result = (wchar_t *)buffer.buff;
+    sb_destroy(&buffer);
+    return result;
+}
+
 
 wchar_t *wcsvarname( const wchar_t *str )
 {

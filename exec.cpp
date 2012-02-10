@@ -950,11 +950,11 @@ void exec( parser_t &parser, job_t *j )
 	{
 		if( j->io )
 		{
-			j->io = io_add( io_duplicate( j, parser.block_io), j->io );
+			j->io = io_add( io_duplicate(parser.block_io), j->io );
 		}
 		else
 		{
-			j->io=io_duplicate( j, parser.block_io);				
+			j->io=io_duplicate(parser.block_io);				
 		}
 	}
 

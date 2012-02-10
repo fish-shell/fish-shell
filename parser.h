@@ -289,7 +289,7 @@ class parser_t {
     int err_pos;
     
     /** Description of last error */
-    string_buffer_t *err_buff;
+    wcstring err_buff;
     
     /** Pointer to the current tokenizer */
     tokenizer *current_tokenizer;

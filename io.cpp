@@ -48,8 +48,6 @@ Utilities for io redirection.
 #include "common.h"
 #include "io.h"
 
-#include "halloc.h"
-
 
 void io_buffer_read( io_data_t *d )
 {
@@ -195,23 +193,15 @@ io_data_t *io_remove( io_data_t *list, io_data_t *element )
 	return list;
 }
 
-io_data_t *io_duplicate( void *context, io_data_t *l )
+io_data_t *io_duplicate( io_data_t *l )
 {
 	io_data_t *res;
 	
 	if( l == 0 )
 		return 0;
 
-	res = (io_data_t *)halloc( context, sizeof( io_data_t) );
-	
-	if( !res )
-	{
-		DIE_MEM();
-		
-	}
-	
-	memcpy( res, l, sizeof(io_data_t ));
-	res->next=io_duplicate( context, l->next );
+	res = new io_data_t(*l);
+	res->next=io_duplicate(l->next );
 	return res;	
 }
 

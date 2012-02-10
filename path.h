@@ -18,10 +18,9 @@
    Returns the user configuration directory for fish. If the directory
    or one of it's parents doesn't exist, they are first created.
 
-   \param context the halloc context to use for memory allocations
-   \return 0 if the no configuration directory can be located or created, the directory path otherwise.
+   \param path The directory as an out param
+   \return whether the directory was returned successfully
 */
-wchar_t *path_get_config( void *context);
 bool path_get_config(wcstring &path);
 
 /**

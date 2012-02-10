@@ -11,7 +11,7 @@ enum io_mode
 ;
 
 /** Represents an FD redirection */
-typedef struct io_data
+struct io_data_t
 {
 	/** Type of redirect */
 	int io_mode;
@@ -41,8 +41,7 @@ typedef struct io_data
 		buffer_t *out_buffer;		
 		/** Whether to close old_fd for IO_FD */
 		int close_old;
-	} param2
-	;
+	} param2;
 
 	/**
 	  Set to true if this is an input io redirection
@@ -50,9 +49,10 @@ typedef struct io_data
 	int is_input;
 	
 	/** Pointer to the next IO redirection */
-	struct io_data *next;
-}
-io_data_t;
+	io_data_t *next;
+    
+    io_data_t() : next(NULL) { }
+};
 
  
 /**
@@ -66,9 +66,9 @@ io_data_t *io_add( io_data_t *first_chain, io_data_t *decond_chain );
 io_data_t *io_remove( io_data_t *list, io_data_t *element );
 
 /**
-   Make a copy of the specified chain of redirections. Uses halloc.
+   Make a copy of the specified chain of redirections. Uses operator new.
 */
-io_data_t *io_duplicate( void *context, io_data_t *l );
+io_data_t *io_duplicate( io_data_t *l );
 
 /**
    Return the last io redirection in the chain for the specified file descriptor.

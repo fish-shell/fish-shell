@@ -361,7 +361,6 @@ parser_t::parser_t(enum parser_type_t type) :
     parser_type(type),
     error_code(0),
     err_pos(0),
-    err_buff(NULL),
     current_tokenizer(NULL),
     lineinfo(NULL),
     current_tokenizer_pos(0),
@@ -602,17 +601,11 @@ void parser_t::error( int ec, int p, const wchar_t *str, ... )
 
 	CHECK( str, );
 	
-	if( !err_buff )
-		err_buff = sb_halloc( global_context );
-	sb_clear( err_buff );	
-
 	error_code = ec;
 	err_pos = p;
 
 	va_start( va, str );
-	
-	sb_vprintf( err_buff, str, va );
-	
+    err_buff = vformat_string(str, va);
 	va_end( va );
 
 }
@@ -744,11 +737,11 @@ void parser_t::print_errors( string_buffer_t *target, const wchar_t *prefix )
 	CHECK( target, );
 	CHECK( prefix, );
 	
-	if( error_code && err_buff )
+	if( error_code && ! err_buff.empty() )
 	{
 		int tmp;
 
-		sb_printf( target, L"%ls: %ls\n", prefix, (wchar_t *)err_buff->buff );
+		sb_printf( target, L"%ls: %ls\n", prefix, err_buff.c_str() );
 
 		tmp = current_tokenizer_pos;
 		current_tokenizer_pos = err_pos;
@@ -764,9 +757,9 @@ void parser_t::print_errors( string_buffer_t *target, const wchar_t *prefix )
 */
 void parser_t::print_errors_stderr()
 {
-	if( error_code && err_buff )
+	if( error_code && ! err_buff.empty() )
 	{
-		debug( 0, L"%ls", (wchar_t *)err_buff->buff );
+		debug( 0, L"%ls", err_buff.c_str() );
 		int tmp;
 		
 		tmp = current_tokenizer_pos;
@@ -1415,7 +1408,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 			case TOK_REDIRECT_NOCLOB:
 			{
 				int type = tok_last_type( tok );
-				io_data_t *new_io;
+                std::auto_ptr<io_data_t> new_io;
                 wcstring target;
 				bool has_target = false;
 				wchar_t *end;
@@ -1440,9 +1433,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 					break;
 				}
 
-				new_io = (io_data_t *)halloc( j, sizeof(io_data_t) );
-				if( !new_io )
-					DIE_MEM();
+				new_io.reset(new io_data_t);
 
 				errno = 0;
 				new_io->fd = wcstol( tok_last( tok ),
@@ -1557,7 +1548,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 					}
 				}
 
-				j->io = io_add( j->io, new_io );
+				j->io = io_add( j->io, new_io.release() );
 				
 			}
 			break;

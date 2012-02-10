@@ -1245,7 +1245,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 
 	int matched_wildcard = 0, unmatched_wildcard = 0;
 
-	wchar_t *unmatched = 0;
+	wcstring unmatched;
 	int unmatched_pos=0;
 
 	/*
@@ -1374,9 +1374,9 @@ void parser_t::parse_job_argument_list( process_t *p,
 						case EXPAND_WILDCARD_NO_MATCH:
 						{
 							unmatched_wildcard = 1;
-							if( !unmatched )
+							if( unmatched.empty() )
 							{
-								unmatched = halloc_wcsdup( j, tok_last( tok ));
+                                unmatched = tok_last(tok);
 								unmatched_pos = tok_get_pos( tok );
 							}
 
@@ -1589,7 +1589,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 			{
 				int tmp;
 
-				debug( 1, WILDCARD_ERR_MSG, unmatched );
+				debug( 1, WILDCARD_ERR_MSG, unmatched.c_str() );
 				tmp = current_tokenizer_pos;
 				current_tokenizer_pos = unmatched_pos;
 

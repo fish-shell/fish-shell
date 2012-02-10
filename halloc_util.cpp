@@ -74,19 +74,6 @@ void *halloc_register( void *context, void *data )
 	return data;
 }
 
-wchar_t *halloc_wcsdup( void *context, const wchar_t *in )
-{
-	size_t len=wcslen(in);
-	wchar_t *out = (wchar_t *)halloc( context, sizeof( wchar_t)*(len+1));
-	
-	if( out == 0 )
-	{
-		DIE_MEM();
-	}
-	memcpy( out, in, sizeof( wchar_t)*(len+1));
-	return out;
-}
-
 wchar_t *halloc_wcsndup( void * context, const wchar_t *in, int c )
 {
 	wchar_t *res = (wchar_t *)halloc( context, sizeof(wchar_t)*(c+1) );

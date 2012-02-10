@@ -46,8 +46,6 @@
 #include "expand.h"
 #include "signal.h"
 
-#include "halloc.h"
-#include "halloc_util.h"
 #include "parse_util.h"
 
 /**

@@ -52,12 +52,6 @@ void halloc_register_function_void( void *context, void (*func)() );
 void *halloc_register( void *context, void *data );
 
 /**
-   Make a copy of the specified string using memory allocated using
-   halloc and the specified context
-*/
-wchar_t *halloc_wcsdup( void *context, const wchar_t *str );
-
-/**
    Make a copy of the specified substring using memory allocated using
    halloc and the specified context
 */

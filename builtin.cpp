@@ -59,8 +59,6 @@
 #include "signal.h"
 #include "exec.h"
 #include "highlight.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "parse_util.h"
 #include "parser_keywords.h"
 #include "expand.h"

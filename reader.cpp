@@ -101,8 +101,6 @@ commence.
 #include "output.h"
 #include "signal.h"
 #include "screen.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "iothread.h"
 #include "intern.h"
 
@@ -1338,19 +1336,15 @@ static void reader_flash()
    exact replacement, e.g. if the COMPLETE_DONT_ESCAPE flag is set.
  */
 
-int reader_can_replace( const wchar_t *in, int flags )
+static int reader_can_replace( const wcstring &in, int flags )
 {
 
-	const wchar_t * str = in;
+	const wchar_t * str = in.c_str();
 
 	if( flags & COMPLETE_DONT_ESCAPE )
 	{
 		return 1;
 	}
-	
-
-	CHECK( in, 1 );
-
 	/*
 	  Test characters that have a special meaning in any character position
 	*/
@@ -1382,20 +1376,17 @@ int reader_can_replace( const wchar_t *in, int flags )
 
 static int handle_completions( std::vector<completion_t> &comp )
 {
-	void *context = 0;
 	wchar_t *base = 0;
 	int len = 0;
 	int done = 0;
 	int count = 0;
 	int flags=0;
 	const wchar_t *begin, *end, *buff = data->command_line.c_str();
-	wchar_t *tok;
 	
 	parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
 	end = buff+data->buff_pos;
 	
-	context = halloc( 0, 0 );
-	tok = halloc_wcsndup( context, begin, end-begin );
+    const wcstring tok(begin, end - begin);
 	
 	/*
 	  Check trivial cases
@@ -1494,7 +1485,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 		if( begin )
 		{
 
-			int offset = wcslen( tok );
+			int offset = tok.size();
 			
 			count = 0;
 			
@@ -1601,11 +1592,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 		s_reset( &data->screen, 1 );
 		reader_repaint();
 
-	}
-
-		
-	halloc_free( context );
-
+	}		
 	return len;
 	
 

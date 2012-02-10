@@ -36,8 +36,6 @@
 #include "parser_keywords.h"
 #include "env.h"
 #include "expand.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "builtin_scripts.h"
 
 /**

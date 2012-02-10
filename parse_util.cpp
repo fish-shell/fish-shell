@@ -38,7 +38,6 @@
 #include "env.h"
 #include "signal.h"
 #include "wildcard.h"
-#include "halloc_util.h"
 
 /**
    Maximum number of autoloaded items opf a specific type to keep in

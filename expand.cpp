@@ -45,8 +45,6 @@ parameter expansion.
 #include "complete.h"
 
 #include "parse_util.h"
-#include "halloc.h"
-#include "halloc_util.h"
 
 /**
    Error issued on invalid variable name

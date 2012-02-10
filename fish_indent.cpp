@@ -37,8 +37,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "util.h"
 #include "common.h"
 #include "wutil.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "tokenizer.h"
 #include "print_help.h"
 #include "parser_keywords.h"
@@ -378,8 +376,6 @@ int main( int argc, char **argv )
 		}		
 	}
 
-	halloc_util_init();	
-
 	sb_init( &sb_in );
 	sb_init( &sb_out );
 
@@ -401,8 +397,6 @@ int main( int argc, char **argv )
 	
 
 	wutil_destroy();
-
-	halloc_util_destroy();
 
 	return 0;
 }

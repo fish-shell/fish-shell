@@ -72,8 +72,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "signal.h"
 #include "event.h"
 
-#include "halloc.h"
-#include "halloc_util.h"
+#include <deque>
 #include "output.h"
 
 /**
@@ -132,11 +131,10 @@ static string_buffer_t event_status;
 /**
    A stack containing the values of is_interactive. Used by proc_push_interactive and proc_pop_interactive.
 */
-static array_list_t *interactive_stack;
+static std::deque<int> interactive_stack;
 
 void proc_init()
 {
-	interactive_stack = al_halloc( global_context );
 	proc_push_interactive( 0 );
     event.arguments.reset(new wcstring_list_t);
 	sb_init( &event_pid );
@@ -179,8 +177,7 @@ void job_promote(job_t *job)
 void job_free( job_t * j )
 {
 	job_remove( j );
-    j->~job_t();
-    halloc_free( j );
+    delete j;
 }
 
 void process_t::free_argv(void) {
@@ -239,8 +236,7 @@ job_t *job_create()
 	while( job_get( free_id ) != 0 )
 		free_id++;
         
-    void *buff = halloc( 0, sizeof(job_t) );
-    job_t *res = new (buff) job_t(free_id);
+    job_t *res = new job_t(free_id);
     job_list().push_front(res);
     
 	job_set_flag( res, 
@@ -1254,7 +1250,7 @@ void proc_sanity_check()
 void proc_push_interactive( int value )
 {
 	int old = is_interactive;
-	al_push_long( interactive_stack, (long)is_interactive );
+    interactive_stack.push_back(is_interactive);
 	is_interactive = value;
 	if( old != value )
 		signal_set_handlers();
@@ -1263,7 +1259,8 @@ void proc_push_interactive( int value )
 void proc_pop_interactive()
 {
 	int old = is_interactive;
-	is_interactive= (int)al_pop_long(interactive_stack);
+	is_interactive= interactive_stack.back();
+    interactive_stack.pop_back();
 	if( is_interactive != old )
 		signal_set_handlers();
 }

@@ -15,8 +15,6 @@
 #include "common.h"
 #include "env.h"
 #include "wutil.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "path.h"
 #include "expand.h"
 

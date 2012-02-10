@@ -31,7 +31,6 @@ wildcards using **.
 #include "reader.h"
 #include "expand.h"
 #include "exec.h"
-#include "halloc_util.h"
 #include <map>
 
 /**

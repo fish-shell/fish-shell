@@ -58,8 +58,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "exec.h"
 #include "event.h"
 #include "output.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "history.h"
 #include "path.h"
 
@@ -275,7 +273,6 @@ int main( int argc, char **argv )
 	const char *cmd=0;
 	int my_optind=0;
 
-	halloc_util_init();	
 	set_main_thread();
 
 	wsetlocale( LC_ALL, L"" );
@@ -388,8 +385,6 @@ int main( int argc, char **argv )
 	parser.destroy();
 	wutil_destroy();
 	event_destroy();
-	
-	halloc_util_destroy();
 	
 	env_destroy();
 	

@@ -59,8 +59,6 @@
 #include "output.h"
 #include "input_common.h"
 #include "env_universal.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "print_help.h"
 
 enum 
@@ -203,7 +201,7 @@ struct comp_t
 */
 static int get_color( int highlight )
 {
-	wchar_t *val;
+	const wchar_t *val;
 
 	if( highlight < 0 )
 		return FISH_COLOR_NORMAL;
@@ -1210,7 +1208,6 @@ int main( int argc, char **argv )
 	  This initialization is made early, so that the other init code
 	  can use global_context for memory managment
 	*/
-	halloc_util_init();
 	program_name = L"fish_pager";
 
 
@@ -1450,7 +1447,5 @@ int main( int argc, char **argv )
 	}
 	destroy();
 
-	halloc_util_destroy();
-	
 }
 

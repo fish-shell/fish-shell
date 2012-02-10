@@ -54,7 +54,6 @@
 #include "expand.h"
 #include "common.h"
 #include "output.h"
-#include "halloc_util.h"
 #include "highlight.h"
 
 /**

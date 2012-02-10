@@ -133,7 +133,7 @@ const wchar_t *wgettext( const wchar_t *in );
 /**
    Wide character version of getenv
 */
-wchar_t *wgetenv( const wchar_t *name );
+const wchar_t *wgetenv( const wchar_t *name );
 
 /**
    Wide character version of mkdir

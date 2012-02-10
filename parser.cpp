@@ -40,8 +40,6 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "event.h"
 #include "intern.h"
 #include "parse_util.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "path.h"
 #include "signal.h"
 #include "complete.h"
@@ -394,11 +392,8 @@ static int block_count( block_t *b )
 
 void parser_t::push_block( int type )
 {
-//    block_t zerod = {};
-//	block_t *newv = new block_t(zerod);
-    void *buffer = halloc( 0, sizeof( block_t ));
-    bzero(buffer, sizeof(block_t));
-    block_t *newv = new(buffer) block_t();
+    block_t zerod = {};
+	block_t *newv = new block_t(zerod);
 	
 	newv->src_lineno = parser_t::get_lineno();
 	newv->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
@@ -460,8 +455,7 @@ void parser_t::pop_block()
     if (old->wants_pop_env)
         env_pop();
     
-    old->~block_t();
-    halloc_free(old);
+    delete old;
 }
 
 const wchar_t *parser_t::get_block_desc( int block ) const
@@ -2796,12 +2790,6 @@ int parser_t::test( const  wchar_t * buff,
 	int needs_cmd=0; 
 
 	/*
-	  halloc context used for calls to expand() and other memory
-	  allocations. Free'd at end of this function.
-	*/
-	void *context;
-
-	/*
 	  Counter on the number of arguments this function has encountered
 	  so far. Is set to -1 when the count is unknown, i.e. after
 	  encountering an argument that contains substitutions that can
@@ -2828,7 +2816,6 @@ int parser_t::test( const  wchar_t * buff,
 		
 	}
 		
-	context = halloc( 0, 0 );
 	current_tokenizer = &tok;
 
 	for( tok_init( &tok, buff, 0 );
@@ -3519,9 +3506,7 @@ int parser_t::test( const  wchar_t * buff,
 	/*
 	  Cleanup
 	*/
-	
-	halloc_free( context );
-	
+		
 	tok_destroy( &tok );
 
 	current_tokenizer=previous_tokenizer;

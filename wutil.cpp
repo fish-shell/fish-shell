@@ -29,8 +29,6 @@
 
 #include "common.h"
 #include "wutil.h"
-#include "halloc.h"
-#include "halloc_util.h"
 
 typedef std::string cstring;
 
@@ -337,27 +335,18 @@ const wchar_t *wgettext( const wchar_t *in )
 	return wres;
 }
 
-wchar_t *wgetenv( const wchar_t *name )
+const wchar_t *wgetenv( const wchar_t *name )
 {
+    ASSERT_IS_MAIN_THREAD();
     cstring name_narrow = wcs2string(name);
 	char *res_narrow = getenv( name_narrow.c_str() );
-	static string_buffer_t *out = 0;
+	static wcstring out;
 
 	if( !res_narrow )
 		return 0;
 	
-	if( !out )
-	{
-		out = sb_halloc( global_context );
-	}
-	else
-	{
-		sb_clear( out );
-	}
-
-	sb_printf( out, L"%s", res_narrow );
-	
-	return (wchar_t *)out->buff;
+    out = format_string(L"%s", res_narrow);
+	return out.c_str();
 	
 }
 

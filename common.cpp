@@ -86,8 +86,6 @@ parts of fish.
 #include "complete.h"
 
 #include "util.cpp"
-#include "halloc.cpp"
-#include "halloc_util.cpp"
 #include "fallback.cpp"
 
 /**

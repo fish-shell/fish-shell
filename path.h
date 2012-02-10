@@ -27,7 +27,6 @@ bool path_get_config(wcstring &path);
    Finds the full path of an executable in a newly allocated string.
    
    \param cmd The name of the executable.
-   \param context the halloc context to use for memory allocations
    \return 0 if the command can not be found, the path of the command otherwise. The result should be freed with free().
 */
 wchar_t *path_get_path( const wchar_t *cmd );

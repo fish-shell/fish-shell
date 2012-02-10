@@ -70,8 +70,6 @@ time the original barrier request was sent have been received.
 #include "common.h"
 #include "wutil.h"
 #include "env_universal_common.h"
-#include "halloc.h"
-#include "halloc_util.h"
 #include "path.h"
 #include "print_help.h"
 
@@ -572,7 +570,6 @@ int main( int argc, char ** argv )
 	
 	fd_set read_fd, write_fd;
 
-	halloc_util_init();
 	set_main_thread();
 	
 	program_name=L"fishd";
@@ -779,6 +776,5 @@ int main( int argc, char ** argv )
 		}		
 
 	}
-	halloc_util_destroy();
 }
 

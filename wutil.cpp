@@ -279,24 +279,6 @@ wcstring wbasename( const wcstring &path )
 }
 
 /**
-   For wgettext: Internal shutdown function. Automatically called on shutdown if the library has been initialized.
-*/
-static void wgettext_destroy()
-{
-	int i;
-
-	if( !wgettext_is_init )
-		return;
-	
-	wgettext_is_init = 0;
-	
-	for(i=0; i<BUFF_COUNT; i++ )
-		sb_destroy( &buff[i] );
-
-	free( wcs2str_buff );
-}
-
-/**
    For wgettext: Internal init function. Automatically called when a translation is first requested.
 */
 static void wgettext_init()
@@ -309,8 +291,6 @@ static void wgettext_init()
 	{
 		sb_init( &buff[i] );
 	}
-	
-	halloc_register_function_void( global_context, &wgettext_destroy );
 	
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );

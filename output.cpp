@@ -529,7 +529,7 @@ int output_color_code( const wcstring &val, bool is_background ) {
 		return FISH_COLOR_NORMAL;
 	
     wcstring_list_t el;
-	tokenize_variable_array2( val, el );
+	tokenize_variable_array( val, el );
 	
 	for(size_t j=0; j < el.size(); j++ ) {
         const wcstring &next = el.at(j);

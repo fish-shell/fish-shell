@@ -111,7 +111,7 @@ int autoload_t::load( const wcstring &cmd, bool reload )
     
     /* Get the list of paths from which we will try to load */
     std::vector<wcstring> path_list;
-	tokenize_variable_array2( path_var, path_list );
+	tokenize_variable_array( path_var, path_list );
 
 	/* Try loading it */
 	res = this->locate_file_and_maybe_load_it( cmd, true, reload, path_list );
@@ -131,7 +131,7 @@ bool autoload_t::can_load( const wcstring &cmd, const env_vars &vars )
     
     const wcstring path_var(path_var_ptr);        
     std::vector<wcstring> path_list;
-	tokenize_variable_array2( path_var, path_list );
+	tokenize_variable_array( path_var, path_list );
     return this->locate_file_and_maybe_load_it( cmd, false, false, path_list );
 }
 

@@ -315,16 +315,6 @@ int hash_ptr_cmp( void *a,
                   void *b );
 
 
-/** 
-	Initialize the list. 
-*/
-void al_init( array_list_t *l );
-
-/** 
-	Destroy the list and free memory used by it.
-*/
-void al_destroy( array_list_t *l );
-
 /**
    Append element to list
 

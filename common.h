@@ -188,12 +188,6 @@ extern const wchar_t *program_name;
 */
 void show_stackframe();
 
-/**
-   Take an array_list_t containing wide strings and converts them to a
-   single null-terminated wchar_t **. The array is allocated using
-   malloc, and needs to be fred's by the caller.
-*/
-wchar_t **list_to_char_arr( array_list_t *l );
 
 wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &completions );
 
@@ -209,12 +203,6 @@ wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &c
    character or the end of file (WEOF) character.
 */
 int fgetws2( wchar_t **buff, int *len, FILE *f );
-
-/**
-   Sorts an array_list of wide strings according to the
-   wcsfilecmp-function from the util library
-*/
-void sort_list( array_list_t *comp );
 
 void sort_strings( std::vector<wcstring> &strings);
 
@@ -566,8 +554,7 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff );
    \param val the input string. The contents of this string is not changed.
    \param out the list in which to place the elements. 
 */
-void tokenize_variable_array( const wchar_t *val, array_list_t *out );
-void tokenize_variable_array2( const wcstring &val, wcstring_list_t &out);
+void tokenize_variable_array( const wcstring &val, wcstring_list_t &out);
 
 /**
    Make sure the specified direcotry exists. If needed, try to create

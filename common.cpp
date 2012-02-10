@@ -132,23 +132,6 @@ void show_stackframe()
 	}
 }
 
-
-wchar_t **list_to_char_arr( array_list_t *l )
-{
-	wchar_t ** res = (wchar_t **)malloc( sizeof(wchar_t *)*(al_get_count( l )+1) );
-	int i;
-	if( res == 0 )
-	{
-		DIE_MEM();
-	}
-	for( i=0; i<al_get_count( l ); i++ )
-	{		
-		res[i] = (wchar_t *)al_get(l,i);
-	}
-	res[i]='\0';
-	return res;	
-}
-
 wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &list )
 {
     wcstring_list_t strings;
@@ -218,24 +201,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 
 }
 
-
-/**
-   Wrapper for wcsfilecmp
-*/
-static int str_cmp( const void *a, const void *b )
-{
-	wchar_t *c= *((wchar_t **)a);
-	wchar_t *d= *((wchar_t **)b);
-	return wcsfilecmp( c, d );
-}
-
-void sort_list( array_list_t *comp )
-{
-	qsort( comp->arr, 
-		   al_get_count( comp ),
-		   sizeof( void*),
-		   &str_cmp );
-}
 
 static bool string_sort_predicate(const wcstring& d1, const wcstring& d2)
 {
@@ -1799,7 +1764,7 @@ int common_get_height()
 	return termsize.ws_row;
 }
 
-void tokenize_variable_array2( const wcstring &val, std::vector<wcstring> &out)
+void tokenize_variable_array( const wcstring &val, std::vector<wcstring> &out)
 {
     size_t pos = 0, end = val.size();
     while (pos < end) {
@@ -1809,39 +1774,6 @@ void tokenize_variable_array2( const wcstring &val, std::vector<wcstring> &out)
         pos = next_pos + 1; //skip the separator
     }
     out.push_back(val.substr(pos, end - pos));
-}
-
-void tokenize_variable_array( const wchar_t *val, array_list_t *out )
-{
-	if( val )
-	{
-		wchar_t *cpy = wcsdup( val );
-		wchar_t *pos, *start;
-		wchar_t *next;
-
-		if( !cpy )
-		{
-			DIE_MEM();
-		}
-
-		for( start=pos=cpy; *pos; pos++ )
-		{
-			if( *pos == ARRAY_SEP )
-			{
-				
-				*pos=0;
-				next = start==cpy?cpy:wcsdup(start);
-				if( !next )
-					DIE_MEM();
-				al_push( out, next );
-				start=pos+1;
-			}
-		}
-		next = start==cpy?cpy:wcsdup(start);
-		if( !next )
-			DIE_MEM();
-		al_push( out, next );
-	}
 }
 
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value) {

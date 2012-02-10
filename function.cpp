@@ -118,7 +118,7 @@ static void autoload_names( std::set<wcstring> &names, int get_hidden )
 	
     wcstring_list_t path_list;
 
-	tokenize_variable_array2( path_var, path_list );
+	tokenize_variable_array( path_var, path_list );
 	for( i=0; i<path_list.size(); i++ )
 	{
         const wcstring &ndir_str = path_list.at(i);

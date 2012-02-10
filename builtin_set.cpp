@@ -273,7 +273,7 @@ static int update_values( wcstring_list_t &list,
 	{
 		/*
 		  The '- 1' below is because the indices in fish are
-		  one-based, but the array_list_t uses zero-based indices
+		  one-based, but the vector uses zero-based indices
 		*/
 		long ind = indexes[i] - 1;
 		const wcstring newv = values[ i ];
@@ -592,7 +592,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 //				al_init( &indexes );
                 env_var_t dest_str = env_get_string(dest);
                 if (! dest_str.missing())
-                    tokenize_variable_array2( dest_str, result );
+                    tokenize_variable_array( dest_str, result );
 								
 				if( !parse_index( indexes, arg, dest, result.size() ) )
 				{
@@ -706,7 +706,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		
         const env_var_t dest_str = env_get_string(dest);
         if (! dest_str.missing())
-            tokenize_variable_array2( dest_str, result );
+            tokenize_variable_array( dest_str, result );
 		
 		for( ; woptind<argc; woptind++ )
 		{			

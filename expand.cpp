@@ -187,7 +187,7 @@ wcstring expand_escape_variable( const wcstring &in )
 	wcstring_list_t lst;
 	wcstring buff;
 
-	tokenize_variable_array2( in, lst );
+	tokenize_variable_array( in, lst );
 
 	switch( lst.size() )
 	{
@@ -882,7 +882,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
                 
 				if( is_ok )
 				{
-					tokenize_variable_array2( var_val, var_item_list );                    
+					tokenize_variable_array( var_val, var_item_list );                    
                     
 					if( !all_vars )
 					{

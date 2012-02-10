@@ -1198,25 +1198,6 @@ static void launch( char *filter, const string_list_t &files, int fileno )
 }
 
 /**
-   Clean up one entry from the hash table of launch files
-*/
-static void clear_entry( void *key, void *val )
-{
-	/*
-	  The key is a mime value, either from the libraries internal hash
-	  table of mime types or from the command line. Either way, it
-	  should not be freed.
-
-	  The value is an array_list_t of filenames. The filenames com from
-	  the argument list and should not be freed. The arraylist,
-	  however, should be destroyed and freed.
-	*/
-	array_list_t *l = (array_list_t *)val;
-	al_destroy( l );
-	free( l );
-}
-
-/**
    Do locale specific init
 */
 static void locale_init()

@@ -427,7 +427,7 @@ static void setup_path()
 	
 	if( !path.missing() )
 	{
-		tokenize_variable_array2( path, lst );
+		tokenize_variable_array( path, lst );
 	}
 	
 	for( j=0; path_el[j]; j++ )
@@ -470,7 +470,7 @@ static void setup_path()
             
 			path = env_get_string( L"PATH" );
             lst.resize(0);
-			tokenize_variable_array2( path, lst );			
+			tokenize_variable_array( path, lst );			
 		}
 	}
 }

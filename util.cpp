@@ -581,16 +581,6 @@ int hash_ptr_cmp( void *a,
 	return a == b;
 }
 
-void al_init( array_list_t *l )
-{
-	memset( l, 0, sizeof( array_list_t ) );
-}
-
-void al_destroy( array_list_t *l )
-{
-	free( l->arr );
-}
-
 /**
    Real implementation of all al_push_* versions. Pushes arbitrary
    element to end of list.

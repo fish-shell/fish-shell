@@ -235,7 +235,7 @@ void complete_print( string_buffer_t *out );
 */
 int complete_is_valid_option( const wchar_t *str, 
 							  const wchar_t *opt, 
-							  array_list_t *errors,
+							  wcstring_list_t *inErrorsOrNull,
 							  bool allow_autoload );
 
 /**

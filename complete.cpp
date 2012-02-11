@@ -428,6 +428,15 @@ void complete_remove( const wchar_t *cmd,
 	}
 }
 
+/* Formats an error string by prepending the prefix and then appending the str in single quotes */
+static wcstring format_error(const wchar_t *prefix, const wcstring &str) {
+    wcstring result = prefix;
+    result.push_back(L'\'');
+    result.append(str);
+    result.push_back(L'\'');
+    return result;
+}
+
 /**
    Find the full path and commandname from a command string 'str'.
 */
@@ -448,7 +457,7 @@ static void parse_cmd_string(const wcstring &str, wcstring &path, wcstring &cmd)
 
 int complete_is_valid_option( const wchar_t *str,
 							  const wchar_t *opt,
-							  array_list_t *errors,
+							  wcstring_list_t *errors,
 							  bool allow_autoload )
 {
     wcstring cmd, path;
@@ -493,9 +502,7 @@ int complete_is_valid_option( const wchar_t *str,
 	if( opt[0] != L'-' )
 	{
 		if( errors )
-		{
-			al_push( errors, wcsdup(L"Option does not begin with a '-'") );
-		}
+            errors->push_back(L"Option does not begin with a '-'");
 		return 0;
 	}
 
@@ -642,8 +649,7 @@ int complete_is_valid_option( const wchar_t *str,
 						wchar_t str[2];
 						str[0] = opt[j];
 						str[1]=0;
-						al_push( errors,
-								 wcsdupcat(_( L"Unknown option: " ), L"'", str, L"'" ) );
+                        errors->push_back(format_error(_(L"Unknown option: "), str));
 					}
 
 					opt_found = 0;
@@ -658,16 +664,16 @@ int complete_is_valid_option( const wchar_t *str,
 			opt_found = is_gnu_exact || (gnu_match_set.size() == 1);
 			if( errors && !opt_found )
 			{
-				if( gnu_match_set.empty())
+                const wchar_t *prefix;
+                if( gnu_match_set.empty())
 				{
-					al_push( errors,
-							 wcsdupcat( _(L"Unknown option: "), L"'", opt, L"\'" ) );
+                    prefix = _(L"Unknown option: ");
 				}
 				else
 				{
-					al_push( errors,
-							 wcsdupcat( _(L"Multiple matches for option: "), L"'", opt, L"\'" ) );
+                    prefix = _(L"Multiple matches for option: ");
 				}
+                errors->push_back(format_error(prefix, opt));
 			}
 		}
 	}

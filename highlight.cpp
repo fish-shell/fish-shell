@@ -224,7 +224,7 @@ int highlight_get_color( int highlight, bool is_background )
 static void highlight_param( const wchar_t * buff,
 							 int *color,
 							 int pos,
-							 array_list_t *error )
+							 wcstring_list_t *error )
 {
 	
 	
@@ -532,8 +532,8 @@ static int has_expand_reserved( const wchar_t *str )
 
 
 
-// PCA DOES_IO
-static void tokenize( const wchar_t * const buff, int * const color, const int pos, array_list_t *error, const env_vars &vars) {
+// This function does I/O
+static void tokenize( const wchar_t * const buff, int * const color, const int pos, wcstring_list_t *error, const env_vars &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
 
 	wcstring cmd;    
@@ -728,8 +728,9 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 							}
 							else
 							{
-								if( error )
-									al_push( error, wcsdupcat ( L"Unknown command \'", cmd.c_str(), L"\'" ));
+								if( error ) {
+                                    error->push_back(format_string(L"Unknown command \'%ls\'", cmd.c_str()));
+                                }
 								color[ tok_get_pos( &tok ) ] = (HIGHLIGHT_ERROR);
 							}
 							had_cmd = 1;
@@ -755,7 +756,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				{
 					color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 					if( error )
-						al_push( error, wcsdup ( L"Redirection without a command" ) );
+                        error->push_back(L"Redirection without a command");
 					break;
 				}
 				
@@ -787,7 +788,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 					{
 						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 						if( error )
-							al_push( error, wcsdup ( L"Invalid redirection" ) );
+                            error->push_back(L"Invalid redirection");
 					}
 						
 				}
@@ -808,7 +809,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )
-								al_push( error, wcsdupcat( L"Directory \'", dir.c_str(), L"\' does not exist" ) );
+                                error->push_back(format_string(L"Directory \'%ls\' does not exist", dir.c_str()));
 							
 						}
 					}
@@ -824,7 +825,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )
-								al_push( error, wcsdupcat( L"File \'", target, L"\' does not exist" ) );
+                                error->push_back(format_string(L"File \'%ls\' does not exist", target));
 						}
 					}
 					if( last_type == TOK_REDIRECT_NOCLOB )
@@ -833,7 +834,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )
-								al_push( error, wcsdupcat( L"File \'", target, L"\' exists" ) );
+                                error->push_back(format_string(L"File \'%ls\' exists", target));
 						}
 					}
 				}
@@ -856,7 +857,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				{
 					color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;					
 					if( error )
-						al_push( error, wcsdup ( L"No job to put in background" ) );
+                        error->push_back(L"No job to put in background" );
 				}
 				
 				break;
@@ -886,7 +887,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				 If the tokenizer reports an error, highlight it as such.
 				 */
 				if( error )
-					al_push( error, wcsdup ( tok_last( &tok) ) );
+                    error->push_back(tok_last( &tok));
 				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 				break;				
 			}			
@@ -897,7 +898,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 
 
 // PCA DOES_IO (calls is_potential_path, path_get_path, maybe others)
-void highlight_shell( const wchar_t * const buff, int *color, int pos, array_list_t *error, const env_vars &vars )
+void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_list_t *error, const env_vars &vars )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
@@ -1116,7 +1117,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 	}
 }
 
-void highlight_universal( const wchar_t *buff, int *color, int pos, array_list_t *error, const env_vars &vars )
+void highlight_universal( const wchar_t *buff, int *color, int pos, wcstring_list_t *error, const env_vars &vars )
 {
 	int i;
 	

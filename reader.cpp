@@ -2402,7 +2402,6 @@ static void highlight_complete(void *ctx_ptr, int result) {
 
 static int threaded_highlight(void *ctx_ptr) {
 	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
-    array_list_t *error = 0;
     const wchar_t *delayer = ctx->vars.get(L"HIGHLIGHT_DELAY");
     double secDelay = 0;
     if (delayer) {
@@ -2411,7 +2410,7 @@ static int threaded_highlight(void *ctx_ptr) {
     }
     if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
     //write(0, "Start", 5);
-    ctx->highlight_function( ctx->string_to_highlight.c_str(), ctx->color, ctx->match_highlight_pos, error, ctx->vars );
+    ctx->highlight_function( ctx->string_to_highlight.c_str(), ctx->color, ctx->match_highlight_pos, NULL /* error */, ctx->vars );
     //write(0, "End", 3);
     return 0;
 }

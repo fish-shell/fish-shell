@@ -530,8 +530,8 @@ static void s_set_color( screen_t *s, buffer_t *b, int c )
 	s_writeb_buffer = b;
 	
     unsigned int uc = (unsigned int)c;
-	set_color( highlight_get_color( uc & 0xffff, false ),
-		   highlight_get_color( (uc>>16)&0xffff, true ) );
+	set_color( highlight_get_rgb_color( uc & 0xffff, false ),
+		   highlight_get_rgb_color( (uc>>16)&0xffff, true ) );
 	
 	output_set_writer( writer_old );
 	

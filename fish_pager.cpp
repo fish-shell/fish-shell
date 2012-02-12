@@ -199,14 +199,14 @@ struct comp_t
    This function translates from a highlight code to a specific color
    by check invironement variables
 */
-static int get_color( int highlight )
+static rgb_color_t get_color( int highlight )
 {
 	const wchar_t *val;
 
 	if( highlight < 0 )
-		return FISH_COLOR_NORMAL;
+		return rgb_color_t::normal();
 	if( highlight >= (4) )
-		return FISH_COLOR_NORMAL;
+		return rgb_color_t::normal();
 	
 	val = wgetenv( hightlight_var[highlight]);
 
@@ -217,10 +217,10 @@ static int get_color( int highlight )
 	
 	if( !val )
 	{
-		return FISH_COLOR_NORMAL;
+		return rgb_color_t::normal();
 	}
 	
-	return output_color_code( val, false );	
+	return parse_color( val, false );	
 }
 
 /**
@@ -424,9 +424,9 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
         const wcstring &comp = c->comp.at(i);
 		if( i != 0 )
 			written += print_max( L"  ", comp_width - written, 2 );
-		set_color( get_color(HIGHLIGHT_PAGER_PREFIX),FISH_COLOR_NORMAL );
+		set_color( get_color(HIGHLIGHT_PAGER_PREFIX),rgb_color_t::normal() );
 		written += print_max( prefix, comp_width - written, comp.empty()?0:1 );
-		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION),FISH_COLOR_IGNORE );
+		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION),rgb_color_t::ignore() );
 		written += print_max( comp.c_str(), comp_width - written, i!=(c->comp.size()-1) );
 	}
 
@@ -439,8 +439,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 			writech( L' ');
 		}
 		written += print_max( L"(", 1, 0 );
-		set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ),
-			   FISH_COLOR_IGNORE );
+		set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ), rgb_color_t::ignore() );
 		written += print_max( c->desc.c_str(), desc_width, 0 );
 		written += print_max( L")", 1, 0 );
 	}
@@ -702,8 +701,7 @@ static int completion_try_print( int cols,
 				string_buffer_t msg;
 				sb_init( &msg );
 				
-				set_color( FISH_COLOR_BLACK,
-					   get_color(HIGHLIGHT_PAGER_PROGRESS) );
+				set_color( rgb_color_t::black(), get_color(HIGHLIGHT_PAGER_PROGRESS) );
 				sb_printf( &msg,
 					   _(L" %d to %d of %d"),
 					   pos,
@@ -715,7 +713,7 @@ static int completion_try_print( int cols,
 								
 				writestr((wchar_t *)msg.buff);
 				sb_destroy( &msg );
-				set_color( FISH_COLOR_NORMAL, FISH_COLOR_NORMAL );
+				set_color( rgb_color_t::normal(), rgb_color_t::normal() );
 				pager_flush();
 				int c = readch();
 

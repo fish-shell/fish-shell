@@ -9,6 +9,7 @@
 #define FISH_OUTPUT_H
 
 #include <wchar.h>
+#include "screen.h"
 
 /**
    Constants for various colors as used by the set_color function. 
@@ -71,7 +72,8 @@ enum
 */
 
 
-void set_color( int c, int c2 );
+//void set_color( int c, int c2 );
+void set_color(rgb_color_t c, rgb_color_t c2);
 
 /**
    Write specified multibyte string
@@ -129,6 +131,7 @@ int write_escaped_str( const wchar_t *str, int max_len );
    Return the internal color code representing the specified color
 */
 int output_color_code( const wcstring &val, bool is_background );
+rgb_color_t parse_color( const wcstring &val, bool is_background );
 
 /**
    This is for writing process notification messages. Has to write to

@@ -166,6 +166,54 @@ static bool is_potential_path( const wcstring &cpath )
 	
 }
 
+rgb_color_t highlight_get_rgb_color( int highlight, bool is_background )
+{
+	size_t i;
+	int idx=0;
+	rgb_color_t result;
+
+	if( highlight < 0 )
+		return rgb_color_t::normal();
+	if( highlight > (1<<VAR_COUNT) )
+		return rgb_color_t::normal();
+	for( i=0; i<VAR_COUNT; i++ )
+	{
+		if( highlight & (1<<i ))
+		{
+			idx = i;
+			break;
+		}
+	}
+    
+	env_var_t val_wstr = env_get_string( highlight_var[idx]); 
+
+//	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
+	
+	if (val_wstr.missing())
+		val_wstr = env_get_string( highlight_var[0]);
+	
+	if( ! val_wstr.missing() )
+		result = parse_color( val_wstr, is_background );
+	
+	if( highlight & HIGHLIGHT_VALID_PATH )
+	{
+		env_var_t val2_wstr =  env_get_string( L"fish_color_valid_path" );
+		const wcstring val2 = val2_wstr.missing() ? L"" : val2_wstr.c_str(); 
+
+		rgb_color_t result2 = parse_color( val2, is_background );
+		if( result == rgb_color_t::normal() )
+			result = result2;
+		else 
+		{
+			if( result2.is_bold() )
+				result.set_bold(true);
+			if( result2.is_underline() )
+				result.set_underline(true);
+		}
+		
+	}
+	return result;
+}
 
 
 int highlight_get_color( int highlight, bool is_background )
@@ -215,7 +263,6 @@ int highlight_get_color( int highlight, bool is_background )
 		
 	}
 	return result;
-	
 }
 
 /**

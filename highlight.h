@@ -9,6 +9,7 @@
 
 #include "env.h"
 #include "util.h"
+#include "screen.h"
 
 /**
    Internal value representing highlighting of normal text
@@ -103,5 +104,6 @@ void highlight_universal( const wchar_t *buff, int *color, int pos, wcstring_lis
    FISH_COLOR_RED.
 */
 int highlight_get_color( int highlight, bool is_background );
+rgb_color_t highlight_get_rgb_color( int highlight, bool is_background );
 
 #endif

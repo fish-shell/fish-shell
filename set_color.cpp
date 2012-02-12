@@ -76,8 +76,7 @@ const char *col[]=
 	"cyan",
 	"white",
 	"normal"
-}
-;
+};
 
 const int col_idx[]=
 {
@@ -92,8 +91,7 @@ const int col_idx[]=
 	6,
 	7,
 	8
-}
-;
+};
 
 int translate_color( char *str )
 {

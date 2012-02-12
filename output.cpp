@@ -126,6 +126,216 @@ int (*output_get_writer())(char)
 	return out;
 }
 
+void set_color(rgb_color_t c, rgb_color_t c2)
+{
+    ASSERT_IS_MAIN_THREAD();
+    
+    const rgb_color_t normal = rgb_color_t::normal();
+    static rgb_color_t last_color = rgb_color_t::normal();
+	static rgb_color_t last_color2 = rgb_color_t::normal();
+	static int was_bold=0;
+	static int was_underline=0;
+	int bg_set=0, last_bg_set=0;
+	char *fg = 0, *bg=0;
+
+	int is_bold = 0;
+	int is_underline = 0;
+
+	/*
+	  Test if we have at least basic support for setting fonts, colors
+	  and related bits - otherwise just give up...
+	*/
+	if( !exit_attribute_mode )
+	{
+		return;
+	}
+	
+
+	is_bold |= c.is_bold();
+	is_bold |= c2.is_bold();
+
+	is_underline |= c.is_underline();
+	is_underline |= c2.is_underline();
+
+	if( (set_a_foreground != 0) && (strlen( set_a_foreground) != 0 ) )
+	{
+		fg = set_a_foreground;
+		bg = set_a_background;
+	}
+	else if( (set_foreground != 0) && (strlen( set_foreground) != 0 ) )
+	{
+		fg = set_foreground;
+		bg = set_background;
+	}
+
+	if( c.is_reset() || c2.is_reset())
+	{
+		c = c2 = normal;
+		was_bold=0;
+		was_underline=0;
+		if( fg )
+		{
+			/*
+			  If we exit attibute mode, we must first set a color, or
+			  previously coloured text might lose it's
+			  color. Terminals are weird...
+			*/
+			writembs( tparm( fg, 0 ) );
+		}
+		writembs( exit_attribute_mode );
+		return;
+	}
+
+	if( was_bold && !is_bold )
+	{
+		/*
+		  Only way to exit bold mode is a reset of all attributes. 
+		*/
+		writembs( exit_attribute_mode );
+		last_color = normal;
+		last_color2 = normal;
+		was_bold=0;
+		was_underline=0;
+	}
+	
+	if( last_color2 != rgb_color_t::normal() &&
+		last_color2 != rgb_color_t::reset() &&
+		last_color2 != rgb_color_t::ignore() )
+	{
+		/*
+		  Background was set
+		*/
+		last_bg_set=1;
+	}
+
+	if( c2 != rgb_color_t::normal() &&
+		c2 != rgb_color_t::ignore() )
+	{
+		/*
+		  Background is set
+		*/
+		bg_set=1;
+        // PCA color fix
+		//c = (c2==FISH_COLOR_WHITE)?FISH_COLOR_BLACK:FISH_COLOR_WHITE;
+	}
+
+	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))
+	{
+		if(bg_set && !last_bg_set)
+		{
+			/*
+			  Background color changed and is set, so we enter bold
+			  mode to make reading easier. This means bold mode is
+			  _always_ on when the background color is set.
+			*/
+			writembs( enter_bold_mode );
+		}
+		if(!bg_set && last_bg_set)
+		{
+			/*
+			  Background color changed and is no longer set, so we
+			  exit bold mode
+			*/
+			writembs( exit_attribute_mode );
+			was_bold=0;
+			was_underline=0;
+			/*
+			  We don't know if exit_attribute_mode resets colors, so
+			  we set it to something known.
+			*/
+			if( fg )
+			{
+				writembs( tparm( fg, 0 ) );
+				last_color=rgb_color_t::black();
+			}
+		}
+	}
+
+	if( last_color != c )
+	{
+		if( c==rgb_color_t::normal() )
+		{
+			if( fg )
+			{
+				writembs( tparm( fg, 0 ) );
+			}
+			writembs( exit_attribute_mode );
+
+			last_color2 = rgb_color_t::normal();
+			was_bold=0;
+			was_underline=0;
+		}
+		else if( c.is_named() )
+		{
+			if( fg )
+			{
+				writembs( tparm( fg, c.name_index() ) );
+			}
+		}
+	}
+
+	last_color = c;
+
+	if( last_color2 != c2 )
+	{
+		if( c2 == rgb_color_t::normal() )
+		{
+			if( bg )
+			{
+				writembs( tparm( bg, 0 ) );
+			}
+
+			writembs( exit_attribute_mode );
+			if( ( last_color != rgb_color_t::normal() ) && fg )
+			{
+				if( fg )
+				{
+					writembs( tparm( fg, last_color.name_index() ) );
+				}
+			}
+			
+
+			was_bold=0;
+			was_underline=0;
+			last_color2 = c2;
+		}
+		else if ( c2.is_named() && c2 != normal)
+		{
+			if( bg )
+			{
+				writembs( tparm( bg, c2.name_index() ) );
+			}
+			last_color2 = c2;
+		}
+	}
+
+	/*
+	  Lastly, we set bold mode and underline mode correctly
+	*/
+	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set )
+	{
+		if( is_bold && !was_bold )
+		{
+			if( enter_bold_mode )
+			{
+				writembs( tparm( enter_bold_mode ) );
+			}
+		}
+		was_bold = is_bold;	
+	}
+
+	if( was_underline && !is_underline )
+	{
+		writembs( exit_underline_mode );		
+	}
+	
+	if( !was_underline && is_underline )
+	{
+		writembs( enter_underline_mode );		
+	}
+	was_underline = is_underline;
+	
+}
 
 void set_color( int c, int c2 )
 {
@@ -563,8 +773,42 @@ int output_color_code( const wcstring &val, bool is_background ) {
 		
 	}
 	
-	return color | (is_bold?FISH_COLOR_BOLD:0) | (is_underline?FISH_COLOR_UNDERLINE:0);
+	return color | (is_bold?FISH_COLOR_BOLD:0) | (is_underline?FISH_COLOR_UNDERLINE:0);	
+}
+
+rgb_color_t parse_color( const wcstring &val, bool is_background ) {
+    rgb_color_t result;
+    
+    int is_bold=0;
+	int is_underline=0;
+
+    wcstring_list_t el;
+	tokenize_variable_array( val, el );
 	
+	for(size_t j=0; j < el.size(); j++ ) {
+        const wcstring &next = el.at(j);
+        wcstring color_name;
+        if (is_background) {
+            // look for something like "--background=red"
+            const wcstring prefix = L"--background=";
+            if (string_prefixes_string(prefix, next)) {
+                color_name = wcstring(next, prefix.size());
+            }
+            
+        } else {
+            if (next == L"--bold" || next == L"-o")
+                is_bold = true;
+            else if (next == L"--underline" || next == L"-u")
+                is_underline = true;
+            else
+                color_name = next;
+        }
+        
+        if (! color_name.empty()) {
+            rgb_color_t::parse(color_name, result);
+        }
+    }
+    return result;
 }
 
 void output_set_term( const wchar_t *term )

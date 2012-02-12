@@ -14,22 +14,164 @@
 
 #include <vector>
 
+/* A type that represents a color */
+class rgb_color_t {
+    enum {
+        type_none,
+        type_named,
+        type_rgb,
+        type_reset,
+        type_ignore
+    };
+    unsigned char type;
+    union {
+        unsigned char name_idx; //0-10
+        unsigned char rgb[3];
+    } data;
+    unsigned flags;
+    
+    /* Try parsing an explicit color name like "magenta" */
+    bool try_parse_named(const wcstring &str) {
+        bzero(&data, sizeof data);
+        const struct {const wchar_t * name; unsigned char idx;} names[] = {
+            {L"black", 0},
+            {L"red", 1},
+            {L"green", 2},
+            {L"brown", 3},
+            {L"yellow", 3},
+            {L"blue", 4},
+            {L"magenta", 5},
+            {L"purple", 5},
+            {L"cyan", 6},
+            {L"white", 7},
+            {L"normal", 8}            
+        };
+        size_t max = sizeof names / sizeof *names;
+        for (size_t idx=0; idx < max; idx++) {
+            if (0 == wcscasecmp(str.c_str(), names[idx].name)) {
+                data.name_idx = names[idx].idx;
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    static int parse_hex_digit(wchar_t x) {
+        switch (x) {
+            case L'0': return 0x0;
+            case L'1': return 0x1;
+            case L'2': return 0x2;
+            case L'3': return 0x3;
+            case L'4': return 0x4;
+            case L'5': return 0x5;
+            case L'6': return 0x6;
+            case L'7': return 0x7;
+            case L'8': return 0x8;
+            case L'9': return 0x9;
+            case L'a':case L'A': return 0xA;
+            case L'b':case L'B': return 0xB;
+            case L'c':case L'C': return 0xC;
+            case L'd':case L'D': return 0xD;
+            case L'e':case L'E': return 0xE;
+            case L'f':case L'F': return 0xF;
+            default: return -1;
+        }
+    }
+    
+    bool try_parse_rgb(const wcstring &name) {
+        bzero(&data, sizeof data);
+        /* We support the following style of rgb formats (case insensitive):
+            #FA3
+            #F3A035
+        */
+        size_t i;
+        if (name.size() == 4 && name.at(0) == L'#') {
+            // type #FA3
+            for (i=0; i < 3; i++) {
+                int val = parse_hex_digit(name.at(i));
+                if (val < 0) break;
+                data.rgb[i] = val*16+val;
+            }
+            return i == 3;
+        } else if (name.size() == 7 && name.at(0) == L'#') {
+            // type #F3A035
+            for (i=0; i < 6;) {
+                int hi = parse_hex_digit(name.at(i++));
+                int lo = parse_hex_digit(name.at(i++));
+                if (lo < 0 || hi < 0) break;
+                data.rgb[i] = hi*16+lo;
+            }
+            return i == 6;    
+        } else {
+            return false;
+        }
+    }
+    
+    static rgb_color_t named_color(unsigned char which)
+    {
+        rgb_color_t result(type_named);
+        result.data.name_idx = which;
+        return result;
+    }
+    
+    public:
+    
+    explicit rgb_color_t(unsigned char t = type_none) : type(t), data(), flags() {}
+    
+    static rgb_color_t normal() { return named_color(8); }    
+    static rgb_color_t white() { return named_color(7); }
+    static rgb_color_t black() { return named_color(0); }
+    static rgb_color_t reset() { return rgb_color_t(type_reset); }
+    static rgb_color_t ignore() { return rgb_color_t(type_ignore); }
+    
+    rgb_color_t(unsigned char r, unsigned char g, unsigned char b)
+    {
+        type = type_rgb;
+        data.rgb[0] = r;
+        data.rgb[1] = g;
+        data.rgb[2] = b;
+    }
+    
+    static bool parse(const wcstring &str, rgb_color_t &color) {
+        if (color.try_parse_named(str)) {
+            color.type = type_named;
+        } else if (color.try_parse_rgb(str)) {
+            color.type = type_rgb;
+        } else {
+            bzero(color.data.rgb, sizeof color.data.rgb);
+            color.type = type_none;
+        }
+        return color.type != type_none;
+    }
+    
+    unsigned char name_index() const {
+        assert(type == type_named);
+        return data.name_idx;
+    }
+    
+    bool is_bold() const { return flags & 1; }
+    void set_bold(bool x) { if (x) flags |= 1; else flags &= ~1; }
+    bool is_underline() const { return flags & 2; }
+    void set_underline(bool x) { if (x) flags |= 2; else flags &= ~2; }
+    
+    bool is_reset(void) const { return type == type_reset; }
+    bool is_ignore(void) const { return type == type_ignore; }
+    bool is_named(void) const { return type == type_named; }
+    
+    bool operator==(const rgb_color_t &other) const {
+        return type == other.type && ! memcmp(&data, &other.data, sizeof data);
+    }
+    
+    bool operator!=(const rgb_color_t &other) const {
+        return !(*this == other);
+    }
+
+};
+
 struct line_entry_t
 {
     wchar_t text;
     int color;
-};
-
-class rgb_color_t {
-    unsigned char rgb[3];
-    public:
-    
-    rgb_color_t(unsigned char r, unsigned char g, unsigned char b)
-    {
-        rgb[0] = r;
-        rgb[1] = g;
-        rgb[2] = b;
-    }
 };
 
 /**

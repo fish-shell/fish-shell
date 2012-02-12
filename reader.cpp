@@ -373,7 +373,7 @@ static int exit_forced;
 */
 static void term_donate()
 {
-	set_color(FISH_COLOR_NORMAL, FISH_COLOR_NORMAL);
+	set_color(rgb_color_t::normal(), rgb_color_t::normal());
 
 	while( 1 )
 	{
@@ -697,7 +697,7 @@ void reader_write_title()
 		}
 	}
 	proc_pop_interactive();		
-	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
+	set_color( rgb_color_t::reset(), rgb_color_t::reset() );
 }
 
 /**
@@ -1708,7 +1708,7 @@ static void reader_interactive_destroy()
 {
 	kill_destroy();
 	writestr( L"\n" );
-	set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
+	set_color( rgb_color_t::reset(), rgb_color_t::reset() );
 	input_destroy();
 }
 
@@ -3300,7 +3300,7 @@ const wchar_t *reader_readline()
 			wperror(L"tcsetattr");
 		}
 		
-		set_color( FISH_COLOR_RESET, FISH_COLOR_RESET );
+		set_color( rgb_color_t::reset(), rgb_color_t::reset() );
 	}
 	
 	return finished ? data->command_line.c_str() : 0;

@@ -678,8 +678,7 @@ static char *get_action( const char *mimetype )
 {
 	char *res=0;
 	
-	const char *launcher;
-	char *end;
+	const char *launcher, *end;
 	string_list_t mime_filenames;
 	
 	const char *launcher_str = NULL;
@@ -741,8 +740,8 @@ static char *get_action( const char *mimetype )
 	/* Skip the = */
 	launcher++;
     
-    /* Make one we can change */
-    std::string mut_launcher = launcher;
+	/* Make one we can change */
+	std::string mut_launcher = launcher;
     
 	/* Only use first launcher */
 	end = strchr( launcher, ';' );

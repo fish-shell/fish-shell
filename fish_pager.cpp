@@ -883,7 +883,7 @@ static void join_completions( wcstring_list_t lst )
 	for( i=0; i<(long)lst.size(); i++ )
 	{
 		const wchar_t *item = lst.at(i).c_str();
-		wchar_t *desc = wcschr( item, COMPLETE_SEP );
+		const wchar_t *desc = wcschr( item, COMPLETE_SEP );
 		long prev_idx;
 		
 		if( !desc )

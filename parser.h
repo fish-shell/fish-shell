@@ -93,7 +93,7 @@ typedef struct block
 		int if_state; /**< The state of the if block, can be one of IF_STATE_UNTESTED, IF_STATE_FALSE, IF_STATE_TRUE */
 		wchar_t *switch_value; /**< The value to test in a switch block */
 		const wchar_t *source_dest; /**< The name of the file to source*/
-		event_t *event; /**<The event that triggered this block */		
+		event_t *event; /**<The event that triggered this block */
 		wchar_t *function_call_name;
 	} param1;
 #endif
@@ -109,7 +109,10 @@ typedef struct block
             state1_ptr = state;
         } else {
             state = dynamic_cast<block_state_t<T> *>(state1_ptr);
-            assert(state != NULL);
+            if (state == NULL) {
+                printf("Expected type %s, but instead got type %s\n", typeid(T).name(), typeid(*state1_ptr).name());
+                abort();
+            }
         }
         return state->value;
     }

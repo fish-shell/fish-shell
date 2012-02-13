@@ -2794,7 +2794,9 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 	parser.push_block( SOURCE );		
 	reader_push_current_filename( fn_intern );
 	
-    parser.current_block->state1<const wchar_t *>() = fn_intern;
+    // PCA We need the state to be a wcstring; it would be nice to figure out how to restore this optimization however
+    //parser.current_block->state1<const wchar_t *>() = fn_intern;
+    parser.current_block->state1<wcstring>() = fn_intern;
 	
 	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), wcstring_list_t());
 	

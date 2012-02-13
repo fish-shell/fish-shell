@@ -15,7 +15,7 @@ The classes responsible for autoloading functions and completions.
 #include <algorithm>
 
 /* The time before we'll recheck an autoloaded file */
-static const int kAutoloadStalenessInterval = 1;
+static const int kAutoloadStalenessInterval = 15;
 
 file_access_attempt_t access_file(const wcstring &path, int mode) {
     file_access_attempt_t result = {0};
@@ -67,7 +67,6 @@ int autoload_t::unload( const wcstring &cmd )
 int autoload_t::load( const wcstring &cmd, bool reload )
 {
 	int res;
-	
 	CHECK_BLOCK( 0 );
     ASSERT_IS_MAIN_THREAD();
     
@@ -108,7 +107,6 @@ int autoload_t::load( const wcstring &cmd, bool reload )
     /* Mark that we're loading this */
     is_loading_set.insert(cmd);
 
-    
     /* Get the list of paths from which we will try to load */
     std::vector<wcstring> path_list;
 	tokenize_variable_array( path_var, path_list );
@@ -181,7 +179,7 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
         } else if ( ! allow_stale_functions && time(NULL) - func->access.last_checked > kAutoloadStalenessInterval) {
             /* Can't use a stale function */
             use_cached = false;
-        } else if (really_load && ! func->is_loaded) {
+        } else if (really_load && ! func->is_placeholder && ! func->is_loaded) {
             /* Can't use an unloaded function */
             use_cached = false;
         } else {

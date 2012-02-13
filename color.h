@@ -1,0 +1,120 @@
+/** \file color.h Color class.
+  */
+#ifndef FISH_COLOR_H
+#define FISH_COLOR_H
+
+#include <stdint.h>
+#include <cstddef>
+#include "config.h"
+#include "common.h"
+
+
+/* A type that represents a color */
+class rgb_color_t {
+    enum {
+        type_none,
+        type_named,
+        type_rgb,
+        type_normal,
+        type_reset,
+        type_ignore
+    };
+    unsigned char type;
+    union {
+        unsigned char name_idx; //0-10
+        unsigned char rgb[3];
+    } data;
+    unsigned flags;
+        
+    /** Try parsing a special color name like "normal" */
+    bool try_parse_special(const wcstring &str);
+    
+    /** Try parsing an rgb color like "#F0A030" */
+    bool try_parse_rgb(const wcstring &str);
+
+    /** Try parsing an explicit color name like "magenta" */
+    bool try_parse_named(const wcstring &str);
+
+    /** Private constructor */
+    explicit rgb_color_t(unsigned char t, unsigned char i=0);
+    
+    public:
+    
+    /** Default constructor of type none */
+    explicit rgb_color_t() : type(type_none), data(), flags() {}
+    
+    /** Parse a color from a string */
+    explicit rgb_color_t(const wcstring &str);
+
+    /** Returns white */    
+    static rgb_color_t white();
+    
+    /** Returns black */
+    static rgb_color_t black();
+    
+    /** Returns the reset special color */
+    static rgb_color_t reset();
+    
+    /** Returns the normal special color */
+    static rgb_color_t normal();
+    
+    /** Returns the ignore special color */
+    static rgb_color_t ignore();
+    
+    /** Returns the none special color */
+    static rgb_color_t none();
+        
+    /** Returns whether the color is the ignore special color */
+    bool is_ignore(void) const { return type == type_ignore; }
+
+    /** Returns whether the color is the normal special color */
+    bool is_normal(void) const { return type == type_normal; }
+    
+    /** Returns whether the color is the reset special color */
+    bool is_reset(void) const { return type == type_reset; }
+    
+    /** Returns whether the color is the none special color */
+    bool is_none(void) const { return type == type_none; }
+    
+    /** Returns whether the color is a named color (like "magenta") */
+    bool is_named(void) const { return type == type_named; }
+    
+    /** Returns whether the color is specified via RGB components */
+    bool is_rgb(void) const { return type == type_rgb; }
+    
+    /** Returns whether the color is special, that is, not rgb or named */
+    bool is_special(void) const { return type != type_named && type != type_rgb; }
+
+    /** Returns a description of the color */
+    wcstring description() const;
+
+    /** Returns the name index for the given color. Requires that the color be named or RGB. */
+    unsigned char to_name_index() const;
+    
+    /** Returns the term256 index for the given color. Requires that the color be named or RGB. */
+    unsigned char to_term256_index() const;
+    
+    /** Returns whether the color is bold */
+    bool is_bold() const { return flags & 1; }
+    
+    /** Set whether the color is bold */
+    void set_bold(bool x) { if (x) flags |= 1; else flags &= ~1; }
+    
+    /** Returns whether the color is underlined */
+    bool is_underline() const { return flags & 2; }
+    
+    /** Set whether the color is underlined */
+    void set_underline(bool x) { if (x) flags |= 2; else flags &= ~2; }
+    
+    /** Compare two colors for equality */
+    bool operator==(const rgb_color_t &other) const {
+        return type == other.type && ! memcmp(&data, &other.data, sizeof data);
+    }
+    
+    /** Compare two colors for inequality */
+    bool operator!=(const rgb_color_t &other) const {
+        return !(*this == other);
+    }
+};
+
+#endif

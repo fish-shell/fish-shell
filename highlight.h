@@ -10,6 +10,7 @@
 #include "env.h"
 #include "util.h"
 #include "screen.h"
+#include "color.h"
 
 /**
    Internal value representing highlighting of normal text

@@ -10,6 +10,7 @@
 
 #include <wchar.h>
 #include "screen.h"
+#include "color.h"
 
 /**
    Constants for various colors as used by the set_color function. 

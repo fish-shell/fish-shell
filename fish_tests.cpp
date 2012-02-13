@@ -670,12 +670,28 @@ static void test_path()
     wcstring path = L"//foo//////bar/";
     wcstring canon = path;
     path_make_canonical(canon);
-	if( canon != L"/foo/bar" ) )
+	if( canon != L"/foo/bar" )
 	{
 		err( L"Bug in canonical PATH code" );
 	}	
 }
 
+/** Testing colors */
+static void test_colors()
+{
+    say(L"Testing colors");
+    assert(rgb_color_t(L"#FF00A0").is_rgb());
+    assert(rgb_color_t(L"FF00A0").is_rgb());
+    assert(rgb_color_t(L"#F30").is_rgb());
+    assert(rgb_color_t(L"F30").is_rgb());
+    assert(rgb_color_t(L"f30").is_rgb());
+    assert(rgb_color_t(L"#FF30a5").is_rgb());
+    assert(rgb_color_t(L"3f30").is_none());
+    assert(rgb_color_t(L"##f30").is_none());
+    assert(rgb_color_t(L"magenta").is_named());
+    assert(rgb_color_t(L"MaGeNTa").is_named());
+    assert(rgb_color_t(L"mooganta").is_none());
+}
 
 
 /**
@@ -808,6 +824,7 @@ int main( int argc, char **argv )
 	test_lru();
 	test_expand();
 	test_path();
+    test_colors();
     test_history();
 	
 	say( L"Encountered %d errors in low-level tests", err_count );

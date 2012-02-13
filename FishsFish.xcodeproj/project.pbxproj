@@ -105,6 +105,8 @@
 		D0A0856513B3ACEE0099B651 /* xdgmimeint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xdgmimeint.cpp; sourceTree = "<group>"; };
 		D0A0856613B3ACEE0099B651 /* xdgmimemagic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xdgmimemagic.cpp; sourceTree = "<group>"; };
 		D0A0856713B3ACEE0099B651 /* xdgmimeparent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xdgmimeparent.cpp; sourceTree = "<group>"; };
+		D0B6B0FE14E88BA400AD6C10 /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = color.cpp; sourceTree = "<group>"; };
+		D0B6B0FF14E88BA400AD6C10 /* color.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = color.h; sourceTree = "<group>"; };
 		D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = autoload.cpp; sourceTree = "<group>"; };
 		D0C6FCCB14CFA4B7004CE8AD /* autoload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = autoload.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -122,6 +124,8 @@
 				D0A0853313B3ACEE0099B651 /* builtin_set.cpp */,
 				D0A0853413B3ACEE0099B651 /* builtin_ulimit.cpp */,
 				D0A0853513B3ACEE0099B651 /* builtin.cpp */,
+				D0B6B0FF14E88BA400AD6C10 /* color.h */,
+				D0B6B0FE14E88BA400AD6C10 /* color.cpp */,
 				D0A0850413B3ACEE0099B651 /* common.h */,
 				D0A0853613B3ACEE0099B651 /* common.cpp */,
 				D0A0850513B3ACEE0099B651 /* complete.h */,

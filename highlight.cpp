@@ -201,7 +201,7 @@ rgb_color_t highlight_get_rgb_color( int highlight, bool is_background )
 		const wcstring val2 = val2_wstr.missing() ? L"" : val2_wstr.c_str(); 
 
 		rgb_color_t result2 = parse_color( val2, is_background );
-		if( result == rgb_color_t::normal() )
+		if( result.is_normal() )
 			result = result2;
 		else 
 		{

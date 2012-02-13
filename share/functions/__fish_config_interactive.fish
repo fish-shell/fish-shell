@@ -104,6 +104,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		set_default fish_color_escape cyan
 		set_default fish_color_operator cyan
 		set_default fish_color_quote brown
+		set_default fish_color_autosuggestion 555
 		set_default fish_color_valid_path --underline
 
 		set_default fish_color_cwd green

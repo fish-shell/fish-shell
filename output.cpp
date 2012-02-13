@@ -55,6 +55,7 @@
 #include "common.h"
 #include "output.h"
 #include "highlight.h"
+#include "env.h"
 
 /**
    Number of color names in the col array
@@ -126,8 +127,30 @@ int (*output_get_writer())(char)
 	return out;
 }
 
+bool allow_term256(void)
+{
+    //consider using t_Co
+    ASSERT_IS_MAIN_THREAD();
+    const wchar_t *t = output_get_term();
+    return t && wcsstr(t, L"256color");
+}
+
+static unsigned char index_for_color(rgb_color_t c) {
+    if (c.is_named() || ! allow_term256()) {
+        return c.to_name_index();
+    } else {
+        return c.to_term256_index();
+    }
+}
+
 void set_color(rgb_color_t c, rgb_color_t c2)
 {
+
+#if 0
+    wcstring tmp = c.description();
+    wcstring tmp2 = c2.description();
+    printf("set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
+#endif    
     ASSERT_IS_MAIN_THREAD();
     
     const rgb_color_t normal = rgb_color_t::normal();
@@ -198,9 +221,9 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 		was_underline=0;
 	}
 	
-	if( last_color2 != rgb_color_t::normal() &&
-		last_color2 != rgb_color_t::reset() &&
-		last_color2 != rgb_color_t::ignore() )
+	if( ! last_color2.is_normal() &&
+		! last_color2.is_reset() &&
+		! last_color2.is_ignore() )
 	{
 		/*
 		  Background was set
@@ -208,15 +231,14 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 		last_bg_set=1;
 	}
 
-	if( c2 != rgb_color_t::normal() &&
-		c2 != rgb_color_t::ignore() )
+	if( ! c2.is_normal() &&
+		! c2.is_ignore())
 	{
 		/*
 		  Background is set
 		*/
 		bg_set=1;
-        // PCA color fix
-		//c = (c2==FISH_COLOR_WHITE)?FISH_COLOR_BLACK:FISH_COLOR_WHITE;
+		c = (c2==rgb_color_t::white())?rgb_color_t::black():rgb_color_t::white();
 	}
 
 	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))
@@ -253,7 +275,7 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 
 	if( last_color != c )
 	{
-		if( c==rgb_color_t::normal() )
+		if( c.is_normal() )
 		{
 			if( fg )
 			{
@@ -265,11 +287,11 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 			was_bold=0;
 			was_underline=0;
 		}
-		else if( c.is_named() )
+		else if( ! c.is_special() )
 		{
 			if( fg )
 			{
-				writembs( tparm( fg, c.name_index() ) );
+                writembs( tparm(fg, index_for_color(c)) );
 			}
 		}
 	}
@@ -278,7 +300,7 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 
 	if( last_color2 != c2 )
 	{
-		if( c2 == rgb_color_t::normal() )
+		if( c2.is_normal() )
 		{
 			if( bg )
 			{
@@ -286,12 +308,9 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 			}
 
 			writembs( exit_attribute_mode );
-			if( ( last_color != rgb_color_t::normal() ) && fg )
+			if( ! last_color.is_normal() && fg )
 			{
-				if( fg )
-				{
-					writembs( tparm( fg, last_color.name_index() ) );
-				}
+                writembs( tparm( fg, index_for_color(last_color) ));
 			}
 			
 
@@ -299,11 +318,11 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 			was_underline=0;
 			last_color2 = c2;
 		}
-		else if ( c2.is_named() && c2 != normal)
+		else if ( ! c2.is_special() )
 		{
 			if( bg )
 			{
-				writembs( tparm( bg, c2.name_index() ) );
+				writembs( tparm( bg, index_for_color(c2) ));
 			}
 			last_color2 = c2;
 		}
@@ -794,7 +813,6 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
             if (string_prefixes_string(prefix, next)) {
                 color_name = wcstring(next, prefix.size());
             }
-            
         } else {
             if (next == L"--bold" || next == L"-o")
                 is_bold = true;
@@ -805,9 +823,18 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
         }
         
         if (! color_name.empty()) {
-            rgb_color_t::parse(color_name, result);
+            result = rgb_color_t(color_name);
+            if (result.is_none()) {
+                result = rgb_color_t::normal();
+            }
         }
     }
+#if 0
+    wcstring desc = result.description();
+    printf("Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(), is_background ? "background" : "foreground");
+#endif
+    if (result.is_none())
+        result = rgb_color_t::normal();
     return result;
 }
 

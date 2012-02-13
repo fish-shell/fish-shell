@@ -678,7 +678,7 @@ static char *get_action( const char *mimetype )
 {
 	char *res=0;
 	
-	char *launcher;
+	const char *launcher;
 	char *end;
 	string_list_t mime_filenames;
 	
@@ -740,13 +740,16 @@ static char *get_action( const char *mimetype )
 	
 	/* Skip the = */
 	launcher++;
-						
+    
+    /* Make one we can change */
+    std::string mut_launcher = launcher;
+    
 	/* Only use first launcher */
 	end = strchr( launcher, ';' );
 	if( end )
-		*end = '\0';
+		mut_launcher.resize(end - launcher);
 
-	launcher_full = (char *)my_malloc( strlen( launcher) + strlen( APPLICATIONS_DIR)+1 );
+	launcher_full = (char *)my_malloc( mut_launcher.size() + strlen( APPLICATIONS_DIR)+1 );
 	if( !launcher_full )
 	{
 		free( (void *)launcher_str );
@@ -754,7 +757,7 @@ static char *get_action( const char *mimetype )
 	}
 	
 	strcpy( launcher_full, APPLICATIONS_DIR );
-	strcat( launcher_full, launcher );
+	strcat( launcher_full, mut_launcher.c_str() );
 	free( (void *)launcher_str );
 	
 	std::string launcher_filename = get_filename( launcher_full );
@@ -1034,7 +1037,7 @@ static void launch( char *filter, const string_list_t &files, int fileno )
 	int count=0;
 	int launch_again=0;
 	
-	if( files.size() <= fileno )
+	if( (int)files.size() <= fileno )
 		return;
 	
 	
@@ -1078,8 +1081,7 @@ static void launch( char *filter, const string_list_t &files, int fileno )
 				case 'F':
 				case 'N':
 				{
-					int i;
-					for( i=0; i<files.size(); i++ )
+					for( size_t i=0; i<files.size(); i++ )
 					{
 						if( i != 0 )
 							writer( ' ' );
@@ -1117,8 +1119,7 @@ static void launch( char *filter, const string_list_t &files, int fileno )
 			
 				case 'D':
 				{
-					int i;
-					for( i=0; i<files.size(); i++ )
+					for( size_t i=0; i<files.size(); i++ )
 					{
 						const char *cpy = get_fullfile( files.at(i).c_str() );					
 						char *dir;

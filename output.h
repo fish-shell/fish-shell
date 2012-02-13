@@ -164,4 +164,7 @@ void output_set_term( const wchar_t *term );
  */
 const wchar_t *output_get_term();
 
+/** Determines whether term256 colors are supported */
+bool allow_term256(void);
+
 #endif

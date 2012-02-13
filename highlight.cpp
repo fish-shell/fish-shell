@@ -166,7 +166,7 @@ static bool is_potential_path( const wcstring &cpath )
 	
 }
 
-rgb_color_t highlight_get_rgb_color( int highlight, bool is_background )
+rgb_color_t highlight_get_color( int highlight, bool is_background )
 {
 	size_t i;
 	int idx=0;
@@ -210,60 +210,10 @@ rgb_color_t highlight_get_rgb_color( int highlight, bool is_background )
 			if( result2.is_underline() )
 				result.set_underline(true);
 		}
-		
 	}
 	return result;
 }
 
-
-int highlight_get_color( int highlight, bool is_background )
-{
-	size_t i;
-	int idx=0;
-	int result = 0;
-
-	if( highlight < 0 )
-		return FISH_COLOR_NORMAL;
-	if( highlight > (1<<VAR_COUNT) )
-		return FISH_COLOR_NORMAL;
-	for( i=0; i<VAR_COUNT; i++ )
-	{
-		if( highlight & (1<<i ))
-		{
-			idx = i;
-			break;
-		}
-	}
-    
-	env_var_t val_wstr = env_get_string( highlight_var[idx]); 
-
-//	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
-	
-	if (val_wstr.missing())
-		val_wstr = env_get_string( highlight_var[0]);
-	
-	if( ! val_wstr.missing() )
-		result = output_color_code( val_wstr, is_background );
-	
-	if( highlight & HIGHLIGHT_VALID_PATH )
-	{
-		env_var_t val2_wstr =  env_get_string( L"fish_color_valid_path" );
-		const wchar_t *val2 = val2_wstr.missing() ? NULL : val2_wstr.c_str(); 
-
-		int result2 = output_color_code( val2, is_background );
-		if( result == FISH_COLOR_NORMAL )
-			result = result2;
-		else 
-		{
-			if( result2 & FISH_COLOR_BOLD )
-				result |= FISH_COLOR_BOLD;
-			if( result2 & FISH_COLOR_UNDERLINE )
-				result |= FISH_COLOR_UNDERLINE;
-		}
-		
-	}
-	return result;
-}
 
 /**
    Highligt operators (such as $, ~, %, as well as escaped characters.

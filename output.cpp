@@ -796,10 +796,10 @@ int output_color_code( const wcstring &val, bool is_background ) {
 }
 
 rgb_color_t parse_color( const wcstring &val, bool is_background ) {
-    rgb_color_t result;
-    
     int is_bold=0;
 	int is_underline=0;
+
+    std::vector<rgb_color_t> candidates;
 
     wcstring_list_t el;
 	tokenize_variable_array( val, el );
@@ -823,18 +823,42 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
         }
         
         if (! color_name.empty()) {
-            result = rgb_color_t(color_name);
-            if (result.is_none()) {
-                result = rgb_color_t::normal();
+            rgb_color_t color = rgb_color_t(color_name);
+            if (! color.is_none()) {
+                candidates.push_back(color);
             }
         }
     }
+        
+    // Pick the best candidate
+    rgb_color_t first_rgb = rgb_color_t::none(), first_named = rgb_color_t::none();
+    for (size_t i=0; i < candidates.size(); i++) {
+        const rgb_color_t &color = candidates.at(i);
+        if (color.is_rgb() && first_rgb.is_none())
+            first_rgb = color;
+        if (color.is_named() && first_named.is_none())
+            first_named = color;
+    }
+    
+    // If we have both RGB and named colors, then prefer rgb if term256 is supported
+    rgb_color_t result;
+    if ((!first_rgb.is_none() && allow_term256()) || first_named.is_none()) {
+        result = first_rgb;
+    } else {
+        result = first_named;
+    }
+    
+    if (result.is_none())
+        result = rgb_color_t::normal();
+    
+    result.set_bold(is_bold);
+    result.set_underline(is_underline);
+    
 #if 0
     wcstring desc = result.description();
     printf("Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(), is_background ? "background" : "foreground");
 #endif
-    if (result.is_none())
-        result = rgb_color_t::normal();
+    
     return result;
 }
 

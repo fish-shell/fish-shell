@@ -1390,7 +1390,7 @@ static void complete_param_expand( const wchar_t *str,
 		ACCEPT_INCOMPLETE | 
 		(do_file?0:EXPAND_SKIP_WILDCARDS);
 	
-	if( expand_string( 		wcsdup(comp_str),
+	if( expand_string( comp_str,
 					   comp_out,
 					   flags ) == EXPAND_ERROR )
 	{

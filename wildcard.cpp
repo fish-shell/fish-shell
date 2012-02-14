@@ -329,18 +329,8 @@ int wildcard_match( const wcstring &str, const wcstring &wc )
 /**
    Creates a path from the specified directory and filename. 
 */
-static wchar_t *make_path( const wchar_t *base_dir, const wchar_t *name )
-{
-	
-	wchar_t *long_name;
-	int base_len = wcslen( base_dir );
-	if( !(long_name= (wchar_t *)malloc( sizeof(wchar_t)*(base_len+wcslen(name)+1) )))
-	{
-		DIE_MEM();
-	}					
-	wcscpy( long_name, base_dir );
-	wcscpy(&long_name[base_len], name );
-	return long_name;
+static wcstring make_path(const wcstring &base_dir, const wcstring &name) {
+    return base_dir + name;
 }
 
 /**
@@ -581,7 +571,7 @@ static wcstring file_get_desc( const wchar_t *filename,
    \param is_cmd whether we are performing command completion
 */
 static void wildcard_completion_allocate( std::vector<completion_t> &list, 
-					  const wchar_t *fullname, 
+					  const wcstring &fullname, 
 					  const wchar_t *completion,
 					  const wchar_t *wc,
 					  int is_cmd )
@@ -597,15 +587,13 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 	
 	long long sz; 
 
-	CHECK( fullname, );
-
 	/*
 	  If the file is a symlink, we need to stat both the file itself
 	  _and_ the destination file. But we try to avoid this with
 	  non-symlinks by first doing an lstat, and if the file is not a
 	  link we copy the results over to the regular stat buffer.
 	*/
-	if( ( lstat_res = lwstat( fullname, &lbuf ) ) )
+	if( ( lstat_res = lwstat( fullname.c_str(), &lbuf ) ) )
 	{
 		sz=-1;
 		stat_res = lstat_res;
@@ -615,7 +603,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		if( S_ISLNK(lbuf.st_mode))
 		{
 			
-			if( ( stat_res = wstat( fullname, &buf ) ) )
+			if( ( stat_res = wstat( fullname.c_str(), &buf ) ) )
 			{
 				sz=-1;
 			}
@@ -638,7 +626,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		}
 	}
 	
-	wcstring desc = file_get_desc( fullname, lstat_res, lbuf, stat_res, buf, stat_errno );
+	wcstring desc = file_get_desc( fullname.c_str(), lstat_res, lbuf, stat_res, buf, stat_errno );
 		
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{
@@ -802,19 +790,16 @@ static int wildcard_expand_internal( const wchar_t *wc,
 				{
 					if( next[0] != L'.' )
 					{
-						const wchar_t *name = next.c_str();
-						const wchar_t *long_name = make_path( base_dir, name );
+						wcstring long_name = make_path( base_dir, next );
 						
-						if( test_flags( long_name, flags ) )
+						if( test_flags( long_name.c_str(), flags ) )
 						{
 							wildcard_completion_allocate( out,
 														  long_name,
-														  name,
+														  next.c_str(),
 														  L"",
 														  flags & EXECUTABLES_ONLY );
 						}
-						
-						free( (void *)long_name );
 					}					
 				}
 			}
@@ -823,7 +808,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 				res = 1;
 				completion_t data_to_push(base_dir);
 				if (std::find( out.begin(), out.end(), data_to_push ) == out.end()) {
-					 out.push_back( data_to_push);
+					 out.push_back(data_to_push);
 				}
 			}							
 		}
@@ -835,12 +820,11 @@ static int wildcard_expand_internal( const wchar_t *wc,
             wcstring next;
 			while(wreaddir(dir, next))
 			{
-				const wchar_t *name = next.c_str();
-				
+                const wchar_t * const name = next.c_str();
 				if( flags & ACCEPT_INCOMPLETE )
 				{
 					
-					wchar_t *long_name = make_path( base_dir, name );
+					const wcstring long_name = make_path( base_dir, next );
 
 					/*
 					  Test for matches before stating file, so as to minimize the number of calls to the much slower stat function 
@@ -853,7 +837,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 										   test,
 										   0 ) )
 					{
-						if( test_flags( long_name, flags ) )
+						if( test_flags( long_name.c_str(), flags ) )
 						{
 							wildcard_completion_allocate( out,
 														  long_name,
@@ -862,16 +846,13 @@ static int wildcard_expand_internal( const wchar_t *wc,
                                                           flags & EXECUTABLES_ONLY );
 							
 						}
-					}
-					
-					free( long_name );
-					
+					}					
 				}
 				else
 				{
 					if( wildcard_match2( name, wc, 1 ) )
 					{
-						wchar_t *long_name = make_path( base_dir, name );
+                        const wcstring long_name = make_path(base_dir, next);
 						int skip = 0;
 						
 						if( is_recursive )
@@ -882,19 +863,14 @@ static int wildcard_expand_internal( const wchar_t *wc,
 							  will be added in the next pass.
 							*/
 							struct stat buf;
-							if( !wstat( long_name, &buf ) )
+							if( !wstat( long_name.c_str(), &buf ) )
 							{
 								skip = S_ISDIR(buf.st_mode);
 							}							
 						}
-						
-						if( skip )
+						if (! skip)
 						{
-							free( long_name );
-						}
-						else
-						{
-							out.push_back( completion_t(long_name) );
+							out.push_back(completion_t(long_name) );
 						}
 						res = 1;
 					}
@@ -1131,11 +1107,7 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int fla
 {
     std::vector<completion_t> lst;
     
-    int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, lst);
-    
-    int i, max = lst.size();
-    for (i=0; i < max; i++) {
-        outputs.push_back( lst.at(i));
-    }
+    int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, lst);    
+    outputs.insert(outputs.end(), lst.begin(), lst.end());
     return res;
 }

@@ -921,7 +921,8 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 	  Locate and syntax highlight cmdsubsts recursively
 	*/
 
-	const wchar_t * subpos=buff;
+	wchar_t * const subbuff = wcsdup(buff);
+    wchar_t * subpos = subbuff;
 	int done=0;
 	
 	while( 1 )
@@ -938,15 +939,15 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 		else
 			*end=0;
 		
-		highlight_shell( begin+1, color +(begin-buff)+1, -1, error, vars );
-		color[end-buff]=HIGHLIGHT_OPERATOR;
+		highlight_shell( begin+1, color + (begin-subbuff)+1, -1, error, vars );
+		color[end-subbuff]=HIGHLIGHT_OPERATOR;
 		
 		if( done )
 			break;
 		
 		subpos = end+1;
-
 	}
+    free(subbuff);
 
 	/*
 	  The highlighting code only changes the first element when the

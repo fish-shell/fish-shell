@@ -793,7 +793,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				if( target != 0 )
 				{
                     wcstring dir = target;
-                    size_t slash_idx = dir.find(L'/');
+                    size_t slash_idx = dir.find_last_of(L'/');
 					struct stat buff;
 					/* 
 					 If file is in directory other than '.', check

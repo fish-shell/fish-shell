@@ -1506,7 +1506,7 @@ bool unescape_string(wcstring &str, int escape_special)
 {
     bool success = false;
     wchar_t *result = unescape(str.c_str(), escape_special);
-    if ( result) {
+    if (result) {
         str.replace(str.begin(), str.end(), result);
         free(result);
         success = true;

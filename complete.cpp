@@ -1868,9 +1868,9 @@ void complete_print( string_buffer_t *out )
 {
 	CHECK( out, );
 
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
+    for (completion_entry_list_t::const_iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
     {
-        completion_entry_t *e = *iter;
+        const completion_entry_t *e = *iter;
         for (option_list_t::const_iterator oiter = e->options.begin(); oiter != e->options.end(); oiter++)
         {
             const complete_entry_opt_t *o = &*oiter;

@@ -2375,9 +2375,8 @@ static void highlight_search(void) {
 	}
 }
 
-static void highlight_complete(void *ctx_ptr, int result) {
+static void highlight_complete(background_highlight_context_t *ctx, int result) {
     ASSERT_IS_MAIN_THREAD();
-	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
 	if (ctx->string_to_highlight == data->command_line) {
 		/* The data hasn't changed, so swap in our colors */
         size_t len = ctx->string_to_highlight.size();
@@ -2400,8 +2399,7 @@ static void highlight_complete(void *ctx_ptr, int result) {
     delete ctx;
 }
 
-static int threaded_highlight(void *ctx_ptr) {
-	background_highlight_context_t *ctx = (background_highlight_context_t *)ctx_ptr;
+static int threaded_highlight(background_highlight_context_t *ctx) {
     const wchar_t *delayer = ctx->vars.get(L"HIGHLIGHT_DELAY");
     double secDelay = 0;
     if (delayer) {
@@ -3020,10 +3018,10 @@ const wchar_t *reader_readline()
 						*/
 						if( ! data->command_line.empty() )
 						{
-//						wcscpy(data->search_buff,L"");
-							//history_add( data->buff );
-                            if (data->history)
+                            if (data->history) {
                                 data->history->add(data->command_line);
+                                data->history->add_with_file_detection(data->command_line);
+                            }
 						}
 						finished=1;
 						data->buff_pos=data->command_length();

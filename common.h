@@ -547,10 +547,7 @@ void common_handle_winch( int signal );
 void write_screen( const wchar_t *msg, string_buffer_t *buff );
 
 /**
-   Tokenize the specified string into the specified array_list_t.
-   Each new element is allocated using malloc and must be freed by the
-   caller.
-   
+   Tokenize the specified string into the specified wcstring_list_t.   
    \param val the input string. The contents of this string is not changed.
    \param out the list in which to place the elements. 
 */

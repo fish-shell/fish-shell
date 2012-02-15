@@ -20,6 +20,7 @@
 #include "fallback.h"
 #include "util.h"
 #include "sanity.h"
+#include "tokenizer.h"
 
 #include "wutil.h"
 #include "history.h"
@@ -28,6 +29,7 @@
 #include "path.h"
 #include "signal.h"
 #include "autoload.h"
+#include "iothread.h"
 #include <map>
 #include <algorithm>
 
@@ -105,7 +107,7 @@ history_item_t::history_item_t(const wcstring &str) : contents(str), creation_ti
 {
 }
 
-history_item_t::history_item_t(const wcstring &str, time_t when) : contents(str), creation_timestamp(when)
+history_item_t::history_item_t(const wcstring &str, time_t when, const path_list_t &paths) : contents(str), creation_timestamp(when), required_paths(paths)
 {
 }
 
@@ -156,14 +158,16 @@ history_t::~history_t()
     pthread_mutex_destroy(&lock);
 }
 
-void history_t::add(const wcstring &str)
+void history_t::add(const wcstring &str, const path_list_t &valid_paths)
 {
     scoped_lock locker(lock);
     
-    new_items.push_back(history_item_t(str.c_str(), true));
+    /* Add the history items */
+    time_t now = time(NULL);
+    new_items.push_back(history_item_t(str, now, valid_paths));
     
     /* This might be a good candidate for moving to a background thread */
-    if((time(0) > save_timestamp + SAVE_INTERVAL) || (new_items.size() >= SAVE_COUNT))
+    if((now > save_timestamp + SAVE_INTERVAL) || (new_items.size() >= SAVE_COUNT))
 		this->save_internal();
 }
 
@@ -584,5 +588,108 @@ void history_sanity_check()
 	/*
 	  No sanity checking implemented yet...
 	*/
+}
+
+struct file_detection_context_t {
+    /* The history associated with this context */
+    history_t *history;
+    
+    /* The command */
+    wcstring command;
+    
+    /* The working directory at the time the command was issued */
+    wcstring working_directory;
+    
+    /* Paths to test */
+    path_list_t potential_paths;
+    
+    /* Paths that were found to be valid */
+    path_list_t valid_paths;
+    
+    int perform_file_detection() {
+        ASSERT_IS_BACKGROUND_THREAD();
+        for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); iter++) {
+            wcstring path = *iter;
+            
+            /* Maybe append the working directory. Note that we know path is not empty here. */
+            if (path.at(0) != '/') {
+                path.insert(0, working_directory);
+            }
+            
+            if (0 == waccess(path.c_str(), F_OK)) {
+                /* Push the original (possibly relative) path */
+                valid_paths.push_front(*iter);
+            }
+        }
+        valid_paths.reverse();
+        return 0;
+    }
+};
+
+static int threaded_perform_file_detection(file_detection_context_t *ctx) {
+    ASSERT_IS_BACKGROUND_THREAD();
+    assert(ctx != NULL);
+    return ctx->perform_file_detection();
+}
+
+static void perform_file_detection_done(file_detection_context_t *ctx, int success) {
+    /* Now that file detection is done, create the history item */
+    ctx->history->add(ctx->command, ctx->valid_paths);
+    
+    /* Done with the context. */
+    delete ctx;
+}
+
+static bool string_could_be_path(const wcstring &potential_path) {
+    // Assume that things with leading dashes aren't paths
+    if (potential_path.empty() || potential_path.at(0) == L'-')
+        return false;
+    return true;
+}
+
+void history_t::add_with_file_detection(const wcstring &str)
+{
+    ASSERT_IS_MAIN_THREAD();
+    path_list_t potential_paths;
+    
+    tokenizer tokenizer;
+    for( tok_init( &tokenizer, str.c_str(), 0 );
+        tok_has_next( &tokenizer );
+        tok_next( &tokenizer ) )
+    {
+        int type = tok_last_type( &tokenizer );
+        if (type == TOK_STRING) {
+            const wchar_t *token_cstr = tok_last(&tokenizer);
+            if (token_cstr) {
+                wcstring potential_path = token_cstr;
+                if (unescape_string(potential_path, false) && string_could_be_path(potential_path)) {
+                    potential_paths.push_front(potential_path);
+                }
+            }
+        }
+    }
+    
+    if (! potential_paths.empty()) {
+        /* We have some paths. Make a context. */
+        file_detection_context_t *context = new file_detection_context_t();
+        context->command = str;
+        context->history = this;
+        
+        /* Stash the working directory. */
+        wchar_t dir_path[4096];
+        const wchar_t *cwd = wgetcwd( dir_path, 4096 );
+        if (cwd) {
+            wcstring wd = cwd;
+            /* Make sure the working directory ends with a slash */
+            if (! wd.empty() && wd.at(wd.size() - 1) != L'/')
+                wd.push_back(L'/');
+            context->working_directory.swap(wd);
+        }
+        
+        /* Store the potential paths. Reverse them to put them in the same order as in the command. */
+        potential_paths.reverse();
+        context->potential_paths.swap(potential_paths);
+        iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);
+    }
 }
 

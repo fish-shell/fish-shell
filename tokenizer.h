@@ -29,8 +29,7 @@ enum token_type
 	TOK_REDIRECT_NOCLOB, /**<? redirection token */
 	TOK_BACKGROUND,/**< send job to bg token */
 	TOK_COMMENT/**< comment token */
-}
-	;
+};
 
 /**
    Tokenizer error types

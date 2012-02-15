@@ -131,8 +131,8 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 	CHECK( b, );
 
 
-	tok->accept_unfinished = flags & TOK_ACCEPT_UNFINISHED;
-	tok->show_comments = flags & TOK_SHOW_COMMENTS;
+	tok->accept_unfinished = !! (flags & TOK_ACCEPT_UNFINISHED);
+	tok->show_comments = !! (flags & TOK_SHOW_COMMENTS);
 	tok->has_next=1;
 
 	tok->has_next = (*b != L'\0');

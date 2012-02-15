@@ -13,7 +13,7 @@
  \param context A arbitary context pointer to pass to the handler and completion callback.
  \return A sequence number, currently not very useful.
 */
-int iothread_perform(int (*handler)(void *), void (*completionCallback)(void *, int), void *context);
+int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(void *, int), void *context);
 
 /** 
   Gets the fd on which to listen for completion callbacks.
@@ -26,5 +26,11 @@ int iothread_port(void);
  Services one iothread competion callback.
 */
 void iothread_service_completion(void);
+
+/** Helper template */
+template<typename T>
+int iothread_perform(int (*handler)(T *), void (*completionCallback)(T *, int), T *context) {
+    return iothread_perform_base((int (*)(void *))handler, (void (*)(void *, int))completionCallback, static_cast<void *>(context));
+}
 
 #endif

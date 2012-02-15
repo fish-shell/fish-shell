@@ -138,7 +138,7 @@ static void iothread_spawn_if_needed(void) {
 	}
 }
 
-int iothread_perform(int (*handler)(void *), void (*completionCallback)(void *, int), void *context) {
+int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(void *, int), void *context) {
 	iothread_init();
 	
 	/* Create and initialize a request. */

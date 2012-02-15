@@ -11,9 +11,12 @@
 #include <vector>
 #include <deque>
 #include <utility>
+#include <list>
 #include <tr1/memory>
 #include <set>
 using std::tr1::shared_ptr;
+
+typedef std::list<wcstring> path_list_t;
 
 enum history_search_type_t {
     /** The history searches for strings containing the given string */
@@ -28,13 +31,16 @@ class history_item_t {
 
     private:
     history_item_t(const wcstring &);
-    history_item_t(const wcstring &, time_t);
+    history_item_t(const wcstring &, time_t, const path_list_t &paths = path_list_t());
 
 	/** The actual contents of the entry */
 	wcstring contents;
     	
 	/** Original creation time for the entry */
 	time_t creation_timestamp;
+    
+    /** Paths that we require to be valid for this item to be autosuggested */
+    path_list_t required_paths;
     
     public:
     const wcstring &str() const { return contents; }
@@ -101,7 +107,10 @@ public:
     static history_t & history_with_name(const wcstring &name);
     
     /** Add a new history item to the end */
-    void add(const wcstring &str);
+    void add(const wcstring &str, const path_list_t &valid_paths = path_list_t());
+    
+    /** Add a new history item to the end */
+    void add_with_file_detection(const wcstring &str);
     
     /** Saves history */
     void save();

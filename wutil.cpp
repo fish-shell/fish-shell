@@ -191,6 +191,12 @@ int waccess(const wchar_t *file_name, int mode)
     return access(tmp.c_str(), mode);
 }
 
+int wunlink(const wchar_t *file_name)
+{
+    cstring tmp = wcs2string(file_name);
+    return unlink(tmp.c_str());
+}
+
 void wperror(const wchar_t *s)
 {
 	int e = errno;

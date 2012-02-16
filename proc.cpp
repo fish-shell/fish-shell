@@ -566,8 +566,9 @@ void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status )
     event.arguments->resize(0);
 }				
 
-int job_reap( int interactive )
+int job_reap( bool interactive )
 {
+    ASSERT_IS_MAIN_THREAD();
 	job_t *jnext;	
 	int found=0;
 	

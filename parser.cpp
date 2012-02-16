@@ -716,7 +716,7 @@ void parser_t::destroy()
 		lineinfo = 0;
 	}
 
-	forbidden_function.resize(0);
+	forbidden_function.clear();
 
 }
 
@@ -2409,7 +2409,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 
 	if( block_type == SUBST )
 	{
-		forbidden_function.resize(0);
+		forbidden_function.clear();
 	}
 	
 	CHECK_BLOCK( 1 );

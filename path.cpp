@@ -497,10 +497,13 @@ void path_make_canonical( wcstring &path )
 {
 
     /* Remove double slashes */
-    replace_all(path, L"//", L"/");
+    size_t size;
+    do {
+        size = path.size();
+        replace_all(path, L"//", L"/");
+    } while (path.size() != size);
     
     /* Remove trailing slashes */
-    size_t size = path.size();
     while (size--) {
         if (path.at(size) != L'/')
             break;

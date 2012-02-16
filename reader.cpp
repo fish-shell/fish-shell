@@ -1283,15 +1283,67 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 	io_buffer_destroy( in);
 }
 
+struct autosuggestion_context_t {
+    history_search_t searcher;
+    file_detection_context_t detector;
+    
+    autosuggestion_context_t(history_t *history, const wcstring &term) :
+        searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
+        detector(history, term)
+    {
+    }
+};
+
+static int threaded_autosuggest(autosuggestion_context_t *ctx) {
+    ASSERT_IS_BACKGROUND_THREAD();
+    while (ctx->searcher.go_backwards()) {
+        history_item_t item = ctx->searcher.current_item();
+        /* See if the item has any required paths */
+        bool item_ok;
+        const path_list_t &paths = item.get_required_paths();
+        if (paths.empty()) {
+            item_ok = true;
+        } else {
+            ctx->detector.potential_paths = paths;
+            item_ok = ctx->detector.paths_are_valid(paths);
+        }
+        if (item_ok)
+            return 1;
+    }
+    return 0;
+}
+
+static bool can_autosuggest(void) {
+    return ! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end();
+}
+
+static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
+    if (result && can_autosuggest() && ctx->searcher.get_term() == data->command_line) {
+        /* Autosuggestion is active and the search term has not changed, so we're good to go */
+        data->autosuggestion = ctx->searcher.current_string();
+    }
+    delete ctx;
+}
+
+
 static void update_autosuggestion(void) {
     /* Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if we're not doing a history search.  */
+#if 0
+    /* Old non-threaded mode */
     data->autosuggestion.clear();
-    if (! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end()) {
+    if (can_autosuggest()) {
         history_search_t searcher = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
         if (searcher.go_backwards()) {
             data->autosuggestion = searcher.current_item();
         }
     }
+#else
+    data->autosuggestion.clear();
+    if (! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end()) {
+        autosuggestion_context_t *ctx = new autosuggestion_context_t(data->history, data->command_line);
+        iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
+    }
+#endif
 }
 
 /**
@@ -1317,8 +1369,6 @@ static void reader_flash()
 	reader_super_highlight_me_plenty( data->buff_pos, 0 );
     
 	reader_repaint();
-	
-	
 }
 
 /**
@@ -1853,8 +1903,8 @@ static void handle_token_history( int forward, int reset )
 			  Search for previous item that contains this substring
 			*/
             if (data->history_search.go_backwards()) {
-                wcstring item = data->history_search.current_item();
-                data->token_history_buff = data->history_search.current_item();
+                wcstring item = data->history_search.current_string();
+                data->token_history_buff = data->history_search.current_string();
             }
 			current_pos = data->token_history_buff.size();
 
@@ -2435,7 +2485,14 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 	data->highlight_function( ctx->buff, ctx->color, match_highlight_pos, error, highlight_complete2, ctx );
 #endif
     highlight_search();
-    update_autosuggestion();
+    
+    /* Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it. Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into the autosuggestion. */
+    const wcstring &cmd = data->command_line, &suggest = data->autosuggestion;
+    if (! suggest.empty() && ! cmd.empty() && string_prefixes_string(cmd, suggest)) {
+        /* The autosuggestion is still reasonable, so do nothing */
+    } else {
+        update_autosuggestion();
+    }
 }
 
 
@@ -3019,7 +3076,7 @@ const wchar_t *reader_readline()
 						if( ! data->command_line.empty() )
 						{
                             if (data->history) {
-                                data->history->add(data->command_line);
+                                //data->history->add(data->command_line);
                                 data->history->add_with_file_detection(data->command_line);
                             }
 						}
@@ -3108,7 +3165,7 @@ const wchar_t *reader_readline()
                         if (data->history_search.is_at_end()) {
                             new_text = data->search_buff;
                         } else {
-                            new_text = data->history_search.current_item();
+                            new_text = data->history_search.current_string();
                         }
 						handle_history(new_text);
 						

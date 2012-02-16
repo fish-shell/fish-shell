@@ -54,7 +54,8 @@
 /**
    The number of tests to run
  */
-#define ESCAPE_TEST_COUNT 1000000
+//#define ESCAPE_TEST_COUNT 1000000
+#define ESCAPE_TEST_COUNT 10000
 /**
    The average length of strings to unescape
  */
@@ -764,6 +765,7 @@ static void test_history_matches(history_search_t &search, size_t matches) {
     size_t i;
     for (i=0; i < matches; i++) {
         assert(search.go_backwards());
+        wcstring item = search.current_string();
     }
     assert(! search.go_backwards());
     
@@ -773,27 +775,77 @@ static void test_history_matches(history_search_t &search, size_t matches) {
     assert(! search.go_forwards());
 }
 
-static void test_history(void) {
+class history_tests_t {
+public:
+    static void test_history(void);
+};
+
+static wcstring random_string(void) {
+    wcstring result;
+    size_t max = 1 + rand() % 32;
+    while (max--) {
+        wchar_t c = 1 + rand()%ESCAPE_TEST_CHAR;
+        result.push_back(c);
+    }
+    return result;
+}
+
+void history_tests_t::test_history(void) {
     say( L"Testing history");
     
     history_t &history = history_t::history_with_name(L"test_history");
+    history.clear();
     history.add(L"Gamma");
     history.add(L"Beta");
     history.add(L"Alpha");
     
-
     /* All three items match "a" */
     history_search_t search1(history, L"a");
     test_history_matches(search1, 3);
-    assert(search1.current_item() == L"Alpha");
+    assert(search1.current_string() == L"Alpha");
     
     /* One item matches "et" */
     history_search_t search2(history, L"et");
     test_history_matches(search2, 1);
-    assert(search2.current_item() == L"Beta");
+    assert(search2.current_string() == L"Beta");
+    
+    /* Test history escaping and unescaping, yaml, etc. */
+    std::vector<history_item_t> before, after;
+    history.clear();
+    size_t i, max = 100;
+    for (i=1; i <= max; i++) {
+        
+        /* Generate a value */
+        wcstring value = wcstring(L"test item ") + format_val(i);
+
+        /* Generate some paths */
+        path_list_t paths;        
+        size_t count = rand() % 6;
+        while (count--) {
+            paths.push_front(random_string());
+        }
+        
+        /* Record this item */
+        history_item_t item(value, time(NULL), paths);
+        before.push_back(item);
+        history.add(item);
+    }
+    history.save();
+    
+    /* Read items back in reverse order and ensure they're the same */
+    for (i=100; i >= 1; i--) {
+        history_item_t item = history.item_at_index(i);
+        assert(! item.empty());
+        after.push_back(item);
+    }
+    assert(before.size() == after.size());
+    for (size_t i=0; i < before.size(); i++) {
+        const history_item_t &bef = before.at(i), &aft = after.at(i);
+        assert(bef.contents == aft.contents);
+        assert(bef.creation_timestamp == aft.creation_timestamp);
+        assert(bef.required_paths == aft.required_paths);
+    }
 }
-
-
 
 
 /**
@@ -825,7 +877,7 @@ int main( int argc, char **argv )
 	test_expand();
 	test_path();
     test_colors();
-    test_history();
+    history_tests_t::test_history();
 	
 	say( L"Encountered %d errors in low-level tests", err_count );
 

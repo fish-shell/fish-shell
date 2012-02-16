@@ -475,9 +475,7 @@ void job_free( job_t* j );
 void job_promote(job_t *job);
 
 /**
-   Create a new job. Job struct is allocated using halloc, so anything
-   that should be freed with the job can uset it as a halloc context
-   when allocating.
+   Create a new job.
 */
 job_t *job_create();
 
@@ -519,7 +517,7 @@ void job_continue( job_t *j, int cont );
 
    \param interactive whether interactive jobs should be reaped as well
 */
-int job_reap( int interactive );
+int job_reap( bool interactive );
 
 /**
    Signal handler for SIGCHLD. Mark any processes with relevant

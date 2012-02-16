@@ -33,6 +33,21 @@
 #include <map>
 #include <algorithm>
 
+/*
+
+Our history format is intended to be valid YAML. Here it is:
+
+  - cmd: ssh blah blah blah
+    when: 2348237
+    paths:
+      - /path/to/something
+      - /path/to/something_else
+    
+  Newlines are replaced by \n. Backslashes are replaced by \\.
+*/
+
+
+
 /** When we rewrite the history, the number of items we keep */
 #define HISTORY_SAVE_MAX (1024 * 256)
 
@@ -46,9 +61,15 @@
 class history_lru_node_t : public lru_node_t {
     public:
     time_t timestamp;
-    history_lru_node_t(const history_item_t &item) : lru_node_t(item.str()), timestamp(item.timestamp()) {}
+    path_list_t required_paths;
+    history_lru_node_t(const history_item_t &item) :
+        lru_node_t(item.str()),
+        timestamp(item.timestamp()),
+        required_paths(item.required_paths)
+    {}
     
     bool write_to_file(FILE *f) const;
+    bool write_yaml_to_file(FILE *f) const;
 };
 
 class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
@@ -72,6 +93,7 @@ class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
         history_lru_node_t *node = this->get_node(item.str());
         if (node != NULL) {
             node->timestamp = std::max(node->timestamp, item.timestamp());
+            /* What to do about paths here? Let's just ignore them */
         } else {
             node = new history_lru_node_t(item);
             this->add_node(node);
@@ -85,11 +107,11 @@ static std::map<wcstring, history_t *> histories;
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix);
 
-/* Unescapes newlines in-place */
-static void unescape_newlines(wcstring &str);
+/** Replaces newlines with a literal backslash followed by an n, and replaces backslashes with two backslashes. */
+static void escape_yaml(std::string &str);
 
-/* Escapes newlines in-place */
-static void escape_newlines(wcstring &str);
+/** Undoes escape_yaml */
+static void unescape_yaml(std::string &str);
 
 /* Custom deleter for our shared_ptr */
 class history_item_data_deleter_t {
@@ -128,10 +150,29 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     }
 }
 
-bool history_lru_node_t::write_to_file(FILE *f) const {
-    wcstring escaped = key;
-    escape_newlines(escaped);
-	return fwprintf( f, L"# %d\n%ls\n", timestamp, escaped.c_str());
+/* Output our YAML to a file */
+bool history_lru_node_t::write_yaml_to_file(FILE *f) const {
+    std::string cmd = wcs2string(key);
+    escape_yaml(cmd);
+    if (fprintf(f, "- cmd: %s\n", cmd.c_str()) < 0)
+        return false;
+        
+    if (fprintf(f, "   when: %ld\n", (long)timestamp) < 0)
+        return false;
+    
+    if (! required_paths.empty()) {
+        if (fputs("   paths:\n", f) < 0)
+            return false;
+            
+        for (path_list_t::const_iterator iter = required_paths.begin(); iter != required_paths.end(); iter++) {
+            std::string path = wcs2string(*iter);
+            escape_yaml(path);
+            
+            if (fprintf(f, "    - %s\n", path.c_str()) < 0)
+                return false;
+        }
+    }
+    return true;
 }
 
 history_t & history_t::history_with_name(const wcstring &name) {
@@ -158,17 +199,27 @@ history_t::~history_t()
     pthread_mutex_destroy(&lock);
 }
 
-void history_t::add(const wcstring &str, const path_list_t &valid_paths)
+void history_t::add(const history_item_t &item)
 {
     scoped_lock locker(lock);
     
     /* Add the history items */
+    new_items.push_back(item);
+    
+    /* Prevent the first write from always triggering a save */
     time_t now = time(NULL);
-    new_items.push_back(history_item_t(str, now, valid_paths));
+    if (! save_timestamp)
+        save_timestamp = now;
     
     /* This might be a good candidate for moving to a background thread */
     if((now > save_timestamp + SAVE_INTERVAL) || (new_items.size() >= SAVE_COUNT))
 		this->save_internal();
+
+}
+
+void history_t::add(const wcstring &str, const path_list_t &valid_paths)
+{
+    this->add(history_item_t(str, time(NULL), valid_paths));
 }
 
 history_item_t history_t::item_at_index(size_t idx) {
@@ -198,136 +249,151 @@ history_item_t history_t::item_at_index(size_t idx) {
     return history_item_t(wcstring(), 0);
 }
 
-history_item_t history_t::decode_item(const char *begin, size_t len)
-{
-    const char *pos = begin, *end = begin + len;
-    
-    int was_backslash = 0;
-    
-    wcstring output;
-    time_t timestamp = 0;
-    
-    int first_char = 1;	
-    bool timestamp_mode = false;
-    
-    while( 1 )
-    {
-        wchar_t c;
-        mbstate_t state;
-        bzero(&state, sizeof state);
+/* Read one line, stripping off any newline, and updating cursor. Note that our string is NOT null terminated; it's just a memory mapped file. */
+static size_t read_line(const char *base, size_t cursor, size_t len, std::string &result) {
+    /* Locate the newline */
+    assert(cursor <= len);
+    const char *start = base + cursor;
+    const char *newline = (char *)memchr(start, '\n', len - cursor);
+    if (newline != NULL) {
+        /* We found a newline. */
+        result.assign(start, newline - start);
         
-        size_t res;
-        
-        res = mbrtowc( &c, pos, end-pos, &state );
-        
-        if( res == (size_t)-1 )
-        {
-            pos++;
-            continue;
-        }
-        else if( res == (size_t)-2 )
-        {
-            break;
-        }
-        else if( res == (size_t)0 )
-        {
-            pos++;
-            continue;
-        }
-        pos += res;
-        
-        if( c == L'\n' )
-        {
-            if( timestamp_mode )
-            {
-                const wchar_t *time_string = output.c_str();
-                while( *time_string && !iswdigit(*time_string))
-                    time_string++;
-                errno=0;
-                
-                if( *time_string )
-                {
-                    time_t tm;
-                    wchar_t *end;
-                    
-                    errno = 0;
-                    tm = (time_t)wcstol( time_string, &end, 10 );
-                    
-                    if( tm && !errno && !*end )
-                    {
-                        timestamp = tm;
-                    }
-                    
-                }					
-                
-                output.clear();
-                timestamp_mode = 0;
-                continue;
-            }
-            if( !was_backslash )
-                break;
-        }
-        
-        if( first_char )
-        {
-            if( c == L'#' ) 
-                timestamp_mode = 1;
-        }
-        
-        first_char = 0;
-        
-        output.push_back(c);
-        
-        was_backslash = ( (c == L'\\') && !was_backslash);
-        
+        /* Return the amount to advance the cursor; skip over the newline */
+        return newline - start + 1;
+    } else {
+        /* We ran off the end */
+        result.clear();
+        return len - cursor;
     }
+}
+
+/* Trims leading spaces in the given string, returning how many there were */
+static size_t trim_leading_spaces(std::string &str) {
+    size_t i = 0, max = str.size();
+    while (i < max && str[i] == ' ')
+        i++;
+    str.erase(0, i);
+    return i;
+}
+
+static bool extract_prefix(std::string &key, std::string &value, const std::string &line) {
+    size_t where = line.find(":");
+    if (where != std::string::npos) {
+        key = line.substr(0, where);
+        
+        // skip a space after the : if necessary
+        size_t val_start = where + 1;
+        if (val_start < line.size() && line.at(val_start) == ' ')
+            val_start++;
+        value = line.substr(val_start);
+    }
+    return where != std::string::npos;
+}
+
+history_item_t history_t::decode_item(const char *base, size_t len) {
+    wcstring cmd;
+    time_t when = 0;
+    path_list_t paths;
     
-    unescape_newlines(output);
-    return history_item_t(output, timestamp);
+    size_t indent = 0, cursor = 0;
+    std::string key, value, line;
+    
+    /* Read the "- cmd:" line */
+    size_t advance = read_line(base, cursor, len, line);
+    trim_leading_spaces(line);
+    if (! extract_prefix(key, value, line) || key != "- cmd")
+        goto done;
+    
+    cursor += advance;
+    cmd = str2wcstring(value.c_str());
+
+    /* Read the remaining lines */
+    for (;;) {
+        /* Read a line */
+        size_t advance = read_line(base, cursor, len, line);
+        
+        /* Count and trim leading spaces */
+        size_t this_indent = trim_leading_spaces(line);
+        if (indent == 0)
+            indent = this_indent;
+        
+        if (this_indent == 0 || indent != this_indent)
+            break;
+        
+        if (! extract_prefix(key, value, line))
+            break;
+            
+        /* We are definitely going to consume this line */
+        unescape_yaml(value);
+        cursor += advance;
+        
+        if (key == "when") {
+            /* Parse an int from the timestamp */
+            long tmp = 0;
+            if (sscanf(value.c_str(), "%ld", &tmp) > 0) {
+                when = tmp;
+            }
+        } else if (key == "paths") {
+            /* Read lines starting with " - " until we can't read any more */
+            for (;;) {
+                size_t advance = read_line(base, cursor, len, line);
+                if (trim_leading_spaces(line) <= indent)
+                    break;
+                    
+                if (strncmp(line.c_str(), "- ", 2))
+                    break;
+                    
+                /* We're going to consume this line */
+                cursor += advance;
+                
+
+                /* Skip the leading dash-space and then store this path it */
+                line.erase(0, 2);
+                unescape_yaml(line);
+                paths.push_front(str2wcstring(line.c_str()));
+            }
+        }
+    }
+    /* Reverse the paths, since we pushed them to the front each time */
+done:
+    paths.reverse();
+    return history_item_t(cmd, when, paths);
+    
 }
 
 void history_t::populate_from_mmap(void)
 {
 	const char *begin = mmap_start;
-	const char *end = begin + mmap_length;
-	const char *pos;
-	
-	int ignore_newline = 0;
-	int do_push = 1;
-	
-	for( pos = begin; pos <end; pos++ )
-	{
-		
-		if( do_push )
-		{
-			ignore_newline = *pos == '#';
-            /* Need to unique-ize */
-            old_item_offsets.push_back(pos - begin);
-			do_push = 0;
-		}
-		
-		switch( *pos )
-		{
-			case '\\':
-			{
-				pos++;
-				break;
-			}
-			
-			case '\n':
-			{
-				if( ignore_newline )
-				{
-					ignore_newline = 0;
-				}
-				else
-				{
-					do_push = 1;
-				}				
-				break;
-			}
-		}
-	}	
+    size_t cursor = 0;
+    while (cursor < mmap_length) {
+        const char *line_start = begin + cursor;
+        /* Look for a newline */
+        const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
+        if (newline == NULL)
+            break;
+        
+        /* Advance the cursor past this line. +1 is for the newline */
+        size_t line_len = newline - line_start;
+        cursor += line_len + 1;
+
+        /* Skip lines with a leading, since these are in the interior of one of our items */
+        if (line_start[0] == ' ')
+            continue;
+        
+        /* Skip very short lines to make one of the checks below easier */
+        if (line_len < 3)
+            continue;
+        
+        /* Try to be a little YAML compatible. Skip lines with leading %, ---, or ... */
+        if (! memcmp(line_start, "%", 1) ||
+            ! memcmp(line_start, "---", 3) ||
+            ! memcmp(line_start, "...", 3))
+            continue;
+            
+        /* We made it through the gauntlet. */
+        old_item_offsets.push_back(line_start - begin);
+    }
 }
 
 void history_t::load_old_if_needed(void)
@@ -403,7 +469,7 @@ bool history_search_t::go_backwards() {
         /* Look for a term that matches and that we haven't seen before */
         const wcstring &str = item.str();
         if (item.matches_search(term, search_type) && ! match_already_made(str) && ! should_skip_match(str)) {
-            prev_matches.push_back(prev_match_t(idx, item.str()));
+            prev_matches.push_back(prev_match_t(idx, item));
             return true;
         }
     }
@@ -429,45 +495,59 @@ void history_search_t::go_to_beginning(void) {
 }
 
 
-wcstring history_search_t::current_item() const {
+history_item_t history_search_t::current_item() const {
     assert(! prev_matches.empty()); 
     return prev_matches.back().second;
 }
 
+wcstring history_search_t::current_string() const {
+    history_item_t item = this->current_item();
+    return item.str();
+}
+
 bool history_search_t::match_already_made(const wcstring &match) const {
     for (std::deque<prev_match_t>::const_iterator iter = prev_matches.begin(); iter != prev_matches.end(); iter++) {
-        if (iter->second == match)
+        if (iter->second.str() == match)
             return true;
     }
     return false;
 }
 
-
-static void replace_all(wcstring &str, const wchar_t *needle, const wchar_t *replacement)
+static void replace_all(std::string &str, const char *needle, const char *replacement)
 {
-    size_t needle_len = wcslen(needle);
+    size_t needle_len = strlen(needle), replacement_len = strlen(replacement);
     size_t offset = 0;
-    while((offset = str.find(needle, offset)) != wcstring::npos)
+    while((offset = str.find(needle, offset)) != std::string::npos)
     {
         str.replace(offset, needle_len, replacement);
-        offset += needle_len;
+        offset += replacement_len;
     }
 }
 
-static void unescape_newlines(wcstring &str)
-{
-    /* Replace instances of backslash + newline with just the newline */
-    replace_all(str, L"\\\n", L"\n");
+static void escape_yaml(std::string &str) {
+    replace_all(str, "\\", "\\\\"); //replace one backslash with two
+    replace_all(str, "\n", "\\n"); //replace newline with backslash + literal n
 }
 
-static void escape_newlines(wcstring &str)
-{
-    /* Replace instances of newline with backslash + newline with newline */
-    replace_all(str, L"\\\n", L"\n");
-    
-    /* If the string ends with a backslash, we'll combine it with the next line. Hack around that by appending a newline. */
-    if (! str.empty() && str.at(str.size() - 1) == L'\\')
-        str.push_back('\n');
+static void unescape_yaml(std::string &str) {
+    bool prev_escape = false;
+    for (size_t idx = 0; idx < str.size(); idx++) {
+        char c = str.at(idx);
+        if (prev_escape) {
+            if (c == '\\') {
+                /* Two backslashes in a row. Delete this one */
+                str.erase(idx, 1);
+                idx--;
+            } else if (c == 'n') {
+                /* Replace backslash + n with an actual newline */
+                str.replace(idx - 1, 2, "\n");
+                idx--;
+            }
+            prev_escape = false;
+        } else {
+            prev_escape = (c == '\\');
+        }
+    }
 }
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix)
@@ -482,6 +562,20 @@ static wcstring history_filename(const wcstring &name, const wcstring &suffix)
     result.append(L"_history");
     result.append(suffix);
     return result;
+}
+
+void history_t::clear_file_state()
+{
+    /* Erase everything we know about our file */
+    if (mmap_start != NULL && mmap_start != MAP_FAILED) {
+        munmap((void *)mmap_start, mmap_length);
+    }
+    mmap_start = 0;
+    mmap_length = 0;
+    loaded_old = false;
+    new_items.clear();
+    old_item_offsets.clear();
+    save_timestamp=time(0);
 }
 
 /** Save the specified mode to file */
@@ -511,7 +605,7 @@ void history_t::save_internal()
             history_lru_cache_t lru(HISTORY_SAVE_MAX);
             
             /* Insert old items in, from old to new */
-            for (std::vector<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); iter++) {
+            for (std::deque<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); iter++) {
                 size_t offset = *iter;
                 history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
                 lru.add_item(item);
@@ -524,7 +618,8 @@ void history_t::save_internal()
             
             /* Write them out */
             for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); iter++) {
-                if (! (*iter)->write_to_file(out)) {
+                const history_lru_node_t *node = *iter;
+                if (! node->write_yaml_to_file(out)) {
                     ok = false;
                     break;
                 }
@@ -550,15 +645,7 @@ void history_t::save_internal()
 	if( ok )
 	{
 		/* Our history has been written to the file, so clear our state so we can re-reference the file. */
-		if (mmap_start != NULL && mmap_start != MAP_FAILED) {
-			munmap((void *)mmap_start, mmap_length);
-        }
-        mmap_start = 0;
-        mmap_length = 0;
-        loaded_old = false;
-        new_items.clear();
-        old_item_offsets.clear();
-		save_timestamp=time(0);
+		this->clear_file_state();
 	}
 	
 	signal_unblock();
@@ -567,6 +654,17 @@ void history_t::save_internal()
 void history_t::save(void) {
     scoped_lock locker(lock);
     this->save_internal();
+}
+
+void history_t::clear(void) {
+    scoped_lock locker(lock);
+    new_items.clear();
+    old_item_offsets.clear();
+    wcstring filename = history_filename(name, L"");
+    if (! filename.empty())
+        wunlink(filename.c_str());
+    this->clear_file_state();
+    
 }
 
 void history_init()
@@ -590,46 +688,69 @@ void history_sanity_check()
 	*/
 }
 
-struct file_detection_context_t {
-    /* The history associated with this context */
-    history_t *history;
-    
-    /* The command */
-    wcstring command;
-    
-    /* The working directory at the time the command was issued */
-    wcstring working_directory;
-    
-    /* Paths to test */
-    path_list_t potential_paths;
-    
-    /* Paths that were found to be valid */
-    path_list_t valid_paths;
-    
-    int perform_file_detection() {
-        ASSERT_IS_BACKGROUND_THREAD();
-        for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); iter++) {
-            wcstring path = *iter;
-            
+int file_detection_context_t::perform_file_detection(bool test_all) {
+    ASSERT_IS_BACKGROUND_THREAD();
+    valid_paths.clear();
+    int result = 1;
+    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); iter++) {
+        wcstring path = *iter;
+        
+        bool path_is_valid;
+        /* Some special paths are always valid */
+        if (path.empty()) {
+            path_is_valid = false;
+        } else if (path == L"." || path == L"./") {
+            path_is_valid = true;
+        } else if (path == L".." || path == L"../") {
+            path_is_valid = (! working_directory.empty() && working_directory != L"/");
+        } else {
             /* Maybe append the working directory. Note that we know path is not empty here. */
             if (path.at(0) != '/') {
                 path.insert(0, working_directory);
             }
-            
-            if (0 == waccess(path.c_str(), F_OK)) {
-                /* Push the original (possibly relative) path */
-                valid_paths.push_front(*iter);
-            }
+            path_is_valid = (0 == waccess(path.c_str(), F_OK));
         }
-        valid_paths.reverse();
-        return 0;
+        
+        
+        if (path_is_valid) {
+            /* Push the original (possibly relative) path */
+            valid_paths.push_front(*iter);
+        } else {
+            /* Not a valid path */
+            result = 0;
+            if (! test_all)
+                break;
+        }
     }
-};
+    valid_paths.reverse();
+    return result;
+}
+
+bool file_detection_context_t::paths_are_valid(const path_list_t &paths) {
+    this->potential_paths = paths;
+    return perform_file_detection(false) > 0;
+}
+
+file_detection_context_t::file_detection_context_t(history_t *hist, const wcstring &cmd) :
+    history(hist),
+    command(cmd),
+    when(time(NULL)) {
+    /* Stash the working directory. TODO: We should be respecting CDPATH here*/
+    wchar_t dir_path[4096];
+    const wchar_t *cwd = wgetcwd( dir_path, 4096 );
+    if (cwd) {
+        wcstring wd = cwd;
+        /* Make sure the working directory ends with a slash */
+        if (! wd.empty() && wd.at(wd.size() - 1) != L'/')
+            wd.push_back(L'/');
+        working_directory.swap(wd);
+    }
+}
 
 static int threaded_perform_file_detection(file_detection_context_t *ctx) {
     ASSERT_IS_BACKGROUND_THREAD();
     assert(ctx != NULL);
-    return ctx->perform_file_detection();
+    return ctx->perform_file_detection(true /* test all */);
 }
 
 static void perform_file_detection_done(file_detection_context_t *ctx, int success) {
@@ -671,21 +792,8 @@ void history_t::add_with_file_detection(const wcstring &str)
     
     if (! potential_paths.empty()) {
         /* We have some paths. Make a context. */
-        file_detection_context_t *context = new file_detection_context_t();
-        context->command = str;
-        context->history = this;
-        
-        /* Stash the working directory. */
-        wchar_t dir_path[4096];
-        const wchar_t *cwd = wgetcwd( dir_path, 4096 );
-        if (cwd) {
-            wcstring wd = cwd;
-            /* Make sure the working directory ends with a slash */
-            if (! wd.empty() && wd.at(wd.size() - 1) != L'/')
-                wd.push_back(L'/');
-            context->working_directory.swap(wd);
-        }
-        
+        file_detection_context_t *context = new file_detection_context_t(this, str);
+                        
         /* Store the potential paths. Reverse them to put them in the same order as in the command. */
         potential_paths.reverse();
         context->potential_paths.swap(potential_paths);

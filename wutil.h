@@ -83,6 +83,11 @@ int lwstat(const wchar_t *file_name, struct stat *buf);
 int waccess(const wchar_t *pathname, int mode);
 
 /**
+   Wide character version of unlink().
+*/
+int wunlink(const wchar_t *pathname);
+
+/**
    Wide character version of perror().
 */
 void wperror(const wchar_t *s);

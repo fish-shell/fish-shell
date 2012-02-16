@@ -28,10 +28,12 @@ enum history_search_type_t {
 
 class history_item_t {
     friend class history_t;
+    friend class history_lru_node_t;
+    friend class history_tests_t;
 
     private:
-    history_item_t(const wcstring &);
-    history_item_t(const wcstring &, time_t, const path_list_t &paths = path_list_t());
+    explicit history_item_t(const wcstring &);
+    explicit history_item_t(const wcstring &, time_t, const path_list_t &paths = path_list_t());
 
 	/** The actual contents of the entry */
 	wcstring contents;
@@ -51,10 +53,22 @@ class history_item_t {
     
     time_t timestamp() const { return creation_timestamp; }
     
+    const path_list_t &get_required_paths() const { return required_paths; }
+    
     bool write_to_file(FILE *f) const;
+    
+    bool operator==(const history_item_t &other) const {
+        return contents == other.contents &&
+               creation_timestamp == other.creation_timestamp &&
+               required_paths == other.required_paths;
+    }
+    
+    /* Functions for testing only */
+    
 };
 
 class history_t {
+    friend class history_tests_t;
 private:
     /** No copying */
     history_t(const history_t&);
@@ -63,11 +77,17 @@ private:
     /** Private creator */
     history_t(const wcstring &pname);
     
+    /** Privately add an item */
+    void add(const history_item_t &item);
+    
     /** Destructor */
     ~history_t();
 
     /** Lock for thread safety */
     pthread_mutex_t lock;
+    
+    /** Internal function */
+    void clear_file_state();
 
 	/** The name of this list. Used for picking a suitable filename and for switching modes. */
 	const wcstring name;
@@ -91,7 +111,7 @@ private:
     void populate_from_mmap(void);
     
     /** List of old items, as offsets into out mmap data */
-    std::vector<size_t> old_item_offsets;
+    std::deque<size_t> old_item_offsets;
     
     /** Whether we've loaded old items */
     bool loaded_old;
@@ -101,7 +121,7 @@ private:
     
     /** Saves history */
     void save_internal();
-    
+        
 public:
     /** Returns history with the given name, creating it if necessary */
     static history_t & history_with_name(const wcstring &name);
@@ -115,7 +135,10 @@ public:
     /** Saves history */
     void save();
     
-    /** Return the specified history at the specified index. 0 is the index of the current commandline. */
+    /** Irreversibly clears history */
+    void clear();
+    
+    /** Return the specified history at the specified index. 0 is the index of the current commandline. (So the most recent item is at index 1.) */
     history_item_t item_at_index(size_t idx);
 };
 
@@ -128,7 +151,7 @@ class history_search_t {
     enum history_search_type_t search_type;
     
     /** Our list of previous matches as index, value. The end is the current match. */
-    typedef std::pair<size_t, wcstring> prev_match_t;
+    typedef std::pair<size_t, history_item_t> prev_match_t;
     std::deque<prev_match_t> prev_matches;
 
     /** Returns yes if a given term is in prev_matches. */
@@ -143,6 +166,9 @@ class history_search_t {
     bool should_skip_match(const wcstring &str) const;
     
     public:
+    
+    /** Gets the search term */
+    const wcstring &get_term() const { return term; }
 
     /** Sets additional string matches to skip */
     void skip_matches(const wcstring_list_t &skips);
@@ -162,8 +188,12 @@ class history_search_t {
     /** Goes to the beginning (backwards) */
     void go_to_beginning(void);
     
-    /** Returns the current search result. asserts if there is no current item. */
-    wcstring current_item(void) const;
+    /** Returns the current search result item. asserts if there is no current item. */
+    history_item_t current_item(void) const;
+    
+    /** Returns the current search result item contents. asserts if there is no current item. */
+    wcstring current_string(void) const;
+
 
     /** Constructor */
     history_search_t(history_t &hist, const wcstring &str, enum history_search_type_t type = HISTORY_SEARCH_TYPE_CONTAINS) :
@@ -198,5 +228,39 @@ void history_destroy();
    Perform sanity checks
 */
 void history_sanity_check();
+
+/* A helper class for threaded detection of paths */
+struct file_detection_context_t {
+
+    /* Constructor */
+    file_detection_context_t(history_t *hist, const wcstring &cmd);
+    
+    /* Determine which of potential_paths are valid, and put them in valid_paths */
+    int perform_file_detection();
+    
+    /* The history associated with this context */
+    history_t *history;
+    
+    /* The command */
+    wcstring command;
+    
+    /* When the command was issued */
+    time_t when;
+    
+    /* The working directory at the time the command was issued */
+    wcstring working_directory;
+    
+    /* Paths to test */
+    path_list_t potential_paths;
+    
+    /* Paths that were found to be valid */
+    path_list_t valid_paths;
+    
+    /* Performs file detection. Returns 1 if every path in potential_paths is valid, 0 otherwise. If test_all is true, tests every path; otherwise stops as soon as it reaches an invalid path. */
+    int perform_file_detection(bool test_all);
+    
+    /* Determine whether the given paths are all valid */
+    bool paths_are_valid(const path_list_t &paths);
+};
 
 #endif

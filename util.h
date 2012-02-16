@@ -449,19 +449,6 @@ void al_foreach( array_list_t *l, void (*func)( void * ));
 */
 void al_foreach2( array_list_t *l, void (*func)( void *, void *), void *aux);
 
-template<typename T>
-T al_list_to(array_list_t *list)
-{
-    T result;
-    int i, c = al_get_count(list);
-    for (i=0; i < c; i++) {
-        void *val = al_get(list, i);
-        result.push_back(val);
-    }
-    return result;
-}
-
-
 /**
    Compares two wide character strings with an (arguably) intuitive
    ordering.

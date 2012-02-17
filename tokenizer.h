@@ -57,6 +57,10 @@ enum tokenizer_error
 */
 #define TOK_SHOW_COMMENTS 2
 
+/** Flag telling the tokenizer to not generate error messages, which we need to do when tokenizing off of the main thread (since wgettext is not thread safe).
+*/
+#define TOK_SQUASH_ERRORS 4
+
 
 /**
    The tokenizer struct. 
@@ -88,6 +92,9 @@ struct tokenizer
 	wchar_t last_quote;
 	/** Last error */
 	int error;
+    
+    /* Whether we are squashing errors */
+    bool squash_errors;
 };
 
 /**

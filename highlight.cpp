@@ -557,7 +557,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 		color[i] = -1;
 
     tokenizer tok;
-	for( tok_init( &tok, buff, TOK_SHOW_COMMENTS );
+	for( tok_init( &tok, buff, TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS );
 		tok_has_next( &tok );
 		tok_next( &tok ) )
 	{	

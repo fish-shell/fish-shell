@@ -23,6 +23,8 @@ segments.
 #include "tokenizer.h"
 #include "common.h"
 
+/* Wow what a hack */
+#define TOK_CALL_ERROR(t, e, x) do { tok_call_error((t), (e), (t)->squash_errors ? L"" : (x)); } while (0)
 
 /**
    Error string for unexpected end of string
@@ -101,7 +103,7 @@ static int check_size( tokenizer *tok, size_t len )
 /**
    Set the latest tokens string to be the specified error message
 */
-static void tok_error( tokenizer *tok, int error_type, const wchar_t *error_message )
+static void tok_call_error( tokenizer *tok, int error_type, const wchar_t *error_message )
 {
 	tok->last_type = TOK_ERROR;
 	tok->error = error_type;
@@ -124,6 +126,11 @@ int tok_get_error( tokenizer *tok )
 void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 {
 
+    /* We can only generate error messages on the main thread due to wgettext() thread safety issues. */
+    if (! (flags & TOK_SQUASH_ERRORS)) {
+        ASSERT_IS_MAIN_THREAD();
+    }
+    
 	CHECK( tok, );
 
 	memset( tok, 0, sizeof( tokenizer) );
@@ -133,6 +140,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 
 	tok->accept_unfinished = !! (flags & TOK_ACCEPT_UNFINISHED);
 	tok->show_comments = !! (flags & TOK_SHOW_COMMENTS);
+    tok->squash_errors = !! (flags & TOK_SQUASH_ERRORS);
 	tok->has_next=1;
 
 	tok->has_next = (*b != L'\0');
@@ -224,7 +232,7 @@ static void read_string( tokenizer *tok )
 				{
 					if( (!tok->accept_unfinished) )
 					{
-						tok_error( tok, TOK_UNTERMINATED_ESCAPE, QUOTE_ERROR );
+						TOK_CALL_ERROR( tok, TOK_UNTERMINATED_ESCAPE, QUOTE_ERROR );
 						return;
 					}
 					else
@@ -290,7 +298,7 @@ static void read_string( tokenizer *tok )
 								
 								if( (!tok->accept_unfinished) )
 								{
-									tok_error( tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR );
+									TOK_CALL_ERROR( tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR );
 									return;
 								}
 								do_loop = 0;
@@ -327,7 +335,7 @@ static void read_string( tokenizer *tok )
 								tok->buff += wcslen( tok->buff );
 								if( (!tok->accept_unfinished) )
 								{
-									tok_error( tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR );
+									TOK_CALL_ERROR( tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR );
 									return;
 								}
 								do_loop = 0;
@@ -381,7 +389,7 @@ static void read_string( tokenizer *tok )
 
 	if( (!tok->accept_unfinished) && (mode!=0) )
 	{
-		tok_error( tok, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR );
+		TOK_CALL_ERROR( tok, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR );
 		return;
 	}
 
@@ -442,7 +450,7 @@ static void read_redirect( tokenizer *tok, int fd )
 		{
 			if( fd == 0 )
 			{
-				tok_error( tok, TOK_OTHER, PIPE_ERROR );
+				TOK_CALL_ERROR( tok, TOK_OTHER, PIPE_ERROR );
 				return;
 			}
 			check_size( tok, FD_STR_MAX_LEN );
@@ -459,7 +467,7 @@ static void read_redirect( tokenizer *tok, int fd )
 	}
 	else
 	{
-		tok_error( tok, TOK_OTHER, REDIRECT_ERROR);
+		TOK_CALL_ERROR( tok, TOK_OTHER, REDIRECT_ERROR);
 	}
 
 	if( !check_size( tok, 2 ))

@@ -18,7 +18,9 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <libgen.h>
+#include <pthread.h>
 #include <string>
+
 
 #if HAVE_LIBINTL_H
 #include <libintl.h>
@@ -70,13 +72,6 @@ static char *wcs2str_buff=0;
    For wgettext: Size of buffer used by translate_wcs2str
 */
 static size_t wcs2str_buff_count=0;
-
-/**
-   For wgettext: Flag to tell whether the translation library has been initialized
-*/
-static int wgettext_is_init = 0;
-
-
 
 
 void wutil_init()
@@ -282,22 +277,23 @@ wcstring wbasename( const wcstring &path )
     return result;
 }
 
-/**
-   For wgettext: Internal init function. Automatically called when a translation is first requested.
-*/
-static void wgettext_init()
-{
-	int i;
-	
-	wgettext_is_init = 1;
-	
-	for( i=0; i<BUFF_COUNT; i++ )
+/* Really init wgettext */
+static void wgettext_really_init() {
+	for( size_t i=0; i<BUFF_COUNT; i++ )
 	{
 		sb_init( &buff[i] );
 	}
-	
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );
+}
+
+/**
+   For wgettext: Internal init function. Automatically called when a translation is first requested.
+*/
+static void wgettext_init_if_necessary()
+{
+    static pthread_once_t once = PTHREAD_ONCE_INIT;
+    pthread_once(&once, wgettext_really_init);
 }
 
 
@@ -322,11 +318,12 @@ static char *wgettext_wcs2str( const wchar_t *in )
 
 const wchar_t *wgettext( const wchar_t *in )
 {
+    ASSERT_IS_MAIN_THREAD();
+
 	if( !in )
 		return in;
 	
-	if( !wgettext_is_init )
-		wgettext_init();
+    wgettext_init_if_necessary();
 	
 	char *mbs_in = wgettext_wcs2str( in );	
 	char *out = gettext( mbs_in );
@@ -339,6 +336,14 @@ const wchar_t *wgettext( const wchar_t *in )
 	curr_buff = (curr_buff+1)%BUFF_COUNT;
 	
 	return wres;
+}
+
+wcstring wgettext2(const wcstring &in) {
+    wgettext_init_if_necessary();
+    std::string mbs_in = wcs2string(in);	
+	char *out = gettext( mbs_in.c_str() );
+    wcstring result = format_string(L"%s", out);
+    return result;
 }
 
 const wchar_t *wgetenv( const wchar_t *name )

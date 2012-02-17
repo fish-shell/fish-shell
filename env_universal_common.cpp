@@ -382,17 +382,6 @@ void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const w
 	callback = cb;
 }
 
-/**
-   Free both key and data
-*/
-static void erase( void *key,
-				   void *data )
-{
-	free( (void *)key );
-//	free( (void *)data );//data is allocated through new
-	delete data;
-}
-
 
 void env_universal_common_destroy()
 {

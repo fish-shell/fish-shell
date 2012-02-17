@@ -523,7 +523,7 @@ void parse_util_token_extent( const wchar_t *buff,
 		DIE_MEM();
 	}
 
-	for( tok_init( &tok, buffcpy, TOK_ACCEPT_UNFINISHED );
+	for( tok_init( &tok, buffcpy, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS );
 		 tok_has_next( &tok );
 		 tok_next( &tok ) )
 	{

@@ -776,7 +776,7 @@ void history_t::add_with_file_detection(const wcstring &str)
     path_list_t potential_paths;
     
     tokenizer tokenizer;
-    for( tok_init( &tokenizer, str.c_str(), 0 );
+    for( tok_init( &tokenizer, str.c_str(), TOK_SQUASH_ERRORS );
         tok_has_next( &tokenizer );
         tok_next( &tokenizer ) )
     {

@@ -738,18 +738,16 @@ int env_set( const wchar_t *key,
 			 const wchar_t *val, 
 			 int var_mode )
 {
-	int free_val = 0;
-	var_entry_t *entry = NULL;
 	env_node_t *node = NULL;
 	int has_changed_old = has_changed;
 	int has_changed_new = 0;
 	var_entry_t *e=0;	
 	int done=0;
-
+    
 	int is_universal = 0;	
 	
 	CHECK( key, ENV_INVALID );
-		
+    
 	if( val && contains( key, L"PWD", L"HOME" ) )
 	{
         /* Canoncalize our path; if it changes, recurse and try again. */
@@ -759,7 +757,7 @@ int env_set( const wchar_t *key,
             return env_set( key, val_canonical.c_str(), var_mode );
         }
 	}
-
+    
 	if( (var_mode & ENV_USER ) && is_read_only(key) )
 	{
 		return ENV_PERM;
@@ -769,31 +767,31 @@ int env_set( const wchar_t *key,
 	{
 		wchar_t *end;
 		int mask;
-
+        
 		/*
-		  Set the new umask
-		*/
+         Set the new umask
+         */
 		if( val && wcslen(val) )
 		{				
 			errno=0;
 			mask = wcstol( val, &end, 8 );
-	
+            
 			if( !errno && (!*end) && (mask <= 0777) && (mask >= 0) )
 			{
 				umask( mask );
 			}
 		}
 		/*
-		  Do not actually create a umask variable, on env_get, it will
-		  be calculated dynamically
-		*/
+         Do not actually create a umask variable, on env_get, it will
+         be calculated dynamically
+         */
 		return 0;
 	}
-
+    
 	/*
-	  Zero element arrays are internaly not coded as null but as this
-	  placeholder string
-	*/
+     Zero element arrays are internaly not coded as null but as this
+     placeholder string
+     */
 	if( !val )
 	{
 		val = ENV_NULL;
@@ -802,9 +800,9 @@ int env_set( const wchar_t *key,
 	if( var_mode & ENV_UNIVERSAL )
 	{
 		int exportv = 0;
-
+        
 		if( !(var_mode & ENV_EXPORT ) &&
-			!(var_mode & ENV_UNEXPORT ) )
+           !(var_mode & ENV_UNEXPORT ) )
 		{
 			env_universal_get_export( key );
 		}
@@ -815,7 +813,7 @@ int env_set( const wchar_t *key,
 		
 		env_universal_set( key, val, exportv );
 		is_universal = 1;
-
+        
 	}
 	else
 	{
@@ -823,7 +821,7 @@ int env_set( const wchar_t *key,
 		node = env_get_node( key );
 		if( node )
 		{
-
+            
 			std::map<wcstring, var_entry_t*>::iterator result = node->env.find(key);
 			if ( result != node->env.end() ) { 
 				e  = result->second; 
@@ -831,15 +829,15 @@ int env_set( const wchar_t *key,
 			else {
 				e = NULL;
 			}
-		
+            
 			if( e->exportv )
 			{
 				has_changed_new = 1;
 			}
 		}
-
+        
 		if( (var_mode & ENV_LOCAL) || 
-			(var_mode & ENV_GLOBAL) )
+           (var_mode & ENV_GLOBAL) )
 		{
 			node = ( var_mode & ENV_GLOBAL )?global_env:top;
 		}
@@ -848,7 +846,7 @@ int env_set( const wchar_t *key,
 			if( node )
 			{
 				if( !(var_mode & ENV_EXPORT ) &&
-					!(var_mode & ENV_UNEXPORT ) )
+                   !(var_mode & ENV_UNEXPORT ) )
 				{				
 					var_mode = e->exportv?ENV_EXPORT:0;
 				}
@@ -864,9 +862,9 @@ int env_set( const wchar_t *key,
 				if( env_universal_get( key ) )
 				{
 					int exportv = 0;
-				
+                    
 					if( !(var_mode & ENV_EXPORT ) &&
-						!(var_mode & ENV_UNEXPORT ) )
+                       !(var_mode & ENV_UNEXPORT ) )
 					{
 						env_universal_get_export( key );
 					}
@@ -879,16 +877,16 @@ int env_set( const wchar_t *key,
 					is_universal = 1;
 					
 					done = 1;
-				
+                    
 				}
 				else
 				{
 					/*
-					  New variable with unspecified scope. The default
-					  scope is the innermost scope that is shadowing,
-					  which will be either the current function or the
-					  global scope.				   
-					*/
+                     New variable with unspecified scope. The default
+                     scope is the innermost scope that is shadowing,
+                     which will be either the current function or the
+                     global scope.				   
+                     */
 					node = top;
 					while( node->next && !node->new_scope )
 					{
@@ -897,9 +895,9 @@ int env_set( const wchar_t *key,
 				}
 			}
 		}
-	
+        
 		if( !done )
-		  {
+        {
 		    var_entry_t *old_entry = NULL;
 		    size_t val_len = wcslen(val);
 		    std::map<wcstring, var_entry_t*>::iterator result = node->env.find(key);
@@ -908,76 +906,78 @@ int env_set( const wchar_t *key,
 				old_entry = result->second;
 				node->env.erase(result);
 		    }
-
+            
+			var_entry_t *entry = NULL;
 			if( old_entry && old_entry->size >= val_len )
-			  {
+            {
 			    entry = old_entry;
 				
 			    if( !!(var_mode & ENV_EXPORT) || entry->exportv )
-			      {
-				entry->exportv = !!(var_mode & ENV_EXPORT);
-				has_changed_new = 1;		
-			      }
-			  }	
+                {
+                    entry->exportv = !!(var_mode & ENV_EXPORT);
+                    has_changed_new = 1;		
+                }
+            }	
 			else
-			  {
-				delete old_entry;
+            {
+                if (old_entry != NULL)
+                    delete old_entry;
 			    entry = new var_entry_t;	
-
+                
 			    if( !entry )
-			      {
-				DIE_MEM();
-			      }
+                {
+                    DIE_MEM();
+                }
 				
 			    entry->size = val_len;
 				
 			    if( var_mode & ENV_EXPORT)
-			      {
-				entry->exportv = 1;
-				has_changed_new = 1;		
-			      }
+                {
+                    entry->exportv = 1;
+                    has_changed_new = 1;		
+                }
 			    else
-			      {
-				entry->exportv = 0;
-			      }
+                {
+                    entry->exportv = 0;
+                }
 				
-			  }
-
+            }
+            
 			entry->val = val;
 			
 			node->env.insert(std::pair<wcstring, var_entry_t*>(key, entry));
-
+            
 			if( entry->exportv )
-			  {
+            {
 			    node->exportv=1;
-			  }
-
+            }
+            
 			has_changed = has_changed_old || has_changed_new;
-		      }
-	
-		  }
-
-		if( !is_universal )
-		  {
-		    event_t ev = event_t::variable_event(key);		
-		    ev.arguments.reset(new wcstring_list_t);
-		    ev.arguments->push_back(L"VARIABLE");
-		    ev.arguments->push_back(L"SET");
-		    ev.arguments->push_back(key);
+        }
+        
+    }
+    
+    if( !is_universal )
+    {
+        event_t ev = event_t::variable_event(key);		
+        ev.arguments.reset(new wcstring_list_t);
+        ev.arguments->push_back(L"VARIABLE");
+        ev.arguments->push_back(L"SET");
+        ev.arguments->push_back(key);
 		
-		    //	debug( 1, L"env_set: fire events on variable %ls", key );	
-		    event_fire( &ev );
-		    //	debug( 1, L"env_set: return from event firing" );	
-		    ev.arguments.reset(NULL);
-		  }
-
-		if( is_locale( key ) )
-		  {
-		    handle_locale();
-		  }
-
-		return 0;
-	}
+        //	debug( 1, L"env_set: fire events on variable %ls", key );	
+        event_fire( &ev );
+        //	debug( 1, L"env_set: return from event firing" );	
+        ev.arguments.reset(NULL);
+    }
+    
+    if( is_locale( key ) )
+    {
+        handle_locale();
+    }
+    
+    return 0;
+}
 
 
 /**
@@ -1004,8 +1004,9 @@ static int try_remove( env_node_t *n,
 		{
 			has_changed = 1;
 		}
-	
-		delete v;	
+        
+        n->env.erase(result);
+		delete v;
 		return 1;
 	}
 
@@ -1590,7 +1591,7 @@ static void get_exported2( const env_node_t *n, std::map<wcstring, wcstring> &h 
 	std::map<wcstring, var_entry_t*>::const_iterator iter;
 	for (iter = n->env.begin(); iter != n->env.end(); ++iter)
 	{
-		wcstring key = iter->first;
+		const wcstring &key = iter->first;
 		var_entry_t *val_entry = iter->second;	
 		if( val_entry->exportv && (val_entry->val != ENV_NULL ) )
 		{	

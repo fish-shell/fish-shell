@@ -1667,7 +1667,7 @@ char **env_export_arr( int recalc )
 		export_func2(vals, &export_buffer );
 		
 		export_arr = (char **)realloc( export_arr,
-							  sizeof(char *)*(vals.size()) + 4) ; //REVIEW I replaced 1 with 4 because I was getting an invalid write of 4 bytes for export[arr] = 0 below 
+							  sizeof(char *)*(1 + vals.size())); //add 1 for null termination
 		
 		for( i=0; i<export_buffer.used; i++ )
 		{
@@ -1678,7 +1678,7 @@ char **env_export_arr( int recalc )
 			}
 			prev_was_null = (export_buffer.buff[i]==0);
 		}
-		export_arr[pos]=0; // REVIEW <- This is why I have changed 1 with 4
+		export_arr[pos]=NULL;
 		has_changed=0;
 
 	}

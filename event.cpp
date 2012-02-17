@@ -243,9 +243,7 @@ void event_add_handler( event_t *event )
 		signal_handle( e->param1.signal, 1 );
 	}
 
-    events.push_back(e);
-    
-    show_all_handlers();
+    events.push_back(e);    
 }
 
 void event_remove( event_t *criterion )
@@ -295,7 +293,6 @@ void event_remove( event_t *criterion )
 		}
 	}
 	events.swap(new_list);
-    show_all_handlers();
 }
 
 int event_get( event_t *criterion, std::vector<event_t *> *out )

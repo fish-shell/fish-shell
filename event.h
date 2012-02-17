@@ -158,7 +158,7 @@ void event_free( event_t *e );
 /**
    Returns a string describing the specified event.
 */
-wcstring event_get_desc( event_t *e );
+wcstring event_get_desc( const event_t *e );
 
 /**
    Fire a generic event with the specified name

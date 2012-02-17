@@ -85,12 +85,12 @@ static event_list_t blocked;
    they must name the same function.
 
 */
-static int event_match( event_t *classv, event_t *instance )
+static int event_match( const event_t *classv, const event_t *instance )
 {
 
 	if( ! classv->function_name.empty() && ! instance->function_name.empty() )
 	{
-		if( classv->function_name == instance->function_name )
+		if( classv->function_name != instance->function_name )
 			return 0;
 	}
 
@@ -164,7 +164,7 @@ static int event_is_blocked( event_t *e )
     return event_block_list_blocks_type(parser.global_event_blocks, e->type);
 }
 
-wcstring event_get_desc( event_t *e )
+wcstring event_get_desc( const event_t *e )
 {
 
 	CHECK( e, 0 );
@@ -221,6 +221,14 @@ wcstring event_get_desc( event_t *e )
 	return result;
 }
 
+static void show_all_handlers(void) {
+    puts("event handlers:");
+    for (event_list_t::const_iterator iter = events.begin(); iter != events.end(); iter++) {
+        const event_t *foo = *iter;
+        wcstring tmp = event_get_desc(foo);
+        printf("    handler now %ls\n", tmp.c_str());
+    }
+}
 
 void event_add_handler( event_t *event )
 {
@@ -234,12 +242,15 @@ void event_add_handler( event_t *event )
 	{
 		signal_handle( e->param1.signal, 1 );
 	}
-	
+
     events.push_back(e);
+    
+    show_all_handlers();
 }
 
 void event_remove( event_t *criterion )
 {
+
 	size_t i;
 	event_list_t new_list;
 	
@@ -284,6 +295,7 @@ void event_remove( event_t *criterion )
 		}
 	}
 	events.swap(new_list);
+    show_all_handlers();
 }
 
 int event_get( event_t *criterion, std::vector<event_t *> *out )
@@ -332,8 +344,9 @@ static int event_is_killed( event_t *e )
    optimize the 'no matches' path. This means that nothing is
    allocated/initialized unless needed.
 */
-static void event_fire_internal( event_t *event )
+static void event_fire_internal( const event_t *event )
 {
+
 	size_t i, j;
 	event_list_t fire;
 	
@@ -411,7 +424,7 @@ static void event_fire_internal( event_t *event )
 		prev_status = proc_get_last_status();
         parser_t &parser = parser_t::principal_parser();
 		parser.push_block( EVENT );
-		parser.current_block->state1<event_t *>() = event;
+		parser.current_block->state1<const event_t *>() = event;
 		parser.eval( buffer.c_str(), 0, TOP );
 		parser.pop_block();
 		proc_pop_interactive();					

@@ -214,7 +214,7 @@ static bool function_remove_ignore_autoload(const wcstring &name)
 	
 	if (erased) {
         event_t ev(EVENT_ANY);
-        ev.function_name=name.c_str();	
+        ev.function_name=name;	
         event_remove( &ev );
     }
     return erased;

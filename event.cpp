@@ -221,6 +221,7 @@ wcstring event_get_desc( const event_t *e )
 	return result;
 }
 
+#if 0
 static void show_all_handlers(void) {
     puts("event handlers:");
     for (event_list_t::const_iterator iter = events.begin(); iter != events.end(); iter++) {
@@ -229,6 +230,7 @@ static void show_all_handlers(void) {
         printf("    handler now %ls\n", tmp.c_str());
     }
 }
+#endif
 
 void event_add_handler( event_t *event )
 {

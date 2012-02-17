@@ -1471,7 +1471,6 @@ void env_pop()
 	}	
 }
 
-
 /**
    Function used with to insert keys of one table into a set::set<wcstring>
 */

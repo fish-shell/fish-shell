@@ -728,7 +728,7 @@ static char *get_action( const char *mimetype )
 	}
 	
 //	fprintf( stderr, "WOOT %s\n", launcher_str );	
-	launcher = strchr( launcher_str, '=' );
+	launcher = const_cast<char*>(strchr( launcher_str, '=' ));
 		
 	if( !launcher )
 	{

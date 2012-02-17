@@ -217,7 +217,7 @@ static void env_universal_remove_all()
 	for( i=0; i<lst.size(); i++ )
 	{
 		const wcstring &key = lst.at(i);
-		env_universal_common_remove( key.c_str() );
+		env_universal_common_remove( key );
 	}
 	
 }
@@ -450,7 +450,7 @@ int env_universal_remove( const wchar_t *name )
 		
 	if( is_dead() )
 	{
-		env_universal_common_remove( name );
+		env_universal_common_remove( wcstring(name) );
 	}
 	else
 	{
@@ -462,21 +462,6 @@ int env_universal_remove( const wchar_t *name )
 	
 	return res;
 }
-
-void env_universal_get_names( array_list_t *l,
-                              int show_exported,
-                              int show_unexported )
-{
-	if( !init )
-		return;
-
-	CHECK( l, );
-	
-	env_universal_common_get_names( l, 
-									show_exported,
-									show_unexported );	
-}
-
 
 void env_universal_get_names2( wcstring_list_t &lst,
                               int show_exported,

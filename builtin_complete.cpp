@@ -431,6 +431,8 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
                         path.push_back(a);
                     else
                         cmd.push_back(a);
+
+					free(a);
 				}
 				else
 				{

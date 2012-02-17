@@ -176,7 +176,7 @@ void env_universal_common_set( const wchar_t *key, const wchar_t *val, int expor
    Do not call this function. Create a message to do it. This function
    is only to be used when fishd is dead.
 */
-void env_universal_common_remove( const wchar_t *key );
+void env_universal_common_remove( const wcstring &key );
 
 /**
    Get the value of the variable with the specified name

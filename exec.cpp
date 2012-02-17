@@ -1742,6 +1742,8 @@ static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 					if( el )
 					{
 						lst->push_back(el);
+
+						free(el);
 					}
 					else
 					{
@@ -1760,6 +1762,8 @@ static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 				if( el )
 				{
                     lst->push_back(el);
+
+					free(el);
 				}
 				else
 				{

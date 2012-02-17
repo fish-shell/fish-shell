@@ -17,6 +17,7 @@
 #include <pwd.h>
 #include <set>
 #include <map>
+#include <algorithm>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -79,6 +80,22 @@ extern char **environ;
 */
 extern char **__environ;
 
+/**
+   A variable entry. Stores the value of a variable and whether it
+   should be exported. Obviously, it needs to be allocated large
+   enough to fit the value string.
+*/
+typedef struct var_entry
+{
+	int exportv; /**< Whether the variable should be exported */
+	size_t size; /**< The maximum length (excluding the NULL) that will fit into this var_entry_t */
+	
+	wcstring val; /**< The value of the variable */
+
+	var_entry():exportv(0), size(0){ } 
+}
+	var_entry_t;
+
 
 /**
    Struct representing one level in the function variable stack
@@ -88,7 +105,7 @@ typedef struct env_node
 	/** 
 		Variable table 
 	*/
-	hash_table_t env;
+	std::map<wcstring, var_entry_t*> env;
 	/** 
 		Does this node imply a new variable scope? If yes, all
 		non-global variables below this one in the stack are
@@ -105,26 +122,11 @@ typedef struct env_node
 		Pointer to next level
 	*/
 	struct env_node *next;
+
+
+	env_node() : new_scope(0), exportv(0), next(NULL) { }
 }
 	env_node_t;
-
-/**
-   A variable entry. Stores the value of a variable and whether it
-   should be exported. Obviously, it needs to be allocated large
-   enough to fit the value string.
-*/
-typedef struct var_entry
-{
-	int exportv; /**< Whether the variable should be exported */
-	size_t size; /**< The maximum length (excluding the NULL) that will fit into this var_entry_t */
-	
-#if __STDC_VERSION__ < 199901L
-	wchar_t val[1]; /**< The value of the variable */
-#else
-	wchar_t val[]; /**< The value of the variable */
-#endif
-}
-	var_entry_t;
 
 class variable_entry_t {
     bool exportv; /**< Whether the variable should be exported */
@@ -147,7 +149,7 @@ static env_node_t *global_env = 0;
 /**
    Table for global variables
 */
-static hash_table_t *global;
+static std::map<wcstring, var_entry_t *> *global;
 
 /**
    Table of variables that may not be set using the set command.
@@ -221,20 +223,6 @@ static const wchar_t *locale_variable[] =
 }
 	;
 
-/**
-   Free hash key and hash value
-*/
-static void clear_hash_entry( void *key, void *data )
-{
-	var_entry_t *entry = (var_entry_t *)data;	
-	if( entry->exportv )
-	{
-		has_changed = 1;
-	}
-	
-	free( (void *)key );
-	free( (void *)data );
-}
 
 /**
    When fishd isn't started, this function is provided to
@@ -257,7 +245,7 @@ static void start_fishd()
 	
     wcstring cmd = format_string(FISHD_CMD, pw->pw_name);	
     parser_t &parser = parser_t::principal_parser();
-	parser.eval( cmd.c_str(), 0, TOP );
+	parser.eval( cmd, 0, TOP );
 }
 
 /**
@@ -560,11 +548,7 @@ void env_init()
     env_electric.insert(L"status");
     env_electric.insert(L"umask");
     
-	top = (env_node_t *)malloc( sizeof(env_node_t) );
-	top->next = 0;
-	top->new_scope = 0;
-	top->exportv=0;
-	hash_init( &top->env, &hash_wcs_func, &hash_wcs_cmp );
+	top = new env_node_t;
 	global_env = top;
 	global = &top->env;	
 	
@@ -702,30 +686,38 @@ void env_destroy()
     env_electric.clear();
 
 	
-	hash_foreach( global, &clear_hash_entry );
-	hash_destroy( global );
-	free( top );
+	std::map<wcstring, var_entry_t*>::iterator iter;
+	for (iter = global->begin(); iter != global->end(); ++iter) {
+		var_entry_t *entry = iter->second;	
+		if( entry->exportv )
+		{
+			has_changed = 1;
+		}
 	
-	free( export_arr );
-	
+		delete entry;
+	}
+
+	delete top;
+	free( export_arr ); 
 }
 
 /**
    Search all visible scopes in order for the specified key. Return
    the first scope in which it was found.
 */
-static env_node_t *env_get_node( const wchar_t *key )
+static env_node_t *env_get_node( const wcstring &key )
 {
-	var_entry_t* res;
+	var_entry_t* res = NULL;
 	env_node_t *env = top;
 
 
 	while( env != 0 )
 	{
-		res = (var_entry_t *) hash_get( &env->env, 
-										key );
-		if( res != 0 )
-		{
+		std::map<wcstring, var_entry_t*>::const_iterator result = env->env.find( key ); 
+
+		if ( result != env->env.end() )
+		{ 
+			res  = result->second; 
 			return env;
 		}
 
@@ -747,8 +739,8 @@ int env_set( const wchar_t *key,
 			 int var_mode )
 {
 	int free_val = 0;
-	var_entry_t *entry;
-	env_node_t *node;
+	var_entry_t *entry = NULL;
+	env_node_t *node = NULL;
 	int has_changed_old = has_changed;
 	int has_changed_new = 0;
 	var_entry_t *e=0;	
@@ -829,10 +821,16 @@ int env_set( const wchar_t *key,
 	{
 		
 		node = env_get_node( key );
-		if( node && &node->env != 0 )
+		if( node )
 		{
-			e = (var_entry_t *) hash_get( &node->env, 
-										  key );
+
+			std::map<wcstring, var_entry_t*>::iterator result = node->env.find(key);
+			if ( result != node->env.end() ) { 
+				e  = result->second; 
+			}
+			else {
+				e = NULL;
+			}
 		
 			if( e->exportv )
 			{
@@ -901,98 +899,85 @@ int env_set( const wchar_t *key,
 		}
 	
 		if( !done )
-		{
-			void *k, *v;
-			var_entry_t *old_entry;
-			size_t val_len = wcslen(val);
+		  {
+		    var_entry_t *old_entry = NULL;
+		    size_t val_len = wcslen(val);
+		    std::map<wcstring, var_entry_t*>::iterator result = node->env.find(key);
+		    if ( result != node->env.end() )
+		    {
+				old_entry = result->second;
+				node->env.erase(result);
+		    }
 
-			hash_remove( &node->env, key, &k, &v );
-
-			/*
-			  Try to reuse previous key string
-			*/
-			if( !k )
-			{
-				k = wcsdup(key);
-			}
-			
-			old_entry = (var_entry_t *)v;
 			if( old_entry && old_entry->size >= val_len )
-			{
-				entry = old_entry;
+			  {
+			    entry = old_entry;
 				
-				if( !!(var_mode & ENV_EXPORT) || entry->exportv )
-				{
-					entry->exportv = !!(var_mode & ENV_EXPORT);
-					has_changed_new = 1;		
-				}
-			}
+			    if( !!(var_mode & ENV_EXPORT) || entry->exportv )
+			      {
+				entry->exportv = !!(var_mode & ENV_EXPORT);
+				has_changed_new = 1;		
+			      }
+			  }	
 			else
-			{
-				free( v );
+			  {
+				delete old_entry;
+			    entry = new var_entry_t;	
 
-				entry = (var_entry_t *)malloc( sizeof( var_entry_t ) + 
-								sizeof(wchar_t )*(val_len+1));
-	
-				if( !entry )
-				{
-					DIE_MEM();
-				}
+			    if( !entry )
+			      {
+				DIE_MEM();
+			      }
 				
-				entry->size = val_len;
+			    entry->size = val_len;
 				
-				if( var_mode & ENV_EXPORT)
-				{
-					entry->exportv = 1;
-					has_changed_new = 1;		
-				}
-				else
-				{
-					entry->exportv = 0;
-				}
+			    if( var_mode & ENV_EXPORT)
+			      {
+				entry->exportv = 1;
+				has_changed_new = 1;		
+			      }
+			    else
+			      {
+				entry->exportv = 0;
+			      }
 				
-			}
+			  }
 
-			wcscpy( entry->val, val );
+			entry->val = val;
 			
-			hash_put( &node->env, k, entry );
+			node->env.insert(std::pair<wcstring, var_entry_t*>(key, entry));
 
 			if( entry->exportv )
-			{
-				node->exportv=1;
-			}
+			  {
+			    node->exportv=1;
+			  }
 
-			if( free_val )
-			{
-				free((void *)val);
-			}
-			
 			has_changed = has_changed_old || has_changed_new;
-		}
+		      }
 	
-	}
+		  }
 
-	if( !is_universal )
-	{
-        event_t ev = event_t::variable_event(key);		
-        ev.arguments.reset(new wcstring_list_t);
-        ev.arguments->push_back(L"VARIABLE");
-        ev.arguments->push_back(L"SET");
-        ev.arguments->push_back(key);
+		if( !is_universal )
+		  {
+		    event_t ev = event_t::variable_event(key);		
+		    ev.arguments.reset(new wcstring_list_t);
+		    ev.arguments->push_back(L"VARIABLE");
+		    ev.arguments->push_back(L"SET");
+		    ev.arguments->push_back(key);
 		
-//	debug( 1, L"env_set: fire events on variable %ls", key );	
-		event_fire( &ev );
-//	debug( 1, L"env_set: return from event firing" );	
-        ev.arguments.reset(NULL);
-	}
+		    //	debug( 1, L"env_set: fire events on variable %ls", key );	
+		    event_fire( &ev );
+		    //	debug( 1, L"env_set: return from event firing" );	
+		    ev.arguments.reset(NULL);
+		  }
 
-	if( is_locale( key ) )
-	{
-		handle_locale();
-	}
+		if( is_locale( key ) )
+		  {
+		    handle_locale();
+		  }
 
-	return 0;
-}
+		return 0;
+	}
 
 
 /**
@@ -1005,32 +990,22 @@ static int try_remove( env_node_t *n,
 					   const wchar_t *key,
 					   int var_mode )
 {
-	void *old_key_void, *old_val_void;
-	wchar_t *old_key, *old_val;
-
 	if( n == 0 )
 	{
 		return 0;
 	}
-	
-	hash_remove( &n->env, 
-				 key,
-				 &old_key_void, 
-				 &old_val_void );
 
-	old_key = (wchar_t *)old_key_void;
-	old_val = (wchar_t *)old_val_void;
-	
-	if( old_key != 0 )
+	std::map<wcstring, var_entry_t*>::iterator result = n->env.find( key );  
+	if ( result != n->env.end() )
 	{
-		var_entry_t * v = (var_entry_t *)old_val;
+		var_entry_t *v = result->second;
+
 		if( v->exportv )
 		{
 			has_changed = 1;
 		}
-		
-		free(old_key);
-		free(old_val);
+	
+		delete v;	
 		return 1;
 	}
 
@@ -1174,30 +1149,39 @@ env_var_t env_get_string( const wchar_t *key )
         wcstring result;
         
         while( env != 0 )
-        {
-            res = (var_entry_t *) hash_get( &env->env, 
-                                           key );
-            if( res != 0 )
-            {
-                if( wcscmp( res->val, ENV_NULL )==0) 
-                {
-                    return wcstring(L"");
-                }
-                else
-                {
-                    return res->val;			
-                }
-            }
+	  {
+		std::map<wcstring, var_entry_t*>::iterator result =  env->env.find(key);
+	    if ( result != env->env.end() ) 
+	      {
+			res = result->second; 
+	      }
+	    else
+	      {
+			res = 0;
+	      }
+	
+
+	    if( res != 0 )
+	      {
+		if( res->val == ENV_NULL ) 
+		  {
+		    return wcstring(L"");
+		  }
+		else
+		  {
+		    return res->val;			
+		  }
+	      }
             
-            if( env->new_scope )
-            {
+	    if( env->new_scope )
+	      {
                 env = global_env;
-            }
-            else
-            {
+	      }
+	    else
+	      {
                 env = env->next;
-            }
-        }	
+	      }
+	  }	
         if( !proc_had_barrier)
         {
             proc_had_barrier=1;
@@ -1251,7 +1235,7 @@ const wchar_t *env_get( const wchar_t *key )
         }
         
         /* We always have a trailing ARRAY_SEP_STR; get rid of it */
-        if (dyn_var.size() >= wcslen(ARRAY_SEP_STR)) {
+       if (dyn_var.size() >= wcslen(ARRAY_SEP_STR)) {
             dyn_var.resize(dyn_var.size() - wcslen(ARRAY_SEP_STR));
         }
         
@@ -1280,17 +1264,26 @@ const wchar_t *env_get( const wchar_t *key )
 	
 	while( env != 0 )
 	{
-		res = (var_entry_t *) hash_get( &env->env, 
-										key );
+		std::map<wcstring, var_entry_t*>::iterator result =  env->env.find(key);
+		if ( result != env->env.end() )
+		{ 
+			res  = result->second; 
+		}
+		else
+		{
+			res = 0;
+		}
+
+
 		if( res != 0 )
 		{
-			if( wcscmp( res->val, ENV_NULL )==0) 
+			if( res->val == ENV_NULL ) 
 			{
 				return 0;
 			}
 			else
 			{
-				return res->val;			
+				return wcsdup(res->val.c_str());			
 			}
 		}
 		
@@ -1347,8 +1340,16 @@ int env_exist( const wchar_t *key, int mode )
 					
 		while( env != 0 )
 		{
-			res = (var_entry_t *) hash_get( &env->env, 
-											key );
+			std::map<wcstring, var_entry_t*>::iterator result = env->env.find( key );
+			if ( result != env->env.end() )
+			{ 
+				res  = result->second; 
+			}
+			else
+			{
+				res = 0;
+			}
+
 			if( res != 0 )
 			{
 				return 1;
@@ -1405,11 +1406,10 @@ static int local_scope_exports( env_node_t *n )
 
 void env_push( int new_scope )
 {
-	env_node_t *node = (env_node_t *)malloc( sizeof(env_node_t) );
+	env_node_t *node = new env_node_t;
 	node->next = top;
-	node->exportv=0;
-	hash_init( &node->env, &hash_wcs_func, &hash_wcs_cmp );
 	node->new_scope=new_scope;
+	
 	if( new_scope )
 	{
 		has_changed |= local_scope_exports(top);
@@ -1430,7 +1430,8 @@ void env_pop()
 
 		for( i=0; locale_variable[i]; i++ )
 		{
-			if( hash_get( &killme->env, locale_variable[i] ) )
+			std::map<wcstring, var_entry_t*>::iterator result =  killme->env.find( locale_variable[i] ); 
+			if ( result != killme->env.end() )
 			{
 				locale_changed = 1;
 				break;
@@ -1443,9 +1444,20 @@ void env_pop()
 		}
 		
 		top = top->next;
-		hash_foreach( &killme->env, &clear_hash_entry );
-		hash_destroy( &killme->env );
-		free( killme );
+
+		std::map<wcstring, var_entry_t*>::iterator iter;
+		for (iter = killme->env.begin(); iter != killme->env.end(); ++iter) 
+		{
+			var_entry_t *entry = iter->second;	
+			if( entry->exportv )
+			{
+				has_changed = 1;
+			}
+	
+			delete entry;
+		}
+
+		delete killme;
 
 		if( locale_changed )
 			handle_locale();
@@ -1478,6 +1490,23 @@ static void add_key_to_string_set( void *key,
 	}
 }
 
+static void add_key_to_string_set(const std::map<wcstring, var_entry_t*> &envs, std::set<wcstring> &strSet)
+{
+	std::map<wcstring, var_entry_t*>::const_iterator iter;
+	for (iter = envs.begin(); iter != envs.end(); ++iter)
+	{
+		var_entry_t *e = iter->second;
+
+		if( ( e->exportv && get_names_show_exported) || 
+			( !e->exportv && get_names_show_unexported) )
+		{
+		/*Insert Key*/
+   	     strSet.insert(iter->first);
+		}
+
+	}
+}
+
 wcstring_list_t env_get_names( int flags )
 {
     wcstring_list_t result;
@@ -1506,10 +1535,7 @@ wcstring_list_t env_get_names( int flags )
 			if( n == global_env )
 				break;
 			
-			hash_foreach2( &n->env, 
-						   add_key_to_string_set,
-						   &names );
-
+			add_key_to_string_set(n->env, names);
 			if( n->new_scope )
 				break;		
 			else
@@ -1520,10 +1546,7 @@ wcstring_list_t env_get_names( int flags )
 	
 	if( show_global )
 	{
-		hash_foreach2( &global_env->env, 
-					   add_key_to_string_set,
-					   &names );
-
+		add_key_to_string_set(global_env->env, names);
 		if( get_names_show_unexported ) {
             result.insert(result.end(), env_electric.begin(), env_electric.end());
         }
@@ -1551,77 +1574,58 @@ wcstring_list_t env_get_names( int flags )
 }
 
 /**
-   Function used by env_export_arr to iterate over hashtable of variables
+	Get list of all exported variables
 */
-static void export_func1( void *k, void *v, void *aux )
-{
-	var_entry_t *val_entry = (var_entry_t *)v;
-	hash_table_t *h = (hash_table_t *)aux;
 
-	hash_remove( h, k, 0, 0 );
-
-	if( val_entry->exportv && wcscmp( val_entry->val, ENV_NULL ) )
-	{	
-		hash_put( h, k, val_entry->val );
-	}
-	
-}
-
-/**
-   Get list of all exported variables
- */
-static void get_exported( env_node_t *n, hash_table_t *h )
+static void get_exported2( const env_node_t *n, std::map<wcstring, wcstring> &h )
 {
 	if( !n )
 		return;
 	
 	if( n->new_scope )
-		get_exported( global_env, h );
+		get_exported2( global_env, h );
 	else
-		get_exported( n->next, h );
+		get_exported2( n->next, h );
 
-	hash_foreach2( &n->env, &export_func1, h );	
-}		
-
+	std::map<wcstring, var_entry_t*>::const_iterator iter;
+	for (iter = n->env.begin(); iter != n->env.end(); ++iter)
+	{
+		wcstring key = iter->first;
+		var_entry_t *val_entry = iter->second;	
+		if( val_entry->exportv && (val_entry->val != ENV_NULL ) )
+		{	
+			h.insert(std::pair<wcstring, wcstring>(key, val_entry->val));
+		}
+	}
+}
 
 /**
-   Function used by env_export_arr to iterate over hashtable of variables
+	Function used by env_export_arr to iterate over map of variables
 */
-static void export_func2( void *k, void *v, void *aux )
+static void export_func2(std::map<wcstring, wcstring> &envs, buffer_t* out)
 {
-	wchar_t *key = (wchar_t *)k;
-	wchar_t *val = (wchar_t *)v;
-	
-	char *ks = wcs2str( key );
-	char *vs = wcs2str( val );
-	
-	char *pos = vs;
-
-	buffer_t *out = (buffer_t *)aux;
-
-	if( !ks || !vs )
+	std::map<wcstring, wcstring>::const_iterator iter;
+	for (iter = envs.begin(); iter != envs.end(); ++iter)
 	{
-		DIE_MEM();
-	}
-	
-	/*
-	  Make arrays into colon-separated lists
-	*/
-	while( *pos )
-	{
-		if( *pos == ARRAY_SEP )
-			*pos = ':';			
-		pos++;
-	}
-	int nil = 0;
-	
-	b_append( out, ks, strlen(ks) );
-	b_append( out, "=", 1 );
-	b_append( out, vs, strlen(vs) );
-	b_append( out, &nil, 1 );
+		char* ks = wcs2str(iter->first.c_str());
+		char* vs = wcs2str(iter->second.c_str()); 
+		char *pos = vs;
+		while( *pos )
+		{
+			if( *pos == ARRAY_SEP )
+				*pos = ':';			
+			pos++;
+		}
+		int nil = 0;
 
-	free( ks );
-	free( vs );
+		b_append( out, ks, strlen(ks) );
+		b_append( out, "=", 1 );
+		b_append( out, vs, strlen(vs) );
+		b_append( out, &nil, 1 );
+
+		free(ks);
+		free(vs);
+	}	
 }
 
 char **env_export_arr( int recalc )
@@ -1634,34 +1638,36 @@ char **env_export_arr( int recalc )
 	
 	if( has_changed )
 	{
-		hash_table_t vals;
+		std::map<wcstring, wcstring> vals;
 		int prev_was_null=1;
 		int pos=0;		
 		size_t i;
 
 		debug( 4, L"env_export_arr() recalc" );
 				
-		hash_init( &vals, &hash_wcs_func, &hash_wcs_cmp );
-		
-		get_exported( top, &vals );
+		get_exported2( top, vals );
 		
         wcstring_list_t uni;
 		env_universal_get_names2( uni, 1, 0 );
 		for( i=0; i<uni.size(); i++ )
 		{
-			const wchar_t *key = uni.at(i).c_str();
-			const wchar_t *val = env_universal_get( key );
-			if( wcscmp( val, ENV_NULL) && !hash_get( &vals, key ) )
-				hash_put( &vals, key, val );
+			const wcstring &key = uni.at(i);
+			const wchar_t *val = env_universal_get( key.c_str() );
+
+			std::map<wcstring, wcstring>::iterator result = vals.find( key ); 
+			if( wcscmp( val, ENV_NULL) && ( result == vals.end() ) )
+			{
+				vals.insert(std::pair<wcstring, wcstring>(key, val));
+			}
+
 		}
 
 		export_buffer.used=0;
 		
-		hash_foreach2( &vals, &export_func2, &export_buffer );
-		hash_destroy( &vals );
+		export_func2(vals, &export_buffer );
 		
 		export_arr = (char **)realloc( export_arr,
-							  sizeof(char *)*(hash_get_count( &vals) + 1) );
+							  sizeof(char *)*(vals.size()) + 4) ; //REVIEW I replaced 1 with 4 because I was getting an invalid write of 4 bytes for export[arr] = 0 below 
 		
 		for( i=0; i<export_buffer.used; i++ )
 		{
@@ -1672,7 +1678,7 @@ char **env_export_arr( int recalc )
 			}
 			prev_was_null = (export_buffer.buff[i]==0);
 		}
-		export_arr[pos]=0;
+		export_arr[pos]=0; // REVIEW <- This is why I have changed 1 with 4
 		has_changed=0;
 
 	}

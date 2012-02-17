@@ -28,6 +28,7 @@
 #include <dirent.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <map>
 
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -93,7 +94,8 @@
 typedef struct var_uni_entry
 {
 	int exportv; /**< Whether the variable should be exported */
-	wchar_t val[1]; /**< The value of the variable */
+	wcstring val; /**< The value of the variable */
+	var_uni_entry():exportv(0) { }
 }
 var_uni_entry_t;
 
@@ -104,7 +106,7 @@ static void parse_message( wchar_t *msg,
 /**
    The table of all universal variables
 */
-hash_table_t env_universal_var;
+std::map<wcstring, var_uni_entry_t*> env_universal_var;
 
 /**
    Callback function, should be called on all events
@@ -112,17 +114,6 @@ hash_table_t env_universal_var;
 void (*callback)( int type, 
 				  const wchar_t *key, 
 				  const wchar_t *val );
-
-/**
-   Variable used by env_get_names to communicate auxiliary information
-   to add_key_to_hash
-*/
-static int get_names_show_exported;
-/**
-   Variable used by env_get_names to communicate auxiliary information
-   to add_key_to_hash
-*/
-static int get_names_show_unexported;
 
 /**
    List of names for the UTF-8 character set.
@@ -389,7 +380,6 @@ static char *wcs2utf( const wchar_t *in )
 void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const wchar_t *val ) )
 {
 	callback = cb;
-	hash_init( &env_universal_var, &hash_wcs_func, &hash_wcs_cmp );
 }
 
 /**
@@ -399,14 +389,20 @@ static void erase( void *key,
 				   void *data )
 {
 	free( (void *)key );
-	free( (void *)data );
+//	free( (void *)data );//data is allocated through new
+	delete data;
 }
 
 
 void env_universal_common_destroy()
 {
-	hash_foreach( &env_universal_var, &erase );
-	hash_destroy( &env_universal_var );
+	std::map<wcstring, var_uni_entry_t*>::iterator iter;
+	
+	for(iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
+	{	
+		var_uni_entry_t* value = iter->second;
+		delete value;
+	}
 }
 
 /**
@@ -531,15 +527,14 @@ void read_message( connection_t *src )
 /**
    Remove variable with specified name
 */
-void env_universal_common_remove( const wchar_t *name )
+void env_universal_common_remove( const wcstring &name )
 {
-	void *k, *v;
-	hash_remove( &env_universal_var, 
-				 name,
-				 &k,
-				 &v );
-	free( k );
-	free( v );
+	std::map<wcstring, var_uni_entry_t*>::iterator result =  env_universal_var.find(name);
+	if (result != env_universal_var.end())
+	{
+		var_uni_entry_t* v = result->second;		
+		delete v;
+	}
 }
 
 /**
@@ -565,23 +560,23 @@ void env_universal_common_set( const wchar_t *key, const wchar_t *val, int expor
 	CHECK( key, );
 	CHECK( val, );
 	
-	entry = (var_uni_entry_t *)malloc( sizeof(var_uni_entry_t) + sizeof(wchar_t)*(wcslen(val)+1) );			
+	entry = new var_uni_entry_t;
 	name = wcsdup(key);
 	
 	if( !entry || !name )
 		DIE_MEM();
 	
+
 	entry->exportv=exportv;
-	
-	wcscpy( entry->val, val );
+	entry->val = val;
 	env_universal_common_remove( name );
 	
-	hash_put( &env_universal_var, name, entry );
-			
+	env_universal_var.insert( std::pair<wcstring, var_uni_entry_t*>(key, entry));			
 	if( callback )
 	{
 		callback( exportv?SET_EXPORT:SET, name, val );
 	}
+	free(name);
 }
 
 
@@ -894,99 +889,71 @@ message_t *create_message( int type,
 }
 
 /**
-   Function used with hash_foreach to insert keys of one table into
-   another
-*/
-static void add_key_to_hash( void *key, 
-							 void *data,
-							 void *aux )
-{
-	var_uni_entry_t *e = (var_uni_entry_t *)data;
-	if( ( e->exportv && get_names_show_exported) || 
-		( !e->exportv && get_names_show_unexported) )
-		al_push( (array_list_t *)aux, key );
-}
-
-static void add_key_to_hash2( void *key, 
-							 void *data,
-							 void *aux )
-{
-    wcstring_list_t &lst = *(wcstring_list_t *)aux;
-	var_uni_entry_t *e = (var_uni_entry_t *)data;
-	if( ( e->exportv && get_names_show_exported) || 
-		( !e->exportv && get_names_show_unexported) )
-        lst.push_back((wchar_t *)key);
-}
-
-void env_universal_common_get_names( array_list_t *l,
-									 int show_exported,
-									 int show_unexported )
-{
-	get_names_show_exported = show_exported;
-	get_names_show_unexported = show_unexported;
-	
-	hash_foreach2( &env_universal_var, 
-				   add_key_to_hash,
-				   l );
-}
-
+	Put exported or unexported variables in a string list
+*/	
 void env_universal_common_get_names2( wcstring_list_t &lst,
 									 int show_exported,
 									 int show_unexported )
 {
-	get_names_show_exported = show_exported;
-	get_names_show_unexported = show_unexported;
+	std::map<wcstring, var_uni_entry_t*>::const_iterator iter;
+	for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
+	{
+		const wcstring& key = iter->first;
+		const var_uni_entry_t *e = iter->second; 
+		if( ( e->exportv && show_exported) || 
+		( !e->exportv && show_unexported) )
+		{
+    	    lst.push_back(key);
+		}
 	
-	hash_foreach2( &env_universal_var, 
-				   add_key_to_hash2,
-				   &lst );
+	} 
+
 }
 
 
 wchar_t *env_universal_common_get( const wchar_t *name )
 {
-	var_uni_entry_t *e = (var_uni_entry_t *)hash_get( &env_universal_var, name );	
-	if( e )
-		return e->val;
+	std::map<wcstring, var_uni_entry_t*>::const_iterator result = env_universal_var.find(name);
+
+	if (result != env_universal_var.end() )
+	{
+		const var_uni_entry_t *e = result->second;
+		if( e )
+			return const_cast<wchar_t*>(e->val.c_str());
+	}
+
 	return 0;	
 }
 
 int env_universal_common_get_export( const wchar_t *name )
 {
-	var_uni_entry_t *e = (var_uni_entry_t *)hash_get( &env_universal_var, name );
-	if( e )
-		return e->exportv;
+	std::map<wcstring, var_uni_entry_t*>::const_iterator result = env_universal_var.find(name);
+
+	if (result != env_universal_var.end() )
+	{
+		const var_uni_entry_t *e = result->second;
+
+		if( e )
+			return e->exportv;
+	}
+
 	return 0;
-}
-
-/**
-   Adds a variable creation message about the specified variable to
-   the specified queue. The function signature is non-obvious since
-   this function is used together with hash_foreach2, which requires
-   the specified function signature.
-
-   \param k the variable name
-   \param v the variable value
-   \param q the queue to add the message to
-*/
-static void enqueue( void *k,
-					 void *v,
-					 void *q)
-{
-	const wchar_t *key = (const wchar_t *)k;
-	const var_uni_entry_t *val = (const var_uni_entry_t *)v;
-	message_queue_t *queue = (message_queue_t *)q;
-	
-	message_t *msg = create_message( val->exportv?SET_EXPORT:SET, key, val->val );
-	msg->count=1;
-	queue->push(msg);
 }
 
 void enqueue_all( connection_t *c )
 {
-	hash_foreach2( &env_universal_var,
-	               &enqueue, 
-	               (void *)c->unsent );
+	std::map<wcstring, var_uni_entry_t*>::const_iterator iter;
+
+	for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
+	{
+		const wcstring &key = iter->first;
+		const var_uni_entry_t *val = iter->second;
+	
+		message_t *msg = create_message( val->exportv?SET_EXPORT:SET, key.c_str(), val->val.c_str() );
+		msg->count=1;
+		c->unsent->push(msg);
+	}
+
 	try_send_all( c );
 }
 

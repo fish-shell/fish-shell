@@ -101,6 +101,9 @@ class lru_cache_t {
         mouth.prev = mouth.next = &mouth;
     }
     
+    /** Note that we do not define a destructor. We cannot evict all nodes (even though they typically need to be deleted by their creator). */
+
+    
     /** Returns the node for a given key, or NULL */
     node_type_t *get_node(const wcstring &key) {
         node_type_t *result = NULL;

@@ -1005,7 +1005,7 @@ static int try_remove( env_node_t *n,
 			has_changed = 1;
 		}
         
-        n->env.erase(result);
+		n->env.erase(result);
 		delete v;
 		return 1;
 	}

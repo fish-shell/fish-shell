@@ -624,7 +624,9 @@ void history_t::save_internal()
                     break;
                 }
             }
-
+            
+            /* Make sure we clear all nodes, since this doesn't happen automatically */
+            lru.evict_all_nodes();
 
 			if( fclose( out ) || !ok )
 			{

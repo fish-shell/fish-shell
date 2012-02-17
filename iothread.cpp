@@ -142,7 +142,7 @@ int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(voi
 	iothread_init();
 	
 	/* Create and initialize a request. */
-	struct ThreadedRequest_t *req = (struct ThreadedRequest_t *)malloc(sizeof *req);
+	struct ThreadedRequest_t *req = new ThreadedRequest_t();
 	req->next = NULL;
 	req->handler = handler;
 	req->completionCallback = completionCallback;
@@ -186,10 +186,12 @@ void iothread_service_completion(void) {
 	s_active_thread_count -= 1;
 	
 	/* Handle the request */
-	if (req && req->completionCallback) {
-		req->completionCallback(req->context, req->handlerResult);
-	}
-	
+    if (req) {
+        if (req->completionCallback) 
+            req->completionCallback(req->context, req->handlerResult);
+        delete req;
+    }
+    
 	/* Maybe spawn another thread, if there's more work to be done. */
 	VOMIT_ON_FAILURE(pthread_mutex_lock(&s_request_queue_lock));
 	iothread_spawn_if_needed();

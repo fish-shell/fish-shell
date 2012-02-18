@@ -223,16 +223,8 @@ class reader_data_t
 	*/
 	wcstring_list_t search_prev;
 
-	/**
-	   The current position in search_prev
-	*/
-
+	/** The current position in search_prev */
 	int search_pos;
-
-	/**
-	   Current count of the buffers
-	*/
-	size_t buff_count;
     
     /** Length of the command */
     size_t command_length() const { return command_line.size(); }
@@ -240,14 +232,10 @@ class reader_data_t
     /** Ensures that our buffers are the right size */
     void check_size(void);
 
-	/**
-	   The current position of the cursor in buff.
-	*/
+	/** The current position of the cursor in buff. */
 	size_t buff_pos;
 
-	/**
-	   Name of the current application
-	*/
+	/** Name of the current application */
 	wcstring app_name;
 
 	/** The prompt command */
@@ -285,13 +273,13 @@ class reader_data_t
 	/**
 	   When this is true, the reader will exit
 	*/
-	int end_loop;
+	bool end_loop;
 
 	/**
 	   If this is true, exit reader even if there are running
 	   jobs. This happens if we press e.g. ^D twice.
 	*/
-	int prev_end_loop;
+	bool prev_end_loop;
 
 	/**
 	   The current contents of the top item in the kill ring. 
@@ -548,14 +536,10 @@ void reader_pop_current_filename()
 
 
 /** Make sure buffers are large enough to hold the current string length */
-void reader_data_t::check_size()
-{
-	if( buff_count != command_length())
-	{
-		buff_count = command_length();
-        colors.resize(buff_count);
-        indents.resize(buff_count);
-	}
+void reader_data_t::check_size() {
+    size_t len = command_length();
+    colors.resize(len);
+    indents.resize(len);
 }
 
 
@@ -1773,10 +1757,10 @@ void reader_sanity_check()
 		if(!( data->buff_pos <= data->command_length() ))
 			sanity_lose();
         
-        if (data->colors.size() != data->buff_count)
+        if (data->colors.size() != data->command_length())
             sanity_lose();
             
-        if (data->indents.size() != data->buff_count)
+        if (data->indents.size() != data->command_length())
             sanity_lose();
             
 	}
@@ -2363,10 +2347,8 @@ public:
      */
 	const wcstring string_to_highlight;
 	
-	/**
-	 Malloc'd color buffer (same size as buff)
-	 */
-	int * color;
+	/** Color buffer */
+	std::vector<color_t> colors;
 	
 	/**
 	  The position to use for bracket matching
@@ -2388,20 +2370,30 @@ public:
     */
     const double when;
     
-    background_highlight_context_t(const wcstring &pbuff, int *pcolor, int phighlight_pos, highlight_function_t phighlight_func) :
+    background_highlight_context_t(const wcstring &pbuff, int phighlight_pos, highlight_function_t phighlight_func) :
         string_to_highlight(pbuff),
-        color(pcolor),
         match_highlight_pos(phighlight_pos),
         highlight_function(phighlight_func),
         vars(env_vars::highlighting_keys),
         when(timef())
     {
-        
+        colors.resize(string_to_highlight.size(), 0);
     }
     
-    ~background_highlight_context_t()
-    {
-        free(color);
+    int threaded_highlight() {
+        const wchar_t *delayer = vars.get(L"HIGHLIGHT_DELAY");
+        double secDelay = 0;
+        if (delayer) {
+            wcstring tmp = delayer;
+            secDelay = from_string<double>(tmp);
+        }
+        if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
+        //write(0, "Start", 5);
+        if (! string_to_highlight.empty()) {
+            highlight_function( string_to_highlight.c_str(), &colors.at(0), match_highlight_pos, NULL /* error */, vars);
+        }
+        //write(0, "End", 3);
+        return 0;
     }
 };
 
@@ -2429,12 +2421,8 @@ static void highlight_complete(background_highlight_context_t *ctx, int result) 
     ASSERT_IS_MAIN_THREAD();
 	if (ctx->string_to_highlight == data->command_line) {
 		/* The data hasn't changed, so swap in our colors */
-        size_t len = ctx->string_to_highlight.size();
-        data->colors.clear();
-        data->colors.insert(data->colors.begin(), ctx->color, ctx->color + len);
-        
-        free(ctx->color);
-		ctx->color = NULL;
+        assert(ctx->colors.size() == data->command_length());
+        data->colors.swap(ctx->colors);
         
         
 		//data->repaint_needed = 1;
@@ -2450,17 +2438,7 @@ static void highlight_complete(background_highlight_context_t *ctx, int result) 
 }
 
 static int threaded_highlight(background_highlight_context_t *ctx) {
-    const wchar_t *delayer = ctx->vars.get(L"HIGHLIGHT_DELAY");
-    double secDelay = 0;
-    if (delayer) {
-        wcstring tmp = delayer;
-        secDelay = from_string<double>(tmp);
-    }
-    if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
-    //write(0, "Start", 5);
-    ctx->highlight_function( ctx->string_to_highlight.c_str(), ctx->color, ctx->match_highlight_pos, NULL /* error */, ctx->vars );
-    //write(0, "End", 3);
-    return 0;
+    return ctx->threaded_highlight();
 }
 
 
@@ -2477,13 +2455,8 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos, array_lis
 {
     reader_sanity_check();
     
-    int *color = (int *)calloc(data->buff_count + 1, sizeof *color); 
-	background_highlight_context_t *ctx = new background_highlight_context_t(data->command_line, color, match_highlight_pos, data->highlight_function);
-#if 1
+	background_highlight_context_t *ctx = new background_highlight_context_t(data->command_line, match_highlight_pos, data->highlight_function);
 	iothread_perform(threaded_highlight, highlight_complete, ctx);
-#else
-	data->highlight_function( ctx->buff, ctx->color, match_highlight_pos, error, highlight_complete2, ctx );
-#endif
     highlight_search();
     
     /* Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it. Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into the autosuggestion. */

@@ -303,7 +303,7 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
             append_path_component(whole_path, dir);
             
 			struct stat buf;
-			if( wstat( whole_path.c_str(), &buf ) == 0 )
+			if( wstat( whole_path, &buf ) == 0 )
 			{
 				if( S_ISDIR(buf.st_mode) )
 				{
@@ -318,7 +318,7 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 			}
 			else
 			{
-				if( lwstat( whole_path.c_str(), &buf ) == 0 )
+				if( lwstat( whole_path, &buf ) == 0 )
 				{
 					err = EROTTEN;
 				}
@@ -451,7 +451,7 @@ bool path_get_config(wcstring &path)
 	if( ! xdg_dir.missing() )
 	{
 		res = xdg_dir + L"/fish";
-		if( !create_directory( res.c_str() ) )
+		if( !create_directory( res ) )
 		{
 			done = 1;
 		}
@@ -462,7 +462,7 @@ bool path_get_config(wcstring &path)
 		if( ! home.missing() )
 		{
 			res = home + L"/.config/fish";
-			if( !create_directory( res.c_str() ) )
+			if( !create_directory( res ) )
 			{
 				done = 1;
 			}

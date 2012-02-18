@@ -239,6 +239,14 @@ wcstring str2wcstring( const char *in )
     return result;
 }
 
+wcstring str2wcstring( const std::string &in )
+{
+    wchar_t *tmp = str2wcs(in.c_str());
+    wcstring result = tmp;
+    free(tmp);
+    return result;
+}
+
 wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 {
 	size_t res=0;

@@ -338,10 +338,9 @@ static wcstring make_path(const wcstring &base_dir, const wcstring &name) {
    does not perform any caching, it directly calls the mimedb command
    to do a lookup.
  */
-static wcstring complete_get_desc_suffix_internal( const wchar_t *suff_orig )
+static wcstring complete_get_desc_suffix_internal( const wcstring &suff )
 {
 
-    wcstring suff = suff_orig;
     wcstring cmd = wcstring(SUFFIX_CMD_STR) + suff;
     
     wcstring_list_t lst;

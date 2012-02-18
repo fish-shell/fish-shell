@@ -561,7 +561,7 @@ int complete_is_valid_option( const wchar_t *str,
 					continue;
 				}
 				
-				if( wcsncmp( &opt[2], o.long_opt.c_str(), gnu_opt_len )==0)
+				if( &opt[2] == o.long_opt )
 				{
                     gnu_match_set.insert(o.long_opt);
 					if( (wcsncmp( &opt[2],

@@ -713,7 +713,7 @@ static void exec_prompt()
 	{
 		proc_push_interactive( 0 );
 		
-		if( exec_subshell( data->prompt.c_str(), prompt_list ) == -1 )
+		if( exec_subshell( data->prompt, prompt_list ) == -1 )
 		{
 			/* If executing the prompt fails, make sure we at least don't print any junk */
             prompt_list.clear();

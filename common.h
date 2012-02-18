@@ -225,6 +225,7 @@ wchar_t *str2wcs( const char *in );
  way using the private use area.
  */
 wcstring str2wcstring( const char *in );
+wcstring str2wcstring( const std::string &in );
 
 /**
    Converts the narrow character string \c in into it's wide

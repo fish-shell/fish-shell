@@ -306,7 +306,7 @@ history_item_t history_t::decode_item(const char *base, size_t len) {
         goto done;
     
     cursor += advance;
-    cmd = str2wcstring(value.c_str());
+    cmd = str2wcstring(value);
 
     /* Read the remaining lines */
     for (;;) {
@@ -351,7 +351,7 @@ history_item_t history_t::decode_item(const char *base, size_t len) {
                 /* Skip the leading dash-space and then store this path it */
                 line.erase(0, 2);
                 unescape_yaml(line);
-                paths.push_front(str2wcstring(line.c_str()));
+                paths.push_front(str2wcstring(line));
             }
         }
     }

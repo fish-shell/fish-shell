@@ -44,53 +44,53 @@ void wutil_destroy();
 /**
    Wide character version of fopen().
 */
-FILE *wfopen(const wchar_t *path, const char *mode);
+FILE *wfopen(const wcstring &path, const char *mode);
 
 /**
    Wide character version of freopen().
 */
-FILE *wfreopen(const wchar_t *path, const char *mode, FILE *stream);
+FILE *wfreopen(const wcstring &path, const char *mode, FILE *stream);
 
 /**
    Wide character version of open().
 */
-int wopen(const wchar_t *pathname, int flags, ...);
+int wopen(const wcstring &pathname, int flags, ...);
 
 /**
    Wide character version of creat().
 */
-int wcreat(const wchar_t *pathname, mode_t mode);
+int wcreat(const wcstring &pathname, mode_t mode);
 
 
 /**
    Wide character version of opendir().
 */
-DIR *wopendir(const wchar_t *name);
+DIR *wopendir(const wcstring &name);
 
 /**
    Wide character version of stat().
 */
-int wstat(const wchar_t *file_name, struct stat *buf);
+int wstat(const wcstring &file_name, struct stat *buf);
 
 /**
    Wide character version of lstat().
 */
-int lwstat(const wchar_t *file_name, struct stat *buf);
+int lwstat(const wcstring &file_name, struct stat *buf);
 
 /**
    Wide character version of access().
 */
-int waccess(const wchar_t *pathname, int mode);
+int waccess(const wcstring &pathname, int mode);
 
 /**
    Wide character version of unlink().
 */
-int wunlink(const wchar_t *pathname);
+int wunlink(const wcstring &pathname);
 
 /**
    Wide character version of perror().
 */
-void wperror(const wchar_t *s);
+void wperror(const wcstring &s);
 
 /**
    Wide character version of getcwd().
@@ -100,7 +100,7 @@ wchar_t *wgetcwd( wchar_t *buff, size_t sz );
 /**
    Wide character version of chdir()
 */
-int wchdir( const wchar_t * dir );
+int wchdir( const wcstring &dir );
 
 /** 
 	Wide character version of realpath function. Just like the GNU
@@ -108,7 +108,7 @@ int wchdir( const wchar_t * dir );
 	second argument, in which case the result will be allocated using
 	malloc, and must be free'd by the user.
 */
-wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path);
+wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path);
 
 /**
    Wide character version of readdir()
@@ -139,16 +139,16 @@ wcstring wgettext2(const wcstring &in);
 /**
    Wide character version of getenv
 */
-const wchar_t *wgetenv( const wchar_t *name );
+const wchar_t *wgetenv( const wcstring &name );
 
 /**
    Wide character version of mkdir
 */
-int wmkdir( const wchar_t *dir, int mode );
+int wmkdir( const wcstring &dir, int mode );
 
 /**
    Wide character version of rename
 */
-int wrename( const wchar_t *oldName, const wchar_t *newName );
+int wrename( const wcstring &oldName, const wcstring &newName );
 
 #endif

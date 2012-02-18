@@ -81,10 +81,10 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
             if (path_len == 0) continue;
             
             append_path_component(new_cmd, cmd_str);
-			if( waccess( new_cmd.c_str(), X_OK )==0 )
+			if( waccess( new_cmd, X_OK )==0 )
 			{
 				struct stat buff;
-				if( wstat( new_cmd.c_str(), &buff )==-1 )
+				if( wstat( new_cmd, &buff )==-1 )
 				{
 					if( errno != EACCES )
 					{

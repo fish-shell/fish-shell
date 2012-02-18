@@ -409,7 +409,7 @@ void history_t::load_old_if_needed(void)
 	
 	if( ! filename.empty() )
 	{
-		if( ( fd = wopen( filename.c_str(), O_RDONLY ) ) > 0 )
+		if( ( fd = wopen( filename, O_RDONLY ) ) > 0 )
 		{
 			off_t len = lseek( fd, 0, SEEK_END );
 			if( len != (off_t)-1)
@@ -595,7 +595,7 @@ void history_t::save_internal()
 	if( ! tmp_name.empty() )
 	{
         FILE *out;
-		if( (out=wfopen( tmp_name.c_str(), "w" ) ) )
+		if( (out=wfopen( tmp_name, "w" ) ) )
 		{
                 
             /* Load old */
@@ -639,7 +639,7 @@ void history_t::save_internal()
 			else
 			{
                 wcstring new_name = history_filename(name, wcstring());
-				wrename(tmp_name.c_str(), new_name.c_str());
+				wrename(tmp_name, new_name);
 			}
 		}
 	}	
@@ -664,7 +664,7 @@ void history_t::clear(void) {
     old_item_offsets.clear();
     wcstring filename = history_filename(name, L"");
     if (! filename.empty())
-        wunlink(filename.c_str());
+        wunlink(filename);
     this->clear_file_state();
     
 }
@@ -710,7 +710,7 @@ int file_detection_context_t::perform_file_detection(bool test_all) {
             if (path.at(0) != '/') {
                 path.insert(0, working_directory);
             }
-            path_is_valid = (0 == waccess(path.c_str(), F_OK));
+            path_is_valid = (0 == waccess(path, F_OK));
         }
         
         

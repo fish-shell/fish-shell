@@ -118,25 +118,25 @@ wchar_t *wgetcwd( wchar_t *buff, size_t sz )
 	return ret;
 }
 
-int wchdir( const wchar_t * dir )
+int wchdir( const wcstring &dir )
 {
     cstring tmp = wcs2string(dir);
 	return chdir( tmp.c_str() );
 }
 
-FILE *wfopen(const wchar_t *path, const char *mode)
+FILE *wfopen(const wcstring &path, const char *mode)
 {
 	cstring tmp = wcs2string(path);
 	return fopen(tmp.c_str(), mode);
 }
 
-FILE *wfreopen(const wchar_t *path, const char *mode, FILE *stream)
+FILE *wfreopen(const wcstring &path, const char *mode, FILE *stream)
 {
     cstring tmp = wcs2string(path);
     return freopen(tmp.c_str(), mode, stream);
 }
 
-int wopen(const wchar_t *pathname, int flags, ...)
+int wopen(const wcstring &pathname, int flags, ...)
 {
     cstring tmp = wcs2string(pathname);
 	int res=-1;
@@ -154,25 +154,25 @@ int wopen(const wchar_t *pathname, int flags, ...)
     return res;
 }
 
-int wcreat(const wchar_t *pathname, mode_t mode)
+int wcreat(const wcstring &pathname, mode_t mode)
 {
     cstring tmp = wcs2string(pathname);
     return creat(tmp.c_str(), mode);
 }
 
-DIR *wopendir(const wchar_t *name)
+DIR *wopendir(const wcstring &name)
 {
     cstring tmp = wcs2string(name);
     return opendir(tmp.c_str());
 }
 
-int wstat(const wchar_t *file_name, struct stat *buf)
+int wstat(const wcstring &file_name, struct stat *buf)
 {
     cstring tmp = wcs2string(file_name);
     return stat(tmp.c_str(), buf);
 }
 
-int lwstat(const wchar_t *file_name, struct stat *buf)
+int lwstat(const wcstring &file_name, struct stat *buf)
 {
    // fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
     cstring tmp = wcs2string(file_name);
@@ -180,31 +180,31 @@ int lwstat(const wchar_t *file_name, struct stat *buf)
 }
 
 
-int waccess(const wchar_t *file_name, int mode)
+int waccess(const wcstring &file_name, int mode)
 {
     cstring tmp = wcs2string(file_name);
     return access(tmp.c_str(), mode);
 }
 
-int wunlink(const wchar_t *file_name)
+int wunlink(const wcstring &file_name)
 {
     cstring tmp = wcs2string(file_name);
     return unlink(tmp.c_str());
 }
 
-void wperror(const wchar_t *s)
+void wperror(const wcstring &s)
 {
 	int e = errno;
-	if( s != 0 )
+	if( !s.empty() )
 	{
-		fwprintf( stderr, L"%ls: ", s );
+		fwprintf( stderr, L"%ls: ", s.c_str() );
 	}
 	fwprintf( stderr, L"%s\n", strerror( e ) );
 }
 
 #ifdef HAVE_REALPATH_NULL
 
-wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
+wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 {
 	cstring tmp = wcs2string(pathname);
 	char *narrow_res = realpath( tmp.c_str(), 0 );	
@@ -346,7 +346,7 @@ wcstring wgettext2(const wcstring &in) {
     return result;
 }
 
-const wchar_t *wgetenv( const wchar_t *name )
+const wchar_t *wgetenv( const wcstring &name )
 {
     ASSERT_IS_MAIN_THREAD();
     cstring name_narrow = wcs2string(name);
@@ -361,13 +361,13 @@ const wchar_t *wgetenv( const wchar_t *name )
 	
 }
 
-int wmkdir( const wchar_t *name, int mode )
+int wmkdir( const wcstring &name, int mode )
 {
 	cstring name_narrow = wcs2string(name);
 	return mkdir( name_narrow.c_str(), mode );
 }
 
-int wrename( const wchar_t *old, const wchar_t *newv )
+int wrename( const wcstring &old, const wcstring &newv )
 {
     cstring old_narrow = wcs2string(old);
 	cstring new_narrow =wcs2string(newv);

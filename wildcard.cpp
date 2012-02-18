@@ -593,7 +593,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 	  non-symlinks by first doing an lstat, and if the file is not a
 	  link we copy the results over to the regular stat buffer.
 	*/
-	if( ( lstat_res = lwstat( fullname.c_str(), &lbuf ) ) )
+	if( ( lstat_res = lwstat( fullname, &lbuf ) ) )
 	{
 		sz=-1;
 		stat_res = lstat_res;
@@ -603,7 +603,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		if( S_ISLNK(lbuf.st_mode))
 		{
 			
-			if( ( stat_res = wstat( fullname.c_str(), &buf ) ) )
+			if( ( stat_res = wstat( fullname, &buf ) ) )
 			{
 				sz=-1;
 			}
@@ -863,7 +863,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 							  will be added in the next pass.
 							*/
 							struct stat buf;
-							if( !wstat( long_name.c_str(), &buf ) )
+							if( !wstat( long_name, &buf ) )
 							{
 								skip = S_ISDIR(buf.st_mode);
 							}							

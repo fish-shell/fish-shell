@@ -128,7 +128,7 @@ static bool is_potential_path( const wcstring &cpath )
         must_be_dir = cleaned_path[cleaned_path.length()-1] == L'/';
         if( must_be_dir )
         {
-            dir = wopendir( cleaned_path.c_str() );
+            dir = wopendir( cleaned_path );
             res = !!dir;
             if( dir )
             {
@@ -144,12 +144,12 @@ static bool is_potential_path( const wcstring &cpath )
             {
                 res = true;
             }
-            else if( (dir = wopendir( dir_name.c_str() )) )
+            else if( (dir = wopendir( dir_name)) )
             {
                 wcstring ent;
                 while (wreaddir(dir, ent))
                 {
-                    if( wcsncmp( ent.c_str(), base_name.c_str(), base_name.length() ) == 0 )
+                    if( ent == base_name )
                     {
                         res = true;
                         break;
@@ -802,7 +802,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 					if( slash_idx != wcstring::npos )
 					{
 						dir.resize(slash_idx);
-						if( wstat( dir.c_str(), &buff ) == -1 )
+						if( wstat( dir, &buff ) == -1 )
 						{
 							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
 							if( error )

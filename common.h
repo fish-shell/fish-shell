@@ -559,7 +559,7 @@ void tokenize_variable_array( const wcstring &val, wcstring_list_t &out);
 
    \return 0 if, at the time of function return the directory exists, -1 otherwise.
 */
-int create_directory( const wchar_t *d );
+int create_directory( const wcstring &d );
 
 /**
    Print a short message about how to file a bug report to stderr

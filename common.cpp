@@ -1781,7 +1781,7 @@ bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &val
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
 }
 
-int create_directory( const wchar_t *d )
+int create_directory( const wcstring &d )
 {
 	int ok = 0;
 	struct stat buf;
@@ -1805,7 +1805,7 @@ int create_directory( const wchar_t *d )
 		if( errno == ENOENT )
 		{
             wcstring dir = wdirname(d);
-			if( !create_directory( dir.c_str() ) )
+			if( !create_directory( dir ) )
 			{
 				if( !wmkdir( d, 0700 ) )
 				{

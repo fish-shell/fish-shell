@@ -20,11 +20,11 @@ static const int kAutoloadStalenessInterval = 15;
 file_access_attempt_t access_file(const wcstring &path, int mode) {
     file_access_attempt_t result = {0};
     struct stat statbuf;
-    if (wstat(path.c_str(), &statbuf)) {
+    if (wstat(path, &statbuf)) {
         result.error = errno;
     } else {
         result.mod_time = statbuf.st_mtime;
-        if (waccess(path.c_str(), mode)) {
+        if (waccess(path, mode)) {
             result.error = errno;
         } else {
             result.accessible = true;

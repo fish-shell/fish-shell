@@ -66,11 +66,12 @@ static const wchar_t * const highlight_var[] =
 
 /**
    Tests if the specified string is the prefix of any valid path in the system. 
-
+   
+   \require_dir Whether the valid path must be a directory
    \return zero it this is not a valid prefix, non-zero otherwise
 */
 // PCA DOES_IO
-static bool is_potential_path( const wcstring &cpath )
+static bool is_potential_path( const wcstring &cpath, bool require_dir = false )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
@@ -121,12 +122,11 @@ static bool is_potential_path( const wcstring &cpath )
         
     }
     
-    if( !has_magic && cleaned_path.length() )
+    if( !has_magic && ! cleaned_path.empty() )
     {
-        int must_be_dir = 0;
+        bool must_be_full_dir = cleaned_path[cleaned_path.length()-1] == L'/';
         DIR *dir;
-        must_be_dir = cleaned_path[cleaned_path.length()-1] == L'/';
-        if( must_be_dir )
+        if( must_be_full_dir )
         {
             dir = wopendir( cleaned_path );
             res = !!dir;
@@ -147,9 +147,10 @@ static bool is_potential_path( const wcstring &cpath )
             else if( (dir = wopendir( dir_name)) )
             {
                 wcstring ent;
-                while (wreaddir(dir, ent))
+                bool is_dir;
+                while (wreaddir(dir, ent, &is_dir))
                 {
-                    if( ent == base_name )
+                    if (string_prefixes_string(base_name, ent) && (! require_dir || is_dir))
                     {
                         res = true;
                         break;
@@ -979,7 +980,9 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 			{
 				for( i=tok_begin-buff; i < (tok_end-buff); i++ )
 				{
-					color[i] |= HIGHLIGHT_VALID_PATH;
+                    // Don't color HIGHLIGHT_ERROR because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
+                    if (! (color[i] & HIGHLIGHT_ERROR))
+                        color[i] |= HIGHLIGHT_VALID_PATH;
 				}
 			}
 		}

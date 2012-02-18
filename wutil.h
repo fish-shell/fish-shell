@@ -113,7 +113,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path);
 /**
    Wide character version of readdir()
 */
-std::wstring *wreaddir(DIR *dir, std::wstring &outPath);
+bool wreaddir(DIR *dir, std::wstring &outPath, bool *outIsDirectory = NULL);
 
 /**
    Wide character version of dirname()

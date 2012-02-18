@@ -82,13 +82,15 @@ void wutil_destroy()
 {
 }
 
-std::wstring *wreaddir(DIR *dir, std::wstring &outPath)
+bool wreaddir(DIR *dir, std::wstring &outPath, bool *is_dir)
 {
     struct dirent *d = readdir( dir );
-    if ( !d ) return 0;
+    if ( !d ) return false;
     
     outPath = str2wcstring(d->d_name);
-    return &outPath;
+    if (is_dir)
+        *is_dir = (d->d_type == DT_DIR);
+    return true;
 }
 
 

@@ -658,7 +658,7 @@ wchar_t *tok_first( const wchar_t *str )
 
 	CHECK( str, 0 );
 	
-	tok_init( &t, str, 0 );
+	tok_init( &t, str, TOK_SQUASH_ERRORS);
 
 	switch( tok_last_type( &t ) )
 	{

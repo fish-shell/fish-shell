@@ -522,6 +522,7 @@ void env_universal_common_remove( const wcstring &name )
 	if (result != env_universal_var.end())
 	{
 		var_uni_entry_t* v = result->second;		
+		env_universal_var.erase(result);
 		delete v;
 	}
 }

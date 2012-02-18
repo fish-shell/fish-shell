@@ -693,7 +693,7 @@ void env_destroy()
 		{
 			has_changed = 1;
 		}
-	
+
 		delete entry;
 	}
 
@@ -1454,7 +1454,6 @@ void env_pop()
 			{
 				has_changed = 1;
 			}
-	
 			delete entry;
 		}
 

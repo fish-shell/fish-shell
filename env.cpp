@@ -197,12 +197,12 @@ static wcstring dyn_var;
 
 /**
    Variable used by env_get_names to communicate auxiliary information
-   to add_key_to_hash
+   to add_key_to_string_set
 */
 static int get_names_show_exported;
 /**
    Variable used by env_get_names to communicate auxiliary information
-   to add_key_to_hash
+   to add_key_to_string_set
 */
 static int get_names_show_unexported;
 
@@ -982,7 +982,7 @@ int env_set( const wchar_t *key,
 
 /**
    Attempt to remove/free the specified key/value pair from the
-   specified hash table.
+   specified map.
 
    \return zero if the variable was not found, non-zero otherwise
 */
@@ -1473,23 +1473,8 @@ void env_pop()
 
 
 /**
-   Function used with hash_foreach to insert keys of one table into
-   a set::set<wcstring>
+   Function used with to insert keys of one table into a set::set<wcstring>
 */
-static void add_key_to_string_set( void *key, 
-                                   void *data,
-                                   void *aux )
-{
-	var_entry_t *e = (var_entry_t *)data;
-	if( ( e->exportv && get_names_show_exported) || 
-		( !e->exportv && get_names_show_unexported) )
-	{
-        std::set<wcstring> *names = (std::set<wcstring> *)aux;
-        const wchar_t *keyStr = (const wchar_t *)key;
-        names->insert(keyStr);
-	}
-}
-
 static void add_key_to_string_set(const std::map<wcstring, var_entry_t*> &envs, std::set<wcstring> &strSet)
 {
 	std::map<wcstring, var_entry_t*>::const_iterator iter;

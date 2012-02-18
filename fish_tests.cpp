@@ -108,103 +108,6 @@ static void err( const wchar_t *blah, ... )
 }
 
 /**
-   Hash function for pointers
-*/
-static int hash_func( void *data )
-{
-/*	srand( (int)data );
-	return rand();
-*/
-	int foo = (int)(long)data;
-	return 127*((foo^0xefc7e214)) ^(foo<<11);	
-}
-
-/**
-   Pointer hash comparison function
-*/
-static int compare_func( void *key1, void *key2 )
-{
-	return key1==key2;
-}
-
-
-/**
-   Hashtable test
-*/
-static int hash_test( long elements )
-{
-	long i;
-	int res=1;
-		
-	hash_table_t h;
-
-	hash_init( &h, hash_func, compare_func );
-	
-	for( i=1; i< elements+1; i++ )
-	{
-		hash_put( &h, (void*)i, (void*)(100l-i) );
-	}
-	
-	for( i=1; i< elements+1; i++ )
-	{
-		if( (long)hash_get( &h, (void*)i ) != (100l-i) )
-		{
-			err( L"Key %d gave data %d, expected data %d",
-				 i, 
-				 (long)hash_get( &h, (void*)i ),
-				 100l-i );
-			res = 0;
-			
-			break;
-		}
-	}
-
-	if( hash_get_count( &h ) != elements )
-	{
-		err( L"Table holds %d elements, should hold %d elements",
-			 hash_get_count( &h ),
-			 elements );
-		res = 0;
-		
-	}
-	
-	
-	for( i=1; i<elements+1; i+=2 )
-	{
-		hash_remove( &h, (void*)i, 0, 0 );
-				
-	}
-
-	if( hash_get_count( &h ) != ((elements)/2) )
-	{
-		err( L"Table contains %d elements, should contain %d elements",
-			 hash_get_count( &h ),
-			 elements/2 );
-		res = 0;
-	}
-	
-	for( i=1; i<elements+1; i++ )
-	{
-		if( hash_contains( &h, (void*)i) != (i+1l)%2l )
-		{
-			if( i%2 )
-				err( L"Key %d remains, should be deleted",
-						i );
-			else
-				err( L"Key %d does not exist",
-					 i );
-			res = 0;
-			break;
-			}
-	}
-
-	hash_destroy( &h );
-
-	return res;
-	
-}
-
-/**
    Stringbuffer test
 */
 static void sb_test()
@@ -237,51 +140,6 @@ static void sb_test()
 		say( L"numerical formating works" );	
 
 	
-}
-
-/**
-   Performs all tests of the util library
-*/
-static void test_util()
-{
-	int i;
-
-	say( L"Testing utility library" );
-	
-	for( i=0; i<18; i++ )
-	{
-		long t1, t2;
-		t1 = get_time();
-		hash_test( 1<<i );
-		t2 = get_time();
-		if( i > 8 )
-			say( L"Hashtable uses %f microseconds per element at size %d",
-				 ((double)(t2-t1))/(1<<i),
-				1<<i );
-	}
-
-	sb_test();
-	
-	
-/*
-	int i;
-	for( i=2; i<10000000; i*=2 )
-	{
-		
-		printf( "%d", i );
-		
-		t1 = get_time();
-		
-		if(!hash_test(i))
-			exit(0);
-	
-		t2 = get_time();
-		
-		printf( " %d\n", (t2-t1)/i );
-		
-		
-	}
-*/	
 }
 
 
@@ -868,7 +726,6 @@ int main( int argc, char **argv )
 	reader_init();
 	env_init();
 
-	test_util();
 	test_escape();
 	test_convert();
 	test_tok();

@@ -2,7 +2,7 @@
 */
 
 #include "color.h"
-
+#include "fallback.h"
 
 bool rgb_color_t::try_parse_special(const wcstring &special) {
     bzero(&data, sizeof data);

@@ -65,6 +65,9 @@ void path_make_canonical( wcstring &path );
 
 bool path_is_valid(const wcstring &path, const wcstring &working_directory);
 
+/** Returns whether the two paths refer to the same file */
+bool paths_are_same_file(const wcstring &path1, const wcstring &path2);
+
 wcstring get_working_directory(void);
 
 #endif

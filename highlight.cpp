@@ -562,9 +562,19 @@ bool autosuggest_handle_special(const wcstring &str, const env_vars &vars, const
                             /* We can specially handle the cd command */
                             handled = true;
 							bool is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
-                            if (! is_help && ! path_can_get_cdpath(dir, working_directory.c_str())) {
+                            if (is_help) {
                                 suggestionOK = false;
-                                break;
+                            } else {
+                                wchar_t *path = path_allocate_cdpath(dir.c_str(), working_directory.c_str());
+                                if (path == NULL) {
+                                    suggestionOK = false;
+                                } else if (paths_are_same_file(working_directory, path)) {
+                                    /* Don't suggest the working directory as the path! */
+                                    suggestionOK = false;
+                                } else {
+                                    suggestionOK = true;
+                                }
+                                free(path);
                             }
 						}
 					}

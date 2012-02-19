@@ -108,5 +108,6 @@ rgb_color_t highlight_get_color( int highlight, bool is_background );
 
 bool autosuggest_handle_special(const wcstring &str, const env_vars &vars, const wcstring &working_directory, bool *outSuggestionOK);
 
+
 #endif
 

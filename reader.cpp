@@ -1287,7 +1287,7 @@ struct autosuggestion_context_t {
         while (searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
             bool item_ok = false;
-            if (autosuggest_handle_special(item.str(), vars, working_directory, &item_ok)) {
+            if (autosuggest_handle_special(item.str(), working_directory, &item_ok)) {
                 /* The command autosuggestion was handled specially, so we're done */
             } else {
                 /* See if the item has any required paths */

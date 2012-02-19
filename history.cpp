@@ -404,7 +404,8 @@ void history_t::load_old_if_needed(void)
 	int fd;
 	int ok=0;
 	
-	signal_block();
+    // PCA not sure why signals were blocked here
+	//signal_block();
     wcstring filename = history_filename(name, L"");
 	
 	if( ! filename.empty() )
@@ -427,7 +428,7 @@ void history_t::load_old_if_needed(void)
 			close( fd );
 		}
 	}
-	signal_unblock();
+	//signal_unblock();
 }
 
 void history_search_t::skip_matches(const wcstring_list_t &skips) {

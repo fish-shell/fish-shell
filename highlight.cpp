@@ -528,7 +528,7 @@ static int has_expand_reserved( const wchar_t *str )
 	return 0;
 }
 
-bool autosuggest_handle_special(const wcstring &str, const env_vars &vars, const wcstring &working_directory, bool *outSuggestionOK) {
+bool autosuggest_handle_special(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK) {
     ASSERT_IS_BACKGROUND_THREAD();
     assert(outSuggestionOK != NULL);
     

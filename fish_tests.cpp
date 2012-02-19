@@ -50,6 +50,7 @@
 #include "event.h"
 #include "path.h"
 #include "history.h"
+#include "highlight.h"
 
 /**
    The number of tests to run
@@ -552,6 +553,11 @@ static void test_colors()
     assert(rgb_color_t(L"mooganta").is_none());
 }
 
+/* Testing autosuggestion */
+static void test_autosuggest() {
+    bool autosuggest_handle_special(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
+}
+
 
 /**
    Test speed of completion calculations
@@ -734,6 +740,7 @@ int main( int argc, char **argv )
 	test_expand();
 	test_path();
     test_colors();
+    test_autosuggest();
     history_tests_t::test_history();
 	
 	say( L"Encountered %d errors in low-level tests", err_count );

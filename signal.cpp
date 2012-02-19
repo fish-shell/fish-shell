@@ -633,6 +633,7 @@ void signal_handle( int sig, int do_handle )
 
 void signal_block()
 {
+    ASSERT_IS_MAIN_THREAD();
 	sigset_t chldset; 
 	
 	if( !block_count )
@@ -647,6 +648,7 @@ void signal_block()
 
 void signal_unblock()
 {
+    ASSERT_IS_MAIN_THREAD();
 	sigset_t chldset; 
 
 	block_count--;

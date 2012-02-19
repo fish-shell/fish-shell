@@ -405,12 +405,12 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
     
     for (wcstring_list_t::const_iterator iter = paths.begin(); iter != paths.end(); iter++) {
 		struct stat buf;
-        const wchar_t *dir = iter->c_str();
+        const wcstring &dir = *iter;
 		if( wstat( dir, &buf ) == 0 )
 		{
 			if( S_ISDIR(buf.st_mode) )
 			{
-				res = wcsdup(dir);
+				res = wcsdup(dir.c_str());
                 break;
 			}
 			else
@@ -534,7 +534,7 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2) {
         return true;
         
     struct stat s1, s2;
-    if (wstat(path1.c_str(), &s1) == 0 && wstat(path2.c_str(), &s2) == 0) {
+    if (wstat(path1, &s1) == 0 && wstat(path2, &s2) == 0) {
         return s1.st_ino == s2.st_ino && s1.st_dev == s2.st_dev;
     } else {
         return false;

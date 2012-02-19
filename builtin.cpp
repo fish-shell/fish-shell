@@ -1074,7 +1074,7 @@ static int builtin_generic( parser_t &parser, wchar_t **argv )
    Output a definition of the specified function to the specified
    stringbuffer. Used by the functions builtin.
 */
-static void functions_def( wchar_t *name, string_buffer_t *out )
+static void functions_def( const wcstring &name, string_buffer_t *out )
 {
 	const wchar_t *desc = function_get_desc( name );
 	const wchar_t *def = function_get_definition(name);
@@ -1088,7 +1088,7 @@ static void functions_def( wchar_t *name, string_buffer_t *out )
 
 	sb_append( out,
 		    L"function ",
-		    name,
+		    name.c_str(),
 		    NULL);
 
 	if( desc && wcslen(desc) )
@@ -1369,8 +1369,8 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 	}
 	else if( copy )
 	{
-		wchar_t *current_func;
-		wchar_t *new_func;
+		wcstring current_func;
+		wcstring new_func;
 		
 		if( argc-woptind != 2 )
 		{
@@ -1389,18 +1389,18 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 			sb_printf( sb_err,
 					   _( L"%ls: Function '%ls' does not exist\n" ),
 					   argv[0],
-					   current_func );
+					   current_func.c_str() );
 			builtin_print_help( parser, argv[0], sb_err );
 
 			return STATUS_BUILTIN_ERROR;
 		}
 
-		if( (wcsfuncname( new_func ) != 0) || parser_keywords_is_reserved( new_func ) )
+		if( (wcsfuncname( new_func.c_str() ) != 0) || parser_keywords_is_reserved( new_func ) )
 		{
 			sb_printf( sb_err,
 			           _( L"%ls: Illegal function name '%ls'\n"),
 			           argv[0],
-			           new_func );
+			           new_func.c_str());
 			builtin_print_help( parser, argv[0], sb_err );
 			return STATUS_BUILTIN_ERROR;
 		}
@@ -1411,8 +1411,8 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 			sb_printf( sb_err,
 					   _( L"%ls: Function '%ls' already exists. Cannot create copy '%ls'\n" ),
 					   argv[0],
-					   new_func,
-					   current_func );            
+					   new_func.c_str(),
+					   current_func.c_str() );            
 			builtin_print_help( parser, argv[0], sb_err );
 
 			return STATUS_BUILTIN_ERROR;
@@ -3682,9 +3682,8 @@ void builtin_get_names(std::vector<completion_t> &list) {
 	}
 }
 
-const wchar_t *builtin_get_desc( const wchar_t *name )
+const wchar_t *builtin_get_desc( const wcstring &name )
 {
-	CHECK( name, 0 );
 	const builtin_data_t *builtin = builtin_lookup(name);
     return builtin ? _(builtin->desc) : NULL;
 }

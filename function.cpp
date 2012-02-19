@@ -85,7 +85,7 @@ static int is_autoload = 0;
    Make sure that if the specified function is a dynamically loaded
    function, it has been fully loaded.
 */
-static int load( const wchar_t *name )
+static int load( const wcstring &name )
 {
     ASSERT_IS_MAIN_THREAD();
     scoped_lock lock(functions_lock);
@@ -188,9 +188,8 @@ void function_add( function_data_t *data, const parser_t &parser )
 	}
 }
 
-int function_exists( const wchar_t *cmd )
+int function_exists( const wcstring &cmd )
 {
-	CHECK( cmd, 0 );
 	if( parser_keywords_is_reserved(cmd) )
 		return 0;
     scoped_lock lock(functions_lock);
@@ -198,9 +197,8 @@ int function_exists( const wchar_t *cmd )
     return loaded_functions.find(cmd) != loaded_functions.end();            
 }
 
-int function_exists_no_autoload( const wchar_t *cmd, const env_vars &vars )
+int function_exists_no_autoload( const wcstring &cmd, const env_vars &vars )
 {
-	CHECK( cmd, 0 );
 	if( parser_keywords_is_reserved(cmd) )
 		return 0;
     scoped_lock lock(functions_lock);
@@ -238,26 +236,26 @@ shared_ptr<function_info_t> function_get(const wcstring &name)
     }
 }
 	
-const wchar_t *function_get_definition( const wchar_t *name )
+const wchar_t *function_get_definition( const wcstring &name )
 {
     shared_ptr<function_info_t> func = function_get(name);
     return func ? func->definition.c_str() : NULL;
 }
 
-wcstring_list_t function_get_named_arguments( const wchar_t *name )
+wcstring_list_t function_get_named_arguments( const wcstring &name )
 {
     shared_ptr<function_info_t> func = function_get(name);
     return func ? func->named_arguments : wcstring_list_t();
 }
 
-int function_get_shadows( const wchar_t *name )
+int function_get_shadows( const wcstring &name )
 {
     shared_ptr<function_info_t> func = function_get(name);
     return func ? func->shadows : false;
 }
 
 	
-const wchar_t *function_get_desc( const wchar_t *name )
+const wchar_t *function_get_desc( const wcstring &name )
 {
     /* Empty length string goes to NULL */
     shared_ptr<function_info_t> func = function_get(name);
@@ -268,17 +266,14 @@ const wchar_t *function_get_desc( const wchar_t *name )
     }
 }
 
-void function_set_desc( const wchar_t *name, const wchar_t *desc )
+void function_set_desc( const wcstring &name, const wcstring &desc )
 {
-	CHECK( name, );
-	CHECK( desc, );
-	
 	load( name );
     shared_ptr<function_info_t> func = function_get(name);
     if (func) func->description = desc;
 }
 
-int function_copy( const wchar_t *name, const wchar_t *new_name )
+int function_copy( const wcstring &name, const wcstring &new_name )
 {
     int result = 0;
     scoped_lock lock(functions_lock);
@@ -318,14 +313,14 @@ wcstring_list_t function_get_names( int get_hidden )
     return wcstring_list_t(names.begin(), names.end());
 }
 
-const wchar_t *function_get_definition_file( const wchar_t *name )
+const wchar_t *function_get_definition_file( const wcstring &name )
 {
     shared_ptr<function_info_t> func = function_get(name);
     return func ? func->definition_file : NULL;
 }
 
 
-int function_get_definition_offset( const wchar_t *name )
+int function_get_definition_offset( const wcstring &name )
 {
     shared_ptr<function_info_t> func = function_get(name);
     return func ? func->definition_offset : -1;

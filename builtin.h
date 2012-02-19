@@ -159,7 +159,7 @@ void builtin_pop_io(parser_t &parser);
 /**
    Return a one-line description of the specified builtin. This is usually a truly constant string, so we should not wrap it in a wcstring.
 */
-const wchar_t *builtin_get_desc( const wchar_t *b );
+const wchar_t *builtin_get_desc( const wcstring &b );
 
 
 /**

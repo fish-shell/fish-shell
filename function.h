@@ -118,27 +118,27 @@ shared_ptr<function_info_t> function_get(const wcstring &name);
 /**
    Returns the definition of the function with the name \c name.
 */
-const wchar_t *function_get_definition( const wchar_t *name );
+const wchar_t *function_get_definition( const wcstring &name );
 
 /**
    Returns the description of the function with the name \c name.
 */
-const wchar_t *function_get_desc( const wchar_t *name );
+const wchar_t *function_get_desc( const wcstring &name );
 
 /**
    Sets the description of the function with the name \c name.
 */
-void function_set_desc( const wchar_t *name, const wchar_t *desc );
+void function_set_desc( const wcstring &name, const wcstring &desc );
 
 /**
    Returns true if the function with the name name exists.
 */
-int function_exists( const wchar_t *name );
+int function_exists( const wcstring &name );
 
 /**
    Returns true if the function with the name name exists, without triggering autoload.
 */
-int function_exists_no_autoload( const wchar_t *name, const env_vars &vars );
+int function_exists_no_autoload( const wcstring &name, const env_vars &vars );
 
 /**
    Returns all function names.
@@ -154,7 +154,7 @@ wcstring_list_t function_get_names( int get_hidden );
    This function does not autoload functions, it will only work on
    functions that have already been defined.
 */
-const wchar_t *function_get_definition_file( const wchar_t *name );
+const wchar_t *function_get_definition_file( const wcstring &name );
 
 /**
    Returns the linenumber where the definition of the specified
@@ -163,23 +163,23 @@ const wchar_t *function_get_definition_file( const wchar_t *name );
    This function does not autoload functions, it will only work on
    functions that have already been defined.
 */
-int function_get_definition_offset( const wchar_t *name );
+int function_get_definition_offset( const wcstring &name );
 
 /**
    Returns a list of all named arguments of the specified function.
 */
-wcstring_list_t function_get_named_arguments( const wchar_t *name );
+wcstring_list_t function_get_named_arguments( const wcstring &name );
 
 /**
    Creates a new function using the same definition as the specified function.
    Returns non-zero if copy is successful.
 */
-int function_copy( const wchar_t *name, const wchar_t *new_name );
+int function_copy( const wcstring &name, const wcstring &new_name );
 
 
 /**
    Returns whether this function shadows variables of the underlying function
 */
-int function_get_shadows( const wchar_t *name );
+int function_get_shadows( const wcstring &name );
 
 #endif

@@ -711,7 +711,7 @@ int complete_is_valid_argument( const wchar_t *str,
 static void complete_strings( std::vector<completion_t> &comp_out,
 							  const wchar_t *wc_escaped,
 							  const wchar_t *desc,
-							  const wchar_t *(*desc_func)(const wchar_t *),
+							  const wchar_t *(*desc_func)(const wcstring &),
 							  std::vector<completion_t> &possible_comp,
 							  int flags )
 {
@@ -862,7 +862,7 @@ static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &co
 /**
    Returns a description for the specified function
 */
-static const wchar_t *complete_function_desc( const wchar_t *fn )
+static const wchar_t *complete_function_desc( const wcstring &fn )
 {
 	const wchar_t *res = function_get_desc( fn );
 

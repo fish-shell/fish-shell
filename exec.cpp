@@ -441,7 +441,7 @@ static int setup_child_process( job_t *j, process_t *p )
    call. Only use it in the execve error handler which calls exit
    right afterwards, anyway.
  */
-static wchar_t *get_interpreter( const wchar_t *file )
+static wchar_t *get_interpreter( const wcstring &file )
 {
 	string_buffer_t sb;
 	FILE *fp = wfopen( file, "r" );

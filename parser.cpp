@@ -1031,7 +1031,7 @@ const wchar_t *parser_t::current_filename() const
 		if( b->type == FUNCTION_CALL )
 		{
             wcstring function_call_name = b->state1<wcstring>();
-			return function_get_definition_file(function_call_name.c_str());
+			return function_get_definition_file(function_call_name);
 		}
 		b=b->outer;
 	}
@@ -1862,7 +1862,7 @@ int parser_t::parse_job( process_t *p,
 				nxt_forbidden = (forbid == nxt);
 			}
 		
-			if( !nxt_forbidden && has_nxt && function_exists( nxt.c_str() ) )
+			if( !nxt_forbidden && has_nxt && function_exists( nxt ) )
 			{
 				/*
 				  Check if we have reached the maximum recursion depth

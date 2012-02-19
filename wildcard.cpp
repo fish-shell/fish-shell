@@ -205,7 +205,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 									   const wchar_t *wc, 
 									   int is_first,
 									   const wchar_t *desc,
-									   const wchar_t *(*desc_func)(const wchar_t *),
+									   const wchar_t *(*desc_func)(const wcstring &),
 									   std::vector<completion_t> &out,
 									   int flags )
 {
@@ -309,7 +309,7 @@ static int wildcard_complete_internal( const wchar_t *orig,
 int wildcard_complete( const wchar_t *str,
 					   const wchar_t *wc,
 					   const wchar_t *desc,						
-					   const wchar_t *(*desc_func)(const wchar_t *),
+					   const wchar_t *(*desc_func)(const wcstring &),
 					   std::vector<completion_t> &out,
 					   int flags )
 {

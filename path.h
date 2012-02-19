@@ -49,11 +49,12 @@ bool path_get_path_string(const wcstring &cmd, wcstring &output, const env_vars 
    will be returned.
    
    \param in The name of the directory.
+   \param wd The working directory, or NULL to use the default. The working directory should have a slash appended at the end.
    \return 0 if the command can not be found, the path of the command otherwise. The path should be free'd with free().
 */
 
-wchar_t *path_allocate_cdpath( const wchar_t *in );
-bool path_can_get_cdpath(const wcstring &in);
+wchar_t *path_allocate_cdpath( const wchar_t *in, const wchar_t *wd = NULL);
+bool path_can_get_cdpath(const wcstring &in, const wchar_t *wd = NULL);
 bool path_get_cdpath_string(const wcstring &in, wcstring &out, const env_vars &vars);
 
 /**
@@ -62,5 +63,8 @@ bool path_get_cdpath_string(const wcstring &in, wcstring &out, const env_vars &v
  */
 void path_make_canonical( wcstring &path );
 
+bool path_is_valid(const wcstring &path, const wcstring &working_directory);
+
+wcstring get_working_directory(void);
 
 #endif

@@ -336,96 +336,91 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 }
 
 
-wchar_t *path_allocate_cdpath( const wchar_t *dir )
+wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
 {
-	wchar_t *res = 0;
+	wchar_t *res = NULL;
 	int err = ENOENT;
 	if( !dir )
 		return 0;
+        
+    if (wd) {
+        size_t len = wcslen(wd);
+        assert(wd[len - 1] == L'/');
+    }
+    
+    wcstring_list_t paths;
+    
+    if (dir[0] == L'/') {
+        /* Absolute path */
+        paths.push_back(dir);
+    } else if (wcsncmp(dir, L"./", 2) == 0 || 
+               wcsncmp(dir, L"../", 3) == 0 ||
+               wcscmp(dir, L".") == 0 ||
+               wcscmp(dir, L"..") == 0) {
+        /* Path is relative to the working directory */
+        wcstring path;
+        if (wd)
+            path.append(wd);
+        path.append(dir);
+        paths.push_back(path);
+    } else {
+        wchar_t *path_cpy;
+        const wchar_t *nxt_path;
+        wchar_t *state;
+        wchar_t *whole_path;
 
+        env_var_t path = env_get_string(L"CDPATH");
+        if (path.missing())
+            path = wd ? wd : L".";
 
-	if( dir[0] == L'/'|| (wcsncmp( dir, L"./", 2 )==0) )
-	{
+        nxt_path = path.c_str();
+        path_cpy = wcsdup( path.c_str() );
+
+        for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
+             nxt_path != 0;
+             nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+        {
+            wchar_t *expanded_path = expand_tilde_compat( wcsdup(nxt_path) );
+
+//			debug( 2, L"woot %ls\n", expanded_path );
+
+            int path_len = wcslen( expanded_path );
+            if( path_len == 0 )
+            {
+                free(expanded_path );
+                continue;
+            }
+
+            whole_path =
+                wcsdupcat( expanded_path,
+                            ( expanded_path[path_len-1] != L'/' )?L"/":L"",
+                            dir );
+
+            free(expanded_path );
+            paths.push_back(whole_path);
+            free( whole_path );
+        }
+        free( path_cpy );
+    }
+    
+    for (wcstring_list_t::const_iterator iter = paths.begin(); iter != paths.end(); iter++) {
 		struct stat buf;
+        const wchar_t *dir = iter->c_str();
 		if( wstat( dir, &buf ) == 0 )
 		{
 			if( S_ISDIR(buf.st_mode) )
 			{
 				res = wcsdup(dir);
+                break;
 			}
 			else
 			{
 				err = ENOTDIR;
 			}
-
 		}
-	}
-	else
-	{
-		wchar_t *path_cpy;
-		const wchar_t *nxt_path;
-		wchar_t *state;
-		wchar_t *whole_path;
-
-		env_var_t path = L".";
-
-		nxt_path = path.c_str();
-		path_cpy = wcsdup( path.c_str() );
-
-		if( !path_cpy )
-		{
-			DIE_MEM();
-		}
-
-		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-			 nxt_path != 0;
-			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
-		{
-			wchar_t *expanded_path = expand_tilde_compat( wcsdup(nxt_path) );
-
-//			debug( 2, L"woot %ls\n", expanded_path );
-
-			int path_len = wcslen( expanded_path );
-			if( path_len == 0 )
-			{
-				free(expanded_path );
-				continue;
-			}
-
-			whole_path =
-				wcsdupcat( expanded_path,
-							( expanded_path[path_len-1] != L'/' )?L"/":L"",
-							dir );
-
-			free(expanded_path );
-
-			struct stat buf;
-			if( wstat( whole_path, &buf ) == 0 )
-			{
-				if( S_ISDIR(buf.st_mode) )
-				{
-					res = whole_path;
-					break;
-				}
-				else
-				{
-					err = ENOTDIR;
-				}
-			}
-			else
-			{
-				if( lwstat( whole_path, &buf ) == 0 )
-				{
-					err = EROTTEN;
-				}
-			}
-			
-			free( whole_path );
-		}
-		free( path_cpy );
-	}
-
-	if( !res )
+    }
+     
+    if( !res )
 	{
 		errno = err;
 	}
@@ -434,8 +429,8 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir )
 }
 
 
-bool path_can_get_cdpath(const wcstring &in) {
-    wchar_t *tmp = path_allocate_cdpath(in.c_str());
+bool path_can_get_cdpath(const wcstring &in, const wchar_t *wd) {
+    wchar_t *tmp = path_allocate_cdpath(in.c_str(), wd);
     bool result = (tmp != NULL);
     free(tmp);
     return result;
@@ -512,3 +507,37 @@ void path_make_canonical( wcstring &path )
     path.resize(size+1);
 }
 
+bool path_is_valid(const wcstring &path, const wcstring &working_directory)
+{
+    bool path_is_valid;
+    /* Some special paths are always valid */
+    if (path.empty()) {
+        path_is_valid = false;
+    } else if (path == L"." || path == L"./") {
+        path_is_valid = true;
+    } else if (path == L".." || path == L"../") {
+        path_is_valid = (! working_directory.empty() && working_directory != L"/");
+    } else if (path.at(0) != '/') {
+        /* Prepend the working directory. Note that we know path is not empty here. */
+        wcstring tmp = working_directory;
+        tmp.append(path);
+        path_is_valid = (0 == waccess(tmp.c_str(), F_OK));
+    } else {
+        /* Simple check */
+        path_is_valid = (0 == waccess(path.c_str(), F_OK));
+    }
+    return path_is_valid;
+}
+
+wcstring get_working_directory(void) {
+    wcstring wd = L"./";
+    wchar_t dir_path[4096];
+    const wchar_t *cwd = wgetcwd( dir_path, 4096 );
+    if (cwd) {
+        wd = cwd;
+        /* Make sure the working directory ends with a slash */
+        if (! wd.empty() && wd.at(wd.size() - 1) != L'/')
+            wd.push_back(L'/');
+    }
+    return wd;
+}

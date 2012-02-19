@@ -103,6 +103,7 @@ commence.
 #include "screen.h"
 #include "iothread.h"
 #include "intern.h"
+#include "path.h"
 
 #include "parse_util.h"
 
@@ -1270,31 +1271,43 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 struct autosuggestion_context_t {
     history_search_t searcher;
     file_detection_context_t detector;
+    const wcstring working_directory;
+    const env_vars vars;
     
     autosuggestion_context_t(history_t *history, const wcstring &term) :
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
-        detector(history, term)
+        detector(history, term),
+        working_directory(get_working_directory()),
+        vars(env_vars::highlighting_keys)
     {
+    }
+    
+    int threaded_autosuggest(void) {
+        ASSERT_IS_BACKGROUND_THREAD();
+        while (searcher.go_backwards()) {
+            history_item_t item = searcher.current_item();
+            bool item_ok = false;
+            if (autosuggest_handle_special(item.str(), vars, working_directory, &item_ok)) {
+                /* The command autosuggestion was handled specially, so we're done */
+            } else {
+                /* See if the item has any required paths */
+                const path_list_t &paths = item.get_required_paths();
+                if (paths.empty()) {
+                    item_ok = true;
+                } else {
+                    detector.potential_paths = paths;
+                    item_ok = detector.paths_are_valid(paths);
+                }
+            }
+            if (item_ok)
+                return 1;
+        }
+        return 0;
     }
 };
 
 static int threaded_autosuggest(autosuggestion_context_t *ctx) {
-    ASSERT_IS_BACKGROUND_THREAD();
-    while (ctx->searcher.go_backwards()) {
-        history_item_t item = ctx->searcher.current_item();
-        /* See if the item has any required paths */
-        bool item_ok;
-        const path_list_t &paths = item.get_required_paths();
-        if (paths.empty()) {
-            item_ok = true;
-        } else {
-            ctx->detector.potential_paths = paths;
-            item_ok = ctx->detector.paths_are_valid(paths);
-        }
-        if (item_ok)
-            return 1;
-    }
-    return 0;
+    return ctx->threaded_autosuggest();
 }
 
 static bool can_autosuggest(void) {
@@ -2587,6 +2600,7 @@ static int read_i()
 			
 			data->buff_pos=0;
             data->command_line.clear();
+            data->check_size();
 			reader_run_command( parser, tmp );
 			free( (void *)tmp );
 			if( data->end_loop)

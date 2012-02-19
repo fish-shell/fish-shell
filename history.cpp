@@ -694,27 +694,8 @@ int file_detection_context_t::perform_file_detection(bool test_all) {
     ASSERT_IS_BACKGROUND_THREAD();
     valid_paths.clear();
     int result = 1;
-    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); iter++) {
-        wcstring path = *iter;
-        
-        bool path_is_valid;
-        /* Some special paths are always valid */
-        if (path.empty()) {
-            path_is_valid = false;
-        } else if (path == L"." || path == L"./") {
-            path_is_valid = true;
-        } else if (path == L".." || path == L"../") {
-            path_is_valid = (! working_directory.empty() && working_directory != L"/");
-        } else {
-            /* Maybe append the working directory. Note that we know path is not empty here. */
-            if (path.at(0) != '/') {
-                path.insert(0, working_directory);
-            }
-            path_is_valid = (0 == waccess(path, F_OK));
-        }
-        
-        
-        if (path_is_valid) {
+    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); iter++) {    
+        if (path_is_valid(*iter, working_directory)) {
             /* Push the original (possibly relative) path */
             valid_paths.push_front(*iter);
         } else {
@@ -736,17 +717,9 @@ bool file_detection_context_t::paths_are_valid(const path_list_t &paths) {
 file_detection_context_t::file_detection_context_t(history_t *hist, const wcstring &cmd) :
     history(hist),
     command(cmd),
-    when(time(NULL)) {
-    /* Stash the working directory. TODO: We should be respecting CDPATH here*/
-    wchar_t dir_path[4096];
-    const wchar_t *cwd = wgetcwd( dir_path, 4096 );
-    if (cwd) {
-        wcstring wd = cwd;
-        /* Make sure the working directory ends with a slash */
-        if (! wd.empty() && wd.at(wd.size() - 1) != L'/')
-            wd.push_back(L'/');
-        working_directory.swap(wd);
-    }
+    when(time(NULL)),
+    working_directory(get_working_directory())
+{
 }
 
 static int threaded_perform_file_detection(file_detection_context_t *ctx) {

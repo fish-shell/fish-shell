@@ -1826,12 +1826,14 @@ int create_directory( const wcstring &d )
 	return ok?0:-1;
 }
 
+__attribute__((noinline))
 void bugreport()
 {
 	debug( 1,
-	       _( L"This is a bug. "
+	       _( L"This is a bug. Break on bugreport to debug."
 		  L"If you can reproduce it, please send a bug report to %s." ),
 		PACKAGE_BUGREPORT );
+    while (1) sleep(10000);
 }
 
 

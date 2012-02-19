@@ -528,7 +528,150 @@ static int has_expand_reserved( const wchar_t *str )
 	return 0;
 }
 
+bool autosuggest_handle_special(const wcstring &str, const env_vars &vars, const wcstring &working_directory, bool *outSuggestionOK) {
+    ASSERT_IS_BACKGROUND_THREAD();
+    assert(outSuggestionOK != NULL);
+    
+    if (str.empty())
+        return false;
+    
+    wcstring cmd;
+    bool had_cmd = false;
+    
+    bool handled = false;
+    bool suggestionOK = true;
+    
+    tokenizer tok;
+	for( tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS );
+		tok_has_next( &tok );
+		tok_next( &tok ) )
+	{	
+        int last_type = tok_last_type( &tok );
+		
+		switch( last_type )
+		{
+			case TOK_STRING:
+			{
+				if( had_cmd )
+				{
+					if( cmd == L"cd" )
+					{
+                        wcstring dir = tok_last( &tok );
+                        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
+						{
+                            /* We can specially handle the cd command */
+                            handled = true;
+							bool is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
+                            if (! is_help && ! path_can_get_cdpath(dir, working_directory.c_str())) {
+                                suggestionOK = false;
+                                break;
+                            }
+						}
+					}
+				}
+				else
+				{ 	
+					/*
+					 Command. First check that the command actually exists.
+					 */
+                    cmd = tok_last( &tok );
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+					if (! expanded || has_expand_reserved(cmd.c_str()))
+					{
 
+					}
+					else
+					{
+						int is_subcommand = 0;
+						int mark = tok_get_pos( &tok );
+						
+						if( parser_keywords_is_subcommand( cmd ) )
+						{
+							
+							int sw;
+							
+							if( cmd == L"builtin")
+							{
+							}
+							else if( cmd == L"command")
+							{
+							}
+							
+							tok_next( &tok );
+							
+							sw = parser_keywords_is_switch( tok_last( &tok ) );
+							
+							if( !parser_keywords_is_block( cmd ) &&
+							   sw == ARG_SWITCH )
+							{
+
+							}
+							else
+							{
+								if( sw == ARG_SKIP )
+								{
+									mark = tok_get_pos( &tok );
+								}
+								
+								is_subcommand = 1;
+							}
+							tok_set_pos( &tok, mark );
+						}
+						
+						if( !is_subcommand )
+						{	
+							had_cmd = true;
+						}
+					}
+					
+				}
+				break;
+			}
+				
+			case TOK_REDIRECT_NOCLOB:
+			case TOK_REDIRECT_OUT:
+			case TOK_REDIRECT_IN:
+			case TOK_REDIRECT_APPEND:
+			case TOK_REDIRECT_FD:
+			{
+				if( !had_cmd )
+				{
+					break;
+				}
+				tok_next( &tok );				
+                break;
+			}
+				
+			case TOK_PIPE:
+			case TOK_BACKGROUND:
+			{
+				had_cmd = false;
+				break;
+			}
+				
+			case TOK_END:
+			{
+				had_cmd = false;
+				break;
+			}
+				
+			case TOK_COMMENT:
+			{
+				break;
+			}
+				
+			case TOK_ERROR:
+			default:
+			{
+				break;				
+			}			
+		}
+    }
+    tok_destroy( &tok );
+    
+    *outSuggestionOK = suggestionOK;
+    return handled;
+}
 
 // This function does I/O
 static void tokenize( const wchar_t * const buff, int * const color, const int pos, wcstring_list_t *error, const env_vars &vars) {
@@ -544,7 +687,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 	
 	int use_function = 1;
 	int use_command = 1;
-	int use_builtin = 1;	
+	int use_builtin = 1;
 	
 	CHECK( buff, );
 	CHECK( color, );
@@ -563,7 +706,6 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 		tok_next( &tok ) )
 	{	
 		int last_type = tok_last_type( &tok );
-		int prev_argc=0;
 		
 		switch( last_type )
 		{
@@ -620,8 +762,6 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				}
 				else
 				{ 
-					prev_argc=0;
-					
 					/*
 					 Command. First check that the command actually exists.
 					 */

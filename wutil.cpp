@@ -82,14 +82,41 @@ void wutil_destroy()
 {
 }
 
-bool wreaddir(DIR *dir, std::wstring &outPath, bool *is_dir)
+bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name, bool *out_is_dir)
 {
     struct dirent *d = readdir( dir );
     if ( !d ) return false;
     
-    outPath = str2wcstring(d->d_name);
-    if (is_dir)
-        *is_dir = (d->d_type == DT_DIR);
+    out_name = str2wcstring(d->d_name);
+    if (out_is_dir) {
+        bool is_dir;
+        if (d->d_type == DT_DIR) {
+            is_dir = true;
+        } else if (d->d_type == DT_LNK) {
+            /* We want to treat symlinks to directories as directories. Use stat to resolve it. */
+            cstring fullpath = wcs2string(dir_path);
+            fullpath.push_back('/');
+            fullpath.append(d->d_name);
+            struct stat buf;
+            if (stat(fullpath.c_str(), &buf) != 0) {
+                is_dir = false;
+            } else {
+                is_dir = !! (S_ISDIR(buf.st_mode));
+            }
+        } else {
+            is_dir = false;
+        }
+        *out_is_dir = is_dir;
+    }
+    return true;
+}
+
+bool wreaddir(DIR *dir, std::wstring &out_name)
+{
+    struct dirent *d = readdir( dir );
+    if ( !d ) return false;
+    
+    out_name = str2wcstring(d->d_name);
     return true;
 }
 

@@ -1269,12 +1269,15 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 }
 
 struct autosuggestion_context_t {
+    wcstring search_string;
+    wcstring autosuggestion;
     history_search_t searcher;
     file_detection_context_t detector;
     const wcstring working_directory;
     const env_vars vars;
     
     autosuggestion_context_t(history_t *history, const wcstring &term) :
+        search_string(term),
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
         detector(history, term),
         working_directory(get_working_directory()),
@@ -1299,9 +1302,19 @@ struct autosuggestion_context_t {
                     item_ok = detector.paths_are_valid(paths);
                 }
             }
-            if (item_ok)
+            if (item_ok) {
+                this->autosuggestion = searcher.current_string();
                 return 1;
+            }
         }
+        
+        /* Since we didn't find a suggestion from history, try other means */
+        wcstring special_suggestion;
+        if (autosuggest_suggest_special(search_string, working_directory, special_suggestion)) {
+            this->autosuggestion = special_suggestion;
+            return 1;
+        }
+        
         return 0;
     }
 };
@@ -1315,9 +1328,15 @@ static bool can_autosuggest(void) {
 }
 
 static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
-    if (result && can_autosuggest() && ctx->searcher.get_term() == data->command_line) {
+    if (result &&
+        can_autosuggest() &&
+        ctx->search_string == data->command_line &&
+        string_prefixes_string(ctx->search_string, ctx->autosuggestion)) {
         /* Autosuggestion is active and the search term has not changed, so we're good to go */
-        data->autosuggestion = ctx->searcher.current_string();
+        data->autosuggestion = ctx->autosuggestion;
+        sanity_check();
+        reader_repaint();
+        
     }
     delete ctx;
 }

@@ -68,10 +68,11 @@ static const wchar_t * const highlight_var[] =
    Tests if the specified string is the prefix of any valid path in the system. 
    
    \require_dir Whether the valid path must be a directory
+   \out_path If non-null, the path on output
    \return zero it this is not a valid prefix, non-zero otherwise
 */
 // PCA DOES_IO
-static bool is_potential_path( const wcstring &cpath, bool require_dir = false )
+static bool is_potential_path( const wcstring &cpath, wcstring *out_path = NULL, bool require_dir = false )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
@@ -129,9 +130,11 @@ static bool is_potential_path( const wcstring &cpath, bool require_dir = false )
         if( must_be_full_dir )
         {
             dir = wopendir( cleaned_path );
-            res = !!dir;
             if( dir )
             {
+                res = true;
+                if (out_path)
+                    *out_path = cleaned_path;
                 closedir( dir );
             }
         }
@@ -143,16 +146,27 @@ static bool is_potential_path( const wcstring &cpath, bool require_dir = false )
             if( dir_name == L"/" && base_name == L"/" )
             {
                 res = true;
+                if (out_path)
+                    *out_path = cleaned_path;
             }
             else if( (dir = wopendir( dir_name)) )
             {
                 wcstring ent;
                 bool is_dir;
-                while (wreaddir(dir, ent, &is_dir))
+                while (wreaddir_resolving(dir, dir_name, ent, &is_dir))
                 {
                     if (string_prefixes_string(base_name, ent) && (! require_dir || is_dir))
                     {
                         res = true;
+                        if (out_path) {
+                            out_path->assign(dir_name);
+                            out_path->push_back(L'/');
+                            out_path->append(ent);
+                            path_make_canonical(*out_path);
+                            /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */
+                            if (is_dir)
+                                out_path->push_back(L'/');
+                        }
                         break;
                     }
                 }
@@ -526,6 +540,146 @@ static int has_expand_reserved( const wchar_t *str )
 		str++;
 	}
 	return 0;
+}
+
+bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outString) {
+    if (str.empty())
+        return false;
+    
+    wcstring cmd;
+    bool had_cmd = false;
+    
+    wcstring suggestion;
+    bool suggestionOK = true;
+    
+    tokenizer tok;
+	for( tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS );
+		tok_has_next( &tok );
+		tok_next( &tok ) )
+	{	
+        int last_type = tok_last_type( &tok );
+		
+		switch( last_type )
+		{
+			case TOK_STRING:
+			{
+				if( had_cmd )
+				{
+					if( cmd == L"cd" )
+					{
+                        wcstring dir = tok_last( &tok );
+                        wcstring suggested_path;
+                        if (is_potential_path(dir, &suggested_path, true /* require directory */)) {
+                            suggestionOK = true;
+                            suggestion = str;
+                            suggestion.erase(tok_get_pos(&tok));
+                            suggestion.append(suggested_path);
+                        }
+					}
+				}
+				else
+				{ 	
+					/*
+					 Command. First check that the command actually exists.
+					 */
+                    cmd = tok_last( &tok );
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+					if (! expanded || has_expand_reserved(cmd.c_str()))
+					{
+
+					}
+					else
+					{
+						int is_subcommand = 0;
+						int mark = tok_get_pos( &tok );
+						
+						if( parser_keywords_is_subcommand( cmd ) )
+						{
+							
+							int sw;
+							
+							if( cmd == L"builtin")
+							{
+							}
+							else if( cmd == L"command")
+							{
+							}
+							
+							tok_next( &tok );
+							
+							sw = parser_keywords_is_switch( tok_last( &tok ) );
+							
+							if( !parser_keywords_is_block( cmd ) &&
+							   sw == ARG_SWITCH )
+							{
+
+							}
+							else
+							{
+								if( sw == ARG_SKIP )
+								{
+									mark = tok_get_pos( &tok );
+								}
+								
+								is_subcommand = 1;
+							}
+							tok_set_pos( &tok, mark );
+						}
+						
+						if( !is_subcommand )
+						{	
+							had_cmd = true;
+						}
+					}
+					
+				}
+				break;
+			}
+				
+			case TOK_REDIRECT_NOCLOB:
+			case TOK_REDIRECT_OUT:
+			case TOK_REDIRECT_IN:
+			case TOK_REDIRECT_APPEND:
+			case TOK_REDIRECT_FD:
+			{
+				if( !had_cmd )
+				{
+					break;
+				}
+				tok_next( &tok );				
+                break;
+			}
+				
+			case TOK_PIPE:
+			case TOK_BACKGROUND:
+			{
+				had_cmd = false;
+				break;
+			}
+				
+			case TOK_END:
+			{
+				had_cmd = false;
+				break;
+			}
+				
+			case TOK_COMMENT:
+			{
+				break;
+			}
+				
+			case TOK_ERROR:
+			default:
+			{
+				break;				
+			}			
+		}
+    }
+    tok_destroy( &tok );
+    
+    if (suggestionOK)
+        outString.swap(suggestion);
+    return suggestionOK;
 }
 
 bool autosuggest_handle_special(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK) {

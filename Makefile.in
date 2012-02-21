@@ -326,10 +326,11 @@ prof:
 
 # Depend on the sources (*.hdr.in) and manually make the
 # intermediate *.hdr and doc.h files if needed
+# Allow doxygen to fail, e.g. if it does not exist
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC)
 	$(MAKE) doc.h $(HDR_FILES)
-	doxygen Doxyfile.user
+	doxygen Doxyfile.user ; true
 	touch user_doc
 
 

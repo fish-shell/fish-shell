@@ -2373,7 +2373,7 @@ public:
         if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
         //write(0, "Start", 5);
         if (! string_to_highlight.empty()) {
-            highlight_function( string_to_highlight.c_str(), &colors.at(0), match_highlight_pos, NULL /* error */, vars);
+            highlight_function( string_to_highlight.c_str(), colors, match_highlight_pos, NULL /* error */, vars);
         }
         //write(0, "End", 3);
         return 0;

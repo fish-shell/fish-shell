@@ -40,7 +40,7 @@
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
 static void highlight_universal_internal( const wchar_t * buff,
-					  int *color, 
+					  std::vector<int> &color, 
 					  int pos );
 
 /**
@@ -838,12 +838,11 @@ bool autosuggest_handle_special(const wcstring &str, const wcstring &working_dir
 }
 
 // This function does I/O
-static void tokenize( const wchar_t * const buff, int * const color, const int pos, wcstring_list_t *error, const env_vars &vars) {
+static void tokenize( const wchar_t * const buff, std::vector<int> &color, const int pos, wcstring_list_t *error, const env_vars &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
-
+    
 	wcstring cmd;    
 	int had_cmd=0;
-	int i;
 	wcstring last_cmd;
 	int len;
 
@@ -854,15 +853,13 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 	int use_builtin = 1;
 	
 	CHECK( buff, );
-	CHECK( color, );
 
 	len = wcslen(buff);
 
 	if( !len )
 		return;
 
-	for( i=0; buff[i] != 0; i++ )
-		color[i] = -1;
+    std::fill(color.begin(), color.end(), -1); 
 
     tokenizer tok;
 	for( tok_init( &tok, buff, TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS );
@@ -885,23 +882,23 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 						if (wcscmp( param, L"--" ) == 0 )
 						{
 							accept_switches = 0;
-							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+							color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 						}
 						else if( accept_switches )
 						{
 							if( complete_is_valid_option( last_cmd.c_str(), param, error, false /* no autoload */ ) )
-								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+								color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 							else
-								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+								color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 						}
 						else
 						{
-							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+							color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 						}
 					}
 					else
 					{
-						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+						color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 					}					
 					
 					if( cmd == L"cd" )
@@ -912,7 +909,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 							int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
 							if( !is_help && ! path_can_get_cdpath(dir))
 							{
-                                color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;							
+                                color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;							
 							}
 						}
 					}
@@ -933,14 +930,14 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
                     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
 					if (! expanded || has_expand_reserved(cmd.c_str()))
 					{
-						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+						color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 					}
 					else
 					{
 						int is_cmd = 0;
 						int is_subcommand = 0;
 						int mark = tok_get_pos( &tok );
-						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;
+						color.at(tok_get_pos( &tok )) = HIGHLIGHT_COMMAND;
 						
 						if( parser_keywords_is_subcommand( cmd ) )
 						{
@@ -982,7 +979,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 							{
 								if( sw == ARG_SKIP )
 								{
-									color[ tok_get_pos( &tok ) ] = HIGHLIGHT_PARAM;
+									color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 									mark = tok_get_pos( &tok );
 								}
 								
@@ -1026,14 +1023,14 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 							
 							if( is_cmd )
 							{								
-								color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMAND;
+								color.at(tok_get_pos( &tok )) = HIGHLIGHT_COMMAND;
 							}
 							else
 							{
 								if( error ) {
                                     error->push_back(format_string(L"Unknown command \'%ls\'", cmd.c_str()));
                                 }
-								color[ tok_get_pos( &tok ) ] = (HIGHLIGHT_ERROR);
+								color.at(tok_get_pos( &tok )) = (HIGHLIGHT_ERROR);
 							}
 							had_cmd = 1;
 						}
@@ -1056,7 +1053,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 			{
 				if( !had_cmd )
 				{
-					color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+					color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 					if( error )
                         error->push_back(L"Redirection without a command");
 					break;
@@ -1065,7 +1062,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
                 wcstring target_str;
 				const wchar_t *target=NULL;
 				
-				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_REDIRECTION;
+				color.at(tok_get_pos( &tok )) = HIGHLIGHT_REDIRECTION;
 				tok_next( &tok );
 				
 				/*
@@ -1088,7 +1085,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 						break;
 					default:
 					{
-						color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+						color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 						if( error )
                             error->push_back(L"Invalid redirection");
 					}
@@ -1109,7 +1106,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 						dir.resize(slash_idx);
 						if( wstat( dir, &buff ) == -1 )
 						{
-							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+							color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 							if( error )
                                 error->push_back(format_string(L"Directory \'%ls\' does not exist", dir.c_str()));
 							
@@ -1125,7 +1122,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 					{
 						if( wstat( target, &buff ) == -1 )
 						{
-							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+							color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 							if( error )
                                 error->push_back(format_string(L"File \'%ls\' does not exist", target));
 						}
@@ -1134,7 +1131,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 					{
 						if( wstat( target, &buff ) != -1 )
 						{
-							color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+							color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 							if( error )
                                 error->push_back(format_string(L"File \'%ls\' exists", target));
 						}
@@ -1148,7 +1145,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 			{
 				if( had_cmd )
 				{
-					color[ tok_get_pos( &tok ) ] = HIGHLIGHT_END;
+					color.at(tok_get_pos( &tok )) = HIGHLIGHT_END;
 					had_cmd = 0;
 					use_command  = 1;
 					use_function = 1;
@@ -1157,7 +1154,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				}
 				else
 				{
-					color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;					
+					color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;					
 					if( error )
                         error->push_back(L"No job to put in background" );
 				}
@@ -1167,7 +1164,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				
 			case TOK_END:
 			{
-				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_END;
+				color.at(tok_get_pos( &tok )) = HIGHLIGHT_END;
 				had_cmd = 0;
 				use_command  = 1;
 				use_function = 1;
@@ -1178,7 +1175,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				
 			case TOK_COMMENT:
 			{
-				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_COMMENT;
+				color.at(tok_get_pos( &tok )) = HIGHLIGHT_COMMENT;
 				break;
 			}
 				
@@ -1190,7 +1187,7 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 				 */
 				if( error )
                     error->push_back(tok_last( &tok));
-				color[ tok_get_pos( &tok ) ] = HIGHLIGHT_ERROR;
+				color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
 				break;				
 			}			
 		}
@@ -1200,24 +1197,24 @@ static void tokenize( const wchar_t * const buff, int * const color, const int p
 
 
 // PCA DOES_IO (calls is_potential_path, path_get_path, maybe others)
-void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_list_t *error, const env_vars &vars )
+void highlight_shell( const wchar_t * const buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
 {
     ASSERT_IS_BACKGROUND_THREAD();
+    
+    const size_t string_length = wcslen(buff);
     
     int i;
     int len;
 	int last_val;
 	
 	CHECK( buff, );
-	CHECK( color, );
 	
 	len = wcslen(buff);
 	
 	if( !len )
 		return;
 	
-	for( i=0; buff[i] != 0; i++ )
-		color[i] = -1;
+    std::fill(color.begin(), color.end(), -1);
 
     /* Tokenize the string */
     tokenize(buff, color, pos, error, vars);
@@ -1233,7 +1230,7 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 	while( 1 )
 	{
 		wchar_t *begin, *end;
-	
+    
 		if( parse_util_locate_cmdsubst(subpos, &begin, &end, 1) <= 0)
 		{
 			break;
@@ -1244,8 +1241,21 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 		else
 			*end=0;
 		
-		highlight_shell( begin+1, color + (begin-subbuff)+1, -1, error, vars );
-		color[end-subbuff]=HIGHLIGHT_OPERATOR;
+        //our subcolors start at color + (begin-subbuff)+1
+        size_t start = begin - subbuff + 1, len = wcslen(begin + 1);
+        std::vector<int> subcolors;
+        subcolors.resize(len, -1);
+        
+		highlight_shell( begin+1, subcolors, -1, error, vars );
+        
+        // insert subcolors
+        std::copy(subcolors.begin(), subcolors.end(), color.begin() + start);
+        
+        // highlight the end of the subcommand
+        assert(end >= subbuff);
+        if ((size_t)(end - subbuff) < string_length) {
+            color.at(end-subbuff)=HIGHLIGHT_OPERATOR;
+        }
 		
 		if( done )
 			break;
@@ -1261,10 +1271,10 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 	last_val=0;
 	for( i=0; buff[i] != 0; i++ )
 	{
-		if( color[i] >= 0 )
-			last_val = color[i];
+		if( color.at(i) >= 0 )
+			last_val = color.at(i);
 		else
-			color[i] = last_val;
+			color.at(i) = last_val;
 	}
 
 	/*
@@ -1285,8 +1295,8 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 				for( i=tok_begin-buff; i < (tok_end-buff); i++ )
 				{
                     // Don't color HIGHLIGHT_ERROR because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
-                    if (! (color[i] & HIGHLIGHT_ERROR))
-                        color[i] |= HIGHLIGHT_VALID_PATH;
+                    if (! (color.at(i) & HIGHLIGHT_ERROR))
+                        color.at(i) |= HIGHLIGHT_VALID_PATH;
 				}
 			}
 		}
@@ -1302,7 +1312,7 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
 	{
 		if( iswspace(buff[i]) )
 		{
-			color[i]=0;
+			color.at(i)=0;
 		}
 	}
 }
@@ -1313,7 +1323,7 @@ void highlight_shell( const wchar_t * const buff, int *color, int pos, wcstring_
    Perform quote and parenthesis highlighting on the specified string.
 */
 static void highlight_universal_internal( const wchar_t * buff,
-										 int *color, 
+										 std::vector<int> &color, 
 										 int pos )
 {	
 
@@ -1360,8 +1370,8 @@ static void highlight_universal_internal( const wchar_t * buff,
 								pos2 = str-buff;
 								if( pos1==pos || pos2==pos )
 								{
-									color[pos1]|=HIGHLIGHT_MATCH<<16;
-									color[pos2]|=HIGHLIGHT_MATCH<<16;
+									color.at(pos1)|=HIGHLIGHT_MATCH<<16;
+									color.at(pos2)|=HIGHLIGHT_MATCH<<16;
 									match_found = 1;
 									
 								}
@@ -1384,7 +1394,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 			}
 		
 			if( !match_found )
-				color[pos] = HIGHLIGHT_ERROR<<16;
+				color.at(pos) = HIGHLIGHT_ERROR<<16;
 		}
 
 		/*
@@ -1408,8 +1418,8 @@ static void highlight_universal_internal( const wchar_t * buff,
 				if( level == 0 )
 				{
 					int pos2 = str-buff;
-					color[pos]|=HIGHLIGHT_MATCH<<16;
-					color[pos2]|=HIGHLIGHT_MATCH<<16;
+					color.at(pos)|=HIGHLIGHT_MATCH<<16;
+					color.at(pos2)|=HIGHLIGHT_MATCH<<16;
 					match_found=1;
 					break;
 				}
@@ -1422,7 +1432,7 @@ static void highlight_universal_internal( const wchar_t * buff,
 	}
 }
 
-void highlight_universal( const wchar_t *buff, int *color, int pos, wcstring_list_t *error, const env_vars &vars )
+void highlight_universal( const wchar_t *buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
 {
 	int i;
 	

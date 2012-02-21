@@ -349,7 +349,7 @@ static int interrupted=0;
 */
 static struct termios saved_modes;
 
-static void reader_super_highlight_me_plenty( int pos, array_list_t *error );
+static void reader_super_highlight_me_plenty( int pos );
 
 /**
    Variable to keep track of forced exits - see \c reader_exit_forced();
@@ -491,7 +491,7 @@ static void reader_kill( size_t begin_idx, int length, int mode, int newv )
     data->command_line.erase(begin_idx, length);
     data->check_size();
 	
-	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos );
 	reader_repaint();
 	
 }
@@ -545,30 +545,8 @@ void reader_data_t::check_size() {
 
 
 /**
-   Compare two completion entrys
- */
-/*
-static int completion_cmp( const void *a, const void *b )
-{
-	completion_t *c= *((completion_t **)a);
-	completion_t *d= *((completion_t **)b);
-
-	return wcsfilecmp( c->completion, d->completion );
-
-}
-*/
-/**
    Sort an array_list_t containing compltion_t structs.
  */
-/*
-static void sort_completion_list( array_list_t *comp )
-{
-	qsort( comp->arr, 
-		   al_get_count( comp ),
-		   sizeof( void*),
-		   &completion_cmp );
-}
-*/
 static void sort_completion_list( std::vector<completion_t> &comp ) {
 	sort(comp.begin(), comp.end());
 }
@@ -577,33 +555,6 @@ static void sort_completion_list( std::vector<completion_t> &comp ) {
    Remove any duplicate completions in the list. This relies on the
    list first beeing sorted.
 */
-/*
-static void remove_duplicates( array_list_t *l )
-{
-	int in, out;
-	const wchar_t *prev;
-	completion_t *first;
-	
-	if( al_get_count( l ) == 0 )
-		return;
-	
-	first = (completion_t *)al_get( l, 0 );
-	prev = first->completion;
-	
-	for( in=1, out=1; in < al_get_count( l ); in++ )
-	{		
-		completion_t *curr = (completion_t *)al_get( l, in );
-		
-		if( wcscmp( prev, curr->completion )!=0 )
-		{
-			al_set( l, out++, curr );
-		}
-		prev = curr->completion;
-	}
-	al_truncate( l, out );
-}
-*/
-
 static void remove_duplicates(std::vector<completion_t> &l) {
 	
 	l.erase(std::unique( l.begin(), l.end()), l.end());
@@ -773,7 +724,7 @@ static void remove_backward()
     data->check_size();
     data->suppress_autosuggestion = true;
 
-	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos );
 
 	reader_repaint();
 
@@ -793,7 +744,7 @@ static int insert_string(const wcstring &str)
     data->suppress_autosuggestion = false;
     
 	/* Syntax highlight  */
-	reader_super_highlight_me_plenty( data->buff_pos-1, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos-1 );
 	
 	reader_repaint();
 	return 1;
@@ -1024,7 +975,7 @@ static void completion_insert( const wchar_t *val, int flags )
 		reader_set_buffer( (wchar_t *)sb.buff, (begin-buff)+move_cursor );
 		sb_destroy( &sb );
 						
-		reader_super_highlight_me_plenty( data->buff_pos, 0 );
+		reader_super_highlight_me_plenty( data->buff_pos );
 		reader_repaint();
 		
 	}
@@ -1382,7 +1333,7 @@ static void reader_flash()
 	pollint.tv_nsec = 100 * 1000000;
 	nanosleep( &pollint, NULL );
 
-	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos );
     
 	reader_repaint();
 }
@@ -1839,7 +1790,7 @@ static void handle_history( const wcstring &new_str )
     data->command_line = new_str;
     data->check_size();
     data->buff_pos=data->command_line.size();
-    reader_super_highlight_me_plenty( data->buff_pos, 0 );
+    reader_super_highlight_me_plenty( data->buff_pos );
     reader_repaint();
 }
 
@@ -1906,7 +1857,7 @@ static void handle_token_history( int forward, int reset )
 		}
 
 		reader_replace_current_token( str );
-		reader_super_highlight_me_plenty( data->buff_pos, 0 );
+		reader_super_highlight_me_plenty( data->buff_pos );
 		reader_repaint();
 	}
 	else
@@ -1983,7 +1934,7 @@ static void handle_token_history( int forward, int reset )
 		if( str )
 		{
 			reader_replace_current_token( str );
-			reader_super_highlight_me_plenty( data->buff_pos, 0 );
+			reader_super_highlight_me_plenty( data->buff_pos );
 			reader_repaint();
             data->search_prev.push_back(str);
 			data->search_pos = data->search_prev.size() - 1;
@@ -2182,7 +2133,7 @@ void reader_set_buffer( const wchar_t *b, int p )
 	data->search_buff.clear();
 	data->history_search.go_to_end();
 
-	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos );
 	reader_repaint_needed();
 }
 
@@ -2483,7 +2434,7 @@ static int threaded_highlight(background_highlight_context_t *ctx) {
    \param match_highlight_pos the position to use for bracket matching. This need not be the same as the surrent cursor position
    \param error if non-null, any possible errors in the buffer are further descibed by the strings inserted into the specified arraylist
 */
-static void reader_super_highlight_me_plenty( int match_highlight_pos, array_list_t *error )
+static void reader_super_highlight_me_plenty( int match_highlight_pos )
 {
     reader_sanity_check();
     
@@ -2701,7 +2652,7 @@ const wchar_t *reader_readline()
 	
 	exec_prompt();
 
-	reader_super_highlight_me_plenty( data->buff_pos, 0 );
+	reader_super_highlight_me_plenty( data->buff_pos );
 	s_reset( &data->screen, 1 );
 	reader_repaint();
 
@@ -3022,7 +2973,7 @@ const wchar_t *reader_readline()
 						reader_replace_current_token( data->search_buff.c_str() );
 					}
 					data->search_buff.clear();
-					reader_super_highlight_me_plenty( data->buff_pos, 0 );
+					reader_super_highlight_me_plenty( data->buff_pos );
 					reader_repaint();
 					
 				}
@@ -3223,7 +3174,7 @@ const wchar_t *reader_readline()
                         data->command_line = data->autosuggestion;
                         data->buff_pos = data->command_line.size();
                         data->check_size();
-                        reader_super_highlight_me_plenty(data->buff_pos, 0);
+                        reader_super_highlight_me_plenty(data->buff_pos);
                         reader_repaint();
                     }
                 }

@@ -211,7 +211,7 @@ static void env_universal_remove_all()
 	size_t i;
 	
 	wcstring_list_t lst;
-	env_universal_common_get_names2( lst, 
+	env_universal_common_get_names( lst, 
 									1,
 									1 );
 	for( i=0; i<lst.size(); i++ )
@@ -470,7 +470,7 @@ void env_universal_get_names2( wcstring_list_t &lst,
 	if( !init )
 		return;
 
-	env_universal_common_get_names2( lst, 
+	env_universal_common_get_names( lst, 
 									show_exported,
 									show_unexported );	
 }

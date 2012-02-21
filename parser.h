@@ -133,20 +133,6 @@ typedef struct block
         return state->value;
     }
 
-
-#if 0
-	/**
-	   Second block type specific variable
-	*/
-	union
-	{
-		array_list_t for_vars; /**< List of values for a for block */	
-		int switch_taken; /**< Whether a switch match has already been found */
-		process_t *function_call_process;		/**< The process representing this function call */
-	} param2;
-#endif
-
-
 	/**
 	   Name of file that created this block
 	*/

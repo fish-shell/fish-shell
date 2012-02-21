@@ -881,7 +881,7 @@ message_t *create_message( int type,
 /**
 	Put exported or unexported variables in a string list
 */	
-void env_universal_common_get_names2( wcstring_list_t &lst,
+void env_universal_common_get_names( wcstring_list_t &lst,
 									 int show_exported,
 									 int show_unexported )
 {

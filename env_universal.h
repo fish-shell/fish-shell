@@ -60,9 +60,6 @@ int env_universal_read_all();
    \param show_exported whether exported variables should be shown
    \param show_unexported whether unexported variables should be shown
 */
-void env_universal_get_names( array_list_t *l,
-							  int show_exported,
-							  int show_unexported );
 void env_universal_get_names2( wcstring_list_t &list,
 							  int show_exported,
 							  int show_unexported );

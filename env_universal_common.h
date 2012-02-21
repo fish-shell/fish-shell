@@ -149,10 +149,7 @@ void env_universal_common_destroy();
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.
 */
-void env_universal_common_get_names( array_list_t *l,
-									 int show_exported,
-									 int show_unexported );
-void env_universal_common_get_names2( wcstring_list_t &lst,
+void env_universal_common_get_names( wcstring_list_t &lst,
 									 int show_exported,
 									 int show_unexported );
 

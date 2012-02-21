@@ -198,7 +198,7 @@ static int wildcard_match2( const wcstring &str_str,
 /**
    Matches the string against the wildcard, and if the wildcard is a
    possible completion of the string, the remainder of the string is
-   inserted into the array_list_t.
+   inserted into the out vector.
 */
 static int wildcard_complete_internal( const wchar_t *orig, 
 									   const wchar_t *str, 

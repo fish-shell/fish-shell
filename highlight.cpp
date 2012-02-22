@@ -1085,7 +1085,10 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 						break;
 					default:
 					{
-						color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;
+                        size_t pos = tok_get_pos(&tok);
+                        if (pos < color.size()) {
+                            color.at(pos) = HIGHLIGHT_ERROR;
+                        }
 						if( error )
                             error->push_back(L"Invalid redirection");
 					}

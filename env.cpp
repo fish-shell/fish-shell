@@ -85,16 +85,13 @@ extern char **__environ;
    should be exported. Obviously, it needs to be allocated large
    enough to fit the value string.
 */
-typedef struct var_entry
+struct var_entry_t
 {
-	int exportv; /**< Whether the variable should be exported */
-	size_t size; /**< The maximum length (excluding the NULL) that will fit into this var_entry_t */
-	
+	bool exportv; /**< Whether the variable should be exported */
 	wcstring val; /**< The value of the variable */
 
-	var_entry():exportv(0), size(0){ } 
-}
-	var_entry_t;
+	var_entry_t() : exportv(false) { } 
+};
 
 
 /**
@@ -899,7 +896,6 @@ int env_set( const wchar_t *key,
 		if( !done )
         {
 		    var_entry_t *old_entry = NULL;
-		    size_t val_len = wcslen(val);
 		    std::map<wcstring, var_entry_t*>::iterator result = node->env.find(key);
 		    if ( result != node->env.end() )
 		    {
@@ -908,11 +904,11 @@ int env_set( const wchar_t *key,
 		    }
             
 			var_entry_t *entry = NULL;
-			if( old_entry && old_entry->size >= val_len )
+			if( old_entry )
             {
 			    entry = old_entry;
 				
-			    if( !!(var_mode & ENV_EXPORT) || entry->exportv )
+			    if( (var_mode & ENV_EXPORT) || entry->exportv )
                 {
                     entry->exportv = !!(var_mode & ENV_EXPORT);
                     has_changed_new = 1;		
@@ -920,17 +916,8 @@ int env_set( const wchar_t *key,
             }	
 			else
             {
-                if (old_entry != NULL)
-                    delete old_entry;
-			    entry = new var_entry_t;	
+			    entry = new var_entry_t;
                 
-			    if( !entry )
-                {
-                    DIE_MEM();
-                }
-				
-			    entry->size = val_len;
-				
 			    if( var_mode & ENV_EXPORT)
                 {
                     entry->exportv = 1;

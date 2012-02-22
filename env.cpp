@@ -1271,7 +1271,7 @@ const wchar_t *env_get( const wchar_t *key )
 			}
 			else
 			{
-				return wcsdup(res->val.c_str());			
+				return res->val.c_str();			
 			}
 		}
 		

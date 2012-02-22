@@ -284,7 +284,7 @@ class parser_t {
     tokenizer *current_tokenizer;
     
     /** String for representing the current line */
-    string_buffer_t  *lineinfo;
+    wcstring lineinfo;
     
     /** This is the position of the beginning of the currently parsed command */
     int current_tokenizer_pos;
@@ -318,8 +318,8 @@ class parser_t {
     int parse_job( process_t *p, job_t *j, tokenizer *tok );
     void skipped_exec( job_t * j );
     void eval_job( tokenizer *tok );
-    int parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset );
-    void print_errors( string_buffer_t *target, const wchar_t *prefix );
+    int parser_test_argument( const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset );
+    void print_errors( wcstring &target, const wchar_t *prefix );
     void print_errors_stderr();
     
     public:
@@ -434,7 +434,7 @@ class parser_t {
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    int test( const wchar_t * buff, int *block_level, string_buffer_t *out, const wchar_t *prefix );
+    int test( const wchar_t * buff, int *block_level, wcstring *out, const wchar_t *prefix );
 
     /**
        Test if the specified string can be parsed as an argument list,
@@ -442,7 +442,7 @@ class parser_t {
        string contains errors, and the second bit is set if the string
        contains an unclosed block.
     */
-    int test_args( const wchar_t * buff, string_buffer_t *out, const wchar_t *prefix );
+    int test_args( const wchar_t * buff, wcstring *out, const wchar_t *prefix );
 
     /**
        Tell the parser that the specified function may not be run if not
@@ -481,9 +481,9 @@ class parser_t {
     const wchar_t *current_filename() const;
 
     /**
-       Write a stack trace starting at the specified block to the specified string_buffer_t
+       Write a stack trace starting at the specified block to the specified wcstring
     */
-    void stack_trace( block_t *b, string_buffer_t *buff);
+    void stack_trace( block_t *b, wcstring &buff);
 
     int get_block_type( const wchar_t *cmd ) const;
     const wchar_t *get_block_command( int type ) const;

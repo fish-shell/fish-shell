@@ -880,7 +880,7 @@ static pid_t exec_fork()
 /**
    Perform output from builtins
  */
-static void do_builtin_io( wchar_t *out, wchar_t *err )
+static void do_builtin_io( const wchar_t *out, const wchar_t *err )
 {
 
 	if( out )
@@ -1500,9 +1500,9 @@ void exec( parser_t &parser, job_t *j )
 				  not inside a pipeline, there is no need to fork
 				*/
 				skip_fork =
-					( !sb_out->used ) &&
-					( !sb_err->used ) &&
-					( !p->next );
+                    get_stdout_buffer().empty() &&
+                    get_stderr_buffer().empty() &&
+					!p->next;
 	
 				/*
 				  If the output of a builtin is to be sent to an internal
@@ -1513,15 +1513,14 @@ void exec( parser_t &parser, job_t *j )
 				io_data_t *io = io_get( j->io, 1 );
 				int buffer_stdout = io && io->io_mode == IO_BUFFER;
 				
-				if( ( !sb_err->used ) && 
+				if( ( get_stderr_buffer().empty() ) && 
 					( !p->next ) &&
-					( sb_out->used ) && 
+					( ! get_stdout_buffer().empty() ) && 
 					( buffer_stdout ) )
 				{
-					char *res = wcs2str( (wchar_t *)sb_out->buff );
-					b_append( io->param2.out_buffer, res, strlen( res ) );
+					std::string res = wcs2string( get_stdout_buffer() );
+					b_append( io->param2.out_buffer, res.c_str(), res.size() );
 					skip_fork = 1;
-					free( res );
 				}
 
 				for( io = j->io; io; io=io->next )
@@ -1560,8 +1559,8 @@ void exec( parser_t &parser, job_t *j )
 					*/
 					p->pid = getpid();
 					setup_child_process( j, p );
-					do_builtin_io( sb_out->used ? (wchar_t *)sb_out->buff : 0, sb_err->used ? (wchar_t *)sb_err->buff : 0 );
-					
+                    const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
+					do_builtin_io( out.empty() ? NULL : out.c_str(), err.empty() ? NULL : err.c_str() );
 					exit( p->status );
 						
 				}

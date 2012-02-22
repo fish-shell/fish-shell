@@ -360,7 +360,6 @@ parser_t::parser_t(enum parser_type_t type) :
     error_code(0),
     err_pos(0),
     current_tokenizer(NULL),
-    lineinfo(NULL),
     current_tokenizer_pos(0),
     job_start_pos(0),
     eval_level(-1),
@@ -709,12 +708,7 @@ void parser_t::destroy()
 		}
 	}
 
-	if( lineinfo )
-	{
-		sb_destroy( lineinfo );
-		free(lineinfo );
-		lineinfo = 0;
-	}
+    lineinfo.clear();
 
 	forbidden_function.clear();
 
@@ -726,21 +720,20 @@ void parser_t::destroy()
    \param target the buffer to write to
    \param prefix: The string token to prefix the ech line with. Usually the name of the command trying to parse something.
 */
-void parser_t::print_errors( string_buffer_t *target, const wchar_t *prefix )
+void parser_t::print_errors( wcstring &target, const wchar_t *prefix )
 {
-	CHECK( target, );
 	CHECK( prefix, );
 	
 	if( error_code && ! err_buff.empty() )
 	{
 		int tmp;
 
-		sb_printf( target, L"%ls: %ls\n", prefix, err_buff.c_str() );
+		append_format( target, L"%ls: %ls\n", prefix, err_buff.c_str() );
 
 		tmp = current_tokenizer_pos;
 		current_tokenizer_pos = err_pos;
 
-		sb_printf( target, L"%ls", this->current_line() );
+		append_format( target, L"%ls", this->current_line() );
 
 		current_tokenizer_pos=tmp;
 	}
@@ -849,14 +842,8 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 	return 1;
 }
 
-void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
-{
-	
-	/*
-	  Validate input
-	*/
-	CHECK( buff, );
-		
+void parser_t::stack_trace( block_t *b, wcstring &buff)
+{		
 	/*
 	  Check if we should end the recursion
 	*/
@@ -869,9 +856,8 @@ void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
 		  This is an event handler
 		*/
         wcstring description = event_get_desc( b->state1<const event_t *>() );
-		sb_printf( buff, _(L"in event handler: %ls\n"), description.c_str());
-		sb_printf( buff,
-				   L"\n" );
+		append_format( buff, _(L"in event handler: %ls\n"), description.c_str());
+		buff.append( L"\n" );
 
 		/*
 		  Stop recursing at event handler. No reason to belive that
@@ -897,18 +883,18 @@ void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
 			case SOURCE:
 			{
                 const wcstring &source_dest = b->state1<wcstring>();
-				sb_printf( buff, _(L"in . (source) call of file '%ls',\n"), source_dest.c_str() );
+				append_format( buff, _(L"in . (source) call of file '%ls',\n"), source_dest.c_str() );
 				break;
 			}
 			case FUNCTION_CALL:
 			{
                 const wcstring &function_call_name = b->state1<wcstring>();
-				sb_printf( buff, _(L"in function '%ls',\n"), function_call_name.c_str() );
+				append_format( buff, _(L"in function '%ls',\n"), function_call_name.c_str() );
 				break;
 			}
 			case SUBST:
 			{
-				sb_printf( buff, _(L"in command substitution\n") );
+				append_format( buff, _(L"in command substitution\n") );
 				break;
 			}
 		}
@@ -917,14 +903,14 @@ void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
 
 		if( file )
 		{
-			sb_printf( buff,
+			append_format( buff,
 					   _(L"\tcalled on line %d of file '%ls',\n"),
 					   b->src_lineno,
 					   file );
 		}
 		else
 		{
-			sb_printf( buff,
+			append_format( buff,
 					   _(L"\tcalled on standard input,\n") );
 		}
 		
@@ -940,14 +926,13 @@ void parser_t::stack_trace( block_t *b, string_buffer_t *buff)
 				{
 					sb_append( &tmp, i>1?L" ":L"", process->argv(i), NULL );
 				}
-				sb_printf( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
+				append_format( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
 				
 				sb_destroy( &tmp );
 			}
 		}
 		
-		sb_printf( buff,
-				   L"\n" );
+		append_format( buff, L"\n" );
 	}
 
 	/*
@@ -1091,12 +1076,8 @@ const wchar_t *parser_t::current_line()
 	if( !line )
 		return L"";
 
-	if( !lineinfo )
-	{
-		lineinfo = (string_buffer_t *)malloc( sizeof(string_buffer_t) );
-		sb_init( lineinfo );
-	}
-	sb_clear( lineinfo );
+
+    lineinfo.clear();
 
 	/*
 	  Calculate line number, line offset, etc.
@@ -1136,18 +1117,18 @@ const wchar_t *parser_t::current_line()
 	*/
 	if( !is_interactive || is_function() )
 	{
-		int prev_width = my_wcswidth( (wchar_t *)lineinfo->buff );
+		int prev_width = my_wcswidth( lineinfo.c_str() );
 		if( file )
-			sb_printf( lineinfo,
+			append_format( lineinfo,
 					   _(L"%ls (line %d): "),
 					   file,
 					   lineno );
 		else
-			sb_printf( lineinfo,
+			append_format( lineinfo,
 					   L"%ls: ",
 					   _(L"Standard input"),
 					   lineno );
-		offset = my_wcswidth( (wchar_t *)lineinfo->buff ) - prev_width;
+		offset = my_wcswidth( lineinfo.c_str() ) - prev_width;
 	}
 	else
 	{
@@ -1164,7 +1145,7 @@ const wchar_t *parser_t::current_line()
 		// Workaround since it seems impossible to print 0 copies of a character using %*lc
 		if( offset+current_line_width )
 		{
-			sb_printf( lineinfo,
+			append_format( lineinfo,
 					   L"%ls\n%*lc^\n",
 					   line,
 					   offset+current_line_width,
@@ -1172,7 +1153,7 @@ const wchar_t *parser_t::current_line()
 		}
 		else
 		{
-			sb_printf( lineinfo,
+			append_format( lineinfo,
 					   L"%ls\n^\n",
 					   line );
 		}
@@ -1181,7 +1162,7 @@ const wchar_t *parser_t::current_line()
 	free( line );
 	parser_t::stack_trace( current_block, lineinfo );
 
-	return (wchar_t *)lineinfo->buff;
+	return lineinfo.c_str();
 }
 
 int parser_t::get_pos() const
@@ -2560,7 +2541,7 @@ const wchar_t *parser_get_block_command( int type )
    syntax errors in command substitutions, improperly escaped
    characters and improper use of the variable expansion operator.
 */
-int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, const wchar_t *prefix, int offset )
+int parser_t::parser_test_argument( const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset )
 {
 	wchar_t *unesc;
 	wchar_t *pos;
@@ -2588,7 +2569,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, co
 					error( SYNTAX_ERROR,
 						   offset,
 						   L"Mismatched parans" );
-					this->print_errors( out, prefix);
+					this->print_errors( *out, prefix);
 				}
 				free( arg_cpy );
 				return 1;
@@ -2634,7 +2615,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, co
 			error( SYNTAX_ERROR,
 				   offset,
 				   L"Invalid token '%ls'", arg_cpy );
-			print_errors( out, prefix);
+			print_errors( *out, prefix);
 		}
 		return 1;
 	}
@@ -2660,7 +2641,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, co
 						if( out )
 						{
 							expand_variable_error( *this, unesc, pos-unesc, offset );
-							print_errors( out, prefix);
+							print_errors( *out, prefix);
 						}
 					}
 				
@@ -2677,8 +2658,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, string_buffer_t *out, co
 	
 }
 
-int parser_t::test_args(const  wchar_t * buff,
-					 string_buffer_t *out, const wchar_t *prefix )
+int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *prefix )
 {
 	tokenizer tok;
 	tokenizer *previous_tokenizer = current_tokenizer;
@@ -2717,7 +2697,7 @@ int parser_t::test_args(const  wchar_t * buff,
 						   tok_get_pos( &tok ),
 						   TOK_ERR_MSG,
 						   tok_last(&tok) );
-					print_errors( out, prefix );
+					print_errors( *out, prefix );
 				}
 				err=1;
 				do_loop=0;
@@ -2732,7 +2712,7 @@ int parser_t::test_args(const  wchar_t * buff,
 						   tok_get_pos( &tok ),
 						   UNEXPECTED_TOKEN_ERR_MSG,
 						   tok_get_desc( tok_last_type(&tok)) );
-					print_errors( out, prefix );
+					print_errors( *out, prefix );
 				}
 				err=1;				
 				do_loop=0;
@@ -2753,7 +2733,7 @@ int parser_t::test_args(const  wchar_t * buff,
 
 int parser_t::test( const  wchar_t * buff,
 				 int *block_level, 
-				 string_buffer_t *out,
+				 wcstring *out,
 				 const wchar_t *prefix )
 {
     ASSERT_IS_MAIN_THREAD();
@@ -2851,7 +2831,7 @@ int parser_t::test( const  wchar_t * buff,
 								   ILLEGAL_CMD_ERR_MSG,
 								   tok_last( &tok ) );
 							
-							print_errors( out, prefix );
+							print_errors( *out, prefix );
 						}
 						break;
 					}
@@ -2873,7 +2853,7 @@ int parser_t::test( const  wchar_t * buff,
 									   tok_get_pos( &tok ),
 									   COND_ERR_MSG );
 								
-								print_errors( out, prefix );
+								print_errors( *out, prefix );
 							}
 						}
 						
@@ -2909,11 +2889,13 @@ int parser_t::test( const  wchar_t * buff,
 					{
 						if( count >= BLOCK_MAX_COUNT )
 						{
-							error( SYNTAX_ERROR,
-								   tok_get_pos( &tok ),
-								   BLOCK_ERR_MSG );
+                            if (out) {
+                                error( SYNTAX_ERROR,
+                                       tok_get_pos( &tok ),
+                                       BLOCK_ERR_MSG );
 
-							print_errors( out, prefix );
+                                print_errors( *out, prefix );
+                            }
 						}
 						else
 						{
@@ -2953,7 +2935,7 @@ int parser_t::test( const  wchar_t * buff,
 									   tok_get_pos( &tok ),
 									   EXEC_ERR_MSG );
 
-								print_errors( out, prefix );
+								print_errors( *out, prefix );
 
 							}
 						}
@@ -2975,7 +2957,7 @@ int parser_t::test( const  wchar_t * buff,
 									   tok_get_pos( &tok ),
 									   EXEC_ERR_MSG );
 
-								print_errors( out, prefix );
+								print_errors( *out, prefix );
 
 							}
 						}
@@ -2997,10 +2979,10 @@ int parser_t::test( const  wchar_t * buff,
 									   tok_get_pos( &tok ),
 									   INVALID_CASE_ERR_MSG );
 
-								print_errors( out, prefix);
+								print_errors( *out, prefix);
 								const wcstring h = builtin_help_get( *this, L"case" );
 								if( h.size() )
-									sb_printf( out, L"%ls", h.c_str() );
+									append_format( *out, L"%ls", h.c_str() );
 							}
 						}
 					}
@@ -3053,7 +3035,7 @@ int parser_t::test( const  wchar_t * buff,
 									error( SYNTAX_ERROR,
 										   tok_get_pos( &tok ),
 										   INVALID_RETURN_ERR_MSG );
-									print_errors( out, prefix );
+									print_errors( *out, prefix );
 								}
 							}
 						}
@@ -3111,7 +3093,7 @@ int parser_t::test( const  wchar_t * buff,
 									error( SYNTAX_ERROR,
 										   tok_get_pos( &tok ),
 										   INVALID_LOOP_ERR_MSG );
-									print_errors( out, prefix );
+									print_errors( *out, prefix );
 								}
 							}
 						}
@@ -3132,7 +3114,7 @@ int parser_t::test( const  wchar_t * buff,
 									   tok_get_pos( &tok ),
 									   INVALID_ELSE_ERR_MSG );
 
-								print_errors( out, prefix );
+								print_errors( *out, prefix );
 							}
 						}
 
@@ -3149,10 +3131,10 @@ int parser_t::test( const  wchar_t * buff,
 							error( SYNTAX_ERROR,
 								   tok_get_pos( &tok ),
 								   INVALID_END_ERR_MSG );
-							print_errors( out, prefix );
+							print_errors( *out, prefix );
 							const wcstring h = builtin_help_get( *this, L"end" );
 							if( h.size() )
-								sb_printf( out, L"%ls", h.c_str() );
+								append_format( *out, L"%ls", h.c_str() );
 						}
 					}
 					
@@ -3197,7 +3179,7 @@ int parser_t::test( const  wchar_t * buff,
 											   L"for",
 											   tok_last( &tok ) );
 										
-										print_errors( out, prefix );
+										print_errors( *out, prefix );
 									}									
 								}
 															
@@ -3215,7 +3197,7 @@ int parser_t::test( const  wchar_t * buff,
 											   BUILTIN_FOR_ERR_IN,
 											   L"for" );
 										
-										print_errors( out, prefix );
+										print_errors( *out, prefix );
 									}
 								}
 							}
@@ -3241,7 +3223,7 @@ int parser_t::test( const  wchar_t * buff,
 						error( SYNTAX_ERROR,
 							   tok_get_pos( &tok ),
 							   INVALID_REDIRECTION_ERR_MSG );
-						print_errors( out, prefix );
+						print_errors( *out, prefix );
 					}
 				}
 				break;
@@ -3258,7 +3240,7 @@ int parser_t::test( const  wchar_t * buff,
 							   tok_get_pos( &tok ),
 							   CMD_ERR_MSG,
 							   tok_get_desc( tok_last_type(&tok)));
-						print_errors( out, prefix );
+						print_errors( *out, prefix );
 					}
 				}
 				needs_cmd=0;
@@ -3293,7 +3275,7 @@ int parser_t::test( const  wchar_t * buff,
 								   tok_get_desc( tok_last_type(&tok)));
 						}
 						
-						print_errors( out, prefix );
+						print_errors( *out, prefix );
 					}
 				}
 				else if( forbid_pipeline )
@@ -3305,7 +3287,7 @@ int parser_t::test( const  wchar_t * buff,
 							   tok_get_pos( &tok ),
 							   EXEC_ERR_MSG );
 						
-						print_errors( out, prefix );
+						print_errors( *out, prefix );
 					}
 				}
 				else
@@ -3342,7 +3324,7 @@ int parser_t::test( const  wchar_t * buff,
 								   tok_get_desc( tok_last_type(&tok)));
 						}
 						
-						print_errors( out, prefix );
+						print_errors( *out, prefix );
 					}
 				}
 				
@@ -3369,7 +3351,7 @@ int parser_t::test( const  wchar_t * buff,
 							   tok_last(&tok) );
 						
 						
-						print_errors( out, prefix );
+						print_errors( *out, prefix );
 					}
 				}
 				
@@ -3395,7 +3377,7 @@ int parser_t::test( const  wchar_t * buff,
 							   L"for",
 							   arg_count );
 						
-						print_errors( out, prefix );
+						print_errors( *out, prefix );
 					}
 				}
 				
@@ -3417,7 +3399,7 @@ int parser_t::test( const  wchar_t * buff,
 				   tok_get_pos( &tok ),
 				   COND_ERR_MSG );
 
-			print_errors( out, prefix );
+			print_errors( *out, prefix );
 		}
 	}
 
@@ -3430,7 +3412,7 @@ int parser_t::test( const  wchar_t * buff,
 			   block_pos[count-1],
 			   BLOCK_END_ERR_MSG );
 
-		print_errors( out, prefix );
+		print_errors( *out, prefix );
 
 		cmd = parser_get_block_command(  block_type[count -1] );
 		if( cmd )
@@ -3438,7 +3420,7 @@ int parser_t::test( const  wchar_t * buff,
 			const wcstring h = builtin_help_get( *this, cmd );
 			if( h.size() )
 			{
-				sb_printf( out, L"%ls", h.c_str() );
+				append_format( *out, L"%ls", h.c_str() );
 			}
 		}
 		

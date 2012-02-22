@@ -470,6 +470,13 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig)
     return result;
 }
 
+void append_format(wcstring &str, const wchar_t *format, ...)
+{
+	va_list va;
+	va_start( va, format );
+    str.append(vformat_string(format, va));
+	va_end( va );
+}
 
 wchar_t *wcsvarname( const wchar_t *str )
 {
@@ -648,14 +655,11 @@ ssize_t write_loop(int fd, const char *buff, size_t count)
 	return out_cum;
 }
 
-
-
 void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
 
-	string_buffer_t sb;
-	string_buffer_t sb2;
+	wcstring sb;
 
 	int errno_old = errno;
 	
@@ -664,37 +668,117 @@ void debug( int level, const wchar_t *msg, ... )
 
 	CHECK( msg, );
 		
-	sb_init( &sb );
-	sb_init( &sb2 );
+    sb = format_string(L"%ls: ", program_name);
+    sb.append(vformat_string(msg, va));
 
-	sb_printf( &sb, L"%ls: ", program_name );
-
-	va_start( va, msg );	
-	sb_vprintf( &sb, msg, va );
-	va_end( va );	
-
-	write_screen( (wchar_t *)sb.buff, &sb2 );
-	fwprintf( stderr, L"%ls", sb2.buff );	
-
-	sb_destroy( &sb );	
-	sb_destroy( &sb2 );	
+	wcstring sb2;
+	write_screen( sb, sb2 );
+	fwprintf( stderr, L"%ls", sb2.c_str() );	
 
 	errno = errno_old;
 }
 
-void write_screen( const wchar_t *msg, string_buffer_t *buff )
+void write_screen( const wcstring &msg, wcstring &buff )
 {
 	const wchar_t *start, *pos;
 	int line_width = 0;
 	int tok_width = 0;
 	int screen_width = common_get_width();
 	
-	CHECK( msg, );
+	if( screen_width )
+	{
+		start = pos = msg.c_str();
+		while( 1 )
+		{
+			int overflow = 0;
+		
+			tok_width=0;
+
+			/*
+			  Tokenize on whitespace, and also calculate the width of the token
+			*/
+			while( *pos && ( !wcschr( L" \n\r\t", *pos ) ) )
+			{
+				
+				/*
+				  Check is token is wider than one line.
+				  If so we mark it as an overflow and break the token.
+				*/
+				if((tok_width + wcwidth(*pos)) > (screen_width-1))
+				{
+					overflow = 1;
+					break;				
+				}
+			
+				tok_width += wcwidth( *pos );
+				pos++;
+			}
+
+			/*
+			  If token is zero character long, we don't do anything
+			*/
+			if( pos == start )
+			{
+				start = pos = pos+1;
+			}
+			else if( overflow )
+			{
+				/*
+				  In case of overflow, we print a newline, except if we already are at position 0
+				*/
+				wchar_t *token = wcsndup( start, pos-start );
+				if( line_width != 0 )
+                    buff.push_back(L'\n');
+                buff.append(format_string(L"%ls-\n", token));
+				free( token );
+				line_width=0;
+			}
+			else
+			{
+				/*
+				  Print the token
+				*/
+				wchar_t *token = wcsndup( start, pos-start );
+				if( (line_width + (line_width!=0?1:0) + tok_width) > screen_width )
+				{
+                    buff.push_back(L'\n');
+					line_width=0;
+				}
+                buff.append(format_string(L"%ls%ls", line_width?L" ":L"", token ));
+				free( token );
+				line_width += (line_width!=0?1:0) + tok_width;
+			}
+			
+			/*
+			  Break on end of string
+			*/
+			if( !*pos )
+			{
+				break;
+			}
+			
+			start=pos;
+		}
+	}
+	else
+	{
+        buff.append(msg);
+	}
+    buff.push_back(L'\n');
+}
+
+void write_screen( const wcstring &msg, string_buffer_t *buff )
+{
+	const wchar_t *start, *pos;
+	int line_width = 0;
+	int tok_width = 0;
+	int screen_width = common_get_width();
+	
 	CHECK( buff, );
 		
 	if( screen_width )
 	{
-		start = pos = msg;
+		start = pos = msg.c_str();
 		while( 1 )
 		{
 			int overflow = 0;
@@ -769,7 +853,7 @@ void write_screen( const wchar_t *msg, string_buffer_t *buff )
 	}
 	else
 	{
-		sb_printf( buff, L"%ls", msg );
+		sb_printf( buff, L"%ls", msg.c_str() );
 	}
 	sb_append_char( buff, L'\n' );
 }
@@ -1833,7 +1917,6 @@ void bugreport()
 	       _( L"This is a bug. Break on bugreport to debug."
 		  L"If you can reproduce it, please send a bug report to %s." ),
 		PACKAGE_BUGREPORT );
-    while (1) sleep(10000);
 }
 
 

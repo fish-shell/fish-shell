@@ -351,6 +351,7 @@ void append_path_component(wcstring &path, const wcstring &component);
 
 wcstring format_string(const wchar_t *format, ...);
 wcstring vformat_string(const wchar_t *format, va_list va_orig);
+void append_format(wcstring &str, const wchar_t *format, ...);
 
 /**
    Returns a newly allocated wide character string array equivalent of
@@ -545,7 +546,8 @@ void common_handle_winch( int signal );
    Write paragraph of output to the specified stringbuffer, and redo
    the linebreaks to fit the current screen.
 */
-void write_screen( const wchar_t *msg, string_buffer_t *buff );
+void write_screen( const wcstring &msg, string_buffer_t *buff );
+void write_screen( const wcstring &msg, wcstring &buff );
 
 /**
    Tokenize the specified string into the specified wcstring_list_t.   

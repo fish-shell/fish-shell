@@ -84,24 +84,22 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 				/*
 				  Print table header before first job
 				*/
-				sb_append( sb_out, _( L"Job\tGroup\t" ));
+				stdout_buffer.append( _( L"Job\tGroup\t" ));
 #ifdef HAVE__PROC_SELF_STAT
-				sb_append( sb_out, _( L"CPU\t" ) );
+				stdout_buffer.append( _( L"CPU\t" ) );
 #endif
-				sb_append( sb_out, _( L"State\tCommand\n" ) );
+				stdout_buffer.append( _( L"State\tCommand\n" ) );
 			}
 
-			sb_printf( sb_out, L"%d\t%d\t", j->job_id, j->pgid );
+			append_format(stdout_buffer, L"%d\t%d\t", j->job_id, j->pgid );
 
 #ifdef HAVE__PROC_SELF_STAT
-			sb_printf( sb_out, L"%d%%\t", cpu_use(j) );
+			append_format(stdout_buffer, L"%d%%\t", cpu_use(j) );
 #endif
-			sb_append( sb_out,
-						job_is_stopped(j)?_(L"stopped"):_(L"running"),
-						L"\t",
-						j->command_cstr(),
-						L"\n",
-						NULL );
+			stdout_buffer.append(job_is_stopped(j)?_(L"stopped"):_(L"running"));
+            stdout_buffer.append(L"\t");
+            stdout_buffer.append(j->command_cstr());
+            stdout_buffer.append(L"\t");
 			break;
 		}
 
@@ -112,9 +110,9 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 				/*
 				  Print table header before first job
 				*/
-				sb_append( sb_out, _( L"Group\n" ));
+				stdout_buffer.append( _( L"Group\n" ));
 			}
-			sb_printf( sb_out, L"%d\n", j->pgid );
+			append_format(stdout_buffer, L"%d\n", j->pgid );
 			break;
 		}
 
@@ -125,12 +123,12 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 				/*
 				  Print table header before first job
 				*/
-				sb_append( sb_out, _( L"Procces\n" ));
+				stdout_buffer.append( _( L"Procces\n" ));
 			}
 
 			for( p=j->first_process; p; p=p->next )
 			{
-				sb_printf( sb_out, L"%d\n", p->pid );
+				append_format(stdout_buffer, L"%d\n", p->pid );
 			}
 			break;
 		}
@@ -142,12 +140,12 @@ static void builtin_jobs_print( job_t *j, int mode, int header )
 				/*
 				  Print table header before first job
 				*/
-				sb_append( sb_out, _( L"Command\n" ));
+				stdout_buffer.append( _( L"Command\n" ));
 			}
 
 			for( p=j->first_process; p; p=p->next )
 			{
-				sb_printf( sb_out, L"%ls\n", p->argv0() );
+				append_format(stdout_buffer, L"%ls\n", p->argv0() );
 			}
 			break;
 		}
@@ -217,12 +215,12 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
 
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 
 				return 1;
@@ -247,7 +245,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 			}
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return 0;				
 
 			case '?':
@@ -300,7 +298,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 				pid=wcstol( argv[i], &end, 10 );
 				if( errno || *end )
 				{
-					sb_printf( sb_err,
+					append_format(stderr_buffer,
 							   _( L"%ls: '%ls' is not a job\n" ),
 							   argv[0],
 							   argv[i] );
@@ -315,7 +313,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 				}
 				else
 				{
-					sb_printf( sb_err,
+					append_format(stderr_buffer,
 							   _( L"%ls: No suitable job: %d\n" ),
 							   argv[0],
 							   pid );
@@ -343,7 +341,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 
 	if( !found )
 	{
-		sb_printf( sb_out,
+		append_format(stdout_buffer,
 				   _( L"%ls: There are no jobs\n" ),
 				   argv[0] );
 	}

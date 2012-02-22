@@ -1853,7 +1853,7 @@ void complete( const wchar_t *cmd,
    argument to the specified stringbuffer, but only if arguemnt is
    non-null and longer than 0 characters.
 */
-static void append_switch( string_buffer_t *out,
+static void append_switch( wcstring &out,
 						   const wcstring &opt,
 						   const wcstring &argument )
 {
@@ -1861,13 +1861,11 @@ static void append_switch( string_buffer_t *out,
 		return;
 
     wcstring esc = escape_string( argument, 1 );
-	sb_printf( out, L" --%ls %ls", opt.c_str(), esc.c_str() );
+	append_format( out, L" --%ls %ls", opt.c_str(), esc.c_str() );
 }
 
-void complete_print( string_buffer_t *out )
+void complete_print( wcstring &out )
 {
-	CHECK( out, );
-
     for (completion_entry_list_t::const_iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
     {
         const completion_entry_t *e = *iter;
@@ -1883,7 +1881,7 @@ void complete_print( string_buffer_t *out )
 				}
 			;
 
-			sb_printf( out,
+			append_format( out,
 					   L"complete%ls",
 					   modestr[o->result_mode] );
 
@@ -1894,7 +1892,7 @@ void complete_print( string_buffer_t *out )
 
 			if( o->short_opt != 0 )
 			{
-				sb_printf( out,
+				append_format( out,
 						   L" --short-option '%lc'",
 						   o->short_opt );
 			}
@@ -1916,7 +1914,7 @@ void complete_print( string_buffer_t *out )
 						   L"condition",
 						   o->condition );
 
-			sb_printf( out, L"\n" );
+			out.append( L"\n" );
 		}
 	}
 }

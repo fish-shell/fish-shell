@@ -109,42 +109,6 @@ static void err( const wchar_t *blah, ... )
 }
 
 /**
-   Stringbuffer test
-*/
-static void sb_test()
-{
-	string_buffer_t b;
-	int res;
-	
-	sb_init( &b );
-	
-	if( (res=sb_printf( &b, L"%ls%s", L"Testing ", "string_buffer_t " )) == -1 )
-	{
-		err( L"Error %d while testing stringbuffers", res );
-	}
-	
-	if( (res=sb_printf( &b, L"%ls", L"functionality" ))==-1)	
-	{
-		err( L"Error %d while testing stringbuffers", res );
-	}
-
-	say( (wchar_t *)b.buff );
-
-	sb_clear( &b );
-
-	sb_printf( &b, L"%d %u %o %x %llX", -7, 99999999, 01234567, 0xdeadbeef, 0xdeadbeefdeadbeefll );
-	if( wcscmp( (wchar_t *)b.buff,  NUM_ANS) != 0 )
-	{
-		err( L"numerical formating is broken, '%ls' != '%ls'", (wchar_t *)b.buff, NUM_ANS );
-	}
-	else
-		say( L"numerical formating works" );	
-
-	
-}
-
-
-/**
    Test the escaping/unescaping code by escaping/unescaping random
    strings and verifying that the original string comes back.
 */

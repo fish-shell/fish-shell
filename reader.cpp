@@ -2219,8 +2219,7 @@ int reader_shell_test( const wchar_t *b )
 	
 	if( res & PARSER_TEST_ERROR )
 	{
-		string_buffer_t sb;
-		sb_init( &sb );
+		wcstring sb;
 
 		int tmp[1];
 		int tmp2[1];
@@ -2228,8 +2227,7 @@ int reader_shell_test( const wchar_t *b )
 		s_write( &data->screen, L"", L"", tmp, tmp2, 0 );
 		
 		parser_t::principal_parser().test( b, 0, &sb, L"fish" );
-		fwprintf( stderr, L"%ls", sb.buff );
-		sb_destroy( &sb );
+		fwprintf( stderr, L"%ls", sb.c_str() );
 	}
 	return res;
 }
@@ -3395,20 +3393,16 @@ static int read_ni( int fd, io_data_t *io )
 
 		if( str )
 		{
-			string_buffer_t sb;
-			sb_init( &sb );
-		
+			wcstring sb;
 			if( ! parser.test( str, 0, &sb, L"fish" ) )
 			{
 				parser.eval( str, io, TOP );
 			}
 			else
 			{
-				fwprintf( stderr, L"%ls", sb.buff );
+				fwprintf( stderr, L"%ls", sb.c_str() );
 				res = 1;
 			}
-			sb_destroy( &sb );
-		
 			free( str );
 		}
 		else

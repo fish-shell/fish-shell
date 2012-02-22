@@ -228,7 +228,7 @@ void complete( const wchar_t* cmd, std::vector<completion_t> &out);
 
    \param out The string_buffer_t to write completions to
 */
-void complete_print( string_buffer_t *out );
+void complete_print( wcstring &out );
 
 /**
    Tests if the specified option is defined for the specified command

@@ -144,9 +144,9 @@ static void print( int resource, int hard )
 	rlim_t l = get( resource, hard );
 
 	if( l == RLIM_INFINITY )
-		sb_append( sb_out, L"unlimited\n" );
+		stdout_buffer.append( L"unlimited\n" );
 	else
-		sb_printf( sb_out, L"%d\n", l / get_multiplier( resource ) );
+		append_format(stdout_buffer, L"%d\n", l / get_multiplier( resource ) );
 	
 }
 
@@ -172,7 +172,7 @@ static void print_all( int hard )
 
 		const wchar_t *unit = ((resource_arr[i].resource==RLIMIT_CPU)?L"(seconds, ":(get_multiplier(resource_arr[i].resource)==1?L"(":L"(kB, "));
 		
-		sb_printf( sb_out,
+		append_format(stdout_buffer,
 				   L"%-*ls %10ls-%lc) ", 
 				   w, 
 				   resource_arr[i].desc, 
@@ -181,11 +181,11 @@ static void print_all( int hard )
 		
 		if( l == RLIM_INFINITY )
 		{
-			sb_append( sb_out, L"unlimited\n" );
+			stdout_buffer.append( L"unlimited\n" );
 		}
 		else
 		{
-			sb_printf( sb_out, L"%d\n", l/get_multiplier(resource_arr[i].resource) );
+			append_format(stdout_buffer, L"%d\n", l/get_multiplier(resource_arr[i].resource) );
 		}
 	}
 		
@@ -240,7 +240,7 @@ static int set( int resource, int hard, int soft, rlim_t value )
 	if( setrlimit( resource, &ls ) )
 	{
 		if( errno == EPERM )
-			sb_printf( sb_err, L"ulimit: Permission denied when changing resource of type '%ls'\n", get_desc( resource ) );
+			append_format(stderr_buffer, L"ulimit: Permission denied when changing resource of type '%ls'\n", get_desc( resource ) );
 		else
 			builtin_wperror( L"ulimit" );
 		return 1;
@@ -347,11 +347,11 @@ static int builtin_ulimit( parser_t &parser, wchar_t ** argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				return 1;
 				
@@ -415,7 +415,7 @@ static int builtin_ulimit( parser_t &parser, wchar_t ** argv )
 #endif
 				
 			case L'h':
-				builtin_print_help( parser, argv[0], sb_out );				
+				builtin_print_help( parser, argv[0], stdout_buffer );				
 				return 0;
 
 			case L'?':
@@ -432,11 +432,9 @@ static int builtin_ulimit( parser_t &parser, wchar_t ** argv )
 		}
 		else
 		{
-			sb_append( sb_err,
-						argv[0],
-						L": Too many arguments\n",
-						NULL );
-			builtin_print_help( parser, argv[0], sb_err );
+            stderr_buffer.append(argv[0]);
+            stderr_buffer.append(L": Too many arguments\n");
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return 1;
 		}
 
@@ -488,11 +486,11 @@ static int builtin_ulimit( parser_t &parser, wchar_t ** argv )
 				new_limit = wcstol( argv[woptind], &end, 10 );
 				if( errno || *end )
 				{
-					sb_printf( sb_err, 
+					append_format(stderr_buffer, 
 							   L"%ls: Invalid limit '%ls'\n", 
 							   argv[0], 
 							   argv[woptind] );
-					builtin_print_help( parser, argv[0], sb_err );
+					builtin_print_help( parser, argv[0], stderr_buffer );
 					return 1;
 				}
 				new_limit *= get_multiplier( what );
@@ -503,11 +501,9 @@ static int builtin_ulimit( parser_t &parser, wchar_t ** argv )
 		
 		default:
 		{
-			sb_append( sb_err,
-						argv[0],
-						L": Too many arguments\n",
-						NULL );
-			builtin_print_help( parser, argv[0], sb_err );
+            stderr_buffer.append(argv[0]);
+            stderr_buffer.append(L": Too many arguments\n");
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return 1;
 		}
 		

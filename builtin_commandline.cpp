@@ -179,8 +179,7 @@ static void write_part( const wchar_t *begin,
 			}						
 		}
 
-		sb_append( sb_out,
-				   (wchar_t *)out.buff );
+        stdout_buffer.append((const wchar_t *)out.buff);
 					
 		free( buff );
 		tok_destroy( &tok );
@@ -200,8 +199,8 @@ static void write_part( const wchar_t *begin,
 
 //		debug( 0, L"woot2 %ls -> %ls", buff, esc );
 
-		sb_append( sb_out, esc );
-		sb_append( sb_out, L"\n" );
+        stdout_buffer.append(esc);
+        stdout_buffer.append(L"\n");
 		
 		free( esc );
 		free( buff );
@@ -255,11 +254,9 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 			return 1;
 		}
 		
-		sb_append( sb_err,
-			    argv[0],
-			    L": Can not set commandline in non-interactive mode\n",
-			    NULL );
-		builtin_print_help( parser, argv[0], sb_err );
+        stderr_buffer.append(argv[0]);
+        stderr_buffer.append(L": Can not set commandline in non-interactive mode\n");
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 
@@ -351,11 +348,11 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format( stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				return 1;
 				
@@ -418,7 +415,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 				break;
 				
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return 0;
 
 			case L'?':
@@ -436,22 +433,22 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 		*/
 		if( buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode || search_mode )
 		{
-			sb_printf(sb_err,
+			append_format(stderr_buffer,
 					  BUILTIN_ERR_COMBO,
 					  argv[0] );
 			
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return 1;
 		}
 		
 
 		if( argc == woptind )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   BUILTIN_ERR_MISSING,
 					   argv[0] );
 			
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return 1;
  		}
 		for( i=woptind; i<argc; i++ )
@@ -468,11 +465,11 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 			}
 			else
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 					   _(L"%ls: Unknown input function '%ls'\n"),
 					   argv[0],
 					   argv[i] );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return 1;
 			}
 		}
@@ -486,45 +483,45 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	if( (search_mode || line_mode || cursor_mode) && (argc-woptind > 1) )
 	{
 		
-		sb_append( sb_err,
+		append_format(stderr_buffer,
 					argv[0],
 					L": Too many arguments\n",
 					NULL );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 
 	if( (buffer_part || tokenize || cut_at_cursor) && (cursor_mode || line_mode || search_mode) )
 	{		
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_ERR_COMBO,
 				   argv[0] );
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}		
 	
 
 	if( (tokenize || cut_at_cursor) && (argc-woptind) )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_ERR_COMBO2,
 				   argv[0],
 				   L"--cut-at-cursor and --tokenize can not be used when setting the commandline" );
 		
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 
 	if( append_mode && !(argc-woptind) )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
                     BUILTIN_ERR_COMBO2,
                     argv[0],
 				   L"insertion mode switches can not be used when not in insertion mode" );
 
-        builtin_print_help( parser, argv[0], sb_err );		
+        builtin_print_help( parser, argv[0], stderr_buffer );		
         return 1;
 	}
 
@@ -552,11 +549,11 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 			new_pos = wcstol( argv[woptind], &endptr, 10 );
 			if( *endptr || errno )
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 					   BUILTIN_ERR_NOT_NUMBER,
 					   argv[0],
 					   argv[woptind] );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 			}
 			
 			current_buffer = reader_get_buffer();
@@ -566,7 +563,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 		}
 		else
 		{
-			sb_printf( sb_out, L"%d\n", reader_get_cursor_pos() );
+			append_format(stdout_buffer, L"%d\n", reader_get_cursor_pos() );
 			return 0;
 		}
 		
@@ -576,7 +573,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	{
 		int pos = reader_get_cursor_pos();
 		const wchar_t *buff = reader_get_buffer();
-		sb_printf( sb_out, L"%d\n", parse_util_lineno( buff, pos ) );
+		append_format(stdout_buffer, L"%d\n", parse_util_lineno( buff, pos ) );
 		return 0;
 			
 	}

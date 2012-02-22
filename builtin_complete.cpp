@@ -397,11 +397,11 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				
 				res = 1;
@@ -434,7 +434,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				}
 				else
 				{
-					sb_printf( sb_err, L"%ls: Invalid token '%ls'\n", argv[0], woptarg );
+					append_format(stderr_buffer, L"%ls: Invalid token '%ls'\n", argv[0], woptarg );
 					res = 1;					
 				}				
 				break;
@@ -481,7 +481,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				break;
 				
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return 0;
 				
 			case '?':
@@ -499,12 +499,12 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		{
 			if( parser.test( condition, 0, 0, 0 ) )
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   L"%ls: Condition '%ls' contained a syntax error\n", 
 						   argv[0],
 						   condition );
 				
-				parser.test( condition, 0, sb_err, argv[0] );
+				parser.test( condition, 0, &stderr_buffer, argv[0] );
 				
 				res = 1;
 			}
@@ -517,12 +517,12 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		{
 			if( parser.test_args( comp, 0, 0 ) )
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   L"%ls: Completion '%ls' contained a syntax error\n", 
 						   argv[0],
 						   comp );
 				
-				parser.test_args( comp, sb_err, argv[0] );
+				parser.test_args( comp, &stderr_buffer, argv[0] );
 				
 				res = 1;
 			}
@@ -567,11 +567,11 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 
 					if( !(next.description).empty() )
 					{
-						sb_printf( sb_out, L"%ls%ls\t%ls\n", prepend, next.completion.c_str(), next.description.c_str() );
+						append_format(stdout_buffer, L"%ls%ls\t%ls\n", prepend, next.completion.c_str(), next.description.c_str() );
 					}
 					else
 					{
-						sb_printf( sb_out, L"%ls%ls\n", prepend, next.completion.c_str() );
+						append_format(stdout_buffer, L"%ls%ls\n", prepend, next.completion.c_str() );
 					}
 				}
 			
@@ -583,10 +583,10 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		}
 		else if( woptind != argc )
 		{
-			sb_printf( sb_err, 
+			append_format(stderr_buffer, 
 					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 
 			res = 1;
 		}
@@ -594,7 +594,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		{
 			/* No arguments specified, meaning we print the definitions of
 			 * all specified completions to stdout.*/
-			complete_print( sb_out );		
+			complete_print( stdout_buffer );		
 		}
 		else
 		{

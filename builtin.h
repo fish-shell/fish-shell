@@ -92,12 +92,16 @@ enum
 /**
    Stringbuffer used to represent standard output
 */
-extern string_buffer_t *sb_out;
+//extern string_buffer_t *sb_out;
 
 /**
    Stringbuffer used to represent standard error
 */
-extern string_buffer_t *sb_err;
+//extern string_buffer_t *sb_err;
+
+/** Get the string used to represent stdout and stderr */
+const wcstring &get_stdout_buffer();
+const wcstring &get_stderr_buffer();
 
 /**
    Kludge. Tells builtins if output is to screen

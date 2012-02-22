@@ -26,6 +26,8 @@ Functions used for implementing the set builtin.
 #include "proc.h"
 #include "parser.h"
 
+/* We know about these buffers */
+extern wcstring stdout_buffer, stderr_buffer;
 
 /**
    Error message for invalid path operations
@@ -91,12 +93,7 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 			{
 				const wchar_t *colon;
 				
-				sb_printf( sb_err, 
-						   _(BUILTIN_SET_PATH_ERROR),
-						   L"set", 
-						   dir, 
-						   key );
-				
+                append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir, key);				
 				colon = wcschr( dir, L':' );
 				
 				if( colon && *(colon+1) ) 
@@ -113,12 +110,7 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 			
 			if( show_hint )
 			{
-				sb_printf( sb_err, 
-						   _(BUILTIN_SET_PATH_HINT),
-						   L"set",
-						   key,
-						   key,
-						   wcschr( dir, L':' )+1);
+                append_format(stderr_buffer, _(BUILTIN_SET_PATH_HINT), L"set", key, key, wcschr( dir, L':' )+1);
 			}
 			
 			if( error )
@@ -156,14 +148,14 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 	{
 		case ENV_PERM:
 		{
-			sb_printf( sb_err, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key );
+            append_format(stderr_buffer, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key);
 			retcode=1;
 			break;
 		}
 		
 		case ENV_INVALID:
 		{
-			sb_printf( sb_err, _(L"%ls: Unknown error"), L"set" );
+			append_format(stderr_buffer, _(L"%ls: Unknown error"), L"set" );
 			retcode=1;
 			break;
 		}
@@ -208,7 +200,7 @@ static int parse_index( std::vector<long> &indexes,
 	
 	if (*src != L'[')
 	{
-		sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), L"set" );					
+		append_format(stderr_buffer, _(BUILTIN_SET_ARG_COUNT), L"set" );					
 		return 0;
 	}
 	
@@ -216,7 +208,7 @@ static int parse_index( std::vector<long> &indexes,
 	
 	if( (wcsncmp( src_orig, name, len )!=0) || (wcslen(name) != (len)) )
 	{
-		sb_printf( sb_err, 
+		append_format(stderr_buffer, 
 				   _(L"%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"),
 				   L"set", 
 				   name,
@@ -244,7 +236,7 @@ static int parse_index( std::vector<long> &indexes,
 		
 		if( end==src || errno ) 
 		{
-			sb_printf(sb_err, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
+			append_format(stderr_buffer, _(L"%ls: Invalid index starting at '%ls'\n"), L"set", src);
 			return 0;
 		}
 
@@ -326,7 +318,7 @@ static void print_variables(int include_values, int esc, int scope)
 		const wcstring key = names.at(i);
         const wcstring e_key = escape_string(key, 0);
 
-		sb_append(sb_out, e_key.c_str());
+		stdout_buffer.append(e_key);
 		
 		if( include_values ) 
 		{
@@ -343,17 +335,18 @@ static void print_variables(int include_values, int esc, int scope)
 				
 				wcstring e_value = esc ? expand_escape_variable(value) : value;
 				
-				sb_append(sb_out, L" ", e_value.c_str(), NULL);
+                stdout_buffer.append(L" ");
+                stdout_buffer.append(e_value);
 				
 				if( shorten )
 				{
-					sb_append(sb_out, L"\u2026");
+					stdout_buffer.append(L"\u2026");
 				}
 
 			}
 		}
 		
-		sb_append(sb_out, L"\n");
+		stdout_buffer.append(L"\n");
 	}
 }
 
@@ -487,7 +480,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 				break;
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return 0;
 
 			case '?':
@@ -510,11 +503,11 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 
 	if( query && (erase || list || global || local || universal || exportv || unexport ) )
 	{
-		sb_printf(sb_err,
+		append_format(stderr_buffer,
 				  BUILTIN_ERR_COMBO,
 				  argv[0] );
 		
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 	
@@ -522,11 +515,11 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	/* We can't both list and erase varaibles */
 	if( erase && list ) 
 	{
-		sb_printf(sb_err,
+		append_format(stderr_buffer,
 				  BUILTIN_ERR_COMBO,
 				  argv[0] );		
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 
@@ -535,10 +528,10 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	*/
 	if( local + global + universal > 1 ) 
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_ERR_GLOCAL,
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 
@@ -547,10 +540,10 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	*/
 	if( exportv && unexport ) 
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_ERR_EXPUNEXP,
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 
@@ -596,7 +589,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 								
 				if( !parse_index( indexes, arg, dest, result.size() ) )
 				{
-					builtin_print_help( parser, argv[0], sb_err );
+					builtin_print_help( parser, argv[0], stderr_buffer );
 					retcode = 1;
 					break;
 				}
@@ -638,11 +631,11 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 
 		if( erase ) 
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _(L"%ls: Erase needs a variable name\n%ls\n"), 
 					   argv[0] );
 			
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			retcode = 1;
 		}
 		else
@@ -667,15 +660,15 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	if( !wcslen( dest ) )
 	{
 		free( dest );
-		sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		append_format(stderr_buffer, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 	
 	if( (bad_char = wcsvarname( dest ) ) )
 	{
-		sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *bad_char );
-		builtin_print_help( parser, argv[0], sb_err );
+		append_format(stderr_buffer, BUILTIN_ERR_VARCHAR, argv[0], *bad_char );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		free( dest );
 		return 1;
 	}
@@ -683,8 +676,8 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	if( slice && erase && (scope != ENV_USER) )
 	{
 		free( dest );
-		sb_printf( sb_err, _(L"%ls: Can not specify scope when erasing array slice\n"), argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		append_format(stderr_buffer, _(L"%ls: Can not specify scope when erasing array slice\n"), argv[0] );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return 1;
 	}
 	
@@ -712,7 +705,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		{			
 			if( !parse_index( indexes, argv[woptind], dest, result.size() ) )
 			{
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				retcode = 1;
 				break;
 			}
@@ -724,8 +717,8 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 			{
 				if( val_count < idx_count )
 				{
-					sb_printf( sb_err, _(BUILTIN_SET_ARG_COUNT), argv[0] );
-					builtin_print_help( parser, argv[0], sb_err );
+					append_format(stderr_buffer, _(BUILTIN_SET_ARG_COUNT), argv[0] );
+					builtin_print_help( parser, argv[0], stderr_buffer );
 					retcode=1;
 					break;
 				}
@@ -762,9 +755,9 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 								   indexes,
 								   value ) )
 				{
-					sb_printf( sb_err, L"%ls: ", argv[0] );
-					sb_printf( sb_err, ARRAY_BOUNDS_ERR );
-					sb_append( sb_err, L"\n" );
+					append_format(stderr_buffer, L"%ls: ", argv[0] );
+					append_format(stderr_buffer, ARRAY_BOUNDS_ERR );
+					stderr_buffer.push_back(L'\n');
 				}
 				
 				my_env_set(dest, result, scope);
@@ -792,10 +785,10 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		{
 			if( woptind != argc )
 			{
-				sb_printf( sb_err, 
+				append_format(stderr_buffer, 
 						   _(L"%ls: Values cannot be specfied with erase\n"),
 						   argv[0] );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				retcode=1;
 			}
 			else

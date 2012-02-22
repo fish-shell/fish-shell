@@ -116,18 +116,27 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const
 int builtin_out_redirect;
 int builtin_err_redirect;
 
-/*
-  Buffers for storing the output of builtin functions
-*/
-string_buffer_t *sb_out=0, *sb_err=0;
+/* Buffers for storing the output of builtin functions */
+wcstring stdout_buffer, stderr_buffer;
+
+const wcstring &get_stdout_buffer() {
+    ASSERT_IS_MAIN_THREAD();
+    return stdout_buffer;
+}
+
+const wcstring &get_stderr_buffer() {
+    ASSERT_IS_MAIN_THREAD();
+    return stderr_buffer;
+}
+
 
 /**
    Stack containing builtin I/O for recursive builtin calls.
 */
 struct io_stack_elem_t {
     int in;
-    string_buffer_t *out;
-    string_buffer_t *err;
+    wcstring out;
+    wcstring err;
 };
 static std::stack<io_stack_elem_t> io_stack;
 
@@ -167,13 +176,15 @@ static void builtin_wperror( const wchar_t *s)
 {
 	if( s != 0 )
 	{
-		sb_append( sb_err, s, L": ", NULL );
+        stderr_buffer.append(s);
+        stderr_buffer.append(L": ");
 	}
 	char *err = strerror( errno );
 	wchar_t *werr = str2wcs( err );
 	if( werr )
 	{
-		sb_append( sb_err,  werr, L"\n", NULL );
+        stderr_buffer.append(werr);
+        stderr_buffer.push_back(L'\n');
 		free( werr );
 	}
 }
@@ -219,15 +230,14 @@ wcstring builtin_help_get( parser_t &parser, const wchar_t *name )
    
 */
 
-static void builtin_print_help( parser_t &parser, const wchar_t *cmd, string_buffer_t *b )
+static void builtin_print_help( parser_t &parser, const wchar_t *cmd, wcstring &b )
 {
 	
 	int is_short = 0;
 	
-	if( b == sb_err )
+	if( &b == &stderr_buffer )
 	{
-		sb_append( sb_err,
-				   parser.current_line() );
+        stderr_buffer.append(parser.current_line());
 	}
 
 	const wcstring h = builtin_help_get( parser, cmd );
@@ -239,7 +249,7 @@ static void builtin_print_help( parser_t &parser, const wchar_t *cmd, string_buf
 	if( str )
 	{
 
-		if( b==sb_err )
+		if( &b == &stderr_buffer )
 		{
 			
 			/*
@@ -319,10 +329,10 @@ static void builtin_print_help( parser_t &parser, const wchar_t *cmd, string_buf
 			}
 		}
 		
-		sb_append( b, str );
+        b.append(str);
 		if( is_short )
 		{
-			sb_printf( b, _(L"%ls: Type 'help %ls' for related documentation\n\n"), cmd, cmd );
+            append_format(b, _(L"%ls: Type 'help %ls' for related documentation\n\n"), cmd, cmd);
 		}
 				
 		free( str );
@@ -334,11 +344,8 @@ static void builtin_print_help( parser_t &parser, const wchar_t *cmd, string_buf
 */
 static void builtin_unknown_option( parser_t &parser, const wchar_t *cmd, const wchar_t *opt )
 {
-	sb_printf( sb_err,
-			   BUILTIN_ERR_UNKNOWN,
-			   cmd,
-			   opt );
-	builtin_print_help( parser, cmd, sb_err );
+    append_format(stderr_buffer, BUILTIN_ERR_UNKNOWN, cmd, opt);
+	builtin_print_help( parser, cmd, stderr_buffer );
 }
 
 /**
@@ -346,11 +353,8 @@ static void builtin_unknown_option( parser_t &parser, const wchar_t *cmd, const 
 */
 static void builtin_missing_argument( parser_t &parser, const wchar_t *cmd, const wchar_t *opt )
 {
-	sb_printf( sb_err,
-			   BUILTIN_ERR_MISSING,
-			   cmd,
-			   opt );
-	builtin_print_help( parser, cmd, sb_err );
+    append_format(stderr_buffer, BUILTIN_ERR_MISSING, cmd, opt);
+	builtin_print_help( parser, cmd, stderr_buffer );
 }
 
 /*
@@ -400,12 +404,12 @@ static void builtin_bind_list()
         wcstring tname; 
 		if( input_terminfo_get_name(seq, tname) )
 		{
-			sb_printf( sb_out, L"bind -k %ls %ls\n", tname.c_str(), ecmd.c_str() );
+			append_format(stdout_buffer, L"bind -k %ls %ls\n", tname.c_str(), ecmd.c_str() );
 		}
 		else
 		{
 			const wcstring eseq = escape_string( seq, 1 );	
-			sb_printf( sb_out, L"bind %ls %ls\n", eseq.c_str(), ecmd.c_str() );
+			append_format(stdout_buffer, L"bind %ls %ls\n", eseq.c_str(), ecmd.c_str() );
 		}		
 	}	
 }
@@ -424,7 +428,7 @@ static void builtin_bind_key_names( int all )
 	{
         const wcstring &name = names.at(i);
 		
-		sb_printf( sb_out, L"%ls\n", name.c_str() );
+		append_format(stdout_buffer, L"%ls\n", name.c_str() );
 	}
 }
 
@@ -439,7 +443,7 @@ static void builtin_bind_function_names()
 	for( size_t i=0; i<names.size(); i++ )
 	{
 		const wchar_t *seq = names.at(i).c_str();		
-		sb_printf( sb_out, L"%ls\n", seq );
+		append_format(stdout_buffer, L"%ls\n", seq );
 	}
 }
 
@@ -463,19 +467,19 @@ static int builtin_bind_add( wchar_t *seq, wchar_t *cmd, int terminfo )
 
 				case ENOENT:
 				{
-					sb_printf( sb_err, _(L"%ls: No key with name '%ls' found\n"), L"bind", seq );
+					append_format(stderr_buffer, _(L"%ls: No key with name '%ls' found\n"), L"bind", seq );
 					break;
 				}
 
 				case EILSEQ:
 				{
-					sb_printf( sb_err, _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", seq );
+					append_format(stderr_buffer, _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", seq );
 					break;
 				}
 
 				default:
 				{
-					sb_printf( sb_err, _(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind", seq );
+					append_format(stderr_buffer, _(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind", seq );
 					break;
 				}
 
@@ -600,11 +604,11 @@ static int builtin_bind( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   BUILTIN_ERR_UNKNOWN,
 						   argv[0],
 						   long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				return STATUS_BUILTIN_ERROR;
 
@@ -618,7 +622,7 @@ static int builtin_bind( parser_t &parser, wchar_t **argv )
 				
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 				
 			case 'k':
@@ -669,7 +673,7 @@ static int builtin_bind( parser_t &parser, wchar_t **argv )
 				default:
 				{
 					res = STATUS_BUILTIN_ERROR;
-					sb_printf( sb_err, _(L"%ls: Expected zero or two parameters, got %d"), argv[0], argc-woptind );
+					append_format(stderr_buffer, _(L"%ls: Expected zero or two parameters, got %d"), argv[0], argc-woptind );
 					break;
 				}
 			}
@@ -693,7 +697,7 @@ static int builtin_bind( parser_t &parser, wchar_t **argv )
 		default:
 		{
 			res = STATUS_BUILTIN_ERROR;
-			sb_printf( sb_err, _(L"%ls: Invalid state\n"), argv[0] );
+			append_format(stderr_buffer, _(L"%ls: Invalid state\n"), argv[0] );
 			break;
 		}
 	}
@@ -763,15 +767,15 @@ static int builtin_block( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   BUILTIN_ERR_UNKNOWN,
 						   argv[0],
 						   long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				return STATUS_BUILTIN_ERROR;
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 			case 'g':
@@ -798,13 +802,13 @@ static int builtin_block( parser_t &parser, wchar_t **argv )
 	{
 		if( scope != UNSET )
 		{
-			sb_printf( sb_err, _( L"%ls: Can not specify scope when removing block\n" ), argv[0] );
+			append_format(stderr_buffer, _( L"%ls: Can not specify scope when removing block\n" ), argv[0] );
 			return STATUS_BUILTIN_ERROR;
 		}
         
         if (parser.global_event_blocks.empty())
 		{
-			sb_printf( sb_err, _( L"%ls: No blocks defined\n" ), argv[0] );
+			append_format(stderr_buffer, _( L"%ls: No blocks defined\n" ), argv[0] );
 			return STATUS_BUILTIN_ERROR;
 		}
 		parser.global_event_blocks.pop_front();
@@ -897,16 +901,16 @@ static int builtin_builtin( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 
 				return STATUS_BUILTIN_ERROR;
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 			case 'n':
@@ -930,10 +934,8 @@ static int builtin_builtin( parser_t &parser, wchar_t **argv )
 		{
 			const wchar_t *el = names.at(i).c_str();
 			
-			sb_append( sb_out,
-						el,
-						L"\n",
-						NULL );
+			stdout_buffer.append(el);
+            stdout_buffer.append(L"\n");
 		}
 	}
 	return STATUS_BUILTIN_OK;
@@ -978,15 +980,15 @@ static int builtin_emit( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return STATUS_BUILTIN_ERROR;
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 			case '?':
@@ -1049,15 +1051,15 @@ static int builtin_generic( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return STATUS_BUILTIN_ERROR;
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 			case '?':
@@ -1074,7 +1076,7 @@ static int builtin_generic( parser_t &parser, wchar_t **argv )
    Output a definition of the specified function to the specified
    stringbuffer. Used by the functions builtin.
 */
-static void functions_def( const wcstring &name, string_buffer_t *out )
+static void functions_def( const wcstring &name, wcstring &out )
 {
 	const wchar_t *desc = function_get_desc( name );
 	const wchar_t *def = function_get_definition(name);
@@ -1086,22 +1088,21 @@ static void functions_def( const wcstring &name, string_buffer_t *out )
 	std::vector<event_t *> ev;
 	event_get( &search, &ev );
 
-	sb_append( out,
-		    L"function ",
-		    name.c_str(),
-		    NULL);
+    out.append(L"function ");
+    out.append(name);
 
 	if( desc && wcslen(desc) )
 	{
 		wchar_t *esc_desc = escape( desc, 1 );
 
-		sb_append( out, L" --description ", esc_desc, NULL );
+		out.append(L" --description ");
+        out.append( esc_desc );
 		free( esc_desc );
 	}
 
 	if( !function_get_shadows( name ) )
 	{
-		sb_append( out, L" --no-scope-shadowing", NULL );	
+		out.append(L" --no-scope-shadowing" );	
 	}
 
 	for( size_t i=0; i<ev.size(); i++ )
@@ -1111,22 +1112,22 @@ static void functions_def( const wcstring &name, string_buffer_t *out )
 		{
 			case EVENT_SIGNAL:
 			{
-				sb_printf( out, L" --on-signal %ls", sig2wcs( next->param1.signal ) );
+				append_format( out, L" --on-signal %ls", sig2wcs( next->param1.signal ) );
 				break;
 			}
 
 			case EVENT_VARIABLE:
 			{
-				sb_printf( out, L" --on-variable %ls", next->str_param1.c_str() );
+				append_format( out, L" --on-variable %ls", next->str_param1.c_str() );
 				break;
 			}
 
 			case EVENT_EXIT:
 			{
 				if( next->param1.pid > 0 )
-					sb_printf( out, L" --on-process-exit %d", next->param1.pid );
+					append_format( out, L" --on-process-exit %d", next->param1.pid );
 				else
-					sb_printf( out, L" --on-job-exit %d", -next->param1.pid );
+					append_format( out, L" --on-job-exit %d", -next->param1.pid );
 				break;
 			}
 
@@ -1134,13 +1135,13 @@ static void functions_def( const wcstring &name, string_buffer_t *out )
 			{
 				job_t *j = job_get( next->param1.job_id );
 				if( j )
-					sb_printf( out, L" --on-job-exit %d", j->pgid );
+					append_format( out, L" --on-job-exit %d", j->pgid );
 				break;
 			}
 
 			case EVENT_GENERIC:
 			{
-				sb_printf( out, L" --on-event %ls", next->str_param1.c_str() );
+				append_format( out, L" --on-event %ls", next->str_param1.c_str() );
 				break;
 			}
 						
@@ -1152,15 +1153,15 @@ static void functions_def( const wcstring &name, string_buffer_t *out )
     wcstring_list_t named = function_get_named_arguments( name );
 	if( named.size() > 0 )
 	{
-		sb_printf( out, L" --argument" );
+		append_format( out, L" --argument" );
 		for( size_t i=0; i < named.size(); i++ )
 		{
-			sb_printf( out, L" %ls", named.at(i).c_str() );
+			append_format( out, L" %ls", named.at(i).c_str() );
 		}
 	}
 	
 
-	sb_printf( out, L"\n\t%ls\nend\n", def );
+	append_format( out, L"\n\t%ls\nend\n", def );
 }
 
 
@@ -1236,11 +1237,11 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 
 				return STATUS_BUILTIN_ERROR;
@@ -1262,7 +1263,7 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 				break;
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 			case 'q':
@@ -1286,11 +1287,11 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 	*/
 	if( (erase + (!!desc) + list + query + copy) > 1 )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Invalid combination of options\n" ),
 				   argv[0] );
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 
 		return STATUS_BUILTIN_ERROR;
 	}
@@ -1308,22 +1309,22 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 
 		if( argc-woptind != 1 )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Expected exactly one function name\n" ),
 					   argv[0] );
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 
 			return STATUS_BUILTIN_ERROR;
 		}
 		func = argv[woptind];
 		if( !function_exists( func ) )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Function '%ls' does not exist\n" ),
 					   argv[0],
 					   func );
 
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 
 			return STATUS_BUILTIN_ERROR;
 		}
@@ -1340,28 +1341,22 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
         std::sort(names.begin(), names.end());
 		if( is_screen )
 		{
-			string_buffer_t buff;
-			sb_init( &buff );
+            wcstring buff;
 
 			for( i=0; i<names.size(); i++ )
 			{
-				sb_append( &buff,
-							names.at(i).c_str(),
-							L", ",
-							NULL );
+                buff.append(names.at(i));
+                buff.append(L", ");
 			}
 
-			write_screen( (wchar_t *)buff.buff, sb_out );
-			sb_destroy( &buff );
+			write_screen( buff, stdout_buffer );
 		}
 		else
 		{
 			for( i=0; i<names.size(); i++ )
 			{
-				sb_append( sb_out,
-							names.at(i).c_str(),
-							L"\n",
-							NULL );
+				stdout_buffer.append(names.at(i).c_str());
+                stdout_buffer.append(L"\n");
 			}
 		}
 
@@ -1374,10 +1369,10 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 		
 		if( argc-woptind != 2 )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Expected exactly two names (current function name, and new function name)\n" ),
 					   argv[0] );
-			builtin_print_help ( parser, argv[0], sb_err );
+			builtin_print_help ( parser, argv[0], stderr_buffer );
 			
 			return STATUS_BUILTIN_ERROR;
 		}
@@ -1386,34 +1381,34 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 		
 		if( !function_exists( current_func ) )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Function '%ls' does not exist\n" ),
 					   argv[0],
 					   current_func.c_str() );
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 
 			return STATUS_BUILTIN_ERROR;
 		}
 
 		if( (wcsfuncname( new_func.c_str() ) != 0) || parser_keywords_is_reserved( new_func ) )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 			           _( L"%ls: Illegal function name '%ls'\n"),
 			           argv[0],
 			           new_func.c_str());
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return STATUS_BUILTIN_ERROR;
 		}
 
 		// keep things simple: don't allow existing names to be copy targets.
 		if( function_exists( new_func ) )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Function '%ls' already exists. Cannot create copy '%ls'\n" ),
 					   argv[0],
 					   new_func.c_str(),
 					   current_func.c_str() );            
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 
 			return STATUS_BUILTIN_ERROR;
 		}
@@ -1432,9 +1427,9 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 			if( !query )
 			{
 				if( i != woptind)
-					sb_append( sb_out, L"\n" );
+					stdout_buffer.append( L"\n" );
 				
-				functions_def( argv[i], sb_out );
+				functions_def( argv[i], stdout_buffer );
 			}
 		}				
 	}
@@ -1526,7 +1521,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
@@ -1544,7 +1539,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 
 				if( sig < 0 )
 				{
-					sb_printf( sb_err,
+					append_format(stderr_buffer,
 							   _( L"%ls: Unknown signal '%ls'\n" ),
 							   argv[0],
 							   woptarg );
@@ -1559,7 +1554,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			{
 				if( wcsvarname( woptarg ) )
 				{
-					sb_printf( sb_err,
+					append_format(stderr_buffer,
 							   _( L"%ls: Invalid variable name '%ls'\n" ),
 							   argv[0],
 							   woptarg );
@@ -1609,7 +1604,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 
 					if( job_id == -1 )
 					{
-						sb_printf( sb_err,
+						append_format(stderr_buffer,
 								   _( L"%ls: Cannot find calling job for event handler\n" ),
 								   argv[0] );
 						res=1;
@@ -1627,7 +1622,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 					pid = wcstol( woptarg, &end, 10 );
 					if( errno || !end || *end )
 					{
-						sb_printf( sb_err,
+						append_format(stderr_buffer,
 								   _( L"%ls: Invalid process id %ls\n" ),
 								   argv[0],
 								   woptarg );
@@ -1660,7 +1655,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				break;
 				
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 				
 			case '?':
@@ -1677,14 +1672,14 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 		
 		if( argc == woptind )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Expected function name\n" ),
 					   argv[0] );
 			res=1;
 		}
 		else if( wcsfuncname( argv[woptind] ) )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Illegal function name '%ls'\n" ),
 					   argv[0],
 					   argv[woptind] );
@@ -1694,7 +1689,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 		else if( parser_keywords_is_reserved(argv[woptind] ) )
 		{
 
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: The name '%ls' is reserved,\nand can not be used as a function name\n" ),
 					   argv[0],
 					   argv[woptind] );
@@ -1712,7 +1707,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				{
 					if( wcsvarname( argv[woptind] ) )
 					{
-						sb_printf( sb_err,
+						append_format(stderr_buffer,
 								   _( L"%ls: Invalid variable name '%ls'\n" ),
 								   argv[0],
 								   argv[woptind] );
@@ -1725,7 +1720,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			}
 			else if( woptind != argc )
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   _( L"%ls: Expected one argument, got %d\n" ),
 						   argv[0],
 						   argc );
@@ -1740,9 +1735,9 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 		size_t i;
 		int chars=0;
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		const wchar_t *cfa =  _( L"Current functions are: " );
-		sb_append( sb_err, cfa );
+		stderr_buffer.append( cfa );
 		chars += wcslen( cfa );
 
         wcstring_list_t names = function_get_names(0);
@@ -1755,13 +1750,13 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 			if( chars+l > common_get_width() )
 			{
 				chars = 0;
-				sb_append(sb_err, L"\n" );
+                stderr_buffer.push_back(L'\n');
 			}
 
-			sb_append( sb_err,
-						nxt, L"  ", NULL );
+            stderr_buffer.append(nxt);
+            stderr_buffer.append(L"  ");
 		}
-		sb_append( sb_err, L"\n" );
+        stderr_buffer.push_back(L'\n');
 
 		parser.pop_block();
 		parser.push_block( FAKE );
@@ -1837,16 +1832,16 @@ static int builtin_random( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				return STATUS_BUILTIN_ERROR;
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				break;
 
 			case '?':
@@ -1871,7 +1866,7 @@ static int builtin_random( parser_t &parser, wchar_t **argv )
 			}
 			lrand48_r( &seed_buffer, &res );
 			
-			sb_printf( sb_out, L"%d\n", abs(res%32767) );
+			append_format(stdout_buffer, L"%d\n", abs(res%32767) );
 			break;
 		}
 
@@ -1884,7 +1879,7 @@ static int builtin_random( parser_t &parser, wchar_t **argv )
 			foo = wcstol( argv[woptind], &end, 10 );
 			if( errno || *end )
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   _( L"%ls: Seed value '%ls' is not a valid number\n" ),
 						   argv[0],
 						   argv[woptind] );
@@ -1898,11 +1893,11 @@ static int builtin_random( parser_t &parser, wchar_t **argv )
 
 		default:
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Expected zero or one argument, got %d\n" ),
 					   argv[0],
 					   argc-woptind );
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return STATUS_BUILTIN_ERROR;
 		}
 	}
@@ -1993,11 +1988,11 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				return STATUS_BUILTIN_ERROR;
 
@@ -2038,7 +2033,7 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 				break;
 				
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 			case L'?':
@@ -2050,21 +2045,21 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 
 	if( ( place & ENV_UNEXPORT ) && ( place & ENV_EXPORT ) )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_ERR_EXPUNEXP,
 				   argv[0] );
 
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 
 	if( (place&ENV_LOCAL?1:0) + (place & ENV_GLOBAL?1:0) + (place & ENV_UNIVERSAL?1:0) > 1)
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_ERR_GLOCAL,
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 
 		return STATUS_BUILTIN_ERROR;
 	}
@@ -2078,7 +2073,7 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 
 		if( !wcslen( argv[i] ) )
 		{
-			sb_printf( sb_err, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
+			append_format(stderr_buffer, BUILTIN_ERR_VARNAME_ZERO, argv[0] );
 			return STATUS_BUILTIN_ERROR;
 		}
 
@@ -2086,8 +2081,8 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 		{
 			if( (!iswalnum(*src)) && (*src != L'_' ) )
 			{
-				sb_printf( sb_err, BUILTIN_ERR_VARCHAR, argv[0], *src );
-				builtin_print_help( parser, argv[0], sb_err );
+				append_format(stderr_buffer, BUILTIN_ERR_VARCHAR, argv[0], *src );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return STATUS_BUILTIN_ERROR;
 			}
 		}
@@ -2327,11 +2322,11 @@ static int builtin_status( parser_t &parser, wchar_t **argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-                sb_printf( sb_err,
+                append_format(stderr_buffer,
                            BUILTIN_ERR_UNKNOWN,
                            argv[0],
                            long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return STATUS_BUILTIN_ERROR;
 
 			case 'c':
@@ -2359,7 +2354,7 @@ static int builtin_status( parser_t &parser, wchar_t **argv )
 				break;
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 			case 'j':
@@ -2371,7 +2366,7 @@ static int builtin_status( parser_t &parser, wchar_t **argv )
 					job_control_mode = JOB_CONTROL_NONE;
 				else
 				{
-					sb_printf( sb_err,
+					append_format(stderr_buffer,
 							   L"%ls: Invalid job control mode '%ls'\n",
 							   woptarg );
 					res = 1;
@@ -2408,14 +2403,14 @@ static int builtin_status( parser_t &parser, wchar_t **argv )
 				if( !fn )
 					fn = _(L"Standard input");
 				
-				sb_printf( sb_out, L"%ls\n", fn );
+				append_format(stdout_buffer, L"%ls\n", fn );
 				
 				break;
 			}
 			
 			case CURRENT_LINE_NUMBER:
 			{
-				sb_printf( sb_out, L"%d\n", parser.get_lineno() );
+				append_format(stdout_buffer, L"%d\n", parser.get_lineno() );
 				break;				
 			}
 			
@@ -2442,22 +2437,22 @@ static int builtin_status( parser_t &parser, wchar_t **argv )
 
 			case STACK_TRACE:
 			{
-				parser.stack_trace( parser.current_block, sb_out );
+				parser.stack_trace( parser.current_block, stdout_buffer );
 				break;
 			}
 
 			case NORMAL:
 			{
 				if( is_login )
-					sb_printf( sb_out, _( L"This is a login shell\n" ) );
+					append_format(stdout_buffer, _( L"This is a login shell\n" ) );
 				else
-					sb_printf( sb_out, _( L"This is not a login shell\n" ) );
+					append_format(stdout_buffer, _( L"This is not a login shell\n" ) );
 
-				sb_printf( sb_out, _( L"Job control: %ls\n" ),
+				append_format(stdout_buffer, _( L"Job control: %ls\n" ),
 						   job_control_mode==JOB_CONTROL_INTERACTIVE?_( L"Only on interactive jobs" ):
 						   (job_control_mode==JOB_CONTROL_NONE ? _( L"Never" ) : _( L"Always" ) ) );
 
-				parser.stack_trace( parser.current_block, sb_out );
+				parser.stack_trace( parser.current_block, stdout_buffer );
 				break;
 			}
 		}
@@ -2490,11 +2485,11 @@ static int builtin_exit( parser_t &parser, wchar_t **argv )
 			ec = wcstol(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 					   _( L"%ls: Argument '%ls' must be an integer\n" ),
 					   argv[0],
 					   argv[1] );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return STATUS_BUILTIN_ERROR;
 			}
 			break;
@@ -2502,11 +2497,11 @@ static int builtin_exit( parser_t &parser, wchar_t **argv )
 
 		default:
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 				   BUILTIN_ERR_TOO_MANY_ARGUMENTS,
 				   argv[0] );
 
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return STATUS_BUILTIN_ERROR;
 		}
 		
@@ -2532,7 +2527,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		dir_in = env_get_string( L"HOME" );
 		if( dir_in.missing_or_empty() )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Could not find home directory\n" ),
 					   argv[0] );
 		}
@@ -2546,21 +2541,21 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 	{
 		if( errno == ENOTDIR )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
 				   dir_in.c_str() );
 		}
 		else if( errno == ENOENT )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 				   _( L"%ls: The directory '%ls' does not exist\n" ),
 				   argv[0],
 				   dir_in.c_str() );			
 		}
 		else if( errno == EROTTEN )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 				   _( L"%ls: '%ls' is a rotten symlink\n" ),
 				   argv[0],
 				   dir_in.c_str() );			
@@ -2568,7 +2563,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		} 
 		else 
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 				   _( L"%ls: Unknown error trying to locate directory '%ls'\n" ),
 				   argv[0],
 				   dir_in.c_str() );			
@@ -2578,9 +2573,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		
 		if( !is_interactive )
 		{
-			sb_append( sb_err,
-				    parser.current_line(),
-				    NULL );
+            stderr_buffer.append(parser.current_line());
 		}
 		
 		res = 1;
@@ -2593,7 +2586,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		status = wstat( dir, &buffer );
 		if( !status && S_ISDIR(buffer.st_mode))
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 				   _( L"%ls: Permission denied: '%ls'\n" ),
 				   argv[0],
 				   dir );
@@ -2602,7 +2595,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		else
 		{
 			
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
 				   dir );
@@ -2610,9 +2603,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		
 		if( !is_interactive )
 		{
-			sb_append( sb_err,
-						parser.current_line(),
-						NULL );
+            stderr_buffer.append(parser.current_line());
 		}
 		
 		res = 1;
@@ -2620,7 +2611,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 	else if( !env_set_pwd() )
 	{
 		res=1;
-		sb_printf( sb_err, _( L"%ls: Could not set PWD variable\n" ), argv[0] );
+		append_format(stderr_buffer, _( L"%ls: Could not set PWD variable\n" ), argv[0] );
 	}
 
     free(dir);
@@ -2636,7 +2627,7 @@ static int builtin_count( parser_t &parser, wchar_t ** argv )
 {
 	int argc;
 	argc = builtin_count_args( argv );
-	sb_printf( sb_out, L"%d\n", argc-1 );
+	append_format(stdout_buffer, L"%d\n", argc-1 );
 	return !(argc-1);
 }
 
@@ -2683,16 +2674,16 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 			case 0:
 				if(long_options[opt_index].flag != 0)
 					break;
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 					   BUILTIN_ERR_UNKNOWN,
 					   argv[0],
 					   long_options[opt_index].name );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return STATUS_BUILTIN_ERROR;
 
 
 			case 'h':
-				builtin_print_help( parser, argv[0], sb_out );
+				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 
 
@@ -2713,7 +2704,7 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 	needle = argv[woptind];
 	if (!needle)
 	{
-		sb_printf( sb_err, _( L"%ls: Key not specified\n" ), argv[0] );
+		append_format(stderr_buffer, _( L"%ls: Key not specified\n" ), argv[0] );
 	}
 	
 
@@ -2758,7 +2749,7 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 		
 		if( wstat(argv[1], &buf) == -1 )
 		{
-			sb_printf( sb_err, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
+			append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
 			builtin_wperror( L"." );
 					
 			return STATUS_BUILTIN_ERROR;
@@ -2766,13 +2757,13 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 
 		if( !S_ISREG(buf.st_mode) )
 		{
-			sb_printf( sb_err, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
+			append_format(stderr_buffer, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
 			return STATUS_BUILTIN_ERROR;
 		}
 
 		if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
 		{
-			sb_printf( sb_err, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
+			append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
 			builtin_wperror( L"." );
 			return STATUS_BUILTIN_ERROR;
 		}
@@ -2806,7 +2797,7 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 		
 	if( res )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 			   _( L"%ls: Error while reading file '%ls'\n" ),
 			   argv[0],
 				   fn_intern == intern_static(L"-") ? L"<stdin>" : fn_intern );
@@ -2862,10 +2853,10 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 		}
 		if( !j )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: There are no suitable jobs\n" ),
 					   argv[0] );
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 		}
 	}
 	else if( argv[2] != 0 )
@@ -2891,19 +2882,19 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 		
 		if( found_job )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Ambiguous job\n" ),
 					   argv[0] );
 		}
 		else
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: '%ls' is not a job\n" ),
 					   argv[0],
 					   argv[1] );
 		}
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 
 		j=0;
 
@@ -2917,32 +2908,32 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 		
 		if( *end || errno )
 		{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   BUILTIN_ERR_NOT_NUMBER,
 						   argv[0],
 						   argv[1] );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 		}
 		else
 		{
 			j = job_get_from_pid( pid );
 			if( !j || !job_get_flag( j, JOB_CONSTRUCTED ) || job_is_completed( j ))
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   _( L"%ls: No suitable job: %d\n" ),
 						   argv[0],
 						   pid );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				j=0;
 			}
 			else if( !job_get_flag( j, JOB_CONTROL) )
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   _( L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n" ),
 						   argv[0],
 						   pid,
 						   j->command_cstr() );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				j=0;
 			}
 		}
@@ -2952,7 +2943,7 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 	{
 		if( builtin_err_redirect )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   FG_MSG,
 					   j->job_id,
 					   j->command_cstr() );
@@ -2991,26 +2982,26 @@ static int send_to_bg( parser_t &parser, job_t *j, const wchar_t *name )
 {
 	if( j == 0 )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Unknown job '%ls'\n" ),
 				   L"bg",
 				   name );
-		builtin_print_help( parser, L"bg", sb_err );
+		builtin_print_help( parser, L"bg", stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 	else if( !job_get_flag( j, JOB_CONTROL ) )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n" ),
 				   L"bg",
 				   j->job_id,
 				   j->command_cstr() );
-		builtin_print_help( parser, L"bg", sb_err );
+		builtin_print_help( parser, L"bg", stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 	else
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _(L"Send job %d '%ls' to background\n"),
 				   j->job_id,
 				   j->command_cstr() );
@@ -3043,7 +3034,7 @@ static int builtin_bg( parser_t &parser, wchar_t **argv )
 		
 		if( !j )
 		{
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: There are no suitable jobs\n" ),
 					   argv[0] );
 			res = 1;
@@ -3066,7 +3057,7 @@ static int builtin_bg( parser_t &parser, wchar_t **argv )
 			pid = (int)wcstol( argv[i], &end, 10 );
 			if( errno || pid < 0 || *end || !job_get_from_pid( pid ) )
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   _( L"%ls: '%ls' is not a job\n" ),
 						   argv[0],
 						   argv[i] );
@@ -3100,26 +3091,26 @@ static int builtin_for( parser_t &parser, wchar_t **argv )
 
 	if( argc < 3)
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_FOR_ERR_COUNT,
 				   argv[0] ,
 				   argc );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 	}
 	else if ( wcsvarname(argv[1]) )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_FOR_ERR_NAME,
 				   argv[0],
 				   argv[1] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 	}
 	else if (wcscmp( argv[2], L"in") != 0 )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_FOR_ERR_IN,
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 	}
 	else
 	{
@@ -3176,11 +3167,11 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 {
 	if( !parser.current_block->outer )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Not inside of block\n" ),
 				   argv[0] );
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 	else
@@ -3300,10 +3291,10 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
 		parser.current_block->type != IF ||
 		parser.current_block->state1<int>() != 1)
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Not inside of 'if' block\n" ),
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 	else
@@ -3334,12 +3325,12 @@ static int builtin_break_continue( parser_t &parser, wchar_t **argv )
 
 	if( argc != 1 )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   BUILTIN_ERR_UNKNOWN,
 				   argv[0],
 				   argv[1] );
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 
@@ -3353,10 +3344,10 @@ static int builtin_break_continue( parser_t &parser, wchar_t **argv )
 
 	if( b == 0 )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Not inside of loop\n" ),
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 
@@ -3410,20 +3401,20 @@ static int builtin_return( parser_t &parser, wchar_t **argv )
 			status = wcstol(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
-				sb_printf( sb_err,
+				append_format(stderr_buffer,
 						   _( L"%ls: Argument '%ls' must be an integer\n" ),
 						   argv[0],
 						   argv[1] );
-				builtin_print_help( parser, argv[0], sb_err );
+				builtin_print_help( parser, argv[0], stderr_buffer );
 				return STATUS_BUILTIN_ERROR;
 			}
 			break;
 		}
 		default:
-			sb_printf( sb_err,
+			append_format(stderr_buffer,
 					   _( L"%ls: Too many arguments\n" ),
 					   argv[0] );
-			builtin_print_help( parser, argv[0], sb_err );
+			builtin_print_help( parser, argv[0], stderr_buffer );
 			return STATUS_BUILTIN_ERROR;
 	}
 
@@ -3437,10 +3428,10 @@ static int builtin_return( parser_t &parser, wchar_t **argv )
 
 	if( b == 0 )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Not inside of function\n" ),
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 
@@ -3468,12 +3459,12 @@ static int builtin_switch( parser_t &parser, wchar_t **argv )
 
 	if( argc != 2 )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: Expected exactly one argument, got %d\n" ),
 				   argv[0],
 				   argc-1 );
 
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		res=1;
 		parser.push_block( FAKE );
 	}
@@ -3500,10 +3491,10 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 	
 	if( parser.current_block->type != SWITCH )
 	{
-		sb_printf( sb_err,
+		append_format(stderr_buffer,
 				   _( L"%ls: 'case' command while not in switch block\n" ),
 				   argv[0] );
-		builtin_print_help( parser, argv[0], sb_err );
+		builtin_print_help( parser, argv[0], stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
 	
@@ -3645,7 +3636,7 @@ int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io )
 	{
 		if( argv[2] == 0 && (parser.is_help( argv[1], 0 ) ) )
 		{
-			builtin_print_help( parser, argv[0], sb_out );
+			builtin_print_help( parser, argv[0], stdout_buffer );
 			return STATUS_BUILTIN_OK;
 		}
 	}
@@ -3693,36 +3684,30 @@ void builtin_push_io( parser_t &parser, int in )
     ASSERT_IS_MAIN_THREAD();
 	if( builtin_stdin != -1 )
 	{
-        struct io_stack_elem_t elem = {builtin_stdin, sb_out, sb_err};
+        struct io_stack_elem_t elem = {builtin_stdin, stdout_buffer, stderr_buffer};
         io_stack.push(elem);
 	}
 	builtin_stdin = in;
-	sb_out = (string_buffer_t *)malloc(sizeof(string_buffer_t));
-	sb_err = (string_buffer_t *)malloc(sizeof(string_buffer_t));
-	sb_init( sb_out );
-	sb_init( sb_err );
+    stdout_buffer.clear();
+    stderr_buffer.clear();
 }
 
 void builtin_pop_io(parser_t &parser)
 {
     ASSERT_IS_MAIN_THREAD();
 	builtin_stdin = 0;
-	sb_destroy( sb_out );
-	sb_destroy( sb_err );
-	free( sb_out);
-	free(sb_err);
-
 	if( ! io_stack.empty() )
 	{
         struct io_stack_elem_t &elem = io_stack.top();
-		sb_err = elem.err;
-		sb_out = elem.out;
+		stderr_buffer = elem.err;
+		stdout_buffer = elem.out;
 		builtin_stdin = elem.in;
         io_stack.pop();
 	}
 	else
 	{
-		sb_out = sb_err = 0;
+        stdout_buffer.clear();
+        stderr_buffer.clear();
 		builtin_stdin = 0;
 	}
 }

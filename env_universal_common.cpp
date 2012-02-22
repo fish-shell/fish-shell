@@ -736,30 +736,29 @@ void try_send_all( connection_t *c )
 /**
    Escape specified string
  */
-static wchar_t *full_escape( const wchar_t *in )
+static wcstring full_escape( const wchar_t *in )
 {
-	string_buffer_t out;
-	sb_init( &out );
+	wcstring out;
 	for( ; *in; in++ )
 	{
 		if( *in < 32 )
 		{
-			sb_printf( &out, L"\\x%.2x", *in );
+			append_format( out, L"\\x%.2x", *in );
 		}
 		else if( *in < 128 )
 		{
-			sb_append_char( &out, *in );
+			out.push_back(*in);
 		}
 		else if( *in < 65536 )
 		{
-			sb_printf( &out, L"\\u%.4x", *in );
+			append_format( out, L"\\u%.4x", *in );
 		}
 		else
 		{
-			sb_printf( &out, L"\\U%.8x", *in );
+			append_format( out, L"\\U%.8x", *in );
 		}
 	}
-	return (wchar_t *)out.buff;
+	return out;
 }
 
 
@@ -803,12 +802,8 @@ message_t *create_message( int type,
 				val_in=L"";
 			}
 			
-			wchar_t *esc = full_escape( val_in );
-			if( !esc )
-				break;
-			
-			char *val = wcs2utf(esc );
-			free(esc);
+			wcstring esc = full_escape( val_in );			
+			char *val = wcs2utf(esc.c_str());
 						
 			sz = strlen(type==SET?SET_MBS:SET_EXPORT_MBS) + strlen(key) + strlen(val) + 4;
 			msg = (message_t *)malloc( sizeof( message_t ) + sz );

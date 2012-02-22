@@ -16,7 +16,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 
-/** \file fish_indent.c
+/** \file fish_indent.cpp
 	The fish_indent proegram.
 */
 
@@ -47,9 +47,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define GETOPT_STRING "hvi"
 
 /**
-   Read the entire contents of a file into the specified string_Buffer_t
+   Read the entire contents of a file into the specified string
  */
-static void read_file( FILE *f, string_buffer_t *b )
+static void read_file( FILE *f, wcstring &b )
 {
 	while( 1 )
 	{
@@ -66,28 +66,23 @@ static void read_file( FILE *f, string_buffer_t *b )
 			break;
 		}
 		
-		sb_append_char( b, c );
+		b.push_back(c);
 	}
 }
 
 /**
-   Insert the specified number of tabe into the output buffer
+   Insert the specified number of tabs into the output buffer
  */
-static void insert_tabs( string_buffer_t *out, int indent )
+static void insert_tabs( wcstring &out, int indent )
 {
-	int i;
-	
-	for( i=0; i<indent; i++ )
-	{
-		sb_append( out, L"\t" );
-	}
+    out.append(L'\t', indent);
 	
 }
 
 /**
    Indent the specified input
  */
-static int indent( string_buffer_t *out, wchar_t *in, int flags )
+static int indent( wcstring &out, const wcstring &in, int flags )
 {
 	tokenizer tok;
 	int res=0;
@@ -97,7 +92,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 	int prev_type = 0;
 	int prev_prev_type = 0;
 
-	tok_init( &tok, in, TOK_SHOW_COMMENTS );
+	tok_init( &tok, in.c_str(), TOK_SHOW_COMMENTS );
 	
 	for( ; tok_has_next( &tok ); tok_next( &tok ) )
 	{
@@ -140,7 +135,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 						insert_tabs( out, indent );
 					}
 					
-					sb_printf( out, L"%ls", last );
+                    append_format(out, L"%ls", last );
 					
 					indent = next_indent;
 					
@@ -148,8 +143,8 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 				else
 				{
 					if ( prev_type != TOK_REDIRECT_FD )
-						sb_append( out, L" " );
-					sb_append( out, last );
+						out.append( L" " );
+					out.append( last );
 				}
 				
 				break;
@@ -158,7 +153,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 			case TOK_END:
 			{
 				if( prev_type != TOK_END || prev_prev_type != TOK_END ) 
-					sb_append( out, L"\n" );
+					out.append( L"\n" );
 				do_indent = 1;
 				is_command = 1;
 				break;
@@ -166,64 +161,65 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 
 			case TOK_PIPE:
 			{
-				sb_append( out, L" " );
+				out.append( L" " );
 				if ( last[0] == '2' && !last[1] ) {
-					sb_append( out, L"^" );
+					out.append( L"^" );
 				} else if ( last[0] != '1' || last[1] ) {
-					sb_append( out, last, L">" );
+					out.append( last);
+                    out.append( L">" );
 				}
-				sb_append( out, L" | " );
+				out.append( L" | " );
 				is_command = 1;
 				break;
 			}
 			
 			case TOK_REDIRECT_OUT:
 			{
-				sb_append( out, L" " );
+				out.append( L" " );
 				if ( wcscmp( last, L"2" ) == 0 ) {
-					sb_append( out, L"^" );
+					out.append( L"^" );
 				} else {
 					if ( wcscmp( last, L"1" ) != 0 )
-				sb_append( out, last );
-						sb_append( out, L"> " );
+				out.append( last );
+						out.append( L"> " );
 				}
 						break;
 			}
 						
 					case TOK_REDIRECT_APPEND:
 			{
-				sb_append( out, L" " );
+				out.append( L" " );
 				if ( wcscmp( last, L"2" ) == 0 ) {
-					sb_append( out, L"^^" );
+					out.append( L"^^" );
 				} else {
 					if ( wcscmp( last, L"1" ) != 0 )
-						sb_append( out, last );
-						sb_append( out, L">> " );
+						out.append( last );
+						out.append( L">> " );
 				}
 						break;
 			}
 						
 					case TOK_REDIRECT_IN:
 			{
-				sb_append( out, L" " );
+				out.append( L" " );
 				if ( wcscmp( last, L"0" ) != 0 )
-					sb_append( out, last );
-						sb_append( out, L"< " );
+					out.append( last );
+						out.append( L"< " );
 						break;
 			}
 						
 					case TOK_REDIRECT_FD:
 			{
-				sb_append( out, L" " );
+				out.append( L" " );
 				if ( wcscmp( last, L"1" ) != 0 )
-					sb_append( out, last );
-						sb_append( out, L">& " );
+					out.append( last );
+						out.append( L">& " );
 						break;
 				}
 
 			case TOK_BACKGROUND:
 			{
-				sb_append( out, L"&\n" );
+				out.append( L"&\n" );
 				do_indent = 1;
 				is_command = 1;
 				break;
@@ -236,7 +232,7 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 					insert_tabs( out, indent );
 				}
 				
-				sb_printf( out, L"%ls", last );
+				append_format( out, L"%ls", last );
 				do_indent = 1;
 				break;				
 			}
@@ -260,34 +256,20 @@ static int indent( string_buffer_t *out, wchar_t *in, int flags )
 
 /**
    Remove any prefix and suffix newlines from the specified
-   string. Does not allocete a new string, edits the string in place
-   and returns a pointer somewhere into the string.
+   string.
  */
-static wchar_t *trim( wchar_t *in )
+static void trim( wcstring &str )
 {
-	wchar_t *end;
-	
-	while( *in == L'\n' )
-	{
-		in++;
-	}
-	
-	end = in + wcslen(in);
-		
-	while( 1 )
-	{
-		if( end < in+2 )
-			break;
+    if (str.empty())
+        return;
 
-		end--;
-		
-		if( (*end == L'\n' ) && ( *(end-1) == L'\n' ) )
-			*end=0;
-		else
-			break;
-	}
-	
-	return in;
+    size_t pos = str.find_first_not_of(L" \n");
+    if (pos > 0)
+        str.erase(0, pos);
+    
+    pos = str.find_last_not_of(L" \n");
+    if (pos != wcstring::npos && pos + 1 < str.length())
+        str.erase(pos + 1);
 }
 
 
@@ -295,10 +277,7 @@ static wchar_t *trim( wchar_t *in )
    The main mathod. Run the program.
  */
 int main( int argc, char **argv )
-{
-	string_buffer_t sb_in;
-	string_buffer_t sb_out;
-	
+{	
 	int do_indent=1;
 	set_main_thread();	
 	wsetlocale( LC_ALL, L"" );
@@ -376,23 +355,22 @@ int main( int argc, char **argv )
 		}		
 	}
 
-	sb_init( &sb_in );
-	sb_init( &sb_out );
-
-	read_file( stdin, &sb_in );
+    wcstring sb_in, sb_out;
+	read_file( stdin, sb_in );
 	
 	wutil_init();
 
-	if( !indent( &sb_out, (wchar_t *)sb_in.buff, do_indent ) )
+	if( !indent( sb_out, sb_in, do_indent ) )
 	{
-		fwprintf( stdout, L"%ls", trim( (wchar_t *)sb_out.buff) );
+        trim(sb_out);
+		fwprintf( stdout, L"%ls", sb_out.c_str() );
 	}
 	else
 	{
 		/*
 		  Indenting failed - print original input
 		*/
-		fwprintf( stdout, L"%ls", (wchar_t *)sb_in.buff );
+		fwprintf( stdout, L"%ls", sb_in.c_str() );
 	}
 	
 

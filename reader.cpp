@@ -937,7 +937,6 @@ static void completion_insert( const wchar_t *val, int flags )
 		
 		int tok_start, tok_len, move_cursor;
 		const wchar_t *begin, *end;
-		string_buffer_t sb;
 		wchar_t *escaped;
 		
         const wchar_t *buff = data->command_line.c_str();
@@ -947,33 +946,31 @@ static void completion_insert( const wchar_t *val, int flags )
 		tok_start = begin - buff;
 		tok_len = end-begin;
 						
-		sb_init( &sb );
-		sb_append_substring( &sb, buff, begin - buff );
+		wcstring sb(buff, begin - buff);
 		
 		if( do_escape )
 		{
 			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );		
-			sb_append( &sb, escaped );
+			sb.append( escaped );
 			move_cursor = wcslen(escaped);
 			free( escaped );
 		}
 		else
 		{
-			sb_append( &sb, val );
+			sb.append( val );
 			move_cursor = wcslen(val);
 		}
 		
 
 		if( add_space ) 
 		{
-			sb_append( &sb, L" " );
+			sb.append( L" " );
 			move_cursor += 1;
 		}
 		
-		sb_append( &sb, end );
+		sb.append( end );
 						
-		reader_set_buffer( (wchar_t *)sb.buff, (begin-buff)+move_cursor );
-		sb_destroy( &sb );
+		reader_set_buffer( sb, (begin-buff)+move_cursor );
 						
 		reader_super_highlight_me_plenty( data->buff_pos );
 		reader_repaint();

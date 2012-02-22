@@ -119,16 +119,6 @@ int no_exec=0;
 static event_t event(0);
 
 /**
-  Stringbuffer used to create arguments when firing events
-*/
-static string_buffer_t event_pid;
-
-/**
-  Stringbuffer used to create arguments when firing events
-*/
-static string_buffer_t event_status;
-
-/**
    A stack containing the values of is_interactive. Used by proc_push_interactive and proc_pop_interactive.
 */
 static std::deque<int> interactive_stack;
@@ -137,8 +127,6 @@ void proc_init()
 {
 	proc_push_interactive( 0 );
     event.arguments.reset(new wcstring_list_t);
-	sb_init( &event_pid );
-	sb_init( &event_status );
 }
 
 
@@ -208,8 +196,6 @@ void process_t::set_argv(const wcstring_list_t &argv) {
 void proc_destroy()
 {
     event.arguments.reset(NULL);
-	sb_destroy( &event_pid );
-	sb_destroy( &event_status );
     job_list_t &jobs = job_list();
 	while( ! jobs.empty() )
 	{

@@ -158,7 +158,7 @@ static const wchar_t *hightlight_var[] =
 /**
    This string_buffer_t contains the text that should be sent back to the calling program
 */
-static string_buffer_t out_buff;
+static wcstring out_buff;
 /**
    This is the file to which the output text should be sent. It is really a pipe.
 */
@@ -698,21 +698,11 @@ static int completion_try_print( int cols,
 			*/
 			while(do_loop)
 			{
-				string_buffer_t msg;
-				sb_init( &msg );
-				
 				set_color( rgb_color_t::black(), get_color(HIGHLIGHT_PAGER_PROGRESS) );
-				sb_printf( &msg,
-					   _(L" %d to %d of %d"),
-					   pos,
-					   pos+termsize.ws_row-1, 
-					   rows );
-				
-				sb_printf( &msg,
-					   L"   \r" );
+                wcstring msg = format_string(_(L" %d to %d of %d"), pos, pos+termsize.ws_row-1, rows );
+				msg.append(L"   \r" );
 								
-				writestr((wchar_t *)msg.buff);
-				sb_destroy( &msg );
+				writestr(msg.c_str());
 				set_color( rgb_color_t::normal(), rgb_color_t::normal() );
 				pager_flush();
 				int c = readch();
@@ -817,7 +807,7 @@ static int completion_try_print( int cols,
 					
 					default:
 					{
-						sb_append_char( &out_buff, c );
+						out_buff.push_back( c );
 						do_loop = 0;
 						break;
 					}					
@@ -1044,11 +1034,6 @@ static void init( int mangle_descriptors, int out )
 	}
 	
 
-	/**
-	   Init the stringbuffer used to keep any output in
-	*/
-	sb_init( &out_buff );
-
 	env_universal_init( 0, 0, 0, 0);
 	input_common_init( &interrupt_handler );
 	output_set_writer( &pager_buffered_writer );
@@ -1115,7 +1100,6 @@ static void destroy()
 		debug( 0, _(L"Error while closing terminfo") );		
 	}
 	
-	sb_destroy( &out_buff );
 	fclose( out_file );
 }
 
@@ -1437,7 +1421,7 @@ int main( int argc, char **argv )
 	
 	free(prefix );
 
-	fwprintf( out_file, L"%ls", (wchar_t *)out_buff.buff );
+	fwprintf( out_file, L"%ls", out_buff.c_str() );
 	if( is_ca_mode )
 	{
 		writembs(exit_ca_mode);

@@ -115,22 +115,20 @@ static void err( const wchar_t *blah, ... )
 static void test_escape()
 {
 	int i;
-	string_buffer_t sb;
+	wcstring sb;
 	
 	say( L"Testing escaping and unescaping" );
-
-	sb_init( &sb );
 	
 	for( i=0; i<ESCAPE_TEST_COUNT; i++ )
 	{
-		wchar_t *o, *e, *u;
+		const wchar_t *o, *e, *u;
 		
-		sb_clear( &sb );
+		sb.clear();
 		while( rand() % ESCAPE_TEST_LENGTH )
 		{
-			sb_append_char( &sb, (rand() %ESCAPE_TEST_CHAR) +1 );
+			sb.push_back((rand() %ESCAPE_TEST_CHAR) +1 );
 		}
-		o = (wchar_t *)sb.buff;
+		o = (const wchar_t *)sb.c_str();
 		e = escape(o, 1);
 		u = unescape( e, 0 );
 		if( !o || !e || !u )
@@ -146,8 +144,8 @@ static void test_escape()
 			
 			
 		}
-		free( e );
-		free( u );
+		free( (void *)e );
+		free( (void *)u );
 		
 	}
 	

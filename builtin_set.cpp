@@ -60,10 +60,9 @@ static int is_path_variable( const wchar_t *env )
 */
 static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 {
-	string_buffer_t sb;
 	size_t i;
 	int retcode = 0;
-	wchar_t *val_str=0;
+	const wchar_t *val_str=NULL;
 		
 	if( is_path_variable( key ) )
 	{
@@ -127,21 +126,18 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 		
 	}
 
-	sb_init( &sb );
-
+	wcstring sb;
 	if(  val.size() )
 	{
 		for( i=0; i< val.size() ; i++ )
 		{
-			const wchar_t *next = val[ i ].c_str();
-			sb_append( &sb, next?next:L"" );
+            sb.append(val[i]);
 			if( i<val.size() - 1 )
 			{
-				sb_append( &sb, ARRAY_SEP_STR );
+				sb.append( ARRAY_SEP_STR );
 			}
 		}
-		val_str = (wchar_t *)sb.buff;
-		
+		val_str = sb.c_str();
 	}
 	
 	switch( env_set( key, val_str, scope | ENV_USER ) )
@@ -160,8 +156,6 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 			break;
 		}
 	}
-
-	sb_destroy( &sb );
 
 	return retcode;
 }

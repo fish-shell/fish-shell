@@ -919,16 +919,15 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
             const process_t * const process = b->state2<process_t*>();
 			if( process->argv(1) )
 			{
-				string_buffer_t tmp;
-				sb_init( &tmp );
+				wcstring tmp;
 				
 				for( i=1; process->argv(i); i++ )
 				{
-					sb_append( &tmp, i>1?L" ":L"", process->argv(i), NULL );
+                    if (i > 1)
+                        tmp.push_back(L' ');
+                    tmp.append(process->argv(i));
 				}
-				append_format( buff, _(L"\twith parameter list '%ls'\n"), (wchar_t *)tmp.buff );
-				
-				sb_destroy( &tmp );
+				append_format( buff, _(L"\twith parameter list '%ls'\n"), tmp.c_str() );
 			}
 		}
 		
@@ -2582,12 +2581,11 @@ int parser_t::parser_test_argument( const wchar_t *arg, wcstring *out, const wch
 			{
 				
 				wchar_t *subst = wcsndup( paran_begin+1, paran_end-paran_begin-1 );
-				string_buffer_t tmp;
-				sb_init( &tmp );
+				wcstring tmp;
 				
-				sb_append_substring( &tmp, arg_cpy, paran_begin - arg_cpy);
-				sb_append_char( &tmp, INTERNAL_SEPARATOR);
-				sb_append( &tmp, paran_end+1);
+				tmp.append(arg_cpy, paran_begin - arg_cpy);
+				tmp.push_back(INTERNAL_SEPARATOR);
+                tmp.append(paran_end+1);
 				
 //				debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
 	
@@ -2595,7 +2593,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, wcstring *out, const wch
 				
 				free( subst );
 				free( arg_cpy );
-				arg_cpy = (wchar_t *)tmp.buff;
+				arg_cpy = wcsdup(tmp.c_str());
 				
 				/*
 				  Do _not_ call sb_destroy on this stringbuffer - it's

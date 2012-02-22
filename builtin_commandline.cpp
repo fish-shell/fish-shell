@@ -90,7 +90,7 @@ static int get_cursor_pos()
 */
 static void replace_part( const wchar_t *begin,
 						  const wchar_t *end,
-						  wchar_t *insert,
+						  const wchar_t *insert,
 						  int append_mode )
 {
 	const wchar_t *buff = get_buffer();
@@ -144,7 +144,7 @@ static void write_part( const wchar_t *begin,
 						int tokenize )
 {	
 	tokenizer tok;
-	string_buffer_t out;
+	wcstring out;
 	wchar_t *buff;
 	size_t pos;
 
@@ -154,7 +154,7 @@ static void write_part( const wchar_t *begin,
 	{
 		buff = wcsndup( begin, end-begin );
 //		fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
-		sb_init( &out );
+		out.clear();
 					
 		for( tok_init( &tok, buff, TOK_ACCEPT_UNFINISHED );
 			 tok_has_next( &tok );
@@ -168,20 +168,18 @@ static void write_part( const wchar_t *begin,
 			{
 				case TOK_STRING:
 				{
-					wchar_t *tmp = unescape( tok_last( &tok ), UNESCAPE_INCOMPLETE );
-					sb_append( &out, tmp, L"\n", NULL );
-					free( tmp );
+                    out.append(escape_string(tok_last( &tok ), UNESCAPE_INCOMPLETE));
+                    out.push_back(L'\n');
 					break;
 				}
 				
 			}						
 		}
 
-        stdout_buffer.append((const wchar_t *)out.buff);
+        stdout_buffer.append(out);
 					
 		free( buff );
 		tok_destroy( &tok );
-		sb_destroy( &out );
 	}
 	else
 	{
@@ -637,21 +635,16 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 
 		default:
 		{
-			string_buffer_t sb;
+			wcstring sb = argv[woptind];
 			int i;
-			
-			sb_init( &sb );
-			
-			sb_append( &sb, argv[woptind] );
 			
 			for( i=woptind+1; i<argc; i++ )
 			{
-				sb_append( &sb, L"\n" );
-				sb_append( &sb, argv[i] );
+                sb.push_back(L'\n');
+                sb.append(argv[i]);
 			}
 			
-			replace_part( begin, end, (wchar_t *)sb.buff, append_mode );
-			sb_destroy( &sb );
+			replace_part( begin, end, sb.c_str(), append_mode );
 			
 			break;
 		}		

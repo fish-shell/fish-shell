@@ -1337,19 +1337,11 @@ static int complete_param( const wchar_t *cmd_orig,
 								  is more commonly supported by
 								  homebrew getopt-like functions.
 								*/
-								string_buffer_t completion;
-								sb_init( &completion );
-
-								sb_printf( &completion,
-										   L"%ls=", 
-										   whole_opt.c_str()+offset );
-						
+								wcstring completion = format_string(L"%ls=", whole_opt.c_str()+offset);						
 								completion_allocate( comp_out,
-													 (wchar_t *)completion.buff,
+													 completion,
 													 C_(o->desc.c_str()),
 													 flags );									
-								
-								sb_destroy( &completion );
 								
 							}
 							
@@ -1532,45 +1524,24 @@ static int try_complete_user( const wchar_t *cmd,
 				{
 					if( wcsncmp( user_name, pw_name, name_len )==0 )
 					{
-						string_buffer_t desc;
-						
-						sb_init( &desc );
-						sb_printf( &desc,
-								   COMPLETE_USER_DESC,
-								   pw_name );
-						
+                        wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);						
 						completion_allocate( comp, 
 											 &pw_name[name_len],
-											 (wchar_t *)desc.buff,
+											 desc,
 											 COMPLETE_NO_SPACE );
 						
 						res=1;
-						
-						sb_destroy( &desc );
 					}
 					else if( wcsncasecmp( user_name, pw_name, name_len )==0 )
 					{
-						string_buffer_t name;							
-						string_buffer_t desc;							
-						
-						sb_init( &name );
-						sb_init( &desc );
-						sb_printf( &name,
-								   L"~%ls",
-								   pw_name );
-						sb_printf( &desc,
-								   COMPLETE_USER_DESC,
-								   pw_name );
+						wcstring name = format_string(L"~%ls", pw_name);
+                        wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
 							
 						completion_allocate( comp, 
-											 (wchar_t *)name.buff,
-											 (wchar_t *)desc.buff,
+											 name,
+											 desc,
 											 COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE );
-						res=1;
-							
-						sb_destroy( &desc );
-						sb_destroy( &name );
-							
+						res=1;							
 					}
 					free( pw_name );
 				}

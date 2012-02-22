@@ -437,17 +437,13 @@ static int setup_child_process( job_t *j, process_t *p )
 }
 
 /**
-   Returns the interpreter for the specified script. Returns 0 if file
-   is not a script with a shebang. This function leaks memory on every
-   call. Only use it in the execve error handler which calls exit
-   right afterwards, anyway.
+   Returns the interpreter for the specified script. Returns false if file
+   is not a script with a shebang.
  */
-static wchar_t *get_interpreter( const wcstring &file )
+static bool get_interpreter( const wcstring &file, wcstring &interpreter )
 {
-	string_buffer_t sb;
+    wcstring res;
 	FILE *fp = wfopen( file, "r" );
-	sb_init( &sb );
-	wchar_t *res = 0;
 	if( fp )
 	{
 		while( 1 )
@@ -457,17 +453,20 @@ static wchar_t *get_interpreter( const wcstring &file )
 				break;
 			if( ch == L'\n' )
 				break;
-			sb_append_char( &sb, (wchar_t)ch );
+            res.push_back(ch);
 		}
+        fclose(fp);
 	}
 	
-	res = (wchar_t *)sb.buff;
-	
-	if( !wcsncmp( L"#! /", res, 4 ) )
-		return res+3;
-	if( !wcsncmp( L"#!/", res, 3 ) )
-		return res+2;
-	return 0;
+	if (string_prefixes_string(L"#! /", res)) {
+        interpreter = 3 + res.c_str();
+        return true;
+    } else if (string_prefixes_string(L"#!/", res)) {
+        interpreter = 2 + res.c_str();
+        return true;
+    } else {
+        return false;
+    }
 }
 
 								 
@@ -543,14 +542,10 @@ static void launch_process( process_t *p )
 			size_t sz = 0;
 			char **p;
 
-			string_buffer_t sz1;
-			string_buffer_t sz2;
+			wcstring sz1, sz2;
 			
 			long arg_max = -1;
-						
-			sb_init( &sz1 );
-			sb_init( &sz2 );
-						
+
 			for(p=argv; *p; p++)
 			{
 				sz += strlen(*p)+1;
@@ -561,32 +556,28 @@ static void launch_process( process_t *p )
 				sz += strlen(*p)+1;
 			}
 			
-			sb_format_size( &sz1, sz );
+            sz1 = format_size(sz);
 
 			arg_max = sysconf( _SC_ARG_MAX );
 			
 			if( arg_max > 0 )
 			{
-				
-				sb_format_size( &sz2, arg_max );
+				sz2 = format_size(arg_max);
 				
 				debug( 0,
 				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit of %ls.",
-				       (wchar_t *)sz1.buff,
-				       (wchar_t *)sz2.buff);
+				       sz1.c_str(),
+				       sz2.c_str());
 			}
 			else
 			{
 				debug( 0,
 				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit.",
-				       (wchar_t *)sz1.buff);
+				       sz1.c_str());
 			}
 			
 			debug( 0, 
-			       L"Try running the command again with fewer arguments.");
-			sb_destroy( &sz1 );
-			sb_destroy( &sz2 );
-			
+			       L"Try running the command again with fewer arguments.");			
 			exit(STATUS_EXEC_FAIL);
 			
 			break;
@@ -602,11 +593,10 @@ static void launch_process( process_t *p )
 
 		case ENOENT:
 		{
-			wchar_t *interpreter = get_interpreter( p->actual_cmd );
-			
-			if( interpreter && waccess( interpreter, X_OK ) )
+            wcstring interpreter;
+			if( get_interpreter(p->actual_cmd, interpreter) && waccess( interpreter, X_OK ) )
 			{
-				debug(0, L"The file '%ls' specified the interpreter '%ls', which is not an executable command.", p->actual_cmd, interpreter );
+				debug(0, L"The file '%ls' specified the interpreter '%ls', which is not an executable command.", p->actual_cmd, interpreter.c_str() );
 			}
 			else
 			{

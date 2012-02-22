@@ -355,20 +355,11 @@ static int find_process( const wchar_t *proc,
 
 				if( wcsncmp( proc, jid, wcslen(proc ) )==0 )
 				{
-					string_buffer_t desc_buff;
-					
-					sb_init( &desc_buff );
-					
-					sb_printf( &desc_buff, 
-							   COMPLETE_JOB_DESC_VAL,
-							   j->command_cstr() );
-					
+                    wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_cstr());
 					completion_allocate( out, 
 										 jid+wcslen(proc),
-										 (wchar_t *)desc_buff.buff,
+										 desc_buff,
 										 0 );
-
-					sb_destroy( &desc_buff );
 				}
 			}
 
@@ -1084,22 +1075,20 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 		}
 		else
 		{
-
-			string_buffer_t mod;
-			sb_init( &mod );
+            wcstring mod;
 			if( last_sep )
 			{
-				sb_append_substring( &mod, in, bracket_begin-in+1 );
-				sb_append( &mod, last_sep+1 );
-				sb_append_char( &mod, BRACKET_END );
+				mod.append( in, bracket_begin-in+1 );
+				mod.append( last_sep+1 );
+				mod.push_back( BRACKET_END );
 			}
 			else
 			{
-				sb_append( &mod, in );
-				sb_append_char( &mod, BRACKET_END );
+                mod.append(in);
+                mod.push_back(BRACKET_END);
 			}
 
-			return expand_brackets( parser, (wchar_t*)mod.buff, 1, out );
+			return expand_brackets( parser, mod.c_str(), 1, out );
 		}
 	}
 

@@ -606,20 +606,18 @@ void parse_util_set_argv( const wchar_t * const *argv, const wcstring_list_t &na
 	if( *argv )
 	{
 		const wchar_t * const *arg;
-		string_buffer_t sb;
-		sb_init( &sb );
+		wcstring sb;
 		
 		for( arg=argv; *arg; arg++ )
 		{
 			if( arg != argv )
 			{
-				sb_append( &sb, ARRAY_SEP_STR );
+				sb.append(ARRAY_SEP_STR);
 			}
-			sb_append( &sb, *arg );
+            sb.append(*arg);
 		}
 			
-		env_set( L"argv", (wchar_t *)sb.buff, ENV_LOCAL );
-		sb_destroy( &sb );
+		env_set( L"argv", sb.c_str(), ENV_LOCAL );
 	}
 	else
 	{

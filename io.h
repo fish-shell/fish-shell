@@ -24,12 +24,13 @@ struct io_data_t
 	{
 		/** Fds for IO_PIPE and for IO_BUFFER */
 		int pipe_fd[2];
-		/** Filename IO_FILE */
-		wchar_t *filename;
 		/** fd to redirect specified fd to, for IO_FD*/
 		int old_fd;
-	} param1
-	;
+	} param1;
+    
+    /** Filename IO_FILE */
+    wcstring filename;
+
 	/** 
 		Second type-specific paramter for redirection
 	*/

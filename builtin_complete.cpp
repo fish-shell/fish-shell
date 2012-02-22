@@ -292,7 +292,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	int authoritative = -1;
 	int flags = COMPLETE_AUTO_SPACE;
 	
-	string_buffer_t short_opt;
+	wcstring short_opt;
 	wcstring_list_t gnu_opt, old_opt;
 	const wchar_t *comp=L"", *desc=L"", *condition=L"";
 
@@ -302,8 +302,6 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	wcstring_list_t path;
 
 	static int recursion_level=0;
-	
-	sb_init( &short_opt );
 	
 	argc = builtin_count_args( argv );	
 	
@@ -455,7 +453,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				break;
 				
 			case 's':
-				sb_append( &short_opt, woptarg );
+                short_opt.append(woptarg);
 				break;
 					
 			case 'l':
@@ -604,7 +602,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			{
 				builtin_complete_remove( cmd,
 										 path,
-										 (wchar_t *)short_opt.buff,
+										 short_opt.c_str(),
 										 gnu_opt,
 										 old_opt );									 
 			}
@@ -612,7 +610,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			{
 				builtin_complete_add( cmd, 
 									  path,
-									  (wchar_t *)short_opt.buff,
+									  short_opt.c_str(),
 									  gnu_opt,
 									  old_opt, 
 									  result_mode, 

@@ -100,7 +100,7 @@ void io_buffer_read( io_data_t *d )
 
 io_data_t *io_buffer_create( int is_input )
 {
-	io_data_t *buffer_redirect = (io_data_t *)malloc( sizeof( io_data_t ));
+	io_data_t *buffer_redirect = new io_data_t();
 	
 	buffer_redirect->io_mode=IO_BUFFER;
 	buffer_redirect->next=0;

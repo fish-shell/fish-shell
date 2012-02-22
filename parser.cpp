@@ -1486,25 +1486,25 @@ void parser_t::parse_job_argument_list( process_t *p,
 							case TOK_REDIRECT_APPEND:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
-								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
+								new_io->filename = target;
 								break;
 
 							case TOK_REDIRECT_OUT:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
-								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
+								new_io->filename = target;
 								break;
 
 							case TOK_REDIRECT_NOCLOB:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_EXCL | O_WRONLY;
-								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
+								new_io->filename = target;
 								break;
 
 							case TOK_REDIRECT_IN:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_RDONLY;
-								new_io->param1.filename = wcsdup(target.c_str()); // PCA LEAKS!
+								new_io->filename = target;
 								break;
 
 							case TOK_REDIRECT_FD:

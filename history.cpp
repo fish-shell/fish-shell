@@ -765,6 +765,7 @@ void history_t::add_with_file_detection(const wcstring &str)
             }
         }
     }
+    tok_destroy(&tokenizer);
     
     if (! potential_paths.empty()) {
         /* We have some paths. Make a context. */

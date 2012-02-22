@@ -26,6 +26,7 @@
 #include <vector>
 #include <deque>
 #include <algorithm>
+#include <memory>
 
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
@@ -286,7 +287,7 @@ static int handle_child_io( io_data_t *io )
 
 			case IO_FILE:
 			{
-				if( (tmp=wopen( io->param1.filename,
+				if( (tmp=wopen( io->filename,
 						io->param2.flags, OPEN_MASK ) )==-1 )
 				{
 					if( ( io->param2.flags & O_EXCL ) &&
@@ -294,13 +295,13 @@ static int handle_child_io( io_data_t *io )
 					{
 						debug( 1, 
 						       NOCLOB_ERROR,
-						       io->param1.filename );
+						       io->filename.c_str() );
 					}
 					else
 					{
 						debug( 1, 
 						       FILE_ERROR,
-						       io->param1.filename );
+						       io->filename.c_str() );
 										
 						wperror( L"open" );
 					}
@@ -659,7 +660,7 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 			exec_close( out->param1.old_fd );
 			break;
 	}	
-	free(out);
+	delete out;
 }
 
 
@@ -674,14 +675,10 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 */
 static io_data_t *io_transmogrify( io_data_t * in )
 {
-	io_data_t *out;
-
 	if( !in )
 		return 0;
 	
-	out = (io_data_t *)malloc( sizeof( io_data_t ) );
-	if( !out )
-		DIE_MEM();
+	std::auto_ptr<io_data_t> out(new io_data_t());
 	
 	out->fd = in->fd;
 	out->io_mode = IO_FD;
@@ -698,7 +695,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		case IO_BUFFER:
 		case IO_PIPE:
 		{
-			memcpy( out, in, sizeof(io_data_t));
+            *out = *in;
 			break;
 		}
 
@@ -709,15 +706,14 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		{
 			int fd;
 			
-			if( (fd=wopen( in->param1.filename, in->param2.flags, OPEN_MASK ) )==-1 )
+			if( (fd=wopen( in->filename, in->param2.flags, OPEN_MASK ) )==-1 )
 			{
 				debug( 1, 
 					   FILE_ERROR,
-					   in->param1.filename );
+					   in->filename.c_str() );
 								
 				wperror( L"open" );
-				free( out );
-				return 0;
+				return NULL;
 			}	
 
 			out->param1.old_fd = fd;
@@ -730,12 +726,12 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		out->next = io_transmogrify( in->next );
 		if( !out->next )
 		{
-			io_untransmogrify( in, out );
-			return 0;
+			io_untransmogrify( in, out.release() );
+			return NULL;
 		}
 	}
 	
-	return out;
+	return out.release();
 }
 
 /**
@@ -1246,13 +1242,13 @@ void exec( parser_t &parser, job_t *j )
 							
 							case IO_FILE:
 							{
-								builtin_stdin=wopen( in->param1.filename,
+								builtin_stdin=wopen( in->filename,
                                               in->param2.flags, OPEN_MASK );
 								if( builtin_stdin == -1 )
 								{
 									debug( 1, 
 										   FILE_ERROR,
-										   in->param1.filename );
+										   in->filename.c_str() );
 									wperror( L"open" );
 								}
 								else
@@ -1530,7 +1526,7 @@ void exec( parser_t &parser, job_t *j )
 
 				for( io = j->io; io; io=io->next )
 				{
-					if( io->io_mode == IO_FILE && wcscmp(io->param1.filename, L"/dev/null" ))
+					if( io->io_mode == IO_FILE && io->filename != L"/dev/null")
 					{
 						skip_fork = 0;
 					}

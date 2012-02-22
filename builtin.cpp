@@ -2128,10 +2128,9 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 	}
 	else
 	{
-		string_buffer_t sb;
 		int eof=0;
 		
-		sb_init( &sb );
+		wcstring sb;
 		
 		while( 1 )
 		{
@@ -2178,17 +2177,16 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 
 			if( res == L'\n' )
 				break;
-
-			sb_append_char( &sb, res );
+    
+            sb.push_back(res);
 		}
 
-		if( sb.used < 2 && eof )
+		if( sb.size() < 2 && eof )
 		{
 			exit_res = 1;
 		}
 		
-		buff = wcsdup( (wchar_t *)sb.buff );
-		sb_destroy( &sb );
+		buff = wcsdup( sb.c_str() );
 	}
 
 	if( i != argc && !exit_res )

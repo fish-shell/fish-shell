@@ -95,7 +95,7 @@ history_t *reader_get_history(void);
    \param b the new buffer value
    \param p the cursor position. If \c p is less than zero, the cursor is placed on the last character.
 */
-void reader_set_buffer( const wchar_t *b, int p );
+void reader_set_buffer( const wcstring &b, int p );
 
 /**
    Get the current cursor position in the command line. If interactive

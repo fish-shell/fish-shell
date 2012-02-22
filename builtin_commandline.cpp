@@ -94,42 +94,40 @@ static void replace_part( const wchar_t *begin,
 						  int append_mode )
 {
 	const wchar_t *buff = get_buffer();
-	string_buffer_t out;
 	int out_pos=get_cursor_pos();
-					
-	sb_init( &out );
+    
+    wcstring out;
 
-	sb_append_substring( &out, buff, begin-buff );
+    out.append(buff, begin - buff);
 					
 	switch( append_mode)
 	{
 		case REPLACE_MODE:
 		{
 							
-			sb_append( &out, insert );
+			out.append(insert);
 			out_pos = wcslen( insert ) + (begin-buff);							
 			break;
 							
 		}
 		case APPEND_MODE:
 		{
-			sb_append_substring( &out, begin, end-begin );
-			sb_append( &out, insert );
+			out.append( begin, end-begin );
+			out.append( insert );
 			break;
 		}
 		case INSERT_MODE:
 		{
 			int cursor = get_cursor_pos() -(begin-buff);
-			sb_append_substring( &out, begin, cursor );
-			sb_append( &out, insert );
-			sb_append_substring( &out, begin+cursor, end-begin-cursor );
+			out.append( begin, cursor );
+			out.append( insert );
+			out.append( begin+cursor, end-begin-cursor );
 			out_pos +=  wcslen( insert );							
 			break;
 		}
 	}
-	sb_append( &out, end );
-	reader_set_buffer( (wchar_t *)out.buff, out_pos );
-	sb_destroy( &out );
+	out.append( end );
+	reader_set_buffer( out, out_pos );
 }
 	
 /**

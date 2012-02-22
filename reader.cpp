@@ -2108,15 +2108,14 @@ history_t *reader_get_history(void) {
 	return data ? data->history : NULL;
 }
 
-void reader_set_buffer( const wchar_t *b, int p )
+void reader_set_buffer( const wcstring &b, int p )
 {
 	if( !data )
 		return;
 
     /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
-	int l = wcslen( b );
-    const wcstring tmp = b;
-    data->command_line = tmp;
+	size_t l = b.size();
+    data->command_line = b;
     
     data->check_size();
 

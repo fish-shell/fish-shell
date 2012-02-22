@@ -324,7 +324,6 @@ int main( int argc, char **argv )
 				char **ptr; 
 				char *file = *(argv+(my_optind++));
 				int i; 
-				string_buffer_t sb;
 				int fd;
 				wchar_t *rel_filename, *abs_filename;
 								
@@ -336,19 +335,15 @@ int main( int argc, char **argv )
 
 				if( *(argv+my_optind))
 				{
-					sb_init( &sb );
-				
+                    wcstring sb;
 					for( i=1,ptr = argv+my_optind; *ptr; i++, ptr++ )
 					{
 						if( i != 1 )
-							sb_append( &sb, ARRAY_SEP_STR );
-						wchar_t *val = str2wcs( *ptr );
-						sb_append( &sb, val );
-						free( val );
+                            sb.append( ARRAY_SEP_STR );
+                        sb.append( str2wcstring( *ptr ));
 					}
 				
-					env_set( L"argv", (wchar_t *)sb.buff, 0 );
-					sb_destroy( &sb );
+					env_set( L"argv", sb.c_str(), 0 );
 				}
 
 				rel_filename = str2wcs( file );

@@ -80,7 +80,7 @@
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
-void highlight_shell( const wchar_t *buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars );
+void highlight_shell( const wcstring &buffstr, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars );
 
 /**
    Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are highlighted. The result is
@@ -92,7 +92,7 @@ void highlight_shell( const wchar_t *buff, std::vector<int> &color, int pos, wcs
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
-void highlight_universal( const wchar_t *buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars );
+void highlight_universal( const wcstring &buffstr, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars );
 
 /**
    Translate from HIGHLIGHT_* to FISH_COLOR_* according to environment

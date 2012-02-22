@@ -39,7 +39,7 @@
 */
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
-static void highlight_universal_internal( const wchar_t * buff,
+static void highlight_universal_internal( const wcstring &buff,
 					  std::vector<int> &color, 
 					  int pos );
 
@@ -1197,33 +1197,27 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 
 
 // PCA DOES_IO (calls is_potential_path, path_get_path, maybe others)
-void highlight_shell( const wchar_t * const buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
+void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
-    const size_t string_length = wcslen(buff);
+    const size_t length = buff.size();
+    assert(buff.size() == color.size());
+
     
-    int i;
-    int len;
-	int last_val;
-	
-	CHECK( buff, );
-	
-	len = wcslen(buff);
-	
-	if( !len )
+	if( length == 0 )
 		return;
 	
     std::fill(color.begin(), color.end(), -1);
 
     /* Tokenize the string */
-    tokenize(buff, color, pos, error, vars);
+    tokenize(buff.c_str(), color, pos, error, vars);
 
 	/*
 	  Locate and syntax highlight cmdsubsts recursively
 	*/
 
-	wchar_t * const subbuff = wcsdup(buff);
+	wchar_t * const subbuff = wcsdup(buff.c_str());
     wchar_t * subpos = subbuff;
 	int done=0;
 	
@@ -1253,7 +1247,7 @@ void highlight_shell( const wchar_t * const buff, std::vector<int> &color, int p
         
         // highlight the end of the subcommand
         assert(end >= subbuff);
-        if ((size_t)(end - subbuff) < string_length) {
+        if ((size_t)(end - subbuff) < length) {
             color.at(end-subbuff)=HIGHLIGHT_OPERATOR;
         }
 		
@@ -1268,8 +1262,8 @@ void highlight_shell( const wchar_t * const buff, std::vector<int> &color, int p
 	  The highlighting code only changes the first element when the
 	  color changes. This fills in the rest.
 	*/
-	last_val=0;
-	for( i=0; buff[i] != 0; i++ )
+	int last_val=0;
+	for( size_t i=0; i < buff.size(); i++ )
 	{
 		if( color.at(i) >= 0 )
 			last_val = color.at(i);
@@ -1280,23 +1274,25 @@ void highlight_shell( const wchar_t * const buff, std::vector<int> &color, int p
 	/*
 	  Color potentially valid paths in a special path color if they
 	  are the current token.
+      For reasons that I don't yet understand, it's required that pos be allowed to be length (e.g. when backspacing).
 	*/
-
-	if( pos >= 0 && pos <= len )
+	if( pos >= 0 && (size_t)pos <= length )
 	{
 		
+        const wchar_t *cbuff = buff.c_str();
 		const wchar_t *tok_begin, *tok_end;
-		parse_util_token_extent( buff, pos, &tok_begin, &tok_end, 0, 0 );
+		parse_util_token_extent( cbuff, pos, &tok_begin, &tok_end, 0, 0 );
 		if( tok_begin && tok_end )
 		{
             const wcstring token(tok_begin, tok_end-tok_begin);
 			if( is_potential_path( token ) )
 			{
-				for( i=tok_begin-buff; i < (tok_end-buff); i++ )
+				for( ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++ )
 				{
                     // Don't color HIGHLIGHT_ERROR because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
-                    if (! (color.at(i) & HIGHLIGHT_ERROR))
+                    if (! (color.at(i) & HIGHLIGHT_ERROR)) {
                         color.at(i) |= HIGHLIGHT_VALID_PATH;
+                    }
 				}
 			}
 		}
@@ -1308,9 +1304,9 @@ void highlight_shell( const wchar_t * const buff, std::vector<int> &color, int p
 	/*
 	  Spaces should not be highlighted at all, since it makes cursor look funky in some terminals
 	*/
-	for( i=0; buff[i]; i++ )
+	for( size_t i=0; i < buff.size(); i++ )
 	{
-		if( iswspace(buff[i]) )
+		if( iswspace(buff.at(i)) )
 		{
 			color.at(i)=0;
 		}
@@ -1322,25 +1318,26 @@ void highlight_shell( const wchar_t * const buff, std::vector<int> &color, int p
 /**
    Perform quote and parenthesis highlighting on the specified string.
 */
-static void highlight_universal_internal( const wchar_t * buff,
+static void highlight_universal_internal( const wcstring &buffstr,
 										 std::vector<int> &color, 
 										 int pos )
 {	
-
-	if( (pos >= 0) && ((size_t)pos < wcslen(buff)) )
+    assert(buffstr.size() == color.size());
+	if( (pos >= 0) && ((size_t)pos < buffstr.size()) )
 	{
 		
 		/*
 		  Highlight matching quotes
 		*/
-		if( (buff[pos] == L'\'') || (buff[pos] == L'\"') )
+		if( (buffstr.at(pos) == L'\'') || (buffstr.at(pos) == L'\"') )
 		{
 			std::deque<long> lst;
 		
 			int level=0;
 			wchar_t prev_q=0;
 		
-			const wchar_t *str=buff;
+            const wchar_t * const buff = buffstr.c_str();
+			const wchar_t *str = buff;
 
 			int match_found=0;
 		
@@ -1400,30 +1397,28 @@ static void highlight_universal_internal( const wchar_t * buff,
 		/*
 		  Highlight matching parenthesis
 		*/
-		if( wcschr( L"()[]{}", buff[pos] ) )
+        const wchar_t c = buffstr.at(pos);
+		if( wcschr( L"()[]{}", c ) )
 		{
-			int step = wcschr(L"({[", buff[pos])?1:-1;
-			wchar_t dec_char = *(wcschr( L"()[]{}", buff[pos] ) + step);
-			wchar_t inc_char = buff[pos];
+			int step = wcschr(L"({[", c)?1:-1;
+			wchar_t dec_char = *(wcschr( L"()[]{}", c ) + step);
+			wchar_t inc_char = c;
 			int level = 0;
-			const wchar_t *str = &buff[pos];
 			int match_found=0;			
-
-			while( (str >= buff) && *str)
-			{
-				if( *str == inc_char )
+            for (long i=pos; i >= 0 && (size_t)i < buffstr.size(); i+=step) {
+                const wchar_t test_char = buffstr.at(i); 
+                if( test_char == inc_char )
 					level++;
-				if( *str == dec_char )
+				if( test_char == dec_char )
 					level--;
 				if( level == 0 )
 				{
-					int pos2 = str-buff;
+					long pos2 = i;
 					color.at(pos)|=HIGHLIGHT_MATCH<<16;
 					color.at(pos2)|=HIGHLIGHT_MATCH<<16;
 					match_found=1;
 					break;
 				}
-				str+= step;
 			}
 			
 			if( !match_found )
@@ -1432,12 +1427,9 @@ static void highlight_universal_internal( const wchar_t * buff,
 	}
 }
 
-void highlight_universal( const wchar_t *buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
+void highlight_universal( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
 {
-	int i;
-	
-	for( i=0; buff[i]; i++ )
-		color[i] = 0;
-	
+    assert(buff.size() == color.size());
+    std::fill(color.begin(), color.end(), 0);	
 	highlight_universal_internal( buff, color, pos );
 }

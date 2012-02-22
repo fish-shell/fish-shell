@@ -138,7 +138,7 @@ void reader_set_complete_function( void (*f)( const wchar_t *, std::vector<compl
  The type of a highlight function.
  */
 class env_vars;
-typedef void (*highlight_function_t)( const wchar_t *, std::vector<int> &, int, wcstring_list_t *, const env_vars &vars );
+typedef void (*highlight_function_t)( const wcstring &, std::vector<int> &, int, wcstring_list_t *, const env_vars &vars );
 
 /**
  Specify function for syntax highlighting. The function must take these arguments:

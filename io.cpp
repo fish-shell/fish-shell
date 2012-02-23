@@ -152,7 +152,7 @@ void io_buffer_destroy( io_data_t *io_buffer )
 	b_destroy( io_buffer->param2.out_buffer );
 	
 	free( io_buffer->param2.out_buffer );
-	free( io_buffer );
+	delete io_buffer;
 }
 
 

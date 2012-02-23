@@ -668,8 +668,10 @@ void debug( int level, const wchar_t *msg, ... )
 
 	CHECK( msg, );
 		
-    sb = format_string(L"%ls: ", program_name);
-    sb.append(vformat_string(msg, va));
+	sb = format_string(L"%ls: ", program_name);
+	va_start(va, msg);
+	sb.append(vformat_string(msg, va));
+	va_end(va);
 
 	wcstring sb2;
 	write_screen( sb, sb2 );

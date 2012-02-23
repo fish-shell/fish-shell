@@ -287,6 +287,9 @@ static bool extract_prefix(std::string &key, std::string &value, const std::stri
         if (val_start < line.size() && line.at(val_start) == ' ')
             val_start++;
         value = line.substr(val_start);
+        
+        unescape_yaml(key);
+        unescape_yaml(value);
     }
     return where != std::string::npos;
 }

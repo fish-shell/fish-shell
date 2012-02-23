@@ -643,6 +643,10 @@ void history_tests_t::test_history(void) {
         
         /* Generate a value */
         wcstring value = wcstring(L"test item ") + format_val(i);
+        
+        /* Maybe add some backslashes */
+        if (i % 3 == 0)
+            value.append(L"(slashies \\\\\\ slashies)");
 
         /* Generate some paths */
         path_list_t paths;        

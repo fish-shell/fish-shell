@@ -593,33 +593,33 @@ void history_t::save_internal()
     
 	bool ok = true;
 	
-	signal_block();
-    
     wcstring tmp_name = history_filename(name, L".tmp");
 	if( ! tmp_name.empty() )
 	{
+    
+        /* Load old */
+        load_old_if_needed();
+        
+        /* Make an LRU cache to save only the last N elements */
+        history_lru_cache_t lru(HISTORY_SAVE_MAX);
+        
+        /* Insert old items in, from old to new */
+        for (std::deque<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); iter++) {
+            size_t offset = *iter;
+            history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
+            lru.add_item(item);
+        }
+        
+        /* Insert new items */
+        for (std::vector<history_item_t>::iterator iter = new_items.begin(); iter != new_items.end(); iter++) {
+            lru.add_item(*iter);
+        }
+        
+        signal_block();
+    
         FILE *out;
 		if( (out=wfopen( tmp_name, "w" ) ) )
 		{
-                
-            /* Load old */
-            load_old_if_needed();
-            
-            /* Make an LRU cache to save only the last N elements */
-            history_lru_cache_t lru(HISTORY_SAVE_MAX);
-            
-            /* Insert old items in, from old to new */
-            for (std::deque<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); iter++) {
-                size_t offset = *iter;
-                history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
-                lru.add_item(item);
-            }
-            
-            /* Insert new items */
-            for (std::vector<history_item_t>::iterator iter = new_items.begin(); iter != new_items.end(); iter++) {
-                lru.add_item(*iter);
-            }
-            
             /* Write them out */
             for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); iter++) {
                 const history_lru_node_t *node = *iter;
@@ -629,9 +629,6 @@ void history_t::save_internal()
                 }
             }
             
-            /* Make sure we clear all nodes, since this doesn't happen automatically */
-            lru.evict_all_nodes();
-
 			if( fclose( out ) || !ok )
 			{
 				/*
@@ -646,6 +643,11 @@ void history_t::save_internal()
 				wrename(tmp_name, new_name);
 			}
 		}
+        
+        signal_unblock();
+        
+        /* Make sure we clear all nodes, since this doesn't happen automatically */
+        lru.evict_all_nodes();
 	}	
 
 	if( ok )
@@ -653,8 +655,6 @@ void history_t::save_internal()
 		/* Our history has been written to the file, so clear our state so we can re-reference the file. */
 		this->clear_file_state();
 	}
-	
-	signal_unblock();
 }
 
 void history_t::save(void) {

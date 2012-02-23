@@ -316,7 +316,7 @@ static void print_variables(int include_values, int esc, int scope)
 		
 		if( include_values ) 
 		{
-			env_var_t value = env_get_string(key.c_str());
+			env_var_t value = env_get_string(key);
 			if( !value.missing() )
 			{
 				int shorten = 0;

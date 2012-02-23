@@ -1076,12 +1076,11 @@ const wchar_t *env_var_t::c_str(void) const {
     return wcstring::c_str();
 }
 
-env_var_t env_get_string( const wchar_t *key )
+env_var_t env_get_string( const wcstring &key )
 {
     scoped_lock lock(env_lock);
     
-	CHECK( key, 0 );    
-	if( wcscmp( key, L"history" ) == 0 )
+	if( key == L"history" )
 	{
         wcstring result;
 		const wchar_t *current;
@@ -1113,19 +1112,19 @@ env_var_t env_get_string( const wchar_t *key )
         
 		return result;
 	}
-	else if( wcscmp( key, L"COLUMNS" )==0 )
+	else if( key == L"COLUMNS" )
 	{
         return format_val((long)common_get_width());
 	}	
-	else if( wcscmp( key, L"LINES" )==0 )
+	else if( key == L"LINES" )
 	{
         return format_val((long)common_get_width());
 	}
-	else if( wcscmp( key, L"status" )==0 )
+	else if( key == L"status" )
 	{
         return format_val((long)proc_get_last_status());
 	}
-	else if( wcscmp( key, L"umask" )==0 )
+	else if( key == L"umask" )
 	{
         return format_string(L"0%0.3o", get_umask() );
 	}

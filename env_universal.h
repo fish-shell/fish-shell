@@ -29,7 +29,7 @@ void env_universal_destroy();
 /**
    Get the value of a universal variable
 */
-wchar_t *env_universal_get( const wchar_t *name );
+wchar_t *env_universal_get( const wcstring &name );
 
 /**
    Get the export flag of the variable with the specified

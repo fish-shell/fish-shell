@@ -75,7 +75,7 @@ int autoload_t::load( const wcstring &cmd, bool reload )
     /* Do some work while locked, including determing the path variable */
     {
         scoped_lock locker(lock); 
-        path_var = env_get_string( env_var_name.c_str() );
+        path_var = env_get_string( env_var_name );
         
         /*
           Do we know where to look?

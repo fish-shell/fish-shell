@@ -318,13 +318,11 @@ int env_universal_read_all()
 	}		
 }
 
-wchar_t *env_universal_get( const wchar_t *name )
+wchar_t *env_universal_get( const wcstring &name )
 {
 	if( !init)
 		return 0;
 
-	CHECK( name, 0 );
-	
 	return env_universal_common_get( name );
 }
 

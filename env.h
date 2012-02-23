@@ -116,7 +116,7 @@ public:
 /**
  Gets the variable with the specified name, or an empty string if it does not exist.
  */
-env_var_t env_get_string( const wchar_t *key );
+env_var_t env_get_string( const wcstring &key );
 
 /**
    Returns 1 if the specified key exists. This can't be reliably done

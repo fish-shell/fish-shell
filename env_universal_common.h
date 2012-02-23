@@ -181,7 +181,7 @@ void env_universal_common_remove( const wcstring &key );
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.
 */
-wchar_t *env_universal_common_get( const wchar_t *name );
+wchar_t *env_universal_common_get( const wcstring &name );
 
 /**
    Get the export flag of the variable with the specified

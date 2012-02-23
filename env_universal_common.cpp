@@ -896,7 +896,7 @@ void env_universal_common_get_names( wcstring_list_t &lst,
 }
 
 
-wchar_t *env_universal_common_get( const wchar_t *name )
+wchar_t *env_universal_common_get( const wcstring &name )
 {
 	std::map<wcstring, var_uni_entry_t*>::const_iterator result = env_universal_var.find(name);
 

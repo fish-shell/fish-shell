@@ -1422,7 +1422,7 @@ static int complete_variable( const wchar_t *whole_var,
 
 		if( match || match_no_case )
 		{
-			const env_var_t value_unescaped = env_get_string( env_name.c_str() );
+			const env_var_t value_unescaped = env_get_string( env_name );
 			if( !value_unescaped.missing() )
 			{
 				wcstring comp;

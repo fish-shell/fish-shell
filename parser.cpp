@@ -1054,9 +1054,9 @@ const wchar_t *parser_t::current_line()
 	int lineno=1;
 
 	const wchar_t *file;
-	wchar_t *whole_str;
-	wchar_t *line;
-	wchar_t *line_end;
+	const wchar_t *whole_str;
+	const wchar_t *line;
+	const wchar_t *line_end;
 	int i;
 	int offset;
 	int current_line_width;
@@ -1158,7 +1158,7 @@ const wchar_t *parser_t::current_line()
 		}
 	}
 
-	free( line );
+	free( (void *)line );
 	parser_t::stack_trace( current_block, lineinfo );
 
 	return lineinfo.c_str();
@@ -1653,7 +1653,7 @@ int parser_t::parse_job( process_t *p,
 
 			case TOK_PIPE:
 			{
-				wchar_t *str = tok_string( tok );
+				const wchar_t *str = tok_string( tok );
 				if( tok_get_pos(tok)>0 && str[tok_get_pos(tok)-1] == L'|' )
 				{
 					error( SYNTAX_ERROR,
@@ -2333,7 +2333,7 @@ void parser_t::eval_job( tokenizer *tok )
 
 		case TOK_BACKGROUND:
 		{
-			wchar_t *str = tok_string( tok );
+			const wchar_t *str = tok_string( tok );
 			if( tok_get_pos(tok)>0 && str[tok_get_pos(tok)-1] == L'&' )
 			{
 				error( SYNTAX_ERROR,

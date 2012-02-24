@@ -1556,8 +1556,9 @@ static int try_complete_user( const wchar_t *cmd,
 void complete( const wchar_t *cmd,
 			   std::vector<completion_t> &comp )
 {
+
 	const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
-	wchar_t *buff;
+	wcstring buff;
 	tokenizer tok;
 	const wchar_t *current_token=0, *current_command=0, *prev_token=0;
 	int on_command=0;
@@ -1601,10 +1602,7 @@ void complete( const wchar_t *cmd,
 	{
 		pos = cursor_pos-(cmdsubst_begin-cmd);
 		
-		buff = wcsndup( cmdsubst_begin, cmdsubst_end-cmdsubst_begin );
-		
-		if( !buff )
-			done=1;
+		buff = wcstring( cmdsubst_begin, cmdsubst_end-cmdsubst_begin );
 	}
 
 	if( !done )
@@ -1612,7 +1610,7 @@ void complete( const wchar_t *cmd,
 		int had_cmd=0;
 		int end_loop=0;
 
-		tok_init( &tok, buff, TOK_ACCEPT_UNFINISHED );
+		tok_init( &tok, buff.c_str(), TOK_ACCEPT_UNFINISHED );
 
 		while( tok_has_next( &tok) && !end_loop )
 		{
@@ -1623,21 +1621,21 @@ void complete( const wchar_t *cmd,
 				case TOK_STRING:
 				{
 
-					wchar_t *ncmd = tok_last( &tok );
-					int is_ddash = (wcscmp( ncmd, L"--" ) == 0) && ( (tok_get_pos( &tok )+2) < pos );
+					const wcstring ncmd = tok_last( &tok );
+					int is_ddash = (ncmd == L"--") && ( (tok_get_pos( &tok )+2) < pos );
 					
 					if( !had_cmd )
 					{
 
 						if( parser_keywords_is_subcommand( ncmd ) )
 						{
-							if( wcscmp( ncmd, L"builtin" )==0)
+							if (ncmd == L"builtin" )
 							{
 								use_function = 0;
 								use_command  = 0;
 								use_builtin  = 1;
 							}
-							else if( wcscmp( ncmd, L"command" )==0)
+							else if (ncmd == L"command")
 							{
 								use_command  = 1;
 								use_function = 0;
@@ -1653,9 +1651,9 @@ void complete( const wchar_t *cmd,
 							int token_end;
 							
 							free( (void *)current_command );
-							current_command = wcsdup( ncmd );
+							current_command = wcsdup( ncmd.c_str() );
 							
-							token_end = tok_get_pos( &tok ) + wcslen( ncmd );
+							token_end = tok_get_pos( &tok ) + ncmd.size();
 							
 							on_command = (pos <= token_end );
 							had_cmd=1;
@@ -1703,7 +1701,6 @@ void complete( const wchar_t *cmd,
 		}
 
 		tok_destroy( &tok );
-		free( buff );
 
 		/*
 		  Get the string to complete

@@ -68,9 +68,9 @@ enum tokenizer_error
 struct tokenizer
 {
 	/** A pointer into the original string, showing where the next token begins */
-	wchar_t *buff;
+	const wchar_t *buff;
 	/** A copy of the original string */
-	wchar_t *orig_buff;
+	const wchar_t *orig_buff;
 	/** A pointer to the last token*/
 	wchar_t *last;
 	
@@ -150,7 +150,7 @@ void tok_destroy( tokenizer *tok );
 /**
    Returns the original string to tokenizer
  */
-wchar_t *tok_string( tokenizer *tok );
+const wchar_t *tok_string( tokenizer *tok );
 
 
 /**

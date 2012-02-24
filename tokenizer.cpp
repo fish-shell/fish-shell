@@ -144,7 +144,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 	tok->has_next=1;
 
 	tok->has_next = (*b != L'\0');
-	tok->orig_buff = tok->buff = (wchar_t *)(b);
+	tok->orig_buff = tok->buff = b;
 	tok_next( tok );
 }
 
@@ -154,7 +154,7 @@ void tok_destroy( tokenizer *tok )
 	
 	free( tok->last );
 	if( tok->free_orig )
-		free( tok->orig_buff );
+		free( (void *)tok->orig_buff );
 }
 
 int tok_last_type( tokenizer *tok )
@@ -624,7 +624,7 @@ void tok_next( tokenizer *tok )
 		{
 			if( iswdigit( *tok->buff ) )
 			{
-				wchar_t *orig = tok->buff;
+				const wchar_t *orig = tok->buff;
 				int fd = 0;
 				while( iswdigit( *tok->buff ) )
 					fd = (fd*10) + (*(tok->buff++) - L'0');
@@ -646,7 +646,7 @@ void tok_next( tokenizer *tok )
 
 }
 
-wchar_t *tok_string( tokenizer *tok )
+const wchar_t *tok_string( tokenizer *tok )
 {
 	return tok?tok->orig_buff:0;
 }

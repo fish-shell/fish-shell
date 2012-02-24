@@ -258,8 +258,7 @@ class reader_data_t
 	/**
 	   Function for tab completion
 	*/
-	void (*complete_func)( const wchar_t *,
-						   std::vector<completion_t>& );
+    complete_function_t complete_func;
 
 	/**
 	   Function for syntax highlighting
@@ -1235,6 +1234,10 @@ struct autosuggestion_context_t {
     
     int threaded_autosuggest(void) {
         ASSERT_IS_BACKGROUND_THREAD();
+        
+        std::vector<completion_t> completions;
+        complete(search_string.c_str(), completions, COMPLETE_AUTOSUGGEST);
+        
         while (searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
             bool item_ok = false;
@@ -2299,8 +2302,7 @@ void reader_set_prompt( const wchar_t *new_prompt )
     data->prompt = new_prompt;
 }
 
-void reader_set_complete_function( void (*f)( const wchar_t *,
-					      std::vector<completion_t>& ) )
+void reader_set_complete_function( complete_function_t f )
 {
 	data->complete_func = f;
 }
@@ -2828,7 +2830,7 @@ const wchar_t *reader_readline()
 					buffcpy = wcsndup( begin, len );
 
 //					comp = al_halloc( 0 );
-					data->complete_func( buffcpy, comp );
+					data->complete_func( buffcpy, comp, COMPLETE_DEFAULT );
 					
 					sort_completion_list( comp );
 					remove_duplicates( comp );

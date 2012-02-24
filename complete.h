@@ -148,6 +148,10 @@ public:
 	bool operator != (const completion_t& rhs) const { return ! (*this == rhs); }
 };
 
+enum complete_type_t {
+    COMPLETE_DEFAULT,
+    COMPLETE_AUTOSUGGEST
+};
 
 /**
 
@@ -218,10 +222,9 @@ void complete_remove( const wchar_t *cmd,
 		      wchar_t short_opt,
 		      const wchar_t *long_opt );
 
-/**
-  Find all completions of the command cmd, insert them into out. 
-*/
-void complete( const wchar_t* cmd, std::vector<completion_t> &out);
+
+/** Find all completions of the command cmd, insert them into out. */
+void complete( const wchar_t* cmd, std::vector<completion_t> &out, complete_type_t type);
 
 /**
    Print a list of all current completions into the string_buffer_t. 

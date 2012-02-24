@@ -15,6 +15,7 @@
 #include "util.h"
 #include "io.h"
 #include "common.h"
+#include "complete.h"
 
 class parser_t;
 class completion_t;
@@ -132,7 +133,8 @@ void reader_pop();
    - The command to be completed as a null terminated array of wchar_t
    - An array_list_t in which completions will be inserted.
 */
-void reader_set_complete_function( void (*f)( const wchar_t *, std::vector<completion_t> & ) );
+typedef void (*complete_function_t)( const wchar_t *, std::vector<completion_t> &, complete_type_t );
+void reader_set_complete_function( complete_function_t );
 
 /**
  The type of a highlight function.

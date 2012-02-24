@@ -573,7 +573,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 					  const wcstring &fullname, 
 					  const wchar_t *completion,
 					  const wchar_t *wc,
-					  int is_cmd )
+                      expand_flags_t expand_flags)
 {
 	struct stat buf, lbuf;
     wcstring sb;
@@ -625,8 +625,10 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		}
 	}
 	
-	wcstring desc = file_get_desc( fullname.c_str(), lstat_res, lbuf, stat_res, buf, stat_errno );
-		
+	wcstring desc;
+    if (! (expand_flags & EXPAND_NO_DESCRIPTIONS))
+        desc = file_get_desc( fullname.c_str(), lstat_res, lbuf, stat_res, buf, stat_errno );
+    
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{
 		free_completion = 1;
@@ -688,7 +690,7 @@ static int test_flags( const wchar_t *filename,
  */
 static int wildcard_expand_internal( const wchar_t *wc, 
 									 const wchar_t *base_dir,
-									 int flags,
+									 expand_flags_t flags,
 									 std::vector<completion_t> &out )
 {
 	
@@ -797,7 +799,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 														  long_name,
 														  next.c_str(),
 														  L"",
-														  flags & EXECUTABLES_ONLY );
+                                                          flags);
 						}
 					}					
 				}
@@ -842,7 +844,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 														  long_name,
                                                           name,
 														  wc,
-                                                          flags & EXECUTABLES_ONLY );
+                                                          flags);
 							
 						}
 					}					
@@ -1058,7 +1060,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 
 int wildcard_expand( const wchar_t *wc, 
 					 const wchar_t *base_dir,
-					 int flags,
+					 expand_flags_t flags,
 					 std::vector<completion_t> &out )
 {
 	size_t c = out.size();
@@ -1066,17 +1068,12 @@ int wildcard_expand( const wchar_t *wc,
 			
 	if( flags & ACCEPT_INCOMPLETE )
 	{
-		const wchar_t *wc_base=L"";
+        wcstring wc_base;
 		const wchar_t *wc_base_ptr = wcsrchr( wc, L'/' );
-		string_buffer_t sb;
-		
-
 		if( wc_base_ptr )
 		{
-			wc_base = wcsndup( wc, (wc_base_ptr-wc)+1 );
+            wc_base = wcstring(wc, (wc_base_ptr-wc)+1);
 		}
-		
-		sb_init( &sb );
 
 		for( size_t i=c; i<out.size(); i++ )
 		{
@@ -1084,25 +1081,14 @@ int wildcard_expand( const wchar_t *wc,
 			
 			if( c.flags & COMPLETE_NO_CASE )
 			{
-				sb_clear( &sb );
-				sb_printf( &sb, L"%ls%ls%ls", base_dir, wc_base, c.completion.c_str() );
-				
-				c.completion = (wchar_t *)sb.buff;
+				c.completion = format_string(L"%ls%ls%ls", base_dir, wc_base.c_str(), c.completion.c_str());
 			}
-		}
-		
-		sb_destroy( &sb );
-
-		if( wc_base_ptr )
-		{
-			free( (void *)wc_base );
-		}
-		
+		}		
 	}
 	return res;
 }
 
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, std::vector<completion_t> &outputs )
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &outputs )
 {
     std::vector<completion_t> lst;
     

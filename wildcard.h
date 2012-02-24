@@ -17,6 +17,7 @@
 
 #include "util.h"
 #include "common.h"
+#include "expand.h"
 
 /*
   Use unencoded private-use keycodes for internal characters
@@ -66,7 +67,7 @@ enum
 	\return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
    
 */
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, int flags, std::vector<completion_t> &out );
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &out );
 /**
    Test whether the given wildcard matches the string
 
@@ -90,6 +91,6 @@ int wildcard_complete( const wchar_t *str,
 					   const wchar_t *desc,						
 					   const wchar_t *(*desc_func)(const wcstring &),
 					   std::vector<completion_t> &out,
-					   int flags );
+					   expand_flags_t flags );
 
 #endif

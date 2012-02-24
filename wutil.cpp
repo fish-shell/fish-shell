@@ -20,6 +20,7 @@
 #include <libgen.h>
 #include <pthread.h>
 #include <string>
+#include <map>
 
 
 #if HAVE_LIBINTL_H
@@ -73,6 +74,12 @@ static char *wcs2str_buff=0;
 */
 static size_t wcs2str_buff_count=0;
 
+/* Lock to protect wgettext */
+static pthread_mutex_t wgettext_lock;
+
+/* Maps string keys to (immortal) pointers to string values */
+typedef std::map<wcstring, wcstring *> wgettext_map_t;
+static std::map<wcstring, wcstring *> wgettext_map;
 
 void wutil_init()
 {
@@ -312,6 +319,7 @@ static void wgettext_really_init() {
 	{
 		sb_init( &buff[i] );
 	}
+    pthread_mutex_init(&wgettext_lock, NULL);
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );
 }
@@ -347,24 +355,21 @@ static char *wgettext_wcs2str( const wchar_t *in )
 
 const wchar_t *wgettext( const wchar_t *in )
 {
-    ASSERT_IS_MAIN_THREAD();
-
 	if( !in )
 		return in;
 	
     wgettext_init_if_necessary();
-	
-	char *mbs_in = wgettext_wcs2str( in );	
-	char *out = gettext( mbs_in );
-	wchar_t *wres=0;
-	
-	sb_clear( &buff[curr_buff] );
-	
-	sb_printf( &buff[curr_buff], L"%s", out );
-	wres = (wchar_t *)buff[curr_buff].buff;
-	curr_buff = (curr_buff+1)%BUFF_COUNT;
-	
-	return wres;
+    
+	wcstring key = in;
+    scoped_lock lock(wgettext_lock);
+    
+    wcstring *& val = wgettext_map[key];
+    if (val == NULL) {
+        cstring mbs_in = wcs2string(key);
+        char *out = gettext(mbs_in.c_str());
+        val = new wcstring(format_string(L"%s", out));
+    }
+	return val->c_str();
 }
 
 wcstring wgettext2(const wcstring &in) {

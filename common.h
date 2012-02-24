@@ -258,6 +258,9 @@ void assert_is_background_thread(const char *who);
 #define ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(x) assert_is_background_thread(x)
 #define ASSERT_IS_BACKGROUND_THREAD() ASSERT_IS_BACKGROUND_THREAD_TRAMPOLINE(__FUNCTION__)
 
+/* Useful macro for asserting that a lock is locked. This doesn't check whether this thread locked it, which it would be nice if it did, but here it is anyways. */
+void assert_is_locked(void *mutex, const char *who);
+#define ASSERT_IS_LOCKED(x) assert_is_locked((void *)(&x), #x)
 
 /**
    Converts the wide character string \c in into it's narrow

@@ -21,40 +21,34 @@
 #include "common.h"
 #include <list>
 
-/**
-   Flag specifying that cmdsubst expansion should be skipped
-*/
-#define EXPAND_SKIP_CMDSUBST 1
+enum {
+    /** Flag specifying that cmdsubst expansion should be skipped */
+    EXPAND_SKIP_CMDSUBST = 1 << 0,
+    
+    /** Flag specifying that variable expansion should be skipped */
+    EXPAND_SKIP_VARIABLES = 1 << 1,
+    
+    /** Flag specifying that wildcard expansion should be skipped */
+    EXPAND_SKIP_WILDCARDS = 1 << 2,
 
-/**
-   Flag specifying that variable expansion should be skipped
-*/
-#define EXPAND_SKIP_VARIABLES 2
+    /**
+       Incomplete matches in the last segment are ok (for tab
+       completion). An incomplete match is a wildcard that matches a
+       prefix of the filename. If accept_incomplete is true, only the
+       remainder of the string is returned.
+    */    
+    ACCEPT_INCOMPLETE = 1 << 3,
 
-/**
-   Flag specifying that wildcard expansion should be skipped
-*/
-#define EXPAND_SKIP_WILDCARDS 4
-
-/**
-   Incomplete matches in the last segment are ok (for tab
-   completion). An incomplete match is a wildcard that matches a
-   prefix of the filename. If accept_incomplete is true, only the
-   remainder of the string is returned.
-*/
-#define ACCEPT_INCOMPLETE 8
-
-/**
-   Only match files that are executable by the current user. Only applicable together with ACCEPT_INCOMPLETE.
-*/
-
-#define EXECUTABLES_ONLY 16
-
-/**
-   Only match directories. Only applicable together with ACCEPT_INCOMPLETE.
-*/
-
-#define DIRECTORIES_ONLY 32
+    /** Only match files that are executable by the current user. Only applicable together with ACCEPT_INCOMPLETE. */
+    EXECUTABLES_ONLY = 1 << 4,
+    
+    /** Only match directories. Only applicable together with ACCEPT_INCOMPLETE. */
+    DIRECTORIES_ONLY = 1 << 5,
+    
+    /** Don't generate descriptions */
+    EXPAND_NO_DESCRIPTIONS = 1 << 6
+};
+typedef int expand_flags_t;
 
 /**
   Use unencoded private-use keycodes for internal characters
@@ -143,7 +137,7 @@ class parser_t;
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
-__warn_unused int expand_string( const wcstring &input, std::vector<completion_t> &output, int flag );
+__warn_unused int expand_string( const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags );
 
 
 /**
@@ -155,7 +149,7 @@ __warn_unused int expand_string( const wcstring &input, std::vector<completion_t
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return Whether expansion succeded
 */
-bool expand_one( wcstring &inout_str, int flag );
+bool expand_one( wcstring &inout_str, expand_flags_t flags );
 
 /**
    Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing. The result must be free'd!

@@ -547,7 +547,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			{
 				recursion_level++;
 			
-				complete( do_complete, comp );
+				complete( do_complete, comp, COMPLETE_DEFAULT );
 			
 				for( size_t i=0; i< comp.size() ; i++ )
 				{

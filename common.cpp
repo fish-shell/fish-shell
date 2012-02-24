@@ -2070,5 +2070,15 @@ void assert_is_background_thread(const char *who)
     if (is_main_thread()) {
         fprintf(stderr, "Warning: %s called on the main thread (may block!). Break on debug_thread_error to debug.\n", who);
         debug_thread_error();
-    }    
+    }
+}
+
+void assert_is_locked(void *vmutex, const char *who)
+{
+    pthread_mutex_t *mutex = static_cast<pthread_mutex_t*>(vmutex);
+    if (0 == pthread_mutex_trylock(mutex)) {
+        fprintf(stderr, "Warning: %s is not locked when it should be. Break on debug_thread_error to debug.\n", who);
+        debug_thread_error();
+        pthread_mutex_unlock(mutex);
+    }
 }

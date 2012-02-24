@@ -20,7 +20,7 @@
 #include <pwd.h>
 #include <signal.h>
 #include <wchar.h>
-
+#include <pthread.h>
 
 #include "fallback.h"
 #include "util.h"
@@ -176,6 +176,7 @@ struct completion_entry_t
 /** Linked list of all completion entries */
 typedef std::list<completion_entry_t *> completion_entry_list_t;
 static completion_entry_list_t completion_entries;
+static pthread_mutex_t completion_lock = PTHREAD_MUTEX_INITIALIZER;
 
 /**
    Table of completions conditions that have already been tested and
@@ -259,12 +260,10 @@ static int condition_test( const wcstring &condition )
 }
 
 
-/**
-   Search for an exactly matching completion entry
-*/
-static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd,
-													const int cmd_type )
+/** Search for an exactly matching completion entry. Must be called while locked. */
+static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd, const int cmd_type )
 {
+    ASSERT_IS_LOCKED(completion_lock);
     for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
 	{
         completion_entry_t *entry = *iter;
@@ -274,16 +273,14 @@ static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd,
 	return NULL;
 }
 
-/**
-   Locate the specified entry. Create it if it doesn't exist.
-*/
-static completion_entry_t *complete_get_exact_entry( const wchar_t *cmd,
-												   int cmd_type )
+/** Locate the specified entry. Create it if it doesn't exist. Must be called while locked. */
+static completion_entry_t *complete_get_exact_entry( const wchar_t *cmd, int cmd_type )
 {
+    ASSERT_IS_LOCKED(completion_lock);
 	completion_entry_t *c;
 
 	complete_init();
-
+    
 	c = complete_find_exact_entry( cmd, cmd_type );
 
 	if( c == NULL )
@@ -307,6 +304,7 @@ void complete_set_authoritative( const wchar_t *cmd,
 	completion_entry_t *c;
 
 	CHECK( cmd, );
+    scoped_lock lock(completion_lock);
 	c = complete_get_exact_entry( cmd, cmd_type );
 	c->authoritative = authoritative;
 }
@@ -324,7 +322,8 @@ void complete_add( const wchar_t *cmd,
 				   int flags )
 {
 	CHECK( cmd, );
-
+    
+    scoped_lock lock(completion_lock);
 	completion_entry_t *c;
 	c = complete_get_exact_entry( cmd, cmd_type );
     
@@ -356,11 +355,11 @@ void complete_add( const wchar_t *cmd,
 /**
    Remove all completion options in the specified entry that match the
    specified short / long option strings. Returns true if it is now
-   empty and should be deleted, false if it's not empty.
+   empty and should be deleted, false if it's not empty. Must be called while locked.
 */
 static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, const wchar_t *long_opt )
 {
-
+    ASSERT_IS_LOCKED(completion_lock);
 	if(( short_opt == 0 ) && (long_opt == 0 ) )
 	{
         e->options.clear();
@@ -410,6 +409,7 @@ void complete_remove( const wchar_t *cmd,
 					  const wchar_t *long_opt )
 {
 	CHECK( cmd, );
+    scoped_lock lock(completion_lock);
     for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ) {
         completion_entry_t *e = *iter;
         bool delete_it = false;
@@ -529,7 +529,8 @@ int complete_is_valid_option( const wchar_t *str,
 	  Make sure completions are loaded for the specified command
 	*/
 	if (allow_autoload) complete_load( cmd, false );
-	
+
+	scoped_lock lock(completion_lock);
     for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
 	{
         const completion_entry_t *i = *iter;
@@ -741,6 +742,8 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 */
 static void complete_cmd_desc( const wchar_t *cmd, std::vector<completion_t> &comp )
 {
+    ASSERT_IS_MAIN_THREAD();
+    
 	const wchar_t *cmd_start;
 	int cmd_len;
 	int skip;
@@ -886,7 +889,8 @@ static void complete_cmd( const wchar_t *cmd,
 						  std::vector<completion_t> &comp,
 						  int use_function,
 						  int use_builtin,
-						  int use_command )
+						  int use_command,
+                          complete_type_t type )
 {
 	wchar_t *path_cpy;
 	wchar_t *nxt_path;
@@ -896,10 +900,12 @@ static void complete_cmd( const wchar_t *cmd,
 
 	wchar_t *cdpath_cpy = wcsdup(L".");
 
+    const bool wants_description = (type == COMPLETE_DEFAULT);
+    
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
 	{
 
-		if( use_command )
+		if( use_command && wants_description )
 		{
 			
 			if( expand_string(cmd, comp, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
@@ -941,8 +947,7 @@ static void complete_cmd( const wchar_t *cmd,
 					
 					prev_count =  comp.size() ;
 					
-					if( expand_string(
-									   nxt_completion,
+					if( expand_string( nxt_completion,
 									   comp,
 									   ACCEPT_INCOMPLETE |
 									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
@@ -958,7 +963,8 @@ static void complete_cmd( const wchar_t *cmd,
 					}
 				}
 				free( path_cpy );
-				complete_cmd_desc( cmd, comp );
+				if (wants_description)
+                    complete_cmd_desc( cmd, comp );
 			}
 		}
 		
@@ -1157,7 +1163,8 @@ static int complete_param( const wchar_t *cmd_orig,
 						   const wchar_t *popt,
 						   const wchar_t *str,
 						   int use_switches,
-						   std::vector<completion_t> &comp_out )
+                           complete_type_t type,
+						   std::vector<completion_t> &comp_out)
 {
 
 	int use_common=1, use_files=1;
@@ -1165,7 +1172,8 @@ static int complete_param( const wchar_t *cmd_orig,
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, path, cmd);
 
-	complete_load( cmd, true );
+    if (type == COMPLETE_DEFAULT)
+        complete_load( cmd, true );
 
     for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
 	{
@@ -1362,9 +1370,7 @@ static int complete_param( const wchar_t *cmd_orig,
 /**
    Perform file completion on the specified string
 */
-static void complete_param_expand( const wchar_t *str,
-								   std::vector<completion_t> &comp_out,
-								   int do_file )
+static void complete_param_expand( const wchar_t *str, std::vector<completion_t> &comp_out, int do_file, complete_type_t type )
 {
 	const wchar_t *comp_str;
 	int flags;
@@ -1377,10 +1383,14 @@ static void complete_param_expand( const wchar_t *str,
 	{
 		comp_str = str;
 	}
-
-	flags = EXPAND_SKIP_CMDSUBST | 
-		ACCEPT_INCOMPLETE | 
-		(do_file?0:EXPAND_SKIP_WILDCARDS);
+    
+    flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE;
+    
+    if (! do_file)
+        flags |= EXPAND_SKIP_WILDCARDS;
+        
+    if (type == COMPLETE_AUTOSUGGEST)
+        flags |= EXPAND_NO_DESCRIPTIONS;
 	
 	if( expand_string( comp_str,
 					   comp_out,
@@ -1553,8 +1563,7 @@ static int try_complete_user( const wchar_t *cmd,
 	return res;
 }
 
-void complete( const wchar_t *cmd,
-			   std::vector<completion_t> &comp )
+void complete( const wchar_t *cmd, std::vector<completion_t> &comp, complete_type_t type )
 {
 
 	const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
@@ -1610,7 +1619,7 @@ void complete( const wchar_t *cmd,
 		int had_cmd=0;
 		int end_loop=0;
 
-		tok_init( &tok, buff.c_str(), TOK_ACCEPT_UNFINISHED );
+		tok_init( &tok, buff.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS );
 
 		while( tok_has_next( &tok) && !end_loop )
 		{
@@ -1765,8 +1774,7 @@ void complete( const wchar_t *cmd,
 			if( on_command )
 			{
 				/* Complete command filename */
-				complete_cmd( current_token,
-							  comp, use_function, use_builtin, use_command );
+				complete_cmd( current_token, comp, use_function, use_builtin, use_command, type );
 			}
 			else
 			{
@@ -1781,7 +1789,8 @@ void complete( const wchar_t *cmd,
 					do_file = complete_param( current_command_unescape, 
 											  prev_token_unescape, 
 											  current_token_unescape, 
-											  !had_ddash, 
+											  !had_ddash,
+                                              type,
 											  comp );
 				}
 				
@@ -1799,7 +1808,7 @@ void complete( const wchar_t *cmd,
 				/*
 				  This function wants the unescaped string
 				*/
-				complete_param_expand( current_token, comp, do_file );
+				complete_param_expand( current_token, comp, do_file, type );
 			}
 		}
 	}

@@ -184,6 +184,40 @@ static pthread_mutex_t completion_lock = PTHREAD_MUTEX_INITIALIZER;
 */
 static std::map<wcstring, bool> condition_cache;
 
+/** Class representing an attempt to compute completions */
+class completer_t {
+    const complete_type_t type;
+    const wcstring cmd;
+    std::vector<completion_t> completions;
+    
+    public:
+    completer_t(const wcstring &c, complete_type_t t) :
+        type(t),
+        cmd(c),
+        completions()
+    {
+    }
+    
+    bool try_complete_variable( const wcstring &str );
+    bool try_complete_user( const wcstring &str );
+
+    bool complete_param( const wcstring &cmd_orig,
+                         const wcstring &popt,
+                         const wcstring &str,
+                         bool use_switches);
+                         
+    void complete_param_expand( const wcstring &str, bool do_file);
+    
+    void complete_cmd( const wcstring &str,
+						  bool use_function,
+						  bool use_builtin,
+						  bool use_command);
+                          
+    bool empty() const { return completions.empty(); }
+    const std::vector<completion_t> &get_completions(void) { return completions; }
+
+};
+
 /* Autoloader for completions */
 class completion_autoload_t : public autoload_t {
 public:
@@ -236,15 +270,24 @@ static void condition_cache_clear()
    be evaluated once. condition_cache_clear must be called after a
    completion run to make sure that there are no stale completions.
 */
-static int condition_test( const wcstring &condition )
-{
-    ASSERT_IS_MAIN_THREAD();
-    
+static int condition_test( const wcstring &condition, complete_type_t type )
+{    
 	if( condition.empty() )
 	{
 //		fwprintf( stderr, L"No condition specified\n" );
 		return 1;
 	}
+ 
+    if (type == COMPLETE_AUTOSUGGEST)
+    {
+        /* Autosuggestion can't support conditions */
+        return 0;
+    }
+
+    ASSERT_IS_MAIN_THREAD();
+    
+   
+    printf("condition_test %ls\n", condition.c_str());
     
     bool test_res;
     std::map<wcstring, bool>::iterator cached_entry = condition_cache.find(condition);
@@ -1026,6 +1069,11 @@ static void complete_cmd( const wchar_t *cmd,
 	free( cdpath_cpy );
 }
 
+void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use_builtin, bool use_command)
+{
+    ::complete_cmd( str.c_str(), this->completions, use_function, use_builtin, use_command, this->type);
+}
+
 /**
    Evaluate the argument list (as supplied by complete -a) and insert
    any return matching completions. Matching is done using \c
@@ -1197,7 +1245,7 @@ static int complete_param( const wchar_t *cmd_orig,
 				{
                 	const complete_entry_opt_t *o = &*oiter;
 					wchar_t *arg;
-					if( (arg=param_match2( o, str ))!=0 && condition_test( o->condition ))
+					if( (arg=param_match2( o, str ))!=0 && condition_test( o->condition, type ))
 					{
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
@@ -1220,7 +1268,7 @@ static int complete_param( const wchar_t *cmd_orig,
                     const complete_entry_opt_t *o = &*oiter;
 					if( o->old_mode )
 					{
-						if( param_match_old( o, popt ) && condition_test( o->condition ))
+						if( param_match_old( o, popt ) && condition_test( o->condition, type ))
 						{
 							old_style_match = 1;
 							use_common &= ((o->result_mode & NO_COMMON )==0);
@@ -1248,7 +1296,7 @@ static int complete_param( const wchar_t *cmd_orig,
 						if( !o->old_mode && ! o->long_opt.empty() && !(o->result_mode & NO_COMMON) )
 							continue;
 
-						if( param_match( o, popt ) && condition_test( o->condition  ))
+						if( param_match( o, popt ) && condition_test( o->condition, type  ))
 						{
 							use_common &= ((o->result_mode & NO_COMMON )==0);
 							use_files &= ((o->result_mode & NO_FILES )==0);
@@ -1271,7 +1319,7 @@ static int complete_param( const wchar_t *cmd_orig,
 				  check if any of the arguments match
 				*/
 
-				if( !condition_test( o->condition ))
+				if( !condition_test( o->condition, type ))
 					continue;
 
 
@@ -1367,6 +1415,11 @@ static int complete_param( const wchar_t *cmd_orig,
 	return use_files;
 }
 
+bool completer_t::complete_param( const wcstring &cmd_orig, const wcstring &popt, const wcstring &str, bool use_switches)
+{
+    return ::complete_param(cmd_orig.c_str(), popt.c_str(), str.c_str(), use_switches, this->type, this->completions);
+}
+
 /**
    Perform file completion on the specified string
 */
@@ -1401,6 +1454,10 @@ static void complete_param_expand( const wchar_t *str, std::vector<completion_t>
 	
 }
 
+void completer_t::complete_param_expand( const wcstring &str, bool do_file)
+{
+    ::complete_param_expand(str.c_str(), this->completions, do_file, this->type);
+}
 
 /**
    Complete the specified string as an environment variable
@@ -1473,8 +1530,7 @@ static int complete_variable( const wchar_t *whole_var,
 
    \return 0 if unable to complete, 1 otherwise
 */
-static int try_complete_variable( const wchar_t *cmd,
-								  std::vector<completion_t> &comp )
+static int try_complete_variable( const wchar_t *cmd, std::vector<completion_t> &comp )
 {
 	int len = wcslen( cmd );
 	int i;
@@ -1494,14 +1550,18 @@ static int try_complete_variable( const wchar_t *cmd,
 	return 0;
 }
 
+bool completer_t::try_complete_variable( const wcstring &str )
+{
+    return ::try_complete_variable(str.c_str(), this->completions) > 0;
+}
+
 /**
    Try to complete the specified string as a username. This is used by
    ~USER type expansion.
 
    \return 0 if unable to complete, 1 otherwise
 */
-static int try_complete_user( const wchar_t *cmd,
-							  std::vector<completion_t> &comp )
+static int try_complete_user( const wchar_t *cmd, std::vector<completion_t> &comp )
 {
 	const wchar_t *first_char=cmd;
 	int res=0;
@@ -1561,6 +1621,255 @@ static int try_complete_user( const wchar_t *cmd,
 	}
 
 	return res;
+}
+
+bool completer_t::try_complete_user( const wcstring &str )
+{
+    return ::try_complete_user(str.c_str(), this->completions) > 0;
+}
+
+void complete2( const wcstring &cmd, std::vector<completion_t> &comps, complete_type_t type )
+{
+    /* Make our completer */
+    completer_t completer(cmd, type);
+    
+	const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
+	wcstring buff;
+	tokenizer tok;
+	const wchar_t *current_token=0, *prev_token=0;
+    wcstring current_command;    
+	int on_command=0;
+	int pos;
+	bool done=false;
+	int cursor_pos;
+	int use_command = 1;
+	int use_function = 1;
+	int use_builtin = 1;
+	int had_ddash = 0;
+
+//	CHECK( comp, );
+
+	complete_init();
+
+//	debug( 1, L"Complete '%ls'", cmd );
+
+	cursor_pos = cmd.size();
+    
+    const wchar_t *cmd_cstr = cmd.c_str();
+	parse_util_cmdsubst_extent( cmd_cstr, cursor_pos, &cmdsubst_begin, &cmdsubst_end );
+	parse_util_token_extent( cmd_cstr, cursor_pos, &tok_begin, &tok_end, &prev_begin, &prev_end );
+
+	if( !cmdsubst_begin )
+		done=1;
+        
+
+	/**
+	   If we are completing a variable name or a tilde expansion user
+	   name, we do that and return. No need for any other competions.
+	*/
+
+	if( !done )
+	{
+        wcstring tmp = tok_begin;
+        done = completer.try_complete_variable( tmp ) || completer.try_complete_user( tmp );
+	}
+
+	if( !done )
+	{
+		pos = cursor_pos-(cmdsubst_begin-cmd_cstr);
+		
+		buff = wcstring( cmdsubst_begin, cmdsubst_end-cmdsubst_begin );
+
+		int had_cmd=0;
+		int end_loop=0;
+
+		tok_init( &tok, buff.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS );
+
+		while( tok_has_next( &tok) && !end_loop )
+		{
+
+			switch( tok_last_type( &tok ) )
+			{
+
+				case TOK_STRING:
+				{
+
+					const wcstring ncmd = tok_last( &tok );
+					int is_ddash = (ncmd == L"--") && ( (tok_get_pos( &tok )+2) < pos );
+					
+					if( !had_cmd )
+					{
+
+						if( parser_keywords_is_subcommand( ncmd ) )
+						{
+							if (ncmd == L"builtin" )
+							{
+								use_function = 0;
+								use_command  = 0;
+								use_builtin  = 1;
+							}
+							else if (ncmd == L"command")
+							{
+								use_command  = 1;
+								use_function = 0;
+								use_builtin  = 0;
+							}
+							break;
+						}
+
+						
+						if( !is_ddash ||
+						    ( (use_command && use_function && use_builtin ) ) )
+						{
+							int token_end;
+							
+							current_command = ncmd;
+							
+							token_end = tok_get_pos( &tok ) + ncmd.size();
+							
+							on_command = (pos <= token_end );
+							had_cmd=1;
+						}
+
+					}
+					else
+					{
+						if( is_ddash )
+						{
+							had_ddash = 1;
+						}
+					}
+					
+					break;
+				}
+					
+				case TOK_END:
+				case TOK_PIPE:
+				case TOK_BACKGROUND:
+				{
+					had_cmd=0;
+					had_ddash = 0;
+					use_command  = 1;
+					use_function = 1;
+					use_builtin  = 1;
+					break;
+				}
+				
+				case TOK_ERROR:
+				{
+					end_loop=1;
+					break;
+				}
+				
+			}
+
+			if( tok_get_pos( &tok ) >= pos )
+			{
+				end_loop=1;
+			}
+			
+			tok_next( &tok );
+
+		}
+
+		tok_destroy( &tok );
+
+		/*
+		  Get the string to complete
+		*/
+
+		current_token = wcsndup( tok_begin, cursor_pos-(tok_begin-cmd_cstr) );
+
+		prev_token = prev_begin ? wcsndup( prev_begin, prev_end - prev_begin ): wcsdup(L"");
+		
+//		debug( 0, L"on_command: %d, %ls %ls\n", on_command, current_command, current_token );
+
+		/*
+		  Check if we are using the 'command' or 'builtin' builtins
+		  _and_ we are writing a switch instead of a command. In that
+		  case, complete using the builtins completions, not using a
+		  subcommand.
+		*/
+		
+		if( (on_command || (wcscmp( current_token, L"--" ) == 0 ) ) &&
+			(current_token[0] == L'-') && 
+			!(use_command && use_function && use_builtin ) )
+		{
+			if( use_command == 0 )
+				current_command = L"builtin";
+			else
+				current_command = L"command";
+			
+			had_cmd = 1;
+			on_command = 0;
+		}
+		
+		/*
+		  Use command completions if in between commands
+		*/
+		if( !had_cmd )
+		{
+			on_command=1;
+		}
+		
+		/*
+		  We don't want these to be null
+		*/
+
+		if( !current_token )
+		{
+			current_token = wcsdup(L"");
+		}
+		
+		if( !prev_token )
+		{
+			prev_token = wcsdup(L"");
+		}
+
+		if( current_token && prev_token )
+		{
+			if( on_command )
+			{
+				/* Complete command filename */
+				completer.complete_cmd( current_token, use_function, use_builtin, use_command );
+			}
+			else
+			{
+				int do_file=0;
+				
+                wcstring current_command_unescape = current_command;
+                wcstring prev_token_unescape = prev_token;
+                wcstring current_token_unescape = current_token;
+                
+				if( unescape_string( current_command_unescape, 0 ) &&
+                    unescape_string( prev_token_unescape, 0 ) &&
+                    unescape_string( current_token_unescape, UNESCAPE_INCOMPLETE))
+				{
+					do_file = completer.complete_param( current_command_unescape, 
+                                                          prev_token_unescape, 
+                                                          current_token_unescape, 
+                                                          !had_ddash );
+				}
+                
+                /*
+				  If we have found no command specific completions at
+				  all, fall back to using file completions.
+				*/
+				if( completer.empty() )
+					do_file = 1;
+				
+				/*
+				  This function wants the unescaped string
+				*/
+				completer.complete_param_expand( current_token, do_file );
+			}
+		}
+	}
+	
+	free( (void *)current_token );
+	free( (void *)prev_token );
+
+	comps = completer.get_completions();
 }
 
 void complete( const wchar_t *cmd, std::vector<completion_t> &comp, complete_type_t type )

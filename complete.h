@@ -225,6 +225,7 @@ void complete_remove( const wchar_t *cmd,
 
 /** Find all completions of the command cmd, insert them into out. */
 void complete( const wchar_t* cmd, std::vector<completion_t> &out, complete_type_t type);
+void complete2( const wcstring &cmd, std::vector<completion_t> &comp, complete_type_t type );
 
 /**
    Print a list of all current completions into the string_buffer_t. 

@@ -100,6 +100,7 @@ private:
     bool is_missing;
 public:
     static env_var_t missing_var(void);
+    env_var_t(const env_var_t &x) : wcstring(x), is_missing(x.is_missing) { }
     env_var_t(const wcstring & x) : wcstring(x), is_missing(false) { }
     env_var_t(const wchar_t *x) : wcstring(x), is_missing(false) { }
     env_var_t() : wcstring(L""), is_missing(false) { }
@@ -110,6 +111,15 @@ public:
         is_missing = s.is_missing;
         wcstring::operator=(s);
         return *this;
+    }
+    
+    bool operator==(const env_var_t &s) const {
+        if (is_missing &&  s.is_missing)
+            return true;
+        else if (s.is_missing || s.is_missing)
+            return false;
+        else
+            return *static_cast<const wcstring *>(this) == *static_cast<const wcstring *>(&s);
     }
 
 };

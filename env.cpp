@@ -1151,7 +1151,7 @@ env_var_t env_get_string( const wcstring &key )
 	      {
 		if( res->val == ENV_NULL ) 
 		  {
-		    return wcstring(L"");
+		    return env_var_t::missing_var();
 		  }
 		else
 		  {

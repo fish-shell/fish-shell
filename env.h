@@ -93,7 +93,7 @@ int env_set( const wchar_t *key,
   valid until the next call to env_get(), env_set(), env_push() or
   env_pop() takes place.
 */
-const wchar_t *env_get( const wchar_t *key );
+//const wchar_t *env_get( const wchar_t *key );
 
 class env_var_t : public wcstring {
 private:
@@ -153,7 +153,7 @@ void env_pop();
 char **env_export_arr( int recalc );
 
 /**
-  Insert all variable names into l. These are not copies of the strings and should not be freed after use.
+  Returns all variable names.
 */
 wcstring_list_t env_get_names( int flags );
 

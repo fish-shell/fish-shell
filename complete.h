@@ -67,39 +67,41 @@
 */
 #define PROG_COMPLETE_SEP L'\t'
 
-/**
-   Do not insert space afterwards if this is the only completion. (The
-   default is to try insert a space)
-*/
-#define COMPLETE_NO_SPACE 1
+enum {
+    /**
+       Do not insert space afterwards if this is the only completion. (The
+       default is to try insert a space)
+    */
+    COMPLETE_NO_SPACE = 1 << 0,
 
-/**
-   This compeltion is case insensitive. 
+    /**
+       This compeltion is case insensitive. 
 
-   Warning: The contents of the completion_t structure is actually
-   different if this flag is set! Specifically, the completion string
-   contains the _entire_ completion token, not only the current
-*/
-#define COMPLETE_NO_CASE 2
+       Warning: The contents of the completion_t structure is actually
+       different if this flag is set! Specifically, the completion string
+       contains the _entire_ completion token, not only the current
+    */
+    COMPLETE_NO_CASE = 1 << 1,
 
-/**
-   This compeltion is the whole argument, not just the remainder. This
-   flag must never be set on completions returned from the complete()
-   function. It is strictly for internal use in the completion code.
-*/
-#define COMPLETE_WHOLE_ARGUMENT 4
+    /**
+       This compeltion is the whole argument, not just the remainder. This
+       flag must never be set on completions returned from the complete()
+       function. It is strictly for internal use in the completion code.
+    */
+    COMPLETE_WHOLE_ARGUMENT = 1 << 2,
 
-/**
-   This completion may or may not want a space at the end - guess by
-   checking the last character of the completion.
-*/
-#define COMPLETE_AUTO_SPACE 8
+    /**
+       This completion may or may not want a space at the end - guess by
+       checking the last character of the completion.
+    */
+    COMPLETE_AUTO_SPACE = 1 << 3,
 
-/**
-   This completion should be inserted as-is, without escaping.
-*/
-#define COMPLETE_DONT_ESCAPE 16
-
+    /**
+       This completion should be inserted as-is, without escaping.
+    */
+    COMPLETE_DONT_ESCAPE = 1 << 4
+};
+typedef int complete_flags_t;
 
 
 class completion_t

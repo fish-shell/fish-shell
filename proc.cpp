@@ -101,7 +101,6 @@ job_list_t &job_list(void) {
     return s_job_list;
 }
 
-int is_interactive=-1;
 int is_interactive_session=0;
 int is_subshell=0;
 int is_block=0;
@@ -112,6 +111,12 @@ pid_t proc_last_bg_pid = 0;
 int job_control_mode = JOB_CONTROL_INTERACTIVE;
 int no_exec=0;
 
+static int is_interactive = -1;
+
+int get_is_interactive(void) {
+    ASSERT_IS_MAIN_THREAD();
+    return is_interactive;
+}
 
 /**
    The event variable used to send all process event
@@ -1236,6 +1241,7 @@ void proc_sanity_check()
 
 void proc_push_interactive( int value )
 {
+    ASSERT_IS_MAIN_THREAD();
 	int old = is_interactive;
     interactive_stack.push_back(is_interactive);
 	is_interactive = value;
@@ -1245,6 +1251,7 @@ void proc_push_interactive( int value )
 
 void proc_pop_interactive()
 {
+    ASSERT_IS_MAIN_THREAD();
 	int old = is_interactive;
 	is_interactive= interactive_stack.back();
     interactive_stack.pop_back();

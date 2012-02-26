@@ -2062,6 +2062,7 @@ void assert_is_main_thread(const char *who)
     if (! is_main_thread()) {
         fprintf(stderr, "Warning: %s called off of main thread. Break on debug_thread_error to debug.\n", who);
         debug_thread_error();
+        sleep(1000);
     }
 }
 

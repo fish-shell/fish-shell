@@ -97,7 +97,7 @@ struct var_entry_t
 /**
    Struct representing one level in the function variable stack
 */
-typedef struct env_node
+struct env_node_t
 {
 	/** 
 		Variable table 
@@ -118,12 +118,11 @@ typedef struct env_node
 	/** 
 		Pointer to next level
 	*/
-	struct env_node *next;
+	struct env_node_t *next;
 
 
-	env_node() : new_scope(0), exportv(0), next(NULL) { }
-}
-	env_node_t;
+	env_node_t() : new_scope(0), exportv(0), next(NULL) { }
+};
 
 class variable_entry_t {
     bool exportv; /**< Whether the variable should be exported */
@@ -337,7 +336,7 @@ static void handle_locale()
 
 		dcgettext( "fish", "Changing language to English", LC_MESSAGES );
 		
-		if( is_interactive )
+		if( get_is_interactive() )
 		{
 			debug( 0, _(L"Changing language to English") );
 		}
@@ -1479,6 +1478,8 @@ static void add_key_to_string_set(const std::map<wcstring, var_entry_t*> &envs, 
 
 wcstring_list_t env_get_names( int flags )
 {
+    scoped_lock lock(env_lock);
+    
     wcstring_list_t result;
     std::set<wcstring> names;
     int show_local = flags & ENV_LOCAL;
@@ -1489,9 +1490,9 @@ wcstring_list_t env_get_names( int flags )
 
 	
 	get_names_show_exported = 
-		flags & ENV_EXPORT|| (!(flags & ENV_UNEXPORT));
+		(flags & ENV_EXPORT) || !(flags & ENV_UNEXPORT);
 	get_names_show_unexported = 
-		flags & ENV_UNEXPORT|| (!(flags & ENV_EXPORT));
+		(flags & ENV_UNEXPORT) || !(flags & ENV_EXPORT);
 
 	if( !show_local && !show_global && !show_universal )
 	{

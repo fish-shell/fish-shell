@@ -1049,6 +1049,9 @@ static void completion_insert( const wchar_t *val, int flags )
 				}
 				insert_char( L' ' );
 			}
+            
+            /* Since we just inserted a completion, don't immediately do a new autosuggestion */
+            data->suppress_autosuggestion = true;
 		}
 
 		free(replaced);
@@ -1234,10 +1237,7 @@ struct autosuggestion_context_t {
     
     int threaded_autosuggest(void) {
         ASSERT_IS_BACKGROUND_THREAD();
-        
-        std::vector<completion_t> completions;
-        complete(search_string.c_str(), completions, COMPLETE_AUTOSUGGEST);
-        
+                
         while (searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
             bool item_ok = false;
@@ -1257,6 +1257,15 @@ struct autosuggestion_context_t {
                 this->autosuggestion = searcher.current_string();
                 return 1;
             }
+        }
+        
+        /* Try normal completions */
+        std::vector<completion_t> completions;
+        complete2(search_string, completions, COMPLETE_AUTOSUGGEST);
+        if (! completions.empty()) {
+            this->autosuggestion = this->search_string;
+            this->autosuggestion.append(completions.at(0).completion);
+            return 1;
         }
         
         /* Since we didn't find a suggestion from history, try other means */
@@ -1436,8 +1445,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 			 */
 			if( !(c.flags & COMPLETE_NO_CASE) || reader_can_replace( tok, c.flags ) )
 			{
-				completion_insert( c.completion.c_str(),
-						   c.flags );			
+				completion_insert( c.completion.c_str(), c.flags );			
 			}
 			done = 1;
 			len = 1;
@@ -1732,7 +1740,7 @@ static void reader_interactive_destroy()
 
 void reader_sanity_check()
 {
-	if( is_interactive)
+	if( get_is_interactive())
 	{
 		if( !data )
 			sanity_lose();
@@ -2440,7 +2448,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos )
     
     /* Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it. Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into the autosuggestion. */
     const wcstring &cmd = data->command_line, &suggest = data->autosuggestion;
-    if (! suggest.empty() && ! cmd.empty() && string_prefixes_string(cmd, suggest)) {
+    if (can_autosuggest() && ! suggest.empty() && string_prefixes_string(cmd, suggest)) {
         /* The autosuggestion is still reasonable, so do nothing */
     } else {
         update_autosuggestion();
@@ -2450,7 +2458,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos )
 
 int exit_status()
 {
-	if( is_interactive )
+	if( get_is_interactive() )
 		return job_list().empty() && data->end_loop;
 	else
 		return end_loop;
@@ -3444,7 +3452,7 @@ int reader_read( int fd, io_data_t *io )
 	int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
 	proc_push_interactive( inter );
 	
-	res= is_interactive?read_i():read_ni( fd, io );
+	res= get_is_interactive() ? read_i():read_ni( fd, io );
 
 	/*
 	  If the exit command was called in a script, only exit the

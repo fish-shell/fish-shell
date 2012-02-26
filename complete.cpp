@@ -143,7 +143,7 @@ typedef struct complete_entry_opt
 	/** True if old style long options are used */
 	int old_mode;
 	/** Completion flags */
-	int flags;
+	complete_flags_t flags;
     
     const wchar_t *localized_desc() const
     {
@@ -198,6 +198,9 @@ class completer_t {
     {
     }
     
+    bool empty() const { return completions.empty(); }
+    const std::vector<completion_t> &get_completions(void) { return completions; }
+    
     bool try_complete_variable( const wcstring &str );
     bool try_complete_user( const wcstring &str );
 
@@ -206,15 +209,14 @@ class completer_t {
                          const wcstring &str,
                          bool use_switches);
                          
-    void complete_param_expand( const wcstring &str, bool do_file);
+    void complete_param_expand(const wcstring &str, bool do_file);
     
     void complete_cmd( const wcstring &str,
-						  bool use_function,
-						  bool use_builtin,
-						  bool use_command);
+                       bool use_function,
+                       bool use_builtin,
+                       bool use_command);
                           
-    bool empty() const { return completions.empty(); }
-    const std::vector<completion_t> &get_completions(void) { return completions; }
+    bool complete_variable(const wcstring &str, int start_offset);
 
 };
 
@@ -244,7 +246,7 @@ void completion_autoload_t::command_removed(const wcstring &cmd) {
    Create a new completion entry
 
 */
-void completion_allocate(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, int flags)
+void completion_allocate(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, complete_flags_t flags)
 {
     completions.push_back(completion_t(comp, desc, flags));
 }
@@ -362,7 +364,7 @@ void complete_add( const wchar_t *cmd,
 				   const wchar_t *condition,
 				   const wchar_t *comp,
 				   const wchar_t *desc,
-				   int flags )
+				   complete_flags_t flags )
 {
 	CHECK( cmd, );
     
@@ -757,7 +759,7 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 							  const wchar_t *desc,
 							  const wchar_t *(*desc_func)(const wcstring &),
 							  std::vector<completion_t> &possible_comp,
-							  int flags )
+							  complete_flags_t flags )
 {
     wcstring tmp = wc_escaped;
     if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS))
@@ -1090,21 +1092,24 @@ static void complete_from_args( const wcstring &str,
 								const wcstring &args,
 								const wcstring &desc,
 								std::vector<completion_t> &comp_out,
-								int flags )
+                                complete_type_t type,
+								complete_flags_t flags )
 {
-
+    /* If type is COMPLETE_AUTOSUGGEST, it means we're on a background thread, so don't call proc_push_interactive */
+    
 	std::vector<completion_t> possible_comp;
 
     parser_t parser(PARSER_TYPE_COMPLETIONS_ONLY);
-	proc_push_interactive(0);
+    
+    if (type != COMPLETE_AUTOSUGGEST)
+        proc_push_interactive(0);
+
 	parser.eval_args( args.c_str(), possible_comp );
 
-	proc_pop_interactive();
+    if (type != COMPLETE_AUTOSUGGEST)
+        proc_pop_interactive();
 	
 	complete_strings( comp_out, str.c_str(), desc.c_str(), 0, possible_comp, flags );
-
-//	al_foreach( &possible_comp, &free );
-//	al_destroy( &possible_comp );
 }
 
 /**
@@ -1249,7 +1254,7 @@ static int complete_param( const wchar_t *cmd_orig,
 					{
 						use_common &= ((o->result_mode & NO_COMMON )==0);
 						use_files &= ((o->result_mode & NO_FILES )==0);
-						complete_from_args( arg, o->comp, o->localized_desc(), comp_out, o->flags );
+						complete_from_args( arg, o->comp, o->localized_desc(), comp_out, type, o->flags );
 					}
 
 				}
@@ -1273,7 +1278,7 @@ static int complete_param( const wchar_t *cmd_orig,
 							old_style_match = 1;
 							use_common &= ((o->result_mode & NO_COMMON )==0);
 							use_files &= ((o->result_mode & NO_FILES )==0);
-							complete_from_args( str, o->comp, o->localized_desc(), comp_out, o->flags );
+							complete_from_args( str, o->comp, o->localized_desc(), comp_out, type, o->flags );
 						}
 					}
 				}
@@ -1300,7 +1305,7 @@ static int complete_param( const wchar_t *cmd_orig,
 						{
 							use_common &= ((o->result_mode & NO_COMMON )==0);
 							use_files &= ((o->result_mode & NO_FILES )==0);
-							complete_from_args( str, o->comp.c_str(), o->localized_desc(), comp_out, o->flags );
+							complete_from_args( str, o->comp.c_str(), o->localized_desc(), comp_out, type, o->flags );
 
 						}
 					}
@@ -1326,7 +1331,7 @@ static int complete_param( const wchar_t *cmd_orig,
 				if( (o->short_opt == L'\0' ) && (o->long_opt[0]==L'\0'))
 				{
 					use_files &= ((o->result_mode & NO_FILES )==0);
-					complete_from_args( str, o->comp, o->localized_desc(), comp_out, o->flags );
+					complete_from_args( str, o->comp, o->localized_desc(), comp_out, type, o->flags );
 				}
 				
 				if( wcslen(str) > 0 && use_switches )
@@ -1370,7 +1375,7 @@ static int complete_param( const wchar_t *cmd_orig,
 							int req_arg=0; /* Does this switch _require_ an argument */
 
 							int offset = 0;
-							int flags = 0;
+							complete_flags_t flags = 0;
 
 															
 							if( match )
@@ -1426,7 +1431,6 @@ bool completer_t::complete_param( const wcstring &cmd_orig, const wcstring &popt
 static void complete_param_expand( const wchar_t *str, std::vector<completion_t> &comp_out, int do_file, complete_type_t type )
 {
 	const wchar_t *comp_str;
-	int flags;
 	
 	if( (wcsncmp( str, L"--", 2 )) == 0 && (comp_str = wcschr(str, L'=' ) ) )
 	{
@@ -1437,7 +1441,7 @@ static void complete_param_expand( const wchar_t *str, std::vector<completion_t>
 		comp_str = str;
 	}
     
-    flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE;
+    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE;
     
     if (! do_file)
         flags |= EXPAND_SKIP_WILDCARDS;
@@ -1464,11 +1468,13 @@ void completer_t::complete_param_expand( const wcstring &str, bool do_file)
 */
 static int complete_variable( const wchar_t *whole_var,
 							  int start_offset,
-							  std::vector<completion_t> &comp_list )
+							  std::vector<completion_t> &comp_list,
+                              complete_type_t type)
 {
 	const wchar_t *var = &whole_var[start_offset];
 	int varlen = wcslen( var );
 	int res = 0;
+    bool wants_description = (type != COMPLETE_AUTOSUGGEST);
     
     const wcstring_list_t names = env_get_names(0);
 	for( size_t i=0; i<names.size(); i++ )
@@ -1489,39 +1495,49 @@ static int complete_variable( const wchar_t *whole_var,
 
 		if( match || match_no_case )
 		{
-			const env_var_t value_unescaped = env_get_string( env_name );
-			if( !value_unescaped.missing() )
-			{
-				wcstring comp;
-				int flags = 0;
-				int offset = 0;
-				
-				if( match )
-				{
-                    comp.append(env_name.c_str() + varlen);
-					offset = varlen;
-				}
-				else
-				{
-                    comp.append(whole_var, start_offset);
-                    comp.append(env_name);
-					flags = COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE;
-				}
-				
-				wcstring value = expand_escape_variable( value_unescaped );
+            wcstring comp;
+            int flags = 0;
+            int offset = 0;
+            
+            if( match )
+            {
+                comp.append(env_name.c_str() + varlen);
+                offset = varlen;
+            }
+            else
+            {
+                comp.append(whole_var, start_offset);
+                comp.append(env_name);
+                flags = COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE;
+            }
+            
+            wcstring desc;
+            if (wants_description)
+            {
+                env_var_t value_unescaped = env_get_string( env_name );
+                if (value_unescaped.missing())
+                    continue;
                 
-                wcstring desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());				
-				completion_allocate( comp_list, 
-									 comp.c_str(),
-									 desc.c_str(),
-									 flags );
-				res =1;
-			}
+                wcstring value = expand_escape_variable( value_unescaped );
+                if (type != COMPLETE_AUTOSUGGEST)
+                    desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
+            }
+                            
+            completion_allocate( comp_list, 
+                                 comp.c_str(),
+                                 desc.c_str(),
+                                 flags );
+            res =1;
 			
 		}
 	}
 
 	return res;
+}
+
+bool completer_t::complete_variable(const wcstring &str, int start_offset)
+{
+    return ::complete_variable(str.c_str(), start_offset, this->completions, this->type);
 }
 
 /**
@@ -1530,7 +1546,7 @@ static int complete_variable( const wchar_t *whole_var,
 
    \return 0 if unable to complete, 1 otherwise
 */
-static int try_complete_variable( const wchar_t *cmd, std::vector<completion_t> &comp )
+static int try_complete_variable( const wchar_t *cmd, std::vector<completion_t> &comp, complete_type_t type )
 {
 	int len = wcslen( cmd );
 	int i;
@@ -1540,7 +1556,7 @@ static int try_complete_variable( const wchar_t *cmd, std::vector<completion_t> 
 		if( cmd[i] == L'$' )
 		{
 /*			wprintf( L"Var prefix \'%ls\'\n", &cmd[i+1] );*/
-			return complete_variable( cmd, i+1, comp );
+			return complete_variable( cmd, i+1, comp, type);
 		}
 		if( !isalnum(cmd[i]) && cmd[i]!=L'_' )
 		{
@@ -1552,7 +1568,7 @@ static int try_complete_variable( const wchar_t *cmd, std::vector<completion_t> 
 
 bool completer_t::try_complete_variable( const wcstring &str )
 {
-    return ::try_complete_variable(str.c_str(), this->completions) > 0;
+    return ::try_complete_variable(str.c_str(), this->completions, this->type) > 0;
 }
 
 /**
@@ -1910,7 +1926,7 @@ void complete( const wchar_t *cmd, std::vector<completion_t> &comp, complete_typ
 
 	if( !done )
 	{
-		if( try_complete_variable( tok_begin, comp ) ||  try_complete_user( tok_begin, comp ))
+		if( try_complete_variable( tok_begin, comp, type ) ||  try_complete_user( tok_begin, comp ))
 		{
 			done=1;
 		}

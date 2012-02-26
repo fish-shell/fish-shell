@@ -366,7 +366,7 @@ extern int is_block;
 /** 
 	Whether we are reading from the keyboard right now
 */
-extern int is_interactive;
+int get_is_interactive(void);
 
 /** 
 	Whether this shell is attached to the keyboard at all

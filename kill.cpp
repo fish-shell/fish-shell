@@ -266,7 +266,7 @@ const wchar_t *kill_yank()
 void kill_sanity_check()
 {
 	int i;
-	if( is_interactive )
+	if( get_is_interactive() )
 	{
 		/* Test that the kill-ring is consistent */
 		if( kill_current != 0 )

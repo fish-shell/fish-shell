@@ -503,7 +503,7 @@ void signal_set_handlers()
 {
 	struct sigaction act;
 
-	if( is_interactive == -1 )
+	if( get_is_interactive() == -1 )
 		return;
 	
 	sigemptyset( & act.sa_mask );
@@ -527,7 +527,7 @@ void signal_set_handlers()
 	*/
 	sigaction( SIGPIPE, &act, 0);
 
-	if( is_interactive )
+	if( get_is_interactive() )
 	{
 		/*
 		   Interactive mode. Ignore interactive signals.  We are a

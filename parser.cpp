@@ -762,6 +762,8 @@ void parser_t::print_errors_stderr()
 int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 {
 	tokenizer tok;
+    const bool show_errors = (this->parser_type == PARSER_TYPE_GENERAL || this->parser_type == PARSER_TYPE_ERRORS_ONLY);
+    
 	/*
 	  eval_args may be called while evaulating another command, so we
 	  save the previous tokenizer and restore it on exit
@@ -772,12 +774,15 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 
 	CHECK( line, 1 );
 //	CHECK( args, 1 );
-		
-	proc_push_interactive(0);	
+    
+    // PCA we need to suppress calling proc_push_interactive off of the main thread. I'm not sure exactly what it does.
+    if (this->parser_type == PARSER_TYPE_GENERAL)
+        proc_push_interactive(0);
+    
 	current_tokenizer = &tok;
 	current_tokenizer_pos = 0;
 	
-	tok_init( &tok, line, 0 );
+	tok_init( &tok, line, (show_errors ? 0 : TOK_SQUASH_ERRORS) );
 	error_code=0;
 
 	for(;do_loop && tok_has_next( &tok) ; tok_next( &tok ) )
@@ -794,7 +799,7 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 					DIE_MEM();
 				}
 				
-				if( expand_string( tmp, args, 0 ) == EXPAND_ERROR )
+				if( expand_string( tmp, args, (show_errors ? 0 : EXPAND_NO_DESCRIPTIONS)  ) == EXPAND_ERROR )
 				{
 					err_pos=tok_get_pos( &tok );
 					do_loop=0;
@@ -809,10 +814,11 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 			
 			case TOK_ERROR:
 			{
-				error( SYNTAX_ERROR,
-					   tok_get_pos( &tok ),
-					   TOK_ERR_MSG,
-					   tok_last(&tok) );
+				if (show_errors)
+                    error( SYNTAX_ERROR,
+                           tok_get_pos( &tok ),
+                           TOK_ERR_MSG,
+                           tok_last(&tok) );
 
 				do_loop=0;
 				break;
@@ -820,10 +826,11 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 
 			default:
 			{
-				error( SYNTAX_ERROR,
-					   tok_get_pos( &tok ),
-					   UNEXPECTED_TOKEN_ERR_MSG,
-					   tok_get_desc( tok_last_type(&tok)) );
+                if (show_errors)
+                    error( SYNTAX_ERROR,
+                           tok_get_pos( &tok ),
+                           UNEXPECTED_TOKEN_ERR_MSG,
+                           tok_get_desc( tok_last_type(&tok)) );
 
 				do_loop=0;
 				break;
@@ -831,14 +838,17 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 		}
 	}
 
-	this->print_errors_stderr();
+    if (show_errors)
+        this->print_errors_stderr();
 	
 	tok_destroy( &tok );
 	
 	current_tokenizer=previous_tokenizer;
 	current_tokenizer_pos = previous_pos;
-	proc_pop_interactive();
-	
+    
+    if (this->parser_type == PARSER_TYPE_GENERAL)
+        proc_pop_interactive();
+
 	return 1;
 }
 
@@ -1114,7 +1124,7 @@ const wchar_t *parser_t::current_line()
 	/**
 	   If we are not going to print a stack trace, at least print the line number and filename
 	*/
-	if( !is_interactive || is_function() )
+	if( !get_is_interactive() || is_function() )
 	{
 		int prev_width = my_wcswidth( lineinfo.c_str() );
 		if( file )
@@ -1139,7 +1149,7 @@ const wchar_t *parser_t::current_line()
 	  Skip printing character position if we are in interactive mode
 	  and the error was on the first character of the line.
 	*/
-	if( !is_interactive || is_function() || (current_line_width!=0) )
+	if( !get_is_interactive() || is_function() || (current_line_width!=0) )
 	{
 		// Workaround since it seems impossible to print 0 copies of a character using %*lc
 		if( offset+current_line_width )
@@ -1559,7 +1569,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 		{
 			job_set_flag( j, JOB_WILDCARD_ERROR, 1 );
 			proc_set_last_status( STATUS_UNMATCHED_WILDCARD );
-			if( is_interactive && !is_block )
+			if( get_is_interactive() && !is_block )
 			{
 				int tmp;
 
@@ -2210,11 +2220,11 @@ void parser_t::eval_job( tokenizer *tok )
 			job_set_flag( j, JOB_SKIP_NOTIFICATION, is_subshell \
 							                        || is_block \
 													|| is_event \
-													|| (!is_interactive));
+													|| (!get_is_interactive()));
 			
 			current_block->job = j;
 			
-			if( is_interactive )
+			if( get_is_interactive() )
 			{
 				if( tcgetattr (0, &j->tmodes) )
 				{

@@ -145,11 +145,11 @@ int expand_is_clean( const wchar_t *in )
 /**
    Return the environment variable value for the string starting at \c in.
 */
-static const wchar_t* expand_var(const wchar_t *in)
+static env_var_t expand_var(const wchar_t *in)
 {
 	if( !in )
-		return 0;
-	return env_get( in );
+		return env_var_t::missing_var();
+	return env_get_string( in );
 }
 
 /**
@@ -818,7 +818,6 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 			int start_pos = i+1;
 			int stop_pos;
 			int var_len;
-			const wchar_t * var_val;
 			int is_single = (c==VARIABLE_EXPAND_SINGLE);
 			int var_name_stop_pos;
 			
@@ -849,9 +848,9 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 			}
             
             var_tmp.append(in + start_pos, var_len);
-			var_val = expand_var(var_tmp.c_str() );
+			env_var_t var_val = expand_var(var_tmp.c_str() );
             
-			if( var_val )
+			if( ! var_val.missing() )
 			{
 				int all_vars=1;
                 wcstring_list_t var_item_list;
@@ -873,7 +872,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
                 
 				if( is_ok )
 				{
-					tokenize_variable_array( var_val, var_item_list );                    
+					tokenize_variable_array( var_val.c_str(), var_item_list );                    
                     
 					if( !all_vars )
 					{

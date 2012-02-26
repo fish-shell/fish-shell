@@ -261,7 +261,7 @@ static void builtin_print_help( parser_t &parser, const wchar_t *cmd, wcstring &
 
 			screen_height = common_get_height();
 			lines = count_char( str, L'\n' );
-			if( !is_interactive || (lines > 2*screen_height/3) )
+			if( !get_is_interactive() || (lines > 2*screen_height/3) )
 			{
 				wchar_t *pos;
 				int cut=0;
@@ -2569,7 +2569,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		}
 		
 		
-		if( !is_interactive )
+		if( !get_is_interactive() )
 		{
             stderr_buffer.append(parser.current_line());
 		}
@@ -2599,7 +2599,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 				   dir );
 		}
 		
-		if( !is_interactive )
+		if( !get_is_interactive() )
 		{
             stderr_buffer.append(parser.current_line());
 		}

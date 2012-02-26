@@ -1261,7 +1261,7 @@ struct autosuggestion_context_t {
         
         /* Try normal completions */
         std::vector<completion_t> completions;
-        complete2(search_string, completions, COMPLETE_AUTOSUGGEST);
+        //complete2(search_string, completions, COMPLETE_AUTOSUGGEST);
         if (! completions.empty()) {
             this->autosuggestion = this->search_string;
             this->autosuggestion.append(completions.at(0).completion);

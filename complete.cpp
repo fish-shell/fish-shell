@@ -1507,8 +1507,8 @@ bool completer_t::complete_variable(const wcstring &str, int start_offset)
 */
 bool completer_t::try_complete_variable( const wcstring &str )
 {
-	size_t i, len = str.size();
-	for( i=len-1; i>=0; i-- )
+	size_t i = str.size();
+	while (i--)
 	{
         wchar_t c = str.at(i);
 		if( c == L'$' )

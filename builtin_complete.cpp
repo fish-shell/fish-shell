@@ -296,7 +296,8 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	wcstring_list_t gnu_opt, old_opt;
 	const wchar_t *comp=L"", *desc=L"", *condition=L"";
 
-	const wchar_t *do_complete = 0;
+    bool do_complete = false;
+    wcstring do_complete_param;
 	
 	wcstring_list_t cmd;
 	wcstring_list_t path;
@@ -477,7 +478,8 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				break;
 				
 			case 'C':
-				do_complete = woptarg?woptarg:reader_get_buffer();
+                do_complete = true;
+				do_complete_param = woptarg ? woptarg : reader_get_buffer();
 				break;
 				
 			case 'h':
@@ -535,19 +537,18 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		{
 			std::vector<completion_t> comp;
 
-			const wchar_t *prev_temporary_buffer = temporary_buffer;
-
 			const wchar_t *token;
 
-			parse_util_token_extent( do_complete, wcslen( do_complete ), &token, 0, 0, 0 );
+			parse_util_token_extent( do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0, 0 );
 						
-			temporary_buffer = do_complete;		
+			const wchar_t *prev_temporary_buffer = temporary_buffer;
+			temporary_buffer = do_complete_param.c_str();
 
 			if( recursion_level < 1 )
 			{
 				recursion_level++;
 			
-				complete( do_complete, comp, COMPLETE_DEFAULT );
+				complete( do_complete_param, comp, COMPLETE_DEFAULT );
 			
 				for( size_t i=0; i< comp.size() ; i++ )
 				{

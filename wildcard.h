@@ -69,7 +69,7 @@ enum
 */
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &out );
 /**
-   Test whether the given wildcard matches the string
+   Test whether the given wildcard matches the string. Does not perform any I/O.
 
    \param str The string to test
    \param wc The wildcard to test against

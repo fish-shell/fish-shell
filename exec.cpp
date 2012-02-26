@@ -1667,6 +1667,7 @@ void exec( parser_t &parser, job_t *j )
 
 static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 {
+    ASSERT_IS_MAIN_THREAD();
 	char *begin, *end;
 	char z=0;
 	int prev_subshell = is_subshell;
@@ -1767,10 +1768,12 @@ static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 
 int exec_subshell( const wcstring &cmd, std::vector<wcstring> &outputs )
 {
+    ASSERT_IS_MAIN_THREAD();
     return exec_subshell_internal(cmd, &outputs);
 }
 
 __warn_unused int exec_subshell( const wcstring &cmd )
 {
+    ASSERT_IS_MAIN_THREAD();
     return exec_subshell_internal(cmd, NULL);
 }

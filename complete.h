@@ -198,7 +198,7 @@ enum complete_type_t {
   \param flags A set of completion flags
 */
 void complete_add( const wchar_t *cmd, 
-		   int cmd_type, 
+		   bool cmd_is_path, 
 		   wchar_t short_opt,
 		   const wchar_t *long_opt,
 		   int long_mode, 
@@ -212,22 +212,19 @@ void complete_add( const wchar_t *cmd,
   true, any options not matching one of the provided options will be
   flagged as an error by syntax highlighting.
 */
-void complete_set_authoritative( const wchar_t *cmd,
-				 int cmd_type,
-				 int authoritative );
+void complete_set_authoritative( const wchar_t *cmd, bool cmd_type, bool authoritative );
 
 /**
   Remove a previously defined completion
 */
 void complete_remove( const wchar_t *cmd, 
-		      int cmd_type, 
+		      bool cmd_is_path, 
 		      wchar_t short_opt,
 		      const wchar_t *long_opt );
 
 
 /** Find all completions of the command cmd, insert them into out. */
-void complete( const wchar_t* cmd, std::vector<completion_t> &out, complete_type_t type);
-void complete2( const wcstring &cmd, std::vector<completion_t> &comp, complete_type_t type );
+void complete( const wcstring &cmd, std::vector<completion_t> &comp, complete_type_t type );
 
 /**
    Print a list of all current completions into the string_buffer_t. 

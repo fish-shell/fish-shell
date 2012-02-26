@@ -285,7 +285,7 @@ const wchar_t *builtin_complete_get_temporary_buffer()
 static int builtin_complete( parser_t &parser, wchar_t **argv )
 {
     ASSERT_IS_MAIN_THREAD();
-	int res=0;
+	bool res=false;
 	int argc=0;
 	int result_mode=SHARED;
 	int remove = 0;
@@ -308,7 +308,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	
 	woptind=0;
 	
-	while( res == 0 )
+	while( ! res )
 	{
 		static const struct woption
 			long_options[] =
@@ -405,7 +405,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				builtin_print_help( parser, argv[0], stderr_buffer );
 
 				
-				res = 1;
+				res = true;
 				break;
 				
 			case 'x':					
@@ -436,7 +436,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				else
 				{
 					append_format(stderr_buffer, L"%ls: Invalid token '%ls'\n", argv[0], woptarg );
-					res = 1;					
+					res = true;					
 				}				
 				break;
 			}
@@ -488,7 +488,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				
 			case '?':
 				builtin_unknown_option( parser, argv[0], argv[woptind-1] );
-				res = 1;
+				res = true;
 				break;
 				
 		}
@@ -508,7 +508,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				
 				parser.test( condition, 0, &stderr_buffer, argv[0] );
 				
-				res = 1;
+				res = true;
 			}
 		}
 	}
@@ -526,7 +526,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 				
 				parser.test_args( comp, &stderr_buffer, argv[0] );
 				
-				res = 1;
+				res = true;
 			}
 		}
 	}
@@ -535,8 +535,6 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 	{
 		if( do_complete )
 		{
-			std::vector<completion_t> comp;
-
 			const wchar_t *token;
 
 			parse_util_token_extent( do_complete_param.c_str(), do_complete_param.size(), &token, 0, 0, 0 );
@@ -547,7 +545,8 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 			if( recursion_level < 1 )
 			{
 				recursion_level++;
-			
+                
+                std::vector<completion_t> comp;
 				complete( do_complete_param, comp, COMPLETE_DEFAULT );
 			
 				for( size_t i=0; i< comp.size() ; i++ )
@@ -589,7 +588,7 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 					   argv[0] );
 			builtin_print_help( parser, argv[0], stderr_buffer );
 
-			res = 1;
+			res = true;
 		}
 		else if( cmd.empty() && path.empty() )
 		{
@@ -625,5 +624,5 @@ static int builtin_complete( parser_t &parser, wchar_t **argv )
 		}	
 	}
 	
-	return res;
+	return res ? 1 : 0;
 }

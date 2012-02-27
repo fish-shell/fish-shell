@@ -250,6 +250,10 @@ std::string wcs2string(const wcstring &input);
 /** Test if a string prefixes another. Returns true if a is a prefix of b */
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
 
+/** Test if a list contains a string using a linear search. */
+bool list_contains_string(const wcstring_list_t &list, const wcstring &str);
+
+
 void assert_is_main_thread(const char *who);
 #define ASSERT_IS_MAIN_THREAD_TRAMPOLINE(x) assert_is_main_thread(x)
 #define ASSERT_IS_MAIN_THREAD() ASSERT_IS_MAIN_THREAD_TRAMPOLINE(__FUNCTION__)

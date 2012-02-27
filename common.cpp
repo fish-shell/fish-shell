@@ -1870,9 +1870,15 @@ void tokenize_variable_array( const wcstring &val, std::vector<wcstring> &out)
     out.push_back(val.substr(pos, end - pos));
 }
 
-bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value) {
+bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value)
+{
     size_t prefix_size = proposed_prefix.size();
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
+}
+
+bool list_contains_string(const wcstring_list_t &list, const wcstring &str)
+{
+    return std::find(list.begin(), list.end(), str) != list.end();
 }
 
 int create_directory( const wcstring &d )

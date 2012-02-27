@@ -550,7 +550,7 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     bool had_cmd = false;
     
     wcstring suggestion;
-    bool suggestionOK = true;
+    bool suggestionOK = false;
     
     tokenizer tok;
 	for( tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS );

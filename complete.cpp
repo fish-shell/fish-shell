@@ -227,6 +227,7 @@ class completer_t {
     const complete_type_t type;
     const wcstring initial_cmd;
     std::vector<completion_t> completions;
+    wcstring_list_t commands_to_load;
     
     /** Table of completions conditions that have already been tested and the corresponding test results */
     typedef std::map<wcstring, bool> condition_cache_t;
@@ -235,8 +236,7 @@ class completer_t {
     public:
     completer_t(const wcstring &c, complete_type_t t) :
         type(t),
-        initial_cmd(c),
-        completions()
+        initial_cmd(c)
     {
     }
     
@@ -268,6 +268,11 @@ class completer_t {
     bool complete_variable(const wcstring &str, int start_offset);
     
     bool condition_test( const wcstring &condition );
+    
+    void get_commands_to_load(wcstring_list_t *lst) {
+        if (lst)
+            lst->insert(lst->end(), commands_to_load.begin(), commands_to_load.end());
+    }
 
 };
 
@@ -609,7 +614,9 @@ int complete_is_valid_option( const wchar_t *str,
 	/*
 	  Make sure completions are loaded for the specified command
 	*/
-	if (allow_autoload) complete_load( cmd, false );
+	if (allow_autoload) {
+        complete_load( cmd, false );
+    }
 
 	scoped_lock lock(completion_lock);
     scoped_lock lock2(completion_entry_lock);
@@ -1245,8 +1252,18 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, path, cmd);
 
-    if (type == COMPLETE_DEFAULT)
+    if (this->type == COMPLETE_DEFAULT)
+    {
         complete_load( cmd, true );
+    }
+    else if (this->type == COMPLETE_AUTOSUGGEST)
+    {
+        /* Maybe indicate we should try loading this on the main thread */
+        if (! list_contains_string(this->commands_to_load, cmd) && ! completion_autoloader.has_tried_loading(cmd))
+        {
+            this->commands_to_load.push_back(cmd);
+        }
+    }
 
     scoped_lock lock(completion_lock);
     scoped_lock lock2(completion_entry_lock);
@@ -1638,7 +1655,7 @@ bool completer_t::try_complete_user( const wcstring &str )
 	return res;
 }
 
-void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_type_t type )
+void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_type_t type, wcstring_list_t *commands_to_load )
 {
     /* Make our completer */
     completer_t completer(cmd, type);
@@ -1876,6 +1893,7 @@ void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_t
 	free( (void *)prev_token );
 
 	comps = completer.get_completions();
+    completer.get_commands_to_load(commands_to_load);
 }
 
 

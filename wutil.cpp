@@ -56,24 +56,6 @@ typedef std::string cstring;
 */
 #define BUFF_COUNT 4
 
-/**
-   For wgettext: The ring of string_buffer_t
-*/
-static string_buffer_t buff[BUFF_COUNT];
-/**
-   For wgettext: Current position in the ring
-*/
-static int curr_buff=0;
-
-/**
-   For wgettext: Buffer used by translate_wcs2str
-*/
-static char *wcs2str_buff=0;
-/**
-   For wgettext: Size of buffer used by translate_wcs2str
-*/
-static size_t wcs2str_buff_count=0;
-
 /* Lock to protect wgettext */
 static pthread_mutex_t wgettext_lock;
 
@@ -315,10 +297,6 @@ wcstring wbasename( const wcstring &path )
 
 /* Really init wgettext */
 static void wgettext_really_init() {
-	for( size_t i=0; i<BUFF_COUNT; i++ )
-	{
-		sb_init( &buff[i] );
-	}
     pthread_mutex_init(&wgettext_lock, NULL);
 	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
 	textdomain( PACKAGE_NAME );
@@ -331,26 +309,6 @@ static void wgettext_init_if_necessary()
 {
     static pthread_once_t once = PTHREAD_ONCE_INIT;
     pthread_once(&once, wgettext_really_init);
-}
-
-
-/**
-   For wgettext: Wide to narrow character conversion. Internal implementation that
-   avoids exessive calls to malloc
-*/
-static char *wgettext_wcs2str( const wchar_t *in )
-{
-	size_t len = MAX_UTF8_BYTES*wcslen(in)+1;
-	if( len > wcs2str_buff_count )
-	{
-		wcs2str_buff = (char *)realloc( wcs2str_buff, len );
-		if( !wcs2str_buff )
-		{
-			DIE_MEM();
-		}
-	}
-	
-	return wcs2str_internal( in, wcs2str_buff);
 }
 
 const wchar_t *wgettext( const wchar_t *in )

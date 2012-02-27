@@ -26,10 +26,11 @@ file_access_attempt_t access_file(const wcstring &path, int mode);
 
 struct autoload_function_t : public lru_node_t
 {   
-    autoload_function_t(const wcstring &key) : lru_node_t(key), is_loaded(false), is_placeholder(false) { bzero(&access, sizeof access); }
+    autoload_function_t(const wcstring &key) : lru_node_t(key), access(), is_loaded(false), is_placeholder(false), is_internalized(false) { }
     file_access_attempt_t access; /** The last access attempt */
     bool is_loaded; /** Whether we have actually loaded this function */
     bool is_placeholder; /** Whether we are a placeholder that stands in for "no such function". If this is true, then is_loaded must be false. */
+    bool is_internalized; /** Whether this function came from a builtin "internalized" script */
 };
 
 
@@ -75,7 +76,8 @@ private:
     
     virtual void node_was_evicted(autoload_function_t *node);
 
-
+    autoload_function_t *get_autoloaded_function_with_creation(const wcstring &cmd, bool allow_eviction);
+    
     protected:    
     /** Overridable callback for when a command is removed */
     virtual void command_removed(const wcstring &cmd) { }
@@ -100,6 +102,9 @@ private:
        \param reload wheter to recheck file timestamps on already loaded files
     */
     int load( const wcstring &cmd, bool reload );
+    
+    /** Check whether we have tried loading the given command. Does not do any I/O. */
+    bool has_tried_loading( const wcstring &cmd );
 
     /**
        Tell the autoloader that the specified file, in the specified path,

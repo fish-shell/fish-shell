@@ -1225,6 +1225,7 @@ struct autosuggestion_context_t {
     file_detection_context_t detector;
     const wcstring working_directory;
     const env_vars vars;
+    wcstring_list_t commands_to_load;
     
     autosuggestion_context_t(history_t *history, const wcstring &term) :
         search_string(term),
@@ -1261,7 +1262,7 @@ struct autosuggestion_context_t {
         
         /* Try normal completions */
         std::vector<completion_t> completions;
-        //complete2(search_string, completions, COMPLETE_AUTOSUGGEST);
+        //complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
         if (! completions.empty()) {
             this->autosuggestion = this->search_string;
             this->autosuggestion.append(completions.at(0).completion);
@@ -1288,6 +1289,24 @@ static bool can_autosuggest(void) {
 }
 
 static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
+
+
+    /* Extract the commands to load */
+    wcstring_list_t commands_to_load;
+    ctx->commands_to_load.swap(commands_to_load);
+    
+    /* If we have autosuggestions to load, load them and try again */
+    if (! result && ! commands_to_load.empty())
+    {
+        for (wcstring_list_t::const_iterator iter = commands_to_load.begin(); iter != commands_to_load.end(); iter++)
+        {
+            printf("loading %ls\n", iter->c_str());
+            complete_load(*iter, false);
+        }
+        iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
+        return;
+    }
+
     if (result &&
         can_autosuggest() &&
         ctx->search_string == data->command_line &&
@@ -1296,7 +1315,6 @@ static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
         data->autosuggestion = ctx->autosuggestion;
         sanity_check();
         reader_repaint();
-        
     }
     delete ctx;
 }
@@ -2838,7 +2856,7 @@ const wchar_t *reader_readline()
 					buffcpy = wcsndup( begin, len );
 
 //					comp = al_halloc( 0 );
-					data->complete_func( buffcpy, comp, COMPLETE_DEFAULT );
+					data->complete_func( buffcpy, comp, COMPLETE_DEFAULT, NULL);
 					
 					sort_completion_list( comp );
 					remove_duplicates( comp );

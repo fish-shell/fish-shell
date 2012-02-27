@@ -143,6 +143,34 @@ void autoload_t::unload_all(void) {
     this->evict_all_nodes();
 }
 
+/** Check whether the given command is loaded. */
+bool autoload_t::has_tried_loading( const wcstring &cmd )
+{
+    scoped_lock locker(lock);   
+    autoload_function_t * func = this->get_node(cmd);
+    return func != NULL;
+}
+
+static bool is_stale(const autoload_function_t *func) {
+    /** Return whether this function is stale. Internalized functions can never be stale. */
+    return ! func->is_internalized && time(NULL) - func->access.last_checked > kAutoloadStalenessInterval;
+}
+
+autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcstring &cmd, bool allow_eviction)
+{
+    ASSERT_IS_LOCKED(lock);
+    autoload_function_t *func = this->get_node(cmd);
+    if (! func) {
+        func = new autoload_function_t(cmd);
+        if (allow_eviction) {
+            this->add_node(func);
+        } else {
+            this->add_node_without_eviction(func);
+        }
+    }
+    return func;
+}
+
 /**
    This internal helper function does all the real work. By using two
    functions, the internal function can return on various places in
@@ -176,7 +204,7 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
         if (! func) {
             /* Can't use a function that doesn't exist */
             use_cached = false;
-        } else if ( ! allow_stale_functions && time(NULL) - func->access.last_checked > kAutoloadStalenessInterval) {
+        } else if ( ! allow_stale_functions && is_stale(func)) {
             /* Can't use a stale function */
             use_cached = false;
         } else if (really_load && ! func->is_placeholder && ! func->is_loaded) {
@@ -189,7 +217,7 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
         
         /* If we can use this function, return whether we were able to access it */
         if (use_cached) {
-            return func->access.accessible;
+            return func->is_internalized || func->access.accessible;
         }
     }    
     /* The source of the script will end up here */
@@ -215,6 +243,16 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
     if (matching_builtin_script) {
         has_script_source = true;
         script_source = str2wcstring(matching_builtin_script->def);
+        
+        /* Make a node representing this function */
+        scoped_lock locker(lock);
+        autoload_function_t *func = this->get_autoloaded_function_with_creation(cmd, really_load);
+        
+        /* This function is internalized */
+        func->is_internalized = true;
+        
+        /* It's a fiction to say the script is loaded at this point, but we're definitely going to load it down below. */
+        if (really_load) func->is_loaded = true;
     }
     
     if (! has_script_source)
@@ -255,12 +293,7 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
                 
                 /* Create the function if we haven't yet. This does not load it. Do not trigger eviction unless we are actually loading, because we don't want to evict off of the main thread. */
                 if (! func) {
-                    func = new autoload_function_t(cmd);
-                    if (really_load) {
-                        this->add_node(func);
-                    } else {
-                        this->add_node_without_eviction(func);
-                    }
+                    func = get_autoloaded_function_with_creation(cmd, really_load);
                 }
                 
                 /* It's a fiction to say the script is loaded at this point, but we're definitely going to load it down below. */

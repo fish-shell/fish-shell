@@ -1227,12 +1227,16 @@ struct autosuggestion_context_t {
     const env_vars vars;
     wcstring_list_t commands_to_load;
     
+    // don't reload more than once
+    bool has_tried_reloading;
+    
     autosuggestion_context_t(history_t *history, const wcstring &term) :
         search_string(term),
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
         detector(history, term),
         working_directory(get_working_directory()),
-        vars(env_vars::highlighting_keys)
+        vars(env_vars::highlighting_keys),
+        has_tried_reloading(false)
     {
     }
     
@@ -1262,8 +1266,8 @@ struct autosuggestion_context_t {
         
         /* Try normal completions */
         std::vector<completion_t> completions;
-        //complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
-        if (! completions.empty()) {
+        complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
+        if (! completions.empty()) {        
             this->autosuggestion = this->search_string;
             this->autosuggestion.append(completions.at(0).completion);
             return 1;
@@ -1296,11 +1300,11 @@ static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
     ctx->commands_to_load.swap(commands_to_load);
     
     /* If we have autosuggestions to load, load them and try again */
-    if (! result && ! commands_to_load.empty())
+    if (! result && ! commands_to_load.empty() && ! ctx->has_tried_reloading)
     {
+        ctx->has_tried_reloading = true;
         for (wcstring_list_t::const_iterator iter = commands_to_load.begin(); iter != commands_to_load.end(); iter++)
         {
-            printf("loading %ls\n", iter->c_str());
             complete_load(*iter, false);
         }
         iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);

@@ -555,7 +555,13 @@ wchar_t *quote_end( const wchar_t *pos )
 wcstring wsetlocale(int category, const wchar_t *locale)
 {
 
-	char *lang = locale?wcs2str( locale ):0;
+	char *lang = NULL;
+	if (locale && wcscmp(locale,L"")){
+		lang = wcs2str( locale );
+	}
+	{
+		lang = NULL;
+	}
 	char * res = setlocale(category,lang);
 	free( lang );
 

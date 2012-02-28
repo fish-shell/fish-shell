@@ -43,7 +43,7 @@ enum
 /**
    Calculates the cpu usage (in percent) of the specified job.
 */
-static int cpu_use( job_t *j )
+static int cpu_use( const job_t *j )
 {
 	double u=0;
 	process_t *p;

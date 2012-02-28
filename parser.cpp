@@ -18,6 +18,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include <pwd.h>
 #include <dirent.h>
 #include <signal.h>
+#include <algorithm>
 
 #include "fallback.h"
 #include "util.h"
@@ -1244,7 +1245,7 @@ bool parser_t::job_remove( job_t *j )
 
 void parser_t::job_promote(job_t *job)
 {
-    job_list_t::iterator loc = find(my_job_list.begin(), my_job_list.end(), job);
+    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);
     assert(loc != my_job_list.end());
     
     /* Move the job to the beginning */
@@ -2308,7 +2309,7 @@ void parser_t::eval_job( tokenizer *tok )
 				if( job_start_pos < tok_get_pos( tok ) )
 				{
 					int stop_pos = tok_get_pos( tok );
-					wchar_t *newline = wcschr(  tok_string(tok)+start_pos,
+					const wchar_t *newline = wcschr(  tok_string(tok)+start_pos,
 												L'\n' );
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );

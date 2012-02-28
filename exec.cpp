@@ -34,6 +34,7 @@
 
 #include "fallback.h"
 #include "util.h"
+#include "iothread.h"
 
 #include "common.h"
 #include "wutil.h"
@@ -832,6 +833,9 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 static pid_t exec_fork()
 {
     ASSERT_IS_MAIN_THREAD();
+    
+    /* Make sure we have no outstanding threads before we fork. This is a pretty sketchy thing to do here, both because exec.cpp shouldn't have to know about iothreads, and because the completion handlers may do unexpected things. */
+    iothread_drain_all();
     
 	pid_t pid;
 	struct timespec pollint;

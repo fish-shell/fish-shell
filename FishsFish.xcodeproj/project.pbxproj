@@ -8,6 +8,8 @@
 
 /* Begin PBXFileReference section */
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
+		D09B1C1914FC7B5B00F91077 /* postfork.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = postfork.cpp; sourceTree = "<group>"; };
+		D09B1C1A14FC7B5B00F91077 /* postfork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = postfork.h; sourceTree = "<group>"; };
 		D0A0850313B3ACEE0099B651 /* builtin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin.h; sourceTree = "<group>"; };
 		D0A0850413B3ACEE0099B651 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		D0A0850513B3ACEE0099B651 /* complete.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = complete.h; sourceTree = "<group>"; };
@@ -182,6 +184,8 @@
 				D0A0855413B3ACEE0099B651 /* parser.cpp */,
 				D0A0851E13B3ACEE0099B651 /* path.h */,
 				D0A0855513B3ACEE0099B651 /* path.cpp */,
+				D09B1C1A14FC7B5B00F91077 /* postfork.h */,
+				D09B1C1914FC7B5B00F91077 /* postfork.cpp */,
 				D0A0851F13B3ACEE0099B651 /* print_help.h */,
 				D0A0855613B3ACEE0099B651 /* print_help.cpp */,
 				D0A0852013B3ACEE0099B651 /* proc.h */,

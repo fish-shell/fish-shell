@@ -96,7 +96,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	tokenizer.o wildcard.o wgetopt.o wutil.o input.o output.o intern.o	\
 	env_universal.o env_universal_common.o input_common.o event.o		\
 	signal.o io.o parse_util.o common.o screen.o path.o autoload.o		\
-	parser_keywords.o iothread.o builtin_scripts.o color.o
+	parser_keywords.o iothread.o builtin_scripts.o color.o postfork.o
 
 FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
 parser_keywords.o wutil.o tokenizer.o

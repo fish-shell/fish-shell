@@ -174,6 +174,9 @@ commence.
  */
 #define SEARCH_FORWARD 1
 
+/* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. */
+static unsigned int s_generation_count;
+
 /* A color is an int */
 typedef int color_t;
 
@@ -215,7 +218,7 @@ class reader_data_t
 	int token_history_pos;
 
 	/**
-	   Saved search string for token history search. Not handled by check_size.
+	   Saved search string for token history search. Not handled by command_line_changed.
 	*/
 	wcstring token_history_buff;
 
@@ -230,8 +233,8 @@ class reader_data_t
     /** Length of the command */
     size_t command_length() const { return command_line.size(); }
     
-    /** Ensures that our buffers are the right size */
-    void check_size(void);
+    /** Do what we need to do whenever our command line changes */
+    void command_line_changed(void);
 
 	/** The current position of the cursor in buff. */
 	size_t buff_pos;
@@ -488,7 +491,7 @@ static void reader_kill( size_t begin_idx, int length, int mode, int newv )
 	}
 	
     data->command_line.erase(begin_idx, length);
-    data->check_size();
+    data->command_line_changed();
 	
 	reader_super_highlight_me_plenty( data->buff_pos );
 	reader_repaint();
@@ -536,10 +539,14 @@ void reader_pop_current_filename()
 
 
 /** Make sure buffers are large enough to hold the current string length */
-void reader_data_t::check_size() {
+void reader_data_t::command_line_changed() {
+    ASSERT_IS_MAIN_THREAD();
     size_t len = command_length();
     colors.resize(len);
     indents.resize(len);
+    
+    /* Update the gen count */
+    s_generation_count++;
 }
 
 
@@ -720,7 +727,7 @@ static void remove_backward()
         
     data->command_line.erase(data->buff_pos-1, 1);    
 	data->buff_pos--;
-    data->check_size();
+    data->command_line_changed();
     data->suppress_autosuggestion = true;
 
 	reader_super_highlight_me_plenty( data->buff_pos );
@@ -737,9 +744,12 @@ static void remove_backward()
 static int insert_string(const wcstring &str)
 {
     size_t len = str.size();
+    if (len == 0)
+        return 0;
+        
     data->command_line.insert(data->buff_pos, str);
     data->buff_pos += len;
-    data->check_size();
+    data->command_line_changed();
     data->suppress_autosuggestion = false;
     
 	/* Syntax highlight  */
@@ -1226,6 +1236,7 @@ struct autosuggestion_context_t {
     const wcstring working_directory;
     const env_vars vars;
     wcstring_list_t commands_to_load;
+    const unsigned int generation_count;
     
     // don't reload more than once
     bool has_tried_reloading;
@@ -1236,13 +1247,18 @@ struct autosuggestion_context_t {
         detector(history, term),
         working_directory(get_working_directory()),
         vars(env_vars::highlighting_keys),
+        generation_count(s_generation_count),
         has_tried_reloading(false)
     {
     }
     
     int threaded_autosuggest(void) {
         ASSERT_IS_BACKGROUND_THREAD();
-                
+        
+        if (generation_count != s_generation_count) {
+            return 0;
+        }
+        
         while (searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
             bool item_ok = false;
@@ -1293,7 +1309,6 @@ static bool can_autosuggest(void) {
 }
 
 static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
-
 
     /* Extract the commands to load */
     wcstring_list_t commands_to_load;
@@ -1818,7 +1833,7 @@ void reader_replace_current_token( const wchar_t *new_token )
 static void handle_history( const wcstring &new_str )
 {
     data->command_line = new_str;
-    data->check_size();
+    data->command_line_changed();
     data->buff_pos=data->command_line.size();
     reader_super_highlight_me_plenty( data->buff_pos );
     reader_repaint();
@@ -2146,8 +2161,7 @@ void reader_set_buffer( const wcstring &b, int p )
     /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
 	size_t l = b.size();
     data->command_line = b;
-    
-    data->check_size();
+    data->command_line_changed();
 
 	if( p>=0 )
 	{
@@ -2284,7 +2298,7 @@ void reader_push( const wchar_t *name )
 
 	data=n;
 
-	data->check_size();
+	data->command_line_changed();
 
 	if( data->next == 0 )
 	{
@@ -2351,45 +2365,43 @@ void reader_set_test_function( int (*f)( const wchar_t * ) )
 /** A class as the context pointer for a background (threaded) highlight operation. */
 class background_highlight_context_t {
 public:
-    /**
-     The string to highlight
-     */
+    /** The string to highlight */
 	const wcstring string_to_highlight;
 	
 	/** Color buffer */
 	std::vector<color_t> colors;
 	
-	/**
-	  The position to use for bracket matching
-	 */
+	/** The position to use for bracket matching */
 	const int match_highlight_pos;
 	
-	/**
-	 Function for syntax highlighting
-	 */
+	/** Function for syntax highlighting */
 	const highlight_function_t highlight_function;
     
-    /**
-     Environment variables
-    */
+    /** Environment variables */
     const env_vars vars;
 
-    /**
-     When the request was made
-    */
+    /** When the request was made */
     const double when;
+    
+    /** Gen count at the time the request was made */
+    const unsigned int generation_count;
     
     background_highlight_context_t(const wcstring &pbuff, int phighlight_pos, highlight_function_t phighlight_func) :
         string_to_highlight(pbuff),
         match_highlight_pos(phighlight_pos),
         highlight_function(phighlight_func),
         vars(env_vars::highlighting_keys),
-        when(timef())
+        when(timef()),
+        generation_count(s_generation_count)
     {
         colors.resize(string_to_highlight.size(), 0);
     }
     
     int threaded_highlight() {
+        if (generation_count != s_generation_count) {
+            // The gen count has changed, so don't do anything
+            return 0;
+        }
         const wchar_t *delayer = vars.get(L"HIGHLIGHT_DELAY");
         double secDelay = 0;
         if (delayer) {
@@ -2596,7 +2608,7 @@ static int read_i()
 			
 			data->buff_pos=0;
             data->command_line.clear();
-            data->check_size();
+            data->command_line_changed();
 			reader_run_command( parser, tmp );
 			free( (void *)tmp );
 			if( data->end_loop)
@@ -2671,7 +2683,6 @@ const wchar_t *reader_readline()
 	int finished=0;
 	struct termios old_modes;
 
-	data->check_size();
 	data->search_buff.clear();
 	data->search_mode = NO_SEARCH;
 	
@@ -3199,7 +3210,7 @@ const wchar_t *reader_readline()
                         /* Accept the autosuggestion */
                         data->command_line = data->autosuggestion;
                         data->buff_pos = data->command_line.size();
-                        data->check_size();
+                        data->command_line_changed();
                         reader_super_highlight_me_plenty(data->buff_pos);
                         reader_repaint();
                     }

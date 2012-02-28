@@ -204,7 +204,7 @@ class process_t
 	int count_help_magic;
 
 	/** Next process in pipeline. We own this and we are responsible for deleting it. */
-	struct process_t *next;
+	process_t *next;
 #ifdef HAVE__PROC_SELF_STAT
 	/** Last time of cpu time check */
 	struct timeval last_time;

@@ -371,6 +371,7 @@ parser_t::parser_t(enum parser_type_t type) :
 
 parser_t &parser_t::principal_parser(void)
 {
+    ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
     static parser_t parser(PARSER_TYPE_GENERAL);
     return parser;
@@ -764,6 +765,12 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 	tokenizer tok;
     const bool show_errors = (this->parser_type == PARSER_TYPE_GENERAL || this->parser_type == PARSER_TYPE_ERRORS_ONLY);
     
+    expand_flags_t eflags = 0;
+    if (! show_errors)
+        eflags |= EXPAND_NO_DESCRIPTIONS;
+    if (this->parser_type != PARSER_TYPE_GENERAL)
+        eflags |= EXPAND_SKIP_CMDSUBST;
+    
 	/*
 	  eval_args may be called while evaulating another command, so we
 	  save the previous tokenizer and restore it on exit
@@ -799,7 +806,7 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 					DIE_MEM();
 				}
 				
-				if( expand_string( tmp, args, (show_errors ? 0 : EXPAND_NO_DESCRIPTIONS)  ) == EXPAND_ERROR )
+				if( expand_string( tmp, args, eflags  ) == EXPAND_ERROR )
 				{
 					err_pos=tok_get_pos( &tok );
 					do_loop=0;
@@ -1208,6 +1215,62 @@ int parser_t::is_help( const wchar_t *s, int min_match ) const
 		
 	return ( wcscmp( L"-h", s ) == 0 ) ||
 		( len >= min_match && (wcsncmp( L"--help", s, len ) == 0) );
+}
+
+job_t *parser_t::job_create(void)
+{
+    job_t *res = new job_t(acquire_job_id());
+    this->my_job_list.push_front(res);
+    
+	job_set_flag( res, 
+				  JOB_CONTROL, 
+				  (job_control_mode==JOB_CONTROL_ALL) || 
+				  ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (get_is_interactive())) );
+    return res;
+}
+
+bool parser_t::job_remove( job_t *j )
+{
+    job_list_t::iterator iter = std::find(my_job_list.begin(), my_job_list.end(), j);
+    if (iter != my_job_list.end()) {
+        my_job_list.erase(iter);
+        return true;
+    } else {
+		debug( 1, _( L"Job inconsistency" ) );
+		sanity_lose();
+        return false;
+    }
+}
+
+void parser_t::job_promote(job_t *job)
+{
+    job_list_t::iterator loc = find(my_job_list.begin(), my_job_list.end(), job);
+    assert(loc != my_job_list.end());
+    
+    /* Move the job to the beginning */
+    my_job_list.splice(my_job_list.begin(), my_job_list, loc);
+}
+
+job_t *parser_t::job_get(job_id_t id)
+{
+    job_iterator_t jobs(my_job_list);
+    job_t *job;
+    while ((job = jobs.next())) {
+        if( id <= 0 || job->job_id == id)
+            return job;
+	}
+	return NULL;
+}
+
+job_t *parser_t::job_get_from_pid( int pid )
+{
+    job_iterator_t jobs;
+    job_t *job;
+    while ((job = jobs.next())) {
+		if( job->pgid == pid )
+			return job;
+	}
+	return 0;
 }
 
 /**
@@ -2212,7 +2275,7 @@ void parser_t::eval_job( tokenizer *tok )
 	{
 		case TOK_STRING:
 		{
-			j = job_create();
+			j = this->job_create();
 			job_set_flag( j, JOB_FOREGROUND, 1 );
 			job_set_flag( j, JOB_TERMINAL, job_get_flag( j, JOB_CONTROL ) );
 			job_set_flag( j, JOB_TERMINAL, job_get_flag( j, JOB_CONTROL ) \

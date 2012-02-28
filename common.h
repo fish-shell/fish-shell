@@ -301,30 +301,16 @@ wcstring to_string(const T &x) {
     return stream.str();
 }
 
+bool is_forked_child();
+
 class scoped_lock {
     pthread_mutex_t *lock_obj;
     bool locked;
 public:
-
-    void lock(void) {
-        assert(! locked);
-        VOMIT_ON_FAILURE(pthread_mutex_lock(lock_obj));
-        locked = true;
-    }
-    
-    void unlock(void) {
-        assert(locked);
-        VOMIT_ON_FAILURE(pthread_mutex_unlock(lock_obj));
-        locked = false;
-    }
-    
-    scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(false) {
-        this->lock();
-    }
-    
-    ~scoped_lock() {
-        if (locked) this->unlock();
-    }
+    void lock(void);
+    void unlock(void);
+    scoped_lock(pthread_mutex_t &mutex);
+    ~scoped_lock();
 };
 
 class wcstokenizer {
@@ -597,14 +583,13 @@ double timef();
  */
 void set_main_thread();
 
-/**
+/** Set up a guard to complain if we try to do certain things (like take a lock) after calling fork */
+void setup_fork_guards(void);
 
-*/
-
-/**
-
- */
-
+/** Return whether we are the child of a fork */
+bool is_forked_child(void);
+void assert_is_not_forked_child(const char *who);
+#define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
+#define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
 #endif
-

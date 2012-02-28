@@ -2058,6 +2058,22 @@ void set_main_thread() {
  	main_thread_id = pthread_self();
 }
 
+
+/* Notice when we've forked */
+static bool is_child_of_fork = false;
+static void child_note_forked(void) {
+    is_child_of_fork = true;
+}
+
+bool is_forked_child(void) {
+    return is_child_of_fork;
+}
+
+void setup_fork_guards(void) {
+    /* Notice when we fork */
+    pthread_atfork(NULL /* prepare */, NULL /* parent */, child_note_forked);
+}
+
 static bool is_main_thread() {
  	assert (main_thread_id != 0);
  	return main_thread_id == pthread_self();
@@ -2068,7 +2084,14 @@ void assert_is_main_thread(const char *who)
     if (! is_main_thread()) {
         fprintf(stderr, "Warning: %s called off of main thread. Break on debug_thread_error to debug.\n", who);
         debug_thread_error();
-        sleep(1000);
+    }
+}
+
+void assert_is_not_forked_child(const char *who)
+{
+    if (is_forked_child()) {
+        fprintf(stderr, "Warning: %s called in a forked child. Break on debug_thread_error to debug.\n", who);
+        debug_thread_error();
     }
 }
 
@@ -2088,4 +2111,26 @@ void assert_is_locked(void *vmutex, const char *who)
         debug_thread_error();
         pthread_mutex_unlock(mutex);
     }
+}
+
+void scoped_lock::lock(void) {
+    assert(! locked);
+    assert(! is_forked_child());
+    VOMIT_ON_FAILURE(pthread_mutex_lock(lock_obj));
+    locked = true;
+}
+
+void scoped_lock::unlock(void) {
+    assert(locked);
+    assert(! is_forked_child());
+    VOMIT_ON_FAILURE(pthread_mutex_unlock(lock_obj));
+    locked = false;
+}
+
+scoped_lock::scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(false) {
+    this->lock();
+}
+
+scoped_lock::~scoped_lock() {
+    if (locked) this->unlock();
 }

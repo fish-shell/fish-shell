@@ -9,7 +9,6 @@
 
 #include "proc.h"
 #include "util.h"
-#include "parser.h"
 #include "event.h"
 #include "function.h"
 #include <vector>
@@ -295,6 +294,9 @@ class parser_t {
     /** String index where the current job started. */
     int job_start_pos;
     
+    /** The jobs associated with this parser */
+    job_list_t my_job_list;
+    
     /**
        Keeps track of how many recursive eval calls have been made. Eval
        doesn't call itself directly, recursion happens on blocks and on
@@ -381,46 +383,47 @@ class parser_t {
     */
     const wchar_t *current_line();
 
-    /**
-       Returns the current line number
-    */
+    /** Returns the current line number */
     int get_lineno() const;
 
-    /**
-       Returns the current position in the latest string of the tokenizer.
-    */
+    /** Returns the current position in the latest string of the tokenizer. */
     int get_pos() const;
 
-    /**
-       Returns the position where the current job started in the latest string of the tokenizer.
-    */
+    /** Returns the position where the current job started in the latest string of the tokenizer. */
     int get_job_pos() const;
 
-    /**
-       Set the current position in the latest string of the tokenizer.
-    */
+    /** Set the current position in the latest string of the tokenizer. */
     void set_pos( int p);
 
-    /**
-       Get the string currently parsed
-    */
+    /** Get the string currently parsed */
     const wchar_t *get_buffer() const;
+    
+    /** Get the list of jobs */
+    job_list_t &job_list() { return my_job_list; }
 
-    /**
-       Create block of specified type
-    */
+    /** Create block of specified type */
     void push_block( int type);
 
-    /**
-       Remove the outermost block namespace
-    */
+    /** Remove the outermost block namespace */
     void pop_block();
 
-    /**
-       Return a description of the given blocktype
-    */
+    /** Return a description of the given blocktype */
     const wchar_t *get_block_desc( int block ) const;
 
+    /** Create a job */
+    job_t *job_create();
+    
+    /** Removes a job */
+    bool job_remove(job_t *job);
+    
+    /** Promotes a job to the front of the list */
+    void job_promote(job_t *job);
+    
+    /** Return the job with the specified job id. If id is 0 or less, return the last job used. */
+    job_t *job_get(int job_id);
+    
+    /** Returns the job with the given pid */
+    job_t *job_get_from_pid( int pid );
 
     /**
        Test if the specified string can be parsed, or if more bytes need

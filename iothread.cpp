@@ -1,4 +1,6 @@
+#include "config.h"
 #include "iothread.h"
+#include "common.h"
 #include <pthread.h>
 #include <assert.h>
 #include <errno.h>
@@ -139,6 +141,8 @@ static void iothread_spawn_if_needed(void) {
 }
 
 int iothread_perform_base(int (*handler)(void *), void (*completionCallback)(void *, int), void *context) {
+    ASSERT_IS_MAIN_THREAD();
+    ASSERT_IS_NOT_FORKED_CHILD();
 	iothread_init();
 	
 	/* Create and initialize a request. */

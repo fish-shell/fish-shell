@@ -95,11 +95,27 @@ static int last_status=0;
 */
 static sig_atomic_t got_signal=0;
 
-static std::list<job_t *> s_job_list;
-
-job_list_t &job_list(void) {
-    return s_job_list;
+bool job_list_is_empty(void)
+{
+    ASSERT_IS_MAIN_THREAD();
+    return parser_t::principal_parser().job_list().empty();
 }
+
+void job_iterator_t::reset()
+{
+    this->current = job_list->begin();
+    this->end = job_list->end();
+}
+
+job_iterator_t::job_iterator_t(job_list_t &jobs) : job_list(&jobs) {
+    this->reset();
+}
+
+
+job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_list()) {
+    this->reset();
+}
+
 
 int is_interactive_session=0;
 int is_subshell=0;
@@ -140,26 +156,14 @@ void proc_init()
 */
 static int job_remove( job_t *j )
 {
-    job_list_t &jobs = job_list();
-    job_list_t::iterator iter = find(jobs.begin(), jobs.end(), j);
-    if (iter != jobs.end()) {
-        jobs.erase(iter);
-        return 1;
-    } else {
-		debug( 1, _( L"Job inconsistency" ) );
-		sanity_lose();
-        return 0;
-    }
+    ASSERT_IS_MAIN_THREAD();
+    return parser_t::principal_parser().job_remove(j);
 }
 
 void job_promote(job_t *job)
 {
-    job_list_t &jobs = job_list();
-    job_list_t::iterator loc = find(jobs.begin(), jobs.end(), job);
-    assert(loc != jobs.end());
-    
-    /* Move the job to the beginning */
-    jobs.splice(jobs.begin(), jobs, loc);
+    ASSERT_IS_MAIN_THREAD();
+    parser_t::principal_parser().job_promote(job);
 }
 
 
@@ -201,13 +205,13 @@ void process_t::set_argv(const wcstring_list_t &argv) {
 void proc_destroy()
 {
     event.arguments.reset(NULL);
-    job_list_t &jobs = job_list();
+    job_list_t &jobs = parser_t::principal_parser().job_list();
 	while( ! jobs.empty() )
 	{
 		job_t *job = jobs.front();
 		debug( 2, L"freeing leaked job %ls", job->command_cstr() );
 		job_free( job );
-	}	
+	}
 }
 
 void proc_set_last_status( int s )
@@ -220,47 +224,59 @@ int proc_get_last_status()
 	return last_status;
 }
 
-job_t *job_create()
-{
-	int free_id=1;
-    	
-	while( job_get( free_id ) != 0 )
-		free_id++;
-        
-    job_t *res = new job_t(free_id);
-    job_list().push_front(res);
-    
-	job_set_flag( res, 
-				  JOB_CONTROL, 
-				  (job_control_mode==JOB_CONTROL_ALL) || 
-				  ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (is_interactive)) );
+/* Basic thread safe job IDs. The vector consumed_job_ids has a true value wherever the job ID corresponding to that slot is in use. The job ID corresponding to slot 0 is 1. */
+static pthread_mutex_t job_id_lock = PTHREAD_MUTEX_INITIALIZER;
+static std::vector<bool> consumed_job_ids;
 
-//	if( res->job_id > 2 )
-//		fwprintf( stderr, L"Create job %d\n", res->job_id );	
-	return res;
+job_id_t acquire_job_id(void)
+{
+    scoped_lock lock(job_id_lock);
+    
+    /* Find the index of the first 0 slot */
+    std::vector<bool>::iterator slot = std::find(consumed_job_ids.begin(), consumed_job_ids.end(), false);
+    if (slot != consumed_job_ids.end())
+    {
+        /* We found a slot. Note that slot 0 corresponds to job ID 1. */
+        *slot = true;
+        return slot - consumed_job_ids.begin() + 1;
+    }
+    else
+    {
+        /* We did not find a slot; create a new slot. The size of the vector is now the job ID (since it is one larger than the slot). */
+        consumed_job_ids.push_back(true);
+        return (job_id_t)consumed_job_ids.size();
+    }
 }
 
- 
-job_t *job_get( int id )
+void release_job_id(job_id_t jid)
 {
-    job_iterator_t jobs;
-    job_t *job;
-    while ((job = jobs.next())) {
-        if( id <= 0 || job->job_id == id)
-            return job;
-	}
-	return NULL;
+    assert(jid > 0);
+    scoped_lock lock(job_id_lock);
+    size_t slot = (size_t)(jid - 1), count = consumed_job_ids.size();
+    
+    /* Make sure this slot is within our vector and is currently set to consumed */
+    assert(slot < count);
+    assert(consumed_job_ids.at(slot) == true);
+    
+    /* Clear it and then resize the vector to eliminate unused trailing job IDs */
+    consumed_job_ids.at(slot) = false;
+    while (count--) {
+        if (consumed_job_ids.at(count))
+            break;
+    }
+    consumed_job_ids.resize(count + 1);
+}
+
+job_t *job_get( job_id_t id )
+{
+    ASSERT_IS_MAIN_THREAD();
+    return parser_t::principal_parser().job_get(id);
 }
 
 job_t *job_get_from_pid( int pid )
 {
-    job_iterator_t jobs;
-    job_t *job;
-    while ((job = jobs.next())) {
-		if( job->pgid == pid )
-			return job;
-	}
-	return 0;
+    ASSERT_IS_MAIN_THREAD();
+    return parser_t::principal_parser().job_get_from_pid(pid);
 }
 
 
@@ -308,7 +324,7 @@ void job_set_flag( job_t *j, int flag, int set )
 		j->flags = j->flags & (0xffffffff ^ flag);
 }
 
-int job_get_flag( job_t *j, int flag )
+int job_get_flag( const job_t *j, int flag )
 {
 	return j->flags&flag?1:0;
 }
@@ -352,7 +368,7 @@ int job_signal( job_t *j, int signal )
    Store the status of the process pid that was returned by waitpid.
    Return 0 if all went well, nonzero otherwise.  
 */
-static void mark_process_status( job_t *j,
+static void mark_process_status( const job_t *j,
 								 process_t *p,
 								 int status )
 {
@@ -399,7 +415,7 @@ static void mark_process_status( job_t *j,
 static void handle_child_status( pid_t pid, int status )
 {
 	int found_proc = 0;
-	job_t *j=0;
+	const job_t *j=0;
 	process_t *p=0;
 //	char mess[MESS_SIZE];	
 	found_proc = 0;		

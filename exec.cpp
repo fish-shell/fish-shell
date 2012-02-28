@@ -831,6 +831,8 @@ static int set_child_group( job_t *j, process_t *p, int print_errors )
 */
 static pid_t exec_fork()
 {
+    ASSERT_IS_MAIN_THREAD();
+    
 	pid_t pid;
 	struct timespec pollint;
 	int i;
@@ -1047,6 +1049,7 @@ void exec( parser_t &parser, job_t *j )
 
 		if( keepalive.pid == 0 )
 		{
+            /* Child */
 			keepalive.pid = getpid();
 			set_child_group( j, &keepalive, 1 );
 			pause();			
@@ -1054,6 +1057,7 @@ void exec( parser_t &parser, job_t *j )
 		}
 		else
 		{
+            /* Parent */
 			set_child_group( j, &keepalive, 0 );			
 		}
 	}

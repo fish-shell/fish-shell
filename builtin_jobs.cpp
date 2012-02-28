@@ -71,7 +71,7 @@ static int cpu_use( job_t *j )
 /**
    Print information about the specified job
 */
-static void builtin_jobs_print( job_t *j, int mode, int header )
+static void builtin_jobs_print( const job_t *j, int mode, int header )
 {
 	process_t *p;
 	switch( mode )
@@ -164,7 +164,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 	int found=0;
 	int mode=JOBS_DEFAULT;
 	int print_last = 0;
-	job_t *j;
+	const job_t *j;
 
 	argc = builtin_count_args( argv );
 	woptind=0;
@@ -270,7 +270,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 		  Ignore unconstructed jobs, i.e. ourself.
 		*/
         job_iterator_t jobs;
-        job_t *j;
+        const job_t *j;
         while ((j = jobs.next()))
 		{
             
@@ -324,7 +324,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 		else
 		{
             job_iterator_t jobs;
-            job_t *j;
+            const job_t *j;
             while ((j = jobs.next()))
             {
 				/*

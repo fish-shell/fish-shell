@@ -260,7 +260,6 @@ static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
 	return my_optind;
 }
 
-
 /**
    Calls a bunch of init functions, parses the init files and then
    parses commands from stdin or files, depending on arguments
@@ -274,7 +273,8 @@ int main( int argc, char **argv )
 	int my_optind=0;
 
 	set_main_thread();
-
+    setup_fork_guards();
+    
 	wsetlocale( LC_ALL, L"" );
 	is_interactive_session=1;
 	program_name=L"fish";

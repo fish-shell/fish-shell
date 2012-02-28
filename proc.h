@@ -279,11 +279,15 @@ class process_t
     A struct represeting a job. A job is basically a pipeline of one
     or more processes and a couple of flags.
  */
+typedef int job_id_t;
+job_id_t acquire_job_id(void);
+void release_job_id(job_id_t jobid);
+
 class job_t
 {
     public:
     
-    job_t(int jobid) :
+    job_t(job_id_t jobid) :
         command(),
         first_process(NULL),
         pgid(0),
@@ -303,6 +307,7 @@ class job_t
             delete data;
             data = tmp;
         }
+        release_job_id(job_id);
     }
         
     
@@ -339,7 +344,7 @@ class job_t
 	   unique identifier of the job within this shell, and is
 	   used e.g. in process expansion.
 	*/
-	const int job_id;
+	const job_id_t job_id;
 	
 	/**
 	   List of all IO redirections for this job. This linked list is allocated via new, and owned by the object, which should delete them.
@@ -384,20 +389,17 @@ extern int is_login;
 extern int is_event;
 
 
-/** List of all living jobs */
 typedef std::list<job_t *> job_list_t;
-job_list_t &job_list(void);
+
+bool job_list_is_empty(void);
 
 /** A class to aid iteration over jobs list */
 class job_iterator_t {
+    job_list_t * const job_list;
     job_list_t::iterator current, end;
     public:
     
-    void reset(void) {
-        job_list_t &jobs = job_list();
-        this->current = jobs.begin();
-        this->end = jobs.end();
-    }
+    void reset(void);
     
     job_t *next() {
         job_t *job = NULL;
@@ -408,9 +410,8 @@ class job_iterator_t {
         return job;
     }
     
-    job_iterator_t() {
-        this->reset();
-    }
+    job_iterator_t(job_list_t &jobs);
+    job_iterator_t();
 };
 
 /**
@@ -452,7 +453,7 @@ void job_set_flag( job_t *j, int flag, int set );
 /**
    Returns one if the specified flag is set in the specified job, 0 otherwise.
  */
-int job_get_flag( job_t *j, int flag );
+int job_get_flag( const job_t *j, int flag );
 
 /**
    Sets the status of the last process to exit
@@ -483,7 +484,7 @@ job_t *job_create();
   Return the job with the specified job id.
   If id is 0 or less, return the last job used.
 */
-job_t *job_get(int id);
+job_t *job_get(job_id_t id);
 
 
 /**

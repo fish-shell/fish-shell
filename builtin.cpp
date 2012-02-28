@@ -1133,7 +1133,7 @@ static void functions_def( const wcstring &name, wcstring &out )
 
 			case EVENT_JOB_ID:
 			{
-				job_t *j = job_get( next->param1.job_id );
+				const job_t *j = job_get( next->param1.job_id );
 				if( j )
 					append_format( out, L" --on-job-exit %d", j->pgid );
 				break;

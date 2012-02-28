@@ -2481,7 +2481,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos )
 int exit_status()
 {
 	if( get_is_interactive() )
-		return job_list().empty() && data->end_loop;
+		return job_list_is_empty() && data->end_loop;
 	else
 		return end_loop;
 }

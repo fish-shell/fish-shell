@@ -334,7 +334,7 @@ static int find_process( const wchar_t *proc,
 	int sz=0;
 	int found = 0;
 
-	job_t *j;
+	const job_t *j;
 
 	if( iswnumeric(proc) || (wcslen(proc)==0) )
 	{

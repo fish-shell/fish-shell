@@ -35,6 +35,7 @@
 #include "fallback.h"
 #include "util.h"
 #include "iothread.h"
+#include "postfork.h"
 
 #include "common.h"
 #include "wutil.h"
@@ -67,26 +68,6 @@
 #define FILE_ERROR _( L"An error occurred while redirecting file '%ls'" )
 
 /**
-   file redirection clobbering error message
-*/
-#define NOCLOB_ERROR _( L"The file '%ls' already exists" )
-
-/**
-   fork error message
-*/
-#define FORK_ERROR _( L"Could not create child process - exiting" )
-
-/**
-   The number of times to try to call fork() before giving up
-*/
-#define FORK_LAPS 5
-
-/**
-   The number of nanoseconds to sleep between attempts to call fork()
-*/
-#define FORK_SLEEP_TIME 1000000
-
-/**
    Base open mode to pass to calls to open
 */
 #define OPEN_MASK 0666
@@ -95,25 +76,27 @@
    List of all pipes used by internal pipes. These must be closed in
    many situations in order to make sure that stray fds aren't lying
    around.
+   
+   Note this is used after fork, so we must not do anything that may allocate memory. Hopefully methods like open_fds.at() don't.
 */
-static std::vector<int> open_fds;
+static std::vector<bool> open_fds;
 
-static int set_child_group( job_t *j, process_t *p, int print_errors );
-
+// Called in a forked child
 static void exec_write_and_exit( int fd, char *buff, size_t count, int status )
 {
 	if( write_loop(fd, buff, count) == -1 ) 
 	{
 		debug( 0, WRITE_ERROR);
 		wperror( L"write" );
-		exit(status);
+		exit_without_destructors(status);
 	}
-	exit( status );
+	exit_without_destructors( status );
 }
 
 
 void exec_close( int fd )
 {
+    /* This may be called in a child of fork(), so don't allocate memory */
 	if( fd < 0 )
 	{
 		debug( 0, L"Called close on invalid file descriptor " );
@@ -130,8 +113,10 @@ void exec_close( int fd )
 		}
 	}
 	
-    /* Maybe remove this form our set of open fds */
-    open_fds.erase(std::remove(open_fds.begin(), open_fds.end(), fd), open_fds.end());
+    /* Maybe remove this from our set of open fds */
+    if (fd < (int)open_fds.size()) {
+        open_fds[fd] = false;
+    }
 }
 
 int exec_pipe( int fd[2])
@@ -149,8 +134,12 @@ int exec_pipe( int fd[2])
 	
 	debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
 	
-    open_fds.push_back(fd[0]);
-    open_fds.push_back(fd[1]);
+    int max_fd = std::max(fd[0], fd[1]);
+    if ((int)open_fds.size() <= max_fd) {
+        open_fds.resize(max_fd + 1, false);
+    }
+    open_fds.at(fd[0]) = true;
+    open_fds.at(fd[1]) = true;
 	
 	return res;
 }
@@ -187,254 +176,20 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
    \param io the list of io redirections for this job. Pipes mentioned
    here should not be closed.
 */
-static void close_unused_internal_pipes( io_data_t *io )
+void close_unused_internal_pipes( io_data_t *io )
 {
     /* A call to exec_close will modify open_fds, so be careful how we walk */
     for (size_t i=0; i < open_fds.size(); i++) {
-        int fd = open_fds.at(i);
-        if( !use_fd_in_pipe( fd, io) )
-        {
-            debug( 4, L"Close fd %d, used in other context", fd );
-            exec_close( fd );
-            i--;
+        if (open_fds[i]) {
+            int fd = (int)i;
+            if( !use_fd_in_pipe( fd, io) )
+            {
+                debug( 4, L"Close fd %d, used in other context", fd );
+                exec_close( fd );
+                i--;
+            }
         }
     }
-}
-
-/**
-   Make sure the fd used by this redirection is not used by i.e. a pipe. 
-*/
-void free_fd( io_data_t *io, int fd )
-{
-	if( !io )
-		return;
-	
-	if( ( io->io_mode == IO_PIPE ) || ( io->io_mode == IO_BUFFER ) )
-	{
-		int i;
-		for( i=0; i<2; i++ )
-		{
-			if(io->param1.pipe_fd[i] == fd )
-			{
-				while(1)
-				{
-					if( (io->param1.pipe_fd[i] = dup(fd)) == -1)
-					{
-						 if( errno != EINTR )
-						{
-							debug( 1, 
-								   FD_ERROR,
-								   fd );							
-							wperror( L"dup" );
-							FATAL_EXIT();
-						}
-					}
-					else
-					{
-						break;
-					}
-				}
-			}
-		}
-	}
-	free_fd( io->next, fd );
-}
-
-/**
-   Set up a childs io redirections. Should only be called by
-   setup_child_process(). Does the following: First it closes any open
-   file descriptors not related to the child by calling
-   close_unused_internal_pipes() and closing the universal variable
-   server file descriptor. It then goes on to perform all the
-   redirections described by \c io.
-
-   \param io the list of IO redirections for the child
-
-   \return 0 on sucess, -1 on failiure
-*/
-static int handle_child_io( io_data_t *io )
-{
-
-	close_unused_internal_pipes( io );
-
-	for( ; io; io=io->next )
-	{
-		int tmp;
-
-		if( io->io_mode == IO_FD && io->fd == io->param1.old_fd )
-		{
-			continue;
-		}
-
-		if( io->fd > 2 )
-		{
-			/*
-			  Make sure the fd used by this redirection is not used by e.g. a pipe. 
-			*/
-			free_fd( io, io->fd );
-		}
-				
-		switch( io->io_mode )
-		{
-			case IO_CLOSE:
-			{
-				if( close(io->fd) )
-				{
-					debug( 0, _(L"Failed to close file descriptor %d"), io->fd );
-					wperror( L"close" );
-				}
-				break;
-			}
-
-			case IO_FILE:
-			{
-				if( (tmp=wopen( io->filename,
-						io->param2.flags, OPEN_MASK ) )==-1 )
-				{
-					if( ( io->param2.flags & O_EXCL ) &&
-					    ( errno ==EEXIST ) )
-					{
-						debug( 1, 
-						       NOCLOB_ERROR,
-						       io->filename.c_str() );
-					}
-					else
-					{
-						debug( 1, 
-						       FILE_ERROR,
-						       io->filename.c_str() );
-										
-						wperror( L"open" );
-					}
-					
-					return -1;
-				}
-				else if( tmp != io->fd)
-				{
-					/*
-					  This call will sometimes fail, but that is ok,
-					  this is just a precausion.
-					*/
-					close(io->fd);
-							
-					if(dup2( tmp, io->fd ) == -1 )
-					{
-						debug( 1, 
-							   FD_ERROR,
-							   io->fd );
-						wperror( L"dup2" );
-						return -1;
-					}
-					exec_close( tmp );
-				}				
-				break;
-			}
-			
-			case IO_FD:
-			{
-				/*
-				  This call will sometimes fail, but that is ok,
-				  this is just a precausion.
-				*/
-				close(io->fd);
-
-				if( dup2( io->param1.old_fd, io->fd ) == -1 )
-				{
-					debug( 1, 
-						   FD_ERROR,
-						   io->fd );
-					wperror( L"dup2" );
-					return -1;
-				}
-				break;
-			}
-			
-			case IO_BUFFER:
-			case IO_PIPE:
-			{
-				int write_pipe;
-				
-				write_pipe = !io->is_input;
-/*
-				debug( 0,
-					   L"%ls %ls on fd %d (%d %d)", 
-					   write_pipe?L"write":L"read", 
-					   (io->io_mode == IO_BUFFER)?L"buffer":L"pipe",
-					   io->fd,
-					   io->param1.pipe_fd[0],
-					   io->param1.pipe_fd[1]);
-*/
-				if( dup2( io->param1.pipe_fd[write_pipe], io->fd ) != io->fd )
-				{
-					debug( 1, PIPE_ERROR );
-					wperror( L"dup2" );
-					return -1;
-				}
-
-				if( write_pipe ) 
-				{
-					exec_close( io->param1.pipe_fd[0]);
-					exec_close( io->param1.pipe_fd[1]);
-				}
-				else
-				{
-					exec_close( io->param1.pipe_fd[0] );
-				}
-				break;
-			}
-			
-		}
-	}
-
-	return 0;
-	
-}
-
-/**
-   Initialize a new child process. This should be called right away
-   after forking in the child process. If job control is enabled for
-   this job, the process is put in the process group of the job, all
-   signal handlers are reset, signals are unblocked (this function may
-   only be called inside the exec function, which blocks all signals),
-   and all IO redirections and other file descriptor actions are
-   performed.
-
-   \param j the job to set up the IO for
-   \param p the child process to set up
-
-   \return 0 on sucess, -1 on failiure. When this function returns,
-   signals are always unblocked. On failiure, signal handlers, io
-   redirections and process group of the process is undefined.
-*/
-static int setup_child_process( job_t *j, process_t *p )
-{
-	int res=0;
-	
-	if( p )
-	{
-		res = set_child_group( j, p, 1 );
-	}
-	
-	if( !res )	
-	{
-		res = handle_child_io( j->io );
-		if( p != 0 && res )
-		{
-			exit( 1 );
-		}
-	}
-	
-	/* Set the handling for job control signals back to the default.  */
-	if( !res )
-	{
-		signal_reset_handlers();
-	}
-	
-	/* Remove all signal blocks */
-	signal_unblock();	
-	
-	return res;
-	
 }
 
 /**
@@ -470,7 +225,7 @@ static bool get_interpreter( const wcstring &file, wcstring &interpreter )
     }
 }
 
-								 
+
 /**
    This function is executed by the child process created by a call to
    fork(). It should be called after \c setup_child_process. It calls
@@ -579,7 +334,7 @@ static void launch_process( process_t *p )
 			
 			debug( 0, 
 			       L"Try running the command again with fewer arguments.");			
-			exit(STATUS_EXEC_FAIL);
+			exit_without_destructors(STATUS_EXEC_FAIL);
 			
 			break;
 		}
@@ -589,7 +344,7 @@ static void launch_process( process_t *p )
 			wperror(L"exec");
 			
 			debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
-			exit(STATUS_EXEC_FAIL);
+			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 
 		case ENOENT:
@@ -604,13 +359,13 @@ static void launch_process( process_t *p )
 				debug(0, L"The file '%ls' or a script or ELF interpreter does not exist, or a shared library needed for file or interpreter cannot be found.", p->actual_cmd);
 			}
 			
-			exit(STATUS_EXEC_FAIL);
+			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 
 		case ENOMEM:
 		{
 			debug(0, L"Out of memory");
-			exit(STATUS_EXEC_FAIL);
+			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 
 		default:
@@ -618,7 +373,7 @@ static void launch_process( process_t *p )
 			wperror(L"exec");
 			
 			//		debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
-			exit(STATUS_EXEC_FAIL);
+			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 	}
 	
@@ -763,135 +518,24 @@ static void internal_exec_helper( parser_t &parser,
 	is_block=is_block_old;
 }
 
-/**
-   This function should be called by both the parent process and the
-   child right after fork() has been called. If job control is
-   enabled, the child is put in the jobs group, and if the child is
-   also in the foreground, it is also given control of the
-   terminal. When called in the parent process, this function may
-   fail, since the child might have already finished and called
-   exit. The parent process may safely ignore the exit status of this
-   call.
-
-   Returns 0 on sucess, -1 on failiure. 
-*/
-static int set_child_group( job_t *j, process_t *p, int print_errors )
+/** Perform output from builtins. Called from a forked child, so don't do anything that may allocate memory, etc.. */
+static void do_builtin_io( const char *out, const char *err )
 {
-	int res = 0;
-	
-	if( job_get_flag( j, JOB_CONTROL ) )
+    size_t len;
+	if (out && (len = strlen(out)))
 	{
-		if (!j->pgid)
-		{
-			j->pgid = p->pid;
-		}
-		
-		if( setpgid (p->pid, j->pgid) )
-		{
-			if( getpgid( p->pid) != j->pgid && print_errors )
-			{
-				debug( 1, 
-				       _( L"Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d" ),
-				       p->pid,
-				       p->argv0(),
-				       j->job_id,
-				       j->command_cstr(),
-				       getpgid( p->pid),
-				       j->pgid );
 
-				wperror( L"setpgid" );
-				res = -1;
-			}
-		}
-	}
-	else
-	{
-		j->pgid = getpid();
-	}
-
-	if( job_get_flag( j, JOB_TERMINAL ) && job_get_flag( j, JOB_FOREGROUND ) )
-	{
-		if( tcsetpgrp (0, j->pgid) && print_errors )
-		{
-			debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
-				   j->job_id, 
-				   j->command_cstr() );
-			wperror( L"tcsetpgrp" );
-			res = -1;
-		}
-	}
-
-	return res;
-}
-
-/**
-   This function is a wrapper around fork. If the fork calls fails
-   with EAGAIN, it is retried FORK_LAPS times, with a very slight
-   delay between each lap. If fork fails even then, the process will
-   exit with an error message.
-*/
-static pid_t exec_fork()
-{
-    ASSERT_IS_MAIN_THREAD();
-    
-    /* Make sure we have no outstanding threads before we fork. This is a pretty sketchy thing to do here, both because exec.cpp shouldn't have to know about iothreads, and because the completion handlers may do unexpected things. */
-    iothread_drain_all();
-    
-	pid_t pid;
-	struct timespec pollint;
-	int i;
-	
-	for( i=0; i<FORK_LAPS; i++ )
-	{
-		pid = fork();
-		if( pid >= 0)
-		{
-			return pid;
-		}
-		
-		if( errno != EAGAIN )
-		{
-			break;
-		}
-
-		pollint.tv_sec = 0;
-		pollint.tv_nsec = FORK_SLEEP_TIME;
-
-		/*
-		  Don't sleep on the final lap - sleeping might change the
-		  value of errno, which will break the error reporting below.
-		*/
-		if( i != FORK_LAPS-1 )
-		{
-			nanosleep( &pollint, NULL );
-		}
-	}
-	
-	debug( 0, FORK_ERROR );
-	wperror (L"fork");
-	FATAL_EXIT();
-}
-
-
-/**
-   Perform output from builtins
- */
-static void do_builtin_io( const wchar_t *out, const wchar_t *err )
-{
-
-	if( out )
-	{
-		if( fwprintf( stdout, L"%ls", out ) == -1 || fflush( stdout ) == EOF )
+		if (write_loop(STDOUT_FILENO, out, len) == -1)
 		{
 			debug( 0, L"Error while writing to stdout" );
-			wperror( L"fwprintf" );
+			wperror( L"write_loop" );
 			show_stackframe();
 		}
 	}
 	
-	if( err )
+	if (err && (len = strlen(err)))
 	{
-		if( fwprintf( stderr, L"%ls", err ) == -1 || fflush( stderr ) == EOF )
+		if (write_loop(STDERR_FILENO, err, len) == -1)
 		{
 			/*
 			  Can't really show any error message here, since stderr is
@@ -899,8 +543,7 @@ static void do_builtin_io( const wchar_t *out, const wchar_t *err )
 			*/
 		}
 	}
-	
-} 
+}
 
 
 void exec( parser_t &parser, job_t *j )
@@ -1049,15 +692,15 @@ void exec( parser_t &parser, job_t *j )
 		
 	if( needs_keepalive )
 	{
-		keepalive.pid = exec_fork();
-
+        /* Call fork. No need to wait for threads since our use is confined and simple. */
+		keepalive.pid = execute_fork(false);
 		if( keepalive.pid == 0 )
 		{
             /* Child */
 			keepalive.pid = getpid();
 			set_child_group( j, &keepalive, 1 );
 			pause();			
-			exit(0);
+			exit_without_destructors(0);
 		}
 		else
 		{
@@ -1401,8 +1044,8 @@ void exec( parser_t &parser, job_t *j )
 				
 				if( io_buffer->param2.out_buffer->used != 0 )
 				{
-					pid = exec_fork();
-
+                    /* We don't have to drain threads here because our child process is simple */
+					pid = execute_fork(false);
 					if( pid == 0 )
 					{
 						
@@ -1450,7 +1093,7 @@ void exec( parser_t &parser, job_t *j )
 			case INTERNAL_BUFFER:
 			{
 		
-				pid = exec_fork();
+				pid = execute_fork(false);
 				
 				if( pid == 0 )
 				{
@@ -1542,14 +1185,17 @@ void exec( parser_t &parser, job_t *j )
 					break;
 				}
 
-				/*
-				  Ok, unfortunatly, we have to do a real fork. Bummer.
-				*/
-								
-				pid = exec_fork();
+				/* Ok, unfortunatly, we have to do a real fork. Bummer. We work hard to make sure we don't have to wait for all our threads to exit, by arranging things so that we don't have to allocate memory or do anything except system calls in the child. */
+                
+                /* Get the strings we'll write before we fork (since they call malloc) */
+                const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
+                char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
+                
+                fflush(stdout);
+                fflush(stderr);
+				pid = execute_fork(false);
 				if( pid == 0 )
 				{
-
 					/*
 					  This is the child process. Setup redirections,
 					  print correct output to stdout and stderr, and
@@ -1557,13 +1203,17 @@ void exec( parser_t &parser, job_t *j )
 					*/
 					p->pid = getpid();
 					setup_child_process( j, p );
-                    const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-					do_builtin_io( out.empty() ? NULL : out.c_str(), err.empty() ? NULL : err.c_str() );
-					exit( p->status );
+					do_builtin_io(outbuff, errbuff);
+					exit_without_destructors( p->status );
 						
 				}
 				else
 				{
+                
+                    /* Free the strings in the parent */
+                    free(outbuff);
+                    free(errbuff);
+                    
 					/* 
 					   This is the parent process. Store away
 					   information on the child, and possibly give
@@ -1580,7 +1230,7 @@ void exec( parser_t &parser, job_t *j )
 			
 			case EXTERNAL:
 			{
-				pid = exec_fork();
+				pid = execute_fork(true /* must drain threads */);
 				if( pid == 0 )
 				{
 					/*

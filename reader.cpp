@@ -1744,7 +1744,7 @@ static void reader_interactive_init()
 		debug( 1,
 			   _( L"Couldn't grab control of terminal" ) );
 		wperror( L"tcsetpgrp" );
-		exit(1);
+		exit_without_destructors(1);
 	}
 
 	common_handle_winch(0);

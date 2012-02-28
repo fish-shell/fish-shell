@@ -41,7 +41,6 @@
 
 #include <errno.h>
 
-
 #include "fallback.h"
 #include "util.h"
 
@@ -93,6 +92,7 @@ struct var_entry_t
 	var_entry_t() : exportv(false) { } 
 };
 
+typedef std::map<wcstring, var_entry_t*> var_table_t;
 
 /**
    Struct representing one level in the function variable stack
@@ -102,7 +102,7 @@ struct env_node_t
 	/** 
 		Variable table 
 	*/
-	std::map<wcstring, var_entry_t*> env;
+	var_table_t env;
 	/** 
 		Does this node imply a new variable scope? If yes, all
 		non-global variables below this one in the stack are
@@ -145,7 +145,7 @@ static env_node_t *global_env = 0;
 /**
    Table for global variables
 */
-static std::map<wcstring, var_entry_t *> *global;
+static var_table_t *global;
 
 /**
    Table of variables that may not be set using the set command.
@@ -171,7 +171,7 @@ static bool is_electric(const wcstring &key)
 /**
    Exported variable array used by execv
 */
-static char **export_arr=0;
+static null_terminated_array_t<char> export_array;
 
 /**
    Buffer used for storing string contents for export_arr
@@ -183,7 +183,7 @@ static buffer_t export_buffer;
    Flag for checking if we need to regenerate the exported variable
    array
 */
-static int has_changed = 1;
+static bool has_changed = true;
 
 /**
    This string is used to store the value of dynamically
@@ -377,7 +377,7 @@ static void universal_callback( int type,
 	
 	if( str )
 	{
-		has_changed=1;
+		has_changed=true;
 		
         event_t ev = event_t::variable_event(name);
         ev.arguments.reset(new wcstring_list_t());
@@ -682,19 +682,18 @@ void env_destroy()
     env_electric.clear();
 
 	
-	std::map<wcstring, var_entry_t*>::iterator iter;
+	var_table_t::iterator iter;
 	for (iter = global->begin(); iter != global->end(); ++iter) {
 		var_entry_t *entry = iter->second;	
 		if( entry->exportv )
 		{
-			has_changed = 1;
+			has_changed = true;
 		}
 
 		delete entry;
 	}
 
 	delete top;
-	free( export_arr ); 
 }
 
 /**
@@ -709,7 +708,7 @@ static env_node_t *env_get_node( const wcstring &key )
 
 	while( env != 0 )
 	{
-		std::map<wcstring, var_entry_t*>::const_iterator result = env->env.find( key ); 
+		var_table_t::const_iterator result = env->env.find( key ); 
 
 		if ( result != env->env.end() )
 		{ 
@@ -735,8 +734,8 @@ int env_set( const wchar_t *key,
 			 int var_mode )
 {
 	env_node_t *node = NULL;
-	int has_changed_old = has_changed;
-	int has_changed_new = 0;
+	bool has_changed_old = has_changed;
+	bool has_changed_new = false;
 	var_entry_t *e=0;	
 	int done=0;
     
@@ -818,7 +817,7 @@ int env_set( const wchar_t *key,
 		if( node )
 		{
             
-			std::map<wcstring, var_entry_t*>::iterator result = node->env.find(key);
+			var_table_t::iterator result = node->env.find(key);
 			if ( result != node->env.end() ) { 
 				e  = result->second; 
 			}
@@ -828,7 +827,7 @@ int env_set( const wchar_t *key,
             
 			if( e->exportv )
 			{
-				has_changed_new = 1;
+				has_changed_new = true;
 			}
 		}
         
@@ -895,7 +894,7 @@ int env_set( const wchar_t *key,
 		if( !done )
         {
 		    var_entry_t *old_entry = NULL;
-		    std::map<wcstring, var_entry_t*>::iterator result = node->env.find(key);
+		    var_table_t::iterator result = node->env.find(key);
 		    if ( result != node->env.end() )
 		    {
 				old_entry = result->second;
@@ -910,7 +909,7 @@ int env_set( const wchar_t *key,
 			    if( (var_mode & ENV_EXPORT) || entry->exportv )
                 {
                     entry->exportv = !!(var_mode & ENV_EXPORT);
-                    has_changed_new = 1;		
+                    has_changed_new = true;		
                 }
             }	
 			else
@@ -920,7 +919,7 @@ int env_set( const wchar_t *key,
 			    if( var_mode & ENV_EXPORT)
                 {
                     entry->exportv = 1;
-                    has_changed_new = 1;		
+                    has_changed_new = true;		
                 }
 			    else
                 {
@@ -981,14 +980,14 @@ static int try_remove( env_node_t *n,
 		return 0;
 	}
 
-	std::map<wcstring, var_entry_t*>::iterator result = n->env.find( key );  
+	var_table_t::iterator result = n->env.find( key );  
 	if ( result != n->env.end() )
 	{
 		var_entry_t *v = result->second;
 
 		if( v->exportv )
 		{
-			has_changed = 1;
+			has_changed = true;
 		}
         
 		n->env.erase(result);
@@ -1136,7 +1135,7 @@ env_var_t env_get_string( const wcstring &key )
         
         while( env != 0 )
 	  {
-		std::map<wcstring, var_entry_t*>::iterator result =  env->env.find(key);
+		var_table_t::iterator result =  env->env.find(key);
 	    if ( result != env->env.end() ) 
 	      {
 			res = result->second; 
@@ -1250,7 +1249,7 @@ const wchar_t *env_get( const wchar_t *key )
 	
 	while( env != 0 )
 	{
-		std::map<wcstring, var_entry_t*>::iterator result =  env->env.find(key);
+		var_table_t::iterator result =  env->env.find(key);
 		if ( result != env->env.end() )
 		{ 
 			res  = result->second; 
@@ -1326,7 +1325,7 @@ int env_exist( const wchar_t *key, int mode )
 					
 		while( env != 0 )
 		{
-			std::map<wcstring, var_entry_t*>::iterator result = env->env.find( key );
+			var_table_t::iterator result = env->env.find( key );
 			if ( result != env->env.end() )
 			{ 
 				res  = result->second; 
@@ -1416,7 +1415,7 @@ void env_pop()
 
 		for( i=0; locale_variable[i]; i++ )
 		{
-			std::map<wcstring, var_entry_t*>::iterator result =  killme->env.find( locale_variable[i] ); 
+			var_table_t::iterator result =  killme->env.find( locale_variable[i] ); 
 			if ( result != killme->env.end() )
 			{
 				locale_changed = 1;
@@ -1431,13 +1430,13 @@ void env_pop()
 		
 		top = top->next;
 
-		std::map<wcstring, var_entry_t*>::iterator iter;
+		var_table_t::iterator iter;
 		for (iter = killme->env.begin(); iter != killme->env.end(); ++iter) 
 		{
 			var_entry_t *entry = iter->second;	
 			if( entry->exportv )
 			{
-				has_changed = 1;
+				has_changed = true;
 			}
 			delete entry;
 		}
@@ -1459,9 +1458,9 @@ void env_pop()
 /**
    Function used with to insert keys of one table into a set::set<wcstring>
 */
-static void add_key_to_string_set(const std::map<wcstring, var_entry_t*> &envs, std::set<wcstring> &strSet)
+static void add_key_to_string_set(const var_table_t &envs, std::set<wcstring> &strSet)
 {
-	std::map<wcstring, var_entry_t*>::const_iterator iter;
+	var_table_t::const_iterator iter;
 	for (iter = envs.begin(); iter != envs.end(); ++iter)
 	{
 		var_entry_t *e = iter->second;
@@ -1548,17 +1547,17 @@ wcstring_list_t env_get_names( int flags )
 	Get list of all exported variables
 */
 
-static void get_exported2( const env_node_t *n, std::map<wcstring, wcstring> &h )
+static void get_exported( const env_node_t *n, std::map<wcstring, wcstring> &h )
 {
 	if( !n )
 		return;
 	
 	if( n->new_scope )
-		get_exported2( global_env, h );
+		get_exported( global_env, h );
 	else
-		get_exported2( n->next, h );
+		get_exported( n->next, h );
 
-	std::map<wcstring, var_entry_t*>::const_iterator iter;
+	var_table_t::const_iterator iter;
 	for (iter = n->env.begin(); iter != n->env.end(); ++iter)
 	{
 		const wcstring &key = iter->first;
@@ -1570,10 +1569,7 @@ static void get_exported2( const env_node_t *n, std::map<wcstring, wcstring> &h 
 	}
 }
 
-/**
-	Function used by env_export_arr to iterate over map of variables
-*/
-static void export_func2(std::map<wcstring, wcstring> &envs, buffer_t* out)
+static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<std::string> &out)
 {
 	std::map<wcstring, wcstring>::const_iterator iter;
 	for (iter = envs.begin(); iter != envs.end(); ++iter)
@@ -1587,20 +1583,23 @@ static void export_func2(std::map<wcstring, wcstring> &envs, buffer_t* out)
 				*pos = ':';			
 			pos++;
 		}
-		int nil = 0;
-
-		b_append( out, ks, strlen(ks) );
-		b_append( out, "=", 1 );
-		b_append( out, vs, strlen(vs) );
-		b_append( out, &nil, 1 );
+        
+        /* Put a string on the vector */
+        out.push_back(std::string());
+        std::string &str = out.back();
+        
+        /* Append our environment variable data to it */
+        str.append(ks);
+        str.append("=");
+        str.append(vs);
 
 		free(ks);
 		free(vs);
-	}	
+	}
 }
 
-char **env_export_arr( int recalc )
-{
+static void update_export_array_if_necessary(bool recalc) {
+    ASSERT_IS_MAIN_THREAD();
 	if( recalc && !proc_had_barrier)
 	{
 		proc_had_barrier=1;
@@ -1610,13 +1609,11 @@ char **env_export_arr( int recalc )
 	if( has_changed )
 	{
 		std::map<wcstring, wcstring> vals;
-		int prev_was_null=1;
-		int pos=0;		
 		size_t i;
 
 		debug( 4, L"env_export_arr() recalc" );
 				
-		get_exported2( top, vals );
+		get_exported( top, vals );
 		
         wcstring_list_t uni;
 		env_universal_get_names2( uni, 1, 0 );
@@ -1632,28 +1629,27 @@ char **env_export_arr( int recalc )
 			}
 
 		}
-
-		export_buffer.used=0;
-		
-		export_func2(vals, &export_buffer );
-		
-		export_arr = (char **)realloc( export_arr,
-							  sizeof(char *)*(1 + vals.size())); //add 1 for null termination
-		
-		for( i=0; i<export_buffer.used; i++ )
-		{
-			if( prev_was_null )
-			{
-				export_arr[pos++]= &export_buffer.buff[i];
-				debug( 3, L"%s", &export_buffer.buff[i]);
-			}
-			prev_was_null = (export_buffer.buff[i]==0);
-		}
-		export_arr[pos]=NULL;
-		has_changed=0;
-
+        
+        std::vector<std::string> local_export_buffer;
+		export_func(vals, local_export_buffer );
+        export_array.set(local_export_buffer);
+		has_changed=false;
 	}
-	return export_arr;	
+
+}
+
+char **env_export_arr( int recalc )
+{
+    ASSERT_IS_MAIN_THREAD();
+    update_export_array_if_necessary(recalc != 0);
+    return export_array.get();
+}
+
+void env_export_arr(bool recalc, null_terminated_array_t<char> &output)
+{
+    ASSERT_IS_MAIN_THREAD();
+    update_export_array_if_necessary(recalc != 0);
+    output = export_array;
 }
 
 env_vars::env_vars(const wchar_t * const *keys)

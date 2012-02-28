@@ -595,7 +595,7 @@ void signal_set_handlers()
 		if( sigaction( SIGCHLD, &act, 0) )
 		{
 			wperror( L"sigaction" );
-			exit(1);
+			exit_without_destructors(1);
 		}
 	}
 	

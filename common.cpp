@@ -2041,6 +2041,10 @@ double timef()
 	return (double)tv.tv_sec + 0.000001*tv.tv_usec;
 }
 
+void exit_without_destructors(int code) {
+    _exit(code);
+}
+
 void append_path_component(wcstring &path, const wcstring &component)
 {
     size_t len = path.size();

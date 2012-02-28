@@ -77,6 +77,8 @@ typedef std::vector<wcstring> wcstring_list_t;
  */
 #define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
 
+/** Exits without invoking destructors (via _exit), useful for code after fork. This would be a good candidate for __noreturn attribute. */
+void exit_without_destructors(int code);
 
 /** 
 	Save the shell mode on startup so we can restore them on exit
@@ -132,7 +134,7 @@ extern const wchar_t *program_name;
 		int exit_read_count;char exit_read_buff;				\
 		show_stackframe();										\
 		exit_read_count=read( 0, &exit_read_buff, 1 );			\
-		exit( 1 );												\
+		exit_without_destructors( 1 );												\
 	}															\
 		
 
@@ -301,8 +303,110 @@ wcstring to_string(const T &x) {
     return stream.str();
 }
 
+/* Helper class for managing a null-terminated array of null-terminated strings (of some char type) */
+template <typename CharType_t>
+class null_terminated_array_t {
+    CharType_t **array;
+    
+    typedef std::basic_string<CharType_t> string_t;
+    typedef std::vector<string_t> string_list_t;
+
+    void swap(null_terminated_array_t<CharType_t> &him) { std::swap(array, him.array); }
+
+    /* Silly function to get the length of a null terminated array of...something */
+    template <typename T>
+    static size_t count_not_null(const T *arr) {
+        size_t len;
+        for (len=0; arr[len] != T(0); len++)
+            ;
+        return len;        
+    }
+
+    size_t size() const {
+        return count_not_null(array);
+    }
+
+    void free(void) {
+        if (array != NULL) {
+            for (size_t i = 0; array[i] != NULL; i++) {
+                delete [] array[i];
+            }
+            delete [] array;
+            array = NULL;
+        }
+    }
+        
+    public:
+    null_terminated_array_t() : array(NULL) { }
+    ~null_terminated_array_t() { this->free(); }
+    
+    /** operator=. Notice the pass-by-value parameter. */
+    null_terminated_array_t& operator=(null_terminated_array_t rhs) {
+        if (this != &rhs)
+            this->swap(rhs);
+        return *this;
+    }
+    
+    /* Copy constructor. */
+    null_terminated_array_t(const null_terminated_array_t &him) {
+        this->set(him.array);
+    }
+    
+    void set(const string_list_t &argv) {
+        /* Get rid of the old argv */
+        this->free();
+
+        /* Allocate our null-terminated array of null-terminated strings */
+        size_t i, count = argv.size();
+        this->array = new CharType_t * [count + 1];
+        for (i=0; i < count; i++) {
+            const string_t &str = argv.at(i);
+            this->array[i] = new CharType_t [1 + str.size()];
+            std::copy(str.begin(), str.end(), this->array[i]);
+            this->array[i][str.size()] = CharType_t(0);
+        }
+        this->array[count] = NULL;
+    }
+    
+    void set(const CharType_t * const *new_array) {
+        if (new_array == array)
+            return;
+            
+        /* Get rid of the old argv */
+        this->free();
+        
+        /* Copy the new one */
+        if (new_array) {
+            size_t i, count = count_not_null(new_array);
+            this->array = new CharType_t * [count + 1];
+            for (i=0; i < count; i++) {
+                size_t len = count_not_null(new_array[i]);
+                this->array[i] = new CharType_t [1 + len];
+                std::copy(new_array[i], new_array[i] + len, this->array[i]);
+                this->array[i][len] = CharType_t(0);
+            }
+            this->array[count] = NULL;
+        }
+    }
+    
+    CharType_t **get() { return array; }
+    const CharType_t * const *get() const { return array; }
+    
+    string_list_t to_list() const {
+        string_list_t lst;
+        if (array != NULL) {
+            size_t count = this->size();
+            lst.reserve(count);
+            lst.insert(lst.end(), array, array + count);
+        }
+        return lst;
+    }
+
+};
+
 bool is_forked_child();
 
+/* Basic scoped lock class */
 class scoped_lock {
     pthread_mutex_t *lock_obj;
     bool locked;

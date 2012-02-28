@@ -188,7 +188,7 @@ static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
 				else
 				{
 					debug( 0, _(L"Invalid value '%s' for debug level switch"), optarg );
-					exit(1);
+					exit_without_destructors(1);
 				}
 				break;
 			}
@@ -229,12 +229,12 @@ static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
 						  _(L"%s, version %s\n"), 
 						  PACKAGE_NAME,
 						  PACKAGE_VERSION );
-				exit( 0 );				
+				exit_without_destructors( 0 );				
 			}
 			
 			case '?':
 			{
-				exit( 1 );
+				exit_without_destructors( 1 );
 			}
 			
 		}		

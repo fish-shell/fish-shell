@@ -128,15 +128,13 @@ enum
 class process_t
 {
     private:
-	/** argv parameter for for execv, builtin_run, etc. This is allocated via new, and furthermore, each string within it is allocated via new as well. Null terminated. */
-	wchar_t **argv_array;
-
-    void free_argv(void);
+	
+    null_terminated_array_t<wchar_t> argv_array;
 
     public:
     
     process_t() :
-        argv_array(NULL),    
+        argv_array(),    
         type(0),
         actual_cmd(NULL),
         pid(0),
@@ -158,7 +156,6 @@ class process_t
     {
         if (this->next != NULL)
             delete this->next;
-        this->free_argv();
         free((void *)actual_cmd); //may be NULL
     }
     
@@ -171,16 +168,16 @@ class process_t
     
     
     /** Sets argv */
-    void set_argv(const wcstring_list_t &argv);
+    void set_argv(const wcstring_list_t &argv) { argv_array.set(argv); }
     
     /** Returns argv */
-    const wchar_t * const *get_argv(void) const { return argv_array; }
+    const wchar_t * const *get_argv(void) const { return argv_array.get(); }
     
     /** Returns argv[0] */
-    const wchar_t *argv0(void) const { return argv_array[0]; }
+    const wchar_t *argv0(void) const { return argv_array.get()[0]; }
     
     /** Returns argv[idx] */
-    const wchar_t *argv(size_t idx) const { return argv_array[idx]; }
+    const wchar_t *argv(size_t idx) const { return argv_array.get()[idx]; }
 
 	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. malloc'd! */
 	const wchar_t *actual_cmd;       

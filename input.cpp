@@ -317,7 +317,7 @@ int input_init()
 	if( setupterm( 0, STDOUT_FILENO, 0) == ERR )
 	{
 		debug( 0, _( L"Could not set up terminal" ) );
-		exit(1);
+		exit_without_destructors(1);
 	}
     const env_var_t term = env_get_string( L"TERM" );
     assert(! term.missing());

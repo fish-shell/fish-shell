@@ -147,10 +147,32 @@ static void test_escape()
 		free( (void *)e );
 		free( (void *)u );
 		
-	}
-	
+	}		
+}
 
-		
+static void test_format(void) {
+    say( L"Testing formatting functions" );
+    struct { unsigned long long val; const char *expected; } tests[] = {
+        { 0, "empty" },
+        { 1, "1B" },
+        { 2, "2B" },
+        { 1024, "1kB" },
+        { 1870, "1.8kB" },
+        { 4322911, "4.1MB" }
+    };
+    size_t i;
+    for (i=0; i < sizeof tests / sizeof *tests; i++) {
+        char buff[128];
+        format_size_safe(buff, tests[i].val);
+        assert( ! strcmp(buff, tests[i].expected));
+    }
+    
+    for (int j=-129; j <= 129; j++) {
+        char buff1[128], buff2[128];
+        format_int_safe(buff1, j);
+        sprintf(buff2, "%d", j);
+        assert( ! strcmp(buff1, buff2));
+    }    
 }
 
 /**
@@ -698,6 +720,7 @@ int main( int argc, char **argv )
 	reader_init();
 	env_init();
 
+    test_format();
 	test_escape();
 	test_convert();
 	test_tok();

@@ -338,6 +338,7 @@ class null_terminated_array_t {
         
     public:
     null_terminated_array_t() : array(NULL) { }
+    null_terminated_array_t(const string_list_t &argv) : array(NULL) { this->set(argv); }
     ~null_terminated_array_t() { this->free(); }
     
     /** operator=. Notice the pass-by-value parameter. */
@@ -348,7 +349,7 @@ class null_terminated_array_t {
     }
     
     /* Copy constructor. */
-    null_terminated_array_t(const null_terminated_array_t &him) {
+    null_terminated_array_t(const null_terminated_array_t &him) : array(NULL) {
         this->set(him.array);
     }
     
@@ -401,8 +402,10 @@ class null_terminated_array_t {
         }
         return lst;
     }
-
 };
+
+/* Helper function to convert from a null_terminated_array_t<wchar_t> to a null_terminated_array_t<char_t> */
+null_terminated_array_t<char> convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr);
 
 bool is_forked_child();
 
@@ -666,11 +669,19 @@ int create_directory( const wcstring &d );
 */
 void bugreport();
 
-/**
-   Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer.
-*/
+/** Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer. */
 void sb_format_size( string_buffer_t *sb, long long sz );
 wcstring format_size(long long sz);
+
+/** Version of format_size that does not allocate memory. */
+void format_size_safe(char buff[128], unsigned long long sz);
+
+/** Our crappier versions of debug which is guaranteed to not allocate any memory, or do anything other than call write(). This is useful after a call to fork() with threads. */
+void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL);
+
+/** Writes out an int safely */
+void format_int_safe(char buff[128], int val);
+
 
 /**
    Return the number of seconds from the UNIX epoch, with subsecond

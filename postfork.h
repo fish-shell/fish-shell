@@ -19,8 +19,36 @@
 #include "wutil.h"
 #include "io.h"
 
+/**
+   This function should be called by both the parent process and the
+   child right after fork() has been called. If job control is
+   enabled, the child is put in the jobs group, and if the child is
+   also in the foreground, it is also given control of the
+   terminal. When called in the parent process, this function may
+   fail, since the child might have already finished and called
+   exit. The parent process may safely ignore the exit status of this
+   call.
 
+   Returns 0 on sucess, -1 on failiure. 
+*/
 int set_child_group( job_t *j, process_t *p, int print_errors );
+
+/**
+   Initialize a new child process. This should be called right away
+   after forking in the child process. If job control is enabled for
+   this job, the process is put in the process group of the job, all
+   signal handlers are reset, signals are unblocked (this function may
+   only be called inside the exec function, which blocks all signals),
+   and all IO redirections and other file descriptor actions are
+   performed.
+
+   \param j the job to set up the IO for
+   \param p the child process to set up
+
+   \return 0 on sucess, -1 on failiure. When this function returns,
+   signals are always unblocked. On failiure, signal handlers, io
+   redirections and process group of the process is undefined.
+*/
 int setup_child_process( job_t *j, process_t *p );
 
 /* Call fork(), optionally waiting until we are no longer multithreaded. If the forked child doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's not necessary to wait for threads to die. If the forked child may do those things, it should wait for threads to die.

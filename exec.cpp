@@ -193,38 +193,36 @@ void close_unused_internal_pipes( io_data_t *io )
 }
 
 /**
-   Returns the interpreter for the specified script. Returns false if file
+   Returns the interpreter for the specified script. Returns NULL if file
    is not a script with a shebang.
  */
-static bool get_interpreter( const wcstring &file, wcstring &interpreter )
+static char *get_interpreter( const char *command, char *interpreter, size_t buff_size )
 {
-    wcstring res;
-	FILE *fp = wfopen( file, "r" );
-	if( fp )
+	int fd = open( command, O_RDONLY );
+	if( fd >= 0 )
 	{
-		while( 1 )
+        size_t idx = 0;
+		while( idx + 1 < buff_size )
 		{
-			wint_t ch = getwc( fp );
-			if( ch == WEOF )
+            char ch;
+            ssize_t amt = read(fd, &ch, sizeof ch);
+			if( amt <= 0 )
 				break;
-			if( ch == L'\n' )
+			if( ch == '\n' )
 				break;
-            res.push_back(ch);
+            interpreter[idx++] = ch;
 		}
-        fclose(fp);
+        interpreter[idx++] = '\0';
+        close(fd);
 	}
-	
-	if (string_prefixes_string(L"#! /", res)) {
-        interpreter = 3 + res.c_str();
-        return true;
-    } else if (string_prefixes_string(L"#!/", res)) {
-        interpreter = 2 + res.c_str();
-        return true;
+	if (strncmp(interpreter, "#! /", 4) == 0) {
+        return interpreter + 3;
+    } else if (strncmp(interpreter, "#!/", 3) == 0) {
+        return interpreter + 2;
     } else {
-        return false;
+        return NULL;
     }
 }
-
 
 /**
    This function is executed by the child process created by a call to
@@ -232,16 +230,13 @@ static bool get_interpreter( const wcstring &file, wcstring &interpreter )
    execve to replace the fish process image with the command specified
    in \c p. It never returns.
 */
-static void launch_process( process_t *p )
+/* Called in a forked child! Do not allocate memory, etc. */
+static void safe_launch_process( process_t *p, const char *actual_cmd, char **argv, char **envv )
 {
-    FILE* f;
 	int err;
 	
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
-	char **argv = wcsv2strv(p->get_argv());
-	char **envv = env_export_arr( 0 );
-	
 	execve ( wcs2str(p->actual_cmd), 
 		 argv,
 		 envv );
@@ -253,55 +248,43 @@ static void launch_process( process_t *p )
 	   /bin/sh if encountered. This is a weird predecessor to the shebang
 	   that is still sometimes used since it is supported on Windows.
 	*/
-	f = wfopen(p->actual_cmd, "r");
-	if( f )
+	int fd = open(actual_cmd, O_RDONLY);
+	if (fd >= 0)
 	{
 		char begin[1] = {0};
-		size_t read;
+		ssize_t amt_read = read(fd, begin, 1);
+		close(fd);
 		
-		read = fread(begin, 1, 1, f);
-		fclose( f );
-		
-		if( (read==1) && (begin[0] == ':') )
+		if( (amt_read==1) && (begin[0] == ':') )
 		{
+            // Relaunch it with /bin/sh. Don't allocate memory, so if you have more args than this, update your silly script! Maybe this should be changed to be based on ARG_MAX somehow.
+            char sh_command[] = "/bin/sh";
+            char *argv2[128];
+            argv2[0] = sh_command;
+            for (size_t i=1; i < sizeof argv2 / sizeof *argv2; i++) {
+                argv2[i] = argv[i-1];
+                if (argv2[i] == NULL)
+                    break;
+            }
             
-            wcstring_list_t argv;
-
-			const wchar_t *sh_command = L"/bin/sh";
-            argv.push_back(sh_command);
-            argv.push_back(p->actual_cmd);
-			for(size_t i=1; p->argv(i) != NULL; i++ ){
-				argv.push_back(p->argv(i));
-			}
-			
-			p->set_argv(argv);
-			p->actual_cmd = wcsdup(sh_command);
-
-			char **res_real = wcsv2strv( p->get_argv() );
-			
-			execve ( wcs2str(p->actual_cmd), 
-				 res_real,
-				 envv );
+			execve(sh_command, argv2, envv);
 		}
 	}
 	
 	errno = err;
-	debug( 0, 
-	       _( L"Failed to execute process '%ls'. Reason:" ),
-	       p->actual_cmd );
+	debug_safe( 0, "Failed to execute process '%s'. Reason:", actual_cmd );
 	
 	switch( errno )
 	{
 		
 		case E2BIG:
 		{
-			size_t sz = 0;
-			char **p;
-
-			wcstring sz1, sz2;
+			char sz1[128], sz2[128];
 			
 			long arg_max = -1;
 
+			size_t sz = 0;
+			char **p;
 			for(p=argv; *p; p++)
 			{
 				sz += strlen(*p)+1;
@@ -312,71 +295,81 @@ static void launch_process( process_t *p )
 				sz += strlen(*p)+1;
 			}
 			
-            sz1 = format_size(sz);
-
+            format_size_safe(sz1, sz);
 			arg_max = sysconf( _SC_ARG_MAX );
 			
 			if( arg_max > 0 )
 			{
-				sz2 = format_size(arg_max);
-				
-				debug( 0,
-				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit of %ls.",
-				       sz1.c_str(),
-				       sz2.c_str());
+                format_size_safe(sz2, sz);
+                debug_safe(0, "The total size of the argument and environment lists %s exceeds the operating system limit of %s.", sz1, sz2);
 			}
 			else
 			{
-				debug( 0,
-				       L"The total size of the argument and environment lists (%ls) exceeds the operating system limit.",
-				       sz1.c_str());
+				debug_safe( 0, "The total size of the argument and environment lists (%s) exceeds the operating system limit.", sz1);
 			}
 			
-			debug( 0, 
-			       L"Try running the command again with fewer arguments.");			
+			debug_safe(0, "Try running the command again with fewer arguments.");			
 			exit_without_destructors(STATUS_EXEC_FAIL);
-			
 			break;
 		}
 
 		case ENOEXEC:
 		{
-			wperror(L"exec");
+            /* Hope strerror doesn't allocate... */
+            const char *err = strerror(errno);
+            debug_safe(0, "exec: %s", err);
 			
-			debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
+			debug_safe(0, "The file '%ls' is marked as an executable but could not be run by the operating system.", actual_cmd);
 			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 
 		case ENOENT:
 		{
-            wcstring interpreter;
-			if( get_interpreter(p->actual_cmd, interpreter) && waccess( interpreter, X_OK ) )
+            char interpreter_buff[128] = {}, *interpreter;
+            interpreter = get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
+			if( interpreter && 0 != access( interpreter, X_OK ) )
 			{
-				debug(0, L"The file '%ls' specified the interpreter '%ls', which is not an executable command.", p->actual_cmd, interpreter.c_str() );
+				debug_safe(0, "The file '%s' specified the interpreter '%s', which is not an executable command.", actual_cmd, interpreter );
 			}
 			else
 			{
-				debug(0, L"The file '%ls' or a script or ELF interpreter does not exist, or a shared library needed for file or interpreter cannot be found.", p->actual_cmd);
+				debug_safe(0, "The file '%s' or a script or ELF interpreter does not exist, or a shared library needed for file or interpreter cannot be found.", actual_cmd);
 			}
-			
 			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 
 		case ENOMEM:
 		{
-			debug(0, L"Out of memory");
+			debug_safe(0, "Out of memory");
 			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 
 		default:
 		{
-			wperror(L"exec");
+            /* Hope strerror doesn't allocate... */
+            const char *err = strerror(errno);
+            debug_safe(0, "exec: %s", err);
 			
 			//		debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
 			exit_without_destructors(STATUS_EXEC_FAIL);
 		}
 	}
+}
+
+/**
+   This function is similar to launch_process, except it is not called after a fork (i.e. it is only calls exec) and therefore it can allocate memory.
+*/
+static void launch_process_nofork( process_t *p )
+{
+    ASSERT_IS_MAIN_THREAD();
+    ASSERT_IS_NOT_FORKED_CHILD();
+    
+	char **argv = wcsv2strv(p->get_argv());
+	char **envv = env_export_arr( 0 );
+    char *actual_cmd = wcs2str(p->actual_cmd);
 	
+    /* Bounce to launch_process. This never returns. */
+    safe_launch_process(p, actual_cmd, argv, envv);
 }
 
 
@@ -630,7 +623,7 @@ void exec( parser_t &parser, job_t *j )
 			/*
 			  launch_process _never_ returns
 			*/
-			launch_process( j->first_process );
+			launch_process_nofork( j->first_process );
 		}
 		else
 		{
@@ -1209,7 +1202,6 @@ void exec( parser_t &parser, job_t *j )
 				}
 				else
 				{
-                
                     /* Free the strings in the parent */
                     free(outbuff);
                     free(errbuff);
@@ -1230,6 +1222,18 @@ void exec( parser_t &parser, job_t *j )
 			
 			case EXTERNAL:
 			{
+                /* Get argv and envv before we fork */
+                null_terminated_array_t<char> argv_array = convert_wide_array_to_narrow(p->get_argv_array());
+                
+                null_terminated_array_t<char> envv_array;
+                env_export_arr(false, envv_array);
+                
+                char **envv = envv_array.get();
+                char **argv = argv_array.get();
+                
+                std::string actual_cmd_str = wcs2string(p->actual_cmd);
+                const char *actual_cmd = actual_cmd_str.c_str();
+                
 				pid = execute_fork(true /* must drain threads */);
 				if( pid == 0 )
 				{
@@ -1238,10 +1242,10 @@ void exec( parser_t &parser, job_t *j )
 					*/
 					p->pid = getpid();
 					setup_child_process( j, p );
-					launch_process( p );
+					safe_launch_process( p, actual_cmd, argv, envv );
 					
 					/*
-					  launch_process _never_ returns...
+					  safe_launch_process _never_ returns...
 					*/
 				}
 				else

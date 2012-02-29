@@ -1314,7 +1314,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 			{
 				wchar_t *end;
 				
-				if( (p->type == INTERNAL_EXEC) )
+				if (p->type == INTERNAL_EXEC)
 				{
 					error( SYNTAX_ERROR,
 						   tok_get_pos( tok ),
@@ -2233,7 +2233,7 @@ void parser_t::skipped_exec( job_t * j )
 			}
 			else if( wcscmp( p->argv0(), L"case" )==0)
 			{
-				if( (current_block->type == SWITCH ) )
+				if(current_block->type == SWITCH)
 				{
 					exec( *this, j );
 					return;

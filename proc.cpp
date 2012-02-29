@@ -335,7 +335,6 @@ int job_signal( job_t *j, int signal )
 	}
 
 	return res;
-
 }
 
 

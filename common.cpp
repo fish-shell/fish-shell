@@ -635,7 +635,7 @@ int read_blocked(int fd, void *buf, size_t count)
 
 ssize_t write_loop(int fd, const char *buff, size_t count)
 {
-	size_t out=0;
+	ssize_t out=0;
 	size_t out_cum=0;
 	while( 1 ) 
 	{
@@ -644,12 +644,12 @@ ssize_t write_loop(int fd, const char *buff, size_t count)
 					 count - out_cum );
 		if (out < 0) 
 		{
-			if( errno != EAGAIN &&
-				errno != EINTR ) 
+			if(errno != EAGAIN && errno != EINTR) 
 			{
 				return -1;
 			}
-		} else 
+		}
+        else 
 		{
 			out_cum += (size_t)out;
 		}
@@ -684,6 +684,79 @@ void debug( int level, const wchar_t *msg, ... )
 	fwprintf( stderr, L"%ls", sb2.c_str() );	
 
 	errno = errno_old;
+}
+
+void debug_safe(int level, const char *msg, const char *param1, const char *param2, const char *param3)
+{
+    if (! msg)
+        return;
+        
+    /* Can't call printf, that may allocate memory Just call write() over and over. */
+    if (level > debug_level)
+        return;
+    int errno_old = errno;
+    
+    size_t param_idx = 0;
+    const char *cursor = msg;
+    while (*cursor != '\0') {
+        const char *end = strchr(cursor, '%');
+        if (end == NULL)
+            end = cursor + strlen(cursor);
+        
+        write(STDERR_FILENO, cursor, end - cursor);
+
+        if (end[0] == '%' && end[1] == 's') {
+            /* Handle a format string */
+            const char *format = NULL;
+            switch (param_idx++) {
+                case 0: format = param1; break;
+                case 1: format = param2; break;
+                case 2: format = param3; break;
+            }
+            if (! format) 
+                format = "(null)";
+            write(STDERR_FILENO, format, strlen(format));
+            cursor = end + 2;
+        } else if (end[0] == '\0') {
+            /* Must be at the end of the string */
+            cursor = end;
+        } else {
+            /* Some other format specifier, just skip it */
+            cursor = end + 1;
+        }
+    }
+    
+    // We always append a newline
+    write(STDERR_FILENO, "\n", 1);
+    
+    errno = errno_old;
+}
+
+void format_int_safe(char buff[128], int val) {
+    if (val == 0) {
+        strcpy(buff, "0");
+    } else {
+        /* Generate the string in reverse */
+        size_t idx = 0;
+        bool negative = (val < 0);
+        if (negative)
+            val = -val;
+
+        while (val > 0) {
+            buff[idx++] = val % 10;
+            val /= 10;
+        }
+        if (negative)
+            buff[idx++] = '-';
+        buff[idx++] = 0;
+        
+        size_t left = 0, right = idx - 1;
+        while (left < right)  {
+            char tmp = buff[left];
+            buff[left++] = buff[right];
+            buff[right--] = tmp;
+        }
+    }
 }
 
 void write_screen( const wcstring &msg, wcstring &buff )
@@ -1979,10 +2052,9 @@ void sb_format_size( string_buffer_t *sb,
 wcstring format_size(long long sz)
 {
     wcstring result;
-	const wchar_t *sz_name[]=
-		{
+	const wchar_t *sz_name[]= {
 			L"kB", L"MB", L"GB", L"TB", L"PB", L"EB", L"ZB", L"YB", 0
-		};
+    };
 
 	if( sz < 0 )
 	{
@@ -2015,8 +2087,88 @@ wcstring format_size(long long sz)
 			
 		}
 	}
-    
     return result;
+}
+
+/* Crappy function to extract the most significant digit of an unsigned long long value */
+static char extract_most_significant_digit(unsigned long long *xp) {
+    unsigned long long place_value = 1;
+    unsigned long long x = *xp;
+    while (x >= 10) {
+        x /= 10;
+        place_value *= 10;
+    }
+    *xp -= (place_value * x);
+    return x + '0';
+}
+
+void append_ull(char *buff, unsigned long long val, size_t *inout_idx, size_t max_len) {
+    size_t idx = *inout_idx;
+    while (val > 0 && idx < max_len)
+        buff[idx++] = extract_most_significant_digit(&val);
+    *inout_idx = idx;
+}
+
+void append_str(char *buff, const char *str, size_t *inout_idx, size_t max_len) {
+    size_t idx = *inout_idx;
+    while (*str && idx < max_len)
+        buff[idx++] = *str++;
+    *inout_idx = idx;
+}
+
+void format_size_safe(char buff[128], unsigned long long sz) {
+    const size_t buff_size = 128;
+    const size_t max_len = buff_size - 1; //need to leave room for a null terminator
+    bzero(buff, buff_size);
+    size_t idx = 0;
+	const char * const sz_name[]= {
+        "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", NULL
+    };
+	if (sz < 1)
+    {
+        strncpy(buff, "empty", buff_size);
+    }
+    else if (sz < 1024)
+    {
+        append_ull(buff, sz, &idx, max_len);
+        append_str(buff, "B", &idx, max_len);
+    }
+    else
+    {
+		for( size_t i=0; sz_name[i]; i++ )
+		{
+			if( sz < (1024*1024) || !sz_name[i+1] )
+			{
+				unsigned long long isz = sz/1024;
+				if( isz > 9 )
+                {
+                    append_ull(buff, isz, &idx, max_len);
+                }
+				else
+                {
+                    if (isz == 0)
+                    {
+                        append_str(buff, "0", &idx, max_len);
+                    }
+                    else
+                    {
+                        append_ull(buff, isz, &idx, max_len);
+                    }
+                    
+                    // Maybe append a single fraction digit
+                    unsigned long long remainder = sz % 1024;
+                    if (remainder > 0)
+                    {
+                        char tmp[3] = {'.', extract_most_significant_digit(&remainder), 0};
+                        append_str(buff, tmp, &idx, max_len);
+                    }
+                }
+                append_str(buff, sz_name[i], &idx, max_len);
+				break;
+			}
+			sz /= 1024;
+		}
+    }
 }
 
 double timef()
@@ -2043,6 +2195,19 @@ double timef()
 
 void exit_without_destructors(int code) {
     _exit(code);
+}
+
+/* Helper function to convert from a null_terminated_array_t<wchar_t> to a null_terminated_array_t<char_t> */
+null_terminated_array_t<char> convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &wide_arr) {
+    const wchar_t *const *arr = wide_arr.get();
+    if (! arr)
+        return null_terminated_array_t<char>();
+        
+    std::vector<std::string> list;
+    for (size_t i=0; arr[i]; i++) {
+        list.push_back(wcs2string(arr[i]));
+    }
+    return null_terminated_array_t<char>(list);
 }
 
 void append_path_component(wcstring &path, const wcstring &component)
@@ -2076,6 +2241,10 @@ static void child_note_forked(void) {
 }
 
 bool is_forked_child(void) {
+    if (is_child_of_fork) {
+        printf("Uh-oh: %d\n", getpid());
+        while (1) sleep(10000);
+    }
     return is_child_of_fork;
 }
 

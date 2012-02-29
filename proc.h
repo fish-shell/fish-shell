@@ -172,6 +172,7 @@ class process_t
     
     /** Returns argv */
     const wchar_t * const *get_argv(void) const { return argv_array.get(); }
+    const null_terminated_array_t<wchar_t> &get_argv_array(void) const { return argv_array; }
     
     /** Returns argv[0] */
     const wchar_t *argv0(void) const { return argv_array.get()[0]; }

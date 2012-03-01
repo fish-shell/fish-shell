@@ -977,7 +977,6 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 	wchar_t *nxt_path;
 	wchar_t *state;
 	std::vector<completion_t> possible_comp;
-	wchar_t *nxt_completion;
 
 	wchar_t *cdpath_cpy = wcsdup(L".");
 
@@ -1020,7 +1019,7 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 					}
 
 					add_slash = nxt_path[path_len-1]!=L'/';
-					nxt_completion = wcsdupcat( nxt_path,
+					wchar_t *nxt_completion = wcsdupcat( nxt_path,
 												add_slash?L"/":L"",
 												cmd );
 					if( ! nxt_completion )
@@ -1042,6 +1041,8 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 							}
 						}
 					}
+                    
+                    free(nxt_completion);
 				}
 				free( path_cpy );
 				if (wants_description)
@@ -1100,6 +1101,7 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
 				{
 				}
+				free(nxt_completion);
 			}
 		}
 	}

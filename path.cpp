@@ -242,6 +242,7 @@ wchar_t *path_get_path( const wchar_t *cmd )
 				}
 			}
 		}
+		free( new_cmd );
 		free( path_cpy );
 
 	}

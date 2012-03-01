@@ -25,7 +25,7 @@ int iothread_port(void);
 /** Services one iothread competion callback. */
 void iothread_service_completion(void);
 
-/** Cancels all outstanding requests and waits for all iothreads to terminate. */
+/** Waits for all iothreads to terminate. */
 void iothread_drain_all(void);
 
 /** Helper template */

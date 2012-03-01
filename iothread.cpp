@@ -9,10 +9,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <fcntl.h>
 #include <queue>
 
-
-#define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
+#define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s). Break on debug_thread_error to debug.\n", #a, __LINE__, __FILE__, err, strerror(err)); debug_thread_error(); abort(); }} while (0)
 
 #ifdef _POSIX_THREAD_THREADS_MAX
   #if _POSIX_THREAD_THREADS_MAX < 64
@@ -67,6 +67,10 @@ static void iothread_init(void) {
 		VOMIT_ON_FAILURE(pipe(pipes));
 		s_read_pipe = pipes[0];
 		s_write_pipe = pipes[1];
+        
+        // 0 means success to VOMIT_ON_FAILURE. Arrange to pass 0 if fcntl returns anything other than -1.
+        VOMIT_ON_FAILURE(-1 == fcntl(s_read_pipe, F_SETFD, FD_CLOEXEC));
+        VOMIT_ON_FAILURE(-1 == fcntl(s_write_pipe, F_SETFD, FD_CLOEXEC));
 		
 		/* Tell each thread its index */
 		for (ThreadIndex_t i=0; i < IO_MAX_THREADS; i++) {
@@ -109,7 +113,7 @@ static void *iothread_worker(void *threadPtr) {
 	}
 	
 	/* Write our index to wake up the main thread */
-	VOMIT_ON_FAILURE(! write(s_write_pipe, &thread->idx, sizeof thread->idx));
+	VOMIT_ON_FAILURE(! write_loop(s_write_pipe, (const char *)&thread->idx, sizeof thread->idx));
 	
 	/* We're done */
 	return req;
@@ -168,7 +172,7 @@ int iothread_port(void) {
 void iothread_service_completion(void) {
     ASSERT_IS_MAIN_THREAD();
 	ThreadIndex_t threadIdx = (ThreadIndex_t)-1;
-	VOMIT_ON_FAILURE(! read(iothread_port(), &threadIdx, sizeof threadIdx));
+	VOMIT_ON_FAILURE(1 != read_loop(iothread_port(), &threadIdx, sizeof threadIdx));
 	assert(threadIdx < IO_MAX_THREADS);
 	
 	struct WorkerThread_t *thread = &threads[threadIdx];
@@ -197,7 +201,7 @@ void iothread_service_completion(void) {
 
 void iothread_drain_all(void) {
     ASSERT_IS_MAIN_THREAD();
-    ASSERT_IS_NOT_FORKED_CHILD();    
+    ASSERT_IS_NOT_FORKED_CHILD();
     while (s_active_thread_count > 0) {
         iothread_service_completion();
     }

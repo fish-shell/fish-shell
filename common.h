@@ -557,6 +557,12 @@ int read_blocked(int fd, void *buf, size_t count);
  */
 ssize_t write_loop(int fd, const char *buff, size_t count);
 
+/**
+   Loop a read request while failiure is non-critical. Return -1 and set errno
+   in case of critical error.
+ */
+ssize_t read_loop(int fd, void *buff, size_t count);
+
 
 /**
    Issue a debug message with printf-style string formating and
@@ -706,5 +712,10 @@ bool is_forked_child(void);
 void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
+
+extern "C" {
+__attribute__((noinline)) void debug_thread_error(void);
+}
+
 
 #endif

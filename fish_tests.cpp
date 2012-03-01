@@ -51,7 +51,9 @@
 #include "path.h"
 #include "history.h"
 #include "highlight.h"
-
+#include "iothread.h"
+#include "postfork.h"
+#include "signal.h"
 /**
    The number of tests to run
  */
@@ -324,9 +326,58 @@ static void test_tok()
 			}
 		}
 	}
-	
+}
 
-		
+static int test_fork_helper(void *unused) {
+    size_t i;
+    for (i=0; i < 100000; i++) {
+        delete [] (new char[4 * 1024 * 1024]);
+    }
+    return 0;
+}
+
+static void test_fork(void) {
+    return; // Test is disabled until I can force it to fail
+    say(L"Testing fork");
+    size_t i, max = 100;
+    for (i=0; i < 100; i++) {
+        printf("%lu / %lu\n", i+1, max);
+        /* Do something horrible to try to trigger an error */
+#define THREAD_COUNT 8
+#define FORK_COUNT 200
+#define FORK_LOOP_COUNT 16
+        signal_block();
+        for (size_t i=0; i < THREAD_COUNT; i++) {
+            iothread_perform<void>(test_fork_helper, NULL, NULL);
+        }
+        for (size_t q = 0; q < FORK_LOOP_COUNT; q++) {
+            size_t pids[FORK_COUNT];
+            for (size_t i=0; i < FORK_COUNT; i++) {
+                pid_t pid = execute_fork(false);
+                if (pid > 0) {
+                    /* Parent */
+                    pids[i] = pid;
+                } else if (pid == 0) {
+                    /* Child */
+                    new char[4 * 1024 * 1024];
+                    exit_without_destructors(0);
+                } else {
+                    perror("fork");
+                }        
+            }
+            for (size_t i=0; i < FORK_COUNT; i++) {
+                int status = 0;
+                if (pids[i] != waitpid(pids[i], &status, 0)) {
+                    perror("waitpid");
+                    assert(0);
+                }
+                assert(WIFEXITED(status) && 0 == WEXITSTATUS(status));
+            }
+        }
+        iothread_drain_all();
+        signal_unblock();
+    }
+#undef FORK_COUNT
 }
 
 /**
@@ -719,11 +770,12 @@ int main( int argc, char **argv )
 	builtin_init();
 	reader_init();
 	env_init();
-
+    
     test_format();
 	test_escape();
 	test_convert();
 	test_tok();
+    test_fork();
 	test_parser();
 	test_lru();
 	test_expand();

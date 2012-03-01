@@ -233,27 +233,21 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 /**
    Highligt operators (such as $, ~, %, as well as escaped characters.
 */
-static void highlight_param( const wchar_t * buff,
-							 int *color,
-							 int pos,
-							 wcstring_list_t *error )
-{
-	
-	
+static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, int pos, wcstring_list_t *error )
+{	
+    const wchar_t * const buff = buffstr.c_str();
 	int mode = 0; 
-	int in_pos, len = wcslen( buff );
+	size_t in_pos, len = buffstr.size();
 	int bracket_count=0;
-	wchar_t c;
-	int normal_status = *color;
+	int normal_status = colors.at(0);
 	
 	for( in_pos=0;
 		 in_pos<len; 
 		 in_pos++ )
 	{
-		c = buff[in_pos];
+		wchar_t c = buffstr.at(in_pos);
 		switch( mode )
 		{
-
 			/*
 			  Mode 0 means unquoted string
 			*/
@@ -268,27 +262,27 @@ static void highlight_param( const wchar_t * buff,
 					{
 						if( in_pos == 1 )
 						{
-							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = normal_status;
+							colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+							colors.at(in_pos+1) = normal_status;
 						}
 					}
 					else if( buff[in_pos]==L',' )
 					{
 						if( bracket_count )
 						{
-							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = normal_status;
+							colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+							colors.at(in_pos+1) = normal_status;
 						}
 					}
 					else if( wcschr( L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", buff[in_pos] ) )
 					{
-						color[start_pos]=HIGHLIGHT_ESCAPE;
-						color[in_pos+1]=normal_status;
+						colors.at(start_pos)=HIGHLIGHT_ESCAPE;
+						colors.at(in_pos+1)=normal_status;
 					}
 					else if( wcschr( L"c", buff[in_pos] ) )
 						{
-						color[start_pos]=HIGHLIGHT_ESCAPE;
-						color[in_pos+2]=normal_status;
+						colors.at(start_pos)=HIGHLIGHT_ESCAPE;
+						colors.at(in_pos+2)=normal_status;
 					}
 					else if( wcschr( L"uUxX01234567", buff[in_pos] ) )
 					{
@@ -352,13 +346,13 @@ static void highlight_param( const wchar_t * buff,
 
 						if( (res <= max_val) )
 						{
-							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = normal_status;								
+							colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+							colors.at(in_pos+1) = normal_status;								
 						}
 						else
 						{	
-							color[start_pos] = HIGHLIGHT_ERROR;
-							color[in_pos+1] = normal_status;								
+							colors.at(start_pos) = HIGHLIGHT_ERROR;
+							colors.at(in_pos+1) = normal_status;								
 						}
 					}
 
@@ -371,8 +365,8 @@ static void highlight_param( const wchar_t * buff,
 						{
 							if( in_pos == 0 )
 							{
-								color[in_pos] = HIGHLIGHT_OPERATOR;
-								color[in_pos+1] = normal_status;
+								colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+								colors.at(in_pos+1) = normal_status;
 							}
 							break;
 						}
@@ -380,8 +374,8 @@ static void highlight_param( const wchar_t * buff,
 						case L'$':
 						{
 							wchar_t n = buff[in_pos+1];							
-							color[in_pos] = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
-							color[in_pos+1] = normal_status;								
+							colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
+							colors.at(in_pos+1) = normal_status;								
 							break;
 						}
 
@@ -391,23 +385,23 @@ static void highlight_param( const wchar_t * buff,
 						case L'(':
 						case L')':
 						{
-							color[in_pos] = HIGHLIGHT_OPERATOR;
-							color[in_pos+1] = normal_status;
+							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+							colors.at(in_pos+1) = normal_status;
 							break;
 						}
 						
 						case L'{':
 						{
-							color[in_pos] = HIGHLIGHT_OPERATOR;
-							color[in_pos+1] = normal_status;
+							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+							colors.at(in_pos+1) = normal_status;
 							bracket_count++;
 							break;					
 						}
 						
 						case L'}':
 						{
-							color[in_pos] = HIGHLIGHT_OPERATOR;
-							color[in_pos+1] = normal_status;
+							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+							colors.at(in_pos+1) = normal_status;
 							bracket_count--;
 							break;						
 						}
@@ -416,8 +410,8 @@ static void highlight_param( const wchar_t * buff,
 						{
 							if( bracket_count )
 							{
-								color[in_pos] = HIGHLIGHT_OPERATOR;
-								color[in_pos+1] = normal_status;
+								colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+								colors.at(in_pos+1) = normal_status;
 							}
 
 							break;					
@@ -425,14 +419,14 @@ static void highlight_param( const wchar_t * buff,
 						
 						case L'\'':
 						{
-							color[in_pos] = HIGHLIGHT_QUOTE;
+							colors.at(in_pos) = HIGHLIGHT_QUOTE;
 							mode = 1;
 							break;					
 						}
 				
 						case L'\"':
 						{
-							color[in_pos] = HIGHLIGHT_QUOTE;
+							colors.at(in_pos) = HIGHLIGHT_QUOTE;
 							mode = 2;
 							break;
 						}
@@ -455,8 +449,8 @@ static void highlight_param( const wchar_t * buff,
 						case '\\':
 						case L'\'':
 						{
-							color[start_pos] = HIGHLIGHT_ESCAPE;
-							color[in_pos+1] = HIGHLIGHT_QUOTE;
+							colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+							colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
 							break;
 						}
 						
@@ -471,7 +465,7 @@ static void highlight_param( const wchar_t * buff,
 				if( c == L'\'' )
 				{
 					mode = 0;
-					color[in_pos+1] = normal_status;
+					colors.at(in_pos+1) = normal_status;
 				}
 				
 				break;
@@ -487,7 +481,7 @@ static void highlight_param( const wchar_t * buff,
 					case '"':
 					{
 						mode = 0;
-						color[in_pos+1] = normal_status;
+						colors.at(in_pos+1) = normal_status;
 						break;
 					}
 				
@@ -505,8 +499,8 @@ static void highlight_param( const wchar_t * buff,
 							case L'$':
 							case '"':
 							{
-								color[start_pos] = HIGHLIGHT_ESCAPE;
-								color[in_pos+1] = HIGHLIGHT_QUOTE;
+								colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+								colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
 								break;
 							}
 						}
@@ -516,8 +510,8 @@ static void highlight_param( const wchar_t * buff,
 					case '$':
 					{
 						wchar_t n = buff[in_pos+1];
-						color[in_pos] = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
-						color[in_pos+1] = HIGHLIGHT_QUOTE;								
+						colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
+						colors.at(in_pos+1) = HIGHLIGHT_QUOTE;								
 						break;
 					}
 				
@@ -914,12 +908,15 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 						}
 					}
 					
-					highlight_param( param,
-									&color[tok_get_pos( &tok )],
-									pos-tok_get_pos( &tok ), 
-									error );
-					
-					
+                    /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
+                    const wcstring param_str = param;
+                    std::vector<int> subcolors;
+                    subcolors.resize(1 + param_str.size());
+                    int tok_pos = tok_get_pos(&tok);
+                    highlight_param(param_str, subcolors, pos-tok_pos, error);
+                                        
+                    /* Copy the subcolors into our colors array */
+                    std::copy(subcolors.begin(), subcolors.begin() + param_str.size(), color.begin() + tok_pos);
 				}
 				else
 				{ 

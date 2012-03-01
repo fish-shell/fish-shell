@@ -1094,7 +1094,7 @@ env_var_t env_get_string( const wcstring &key )
 		
 		for( i=add_current;; i++ )
 		{
-            // PCA This looks bad!
+            // PCA This looks bad! We can't do this off of the main thread.
 			wchar_t *next = NULL;//history_get( i-add_current );
 			if( !next )
 			{

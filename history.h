@@ -34,10 +34,13 @@ class history_item_t {
     private:
     explicit history_item_t(const wcstring &);
     explicit history_item_t(const wcstring &, time_t, const path_list_t &paths = path_list_t());
+    
+    /** Attempts to merge two compatible history items together */
+    bool merge(const history_item_t &item);
 
 	/** The actual contents of the entry */
 	wcstring contents;
-    	
+    
 	/** Original creation time for the entry */
 	time_t creation_timestamp;
     
@@ -101,9 +104,10 @@ private:
 	/** The size of the mmaped region */
 	size_t mmap_length;
 
-	/**
-	   Timestamp of last save
-	*/
+    /** Timestamp of when this history was created */
+    const time_t birth_timestamp;
+
+	/** Timestamp of last save */
 	time_t save_timestamp;
     
     static history_item_t decode_item(const char *ptr, size_t len);
@@ -118,6 +122,9 @@ private:
     
     /** Loads old if necessary */
     void load_old_if_needed(void);
+    
+    /** Deletes duplicates in new_items. */
+    void compact_new_items();
     
     /** Saves history */
     void save_internal();

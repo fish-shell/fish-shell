@@ -136,7 +136,7 @@ wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &l
 {
     wcstring_list_t strings;
     strings.reserve(list.size());
-    for (std::vector<completion_t>::const_iterator iter = list.begin(); iter != list.end(); iter++) {
+    for (std::vector<completion_t>::const_iterator iter = list.begin(); iter != list.end(); ++iter) {
         strings.push_back(iter->completion);
     }
     return strings;

@@ -1318,7 +1318,7 @@ static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
     if (! result && ! commands_to_load.empty() && ! ctx->has_tried_reloading)
     {
         ctx->has_tried_reloading = true;
-        for (wcstring_list_t::const_iterator iter = commands_to_load.begin(); iter != commands_to_load.end(); iter++)
+        for (wcstring_list_t::const_iterator iter = commands_to_load.begin(); iter != commands_to_load.end(); ++iter)
         {
             complete_load(*iter, false);
         }

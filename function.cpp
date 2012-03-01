@@ -299,7 +299,7 @@ wcstring_list_t function_get_names( int get_hidden )
 	autoload_names( names, get_hidden );
 	
     function_map_t::const_iterator iter;
-    for (iter = loaded_functions.begin(); iter != loaded_functions.end(); iter++) {
+    for (iter = loaded_functions.begin(); iter != loaded_functions.end(); ++iter) {
         const wcstring &name = iter->first;
         
         /* Maybe skip hidden */

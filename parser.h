@@ -37,7 +37,7 @@ struct event_block_t
 typedef std::deque<event_block_t> event_block_list_t;
 
 inline bool event_block_list_blocks_type(const event_block_list_t &ebls, int type) {
-    for (event_block_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); iter++) {
+    for (event_block_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); ++iter) {
         if( iter->typemask & (1<<EVENT_ANY ) )
             return true;
         if( iter->typemask & (1<<type) )

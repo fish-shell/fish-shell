@@ -1424,7 +1424,7 @@ int main (int argc, char *argv[])
 	*/
 	if( output_type == LAUNCH && !error )
 	{
-		for( launch_hash_t::iterator iter = launch_hash.begin(); iter != launch_hash.end(); iter++)
+		for( launch_hash_t::iterator iter = launch_hash.begin(); iter != launch_hash.end(); ++iter)
 		{
 			const char *mimetype = iter->first.c_str();
 			string_list_t &files = iter->second;

@@ -57,6 +57,29 @@ Our history format is intended to be valid YAML. Here it is:
 /** Number of new history entries to add before automatic history save */
 #define SAVE_COUNT 5
 
+/** Whether we print timing information */
+#define LOG_TIMES 0
+
+class time_profiler_t {
+    const char *what;
+    double start;
+    public:
+    
+    time_profiler_t(const char *w) {
+        if (LOG_TIMES) {
+            what = w;
+            start = timef();
+        }
+    }
+    
+    ~time_profiler_t() {
+        if (LOG_TIMES) {
+            double end = timef();
+            printf("(LOG_TIMES %s: %02f msec)\n", what, (end - start) * 1000);
+        }
+    }
+};
+
 /* Our LRU cache is used for restricting the amount of history we have, and limiting how long we order it. */
 class history_lru_node_t : public lru_node_t {
     public:
@@ -125,6 +148,20 @@ class history_item_data_deleter_t {
     }
 };
 
+/* We can merge two items if they are the same command. We use the more recent timestamp and the longer list of required paths. */
+bool history_item_t::merge(const history_item_t &item)
+{
+    bool result = false;
+    if (this->contents == item.contents) {
+        this->creation_timestamp = std::max(this->creation_timestamp, item.creation_timestamp);
+        if (this->required_paths.size() < item.required_paths.size()) {
+            this->required_paths = item.required_paths;
+        }
+        result = true;
+    }
+    return result;
+}
+
 history_item_t::history_item_t(const wcstring &str) : contents(str), creation_timestamp(time(NULL))
 {
 }
@@ -164,7 +201,7 @@ bool history_lru_node_t::write_yaml_to_file(FILE *f) const {
         if (fputs("   paths:\n", f) < 0)
             return false;
             
-        for (path_list_t::const_iterator iter = required_paths.begin(); iter != required_paths.end(); iter++) {
+        for (path_list_t::const_iterator iter = required_paths.begin(); iter != required_paths.end(); ++iter) {
             std::string path = wcs2string(*iter);
             escape_yaml(path);
             
@@ -188,6 +225,7 @@ history_t::history_t(const wcstring &pname) :
     name(pname),
     mmap_start(NULL),
     mmap_length(0),
+    birth_timestamp(time(NULL)),
     save_timestamp(0),
     loaded_old(false)
 {
@@ -203,8 +241,15 @@ void history_t::add(const history_item_t &item)
 {
     scoped_lock locker(lock);
     
-    /* Add the history items */
-    new_items.push_back(item);
+    /* Try merging with the last item */
+    if (! new_items.empty() && new_items.back().merge(item)) {
+        /* We merged, so we don't have to add anything */
+    }
+    else
+    {
+        /* We have to add a new item */
+        new_items.push_back(item);
+    }
     
     /* Prevent the first write from always triggering a save */
     time_t now = time(NULL);
@@ -212,8 +257,10 @@ void history_t::add(const history_item_t &item)
         save_timestamp = now;
     
     /* This might be a good candidate for moving to a background thread */
-    if((now > save_timestamp + SAVE_INTERVAL) || (new_items.size() >= SAVE_COUNT))
+    if((now > save_timestamp + SAVE_INTERVAL) || (new_items.size() >= SAVE_COUNT)) {
+        time_profiler_t profiler("save_internal");
 		this->save_internal();
+    }
 
 }
 
@@ -249,7 +296,7 @@ history_item_t history_t::item_at_index(size_t idx) {
     return history_item_t(wcstring(), 0);
 }
 
-/* Read one line, stripping off any newline, and updating cursor. Note that our string is NOT null terminated; it's just a memory mapped file. */
+/* Read one line, stripping off any newline, and updating cursor. Note that our input string is NOT null terminated; it's just a memory mapped file. */
 static size_t read_line(const char *base, size_t cursor, size_t len, std::string &result) {
     /* Locate the newline */
     assert(cursor <= len);
@@ -365,12 +412,39 @@ done:
     
 }
 
+// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
+// The string is NOT null terminated; however we do know it contains a newline, so stop when we reach it
+static bool parse_timestamp(const char *str, time_t *out_when) {
+    const char *cursor = str;
+    /* Advance past spaces */
+    while (*cursor == ' ')
+        cursor++;
+        
+    /* Look for "when:" */
+    size_t when_len = 5;
+    if (strncmp(cursor, "when:", when_len) != 0)
+        return false;
+    cursor += when_len;
+    
+    /* Advance past spaces */
+    while (*cursor == ' ')
+        cursor++;
+    
+    /* Try to parse a timestamp. */
+    long timestamp = 0;
+    if (isdigit(*cursor) && (timestamp = strtol(cursor, NULL, 0)) > 0) {
+        *out_when = (time_t)timestamp;
+        return true;
+    }
+    return false;
+}
+
 void history_t::populate_from_mmap(void)
 {
 	const char *begin = mmap_start;
     size_t cursor = 0;
     while (cursor < mmap_length) {
-        const char *line_start = begin + cursor;
+        const char * const line_start = begin + cursor;
         /* Look for a newline */
         const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
         if (newline == NULL)
@@ -380,7 +454,7 @@ void history_t::populate_from_mmap(void)
         size_t line_len = newline - line_start;
         cursor += line_len + 1;
 
-        /* Skip lines with a leading, since these are in the interior of one of our items */
+        /* Skip lines with a leading space, since these are in the interior of one of our items */
         if (line_start[0] == ' ')
             continue;
         
@@ -393,7 +467,14 @@ void history_t::populate_from_mmap(void)
             ! memcmp(line_start, "---", 3) ||
             ! memcmp(line_start, "...", 3))
             continue;
-            
+
+
+        /* Hackish fast way to skip items created after our timestamp. This is the mechanism by which we avoid "seeing" commands from other sessions that started after we started. We try hard to ensure that our items are sorted by their timestamps, so in theory we could just break, but I don't think that works well if (for example) the clock changes. So we'll read all subsequent items.
+         */
+        time_t timestamp;
+        if (parse_timestamp(line_start, &timestamp) && timestamp >= birth_timestamp)
+            continue;
+
         /* We made it through the gauntlet. */
         old_item_offsets.push_back(line_start - begin);
     }
@@ -406,7 +487,7 @@ void history_t::load_old_if_needed(void)
     
 	int fd;
 	int ok=0;
-	
+    
     // PCA not sure why signals were blocked here
 	//signal_block();
     wcstring filename = history_filename(name, L"");
@@ -424,6 +505,7 @@ void history_t::load_old_if_needed(void)
 					if( (mmap_start = (char *)mmap( 0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0 )) != MAP_FAILED )
 					{
 						ok = 1;
+                        time_profiler_t profiler("populate_from_mmap");
 						this->populate_from_mmap();
 					}
 				}
@@ -510,7 +592,7 @@ wcstring history_search_t::current_string() const {
 }
 
 bool history_search_t::match_already_made(const wcstring &match) const {
-    for (std::deque<prev_match_t>::const_iterator iter = prev_matches.begin(); iter != prev_matches.end(); iter++) {
+    for (std::deque<prev_match_t>::const_iterator iter = prev_matches.begin(); iter != prev_matches.end(); ++iter) {
         if (iter->second.str() == match)
             return true;
     }
@@ -574,45 +656,79 @@ void history_t::clear_file_state()
     if (mmap_start != NULL && mmap_start != MAP_FAILED) {
         munmap((void *)mmap_start, mmap_length);
     }
-    mmap_start = 0;
+    mmap_start = NULL;
     mmap_length = 0;
     loaded_old = false;
-    new_items.clear();
     old_item_offsets.clear();
     save_timestamp=time(0);
+}
+
+void history_t::compact_new_items() {
+    /* Keep only the most recent items with the given contents. This algorithm could be made more efficient, but likely would consume more memory too. */
+    std::set<wcstring> seen;
+    size_t idx = new_items.size();
+    while (idx--) {
+        const history_item_t &item = new_items[idx];
+        if (! seen.insert(item.contents).second) {
+            // This item was not inserted because it was already in the set, so delete the item at this index
+            new_items.erase(new_items.begin() + idx);
+        }
+    }
 }
 
 /** Save the specified mode to file */
 void history_t::save_internal()
 {
     /* This must be called while locked */
+    ASSERT_IS_LOCKED(lock);
     
     /* Nothing to do if there's no new items */
     if (new_items.empty())
         return;
+        
+    /* Compact our new items so we don't have duplicates */
+    this->compact_new_items();
     
 	bool ok = true;
 	
     wcstring tmp_name = history_filename(name, L".tmp");
 	if( ! tmp_name.empty() )
 	{
-    
         /* Load old */
         load_old_if_needed();
         
         /* Make an LRU cache to save only the last N elements */
         history_lru_cache_t lru(HISTORY_SAVE_MAX);
         
-        /* Insert old items in, from old to new */
-        for (std::deque<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); iter++) {
+        /* Insert old items in, from old to new. Merge them with our new items, inserting items with earlier timestamps first. */
+        std::vector<history_item_t>::const_iterator new_item_iter = new_items.begin();
+        
+        for (std::deque<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); ++iter) {
             size_t offset = *iter;
-            history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
-            lru.add_item(item);
+            
+            /* Decode an old item */
+            const history_item_t old_item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
+            if (old_item.empty())
+                continue;
+            
+            /* The old item may actually be more recent than our new item, if it came from another session. Insert all new items at the given index with an earlier timestamp. */
+            for (; new_item_iter != new_items.end(); ++new_item_iter) {
+                if (new_item_iter->timestamp() < old_item.timestamp()) {
+                    /* This "new item" is in fact older. */
+                    lru.add_item(*new_item_iter);
+                } else {
+                    /* The new item is not older. */
+                    break;
+                }
+            }
+            
+            /* Now add this old item */
+            lru.add_item(old_item);
         }
         
-        /* Insert new items */
-        for (std::vector<history_item_t>::iterator iter = new_items.begin(); iter != new_items.end(); iter++) {
-            lru.add_item(*iter);
+        /* Insert any remaining new items */
+        for (; new_item_iter != new_items.end(); ++new_item_iter) {
+            lru.add_item(*new_item_iter);
         }
         
         signal_block();
@@ -621,7 +737,7 @@ void history_t::save_internal()
 		if( (out=wfopen( tmp_name, "w" ) ) )
 		{
             /* Write them out */
-            for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); iter++) {
+            for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter) {
                 const history_lru_node_t *node = *iter;
                 if (! node->write_yaml_to_file(out)) {
                     ok = false;
@@ -681,7 +797,7 @@ void history_init()
 void history_destroy()
 {
     /* Save all histories */
-    for (std::map<wcstring, history_t *>::iterator iter = histories.begin(); iter != histories.end(); iter++) {
+    for (std::map<wcstring, history_t *>::iterator iter = histories.begin(); iter != histories.end(); ++iter) {
         iter->second->save();
     }
 }
@@ -698,7 +814,7 @@ int file_detection_context_t::perform_file_detection(bool test_all) {
     ASSERT_IS_BACKGROUND_THREAD();
     valid_paths.clear();
     int result = 1;
-    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); iter++) {    
+    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); ++iter) {    
         if (path_is_valid(*iter, working_directory)) {
             /* Push the original (possibly relative) path */
             valid_paths.push_front(*iter);

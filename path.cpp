@@ -404,7 +404,7 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
         free( path_cpy );
     }
     
-    for (wcstring_list_t::const_iterator iter = paths.begin(); iter != paths.end(); iter++) {
+    for (wcstring_list_t::const_iterator iter = paths.begin(); iter != paths.end(); ++iter) {
 		struct stat buf;
         const wcstring &dir = *iter;
 		if( wstat( dir, &buf ) == 0 )

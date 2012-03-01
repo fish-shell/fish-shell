@@ -347,7 +347,7 @@ bool completer_t::condition_test( const wcstring &condition )
 static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd, const bool cmd_is_path )
 {
     ASSERT_IS_LOCKED(completion_lock);
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
 	{
         completion_entry_t *entry = *iter;
         if (entry->cmd == cmd && cmd_is_path == entry->cmd_is_path)
@@ -481,7 +481,7 @@ static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, con
 			else
 			{
                 /* Just go to the next one */
-				iter++;
+				++iter;
 			}
 		}
 	}
@@ -509,7 +509,7 @@ void complete_remove( const wchar_t *cmd,
             delete e;
         } else {
             /* Don't delete it */
-            iter++;
+            ++iter;
         }
 	}
 }
@@ -620,7 +620,7 @@ int complete_is_valid_option( const wchar_t *str,
 
 	scoped_lock lock(completion_lock);
     scoped_lock lock2(completion_entry_lock);
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
 	{
         const completion_entry_t *i = *iter;
 		const wcstring &match = i->cmd_is_path ? path : cmd;
@@ -642,7 +642,7 @@ int complete_is_valid_option( const wchar_t *str,
         const option_list_t &options = i->get_options();
 		if( is_gnu_opt )
 		{
-            for (option_list_t::const_iterator iter = options.begin(); iter != options.end(); iter++)
+            for (option_list_t::const_iterator iter = options.begin(); iter != options.end(); ++iter)
             {
                 const complete_entry_opt_t &o = *iter;
 				if( o.old_mode )
@@ -665,7 +665,7 @@ int complete_is_valid_option( const wchar_t *str,
 		else
 		{
 			/* Check for old style options */
-            for (option_list_t::const_iterator iter = options.begin(); iter != options.end(); iter++)
+            for (option_list_t::const_iterator iter = options.begin(); iter != options.end(); ++iter)
 			{
                 const complete_entry_opt_t &o = *iter;
                 
@@ -1269,7 +1269,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 
     scoped_lock lock(completion_lock);
     scoped_lock lock2(completion_entry_lock);
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
+    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
 	{
         const completion_entry_t *i = *iter;
 		const wcstring &match = i->cmd_is_path ? path : cmd;
@@ -1288,7 +1288,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 			{
 				/* Check if we are entering a combined option and argument
 				   (like --color=auto or -I/usr/include) */
-                for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); oiter++)
+                for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); ++oiter)
 				{
                 	const complete_entry_opt_t *o = &*oiter;
 					wchar_t *arg;
@@ -1310,7 +1310,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 				  If we are using old style long options, check for them
 				  first
 				*/
-                for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); oiter++)
+                for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); ++oiter)
 				{
                     const complete_entry_opt_t *o = &*oiter;
 					if( o->old_mode )
@@ -1332,7 +1332,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 				*/
 				if( !old_style_match )
 				{
-                    for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); oiter++)
+                    for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); ++oiter)
                     {
                         const complete_entry_opt_t *o = &*oiter;
 						/*
@@ -1358,7 +1358,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 		if( use_common )
 		{
 
-            for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); oiter++)
+            for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); ++oiter)
             {
                 const complete_entry_opt_t *o = &*oiter;
 				/*
@@ -1920,11 +1920,11 @@ void complete_print( wcstring &out )
 {
     scoped_lock locker(completion_lock);
     scoped_lock locker2(completion_entry_lock);
-    for (completion_entry_list_t::const_iterator iter = completion_entries.begin(); iter != completion_entries.end(); iter++)
+    for (completion_entry_list_t::const_iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
     {
         const completion_entry_t *e = *iter;
         const option_list_t options = e->get_options();
-        for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); oiter++)
+        for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); ++oiter)
         {
             const complete_entry_opt_t *o = &*oiter;
 			const wchar_t *modestr[] =

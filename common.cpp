@@ -559,9 +559,6 @@ wcstring wsetlocale(int category, const wchar_t *locale)
 	if (locale && wcscmp(locale,L"")){
 		lang = wcs2str( locale );
 	}
-	{
-		lang = NULL;
-	}
 	char * res = setlocale(category,lang);
 	free( lang );
 
@@ -661,6 +658,15 @@ ssize_t write_loop(int fd, const char *buff, size_t count)
 	return out_cum;
 }
 
+ssize_t read_loop(int fd, void *buff, size_t count)
+{
+    ssize_t result;
+    do {
+        result = read(fd, buff, count);
+    } while (result < 0 && (errno == EAGAIN || errno == EINTR));
+    return result;
+}
+
 void debug( int level, const wchar_t *msg, ... )
 {
 	va_list va;
@@ -743,12 +749,12 @@ void format_int_safe(char buff[128], int val) {
             val = -val;
 
         while (val > 0) {
-            buff[idx++] = val % 10;
+            buff[idx++] = '0' + (val % 10);
             val /= 10;
         }
         if (negative)
             buff[idx++] = '-';
-        buff[idx++] = 0;
+        buff[idx] = 0;
         
         size_t left = 0, right = idx - 1;
         while (left < right)  {

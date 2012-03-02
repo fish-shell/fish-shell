@@ -201,6 +201,13 @@ bool set_cloexec(int fd) {
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec)
 {
     cstring tmp = wcs2string(pathname);
+    /* Prefer to use O_CLOEXEC. It has to both be defined and nonzero */
+#ifdef O_CLOEXEC
+    if (cloexec && O_CLOEXEC) {
+        flags |= O_CLOEXEC;
+        cloexec = false;
+    }
+#endif
     int fd = ::open(tmp.c_str(), flags, mode);
     if (cloexec && fd >= 0 && ! set_cloexec(fd)) {
         close(fd);

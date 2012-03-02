@@ -2746,24 +2746,25 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 	else
 	{
 		
-		if( wstat(argv[1], &buf) == -1 )
+		if( ( fd = wopen_cloexec( argv[1], O_RDONLY ) ) == -1 )
 		{
 			append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
 			builtin_wperror( L"." );
-					
+			return STATUS_BUILTIN_ERROR;
+		}
+        
+		if( fstat(fd, &buf) == -1 )
+		{
+			close(fd);
+			append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
+			builtin_wperror( L"." );
 			return STATUS_BUILTIN_ERROR;
 		}
 
 		if( !S_ISREG(buf.st_mode) )
 		{
+			close(fd);
 			append_format(stderr_buffer, _( L"%ls: '%ls' is not a file\n" ), argv[0], argv[1] );
-			return STATUS_BUILTIN_ERROR;
-		}
-
-		if( ( fd = wopen_cloexec( argv[1], O_RDONLY ) ) == -1 )
-		{
-			append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
-			builtin_wperror( L"." );
 			return STATUS_BUILTIN_ERROR;
 		}
 

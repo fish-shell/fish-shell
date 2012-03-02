@@ -1967,91 +1967,91 @@ int parser_t::parse_job( process_t *p,
 				*/
 				if( p->actual_cmd == NULL )
 				{
-
+                    
 					int tmp;
-						const wchar_t *cmd = args.at( 0 ).completion.c_str();
-						
-						/* 
-						   We couldn't find the specified command.
-						   
-						   What we want to happen now is that the
-						   specified job won't get executed, and an
-						   error message is printed on-screen, but
-						   otherwise, the parsing/execution of the
-						   file continues. Because of this, we don't
-						   want to call error(), since that would stop
-						   execution of the file. Instead we let
-						   p->actual_command be 0 (null), which will
-						   cause the job to silently not execute. We
-						   also print an error message and set the
-						   status to 127 (This is the standard number
-						   for this, used by other shells like bash
-						   and zsh).
-						*/
-						if( wcschr( cmd, L'=' ) )
-						{
-							wchar_t *cpy = wcsdup( cmd );
-							wchar_t *valpart = wcschr( cpy, L'=' );
-							*valpart++=0;
-							
-							debug( 0,
-								   COMMAND_ASSIGN_ERR_MSG,
-								   cmd,
-								   cpy,
-								   valpart);
-							free(cpy);
-							
-						}
-						else if(cmd[0]==L'$')
-						{
-							
-							const env_var_t val_wstr = env_get_string( cmd+1 );
-							const wchar_t *val = val_wstr.missing() ? NULL : val_wstr.c_str();	
-							if( val )
-							{
-								debug( 0,
-									   _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end'. See the help section for the function command by typing 'help function'." ),
-									   cmd+1,
-									   val,
-									   cmd );
-							}
-							else
-							{
-								debug( 0,
-									   _(L"Variables may not be used as commands. Instead, define a function. See the help section for the function command by typing 'help function'." ),
-									   cmd );
-							}			
-						}
-						else if(wcschr( cmd, L'$' ))
-						{
-							debug( 0,
-								   _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. See the help section for the eval command by typing 'help eval'." ),
-								   cmd,
-								   cmd );
-						}
-						else if( err!=ENOENT )
-						{
-							debug( 0,
-								   _(L"The file '%ls' is not executable by this user"),
-								   cmd?cmd:L"UNKNOWN" );
-						}
-						else
-						{			
-							debug( 0,
-								   _(L"Unknown command '%ls'"),
-								   cmd?cmd:L"UNKNOWN" );
-						}
-						
-						tmp = current_tokenizer_pos;
-						current_tokenizer_pos = tok_get_pos(tok);
-						
-						fwprintf( stderr, L"%ls", parser_t::current_line() );
-						
-						current_tokenizer_pos=tmp;
-
-						job_set_flag( j, JOB_SKIP, 1 );
-						event_fire_generic(L"fish_command_not_found", (wchar_t *)( args.at( 0 ).completion.c_str() ) );
-						proc_set_last_status( err==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE );
+                    const wchar_t *cmd = args.at( 0 ).completion.c_str();
+                    
+                    /* 
+                     We couldn't find the specified command.
+                     
+                     What we want to happen now is that the
+                     specified job won't get executed, and an
+                     error message is printed on-screen, but
+                     otherwise, the parsing/execution of the
+                     file continues. Because of this, we don't
+                     want to call error(), since that would stop
+                     execution of the file. Instead we let
+                     p->actual_command be 0 (null), which will
+                     cause the job to silently not execute. We
+                     also print an error message and set the
+                     status to 127 (This is the standard number
+                     for this, used by other shells like bash
+                     and zsh).
+                     */
+                    if( wcschr( cmd, L'=' ) )
+                    {
+                        wchar_t *cpy = wcsdup( cmd );
+                        wchar_t *valpart = wcschr( cpy, L'=' );
+                        *valpart++=0;
+                        
+                        debug( 0,
+                              COMMAND_ASSIGN_ERR_MSG,
+                              cmd,
+                              cpy,
+                              valpart);
+                        free(cpy);
+                        
+                    }
+                    else if(cmd[0]==L'$')
+                    {
+                        
+                        const env_var_t val_wstr = env_get_string( cmd+1 );
+                        const wchar_t *val = val_wstr.missing() ? NULL : val_wstr.c_str();	
+                        if( val )
+                        {
+                            debug( 0,
+                                  _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end'. See the help section for the function command by typing 'help function'." ),
+                                  cmd+1,
+                                  val,
+                                  cmd );
+                        }
+                        else
+                        {
+                            debug( 0,
+                                  _(L"Variables may not be used as commands. Instead, define a function. See the help section for the function command by typing 'help function'." ),
+                                  cmd );
+                        }			
+                    }
+                    else if(wcschr( cmd, L'$' ))
+                    {
+                        debug( 0,
+                              _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. See the help section for the eval command by typing 'help eval'." ),
+                              cmd,
+                              cmd );
+                    }
+                    else if( err!=ENOENT )
+                    {
+                        debug( 0,
+                              _(L"The file '%ls' is not executable by this user"),
+                              cmd?cmd:L"UNKNOWN" );
+                    }
+                    else
+                    {			
+                        debug( 0,
+                              _(L"Unknown command '%ls'"),
+                              cmd?cmd:L"UNKNOWN" );
+                    }
+                    
+                    tmp = current_tokenizer_pos;
+                    current_tokenizer_pos = tok_get_pos(tok);
+                    
+                    fwprintf( stderr, L"%ls", parser_t::current_line() );
+                    
+                    current_tokenizer_pos=tmp;
+                    
+                    job_set_flag( j, JOB_SKIP, 1 );
+                    event_fire_generic(L"fish_command_not_found", (wchar_t *)( args.at( 0 ).completion.c_str() ) );
+                    proc_set_last_status( err==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE );
 				}
 			}
 		}
@@ -2307,8 +2307,7 @@ void parser_t::eval_job( tokenizer *tok )
 				if( job_start_pos < tok_get_pos( tok ) )
 				{
 					int stop_pos = tok_get_pos( tok );
-					const wchar_t *newline = wcschr(  tok_string(tok)+start_pos,
-												L'\n' );
+					const wchar_t *newline = wcschr(tok_string(tok)+start_pos, L'\n');
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );
 

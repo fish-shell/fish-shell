@@ -935,9 +935,9 @@ static void completion_insert( const wchar_t *val, int flags )
 	wchar_t *replaced;
 
 	wchar_t quote;
-	int add_space = !(flags & COMPLETE_NO_SPACE);
-	int do_replace = (flags & COMPLETE_NO_CASE);
-	int do_escape = !(flags & COMPLETE_DONT_ESCAPE);
+	bool add_space = !(flags & COMPLETE_NO_SPACE);
+	bool do_replace = !!(flags & COMPLETE_NO_CASE);
+	bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
 	
 	//	debug( 0, L"Insert completion %ls with flags %d", val, flags);
 
@@ -1283,9 +1283,24 @@ struct autosuggestion_context_t {
         /* Try normal completions */
         std::vector<completion_t> completions;
         complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
-        if (! completions.empty()) {        
+        if (! completions.empty()) {
+            const completion_t &comp = completions.at(0);
             this->autosuggestion = this->search_string;
-            this->autosuggestion.append(completions.at(0).completion);
+            
+            if (comp.flags & COMPLETE_NO_CASE) {
+                /* The completion contains the whole current token, not merely a suffix */
+                
+                const wchar_t *begin;
+                const wchar_t *buff = data->command_line.c_str();
+                parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
+                
+                size_t start = begin - buff;
+                assert(data->buff_pos >= start);
+                this->autosuggestion.replace(start, data->buff_pos - start, comp.completion);
+            } else {
+                /* The completion contains only a suffix */
+                this->autosuggestion.append(comp.completion);
+            }
             return 1;
         }
         
@@ -1325,11 +1340,11 @@ static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
         iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
         return;
     }
-
+    
     if (result &&
         can_autosuggest() &&
         ctx->search_string == data->command_line &&
-        string_prefixes_string(ctx->search_string, ctx->autosuggestion)) {
+        string_prefixes_string_case_insensitive(ctx->search_string, ctx->autosuggestion)) {
         /* Autosuggestion is active and the search term has not changed, so we're good to go */
         data->autosuggestion = ctx->autosuggestion;
         sanity_check();
@@ -2482,7 +2497,7 @@ static void reader_super_highlight_me_plenty( int match_highlight_pos )
     
     /* Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it. Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into the autosuggestion. */
     const wcstring &cmd = data->command_line, &suggest = data->autosuggestion;
-    if (can_autosuggest() && ! suggest.empty() && string_prefixes_string(cmd, suggest)) {
+    if (can_autosuggest() && ! suggest.empty() && string_prefixes_string_case_insensitive(cmd, suggest)) {
         /* The autosuggestion is still reasonable, so do nothing */
     } else {
         update_autosuggestion();

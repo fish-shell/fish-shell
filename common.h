@@ -252,6 +252,9 @@ std::string wcs2string(const wcstring &input);
 /** Test if a string prefixes another. Returns true if a is a prefix of b */
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
 
+/** Test if a string prefixes another without regard to case. Returns true if a is a prefix of b */
+bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix, const wcstring &value);
+
 /** Test if a list contains a string using a linear search. */
 bool list_contains_string(const wcstring_list_t &list, const wcstring &str);
 

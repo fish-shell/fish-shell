@@ -42,19 +42,23 @@ void wutil_init();
 void wutil_destroy();
 
 /**
-   Wide character version of fopen().
+   Wide character version of fopen(). This sets CLO_EXEC.
 */
 FILE *wfopen(const wcstring &path, const char *mode);
+
+/** Sets CLO_EXEC on a given fd */
+bool set_cloexec(int fd);
 
 /**
    Wide character version of freopen().
 */
 FILE *wfreopen(const wcstring &path, const char *mode, FILE *stream);
 
-/**
-   Wide character version of open().
-*/
-int wopen(const wcstring &pathname, int flags, ...);
+/** Wide character version of open(). */
+int wopen(const wcstring &pathname, int flags, mode_t mode = 0);
+
+/** Wide character version of open() that also sets the close-on-exec flag (atomically when possible). */
+int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);
 
 /**
    Wide character version of creat().
@@ -62,9 +66,7 @@ int wopen(const wcstring &pathname, int flags, ...);
 int wcreat(const wcstring &pathname, mode_t mode);
 
 
-/**
-   Wide character version of opendir().
-*/
+/** Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by POSIX (hooray). */
 DIR *wopendir(const wcstring &name);
 
 /**

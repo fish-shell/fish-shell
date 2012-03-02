@@ -196,6 +196,7 @@ char *my_strdup( const char *s )
 */
 static const char * search_ini( const char *filename, const char *match )
 {
+    /* OK to not use CLO_EXEC here because mimedb is single threaded */
 	FILE *f = fopen( filename, "r" );
 	char buf[4096];
 	int len=strlen(match);
@@ -584,6 +585,7 @@ static char *get_description( const char *mimetype )
 		return 0;
 	}
 
+    /* OK to not use CLO_EXEC here because mimedb is single threaded */
 	fd = open( fn.c_str(), O_RDONLY );
 
 //	fprintf( stderr, "%s\n", fn );

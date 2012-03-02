@@ -616,16 +616,6 @@ wchar_t *unescape( const wchar_t * in,
 bool unescape_string( wcstring &str, 
                   int escape_special );
 
-/**
-   Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
-   milliseconds between polls and timing out after timeout seconds, 
-   thereafter forcibly attempting to obtain the lock if force is non-zero.
-   Returns 1 on success, 0 on failure.
-   To release the lock the lockfile must be unlinked.
-   A unique temporary file named by appending characters to the lockfile name 
-   is used; any pre-existing file of the same name is subject to deletion.
-*/
-int acquire_lock_file( const char *lockfile, const int timeout, int force );
 
 /** 
     Returns the width of the terminal window, so that not all

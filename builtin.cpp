@@ -2724,6 +2724,7 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 */
 static int builtin_source( parser_t &parser, wchar_t ** argv )
 {
+    ASSERT_IS_MAIN_THREAD();
 	int fd;
 	int res = STATUS_BUILTIN_OK;
 	struct stat buf;
@@ -2759,7 +2760,7 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 			return STATUS_BUILTIN_ERROR;
 		}
 
-		if( ( fd = wopen( argv[1], O_RDONLY ) ) == -1 )
+		if( ( fd = wopen_cloexec( argv[1], O_RDONLY ) ) == -1 )
 		{
 			append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1] );
 			builtin_wperror( L"." );

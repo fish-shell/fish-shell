@@ -198,6 +198,7 @@ void close_unused_internal_pipes( io_data_t *io )
  */
 static char *get_interpreter( const char *command, char *interpreter, size_t buff_size )
 {
+    // OK to not use CLO_EXEC here because this is only called after fork
 	int fd = open( command, O_RDONLY );
 	if( fd >= 0 )
 	{
@@ -248,6 +249,7 @@ static void safe_launch_process( process_t *p, const char *actual_cmd, char **ar
 	   /bin/sh if encountered. This is a weird predecessor to the shebang
 	   that is still sometimes used since it is supported on Windows.
 	*/
+    /* OK to not use CLO_EXEC here because this is called after fork and the file is immediately closed */
 	int fd = open(actual_cmd, O_RDONLY);
 	if (fd >= 0)
 	{
@@ -414,6 +416,7 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 */
 static io_data_t *io_transmogrify( io_data_t * in )
 {
+    ASSERT_IS_MAIN_THREAD();
 	if( !in )
 		return 0;
 	
@@ -876,6 +879,7 @@ void exec( parser_t &parser, job_t *j )
 							
 							case IO_FILE:
 							{
+                                /* Do not set CLO_EXEC because child needs access */
 								builtin_stdin=wopen( in->filename,
                                               in->param2.flags, OPEN_MASK );
 								if( builtin_stdin == -1 )

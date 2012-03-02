@@ -680,9 +680,7 @@ void parser_t::destroy()
 {
 	if( profile )
 	{
-		/*
-		  Save profiling information
-		*/
+		/* Save profiling information. OK to not use CLO_EXEC here because this is called while fish is dying (and hence will not fork) */
 		FILE *f = fopen( profile, "w" );
 		if( !f )
 		{

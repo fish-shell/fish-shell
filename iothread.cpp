@@ -12,8 +12,6 @@
 #include <fcntl.h>
 #include <queue>
 
-#define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s). Break on debug_thread_error to debug.\n", #a, __LINE__, __FILE__, err, strerror(err)); debug_thread_error(); abort(); }} while (0)
-
 #ifdef _POSIX_THREAD_THREADS_MAX
   #if _POSIX_THREAD_THREADS_MAX < 64
     #define IO_MAX_THREADS _POSIX_THREAD_THREADS_MAX

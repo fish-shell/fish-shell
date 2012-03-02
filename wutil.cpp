@@ -71,6 +71,8 @@ void wutil_destroy()
 {
 }
 
+static pthread_mutex_t readdir_lock = PTHREAD_MUTEX_INITIALIZER;
+
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name, bool *out_is_dir)
 {
     struct dirent *d = readdir( dir );
@@ -144,8 +146,39 @@ int wchdir( const wcstring &dir )
 
 FILE *wfopen(const wcstring &path, const char *mode)
 {
-	cstring tmp = wcs2string(path);
-	return fopen(tmp.c_str(), mode);
+    int permissions = 0, options = 0;
+    switch (*mode++) {
+        case 'r':
+            permissions = O_RDONLY;
+            break;
+        case 'w':
+            permissions = O_WRONLY;
+            options = O_CREAT | O_TRUNC;
+            break;
+        case 'a':
+            permissions = O_WRONLY;
+            options = O_CREAT | O_APPEND;
+            break;
+        default:
+            errno = EINVAL;
+            return NULL;
+            break;
+    }
+    /* Skip binary */
+    if (*mode == 'b')
+        mode++;
+    
+    /* Consider append option */
+    if (*mode == '+')
+        permissions = O_RDWR;
+    
+    int fd = wopen_cloexec(path, permissions | options, 0666);
+    if (fd < 0)
+        return NULL;
+    FILE *result = fdopen(fd, mode);
+    if (result == NULL)
+        close(fd);
+    return result;
 }
 
 FILE *wfreopen(const wcstring &path, const char *mode, FILE *stream)
@@ -154,23 +187,40 @@ FILE *wfreopen(const wcstring &path, const char *mode, FILE *stream)
     return freopen(tmp.c_str(), mode, stream);
 }
 
-int wopen(const wcstring &pathname, int flags, ...)
+bool set_cloexec(int fd) {
+    int flags = fcntl(fd, F_GETFD, 0);
+    if (flags < 0) {
+        return false;
+    } else if (flags & FD_CLOEXEC) {
+        return true;
+    } else {
+        return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) >= 0;
+    }
+}
+
+static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec)
 {
     cstring tmp = wcs2string(pathname);
-	int res=-1;
-	va_list argp;	
-    if( ! (flags & O_CREAT) )
-    {
-        res = open(tmp.c_str(), flags);
+    int fd = ::open(tmp.c_str(), flags, mode);
+    if (cloexec && fd >= 0 && ! set_cloexec(fd)) {
+        close(fd);
+        fd = -1;
     }
-    else
-    {
-        va_start( argp, flags );
-        res = open(tmp.c_str(), flags, va_arg(argp, int) );
-        va_end( argp );
-    }
-    return res;
+    return fd;
+    
 }
+int wopen(const wcstring &pathname, int flags, mode_t mode)
+{
+    // off the main thread, always use wopen_cloexec
+    ASSERT_IS_MAIN_THREAD();
+    return wopen_internal(pathname, flags, mode, false);
+}
+
+int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode)
+{
+    return wopen_internal(pathname, flags, mode, true);
+}
+
 
 int wcreat(const wcstring &pathname, mode_t mode)
 {

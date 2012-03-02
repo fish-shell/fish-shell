@@ -440,7 +440,8 @@ xdg_mime_get_mime_type_for_file (const char *file_name)
   data = (unsigned char *)malloc (max_extent);
   if (data == NULL)
     return XDG_MIME_TYPE_UNKNOWN;
-        
+
+  /* OK to not use CLO_EXEC here because mimedb is single threaded */
   file = fopen (file_name, "r");
   if (file == NULL)
     {

@@ -130,6 +130,7 @@ _xdg_mime_parent_read_from_file (XdgParentList *list,
   int i, alloc;
   XdgMimeParents *entry;
 
+  /* OK to not use CLO_EXEC here because mimedb is single threaded */
   file = fopen (file_name, "r");
 
   if (file == NULL)

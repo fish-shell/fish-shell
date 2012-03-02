@@ -447,6 +447,7 @@ _xdg_mime_glob_read_from_file (XdgGlobHash *glob_hash,
   FILE *glob_file;
   char line[255];
 
+  /* OK to not use CLO_EXEC here because mimedb is single threaded */
   glob_file = fopen (file_name, "r");
 
   if (glob_file == NULL)

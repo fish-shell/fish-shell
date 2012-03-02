@@ -124,6 +124,7 @@ _xdg_mime_alias_read_from_file (XdgAliasList *list,
   char line[255];
   int alloc;
 
+  /* OK to not use CLO_EXEC here because mimedb is single threaded */
   file = fopen (file_name, "r");
 
   if (file == NULL)

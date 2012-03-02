@@ -1006,6 +1006,7 @@ static void init( int mangle_descriptors, int out )
 		close(1);
 		close(0);
 
+        /* OK to not use CLO_EXEC here because fish_pager is single threaded */
 		if( (in = open( ttyname(2), O_RDWR )) != -1 )
 		{
 			if( dup2( 2, 1 ) == -1 )

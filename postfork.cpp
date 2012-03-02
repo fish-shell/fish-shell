@@ -169,6 +169,7 @@ static int handle_child_io( io_data_t *io )
 
 			case IO_FILE:
 			{
+                // Here we definitely do not want to set CLO_EXEC because our child needs access
 				if( (tmp=wopen( io->filename,
 						io->param2.flags, OPEN_MASK ) )==-1 )
 				{

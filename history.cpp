@@ -494,7 +494,7 @@ void history_t::load_old_if_needed(void)
 	
 	if( ! filename.empty() )
 	{
-		if( ( fd = wopen( filename, O_RDONLY ) ) > 0 )
+		if( ( fd = wopen_cloexec( filename, O_RDONLY ) ) > 0 )
 		{
 			off_t len = lseek( fd, 0, SEEK_END );
 			if( len != (off_t)-1)

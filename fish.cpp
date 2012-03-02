@@ -326,13 +326,17 @@ int main( int argc, char **argv )
 				int i; 
 				int fd;
 				wchar_t *rel_filename, *abs_filename;
-								
+
+                
 				if( ( fd = open(file, O_RDONLY) ) == -1 )
 				{
 					wperror( L"open" );
 					return 1;
 				}
-
+                
+                // OK to not do this atomically since we cannot have gone multithreaded yet
+                set_cloexec(fd);
+                
 				if( *(argv+my_optind))
 				{
                     wcstring sb;

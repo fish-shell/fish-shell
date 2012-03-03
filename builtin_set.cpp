@@ -74,7 +74,7 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 			int show_hint = 0;
 			
 			struct stat buff;
-			const wchar_t *dir = val[ i ].c_str();
+			const wchar_t *dir = val[i].c_str();
 			
 			if( wstat( dir, &buff ) )
 			{
@@ -91,7 +91,6 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 			if( error )
 			{
 				const wchar_t *colon;
-				
                 append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir, key);
 				colon = wcschr( dir, L':' );
 				

@@ -460,10 +460,13 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig)
 
 void append_format(wcstring &str, const wchar_t *format, ...)
 {
+    /* Preserve errno across this call since it likes to stomp on it */
+    int err = errno;
 	va_list va;
 	va_start( va, format );
     str.append(vformat_string(format, va));
 	va_end( va );
+    errno = err;
 }
 
 wchar_t *wcsvarname( const wchar_t *str )

@@ -372,6 +372,9 @@ const wchar_t *wgettext( const wchar_t *in )
 {
 	if( !in )
 		return in;
+        
+	// preserve errno across this since this is often used in printing error messages
+	int err = errno;
 	
     wgettext_init_if_necessary();
     
@@ -384,6 +387,7 @@ const wchar_t *wgettext( const wchar_t *in )
         char *out = gettext(mbs_in.c_str());
         val = new wcstring(format_string(L"%s", out));
     }
+	errno = err;
 	return val->c_str();
 }
 

@@ -370,9 +370,7 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
         wchar_t *state;
         wchar_t *whole_path;
 
-        env_var_t path = env_get_string(L"CDPATH");
-        if (path.missing())
-            path = wd ? wd : L".";
+        env_var_t path = L".";
 
         nxt_path = path.c_str();
         path_cpy = wcsdup( path.c_str() );

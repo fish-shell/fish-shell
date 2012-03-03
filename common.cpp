@@ -726,18 +726,19 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     errno = errno_old;
 }
 
-void format_int_safe(char buff[128], int val) {
+void format_long_safe(char buff[128], long val) {
     if (val == 0) {
         strcpy(buff, "0");
     } else {
         /* Generate the string in reverse */
         size_t idx = 0;
         bool negative = (val < 0);
-        if (negative)
-            val = -val;
+        
+        /* Note that we can't just negate val if it's negative, because it may be the most negative value. We do rely on round-towards-zero division though. */
 
-        while (val > 0) {
-            buff[idx++] = '0' + (val % 10);
+        while (val != 0) {
+            long rem = val % 10;
+            buff[idx++] = '0' + (rem < 0 ? -rem : rem);
             val /= 10;
         }
         if (negative)
@@ -747,6 +748,33 @@ void format_int_safe(char buff[128], int val) {
         size_t left = 0, right = idx - 1;
         while (left < right)  {
             char tmp = buff[left];
+            buff[left++] = buff[right];
+            buff[right--] = tmp;
+        }
+    }
+}
+
+void format_long_safe(wchar_t buff[128], long val) {
+    if (val == 0) {
+        wcscpy(buff, L"0");
+    } else {
+        /* Generate the string in reverse */
+        size_t idx = 0;
+        bool negative = (val < 0);
+
+        while (val > 0) {
+            long rem = val % 10;
+            /* Here we're assuming that wide character digits are contiguous - is that a correct assumption? */
+            buff[idx++] = L'0' + (rem < 0 ? -rem : rem);
+            val /= 10;
+        }
+        if (negative)
+            buff[idx++] = L'-';
+        buff[idx] = 0;
+        
+        size_t left = 0, right = idx - 1;
+        while (left < right)  {
+            wchar_t tmp = buff[left];
             buff[left++] = buff[right];
             buff[right--] = tmp;
         }

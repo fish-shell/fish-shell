@@ -3255,7 +3255,7 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 											parser.get_job_pos()-parser.current_block->tok_pos );
 					d->definition = def;
 		
-					function_add( d, parser );	
+					function_add( *d, parser );	
 					free( def );
 				}
 				else

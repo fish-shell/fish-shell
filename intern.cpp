@@ -11,6 +11,8 @@
 #include <wchar.h>
 #include <unistd.h>
 #include <set>
+#include <deque>
+#include <algorithm>
 
 #include "fallback.h"
 #include "util.h"
@@ -20,13 +22,24 @@
 #include "intern.h"
 
 /** Comparison function for intern'd strings */
-static bool string_table_compare(const wchar_t *a, const wchar_t *b) {
-    return wcscmp(a, b) < 0;
-}
+class string_table_compare_t {
+    public:
+    bool operator()(const wchar_t *a, const wchar_t *b) const {
+        return wcscmp(a, b) < 0;
+    }
+};
 
+/* A sorted deque ends up being a little more memory efficient than a std::set for the intern'd string table */
+#define USE_SET 0
+#if USE_SET
 /** The table of intern'd strings */
-typedef std::set<const wchar_t *, bool (*)(const wchar_t *, const wchar_t *b)> string_table_t;
-static string_table_t string_table(string_table_compare);
+typedef std::set<const wchar_t *, string_table_compare_t> string_table_t;
+#else
+/** The table of intern'd strings */
+typedef std::deque<const wchar_t *> string_table_t;
+#endif
+
+static string_table_t string_table;
 
 /** The lock to provide thread safety for intern'd strings */
 static pthread_mutex_t intern_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -39,6 +52,8 @@ static const wchar_t *intern_with_dup( const wchar_t *in, bool dup )
 //	debug( 0, L"intern %ls", in );
     scoped_lock lock(intern_lock);
     const wchar_t *result;
+    
+#if USE_SET
     string_table_t::const_iterator iter = string_table.find(in);
     if (iter != string_table.end()) {
         result = *iter; 
@@ -46,6 +61,15 @@ static const wchar_t *intern_with_dup( const wchar_t *in, bool dup )
         result = dup ? wcsdup(in) : in;
         string_table.insert(result);
     }
+#else
+    string_table_t::iterator iter = std::lower_bound(string_table.begin(), string_table.end(), in, string_table_compare_t());
+    if (iter != string_table.end() && wcscmp(*iter, in) == 0) {
+        result = *iter;
+    } else {
+        result = dup ? wcsdup(in) : in;
+        string_table.insert(iter, result);
+    }
+#endif
     return result;
 }
 

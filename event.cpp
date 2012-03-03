@@ -136,7 +136,7 @@ static int event_match( const event_t *classv, const event_t *instance )
    Create an identical copy of an event. Use deep copying, i.e. make
    duplicates of any strings used as well.
 */
-static event_t *event_copy( event_t *event, int copy_arguments )
+static event_t *event_copy( const event_t *event, int copy_arguments )
 {
     event_t *e = new event_t(*event);
     
@@ -232,7 +232,7 @@ static void show_all_handlers(void) {
 }
 #endif
 
-void event_add_handler( event_t *event )
+void event_add_handler( const event_t *event )
 {
 	event_t *e;
 

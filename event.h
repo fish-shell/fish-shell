@@ -100,7 +100,7 @@ struct event_t
 
    May not be called by a signal handler, since it may allocate new memory.
 */
-void event_add_handler( event_t *event );
+void event_add_handler( const event_t *event );
 
 /**
    Remove all events matching the specified criterion. 

@@ -171,10 +171,17 @@ static void test_format(void) {
     
     for (int j=-129; j <= 129; j++) {
         char buff1[128], buff2[128];
-        format_int_safe(buff1, j);
+        format_long_safe(buff1, j);
         sprintf(buff2, "%d", j);
         assert( ! strcmp(buff1, buff2));
-    }    
+    }
+    
+    long q = LONG_MIN;
+    char buff1[128], buff2[128];
+    format_long_safe(buff1, q);
+    sprintf(buff2, "%ld", q);
+    assert( ! strcmp(buff1, buff2));
+    
 }
 
 /**

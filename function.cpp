@@ -79,7 +79,7 @@ void function_autoload_t::command_removed(const wcstring &cmd) {
    that the function being defined is autoloaded. There should be a
    better way to do this...
 */
-static int is_autoload = 0;
+static bool is_autoload = false;
 
 /**
    Make sure that if the specified function is a dynamically loaded
@@ -89,7 +89,7 @@ static int load( const wcstring &name )
 {
     ASSERT_IS_MAIN_THREAD();
     scoped_lock lock(functions_lock);
-	int was_autoload = is_autoload;
+	bool was_autoload = is_autoload;
 	int res;
     function_map_t::iterator iter = loaded_functions.find(name);
 	if( iter !=  loaded_functions.end() && !iter->second->is_autoload ) {
@@ -97,7 +97,7 @@ static int load( const wcstring &name )
 		return 0;
     }
 	
-	is_autoload = 1;	
+	is_autoload = true;	
 	res = function_autoloader.load( name, true );
 	is_autoload = was_autoload;
 	return res;
@@ -155,36 +155,51 @@ void function_init()
     VOMIT_ON_FAILURE(pthread_mutexattr_destroy(&a));
 }
 
-
-void function_add( function_data_t *data, const parser_t &parser )
+function_info_t::function_info_t(const function_data_t &data, const wchar_t *filename, int def_offset, bool autoload) :
+    definition(data.definition),
+    description(data.description),
+    definition_file(intern(filename)),
+    definition_offset(def_offset),
+    named_arguments(data.named_arguments),
+    is_autoload(autoload),
+    shadows(data.shadows)
 {
-	CHECK( ! data->name.empty(), );
-	CHECK( data->definition, );
-	scoped_lock lock(functions_lock);
-	function_remove( data->name );
-	    
-    shared_ptr<function_info_t> &info = loaded_functions[data->name];
-    if (! info) {
-        info.reset(new function_info_t);
-    }
-    
-	info->definition_offset = parse_util_lineno( parser.get_buffer(), parser.current_block->tok_pos )-1;
-	info->definition = data->definition;
+}
 
-    if (! data->named_arguments.empty()) {
-        info->named_arguments.insert(info->named_arguments.end(), data->named_arguments.begin(), data->named_arguments.end());
-    }	
+function_info_t::function_info_t(const function_info_t &data, const wchar_t *filename, int def_offset, bool autoload) :
+    definition(data.definition),
+    description(data.description),
+    definition_file(intern(filename)),
+    definition_offset(def_offset),
+    named_arguments(data.named_arguments),
+    is_autoload(autoload),
+    shadows(data.shadows)
+{
+}
+
+void function_add( const function_data_t &data, const parser_t &parser )
+{
+    ASSERT_IS_MAIN_THREAD();
+    
+	CHECK( ! data.name.empty(), );
+	CHECK( data.definition, );
+	scoped_lock lock(functions_lock);
+    
+    /* Remove the old function */
+	function_remove( data.name );
+    
+    /* Create a new function */
+    const wchar_t *filename = reader_current_filename();
+    int def_offset = parse_util_lineno( parser.get_buffer(), parser.current_block->tok_pos )-1;
+    function_info_t *new_info = new function_info_t(data, filename, def_offset, is_autoload);
+    
+    /* Store it in the loaded_functions map */
+    loaded_functions[data.name].reset(new_info);
 	
-	if (! data->description.empty())
-        info->description = data->description;
-	info->definition_file = intern(reader_current_filename());
-	info->is_autoload = is_autoload;
-	info->shadows = data->shadows;
-	
-	
-	for( size_t i=0; i< data->events.size(); i++ )
+    /* Add event handlers */
+	for( std::vector<event_t>::const_iterator iter = data.events.begin(); iter != data.events.end(); ++iter )
 	{
-		event_add_handler( &data->events.at(i) );
+		event_add_handler( &*iter );
 	}
 }
 
@@ -273,21 +288,17 @@ void function_set_desc( const wcstring &name, const wcstring &desc )
     if (func) func->description = desc;
 }
 
-int function_copy( const wcstring &name, const wcstring &new_name )
+bool function_copy( const wcstring &name, const wcstring &new_name )
 {
-    int result = 0;
+    bool result = false;
     scoped_lock lock(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
         shared_ptr<function_info_t> &new_info = loaded_functions[new_name];
-        new_info.reset(new function_info_t(*iter->second));
         
-		// This new instance of the function shouldn't be tied to the def 
-		// file of the original. 
-		new_info->definition_file = 0;
-		new_info->is_autoload = 0;
-        
-        result = 1;
+		// This new instance of the function shouldn't be tied to the definition file of the original, so pass NULL filename, etc.
+        new_info.reset(new function_info_t(*iter->second, NULL, 0, false));
+        result = true;
     }
 	return result;
 }

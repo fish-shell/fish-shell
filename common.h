@@ -281,15 +281,6 @@ void assert_is_locked(void *mutex, const char *who);
 */
 char *wcs2str_internal( const wchar_t *in, char *out );
 
-/**
- Converts some type to a wstring.
- */
-template<typename T>
-wcstring format_val(T x) {
-    std::wstringstream stream;
-    stream << x;
-    return stream.str();
-}
 
 template<typename T>
 T from_string(const wcstring &x) {
@@ -678,8 +669,31 @@ void format_size_safe(char buff[128], unsigned long long sz);
 /** Our crappier versions of debug which is guaranteed to not allocate any memory, or do anything other than call write(). This is useful after a call to fork() with threads. */
 void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL);
 
-/** Writes out an int safely */
-void format_int_safe(char buff[128], int val);
+/** Writes out a long safely */
+void format_long_safe(char buff[128], long val);
+void format_long_safe(wchar_t buff[128], long val);
+
+
+/** Converts some type to a wstring. */
+template<typename T>
+inline wcstring format_val(T x) {
+    std::wstringstream stream;
+    stream << x;
+    return stream.str();
+}
+
+/* wstringstream is a huge memory pig. Let's provide some specializations where we can. */
+template<>
+inline wcstring format_val(long x) {
+    wchar_t buff[128];
+    format_long_safe(buff, x);
+    return wcstring(buff);
+}
+
+template<>
+inline wcstring format_val(int x) {
+    return format_val(static_cast<long>(x));
+}
 
 
 /**

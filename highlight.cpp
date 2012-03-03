@@ -1331,7 +1331,7 @@ static void highlight_universal_internal( const wcstring &buffstr,
 		*/
 		if( (buffstr.at(pos) == L'\'') || (buffstr.at(pos) == L'\"') )
 		{
-			std::deque<long> lst;
+			std::vector<long> lst;
 		
 			int level=0;
 			wchar_t prev_q=0;

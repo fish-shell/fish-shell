@@ -12,7 +12,6 @@
 #include "event.h"
 #include "function.h"
 #include <vector>
-#include <deque>
 #include <memory>
 
 #define PARSER_TEST_ERROR 1
@@ -34,7 +33,7 @@ struct event_block_t
 	unsigned int typemask;
 };
 
-typedef std::deque<event_block_t> event_block_list_t;
+typedef std::list<event_block_t> event_block_list_t;
 
 inline bool event_block_list_blocks_type(const event_block_list_t &ebls, int type) {
     for (event_block_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); ++iter) {

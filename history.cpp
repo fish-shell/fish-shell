@@ -223,6 +223,7 @@ history_t & history_t::history_with_name(const wcstring &name) {
 
 history_t::history_t(const wcstring &pname) :
     name(pname),
+    unsaved_item_count(0),
     mmap_start(NULL),
     mmap_length(0),
     birth_timestamp(time(NULL)),
@@ -249,6 +250,7 @@ void history_t::add(const history_item_t &item)
     {
         /* We have to add a new item */
         new_items.push_back(item);
+        unsaved_item_count++;
     }
     
     /* Prevent the first write from always triggering a save */
@@ -257,7 +259,7 @@ void history_t::add(const history_item_t &item)
         save_timestamp = now;
     
     /* This might be a good candidate for moving to a background thread */
-    if((now > save_timestamp + SAVE_INTERVAL) || (new_items.size() >= SAVE_COUNT)) {
+    if((now > save_timestamp + SAVE_INTERVAL) || (unsaved_item_count >= SAVE_COUNT)) {
         time_profiler_t profiler("save_internal");
 		this->save_internal();
     }
@@ -764,6 +766,9 @@ void history_t::save_internal()
         
         /* Make sure we clear all nodes, since this doesn't happen automatically */
         lru.evict_all_nodes();
+        
+        /* We've saved everything, so we have no more unsaved items */
+        unsaved_item_count = 0;
 	}	
 
 	if( ok )
@@ -781,6 +786,7 @@ void history_t::save(void) {
 void history_t::clear(void) {
     scoped_lock locker(lock);
     new_items.clear();
+    unsaved_item_count = 0;
     old_item_offsets.clear();
     wcstring filename = history_filename(name, L"");
     if (! filename.empty())

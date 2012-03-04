@@ -98,6 +98,9 @@ private:
 	/** New items. */
 	std::vector<history_item_t> new_items;
     
+	/** How many items we've added without saving */
+	size_t unsaved_item_count;
+    
 	/** The mmaped region for the history file */
 	const char *mmap_start;
 

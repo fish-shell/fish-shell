@@ -16,52 +16,6 @@
 #include <unistd.h>
 
 /**
-   Typedef for a generic function pointer
- */
-typedef void (*func_ptr_t)();
-
-/**
-   A union of all types that can be stored in an array_list_t. This is
-   used to make sure that the pointer type can fit whatever we want to
-   insert.
- */
-typedef union 
-{
-	/**
-	   long value
-	 */
-	long long_val;
-	/**
-	   pointer value
-	 */
-	void *ptr_val;
-	/**
-	   function pointer value
-	 */
-	func_ptr_t func_val;
-}
-	anything_t;
-
-/**
-   Data structure for an automatically resizing dynamically allocated
-   priority queue. A priority queue allows quick retrieval of the
-   smallest element of a set (This implementation uses O(log n) time).
-   This implementation uses a heap for storing the queue.
-*/
-typedef struct priority_queue
-{
-	/** Array contining the data */
-	void **arr;
-	/** Number of elements*/
-	int count;
-	/** Length of array */
-	int size;
-	/** Comparison function */
-	int (*compare)(void *e1, void *e2);
-}
-priority_queue_t;
-
-/**
    Buffer for concatenating arbitrary data.
 */
 typedef struct buffer

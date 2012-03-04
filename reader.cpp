@@ -1074,8 +1074,7 @@ static void completion_insert( const wchar_t *val, int flags )
 
 static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<completion_t> &comp )
 {
-	string_buffer_t cmd;
-	string_buffer_t msg;
+    wcstring msg;
 	wchar_t * prefix_esc;
 	char *foo;
 	io_data_t *in;
@@ -1091,15 +1090,12 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 		prefix_esc = escape( prefix,1);
 	}
 	
-	sb_init( &cmd );
-	sb_init( &msg );
-	sb_printf( &cmd,
-			   L"fish_pager -c 3 -r 4 %ls -p %ls",
-//			   L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
-			   is_quoted?L"-q":L"",
-			   prefix_esc );
-
-	free( prefix_esc );
+    wcstring cmd = format_string(L"fish_pager -c 3 -r 4 %ls -p %ls",
+                                 // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
+                                is_quoted?L"-q":L"",
+                                prefix_esc );
+    
+    free(prefix_esc);
 
 	in= io_buffer_create( 1 );
 	in->fd = 3;
@@ -1164,15 +1160,11 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 		}
 		else if( baz )
 		{
-			sb_printf( &msg, L"%ls%ls%ls\n", 
-					   foo,
-					   escaped_separator,
-					   baz );
+            msg = format_string(L"%ls%ls%ls\n", foo, escaped_separator, baz);
 		}
 		else
 		{
-			sb_printf( &msg, L"%ls\n", 
-					   foo );
+            msg = format_string(L"%ls\n", foo);
 		}
 
 		free( foo );		
@@ -1181,7 +1173,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 
 	free( escaped_separator );		
 	
-	foo = wcs2str( (wchar_t *)msg.buff );
+	foo = wcs2str(msg.c_str());
 	b_append( in->param2.out_buffer, foo, strlen(foo) );
 	free( foo );
 	
@@ -1192,13 +1184,10 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 	out->fd = 4;
 	
     parser_t &parser = parser_t::principal_parser();
-	parser.eval( (wchar_t *)cmd.buff, out, TOP);
+	parser.eval( cmd, out, TOP);
 	term_steal();
 
 	io_buffer_read( out );
-
-	sb_destroy( &cmd );
-	sb_destroy( &msg );
 
 	int nil=0;
 	b_append( out->param2.out_buffer, &nil, 1 );
@@ -1805,31 +1794,21 @@ void reader_replace_current_token( const wchar_t *new_token )
 {
 
 	const wchar_t *begin, *end;
-	string_buffer_t sb;
 	int new_pos;
 
-	/*
-	  Find current token
-	*/
+	/* Find current token */
     const wchar_t *buff = data->command_line.c_str();
 	parse_util_token_extent( (wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0 );
 
 	if( !begin || !end )
 		return;
 
-	/*
-	  Make new string
-	*/
-	sb_init( &sb );
-	sb_append_substring( &sb, buff, begin-buff );
-	sb_append( &sb, new_token );
-	sb_append( &sb, end );
-
+	/* Make new string */
+    wcstring new_buff(buff, begin - buff);
+    new_buff.append(new_token);
+    new_buff.append(end);
 	new_pos = (begin-buff) + wcslen(new_token);
-
-	reader_set_buffer( (wchar_t *)sb.buff, new_pos );
-	sb_destroy( &sb );
-
+	reader_set_buffer(new_buff, new_pos);
 }
 
 

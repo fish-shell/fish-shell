@@ -17,19 +17,6 @@
 #include <string>
 #include "common.h"
 
-
-/**
-   Wide version of the dirent data structure
-*/
-struct wdirent
-{
-	/**
-	   The name of the current directory
-	*/
-	wchar_t *d_name;
-};
-
-
 /**
    Call this function on startup to create internal wutil
    resources. This function doesn't do anything.

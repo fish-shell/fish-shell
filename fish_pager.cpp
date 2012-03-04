@@ -156,7 +156,7 @@ static const wchar_t *hightlight_var[] =
 	;
 
 /**
-   This string_buffer_t contains the text that should be sent back to the calling program
+   This string contains the text that should be sent back to the calling program
 */
 static wcstring out_buff;
 /**

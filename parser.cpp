@@ -715,7 +715,7 @@ void parser_t::destroy()
 }
 
 /**
-   Print error message to string_buffer_t if an error has occured while parsing
+   Print error message to string if an error has occured while parsing
 
    \param target the buffer to write to
    \param prefix: The string token to prefix the ech line with. Usually the name of the command trying to parse something.

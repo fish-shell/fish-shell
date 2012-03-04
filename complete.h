@@ -227,9 +227,9 @@ void complete_remove( const wchar_t *cmd,
 void complete( const wcstring &cmd, std::vector<completion_t> &comp, complete_type_t type, wcstring_list_t *to_load = NULL );
 
 /**
-   Print a list of all current completions into the string_buffer_t. 
+   Print a list of all current completions into the string. 
 
-   \param out The string_buffer_t to write completions to
+   \param out The string to write completions to
 */
 void complete_print( wcstring &out );
 

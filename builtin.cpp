@@ -168,7 +168,7 @@ static int builtin_count_args( wchar_t **argv )
 
 /** 
 	This function works like wperror, but it prints its result into
-	the sb_err string_buffer_t instead of to stderr. Used by the builtin
+	the sb_err string instead of to stderr. Used by the builtin
 	commands.
 */
 

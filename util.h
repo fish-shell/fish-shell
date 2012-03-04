@@ -26,13 +26,6 @@ typedef struct buffer
 }
 buffer_t;
 
-
-/**
-   String buffer struct.  An autoallocating buffer used for
-   concatenating strings. This is really just a buffer_t.
-*/
-typedef buffer_t string_buffer_t;
-
 /**
    Set the out-of-memory handler callback function. If a memory
    allocation fails, this function will be called. 
@@ -93,75 +86,6 @@ int mini( int a, int b );
    'File2' and 'file3' will still be sorted in the order given above.
 */
 int wcsfilecmp( const wchar_t *a, const wchar_t *b );
-
-
-/*
-  String buffer functions
-*/
-
-/**
-   Initialize the specified string_buffer
-*/
-void sb_init( string_buffer_t * );
-
-/**
-   Append a part of a string to the buffer.
-*/
-void sb_append_substring( string_buffer_t *, const wchar_t *, size_t );
-
-/**
-   Append a character to the buffer.
-*/
-void sb_append_char( string_buffer_t *, wchar_t );
-
-/**
-   Append all specified items to buffer.
- */
-#define sb_append( sb,... ) sb_append_internal( sb, __VA_ARGS__, NULL )
-
-/**
-   Append a null terminated list of strings to the buffer.
-   Example:
-
-   sb_append2( my_buff, L"foo", L"bar", NULL );
-
-   Do not forget to cast the last 0 to (void *), or you might encounter errors on 64-bit platforms!
-*/
-__sentinel void sb_append_internal( string_buffer_t *, ... );
-
-/**
-   Append formated string data to the buffer. This function internally
-   relies on \c vswprintf, so any filter options supported by that
-   function is also supported by this function.
-*/
-int sb_printf( string_buffer_t *buffer, const wchar_t *format, ... );
-
-/**
-   Vararg version of sb_printf.
-*/
-int sb_vprintf( string_buffer_t *buffer, const wchar_t *format, va_list va_orig );
-
-/**
-  Destroy the buffer and free its memory
-*/
-void sb_destroy( string_buffer_t * );
-
-/**
-   Completely truncate the buffer. This will not deallocate the memory
-   used, it will only set the contents of the string to L"\\0".
-*/
-void sb_clear( string_buffer_t * );
-
-/**
-   Truncate the string to the specified number of characters. This
-   will not deallocate the memory used.
-*/
-void sb_truncate( string_buffer_t *, int chars_left );
-
-/**
-   Return the number of characters in the string
-*/
-ssize_t sb_length( string_buffer_t * );
 
 
 /*

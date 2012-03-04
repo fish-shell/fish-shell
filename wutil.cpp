@@ -51,11 +51,6 @@ typedef std::string cstring;
 #endif
 #endif
 
-/**
-   For wgettext: Number of string_buffer_t in the ring of buffers
-*/
-#define BUFF_COUNT 4
-
 /* Lock to protect wgettext */
 static pthread_mutex_t wgettext_lock;
 

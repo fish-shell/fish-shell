@@ -89,15 +89,6 @@ enum
 #define BUILTIN_END_BLOCK_UNKNOWN _( L"%ls: Unknown block type '%ls'\n" )
 
 #define BUILTIN_ERR_NOT_NUMBER _( L"%ls: Argument '%ls' is not a number\n" )
-/**
-   Stringbuffer used to represent standard output
-*/
-//extern string_buffer_t *sb_out;
-
-/**
-   Stringbuffer used to represent standard error
-*/
-//extern string_buffer_t *sb_err;
 
 /** Get the string used to represent stdout and stderr */
 const wcstring &get_stdout_buffer();
@@ -150,12 +141,12 @@ wcstring_list_t builtin_get_names(void);
 void builtin_get_names(std::vector<completion_t> &list);
 
 /**
-   Pushes a new set of input/output to the stack. The new stdin is supplied, a new set of output string_buffer_ts is created.
+   Pushes a new set of input/output to the stack. The new stdin is supplied, a new set of output strings is created.
 */
 void builtin_push_io( parser_t &parser, int stdin_fd );
 
 /**
-   Pops a set of input/output from the stack. The output string_buffer_ts are destroued, but the input file is not closed.
+   Pops a set of input/output from the stack. The output strings are destroued, but the input file is not closed.
 */
 void builtin_pop_io(parser_t &parser);
 

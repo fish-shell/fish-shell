@@ -881,7 +881,7 @@ static void read_try( job_t *j )
 			}
 			else
 			{
-				b_append( buff->out_buffer, b, l );
+                buff->out_buffer_append(b, l);
 			}			
 		}
 	}

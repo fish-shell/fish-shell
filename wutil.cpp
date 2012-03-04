@@ -66,8 +66,6 @@ void wutil_destroy()
 {
 }
 
-static pthread_mutex_t readdir_lock = PTHREAD_MUTEX_INITIALIZER;
-
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name, bool *out_is_dir)
 {
     struct dirent *d = readdir( dir );

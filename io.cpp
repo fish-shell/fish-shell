@@ -91,7 +91,7 @@ void io_buffer_read( io_data_t *d )
 			}
 			else
 			{				
-				b_append( d->out_buffer, b, l );				
+				d->out_buffer_append( b, l );				
 			}
 		}
 	}
@@ -100,21 +100,18 @@ void io_buffer_read( io_data_t *d )
 
 io_data_t *io_buffer_create( int is_input )
 {
-	std::auto_ptr<io_data_t> buffer_redirect(new io_data_t());
-	
+	std::auto_ptr<io_data_t> buffer_redirect(new io_data_t);
+	buffer_redirect->out_buffer_create();
 	buffer_redirect->io_mode=IO_BUFFER;
 	buffer_redirect->next=0;
-	buffer_redirect->out_buffer= (buffer_t *)malloc( sizeof(buffer_t));
 	buffer_redirect->is_input = is_input;
-	b_init( buffer_redirect->out_buffer );
 	buffer_redirect->fd=is_input?0:1;
 	
 	if( exec_pipe( buffer_redirect->param1.pipe_fd ) == -1 )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror (L"pipe");
-		free(  buffer_redirect->out_buffer );
-		return 0;
+		return NULL;
 	}
 	else if( fcntl( buffer_redirect->param1.pipe_fd[0],
 					F_SETFL,
@@ -122,8 +119,7 @@ io_data_t *io_buffer_create( int is_input )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror( L"fcntl" );
-		free(  buffer_redirect->out_buffer );
-		return 0;
+		return NULL;
 	}
 	return buffer_redirect.release();
 }
@@ -146,10 +142,6 @@ void io_buffer_destroy( io_data_t *io_buffer )
 	  Dont free fd for writing. This should already be free'd before
 	  calling exec_read_io_buffer on the buffer
 	*/
-	
-	b_destroy( io_buffer->out_buffer );
-	
-	free( io_buffer->out_buffer );
 	delete io_buffer;
 }
 

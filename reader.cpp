@@ -1174,7 +1174,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 	free( escaped_separator );		
 	
 	foo = wcs2str(msg.c_str());
-	b_append( in->out_buffer, foo, strlen(foo) );
+	in->out_buffer_append(foo, strlen(foo) );
 	free( foo );
 	
 	term_donate();
@@ -1190,10 +1190,10 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 	io_buffer_read( out );
 
 	int nil=0;
-	b_append( out->out_buffer, &nil, 1 );
+    out->out_buffer_append((char *)&nil, 1);
 
 	wchar_t *tmp;
-	wchar_t *str = str2wcs((char *)out->out_buffer->buff);
+	wchar_t *str = str2wcs(out->out_buffer_ptr());
 
 	if( str )
 	{

@@ -420,7 +420,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 	if( !in )
 		return 0;
 	
-	std::auto_ptr<io_data_t> out(new io_data_t());
+	std::auto_ptr<io_data_t> out(new io_data_t);
 	
 	out->fd = in->fd;
 	out->io_mode = IO_FD;
@@ -437,7 +437,7 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		case IO_BUFFER:
 		case IO_PIPE:
 		{
-            *out = *in;
+            out.reset(new io_data_t(*in));
 			break;
 		}
 
@@ -1039,7 +1039,10 @@ void exec( parser_t &parser, job_t *j )
 				
 				io_buffer_read( io_buffer );
 				
-				if( io_buffer->out_buffer->used != 0 )
+                const char *buffer = io_buffer->out_buffer_ptr();
+                size_t count = io_buffer->out_buffer_size();
+                
+				if( io_buffer->out_buffer_size() > 0 )
 				{
                     /* We don't have to drain threads here because our child process is simple */
 					pid = execute_fork(false);
@@ -1052,10 +1055,7 @@ void exec( parser_t &parser, job_t *j )
 						p->pid = getpid();
 						setup_child_process( j, p );
 
-						exec_write_and_exit(io_buffer->fd, 
-											io_buffer->out_buffer->buff,
-											io_buffer->out_buffer->used,
-											status);
+						exec_write_and_exit(io_buffer->fd, buffer, count, status);
 					}
 					else
 					{
@@ -1090,8 +1090,10 @@ void exec( parser_t &parser, job_t *j )
 			case INTERNAL_BUFFER:
 			{
 		
+				const char *buffer = io_buffer->out_buffer_ptr();
+				size_t count = io_buffer->out_buffer_size();
+        
 				pid = execute_fork(false);
-				
 				if( pid == 0 )
 				{
 					/*
@@ -1101,10 +1103,7 @@ void exec( parser_t &parser, job_t *j )
 					p->pid = getpid();
 					setup_child_process( j, p );
 					
-					exec_write_and_exit( 1,
-										 input_redirect->out_buffer->buff, 
-										 input_redirect->out_buffer->used,
-										 0);
+					exec_write_and_exit( 1, buffer, count, 0);
 				}
 				else
 				{
@@ -1157,7 +1156,7 @@ void exec( parser_t &parser, job_t *j )
 					( buffer_stdout ) )
 				{
 					std::string res = wcs2string( get_stdout_buffer() );
-					b_append( io->out_buffer, res.c_str(), res.size() );
+					io->out_buffer_append( res.c_str(), res.size() );
 					skip_fork = 1;
 				}
 
@@ -1378,9 +1377,9 @@ static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 	
 	is_subshell = prev_subshell;
 	
-	b_append( io_buffer->out_buffer, &z, 1 );
+	io_buffer->out_buffer_append( &z, 1 );
 	
-	begin=end=io_buffer->out_buffer->buff;	
+	begin=end=io_buffer->out_buffer_ptr();	
 
 	if( lst )
 	{

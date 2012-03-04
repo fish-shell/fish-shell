@@ -14,7 +14,6 @@
 #include <list>
 #include <tr1/memory>
 #include <set>
-using std::tr1::shared_ptr;
 
 typedef std::list<wcstring> path_list_t;
 

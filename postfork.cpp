@@ -352,4 +352,5 @@ pid_t execute_fork(bool wait_for_threads_to_die)
 	debug( 0, FORK_ERROR );
 	wperror (L"fork");
 	FATAL_EXIT();
+    return 0;
 }

@@ -1,22 +1,33 @@
 #ifndef FISH_IO_H
 #define FISH_IO_H
 
+#include <tr1/memory>
+using std::tr1::shared_ptr;
+
 /**
    Describes what type of IO operation an io_data_t represents
 */
 enum io_mode
 {
 	IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
-}
-;
+};
 
 /** Represents an FD redirection */
-struct io_data_t
+class io_data_t
 {
+private:
+    /** buffer to save output in for IO_BUFFER. Note that in the original fish, the buffer was a pointer to a buffer_t stored in the param2 union down below, and when an io_data_t was duplicated the pointer was copied so that two io_data_ts referenced the same buffer. It's not clear to me how this was ever cleaned up correctly. But it's important that they share the same buffer for reasons I don't yet understand either. But we can get correct sharing and cleanup with shared_ptr. */
+    shared_ptr<std::vector<char> > out_buffer;
+
+    /* No assignment allowed */
+    void operator=(const io_data_t &rhs) { assert(0); }
+
+public:
 	/** Type of redirect */
 	int io_mode;
 	/** FD to redirect */
 	int fd;
+
 	/** 
 		Type-specific parameter for redirection 
 	*/
@@ -31,9 +42,7 @@ struct io_data_t
     /** Filename IO_FILE */
     wcstring filename;
 
-	/** 
-		Second type-specific paramter for redirection
-	*/
+	/**  Second type-specific paramter for redirection */
 	union
 	{
 		/** file creation flags to send to open for IO_FILE */
@@ -42,8 +51,28 @@ struct io_data_t
 		int close_old;
 	} param2;
     
-    /** buffer to save output in for IO_BUFFER */
-    buffer_t *out_buffer;		
+    /** Function to create the output buffer */
+    void out_buffer_create() {
+        out_buffer.reset(new std::vector<char>);
+    }
+        
+    /** Function to append to the buffer */
+    void out_buffer_append(const char *ptr, size_t count) {
+        assert(out_buffer.get() != NULL); 
+        out_buffer->insert(out_buffer->end(), ptr, ptr + count);
+    }
+    
+    /** Function to get a pointer to the buffer */
+    char *out_buffer_ptr(void) {
+        assert(out_buffer.get() != NULL);
+        return &out_buffer->at(0);
+    }
+    
+    /** Function to get the size of the buffer */
+    size_t out_buffer_size(void) const {
+        assert(out_buffer.get() != NULL);
+        return out_buffer->size();
+    }
 
 	/** Set to true if this is an input io redirection */
 	int is_input;
@@ -51,7 +80,11 @@ struct io_data_t
 	/** Pointer to the next IO redirection */
 	io_data_t *next;
     
-    io_data_t() : next(NULL) { }
+    io_data_t() : next(NULL)
+    {
+    }
+    
+    /* Note: we have a default copy constructor */
 };
 
  

@@ -173,11 +173,6 @@ static bool is_electric(const wcstring &key)
 */
 static null_terminated_array_t<char> export_array;
 
-/**
-   Buffer used for storing string contents for export_arr
-*/
-static buffer_t export_buffer;
-
 
 /**
    Flag for checking if we need to regenerate the exported variable
@@ -507,8 +502,6 @@ void env_init()
 	wchar_t *uname;
 	wchar_t *version;
 	
-	b_init( &export_buffer );
-	
 	/*
 	  env_read_only variables can not be altered directly by the user
 	*/
@@ -670,8 +663,6 @@ void env_init()
 void env_destroy()
 {
 	env_universal_destroy();
-	
-	b_destroy( &export_buffer );
 	
 	while( &top->env != global )
 	{

@@ -3360,7 +3360,7 @@ static int read_ni( int fd, io_data_t *io )
     parser_t &parser = parser_t::principal_parser();
 	FILE *in_stream;
 	wchar_t *buff=0;
-	buffer_t acc;
+	std::vector<char> acc;
 
 	int des = fd == 0 ? dup(0) : fd;
 	int res=0;
@@ -3370,8 +3370,6 @@ static int read_ni( int fd, io_data_t *io )
 		wperror( L"dup" );
 		return 1;
 	}
-
-	b_init( &acc );
 
 	in_stream = fdopen( des, "r" );
 	if( in_stream != 0 )
@@ -3394,17 +3392,17 @@ static int read_ni( int fd, io_data_t *io )
 				/*
 				  Reset buffer on error. We won't evaluate incomplete files.
 				*/
-				acc.used=0;
+				acc.clear();
 				break;
 				
 			}
 
-			b_append( &acc, buff, c );
+			acc.insert(acc.end(), buff, buff + c);
 		}
-		b_append( &acc, "\0", 1 );
-		acc_used = acc.used;
-		str = str2wcs( acc.buff );
-		b_destroy( &acc );
+        acc.push_back(0);
+		acc_used = acc.size();
+		str = str2wcs(&acc.at(0));
+        acc.clear();
 
 		if(	fclose( in_stream ))
 		{

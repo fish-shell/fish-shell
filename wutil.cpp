@@ -142,7 +142,8 @@ int wchdir( const wcstring &dir )
 FILE *wfopen(const wcstring &path, const char *mode)
 {
     int permissions = 0, options = 0;
-    switch (*mode++) {
+    size_t idx = 0;
+    switch (mode[idx++]) {
         case 'r':
             permissions = O_RDONLY;
             break;
@@ -160,11 +161,11 @@ FILE *wfopen(const wcstring &path, const char *mode)
             break;
     }
     /* Skip binary */
-    if (*mode == 'b')
-        mode++;
+    if (mode[idx] == 'b')
+        idx++;
     
     /* Consider append option */
-    if (*mode == '+')
+    if (mode[idx] == '+')
         permissions = O_RDWR;
     
     int fd = wopen_cloexec(path, permissions | options, 0666);

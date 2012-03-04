@@ -49,6 +49,7 @@
 #endif
 
 #include <errno.h>
+#include <vector>
 
 #include "fallback.h"
 #include "util.h"
@@ -136,11 +137,11 @@ static struct termios saved_modes;
 static int is_ca_mode = 0;
 
 /**
-   This buffer_t is used to buffer the output of the pager to improve
+   This buffer is used to buffer the output of the pager to improve
    screen redraw performance bu cutting down the number of write()
    calls to only one.
 */
-static buffer_t pager_buffer;
+static std::vector<char> pager_buffer;
 
 /**
    The environment variables used to specify the color of different
@@ -340,7 +341,7 @@ static wint_t readch()
 */
 static int pager_buffered_writer( char c)
 {
-	b_append( &pager_buffer, &c, 1 );
+	pager_buffer.push_back(c);
 	return 0;
 }
 
@@ -349,8 +350,10 @@ static int pager_buffered_writer( char c)
 */
 static void pager_flush()
 {
-	write_loop( 1, pager_buffer.buff, pager_buffer.used );
-	pager_buffer.used = 0;
+    if (! pager_buffer.empty()) {
+        write_loop( 1, & pager_buffer.at(0), pager_buffer.size() * sizeof(char) );
+        pager_buffer.clear();
+    }
 }
 
 /**

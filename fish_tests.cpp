@@ -228,30 +228,28 @@ static void test_convert()
 
 
 	int i;
-	buffer_t sb;
+	std::vector<char> sb;
 	
 	say( L"Testing wide/narrow string conversion" );
-
-	b_init( &sb );
 	
 	for( i=0; i<ESCAPE_TEST_COUNT; i++ )
 	{
 		wchar_t *w;
-		char *o, *n;
+		const char *o, *n;
 		
 		char c;
 		
-		sb.used=0;
+		sb.clear();
 		
 		while( rand() % ESCAPE_TEST_LENGTH )
 		{
 			c = rand ();
-			b_append( &sb, &c, 1 );
+            sb.push_back(c);
 		}
 		c = 0;
-		b_append( &sb, &c, 1 );
+        sb.push_back(c);
 		
-		o = (char *)sb.buff;
+		o = &sb.at(0);
 		w = str2wcs(o);
 		n = wcs2str(w);
 		
@@ -265,7 +263,7 @@ static void test_convert()
 			err( L"Line %d - %d: Conversion cycle of string %s produced different string %s", __LINE__, i, o, n );
 		}
 		free( w );
-		free( n );
+		free( (void *)n );
 		
 	}
 

@@ -242,15 +242,15 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 	int normal_status = colors.at(0);
 	
 	for( in_pos=0;
-		 in_pos<len; 
-		 in_pos++ )
+        in_pos<len; 
+        in_pos++ )
 	{
 		wchar_t c = buffstr.at(in_pos);
 		switch( mode )
 		{
-			/*
-			  Mode 0 means unquoted string
-			*/
+                /*
+                 Mode 0 means unquoted string
+                 */
 			case 0:
 			{
 				if( c == L'\\' )
@@ -280,9 +280,10 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 						colors.at(in_pos+1)=normal_status;
 					}
 					else if( wcschr( L"c", buff[in_pos] ) )
-						{
+                    {
 						colors.at(start_pos)=HIGHLIGHT_ESCAPE;
-						colors.at(in_pos+2)=normal_status;
+                        if (in_pos+2 < colors.size())
+                            colors.at(in_pos+2)=normal_status;
 					}
 					else if( wcschr( L"uUxX01234567", buff[in_pos] ) )
 					{
@@ -302,26 +303,26 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 								max_val = UCS2_MAX;
 								break;
 							}
-							
+                                
 							case L'U':
 							{
 								chars=8;
 								max_val = WCHAR_MAX;
 								break;
 							}
-							
+                                
 							case L'x':
 							{
 								break;
 							}
-							
+                                
 							case L'X':
 							{
 								byte=1;
 								max_val = BYTE_MAX;
 								break;
 							}
-							
+                                
 							default:
 							{
 								base=8;
@@ -343,7 +344,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							
 							res=(res*base)|d;
 						}
-
+                        
 						if( (res <= max_val) )
 						{
 							colors.at(start_pos) = HIGHLIGHT_ESCAPE;
@@ -355,7 +356,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							colors.at(in_pos+1) = normal_status;								
 						}
 					}
-
+                    
 				}
 				else 
 				{
@@ -370,7 +371,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							}
 							break;
 						}
-
+                            
 						case L'$':
 						{
 							wchar_t n = buff[in_pos+1];							
@@ -378,8 +379,8 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							colors.at(in_pos+1) = normal_status;								
 							break;
 						}
-
-
+                            
+                            
 						case L'*':
 						case L'?':
 						case L'(':
@@ -389,7 +390,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							colors.at(in_pos+1) = normal_status;
 							break;
 						}
-						
+                            
 						case L'{':
 						{
 							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
@@ -397,7 +398,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							bracket_count++;
 							break;					
 						}
-						
+                            
 						case L'}':
 						{
 							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
@@ -405,7 +406,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							bracket_count--;
 							break;						
 						}
-
+                            
 						case L',':
 						{
 							if( bracket_count )
@@ -413,32 +414,32 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 								colors.at(in_pos) = HIGHLIGHT_OPERATOR;
 								colors.at(in_pos+1) = normal_status;
 							}
-
+                            
 							break;					
 						}
-						
+                            
 						case L'\'':
 						{
 							colors.at(in_pos) = HIGHLIGHT_QUOTE;
 							mode = 1;
 							break;					
 						}
-				
+                            
 						case L'\"':
 						{
 							colors.at(in_pos) = HIGHLIGHT_QUOTE;
 							mode = 2;
 							break;
 						}
-
+                            
 					}
 				}		
 				break;
 			}
-
-			/*
-			  Mode 1 means single quoted string, i.e 'foo'
-			*/
+                
+                /*
+                 Mode 1 means single quoted string, i.e 'foo'
+                 */
 			case 1:
 			{
 				if( c == L'\\' )
@@ -453,12 +454,12 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
 							break;
 						}
-						
+                            
 						case 0:
 						{
 							return;
 						}
-						
+                            
 					}
 					
 				}
@@ -470,10 +471,10 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 				
 				break;
 			}
-
-			/*
-			  Mode 2 means double quoted string, i.e. "foo"
-			*/
+                
+                /*
+                 Mode 2 means double quoted string, i.e. "foo"
+                 */
 			case 2:
 			{
 				switch( c )
@@ -484,7 +485,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 						colors.at(in_pos+1) = normal_status;
 						break;
 					}
-				
+                        
 					case '\\':
 					{
 						int start_pos = in_pos;
@@ -494,7 +495,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							{
 								return;
 							}
-							
+                                
 							case '\\':
 							case L'$':
 							case '"':
@@ -506,7 +507,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 						}
 						break;
 					}
-					
+                        
 					case '$':
 					{
 						wchar_t n = buff[in_pos+1];
@@ -514,7 +515,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 						colors.at(in_pos+1) = HIGHLIGHT_QUOTE;								
 						break;
 					}
-				
+                        
 				}						
 				break;
 			}

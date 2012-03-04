@@ -429,8 +429,7 @@ static wint_t input_try_mapping( const input_mapping_t &m)
 	input_unreadch( c );
 
     const wchar_t *str = m.seq.c_str();
-    for( j=0; str[j] != L'\0' && 
-             str[j] == (c=input_common_readch( j>0 )); j++ )
+    for( j=0; str[j] != L'\0' && str[j] == (c=input_common_readch( j>0 )); j++ )
         ;
     
     if( str[j] == L'\0' )

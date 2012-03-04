@@ -42,6 +42,7 @@ efficient way for transforming that to the desired screen content.
 #include <time.h>
 
 #include <assert.h>
+#include <vector>
 
 
 #include "fallback.h"
@@ -63,7 +64,8 @@ efficient way for transforming that to the desired screen content.
    tputs. Since tputs external function can only take an integer and
    not a pointer as parameter we need a static storage buffer.
 */
-static buffer_t *s_writeb_buffer=0;
+typedef std::vector<char> data_buffer_t;
+static data_buffer_t *s_writeb_buffer=0;
 
 /**
    Tests if the specified narrow character sequence is present at the
@@ -428,7 +430,7 @@ static void s_desired_append_char( screen_t *s,
 */
 static int s_writeb( char c )
 {
-	b_append( s_writeb_buffer, &c, 1 );
+    s_writeb_buffer->push_back(c);
 	return 0;
 }
 
@@ -442,7 +444,7 @@ static int s_writeb( char c )
    \param new_x the new x position
    \param new_y the new y position
 */
-static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
+static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 {
 	int i;
 	int x_steps, y_steps;
@@ -492,8 +494,7 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 	
 	if( x_steps && new_x == 0 )
 	{
-		char c = '\r';
-		b_append( b, &c, 1 );
+        b->push_back('\r');
 		x_steps = 0;
 	}
 		
@@ -521,7 +522,7 @@ static void s_move( screen_t *s, buffer_t *b, int new_x, int new_y )
 /**
    Set the pen color for the terminal
 */
-static void s_set_color( screen_t *s, buffer_t *b, int c )
+static void s_set_color( screen_t *s, data_buffer_t *b, int c )
 {
 	
 	int (*writer_old)(char) = output_get_writer();
@@ -541,7 +542,7 @@ static void s_set_color( screen_t *s, buffer_t *b, int c )
    Convert a wide character to a multibyte string and append it to the
    buffer.
 */
-static void s_write_char( screen_t *s, buffer_t *b, wchar_t c )
+static void s_write_char( screen_t *s, data_buffer_t *b, wchar_t c )
 {
 	int (*writer_old)(char) = output_get_writer();
 
@@ -558,7 +559,7 @@ static void s_write_char( screen_t *s, buffer_t *b, wchar_t c )
    Send the specified string through tputs and append the output to
    the specified buffer.
 */
-static void s_write_mbs( buffer_t *b, char *s )
+static void s_write_mbs( data_buffer_t *b, char *s )
 {
 	int (*writer_old)(char) = output_get_writer();
 
@@ -574,7 +575,7 @@ static void s_write_mbs( buffer_t *b, char *s )
    Convert a wide string to a multibyte string and append it to the
    buffer.
 */
-static void s_write_str( buffer_t *b, const wchar_t *s )
+static void s_write_str( data_buffer_t *b, const wchar_t *s )
 {
 	int (*writer_old)(char) = output_get_writer();
 
@@ -596,13 +597,10 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 	int current_width=0;
 	int screen_width = common_get_width();
 	int need_clear = scr->need_clear;
-	buffer_t output;
+	data_buffer_t output;
 
 	scr->need_clear = 0;
-	
-	b_init( &output );
-
-	
+		
 	if( scr->actual_width != screen_width )
 	{
 		need_clear = 1;
@@ -691,12 +689,10 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 	
 	s_set_color( scr, &output, 0xffffffff);
 
-	if( output.used )
+	if( ! output.empty() )
 	{
-		write_loop( 1, output.buff, output.used );
+		write_loop( 1, &output.at(0), output.size() );
 	}
-	
-	b_destroy( &output );
 	
 }
 

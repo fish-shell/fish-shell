@@ -1113,16 +1113,13 @@ static void destroy()
 */
 static void read_array( FILE* file, wcstring_list_t &comp )
 {
-	buffer_t buffer;
+	std::vector<char> buffer;
 	int c;
-	char cc;
 	wchar_t *wcs;
-
-	b_init( &buffer );
 
 	while( !feof( file ) )
 	{
-		buffer.used=0;
+		buffer.clear();
 
 		while( 1 )
 		{
@@ -1137,17 +1134,14 @@ static void read_array( FILE* file, wcstring_list_t &comp )
 				break;
 			}
 
-			cc=c;
-			
-			b_append( &buffer, &cc, 1 );
+            buffer.push_back(static_cast<char>(c));
 		}
 
-		if( buffer.used )
+		if( ! buffer.empty() )
 		{
-			cc=0;
-			b_append( &buffer, &cc, 1 );
+            buffer.push_back(0);
 			
-			wcs = str2wcs( buffer.buff );
+			wcs = str2wcs( &buffer.at(0) );
 			if( wcs ) 
 			{
                 wcstring tmp = wcs;
@@ -1159,8 +1153,6 @@ static void read_array( FILE* file, wcstring_list_t &comp )
 			}
 		}
 	}
-
-	b_destroy( &buffer );
 
 }
 

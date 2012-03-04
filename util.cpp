@@ -166,62 +166,6 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 	return res;	
 }
 
-void b_init( buffer_t *b)
-{
-	CHECK( b, );
-	memset( b,0,sizeof(buffer_t));
-}
-
-
-
-void b_destroy( buffer_t *b )
-{
-	CHECK( b, );
-	free( b->buff );
-}
-
-
-int b_append( buffer_t *b, const void *d, ssize_t len )
-{
-	if( len<=0 )
-		return 0;
-
-	CHECK( b, -1 );	
-
-	if( !b )
-	{
-		return 0;
-	}
-
-	if( !d )
-	{
-		return 0;
-	}
-
-	if( b->length <= (b->used + len) )
-	{
-		size_t l = maxi( b->length*2,
-						 b->used+len+MIN_SIZE );
-		
-		void *d = realloc( b->buff, l );
-		if( !d )
-		{
-			oom_handler( b );
-			return -1;			
-		}
-		b->buff=(char *)d;
-		b->length = l;
-	}
-	memcpy( ((char*)b->buff)+b->used,
-			d,
-			len );
-
-//	fwprintf( stderr, L"Copy %s, new value %s\n", d, b->buff );
-	b->used+=len;
-
-	return 1;
-}
-
 long long get_time()
 {
 	struct timeval time_struct;

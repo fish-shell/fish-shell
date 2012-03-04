@@ -87,29 +87,6 @@ int mini( int a, int b );
 */
 int wcsfilecmp( const wchar_t *a, const wchar_t *b );
 
-
-/*
-  Buffer functions
-*/
-
-/**
-   Initialize the specified buffer_t
-*/
-void b_init( buffer_t *b);
-
-/**
-   Destroy the specified buffer_t
-*/
-
-void b_destroy( buffer_t *b );
-
-/**
-   Add data of the specified length to the specified buffer_t
-
-   \return 0 on error, non-zero otherwise
-*/
-int b_append( buffer_t *b, const void *d, ssize_t len );
-
 /**
    Get the current time in microseconds since Jan 1, 1970
 */

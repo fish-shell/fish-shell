@@ -82,7 +82,7 @@
 static std::vector<bool> open_fds;
 
 // Called in a forked child
-static void exec_write_and_exit( int fd, char *buff, size_t count, int status )
+static void exec_write_and_exit( int fd, const char *buff, size_t count, int status )
 {
 	if( write_loop(fd, buff, count) == -1 ) 
 	{
@@ -1039,7 +1039,7 @@ void exec( parser_t &parser, job_t *j )
 				
 				io_buffer_read( io_buffer );
 				
-				if( io_buffer->param2.out_buffer->used != 0 )
+				if( io_buffer->out_buffer->used != 0 )
 				{
                     /* We don't have to drain threads here because our child process is simple */
 					pid = execute_fork(false);
@@ -1053,8 +1053,8 @@ void exec( parser_t &parser, job_t *j )
 						setup_child_process( j, p );
 
 						exec_write_and_exit(io_buffer->fd, 
-											io_buffer->param2.out_buffer->buff,
-											io_buffer->param2.out_buffer->used,
+											io_buffer->out_buffer->buff,
+											io_buffer->out_buffer->used,
 											status);
 					}
 					else
@@ -1102,8 +1102,8 @@ void exec( parser_t &parser, job_t *j )
 					setup_child_process( j, p );
 					
 					exec_write_and_exit( 1,
-										 input_redirect->param2.out_buffer->buff, 
-										 input_redirect->param2.out_buffer->used,
+										 input_redirect->out_buffer->buff, 
+										 input_redirect->out_buffer->used,
 										 0);
 				}
 				else
@@ -1157,7 +1157,7 @@ void exec( parser_t &parser, job_t *j )
 					( buffer_stdout ) )
 				{
 					std::string res = wcs2string( get_stdout_buffer() );
-					b_append( io->param2.out_buffer, res.c_str(), res.size() );
+					b_append( io->out_buffer, res.c_str(), res.size() );
 					skip_fork = 1;
 				}
 
@@ -1378,9 +1378,9 @@ static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 	
 	is_subshell = prev_subshell;
 	
-	b_append( io_buffer->param2.out_buffer, &z, 1 );
+	b_append( io_buffer->out_buffer, &z, 1 );
 	
-	begin=end=io_buffer->param2.out_buffer->buff;	
+	begin=end=io_buffer->out_buffer->buff;	
 
 	if( lst )
 	{

@@ -38,15 +38,14 @@ struct io_data_t
 	{
 		/** file creation flags to send to open for IO_FILE */
 		int flags;
-		/** buffer to save output in for IO_BUFFER */
-		buffer_t *out_buffer;		
 		/** Whether to close old_fd for IO_FD */
 		int close_old;
 	} param2;
+    
+    /** buffer to save output in for IO_BUFFER */
+    buffer_t *out_buffer;		
 
-	/**
-	  Set to true if this is an input io redirection
-	 */
+	/** Set to true if this is an input io redirection */
 	int is_input;
 	
 	/** Pointer to the next IO redirection */

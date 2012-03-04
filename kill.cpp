@@ -37,13 +37,14 @@
 #define KILL_MAX 8192
 
  /** Last kill string */
-static ll_node_t *kill_last=0;
+//static ll_node_t *kill_last=0;
 
 /** Current kill string */
-static ll_node_t *kill_current=0;
+//static ll_node_t *kill_current=0;
 
 /** Kill ring */
-//static std::vector<wcstring> kill_list;
+typedef std::list<wcstring> kill_list_t;
+static kill_list_t kill_list;
 
 /**
    Contents of the X clipboard, at last time we checked it
@@ -69,38 +70,15 @@ static int has_xsel()
 	return res;
 }
 
-/**
-   Add the string to the internal killring
-*/
-static void kill_add_internal( const wcstring &str )
-{
-	if (str.empty())
-		return;
-	
-	if (kill_last == 0)
-	{
-		kill_current = kill_last=(ll_node_t *)malloc( sizeof( ll_node_t ) );
-		kill_current->data = wcsdup(str.c_str());
-		kill_current->prev = kill_current;
-	}
-	else
-	{
-		kill_current = (ll_node_t *)malloc( sizeof( ll_node_t ) );
-		kill_current->data = kill_last->data;
-		kill_last->data = wcsdup(str.c_str());
-		kill_current->prev = kill_last->prev;
-		kill_last->prev = kill_current;
-		kill_current = kill_last;
-	}
-}
-
-
 void kill_add( const wcstring &str )
 {
+    ASSERT_IS_MAIN_THREAD();
+    if (str.empty())
+        return;
+        
 	wchar_t *cmd = NULL;
 	wchar_t *escaped_str;
-	kill_add_internal(str);
-
+	kill_list.push_front(str);
 
 	/*
 	   Check to see if user has set the FISH_CLIPBOARD_CMD variable,
@@ -148,55 +126,14 @@ void kill_add( const wcstring &str )
 }
 
 /**
-   Remove the specified node from the circular list
-*/
-static void kill_remove_node( ll_node_t *n )
-{
-	if( n->prev == n )
-	{
-		kill_last=kill_current = 0;
-	}
-	else
-	{
-		ll_node_t *nxt = n->prev;
-		while( nxt->prev != n )
-		{
-			nxt=nxt->prev;
-		}
-		nxt->prev = n->prev;
-		if( kill_last == n )
-		{
-			kill_last = n->prev;
-		}
-		kill_current=kill_last;
-		free( n->data );
-		free( n );		
-	}	
-}
-
-/**
    Remove first match for specified string from circular list
 */
 static void kill_remove( const wcstring &s )
 {
-	ll_node_t *n, *next=0;
-	
-	if( !kill_last )
-	{
-		return;
-	}
-	
-	for( n=kill_last; 
-		 n!=kill_last || next == 0 ;
-		 n=n->prev )
-	{
-		if( wcscmp( (wchar_t *)n->data, s.c_str() ) == 0 )
-		{
-			kill_remove_node( n );
-			break;
-		}
-		next = n;
-	}
+    ASSERT_IS_MAIN_THREAD();
+    kill_list_t::iterator iter = std::find(kill_list.begin(), kill_list.end(), s);
+    if (iter != kill_list.end())
+        kill_list.erase(iter);
 }
 		
 		
@@ -209,10 +146,14 @@ void kill_replace( const wcstring &old, const wcstring &newv )
 
 const wchar_t *kill_yank_rotate()
 {
-	if( kill_current == 0 )
-		return L"";
-	kill_current = kill_current->prev;
-	return (const wchar_t *)kill_current->data;
+    ASSERT_IS_MAIN_THREAD();
+    // Move the first element to the end
+    if (kill_list.empty()) {
+        return NULL;
+    } else {
+        kill_list.splice(kill_list.end(), kill_list, kill_list.begin());
+        return kill_list.front().c_str();
+    }
 }
 
 /**
@@ -253,7 +194,7 @@ static void kill_check_x_buffer()
                 {
                     free(cut_buffer);
                     cut_buffer = wcsdup(new_cut_buffer.c_str());
-                    kill_add_internal( cut_buffer );
+                    kill_list.push_front( new_cut_buffer );
                 }
 			}
 		}
@@ -264,45 +205,15 @@ static void kill_check_x_buffer()
 const wchar_t *kill_yank()
 {
 	kill_check_x_buffer();
-	if( kill_current == 0 )
-		return L"";
-	kill_current=kill_last;
-	return (wchar_t *)kill_current->data;
+    if (kill_list.empty()) {
+        return L"";
+    } else {
+        return kill_list.front().c_str();
+    }
 }
 
 void kill_sanity_check()
 {
-	int i;
-	if( get_is_interactive() )
-	{
-		/* Test that the kill-ring is consistent */
-		if( kill_current != 0 )
-		{
-			int kill_ok = 0;
-			ll_node_t *tmp = kill_current->prev;
-			for( i=0; i<KILL_MAX; i++ )
-			{
-				if( tmp == 0 )
-					break;
-				if( tmp->data == 0 )
-					break;
-				
-				if( tmp == kill_current )
-				{
-					kill_ok = 1;
-					break;
-				}
-				tmp = tmp->prev;				
-			}
-			if( !kill_ok )
-			{
-				debug( 0, 
-					   L"Killring inconsistent" );
-				sanity_lose();
-			}
-		}
-		
-	}
 }
 
 void kill_init()
@@ -313,20 +224,5 @@ void kill_destroy()
 {
 	if( cut_buffer )
 		free( cut_buffer );
-	
-	if( kill_current != 0 )
-	{
-		kill_current = kill_last->prev;
-		kill_last->prev = 0;
-		
-		while( kill_current )
-		{
-			ll_node_t *tmp = kill_current;
-			kill_current = kill_current->prev;
-			free( tmp->data );
-			free( tmp );
-		}
-	}	
-	
 }
 

@@ -62,18 +62,6 @@ typedef struct priority_queue
 priority_queue_t;
 
 /**
-   Linked list node.
-*/
-typedef struct _ll_node
-{
-	/** Next node */
-	struct _ll_node *next, /** Previous node */ *prev;
-	/** Node data */
-	void *data;
-}
-ll_node_t;
-
-/**
    Buffer for concatenating arbitrary data.
 */
 typedef struct buffer

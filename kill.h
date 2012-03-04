@@ -17,25 +17,20 @@ void kill_replace( const wcstring &old, const wcstring &newv );
 
 /** Add a string to the top of the killring */
 void kill_add( const wcstring &str );
-/**
-   Rotate the killring
-*/
+
+/** Rotate the killring */
 const wchar_t *kill_yank_rotate();
-/**
-  Paste from the killring
-*/
+
+/** Paste from the killring */
 const wchar_t *kill_yank();
-/**
-   Sanity check
-*/
+
+/** Sanity check */
 void kill_sanity_check();
-/**
-   Initialize the killring
-*/
+
+/** Initialize the killring */
 void kill_init();
-/**
-   Destroy the killring
-*/
+
+/** Destroy the killring */
 void kill_destroy();
 
 #endif

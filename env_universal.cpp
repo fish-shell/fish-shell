@@ -198,7 +198,7 @@ static void check_connection()
 		
 		env_universal_server.fd = -1;
 		env_universal_server.killme=0;
-		env_universal_server.input.used=0;	
+		env_universal_server.input.clear();	
 		env_universal_read_all();
 	}	
 }

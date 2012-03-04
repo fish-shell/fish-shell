@@ -464,13 +464,13 @@ void read_message( connection_t *src )
 			{
 				src->killme = 1;
 				debug( 3, L"Fd %d has reached eof, set killme flag", src->fd );
-				if( src->input.used > 0 )
+				if( src->input.size() > 0 )
 				{
 					char c = 0;
-					b_append( &src->input, &c, 1 );
+					src->input.push_back(c);
 					debug( 1, 
 						   L"Universal variable connection closed while reading command. Partial command recieved: '%s'", 
-						   (wchar_t *)src->input.buff  );
+						   &src->input.at(0));
 				}
 				return;
 			}
@@ -483,16 +483,16 @@ void read_message( connection_t *src )
 			wchar_t *msg;
 			
 			b = 0;
-			b_append( &src->input, &b, 1 );
+            src->input.push_back(b);
 			
-			msg = utf2wcs( src->input.buff );
+			msg = utf2wcs( &src->input.at(0) );
 			
 			/*
 			  Before calling parse_message, we must empty reset
 			  everything, since the callback function could
 			  potentially call read_message.
 			*/
-			src->input.used=0;
+			src->input.clear();
 			
 			if( msg )
 			{
@@ -500,7 +500,7 @@ void read_message( connection_t *src )
 			}
 			else
 			{
-				debug( 0, _(L"Could not convert message '%s' to wide character string"), src->input.buff );
+				debug( 0, _(L"Could not convert message '%s' to wide character string"), &src->input.at(0) );
 			}
 			
 			free( msg );
@@ -508,7 +508,7 @@ void read_message( connection_t *src )
 		}
 		else
 		{
-			b_append( &src->input, &b, 1 );
+            src->input.push_back(b);
 		}
 	}
 }
@@ -947,7 +947,6 @@ void connection_init( connection_t *c, int fd )
 {
 	memset (c, 0, sizeof (connection_t));
 	c->fd = fd;
-	b_init( &c->input );
     c->unsent = new std::queue<message_t *>;
 	c->buffer_consumed = c->buffer_used = 0;	
 }
@@ -955,7 +954,6 @@ void connection_init( connection_t *c, int fd )
 void connection_destroy( connection_t *c)
 {
     if (c->unsent) delete c->unsent;
-	b_destroy( &c->input );
 
 	/*
 	  A connection need not always be open - we only try to close it

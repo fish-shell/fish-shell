@@ -93,7 +93,7 @@ typedef struct connection
 	   The input string. Input from the socket goes here. When a
 	   newline is encountered, the buffer is parsed and cleared.
 	*/
-	buffer_t input;
+	std::vector<char> input;
 	
 	/**
 	   The read buffer. 

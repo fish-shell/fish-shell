@@ -449,12 +449,56 @@ wcstring format_string(const wchar_t *format, ...)
 }
 
 wcstring vformat_string(const wchar_t *format, va_list va_orig)
-{
-    string_buffer_t buffer;
-    sb_init(&buffer);
-    sb_vprintf(&buffer, format, va_orig);
-    wcstring result = (wchar_t *)buffer.buff;
-    sb_destroy(&buffer);
+{    
+    const int saved_err = errno;
+    /*
+      As far as I know, there is no way to check if a
+      vswprintf-call failed because of a badly formated string
+      option or because the supplied destination string was to
+      small. In GLIBC, errno seems to be set to EINVAL either way. 
+
+      Because of this, on failiure we try to
+      increase the buffer size until the free space is
+      larger than max_size, at which point it will
+      conclude that the error was probably due to a badly
+      formated string option, and return an error. Make
+      sure to null terminate string before that, though.
+    */
+    const size_t max_size = (128*1024*1024);
+    wchar_t static_buff[256];
+    size_t size = 0;
+    wchar_t *buff = NULL;
+    int status = -1;
+    while (status < 0) {
+        /* Reallocate if necessary */
+        if (size == 0) {
+            buff = static_buff;
+            size = sizeof static_buff;
+        } else {
+            size *= 2;
+            if (size >= max_size) {
+                buff[0] = '\0';
+                break;
+            }
+            buff = (wchar_t *)realloc( (buff == static_buff ? NULL : buff), size);
+            if (buff == NULL) {
+                DIE_MEM();
+            }
+        }
+                
+        /* Try printing */
+		va_list va;
+		va_copy( va, va_orig );
+        status = vswprintf(buff, size / sizeof(wchar_t), format, va);
+        va_end(va);   
+    }
+    
+    wcstring result = wcstring(buff);
+    
+    if (buff != static_buff)
+        free(buff);
+    
+    errno = saved_err;
     return result;
 }
 

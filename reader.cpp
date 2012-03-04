@@ -284,10 +284,8 @@ class reader_data_t
 	*/
 	bool prev_end_loop;
 
-	/**
-	   The current contents of the top item in the kill ring. 
-	 */
-	string_buffer_t kill_item;
+	/** The current contents of the top item in the kill ring.  */
+	wcstring kill_item;
 
 	/**
 	   Pointer to previous reader_data
@@ -459,29 +457,25 @@ static void reader_kill( size_t begin_idx, int length, int mode, int newv )
     const wchar_t *begin = data->command_line.c_str() + begin_idx;
 	if( newv )
 	{
-		sb_clear( &data->kill_item );
-		sb_append_substring( &data->kill_item, begin, length );
-		kill_add( (wchar_t *)data->kill_item.buff );
+        data->kill_item = wcstring(begin, length);
+		kill_add(data->kill_item);
 	}
 	else
 	{
 
-		wchar_t *old = wcsdup( (wchar_t *)data->kill_item.buff);
-
+        wcstring old = data->kill_item;
 		if( mode == KILL_APPEND )
 		{
-			sb_append_substring( &data->kill_item, begin, length );
+            data->kill_item.append(begin, length);
 		}
 		else
 		{
-			sb_clear( &data->kill_item );
-			sb_append_substring( &data->kill_item, begin, length );
-			sb_append( &data->kill_item, old );
+            data->kill_item = wcstring(begin, length);
+            data->kill_item.append(old);
 		}
 
 		
-		kill_replace( old, (wchar_t *)data->kill_item.buff );
-		free( old );
+		kill_replace( old, data->kill_item );
 	}
 
 	if( data->buff_pos > begin_idx ) {
@@ -2307,7 +2301,6 @@ void reader_push( const wchar_t *name )
     n->history = & history_t::history_with_name(name);
 	n->app_name = name;
 	n->next = data;
-	sb_init( &n->kill_item );
 
 	data=n;
 
@@ -2337,7 +2330,6 @@ void reader_pop()
 	}
 
 	data=data->next;
-	sb_destroy( &n->kill_item );
 	
     /* Invoke the destructor to balance our new */
     delete n;

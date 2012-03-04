@@ -163,11 +163,6 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b );
 void sb_init( string_buffer_t * );
 
 /**
-   Allocate memory for storing a stringbuffer and init it
-*/
-string_buffer_t *sb_new();
-
-/**
    Append a part of a string to the buffer.
 */
 void sb_append_substring( string_buffer_t *, const wchar_t *, size_t );

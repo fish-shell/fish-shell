@@ -183,20 +183,6 @@ void sb_init( string_buffer_t * b)
 	b->used -= sizeof(wchar_t);
 }
 
-string_buffer_t *sb_new()
-{
-	string_buffer_t *res = (string_buffer_t *)malloc( sizeof( string_buffer_t ) );
-
-	if( !res )
-	{
-		oom_handler( 0 );
-		return 0;
-	}
-	
-	sb_init( res );
-	return res;
-}
-
 void sb_append_substring( string_buffer_t *b, const wchar_t *s, size_t l )
 {
 	wchar_t tmp=0;

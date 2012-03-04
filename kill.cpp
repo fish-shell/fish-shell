@@ -36,8 +36,15 @@
 */
 #define KILL_MAX 8192
 
+ /** Last kill string */
+static ll_node_t *kill_last=0;
 
-static ll_node_t /** Last kill string */*kill_last=0, /** Current kill string */*kill_current =0;
+/** Current kill string */
+static ll_node_t *kill_current=0;
+
+/** Kill ring */
+//static std::vector<wcstring> kill_list;
+
 /**
    Contents of the X clipboard, at last time we checked it
 */
@@ -65,22 +72,22 @@ static int has_xsel()
 /**
    Add the string to the internal killring
 */
-static void kill_add_internal( wchar_t *str )
+static void kill_add_internal( const wcstring &str )
 {
-	if( wcslen( str ) == 0 )
+	if (str.empty())
 		return;
 	
-	if( kill_last == 0 )
+	if (kill_last == 0)
 	{
 		kill_current = kill_last=(ll_node_t *)malloc( sizeof( ll_node_t ) );
-		kill_current->data = wcsdup(str);
+		kill_current->data = wcsdup(str.c_str());
 		kill_current->prev = kill_current;
 	}
 	else
 	{
 		kill_current = (ll_node_t *)malloc( sizeof( ll_node_t ) );
 		kill_current->data = kill_last->data;
-		kill_last->data = wcsdup(str);
+		kill_last->data = wcsdup(str.c_str());
 		kill_current->prev = kill_last->prev;
 		kill_last->prev = kill_current;
 		kill_current = kill_last;
@@ -88,7 +95,7 @@ static void kill_add_internal( wchar_t *str )
 }
 
 
-void kill_add( wchar_t *str )
+void kill_add( const wcstring &str )
 {
 	wchar_t *cmd = NULL;
 	wchar_t *escaped_str;
@@ -106,7 +113,7 @@ void kill_add( wchar_t *str )
 	const env_var_t clipboard_wstr = env_get_string(L"FISH_CLIPBOARD_CMD");
 	if( !clipboard_wstr.missing() )
 	{
-		escaped_str = escape( str, 1 );
+		escaped_str = escape( str.c_str(), 1 );
 		cmd = wcsdupcat(L"echo -n ", escaped_str, clipboard_wstr.c_str());
 	}
 	else
@@ -119,7 +126,7 @@ void kill_add( wchar_t *str )
 	const env_var_t disp_wstr = env_get_string( L"DISPLAY" );
 	if( !disp_wstr.missing() )
 	{
-			escaped_str = escape( str, 1 );
+			escaped_str = escape( str.c_str(), 1 );
 			cmd = wcsdupcat(L"echo ", escaped_str, L"|xsel -b" );
 		}
 	}
@@ -170,7 +177,7 @@ static void kill_remove_node( ll_node_t *n )
 /**
    Remove first match for specified string from circular list
 */
-static void kill_remove( wchar_t *s )
+static void kill_remove( const wcstring &s )
 {
 	ll_node_t *n, *next=0;
 	
@@ -183,7 +190,7 @@ static void kill_remove( wchar_t *s )
 		 n!=kill_last || next == 0 ;
 		 n=n->prev )
 	{
-		if( wcscmp( (wchar_t *)n->data, s ) == 0 )
+		if( wcscmp( (wchar_t *)n->data, s.c_str() ) == 0 )
 		{
 			kill_remove_node( n );
 			break;
@@ -194,7 +201,7 @@ static void kill_remove( wchar_t *s )
 		
 		
 
-void kill_replace( wchar_t *old, wchar_t *newv )
+void kill_replace( const wcstring &old, const wcstring &newv )
 {
 	kill_remove( old );
 	kill_add( newv );	

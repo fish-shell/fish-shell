@@ -636,7 +636,6 @@ void common_handle_winch( int signal );
    Write paragraph of output to the specified stringbuffer, and redo
    the linebreaks to fit the current screen.
 */
-void write_screen( const wcstring &msg, string_buffer_t *buff );
 void write_screen( const wcstring &msg, wcstring &buff );
 
 /**
@@ -660,7 +659,6 @@ int create_directory( const wcstring &d );
 void bugreport();
 
 /** Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer. */
-void sb_format_size( string_buffer_t *sb, long long sz );
 wcstring format_size(long long sz);
 
 /** Version of format_size that does not allocate memory. */

@@ -12,13 +12,11 @@
 /**
    Replace the specified string in the killring
 */
-void kill_replace( wchar_t *old, wchar_t *newv );
+void kill_replace( const wcstring &old, const wcstring &newv );
 
 
-/**
-   Add a string to the top of the killring
-*/
-void kill_add( wchar_t *str );
+/** Add a string to the top of the killring */
+void kill_add( const wcstring &str );
 /**
    Rotate the killring
 */

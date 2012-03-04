@@ -712,9 +712,6 @@ static int wildcard_expand_internal( const wchar_t *wc,
 
 	/* Sligtly mangled version of base_dir */
 	const wchar_t *dir_string;
-
-	/* Description for completions */
-	string_buffer_t sb_desc;
 	
 	//	debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
 
@@ -764,9 +761,6 @@ static int wildcard_expand_internal( const wchar_t *wc,
 	*/	
 	wc_recursive = wcschr( wc, ANY_STRING_RECURSIVE );
 	is_recursive = ( wc_recursive && (!wc_end || wc_recursive < wc_end));
-
-	if( flags & ACCEPT_INCOMPLETE )
-		sb_init( &sb_desc );
 
 	/*
 	  Is this segment of the wildcard the last?
@@ -1048,11 +1042,6 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		free( new_dir );
 	}
 	closedir( dir );
-	
-	if( flags & ACCEPT_INCOMPLETE )
-	{
-		sb_destroy( &sb_desc );
-	}
 
 	return res;
 }

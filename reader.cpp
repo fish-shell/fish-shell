@@ -1301,7 +1301,11 @@ static int threaded_autosuggest(autosuggestion_context_t *ctx) {
 }
 
 static bool can_autosuggest(void) {
-    return ! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end();
+    /* We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search, and our command line contains a non-whitespace character. */
+    const wchar_t *whitespace = L" \t\r\n\v";
+    return ! data->suppress_autosuggestion &&
+             data->history_search.is_at_end() &&
+             data->command_line.find_first_not_of(whitespace) != wcstring::npos;
 }
 
 static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {

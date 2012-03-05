@@ -305,6 +305,20 @@ static int interrupt_handler()
 	return R_NULL;	
 }
 
+void update_fish_term256(void)
+{
+    /* Infer term256 support */
+    env_var_t fish_term256 = env_get_string(L"fish_term256");
+    bool support_term256;
+    if (! fish_term256.missing_or_empty()) {
+        support_term256 = from_string<bool>(fish_term256);
+    } else {
+        env_var_t term = env_get_string(L"TERM");
+        support_term256 = ! term.missing() && term.find(L"256color") != wcstring::npos;
+    }
+    output_set_supports_term256(support_term256);
+}
+
 int input_init()
 {
 	if( is_init )
@@ -325,16 +339,7 @@ int input_init()
 	
 	input_terminfo_init();
     
-    /* Infer term256 support. Consider using t_Co */
-    env_var_t fish_term256 = env_get_string(L"fish_term256");
-    bool support_term256;
-    if (! fish_term256.missing_or_empty()) {
-        support_term256 = from_string<bool>(fish_term256);
-    } else {
-        env_var_t term = env_get_string(L"TERM");
-        support_term256 = ! term.missing() && term.find(L"256color") != wcstring::npos;
-    }
-    output_set_supports_term256(support_term256);
+    update_fish_term256();
 
 	/* If we have no keybindings, add a few simple defaults */
 	if( mapping_list.size() )

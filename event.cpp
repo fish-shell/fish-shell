@@ -88,10 +88,12 @@ static event_list_t blocked;
 static int event_match( const event_t *classv, const event_t *instance )
 {
 
-	if( ! classv->function_name.empty() && ! instance->function_name.empty() )
+    /* If the function names are both non-empty and different, then it's not a match */
+	if( ! classv->function_name.empty() &&
+        ! instance->function_name.empty() &&
+          classv->function_name != instance->function_name)
 	{
-		if( classv->function_name != instance->function_name )
-			return 0;
+        return 0;
 	}
 
 	if( classv->type == EVENT_ANY )

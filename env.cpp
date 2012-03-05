@@ -54,7 +54,7 @@
 #include "reader.h"
 #include "parser.h"
 #include "env_universal.h"
-#include "input_common.h"
+#include "input.h"
 #include "event.h"
 #include "path.h"
 
@@ -200,7 +200,7 @@ static int get_names_show_unexported;
 /**
    List of all locale variable names
 */
-static const wchar_t *locale_variable[] =
+static const wchar_t * const locale_variable[] =
 {
 	L"LANG",
 	L"LC_ALL",
@@ -211,8 +211,7 @@ static const wchar_t *locale_variable[] =
 	L"LC_NUMERIC",
 	L"LC_TIME",
 	NULL
-}
-	;
+};
 
 
 /**
@@ -250,20 +249,14 @@ static mode_t get_umask()
 	return res;
 }
 
-/**
-   Checks if the specified variable is a locale variable
-*/
-static int is_locale( const wchar_t *key )
-{
-	int i;
-	for( i=0; locale_variable[i]; i++ )
-	{
-		if( wcscmp(locale_variable[i], key ) == 0 )
-		{
-			return 1;
+/** Checks if the specified variable is a locale variable */
+static bool var_is_locale(const wcstring &key) {
+	for (size_t i=0; locale_variable[i]; i++) {
+		if (key == locale_variable[i]) {
+			return true;
 		}
 	}
-	return 0;
+	return false;
 }
 
 /**
@@ -339,6 +332,16 @@ static void handle_locale()
 }
 
 
+/** React to modifying hte given variable */
+static void react_to_variable_change(const wcstring &key) {
+    if(var_is_locale(key)){
+        handle_locale();
+    } else if (key == L"fish_term256") {
+        update_fish_term256();
+        reader_repaint_needed();
+    }
+}
+
 /**
    Universal variable callback function. This function makes sure the
    proper events are triggered when an event occurs.
@@ -349,7 +352,7 @@ static void universal_callback( int type,
 {
 	const wchar_t *str=0;
 	
-	if( is_locale( name ) )
+	if( var_is_locale( name ) )
 	{
 		handle_locale();
 	}
@@ -720,9 +723,7 @@ static env_node_t *env_get_node( const wcstring &key )
 	return 0;
 }
 
-int env_set( const wchar_t *key, 
-			 const wchar_t *val, 
-			 int var_mode )
+int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 {
 	env_node_t *node = NULL;
 	bool has_changed_old = has_changed;
@@ -947,10 +948,7 @@ int env_set( const wchar_t *key,
         ev.arguments.reset(NULL);
     }
     
-    if( is_locale( key ) )
-    {
-        handle_locale();
-    }
+    react_to_variable_change(key);
     
     return 0;
 }
@@ -1002,12 +1000,11 @@ static int try_remove( env_node_t *n,
 }
 
 
-int env_remove( const wchar_t *key, int var_mode )
+int env_remove( const wcstring &key, int var_mode )
 {
+    ASSERT_IS_MAIN_THREAD();
 	env_node_t *first_node;
 	int erased = 0;
-	
-	CHECK( key, 1 );
 		
 	if( (var_mode & ENV_USER ) && is_read_only(key) )
 	{
@@ -1024,7 +1021,7 @@ int env_remove( const wchar_t *key, int var_mode )
 			first_node = global_env;
 		}
 		
-		if( try_remove( first_node, key, var_mode ) )
+		if( try_remove( first_node, key.c_str(), var_mode ) )
 		{		
 			event_t ev = event_t::variable_event(key);
             ev.arguments.reset(new wcstring_list_t);
@@ -1043,13 +1040,10 @@ int env_remove( const wchar_t *key, int var_mode )
 		!(var_mode & ENV_GLOBAL) &&
 		!(var_mode & ENV_LOCAL) ) 
 	{
-		erased = !env_universal_remove( key );
+		erased = ! env_universal_remove( key.c_str() );
 	}
 
-	if( is_locale( key ) )
-	{
-		handle_locale();
-	}
+    react_to_variable_change(key);
 	
 	return !erased;	
 }

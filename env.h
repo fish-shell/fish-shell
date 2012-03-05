@@ -81,9 +81,7 @@ void env_destroy();
    * ENV_INVALID, the variable name or mode was invalid
 */
 
-int env_set( const wchar_t *key, 
-			 const wchar_t *val,
-			 int mode );
+int env_set(const wchar_t *key,  const wchar_t *val, int mode);
 
 
 /**
@@ -145,7 +143,7 @@ int env_exist( const wchar_t *key, int mode );
 
    \return zero if the variable existed, and non-zero if the variable did not exist
 */
-int env_remove( const wchar_t *key, int mode );
+int env_remove( const wcstring &key, int mode );
 
 /**
   Push the variable stack. Used for implementing local variables for functions and for-loops.

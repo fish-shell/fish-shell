@@ -119,24 +119,21 @@ bool input_mapping_get( const wcstring &sequence, wcstring &cmd );
  */
 const wchar_t *input_terminfo_get_sequence( const wchar_t *name );
 
-/**
-   Return the name of the terminfo variable with the specified sequence
- */
+/** Return the name of the terminfo variable with the specified sequence */
 bool input_terminfo_get_name( const wcstring &seq, wcstring &name );
 
 /** Return a list of all known terminfo names */
 wcstring_list_t input_terminfo_get_names( bool skip_null );
 
 
-/**
-   Returns the input function code for the given input function name.
-*/
+/** Returns the input function code for the given input function name. */
 wchar_t input_function_get_code( const wcstring &name );
 
-/**
-   Returns a list of all existing input function names
- */
+/** Returns a list of all existing input function names */
 wcstring_list_t input_function_get_names( void );
+
+/** Updates our idea of whether we support term256 */
+void update_fish_term256();
 
 
 #endif

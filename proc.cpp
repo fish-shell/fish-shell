@@ -541,8 +541,8 @@ void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status )
 	event.param1.pid = pid;
 	
     event.arguments->push_back(msg);
-    event.arguments->push_back(format_val<int>(pid));
-    event.arguments->push_back(format_val<int>(status));
+    event.arguments->push_back(to_string<int>(pid));
+    event.arguments->push_back(to_string<int>(status));
 	event_fire( &event );
     event.arguments->resize(0);
 }				

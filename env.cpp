@@ -1103,15 +1103,15 @@ env_var_t env_get_string( const wcstring &key )
 	}
 	else if( key == L"COLUMNS" )
 	{
-        return format_val((long)common_get_width());
+        return to_string((long)common_get_width());
 	}	
 	else if( key == L"LINES" )
 	{
-        return format_val((long)common_get_width());
+        return to_string((long)common_get_width());
 	}
 	else if( key == L"status" )
 	{
-        return format_val((long)proc_get_last_status());
+        return to_string((long)proc_get_last_status());
 	}
 	else if( key == L"umask" )
 	{

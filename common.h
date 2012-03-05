@@ -281,6 +281,19 @@ void assert_is_locked(void *mutex, const char *who);
 */
 char *wcs2str_internal( const wchar_t *in, char *out );
 
+/** Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer. */
+wcstring format_size(long long sz);
+
+/** Version of format_size that does not allocate memory. */
+void format_size_safe(char buff[128], unsigned long long sz);
+
+/** Our crappier versions of debug which is guaranteed to not allocate any memory, or do anything other than call write(). This is useful after a call to fork() with threads. */
+void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL);
+
+/** Writes out a long safely */
+void format_long_safe(char buff[128], long val);
+void format_long_safe(wchar_t buff[128], long val);
+
 
 template<typename T>
 T from_string(const wcstring &x) {
@@ -296,6 +309,20 @@ wcstring to_string(const T &x) {
     stream << x;
     return stream.str();
 }
+
+/* wstringstream is a huge memory pig. Let's provide some specializations where we can. */
+template<>
+inline wcstring to_string(const long &x) {
+    wchar_t buff[128];
+    format_long_safe(buff, x);
+    return wcstring(buff);
+}
+
+template<>
+inline wcstring to_string(const int &x) {
+    return to_string(static_cast<long>(x));
+}
+
 
 /* Helper class for managing a null-terminated array of null-terminated strings (of some char type) */
 template <typename CharType_t>
@@ -657,42 +684,6 @@ int create_directory( const wcstring &d );
    Print a short message about how to file a bug report to stderr
 */
 void bugreport();
-
-/** Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer. */
-wcstring format_size(long long sz);
-
-/** Version of format_size that does not allocate memory. */
-void format_size_safe(char buff[128], unsigned long long sz);
-
-/** Our crappier versions of debug which is guaranteed to not allocate any memory, or do anything other than call write(). This is useful after a call to fork() with threads. */
-void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL);
-
-/** Writes out a long safely */
-void format_long_safe(char buff[128], long val);
-void format_long_safe(wchar_t buff[128], long val);
-
-
-/** Converts some type to a wstring. */
-template<typename T>
-inline wcstring format_val(T x) {
-    std::wstringstream stream;
-    stream << x;
-    return stream.str();
-}
-
-/* wstringstream is a huge memory pig. Let's provide some specializations where we can. */
-template<>
-inline wcstring format_val(long x) {
-    wchar_t buff[128];
-    format_long_safe(buff, x);
-    return wcstring(buff);
-}
-
-template<>
-inline wcstring format_val(int x) {
-    return format_val(static_cast<long>(x));
-}
-
 
 /**
    Return the number of seconds from the UNIX epoch, with subsecond

@@ -1160,11 +1160,11 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 		}
 		else if( baz )
 		{
-            msg = format_string(L"%ls%ls%ls\n", foo, escaped_separator, baz);
+			append_format(msg, L"%ls%ls%ls\n", foo, escaped_separator, baz);
 		}
 		else
 		{
-            msg = format_string(L"%ls\n", foo);
+			append_format(msg, L"%ls\n", foo);
 		}
 
 		free( foo );		

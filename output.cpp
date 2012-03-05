@@ -1,6 +1,6 @@
 /** \file output.c
-	Generic output functions
-*/
+ Generic output functions
+ */
 
 #include "config.h"
 
@@ -58,15 +58,15 @@
 #include "env.h"
 
 /**
-   Number of color names in the col array
-*/
+ Number of color names in the col array
+ */
 #define COLORS (sizeof(col)/sizeof(wchar_t *))
 
 static int writeb_internal( char c );
 
 /**
-   Names of different colors. 
-*/
+ Names of different colors. 
+ */
 static const wchar_t *col[]=
 {
 	L"black",
@@ -81,14 +81,14 @@ static const wchar_t *col[]=
 	L"white"
 	L"normal"
 }
-	;
+;
 
 /**
-   Mapping from color name (the 'col' array) to color index as used in
-   ANSI color terminals, and also the fish_color_* constants defined
-   in highlight.h. Non-ANSI terminals will display the wrong colors,
-   since they use a different mapping.
-*/
+ Mapping from color name (the 'col' array) to color index as used in
+ ANSI color terminals, and also the fish_color_* constants defined
+ in highlight.h. Non-ANSI terminals will display the wrong colors,
+ since they use a different mapping.
+ */
 static const int col_idx[]=
 {
 	0, 
@@ -105,13 +105,13 @@ static const int col_idx[]=
 };
 
 /**
-   The function used for output
-*/
+ The function used for output
+ */
 
 static int (*out)(char c) = &writeb_internal;
 
 /**
-   Name of terminal
+ Name of terminal
  */
 static wcstring current_term;
 
@@ -130,6 +130,11 @@ int (*output_get_writer())(char)
 	return out;
 }
 
+static bool term256_support_is_native(void) {
+    /* Return YES if we think the term256 support is "native" as opposed to forced. */
+    return max_colors == 256;
+}
+
 bool output_get_supports_term256() {
     return support_term256;
 }
@@ -146,9 +151,51 @@ static unsigned char index_for_color(rgb_color_t c) {
     }
 }
 
+
+static bool write_color(char *todo, unsigned char idx, bool is_fg) {
+    bool result = false;
+    if (idx < 16 || term256_support_is_native()) {
+        /* Use tparm */
+        writembs( tparm( todo, idx ) );
+        result = true;
+    } else {
+        /* We are attempting to bypass the term here. Generate the ANSI escape sequence ourself. */
+        char stridx[128];
+        format_long_safe(stridx, (long)idx);
+        char buff[128] = "\x1b[";
+        strcat(buff, is_fg ? "38;5;" : "48;5;");
+        strcat(buff, stridx);
+        strcat(buff, "m");
+        write_loop(STDOUT_FILENO, buff, strlen(buff));
+        result = true;
+    }
+    return result;
+}
+
+static bool write_foreground_color(unsigned char idx) {
+    if (set_a_foreground && set_a_foreground[0]) {
+        return write_color(set_a_foreground, idx, true);
+    } else if (set_foreground && set_foreground[0]) {
+        return write_color(set_foreground, idx, true);
+    } else {
+        return false;
+    }
+}
+
+static bool write_background_color(unsigned char idx) {
+    if (set_a_background && set_a_background[0]) {
+        return write_color(set_a_background, idx, false);
+    } else if (set_background && set_background[0]) {
+        return write_color(set_background, idx, false);
+    } else {
+        return false;
+    }
+}
+
+
 void set_color(rgb_color_t c, rgb_color_t c2)
 {
-
+    
 #if 0
     wcstring tmp = c.description();
     wcstring tmp2 = c2.description();
@@ -162,61 +209,46 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 	static int was_bold=0;
 	static int was_underline=0;
 	int bg_set=0, last_bg_set=0;
-	char *fg = 0, *bg=0;
-
+    
 	int is_bold = 0;
 	int is_underline = 0;
-
+    
 	/*
-	  Test if we have at least basic support for setting fonts, colors
-	  and related bits - otherwise just give up...
-	*/
+     Test if we have at least basic support for setting fonts, colors
+     and related bits - otherwise just give up...
+     */
 	if( !exit_attribute_mode )
 	{
 		return;
 	}
 	
-
+    
 	is_bold |= c.is_bold();
 	is_bold |= c2.is_bold();
-
+    
 	is_underline |= c.is_underline();
 	is_underline |= c2.is_underline();
-
-	if( (set_a_foreground != 0) && (strlen( set_a_foreground) != 0 ) )
-	{
-		fg = set_a_foreground;
-		bg = set_a_background;
-	}
-	else if( (set_foreground != 0) && (strlen( set_foreground) != 0 ) )
-	{
-		fg = set_foreground;
-		bg = set_background;
-	}
-
+    
 	if( c.is_reset() || c2.is_reset())
 	{
 		c = c2 = normal;
 		was_bold=0;
 		was_underline=0;
-		if( fg )
-		{
-			/*
-			  If we exit attibute mode, we must first set a color, or
-			  previously coloured text might lose it's
-			  color. Terminals are weird...
-			*/
-			writembs( tparm( fg, 0 ) );
-		}
+        /*
+         If we exit attibute mode, we must first set a color, or
+         previously coloured text might lose it's
+         color. Terminals are weird...
+         */
+        write_foreground_color(0);
 		writembs( exit_attribute_mode );
 		return;
 	}
-
+    
 	if( was_bold && !is_bold )
 	{
 		/*
-		  Only way to exit bold mode is a reset of all attributes. 
-		*/
+         Only way to exit bold mode is a reset of all attributes. 
+         */
 		writembs( exit_attribute_mode );
 		last_color = normal;
 		last_color2 = normal;
@@ -225,115 +257,102 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 	}
 	
 	if( ! last_color2.is_normal() &&
-		! last_color2.is_reset() &&
-		! last_color2.is_ignore() )
+       ! last_color2.is_reset() &&
+       ! last_color2.is_ignore() )
 	{
 		/*
-		  Background was set
-		*/
+         Background was set
+         */
 		last_bg_set=1;
 	}
-
+    
 	if( ! c2.is_normal() &&
-		! c2.is_ignore())
+       ! c2.is_ignore())
 	{
 		/*
-		  Background is set
-		*/
+         Background is set
+         */
 		bg_set=1;
 		c = (c2==rgb_color_t::white())?rgb_color_t::black():rgb_color_t::white();
 	}
-
+    
 	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))
 	{
 		if(bg_set && !last_bg_set)
 		{
 			/*
-			  Background color changed and is set, so we enter bold
-			  mode to make reading easier. This means bold mode is
-			  _always_ on when the background color is set.
-			*/
+             Background color changed and is set, so we enter bold
+             mode to make reading easier. This means bold mode is
+             _always_ on when the background color is set.
+             */
 			writembs( enter_bold_mode );
 		}
 		if(!bg_set && last_bg_set)
 		{
 			/*
-			  Background color changed and is no longer set, so we
-			  exit bold mode
-			*/
+             Background color changed and is no longer set, so we
+             exit bold mode
+             */
 			writembs( exit_attribute_mode );
 			was_bold=0;
 			was_underline=0;
 			/*
-			  We don't know if exit_attribute_mode resets colors, so
-			  we set it to something known.
-			*/
-			if( fg )
+             We don't know if exit_attribute_mode resets colors, so
+             we set it to something known.
+             */
+			if( write_foreground_color(0))
 			{
-				writembs( tparm( fg, 0 ) );
 				last_color=rgb_color_t::black();
 			}
 		}
 	}
-
+    
 	if( last_color != c )
 	{
 		if( c.is_normal() )
 		{
-			if( fg )
-			{
-				writembs( tparm( fg, 0 ) );
-			}
+			write_foreground_color(0);
 			writembs( exit_attribute_mode );
-
+            
 			last_color2 = rgb_color_t::normal();
 			was_bold=0;
 			was_underline=0;
 		}
 		else if( ! c.is_special() )
 		{
-			if( fg )
-			{
-                writembs( tparm(fg, index_for_color(c)) );
-			}
+            write_foreground_color(index_for_color(c));
 		}
 	}
-
+    
 	last_color = c;
-
+    
 	if( last_color2 != c2 )
 	{
 		if( c2.is_normal() )
 		{
-			if( bg )
-			{
-				writembs( tparm( bg, 0 ) );
-			}
-
+            write_background_color(0);
+            
 			writembs( exit_attribute_mode );
-			if( ! last_color.is_normal() && fg )
+			if( ! last_color.is_normal())
 			{
-                writembs( tparm( fg, index_for_color(last_color) ));
+                write_foreground_color(index_for_color(last_color));
 			}
 			
-
+            
 			was_bold=0;
 			was_underline=0;
 			last_color2 = c2;
 		}
 		else if ( ! c2.is_special() )
 		{
-			if( bg )
-			{
-				writembs( tparm( bg, index_for_color(c2) ));
-			}
+            write_background_color(index_for_color(c2));
 			last_color2 = c2;
 		}
 	}
-
+    
 	/*
-	  Lastly, we set bold mode and underline mode correctly
-	*/
+     Lastly, we set bold mode and underline mode correctly
+     */
 	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set )
 	{
 		if( is_bold && !was_bold )
@@ -345,7 +364,7 @@ void set_color(rgb_color_t c, rgb_color_t c2)
 		}
 		was_bold = is_bold;	
 	}
-
+    
 	if( was_underline && !is_underline )
 	{
 		writembs( exit_underline_mode );		
@@ -369,29 +388,29 @@ void set_color( int c, int c2 )
 	static int was_underline=0;
 	int bg_set=0, last_bg_set=0;
 	char *fg = 0, *bg=0;
-
+    
 	int is_bold = 0;
 	int is_underline = 0;
-
+    
 	/*
-	  Test if we have at least basic support for setting fonts, colors
-	  and related bits - otherwise just give up...
-	*/
+     Test if we have at least basic support for setting fonts, colors
+     and related bits - otherwise just give up...
+     */
 	if( !exit_attribute_mode )
 	{
 		return;
 	}
 	
-
+    
 	is_bold |= (c&FISH_COLOR_BOLD)!=0;
 	is_bold |= (c2&FISH_COLOR_BOLD)!=0;
-
+    
 	is_underline |= (c&FISH_COLOR_UNDERLINE)!=0;
 	is_underline |= (c2&FISH_COLOR_UNDERLINE)!=0;
-
+    
 	c = c&(~(FISH_COLOR_BOLD|FISH_COLOR_UNDERLINE));
 	c2 = c2&(~(FISH_COLOR_BOLD|FISH_COLOR_UNDERLINE));
-
+    
 	if( (set_a_foreground != 0) && (strlen( set_a_foreground) != 0 ) )
 	{
 		fg = set_a_foreground;
@@ -402,7 +421,7 @@ void set_color( int c, int c2 )
 		fg = set_foreground;
 		bg = set_background;
 	}
-
+    
 	if( (c == FISH_COLOR_RESET) || (c2 == FISH_COLOR_RESET))
 	{
 		c = c2 = FISH_COLOR_NORMAL;
@@ -411,21 +430,21 @@ void set_color( int c, int c2 )
 		if( fg )
 		{
 			/*
-			  If we exit attibute mode, we must first set a color, or
-			  previously coloured text might lose it's
-			  color. Terminals are weird...
-			*/
+             If we exit attibute mode, we must first set a color, or
+             previously coloured text might lose it's
+             color. Terminals are weird...
+             */
 			writembs( tparm( fg, 0 ) );
 		}
 		writembs( exit_attribute_mode );
 		return;
 	}
-
+    
 	if( was_bold && !is_bold )
 	{
 		/*
-		  Only way to exit bold mode is a reset of all attributes. 
-		*/
+         Only way to exit bold mode is a reset of all attributes. 
+         */
 		writembs( exit_attribute_mode );
 		last_color = FISH_COLOR_NORMAL;
 		last_color2 = FISH_COLOR_NORMAL;
@@ -434,49 +453,49 @@ void set_color( int c, int c2 )
 	}
 	
 	if( last_color2 != FISH_COLOR_NORMAL &&
-		last_color2 != FISH_COLOR_RESET &&
-		last_color2 != FISH_COLOR_IGNORE )
+       last_color2 != FISH_COLOR_RESET &&
+       last_color2 != FISH_COLOR_IGNORE )
 	{
 		/*
-		  Background was set
-		*/
+         Background was set
+         */
 		last_bg_set=1;
 	}
-
+    
 	if( c2 != FISH_COLOR_NORMAL &&
-		c2 != FISH_COLOR_IGNORE )
+       c2 != FISH_COLOR_IGNORE )
 	{
 		/*
-		  Background is set
-		*/
+         Background is set
+         */
 		bg_set=1;
 		c = (c2==FISH_COLOR_WHITE)?FISH_COLOR_BLACK:FISH_COLOR_WHITE;
 	}
-
+    
 	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))
 	{
 		if(bg_set && !last_bg_set)
 		{
 			/*
-			  Background color changed and is set, so we enter bold
-			  mode to make reading easier. This means bold mode is
-			  _always_ on when the background color is set.
-			*/
+             Background color changed and is set, so we enter bold
+             mode to make reading easier. This means bold mode is
+             _always_ on when the background color is set.
+             */
 			writembs( enter_bold_mode );
 		}
 		if(!bg_set && last_bg_set)
 		{
 			/*
-			  Background color changed and is no longer set, so we
-			  exit bold mode
-			*/
+             Background color changed and is no longer set, so we
+             exit bold mode
+             */
 			writembs( exit_attribute_mode );
 			was_bold=0;
 			was_underline=0;
 			/*
-			  We don't know if exit_attribute_mode resets colors, so
-			  we set it to something known.
-			*/
+             We don't know if exit_attribute_mode resets colors, so
+             we set it to something known.
+             */
 			if( fg )
 			{
 				writembs( tparm( fg, 0 ) );
@@ -484,7 +503,7 @@ void set_color( int c, int c2 )
 			}
 		}
 	}
-
+    
 	if( last_color != c )
 	{
 		if( c==FISH_COLOR_NORMAL )
@@ -494,7 +513,7 @@ void set_color( int c, int c2 )
 				writembs( tparm( fg, 0 ) );
 			}
 			writembs( exit_attribute_mode );
-
+            
 			last_color2 = FISH_COLOR_NORMAL;
 			was_bold=0;
 			was_underline=0;
@@ -507,9 +526,9 @@ void set_color( int c, int c2 )
 			}
 		}
 	}
-
+    
 	last_color = c;
-
+    
 	if( last_color2 != c2 )
 	{
 		if( c2 == FISH_COLOR_NORMAL )
@@ -518,7 +537,7 @@ void set_color( int c, int c2 )
 			{
 				writembs( tparm( bg, 0 ) );
 			}
-
+            
 			writembs( exit_attribute_mode );
 			if( ( last_color != FISH_COLOR_NORMAL ) && fg )
 			{
@@ -528,7 +547,7 @@ void set_color( int c, int c2 )
 				}
 			}
 			
-
+            
 			was_bold=0;
 			was_underline=0;
 			last_color2 = c2;
@@ -542,10 +561,10 @@ void set_color( int c, int c2 )
 			last_color2 = c2;
 		}
 	}
-
+    
 	/*
-	  Lastly, we set bold mode and underline mode correctly
-	*/
+     Lastly, we set bold mode and underline mode correctly
+     */
 	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set )
 	{
 		if( is_bold && !was_bold )
@@ -557,7 +576,7 @@ void set_color( int c, int c2 )
 		}
 		was_bold = is_bold;	
 	}
-
+    
 	if( was_underline && !is_underline )
 	{
 		writembs( exit_underline_mode );		
@@ -572,8 +591,8 @@ void set_color( int c, int c2 )
 }
 
 /**
-   Default output method, simply calls write() on stdout
-*/
+ Default output method, simply calls write() on stdout
+ */
 static int writeb_internal( char c )
 {
 	write_loop( 1, &c, 1 );
@@ -589,7 +608,7 @@ int writeb( tputs_arg_t b )
 int writembs_internal( char *str )
 {
 	CHECK( str, 1 );
-		
+    
 	return tputs(str,1,&writeb)==ERR?1:0;
 }
 
@@ -599,9 +618,9 @@ int writech( wint_t ch )
 	size_t i;
 	char buff[MB_LEN_MAX+1];
 	size_t bytes;
-
+    
 	if( ( ch >= ENCODE_DIRECT_BASE) &&
-		( ch < ENCODE_DIRECT_BASE+256) )
+       ( ch < ENCODE_DIRECT_BASE+256) )
 	{
 		buff[0] = ch - ENCODE_DIRECT_BASE;
 		bytes=1;
@@ -630,17 +649,17 @@ int writech( wint_t ch )
 void writestr( const wchar_t *str )
 {
 	char *pos;
-
+    
 	CHECK( str, );
 	
-//	while( *str )
-//		writech( *str++ );
-
+    //	while( *str )
+    //		writech( *str++ );
+    
 	/*
-	  Check amount of needed space
-	*/
+     Check amount of needed space
+     */
 	size_t len = wcstombs( 0, str, 0 );
-		
+    
 	if( len == (size_t)-1 )
 	{
 		debug( 1, L"Tried to print invalid wide character string" );
@@ -648,10 +667,10 @@ void writestr( const wchar_t *str )
 	}
 	
 	len++;
-		
+    
 	/*
-	  Convert
-	*/
+     Convert
+     */
     char *buffer, static_buffer[256];
     if (len <= sizeof static_buffer)
         buffer = static_buffer;
@@ -659,12 +678,12 @@ void writestr( const wchar_t *str )
         buffer = new char[len];
     
 	wcstombs( buffer, 
-			  str,
-			  len );
-
+             str,
+             len );
+    
 	/*
-	  Write
-	*/
+     Write
+     */
 	for( pos = buffer; *pos; pos++ )
 	{
 		out( *pos );
@@ -679,17 +698,17 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 {
 	int written=0;
 	int tot;
-
+    
 	CHECK( str, );
 	
 	tot = my_wcswidth(str);
-
+    
 	if( tot <= max_width )
 	{
 		writestr( str );
 		return;
 	}
-
+    
 	while( *str != 0 )
 	{
 		int w = wcwidth( *str );
@@ -700,10 +719,10 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 		written+=w;
 		writech( *(str++) );
 	}
-
+    
 	written += wcwidth( ellipsis_char );
 	writech( ellipsis_char );
-
+    
 	while( written < max_width )
 	{
 		written++;
@@ -713,17 +732,17 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 
 int write_escaped_str( const wchar_t *str, int max_len )
 {
-
+    
 	wchar_t *out;
 	int i;
 	int len;
 	int written=0;
-
+    
 	CHECK( str, 0 );
 	
 	out = escape( str, 1 );
 	len = my_wcswidth( out );
-
+    
 	if( max_len && (max_len < len))
 	{
 		for( i=0; (written+wcwidth(out[i]))<=(max_len-1); i++ )
@@ -745,7 +764,7 @@ int write_escaped_str( const wchar_t *str, int max_len )
 		written = len;
 		writestr( out );
 	}
-
+    
 	free( out );
 	return written;
 }
@@ -801,9 +820,9 @@ int output_color_code( const wcstring &val, bool is_background ) {
 rgb_color_t parse_color( const wcstring &val, bool is_background ) {
     int is_bold=0;
 	int is_underline=0;
-
+    
     std::vector<rgb_color_t> candidates;
-
+    
     wcstring_list_t el;
 	tokenize_variable_array( val, el );
 	
@@ -832,7 +851,7 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
             }
         }
     }
-        
+    
     // Pick the best candidate
     rgb_color_t first_rgb = rgb_color_t::none(), first_named = rgb_color_t::none();
     for (size_t i=0; i < candidates.size(); i++) {

@@ -328,12 +328,12 @@ inline wcstring to_string(const long &x) {
 
 template<>
 inline bool from_string(const std::string &x) {
-    return ! x.empty() && strchr("YTyt", x.at(0));
+    return ! x.empty() && strchr("YTyt1", x.at(0));
 }
 
 template<>
 inline bool from_string(const wcstring &x) {
-    return ! x.empty() && wcschr(L"YTyt", x.at(0));
+    return ! x.empty() && wcschr(L"YTyt1", x.at(0));
 }
 
 template<>

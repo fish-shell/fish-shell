@@ -1090,8 +1090,8 @@ void exec( parser_t &parser, job_t *j )
 			case INTERNAL_BUFFER:
 			{
 		
-				const char *buffer = io_buffer->out_buffer_ptr();
-				size_t count = io_buffer->out_buffer_size();
+				const char *buffer = input_redirect->out_buffer_ptr();
+				size_t count = input_redirect->out_buffer_size();
         
 				pid = execute_fork(false);
 				if( pid == 0 )

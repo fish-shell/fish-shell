@@ -304,6 +304,14 @@ T from_string(const wcstring &x) {
 }
 
 template<typename T>
+T from_string(const std::string &x) {
+    T result = T();
+    std::stringstream stream(x);
+    stream >> result;
+    return result;
+}
+
+template<typename T>
 wcstring to_string(const T &x) {
     std::wstringstream stream;
     stream << x;
@@ -316,6 +324,16 @@ inline wcstring to_string(const long &x) {
     wchar_t buff[128];
     format_long_safe(buff, x);
     return wcstring(buff);
+}
+
+template<>
+inline bool from_string(const std::string &x) {
+    return ! x.empty() && strchr("YTyt", x.at(0));
+}
+
+template<>
+inline bool from_string(const wcstring &x) {
+    return ! x.empty() && wcschr(L"YTyt", x.at(0));
 }
 
 template<>

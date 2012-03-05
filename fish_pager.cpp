@@ -1089,6 +1089,15 @@ static void init( int mangle_descriptors, int out )
 		free( wterm );
 	}
 	
+    /* Infer term256 support */
+    char *fish_term256 = getenv("fish_term256");
+    bool support_term256;
+    if (fish_term256) {
+        support_term256 = from_string<bool>(fish_term256);
+    } else {
+        support_term256 = term && strstr(term, "256color");
+    }
+    output_set_supports_term256(support_term256);    
 }
 
 /**

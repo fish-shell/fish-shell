@@ -154,16 +154,14 @@ void output_set_writer( int (*writer)(char) );
  */
 int (*output_get_writer())(char) ;
 
-/**
-   Set the terminal name
- */
+/** Set the terminal name */
 void output_set_term( const wchar_t *term );
-/**
-   Return the terminal name
- */
+
+/** Return the terminal name */
 const wchar_t *output_get_term();
 
-/** Determines whether term256 colors are supported */
-bool allow_term256(void);
+/** Sets whether term256 colors are supported */
+bool output_get_supports_term256();
+void output_set_supports_term256(bool val);
 
 #endif

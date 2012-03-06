@@ -39,17 +39,6 @@ if status --is-login
 end
 
 #
-# There are variables that contain colons that are not arrays. This
-# reverts them back to regular strings.
-#
-
-for i in DISPLAY
-	if set -q $i
-		set -- $i (printf ":%s" $$i|cut -c 2-)
-	end
-end
-
-#
 # Load additional initialization files
 #
 

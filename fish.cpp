@@ -305,7 +305,8 @@ int main( int argc, char **argv )
 
     parser_t &parser = parser_t::principal_parser();
 
-    printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
+    if (g_log_forks)
+        printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
 	if( read_init() )
 	{
@@ -390,7 +391,8 @@ int main( int argc, char **argv )
 	
 	env_destroy();
 	
-    printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
+    if (g_log_forks)
+        printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
     
 	return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();	
 }

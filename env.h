@@ -183,5 +183,7 @@ public:
     static const wchar_t * const highlighting_keys[];
 };
 
+extern bool g_log_forks;
+
 
 #endif

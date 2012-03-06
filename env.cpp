@@ -94,6 +94,9 @@ struct var_entry_t
 
 typedef std::map<wcstring, var_entry_t*> var_table_t;
 
+bool g_log_forks = true;
+
+
 /**
    Struct representing one level in the function variable stack
 */
@@ -498,6 +501,15 @@ static void env_set_defaults()
 	
 }
 
+// Some variables should not be arrays. This used to be handled by a startup script, but we'd like to get down to 0 forks for startup, so handle it here.
+static bool variable_can_be_array(const wchar_t *key) {
+    if (! wcscmp(key, L"DISPLAY")) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 void env_init()
 {
 	char **p;
@@ -555,7 +567,6 @@ void env_init()
 	for( p=environ?environ:__environ; p && *p; p++ )
 	{
 		wchar_t *key, *val;
-		wchar_t *pos;
 		
 		key = str2wcs(*p);
 
@@ -574,16 +585,15 @@ void env_init()
 		{ 
 			*val = L'\0';
 			val++;
-			pos=val;
-			//fwprintf( stderr, L"Set $%ls to %ls\n", key, val );
-			while( *pos )
-			{
-				if( *pos == L':' )
-				{
-					*pos = ARRAY_SEP;
-				}
-				pos++;
-			}
+            
+            //fwprintf( stderr, L"Set $%ls to %ls\n", key, val );
+            if (variable_can_be_array(val)) {
+                for (size_t i=0; val[i] != L'\0'; i++) {
+                    if( val[i] == L':' ) {
+                        val[i] = ARRAY_SEP;
+                    }
+                }
+            }
 
 			env_set( key, val, ENV_EXPORT | ENV_GLOBAL );
 		}		

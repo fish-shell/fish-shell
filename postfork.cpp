@@ -304,6 +304,8 @@ int setup_child_process( job_t *j, process_t *p )
 	
 }
 
+int g_fork_count = 0;
+
 /**
    This function is a wrapper around fork. If the fork calls fails
    with EAGAIN, it is retried FORK_LAPS times, with a very slight
@@ -323,6 +325,8 @@ pid_t execute_fork(bool wait_for_threads_to_die)
 	struct timespec pollint;
 	int i;
 	
+    g_fork_count++;
+    
 	for( i=0; i<FORK_LAPS; i++ )
 	{
 		pid = fork();

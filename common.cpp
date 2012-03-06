@@ -1952,6 +1952,7 @@ void set_main_thread() {
 
 /* Notice when we've forked */
 static pid_t initial_pid;
+
 bool is_forked_child(void) {
     bool is_child_of_fork = (getpid() != initial_pid);
     if (is_child_of_fork) {

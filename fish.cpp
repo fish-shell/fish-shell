@@ -89,7 +89,7 @@ static int read_init()
 	{
 		wcstring config_dir_escaped = escape_string( config_dir, 1 );
         wcstring eval_buff = format_string(L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
-		parser.eval( eval_buff.c_str(), 0, TOP );
+		parser.eval( eval_buff, 0, TOP );
 	}
 	
 	return 1;
@@ -265,8 +265,9 @@ static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
    parses commands from stdin or files, depending on arguments
 */
 
+extern int g_fork_count;
 int main( int argc, char **argv )
-{
+{    
     struct stat tmp;
 	int res=1;
 	const char *cmd=0;
@@ -303,6 +304,8 @@ int main( int argc, char **argv )
 	history_init();
 
     parser_t &parser = parser_t::principal_parser();
+
+    printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
 	if( read_init() )
 	{
@@ -387,5 +390,7 @@ int main( int argc, char **argv )
 	
 	env_destroy();
 	
+    printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
+    
 	return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();	
 }

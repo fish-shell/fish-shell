@@ -1951,12 +1951,9 @@ void set_main_thread() {
 
 
 /* Notice when we've forked */
-static bool is_child_of_fork = false;
-static void child_note_forked(void) {
-    is_child_of_fork = true;
-}
-
+static pid_t initial_pid;
 bool is_forked_child(void) {
+    bool is_child_of_fork = (getpid() != initial_pid);
     if (is_child_of_fork) {
         printf("Uh-oh: %d\n", getpid());
         while (1) sleep(10000);
@@ -1965,8 +1962,8 @@ bool is_forked_child(void) {
 }
 
 void setup_fork_guards(void) {
-    /* Notice when we fork */
-    pthread_atfork(NULL /* prepare */, NULL /* parent */, child_note_forked);
+    /* Notice when we fork by stashing our pid. This seems simpler than pthread_atfork(). */
+    initial_pid = getpid();
 }
 
 static bool is_main_thread() {

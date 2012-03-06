@@ -307,7 +307,7 @@ static int interrupt_handler()
 
 void update_fish_term256(void)
 {
-    /* Infer term256 support */
+    /* Infer term256 support. If fish_term256 is set, we respect it; otherwise try to detect it from the TERM variable */
     env_var_t fish_term256 = env_get_string(L"fish_term256");
     bool support_term256;
     if (! fish_term256.missing_or_empty()) {

@@ -419,7 +419,7 @@ namespace test_expressions {
                 assert(combiners.size() + 1 == subjects.size());
                 assert(! subjects.empty());
                 
-                size_t idx = 0, max = combiners.size();
+                size_t idx = 0, max = subjects.size();
                 bool or_result = false;
                 while (idx < max) {
                     if (or_result) {

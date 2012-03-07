@@ -649,6 +649,11 @@ static void test_test() {
     assert(run_test_test(1, L"-x /bin/ls_not_a_path"));
     assert(run_test_test(0, L"-d /bin/"));
     assert(run_test_test(1, L"-d /bin/ls"));
+    
+    /* This failed at once point */
+    assert(run_test_test(1, L"-d /bin -a 5 -eq 3"));
+    assert(run_test_test(0, L"-d /bin -o 5 -eq 3"));
+    assert(run_test_test(0, L"-d /bin -a ! 5 -eq 3"));
         
 }
 

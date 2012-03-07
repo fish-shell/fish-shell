@@ -227,7 +227,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 	else
 		# Ubuntu Feisty places this command in the regular path instead
-		if type -p command-not-found >/dev/null
+		if which command-not-found >/dev/null
 			function fish_command_not_found_handler --on-event fish_command_not_found
 				command-not-found $argv
 			end

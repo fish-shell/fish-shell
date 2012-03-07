@@ -279,7 +279,9 @@ static void trim( wcstring &str )
 int main( int argc, char **argv )
 {	
 	int do_indent=1;
-	set_main_thread();	
+	set_main_thread();
+    setup_fork_guards();
+    
 	wsetlocale( LC_ALL, L"" );
 	program_name=L"fish_indent";
 

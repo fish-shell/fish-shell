@@ -1238,8 +1238,12 @@ void exec( parser_t &parser, job_t *j )
                 const char *actual_cmd = actual_cmd_str.c_str();
                 
                 const wchar_t *reader_current_filename();
-                if (g_log_forks)
+                if (g_log_forks) {
                     printf("forking for '%s' in '%ls'\n", actual_cmd, reader_current_filename());
+                    if (std::string(actual_cmd) == "/usr/bin/getopt") {
+                        puts("wat");
+                    }
+                }
 				pid = execute_fork(true /* must drain threads */);
 				if( pid == 0 )
 				{

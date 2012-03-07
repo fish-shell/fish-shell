@@ -1442,7 +1442,32 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 	}
 
 	return res;
+}
 
+/** The echo builtin.
+    bash only respects -n if it's the first argument. We'll do the same. */
+
+static int builtin_echo( parser_t &parser, wchar_t **argv )
+{
+    /* Skip first arg */
+    if (! *argv++)
+        return STATUS_BUILTIN_ERROR;
+    
+    /* Process -n */
+    bool show_newline = true;
+    if (*argv && ! wcscmp(*argv, L"-n")) {
+        show_newline = false;
+        argv++;
+    }
+    
+    for (size_t idx = 0; argv[idx]; idx++) {
+        if (idx > 0)
+            stdout_buffer.push_back(' ');
+        stdout_buffer.append(argv[idx]);
+    }
+    if (show_newline)
+        stdout_buffer.push_back('\n');
+    return STATUS_BUILTIN_OK;
 }
 
 
@@ -3562,6 +3587,7 @@ static const builtin_data_t builtin_datas[]=
 	{ 		L"contains",  &builtin_contains, N_( L"Search for a specified string in a list" )   },
 	{ 		L"continue",  &builtin_break_continue, N_( L"Skip the rest of the current lap of the innermost loop" )   },
 	{ 		L"count",  &builtin_count, N_( L"Count the number of arguments" )   },
+    {       L"echo",  &builtin_echo, N_( L"Print arguments" ) },
 	{ 		L"else",  &builtin_else, N_( L"Evaluate block if condition is false" )   },
 	{ 		L"emit",  &builtin_emit, N_( L"Emit an event" ) },
 	{ 		L"end",  &builtin_end, N_( L"End a block of commands" )   },

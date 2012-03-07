@@ -1190,7 +1190,9 @@ int main( int argc, char **argv )
 
 	int mangle_descriptors = 0;
 	int result_fd = -1;
-	set_main_thread();		
+	set_main_thread();
+    setup_fork_guards();
+    
 	/*
 	  This initialization is made early, so that the other init code
 	  can use global_context for memory managment

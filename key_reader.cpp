@@ -28,6 +28,7 @@ int writestr( char *str )
 int main( int argc, char **argv)
 {
 	set_main_thread();
+    setup_fork_guards();
 	setlocale( LC_ALL, "" );
 	
 

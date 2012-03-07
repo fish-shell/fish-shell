@@ -827,6 +827,7 @@ int main( int argc, char ** argv )
 	fd_set read_fd, write_fd;
 
 	set_main_thread();
+    setup_fork_guards();
 	
 	program_name=L"fishd";
 	wsetlocale( LC_ALL, L"" );	

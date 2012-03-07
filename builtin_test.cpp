@@ -595,11 +595,14 @@ int builtin_test( parser_t &parser, wchar_t **argv )
         wcstring err;
         expression *expr = test_parser::parse_args(args, err);
         if (! expr) {
+#if 0
             printf("Oops! test was given args:\n");
             for (size_t i=0; i < argc; i++) {
                 printf("\t%ls\n", args.at(i).c_str());
             }
             printf("and returned parse error: %ls\n", err.c_str());
+#endif
+            builtin_show_error(err);
             return BUILTIN_TEST_FAIL;
         } else {
             wcstring_list_t eval_errors;

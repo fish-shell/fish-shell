@@ -94,6 +94,9 @@ enum
 const wcstring &get_stdout_buffer();
 const wcstring &get_stderr_buffer();
 
+/** Output an error */
+void builtin_show_error(const wcstring &err);
+
 /**
    Kludge. Tells builtins if output is to screen
 */

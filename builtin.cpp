@@ -129,6 +129,10 @@ const wcstring &get_stderr_buffer() {
     return stderr_buffer;
 }
 
+void builtin_show_error(const wcstring &err) {
+    ASSERT_IS_MAIN_THREAD();
+    stderr_buffer.append(err);
+}
 
 /**
    Stack containing builtin I/O for recursive builtin calls.

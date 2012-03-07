@@ -384,6 +384,9 @@ static void builtin_missing_argument( parser_t &parser, const wchar_t *cmd, cons
 #include "builtin_ulimit.cpp"
 #include "builtin_jobs.cpp"
 
+/* builtin_test lives in builtin_test.cpp */
+int builtin_test( parser_t &parser, wchar_t **argv );
+
 /**
    List all current key bindings
  */
@@ -3574,6 +3577,7 @@ static const builtin_data_t builtin_datas[]=
 	{ 		L"set",  &builtin_set, N_( L"Handle environment variables" )   },
 	{ 		L"status",  &builtin_status, N_( L"Return status information about fish" )  },
 	{ 		L"switch",  &builtin_switch, N_( L"Conditionally execute a block of commands" )   },
+    { 		L"test",  &builtin_test, N_( L"Test a condition" )   },
 	{ 		L"ulimit",  &builtin_ulimit, N_( L"Set or get the shells resource usage limits" )  },
 	{ 		L"while",  &builtin_generic, N_( L"Perform a command multiple times" )   }
 };

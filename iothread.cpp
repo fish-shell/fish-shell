@@ -208,5 +208,5 @@ void iothread_drain_all(void) {
         iothread_service_completion();
     }
     double after = timef();
-    printf("(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now), thread_count);
+    //printf("(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now), thread_count);
 }

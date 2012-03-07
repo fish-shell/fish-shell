@@ -111,6 +111,7 @@
 		D0B6B0FF14E88BA400AD6C10 /* color.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = color.h; sourceTree = "<group>"; };
 		D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = autoload.cpp; sourceTree = "<group>"; };
 		D0C6FCCB14CFA4B7004CE8AD /* autoload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = autoload.h; sourceTree = "<group>"; };
+		D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_test.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -125,6 +126,7 @@
 				D0A0853213B3ACEE0099B651 /* builtin_jobs.cpp */,
 				D0A0853313B3ACEE0099B651 /* builtin_set.cpp */,
 				D0A0853413B3ACEE0099B651 /* builtin_ulimit.cpp */,
+				D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */,
 				D0A0853513B3ACEE0099B651 /* builtin.cpp */,
 				D0B6B0FF14E88BA400AD6C10 /* color.h */,
 				D0B6B0FE14E88BA400AD6C10 /* color.cpp */,

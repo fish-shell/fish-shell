@@ -94,7 +94,7 @@ struct var_entry_t
 
 typedef std::map<wcstring, var_entry_t*> var_table_t;
 
-bool g_log_forks = true;
+bool g_log_forks = false;
 
 
 /**

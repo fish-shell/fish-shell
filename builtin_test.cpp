@@ -379,9 +379,12 @@ namespace test_expressions {
         expression *result = parser.parse_expression(0, (unsigned int)args.size());
         /* Handle errors */
         for (size_t i = 0; i < parser.errors.size(); i++) {
-            if (i > 0)
-                err.push_back(L'\n');
+            err.append(L"test: ");
             err.append(parser.errors.at(i));
+            err.push_back(L'\n');
+            
+            // For now we only show the first error
+            break;
         }
         return result;
     }

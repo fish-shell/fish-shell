@@ -667,10 +667,12 @@ void env_init()
 				 ENV_GLOBAL | ENV_EXPORT );
 	}
 
-	/*
-	  Set correct defaults for e.g. USER and HOME variables
-	*/
+	/* Set correct defaults for e.g. USER and HOME variables */
 	env_set_defaults();
+    
+    /* Set g_log_forks */
+    env_var_t log_forks = env_get_string(L"fish_log_forks");
+    g_log_forks = ! log_forks.missing_or_empty() && from_string<bool>(log_forks);
 }
 
 void env_destroy()

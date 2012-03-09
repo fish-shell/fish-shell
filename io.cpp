@@ -197,7 +197,7 @@ io_data_t *io_duplicate( io_data_t *l )
 
 io_data_t *io_get( io_data_t *io, int fd )
 {
-	if( io == 0 )
+	if( io == NULL )
 		return 0;
 	
 	io_data_t *res = io_get( io->next, fd );

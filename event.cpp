@@ -192,7 +192,7 @@ wcstring event_get_desc( const event_t *e )
 			{
 				job_t *j = job_get_from_pid( -e->param1.pid );
 				if( j )
-					result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_cstr() );
+					result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr() );
 				else
 					result = format_string(_(L"exit handler for job with process group %d"), -e->param1.pid );
 			}
@@ -203,7 +203,7 @@ wcstring event_get_desc( const event_t *e )
 		{
 			job_t *j = job_get( e->param1.job_id );
 			if( j )
-				result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_cstr() );
+				result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr() );
 			else
 				result = format_string(_(L"exit handler for job with job id %d"), j->job_id );
 

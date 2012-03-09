@@ -65,7 +65,7 @@
 /**
    file redirection error message
 */
-#define FILE_ERROR _( L"An error occurred while redirecting file '%ls'" )
+#define FILE_ERROR _( L"An error occurred while redirecting file '%s'" )
 
 /**
    Base open mode to pass to calls to open
@@ -448,11 +448,11 @@ static io_data_t *io_transmogrify( io_data_t * in )
 		{
 			int fd;
 			
-			if( (fd=wopen( in->filename, in->param2.flags, OPEN_MASK ) )==-1 )
+			if( (fd=open( in->filename_cstr, in->param2.flags, OPEN_MASK ) )==-1 )
 			{
 				debug( 1, 
 					   FILE_ERROR,
-					   in->filename.c_str() );
+					   in->filename_cstr );
 								
 				wperror( L"open" );
 				return NULL;
@@ -574,7 +574,7 @@ void exec( parser_t &parser, job_t *j )
 	sigemptyset( &chldset );
 	sigaddset( &chldset, SIGCHLD );
 	
-	debug( 4, L"Exec job '%ls' with id %d", j->command_cstr(), j->job_id );	
+	debug( 4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id );	
 	
 	if( parser.block_io )
 	{
@@ -689,6 +689,9 @@ void exec( parser_t &parser, job_t *j )
 	if( needs_keepalive )
 	{
         /* Call fork. No need to wait for threads since our use is confined and simple. */
+        if (g_log_forks) {
+            printf("Executing keepalive fork for '%ls'\n", j->command_wcstr());
+        }
 		keepalive.pid = execute_fork(false);
 		if( keepalive.pid == 0 )
 		{
@@ -880,13 +883,13 @@ void exec( parser_t &parser, job_t *j )
 							case IO_FILE:
 							{
                                 /* Do not set CLO_EXEC because child needs access */
-								builtin_stdin=wopen( in->filename,
+								builtin_stdin=open( in->filename_cstr,
                                               in->param2.flags, OPEN_MASK );
 								if( builtin_stdin == -1 )
 								{
 									debug( 1, 
 										   FILE_ERROR,
-										   in->filename.c_str() );
+										   in->filename_cstr );
 									wperror( L"open" );
 								}
 								else
@@ -1045,6 +1048,9 @@ void exec( parser_t &parser, job_t *j )
 				if( io_buffer->out_buffer_size() > 0 )
 				{
                     /* We don't have to drain threads here because our child process is simple */
+                    if (g_log_forks) {
+                        printf("Executing fork for internal block or function for '%ls'\n", p->argv0());
+                    }
 					pid = execute_fork(false);
 					if( pid == 0 )
 					{
@@ -1093,6 +1099,10 @@ void exec( parser_t &parser, job_t *j )
 				const char *buffer = input_redirect->out_buffer_ptr();
 				size_t count = input_redirect->out_buffer_size();
         
+                /* We don't have to drain threads here because our child process is simple */
+                if (g_log_forks) {
+                    printf("Executing fork for internal buffer for '%ls'\n", p->argv0() ? p->argv0() : L"(null)");
+                }
 				pid = execute_fork(false);
 				if( pid == 0 )
 				{
@@ -1148,7 +1158,7 @@ void exec( parser_t &parser, job_t *j )
 				*/
 
 				io_data_t *io = io_get( j->io, 1 );
-				int buffer_stdout = io && io->io_mode == IO_BUFFER;
+				bool buffer_stdout = io && io->io_mode == IO_BUFFER;
 				
 				if( ( get_stderr_buffer().empty() ) && 
 					( !p->next ) &&
@@ -1160,9 +1170,9 @@ void exec( parser_t &parser, job_t *j )
 					skip_fork = 1;
 				}
 
-				for( io = j->io; io; io=io->next )
+				for( io_data_t *tmp_io = j->io; tmp_io != NULL; tmp_io=tmp_io->next )
 				{
-					if( io->io_mode == IO_FILE && io->filename != L"/dev/null")
+					if( tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
 					{
 						skip_fork = 0;
 					}
@@ -1173,7 +1183,7 @@ void exec( parser_t &parser, job_t *j )
 					p->completed=1;
 					if( p->next == 0 )
 					{
-						debug( 3, L"Set status of %ls to %d using short circut", j->command_cstr(), p->status );
+						debug( 3, L"Set status of %ls to %d using short circut", j->command_wcstr(), p->status );
 						
 						int status = p->status;
 						proc_set_last_status( job_get_flag( j, JOB_NEGATE )?(!status):status );
@@ -1189,6 +1199,10 @@ void exec( parser_t &parser, job_t *j )
                 
                 fflush(stdout);
                 fflush(stderr);
+                if (g_log_forks) {
+                    printf("Executing fork for internal builtin for '%ls' (io is %p)\n", p->argv0(), io);
+                    io_print(io);
+                }
 				pid = execute_fork(false);
 				if( pid == 0 )
 				{
@@ -1240,9 +1254,6 @@ void exec( parser_t &parser, job_t *j )
                 const wchar_t *reader_current_filename();
                 if (g_log_forks) {
                     printf("forking for '%s' in '%ls'\n", actual_cmd, reader_current_filename());
-                    if (std::string(actual_cmd) == "/usr/bin/getopt") {
-                        puts("wat");
-                    }
                 }
 				pid = execute_fork(true /* must drain threads */);
 				if( pid == 0 )

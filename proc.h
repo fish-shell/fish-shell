@@ -130,7 +130,15 @@ class process_t
     private:
 	
     null_terminated_array_t<wchar_t> argv_array;
+    
+    /* narrow copy of argv0 so we don't have to convert after fork */
+    narrow_string_rep_t argv0_narrow;
 
+
+    /* No copying */
+    process_t(const process_t &rhs) { }
+    void operator=(const process_t &rhs) { }
+    
     public:
     
     process_t() :
@@ -168,17 +176,32 @@ class process_t
     
     
     /** Sets argv */
-    void set_argv(const wcstring_list_t &argv) { argv_array.set(argv); }
+    void set_argv(const wcstring_list_t &argv) {
+        argv_array.set(argv);
+        argv0_narrow.set(argv.empty() ? L"" : argv[0]);
+    }
     
     /** Returns argv */
     const wchar_t * const *get_argv(void) const { return argv_array.get(); }
     const null_terminated_array_t<wchar_t> &get_argv_array(void) const { return argv_array; }
     
-    /** Returns argv[0] */
-    const wchar_t *argv0(void) const { return argv_array.get()[0]; }
-    
     /** Returns argv[idx] */
-    const wchar_t *argv(size_t idx) const { return argv_array.get()[idx]; }
+    const wchar_t *argv(size_t idx) const {
+        const wchar_t * const *argv = argv_array.get();
+        assert(argv != NULL);
+        return argv[idx];
+    }
+    
+    /** Returns argv[0], or NULL */
+    const wchar_t *argv0(void) const {
+        const wchar_t * const *argv = argv_array.get();
+        return argv ? argv[0] : NULL;
+    }
+    
+    /** Returns argv[0] as a char * */
+    const char *argv0_cstr(void) const {
+        return argv0_narrow.get();
+    }
 
 	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. malloc'd! */
 	const wchar_t *actual_cmd;       
@@ -283,6 +306,20 @@ void release_job_id(job_id_t jobid);
 
 class job_t
 {
+	/** 
+	    The original command which led to the creation of this
+	    job. It is used for displaying messages about job status
+	    on the terminal.
+	*/
+	wcstring command;
+    
+    /* narrow copy so we don't have to convert after fork */
+    narrow_string_rep_t command_narrow;
+    
+    /* No copying */
+    job_t(const job_t &rhs) : job_id(0) { }
+    void operator=(const job_t &) { }
+    
     public:
     
     job_t(job_id_t jobid) :
@@ -307,16 +344,21 @@ class job_t
         }
         release_job_id(job_id);
     }
-        
     
-	/** 
-	    The original command which led to the creation of this
-	    job. It is used for displaying messages about job status
-	    on the terminal.
-	*/
-	wcstring command;
+    /** Returns whether the command is empty. */
+    bool command_is_empty() const { return command.empty(); }
     
-    const wchar_t *command_cstr() const { return command.c_str(); }
+    /** Returns the command as a wchar_t *. */
+    const wchar_t *command_wcstr() const { return command.c_str(); }
+    
+    /** Returns the command as a char *. */
+    const char *command_cstr() const { return command_narrow.get(); }
+    
+    /** Sets the command */
+    void set_command(const wcstring &cmd) {
+        command = cmd;
+        command_narrow.set(cmd);
+    }
 	
 	/** 
 	    A linked list of all the processes in this job. We are responsible for deleting this when we are deallocated.

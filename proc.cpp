@@ -184,7 +184,7 @@ void proc_destroy()
 	while( ! jobs.empty() )
 	{
 		job_t *job = jobs.front();
-		debug( 2, L"freeing leaked job %ls", job->command_cstr() );
+		debug( 2, L"freeing leaked job %ls", job->command_wcstr() );
 		job_free( job );
 	}
 }
@@ -528,7 +528,7 @@ void job_handle_signal ( int signal, siginfo_t *info, void *con )
 static void format_job_info( const job_t *j, const wchar_t *status )
 {
 	fwprintf (stdout, L"\r" );
-	fwprintf (stdout, _( L"Job %d, \'%ls\' has %ls" ), j->job_id, j->command_cstr(), status);
+	fwprintf (stdout, _( L"Job %d, \'%ls\' has %ls" ), j->job_id, j->command_wcstr(), status);
 	fflush( stdout );
 	tputs(clr_eol,1,&writeb);
 	fwprintf (stdout, L"\n" );
@@ -613,7 +613,7 @@ int job_reap( bool interactive )
 									  _( L"%ls: Job %d, \'%ls\' terminated by signal %ls (%ls)" ),
 									  program_name,
 									  j->job_id, 
-									  j->command_cstr(),
+									  j->command_wcstr(),
 									  sig2wcs(WTERMSIG(p->status)),
 									  signal_get_desc( WTERMSIG(p->status) ) );
 						else
@@ -623,7 +623,7 @@ int job_reap( bool interactive )
 									  p->pid,
 									  p->argv0(),
 									  j->job_id,
-									  j->command_cstr(),
+									  j->command_wcstr(),
 									  sig2wcs(WTERMSIG(p->status)),
 									  signal_get_desc( WTERMSIG(p->status) ) );
 						tputs(clr_eol,1,&writeb);
@@ -857,7 +857,7 @@ static void read_try( job_t *j )
 	
 	if( buff )
 	{
-		debug( 3, L"proc::read_try('%ls')\n", j->command_cstr() );
+		debug( 3, L"proc::read_try('%ls')\n", j->command_wcstr() );
 		while(1)
 		{
 			char b[BUFFER_SIZE];
@@ -905,7 +905,7 @@ static int terminal_give_to_job( job_t *j, int cont )
 		debug( 1, 
 			   _( L"Could not send job %d ('%ls') to foreground" ), 
 			   j->job_id, 
-			   j->command_cstr() );
+			   j->command_wcstr() );
 		wperror( L"tcsetpgrp" );
 		return 0;
 	}
@@ -917,7 +917,7 @@ static int terminal_give_to_job( job_t *j, int cont )
 			debug( 1,
 				   _( L"Could not send job %d ('%ls') to foreground" ),
 				   j->job_id,
-				   j->command_cstr() );
+				   j->command_wcstr() );
 			wperror( L"tcsetattr" );
 			return 0;
 		}
@@ -977,7 +977,7 @@ void job_continue (job_t *j, int cont)
 		   L"Continue job %d, gid %d (%ls), %ls, %ls",
 		   j->job_id, 
 		   j->pgid,
-		   j->command_cstr(), 
+		   j->command_wcstr(), 
 		   job_is_completed( j )?L"COMPLETED":L"UNCOMPLETED", 
 		   is_interactive?L"INTERACTIVE":L"NON-INTERACTIVE" );
 	
@@ -1188,8 +1188,8 @@ void proc_sanity_check()
 			{
 				debug( 0, 
 					   _( L"More than one job in foreground: job 1: '%ls' job 2: '%ls'"),
-					   fg_job->command_cstr(),
-					   j->command_cstr() );
+					   fg_job->command_wcstr(),
+					   j->command_wcstr() );
 				sanity_lose();
 			}
 			fg_job = j;
@@ -1207,7 +1207,7 @@ void proc_sanity_check()
 			{
 				debug( 0,
 					   _( L"Job '%ls', process '%ls' has inconsistent state \'stopped\'=%d" ),
-					   j->command_cstr(), 
+					   j->command_wcstr(), 
 					   p->argv0(),
 					   p->stopped );
 				sanity_lose();
@@ -1217,7 +1217,7 @@ void proc_sanity_check()
 			{
 				debug( 0,
 					   _( L"Job '%ls', process '%ls' has inconsistent state \'completed\'=%d" ),
-					   j->command_cstr(), 
+					   j->command_wcstr(), 
 					   p->argv0(),
 					   p->completed );
 				sanity_lose();

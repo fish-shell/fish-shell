@@ -194,6 +194,7 @@ bool set_cloexec(int fd) {
 
 static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool cloexec)
 {
+    ASSERT_IS_NOT_FORKED_CHILD();
     cstring tmp = wcs2string(pathname);
     /* Prefer to use O_CLOEXEC. It has to both be defined and nonzero */
 #ifdef O_CLOEXEC
@@ -214,6 +215,7 @@ int wopen(const wcstring &pathname, int flags, mode_t mode)
 {
     // off the main thread, always use wopen_cloexec
     ASSERT_IS_MAIN_THREAD();
+    ASSERT_IS_NOT_FORKED_CHILD();
     return wopen_internal(pathname, flags, mode, false);
 }
 

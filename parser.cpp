@@ -1538,25 +1538,25 @@ void parser_t::parse_job_argument_list( process_t *p,
 							case TOK_REDIRECT_APPEND:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
-								new_io->filename = target;
+								new_io->set_filename(target);
 								break;
 
 							case TOK_REDIRECT_OUT:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
-								new_io->filename = target;
+								new_io->set_filename(target);
 								break;
 
 							case TOK_REDIRECT_NOCLOB:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_CREAT | O_EXCL | O_WRONLY;
-								new_io->filename = target;
+								new_io->set_filename(target);
 								break;
 
 							case TOK_REDIRECT_IN:
 								new_io->io_mode = IO_FILE;
 								new_io->param2.flags = O_RDONLY;
-								new_io->filename = target;
+								new_io->set_filename(target);
 								break;
 
 							case TOK_REDIRECT_FD:
@@ -2311,15 +2311,15 @@ void parser_t::eval_job( tokenizer *tok )
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );
 
-					j->command = wcstring(tok_string(tok)+start_pos, stop_pos-start_pos);
+					j->set_command(wcstring(tok_string(tok)+start_pos, stop_pos-start_pos));
 				}
 				else
-					j->command = L"";
+					j->set_command(L"");
 
 				if( profile )
 				{
 					t2 = get_time();
-					profile_item->cmd = wcsdup( j->command_cstr() );
+					profile_item->cmd = wcsdup( j->command_wcstr() );
 					profile_item->skipped=current_block->skip;
 				}
 				

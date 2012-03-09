@@ -40,8 +40,6 @@ public:
 		int old_fd;
 	} param1;
     
-    /** Filename IO_FILE */
-    wcstring filename;
 
 	/**  Second type-specific paramter for redirection */
 	union
@@ -52,6 +50,15 @@ public:
 		int close_old;
 	} param2;
     
+    /** Filename IO_FILE. malloc'd. This needs to be used after fork, so don't use wcstring here. */
+    const char *filename_cstr;
+    
+    /** Convenience to set filename_cstr via wcstring */
+    void set_filename(const wcstring &str) {
+        free((void *)filename_cstr);
+        filename_cstr = wcs2str(str.c_str());
+    }
+
     /** Function to create the output buffer */
     void out_buffer_create() {
         out_buffer.reset(new std::vector<char>);
@@ -81,11 +88,26 @@ public:
 	/** Pointer to the next IO redirection */
 	io_data_t *next;
     
-    io_data_t() : next(NULL)
+    io_data_t() : filename_cstr(NULL), next(NULL)
     {
     }
     
-    /* Note: we have a default copy constructor */
+    io_data_t(const io_data_t &rhs) :
+        out_buffer(rhs.out_buffer),
+        io_mode(rhs.io_mode),
+        fd(rhs.fd),
+        param1(rhs.param1),
+        param2(rhs.param2),
+        filename_cstr(rhs.filename_cstr ? strdup(rhs.filename_cstr) : NULL),
+        is_input(rhs.is_input),
+        next(rhs.next)
+    {
+        
+    }
+    
+    ~io_data_t() {
+        free((void *)filename_cstr);
+    }
 };
 
  
@@ -118,7 +140,7 @@ void io_buffer_destroy( io_data_t *io_buffer );
 
 /**
    Create a IO_BUFFER type io redirection, complete with a pipe and a
-   buffer_t for output. The default file descriptor used is 1 for
+   vector<char> for output. The default file descriptor used is 1 for
    output buffering and 0 for input buffering.
 
    \param is_input set this parameter to zero if the buffer should be

@@ -20,17 +20,27 @@
 #define OPEN_MASK 0666
 
 /** fork error message */
-#define FORK_ERROR _( L"Could not create child process - exiting" )
+#define FORK_ERROR "Could not create child process - exiting"
 
 /** file redirection clobbering error message */
-#define NOCLOB_ERROR _( L"The file '%ls' already exists" )
+#define NOCLOB_ERROR "The file '%s' already exists"
 
 /** file redirection error message */
-#define FILE_ERROR _( L"An error occurred while redirecting file '%ls'" )
+#define FILE_ERROR "An error occurred while redirecting file '%s'"
 
 /** file descriptor redirection error message */
-#define FD_ERROR   _( L"An error occurred while redirecting file descriptor %d" )
+#define FD_ERROR   "An error occurred while redirecting file descriptor %s"
 
+/** pipe error */
+#define LOCAL_PIPE_ERROR "An error occurred while setting up pipe"
+
+/* Cover for debug_safe that can take an int. The format string should expect a %s */
+static void debug_safe_int(int level, const char *format, int val)
+{
+    char buff[128];
+    format_long_safe(buff, val);
+    debug_safe(level, format, buff);
+}
 
 // PCA These calls to debug are rather sketchy because they may allocate memory. Fortunately they only occur if an error occurs.
 int set_child_group( job_t *j, process_t *p, int print_errors )
@@ -48,15 +58,25 @@ int set_child_group( job_t *j, process_t *p, int print_errors )
 		{
 			if( getpgid( p->pid) != j->pgid && print_errors )
 			{
+                char pid_buff[128];
+                char job_id_buff[128];
+                char getpgid_buff[128];
+                char job_pgid_buff[128];
+                
+                format_long_safe(pid_buff, p->pid);
+                format_long_safe(job_id_buff, j->job_id);
+                format_long_safe(getpgid_buff, getpgid( p->pid));
+                format_long_safe(job_pgid_buff, j->pgid);
+            
                 // PCA FIXME This is sketchy to do in a forked child because it may allocate memory. This needs to call only safe functions.
-				debug( 1, 
-				       _( L"Could not send process %d, '%ls' in job %d, '%ls' from group %d to group %d" ),
-				       p->pid,
-				       p->argv0(),
-				       j->job_id,
+				debug_safe( 1, 
+				       "Could not send process %s, '%s' in job %s, '%s' from group %s to group %s",
+				       pid_buff,
+				       p->argv0_cstr(),
+				       job_id_buff,
 				       j->command_cstr(),
-				       getpgid( p->pid),
-				       j->pgid );
+				       getpgid_buff,
+				       job_pgid_buff );
 
 				wperror( L"setpgid" );
 				res = -1;
@@ -72,9 +92,9 @@ int set_child_group( job_t *j, process_t *p, int print_errors )
 	{
 		if( tcsetpgrp (0, j->pgid) && print_errors )
 		{
-			debug( 1, _( L"Could not send job %d ('%ls') to foreground" ), 
-				   j->job_id, 
-				   j->command_cstr() );
+            char job_id_buff[128];
+            format_long_safe(job_id_buff, j->job_id);
+			debug_safe( 1, "Could not send job %s ('%s') to foreground", job_id_buff, j->command_cstr() );
 			wperror( L"tcsetpgrp" );
 			res = -1;
 		}
@@ -102,9 +122,7 @@ static void free_fd( io_data_t *io, int fd )
 					{
 						 if( errno != EINTR )
 						{
-							debug( 1, 
-								   FD_ERROR,
-								   fd );							
+							debug_safe_int( 1, FD_ERROR, fd );							
 							wperror( L"dup" );
 							FATAL_EXIT();
 						}
@@ -161,7 +179,7 @@ static int handle_child_io( io_data_t *io )
 			{
 				if( close(io->fd) )
 				{
-					debug( 0, _(L"Failed to close file descriptor %d"), io->fd );
+					debug_safe_int( 0, "Failed to close file descriptor %s", io->fd );
 					wperror( L"close" );
 				}
 				break;
@@ -170,23 +188,18 @@ static int handle_child_io( io_data_t *io )
 			case IO_FILE:
 			{
                 // Here we definitely do not want to set CLO_EXEC because our child needs access
-				if( (tmp=wopen( io->filename,
+				if( (tmp=open( io->filename_cstr,
 						io->param2.flags, OPEN_MASK ) )==-1 )
 				{
 					if( ( io->param2.flags & O_EXCL ) &&
 					    ( errno ==EEXIST ) )
 					{
-						debug( 1, 
-						       NOCLOB_ERROR,
-						       io->filename.c_str() );
+						debug_safe( 1, NOCLOB_ERROR, io->filename_cstr );
 					}
 					else
 					{
-						debug( 1, 
-						       FILE_ERROR,
-						       io->filename.c_str() );
-										
-						wperror( L"open" );
+						debug_safe( 1, FILE_ERROR, io->filename_cstr );				
+						perror( "open" );
 					}
 					
 					return -1;
@@ -201,10 +214,8 @@ static int handle_child_io( io_data_t *io )
 							
 					if(dup2( tmp, io->fd ) == -1 )
 					{
-						debug( 1, 
-							   FD_ERROR,
-							   io->fd );
-						wperror( L"dup2" );
+						debug_safe_int( 1,  FD_ERROR, io->fd );
+						perror( "dup2" );
 						return -1;
 					}
 					exec_close( tmp );
@@ -222,9 +233,7 @@ static int handle_child_io( io_data_t *io )
 
 				if( dup2( io->param1.old_fd, io->fd ) == -1 )
 				{
-					debug( 1, 
-						   FD_ERROR,
-						   io->fd );
+					debug_safe_int( 1, FD_ERROR, io->fd );
 					wperror( L"dup2" );
 					return -1;
 				}
@@ -248,8 +257,8 @@ static int handle_child_io( io_data_t *io )
 */
 				if( dup2( io->param1.pipe_fd[write_pipe], io->fd ) != io->fd )
 				{
-					debug( 1, PIPE_ERROR );
-					wperror( L"dup2" );
+					debug_safe( 1, LOCAL_PIPE_ERROR );
+					perror( "dup2" );
 					return -1;
 				}
 
@@ -275,24 +284,24 @@ static int handle_child_io( io_data_t *io )
 
 int setup_child_process( job_t *j, process_t *p )
 {
-	int res=0;
+	bool ok=true;
 	
 	if( p )
 	{
-		res = set_child_group( j, p, 1 );
+		ok = (0 == set_child_group( j, p, 1 ));
 	}
 	
-	if( !res )	
+	if( ok )	
 	{
-		res = handle_child_io( j->io );
-		if( p != 0 && res )
+		ok = (0 == handle_child_io( j->io ));
+		if( p != 0 && ! ok )
 		{
 			exit_without_destructors( 1 );
 		}
 	}
 	
 	/* Set the handling for job control signals back to the default.  */
-	if( !res )
+	if( ok )
 	{
 		signal_reset_handlers();
 	}
@@ -300,7 +309,7 @@ int setup_child_process( job_t *j, process_t *p )
 	/* Remove all signal blocks */
 	signal_unblock();	
 	
-	return res;
+	return ok ? 0 : -1;
 	
 }
 
@@ -353,7 +362,7 @@ pid_t execute_fork(bool wait_for_threads_to_die)
 		}
 	}
 	
-	debug( 0, FORK_ERROR );
+	debug_safe( 0, FORK_ERROR );
 	wperror (L"fork");
 	FATAL_EXIT();
     return 0;

@@ -2964,7 +2964,7 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 						   _( L"%ls: Can't put job %d, '%ls' to foreground because it is not under job control\n" ),
 						   argv[0],
 						   pid,
-						   j->command_cstr() );
+						   j->command_wcstr() );
 				builtin_print_help( parser, argv[0], stderr_buffer );
 				j=0;
 			}
@@ -2978,7 +2978,7 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 			append_format(stderr_buffer,
 					   FG_MSG,
 					   j->job_id,
-					   j->command_cstr() );
+					   j->command_wcstr() );
 		}
 		else
 		{
@@ -2990,10 +2990,10 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 			fwprintf( stderr,
 					  FG_MSG,
 					  j->job_id,
-					  j->command_cstr() );
+					  j->command_wcstr() );
 		}
 
-		wchar_t *ft = tok_first( j->command_cstr() );
+		wchar_t *ft = tok_first( j->command_wcstr() );
 		if( ft != 0 )
 			env_set( L"_", ft, ENV_EXPORT );
 		free(ft);
@@ -3027,7 +3027,7 @@ static int send_to_bg( parser_t &parser, job_t *j, const wchar_t *name )
 				   _( L"%ls: Can't put job %d, '%ls' to background because it is not under job control\n" ),
 				   L"bg",
 				   j->job_id,
-				   j->command_cstr() );
+				   j->command_wcstr() );
 		builtin_print_help( parser, L"bg", stderr_buffer );
 		return STATUS_BUILTIN_ERROR;
 	}
@@ -3036,7 +3036,7 @@ static int send_to_bg( parser_t &parser, job_t *j, const wchar_t *name )
 		append_format(stderr_buffer,
 				   _(L"Send job %d '%ls' to background\n"),
 				   j->job_id,
-				   j->command_cstr() );
+				   j->command_wcstr() );
 	}
 	make_first( j );
 	job_set_flag( j, JOB_FOREGROUND, 0 );

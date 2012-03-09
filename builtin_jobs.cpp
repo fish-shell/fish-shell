@@ -98,7 +98,7 @@ static void builtin_jobs_print( const job_t *j, int mode, int header )
 #endif
 			stdout_buffer.append(job_is_stopped(j)?_(L"stopped"):_(L"running"));
             stdout_buffer.append(L"\t");
-            stdout_buffer.append(j->command_cstr());
+            stdout_buffer.append(j->command_wcstr());
             stdout_buffer.append(L"\t");
 			break;
 		}

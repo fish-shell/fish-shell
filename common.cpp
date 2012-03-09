@@ -299,14 +299,31 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 
 char *wcs2str( const wchar_t *in )
 {
-	char *out;	
-	
-	out = (char *)malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
-
-	if( !out )
-	{
-		DIE_MEM();
-	}
+    if (! in)
+        return NULL;
+	char *out;
+    size_t desired_size = MAX_UTF8_BYTES*wcslen(in)+1;
+    char local_buff[512];
+    if (desired_size <= sizeof local_buff / sizeof *local_buff) {
+        // convert into local buff, then use strdup() so we don't waste malloc'd space
+        char *result = wcs2str_internal(in, local_buff);
+        if (result) {
+            // It converted into the local buffer, so copy it
+            result = strdup(result);
+            if (! result) {
+                DIE_MEM();
+            }
+        }
+        return result;
+        
+    } else {
+        // here we fall into the bad case of allocating a buffer probably much larger than necessary
+        out = (char *)malloc( MAX_UTF8_BYTES*wcslen(in)+1 );
+        if (!out) {
+            DIE_MEM();
+        }
+        return wcs2str_internal( in, out );
+    }
 
 	return wcs2str_internal( in, out );
 }
@@ -727,8 +744,9 @@ void debug( int level, const wchar_t *msg, ... )
 	errno = errno_old;
 }
 
-void debug_safe(int level, const char *msg, const char *param1, const char *param2, const char *param3)
+void debug_safe(int level, const char *msg, const char *param1, const char *param2, const char *param3, const char *param4, const char *param5, const char *param6, const char *param7, const char *param8, const char *param9, const char *param10, const char *param11, const char *param12)
 {
+    const char * const params[] = {param1, param2, param3, param4, param5, param6, param7, param8, param9, param10, param11, param12};
     if (! msg)
         return;
         
@@ -748,12 +766,8 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
 
         if (end[0] == '%' && end[1] == 's') {
             /* Handle a format string */
-            const char *format = NULL;
-            switch (param_idx++) {
-                case 0: format = param1; break;
-                case 1: format = param2; break;
-                case 2: format = param3; break;
-            }
+            assert(param_idx < sizeof params / sizeof *params);
+            const char *format = params[param_idx++];
             if (! format) 
                 format = "(null)";
             write(STDERR_FILENO, format, strlen(format));

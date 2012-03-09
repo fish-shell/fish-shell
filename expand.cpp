@@ -348,14 +348,14 @@ static int find_process( const wchar_t *proc,
             while ((j = jobs.next()))
 			{
 				wchar_t jid[16];
-				if( j->command.size() == 0 )
+				if( j->command_is_empty() )
 					continue;
 
 				swprintf( jid, 16, L"%d", j->job_id );
 
 				if( wcsncmp( proc, jid, wcslen(proc ) )==0 )
 				{
-                    wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_cstr());
+                    wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
 					completion_allocate( out, 
 										 jid+wcslen(proc),
 										 desc_buff,
@@ -375,7 +375,7 @@ static int find_process( const wchar_t *proc,
 			if( jid > 0 && !errno && !*end )
 			{
 				j = job_get( jid );
-				if( (j != 0) && (j->command_cstr() != 0 ) )
+				if( (j != 0) && (j->command_wcstr() != 0 ) )
 				{
 					
 					{
@@ -395,15 +395,15 @@ static int find_process( const wchar_t *proc,
 	{
 		int offset;
 		
-		if( j->command_cstr() == 0 )
+		if( j->command_wcstr() == 0 )
 			continue;
 		
-		if( match_pid( j->command_cstr(), proc, flags, &offset ) )
+		if( match_pid( j->command_wcstr(), proc, flags, &offset ) )
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
 				completion_allocate( out, 
-									 j->command_cstr() + offset + wcslen(proc),
+									 j->command_wcstr() + offset + wcslen(proc),
 									 COMPLETE_JOB_DESC,
 									 0 );
 			}
@@ -425,7 +425,7 @@ static int find_process( const wchar_t *proc,
     while ((j = jobs.next()))
 	{
 		process_t *p;
-		if( j->command.size() == 0 )
+		if( j->command_is_empty() )
 			continue;
 		for( p=j->first_process; p; p=p->next )
 		{

@@ -288,7 +288,7 @@ wcstring format_size(long long sz);
 void format_size_safe(char buff[128], unsigned long long sz);
 
 /** Our crappier versions of debug which is guaranteed to not allocate any memory, or do anything other than call write(). This is useful after a call to fork() with threads. */
-void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL);
+void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL, const char *param5 = NULL, const char *param6 = NULL, const char *param7 = NULL, const char *param8 = NULL, const char *param9 = NULL, const char *param10 = NULL, const char *param11 = NULL, const char *param12 = NULL);
 
 /** Writes out a long safely */
 void format_long_safe(char buff[128], long val);
@@ -445,6 +445,28 @@ class null_terminated_array_t {
 
 /* Helper function to convert from a null_terminated_array_t<wchar_t> to a null_terminated_array_t<char_t> */
 null_terminated_array_t<char> convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr);
+
+/* Helper class to cache a narrow version of a wcstring in a malloc'd buffer, so that we can read it after fork() */
+class narrow_string_rep_t {
+    private:
+    const char *str;
+    
+    public:
+    ~narrow_string_rep_t() {
+        free((void *)str);
+    }
+    
+    narrow_string_rep_t() : str(NULL) {}
+    
+    void set(const wcstring &s) {
+        free((void *)str);
+        str = wcs2str(s.c_str());
+    }
+    
+    const char *get() const {
+        return str;
+    }
+};
 
 bool is_forked_child();
 

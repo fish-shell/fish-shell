@@ -59,8 +59,8 @@ __warn_unused int exec_subshell(const wcstring &cmd );
 
 
 /**
-   Loops over close until thesyscall was run without beeing
-   interrupted. Thenremoves the fd from the open_fds list.
+   Loops over close until the syscall was run without being
+   interrupted. Then removes the fd from the open_fds list.
 */
 void exec_close( int fd );
 

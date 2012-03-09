@@ -1169,14 +1169,29 @@ void exec( parser_t &parser, job_t *j )
 					io->out_buffer_append( res.c_str(), res.size() );
 					skip_fork = 1;
 				}
+                
+                if (! skip_fork && ! j->io) {
+                    /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO. */
+                    if (g_log_forks) {
+                        printf("Skipping fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", p->argv0(), io, j->io);
+                    }
+                    const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
+                    char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
+                    do_builtin_io(outbuff, errbuff);
+                    free(outbuff);
+                    free(errbuff);
+                    skip_fork = 1;
+                }
 
 				for( io_data_t *tmp_io = j->io; tmp_io != NULL; tmp_io=tmp_io->next )
 				{
 					if( tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
 					{
 						skip_fork = 0;
+                        break;
 					}
 				}
+                
 				
 				if( skip_fork )
 				{
@@ -1191,6 +1206,7 @@ void exec( parser_t &parser, job_t *j )
 					break;
 				}
 
+
 				/* Ok, unfortunatly, we have to do a real fork. Bummer. We work hard to make sure we don't have to wait for all our threads to exit, by arranging things so that we don't have to allocate memory or do anything except system calls in the child. */
                 
                 /* Get the strings we'll write before we fork (since they call malloc) */
@@ -1200,7 +1216,7 @@ void exec( parser_t &parser, job_t *j )
                 fflush(stdout);
                 fflush(stderr);
                 if (g_log_forks) {
-                    printf("Executing fork for internal builtin for '%ls' (io is %p)\n", p->argv0(), io);
+                    printf("Executing fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", p->argv0(), io, j->io);
                     io_print(io);
                 }
 				pid = execute_fork(false);

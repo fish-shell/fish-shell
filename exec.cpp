@@ -1255,7 +1255,7 @@ void exec( parser_t &parser, job_t *j )
                 if (g_log_forks) {
                     printf("forking for '%s' in '%ls'\n", actual_cmd, reader_current_filename());
                 }
-				pid = execute_fork(true /* must drain threads */);
+				pid = execute_fork(false);
 				if( pid == 0 )
 				{
 					/*

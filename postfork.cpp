@@ -68,7 +68,6 @@ int set_child_group( job_t *j, process_t *p, int print_errors )
                 format_long_safe(getpgid_buff, getpgid( p->pid));
                 format_long_safe(job_pgid_buff, j->pgid);
             
-                // PCA FIXME This is sketchy to do in a forked child because it may allocate memory. This needs to call only safe functions.
 				debug_safe( 1, 
 				       "Could not send process %s, '%s' in job %s, '%s' from group %s to group %s",
 				       pid_buff,

@@ -17,7 +17,7 @@ enum io_mode
 class io_data_t
 {
 private:
-    /** buffer to save output in for IO_BUFFER. Note that in the original fish, the buffer was a pointer to a buffer_t stored in the param2 union down below, and when an io_data_t was duplicated the pointer was copied so that two io_data_ts referenced the same buffer. It's not clear to me how this was ever cleaned up correctly. But it's important that they share the same buffer for reasons I don't yet understand either. But we can get correct sharing and cleanup with shared_ptr. */
+    /** buffer to save output in for IO_BUFFER. Note that in the original fish, the buffer was a pointer to a buffer_t stored in the param2 union down below, and when an io_data_t was duplicated the pointer was copied so that two io_data_ts referenced the same buffer. It's not clear to me how this was ever cleaned up correctly. But it's important that they share the same buffer for reasons I don't yet understand either. We can get correct sharing and cleanup with shared_ptr. */
     shared_ptr<std::vector<char> > out_buffer;
 
     /* No assignment allowed */
@@ -36,7 +36,7 @@ public:
 	{
 		/** Fds for IO_PIPE and for IO_BUFFER */
 		int pipe_fd[2];
-		/** fd to redirect specified fd to, for IO_FD*/
+		/** fd to redirect specified fd to, for IO_FD */
 		int old_fd;
 	} param1;
     

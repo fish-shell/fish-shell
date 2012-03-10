@@ -269,6 +269,14 @@ class completer_t {
     
     bool condition_test( const wcstring &condition );
     
+    expand_flags_t expand_flags() const {
+        /* Never do command substitution in autosuggestions */
+        expand_flags_t result = 0;
+        if (type == COMPLETE_AUTOSUGGEST)
+            result |= EXPAND_SKIP_CMDSUBST;
+        return result;
+    }
+    
     void get_commands_to_load(wcstring_list_t *lst) {
         if (lst)
             lst->insert(lst->end(), commands_to_load.begin(), commands_to_load.end());
@@ -988,7 +996,7 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 		if( use_command && wants_description )
 		{
 			
-			if( expand_string(str, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY ) != EXPAND_ERROR )
+			if( expand_string(str, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags() ) != EXPAND_ERROR )
 			{
 				this->complete_cmd_desc( str );
 			}
@@ -1029,8 +1037,7 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 					
 					if( expand_string( nxt_completion,
 									   this->completions,
-									   ACCEPT_INCOMPLETE |
-									   EXECUTABLES_ONLY ) != EXPAND_ERROR )
+									   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()  ) != EXPAND_ERROR )
 					{
 						for( size_t i=prev_count; i< this->completions.size(); i++ )
 						{
@@ -1098,7 +1105,7 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 			
 				if( expand_string( nxt_completion,
 								   this->completions,
-								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY ) != EXPAND_ERROR )
+								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY | this->expand_flags() ) != EXPAND_ERROR )
 				{
 				}
 				free(nxt_completion);
@@ -1489,7 +1496,7 @@ void completer_t::complete_param_expand( const wcstring &sstr, bool do_file)
 	
 	if( expand_string( comp_str,
 					   this->completions,
-					   flags ) == EXPAND_ERROR )
+					   flags | this->expand_flags() ) == EXPAND_ERROR )
 	{
 		debug( 3, L"Error while expanding string '%ls'", comp_str );
 	}

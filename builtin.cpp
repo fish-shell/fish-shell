@@ -1470,6 +1470,19 @@ static int builtin_echo( parser_t &parser, wchar_t **argv )
     return STATUS_BUILTIN_OK;
 }
 
+/** The pwd builtin. We don't respect -P to resolve symbolic links because we try to always resolve them. */
+static int builtin_pwd( parser_t &parser, wchar_t **argv )
+{
+	wchar_t dir_path[4096];
+	wchar_t *res = wgetcwd( dir_path, 4096 );
+    if (res == NULL) {
+        return STATUS_BUILTIN_ERROR;
+    } else {
+        stdout_buffer.append(dir_path);
+        stdout_buffer.push_back(L'\n');
+        return STATUS_BUILTIN_OK;
+    }
+}
 
 /**
    The function builtin, used for providing subroutines.
@@ -3601,6 +3614,7 @@ static const builtin_data_t builtin_datas[]=
 	{ 		L"jobs",  &builtin_jobs, N_( L"Print currently running jobs" )   },
 	{ 		L"not",  &builtin_generic, N_( L"Negate exit status of job" )  },
 	{ 		L"or",  &builtin_generic, N_( L"Execute command if previous command failed" )  },
+    { 		L"pwd",  &builtin_pwd, N_( L"Print the working directory" )  },
 	{ 		L"random",  &builtin_random, N_( L"Generate random number" )  },
 	{ 		L"read",  &builtin_read, N_( L"Read a line of input into variables" )   },
 	{ 		L"return",  &builtin_return, N_( L"Stop the currently evaluated function" )   },

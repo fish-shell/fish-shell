@@ -121,7 +121,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error message for wildcards with no matches
 */
-#define WILDCARD_ERR_MSG _( L"Warning: No match for wildcard '%ls'. The command will not be executed.")
+#define WILDCARD_ERR_MSG _( L"No matches for wildcard '%ls'.")
 
 /**
    Error when using case builtin outside of switch block

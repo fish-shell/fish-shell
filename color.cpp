@@ -135,7 +135,17 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
     return false;
 }
 
-rgb_color_t::rgb_color_t(unsigned char t, unsigned char i) : type(t), data(), flags() {
+static const wchar_t *name_for_color_idx(unsigned char idx) {
+    size_t max = sizeof named_colors / sizeof *named_colors;
+    for (size_t i=0; i < max; i++) {
+        if (named_colors[i].idx == idx) {
+            return named_colors[i].name;
+        }
+    }
+    return L"unknown";
+}
+
+rgb_color_t::rgb_color_t(unsigned char t, unsigned char i) : type(t), flags(), data() {
     data.name_idx = i;
 }
 
@@ -240,11 +250,13 @@ wcstring rgb_color_t::description() const {
         case type_none:
             return L"none";
         case type_named:
-            return format_string(L"named(%d)", (int)data.name_idx);                
+            return format_string(L"named(%d: %ls)", (int)data.name_idx, name_for_color_idx(data.name_idx));
         case type_rgb:
             return format_string(L"rgb(0x%02x%02x%02x)", data.rgb[0], data.rgb[1], data.rgb[2]);
         case type_reset:
             return L"reset";
+        case type_normal:
+            return L"normal";
         case type_ignore:
             return L"ignore";
         default:

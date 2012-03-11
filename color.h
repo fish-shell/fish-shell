@@ -9,8 +9,10 @@
 #include "common.h"
 
 
-/* A type that represents a color */
+/* A type that represents a color. We work hard to keep it at a size of 4 bytes. */
 class rgb_color_t {
+
+    /* Types */
     enum {
         type_none,
         type_named,
@@ -19,13 +21,20 @@ class rgb_color_t {
         type_reset,
         type_ignore
     };
-    unsigned char type;
+    unsigned char type:4;
+    
+    /* Flags */
+    enum {
+        flag_bold = 1 << 0,
+        flag_underline = 1 << 1
+    };
+    unsigned char flags:4;
+    
     union {
         unsigned char name_idx; //0-10
         unsigned char rgb[3];
     } data;
-    unsigned flags;
-        
+            
     /** Try parsing a special color name like "normal" */
     bool try_parse_special(const wcstring &str);
     
@@ -41,7 +50,7 @@ class rgb_color_t {
     public:
     
     /** Default constructor of type none */
-    explicit rgb_color_t() : type(type_none), data(), flags() {}
+    explicit rgb_color_t() : type(type_none), flags(), data() {}
     
     /** Parse a color from a string */
     explicit rgb_color_t(const wcstring &str);
@@ -95,16 +104,16 @@ class rgb_color_t {
     unsigned char to_term256_index() const;
     
     /** Returns whether the color is bold */
-    bool is_bold() const { return flags & 1; }
+    bool is_bold() const { return flags & flag_bold; }
     
     /** Set whether the color is bold */
-    void set_bold(bool x) { if (x) flags |= 1; else flags &= ~1; }
+    void set_bold(bool x) { if (x) flags |= flag_bold; else flags &= ~flag_bold; }
     
     /** Returns whether the color is underlined */
-    bool is_underline() const { return flags & 2; }
+    bool is_underline() const { return !! (flags & flag_underline); }
     
     /** Set whether the color is underlined */
-    void set_underline(bool x) { if (x) flags |= 2; else flags &= ~2; }
+    void set_underline(bool x) { if (x) flags |= flag_underline; else flags &= ~flag_underline; }
     
     /** Compare two colors for equality */
     bool operator==(const rgb_color_t &other) const {

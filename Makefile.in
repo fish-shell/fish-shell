@@ -753,8 +753,8 @@ mimedb: $(MIME_OBJS)
 # Build the set_color program
 #
 
-set_color: set_color.o print_help.o common.o
-	$(CXX) set_color.o print_help.o common.o wutil.o $(LDFLAGS_SET_COLOR) -o $@
+set_color: set_color.o print_help.o common.o color.o
+	$(CXX) set_color.o print_help.o common.o wutil.o color.o $(LDFLAGS_SET_COLOR) -o $@
 
 
 #

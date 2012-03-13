@@ -38,6 +38,7 @@
 
 #include "fallback.h"
 #include "print_help.h"
+#include "color.h"
 
 /*
   Small utility for setting the color.
@@ -143,14 +144,73 @@ static void check_locale_init()
 	textdomain( PACKAGE_NAME );
 }
 
+/* A lot of this code is taken straight from output.cpp; it sure would be nice to factor these together. */
+
+static bool support_term256;
+static bool output_get_supports_term256(void) {
+    return support_term256;
+}
+
+static bool term256_support_is_native(void) {
+    /* Return YES if we think the term256 support is "native" as opposed to forced. */
+    return max_colors == 256;
+}
+
+static bool write_color(char *todo, unsigned char idx, bool is_fg) {
+    bool result = false;
+    if (idx < 16 || term256_support_is_native()) {
+        /* Use tparm */
+        putp( tparm( todo, idx ) );
+        result = true;
+    } else {
+        /* We are attempting to bypass the term here. Generate the ANSI escape sequence ourself. */
+        char stridx[128];
+        format_long_safe(stridx, (long)idx);
+        char buff[128] = "\x1b[";
+        strcat(buff, is_fg ? "38;5;" : "48;5;");
+        strcat(buff, stridx);
+        strcat(buff, "m");
+        write_loop(STDOUT_FILENO, buff, strlen(buff));
+        result = true;
+    }
+    return result;
+}
+
+static bool write_foreground_color(unsigned char idx) {
+    if (set_a_foreground && set_a_foreground[0]) {
+        return write_color(set_a_foreground, idx, true);
+    } else if (set_foreground && set_foreground[0]) {
+        return write_color(set_foreground, idx, true);
+    } else {
+        return false;
+    }
+}
+
+static bool write_background_color(unsigned char idx) {
+    if (set_a_background && set_a_background[0]) {
+        return write_color(set_a_background, idx, false);
+    } else if (set_background && set_background[0]) {
+        return write_color(set_background, idx, false);
+    } else {
+        return false;
+    }
+}
+
+static unsigned char index_for_color(rgb_color_t c) {
+    if (c.is_named() || ! output_get_supports_term256()) {
+        return c.to_name_index();
+    } else {
+        return c.to_term256_index();
+    }
+}
+
 
 int main( int argc, char **argv )
 {
 	char *bgcolor=0;
 	char *fgcolor=0;
-	int fg, bg;
-	int bold=0;
-	int underline=0;
+	bool bold=false;
+	bool underline=false;
 	char *bg_seq, *fg_seq;
 			
 	while( 1 )
@@ -212,11 +272,11 @@ int main( int argc, char **argv )
 				exit(0);				
 								
 			case 'o':
-				bold=1;
+				bold=true;
 				break;
 				
 			case 'u':
-				underline=1;
+				underline=true;
 				break;
 				
 			case 'v':
@@ -251,6 +311,15 @@ int main( int argc, char **argv )
 			printf( _("%s: Too many arguments\n"), SET_COLOR );
 			return 1;
 	}
+    
+    /* Infer term256 support */
+    char *fish_term256 = getenv("fish_term256");
+    if (fish_term256) {
+        support_term256 = from_string<bool>(fish_term256);
+    } else {
+        const char *term = getenv("TERM");
+        support_term256 = term && strstr(term, "256color");
+    }
 
 	if( !fgcolor && !bgcolor && !bold && !underline )
 	{
@@ -259,17 +328,17 @@ int main( int argc, char **argv )
 		print_help( argv[0], 2 );		
 		return 1;
 	}
-	
-	fg = translate_color(fgcolor);
-	if( fgcolor && (fg==-1))
+    
+    rgb_color_t fg = rgb_color_t(fgcolor ? fgcolor : "");
+	if( fgcolor && fg.is_none())
 	{
 		check_locale_init();
 		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, fgcolor );
 		return 1;		
 	}
 
-	bg = translate_color(bgcolor);
-	if( bgcolor && (bg==-1))
+    rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : "");
+	if( bgcolor && bg.is_none())
 	{
 		check_locale_init();
 		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, bgcolor );
@@ -277,10 +346,6 @@ int main( int argc, char **argv )
 	}
 
 	setupterm( 0, STDOUT_FILENO, 0);
-
-	fg_seq = set_a_foreground?set_a_foreground:set_foreground;
-	bg_seq = set_a_background?set_a_background:set_background;
-	
 
 	if( bold )
 	{
@@ -296,35 +361,31 @@ int main( int argc, char **argv )
 
 	if( bgcolor )
 	{
-		if( bg == 8 )
+		if( bg.is_normal() )
 		{
-			if( bg_seq )
-				putp( tparm( bg_seq, 0) );
+            write_background_color(0);
 			putp( tparm(exit_attribute_mode) );		
 		}	
 	}
 
 	if( fgcolor )
 	{
-		if( fg == 8 )
+		if( fg.is_normal() )
 		{
-			if( fg_seq )
-				putp( tparm( fg_seq, 0) );
+            write_foreground_color(0);
 			putp( tparm(exit_attribute_mode) );		
 		}	
 		else
 		{
-			if( fg_seq )
-				putp( tparm( fg_seq, fg) );
+            write_foreground_color(index_for_color(fg));
 		}
 	}
 	
 	if( bgcolor )
 	{
-		if( bg != 8 )
+		if( ! bg.is_normal() )
 		{
-			if( bg_seq )
-				putp( tparm( bg_seq, bg) );
+            write_background_color(index_for_color(bg));
 		}
 	}
 

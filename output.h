@@ -73,7 +73,6 @@ enum
 */
 
 
-//void set_color( int c, int c2 );
 void set_color(rgb_color_t c, rgb_color_t c2);
 
 /**

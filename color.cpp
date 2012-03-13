@@ -223,7 +223,7 @@ unsigned char rgb_color_t::to_name_index() const {
     }
 }
 
-rgb_color_t::rgb_color_t(const wcstring &str) {
+void rgb_color_t::parse(const wcstring &str) {
     bool success = false;
     if (! success) success = try_parse_special(str);
     if (! success) success = try_parse_named(str);
@@ -243,6 +243,14 @@ rgb_color_t::rgb_color_t(const wcstring &str) {
         bzero(this->data.rgb, sizeof this->data.rgb);
         this->type = type_none;
     }
+}
+
+rgb_color_t::rgb_color_t(const wcstring &str) {
+    this->parse(str);
+}
+
+rgb_color_t::rgb_color_t(const std::string &str) {
+    this->parse(str2wcstring(str));
 }
 
 wcstring rgb_color_t::description() const {

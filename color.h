@@ -44,6 +44,9 @@ class rgb_color_t {
     /** Try parsing an explicit color name like "magenta" */
     bool try_parse_named(const wcstring &str);
 
+    /* Parsing entry point */
+    void parse(const wcstring &str);
+
     /** Private constructor */
     explicit rgb_color_t(unsigned char t, unsigned char i=0);
     
@@ -54,6 +57,7 @@ class rgb_color_t {
     
     /** Parse a color from a string */
     explicit rgb_color_t(const wcstring &str);
+    explicit rgb_color_t(const std::string &str);
 
     /** Returns white */    
     static rgb_color_t white();

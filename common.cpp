@@ -1554,9 +1554,12 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 								return 0;
 							}
 							else
-								out_pos--;						
+							{
+								//We may ever escape a NULL character, but still appending a \ in case I am wrong.
+								in[out_pos] = L'\\';
+							}
 						}
-						
+							break;	
 						default:
 						{
 							in[out_pos++] = L'\\';
@@ -1610,9 +1613,12 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 									return 0;
 								}
 								else
-									out_pos--;						
+								{
+									//We probably don't need it since NULL character is always appended before ending this function.
+									in[out_pos]=in[in_pos];
+								}
 							}
-							
+								break;		
 							case '\\':
 							case L'$':
 							case '"':

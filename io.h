@@ -73,7 +73,7 @@ public:
     /** Function to get a pointer to the buffer */
     char *out_buffer_ptr(void) {
         assert(out_buffer.get() != NULL);
-        return &out_buffer->at(0);
+        return (out_buffer->size() == 0) ? NULL : &out_buffer->at(0);
     }
     
     /** Function to get the size of the buffer */

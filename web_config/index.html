@@ -1,0 +1,142 @@
+<html>
+<head>
+<style type="text/css">
+
+body {
+    background-color: #292929;
+    font-family: Courier, "Courier New", monospace;
+    color: white;
+}
+
+#ancestor {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 25px;
+}
+
+#parent {
+    width: 100%;
+    background-color: black;
+    min-height: 200px;
+    margin-top: 30px;
+
+}
+
+#tab_parent {
+    width: 100%;
+}
+
+.tab, .selected_tab {
+    border-style: groove;
+    border-color: #292929;
+    border-width: 2px;
+    margin-left: -2px;
+    margin-right: -2px;
+    font-size: 17pt;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    text-align: center;
+    width: 25%;
+    float: left;
+    background-color: #292929;
+}
+
+.selected_tab {
+    background-color: inherit;
+    border-style: none;
+    margin-left: 0px;
+    margin-right: -1px;
+}
+
+.footer {
+    clear: both;
+    height: 30px;
+}
+
+#master {
+    float: left;
+    text-align: right;
+    width: 200px;
+    font-size: 16pt;
+    padding-top: 24px;
+}
+
+.master_element {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    padding-left: 5px;
+    font-size: smaller;
+}
+
+.master_element_text {
+    text-decoration: none;
+    padding-bottom: 1px;
+    border-bottom: 1px solid white;
+}
+
+</style>
+
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript">
+
+/* Adds a new element to master */
+function create_master_element(contents) {
+    $('<div/>', {
+      class: 'master_element',
+      click: function(){
+        $(this).toggleClass('master_element');
+      }
+    }).append(
+        $("<span/>", {
+        class: 'master_element_text',
+        text: contents
+        })
+    ).appendTo('#master')
+}
+
+$(document).ready(function() {
+    $('#thelink').click(function() {
+
+		req = $.ajax({
+		  type: "GET",
+		  url: "/colors/",
+		  success: function(data){
+			$.each($.parseJSON(data), function(idx, contents) {
+				var key = contents[0]
+				var value = contents[1]
+			    create_master_element(key)
+			})
+		  },
+		  fail: function(){
+		     alert('fail')
+		  }
+		})
+
+    })
+})
+ </script>
+
+</head>
+<body>
+
+<div id="ancestor">
+    <span style="font-size: 68pt">fish</span>
+    <div id="parent">
+        <div id="tab_parent">
+            <div class="selected_tab">colors</div>
+            <div class="tab">functions</div>
+            <div class="tab">variables</div>
+            <div class="tab">history</div>
+        </div>
+        <div id="master">
+            <!--- <div class="master_element"><span class="master_element_text">command</span></div> -->
+        </div>
+        <div class="footer">
+        </div>
+    </div>
+</div>
+
+<a id="thelink">Click me</a>
+
+</body></html>

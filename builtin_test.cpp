@@ -67,7 +67,10 @@ namespace test_expressions {
         test_number_lesser_equal,   // "-le", true if first number is at most second
         
         test_combine_and,            // "-a", true if left and right are both true
-        test_combine_or             // "-o", true if either left or right is true
+        test_combine_or,             // "-o", true if either left or right is true
+        
+        test_paren_open,             // "(", open paren
+        test_paren_close,             // ")", close paren
     };
     
     static bool binary_primary_evaluate(test_expressions::token_t token, const wcstring &left, const wcstring &right, wcstring_list_t &errors);
@@ -110,7 +113,9 @@ namespace test_expressions {
         {test_number_lesser, L"-lt", BINARY_PRIMARY},
         {test_number_lesser_equal, L"-le", BINARY_PRIMARY},
         {test_combine_and, L"-a", 0},
-        {test_combine_or, L"-o", 0}
+        {test_combine_or, L"-o", 0},
+        {test_paren_open, L"(", 0},
+        {test_paren_close, L")", 0}
     };
     
     const token_info_t *token_for_string(const wcstring &str) {
@@ -134,7 +139,8 @@ namespace test_expressions {
                       <primary>
                      
         <primary> = <unary_primary> arg |
-                    arg <binary_primary> arg
+                    arg <binary_primary> arg |
+                    '(' <expr> ')'
                 
     */
     
@@ -158,6 +164,7 @@ namespace test_expressions {
         expression *parse_unary_expression(unsigned int start, unsigned int end);
         
         expression *parse_primary(unsigned int start, unsigned int end);
+        expression *parse_parenthentical(unsigned int start, unsigned int end);
         expression *parse_unary_primary(unsigned int start, unsigned int end);
         expression *parse_binary_primary(unsigned int start, unsigned int end);
         
@@ -238,6 +245,15 @@ namespace test_expressions {
         bool evaluate(wcstring_list_t &errors);
     };
     
+    /* Parenthetical expression */
+    class parenthetical_expression : public expression {
+        public:
+        expr_ref_t contents;
+        parenthetical_expression(token_t tok, range_t where, expr_ref_t &expr) : expression(tok, where), contents(expr) { }
+        
+        virtual bool evaluate(wcstring_list_t &errors);
+    };
+    
     void test_parser::add_error(const wchar_t *fmt, ...) {
         assert(fmt != NULL);
         va_list va;
@@ -284,10 +300,10 @@ namespace test_expressions {
         while (idx < end) {
             
             if (! subjects.empty()) {
-                /* This is not the first expression, so we need a combiner. */
+                /* This is not the first expression, so we expect a combiner. */
                 token_t combiner = token_for_string(arg(idx))->tok;
                 if (combiner != test_combine_and && combiner != test_combine_or) {
-                    add_error(L"Expected combining argument at index %u", idx);
+                    /* Not a combiner, we're done */
                     break;
                 }
                 combiners.push_back(combiner);
@@ -306,15 +322,11 @@ namespace test_expressions {
             subjects.push_back(expr);
         }
         
-        if (idx >= end) {
-            /* We succeeded. Our new expression takes ownership of all expressions we created. The token we pass is irrelevant. */
+        if (! subjects.empty()) {
+            /* Our new expression takes ownership of all expressions we created. The token we pass is irrelevant. */
             return new combining_expression(test_combine_and, range_t(start, idx), subjects, combiners);
         } else {
-            /* Failure; we must delete our expressions since we own them */
-            while (! subjects.empty()) {
-                delete subjects.back();
-                subjects.pop_back();
-            }
+            /* No subjects */
             return NULL;
         }
     }
@@ -351,13 +363,46 @@ namespace test_expressions {
         
         return new binary_primary(info->tok, range_t(start, start + 3), arg(start), arg(start + 2));
     }
+    
+    expression *test_parser::parse_parenthentical(unsigned int start, unsigned int end) {
+        /* We need at least three arguments: open paren, argument, close paren */
+        if (start + 3 >= end)
+            return NULL;
+        
+        /* Must start with an open expression */
+        const token_info_t *open_paren = token_for_string(arg(start));
+        if (open_paren->tok != test_paren_open)
+            return NULL;
+            
+        /* Parse a subexpression */
+        expression *subexr_ptr = parse_expression(start + 1, end);
+        if (! subexr_ptr)
+            return NULL;
+        expr_ref_t subexpr(subexr_ptr);
+        
+        /* Parse a close paren */
+        unsigned close_index = subexpr->range.end;
+        assert(close_index <= end);
+        if (close_index == end) {
+            return error(L"Missing close paren at index %u", close_index);
+        }
+        const token_info_t *close_paren = token_for_string(arg(close_index));
+        if (close_paren->tok != test_paren_close) {
+            return error(L"Expected close paren at index %u", close_index);
+        }
+        
+        /* Success */
+        return new parenthetical_expression(test_paren_open, range_t(start, close_index+1), subexpr);
+    }
 
     expression *test_parser::parse_primary(unsigned int start, unsigned int end) {
         if (start >= end) {
             return error(L"Missing argument at index %u", start);
         }
         
-        expression *expr = parse_unary_primary(start, end);
+        expression *expr = NULL;
+        if (! expr) expr = parse_parenthentical(start, end);
+        if (! expr) expr = parse_unary_primary(start, end);
         if (! expr) expr = parse_binary_primary(start, end);
         return expr;
     }
@@ -370,22 +415,36 @@ namespace test_expressions {
         return parse_combining_expression(start, end);
     }
     
-    
     expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err) {
         /* Empty list and one-arg list should be handled by caller */
         assert(args.size() > 1);
         
         test_parser parser(args);
         expression *result = parser.parse_expression(0, (unsigned int)args.size());
+        
         /* Handle errors */
+        bool errored = false;
         for (size_t i = 0; i < parser.errors.size(); i++) {
             err.append(L"test: ");
             err.append(parser.errors.at(i));
             err.push_back(L'\n');
-            
+            errored = true;
             // For now we only show the first error
             break;
         }
+        
+        if (! errored && result) {
+            /* It's also an error if there are any unused arguments. This is not detected by parse_expression() */
+            assert(result->range.end <= args.size());
+            if (result->range.end < args.size()) {
+                append_format(err, L"test: unexpected argument at index %lu: '%ls'\n", (unsigned long)result->range.end, args.at(result->range.end).c_str());
+                delete result;
+                result = NULL;
+                errored = true;
+            }
+        }
+        
+        
         return result;
     }
     
@@ -454,6 +513,10 @@ namespace test_expressions {
                 return BUILTIN_TEST_FAIL;
 
         }
+    }
+    
+    bool parenthetical_expression::evaluate(wcstring_list_t &errors) {
+        return contents->evaluate(errors);
     }
 
     /* IEEE 1003.1 says nothing about what it means for two strings to be "algebraically equal". For example, should we interpret 0x10 as 0, 10, or 16? Here we use only base 10 and use wcstoll, which allows for leading + and -, and leading whitespace. This matches bash. */

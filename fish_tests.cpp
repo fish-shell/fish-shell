@@ -641,7 +641,9 @@ static void test_test() {
         it would be false. */
     assert(run_test_test(0, L"0 = 0 -o 0 = 1 -a 0 = 2"));
     assert(run_test_test(0, L"-n 5 -o 0 = 1 -a 0 = 2"));
-    
+    assert(run_test_test(1, L"( 0 = 0 -o  0 = 1 ) -a 0 = 2"));
+    assert(run_test_test(0, L"0 = 0 -o ( 0 = 1 -a 0 = 2 )"));    
+        
     /* A few lame tests for permissions; these need to be a lot more complete. */
     assert(run_test_test(0, L"-e /bin/ls"));
     assert(run_test_test(1, L"-e /bin/ls_not_a_path"));

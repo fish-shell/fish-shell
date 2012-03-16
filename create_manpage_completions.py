@@ -16,7 +16,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 """ Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > test2.out """
 
-import sys, re, os.path, gzip
+import sys, re, os.path, gzip, traceback
+
 
 # This gets set to the name of the command that we are currently executing
 CMDNAME = ""
@@ -51,7 +52,7 @@ def printcompletecommand(cmdname, args, description):
 def builtcommand(options, description):
 #	print "Options are: ", options
 	optionlist = re.split(" |,|\"|=|[|]", options)
-	optionlist = filter(lambda x: len(x) > 0 and x[0] == "-", optionlist)
+	optionlist = [x for x in optionlist if x.startswith('-')]
 	if len(optionlist) == 0:
 		return
 	for i in range(0, len(optionlist)):
@@ -416,6 +417,55 @@ class Type4ManParser(ManParser):
 	def name():
 		return "Type4"
 
+class TypeMacManParser(ManParser):
+	def isMyType(self, manpage):
+		options_section_matched = compileAndSearch("\.Sh DESCRIPTION", manpage)
+		return options_section_matched != None
+	
+	def trim_groff(self, line):
+		# Remove initial period
+		if line.startswith('.'):
+			line = line[1:]
+		# Skip leading groff crud
+		while re.match('[A-Z][a-z]\s', line):
+			line = line[3:]
+		return line
+	
+	def is_option(self, line):
+		return line.startswith('.It Fl')
+	
+	
+	def parseManPage(self, manpage):
+		lines =  manpage.splitlines()
+		# Discard lines until we get to ".sh Description"
+		while lines and not lines[0].startswith('.Sh DESCRIPTION'):
+			lines.pop(0)
+		
+		while lines:
+			# Pop until we get to the next option
+			while lines and not self.is_option(lines[0]):
+				lines.pop(0)
+			
+			# Extract the name
+			name = self.trim_groff(lines.pop(0)).strip()
+			
+			# Extract the description
+			desc = ''
+			while lines and not self.is_option(lines[0]):
+				# print "*", lines[0]
+				desc = desc + lines.pop(0)
+			
+			#print "name: ", name
+			
+			if name == '-':
+				# Skip double -- arguments
+				continue
+			elif len(name) > 1:
+				# Output the command
+				builtcommand('--' + name, desc)
+			elif len(name) == 1:
+				builtcommand('-' + name, desc)
+			
 
 def parse_manpage_at_path(manpage_path):
 	filename = os.path.basename(manpage_path)
@@ -432,7 +482,7 @@ def parse_manpage_at_path(manpage_path):
 	manpage = fd.read()
 	fd.close()
 	
-	parsers = [Type1ManParser(), Type2ManParser(), Type4ManParser(), Type3ManParser()]
+	parsers = [Type1ManParser(), Type2ManParser(), Type4ManParser(), Type3ManParser(), TypeMacManParser()]
 	parserToUse = None
 
 	# Get the "base" command, e.g. gcc.1.gz -> gcc
@@ -441,37 +491,21 @@ def parse_manpage_at_path(manpage_path):
 	if cmd_base in ignoredcommands:
 		return
 		
+	idx = 0
 	for parser in parsers:
 		if parser.isMyType(manpage):
 			parserToUse = parser
 #			print "Type is: ", parser.name()
 			break
+			idx += 1
 		
 	if parserToUse == None:
 		print >> sys.stderr, manpage_path, " : Not supported"
-
-	elif parserToUse == parsers[0]:
+	else:
 		if parserToUse.parseManPage(manpage) == False:
-			print >> sys.stderr, "Type1 : ", manpage_path, " is unparsable"
+			print >> sys.stderr, "Type%d : %s is unparsable" % (idx, manpage_path)
 		else:
 			print >> sys.stderr, manpage_path, " parsed successfully"
-	
-	elif parserToUse == parsers[1]:
-		if parserToUse.parseManPage(manpage) == False:
-			print >> sys.stderr, "Type2 : ", manpage_path, " is unparsable"
-		else:
-			print >> sys.stderr, "Type2 : ", manpage_path, " parsed successfully"
-	elif parserToUse == parsers[2]:
-		if parserToUse.parseManPage(manpage) == False:
-			print >> sys.stderr, "Type3 : ", manpage_path, " is unparsable"
-		else:
-			print >> sys.stderr, manpage_path, " parsed successfully"
-
-	elif parserToUse == parsers[3]:
-		if parserToUse.parseManPage(manpage) == False:
-			print >> sys.stderr, "Type4 : ", manpage_path, " is unparsable"
-		else:
-			print >> sys.stderr, "Type4 :", manpage_path, " parsed successfully"
 
 		
 
@@ -489,3 +523,4 @@ if __name__ == "__main__":
 			print >> sys.stderr, 'Cannot open ', manpage_path
 		except:
 			print >> sys.stderr, "Error parsing %s: %s" % (manpage_path, sys.exc_info()[0])
+			traceback.print_exc(file=sys.stdout)

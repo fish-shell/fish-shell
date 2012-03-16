@@ -27,7 +27,7 @@ body {
     width: 100%;
 }
 
-.tab, .selected_tab {
+.tab {
     border-style: groove;
     border-color: #292929;
     border-width: 2px;
@@ -40,6 +40,7 @@ body {
     width: 25%;
     float: left;
     background-color: #292929;
+    cursor: pointer;
 }
 
 .selected_tab {
@@ -80,6 +81,58 @@ body {
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript">
 
+function request_failed() {
+	alert('Request failed');
+}
+
+function switch_tab(new_tab) {
+	/* Switch selected tab */
+	$(".selected_tab").removeClass("selected_tab")
+	$('#' + new_tab).addClass("selected_tab")
+	
+	/* Empty master element */
+	$('#master').empty()
+	
+	/* Load something new */
+	if (new_tab == 'tab_colors') {
+	
+		req = $.ajax({
+		  type: "GET",
+		  url: "/colors/",
+		  success: function(data){
+			$.each($.parseJSON(data), function(idx, contents) {
+				var key = contents[0]
+				var value = contents[1]
+			    create_master_element(key)
+			})
+		  },
+		  fail: request_failed
+		})
+	
+	} else if (new_tab == 'tab_functions') {
+	
+		req = $.ajax({
+		  type: "GET",
+		  url: "/functions/",
+		  success: function(data){
+			$.each($.parseJSON(data), function(idx, contents) {
+				var key = contents
+			    create_master_element(key)
+			})
+		  },
+		  fail: request_failed
+		})
+	
+	} else if (new_tab == 'tab_variables') {
+	
+	} else if (new_tab == 'tab_history') {
+	
+	} else {
+		alert("Unknown tab");
+	}
+	return false
+}
+
 /* Adds a new element to master */
 function create_master_element(contents) {
     $('<div/>', {
@@ -96,22 +149,8 @@ function create_master_element(contents) {
 }
 
 $(document).ready(function() {
-    $('#thelink').click(function() {
-
-		req = $.ajax({
-		  type: "GET",
-		  url: "/colors/",
-		  success: function(data){
-			$.each($.parseJSON(data), function(idx, contents) {
-				var key = contents[0]
-				var value = contents[1]
-			    create_master_element(key)
-			})
-		  },
-		  fail: function(){
-		     alert('fail')
-		  }
-		})
+	switch_tab('tab_colors')
+	$('#thelink').click(function() {
 
     })
 })
@@ -124,10 +163,10 @@ $(document).ready(function() {
     <span style="font-size: 68pt">fish</span>
     <div id="parent">
         <div id="tab_parent">
-            <div class="selected_tab">colors</div>
-            <div class="tab">functions</div>
-            <div class="tab">variables</div>
-            <div class="tab">history</div>
+            <div class="tab selected_tab" id="tab_colors" onClick="javascript: switch_tab('tab_colors')">colors</div>
+            <div class="tab"  id="tab_functions" onClick="javascript: switch_tab('tab_functions')">functions</div>
+            <div class="tab" id="tab_variables" onClick="javascript: switch_tab('tab_variables')">variables</div>
+            <div class="tab" id="tab_history" onClick="javascript: switch_tab('tab_history')">history</div>
         </div>
         <div id="master">
             <!--- <div class="master_element"><span class="master_element_text">command</span></div> -->

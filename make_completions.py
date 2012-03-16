@@ -14,7 +14,7 @@ cl = { re.compile(r"-[ \t]*\n[ \t\r]+" ):"",
 def header(cmd):
   print '''#
 # Command specific completions for the %s command.
-# These completions where generated from the commands
+# These completions were generated from the commands
 # man page by the make_completions.py script, but may
 # have been hand edited since.
 #

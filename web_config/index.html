@@ -18,7 +18,7 @@ body {
 #parent {
     width: 100%;
     background-color: black;
-    min-height: 200px;
+    min-height: 480px;
     margin-top: 30px;
 
 }
@@ -58,22 +58,56 @@ body {
 #master {
     float: left;
     text-align: right;
-    width: 200px;
+    min-width: 200px;
     font-size: 16pt;
     padding-top: 24px;
+    padding-right: 32px;
+    padding-left: 12px;
 }
 
 .master_element {
-    padding-top: 15px;
-    padding-bottom: 15px;
+    padding-top: 5px;
+    padding-bottom: 5px;
     padding-left: 5px;
-    font-size: smaller;
+    font-size: 12pt;
 }
 
 .master_element_text {
     text-decoration: none;
     padding-bottom: 1px;
     border-bottom: 1px solid white;
+}
+
+#colorpicker_term256 {}
+
+#data_table {
+	table-layout:fixed;
+	color: white;
+	width: 100%;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.data_table_row {
+}
+
+.data_table_cell {
+	padding-bottom: 10px;
+	overflow:hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.colorpicker_term256_row {
+}
+
+.colorpicker_term256_cell {
+	width: 24;
+	height: 24;
+}
+
+.colorpicker_cell_selected {
+	 border: solid white 3px;
 }
 
 </style>
@@ -85,6 +119,20 @@ function request_failed() {
 	alert('Request failed');
 }
 
+/* Runs a GET request, parses the JSON, and invokes the handler for each element in it. The JSON result is assumed to be an array. */
+function run_get_request(url, handler) {
+	$.ajax({
+		  type: "GET",
+		  url: url,
+		  success: function(data){
+			$.each($.parseJSON(data), function(idx, contents) {
+				handler(contents)
+			})
+		  },
+		  fail: request_failed
+		})
+}
+
 function switch_tab(new_tab) {
 	/* Switch selected tab */
 	$(".selected_tab").removeClass("selected_tab")
@@ -93,38 +141,31 @@ function switch_tab(new_tab) {
 	/* Empty master element */
 	$('#master').empty()
 	
+	/* Hide some things */
+	$('#colorpicker_term256').hide()
+	$('#data_table').hide()
+	
 	/* Load something new */
 	if (new_tab == 'tab_colors') {
-	
-		req = $.ajax({
-		  type: "GET",
-		  url: "/colors/",
-		  success: function(data){
-			$.each($.parseJSON(data), function(idx, contents) {
-				var key = contents[0]
-				var value = contents[1]
-			    create_master_element(key)
-			})
-		  },
-		  fail: request_failed
+		run_get_request('/colors/', function(contents){
+			var key = contents[0]
+			var value = contents[1]
+			create_master_element(key)
 		})
-	
-	} else if (new_tab == 'tab_functions') {
-	
-		req = $.ajax({
-		  type: "GET",
-		  url: "/functions/",
-		  success: function(data){
-			$.each($.parseJSON(data), function(idx, contents) {
-				var key = contents
-			    create_master_element(key)
-			})
-		  },
-		  fail: request_failed
+		$('#colorpicker_term256').show()
+	} else if (new_tab == 'tab_functions') {	
+		run_get_request('/functions/', function(contents){
+			create_master_element(contents)
 		})
-	
+		$('#data_table').show()
 	} else if (new_tab == 'tab_variables') {
-	
+		run_get_request('/variables/', function(contents){
+			var name = contents[0]
+			var value = contents[1]
+			var flags = contents[2]
+			create_data_table_element([name, value])
+		})
+		$('#data_table').show()
 	} else if (new_tab == 'tab_history') {
 	
 	} else {
@@ -132,6 +173,9 @@ function switch_tab(new_tab) {
 	}
 	return false
 }
+
+/* The first index here corresponds to value 16 */
+var term256_colors = ["000000", "00005f", "000087", "0000af", "0000d7", "0000ff", "005f00", "005f5f", "005f87", "005faf", "005fd7", "005fff", "008700", "00875f", "008787", "0087af", "0087d7", "0087ff", "00af00", "00af5f", "00af87", "00afaf", "00afd7", "00afff", "00d700", "00d75f", "00d787", "00d7af", "00d7d7", "00d7ff", "00ff00", "00ff5f", "00ff87", "00ffaf", "00ffd7", "00ffff", "5f0000", "5f005f", "5f0087", "5f00af", "5f00d7", "5f00ff", "5f5f00", "5f5f5f", "5f5f87", "5f5faf", "5f5fd7", "5f5fff", "5f8700", "5f875f", "5f8787", "5f87af", "5f87d7", "5f87ff", "5faf00", "5faf5f", "5faf87", "5fafaf", "5fafd7", "5fafff", "5fd700", "5fd75f", "5fd787", "5fd7af", "5fd7d7", "5fd7ff", "5fff00", "5fff5f", "5fff87", "5fffaf", "5fffd7", "5fffff", "870000", "87005f", "870087", "8700af", "8700d7", "8700ff", "875f00", "875f5f", "875f87", "875faf", "875fd7", "875fff", "878700", "87875f", "878787", "8787af", "8787d7", "8787ff", "87af00", "87af5f", "87af87", "87afaf", "87afd7", "87afff", "87d700", "87d75f", "87d787", "87d7af", "87d7d7", "87d7ff", "87ff00", "87ff5f", "87ff87", "87ffaf", "87ffd7", "87ffff", "af0000", "af005f", "af0087", "af00af", "af00d7", "af00ff", "af5f00", "af5f5f", "af5f87", "af5faf", "af5fd7", "af5fff", "af8700", "af875f", "af8787", "af87af", "af87d7", "af87ff", "afaf00", "afaf5f", "afaf87", "afafaf", "afafd7", "afafff", "afd700", "afd75f", "afd787", "afd7af", "afd7d7", "afd7ff", "afff00", "afff5f", "afff87", "afffaf", "afffd7", "afffff", "d70000", "d7005f", "d70087", "d700af", "d700d7", "d700ff", "d75f00", "d75f5f", "d75f87", "d75faf", "d75fd7", "d75fff", "d78700", "d7875f", "d78787", "d787af", "d787d7", "d787ff", "d7af00", "d7af5f", "d7af87", "d7afaf", "d7afd7", "d7afff", "d7d700", "d7d75f", "d7d787", "d7d7af", "d7d7d7", "d7d7ff", "d7ff00", "d7ff5f", "d7ff87", "d7ffaf", "d7ffd7", "d7ffff", "ff0000", "ff005f", "ff0087", "ff00af", "ff00d7", "ff00ff", "ff5f00", "ff5f5f", "ff5f87", "ff5faf", "ff5fd7", "ff5fff", "ff8700", "ff875f", "ff8787", "ff87af", "ff87d7", "ff87ff", "ffaf00", "ffaf5f", "ffaf87", "ffafaf", "ffafd7", "ffafff", "ffd700", "ffd75f", "ffd787", "ffd7af", "ffd7d7", "ffd7ff", "ffff00", "ffff5f", "ffff87", "ffffaf", "ffffd7", "ffffff", "080808", "121212", "1c1c1c", "262626", "303030", "3a3a3a", "444444", "4e4e4e", "585858", "626262", "6c6c6c", "767676", "808080", "8a8a8a", "949494", "9e9e9e", "a8a8a8", "b2b2b2", "bcbcbc", "c6c6c6", "d0d0d0", "dadada", "e4e4e4", "eeeeee"]
 
 /* Adds a new element to master */
 function create_master_element(contents) {
@@ -148,13 +192,56 @@ function create_master_element(contents) {
     ).appendTo('#master')
 }
 
-$(document).ready(function() {
-	switch_tab('tab_colors')
-	$('#thelink').click(function() {
+/* Creates a new row in the data table */
+function create_data_table_element(contents_list) {
+	var row = $('<tr>', {
+		class: 'data_table_row'
+	})
+	for (idx = 0; idx < contents_list.length; idx++) {
+		/* Align the first one right, subsequent ones left */
+		if (idx == 0) {
+			cell_style = 'text-align: right; padding-right: 30px;'
+		} else {
+			cell_style = 'text-align: left;'
+		}
+		row.append($('<td>', {
+			class: 'data_table_cell',
+			style: cell_style,
+			text: contents_list[idx]
+		}))
+	}
+	$('#data_table').append(row)
+}
 
-    })
+/* Put stuff in colorpicker_term256 */
+function populate_colorpicker_term256() {
+	var idx
+	var items_per_row = 12
+	for (idx = 0; idx < term256_colors.length; idx += items_per_row) {
+		var row = $('<tr>', {
+			class: 'colorpicker_term256_row'
+		})
+		
+		var subidx
+		for (subidx = 0; subidx < items_per_row && idx  + subidx < term256_colors.length; subidx++) {
+			cell_style = 'background-color: #' + term256_colors[idx + subidx]
+			row.append($('<td>', {
+				class: 'colorpicker_term256_cell',
+				style: cell_style,
+				text: ''
+			}))
+		}
+		
+		$('#colorpicker_term256').append(row)
+	}
+	
+}
+
+$(document).ready(function() {
+	populate_colorpicker_term256()
+	switch_tab('tab_colors')
 })
- </script>
+</script>
 
 </head>
 <body>
@@ -171,6 +258,10 @@ $(document).ready(function() {
         <div id="master">
             <!--- <div class="master_element"><span class="master_element_text">command</span></div> -->
         </div>
+        <table id="colorpicker_term256">
+        </table>
+		<table id="data_table">
+		<table>
         <div class="footer">
         </div>
     </div>

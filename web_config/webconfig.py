@@ -12,6 +12,21 @@ def run_fish_cmd(text):
 	out, err = p.communicate(text)
 	return out, err
 
+class FishVar:
+	""" A class that represents a variable """
+	def __init__(self, name, value):
+		self.name = name
+		self.value = value
+		self.universal = False
+		self.exported = False
+		
+	def get_json_obj(self):
+		# Return an array(3): name, value, flags
+		flags = []
+		if self.universal: flags.append('universal')
+		if self.exported: flags.append('exported')
+		return [self.name, self.value, ', '.join(flags)]
+
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	
 	def do_get_colors(self):
@@ -33,14 +48,50 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			return out.split('\n')
 		else:
 			return out.strip().split(', ')
+	
+	def do_get_variable_names(self, cmd):
+		" Given a command like 'set -U' return all the variable names "
+		out, err = run_fish_cmd(cmd)
+		return out.split('\n')
+	
+	def do_get_variables(self):
+		out, err = run_fish_cmd('set')
+		
+		# Put all the variables into a dictionary
+		vars = {}
+		for line in out.split('\n'):
+			comps = line.split(' ', 1)
+			if len(comps) < 2: continue
+			fish_var = FishVar(comps[0], comps[1])
+			vars[fish_var.name] = fish_var
+			
+		# Mark universal variables
+		for name in self.do_get_variable_names('set -nU'):
+			if name in vars: vars[name].universal = True
+		# Mark exported variables
+		for name in self.do_get_variable_names('set -nx'):
+			if name in vars: vars[name].exported = True
+		
+		return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=str.lower)]
+		
 		
 
+	def do_get_color_for_variable(self, name):
+		"Return the color with the given name, or the empty string if there is none"
+		out, err = run_fish_cmd("echo -n $" + name)
+		return out
+				
 	def do_GET(self):
 		p = self.path
 		if p == '/colors/':
 			output = self.do_get_colors()
 		elif p == '/functions/':
 			output = self.do_get_functions()
+		elif p == '/variables/':
+			output = self.do_get_variables()
+		elif re.match(r"/color/(\w+)/", p):
+			name = re.match(r"/color/(\w+)/", p).group(1)
+			output = self.do_get_color_for_variable(name)
 		else:
 			return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 				

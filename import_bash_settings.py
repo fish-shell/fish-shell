@@ -32,6 +32,29 @@ def remove_single_quotes(input):
 		end = end - 1 
 	return input[start:end]
 
+#Find outside quotes
+def contains_outside_quotes(input, ch):
+	in_quotes = False
+
+	i = 0
+	
+	while i < len(input):
+		if input[i] == ch and in_quotes == False:
+			return True
+		elif input[i] == '\\' and in_quotes == True:
+			i = i+1	
+		elif input[i] == '"':
+			in_quotes = not in_quotes
+		elif input[i] == "'" and not in_quotes:
+			i = i + 1
+			while input[i] != "'":
+				i = i + 1	
+
+		i = i + 1
+
+	return False 
+
+
 #Replace characters outside double quotes
 def replace_outside_quotes(input, oldchar, newchar, change_all = True):
 	in_quotes = False
@@ -57,7 +80,7 @@ def replace_outside_quotes(input, oldchar, newchar, change_all = True):
 			i = i+1	
 		elif input[i] == '"':
 			in_quotes=not in_quotes
-		elif input[i] == "'":
+		elif input[i] == "'" and not in_quotes:
 			newstr.append(input[i])
 			i = i + 1
 			while input[i] != "'":
@@ -95,7 +118,7 @@ def parse_input(input):
 def add_alias(alias_name, alias_value):
 		alias_value = remove_single_quotes(alias_value)
 
-		while "`" in alias_value:
+		while contains_outside_quotes(alias_value,"`"):
 			alias_value = replace_outside_quotes(alias_value, '`', '(', False)
 			alias_value = replace_outside_quotes(alias_value, '`', ')', False)
 

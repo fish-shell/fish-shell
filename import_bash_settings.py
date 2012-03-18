@@ -20,6 +20,7 @@ config_file = None
 prompt_buff = ""
 i = 0
 quote_started = False
+bash_builtins = ["export"]
 
 #Remove leading and trailing single quotes from a string
 def remove_single_quotes(input):
@@ -30,6 +31,44 @@ def remove_single_quotes(input):
 	if input[end-1] == "'":
 		end = end - 1 
 	return input[start:end]
+
+#Replace characters outside double quotes
+def replace_outside_quotes(input, oldchar, newchar, change_all = True):
+	in_quotes = False
+	newstr = [] 
+
+	i = 0
+	
+	while i < len(input):
+		if input[i] == oldchar and in_quotes == False:
+			newstr.append(newchar)
+			i = i+1
+
+			if change_all == True:
+				continue	
+			else:
+				while i < len(input):
+					newstr.append(input[i])
+					i = i + 1
+				#Break loop and return all the characters in list by joining them
+				break	
+		elif input[i] == '\\' and in_quotes == True:
+			newstr.append(input[i])
+			i = i+1	
+		elif input[i] == '"':
+			in_quotes=not in_quotes
+		elif input[i] == "'":
+			newstr.append(input[i])
+			i = i + 1
+			while input[i] != "'":
+				newstr.append(input[i])
+				i = i + 1	
+
+		newstr.append(input[i])
+		i = i + 1
+
+	return ''.join(newstr)	
+
 
 #Parse input passed to the script
 def parse_input(input):
@@ -56,9 +95,39 @@ def parse_input(input):
 def add_alias(alias_name, alias_value):
 		alias_value = remove_single_quotes(alias_value)
 
-		config_file.write("function " + alias_name + "\n")
-		config_file.write("\t" + alias_value + " $argv" + "\n")
-		config_file.write("end\n")
+		while "`" in alias_value:
+			alias_value = replace_outside_quotes(alias_value, '`', '(', False)
+			alias_value = replace_outside_quotes(alias_value, '`', ')', False)
+
+		config_file.write("function " + alias_name)
+		for line in alias_value.split(";"):
+			line = line.strip()
+			tokens = line.split(' ')
+			first_token = tokens[0].strip()
+			if first_token in bash_builtins:
+				print first_token, " is a bash builtin"			
+				if first_token == "export":
+					var_regex = re.compile("(.*?)=(.*)")	
+					var_regex_matched = re.search(var_regex, line[7:])
+			
+					if var_regex_matched != None:
+						stripped_name = var_regex_matched.group(1).strip()	
+						config_file.write("\n\tset -gx " + var_regex_matched.group(1).strip() + " " + var_regex_matched.group(2).strip())
+					else:
+						export_name = line[6:].strip()
+						config_file.write("\n\tset -gx " + export_name + " $" + export_name ) 
+
+			elif "=" in first_token:
+					var_regex = re.compile("(.*?)=(.*)")	
+					var_regex_matched = re.search(var_regex, line)
+			
+					if var_regex_matched != None:
+						stripped_name = var_regex_matched.group(1).strip()	
+						config_file.write("\n\tset " + var_regex_matched.group(1).strip() + " " + var_regex_matched.group(2).strip() )
+			else:
+					if len(line.strip()) > 0:
+						config_file.write( "\n\t" + line.strip() + " $argv" )
+		config_file.write("\nend;\n")
 
 def parse_control_sequence():
 	ch = next_prompt_char()

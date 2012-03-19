@@ -94,10 +94,15 @@ body {
 }
 
 .data_table_cell {
-	padding-bottom: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 	overflow:hidden;
+	border-bottom: #444 dotted 1px;
+}
+
+.no_overflow {
 	text-overflow: ellipsis;
-	white-space: nowrap;
+	white-space: nowrap;	
 }
 
 .colorpicker_term256_row {
@@ -146,6 +151,7 @@ function switch_tab(new_tab) {
 	/* Hide some things */
 	$('#colorpicker_term256').hide()
 	$('#data_table').hide()
+	$('#data_table').empty()
 	
 	/* Load something new */
 	if (new_tab == 'tab_colors') {
@@ -169,7 +175,10 @@ function switch_tab(new_tab) {
 		})
 		$('#data_table').show()
 	} else if (new_tab == 'tab_history') {
-	
+		run_get_request('/history/', function(contents){
+			create_data_table_element([contents])
+		})
+		$('#data_table').show()
 	} else {
 		alert("Unknown tab");
 	}
@@ -225,23 +234,39 @@ function create_master_element(contents) {
     ).appendTo('#master')
 }
 
+/* Toggle the no_overflow class */
+function toggle_overflow(who) {
+	$(who).toggleClass('no_overflow')
+}
+
 /* Creates a new row in the data table */
 function create_data_table_element(contents_list) {
 	var row = $('<tr>', {
 		class: 'data_table_row'
 	})
 	for (idx = 0; idx < contents_list.length; idx++) {
-		/* Align the first one right, subsequent ones left */
-		if (idx == 0) {
-			cell_style = 'text-align: right; padding-right: 30px;'
+		/* If we have more than one, then align the first one right, subsequent ones left */
+		if (idx == 0 && contents_list.length > 1) {
+			cell = $('<td>', {
+						class: 'data_table_cell no_overflow',
+						style: 'text-align: right; padding-right: 30px;'
+					});
+			
 		} else {
-			cell_style = 'text-align: left;'
+			cell = $('<td>', {
+						class: 'data_table_cell no_overflow',
+						style: 'text-align: left',
+						onClick: "toggle_overflow(this)"
+					});			
 		}
-		row.append($('<td>', {
-			class: 'data_table_cell',
-			style: cell_style,
-			text: contents_list[idx]
-		}))
+		text_list = contents_list[idx].split("\n")
+		for (j=0; j < text_list.length; j++) {
+			cell.append($('<p>', {
+				text: text_list[j]
+			}))
+		}
+
+		row.append(cell)
 	}
 	$('#data_table').append(row)
 }
@@ -282,10 +307,10 @@ $(document).ready(function() {
     <span style="font-size: 68pt">fish</span>
     <div id="parent">
         <div id="tab_parent">
-            <div class="tab selected_tab" id="tab_colors" onClick="javascript: switch_tab('tab_colors')">colors</div>
-            <div class="tab"  id="tab_functions" onClick="javascript: switch_tab('tab_functions')">functions</div>
-            <div class="tab" id="tab_variables" onClick="javascript: switch_tab('tab_variables')">variables</div>
-            <div class="tab" id="tab_history" onClick="javascript: switch_tab('tab_history')">history</div>
+            <div class="tab selected_tab" id="tab_colors" onClick="switch_tab('tab_colors')">colors</div>
+            <div class="tab"  id="tab_functions" onClick="switch_tab('tab_functions')">functions</div>
+            <div class="tab" id="tab_variables" onClick="switch_tab('tab_variables')">variables</div>
+            <div class="tab" id="tab_history" onClick="switch_tab('tab_history')">history</div>
         </div>
         <div id="master">
             <!--- <div class="master_element"><span class="master_element_text">command</span></div> -->

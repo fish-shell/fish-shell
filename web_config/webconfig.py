@@ -55,7 +55,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		return out.split('\n')
 	
 	def do_get_variables(self):
-		out, err = run_fish_cmd('set')
+		out, err = run_fish_cmd('set -L')
 		
 		# Put all the variables into a dictionary
 		vars = {}
@@ -65,15 +65,20 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			fish_var = FishVar(comps[0], comps[1])
 			vars[fish_var.name] = fish_var
 			
-		# Mark universal variables
-		for name in self.do_get_variable_names('set -nU'):
+		# Mark universal variables. L means don't abbreviate.
+		for name in self.do_get_variable_names('set -nUL'):
 			if name in vars: vars[name].universal = True
-		# Mark exported variables
-		for name in self.do_get_variable_names('set -nx'):
+		# Mark exported variables. L means don't abbreviate.
+		for name in self.do_get_variable_names('set -nxL'):
 			if name in vars: vars[name].exported = True
 		
 		return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=str.lower)]
-		
+	
+	def do_get_history(self):
+		# Use \x1e ("record separator") to distinguish between history items. The first
+		# backslash is so Python passes one backslash to fish
+		out, err = run_fish_cmd('for val in $history; echo -n $val \\x1e; end')
+		return out.split('\x1e')
 		
 
 	def do_get_color_for_variable(self, name):
@@ -89,6 +94,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			output = self.do_get_functions()
 		elif p == '/variables/':
 			output = self.do_get_variables()
+		elif p == '/history/':
+			output = self.do_get_history()
 		elif re.match(r"/color/(\w+)/", p):
 			name = re.match(r"/color/(\w+)/", p).group(1)
 			output = self.do_get_color_for_variable(name)
@@ -101,8 +108,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		self.wfile.write('\n')
 		
 		# Output JSON
-		print len(output)
-		print output
 		json.dump(output, self.wfile)
 		
 		

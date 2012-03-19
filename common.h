@@ -739,6 +739,7 @@ double timef();
     This is our replacement for pthread_main_np().
  */
 void set_main_thread();
+bool is_main_thread();
 
 /** Set up a guard to complain if we try to do certain things (like take a lock) after calling fork */
 void setup_fork_guards(void);

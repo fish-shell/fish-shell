@@ -1969,7 +1969,6 @@ void set_main_thread() {
  	main_thread_id = pthread_self();
 }
 
-
 /* Notice when we've forked */
 static pid_t initial_pid;
 
@@ -1987,7 +1986,7 @@ void setup_fork_guards(void) {
     initial_pid = getpid();
 }
 
-static bool is_main_thread() {
+bool is_main_thread() {
  	assert (main_thread_id != 0);
  	return main_thread_id == pthread_self();
 }

@@ -147,6 +147,9 @@ public:
     /** Irreversibly clears history */
     void clear();
     
+    /* Gets all the history into a string with ARRAY_SEP_STR. This is intended for the $history environment variable. This may be long! */
+    void get_string_representation(wcstring &str, const wcstring &separator);
+    
     /** Return the specified history at the specified index. 0 is the index of the current commandline. (So the most recent item is at index 1.) */
     history_item_t item_at_index(size_t idx);
 };

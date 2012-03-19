@@ -1072,39 +1072,18 @@ const wchar_t *env_var_t::c_str(void) const {
 }
 
 env_var_t env_get_string( const wcstring &key )
-{
-    scoped_lock lock(env_lock);
-    
-	if( key == L"history" )
+{    
+    /* Big hack...we only allow getting the history on the main thread. Note that history_t may ask for an environment variable, so don't take the lock here (we don't need it) */
+	if( key == L"history" && is_main_thread())
 	{
-        wcstring result;
-		const wchar_t *current;
-		int i;		
-		int add_current=0;
-		
-		current = reader_get_buffer();
-		if( current && wcslen( current ) )
-		{
-			add_current=1;
-            result += current;
-		}
-		
-		for( i=add_current;; i++ )
-		{
-            // PCA This looks bad! We can't do this off of the main thread.
-			wchar_t *next = NULL;//history_get( i-add_current );
-			if( !next )
-			{
-				break;
-			}
-			
-			if( i!=0)
-			{
-                result += ARRAY_SEP_STR;
-			}
-            result += next;
-		}
+        env_var_t result;
         
+        history_t *history = reader_get_history();
+        if (! history) {
+            history = &history_t::history_with_name(L"fish");
+        }
+        if (history)
+            history->get_string_representation(result, ARRAY_SEP_STR);                
 		return result;
 	}
 	else if( key == L"COLUMNS" )
@@ -1124,6 +1103,8 @@ env_var_t env_get_string( const wcstring &key )
         return format_string(L"0%0.3o", get_umask() );
 	}
 	else {
+        
+        scoped_lock lock(env_lock);
         
         var_entry_t *res;
         env_node_t *env = top;
@@ -1181,119 +1162,6 @@ env_var_t env_get_string( const wcstring &key )
             return item;
         }
     }
-}
-
-const wchar_t *env_get( const wchar_t *key )
-{
-    ASSERT_IS_MAIN_THREAD();
-
-	var_entry_t *res;
-	env_node_t *env = top;
-	wchar_t *item;
-	
-	CHECK( key, 0 );
-
-	if( wcscmp( key, L"history" ) == 0 )
-	{
-		const wchar_t *current;
-		dyn_var.clear();
-		
-		current = reader_get_buffer();
-		if( current && wcslen( current ) )
-		{
-            dyn_var.append(current);
-            dyn_var.append(ARRAY_SEP_STR);
-        }
-        
-        history_t *history = reader_get_history();
-        if (history) {
-            for (size_t idx = 1; idx < (size_t)(-1); idx++) {
-                history_item_t item = history->item_at_index(idx);
-                if (item.empty()) break;
-                
-                dyn_var.append(item.str());
-                dyn_var.append(ARRAY_SEP_STR);
-            }
-        }
-        
-        /* We always have a trailing ARRAY_SEP_STR; get rid of it */
-       if (dyn_var.size() >= wcslen(ARRAY_SEP_STR)) {
-            dyn_var.resize(dyn_var.size() - wcslen(ARRAY_SEP_STR));
-        }
-        
-		return dyn_var.c_str();
-	}
-	else if( wcscmp( key, L"COLUMNS" )==0 )
-	{
-        dyn_var = to_string<int>(common_get_width());
-		return dyn_var.c_str();		
-	}	
-	else if( wcscmp( key, L"LINES" )==0 )
-	{
-        dyn_var = to_string<int>(common_get_height());
-		return dyn_var.c_str();
-	}
-	else if( wcscmp( key, L"status" )==0 )
-	{
-        dyn_var = to_string<int>(proc_get_last_status());
-		return dyn_var.c_str();
-	}
-	else if( wcscmp( key, L"umask" )==0 )
-	{
-        dyn_var = format_string(L"0%0.3o", get_umask());
-		return dyn_var.c_str();
-	}
-	
-	while( env != 0 )
-	{
-		var_table_t::iterator result =  env->env.find(key);
-		if ( result != env->env.end() )
-		{ 
-			res  = result->second; 
-		}
-		else
-		{
-			res = 0;
-		}
-
-
-		if( res != 0 )
-		{
-			if( res->val == ENV_NULL ) 
-			{
-				return 0;
-			}
-			else
-			{
-				return res->val.c_str();			
-			}
-		}
-		
-		if( env->new_scope )
-		{
-			env = global_env;
-		}
-		else
-		{
-			env = env->next;
-		}
-	}	
-	if( !proc_had_barrier)
-	{
-		proc_had_barrier=1;
-		env_universal_barrier();
-	}
-	
-	item = env_universal_get( key );
-	
-	if( !item || (wcscmp( item, ENV_NULL )==0))
-	{
-		return 0;
-	}
-	else
-	{
-		return item;
-	}
 }
 
 int env_exist( const wchar_t *key, int mode )

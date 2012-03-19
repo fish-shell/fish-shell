@@ -298,10 +298,10 @@ static void erase_values(wcstring_list_t &list, std::vector<long> &indexes)
 
 
 /**
-   Print the names of all environment variables in the scope, with or without values,
-   with or without escaping
+   Print the names of all environment variables in the scope, with or without shortening,
+   with or without values, with or without escaping
 */
-static void print_variables(int include_values, int esc, int scope) 
+static void print_variables(int include_values, int esc, bool shorten_ok, int scope) 
 {
     wcstring_list_t names = env_get_names(scope);
     sort(names.begin(), names.end());
@@ -320,7 +320,7 @@ static void print_variables(int include_values, int esc, int scope)
 			{
 				int shorten = 0;
 				
-				if( value.length() > 64 )
+				if( shorten_ok && value.length() > 64 )
 				{
 					shorten = 1;
 					value.resize(60);
@@ -383,7 +383,11 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 			} 
 			,
 			{ 
-				L"universal", no_argument, 0, 'U' 
+				L"universal", no_argument, 0, 'U'
+			}
+            ,
+			{ 
+				L"long", no_argument, 0, 'L'
 			} 
 			,
 			{ 
@@ -400,7 +404,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		}
 	;
 	
-	const wchar_t *short_options = L"+xglenuUqh";
+	const wchar_t *short_options = L"+xglenuULqh";
 
 	int argc = builtin_count_args(argv);
 
@@ -410,7 +414,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	int local = 0, global = 0, exportv = 0;
 	int erase = 0, list = 0, unexport=0;
 	int universal = 0, query=0;
-	
+	bool shorten_ok = true;
 
 	/*
 	  Variables used for performing the actual work
@@ -467,6 +471,10 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 			case 'U':
 				universal = 1;
 				break;
+            
+            case 'L':
+                shorten_ok = false;
+                break;
 
 			case 'q':
 				query = 1;
@@ -574,8 +582,6 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 				wcstring_list_t result;
 				size_t j;
 				
-//				al_init( &result );
-//				al_init( &indexes );
                 env_var_t dest_str = env_get_string(dest);
                 if (! dest_str.missing())
                     tokenize_variable_array( dest_str, result );
@@ -612,7 +618,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	if( list ) 
 	{
 		/* Maybe we should issue an error if there are any other arguments? */
-		print_variables(0, 0, scope);
+		print_variables(0, 0, shorten_ok, scope);
 		return 0;
 	} 
 	
@@ -633,7 +639,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		}
 		else
 		{
-			print_variables( 1, 1, scope );
+			print_variables( 1, 1, shorten_ok, scope );
 		}
 		
 		return retcode;

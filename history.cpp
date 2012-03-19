@@ -271,6 +271,32 @@ void history_t::add(const wcstring &str, const path_list_t &valid_paths)
     this->add(history_item_t(str, time(NULL), valid_paths));
 }
 
+void history_t::get_string_representation(wcstring &result, const wcstring &separator)
+{
+    scoped_lock locker(lock);
+    
+    bool first = true;
+    
+    /* Append new items */
+    for (size_t i=0; i < new_items.size(); i++) {
+        if (! first)
+            result.append(separator);
+        result.append(new_items.at(i).str());
+        first = false;
+    }
+    
+    /* Append old items */
+    load_old_if_needed();
+    for (std::deque<size_t>::const_reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter) {        
+        size_t offset = *iter;
+        const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
+        if (! first)
+            result.append(separator);
+        result.append(item.str());
+        first = false;
+    }
+}
+
 history_item_t history_t::item_at_index(size_t idx) {
     scoped_lock locker(lock);
     

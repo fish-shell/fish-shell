@@ -149,8 +149,8 @@ def add_alias(alias_name, alias_value):
 						config_file.write("\n\tset " + var_regex_matched.group(1).strip() + " " + var_regex_matched.group(2).strip() )
 			else:
 					if len(line.strip()) > 0:
-						config_file.write( "\n\t" + line.strip() + " $argv" )
-		config_file.write("\nend;\n")
+						config_file.write( "\n\t" + line.strip() )
+		config_file.write(" $argv\nend;\n")
 
 def parse_control_sequence():
 	ch = next_prompt_char()

@@ -233,11 +233,11 @@ term256_colors = [ //222
 "d75f5f",
 "d78787",
 "ff8787",
-"ff875f",
 "ffafaf",
 "ffaf87",
 "ffaf5f",
 "ffaf00",
+"ff875f",
 "ff8700",
 "ff5f00",
 "d75f00",
@@ -463,6 +463,7 @@ term256_colors = [ //222
 ]
 
 var items_per_row = 15
+var show_labels = 0
 
 /* Adds a new element to master */
 function create_master_element(contents) {
@@ -530,7 +531,7 @@ function populate_colorpicker_term256() {
 			row.append($('<td>', {
 				class: 'colorpicker_term256_cell',
 				style: cell_style,
-				text: ''//String(subidx + idx + 223)
+				text: show_labels ? String(subidx + idx + 223) : ''
 			}))
 		}
 		

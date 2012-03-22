@@ -12,6 +12,44 @@ def run_fish_cmd(text):
 	out, err = p.communicate(text)
 	return out, err
 
+named_colors = {
+	'black'   : '000000',
+	'red'     : 'FF0000',
+	'green'   : '00FF00',
+	'brown'   : '725000',
+	'yellow'  : 'FFFF00',
+	'blue'    : '0000FF',
+	'magenta' : 'FF00FF',
+	'purple'  : 'FF00FF',
+	'cyan'    : '00FFFF',
+	'white'   : 'FFFFFF'
+}
+
+
+def parse_color(color_str):
+	""" A basic function to parse a color string, for example, 'red' '--bold' """
+	comps = color_str.split(' ')
+	print "comps: ", comps
+	color = 'normal'
+	bold, underline = False, False
+	for comp in comps:
+		# Remove quotes
+		comp = comp.strip("'\" ")
+		if comp == '--bold':
+			bold = True
+		elif comp == '--underline':
+			underline = True
+		elif comp in named_colors:
+			# Named color
+			color = named_colors[comp]
+		elif re.match(r"[0-9a-fA-F]{3}", comp) is not None or re.match(r"[0-9a-fA-F]{6}", comp) is not None:
+			# Hex color
+			color = comp
+		else:
+			# Unknown component
+			pass
+	return color
+
 class FishVar:
 	""" A class that represents a variable """
 	def __init__(self, name, value):
@@ -32,17 +70,18 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_get_colors(self):
 		"Look for fish_color_*"
 		result = []
-		out, err = run_fish_cmd('set')
-		for match in re.finditer(r"fish_color_(\S+) (.+)", out):
-			color_name, color_value = match.group(1, 2)
-			result.append([color_name.strip(), color_value.strip()])
+		out, err = run_fish_cmd('set -L')
+		for line in out.split('\n'):
+			for match in re.finditer(r"^fish_color_(\S+) (.+)", line):
+				color_name, color_value = match.group(1, 2)
+				result.append([color_name.strip(), parse_color(color_value)])
 		print result
 		return result
 		
 	def do_get_functions(self):
 		out, err = run_fish_cmd('functions')
 		out = out.strip()
-		
+		print out
 		# Not sure why fish sometimes returns this with newlines
 		if "\n" in out:
 			return out.split('\n')

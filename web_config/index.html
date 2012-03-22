@@ -19,12 +19,13 @@ body {
     width: 100%;
     background-color: black;
     min-height: 480px;
-    margin-top: 30px;
+    margin-top: 12px;
 
 }
 
 #tab_parent {
     width: 100%;
+    height: 100px;
 }
 
 .tab {
@@ -55,21 +56,34 @@ body {
     height: 30px;
 }
 
+#master_detail_box {
+	overflow: hidden;
+}
+
 #master {
     float: left;
     text-align: right;
     min-width: 200px;
     font-size: 16pt;
-    padding-top: 24px;
-    padding-right: 32px;
     padding-left: 12px;
+    margin-top: -7px;
 }
 
 .master_element {
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 7px;
+    padding-bottom: 12px;
     padding-left: 5px;
+    padding-right: 32px;    
     font-size: 12pt;
+}
+
+.selected_master_elem {
+	border: 1px solid #555;
+	border-right: none;
+	/* Make our border overlap the box */
+	position: relative;
+	left: 1px;
+	background-color: black;
 }
 
 .master_element_text {
@@ -79,7 +93,8 @@ body {
 }
 
 #colorpicker_term256 {
-	padding-top: 30px;
+	padding: 30px;
+	border: 1px solid #555;
 }
 
 #data_table {
@@ -117,13 +132,39 @@ body {
 	 border: solid white 3px;
 }
 
+.error_msg {
+	color: red;
+	font-size: 12pt;
+	margin-left: 24pt;
+	margin-top: 5pt;
+	margin-bottom: 5pt;
+}
+
 </style>
 
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript">
 
-function request_failed() {
-	alert('Request failed');
+function request_failed(jqXHR, textStatus, errorThrown) {
+	msg = ''
+	if (textStatus == "timeout") {
+		msg = 'The request timed out. Perhaps the server has exited or is hung.'
+	} else if (textStatus == "error") {
+		msg = 'The request received an error.'
+		if (jqXHR.status == 0)
+			msg = msg + ' Perhaps the server has exited.'
+	} else if (msg == 'abort') {
+		msg = 'The request aborted.'
+	} else if (msg == 'parsererror') {
+		msg = 'The request experienced a parser error.'
+	} else {
+		msg = 'The request had an unknown error "' + textStatus + '."'
+	}
+
+	if (errorThrown.length > 0) {
+		msg = msg + ' The HTTP reply returned ' + errorThrown
+	}	
+	$('#global_error').text(msg)
 }
 
 /* Runs a GET request, parses the JSON, and invokes the handler for each element in it. The JSON result is assumed to be an array. */
@@ -132,11 +173,12 @@ function run_get_request(url, handler) {
 		  type: "GET",
 		  url: url,
 		  success: function(data){
+			$('#global_error').text('')
 			$.each($.parseJSON(data), function(idx, contents) {
 				handler(contents)
 			})
 		  },
-		  fail: request_failed
+		  error: request_failed
 		})
 }
 
@@ -158,12 +200,13 @@ function switch_tab(new_tab) {
 		run_get_request('/colors/', function(contents){
 			var key = contents[0]
 			var value = contents[1]
-			create_master_element(key)
+			var color = (value.length > 0 ? '#' + value : '')
+			create_master_element(key, color)
 		})
 		$('#colorpicker_term256').show()
 	} else if (new_tab == 'tab_functions') {	
 		run_get_request('/functions/', function(contents){
-			create_master_element(contents)
+			create_master_element(contents, '')
 		})
 		$('#data_table').show()
 	} else if (new_tab == 'tab_variables') {
@@ -183,6 +226,12 @@ function switch_tab(new_tab) {
 		alert("Unknown tab");
 	}
 	return false
+}
+
+function select_master_element(elem) {
+	$(".selected_master_elem").removeClass("selected_master_elem")
+	$(elem).addClass("selected_master_elem")
+
 }
 
 /* The first index here corresponds to value 16 */
@@ -466,16 +515,20 @@ var items_per_row = 15
 var show_labels = 0
 
 /* Adds a new element to master */
-function create_master_element(contents) {
+function create_master_element(contents, color) {
+	if (color.length == 0) color = 'inherit'
+	style_str = 'color: ' + color + '; border-bottom: 1px solid ' + color + ' ;'
     $('<div/>', {
       class: 'master_element',
       click: function(){
-        $(this).toggleClass('master_element');
+      	select_master_element(this)
+        //$(this).toggleClass('master_element');
       }
     }).append(
         $("<span/>", {
         class: 'master_element_text',
-        text: contents
+        style: style_str,
+        text: contents,
         })
     ).appendTo('#master')
 }
@@ -550,7 +603,7 @@ $(document).ready(function() {
 <body>
 
 <div id="ancestor">
-    <span style="font-size: 68pt">fish</span>
+    <span style="font-size: 30pt">fish</span><p id="global_error" class="error_msg"></p>
     <div id="parent">
         <div id="tab_parent">
             <div class="tab selected_tab" id="tab_colors" onClick="switch_tab('tab_colors')">colors</div>
@@ -558,11 +611,12 @@ $(document).ready(function() {
             <div class="tab" id="tab_variables" onClick="switch_tab('tab_variables')">variables</div>
             <div class="tab" id="tab_history" onClick="switch_tab('tab_history')">history</div>
         </div>
-        <div id="master">
-            <!--- <div class="master_element"><span class="master_element_text">command</span></div> -->
+        <div id="master_detail_box">
+	        <div id="master">
+    	    </div>
+			<table id="colorpicker_term256">
+			</table>
         </div>
-        <table id="colorpicker_term256">
-        </table>
 		<table id="data_table">
 		<table>
         <div class="footer">

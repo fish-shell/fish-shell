@@ -46,7 +46,7 @@ def printcompletecommand(cmdname, args, description):
 	print "complete -c", cmdname,
 	for arg in args:
 		print arg,
-	print "--descripton '" + description + "'"
+	print '--descripton "' + description + '"' 
 	print "\n",
 
 def builtcommand(options, description):
@@ -60,7 +60,7 @@ def builtcommand(options, description):
 			optionlist[i] = "-l " + optionlist[i][2:]
 		else:
 			optionlist[i] = "-s " + optionlist[i][1:]
-
+	description = description.replace('"','\\"')
 	first_period = description.find(".")	
 #	print "First period at: ", first_period
 	if first_period >= 45 or first_period == -1 and len(description) > 45:

@@ -59,6 +59,8 @@ body {
 #master_detail_table {
 	display: table;
 	margin-top: 10px;
+	margin-left: 12px;
+	margin-right: 12px;
 }
 
 #master {
@@ -66,7 +68,6 @@ body {
     text-align: right;
     min-width: 200px;
     font-size: 16pt;
-    padding-left: 12px;
     padding-bottom: 0px;
     margin-top: -7px;
 }
@@ -82,16 +83,17 @@ body {
 }
 
 #detail_function {
-	white-space: pre;
-	overflow: auto;
+	white-space: pre-wrap;
 	width: 100%;
+	font-size: 11pt;
+	color: #BBB;
 }
 
 .master_element {
     padding-top: 6px;
     padding-bottom: 11px;
     padding-left: 5px;
-    padding-right: 32px;    
+    padding-right: 22px;    
     font-size: 12pt;
 	/* Make our border overlap the detail, even if we're unselected (so it doesn't jump when selected) */
 	position: relative;
@@ -106,6 +108,7 @@ body {
 	/* Pad one less than .master_element, to accomodate our border. */
     padding-top: 5px;
     padding-bottom: 10px;
+    padding-left: 4px;
 }
 
 .master_element_text {
@@ -146,7 +149,7 @@ body {
 
 #data_table {
 	table-layout:fixed;
-	color: white;
+	color: #CCC;
 	width: 100%;
 	padding-left: 10px;
 	padding-right: 10px;
@@ -160,11 +163,12 @@ body {
 	padding-bottom: 5px;
 	overflow:hidden;
 	border-bottom: #444 dotted 1px;
+	word-wrap: break-word;
 }
 
 .no_overflow {
 	text-overflow: ellipsis;
-	white-space: nowrap;	
+	white-space: nowrap;
 }
 
 .colorpicker_ground {
@@ -387,7 +391,7 @@ function switch_tab(new_tab) {
 			var style = new Style(key_and_values[1])
 			style_map[key] = style
 			
-			elem = create_master_element(key, style.color, select_color_master_element)
+			elem = create_master_element(key, style.color, '', select_color_master_element)
 			if (first) {
 				/* It's the first element, so select it, so something gets selected */
 				select_color_master_element(elem)
@@ -396,9 +400,16 @@ function switch_tab(new_tab) {
 		})
 		$('#detail_colorpicker').show()
 		$('#master_detail_table').show()
-	} else if (new_tab == 'tab_functions') {	
+	} else if (new_tab == 'tab_functions') {
+		/* Keep track of whether this is the first element */
+		var first = true
 		run_get_request('/functions/', function(contents){
-			create_master_element(contents, 'AAAAAA', select_function_master_element)
+			elem = create_master_element(contents, 'AAAAAA', '11pt', select_function_master_element)
+			if (first) {
+				/* It's the first element, so select it, so something gets selected */
+				select_function_master_element(elem)
+				first = false
+			}
 		})
 		$('#detail_function').show()
 		$('#master_detail_table').show()
@@ -501,7 +512,23 @@ function select_function_master_element(elem) {
 	run_post_request('/get_function/', {
 		what: current_master_element_name()
 	}, function(contents){
-		$('#detail_function').text(contents)
+		/* Replace leading tabs and groups of four spaces at the beginning of a line with two spaces. */
+		lines = contents.split('\n')
+		rx = /^[\t ]+/
+		for (var i=0; i < lines.length; i++) {
+			line = lines[i]
+			/* Get leading whitespace */
+			whitespace_arr = rx.exec(line)
+			if (whitespace_arr) {
+				/* Replace four spaces with two spaces, and tabs with two spaces */
+				var whitespace = whitespace_arr[0]
+				new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
+				lines[i] = new_whitespace + line.slice(whitespace.length)
+			}
+		}
+		munged_contents = lines.join('\n')
+	
+		$('#detail_function').text(munged_contents)
 	});
 }
 
@@ -835,12 +862,20 @@ var show_labels = 0
 var COLOR_NORMAL = 'DDDDDD'
 
 /* Adds a new element to master */
-function create_master_element(contents, color, click_handler) {
+function create_master_element(contents, color, font_size, click_handler) {
 	if (color.length == 0) color = 'inherit'
 	
 	/* In the master list, ensure the color is visible against the dark background */
 	master_color = master_color_for_color(color)
 	style_str = 'color: #' + master_color + '; border-bottom: 1px solid #' + master_color + ' ;'
+	
+	if (font_size.length > 0) {
+		style_str += 'font-size: ' + font_size + ';'
+	}
+	
+	if (contents.length >= 20) {
+		style_str += 'letter-spacing:-2px;'
+	}
 	
     elem = $('<div/>', {
       class: 'master_element',
@@ -939,8 +974,7 @@ $(document).ready(function() {
             <div class="tab" id="tab_history" onClick="switch_tab('tab_history')">history</div>
         </div>
         <div id="master_detail_table">
-	        <div id="master">
-    	    </div>
+	        <div id="master"></div>
     	    <div id="detail">
     	    	<div id="detail_colorpicker">
 					<div class="colorpicker_ground">

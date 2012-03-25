@@ -302,7 +302,10 @@ class reader_data_t
 	   Keep track of whether any internal code has done something
 	   which is known to require a repaint.
 	 */
-	int repaint_needed;
+	bool repaint_needed;
+    
+    /** Whether the a screen reset is needed after a repaint. */
+    bool screen_reset_needed;
 };
 
 /**
@@ -446,7 +449,7 @@ static void reader_repaint()
 		 &indents[0], 
 		 data->buff_pos );
 #endif
-	data->repaint_needed = 0;
+	data->repaint_needed = false;
 }
 
 /**
@@ -678,6 +681,9 @@ void reader_init()
 	shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
     shell_modes.c_cc[VMIN]=1;
     shell_modes.c_cc[VTIME]=0;
+    
+    /* Repaint if necessary before each byte is read. This lets us react immediately to universal variable color changes. */
+    input_common_set_poll_callback(reader_repaint_if_needed);
 }
 
 
@@ -699,12 +705,29 @@ void reader_exit( int do_exit, int forced )
 
 void reader_repaint_needed()
 {
-	if( data )
-	{
-		data->repaint_needed = 1;
+	if (data) {
+		data->repaint_needed = true;
 	}
 }
 
+void reader_repaint_if_needed() {
+    if (data && data->screen_reset_needed) {
+        s_reset( &data->screen, false);
+        data->screen_reset_needed = false;
+    }
+
+    if (data && data->repaint_needed) {
+        reader_repaint();
+        /* reader_repaint clears repaint_needed */
+    }
+}
+
+void reader_react_to_color_change() {
+	if (data) {
+		data->repaint_needed = true;
+        data->screen_reset_needed = true;
+	}
+}
 
 
 /**
@@ -1651,7 +1674,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 		}
 
 		free( prefix );
-		s_reset( &data->screen, 1 );
+		s_reset( &data->screen, true);
 		reader_repaint();
 
 	}		
@@ -2325,7 +2348,7 @@ void reader_pop()
 	{
 		end_loop = 0;
 		//history_set_mode( data->app_name.c_str() );
-		s_reset( &data->screen, 1 );
+		s_reset( &data->screen, true);
 	}
 }
 
@@ -2678,7 +2701,7 @@ const wchar_t *reader_readline()
 	exec_prompt();
 
 	reader_super_highlight_me_plenty( data->buff_pos );
-	s_reset( &data->screen, 1 );
+	s_reset( &data->screen, true);
 	reader_repaint();
 
 	/* 
@@ -2804,9 +2827,7 @@ const wchar_t *reader_readline()
 
 			case R_NULL:
 			{
-				if( data->repaint_needed )
-					reader_repaint();
-				
+				reader_repaint_if_needed();
 				break;
 			}
 
@@ -2814,7 +2835,7 @@ const wchar_t *reader_readline()
 			{
 				exec_prompt();
 				write_loop( 1, "\r", 1 );
-				s_reset( &data->screen, 0 );
+				s_reset( &data->screen, false);
 				reader_repaint();
 				break;
 			}
@@ -3084,7 +3105,7 @@ const wchar_t *reader_readline()
 					*/
 					default:
 					{
-						s_reset( &data->screen, 1 );
+						s_reset( &data->screen, true);
 						reader_repaint();
 						break;
 					}

@@ -341,7 +341,9 @@ static void react_to_variable_change(const wcstring &key) {
         handle_locale();
     } else if (key == L"fish_term256") {
         update_fish_term256();
-        reader_repaint_needed();
+        reader_react_to_color_change();
+    } else if (string_prefixes_string(L"fish_color_", key)) {
+        reader_react_to_color_change();
     }
 }
 
@@ -354,11 +356,6 @@ static void universal_callback( int type,
 								const wchar_t *val )
 {
 	const wchar_t *str=0;
-	
-	if( var_is_locale( name ) )
-	{
-		handle_locale();
-	}
 	
 	switch( type )
 	{
@@ -388,6 +385,9 @@ static void universal_callback( int type,
 		event_fire( &ev );
         ev.arguments.reset(NULL);
 	}
+    
+    if (name)
+        react_to_variable_change(name);
 }
 
 /**

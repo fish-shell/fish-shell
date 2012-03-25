@@ -85,10 +85,11 @@ class screen_data_t
 };
 
 /**
-   The struct representing the current and desired screen contents.
+   The class representing the current and desired screen contents.
 */
-typedef struct
+class screen_t
 {
+    public:
 	/**
 	  The internal representation of the desired screen contents.
 	*/
@@ -123,8 +124,7 @@ typedef struct
 	   other than from fish's main loop, in which case we need to redraw.
 	*/
 	struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
-}
-	screen_t;
+};
 
 /**
    This is the main function for the screen putput library. It is used
@@ -155,6 +155,6 @@ void s_write( screen_t *s,
     resizing, there will be one line of garbage for every repaint,
     which will quicly fill the screen.
 */
-void s_reset( screen_t *s, int reset_cursor );
+void s_reset( screen_t *s, bool reset_cursor );
 
 #endif

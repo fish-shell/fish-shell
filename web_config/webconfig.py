@@ -4,7 +4,7 @@ import SimpleHTTPServer
 import SocketServer
 import webbrowser
 import subprocess
-import re, json, socket, sys
+import re, json, socket, sys, cgi
 
 def run_fish_cmd(text):
 	from subprocess import PIPE
@@ -25,12 +25,24 @@ named_colors = {
 	'white'   : 'FFFFFF'
 }
 
+def parse_one_color(comp):
+	""" A basic function to parse a single color value like 'FFA000' """
+	if comp in named_colors:
+		# Named color
+		return named_colors[comp]
+	elif re.match(r"[0-9a-fA-F]{3}", comp) is not None or re.match(r"[0-9a-fA-F]{6}", comp) is not None:
+		# Hex color
+		return comp
+	else:
+		# Unknown
+		return ''
+
 
 def parse_color(color_str):
 	""" A basic function to parse a color string, for example, 'red' '--bold' """
 	comps = color_str.split(' ')
-	print "comps: ", comps
 	color = 'normal'
+	background_color = ''
 	bold, underline = False, False
 	for comp in comps:
 		# Remove quotes
@@ -39,16 +51,22 @@ def parse_color(color_str):
 			bold = True
 		elif comp == '--underline':
 			underline = True
-		elif comp in named_colors:
-			# Named color
-			color = named_colors[comp]
-		elif re.match(r"[0-9a-fA-F]{3}", comp) is not None or re.match(r"[0-9a-fA-F]{6}", comp) is not None:
-			# Hex color
-			color = comp
+		elif comp.startswith('--background='):
+			# Background color
+			background_color = parse_one_color(comp[len('--background='):])
 		else:
-			# Unknown component
-			pass
-	return color
+			# Regular color
+			maybe_color = parse_one_color(comp)
+			if maybe_color: color = maybe_color
+	
+	return [color, background_color, bold, underline]
+	
+	
+def parse_bool(val):
+	val = val.lower()
+	if val.startswith('f') or val.startswith('0'): return False
+	if val.startswith('t') or val.startswith('1'): return True
+	return bool(val)
 
 class FishVar:
 	""" A class that represents a variable """
@@ -72,7 +90,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		result = []
 		out, err = run_fish_cmd('set -L')
 		for line in out.split('\n'):
-			for match in re.finditer(r"^fish_color_(\S+) (.+)", line):
+			for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
 				color_name, color_value = match.group(1, 2)
 				result.append([color_name.strip(), parse_color(color_value)])
 		print result
@@ -81,7 +99,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_get_functions(self):
 		out, err = run_fish_cmd('functions')
 		out = out.strip()
-		print out
+		
 		# Not sure why fish sometimes returns this with newlines
 		if "\n" in out:
 			return out.split('\n')
@@ -124,7 +142,23 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		"Return the color with the given name, or the empty string if there is none"
 		out, err = run_fish_cmd("echo -n $" + name)
 		return out
-				
+		
+	def do_set_color_for_variable(self, name, color, background_color, bold, underline):
+		if not color: color = 'normal'
+		"Sets a color for a fish color name, like 'autosuggestion'"
+		command = 'set -U fish_color_' + name
+		if color: command += ' ' + color
+		if background_color: command += ' --background=' + background_color
+		if bold: command += ' --bold'
+		if underline: command += ' --underline'
+		
+		out, err = run_fish_cmd(command)
+		return out
+		
+	def do_get_function(self, func_name):
+		out, err = run_fish_cmd('functions ' + func_name)
+		return out
+		
 	def do_GET(self):
 		p = self.path
 		if p == '/colors/':
@@ -149,7 +183,43 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		# Output JSON
 		json.dump(output, self.wfile)
 		
+	def do_POST(self):
+		p = self.path
+		ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+		if ctype == 'multipart/form-data':
+			postvars = cgi.parse_multipart(self.rfile, pdict)
+		elif ctype == 'application/x-www-form-urlencoded':
+			length = int(self.headers.getheader('content-length'))
+			postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+		else:
+			postvars = {}
 		
+		if p == '/set_color/':
+			what = postvars.get('what')
+			color = postvars.get('color')
+			background_color = postvars.get('background_color')
+			bold = postvars.get('bold')
+			underline = postvars.get('underline')
+			print "underline: ", underline
+			if what:
+				# Not sure why we get lists here?
+				output = self.do_set_color_for_variable(what[0], color[0], background_color[0], parse_bool(bold[0]), parse_bool(underline[0]))
+			else:
+				output = 'Bad request'
+		elif p == '/get_function/':
+			what = postvars.get('what')
+			output = [self.do_get_function(what[0])]
+		else:
+			return SimpleHTTPServer.SimpleHTTPRequestHandler.do_POST(self)
+			
+		# Return valid output
+		self.send_response(200)
+		self.send_header('Content-type','text/html')
+		self.wfile.write('\n')
+		
+		# Output JSON
+		json.dump(output, self.wfile)
+
 
 PORT = 8000
 while PORT <= 9000:

@@ -75,6 +75,12 @@ void reader_write_title();
  */
 void reader_repaint_needed();
 
+/** Call this function to tell the reader that some color has changed. */
+void reader_react_to_color_change();
+
+/* Repaint immediately if needed. */
+void reader_repaint_if_needed();
+
 /**
    Run the specified command with the correct terminal modes, and
    while taking care to perform job notification, set the title, etc.

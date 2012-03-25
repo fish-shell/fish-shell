@@ -30,6 +30,9 @@ enum
 */
 void input_common_init( int (*ih)() );
 
+/* Sets a callback to be invoked every time a byte is read */
+void input_common_set_poll_callback(void (*handler)(void));
+
 /**
    Free memory used by the library
 */

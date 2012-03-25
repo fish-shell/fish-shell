@@ -44,14 +44,21 @@ static wint_t lookahead_arr[1024];
 */
 static int lookahead_count = 0;
 
-/**
-   Callback function for handling interrupts on reading
-*/
+/** Callback function for handling interrupts on reading */
 static int (*interrupt_handler)();
+
+/** Callback function to be invoked before reading each byte */
+static void (*poll_handler)();
+
 
 void input_common_init( int (*ih)() )
 {
 	interrupt_handler = ih;
+}
+
+void input_common_set_poll_callback(void (*handler)(void))
+{
+    poll_handler = handler;
 }
 
 void input_common_destroy()
@@ -66,10 +73,14 @@ void input_common_destroy()
 static wint_t readb()
 {
 	unsigned char arr[1];
-	int do_loop = 0;
+	bool do_loop = false;
 	
 	do
 	{
+        /* Invoke any poll handler */
+        if (poll_handler)
+            poll_handler();
+    
 		fd_set fdset;	
 		int fd_max=0;
 		int ioport = iothread_port();
@@ -88,7 +99,7 @@ static wint_t readb()
 		}
 		
 		
-		do_loop = 0;			
+		do_loop = false;			
 		
 		res = select( fd_max + 1, &fdset, 0, 0, 0 );
 		if( res==-1 )
@@ -113,7 +124,7 @@ static wint_t readb()
 					}
 					
 					
-					do_loop = 1;
+					do_loop = true;
 					break;
 				}
 				default:
@@ -133,7 +144,7 @@ static wint_t readb()
 				{
 					debug( 3, L"Wake up on universal variable event" );					
 					env_universal_read_all();
-					do_loop = 1;
+					do_loop = true;
 
 					if( lookahead_count )
 					{
@@ -148,7 +159,7 @@ static wint_t readb()
 				{
 					iothread_service_completion();
 				}
-                do_loop = 1;
+                do_loop = true;
 			}
 			
 			if( FD_ISSET( 0, &fdset ) )
@@ -160,7 +171,7 @@ static wint_t readb()
 					*/
 					return R_EOF;
 				}
-				do_loop = 0;
+				do_loop = false;
 			}				
 		}
 	}

@@ -123,7 +123,7 @@ private:
     bool loaded_old;
     
     /** Loads old if necessary */
-    void load_old_if_needed(void);
+    bool load_old_if_needed(void);
     
     /** Deletes duplicates in new_items. */
     void compact_new_items();

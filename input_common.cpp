@@ -72,8 +72,9 @@ void input_common_destroy()
 */
 static wint_t readb()
 {
+    /* do_loop must be set on every path through the loop; leaving it uninitialized allows the static analyzer to assist in catching mistakes. */
 	unsigned char arr[1];
-	bool do_loop = false;
+	bool do_loop;
 	
 	do
 	{
@@ -97,10 +98,7 @@ static wint_t readb()
 			FD_SET( ioport, &fdset );
 			if (fd_max < ioport) fd_max = ioport;
 		}
-		
-		
-		do_loop = false;			
-		
+				
 		res = select( fd_max + 1, &fdset, 0, 0, 0 );
 		if( res==-1 )
 		{
@@ -138,39 +136,37 @@ static wint_t readb()
 		}
 		else
 		{
-			if( env_universal_server.fd > 0 )
+            /* Assume we loop unless we see a character in stdin */
+            do_loop = true;
+            
+            if( env_universal_server.fd > 0 && FD_ISSET( env_universal_server.fd, &fdset ) )
+            {
+                debug( 3, L"Wake up on universal variable event" );					
+                env_universal_read_all();
+                if( lookahead_count )
+                {
+                    return lookahead_arr[--lookahead_count];
+                }
+            }				
+			
+			if ( ioport > 0 && FD_ISSET(ioport, &fdset))
 			{
-				if( FD_ISSET( env_universal_server.fd, &fdset ) )
-				{
-					debug( 3, L"Wake up on universal variable event" );					
-					env_universal_read_all();
-					do_loop = true;
-
-					if( lookahead_count )
-					{
-						return lookahead_arr[--lookahead_count];
-					}
-				}				
+                iothread_service_completion();
+                if( lookahead_count )
+                {
+                    return lookahead_arr[--lookahead_count];
+                }
 			}
 			
-			if ( ioport > 0 )
-			{
-				if (FD_ISSET(ioport, &fdset) )
-				{
-					iothread_service_completion();
-				}
-                do_loop = true;
-			}
-			
-			if( FD_ISSET( 0, &fdset ) )
+			if( FD_ISSET( STDIN_FILENO, &fdset ) )
 			{
 				if( read_blocked( 0, arr, 1 ) != 1 )
 				{
-					/*
-					  The teminal has been closed. Save and exit.
-					*/
+					/* The teminal has been closed. Save and exit. */
 					return R_EOF;
 				}
+                
+                /* We read from stdin, so don't loop */
 				do_loop = false;
 			}				
 		}

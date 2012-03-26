@@ -107,7 +107,6 @@ static std::map<wcstring, wcstring> suffix_map;
 
 int wildcard_has( const wchar_t *str, int internal )
 {
-	wchar_t prev=0;
 	if( !str )
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
@@ -120,11 +119,11 @@ int wildcard_has( const wchar_t *str, int internal )
 		{
 			if( ( *str == ANY_CHAR ) || (*str == ANY_STRING) || (*str == ANY_STRING_RECURSIVE) )
 				return 1;
-			prev = *str;
 		}
 	}
 	else
 	{
+        wchar_t prev=0;
 		for( ; *str; str++ )
 		{
 			if( ( (*str == L'*' ) || (*str == L'?' ) ) && (prev != L'\\') )

@@ -708,15 +708,12 @@ void env_destroy()
 */
 static env_node_t *env_get_node( const wcstring &key )
 {
-	var_entry_t* res = NULL;
 	env_node_t *env = top;
-
-
-	while( env != 0 )
+	while( env != NULL )
 	{
 		if ( env->env.find( key ) != env->env.end() )
 		{ 
-			return env;
+			break;
 		}
 
 		if( env->new_scope )
@@ -728,8 +725,7 @@ static env_node_t *env_get_node( const wcstring &key )
 			env = env->next;
 		}
 	}
-	
-	return 0;
+	return env;
 }
 
 int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
@@ -817,15 +813,10 @@ int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 		node = env_get_node( key );
 		if( node )
 		{
-            
 			var_table_t::iterator result = node->env.find(key);
-			if ( result != node->env.end() ) { 
-				e  = result->second; 
-			}
-			else {
-				e = NULL;
-			}
-            
+            assert(result != node->env.end());
+            e  = result->second;
+                        
 			if( e->exportv )
 			{
 				has_changed_new = true;

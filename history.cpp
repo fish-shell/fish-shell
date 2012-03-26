@@ -508,13 +508,13 @@ void history_t::populate_from_mmap(void)
     }
 }
 
-void history_t::load_old_if_needed(void)
+bool history_t::load_old_if_needed(void)
 {
-    if (loaded_old) return;
+    if (loaded_old) return true;
     loaded_old = true;
     
 	int fd;
-	int ok=0;
+	bool ok=false;
     
     // PCA not sure why signals were blocked here
 	//signal_block();
@@ -532,7 +532,7 @@ void history_t::load_old_if_needed(void)
 				{
 					if( (mmap_start = (char *)mmap( 0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0 )) != MAP_FAILED )
 					{
-						ok = 1;
+						ok = true;
                         time_profiler_t profiler("populate_from_mmap");
 						this->populate_from_mmap();
 					}
@@ -542,6 +542,7 @@ void history_t::load_old_if_needed(void)
 		}
 	}
 	//signal_unblock();
+    return ok;
 }
 
 void history_search_t::skip_matches(const wcstring_list_t &skips) {

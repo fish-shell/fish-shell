@@ -202,9 +202,9 @@ void iothread_drain_all(void) {
     ASSERT_IS_NOT_FORKED_CHILD(); 
     if (s_active_thread_count == 0)
         return;
-    int thread_count = s_active_thread_count;
 #define TIME_DRAIN 0
 #if TIME_DRAIN
+    int thread_count = s_active_thread_count;
     double now = timef();
 #endif
     while (s_active_thread_count > 0) {

@@ -801,7 +801,6 @@ static int expand_variables2( parser_t &parser, const wcstring &instr, std::vect
 
 static int expand_variables_internal( parser_t &parser, wchar_t * const in, std::vector<completion_t> &out, int last_idx )
 {
-	wchar_t prev_char=0;
 	int is_ok= 1;
 	int empty=0;
 	
@@ -819,7 +818,6 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 			int stop_pos;
 			int var_len;
 			int is_single = (c==VARIABLE_EXPAND_SINGLE);
-			int var_name_stop_pos;
 			
 			stop_pos = start_pos;
             
@@ -833,8 +831,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
                 
 				stop_pos++;
 			}
-			var_name_stop_pos = stop_pos;
-			
+
             /*			printf( "Stop for '%c'\n", in[stop_pos]);*/
             
 			var_len = stop_pos - start_pos;
@@ -1000,8 +997,6 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
             
             
 		}
-        
-		prev_char = c;
 	}
     
 	if( !empty )
@@ -1151,7 +1146,6 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 {
 	wchar_t *paran_begin=0, *paran_end=0;
 	int len1;
-	wchar_t prev=0;
     std::vector<wcstring> sub_res;
 	size_t i, j;
 	wchar_t *tail_begin = 0;	
@@ -1178,7 +1172,6 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 	}
     
 	len1 = (paran_begin-in);
-	prev=0;
     
     const wcstring subcmd(paran_begin + 1, paran_end-paran_begin - 1);
     

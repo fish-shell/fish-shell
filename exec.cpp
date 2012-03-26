@@ -394,6 +394,7 @@ static void io_untransmogrify( io_data_t * in, io_data_t *out )
 {
 	if( !out )
 		return;
+    assert(in != NULL);
 	io_untransmogrify( in->next, out->next );
 	switch( in->io_mode )
 	{
@@ -548,7 +549,6 @@ void exec( parser_t &parser, job_t *j )
 	pid_t pid;
 	int mypipe[2];
 	sigset_t chldset; 
-	int skip_fork;
 	
 	io_data_t pipe_read, pipe_write;
 	io_data_t *tmp;
@@ -720,7 +720,6 @@ void exec( parser_t &parser, job_t *j )
 	{
 		const bool p_wants_pipe = (p->next != NULL);
 		mypipe[1]=-1;
-		skip_fork=0;
 		
 		pipe_write.fd = p->pipe_write_fd;
 		pipe_read.fd = p->pipe_read_fd;

@@ -489,13 +489,11 @@ void parse_util_token_extent( const wchar_t *buff,
 
 	tokenizer tok;
 
-	const wchar_t *a, *b, *pa, *pb;
+	const wchar_t *a = NULL, *b = NULL, *pa = NULL, *pb = NULL;
 	
 	CHECK( buff, );
 		
 	assert( cursor_pos >= 0 );
-
-	a = b = pa = pb = 0;
 	
 	parse_util_cmdsubst_extent( buff, cursor_pos, &begin, &end );
 

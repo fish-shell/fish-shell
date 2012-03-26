@@ -212,7 +212,6 @@ static void read_string( tokenizer *tok )
 	const wchar_t *start;
 	int len;
 	int mode=0;
-	wchar_t prev;
 	int do_loop=1;
 	int paran_count=0;
 
@@ -383,7 +382,6 @@ static void read_string( tokenizer *tok )
 		if( !do_loop )
 			break;
 
-		prev = *tok->buff;
 		tok->buff++;
 	}
 

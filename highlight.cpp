@@ -292,7 +292,6 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 						int chars=2;
 						int base=16;
 						
-						int byte = 0;
 						wchar_t max_val = ASCII_MAX;
 						
 						switch( buff[in_pos] )
@@ -318,7 +317,6 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
                                 
 							case L'X':
 							{
-								byte=1;
 								max_val = BYTE_MAX;
 								break;
 							}

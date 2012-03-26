@@ -232,17 +232,6 @@ void rgb_color_t::parse(const wcstring &str) {
         bzero(this->data.rgb, sizeof this->data.rgb);
         this->type = type_none;
     }
-    if (! success) success = try_parse_special(str);
-    if (this->try_parse_special(str)) {
-        /* Nothing */
-    } else if (this->try_parse_named(str)) {
-    
-    } else if (this->try_parse_rgb(str)) {
-        this->type = type_rgb;
-    } else {
-        bzero(this->data.rgb, sizeof this->data.rgb);
-        this->type = type_none;
-    }
 }
 
 rgb_color_t::rgb_color_t(const wcstring &str) {

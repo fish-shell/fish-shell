@@ -283,7 +283,7 @@ int job_is_stopped( const job_t *j )
 int job_is_completed( const job_t *j )
 {
 	process_t *p;
-	
+	assert(j->first_process != NULL);
 	for (p = j->first_process; p->next; p = p->next)
 		;
 	

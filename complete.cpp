@@ -563,7 +563,7 @@ int complete_is_valid_option( const wchar_t *str,
 	int is_old_opt=0;
 	int is_short_opt=0;
 	int is_gnu_exact=0;
-	int gnu_opt_len=0;
+	size_t gnu_opt_len=0;
     
     std::vector<char> short_validated;
 
@@ -653,12 +653,12 @@ int complete_is_valid_option( const wchar_t *str,
             for (option_list_t::const_iterator iter = options.begin(); iter != options.end(); ++iter)
             {
                 const complete_entry_opt_t &o = *iter;
-				if( o.old_mode )
+				if (o.old_mode )
 				{
 					continue;
 				}
 				
-				if( &opt[2] == o.long_opt )
+				if (wcsncmp(&opt[2], o.long_opt.c_str(), gnu_opt_len) == 0)
 				{
                     gnu_match_set.insert(o.long_opt);
 					if( (wcsncmp( &opt[2],
@@ -1535,12 +1535,10 @@ bool completer_t::complete_variable(const wcstring &str, int start_offset)
 		{
             wcstring comp;
             int flags = 0;
-            int offset = 0;
             
             if( match )
             {
                 comp.append(env_name.c_str() + varlen);
-                offset = varlen;
             }
             else
             {

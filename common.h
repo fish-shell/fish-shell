@@ -77,8 +77,8 @@ typedef std::vector<wcstring> wcstring_list_t;
  */
 #define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
 
-/** Exits without invoking destructors (via _exit), useful for code after fork. This would be a good candidate for __noreturn attribute. */
-void exit_without_destructors(int code);
+/** Exits without invoking destructors (via _exit), useful for code after fork. */
+void exit_without_destructors(int code) __attribute__ ((noreturn));
 
 /** 
 	Save the shell mode on startup so we can restore them on exit

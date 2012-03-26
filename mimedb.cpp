@@ -614,6 +614,7 @@ static char *get_description( const char *mimetype )
 	{
 		perror( "read" );
 		error=1;
+        free((void *)contents);
 		return 0;
 	}
 

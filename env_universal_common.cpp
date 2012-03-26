@@ -545,28 +545,21 @@ static int match( const wchar_t *msg, const wchar_t *cmd )
 void env_universal_common_set( const wchar_t *key, const wchar_t *val, int exportv )
 {
 	var_uni_entry_t *entry;
-	wchar_t *name;
 
 	CHECK( key, );
 	CHECK( val, );
 	
 	entry = new var_uni_entry_t;
-	name = wcsdup(key);
-	
-	if( !entry || !name )
-		DIE_MEM();
-	
 
 	entry->exportv=exportv;
 	entry->val = val;
-	env_universal_common_remove( name );
+	env_universal_common_remove( key );
 	
 	env_universal_var.insert( std::pair<wcstring, var_uni_entry_t*>(key, entry));			
 	if( callback )
 	{
-		callback( exportv?SET_EXPORT:SET, name, val );
+		callback( exportv?SET_EXPORT:SET, key, val );
 	}
-	free(name);
 }
 
 

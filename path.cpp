@@ -185,7 +185,6 @@ wchar_t *path_get_path( const wchar_t *cmd )
 		  its arguments
 		*/
 		wchar_t *path_cpy = wcsdup( path.c_str() );
-		const wchar_t *nxt_path = path.c_str();
 		wchar_t *state;
 			
 		if( (new_cmd==0) || (path_cpy==0) )
@@ -193,7 +192,7 @@ wchar_t *path_get_path( const wchar_t *cmd )
 			DIE_MEM();
 		}
 
-		for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
+		for( const wchar_t *nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
 			 nxt_path != 0;
 			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 		{
@@ -366,17 +365,15 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
         paths.push_back(path);
     } else {
         wchar_t *path_cpy;
-        const wchar_t *nxt_path;
         wchar_t *state;
         wchar_t *whole_path;
 
         env_var_t path = L".";
 
-        nxt_path = path.c_str();
         path_cpy = wcsdup( path.c_str() );
 
-        for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-             nxt_path != 0;
+        for( const wchar_t *nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
+             nxt_path != NULL;
              nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
         {
             wchar_t *expanded_path = expand_tilde_compat( wcsdup(nxt_path) );

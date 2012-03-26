@@ -205,7 +205,7 @@ wcstring event_get_desc( const event_t *e )
 			if( j )
 				result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr() );
 			else
-				result = format_string(_(L"exit handler for job with job id %d"), j->job_id );
+				result = format_string(_(L"exit handler for job with job id %d"), e->param1.job_id );
 
 			break;
 		}

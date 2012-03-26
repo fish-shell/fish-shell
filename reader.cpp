@@ -545,17 +545,7 @@ void reader_data_t::command_line_changed() {
 }
 
 
-/**
-   Sort an array_list_t containing compltion_t structs.
- */
-static void sort_completion_list( std::vector<completion_t> &comp ) {
-	sort(comp.begin(), comp.end());
-}
-
-/**
-   Remove any duplicate completions in the list. This relies on the
-   list first beeing sorted.
-*/
+/** Remove any duplicate completions in the list. This relies on the list first beeing sorted. */
 static void remove_duplicates(std::vector<completion_t> &l) {
 	
 	l.erase(std::unique( l.begin(), l.end()), l.end());
@@ -947,6 +937,8 @@ static void get_param( const wchar_t *cmd,
 */
 static void completion_insert( const wchar_t *val, int flags )
 {
+    assert(data != NULL);
+    
 	wchar_t *replaced;
 
 	wchar_t quote;
@@ -959,7 +951,7 @@ static void completion_insert( const wchar_t *val, int flags )
 	if( do_replace )
 	{
 		
-		int tok_start, tok_len, move_cursor;
+		int move_cursor;
 		const wchar_t *begin, *end;
 		wchar_t *escaped;
 		
@@ -967,9 +959,6 @@ static void completion_insert( const wchar_t *val, int flags )
 		parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
 		end = buff + data->buff_pos;
 
-		tok_start = begin - buff;
-		tok_len = end-begin;
-						
 		wcstring sb(buff, begin - buff);
 		
 		if( do_escape )
@@ -1888,6 +1877,10 @@ static void reset_token_history()
 */
 static void handle_token_history( int forward, int reset )
 {
+    /* Paranoia */
+    if (! data)
+        return;
+        
 	const wchar_t *str=0;
 	int current_pos;
 	tokenizer tok;
@@ -2723,8 +2716,6 @@ const wchar_t *reader_readline()
 
 	while( !finished && !data->end_loop)
 	{
-		int regular_char = 0;
-		
 		/*
 		  Sometimes strange input sequences seem to generate a zero
 		  byte. I believe these simply mean a character was pressed
@@ -2865,7 +2856,6 @@ const wchar_t *reader_readline()
 					const wchar_t *begin, *end;
 					const wchar_t *token_begin, *token_end;
                     const wchar_t *buff = data->command_line.c_str();
-					wchar_t *buffcpy;
 					int len;
 					int cursor_steps;
 
@@ -2883,20 +2873,15 @@ const wchar_t *reader_readline()
 					reader_repaint();
 					
 					len = data->buff_pos - (begin-buff);
-					buffcpy = wcsndup( begin, len );
+                    const wcstring buffcpy = wcstring(begin, len);
 
-//					comp = al_halloc( 0 );
 					data->complete_func( buffcpy, comp, COMPLETE_DEFAULT, NULL);
 					
-					sort_completion_list( comp );
+					sort(comp.begin(), comp.end());
 					remove_duplicates( comp );
 					
-
-					free( buffcpy );
 					comp_empty = handle_completions( comp );
 					comp.clear();
-//					halloc_free( comp );
-//					comp = 0;
 				}
 
 				break;
@@ -3319,7 +3304,7 @@ const wchar_t *reader_readline()
 				
 				if( (!wchar_private(c)) && (( (c>31) || (c==L'\n'))&& (c != 127)) )
 				{
-					regular_char = 1;
+                    /* Regular character */
 					insert_char( c );
 				}
 				else

@@ -2260,8 +2260,9 @@ void parser_t::eval_job( tokenizer *tok )
     profile_item_t *profile_item = NULL;
 	int skip = 0;
 	int job_begin_pos, prev_tokenizer_pos;
-	
-	if( profile )
+	const bool do_profile = profile;
+    
+	if( do_profile )
 	{
         profile_items.resize(profile_items.size() + 1);
         profile_item = &profile_items.back();
@@ -2316,7 +2317,7 @@ void parser_t::eval_job( tokenizer *tok )
 				else
 					j->set_command(L"");
 
-				if( profile )
+				if( do_profile )
 				{
 					t2 = get_time();
 					profile_item->cmd = wcsdup( j->command_wcstr() );
@@ -2346,7 +2347,7 @@ void parser_t::eval_job( tokenizer *tok )
 					this->skipped_exec( j );
 				}
 
-				if( profile )
+				if( do_profile )
 				{
 					t3 = get_time();
 					profile_item->level=eval_level;
@@ -2511,8 +2512,6 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 		event_fire( NULL );
 	}
 
-	int prev_block_type = current_block->type;
-
 	parser_t::pop_block();
 
 	while( start_current_block != current_block )
@@ -2543,7 +2542,6 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 			break;
 
 		}
-		prev_block_type = current_block->type;
 		parser_t::pop_block();
 	}
 
@@ -2642,7 +2640,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, wcstring *out, const wch
 					this->print_errors( *out, prefix);
 				}
 				free( arg_cpy );
-				return 1;
+				return err;
 				
 			case 0:
 				do_loop = 0;

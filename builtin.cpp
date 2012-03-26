@@ -2723,6 +2723,7 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 		switch( opt )
 		{
 			case 0:
+                assert(opt_index >= 0 && opt_index < sizeof long_options / sizeof *long_options);
 				if(long_options[opt_index].flag != 0)
 					break;
 				append_format(stderr_buffer,

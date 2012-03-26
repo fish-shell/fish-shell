@@ -67,6 +67,27 @@ efficient way for transforming that to the desired screen content.
 typedef std::vector<char> data_buffer_t;
 static data_buffer_t *s_writeb_buffer=0;
 
+static int s_writeb( char c );
+
+/* Class to temporarily set s_writeb_buffer and the writer function in a scoped way */
+class scoped_buffer_t {
+    data_buffer_t * const old_buff;
+    int (* const old_writer)(char);
+    
+    public:
+    scoped_buffer_t(data_buffer_t *buff) : old_buff(s_writeb_buffer), old_writer(output_get_writer())
+    {
+        s_writeb_buffer = buff;
+        output_set_writer(s_writeb);
+    }
+    
+    ~scoped_buffer_t()
+    {
+        s_writeb_buffer = old_buff;
+        output_set_writer(old_writer);
+    }
+};
+
 /**
    Tests if the specified narrow character sequence is present at the
    specified position of the specified wide character string. All of
@@ -449,17 +470,14 @@ static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 	int i;
 	int x_steps, y_steps;
 	
-	int (*writer_old)(char) = output_get_writer();
-
 	char *str;
 /*
   debug( 0, L"move from %d %d to %d %d", 
   s->screen_cursor[0], s->screen_cursor[1],  
   new_x, new_y );
 */
-	output_set_writer( &s_writeb );
-	s_writeb_buffer = b;
-	
+    scoped_buffer_t scoped_buffer(b);
+    	
 	y_steps = new_y - s->actual.cursor[1];
 
 	if( y_steps > 0 && (strcmp( cursor_down, "\n")==0))
@@ -514,9 +532,6 @@ static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 
 	s->actual.cursor[0] = new_x;
 	s->actual.cursor[1] = new_y;
-	
-	output_set_writer( writer_old );
-	
 }
 
 /**
@@ -524,18 +539,11 @@ static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 */
 static void s_set_color( screen_t *s, data_buffer_t *b, int c )
 {
-	
-	int (*writer_old)(char) = output_get_writer();
-
-	output_set_writer( &s_writeb );
-	s_writeb_buffer = b;
-	
+    scoped_buffer_t scoped_buffer(b);
+    
     unsigned int uc = (unsigned int)c;
 	set_color( highlight_get_color( uc & 0xffff, false ),
-		   highlight_get_color( (uc>>16)&0xffff, true ) );
-	
-	output_set_writer( writer_old );
-	
+		   highlight_get_color( (uc>>16)&0xffff, true ) );	
 }
 
 /**
@@ -544,15 +552,9 @@ static void s_set_color( screen_t *s, data_buffer_t *b, int c )
 */
 static void s_write_char( screen_t *s, data_buffer_t *b, wchar_t c )
 {
-	int (*writer_old)(char) = output_get_writer();
-
-	output_set_writer( &s_writeb );
-	s_writeb_buffer = b;
-	s->actual.cursor[0]+=wcwidth( c );
-	
+	scoped_buffer_t scoped_buffer(b);
+	s->actual.cursor[0]+=wcwidth( c );	
 	writech( c );
-	
-	output_set_writer( writer_old );
 }
 
 /**
@@ -561,14 +563,8 @@ static void s_write_char( screen_t *s, data_buffer_t *b, wchar_t c )
 */
 static void s_write_mbs( data_buffer_t *b, char *s )
 {
-	int (*writer_old)(char) = output_get_writer();
-
-	output_set_writer( &s_writeb );
-	s_writeb_buffer = b;
-
+    scoped_buffer_t scoped_buffer(b);
 	writembs( s );
-	
-	output_set_writer( writer_old );
 }
 
 /**
@@ -577,14 +573,8 @@ static void s_write_mbs( data_buffer_t *b, char *s )
 */
 static void s_write_str( data_buffer_t *b, const wchar_t *s )
 {
-	int (*writer_old)(char) = output_get_writer();
-
-	output_set_writer( &s_writeb );
-	s_writeb_buffer = b;
-
+    scoped_buffer_t scoped_buffer(b);
 	writestr( s );
-	
-	output_set_writer( writer_old );
 }
 
 /**

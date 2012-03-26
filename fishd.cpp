@@ -659,9 +659,8 @@ static wchar_t *fishd_env_get( const wchar_t *key )
 	{
 		res = env_universal_common_get( key );
 		if( res )
-			res = wcsdup( res );
-		
-		return env_universal_common_get( key );
+			res = wcsdup( res );		
+		return res;
 	}
 }
 

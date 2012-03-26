@@ -4,7 +4,7 @@ import SimpleHTTPServer
 import SocketServer
 import webbrowser
 import subprocess
-import re, json, socket, sys, cgi
+import re, json, socket, os, sys, cgi, select
 
 def run_fish_cmd(text):
 	from subprocess import PIPE
@@ -93,7 +93,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
 				color_name, color_value = match.group(1, 2)
 				result.append([color_name.strip(), parse_color(color_value)])
-		print result
 		return result
 		
 	def do_get_functions(self):
@@ -200,7 +199,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			background_color = postvars.get('background_color')
 			bold = postvars.get('bold')
 			underline = postvars.get('underline')
-			print "underline: ", underline
 			if what:
 				# Not sure why we get lists here?
 				output = self.do_set_color_for_variable(what[0], color[0], background_color[0], parse_bool(bold[0]), parse_bool(underline[0]))
@@ -220,7 +218,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		# Output JSON
 		json.dump(output, self.wfile)
 
+	def log_request(self, code='-', size='-'):
+		""" Disable request logging """
+		pass
 
+# Make sure that the working directory is the one that contains the script server file,
+# because the document root is the working directory
+where = os.path.dirname(sys.argv[0])
+os.chdir(where)
+
+# Try to find a suitable port
 PORT = 8000
 while PORT <= 9000:
 	try:
@@ -235,11 +242,22 @@ while PORT <= 9000:
 	PORT += 1
 
 if PORT > 9000:
-	print "Unable to start a web server"
+	# Nobody say it
+	print "Unable to find an open port between 8000 and 9000"
 	sys.exit(-1)
 
 	
-webbrowser.open("http://localhost:%d" % PORT)
+url = 'http://localhost:%d' % PORT
 
-print "serving at port", PORT
-httpd.serve_forever()
+print "Web config started at '%s'. Hit enter to stop." % url
+webbrowser.open(url)
+
+# Select on stdin and httpd
+stdin_no = sys.stdin.fileno()
+while True:
+	ready_read, _, _ = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
+	if stdin_no in ready_read:
+		print "Shutting down."
+		break
+	else:
+		httpd.handle_request()

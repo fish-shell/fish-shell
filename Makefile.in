@@ -599,6 +599,8 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
 	for i in $(COMPLETIONS_DIR_FILES); do \
@@ -613,6 +615,19 @@ install-force: all install-translations
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/; \
 		true; \
 	done;
+	for i in share/tools/*.py; do\
+		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/; \
+		true; \
+	done;
+	for i in share/tools/web_config/*; do\
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
+		true; \
+	done;
+	for i in share/tools/web_config/*.py; do\
+		$(INSTALL) -m 755 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
+		true; \
+	done;
+
 	$(INSTALL) -m 755 -d $(DESTDIR)$(docdir)
 	for i in user_doc/html/* ChangeLog; do \
 		if test -f $$i; then \

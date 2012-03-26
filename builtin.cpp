@@ -1171,7 +1171,7 @@ static void functions_def( const wcstring &name, wcstring &out )
     /* This forced tab is sort of crummy - not all functions start with a tab */
     append_format( out, L"\n\t%ls", def);
     
-    /* Append a newline before the end, unless there already is one there */
+    /* Append a newline before the 'end', unless there already is one there */
     size_t deflen = wcslen(def);
     if (deflen == 0 || def[deflen-1] != L'\n') {
         out.push_back(L'\n');

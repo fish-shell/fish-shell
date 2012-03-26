@@ -718,6 +718,7 @@ void exec( parser_t &parser, job_t *j )
 
 	for( p=j->first_process; p; p = p->next )
 	{
+		const bool p_wants_pipe = (p->next != NULL);
 		mypipe[1]=-1;
 		skip_fork=0;
 		
@@ -748,7 +749,7 @@ void exec( parser_t &parser, job_t *j )
 			j->io = io_add( j->io, &pipe_read );
 		}
 		
-		if( p->next )
+		if( p_wants_pipe )
 		{
 //			debug( 1, L"%ls|%ls" , p->argv[0], p->next->argv[0]);
 			
@@ -1315,7 +1316,7 @@ void exec( parser_t &parser, job_t *j )
 		   Set up the pipe the next process uses to read from the
 		   current process_t
 		*/
-		if( p->next )
+		if( p_wants_pipe )
 			pipe_read.param1.pipe_fd[0] = mypipe[0];
 		
 		/* 

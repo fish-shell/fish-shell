@@ -203,10 +203,15 @@ void iothread_drain_all(void) {
     if (s_active_thread_count == 0)
         return;
     int thread_count = s_active_thread_count;
+#define TIME_DRAIN 0
+#if TIME_DRAIN
     double now = timef();
+#endif
     while (s_active_thread_count > 0) {
         iothread_service_completion();
     }
+#if TIME_DRAIN
     double after = timef();
-    //printf("(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now), thread_count);
+    printf("(Waited %.02f msec for %d thread(s) to drain)\n", 1000 * (after - now), thread_count);
+#endif
 }

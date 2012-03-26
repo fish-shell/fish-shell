@@ -1154,7 +1154,6 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 	wchar_t prev=0;
     std::vector<wcstring> sub_res;
 	size_t i, j;
-	const wchar_t *item_begin;
 	wchar_t *tail_begin = 0;	
     
     const wchar_t * const in = input.c_str();
@@ -1180,7 +1179,6 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
     
 	len1 = (paran_begin-in);
 	prev=0;
-	item_begin = paran_begin+1;
     
     const wcstring subcmd(paran_begin + 1, paran_end-paran_begin - 1);
     
@@ -1328,16 +1326,14 @@ static void expand_tilde_internal( wcstring &input )
             {
                 tail_idx = wcslen( in );
             }
-            tail_idx = name_end - in;
-            wcstring name_str = input.substr(1, name_end-in-1);
-			const char *name_cstr = wcs2str( name_str.c_str() );
-			struct passwd *userinfo =
-				getpwnam( name_cstr );
-            free((void *)name_cstr);
+            wcstring name_str = input.substr(1, tail_idx - 1);
+            std::string name_cstr = wcs2string(name_str);
+			struct passwd *userinfo = getpwnam( name_cstr.c_str() );
 
-			if( userinfo == 0 )
+			if( userinfo == NULL )
 			{
 				tilde_error = 1;
+                input[0] = L'~';
 			}
 			else
 			{

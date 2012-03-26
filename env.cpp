@@ -714,11 +714,8 @@ static env_node_t *env_get_node( const wcstring &key )
 
 	while( env != 0 )
 	{
-		var_table_t::const_iterator result = env->env.find( key ); 
-
-		if ( result != env->env.end() )
+		if ( env->env.find( key ) != env->env.end() )
 		{ 
-			res  = result->second; 
 			return env;
 		}
 

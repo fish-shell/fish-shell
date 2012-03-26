@@ -211,8 +211,7 @@ int main( int argc, char **argv )
 	char *fgcolor=0;
 	bool bold=false;
 	bool underline=false;
-	char *bg_seq, *fg_seq;
-			
+
 	while( 1 )
 	{
 		static struct option

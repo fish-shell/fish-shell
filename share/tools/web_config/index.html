@@ -17,38 +17,60 @@ body {
 
 #parent {
     width: 100%;
-    background-color: black;
     min-height: 480px;
     margin-top: 12px;
-
 }
 
 #tab_parent {
+    display: table;
     width: 100%;
-    height: 100px;
+    height: 50px;;
 }
 
 .tab {
-    border-style: groove;
-    border-color: #292929;
-    border-width: 2px;
-    margin-left: -2px;
-    margin-right: -2px;
+	display: table-cell;
+    border: 1px solid #111;
+    border-right: none;
+    padding-bottom: 15px;
+    padding-top: 15px;
     font-size: 17pt;
-    padding-top: 20px;
-    padding-bottom: 20px;
     text-align: center;
     width: 25%;
-    float: left;
     background-color: #292929;
     cursor: pointer;
 }
 
+#tab_parent :first-child {
+	border-top-left-radius: 8px;
+}
+
+#tab_parent :last-child {
+	border-right: 1px solid #111;
+	border-top-right-radius: 8px;
+}
+
+.tab_first {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.tab_last {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
 .selected_tab {
-    background-color: inherit;
-    border-style: none;
-    margin-left: 0px;
-    margin-right: -1px;
+    background-color: black;
+    border-color: black;
+}
+
+#tab_contents {
+	padding-top: 35px;
+	width: 100%;
+	background-color: black;
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+	margin-bottom: 20px;
 }
 
 .footer {
@@ -68,7 +90,7 @@ body {
     text-align: right;
     min-width: 200px;
     font-size: 16pt;
-    padding-bottom: 0px;
+    padding-bottom: 5px;
     margin-top: -7px;
 }
 
@@ -80,6 +102,7 @@ body {
   	padding-bottom: 20px;
   	padding-left: 30px;
   	padding-right: 30px;
+	border-radius: 5;
 }
 
 #detail_function {
@@ -104,6 +127,9 @@ body {
 	border: 1px solid #555;
 	border-right: none;
 	background-color: #181818;
+	
+	border-top-left-radius: 5;
+	border-bottom-left-radius: 5;
 	
 	/* Pad one less than .master_element, to accomodate our border. */
     padding-top: 5px;
@@ -134,7 +160,7 @@ body {
 	cursor: pointer;
 	display:inline-block;
 	text-align: center;
-	border: solid #333 2px;
+	border: groove #333 2px;
 	padding: 5px;
 	margin-top: 5px;
 	margin-left: auto;
@@ -161,6 +187,7 @@ body {
 .data_table_cell {
 	padding-top: 5px;
 	padding-bottom: 5px;
+	vertical-align: top;
 	overflow:hidden;
 	border-bottom: #444 dotted 1px;
 	word-wrap: break-word;
@@ -171,18 +198,16 @@ body {
 	white-space: nowrap;
 }
 
-.colorpicker_ground {
-	position: relative;
-	bottom: 50px;
+.colorpicker_target {
 	margin: 0px;
 	height: 50px;
 	margin-bottom: -50px;
 }
 
-.colorpicker_ground_tab {
+.colorpicker_target_tab {
 	cursor: pointer;
-	color: #AAA;
-	border: solid 2px #555;
+	color: #555;
+	border: solid 1px #555;
 	padding-top: 5px;
 	padding-bottom: 5px;
 	padding-left: 7px;
@@ -192,10 +217,12 @@ body {
 	margin-right: -2px;
 	min-width: 110px;
 	text-align: center;
+	position: relative;
+	bottom: 47px;
 }
 
-.colorpicker_ground_selected {
-	background-color: #777;
+.colorpicker_target_selected {
+	background-color: #181818; /* same as #detail */
 	color: white;
 }
 
@@ -233,11 +260,11 @@ function show_error(msg) {
 function request_failed(jqXHR, textStatus, errorThrown) {
 	msg = ''
 	if (textStatus == "timeout") {
-		msg = 'The request timed out. Perhaps the server has exited or is hung.'
+		msg = 'The request timed out. Perhaps the server has shut down or is hung.'
 	} else if (textStatus == "error") {
 		msg = 'The request received an error.'
 		if (jqXHR.status == 0)
-			msg = msg + ' Perhaps the server has exited.'
+			msg = msg + ' Perhaps the server has shut down.'
 	} else if (msg == 'abort') {
 		msg = 'The request aborted.'
 	} else if (msg == 'parsererror') {
@@ -448,7 +475,7 @@ function current_master_element_name() {
 
 function is_foreground() {
 	/* Returns true if the selected tab is foreground, false if it's background */
-	who = $('.colorpicker_ground_selected')
+	who = $('.colorpicker_target_selected')
 	if (who.length == 0) {
 		show_error('Not sure if we are in foreground or background')
 		return false
@@ -517,7 +544,7 @@ function select_function_master_element(elem) {
 		rx = /^[\t ]+/
 		for (var i=0; i < lines.length; i++) {
 			line = lines[i]
-			/* Get leading whitespace */
+			/* Get leading tabs and spaces */
 			whitespace_arr = rx.exec(line)
 			if (whitespace_arr) {
 				/* Replace four spaces with two spaces, and tabs with two spaces */
@@ -595,10 +622,10 @@ function picked_modifier(cell) {
 	post_style_to_server()
 }
 
-function picked_ground(tab) {
+function picked_colorpicker_target(tab) {
 	/* The function that gets called when a tab is selected */
-	$('.colorpicker_ground_selected').removeClass('colorpicker_ground_selected')
-	$(tab).addClass('colorpicker_ground_selected')
+	$('.colorpicker_target_selected').removeClass('colorpicker_target_selected')
+	$(tab).addClass('colorpicker_target_selected')
 	reflect_style()
 }
 
@@ -969,30 +996,32 @@ $(document).ready(function() {
     <div id="parent">
         <div id="tab_parent">
             <div class="tab selected_tab" id="tab_colors" onClick="switch_tab('tab_colors')">colors</div>
-            <div class="tab"  id="tab_functions" onClick="switch_tab('tab_functions')">functions</div>
+            <div class="tab" id="tab_functions" onClick="switch_tab('tab_functions')">functions</div>
             <div class="tab" id="tab_variables" onClick="switch_tab('tab_variables')">variables</div>
             <div class="tab" id="tab_history" onClick="switch_tab('tab_history')">history</div>
         </div>
-        <div id="master_detail_table">
-	        <div id="master"></div>
-    	    <div id="detail">
-    	    	<div id="detail_colorpicker">
-					<div class="colorpicker_ground">
-						<div class="colorpicker_ground_tab colorpicker_ground_selected" id="foreground" onClick="picked_ground(this)">Foreground</div><div class="colorpicker_ground_tab" id="background" onClick="picked_ground(this)">Background</div>
+        <div id="tab_contents">
+			<div id="master_detail_table">
+				<div id="master"></div>
+				<div id="detail">
+					<div id="detail_colorpicker">
+						<div class="colorpicker_target">
+							<div class="colorpicker_target_tab tab_first colorpicker_target_selected" id="foreground" onClick="picked_colorpicker_target(this)">Text</div><div class="colorpicker_target_tab tab_last" id="background" onClick="picked_colorpicker_target(this)">Background</div>
+						</div>
+						<table id="colorpicker_term256">
+						</table>
+						<div class="colorpicker_modifiers">
+							<div class="colorpicker_modifier_cell" id="modifier_underline" style="text-decoration: underline" onClick='picked_modifier(this)'>Underline</div>
+						</div>
 					</div>
-					<table id="colorpicker_term256">
-					</table>
-					<div class="colorpicker_modifiers">
-						<div class="colorpicker_modifier_cell" id="modifier_underline" style="text-decoration: underline" onClick='picked_modifier(this)'>Underline</div>
-					</div>
+					<div id="detail_function"></div>
 				</div>
-				<div id="detail_function"></div>
 			</div>
-        </div>
-		<table id="data_table">
-		<table>
-        <div class="footer">
-        </div>
+			<table id="data_table">
+			<table>
+			<div class="footer">
+			</div>
+		</div>
     </div>
 </div>
 

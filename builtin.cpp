@@ -1081,7 +1081,7 @@ static int builtin_generic( parser_t &parser, wchar_t **argv )
 
 /**
    Output a definition of the specified function to the specified
-   stringbuffer. Used by the functions builtin.
+   string. Used by the functions builtin.
 */
 static void functions_def( const wcstring &name, wcstring &out )
 {
@@ -1167,8 +1167,16 @@ static void functions_def( const wcstring &name, wcstring &out )
 		}
 	}
 	
-
-	append_format( out, L"\n\t%ls\nend\n", def );
+    
+    /* This forced tab is sort of crummy - not all functions start with a tab */
+    append_format( out, L"\n\t%ls", def);
+    
+    /* Append a newline before the end, unless there already is one there */
+    size_t deflen = wcslen(def);
+    if (deflen == 0 || def[deflen-1] != L'\n') {
+        out.push_back(L'\n');
+    }
+    out.append(L"end\n");
 }
 
 

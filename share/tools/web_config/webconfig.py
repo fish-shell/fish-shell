@@ -258,6 +258,8 @@ while True:
 	ready_read, _, _ = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
 	if stdin_no in ready_read:
 		print "Shutting down."
+		# Consume the newline so it doesn't get printed by the caller
+		sys.stdin.readline()
 		break
 	else:
 		httpd.handle_request()

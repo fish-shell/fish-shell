@@ -1256,6 +1256,7 @@ struct autosuggestion_context_t {
     {
     }
     
+    /* The function run in the background thread to determine an autosuggestion */
     int threaded_autosuggest(void) {
         ASSERT_IS_BACKGROUND_THREAD();
         
@@ -1265,6 +1266,11 @@ struct autosuggestion_context_t {
         
         while (searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
+            
+            /* Skip items with newlines because they make terrible autosuggestions */
+            if (item.str().find('\n') != wcstring::npos)
+                continue;
+            
             bool item_ok = false;
             if (autosuggest_handle_special(item.str(), working_directory, &item_ok)) {
                 /* The command autosuggestion was handled specially, so we're done */
@@ -3079,7 +3085,6 @@ const wchar_t *reader_readline()
 						if( ! data->command_line.empty() )
 						{
                             if (data->history) {
-                                //data->history->add(data->command_line);
                                 data->history->add_with_file_detection(data->command_line);
                             }
 						}

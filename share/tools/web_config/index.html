@@ -230,14 +230,14 @@ body {
 }
 
 .colorpicker_term256_cell {
-	width: 27;
-	height: 27;
+	width: 29;
+	height: 29;
 }
 
 .colorpicker_cell_selected {
 	 border: dashed white 3px;
-	 width: 21;
-	 height: 21;
+	 width: 23;
+	 height: 23;
 }
 
 .error_msg {
@@ -497,6 +497,7 @@ function reflect_style() {
 	style = current_style()
 	if (style) {
 	
+		/* Use this function to make a color that contrasts well with the given color */
 		var adjust = .5
 		function compute_constrast(lightness){
 			var new_lightness = lightness + adjust
@@ -969,13 +970,19 @@ function populate_colorpicker_term256() {
 		
 		for (var subidx = 0; subidx < items_per_row && idx  + subidx < term256_colors.length; subidx++) {
 			cell_style = 'background-color: #' + term256_colors[idx + subidx]
-			row.append($('<td>', {
+			var cell = $('<td>', {
 				class: 'colorpicker_term256_cell',
 				style: cell_style,
 				id: 'color_' + term256_colors[idx + subidx],
 				text: show_labels ? String(subidx + idx + 223) : '',
 				onClick: 'picked_color_cell(this)'
+			})
+			
+			/* For reasons I don't understand, this makes the selected cell border appear in Firefox */
+			cell.append($('<div>', {
+				style: 'width: 100%; height: 100%'
 			}))
+			row.append(cell)
 		}
 		
 		$('#colorpicker_term256').append(row)

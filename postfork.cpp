@@ -166,9 +166,7 @@ static int handle_child_io( io_data_t *io )
 
 		if( io->fd > 2 )
 		{
-			/*
-			  Make sure the fd used by this redirection is not used by e.g. a pipe. 
-			*/
+			/* Make sure the fd used by this redirection is not used by e.g. a pipe.  */
 			free_fd( io, io->fd );
 		}
 				
@@ -242,9 +240,7 @@ static int handle_child_io( io_data_t *io )
 			case IO_BUFFER:
 			case IO_PIPE:
 			{
-				int write_pipe;
-				
-				write_pipe = !io->is_input;
+				unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
 /*
 				debug( 0,
 					   L"%ls %ls on fd %d (%d %d)", 
@@ -254,7 +250,7 @@ static int handle_child_io( io_data_t *io )
 					   io->param1.pipe_fd[0],
 					   io->param1.pipe_fd[1]);
 */
-				if( dup2( io->param1.pipe_fd[write_pipe], io->fd ) != io->fd )
+				if( dup2( io->param1.pipe_fd[write_pipe_idx], io->fd ) != io->fd )
 				{
 					debug_safe( 1, LOCAL_PIPE_ERROR );
 					perror( "dup2" );

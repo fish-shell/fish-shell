@@ -993,12 +993,14 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
 	{
 
-		if( use_command && wants_description )
+		if( use_command )
 		{
 			
 			if( expand_string(str, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags() ) != EXPAND_ERROR )
 			{
-				this->complete_cmd_desc( str );
+                if (wants_description) {
+                    this->complete_cmd_desc( str );
+                }
 			}
 		}
 	}

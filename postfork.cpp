@@ -257,7 +257,7 @@ static int handle_child_io( io_data_t *io )
 					return -1;
 				}
 
-				if( write_pipe ) 
+				if( write_pipe_idx > 0 ) 
 				{
 					exec_close( io->param1.pipe_fd[0]);
 					exec_close( io->param1.pipe_fd[1]);

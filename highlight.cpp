@@ -533,15 +533,15 @@ static int has_expand_reserved( const wchar_t *str )
 	return 0;
 }
 
+/* Attempts to suggest a completion for a command we handle specially, like 'cd'. Returns true if we recognized the command (even if we couldn't think of a suggestion for it) */
 bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outString) {
     if (str.empty())
         return false;
     
     wcstring cmd;
-    bool had_cmd = false;
+    bool had_cmd = false, recognized_cmd = false;
     
     wcstring suggestion;
-    bool suggestionOK = false;
     
     tokenizer tok;
 	for( tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS );
@@ -556,12 +556,22 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 			{
 				if( had_cmd )
 				{
-					if( cmd == L"cd" )
+                    recognized_cmd = (cmd == L"cd");
+					if( recognized_cmd )
 					{
                         wcstring dir = tok_last( &tok );
                         wcstring suggested_path;
                         if (is_potential_path(dir, &suggested_path, true /* require directory */)) {
-                            suggestionOK = true;
+                            /* suggested_path needs to actually have dir as a prefix (perhaps with different case). Handle stuff like ./ */
+                            bool wants_dot_slash = string_prefixes_string(L"./", dir);
+                            bool has_dot_slash = string_prefixes_string(L"./", suggested_path);
+                            
+                            if (wants_dot_slash && ! has_dot_slash) {
+                                suggested_path.insert(0, L"./");
+                            } else if (! wants_dot_slash && has_dot_slash) {
+                                suggested_path.erase(0, 2);
+                            }
+                            
                             suggestion = str;
                             suggestion.erase(tok_get_pos(&tok));
                             suggestion.append(suggested_path);
@@ -668,9 +678,11 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     }
     tok_destroy( &tok );
     
-    if (suggestionOK)
+    if (recognized_cmd) {
         outString.swap(suggestion);
-    return suggestionOK;
+    }
+    
+    return recognized_cmd;
 }
 
 bool autosuggest_handle_special(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK) {

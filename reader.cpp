@@ -1249,6 +1249,7 @@ struct autosuggestion_context_t {
     int threaded_autosuggest(void) {
         ASSERT_IS_BACKGROUND_THREAD();
         
+        /* If the main thread has moved on, skip all the work */
         if (generation_count != s_generation_count) {
             return 0;
         }
@@ -1279,6 +1280,13 @@ struct autosuggestion_context_t {
             }
         }
         
+        /* Try handling a special command like cd */
+        wcstring special_suggestion;
+        if (autosuggest_suggest_special(search_string, working_directory, special_suggestion)) {
+            this->autosuggestion = special_suggestion;
+            return 1;
+        }
+        
         /* Try normal completions */
         std::vector<completion_t> completions;
         complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
@@ -1300,13 +1308,6 @@ struct autosuggestion_context_t {
                 /* The completion contains only a suffix */
                 this->autosuggestion.append(comp.completion);
             }
-            return 1;
-        }
-        
-        /* Since we didn't find a suggestion from history, try other means */
-        wcstring special_suggestion;
-        if (autosuggest_suggest_special(search_string, working_directory, special_suggestion)) {
-            this->autosuggestion = special_suggestion;
             return 1;
         }
         

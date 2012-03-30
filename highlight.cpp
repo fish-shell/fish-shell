@@ -236,14 +236,12 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, int pos, wcstring_list_t *error )
 {	
     const wchar_t * const buff = buffstr.c_str();
-	int mode = 0; 
+	enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
 	size_t in_pos, len = buffstr.size();
 	int bracket_count=0;
 	int normal_status = colors.at(0);
 	
-	for( in_pos=0;
-        in_pos<len; 
-        in_pos++ )
+	for (in_pos=0; in_pos<len; in_pos++)
 	{
 		wchar_t c = buffstr.at(in_pos);
 		switch( mode )
@@ -251,11 +249,11 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
                 /*
                  Mode 0 means unquoted string
                  */
-			case 0:
+			case e_unquoted:
 			{
 				if( c == L'\\' )
 				{
-					int start_pos = in_pos;
+					size_t start_pos = in_pos;
 					in_pos++;
 					
 					if( wcschr( L"~%", buff[in_pos] ) )
@@ -419,14 +417,14 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 						case L'\'':
 						{
 							colors.at(in_pos) = HIGHLIGHT_QUOTE;
-							mode = 1;
+							mode = e_single_quoted;
 							break;					
 						}
                             
 						case L'\"':
 						{
 							colors.at(in_pos) = HIGHLIGHT_QUOTE;
-							mode = 2;
+							mode = e_double_quoted;
 							break;
 						}
                             
@@ -438,7 +436,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
                 /*
                  Mode 1 means single quoted string, i.e 'foo'
                  */
-			case 1:
+			case e_single_quoted:
 			{
 				if( c == L'\\' )
 				{
@@ -463,7 +461,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 				}
 				if( c == L'\'' )
 				{
-					mode = 0;
+					mode = e_unquoted;
 					colors.at(in_pos+1) = normal_status;
 				}
 				
@@ -473,13 +471,13 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
                 /*
                  Mode 2 means double quoted string, i.e. "foo"
                  */
-			case 2:
+			case e_double_quoted:
 			{
 				switch( c )
 				{
 					case '"':
 					{
-						mode = 0;
+						mode = e_unquoted;
 						colors.at(in_pos+1) = normal_status;
 						break;
 					}
@@ -910,7 +908,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
                     /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
                     const wcstring param_str = param;
                     std::vector<int> subcolors;
-                    subcolors.resize(1 + param_str.size());
+                    subcolors.resize(1 + param_str.size(), -1);
                     int tok_pos = tok_get_pos(&tok);
                     highlight_param(param_str, subcolors, pos-tok_pos, error);
                                         

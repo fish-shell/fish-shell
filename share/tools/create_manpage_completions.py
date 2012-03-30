@@ -18,10 +18,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 import sys, re, os.path, gzip, traceback
 
-
 # This gets set to the name of the command that we are currently executing
 CMDNAME = ""
 
+# builtcommand writes into this global variable, yuck
+built_command_output = []
 
 def compileAndSearch(regex, input):
 	options_section_regex = re.compile(regex , re.DOTALL)
@@ -42,12 +43,13 @@ def unquoteSingleQuotes(data):
 		data = data[1:len(data)-1]
 	return data
 
-def printcompletecommand(cmdname, args, description):
-	print "complete -c", cmdname,
-	for arg in args:
-		print arg,
-	print '--descripton "' + description + '"' 
-	print "\n",
+def output_complete_command(cmdname, args, description, output_list):
+	comps = ['complete -c', cmdname]
+	comps.extend(args)
+	comps.append('--description')
+	comps.append("'" + description + "'")
+	output_list.append(' '.join(comps))
+
 
 def builtcommand(options, description):
 #	print "Options are: ", options
@@ -68,7 +70,7 @@ def builtcommand(options, description):
 	elif first_period >= 0:
 			description = description[:first_period]
 
-	printcompletecommand(CMDNAME, optionlist, description)
+	output_complete_command(CMDNAME, optionlist, description, built_command_output)
 
 	
 
@@ -421,7 +423,7 @@ class Type4ManParser(ManParser):
 
 		return True
 
-	def name():
+	def name(self):
 		return "Type4"
 
 class TypeMacManParser(ManParser):
@@ -452,6 +454,9 @@ class TypeMacManParser(ManParser):
 			# Pop until we get to the next option
 			while lines and not self.is_option(lines[0]):
 				lines.pop(0)
+				
+			if not lines:
+				continue
 			
 			# Extract the name
 			name = self.trim_groff(lines.pop(0)).strip()
@@ -472,6 +477,9 @@ class TypeMacManParser(ManParser):
 				builtcommand('--' + name, desc)
 			elif len(name) == 1:
 				builtcommand('-' + name, desc)
+				
+	def name(self):
+		return "Darwin man parser"
 			
 
 def parse_manpage_at_path(manpage_path):
@@ -505,13 +513,21 @@ def parse_manpage_at_path(manpage_path):
 #			print "Type is: ", parser.name()
 			break
 			idx += 1
-		
+	
+	# Clear the output list
+	built_command_output[:] = []
+	
 	if parserToUse == None:
 		print >> sys.stderr, manpage_path, " : Not supported"
 	else:
 		if parserToUse.parseManPage(manpage) == False:
 			print >> sys.stderr, "Type%d : %s is unparsable" % (idx, manpage_path)
-		else:
+		elif built_command_output:
+			built_command_output.insert(0, "# %s: %s" % (CMDNAME, parser.name()))
+			for line in built_command_output:
+				pass
+				#print line
+			#print ''
 			print >> sys.stderr, manpage_path, " parsed successfully"
 
 		
@@ -520,8 +536,7 @@ def compare_paths(a, b):
 	""" Compare two paths by their base name, case insensitive """
 	return cmp(os.path.basename(a).lower(), os.path.basename(b).lower())
 
-if __name__ == "__main__":
-	paths = sys.argv[1:]
+def parse_and_output_man_pages(paths):
 	paths.sort(compare_paths)
 	for manpage_path in paths:
 		try:
@@ -531,3 +546,16 @@ if __name__ == "__main__":
 		except:
 			print >> sys.stderr, "Error parsing %s: %s" % (manpage_path, sys.exc_info()[0])
 			traceback.print_exc(file=sys.stdout)
+
+
+
+if __name__ == "__main__":
+	paths = sys.argv[1:]
+	parse_and_output_man_pages(paths)
+	
+	# Profiling code
+	# import cProfile, pstats
+	# cProfile.run('parse_and_output_man_pages(paths)', 'fooprof')
+	# p = pstats.Stats('fooprof')
+	# p.sort_stats('cumulative').print_stats(10)
+	

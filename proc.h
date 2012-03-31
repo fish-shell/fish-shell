@@ -464,7 +464,8 @@ class job_iterator_t {
    Both setting it to one when it should be zero and the opposite may
    cause concurrency bugs.
 */
-extern int proc_had_barrier;
+bool get_proc_had_barrier();
+void set_proc_had_barrier(bool flag);
 
 /**
    Pid of last process to be started in the background

@@ -338,6 +338,7 @@ int env_universal_get_export( const wchar_t *name )
 
 void env_universal_barrier()
 {
+    ASSERT_IS_MAIN_THREAD();
 	message_t *msg;
 	fd_set fds;
 

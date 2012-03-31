@@ -122,16 +122,27 @@ int is_subshell=0;
 int is_block=0;
 int is_login=0;
 int is_event=0;
-int proc_had_barrier;
 pid_t proc_last_bg_pid = 0;
 int job_control_mode = JOB_CONTROL_INTERACTIVE;
 int no_exec=0;
 
 static int is_interactive = -1;
 
+static bool proc_had_barrier = false;
+
 int get_is_interactive(void) {
     ASSERT_IS_MAIN_THREAD();
     return is_interactive;
+}
+
+bool get_proc_had_barrier() {
+    ASSERT_IS_MAIN_THREAD();
+    return proc_had_barrier;
+}
+
+void set_proc_had_barrier(bool flag) {
+    ASSERT_IS_MAIN_THREAD();
+    proc_had_barrier = flag;
 }
 
 /**

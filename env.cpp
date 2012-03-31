@@ -730,6 +730,7 @@ static env_node_t *env_get_node( const wcstring &key )
 
 int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 {
+    ASSERT_IS_MAIN_THREAD();
 	env_node_t *node = NULL;
 	bool has_changed_old = has_changed;
 	bool has_changed_new = false;
@@ -840,9 +841,9 @@ int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 			}
 			else
 			{
-				if( !proc_had_barrier)
+				if( ! get_proc_had_barrier())
 				{
-					proc_had_barrier=1;
+					set_proc_had_barrier(true);
 					env_universal_barrier();
 				}
 				
@@ -1062,7 +1063,8 @@ const wchar_t *env_var_t::c_str(void) const {
 env_var_t env_get_string( const wcstring &key )
 {    
     /* Big hack...we only allow getting the history on the main thread. Note that history_t may ask for an environment variable, so don't take the lock here (we don't need it) */
-	if( key == L"history" && is_main_thread())
+    const bool is_main = is_main_thread();
+	if( key == L"history" && is_main)
 	{
         env_var_t result;
         
@@ -1100,42 +1102,44 @@ env_var_t env_get_string( const wcstring &key )
         wcstring result;
         
         while( env != 0 )
-	  {
-		var_table_t::iterator result =  env->env.find(key);
-	    if ( result != env->env.end() ) 
-	      {
-			res = result->second; 
-	      }
-	    else
-	      {
-			res = 0;
-	      }
-	
-
-	    if( res != 0 )
-	      {
-		if( res->val == ENV_NULL ) 
-		  {
-		    return env_var_t::missing_var();
-		  }
-		else
-		  {
-		    return res->val;			
-		  }
-	      }
-            
-	    if( env->new_scope )
-	      {
-                env = global_env;
-	      }
-	    else
-	      {
-                env = env->next;
-	      }
-	  }	
-        if( !proc_had_barrier)
         {
-            proc_had_barrier=1;
+            var_table_t::iterator result =  env->env.find(key);
+            if ( result != env->env.end() ) 
+            {
+                res = result->second; 
+            }
+            else
+            {
+                res = 0;
+            }
+            
+            
+            if( res != 0 )
+            {
+                if( res->val == ENV_NULL ) 
+                {
+                    return env_var_t::missing_var();
+                }
+                else
+                {
+                    return res->val;			
+                }
+            }
+            
+            if( env->new_scope )
+            {
+                env = global_env;
+            }
+            else
+            {
+                env = env->next;
+            }
+        }
+        
+        /* Another big hack - only do a universal barrier on the main thread (since it can change variable values) */
+        if(is_main && ! get_proc_had_barrier())
+        {
+            set_proc_had_barrier(true);
             env_universal_barrier();
         }
         
@@ -1211,9 +1215,9 @@ int env_exist( const wchar_t *key, int mode )
 	
 	if( ! (mode & ENV_LOCAL) && ! (mode & ENV_GLOBAL) )
 	{
-		if( !proc_had_barrier)
+		if( ! get_proc_had_barrier())
 		{
-			proc_had_barrier=1;
+			set_proc_had_barrier(true);
 			env_universal_barrier();
 		}
 		
@@ -1453,9 +1457,9 @@ static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<st
 
 static void update_export_array_if_necessary(bool recalc) {
     ASSERT_IS_MAIN_THREAD();
-	if( recalc && !proc_had_barrier)
+	if( recalc && ! get_proc_had_barrier())
 	{
-		proc_had_barrier=1;
+		set_proc_had_barrier(true);
 		env_universal_barrier();
 	}
 	

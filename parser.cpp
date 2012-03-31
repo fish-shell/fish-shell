@@ -2251,6 +2251,7 @@ void parser_t::skipped_exec( job_t * j )
 
 void parser_t::eval_job( tokenizer *tok )
 {
+    ASSERT_IS_MAIN_THREAD();
 	job_t *j;
 
 	int start_pos = job_start_pos = tok_get_pos( tok );
@@ -2340,7 +2341,7 @@ void parser_t::eval_job( tokenizer *tok )
 					
 					/* Only external commands require a new fishd barrier */
 					if( !was_builtin )
-						proc_had_barrier=0;
+						set_proc_had_barrier(false);
 				}
 				else
 				{

@@ -919,12 +919,14 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 					
                     /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
                     const wcstring param_str = param;
-                    std::vector<int> subcolors;
-                    subcolors.resize(1 + param_str.size(), -1);
                     int tok_pos = tok_get_pos(&tok);
+                    
+                    std::vector<int>::const_iterator where = color.begin() + tok_pos;
+                    std::vector<int> subcolors(where, where + param_str.size());
+                    subcolors.push_back(-1);                
                     highlight_param(param_str, subcolors, pos-tok_pos, error);
                                         
-                    /* Copy the subcolors into our colors array */
+                    /* Copy the subcolors back into our colors array */
                     std::copy(subcolors.begin(), subcolors.begin() + param_str.size(), color.begin() + tok_pos);
 				}
 				else

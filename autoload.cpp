@@ -70,28 +70,20 @@ int autoload_t::load( const wcstring &cmd, bool reload )
 	CHECK_BLOCK( 0 );
     ASSERT_IS_MAIN_THREAD();
     
-	env_var_t path_var;
+	env_var_t path_var = env_get_string( env_var_name );
     
-    /* Do some work while locked, including determing the path variable */
+    /*
+      Do we know where to look?
+    */
+    if( path_var.empty() )
+        return 0;
+    
+    /* Check if the lookup path has changed. If so, drop all loaded files. path_var may only be inspected on the main thread. */
+    if( path_var != this->last_path )
     {
-        scoped_lock locker(lock); 
-        path_var = env_get_string( env_var_name );
-        
-        /*
-          Do we know where to look?
-        */
-        if( path_var.empty() )
-            return 0;
-        
-        /*
-          Check if the lookup path has changed. If so, drop all loaded
-          files.
-        */
-        if( path_var != this->path )
-        {
-            this->path = path_var;
-            this->evict_all_nodes();
-        }
+        this->last_path = path_var;
+        scoped_lock locker(lock);
+        this->evict_all_nodes();
     }
     
     /** Warn and fail on infinite recursion. It's OK to do this because this function is only called on the main thread. */

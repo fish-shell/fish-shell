@@ -417,7 +417,6 @@ function switch_tab(new_tab) {
 			var key = key_and_values[0]
 			var style = new Style(key_and_values[1])
 			style_map[key] = style
-			
 			elem = create_master_element(key, style.color, '', select_color_master_element)
 			if (first) {
 				/* It's the first element, so select it, so something gets selected */
@@ -630,10 +629,27 @@ function picked_colorpicker_target(tab) {
 	reflect_style()
 }
 
+/* Given a color name, like 'normal' or 'red' or 'FF00F0', return an RGB color string (or empty string) */
+function interpret_color(str) {
+	str = str.toLowerCase()
+	if (str == 'black') return '000000'
+	if (str == 'red') return 'FF0000'
+	if (str == 'green') return '00FF00'
+	if (str == 'brown') return '725000'
+	if (str == 'yellow') return 'FFFF00'
+	if (str == 'blue') return '0000FF'
+	if (str == 'magenta') return 'FF00FF'
+	if (str == 'purple') return 'FF00FF'
+	if (str == 'cyan') return '00FFFF'
+	if (str == 'white') return 'FFFFFF'
+	if (str == 'normal') return ''
+	return str
+}
+
 /* Class representing a color style */
 function Style(stuff) {
-	this.color = stuff[0]
-	this.background_color = stuff[1]
+	this.color = interpret_color(stuff[0])
+	this.background_color = interpret_color(stuff[1])
 	this.bold = stuff[2]
 	this.underline = stuff[3]
 }
@@ -887,15 +903,13 @@ term256_colors = [ //247
 var items_per_row = 15
 var show_labels = 0
 
-var COLOR_NORMAL = 'DDDDDD'
+var COLOR_NORMAL = 'CCC'
 
 /* Adds a new element to master */
 function create_master_element(contents, color, font_size, click_handler) {
-	if (color.length == 0) color = 'inherit'
-	
 	/* In the master list, ensure the color is visible against the dark background */
-	master_color = master_color_for_color(color)
-	style_str = 'color: #' + master_color + '; border-bottom: 1px solid #' + master_color + ' ;'
+	var master_color = color ? master_color_for_color(color) : COLOR_NORMAL
+	var style_str = 'color: #' + master_color + '; border-bottom: 1px solid #' + master_color + ' ;'
 	
 	if (font_size.length > 0) {
 		style_str += 'font-size: ' + font_size + ';'

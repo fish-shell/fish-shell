@@ -56,7 +56,7 @@ private:
     const size_t builtin_script_count;
 
     /** The path from which we most recently autoloaded */
-    wcstring path;
+    wcstring last_path;
 
 	/**
 	   A table containing all the files that are currently being

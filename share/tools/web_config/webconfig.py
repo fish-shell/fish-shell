@@ -88,11 +88,37 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_get_colors(self):
 		"Look for fish_color_*"
 		result = []
+		remaining = set(['normal',
+						 'error',
+						 'command',
+						 'end',
+						 'param',
+						 'comment',
+						 'match',
+						 'search_match',
+						 'operator',
+						 'escape',
+						 'quote',
+						 'redirection',
+						 'valid_path',
+						 'autosuggestion'
+						 ])
+    
 		out, err = run_fish_cmd('set -L')
 		for line in out.split('\n'):
 			for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
-				color_name, color_value = match.group(1, 2)
-				result.append([color_name.strip(), parse_color(color_value)])
+				color_name, color_value = [x.strip() for x in match.group(1, 2)]
+				result.append([color_name, parse_color(color_value)])
+				remaining.discard(color_name)
+				
+		# Ensure that we have all the color names we know about, so that if the
+		# user deletes one he can still set it again via the web interface
+		for x in remaining:
+			result.append([x, parse_color('')])
+			
+		# Sort our result (by their keys)
+		result.sort()
+		
 		return result
 		
 	def do_get_functions(self):

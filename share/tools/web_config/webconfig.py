@@ -160,7 +160,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		# Use \x1e ("record separator") to distinguish between history items. The first
 		# backslash is so Python passes one backslash to fish
 		out, err = run_fish_cmd('for val in $history; echo -n $val \\x1e; end')
-		return out.split('\x1e')
+		result = out.split('\x1e')
+		if result: result.pop()
+		return result
 		
 
 	def do_get_color_for_variable(self, name):

@@ -199,9 +199,10 @@ body {
 }
 
 .colorpicker_target {
-	margin: 0px;
-	height: 50px;
-	margin-bottom: -50px;
+	margin: 0 0 -50px 0;
+	position: relative;
+	bottom: 47px;
+	float: left; /* for some reason this makes the cells that it overlaps (before adjusting its bottom) clickable in Safari */
 }
 
 .colorpicker_target_tab {
@@ -217,8 +218,6 @@ body {
 	margin-right: -2px;
 	min-width: 110px;
 	text-align: center;
-	position: relative;
-	bottom: 47px;
 }
 
 .colorpicker_target_selected {

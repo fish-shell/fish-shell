@@ -314,7 +314,12 @@ void update_fish_term256(void)
         support_term256 = from_string<bool>(fish_term256);
     } else {
         env_var_t term = env_get_string(L"TERM");
-        support_term256 = ! term.missing() && term.find(L"256color") != wcstring::npos;
+        if (term.missing()) {
+            support_term256 = false;
+        } else {
+            // assume that all xterms are 256
+            support_term256 = (term.find(L"256color") != wcstring::npos || term.find(L"xterm") != wcstring::npos);
+        }
     }
     output_set_supports_term256(support_term256);
 }

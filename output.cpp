@@ -166,7 +166,14 @@ static bool write_color(char *todo, unsigned char idx, bool is_fg) {
         strcat(buff, is_fg ? "38;5;" : "48;5;");
         strcat(buff, stridx);
         strcat(buff, "m");
-        write_loop(STDOUT_FILENO, buff, strlen(buff));
+        
+        int (*writer)(char) = output_get_writer();
+        if (writer) {
+            for (size_t i=0; buff[i]; i++) {
+                writer(buff[i]);
+            }
+        }
+        
         result = true;
     }
     return result;

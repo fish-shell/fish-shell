@@ -714,7 +714,7 @@ void reader_repaint_if_needed() {
 
 void reader_react_to_color_change() {
 	if (data) {
-		data->repaint_needed = true;
+        data->repaint_needed = true;
         data->screen_reset_needed = true;
 	}
 }

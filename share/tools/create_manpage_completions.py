@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > man_completions.fish """
+
 """
 <OWNER> = Siteshwar Vashisht 
 <YEAR> = 2012 
@@ -14,8 +16,6 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-""" Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > man_completions.fish """
-
 import string, sys, re, os.path, gzip, traceback
 
 # This gets set to the name of the command that we are currently executing
@@ -28,8 +28,13 @@ built_command_output = []
 diagnostic_output = []
 diagnostic_indent = 0
 
-def add_diagnostic(dgn):
-    diagnostic_output.append('   '*diagnostic_indent + dgn)
+global VERBOSE
+VERBOSE = False
+
+def add_diagnostic(dgn, always = False):
+    # Add a diagnostic message if VERBOSE is True or always is True
+    if VERBOSE or always:
+        diagnostic_output.append('   '*diagnostic_indent + dgn)
     
 def flush_diagnostics(where):
     if diagnostic_output:
@@ -475,7 +480,7 @@ class Type4ManParser(ManParser):
 
 class TypeMacManParser(ManParser):
     def isMyType(self, manpage):
-        options_section_matched = compileAndSearch("\.Sh DESCRIPTION", manpage)
+        options_section_matched = compileAndSearch("\.S[hH] DESCRIPTION", manpage)
         return options_section_matched != None
     
     def trim_groff(self, line):
@@ -492,9 +497,10 @@ class TypeMacManParser(ManParser):
     
     
     def parseManPage(self, manpage):
+        got_something = False
         lines =  manpage.splitlines()
         # Discard lines until we get to ".sh Description"
-        while lines and not lines[0].startswith('.Sh DESCRIPTION'):
+        while lines and not (lines[0].startswith('.Sh DESCRIPTION') or lines[0].startswith('.SH DESCRIPTION')):
             lines.pop(0)
         
         while lines:
@@ -522,8 +528,12 @@ class TypeMacManParser(ManParser):
             elif len(name) > 1:
                 # Output the command
                 builtcommand('--' + name, desc)
+                got_something = True
             elif len(name) == 1:
                 builtcommand('-' + name, desc)
+                got_something = True
+                
+        return got_something
                 
     def name(self):
         return "Darwin man parser"
@@ -564,10 +574,10 @@ def parse_manpage_at_path(manpage_path):
     parsers = [Type1ManParser(), Type2ManParser(), Type4ManParser(), Type3ManParser(), TypeMacManParser()]
     parsersToTry = [p for p in parsers if p.isMyType(manpage)]
         
+    success = False
     if not parsersToTry:
         add_diagnostic(manpage_path + ": Not supported")
     else:
-        success = False
         for parser in parsersToTry:
             add_diagnostic('Trying parser ' + parser.name())
             diagnostic_indent += 1
@@ -583,7 +593,8 @@ def parse_manpage_at_path(manpage_path):
             add_diagnostic(manpage_path + ' parsed successfully')
         else:
             parser_names =  ', '.join(p.name() for p in parsersToTry)
-            add_diagnostic('%s is unparsable (tried parser %s)' % (manpage_path, parser_names))
+            add_diagnostic('%s is unparsable (tried parser %s)' % (manpage_path, parser_names), True)
+    return success
 
 def compare_paths(a, b):
     """ Compare two paths by their base name, case insensitive """
@@ -592,23 +603,31 @@ def compare_paths(a, b):
 def parse_and_output_man_pages(paths):
     global diagnostic_indent
     paths.sort(compare_paths)
+    total_count = len(paths)
+    successful_count = 0
     for manpage_path in paths:
         try:
-            parse_manpage_at_path(manpage_path)
+            if parse_manpage_at_path(manpage_path):
+                successful_count += 1
         except IOError:
             diagnostic_indent = 0
             add_diagnostic('Cannot open ' + manpage_path)
         except:
-            add_diagnostic('Error parsing %s: %s' % (manpage_path, sys.exc_info()[0]))
+            add_diagnostic('Error parsing %s: %s' % (manpage_path, sys.exc_info()[0]), True)
             flush_diagnostics(sys.stderr)
             traceback.print_exc(file=sys.stderr)
         flush_diagnostics(sys.stderr)
-
-
+    add_diagnostic("Successfully parsed %d / %d pages" % (successful_count, total_count), True)
+    flush_diagnostics(sys.stderr)
+    
 
 if __name__ == "__main__":
-    paths = sys.argv[1:]
-    parse_and_output_man_pages(paths)
+    args = sys.argv[1:]
+    if args and (args[0] == '-v' or args[0] == '--verbose'):
+        VERBOSE = True
+        args.pop(0)
+    
+    parse_and_output_man_pages(args)
     
     # Profiling code
     # import cProfile, pstats

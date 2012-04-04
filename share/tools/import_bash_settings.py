@@ -128,7 +128,7 @@ def add_alias(alias_name, alias_value):
 			tokens = line.split(' ')
 			first_token = tokens[0].strip()
 			if first_token in bash_builtins:
-				print first_token, " is a bash builtin"			
+				print >> sys.stderr, first_token, " is a bash builtin"			
 				if first_token == "export":
 					var_regex = re.compile("(.*?)=(.*)")	
 					var_regex_matched = re.search(var_regex, line[7:])

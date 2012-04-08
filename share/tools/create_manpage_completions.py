@@ -1,6 +1,7 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-# Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > man_completions.fish """
+# Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > man_completions.fish
 
 """
 <OWNER> = Siteshwar Vashisht 
@@ -17,6 +18,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import string, sys, re, os.path, gzip, traceback
+from deroff import Deroffer
 
 # This gets set to the name of the command that we are currently executing
 CMDNAME = ""
@@ -478,7 +480,7 @@ class Type4ManParser(ManParser):
     def name(self):
         return "Type4"
 
-class TypeMacManParser(ManParser):
+class TypeDarwinManParser(ManParser):
     def isMyType(self, manpage):
         options_section_matched = compileAndSearch("\.S[hH] DESCRIPTION", manpage)
         return options_section_matched != None
@@ -537,7 +539,54 @@ class TypeMacManParser(ManParser):
                 
     def name(self):
         return "Darwin man parser"
+
+
+class TypeDeroffManParser(ManParser):
+    def isMyType(self, manpage):
+        return True # We're optimists
+    
+    def is_option(self, line):
+        return line.startswith('-')
+        
+    def could_be_description(self, line):
+        return len(line) > 0 and not line.startswith('-')
+    
+    def parseManPage(self, manpage):
+        d = Deroffer()
+        d.deroff(manpage)
+        output = d.get_output()
+        lines = output.split('\n')
+        
+        got_something = False
+        
+        # Discard lines until we get to DESCRIPTION or OPTIONS
+        while lines and not (lines[0].startswith('DESCRIPTION') or lines[0].startswith('OPTIONS') or lines[0].startswith('COMMAND OPTIONS')):
+            lines.pop(0)
+        
+        while lines:
+            # Pop until we get to the next option
+            while lines and not self.is_option(lines[0]):
+                lines.pop(0)    
             
+            if not lines:
+                continue
+            
+            options = lines.pop(0)
+            
+            # Pop until we get to either an empty line or a line starting with -
+            description = ''
+            while lines and self.could_be_description(lines[0]):
+                if description: description += ' '
+                description += lines.pop(0)
+            
+            builtcommand(options, description)
+            got_something = True
+            
+        return got_something
+            
+                
+    def name(self):
+        return "Deroffing man parser"
 
 def parse_manpage_at_path(manpage_path):
     filename = os.path.basename(manpage_path)
@@ -567,11 +616,22 @@ def parse_manpage_at_path(manpage_path):
     ignoredcommands = ["cc", "g++", "gcc", "c++", "cpp", "emacs", "gprof", "wget", "ld", "awk"]
     if cmd_base in ignoredcommands:
         return
+        
+    # Ignore perl's gazillion man pages
+    ignored_prefixes = ['perl', 'zsh']
+    for prefix in ignored_prefixes:
+        if cmd_base.startswith(prefix):
+            return
+            
+    # Ignore the millions of links to BUILTIN(1)
+    if manpage.find('BUILTIN 1') != -1:
+        return
+            
     
     # Clear the output list
     built_command_output[:] = []
         
-    parsers = [Type1ManParser(), Type2ManParser(), Type4ManParser(), Type3ManParser(), TypeMacManParser()]
+    parsers = [Type1ManParser(), Type2ManParser(), Type4ManParser(), Type3ManParser(), TypeDarwinManParser(), TypeDeroffManParser()]
     parsersToTry = [p for p in parsers if p.isMyType(manpage)]
         
     success = False
@@ -593,7 +653,8 @@ def parse_manpage_at_path(manpage_path):
             add_diagnostic(manpage_path + ' parsed successfully')
         else:
             parser_names =  ', '.join(p.name() for p in parsersToTry)
-            add_diagnostic('%s is unparsable (tried parser %s)' % (manpage_path, parser_names), True)
+            #add_diagnostic('%s contains no options or is unparsable' % manpage_path, True)
+            add_diagnostic('%s contains no options or is unparsable (tried parser %s)' % (manpage_path, parser_names), True)
     return success
 
 def compare_paths(a, b):
@@ -612,6 +673,8 @@ def parse_and_output_man_pages(paths):
         except IOError:
             diagnostic_indent = 0
             add_diagnostic('Cannot open ' + manpage_path)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except:
             add_diagnostic('Error parsing %s: %s' % (manpage_path, sys.exc_info()[0]), True)
             flush_diagnostics(sys.stderr)
@@ -627,11 +690,11 @@ if __name__ == "__main__":
         VERBOSE = True
         args.pop(0)
     
-    parse_and_output_man_pages(args)
-    
-    # Profiling code
-    # import cProfile, pstats
-    # cProfile.run('parse_and_output_man_pages(paths)', 'fooprof')
-    # p = pstats.Stats('fooprof')
-    # p.sort_stats('cumulative').print_stats(10)
-    
+    if False:
+        parse_and_output_man_pages(args)
+    else:
+        # Profiling code
+        import cProfile, pstats
+        cProfile.run('parse_and_output_man_pages(args)', 'fooprof')
+        p = pstats.Stats('fooprof')
+        p.sort_stats('cumulative').print_stats(100)

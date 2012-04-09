@@ -8,7 +8,7 @@ class Deroffer:
     
     def __init__(self):
         self.reg_table = {}
-        self.tr = range(256)
+        self.tr = {}
         self.nls = 2
         self.specletter = False
         self.pretty = False
@@ -42,13 +42,12 @@ class Deroffer:
         return ''.join(self.output)
     
     def putchar(self, c):
-        self.output.append(c)
+        if c != '\n' or self.output:
+            self.output.append(c)
         return c
         
     def condputchar(self, c):
-        ci = ord(c)
-        ci_trans = self.tr[ci & 0xFF]
-        c_trans = chr(ci_trans)
+        c_trans = self.tr.get(c, c)
         if not self.pic and not self.eqn and not self.refer and not self.macro and (not self.skiplists or not self.inlist) and (not self.skipheaders or not self.inheader):
             if self.pretty:
                 if c == '\n':
@@ -483,13 +482,10 @@ class Deroffer:
         return False
 
     def text(self):
-        while True:
+        while self.s:
             if not self.esc_char():
-                if self.str_at(0):
-                    self.condputchar(self.str_at(0))
-                    self.skip_char()
-                else:
-                    break
+                self.condputchar(self.str_at(0))
+                self.skip_char()
         return True
 
 
@@ -669,9 +665,9 @@ class Deroffer:
                 ns = self.str_at(0)
                 self.skip_char()
                 if not ns or ns == '\n':
-                    self.tr[c] = ord(' ')
+                    self.tr[c] = ' '
                 else:
-                    self.tr[c] = ord(ns)
+                    self.tr[c] = ns
             return True
         elif s0s1 in ['sp']:
             if self.pretty: self.condputchar('\n')
@@ -747,11 +743,14 @@ class Deroffer:
         return True
 
     def do_line(self):
-        if not self.s: return True
-        if self.str_at(0) == '.' or self.str_at(0) == '\'':
+        ch = self.str_at(0)
+        if ch == '.' or ch == '\'':
             if not self.request_or_macro(): return False
         elif self.tbl:
             self.do_tbl()
+        elif '\\' not in self.s:
+            # Fast check for common case of simple string
+            self.condputs(self.s)
         else:
             self.text()
         return True
@@ -782,7 +781,7 @@ def deroff_files(files):
 if __name__ == "__main__":
     import gzip
     paths = sys.argv[1:]
-    if True:
+    if False:
         deroff_files(paths)
     else:
         import cProfile, pstats

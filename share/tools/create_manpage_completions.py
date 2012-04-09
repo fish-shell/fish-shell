@@ -71,7 +71,7 @@ def unquoteSingleQuotes(data):
 
 # Make a string of characters that are deemed safe in fish without needing to be escaped
 # Note that space is not included
-g_fish_safe_chars = frozenset(string.ascii_letters + string.digits + '_+-|/:=<>@~')
+g_fish_safe_chars = frozenset(string.ascii_letters + string.digits + '_+-|/:=@~')
 
 def fish_escape_single_quote(str):
     # Escape a string if necessary so that it can be put in single quotes
@@ -96,6 +96,11 @@ def builtcommand(options, description):
     man_optionlist = re.split(" |,|\"|=|[|]", options)
     fish_options = []
     for option in man_optionlist:
+        option = option.strip()
+        
+        # Skip some problematic cases
+        if option in ['-', '--']: continue
+        
         if option.startswith('--'):
             # New style long option (--recursive)
             fish_options.append('-l ' + fish_escape_single_quote(option[2:]))
@@ -563,10 +568,18 @@ class TypeDeroffManParser(ManParser):
         while lines and not (lines[0].startswith('DESCRIPTION') or lines[0].startswith('OPTIONS') or lines[0].startswith('COMMAND OPTIONS')):
             lines.pop(0)
         
+        # Look for BUGS and stop there
+        for idx in xrange(len(lines)):
+            line = lines[idx]
+            if line.startswith('BUGS'):
+                # Drop remaining elements
+                lines[idx:] = []
+                break
+        
         while lines:
             # Pop until we get to the next option
             while lines and not self.is_option(lines[0]):
-                lines.pop(0)    
+                line = lines.pop(0)
             
             if not lines:
                 continue
@@ -690,7 +703,7 @@ if __name__ == "__main__":
         VERBOSE = True
         args.pop(0)
     
-    if False:
+    if True:
         parse_and_output_man_pages(args)
     else:
         # Profiling code

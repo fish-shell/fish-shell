@@ -192,9 +192,20 @@ class completion_entry_t
     }
 };
 
-/** Linked list of all completion entries */
-typedef std::list<completion_entry_t *> completion_entry_list_t;
-static completion_entry_list_t completion_entries;
+/** Set of all completion entries */
+struct completion_entry_set_comparer {
+    /** Comparison for std::set */
+    bool operator()(completion_entry_t *p1, completion_entry_t *p2) const {
+        /* Paths always come last for no particular reason */
+        if (p1->cmd_is_path != p2->cmd_is_path) {
+            return p1->cmd_is_path < p2->cmd_is_path;
+        } else {
+            return p1->cmd < p2->cmd;
+        }
+    }
+};
+typedef std::set<completion_entry_t *, completion_entry_set_comparer> completion_entry_set_t;
+static completion_entry_set_t completion_set;
 
 /** The lock that guards the list of completion entries */
 static pthread_mutex_t completion_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -355,13 +366,13 @@ bool completer_t::condition_test( const wcstring &condition )
 static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd, const bool cmd_is_path )
 {
     ASSERT_IS_LOCKED(completion_lock);
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
-	{
-        completion_entry_t *entry = *iter;
-        if (entry->cmd == cmd && cmd_is_path == entry->cmd_is_path)
-			return entry;
-	}
-	return NULL;
+    completion_entry_t *result = NULL;
+    completion_entry_t tmp_entry(cmd, cmd_is_path, L"", false);
+    completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
+    if (iter != completion_set.end()) {
+        result = *iter;
+    }
+	return result;
 }
 
 /** Locate the specified entry. Create it if it doesn't exist. Must be called while locked. */
@@ -375,7 +386,7 @@ static completion_entry_t *complete_get_exact_entry( const wchar_t *cmd, bool cm
 	if( c == NULL )
 	{
         c = new completion_entry_t(cmd, cmd_is_path, L"", true);
-        completion_entries.push_front(c);
+        completion_set.insert(c);
 	}
 
 	return c;
@@ -504,22 +515,18 @@ void complete_remove( const wchar_t *cmd,
 {
 	CHECK( cmd, );
     scoped_lock lock(completion_lock);
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ) {
-        completion_entry_t *e = *iter;
-        bool delete_it = false;
-		if(cmd_is_path == e->cmd_is_path && cmd == e->cmd) {
-            delete_it = complete_remove_entry( e, short_opt, long_opt );
-        }
-        
+    
+    completion_entry_t tmp_entry(cmd, cmd_is_path, L"", false);
+    completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
+    if (iter != completion_set.end()) {
+        completion_entry_t *entry = *iter;
+        bool delete_it = complete_remove_entry(entry, short_opt, long_opt);
         if (delete_it) {
             /* Delete this entry */
-            iter = completion_entries.erase(iter);
-            delete e;
-        } else {
-            /* Don't delete it */
-            ++iter;
+            completion_set.erase(iter);
+            delete entry;
         }
-	}
+    }
 }
 
 /* Formats an error string by prepending the prefix and then appending the str in single quotes */
@@ -628,7 +635,7 @@ int complete_is_valid_option( const wchar_t *str,
 
 	scoped_lock lock(completion_lock);
     scoped_lock lock2(completion_entry_lock);
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
+    for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
 	{
         const completion_entry_t *i = *iter;
 		const wcstring &match = i->cmd_is_path ? path : cmd;
@@ -1278,7 +1285,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 
     scoped_lock lock(completion_lock);
     scoped_lock lock2(completion_entry_lock);
-    for (completion_entry_list_t::iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
+    for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
 	{
         const completion_entry_t *i = *iter;
 		const wcstring &match = i->cmd_is_path ? path : cmd;
@@ -1927,7 +1934,7 @@ void complete_print( wcstring &out )
 {
     scoped_lock locker(completion_lock);
     scoped_lock locker2(completion_entry_lock);
-    for (completion_entry_list_t::const_iterator iter = completion_entries.begin(); iter != completion_entries.end(); ++iter)
+    for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
     {
         const completion_entry_t *e = *iter;
         const option_list_t options = e->get_options();

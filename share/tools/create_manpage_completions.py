@@ -30,12 +30,16 @@ built_command_output = []
 diagnostic_output = []
 diagnostic_indent = 0
 
-global VERBOSE, WRITE_TO_STDOUT
-VERBOSE, WRITE_TO_STDOUT = False, False
+# Three diagnostic verbosity levels
+VERY_VERBOSE, BRIEF_VERBOSE, NOT_VERBOSE = 2, 1, 0
 
-def add_diagnostic(dgn, always = False):
-    # Add a diagnostic message if VERBOSE is True or always is True
-    if VERBOSE or always:
+# Pick some reasonable default values for settings
+global VERBOSITY, WRITE_TO_STDOUT
+VERBOSITY, WRITE_TO_STDOUT = NOT_VERBOSE, False
+
+def add_diagnostic(dgn, msg_verbosity = VERY_VERBOSE):
+    # Add a diagnostic message, if msg_verbosity <= VERBOSITY
+    if msg_verbosity <= VERBOSITY:
         diagnostic_output.append('   '*diagnostic_indent + dgn)
     
 def flush_diagnostics(where):
@@ -520,6 +524,7 @@ class TypeDarwinManParser(ManParser):
             
             # Extract the name
             name = self.trim_groff(lines.pop(0)).strip()
+            if not name: continue
             name = name.split(None, 2)[0]
             
             # Extract the description
@@ -720,20 +725,32 @@ def parse_manpage_at_path(manpage_path, output_directory):
                 output_file.close()
         else:
             parser_names =  ', '.join(p.name() for p in parsersToTry)
-            #add_diagnostic('%s contains no options or is unparsable' % manpage_path, True)
-            add_diagnostic('%s contains no options or is unparsable (tried parser %s)' % (manpage_path, parser_names), True)
+            #add_diagnostic('%s contains no options or is unparsable' % manpage_path, BRIEF_VERBOSE)
+            add_diagnostic('%s contains no options or is unparsable (tried parser %s)' % (manpage_path, parser_names), BRIEF_VERBOSE)
     return success
 
 def compare_paths(a, b):
     """ Compare two paths by their base name, case insensitive """
     return cmp(os.path.basename(a).lower(), os.path.basename(b).lower())
 
-def parse_and_output_man_pages(paths, output_directory):
+def parse_and_output_man_pages(paths, output_directory, show_progress):
     global diagnostic_indent
     paths.sort(compare_paths)
     total_count = len(paths)
-    successful_count = 0
+    successful_count, index = 0, 0
+    padding_len = len(str(total_count))
+    last_progress_string_length = 0
+    if show_progress and not WRITE_TO_STDOUT:
+        print "Parsing man pages and writing completions to", output_directory
     for manpage_path in paths:
+        index += 1
+        if show_progress:
+            filename = os.path.basename(manpage_path).split('.', 1)[0]
+            progress_str = '  %s / %d : %s' % (str(index).rjust(padding_len), total_count, filename)
+            # Pad on the right with spaces so we overwrite whatever we wrote last time
+            padded_progress_str = progress_str.ljust(last_progress_string_length)
+            last_progress_string_length = len(progress_str)
+            print padded_progress_str, chr(27) + '[A'
         try:
             if parse_manpage_at_path(manpage_path, output_directory):
                 successful_count += 1
@@ -743,11 +760,11 @@ def parse_and_output_man_pages(paths, output_directory):
         except (KeyboardInterrupt, SystemExit):
             raise
         except:
-            add_diagnostic('Error parsing %s: %s' % (manpage_path, sys.exc_info()[0]), True)
+            add_diagnostic('Error parsing %s: %s' % (manpage_path, sys.exc_info()[0]), BRIEF_VERBOSE)
             flush_diagnostics(sys.stderr)
             traceback.print_exc(file=sys.stderr)
         flush_diagnostics(sys.stderr)
-    add_diagnostic("Successfully parsed %d / %d pages" % (successful_count, total_count), True)
+    add_diagnostic("Successfully parsed %d / %d pages" % (successful_count, total_count), BRIEF_VERBOSE)
     flush_diagnostics(sys.stderr)
 
 def get_paths_from_manpath():
@@ -773,26 +790,26 @@ def get_paths_from_manpath():
         
 
 def usage(script_name):
-    print "Usage: %s [-v, --verbose] [-s, --stdout] [-d, --directory] files..." % script_name
+    print "Usage: %s [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress] files..." % script_name
     print """Command options are:
      -h, --help\t\tShow this help message
      -v, --verbose\tShow debugging output to stderr
      -s, --stdout\tWrite all completions to stdout (trumps the --directory option)
      -d, --directory\tWrite all completions to the given directory, instead of to ~/.config/fish/completions
      -m, --manpath\tProcess all man1 files available in the manpath (as determined by man --path)
+     -p, --progress\tShow progress
     """
 
 if __name__ == "__main__":
     script_name = sys.argv[0]
     try:
-        opts, file_paths = getopt.gnu_getopt(sys.argv[1:], 'vsd:hm', ['verbose', 'stdout', 'directory=', 'help', 'manpath'])
+        opts, file_paths = getopt.gnu_getopt(sys.argv[1:], 'vsd:hmp', ['verbose', 'stdout', 'directory=', 'help', 'manpath', 'progress'])
     except getopt.GetoptError, err:
         print str(err) # will print something like "option -a not recognized"
         usage(script_name)
         sys.exit(2)
     
-    use_manpath = False
-    custom_dir = False
+    use_manpath, show_progress, custom_dir = False, False, False
     output_directory = ''
     for opt, value in opts:
         if opt in ('-v', '--verbose'):
@@ -806,6 +823,8 @@ if __name__ == "__main__":
             sys.exit(0)
         elif opt in ('-m', '--manpath'):
             use_manpath = True
+        elif opt in ('-p', '--progress'):
+            show_progress = True
         else:
             assert False, "unhandled option"
     
@@ -828,7 +847,7 @@ if __name__ == "__main__":
                 raise
     
     if True:
-        parse_and_output_man_pages(file_paths, output_directory)
+        parse_and_output_man_pages(file_paths, output_directory, show_progress)
     else:
         # Profiling code
         import cProfile, pstats

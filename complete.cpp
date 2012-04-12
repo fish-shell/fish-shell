@@ -152,6 +152,9 @@ typedef struct complete_entry_opt
     }
 } complete_entry_opt_t;
 
+/* Last value used in the order field of completion_entry_t */
+static unsigned int kCompleteOrder = 0;
+
 /**
    Struct describing a command completion
 */
@@ -171,9 +174,12 @@ class completion_entry_t
     
 	/** True if command is a path */
 	const bool cmd_is_path;
-        
+                    
 	/** True if no other options than the ones supplied are possible */
 	bool authoritative;
+    
+    /** Order for when this completion was created. This aids in outputting completions sorted by time. */
+    const unsigned int order;
     
     /** Getters for option list. */
     option_list_t &get_options();
@@ -187,7 +193,8 @@ class completion_entry_t
         short_opt_str(options),
         cmd(c),
         cmd_is_path(type),
-        authoritative(author)
+        authoritative(author),
+        order(++kCompleteOrder)
     {
     }
 };
@@ -206,6 +213,11 @@ struct completion_entry_set_comparer {
 };
 typedef std::set<completion_entry_t *, completion_entry_set_comparer> completion_entry_set_t;
 static completion_entry_set_t completion_set;
+
+// Comparison function to sort completions by their order field
+static bool compare_completions_by_order(const completion_entry_t *p1, const completion_entry_t *p2) {
+    return p1->order < p2->order;
+}
 
 /** The lock that guards the list of completion entries */
 static pthread_mutex_t completion_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -1934,7 +1946,12 @@ void complete_print( wcstring &out )
 {
     scoped_lock locker(completion_lock);
     scoped_lock locker2(completion_entry_lock);
-    for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
+    
+    // Get a list of all completions in a vector, then sort it by order
+    std::vector<const completion_entry_t *> all_completions(completion_set.begin(), completion_set.end());
+    sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
+    
+    for (std::vector<const completion_entry_t *>::const_iterator iter = all_completions.begin(); iter != all_completions.end(); ++iter)
     {
         const completion_entry_t *e = *iter;
         const option_list_t options = e->get_options();

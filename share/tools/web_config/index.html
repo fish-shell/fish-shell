@@ -1,5 +1,8 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+<title>fish shell configuration</title>
 <style type="text/css">
 
 body {
@@ -975,6 +978,7 @@ function create_data_table_element(contents_list) {
 
 /* Put stuff in colorpicker_term256 */
 function populate_colorpicker_term256() {
+	$('#colorpicker_term256').empty()
 	var idx
 	for (idx = 0; idx < term256_colors.length; idx += items_per_row) {
 		var row = $('<tr>', {
@@ -1028,7 +1032,7 @@ $(document).ready(function() {
 						<div class="colorpicker_target">
 							<div class="colorpicker_target_tab tab_first colorpicker_target_selected" id="foreground" onClick="picked_colorpicker_target(this)">Text</div><div class="colorpicker_target_tab tab_last" id="background" onClick="picked_colorpicker_target(this)">Background</div>
 						</div>
-						<table id="colorpicker_term256">
+						<table id="colorpicker_term256"><tr><td></td></tr>
 						</table>
 						<div class="colorpicker_modifiers">
 							<div class="colorpicker_modifier_cell" id="modifier_underline" style="text-decoration: underline" onClick='picked_modifier(this)'>Underline</div>
@@ -1037,8 +1041,8 @@ $(document).ready(function() {
 					<div id="detail_function"></div>
 				</div>
 			</div>
-			<table id="data_table">
-			<table>
+			<table id="data_table"><tr><td></td></tr>
+			</table>
 			<div class="footer">
 			</div>
 		</div>

@@ -124,6 +124,28 @@ static int next_tab_stop( int in )
 	return ( (in/init_tabs)+1 )*init_tabs;
 }
 
+// PCA for term256 support, let's just detect the escape codes directly
+static int is_term256_escape(const wchar_t *str) {
+    // An escape code looks like this: \x1b[38;5;<num>m 
+    // or like this: \x1b[48;5;<num>m 
+    
+    // parse out the required prefix
+    int len = try_sequence("\x1b[38;5;", str);
+    if (! len) len = try_sequence("\x1b[48;5;", str);
+    if (! len) return 0;
+    
+    // now try parsing out a string of digits
+    // we need at least one
+    if (! iswdigit(str[len])) return 0;
+    while (iswdigit(str[len])) len++;
+    
+    // look for the terminating m
+    if (str[len++] != L'm') return 0;
+    
+    // success
+    return len;
+}
+
 /**
    Calculate the width of the specified prompt. Does some clever magic
    to detect common escape sequences that may be embeded in a prompt,
@@ -143,13 +165,13 @@ static int calc_prompt_width( const wchar_t *prompt )
 			*/
 			size_t p;
 			int len=0;
-			int found = 0;
+			bool found = false;
 			
 			/*
 			  Detect these terminfo color escapes with parameter
 			  value 0..7, all of which don't move the cursor
 			*/
-			char * esc[] =
+			char * const esc[] =
 				{
 					set_a_foreground,
 					set_a_background,
@@ -162,7 +184,7 @@ static int calc_prompt_width( const wchar_t *prompt )
 			  Detect these semi-common terminfo escapes without any
 			  parameter values, all of which don't move the cursor
 			*/
-			char *esc2[] =
+			char * const esc2[] =
 				{
 					enter_bold_mode,
 					exit_attribute_mode,
@@ -187,7 +209,7 @@ static int calc_prompt_width( const wchar_t *prompt )
 				}
 			;
 
-			for( p=0; p < (sizeof(esc)/sizeof(char *)) && !found; p++ )
+			for( p=0; p < sizeof esc / sizeof *esc && !found; p++ )
 			{
 				if( !esc[p] )
 					continue;
@@ -198,11 +220,21 @@ static int calc_prompt_width( const wchar_t *prompt )
 					if( len )
 					{
 						j += (len-1);
-						found = 1;
+						found = true;
 						break;
 					}
 				}
 			}
+            
+            // PCA for term256 support, let's just detect the escape codes directly
+            if (! found) {
+                len = is_term256_escape(&prompt[j]);
+                if (len) {
+                    j += (len - 1);
+                    found = true;
+                }
+            }
+
 
 			for( p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++ )
 			{
@@ -219,7 +251,7 @@ static int calc_prompt_width( const wchar_t *prompt )
 				if( len )
 				{
 					j += (len-1);
-					found = 1;
+					found = true;
 				}
 			}
 				
@@ -232,7 +264,7 @@ static int calc_prompt_width( const wchar_t *prompt )
 					{
 						const wchar_t *end;
 						j+=2;
-						found = 1;
+						found = true;
 						end = wcsstr( &prompt[j], L"\x1b\\" );
 						if( end )
 						{

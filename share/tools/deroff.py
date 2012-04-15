@@ -4,10 +4,278 @@
 """ Deroff.py, ported to Python from the venerable deroff.c """
 
 
-import sys
-
+import sys, re
 
 class Deroffer:
+
+    g_specs_specletter = {
+        # Output composed latin1 letters
+        '-D': '\320',
+        'Sd': '\360',
+        'Tp': '\376',
+        'TP': '\336',
+        'AE': '\306',
+        'ae': '\346',
+        'OE': "OE",
+        'oe': "oe",
+        ':a': '\344',
+        ':A': '\304',
+        ':e': '\353',
+        ':E': '\313',
+        ':i': '\357',
+        ':I': '\317',
+        ':o': '\366',
+        ':O': '\326',
+        ':u': '\374',
+        ':U': '\334',
+        ':y': '\377',
+        'ss': '\337',
+        '\'A': '\301',
+        '\'E': '\311',
+        '\'I': '\315',
+        '\'O': '\323',
+        '\'U': '\332',
+        '\'Y': '\335',
+        '\'a': '\341',
+        '\'e': '\351',
+        '\'i': '\355',
+        '\'o': '\363',
+        '\'u': '\372',
+        '\'y': '\375',
+        '^A': '\302',
+        '^E': '\312',
+        '^I': '\316',
+        '^O': '\324',
+        '^U': '\333',
+        '^a': '\342',
+        '^e': '\352',
+        '^i': '\356',
+        '^o': '\364',
+        '^u': '\373',
+        '`A': '\300',
+        '`E': '\310',
+        '`I': '\314',
+        '`O': '\322',
+        '`U': '\331',
+        '`a': '\340',
+        '`e': '\350',
+        '`i': '\354',
+        '`o': '\362',
+        '`u': '\371',
+        '~A': '\303',
+        '~N': '\321',
+        '~O': '\325',
+        '~a': '\343',
+        '~n': '\361',
+        '~o': '\365',
+        ',C': '\307',
+        ',c': '\347',
+        '/l': "/l",
+        '/L': "/L",
+        '/o': '\370',
+        '/O': '\330',
+        'oA': '\305',
+        'oa': '\345',
+        
+        # Ligatures
+        'fi': 'fi',
+        'ff': 'ff',
+        'fl': 'fl',
+        
+        'Fi': 'ffi',
+        'Ff': 'fff',
+        'Fl': 'ffl'
+    }
+    
+    g_specs = {
+        'mi': '-',
+        'en': '-',
+        'hy': '-',
+        'em': "--",
+        'lq': "\"", # PCA: This used to be left and right smart quotes, but they look dumb
+        'rq': "\"", # So just use ordinary double quotes
+        'Bq': ",,",
+        'oq': '`',
+        'cq': '\'',
+        'aq': '\'',
+        'dq': '"',
+        'or': '|',
+        'at': '@',
+        'sh': '#',
+        'Eu': '\244',
+        'eu': '\244',
+        'Do': '$',
+        'ct': '\242',
+        'Fo': '\253',
+        'Fc': '\273',
+        'fo': '<',
+        'fc': '>',
+        'r!': '\241',
+        'r?': '\277',
+        'Of': '\252',
+        'Om': '\272',
+        'pc': '\267',
+        'S1': '\271',
+        'S2': '\262',
+        'S3': '\263',
+        '<-': "<-",
+        '->': "->",
+        '<>': "<->",
+        'ua': '^',
+        'da': 'v',
+        'lA': "<=",
+        'rA': "=>",
+        'hA': "<=>",
+        'uA': "^^",
+        'dA': "vv",
+        'ba': '|',
+        'bb': '|',
+        'br': '|',
+        'bv': '|',
+        'ru': '_',
+        'ul': '_',
+        'ci': 'O',
+        'bu': 'o',
+        'co': '\251',
+        'rg': '\256',
+        'tm': "(TM)",
+        'dd': "||",
+        'dg': '|',
+        'ps': '\266',
+        'sc': '\247',
+        'de': '\260',
+        '%0': "0/00",
+        '14': '\274',
+        '12': '\275',
+        '34': '\276',
+        'f/': '/',
+        'sl': '/',
+        'rs': '\\',
+        'sq': "[]",
+        'fm': '\'',
+        'ha': '^',
+        'ti': '~',
+        'lB': '[',
+        'rB': ']',
+        'lC': '{',
+        'rC': '}',
+        'la': '<',
+        'ra': '>',
+        'lh': "<=",
+        'rh': "=>",
+        'tf': "therefore",
+        '~~': "~~",
+        '~=': "~=",
+        '!=': "!=",
+        '**': '*',
+        '+-': '\261',
+        '<=': "<=",
+        '==': "==",
+        '=~': "=~",
+        '>=': ">=",
+        'AN': "\\/",
+        'OR': "/\\",
+        'no': '\254',
+        'te': "there exists",
+        'fa': "for all",
+        'Ah': "aleph",
+        'Im': "imaginary",
+        'Re': "real",
+        'if': "infinity",
+        'md': "\267",
+        'mo': "member of",
+        'mu': '\327',
+        'nm': "not member of",
+        'pl': '+',
+        'eq': '=',
+        'pt': "oc",
+        'pp': "perpendicular",
+        'sb': "(=",
+        'sp': "=)",
+        'ib': "(-",
+        'ip': "-)",
+        'ap': '~',
+        'is': 'I',
+        'sr': "root",
+        'pd': 'd',
+        'c*': "(x)",
+        'c+': "(+)",
+        'ca': "cap",
+        'cu': 'U',
+        'di': '\367',
+        'gr': 'V',
+        'es': "{}",
+        'CR': "_|",
+        'st': "such that",
+        '/_': "/_",
+        'lz': "<>",
+        'an': '-',
+        
+        # Output Greek
+        '*A': "Alpha",
+        '*B': "Beta",
+        '*C': "Xi",
+        '*D': "Delta",
+        '*E': "Epsilon",
+        '*F': "Phi",
+        '*G': "Gamma",
+        '*H': "Theta",
+        '*I': "Iota",
+        '*K': "Kappa",
+        '*L': "Lambda",
+        '*M': "Mu",
+        '*N': "Nu",
+        '*O': "Omicron",
+        '*P': "Pi",
+        '*Q': "Psi",
+        '*R': "Rho",
+        '*S': "Sigma",
+        '*T': "Tau",
+        '*U': "Upsilon",
+        '*W': "Omega",
+        '*X': "Chi",
+        '*Y': "Eta",
+        '*Z': "Zeta",
+        '*a': "alpha",
+        '*b': "beta",
+        '*c': "xi",
+        '*d': "delta",
+        '*e': "epsilon",
+        '*f': "phi",
+        '+f': "phi",
+        '*g': "gamma",
+        '*h': "theta",
+        '+h': "theta",
+        '*i': "iota",
+        '*k': "kappa",
+        '*l': "lambda",
+        '*m': "\265",
+        '*n': "nu",
+        '*o': "omicron",
+        '*p': "pi",
+        '+p': "omega",
+        '*q': "psi",
+        '*r': "rho",
+        '*s': "sigma",
+        '*t': "tau",
+        '*u': "upsilon",
+        '*w': "omega",
+        '*x': "chi",
+        '*y': "eta",
+        '*z': "zeta",
+        'ts': "sigma",
+    }
+    
+    g_re_word = re.compile(r'[a-zA-Z_]+') # equivalent to the word() method
+    g_re_number = re.compile(r'[+-]?\d+') # equivalent to the number() method
+    g_re_esc_char = re.compile(r"""([a-zA-Z_]) |   # Word
+                                   ([+-]?\d)   |   # Number
+                                   \\              # Backslash (for escape seq)
+                               """)
+                               
+    g_re_not_backslash_or_whitespace = re.compile(r'[^ \t\n\r\f\v\\]+') # Match a sequence of not backslash or whitespace
+    
+    g_re_newline_collapse = re.compile(r'\n{3,}')
     
     def __init__(self):
         self.reg_table = {}
@@ -38,38 +306,45 @@ class Deroffer:
     
     def flush_output(self, where):
         if where:
-            where.write(''.join(self.output))
+            where.write(self.get_output())
         self.output[:] = []
     
     def get_output(self):
-        return ''.join(self.output)
+        res = ''.join(self.output)
+        clean_res = Deroffer.g_re_newline_collapse.sub('\n', res)
+        return clean_res
+        
+    
+    def cleanup_whitespace(self):
+        output = self.output
+        while output and output[0] == '\n': del output[0]
+        idx = len(output) - 1
+        while idx > 1:
+            if output[idx] == '\n' and output[idx-1] == '\n' and output[idx-2] == '\n' :
+                del output[idx]
+            idx = idx - 1
+        
     
     def putchar(self, c):
-        if c != '\n' or self.output:
-            self.output.append(c)
+        self.output.append(c)
         return c
         
     def condputchar(self, c):
-        c_trans = self.tr.get(c, c)
-        if not self.pic and not self.eqn and not self.refer and not self.macro and (not self.skiplists or not self.inlist) and (not self.skipheaders or not self.inheader):
-            if self.pretty:
-                if c == '\n':
-                    self.nls += 1
-                    if self.nls > 2: return c
-                else:
-                    self.nls = 0
-                return self.putchar(c_trans)
-            else:
-                return self.putchar(c_trans)
-        elif not self.pretty and c == '\n':
-            return self.putchar(c_trans)
-        else:
-            return c
-            
-    def condputs(self, str):
-        for c in str:
-            self.condputchar(c)
+        special = self.pic or self.eqn or self.refer or self.macro or (self.skiplists and self.inlist) or (self.skipheaders and self.inheader)
+        if not special:
+            c_trans = self.tr.get(c, c)
+            self.putchar(c_trans)
     
+    def condputs(self, str):
+        special = self.pic or self.eqn or self.refer or self.macro or (self.skiplists and self.inlist) or (self.skipheaders and self.inheader)
+        if special: return
+        
+        if not self.tr:
+            self.output.extend(str)
+        else:
+            tr = self.tr
+            self.output.extend([tr.get(c, c) for c in str])
+            
     def str_at(self, idx):
         return self.s[idx:idx+1]
     
@@ -178,270 +453,12 @@ class Deroffer:
     def spec(self):
         self.specletter = False
         if self.s.startswith('\\(') and self.prch(2) and self.prch(3):
-            specs_specletter = {
-                # Output composed latin1 letters
-                '-D': '\320',
-                'Sd': '\360',
-                'Tp': '\376',
-                'TP': '\336',
-                'AE': '\306',
-                'ae': '\346',
-                'OE': "OE",
-                'oe': "oe",
-                ':a': '\344',
-                ':A': '\304',
-                ':e': '\353',
-                ':E': '\313',
-                ':i': '\357',
-                ':I': '\317',
-                ':o': '\366',
-                ':O': '\326',
-                ':u': '\374',
-                ':U': '\334',
-                ':y': '\377',
-                'ss': '\337',
-                '\'A': '\301',
-                '\'E': '\311',
-                '\'I': '\315',
-                '\'O': '\323',
-                '\'U': '\332',
-                '\'Y': '\335',
-                '\'a': '\341',
-                '\'e': '\351',
-                '\'i': '\355',
-                '\'o': '\363',
-                '\'u': '\372',
-                '\'y': '\375',
-                '^A': '\302',
-                '^E': '\312',
-                '^I': '\316',
-                '^O': '\324',
-                '^U': '\333',
-                '^a': '\342',
-                '^e': '\352',
-                '^i': '\356',
-                '^o': '\364',
-                '^u': '\373',
-                '`A': '\300',
-                '`E': '\310',
-                '`I': '\314',
-                '`O': '\322',
-                '`U': '\331',
-                '`a': '\340',
-                '`e': '\350',
-                '`i': '\354',
-                '`o': '\362',
-                '`u': '\371',
-                '~A': '\303',
-                '~N': '\321',
-                '~O': '\325',
-                '~a': '\343',
-                '~n': '\361',
-                '~o': '\365',
-                ',C': '\307',
-                ',c': '\347',
-                '/l': "/l",
-                '/L': "/L",
-                '/o': '\370',
-                '/O': '\330',
-                'oA': '\305',
-                'oa': '\345',
-                
-                # Ligatures
-                'fi': 'fi',
-                'ff': 'ff',
-                'fl': 'fl',
-                
-                'Fi': 'ffi',
-                'Ff': 'fff',
-                'Fl': 'ffl'
-            }
-            
-            specs = {
-                'mi': '-',
-                'en': '-',
-                'hy': '-',
-                'em': "--",
-                'lq': "``",
-                'rq': "\'\'",
-                'Bq': ",,",
-                'oq': '`',
-                'cq': '\'',
-                'aq': '\'',
-                'dq': '"',
-                'or': '|',
-                'at': '@',
-                'sh': '#',
-                'Eu': '\244',
-                'eu': '\244',
-                'Do': '$',
-                'ct': '\242',
-                'Fo': '\253',
-                'Fc': '\273',
-                'fo': '<',
-                'fc': '>',
-                'r!': '\241',
-                'r?': '\277',
-                'Of': '\252',
-                'Om': '\272',
-                'pc': '\267',
-                'S1': '\271',
-                'S2': '\262',
-                'S3': '\263',
-                '<-': "<-",
-                '->': "->",
-                '<>': "<->",
-                'ua': '^',
-                'da': 'v',
-                'lA': "<=",
-                'rA': "=>",
-                'hA': "<=>",
-                'uA': "^^",
-                'dA': "vv",
-                'ba': '|',
-                'bb': '|',
-                'br': '|',
-                'bv': '|',
-                'ru': '_',
-                'ul': '_',
-                'ci': 'O',
-                'bu': 'o',
-                'co': '\251',
-                'rg': '\256',
-                'tm': "(TM)",
-                'dd': "||",
-                'dg': '|',
-                'ps': '\266',
-                'sc': '\247',
-                'de': '\260',
-                '%0': "0/00",
-                '14': '\274',
-                '12': '\275',
-                '34': '\276',
-                'f/': '/',
-                'sl': '/',
-                'rs': '\\',
-                'sq': "[]",
-                'fm': '\'',
-                'ha': '^',
-                'ti': '~',
-                'lB': '[',
-                'rB': ']',
-                'lC': '{',
-                'rC': '}',
-                'la': '<',
-                'ra': '>',
-                'lh': "<=",
-                'rh': "=>",
-                'tf': "therefore",
-                '~~': "~~",
-                '~=': "~=",
-                '!=': "!=",
-                '**': '*',
-                '+-': '\261',
-                '<=': "<=",
-                '==': "==",
-                '=~': "=~",
-                '>=': ">=",
-                'AN': "\\/",
-                'OR': "/\\",
-                'no': '\254',
-                'te': "there exists",
-                'fa': "for all",
-                'Ah': "aleph",
-                'Im': "imaginary",
-                'Re': "real",
-                'if': "infinity",
-                'md': "\267",
-                'mo': "member of",
-                'mu': '\327',
-                'nm': "not member of",
-                'pl': '+',
-                'eq': '=',
-                'pt': "oc",
-                'pp': "perpendicular",
-                'sb': "(=",
-                'sp': "=)",
-                'ib': "(-",
-                'ip': "-)",
-                'ap': '~',
-                'is': 'I',
-                'sr': "root",
-                'pd': 'd',
-                'c*': "(x)",
-                'c+': "(+)",
-                'ca': "cap",
-                'cu': 'U',
-                'di': '\367',
-                'gr': 'V',
-                'es': "{}",
-                'CR': "_|",
-                'st': "such that",
-                '/_': "/_",
-                'lz': "<>",
-                'an': '-',
-                
-                # Output Greek
-                '*A': "Alpha",
-                '*B': "Beta",
-                '*C': "Xi",
-                '*D': "Delta",
-                '*E': "Epsilon",
-                '*F': "Phi",
-                '*G': "Gamma",
-                '*H': "Theta",
-                '*I': "Iota",
-                '*K': "Kappa",
-                '*L': "Lambda",
-                '*M': "Mu",
-                '*N': "Nu",
-                '*O': "Omicron",
-                '*P': "Pi",
-                '*Q': "Psi",
-                '*R': "Rho",
-                '*S': "Sigma",
-                '*T': "Tau",
-                '*U': "Upsilon",
-                '*W': "Omega",
-                '*X': "Chi",
-                '*Y': "Eta",
-                '*Z': "Zeta",
-                '*a': "alpha",
-                '*b': "beta",
-                '*c': "xi",
-                '*d': "delta",
-                '*e': "epsilon",
-                '*f': "phi",
-                '+f': "phi",
-                '*g': "gamma",
-                '*h': "theta",
-                '+h': "theta",
-                '*i': "iota",
-                '*k': "kappa",
-                '*l': "lambda",
-                '*m': "\265",
-                '*n': "nu",
-                '*o': "omicron",
-                '*p': "pi",
-                '+p': "omega",
-                '*q': "psi",
-                '*r': "rho",
-                '*s': "sigma",
-                '*t': "tau",
-                '*u': "upsilon",
-                '*w': "omega",
-                '*x': "chi",
-                '*y': "eta",
-                '*z': "zeta",
-                'ts': "sigma",
-            }
-            
             key = self.s[2:4]
-            if key in specs_specletter:
-                self.condputs(specs_specletter[key])
+            if key in Deroffer.g_specs_specletter:
+                self.condputs(Deroffer.g_specs_specletter[key])
                 self.specletter = True
-            elif key in specs:
-                self.condputs(specs[key])
+            elif key in Deroffer.g_specs:
+                self.condputs(Deroffer.g_specs[key])
             self.skip_char(4)
             return True
         elif self.s.startswith('\\%'):
@@ -467,30 +484,36 @@ class Deroffer:
             self.skip_char(2)
             return True
         return False
-    
+
     def word(self):
-        if self.letter(0):
-            self.condputchar(self.str_at(0))
-            self.skip_char()
-            while True:
-                if self.spec() and not self.specletter:
-                    break
-                else:
-                    if self.letter(0):
-                        self.condputchar(self.str_at(0))
-                        self.skip_char()
-                    else:
-                        break
-            return True
-        return False
+        got_something = False
+        while True:
+            match = Deroffer.g_re_word.match(self.s)
+            if not match: break
+            got_something = True
+            self.condputs(match.group(0))
+            self.skip_char(match.end(0))
+            
+            # Consume all specials
+            while self.spec():
+                if not self.specletter: break
+            
+        return got_something
+
 
     def text(self):
         while self.s:
-            if not self.esc_char():
-                self.condputchar(self.str_at(0))
-                self.skip_char()
+            idx = self.s.find('\\')
+            if idx == -1:
+                self.condputs(self.s)
+                self.s = ''
+            else:
+                self.condputs(self.s[:idx])
+                self.skip_char(idx)
+                if not self.esc_char():
+                    self.condputchar(self.str_at(0))
+                    self.skip_char()
         return True
-
 
     def letter(self, idx):
         ch = self.str_at(idx)
@@ -502,14 +525,14 @@ class Deroffer:
         return ch.isdigit()
 
     def number(self):
-        if (self.str_at(0) in '+-' and self.digit(1)) or self.digit(0):
-            self.condputchar(self.str_at(0))
-            self.skip_char()
-            while self.digit(0):
-                self.condputchar(self.str_at(0))
-                self.skip_char()
+        match = Deroffer.g_re_number.match(self.s)
+        if not match:
+            return False
+        else:
+            self.condputs(match.group(0))
+            self.skip_char(match.end())
             return True
-        return False
+            
 
     def esc_char(self):
         if self.s.startswith('\\'):
@@ -528,8 +551,34 @@ class Deroffer:
             return True
         else:
             return False
-            
+    
     def text_arg(self):
+        # PCA: The deroff.c textArg() disallowed quotes at the start of an argument
+        # I'm not sure if this was a bug or not
+        got_something = False
+        while True:
+            match = Deroffer.g_re_not_backslash_or_whitespace.match(self.s)
+            if match:
+                # Output the characters in the match
+                self.condputs(match.group(0))
+                self.skip_char(match.end(0))
+                got_something = True
+                
+            # Next is either an escape, or whitespace, or the end
+            # If it's the whitespace or the end, we're done
+            if not self.s or self.is_white(0):
+                return got_something
+            
+            # Try an escape
+            if not self.esc_char():
+                # Some busted escape? Just output it
+                self.condputchar(self.str_at(0))
+                self.skip_char()
+                got_something = True
+                        
+                
+    
+    def text_arg2(self):
         if not self.esc_char():
             if self.s and not self.is_white(0):
                 self.condputchar(self.str_at(0))
@@ -761,10 +810,11 @@ class Deroffer:
     def deroff(self, str):
         lines = str.split('\n')
         for line in lines:
-            line = line + '\n'
-            self.s = line
+            self.s = line + '\n'
             if not self.do_line():
                 break
+            #self.putchar('\n')
+        #self.cleanup_whitespace()
 
 def deroff_files(files):
     for arg in files:
@@ -790,4 +840,5 @@ if __name__ == "__main__":
         import cProfile, pstats
         cProfile.run('deroff_files(paths)', 'fooprof')
         p = pstats.Stats('fooprof')
-        p.sort_stats('cumulative').print_stats(100)
+        p.sort_stats('time').print_stats(100)
+        #p.sort_stats('cumulative').print_callers(.5, 'esc_char')

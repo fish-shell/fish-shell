@@ -851,6 +851,6 @@ if __name__ == "__main__":
     else:
         # Profiling code
         import cProfile, pstats
-        cProfile.run('parse_and_output_man_pages(file_paths, output_directory)', 'fooprof')
+        cProfile.run('parse_and_output_man_pages(file_paths, output_directory, show_progress)', 'fooprof')
         p = pstats.Stats('fooprof')
         p.sort_stats('cumulative').print_stats(100)

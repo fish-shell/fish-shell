@@ -4,7 +4,7 @@
 """ Deroff.py, ported to Python from the venerable deroff.c """
 
 
-import sys, re
+import sys, re, string
 
 class Deroffer:
 
@@ -271,18 +271,25 @@ class Deroffer:
     g_re_esc_char = re.compile(r"""([a-zA-Z_]) |   # Word
                                    ([+-]?\d)   |   # Number
                                    \\              # Backslash (for escape seq)
-                               """)
+                               """, re.VERBOSE)
                                
     g_re_not_backslash_or_whitespace = re.compile(r'[^ \t\n\r\f\v\\]+') # Match a sequence of not backslash or whitespace
     
     g_re_newline_collapse = re.compile(r'\n{3,}')
+
+    g_re_font = re.compile(r"""\\f(         # Starts with backslash f
+                               (\(\S{2}) |  # Open paren, then two printable chars
+                               (\[\S*?\]) |  # Open bracket, zero or more printable characters, then close bracket
+                               \S)          # Any printable character
+                            """,  re.VERBOSE)   
     
     def __init__(self):
         self.reg_table = {}
-        self.tr = {}
+        self.tr_from = ''
+        self.tr_to = ''
+        self.tr = ''
         self.nls = 2
         self.specletter = False
-        self.pretty = False
         self.refer = False
         self.macro = 0
         self.nobody = False
@@ -313,37 +320,21 @@ class Deroffer:
         res = ''.join(self.output)
         clean_res = Deroffer.g_re_newline_collapse.sub('\n', res)
         return clean_res
-        
-    
-    def cleanup_whitespace(self):
-        output = self.output
-        while output and output[0] == '\n': del output[0]
-        idx = len(output) - 1
-        while idx > 1:
-            if output[idx] == '\n' and output[idx-1] == '\n' and output[idx-2] == '\n' :
-                del output[idx]
-            idx = idx - 1
-        
-    
+            
     def putchar(self, c):
         self.output.append(c)
         return c
         
-    def condputchar(self, c):
+    # This gets swapped in in place of condputs the first time tr gets modified
+    def condputs_tr(self, str):
         special = self.pic or self.eqn or self.refer or self.macro or (self.skiplists and self.inlist) or (self.skipheaders and self.inheader)
         if not special:
-            c_trans = self.tr.get(c, c)
-            self.putchar(c_trans)
-    
+            self.output.append(str.translate(self.tr))
+        
     def condputs(self, str):
         special = self.pic or self.eqn or self.refer or self.macro or (self.skiplists and self.inlist) or (self.skipheaders and self.inheader)
-        if special: return
-        
-        if not self.tr:
-            self.output.extend(str)
-        else:
-            tr = self.tr
-            self.output.extend([tr.get(c, c) for c in str])
+        if not special:        
+            self.output.append(str)
             
     def str_at(self, idx):
         return self.s[idx:idx+1]
@@ -356,7 +347,7 @@ class Deroffer:
         
     def is_white(self, idx):
         # Note this returns false for empty strings (idx >= len(self.s))
-        return self.str_at(idx).isspace()
+        return self.s[idx:idx+1].isspace()
 
     def prefix_at(self, offset, other_str):
         return self.s[offset:].startswith(other_str)
@@ -365,15 +356,23 @@ class Deroffer:
         return self.s[offset:offset+len] == other[:len]
 
     def prch(self, idx):
-        ch = self.str_at(idx)
-        return ch and ch not in ' \t\n'
+        # Note that this return False for the empty string (idx >= len(self.s))
+        ch = self.s[idx:idx+1]
+        return ch not in ' \t\n'
 
     def font(self):
-        if self.str_at(0) == '\\' and self.str_at(1) == 'f':
-            if self.str_at(2) == '(' and self.prch(3) and self.prch(4):
+        match = Deroffer.g_re_font.match(self.s)
+        if not match: return False
+        self.skip_char(match.end())
+        return True
+        
+    def font2(self):
+        if self.s.startswith('\\f'):
+            c = self.str_at(2)
+            if c == '(' and self.prch(3) and self.prch(4):
                 self.skip_char(5)
                 return True
-            elif self.str_at(2) == '[':
+            elif c == '[':
                 self.skip_char(2)
                 while self.prch(0) and self.str_at(0) != ']': self.skip_char()
                 if self.str_at(0) == ']': self.skip_char()
@@ -469,18 +468,19 @@ class Deroffer:
             return False
             
     def esc(self):
-        if self.str_at(0) == '\\' and self.str_at(1):
+        if self.s.startswith('\\'):
             c = self.str_at(1)
+            if not c: return False
             if c in 'eE':
-                self.condputchar('\\')
+                self.condputs('\\')
             elif c in 't':
-                self.condputchar('\t')
+                self.condputs('\t')
             elif c in '0~':
-                self.condputchar(' ')
+                self.condputs(' ')
             elif c in '|^&:':
                 pass
             else:
-                self.condputchar(c)
+                self.condputs(c)
             self.skip_char(2)
             return True
         return False
@@ -502,16 +502,17 @@ class Deroffer:
 
 
     def text(self):
-        while self.s:
+        while True:
             idx = self.s.find('\\')
             if idx == -1:
                 self.condputs(self.s)
                 self.s = ''
+                break
             else:
                 self.condputs(self.s[:idx])
                 self.skip_char(idx)
                 if not self.esc_char():
-                    self.condputchar(self.str_at(0))
+                    self.condputs(self.str_at(0))
                     self.skip_char()
         return True
 
@@ -532,12 +533,30 @@ class Deroffer:
             self.condputs(match.group(0))
             self.skip_char(match.end())
             return True
-            
-
-    def esc_char(self):
+    
+    def esc_char2(self):
         if self.s.startswith('\\'):
             if self.comment() or self.font() or self.size() or self.numreq() or self.var() or self.spec() or self.esc():
                 return True
+        return self.word() or self.number()
+
+    def esc_char(self):
+        if self.s.startswith('\\'):
+            c = self.str_at(1)
+            if c == '"':
+                if self.comment(): return True
+            elif c == 'f':
+                if self.font(): return True
+            elif c == 's':
+                if self.size(): return True
+            elif c in 'hvwud':
+                if self.numreq(): return True
+            elif c in 'n*':
+                if self.var(): return True
+            elif c == '(':
+                if self.spec(): return True
+            else:
+                if self.esc(): return True
         return self.word() or self.number()
 
     def quoted_arg(self):
@@ -546,7 +565,7 @@ class Deroffer:
             while self.s and self.str_at(0) != '"':
                 if not self.esc_char():
                     if self.s:
-                        self.condputchar(self.str_at(0))
+                        self.condputs(self.str_at(0))
                         self.skip_char()
             return True
         else:
@@ -572,7 +591,7 @@ class Deroffer:
             # Try an escape
             if not self.esc_char():
                 # Some busted escape? Just output it
-                self.condputchar(self.str_at(0))
+                self.condputs(self.str_at(0))
                 self.skip_char()
                 got_something = True
                         
@@ -581,14 +600,14 @@ class Deroffer:
     def text_arg2(self):
         if not self.esc_char():
             if self.s and not self.is_white(0):
-                self.condputchar(self.str_at(0))
+                self.condputs(self.str_at(0))
                 self.skip_char()
             else:
                 return False
         while True:
             if not self.esc_char():
                 if self.s and not self.is_white(0):
-                    self.condputchar(self.str_at(0))
+                    self.condputs(self.str_at(0))
                     self.skip_char()
                 else:
                     return True
@@ -598,13 +617,13 @@ class Deroffer:
         s0 = self.str_at(0)
         if s0 == '\\':
             if self.str_at(1) == '"':
-                if not self.pretty: self.condputchar('\n')
+                self.condputs('\n')
                 return True
             else:
                 pass
         elif s0 == '[':
             self.refer = True
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0 == ']':
             self.refer = False
@@ -612,7 +631,7 @@ class Deroffer:
             return self.text()
         elif s0 == '.':
             self.macro = False
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         
         self.nobody = False
@@ -620,16 +639,13 @@ class Deroffer:
         if s0s1 == 'SH':
             for header_str in [' SYNOPSIS', ' "SYNOPSIS', ' ‹BERSICHT', ' "‹BERSICHT']:
                 if self.s[2:].startswith(header_str):
-                    if self.pretty: self.condputchar('\n')
                     self.inheader = True
                     break
             else:
                 # Did not find a header string
                 self.inheader = False
-                if self.pretty: self.condputchar('\n')
                 self.nobody = True
         elif s0s1 in ['SS', 'IP', 'H ']:
-            if self.pretty: self.condputchar('\n')
             self.nobody = True
         elif s0s1 in ['I ', 'IR', 'IB', 'B ', 'BR', 'BI', 'R ', 'RB', 'RI', 'AB']:
             pass
@@ -637,59 +653,58 @@ class Deroffer:
             self.refer = False
         elif s0s1 in ['PS']:
             if self.is_white(2): self.pic = True
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['PE']:
             if self.is_white(2): self.pic = False
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['TS']:
             if self.is_white(2): self.tbl, self.tblstate = True, self.OPTIONS
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['T&']:
             if self.is_white(2): self.tbl, self.tblstate = True, self.FORMAT
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['TE']:
             if self.is_white(2): self.tbl = False
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['EQ']:
             if self.is_white(2): self.eqn = True
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['EN']:
             if self.is_white(2): self.eqn = False
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['R1']:
             if self.is_white(2): self.refer2 = True
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['R2']:
             if self.is_white(2): self.refer2 = False
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['de']:
             macro=True
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['BL', 'VL', 'AL', 'LB', 'RL', 'ML', 'DL']:
             if self.is_white(2): self.inlist = True
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['BV']:
             if self.str_at(2) == 'L' and self.white(self.str_at(3)): self.inlist = True
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['LE']:
             if self.is_white(2): self.inlist = False
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['LP', 'PP', 'P\n']:
-            if self.pretty: self.condputchar('\n')
-            self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['ds']:
             self.skip_char(2)
@@ -701,7 +716,7 @@ class Deroffer:
                     name, value = comps
                     value = value.rstrip()
                     self.reg_table[name] = value
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         elif s0s1 in ['so', 'nx']:
             # We always ignore include directives
@@ -711,22 +726,24 @@ class Deroffer:
         elif s0s1 in ['tr']:
             self.skip_char(2)
             self.skip_leading_whitespace()
-            while self.str_at(0) and self.str_at(0) != '\n':
-                c = ord(self.str_at(0))
-                self.skip_char()
-                ns = self.str_at(0)
-                self.skip_char()
-                if not ns or ns == '\n':
-                    self.tr[c] = ' '
-                else:
-                    self.tr[c] = ns
+            while self.s and self.str_at(0) != '\n':
+                c = self.str_at(0)
+                ns = self.str_at(1)
+                self.skip_char(2)
+                if not ns or ns == '\n': ns = ' '
+                self.tr_from += c
+                self.tr_to += ns
+            
+            # Update our table, then swap in the slower tr-savvy condputs
+            self.tr = string.maketrans(self.tr_from, self.tr_to)
+            self.condputs = self.condputs_tr
+                
             return True
         elif s0s1 in ['sp']:
-            if self.pretty: self.condputchar('\n')
-            self.condputchar('\n')
+            self.condputs('\n')
             return True
         else:
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             return True
         
         if self.skipheaders and self.nobody: return True
@@ -737,7 +754,7 @@ class Deroffer:
         while True:
             if not self.quoted_arg() and not self.text_arg():
                 if self.s:
-                    self.condputchar(self.str_at(0))
+                    self.condputs(self.str_at(0))
                     self.skip_char()
                 else:
                     return True
@@ -779,7 +796,7 @@ class Deroffer:
                         self.tblTab = arg[0:1]
                         
             self.tblstate = self.FORMAT
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
             
         elif self.tblstate == self.FORMAT:
             while self.s and self.str_at(0) != '.' and self.str_at(0) != '\n':
@@ -787,7 +804,7 @@ class Deroffer:
                 if self.str_at(0): self.skip_char()
                 
             if self.str_at(0) == '.': self.tblstate = self.DATA
-            if not self.pretty: self.condputchar('\n')
+            self.condputs('\n')
         elif self.tblstate == self.DATA:
             if self.tblTab:
                 self.s = self.s.replace(self.tblTab, '\t')
@@ -814,7 +831,6 @@ class Deroffer:
             if not self.do_line():
                 break
             #self.putchar('\n')
-        #self.cleanup_whitespace()
 
 def deroff_files(files):
     for arg in files:
@@ -841,4 +857,4 @@ if __name__ == "__main__":
         cProfile.run('deroff_files(paths)', 'fooprof')
         p = pstats.Stats('fooprof')
         p.sort_stats('time').print_stats(100)
-        #p.sort_stats('cumulative').print_callers(.5, 'esc_char')
+        #p.sort_stats('calls').print_callers(.5, 'str_at')

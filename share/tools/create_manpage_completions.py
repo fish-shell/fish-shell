@@ -770,8 +770,9 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 def get_paths_from_manpath():
     # Return all the paths to man(1) files in the manpath
     import subprocess, os
-    manpath = subprocess.check_output(['man', '--path']).strip()
-    parent_paths = manpath.split(':')
+    proc = subprocess.Popen(['man', '--path'], stdout=subprocess.PIPE)
+    manpath, err_data = proc.communicate()
+    parent_paths = manpath.strip().split(':')
     if not parent_paths:
         print >> sys.stderr, "Unable to get the manpath (tried man --path)"
         sys.exit(-1)

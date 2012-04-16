@@ -212,6 +212,86 @@ bool history_lru_node_t::write_yaml_to_file(FILE *f) const {
     return true;
 }
 
+
+// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
+// The string is NOT null terminated; however we do know it contains a newline, so stop when we reach it
+static bool parse_timestamp(const char *str, time_t *out_when) {
+    const char *cursor = str;
+    /* Advance past spaces */
+    while (*cursor == ' ')
+        cursor++;
+        
+    /* Look for "when:" */
+    size_t when_len = 5;
+    if (strncmp(cursor, "when:", when_len) != 0)
+        return false;
+    cursor += when_len;
+    
+    /* Advance past spaces */
+    while (*cursor == ' ')
+        cursor++;
+    
+    /* Try to parse a timestamp. */
+    long timestamp = 0;
+    if (isdigit(*cursor) && (timestamp = strtol(cursor, NULL, 0)) > 0) {
+        *out_when = (time_t)timestamp;
+        return true;
+    }
+    return false;
+}
+
+// Support for iteratively locating the offsets of history items
+// Pass the address and length of a mapped region.
+// Pass a pointer to a cursor size_t, initially 0
+// If custoff_timestamp is nonzero, skip items created at or after that timestamp
+// Returns (size_t)(-1) when done
+static size_t offset_of_next_item(const char *begin, size_t mmap_length, size_t *inout_cursor, time_t cutoff_timestamp)
+{
+    size_t cursor = *inout_cursor;
+    size_t result = (size_t)(-1);
+    while (cursor < mmap_length) {
+        const char * const line_start = begin + cursor;
+        /* Look for a newline */
+        const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
+        if (newline == NULL)
+            break;
+        
+        /* Advance the cursor past this line. +1 is for the newline */
+        size_t line_len = newline - line_start;
+        cursor += line_len + 1;
+
+        /* Skip lines with a leading space, since these are in the interior of one of our items */
+        if (line_start[0] == ' ')
+            continue;
+        
+        /* Skip very short lines to make one of the checks below easier */
+        if (line_len < 3)
+            continue;
+        
+        /* Try to be a little YAML compatible. Skip lines with leading %, ---, or ... */
+        if (! memcmp(line_start, "%", 1) ||
+            ! memcmp(line_start, "---", 3) ||
+            ! memcmp(line_start, "...", 3))
+            continue;
+
+        /* A 0 timestamp means no cutoff */
+        if (cutoff_timestamp != 0) {
+            /* Hackish fast way to skip items created after our timestamp. This is the mechanism by which we avoid "seeing" commands from other sessions that started after we started. We try hard to ensure that our items are sorted by their timestamps, so in theory we could just break, but I don't think that works well if (for example) the clock changes. So we'll read all subsequent items.
+             */
+            time_t timestamp;
+            if (parse_timestamp(line_start, &timestamp) && timestamp >= cutoff_timestamp)
+                continue;
+            }
+
+        /* We made it through the gauntlet. */
+        result = line_start - begin;
+        break;
+    }
+    *inout_cursor = cursor;
+    return result;
+}
+
+
 history_t & history_t::history_with_name(const wcstring &name) {
     /* Note that histories are currently never deleted, so we can return a reference to them without using something like shared_ptr */
     scoped_lock locker(hist_lock);
@@ -440,72 +520,49 @@ done:
     
 }
 
-// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
-// The string is NOT null terminated; however we do know it contains a newline, so stop when we reach it
-static bool parse_timestamp(const char *str, time_t *out_when) {
-    const char *cursor = str;
-    /* Advance past spaces */
-    while (*cursor == ' ')
-        cursor++;
-        
-    /* Look for "when:" */
-    size_t when_len = 5;
-    if (strncmp(cursor, "when:", when_len) != 0)
-        return false;
-    cursor += when_len;
-    
-    /* Advance past spaces */
-    while (*cursor == ' ')
-        cursor++;
-    
-    /* Try to parse a timestamp. */
-    long timestamp = 0;
-    if (isdigit(*cursor) && (timestamp = strtol(cursor, NULL, 0)) > 0) {
-        *out_when = (time_t)timestamp;
-        return true;
-    }
-    return false;
-}
-
 void history_t::populate_from_mmap(void)
 {
-	const char *begin = mmap_start;
     size_t cursor = 0;
-    while (cursor < mmap_length) {
-        const char * const line_start = begin + cursor;
-        /* Look for a newline */
-        const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
-        if (newline == NULL)
+    for (;;) {
+        size_t offset = offset_of_next_item(mmap_start, mmap_length, &cursor, birth_timestamp);
+        // If we get back -1, we're done
+        if (offset == (size_t)(-1))
             break;
-        
-        /* Advance the cursor past this line. +1 is for the newline */
-        size_t line_len = newline - line_start;
-        cursor += line_len + 1;
 
-        /* Skip lines with a leading space, since these are in the interior of one of our items */
-        if (line_start[0] == ' ')
-            continue;
-        
-        /* Skip very short lines to make one of the checks below easier */
-        if (line_len < 3)
-            continue;
-        
-        /* Try to be a little YAML compatible. Skip lines with leading %, ---, or ... */
-        if (! memcmp(line_start, "%", 1) ||
-            ! memcmp(line_start, "---", 3) ||
-            ! memcmp(line_start, "...", 3))
-            continue;
-
-
-        /* Hackish fast way to skip items created after our timestamp. This is the mechanism by which we avoid "seeing" commands from other sessions that started after we started. We try hard to ensure that our items are sorted by their timestamps, so in theory we could just break, but I don't think that works well if (for example) the clock changes. So we'll read all subsequent items.
-         */
-        time_t timestamp;
-        if (parse_timestamp(line_start, &timestamp) && timestamp >= birth_timestamp)
-            continue;
-
-        /* We made it through the gauntlet. */
-        old_item_offsets.push_back(line_start - begin);
+        // Remember this item
+        old_item_offsets.push_back(offset);        
     }
+}
+
+// Do a private, read-only map of the entirety of a history file with the given name. Returns true if successful. Returns the mapped memory region by reference.
+static bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len)
+{
+    bool result = false;
+    wcstring filename = history_filename(name, L"");
+    if (! filename.empty())
+    {
+        int fd;
+		if((fd = wopen_cloexec(filename, O_RDONLY)) > 0)
+		{
+			off_t len = lseek( fd, 0, SEEK_END );
+			if(len != (off_t)-1)
+			{
+				size_t mmap_length = (size_t)len;
+				if(lseek(fd, 0, SEEK_SET) == 0)
+				{
+                    char *mmap_start;
+					if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) != MAP_FAILED)
+					{
+						result = true;
+                        *out_map_start = mmap_start;
+                        *out_map_len = mmap_length;
+					}
+				}
+			}
+			close( fd );
+		}
+    }
+    return result;
 }
 
 bool history_t::load_old_if_needed(void)
@@ -513,34 +570,18 @@ bool history_t::load_old_if_needed(void)
     if (loaded_old) return true;
     loaded_old = true;
     
-	int fd;
-	bool ok=false;
     
     // PCA not sure why signals were blocked here
 	//signal_block();
-    wcstring filename = history_filename(name, L"");
-	
-	if( ! filename.empty() )
-	{
-		if( ( fd = wopen_cloexec( filename, O_RDONLY ) ) > 0 )
-		{
-			off_t len = lseek( fd, 0, SEEK_END );
-			if( len != (off_t)-1)
-			{
-				mmap_length = (size_t)len;
-				if( lseek( fd, 0, SEEK_SET ) == 0 )
-				{
-					if( (mmap_start = (char *)mmap( 0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0 )) != MAP_FAILED )
-					{
-						ok = true;
-                        time_profiler_t profiler("populate_from_mmap");
-						this->populate_from_mmap();
-					}
-				}
-			}
-			close( fd );
-		}
-	}
+    
+	bool ok = false;    
+    if (map_file(name, &mmap_start, &mmap_length)) {
+        // Here we've mapped the file
+        ok = true;
+        time_profiler_t profiler("populate_from_mmap");
+        this->populate_from_mmap();
+    } 
+    
 	//signal_unblock();
     return ok;
 }
@@ -719,47 +760,54 @@ void history_t::save_internal()
     this->compact_new_items();
     
 	bool ok = true;
-	
-    wcstring tmp_name = history_filename(name, L".tmp");
+    
+    wcstring tmp_name = history_filename(name, L".tmp");    
 	if( ! tmp_name.empty() )
-	{
-        /* Load old */
-        load_old_if_needed();
-        
+	{        
         /* Make an LRU cache to save only the last N elements */
         history_lru_cache_t lru(HISTORY_SAVE_MAX);
         
         /* Insert old items in, from old to new. Merge them with our new items, inserting items with earlier timestamps first. */
         std::vector<history_item_t>::const_iterator new_item_iter = new_items.begin();
         
-        for (std::deque<size_t>::iterator iter = old_item_offsets.begin(); iter != old_item_offsets.end(); ++iter) {
-            size_t offset = *iter;
-            
-            /* Decode an old item */
-            const history_item_t old_item = history_t::decode_item(mmap_start + offset, mmap_length - offset);
-            if (old_item.empty())
-                continue;
-            
-            /* The old item may actually be more recent than our new item, if it came from another session. Insert all new items at the given index with an earlier timestamp. */
-            for (; new_item_iter != new_items.end(); ++new_item_iter) {
-                if (new_item_iter->timestamp() < old_item.timestamp()) {
-                    /* This "new item" is in fact older. */
-                    lru.add_item(*new_item_iter);
-                } else {
-                    /* The new item is not older. */
+        /* Map in existing items (which may have changed out from underneath us, so don't trust our old mmap'd data) */
+        const char *local_mmap_start = NULL;
+        size_t local_mmap_size = 0;
+        if (map_file(name, &local_mmap_start, &local_mmap_size)) {
+            size_t cursor = 0;
+            for (;;) {
+                size_t offset = offset_of_next_item(local_mmap_start, local_mmap_size, &cursor, 0);
+                /* If we get back -1, we're done */
+                if (offset == (size_t)(-1))
                     break;
+
+                /* Try decoding an old item */
+                const history_item_t old_item = history_t::decode_item(local_mmap_start + offset, local_mmap_size - offset);
+                if (old_item.empty())
+                    continue;
+                    
+                /* The old item may actually be more recent than our new item, if it came from another session. Insert all new items at the given index with an earlier timestamp. */
+                for (; new_item_iter != new_items.end(); ++new_item_iter) {
+                    if (new_item_iter->timestamp() < old_item.timestamp()) {
+                        /* This "new item" is in fact older. */
+                        lru.add_item(*new_item_iter);
+                    } else {
+                        /* The new item is not older. */
+                        break;
+                    }
                 }
+                
+                /* Now add this old item */
+                lru.add_item(old_item);
             }
-            
-            /* Now add this old item */
-            lru.add_item(old_item);
+            munmap((void *)local_mmap_start, local_mmap_size);
         }
         
         /* Insert any remaining new items */
         for (; new_item_iter != new_items.end(); ++new_item_iter) {
             lru.add_item(*new_item_iter);
         }
-        
+                
         signal_block();
     
         FILE *out;

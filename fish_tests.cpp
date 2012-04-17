@@ -762,9 +762,26 @@ static void test_history_matches(history_search_t &search, size_t matches) {
     assert(! search.go_forwards());
 }
 
+static bool history_contains(history_t *history, const wcstring &txt) {
+    bool result = false;
+    size_t i;
+    for (i=1; ; i++) {
+        history_item_t item = history->item_at_index(i);
+        if (item.empty())
+            break;
+            
+        if (item.str() == txt) {
+            result = true;
+            break;
+        }
+    }
+    return result;
+}
+
 class history_tests_t {
 public:
     static void test_history(void);
+    static void test_history_merge(void);
 };
 
 static wcstring random_string(void) {
@@ -836,6 +853,70 @@ void history_tests_t::test_history(void) {
         assert(bef.creation_timestamp == aft.creation_timestamp);
         assert(bef.required_paths == aft.required_paths);
     }
+    
+    /* Clean up after our tests */
+    history.clear();
+}
+
+// wait until the next second
+static void time_barrier(void) {
+    time_t start = time(NULL);
+    do {
+        usleep(1000);
+    } while (time(NULL) == start);
+}
+
+void history_tests_t::test_history_merge(void) {
+    // In a single fish process, only one history is allowed to exist with the given name
+    // But it's common to have multiple history instances with the same name active in different processes,
+    // e.g. when you have multiple shells open.
+    // We try to get that right and merge all their history together. Test that case.
+    say( L"Testing history merge");
+    const size_t count = 3;
+    const wcstring name = L"merge_test";
+    history_t *hists[count] = {new history_t(name), new history_t(name), new history_t(name)};
+    wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
+    
+    /* Make sure history is clear */
+    for (size_t i=0; i < count; i++) {
+        hists[i]->clear();
+    }
+    
+    /* Make sure we don't add an item in the same second as we created the history */
+    time_barrier();
+    
+    /* Add a different item to each */
+    for (size_t i=0; i < count; i++) {
+        hists[i]->add(texts[i]);
+    }
+    
+    /* Save them */
+    for (size_t i=0; i < count; i++) {
+        hists[i]->save();
+    }
+        
+    /* Make sure each history contains what it ought to, but they have not leaked into each other */
+    for (size_t i = 0; i < count; i++) {
+        for (size_t j=0; j < count; j++) {
+            bool does_contain = history_contains(hists[i], texts[j]);
+            bool should_contain = (i == j);
+            assert(should_contain == does_contain);
+        }
+    }
+    
+    /* Make a new history. It should contain everything. The time_barrier() is so that the timestamp is newer, since we only pick up items whose timestamp is before the birth stamp. */
+    time_barrier();
+    history_t *everything = new history_t(name);
+    for (size_t i=0; i < count; i++) {
+        assert(history_contains(everything, texts[i]));
+    }
+
+    /* Clean up */
+    for (size_t i=0; i < 3; i++) {
+        delete hists[i];
+    }
+    everything->clear();
+    delete everything; //not as scary as it looks
 }
 
 
@@ -873,6 +954,7 @@ int main( int argc, char **argv )
     test_colors();
     test_autosuggest();
     history_tests_t::test_history();
+    history_tests_t::test_history_merge();
 	
 	say( L"Encountered %d errors in low-level tests", err_count );
 

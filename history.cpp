@@ -240,6 +240,37 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
     return false;
 }
 
+// Returns a pointer to the start of the next line, or NULL
+// The next line must itself end with a newline
+// Note that the string is not null terminated
+static const char *next_line(const char *start, size_t length) {
+    /* Handle the hopeless case */
+    if (length < 1)
+        return NULL;
+    
+    /* Get a pointer to the end, that we must not pass */
+    const char * const end = start + length;
+    
+    /* Skip past the next newline */
+    const char *nextline = (const char *)memchr(start, '\n', length);
+    if (! nextline || nextline >= end) {
+        return NULL;
+    }
+    /* Skip past the newline character itself */
+    if (++nextline >= end) {
+        return NULL;
+    }
+    
+    /* Make sure this new line is itself "newline terminated". If it's not, return NULL; */
+    const char *next_newline = (const char *)memchr(nextline, '\n', end - nextline);
+    if (! next_newline) {
+        return NULL;
+    }
+    
+    /* Done */
+    return nextline;
+}
+
 // Support for iteratively locating the offsets of history items
 // Pass the address and length of a mapped region.
 // Pass a pointer to a cursor size_t, initially 0
@@ -251,7 +282,8 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length, size_t 
     size_t result = (size_t)(-1);
     while (cursor < mmap_length) {
         const char * const line_start = begin + cursor;
-        /* Look for a newline */
+        
+        /* Advance the cursor to the next line */
         const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
         if (newline == NULL)
             break;
@@ -274,14 +306,36 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length, size_t 
             ! memcmp(line_start, "...", 3))
             continue;
 
-        /* A 0 timestamp means no cutoff */
+        /* At this point, we know line_start is at the beginning of an item. But maybe we want to skip this item because of timestamps. A 0 cutoff means we don't care; if we do care, then try parsing out a timestamp. */
         if (cutoff_timestamp != 0) {
             /* Hackish fast way to skip items created after our timestamp. This is the mechanism by which we avoid "seeing" commands from other sessions that started after we started. We try hard to ensure that our items are sorted by their timestamps, so in theory we could just break, but I don't think that works well if (for example) the clock changes. So we'll read all subsequent items.
              */
+            const char * const end = begin + mmap_length;
+            
+            /* Walk over lines that we think are interior. These lines are not null terminated, but are guaranteed to contain a newline. */
+            bool has_timestamp = false;
             time_t timestamp;
-            if (parse_timestamp(line_start, &timestamp) && timestamp >= cutoff_timestamp)
+            const char *interior_line;
+            for (interior_line = next_line(line_start, end - line_start);
+                 interior_line != NULL && ! has_timestamp;
+                 interior_line = next_line(interior_line, end - interior_line)) {
+                 
+                /* If the first character is not a space, it's not an interior line, so we're done */
+                if (interior_line[0] != ' ')
+                    break;
+                    
+                /* Hackish optimization: since we just stepped over some interior line, update the cursor so we don't have to look at these lines next time */
+                cursor = interior_line - begin;
+                
+                /* Try parsing a timestamp from this line. If we succeed, the loop will break. */
+                has_timestamp = parse_timestamp(interior_line, &timestamp);
+            }
+                 
+            /* Skip this item if the timestamp is at or after our cutoff. */
+            if (has_timestamp && timestamp >= cutoff_timestamp) {
                 continue;
             }
+        }
 
         /* We made it through the gauntlet. */
         result = line_start - begin;

@@ -2,6 +2,7 @@
 # Completions for the xpdf command
 # Vikas Gorur <vikas@80x25.org>
 #
+complete -c xpdf -x -a "(__fish_complete_suffix .pdf)"
 
 complete -c xpdf -s g --description "Set the initial window geometry"
 complete -c xpdf -o title --description "Set the window title"

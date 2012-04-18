@@ -188,7 +188,7 @@ static void write_part( const wchar_t *begin,
 	}
 	else
 	{
-		wchar_t *buff, *esc;
+		wchar_t *buff;
 
 		if( cut_at_cursor )
 		{
@@ -196,14 +196,12 @@ static void write_part( const wchar_t *begin,
 		}
 
 		buff = wcsndup( begin, end-begin );
-		esc = unescape( buff, UNESCAPE_INCOMPLETE );
 
 //		debug( 0, L"woot2 %ls -> %ls", buff, esc );
 
-		sb_append( sb_out, esc );
+		sb_append( sb_out, buff );
 		sb_append( sb_out, L"\n" );
 
-		free( esc );
 		free( buff );
 
 	}

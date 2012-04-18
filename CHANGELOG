@@ -1,0 +1,3 @@
+24-01-2012 Jan Kanis
+	* Added a changelog file
+	* removed unescaping if the 'commandline' builtin is called without the -o (tokenise) flag

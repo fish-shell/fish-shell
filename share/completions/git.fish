@@ -196,11 +196,24 @@ complete -f -c git -n '__fish_git_needs_command' -a revert -d 'Revert an existin
 # TODO options
 
 ### rm
-complete -c git -n '__fish_git_needs_command'    -a rm -d 'Remove files from the working tree and from the index'
+complete -c git -n '__fish_git_needs_command'    -a rm     -d 'Remove files from the working tree and from the index'
+complete -c git -n '__fish_git_using_command rm' -f
+complete -c git -n '__fish_git_using_command rm' -l cached -d 'Keep local copies'
+complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
+complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
+complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Suppress the output'
+complete -c git -n '__fish_git_using_command rm' -s f -l force -d 'Override the up-to-date check'
+complete -c git -n '__fish_git_using_command rm' -s n -l dry-run -d 'Dry run'
 # TODO options
 
 ### status
 complete -f -c git -n '__fish_git_needs_command' -a status -d 'Show the working tree status'
+complete -f -c git -n '__fish_git_using_command status' -s s -l short -d 'Give the output in the short-format'
+complete -f -c git -n '__fish_git_using_command status' -s b -l branch -d 'Show the branch and tracking info even in short-format'
+complete -f -c git -n '__fish_git_using_command status'      -l porcelain -d 'Give the output in a stable, easy-to-parse format'
+complete -f -c git -n '__fish_git_using_command status' -s z -d 'Terminate entries with NUL character'
+complete -f -c git -n '__fish_git_using_command status' -s u -l untracked-files -x -a 'no normal all' -d 'The untracked files handling mode'
+complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x -a 'none untracked dirty all' -d 'Ignore changes to submodules'
 # TODO options
 
 ### tag

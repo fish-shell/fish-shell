@@ -183,23 +183,15 @@ static void write_part( const wchar_t *begin,
 	}
 	else
 	{
-		wchar_t *buff, *esc;
-		
 		if( cut_at_cursor )
 		{
 			end = begin+pos;			
 		}
 
-		buff = wcsndup( begin, end-begin );
-		esc = unescape( buff, UNESCAPE_INCOMPLETE );
-
 //		debug( 0, L"woot2 %ls -> %ls", buff, esc );
 
-        stdout_buffer.append(esc);
+        stdout_buffer.append(begin, end - begin);
         stdout_buffer.append(L"\n");
-		
-		free( esc );
-		free( buff );
 		
 	}
 }

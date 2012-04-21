@@ -11,7 +11,7 @@ echo "	if not set -q \$argv[1]" >> $bash_config
 echo "		set -gx \$argv" >> $bash_config
 echo "	end" >> $bash_config
 echo "end" >> $bash_config
-echo "PS1=$PS1" | python import_bash_settings.py
-alias | python import_bash_settings.py
-env | python import_bash_settings.py
+echo "PS1=$PS1" | python share/tools/import_bash_settings.py
+alias | python share/tools/import_bash_settings.py
+env | python share/tools/import_bash_settings.py
 

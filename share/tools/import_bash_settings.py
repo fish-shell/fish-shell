@@ -15,7 +15,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import os, sys, re
-import "deroff"
+#import "deroff"
 
 config_file = None
 prompt_buff = ""
@@ -108,6 +108,8 @@ def parse_input(input):
 			add_alias(env_name[6:], env_value)
 		elif env_name == "PS1":
 			parse_bash_prompt(env_value)	
+		elif env_name == "PATH":
+			config_file.write("set -x " + env_name + ' ' + env_value.replace(":"," ") )
 		else:
 			config_file.write("set_default " + env_name + ' "' + env_value + '"') 
 		#Move to next line

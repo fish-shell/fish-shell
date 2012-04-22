@@ -307,14 +307,6 @@ class parser_t {
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
     
-    /**
-       Returns the name of the currently evaluated function if we are
-       currently evaluating a function, null otherwise. This is tested by
-       moving down the block-scope-stack, checking every block if it is of
-       type FUNCTION_CALL.
-    */
-    const wchar_t *is_function() const;
-    
     void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, std::vector<completion_t>& );
     int parse_job( process_t *p, job_t *j, tokenizer *tok );
     void skipped_exec( job_t * j );
@@ -325,6 +317,14 @@ class parser_t {
     
     public:
     std::vector<profile_item_t> profile_items;
+    
+    /**
+       Returns the name of the currently evaluated function if we are
+       currently evaluating a function, null otherwise. This is tested by
+       moving down the block-scope-stack, checking every block if it is of
+       type FUNCTION_CALL.
+    */
+    const wchar_t *is_function() const;
     
     /** Get the "principal" parser, whatever that is */
     static parser_t &principal_parser();

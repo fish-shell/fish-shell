@@ -184,6 +184,7 @@ public:
 };
 
 extern bool g_log_forks;
+extern int g_fork_count;
 
 
 #endif

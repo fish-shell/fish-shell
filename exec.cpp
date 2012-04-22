@@ -690,7 +690,7 @@ void exec( parser_t &parser, job_t *j )
 	{
         /* Call fork. No need to wait for threads since our use is confined and simple. */
         if (g_log_forks) {
-            printf("Executing keepalive fork for '%ls'\n", j->command_wcstr());
+            printf("fork #%d: Executing keepalive fork for '%ls'\n", g_fork_count, j->command_wcstr());
         }
 		keepalive.pid = execute_fork(false);
 		if( keepalive.pid == 0 )
@@ -1101,7 +1101,7 @@ void exec( parser_t &parser, job_t *j )
         
                 /* We don't have to drain threads here because our child process is simple */
                 if (g_log_forks) {
-                    printf("Executing fork for internal buffer for '%ls'\n", p->argv0() ? p->argv0() : L"(null)");
+                    printf("fork #%d: Executing fork for internal buffer for '%ls'\n", g_fork_count, p->argv0() ? p->argv0() : L"(null)");
                 }
 				pid = execute_fork(false);
 				if( pid == 0 )
@@ -1173,7 +1173,7 @@ void exec( parser_t &parser, job_t *j )
                 if (! skip_fork && ! j->io) {
                     /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO. */
                     if (g_log_forks) {
-                        printf("Skipping fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", p->argv0(), io, j->io);
+                        printf("fork #-: Skipping fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", p->argv0(), io, j->io);
                     }
                     const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
                     char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
@@ -1269,7 +1269,9 @@ void exec( parser_t &parser, job_t *j )
                 
                 const wchar_t *reader_current_filename();
                 if (g_log_forks) {
-                    printf("forking for '%s' in '%ls'\n", actual_cmd, reader_current_filename());
+                    const wchar_t *file = reader_current_filename();
+                    const wchar_t *func = parser_t::principal_parser().is_function();
+                    printf("fork #%d: forking for '%s' in '%ls:%ls'\n", g_fork_count, actual_cmd, file ? file : L"", func ? func : L"?");
                 }
 				pid = execute_fork(false);
 				if( pid == 0 )

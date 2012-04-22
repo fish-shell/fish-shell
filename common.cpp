@@ -1961,7 +1961,7 @@ void append_path_component(wcstring &path, const wcstring &component)
 }
 
 extern "C" {
-__attribute__((noinline)) void debug_thread_error(void) {}
+__attribute__((noinline)) void debug_thread_error(void) {     while (1) sleep(9999999); }
 }
 
  
@@ -2015,11 +2015,11 @@ void assert_is_background_thread(const char *who)
     }
 }
 
-void assert_is_locked(void *vmutex, const char *who)
+void assert_is_locked(void *vmutex, const char *who, const char *caller)
 {
     pthread_mutex_t *mutex = static_cast<pthread_mutex_t*>(vmutex);
     if (0 == pthread_mutex_trylock(mutex)) {
-        fprintf(stderr, "Warning: %s is not locked when it should be. Break on debug_thread_error to debug.\n", who);
+        fprintf(stderr, "Warning: %s is not locked when it should be in '%s'. Break on debug_thread_error to debug.\n", who, caller);
         debug_thread_error();
         pthread_mutex_unlock(mutex);
     }

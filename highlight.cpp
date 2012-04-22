@@ -561,15 +561,36 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 					{
                         wcstring dir = tok_last( &tok );
                         wcstring suggested_path;
+                            
                         if (is_potential_path(dir, &suggested_path, true /* require directory */)) {
+
                             /* suggested_path needs to actually have dir as a prefix (perhaps with different case). Handle stuff like ./ */
                             bool wants_dot_slash = string_prefixes_string(L"./", dir);
                             bool has_dot_slash = string_prefixes_string(L"./", suggested_path);
-                            
+                                                        
                             if (wants_dot_slash && ! has_dot_slash) {
                                 suggested_path.insert(0, L"./");
                             } else if (! wants_dot_slash && has_dot_slash) {
                                 suggested_path.erase(0, 2);
+                            }
+                            
+                            bool wants_tilde = string_prefixes_string(L"~", dir);
+                            bool has_tilde = string_prefixes_string(L"~", suggested_path);
+                            if (wants_tilde && ! has_tilde) {
+                                // The input string has a tilde, the output string does not
+                                // Extract the tilde part, expand it, see if the expansion prefixes the suggestion
+                                // If so, replace it with the tilde part
+                                size_t slash_idx = dir.find(L'/');
+                                const wcstring tilde_part(dir, 0, slash_idx); //note that slash_idx is npos this will return everything
+                                
+                                // Expand the tilde
+                                wcstring expanded_tilde = tilde_part;
+                                expand_tilde(expanded_tilde);
+                                
+                                // Replace it
+                                if (string_prefixes_string(expanded_tilde, suggested_path)) {
+                                    suggested_path.replace(0, expanded_tilde.size(), tilde_part);
+                                }
                             }
                             
                             suggestion = str;

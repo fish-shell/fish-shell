@@ -1092,58 +1092,55 @@ env_var_t env_get_string( const wcstring &key )
 	{
         return format_string(L"0%0.3o", get_umask() );
 	}
-	else {
-        
-        scoped_lock lock(env_lock);
-        
-        var_entry_t *res;
-        env_node_t *env = top;
-        wchar_t *item;
-        wcstring result;
-        
-        while( env != 0 )
+	else
+    {
         {
-            var_table_t::iterator result =  env->env.find(key);
-            if ( result != env->env.end() ) 
-            {
-                res = result->second; 
-            }
-            else
-            {
-                res = 0;
-            }
+            /* Lock around a local region */
+            scoped_lock lock(env_lock);
             
+            var_entry_t *res = NULL;
+            env_node_t *env = top;
+            wcstring result;
             
-            if( res != 0 )
+            while( env != NULL )
             {
-                if( res->val == ENV_NULL ) 
+                var_table_t::iterator result =  env->env.find(key);
+                if ( result != env->env.end() ) 
+                    res = result->second; 
+                
+                
+                if( res != NULL )
                 {
-                    return env_var_t::missing_var();
+                    if( res->val == ENV_NULL ) 
+                    {
+                        return env_var_t::missing_var();
+                    }
+                    else
+                    {
+                        return res->val;			
+                    }
+                }
+                
+                if( env->new_scope )
+                {
+                    env = global_env;
                 }
                 else
                 {
-                    return res->val;			
+                    env = env->next;
                 }
-            }
-            
-            if( env->new_scope )
-            {
-                env = global_env;
-            }
-            else
-            {
-                env = env->next;
             }
         }
         
-        /* Another big hack - only do a universal barrier on the main thread (since it can change variable values) */
+        /* Another big hack - only do a universal barrier on the main thread (since it can change variable values)
+           Make sure we do this outside the env_lock because it may itself call env_get_string */
         if(is_main && ! get_proc_had_barrier())
         {
             set_proc_had_barrier(true);
             env_universal_barrier();
         }
         
-        item = env_universal_get( key );
+        wchar_t *item = env_universal_get( key );
         
         if( !item || (wcscmp( item, ENV_NULL )==0))
         {

@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <wchar.h>
 #include <pthread.h>
+#include <algorithm>
 
 #include "fallback.h"
 #include "util.h"

@@ -207,7 +207,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 	# Reload keybindings when binding variable change
 	function __fish_reload_key_bindings -d "Reload keybindings when binding variable change" --on-variable fish_key_bindings
-		eval $fish_key_bindings ^/dev/null
+		# Do something nasty to avoid two forks
+		if test "$fish_key_bindings" =  fish_default_key_bindings
+			fish_default_key_bindings
+		else
+			eval $fish_key_bindings ^/dev/null
+		end
 	end
 
 	# Load keybindings

@@ -561,7 +561,7 @@ void exec( parser_t &parser, job_t *j )
 	*/
 	int exec_error=0;
 
-	int needs_keepalive = 0;
+	bool needs_keepalive = false;
 	process_t keepalive;
 	
 
@@ -672,12 +672,12 @@ void exec( parser_t &parser, job_t *j )
 			{
 				if( p->next )
 				{
-					needs_keepalive = 1;
+					needs_keepalive = true;
 					break;
 				}
 				if( p != j->first_process )
 				{
-					needs_keepalive = 1;
+					needs_keepalive = true;
 					break;
 				}
 				
@@ -1216,7 +1216,7 @@ void exec( parser_t &parser, job_t *j )
                 fflush(stdout);
                 fflush(stderr);
                 if (g_log_forks) {
-                    printf("Executing fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", p->argv0(), io, j->io);
+                    printf("fork #%d: Executing fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", g_fork_count, p->argv0(), io, j->io);
                     io_print(io);
                 }
 				pid = execute_fork(false);

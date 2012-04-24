@@ -528,6 +528,7 @@ void complete_remove( const wchar_t *cmd,
 {
 	CHECK( cmd, );
     scoped_lock lock(completion_lock);
+    scoped_lock lock2(completion_entry_lock);
     
     completion_entry_t tmp_entry(cmd, cmd_is_path, L"", false);
     completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);

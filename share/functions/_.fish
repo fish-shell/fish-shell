@@ -10,7 +10,7 @@ if test -x (echo $path)
 	end
 else
 	function _ --description "Alias for the gettext command"
-		printf "%s" $argv
+		echo -n $argv
 	end
 end
 

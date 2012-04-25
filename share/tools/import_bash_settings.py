@@ -15,7 +15,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 """
 
 import os, sys, re
-#import "deroff"
 
 config_file = None
 prompt_buff = ""

@@ -825,7 +825,7 @@ static int select_try( job_t *j )
 			int fd = d->param1.pipe_fd[0];
 //			fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
 			FD_SET( fd, &fds );
-			maxfd=maxi( maxfd, d->param1.pipe_fd[0] );
+			maxfd = maxi(maxfd, fd);
 			debug( 3, L"select_try on %d\n", fd );
 		}
 	}

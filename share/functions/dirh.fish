@@ -25,10 +25,13 @@ function dirh --description "Print the current directory history (the back- and 
 	set_color $fish_color_history_current
 	echo -n -e $current$separator
 	set_color normal
-
-	for i in (seq (echo (count $dirnext)) -1 1)
-		echo -n -e $dirnext[$i]$separator
-	end
+    
+    # BSD seq 0 outputs '1 0' instead of nothing
+    if test (count $dirnext) -gt 0
+        for i in (seq (echo (count $dirnext)) -1 1)
+            echo -n -e $dirnext[$i]$separator
+        end
+    end
 
 	echo
 end

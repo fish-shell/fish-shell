@@ -771,7 +771,7 @@ static int insert_string(const wcstring &str)
 */
 static int insert_char( wchar_t c )
 {
-	return insert_string( wcstring(1, c) );
+	return insert_string(wcstring(&c, 1));
 }
 
 
@@ -927,6 +927,135 @@ static void get_param( const wchar_t *cmd,
 }
 
 /**
+   Insert the string in the given command line at the given cursor
+   position. The function checks if the string is quoted or not and
+   correctly escapes the string.
+   \param val the string to insert
+   \param flags A union of all flags describing the completion to insert. See the completion_t struct for more information on possible values.
+   \param command_line The command line into which we will insert
+   \param inout_cursor_pos On input, the location of the cursor within the command line. On output, the new desired position.
+   \return The completed string
+*/
+static wcstring completion_insert_helper(const wcstring &val_str, int flags, const wcstring &command_line, size_t *inout_cursor_pos)
+{
+	wchar_t *replaced;
+    const wchar_t *val = val_str.c_str();
+	bool add_space = !(flags & COMPLETE_NO_SPACE);
+	bool do_replace = !!(flags & COMPLETE_NO_CASE);
+	bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
+    const size_t cursor_pos = *inout_cursor_pos;
+    
+	//	debug( 0, L"Insert completion %ls with flags %d", val, flags);
+
+	if( do_replace )
+	{
+		
+		int move_cursor;
+		const wchar_t *begin, *end;
+		wchar_t *escaped;
+		
+        const wchar_t *buff = command_line.c_str();
+		parse_util_token_extent( buff, cursor_pos, &begin, 0, 0, 0 );
+		end = buff + cursor_pos;
+
+		wcstring sb(buff, begin - buff);
+		
+		if( do_escape )
+		{
+			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );		
+			sb.append( escaped );
+			move_cursor = wcslen(escaped);
+			free( escaped );
+		}
+		else
+		{
+			sb.append( val );
+			move_cursor = wcslen(val);
+		}
+		
+
+		if( add_space ) 
+		{
+			sb.append( L" " );
+			move_cursor += 1;
+		}
+		sb.append( end );
+        
+        size_t new_cursor_pos = (begin - buff) + move_cursor;
+        *inout_cursor_pos = new_cursor_pos;
+        return sb;
+	}
+	else
+	{
+        wchar_t quote = L'\0';
+		if( do_escape )
+		{
+			get_param(command_line.c_str(), cursor_pos, &quote, 0, 0, 0);
+			if( quote == L'\0' )
+			{
+				replaced = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+			}
+			else
+			{
+				bool unescapable = false;
+
+				const wchar_t *pin;
+				wchar_t *pout;
+				
+				replaced = pout = (wchar_t *)malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
+
+				for( pin=val; *pin; pin++ )
+				{
+					switch( *pin )
+					{
+						case L'\n':
+						case L'\t':
+						case L'\b':
+						case L'\r':
+							unescapable = true;
+							break;
+						default:
+							*pout++ = *pin;
+							break;
+					}
+				}
+                
+				if (unescapable)
+				{
+					free( replaced );
+					wchar_t *tmp = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+					replaced = wcsdupcat( L" ", tmp );
+					free( tmp);
+					replaced[0]=quote;
+				}
+				else
+					*pout = 0;
+			}
+		}
+		else
+		{
+			replaced = wcsdup(val);
+		}
+		
+        wcstring result = command_line;
+        result.insert(cursor_pos, replaced);
+        size_t new_cursor_pos = cursor_pos + wcslen(replaced);
+        if (add_space)
+        {
+            if (quote && (command_line.c_str()[cursor_pos] != quote)) 
+            {
+                /* This is a quoted parameter, first print a quote */
+                result.insert(new_cursor_pos++, wcstring(&quote, 1));
+            }
+            result.insert(new_cursor_pos++, L" ");
+        }
+        free(replaced);
+        *inout_cursor_pos = new_cursor_pos;
+        return result;
+	}
+}
+
+/**
    Insert the string at the current cursor position. The function
    checks if the string is quoted or not and correctly escapes the
    string.
@@ -936,6 +1065,16 @@ static void get_param( const wchar_t *cmd,
 
 */
 static void completion_insert( const wchar_t *val, int flags )
+{
+    size_t cursor = data->buff_pos;
+    wcstring new_command_line = completion_insert_helper(val, flags, data->command_line, &cursor);
+    reader_set_buffer(new_command_line, cursor);
+    
+    /* Since we just inserted a completion, don't immediately do a new autosuggestion */
+    data->suppress_autosuggestion = true;
+}
+
+static void completion_insert_old( const wchar_t *val, int flags )
 {
     assert(data != NULL);
     
@@ -1070,8 +1209,7 @@ static void completion_insert( const wchar_t *val, int flags )
 
 		free(replaced);
 	
-	}
-	
+	}	
 }
 
 /**
@@ -1224,6 +1362,7 @@ static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<complet
 struct autosuggestion_context_t {
     wcstring search_string;
     wcstring autosuggestion;
+    size_t cursor_pos;
     history_search_t searcher;
     file_detection_context_t detector;
     const wcstring working_directory;
@@ -1234,8 +1373,9 @@ struct autosuggestion_context_t {
     // don't reload more than once
     bool has_tried_reloading;
     
-    autosuggestion_context_t(history_t *history, const wcstring &term) :
+    autosuggestion_context_t(history_t *history, const wcstring &term, size_t pos) :
         search_string(term),
+        cursor_pos(pos),
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
         detector(history, term),
         working_directory(get_working_directory()),
@@ -1251,6 +1391,11 @@ struct autosuggestion_context_t {
         
         /* If the main thread has moved on, skip all the work */
         if (generation_count != s_generation_count) {
+            return 0;
+        }
+        
+        /* Let's make sure we aren't using the empty string */
+        if (search_string.empty()) {
             return 0;
         }
         
@@ -1287,6 +1432,15 @@ struct autosuggestion_context_t {
             return 1;
         }
         
+        // Here we do something a little funny
+        // If the line ends with a space, and the cursor is not at the end,
+        // Don't use completion autosuggestions. It ends up being pretty weird seeing stuff get spammed on the right
+        // While you go back to edit a line
+        const bool line_ends_with_space = iswspace(search_string.at(search_string.size() - 1));
+        const bool cursor_at_end = (this->cursor_pos == search_string.size());
+        if (line_ends_with_space && ! cursor_at_end)
+            return 0;
+
         /* Try normal completions */
         std::vector<completion_t> completions;
         complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
@@ -1372,7 +1526,7 @@ static void update_autosuggestion(void) {
 #else
     data->autosuggestion.clear();
     if (! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end()) {
-        autosuggestion_context_t *ctx = new autosuggestion_context_t(data->history, data->command_line);
+        autosuggestion_context_t *ctx = new autosuggestion_context_t(data->history, data->command_line, data->buff_pos);
         iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
     }
 #endif
@@ -1456,11 +1610,11 @@ static int reader_can_replace( const wcstring &in, int flags )
 */
 
 
-static int handle_completions( std::vector<completion_t> &comp )
+static int handle_completions( const std::vector<completion_t> &comp )
 {
-	wchar_t *base = 0;
+	wchar_t *base = NULL;
 	int len = 0;
-	int done = 0;
+	bool done = false;
 	int count = 0;
 	int flags=0;
 	const wchar_t *begin, *end, *buff = data->command_line.c_str();
@@ -1473,21 +1627,17 @@ static int handle_completions( std::vector<completion_t> &comp )
 	/*
 	  Check trivial cases
 	 */
-	switch( comp.size() )
+	switch(comp.size())
 	{
-		/*
-		  No suitable completions found, flash screen and retur
-		*/
+		/* No suitable completions found, flash screen and return */
 		case 0:
 		{
 			reader_flash();
-			done = 1;
+			done = true;
 			break;
 		}
 
-		/*
-		  Exactly one suitable completion found - insert it
-		 */
+		/* Exactly one suitable completion found - insert it */
 		case 1:
 		{
 			
@@ -1503,8 +1653,8 @@ static int handle_completions( std::vector<completion_t> &comp )
 			{
 				completion_insert( c.completion.c_str(), c.flags );			
 			}
-			done = 1;
-			len = 1;
+			done = true;
+			len = 1; // I think this just means it's a true return
 			break;
 		}
 	}
@@ -1512,17 +1662,12 @@ static int handle_completions( std::vector<completion_t> &comp )
 		
 	if( !done )
 	{
-		/*
-		  Try to find something to insert whith the correct case
-		 */
+		/* Try to find something to insert whith the correct case */
 		for( size_t i=0; i< comp.size() ; i++ )
 		{
 			const completion_t &c =  comp.at( i );
-			int new_len;
 
-			/*
-			  Ignore case insensitive completions for now
-			 */
+			/* Ignore case insensitive completions for now */
 			if( c.flags & COMPLETE_NO_CASE )
 				continue;
 			
@@ -1530,8 +1675,8 @@ static int handle_completions( std::vector<completion_t> &comp )
 			
 			if( base )
 			{
-				new_len = comp_len( base, c.completion.c_str() );
-				len = new_len < len ? new_len: len;
+				int new_len = comp_len( base, c.completion.c_str() );
+                len = mini(new_len, len);
 			}
 			else
 			{
@@ -1541,9 +1686,7 @@ static int handle_completions( std::vector<completion_t> &comp )
 			}
 		}
 
-		/*
-		  If we found something to insert, do it.
-		 */
+		/* If we found something to insert, do it. */
 		if( len > 0 )
 		{
 			if( count > 1 )
@@ -1551,18 +1694,15 @@ static int handle_completions( std::vector<completion_t> &comp )
 
 			base[len]=L'\0';
 			completion_insert(base, flags);
-			done = 1;
+			done = true;
 		}
 	}
 	
 	
 
-	if( !done && base == 0 )
+	if( !done && base == NULL )
 	{
-		/*
-		  Try to find something to insert ignoring case
-		*/
-
+		/* Try to find something to insert ignoring case */
 		if( begin )
 		{
 

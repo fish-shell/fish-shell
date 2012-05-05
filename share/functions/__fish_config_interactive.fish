@@ -128,13 +128,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 		set_default fish_color_history_current cyan
 
-
-		#
-		# Setup the CDPATH variable
-		#
-
-		set_default CDPATH . ~
-
 		#
 		# Remove temporary functions for setting default variable values
 		#

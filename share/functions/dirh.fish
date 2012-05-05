@@ -27,7 +27,7 @@ function dirh --description "Print the current directory history (the back- and 
 	set_color normal
     
     # BSD seq 0 outputs '1 0' instead of nothing
-    if test (count $dirnext) -gt 0
+    if count $dirnext > /dev/null
         for i in (seq (echo (count $dirnext)) -1 1)
             echo -n -e $dirnext[$i]$separator
         end

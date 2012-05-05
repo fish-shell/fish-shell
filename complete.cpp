@@ -277,6 +277,8 @@ class completer_t {
                          
     void complete_param_expand(const wcstring &str, bool do_file);
     
+    void debug_print_completions();
+    
     void complete_cmd( const wcstring &str,
                        bool use_function,
                        bool use_builtin,
@@ -1522,8 +1524,14 @@ void completer_t::complete_param_expand( const wcstring &sstr, bool do_file)
 					   flags | this->expand_flags() ) == EXPAND_ERROR )
 	{
 		debug( 3, L"Error while expanding string '%ls'", comp_str );
-	}
-	
+	}	
+}
+
+void completer_t::debug_print_completions()
+{
+    for (size_t i=0; i < completions.size(); i++) {
+        printf("- Completion: %ls\n", completions.at(i).completion.c_str());
+    }
 }
 
 /**

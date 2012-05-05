@@ -1159,18 +1159,19 @@ void completer_t::complete_from_args( const wcstring &str,
                                       const wcstring &desc,
                                       complete_flags_t flags )
 {
-    /* If type is COMPLETE_AUTOSUGGEST, it means we're on a background thread, so don't call proc_push_interactive */
     
 	std::vector<completion_t> possible_comp;
 
-    parser_t parser(PARSER_TYPE_COMPLETIONS_ONLY);
-    
-    if (this->type != COMPLETE_AUTOSUGGEST)
+    bool is_autosuggest = (this->type == COMPLETE_AUTOSUGGEST);
+    parser_t parser(is_autosuggest ? PARSER_TYPE_COMPLETIONS_ONLY : PARSER_TYPE_GENERAL);
+
+    /* If type is COMPLETE_AUTOSUGGEST, it means we're on a background thread, so don't call proc_push_interactive */    
+    if (is_autosuggest)
         proc_push_interactive(0);
 
 	parser.eval_args( args.c_str(), possible_comp );
 
-    if (this->type != COMPLETE_AUTOSUGGEST)
+    if (is_autosuggest)
         proc_pop_interactive();
 	
 	complete_strings( this->completions, str.c_str(), desc.c_str(), 0, possible_comp, flags );

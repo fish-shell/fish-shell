@@ -289,9 +289,16 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 	}
 	else
 	{
-
-		const wchar_t *path = L".";
+        
+        const wchar_t *path = L".";
                 
+        // Respect CDPATH
+        env_var_t cdpath = env_get_string(L"CDPATH");
+        if (! cdpath.missing_or_empty()) {
+            path = cdpath.c_str();
+            printf("CDPATH: %ls\n", path);
+        }
+        
         wcstokenizer tokenizer(path, ARRAY_SEP_STR);
         wcstring next_path;
         while (tokenizer.next(next_path))
@@ -368,7 +375,9 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
         wchar_t *state;
         wchar_t *whole_path;
 
-        env_var_t path = L".";
+        // Respect CDPATH
+        env_var_t path = env_get_string(L"CDPATH");
+        if (path.missing_or_empty()) path = L".";
 
         path_cpy = wcsdup( path.c_str() );
 

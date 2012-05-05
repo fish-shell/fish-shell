@@ -2573,7 +2573,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 	int res=STATUS_BUILTIN_OK;
 
 	
-	if( argv[1]  == 0 )
+	if (argv[1] == NULL)
 	{
 		dir_in = env_get_string( L"HOME" );
 		if( dir_in.missing_or_empty() )

@@ -101,7 +101,8 @@ class lru_cache_t {
         mouth.prev = mouth.next = &mouth;
     }
     
-    /** Note that we do not define a destructor. We cannot evict all nodes (even though they typically need to be deleted by their creator). */
+    /** Note that we do not evict nodes in our destructor (even though they typically need to be deleted by their creator). */
+    virtual ~lru_cache_t() { }
 
     
     /** Returns the node for a given key, or NULL */

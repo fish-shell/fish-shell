@@ -356,8 +356,9 @@ static const struct block_lookup_entry block_lookup[]=
 };
 
 
-parser_t::parser_t(enum parser_type_t type) :
+parser_t::parser_t(enum parser_type_t type, bool errors) :
     parser_type(type),
+    show_errors(errors),
     error_code(0),
     err_pos(0),
     current_tokenizer(NULL),
@@ -374,7 +375,7 @@ parser_t &parser_t::principal_parser(void)
 {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
-    static parser_t parser(PARSER_TYPE_GENERAL);
+    static parser_t parser(PARSER_TYPE_GENERAL, true);
     return parser;
 }
 
@@ -762,12 +763,12 @@ void parser_t::print_errors_stderr()
 int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 {
 	tokenizer tok;
-    const bool show_errors = (this->parser_type == PARSER_TYPE_GENERAL || this->parser_type == PARSER_TYPE_ERRORS_ONLY);
     
     expand_flags_t eflags = 0;
     if (! show_errors)
         eflags |= EXPAND_NO_DESCRIPTIONS;
-    if (this->parser_type != PARSER_TYPE_GENERAL)
+    // Completions need command substitution (for example, the cd completion uses this)
+    if (this->parser_type != PARSER_TYPE_GENERAL && this->parser_type != PARSER_TYPE_COMPLETIONS_ONLY)
         eflags |= EXPAND_SKIP_CMDSUBST;
     
 	/*

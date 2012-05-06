@@ -866,7 +866,7 @@ static void get_param( const wchar_t *cmd,
 	int unfinished;
 
 	tokenizer tok;
-	tok_init( &tok, cmd, TOK_ACCEPT_UNFINISHED );
+	tok_init( &tok, cmd, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS );
 
 	for( ; tok_has_next( &tok ); tok_next( &tok ) )
 	{
@@ -936,7 +936,7 @@ static void get_param( const wchar_t *cmd,
    \param inout_cursor_pos On input, the location of the cursor within the command line. On output, the new desired position.
    \return The completed string
 */
-static wcstring completion_insert_helper(const wcstring &val_str, int flags, const wcstring &command_line, size_t *inout_cursor_pos)
+static wcstring completion_apply_to_command_line(const wcstring &val_str, int flags, const wcstring &command_line, size_t *inout_cursor_pos)
 {
 	wchar_t *replaced;
     const wchar_t *val = val_str.c_str();
@@ -1067,149 +1067,11 @@ static wcstring completion_insert_helper(const wcstring &val_str, int flags, con
 static void completion_insert( const wchar_t *val, int flags )
 {
     size_t cursor = data->buff_pos;
-    wcstring new_command_line = completion_insert_helper(val, flags, data->command_line, &cursor);
+    wcstring new_command_line = completion_apply_to_command_line(val, flags, data->command_line, &cursor);
     reader_set_buffer(new_command_line, cursor);
     
     /* Since we just inserted a completion, don't immediately do a new autosuggestion */
     data->suppress_autosuggestion = true;
-}
-
-static void completion_insert_old( const wchar_t *val, int flags )
-{
-    assert(data != NULL);
-    
-	wchar_t *replaced;
-
-	wchar_t quote;
-	bool add_space = !(flags & COMPLETE_NO_SPACE);
-	bool do_replace = !!(flags & COMPLETE_NO_CASE);
-	bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
-	
-	//	debug( 0, L"Insert completion %ls with flags %d", val, flags);
-
-	if( do_replace )
-	{
-		
-		int move_cursor;
-		const wchar_t *begin, *end;
-		wchar_t *escaped;
-		
-        const wchar_t *buff = data->command_line.c_str();
-		parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
-		end = buff + data->buff_pos;
-
-		wcstring sb(buff, begin - buff);
-		
-		if( do_escape )
-		{
-			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );		
-			sb.append( escaped );
-			move_cursor = wcslen(escaped);
-			free( escaped );
-		}
-		else
-		{
-			sb.append( val );
-			move_cursor = wcslen(val);
-		}
-		
-
-		if( add_space ) 
-		{
-			sb.append( L" " );
-			move_cursor += 1;
-		}
-		
-		sb.append( end );
-						
-		reader_set_buffer( sb, (begin-buff)+move_cursor );
-						
-		reader_super_highlight_me_plenty( data->buff_pos );
-		reader_repaint();
-		
-	}
-	else
-	{
-		
-		if( do_escape )
-		{
-			get_param( data->command_line.c_str(),
-				   data->buff_pos,
-				   &quote,
-				   0, 0, 0 );
-
-			if( quote == L'\0' )
-			{
-				replaced = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-			}
-			else
-			{
-				int unescapable=0;
-
-				const wchar_t *pin;
-				wchar_t *pout;
-				
-				replaced = pout =
-					(wchar_t *)malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
-
-				for( pin=val; *pin; pin++ )
-				{
-					switch( *pin )
-					{
-						case L'\n':
-						case L'\t':
-						case L'\b':
-						case L'\r':
-							unescapable=1;
-							break;
-						default:
-							*pout++ = *pin;
-							break;
-					}
-				}
-				if( unescapable )
-				{
-					free( replaced );
-					wchar_t *tmp = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-					replaced = wcsdupcat( L" ", tmp );
-					free( tmp);
-					replaced[0]=quote;
-				}
-				else
-					*pout = 0;
-			}
-		}
-		else
-		{
-			replaced = wcsdup(val);
-		}
-		
-		if( insert_string( replaced ) )
-		{
-			/*
-			  Print trailing space since this is the only completion 
-			*/
-			if( add_space ) 
-			{
-
-				if( quote &&
-				    (data->command_line.c_str()[data->buff_pos] != quote ) ) 
-				{
-					/* 
-					   This is a quoted parameter, first print a quote 
-					*/
-					insert_char( quote );
-				}
-				insert_char( L' ' );
-			}
-            
-            /* Since we just inserted a completion, don't immediately do a new autosuggestion */
-            data->suppress_autosuggestion = true;
-		}
-
-		free(replaced);
-	
-	}	
 }
 
 /**
@@ -1446,22 +1308,8 @@ struct autosuggestion_context_t {
         complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
         if (! completions.empty()) {
             const completion_t &comp = completions.at(0);
-            this->autosuggestion = this->search_string;
-            
-            if (comp.flags & COMPLETE_NO_CASE) {
-                /* The completion contains the whole current token, not merely a suffix */
-                
-                const wchar_t *begin;
-                const wchar_t *buff = data->command_line.c_str();
-                parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
-                
-                size_t start = begin - buff;
-                assert(data->buff_pos >= start);
-                this->autosuggestion.replace(start, data->buff_pos - start, comp.completion);
-            } else {
-                /* The completion contains only a suffix */
-                this->autosuggestion.append(comp.completion);
-            }
+            size_t cursor = this->cursor_pos;
+            this->autosuggestion = completion_apply_to_command_line(comp.completion.c_str(), comp.flags, this->search_string, &cursor);
             return 1;
         }
         

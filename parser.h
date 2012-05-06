@@ -269,9 +269,12 @@ class parser_t {
     enum parser_type_t parser_type;
     std::vector<block_t> blocks;
     
+    /** Whether or not we output errors */
+    const bool show_errors;
+    
     /** Last error code */
     int error_code;
-    
+        
     /** Position of last error */
     int err_pos;
     
@@ -330,7 +333,7 @@ class parser_t {
     static parser_t &principal_parser();
     
     /** Create a parser of the given type */
-    parser_t(enum parser_type_t type);
+    parser_t(enum parser_type_t type, bool show_errors);
     
     /** The current innermost block, allocated with new */
     block_t *current_block;

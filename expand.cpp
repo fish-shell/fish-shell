@@ -1419,7 +1419,7 @@ static void remove_internal_separator2( wcstring &s, int conv )
 
 int expand_string( const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags )
 {
-	parser_t parser(PARSER_TYPE_ERRORS_ONLY);
+	parser_t parser(PARSER_TYPE_ERRORS_ONLY, true /* show errors */);
    	std::vector<completion_t> list1, list2;
 	std::vector<completion_t> *in, *out;
     

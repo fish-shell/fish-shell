@@ -767,8 +767,7 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
     expand_flags_t eflags = 0;
     if (! show_errors)
         eflags |= EXPAND_NO_DESCRIPTIONS;
-    // Completions need command substitution (for example, the cd completion uses this)
-    if (this->parser_type != PARSER_TYPE_GENERAL && this->parser_type != PARSER_TYPE_COMPLETIONS_ONLY)
+    if (this->parser_type != PARSER_TYPE_GENERAL)
         eflags |= EXPAND_SKIP_CMDSUBST;
     
 	/*

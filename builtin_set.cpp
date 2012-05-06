@@ -49,9 +49,7 @@ extern wcstring stdout_buffer, stderr_buffer;
 */
 static int is_path_variable( const wchar_t *env )
 {
-	return contains( env,
-						 L"PATH"
-					);
+	return contains(env, L"PATH", L"CDPATH" );
 }
 
 /**

@@ -377,7 +377,7 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
 
         // Respect CDPATH
         env_var_t path = env_get_string(L"CDPATH");
-        if (path.missing_or_empty()) path = L".";
+        if (path.missing_or_empty()) path = L"."; //We'll change this to the wd if we have one
 
         path_cpy = wcsdup( path.c_str() );
 
@@ -385,6 +385,13 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
              nxt_path != NULL;
              nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
         {
+        
+            if (! wcscmp(nxt_path, L".") && wd != NULL) {
+                // nxt_path is just '.', and we have a working directory, so use the wd instead
+                // TODO: if nxt_path starts with ./ we need to replace the . with the wd
+                nxt_path = wd;
+            }
+            
             wchar_t *expanded_path = expand_tilde_compat( wcsdup(nxt_path) );
 
 //			debug( 2, L"woot %ls\n", expanded_path );

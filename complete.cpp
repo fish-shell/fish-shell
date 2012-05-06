@@ -1009,8 +1009,12 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 	wchar_t *state;
 	std::vector<completion_t> possible_comp;
 
-	wchar_t *cdpath_cpy = wcsdup(L".");
 
+    env_var_t cdpath = env_get_string(L"CDPATH");
+    if (cdpath.missing_or_empty())
+        cdpath = L".";
+    wchar_t *cdpath_cpy = wcsdup(cdpath.c_str());
+    
     const bool wants_description = (type == COMPLETE_DEFAULT);
     
 	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )

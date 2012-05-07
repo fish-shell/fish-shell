@@ -16,10 +16,13 @@ Functions having to do with parser keywords, like testing if a function is a blo
 
 bool parser_keywords_is_switch( const wcstring &cmd )
 {
-	if( cmd == L"--" )
+	if (cmd == L"--") {
 		return ARG_SKIP;
-	else 
-		return ! cmd.empty() && cmd.at(0) == L'-';
+    } else if (! cmd.empty() && cmd.at(0) == L'-') {
+        return ARG_SWITCH;
+    } else {
+        return ARG_NON_SWITCH;
+    }
 }
 
 bool parser_keywords_skip_arguments( const wcstring &cmd )

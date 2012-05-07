@@ -231,10 +231,11 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 
 
 /**
-   Highligt operators (such as $, ~, %, as well as escaped characters.
+   Highlight operators (such as $, ~, %, as well as escaped characters.
 */
 static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, int pos, wcstring_list_t *error )
-{	
+{
+    return;
     const wchar_t * const buff = buffstr.c_str();
 	enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
 	size_t in_pos, len = buffstr.size();
@@ -533,6 +534,125 @@ static int has_expand_reserved( const wchar_t *str )
 	return 0;
 }
 
+/* A class representing the result of parsing a command line, containing both the last command and its arguments. This is used by autosuggestions */
+class autosuggest_parsed_command_t {
+    public:
+    /* The command, like "cd" */
+    wcstring command;
+    
+    /* Arguments to the command */
+    wcstring_list_t arguments;
+    
+    autosuggest_parsed_command_t(const wcstring &str) {
+        if (str.empty())
+            return;
+        
+        wcstring cmd;
+        wcstring_list_t args;
+        bool had_cmd = false, recognized_cmd = false;
+        tokenizer tok;
+        for (tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS); tok_has_next(&tok); tok_next(&tok))
+        {
+            int last_type = tok_last_type(&tok);
+            
+            switch( last_type )
+            {
+                case TOK_STRING:
+                {
+                    if( had_cmd )
+                    {
+                        /* Parameter to the command */
+                        args.push_back(tok_last(&tok));
+                    }
+                    else
+                    { 	
+                        /* Command. First check that the command actually exists. */
+                        wcstring local_cmd = tok_last( &tok );
+                        bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+                        if (! expanded || has_expand_reserved(cmd.c_str()))
+                        {
+                            /* We can't expand this cmd, ignore it */
+                        }
+                        else
+                        {
+                            bool is_subcommand = false;
+                            int mark = tok_get_pos( &tok );
+                            
+                            if (parser_keywords_is_subcommand(cmd))
+                            {
+                                int sw;
+                                tok_next( &tok );
+                                
+                                sw = parser_keywords_is_switch( tok_last( &tok ) );
+                                if( !parser_keywords_is_block( cmd ) &&
+                                   sw == ARG_SWITCH )
+                                {
+                                    /* It's an argument to the subcommand itself */
+                                }
+                                else
+                                {
+                                    if( sw == ARG_SKIP )
+                                        mark = tok_get_pos( &tok );                                    
+                                    is_subcommand = true;
+                                }
+                                tok_set_pos( &tok, mark );
+                            }
+                            
+                            if (!is_subcommand)
+                            {
+                                /* It's really a command */
+                                had_cmd = true;
+                                cmd = local_cmd;
+                            }
+                        }
+                        
+                    }
+                    break;
+                }
+                    
+                case TOK_REDIRECT_NOCLOB:
+                case TOK_REDIRECT_OUT:
+                case TOK_REDIRECT_IN:
+                case TOK_REDIRECT_APPEND:
+                case TOK_REDIRECT_FD:
+                {
+                    if( !had_cmd )
+                    {
+                        break;
+                    }
+                    tok_next( &tok );				
+                    break;
+                }
+                    
+                case TOK_PIPE:
+                case TOK_BACKGROUND:
+                case TOK_END:
+                {
+                    had_cmd = false;
+                    cmd.empty();
+                    args.empty();
+                    break;
+                }
+
+                case TOK_COMMENT:                    
+                case TOK_ERROR:
+                default:
+                {
+                    break;				
+                }			
+            }
+        }
+        tok_destroy( &tok );
+        
+        /* Remember our command if we have one */
+        if (had_cmd) {
+            this->command.swap(cmd);
+            this->arguments.swap(args);
+        }
+
+    }    
+};
+
 /* Attempts to suggest a completion for a command we handle specially, like 'cd'. Returns true if we recognized the command (even if we couldn't think of a suggestion for it) */
 bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outString) {
     if (str.empty())
@@ -706,157 +826,40 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     return recognized_cmd;
 }
 
-bool autosuggest_handle_special(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK) {
+bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK) {
     ASSERT_IS_BACKGROUND_THREAD();
     assert(outSuggestionOK != NULL);
     
-    if (str.empty())
-        return false;
+    bool handled = false, suggestionOK = false;
     
-    wcstring cmd;
-    bool had_cmd = false;
+    /* Parse the string */
+    autosuggest_parsed_command_t parsed(str);
     
-    bool handled = false;
-    bool suggestionOK = true;
-    
-    tokenizer tok;
-	for( tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS );
-		tok_has_next( &tok );
-		tok_next( &tok ) )
-	{	
-        int last_type = tok_last_type( &tok );
-		
-		switch( last_type )
-		{
-			case TOK_STRING:
-			{
-				if( had_cmd )
-				{
-					if( cmd == L"cd" )
-					{
-                        wcstring dir = tok_last( &tok );
-                        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
-						{
-                            /* We can specially handle the cd command */
-                            handled = true;
-							bool is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
-                            if (is_help) {
-                                suggestionOK = false;
-                            } else {
-                                wchar_t *path = path_allocate_cdpath(dir.c_str(), working_directory.c_str());
-                                if (path == NULL) {
-                                    suggestionOK = false;
-                                } else if (paths_are_same_file(working_directory, path)) {
-                                    /* Don't suggest the working directory as the path! */
-                                    suggestionOK = false;
-                                } else {
-                                    suggestionOK = true;
-                                }
-                                free(path);
-                            }
-						}
-					}
-				}
-				else
-				{ 	
-					/*
-					 Command. First check that the command actually exists.
-					 */
-                    cmd = tok_last( &tok );
-                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
-					if (! expanded || has_expand_reserved(cmd.c_str()))
-					{
-
-					}
-					else
-					{
-						int is_subcommand = 0;
-						int mark = tok_get_pos( &tok );
-						
-						if( parser_keywords_is_subcommand( cmd ) )
-						{
-							
-							int sw;
-							
-							if( cmd == L"builtin")
-							{
-							}
-							else if( cmd == L"command")
-							{
-							}
-							
-							tok_next( &tok );
-							
-							sw = parser_keywords_is_switch( tok_last( &tok ) );
-							
-							if( !parser_keywords_is_block( cmd ) &&
-							   sw == ARG_SWITCH )
-							{
-
-							}
-							else
-							{
-								if( sw == ARG_SKIP )
-								{
-									mark = tok_get_pos( &tok );
-								}
-								
-								is_subcommand = 1;
-							}
-							tok_set_pos( &tok, mark );
-						}
-						
-						if( !is_subcommand )
-						{	
-							had_cmd = true;
-						}
-					}
-					
-				}
-				break;
-			}
-				
-			case TOK_REDIRECT_NOCLOB:
-			case TOK_REDIRECT_OUT:
-			case TOK_REDIRECT_IN:
-			case TOK_REDIRECT_APPEND:
-			case TOK_REDIRECT_FD:
-			{
-				if( !had_cmd )
-				{
-					break;
-				}
-				tok_next( &tok );				
-                break;
-			}
-				
-			case TOK_PIPE:
-			case TOK_BACKGROUND:
-			{
-				had_cmd = false;
-				break;
-			}
-				
-			case TOK_END:
-			{
-				had_cmd = false;
-				break;
-			}
-				
-			case TOK_COMMENT:
-			{
-				break;
-			}
-				
-			case TOK_ERROR:
-			default:
-			{
-				break;				
-			}			
-		}
+    if (parsed.command == L"cd" && ! parsed.arguments.empty()) {        
+        /* We can possibly handle this specially */
+        wcstring dir = parsed.arguments.back();
+        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
+        {
+            handled = true;
+            bool is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
+            if (is_help) {
+                suggestionOK = false;
+            } else {
+                wchar_t *path = path_allocate_cdpath(dir.c_str(), working_directory.c_str());
+                if (path == NULL) {
+                    suggestionOK = false;
+                } else if (paths_are_same_file(working_directory, path)) {
+                    /* Don't suggest the working directory as the path! */
+                    suggestionOK = false;
+                } else {
+                    suggestionOK = true;
+                }
+                free(path);
+            }
+        }        
+    } else {
+        /* Either an error or some other command, so we don't handle it specially */
     }
-    tok_destroy( &tok );
-    
     *outSuggestionOK = suggestionOK;
     return handled;
 }
@@ -924,7 +927,8 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 					{
 						color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 					}					
-					
+
+#if 0
 					if( cmd == L"cd" )
 					{
                         wcstring dir = tok_last( &tok );
@@ -937,6 +941,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 							}
 						}
 					}
+#endif
 					
                     /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
                     const wcstring param_str = param;
@@ -1032,10 +1037,10 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 							 any files for that
 							 */
 							if( use_builtin )
-								is_cmd |= builtin_exists( cmd );
+								is_cmd = is_cmd || builtin_exists( cmd );
 							
 							if( use_function )
-								is_cmd |= function_exists_no_autoload( cmd, vars );
+								is_cmd = is_cmd || function_exists_no_autoload( cmd, vars );
 							
 							/*
 							 Moving on to expensive tests
@@ -1047,7 +1052,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 							if( use_command )
                             {
                                 wcstring tmp;
-								is_cmd |= !!path_get_path_string( cmd, tmp, vars );
+								is_cmd = is_cmd || path_get_path_string( cmd, tmp, vars );
                             }
 							
 							if( is_cmd )

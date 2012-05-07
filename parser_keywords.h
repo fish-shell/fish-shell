@@ -7,15 +7,14 @@ Functions having to do with parser keywords, like testing if a function is a blo
 #define FISH_PARSER_KEYWORD_H
 
 /**
-   Return valuse for parser_keywords_is_switch()
+   Return values for parser_keywords_is_switch()
 */
 enum 
 {
 	ARG_NON_SWITCH,
 	ARG_SWITCH,
 	ARG_SKIP
-}
-	;
+};
 
 
 

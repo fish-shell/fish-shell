@@ -106,7 +106,7 @@ void highlight_universal( const wcstring &buffstr, std::vector<int> &color, int 
 */
 rgb_color_t highlight_get_color( int highlight, bool is_background );
 
-bool autosuggest_handle_special(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
+bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
 bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outString);
 
 

@@ -397,7 +397,7 @@ static void test_parser()
 {
 	say( L"Testing parser" );
 	
-	parser_t parser(PARSER_TYPE_GENERAL);
+	parser_t parser(PARSER_TYPE_GENERAL, true);
     
 	say( L"Testing null input to parser" );
 	if( !parser.test( 0, 0, 0, 0 ) )
@@ -582,7 +582,7 @@ static void test_path()
 /** Test the 'test' builtin */
 int builtin_test( parser_t &parser, wchar_t **argv );
 static bool run_test_test(int expected, wcstring_list_t &lst) {
-    parser_t parser(PARSER_TYPE_GENERAL);
+    parser_t parser(PARSER_TYPE_GENERAL, true);
     size_t i, count = lst.size();
     wchar_t **argv = new wchar_t *[count+2];
     argv[0] = (wchar_t *)L"test";
@@ -678,7 +678,7 @@ static void test_colors()
 
 /* Testing autosuggestion */
 static void test_autosuggest() {
-    bool autosuggest_handle_special(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
+    bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
 }
 
 

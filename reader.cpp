@@ -1269,7 +1269,7 @@ struct autosuggestion_context_t {
                 continue;
             
             bool item_ok = false;
-            if (autosuggest_handle_special(item.str(), working_directory, &item_ok)) {
+            if (autosuggest_special_validate_from_history(item.str(), working_directory, &item_ok)) {
                 /* The command autosuggestion was handled specially, so we're done */
             } else {
                 /* See if the item has any required paths */

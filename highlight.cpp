@@ -827,7 +827,7 @@ bool autosuggest_special_validate_from_history(const wcstring &str, const wcstri
 }
 
 // This function does I/O
-static void tokenize( const wchar_t * const buff, std::vector<int> &color, const int pos, wcstring_list_t *error, const env_vars &vars) {
+static void tokenize( const wchar_t * const buff, std::vector<int> &color, const int pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
     
 	wcstring cmd;    
@@ -890,20 +890,18 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 						color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 					}					
 
-#if 0
 					if( cmd == L"cd" )
 					{
                         wcstring dir = tok_last( &tok );
                         if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
 						{
 							int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
-							if( !is_help && ! path_can_get_cdpath(dir))
+							if( !is_help && ! is_potential_cd_path(dir, working_directory, NULL))
 							{
                                 color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;							
 							}
 						}
 					}
-#endif
 					
                     /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
                     const wcstring param_str = param;
@@ -1209,8 +1207,11 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 	
     std::fill(color.begin(), color.end(), -1);
 
+    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. Note that we also need this as a vector (of one directory). */
+    const wcstring working_directory = get_working_directory();
+
     /* Tokenize the string */
-    tokenize(buff.c_str(), color, pos, error, vars);
+    tokenize(buff.c_str(), color, pos, error, working_directory, vars);
 
 	/*
 	  Locate and syntax highlight cmdsubsts recursively
@@ -1269,9 +1270,6 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 		else
 			color.at(i) = last_val;
 	}
-
-    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. Note this needs to be a vector (of one directory). */
-    const wcstring_list_t working_directories(1, get_working_directory());
     
 	/*
 	  Color potentially valid paths in a special path color if they
@@ -1286,8 +1284,9 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 		parse_util_token_extent( cbuff, pos, &tok_begin, &tok_end, 0, 0 );
 		if( tok_begin && tok_end )
 		{
-            const wcstring token(tok_begin, tok_end-tok_begin);
-			if (is_potential_path(token, working_directories))
+			const wcstring token(tok_begin, tok_end-tok_begin);
+			const wcstring_list_t working_directory_list(1, working_directory);
+			if (is_potential_path(token, working_directory_list))
 			{
 				for( ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++ )
 				{

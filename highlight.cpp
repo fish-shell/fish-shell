@@ -601,131 +601,122 @@ static int has_expand_reserved( const wchar_t *str )
 	return 0;
 }
 
-/* A class representing the result of parsing a command line, containing both the last command and its arguments. This is used by autosuggestions */
-class autosuggest_parsed_command_t {
-    public:
-    /* The command, like "cd" */
-    wcstring command;
+/* Parse a command line. Return by reference the last command, its arguments, and the offset in the string of the beginning of the last argument. This is used by autosuggestions */
+static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command, wcstring_list_t *out_arguments, int *out_last_arg_pos)
+{
+    if (str.empty())
+        return false;
     
-    /* Arguments to the command */
-    wcstring_list_t arguments;
+    wcstring cmd;
+    wcstring_list_t args;
+    int arg_pos = -1;
     
-    /* Position in the string of the start of the last argument */
-    int last_arg_pos;
-    
-    autosuggest_parsed_command_t(const wcstring &str) {
-        if (str.empty())
-            return;
+    bool had_cmd = false;
+    tokenizer tok;
+    for (tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS); tok_has_next(&tok); tok_next(&tok))
+    {
+        int last_type = tok_last_type(&tok);
         
-        wcstring cmd;
-        wcstring_list_t args;
-        int arg_pos = -1;
-        
-        bool had_cmd = false;
-        tokenizer tok;
-        for (tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS); tok_has_next(&tok); tok_next(&tok))
+        switch( last_type )
         {
-            int last_type = tok_last_type(&tok);
-            
-            switch( last_type )
+            case TOK_STRING:
             {
-                case TOK_STRING:
+                if( had_cmd )
                 {
-                    if( had_cmd )
+                    /* Parameter to the command */
+                    args.push_back(tok_last(&tok));
+                    arg_pos = tok_get_pos(&tok);
+                }
+                else
+                { 	
+                    /* Command. First check that the command actually exists. */
+                    wcstring local_cmd = tok_last( &tok );
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+                    if (! expanded || has_expand_reserved(cmd.c_str()))
                     {
-                        /* Parameter to the command */
-                        args.push_back(tok_last(&tok));
-                        arg_pos = tok_get_pos(&tok);
+                        /* We can't expand this cmd, ignore it */
                     }
                     else
-                    { 	
-                        /* Command. First check that the command actually exists. */
-                        wcstring local_cmd = tok_last( &tok );
-                        bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
-                        if (! expanded || has_expand_reserved(cmd.c_str()))
+                    {
+                        bool is_subcommand = false;
+                        int mark = tok_get_pos(&tok);
+                        
+                        if (parser_keywords_is_subcommand(cmd))
                         {
-                            /* We can't expand this cmd, ignore it */
-                        }
-                        else
-                        {
-                            bool is_subcommand = false;
-                            int mark = tok_get_pos(&tok);
+                            int sw;
+                            tok_next( &tok );
                             
-                            if (parser_keywords_is_subcommand(cmd))
+                            sw = parser_keywords_is_switch( tok_last( &tok ) );
+                            if( !parser_keywords_is_block( cmd ) &&
+                               sw == ARG_SWITCH )
                             {
-                                int sw;
-                                tok_next( &tok );
-                                
-                                sw = parser_keywords_is_switch( tok_last( &tok ) );
-                                if( !parser_keywords_is_block( cmd ) &&
-                                   sw == ARG_SWITCH )
-                                {
-                                    /* It's an argument to the subcommand itself */
-                                }
-                                else
-                                {
-                                    if( sw == ARG_SKIP )
-                                        mark = tok_get_pos( &tok );                                    
-                                    is_subcommand = true;
-                                }
-                                tok_set_pos( &tok, mark );
+                                /* It's an argument to the subcommand itself */
                             }
-                            
-                            if (!is_subcommand)
+                            else
                             {
-                                /* It's really a command */
-                                had_cmd = true;
-                                cmd = local_cmd;
+                                if( sw == ARG_SKIP )
+                                    mark = tok_get_pos( &tok );                                    
+                                is_subcommand = true;
                             }
+                            tok_set_pos( &tok, mark );
                         }
                         
+                        if (!is_subcommand)
+                        {
+                            /* It's really a command */
+                            had_cmd = true;
+                            cmd = local_cmd;
+                        }
                     }
-                    break;
-                }
                     
-                case TOK_REDIRECT_NOCLOB:
-                case TOK_REDIRECT_OUT:
-                case TOK_REDIRECT_IN:
-                case TOK_REDIRECT_APPEND:
-                case TOK_REDIRECT_FD:
-                {
-                    if( !had_cmd )
-                    {
-                        break;
-                    }
-                    tok_next( &tok );				
-                    break;
                 }
-                    
-                case TOK_PIPE:
-                case TOK_BACKGROUND:
-                case TOK_END:
-                {
-                    had_cmd = false;
-                    cmd.empty();
-                    args.empty();
-                    arg_pos = -1;
-                    break;
-                }
-
-                case TOK_COMMENT:                    
-                case TOK_ERROR:
-                default:
-                {
-                    break;				
-                }			
+                break;
             }
+                
+            case TOK_REDIRECT_NOCLOB:
+            case TOK_REDIRECT_OUT:
+            case TOK_REDIRECT_IN:
+            case TOK_REDIRECT_APPEND:
+            case TOK_REDIRECT_FD:
+            {
+                if( !had_cmd )
+                {
+                    break;
+                }
+                tok_next( &tok );				
+                break;
+            }
+                
+            case TOK_PIPE:
+            case TOK_BACKGROUND:
+            case TOK_END:
+            {
+                had_cmd = false;
+                cmd.empty();
+                args.empty();
+                arg_pos = -1;
+                break;
+            }
+                
+            case TOK_COMMENT:                    
+            case TOK_ERROR:
+            default:
+            {
+                break;				
+            }			
         }
-        tok_destroy( &tok );
-        
-        /* Remember our command if we have one */
-        if (had_cmd) {
-            this->command.swap(cmd);
-            this->arguments.swap(args);
-            this->last_arg_pos = arg_pos;
-        }
-    }    
-};
+    }
+    tok_destroy( &tok );
+    
+    /* Remember our command if we have one */
+    if (had_cmd) {
+        if (out_command) out_command->swap(cmd);
+        if (out_arguments) out_arguments->swap(args);
+        if (out_last_arg_pos) *out_last_arg_pos = arg_pos;
+    }
+    return had_cmd;
+}
+
 
 bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outSuggestion) {
     if (str.empty())
@@ -735,12 +726,16 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     
     
     /* Parse the string */
-    const autosuggest_parsed_command_t parsed(str);
+    wcstring parsed_command;
+    wcstring_list_t parsed_arguments;
+    int parsed_last_arg_pos = -1;
+    if (! autosuggest_parse_command(str, &parsed_command, &parsed_arguments, &parsed_last_arg_pos))
+        return false;
     
     bool result = false;
-    if (parsed.command == L"cd" && ! parsed.arguments.empty()) {        
+    if (parsed_command == L"cd" && ! parsed_arguments.empty()) {        
         /* We can possibly handle this specially */
-        wcstring dir = parsed.arguments.back();
+        wcstring dir = parsed_arguments.back();
         wcstring suggested_path;
         
         /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
@@ -780,7 +775,7 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
             
             /* Success */
             outSuggestion = str;
-            outSuggestion.erase(parsed.last_arg_pos);
+            outSuggestion.erase(parsed_last_arg_pos);
             outSuggestion.append(suggested_path);
         }
     } else {
@@ -794,13 +789,17 @@ bool autosuggest_special_validate_from_history(const wcstring &str, const wcstri
     assert(outSuggestionOK != NULL);
     
     bool handled = false, suggestionOK = false;
-    
-    /* Parse the string */
-    autosuggest_parsed_command_t parsed(str);
-    
-    if (parsed.command == L"cd" && ! parsed.arguments.empty()) {        
+
+    /* Parse the string */    
+    wcstring parsed_command;
+    wcstring_list_t parsed_arguments;
+    int parsed_last_arg_pos = -1;
+    if (! autosuggest_parse_command(str, &parsed_command, &parsed_arguments, &parsed_last_arg_pos))
+        return false;
+
+    if (parsed_command == L"cd" && ! parsed_arguments.empty()) {        
         /* We can possibly handle this specially */
-        wcstring dir = parsed.arguments.back();
+        wcstring dir = parsed_arguments.back();
         if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
         {
             handled = true;

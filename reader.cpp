@@ -1296,8 +1296,8 @@ struct autosuggestion_context_t {
         
         // Here we do something a little funny
         // If the line ends with a space, and the cursor is not at the end,
-        // Don't use completion autosuggestions. It ends up being pretty weird seeing stuff get spammed on the right
-        // While you go back to edit a line
+        // don't use completion autosuggestions. It ends up being pretty weird seeing stuff get spammed on the right
+        // while you go back to edit a line
         const bool line_ends_with_space = iswspace(search_string.at(search_string.size() - 1));
         const bool cursor_at_end = (this->cursor_pos == search_string.size());
         if (line_ends_with_space && ! cursor_at_end)

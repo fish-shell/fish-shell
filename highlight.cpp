@@ -64,22 +64,54 @@ static const wchar_t * const highlight_var[] =
     L"fish_color_autosuggestion"
 };
 
-/**
-   Tests if the specified string is the prefix of any valid path in the system. 
-   
-   \require_dir Whether the valid path must be a directory
-   \out_path If non-null, the path on output
-   \return zero it this is not a valid prefix, non-zero otherwise
-*/
-// PCA DOES_IO
-static bool is_potential_path( const wcstring &cpath, wcstring *out_path = NULL, bool require_dir = false )
+/* If the given path looks like it's relative to the working directory, then prepend that working directory. */
+static wcstring apply_working_directory(const wcstring &path, const wcstring &working_directory) {
+    if (path.empty() || working_directory.empty())
+        return path;
+    
+    /* We're going to make sure that if we want to prepend the wd, that the string has no leading / */
+    bool prepend_wd;
+    switch (path.at(0)) {
+        case L'/':
+        case L'~':
+            prepend_wd = false;
+            break;
+        default:
+            prepend_wd = true;
+            break;
+    }
+    
+    if (! prepend_wd) {
+        /* No need to prepend the wd, so just return the path we were given */
+        return path;
+    } else {
+        /* Remove up to one ./ */
+        wcstring path_component = path;
+        if (string_prefixes_string(L"./", path_component)) {
+            path_component.erase(0, 2);
+        }
+        
+        /* Removing leading /s */
+        while (string_prefixes_string(L"/", path_component)) {
+            path_component.erase(0, 1);
+        }
+        
+        /* Construct and return a new path */
+        wcstring new_path = working_directory;
+        append_path_component(new_path, path_component);
+        return new_path;
+    }
+}
+
+/* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O! */
+static bool is_potential_path( const wcstring &cpath, const wcstring_list_t &directories, bool require_dir = false, wcstring *out_path = NULL)
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
 	const wchar_t *unescaped, *in;
-    wcstring cleaned_path;
+    wcstring clean_path;
 	int has_magic = 0;
-	bool res = false;
+	bool result = false;
     
     wcstring path(cpath);
     expand_tilde(path);
@@ -115,7 +147,7 @@ static bool is_potential_path( const wcstring &cpath, wcstring *out_path = NULL,
 				
             default:
             {
-                cleaned_path += *in;
+                clean_path.append(in, 1);
                 break;
             }
 				
@@ -123,62 +155,98 @@ static bool is_potential_path( const wcstring &cpath, wcstring *out_path = NULL,
         
     }
     
-    if( !has_magic && ! cleaned_path.empty() )
+    if( ! has_magic && ! clean_path.empty() )
     {
-        bool must_be_full_dir = cleaned_path[cleaned_path.length()-1] == L'/';
-        DIR *dir;
-        if( must_be_full_dir )
-        {
-            dir = wopendir( cleaned_path );
-            if( dir )
-            {
-                res = true;
-                if (out_path)
-                    *out_path = cleaned_path;
-                closedir( dir );
-            }
-        }
-        else
-        {
-            wcstring dir_name = wdirname(cleaned_path);
-            wcstring base_name = wbasename(cleaned_path);
-            
-            if( dir_name == L"/" && base_name == L"/" )
-            {
-                res = true;
-                if (out_path)
-                    *out_path = cleaned_path;
-            }
-            else if( (dir = wopendir( dir_name)) )
-            {
-                wcstring ent;
-                bool is_dir;
-                while (wreaddir_resolving(dir, dir_name, ent, &is_dir))
-                {
-                    if (string_prefixes_string(base_name, ent) && (! require_dir || is_dir))
-                    {
-                        res = true;
-                        if (out_path) {
-                            out_path->assign(dir_name);
-                            out_path->push_back(L'/');
-                            out_path->append(ent);
-                            path_make_canonical(*out_path);
-                            /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */
-                            if (is_dir)
-                                out_path->push_back(L'/');
-                        }
-                        break;
-                    }
-                }
-                
-                closedir( dir );
-            }
-        }
+        /* Don't test the same path multiple times, which can happen if the path is absolute and the CDPATH contains multiple entries */
+        std::set<wcstring> checked_paths;
         
+        for (size_t wd_idx = 0; wd_idx < directories.size() && ! result; wd_idx++) {
+            const wcstring &wd = directories.at(wd_idx);
+            
+            const wcstring abs_path = apply_working_directory(clean_path, wd);
+            
+            /* Skip this if it's empty or we've already checked it */
+            if (abs_path.empty() || checked_paths.count(abs_path))
+                continue;
+            checked_paths.insert(abs_path);
+            
+            /* If we end with a slash, then it must be a directory */
+            bool must_be_full_dir = abs_path.at(abs_path.size()-1) == L'/';
+            if (must_be_full_dir) 
+            {
+                struct stat buf;
+                if (0 == wstat(abs_path, &buf) && S_ISDIR(buf.st_mode)) {
+                    result = true;
+                    /* Return the path suffix, not the whole absolute path */
+                    if (out_path)
+                        *out_path = clean_path;
+                }
+            }
+            else
+            {
+                DIR *dir = NULL;
+                
+                /* We do not end with a slash; it does not have to be a directory */
+                const wcstring dir_name = wdirname(abs_path);
+                const wcstring base_name = wbasename(abs_path);
+                if (dir_name == L"/" && base_name == L"/")
+                {
+                    result = true;
+                    if (out_path)
+                        *out_path = clean_path;
+                }
+                else if ((dir = wopendir(dir_name))) {
+                    /* We opened the dir_name; look for a string where the base name prefixes it */
+                    wcstring ent;
+                    
+                    // Don't ask for the is_dir value unless we care, because it can cause extra filesystem acces */
+                    bool is_dir = false;
+                    while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : NULL))
+                    {
+                        /* TODO: support doing the right thing on case-insensitive filesystems like HFS+ */
+                        if (string_prefixes_string(base_name, ent) && (! require_dir || is_dir))
+                        {
+                            result = true;
+                            if (out_path) {
+                                out_path->assign(dir_name);
+                                out_path->push_back(L'/');
+                                out_path->append(ent);
+                                path_make_canonical(*out_path);
+                                /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */
+                                if (is_dir)
+                                    out_path->push_back(L'/');
+                            }
+                            break;
+                        }
+                    }
+                    closedir(dir);
+                }
+            }
+        }
     }
-	
-	return res;
-	
+    return result;
+}
+
+
+/* Given a string, return whether it prefixes a path that we could cd into. Return that path in out_path */
+static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory, wcstring *out_path) {
+    /* Get the CDPATH */
+    env_var_t cdpath = env_get_string(L"CDPATH");
+    if (cdpath.missing_or_empty())
+        cdpath = L".";
+    
+    /* Tokenize it into directories */
+    wcstring_list_t directories;
+    wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
+    wcstring next_path;
+    while (tokenizer.next(next_path))
+    {
+        /* Ensure that we use the working directory for relative cdpaths like "." */
+        directories.push_back(apply_working_directory(next_path, working_directory));
+    }
+    
+    /* Call is_potential_path */
+    return is_potential_path(path, directories, true /* require_dir */, out_path);
 }
 
 rgb_color_t highlight_get_color( int highlight, bool is_background )
@@ -235,7 +303,6 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 */
 static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, int pos, wcstring_list_t *error )
 {
-    return;
     const wchar_t * const buff = buffstr.c_str();
 	enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
 	size_t in_pos, len = buffstr.size();
@@ -543,13 +610,18 @@ class autosuggest_parsed_command_t {
     /* Arguments to the command */
     wcstring_list_t arguments;
     
+    /* Position in the string of the start of the last argument */
+    int last_arg_pos;
+    
     autosuggest_parsed_command_t(const wcstring &str) {
         if (str.empty())
             return;
         
         wcstring cmd;
         wcstring_list_t args;
-        bool had_cmd = false, recognized_cmd = false;
+        int arg_pos = -1;
+        
+        bool had_cmd = false;
         tokenizer tok;
         for (tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS); tok_has_next(&tok); tok_next(&tok))
         {
@@ -563,6 +635,7 @@ class autosuggest_parsed_command_t {
                     {
                         /* Parameter to the command */
                         args.push_back(tok_last(&tok));
+                        arg_pos = tok_get_pos(&tok);
                     }
                     else
                     { 	
@@ -576,7 +649,7 @@ class autosuggest_parsed_command_t {
                         else
                         {
                             bool is_subcommand = false;
-                            int mark = tok_get_pos( &tok );
+                            int mark = tok_get_pos(&tok);
                             
                             if (parser_keywords_is_subcommand(cmd))
                             {
@@ -631,6 +704,7 @@ class autosuggest_parsed_command_t {
                     had_cmd = false;
                     cmd.empty();
                     args.empty();
+                    arg_pos = -1;
                     break;
                 }
 
@@ -648,182 +722,71 @@ class autosuggest_parsed_command_t {
         if (had_cmd) {
             this->command.swap(cmd);
             this->arguments.swap(args);
+            this->last_arg_pos = arg_pos;
         }
-
     }    
 };
 
-/* Attempts to suggest a completion for a command we handle specially, like 'cd'. Returns true if we recognized the command (even if we couldn't think of a suggestion for it) */
-bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outString) {
+bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outSuggestion) {
     if (str.empty())
         return false;
+        
+    ASSERT_IS_BACKGROUND_THREAD();
     
-    wcstring cmd;
-    bool had_cmd = false, recognized_cmd = false;
     
-    wcstring suggestion;
+    /* Parse the string */
+    const autosuggest_parsed_command_t parsed(str);
     
-    tokenizer tok;
-	for( tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS );
-		tok_has_next( &tok );
-		tok_next( &tok ) )
-	{	
-        int last_type = tok_last_type( &tok );
-		
-		switch( last_type )
-		{
-			case TOK_STRING:
-			{
-				if( had_cmd )
-				{
-                    recognized_cmd = (cmd == L"cd");
-					if( recognized_cmd )
-					{
-                        wcstring dir = tok_last( &tok );
-                        wcstring suggested_path;
-                            
-                        if (is_potential_path(dir, &suggested_path, true /* require directory */)) {
+    bool result = false;
+    if (parsed.command == L"cd" && ! parsed.arguments.empty()) {        
+        /* We can possibly handle this specially */
+        wcstring dir = parsed.arguments.back();
+        wcstring suggested_path;
+        
+        /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
+        result = true;
+        outSuggestion.clear();
+        
+        if (is_potential_cd_path(dir, working_directory, &suggested_path)) {
 
-                            /* suggested_path needs to actually have dir as a prefix (perhaps with different case). Handle stuff like ./ */
-                            bool wants_dot_slash = string_prefixes_string(L"./", dir);
-                            bool has_dot_slash = string_prefixes_string(L"./", suggested_path);
-                                                        
-                            if (wants_dot_slash && ! has_dot_slash) {
-                                suggested_path.insert(0, L"./");
-                            } else if (! wants_dot_slash && has_dot_slash) {
-                                suggested_path.erase(0, 2);
-                            }
-                            
-                            bool wants_tilde = string_prefixes_string(L"~", dir);
-                            bool has_tilde = string_prefixes_string(L"~", suggested_path);
-                            if (wants_tilde && ! has_tilde) {
-                                // The input string has a tilde, the output string does not
-                                // Extract the tilde part, expand it, see if the expansion prefixes the suggestion
-                                // If so, replace it with the tilde part
-                                size_t slash_idx = dir.find(L'/');
-                                const wcstring tilde_part(dir, 0, slash_idx); //note that slash_idx is npos this will return everything
-                                
-                                // Expand the tilde
-                                wcstring expanded_tilde = tilde_part;
-                                expand_tilde(expanded_tilde);
-                                
-                                // Replace it
-                                if (string_prefixes_string(expanded_tilde, suggested_path)) {
-                                    suggested_path.replace(0, expanded_tilde.size(), tilde_part);
-                                }
-                            }
-                            
-                            suggestion = str;
-                            suggestion.erase(tok_get_pos(&tok));
-                            suggestion.append(suggested_path);
-                        }
-					}
-				}
-				else
-				{ 	
-					/*
-					 Command. First check that the command actually exists.
-					 */
-                    cmd = tok_last( &tok );
-                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
-					if (! expanded || has_expand_reserved(cmd.c_str()))
-					{
-
-					}
-					else
-					{
-						int is_subcommand = 0;
-						int mark = tok_get_pos( &tok );
-						
-						if( parser_keywords_is_subcommand( cmd ) )
-						{
-							
-							int sw;
-							
-							if( cmd == L"builtin")
-							{
-							}
-							else if( cmd == L"command")
-							{
-							}
-							
-							tok_next( &tok );
-							
-							sw = parser_keywords_is_switch( tok_last( &tok ) );
-							
-							if( !parser_keywords_is_block( cmd ) &&
-							   sw == ARG_SWITCH )
-							{
-
-							}
-							else
-							{
-								if( sw == ARG_SKIP )
-								{
-									mark = tok_get_pos( &tok );
-								}
-								
-								is_subcommand = 1;
-							}
-							tok_set_pos( &tok, mark );
-						}
-						
-						if( !is_subcommand )
-						{	
-							had_cmd = true;
-						}
-					}
-					
-				}
-				break;
-			}
-				
-			case TOK_REDIRECT_NOCLOB:
-			case TOK_REDIRECT_OUT:
-			case TOK_REDIRECT_IN:
-			case TOK_REDIRECT_APPEND:
-			case TOK_REDIRECT_FD:
-			{
-				if( !had_cmd )
-				{
-					break;
-				}
-				tok_next( &tok );				
-                break;
-			}
-				
-			case TOK_PIPE:
-			case TOK_BACKGROUND:
-			{
-				had_cmd = false;
-				break;
-			}
-				
-			case TOK_END:
-			{
-				had_cmd = false;
-				break;
-			}
-				
-			case TOK_COMMENT:
-			{
-				break;
-			}
-				
-			case TOK_ERROR:
-			default:
-			{
-				break;				
-			}			
-		}
+            /* suggested_path needs to actually have dir as a prefix (perhaps with different case). Handle stuff like ./ */
+            bool wants_dot_slash = string_prefixes_string(L"./", dir);
+            bool has_dot_slash = string_prefixes_string(L"./", suggested_path);
+                                        
+            if (wants_dot_slash && ! has_dot_slash) {
+                suggested_path.insert(0, L"./");
+            } else if (! wants_dot_slash && has_dot_slash) {
+                suggested_path.erase(0, 2);
+            }
+            
+            bool wants_tilde = string_prefixes_string(L"~", dir);
+            bool has_tilde = string_prefixes_string(L"~", suggested_path);
+            if (wants_tilde && ! has_tilde) {
+                // The input string has a tilde, the output string does not
+                // Extract the tilde part, expand it, see if the expansion prefixes the suggestion
+                // If so, replace it with the tilde part
+                size_t slash_idx = dir.find(L'/');
+                const wcstring tilde_part(dir, 0, slash_idx); //note that slash_idx is npos this will return everything
+                
+                // Expand the tilde
+                wcstring expanded_tilde = tilde_part;
+                expand_tilde(expanded_tilde);
+                
+                // Replace it
+                if (string_prefixes_string(expanded_tilde, suggested_path)) {
+                    suggested_path.replace(0, expanded_tilde.size(), tilde_part);
+                }
+            }
+            
+            /* Success */
+            outSuggestion = str;
+            outSuggestion.erase(parsed.last_arg_pos);
+            outSuggestion.append(suggested_path);
+        }
+    } else {
+        /* Either an error or some other command, so we don't handle it specially */
     }
-    tok_destroy( &tok );
-    
-    if (recognized_cmd) {
-        outString.swap(suggestion);
-    }
-    
-    return recognized_cmd;
+    return result;
 }
 
 bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK) {
@@ -1308,6 +1271,9 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 			color.at(i) = last_val;
 	}
 
+    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. Note this needs to be a vector (of one directory). */
+    const wcstring_list_t working_directories(1, get_working_directory());
+    
 	/*
 	  Color potentially valid paths in a special path color if they
 	  are the current token.
@@ -1322,7 +1288,7 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 		if( tok_begin && tok_end )
 		{
             const wcstring token(tok_begin, tok_end-tok_begin);
-			if( is_potential_path( token ) )
+			if (is_potential_path(token, working_directories))
 			{
 				for( ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++ )
 				{

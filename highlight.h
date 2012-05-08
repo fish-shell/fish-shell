@@ -106,7 +106,13 @@ void highlight_universal( const wcstring &buffstr, std::vector<int> &color, int 
 */
 rgb_color_t highlight_get_color( int highlight, bool is_background );
 
+/** Given a command 'str' from the history, try to determine whether we ought to suggest it by specially recognizing the command.
+    Returns true if we validated the command. If so, returns by reference whether the suggestion is valid or not.
+*/
 bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
+
+/** Given the command line contents 'str', return via reference a suggestion by specially recognizing the command. Returns true if we recognized the command (even if we couldn't think of a suggestion for it).
+*/
 bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outString);
 
 

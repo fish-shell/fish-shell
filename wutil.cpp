@@ -73,10 +73,11 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
     
     out_name = str2wcstring(d->d_name);
     if (out_is_dir) {
+        /* The caller cares if this is a directory, so check */
         bool is_dir;
         if (d->d_type == DT_DIR) {
             is_dir = true;
-        } else if (d->d_type == DT_LNK) {
+        } else if (d->d_type == DT_LNK || d->d_type == DT_UNKNOWN) {
             /* We want to treat symlinks to directories as directories. Use stat to resolve it. */
             cstring fullpath = wcs2string(dir_path);
             fullpath.push_back('/');

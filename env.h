@@ -81,7 +81,7 @@ void env_destroy();
    * ENV_INVALID, the variable name or mode was invalid
 */
 
-int env_set(const wchar_t *key,  const wchar_t *val, int mode);
+int env_set(const wcstring &key, const wchar_t *val, int mode);
 
 
 /**

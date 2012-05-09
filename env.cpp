@@ -728,7 +728,7 @@ static env_node_t *env_get_node( const wcstring &key )
 	return env;
 }
 
-int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
+int env_set(const wcstring &key, const wchar_t *val, int var_mode)
 {
     ASSERT_IS_MAIN_THREAD();
 	env_node_t *node = NULL;
@@ -738,8 +738,6 @@ int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 	int done=0;
     
 	int is_universal = 0;	
-	
-	CHECK( key, ENV_INVALID );
     
 	if( val && contains( key, L"PWD", L"HOME" ) )
 	{
@@ -756,7 +754,7 @@ int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 		return ENV_PERM;
 	}
 	
-	if( wcscmp( key, L"umask" ) == 0)
+	if (key == L"umask")
 	{
 		wchar_t *end;
 		int mask;
@@ -804,7 +802,7 @@ int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 			exportv = (var_mode & ENV_EXPORT );
 		}
 		
-		env_universal_set( key, val, exportv );
+		env_universal_set(key, val, exportv);
 		is_universal = 1;
         
 	}
@@ -861,7 +859,7 @@ int env_set(const wchar_t *key,  const wchar_t *val, int var_mode)
 						exportv = (var_mode & ENV_EXPORT );
 					}
 					
-					env_universal_set( key, val, exportv );
+					env_universal_set(key, val, exportv);
 					is_universal = 1;
 					
 					done = 1;

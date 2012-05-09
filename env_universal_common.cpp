@@ -903,18 +903,15 @@ wchar_t *env_universal_common_get( const wcstring &name )
 	return 0;	
 }
 
-int env_universal_common_get_export( const wchar_t *name )
+int env_universal_common_get_export( const wcstring &name )
 {
 	std::map<wcstring, var_uni_entry_t*>::const_iterator result = env_universal_var.find(name);
-
 	if (result != env_universal_var.end() )
 	{
 		const var_uni_entry_t *e = result->second;
-
-		if( e )
+		if (e != NULL)
 			return e->exportv;
 	}
-
 	return 0;
 }
 

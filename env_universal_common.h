@@ -190,7 +190,7 @@ wchar_t *env_universal_common_get( const wcstring &name );
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.
 */
-int env_universal_common_get_export( const wchar_t *name );
+int env_universal_common_get_export( const wcstring &name );
 
 /**
    Add messages about all existing variables to the specified connection

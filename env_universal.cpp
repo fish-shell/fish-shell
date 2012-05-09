@@ -326,12 +326,10 @@ wchar_t *env_universal_get( const wcstring &name )
 	return env_universal_common_get( name );
 }
 
-int env_universal_get_export( const wchar_t *name )
+int env_universal_get_export( const wcstring &name )
 {
 	if( !init)
 		return 0;
-
-	CHECK( name, 0 );
 	
 	return env_universal_common_get_export( name );
 }
@@ -399,26 +397,24 @@ void env_universal_barrier()
 }
 
 
-void env_universal_set( const wchar_t *name, const wchar_t *value, int exportv )
+void env_universal_set( const wcstring &name, const wcstring &value, int exportv )
 {
 	message_t *msg;
 	
 	if( !init )
 		return;
 
-	CHECK( name, );
-		
-	debug( 3, L"env_universal_set( \"%ls\", \"%ls\" )", name, value );
+	debug( 3, L"env_universal_set( \"%ls\", \"%ls\" )", name.c_str(), value.c_str() );
 
 	if( is_dead() )
 	{
-		env_universal_common_set( name, value, exportv );
+		env_universal_common_set( name.c_str(), value.c_str(), exportv );
 	}
 	else
 	{
 		msg = create_message( exportv?SET_EXPORT:SET, 
-							  name, 
-							  value);
+							  name.c_str(), 
+							  value.c_str());
 
 		if( !msg )
 		{

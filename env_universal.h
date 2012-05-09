@@ -35,12 +35,12 @@ wchar_t *env_universal_get( const wcstring &name );
    Get the export flag of the variable with the specified
    name. Returns 0 if the variable doesn't exist.
 */
-int env_universal_get_export( const wchar_t *name );
+int env_universal_get_export( const wcstring &name );
 
 /**
    Set the value of a universal variable
 */
-void env_universal_set( const wchar_t *name, const wchar_t *val, int exportv );
+void env_universal_set( const wcstring &name, const wcstring &val, int exportv );
 /**
    Erase a universal variable
    

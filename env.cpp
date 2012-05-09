@@ -637,35 +637,16 @@ void env_init()
 	  Set up SHLVL variable
 	*/
 	const env_var_t shlvl_str = env_get_string( L"SHLVL" );
-	const wchar_t *shlvl = shlvl_str.missing() ? NULL : shlvl_str.c_str();
-
-	if ( shlvl )
+    wcstring nshlvl_str = L"1";
+	if (! shlvl_str.missing())
 	{
-		wchar_t *nshlvl, **end_nshlvl;
-		/* add an extra space for digit dump (9+1=10) */
-		size_t i =  wcslen( shlvl ) + 2 * sizeof(wchar_t);
-
-		nshlvl = (wchar_t *)malloc(i);
-		end_nshlvl = (wchar_t **)calloc( 1, sizeof(nshlvl) );
-		if ( !nshlvl || !end_nshlvl )
-				DIE_MEM();
-
-		if ( nshlvl && swprintf( nshlvl, i,
-								 L"%ld", wcstoul( shlvl, end_nshlvl, 10 )+1 ) != -1 )
-		{
-			env_set( L"SHLVL",
-				     nshlvl,
-				     ENV_GLOBAL | ENV_EXPORT );
-		}
-		free( end_nshlvl );
-		free( nshlvl );
+        long shlvl_i = wcstol(shlvl_str.c_str(), NULL, 10);
+        if (shlvl_i >= 0)
+        {
+            nshlvl_str = format_string(L"%ld", 1 + shlvl_i);
+        }
 	}
-	else
-	{
-		env_set( L"SHLVL",
-				 L"1",
-				 ENV_GLOBAL | ENV_EXPORT );
-	}
+    env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT );
 
 	/* Set correct defaults for e.g. USER and HOME variables */
 	env_set_defaults();

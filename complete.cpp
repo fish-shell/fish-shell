@@ -828,7 +828,7 @@ int complete_is_valid_argument( const wchar_t *str,
 */
 
 static void complete_strings( std::vector<completion_t> &comp_out,
-							  const wchar_t *wc_escaped,
+							  const wcstring &wc_escaped,
 							  const wchar_t *desc,
 							  const wchar_t *(*desc_func)(const wcstring &),
 							  std::vector<completion_t> &possible_comp,
@@ -1001,9 +1001,12 @@ static const wchar_t *complete_function_desc( const wcstring &fn )
 
    \param comp the list to add all completions to
 */
-void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use_builtin, bool use_command)
+void completer_t::complete_cmd( const wcstring &str_cmd, bool use_function, bool use_builtin, bool use_command)
 {
-    const wchar_t * const cmd = str.c_str();
+    /* Paranoia */
+    if (str_cmd.empty())
+        return;
+        
 	wchar_t *path_cpy;
 	wchar_t *nxt_path;
 	wchar_t *state;
@@ -1013,20 +1016,19 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
     env_var_t cdpath = env_get_string(L"CDPATH");
     if (cdpath.missing_or_empty())
         cdpath = L".";
-    wchar_t *cdpath_cpy = wcsdup(cdpath.c_str());
     
     const bool wants_description = (type == COMPLETE_DEFAULT);
     
-	if( (wcschr( cmd, L'/') != 0) || (cmd[0] == L'~' ) )
+    if (str_cmd.find(L'/') != wcstring::npos || str_cmd.at(0) == L'~')
 	{
 
 		if( use_command )
 		{
 			
-			if( expand_string(str, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags() ) != EXPAND_ERROR )
+			if( expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags() ) != EXPAND_ERROR )
 			{
                 if (wants_description) {
-                    this->complete_cmd_desc( str );
+                    this->complete_cmd_desc( str_cmd );
                 }
 			}
 		}
@@ -1046,43 +1048,37 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 				     nxt_path != 0;
 				     nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
 				{
-					size_t prev_count;
-					int path_len = wcslen(nxt_path);
-					int add_slash;
-					
-					if( !path_len )
-					{
-						continue;
-					}
+                    wcstring base_path = nxt_path;
+                    if (base_path.empty())
+                        continue;
+                        
+                    /* Make sure the base path ends with a slash */
+                    if (base_path.at(base_path.size() - 1) != L'/')
+                        base_path.push_back(L'/');
 
-					add_slash = nxt_path[path_len-1]!=L'/';
-					wchar_t *nxt_completion = wcsdupcat( nxt_path,
-												add_slash?L"/":L"",
-												cmd );
-					if( ! nxt_completion )
-						continue;
-					
-					prev_count =  this->completions.size() ;
-					
+                    wcstring nxt_completion = base_path;
+                    nxt_completion.append(str_cmd);
+
+                    size_t prev_count =  this->completions.size();
 					if( expand_string( nxt_completion,
 									   this->completions,
 									   ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()  ) != EXPAND_ERROR )
 					{
+                        /* For all new completions, if COMPLETE_NO_CASE is set, then use only the last path component */
 						for( size_t i=prev_count; i< this->completions.size(); i++ )
 						{
 							completion_t &c =  this->completions.at( i );
 							if(c.flags & COMPLETE_NO_CASE )
 							{
-								c.completion += add_slash ;
+                                
+								c.completion.erase(0, base_path.size());
 							}
 						}
 					}
-                    
-                    free(nxt_completion);
 				}
 				free( path_cpy );
 				if (wants_description)
-                    this->complete_cmd_desc( str );
+                    this->complete_cmd_desc( str_cmd );
 			}
 		}
 		
@@ -1093,12 +1089,12 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 		if( use_function )
 		{
 			//function_get_names( &possible_comp, cmd[0] == L'_' );
-            wcstring_list_t names = function_get_names(cmd[0] == L'_' );
+            wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_' );
             for (size_t i=0; i < names.size(); i++) {
                 possible_comp.push_back(completion_t(names.at(i)));
             }
             
-			complete_strings( this->completions, cmd, 0, &complete_function_desc, possible_comp, 0 );
+			complete_strings( this->completions, str_cmd, 0, &complete_function_desc, possible_comp, 0 );
 		}
 
 		possible_comp.clear();
@@ -1106,43 +1102,10 @@ void completer_t::complete_cmd( const wcstring &str, bool use_function, bool use
 		if( use_builtin )
 		{
 			builtin_get_names( possible_comp );
-			complete_strings( this->completions, cmd, 0, &builtin_get_desc, possible_comp, 0 );
+			complete_strings( this->completions, str_cmd, 0, &builtin_get_desc, possible_comp, 0 );
 		}
-//		al_destroy( &possible_comp );
 
 	}
-
-	if( use_builtin || (use_function && function_exists( L"cd") ) )
-	{
-		/*
-		  Tab complete implicit cd for directories in CDPATH
-		*/
-		if( cmd[0] != L'/' && ( wcsncmp( cmd, L"./", 2 )!=0) )
-		{
-			for( nxt_path = wcstok( cdpath_cpy, ARRAY_SEP_STR, &state );
-				 nxt_path != 0;
-				 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
-			{
-				wchar_t *nxt_completion=
-					wcsdupcat( nxt_path,
-							   (nxt_path[wcslen(nxt_path)-1]==L'/'?L"":L"/"),
-							   cmd );
-				if( ! nxt_completion )
-				{
-					continue;
-				}
-			
-				if( expand_string( nxt_completion,
-								   this->completions,
-								   ACCEPT_INCOMPLETE | DIRECTORIES_ONLY | this->expand_flags() ) != EXPAND_ERROR )
-				{
-				}
-				free(nxt_completion);
-			}
-		}
-	}
-
-	free( cdpath_cpy );
 }
 
 
@@ -1178,7 +1141,7 @@ void completer_t::complete_from_args( const wcstring &str,
     if (! is_autosuggest)
         proc_pop_interactive();
 	
-	complete_strings( this->completions, str.c_str(), desc.c_str(), 0, possible_comp, flags );
+	complete_strings( this->completions, str, desc.c_str(), 0, possible_comp, flags );
 }
 
 /**
@@ -1507,7 +1470,7 @@ void completer_t::complete_param_expand( const wcstring &sstr, bool do_file)
     const wchar_t * const str = sstr.c_str();
 	const wchar_t *comp_str;
 	
-	if( (wcsncmp( str, L"--", 2 )) == 0 && (comp_str = wcschr(str, L'=' ) ) )
+	if (string_prefixes_string( L"--", sstr) && (comp_str = wcschr(str, L'=' ) ) )
 	{
 		comp_str++;
 	}

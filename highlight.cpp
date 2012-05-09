@@ -807,7 +807,7 @@ bool autosuggest_special_validate_from_history(const wcstring &str, const wcstri
             if (is_help) {
                 suggestionOK = false;
             } else {
-                wchar_t *path = path_allocate_cdpath(dir.c_str(), working_directory.c_str());
+                wchar_t *path = path_allocate_cdpath(dir, working_directory.c_str());
                 if (path == NULL) {
                     suggestionOK = false;
                 } else if (paths_are_same_file(working_directory, path)) {
@@ -1237,8 +1237,7 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 		
         //our subcolors start at color + (begin-subbuff)+1
         size_t start = begin - subbuff + 1, len = wcslen(begin + 1);
-        std::vector<int> subcolors;
-        subcolors.resize(len, -1);
+        std::vector<int> subcolors(len, -1);
         
 		highlight_shell( begin+1, subcolors, -1, error, vars );
         

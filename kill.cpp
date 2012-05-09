@@ -76,8 +76,8 @@ void kill_add( const wcstring &str )
     if (str.empty())
         return;
         
-	wchar_t *cmd = NULL;
-	wchar_t *escaped_str;
+	wcstring cmd;
+    wchar_t *escaped_str = NULL;
 	kill_list.push_front(str);
 
 	/*
@@ -92,7 +92,9 @@ void kill_add( const wcstring &str )
 	if( !clipboard_wstr.missing() )
 	{
 		escaped_str = escape( str.c_str(), 1 );
-		cmd = wcsdupcat(L"echo -n ", escaped_str, clipboard_wstr.c_str());
+        cmd.assign(L"echo -n ");
+        cmd.append(escaped_str);
+        cmd.append(clipboard_wstr);
 	}
 	else
 	{
@@ -105,13 +107,15 @@ void kill_add( const wcstring &str )
 	if( !disp_wstr.missing() )
 	{
 			escaped_str = escape( str.c_str(), 1 );
-			cmd = wcsdupcat(L"echo ", escaped_str, L"|xsel -b" );
+            cmd.assign(L"echo ");
+            cmd.append(escaped_str);
+            cmd.append(L"|xsel -b" );
 		}
 	}
 
-	if (cmd != NULL)
+	if (! cmd.empty())
 	{
-		if( exec_subshell( cmd) == -1 )
+		if( exec_subshell(cmd) == -1 )
 		{
 			/* 
 			   Do nothing on failiure
@@ -119,7 +123,6 @@ void kill_add( const wcstring &str )
 		}
 		
 		free( cut_buffer );
-		free( cmd );
 	
 		cut_buffer = escaped_str;
 	}

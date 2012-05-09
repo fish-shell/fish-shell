@@ -670,54 +670,45 @@ static wchar_t *fishd_env_get( const wchar_t *key )
    to be rewritten to avoid dragging in additional library
    dependencies.
 */
-static wchar_t *fishd_get_config()
+static wcstring fishd_get_config()
 {
 	wchar_t *xdg_dir, *home;
-	int done = 0;
-	wchar_t *res = 0;
+	bool done = false;
+	wcstring result;
 	
 	xdg_dir = fishd_env_get( L"XDG_CONFIG_HOME" );
-	if( xdg_dir )
+	if (xdg_dir)
 	{
-		res = wcsdupcat( xdg_dir, L"/fish" );
-		if( !create_directory( res ) )
+        result = xdg_dir;
+        append_path_component(result, L"/fish");
+		if (!create_directory(result))
 		{
-			done = 1;
+			done = true;
 		}
-		else
-		{
-			free( res );
-		}
-		free( xdg_dir );
+		free(xdg_dir);
 	}
 	else
 	{		
 		home = fishd_env_get( L"HOME" );
 		if( home )
 		{
-			res = wcsdupcat( home, L"/.config/fish" );
-			if( !create_directory( res ) )
+            result = home;
+            append_path_component(result, L"/.config/fish");
+			if (!create_directory(result))
 			{
 				done = 1;
-			}
-			else
-			{
-				free( res );
 			}
 			free( home );
 		}
 	}
-	
-	if( done )
-	{
-		return res;
-	}
-	else
-	{
+    
+    if (! done) {
+        /* Bad juju */
 		debug( 0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access." ));
-		return 0;
-	}
-	
+        result.clear();        
+    }
+    
+    return result;
 }
 
 /**
@@ -725,41 +716,30 @@ static wchar_t *fishd_get_config()
 */
 static void load_or_save( int save)
 {
-	char *name;
-	wchar_t *wdir = fishd_get_config();
-	char *dir;	
+	const wcstring wdir = fishd_get_config();
 	char hostname[HOSTNAME_LEN];
 	connection_t c;
 	int fd;
 	
-	if( !wdir )
-	{
+	if (wdir.empty())
 		return;
-	}
 	
-	dir = wcs2str( wdir );
-
-	free( wdir );
+	std::string dir = wcs2string( wdir );
 	
 	gethostname( hostname, HOSTNAME_LEN );
 	
-	name = (char *)malloc( strlen(dir)+ strlen(FILE)+ strlen(hostname) + 2 );
-	strcpy( name, dir );
-	strcat( name, "/" );
-	strcat( name, FILE );
-	strcat( name, hostname );
-
-	free( dir );
-
+    std::string name;
+    name.append(dir);
+    name.append("/");
+    name.append(FILE);
+    name.append(hostname);
 	
 	debug( 4, L"Open file for %s: '%s'", 
 		   save?"saving":"loading", 
-		   name );
+		   name.c_str() );
 	
     /* OK to not use CLO_EXEC here because fishd is single threaded */
-	fd = open( name, save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
-	
-	free( name );
+	fd = open(name.c_str(), save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
 	
 	if( fd == -1 )
 	{

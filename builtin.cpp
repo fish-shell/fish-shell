@@ -2569,7 +2569,7 @@ static int builtin_exit( parser_t &parser, wchar_t **argv )
 static int builtin_cd( parser_t &parser, wchar_t **argv )
 {
 	env_var_t dir_in;
-	wchar_t *dir;
+	wchar_t *dir = NULL;
 	int res=STATUS_BUILTIN_OK;
 
 	
@@ -2583,10 +2583,13 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 					   argv[0] );
 		}
 	}
-	else
+	else {
 		dir_in = argv[1];
+    }
 
-	dir = path_allocate_cdpath( dir_in.missing() ? NULL : dir_in.c_str() );
+    if (! dir_in.missing()) {
+        dir = path_allocate_cdpath(dir_in);
+    }
 
 	if( !dir )
 	{

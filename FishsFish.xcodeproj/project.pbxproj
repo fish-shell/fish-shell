@@ -231,7 +231,7 @@
 /* Begin PBXLegacyTarget section */
 		D0A084F713B3AC130099B651 /* FishsFish */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "-k ${ACTION} -j 3";
+			buildArgumentsString = "-k ${ACTION}";
 			buildConfigurationList = D0A084FA13B3AC130099B651 /* Build configuration list for PBXLegacyTarget "FishsFish" */;
 			buildPhases = (
 			);

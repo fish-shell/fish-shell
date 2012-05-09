@@ -798,14 +798,8 @@ int parser_t::eval_args( const wchar_t *line, std::vector<completion_t> &args )
 		{
 			case TOK_STRING:
 			{
-				wchar_t *tmp = wcsdup(tok_last( &tok ));
-				
-				if( !tmp )
-				{
-					DIE_MEM();
-				}
-				
-				if( expand_string( tmp, args, eflags  ) == EXPAND_ERROR )
+                const wcstring tmp = tok_last(&tok);				
+				if( expand_string(tmp, args, eflags) == EXPAND_ERROR )
 				{
 					err_pos=tok_get_pos( &tok );
 					do_loop=0;

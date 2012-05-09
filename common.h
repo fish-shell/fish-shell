@@ -180,10 +180,6 @@ extern const wchar_t *program_name;
    Check if the specified stringelement is a part of the specified string list
  */
 #define contains( str,... ) contains_internal( str, __VA_ARGS__, NULL )
-/**
-   Concatenate all the specified strings into a single newly allocated one
- */
-#define wcsdupcat( str,... ) wcsdupcat_internal( str, __VA_ARGS__, NULL )
 
 /**
   Print a stack trace to stderr
@@ -251,6 +247,7 @@ std::string wcs2string(const wcstring &input);
 
 /** Test if a string prefixes another. Returns true if a is a prefix of b */
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
+bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value);
 
 /** Test if a string prefixes another without regard to case. Returns true if a is a prefix of b */
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix, const wcstring &value);
@@ -519,23 +516,6 @@ void append_format(wcstring &str, const wchar_t *format, ...);
    the specified multibyte character string array
 */
 char **wcsv2strv( const wchar_t * const *in );
-
-/**
-   Returns a newly allocated multibyte character string array equivalent of the specified wide character string array
-*/
-wchar_t **strv2wcsv( const char **in );
-
-
-/**
-   Returns a newly allocated concatenation of the specified wide
-   character strings. The last argument must be a null pointer.
-*/
-__sentinel wchar_t *wcsdupcat_internal( const wchar_t *a, ... );
-
-/**
-   Test if the given string is a valid variable name
-*/
-
 
 /**
    Test if the given string is a valid variable name. 

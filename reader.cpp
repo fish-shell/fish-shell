@@ -938,7 +938,6 @@ static void get_param( const wchar_t *cmd,
 */
 static wcstring completion_apply_to_command_line(const wcstring &val_str, int flags, const wcstring &command_line, size_t *inout_cursor_pos)
 {
-	wchar_t *replaced;
     const wchar_t *val = val_str.c_str();
 	bool add_space = !(flags & COMPLETE_NO_SPACE);
 	bool do_replace = !!(flags & COMPLETE_NO_CASE);
@@ -988,25 +987,20 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
 	else
 	{
         wchar_t quote = L'\0';
+        wcstring replaced;
 		if( do_escape )
 		{
 			get_param(command_line.c_str(), cursor_pos, &quote, 0, 0, 0);
 			if( quote == L'\0' )
 			{
-				replaced = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+				replaced = escape_string( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 			}
 			else
 			{
 				bool unescapable = false;
-
-				const wchar_t *pin;
-				wchar_t *pout;
-				
-				replaced = pout = (wchar_t *)malloc( sizeof(wchar_t)*(wcslen(val) + 1) );
-
-				for( pin=val; *pin; pin++ )
+				for (const wchar_t *pin = val; *pin; pin++)
 				{
-					switch( *pin )
+					switch (*pin )
 					{
 						case L'\n':
 						case L'\t':
@@ -1015,31 +1009,26 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
 							unescapable = true;
 							break;
 						default:
-							*pout++ = *pin;
+							replaced.push_back(*pin);
 							break;
 					}
 				}
                 
 				if (unescapable)
 				{
-					free( replaced );
-					wchar_t *tmp = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-					replaced = wcsdupcat( L" ", tmp );
-					free( tmp);
-					replaced[0]=quote;
+                    replaced = escape_string(val, ESCAPE_ALL | ESCAPE_NO_QUOTED);
+                    replaced.insert(0, &quote, 1);
 				}
-				else
-					*pout = 0;
 			}
 		}
 		else
 		{
-			replaced = wcsdup(val);
+			replaced = val;
 		}
 		
         wcstring result = command_line;
         result.insert(cursor_pos, replaced);
-        size_t new_cursor_pos = cursor_pos + wcslen(replaced);
+        size_t new_cursor_pos = cursor_pos + replaced.size();
         if (add_space)
         {
             if (quote && (command_line.c_str()[cursor_pos] != quote)) 
@@ -1049,7 +1038,6 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
             }
             result.insert(new_cursor_pos++, L" ");
         }
-        free(replaced);
         *inout_cursor_pos = new_cursor_pos;
         return result;
 	}
@@ -1084,31 +1072,29 @@ static void completion_insert( const wchar_t *val, int flags )
    \param comp the list of completions to display
 */
 
-static void run_pager( wchar_t *prefix, int is_quoted, const std::vector<completion_t> &comp )
+static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<completion_t> &comp )
 {
     wcstring msg;
-	wchar_t * prefix_esc;
+	wcstring prefix_esc;
 	char *foo;
 	io_data_t *in;
 	wchar_t *escaped_separator;
 	int has_case_sensitive=0;
 
-	if( !prefix || (wcslen(prefix)==0))
+	if (prefix.empty())
 	{
-		prefix_esc = wcsdup(L"\"\"");
+		prefix_esc = L"\"\"";
 	}
 	else
 	{
-		prefix_esc = escape( prefix,1);
+		prefix_esc = escape_string(prefix, 1);
 	}
 	
     wcstring cmd = format_string(L"fish_pager -c 3 -r 4 %ls -p %ls",
                                  // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
                                 is_quoted?L"-q":L"",
-                                prefix_esc );
+                                prefix_esc.c_str() );
     
-    free(prefix_esc);
-
 	in= io_buffer_create( 1 );
 	in->fd = 3;
 
@@ -1611,7 +1597,7 @@ static int handle_completions( const std::vector<completion_t> &comp )
 		  is true, so we print the list
 		*/
 		int len;
-		wchar_t * prefix;
+		wcstring prefix;
 		const wchar_t * prefix_start;
         const wchar_t *buff = data->command_line.c_str();
 		get_param( buff,
@@ -1625,23 +1611,12 @@ static int handle_completions( const std::vector<completion_t> &comp )
 
 		if( len <= PREFIX_MAX_LEN )
 		{
-			prefix = (wchar_t *)malloc( sizeof(wchar_t)*(len+1) );
-			wcslcpy( prefix, prefix_start, len );
-			prefix[len]=L'\0';
+            prefix.append(prefix_start, len);
 		}
 		else
 		{
-			wchar_t tmp[2]=
-				{
-					ellipsis_char,
-					0
-				}
-			;
-
-			prefix = wcsdupcat( tmp,
-								prefix_start + (len - PREFIX_MAX_LEN) );
-			prefix[PREFIX_MAX_LEN] = 0;
-
+            prefix = wcstring(&ellipsis_char, 1);
+            prefix.append(prefix_start + (len - PREFIX_MAX_LEN));
 		}
 
 		{
@@ -1656,8 +1631,6 @@ static int handle_completions( const std::vector<completion_t> &comp )
 			
 			run_pager( prefix, is_quoted, comp );
 		}
-
-		free( prefix );
 		s_reset( &data->screen, true);
 		reader_repaint();
 

@@ -199,54 +199,49 @@ static int wildcard_match2( const wcstring &str_str,
    possible completion of the string, the remainder of the string is
    inserted into the out vector.
 */
-static int wildcard_complete_internal( const wchar_t *orig, 
+static bool wildcard_complete_internal(const wcstring &orig, 
 									   const wchar_t *str, 
 									   const wchar_t *wc, 
-									   int is_first,
+									   bool is_first,
 									   const wchar_t *desc,
 									   const wchar_t *(*desc_func)(const wcstring &),
 									   std::vector<completion_t> &out,
 									   int flags )
 {
-	if( !wc || !str || !orig)
+	if( !wc || ! str || orig.empty())
 	{
 		debug( 2, L"Got null string on line %d of file %s", __LINE__, __FILE__ );
 		return 0;		
 	}
 
 	if( *wc == 0 &&
-		( ( *str != L'.') || (!is_first)) )
+		( (str[0] != L'.') || (!is_first)) )
 	{
-		wchar_t *out_completion = 0;
-		const wchar_t *out_desc = desc;
+		wcstring out_completion;
+        wcstring out_desc = (desc ? desc : L"");
 
 		if( flags & COMPLETE_NO_CASE )
 		{
-			out_completion = wcsdup( orig );
+			out_completion = orig;
 		}
 		else
 		{
-			out_completion = wcsdup( str );
+			out_completion = str;
 		}
 
-		if( wcschr( str, PROG_COMPLETE_SEP ) )
+        size_t complete_sep_loc = out_completion.find(PROG_COMPLETE_SEP);
+        if (complete_sep_loc != wcstring::npos)
 		{
-			/*
-			  This completion has an embedded description, du not use the generic description
-			*/
-			wchar_t *sep;
-			
-			sep = wcschr(out_completion, PROG_COMPLETE_SEP );
-			*sep = 0;
-			out_desc = sep + 1;
-			
+			/* This completion has an embedded description, do not use the generic description */
+            out_desc.assign(out_completion, complete_sep_loc + 1, out_completion.size() - complete_sep_loc - 1);
+            out_completion.resize(complete_sep_loc);			
 		}
 		else
 		{
 			if( desc_func )
 			{
 				/*
-				  A descripton generating function is specified, call
+				  A description generating function is specified, call
 				  it. If it returns something, use that as the
 				  description.
 				*/
@@ -257,36 +252,33 @@ static int wildcard_complete_internal( const wchar_t *orig,
 			
 		}
 		
-		if(out_completion)
+		if (! out_completion.empty())
 		{
 			completion_allocate( out, 
 								 out_completion,
-								 out_desc ? out_desc : L"",
+								 out_desc,
 								 flags );
-		}
-		
-		free ( out_completion );
-		
-		return 1;
+		}		
+		return true;
 	}
 	
 	
 	if( *wc == ANY_STRING )
 	{		
-		int res=0;
+		bool res=false;
 		
 		/* Ignore hidden file */
 		if( is_first && str[0] == L'.' )
-			return 0;
+			return false;
 		
 		/* Try all submatches */
 		do
 		{
-			res |= wildcard_complete_internal( orig, str, wc+1, 0, desc, desc_func, out, flags );
-			if( res )
+			res = wildcard_complete_internal( orig, str, wc+1, 0, desc, desc_func, out, flags );
+			if (res)
 				break;
 		}
-		while( *str++ != 0 );
+		while (*str++ != 0);
 		return res;
 		
 	}
@@ -302,20 +294,18 @@ static int wildcard_complete_internal( const wchar_t *orig,
 	{
 		return wildcard_complete_internal( orig, str+1, wc+1, 0, desc, desc_func, out, flags | COMPLETE_NO_CASE );
 	}
-	return 0;	
+	return false;	
 }
 
-int wildcard_complete( const wchar_t *str,
+bool wildcard_complete(const wcstring &str,
 					   const wchar_t *wc,
 					   const wchar_t *desc,						
 					   const wchar_t *(*desc_func)(const wcstring &),
 					   std::vector<completion_t> &out,
 					   int flags )
 {
-	int res;
-	
-	res =  wildcard_complete_internal( str, str, wc, 1, desc, desc_func, out, flags );	
-
+	bool res;
+	res =  wildcard_complete_internal( str, str.c_str(), wc, true, desc, desc_func, out, flags );	
 	return res;
 }
 
@@ -570,15 +560,14 @@ static wcstring file_get_desc( const wchar_t *filename,
 */
 static void wildcard_completion_allocate( std::vector<completion_t> &list, 
 					  const wcstring &fullname, 
-					  const wchar_t *completion,
+					  const wcstring &completion,
 					  const wchar_t *wc,
                       expand_flags_t expand_flags)
 {
 	struct stat buf, lbuf;
     wcstring sb;
-	
-	int free_completion = 0;
-	
+	wcstring munged_completion;
+    
 	int flags = 0;
 	int stat_res, lstat_res;
 	int stat_errno=0;
@@ -593,12 +582,13 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 	*/
 	if( ( lstat_res = lwstat( fullname, &lbuf ) ) )
 	{
+        /* lstat failed! */
 		sz=-1;
 		stat_res = lstat_res;
 	}
 	else
 	{
-		if( S_ISLNK(lbuf.st_mode))
+		if (S_ISLNK(lbuf.st_mode))
 		{
 			
 			if( ( stat_res = wstat( fullname, &buf ) ) )
@@ -630,9 +620,9 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
     
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
 	{
-		free_completion = 1;
 		flags = flags | COMPLETE_NO_SPACE;
-		completion = wcsdupcat( completion, L"/" );
+        munged_completion = completion;
+        munged_completion.push_back(L'/');
         sb.append(desc);
 	}
 	else
@@ -641,10 +631,9 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
         sb.append(L", ");
         sb.append(format_size(sz));
 	}
-
-	wildcard_complete( completion, wc, sb.c_str(), NULL, list, flags );
-	if( free_completion )
-		free( (void *)completion );
+    
+    const wcstring &completion_to_use = munged_completion.empty() ? completion : munged_completion;
+	wildcard_complete(completion_to_use, wc, sb.c_str(), NULL, list, flags);
 }
 
 /**
@@ -790,7 +779,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 						{
 							wildcard_completion_allocate( out,
 														  long_name,
-														  next.c_str(),
+														  next,
 														  L"",
                                                           flags);
 						}
@@ -812,7 +801,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			  This is the last wildcard segment, and it is not empty. Match files/directories.
 			*/
             wcstring next;
-			while(wreaddir(dir, next))
+			while (wreaddir(dir, next))
 			{
                 const wchar_t * const name = next.c_str();
 				if( flags & ACCEPT_INCOMPLETE )

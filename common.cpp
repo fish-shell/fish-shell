@@ -401,61 +401,6 @@ char **wcsv2strv( const wchar_t * const *in )
 
 }
 
-wchar_t *wcsdupcat_internal( const wchar_t *a, ... )
-{
-	int len=wcslen(a);
-	int pos;
-	va_list va, va2;
-	wchar_t *arg;
-
-	va_start( va, a );
-	va_copy( va2, va );
-	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
-	{
-		len += wcslen( arg );
-	}
-	va_end( va );
-
-	wchar_t *res = (wchar_t *)malloc( sizeof(wchar_t)*(len +1 ));
-	if( res == 0 )
-	{
-		DIE_MEM();
-	}
-	
-	wcscpy( res, a );
-	pos = wcslen(a);
-	while( (arg=va_arg(va2, wchar_t *) )!= 0 ) 
-	{
-		wcscpy( res+pos, arg );
-		pos += wcslen(arg);
-	}
-	va_end( va2 );
-	return res;	
-
-}
-
-
-wchar_t **strv2wcsv( const char **in )
-{
-	int count =0;
-	int i;
-
-	while( in[count] != 0 )
-		count++;
-	wchar_t **res = (wchar_t **)malloc( sizeof( wchar_t *)*(count+1));
-	if( res == 0 )
-	{
-		DIE_MEM();
-	}
-
-	for( i=0; i<count; i++ )
-	{
-		res[i]=str2wcs(in[i]);
-	}
-	res[count]=0;
-	return res;
-
-}
 wcstring format_string(const wchar_t *format, ...)
 {
 	va_list va;
@@ -1723,6 +1668,13 @@ void tokenize_variable_array( const wcstring &val, std::vector<wcstring> &out)
     out.push_back(val.substr(pos, end - pos));
 }
 
+bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value)
+{
+    size_t prefix_size = wcslen(proposed_prefix);
+    return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
+}
+
+
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value)
 {
     size_t prefix_size = proposed_prefix.size();
@@ -1948,14 +1900,19 @@ null_terminated_array_t<char> convert_wide_array_to_narrow(const null_terminated
 
 void append_path_component(wcstring &path, const wcstring &component)
 {
-    size_t len = path.size();
-    if (len == 0)
-    {
-        path = component;
-    }
-    else
-    {
-        if (path[len-1] != L'/') path.push_back(L'/');
+    if (path.empty() || component.empty()) {
+        path.append(component);
+    } else {
+        size_t path_len = path.size();
+        bool path_slash = path.at(path_len-1) == L'/';
+        bool comp_slash = component.at(0) == L'/';
+        if (! path_slash && ! comp_slash) {
+            // Need a slash
+            path.push_back(L'/');
+        } else if (path_slash && comp_slash) {
+            // Too many slashes
+            path.erase(path_len - 1, 1);
+        }
         path.append(component);
     }
 }

@@ -343,12 +343,12 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 }
 
 
-wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
+wchar_t *path_allocate_cdpath( const wcstring &dir, const wchar_t *wd )
 {
 	wchar_t *res = NULL;
 	int err = ENOENT;
-	if( !dir )
-		return 0;
+	if (dir.empty())
+		return NULL;
         
     if (wd) {
         size_t len = wcslen(wd);
@@ -357,13 +357,12 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
     
     wcstring_list_t paths;
     
-    if (dir[0] == L'/') {
+    if (dir.at(0) == L'/') {
         /* Absolute path */
         paths.push_back(dir);
-    } else if (wcsncmp(dir, L"./", 2) == 0 || 
-               wcsncmp(dir, L"../", 3) == 0 ||
-               wcscmp(dir, L".") == 0 ||
-               wcscmp(dir, L"..") == 0) {
+    } else if (string_prefixes_string(L"./", dir) ||
+               string_prefixes_string(L"../", dir) ||
+               dir == L"." || dir == L"..") {
         /* Path is relative to the working directory */
         wcstring path;
         if (wd)
@@ -373,7 +372,6 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
     } else {
         wchar_t *path_cpy;
         wchar_t *state;
-        wchar_t *whole_path;
 
         // Respect CDPATH
         env_var_t path = env_get_string(L"CDPATH");
@@ -392,25 +390,17 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
                 nxt_path = wd;
             }
             
-            wchar_t *expanded_path = expand_tilde_compat( wcsdup(nxt_path) );
+            wcstring expanded_path = nxt_path;
+            expand_tilde(expanded_path);
 
-//			debug( 2, L"woot %ls\n", expanded_path );
+//			debug( 2, L"woot %ls\n", expanded_path.c_str() );
 
-            int path_len = wcslen( expanded_path );
-            if( path_len == 0 )
-            {
-                free(expanded_path );
+            if (expanded_path.empty())
                 continue;
-            }
-
-            whole_path =
-                wcsdupcat( expanded_path,
-                            ( expanded_path[path_len-1] != L'/' )?L"/":L"",
-                            dir );
-
-            free(expanded_path );
+            
+            wcstring whole_path = expanded_path;
+            append_path_component(whole_path, dir);
             paths.push_back(whole_path);
-            free( whole_path );
         }
         free( path_cpy );
     }
@@ -442,7 +432,7 @@ wchar_t *path_allocate_cdpath( const wchar_t *dir, const wchar_t *wd )
 
 
 bool path_can_get_cdpath(const wcstring &in, const wchar_t *wd) {
-    wchar_t *tmp = path_allocate_cdpath(in.c_str(), wd);
+    wchar_t *tmp = path_allocate_cdpath(in, wd);
     bool result = (tmp != NULL);
     free(tmp);
     return result;

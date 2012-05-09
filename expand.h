@@ -105,8 +105,7 @@ enum
 	EXPAND_WILDCARD_NO_MATCH,
 	/* Ok, a wildcard in the string matched a file */
 	EXPAND_WILDCARD_MATCH
-}
-	;
+};
 
 /** Character for separating two array elements. We use 30, i.e. the ascii record separator since that seems logical. */
 #define ARRAY_SEP 0x1e
@@ -129,8 +128,7 @@ class parser_t;
    into the list out.
    
    If the parameter does not need expansion, it is copied into the list
-   out. If expansion is performed, the original parameter is freed and
-   newly allocated strings are inserted into the list out.
+   out.
 
    \param input The parameter to expand
    \param output The list to which the result will be appended.

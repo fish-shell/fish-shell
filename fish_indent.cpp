@@ -107,23 +107,24 @@ static int indent( wcstring &out, const wcstring &in, int flags )
 				{
 					int next_indent = indent;
 					is_command = 0;
-
-					wchar_t *unesc = unescape( last, UNESCAPE_SPECIAL );
+                    
+                    wcstring unesc = last;
+                    unescape_string(unesc, UNESCAPE_SPECIAL);
 					
-					if( parser_keywords_is_block( unesc ) )
+					if( parser_keywords_is_block(unesc))
 					{
 						next_indent++;
 					}
-					else if( wcscmp( unesc, L"else" ) == 0 )
+					else if (unesc == L"else")
 					{
 						indent--;
 					}
 					/* case should have the same indent level as switch*/
-					else if( wcscmp( unesc, L"case" ) == 0 )
+					else if (unesc == L"case")
 					{
 						indent--;
 					}
-					else if( wcscmp( unesc, L"end" ) == 0 )
+					else if (unesc == L"end")
 					{
 						indent--;
 						next_indent--;

@@ -359,7 +359,7 @@ static void safe_launch_process( process_t *p, const char *actual_cmd, char **ar
 }
 
 /**
-   This function is similar to launch_process, except it is not called after a fork (i.e. it is only calls exec) and therefore it can allocate memory.
+   This function is similar to launch_process, except it is not called after a fork (i.e. it only calls exec) and therefore it can allocate memory.
 */
 static void launch_process_nofork( process_t *p )
 {

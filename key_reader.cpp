@@ -15,6 +15,7 @@
 #include <locale.h>
 #include <termcap.h>
 
+#include "common.h"
 #include "fallback.h"
 
 #include "input_common.h"
@@ -36,7 +37,7 @@ int main( int argc, char **argv)
 	{
 		static char term_buffer[2048];
 		char *termtype = getenv ("TERM");
-		char *tbuff = malloc( sizeof(char)*9999);
+		char *tbuff = new char[9999];
 		char *res;
 		
 		tgetent( term_buffer, termtype );

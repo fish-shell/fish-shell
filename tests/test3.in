@@ -127,3 +127,10 @@ else
 end
 
 
+set foo abc def
+set -e foo[1]
+if test $foo '=' def
+	echo Test 11 pass
+else
+	echo Test 11 fail
+end

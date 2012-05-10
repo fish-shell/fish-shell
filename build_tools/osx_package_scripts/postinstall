@@ -1,0 +1,3 @@
+#!/bin/sh -x
+
+./add-shell /usr/local/bin/fish > /tmp/fish_postinstall_output.log

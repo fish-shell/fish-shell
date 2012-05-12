@@ -5,7 +5,7 @@ mkdir -p /tmp/fish_pkg/
 if make install prefix=/tmp/fish_pkg/usr/local/
 then
 	echo "Root written to /tmp/fish_pkg/"
-	if pkgbuild --identifier com.ridiculousfish.fish-shell --scripts build_tools/osx_package_scripts/ --root /tmp/fish_pkg/ ~/fish_installer.pkg
+	if /Developer/usr/bin/packagemaker --doc ./build_tools/fish_shell.pmdoc --out ~/fish_installer.pkg
 	then
 		echo "Package written to ~/fish_installer.pkg"
 	else

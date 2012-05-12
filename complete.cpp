@@ -161,7 +161,8 @@ static unsigned int kCompleteOrder = 0;
 */
 typedef std::list<complete_entry_opt_t> option_list_t;
 class completion_entry_t
-{
+{    
+public:
 	/** List of all options */
 	option_list_t options;
     
@@ -183,8 +184,11 @@ class completion_entry_t
     const unsigned int order;
     
     /** Getters for option list. */
-    option_list_t &get_options();
     const option_list_t &get_options() const;
+    
+    /** Adds or removes an option. */
+    void add_option(const complete_entry_opt_t &opt);
+    bool remove_option(wchar_t short_opt, const wchar_t *long_opt);
     
     /** Getter for short_opt_str. */
     wcstring &get_short_opt_str();    
@@ -226,9 +230,10 @@ static pthread_mutex_t completion_lock = PTHREAD_MUTEX_INITIALIZER;
 /** The lock that guards the options list of individual completion entries. If both completion_lock and completion_entry_lock are to be taken, completion_lock must be taken first. */
 static pthread_mutex_t completion_entry_lock = PTHREAD_MUTEX_INITIALIZER;
 
-option_list_t &completion_entry_t::get_options() {
+
+void completion_entry_t::add_option(const complete_entry_opt_t &opt) {
     ASSERT_IS_LOCKED(completion_entry_lock);
-    return options;
+    options.push_front(opt);
 }
 
 const option_list_t &completion_entry_t::get_options() const {
@@ -434,16 +439,15 @@ void complete_add( const wchar_t *cmd,
     
     /* Lock the lock that allows us to edit the completion entry list */
     scoped_lock lock(completion_lock);
-	completion_entry_t *c;
-	c = complete_get_exact_entry( cmd, cmd_is_path );
     
     /* Lock the lock that allows us to edit individual completion entries */
     scoped_lock lock2(completion_entry_lock);
     
-    option_list_t &options = c->get_options();
-    options.push_front(complete_entry_opt_t());
-    complete_entry_opt_t &opt = options.front();
-    
+	completion_entry_t *c;
+	c = complete_get_exact_entry( cmd, cmd_is_path );
+        
+    /* Create our new option */
+    complete_entry_opt_t opt;
 	if( short_opt != L'\0' )
 	{
 		int len = 1 + ((result_mode & NO_COMMON) != 0);
@@ -464,6 +468,8 @@ void complete_add( const wchar_t *cmd,
     if (long_opt) opt.long_opt = long_opt;
     if (desc) opt.desc = desc;
 	opt.flags = flags;
+    
+    c->add_option(opt);
 }
 
 /**
@@ -471,21 +477,17 @@ void complete_add( const wchar_t *cmd,
    specified short / long option strings. Returns true if it is now
    empty and should be deleted, false if it's not empty. Must be called while locked.
 */
-static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, const wchar_t *long_opt )
+bool completion_entry_t::remove_option( wchar_t short_opt, const wchar_t *long_opt )
 {
     ASSERT_IS_LOCKED(completion_lock);
     ASSERT_IS_LOCKED(completion_entry_lock);
-    option_list_t &options = e->get_options();
 	if(( short_opt == 0 ) && (long_opt == 0 ) )
 	{
-        options.clear();
+        this->options.clear();
 	}
 	else
 	{
-        /* Lock the lock that allows us to edit individual completion entries */
-        scoped_lock lock2(completion_entry_lock);
-        
-        for (option_list_t::iterator iter = options.begin(); iter != options.end(); )
+        for (option_list_t::iterator iter = this->options.begin(); iter != this->options.end(); )
 		{
             complete_entry_opt_t &o = *iter;
 			if(short_opt==o.short_opt || long_opt == o.long_opt)
@@ -497,7 +499,7 @@ static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, con
 				*/
 				if( o.short_opt )
 				{
-                    wcstring &short_opt_str = e->get_short_opt_str();
+                    wcstring &short_opt_str = this->get_short_opt_str();
                     size_t idx = short_opt_str.find(o.short_opt);
                     if (idx != wcstring::npos)
                     {
@@ -510,7 +512,7 @@ static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, con
 				}
                 
                 /* Destroy this option and go to the next one */
-				iter = options.erase(iter);
+				iter = this->options.erase(iter);
 			}
 			else
 			{
@@ -519,7 +521,7 @@ static bool complete_remove_entry( completion_entry_t *e, wchar_t short_opt, con
 			}
 		}
 	}
-    return options.empty();
+    return this->options.empty();
 }
 
 
@@ -536,7 +538,7 @@ void complete_remove( const wchar_t *cmd,
     completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
     if (iter != completion_set.end()) {
         completion_entry_t *entry = *iter;
-        bool delete_it = complete_remove_entry(entry, short_opt, long_opt);
+        bool delete_it = entry->remove_option(short_opt, long_opt);
         if (delete_it) {
             /* Delete this entry */
             completion_set.erase(iter);
@@ -1244,12 +1246,16 @@ void complete_load( const wcstring &name, bool reload )
    previous option popt. Insert results into comp_out. Return 0 if file
    completion should be disabled, 1 otherwise.
 */
+struct local_options_t {
+    wcstring short_opt_str;
+    option_list_t options;
+};
 bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spopt, const wcstring &sstr, bool use_switches)
 {
 
     const wchar_t * const cmd_orig = scmd_orig.c_str(), * const popt = spopt.c_str(), * const str = sstr.c_str();
 
-	int use_common=1, use_files=1;
+	bool use_common=1, use_files=1;
 
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, path, cmd);
@@ -1266,20 +1272,34 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
             this->commands_to_load.push_back(cmd);
         }
     }
-
-    scoped_lock lock(completion_lock);
-    scoped_lock lock2(completion_entry_lock);
-    for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
-	{
-        const completion_entry_t *i = *iter;
-		const wcstring &match = i->cmd_is_path ? path : cmd;
-
-		if( ( (!wildcard_match( match, i->cmd ) ) ) )
-		{
-			continue;
-		}
-		
-        const option_list_t &options = i->get_options();
+    
+    /* Make a list of lists of all options that we care about */
+    std::vector<local_options_t> all_options;
+    {
+        scoped_lock lock(completion_lock);
+        scoped_lock lock2(completion_entry_lock);
+        for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
+        {
+            const completion_entry_t *i = *iter;
+            const wcstring &match = i->cmd_is_path ? path : cmd;
+            if (! wildcard_match(match, i->cmd))
+            {
+                continue;
+            }
+            
+            /* Copy all of their options into our list */
+            all_options.push_back(local_options_t());
+            all_options.back().short_opt_str = i->get_short_opt_str();
+            all_options.back().options = i->get_options(); //Oof, this is a lot of copying
+        }
+    }
+    
+    /* Now release the lock and test each option that we captured above.
+       We have to do this outside the lock because callouts (like the condition) may add or remove completions.
+       See https://github.com/ridiculousfish/fishfish/issues/2 */
+    for (std::vector<local_options_t>::const_iterator iter = all_options.begin(); iter != all_options.end(); iter++)
+    {
+        const option_list_t &options = iter->options;
 		use_common=1;
 		if( use_switches )
 		{
@@ -1294,8 +1314,8 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 					wchar_t *arg;
 					if( (arg=param_match2( o, str ))!=0 && this->condition_test( o->condition ))
 					{
-						use_common &= ((o->result_mode & NO_COMMON )==0);
-						use_files &= ((o->result_mode & NO_FILES )==0);
+                        if (o->result_mode & NO_COMMON) use_common = false;
+                        if (o->result_mode & NO_FILES) use_files = false;
 						complete_from_args( arg, o->comp, o->localized_desc(), o->flags );
 					}
 
@@ -1318,8 +1338,8 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 						if( param_match_old( o, popt ) && this->condition_test( o->condition ))
 						{
 							old_style_match = 1;
-							use_common &= ((o->result_mode & NO_COMMON )==0);
-							use_files &= ((o->result_mode & NO_FILES )==0);
+                            if (o->result_mode & NO_COMMON) use_common = false;
+                            if (o->result_mode & NO_FILES) use_files = false;
 							complete_from_args( str, o->comp, o->localized_desc(), o->flags );
 						}
 					}
@@ -1345,8 +1365,8 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 
 						if( param_match( o, popt ) && this->condition_test( o->condition  ))
 						{
-							use_common &= ((o->result_mode & NO_COMMON )==0);
-							use_files &= ((o->result_mode & NO_FILES )==0);
+                            if (o->result_mode & NO_COMMON) use_common = false;
+                            if (o->result_mode & NO_FILES) use_files = false;
 							complete_from_args( str, o->comp.c_str(), o->localized_desc(), o->flags );
 
 						}
@@ -1382,7 +1402,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 					  Check if the short style option matches
 					*/
 					if( o->short_opt != L'\0' &&
-						short_ok( str, o->short_opt, i->get_short_opt_str() ) )
+						short_ok(str, o->short_opt, iter->short_opt_str))
 					{
 						const wchar_t *desc = o->localized_desc();
 						wchar_t completion[2];

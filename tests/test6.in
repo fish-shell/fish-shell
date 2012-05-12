@@ -1,0 +1,11 @@
+
+# Test that conditions that add or remove completions don't deadlock, etc.
+# We actually encountered some case that was effectively like this (Issue 2 in github)
+
+complete --command AAAA -l abcd --condition 'complete -c AAAA -l efgh'
+complete -C'AAAA -'
+complete -C'AAAA -'
+
+complete --command BBBB -l abcd --condition 'complete -e --command BBBB -l abcd'
+complete -C'BBBB -'
+complete -C'BBBB -'

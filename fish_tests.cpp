@@ -616,6 +616,8 @@ static void test_is_potential_path()
     assert(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, false, &tmp));
     assert(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, false, &tmp));
     
+    assert(is_potential_path(L"/usr", wds, true, &tmp) && tmp == L"/usr/");
+
 }
 
 /** Test the 'test' builtin */

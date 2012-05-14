@@ -1688,6 +1688,16 @@ bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix, co
     return prefix_size <= value.size() && wcsncasecmp(proposed_prefix.c_str(), value.c_str(), prefix_size) == 0;
 }
 
+bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value) {
+    size_t suffix_size = proposed_suffix.size();
+    return suffix_size <= value.size() && value.compare(value.size() - suffix_size, suffix_size, proposed_suffix) == 0;
+}
+
+bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value) {
+    size_t suffix_size = wcslen(proposed_suffix);
+    return suffix_size <= value.size() && value.compare(value.size() - suffix_size, suffix_size, proposed_suffix) == 0;
+}
+
 bool list_contains_string(const wcstring_list_t &list, const wcstring &str)
 {
     return std::find(list.begin(), list.end(), str) != list.end();

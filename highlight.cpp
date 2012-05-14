@@ -209,14 +209,14 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
                         {
                             result = true;
                             if (out_path) {
-                            
-                                /* We want to return the path in the same "form" as it was given. Take the given path, get its basename. Append that to the output if the given path has the basename as the prefix (which it won't if the given path contains no slashes). Then append the directory entry. */
+                                /* We want to return the path in the same "form" as it was given. Take the given path, get its basename. Append that to the output if the basename actually prefixes the path (which it won't if the given path contains no slashes), and isn't a slash (so we don't duplicate slashes). Then append the directory entry. */
                                 
                                 out_path->clear();
                                 const wcstring path_base = wdirname(const_path);
                                 if (string_prefixes_string(path_base, const_path)) {
                                     out_path->append(path_base);
-                                    out_path->push_back(L'/');
+                                    if (! string_suffixes_string(L"/", *out_path))
+                                        out_path->push_back(L'/');
                                 }
                                 out_path->append(ent);
                                 /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */
@@ -761,36 +761,6 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
         outSuggestion.clear();
 
         if (is_potential_cd_path(dir, working_directory, &suggested_path)) {
-
-            /* suggested_path needs to actually have dir as a prefix (perhaps with different case). Handle stuff like ./ */
-            bool wants_dot_slash = string_prefixes_string(L"./", dir);
-            bool has_dot_slash = string_prefixes_string(L"./", suggested_path);
-                                        
-            if (wants_dot_slash && ! has_dot_slash) {
-                suggested_path.insert(0, L"./");
-            } else if (! wants_dot_slash && has_dot_slash) {
-                suggested_path.erase(0, 2);
-            }
-            
-            bool wants_tilde = string_prefixes_string(L"~", dir);
-            bool has_tilde = string_prefixes_string(L"~", suggested_path);
-            if (wants_tilde && ! has_tilde) {
-                // The input string has a tilde, the output string does not
-                // Extract the tilde part, expand it, see if the expansion prefixes the suggestion
-                // If so, replace it with the tilde part
-                size_t slash_idx = dir.find(L'/');
-                const wcstring tilde_part(dir, 0, slash_idx); //note that slash_idx is npos this will return everything
-                
-                // Expand the tilde
-                wcstring expanded_tilde = tilde_part;
-                expand_tilde(expanded_tilde);
-                
-                // Replace it
-                if (string_prefixes_string(expanded_tilde, suggested_path)) {
-                    suggested_path.replace(0, expanded_tilde.size(), tilde_part);
-                }
-            }
-            
             /* Success */
             outSuggestion = str;
             outSuggestion.erase(parsed_last_arg_pos);

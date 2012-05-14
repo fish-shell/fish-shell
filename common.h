@@ -249,6 +249,11 @@ std::string wcs2string(const wcstring &input);
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value);
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value);
 
+/** Test if a string is a suffix of another */
+bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
+bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
+
+
 /** Test if a string prefixes another without regard to case. Returns true if a is a prefix of b */
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix, const wcstring &value);
 

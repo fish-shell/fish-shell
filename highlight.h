@@ -115,6 +115,11 @@ bool autosuggest_special_validate_from_history(const wcstring &str, const wcstri
 */
 bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outString);
 
+/* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O!
+
+    This is used only internally to this file, and is exposed only for testing.
+*/
+bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, bool require_dir = false, wcstring *out_path = NULL);
 
 #endif
 

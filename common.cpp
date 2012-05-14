@@ -84,7 +84,9 @@ parts of fish.
 
 struct termios shell_modes;      
 
+// Note we foolishly assume that pthread_t is just a primitive. But it might be a struct.
 static pthread_t main_thread_id = 0;
+static bool thread_assertions_configured_for_testing = false;
 
 wchar_t ellipsis_char;
 
@@ -1926,6 +1928,10 @@ void set_main_thread() {
  	main_thread_id = pthread_self();
 }
 
+void configure_thread_assertions_for_testing(void) {
+    thread_assertions_configured_for_testing = true;
+}
+
 /* Notice when we've forked */
 static pid_t initial_pid;
 
@@ -1950,7 +1956,7 @@ bool is_main_thread() {
 
 void assert_is_main_thread(const char *who)
 {
-    if (! is_main_thread()) {
+    if (! is_main_thread() && ! thread_assertions_configured_for_testing) {
         fprintf(stderr, "Warning: %s called off of main thread. Break on debug_thread_error to debug.\n", who);
         debug_thread_error();
     }
@@ -1966,7 +1972,7 @@ void assert_is_not_forked_child(const char *who)
 
 void assert_is_background_thread(const char *who)
 {
-    if (is_main_thread()) {
+    if (is_main_thread() && ! thread_assertions_configured_for_testing) {
         fprintf(stderr, "Warning: %s called on the main thread (may block!). Break on debug_thread_error to debug.\n", who);
         debug_thread_error();
     }

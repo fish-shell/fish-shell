@@ -579,6 +579,45 @@ static void test_path()
 	}	
 }
 
+/** Test is_potential_path */
+static void test_is_potential_path()
+{
+    say(L"Testing is_potential_path");
+    if (system("rm -Rf /tmp/is_potential_path_test/")) {
+        err(L"Failed to remove /tmp/is_potential_path_test/");
+    }
+    
+    /* Directories */
+    if (system("mkdir -p /tmp/is_potential_path_test/alpha/")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/is_potential_path_test/beta/")) err(L"mkdir failed");
+    
+    /* Files */
+    if (system("touch /tmp/is_potential_path_test/aardvark")) err(L"touch failed");
+    if (system("touch /tmp/is_potential_path_test/gamma")) err(L"touch failed");
+    
+    const wcstring wd = L"/tmp/is_potential_path_test/";
+    const wcstring_list_t wds(1, wd);
+    
+    wcstring tmp;
+    assert(is_potential_path(L"al", wds, true, &tmp) && tmp == L"alpha/");
+    assert(is_potential_path(L"alpha/", wds, true, &tmp) && tmp == L"alpha/");
+    assert(is_potential_path(L"aard", wds, false, &tmp) && tmp == L"aardvark");
+    
+    assert(! is_potential_path(L"balpha/", wds, true, &tmp));
+    assert(! is_potential_path(L"aard", wds, true, &tmp));
+    assert(! is_potential_path(L"aarde", wds, true, &tmp));
+    assert(! is_potential_path(L"aarde", wds, false, &tmp));
+    
+    assert(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, false, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    assert(is_potential_path(L"/tmp/is_potential_path_test/al", wds, true, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
+    assert(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, false, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    
+    assert(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, true, &tmp));
+    assert(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, false, &tmp));
+    assert(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, false, &tmp));
+    
+}
+
 /** Test the 'test' builtin */
 int builtin_test( parser_t &parser, wchar_t **argv );
 static bool run_test_test(int expected, wcstring_list_t &lst) {
@@ -927,6 +966,7 @@ int main( int argc, char **argv )
 {
 	setlocale( LC_ALL, "" );
 	srand( time( 0 ) );
+    configure_thread_assertions_for_testing();
 
 	program_name=L"(ignore)";
 	
@@ -951,6 +991,7 @@ int main( int argc, char **argv )
 	test_expand();
     test_test();
 	test_path();
+    test_is_potential_path();
     test_colors();
     test_autosuggest();
     history_tests_t::test_history();

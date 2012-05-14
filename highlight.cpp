@@ -103,8 +103,9 @@ static wcstring apply_working_directory(const wcstring &path, const wcstring &wo
     }
 }
 
-/* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O! */
-static bool is_potential_path( const wcstring &cpath, const wcstring_list_t &directories, bool require_dir = false, wcstring *out_path = NULL)
+/* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O!
+*/
+bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, bool require_dir, wcstring *out_path)
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
@@ -113,7 +114,7 @@ static bool is_potential_path( const wcstring &cpath, const wcstring_list_t &dir
 	int has_magic = 0;
 	bool result = false;
     
-    wcstring path(cpath);
+    wcstring path(const_path);
     expand_tilde(path);
     if (! unescape_string(path, 1))
         return false;
@@ -196,22 +197,28 @@ static bool is_potential_path( const wcstring &cpath, const wcstring_list_t &dir
                         *out_path = clean_path;
                 }
                 else if ((dir = wopendir(dir_name))) {
-                    /* We opened the dir_name; look for a string where the base name prefixes it */
+                    // We opened the dir_name; look for a string where the base name prefixes it
                     wcstring ent;
                     
                     // Don't ask for the is_dir value unless we care, because it can cause extra filesystem acces */
                     bool is_dir = false;
                     while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : NULL))
                     {
-                        /* TODO: support doing the right thing on case-insensitive filesystems like HFS+ */
+                        // TODO: support doing the right thing on case-insensitive filesystems like HFS+
                         if (string_prefixes_string(base_name, ent) && (! require_dir || is_dir))
                         {
                             result = true;
                             if (out_path) {
-                                out_path->assign(dir_name);
-                                out_path->push_back(L'/');
+                            
+                                /* We want to return the path in the same "form" as it was given. Take the given path, get its basename. Append that to the output if the given path has the basename as the prefix (which it won't if the given path contains no slashes). Then append the directory entry. */
+                                
+                                out_path->clear();
+                                const wcstring path_base = wdirname(const_path);
+                                if (string_prefixes_string(path_base, const_path)) {
+                                    out_path->append(path_base);
+                                    out_path->push_back(L'/');
+                                }
                                 out_path->append(ent);
-                                path_make_canonical(*out_path);
                                 /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */
                                 if (is_dir)
                                     out_path->push_back(L'/');
@@ -230,23 +237,35 @@ static bool is_potential_path( const wcstring &cpath, const wcstring_list_t &dir
 
 /* Given a string, return whether it prefixes a path that we could cd into. Return that path in out_path */
 static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory, wcstring *out_path) {
-    /* Get the CDPATH */
-    env_var_t cdpath = env_get_string(L"CDPATH");
-    if (cdpath.missing_or_empty())
-        cdpath = L".";
-    
-    /* Tokenize it into directories */
     wcstring_list_t directories;
-    wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
-    wcstring next_path;
-    while (tokenizer.next(next_path))
-    {
-        /* Ensure that we use the working directory for relative cdpaths like "." */
-        directories.push_back(apply_working_directory(next_path, working_directory));
+    
+    if (string_prefixes_string(L"./", path)) {
+        /* Ignore the CDPATH in this case; just use the working directory */
+        directories.push_back(working_directory);
+    } else {
+        /* Get the CDPATH */
+        env_var_t cdpath = env_get_string(L"CDPATH");
+        if (cdpath.missing_or_empty())
+            cdpath = L".";
+        
+        /* Tokenize it into directories */
+        wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
+        wcstring next_path;
+        while (tokenizer.next(next_path))
+        {
+            /* Ensure that we use the working directory for relative cdpaths like "." */
+            directories.push_back(apply_working_directory(next_path, working_directory));
+        }
     }
     
-    /* Call is_potential_path */
-    return is_potential_path(path, directories, true /* require_dir */, out_path);
+    /* Call is_potential_path with all of these directories */
+    bool result = is_potential_path(path, directories, true /* require_dir */, out_path);
+#if 0
+    if (out_path) {
+        printf("%ls -> %ls\n", path.c_str(), out_path->c_str());
+    }
+#endif
+    return result;
 }
 
 rgb_color_t highlight_get_color( int highlight, bool is_background )
@@ -724,7 +743,6 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
         
     ASSERT_IS_BACKGROUND_THREAD();
     
-    
     /* Parse the string */
     wcstring parsed_command;
     wcstring_list_t parsed_arguments;
@@ -741,7 +759,7 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
         /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
         result = true;
         outSuggestion.clear();
-        
+
         if (is_potential_cd_path(dir, working_directory, &suggested_path)) {
 
             /* suggested_path needs to actually have dir as a prefix (perhaps with different case). Handle stuff like ./ */

@@ -721,6 +721,9 @@ double timef();
 void set_main_thread();
 bool is_main_thread();
 
+/** Configures thread assertions for testing */
+void configure_thread_assertions_for_testing();
+
 /** Set up a guard to complain if we try to do certain things (like take a lock) after calling fork */
 void setup_fork_guards(void);
 

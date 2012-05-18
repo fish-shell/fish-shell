@@ -787,12 +787,13 @@ void exec( parser_t &parser, job_t *j )
 				*/
 
 				signal_unblock();
-				const wchar_t * orig_def = function_get_definition( p->argv0() );
+                wcstring orig_def;
+                function_get_definition( p->argv0(), &orig_def );
                 
                 // function_get_named_arguments may trigger autoload, which deallocates the orig_def.
                 // We should make function_get_definition return a wcstring (but how to handle NULL...)
-                if (orig_def)
-                    def = wcsdup(orig_def);
+                if (! orig_def.empty())
+                    def = wcsdup(orig_def.c_str());
                 
 				wcstring_list_t named_arguments = function_get_named_arguments( p->argv0() );
 				shadows = function_get_shadows( p->argv0() );

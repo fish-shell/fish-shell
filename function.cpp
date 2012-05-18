@@ -251,10 +251,13 @@ shared_ptr<function_info_t> function_get(const wcstring &name)
     }
 }
 	
-const wchar_t *function_get_definition( const wcstring &name )
+bool function_get_definition( const wcstring &name, wcstring *out_definition )
 {
     shared_ptr<function_info_t> func = function_get(name);
-    return func ? func->definition.c_str() : NULL;
+    if (func && out_definition) {
+        out_definition->assign(func->definition);
+    }
+    return func != NULL;
 }
 
 wcstring_list_t function_get_named_arguments( const wcstring &name )

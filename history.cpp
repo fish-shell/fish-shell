@@ -136,18 +136,6 @@ static void escape_yaml(std::string &str);
 /** Undoes escape_yaml */
 static void unescape_yaml(std::string &str);
 
-/* Custom deleter for our shared_ptr */
-class history_item_data_deleter_t {
-    private:
-        const bool free_it;
-    public:
-    history_item_data_deleter_t(bool flag) : free_it(flag) { }
-    void operator()(const wchar_t *data) {
-        if (free_it)
-            free((void *)data);
-    }
-};
-
 /* We can merge two items if they are the same command. We use the more recent timestamp and the longer list of required paths. */
 bool history_item_t::merge(const history_item_t &item)
 {

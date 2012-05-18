@@ -832,7 +832,7 @@ int complete_is_valid_argument( const wchar_t *str,
 static void complete_strings( std::vector<completion_t> &comp_out,
 							  const wcstring &wc_escaped,
 							  const wchar_t *desc,
-							  const wchar_t *(*desc_func)(const wcstring &),
+							  wcstring (*desc_func)(const wcstring &),
 							  std::vector<completion_t> &possible_comp,
 							  complete_flags_t flags )
 {
@@ -981,16 +981,20 @@ void completer_t::complete_cmd_desc( const wcstring &str )
 }
 
 /**
-   Returns a description for the specified function
+   Returns a description for the specified function, or an empty string if none
 */
-static const wchar_t *complete_function_desc( const wcstring &fn )
+static wcstring complete_function_desc( const wcstring &fn )
 {
+    wcstring result;
+    
 	const wchar_t *res = function_get_desc( fn );
+    if (res) {
+        result = res;
+    } else {
+        function_get_definition(fn, &result);
+    }
 
-	if( !res )
-		res = function_get_definition( fn );
-
-	return res;
+	return result;
 }
 
 

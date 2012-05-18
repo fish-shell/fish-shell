@@ -204,7 +204,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
 									   const wchar_t *wc, 
 									   bool is_first,
 									   const wchar_t *desc,
-									   const wchar_t *(*desc_func)(const wcstring &),
+									   wcstring (*desc_func)(const wcstring &),
 									   std::vector<completion_t> &out,
 									   int flags )
 {
@@ -245,8 +245,8 @@ static bool wildcard_complete_internal(const wcstring &orig,
 				  it. If it returns something, use that as the
 				  description.
 				*/
-				const wchar_t *func_desc = desc_func( orig );
-				if( func_desc )
+				wcstring func_desc = desc_func( orig );
+				if (! func_desc.empty())
 					out_desc = func_desc;
 			}
 			
@@ -300,7 +300,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
 bool wildcard_complete(const wcstring &str,
 					   const wchar_t *wc,
 					   const wchar_t *desc,						
-					   const wchar_t *(*desc_func)(const wcstring &),
+					   wcstring (*desc_func)(const wcstring &),
 					   std::vector<completion_t> &out,
 					   int flags )
 {

@@ -103,14 +103,10 @@ void function_add( const function_data_t &data, const parser_t &parser );
 void function_remove( const wcstring &name );
 
 /**
-    Gets a function by name.
+   Returns by reference the definition of the function with the name \c name.
+   Returns true if successful, false if no function with the given name exists.
 */
-shared_ptr<function_info_t> function_get(const wcstring &name);
-
-/**
-   Returns the definition of the function with the name \c name.
-*/
-const wchar_t *function_get_definition( const wcstring &name );
+bool function_get_definition( const wcstring &name, wcstring *out_definition );
 
 /**
    Returns the description of the function with the name \c name.

@@ -89,7 +89,7 @@ int wildcard_has( const wchar_t *str, int internal );
 bool wildcard_complete(const wcstring &str,
 					   const wchar_t *wc,
 					   const wchar_t *desc,						
-					   const wchar_t *(*desc_func)(const wcstring &),
+					   wcstring (*desc_func)(const wcstring &),
 					   std::vector<completion_t> &out,
 					   expand_flags_t flags );
 

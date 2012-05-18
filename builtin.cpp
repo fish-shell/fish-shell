@@ -1086,7 +1086,8 @@ static int builtin_generic( parser_t &parser, wchar_t **argv )
 static void functions_def( const wcstring &name, wcstring &out )
 {
 	const wchar_t *desc = function_get_desc( name );
-	const wchar_t *def = function_get_definition(name);
+    wcstring def;
+    function_get_definition(name, &def);
 
 	event_t search(EVENT_ANY);
 
@@ -1169,11 +1170,10 @@ static void functions_def( const wcstring &name, wcstring &out )
 	
     
     /* This forced tab is sort of crummy - not all functions start with a tab */
-    append_format( out, L"\n\t%ls", def);
+    append_format( out, L"\n\t%ls", def.c_str());
     
     /* Append a newline before the 'end', unless there already is one there */
-    size_t deflen = wcslen(def);
-    if (deflen == 0 || def[deflen-1] != L'\n') {
+    if (! string_suffixes_string(L"\n", def)) {
         out.push_back(L'\n');
     }
     out.append(L"end\n");
@@ -3733,10 +3733,14 @@ void builtin_get_names(std::vector<completion_t> &list) {
 	}
 }
 
-const wchar_t *builtin_get_desc( const wcstring &name )
+wcstring builtin_get_desc( const wcstring &name )
 {
+    wcstring result;
 	const builtin_data_t *builtin = builtin_lookup(name);
-    return builtin ? _(builtin->desc) : NULL;
+    if (builtin) {
+        result = _(builtin->desc);
+    }
+    return result;
 }
 
 void builtin_push_io( parser_t &parser, int in )

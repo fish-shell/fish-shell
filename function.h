@@ -16,9 +16,6 @@
 #include "common.h"
 #include "event.h"
 
-#include <tr1/memory>
-using std::tr1::shared_ptr;
-
 class parser_t;
 class env_vars;
 

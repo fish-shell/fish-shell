@@ -41,7 +41,7 @@
 /**
    Table containing all functions
 */
-typedef std::map<wcstring, shared_ptr<function_info_t> > function_map_t;
+typedef std::map<wcstring, function_info_t> function_map_t;
 static function_map_t loaded_functions;
 
 /* Lock for functions */
@@ -92,7 +92,7 @@ static int load( const wcstring &name )
 	bool was_autoload = is_autoload;
 	int res;
     function_map_t::iterator iter = loaded_functions.find(name);
-	if( iter !=  loaded_functions.end() && !iter->second->is_autoload ) {
+	if( iter !=  loaded_functions.end() && !iter->second.is_autoload ) {
         /* We have a non-autoload version already */
 		return 0;
     }
@@ -148,6 +148,7 @@ static void autoload_names( std::set<wcstring> &names, int get_hidden )
 
 void function_init()
 {
+    /* PCA: This recursive lock was introduced early in my work. I would like to make this a non-recursive lock but I haven't fully investigated all the call paths (for autoloading functions, etc.) */
     pthread_mutexattr_t a;
     VOMIT_ON_FAILURE(pthread_mutexattr_init(&a));
     VOMIT_ON_FAILURE(pthread_mutexattr_settype(&a,PTHREAD_MUTEX_RECURSIVE));
@@ -188,13 +189,12 @@ void function_add( const function_data_t &data, const parser_t &parser )
     /* Remove the old function */
 	function_remove( data.name );
     
-    /* Create a new function */
+    
+    /* Create and store a new function */
     const wchar_t *filename = reader_current_filename();
     int def_offset = parse_util_lineno( parser.get_buffer(), parser.current_block->tok_pos )-1;
-    function_info_t *new_info = new function_info_t(data, filename, def_offset, is_autoload);
-    
-    /* Store it in the loaded_functions map */
-    loaded_functions[data.name].reset(new_info);
+    const function_map_t::value_type new_pair(data.name, function_info_t(data, filename, def_offset, is_autoload));
+    loaded_functions.insert(new_pair);
 	
     /* Add event handlers */
 	for( std::vector<event_t>::const_iterator iter = data.events.begin(); iter != data.events.end(); ++iter )
@@ -240,43 +240,49 @@ void function_remove( const wcstring &name )
         function_autoloader.unload( name );
 }
 
-shared_ptr<function_info_t> function_get(const wcstring &name)
+static const function_info_t *function_get(const wcstring &name)
 {
-    scoped_lock lock(functions_lock);
+    // The caller must lock the functions_lock before calling this; however our mutex is currently recursive, so trylock will never fail
+    // We need a way to correctly check if a lock is locked (or better yet, make our lock non-recursive)
+    //ASSERT_IS_LOCKED(functions_lock);
     function_map_t::iterator iter = loaded_functions.find(name);
     if (iter == loaded_functions.end()) {
-        return shared_ptr<function_info_t>();
+        return NULL;
     } else {
-        return iter->second;
+        return &iter->second;
     }
 }
 	
-bool function_get_definition( const wcstring &name, wcstring *out_definition )
+bool function_get_definition(const wcstring &name, wcstring *out_definition)
 {
-    shared_ptr<function_info_t> func = function_get(name);
+    scoped_lock lock(functions_lock);
+    const function_info_t *func = function_get(name);
     if (func && out_definition) {
         out_definition->assign(func->definition);
     }
     return func != NULL;
 }
 
-wcstring_list_t function_get_named_arguments( const wcstring &name )
+wcstring_list_t function_get_named_arguments(const wcstring &name)
 {
-    shared_ptr<function_info_t> func = function_get(name);
+    scoped_lock lock(functions_lock);
+    const function_info_t *func = function_get(name);
     return func ? func->named_arguments : wcstring_list_t();
 }
 
-int function_get_shadows( const wcstring &name )
+int function_get_shadows(const wcstring &name)
 {
-    shared_ptr<function_info_t> func = function_get(name);
+    scoped_lock lock(functions_lock);
+    const function_info_t *func = function_get(name);
     return func ? func->shadows : false;
 }
 
 	
-bool function_get_desc( const wcstring &name, wcstring *out_desc )
+bool function_get_desc(const wcstring &name, wcstring *out_desc)
 {
     /* Empty length string goes to NULL */
-    shared_ptr<function_info_t> func = function_get(name);
+    scoped_lock lock(functions_lock);
+    const function_info_t *func = function_get(name);
     if (out_desc && func && ! func->description.empty()) {
         out_desc->assign(_(func->description.c_str()));
         return true;
@@ -285,33 +291,35 @@ bool function_get_desc( const wcstring &name, wcstring *out_desc )
     }
 }
 
-void function_set_desc( const wcstring &name, const wcstring &desc )
+void function_set_desc(const wcstring &name, const wcstring &desc)
 {
-	load( name );
-    shared_ptr<function_info_t> func = function_get(name);
-    if (func) func->description = desc;
+	load(name);
+    scoped_lock lock(functions_lock);
+    function_map_t::iterator iter = loaded_functions.find(name);
+    if (iter != loaded_functions.end()) {
+        iter->second.description = desc;
+    }
 }
 
-bool function_copy( const wcstring &name, const wcstring &new_name )
+bool function_copy(const wcstring &name, const wcstring &new_name)
 {
     bool result = false;
     scoped_lock lock(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
-        shared_ptr<function_info_t> &new_info = loaded_functions[new_name];
-        
 		// This new instance of the function shouldn't be tied to the definition file of the original, so pass NULL filename, etc.
-        new_info.reset(new function_info_t(*iter->second, NULL, 0, false));
+        const function_map_t::value_type new_pair(new_name, function_info_t(iter->second, NULL, 0, false));
+        loaded_functions.insert(new_pair);
         result = true;
     }
 	return result;
 }
 
-wcstring_list_t function_get_names( int get_hidden )
+wcstring_list_t function_get_names(int get_hidden)
 {
     std::set<wcstring> names;
     scoped_lock lock(functions_lock);
-	autoload_names( names, get_hidden );
+	autoload_names(names, get_hidden);
 	
     function_map_t::const_iterator iter;
     for (iter = loaded_functions.begin(); iter != loaded_functions.end(); ++iter) {
@@ -319,25 +327,24 @@ wcstring_list_t function_get_names( int get_hidden )
         
         /* Maybe skip hidden */
         if (! get_hidden) {
-            if (name.size() == 0 || name.at(0) == L'_') continue;
+            if (name.empty() || name.at(0) == L'_') continue;
         }
-        
         names.insert(name);
     }
-    
     return wcstring_list_t(names.begin(), names.end());
 }
 
-const wchar_t *function_get_definition_file( const wcstring &name )
+const wchar_t *function_get_definition_file(const wcstring &name)
 {
-    shared_ptr<function_info_t> func = function_get(name);
+    scoped_lock lock(functions_lock);
+    const function_info_t *func = function_get(name);
     return func ? func->definition_file : NULL;
 }
 
 
-int function_get_definition_offset( const wcstring &name )
+int function_get_definition_offset(const wcstring &name)
 {
-    shared_ptr<function_info_t> func = function_get(name);
+    scoped_lock lock(functions_lock);
+    const function_info_t *func = function_get(name);
     return func ? func->definition_offset : -1;
 }
-

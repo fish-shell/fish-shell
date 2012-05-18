@@ -273,14 +273,15 @@ int function_get_shadows( const wcstring &name )
 }
 
 	
-const wchar_t *function_get_desc( const wcstring &name )
+bool function_get_desc( const wcstring &name, wcstring *out_desc )
 {
     /* Empty length string goes to NULL */
     shared_ptr<function_info_t> func = function_get(name);
-    if (func && func->description.size()) {
-        return _(func->description.c_str());
+    if (out_desc && func && ! func->description.empty()) {
+        out_desc->assign(_(func->description.c_str()));
+        return true;
     } else {
-        return NULL;
+        return false;
     }
 }
 

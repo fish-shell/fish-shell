@@ -986,14 +986,10 @@ void completer_t::complete_cmd_desc( const wcstring &str )
 static wcstring complete_function_desc( const wcstring &fn )
 {
     wcstring result;
-    
-	const wchar_t *res = function_get_desc( fn );
-    if (res) {
-        result = res;
-    } else {
+    bool has_description = function_get_desc(fn, &result);
+    if (! has_description) {
         function_get_definition(fn, &result);
     }
-
 	return result;
 }
 

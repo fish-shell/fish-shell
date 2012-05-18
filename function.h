@@ -109,9 +109,10 @@ void function_remove( const wcstring &name );
 bool function_get_definition( const wcstring &name, wcstring *out_definition );
 
 /**
-   Returns the description of the function with the name \c name.
+   Returns by reference the description of the function with the name \c name.
+   Returns true if the function exists and has a nonempty description, false if it does not.
 */
-const wchar_t *function_get_desc( const wcstring &name );
+bool function_get_desc( const wcstring &name, wcstring *out_desc );
 
 /**
    Sets the description of the function with the name \c name.
@@ -141,6 +142,8 @@ wcstring_list_t function_get_names( int get_hidden );
 
    This function does not autoload functions, it will only work on
    functions that have already been defined.
+   
+   This returns an intern'd string.
 */
 const wchar_t *function_get_definition_file( const wcstring &name );
 

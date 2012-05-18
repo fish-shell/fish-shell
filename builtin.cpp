@@ -1085,8 +1085,8 @@ static int builtin_generic( parser_t &parser, wchar_t **argv )
 */
 static void functions_def( const wcstring &name, wcstring &out )
 {
-	const wchar_t *desc = function_get_desc( name );
-    wcstring def;
+    wcstring desc, def;
+    function_get_desc(name, &desc);
     function_get_definition(name, &def);
 
 	event_t search(EVENT_ANY);
@@ -1099,13 +1099,11 @@ static void functions_def( const wcstring &name, wcstring &out )
     out.append(L"function ");
     out.append(name);
 
-	if( desc && wcslen(desc) )
+	if (! desc.empty())
 	{
-		wchar_t *esc_desc = escape( desc, 1 );
-
+        wcstring esc_desc = escape_string(desc, true);
 		out.append(L" --description ");
-        out.append( esc_desc );
-		free( esc_desc );
+        out.append(esc_desc);
 	}
 
 	if( !function_get_shadows( name ) )

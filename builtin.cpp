@@ -1451,7 +1451,9 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 }
 
 /** The echo builtin.
-    bash only respects -n if it's the first argument. We'll do the same. */
+    bash only respects -n if it's the first argument. We'll do the same.
+    We also support a new option -s to mean "no spaces"
+*/
 
 static int builtin_echo( parser_t &parser, wchar_t **argv )
 {
@@ -1459,19 +1461,26 @@ static int builtin_echo( parser_t &parser, wchar_t **argv )
     if (! *argv++)
         return STATUS_BUILTIN_ERROR;
     
-    /* Process -n */
-    bool show_newline = true;
-    if (*argv && ! wcscmp(*argv, L"-n")) {
-        show_newline = false;
-        argv++;
+    /* Process options */
+    bool print_newline = true, print_spaces = true;
+    while (*argv) {
+        if (! wcscmp(*argv, L"-n")) {
+            print_newline = false;
+            argv++;
+        } else if (! wcscmp(*argv, L"-s")) {
+            print_spaces = false;
+            argv++;
+        } else {
+            break;
+        }
     }
-    
+        
     for (size_t idx = 0; argv[idx]; idx++) {
-        if (idx > 0)
+        if (print_spaces && idx > 0)
             stdout_buffer.push_back(' ');
         stdout_buffer.append(argv[idx]);
     }
-    if (show_newline)
+    if (print_newline)
         stdout_buffer.push_back('\n');
     return STATUS_BUILTIN_OK;
 }

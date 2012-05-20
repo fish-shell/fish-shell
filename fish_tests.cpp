@@ -649,7 +649,7 @@ static bool run_test_test(int expected, const wcstring &str) {
 
 static void test_test() {
     say(L"Testing test builtin");
-    
+
     assert(run_test_test(0, L"5 -ne 6"));
     assert(run_test_test(0, L"5 -eq 5"));
     assert(run_test_test(0, L"0 -eq 0"));
@@ -693,11 +693,14 @@ static void test_test() {
     assert(run_test_test(0, L"-d /bin/"));
     assert(run_test_test(1, L"-d /bin/ls"));
     
-    /* This failed at once point */
+    /* This failed at one point */
     assert(run_test_test(1, L"-d /bin -a 5 -eq 3"));
     assert(run_test_test(0, L"-d /bin -o 5 -eq 3"));
     assert(run_test_test(0, L"-d /bin -a ! 5 -eq 3"));
-        
+    
+    /* We didn't properly handle multiple "just strings" either */
+    assert(run_test_test(0, L"foo"));
+    assert(run_test_test(0, L"foo -a bar"));
 }
 
 /** Testing colors */

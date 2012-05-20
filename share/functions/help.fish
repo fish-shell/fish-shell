@@ -62,6 +62,12 @@ function help --description "Show help for the fish shell"
 				end
 			end
 		end
+
+		# On OS X, just use open
+		if test (uname) = Darwin
+			set fish_browser (which open)
+		end
+
 	end
 
 	if test -z $fish_browser

@@ -124,7 +124,7 @@ namespace test_expressions {
                 return &token_infos[i];
             }
         }
-        return &token_infos[0];
+        return &token_infos[0]; //unknown
     }
 
     
@@ -133,7 +133,7 @@ namespace test_expressions {
         <expr> = <combining_expr>
                  
         <combining_expr> = <unary_expr> and/or <combining_expr> |
-                           <combining_expr>
+                           <unary_expr>
         
         <unary_expr> = bang <unary_expr> |
                       <primary>
@@ -167,6 +167,7 @@ namespace test_expressions {
         expression *parse_parenthentical(unsigned int start, unsigned int end);
         expression *parse_unary_primary(unsigned int start, unsigned int end);
         expression *parse_binary_primary(unsigned int start, unsigned int end);
+        expression *parse_just_a_string(unsigned int start, unsigned int end);
         
         static expression *parse_args(const wcstring_list_t &args, wcstring &err);
     };
@@ -196,7 +197,7 @@ namespace test_expressions {
 
     typedef std::auto_ptr<expression> expr_ref_t;
 
-    /* Single argument like -n foo */
+    /* Single argument like -n foo or "just a string" */
     class unary_primary : public expression {
         public:
         wcstring arg;
@@ -348,6 +349,62 @@ namespace test_expressions {
         return new unary_primary(info->tok, range_t(start, start + 2), arg(start + 1));
     }
     
+    expression *test_parser::parse_just_a_string(unsigned int start, unsigned int end) {
+        /* Handle a string as a unary primary that is not a token of any other type.
+           e.g. 'test foo -a bar' should evaluate to true
+           We handle this with a unary primary of test_string_n
+        */
+        
+        /* We need one arguments */
+        if (start >= end) {
+            return error(L"Missing argument at index %u", start);
+        }
+        
+        const token_info_t *info = token_for_string(arg(start));
+        if (info->tok != test_unknown) {
+            return error(L"Unexpected argument type at index %u", start);
+        }
+        
+        /* This is hackish; a nicer way to implement this would be with a "just a string" expression type */
+        return new unary_primary(test_string_n, range_t(start, start + 1), arg(start));
+    }
+    
+#if 0
+    expression *test_parser::parse_unary_primary(unsigned int start, unsigned int end) {
+        /* We need either one or two arguments */
+        if (start >= end) {
+            return error(L"Missing argument at index %u", start);
+        }
+        
+        /* The index of the argument to the unary primary */
+        unsigned int arg_idx;
+        
+        /* All our unary primaries are prefix, so any operator is at start. But it also may just be a string, with no operator. */
+        const token_info_t *info = token_for_string(arg(start));
+        if (info->flags & UNARY_PRIMARY) {
+            /* We have an operator. Skip the operator argument */
+            arg_idx = start + 1;
+            
+            /* We have some freedom here...do we allow other tokens for the argument to operate on?
+               For example, should 'test -n =' work? I say yes. So no typechecking on the next token. */
+               
+        } else if (info->tok == test_unknown) {
+            /* "Just a string. */
+            arg_idx = start;
+        } else {
+            /* Here we don't allow arbitrary tokens as "just a string." I.e. 'test = -a =' should have a parse error. We could relax this at some point. */
+            return error(L"Parse error at argument index %u", start);
+        }
+        
+        /* Verify we have the argument we want, i.e. test -n should fail to parse */
+        if (arg_idx >= end) {
+            return error(L"Missing argument at index %u", arg_idx);
+        }
+        
+        return new unary_primary(info->tok, range_t(start, arg_idx + 1), arg(arg_idx));
+    }
+#endif
+    
     expression *test_parser::parse_binary_primary(unsigned int start, unsigned int end) {
         /* We need three arguments */
         for (unsigned int idx = start; idx < start + 3; idx++) {
@@ -404,6 +461,7 @@ namespace test_expressions {
         if (! expr) expr = parse_parenthentical(start, end);
         if (! expr) expr = parse_unary_primary(start, end);
         if (! expr) expr = parse_binary_primary(start, end);
+        if (! expr) expr = parse_just_a_string(start, end);
         return expr;
     }
 

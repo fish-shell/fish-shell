@@ -1,0 +1,84 @@
+<head>
+<title>fishfish shell release notes</title>
+<style type="text/css">
+.mono {
+	font-family: Courier, "Courier New", monospace;
+	font-size: 10pt;
+}
+
+li {
+	margin-top: 12px;
+}
+</style>
+</head><body>
+<h2>Release Notes for <i>fishfish</i> Beta r1</h2>
+
+<h3>Scripting</h3>
+<ul>
+	<li>No changes! All existing fish scripts, config files, completions, etc. from trunk should continue to work.</li>
+</ul>
+
+<h3>New Features</h3>
+<ul>
+
+<li><b>Autosuggestions</b>. Think URL fields in browsers. When you type a command, fish will suggest the rest of the command after the cursor, in a muted gray when possible. You can accept the suggestion with the right arrow key or Ctrl-F. Suggestions come from command history, completions, and some custom code for cd; there's a lot of potential for improvement here. The suggestions are computed on a background pthread, so they never slow down your typing.
+
+The autosuggestion feature is incredible. I miss it dearly every time I use anything else.</li>
+
+<li><b>term256 support</b> where available, specifically modern xterms and OS X Lion. You can specify colors the old way ('set_color cyan') or by specifying RGB hex values ('set_color FF3333'); fish will pick the closest supported color. Some xterms do not advertise term256 support either in the $TERM or terminfo max_colors field, but nevertheless support it. For that reason, fish will default into using it on any xterm (but it can be disabled with an environment variable).</li>
+
+<li><b>Web-based configuration</b> page. There is a new function 'fish_config'. This spins up a simple Python web server and opens a browser window to it. From this web page, you can set your shell colors and view your functions, variables, and history; all changes apply immediately to all running shells. Eventually all configuration ought to be supported via this mechanism (but in addition to, not instead of, command line mechanisms).</li>
+
+<li><b>Man page completions</b>. There is a new function 'fish_update_completions'. This function reads all the man1 files from your manpath, removes the roff formatting, parses them to find the commands and options, and outputs fish completions into ~/.config/fish/completions. It won't overwrite existing completion files (except ones that it generated itself).</li>
+
+</ul>
+
+<h3>Programmatic Changes</h3>
+
+<ul>
+
+<li>fish is now entirely in C++. I have no particular love for C++, but it provides a ready memory-model to replace halloc. We've made an effort to keep it to a sane and portable subset (no C++11, no boost, no going crazy with templates or smart pointers), but we do use the STL and a little tr1.</li>
+
+<li>halloc is entirely gone, replaced by normal C++ ownership semantics. If you don't know what halloc is, well, now you have two reasons to be happy.</li>
+
+<li>All the crufty C data structures are entirely gone. array_list_t, priority_queue_t, hash_table_t, string_buffer_t have been removed and replaced by STL equivalents like std::vector, std::map, and std::wstring. A lot of the string handling now uses std::wstring instead of wchar_t *</li>
+
+<li>fish now spawns pthreads for tasks like syntax highlighting that require blocking I/O.</li>
+
+<li>History has been completely rewritten. History files now use an extensible YAML-style syntax. History "merging" (multiple shells writing to the same history file) now works better. There is now a maximum history length of about 250k items (256 * 1024).</li>
+
+<li>The parser has been "instanced," so you can now create more than one.</li>
+
+<li>Total #LoC has shrunk slightly even with the new features.</li>
+</ul>
+
+<h3>Performance</h3>
+
+<ul>
+
+<li>fish now runs syntax highlighting in a background thread, so typing commands is always responsive even on slow filesystems.</li>
+
+<li>echo, test, and pwd are now builtins, which eliminates many forks.</li>
+
+<li>The files in share/functions and share/completions now get 'internalized' into C strings that get compiled in with fish. This substantially reduces the number of files touched at startup. A consequence is that you cannot change these functions without recompiling, but often other functions depend on these "standard" functions, so changing them is perhaps not a good idea anyways.</li>
+</ul>
+
+<p>Here are some system call counts for launching and then exiting fish with the default configuration, on OS X. The first column is fish trunk, the next column is with our changes, and the last column is bash for comparison. This data was collected via dtrace.
+
+<pre>
+           before   after    bash    
+  open          9       4       5
+  fork         28      14       0
+  stat        131      85      11
+ lstat        670       0       0
+  read        332      80       4
+ write        172     149       0
+</pre>
+
+<p>The large number of forks relative to bash are due to fish's insanely expensive default prompt, which is unchanged in my version. If we switch to a prompt comparable to bash's (lame) default, the forks drop to 16 with trunk, 4 after our changes.
+
+<p>The large reduction in lstat() numbers is due to fish no longer needing to call ttyname() on OS X.
+
+<p>We've got some work to do to be as lean as bash, but we're on the right track.
+
+</body></html>

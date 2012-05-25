@@ -14,4 +14,5 @@ autoconf
 ./configure
 make -j 3
 sudo checkinstall --default --pakdir ~/fish_built/ --pkgversion 0.9 make install
+mv ~/fish_built/fishfish_0.9-1_i386.deb ~/fish_built/fishfish_0.9_i386.deb
 

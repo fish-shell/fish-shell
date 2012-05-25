@@ -1,0 +1,5 @@
+\section fish_config fish_config - Start up the web-based configuration interface
+
+\subsection fish_config-description Description
+
+This command starts up the web-based configuration interface, which allows you to edit your colors and view your functions, variables, and history.

@@ -3,11 +3,15 @@
 # Terminate on error
 set -e
 
-rm -Rf /tmp/fish_fish_deb
-mkdir /tmp/fish_fish_deb
-git archive --format=tar fish_fish | tar -x -C /tmp/fish_fish_deb
-cd /tmp/fish_fish_deb
+sudo rm -Rf /tmp/fishfish
+mkdir /tmp/fishfish
+git archive --format=tar fish_fish | tar -x -C /tmp/fishfish
+mkdir /tmp/fishfish/doc-pak
+cp README INSTALL CHANGELOG release_notes.html /tmp/fishfish/doc-pak/
+cp build_tools/description-pak /tmp/fishfish/
+cd /tmp/fishfish
 autoconf
 ./configure
-make
-sudo checkinstall make install
+make -j 3
+sudo checkinstall --default --pakdir ~/fish_built/ --pkgversion 0.9 make install
+

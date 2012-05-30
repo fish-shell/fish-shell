@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import sys
-import commands
+try:
+  import commands
+except ImportError:
+  import subprocess
 import re
 
 # Regexes for performing cleanup
@@ -12,13 +15,13 @@ cl = { re.compile(r"-[ \t]*\n[ \t\r]+" ):"",
        re.compile(r"[ \n\t\r]$"):"" }
 
 def header(cmd):
-  print '''#
-# Command specific completions for the %s command.
+  print('''#
+# Command specific completions for the {0} command.
 # These completions were generated from the commands
 # man page by the make_completions.py script, but may
 # have been hand edited since.
 #
-''' % (cmd)
+'''.format(cmd))
 
 def up_first(s):
   return s[0].upper() + s[1:]
@@ -57,13 +60,16 @@ def print_completion( cmd, switch_arr, arg, desc ):
 
   res += " --description '%s'" % (up_first(escape_quotes(clean(desc))))
 
-  print res
+  print(res)
 
 cmd = sys.argv[1]
 
 header(cmd)
 
-man = commands.getoutput( "man %s | col -b" % cmd )
+try:
+  man = commands.getoutput( "man %s | col -b".format(cmd))
+except NameError:
+  man = subprocess.getoutput( "man %s | col -b".format(cmd))
 
 remainder = man
 
@@ -152,7 +158,7 @@ for c in man:
       desc += c
 
   else:
-    print "Unknown mode", mode
+    print("Unknown mode {0}".format(mode))
 
   pc = c
 

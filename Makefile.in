@@ -331,7 +331,7 @@ prof:
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC)
 	$(MAKE) doc.h $(HDR_FILES)
-	doxygen Doxyfile.user ; true
+	- doxygen Doxyfile.user
 	touch user_doc
 
 
@@ -519,13 +519,15 @@ share/man: $(HELP_SRC)
 		cat $$i >>$$FILE; \
 		echo "*/" >>$$FILE; \
 	done
-	doxygen Doxyfile.help
-	for i in $(HELP_SRC); do \
-		CMD_NAME=`basename $$i .txt`; \
-		sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <help_doc/man/man1/$$CMD_NAME.1 >share/man/$$CMD_NAME.1; \
-	done
+	if command -v doxygen; then \
+		doxygen Doxyfile.help ; \
+		for i in $(HELP_SRC); do \
+			CMD_NAME=`basename $$i .txt`; \
+			sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <help_doc/man/man1/$$CMD_NAME.1 >share/man/$$CMD_NAME.1; \
+		done \
+	fi
 	rm doc_src/*.doxygen   # Clean up intermediate files in doc_src/
-	rm -r help_doc         # Clean up intermediate help_doc tree
+	rm -rf help_doc         # Clean up intermediate help_doc tree
 
 #
 # The build rules for installing/uninstalling fish

@@ -97,7 +97,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 		# Regular syntax highlighting colors
 		set_default fish_color_normal normal
-		set_default fish_color_command green
+		set_default fish_color_command 005fd7
+		set_default fish_color_param 00afff
 		set_default fish_color_redirection normal
 		set_default fish_color_comment red
 		set_default fish_color_error red --bold

@@ -2,7 +2,7 @@
 
 rm -rf /tmp/fish_pkg
 mkdir -p /tmp/fish_pkg/
-if make install prefix=/tmp/fish_pkg/usr/local/
+if make DESTDIR=/tmp/fish_pkg install
 then
 	echo "Root written to /tmp/fish_pkg/"
 	if /Developer/usr/bin/packagemaker --doc ./build_tools/fish_shell.pmdoc --out ~/fish_built/fishfish.pkg

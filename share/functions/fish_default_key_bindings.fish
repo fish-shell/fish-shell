@@ -31,8 +31,10 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 
 	bind \e\[H beginning-of-line
 	bind \e\[F end-of-line
-	bind -k home beginning-of-line
-	bind -k end end-of-line
+
+	# OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
+	bind -k home beginning-of-line 2> /dev/null
+	bind -k end end-of-line 2> /dev/null
 
 	bind \e\eOC nextd-or-forward-word
 	bind \e\eOD prevd-or-backward-word

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 
 import string, sys, os.path
@@ -47,16 +47,20 @@ class cfunc:
 		
 	def cdef(self):
 		result = ""
-		result += "static const char * const %s = \n\t" % self.cfunc_name()
+		result += "static const char * const {0} = \n\t".format(self.cfunc_name())
 		result += '\n\t'.join(self.lines)
 		result += ';\n'
 		return result
 
 	def cfunc_name(self):
 		# Translate - and . to underscore
-		translator = string.maketrans('-.', '__')
-		munged_name = string.translate(self.name, translator)
-		return "%s_%s" % (self.type, munged_name)
+		try: #Python 2
+			translator = string.maketrans('-.', '__')
+			munged_name = string.translate(self.name, translator)
+		except AttributeError: #Python 3
+			translator = "".maketrans('-.', '__')
+			munged_name = self.name.translate(translator)
+		return "{0}_{1}".format(self.type, munged_name)
 
 TYPES = ['function', 'completion']
 type_to_funcs = dict((t, []) for t in TYPES)
@@ -71,7 +75,7 @@ for file in sys.argv[1:]:
 	# Try to figure out the file type (completion or function)
 	matches = [dir in dirname for dir in TYPES]
 	if matches.count(True) is not 1:
-		print "Cannot determine the type of the file at path %s" % file
+		print("Cannot determine the type of the file at path {0}".format(file))
 		sys.exit(-1)
 	type = TYPES[matches.index(True)]
 	
@@ -81,7 +85,7 @@ for file in sys.argv[1:]:
 	type_to_funcs[type].append(newfunc)
 
 # Sort our functions by name
-for funcs in type_to_funcs.itervalues():
+for funcs in type_to_funcs.values():
 	funcs.sort(key=cfunc.cfunc_name)
 
 # Output our header
@@ -97,7 +101,7 @@ fd.write('\n')
 for type in TYPES:
 	funcs = type_to_funcs[type]
 	fd.write('\n')
-	fd.write('extern const struct builtin_script_t internal_%s_scripts[%d];' % (type, len(funcs)))
+	fd.write('extern const struct builtin_script_t internal_{0}_scripts[{1}];'.format(type, len(funcs)))
 	fd.write('\n')
 fd.close()
 
@@ -113,8 +117,8 @@ for type in TYPES:
 # Output the refs
 for type in TYPES:
 	funcs = type_to_funcs[type]
-	func_refs = ["{L%s, %s}" % (stringize(func.name), func.cfunc_name()) for func in funcs]
-	fd.write('const struct builtin_script_t internal_%s_scripts[%d] =\n' % (type, len(funcs)))
+	func_refs = ["{0}L{1}, {2}{3}".format("{", stringize(func.name), func.cfunc_name(), "}") for func in funcs]
+	fd.write('const struct builtin_script_t internal_{0}_scripts[{1}] =\n'.format(type, len(funcs)))
 	fd.write('{\n\t')
 	fd.write(',\n\t'.join(func_refs))
 	fd.write('\n};\n')

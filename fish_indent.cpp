@@ -65,8 +65,7 @@ static void read_file( FILE *f, wcstring &b )
 			
 			break;
 		}
-		
-		b.push_back(c);
+		b.push_back((wchar_t)c);
 	}
 }
 
@@ -75,7 +74,7 @@ static void read_file( FILE *f, wcstring &b )
  */
 static void insert_tabs( wcstring &out, int indent )
 {
-    out.append(L'\t', indent);
+    out.append(indent, L'\t');
 	
 }
 

@@ -18,6 +18,7 @@ The classes responsible for autoloading functions and completions.
 static const int kAutoloadStalenessInterval = 15;
 
 file_access_attempt_t access_file(const wcstring &path, int mode) {
+    //printf("Touch %ls\n", path.c_str());
     file_access_attempt_t result = {0};
     struct stat statbuf;
     if (wstat(path, &statbuf)) {

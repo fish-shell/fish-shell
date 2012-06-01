@@ -168,8 +168,14 @@ GENERATED_INTERN_SCRIPT_FILES := builtin_scripts.h builtin_scripts.cpp
 
 # Use a pattern rule so that Make knows to only issue one invocation
 # per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
+
+# Internalized scripts are currently disabled.
+# For now, we just generate empty arrays.
+# To generate them again, you would run this:
+# ./internalize_scripts.py share/functions/*.fish share/completions/*.fish
+
 builtin%scripts.h builtin%scripts.cpp: internalize_scripts.py
-	./internalize_scripts.py share/functions/*.fish share/completions/*.fish
+	./internalize_scripts.py
 
 
 #

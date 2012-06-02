@@ -1956,10 +1956,28 @@ int parser_t::parse_job( process_t *p,
 				p->actual_cmd = path_get_path( args.at(0).completion.c_str() );
 				err = errno;
 				
-				/*
-				  Check if the specified command exists
-				*/
-				if( p->actual_cmd == NULL )
+                bool use_implicit_cd = false;
+                if (p->actual_cmd == NULL)
+                {
+                    /* If the specified command does not exist, try using an implicit cd. */
+                    wcstring implicit_cd_path;
+                    use_implicit_cd = path_can_be_implicit_cd(args.at(0).completion, &implicit_cd_path);
+                    if (use_implicit_cd)
+                    {
+                        args.clear();
+                        args.push_back(completion_t(L"cd"));
+                        args.push_back(completion_t(implicit_cd_path));
+                        
+                        /* If we have defined a wrapper around cd, use it, otherwise use the cd builtin */
+                        if (use_function && function_exists(L"cd"))
+                            p->type = INTERNAL_FUNCTION;
+                        else
+                            p->type = INTERNAL_BUILTIN;
+                    }
+                }
+                
+				/* Check if the specified command exists */
+				if( p->actual_cmd == NULL && ! use_implicit_cd )
 				{
                     
 					int tmp;

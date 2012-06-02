@@ -1351,20 +1351,11 @@ static wchar_t * expand_tilde_internal_compat( wchar_t *in )
 
 void expand_tilde( wcstring &input)
 {
-	if( input[0] == L'~' )
+	if( ! input.empty() && input.at(0) == L'~' )
 	{
-		input[0] = HOME_DIRECTORY;
+		input.at(0) = HOME_DIRECTORY;
 		expand_tilde_internal( input );
 	}
-}
-
-wchar_t * expand_tilde_compat( wchar_t *input )
-{
-    if (input[0] == L'~') {
-        input[0] = HOME_DIRECTORY;
-        return expand_tilde_internal_compat(input);
-    }
-    return input;
 }
 
 /**

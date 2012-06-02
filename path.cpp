@@ -431,13 +431,38 @@ wchar_t *path_allocate_cdpath( const wcstring &dir, const wchar_t *wd )
 }
 
 
-bool path_can_get_cdpath(const wcstring &in, const wchar_t *wd) {
+bool path_can_get_cdpath(const wcstring &in, const wchar_t *wd)
+{
     wchar_t *tmp = path_allocate_cdpath(in, wd);
     bool result = (tmp != NULL);
     free(tmp);
     return result;
 }
 
+bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wchar_t *wd)
+{
+    wcstring exp_path = path;
+    expand_tilde(exp_path);
+    
+    bool result = false;
+    if (string_prefixes_string(L"/", exp_path) ||
+        string_prefixes_string(L"./", exp_path) ||
+        string_prefixes_string(L"../", exp_path) ||
+        exp_path == L"..")
+    {
+        /* These paths can be implicit cd. Note that a single period cannot (that's used for sourcing files anyways) */
+        wchar_t *cd_path = path_allocate_cdpath(exp_path, wd);
+        if (cd_path)
+        {
+            /* It worked. Return the path if desired */
+            if (out_path)
+                out_path->assign(cd_path);
+            free(cd_path);
+            result = true;
+        }
+    }
+    return result;
+}
 
 bool path_get_config(wcstring &path)
 {

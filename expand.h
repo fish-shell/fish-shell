@@ -162,7 +162,6 @@ wcstring expand_escape_variable( const wcstring &in );
    \param input the string to tilde expand
 */
 void expand_tilde(wcstring &input);
-wchar_t * expand_tilde_compat( wchar_t *input );
 
 
 /**

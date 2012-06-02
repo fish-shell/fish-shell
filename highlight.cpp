@@ -916,7 +916,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 					}
 					else
 					{
-						int is_cmd = 0;
+						bool is_cmd = false;
 						int is_subcommand = 0;
 						int mark = tok_get_pos( &tok );
 						color.at(tok_get_pos( &tok )) = HIGHLIGHT_COMMAND;
@@ -984,11 +984,11 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 							 function, since we don't have to stat
 							 any files for that
 							 */
-							if( use_builtin )
-								is_cmd = is_cmd || builtin_exists( cmd );
+							if (! is_cmd && use_builtin )
+								is_cmd = builtin_exists( cmd );
 							
-							if( use_function )
-								is_cmd = is_cmd || function_exists_no_autoload( cmd, vars );
+							if (! is_cmd && use_function )
+								is_cmd = function_exists_no_autoload( cmd, vars );
 							
 							/*
 							 Moving on to expensive tests
@@ -997,12 +997,19 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 							/*
 							 Check if this is a regular command
 							 */
-							if( use_command )
+							if (! is_cmd && use_command )
                             {
                                 wcstring tmp;
-								is_cmd = is_cmd || path_get_path_string( cmd, tmp, vars );
+								is_cmd = path_get_path_string( cmd, tmp, vars );
                             }
 							
+                            /* Maybe it is a path for a implicit cd command. */
+                            if (! is_cmd)
+                            {
+                                if (use_builtin || (use_function && function_exists_no_autoload( L"cd", vars)))
+                                    is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str());
+                            }
+                            
 							if( is_cmd )
 							{								
 								color.at(tok_get_pos( &tok )) = HIGHLIGHT_COMMAND;
@@ -1181,7 +1188,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 }
 
 
-// PCA DOES_IO (calls is_potential_path, path_get_path, maybe others)
+// PCA This function does I/O, (calls is_potential_path, path_get_path, maybe others) and so ought to only run on a background thread
 void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
 {
     ASSERT_IS_BACKGROUND_THREAD();

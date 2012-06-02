@@ -672,6 +672,13 @@ void reader_init()
     shell_modes.c_cc[VMIN]=1;
     shell_modes.c_cc[VTIME]=0;
     
+    // PCA disable VDSUSP (typically control-Y), which is a funny job control
+    // function available only on OS X and BSD systems
+    // This lets us use control-Y for yank instead
+    #ifdef VDSUSP
+    shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;  
+    #endif
+    
     /* Repaint if necessary before each byte is read. This lets us react immediately to universal variable color changes. */
     input_common_set_poll_callback(reader_repaint_if_needed);
 }

@@ -434,8 +434,8 @@ static wint_t input_exec_binding( const input_mapping_t &m, const wcstring &seq 
 */
 static wint_t input_try_mapping( const input_mapping_t &m)
 {
-	int j, k;
 	wint_t c=0;
+	int j;
 
 	/*
 	  Check if the actual function code of this mapping is on the stack
@@ -448,15 +448,22 @@ static wint_t input_try_mapping( const input_mapping_t &m)
 	input_unreadch( c );
 
     const wchar_t *str = m.seq.c_str();
-    for( j=0; str[j] != L'\0' && str[j] == (c=input_common_readch( j>0 )); j++ )
-        ;
+    for (j=0; str[j] != L'\0'; j++)
+    {
+        bool timed = (j > 0);
+        c = input_common_readch(timed);
+        if (str[j] != c)
+            break;
+    }
     
     if( str[j] == L'\0' )
     {
+        /* We matched the entire sequence */
         return input_exec_binding( m, m.seq );
     }
     else
     {
+        int k;
         /*
           Return the read characters
         */

@@ -11,6 +11,19 @@ li {
 }
 </style>
 </head><body>
+<h2>Release Notes for <i>fishfish</i> Beta r2</h2>
+
+<h3>Bug Fixes</h3>
+<ul>
+<li><b>Implicit cd</b> is back, for paths that start with one or two dots, a slash, or a tilde.</li>
+<li><b>Overrides of default functions should be fixed</b>. The "internalized scripts" feature is disabled for now.</li>
+<li><b>Disabled delayed suspend</b>. This is a strange job-control feature of BSD systems, including OS X. Disabling it frees up Control Y for other purposes; in particular, for yank, which now works on OS X.</li>
+<li><b>fish_indent is fixed</b>. In particular, the <span class="mono">funced</span> and <span class="mono">funcsave</span> functions work again.
+</ul>
+
+
+<hr>
+
 <h2>Release Notes for <i>fishfish</i> Beta r1</h2>
 
 <h3>Scripting</h3>

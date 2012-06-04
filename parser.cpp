@@ -391,10 +391,12 @@ void parser_t::skip_all_blocks(void)
     /* Tell all blocks to skip */
     if (s_principal_parser)
     {
+        //write(2, "Cancelling blocks\n", strlen("Cancelling blocks\n"));
         block_t *c = s_principal_parser->current_block;
         while( c )
         {
             c->skip = true;
+            //fprintf(stderr, "   Cancelled %p\n", c);
             c = c->outer;
         }
     }
@@ -2292,7 +2294,7 @@ void parser_t::eval_job( tokenizer *tok )
     
     
     profile_item_t *profile_item = NULL;
-	int skip = 0;
+	bool skip = false;
 	int job_begin_pos, prev_tokenizer_pos;
 	const bool do_profile = profile;
     
@@ -2333,7 +2335,6 @@ void parser_t::eval_job( tokenizer *tok )
 			}
 
 			j->first_process = new process_t();
-
 			job_begin_pos = tok_get_pos( tok );
 			
 			if( parse_job( j->first_process, j, tok ) &&
@@ -2358,9 +2359,9 @@ void parser_t::eval_job( tokenizer *tok )
 					profile_item->skipped=current_block->skip;
 				}
 				
-				skip |= current_block->skip;
-				skip |= job_get_flag( j, JOB_WILDCARD_ERROR );
-				skip |= job_get_flag( j, JOB_SKIP );
+				skip = skip || current_block->skip;
+				skip = skip || job_get_flag( j, JOB_WILDCARD_ERROR );
+				skip = skip || job_get_flag( j, JOB_SKIP );
 				
 				if(!skip )
 				{
@@ -2396,7 +2397,9 @@ void parser_t::eval_job( tokenizer *tok )
 					{
 						case WHILE_TEST_FIRST:
 						{
-							current_block->skip = proc_get_last_status()!= 0;
+							// PCA I added the 'current_block->skip ||' part because we couldn't reliably
+							// control-C out of loops like this: while test 1 -eq 1; end
+							current_block->skip = current_block->skip || proc_get_last_status()!= 0;
 							current_block->state1<int>()=WHILE_TESTED;
 						}
 						break;

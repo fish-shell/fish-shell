@@ -371,12 +371,33 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     
 }
 
+/* A pointer to the principal parser (which is a static local) */
+static parser_t *s_principal_parser = NULL;
+
 parser_t &parser_t::principal_parser(void)
 {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
     static parser_t parser(PARSER_TYPE_GENERAL, true);
+    if (! s_principal_parser)
+    {
+        s_principal_parser = &parser;
+    }
     return parser;
+}
+
+void parser_t::skip_all_blocks(void)
+{
+    /* Tell all blocks to skip */
+    if (s_principal_parser)
+    {
+        block_t *c = s_principal_parser->current_block;
+        while( c )
+        {
+            c->skip = true;
+            c = c->outer;
+        }
+    }
 }
 
 /**

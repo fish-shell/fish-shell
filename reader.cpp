@@ -493,19 +493,12 @@ static void reader_kill( size_t begin_idx, int length, int mode, int newv )
 	
 }
 
+/* This is called from a signal handler! */
 void reader_handle_int( int sig )
 {
-    //PCA INSTANCED_PARSER what is this?
-	block_t *c = NULL;//current_block;
-	
 	if( !is_interactive_read )
 	{
-		while( c )
-		{
-			c->type=FAKE;
-			c->skip=1;
-			c=c->outer;
-		}
+        parser_t::skip_all_blocks();
 	}
 	
 	interrupted = 1;

@@ -66,7 +66,8 @@ static int active_list=0;
 typedef std::vector<event_t *> event_list_t; 
 
 /**
-   List of event handlers
+   List of event handlers.
+   Note this is inspected by our signal handler, so we must block signals around manipulating it.
 */
 static event_list_t events;
 /**
@@ -246,8 +247,11 @@ void event_add_handler( const event_t *event )
 	{
 		signal_handle( e->param1.signal, 1 );
 	}
-
-    events.push_back(e);    
+    
+    // Block around updating the events vector
+    signal_block();
+    events.push_back(e);
+    signal_unblock();
 }
 
 void event_remove( event_t *criterion )
@@ -296,7 +300,9 @@ void event_remove( event_t *criterion )
             new_list.push_back(n);
 		}
 	}
+    signal_block();
 	events.swap(new_list);
+    signal_unblock();
 }
 
 int event_get( event_t *criterion, std::vector<event_t *> *out )
@@ -320,6 +326,28 @@ int event_get( event_t *criterion, std::vector<event_t *> *out )
 		}		
 	}
 	return found;
+}
+
+bool event_is_signal_observed(int sig)
+{
+    /* We are in a signal handler! Don't allocate memory, etc.
+       This does what event_match does, except it doesn't require passing in an event_t.
+    */
+    size_t i, max = events.size();
+    for (i=0; i < max; i++)
+    {
+        const event_t *event = events[i];
+        if (event->type == EVENT_ANY)
+        {
+            return true;
+        }
+        else if (event->type == EVENT_SIGNAL)
+        {
+            if( event->param1.signal == EVENT_ANY_SIGNAL || event->param1.signal == sig)
+                return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -519,26 +547,32 @@ static void event_fire_delayed()
 	}	
 }
 
+void event_fire_signal(int signal)
+{
+    /*
+      This means we are in a signal handler. We must be very
+      careful not do do anything that could cause a memory
+      allocation or something else that might be bad when in a
+      signal handler.
+    */
+    if( sig_list[active_list].count < SIG_UNHANDLED_MAX )
+        sig_list[active_list].signal[sig_list[active_list].count++]=signal;
+    else
+        sig_list[active_list].overflow=1;
+}
+
 
 void event_fire( event_t *event )
 {
-	is_event++;
 	
 	if( event && (event->type == EVENT_SIGNAL) )
 	{
-		/*
-		  This means we are in a signal handler. We must be very
-		  careful not do do anything that could cause a memory
-		  allocation or something else that might be bad when in a
-		  signal handler.
-		*/
-		if( sig_list[active_list].count < SIG_UNHANDLED_MAX )
-			sig_list[active_list].signal[sig_list[active_list].count++]=event->param1.signal;
-		else
-			sig_list[active_list].overflow=1;
+        event_fire_signal(event->param1.signal);
 	}
 	else
 	{
+        is_event++;
+
 		/*
 		  Fire events triggered by signals
 		*/
@@ -555,9 +589,8 @@ void event_fire( event_t *event )
 				event_fire_internal( event );
 			}
 		}
-		
+        is_event--;
 	}	
-	is_event--;
 }
 
 
@@ -569,10 +602,10 @@ void event_destroy()
 {
 
     for_each(events.begin(), events.end(), event_free);
-    events.resize(0);
+    events.clear();
     
     for_each(killme.begin(), killme.end(), event_free);
-    killme.resize(0);
+    killme.clear();
 }
 
 void event_free( event_t *e )

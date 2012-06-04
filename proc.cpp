@@ -399,11 +399,10 @@ static void mark_process_status( const job_t *j,
 */
 static void handle_child_status( pid_t pid, int status )
 {
-	int found_proc = 0;
+	bool found_proc = false;
 	const job_t *j=0;
 	process_t *p=0;
 //	char mess[MESS_SIZE];	
-	found_proc = 0;		
 	/*
 	  snprintf( mess, 
 	  MESS_SIZE,
@@ -413,7 +412,7 @@ static void handle_child_status( pid_t pid, int status )
 	*/
 
     job_iterator_t jobs;
-	while ((j = jobs.next()))
+	while (! found_proc && (j = jobs.next()))
 	{
 		process_t *prev=0;
 		for( p=j->first_process; p; p=p->next )
@@ -442,7 +441,7 @@ static void handle_child_status( pid_t pid, int status )
 						kill(prev->pid,SIGPIPE);
 					}
 				}
-				found_proc = 1;
+				found_proc = true;
 				break;
 			}
 			prev = p;
@@ -466,15 +465,10 @@ static void handle_child_status( pid_t pid, int status )
 		}
 		else
 		{
-            //PCA INSTANCED_PARSER what is this?
-			block_t *c = NULL;//parser.current_block;
+            /* In an interactive session, tell the principal parser to skip all blocks we're executing so control-C returns control to the user. */
 			if( p && found_proc )
 			{
-				while( c )
-				{
-					c->skip=1;
-					c=c->outer;
-				}		
+                parser_t::skip_all_blocks();
 			}			
 		}
 	}
@@ -499,6 +493,7 @@ static void handle_child_status( pid_t pid, int status )
 }
 
 
+/* This is called from a signal handler */
 void job_handle_signal ( int signal, siginfo_t *info, void *con )
 {
 	

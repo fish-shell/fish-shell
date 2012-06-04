@@ -123,6 +123,12 @@ void event_remove( event_t *event );
 int event_get( event_t *criterion, std::vector<event_t *> *out );
 
 /**
+    Returns whether an event listener is registered for the given signal.
+    This is safe to call from a signal handler.
+*/
+bool event_is_signal_observed(int signal);
+
+/**
    Fire the specified event. The function_name field of the event must
    be set to 0. If the event is of type EVENT_SIGNAL, no the event is
    queued, and will be dispatched the next time event_fire is
@@ -139,6 +145,9 @@ int event_get( event_t *criterion, std::vector<event_t *> *out );
    null, then all delayed events will be fired.
 */
 void event_fire( event_t *event );
+
+/** Like event_fire, but takes a signal directly. */
+void event_fire_signal(int signal);
 
 /**
    Initialize the event-handling library

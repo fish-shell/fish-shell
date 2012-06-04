@@ -1341,14 +1341,6 @@ static void expand_tilde_internal( wcstring &input )
 	}
 }
 
-static wchar_t * expand_tilde_internal_compat( wchar_t *in )
-{
-    wcstring tmp = in;
-    expand_tilde_internal(tmp);
-    free(in);
-    return wcsdup(tmp.c_str());
-}
-
 void expand_tilde( wcstring &input)
 {
 	if( ! input.empty() && input.at(0) == L'~' )

@@ -332,6 +332,11 @@ class parser_t {
     /** Get the "principal" parser, whatever that is */
     static parser_t &principal_parser();
     
+    /** Indicates that execution of all blocks in the principal parser should stop.
+        This is called from signal handlers!
+    */
+    static void skip_all_blocks();
+    
     /** Create a parser of the given type */
     parser_t(enum parser_type_t type, bool show_errors);
     

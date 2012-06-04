@@ -525,8 +525,8 @@ void path_make_canonical( wcstring &path )
         replace_all(path, L"//", L"/");
     } while (path.size() != size);
     
-    /* Remove trailing slashes */
-    while (size--) {
+    /* Remove trailing slashes, except don't remove the first one */
+    while (size-- > 1) {
         if (path.at(size) != L'/')
             break;
     }

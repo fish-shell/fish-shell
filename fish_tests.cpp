@@ -576,7 +576,14 @@ static void test_path()
 	if( canon != L"/foo/bar" )
 	{
 		err( L"Bug in canonical PATH code" );
-	}	
+	}
+    
+    path = L"/";
+    path_make_canonical(path);
+    if (path != L"/")
+    {
+		err( L"Bug in canonical PATH code" );
+    }
 }
 
 /** Test is_potential_path */

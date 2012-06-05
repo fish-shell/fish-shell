@@ -77,7 +77,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	# If we are starting up for the first time, set various defaults
 	#
 
-	if not set -q __fish_init_1_23_0
+	if not set -q __fish_init_1_50_0
 		if not set -q fish_greeting
 			set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
 			set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
@@ -97,15 +97,15 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 		# Regular syntax highlighting colors
 		set_default fish_color_normal normal
-		set_default fish_color_command 005fd7
-		set_default fish_color_param 00afff
+		set_default fish_color_command 005fd7 purple
+		set_default fish_color_param 00afff cyan
 		set_default fish_color_redirection normal
 		set_default fish_color_comment red
 		set_default fish_color_error red --bold
 		set_default fish_color_escape cyan
 		set_default fish_color_operator cyan
 		set_default fish_color_quote brown
-		set_default fish_color_autosuggestion 555
+		set_default fish_color_autosuggestion 555 yellow
 		set_default fish_color_valid_path --underline
 
 		set_default fish_color_cwd green

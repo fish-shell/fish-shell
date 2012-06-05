@@ -661,11 +661,14 @@ def parse_manpage_at_path(manpage_path, output_directory):
         fd = gzip.open(manpage_path, 'r')
     else:
         fd = open(manpage_path, 'r')
-    try:
+
+    try: #Utf-8 python3
         manpage = fd.read()
-    except UnicodeDecodeError:
-        return
+    except: #Latin-1 python3
+        fd = open(manpage_path, 'r', encoding='latin-1')
+        manpage = fd.read()
     fd.close()
+
     manpage = str(manpage)
     
     # Get the "base" command, e.g. gcc.1.gz -> gcc

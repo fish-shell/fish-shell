@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 <OWNER> = Siteshwar Vashisht 
@@ -130,7 +130,7 @@ def add_alias(alias_name, alias_value):
 			tokens = line.split(' ')
 			first_token = tokens[0].strip()
 			if first_token in bash_builtins:
-				print >> sys.stderr, first_token, " is a bash builtin"			
+				sys.stderr.write("{0} is a bash builtin".format(first_token, ))
 				if first_token == "export":
 					var_regex = re.compile("(.*?)=(.*)")	
 					var_regex_matched = re.search(var_regex, line[7:])
@@ -193,12 +193,10 @@ def add_to_echo(str, is_special=True):
 	
 	if (is_special == True):
 		if (quote_started == True):
-#			print "Ending Quote for", str
 			config_file.write('"')
 			quote_started = False
 	else:
 		if (quote_started == False):
-#			print "Starting Quote for", str
 			config_file.write('"')
 			quote_started = True
 
@@ -208,7 +206,6 @@ def check_end_quote():
 	global quote_started
 
 	if quote_started == True:
-#		print "Ending quote",
 		config_file.write('"')
 
 def parse_bash_prompt(bash_prompt):
@@ -285,11 +282,11 @@ def parse_bash_prompt(bash_prompt):
 			elif (ch2 == "["):
 				parse_control_sequence()
 			elif (ch2 ==  "]"):
-				print "Unexpected ]"
+				print("Unexpected ]")
 			elif (ch2 == "v" or ch2 == "V"):
 				add_to_echo("(fish -v 2>| cut -d\" \" -f3)")
 			else:
-				print "Unknown escape character"
+				print("Unknown escape character")
 		else:
 			add_to_echo(ch,False)
 		ch = next_prompt_char()
@@ -298,5 +295,5 @@ def parse_bash_prompt(bash_prompt):
 
 if __name__  == "__main__":
 	input = sys.stdin.read()
-	config_file = open( os.environ["HOME"] + "/.config/fish/bash_config.fish","a")
+	config_file = open("{0}/.config/fish/bash_config.fish".format(os.environ["HOME"]),"a")
 	parse_input(input)

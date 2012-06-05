@@ -44,30 +44,34 @@ function history --description "Deletes an item from history"
         
         set found_items_count (count $found_items)
         if test $found_items_count -gt 0 
-            printf "Delete which entries ?\n"
-            printf "[0] cancel\n"
-            printf "[1] all\n\n"
+            echo "[0] cancel"
+            echo "[1] all"
+            echo
             
             for i in (seq $found_items_count)
                 printf "[%s] %s \n" (math $i + 1) $found_items[$i]
-            end;
+            end
 
-            read choice
+            read --local --prompt "echo 'Delete which entries? > '" choice
             set choice (echo $choice | tr " " "\n") 
 
             for i in $choice
-                echo $i | grep -q "^[0-9]*\$"
-
+            	
+            	# Skip empty input; for example, if the user just hits return
+            	if test -z $i
+            		continue
+            	end
+            
                 #Following two validations could be embedded with "and" but I find the syntax kind of weird. 
-                if test $status -ne 0
+                if not echo $i | grep -q "^[0-9]+\$"
                     printf "Invalid input: %s\n" $i 
-                    continue; 
-                end;
+                    continue 
+                end
  
                 if test $i -gt (math $found_items_count + 1)
                     printf "Invalid input : %s\n" $i 
                     continue
-                end;
+                end
                 
                 if test $i = "0"
                     printf "Cancel\n"
@@ -76,7 +80,7 @@ function history --description "Deletes an item from history"
                     if test $i = "1"
                         for item in $found_items
                             builtin history --delete $item
-                        end;
+                        end
                         printf "Deleted all!\n"
                         return 
                     else

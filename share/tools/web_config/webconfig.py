@@ -37,6 +37,16 @@ def parse_one_color(comp):
         # Unknown
         return ''
 
+def better_color(c1, c2):
+	""" Indicate which color is "better", i.e. prefer term256 colors """
+	if not c2: return c1
+	if not c1: return c2
+	if c1 == 'normal': return c2
+	if c2 == 'normal': return c1
+	if c2 in named_colors: return c1
+	if c1 in named_colors: return c2
+	return c1
+	
 
 def parse_color(color_str):
     """ A basic function to parse a color string, for example, 'red' '--bold' """
@@ -53,11 +63,10 @@ def parse_color(color_str):
             underline = True
         elif comp.startswith('--background='):
             # Background color
-            background_color = parse_one_color(comp[len('--background='):])
+            background_color = better_color(background_color, parse_one_color(comp[len('--background='):]))
         else:
             # Regular color
-            maybe_color = parse_one_color(comp)
-            if maybe_color: color = maybe_color
+            color = better_color(color, parse_one_color(comp))
     
     return [color, background_color, bold, underline]
     

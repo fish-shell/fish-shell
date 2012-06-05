@@ -3661,6 +3661,7 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
         wcstring full_history;
         history->get_string_representation(full_history, wcstring(L"\n"));
         stdout_buffer.append(full_history);
+        stdout_buffer.push_back('\n');
         return STATUS_BUILTIN_OK;
     }
 

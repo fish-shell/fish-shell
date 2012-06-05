@@ -22,6 +22,18 @@ li {
 <li>A SIGTERM now ends the whole execution stack again (<a href="https://github.com/ridiculousfish/fishfish/issues/13">from this issue</a>).
 </ul>
 
+<h3>New Features</h3>
+<ul>
+<li>A <b>history builtin</b>, and associated interactive function that enables deleting history items. Example usage:
+	
+<ul>
+<li>Print all history items beginning with echo: <span class="mono">history --search --prefix echo</span></li>
+<li>Print all history items containing foo: <span class="mono">history --search --contains foo</span></li>
+<li>Interactively delete some items containing foo: <span class="mono">history --delete --contains foo</span></li>
+</ul><br>
+Credit to Siteshwar for implementation. Thanks Siteshwar!
+</li>
+
 
 <hr>
 

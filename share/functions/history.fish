@@ -53,8 +53,8 @@ function history --description "Deletes an item from history"
             end
 
             read --local --prompt "echo 'Delete which entries? > '" choice
-            set choice (echo $choice | tr " " "\n") 
-
+            set choice (echo $choice | tr " " "\n")
+            
             for i in $choice
             	
             	# Skip empty input; for example, if the user just hits return
@@ -63,7 +63,7 @@ function history --description "Deletes an item from history"
             	end
             
                 #Following two validations could be embedded with "and" but I find the syntax kind of weird. 
-                if not echo $i | grep -q "^[0-9]+\$"
+                if not echo $i | grep -E -q "^[0-9]+\$"
                     printf "Invalid input: %s\n" $i 
                     continue 
                 end

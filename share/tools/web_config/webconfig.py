@@ -1,7 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-import SimpleHTTPServer
-import SocketServer
+try: #Python2
+    import SimpleHTTPServer
+except ImportError: #Python3
+    import http.server as SimpleHTTPServer
+try: #Python2
+    import SocketServer
+except ImportError: #Python3
+    import socketserver as SocketServer
 import webbrowser
 import subprocess
 import re, json, socket, os, sys, cgi, select
@@ -9,8 +15,13 @@ import re, json, socket, os, sys, cgi, select
 def run_fish_cmd(text):
     from subprocess import PIPE
     p = subprocess.Popen(["fish"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    out, err = p.communicate(text)
-    return out, err
+    try: #Python2
+        out, err = p.communicate(text)
+    except TypeError: #Python3
+        out, err = p.communicate(bytes(text, 'utf-8'))        
+        out = str(out, 'utf-8')
+        err = str(err, 'utf-8')
+    return(out, err)
 
 named_colors = {
     'black'   : '000000',
@@ -139,6 +150,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
         out, err = run_fish_cmd('set -L')
         for line in out.split('\n'):
+
             for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(1, 2)]
                 color_desc = descriptions.get(color_name, '')
@@ -240,28 +252,53 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Return valid output
         self.send_response(200)
         self.send_header('Content-type','text/html')
-        self.wfile.write('\n')
+        try: #Python2
+            self.wfile.write('\n')
+        except TypeError: #Python3
+            self.wfile.write(bytes('\n', 'utf-8'))
         
         # Output JSON
-        json.dump(output, self.wfile)
+        try: #Python2
+            self.wfile.write(json.dumps(output))
+        except TypeError: #Python3
+            self.wfile.write(bytes(json.dumps(output), 'utf-8'))
         
     def do_POST(self):
         p = self.path
-        ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+        try: #Python2
+            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
+        except AttributeError: #Python3
+            ctype, pdict = cgi.parse_header(self.headers['content-type'])
         if ctype == 'multipart/form-data':
             postvars = cgi.parse_multipart(self.rfile, pdict)
         elif ctype == 'application/x-www-form-urlencoded':
-            length = int(self.headers.getheader('content-length'))
+            try:
+                length = int(self.headers.getheader('content-length'))
+            except AttributeError:
+                length = int(self.headers['content-length'])
             postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
         else:
             postvars = {}
-        
+
         if p == '/set_color/':
             what = postvars.get('what')
             color = postvars.get('color')
             background_color = postvars.get('background_color')
             bold = postvars.get('bold')
             underline = postvars.get('underline')
+
+            if what == None: #Will be None for python3
+                what = postvars.get(b'what')
+                what[0] = str(what[0]).lstrip("b'").rstrip("'")
+                color = postvars.get(b'color')
+                color[0] = str(color[0]).lstrip("b'").rstrip("'")
+                background_color = postvars.get(b'background_color')
+                background_color[0] = str(background_color[0]).lstrip("b'").rstrip("'")
+                bold = postvars.get(b'bold')
+                bold[0] = str(bold[0]).lstrip("b'").rstrip("'")
+                underline = postvars.get(b'underline')
+                underline[0] = str(underline[0]).lstrip("b'").rstrip("'")
+
             if what:
                 # Not sure why we get lists here?
                 output = self.do_set_color_for_variable(what[0], color[0], background_color[0], parse_bool(bold[0]), parse_bool(underline[0]))
@@ -269,6 +306,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 output = 'Bad request'
         elif p == '/get_function/':
             what = postvars.get('what')
+            if what == None: #Will be None for python3
+                what = postvars.get(b'what')
+                what[0] = str(what[0]).lstrip("b'").rstrip("'")
             output = [self.do_get_function(what[0])]
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_POST(self)
@@ -276,10 +316,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Return valid output
         self.send_response(200)
         self.send_header('Content-type','text/html')
-        self.wfile.write('\n')
+        try: #Python2
+            self.wfile.write('\n')
+        except TypeError: #Python3
+            self.wfile.write(bytes('\n', 'utf-8'))
         
         # Output JSON
-        json.dump(output, self.wfile)
+        try: #Python2
+            self.wfile.write(json.dumps(output))
+        except TypeError: #Python3
+            self.wfile.write(bytes(json.dumps(output), 'utf-8'))
 
     def log_request(self, code='-', size='-'):
         """ Disable request logging """
@@ -306,21 +352,21 @@ while PORT <= 9000:
 
 if PORT > 9000:
     # Nobody say it
-    print "Unable to find an open port between 8000 and 9000"
+    print("Unable to find an open port between 8000 and 9000")
     sys.exit(-1)
 
     
-url = 'http://localhost:%d' % PORT
+url = 'http://localhost:{0}'.format(PORT)
 
-print "Web config started at '%s'. Hit enter to stop." % url
+print("Web config started at '{0}'. Hit enter to stop.".format(url))
 webbrowser.open(url)
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()
 while True:
-    ready_read, _, _ = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
-    if stdin_no in ready_read:
-        print "Shutting down."
+    ready_read = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
+    if ready_read[0][0] < 1:
+        print("Shutting down.")
         # Consume the newline so it doesn't get printed by the caller
         sys.stdin.readline()
         break

@@ -7,7 +7,7 @@
 \
 The path to fish will be added to /etc/shells, but your default shell will not be modified. \
 \
-This release is beta r1.\
+This release is beta r2.\
 }]]></resource><resource mime-type="text/rtf" kind="embedded" type="conclusion"><![CDATA[{\rtf1\ansi\ansicpg1252\cocoartf1138\cocoasubrtf470
 {\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 Monaco;}
 {\colortbl;\red255\green255\blue255;}

@@ -316,9 +316,16 @@ void update_fish_term256(void)
         env_var_t term = env_get_string(L"TERM");
         if (term.missing()) {
             support_term256 = false;
+        } else if (term.find(L"256color") != wcstring::npos) {
+            /* Explicitly supported */
+            support_term256 = true;
+        } else if (term.find(L"xterm") != wcstring::npos) {
+            // assume that all xterms are 256, except for OS X SnowLeopard
+            env_var_t prog = env_get_string(L"TERM_PROGRAM");
+            support_term256 = (prog != L"Apple_Terminal");
         } else {
-            // assume that all xterms are 256
-            support_term256 = (term.find(L"256color") != wcstring::npos || term.find(L"xterm") != wcstring::npos);
+            // Don't know, default to false
+            support_term256 = false;
         }
     }
     output_set_supports_term256(support_term256);

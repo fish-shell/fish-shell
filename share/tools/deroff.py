@@ -782,7 +782,10 @@ class Deroffer:
             self.tr_to += ns
         
         # Update our table, then swap in the slower tr-savvy condputs
-        self.tr = string.maketrans(self.tr_from, self.tr_to)
+        try: #Python2
+            self.tr = string.maketrans(self.tr_from, self.tr_to)
+        except AttributeError: #Python3
+            self.tr = "".maketrans(self.tr_from, self.tr_to)
         self.condputs = self.condputs_tr
         return True
         
@@ -961,7 +964,10 @@ class Deroffer:
                 self.tr_to += ns
             
             # Update our table, then swap in the slower tr-savvy condputs
-            self.tr = string.maketrans(self.tr_from, self.tr_to)
+            try: #Python2
+                self.tr = string.maketrans(self.tr_from, self.tr_to)
+            except AttributeError: #Python3
+                self.tr = "".maketrans(self.tr_from, self.tr_to)
             self.condputs = self.condputs_tr
                 
             return True

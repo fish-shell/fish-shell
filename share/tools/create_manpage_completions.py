@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > man_completions.fish
@@ -575,7 +575,7 @@ class TypeDeroffManParser(ManParser):
             lines.pop(0)
         
         # Look for BUGS and stop there
-        for idx in xrange(len(lines)):
+        for idx in range(len(lines)):
             line = lines[idx]
             if line.startswith('BUGS'):
                 # Drop remaining elements
@@ -630,8 +630,8 @@ def file_missing_or_overwritable(path):
         file.close()
         return result
             
-    except IOError as (err, strerror):
-        if err == errno.ENOENT:
+    except IOError as err:
+        if err == 2:
             # File does not exist, full steam ahead
             return True
         else:
@@ -661,8 +661,12 @@ def parse_manpage_at_path(manpage_path, output_directory):
         fd = gzip.open(manpage_path, 'r')
     else:
         fd = open(manpage_path, 'r')
-    manpage = fd.read()
+    try:
+        manpage = fd.read()
+    except UnicodeDecodeError:
+        return
     fd.close()
+    manpage = str(manpage)
     
     # Get the "base" command, e.g. gcc.1.gz -> gcc
     cmd_base = CMDNAME.split('.', 1)[0]
@@ -708,8 +712,8 @@ def parse_manpage_at_path(manpage_path, output_directory):
                     else:
                         add_diagnostic("Not overwriting the file at '%s'" % fullpath)
                         
-                except IOError as (errno, strerror):
-                    add_diagnostic("Unable to open file '%s': error(%d): %s" % (fullpath, errno, strerror))
+                except IOError as err:
+                    add_diagnostic("Unable to open file '%s': error(%d): %s" % (fullpath, err.errno, err.strerror))
                     return False
             
             built_command_output.insert(0, "# %s: %s" % (CMDNAME, parser.name()))
@@ -729,28 +733,24 @@ def parse_manpage_at_path(manpage_path, output_directory):
             add_diagnostic('%s contains no options or is unparsable (tried parser %s)' % (manpage_path, parser_names), BRIEF_VERBOSE)
     return success
 
-def compare_paths(a, b):
-    """ Compare two paths by their base name, case insensitive """
-    return cmp(os.path.basename(a).lower(), os.path.basename(b).lower())
-
 def parse_and_output_man_pages(paths, output_directory, show_progress):
     global diagnostic_indent
-    paths.sort(compare_paths)
+    paths.sort()
     total_count = len(paths)
     successful_count, index = 0, 0
     padding_len = len(str(total_count))
     last_progress_string_length = 0
     if show_progress and not WRITE_TO_STDOUT:
-        print "Parsing man pages and writing completions to", output_directory
+        print("Parsing man pages and writing completions to {0}".format(output_directory))
     for manpage_path in paths:
         index += 1
         if show_progress:
             filename = os.path.basename(manpage_path).split('.', 1)[0]
-            progress_str = '  %s / %d : %s' % (str(index).rjust(padding_len), total_count, filename)
+            progress_str = '  {0} / {1} : {2}'.format((str(index).rjust(padding_len)), total_count, filename)
             # Pad on the right with spaces so we overwrite whatever we wrote last time
             padded_progress_str = progress_str.ljust(last_progress_string_length)
             last_progress_string_length = len(progress_str)
-            print padded_progress_str, chr(27) + '[A'
+            sys.stdout.write("\r\r{0} {1}".format(padded_progress_str, chr(27)))
         try:
             if parse_manpage_at_path(manpage_path, output_directory):
                 successful_count += 1
@@ -764,6 +764,7 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
             flush_diagnostics(sys.stderr)
             traceback.print_exc(file=sys.stderr)
         flush_diagnostics(sys.stderr)
+    print("") #Newline after loop
     add_diagnostic("Successfully parsed %d / %d pages" % (successful_count, total_count), BRIEF_VERBOSE)
     flush_diagnostics(sys.stderr)
 
@@ -772,16 +773,16 @@ def get_paths_from_manpath():
     import subprocess, os
     proc = subprocess.Popen(['man', '--path'], stdout=subprocess.PIPE)
     manpath, err_data = proc.communicate()
-    parent_paths = manpath.strip().split(':')
+    parent_paths = manpath.decode().strip().split(':')
     if not parent_paths:
-        print >> sys.stderr, "Unable to get the manpath (tried man --path)"
+        sys.stderr.write("Unable to get the manpath (tried man --path)\n")
         sys.exit(-1)
     result = []
     for parent_path in parent_paths:
         directory_path = os.path.join(parent_path, 'man1')
         try:
             names = os.listdir(directory_path)
-        except OSError, e:
+        except OSError as e:
             names = []
         names.sort()
         for name in names:
@@ -791,22 +792,22 @@ def get_paths_from_manpath():
         
 
 def usage(script_name):
-    print "Usage: %s [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress] files..." % script_name
-    print """Command options are:
+    print("Usage: {0} [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress] files...".format(script_name))
+    print("""Command options are:
      -h, --help\t\tShow this help message
      -v, --verbose\tShow debugging output to stderr
      -s, --stdout\tWrite all completions to stdout (trumps the --directory option)
      -d, --directory\tWrite all completions to the given directory, instead of to ~/.config/fish/completions
      -m, --manpath\tProcess all man1 files available in the manpath (as determined by man --path)
      -p, --progress\tShow progress
-    """
+    """)
 
 if __name__ == "__main__":
     script_name = sys.argv[0]
     try:
         opts, file_paths = getopt.gnu_getopt(sys.argv[1:], 'vsd:hmp', ['verbose', 'stdout', 'directory=', 'help', 'manpath', 'progress'])
-    except getopt.GetoptError, err:
-        print str(err) # will print something like "option -a not recognized"
+    except getopt.GetoptError as err:
+        print(err.strerror) # will print something like "option -a not recognized"
         usage(script_name)
         sys.exit(2)
     
@@ -834,7 +835,7 @@ if __name__ == "__main__":
         file_paths.extend(get_paths_from_manpath())
     
     if not file_paths:
-        print "No paths specified"
+        print("No paths specified")
         sys.exit(0)
     
     if not WRITE_TO_STDOUT and not output_directory:
@@ -843,7 +844,7 @@ if __name__ == "__main__":
         output_directory = os.path.expanduser('~/.config/fish/completions/')
         try:
             os.makedirs(output_directory)
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
     

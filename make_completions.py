@@ -43,7 +43,7 @@ def print_completion( cmd, switch_arr, arg, desc ):
   if len(switch_arr)==0:
     return
 
-  res = "complete -c %s" % (cmd)
+  res = "complete -c {0}".format(cmd)
   for sw in switch_arr:
 
     offset=1
@@ -56,9 +56,9 @@ def print_completion( cmd, switch_arr, arg, desc ):
       switch_type = "l"
       offset=2
 
-    res += " -%s %s" % (switch_type, escape(sw[offset:]))
+    res += " -{0} {1}".format(switch_type, escape(sw[offset:]))
 
-  res += " --description '%s'" % (up_first(escape_quotes(clean(desc))))
+  res += " --description '{0}'".format(up_first(escape_quotes(clean(desc))))
 
   print(res)
 
@@ -67,9 +67,9 @@ cmd = sys.argv[1]
 header(cmd)
 
 try:
-  man = commands.getoutput( "man %s | col -b".format(cmd))
+  man = commands.getoutput( "man {0} | col -b".format(cmd))
 except NameError:
-  man = subprocess.getoutput( "man %s | col -b".format(cmd))
+  man = subprocess.getoutput( "man {0} | col -b".format(cmd))
 
 remainder = man
 

@@ -863,7 +863,12 @@ void history_tests_t::test_history(void) {
     history_search_t search2(history, L"et");
     test_history_matches(search2, 1);
     assert(search2.current_string() == L"Beta");
-    
+
+    /* Test item removal */
+    history.remove(L"Alpha");
+    history_search_t search3(history, L"Alpha");
+    test_history_matches(search3, 0);
+   
     /* Test history escaping and unescaping, yaml, etc. */
     std::vector<history_item_t> before, after;
     history.clear();

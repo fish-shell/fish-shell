@@ -5,7 +5,7 @@
 
 	1). Create a function in builtin.c with the following signature:
 
-	<tt>static int builtin_NAME( wchar_t ** args )</tt>
+	<tt>static int builtin_NAME( parser_t &parser, wchar_t ** args )</tt>
 
 	where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
 
@@ -63,7 +63,7 @@
 #include "parser_keywords.h"
 #include "expand.h"
 #include "path.h"
-
+#include "history.h"
 
 /**
    The default prompt for the read command
@@ -3590,6 +3590,126 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 }
 
 
+/**
+   History of commands executed by user
+*/
+static int builtin_history( parser_t &parser, wchar_t **argv )
+{
+    int argc = builtin_count_args(argv);
+
+    bool search_history = false; 
+    bool delete_item = false;
+    bool search_prefix = false;
+    bool save_history = false;
+    bool clear_history = false;
+
+    wcstring delete_string;
+    wcstring search_string;
+
+    static const struct woption long_options[] =
+        {
+            { L"prefix", required_argument, 0, 'p' },
+            { L"delete", required_argument, 0, 'd' },
+            { L"search", no_argument, 0, 's' },
+            { L"contains", required_argument, 0, 'c' },
+            { L"save", no_argument, 0, 'v' },
+            { L"clear", no_argument, 0, 'l' },
+            { 0, 0, 0, 0 }
+        };
+
+    int opt = 0;
+    int opt_index = 0;
+    woptind = 0;
+    history_t *history = reader_get_history();
+
+    while((opt = wgetopt_long( argc, argv, L"pdsc", long_options, &opt_index )) != -1)
+    {
+        switch(opt)
+        {
+           case 'p':
+                search_prefix = true;
+                search_string = woptarg;
+                break;
+           case 'd':
+                delete_item = true;
+                delete_string = woptarg;
+                break;
+           case 's':
+                search_history = true;
+                break;
+           case 'c':
+                search_string = woptarg;
+                break;
+           case 'v':
+                save_history = true;
+                break;
+           case 'l':
+                clear_history = true;
+                break; 
+           case '?':
+                append_format(stderr_buffer, BUILTIN_ERR_UNKNOWN, argv[0], argv[woptind-1]);
+                return STATUS_BUILTIN_ERROR;
+                break;
+           default:
+                append_format(stderr_buffer, BUILTIN_ERR_UNKNOWN, argv[0], argv[woptind-1]);
+                return STATUS_BUILTIN_ERROR;
+        }
+    }	
+
+    if (argc == 1)
+    {
+        wcstring full_history;
+        history->get_string_representation(full_history, wcstring(L"\n"));
+        stdout_buffer.append(full_history);
+        return STATUS_BUILTIN_OK;
+    }
+
+    if (search_history)
+    {
+        int res = STATUS_BUILTIN_ERROR;
+
+        if (search_string.empty())
+        {
+            append_format(stderr_buffer, BUILTIN_ERR_COMBO2, argv[0], L"Use --search with either --contains or --prefix");
+            return res;
+        }
+
+        history_search_t searcher = history_search_t(*history, search_string, search_prefix?HISTORY_SEARCH_TYPE_PREFIX:HISTORY_SEARCH_TYPE_CONTAINS);
+        while (searcher.go_backwards())
+        {
+            stdout_buffer.append(searcher.current_string());
+            stdout_buffer.append(L"\n"); 
+            res = STATUS_BUILTIN_OK;
+        }
+        return res;
+    }
+
+    if (delete_item)
+    {
+        if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
+            delete_string = delete_string.substr(1, delete_string.length() - 2);
+       
+        history->remove(delete_string);
+        return STATUS_BUILTIN_OK;
+    }
+
+    if (save_history)
+    {
+        history->save();
+        return STATUS_BUILTIN_OK;
+    }
+
+    if (clear_history)
+    {
+        history->clear();
+        history->save();
+        return STATUS_BUILTIN_OK;
+    }
+
+    return STATUS_BUILTIN_ERROR;
+}
+
+
 /*
   END OF BUILTIN COMMANDS
   Below are functions for handling the builtin commands.
@@ -3629,7 +3749,8 @@ static const builtin_data_t builtin_datas[]=
 	{ 		L"for",  &builtin_for, N_( L"Perform a set of commands multiple times" )   },
 	{ 		L"function",  &builtin_function, N_( L"Define a new function" )   },
 	{ 		L"functions",  &builtin_functions, N_( L"List or remove functions" )   },
-	{ 		L"if",  &builtin_generic, N_( L"Evaluate block if condition is true" )   },
+	{ 		L"history",  &builtin_history, N_( L"History of commands executed by user" )   },
+ 	{ 		L"if",  &builtin_generic, N_( L"Evaluate block if condition is true" )   },
 	{ 		L"jobs",  &builtin_jobs, N_( L"Print currently running jobs" )   },
 	{ 		L"not",  &builtin_generic, N_( L"Negate exit status of job" )  },
 	{ 		L"or",  &builtin_generic, N_( L"Execute command if previous command failed" )  },

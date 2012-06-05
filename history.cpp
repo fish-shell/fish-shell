@@ -393,6 +393,23 @@ void history_t::add(const wcstring &str, const path_list_t &valid_paths)
     this->add(history_item_t(str, time(NULL), valid_paths));
 }
 
+void history_t::remove(const wcstring &str)
+{
+    history_item_t item_to_delete(str);
+    deleted_items.push_back(item_to_delete);
+
+    for (std::vector<history_item_t>::iterator iter = new_items.begin(); iter != new_items.end(); ++iter)
+    {
+        if (iter->match_contents(item_to_delete))
+        {
+            new_items.erase(iter);
+            break;
+        }
+    }
+
+    save();
+}
+
 void history_t::get_string_representation(wcstring &result, const wcstring &separator)
 {
     scoped_lock locker(lock);
@@ -400,10 +417,10 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     bool first = true;
     
     /* Append new items */
-    for (size_t i=0; i < new_items.size(); i++) {
+    for (std::vector<history_item_t>::const_reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter) {
         if (! first)
             result.append(separator);
-        result.append(new_items.at(i).str());
+        result.append(iter->str());
         first = false;
     }
     
@@ -795,7 +812,7 @@ void history_t::save_internal()
     ASSERT_IS_LOCKED(lock);
     
     /* Nothing to do if there's no new items */
-    if (new_items.empty())
+    if (new_items.empty() && deleted_items.empty())
         return;
         
     /* Compact our new items so we don't have duplicates */
@@ -825,9 +842,11 @@ void history_t::save_internal()
 
                 /* Try decoding an old item */
                 const history_item_t old_item = history_t::decode_item(local_mmap_start + offset, local_mmap_size - offset);
-                if (old_item.empty())
+                if (old_item.empty() || is_deleted(old_item))
+                {
+//                    debug(0, L"Item is deleted : %s\n", old_item.str().c_str());
                     continue;
-                    
+                }
                 /* The old item may actually be more recent than our new item, if it came from another session. Insert all new items at the given index with an earlier timestamp. */
                 for (; new_item_iter != new_items.end(); ++new_item_iter) {
                     if (new_item_iter->timestamp() < old_item.timestamp()) {
@@ -846,7 +865,8 @@ void history_t::save_internal()
         }
         
         /* Insert any remaining new items */
-        for (; new_item_iter != new_items.end(); ++new_item_iter) {
+        for (; new_item_iter != new_items.end(); ++new_item_iter)
+        {
             lru.add_item(*new_item_iter);
         }
                 
@@ -903,6 +923,7 @@ void history_t::save(void) {
 void history_t::clear(void) {
     scoped_lock locker(lock);
     new_items.clear();
+    deleted_items.clear();
     unsaved_item_count = 0;
     old_item_offsets.clear();
     wcstring filename = history_filename(name, L"");
@@ -1020,3 +1041,12 @@ void history_t::add_with_file_detection(const wcstring &str)
     }
 }
 
+bool history_t::is_deleted(const history_item_t &item) const
+{
+    for (std::vector<history_item_t>::const_iterator iter = deleted_items.begin(); iter != deleted_items.end(); ++iter)
+    { 
+        if (iter->match_contents(item))  { return true; }
+    }
+
+    return false;
+}

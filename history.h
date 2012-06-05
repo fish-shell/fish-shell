@@ -64,6 +64,10 @@ class history_item_t {
                creation_timestamp == other.creation_timestamp &&
                required_paths == other.required_paths;
     }
+
+    bool match_contents(const history_item_t &other) const {
+        return contents == other.contents;
+    }
     
     /* Functions for testing only */
     
@@ -96,7 +100,10 @@ private:
 	
 	/** New items. */
 	std::vector<history_item_t> new_items;
-    
+
+  	/** Deleted items. */
+	std::vector<history_item_t> deleted_items;
+
 	/** How many items we've added without saving */
 	size_t unsaved_item_count;
     
@@ -137,6 +144,9 @@ public:
     
     /** Add a new history item to the end */
     void add(const wcstring &str, const path_list_t &valid_paths = path_list_t());
+
+    /** Remove a history item */
+    void remove(const wcstring &str);
     
     /** Add a new history item to the end */
     void add_with_file_detection(const wcstring &str);
@@ -152,6 +162,8 @@ public:
     
     /** Return the specified history at the specified index. 0 is the index of the current commandline. (So the most recent item is at index 1.) */
     history_item_t item_at_index(size_t idx);
+
+    bool is_deleted(const history_item_t &item) const;
 };
 
 class history_search_t {

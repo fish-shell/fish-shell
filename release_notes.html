@@ -19,7 +19,10 @@ li {
 <li><b>Overrides of default functions should be fixed</b>. The "internalized scripts" feature is disabled for now.</li>
 <li><b>Disabled delayed suspend</b>. This is a strange job-control feature of BSD systems, including OS X. Disabling it frees up Control Y for other purposes; in particular, for yank, which now works on OS X.</li>
 <li><b>fish_indent is fixed</b>. In particular, the <span class="mono">funced</span> and <span class="mono">funcsave</span> functions work again.
-<li>A SIGTERM now ends the whole execution stack again (<a href="https://github.com/ridiculousfish/fishfish/issues/13">from this issue</a>).
+<li>A SIGTERM now ends the whole execution stack again (<a href="https://github.com/ridiculousfish/fishfish/issues/13">resolving this issue</a>).
+<li>Bumped the __fish_config_interactive version number so the default fish_color_autosuggestion kicks in.
+<li>fish_config better handles combined term256 and classic colors like "555 yellow".
+
 </ul>
 
 <h3>New Features</h3>
@@ -33,7 +36,7 @@ li {
 </ul><br>
 Credit to Siteshwar for implementation. Thanks Siteshwar!
 </li>
-
+</ul>
 
 <hr>
 

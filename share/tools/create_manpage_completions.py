@@ -774,11 +774,11 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
 def get_paths_from_manpath():
     # Return all the paths to man(1) files in the manpath
     import subprocess, os
-    proc = subprocess.Popen(['man', '--path'], stdout=subprocess.PIPE)
+    proc = subprocess.Popen(['manpath'], stdout=subprocess.PIPE)
     manpath, err_data = proc.communicate()
     parent_paths = manpath.decode().strip().split(':')
     if not parent_paths:
-        sys.stderr.write("Unable to get the manpath (tried man --path)\n")
+        sys.stderr.write("Unable to get the manpath (tried manpath)\n")
         sys.exit(-1)
     result = []
     for parent_path in parent_paths:
@@ -801,7 +801,7 @@ def usage(script_name):
      -v, --verbose\tShow debugging output to stderr
      -s, --stdout\tWrite all completions to stdout (trumps the --directory option)
      -d, --directory\tWrite all completions to the given directory, instead of to ~/.config/fish/completions
-     -m, --manpath\tProcess all man1 files available in the manpath (as determined by man --path)
+     -m, --manpath\tProcess all man1 files available in the manpath (as determined by manpath)
      -p, --progress\tShow progress
     """)
 

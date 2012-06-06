@@ -23,13 +23,18 @@ function history --description "Deletes an item from history"
                 case --contains
                     set search_mode contains
                     set contains_args $argv[(math $i + 1)]
+                case --save
+                    set cmd save
                 case --clear
                     set cmd clear
                 case --search
                 	set cmd print
-                	
             end
         end
+    else
+        #Execute history builtin without any argument
+        builtin history
+        return
     end
 
     switch $cmd
@@ -99,18 +104,16 @@ function history --description "Deletes an item from history"
 					end
 				end
 			 end
-			 
+        case save
+            #Save changes to history file
+            builtin history $argv
 		case clear
 			# Erase the entire history
-			if test $clear = 1
-				echo "Are you sure you want to clear history ? (y/n)"
-				read ch
-				if test $ch = "y"
-					builtin history $argv
-					echo "History cleared!"
-				end
-			else 
-				builtin history $argv
-			end
+            echo "Are you sure you want to clear history ? (y/n)"
+            read ch
+            if test $ch = "y"
+                builtin history $argv
+                echo "History cleared!"
+            end
 	end
 end

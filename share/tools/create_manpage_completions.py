@@ -452,7 +452,7 @@ class Type4ManParser(ManParser):
         #   sys.exit(1)
         options_parts_regex = re.compile("\.TP(.*?)\.TP", re.DOTALL)
         options_matched = re.search(options_parts_regex, options_section)
-        print >> sys.stderr, "Command is ", CMDNAME
+        add_diagnostic('Command is ' + CMDNAME)
 
         if options_matched == None:
             print >> sys.stderr, "Unable to find options section"
@@ -469,7 +469,7 @@ class Type4ManParser(ManParser):
             if (len(data)>1): # and len(data[1])<400):
                 optionName = data[0].strip()
                 if ( optionName.find("-") == -1):
-                    print >> sys.stderr, optionName, "doesn't contains -"
+                    add_diagnostic(optionName + " doesn't contain - ")
                 else:
                     optionName = unquoteDoubleQuotes(optionName)
                     optionName = unquoteSingleQuotes(optionName)
@@ -631,7 +631,7 @@ def file_missing_or_overwritable(path):
         return result
             
     except IOError as err:
-        if err == 2:
+        if err.errno == 2:
             # File does not exist, full steam ahead
             return True
         else:

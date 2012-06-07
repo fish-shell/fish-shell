@@ -9,7 +9,7 @@ function delete-or-exit
 
 	set -l cmd (commandline)
 
-	switch $cmd
+	switch "$cmd"
 
 		case ''
 		exit 0

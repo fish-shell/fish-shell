@@ -608,7 +608,7 @@ void reader_write_title()
 		size_t i;
 		if( lst.size() > 0 )
 		{
-			writestr( L"\x1b]2;" );
+			writestr( L"\x1b];" );
 			for( i=0; i<lst.size(); i++ )
 			{
 				writestr( lst.at(i).c_str() );

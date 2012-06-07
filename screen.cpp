@@ -146,6 +146,21 @@ static int is_term256_escape(const wchar_t *str) {
     return len;
 }
 
+static int is_apple_terminal_url(const wchar_t *str) {
+    // An escape code looks like this: \x1b]7;<url>\x07
+    int len = try_sequence("\x1b]7;", str);
+    if (! len) return 0;
+
+    while (str[len]) {
+        if (str[len] == L'\x07') {
+            return len + 1;
+        }
+        ++len;
+    }
+
+    return 0;
+}
+
 /**
    Calculate the width of the specified prompt. Does some clever magic
    to detect common escape sequences that may be embeded in a prompt,
@@ -235,6 +250,13 @@ static int calc_prompt_width( const wchar_t *prompt )
                 }
             }
 
+            if (! found) {
+                len = is_apple_terminal_url(&prompt[j]);
+                if (len) {
+                    j += (len - 1);
+                    found = true;
+                }
+            }
 
 			for( p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++ )
 			{

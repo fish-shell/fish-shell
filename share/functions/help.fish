@@ -31,7 +31,7 @@ function help --description "Show help for the fish shell"
 	# Find a suitable browser for viewing the help pages. This is needed
 	# by the help function defined below.
 	#
-	set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape
+	set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq
 	set -l text_browsers htmlview www-browser links elinks lynx w3m
 
 	if test $BROWSER
@@ -115,7 +115,7 @@ function help --description "Show help for the fish shell"
 
 		end
 
-		eval $fish_browser file://$__fish_help_dir/$fish_help_page \&
+		eval "$fish_browser file://$__fish_help_dir/$fish_help_page &"
 	else
 		eval $fish_browser file://$__fish_help_dir/$fish_help_page
 	end

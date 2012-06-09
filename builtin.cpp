@@ -3622,7 +3622,7 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
     woptind = 0;
     history_t *history = reader_get_history();
 
-    while((opt = wgetopt_long( argc, argv, L"pdsc", long_options, &opt_index )) != -1)
+    while((opt = wgetopt_long_only( argc, argv, L"pdscvl", long_options, &opt_index )) != -1)
     {
         switch(opt)
         {

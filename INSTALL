@@ -1,4 +1,3 @@
-
 Known issues
 ============
 
@@ -71,3 +70,17 @@ You will not be able to use fish as the default shell unless you also
 add the corresponding line to /etc/shells, which mostly defeats the
 point of a local install. As a workaround, you can add fish as the
 last command of the init files for your regular shell.
+
+
+Going back to your old shell
+============================
+
+If for any reason you want to go back to your old shell just run the following:
+
+for bash shell
+% chsh -s /bin/bash
+
+for zsh shell
+% chsh -s /bin/bash
+
+Then shutdown your windows and open a new one.

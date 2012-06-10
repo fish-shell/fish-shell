@@ -53,6 +53,11 @@ following command:
 
 chsh will prompt you for your password, and change your default shell.
 
+To switch your default shell back, you can run:
+
+ % chsh -s /bin/bash
+
+Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
 
 Local install procedure
 =======================

@@ -237,7 +237,7 @@ static const struct lookup_entry lookup[] =
 	}
 	,
 #endif
-#ifdef SIGXCPY
+#ifdef SIGXCPU
 	{
 		SIGXCPU,
 		L"SIGXCPU",

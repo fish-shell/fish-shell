@@ -33,4 +33,4 @@ Interactively delete commands with prefix "foo".
 
 history --delete "foo"
 Delete command "foo" from history.
-<pre>
+</pre>

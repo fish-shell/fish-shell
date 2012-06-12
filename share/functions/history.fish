@@ -54,6 +54,9 @@ function history --description "Deletes an item from history"
 					set found_items (builtin history --search --contains $contains_args)
 				case none
 					builtin history $argv
+
+ 					#Save changes after deleting item
+  					builtin history --save
 					return 0 
 			end
 			
@@ -101,8 +104,12 @@ function history --description "Deletes an item from history"
 						else
 							builtin history --delete $found_items[(math $i - 1)]
 						end
+
 					end
 				end
+                
+ 				#Save changes after deleting item(s)
+  				builtin history --save
 			 end
         case save
             #Save changes to history file

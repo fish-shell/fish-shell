@@ -3614,6 +3614,7 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
             { L"contains", required_argument, 0, 'c' },
             { L"save", no_argument, 0, 'v' },
             { L"clear", no_argument, 0, 'l' },
+            { L"help", no_argument, 0, 'h' },
             { 0, 0, 0, 0 }
         };
 
@@ -3646,6 +3647,10 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
            case 'l':
                 clear_history = true;
                 break; 
+           case 'h':
+                builtin_print_help( parser, argv[0], stdout_buffer );
+                return STATUS_BUILTIN_OK;
+                break;
            case '?':
                 append_format(stderr_buffer, BUILTIN_ERR_UNKNOWN, argv[0], argv[woptind-1]);
                 return STATUS_BUILTIN_ERROR;

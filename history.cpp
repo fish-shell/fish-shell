@@ -406,8 +406,6 @@ void history_t::remove(const wcstring &str)
             break;
         }
     }
-
-    save();
 }
 
 void history_t::get_string_representation(wcstring &result, const wcstring &separator)

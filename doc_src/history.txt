@@ -3,34 +3,34 @@
 \subsection history-synopsis Synopsis
 <pre>
 history (--save | --clear)
-history (--search | --delete ) (--prefix "prefix string" | --search "search string")
+history (--search | --delete ) (--prefix "prefix string" | --contains "search string")
 </pre>
 
 \subsection history-description Description
 
-history is used to list, search and delete user's command history.
+history is used to list, search and delete user's command history
 
 \subsection history-examples Example
 
 <pre>
 history --save
-Save all changes in history file.
+Save all changes in history file
 
 history --clear
-Delete all history items.
+Delete all history items
 
 history --search --contains "foo"
-Searches commands containing "foo" string.
+Searches commands containing "foo" string
 
 history --search --prefix "foo"
-Searches for commands with prefix "foo".
+Searches for commands with prefix "foo"
 
 history --delete --contains "foo"
-Interactively delete commands containing string "foo".
+Interactively delete commands containing string "foo"
 
 history --delete --prefix "foo"
-Interactively delete commands with prefix "foo".
+Interactively delete commands with prefix "foo"
 
 history --delete "foo"
-Delete command "foo" from history.
+Delete command "foo" from history
 </pre>

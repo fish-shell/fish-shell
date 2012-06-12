@@ -1,12 +1,12 @@
-
+set -l skin
 if valgrind --version | sgrep -- '-2\.[012]\.' >/dev/null ^/dev/null
 	# In older versions of Valgrind, the skin selection option was
     # '--skin'
-	set -g skin skin
+	set skin skin
 else
 	# But someone decided that it would be fun to change this to
     # '--tool' for no good reason
-	set -g skin tool
+	set skin tool
 end
 
 complete -xc valgrind -l $skin --description "Skin" -a "
@@ -17,9 +17,16 @@ complete -xc valgrind -l $skin --description "Skin" -a "
 	massif\tHeap\ profiler
 "
 
-eval "function __fish_valgrind_skin; contains -- --$skin=\$argv (commandline -cpo);end"
-
-set -e $skin
+eval "
+function __fish_valgrind_skin --argument tool
+	set -l cmd (commandline -cpo)
+	if contains -- --$skin=\$tool \$cmd
+		return 0
+    end
+	test \$tool = memcheck
+	and echo \$cmd | grep -qve $skin
+end
+"
 
 complete -c valgrind -l help --description "Display help and exit"
 complete -c valgrind -l help-debug --description "Display help and debug options"

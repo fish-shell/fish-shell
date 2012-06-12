@@ -65,7 +65,7 @@ complete -c find -o path -o wholename --description "File path matches pattern" 
 
 complete -c find -o perm --description "Files has specified permissions set" -r
 
-complete -c find -o iregex --description "File name matches regex" -r
+complete -c find -o regex --description "File name matches regex" -r
 
 complete -c find -o samefile --description "File refers to the same inode as specified file" -r
 complete -c find -o size --description "File uses specified units of space" -r

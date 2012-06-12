@@ -28,6 +28,7 @@ complete -c flac -l sector-align          -d "Align multiple files on sector bou
 complete -c flac -l replay-gain           -d "Calculate ReplayGain & store in Vorbis comments"
 complete -c flac -l cuesheet=     -d "Import cuesheet and store in CUESHEET block"
 complete -c flac -x -s T -l tag=        -d "Add a Vorbis comment FIELD=VALUE; may appear multiple times"
+complete -c flac -x -s T -l tag-from-file=   -d "Read tags from file"
 complete -c flac -x -s S -l seekpoint=             -d "Add seek point(s) {#|X|#x|#s}"
 complete -c flac -x -s P -l padding=               -d "Write a PADDING block of length #"
 complete -c flac -s 0 -l compression-level-0    -d "Synonymous with -l 0 -b 1152 -r 22"

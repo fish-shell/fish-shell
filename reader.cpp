@@ -1774,6 +1774,19 @@ void reader_sanity_check()
 	}
 }
 
+/**
+   Set the specified string from the history as the current buffer. Do
+   not modify prefix_width.
+*/
+static void set_command_line_and_position( const wcstring &new_str, int pos )
+{
+    data->command_line = new_str;
+    data->command_line_changed();
+    data->buff_pos = pos;
+    reader_super_highlight_me_plenty( data->buff_pos );
+    reader_repaint();
+}
+
 void reader_replace_current_token( const wchar_t *new_token )
 {
 
@@ -1792,22 +1805,10 @@ void reader_replace_current_token( const wchar_t *new_token )
     new_buff.append(new_token);
     new_buff.append(end);
 	new_pos = (begin-buff) + wcslen(new_token);
-	reader_set_buffer(new_buff, new_pos);
+    
+    set_command_line_and_position(new_buff, new_pos);
 }
 
-
-/**
-   Set the specified string from the history as the current buffer. Do
-   not modify prefix_width.
-*/
-static void handle_history( const wcstring &new_str )
-{
-    data->command_line = new_str;
-    data->command_line_changed();
-    data->buff_pos=data->command_line.size();
-    reader_super_highlight_me_plenty( data->buff_pos );
-    reader_repaint();
-}
 
 /**
    Reset the data structures associated with the token search
@@ -1828,6 +1829,8 @@ static void reset_token_history()
 	data->search_pos=0;
     data->search_prev.clear();
     data->search_prev.push_back(data->search_buff);
+    
+    data->history_search = history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
 }
 
 
@@ -1937,7 +1940,7 @@ static void handle_token_history( int forward, int reset )
 							//debug( 3, L"ok pos" );
 
                             const wcstring last_tok = tok_last( &tok );
-                            if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) != data->search_prev.end()) {
+                            if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) == data->search_prev.end()) {
 								data->token_history_pos = tok_get_pos( &tok );
 								str = wcsdup(tok_last( &tok ));
 							}
@@ -3122,7 +3125,7 @@ const wchar_t *reader_readline()
                         } else {
                             new_text = data->history_search.current_string();
                         }
-						handle_history(new_text);
+						set_command_line_and_position(new_text, new_text.size());
 						
 						break;
 					}

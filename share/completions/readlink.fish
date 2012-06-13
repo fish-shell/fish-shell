@@ -1,0 +1,8 @@
+complete -c readlink -s f -l canonicalize            -d 'follow every symlink in every component of the given name recursively; all but the last component must exist'
+complete -c readlink -s e -l canonicalize-existing   -d 'follow every symlink in every component of the given name recursively, all components must exist'
+complete -c readlink -s m -l canonicalize-missing    -d 'follow every symlink in every component of the given name recursively, without requirements on components existence'
+complete -c readlink -s n -l no-newline              -d 'do not output the trailing newline'
+complete -c readlink -s q -l quiet -l silent         -d 'suppress most error messages'
+complete -c readlink -s v -l verbose                 -d 'report error messages'
+complete -c readlink -l help     -d 'display this help and exit'
+complete -c readlink -l version  -d 'output version information and exit'

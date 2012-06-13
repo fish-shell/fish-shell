@@ -13,6 +13,9 @@ function alias --description "Legacy function for creating shellscript functions
 	set -l body
 	switch (count $argv)
 
+		case 0
+ 			echo "Fish implements aliases using functions. Use 'functions' builtin to see list of functions and 'functions function_name' to see function definition, type 'help alias' for more information."
+			return 1
 		case 1
 			set -l tmp (echo $argv|sed -e "s/\([^=]\)=/\1\n/")
 			set name $tmp[1]

@@ -427,9 +427,9 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
         const wcstring &comp = c->comp.at(i);
 		if( i != 0 )
 			written += print_max( L"  ", comp_width - written, 2 );
-		set_color( get_color(HIGHLIGHT_PAGER_PREFIX), rgb_color_t::normal() );
+		set_color( get_color(HIGHLIGHT_PAGER_PREFIX),rgb_color_t::normal() );
 		written += print_max( prefix, comp_width - written, comp.empty()?0:1 );
-		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION), rgb_color_t::normal() );
+		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION),rgb_color_t::ignore() );
 		written += print_max( comp.c_str(), comp_width - written, i!=(c->comp.size()-1) );
 	}
 
@@ -442,7 +442,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 			writech( L' ');
 		}
 		written += print_max( L"(", 1, 0 );
-        set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ), rgb_color_t::normal() );
+		set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ), rgb_color_t::ignore() );
 		written += print_max( c->desc.c_str(), desc_width, 0 );
 		written += print_max( L")", 1, 0 );
 	}
@@ -454,6 +454,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 			writech( L' ');
 		}
 	}
+	
 }
 
 /**

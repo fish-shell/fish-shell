@@ -389,7 +389,7 @@ static int print_max( const wchar_t *str, int max, int has_more )
 /**
    Print the specified item using at the specified amount of space
 */
-static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, const rgb_color_t& bgc )
+static void completion_print_item( const wchar_t *prefix, comp_t *c, int width )
 {
 	int comp_width=0, desc_width=0;
 	int written=0;
@@ -427,10 +427,9 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, 
         const wcstring &comp = c->comp.at(i);
 		if( i != 0 )
 			written += print_max( L"  ", comp_width - written, 2 );
-		// set_color( get_color(HIGHLIGHT_PAGER_PREFIX), rgb_color_t::normal() );
-		set_color( get_color(HIGHLIGHT_PAGER_PREFIX), bgc );
+		set_color( get_color(HIGHLIGHT_PAGER_PREFIX), rgb_color_t::normal() );
 		written += print_max( prefix, comp_width - written, comp.empty()?0:1 );
-		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION), bgc );
+		set_color( get_color(HIGHLIGHT_PAGER_COMPLETION), rgb_color_t::normal() );
 		written += print_max( comp.c_str(), comp_width - written, i!=(c->comp.size()-1) );
 	}
 
@@ -443,7 +442,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, 
 			writech( L' ');
 		}
 		written += print_max( L"(", 1, 0 );
-		set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ), bgc );
+        set_color( get_color( HIGHLIGHT_PAGER_DESCRIPTION ), rgb_color_t::normal() );
 		written += print_max( c->desc.c_str(), desc_width, 0 );
 		written += print_max( L")", 1, 0 );
 	}
@@ -455,7 +454,6 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, 
 			writech( L' ');
 		}
 	}
-    set_color( rgb_color_t::normal(), rgb_color_t::normal() );
 }
 
 /**
@@ -483,10 +481,6 @@ static void completion_print( int cols,
 	int rows = (lst.size()-1)/cols+1;
 	int i, j;
 
-    rgb_color_t b1 = rgb_color_t::normal();
-    rgb_color_t b2 = rgb_color_t( "#0D0D0D" );
-    b2.set_underline( false );
-
 	for( i = row_start; i<row_stop; i++ )
 	{
 		for( j = 0; j < cols; j++ )
@@ -500,7 +494,7 @@ static void completion_print( int cols,
 
 			el = lst.at(j*rows + i );
 			
-			completion_print_item( prefix, el, width[j] - (is_last?0:2), i%2?b2:b1 );
+			completion_print_item( prefix, el, width[j] - (is_last?0:2) );
 			
 			if( !is_last)
 				writestr( L"  " );

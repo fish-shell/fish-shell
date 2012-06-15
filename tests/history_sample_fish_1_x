@@ -1,0 +1,12 @@
+# 1339519901
+ls /
+# 1339519903
+cd foobar
+# 1339519906
+function yay\
+echo hi\
+end
+# 1339520882
+echo #abc
+# 1339520884
+#def

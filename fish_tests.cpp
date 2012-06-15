@@ -833,6 +833,7 @@ class history_tests_t {
 public:
     static void test_history(void);
     static void test_history_merge(void);
+    static void test_history_formats(void);
 };
 
 static wcstring random_string(void) {
@@ -975,6 +976,129 @@ void history_tests_t::test_history_merge(void) {
     delete everything; //not as scary as it looks
 }
 
+static bool install_sample_history(const wchar_t *name) {
+    char command[512];
+    snprintf(command, sizeof command, "cp tests/%ls ~/.config/fish/%ls_history", name, name);    
+    if (system(command)) {
+        err(L"Failed to copy sample history");
+        return false;
+    }
+    return true;
+}
+
+/* Indicates whether the history is equal to the given null-terminated array of strings. */
+static bool history_equals(history_t &hist, const wchar_t * const *strings) {
+    /* Count our expected items */
+    size_t expected_count = 0;
+    while (strings[expected_count]) {
+        expected_count++;
+    }
+    
+    /* Ensure the contents are the same */
+    size_t history_idx = 1;
+    size_t array_idx = 0;
+    for (;;) {
+        const wchar_t *expected = strings[array_idx];
+        history_item_t item = hist.item_at_index(history_idx);
+        if (expected == NULL) {
+            if (! item.empty()) {
+                err(L"Expected empty item at history index %lu", history_idx);
+            }
+            break;
+        } else {
+            if (item.str() != expected) {
+                err(L"Expected '%ls', found '%ls' at index %lu", expected, item.str().c_str(), history_idx);
+            }
+        }
+        history_idx++;
+        array_idx++;
+    }
+    
+    return true;
+}
+
+void history_tests_t::test_history_formats(void) {
+    const wchar_t *name;
+    
+    // Test inferring and reading legacy and bash history formats
+    name = L"history_sample_fish_1_x";
+    say(L"Testing %ls", name);
+    if (! install_sample_history(name)) {
+        err(L"Couldn't open file tests/%ls", name);
+    } else {
+        /* Note: This is backwards from what appears in the file */
+        const wchar_t * const expected[] = {
+            L"#def",
+
+            L"echo #abc",
+            
+            L"function yay\n"
+            "echo hi\n"
+            "end",
+            
+            L"cd foobar",
+            
+            L"ls /",
+                        
+            NULL
+        };
+        
+        history_t &test_history = history_t::history_with_name(name);
+        if (! history_equals(test_history, expected)) {
+            err(L"test_history_formats failed for %ls\n", name);
+        }
+        test_history.clear();
+    }
+    
+    name = L"history_sample_fish_2_0";
+    say(L"Testing %ls", name);
+    if (! install_sample_history(name)) {
+        err(L"Couldn't open file tests/%ls", name);
+    } else {
+        const wchar_t * const expected[] = {
+            L"echo this has\\\nbackslashes",
+            
+            L"function foo\n"
+            "echo bar\n"
+            "end",
+            
+            L"echo alpha",
+            
+            NULL
+        };
+        
+        history_t &test_history = history_t::history_with_name(name);
+        if (! history_equals(test_history, expected)) {
+            err(L"test_history_formats failed for %ls\n", name);
+        }
+        test_history.clear();
+    }
+    
+    say(L"Testing bash import");
+    FILE *f = fopen("tests/history_sample_bash", "r");
+    if (! f) {
+        err(L"Couldn't open file tests/history_sample_bash");
+    } else {
+        // It should skip over the export command since that's a bash-ism
+        const wchar_t *expected[] = {
+            L"echo supsup",
+            
+            L"history --help",
+            
+            L"echo foo",
+            
+            NULL
+        };
+        history_t &test_history = history_t::history_with_name(L"bash_import");
+        test_history.populate_from_bash(f);
+        if (! history_equals(test_history, expected)) {
+            err(L"test_history_formats failed for bash import\n");
+        }
+        test_history.clear();
+        fclose(f);
+    }
+}
+
 
 /**
    Main test 
@@ -1013,6 +1137,7 @@ int main( int argc, char **argv )
     test_autosuggest();
     history_tests_t::test_history();
     history_tests_t::test_history_merge();
+    history_tests_t::test_history_formats();
 	
 	say( L"Encountered %d errors in low-level tests", err_count );
 

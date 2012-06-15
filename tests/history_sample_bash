@@ -1,0 +1,7 @@
+echo foo
+history --help
+#1339718290
+export HISTTIMEFORMAT='%F %T '
+#1339718298
+echo supsup
+#abcde

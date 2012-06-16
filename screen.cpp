@@ -327,6 +327,10 @@ static int room_for_usec(struct stat *st)
 static void s_save_status( screen_t *s)
 {
 
+    // PCA Let's not do this futimes stuff, because sudo dumbly uses the
+    // tty's ctime as part of its tty_tickets feature
+    // Disabling this should fix https://github.com/fish-shell/fish-shell/issues/122
+#if 0
 	/*
 	  This futimes call tries to trick the system into using st_mtime
 	  as a tampering flag. This of course only works on systems where
@@ -354,6 +358,7 @@ static void s_save_status( screen_t *s)
 	*/
 	futimes( 1, t );
 	futimes( 2, t );
+#endif
 
 	fstat( 1, &s->prev_buff_1 );
 	fstat( 2, &s->prev_buff_2 );

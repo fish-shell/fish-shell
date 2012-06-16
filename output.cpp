@@ -280,7 +280,8 @@ void set_color(rgb_color_t c, rgb_color_t c2)
          Background is set
          */
 		bg_set=1;
-		c = (c2==rgb_color_t::white())?rgb_color_t::black():rgb_color_t::white();
+        if ( c==c2 )
+            c = (c2==rgb_color_t::white())?rgb_color_t::black():rgb_color_t::white();
 	}
     
 	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))

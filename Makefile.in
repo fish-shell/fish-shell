@@ -606,7 +606,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
-	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
@@ -620,7 +620,7 @@ install-force: all install-translations
 		true; \
 	done;
 	for i in share/man/*.1; do \
-		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/; \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 		true; \
 	done;
 	for i in share/tools/*.py; do\

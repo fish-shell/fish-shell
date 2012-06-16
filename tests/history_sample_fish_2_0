@@ -1,0 +1,6 @@
+- cmd: echo alpha
+   when: 1339717374
+- cmd: function foo\necho bar\nend
+   when: 1339717377
+- cmd: echo this has\\\nbackslashes
+   when: 1339717385

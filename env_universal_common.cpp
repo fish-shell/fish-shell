@@ -555,7 +555,7 @@ void env_universal_common_set( const wchar_t *key, const wchar_t *val, int expor
 	entry->val = val;
 	env_universal_common_remove( key );
 	
-	env_universal_var.insert( std::pair<wcstring, var_uni_entry_t*>(key, entry));			
+    env_universal_var[key] = entry;
 	if( callback )
 	{
 		callback( exportv?SET_EXPORT:SET, key, val );

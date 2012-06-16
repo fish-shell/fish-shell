@@ -1,0 +1,1 @@
+__fish_complete_xsum sha224sum

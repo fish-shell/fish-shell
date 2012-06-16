@@ -1,4 +1,8 @@
-#completion for mutt
+if which abook >/dev/null
+    complete -c mutt -f -a '(__fish_print_abook_emails)'
+    complete -c mutt -s c -x -d 'Specify a carbon-copy (CC) recipient' -a '(__fish_print_abook_emails)'
+    complete -c mutt -s b -x -d 'Specify a blind-carbon-copy (BCC) recipient' -a '(__fish_print_abook_emails)'
+end
 
 complete -c mutt -s D --description 'Print the value of all configuration options to stdout'
 complete -c mutt -s h --description 'Display help'

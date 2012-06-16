@@ -1,3 +1,4 @@
+complete -c cut -x
 complete -c cut -s b -l bytes -x --description "Output byte range"
 complete -c cut -s c -l characters -x --description "Output character range"
 complete -c cut -s d -l delimiter -x --description "Select field delimiter"

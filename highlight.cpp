@@ -103,6 +103,28 @@ static wcstring apply_working_directory(const wcstring &path, const wcstring &wo
     }
 }
 
+/* Determine if the filesystem containing the given fd is case insensitive. */
+typedef std::map<wcstring, bool> case_sensitivity_cache_t;
+bool fs_is_case_insensitive(const wcstring &path, int fd, case_sensitivity_cache_t &case_sensitivity_cache)
+{
+    /* If _PC_CASE_SENSITIVE is not defined, assume case sensitive */
+    bool result = false;
+#ifdef _PC_CASE_SENSITIVE
+    /* Try the cache first */
+    case_sensitivity_cache_t::iterator cache = case_sensitivity_cache.find(path);
+    if (cache != case_sensitivity_cache.end()) {
+        /* Use the cached value */
+        result = cache->second;
+    } else {
+        /* Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case sensitive, and a 0 value means case insensitive */
+        long ret = fpathconf(fd, _PC_CASE_SENSITIVE);
+        result = (ret == 0);
+        case_sensitivity_cache[path] = result;
+    }
+#endif
+    return result;
+}
+
 /* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O!
 */
 bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, bool require_dir, wcstring *out_path)
@@ -161,6 +183,9 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
         /* Don't test the same path multiple times, which can happen if the path is absolute and the CDPATH contains multiple entries */
         std::set<wcstring> checked_paths;
         
+        /* Keep a cache of which paths / filesystems are case sensitive */
+        case_sensitivity_cache_t case_sensitivity_cache;
+        
         for (size_t wd_idx = 0; wd_idx < directories.size() && ! result; wd_idx++) {
             const wcstring &wd = directories.at(wd_idx);
             
@@ -200,12 +225,23 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
                     // We opened the dir_name; look for a string where the base name prefixes it
                     wcstring ent;
                     
+                    // Check if we're case insensitive
+                    bool case_insensitive = fs_is_case_insensitive(dir_name, dirfd(dir), case_sensitivity_cache);
+                    
                     // Don't ask for the is_dir value unless we care, because it can cause extra filesystem acces */
                     bool is_dir = false;
                     while (wreaddir_resolving(dir, dir_name, ent, require_dir ? &is_dir : NULL))
-                    {
-                        // TODO: support doing the right thing on case-insensitive filesystems like HFS+
-                        if (string_prefixes_string(base_name, ent) && (! require_dir || is_dir))
+                    {                    
+
+                        /* Determine which function to call to check for prefixes */
+                        bool (*prefix_func)(const wcstring &, const wcstring &);
+                        if (case_insensitive) {
+                            prefix_func = string_prefixes_string_case_insensitive;
+                        } else {
+                            prefix_func = string_prefixes_string;
+                        }
+
+                        if (prefix_func(base_name, ent) && (! require_dir || is_dir))
                         {
                             result = true;
                             if (out_path) {
@@ -213,10 +249,13 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
                                 
                                 out_path->clear();
                                 const wcstring path_base = wdirname(const_path);
-                                if (string_prefixes_string(path_base, const_path)) {
+                                
+                                
+                                if (prefix_func(path_base, const_path)) {
                                     out_path->append(path_base);
                                     if (! string_suffixes_string(L"/", *out_path))
                                         out_path->push_back(L'/');
+                                    printf("path: %ls\n", out_path->c_str());
                                 }
                                 out_path->append(ent);
                                 /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */

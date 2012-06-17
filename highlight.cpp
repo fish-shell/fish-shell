@@ -255,7 +255,6 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
                                     out_path->append(path_base);
                                     if (! string_suffixes_string(L"/", *out_path))
                                         out_path->push_back(L'/');
-                                    printf("path: %ls\n", out_path->c_str());
                                 }
                                 out_path->append(ent);
                                 /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */

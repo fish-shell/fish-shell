@@ -17,7 +17,11 @@ function alias --description "Legacy function for creating shellscript functions
  			echo "Fish implements aliases using functions. Use 'functions' builtin to see list of functions and 'functions function_name' to see function definition, type 'help alias' for more information."
 			return 1
 		case 1
-			set -l tmp (echo $argv|sed -e "s/\([^=]\)=/\1\n/")
+			# Some seds (e.g. on Mac OS X), don't support \n in the RHS
+			# Use a literal newline instead
+			# http://sed.sourceforge.net/sedfaq4.html#s4.1
+			set -l tmp (echo $argv|sed -e "s/\([^=]\)=/\1\\
+/")
 			set name $tmp[1]
 			set body $tmp[2]
 

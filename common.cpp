@@ -1943,9 +1943,12 @@ void configure_thread_assertions_for_testing(void) {
 }
 
 /* Notice when we've forked */
-static pid_t initial_pid;
+static pid_t initial_pid = 0;
 
 bool is_forked_child(void) {
+    /* Just bail if nobody's called setup_fork_guards - e.g. fishd */
+    if (! initial_pid) return false;
+    
     bool is_child_of_fork = (getpid() != initial_pid);
     if (is_child_of_fork) {
         printf("Uh-oh: %d\n", getpid());

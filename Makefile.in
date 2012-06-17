@@ -337,8 +337,7 @@ prof:
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC)
 	$(MAKE) doc.h $(HDR_FILES)
-	- doxygen Doxyfile.user
-	touch user_doc
+	- doxygen Doxyfile.user && touch user_doc
 
 
 #

@@ -932,11 +932,12 @@ clean:
 	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader
+	rm -f command_list.txt toc.txt
 	rm -f share/config.fish etc/config.fish doc_src/index.hdr doc_src/commands.hdr
 	rm -f fish-@PACKAGE_VERSION@.tar
 	rm -f fish-@PACKAGE_VERSION@.tar.gz
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2
-	rm -rf doc;
+	rm -rf doc user_doc share/man;
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
 	test ! -d "$(XSEL)" || make -C $(XSEL) clean

@@ -627,7 +627,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		if( erase ) 
 		{
 			append_format(stderr_buffer,
-					   _(L"%ls: Erase needs a variable name\n%ls\n"), 
+					   _(L"%ls: Erase needs a variable name\n"), 
 					   argv[0] );
 			
 			builtin_print_help( parser, argv[0], stderr_buffer );

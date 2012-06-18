@@ -498,7 +498,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 	  also specify scope
 	*/
 
-	if( query && (erase || list || global || local || universal || exportv || unexport ) )
+	if( query && (erase || list) )
 	{
 		append_format(stderr_buffer,
 				  BUILTIN_ERR_COMBO,

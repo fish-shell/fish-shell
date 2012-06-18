@@ -260,7 +260,7 @@ static int update_values( wcstring_list_t &list,
 		*/
 		long ind = indexes[i] - 1;
 		const wcstring newv = values[ i ];
-		if( ind < 0 )
+		if( ind < 0 || ind>=list.size() )
 		{
 			return 1;
 		}

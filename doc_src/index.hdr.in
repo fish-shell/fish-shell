@@ -124,7 +124,7 @@ these characters, so called escape sequences are provided. These are:
 - <code>'\\*'</code>, escapes the star character
 - <code>'\\?'</code>, escapes the question mark character
 - <code>'\\~'</code>, escapes the tilde character
-- <code>'\\%'</code>, escapes the percent character
+- <code>'\\%%'</code>, escapes the percent character
 - <code>'\\#'</code>, escapes the hash character
 - <code>'\\('</code>, escapes the left parenthesis character
 - <code>'\\)'</code>, escapes the right parenthesis character

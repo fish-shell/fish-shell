@@ -1147,36 +1147,46 @@ int env_exist( const wchar_t *key, int mode )
 	{
 		if( is_read_only(key) || is_electric(key) )
 		{
+            //Such variables are never exported
+            if (mode & ENV_EXPORT)
+            {
+                return 0;
+            }
+            else if (mode & ENV_UNEXPORT)
+            {
+                return 1;
+            }
 			return 1;
 		}
 	}
 
-	if( ! (mode & ENV_UNIVERSAL) )
+    if( !(mode & ENV_UNIVERSAL) )
 	{
 		env = (mode & ENV_GLOBAL)?global_env:top;
 					
 		while( env != 0 )
 		{
 			var_table_t::iterator result = env->env.find( key );
+
 			if ( result != env->env.end() )
 			{ 
 				res  = result->second; 
-			}
-			else
-			{
-				res = 0;
-			}
 
-			if( res != 0 )
-			{
-				return 1;
+                if (mode & ENV_EXPORT)
+                {
+                    return res->exportv == 1;
+                }
+                else if (mode & ENV_UNEXPORT)
+                {
+                    return res->exportv == 0;
+                }
+                
+                return 1;
 			}
-			
-			if( mode & ENV_LOCAL )
-			{
-				break;
-			}
-			
+		
+            if ( mode & ENV_LOCAL )
+                break;	
+
 			if( env->new_scope )
 			{
 				env = global_env;
@@ -1187,8 +1197,8 @@ int env_exist( const wchar_t *key, int mode )
 			}
 		}	
 	}
-	
-	if( ! (mode & ENV_LOCAL) && ! (mode & ENV_GLOBAL) )
+
+    if( !(mode & ENV_LOCAL) && !(mode & ENV_GLOBAL) )
 	{
 		if( ! get_proc_had_barrier())
 		{
@@ -1197,10 +1207,23 @@ int env_exist( const wchar_t *key, int mode )
 		}
 		
 		item = env_universal_get( key );
-	
-	}
-	return item != 0;
 
+        if (item != NULL)
+        {
+            if (mode & ENV_EXPORT)
+            {
+                return env_universal_get_export(key) == 1; 
+            }
+            else if (mode & ENV_UNEXPORT)
+            {
+                return env_universal_get_export(key) == 0; 
+            }
+
+            return 1;
+        }
+	}
+
+	return 0;
 }
 
 /**

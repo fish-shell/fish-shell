@@ -753,7 +753,8 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
             # Pad on the right with spaces so we overwrite whatever we wrote last time
             padded_progress_str = progress_str.ljust(last_progress_string_length)
             last_progress_string_length = len(progress_str)
-            sys.stdout.write("\r\r{0} {1}".format(padded_progress_str, chr(27)))
+            sys.stdout.write("\r{0} {1}\r".format(padded_progress_str, chr(27)))
+            sys.stdout.flush();
         try:
             if parse_manpage_at_path(manpage_path, output_directory):
                 successful_count += 1

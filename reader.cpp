@@ -1089,7 +1089,7 @@ static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<
 	{
 		prefix_esc = escape_string(prefix, 1);
 	}
-	
+    	
     wcstring cmd = format_string(L"fish_pager -c 3 -r 4 %ls -p %ls",
                                  // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
                                 is_quoted?L"-q":L"",
@@ -1607,7 +1607,7 @@ static int handle_completions( const std::vector<completion_t> &comp )
 				   0,
 				   0 );
 
-		len = &buff[data->buff_pos]-prefix_start+1;
+		len = &buff[data->buff_pos]-prefix_start;
 
 		if( len <= PREFIX_MAX_LEN )
 		{

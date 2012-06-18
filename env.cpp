@@ -901,8 +901,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
             }
             
 			entry->val = val;
-			
-			node->env.insert(std::pair<wcstring, var_entry_t*>(key, entry));
+			node->env[key] = entry;
             
 			if( entry->exportv )
             {
@@ -1397,7 +1396,8 @@ static void get_exported( const env_node_t *n, std::map<wcstring, wcstring> &h )
 		var_entry_t *val_entry = iter->second;	
 		if( val_entry->exportv && (val_entry->val != ENV_NULL ) )
 		{	
-			h.insert(std::pair<wcstring, wcstring>(key, val_entry->val));
+            // Don't use std::map::insert here, since we need to overwrite existing values from previous scopes
+            h[key] = val_entry->val;
 		}
 	}
 }
@@ -1455,12 +1455,11 @@ static void update_export_array_if_necessary(bool recalc) {
 			const wcstring &key = uni.at(i);
 			const wchar_t *val = env_universal_get( key.c_str() );
 
-			std::map<wcstring, wcstring>::iterator result = vals.find( key ); 
-			if( wcscmp( val, ENV_NULL) && ( result == vals.end() ) )
-			{
+			if (wcscmp( val, ENV_NULL)) {
+				// Note that std::map::insert does NOT overwrite a value already in the map,
+				// which we depend on here
 				vals.insert(std::pair<wcstring, wcstring>(key, val));
 			}
-
 		}
         
         std::vector<std::string> local_export_buffer;

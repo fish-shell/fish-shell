@@ -1,10 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """ Deroff.py, ported to Python from the venerable deroff.c """
 
 
 import sys, re, string
+
+IS_PY3 = sys.version_info[0] >= 3
 
 class Deroffer:
 
@@ -307,6 +309,7 @@ class Deroffer:
         self.skiplists = False
         self.ignore_sonx = False
         self.output = []
+        self.name = ''
         
         self.OPTIONS = 0
         self.FORMAT = 1
@@ -330,6 +333,7 @@ class Deroffer:
                 'RB': Deroffer.macro_i_ir,
                 'RI': Deroffer.macro_i_ir,
                 'AB': Deroffer.macro_i_ir,
+                'Nm': Deroffer.macro_Nm,
                 '] ': Deroffer.macro_close_bracket,
                 'PS': Deroffer.macro_ps,
                 'PE': Deroffer.macro_pe,
@@ -678,6 +682,13 @@ class Deroffer:
         pass
         return False
         
+    def macro_Nm(self):
+        if self.s == 'Nm\n':
+            self.condputs(self.name)
+        else:
+            self.name = self.s[3:].strip() + ' '
+        return True
+               
     def macro_close_bracket(self):
         self.refer = False
         return False
@@ -1062,12 +1073,14 @@ class Deroffer:
 
 def deroff_files(files):
     for arg in files:
-        print >> sys.stderr, arg
+        sys.stderr.write(arg + '\n')
         if arg.endswith('.gz'):
             f = gzip.open(arg, 'r')
+            str = f.read()
+            if IS_PY3: str = str.decode('latin-1')
         else:
             f = open(arg, 'r')
-        str = f.read()
+            str = f.read()
         d = Deroffer()
         d.deroff(str)
         d.flush_output(sys.stdout)
@@ -1078,7 +1091,7 @@ def deroff_files(files):
 if __name__ == "__main__":
     import gzip
     paths = sys.argv[1:]
-    if False:
+    if True:
         deroff_files(paths)
     else:
         import cProfile, profile, pstats

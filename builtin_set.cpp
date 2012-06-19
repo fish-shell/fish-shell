@@ -260,10 +260,14 @@ static int update_values( wcstring_list_t &list,
 		*/
 		long ind = indexes[i] - 1;
 		const wcstring newv = values[ i ];
-		if( ind < 0 || ind>=list.size() )
+		if( ind < 0 )
 		{
 			return 1;
 		}
+        if ( ind >= list.size() )
+        {
+            list.resize( ind+1 );
+        }
 		
 //		free((void *) al_get(list, ind));
 		list[ ind ] = newv; 

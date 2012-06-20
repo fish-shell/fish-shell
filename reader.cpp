@@ -578,6 +578,7 @@ void reader_write_title()
     bool recognized = false;
     recognized = recognized || contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" );
     recognized = recognized || ! wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
+    recognized = recognized || ! wcsncmp(term, L"screen-", wcslen(L"screen-"));
 
 	if( ! recognized )
 	{

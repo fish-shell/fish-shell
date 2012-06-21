@@ -1715,6 +1715,8 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				break;
 				
 			case 'h':
+				parser.pop_block();
+				parser.push_block( FAKE );
 				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 				

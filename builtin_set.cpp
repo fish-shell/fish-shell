@@ -264,6 +264,10 @@ static int update_values( wcstring_list_t &list,
 		{
 			return 1;
 		}
+        if ( ind >= list.size() )
+        {
+            list.resize( ind+1 );
+        }
 		
 //		free((void *) al_get(list, ind));
 		list[ ind ] = newv; 

@@ -65,8 +65,9 @@
 # The color for the branch name and each individual optional component can be
 # specified using __fish_git_prompt_color_<name>, where <name> is 'prefix',
 # 'suffix', 'bare', 'merging', 'branch', 'dirtystate', 'stagedstate',
-# 'invalidstate', 'stashstate', 'untrackedfiles', and 'upstream'. Colors are
-# specified as arguments to `set_color`.
+# 'invalidstate', 'stashstate', 'untrackedfiles', and 'upstream'. The variable
+# __fish_git_prompt_color is used for any component that does not have an
+# individual color set. Colors are specified as arguments to `set_color`.
 #
 # The characters used for the optional features can be configured using
 # __fish_git_prompt_char_<token>, where <token> is one of 'dirtystate',

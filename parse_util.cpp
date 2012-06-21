@@ -161,7 +161,7 @@ int parse_util_get_offset_from_line( const wcstring &str, int line )
 			count++;
 			if( count == line )
 			{
-				return i+1;
+				return (i+1)<str.size()?i+1:i;
 			}
 			
 		}

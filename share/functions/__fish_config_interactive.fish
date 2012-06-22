@@ -83,7 +83,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
 			set -U fish_greeting $line1\n$line2
 		end
-		set -U __fish_init_1_23_0
+		set -U __fish_init_1_50_0
 
 		#
 		# Set various defaults using these throwaway functions

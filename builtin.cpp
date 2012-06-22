@@ -3540,6 +3540,7 @@ static int builtin_switch( parser_t &parser, wchar_t **argv )
 		parser.current_block->state1<wcstring>() = argv[1];
 		parser.current_block->skip=1;
 		parser.current_block->state2<int>() = 0;
+        res = proc_get_last_status();
 	}
 	
 	return res;
@@ -3568,7 +3569,7 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 	
 	if( parser.current_block->state2<int>() )
 	{
-		return STATUS_BUILTIN_OK;
+		return proc_get_last_status();
 	}
 	
 	for( i=1; i<argc; i++ )
@@ -3588,7 +3589,7 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 		}
 	}
 	
-	return STATUS_BUILTIN_OK;
+	return proc_get_last_status();
 }
 
 

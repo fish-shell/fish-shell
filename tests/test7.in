@@ -1,0 +1,30 @@
+# Test that subsequent cases do not blow away the status from previous ones
+for val in one two three four
+	switch $val
+	case one
+		/bin/sh -c 'exit 1'
+	case two
+		/bin/sh -c 'exit 2'
+	case three
+		/bin/sh -c 'exit 3'
+	end
+	echo $status
+end
+
+echo
+
+# Test that the `switch` builtin itself does not blow away status before evaluating a case
+false
+switch one
+case one
+	echo $status
+end
+
+# Test that non-case tokens inside `switch` don't blow away status
+# (why are these even allowed?)
+false
+switch one
+true
+case one
+	echo $status
+end

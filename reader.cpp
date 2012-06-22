@@ -2001,14 +2001,6 @@ static void move_word( int dir, int erase, int newv )
 	}
 	
 	/*
-	  When moving left, ignore the character under the cursor
-	*/
-	if( !dir )
-	{
-		end_buff_pos+=2*step;
-	}
-	
-	/*
 	  Remove all whitespace characters before finding a word
 	*/
 	while( 1 )

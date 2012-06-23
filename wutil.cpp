@@ -304,7 +304,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 
 #else
 
-wchar_t *wrealpath(const wchar_t *pathname, wchar_t *resolved_path)
+wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 {
     cstring tmp = wcs2string(pathname);
 	char narrow_buff[PATH_MAX];

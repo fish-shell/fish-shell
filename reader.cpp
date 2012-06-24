@@ -3213,7 +3213,11 @@ const wchar_t *reader_readline()
 
 			case R_BEGINNING_OF_HISTORY:
 			{
-				data->history_search.go_to_beginning();
+                data->history_search = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
+                data->history_search.go_to_beginning();
+                wcstring new_text = data->history_search.current_string();
+                set_command_line_and_position(new_text, new_text.size());
+
 				break;
 			}
 

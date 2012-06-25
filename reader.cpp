@@ -578,6 +578,7 @@ void reader_write_title()
     bool recognized = false;
     recognized = recognized || contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" );
     recognized = recognized || ! wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
+    recognized = recognized || ! wcsncmp(term, L"screen-", wcslen(L"screen-"));
 
 	if( ! recognized )
 	{
@@ -608,7 +609,7 @@ void reader_write_title()
 		size_t i;
 		if( lst.size() > 0 )
 		{
-			writestr( L"\x1b];" );
+			writestr( L"\x1b]0;" );
 			for( i=0; i<lst.size(); i++ )
 			{
 				writestr( lst.at(i).c_str() );
@@ -3212,7 +3213,11 @@ const wchar_t *reader_readline()
 
 			case R_BEGINNING_OF_HISTORY:
 			{
-				data->history_search.go_to_beginning();
+                data->history_search = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
+                data->history_search.go_to_beginning();
+                wcstring new_text = data->history_search.current_string();
+                set_command_line_and_position(new_text, new_text.size());
+
 				break;
 			}
 

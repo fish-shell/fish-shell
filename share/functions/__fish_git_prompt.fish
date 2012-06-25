@@ -237,14 +237,14 @@ function __fish_git_prompt --description "Prompt function for Git"
 			if test $os -ne 0
 				set b (switch "$__fish_git_prompt_describe_style"
 						case contains
-							git describe --contains HEAD; set os $status
+							git describe --contains HEAD
 						case branch
-							git describe --contains --all HEAD; set os $status
+							git describe --contains --all HEAD
 						case describe
-							git describe HEAD; set os $status
+							git describe HEAD
 						case default '*'
-							git describe --tags --exact-match HEAD; set os $status
-						end ^/dev/null)
+							git describe --tags --exact-match HEAD
+						end ^/dev/null; set os $status)
 				if test $os -ne 0
 					set b (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
 					if test $os -ne 0

@@ -1,11 +1,8 @@
 function __fish_complete_cd -d "Completions for the cd command"
-
 	#
 	# We can't simply use __fish_complete_directories because of the CDPATH
 	#
-
 	set -l wd $PWD
-	set -l owd $OLDPWD
 
 	# Check if CDPATH is set
 
@@ -17,10 +14,10 @@ function __fish_complete_cd -d "Completions for the cd command"
 		set mycdpath $CDPATH
 	end
 
-
-	if echo '(commandline -ct)'|sgrep '^/\|^\./\|^\.\./' >/dev/null
+    set -l ctoken (commandline -ct)
+	if echo $ctoken | sgrep '^/\|^\./\|^\.\./\|^~/' >/dev/null
 		# This is an absolute search path
-		eval printf '\%s\\tDirectory\\n' '(commandline -ct)'\*/
+		eval printf '\%s\\tDirectory\\n' $ctoken\*/
 	else
 		# This is a relative search path
 		# Iterate over every directory in CDPATH
@@ -33,11 +30,10 @@ function __fish_complete_cd -d "Completions for the cd command"
 			builtin cd $wd
 			eval builtin cd $i
 
-			eval printf '"%s\tDirectory in "'$i'"\n"' '(commandline -ct)'\*/
+			eval printf '"%s\tDirectory in "'$i'"\n"' $ctoken\*/
 		end
 	end
 
 	builtin cd $wd
-	set OLDPWD $owd
 end
 

@@ -122,7 +122,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		set_default fish_pager_color_completion normal
 		set_default fish_pager_color_description normal
 		set_default fish_pager_color_progress cyan
-        set_default fish_pater_color_secondary 151515
 
 		#
 		# Directory history colors

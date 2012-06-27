@@ -3247,7 +3247,13 @@ const wchar_t *reader_readline()
 								
 				break;
 			}
-			
+
+			case R_SUPPRESS_AUTOSUGGESTION:
+			{
+				data->suppress_autosuggestion = true;
+				data->autosuggestion.clear();
+				reader_repaint();
+			}
 
 			/* Other, if a normal character, we add it to the command */
 			default:

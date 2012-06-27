@@ -391,7 +391,7 @@ static int print_max( const wchar_t *str, int max, int has_more )
 /**
    Print the specified item using at the specified amount of space
 */
-static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, bool primary )
+static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, bool secondary )
 {
 	int comp_width=0, desc_width=0;
 	int written=0;
@@ -424,7 +424,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, 
 		
 	}
 	
-    rgb_color_t bg = primary ? rgb_color_t::normal() : get_color(HIGHLIGHT_PAGER_SECONDARY);
+    rgb_color_t bg = secondary ? get_color(HIGHLIGHT_PAGER_SECONDARY) : rgb_color_t::normal();
 	for( size_t i=0; i<c->comp.size(); i++ )
 	{
         const wcstring &comp = c->comp.at(i);
@@ -457,7 +457,7 @@ static void completion_print_item( const wchar_t *prefix, comp_t *c, int width, 
 			writech( L' ');
 		}
 	}
-	if ( !primary )
+	if ( secondary )
 		set_color( rgb_color_t::normal(), rgb_color_t::normal() );
 }
 

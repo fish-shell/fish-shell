@@ -9,7 +9,7 @@ function funced --description 'Edit function definition'
                 end
 
                 if not type -f "$external" >/dev/null
-                    for e in edit nano pico joe mcedit vim vi
+                    for e in edit emacs vim joe mcedit nano pico vi
                         if type -f $e >/dev/null
                             set external $e
                             break

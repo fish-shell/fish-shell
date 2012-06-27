@@ -1004,6 +1004,7 @@ highlighting in the completion pager:
 - \c fish_pager_color_completion, the color of the completion itself
 - \c fish_pager_color_description, the color of the completion description
 - \c fish_pager_color_progress, the color of the progress bar at the bottom left corner
+- \c fish_pager_color_secondary, the background color of the every second completion
 
 Example:
 
@@ -1227,8 +1228,8 @@ fish_color_substitution, \c fish_color_redirection, \c fish_color_end,
 \c fish_color_error, \c fish_color_param, \c fish_color_comment, \c
 fish_color_match, \c fish_color_search_match, \c fish_color_cwd, \c
 fish_pager_color_prefix, \c fish_pager_color_completion, \c
-fish_pager_color_description and \c
-fish_pager_color_progress. Usually, the value of these variables will
+fish_pager_color_description, \c fish_pager_color_progress
+and \c fish_pager_color_secondary. Usually, the value of these variables will
 be one of \c black, \c red, \c green, \c brown, \c yellow, \c blue, \c
 magenta, \c purple, \c cyan, \c white or \c normal, but they can be an
 array containing any color options for the set_color command.

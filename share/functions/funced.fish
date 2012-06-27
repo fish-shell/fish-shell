@@ -1,5 +1,26 @@
+function funced --description 'Edit function definition'
+    set -l external
+	if test (count $argv) = 2
+        for i in (seq 2)
+            switch $argv[$i]
+            case -e --editor
+                if set -q EDITOR
+                    set external $EDITOR
+                end
 
-function funced --description "Edit function definition"
+                if not type -f "$external" >/dev/null
+                    for e in edit nano pico joe mcedit vim vi
+                        if type -f $e >/dev/null
+                            set external $e
+                            break
+                        end
+                    end
+                end
+                set -e argv[$i]
+                break
+            end
+        end
+	end
 	if test (count $argv) = 1
 		switch $argv
 
@@ -15,14 +36,30 @@ function funced --description "Edit function definition"
 				set -l init ''
 				set -l tmp
 
-				# Shadow IFS here to avoid array splitting in command substitution
-				set -l IFS
+                if set -q external[1]
+                    set -l tmpname (mktemp --suffix=.fish)
+
+                    if functions -q $argv
+                        functions $argv > $tmpname
+                    else
+                        echo "function $argv
+end
+" > $tmpname
+                    end
+                    eval $external $tmpname
+                    . $tmpname
+                    set -l stat $status 
+                    rm $tmpname >/dev/null
+                    return $stat
+                end
+
+                set -l IFS
 				if functions -q $argv
-					set init (functions $argv | fish_indent --no-indent)
+                    # Shadow IFS here to avoid array splitting in command substitution
+                    set init (functions $argv | fish_indent --no-indent)
 				else
 					set init function $argv\nend
 				end
-
 
 				set -l prompt 'printf "%s%s%s> " (set_color green) '$argv' (set_color normal)'
 				# Unshadow IFS since the fish_title breaks otherwise

@@ -1,9 +1,11 @@
 \section funced funced - edit a function interactively
 
 \subsection funced-synopsis Synopsis
- <code>funced NAME</code>
+ <code>funced [-e] NAME</code>
 
 \subsection funced-description Description
 
 Use the funced command to interactively edit the definition of a
 function. If there is no function with the name specified, a skeleton function is inserted, if a function exist, the definion will be shown on the command line.
+
+- <code>-e</code> or <code>--editor</code> open function body inside external editor

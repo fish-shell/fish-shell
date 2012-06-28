@@ -32,7 +32,7 @@ function funced --description 'Edit function definition'
 				printf (_ "%s: Unknown option %s\n") funced $argv
 				return 1
 
-			case '*'
+			case '*' '.*'
 				set -l init ''
 				set -l tmp
 

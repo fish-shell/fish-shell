@@ -70,6 +70,9 @@
 */
 #define HIGHLIGHT_AUTOSUGGESTION 0x2000
 
+class history_item_t;
+class file_detection_context_t;
+
 /**
    Perform syntax highlighting for the shell commands in buff. The result is
    stored in the color array as a color_code from the HIGHLIGHT_ enum
@@ -109,7 +112,7 @@ rgb_color_t highlight_get_color( int highlight, bool is_background );
 /** Given a command 'str' from the history, try to determine whether we ought to suggest it by specially recognizing the command.
     Returns true if we validated the command. If so, returns by reference whether the suggestion is valid or not.
 */
-bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
+bool autosuggest_validate_from_history(const history_item_t &item, file_detection_context_t &detector, const wcstring &working_directory, const env_vars &vars);
 
 /** Given the command line contents 'str', return via reference a suggestion by specially recognizing the command. Returns true if we recognized the command (even if we couldn't think of a suggestion for it).
 */

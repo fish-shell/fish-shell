@@ -1255,23 +1255,12 @@ struct autosuggestion_context_t {
             if (item.str().find('\n') != wcstring::npos)
                 continue;
             
-            bool item_ok = false;
-            if (autosuggest_special_validate_from_history(item.str(), working_directory, &item_ok)) {
+            if (autosuggest_validate_from_history(item, detector, working_directory, vars)) {
                 /* The command autosuggestion was handled specially, so we're done */
-            } else {
-                /* See if the item has any required paths */
-                const path_list_t &paths = item.get_required_paths();
-                if (paths.empty()) {
-                    item_ok = true;
-                } else {
-                    detector.potential_paths = paths;
-                    item_ok = detector.paths_are_valid(paths);
-                }
-            }
-            if (item_ok) {
                 this->autosuggestion = searcher.current_string();
                 return 1;
             }
+
         }
         
         /* Try handling a special command like cd */

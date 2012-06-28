@@ -33,6 +33,7 @@
 #include "output.h"
 #include "wildcard.h"
 #include "path.h"
+#include "history.h"
 
 /**
    Number of elements in the highlight_var array
@@ -810,17 +811,16 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     return result;
 }
 
-bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK) {
+bool autosuggest_validate_from_history(const history_item_t &item, file_detection_context_t &detector, const wcstring &working_directory, const env_vars &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
-    assert(outSuggestionOK != NULL);
-    
+
     bool handled = false, suggestionOK = false;
 
     /* Parse the string */    
     wcstring parsed_command;
     wcstring_list_t parsed_arguments;
     int parsed_last_arg_pos = -1;
-    if (! autosuggest_parse_command(str, &parsed_command, &parsed_arguments, &parsed_last_arg_pos))
+    if (! autosuggest_parse_command(item.str(), &parsed_command, &parsed_arguments, &parsed_last_arg_pos))
         return false;
 
     if (parsed_command == L"cd" && ! parsed_arguments.empty()) {        
@@ -845,11 +845,34 @@ bool autosuggest_special_validate_from_history(const wcstring &str, const wcstri
                 free(path);
             }
         }        
-    } else {
-        /* Either an error or some other command, so we don't handle it specially */
+    } 
+  
+    /* If not handled specially, handle it here */
+    if (! handled) {
+        bool cmd_ok = false;
+
+        wchar_t *full_path = path_get_path(parsed_command.c_str());
+        if (full_path) {
+            cmd_ok = true;
+            free(full_path);
+        }
+        else if (builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command, vars)) {
+            cmd_ok = true;
+        }
+
+        if (cmd_ok) {
+            const path_list_t &paths = item.get_required_paths();
+            if (paths.empty()) {
+                suggestionOK= true;
+            }
+            else {
+                detector.potential_paths = paths;
+                suggestionOK = detector.paths_are_valid(paths);
+            }
+        }
     }
-    *outSuggestionOK = suggestionOK;
-    return handled;
+
+    return suggestionOK;
 }
 
 // This function does I/O

@@ -300,11 +300,17 @@ class completer_t {
     
     bool condition_test( const wcstring &condition );
     
+    void complete_strings( const wcstring &wc_escaped,
+                           const wchar_t *desc,
+                           wcstring (*desc_func)(const wcstring &),
+                           std::vector<completion_t> &possible_comp,
+                           complete_flags_t flags );
+    
     expand_flags_t expand_flags() const {
-        /* Never do command substitution in autosuggestions */
+        /* Never do command substitution in autosuggestions. Sadly, we also can't yet do process expansion because it's not thread safe. */
         expand_flags_t result = 0;
         if (type == COMPLETE_AUTOSUGGEST)
-            result |= EXPAND_SKIP_CMDSUBST;
+            result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_PROCESS;
         return result;
     }
     
@@ -812,8 +818,8 @@ int complete_is_valid_argument( const wchar_t *str,
 
 /**
    Copy any strings in possible_comp which have the specified prefix
-   to the list comp_out. The prefix may contain wildcards. The output
-   will consist of completion_t structs.
+   to the completer's completion array. The prefix may contain wildcards.
+   The output will consist of completion_t structs.
 
    There are three ways to specify descriptions for each
    completion. Firstly, if a description has already been added to the
@@ -822,22 +828,20 @@ int complete_is_valid_argument( const wchar_t *str,
    completion. Thirdly, if none of the above are available, the desc
    string is used as a description.
 
-   \param comp_out the destination list
    \param wc_escaped the prefix, possibly containing wildcards. The wildcard should not have been unescaped, i.e. '*' should be used for any string, not the ANY_STRING character.
    \param desc the default description, used for completions with no embedded description. The description _may_ contain a COMPLETE_SEP character, if not, one will be prefixed to it
    \param desc_func the function that generates a description for those completions witout an embedded description
    \param possible_comp the list of possible completions to iterate over
 */
 
-static void complete_strings( std::vector<completion_t> &comp_out,
-							  const wcstring &wc_escaped,
-							  const wchar_t *desc,
-							  wcstring (*desc_func)(const wcstring &),
-							  std::vector<completion_t> &possible_comp,
-							  complete_flags_t flags )
+void completer_t::complete_strings( const wcstring &wc_escaped,
+                                    const wchar_t *desc,
+                                    wcstring (*desc_func)(const wcstring &),
+                                    std::vector<completion_t> &possible_comp,
+                                    complete_flags_t flags )
 {
     wcstring tmp = wc_escaped;
-    if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS))
+    if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags()))
         return;
     
 	const wchar_t *wc = parse_util_unescape_wildcards( tmp.c_str() );
@@ -849,7 +853,7 @@ static void complete_strings( std::vector<completion_t> &comp_out,
 
 		if( next_str )
 		{
-			wildcard_complete( next_str, wc, desc, desc_func, comp_out, flags );
+			wildcard_complete( next_str, wc, desc, desc_func, this->completions, flags );
 		}
 	}
 
@@ -1096,7 +1100,7 @@ void completer_t::complete_cmd( const wcstring &str_cmd, bool use_function, bool
                 possible_comp.push_back(completion_t(names.at(i)));
             }
             
-			complete_strings( this->completions, str_cmd, 0, &complete_function_desc, possible_comp, 0 );
+			this->complete_strings( str_cmd, 0, &complete_function_desc, possible_comp, 0 );
 		}
 
 		possible_comp.clear();
@@ -1104,7 +1108,7 @@ void completer_t::complete_cmd( const wcstring &str_cmd, bool use_function, bool
 		if( use_builtin )
 		{
 			builtin_get_names( possible_comp );
-			complete_strings( this->completions, str_cmd, 0, &builtin_get_desc, possible_comp, 0 );
+			this->complete_strings( str_cmd, 0, &builtin_get_desc, possible_comp, 0 );
 		}
 
 	}
@@ -1143,7 +1147,7 @@ void completer_t::complete_from_args( const wcstring &str,
     if (! is_autosuggest)
         proc_pop_interactive();
 	
-	complete_strings( this->completions, str, desc.c_str(), 0, possible_comp, flags );
+	this->complete_strings( str, desc.c_str(), 0, possible_comp, flags );
 }
 
 /**

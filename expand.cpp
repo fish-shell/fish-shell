@@ -379,7 +379,7 @@ static int find_process( const wchar_t *proc,
 				{
 					
 					{
-                        wcstring result = format_string(L"%ld", (long)j->pgid);
+                        wcstring result = to_string((long)j->pgid);
 						out.push_back(completion_t(result));
 						found = 1;
 					}
@@ -409,7 +409,7 @@ static int find_process( const wchar_t *proc,
 			}
 			else
 			{
-                wcstring result = format_string(L"%ld", (long)j->pgid);
+                wcstring result = to_string((long)j->pgid);
                 out.push_back(completion_t(result));
 				found = 1;
 			}
@@ -1502,7 +1502,8 @@ int expand_string( const wcstring &input, std::vector<completion_t> &output, exp
                  interested in other completions, so we
                  short-circut and return
                  */
-                expand_pid( next, flags, output );
+                if (! (flags & EXPAND_SKIP_PROCESS ))
+                    expand_pid( next, flags, output );
                 return EXPAND_OK;
             }
             else
@@ -1512,7 +1513,7 @@ int expand_string( const wcstring &input, std::vector<completion_t> &output, exp
         }
         else
         {
-            if( !expand_pid( next, flags, *out ) )
+            if( ! (flags & EXPAND_SKIP_PROCESS ) && ! expand_pid( next, flags, *out ) )
             {
                 return EXPAND_ERROR;
             }

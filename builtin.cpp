@@ -1097,7 +1097,9 @@ static void functions_def( const wcstring &name, wcstring &out )
 	event_get( &search, &ev );
 
     out.append(L"function ");
-    out.append(name);
+    if ( name[0]!=L'-' ){
+        out.append(name);
+    }
 
 	if (! desc.empty())
 	{
@@ -1165,7 +1167,11 @@ static void functions_def( const wcstring &name, wcstring &out )
 			append_format( out, L" %ls", named.at(i).c_str() );
 		}
 	}
-	
+
+    if ( name[0]==L'-' ){
+        out.append(L" -- ");
+        out.append(name);
+    }
     
     /* This forced tab is sort of crummy - not all functions start with a tab */
     append_format( out, L"\n\t%ls", def.c_str());

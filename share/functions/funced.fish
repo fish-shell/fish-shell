@@ -47,7 +47,11 @@ function funced --description 'Edit function definition'
         set init function $funcname\n\nend
     end
 
-    if begin; test "$editor" = fish; or set -q interactive[1]; end
+    if not type -f "$editor" >/dev/null
+        set interactive 1
+    end
+
+    if begin; set -q interactive[1]; or test "$editor" = fish; end
         set -l IFS
         if functions -q -- $funcname
             # Shadow IFS here to avoid array splitting in command substitution
@@ -63,12 +67,6 @@ function funced --description 'Edit function definition'
             eval (echo -n $cmd | fish_indent)
         end
         return 0
-    end
-
-    if not type -f "$editor" >/dev/null
-        set_color red
-        printf (_ "%s: Editor %s is not found\n") funced $editor
-        set_color normal
     end
 
     set -q TMPDIR; or set -l TMPDIR /tmp

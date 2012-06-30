@@ -1,26 +1,31 @@
 function funced --description 'Edit function definition'
-    set -l external
-	if test (count $argv) = 2
-        for i in (seq 2)
-            switch $argv[$i]
-            case -e --editor
-                if set -q EDITOR
-                    set external $EDITOR
-                end
-
-                if not type -f "$external" >/dev/null
-                    for e in edit emacs vim joe mcedit nano pico vi
-                        if type -f $e >/dev/null
-                            set external $e
-                            break
-                        end
-                    end
-                end
-                set -e argv[$i]
-                break
-            end
-        end
+    set -l external ''
+    # Default to editing with EDITOR if set
+    if set -q EDITOR
+        set external $EDITOR
 	end
+
+	# Allow overriding the editor with a -e flag
+	if test (count $argv) -eq 3
+		if contains -- $argv[1] -e --editor
+			set external $argv[2]
+			set -e argv[2]
+			set -e argv[1]
+		end
+	end
+	
+	# Let an editor of "fish" mean to use the default editor
+	if test "$external" = fish
+		set -e external
+	end
+	
+	# Make sure any external editor exists
+	if set -q external
+		if not type -f "$external" >/dev/null
+			set -e external
+		end
+	end
+		
 	if test (count $argv) = 1
 		switch $argv
 
@@ -37,17 +42,19 @@ function funced --description 'Edit function definition'
 				set -l tmp
 
                 if set -q external[1]
-                    set -l tmpname (mktemp --suffix=.fish)
+                	# Generate a temporary filename.
+                	# mktemp has a different interface on different OSes,
+                	# or may not exist at all; thus we fake one up from our pid
+                    set -l tmpname (printf "$TMPDIR/fish_funced_%d.fish" %self)
 
                     if functions -q $argv
                         functions $argv > $tmpname
                     else
-                        echo "function $argv
-end
-" > $tmpname
+                        echo function $argv\n\nend > $tmpname
                     end
-                    eval $external $tmpname
-                    . $tmpname
+                    if eval $external $tmpname
+                        . $tmpname
+                    end
                     set -l stat $status 
                     rm $tmpname >/dev/null
                     return $stat

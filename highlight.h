@@ -71,7 +71,7 @@
 #define HIGHLIGHT_AUTOSUGGESTION 0x2000
 
 class history_item_t;
-class file_detection_context_t;
+struct file_detection_context_t;
 
 /**
    Perform syntax highlighting for the shell commands in buff. The result is

@@ -2001,14 +2001,6 @@ static void move_word( int dir, int erase, int newv )
 	}
 	
 	/*
-	  When moving left, ignore the character under the cursor
-	*/
-	if( !dir )
-	{
-		end_buff_pos+=2*step;
-	}
-	
-	/*
 	  Remove all whitespace characters before finding a word
 	*/
 	while( 1 )
@@ -3255,7 +3247,13 @@ const wchar_t *reader_readline()
 								
 				break;
 			}
-			
+
+			case R_SUPPRESS_AUTOSUGGESTION:
+			{
+				data->suppress_autosuggestion = true;
+				data->autosuggestion.clear();
+				reader_repaint();
+			}
 
 			/* Other, if a normal character, we add it to the command */
 			default:

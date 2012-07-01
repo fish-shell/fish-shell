@@ -129,7 +129,8 @@ static const wchar_t *name_arr[] =
 	L"end-of-buffer",
 	L"repaint",
 	L"up-line",
-	L"down-line"
+	L"down-line",
+	L"suppress-autosuggestion"
 }
 	;
 
@@ -210,7 +211,8 @@ static const wchar_t code_arr[] =
 	R_END_OF_BUFFER,
 	R_REPAINT,
 	R_UP_LINE,
-	R_DOWN_LINE
+	R_DOWN_LINE,
+	R_SUPPRESS_AUTOSUGGESTION,
 }
 	;
 

@@ -3253,6 +3253,7 @@ const wchar_t *reader_readline()
 				data->suppress_autosuggestion = true;
 				data->autosuggestion.clear();
 				reader_repaint();
+				break;
 			}
 
 			/* Other, if a normal character, we add it to the command */

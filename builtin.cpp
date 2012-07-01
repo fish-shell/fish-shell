@@ -1085,6 +1085,8 @@ static int builtin_generic( parser_t &parser, wchar_t **argv )
 */
 static void functions_def( const wcstring &name, wcstring &out )
 {
+    CHECK( ! name.empty(), );
+    
     wcstring desc, def;
     function_get_desc(name, &desc);
     function_get_definition(name, &def);
@@ -1097,7 +1099,11 @@ static void functions_def( const wcstring &name, wcstring &out )
 	event_get( &search, &ev );
 
     out.append(L"function ");
-    if ( name[0]!=L'-' ){
+    
+    /* Typically we prefer to specify the function name first, e.g. "function foo --description bar"
+       But If the function name starts with a -, we'll need to output it after all the options. */
+    bool defer_function_name = (name.at(0) == L'-');
+    if ( ! defer_function_name ){
         out.append(name);
     }
 
@@ -1168,7 +1174,8 @@ static void functions_def( const wcstring &name, wcstring &out )
 		}
 	}
 
-    if ( name[0]==L'-' ){
+    /* Output the function name if we deferred it */
+    if ( defer_function_name ){
         out.append(L" -- ");
         out.append(name);
     }
@@ -3317,18 +3324,29 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 				
 				if( d )
 				{
-					/**
-					   Copy the text from the beginning of the function
-					   until the end command and use as the new definition
-					   for the specified function
-					*/
+                    if (d->name.empty())
+                    {
+                        /* Disallow empty function names */
+                		append_format(stderr_buffer, _( L"%ls: No function name given\n" ), argv[0] );
+                        
+                        /* Return an error via a crummy way. Don't just return here, since we need to pop the block. */
+                        proc_set_last_status(STATUS_BUILTIN_ERROR);
+                    }
+                    else
+                    {
+                        /**
+                           Copy the text from the beginning of the function
+                           until the end command and use as the new definition
+                           for the specified function
+                        */
 
-					wchar_t *def = wcsndup( parser.get_buffer()+parser.current_block->tok_pos,
-											parser.get_job_pos()-parser.current_block->tok_pos );
-					d->definition = def;
-		
-					function_add( *d, parser );	
-					free( def );
+                        wchar_t *def = wcsndup( parser.get_buffer()+parser.current_block->tok_pos,
+                                                parser.get_job_pos()-parser.current_block->tok_pos );
+                        d->definition = def;
+            
+                        function_add( *d, parser );	
+                        free( def );
+                    }
 				}
 				else
 				{

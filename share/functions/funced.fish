@@ -4,7 +4,7 @@ function funced --description 'Edit function definition'
     set -l funcname
     while set -q argv[1]
         switch $argv[1]
-			case '---long impossible to match line, because case respects -h option' -h --help
+			case -h --help
 				__fish_print_help funced
 				return 0
 

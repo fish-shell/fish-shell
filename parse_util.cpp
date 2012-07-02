@@ -665,7 +665,6 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 					in++;
 					*(out++)=*in;
 				}
-				*(out++)=*in;
 				break;
 			}
 			
@@ -688,6 +687,7 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 			}
 		}		
 	}
+    *out = *in;
 	return unescaped;
 }
 

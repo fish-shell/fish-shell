@@ -660,11 +660,28 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 		{
 			case L'\\':
 			{
-				if( *(in+1) )
-				{
-					in++;
-					*(out++)=*in;
-				}
+                switch ( *(in + 1) )
+                {
+                    case L'*':
+                    case L'?':
+                    {
+                        in++;
+                        *(out++)=*in;
+                        break;
+                    }
+                    case L'\\':
+                    {
+                        in++;
+                        *(out++)=L'\\';
+                        *(out++)=L'\\';
+                        break;
+                    }
+                    default:
+                    {
+                        *(out++)=*in;
+                        break;
+                    }
+                }
 				break;
 			}
 			

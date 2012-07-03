@@ -68,7 +68,7 @@
 /**
    The default prompt for the read command
 */
-#define DEFAULT_READ_PROMPT L"set_color green; echo read; set_color normal; echo \"> \""
+#define DEFAULT_READ_PROMPT L"set_color green; echo -n read; set_color normal; echo -n \"> \""
 
 /**
    The mode name to pass to history and input

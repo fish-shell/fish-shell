@@ -1,0 +1,16 @@
+\section echo echo - display a line of text
+
+\subsection echo-synopsis Synopsis
+ <tt>echo [STRING]</tt>
+
+\subsection echo-description Description                                                                                                                             
+                                                                                                                                                                          
+Display a line of text.                                                                                                           
+                                                                                                                                                                          
+- \c -n, \c Do not output a newline
+- \c -s, \c Do not separate arguments with spaces                                                                                                                                
+- \c -h, \c --help Display this help
+
+\subsection echo-example Example
+
+<tt>echo 'Hello World'</tt> Print hello world to stdout

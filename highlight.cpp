@@ -257,7 +257,8 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
                                     if (! string_suffixes_string(L"/", *out_path))
                                         out_path->push_back(L'/');
                                 }
-                                out_path->append(ent);
+                                wcstring escapedDir = escape_string(ent, ESCAPE_ALL | ESCAPE_NO_QUOTED);	
+                                out_path->append(escapedDir);
                                 /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */
                                 if (is_dir)
                                     out_path->push_back(L'/');

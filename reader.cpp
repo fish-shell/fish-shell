@@ -2372,8 +2372,6 @@ static void handle_end_loop()
 */
 static int read_i()
 {
-	event_fire_generic(L"fish_prompt");
-	
 	reader_push(L"fish");
 	reader_set_complete_function( &complete );
 	reader_set_highlight_function( &highlight_shell );
@@ -2386,6 +2384,7 @@ static int read_i()
 	{
 		const wchar_t *tmp;
 
+		event_fire_generic(L"fish_prompt");
 		if( function_exists( PROMPT_FUNCTION_NAME ) )
 			reader_set_prompt( PROMPT_FUNCTION_NAME );
 		else

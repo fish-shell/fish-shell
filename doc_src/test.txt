@@ -1,0 +1,43 @@
+\section test test - perform tests on files and text
+
+\subsection test-synopsis Synopsis
+ <tt>test [EXPRESSION]</tt>
+
+\subsection test-description Description                                                                                                                             
+                                                                                                                                                                          
+Tests the expression given and returns true or false.                                                                                                           
+
+- \c -h, \c Display this help
+- \c -hG, \c File owned by effective group ID
+- \c -hL, \c File is syslink
+- \c -hO, \c File owned by effective user ID
+- \c -hS, \c File is socket
+- \c -ha, \c Logical and 
+- \c -hb, \c File is block device 
+- \c -hc, \c File is character device 
+- \c -hd, \c File is a directory
+- \c -he, \c File exists
+- \c -hf, \c File is regular 
+- \c -hf, \c File is set-group-ID 
+- \c -hk, \c File has sticky bit set 
+- \c -hn, \c String length is non-zero
+- \c -ho, \c Logical or
+- \c -hp, \c File is named pipe
+- \c -hr, \c File is readable
+- \c -hs, \c File size is non-zero
+- \c -ht, \c FD is terminal
+- \c -hu, \c File set-user-ID bit is set
+- \c -hw, \c File is writable
+- \c -hx, \c File is executable 
+- \c -hz, \c String length is zero
+
+\subsection test-example Example
+
+<tt>
+    if test -d "/"                                                                                                                                                    
+	echo "Fish is cool";                                                                                                                                      
+    end  
+</tt> 
+
+Because "/" is a directory the expression will evaluate
+to true, and "Fish is cool" will be echoed

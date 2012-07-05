@@ -3838,7 +3838,7 @@ static int internal_help( const wchar_t *cmd )
 {
 	CHECK( cmd, 0 );
 	return contains( cmd, L"for", L"while", L"function",
-			 L"if", L"end", L"switch", L"count" );
+			 L"if", L"end", L"switch", L"case", L"count" );
 }
 
 

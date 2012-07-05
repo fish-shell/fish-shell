@@ -3196,8 +3196,10 @@ const wchar_t *reader_readline()
 			{
                 data->history_search = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
                 data->history_search.go_to_beginning();
-                wcstring new_text = data->history_search.current_string();
-                set_command_line_and_position(new_text, new_text.size());
+                if (! data->history_search.is_at_end()) {
+                    wcstring new_text = data->history_search.current_string();
+                    set_command_line_and_position(new_text, new_text.size());
+                }
 
 				break;
 			}

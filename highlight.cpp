@@ -127,28 +127,28 @@ bool fs_is_case_insensitive(const wcstring &path, int fd, case_sensitivity_cache
 }
 
 /* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O!
+
+   We expect the path to already be unescaped.
 */
-bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, bool require_dir, wcstring *out_path)
+bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_path)
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
-	const wchar_t *unescaped, *in;
+    const bool require_dir = !! (flags & PATH_REQUIRE_DIR);
     wcstring clean_path;
 	int has_magic = 0;
 	bool result = false;
     
     wcstring path(const_path);
-    expand_tilde(path);
-    if (! unescape_string(path, 1))
-        return false;
-    
-    unescaped = path.c_str();
+    if (flags & PATH_EXPAND_TILDE)
+        expand_tilde(path);    
     
     //	debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
     
-    for( in = unescaped; *in; in++ )
+    for( size_t i=0; i < path.size(); i++)
     {
-        switch( *in )
+        wchar_t c = path.at(i);
+        switch( c )
         {
             case PROCESS_EXPAND:
             case VARIABLE_EXPAND:
@@ -171,7 +171,7 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
 				
             default:
             {
-                clean_path.append(in, 1);
+                clean_path.push_back(c);
                 break;
             }
 				
@@ -274,8 +274,8 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
 }
 
 
-/* Given a string, return whether it prefixes a path that we could cd into. Return that path in out_path */
-static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory, wcstring *out_path) {
+/* Given a string, return whether it prefixes a path that we could cd into. Return that path in out_path. Expects path to be unescaped. */
+static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory, path_flags_t flags, wcstring *out_path) {
     wcstring_list_t directories;
     
     if (string_prefixes_string(L"./", path)) {
@@ -298,7 +298,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     }
     
     /* Call is_potential_path with all of these directories */
-    bool result = is_potential_path(path, directories, true /* require_dir */, out_path);
+    bool result = is_potential_path(path, directories, flags | PATH_REQUIRE_DIR, out_path);
 #if 0
     if (out_path) {
         printf("%ls -> %ls\n", path.c_str(), out_path->c_str());
@@ -671,7 +671,7 @@ static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command
     
     bool had_cmd = false;
     tokenizer tok;
-    for (tok_init( &tok, str.c_str(), TOK_SQUASH_ERRORS); tok_has_next(&tok); tok_next(&tok))
+    for (tok_init( &tok, str.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS); tok_has_next(&tok); tok_next(&tok))
     {
         int last_type = tok_last_type(&tok);
         
@@ -681,7 +681,7 @@ static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command
             {
                 if( had_cmd )
                 {
-                    /* Parameter to the command */
+                    /* Parameter to the command. We store these escaped. */
                     args.push_back(tok_last(&tok));
                     arg_pos = tok_get_pos(&tok);
                 }
@@ -776,6 +776,7 @@ static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command
 }
 
 
+/* We have to return an escaped string here */
 bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outSuggestion) {
     if (str.empty())
         return false;
@@ -792,18 +793,34 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     bool result = false;
     if (parsed_command == L"cd" && ! parsed_arguments.empty()) {        
         /* We can possibly handle this specially */
-        wcstring dir = parsed_arguments.back();
+        const wcstring escaped_dir = parsed_arguments.back();
         wcstring suggested_path;
         
         /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
         result = true;
         outSuggestion.clear();
+        
+        /* Unescape the parameter */
+        wcstring unescaped_dir = escaped_dir;
+        bool unescaped = unescape_string(unescaped_dir, UNESCAPE_INCOMPLETE);
+        
+        /* Determine the quote type we got from the input directory. */
+        wchar_t quote = L'\0';
+        parse_util_get_parameter_info(escaped_dir, 0, &quote, NULL, NULL);
+        
+        /* Big hack to avoid expanding a tilde inside quotes */
+        path_flags_t path_flags = (quote == L'\0') ? PATH_EXPAND_TILDE : 0;
+        if (unescaped && is_potential_cd_path(unescaped_dir, working_directory, path_flags, &suggested_path)) {
+                    
+            /* Note: this looks really wrong for strings that have an "unescapable" character in them, e.g. a \t, because parse_util_escape_string_with_quote will insert that character */
+            wcstring escaped_suggested_path = parse_util_escape_string_with_quote(suggested_path, quote);
 
-        if (is_potential_cd_path(dir, working_directory, &suggested_path)) {
-            /* Success */
+            /* Return it */
             outSuggestion = str;
             outSuggestion.erase(parsed_last_arg_pos);
-            outSuggestion.append(suggested_path);
+            if (quote != L'\0') outSuggestion.push_back(quote);
+            outSuggestion.append(escaped_suggested_path);
+            if (quote != L'\0') outSuggestion.push_back(quote);
         }
     } else {
         /* Either an error or some other command, so we don't handle it specially */
@@ -945,7 +962,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
                         if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
 						{
 							int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
-							if( !is_help && ! is_potential_cd_path(dir, working_directory, NULL))
+							if( !is_help && ! is_potential_cd_path(dir, working_directory, PATH_EXPAND_TILDE, NULL))
 							{
                                 color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;							
 							}
@@ -1339,9 +1356,9 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 		parse_util_token_extent( cbuff, pos, &tok_begin, &tok_end, 0, 0 );
 		if( tok_begin && tok_end )
 		{
-			const wcstring token(tok_begin, tok_end-tok_begin);
+			wcstring token(tok_begin, tok_end-tok_begin);
 			const wcstring_list_t working_directory_list(1, working_directory);
-			if (is_potential_path(token, working_directory_list))
+			if (unescape_string(token, 1) && is_potential_path(token, working_directory_list, PATH_EXPAND_TILDE))
 			{
 				for( ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++ )
 				{

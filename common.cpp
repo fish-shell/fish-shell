@@ -898,13 +898,13 @@ static wchar_t *escape_simple( const wchar_t *in )
 	return out;
 }
 
-wchar_t *escape( const wchar_t *in_orig, 
-		 int flags )
+wchar_t *escape( const wchar_t *in_orig, escape_flags_t flags )
 {
 	const wchar_t *in = in_orig;
 	
-	int escape_all = flags & ESCAPE_ALL;
-	int no_quoted  = flags & ESCAPE_NO_QUOTED;
+	bool escape_all = !! (flags & ESCAPE_ALL);
+	bool no_quoted  = !! (flags & ESCAPE_NO_QUOTED);
+    bool no_tilde = !! (flags & ESCAPE_NO_TILDE);
 	
 	wchar_t *out;
 	wchar_t *pos;
@@ -955,8 +955,8 @@ wchar_t *escape( const wchar_t *in_orig,
 		}
 		else
 		{
-			
-			switch( *in )
+            wchar_t c = *in;
+			switch( c )
 			{
 				case L'\t':
 					*(pos++) = L'\\';
@@ -1020,9 +1020,12 @@ wchar_t *escape( const wchar_t *in_orig,
 				case L'%':
 				case L'~':
 				{
-					need_escape=1;
-					if( escape_all )
-						*pos++ = L'\\';
+                    if (! no_tilde || c != L'~')
+                    {
+                        need_escape=1;
+                        if( escape_all )
+                            *pos++ = L'\\';
+                    }
 					*pos++ = *in;
 					break;
 				}
@@ -1076,13 +1079,12 @@ wchar_t *escape( const wchar_t *in_orig,
 	return out;
 }
 
-wcstring escape_string( const wcstring &in, int escape_all ) {
-    wchar_t *tmp = escape(in.c_str(), escape_all);
+wcstring escape_string( const wcstring &in, escape_flags_t flags ) {
+    wchar_t *tmp = escape(in.c_str(), flags);
     wcstring result(tmp);
     free(tmp);
     return result;
 }
-
 
 wchar_t *unescape( const wchar_t * orig, int flags )
 {

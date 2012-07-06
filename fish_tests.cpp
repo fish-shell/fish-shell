@@ -59,6 +59,8 @@
 #include "iothread.h"
 #include "postfork.h"
 #include "signal.h"
+#include "highlight.h"
+
 /**
    The number of tests to run
  */
@@ -606,24 +608,24 @@ static void test_is_potential_path()
     const wcstring_list_t wds(1, wd);
     
     wcstring tmp;
-    assert(is_potential_path(L"al", wds, true, &tmp) && tmp == L"alpha/");
-    assert(is_potential_path(L"alpha/", wds, true, &tmp) && tmp == L"alpha/");
-    assert(is_potential_path(L"aard", wds, false, &tmp) && tmp == L"aardvark");
+    assert(is_potential_path(L"al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
+    assert(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
+    assert(is_potential_path(L"aard", wds, 0, &tmp) && tmp == L"aardvark");
     
-    assert(! is_potential_path(L"balpha/", wds, true, &tmp));
-    assert(! is_potential_path(L"aard", wds, true, &tmp));
-    assert(! is_potential_path(L"aarde", wds, true, &tmp));
-    assert(! is_potential_path(L"aarde", wds, false, &tmp));
+    assert(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR, &tmp));
+    assert(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR, &tmp));
+    assert(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR, &tmp));
+    assert(! is_potential_path(L"aarde", wds, 0, &tmp));
     
-    assert(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, false, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
-    assert(is_potential_path(L"/tmp/is_potential_path_test/al", wds, true, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
-    assert(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, false, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    assert(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    assert(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
+    assert(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
     
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, true, &tmp));
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, false, &tmp));
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, false, &tmp));
+    assert(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR, &tmp));
+    assert(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0, &tmp));
+    assert(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0, &tmp));
     
-    assert(is_potential_path(L"/usr", wds, true, &tmp) && tmp == L"/usr/");
+    assert(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/usr/");
 
 }
 
@@ -727,9 +729,84 @@ static void test_colors()
     assert(rgb_color_t(L"mooganta").is_none());
 }
 
-/* Testing autosuggestion */
-static void test_autosuggest() {
-    bool autosuggest_special_validate_from_history(const wcstring &str, const wcstring &working_directory, bool *outSuggestionOK);
+static void perform_one_autosuggestion_test(const wcstring &command, const wcstring &wd, const wcstring &expected, long line)
+{
+    wcstring suggestion;
+    bool success = autosuggest_suggest_special(command, wd, suggestion);
+    if (! success)
+    {
+        printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line, command.c_str());
+        assert(success);
+    }
+    if (suggestion != expected)
+    {
+        printf("line %ld: autosuggest_suggest_special() returned the wrong expected string for command %ls\n", line, command.c_str());
+        printf("  actual: %ls\n", suggestion.c_str());
+        printf("expected: %ls\n", expected.c_str());
+        assert(suggestion == expected); 
+    }
+}
+
+/* Testing test_autosuggest_suggest_special, in particular for properly handling quotes and backslashes */
+static void test_autosuggest_suggest_special() {
+    if (system("mkdir -p '/tmp/autosuggest_test/0foobar'")) err(L"mkdir failed");
+    if (system("mkdir -p '/tmp/autosuggest_test/1foo bar'")) err(L"mkdir failed");
+    if (system("mkdir -p '/tmp/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
+    if (system("mkdir -p '/tmp/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/autosuggest_test/4foo\\'bar")) err(L"mkdir failed"); //a path with a single quote
+    if (system("mkdir -p /tmp/autosuggest_test/5foo\\\"bar")) err(L"mkdir failed"); //a path with a double quote
+    if (system("mkdir -p ~/test_autosuggest_suggest_special/")) err(L"mkdir failed"); //make sure tilde is handled
+    
+    const wcstring wd = L"/tmp/autosuggest_test/";
+    perform_one_autosuggestion_test(L"cd /tmp/autosuggest_test/0", wd, L"cd /tmp/autosuggest_test/0foobar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"/tmp/autosuggest_test/0", wd, L"cd \"/tmp/autosuggest_test/0foobar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '/tmp/autosuggest_test/0", wd, L"cd '/tmp/autosuggest_test/0foobar/'", __LINE__);
+    perform_one_autosuggestion_test(L"cd 0", wd, L"cd 0foobar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"0", wd, L"cd \"0foobar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '0", wd, L"cd '0foobar/'", __LINE__);
+    
+    perform_one_autosuggestion_test(L"cd /tmp/autosuggest_test/1", wd, L"cd /tmp/autosuggest_test/1foo\\ bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"/tmp/autosuggest_test/1", wd, L"cd \"/tmp/autosuggest_test/1foo bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '/tmp/autosuggest_test/1", wd, L"cd '/tmp/autosuggest_test/1foo bar/'", __LINE__);
+    perform_one_autosuggestion_test(L"cd 1", wd, L"cd 1foo\\ bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"1", wd, L"cd \"1foo bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '1", wd, L"cd '1foo bar/'", __LINE__);
+    
+    perform_one_autosuggestion_test(L"cd /tmp/autosuggest_test/2", wd, L"cd /tmp/autosuggest_test/2foo\\ \\ bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"/tmp/autosuggest_test/2", wd, L"cd \"/tmp/autosuggest_test/2foo  bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '/tmp/autosuggest_test/2", wd, L"cd '/tmp/autosuggest_test/2foo  bar/'", __LINE__);
+    perform_one_autosuggestion_test(L"cd 2", wd, L"cd 2foo\\ \\ bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"2", wd, L"cd \"2foo  bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '2", wd, L"cd '2foo  bar/'", __LINE__);
+    
+    perform_one_autosuggestion_test(L"cd /tmp/autosuggest_test/3", wd, L"cd /tmp/autosuggest_test/3foo\\\\bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"/tmp/autosuggest_test/3", wd, L"cd \"/tmp/autosuggest_test/3foo\\bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '/tmp/autosuggest_test/3", wd, L"cd '/tmp/autosuggest_test/3foo\\bar/'", __LINE__);
+    perform_one_autosuggestion_test(L"cd 3", wd, L"cd 3foo\\\\bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"3", wd, L"cd \"3foo\\bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '3", wd, L"cd '3foo\\bar/'", __LINE__);
+    
+    perform_one_autosuggestion_test(L"cd /tmp/autosuggest_test/4", wd, L"cd /tmp/autosuggest_test/4foo\\'bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"/tmp/autosuggest_test/4", wd, L"cd \"/tmp/autosuggest_test/4foo'bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '/tmp/autosuggest_test/4", wd, L"cd '/tmp/autosuggest_test/4foo\\'bar/'", __LINE__);
+    perform_one_autosuggestion_test(L"cd 4", wd, L"cd 4foo\\'bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"4", wd, L"cd \"4foo'bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '4", wd, L"cd '4foo\\'bar/'", __LINE__);
+    
+    perform_one_autosuggestion_test(L"cd /tmp/autosuggest_test/5", wd, L"cd /tmp/autosuggest_test/5foo\\\"bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"/tmp/autosuggest_test/5", wd, L"cd \"/tmp/autosuggest_test/5foo\\\"bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '/tmp/autosuggest_test/5", wd, L"cd '/tmp/autosuggest_test/5foo\"bar/'", __LINE__);
+    perform_one_autosuggestion_test(L"cd 5", wd, L"cd 5foo\\\"bar/", __LINE__);
+    perform_one_autosuggestion_test(L"cd \"5", wd, L"cd \"5foo\\\"bar/\"", __LINE__);
+    perform_one_autosuggestion_test(L"cd '5", wd, L"cd '5foo\"bar/'", __LINE__);
+    
+    perform_one_autosuggestion_test(L"cd ~/test_autosuggest_suggest_specia", wd, L"cd ~/test_autosuggest_suggest_special/", __LINE__);
+    
+    // A single quote should defeat tilde expansion
+    perform_one_autosuggestion_test(L"cd '~/test_autosuggest_suggest_specia'", wd, L"", __LINE__);
+    
+    system("rm -Rf '/tmp/autosuggest_test/'");
+    system("rm -Rf ~/test_autosuggest_suggest_special/");
 }
 
 
@@ -1134,7 +1211,7 @@ int main( int argc, char **argv )
 	test_path();
     test_is_potential_path();
     test_colors();
-    test_autosuggest();
+    test_autosuggest_suggest_special();
     history_tests_t::test_history();
     history_tests_t::test_history_merge();
     history_tests_t::test_history_formats();

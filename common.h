@@ -63,14 +63,18 @@ typedef std::vector<wcstring> wcstring_list_t;
  */
 #define UNESCAPE_INCOMPLETE 2
 
-/**
-   Escape all characters, including magic characters like the semicolon
- */
-#define ESCAPE_ALL 1
-/**
-   Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty string
- */
-#define ESCAPE_NO_QUOTED 2
+/* Flags for the escape() and escape_string() functions */
+enum {
+    /** Escape all characters, including magic characters like the semicolon */
+     ESCAPE_ALL = 1 << 0,
+     
+    /** Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty string */
+    ESCAPE_NO_QUOTED = 1 << 1,
+    
+    /** Do not escape tildes */
+    ESCAPE_NO_TILDE = 1 << 2
+};
+typedef unsigned int escape_flags_t;
 
 /**
  Helper macro for errors
@@ -639,8 +643,8 @@ void debug( int level, const wchar_t *msg, ... );
    \return The escaped string, or 0 if there is not enough memory
 */
 
-wchar_t *escape( const wchar_t *in, int escape_all );
-wcstring escape_string( const wcstring &in, int escape_all );
+wchar_t *escape( const wchar_t *in, escape_flags_t flags );
+wcstring escape_string( const wcstring &in, escape_flags_t flags );
 
 /**
    Expand backslashed escapes and substitute them with their unescaped

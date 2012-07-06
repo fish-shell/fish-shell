@@ -802,130 +802,6 @@ static int comp_ilen( const wchar_t *a, const wchar_t *b )
 	return i;
 }
 
-/**
-   Find the outermost quoting style of current token. Returns 0 if
-   token is not quoted.
-
-*/
-static wchar_t get_quote( wchar_t *cmd, int len )
-{
-	int i=0;
-	wchar_t res=0;
-
-	while( 1 )
-	{
-		if( !cmd[i] )
-			break;
-
-		if( cmd[i] == L'\\' )
-		{
-			i++;
-			if( !cmd[i] )
-				break;
-			i++;			
-		}
-		else
-		{
-			if( cmd[i] == L'\'' || cmd[i] == L'\"' )
-			{
-				const wchar_t *end = quote_end( &cmd[i] );
-				//fwprintf( stderr, L"Jump %d\n",  end-cmd );
-				if(( end == 0 ) || (!*end) || (end-cmd > len))
-				{
-					res = cmd[i];
-					break;
-				}
-				i = end-cmd+1;
-			}
-			else
-				i++;
-		}
-	}
-
-	return res;
-}
-
-/**
-   Calculates information on the parameter at the specified index.
-
-   \param cmd The command to be analyzed
-   \param pos An index in the string which is inside the parameter
-   \param quote If not 0, store the type of quote this parameter has, can be either ', " or \\0, meaning the string is not quoted.
-   \param offset If not 0, get_param will store a pointer to the beginning of the parameter.
-   \param string If not 0, get_parm will store a copy of the parameter string as returned by the tokenizer.
-   \param type If not 0, get_param will store the token type as returned by tok_last.
-*/
-static void get_param( const wchar_t *cmd,
-					   const int pos,
-					   wchar_t *quote,
-					   const wchar_t **offset,
-					   wchar_t **string,
-					   int *type )
-{
-	int prev_pos=0;
-	wchar_t last_quote = '\0';
-	int unfinished;
-
-	tokenizer tok;
-	tok_init( &tok, cmd, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS );
-
-	for( ; tok_has_next( &tok ); tok_next( &tok ) )
-	{
-		if( tok_get_pos( &tok ) > pos )
-			break;
-
-		if( tok_last_type( &tok ) == TOK_STRING )
-			last_quote = get_quote( tok_last( &tok ),
-									pos - tok_get_pos( &tok ) );
-
-		if( type != 0 )
-			*type = tok_last_type( &tok );
-		if( string != 0 )
-			wcscpy( *string, tok_last( &tok ) );
-
-		prev_pos = tok_get_pos( &tok );
-	}
-
-	tok_destroy( &tok );
-    
-    wchar_t *cmd_tmp = wcsdup(cmd);
-	cmd_tmp[pos]=0;
-	int cmdlen = wcslen( cmd_tmp );
-	unfinished = (cmdlen==0);
-	if( !unfinished )
-	{
-		unfinished = (quote != 0);
-
-		if( !unfinished )
-		{
-			if( wcschr( L" \t\n\r", cmd_tmp[cmdlen-1] ) != 0 )
-			{
-				if( ( cmdlen == 1) || (cmd_tmp[cmdlen-2] != L'\\') )
-				{
-					unfinished=1;
-				}
-			}
-		}
-	}
-
-	if( quote )
-		*quote = last_quote;
-
-	if( offset != 0 )
-	{
-		if( !unfinished )
-		{
-			while( (cmd_tmp[prev_pos] != 0) && (wcschr( L";|",cmd_tmp[prev_pos])!= 0) )
-				prev_pos++;
-
-			*offset = cmd + prev_pos;
-		}
-		else
-		{
-			*offset = cmd + pos;
-		}
-	}
-}
 
 /**
    Insert the string in the given command line at the given cursor
@@ -991,36 +867,8 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
         wcstring replaced;
 		if( do_escape )
 		{
-			get_param(command_line.c_str(), cursor_pos, &quote, 0, 0, 0);
-			if( quote == L'\0' )
-			{
-				replaced = escape_string( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-			}
-			else
-			{
-				bool unescapable = false;
-				for (const wchar_t *pin = val; *pin; pin++)
-				{
-					switch (*pin )
-					{
-						case L'\n':
-						case L'\t':
-						case L'\b':
-						case L'\r':
-							unescapable = true;
-							break;
-						default:
-							replaced.push_back(*pin);
-							break;
-					}
-				}
-                
-				if (unescapable)
-				{
-                    replaced = escape_string(val, ESCAPE_ALL | ESCAPE_NO_QUOTED);
-                    replaced.insert(0, &quote, 1);
-				}
-			}
+            parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
+            replaced = parse_util_escape_string_with_quote(val_str, quote);
 		}
 		else
 		{
@@ -1274,9 +1122,13 @@ struct autosuggestion_context_t {
         // If the line ends with a space, and the cursor is not at the end,
         // don't use completion autosuggestions. It ends up being pretty weird seeing stuff get spammed on the right
         // while you go back to edit a line
-        const bool line_ends_with_space = iswspace(search_string.at(search_string.size() - 1));
+        const wchar_t last_char = search_string.at(search_string.size() - 1);
         const bool cursor_at_end = (this->cursor_pos == search_string.size());
-        if (line_ends_with_space && ! cursor_at_end)
+        if (! cursor_at_end && iswspace(last_char))
+            return 0;
+
+        // On the other hand, if the line ends with a quote, don't go dumping stuff after the quote
+        if (wcschr(L"'\"", last_char) && cursor_at_end)
             return 0;
 
         /* Try normal completions */
@@ -1586,35 +1438,29 @@ static int handle_completions( const std::vector<completion_t> &comp )
 		  There is no common prefix in the completions, and show_list
 		  is true, so we print the list
 		*/
-		int len;
+		size_t len, prefix_start = 0;
 		wcstring prefix;
-		const wchar_t * prefix_start;
-        const wchar_t *buff = data->command_line.c_str();
-		get_param( buff,
-				   data->buff_pos,
-				   0,
-				   &prefix_start,
-				   0,
-				   0 );
+		parse_util_get_parameter_info(data->command_line, data->buff_pos, NULL, &prefix_start, NULL);
 
-		len = &buff[data->buff_pos]-prefix_start;
+		assert(data->buff_pos >= prefix_start); 
+		len = data->buff_pos - prefix_start;
 
 		if( len <= PREFIX_MAX_LEN )
-		{
-            prefix.append(prefix_start, len);
+        {
+            prefix.append(data->command_line, prefix_start, len);
 		}
 		else
 		{
+            // append just the end of the string
             prefix = wcstring(&ellipsis_char, 1);
-            prefix.append(prefix_start + (len - PREFIX_MAX_LEN));
-		}
+			prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN, wcstring::npos);
+        }
 
 		{
 			int is_quoted;
 
 			wchar_t quote;
-            const wchar_t *buff = data->command_line.c_str();
-			get_param( buff, data->buff_pos, &quote, 0, 0, 0 );
+			parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
 			is_quoted = (quote != L'\0');
 			
 			write_loop(1, "\n", 1 );

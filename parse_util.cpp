@@ -708,3 +708,150 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
 	return unescaped;
 }
 
+
+/**
+   Find the outermost quoting style of current token. Returns 0 if
+   token is not quoted.
+
+*/
+static wchar_t get_quote( const wchar_t *cmd, int len )
+{
+	int i=0;
+	wchar_t res=0;
+
+	while( 1 )
+	{
+		if( !cmd[i] )
+			break;
+
+		if( cmd[i] == L'\\' )
+		{
+			i++;
+			if( !cmd[i] )
+				break;
+			i++;			
+		}
+		else
+		{
+			if( cmd[i] == L'\'' || cmd[i] == L'\"' )
+			{
+				const wchar_t *end = quote_end( &cmd[i] );
+				//fwprintf( stderr, L"Jump %d\n",  end-cmd );
+				if(( end == 0 ) || (!*end) || (end-cmd > len))
+				{
+					res = cmd[i];
+					break;
+				}
+				i = end-cmd+1;
+			}
+			else
+				i++;
+		}
+	}
+
+	return res;
+}
+
+void parse_util_get_parameter_info( const wcstring &cmd, const size_t pos, wchar_t *quote, size_t *offset, int *type )
+{
+	size_t prev_pos=0;
+	wchar_t last_quote = '\0';
+	int unfinished;
+
+	tokenizer tok;
+	tok_init( &tok, cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS );
+
+	for( ; tok_has_next( &tok ); tok_next( &tok ) )
+	{
+		if( tok_get_pos( &tok ) > pos )
+			break;
+
+		if( tok_last_type( &tok ) == TOK_STRING )
+			last_quote = get_quote( tok_last( &tok ),
+									pos - tok_get_pos( &tok ) );
+
+		if( type != NULL )
+			*type = tok_last_type( &tok );
+
+		prev_pos = tok_get_pos( &tok );
+	}
+
+	tok_destroy( &tok );
+    
+    wchar_t *cmd_tmp = wcsdup(cmd.c_str());
+	cmd_tmp[pos]=0;
+	int cmdlen = wcslen( cmd_tmp );
+	unfinished = (cmdlen==0);
+	if( !unfinished )
+	{
+		unfinished = (quote != 0);
+
+		if( !unfinished )
+		{
+			if( wcschr( L" \t\n\r", cmd_tmp[cmdlen-1] ) != 0 )
+			{
+				if( ( cmdlen == 1) || (cmd_tmp[cmdlen-2] != L'\\') )
+				{
+					unfinished=1;
+				}
+			}
+		}
+	}
+
+	if( quote )
+		*quote = last_quote;
+
+	if( offset != 0 )
+	{
+		if( !unfinished )
+		{
+			while( (cmd_tmp[prev_pos] != 0) && (wcschr( L";|",cmd_tmp[prev_pos])!= 0) )
+				prev_pos++;
+
+			*offset = prev_pos;
+		}
+		else
+		{
+			*offset = pos;
+		}
+	}
+    free(cmd_tmp);
+}
+
+wcstring parse_util_escape_string_with_quote( const wcstring &cmd, wchar_t quote)
+{
+    wcstring result;
+    if( quote == L'\0' )
+    {
+        result = escape_string( cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED | ESCAPE_NO_TILDE );
+    }
+    else
+    {
+        bool unescapable = false;
+        for (size_t i = 0; i < cmd.size(); i++)
+        {
+            wchar_t c = cmd.at(i);
+            switch (c)
+            {
+                case L'\n':
+                case L'\t':
+                case L'\b':
+                case L'\r':
+                    unescapable = true;
+                    break;
+                default:
+                    if (c == quote)
+                        result.push_back(L'\\');
+                    result.push_back(c);
+                    break;
+            }
+        }
+        
+        if (unescapable)
+        {
+            result = escape_string(cmd, ESCAPE_ALL | ESCAPE_NO_QUOTED);
+            result.insert(0, &quote, 1);
+        }
+    }
+    return result;
+}

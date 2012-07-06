@@ -197,11 +197,11 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
         if (! func) {
             /* Can't use a function that doesn't exist */
             use_cached = false;
-        } else if ( ! allow_stale_functions && is_stale(func)) {
-            /* Can't use a stale function */
-            use_cached = false;
         } else if (really_load && ! func->is_placeholder && ! func->is_loaded) {
             /* Can't use an unloaded function */
+            use_cached = false;
+        } else if ( ! allow_stale_functions && is_stale(func)) {
+            /* Can't use a stale function */
             use_cached = false;
         } else {
             /* I guess we can use it */
@@ -266,7 +266,7 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
                 autoload_function_t *func = this->get_node(cmd);
                 
                 /* Generate the source if we need to load it */
-                bool need_to_load_function = really_load && (func == NULL || func->access.mod_time == access.mod_time || ! func->is_loaded);
+                bool need_to_load_function = really_load && (func == NULL || func->access.mod_time != access.mod_time || ! func->is_loaded);
                 if (need_to_load_function) {
                 
                     /* Generate the script source */

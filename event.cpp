@@ -443,7 +443,7 @@ static void event_fire_internal( const event_t *event )
             }
         }
 
-//		debug( 1, L"Event handler fires command '%ls'", (wchar_t *)b->buff );
+//		debug( 1, L"Event handler fires command '%ls'", buffer.c_str() );
 		
 		/*
 		  Event handlers are not part of the main flow of code, so
@@ -454,7 +454,7 @@ static void event_fire_internal( const event_t *event )
         parser_t &parser = parser_t::principal_parser();
 		parser.push_block( EVENT );
 		parser.current_block->state1<const event_t *>() = event;
-		parser.eval( buffer.c_str(), 0, TOP );
+		parser.eval( buffer, 0, TOP );
 		parser.pop_block();
 		proc_pop_interactive();					
 		proc_set_last_status( prev_status );

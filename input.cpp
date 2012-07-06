@@ -495,18 +495,18 @@ wint_t input_readch()
 {
 	
 	size_t i;
-
+    
 	CHECK_BLOCK( R_NULL );
 	
 	/*
-	  Clear the interrupted flag
-	*/
+     Clear the interrupted flag
+     */
 	reader_interrupted();
 	
 	/*
-	  Search for sequence in mapping tables
-	*/
-
+     Search for sequence in mapping tables
+     */
+    
 	while( 1 )
 	{
 		const input_mapping_t *generic = 0;
@@ -525,27 +525,34 @@ wint_t input_readch()
 		}
 		
 		/*
-		  No matching exact mapping, try to find generic mapping.
-		*/
-
+         No matching exact mapping, try to find generic mapping.
+         */
+        
 		if( generic )
 		{	
 			wchar_t arr[2]=
-				{
-					0, 
-					0
-				}
+            {
+                0, 
+                0
+            }
 			;
 			arr[0] = input_common_readch(0);
 			
 			return input_exec_binding( *generic, arr );				
 		}
-				
+        
 		/*
-		  No action to take on specified character, ignore it
-		  and move to next one.
-		*/
-		input_common_readch( 0 );	}	
+         No action to take on specified character, ignore it
+         and move to next one.
+         */
+		wchar_t c = input_common_readch( 0 );
+        
+        /* If it's closed, then just return */
+        if (c == R_EOF)
+        {
+            return WEOF;
+        }
+    }	
 }
 
 void input_mapping_get_names( wcstring_list_t &lst )

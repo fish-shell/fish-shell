@@ -23,7 +23,7 @@ function __fish_print_help --description "Print help message for the specified f
 	set -l sed_cmd -e $cmd1 -e $cmd2 -e $cmd3
 
 	# Render help output, save output into the variable 'help'
-	set -l help (nroff -man "$__fish_datadir/man/man1/$item.1")
+	set -l help (nroff -man "$__fish_datadir/man/man1/$item.1" ^ /dev/null )
 	set -l lines (count $help)
 
 	# Print an empty line first

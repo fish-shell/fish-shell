@@ -759,8 +759,25 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
 		}
         //		debug( 0, L"Push idx %d", tmp );
 		
-        idx.push_back(tmp);
 		pos = end-in;
+        if ( in[pos]==L'.' && in[pos+1]==L'.' ){
+            pos+=2;
+            long tmp1 = wcstol( &in[pos], &end, 10 );
+            if( ( errno ) || ( end == &in[pos] ) )
+            {
+                return 1;
+            }
+            pos = end-in;
+
+            debug( 0, L"Push range idx %d %d", tmp, tmp1 );
+            idx.push_back(tmp);
+            // idx.push_back(tmp2);
+            continue;
+        }
+        
+		debug( 0, L"Push idx %d", tmp );
+        idx.push_back(tmp);
+        // idx.push_back(tmp2);
 	}
 	
 	if( end_ptr )

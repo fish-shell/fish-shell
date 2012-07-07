@@ -727,10 +727,8 @@ void expand_variable_error( parser_t &parser, const wchar_t *token, int token_po
 /**
    Parse an array slicing specification
  */
-static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx )
+static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, int size=-1 )
 {
-	
-	
 	wchar_t *end;
 	
 	int pos = 1;
@@ -769,9 +767,17 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
             }
             pos = end-in;
 
-            // debug( 0, L"Push range idx %d %d", tmp, tmp1 );
-            idx.push_back(tmp);
-            // idx.push_back(tmp2);
+            if ( size>-1 ) {
+                // debug( 0, L"Push range idx %d %d", tmp, tmp1 );
+                long i1 = tmp>-1 ? tmp : size+tmp+1;
+                long i2 = tmp1>-1 ? tmp1 : size+tmp1+1;
+                // debug( 0, L"Push range idx %d %d", i1, i2 );
+                short direction = i2<i1 ? -1 : 1 ;
+                for (long jjj = i1; jjj*direction <= i2*direction; jjj+=direction) {
+                    // debug(0, L"Expand range [subst]: %i\n", jjj); 
+                    idx.push_back( jjj );
+                }
+            }
             continue;
         }
         
@@ -1204,7 +1210,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
         std::vector<long> slice_idx;
 		wchar_t *slice_end;
 		
-		if( parse_slice( tail_begin, &slice_end, slice_idx ) )
+		if( parse_slice( tail_begin, &slice_end, slice_idx, sub_res.size() ) )
 		{
 			parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 			return 0;
@@ -1216,11 +1222,6 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 			for( i=0; i < slice_idx.size(); i++ )
 			{
 				long idx = slice_idx.at(i);
-				if( idx < 0 )
-				{
-					idx = sub_res.size() + idx + 1;
-				}
-				
 				if( idx < 1 || (size_t)idx > sub_res.size() )
 				{
 					parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );

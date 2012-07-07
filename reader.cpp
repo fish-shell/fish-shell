@@ -118,7 +118,7 @@ commence.
    fish specific commands, meaning it will work even if fish is not
    installed. This is used by read_i.
 */
-#define DEFAULT_PROMPT L"echo \"$USER@\"; hostname|cut -d . -f 1; echo \" \"; pwd; printf '> ';"
+#define DEFAULT_PROMPT L"echo -n \"$USER@\"(hostname|cut -d . -f 1)' '(pwd)'> '"
 
 /**
    The name of the function that prints the fish prompt

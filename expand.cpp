@@ -769,13 +769,13 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
             }
             pos = end-in;
 
-            debug( 0, L"Push range idx %d %d", tmp, tmp1 );
+            // debug( 0, L"Push range idx %d %d", tmp, tmp1 );
             idx.push_back(tmp);
             // idx.push_back(tmp2);
             continue;
         }
         
-		debug( 0, L"Push idx %d", tmp );
+		// debug( 0, L"Push idx %d", tmp );
         idx.push_back(tmp);
         // idx.push_back(tmp2);
 	}

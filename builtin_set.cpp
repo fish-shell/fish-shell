@@ -32,7 +32,7 @@ extern wcstring stdout_buffer, stderr_buffer;
 /**
    Error message for invalid path operations
 */
-#define BUILTIN_SET_PATH_ERROR L"%ls: Could not add component %ls to %ls.\n"
+#define BUILTIN_SET_PATH_ERROR L"%ls: Warning: path component %ls may not be valid in %ls.\n"
 
 /**
    Hint for invalid path operation with a colon
@@ -56,105 +56,107 @@ static int is_path_variable( const wchar_t *env )
    Call env_set. If this is a path variable, e.g. PATH, validate the
    elements. On error, print a description of the problem to stderr.
 */
-static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
+static int my_env_set( const wchar_t *key, const wcstring_list_t &val, int scope )
 {
-	size_t i;
-	int retcode = 0;
-	const wchar_t *val_str=NULL;
-		
-	if( is_path_variable( key ) )
-	{
-		int error = 0;
-		
-		for( i=0; i< val.size() ; i++ )
-		{
-			int show_perror = 0;
-			int show_hint = 0;
-			
-			struct stat buff;
-			const wchar_t *dir = val[i].c_str();
-			
-			if( wstat( dir, &buff ) )
-			{
-				error = 1;
-				show_perror = 1;
-			}
-
-			if( !( S_ISDIR(buff.st_mode) ) )
-			{
-				error = 1;
-				
-			}
-			
-			if( error )
-			{
-				const wchar_t *colon;
+    size_t i;
+    int retcode = 0;
+    const wchar_t *val_str=NULL;
+    
+    if( is_path_variable( key ) )
+    {
+        /* Fix for https://github.com/fish-shell/fish-shell/issues/199 . Return success if any path setting succeeds. */
+        bool any_success = false, any_error = false;
+        
+        for( i=0; i< val.size() ; i++ )
+        {
+            bool show_perror = false;
+            int show_hint = 0;
+            bool error = false;
+            
+            struct stat buff;
+            const wchar_t *dir = val[i].c_str();
+            
+            if( wstat( dir, &buff ) )
+            {
+                error = true;
+                show_perror = true;
+            }
+            
+            if( !( S_ISDIR(buff.st_mode) ) )
+            {
+                error = true;
+            }
+            
+            if( !error )
+            {
+                any_success = true;
+            }
+            else
+            {
+                any_error = true;
+                const wchar_t *colon;
                 append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir, key);
-				colon = wcschr( dir, L':' );
-				
-				if( colon && *(colon+1) ) 
-				{
-					show_hint = 1;
-				}
-				
-			}
-			
-			if( show_perror )
-			{
-				builtin_wperror( L"set" );
-			}
-			
-			if( show_hint )
-			{
+                colon = wcschr( dir, L':' );
+                
+                if( colon && *(colon+1) ) 
+                {
+                    show_hint = 1;
+                }
+                
+            }
+            
+            if( show_perror )
+            {
+                builtin_wperror( L"set" );
+            }
+            
+            if( show_hint )
+            {
                 append_format(stderr_buffer, _(BUILTIN_SET_PATH_HINT), L"set", key, key, wcschr( dir, L':' )+1);
-			}
-			
-			if( error )
-			{
-				break;
-			}
-			
-		}
-
-		if( error )
-		{
-			return 1;
-		}
-		
-	}
-
-	wcstring sb;
-	if(  val.size() )
-	{
-		for( i=0; i< val.size() ; i++ )
-		{
+            }
+            
+        }
+        
+        /* Fail at setting the path if we tried to set it to something non-empty, but it wound up empty. */
+        if( ! val.empty() && ! any_success )
+        {
+            return 1;
+        }
+        
+    }
+    
+    wcstring sb;
+    if(  val.size() )
+    {
+        for( i=0; i< val.size() ; i++ )
+        {
             sb.append(val[i]);
-			if( i<val.size() - 1 )
-			{
-				sb.append( ARRAY_SEP_STR );
-			}
-		}
-		val_str = sb.c_str();
-	}
-	
-	switch( env_set( key, val_str, scope | ENV_USER ) )
-	{
-		case ENV_PERM:
-		{
+            if( i<val.size() - 1 )
+            {
+                sb.append( ARRAY_SEP_STR );
+            }
+        }
+        val_str = sb.c_str();
+    }
+    
+    switch( env_set( key, val_str, scope | ENV_USER ) )
+    {
+        case ENV_PERM:
+        {
             append_format(stderr_buffer, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key);
-			retcode=1;
-			break;
-		}
-		
-		case ENV_INVALID:
-		{
-			append_format(stderr_buffer, _(L"%ls: Unknown error"), L"set" );
-			retcode=1;
-			break;
-		}
-	}
-
-	return retcode;
+            retcode=1;
+            break;
+        }
+            
+        case ENV_INVALID:
+        {
+            append_format(stderr_buffer, _(L"%ls: Unknown error"), L"set" );
+            retcode=1;
+            break;
+        }
+    }
+    
+    return retcode;
 }
 
 

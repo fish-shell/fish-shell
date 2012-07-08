@@ -2717,6 +2717,7 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 	argc = builtin_count_args( argv );
 	int i;
 	wchar_t *needle;
+	int index=0;
 	
 	woptind=0;
 
@@ -2725,6 +2726,10 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 		{
 			{
 				L"help", no_argument, 0, 'h'
+			}
+			,
+			{
+				L"index", no_argument, 0, 'i'
 			}
 			,
 			{
@@ -2739,7 +2744,7 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 
 		int opt = wgetopt_long( argc,
 					argv,
-					L"+h",
+					L"+hi",
 					long_options,
 					&opt_index );
 		if( opt == -1 )
@@ -2772,6 +2777,9 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 				builtin_unknown_option( parser, argv[0], argv[woptind-1] );
 				return STATUS_BUILTIN_ERROR;
 
+			case 'i':
+				index=1;
+				break;
 		}
 		
 	}
@@ -2790,6 +2798,7 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 		
 		if( !wcscmp( needle, argv[i]) )
 		{
+			if ( index ) append_format(stdout_buffer, L"%d\n", i-woptind );
 			return 0;
 		}
 	}

@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		D0F019EC15A976F30034B3B1 /* fish_directory_tree */ = {
+		D0F019EC15A976F30034B3B1 /* root */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "fish_directory_tree" */;
+			buildConfigurationList = D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "root" */;
 			buildPhases = (
 				D0F019F015A977010034B3B1 /* CopyFiles */,
 				D0F019F715A977A00034B3B1 /* CopyFiles */,
@@ -22,7 +22,7 @@
 				D0F01A1715AA36300034B3B1 /* PBXTargetDependency */,
 				D0F01A1B15AA36330034B3B1 /* PBXTargetDependency */,
 			);
-			name = fish_directory_tree;
+			name = root;
 			productName = base;
 		};
 /* End PBXAggregateTarget section */
@@ -783,14 +783,14 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D0A084F713B3AC130099B651 /* Makefile */,
+				D0F019EC15A976F30034B3B1 /* root */,
 				D0D02A9915985A75008E62BD /* fish.app */,
-				D0F019EC15A976F30034B3B1 /* fish_directory_tree */,
 				D0D2693B159835CA005D9B9C /* fish_shell */,
 				D0D02ABB15985EF9008E62BD /* fishd */,
 				D0D02ACF1598642A008E62BD /* fish_indent */,
 				D0D02AE315986537008E62BD /* fish_pager */,
 				D0F019DB15A969970034B3B1 /* set_color */,
+				D0A084F713B3AC130099B651 /* Makefile */,
 			);
 		};
 /* End PBXProject section */
@@ -1335,7 +1335,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "fish_directory_tree" */ = {
+		D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "root" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0F019EE15A976F30034B3B1 /* Debug */,

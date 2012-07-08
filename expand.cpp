@@ -733,7 +733,7 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
 	
 	int pos = 1;
     
-    //	debug( 0, L"parse_slice on '%ls'", in );
+    // debug( 0, L"parse_slice on '%ls'", in );
 	
 	while( 1 )
 	{
@@ -758,6 +758,8 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
 		
         long i1 = tmp>-1 ? tmp : size+tmp+1;
 		pos = end-in;
+        while( in[pos]==INTERNAL_SEPARATOR )
+            pos++;		
         if ( in[pos]==L'.' && in[pos+1]==L'.' ){
             pos+=2;
             while( in[pos]==INTERNAL_SEPARATOR )

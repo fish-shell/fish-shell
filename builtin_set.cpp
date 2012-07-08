@@ -89,7 +89,7 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 			if( error )
 			{
 				const wchar_t *colon;
-                append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir, key);
+				append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir, key);
 				colon = wcschr( dir, L':' );
 				
 				if( colon && *(colon+1) ) 
@@ -106,7 +106,7 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 			
 			if( show_hint )
 			{
-                append_format(stderr_buffer, _(BUILTIN_SET_PATH_HINT), L"set", key, key, wcschr( dir, L':' )+1);
+				append_format(stderr_buffer, _(BUILTIN_SET_PATH_HINT), L"set", key, key, wcschr( dir, L':' )+1);
 			}
 			
 			if( error )
@@ -128,7 +128,7 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 	{
 		for( i=0; i< val.size() ; i++ )
 		{
-            sb.append(val[i]);
+			sb.append(val[i]);
 			if( i<val.size() - 1 )
 			{
 				sb.append( ARRAY_SEP_STR );
@@ -141,7 +141,7 @@ static int my_env_set( const wchar_t *key, wcstring_list_t &val, int scope )
 	{
 		case ENV_PERM:
 		{
-            append_format(stderr_buffer, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key);
+			append_format(stderr_buffer, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key);
 			retcode=1;
 			break;
 		}
@@ -237,32 +237,32 @@ static int parse_index( std::vector<long> &indexes,
 		}
 		
 		src = end;
-        if ( *src==L'.' && *(src+1)==L'.' ){
-            src+=2;
-            long l_ind2 = wcstol( src, &end, 10 );
-            if( end==src || errno )
-            {
-                return 1;
-            }
-            src = end;
+		if ( *src==L'.' && *(src+1)==L'.' ){
+			src+=2;
+			long l_ind2 = wcstol( src, &end, 10 );
+			if( end==src || errno )
+			{
+				return 1;
+			}
+			src = end;
 
-            if( l_ind2 < 0 )
-            {
-                l_ind2 = var_count+l_ind2+1;
-            }
-            int direction = l_ind2<l_ind ? -1 : 1 ;
-            for (long jjj = l_ind; jjj*direction <= l_ind2*direction; jjj+=direction) {
-                // debug(0, L"Expand range [set]: %i\n", jjj); 
-                indexes.push_back( jjj );
-                count++;
-            }
-        }
-        else {
-            indexes.push_back( l_ind );
-            count++;
-        }
-        while (iswspace(*src)) src++;
-    }
+			if( l_ind2 < 0 )
+			{
+				l_ind2 = var_count+l_ind2+1;
+			}
+			int direction = l_ind2<l_ind ? -1 : 1 ;
+			for (long jjj = l_ind; jjj*direction <= l_ind2*direction; jjj+=direction) {
+				// debug(0, L"Expand range [set]: %i\n", jjj); 
+				indexes.push_back( jjj );
+				count++;
+			}
+		}
+		else {
+			indexes.push_back( l_ind );
+			count++;
+		}
+		while (iswspace(*src)) src++;
+	}
 
 	return count;
 }
@@ -286,10 +286,10 @@ static int update_values( wcstring_list_t &list,
 		{
 			return 1;
 		}
-        if ( ind >= list.size() )
-        {
-            list.resize( ind+1 );
-        }
+		if ( ind >= list.size() )
+		{
+			list.resize( ind+1 );
+		}
 		
 //		free((void *) al_get(list, ind));
 		list[ ind ] = newv; 
@@ -303,19 +303,19 @@ static int update_values( wcstring_list_t &list,
 */
 static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes) 
 {
-    // Make a set of indexes.
-    // This both sorts them into ascending order and removes duplicates.
-    const std::set<long> indexes_set(indexes.begin(), indexes.end());
-    
-    // Now walk the set backwards, so we encounter larger indexes first, and remove elements at the given (1-based) indexes.
-    std::set<long>::const_reverse_iterator iter;
-    for (iter = indexes_set.rbegin(); iter != indexes_set.rend(); iter++) {
-        long val = *iter;
-        if (val > 0 && val <= list.size()) {
-            // One-based indexing!
-            list.erase(list.begin() + val - 1);
-        }
-    }
+	// Make a set of indexes.
+	// This both sorts them into ascending order and removes duplicates.
+	const std::set<long> indexes_set(indexes.begin(), indexes.end());
+	
+	// Now walk the set backwards, so we encounter larger indexes first, and remove elements at the given (1-based) indexes.
+	std::set<long>::const_reverse_iterator iter;
+	for (iter = indexes_set.rbegin(); iter != indexes_set.rend(); iter++) {
+		long val = *iter;
+		if (val > 0 && val <= list.size()) {
+			// One-based indexing!
+			list.erase(list.begin() + val - 1);
+		}
+	}
 }
 
 
@@ -325,13 +325,13 @@ static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes
 */
 static void print_variables(int include_values, int esc, bool shorten_ok, int scope) 
 {
-    wcstring_list_t names = env_get_names(scope);
-    sort(names.begin(), names.end());
+	wcstring_list_t names = env_get_names(scope);
+	sort(names.begin(), names.end());
 	
 	for( size_t i = 0; i < names.size(); i++ )
 	{
 		const wcstring key = names.at(i);
-        const wcstring e_key = escape_string(key, 0);
+		const wcstring e_key = escape_string(key, 0);
 
 		stdout_buffer.append(e_key);
 		
@@ -350,8 +350,8 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 				
 				wcstring e_value = esc ? expand_escape_variable(value) : value;
 				
-                stdout_buffer.append(L" ");
-                stdout_buffer.append(e_value);
+				stdout_buffer.append(L" ");
+				stdout_buffer.append(e_value);
 				
 				if( shorten )
 				{
@@ -407,7 +407,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 			{ 
 				L"universal", no_argument, 0, 'U'
 			}
-            ,
+			,
 			{ 
 				L"long", no_argument, 0, 'L'
 			} 
@@ -460,7 +460,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		{
 			break;
 		}
-    
+	
 		switch(c) 
 		{
 			case 0:
@@ -493,10 +493,10 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 			case 'U':
 				universal = 1;
 				break;
-            
-            case 'L':
-                shorten_ok = false;
-                break;
+			
+			case 'L':
+				shorten_ok = false;
+				break;
 
 			case 'q':
 				query = 1;
@@ -604,9 +604,9 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 				wcstring_list_t result;
 				size_t j;
 				
-                env_var_t dest_str = env_get_string(dest);
-                if (! dest_str.missing())
-                    tokenize_variable_array( dest_str, result );
+				env_var_t dest_str = env_get_string(dest);
+				if (! dest_str.missing())
+					tokenize_variable_array( dest_str, result );
 								
 				if( !parse_index( indexes, arg, dest, result.size() ) )
 				{
@@ -718,9 +718,9 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		std::vector<long> indexes;
 		wcstring_list_t result;
 		
-        const env_var_t dest_str = env_get_string(dest);
-        if (! dest_str.missing())
-            tokenize_variable_array( dest_str, result );
+		const env_var_t dest_str = env_get_string(dest);
+		if (! dest_str.missing())
+			tokenize_variable_array( dest_str, result );
 		
 		for( ; woptind<argc; woptind++ )
 		{			
@@ -819,9 +819,9 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		}
 		else
 		{
-            wcstring_list_t val;
+			wcstring_list_t val;
 			for( i=woptind; i<argc; i++ )
-                val.push_back(argv[i]);
+				val.push_back(argv[i]);
 			retcode = my_env_set( dest, val, scope );
 		}		
 	}

@@ -32,6 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
+#include <sys/param.h>
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
@@ -61,20 +62,177 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "history.h"
 #include "path.h"
 
+/* PATH_MAX may not exist */
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
 /**
    The string describing the single-character options accepted by the main fish binary
 */
 #define GETOPT_STRING "+hilnvc:p:d:"
 
+static bool has_suffix(const std::string &path, const char *suffix, bool ignore_case)
+{
+    size_t pathlen = path.size(), suffixlen = strlen(suffix);
+    return pathlen >= suffixlen && ! (ignore_case ? strcasecmp : strcmp)(path.c_str() + pathlen - suffixlen, suffix);
+}
+
+/* Modifies the given path by calling realpath. Returns true if realpath succeeded, false otherwise */
+static bool get_realpath(std::string &path)
+{
+    char buff[PATH_MAX], *ptr;
+    if ((ptr = realpath(path.c_str(), buff)))
+    {
+        path = ptr;
+    }
+    return ptr != NULL;
+}
+
+/* OS X function for getting the executable path */
+extern "C" {
+    int _NSGetExecutablePath(char* buf, uint32_t* bufsize);
+}
+
+/* Return the path to the current executable. This needs to be realpath'd. */
+static std::string get_executable_path(const char *argv0)
+{
+    char buff[PATH_MAX];
+#if __APPLE__
+    {
+        /* Returns 0 on success, -1 if the buffer is too small */
+        uint32_t buffSize = sizeof buff;
+        if (0 == _NSGetExecutablePath(buff, &buffSize))
+            return std::string(buff);
+        
+        /* Loop until we're big enough */
+        char *mbuff = (char *)malloc(buffSize);
+        while (0 > _NSGetExecutablePath(mbuff, &buffSize))
+            mbuff = (char *)realloc(mbuff, buffSize);
+        
+        /* Return the string */
+        std::string result = mbuff;
+        free(mbuff);
+        return result;
+    }
+#endif
+    {
+        /* On other Unixes, try /proc directory. This might be worth breaking out into macros. */
+        if (0 < readlink("/proc/self/exe", buff, sizeof buff) || // Linux
+            0 < readlink("/proc/curproc/file", buff, sizeof buff) || // BSD
+            0 < readlink("/proc/self/path/a.out", buff, sizeof buff)) // Solaris
+        {
+            return std::string(buff);
+        }
+    }
+    
+    /* Just return argv0, which probably won't work (i.e. it's not an absolute path or a path relative to the working directory, but instead something the caller found via $PATH). We'll eventually fall back to the compile time paths. */
+    return std::string(argv0 ? argv0 : "");
+}
+
+/* A struct of configuration directories.
+ */
+struct config_paths_t
+{
+    wcstring data;      // e.g. /usr/local/share
+    wcstring sysconf;   // e.g. /usr/local/etc
+    wcstring doc;       // e.g. /usr/local/share/doc/fish
+    wcstring bin;       // e.g. /usr/local/bin
+};
+
+static struct config_paths_t determine_config_directory_paths(const char *argv0)
+{
+    struct config_paths_t paths;
+    bool done = false;
+    std::string exec_path = get_executable_path(argv0);
+    if (get_realpath(exec_path))
+    {        
+#if __APPLE__
+        
+        /* On OS X, maybe we're an app bundle, and should use the bundle's files. Since we don't link CF, use this lame approach to test it: see if the resolved path ends with /Contents/MacOS/fish, case insensitive since HFS+ usually is.
+         */
+        if (! done)
+        {
+            const char *suffix = "/Contents/MacOS/fish";
+            const size_t suffixlen = strlen(suffix);
+            if (has_suffix(exec_path, suffix, true))
+            {
+                /* Looks like we're a bundle. Cut the string at the / prefixing /Contents... and then the rest */
+                wcstring wide_resolved_path = str2wcstring(exec_path);
+                wide_resolved_path.resize(exec_path.size() - suffixlen);
+                wide_resolved_path.append(L"/Contents/Resources/");
+                
+                /* Append share, etc, doc */
+                paths.data = wide_resolved_path + L"share/fish";
+                paths.sysconf = wide_resolved_path + L"etc/fish";
+                paths.doc = wide_resolved_path + L"doc";
+                
+                /* But the bin_dir is the resolved_path, minus fish (aka the MacOS directory) */
+                paths.bin = str2wcstring(exec_path);
+                paths.bin.resize(paths.bin.size() - strlen("/fish"));
+                
+                done = true;
+            }
+        }
+#endif
+        
+        if (! done)
+        {
+            /* The next check is that we are in a reloctable directory tree like this:
+                 bin/fish
+                 etc/fish
+                 share/fish
+                 
+                 Check it!
+            */
+            const char *suffix = "/bin/fish";
+            if (has_suffix(exec_path, suffix, false))
+            {
+                wcstring base_path = str2wcstring(exec_path);
+                base_path.resize(base_path.size() - strlen(suffix));
+                
+                paths.data = base_path + L"/share/fish";
+                paths.sysconf = base_path + L"/etc/fish";
+                paths.doc = base_path + L"/share/doc";
+                paths.bin = base_path + L"/bin";
+                
+                struct stat buf;
+                if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf))
+                {
+                    done = true;
+                }
+            }
+        }
+    }
+    
+    if (! done)
+    {
+        /* Fall back to what got compiled in. */
+        paths.data = L"" DATADIR "/fish";
+        paths.sysconf = L"" SYSCONFDIR "/fish";
+        paths.doc = L"" DATADIR "/doc/fish";
+        paths.bin = L"" PREFIX "/bin";
+        
+        done = true;
+    }
+    
+    /* Set the results in the environment */
+    env_set(L"__fish_datadir", paths.data.c_str(), ENV_GLOBAL | ENV_EXPORT);
+    env_set(L"__fish_sysconfdir", paths.sysconf.c_str(), ENV_GLOBAL | ENV_EXPORT);
+    env_set(L"__fish_help_dir", paths.doc.c_str(), ENV_GLOBAL | ENV_EXPORT);
+    env_set(L"__fish_bin_dir", paths.bin.c_str(), ENV_GLOBAL | ENV_EXPORT);
+    
+    return paths;
+}
+
 /**
-   Parse init files
+   Parse init files. exec_path is the path of fish executable as determined by argv[0].
 */
-static int read_init()
+static int read_init(const struct config_paths_t &paths)
 {
     parser_t &parser = parser_t::principal_parser();
-
-	parser.eval( L"builtin . " DATADIR "/fish/config.fish 2>/dev/null", 0, TOP );
-	parser.eval( L"builtin . " SYSCONFDIR L"/fish/config.fish 2>/dev/null", 0, TOP );
+	parser.eval( L"builtin . " + paths.data + L"/config.fish 2>/dev/null", 0, TOP );
+	parser.eval( L"builtin . " + paths.sysconf + L"/config.fish 2>/dev/null", 0, TOP );
 	
 	/*
 	  We need to get the configuration directory before we can source the user configuration file
@@ -292,7 +450,7 @@ int main( int argc, char **argv )
 		debug( 1, _(L"Can not use the no-execute mode when running an interactive session") );
 		no_exec = 0;
 	}
-	
+    	
 	proc_init();	
 	event_init();	
 	wutil_init();
@@ -308,7 +466,9 @@ int main( int argc, char **argv )
     if (g_log_forks)
         printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
-	if( read_init() )
+    /* Determine config paths */
+    const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
+	if( read_init(paths) )
 	{
 		if( cmd != 0 )
 		{

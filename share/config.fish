@@ -3,7 +3,6 @@
 # common helper functions for the command completions. All actual
 # completions are located in the completions subdirectory.
 #
-# @configure_input@
 
 #
 # Set default field separators
@@ -22,35 +21,27 @@ if set -q XDG_CONFIG_HOME
 	set configdir $XDG_CONFIG_HOME
 end
 
-# These are used internally by fish in various places
-if not set -q __fish_datadir
-	set -g __fish_datadir @datadir@/fish
-end
-
-if not set -q __fish_sysconfdir
-	set -g __fish_sysconfdir @sysconfdir@/fish
-end
+# __fish_datadir, __fish_sysconfdir, __fish_help_dir, __fish_bin_dir
+# are expected to have been set up by read_init from fish.cpp
 
 # Set up function and completion paths. Make sure that the fish
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-	set -U fish_function_path $configdir/fish/functions    @sysconfdir@/fish/functions    @datadir@/fish/functions
+	set fish_function_path $configdir/fish/functions    $__fish_sysconfdir/functions    $__fish_datadir/functions
 end
 
-if not contains @datadir@/fish/functions $fish_function_path
-	set fish_function_path[-1] @datadir@/fish/functions
+if not contains $__fish_datadir/functions $fish_function_path
+	set fish_function_path[-1] $__fish_datadir/functions
 end
 
 if not set -q fish_complete_path
-	set -U fish_complete_path $configdir/fish/completions  @sysconfdir@/fish/completions  @datadir@/fish/completions
+	set fish_complete_path $configdir/fish/completions  $__fish_sysconfdir/completions  $__fish_datadir/completions
 end
 
-if not contains @datadir@/fish/completions $fish_complete_path
-	set fish_complete_path[-1] @datadir@/fish/completions
+if not contains $__fish_datadir/completions $fish_complete_path
+	set fish_complete_path[-1] $__fish_datadir/completions
 end
-
-set __fish_help_dir @docdir@
 
 #
 # This is a Solaris-specific test to modify the PATH so that
@@ -72,12 +63,12 @@ end
 # want this even for text-only terminals.
 #
 
-set -l path_list /bin /usr/bin /usr/X11R6/bin /usr/local/bin @prefix@/bin @optbindirs@
+set -l path_list /bin /usr/bin /usr/X11R6/bin /usr/local/bin $__fish_bin_dir
 
 # Root should also have the sbin directories in the path
 switch $USER
 	case root
-	set path_list $path_list /sbin /usr/sbin /usr/local/sbin @prefix@/sbin
+	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
 end
 
 for i in $path_list

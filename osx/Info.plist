@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>fish shell</string>
+	<key>CFBundleExecutable</key>
+	<string>fish_launcher</string>
+	<key>CFBundleIconFile</key>
+	<string>fish.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.ridiculousfish.fish-shell</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>fish shell</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>2.0</string>
+	<key>CFBundleVersion</key>
+	<string>289.5</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.6</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2012, ridiculous_fish
+All rights reserved.</string>
+	<key>LSUIElement</key>
+	<true/>
+</dict>
+</plist>

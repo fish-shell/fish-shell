@@ -1,7 +1,6 @@
 #
 # Init file for fish
 #
-# @configure_input@
 
 #
 # Some things should only be done for login terminals

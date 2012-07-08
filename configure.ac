@@ -9,7 +9,7 @@
 # configure the build process.
 #
 
-AC_INIT(fish,1.23.1,fish-users@lists.sf.net)
+AC_INIT(fish,2.0.0,fish-users@lists.sf.net)
 
 #
 # preserve configure arguments for xsel

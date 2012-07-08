@@ -234,15 +234,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D0F019DA15A969970034B3B1 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
 		D0F019F015A977010034B3B1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -743,7 +734,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0D26943159835CA005D9B9C /* Build configuration list for PBXNativeTarget "fish_shell" */;
 			buildPhases = (
-				D0D269481598364C005D9B9C /* ShellScript */,
 				D0D02A90159844FD008E62BD /* ShellScript */,
 				D0D26938159835CA005D9B9C /* Sources */,
 				D0D26939159835CA005D9B9C /* Frameworks */,
@@ -763,7 +753,6 @@
 			buildPhases = (
 				D0F019D815A969970034B3B1 /* Sources */,
 				D0F019D915A969970034B3B1 /* Frameworks */,
-				D0F019DA15A969970034B3B1 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -829,22 +818,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "${SRCROOT}/internalize_scripts.py --output ${DERIVED_FILE_DIR}";
-		};
-		D0D269481598364C005D9B9C /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/osx_config.h",
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/config.h",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "cp ${SRCROOT}/osx/osx_config.h ${DERIVED_FILE_DIR}/config.h";
+			shellScript = "mkdir -p \"${DERIVED_FILE_DIR}\"\n\"${SRCROOT}/internalize_scripts.py\" --output \"${DERIVED_FILE_DIR}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1028,6 +1002,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
 			};
 			name = Debug;
 		};
@@ -1048,6 +1023,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
 			};
 			name = Release;
 		};
@@ -1357,6 +1333,7 @@
 				D0F019E115A969970034B3B1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "fish_directory_tree" */ = {
 			isa = XCConfigurationList;
@@ -1365,6 +1342,7 @@
 				D0F019EF15A976F30034B3B1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

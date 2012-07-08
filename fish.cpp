@@ -165,7 +165,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 /* Append share, etc, doc */
                 paths.data = wide_resolved_path + L"share/fish";
                 paths.sysconf = wide_resolved_path + L"etc/fish";
-                paths.doc = wide_resolved_path + L"doc";
+                paths.doc = wide_resolved_path + L"doc/fish";
                 
                 /* But the bin_dir is the resolved_path, minus fish (aka the MacOS directory) */
                 paths.bin = str2wcstring(exec_path);
@@ -193,7 +193,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 
                 paths.data = base_path + L"/share/fish";
                 paths.sysconf = base_path + L"/etc/fish";
-                paths.doc = base_path + L"/share/doc";
+                paths.doc = base_path + L"/share/doc/fish";
                 paths.bin = base_path + L"/bin";
                 
                 struct stat buf;

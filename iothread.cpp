@@ -96,12 +96,7 @@ static ThreadedRequest_t *dequeue_request(void) {
 static void *iothread_worker(void *threadPtr) {
 	assert(threadPtr != NULL);
 	struct WorkerThread_t *thread = (struct WorkerThread_t *)threadPtr;
-	
-    // We don't want to receive signals on this thread
-    sigset_t set;
-    sigfillset(&set);
-    VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &set, NULL));
-    
+	    
 	/* Grab a request off of the queue */
 	struct ThreadedRequest_t *req = dequeue_request();
 
@@ -124,7 +119,12 @@ static void iothread_spawn_if_needed(void) {
 		struct WorkerThread_t *thread = next_vacant_thread_slot();
 		assert(thread != NULL);
 		
-		/* Spawn a thread */
+        /* The spawned thread inherits our signal mask. We don't want the thread to ever receive signals on the spawned thread, so temporarily block all signals, spawn the thread, and then restore it. */
+        sigset_t newSet, savedSet;
+        sigfillset(&newSet);
+        VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &newSet, &savedSet));
+        
+		/* Spawn a thread.  */
 		int err;
 		do {
 			err = 0;
@@ -132,10 +132,15 @@ static void iothread_spawn_if_needed(void) {
 				err = errno;
 			}
 		} while (err == EAGAIN);
+        
+        /* Need better error handling - perhaps try again later. */
 		assert(err == 0);
 		
 		/* Note that we are spawned another thread */
-		s_active_thread_count += 1;		
+		s_active_thread_count += 1;
+        
+        /* Restore our sigmask */
+        VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &savedSet, NULL));
 	}
 }
 

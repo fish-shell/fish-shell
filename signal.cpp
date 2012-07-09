@@ -636,7 +636,7 @@ void signal_block()
 	if( !block_count )
 	{
 		sigfillset( &chldset );
-		sigprocmask(SIG_BLOCK, &chldset, 0);	
+		VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, NULL));
 	}
 	
 	block_count++;
@@ -660,7 +660,7 @@ void signal_unblock()
 	if( !block_count )
 	{
 		sigfillset( &chldset );
-		sigprocmask(SIG_UNBLOCK, &chldset, 0);	
+		VOMIT_ON_FAILURE(pthread_sigmask(SIG_UNBLOCK, &chldset, 0));
 	}
 //	debug( 0, L"signal block level decreased to %d", block_count );
 }

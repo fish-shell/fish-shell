@@ -623,9 +623,9 @@ int read_blocked(int fd, void *buf, size_t count)
 
 	sigemptyset( &chldset );
 	sigaddset( &chldset, SIGCHLD );
-	sigprocmask(SIG_BLOCK, &chldset, &oldset);
+	VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, &oldset));
 	res = read( fd, buf, count );
-	sigprocmask( SIG_SETMASK, &oldset, 0 );
+	VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &oldset, NULL));
 	return res;	
 }
 

@@ -79,9 +79,14 @@ The fish parser. Contains functions for parsing and evaluating code.
 #define COND_ERR_MSG _( L"An additional command is required" )
 
 /**
-   Error message on reaching maximum recusrion depth
+   Error message on a function that calls itself immediately
 */
-#define RECURSION_ERR_MSG _( L"Maximum recursion depth reached. Accidental infinite loop?")
+#define INFINITE_RECURSION_ERR_MSG _( L"The function calls itself immediately, which would result in an infinite loop.")
+
+/**
+   Error message on reaching maximum recursion depth
+*/
+#define OVERFLOW_RECURSION_ERR_MSG _( L"Maximum recursion depth reached. Accidental infinite loop?")
 
 /**
    Error message used when the end of a block can't be located
@@ -1902,7 +1907,7 @@ int parser_t::parse_job( process_t *p,
 		
 		if( use_function && !current_block->skip )
 		{
-			int nxt_forbidden=0;
+			bool nxt_forbidden=false;
 			wcstring forbid;
 
 			int is_function_call=0;
@@ -1928,7 +1933,12 @@ int parser_t::parse_job( process_t *p,
 			if( is_function_call && !current_block->had_command )
 			{
                 forbid = forbidden_function.empty() ? wcstring(L"") : forbidden_function.back();
-				nxt_forbidden = (forbid == nxt);
+                if (forbid == nxt)
+                {
+                    /* Infinite recursive loop */
+                    nxt_forbidden = true;
+                    error( SYNTAX_ERROR, tok_get_pos( tok ), INFINITE_RECURSION_ERR_MSG );
+                }
 			}
 		
 			if( !nxt_forbidden && has_nxt && function_exists( nxt ) )
@@ -1938,9 +1948,7 @@ int parser_t::parse_job( process_t *p,
 				*/
 				if( forbidden_function.size() > MAX_RECURSION_DEPTH )
 				{
-					error( SYNTAX_ERROR,
-						   tok_get_pos( tok ),
-						   RECURSION_ERR_MSG );
+					error( SYNTAX_ERROR, tok_get_pos( tok ), OVERFLOW_RECURSION_ERR_MSG );
 				}
 				else
 				{

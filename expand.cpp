@@ -715,10 +715,17 @@ void expand_variable_error( parser_t &parser, const wchar_t *token, int token_po
 		
 		default:
 		{
+            wchar_t token_stop_char = token[stop_pos];
+            // Unescape (see http://github.com/fish-shell/fish-shell/issues/50)
+            if (token_stop_char == ANY_CHAR)
+                token_stop_char = L'?';
+            else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
+                token_stop_char = L'*';
+            
 			parser.error( SYNTAX_ERROR,
 				   error_pos,
 				   COMPLETE_VAR_DESC,
-				   token[stop_pos] );
+				   token_stop_char );
 			break;
 		}
 	}

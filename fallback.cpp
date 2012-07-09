@@ -74,7 +74,7 @@ int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t))
 */
 char *tparm_solaris_kludge( char *str, ... )
 {
-	long int param[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	long int param[9] = { };
 
 	va_list ap;
 	va_start( ap, str );

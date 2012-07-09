@@ -809,7 +809,7 @@ def parse_and_output_man_pages(paths, output_directory, yield_to_dirs, show_prog
             # Pad on the right with spaces so we overwrite whatever we wrote last time
             padded_progress_str = progress_str.ljust(last_progress_string_length)
             last_progress_string_length = len(progress_str)
-            sys.stdout.write("\r{0} {1}\r".format(padded_progress_str, chr(27)))
+            sys.stdout.write("\r{0}\r".format(padded_progress_str))
             sys.stdout.flush()
                         
         # Maybe we want to skip this item
@@ -887,7 +887,7 @@ if __name__ == "__main__":
     try:
         opts, file_paths = getopt.gnu_getopt(sys.argv[1:], 'v:sd:hmpy:z', ['verbose=', 'stdout', 'directory=', 'help', 'manpath', 'progress', 'yield-to='])
     except getopt.GetoptError as err:
-        print(err.strerror) # will print something like "option -a not recognized"
+        print(err.msg) # will print something like "option -a not recognized"
         usage(script_name)
         sys.exit(2)
     

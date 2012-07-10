@@ -28,3 +28,11 @@ true
 case one
 	echo $status
 end
+
+#test contains -i
+echo test contains -i
+contains -i string a b c string d
+contains -i string a b c d; or echo nothing
+contains -i -- string a b c string d
+contains -i -- -- a b c; or echo nothing
+contains -i -- -- a b c -- v

@@ -146,6 +146,9 @@ public:
     /** Returns history with the given name, creating it if necessary */
     static history_t & history_with_name(const wcstring &name);
     
+    /** Determines whether the history is empty. Unfortunately this cannot be const, since it may require populating the history. */
+    bool is_empty(void);
+    
     /** Add a new history item to the end */
     void add(const wcstring &str, const path_list_t &valid_paths = path_list_t());
 

@@ -373,7 +373,6 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
 				else
 				{
                     /* Note: pos will be left pointing just after this newline, because of the ++ in the loop */
-                    
                     all_done = true;
 				}
 				break;
@@ -1143,6 +1142,18 @@ void history_t::clear(void)
     
 }
 
+bool history_t::is_empty(void)
+{
+    bool result = false;
+    scoped_lock locker(lock);
+    if (new_items.empty())
+    {
+        load_old_if_needed();
+        result = old_item_offsets.empty();
+    }
+    return result;
+}
+
 /* Indicate whether we ought to import the bash history file into fish */
 static bool should_import_bash_history_line(const std::string &line)
 {
@@ -1161,7 +1172,11 @@ static bool should_import_bash_history_line(const std::string &line)
             return false;
         }
     }
-    printf("Importing %s\n", line.c_str());
+    
+    /* Skip lines with backticks */
+    if (line.find('`') != std::string::npos)
+        return false;
+    
     return true;
 }
 

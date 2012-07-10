@@ -2093,7 +2093,7 @@ static int default_test( const wchar_t *b )
 void reader_push( const wchar_t *name )
 {
     // use something nasty which guarantees value initialization (that is, all fields zero)
-    reader_data_t zerod = {};
+    const reader_data_t zerod = {};
     reader_data_t *n = new reader_data_t(zerod);
     
     n->history = & history_t::history_with_name(name);
@@ -2113,7 +2113,6 @@ void reader_push( const wchar_t *name )
 	reader_set_highlight_function( &highlight_universal );
 	reader_set_test_function( &default_test );
 	reader_set_prompt( L"" );
-	//history_set_mode( name );
 }
 
 void reader_pop()
@@ -2164,6 +2163,24 @@ void reader_set_test_function( int (*f)( const wchar_t * ) )
 	data->test_func = f;
 }
 
+void reader_import_history_if_necessary(void)
+{
+    /* Import history from bash, etc. if our current history is empty */
+    if (data->history && data->history->is_empty())
+    {
+        /* Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash itself. But this is better than nothing.
+        */
+        const env_var_t var = env_get_string(L"HISTFILE");
+        wcstring path = (var.missing() ? L"~/.bash_history" : var);
+        expand_tilde(path);
+        FILE *f = wfopen(path, "r");
+        if (f)
+        {
+            data->history->populate_from_bash(f);
+            fclose(f);
+        }
+    }
+}
 
 /** A class as the context pointer for a background (threaded) highlight operation. */
 class background_highlight_context_t {
@@ -2376,6 +2393,8 @@ static int read_i()
 	reader_set_complete_function( &complete );
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &reader_shell_test );
+    reader_import_history_if_necessary();
+    
 	parser_t &parser = parser_t::principal_parser();
     
 	data->prev_end_loop=0;

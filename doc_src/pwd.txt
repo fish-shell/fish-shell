@@ -1,0 +1,8 @@
+\section pwd pwd - returns the current directory
+
+\subsection pwd-synopsis Synopsis
+ <tt>pwd</tt>
+
+\subsection pwd-description Description
+
+Returns the current directory, always tries to resolve symbolic links.

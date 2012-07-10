@@ -76,7 +76,7 @@ function help --description "Show help for the fish shell"
 		return 1
 	end
 
-	set fish_help_item $argv[1]
+	set -l fish_help_item $argv[1]
 
 	switch "$fish_help_item"
 		case ""
@@ -98,7 +98,14 @@ function help --description "Show help for the fish shell"
 			set fish_help_page "index.html\#$fish_help_item"
 		case "*"
 			if type -f $fish_help_item >/dev/null
-				man $fish_help_item
+				# Prefer to use fish's man pages, to avoid
+				# the annoying useless "builtin" man page bash
+				# installs on OS X
+				set -l man_arg "$__fish_datadir/man/man1/$fish_help_item.1"
+				if test ! -f "$man_arg"
+					set man_arg $fish_help_item
+				end
+				man $man_arg
 				return
 			end
 			set fish_help_page "index.html"

@@ -862,6 +862,10 @@ distclean: clean
 # are created by the configure script.
 #
 
+# Don't delete the docs unless we have Doxygen installed
+# We provide pre-built docs in the tarball, and if they get
+# deleted we won't be able to regenerate them
+
 clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
@@ -872,7 +876,9 @@ clean:
 	rm -f fish-@PACKAGE_VERSION@.tar
 	rm -f fish-@PACKAGE_VERSION@.tar.gz
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2
-	rm -rf doc user_doc share/man;
+	if command -v doxygen; then \
+		rm -rf doc user_doc share/man; \
+	fi
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
 	test ! -d "$(XSEL)" || make -C $(XSEL) clean

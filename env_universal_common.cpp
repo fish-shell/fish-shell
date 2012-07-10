@@ -167,6 +167,26 @@ static const char *iconv_wide_names_2[]=
   }
   ;
 
+template<class T>
+class sloppy {}; 
+
+static size_t hack_iconv(iconv_t cd, const char * const* inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
+{
+    /* FreeBSD has this prototype: size_t iconv (iconv_t, const char **...)
+       OS X and Linux this one: size_t iconv (iconv_t, char **...)
+       AFAIK there's no single type that can be passed as both char ** and const char **.
+       Therefore, we let C++ figure it out, by providing a struct with an implicit conversion to both char** and const char **.
+    */
+    struct sloppy_char
+    {
+        const char * const * t;
+        operator char** () const { return (char **)t; }
+        operator const char** () const { return (const char**)t; }
+    } slop_inbuf = {inbuf};
+    
+    return iconv( cd, slop_inbuf, inbytesleft, outbuf, outbytesleft );
+}
+
 /**
    Convert utf-8 string to wide string
  */
@@ -246,7 +266,12 @@ static wchar_t *utf2wcs( const char *in )
 		return 0;		
 	}
 	
-	nconv = iconv( cd, (char **)&in, &in_len, &nout, &out_len );
+    /* FreeBSD has this prototype: size_t iconv (iconv_t, const char **...)
+       OS X and Linux this one: size_t iconv (iconv_t, char **...)
+       AFAIK there's no single type that can be passed as both char ** and const char **.
+       So we cast the function pointer instead (!)
+    */
+    nconv = hack_iconv( cd, &in, &in_len, &nout, &out_len );
 		
 	if (nconv == (size_t) -1)
 	{
@@ -279,6 +304,8 @@ static wchar_t *utf2wcs( const char *in )
 	
 	return out;	
 }
+
+
 
 /**
    Convert wide string to utf-8
@@ -357,7 +384,7 @@ static char *wcs2utf( const wchar_t *in )
 		return 0;		
 	}
 	
-	nconv = iconv( cd, &char_in, &in_len, &nout, &out_len );
+    nconv = hack_iconv( cd, &char_in, &in_len, &nout, &out_len );
 	
 
 	if (nconv == (size_t) -1)

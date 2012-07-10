@@ -104,8 +104,9 @@ fi
 # This mostly helps OS X users, since fink usually installs out of
 # tree and doesn't update CFLAGS.
 #
+# It also helps FreeBSD which puts libiconv in /usr/local/lib
 
-for i in /usr/pkg /sw /opt /opt/local; do
+for i in /usr/pkg /sw /opt /opt/local /usr/local; do
 
 	AC_MSG_CHECKING([for $i/include include directory])
 	if test -d $i/include; then

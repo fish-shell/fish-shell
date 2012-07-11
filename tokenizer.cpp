@@ -185,12 +185,34 @@ int tok_has_next( tokenizer *tok )
 }
 
 /**
-   Tests if this character can be a part of a string
+   Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the first character.
 */
-
-static int is_string_char( wchar_t c )
+static bool is_string_char( wchar_t c, bool is_first )
 {
-	return !( !c ||  wcschr( SEP, c ) );
+    switch (c)
+    {
+        /* Unconditional separators */
+        case L'\0':
+        case L' ':
+        case L'\n':
+        case L'|':
+        case L'\t':
+        case L';':
+        case L'#':
+        case L'\r':
+        case L'<':
+        case L'>':
+        case L'&':
+            return false;
+            
+        /* Conditional separator */
+        case L'^':
+            return ! is_first;
+        
+        default:
+            return true;
+            
+    }
 }
 
 /**
@@ -216,7 +238,8 @@ static void read_string( tokenizer *tok )
 	int paran_count=0;
 
 	start = tok->buff;
-
+    bool is_first = true;
+    
 	while( 1 )
 	{
 
@@ -308,7 +331,7 @@ static void read_string( tokenizer *tok )
 
 						default:
 						{
-							if( !is_string_char(*(tok->buff)) )
+							if( !is_string_char(*(tok->buff), is_first) )
 							{
 								do_loop=0;
 							}
@@ -383,6 +406,7 @@ static void read_string( tokenizer *tok )
 			break;
 
 		tok->buff++;
+        is_first = false;
 	}
 
 	if( (!tok->accept_unfinished) && (mode!=0) )
@@ -609,13 +633,13 @@ void tok_next( tokenizer *tok )
 			break;
 
 		case L'>':
-                        read_redirect( tok, 1 );
+			read_redirect( tok, 1 );
 			return;
 		case L'<':
-                        read_redirect( tok, 0 );
+			read_redirect( tok, 0 );
 			return;
 		case L'^':
-                        read_redirect( tok, 2 );
+			read_redirect( tok, 2 );
 			return;
 
 		default:

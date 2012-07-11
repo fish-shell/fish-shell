@@ -104,6 +104,10 @@ static struct winsize termsize;
 
 void show_stackframe() 
 {
+    /* Hack to avoid showing backtraces in the tester */
+    if (program_name && ! wcscmp(program_name, L"(ignore)"))
+        return;
+    
 	void *trace[32];
 	char **messages = (char **)NULL;
 	int i, trace_size = 0;
@@ -668,6 +672,9 @@ ssize_t read_loop(int fd, void *buff, size_t count)
 
 void debug( int level, const wchar_t *msg, ... )
 {
+    /* Hack to not print error messages in the tests */
+    if ( program_name && ! wcscmp(program_name, L"(ignore)") )
+        return;
 	va_list va;
 
 	wcstring sb;

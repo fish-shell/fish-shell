@@ -63,7 +63,7 @@
 /**
    Command used to start fishd
 */
-#define FISHD_CMD L"fishd ^/tmp/fishd.log.%s"
+#define FISHD_CMD L"fishd ^ /tmp/fishd.log.%s"
 
 /**
    Value denoting a null string

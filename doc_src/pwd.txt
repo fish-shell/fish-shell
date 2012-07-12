@@ -5,4 +5,4 @@
 
 \subsection pwd-description Description
 
-Returns the current directory, always tries to resolve symbolic links.
+Returns the current directory. Note that fish always resolves symbolic links in the current directory path.

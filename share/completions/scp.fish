@@ -25,6 +25,22 @@ complete -c scp -d Hostname -a "
 (__fish_print_users)@
 
 "
+
+#
+# Remote path
+#
+complete -c scp -d "Remote Path" -n "echo (commandline -ct)|sgrep -o '.*:';and true" -a "
+
+(
+	#Prepend any user@host information supplied before the remote completion
+	echo (commandline -ct)|sgrep -o '.*:'
+)(
+	#Get the list of remote files from the specified ssh server
+	ssh -o \"BatchMode yes\" (echo (commandline -ct)|sed -ne 's/\(.*\):.*/\1/p') ls\ -d\ (echo (commandline -ct)|sed -ne 's/.*://p')\*
+)
+
+"
+
 complete -c scp -s B --description "Batch mode"
 complete -c scp -s l -x --description "Bandwidth limit"
 complete -c scp -s P -x --description "Port"

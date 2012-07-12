@@ -11,6 +11,9 @@ By defining the \c fish_prompt function, the user can choose a custom
 prompt. The \c fish_prompt function is executed when the prompt is to
 be shown, and the output is used as a prompt.
 
+Please keep in mind that the function is executed by <a
+href='./index.html#expand-command-substitution'>command substitution</a> and so, even though on the outside it won't change, it's still possible to locally redefine variables and have the status variable changed.
+
 \subsection fish_prompt-example Example
 
 A simple prompt:

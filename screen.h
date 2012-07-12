@@ -132,10 +132,19 @@ class screen_t
    will use it's knowlege of the current contents of the screen in
    order to render the desired output using as few terminal commands
    as possible.
+   
+    \param s the screen on which to write
+    \param prompt the prompt to prepend to the command line
+    \param commandline the command line
+    \param explicit_len the number of characters of the "explicit" (non-autosuggestion) portion of the command line
+    \param colors the colors to use for the comand line
+    \param indent the indent to use for the command line
+    \param cursor_pos where the cursor is
 */
 void s_write( screen_t *s, 
 			  const wchar_t *prompt, 
 			  const wchar_t *commandline,
+			  int explicit_len,
 			  const int *colors, 
 			  const int *indent,
 			  int cursor_pos );

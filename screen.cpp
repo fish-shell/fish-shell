@@ -735,7 +735,8 @@ static int is_dumb()
 
 void s_write( screen_t *s,
 	      const wchar_t *prompt,
-	      const wchar_t *b, 
+	      const wchar_t *commandline, 
+	      int explicit_len,
 	      const int *c, 
 	      const int *indent,
 	      int cursor )
@@ -746,12 +747,11 @@ void s_write( screen_t *s,
 	int prompt_width;
 	int screen_width;
 
-	int max_line_width = 0;
-	int current_line_width = 0;
+	int max_line_width = 0, current_line_width = 0, newline_count = 0, explicit_portion_width = 0;
 	
 	CHECK( s, );
 	CHECK( prompt, );
-	CHECK( b, );
+	CHECK( commandline, );
 	CHECK( c, );
 	CHECK( indent, );
 
@@ -762,7 +762,7 @@ void s_write( screen_t *s,
 	if( is_dumb() )
 	{
 		char *prompt_narrow = wcs2str( prompt );
-		char *buffer_narrow = wcs2str( b );
+		char *buffer_narrow = wcs2str( commandline );
 		
 		write_loop( 1, "\r", 1 );
 		write_loop( 1, prompt_narrow, strlen( prompt_narrow ) );
@@ -803,18 +803,25 @@ void s_write( screen_t *s,
 	/*
 	  Check if we are overflowing
 	 */
-
-	for( i=0; b[i]; i++ )
+    int last_char_that_fits = 0;
+	for( i=0; commandline[i]; i++ )
 	{
-		if( b[i] == L'\n' )
+		if( commandline[i] == L'\n' )
 		{
 			if( current_line_width > max_line_width )
 				max_line_width = current_line_width;
 			current_line_width = indent[i]*INDENT_STEP;
+            newline_count++;
 		}
 		else
 		{
-			current_line_width += wcwidth(b[i]);
+            int width = wcwidth(commandline[i]);
+			current_line_width += width;
+            if (i < explicit_len)
+                explicit_portion_width += width;
+                
+            if (prompt_width + current_line_width < screen_width)
+                last_char_that_fits = i;
 		}
 	}
 	if( current_line_width > max_line_width )
@@ -822,6 +829,16 @@ void s_write( screen_t *s,
 
     s->desired.resize(0);
 	s->desired.cursor[0] = s->desired.cursor[1] = 0;
+    
+    /* If we cannot fit with the autosuggestion, but we can fit without it, truncate the autosuggestion. We limit this check to just one line to avoid confusion; not sure how well this would work with multiple lines */
+    wcstring truncated_autosuggestion_line;
+    if (newline_count == 0 && prompt_width + max_line_width >= screen_width && prompt_width + explicit_portion_width < screen_width)
+    {
+        max_line_width = screen_width - prompt_width - 1;
+        truncated_autosuggestion_line = wcstring(commandline, 0, last_char_that_fits);
+        truncated_autosuggestion_line.push_back(ellipsis_char);
+        commandline = truncated_autosuggestion_line.c_str();
+    }
 
 	/*
 	  If overflowing, give the prompt its own line to improve the
@@ -842,7 +859,7 @@ void s_write( screen_t *s,
 	
 
 	
-	for( i=0; b[i]; i++ )
+	for( i=0; commandline[i]; i++ )
 	{
 		int col = c[i];
 		
@@ -857,9 +874,9 @@ void s_write( screen_t *s,
 			cursor_arr[1] = s->desired.cursor[1];
 		}
 		
-		s_desired_append_char( s, b[i], col, indent[i], prompt_width );
+		s_desired_append_char( s, commandline[i], col, indent[i], prompt_width );
 		
-		if( i== cursor && s->desired.cursor[1] != cursor_arr[1] && b[i] != L'\n' )
+		if( i== cursor && s->desired.cursor[1] != cursor_arr[1] && commandline[i] != L'\n' )
 		{
 			/*
 			   Ugh. We are placed exactly at the wrapping point of a
@@ -867,7 +884,7 @@ void s_write( screen_t *s,
 			   cursor won't be on the ellipsis which looks
 			   unintuitive.
 			*/
-			cursor_arr[0] = s->desired.cursor[0] - wcwidth(b[i]);
+			cursor_arr[0] = s->desired.cursor[0] - wcwidth(commandline[i]);
 			cursor_arr[1] = s->desired.cursor[1];
 		}
 		

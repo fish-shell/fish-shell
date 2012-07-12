@@ -424,15 +424,6 @@ static void reader_repaint()
     //Update the indentation
 	parser_t::principal_parser().test( data->command_line.c_str(), &data->indents[0], 0, 0 );
 	    
-#if 0
-	s_write( &data->screen,
-		 data->prompt_buff.c_str(),
-		 data->command_line.c_str(),
-		 &data->colors[0],
-		 &data->indents[0], 
-		 data->buff_pos );
-#else
-
     wcstring full_line = (data->autosuggestion.empty() ? data->command_line : data->autosuggestion);
     size_t len = std::max((size_t)1, full_line.size());
     
@@ -445,10 +436,10 @@ static void reader_repaint()
 	s_write( &data->screen,
 		 data->prompt_buff.c_str(),
 		 full_line.c_str(),
+         data->command_line.size(),
 		 &colors[0],
 		 &indents[0], 
 		 data->buff_pos );
-#endif
 	data->repaint_needed = false;
 }
 
@@ -2072,7 +2063,7 @@ int reader_shell_test( const wchar_t *b )
 		int tmp[1];
 		int tmp2[1];
 		
-		s_write( &data->screen, L"", L"", tmp, tmp2, 0 );
+		s_write( &data->screen, L"", L"", 0, tmp, tmp2, 0 );
 		
 		parser_t::principal_parser().test( b, 0, &sb, L"fish" );
 		fwprintf( stderr, L"%ls", sb.c_str() );

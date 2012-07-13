@@ -4,6 +4,8 @@
 Doxyfile.help
 Makefile
 autom4te.cache/
+builtin_scripts.cpp
+builtin_scripts.h
 command_list.txt
 config.h
 config.h.in

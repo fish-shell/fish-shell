@@ -78,6 +78,7 @@
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
 	# Ask git-config for some config options
 	set -l svn_remote
+	set -l svn_prefix
 	set -l upstream git
 	set -l legacy
 	set -l verbose
@@ -90,6 +91,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 			test -n "$__fish_git_prompt_showupstream"; or return
 		case svn-remote.'*'.url
 			set svn_remote $svn_remote $value
+			set -l remote_prefix (/bin/sh -c 'echo "${1%.url}"' -- $key)
+			set svn_prefix $svn_prefix $remote_prefix
 			if test -n "$svn_url_pattern"
 				set svn_url_pattern $svn_url_pattern"\|$value"
 			else
@@ -122,8 +125,16 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		if test (count $svn_upstream) -ne 0
 			echo $svn_upstream[-1] | read -l _ svn_upstream _
 			set svn_upstream (echo $svn_upstream | sed 's/@.*//')
-			for remote in $svn_remote
-				set svn_upstream (/bin/sh -c 'echo "${1#$2}"' -- $svn_upstream $remote)
+			set -l cur_prefix
+			for i in (seq (count $svn_remote))
+				set -l remote $svn_remote[$i]
+				set -l mod_upstream (/bin/sh -c 'echo "${1#$2}"' -- $svn_upstream $remote)
+				if test "$svn_upstream" != "$mod_upstream"
+					# we found a valid remote
+					set svn_upstream $mod_upstream
+					set cur_prefix $svn_prefix[$i]
+					break
+				end
 			end
 
 			if test -z "$svn_upstream"
@@ -138,6 +149,12 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 					set upstream (echo $svn_upstream | cut -c 2-)
 				else
 					set upstream $svn_upstream
+				end
+				set -l fetch_val (git config "$cur_prefix".fetch)
+				if test -n "$fetch_val"
+					set -l IFS :
+					echo "$fetch_val" | read -l trunk pattern
+					set upstream (/bin/sh -c 'echo "${1%/$2}"' -- $pattern $trunk)/$upstream
 				end
 			end
 		else

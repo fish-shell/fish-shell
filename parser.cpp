@@ -1080,7 +1080,7 @@ static int printed_width( const wchar_t *str, int len )
 		}
 		else
 		{
-			res += wcwidth( str[i] );
+			res += fish_wcwidth( str[i] );
 		}
 	}
 	return res;

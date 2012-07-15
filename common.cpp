@@ -511,18 +511,7 @@ int wcsvarchr( wchar_t chr )
 */
 int my_wcswidth( const wchar_t *c )
 {
-	int res=0;
-	while( *c )
-	{
-		int w = wcwidth( *c++ );
-		if( w < 0 )
-			w = 1;
-		if( w > 2 )
-			w=1;
-		
-		res += w;		
-	}
-	return res;
+	return fish_wcswidth(c, wcslen(c));
 }
 
 wchar_t *quote_end( const wchar_t *pos )
@@ -822,13 +811,13 @@ void write_screen( const wcstring &msg, wcstring &buff )
 				  Check is token is wider than one line.
 				  If so we mark it as an overflow and break the token.
 				*/
-				if((tok_width + wcwidth(*pos)) > (screen_width-1))
+				if((tok_width + fish_wcwidth(*pos)) > (screen_width-1))
 				{
 					overflow = 1;
 					break;				
 				}
 			
-				tok_width += wcwidth( *pos );
+				tok_width += fish_wcwidth( *pos );
 				pos++;
 			}
 

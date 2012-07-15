@@ -507,8 +507,8 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
     
 	while( *str != 0 )
 	{
-		int w = wcwidth( *str );
-		if( written+w+wcwidth( ellipsis_char )>max_width )
+		int w = fish_wcwidth( *str );
+		if( written+w+fish_wcwidth( ellipsis_char )>max_width )
 		{
 			break;
 		}
@@ -516,7 +516,7 @@ void writestr_ellipsis( const wchar_t *str, int max_width )
 		writech( *(str++) );
 	}
     
-	written += wcwidth( ellipsis_char );
+	written += fish_wcwidth( ellipsis_char );
 	writech( ellipsis_char );
     
 	while( written < max_width )
@@ -541,13 +541,13 @@ int write_escaped_str( const wchar_t *str, int max_len )
     
 	if( max_len && (max_len < len))
 	{
-		for( i=0; (written+wcwidth(out[i]))<=(max_len-1); i++ )
+		for( i=0; (written+fish_wcwidth(out[i]))<=(max_len-1); i++ )
 		{
 			writech( out[i] );
-			written += wcwidth( out[i] );
+			written += fish_wcwidth( out[i] );
 		}
 		writech( ellipsis_char );
-		written += wcwidth( ellipsis_char );
+		written += fish_wcwidth( ellipsis_char );
 		
 		for( i=written; i<max_len; i++ )
 		{

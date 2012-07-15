@@ -12,6 +12,10 @@
 #include <sys/types.h>
 #include <signal.h>
 
+/** fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if the system one is busted. */
+int fish_wcwidth(wchar_t wc);
+int fish_wcswidth(const wchar_t *str, size_t n);
+
 #ifndef WCHAR_MAX
 /**
    This _should_ be defined by wchar.h, but e.g. OpenBSD doesn't.

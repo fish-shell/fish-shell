@@ -721,9 +721,14 @@ static void remove_backward()
 
 	if( data->buff_pos <= 0 )
 		return;
-        
-    data->command_line.erase(data->buff_pos-1, 1);    
-	data->buff_pos--;
+    
+    /* Fake composed character sequences by continuning to delete until we delete a character of width at least 1. */
+    int width;
+    do {
+        data->buff_pos -= 1;
+        width = fish_wcwidth(data->command_line.at(data->buff_pos));
+        data->command_line.erase(data->buff_pos, 1);        
+    } while (width == 0 && data->buff_pos > 0);
     data->command_line_changed();
     data->suppress_autosuggestion = true;
 

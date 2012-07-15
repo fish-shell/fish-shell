@@ -130,7 +130,8 @@ static const wchar_t *name_arr[] =
 	L"repaint",
 	L"up-line",
 	L"down-line",
-	L"suppress-autosuggestion"
+	L"suppress-autosuggestion",
+	L"accept-autosuggestion"
 }
 	;
 
@@ -213,6 +214,7 @@ static const wchar_t code_arr[] =
 	R_UP_LINE,
 	R_DOWN_LINE,
 	R_SUPPRESS_AUTOSUGGESTION,
+	R_ACCEPT_AUTOSUGGESTION
 }
 	;
 
@@ -257,7 +259,6 @@ void input_mapping_add( const wchar_t *sequence,
 			const wchar_t *command )
 {
 	size_t i;
-
 	CHECK( sequence, );
 	CHECK( command, );
 	
@@ -445,7 +446,7 @@ static wint_t input_try_mapping( const input_mapping_t &m)
 {
 	wint_t c=0;
 	int j;
-
+    
 	/*
 	  Check if the actual function code of this mapping is on the stack
 	 */

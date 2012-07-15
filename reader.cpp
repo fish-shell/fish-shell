@@ -1204,6 +1204,18 @@ static void update_autosuggestion(void) {
 #endif
 }
 
+static void accept_autosuggestion(void) {
+    /* Accept any autosuggestion by replacing the command line with it. */
+    if (! data->autosuggestion.empty()) {
+        /* Accept the autosuggestion */
+        data->command_line = data->autosuggestion;
+        data->buff_pos = data->command_line.size();
+        data->command_line_changed();
+        reader_super_highlight_me_plenty(data->buff_pos);
+        reader_repaint();
+    }
+}
+
 /**
   Flash the screen. This function only changed the color of the
   current line, since the flash_screen sequnce is rather painful to
@@ -3015,15 +3027,7 @@ const wchar_t *reader_readline()
 					data->buff_pos++;					
 					reader_repaint();
 				} else {
-                    /* We're at the end of our buffer, and the user hit right. Try autosuggestion. */
-                    if (! data->autosuggestion.empty()) {
-                        /* Accept the autosuggestion */
-                        data->command_line = data->autosuggestion;
-                        data->buff_pos = data->command_line.size();
-                        data->command_line_changed();
-                        reader_super_highlight_me_plenty(data->buff_pos);
-                        reader_repaint();
-                    }
+                    accept_autosuggestion();
                 }
 				break;
 			}
@@ -3113,12 +3117,18 @@ const wchar_t *reader_readline()
 								
 				break;
 			}
-
+            
 			case R_SUPPRESS_AUTOSUGGESTION:
 			{
 				data->suppress_autosuggestion = true;
 				data->autosuggestion.clear();
 				reader_repaint();
+				break;
+			}
+            
+			case R_ACCEPT_AUTOSUGGESTION:
+			{
+				accept_autosuggestion();
 				break;
 			}
 

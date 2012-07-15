@@ -2358,7 +2358,11 @@ static void handle_end_loop()
 	}
 	else
 	{
-		if( !isatty(0) )
+        /* PCA: we used to only hangup jobs if stdin was closed. This prevented child processes from exiting. It's unclear to my why it matters if stdin is closed, but it seems to me if we're forcing an exit, we definitely want to hang up our processes.
+        
+            See https://github.com/fish-shell/fish-shell/issues/138
+        */
+		if( reader_exit_forced() || !isatty(0) )
 		{
 			/*
 			  We already know that stdin is a tty since we're

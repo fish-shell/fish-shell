@@ -206,6 +206,9 @@ wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &c
 */
 int fgetws2( wchar_t **buff, int *len, FILE *f );
 
+/** Like fgetws2, but reads into a string */
+int fgetws2(wcstring *s, FILE *f);
+
 void sort_strings( std::vector<wcstring> &strings);
 
 void sort_completions( std::vector<completion_t> &strings);

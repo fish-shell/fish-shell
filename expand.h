@@ -192,5 +192,9 @@ int expand_is_clean( const wchar_t *in );
 */
 void expand_variable_error( parser_t &parser, const wchar_t *token, int token_pos, int error_pos );
 
+/**
+   Testing function for getting all process names.
+*/
+std::vector<wcstring> expand_get_all_process_names(void);
 
 #endif

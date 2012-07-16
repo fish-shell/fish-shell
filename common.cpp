@@ -136,6 +136,40 @@ wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &l
     return strings;
 }
 
+int fgetws2(wcstring *s, FILE *f)
+{
+	int i=0;
+	wint_t c;
+
+	while( 1 )
+	{
+		errno=0;
+
+		c = getwc( f );
+		
+		if( errno == EILSEQ )
+		{
+			continue;
+		}
+			
+		switch( c )
+		{
+			/* End of line */ 
+			case WEOF:
+			case L'\n':
+			case L'\0':
+				return i;				
+				/* Ignore carriage returns */
+			case L'\r':
+				break;
+				
+			default:
+                i++;
+				s->push_back((wchar_t)c);
+				break;
+		}
+	}
+}
 
 int fgetws2( wchar_t **b, int *len, FILE *f )
 {

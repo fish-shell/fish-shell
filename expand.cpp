@@ -493,7 +493,7 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid)
         
         /* the 'cmdline' file exists, it should contain the commandline */
         FILE *cmdfile;
-        if ((cmdfile=wfopen(path + L"/cmdline", "r"))==0)
+        if ((cmdfile=wfopen(path + L"/cmdline", "r")))
         {
             wcstring full_command_line;
 			signal_block();
@@ -509,7 +509,7 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid)
             }
         }
 #ifdef SunOS
-        else if ((cmdfile=wfopen(path + L"/psinfo", "r"))==0)
+        else if ((cmdfile=wfopen(path + L"/psinfo", "r")))
         {
             psinfo_t info;
             if (fread(&info, sizeof(info), 1, cmdfile))

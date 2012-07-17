@@ -126,16 +126,6 @@ void show_stackframe()
 	}
 }
 
-wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &list )
-{
-    wcstring_list_t strings;
-    strings.reserve(list.size());
-    for (std::vector<completion_t>::const_iterator iter = list.begin(); iter != list.end(); ++iter) {
-        strings.push_back(iter->completion);
-    }
-    return strings;
-}
-
 int fgetws2(wcstring *s, FILE *f)
 {
 	int i=0;
@@ -240,10 +230,6 @@ void sort_strings( std::vector<wcstring> &strings)
     std::sort(strings.begin(), strings.end(), string_sort_predicate);
 }
 
-void sort_completions( std::vector<completion_t> &completions)
-{
-    std::sort(completions.begin(), completions.end());
-}
 wchar_t *str2wcs( const char *in )
 {
 	wchar_t *out;
@@ -693,33 +679,53 @@ ssize_t read_loop(int fd, void *buff, size_t count)
     return result;
 }
 
-void debug( int level, const wchar_t *msg, ... )
+static bool should_debug(int level)
 {
+	if( level > debug_level )
+		return false;
+
     /* Hack to not print error messages in the tests */
     if ( program_name && ! wcscmp(program_name, L"(ignore)") )
-        return;
-	va_list va;
+        return false;
+        
+    return true;
+}
 
-	wcstring sb;
-
-	int errno_old = errno;
-	
-	if( level > debug_level )
-		return;
-
-	CHECK( msg, );
-		
-	sb = format_string(L"%ls: ", program_name);
-	va_start(va, msg);
-	sb.append(vformat_string(msg, va));
-	va_end(va);
-
+static void debug_shared( const wcstring &msg )
+{
+    const wcstring sb = wcstring(program_name) + L": " + msg;
 	wcstring sb2;
 	write_screen( sb, sb2 );
 	fwprintf( stderr, L"%ls", sb2.c_str() );	
-
-	errno = errno_old;
 }
+
+void debug( int level, const wchar_t *msg, ... )
+{
+    if (! should_debug(level))
+        return;
+    int errno_old = errno;
+    va_list va;
+	va_start(va, msg);
+    wcstring local_msg = vformat_string(msg, va);
+	va_end(va);
+    debug_shared(local_msg);
+    errno = errno_old;
+}
+
+void debug( int level, const char *msg, ... )
+{
+    if (! should_debug(level))
+        return;
+    int errno_old = errno;
+    char local_msg[512];
+    va_list va;
+	va_start(va, msg);
+    vsnprintf(local_msg, sizeof local_msg, msg, va);
+	va_end(va);
+    debug_shared(str2wcstring(local_msg));
+    errno = errno_old;
+}
+
 
 void debug_safe(int level, const char *msg, const char *param1, const char *param2, const char *param3, const char *param4, const char *param5, const char *param6, const char *param7, const char *param8, const char *param9, const char *param10, const char *param11, const char *param12)
 {

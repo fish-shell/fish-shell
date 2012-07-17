@@ -1274,7 +1274,7 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
     const size_t length = buff.size();
     assert(buff.size() == color.size());
 
-    
+
 	if( length == 0 )
 		return;
 	

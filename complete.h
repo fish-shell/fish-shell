@@ -134,17 +134,12 @@ public:
 	*/
 	int flags;
     
-    completion_t(const wcstring &comp, const wcstring &desc = L"", int flags_val = 0) : completion(comp), description(desc), flags(flags_val) {
-        if( flags & COMPLETE_AUTO_SPACE )
-        {
-            flags = flags & ~COMPLETE_AUTO_SPACE;
-            size_t len = completion.size();
-            if (len > 0  && ( wcschr( L"/=@:", comp.at(len-1)) != 0 ))
-                flags |= COMPLETE_NO_SPACE;
-            
-        }
-    }
-
+    /* Construction. Note: defining these so that they are not inlined reduces the executable size. */
+    completion_t(const wcstring &comp, const wcstring &desc = L"", int flags_val = 0);
+    completion_t(const completion_t &);
+    completion_t &operator=(const completion_t &);
+    
+    /* The following are needed for sorting and uniquing completions */
 	bool operator < (const completion_t& rhs) const { return this->completion < rhs.completion; }
 	bool operator == (const completion_t& rhs) const { return this->completion == rhs.completion; }
 	bool operator != (const completion_t& rhs) const { return ! (*this == rhs); }
@@ -154,6 +149,12 @@ enum complete_type_t {
     COMPLETE_DEFAULT,
     COMPLETE_AUTOSUGGEST
 };
+
+/** Given a list of completions, returns a list of their completion fields */
+wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &completions );
+
+/** Sorts a list of completions */
+void sort_completions( std::vector<completion_t> &completions);
 
 /**
 
@@ -270,7 +271,7 @@ void complete_load( const wcstring &cmd, bool reload );
    \param flags completion flags
 
 */
-void completion_allocate(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, int flags);
+void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc = L"", int flags = 0);
 
 
 #endif

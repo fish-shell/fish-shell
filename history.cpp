@@ -495,7 +495,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     
     /* Append old items */
     load_old_if_needed();
-    for (std::deque<size_t>::const_reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter) {        
+    for (std::vector<size_t>::const_reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter) {        
         size_t offset = *iter;
         const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
         if (! first)
@@ -927,7 +927,7 @@ wcstring history_search_t::current_string() const {
 }
 
 bool history_search_t::match_already_made(const wcstring &match) const {
-    for (std::deque<prev_match_t>::const_iterator iter = prev_matches.begin(); iter != prev_matches.end(); ++iter) {
+    for (std::vector<prev_match_t>::const_iterator iter = prev_matches.begin(); iter != prev_matches.end(); ++iter) {
         if (iter->second.str() == match)
             return true;
     }

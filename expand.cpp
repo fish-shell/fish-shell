@@ -589,7 +589,7 @@ static int find_process( const wchar_t *proc,
 				if( wcsncmp( proc, jid, wcslen(proc ) )==0 )
 				{
                     wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
-					completion_allocate( out, 
+					append_completion( out, 
 										 jid+wcslen(proc),
 										 desc_buff,
 										 0 );
@@ -610,10 +610,8 @@ static int find_process( const wchar_t *proc,
 				j = job_get( jid );
 				if( (j != 0) && (j->command_wcstr() != 0 ) )
 				{
-					
 					{
-                        wcstring result = to_string((long)j->pgid);
-						out.push_back(completion_t(result));
+                        append_completion(out, to_string<long>(j->pgid));
 						found = 1;
 					}
 				}
@@ -635,15 +633,14 @@ static int find_process( const wchar_t *proc,
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
-				completion_allocate( out, 
+				append_completion( out, 
 									 j->command_wcstr() + offset + wcslen(proc),
 									 COMPLETE_JOB_DESC,
 									 0 );
 			}
 			else
 			{
-                wcstring result = to_string((long)j->pgid);
-                out.push_back(completion_t(result));
+                append_completion(out, to_string<long>(j->pgid));
 				found = 1;
 			}
 		}
@@ -671,15 +668,17 @@ static int find_process( const wchar_t *proc,
 			{
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					completion_allocate( out, 
+					append_completion( out, 
 										 p->actual_cmd + offset + wcslen(proc),
 										 COMPLETE_CHILD_PROCESS_DESC,
 										 0 );
 				}
 				else
 				{
-                    wcstring result = to_string<int>(p->pid);
-					out.push_back(completion_t(result));
+                    append_completion (out,
+                                         to_string<long>(p->pid),
+                                         L"",
+                                         0);
 					found = 1;
 				}
 			}
@@ -703,14 +702,14 @@ static int find_process( const wchar_t *proc,
         {
             if( flags & ACCEPT_INCOMPLETE )
             {
-                completion_allocate( out, 
+                append_completion( out, 
                                      process_name.c_str() + offset + wcslen(proc),
                                      COMPLETE_PROCESS_DESC,
                                      0 );
             }
             else
             {
-                out.push_back(completion_t(to_string((long)process_pid)));
+                append_completion(out, to_string<long>(process_pid));
             }
         }
     }
@@ -732,7 +731,7 @@ static int expand_pid( const wcstring &instr_with_sep,
  
 	if( instr.empty() || instr.at(0) != PROCESS_EXPAND )
 	{
-		out.push_back(completion_t(instr));
+        append_completion(out, instr);
 		return 1;
 	}
     
@@ -742,14 +741,14 @@ static int expand_pid( const wcstring &instr_with_sep,
 	{
 		if( wcsncmp( in+1, SELF_STR, wcslen(in+1) )==0 )
 		{
-			completion_allocate( out, 
+			append_completion( out, 
 								 SELF_STR+wcslen(in+1),
 								 COMPLETE_SELF_DESC, 
 								 0 );
 		}
 		else if( wcsncmp( in+1, LAST_STR, wcslen(in+1) )==0 )
 		{
-			completion_allocate( out, 
+			append_completion( out, 
 								 LAST_STR+wcslen(in+1), 
 								 COMPLETE_LAST_DESC, 
 								 0 );
@@ -760,8 +759,7 @@ static int expand_pid( const wcstring &instr_with_sep,
 		if( wcscmp( (in+1), SELF_STR )==0 )
 		{
 
-			const wcstring pid_str = to_string<int>(getpid());
-			out.push_back(completion_t(pid_str));
+            append_completion(out, to_string<long>(getpid()));
 
 			return 1;
 		}
@@ -769,8 +767,7 @@ static int expand_pid( const wcstring &instr_with_sep,
 		{
 			if( proc_last_bg_pid > 0 )
 			{
-                const wcstring pid_str = to_string<int>(proc_last_bg_pid);
-				out.push_back( completion_t(pid_str));
+                append_completion(out, to_string<long>(proc_last_bg_pid));
 			}
 
 			return 1;
@@ -1090,7 +1087,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 							const wcstring &next = var_item_list.at(j);
 							if( is_ok && (i == 0) && (!in[stop_pos]) )
 							{
-								out.push_back(completion_t(next));
+                                append_completion(out, next);
 							}
 							else
 							{
@@ -1152,7 +1149,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
     
 	if( !empty )
 	{
-		out.push_back(completion_t(in));
+        append_completion(out, in);
 	}
     
 	return is_ok;
@@ -1247,7 +1244,7 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 
 	if( bracket_begin == 0 )
 	{
-		out.push_back(completion_t(in));
+		append_completion(out, in);
 		return 1;
 	}
 

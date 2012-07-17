@@ -306,6 +306,25 @@ class reader_data_t
     
     /** Whether the a screen reset is needed after a repaint. */
     bool screen_reset_needed;
+    
+    /** Constructor */
+    reader_data_t() :
+        suppress_autosuggestion(0),
+        history(0),
+        token_history_pos(0),
+        search_pos(0),
+        buff_pos(0),
+        complete_func(0),
+        highlight_function(0),
+        test_func(0),
+        end_loop(0),
+        prev_end_loop(0),
+        next(0),
+        search_mode(0),
+        repaint_needed(0),
+        screen_reset_needed(0)
+        {
+        }
 };
 
 /**
@@ -530,8 +549,8 @@ void reader_data_t::command_line_changed() {
 
 
 /** Remove any duplicate completions in the list. This relies on the list first beeing sorted. */
-static void remove_duplicates(std::vector<completion_t> &l) {
-	
+static void remove_duplicates(std::vector<completion_t> &l)
+{
 	l.erase(std::unique( l.begin(), l.end()), l.end());
 }
 
@@ -2100,9 +2119,7 @@ static int default_test( const wchar_t *b )
 
 void reader_push( const wchar_t *name )
 {
-    // use something nasty which guarantees value initialization (that is, all fields zero)
-    const reader_data_t zerod = {};
-    reader_data_t *n = new reader_data_t(zerod);
+    reader_data_t *n = new reader_data_t();
     
     n->history = & history_t::history_with_name(name);
 	n->app_name = name;

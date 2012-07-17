@@ -24,7 +24,6 @@
 #include <dirent.h>
 #include <time.h>
 #include <vector>
-#include <deque>
 #include <algorithm>
 #include <memory>
 

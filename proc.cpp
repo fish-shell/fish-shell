@@ -72,7 +72,6 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "signal.h"
 #include "event.h"
 
-#include <deque>
 #include "output.h"
 
 /**
@@ -153,7 +152,7 @@ static event_t event(0);
 /**
    A stack containing the values of is_interactive. Used by proc_push_interactive and proc_pop_interactive.
 */
-static std::deque<int> interactive_stack;
+static std::vector<int> interactive_stack;
 
 void proc_init()
 {

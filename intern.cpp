@@ -11,7 +11,6 @@
 #include <wchar.h>
 #include <unistd.h>
 #include <set>
-#include <deque>
 #include <algorithm>
 
 #include "fallback.h"
@@ -29,14 +28,14 @@ class string_table_compare_t {
     }
 };
 
-/* A sorted deque ends up being a little more memory efficient than a std::set for the intern'd string table */
+/* A sorted vector ends up being a little more memory efficient than a std::set for the intern'd string table */
 #define USE_SET 0
 #if USE_SET
 /** The table of intern'd strings */
 typedef std::set<const wchar_t *, string_table_compare_t> string_table_t;
 #else
 /** The table of intern'd strings */
-typedef std::deque<const wchar_t *> string_table_t;
+typedef std::vector<const wchar_t *> string_table_t;
 #endif
 
 static string_table_t string_table;

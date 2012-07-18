@@ -254,6 +254,14 @@ const wcstring &completion_entry_t::get_short_opt_str() const {
 /* completion_t functions */
 completion_t::completion_t(const wcstring &comp, const wcstring &desc, int flags_val) : completion(comp), description(desc), flags(flags_val)
 {
+    if( flags & COMPLETE_AUTO_SPACE )
+    {
+        flags = flags & ~COMPLETE_AUTO_SPACE;
+        size_t len = completion.size();
+        if (len > 0  && ( wcschr( L"/=@:", comp.at(len-1)) != 0 ))
+            flags |= COMPLETE_NO_SPACE;
+    }
+
 }
 
 completion_t::completion_t(const completion_t &him) : completion(him.completion), description(him.description), flags(him.flags)

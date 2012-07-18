@@ -70,6 +70,12 @@
 */
 #define ENV_NULL L"\x1d"
 
+/** Some configuration path environment variables */
+#define FISH_DATADIR_VAR L"__fish_datadir"
+#define FISH_SYSCONFDIR_VAR L"__fish_sysconfdir"
+#define FISH_HELPDIR_VAR L"__fish_help_dir"
+#define FISH_BIN_DIR L"__fish_bin_dir"
+
 /**
    At init, we read all the environment variables from this array.
 */
@@ -235,8 +241,21 @@ static void start_fishd()
 		debug( 0, _( L"Could not get user information" ) );
 		return;
 	}
-	
-    wcstring cmd = format_string(FISHD_CMD, pw->pw_name);	
+    
+    wcstring cmd = format_string(FISHD_CMD, pw->pw_name);
+    
+    /* Prefer the fishd in __fish_bin_dir, if exists */
+    const env_var_t bin_dir = env_get_string(L"__fish_bin_dir");
+    if (! bin_dir.missing_or_empty())
+    {
+        wcstring path = bin_dir + L"/fishd";
+        if (waccess(path, X_OK) == 0)
+        {
+            /* The path command just looks like 'fishd', so insert the bin path to make it absolute */
+            cmd.insert(0, bin_dir + L"/");
+        }
+    }
+    
     parser_t &parser = parser_t::principal_parser();
 	parser.eval( cmd, 0, TOP );
 }
@@ -510,7 +529,7 @@ static bool variable_can_be_array(const wchar_t *key) {
     }
 }
 
-void env_init()
+void env_init(const struct config_paths_t *paths /* or NULL */)
 {
 	char **p;
 	struct passwd *pw;
@@ -560,7 +579,7 @@ void env_init()
 	  Now the environemnt variable handling is set up, the next step
 	  is to insert valid data
 	*/
-	
+	    
 	/*
 	  Import environment variables
 	*/
@@ -600,6 +619,15 @@ void env_init()
 		free(key);
 	}
 	
+    /* Set the given paths in the environment, if we have any */
+    if (paths != NULL)
+    {
+        env_set(FISH_DATADIR_VAR, paths->data.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        env_set(FISH_SYSCONFDIR_VAR, paths->sysconf.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        env_set(FISH_HELPDIR_VAR, paths->doc.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        env_set(FISH_BIN_DIR, paths->bin.c_str(), ENV_GLOBAL | ENV_EXPORT);
+    }
+    
 	/*
 	  Set up the PATH variable
 	*/

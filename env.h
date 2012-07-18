@@ -52,11 +52,20 @@ enum{
 }
 ;
 
+/* A struct of configuration directories, determined in main() that fish will optionally pass to env_init.
+ */
+struct config_paths_t
+{
+    wcstring data;      // e.g. /usr/local/share
+    wcstring sysconf;   // e.g. /usr/local/etc
+    wcstring doc;       // e.g. /usr/local/share/doc/fish
+    wcstring bin;       // e.g. /usr/local/bin
+};
 
 /**
    Initialize environment variable data
 */
-void env_init();
+void env_init(const struct config_paths_t *paths = NULL);
 
 /**
    Destroy environment variable data
@@ -163,6 +172,8 @@ void env_export_arr(bool recalc, null_terminated_array_t<char> &result);
   Returns all variable names.
 */
 wcstring_list_t env_get_names( int flags );
+
+
 
 /**
    Update the PWD variable

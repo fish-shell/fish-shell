@@ -875,17 +875,14 @@ void expand_variable_error( parser_t &parser, const wchar_t *token, int token_po
 /**
    Parse an array slicing specification
  */
-static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx )
+static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, int size )
 {
-	
-	
 	wchar_t *end;
 	
 	int pos = 1;
     
     //	debug( 0, L"parse_slice on '%ls'", in );
 	
-    
 	while( 1 )
 	{
 		long tmp;
@@ -907,8 +904,34 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
 		}
         //		debug( 0, L"Push idx %d", tmp );
 		
-        idx.push_back(tmp);
+		long i1 = tmp>-1 ? tmp : size+tmp+1;
 		pos = end-in;
+		while( in[pos]==INTERNAL_SEPARATOR )
+			pos++;		
+		if ( in[pos]==L'.' && in[pos+1]==L'.' ){
+			pos+=2;
+			while( in[pos]==INTERNAL_SEPARATOR )
+				pos++;		
+			long tmp1 = wcstol( &in[pos], &end, 10 );
+			if( ( errno ) || ( end == &in[pos] ) )
+			{
+				return 1;
+			}
+		pos = end-in;
+
+			// debug( 0, L"Push range %d %d", tmp, tmp1 );
+			long i2 = tmp1>-1 ? tmp1 : size+tmp1+1;
+			// debug( 0, L"Push range idx %d %d", i1, i2 );
+			short direction = i2<i1 ? -1 : 1 ;
+			for (long jjj = i1; jjj*direction <= i2*direction; jjj+=direction) {
+				// debug(0, L"Expand range [subst]: %i\n", jjj); 
+				idx.push_back( jjj );
+			}
+			continue;
+		}
+		
+		// debug( 0, L"Push idx %d", tmp );
+		idx.push_back( i1 );
 	}
 	
 	if( end_ptr )
@@ -1000,25 +1023,26 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 				int all_vars=1;
                 wcstring_list_t var_item_list;
                 
+				if( is_ok )
+				{
+					tokenize_variable_array( var_val.c_str(), var_item_list );					
+					
 				if( in[stop_pos] == L'[' )
 				{
 					wchar_t *slice_end;
 					all_vars=0;
 					
-					if( parse_slice( in + stop_pos, &slice_end, var_idx_list ) )
+						if( parse_slice( in + stop_pos, &slice_end, var_idx_list, var_item_list.size() ) )
 					{
 						parser.error( SYNTAX_ERROR,
                                      -1,
                                      L"Invalid index value" );						
 						is_ok = 0;
+							break;
 					}					
 					stop_pos = (slice_end-in);
 				}				
                 
-				if( is_ok )
-				{
-					tokenize_variable_array( var_val.c_str(), var_item_list );                    
-                    
 					if( !all_vars )
 					{
                         wcstring_list_t string_values(var_idx_list.size());
@@ -1026,11 +1050,6 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 						for( size_t j=0; j<var_idx_list.size(); j++)
 						{
 							long tmp = var_idx_list.at(j);
-							if( tmp < 0 )
-							{
-								tmp = ((long)var_item_list.size())+tmp+1;
-							}
-                            
 							/*
                              Check that we are within array
                              bounds. If not, truncate the list to
@@ -1335,7 +1354,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
         std::vector<long> slice_idx;
 		wchar_t *slice_end;
 		
-		if( parse_slice( tail_begin, &slice_end, slice_idx ) )
+		if( parse_slice( tail_begin, &slice_end, slice_idx, sub_res.size() ) )
 		{
 			parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 			return 0;
@@ -1347,17 +1366,13 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 			for( i=0; i < slice_idx.size(); i++ )
 			{
 				long idx = slice_idx.at(i);
-				if( idx < 0 )
-				{
-					idx = sub_res.size() + idx + 1;
-				}
-				
 				if( idx < 1 || (size_t)idx > sub_res.size() )
 				{
-					parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
+					parser.error( SYNTAX_ERROR,
+								 -1,
+								 ARRAY_BOUNDS_ERR );
 					return 0;
 				}
-				
 				idx = idx-1;
 				
                 sub_res2.push_back(sub_res.at(idx));

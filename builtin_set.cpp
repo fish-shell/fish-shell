@@ -238,9 +238,31 @@ static int parse_index( std::vector<long> &indexes,
 			l_ind = var_count+l_ind+1;
 		}
 		
-		indexes.push_back( l_ind );
 		src = end;
+		if ( *src==L'.' && *(src+1)==L'.' ){
+			src+=2;
+			long l_ind2 = wcstol( src, &end, 10 );
+			if( end==src || errno )
+			{
+				return 1;
+			}
+			src = end;
+
+			if( l_ind2 < 0 )
+			{
+				l_ind2 = var_count+l_ind2+1;
+			}
+			int direction = l_ind2<l_ind ? -1 : 1 ;
+			for (long jjj = l_ind; jjj*direction <= l_ind2*direction; jjj+=direction) {
+				// debug(0, L"Expand range [set]: %i\n", jjj); 
+				indexes.push_back( jjj );
 		count++;
+			}
+		}
+		else {
+			indexes.push_back( l_ind );
+			count++;
+		}
 		while (iswspace(*src)) src++;
 	}
 

@@ -1,0 +1,25 @@
+# Test index ranges 
+
+echo Test variable expand
+set n 10
+set test (seq $n)
+echo $test[1..$n]      # normal range
+echo $test[$n..1]      # inverted range
+echo $test[2..5 8..6]  # several ranges
+echo $test[-1..-2]     # range with negative limits
+echo $test[-1..1]      # range with mixed limits
+
+echo Test variable set
+set test1 $test
+set test1[-1..1] $test; echo $test1
+set test1[1..$n] $test; echo $test1
+set test1[$n..1] $test; echo $test1
+set test1[2..4 -2..-4] $test1[4..2 -4..-2]; echo $test1
+
+echo Test command substitution
+echo (seq 5)[-1..1]
+echo (seq $n)[3..5 -2..2]
+
+echo Test more
+echo $test[(count $test)..1]
+echo $test[1..(count $test)]

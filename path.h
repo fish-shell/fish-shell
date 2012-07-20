@@ -30,6 +30,7 @@ bool path_get_config(wcstring &path);
    \return 0 if the command can not be found, the path of the command otherwise. The result should be freed with free().
 */
 wchar_t *path_get_path( const wchar_t *cmd );
+bool path_get_path( const wcstring &cmd, wcstring &output );
 
 /** Returns whether the path can be used for an implicit cd command; if so, also returns the path by reference (if desired). This requires it to start with one of the allowed prefixes (., .., ~) and resolve to a directory. */
 bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path = NULL, const wchar_t *wd = NULL);

@@ -126,37 +126,39 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 
 }
 
-wchar_t *path_get_path( const wchar_t *cmd )
+bool path_get_path_string(const wcstring &cmd, wcstring &out_path)
 {
 	int err = ENOENT;
 	
-	CHECK( cmd, 0 );
-
-	debug( 3, L"path_get_path( '%ls' )", cmd );
-
-	if(wcschr( cmd, L'/' ) != 0 )
+	debug( 3, L"path_get_path( '%ls' )", cmd.c_str() );
+    
+    /* If the command has a slash, it must be a full path */
+	if (cmd.find(L'/') != wcstring::npos)
 	{
 		if( waccess( cmd, X_OK )==0 )
 		{
 			struct stat buff;
 			if(wstat( cmd, &buff ))
 			{
-				return 0;
+				return false;
 			}
 			
 			if( S_ISREG(buff.st_mode) )
-				return wcsdup( cmd );
+            {
+				out_path = cmd;
+                return true;
+            }
 			else
 			{
 				errno = EACCES;
-				return 0;
+				return false;
 			}
 		}
 		else
 		{
 			struct stat buff;
 			wstat( cmd, &buff );
-			return 0;
+			return false;
 		}
 		
 	}
@@ -175,38 +177,17 @@ wchar_t *path_get_path( const wchar_t *cmd )
 			}
 		}
 		
-		/*
-		  Allocate string long enough to hold the whole command
-		*/
-		wchar_t *new_cmd = (wchar_t *)calloc(wcslen(cmd)+path.size()+2, sizeof(wchar_t) );
-		
-		/*
-		  We tokenize a copy of the path, since strtok modifies
-		  its arguments
-		*/
-		wchar_t *path_cpy = wcsdup( path.c_str() );
-		wchar_t *state;
-			
-		if( (new_cmd==0) || (path_cpy==0) )
+        wcstring nxt_path;
+        wcstokenizer tokenizer(path, ARRAY_SEP_STR);
+		while (tokenizer.next(nxt_path))
 		{
-			DIE_MEM();
-		}
-
-		for( const wchar_t *nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-			 nxt_path != 0;
-			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
-		{
-			int path_len = wcslen( nxt_path );
-			wcscpy( new_cmd, nxt_path );
-			if( new_cmd[path_len-1] != L'/' )
-			{
-				new_cmd[path_len++]=L'/';
-			}
-			wcscpy( &new_cmd[path_len], cmd );
-			if( waccess( new_cmd, X_OK )==0 )
+            if (nxt_path.empty())
+                continue;
+            append_path_component(nxt_path, cmd);
+			if( waccess( nxt_path, X_OK )==0 )
 			{
 				struct stat buff;
-				if( wstat( new_cmd, &buff )==-1 )
+				if( wstat( nxt_path, &buff )==-1 )
 				{
 					if( errno != EACCES )
 					{
@@ -216,8 +197,8 @@ wchar_t *path_get_path( const wchar_t *cmd )
 				}
 				if( S_ISREG(buff.st_mode) )
 				{
-					free( path_cpy );
-					return new_cmd;
+                    out_path.swap(nxt_path);
+					return true;
 				}
 				err = EACCES;
 				
@@ -234,34 +215,34 @@ wchar_t *path_get_path( const wchar_t *cmd )
 					default:
 					{
 						debug( 1,
-							   MISSING_COMMAND_ERR_MSG,
-							   new_cmd );
+                              MISSING_COMMAND_ERR_MSG,
+                              nxt_path.c_str() );
 						wperror( L"access" );
 					}
 				}
 			}
 		}
-		free( new_cmd );
-		free( path_cpy );
-
 	}
-
+    
 	errno = err;
-	return 0;
+	return false;
 }
 
-bool path_get_path_string(const wcstring &cmd, wcstring &output)
+wchar_t *path_get_path(const wchar_t *cmd)
 {
-    bool success = false;
-    wchar_t *tmp = path_get_path(cmd.c_str());
-    if (tmp) {
-        output = tmp;
-        free(tmp);
-        success = true;
+    wcstring tmp;
+    wchar_t *result = NULL;
+    if (cmd != NULL && path_get_path_string(cmd, tmp))
+    {
+        result = wcsdup(tmp.c_str());
     }
-    return success;
+    return result;
 }
 
+bool path_get_path( const wcstring &cmd, wcstring &output )
+{
+    return path_get_path_string(cmd, output);
+}
 
 bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env_vars &vars)
 {

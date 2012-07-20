@@ -1056,11 +1056,7 @@ void completer_t::complete_cmd( const wcstring &str_cmd, bool use_function, bool
     if (str_cmd.empty())
         return;
         
-	wchar_t *path_cpy;
-	wchar_t *nxt_path;
-	wchar_t *state;
 	std::vector<completion_t> possible_comp;
-
 
     env_var_t cdpath = env_get_string(L"CDPATH");
     if (cdpath.missing_or_empty())
@@ -1090,14 +1086,10 @@ void completer_t::complete_cmd( const wcstring &str_cmd, bool use_function, bool
 			const env_var_t path = env_get_string(L"PATH");
 			if( !path.missing() )
 			{
-			
-				path_cpy = wcsdup( path.c_str() );
-			
-				for( nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-				     nxt_path != 0;
-				     nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+                wcstring base_path;
+                wcstokenizer tokenizer(path, ARRAY_SEP_STR);
+				while (tokenizer.next(base_path))
 				{
-                    wcstring base_path = nxt_path;
                     if (base_path.empty())
                         continue;
                         
@@ -1125,7 +1117,6 @@ void completer_t::complete_cmd( const wcstring &str_cmd, bool use_function, bool
 						}
 					}
 				}
-				free( path_cpy );
 				if (wants_description)
                     this->complete_cmd_desc( str_cmd );
 			}

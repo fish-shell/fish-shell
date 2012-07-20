@@ -1502,18 +1502,24 @@ void completer_t::complete_param_expand( const wcstring &sstr, bool do_file)
 	{
 		comp_str = str;
 	}
-    
-    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE;
-    
-    if (! do_file)
-        flags |= EXPAND_SKIP_WILDCARDS;
-        
-    if (type == COMPLETE_AUTOSUGGEST)
-        flags |= EXPAND_NO_DESCRIPTIONS;
-	
+
+	expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE;
+
+	if (! do_file)
+		flags |= EXPAND_SKIP_WILDCARDS;
+
+	if (type == COMPLETE_AUTOSUGGEST)
+		flags |= EXPAND_NO_DESCRIPTIONS;
+
+	const env_var_t verbose_complete = env_get_string( L"fish_complete_no_descriptions" );
+	if( !verbose_complete.missing() && verbose_complete == env_var_t(L"1"))
+	{
+		flags |= EXPAND_NO_DESCRIPTIONS;
+	}
+
 	if( expand_string( comp_str,
-					   this->completions,
-					   flags | this->expand_flags() ) == EXPAND_ERROR )
+				this->completions,
+				flags | this->expand_flags() ) == EXPAND_ERROR )
 	{
 		debug( 3, L"Error while expanding string '%ls'", comp_str );
 	}	
@@ -1521,9 +1527,9 @@ void completer_t::complete_param_expand( const wcstring &sstr, bool do_file)
 
 void completer_t::debug_print_completions()
 {
-    for (size_t i=0; i < completions.size(); i++) {
-        printf("- Completion: %ls\n", completions.at(i).completion.c_str());
-    }
+	for (size_t i=0; i < completions.size(); i++) {
+		printf("- Completion: %ls\n", completions.at(i).completion.c_str());
+	}
 }
 
 /**

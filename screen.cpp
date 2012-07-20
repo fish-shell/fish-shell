@@ -882,6 +882,11 @@ void s_write( screen_t *s,
 	 */
 	if( max_line_width + prompt_width >= screen_width )
 	{
+		for( i=0; i<prompt_width; i++ )
+		{
+			s_desired_append_char( s, L' ', 0, 0, prompt_width );
+		}
+
 		s_desired_append_char( s, L'\n', 0, 0, 0 );
 		prompt_width=0;
 	}

@@ -2060,3 +2060,20 @@ scoped_lock::scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(fals
 scoped_lock::~scoped_lock() {
     if (locked) this->unlock();
 }
+
+wcstokenizer::wcstokenizer(const wcstring &s, const wcstring &separator) : sep(separator) {
+    buffer = wcsdup(s.c_str());
+    str = buffer;
+    state = NULL;
+}
+
+bool wcstokenizer::next(wcstring &result) {
+    wchar_t *tmp = wcstok(str, sep.c_str(), &state);
+    str = NULL;
+    if (tmp) result = tmp;
+    return tmp != NULL;
+}
+    
+wcstokenizer::~wcstokenizer() {
+    free(buffer);
+}

@@ -803,8 +803,9 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **save_ptr)
 
 #endif
 
-#ifndef HAVE_WCSDUP
-wchar_t *wcsdup( const wchar_t *in )
+/* Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g. building on Linux) these should end up just being stripped, as they are static functions that are not referenced in this file.
+*/
+static wchar_t *wcsdup_fallback(const wchar_t *in)
 {
 	size_t len=wcslen(in);
 	wchar_t *out = (wchar_t *)malloc( sizeof( wchar_t)*(len+1));
@@ -815,23 +816,9 @@ wchar_t *wcsdup( const wchar_t *in )
 
 	memcpy( out, in, sizeof( wchar_t)*(len+1));
 	return out;
-	
 }
-#endif
 
-#ifndef HAVE_WCSLEN
-size_t wcslen(const wchar_t *in)
-{
-	const wchar_t *end=in;
-	while( *end )
-		end++;
-	return end-in;
-}
-#endif
-
-
-#ifndef HAVE_WCSCASECMP
-int wcscasecmp( const wchar_t *a, const wchar_t *b )
+int wcscasecmp_fallback( const wchar_t *a, const wchar_t *b )
 {
 	if( *a == 0 )
 	{
@@ -845,10 +832,54 @@ int wcscasecmp( const wchar_t *a, const wchar_t *b )
 	if( diff != 0 )
 		return diff;
 	else
-		return wcscasecmp( a+1,b+1);
+		return wcscasecmp_fallback( a+1,b+1);
+}
+
+
+#if __APPLE__ && __DARWIN_C_LEVEL >= 200809L
+/* Note parens avoid the macro expansion */
+wchar_t *wcsdup_use_weak(const wchar_t *a)
+{
+    if (wcsdup != NULL)
+        return (wcsdup)(a);
+    return wcsdup_fallback(a);
+}
+
+int wcscasecmp_use_weak(const wchar_t *a, const wchar_t *b)
+{
+    if (wcscasecmp != NULL)
+        return (wcscasecmp)(a, b);
+    return wcscasecmp_fallback(a, b);
+}
+ 
+#else //__APPLE__
+
+ #ifndef HAVE_WCSDUP
+wchar_t *wcsdup( const wchar_t *in )
+{
+	return wcsdup_fallback(in);
+	
+}
+ #endif
+
+
+ #ifndef HAVE_WCSCASECMP
+int wcscasecmp( const wchar_t *a, const wchar_t *b )
+{
+	return wcscasecmp_fallback(a, b);
+}
+ #endif
+#endif //__APPLE__
+
+#ifndef HAVE_WCSLEN
+size_t wcslen(const wchar_t *in)
+{
+	const wchar_t *end=in;
+	while( *end )
+		end++;
+	return end-in;
 }
 #endif
-
 
 #ifndef HAVE_WCSNCASECMP
 int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count )

@@ -486,28 +486,15 @@ public:
     ~scoped_lock();
 };
 
+/* Wrapper around wcstok */
 class wcstokenizer {
     wchar_t *buffer, *str, *state;
     const wcstring sep;
     
 public:
-    wcstokenizer(const wcstring &s, const wcstring &separator) : sep(separator) {
-        wchar_t *wcsdup(const wchar_t *s);
-        buffer = wcsdup(s.c_str());
-        str = buffer;
-        state = NULL;
-    }
-
-    bool next(wcstring &result) {
-        wchar_t *tmp = wcstok(str, sep.c_str(), &state);
-        str = NULL;
-        if (tmp) result = tmp;
-        return tmp != NULL;
-    }
-    
-    ~wcstokenizer() {
-        free(buffer);
-    }
+    wcstokenizer(const wcstring &s, const wcstring &separator);
+    bool next(wcstring &result);
+    ~wcstokenizer();
 };
 
 /** 

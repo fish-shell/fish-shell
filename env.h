@@ -181,14 +181,15 @@ wcstring_list_t env_get_names( int flags );
 */
 int env_set_pwd();
 
-class env_vars {
+class env_vars_snapshot_t {
     std::map<wcstring, wcstring> vars;
 
 public:
-    env_vars(const wchar_t * const * keys);
-    env_vars(void);
+    env_vars_snapshot_t(const wchar_t * const * keys);
+    env_vars_snapshot_t(void);
     
     const wchar_t *get(const wchar_t *key) const;
+    env_var_t get(const wcstring &key) const;
     
     // vars necessary for highlighting
     static const wchar_t * const highlighting_keys[];

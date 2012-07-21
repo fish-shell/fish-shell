@@ -263,13 +263,13 @@ static int iswnumeric( const wchar_t *n )
    See if the process described by \c proc matches the commandline \c
    cmd
 */
-static bool match_pid( const wchar_t *cmd,
+static bool match_pid( const wcstring &cmd,
 					   const wchar_t *proc,
 					   int flags,
 					   int *offset)
 {
 	/* Test for a direct match. If the proc string is empty (e.g. the user tries to complete against %), then return an offset pointing at the base command. That ensures that you don't see a bunch of dumb paths when completing against all processes. */
-	if( proc[0] != L'\0' && wcsncmp( cmd, proc, wcslen( proc ) ) == 0 )
+	if( proc[0] != L'\0' && wcsncmp( cmd.c_str(), proc, wcslen( proc ) ) == 0 )
 	{
 		if( offset )
 			*offset = 0;
@@ -284,7 +284,7 @@ static bool match_pid( const wchar_t *cmd,
     {
         /* It's a match. Return the offset within the full command. */
         if (offset)
-            *offset = wcslen(cmd) - base_cmd.size();
+            *offset = cmd.size() - base_cmd.size();
     }
     return result;
 }
@@ -629,7 +629,7 @@ static int find_process( const wchar_t *proc,
 		if( j->command_is_empty() )
 			continue;
 		
-		if( match_pid( j->command_wcstr(), proc, flags, &offset ) )
+		if( match_pid( j->command(), proc, flags, &offset ) )
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
@@ -661,7 +661,7 @@ static int find_process( const wchar_t *proc,
 		{
 			int offset;
 			
-			if( p->actual_cmd == 0 )
+			if( p->actual_cmd.empty() )
 				continue;
 
 			if( match_pid( p->actual_cmd, proc, flags, &offset ) )
@@ -669,7 +669,7 @@ static int find_process( const wchar_t *proc,
 				if( flags & ACCEPT_INCOMPLETE )
 				{
 					append_completion( out, 
-										 p->actual_cmd + offset + wcslen(proc),
+										 wcstring(p->actual_cmd, offset + wcslen(proc)),
 										 COMPLETE_CHILD_PROCESS_DESC,
 										 0 );
 				}
@@ -698,7 +698,7 @@ static int find_process( const wchar_t *proc,
     {
         int offset;
         
-        if( match_pid( process_name.c_str(), proc, flags, &offset ) )
+        if( match_pid( process_name, proc, flags, &offset ) )
         {
             if( flags & ACCEPT_INCOMPLETE )
             {

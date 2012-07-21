@@ -57,14 +57,9 @@ static wchar_t *cut_buffer=0;
 */
 static int has_xsel()
 {
-	static int called=0;
-	static int res = 0;
-    
-	if (!called) {
-        wchar_t *path = path_get_path( L"xsel" );
-		res = !!path;
-        free(path);
-		called = 1;
+	static int res=-1;
+	if (res < 0) {
+		res = !! path_get_path(L"xsel", NULL);
     }
     
 	return res;

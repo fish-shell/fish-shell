@@ -29,15 +29,17 @@ bool path_get_config(wcstring &path);
    \param cmd The name of the executable.
    \return 0 if the command can not be found, the path of the command otherwise. The result should be freed with free().
 */
-wchar_t *path_get_path( const wchar_t *cmd );
-bool path_get_path( const wcstring &cmd, wcstring &output );
+bool path_get_path( const wcstring &cmd, wcstring *output_or_NULL );
+
+/**
+  A version of path_get_path() that takes the user's PATH variable from the given environment variable snapshot
+*/
+class env_vars_snapshot_t;
+bool path_get_path(const wcstring &cmd, wcstring *output_or_NULL, const env_vars_snapshot_t &vars);
+
 
 /** Returns whether the path can be used for an implicit cd command; if so, also returns the path by reference (if desired). This requires it to start with one of the allowed prefixes (., .., ~) and resolve to a directory. */
 bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path = NULL, const wchar_t *wd = NULL);
-
-class env_vars;
-bool path_get_path_string(const wcstring &cmd, wcstring &output);
-bool path_get_path_string(const wcstring &cmd, wcstring &output, const env_vars &vars);
 
 /**
    Returns the full path of the specified directory, using the CDPATH
@@ -59,7 +61,7 @@ bool path_get_path_string(const wcstring &cmd, wcstring &output, const env_vars 
 
 wchar_t *path_allocate_cdpath( const wcstring &in, const wchar_t *wd = NULL);
 bool path_can_get_cdpath(const wcstring &in, const wchar_t *wd = NULL);
-bool path_get_cdpath_string(const wcstring &in, wcstring &out, const env_vars &vars);
+bool path_get_cdpath_string(const wcstring &in, wcstring &out, const env_vars_snapshot_t &vars);
 
 /**
    Remove double slashes and trailing slashes from a path,

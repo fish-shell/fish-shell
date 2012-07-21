@@ -1078,7 +1078,7 @@ struct autosuggestion_context_t {
     history_search_t searcher;
     file_detection_context_t detector;
     const wcstring working_directory;
-    const env_vars vars;
+    const env_vars_snapshot_t vars;
     wcstring_list_t commands_to_load;
     const unsigned int generation_count;
     
@@ -1091,7 +1091,7 @@ struct autosuggestion_context_t {
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
         detector(history, term),
         working_directory(get_working_directory()),
-        vars(env_vars::highlighting_keys),
+        vars(env_vars_snapshot_t::highlighting_keys),
         generation_count(s_generation_count),
         has_tried_reloading(false)
     {
@@ -2223,7 +2223,7 @@ public:
 	const highlight_function_t highlight_function;
     
     /** Environment variables */
-    const env_vars vars;
+    const env_vars_snapshot_t vars;
 
     /** When the request was made */
     const double when;
@@ -2235,7 +2235,7 @@ public:
         string_to_highlight(pbuff),
         match_highlight_pos(phighlight_pos),
         highlight_function(phighlight_func),
-        vars(env_vars::highlighting_keys),
+        vars(env_vars_snapshot_t::highlighting_keys),
         when(timef()),
         generation_count(s_generation_count)
     {

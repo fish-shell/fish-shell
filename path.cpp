@@ -23,110 +23,7 @@
 */
 #define MISSING_COMMAND_ERR_MSG _( L"Error while searching for command '%ls'" )
 
-bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_vars &vars)
-{
-    const wchar_t * const cmd = cmd_str.c_str();
-    int err = ENOENT;
-    debug( 3, L"path_get_path_string( '%ls' )", cmd );
-    
-	if(wcschr( cmd, L'/' ) != 0 )
-	{
-		if( waccess( cmd, X_OK )==0 )
-		{
-			struct stat buff;
-			if(wstat( cmd, &buff ))
-			{
-				return false;
-			}
-			
-			if (S_ISREG(buff.st_mode))
-            {
-                output = cmd_str;
-                return true;
-            }
-            else
-			{
-				errno = EACCES;
-				return false;
-			}
-		}
-		else
-		{
-			//struct stat buff;
-			//wstat( cmd, &buff );
-			return false;
-		}
-		
-	}
-	else
-	{
-		const wchar_t *path = vars.get(L"PATH");
-		if( path == 0 )
-		{
-			if( contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
-			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
-			}
-			else
-			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
-			}
-		}
-		
-        wcstokenizer tokenizer(path, ARRAY_SEP_STR);
-        wcstring new_cmd;
-        while (tokenizer.next(new_cmd))
-        {
-            size_t path_len = new_cmd.size();
-            if (path_len == 0) continue;
-            
-            append_path_component(new_cmd, cmd_str);
-			if( waccess( new_cmd, X_OK )==0 )
-			{
-				struct stat buff;
-				if( wstat( new_cmd, &buff )==-1 )
-				{
-					if( errno != EACCES )
-					{
-						wperror( L"stat" );
-					}
-					continue;
-				}
-				if( S_ISREG(buff.st_mode) )
-				{
-					output = new_cmd;
-                    return true;
-				}
-				err = EACCES;
-				
-			}
-			else
-			{
-				switch( errno )
-				{
-					case ENOENT:
-					case ENAMETOOLONG:
-					case EACCES:
-					case ENOTDIR:
-						break;
-					default:
-					{
-						debug( 1,
-                              MISSING_COMMAND_ERR_MSG,
-                              new_cmd.c_str() );
-						wperror( L"access" );
-					}
-				}
-			}
-		}
-	}
-    
-	errno = err;
-	return false;
-
-}
-
-bool path_get_path_string(const wcstring &cmd, wcstring &out_path)
+static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const env_var_t &bin_path_var)
 {
 	int err = ENOENT;
 	
@@ -145,7 +42,8 @@ bool path_get_path_string(const wcstring &cmd, wcstring &out_path)
 			
 			if( S_ISREG(buff.st_mode) )
             {
-				out_path = cmd;
+				if (out_path)
+                    out_path->assign(cmd);
                 return true;
             }
 			else
@@ -164,21 +62,25 @@ bool path_get_path_string(const wcstring &cmd, wcstring &out_path)
 	}
 	else
 	{
-		env_var_t path = env_get_string(L"PATH");
-		if( path.missing() )
+        wcstring bin_path;
+		if (! bin_path_var.missing())
+        {
+            bin_path = bin_path_var;
+        }
+        else
 		{
-			if( contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
+			if (contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ))
 			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
+				bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
 			}
 			else
 			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
+				bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
 			}
 		}
 		
         wcstring nxt_path;
-        wcstokenizer tokenizer(path, ARRAY_SEP_STR);
+        wcstokenizer tokenizer(bin_path, ARRAY_SEP_STR);
 		while (tokenizer.next(nxt_path))
 		{
             if (nxt_path.empty())
@@ -197,7 +99,8 @@ bool path_get_path_string(const wcstring &cmd, wcstring &out_path)
 				}
 				if( S_ISREG(buff.st_mode) )
 				{
-                    out_path.swap(nxt_path);
+                    if (out_path)
+                        out_path->swap(nxt_path);
 					return true;
 				}
 				err = EACCES;
@@ -228,23 +131,17 @@ bool path_get_path_string(const wcstring &cmd, wcstring &out_path)
 	return false;
 }
 
-wchar_t *path_get_path(const wchar_t *cmd)
+bool path_get_path(const wcstring &cmd, wcstring *out_path, const env_vars_snapshot_t &vars)
 {
-    wcstring tmp;
-    wchar_t *result = NULL;
-    if (cmd != NULL && path_get_path_string(cmd, tmp))
-    {
-        result = wcsdup(tmp.c_str());
-    }
-    return result;
+    return path_get_path_core(cmd, out_path, vars.get(wcstring(L"PATH")));
 }
 
-bool path_get_path( const wcstring &cmd, wcstring &output )
+bool path_get_path(const wcstring &cmd, wcstring *out_path)
 {
-    return path_get_path_string(cmd, output);
+    return path_get_path_core(cmd, out_path, env_get_string(L"PATH"));
 }
 
-bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env_vars &vars)
+bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env_vars_snapshot_t &vars)
 {
 	wchar_t *res = 0;
 	int err = ENOENT;

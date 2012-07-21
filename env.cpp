@@ -1535,7 +1535,7 @@ void env_export_arr(bool recalc, null_terminated_array_t<char> &output)
     output = export_array;
 }
 
-env_vars::env_vars(const wchar_t * const *keys)
+env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t * const *keys)
 {
     ASSERT_IS_MAIN_THREAD();
     for (size_t i=0; keys[i]; i++) {
@@ -1546,13 +1546,19 @@ env_vars::env_vars(const wchar_t * const *keys)
     }
 }
 
-env_vars::env_vars() { }
+env_vars_snapshot_t::env_vars_snapshot_t() { }
 
-const wchar_t *env_vars::get(const wchar_t *key) const
+const wchar_t *env_vars_snapshot_t::get(const wchar_t *key) const
 {
     std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
     return (iter == vars.end() ? NULL : iter->second.c_str());
 }
 
-const wchar_t * const env_vars::highlighting_keys[] = {L"PATH", L"CDPATH", L"HIGHLIGHT_DELAY", L"fish_function_path", NULL};
+env_var_t env_vars_snapshot_t::get(const wcstring &key) const
+{
+    std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
+    return (iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second));
+}
+
+const wchar_t * const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH", L"HIGHLIGHT_DELAY", L"fish_function_path", NULL};
 

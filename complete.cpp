@@ -609,7 +609,7 @@ static wcstring format_error(const wchar_t *prefix, const wcstring &str) {
    Find the full path and commandname from a command string 'str'.
 */
 static void parse_cmd_string(const wcstring &str, wcstring &path, wcstring &cmd) {
-    if (! path_get_path_string(str, path)) {
+    if (! path_get_path(str, &path)) {
 		/** Use the empty string as the 'path' for commands that can not be found. */
         path = L"";
     }

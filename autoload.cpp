@@ -116,11 +116,10 @@ int autoload_t::load( const wcstring &cmd, bool reload )
 
 bool autoload_t::can_load( const wcstring &cmd, const env_vars_snapshot_t &vars )
 {
-    const wchar_t *path_var_ptr = vars.get(env_var_name.c_str());
-    if (! path_var_ptr || ! path_var_ptr[0])
+    const env_var_t path_var = vars.get(env_var_name);
+    if (path_var.missing_or_empty())
         return false;
-    
-    const wcstring path_var(path_var_ptr);        
+
     std::vector<wcstring> path_list;
 	tokenize_variable_array( path_var, path_list );
     return this->locate_file_and_maybe_load_it( cmd, false, false, path_list );

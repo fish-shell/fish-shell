@@ -47,41 +47,6 @@
 */
 #define SB_MAX_SIZE (128*1024*1024)
 
-/**
-   Handle oom condition. Default action is to print a stack trace and
-   exit, but an alternative action can be specified.
- */
-#define oom_handler( p )						\
-	{											\
-		if( oom_handler_internal == util_die_on_oom )	\
-		{												\
-			DIE_MEM();									\
-		}												\
-		oom_handler_internal( p );						\
-	}													\
-		
-
-
-void util_die_on_oom( void * p);
-
-void (*oom_handler_internal)(void *) = &util_die_on_oom;
-
-void (*util_set_oom_handler( void (*h)(void *) ))(void *)
-{
-	void (*old)(void *) = oom_handler_internal;
-	
-	if( h )
-		oom_handler_internal = h;
-	else
-		oom_handler_internal = &util_die_on_oom;
-
-	return old;
-}
-
-void util_die_on_oom( void *p )
-{
-}
-
 int mini( int a,
 		  int b )
 {

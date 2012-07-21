@@ -850,8 +850,9 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
             if (is_help) {
                 suggestionOK = false;
             } else {
-                wchar_t *path = path_allocate_cdpath(dir, working_directory.c_str());
-                if (path == NULL) {
+                wcstring path;
+                bool can_cd = path_get_cdpath(dir, &path, working_directory.c_str(), vars);
+                if (! can_cd) {
                     suggestionOK = false;
                 } else if (paths_are_same_file(working_directory, path)) {
                     /* Don't suggest the working directory as the path! */
@@ -859,7 +860,6 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
                 } else {
                     suggestionOK = true;
                 }
-                free(path);
             }
         }        
     } 
@@ -1084,7 +1084,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
                             if (! is_cmd)
                             {
                                 if (use_builtin || (use_function && function_exists_no_autoload( L"cd", vars)))
-                                    is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str());
+                                    is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
                             }
                             
 							if( is_cmd )

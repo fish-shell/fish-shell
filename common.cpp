@@ -219,17 +219,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 
 }
 
-
-static bool string_sort_predicate(const wcstring& d1, const wcstring& d2)
-{
-    return wcsfilecmp(d1.c_str(), d2.c_str()) < 0;
-}
-
-void sort_strings( std::vector<wcstring> &strings)
-{
-    std::sort(strings.begin(), strings.end(), string_sort_predicate);
-}
-
 wchar_t *str2wcs( const char *in )
 {
 	wchar_t *out;

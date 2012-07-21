@@ -1538,27 +1538,41 @@ void env_export_arr(bool recalc, null_terminated_array_t<char> &output)
 env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t * const *keys)
 {
     ASSERT_IS_MAIN_THREAD();
+    wcstring key;
     for (size_t i=0; keys[i]; i++) {
-        const env_var_t val = env_get_string(keys[i]);
-        if (!val.missing()) {
-            vars[keys[i]] = val;
+        key.assign(keys[i]);
+        const env_var_t val = env_get_string(key);
+        if (! val.missing()) {
+            vars[key] = val;
         }
     }
 }
 
 env_vars_snapshot_t::env_vars_snapshot_t() { }
 
-const wchar_t *env_vars_snapshot_t::get(const wchar_t *key) const
+/* The "current" variables are not a snapshot at all, but instead trampoline to env_get_string, etc. We identify the current snapshot based on pointer values. */
+static const env_vars_snapshot_t sCurrentSnapshot;
+const env_vars_snapshot_t &env_vars_snapshot_t::current()
 {
-    std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
-    return (iter == vars.end() ? NULL : iter->second.c_str());
+    return sCurrentSnapshot;
+}
+
+bool env_vars_snapshot_t::is_current() const
+{
+    return this == &sCurrentSnapshot;
 }
 
 env_var_t env_vars_snapshot_t::get(const wcstring &key) const
 {
-    std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
-    return (iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second));
+    /* If we represent the current state, bounce to env_get_string */
+    if (this->is_current())
+    {
+        return env_get_string(key);
+    }
+    else {
+        std::map<wcstring, wcstring>::const_iterator iter = vars.find(key);
+        return (iter == vars.end() ? env_var_t::missing_var() : env_var_t(iter->second));
+    }
 }
 
-const wchar_t * const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH", L"HIGHLIGHT_DELAY", L"fish_function_path", NULL};
-
+const wchar_t * const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH", L"fish_function_path", NULL};

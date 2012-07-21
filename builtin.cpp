@@ -2591,7 +2591,7 @@ static int builtin_exit( parser_t &parser, wchar_t **argv )
 static int builtin_cd( parser_t &parser, wchar_t **argv )
 {
 	env_var_t dir_in;
-	wchar_t *dir = NULL;
+	wcstring dir;
 	int res=STATUS_BUILTIN_OK;
 
 	
@@ -2609,11 +2609,13 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		dir_in = argv[1];
     }
 
-    if (! dir_in.missing()) {
-        dir = path_allocate_cdpath(dir_in);
+    bool got_cd_path = false;
+    if (! dir_in.missing())
+    {
+        got_cd_path = path_get_cdpath(dir_in, &dir);
     }
 
-	if( !dir )
+	if( !got_cd_path )
 	{
 		if( errno == ENOTDIR )
 		{
@@ -2665,7 +2667,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 			append_format(stderr_buffer,
 				   _( L"%ls: Permission denied: '%ls'\n" ),
 				   argv[0],
-				   dir );
+				   dir.c_str() );
 			
 		}
 		else
@@ -2674,7 +2676,7 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 			append_format(stderr_buffer,
 				   _( L"%ls: '%ls' is not a directory\n" ),
 				   argv[0],
-				   dir );
+				   dir.c_str() );
 		}
 		
 		if( !get_is_interactive() )
@@ -2689,8 +2691,6 @@ static int builtin_cd( parser_t &parser, wchar_t **argv )
 		res=1;
 		append_format(stderr_buffer, _( L"%ls: Could not set PWD variable\n" ), argv[0] );
 	}
-
-    free(dir);
 
 	return res;
 }

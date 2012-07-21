@@ -2247,18 +2247,9 @@ public:
             // The gen count has changed, so don't do anything
             return 0;
         }
-        const wchar_t *delayer = vars.get(L"HIGHLIGHT_DELAY");
-        double secDelay = 0;
-        if (delayer) {
-            wcstring tmp = delayer;
-            secDelay = from_string<double>(tmp);
-        }
-        if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
-        //write(0, "Start", 5);
         if (! string_to_highlight.empty()) {
             highlight_function( string_to_highlight.c_str(), colors, match_highlight_pos, NULL /* error */, vars);
         }
-        //write(0, "End", 3);
         return 0;
     }
 };

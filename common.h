@@ -207,8 +207,6 @@ int fgetws2( wchar_t **buff, int *len, FILE *f );
 /** Like fgetws2, but reads into a string */
 int fgetws2(wcstring *s, FILE *f);
 
-void sort_strings( std::vector<wcstring> &strings);
-
 /**
    Returns a newly allocated wide character string equivalent of the
    specified multibyte character string

@@ -100,14 +100,12 @@ function history --description "Deletes an item from history"
 								builtin history --delete $item
 							end
 							printf "Deleted all!\n"
-							return 
 						else
 							builtin history --delete $found_items[(math $i - 1)]
 						end
 
 					end
 				end
-                
  				#Save changes after deleting item(s)
   				builtin history --save
 			 end

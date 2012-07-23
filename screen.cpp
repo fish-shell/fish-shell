@@ -875,6 +875,10 @@ void s_write( screen_t *s,
         truncated_autosuggestion_line.push_back(ellipsis_char);
         commandline = truncated_autosuggestion_line.c_str();
     }
+	for( i=0; i<prompt_width; i++ )
+	{
+		s_desired_append_char( s, L' ', 0, 0, prompt_width );
+	}
 
 	/*
 	  If overflowing, give the prompt its own line to improve the
@@ -882,23 +886,9 @@ void s_write( screen_t *s,
 	 */
 	if( max_line_width + prompt_width >= screen_width )
 	{
-		for( i=0; i<prompt_width; i++ )
-		{
-			s_desired_append_char( s, L' ', 0, 0, prompt_width );
-		}
-
 		s_desired_append_char( s, L'\n', 0, 0, 0 );
 		prompt_width=0;
 	}
-	else
-	{
-		for( i=0; i<prompt_width; i++ )
-		{
-			s_desired_append_char( s, L' ', 0, 0, prompt_width );
-		}
-	}
-	
-
 	
 	for( i=0; commandline[i]; i++ )
 	{

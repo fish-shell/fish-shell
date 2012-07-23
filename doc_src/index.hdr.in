@@ -80,7 +80,7 @@ while '-f' will turn it off.
 
 \subsection quotes Quotes
 
-Sometimes features such as <a href="#globbing">parameter expansion</a>
+Sometimes features such as <a href="#expand">parameter expansion</a>
 and <a href="#escapes">character escapes</a> get in the way. When that
 happens, the user can write a parameter within quotes, either '
 (single quote) or " (double quote). There is one important difference
@@ -581,6 +581,9 @@ A command substitution will not change the value of the <a
 href='#variables-status'>status</a> variable outside of the command
 substitution.
 
+Only part of the output can be used, see <a href='#expand-index-range'>index
+range expansion</a> for details.
+
 Example:
 
 The command <code>echo (basename image.jpg .jpg).png</code> will
@@ -673,6 +676,50 @@ the innermost $ dereference. Thus, $$foo[5] will always mean the fifth
 element of the foo variable should be dereferenced and never that the fifth
 element of the doubly dereferenced variable foo. The latter can
 instead be expressed as $$foo[1][5].
+
+\subsection expand-index-range Index range expansion
+
+Both command substitution and environment variables support accessing only 
+specific items by providing a set of indices in square brackets. It's 
+often needed to access a sequence of elements. To do this, one can use
+range operator '..' for this. A range 'a..b', where range limits 'a' and 'b' 
+are integer numbers, is expanded into a sequence of indices 
+'a a+1 a+2 ... b' or 'a a-1 a-2 ... b' depending on which of 'a' or 'b' 
+is higher. The negative range limits are calculated from the end of the array
+or command substitution.
+
+Some examples:
+<pre>
+# Limit the command substitution output
+echo (seq 10)[2..5] # will use elements from 2 to 5
+# Output is:
+# 2 3 4 5
+
+# Use overlapping ranges:
+echo (seq 10)[2..5 1..3] # will take elements from 2 to 5 and then elements from 1 to 3 
+# Output is:
+# 2 3 4 5 1 2 3
+
+# Reverse output
+echo (seq 10)[-1..1] # will use elements from the last output line to the first one in reverse direction
+# Output is:
+# 10 9 8 7 6 5 4 3 2 1
+</pre>
+
+The same works when setting or expanding variables:
+<pre>
+# Reverse path variable
+set PATH $PATH[-1..1]
+# or 
+set PATH[-1..1] $PATH
+
+# Use only n last items of the PATH
+set n -3
+echo $PATH[$n..-1]
+</pre>
+
+NOTE: Currently variables are allowed inside variables index expansion, but not in indices, 
+used for command substitution.
 
 \subsection expand-home Home directory expansion
 
@@ -908,6 +955,9 @@ echo $smurf
 If you specify a negative index when expanding or assigning to an
 array variable, the index will be calculated from the end of the
 array. For example, the index -1 means the last index of an array.
+
+A range of indices can be specified, see <a href='#expand-index-range'>index
+range expansion</a> for details.
 
 \subsection variables-special Special variables
 

@@ -2681,7 +2681,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, wcstring *out, const wch
 				{
 					error( SYNTAX_ERROR,
 						   offset,
-						   L"Mismatched parans" );
+						   L"Mismatched parenthesis" );
 					this->print_errors( *out, prefix);
 				}
 				free( arg_cpy );

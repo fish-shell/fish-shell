@@ -1328,7 +1328,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 		case -1:
 			parser.error( SYNTAX_ERROR,
                          -1,
-                         L"Mismatched parans" );
+                         L"Mismatched parenthesis" );
 			return 0;
 		case 0:
             outList.push_back(completion_t(input));

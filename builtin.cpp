@@ -142,7 +142,7 @@ struct io_stack_elem_t {
     wcstring out;
     wcstring err;
 };
-static std::stack<io_stack_elem_t> io_stack;
+static std::stack<io_stack_elem_t, std::vector<io_stack_elem_t> > io_stack;
 
 /**
    The file from which builtin functions should attempt to read, use

@@ -345,7 +345,7 @@ static int is_interactive_read;
 static int end_loop = 0;
 
 /** The stack containing names of files that are being parsed */
-static std::stack<const wchar_t *, std::list<const wchar_t *> > current_filename;
+static std::stack<const wchar_t *, std::vector<const wchar_t *> > current_filename;
 
 
 /**

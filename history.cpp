@@ -637,13 +637,11 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len) {
                 /* Skip the leading dash-space and then store this path it */
                 line.erase(0, 2);
                 unescape_yaml(line);
-                paths.push_front(str2wcstring(line));
+                paths.push_back(str2wcstring(line));
             }
         }
     }
-    /* Reverse the paths, since we pushed them to the front each time */
 done:
-    paths.reverse();
     return history_item_t(cmd, when, paths);
 }
 
@@ -1243,7 +1241,7 @@ int file_detection_context_t::perform_file_detection(bool test_all) {
     for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); ++iter) {    
         if (path_is_valid(*iter, working_directory)) {
             /* Push the original (possibly relative) path */
-            valid_paths.push_front(*iter);
+            valid_paths.push_back(*iter);
         } else {
             /* Not a valid path */
             result = 0;
@@ -1251,7 +1249,6 @@ int file_detection_context_t::perform_file_detection(bool test_all) {
                 break;
         }
     }
-    valid_paths.reverse();
     return result;
 }
 
@@ -1305,7 +1302,7 @@ void history_t::add_with_file_detection(const wcstring &str)
             if (token_cstr) {
                 wcstring potential_path = token_cstr;
                 if (unescape_string(potential_path, false) && string_could_be_path(potential_path)) {
-                    potential_paths.push_front(potential_path);
+                    potential_paths.push_back(potential_path);
                 }
             }
         }
@@ -1317,7 +1314,6 @@ void history_t::add_with_file_detection(const wcstring &str)
         file_detection_context_t *context = new file_detection_context_t(this, str);
                         
         /* Store the potential paths. Reverse them to put them in the same order as in the command. */
-        potential_paths.reverse();
         context->potential_paths.swap(potential_paths);
         iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);
     }

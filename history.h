@@ -11,10 +11,9 @@
 #include <vector>
 #include <utility>
 #include <list>
-#include <tr1/memory>
 #include <set>
 
-typedef std::list<wcstring> path_list_t;
+typedef std::vector<wcstring> path_list_t;
 
 enum history_search_type_t {
     /** The history searches for strings containing the given string */

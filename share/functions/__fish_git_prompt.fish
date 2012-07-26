@@ -83,12 +83,12 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	set -l legacy
 	set -l verbose
 	set -l svn_url_pattern
-	set -l __fish_git_prompt_show_upstream $__fish_git_prompt_show_upstream
-	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
+	set -l show_upstream $__fish_git_prompt_showupstream
+	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showUpstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
 		switch $key
-		case bash.showUpstream
-			set __fish_git_prompt_show_upstream $value
-			test -n "$__fish_git_prompt_showupstream"; or return
+		case bash.showUpstream bash.showupstream
+			set show_upstream $value
+			test -n "$show_upstream"; or return
 		case svn-remote.'*'.url
 			set svn_remote $svn_remote $value
 			set -l remote_prefix (/bin/sh -c 'echo "${1%.url}"' -- $key)
@@ -103,7 +103,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 
 	# parse configuration variables
-	for option in $__fish_git_prompt_showupstream
+	for option in $show_upstream
 		switch $option
 		case git svn
 			set upstream $option

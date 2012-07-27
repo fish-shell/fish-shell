@@ -1189,7 +1189,23 @@ function update_table_filter_text_box(allow_transient_message) {
 
 $(document).ready(function() {
 	populate_colorpicker_term256()
-	switch_tab('tab_colors')
+	var tab_name
+	switch (window.location.hash) {
+		case '#functions':
+			tab_name = 'tab_functions'
+			break
+		case '#variables':
+			tab_name = 'tab_variables'
+			break
+		case '#history':
+			tab_name = 'tab_history'
+			break
+		case '#colors':
+		default:
+			tab_name = 'tab_colors'
+			break;
+	}
+	switch_tab(tab_name)
 })
 </script>
 

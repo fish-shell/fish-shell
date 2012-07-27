@@ -374,9 +374,16 @@ if PORT > 9000:
     print("Unable to find an open port between 8000 and 9000")
     sys.exit(-1)
 
-    
-url = 'http://localhost:{0}'.format(PORT)
+# Get any initial tab (functions, colors, etc)
+# Just look at the first letter
+initial_tab = ''
+if len(sys.argv) > 1:
+	for tab in ['functions', 'colors', 'variables', 'history']:
+		if tab.startswith(sys.argv[1]):
+			initial_tab = '#' + tab
+			break
 
+url = 'http://localhost:{0}/{1}'.format(PORT, initial_tab)
 print("Web config started at '{0}'. Hit enter to stop.".format(url))
 webbrowser.open(url)
 

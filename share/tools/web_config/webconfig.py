@@ -1,27 +1,34 @@
 #!/usr/bin/env python
 
-try: #Python2
+# Whether we're Python 2
+import sys
+IS_PY2 = sys.version_info[0] == 2
+
+if IS_PY2:
     import SimpleHTTPServer
-except ImportError: #Python3
-    import http.server as SimpleHTTPServer
-try: #Python2
     import SocketServer
-except ImportError: #Python3
+else:
+    import http.server as SimpleHTTPServer
     import socketserver as SocketServer
 import webbrowser
 import subprocess
-import re, json, socket, os, sys, cgi, select
+import re, json, socket, os, sys, cgi, select, time
 
 def run_fish_cmd(text):
     from subprocess import PIPE
     p = subprocess.Popen(["fish"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    try: #Python2
-        out, err = p.communicate(text)
-    except TypeError: #Python3
+    if IS_PY2:
+    	out, err = p.communicate(text)
+    else:
         out, err = p.communicate(bytes(text, 'utf-8'))        
         out = str(out, 'utf-8')
         err = str(err, 'utf-8')
     return(out, err)
+    
+def escape_fish_cmd(text):
+	# Replace one backslash with two, and single quotes with backslash-quote
+	escaped = text.replace('\\', '\\\\').replace("'", "\\'")
+	return "'" + escaped + "'"
 
 named_colors = {
     'black'   : '000000',
@@ -104,6 +111,13 @@ class FishVar:
         return [self.name, self.value, ', '.join(flags)]
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    
+    def write_to_wfile(self, txt):
+        if IS_PY2:
+        	self.wfile.write(txt)
+        else: # Python 3
+        	self.wfile.write(bytes(txt, 'utf-8'))
+
     
     def do_get_colors(self):
         # Looks for fish_color_*.
@@ -207,8 +221,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Use \x1e ("record separator") to distinguish between history items. The first
         # backslash is so Python passes one backslash to fish
         out, err = run_fish_cmd('for val in $history; echo -n $val \\x1e; end')
-        result = out.split('\x1e')
-        if result: result.pop()
+        result = out.split(' \x1e')
+        if result: result.pop() # Trim off the trailing element
         return result
         
 
@@ -233,6 +247,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         out, err = run_fish_cmd('functions ' + func_name)
         return out
         
+    def do_delete_history_item(self, history_item_text):
+    	# It's really lame that we always return success here
+    	out, err = run_fish_cmd('builtin history --save --delete -- ' + escape_fish_cmd(history_item_text))
+    	return True
+        
     def do_GET(self):
         p = self.path
         if p == '/colors/':
@@ -242,7 +261,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         elif p == '/variables/':
             output = self.do_get_variables()
         elif p == '/history/':
+            # start = time.time()
             output = self.do_get_history()
+            # end = time.time()
+            # print "History: ", end - start
         elif re.match(r"/color/(\w+)/", p):
             name = re.match(r"/color/(\w+)/", p).group(1)
             output = self.do_get_color_for_variable(name)
@@ -252,22 +274,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Return valid output
         self.send_response(200)
         self.send_header('Content-type','text/html')
-        try: #Python2
-            self.wfile.write('\n')
-        except TypeError: #Python3
-            self.wfile.write(bytes('\n', 'utf-8'))
+        self.write_to_wfile('\n')
         
         # Output JSON
-        try: #Python2
-            self.wfile.write(json.dumps(output))
-        except TypeError: #Python3
-            self.wfile.write(bytes(json.dumps(output), 'utf-8'))
+        self.write_to_wfile(json.dumps(output))
         
     def do_POST(self):
         p = self.path
-        try: #Python2
+        if IS_PY2:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-        except AttributeError: #Python3
+        else: # Python 3
             ctype, pdict = cgi.parse_header(self.headers['content-type'])
         if ctype == 'multipart/form-data':
             postvars = cgi.parse_multipart(self.rfile, pdict)
@@ -310,22 +326,25 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 what = postvars.get(b'what')
                 what[0] = str(what[0]).lstrip("b'").rstrip("'")
             output = [self.do_get_function(what[0])]
+        elif p == '/delete_history_item/':
+            what = postvars.get('what')
+            if what == None: #Will be None for python3
+                what = postvars.get(b'what')
+                what[0] = str(what[0]).lstrip("b'").rstrip("'")
+            if self.do_delete_history_item(what[0]):
+            	output = ["OK"]
+            else:
+            	output = ["Unable to delete history item"]
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_POST(self)
             
         # Return valid output
         self.send_response(200)
         self.send_header('Content-type','text/html')
-        try: #Python2
-            self.wfile.write('\n')
-        except TypeError: #Python3
-            self.wfile.write(bytes('\n', 'utf-8'))
-        
+        self.write_to_wfile('\n')
+		        
         # Output JSON
-        try: #Python2
-            self.wfile.write(json.dumps(output))
-        except TypeError: #Python3
-            self.wfile.write(bytes(json.dumps(output), 'utf-8'))
+        self.write_to_wfile(json.dumps(output))
 
     def log_request(self, code='-', size='-'):
         """ Disable request logging """

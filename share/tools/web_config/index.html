@@ -106,6 +106,7 @@ body {
   	padding-left: 30px;
   	padding-right: 30px;
 	border-radius: 5;
+	width: 100%;
 }
 
 #detail_function {
@@ -221,6 +222,11 @@ body {
 	word-wrap: break-word;
 }
 
+/* The CSS we apply when a table row is filtered */
+.data_table_row_filtered {
+	display: none;
+}
+
 .no_overflow {
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -275,6 +281,37 @@ body {
 	margin-bottom: 5pt;
 }
 
+img.delete_icon {
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	text-decoration: none;
+	border: none;
+}
+
+#table_filter_container {
+	/* top right bottom left*/
+	padding: 0 10 10 30;
+	text-align: right;
+	position: relative;
+	bottom: 10px;
+}
+
+.table_filter_text_box {
+	width: 250px;
+	padding: 5 10 5 10;
+	background-color: #888;
+	border: #222 solid 3px;
+	border-radius: 15px;
+	font-size: 12pt;
+	color: white;
+	font-weight: bold;
+}
+
+.text_box_transient {
+	color: #C8C8C8;
+}
+
 </style>
 
 <script type="text/javascript" src="jquery.js"></script>
@@ -307,19 +344,26 @@ function request_failed(jqXHR, textStatus, errorThrown) {
 }
 
 /* Runs a GET request, parses the JSON, and invokes the handler for each element in it. The JSON result is assumed to be an array. */
-function run_get_request(url, handler) {
+function run_get_request_with_bulk_handler(url, handler) {
 	$.ajax({
 		  type: "GET",
 		  url: url,
 		  success: function(data){
 			$('#global_error').text('')
-			$.each($.parseJSON(data), function(idx, contents) {
-				handler(contents)
-			})
+			handler($.parseJSON(data))
 		  },
 		  error: request_failed
 		})
 }
+
+function run_get_request(url, handler) {
+	run_get_request_with_bulk_handler(url, function(json_contents){
+		$.each(json_contents, function(idx, contents){
+			handler(contents)
+		})
+	})
+}
+
 
 /* As above but with POST request. */
 function run_post_request(url, data_map, handler) {
@@ -469,16 +513,33 @@ function switch_tab(new_tab) {
 		$('#detail_function').show()
 		$('#master_detail_table').show()
 	} else if (new_tab == 'tab_variables') {
-		run_get_request('/variables/', function(contents){
-			var name = contents[0]
-			var value = contents[1]
-			var flags = contents[2]
-			create_data_table_element([name, value])
+		run_get_request_with_bulk_handler('/variables/', function(json_contents){
+			var rows = new Array()
+			for (var i = 0; i < json_contents.length; i++) {
+				var contents = json_contents[i]
+				var name = contents[0]
+				var value = contents[1]
+				var flags = contents[2]
+				var row = create_data_table_element_text([name, value], false)
+				rows[i] = row
+			}
+			$('#data_table').append(rows.join(''))
 		})
 		$('#data_table').show()
 	} else if (new_tab == 'tab_history') {
-		run_get_request('/history/', function(contents){
-			create_data_table_element([contents])
+		// Clear the history map
+		history_element_map.length = 0
+		run_get_request_with_bulk_handler('/history/', function(json_contents){
+			start = new Date().getTime()
+			var rows = new Array()
+			for (var i = 0; i < json_contents.length; i++) {
+				var history_text = json_contents[i]
+				rows[i] = create_data_table_element_text([history_text], true)
+				history_element_map[last_global_element_identifier] = history_text
+			}
+			$('#data_table').append(rows.join(''))
+			end = new Date().getTime()				
+			//alert(rows.length + " rows in " + (end - start) + " msec")
 		})
 		$('#data_table').show()
 	} else {
@@ -999,36 +1060,53 @@ function toggle_overflow(who) {
 	$(who).toggleClass('no_overflow')
 }
 
+function escape_HTML(foo) {
+    return foo.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* Given the image, walk up to the table */
+function tell_fish_to_delete_element(idx) {
+	var row_elem = $('#data_table_row_' + idx)
+	var txt = history_element_map[idx]
+	run_post_request('/delete_history_item/', {
+		what: txt
+	}, function(contents){
+		if (contents == "OK") {
+			row_elem.remove();
+		} else {
+			show_error(contents)
+		}
+	});
+}
+
+
 /* Creates a new row in the data table */
-function create_data_table_element(contents_list) {
-	var row = $('<tr>', {
-		class: 'data_table_row'
-	})
+var last_global_element_identifier = 0
+var history_element_map = new Array();
+
+function create_data_table_element_text(contents_list, show_delete_button) {
+	var element_identifier = (++last_global_element_identifier).toString()
+	lines = new Array()
+	var result_str = '<tr class="data_table_row" id="data_table_row_' + element_identifier + '">'
 	for (idx = 0; idx < contents_list.length; idx++) {
 		/* If we have more than one, then align the first one right, subsequent ones left */
 		if (idx == 0 && contents_list.length > 1) {
-			cell = $('<td>', {
-						class: 'data_table_cell no_overflow',
-						style: 'text-align: right; padding-right: 30px;'
-					});
-			
+			result_str += '<td class="data_table_cell no_overflow" style="text-align: right; padding-right: 30px;">'
 		} else {
-			cell = $('<td>', {
-						class: 'data_table_cell no_overflow',
-						style: 'text-align: left',
-						onClick: 'toggle_overflow(this)'
-					});			
+			result_str += '<td class="data_table_cell no_overflow" style="text-align: left; padding-right: 30px;" onClick:"toggle_overflow(this)">'			
 		}
 		text_list = contents_list[idx].split("\n")
 		for (j=0; j < text_list.length; j++) {
-			cell.append($('<p>', {
-				text: text_list[j]
-			}))
+			if (j > 0) result_str += '<br>'
+			result_str += escape_HTML(text_list[j]);
 		}
-
-		row.append(cell)
+		result_str += '</td>'
 	}
-	$('#data_table').append(row)
+	if (show_delete_button) {
+		result_str += '<td class="data_table_cell" style="text-align: right; width: 25px"><a onClick="tell_fish_to_delete_element(' + element_identifier + ')"><img class="delete_icon" src="delete.png"></a></td>'
+	}
+	result_str += '</tr>'
+	return result_str
 }
 
 /* Put stuff in colorpicker_term256 */
@@ -1059,6 +1137,54 @@ function populate_colorpicker_term256() {
 		
 		$('#colorpicker_term256').append(row)
 	}	
+}
+
+/* Update the filter text box */
+function update_table_filter_text_box(allow_transient_message) {
+	var box = $('.table_filter_text_box')
+	var has_transient = box.hasClass('text_box_transient')
+	if (! allow_transient_message && has_transient) {
+		box.val('')
+		box.removeClass('text_box_transient')
+		has_transient = false
+	} else if (allow_transient_message && ! has_transient && ! box.val().length) {
+		box.val('Filter')
+		box.addClass('text_box_transient')
+		has_transient = true
+	}
+	
+	var search_text = box.val()
+	if (has_transient || search_text.length == 0) {
+		/* Unfilter all */
+		$('.data_table_row_filtered').removeClass('data_table_row_filtered')
+	} else {
+		/* Helper function to return whether a node (or its descendants) matches the given text */
+		function match_text(node) {
+			if (node.nodeType == 3) {
+				return node.nodeValue.indexOf(search_text) != -1
+			} else {
+				for (var i = 0, len = node.childNodes.length; i < len; ++i) {
+					if (match_text(node.childNodes[i])) {
+						return true;
+					}
+				}
+			}
+			return false
+		}
+	
+		$('.data_table_row').each(function(idx) {
+			var row = $(this)
+			var is_hidden = row.hasClass('data_table_row_filtered')
+			var should_be_hidden = ! match_text(this)
+			if (is_hidden && ! should_be_hidden) {
+				row.removeClass('data_table_row_filtered')
+			} else if (! is_hidden && should_be_hidden) {
+				row.addClass('data_table_row_filtered')
+			}
+		})
+	}
+	
+	return true
 }
 
 $(document).ready(function() {
@@ -1096,7 +1222,13 @@ $(document).ready(function() {
 					<div id="detail_function"></div>
 				</div>
 			</div>
-			<table id="data_table"><tr><td></td></tr>
+			<table id="data_table">
+			<div id="table_filter_container">
+				<input type="text" class="table_filter_text_box text_box_transient" value="Filter" onInput="update_table_filter_text_box(false)" onFocus="update_table_filter_text_box(false)" onBlur="update_table_filter_text_box(true)">
+			</div>
+			<tr><td>
+			</td></tr>
+			<tr><td></td></tr>
 			</table>
 			<div class="footer">
 			</div>

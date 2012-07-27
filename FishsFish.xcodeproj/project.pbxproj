@@ -29,6 +29,8 @@
 
 /* Begin PBXBuildFile section */
 		D07A7D3C15A7A38100811FC6 /* builtin_scripts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F5E28215A7A32D00315DFF /* builtin_scripts.cpp */; };
+		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
+		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
 		D0C4FD9515A7D80700212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
 		D0C4FD9615A7D80C00212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
 		D0CBD57B159EE4640024809C /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD578159EE4600024809C /* completions */; };
@@ -279,6 +281,8 @@
 
 /* Begin PBXFileReference section */
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
+		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
+		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
 		D09B1C1914FC7B5B00F91077 /* postfork.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = postfork.cpp; sourceTree = "<group>"; };
 		D09B1C1A14FC7B5B00F91077 /* postfork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = postfork.h; sourceTree = "<group>"; };
 		D0A0850313B3ACEE0099B651 /* builtin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin.h; sourceTree = "<group>"; };
@@ -599,9 +603,11 @@
 		D0D02AAB15985C14008E62BD /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				D07B247215BCC15700D4ADB4 /* add-shell */,
 				D0CBD586159EF0E10024809C /* launch_fish.scpt */,
 				D0CBD580159EE48F0024809C /* config.fish */,
 				D0C4FD9415A7D7EE00212EF1 /* config.fish */,
+				D07B247515BCC4BE00D4ADB4 /* install.sh */,
 				D0CBD578159EE4600024809C /* completions */,
 				D0CBD579159EE4600024809C /* functions */,
 				D0CBD57A159EE4600024809C /* tools */,
@@ -805,6 +811,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */,
+				D07B247315BCC15700D4ADB4 /* add-shell in Resources */,
+				D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

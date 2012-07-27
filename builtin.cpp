@@ -3639,15 +3639,12 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
     bool save_history = false;
     bool clear_history = false;
 
-    wcstring delete_string;
-    wcstring search_string;
-
     static const struct woption long_options[] =
         {
-            { L"prefix", required_argument, 0, 'p' },
-            { L"delete", required_argument, 0, 'd' },
+            { L"prefix", no_argument, 0, 'p' },
+            { L"delete", no_argument, 0, 'd' },
             { L"search", no_argument, 0, 's' },
-            { L"contains", required_argument, 0, 'c' },
+            { L"contains", no_argument, 0, 'c' },
             { L"save", no_argument, 0, 'v' },
             { L"clear", no_argument, 0, 'l' },
             { L"help", no_argument, 0, 'h' },
@@ -3658,24 +3655,25 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
     int opt_index = 0;
     woptind = 0;
     history_t *history = reader_get_history();
-
+    
+    /* Use the default history if we have none (which happens if invoked non-interactively, e.g. from webconfig.py */
+    if (! history)
+        history = &history_t::history_with_name(L"fish");
+    
     while((opt = wgetopt_long_only( argc, argv, L"pdscvl", long_options, &opt_index )) != -1)
     {
         switch(opt)
         {
            case 'p':
                 search_prefix = true;
-                search_string = woptarg;
                 break;
            case 'd':
                 delete_item = true;
-                delete_string = woptarg;
                 break;
            case 's':
                 search_history = true;
                 break;
            case 'c':
-                search_string = woptarg;
                 break;
            case 'v':
                 save_history = true;
@@ -3687,6 +3685,9 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
                 builtin_print_help( parser, argv[0], stdout_buffer );
                 return STATUS_BUILTIN_OK;
                 break;
+           case EOF:
+                /* Remainder are arguments */
+                break;
            case '?':
                 append_format(stderr_buffer, BUILTIN_ERR_UNKNOWN, argv[0], argv[woptind-1]);
                 return STATUS_BUILTIN_ERROR;
@@ -3696,6 +3697,9 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
                 return STATUS_BUILTIN_ERROR;
         }
     }	
+
+    /* Everything after is an argument */
+    const wcstring_list_t args(argv + woptind, argv + argc);
 
     if (argc == 1)
     {
@@ -3709,29 +3713,36 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
     if (search_history)
     {
         int res = STATUS_BUILTIN_ERROR;
-
-        if (search_string.empty())
+        for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter)
         {
-            append_format(stderr_buffer, BUILTIN_ERR_COMBO2, argv[0], L"Use --search with either --contains or --prefix");
-            return res;
-        }
+            const wcstring &search_string = *iter;
+            if (search_string.empty())
+            {
+                append_format(stderr_buffer, BUILTIN_ERR_COMBO2, argv[0], L"Use --search with either --contains or --prefix");
+                return res;
+            }
 
-        history_search_t searcher = history_search_t(*history, search_string, search_prefix?HISTORY_SEARCH_TYPE_PREFIX:HISTORY_SEARCH_TYPE_CONTAINS);
-        while (searcher.go_backwards())
-        {
-            stdout_buffer.append(searcher.current_string());
-            stdout_buffer.append(L"\n"); 
-            res = STATUS_BUILTIN_OK;
+            history_search_t searcher = history_search_t(*history, search_string, search_prefix?HISTORY_SEARCH_TYPE_PREFIX:HISTORY_SEARCH_TYPE_CONTAINS);
+            while (searcher.go_backwards())
+            {
+                stdout_buffer.append(searcher.current_string());
+                stdout_buffer.append(L"\n"); 
+                res = STATUS_BUILTIN_OK;
+            }
         }
         return res;
     }
 
     if (delete_item)
     {
-        if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
-            delete_string = delete_string.substr(1, delete_string.length() - 2);
-       
-        history->remove(delete_string);
+        for (wcstring_list_t::const_iterator iter = args.begin(); iter != args.end(); ++iter)
+        {
+            wcstring delete_string = *iter;
+            if (delete_string[0] == '"' && delete_string[delete_string.length() - 1] == '"')
+                delete_string = delete_string.substr(1, delete_string.length() - 2);
+           
+            history->remove(delete_string);
+        }
         return STATUS_BUILTIN_OK;
     }
 

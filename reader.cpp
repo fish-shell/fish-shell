@@ -1953,7 +1953,7 @@ static void move_word( int dir, int erase, int newv )
 	/*
 	  Make sure we don't move beyond begining or end of buffer
 	*/
-	end_buff_pos = maxi( 0, mini( end_buff_pos, data->command_length() ) );
+	end_buff_pos = maxi( 0UL, mini( end_buff_pos, data->command_length() ) );
 	
 
 
@@ -1997,7 +1997,7 @@ void reader_set_buffer( const wcstring &b, int p )
 
 	if( p>=0 )
 	{
-		data->buff_pos=mini( p, l );
+		data->buff_pos=mini( (size_t)p, l );
 	}
 	else
 	{
@@ -2724,7 +2724,7 @@ const wchar_t *reader_readline()
                 const wchar_t *buff = data->command_line.c_str();
 				const wchar_t *begin = &buff[data->buff_pos];
 				const wchar_t *end = begin;
-				int len;
+				long len;
 								
 				while( *end && *end != L'\n' )
 					end++;
@@ -2749,7 +2749,7 @@ const wchar_t *reader_readline()
                     const wchar_t *buff = data->command_line.c_str();
 					const wchar_t *end = &buff[data->buff_pos];
 					const wchar_t *begin = end;
-					int len;
+					long len;
 					
 					while( begin > buff  && *begin != L'\n' )
 						begin--;
@@ -2757,7 +2757,7 @@ const wchar_t *reader_readline()
 					if( *begin == L'\n' )
 						begin++;
 					
-					len = maxi( end-begin, 1 );
+					len = maxi( end-begin, 1L );
 					begin = end - len;
 										
 					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );					
@@ -2780,7 +2780,7 @@ const wchar_t *reader_readline()
 				if( *begin == L'\n' )
 					begin++;
 				
-				len = maxi( end-begin, 0 );
+				len = maxi( end-begin, 0L );
 				begin = end - len;
 
 				while( *end && *end != L'\n' )

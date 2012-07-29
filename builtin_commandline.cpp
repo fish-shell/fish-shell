@@ -94,7 +94,7 @@ static void replace_part( const wchar_t *begin,
 						  int append_mode )
 {
 	const wchar_t *buff = get_buffer();
-	int out_pos=get_cursor_pos();
+	long out_pos=get_cursor_pos();
     
     wcstring out;
 
@@ -118,7 +118,7 @@ static void replace_part( const wchar_t *begin,
 		}
 		case INSERT_MODE:
 		{
-			int cursor = get_cursor_pos() -(begin-buff);
+			long cursor = get_cursor_pos() -(begin-buff);
 			out.append( begin, cursor );
 			out.append( insert );
 			out.append( begin+cursor, end-begin-cursor );
@@ -127,7 +127,7 @@ static void replace_part( const wchar_t *begin,
 		}
 	}
 	out.append( end );
-	reader_set_buffer( out, out_pos );
+	reader_set_buffer( out, (int)out_pos );
 }
 	
 /**
@@ -222,12 +222,12 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
 	if( current_buffer )
 	{
-		current_cursor_pos = wcslen( current_buffer );
+		current_cursor_pos = (int)wcslen( current_buffer );
 	}
 	else
 	{
 		current_buffer = reader_get_buffer();
-		current_cursor_pos = reader_get_cursor_pos();
+		current_cursor_pos = (int)reader_get_cursor_pos();
 	}
 
 	if( !get_buffer() )
@@ -531,7 +531,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 		if( argc-woptind )
 		{
 			wchar_t *endptr;
-			int new_pos;
+			long new_pos;
 			errno = 0;
 			
 			new_pos = wcstol( argv[woptind], &endptr, 10 );
@@ -545,7 +545,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 			}
 			
 			current_buffer = reader_get_buffer();
-			new_pos = maxi( 0, mini( new_pos, wcslen( current_buffer ) ) );
+			new_pos = maxi( 0L, mini( (long)new_pos, (long)wcslen( current_buffer ) ) );
 			reader_set_buffer( current_buffer, new_pos );
 			return 0;
 		}

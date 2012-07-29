@@ -373,7 +373,7 @@ static int match_signal_name( const wchar_t *canonical,
 
 int wcs2sig( const wchar_t *str )
 {
-	int i, res;
+	int i;
 	wchar_t *end=0;
 	
 	for( i=0; lookup[i].desc ; i++ )
@@ -384,9 +384,9 @@ int wcs2sig( const wchar_t *str )
 		}
 	}
 	errno=0;
-	res = wcstol( str, &end, 10 );
-	if( !errno && res>=0 && !*end )
-		return res;
+	long res = wcstol( str, &end, 10 );
+	if( !errno && res>=0 && res <= INT_MAX && !*end )
+		return (int)res;
 	
 	return -1;	
 }

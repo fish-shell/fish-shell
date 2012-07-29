@@ -223,7 +223,7 @@ job_id_t acquire_job_id(void)
     {
         /* We found a slot. Note that slot 0 corresponds to job ID 1. */
         *slot = true;
-        return slot - consumed_job_ids.begin() + 1;
+        return (job_id_t)(slot - consumed_job_ids.begin() + 1);
     }
     else
     {

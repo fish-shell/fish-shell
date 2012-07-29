@@ -305,7 +305,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 					return 1;
 				}
 
-				j = job_get_from_pid( pid );
+				j = job_get_from_pid( (int)pid );
 
 				if( j && !job_is_completed( j ) )
 				{

@@ -135,7 +135,7 @@ extern const wchar_t *program_name;
 */
 #define FATAL_EXIT()											\
 	{															\
-		int exit_read_count;char exit_read_buff;				\
+		ssize_t exit_read_count;char exit_read_buff;			\
 		show_stackframe();										\
 		exit_read_count=read( 0, &exit_read_buff, 1 );			\
 		exit_without_destructors( 1 );												\
@@ -148,8 +148,8 @@ extern const wchar_t *program_name;
 #define DIE_MEM()														\
 	{																	\
 		fwprintf( stderr,												\
-				  L"fish: Out of memory on line %d of file %s, shutting down fish\n", \
-				  __LINE__,												\
+				  L"fish: Out of memory on line %ld of file %s, shutting down fish\n", \
+				  (long)__LINE__,												\
 				  __FILE__ );											\
 		FATAL_EXIT();														\
 	}

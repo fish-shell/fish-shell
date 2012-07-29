@@ -29,12 +29,20 @@ buffer_t;
 /**
    Returns the larger of two ints
 */
-int maxi( int a, int b );
+template<typename T>
+static inline T maxi( T a, T b )
+{
+    return a>b?a:b;
+}
 
 /**
    Returns the smaller of two ints
  */
-int mini( int a, int b );
+template<typename T>
+static inline T mini( T a, T b )
+{
+    return a<b?a:b;
+}
 
 /**
    Compares two wide character strings with an (arguably) intuitive

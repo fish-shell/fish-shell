@@ -766,15 +766,14 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
 	if (key == L"umask")
 	{
 		wchar_t *end;
-		int mask;
-        
+
 		/*
          Set the new umask
          */
 		if( val && wcslen(val) )
 		{				
 			errno=0;
-			mask = wcstol( val, &end, 8 );
+			long mask = wcstol( val, &end, 8 );
             
 			if( !errno && (!*end) && (mask <= 0777) && (mask >= 0) )
 			{

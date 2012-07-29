@@ -94,35 +94,6 @@ const int col_idx[]=
 	8
 };
 
-int translate_color( char *str )
-{
-	char *endptr;
-	int color;
-
-	if( !str )
-		return -1;
-
-	errno = 0;
-	color = strtol( str, &endptr, 10 );
-
-	if( *endptr || color<0 || errno )
-	{
-		size_t i;
-		color = -1;
-		for( i=0; i<COLORS; i++ )
-		{
-			
-			if( strcasecmp( col[i], str ) == 0 )
-			{
-				color = col_idx[i];				
-				break;
-			}
-		}
-	}	
-	return color;
-	
-}
-
 void print_colors()
 {
 	size_t i;

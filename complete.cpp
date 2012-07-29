@@ -912,7 +912,6 @@ void completer_t::complete_cmd_desc( const wcstring &str )
     ASSERT_IS_MAIN_THREAD();
     
 	const wchar_t *cmd_start;
-	int cmd_len;
 	int skip;
 	
     const wchar_t * const cmd = str.c_str();
@@ -923,14 +922,12 @@ void completer_t::complete_cmd_desc( const wcstring &str )
 	else
 		cmd_start = cmd;
 
-	cmd_len = wcslen(cmd_start);
-
 	/*
 	  Using apropos with a single-character search term produces far
 	  to many results - require at least two characters if we don't
 	  know the location of the whatis-database.
 	*/
-	if(cmd_len < 2 )
+	if (wcslen(cmd_start) < 2)
 		return;
 
 	if( wildcard_has( cmd_start, 0 ) )

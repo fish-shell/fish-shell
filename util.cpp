@@ -47,19 +47,6 @@
 */
 #define SB_MAX_SIZE (128*1024*1024)
 
-int mini( int a,
-		  int b )
-{
-	return a<b?a:b;
-}
-
-
-int maxi( int a,
-		  int b )
-{
-	return a>b?a:b;
-}
-
 int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 {
 	CHECK( a, 0 );
@@ -76,13 +63,13 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 		return 1;
 	}
 
-	int secondary_diff=0;
+	long secondary_diff=0;
 	if( iswdigit( *a ) && iswdigit( *b ) )
 	{
 		wchar_t *aend, *bend;
 		long al;
 		long bl;
-		int diff;
+		long diff;
 
 		errno = 0;		
 		al = wcstol( a, &aend, 10 );
@@ -98,7 +85,7 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 		
 		diff = al - bl;
 		if( diff )
-			return diff>0?2:-2;
+			return diff > 0 ? 2 : -2;
 
 		secondary_diff = (aend-a) - (bend-b);
 
@@ -124,7 +111,7 @@ int wcsfilecmp( const wchar_t *a, const wchar_t *b )
 		*/
 		if( secondary_diff )
 		{
-			return secondary_diff>0?1:-1;
+			return secondary_diff > 0 ? 1 :-1;
 		}
 	}
 	

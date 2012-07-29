@@ -108,7 +108,7 @@ int autoload_t::load( const wcstring &cmd, bool reload )
 	res = this->locate_file_and_maybe_load_it( cmd, true, reload, path_list );
     
     /* Clean up */
-    int erased = is_loading_set.erase(cmd);
+    bool erased = !! is_loading_set.erase(cmd);
     assert(erased);
 		
 	return res;

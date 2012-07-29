@@ -309,15 +309,14 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
 
 rgb_color_t highlight_get_color( int highlight, bool is_background )
 {
-	size_t i;
-	int idx=0;
+	size_t idx=0;
 	rgb_color_t result;
 
 	if( highlight < 0 )
 		return rgb_color_t::normal();
 	if( highlight > (1<<VAR_COUNT) )
 		return rgb_color_t::normal();
-	for( i=0; i<VAR_COUNT; i++ )
+	for( size_t i=0; i<VAR_COUNT; i++ )
 	{
 		if( highlight & (1<<i ))
 		{
@@ -456,7 +455,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 						
 						for( i=0; i<chars; i++ )
 						{
-							int d = convert_digit( buff[++in_pos],base);
+							long d = convert_digit( buff[++in_pos],base);
 							
 							if( d < 0 )
 							{

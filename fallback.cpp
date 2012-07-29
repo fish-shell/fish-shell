@@ -915,7 +915,7 @@ int wcwidth( wchar_t c )
 #endif
 
 #ifndef HAVE_WCSNDUP
-wchar_t *wcsndup( const wchar_t *in, int c )
+wchar_t *wcsndup( const wchar_t *in, size_t c )
 {
 	wchar_t *res = (wchar_t *)malloc( sizeof(wchar_t)*(c+1) );
 	if( res == 0 )

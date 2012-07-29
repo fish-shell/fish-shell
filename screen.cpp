@@ -460,7 +460,7 @@ static void s_desired_append_char( screen_t *s,
 			{
                 s->desired.line(line_no).append(ellipsis_char, HIGHLIGHT_COMMENT);
                 
-                line_no = s->desired.line_count();
+                line_no = (int)s->desired.line_count();
                 s->desired.add_line();
 				s->desired.cursor[1]++;
 				s->desired.cursor[0]=0;
@@ -653,7 +653,6 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b)
 */
 static void s_update( screen_t *scr, const wchar_t *prompt )
 {
-	size_t i;
 	int prompt_width = calc_prompt_width( prompt );
 	int screen_width = common_get_width();
 	int need_clear = scr->need_clear;
@@ -677,7 +676,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 		scr->actual.cursor[0] = prompt_width;
 	}
 	
-    for (i=0; i < scr->desired.line_count(); i++)
+    for (size_t i=0; i < scr->desired.line_count(); i++)
 	{
 		const line_t &o_line = scr->desired.line(i);
 		line_t &s_line = scr->actual.create_line(i);
@@ -686,7 +685,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
         
 		if( need_clear )
 		{
-			s_move( scr, &output, start_pos, i );
+			s_move( scr, &output, start_pos, (int)i );
 			s_write_mbs( &output, clr_eol);
             s_line.clear();
 		}
@@ -725,7 +724,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
         /* Now actually output stuff */
         for ( ; j < o_line.size(); j++)
         {
-            s_move( scr, &output, current_width, i );
+            s_move( scr, &output, current_width, (int)i );
             s_set_color( scr, &output, o_line.color_at(j) );
             s_write_char( scr, &output, o_line.char_at(j) );
             current_width += fish_wcwidth(o_line.char_at(j));
@@ -735,15 +734,15 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
         int prev_length = (s_line.text.empty() ? 0 : fish_wcswidth(&s_line.text.at(0), s_line.text.size()));
         if (prev_length > current_width )
 		{
-			s_move( scr, &output, current_width, i );
+			s_move( scr, &output, current_width, (int)i );
 			s_write_mbs( &output, clr_eol);
 		}
 	}
     
     /* Clear remaining lines */
-    for( i=scr->desired.line_count(); i < scr->actual.line_count(); i++ )
+    for( size_t i=scr->desired.line_count(); i < scr->actual.line_count(); i++ )
 	{
-		s_move( scr, &output, 0, i );
+		s_move( scr, &output, 0, (int)i );
 		s_write_mbs( &output, clr_eol);
 	}
 	

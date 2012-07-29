@@ -232,7 +232,7 @@ static int myal( wchar_t c )
 static void read_string( tokenizer *tok )
 {
 	const wchar_t *start;
-	int len;
+	long len;
 	int mode=0;
 	int do_loop=1;
 	int paran_count=0;

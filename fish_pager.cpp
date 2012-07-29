@@ -483,8 +483,8 @@ static void completion_print( int cols,
 			      std::vector<comp_t *> &lst )
 {
 
-	int rows = (lst.size()-1)/cols+1;
-	int i, j;
+	size_t rows = (lst.size()-1)/cols+1;
+	size_t i, j;
 
 	for( i = row_start; i<row_stop; i++ )
 	{
@@ -551,7 +551,7 @@ static int completion_try_print( int cols,
 	
 	int i, j;
 	
-	int rows = (lst.size()-1)/cols+1;
+	long rows = (lst.size()-1)/cols+1;
 	
 	int pref_tot_width=0;
 	int min_tot_width = 0;
@@ -758,8 +758,7 @@ static int completion_try_print( int cols,
 					case PAGE_DOWN:
 					{
 
-						npos = mini( rows - termsize.ws_row+1,
-							     pos + termsize.ws_row-1 );
+						npos = mini( (int)(rows - termsize.ws_row+1), (int)(pos + termsize.ws_row-1) );
 						if( npos != pos )
 						{
 							pos = npos;

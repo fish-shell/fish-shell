@@ -290,7 +290,7 @@ int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
    Fallback for wcsndup function. Returns a copy of \c in, truncated
    to a maximum length of \c c.
 */
-wchar_t *wcsndup( const wchar_t *in, int c );
+wchar_t *wcsndup( const wchar_t *in, size_t c );
 
 #endif
 

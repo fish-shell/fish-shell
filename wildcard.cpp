@@ -366,7 +366,7 @@ static wcstring complete_get_desc_suffix_internal( const wcstring &suff )
 static wcstring complete_get_desc_suffix( const wchar_t *suff_orig )
 {
 
-	int len;
+	size_t len;
 	wchar_t *suff;
 	wchar_t *pos;
 	wchar_t *tmp;
@@ -687,7 +687,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 	int res = 0;
 	
 	/* Length of the directory to search in */
-	int base_len;
+	size_t base_len;
 
 	/* Variables for testing for presense of recursive wildcards */
 	const wchar_t *wc_recursive;
@@ -714,7 +714,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		/* 
 		   Avoid excessive number of returned matches for wc ending with a * 
 		*/
-		int len = wcslen(wc);
+		size_t len = wcslen(wc);
 		if( len && (wc[len-1]==ANY_STRING) )
 		{
 			wchar_t * foo = wcsdup( wc );
@@ -942,7 +942,6 @@ static int wildcard_expand_internal( const wchar_t *wc,
 
 			if( whole_match || partial_match )
 			{
-				int new_len;
 				struct stat buf;			
 				char *dir_str;
 				int stat_res;
@@ -960,7 +959,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 					{
 						if( S_ISDIR(buf.st_mode) )
 						{
-							new_len = wcslen( new_dir );
+							size_t new_len = wcslen( new_dir );
 							new_dir[new_len] = L'/';
 							new_dir[new_len+1] = L'\0';
 							

@@ -319,14 +319,14 @@ static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
 			case 'd':		
 			{
 				char *end;
-				int tmp;
+				long tmp;
 
 				errno = 0;
 				tmp = strtol(optarg, &end, 10);
 				
 				if( tmp >= 0 && tmp <=10 && !*end && !errno )
 				{
-					debug_level=tmp;
+					debug_level = (int)tmp;
 				}
 				else
 				{

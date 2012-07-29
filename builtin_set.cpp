@@ -174,7 +174,7 @@ static int my_env_set( const wchar_t *key, const wcstring_list_t &val, int scope
 static int parse_index( std::vector<long> &indexes,
 						const wchar_t *src,
 						const wchar_t *name,
-						int var_count )
+						size_t var_count )
 {
 	size_t len;
 	
@@ -715,7 +715,7 @@ static int builtin_set( parser_t &parser, wchar_t **argv )
 		/*
 		  Slice mode
 		*/
-		int idx_count, val_count;
+		size_t idx_count, val_count;
 		wcstring_list_t values;
 		std::vector<long> indexes;
 		wcstring_list_t result;

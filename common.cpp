@@ -620,7 +620,7 @@ __sentinel bool contains_internal( const wcstring &needle, ... )
 
 int read_blocked(int fd, void *buf, size_t count)
 {
-	int res;	
+	ssize_t res;
 	sigset_t chldset, oldset; 
 
 	sigemptyset( &chldset );
@@ -628,7 +628,7 @@ int read_blocked(int fd, void *buf, size_t count)
 	VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, &oldset));
 	res = read( fd, buf, count );
 	VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &oldset, NULL));
-	return res;	
+	return (int)res;
 }
 
 ssize_t write_loop(int fd, const char *buff, size_t count)
@@ -798,7 +798,7 @@ void format_long_safe(wchar_t buff[128], long val) {
         while (val > 0) {
             long rem = val % 10;
             /* Here we're assuming that wide character digits are contiguous - is that a correct assumption? */
-            buff[idx++] = L'0' + (rem < 0 ? -rem : rem);
+            buff[idx++] = L'0' + (wchar_t)(rem < 0 ? -rem : rem);
             val /= 10;
         }
         if (negative)
@@ -1114,8 +1114,10 @@ wcstring escape_string( const wcstring &in, escape_flags_t flags ) {
 wchar_t *unescape( const wchar_t * orig, int flags )
 {
 	
-	int mode = 0; 
-	int in_pos, out_pos, len;
+	int mode = 0;
+    int out_pos;
+	size_t in_pos;
+    size_t len;
 	int c;
 	int bracket_count=0;
 	wchar_t prev=0;	
@@ -1131,7 +1133,7 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 	if( !in )
 		DIE_MEM();
 	
-	for( in_pos=0, out_pos=0; 
+	for( in_pos=0, out_pos=0;
 		 in_pos<len; 
 		 (prev=(out_pos>=0)?in[out_pos]:0), out_pos++, in_pos++ )
 	{
@@ -1220,6 +1222,8 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 								{
 									base=8;
 									chars=3;
+                                    // note in_pod must be larger than 0 since we incremented it above
+                                    assert(in_pos > 0);
 									in_pos--;
 									break;
 								}								
@@ -1227,7 +1231,7 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 					
 							for( i=0; i<chars; i++ )
 							{
-								int d = convert_digit( in[++in_pos],base);
+								long d = convert_digit( in[++in_pos],base);
 								
 								if( d < 0 )
 								{
@@ -1240,7 +1244,7 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 
 							if( (res <= max_val) )
 							{
-								in[out_pos] = (byte?ENCODE_DIRECT_BASE:0)+res;
+								in[out_pos] = (wchar_t)((byte?ENCODE_DIRECT_BASE:0)+res);
 							}
 							else
 							{	

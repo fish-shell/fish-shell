@@ -217,7 +217,7 @@ wchar_t input_common_readch( int timed )
 			wint_t b = readb();
 			char bb;
 			
-			int sz;
+			size_t sz;
 			
 			if( (b >= R_NULL) && (b < R_NULL + 1000) )
 				return b;
@@ -228,11 +228,11 @@ wchar_t input_common_readch( int timed )
 			
 			switch( sz )
 			{
-				case -1:
+				case (size_t)(-1):
 					memset (&state, '\0', sizeof (state));
 					debug( 2, L"Illegal input" );					
 					return R_NULL;					
-				case -2:
+				case (size_t)(-2):
 					break;
 				case 0:
 					return 0;

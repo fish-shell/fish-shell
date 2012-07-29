@@ -182,7 +182,7 @@ int parse_util_get_offset( const wcstring &str, int line, int line_offset )
 	
 	if( off2 < 0 )
 	{
-		off2 = wcslen( buff )+1;
+		off2 = (int)(wcslen( buff )+1);
 	}
 	
 	if( line_offset2 < 0 )
@@ -369,7 +369,7 @@ static void job_or_process_extent( const wchar_t *buff,
 								   int process )
 {
 	const wchar_t *begin, *end;
-	int pos;
+	long pos;
 	wchar_t *buffcpy;
 	int finished=0;
 	
@@ -484,7 +484,7 @@ void parse_util_token_extent( const wchar_t *buff,
 							  const wchar_t **prev_end )
 {
 	const wchar_t *begin, *end;
-	int pos;
+	long pos;
 	wchar_t *buffcpy;
 
 	tokenizer tok;
@@ -714,9 +714,9 @@ wchar_t *parse_util_unescape_wildcards( const wchar_t *str )
    token is not quoted.
 
 */
-static wchar_t get_quote( const wchar_t *cmd, int len )
+static wchar_t get_quote( const wchar_t *cmd, size_t len )
 {
-	int i=0;
+	size_t i=0;
 	wchar_t res=0;
 
 	while( 1 )
@@ -780,7 +780,7 @@ void parse_util_get_parameter_info( const wcstring &cmd, const size_t pos, wchar
     
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());
 	cmd_tmp[pos]=0;
-	int cmdlen = wcslen( cmd_tmp );
+	size_t cmdlen = wcslen( cmd_tmp );
 	unfinished = (cmdlen==0);
 	if( !unfinished )
 	{

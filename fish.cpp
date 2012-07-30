@@ -130,15 +130,6 @@ static std::string get_executable_path(const char *argv0)
     return std::string(argv0 ? argv0 : "");
 }
 
-/* A struct of configuration directories.
- */
-struct config_paths_t
-{
-    wcstring data;      // e.g. /usr/local/share
-    wcstring sysconf;   // e.g. /usr/local/etc
-    wcstring doc;       // e.g. /usr/local/share/doc/fish
-    wcstring bin;       // e.g. /usr/local/bin
-};
 
 static struct config_paths_t determine_config_directory_paths(const char *argv0)
 {
@@ -215,12 +206,6 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         
         done = true;
     }
-    
-    /* Set the results in the environment */
-    env_set(L"__fish_datadir", paths.data.c_str(), ENV_GLOBAL | ENV_EXPORT);
-    env_set(L"__fish_sysconfdir", paths.sysconf.c_str(), ENV_GLOBAL | ENV_EXPORT);
-    env_set(L"__fish_help_dir", paths.doc.c_str(), ENV_GLOBAL | ENV_EXPORT);
-    env_set(L"__fish_bin_dir", paths.bin.c_str(), ENV_GLOBAL | ENV_EXPORT);
     
     return paths;
 }
@@ -450,6 +435,8 @@ int main( int argc, char **argv )
 		debug( 1, _(L"Can not use the no-execute mode when running an interactive session") );
 		no_exec = 0;
 	}
+    
+	const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
     	
 	proc_init();	
 	event_init();	
@@ -457,7 +444,7 @@ int main( int argc, char **argv )
 	//parser_init();
 	builtin_init();
 	function_init();
-	env_init();
+	env_init(&paths);
 	reader_init();
 	history_init();
 
@@ -466,8 +453,6 @@ int main( int argc, char **argv )
     if (g_log_forks)
         printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
-    /* Determine config paths */
-    const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
 	if( read_init(paths) )
 	{
 		if( cmd != 0 )

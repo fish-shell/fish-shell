@@ -14,38 +14,41 @@
 
 #include <vector>
 
-struct line_entry_t
-{
-    wchar_t text;
-    int color;
-};
-
 /**
    A class representing a single line of a screen.
 */
-class line_t
+struct line_t
 {
-    public:
-    std::vector<struct line_entry_t> entries;
+    std::vector<wchar_t> text;
+    std::vector<int> colors;
     
-    void resize(size_t size) {
-        entries.resize(size);
+    void clear(void)
+    {
+        text.clear();
+        colors.clear();
     }
     
-    line_entry_t &entry(size_t idx) {
-        return entries.at(idx);
+    void append(wchar_t txt, int color)
+    {
+        text.push_back(txt);
+        colors.push_back(color);
+    }
+        
+    size_t size(void) const
+    {
+        return text.size();
     }
     
-    line_entry_t &create_entry(size_t idx) {
-        if (idx >= entries.size()) {
-            entries.resize(idx + 1);
-        }
-        return entries.at(idx);
+    wchar_t char_at(size_t idx) const
+    {
+        return text.at(idx);
     }
     
-    size_t entry_count(void) {
-        return entries.size();
+    int color_at(size_t idx) const
+    {
+        return colors.at(idx);
     }
+    
 };
 
 /**
@@ -67,7 +70,7 @@ class screen_data_t
     void resize(size_t size) {
         line_datas.resize(size);
     }
-    
+        
     line_t &create_line(size_t idx) {
         if (idx >= line_datas.size()) {
             line_datas.resize(idx + 1);

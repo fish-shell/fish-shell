@@ -1080,7 +1080,7 @@ static int printed_width( const wchar_t *str, int len )
 		}
 		else
 		{
-			res += wcwidth( str[i] );
+			res += fish_wcwidth( str[i] );
 		}
 	}
 	return res;
@@ -1979,16 +1979,16 @@ int parser_t::parse_job( process_t *p,
 			*/
 			if( current_block->skip )
 			{
-				p->actual_cmd = wcsdup(L"");
+				p->actual_cmd.clear();
 			}
 			else
 			{
 				int err;
-				p->actual_cmd = path_get_path( args.at(0).completion.c_str() );
+                bool has_command = path_get_path(args.at(0).completion, &p->actual_cmd);
 				err = errno;
 				
                 bool use_implicit_cd = false;
-                if (p->actual_cmd == NULL)
+                if (! has_command)
                 {
                     /* If the specified command does not exist, try using an implicit cd. */
                     wcstring implicit_cd_path;
@@ -2008,7 +2008,7 @@ int parser_t::parse_job( process_t *p,
                 }
                 
 				/* Check if the specified command exists */
-				if( p->actual_cmd == NULL && ! use_implicit_cd )
+				if( ! has_command && ! use_implicit_cd )
 				{
                     
 					int tmp;
@@ -2681,7 +2681,7 @@ int parser_t::parser_test_argument( const wchar_t *arg, wcstring *out, const wch
 				{
 					error( SYNTAX_ERROR,
 						   offset,
-						   L"Mismatched parans" );
+						   L"Mismatched parenthesis" );
 					this->print_errors( *out, prefix);
 				}
 				free( arg_cpy );

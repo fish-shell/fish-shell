@@ -23,13 +23,14 @@
 */
 #define MISSING_COMMAND_ERR_MSG _( L"Error while searching for command '%ls'" )
 
-bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_vars &vars)
+static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const env_var_t &bin_path_var)
 {
-    const wchar_t * const cmd = cmd_str.c_str();
-    int err = ENOENT;
-    debug( 3, L"path_get_path_string( '%ls' )", cmd );
+	int err = ENOENT;
+	
+	debug( 3, L"path_get_path( '%ls' )", cmd.c_str() );
     
-	if(wcschr( cmd, L'/' ) != 0 )
+    /* If the command has a slash, it must be a full path */
+	if (cmd.find(L'/') != wcstring::npos)
 	{
 		if( waccess( cmd, X_OK )==0 )
 		{
@@ -39,12 +40,13 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 				return false;
 			}
 			
-			if (S_ISREG(buff.st_mode))
+			if( S_ISREG(buff.st_mode) )
             {
-                output = cmd_str;
+				if (out_path)
+                    out_path->assign(cmd);
                 return true;
             }
-            else
+			else
 			{
 				errno = EACCES;
 				return false;
@@ -52,39 +54,42 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 		}
 		else
 		{
-			//struct stat buff;
-			//wstat( cmd, &buff );
+			struct stat buff;
+			wstat( cmd, &buff );
 			return false;
 		}
 		
 	}
 	else
 	{
-		const wchar_t *path = vars.get(L"PATH");
-		if( path == 0 )
+        wcstring bin_path;
+		if (! bin_path_var.missing())
+        {
+            bin_path = bin_path_var;
+        }
+        else
 		{
-			if( contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
+			if (contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ))
 			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
+				bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
 			}
 			else
 			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
+				bin_path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
 			}
 		}
 		
-        wcstokenizer tokenizer(path, ARRAY_SEP_STR);
-        wcstring new_cmd;
-        while (tokenizer.next(new_cmd))
-        {
-            size_t path_len = new_cmd.size();
-            if (path_len == 0) continue;
-            
-            append_path_component(new_cmd, cmd_str);
-			if( waccess( new_cmd, X_OK )==0 )
+        wcstring nxt_path;
+        wcstokenizer tokenizer(bin_path, ARRAY_SEP_STR);
+		while (tokenizer.next(nxt_path))
+		{
+            if (nxt_path.empty())
+                continue;
+            append_path_component(nxt_path, cmd);
+			if( waccess( nxt_path, X_OK )==0 )
 			{
 				struct stat buff;
-				if( wstat( new_cmd, &buff )==-1 )
+				if( wstat( nxt_path, &buff )==-1 )
 				{
 					if( errno != EACCES )
 					{
@@ -94,8 +99,9 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 				}
 				if( S_ISREG(buff.st_mode) )
 				{
-					output = new_cmd;
-                    return true;
+                    if (out_path)
+                        out_path->swap(nxt_path);
+					return true;
 				}
 				err = EACCES;
 				
@@ -113,7 +119,7 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
 					{
 						debug( 1,
                               MISSING_COMMAND_ERR_MSG,
-                              new_cmd.c_str() );
+                              nxt_path.c_str() );
 						wperror( L"access" );
 					}
 				}
@@ -123,147 +129,19 @@ bool path_get_path_string(const wcstring &cmd_str, wcstring &output, const env_v
     
 	errno = err;
 	return false;
-
 }
 
-wchar_t *path_get_path( const wchar_t *cmd )
+bool path_get_path(const wcstring &cmd, wcstring *out_path, const env_vars_snapshot_t &vars)
 {
-	int err = ENOENT;
-	
-	CHECK( cmd, 0 );
-
-	debug( 3, L"path_get_path( '%ls' )", cmd );
-
-	if(wcschr( cmd, L'/' ) != 0 )
-	{
-		if( waccess( cmd, X_OK )==0 )
-		{
-			struct stat buff;
-			if(wstat( cmd, &buff ))
-			{
-				return 0;
-			}
-			
-			if( S_ISREG(buff.st_mode) )
-				return wcsdup( cmd );
-			else
-			{
-				errno = EACCES;
-				return 0;
-			}
-		}
-		else
-		{
-			struct stat buff;
-			wstat( cmd, &buff );
-			return 0;
-		}
-		
-	}
-	else
-	{
-		env_var_t path = env_get_string(L"PATH");
-		if( path.missing() )
-		{
-			if( contains( PREFIX L"/bin", L"/bin", L"/usr/bin" ) )
-			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin";
-			}
-			else
-			{
-				path = L"/bin" ARRAY_SEP_STR L"/usr/bin" ARRAY_SEP_STR PREFIX L"/bin";
-			}
-		}
-		
-		/*
-		  Allocate string long enough to hold the whole command
-		*/
-		wchar_t *new_cmd = (wchar_t *)calloc(wcslen(cmd)+path.size()+2, sizeof(wchar_t) );
-		
-		/*
-		  We tokenize a copy of the path, since strtok modifies
-		  its arguments
-		*/
-		wchar_t *path_cpy = wcsdup( path.c_str() );
-		wchar_t *state;
-			
-		if( (new_cmd==0) || (path_cpy==0) )
-		{
-			DIE_MEM();
-		}
-
-		for( const wchar_t *nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-			 nxt_path != 0;
-			 nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
-		{
-			int path_len = wcslen( nxt_path );
-			wcscpy( new_cmd, nxt_path );
-			if( new_cmd[path_len-1] != L'/' )
-			{
-				new_cmd[path_len++]=L'/';
-			}
-			wcscpy( &new_cmd[path_len], cmd );
-			if( waccess( new_cmd, X_OK )==0 )
-			{
-				struct stat buff;
-				if( wstat( new_cmd, &buff )==-1 )
-				{
-					if( errno != EACCES )
-					{
-						wperror( L"stat" );
-					}
-					continue;
-				}
-				if( S_ISREG(buff.st_mode) )
-				{
-					free( path_cpy );
-					return new_cmd;
-				}
-				err = EACCES;
-				
-			}
-			else
-			{
-				switch( errno )
-				{
-					case ENOENT:
-					case ENAMETOOLONG:
-					case EACCES:
-					case ENOTDIR:
-						break;
-					default:
-					{
-						debug( 1,
-							   MISSING_COMMAND_ERR_MSG,
-							   new_cmd );
-						wperror( L"access" );
-					}
-				}
-			}
-		}
-		free( new_cmd );
-		free( path_cpy );
-
-	}
-
-	errno = err;
-	return 0;
+    return path_get_path_core(cmd, out_path, vars.get(L"PATH"));
 }
 
-bool path_get_path_string(const wcstring &cmd, wcstring &output)
+bool path_get_path(const wcstring &cmd, wcstring *out_path)
 {
-    bool success = false;
-    wchar_t *tmp = path_get_path(cmd.c_str());
-    if (tmp) {
-        output = tmp;
-        free(tmp);
-        success = true;
-    }
-    return success;
+    return path_get_path_core(cmd, out_path, env_get_string(L"PATH"));
 }
 
-
-bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env_vars &vars)
+bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env_var_t &cdpath)
 {
 	wchar_t *res = 0;
 	int err = ENOENT;
@@ -290,13 +168,12 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 	else
 	{
         
-        const wchar_t *path = L".";
+        wcstring path = L".";
                 
         // Respect CDPATH
         env_var_t cdpath = env_get_string(L"CDPATH");
         if (! cdpath.missing_or_empty()) {
             path = cdpath.c_str();
-            printf("CDPATH: %ls\n", path);
         }
         
         wcstokenizer tokenizer(path, ARRAY_SEP_STR);
@@ -342,21 +219,19 @@ bool path_get_cdpath_string(const wcstring &dir_str, wcstring &result, const env
 	return res;
 }
 
-
-wchar_t *path_allocate_cdpath( const wcstring &dir, const wchar_t *wd )
+bool path_get_cdpath(const wcstring &dir, wcstring *out, const wchar_t *wd, const env_vars_snapshot_t &env_vars)
 {
-	wchar_t *res = NULL;
 	int err = ENOENT;
 	if (dir.empty())
-		return NULL;
+		return false;
         
-    if (wd) {
+    if (wd)
+    {
         size_t len = wcslen(wd);
         assert(wd[len - 1] == L'/');
     }
     
     wcstring_list_t paths;
-    
     if (dir.at(0) == L'/') {
         /* Absolute path */
         paths.push_back(dir);
@@ -370,41 +245,35 @@ wchar_t *path_allocate_cdpath( const wcstring &dir, const wchar_t *wd )
         path.append(dir);
         paths.push_back(path);
     } else {
-        wchar_t *path_cpy;
-        wchar_t *state;
-
         // Respect CDPATH
-        env_var_t path = env_get_string(L"CDPATH");
-        if (path.missing_or_empty()) path = L"."; //We'll change this to the wd if we have one
+        env_var_t path = env_vars.get(L"CDPATH");
+        if (path.missing_or_empty())
+            path = L"."; //We'll change this to the wd if we have one
 
-        path_cpy = wcsdup( path.c_str() );
-
-        for( const wchar_t *nxt_path = wcstok( path_cpy, ARRAY_SEP_STR, &state );
-             nxt_path != NULL;
-             nxt_path = wcstok( 0, ARRAY_SEP_STR, &state) )
+        wcstring nxt_path;
+        wcstokenizer tokenizer(path, ARRAY_SEP_STR);
+        while (tokenizer.next(nxt_path))
         {
         
-            if (! wcscmp(nxt_path, L".") && wd != NULL) {
+            if (nxt_path == L"." && wd != NULL) {
                 // nxt_path is just '.', and we have a working directory, so use the wd instead
                 // TODO: if nxt_path starts with ./ we need to replace the . with the wd
                 nxt_path = wd;
             }
-            
-            wcstring expanded_path = nxt_path;
-            expand_tilde(expanded_path);
+            expand_tilde(nxt_path);
 
 //			debug( 2, L"woot %ls\n", expanded_path.c_str() );
 
-            if (expanded_path.empty())
+            if (nxt_path.empty())
                 continue;
             
-            wcstring whole_path = expanded_path;
+            wcstring whole_path = nxt_path;
             append_path_component(whole_path, dir);
             paths.push_back(whole_path);
         }
-        free( path_cpy );
     }
     
+    bool success = false;
     for (wcstring_list_t::const_iterator iter = paths.begin(); iter != paths.end(); ++iter) {
 		struct stat buf;
         const wcstring &dir = *iter;
@@ -412,7 +281,9 @@ wchar_t *path_allocate_cdpath( const wcstring &dir, const wchar_t *wd )
 		{
 			if( S_ISDIR(buf.st_mode) )
 			{
-				res = wcsdup(dir.c_str());
+                success = true;
+                if (out)
+                    out->assign(dir);
                 break;
 			}
 			else
@@ -422,24 +293,12 @@ wchar_t *path_allocate_cdpath( const wcstring &dir, const wchar_t *wd )
 		}
     }
      
-    if( !res )
-	{
+    if (! success)
 		errno = err;
-	}
-
-	return res;
+    return success;
 }
 
-
-bool path_can_get_cdpath(const wcstring &in, const wchar_t *wd)
-{
-    wchar_t *tmp = path_allocate_cdpath(in, wd);
-    bool result = (tmp != NULL);
-    free(tmp);
-    return result;
-}
-
-bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wchar_t *wd)
+bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wchar_t *wd, const env_vars_snapshot_t &vars)
 {
     wcstring exp_path = path;
     expand_tilde(exp_path);
@@ -450,16 +309,8 @@ bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wch
         string_prefixes_string(L"../", exp_path) ||
         exp_path == L"..")
     {
-        /* These paths can be implicit cd. Note that a single period cannot (that's used for sourcing files anyways) */
-        wchar_t *cd_path = path_allocate_cdpath(exp_path, wd);
-        if (cd_path)
-        {
-            /* It worked. Return the path if desired */
-            if (out_path)
-                out_path->assign(cd_path);
-            free(cd_path);
-            result = true;
-        }
+        /* These paths can be implicit cd, so see if you cd to the path. Note that a single period cannot (that's used for sourcing files anyways) */
+        result = path_get_cdpath(exp_path, out_path, wd, vars);
     }
     return result;
 }
@@ -548,10 +399,10 @@ bool path_is_valid(const wcstring &path, const wcstring &working_directory)
         /* Prepend the working directory. Note that we know path is not empty here. */
         wcstring tmp = working_directory;
         tmp.append(path);
-        path_is_valid = (0 == waccess(tmp.c_str(), F_OK));
+        path_is_valid = (0 == waccess(tmp, F_OK));
     } else {
         /* Simple check */
-        path_is_valid = (0 == waccess(path.c_str(), F_OK));
+        path_is_valid = (0 == waccess(path, F_OK));
     }
     return path_is_valid;
 }

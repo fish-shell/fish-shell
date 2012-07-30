@@ -24,7 +24,6 @@
 #include <dirent.h>
 #include <time.h>
 #include <vector>
-#include <deque>
 #include <algorithm>
 #include <memory>
 
@@ -238,7 +237,7 @@ static void safe_launch_process( process_t *p, const char *actual_cmd, char **ar
 	
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
-	execve ( wcs2str(p->actual_cmd), 
+	execve ( wcs2str(p->actual_cmd.c_str()), 
 		 argv,
 		 envv );
 	
@@ -368,7 +367,7 @@ static void launch_process_nofork( process_t *p )
     
 	char **argv = wcsv2strv(p->get_argv());
 	char **envv = env_export_arr( 0 );
-    char *actual_cmd = wcs2str(p->actual_cmd);
+    char *actual_cmd = wcs2str(p->actual_cmd.c_str());
 	
     /* Bounce to launch_process. This never returns. */
     safe_launch_process(p, actual_cmd, argv, envv);

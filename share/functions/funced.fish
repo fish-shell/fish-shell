@@ -84,6 +84,6 @@ function funced --description 'Edit function definition'
         . $tmpname
     end
     set -l stat $status 
-    rm $tmpname >/dev/null
+    rm -f $tmpname >/dev/null
     return $stat
 end

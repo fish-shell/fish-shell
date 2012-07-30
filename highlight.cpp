@@ -828,7 +828,7 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     return result;
 }
 
-bool autosuggest_validate_from_history(const history_item_t &item, file_detection_context_t &detector, const wcstring &working_directory, const env_vars &vars) {
+bool autosuggest_validate_from_history(const history_item_t &item, file_detection_context_t &detector, const wcstring &working_directory, const env_vars_snapshot_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
 
     bool handled = false, suggestionOK = false;
@@ -850,8 +850,9 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
             if (is_help) {
                 suggestionOK = false;
             } else {
-                wchar_t *path = path_allocate_cdpath(dir, working_directory.c_str());
-                if (path == NULL) {
+                wcstring path;
+                bool can_cd = path_get_cdpath(dir, &path, working_directory.c_str(), vars);
+                if (! can_cd) {
                     suggestionOK = false;
                 } else if (paths_are_same_file(working_directory, path)) {
                     /* Don't suggest the working directory as the path! */
@@ -859,7 +860,6 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
                 } else {
                     suggestionOK = true;
                 }
-                free(path);
             }
         }        
     } 
@@ -868,12 +868,12 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
     if (! handled) {
         bool cmd_ok = false;
 
-        wchar_t *full_path = path_get_path(parsed_command.c_str());
-        if (full_path) {
+        if (path_get_path(parsed_command, NULL))
+        {
             cmd_ok = true;
-            free(full_path);
         }
-        else if (builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command, vars)) {
+        else if (builtin_exists(parsed_command) || function_exists_no_autoload(parsed_command, vars))
+        {
             cmd_ok = true;
         }
 
@@ -893,7 +893,7 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
 }
 
 // This function does I/O
-static void tokenize( const wchar_t * const buff, std::vector<int> &color, const int pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars &vars) {
+static void tokenize( const wchar_t * const buff, std::vector<int> &color, const int pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars_snapshot_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
     
 	wcstring cmd;    
@@ -1077,15 +1077,14 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 							 */
 							if (! is_cmd && use_command )
                             {
-                                wcstring tmp;
-								is_cmd = path_get_path_string( cmd, tmp, vars );
+								is_cmd = path_get_path( cmd, NULL, vars );
                             }
 							
                             /* Maybe it is a path for a implicit cd command. */
                             if (! is_cmd)
                             {
                                 if (use_builtin || (use_function && function_exists_no_autoload( L"cd", vars)))
-                                    is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str());
+                                    is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
                             }
                             
 							if( is_cmd )
@@ -1267,14 +1266,14 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 
 
 // PCA This function does I/O, (calls is_potential_path, path_get_path, maybe others) and so ought to only run on a background thread
-void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
+void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars_snapshot_t &vars )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
     const size_t length = buff.size();
     assert(buff.size() == color.size());
 
-    
+
 	if( length == 0 )
 		return;
 	
@@ -1500,7 +1499,7 @@ static void highlight_universal_internal( const wcstring &buffstr,
 	}
 }
 
-void highlight_universal( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars &vars )
+void highlight_universal( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars_snapshot_t &vars )
 {
     assert(buff.size() == color.size());
     std::fill(color.begin(), color.end(), 0);	

@@ -126,16 +126,40 @@ void show_stackframe()
 	}
 }
 
-wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &list )
+int fgetws2(wcstring *s, FILE *f)
 {
-    wcstring_list_t strings;
-    strings.reserve(list.size());
-    for (std::vector<completion_t>::const_iterator iter = list.begin(); iter != list.end(); ++iter) {
-        strings.push_back(iter->completion);
-    }
-    return strings;
-}
+	int i=0;
+	wint_t c;
 
+	while( 1 )
+	{
+		errno=0;
+
+		c = getwc( f );
+		
+		if( errno == EILSEQ )
+		{
+			continue;
+		}
+			
+		switch( c )
+		{
+			/* End of line */ 
+			case WEOF:
+			case L'\n':
+			case L'\0':
+				return i;				
+				/* Ignore carriage returns */
+			case L'\r':
+				break;
+				
+			default:
+                i++;
+				s->push_back((wchar_t)c);
+				break;
+		}
+	}
+}
 
 int fgetws2( wchar_t **b, int *len, FILE *f )
 {
@@ -195,21 +219,6 @@ int fgetws2( wchar_t **b, int *len, FILE *f )
 
 }
 
-
-static bool string_sort_predicate(const wcstring& d1, const wcstring& d2)
-{
-    return wcsfilecmp(d1.c_str(), d2.c_str()) < 0;
-}
-
-void sort_strings( std::vector<wcstring> &strings)
-{
-    std::sort(strings.begin(), strings.end(), string_sort_predicate);
-}
-
-void sort_completions( std::vector<completion_t> &completions)
-{
-    std::sort(completions.begin(), completions.end());
-}
 wchar_t *str2wcs( const char *in )
 {
 	wchar_t *out;
@@ -511,18 +520,7 @@ int wcsvarchr( wchar_t chr )
 */
 int my_wcswidth( const wchar_t *c )
 {
-	int res=0;
-	while( *c )
-	{
-		int w = wcwidth( *c++ );
-		if( w < 0 )
-			w = 1;
-		if( w > 2 )
-			w=1;
-		
-		res += w;		
-	}
-	return res;
+	return fish_wcswidth(c, wcslen(c));
 }
 
 wchar_t *quote_end( const wchar_t *pos )
@@ -670,33 +668,53 @@ ssize_t read_loop(int fd, void *buff, size_t count)
     return result;
 }
 
-void debug( int level, const wchar_t *msg, ... )
+static bool should_debug(int level)
 {
+	if( level > debug_level )
+		return false;
+
     /* Hack to not print error messages in the tests */
     if ( program_name && ! wcscmp(program_name, L"(ignore)") )
-        return;
-	va_list va;
+        return false;
+        
+    return true;
+}
 
-	wcstring sb;
-
-	int errno_old = errno;
-	
-	if( level > debug_level )
-		return;
-
-	CHECK( msg, );
-		
-	sb = format_string(L"%ls: ", program_name);
-	va_start(va, msg);
-	sb.append(vformat_string(msg, va));
-	va_end(va);
-
+static void debug_shared( const wcstring &msg )
+{
+    const wcstring sb = wcstring(program_name) + L": " + msg;
 	wcstring sb2;
 	write_screen( sb, sb2 );
 	fwprintf( stderr, L"%ls", sb2.c_str() );	
-
-	errno = errno_old;
 }
+
+void debug( int level, const wchar_t *msg, ... )
+{
+    if (! should_debug(level))
+        return;
+    int errno_old = errno;
+    va_list va;
+	va_start(va, msg);
+    wcstring local_msg = vformat_string(msg, va);
+	va_end(va);
+    debug_shared(local_msg);
+    errno = errno_old;
+}
+
+void debug( int level, const char *msg, ... )
+{
+    if (! should_debug(level))
+        return;
+    int errno_old = errno;
+    char local_msg[512];
+    va_list va;
+	va_start(va, msg);
+    vsnprintf(local_msg, sizeof local_msg, msg, va);
+	va_end(va);
+    debug_shared(str2wcstring(local_msg));
+    errno = errno_old;
+}
+
 
 void debug_safe(int level, const char *msg, const char *param1, const char *param2, const char *param3, const char *param4, const char *param5, const char *param6, const char *param7, const char *param8, const char *param9, const char *param10, const char *param11, const char *param12)
 {
@@ -822,13 +840,13 @@ void write_screen( const wcstring &msg, wcstring &buff )
 				  Check is token is wider than one line.
 				  If so we mark it as an overflow and break the token.
 				*/
-				if((tok_width + wcwidth(*pos)) > (screen_width-1))
+				if((tok_width + fish_wcwidth(*pos)) > (screen_width-1))
 				{
 					overflow = 1;
 					break;				
 				}
 			
-				tok_width += wcwidth( *pos );
+				tok_width += fish_wcwidth( *pos );
 				pos++;
 			}
 
@@ -2030,4 +2048,21 @@ scoped_lock::scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(fals
 
 scoped_lock::~scoped_lock() {
     if (locked) this->unlock();
+}
+
+wcstokenizer::wcstokenizer(const wcstring &s, const wcstring &separator) : sep(separator) {
+    buffer = wcsdup(s.c_str());
+    str = buffer;
+    state = NULL;
+}
+
+bool wcstokenizer::next(wcstring &result) {
+    wchar_t *tmp = wcstok(str, sep.c_str(), &state);
+    str = NULL;
+    if (tmp) result = tmp;
+    return tmp != NULL;
+}
+    
+wcstokenizer::~wcstokenizer() {
+    free(buffer);
 }

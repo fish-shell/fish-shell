@@ -9,13 +9,11 @@
 #include "common.h"
 #include "pthread.h"
 #include <vector>
-#include <deque>
 #include <utility>
 #include <list>
-#include <tr1/memory>
 #include <set>
 
-typedef std::list<wcstring> path_list_t;
+typedef std::vector<wcstring> path_list_t;
 
 enum history_search_type_t {
     /** The history searches for strings containing the given string */
@@ -123,7 +121,7 @@ private:
     void populate_from_mmap(void);
     
     /** List of old items, as offsets into out mmap data */
-    std::deque<size_t> old_item_offsets;
+    std::vector<size_t> old_item_offsets;
     
     /** Whether we've loaded old items */
     bool loaded_old;
@@ -186,7 +184,7 @@ class history_search_t {
     
     /** Our list of previous matches as index, value. The end is the current match. */
     typedef std::pair<size_t, history_item_t> prev_match_t;
-    std::deque<prev_match_t> prev_matches;
+    std::vector<prev_match_t> prev_matches;
 
     /** Returns yes if a given term is in prev_matches. */
     bool match_already_made(const wcstring &match) const;

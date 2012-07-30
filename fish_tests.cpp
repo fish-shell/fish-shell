@@ -964,7 +964,7 @@ void history_tests_t::test_history(void) {
         path_list_t paths;        
         size_t count = rand() % 6;
         while (count--) {
-            paths.push_front(random_string());
+            paths.push_back(random_string());
         }
         
         /* Record this item */

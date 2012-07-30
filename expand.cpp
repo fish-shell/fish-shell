@@ -16,11 +16,13 @@ parameter expansion.
 #include <pwd.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/sysctl.h>
 #include <termios.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
+#include <algorithm>
 
 #include <assert.h>
 #include <vector>
@@ -120,6 +122,8 @@ parameter expansion.
    Unclean characters. See \c expand_is_clean().
 */
 #define UNCLEAN L"$*?\\\"'({})"
+
+static void remove_internal_separator( wcstring &s, bool conv );
 
 int expand_is_clean( const wchar_t *in )
 {
@@ -259,59 +263,288 @@ static int iswnumeric( const wchar_t *n )
    See if the process described by \c proc matches the commandline \c
    cmd
 */
-static int match_pid( const wchar_t *cmd,
-					  const wchar_t *proc,
-					  int flags,
-					  int *offset)
+static bool match_pid( const wcstring &cmd,
+					   const wchar_t *proc,
+					   int flags,
+					   int *offset)
 {
-	/* Test for direct match */
-	
-	if( wcsncmp( cmd, proc, wcslen( proc ) ) == 0 )
+	/* Test for a direct match. If the proc string is empty (e.g. the user tries to complete against %), then return an offset pointing at the base command. That ensures that you don't see a bunch of dumb paths when completing against all processes. */
+	if( proc[0] != L'\0' && wcsncmp( cmd.c_str(), proc, wcslen( proc ) ) == 0 )
 	{
 		if( offset )
 			*offset = 0;
-		return 1;
+		return true;
 	}
-	
-	/*
-	  Test if the commandline is a path to the command, if so we try
-	  to match against only the command part
-	*/
-	wchar_t *first_token = tok_first( cmd );
-	if( first_token == 0 )
-		return 0;
+        
+    /* Get the command to match against. We're only interested in the last path component. */
+    const wcstring base_cmd = wbasename(cmd);
+    
+    bool result = string_prefixes_string(proc, base_cmd);
+    if (result)
+    {
+        /* It's a match. Return the offset within the full command. */
+        if (offset)
+            *offset = cmd.size() - base_cmd.size();
+    }
+    return result;
+}
 
-	wchar_t *start=0;
-	wchar_t prev=0;
-	wchar_t *p;
+/** Helper class for iterating over processes. The names returned have been unescaped (e.g. may include spaces) */
+#ifdef KERN_PROCARGS2
 
-	/*
-	  This should be done by basename(), if it wasn't for the fact
-	  that is does not accept wide strings
-	*/
-	for( p=first_token; *p; p++ )
-	{
-		if( *p == L'/' && prev != L'\\' )
-			start = p;
-		prev = *p;
-	}
-	if( start )
-	{
+/* BSD / OS X process completions */
 
-		if( wcsncmp( start+1, proc, wcslen( proc ) ) == 0 )
-		{
-			if( offset )
-				*offset = start+1-first_token;
-			
-			free( first_token );
+class process_iterator_t {
+    std::vector<pid_t> pids;
+    size_t idx;
+    
+    wcstring name_for_pid(pid_t pid);
+    
+    public:
+    process_iterator_t();
+    bool next_process(wcstring *str, pid_t *pid);
+};
 
-			return 1;
-		}
-	}
-	free( first_token );
+wcstring process_iterator_t::name_for_pid(pid_t pid)
+{
+    wcstring result;
+    int mib[4], maxarg = 0, numArgs = 0;
+    size_t size = 0;
+    char *args = NULL, *stringPtr = NULL;
+    
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_ARGMAX;
+    
+    size = sizeof(maxarg);
+    if (sysctl(mib, 2, &maxarg, &size, NULL, 0) == -1) {
+        return result;
+    }
+    
+    args = (char *)malloc( maxarg );
+    if ( args == NULL ) {
+        return result;
+    }
+    
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROCARGS2;
+    mib[2] = pid;
+    
+    size = (size_t)maxarg;
+    if ( sysctl(mib, 3, args, &size, NULL, 0) == -1 ) {
+        free( args );
+        return result;;
+    }
+    
+    memcpy( &numArgs, args, sizeof(numArgs) );
+    stringPtr = args + sizeof(numArgs);
+    result = str2wcstring(stringPtr);
+    free(args);
+    return result;
+}
 
-	return 0;
+bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid)
+{
+    wcstring name;
+    pid_t pid = 0;
+    bool result = false;
+    while (idx < pids.size())
+    {
+        pid = pids.at(idx++);
+        name = name_for_pid(pid);
+        if (! name.empty())
+        {
+            result = true;
+            break;
+        }
+    }
+    if (result)
+    {
+        *out_str = name;
+        *out_pid = pid;
+    }
+    return result;
+}
 
+process_iterator_t::process_iterator_t() : idx(0)
+{
+    int                 err;
+    struct kinfo_proc * result;
+    bool                done;
+    static const int    name[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
+    // Declaring name as const requires us to cast it when passing it to
+    // sysctl because the prototype doesn't include the const modifier.
+    size_t              length;
+    
+    
+    // We start by calling sysctl with result == NULL and length == 0.
+    // That will succeed, and set length to the appropriate length.
+    // We then allocate a buffer of that size and call sysctl again
+    // with that buffer.  If that succeeds, we're done.  If that fails
+    // with ENOMEM, we have to throw away our buffer and loop.  Note
+    // that the loop causes use to call sysctl with NULL again; this
+    // is necessary because the ENOMEM failure case sets length to
+    // the amount of data returned, not the amount of data that
+    // could have been returned.
+    
+    result = NULL;
+    done = false;
+    do {
+        assert(result == NULL);
+        
+        // Call sysctl with a NULL buffer.
+        
+        length = 0;
+        err = sysctl( (int *) name, (sizeof(name) / sizeof(*name)) - 1,
+                     NULL, &length,
+                     NULL, 0);
+        if (err == -1) {
+            err = errno;
+        }
+        
+        // Allocate an appropriately sized buffer based on the results
+        // from the previous call.
+        
+        if (err == 0) {
+            result = (struct kinfo_proc *)malloc(length);
+            if (result == NULL) {
+                err = ENOMEM;
+            }
+        }
+        
+        // Call sysctl again with the new buffer.  If we get an ENOMEM
+        // error, toss away our buffer and start again.
+        
+        if (err == 0) {
+            err = sysctl( (int *) name, (sizeof(name) / sizeof(*name)) - 1,
+                         result, &length,
+                         NULL, 0);
+            if (err == -1) {
+                err = errno;
+            }
+            if (err == 0) {
+                done = true;
+            } else if (err == ENOMEM) {
+                assert(result != NULL);
+                free(result);
+                result = NULL;
+                err = 0;
+            }
+        }
+    } while (err == 0 && ! done);
+    
+    // Clean up and establish post conditions.
+    if (err == 0 && result != NULL)
+    {
+        for (size_t idx = 0; idx < length / sizeof(struct kinfo_proc); idx++)
+            pids.push_back(result[idx].kp_proc.p_pid);
+    }
+    
+    if (result)
+        free(result);    
+}
+
+#else
+
+/* /proc style process completions */
+class process_iterator_t {
+    DIR *dir;
+    
+    public:
+    process_iterator_t();
+    ~process_iterator_t();
+    
+    bool next_process(wcstring *out_str, pid_t *out_pid);
+};
+
+process_iterator_t::process_iterator_t(void)
+{
+    dir = opendir( "/proc" );
+}
+
+process_iterator_t::~process_iterator_t(void)
+{
+    if (dir)
+        closedir(dir);
+}
+
+bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid)
+{
+    wcstring cmd;
+    pid_t pid = 0;
+    while (cmd.empty())
+    {
+        wcstring name;
+        if (! dir || ! wreaddir(dir, name))
+            break;
+            
+		if (!iswnumeric(name.c_str()))
+			continue;
+            
+        wcstring path = wcstring(L"/proc/") + name;
+        struct stat buf;
+		if (wstat(path, &buf))
+			continue;
+
+		if( buf.st_uid != getuid() )
+			continue;
+        
+        /* remember the pid */
+        pid = (long)wcstol(name.c_str(), NULL, 10);
+        
+        /* the 'cmdline' file exists, it should contain the commandline */
+        FILE *cmdfile;
+        if ((cmdfile=wfopen(path + L"/cmdline", "r")))
+        {
+            wcstring full_command_line;
+			signal_block();
+			fgetws2(&full_command_line, cmdfile);
+			signal_unblock();
+            
+            /* The command line needs to be escaped */
+            wchar_t *first_arg = tok_first( full_command_line.c_str() );
+            if (first_arg)
+            {
+                cmd = first_arg;
+                free(first_arg);
+            }
+        }
+#ifdef SunOS
+        else if ((cmdfile=wfopen(path + L"/psinfo", "r")))
+        {
+            psinfo_t info;
+            if (fread(&info, sizeof(info), 1, cmdfile))
+            {
+                /* The filename is unescaped */
+                cmd = str2wcstring(info.pr_fname);
+            }
+        }
+#endif
+        if (cmdfile)
+            fclose(cmdfile);
+    }
+    
+    bool result = ! cmd.empty();
+    if (result)
+    {
+        *out_str = cmd;
+        *out_pid = pid;
+    }
+    return result;
+}
+
+#endif
+
+std::vector<wcstring> expand_get_all_process_names(void)
+{
+    wcstring name;
+    pid_t pid;
+    process_iterator_t iterator;
+    std::vector<wcstring> result;
+    while (iterator.next_process(&name, &pid))
+    {
+        result.push_back(name);
+    }
+    return result;
 }
 
 /**
@@ -332,11 +565,6 @@ static int find_process( const wchar_t *proc,
 						 int flags,
 						 std::vector<completion_t> &out )
 {
-	DIR *dir;
-	wchar_t *pdir_name;
-	wchar_t *pfile_name;
-	wchar_t *cmd=0;
-	int sz=0;
 	int found = 0;
 
 	const job_t *j;
@@ -361,7 +589,7 @@ static int find_process( const wchar_t *proc,
 				if( wcsncmp( proc, jid, wcslen(proc ) )==0 )
 				{
                     wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
-					completion_allocate( out, 
+					append_completion( out, 
 										 jid+wcslen(proc),
 										 desc_buff,
 										 0 );
@@ -382,10 +610,8 @@ static int find_process( const wchar_t *proc,
 				j = job_get( jid );
 				if( (j != 0) && (j->command_wcstr() != 0 ) )
 				{
-					
 					{
-                        wcstring result = to_string((long)j->pgid);
-						out.push_back(completion_t(result));
+                        append_completion(out, to_string<long>(j->pgid));
 						found = 1;
 					}
 				}
@@ -400,22 +626,21 @@ static int find_process( const wchar_t *proc,
 	{
 		int offset;
 		
-		if( j->command_wcstr() == 0 )
+		if( j->command_is_empty() )
 			continue;
 		
-		if( match_pid( j->command_wcstr(), proc, flags, &offset ) )
+		if( match_pid( j->command(), proc, flags, &offset ) )
 		{
 			if( flags & ACCEPT_INCOMPLETE )
 			{
-				completion_allocate( out, 
+				append_completion( out, 
 									 j->command_wcstr() + offset + wcslen(proc),
 									 COMPLETE_JOB_DESC,
 									 0 );
 			}
 			else
 			{
-                wcstring result = to_string((long)j->pgid);
-                out.push_back(completion_t(result));
+                append_completion(out, to_string<long>(j->pgid));
 				found = 1;
 			}
 		}
@@ -436,22 +661,24 @@ static int find_process( const wchar_t *proc,
 		{
 			int offset;
 			
-			if( p->actual_cmd == 0 )
+			if( p->actual_cmd.empty() )
 				continue;
 
 			if( match_pid( p->actual_cmd, proc, flags, &offset ) )
 			{
 				if( flags & ACCEPT_INCOMPLETE )
 				{
-					completion_allocate( out, 
-										 p->actual_cmd + offset + wcslen(proc),
+					append_completion( out, 
+										 wcstring(p->actual_cmd, offset + wcslen(proc)),
 										 COMPLETE_CHILD_PROCESS_DESC,
 										 0 );
 				}
 				else
 				{
-                    wcstring result = to_string<int>(p->pid);
-					out.push_back(completion_t(result));
+                    append_completion (out,
+                                         to_string<long>(p->pid),
+                                         L"",
+                                         0);
 					found = 1;
 				}
 			}
@@ -463,122 +690,29 @@ static int find_process( const wchar_t *proc,
 		return 1;
 	}
 
-	if( !(dir = opendir( "/proc" )))
-	{
-		/*
-		  This system does not have a /proc filesystem.
-		*/
-		return 1;
-	}
-
-	pdir_name = (wchar_t *)malloc( sizeof(wchar_t)*256 );
-	pfile_name = (wchar_t *)malloc( sizeof(wchar_t)*64 );
-	wcscpy( pdir_name, L"/proc/" );
-	
-    wcstring nameStr;
-    while (wreaddir(dir, nameStr))
-	{
-		const wchar_t *name = nameStr.c_str();
-		struct stat buf;
-
-		if( !iswnumeric( name ) )
-			continue;
-
-		wcscpy( pdir_name + 6, name );
-		if( wstat( pdir_name, &buf ) )
-		{
-			continue;
-		}
-		if( buf.st_uid != getuid() )
-		{
-			continue;
-		}
-		wcscpy( pfile_name, pdir_name );
-		wcscat( pfile_name, L"/cmdline" );
-
-		if( !wstat( pfile_name, &buf ) )
-		{
-			/*
-			  the 'cmdline' file exists, it should contain the commandline
-			*/
-			FILE *cmdfile;
-
-			if((cmdfile=wfopen( pfile_name, "r" ))==0)
-			{
-				wperror( L"fopen" );
-				continue;
-			}
-
-			signal_block();
-			fgetws2( &cmd, &sz, cmdfile );
-			signal_unblock();
-			
-			fclose( cmdfile );
-		}
-		else
-		{
-#ifdef SunOS
-			wcscpy( pfile_name, pdir_name );
-			wcscat( pfile_name, L"/psinfo" );
-			if( !wstat( pfile_name, &buf ) )
-			{
-				psinfo_t info;
-
-				FILE *psfile;
-
-				if((psfile=wfopen( pfile_name, "r" ))==0)
-				{
-					wperror( L"fopen" );
-					continue;
-				}
-
-				if( fread( &info, sizeof(info), 1, psfile ) )
-				{
-					if( cmd != 0 )
-						free( cmd );
-					cmd = str2wcs( info.pr_fname );
-				}
-				fclose( psfile );
-			}
-			else
-#endif
-			{
-				if( cmd != 0 )
-				{
-					*cmd = 0;
-				}
-			}
-		}
-
-		if( cmd != 0 )
-		{
-			int offset;
-			
-			if( match_pid( cmd, proc, flags, &offset ) )
-			{
-				if( flags & ACCEPT_INCOMPLETE )
-				{
-					completion_allocate( out, 
-										 cmd + offset + wcslen(proc),
-										 COMPLETE_PROCESS_DESC,
-										 0 );
-				}
-				else
-				{
-                    if (name)
-                        out.push_back(completion_t(name));
-				}
-			}
-		}
-	}
-
-	if( cmd != 0 )
-		free( cmd );
-
-	free( pdir_name );
-	free( pfile_name );
-
-	closedir( dir );
+    /* Iterate over all processes */
+    wcstring process_name;
+    pid_t process_pid;
+    process_iterator_t iterator;
+    while (iterator.next_process(&process_name, &process_pid))
+    {
+        int offset;
+        
+        if( match_pid( process_name, proc, flags, &offset ) )
+        {
+            if( flags & ACCEPT_INCOMPLETE )
+            {
+                append_completion( out, 
+                                     process_name.c_str() + offset + wcslen(proc),
+                                     COMPLETE_PROCESS_DESC,
+                                     0 );
+            }
+            else
+            {
+                append_completion(out, to_string<long>(process_pid));
+            }
+        }
+    }
 
 	return 1;
 }
@@ -586,14 +720,18 @@ static int find_process( const wchar_t *proc,
 /**
    Process id expansion
 */
-static int expand_pid( const wcstring &instr,
+static int expand_pid( const wcstring &instr_with_sep,
 					   int flags,
 					   std::vector<completion_t> &out )
 {
  
+    /* expand_string calls us with internal separators in instr...sigh */
+    wcstring instr = instr_with_sep;
+    remove_internal_separator(instr, false);
+ 
 	if( instr.empty() || instr.at(0) != PROCESS_EXPAND )
 	{
-		out.push_back(completion_t(instr));
+        append_completion(out, instr);
 		return 1;
 	}
     
@@ -603,14 +741,14 @@ static int expand_pid( const wcstring &instr,
 	{
 		if( wcsncmp( in+1, SELF_STR, wcslen(in+1) )==0 )
 		{
-			completion_allocate( out, 
+			append_completion( out, 
 								 SELF_STR+wcslen(in+1),
 								 COMPLETE_SELF_DESC, 
 								 0 );
 		}
 		else if( wcsncmp( in+1, LAST_STR, wcslen(in+1) )==0 )
 		{
-			completion_allocate( out, 
+			append_completion( out, 
 								 LAST_STR+wcslen(in+1), 
 								 COMPLETE_LAST_DESC, 
 								 0 );
@@ -621,8 +759,7 @@ static int expand_pid( const wcstring &instr,
 		if( wcscmp( (in+1), SELF_STR )==0 )
 		{
 
-			const wcstring pid_str = to_string<int>(getpid());
-			out.push_back(completion_t(pid_str));
+            append_completion(out, to_string<long>(getpid()));
 
 			return 1;
 		}
@@ -630,8 +767,7 @@ static int expand_pid( const wcstring &instr,
 		{
 			if( proc_last_bg_pid > 0 )
 			{
-                const wcstring pid_str = to_string<int>(proc_last_bg_pid);
-				out.push_back( completion_t(pid_str));
+                append_completion(out, to_string<long>(proc_last_bg_pid));
 			}
 
 			return 1;
@@ -739,17 +875,14 @@ void expand_variable_error( parser_t &parser, const wchar_t *token, int token_po
 /**
    Parse an array slicing specification
  */
-static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx )
+static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, int size )
 {
-	
-	
 	wchar_t *end;
 	
 	int pos = 1;
     
     //	debug( 0, L"parse_slice on '%ls'", in );
 	
-    
 	while( 1 )
 	{
 		long tmp;
@@ -771,8 +904,34 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
 		}
         //		debug( 0, L"Push idx %d", tmp );
 		
-        idx.push_back(tmp);
+		long i1 = tmp>-1 ? tmp : size+tmp+1;
 		pos = end-in;
+		while( in[pos]==INTERNAL_SEPARATOR )
+			pos++;		
+		if ( in[pos]==L'.' && in[pos+1]==L'.' ){
+			pos+=2;
+			while( in[pos]==INTERNAL_SEPARATOR )
+				pos++;		
+			long tmp1 = wcstol( &in[pos], &end, 10 );
+			if( ( errno ) || ( end == &in[pos] ) )
+			{
+				return 1;
+			}
+		pos = end-in;
+
+			// debug( 0, L"Push range %d %d", tmp, tmp1 );
+			long i2 = tmp1>-1 ? tmp1 : size+tmp1+1;
+			// debug( 0, L"Push range idx %d %d", i1, i2 );
+			short direction = i2<i1 ? -1 : 1 ;
+			for (long jjj = i1; jjj*direction <= i2*direction; jjj+=direction) {
+				// debug(0, L"Expand range [subst]: %i\n", jjj); 
+				idx.push_back( jjj );
+			}
+			continue;
+		}
+		
+		// debug( 0, L"Push idx %d", tmp );
+		idx.push_back( i1 );
 	}
 	
 	if( end_ptr )
@@ -864,25 +1023,26 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 				int all_vars=1;
                 wcstring_list_t var_item_list;
                 
+				if( is_ok )
+				{
+					tokenize_variable_array( var_val.c_str(), var_item_list );					
+					
 				if( in[stop_pos] == L'[' )
 				{
 					wchar_t *slice_end;
 					all_vars=0;
 					
-					if( parse_slice( in + stop_pos, &slice_end, var_idx_list ) )
+						if( parse_slice( in + stop_pos, &slice_end, var_idx_list, var_item_list.size() ) )
 					{
 						parser.error( SYNTAX_ERROR,
                                      -1,
                                      L"Invalid index value" );						
 						is_ok = 0;
+							break;
 					}					
 					stop_pos = (slice_end-in);
 				}				
                 
-				if( is_ok )
-				{
-					tokenize_variable_array( var_val.c_str(), var_item_list );                    
-                    
 					if( !all_vars )
 					{
                         wcstring_list_t string_values(var_idx_list.size());
@@ -890,11 +1050,6 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 						for( size_t j=0; j<var_idx_list.size(); j++)
 						{
 							long tmp = var_idx_list.at(j);
-							if( tmp < 0 )
-							{
-								tmp = ((long)var_item_list.size())+tmp+1;
-							}
-                            
 							/*
                              Check that we are within array
                              bounds. If not, truncate the list to
@@ -951,7 +1106,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 							const wcstring &next = var_item_list.at(j);
 							if( is_ok && (i == 0) && (!in[stop_pos]) )
 							{
-								out.push_back(completion_t(next));
+                                append_completion(out, next);
 							}
 							else
 							{
@@ -1013,7 +1168,7 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
     
 	if( !empty )
 	{
-		out.push_back(completion_t(in));
+        append_completion(out, in);
 	}
     
 	return is_ok;
@@ -1108,7 +1263,7 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 
 	if( bracket_begin == 0 )
 	{
-		out.push_back(completion_t(in));
+		append_completion(out, in);
 		return 1;
 	}
 
@@ -1173,7 +1328,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 		case -1:
 			parser.error( SYNTAX_ERROR,
                          -1,
-                         L"Mismatched parans" );
+                         L"Mismatched parenthesis" );
 			return 0;
 		case 0:
             outList.push_back(completion_t(input));
@@ -1199,7 +1354,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
         std::vector<long> slice_idx;
 		wchar_t *slice_end;
 		
-		if( parse_slice( tail_begin, &slice_end, slice_idx ) )
+		if( parse_slice( tail_begin, &slice_end, slice_idx, sub_res.size() ) )
 		{
 			parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
 			return 0;
@@ -1211,17 +1366,13 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
 			for( i=0; i < slice_idx.size(); i++ )
 			{
 				long idx = slice_idx.at(i);
-				if( idx < 0 )
-				{
-					idx = sub_res.size() + idx + 1;
-				}
-				
 				if( idx < 1 || (size_t)idx > sub_res.size() )
 				{
-					parser.error( SYNTAX_ERROR, -1, L"Invalid index value" );
+					parser.error( SYNTAX_ERROR,
+								 -1,
+								 ARRAY_BOUNDS_ERR );
 					return 0;
 				}
-				
 				idx = idx-1;
 				
                 sub_res2.push_back(sub_res.at(idx));
@@ -1366,49 +1517,28 @@ void expand_tilde( wcstring &input)
    Remove any internal separators. Also optionally convert wildcard characters to
    regular equivalents. This is done to support EXPAND_SKIP_WILDCARDS.
 */
-static void remove_internal_separator( const void *s, int conv )
+static void remove_internal_separator( wcstring &str, bool conv )
 {
-	wchar_t *in = (wchar_t *)s;
-	wchar_t *out=in;
-	
-	CHECK( s, );
-
-	while( *in )
-	{
-		switch( *in )
-		{
-			case INTERNAL_SEPARATOR:
-				in++;
-				break;
-				
-			case ANY_CHAR:
-				in++;
-				*out++ = conv?L'?':ANY_CHAR;
-				break;
-
-			case ANY_STRING:
-				in++;
-				*out++ = conv?L'*':ANY_STRING;
-				break;
-
-			case ANY_STRING_RECURSIVE:
-				in++;
-				*out++ = conv?L'*':ANY_STRING_RECURSIVE;
-				break;
-
-			default:
-				*out++ = *in++;
-		}
-	}
-	*out=0;
-}
-
-static void remove_internal_separator2( wcstring &s, int conv )
-{
-    wchar_t *tmp = wcsdup(s.c_str());
-    remove_internal_separator(tmp, conv);
-    s = tmp;
-    free(tmp);
+    /* Remove all instances of INTERNAL_SEPARATOR */
+    str.erase(std::remove(str.begin(), str.end(), (wchar_t)INTERNAL_SEPARATOR), str.end());
+    
+    /* If conv is true, replace all instances of ANY_CHAR with '?', ANY_STRING with '*', ANY_STRING_RECURSIVE with '*' */
+    if (conv)
+    {
+        for (size_t idx = 0; idx < str.size(); idx++)
+        {
+            switch (str.at(idx))
+            {
+                case ANY_CHAR:
+                    str.at(idx) = L'?';
+                    break;
+                case ANY_STRING:
+                case ANY_STRING_RECURSIVE:
+                    str.at(idx) = L'*';
+                break;
+            }
+        }
+    }
 }
 
 
@@ -1542,7 +1672,7 @@ int expand_string( const wcstring &input, std::vector<completion_t> &output, exp
         wcstring next_str = in->at(i).completion;
         int wc_res;
         
-        remove_internal_separator2( next_str, EXPAND_SKIP_WILDCARDS & flags );			
+        remove_internal_separator( next_str, (EXPAND_SKIP_WILDCARDS & flags) ? true : false );			
         const wchar_t *next = next_str.c_str();
         
         if( ((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||

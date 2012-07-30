@@ -21,7 +21,7 @@ tmpfile=${file}.tmp
 set -o noclobber
 
 trap "rm -f $tmpfile" EXIT
-        
+
 if ! cat $file > $tmpfile
 then
         cat 1>&2 <<EOF
@@ -31,11 +31,16 @@ EOF
         exit 1
 fi
 
+# Append a newline if it doesn't exist
+if [ "$(tail -c1 "$tmpfile"; echo x)" != $'\nx' ]; then
+    echo "" >> "$tmpfile"
+fi
+
 for i
 do
-        if ! grep -q "^${i}$" $tmpfile
+        if ! grep -q "^${i}$" "$tmpfile"
         then
-                echo $i >> $tmpfile
+                echo $i >> "$tmpfile"
         fi
 done
 

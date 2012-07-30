@@ -212,7 +212,7 @@ int function_exists( const wcstring &cmd )
     return loaded_functions.find(cmd) != loaded_functions.end();            
 }
 
-int function_exists_no_autoload( const wcstring &cmd, const env_vars &vars )
+int function_exists_no_autoload( const wcstring &cmd, const env_vars_snapshot_t &vars )
 {
 	if( parser_keywords_is_reserved(cmd) )
 		return 0;

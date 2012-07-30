@@ -142,13 +142,10 @@ int wildcard_has( const wchar_t *str, int internal )
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards. 
 */
-static int wildcard_match2( const wcstring &str_str, 
-							const wcstring &wc_str, 
+static int wildcard_match2( const wchar_t *str, 
+							const wchar_t *wc, 
 							int is_first )
 {
-    const wchar_t *str = str_str.c_str();
-    const wchar_t *wc = wc_str.c_str();
-	
 	if( *str == 0 && *wc==0 )
 		return 1;
 	
@@ -254,7 +251,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
 		
 		if (! out_completion.empty())
 		{
-			completion_allocate( out, 
+			append_completion( out, 
 								 out_completion,
 								 out_desc,
 								 flags );
@@ -312,7 +309,7 @@ bool wildcard_complete(const wcstring &str,
 
 int wildcard_match( const wcstring &str, const wcstring &wc )
 {
-	return wildcard_match2( str, wc, 1 );	
+	return wildcard_match2( str.c_str(), wc.c_str(), 1 );	
 }
 
 /**
@@ -424,7 +421,7 @@ static wcstring complete_get_desc_suffix( const wchar_t *suff_orig )
    \param err The errno value after a failed stat call on the file. 
 */
 
-static wcstring file_get_desc( const wchar_t *filename, 
+static wcstring file_get_desc( const wcstring &filename, 
 									 int lstat_res,
 									 struct stat lbuf, 
 									 int stat_res, 
@@ -433,8 +430,6 @@ static wcstring file_get_desc( const wchar_t *filename,
 {
 	const wchar_t *suffix;
 
-	CHECK( filename, 0 );
-		
 	if( !lstat_res )
 	{
 		if( S_ISLNK(lbuf.st_mode))
@@ -535,7 +530,7 @@ static wcstring file_get_desc( const wchar_t *filename,
 		}
 	}
 	
-	suffix = wcsrchr( filename, L'.' );
+	suffix = wcsrchr( filename.c_str(), L'.' );
 	if( suffix != 0 && !wcsrchr( suffix, L'/' ) )
 	{
 		return complete_get_desc_suffix( suffix );

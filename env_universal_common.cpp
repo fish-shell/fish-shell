@@ -106,7 +106,8 @@ static void parse_message( wchar_t *msg,
 /**
    The table of all universal variables
 */
-std::map<wcstring, var_uni_entry_t*> env_universal_var;
+typedef std::map<wcstring, var_uni_entry_t*> env_var_table_t;
+env_var_table_t env_universal_var;
 
 /**
    Callback function, should be called on all events
@@ -412,7 +413,7 @@ void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const w
 
 void env_universal_common_destroy()
 {
-	std::map<wcstring, var_uni_entry_t*>::iterator iter;
+	env_var_table_t::iterator iter;
 	
 	for(iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
 	{	
@@ -545,7 +546,7 @@ void read_message( connection_t *src )
 */
 void env_universal_common_remove( const wcstring &name )
 {
-	std::map<wcstring, var_uni_entry_t*>::iterator result =  env_universal_var.find(name);
+	env_var_table_t::iterator result =  env_universal_var.find(name);
 	if (result != env_universal_var.end())
 	{
 		var_uni_entry_t* v = result->second;		
@@ -900,7 +901,7 @@ void env_universal_common_get_names( wcstring_list_t &lst,
 									 int show_exported,
 									 int show_unexported )
 {
-	std::map<wcstring, var_uni_entry_t*>::const_iterator iter;
+	env_var_table_t::const_iterator iter;
 	for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
 	{
 		const wcstring& key = iter->first;
@@ -918,7 +919,7 @@ void env_universal_common_get_names( wcstring_list_t &lst,
 
 wchar_t *env_universal_common_get( const wcstring &name )
 {
-	std::map<wcstring, var_uni_entry_t*>::const_iterator result = env_universal_var.find(name);
+	env_var_table_t::const_iterator result = env_universal_var.find(name);
 
 	if (result != env_universal_var.end() )
 	{
@@ -932,7 +933,7 @@ wchar_t *env_universal_common_get( const wcstring &name )
 
 int env_universal_common_get_export( const wcstring &name )
 {
-	std::map<wcstring, var_uni_entry_t*>::const_iterator result = env_universal_var.find(name);
+	env_var_table_t::const_iterator result = env_universal_var.find(name);
 	if (result != env_universal_var.end() )
 	{
 		const var_uni_entry_t *e = result->second;
@@ -944,7 +945,7 @@ int env_universal_common_get_export( const wcstring &name )
 
 void enqueue_all( connection_t *c )
 {
-	std::map<wcstring, var_uni_entry_t*>::const_iterator iter;
+	env_var_table_t::const_iterator iter;
 
 	for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
 	{

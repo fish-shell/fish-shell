@@ -122,7 +122,7 @@ extern const wchar_t *program_name;
 	if( !(arg) )														\
 	{																	\
 		debug( 0,														\
-			   _( L"function %s called with null value for argument %s. " ), \
+			   "function %s called with null value for argument %s. ",  \
 			   __func__,												\
 			   #arg );													\
 		bugreport();													\
@@ -162,7 +162,7 @@ extern const wchar_t *program_name;
 	if( signal_is_blocked() )											\
 	{																	\
 		debug( 0,														\
-			   _( L"function %s called while blocking signals. " ),		\
+			    "function %s called while blocking signals. ",  		\
 			   __func__);												\
 		bugreport();													\
 		show_stackframe();												\
@@ -191,8 +191,6 @@ extern const wchar_t *program_name;
 void show_stackframe();
 
 
-wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &completions );
-
 /**
    Read a line from the stream f into the buffer buff of length len. If
    buff is to small, it will be reallocated, and both buff and len will
@@ -206,9 +204,8 @@ wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &c
 */
 int fgetws2( wchar_t **buff, int *len, FILE *f );
 
-void sort_strings( std::vector<wcstring> &strings);
-
-void sort_completions( std::vector<completion_t> &strings);
+/** Like fgetws2, but reads into a string */
+int fgetws2(wcstring *s, FILE *f);
 
 /**
    Returns a newly allocated wide character string equivalent of the
@@ -487,28 +484,15 @@ public:
     ~scoped_lock();
 };
 
+/* Wrapper around wcstok */
 class wcstokenizer {
     wchar_t *buffer, *str, *state;
     const wcstring sep;
     
 public:
-    wcstokenizer(const wcstring &s, const wcstring &separator) : sep(separator) {
-        wchar_t *wcsdup(const wchar_t *s);
-        buffer = wcsdup(s.c_str());
-        str = buffer;
-        state = NULL;
-    }
-
-    bool next(wcstring &result) {
-        wchar_t *tmp = wcstok(str, sep.c_str(), &state);
-        str = NULL;
-        if (tmp) result = tmp;
-        return tmp != NULL;
-    }
-    
-    ~wcstokenizer() {
-        free(buffer);
-    }
+    wcstokenizer(const wcstring &s, const wcstring &separator);
+    bool next(wcstring &result);
+    ~wcstokenizer();
 };
 
 /** 
@@ -632,6 +616,7 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 
    will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that program_name is 'fish'.
 */
+void debug( int level, const char *msg, ... );
 void debug( int level, const wchar_t *msg, ... );
 
 /**

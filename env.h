@@ -52,11 +52,20 @@ enum{
 }
 ;
 
+/* A struct of configuration directories, determined in main() that fish will optionally pass to env_init.
+ */
+struct config_paths_t
+{
+    wcstring data;      // e.g. /usr/local/share
+    wcstring sysconf;   // e.g. /usr/local/etc
+    wcstring doc;       // e.g. /usr/local/share/doc/fish
+    wcstring bin;       // e.g. /usr/local/bin
+};
 
 /**
    Initialize environment variable data
 */
-void env_init();
+void env_init(const struct config_paths_t *paths = NULL);
 
 /**
    Destroy environment variable data
@@ -164,20 +173,26 @@ void env_export_arr(bool recalc, null_terminated_array_t<char> &result);
 */
 wcstring_list_t env_get_names( int flags );
 
+
+
 /**
    Update the PWD variable
    directory
 */
 int env_set_pwd();
 
-class env_vars {
+class env_vars_snapshot_t {
     std::map<wcstring, wcstring> vars;
+    bool is_current() const;
 
 public:
-    env_vars(const wchar_t * const * keys);
-    env_vars(void);
+    env_vars_snapshot_t(const wchar_t * const * keys);
+    env_vars_snapshot_t(void);
     
-    const wchar_t *get(const wchar_t *key) const;
+    env_var_t get(const wcstring &key) const;
+    
+    // Returns the fake snapshot representing the live variables array
+    static const env_vars_snapshot_t &current();
     
     // vars necessary for highlighting
     static const wchar_t * const highlighting_keys[];

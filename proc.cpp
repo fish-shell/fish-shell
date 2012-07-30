@@ -72,7 +72,6 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "signal.h"
 #include "event.h"
 
-#include <deque>
 #include "output.h"
 
 /**
@@ -153,7 +152,7 @@ static event_t event(0);
 /**
    A stack containing the values of is_interactive. Used by proc_push_interactive and proc_pop_interactive.
 */
-static std::deque<int> interactive_stack;
+static std::vector<int> interactive_stack;
 
 void proc_init()
 {
@@ -1213,7 +1212,6 @@ void proc_sanity_check()
 			validate_pointer( p->get_argv(), _( L"Process argument list" ), 0 );
 			validate_pointer( p->argv0(), _( L"Process name" ), 0 );
 			validate_pointer( p->next, _( L"Process list pointer" ), 1 );
-			validate_pointer( p->actual_cmd, _( L"Process command" ), 1 );
 			
 			if ( (p->stopped & (~0x00000001)) != 0 )
 			{

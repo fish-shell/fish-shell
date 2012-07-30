@@ -144,7 +144,7 @@ class process_t
     process_t() :
         argv_array(),    
         type(0),
-        actual_cmd(NULL),
+        actual_cmd(),
         pid(0),
         pipe_write_fd(0),
         pipe_read_fd(0),
@@ -164,7 +164,6 @@ class process_t
     {
         if (this->next != NULL)
             delete this->next;
-        free((void *)actual_cmd); //may be NULL
     }
     
 	/** 
@@ -203,8 +202,8 @@ class process_t
         return argv0_narrow.get();
     }
 
-	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. malloc'd! */
-	const wchar_t *actual_cmd;       
+	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. */
+	wcstring actual_cmd;       
 
 	/** process ID */
 	pid_t pid;
@@ -311,7 +310,7 @@ class job_t
 	    job. It is used for displaying messages about job status
 	    on the terminal.
 	*/
-	wcstring command;
+	wcstring command_str;
     
     /* narrow copy so we don't have to convert after fork */
     narrow_string_rep_t command_narrow;
@@ -323,7 +322,7 @@ class job_t
     public:
     
     job_t(job_id_t jobid) :
-        command(),
+        command_str(),
         first_process(NULL),
         pgid(0),
         tmodes(),
@@ -346,17 +345,20 @@ class job_t
     }
     
     /** Returns whether the command is empty. */
-    bool command_is_empty() const { return command.empty(); }
+    bool command_is_empty() const { return command_str.empty(); }
     
     /** Returns the command as a wchar_t *. */
-    const wchar_t *command_wcstr() const { return command.c_str(); }
+    const wchar_t *command_wcstr() const { return command_str.c_str(); }
+    
+    /** Returns the command */
+    const wcstring &command() const { return command_str; }
     
     /** Returns the command as a char *. */
     const char *command_cstr() const { return command_narrow.get(); }
     
     /** Sets the command */
     void set_command(const wcstring &cmd) {
-        command = cmd;
+        command_str = cmd;
         command_narrow.set(cmd);
     }
 	

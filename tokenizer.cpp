@@ -696,7 +696,6 @@ wchar_t *tok_first( const wchar_t *str )
 	return res;
 }
 
-
 int tok_get_pos( tokenizer *tok )
 {
 	CHECK( tok, 0 );

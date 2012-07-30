@@ -27,21 +27,6 @@ typedef struct buffer
 buffer_t;
 
 /**
-   Set the out-of-memory handler callback function. If a memory
-   allocation fails, this function will be called. 
-*/	
-void (*util_set_oom_handler( void (*h)(void *) ))(void *);
-
-/**
-   This is a possible out of memory handler that will kill the current
-   process in response to any out of memory event, while also printing
-   an error message describing what allocation failed.
-
-   This is the default out of memory handler.
-*/
-void util_die_on_oom( void *p );
-
-/**
    Returns the larger of two ints
 */
 int maxi( int a, int b );

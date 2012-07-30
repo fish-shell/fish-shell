@@ -306,6 +306,25 @@ class reader_data_t
     
     /** Whether the a screen reset is needed after a repaint. */
     bool screen_reset_needed;
+    
+    /** Constructor */
+    reader_data_t() :
+        suppress_autosuggestion(0),
+        history(0),
+        token_history_pos(0),
+        search_pos(0),
+        buff_pos(0),
+        complete_func(0),
+        highlight_function(0),
+        test_func(0),
+        end_loop(0),
+        prev_end_loop(0),
+        next(0),
+        search_mode(0),
+        repaint_needed(0),
+        screen_reset_needed(0)
+        {
+        }
 };
 
 /**
@@ -326,7 +345,7 @@ static int is_interactive_read;
 static int end_loop = 0;
 
 /** The stack containing names of files that are being parsed */
-static std::stack<const wchar_t *, std::list<const wchar_t *> > current_filename;
+static std::stack<const wchar_t *, std::vector<const wchar_t *> > current_filename;
 
 
 /**
@@ -530,8 +549,8 @@ void reader_data_t::command_line_changed() {
 
 
 /** Remove any duplicate completions in the list. This relies on the list first beeing sorted. */
-static void remove_duplicates(std::vector<completion_t> &l) {
-	
+static void remove_duplicates(std::vector<completion_t> &l)
+{
 	l.erase(std::unique( l.begin(), l.end()), l.end());
 }
 
@@ -721,9 +740,14 @@ static void remove_backward()
 
 	if( data->buff_pos <= 0 )
 		return;
-        
-    data->command_line.erase(data->buff_pos-1, 1);    
-	data->buff_pos--;
+    
+    /* Fake composed character sequences by continuning to delete until we delete a character of width at least 1. */
+    int width;
+    do {
+        data->buff_pos -= 1;
+        width = fish_wcwidth(data->command_line.at(data->buff_pos));
+        data->command_line.erase(data->buff_pos, 1);        
+    } while (width == 0 && data->buff_pos > 0);
     data->command_line_changed();
     data->suppress_autosuggestion = true;
 
@@ -1054,7 +1078,7 @@ struct autosuggestion_context_t {
     history_search_t searcher;
     file_detection_context_t detector;
     const wcstring working_directory;
-    const env_vars vars;
+    const env_vars_snapshot_t vars;
     wcstring_list_t commands_to_load;
     const unsigned int generation_count;
     
@@ -1067,7 +1091,7 @@ struct autosuggestion_context_t {
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
         detector(history, term),
         working_directory(get_working_directory()),
-        vars(env_vars::highlighting_keys),
+        vars(env_vars_snapshot_t::highlighting_keys),
         generation_count(s_generation_count),
         has_tried_reloading(false)
     {
@@ -1197,6 +1221,18 @@ static void update_autosuggestion(void) {
         iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
     }
 #endif
+}
+
+static void accept_autosuggestion(void) {
+    /* Accept any autosuggestion by replacing the command line with it. */
+    if (! data->autosuggestion.empty()) {
+        /* Accept the autosuggestion */
+        data->command_line = data->autosuggestion;
+        data->buff_pos = data->command_line.size();
+        data->command_line_changed();
+        reader_super_highlight_me_plenty(data->buff_pos);
+        reader_repaint();
+    }
 }
 
 /**
@@ -2083,9 +2119,7 @@ static int default_test( const wchar_t *b )
 
 void reader_push( const wchar_t *name )
 {
-    // use something nasty which guarantees value initialization (that is, all fields zero)
-    const reader_data_t zerod = {};
-    reader_data_t *n = new reader_data_t(zerod);
+    reader_data_t *n = new reader_data_t();
     
     n->history = & history_t::history_with_name(name);
 	n->app_name = name;
@@ -2189,7 +2223,7 @@ public:
 	const highlight_function_t highlight_function;
     
     /** Environment variables */
-    const env_vars vars;
+    const env_vars_snapshot_t vars;
 
     /** When the request was made */
     const double when;
@@ -2201,7 +2235,7 @@ public:
         string_to_highlight(pbuff),
         match_highlight_pos(phighlight_pos),
         highlight_function(phighlight_func),
-        vars(env_vars::highlighting_keys),
+        vars(env_vars_snapshot_t::highlighting_keys),
         when(timef()),
         generation_count(s_generation_count)
     {
@@ -2213,18 +2247,9 @@ public:
             // The gen count has changed, so don't do anything
             return 0;
         }
-        const wchar_t *delayer = vars.get(L"HIGHLIGHT_DELAY");
-        double secDelay = 0;
-        if (delayer) {
-            wcstring tmp = delayer;
-            secDelay = from_string<double>(tmp);
-        }
-        if (secDelay > 0) usleep((useconds_t)(secDelay * 1E6));
-        //write(0, "Start", 5);
         if (! string_to_highlight.empty()) {
             highlight_function( string_to_highlight.c_str(), colors, match_highlight_pos, NULL /* error */, vars);
         }
-        //write(0, "End", 3);
         return 0;
     }
 };
@@ -2353,7 +2378,11 @@ static void handle_end_loop()
 	}
 	else
 	{
-		if( !isatty(0) )
+        /* PCA: we used to only hangup jobs if stdin was closed. This prevented child processes from exiting. It's unclear to my why it matters if stdin is closed, but it seems to me if we're forcing an exit, we definitely want to hang up our processes.
+        
+            See https://github.com/fish-shell/fish-shell/issues/138
+        */
+		if( reader_exit_forced() || !isatty(0) )
 		{
 			/*
 			  We already know that stdin is a tty since we're
@@ -3006,15 +3035,7 @@ const wchar_t *reader_readline()
 					data->buff_pos++;					
 					reader_repaint();
 				} else {
-                    /* We're at the end of our buffer, and the user hit right. Try autosuggestion. */
-                    if (! data->autosuggestion.empty()) {
-                        /* Accept the autosuggestion */
-                        data->command_line = data->autosuggestion;
-                        data->buff_pos = data->command_line.size();
-                        data->command_line_changed();
-                        reader_super_highlight_me_plenty(data->buff_pos);
-                        reader_repaint();
-                    }
+                    accept_autosuggestion();
                 }
 				break;
 			}
@@ -3104,12 +3125,18 @@ const wchar_t *reader_readline()
 								
 				break;
 			}
-
+            
 			case R_SUPPRESS_AUTOSUGGESTION:
 			{
 				data->suppress_autosuggestion = true;
 				data->autosuggestion.clear();
 				reader_repaint();
+				break;
+			}
+            
+			case R_ACCEPT_AUTOSUGGESTION:
+			{
+				accept_autosuggestion();
 				break;
 			}
 

@@ -214,12 +214,14 @@ unsigned char rgb_color_t::to_term256_index() const {
 }
 
 unsigned char rgb_color_t::to_name_index() const {
+    assert(type == type_named || type == type_rgb);
     if (type == type_named) {
         return data.name_idx;
     } else if (type == type_rgb) {
         return term8_color_for_rgb(data.rgb);
     } else {
-        throw "Bad type for to_name_index";
+        /* This is an error */
+        return -1;
     }
 }
 

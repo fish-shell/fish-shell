@@ -428,16 +428,16 @@ int main( int argc, char **argv )
 	my_optind = fish_parse_opt( argc, argv, &cmd );
 
 	/*
-	  No-exec is prohibited when in interactive mode
-	*/
+	   No-exec is prohibited when in interactive mode
+	   */
 	if( is_interactive_session && no_exec)
 	{
 		debug( 1, _(L"Can not use the no-execute mode when running an interactive session") );
 		no_exec = 0;
 	}
-    
+
 	const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
-    	
+
 	proc_init();	
 	event_init();	
 	wutil_init();
@@ -448,10 +448,10 @@ int main( int argc, char **argv )
 	reader_init();
 	history_init();
 
-    parser_t &parser = parser_t::principal_parser();
+	parser_t &parser = parser_t::principal_parser();
 
-    if (g_log_forks)
-        printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
+	if (g_log_forks)
+		printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
 	if( read_init(paths) )
 	{
@@ -462,70 +462,68 @@ int main( int argc, char **argv )
 			free(cmd_wcs);
 			reader_exit(0, 0);
 		}
-		else
+		else if( my_optind != argc )
 		{
-			if( my_optind == argc )
+			char **ptr; 
+			char *file = *(argv+(my_optind++));
+			int i; 
+			int fd;
+			wchar_t *rel_filename, *abs_filename;
+
+
+			if( ( fd = open(file, O_RDONLY) ) == -1 )
 			{
-				res = reader_read( STDIN_FILENO, 0 );
+				wperror( L"open" );
+				return 1;
 			}
-			else
+
+			// OK to not do this atomically since we cannot have gone multithreaded yet
+			set_cloexec(fd);
+
+			if( *(argv+my_optind))
 			{
-				char **ptr; 
-				char *file = *(argv+(my_optind++));
-				int i; 
-				int fd;
-				wchar_t *rel_filename, *abs_filename;
-
-                
-				if( ( fd = open(file, O_RDONLY) ) == -1 )
+				wcstring sb;
+				for( i=1,ptr = argv+my_optind; *ptr; i++, ptr++ )
 				{
-					wperror( L"open" );
-					return 1;
-				}
-                
-                // OK to not do this atomically since we cannot have gone multithreaded yet
-                set_cloexec(fd);
-                
-				if( *(argv+my_optind))
-				{
-                    wcstring sb;
-					for( i=1,ptr = argv+my_optind; *ptr; i++, ptr++ )
-					{
-						if( i != 1 )
-                            sb.append( ARRAY_SEP_STR );
-                        sb.append( str2wcstring( *ptr ));
-					}
-				
-					env_set( L"argv", sb.c_str(), 0 );
+					if( i != 1 )
+						sb.append( ARRAY_SEP_STR );
+					sb.append( str2wcstring( *ptr ));
 				}
 
-				rel_filename = str2wcs( file );
-				abs_filename = wrealpath( rel_filename, 0 );
-
-				if( !abs_filename )
-				{
-					abs_filename = wcsdup(rel_filename);
-				}
-
-				reader_push_current_filename( intern( abs_filename ) );
-				free( rel_filename );
-				free( abs_filename );
-
-				res = reader_read( fd, 0 );
-
-				if( res )
-				{
-					debug( 1, 
-					       _(L"Error while reading file %ls\n"), 
-					       reader_current_filename()?reader_current_filename(): _(L"Standard input") );
-				}				
-				reader_pop_current_filename();
+				env_set( L"argv", sb.c_str(), 0 );
 			}
+
+			rel_filename = str2wcs( file );
+			abs_filename = wrealpath( rel_filename, 0 );
+
+			if( !abs_filename )
+			{
+				abs_filename = wcsdup(rel_filename);
+			}
+
+			reader_push_current_filename( intern( abs_filename ) );
+			free( rel_filename );
+			free( abs_filename );
+
+			res = reader_read( fd, 0 );
+
+			if( res )
+			{
+				debug( 1, 
+						_(L"Error while reading file %ls\n"), 
+						reader_current_filename()?reader_current_filename(): _(L"Standard input") );
+			}				
+			reader_pop_current_filename();
+		}
+		if( is_interactive_session )
+		{
+			res = reader_read( STDIN_FILENO, 0 );
 		}
 	}
-	
+
+
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
-	
+
 	history_destroy();
 	proc_destroy();
 	builtin_destroy();
@@ -533,11 +531,11 @@ int main( int argc, char **argv )
 	parser.destroy();
 	wutil_destroy();
 	event_destroy();
-	
+
 	env_destroy();
-	
-    if (g_log_forks)
-        printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
-    
+
+	if (g_log_forks)
+		printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
+
 	return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();	
 }

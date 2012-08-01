@@ -62,7 +62,8 @@ static const wchar_t * const highlight_var[] =
 	L"fish_color_quote",
 	L"fish_color_redirection",
 	L"fish_color_valid_path",
-    L"fish_color_autosuggestion"
+    L"fish_color_autosuggestion",
+    L"fish_color_alert"
 };
 
 /* If the given path looks like it's relative to the working directory, then prepend that working directory. */
@@ -330,8 +331,13 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 
 //	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
 	
-	if (val_wstr.missing())
-		val_wstr = env_get_string( highlight_var[0]);
+	if (val_wstr.missing()) {
+		// alerts default to error
+		if ( highlight & HIGHLIGHT_ALERT )
+			val_wstr = env_get_string( highlight_var[1]);
+		else
+			val_wstr = env_get_string( highlight_var[0]);
+	}
 	
 	if( ! val_wstr.missing() )
 		result = parse_color( val_wstr, is_background );
@@ -927,7 +933,29 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 		{
 			case TOK_STRING:
 			{
-				if( had_cmd )
+				bool alert_found = false;
+				env_var_t alerts = env_get_string( L"fish_alert_highlight_keywords" );
+				if( !alerts.missing() )
+				{
+					wchar_t *word = tok_last(&tok);
+					wcstring_list_t lst;
+					tokenize_variable_array( alerts, lst );
+					for(unsigned idx = 0; idx < lst.size(); idx++)
+					{
+						if (!wcscmp(word,lst.at(idx).c_str()))
+						{
+							color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+							alert_found = true;
+							break;
+						}
+					}
+				}
+
+				if (alert_found)
+				{
+					; // Do nothing if alert token has been found
+				}
+				else if( had_cmd )
 				{
 					
 					/*Parameter */

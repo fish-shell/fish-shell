@@ -1047,6 +1047,7 @@ in fish:
 - \c fish_color_operator, the color for parameter expansion operators like '*' and '~'
 - \c fish_color_escape, the color used to highlight character escapes like '\\n' and '\\x70'
 - \c fish_color_cwd, the color used for the current working directory in the default prompt
+- \c fish_color_alert, the color used for alert keywords. These are picked up from the \c fish_alert_highlight_keywords variable if defined
 
 Additionally, the following variables are available to change the
 highlighting in the completion pager:

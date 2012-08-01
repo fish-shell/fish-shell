@@ -107,6 +107,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		set_default fish_color_quote brown
 		set_default fish_color_autosuggestion 555 yellow
 		set_default fish_color_valid_path --underline
+		set_default fish_color_alert red --underline --bold
 
 		set_default fish_color_cwd green
 		set_default fish_color_cwd_root red
@@ -129,6 +130,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 		set_default fish_color_history_current cyan
 
+    # Tab autocompletion settings
+    
+    set_default fish_complete_no_descriptions 0
 		#
 		# Remove temporary functions for setting default variable values
 		#

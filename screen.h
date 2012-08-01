@@ -147,7 +147,7 @@ class screen_t
 void s_write( screen_t *s, 
 			  const wchar_t *prompt, 
 			  const wchar_t *commandline,
-			  int explicit_len,
+			  size_t explicit_len,
 			  const int *colors, 
 			  const int *indent,
 			  int cursor_pos );

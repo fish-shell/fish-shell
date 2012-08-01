@@ -339,7 +339,7 @@ class completer_t {
                        
     void complete_cmd_desc( const wcstring &str );
                           
-    bool complete_variable(const wcstring &str, int start_offset);
+    bool complete_variable(const wcstring &str, size_t start_offset);
     
     bool condition_test( const wcstring &condition );
     
@@ -1471,7 +1471,7 @@ bool completer_t::complete_param( const wcstring &scmd_orig, const wcstring &spo
 							int has_arg=0; /* Does this switch have any known arguments  */
 							int req_arg=0; /* Does this switch _require_ an argument */
 
-							int offset = 0;
+							size_t offset = 0;
 							complete_flags_t flags = 0;
 
 															
@@ -1560,11 +1560,11 @@ void completer_t::debug_print_completions()
 /**
    Complete the specified string as an environment variable
 */
-bool completer_t::complete_variable(const wcstring &str, int start_offset)
+bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
 {
     const wchar_t * const whole_var = str.c_str();
 	const wchar_t *var = &whole_var[start_offset];
-	int varlen = wcslen( var );
+	size_t varlen = wcslen( var );
 	int res = 0;
     bool wants_description = (type != COMPLETE_AUTOSUGGEST);
     
@@ -1572,7 +1572,7 @@ bool completer_t::complete_variable(const wcstring &str, int start_offset)
 	for( size_t i=0; i<names.size(); i++ )
 	{
 		const wcstring & env_name = names.at(i);
-		int namelen = env_name.size();
+		size_t namelen = env_name.size();
 		int match=0, match_no_case=0;	
 
 		if( varlen > namelen )
@@ -1667,7 +1667,7 @@ bool completer_t::try_complete_user( const wcstring &str )
 		if( name_end == 0 )
 		{
 			struct passwd *pw;
-			int name_len = wcslen( user_name );
+			size_t name_len = wcslen( user_name );
 			
 			setpwent();
 			

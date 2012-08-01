@@ -179,6 +179,10 @@ static char *posixly_correct;
 /**
    Use translation functions if available
 */
+#ifdef _
+ #undef _
+#endif
+
 #ifdef HAVE_TRANSLATE_H
 #ifdef USE_GETTEXT
 #define _(string) wgettext(string)

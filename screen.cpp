@@ -113,7 +113,7 @@ static int try_sequence( const char *seq, const wchar_t *str )
    Returns the number of columns left until the next tab stop, given
    the current cursor postion.
  */
-static int next_tab_stop( int in )
+static size_t next_tab_stop( size_t in )
 {
 	/*
 	  Assume tab stops every 8 characters if undefined
@@ -151,9 +151,9 @@ static int is_term256_escape(const wchar_t *str) {
    to detect common escape sequences that may be embeded in a prompt,
    such as color codes.
 */
-static int calc_prompt_width( const wchar_t *prompt )
+static size_t calc_prompt_width( const wchar_t *prompt )
 {
-	int res = 0;
+	size_t res = 0;
 	size_t j, k;
 
 	for( j=0; prompt[j]; j++ )
@@ -416,7 +416,7 @@ static void s_desired_append_char( screen_t *s,
 				   wchar_t b,
 				   int c, 
 				   int indent,
-				   int prompt_width )
+				   size_t prompt_width )
 {
 	int line_no = s->desired.cursor[1];
 	
@@ -653,7 +653,7 @@ static size_t line_shared_prefix(const line_t &a, const line_t &b)
 */
 static void s_update( screen_t *scr, const wchar_t *prompt )
 {
-	int prompt_width = calc_prompt_width( prompt );
+	size_t prompt_width = calc_prompt_width( prompt );
 	int screen_width = common_get_width();
 	int need_clear = scr->need_clear;
 	data_buffer_t output;
@@ -673,25 +673,25 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 		s_move( scr, &output, 0, 0 );
 		s_write_str( &output, prompt );
         scr->actual_prompt = prompt;
-		scr->actual.cursor[0] = prompt_width;
+		scr->actual.cursor[0] = (int)prompt_width;
 	}
 	
     for (size_t i=0; i < scr->desired.line_count(); i++)
 	{
 		const line_t &o_line = scr->desired.line(i);
 		line_t &s_line = scr->actual.create_line(i);
-		int start_pos = (i==0 ? prompt_width : 0);
+		size_t start_pos = (i==0 ? prompt_width : 0);
         int current_width = 0;
         
 		if( need_clear )
 		{
-			s_move( scr, &output, start_pos, (int)i );
+			s_move( scr, &output, (int)start_pos, (int)i );
 			s_write_mbs( &output, clr_eol);
             s_line.clear();
 		}
         
         /* Note that skip_remaining is a width, not a character count */
-        int skip_remaining = start_pos;
+        size_t skip_remaining = start_pos;
         
         /* Compute how much we should skip. At a minimum we skip over the prompt. But also skip over the shared prefix of what we want to output now, and what we output before, to avoid repeatedly outputting it. */
         size_t shared_prefix = line_shared_prefix(o_line, s_line);
@@ -771,18 +771,18 @@ static int is_dumb()
 void s_write( screen_t *s,
 	      const wchar_t *prompt,
 	      const wchar_t *commandline, 
-	      int explicit_len,
+	      size_t explicit_len,
 	      const int *c, 
 	      const int *indent,
 	      int cursor )
 {
-	int i;
 	int cursor_arr[2];
 
-	int prompt_width;
-	int screen_width;
+	size_t prompt_width;
+	size_t screen_width;
 
-	int max_line_width = 0, current_line_width = 0, newline_count = 0, explicit_portion_width = 0;
+	int current_line_width = 0, newline_count = 0, explicit_portion_width = 0;
+    size_t max_line_width = 0;
 	
 	CHECK( s, );
 	CHECK( prompt, );
@@ -838,8 +838,8 @@ void s_write( screen_t *s,
 	/*
 	  Check if we are overflowing
 	 */
-    int last_char_that_fits = 0;
-	for( i=0; commandline[i]; i++ )
+    size_t last_char_that_fits = 0;
+	for( size_t i=0; commandline[i]; i++ )
 	{
 		if( commandline[i] == L'\n' )
 		{
@@ -874,7 +874,7 @@ void s_write( screen_t *s,
         truncated_autosuggestion_line.push_back(ellipsis_char);
         commandline = truncated_autosuggestion_line.c_str();
     }
-	for( i=0; i<prompt_width; i++ )
+	for( size_t i=0; i<prompt_width; i++ )
 	{
 		s_desired_append_char( s, L' ', 0, 0, prompt_width );
 	}
@@ -889,6 +889,7 @@ void s_write( screen_t *s,
 		prompt_width=0;
 	}
 	
+    int i;
 	for( i=0; commandline[i]; i++ )
 	{
 		int col = c[i];
@@ -917,7 +918,6 @@ void s_write( screen_t *s,
 			cursor_arr[0] = s->desired.cursor[0] - fish_wcwidth(commandline[i]);
 			cursor_arr[1] = s->desired.cursor[1];
 		}
-		
 	}
 	if( i == cursor )
 	{

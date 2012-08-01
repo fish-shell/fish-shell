@@ -1641,7 +1641,7 @@ void reader_sanity_check()
    Set the specified string from the history as the current buffer. Do
    not modify prefix_width.
 */
-static void set_command_line_and_position( const wcstring &new_str, int pos )
+static void set_command_line_and_position( const wcstring &new_str, size_t pos )
 {
     data->command_line = new_str;
     data->command_line_changed();
@@ -1654,7 +1654,7 @@ void reader_replace_current_token( const wchar_t *new_token )
 {
 
 	const wchar_t *begin, *end;
-	int new_pos;
+	size_t new_pos;
 
 	/* Find current token */
     const wchar_t *buff = data->command_line.c_str();
@@ -1985,7 +1985,7 @@ history_t *reader_get_history(void) {
 	return data ? data->history : NULL;
 }
 
-void reader_set_buffer( const wcstring &b, int p )
+void reader_set_buffer( const wcstring &b, size_t p )
 {
 	if( !data )
 		return;
@@ -3232,14 +3232,12 @@ static int read_ni( int fd, io_data_t *io )
 	if( in_stream != 0 )
 	{
 		wchar_t *str;
-		int acc_used;
+		size_t acc_used;
 
 		while(!feof( in_stream ))
 		{
 			char buff[4096];
-			int c;
-
-			c = fread(buff, 1, 4096, in_stream);
+			size_t c = fread(buff, 1, 4096, in_stream);
 			
 			if( ferror( in_stream ) && ( errno != EINTR ) )
 			{

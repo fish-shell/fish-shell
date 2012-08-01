@@ -135,15 +135,15 @@ int parse_util_get_line_from_offset( const wcstring &str, int pos )
 }
 
 
-int parse_util_get_offset_from_line( const wcstring &str, int line )
+size_t parse_util_get_offset_from_line( const wcstring &str, int line )
 {
     const wchar_t *buff = str.c_str();
-	int i;
+	size_t i;
 	int count = 0;
 	
 	if( line < 0 )
 	{
-		return -1;
+		return (size_t)(-1);
 	}
 
 	if( line == 0 )
@@ -168,19 +168,19 @@ int parse_util_get_offset_from_line( const wcstring &str, int line )
 	}
 }
 
-int parse_util_get_offset( const wcstring &str, int line, int line_offset )
+size_t parse_util_get_offset( const wcstring &str, int line, long line_offset )
 {
     const wchar_t *buff = str.c_str();
-	int off = parse_util_get_offset_from_line( buff, line );
-	int off2 = parse_util_get_offset_from_line( buff, line+1 );
-	int line_offset2 = line_offset;
+	size_t off = parse_util_get_offset_from_line( buff, line );
+	size_t off2 = parse_util_get_offset_from_line( buff, line+1 );
+	long line_offset2 = line_offset;
 	
-	if( off < 0 )
+	if( off == (size_t)(-1) )
 	{
 		return -1;
 	}
 	
-	if( off2 < 0 )
+	if( off2 == (size_t)(-1) )
 	{
 		off2 = (int)(wcslen( buff )+1);
 	}
@@ -292,7 +292,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
 
 
 void parse_util_cmdsubst_extent( const wchar_t *buff,
-								 int cursor_pos,
+								 size_t cursor_pos,
 								 const wchar_t **a, 
 								 const wchar_t **b )
 {
@@ -477,7 +477,7 @@ void parse_util_job_extent( const wchar_t *buff,
 
 
 void parse_util_token_extent( const wchar_t *buff,
-							  int cursor_pos,
+							  size_t cursor_pos,
 							  const wchar_t **tok_begin,
 							  const wchar_t **tok_end,
 							  const wchar_t **prev_begin, 

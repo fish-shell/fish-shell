@@ -1692,7 +1692,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				else
 				{
 					errno = 0;
-					pid = wcstol( woptarg, &end, 10 );
+					pid = (pid_t)wcstol( woptarg, &end, 10 );
 					if( errno || !end || *end )
 					{
 						append_format(stderr_buffer,
@@ -1821,7 +1821,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 		for( i=0; i<names.size(); i++ )
 		{
 			const wchar_t *nxt = names.at(i).c_str();
-			int l = wcslen( nxt + 2 );
+			size_t l = wcslen( nxt + 2 );
 			if( chars+l > common_get_width() )
 			{
 				chars = 0;
@@ -2542,7 +2542,7 @@ static int builtin_exit( parser_t &parser, wchar_t **argv )
 {
 	int argc = builtin_count_args( argv );
 
-	int ec=0;
+	long ec=0;
 	switch( argc )
 	{
 		case 1:
@@ -2580,7 +2580,7 @@ static int builtin_exit( parser_t &parser, wchar_t **argv )
 		
 	}
 	reader_exit( 1, 0 );
-	return ec;
+	return (int)ec;
 }
 
 /**

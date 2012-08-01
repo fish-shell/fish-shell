@@ -79,15 +79,13 @@ struct tokenizer
 	/** Length of last token*/
 	size_t last_len;
 	/** Offset of last token*/
-	int last_pos;
+	size_t last_pos;
 	/** Whether there are more tokens*/
-	int has_next;
+	bool has_next;
 	/** Whether incomplete tokens are accepted*/
-	int accept_unfinished;
+	bool accept_unfinished;
 	/** Whether commants should be returned*/
-	int show_comments;
-	/** Flag set to true of the orig_buff points to an internal string that needs to be free()d when deallocating the tokenizer. */
-	int free_orig;
+	bool show_comments;
 	/** Type of last quote, can be either ' or ".*/
 	wchar_t last_quote;
 	/** Last error */

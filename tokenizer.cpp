@@ -141,7 +141,7 @@ void tok_init( tokenizer *tok, const wchar_t *b, int flags )
 	tok->accept_unfinished = !! (flags & TOK_ACCEPT_UNFINISHED);
 	tok->show_comments = !! (flags & TOK_SHOW_COMMENTS);
     tok->squash_errors = !! (flags & TOK_SQUASH_ERRORS);
-	tok->has_next=1;
+	tok->has_next=true;
 
 	tok->has_next = (*b != L'\0');
 	tok->orig_buff = tok->buff = b;
@@ -153,8 +153,6 @@ void tok_destroy( tokenizer *tok )
 	CHECK( tok, );
 	
 	free( tok->last );
-	if( tok->free_orig )
-		free( (void *)tok->orig_buff );
 }
 
 int tok_last_type( tokenizer *tok )
@@ -432,13 +430,12 @@ static void read_string( tokenizer *tok )
 static void read_comment( tokenizer *tok )
 {
 	const wchar_t *start;
-	int len;
 
 	start = tok->buff;
 	while( *(tok->buff)!= L'\n' && *(tok->buff)!= L'\0' )
 		tok->buff++;
 
-	len = tok->buff - start;
+	size_t len = tok->buff - start;
 	if( !check_size( tok, len ))
 		return;
 
@@ -553,7 +550,7 @@ void tok_next( tokenizer *tok )
 	
 	if( tok_last_type( tok ) == TOK_ERROR )
 	{
-		tok->has_next=0;
+		tok->has_next=false;
 		return;
 	}
 
@@ -610,7 +607,7 @@ void tok_next( tokenizer *tok )
 		case L'\0':
 			tok->last_type = TOK_END;
 			/*fwprintf( stderr, L"End of string\n" );*/
-			tok->has_next = 0;
+			tok->has_next = false;
 			break;
 		case 13:
 		case L'\n':
@@ -700,7 +697,7 @@ int tok_get_pos( tokenizer *tok )
 {
 	CHECK( tok, 0 );
 	
-	return tok->last_pos;
+	return (int)tok->last_pos;
 }
 
 
@@ -709,7 +706,7 @@ void tok_set_pos( tokenizer *tok, int pos )
 	CHECK( tok, );
 	
 	tok->buff = tok->orig_buff + pos;
-	tok->has_next = 1;
+	tok->has_next = true;
 	tok_next( tok );
 }
 

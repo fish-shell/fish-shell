@@ -127,7 +127,7 @@ static void replace_part( const wchar_t *begin,
 		}
 	}
 	out.append( end );
-	reader_set_buffer( out, (int)out_pos );
+	reader_set_buffer( out, (size_t)out_pos );
 }
 	
 /**
@@ -387,7 +387,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 
 			case 'I':
 				current_buffer = woptarg;
-				current_cursor_pos = wcslen( woptarg );
+				current_cursor_pos = (int)wcslen( woptarg );
 				break;
 				
 			case 'C':
@@ -545,8 +545,8 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 			}
 			
 			current_buffer = reader_get_buffer();
-			new_pos = maxi( 0L, mini( (long)new_pos, (long)wcslen( current_buffer ) ) );
-			reader_set_buffer( current_buffer, new_pos );
+			new_pos = maxi( 0L, mini( new_pos, (long)wcslen( current_buffer ) ) );
+			reader_set_buffer( current_buffer, (size_t)new_pos );
 			return 0;
 		}
 		else

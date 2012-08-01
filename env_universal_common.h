@@ -103,12 +103,12 @@ typedef struct connection
 	/**
 	   Number of bytes that have already been consumed.
 	*/
-	int buffer_consumed;
+	size_t buffer_consumed;
 	
 	/**
 	   Number of bytes that have been read into the buffer. 
 	*/
-	int buffer_used;
+	size_t buffer_used;
 	
 
 	/**

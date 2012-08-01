@@ -480,7 +480,7 @@ static void completion_print( int cols,
 			      int row_stop,
 			      wchar_t *prefix,
 			      int is_quoted,
-			      std::vector<comp_t *> &lst )
+			      const std::vector<comp_t *> &lst )
 {
 
 	size_t rows = (lst.size()-1)/cols+1;
@@ -549,9 +549,9 @@ static int completion_try_print( int cols,
 	*/
 	int print=0;
 	
-	int i, j;
+	long i, j;
 	
-	long rows = (lst.size()-1)/cols+1;
+	int rows = (int)((lst.size()-1)/cols+1);
 	
 	int pref_tot_width=0;
 	int min_tot_width = 0;
@@ -573,7 +573,7 @@ static int completion_try_print( int cols,
 		{
 			int pref,min;
 			comp_t *c;
-			if( (int)lst.size() <= j*rows + i )
+			if( lst.size() <= j*rows + i )
 				continue;
 
 			c = lst.at(j*rows + i );
@@ -613,7 +613,7 @@ static int completion_try_print( int cols,
 	}
 	else
 	{
-		int next_rows = (lst.size()-1)/(cols-1)+1;
+		long next_rows = (lst.size()-1)/(cols-1)+1;
 /*		fwprintf( stderr,
   L"cols %d, min_tot %d, term %d, rows=%d, nextrows %d, termrows %d, diff %d\n",
   cols,

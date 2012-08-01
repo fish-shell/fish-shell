@@ -431,9 +431,7 @@ static int read_byte( connection_t *src )
 	if( src->buffer_consumed >= src->buffer_used )
 	{
 
-		int res;
-
-		res = read( src->fd, src->buffer, ENV_UNIVERSAL_BUFFER_SIZE );
+		ssize_t res = read( src->fd, src->buffer, ENV_UNIVERSAL_BUFFER_SIZE );
 		
 //		debug(4, L"Read chunk '%.*s'", res, src->buffer );
 		
@@ -692,7 +690,7 @@ static int try_send( message_t *msg,
 	debug( 3,
 		   L"before write of %d chars to fd %d", strlen(msg->body), fd );	
 
-	int res = write( fd, msg->body, strlen(msg->body) );
+	ssize_t res = write( fd, msg->body, strlen(msg->body) );
 
 	if( res != -1 )
 	{

@@ -280,7 +280,7 @@ static int sprint_rand_digits( char *str, int maxlen )
  */
 static char *gen_unique_nfs_filename( const char *filename )
 {
-	int pidlen, hnlen, orglen = strlen( filename );
+	size_t pidlen, hnlen, orglen = strlen( filename );
 	char hostname[HOST_NAME_MAX + 1];
 	char *newname;
 	
@@ -452,7 +452,7 @@ done:
 */
 static char *acquire_socket_lock( const char *sock_name )
 {
-	int len = strlen( sock_name );
+	size_t len = strlen( sock_name );
 	char *lockfile = (char *)malloc( len + strlen( LOCKPOSTFIX ) + 1 );
 	
 	if( lockfile == NULL ) 

@@ -58,6 +58,10 @@
 */
 #define GETOPT_STRING "b:hvocu"
 
+#ifdef _
+ #undef _
+#endif
+
 #ifdef USE_GETTEXT
 #define _(string) gettext(string)
 #else

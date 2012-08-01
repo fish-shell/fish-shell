@@ -100,9 +100,10 @@ history_t *reader_get_history(void);
    Set the string of characters in the command buffer, as well as the cursor position.
 
    \param b the new buffer value
-   \param p the cursor position. If \c p is less than zero, the cursor is placed on the last character.
+   \param p the cursor position. If \c p is larger than the length of the command line,
+            the cursor is placed on the last character.
 */
-void reader_set_buffer( const wcstring &b, int p );
+void reader_set_buffer( const wcstring &b, size_t p );
 
 /**
    Get the current cursor position in the command line. If interactive

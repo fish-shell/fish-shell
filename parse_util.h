@@ -40,7 +40,7 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
    \param b the end of the searched string
 */
 void parse_util_cmdsubst_extent( const wchar_t *buff,
-								 int cursor_pos,
+								 size_t cursor_pos,
 								 const wchar_t **a, 
 								 const wchar_t **b );
 
@@ -84,7 +84,7 @@ void parse_util_job_extent( const wchar_t *buff,
    \param prev_end the end of the token before the current token
 */
 void parse_util_token_extent( const wchar_t *buff,
-							  int cursor_pos,
+							  size_t cursor_pos,
 							  const wchar_t **tok_begin,
 							  const wchar_t **tok_end,
 							  const wchar_t **prev_begin, 
@@ -104,13 +104,13 @@ int parse_util_get_line_from_offset( const wcstring &str, int pos );
 /**
    Get the offset of the first character on the specified line
  */
-int parse_util_get_offset_from_line( const wcstring &str, int line );
+size_t parse_util_get_offset_from_line( const wcstring &str, int line );
 
 
 /**
    Return the total offset of the buffer for the cursor position nearest to the specified poition
  */
-int parse_util_get_offset( const wcstring &str, int line, int line_offset );
+size_t parse_util_get_offset( const wcstring &str, int line, long line_offset );
 
 /**
    Set the argv environment variable to the specified null-terminated

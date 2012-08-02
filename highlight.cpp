@@ -942,7 +942,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 					tokenize_variable_array( alerts, lst );
 					for(unsigned idx = 0; idx < lst.size(); idx++)
 					{
-						if (!wcscmp(word,lst.at(idx).c_str()))
+						if (wcsstr(word,lst.at(idx).c_str()))
 						{
 							color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
 							alert_found = true;

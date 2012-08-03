@@ -3,7 +3,7 @@
 #
 
 function __fish_describe_command -d "Command used to find descriptions for commands"
-	apropos $argv | awk -v FS=" +- +" '{
+	apropos $argv ^/dev/null | awk -v FS=" +- +" '{
 		split($1, names, ", ");
 		for (name in names)
 			if (names[name] ~ /^'"$argv"'.* *\([18]\)/ ) {

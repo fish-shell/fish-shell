@@ -45,6 +45,9 @@ bind to the function name. This way it becomes significantly easier to
 test the function while editing, and the result is usually more
 readable as well.
 
+If you want to autoload bindings each time you start shell, you should 
+define them inside fish_user_keybindings function.
+
 - <tt>-a</tt> or <tt>--all</tt> If --key-names is specified, show all key names, not only the ones that actually are defined for the current terminal. If erase mode is specified, this switch will cause all current bindings to be erased.
 - <tt>-e</tt> or <tt>--erase</tt> Erase mode. All non-switch arguments are interpreted as character sequences and any commands associated with those sequences are erased.
 - <tt>-h</tt> or <tt>--help</tt> Display help and exit

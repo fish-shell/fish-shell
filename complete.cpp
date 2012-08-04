@@ -1722,14 +1722,12 @@ void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_t
     completer_t completer(cmd, type);
     
 	const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
-	wcstring buff;
 	tokenizer tok;
 	const wchar_t *current_token=0, *prev_token=0;
     wcstring current_command;    
 	int on_command=0;
-	int pos;
+	size_t pos;
 	bool done=false;
-	int cursor_pos;
 	int use_command = 1;
 	int use_function = 1;
 	int use_builtin = 1;
@@ -1737,7 +1735,7 @@ void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_t
 
 //	debug( 1, L"Complete '%ls'", cmd );
 
-	cursor_pos = cmd.size();
+	size_t cursor_pos = cmd.size();
     
     const wchar_t *cmd_cstr = cmd.c_str();
 	parse_util_cmdsubst_extent( cmd_cstr, cursor_pos, &cmdsubst_begin, &cmdsubst_end );
@@ -1762,7 +1760,7 @@ void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_t
 	{
 		pos = cursor_pos-(cmdsubst_begin-cmd_cstr);
 		
-		buff = wcstring( cmdsubst_begin, cmdsubst_end-cmdsubst_begin );
+		wcstring buff = wcstring( cmdsubst_begin, cmdsubst_end-cmdsubst_begin );
 
 		int had_cmd=0;
 		int end_loop=0;
@@ -1805,11 +1803,9 @@ void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_t
 						if( !is_ddash ||
 						    ( (use_command && use_function && use_builtin ) ) )
 						{
-							int token_end;
-							
 							current_command = ncmd;
 							
-							token_end = tok_get_pos( &tok ) + ncmd.size();
+							size_t token_end = tok_get_pos( &tok ) + ncmd.size();
 							
 							on_command = (pos <= token_end );
 							had_cmd=1;

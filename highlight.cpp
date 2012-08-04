@@ -565,7 +565,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 			{
 				if( c == L'\\' )
 				{
-					int start_pos = in_pos;
+					size_t start_pos = in_pos;
 					switch( buff[++in_pos] )
 					{
 						case '\\':
@@ -609,7 +609,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
                         
 					case '\\':
 					{
-						int start_pos = in_pos;
+						size_t start_pos = in_pos;
 						switch( buff[++in_pos] )
 						{
 							case L'\0':

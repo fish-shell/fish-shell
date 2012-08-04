@@ -1692,7 +1692,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				else
 				{
 					errno = 0;
-					pid = (pid_t)wcstol( woptarg, &end, 10 );
+					pid = fish_wcstoi( woptarg, &end, 10 );
 					if( errno || !end || *end )
 					{
 						append_format(stderr_buffer,
@@ -2225,15 +2225,15 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 					break;
 				}
 
-				int sz = mbrtowc( &res, &b, 1, &state );
+				size_t sz = mbrtowc( &res, &b, 1, &state );
 
 				switch( sz )
 				{
-					case -1:
+					case (size_t)(-1):
 						memset (&state, '\0', sizeof (state));
 						break;
 
-					case -2:
+					case (size_t)(-2):
 						break;
 					case 0:
 						eof=1;
@@ -2960,7 +2960,7 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 		int found_job = 0;
 		
 		errno = 0;
-		pid = wcstol( argv[1], &endptr, 10 );
+		pid = fish_wcstoi( argv[1], &endptr, 10 );
 		if( !( *endptr || errno )  )
 		{			
 			j = job_get_from_pid( pid );
@@ -2992,7 +2992,7 @@ static int builtin_fg( parser_t &parser, wchar_t **argv )
 		wchar_t *end;		
 		int pid;
 		errno = 0;
-		pid = abs(wcstol( argv[1], &end, 10 ));
+		pid = abs(fish_wcstoi( argv[1], &end, 10 ));
 		
 		if( *end || errno )
 		{
@@ -3142,7 +3142,7 @@ static int builtin_bg( parser_t &parser, wchar_t **argv )
 		for( i=1; argv[i]; i++ )
 		{
 			errno=0;
-			pid = (int)wcstol( argv[i], &end, 10 );
+			pid = fish_wcstoi( argv[i], &end, 10 );
 			if( errno || pid < 0 || *end || !job_get_from_pid( pid ) )
 			{
 				append_format(stderr_buffer,
@@ -3158,7 +3158,7 @@ static int builtin_bg( parser_t &parser, wchar_t **argv )
 		{
 			for( i=1; !res && argv[i]; i++ )
 			{
-				pid = (int)wcstol( argv[i], 0, 10 );
+				pid = fish_wcstoi( argv[i], 0, 10 );
 				res |= send_to_bg( parser, job_get_from_pid( pid ), *argv);
 			}
 		}
@@ -3497,7 +3497,7 @@ static int builtin_return( parser_t &parser, wchar_t **argv )
 		{
 			wchar_t *end;
 			errno = 0;
-			status = wcstol(argv[1],&end,10);
+			status = fish_wcstoi(argv[1],&end,10);
 			if( errno || *end != 0)
 			{
 				append_format(stderr_buffer,

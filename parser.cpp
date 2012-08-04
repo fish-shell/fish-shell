@@ -1343,7 +1343,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 				}
 
 				errno = 0;
-				p->pipe_write_fd = wcstol( tok_last( tok ), &end, 10 );
+				p->pipe_write_fd = fish_wcstoi( tok_last( tok ), &end, 10 );
 				if( p->pipe_write_fd < 0 || errno || *end )
 				{
 					error( SYNTAX_ERROR,
@@ -1504,7 +1504,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 				new_io.reset(new io_data_t);
 
 				errno = 0;
-				new_io->fd = wcstol( tok_last( tok ),
+				new_io->fd = fish_wcstoi( tok_last( tok ),
 									 &end,
 									 10 );
 				if( new_io->fd < 0 || errno || *end )
@@ -1594,9 +1594,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 									new_io->io_mode = IO_FD;
 									errno = 0;
 									
-									new_io->param1.old_fd = wcstol( target.c_str(),
-																	&end,
-																	10 );
+									new_io->param1.old_fd = fish_wcstoi( target.c_str(), &end, 10 );
 									
 									if( ( new_io->param1.old_fd < 0 ) ||
 										errno || *end )

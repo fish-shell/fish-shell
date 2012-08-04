@@ -141,4 +141,7 @@ int wmkdir( const wcstring &dir, int mode );
 */
 int wrename( const wcstring &oldName, const wcstring &newName );
 
+/** Like wcstol(), but fails on a value outside the range of an int */
+int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base);
+
 #endif

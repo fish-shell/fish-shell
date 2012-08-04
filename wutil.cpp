@@ -423,3 +423,19 @@ int wrename( const wcstring &old, const wcstring &newv )
 	cstring new_narrow =wcs2string(newv);
 	return rename( old_narrow.c_str(), new_narrow.c_str() );
 }
+
+int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base)
+{
+    long ret = wcstol(str, endptr, base);
+    if (ret > INT_MAX)
+    {
+        ret = INT_MAX;
+        errno = ERANGE;
+    }
+    else if (ret < INT_MIN)
+    {
+        ret = INT_MIN;
+        errno = ERANGE;
+    }
+    return (int)ret;
+}

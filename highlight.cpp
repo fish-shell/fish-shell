@@ -40,9 +40,7 @@
 */
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
-static void highlight_universal_internal( const wcstring &buff,
-					  std::vector<int> &color, 
-					  int pos );
+static void highlight_universal_internal( const wcstring &buff, std::vector<int> &color, size_t pos );
 
 /**
    The environment variables used to specify the color of different tokens.
@@ -358,7 +356,7 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 /**
    Highlight operators (such as $, ~, %, as well as escaped characters.
 */
-static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, int pos, wcstring_list_t *error )
+static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, size_t pos, wcstring_list_t *error )
 {
     const wchar_t * const buff = buffstr.c_str();
 	enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
@@ -892,13 +890,12 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
 }
 
 // This function does I/O
-static void tokenize( const wchar_t * const buff, std::vector<int> &color, const int pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars_snapshot_t &vars) {
+static void tokenize( const wchar_t * const buff, std::vector<int> &color, const size_t pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars_snapshot_t &vars) {
     ASSERT_IS_BACKGROUND_THREAD();
     
-	wcstring cmd;    
+	wcstring cmd;
 	int had_cmd=0;
 	wcstring last_cmd;
-	int len;
 
 	int accept_switches = 1;
 	
@@ -908,10 +905,8 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 	
 	CHECK( buff, );
 
-	len = wcslen(buff);
-
-	if( !len )
-		return;
+    if (buff[0] == L'\0')
+        return;
 
     std::fill(color.begin(), color.end(), -1); 
 
@@ -970,11 +965,12 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 					
                     /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
                     const wcstring param_str = param;
-                    int tok_pos = tok_get_pos(&tok);
+                    size_t tok_pos = tok_get_pos(&tok);
                     
                     std::vector<int>::const_iterator where = color.begin() + tok_pos;
                     std::vector<int> subcolors(where, where + param_str.size());
-                    subcolors.push_back(-1);                
+                    subcolors.push_back(-1);
+                    assert(pos >= tok_pos);
                     highlight_param(param_str, subcolors, pos-tok_pos, error);
                                         
                     /* Copy the subcolors back into our colors array */
@@ -1265,7 +1261,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 
 
 // PCA This function does I/O, (calls is_potential_path, path_get_path, maybe others) and so ought to only run on a background thread
-void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars_snapshot_t &vars )
+void highlight_shell( const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars )
 {
     ASSERT_IS_BACKGROUND_THREAD();
     
@@ -1346,7 +1342,7 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 	  are the current token.
       For reasons that I don't yet understand, it's required that pos be allowed to be length (e.g. when backspacing).
 	*/
-	if( pos >= 0 && (size_t)pos <= length )
+	if( pos <= length )
 	{
 		
         const wchar_t *cbuff = buff.c_str();
@@ -1389,12 +1385,10 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, int pos, wc
 /**
    Perform quote and parenthesis highlighting on the specified string.
 */
-static void highlight_universal_internal( const wcstring &buffstr,
-										 std::vector<int> &color, 
-										 int pos )
+static void highlight_universal_internal( const wcstring &buffstr, std::vector<int> &color, size_t pos )
 {	
     assert(buffstr.size() == color.size());
-	if( (pos >= 0) && ((size_t)pos < buffstr.size()) )
+	if( pos < buffstr.size() )
 	{
 		
 		/*
@@ -1498,7 +1492,7 @@ static void highlight_universal_internal( const wcstring &buffstr,
 	}
 }
 
-void highlight_universal( const wcstring &buff, std::vector<int> &color, int pos, wcstring_list_t *error, const env_vars_snapshot_t &vars )
+void highlight_universal( const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars )
 {
     assert(buff.size() == color.size());
     std::fill(color.begin(), color.end(), 0);	

@@ -788,9 +788,9 @@ static int expand_pid( const wcstring &instr_with_sep,
 }
 
 
-void expand_variable_error( parser_t &parser, const wchar_t *token, int token_pos, int error_pos )
+void expand_variable_error( parser_t &parser, const wchar_t *token, size_t token_pos, int error_pos )
 {
-	int stop_pos = token_pos+1;
+	size_t stop_pos = token_pos+1;
 	
 	switch( token[stop_pos] )
 	{
@@ -873,11 +873,12 @@ void expand_variable_error( parser_t &parser, const wchar_t *token, int token_po
 /**
    Parse an array slicing specification
  */
-static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, int size )
+static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, size_t array_size )
 {
 	wchar_t *end;
 	
-	int pos = 1;
+    const long size = (long)array_size;
+	size_t pos = 1; //skip past the opening square bracket
     
     //	debug( 0, L"parse_slice on '%ls'", in );
 	
@@ -902,7 +903,7 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
 		}
         //		debug( 0, L"Push idx %d", tmp );
 		
-		long i1 = tmp>-1 ? tmp : size+tmp+1;
+		long i1 = tmp>-1 ? tmp : (long)array_size+tmp+1;
 		pos = end-in;
 		while( in[pos]==INTERNAL_SEPARATOR )
 			pos++;		
@@ -959,16 +960,16 @@ static int parse_slice( const wchar_t *in, wchar_t **end_ptr, std::vector<long> 
    happens, don't edit it unless you know exactly what you are doing,
    and do proper testing afterwards.
 */
-static int expand_variables_internal( parser_t &parser, wchar_t * const in, std::vector<completion_t> &out, int last_idx );
+static int expand_variables_internal( parser_t &parser, wchar_t * const in, std::vector<completion_t> &out, long last_idx );
 
-static int expand_variables2( parser_t &parser, const wcstring &instr, std::vector<completion_t> &out, int last_idx ) {
+static int expand_variables2( parser_t &parser, const wcstring &instr, std::vector<completion_t> &out, long last_idx ) {
     wchar_t *in = wcsdup(instr.c_str());
     int result = expand_variables_internal(parser, in, out, last_idx);
     free(in);
     return result;
 }
 
-static int expand_variables_internal( parser_t &parser, wchar_t * const in, std::vector<completion_t> &out, int last_idx )
+static int expand_variables_internal( parser_t &parser, wchar_t * const in, std::vector<completion_t> &out, long last_idx )
 {
 	int is_ok= 1;
 	int empty=0;
@@ -978,14 +979,14 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
     
     //	CHECK( out, 0 );
 	
-	for( int i=last_idx; (i>=0) && is_ok && !empty; i-- )
+	for( long i=last_idx; (i>=0) && is_ok && !empty; i-- )
 	{
 		const wchar_t c = in[i];
 		if( ( c == VARIABLE_EXPAND ) || (c == VARIABLE_EXPAND_SINGLE ) )
 		{
-			int start_pos = i+1;
-			int stop_pos;
-			int var_len;
+			long start_pos = i+1;
+			long stop_pos;
+			long var_len;
 			int is_single = (c==VARIABLE_EXPAND_SINGLE);
 			
 			stop_pos = start_pos;
@@ -1185,7 +1186,7 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 	const wchar_t *last_sep=0;
 
 	const wchar_t *item_begin;
-	int len1, len2, tot_len;
+	size_t len1, len2, tot_len;
 
 	CHECK( in, 0 );
 //	CHECK( out, 0 );
@@ -1276,7 +1277,8 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 			if( (*pos == BRACKET_SEP) || (pos==bracket_end) )
 			{
 				wchar_t *whole_item;
-				int item_len = pos-item_begin;
+                assert(pos >= item_begin);
+				size_t item_len = pos-item_begin;
 
 				whole_item = (wchar_t *)malloc( sizeof(wchar_t)*(tot_len + item_len + 1) );
 				wcslcpy( whole_item, in, len1+1 );
@@ -1310,7 +1312,6 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector<completion_t> &outList )
 {
 	wchar_t *paran_begin=0, *paran_end=0;
-	int len1;
     std::vector<wcstring> sub_res;
 	size_t i, j;
 	wchar_t *tail_begin = 0;	
@@ -1335,9 +1336,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
             
 			break;
 	}
-    
-	len1 = (paran_begin-in);
-    
+        
     const wcstring subcmd(paran_begin + 1, paran_end-paran_begin - 1);
     
 	if( exec_subshell( subcmd, sub_res) == -1 )
@@ -1407,7 +1406,7 @@ static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector
             wcstring tail_item = tail_expand.at(j).completion;
             
             //sb_append_substring( &whole_item, in, len1 );
-            whole_item.append(in, len1);
+            whole_item.append(in, paran_begin-in);
             
             //sb_append_char( &whole_item, INTERNAL_SEPARATOR );
             whole_item.push_back(INTERNAL_SEPARATOR);

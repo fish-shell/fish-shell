@@ -369,7 +369,7 @@ static int interrupted=0;
 */
 static struct termios saved_modes;
 
-static void reader_super_highlight_me_plenty( int pos );
+static void reader_super_highlight_me_plenty( size_t pos );
 
 /**
    Variable to keep track of forced exits - see \c reader_exit_forced();
@@ -465,7 +465,7 @@ static void reader_repaint()
 /**
    Internal helper function for handling killing parts of text.
 */
-static void reader_kill( size_t begin_idx, int length, int mode, int newv )
+static void reader_kill( size_t begin_idx, size_t length, int mode, int newv )
 {
     const wchar_t *begin = data->command_line.c_str() + begin_idx;
 	if( newv )
@@ -773,7 +773,8 @@ static int insert_string(const wcstring &str)
     data->command_line_changed();
     data->suppress_autosuggestion = false;
     
-	/* Syntax highlight  */
+	/* Syntax highlight. Note we must have that buff_pos > 0 because we just added something nonzero to its length  */
+    assert(data->buff_pos > 0);
 	reader_super_highlight_me_plenty( data->buff_pos-1 );
 	
 	reader_repaint();
@@ -1959,8 +1960,8 @@ static void move_word( int dir, int erase, int newv )
 
 	if( erase )
 	{
-		int remove_count = abs(data->buff_pos - end_buff_pos);
-		int first_char = mini( data->buff_pos, end_buff_pos );
+		size_t remove_count = labs(data->buff_pos - end_buff_pos);
+		long first_char = mini( data->buff_pos, end_buff_pos );
 //		fwprintf( stderr, L"Remove from %d to %d\n", first_char, first_char+remove_count );
 		
 		reader_kill( first_char, remove_count, dir?KILL_APPEND:KILL_PREPEND, newv );
@@ -1985,24 +1986,21 @@ history_t *reader_get_history(void) {
 	return data ? data->history : NULL;
 }
 
-void reader_set_buffer( const wcstring &b, size_t p )
+void reader_set_buffer( const wcstring &b, size_t pos )
 {
 	if( !data )
 		return;
 
     /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
-	size_t l = b.size();
+	size_t command_line_len = b.size();
     data->command_line = b;
     data->command_line_changed();
 
-	if( p>=0 )
-	{
-		data->buff_pos=mini( (size_t)p, l );
-	}
-	else
-	{
-		data->buff_pos=l;
-	}
+    /* Don't set a position past the command line length */
+    if (pos > command_line_len)
+        pos = command_line_len;
+        
+    data->buff_pos = pos;
 
 	data->search_mode = NO_SEARCH;
 	data->search_buff.clear();
@@ -2217,7 +2215,7 @@ public:
 	std::vector<color_t> colors;
 	
 	/** The position to use for bracket matching */
-	const int match_highlight_pos;
+	const size_t match_highlight_pos;
 	
 	/** Function for syntax highlighting */
 	const highlight_function_t highlight_function;
@@ -2231,24 +2229,26 @@ public:
     /** Gen count at the time the request was made */
     const unsigned int generation_count;
     
-    background_highlight_context_t(const wcstring &pbuff, int phighlight_pos, highlight_function_t phighlight_func) :
+    background_highlight_context_t(const wcstring &pbuff, size_t phighlight_pos, highlight_function_t phighlight_func) :
         string_to_highlight(pbuff),
+        colors(pbuff.size(), 0),
         match_highlight_pos(phighlight_pos),
         highlight_function(phighlight_func),
         vars(env_vars_snapshot_t::highlighting_keys),
         when(timef()),
         generation_count(s_generation_count)
     {
-        colors.resize(string_to_highlight.size(), 0);
     }
     
     int threaded_highlight() {
-        if (generation_count != s_generation_count) {
+        if (generation_count != s_generation_count)
+        {
             // The gen count has changed, so don't do anything
             return 0;
         }
-        if (! string_to_highlight.empty()) {
-            highlight_function( string_to_highlight.c_str(), colors, match_highlight_pos, NULL /* error */, vars);
+        if (! string_to_highlight.empty())
+        {
+            highlight_function( string_to_highlight, colors, match_highlight_pos, NULL /* error */, vars);
         }
         return 0;
     }
@@ -2262,10 +2262,8 @@ static void highlight_search(void) {
 		const wchar_t *match = wcsstr( buff, data->search_buff.c_str() );
 		if( match )
 		{
-			int start = match-buff;
-			int count = data->search_buff.size();
-			int i;
-
+			size_t start = match-buff;
+			size_t i, count = data->search_buff.size();
 			for( i=0; i<count; i++ )
 			{
 				data->colors.at(start+i) |= HIGHLIGHT_SEARCH_MATCH<<16;
@@ -2308,7 +2306,7 @@ static int threaded_highlight(background_highlight_context_t *ctx) {
    \param match_highlight_pos the position to use for bracket matching. This need not be the same as the surrent cursor position
    \param error if non-null, any possible errors in the buffer are further descibed by the strings inserted into the specified arraylist
 */
-static void reader_super_highlight_me_plenty( int match_highlight_pos )
+static void reader_super_highlight_me_plenty( size_t match_highlight_pos )
 {
     reader_sanity_check();
     
@@ -2724,7 +2722,6 @@ const wchar_t *reader_readline()
                 const wchar_t *buff = data->command_line.c_str();
 				const wchar_t *begin = &buff[data->buff_pos];
 				const wchar_t *end = begin;
-				long len;
 								
 				while( *end && *end != L'\n' )
 					end++;
@@ -2732,8 +2729,7 @@ const wchar_t *reader_readline()
 				if( end==begin && *end )
 					end++;
 				
-				len = end-begin;
-				
+				size_t len = end-begin;				
 				if( len )
 				{
 					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE );
@@ -2749,7 +2745,6 @@ const wchar_t *reader_readline()
                     const wchar_t *buff = data->command_line.c_str();
 					const wchar_t *end = &buff[data->buff_pos];
 					const wchar_t *begin = end;
-					long len;
 					
 					while( begin > buff  && *begin != L'\n' )
 						begin--;
@@ -2757,7 +2752,7 @@ const wchar_t *reader_readline()
 					if( *begin == L'\n' )
 						begin++;
 					
-					len = maxi( end-begin, 1L );
+					size_t len = maxi( end-begin, 1L );
 					begin = end - len;
 										
 					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );					
@@ -2772,7 +2767,7 @@ const wchar_t *reader_readline()
                 const wchar_t *buff = data->command_line.c_str();
 				const wchar_t *end = &buff[data->buff_pos];
 				const wchar_t *begin = end;
-				int len;
+				size_t len;
 		
 				while( begin > buff  && *begin != L'\n' )
 					begin--;

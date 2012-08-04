@@ -400,10 +400,10 @@ static void s_check_status( screen_t *s)
 		  earlier value. 
 		*/
 		
-		int prev_line = s->actual.cursor[1];
+		int prev_line = s->actual.cursor.y;
 		write_loop( 1, "\r", 1 );
 		s_reset( s, false );
-		s->actual.cursor[1] = prev_line;
+		s->actual.cursor.y = prev_line;
 	}
 }
 
@@ -418,7 +418,7 @@ static void s_desired_append_char( screen_t *s,
 				   int indent,
 				   size_t prompt_width )
 {
-	int line_no = s->desired.cursor[1];
+	int line_no = s->desired.cursor.y;
 	
 	switch( b )
 	{
@@ -426,8 +426,8 @@ static void s_desired_append_char( screen_t *s,
 		{
 			int i;
             s->desired.create_line(s->desired.line_count());
-			s->desired.cursor[1]++;
-			s->desired.cursor[0]=0;
+			s->desired.cursor.y++;
+			s->desired.cursor.x=0;
 			for( i=0; i < prompt_width+indent*INDENT_STEP; i++ )
 			{
 				s_desired_append_char( s, L' ', 0, indent, prompt_width );
@@ -439,7 +439,7 @@ static void s_desired_append_char( screen_t *s,
 		{
             line_t &current = s->desired.line(line_no);
             current.clear();
-            s->desired.cursor[0] = 0;
+            s->desired.cursor.x = 0;
 			break;			
 		}		
 
@@ -456,14 +456,14 @@ static void s_desired_append_char( screen_t *s,
 			  Check if we are at the end of the line. If so, print an
 			  ellipsis character and continue on the next line.
 			*/
-			if( s->desired.cursor[0] + cw + ew > screen_width )
+			if( s->desired.cursor.x + cw + ew > screen_width )
 			{
                 s->desired.line(line_no).append(ellipsis_char, HIGHLIGHT_COMMENT);
                 
                 line_no = (int)s->desired.line_count();
                 s->desired.add_line();
-				s->desired.cursor[1]++;
-				s->desired.cursor[0]=0;
+				s->desired.cursor.y++;
+				s->desired.cursor.x=0;
 				for( i=0; i < (prompt_width-ew); i++ )
 				{
 					s_desired_append_char( s, L' ', 0, indent, prompt_width );
@@ -473,7 +473,7 @@ static void s_desired_append_char( screen_t *s,
 			
             line_t &line = s->desired.line(line_no);
             line.append(b, c);
-			s->desired.cursor[0]+= cw;
+			s->desired.cursor.x+= cw;
 			break;
 		}
 	}
@@ -512,7 +512,7 @@ static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 */
     scoped_buffer_t scoped_buffer(b);
     	
-	y_steps = new_y - s->actual.cursor[1];
+	y_steps = new_y - s->actual.cursor.y;
 
 	if( y_steps > 0 && (strcmp( cursor_down, "\n")==0))
 	{	
@@ -523,7 +523,7 @@ static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 		  as moving it down one step. The cursor_up does not have this
 		  behaviour...
 		*/
-		s->actual.cursor[0]=0;
+		s->actual.cursor.x=0;
 	}
 	
 	if( y_steps < 0 )
@@ -542,7 +542,7 @@ static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 	}
 
 
-	x_steps = new_x - s->actual.cursor[0];
+	x_steps = new_x - s->actual.cursor.x;
 	
 	if( x_steps && new_x == 0 )
 	{
@@ -565,8 +565,8 @@ static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
 	}
 
 
-	s->actual.cursor[0] = new_x;
-	s->actual.cursor[1] = new_y;
+	s->actual.cursor.x = new_x;
+	s->actual.cursor.y = new_y;
 }
 
 /**
@@ -588,7 +588,7 @@ static void s_set_color( screen_t *s, data_buffer_t *b, int c )
 static void s_write_char( screen_t *s, data_buffer_t *b, wchar_t c )
 {
 	scoped_buffer_t scoped_buffer(b);
-	s->actual.cursor[0]+=fish_wcwidth( c );	
+	s->actual.cursor.x+=fish_wcwidth( c );
 	writech( c );
 }
 
@@ -601,7 +601,7 @@ static int s_write_string( screen_t *s, data_buffer_t *b, const wcstring &str )
 	scoped_buffer_t scoped_buffer(b);
     int width = fish_wcswidth(str.c_str(), str.size());
 	writestr(str.c_str());
-    s->actual.cursor[0] += width;
+    s->actual.cursor.x += width;
     return width;
 }
 
@@ -673,7 +673,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 		s_move( scr, &output, 0, 0 );
 		s_write_str( &output, prompt );
         scr->actual_prompt = prompt;
-		scr->actual.cursor[0] = (int)prompt_width;
+		scr->actual.cursor.x = (int)prompt_width;
 	}
 	
     for (size_t i=0; i < scr->desired.line_count(); i++)
@@ -746,7 +746,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 		s_write_mbs( &output, clr_eol);
 	}
 	
-	s_move( scr, &output, scr->desired.cursor[0], scr->desired.cursor[1] );
+	s_move( scr, &output, scr->desired.cursor.x, scr->desired.cursor.y );
 	s_set_color( scr, &output, 0xffffffff);
 
 	if( ! output.empty() )
@@ -776,7 +776,7 @@ void s_write( screen_t *s,
 	      const int *indent,
 	      size_t cursor_pos )
 {
-	int cursor_arr[2];
+	screen_data_t::cursor_t cursor_arr;
 
 	size_t prompt_width;
 	size_t screen_width;
@@ -863,7 +863,7 @@ void s_write( screen_t *s,
 		max_line_width = current_line_width;
 
     s->desired.resize(0);
-	s->desired.cursor[0] = s->desired.cursor[1] = 0;
+	s->desired.cursor.x = s->desired.cursor.y = 0;
     
     /* If we cannot fit with the autosuggestion, but we can fit without it, truncate the autosuggestion. We limit this check to just one line to avoid confusion; not sure how well this would work with multiple lines */
     wcstring truncated_autosuggestion_line;
@@ -901,13 +901,12 @@ void s_write( screen_t *s,
 		
 		if( i == cursor_pos )
 		{
-			cursor_arr[0] = s->desired.cursor[0];
-			cursor_arr[1] = s->desired.cursor[1];
+            cursor_arr = s->desired.cursor;
 		}
 		
 		s_desired_append_char( s, commandline[i], col, indent[i], prompt_width );
 		
-		if( i== cursor_pos && s->desired.cursor[1] != cursor_arr[1] && commandline[i] != L'\n' )
+		if( i== cursor_pos && s->desired.cursor.y != cursor_arr.y && commandline[i] != L'\n' )
 		{
 			/*
 			   Ugh. We are placed exactly at the wrapping point of a
@@ -915,16 +914,16 @@ void s_write( screen_t *s,
 			   cursor won't be on the ellipsis which looks
 			   unintuitive.
 			*/
-			cursor_arr[0] = s->desired.cursor[0] - fish_wcwidth(commandline[i]);
-			cursor_arr[1] = s->desired.cursor[1];
+			cursor_arr.x = s->desired.cursor.x - fish_wcwidth(commandline[i]);
+			cursor_arr.y = s->desired.cursor.y;
 		}
 	}
 	if( i == cursor_pos )
 	{
-		memcpy(cursor_arr, s->desired.cursor, sizeof(int)*2);
+        cursor_arr = s->desired.cursor;
 	}
 	
-	memcpy( s->desired.cursor, cursor_arr, sizeof(int)*2 );
+    s->desired.cursor = cursor_arr;
 	s_update( s, prompt );
 	s_save_status( s );
 }
@@ -933,9 +932,9 @@ void s_reset( screen_t *s, bool reset_cursor )
 {
 	CHECK( s, );
 
-	int prev_line = s->actual.cursor[1];
+	int prev_line = s->actual.cursor.y;
     s->actual.resize(0);
-	s->actual.cursor[0] = s->actual.cursor[1] = 0;
+	s->actual.cursor.x = s->actual.cursor.y = 0;
     s->actual_prompt = L"";
 	s->need_clear=1;
 
@@ -946,7 +945,7 @@ void s_reset( screen_t *s, bool reset_cursor )
 		  next repaint.
 		*/
 		write_loop( 1, "\r", 1 );
-		s->actual.cursor[1] = prev_line;
+		s->actual.cursor.y = prev_line;
 	}
 	fstat( 1, &s->prev_buff_1 );
 	fstat( 2, &s->prev_buff_2 );

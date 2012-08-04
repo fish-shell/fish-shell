@@ -60,7 +60,10 @@ class screen_data_t
     
     public:
     
-    int cursor[2];
+    struct cursor_t {
+        int x;
+        int y;
+    } cursor;
     
     line_t &add_line(void) {
         line_datas.resize(line_datas.size() + 1);

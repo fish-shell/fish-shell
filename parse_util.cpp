@@ -53,7 +53,10 @@
 
 int parse_util_lineno( const wchar_t *str, size_t offset )
 {
-	int res = 0;
+	if (! str)
+		return 0;
+
+	int res = 1;
 	for( size_t i=0; str[i] && i<offset; i++ )
 	{
 		if( str[i] == L'\n' )

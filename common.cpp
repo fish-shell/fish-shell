@@ -618,7 +618,7 @@ __sentinel bool contains_internal( const wcstring &needle, ... )
 	return res;
 }
 
-int read_blocked(int fd, void *buf, size_t count)
+long read_blocked(int fd, void *buf, size_t count)
 {
 	ssize_t res;
 	sigset_t chldset, oldset; 
@@ -628,7 +628,7 @@ int read_blocked(int fd, void *buf, size_t count)
 	VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &chldset, &oldset));
 	res = read( fd, buf, count );
 	VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &oldset, NULL));
-	return (int)res;
+	return res;
 }
 
 ssize_t write_loop(int fd, const char *buff, size_t count)

@@ -61,8 +61,7 @@ static const wchar_t *current_buffer=0;
    What the commandline builtin considers to be the current cursor
    position.
  */
-static const size_t kInvalidCursorPosition = (size_t)(-1);
-static size_t current_cursor_pos = kInvalidCursorPosition;
+static size_t current_cursor_pos = (size_t)(-1);
 
 /**
    Returns the current commandline buffer.

@@ -384,10 +384,10 @@ int wcs2sig( const wchar_t *str )
 		}
 	}
 	errno=0;
-	long res = wcstol( str, &end, 10 );
-	if( !errno && res>=0 && res <= INT_MAX && !*end )
-		return (int)res;
-	
+	int res = fish_wcstoi( str, &end, 10 );
+	if( !errno && res>=0 && !*end )
+		return res;
+
 	return -1;	
 }
 

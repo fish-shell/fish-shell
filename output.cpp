@@ -161,7 +161,7 @@ static bool write_color(char *todo, unsigned char idx, bool is_fg) {
     } else {
         /* We are attempting to bypass the term here. Generate the ANSI escape sequence ourself. */
         char stridx[128];
-        format_long_safe(stridx, (long)idx);
+        format_long_safe(stridx, idx);
         char buff[128] = "\x1b[";
         strcat(buff, is_fg ? "38;5;" : "48;5;");
         strcat(buff, stridx);

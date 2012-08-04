@@ -95,6 +95,8 @@ static void exec_write_and_exit( int fd, const char *buff, size_t count, int sta
 
 void exec_close( int fd )
 {
+    ASSERT_IS_MAIN_THREAD();
+    
     /* This may be called in a child of fork(), so don't allocate memory */
 	if( fd < 0 )
 	{
@@ -113,7 +115,7 @@ void exec_close( int fd )
 	}
 	
     /* Maybe remove this from our set of open fds */
-    if (fd < (int)open_fds.size()) {
+    if (fd < open_fds.size()) {
         open_fds[fd] = false;
     }
 }
@@ -134,7 +136,7 @@ int exec_pipe( int fd[2])
 	debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
 	
     int max_fd = std::max(fd[0], fd[1]);
-    if ((int)open_fds.size() <= max_fd) {
+    if (open_fds.size() <= max_fd) {
         open_fds.resize(max_fd + 1, false);
     }
     open_fds.at(fd[0]) = true;

@@ -583,7 +583,7 @@ __sentinel bool contains_internal( const wcstring &needle, ... );
    if you _know_ there is data available for reading, or the program
    will hang until there is data.
 */
-int read_blocked(int fd, void *buf, size_t count);
+long read_blocked(int fd, void *buf, size_t count);
 
 /**
    Loop a write request while failiure is non-critical. Return -1 and set errno

@@ -1313,7 +1313,7 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, size_t pos,
         
         // highlight the end of the subcommand
         assert(end >= subbuff);
-        if ((size_t)(end - subbuff) < length) {
+        if ((end - subbuff) < length) {
             color.at(end-subbuff)=HIGHLIGHT_OPERATOR;
         }
 		
@@ -1418,7 +1418,7 @@ static void highlight_universal_internal( const wcstring &buffstr, std::vector<i
 						if( level == 0 )
 						{
 							level++;
-                            lst.push_back((long)(str-buff));
+                            lst.push_back(str-buff);
 							prev_q = *str;
 						}
 						else
@@ -1442,7 +1442,7 @@ static void highlight_universal_internal( const wcstring &buffstr, std::vector<i
 							else
 							{
 								level++;
-                                lst.push_back((long)(str-buff));
+                                lst.push_back(str-buff);
 								prev_q = *str;
 							}
 						}

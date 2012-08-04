@@ -444,7 +444,9 @@ static void reader_repaint()
 	parser_t::principal_parser().test( data->command_line.c_str(), &data->indents[0], 0, 0 );
 	    
     wcstring full_line = (data->autosuggestion.empty() ? data->command_line : data->autosuggestion);
-    size_t len = std::max((size_t)1, full_line.size());
+    size_t len = full_line.size();
+    if (len < 1)
+        len = 1;
     
     std::vector<color_t> colors = data->colors;
     colors.resize(len, HIGHLIGHT_AUTOSUGGESTION);

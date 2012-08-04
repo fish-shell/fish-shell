@@ -494,7 +494,7 @@ static void completion_print( int cols,
 
 			int is_last = (j==(cols-1));
 			
-			if( (int)lst.size() <= j*rows + i )
+			if( lst.size() <= j*rows + i )
 				continue;
 
 			el = lst.at(j*rows + i );
@@ -872,11 +872,9 @@ static void mangle_descriptions( wcstring_list_t &lst )
 */
 static void join_completions( wcstring_list_t lst )
 {
-	long i;
-    
     std::map<wcstring, long> desc_table;
 
-	for( i=0; i<(long)lst.size(); i++ )
+	for( size_t i=0; i<lst.size(); i++ )
 	{
 		const wchar_t *item = lst.at(i).c_str();
 		const wchar_t *desc = wcschr( item, COMPLETE_SEP );

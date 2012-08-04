@@ -528,7 +528,7 @@ static void event_fire_delayed()
 		/*
 		  Send all signals in our private list
 		*/
-		for( i=0; i<(size_t)lst->count; i++ )
+		for( int i=0; i < lst->count; i++ )
 		{
 			e.param1.signal = lst->signal[i];
             e.arguments->at(0) = sig2wcs( e.param1.signal );

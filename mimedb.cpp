@@ -1033,13 +1033,13 @@ static void write_file( const char *file, int print_path )
    \param files the list of files for which to perform the action
    \param fileno an internal value. Should always be set to zero.
 */
-static void launch( char *filter, const string_list_t &files, int fileno )
+static void launch( char *filter, const string_list_t &files, size_t fileno )
 {
 	char *filter_org=filter;
 	int count=0;
 	int launch_again=0;
 	
-	if( (int)files.size() <= fileno )
+	if( files.size() <= fileno )
 		return;
 	
 	

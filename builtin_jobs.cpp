@@ -292,10 +292,10 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 
 			for( i=woptind; i<argc; i++ )
 			{
-				long pid;
+				int pid;
 				wchar_t *end;
 				errno=0;
-				pid=wcstol( argv[i], &end, 10 );
+				pid=fish_wcstoi( argv[i], &end, 10 );
 				if( errno || *end )
 				{
 					append_format(stderr_buffer,
@@ -305,7 +305,7 @@ static int builtin_jobs( parser_t &parser, wchar_t **argv )
 					return 1;
 				}
 
-				j = job_get_from_pid( (int)pid );
+				j = job_get_from_pid( pid );
 
 				if( j && !job_is_completed( j ) )
 				{

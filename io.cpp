@@ -64,7 +64,7 @@ void io_buffer_read( io_data_t *d )
 		while(1)
 		{
 			char b[4096];
-			int l;
+			long l;
 			l=read_blocked( d->param1.pipe_fd[0], b, 4096 );
 			if( l==0 )
 			{

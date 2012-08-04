@@ -198,41 +198,6 @@ static void handle_term( int signal )
 
 
 /**
- Writes a pid_t in decimal representation to str.
- str must contain sufficient space.
- The conservatively approximate maximum number of characters a pid_t will 
- represent is given by: (int)(0.31 * sizeof(pid_t) + CHAR_BIT + 1)
- Returns the length of the string
- */
-static int sprint_pid_t( pid_t pid, char *str )
-{
-	int len, i = 0;
-	int dig;
-    
-	/* Store digits in reverse order into string */
-	while( pid != 0 )
-	{
-		dig = pid % 10;
-		str[i] = '0' + dig;
-		pid = ( pid - dig ) / 10;
-		i++;
-	}
-	len = i;
-	/* Reverse digits */
-	i /= 2;
-	while( i )
-	{
-		i--;
-		dig = str[i];
-		str[i] = str[len -  1 - i];
-		str[len - 1 - i] = dig;
-	}
-	return len;
-}
-
-
-
-/**
  Writes a pseudo-random number (between one and maxlen) of pseudo-random
  digits into str.
  str must point to an allocated buffer of size of at least maxlen chars.
@@ -247,7 +212,7 @@ static int sprint_pid_t( pid_t pid, char *str )
  Excludes chars other than digits since ANSI C only guarantees that digits
  are consecutive.
  */
-static int sprint_rand_digits( char *str, int maxlen )
+static void sprint_rand_digits( char *str, int maxlen )
 {
 	int i, max;
 	struct timeval tv;
@@ -265,7 +230,7 @@ static int sprint_rand_digits( char *str, int maxlen )
 	{
 		str[i] = '0' + 10 * (rand() / (RAND_MAX + 1.0));
 	}
-	return i;
+	str[i] = 0;
 }
 
 
@@ -278,45 +243,22 @@ static int sprint_rand_digits( char *str, int maxlen )
  fallback.
  The memory returned should be freed using free().
  */
-static char *gen_unique_nfs_filename( const char *filename )
+static std::string gen_unique_nfs_filename( const char *filename )
 {
-	size_t pidlen, hnlen, orglen = strlen( filename );
-	char hostname[HOST_NAME_MAX + 1];
-	char *newname;
+	char hostname[HOST_NAME_MAX + 1];    
+    char pid_str[256];
+    snprintf(pid_str, sizeof pid_str, "%ld", (long)getpid());
 	
-	if ( gethostname( hostname, HOST_NAME_MAX + 1 ) == 0 )
-	{
-		hnlen = strlen( hostname );
+	if ( gethostname( hostname, sizeof hostname ) != 0 )
+    {
+		sprint_rand_digits( hostname, HOST_NAME_MAX );
 	}
-	else
-	{
-		hnlen = sprint_rand_digits( hostname, HOST_NAME_MAX );
-		hostname[hnlen] = '\0';
-	}
-	newname = (char *)malloc( orglen + 1 /* period */ + hnlen + 1 /* period */ +
-                             /* max possible pid size: 0.31 ~= log(10)2 */
-                             (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1)
-                             + 1 /* '\0' */ );
-	
-	if ( newname == NULL )
-	{
-		debug( 1, L"gen_unique_nfs_filename: %s", strerror( errno ) );
-		return newname;
-	}
-	memcpy( newname, filename, orglen );
-	newname[orglen] = '.';
-	memcpy( newname + orglen + 1, hostname, hnlen );
-	newname[orglen + 1 + hnlen] = '.';
-	pidlen = sprint_pid_t( getpid(), newname + orglen + 1 + hnlen + 1 );
-	newname[orglen + 1 + hnlen + 1 + pidlen] = '\0';
-    /*	debug( 1, L"gen_unique_nfs_filename returning with: newname = \"%s\"; "
-     L"HOST_NAME_MAX = %d; hnlen = %d; orglen = %d; "
-     L"sizeof(pid_t) = %d; maxpiddigits = %d; malloc'd size: %d", 
-     newname, (int)HOST_NAME_MAX, hnlen, orglen, 
-     (int)sizeof(pid_t), 
-     (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1),
-     (int)(orglen + 1 + hnlen + 1 + 
-     (int)(0.31 * sizeof(pid_t) * CHAR_BIT + 1) + 1) ); */
+    
+    std::string newname(filename);
+	newname.push_back('.');
+    newname.append(hostname);
+    newname.push_back('.');
+    newname.append(pid_str);    
 	return newname;
 }
 
@@ -348,11 +290,8 @@ static int acquire_lock_file( const char *lockfile, const int timeout, int force
 	/*
      (Re)create a unique file and check that it has one only link.
      */
-	char *linkfile = gen_unique_nfs_filename( lockfile );
-	if( linkfile == NULL )
-	{
-		goto done;
-	}
+	const std::string linkfile_str = gen_unique_nfs_filename( lockfile );
+    const char * const linkfile = linkfile_str.c_str();
 	(void)unlink( linkfile );
     /* OK to not use CLO_EXEC here because fishd is single threaded */
 	if( ( fd = open( linkfile, O_CREAT|O_RDONLY, 0600 ) ) == -1 )
@@ -439,7 +378,6 @@ static int acquire_lock_file( const char *lockfile, const int timeout, int force
 done:
 	/* The linkfile is not needed once the lockfile has been created */
 	(void)unlink( linkfile );
-	free( linkfile );
 	return ret;
 }
 

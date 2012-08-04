@@ -132,7 +132,7 @@ size_t parse_util_get_offset( const wcstring &str, int line, long line_offset )
 	
 	if( off2 == (size_t)(-1) )
 	{
-		off2 = (int)(wcslen( buff )+1);
+		off2 = wcslen( buff )+1;
 	}
 	
 	if( line_offset2 < 0 )

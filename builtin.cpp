@@ -2218,8 +2218,7 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 			while( !finished )
 			{
 				char b;
-				int read_res = read_blocked( builtin_stdin, &b, 1 );
-				if( read_res <= 0 )
+				if( read_blocked( builtin_stdin, &b, 1 ) <= 0 )
 				{
 					eof=1;
 					break;

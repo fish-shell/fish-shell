@@ -377,8 +377,8 @@ static void mark_process_status( const job_t *j,
 		char mess[MESS_SIZE];
 		snprintf( mess,
 				  MESS_SIZE,
-				  "Process %d exited abnormally\n",
-				  (int) p->pid );
+				  "Process %ld exited abnormally\n",
+				  (long) p->pid );
 		/*
 		  If write fails, do nothing. We're in a signal handlers error
 		  handler. If things aren't working properly, it's safer to
@@ -866,7 +866,7 @@ static void read_try( job_t *j )
 		while(1)
 		{
 			char b[BUFFER_SIZE];
-			int l;
+			long l;
 			
 			l=read_blocked( buff->param1.pipe_fd[0],
 					b, BUFFER_SIZE );

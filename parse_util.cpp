@@ -51,53 +51,10 @@
 */
 #define AUTOLOAD_MIN_AGE 60
 
-
-int parse_util_lineno( const wchar_t *str, int len )
+int parse_util_lineno( const wchar_t *str, size_t offset )
 {
-	/**
-	   First cached state
-	*/
-	static wchar_t *prev_str = 0;
-	static int i=0;
-	static int res = 1;
-
-	/**
-	   Second cached state
-	*/
-	static wchar_t *prev_str2 = 0;
-	static int i2 = 0;
-	static int res2 = 1;
-
-	CHECK( str, 0 );
-
-	if( str != prev_str || i>len )
-	{
-		if( prev_str2 == str && i2 <= len )
-		{
-			wchar_t *tmp_str = prev_str;
-			int tmp_i = i;
-			int tmp_res = res;
-			prev_str = prev_str2;
-			i=i2;
-			res=res2;
-			
-			prev_str2 = tmp_str;
-			i2 = tmp_i;
-			res2 = tmp_res;
-		}
-		else
-		{
-			prev_str2 = prev_str;
-			i2 = i;
-			res2=res;
-				
-			prev_str = (wchar_t *)str;
-			i=0;
-			res=1;
-		}
-	}
-	
-	for( ; str[i] && i<len; i++ )
+	int res = 0;
+	for( size_t i=0; str[i] && i<offset; i++ )
 	{
 		if( str[i] == L'\n' )
 		{
@@ -108,18 +65,11 @@ int parse_util_lineno( const wchar_t *str, int len )
 }
 
 
-int parse_util_get_line_from_offset( const wcstring &str, int pos )
+int parse_util_get_line_from_offset( const wcstring &str, size_t pos )
 {
-	//	return parse_util_lineno( buff, pos );
     const wchar_t *buff = str.c_str();
-	int i;
 	int count = 0;
-	if( pos < 0 )
-	{
-		return -1;
-	}
-	
-	for( i=0; i<pos; i++ )
+	for( size_t i=0; i<pos; i++ )
 	{
 		if( !buff[i] )
 		{
@@ -363,7 +313,7 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
    Get the beginning and end of the job or process definition under the cursor
 */
 static void job_or_process_extent( const wchar_t *buff,
-								   int cursor_pos,
+								   size_t cursor_pos,
 								   const wchar_t **a, 
 								   const wchar_t **b, 
 								   int process )
@@ -460,7 +410,7 @@ static void job_or_process_extent( const wchar_t *buff,
 }
 
 void parse_util_process_extent( const wchar_t *buff,
-								int pos,
+								size_t pos,
 								const wchar_t **a, 
 								const wchar_t **b )
 {
@@ -468,11 +418,11 @@ void parse_util_process_extent( const wchar_t *buff,
 }
 
 void parse_util_job_extent( const wchar_t *buff,
-							int pos,
+							size_t pos,
 							const wchar_t **a, 
 							const wchar_t **b )
 {
-	job_or_process_extent( buff,pos,a, b, 0 );	
+	job_or_process_extent( buff,pos,a, b, 0 );
 }
 
 

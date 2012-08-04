@@ -150,7 +150,7 @@ void s_write( screen_t *s,
 			  size_t explicit_len,
 			  const int *colors, 
 			  const int *indent,
-			  int cursor_pos );
+			  size_t cursor_pos );
 
 /** 
     This function resets the screen buffers internal knowledge about

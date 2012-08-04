@@ -774,7 +774,7 @@ void s_write( screen_t *s,
 	      size_t explicit_len,
 	      const int *c, 
 	      const int *indent,
-	      int cursor )
+	      size_t cursor_pos )
 {
 	int cursor_arr[2];
 
@@ -889,17 +889,17 @@ void s_write( screen_t *s,
 		prompt_width=0;
 	}
 	
-    int i;
+    size_t i;
 	for( i=0; commandline[i]; i++ )
 	{
 		int col = c[i];
 		
-		if( i == cursor )
+		if( i == cursor_pos )
 		{
 			col = 0;
 		}
 		
-		if( i == cursor )
+		if( i == cursor_pos )
 		{
 			cursor_arr[0] = s->desired.cursor[0];
 			cursor_arr[1] = s->desired.cursor[1];
@@ -907,7 +907,7 @@ void s_write( screen_t *s,
 		
 		s_desired_append_char( s, commandline[i], col, indent[i], prompt_width );
 		
-		if( i== cursor && s->desired.cursor[1] != cursor_arr[1] && commandline[i] != L'\n' )
+		if( i== cursor_pos && s->desired.cursor[1] != cursor_arr[1] && commandline[i] != L'\n' )
 		{
 			/*
 			   Ugh. We are placed exactly at the wrapping point of a
@@ -919,7 +919,7 @@ void s_write( screen_t *s,
 			cursor_arr[1] = s->desired.cursor[1];
 		}
 	}
-	if( i == cursor )
+	if( i == cursor_pos )
 	{
 		memcpy(cursor_arr, s->desired.cursor, sizeof(int)*2);
 	}

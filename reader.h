@@ -107,9 +107,9 @@ void reader_set_buffer( const wcstring &b, size_t p );
 
 /**
    Get the current cursor position in the command line. If interactive
-   mode is uninitialized, return -1.
+   mode is uninitialized, return (size_t)(-1).
 */
-int reader_get_cursor_pos();
+size_t reader_get_cursor_pos();
 
 /**
    Return the value of the interrupted flag, which is set by the sigint

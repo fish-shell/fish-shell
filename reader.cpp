@@ -228,7 +228,7 @@ class reader_data_t
 	wcstring_list_t search_prev;
 
 	/** The current position in search_prev */
-	int search_pos;
+	size_t search_pos;
     
     /** Length of the command */
     size_t command_length() const { return command_line.size(); }
@@ -795,12 +795,10 @@ static int insert_char( wchar_t c )
 /**
    Calculate the length of the common prefix substring of two strings.
 */
-static int comp_len( const wchar_t *a, const wchar_t *b )
+static size_t comp_len( const wchar_t *a, const wchar_t *b )
 {
-	int i;
-	for( i=0;
-		 a[i] != '\0' && b[i] != '\0' && a[i]==b[i];
-		 i++ )
+	size_t i;
+	for( i=0; a[i] != L'\0' && b[i] != L'\0' && a[i]==b[i]; i++ )
 		;
 	return i;
 }
@@ -808,12 +806,10 @@ static int comp_len( const wchar_t *a, const wchar_t *b )
 /**
    Calculate the case insensitive length of the common prefix substring of two strings.
 */
-static int comp_ilen( const wchar_t *a, const wchar_t *b )
+static size_t comp_ilen( const wchar_t *a, const wchar_t *b )
 {
-	int i;
-	for( i=0;
-		 a[i] != '\0' && b[i] != '\0' && towlower(a[i])==towlower(b[i]);
-		 i++ )
+	size_t i;
+	for( i=0; a[i] != L'\0' && b[i] != L'\0' && towlower(a[i])==towlower(b[i]); i++ )
 		;
 	return i;
 }
@@ -842,7 +838,7 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
 	if( do_replace )
 	{
 		
-		int move_cursor;
+		size_t move_cursor;
 		const wchar_t *begin, *end;
 		wchar_t *escaped;
 		
@@ -974,7 +970,7 @@ static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<
 	for( size_t i=0; i< comp.size(); i++ )
 	{
 
-		int base_len=-1;
+		long base_len=-1;
 		const completion_t &el = comp.at( i );
 
 		wchar_t *foo=0;
@@ -1314,10 +1310,10 @@ static int reader_can_replace( const wcstring &in, int flags )
 */
 
 
-static int handle_completions( const std::vector<completion_t> &comp )
+static bool handle_completions( const std::vector<completion_t> &comp )
 {
 	wchar_t *base = NULL;
-	int len = 0;
+	size_t len = 0;
 	bool done = false;
 	int count = 0;
 	int flags=0;
@@ -1379,7 +1375,7 @@ static int handle_completions( const std::vector<completion_t> &comp )
 			
 			if( base )
 			{
-				int new_len = comp_len( base, c.completion.c_str() );
+				size_t new_len = comp_len( base, c.completion.c_str() );
                 len = mini(new_len, len);
 			}
 			else
@@ -1410,15 +1406,13 @@ static int handle_completions( const std::vector<completion_t> &comp )
 		if( begin )
 		{
 
-			int offset = tok.size();
+			size_t offset = tok.size();
 			
 			count = 0;
 			
 			for( size_t i=0; i< comp.size(); i++ )
 			{
 				const completion_t &c = comp.at( i );
-				int new_len;
-
 
 				if( !(c.flags & COMPLETE_NO_CASE) )
 					continue;
@@ -1433,7 +1427,7 @@ static int handle_completions( const std::vector<completion_t> &comp )
 
 				if( base )
 				{
-					new_len = offset +  comp_ilen( base+offset, c.completion.c_str()+offset );
+					size_t new_len = offset + comp_ilen( base+offset, c.completion.c_str()+offset );
 					len = new_len < len ? new_len: len;
 				}
 				else
@@ -1499,9 +1493,7 @@ static int handle_completions( const std::vector<completion_t> &comp )
 		reader_repaint();
 
 	}		
-	return len;
-	
-
+	return len > 0;
 }
 
 
@@ -1711,7 +1703,7 @@ static void handle_token_history( int forward, int reset )
         return;
         
 	const wchar_t *str=0;
-	int current_pos;
+	long current_pos;
 	tokenizer tok;
 
 	if( reset )
@@ -1726,7 +1718,7 @@ static void handle_token_history( int forward, int reset )
 
 	current_pos  = data->token_history_pos;
 
-	if( forward || data->search_pos + 1 < (long)data->search_prev.size() )
+	if( forward || data->search_pos + 1 < data->search_prev.size() )
 	{
 		if( forward )
 		{
@@ -1822,8 +1814,8 @@ static void handle_token_history( int forward, int reset )
 			reader_replace_current_token( str );
 			reader_super_highlight_me_plenty( data->buff_pos );
 			reader_repaint();
+            data->search_pos = data->search_prev.size();
             data->search_prev.push_back(str);
-			data->search_pos = data->search_prev.size() - 1;
 		}
 		else if( ! reader_interrupted() )
 		{
@@ -2011,10 +2003,10 @@ void reader_set_buffer( const wcstring &b, size_t pos )
 }
 
 
-int reader_get_cursor_pos()
+size_t reader_get_cursor_pos()
 {
 	if( !data )
-		return -1;
+		return (size_t)(-1);
 
 	return data->buff_pos;
 }
@@ -2493,85 +2485,84 @@ static int wchar_private( wchar_t c )
    Test if the specified character in the specified string is
    backslashed.
 */
-static int is_backslashed( const wchar_t *str, int pos )
+static bool is_backslashed( const wchar_t *str, size_t pos )
 {
-	int count = 0;
-	int i;
-	
-	for( i=pos-1; i>=0; i-- )
+	size_t count = 0;
+	size_t idx = pos;
+	while (idx--)
 	{
-		if( str[i] != L'\\' )
+		if( str[idx] != L'\\' )
 			break;
 		
 		count++;
 	}
 
-	return count %2;
+	return (count % 2) == 1;
 }
 
 
 const wchar_t *reader_readline()
 {
-
+    
 	wint_t c;
-	int i;
-	int last_char=0, yank=0;
+	int last_char=0;
+    size_t yank_len=0;
 	const wchar_t *yank_str;
 	std::vector<completion_t> comp;
-	int comp_empty=1;
+	bool comp_empty = true;
 	int finished=0;
 	struct termios old_modes;
-
+    
 	data->search_buff.clear();
 	data->search_mode = NO_SEARCH;
 	
 	
 	exec_prompt();
-
+    
 	reader_super_highlight_me_plenty( data->buff_pos );
 	s_reset( &data->screen, true);
 	reader_repaint();
-
-	/* 
-	   get the current terminal modes. These will be restored when the
-	   function returns.
-	*/
-	tcgetattr(0,&old_modes);        
+    
+	/*
+     get the current terminal modes. These will be restored when the
+     function returns.
+     */
+	tcgetattr(0,&old_modes);
 	/* set the new modes */
 	if( tcsetattr(0,TCSANOW,&shell_modes))
 	{
 		wperror(L"tcsetattr");
     }
-
+    
 	while( !finished && !data->end_loop)
 	{
 		/*
-		  Sometimes strange input sequences seem to generate a zero
-		  byte. I believe these simply mean a character was pressed
-		  but it should be ignored. (Example: Trying to add a tilde
-		  (~) to digit)
-		*/
+         Sometimes strange input sequences seem to generate a zero
+         byte. I believe these simply mean a character was pressed
+         but it should be ignored. (Example: Trying to add a tilde
+         (~) to digit)
+         */
 		while( 1 )
 		{
 			int was_interactive_read = is_interactive_read;
 			is_interactive_read = 1;
 			c=input_readch();
 			is_interactive_read = was_interactive_read;
-						
+            
 			if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
 			{
 				if( can_read(0) )
 				{
-
+                    
 					wchar_t arr[READAHEAD_MAX+1];
 					int i;
-
+                    
 					memset( arr, 0, sizeof( arr ) );
 					arr[0] = c;
-
+                    
 					for( i=1; i<READAHEAD_MAX; i++ )
 					{
-
+                        
 						if( !can_read( 0 ) )
 						{
 							c = 0;
@@ -2586,33 +2577,33 @@ const wchar_t *reader_readline()
 						else
 							break;
 					}
-
+                    
 					insert_string( arr );
-
+                    
 				}
 			}
-
+            
 			if( c != 0 )
 				break;
 		}
-/*
-  if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
-  {
-  halloc_destroy( comp );
-  comp = 0;
-  }
-*/
+        /*
+         if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
+         {
+         halloc_destroy( comp );
+         comp = 0;
+         }
+         */
 		if( last_char != R_YANK && last_char != R_YANK_POP )
-			yank=0;
+			yank_len=0;
         const wchar_t *buff = data->command_line.c_str();
 		switch( c )
 		{
-
-			/* go to beginning of line*/
+                
+                /* go to beginning of line*/
 			case R_BEGINNING_OF_LINE:
 			{
-				while( ( data->buff_pos>0 ) && 
-					   ( buff[data->buff_pos-1] != L'\n' ) )
+				while( ( data->buff_pos>0 ) &&
+                      ( buff[data->buff_pos-1] != L'\n' ) )
 				{
 					data->buff_pos--;
 				}
@@ -2620,11 +2611,11 @@ const wchar_t *reader_readline()
 				reader_repaint();
 				break;
 			}
-
+                
 			case R_END_OF_LINE:
 			{
-				while( buff[data->buff_pos] && 
-					   buff[data->buff_pos] != L'\n' )
+				while( buff[data->buff_pos] &&
+                      buff[data->buff_pos] != L'\n' )
 				{
 					data->buff_pos++;
 				}
@@ -2632,31 +2623,31 @@ const wchar_t *reader_readline()
 				reader_repaint();
 				break;
 			}
-
-			
+                
+                
 			case R_BEGINNING_OF_BUFFER:
 			{
 				data->buff_pos = 0;
-
+                
 				reader_repaint();
 				break;
 			}
-
-			/* go to EOL*/
+                
+                /* go to EOL*/
 			case R_END_OF_BUFFER:
 			{
 				data->buff_pos = data->command_length();
-
+                
 				reader_repaint();
 				break;
 			}
-
+                
 			case R_NULL:
 			{
 				reader_repaint_if_needed();
 				break;
 			}
-
+                
 			case R_REPAINT:
 			{
 				exec_prompt();
@@ -2665,31 +2656,30 @@ const wchar_t *reader_readline()
 				reader_repaint();
 				break;
 			}
-
+                
 			case R_EOF:
 			{
 				exit_forced = 1;
 				data->end_loop=1;
 				break;
 			}
-
-			/* complete */
+                
+                /* complete */
 			case R_COMPLETE:
 			{
-
+                
 				if( !data->complete_func )
 					break;
-
+                
  				if( comp_empty || last_char != R_COMPLETE)
 				{
 					const wchar_t *begin, *end;
 					const wchar_t *token_begin, *token_end;
                     const wchar_t *buff = data->command_line.c_str();
-					int len;
-					int cursor_steps;
-
+					long cursor_steps;
+                    
 					parse_util_cmdsubst_extent( buff, data->buff_pos, &begin, &end );
-
+                    
 					parse_util_token_extent( begin, data->buff_pos - (begin-buff), &token_begin, &token_end, 0, 0 );
 					
 					cursor_steps = token_end - buff- data->buff_pos;
@@ -2701,9 +2691,9 @@ const wchar_t *reader_readline()
 					
 					reader_repaint();
 					
-					len = data->buff_pos - (begin-buff);
+					size_t len = data->buff_pos - (begin-buff);
                     const wcstring buffcpy = wcstring(begin, len);
-
+                    
 					data->complete_func( buffcpy, comp, COMPLETE_DEFAULT, NULL);
 					
 					sort(comp.begin(), comp.end());
@@ -2712,24 +2702,24 @@ const wchar_t *reader_readline()
 					comp_empty = handle_completions( comp );
 					comp.clear();
 				}
-
+                
 				break;
 			}
-
-			/* kill */
+                
+                /* kill */
 			case R_KILL_LINE:
 			{
                 const wchar_t *buff = data->command_line.c_str();
 				const wchar_t *begin = &buff[data->buff_pos];
 				const wchar_t *end = begin;
-								
+                
 				while( *end && *end != L'\n' )
 					end++;
 				
 				if( end==begin && *end )
 					end++;
 				
-				size_t len = end-begin;				
+				size_t len = end-begin;
 				if( len )
 				{
 					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE );
@@ -2737,7 +2727,7 @@ const wchar_t *reader_readline()
 				
 				break;
 			}
-
+                
 			case R_BACKWARD_KILL_LINE:
 			{
 				if( data->buff_pos > 0 )
@@ -2754,21 +2744,21 @@ const wchar_t *reader_readline()
 					
 					size_t len = maxi( end-begin, 1L );
 					begin = end - len;
-										
-					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );					
+                    
+					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
 					
 				}
 				break;
-
+                
 			}
-
+                
 			case R_KILL_WHOLE_LINE:
 			{
                 const wchar_t *buff = data->command_line.c_str();
 				const wchar_t *end = &buff[data->buff_pos];
 				const wchar_t *begin = end;
 				size_t len;
-		
+                
 				while( begin > buff  && *begin != L'\n' )
 					begin--;
 				
@@ -2777,7 +2767,7 @@ const wchar_t *reader_readline()
 				
 				len = maxi( end-begin, 0L );
 				begin = end - len;
-
+                
 				while( *end && *end != L'\n' )
 					end++;
 				
@@ -2788,43 +2778,43 @@ const wchar_t *reader_readline()
 				
 				if( len )
 				{
-					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );					
+					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );
 				}
 				
 				break;
 			}
-
-			/* yank*/
+                
+                /* yank*/
 			case R_YANK:
 			{
 				yank_str = kill_yank();
 				insert_string( yank_str );
-				yank = wcslen( yank_str );
+				yank_len = wcslen( yank_str );
 				break;
 			}
-
-			/* rotate killring*/
+                
+                /* rotate killring*/
 			case R_YANK_POP:
 			{
-				if( yank )
+				if( yank_len )
 				{
-					for( i=0; i<yank; i++ )
+					for( size_t i=0; i<yank_len; i++ )
 						remove_backward();
-
+                    
 					yank_str = kill_yank_rotate();
 					insert_string(yank_str);
-					yank = wcslen(yank_str);
+					yank_len = wcslen(yank_str);
 				}
 				break;
 			}
-
-			/* Escape was pressed */
+                
+                /* Escape was pressed */
 			case L'\x1b':
 			{
 				if( data->search_mode )
 				{
 					data->search_mode= NO_SEARCH;
-										
+                    
 					if( data->token_history_pos==-1 )
 					{
 						//history_reset();
@@ -2840,24 +2830,24 @@ const wchar_t *reader_readline()
 					reader_repaint();
 					
 				}
-
+                
 				break;
 			}
-
-			/* delete backward*/
+                
+                /* delete backward*/
 			case R_BACKWARD_DELETE_CHAR:
 			{
 				remove_backward();
 				break;
 			}
-
-			/* delete forward*/
+                
+                /* delete forward*/
 			case R_DELETE_CHAR:
 			{
 				/**
-				   Remove the current character in the character buffer and on the
-				   screen using syntax highlighting, etc.
-				*/
+                 Remove the current character in the character buffer and on the
+                 screen using syntax highlighting, etc.
+                 */
 				if( data->buff_pos < data->command_length() )
 				{
 					data->buff_pos++;
@@ -2865,20 +2855,20 @@ const wchar_t *reader_readline()
 				}
 				break;
 			}
-
-			/*
-			  Evaluate. If the current command is unfinished, or if
-			  the charater is escaped using a backslash, insert a
-			  newline
-			*/
+                
+                /*
+                 Evaluate. If the current command is unfinished, or if
+                 the charater is escaped using a backslash, insert a
+                 newline
+                 */
 			case R_EXECUTE:
 			{
                 /* Delete any autosuggestion */
                 data->autosuggestion.clear();
                 
 				/*
-				  Allow backslash-escaped newlines
-				*/
+                 Allow backslash-escaped newlines
+                 */
 				if( is_backslashed( data->command_line.c_str(), data->buff_pos ) )
 				{
 					insert_char( '\n' );
@@ -2887,12 +2877,12 @@ const wchar_t *reader_readline()
 				
 				switch( data->test_func( data->command_line.c_str() ) )
 				{
-
+                        
 					case 0:
 					{
 						/*
-						  Finished commend, execute it
-						*/
+                         Finished commend, execute it
+                         */
 						if( ! data->command_line.empty() )
 						{
                             if (data->history) {
@@ -2904,34 +2894,34 @@ const wchar_t *reader_readline()
 						reader_repaint();
 						break;
 					}
-					
-					/*
-					  We are incomplete, continue editing
-					*/
+                        
+                        /*
+                         We are incomplete, continue editing
+                         */
 					case PARSER_TEST_INCOMPLETE:
-					{						
+					{
 						insert_char( '\n' );
 						break;
 					}
-
-					/*
-					  Result must be some combination including an
-					  error. The error message will already be
-					  printed, all we need to do is repaint
-					*/
+                        
+                        /*
+                         Result must be some combination including an
+                         error. The error message will already be
+                         printed, all we need to do is repaint
+                         */
 					default:
 					{
 						s_reset( &data->screen, true);
 						reader_repaint();
 						break;
 					}
-
+                        
 				}
 				
 				break;
 			}
-
-			/* History functions */
+                
+                /* History functions */
 			case R_HISTORY_SEARCH_BACKWARD:
 			case R_HISTORY_TOKEN_SEARCH_BACKWARD:
 			case R_HISTORY_SEARCH_FORWARD:
@@ -2943,7 +2933,7 @@ const wchar_t *reader_readline()
 				{
 					reset = 1;
 					if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
-					    ( c == R_HISTORY_SEARCH_FORWARD ) )
+                       ( c == R_HISTORY_SEARCH_FORWARD ) )
 					{
 						data->search_mode = LINE_SEARCH;
 					}
@@ -2961,14 +2951,14 @@ const wchar_t *reader_readline()
                         data->history_search.skip_matches(wcstring_list_t(&suggest, 1 + &suggest));
                     }
 				}
-
+                
 				switch( data->search_mode )
 				{
-
+                        
 					case LINE_SEARCH:
 					{
 						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
-							( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
+                           ( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
 						{
 							data->history_search.go_backwards();
 						}
@@ -2990,11 +2980,11 @@ const wchar_t *reader_readline()
 						
 						break;
 					}
-					
+                        
 					case TOKEN_SEARCH:
 					{
 						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
-							( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
+                           ( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
 						{
 							handle_token_history( SEARCH_BACKWARD, reset );
 						}
@@ -3009,9 +2999,9 @@ const wchar_t *reader_readline()
 				}
 				break;
 			}
-
-
-			/* Move left*/
+                
+                
+                /* Move left*/
 			case R_BACKWARD_CHAR:
 			{
 				if( data->buff_pos > 0 )
@@ -3021,48 +3011,48 @@ const wchar_t *reader_readline()
 				}
 				break;
 			}
-			
-			/* Move right*/
+                
+                /* Move right*/
 			case R_FORWARD_CHAR:
 			{
 				if( data->buff_pos < data->command_length() )
 				{
-					data->buff_pos++;					
+					data->buff_pos++;
 					reader_repaint();
 				} else {
                     accept_autosuggestion();
                 }
 				break;
 			}
-
-			/* kill one word left */
+                
+                /* kill one word left */
 			case R_BACKWARD_KILL_WORD:
 			{
 				move_word(0,1, last_char!=R_BACKWARD_KILL_WORD);
 				break;
 			}
-
-			/* kill one word right */
+                
+                /* kill one word right */
 			case R_KILL_WORD:
 			{
 				move_word(1,1, last_char!=R_KILL_WORD);
 				break;
 			}
-
-			/* move one word left*/
+                
+                /* move one word left*/
 			case R_BACKWARD_WORD:
 			{
 				move_word(0,0,0);
 				break;
 			}
-
-			/* move one word right*/
+                
+                /* move one word right*/
 			case R_FORWARD_WORD:
 			{
 				move_word( 1,0,0);
 				break;
 			}
-
+                
 			case R_BEGINNING_OF_HISTORY:
 			{
                 data->history_search = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
@@ -3071,44 +3061,44 @@ const wchar_t *reader_readline()
                     wcstring new_text = data->history_search.current_string();
                     set_command_line_and_position(new_text, new_text.size());
                 }
-
+                
 				break;
 			}
-
+                
 			case R_END_OF_HISTORY:
 			{
 				data->history_search.go_to_end();
 				break;
 			}
-
+                
 			case R_UP_LINE:
 			case R_DOWN_LINE:
 			{
-				int line_old = parse_util_get_line_from_offset( data->command_line.c_str(), data->buff_pos );
+				int line_old = parse_util_get_line_from_offset( data->command_line, data->buff_pos );
 				int line_new;
 				
 				if( c == R_UP_LINE )
 					line_new = line_old-1;
 				else
 					line_new = line_old+1;
-	
+                
 				int line_count = parse_util_lineno( data->command_line.c_str(), data->command_length() )-1;
 				
 				if( line_new >= 0 && line_new <= line_count)
 				{
-					int base_pos_new;
-					int base_pos_old;
+					size_t base_pos_new;
+					size_t base_pos_old;
 					
 					int indent_old;
 					int indent_new;
-					int line_offset_old;
-					int total_offset_new;
-
+					size_t line_offset_old;
+					size_t total_offset_new;
+                    
 					base_pos_new = parse_util_get_offset_from_line( data->command_line, line_new );
-
+                    
 					base_pos_old = parse_util_get_offset_from_line( data->command_line,  line_old );
 					
-					
+					assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
 					indent_old = data->indents.at(base_pos_old);
 					indent_new = data->indents.at(base_pos_new);
 					
@@ -3117,10 +3107,10 @@ const wchar_t *reader_readline()
 					data->buff_pos = total_offset_new;
 					reader_repaint();
 				}
-								
+                
 				break;
 			}
-            
+                
 			case R_SUPPRESS_AUTOSUGGESTION:
 			{
 				data->suppress_autosuggestion = true;
@@ -3128,14 +3118,14 @@ const wchar_t *reader_readline()
 				reader_repaint();
 				break;
 			}
-            
+                
 			case R_ACCEPT_AUTOSUGGESTION:
 			{
 				accept_autosuggestion();
 				break;
 			}
-
-			/* Other, if a normal character, we add it to the command */
+                
+                /* Other, if a normal character, we add it to the command */
 			default:
 			{
 				
@@ -3147,22 +3137,22 @@ const wchar_t *reader_readline()
 				else
 				{
 					/*
-					  Low priority debug message. These can happen if
-					  the user presses an unefined control
-					  sequnece. No reason to report.
-					*/
+                     Low priority debug message. These can happen if
+                     the user presses an unefined control
+                     sequnece. No reason to report.
+                     */
 					debug( 2, _( L"Unknown keybinding %d" ), c );
 				}
 				break;
 			}
-
+                
 		}
 		
 		if( (c != R_HISTORY_SEARCH_BACKWARD) &&
-		    (c != R_HISTORY_SEARCH_FORWARD) &&
-		    (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
-		    (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
-		    (c != R_NULL) )
+           (c != R_HISTORY_SEARCH_FORWARD) &&
+           (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
+           (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
+           (c != R_NULL) )
 		{
 			data->search_mode = NO_SEARCH;
 			data->search_buff.clear();
@@ -3172,12 +3162,12 @@ const wchar_t *reader_readline()
 		
 		last_char = c;
 	}
-
+    
 	writestr( L"\n" );
-/*
-  if( comp )
-  halloc_free( comp );
-*/
+    /*
+     if( comp )
+     halloc_free( comp );
+     */
 	if( !reader_exit_forced() )
 	{
 		if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */

@@ -53,7 +53,7 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
    \param b the end of the searched string
 */
 void parse_util_process_extent( const wchar_t *buff,
-								int cursor_pos,
+								size_t cursor_pos,
 								const wchar_t **a, 
 								const wchar_t **b );
 
@@ -67,7 +67,7 @@ void parse_util_process_extent( const wchar_t *buff,
    \param b the end of the searched string
 */
 void parse_util_job_extent( const wchar_t *buff,
-							int cursor_pos,
+							size_t cursor_pos,
 							const wchar_t **a, 
 							const wchar_t **b );
 
@@ -94,12 +94,12 @@ void parse_util_token_extent( const wchar_t *buff,
 /**
    Get the linenumber at the specified character offset
 */
-int parse_util_lineno( const wchar_t *str, int len );
+int parse_util_lineno( const wchar_t *str, size_t len );
 
 /**
    Calculate the line number of the specified cursor position
  */
-int parse_util_get_line_from_offset( const wcstring &str, int pos );
+int parse_util_get_line_from_offset( const wcstring &str, size_t pos );
 
 /**
    Get the offset of the first character on the specified line

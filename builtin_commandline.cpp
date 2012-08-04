@@ -61,7 +61,8 @@ static const wchar_t *current_buffer=0;
    What the commandline builtin considers to be the current cursor
    position.
  */
-static int current_cursor_pos = -1;
+static const size_t kInvalidCursorPosition = (size_t)(-1);
+static size_t current_cursor_pos = kInvalidCursorPosition;
 
 /**
    Returns the current commandline buffer.
@@ -74,7 +75,7 @@ static const wchar_t *get_buffer()
 /**
    Returns the position of the cursor
 */
-static int get_cursor_pos()
+static size_t get_cursor_pos()
 {
 	return current_cursor_pos;
 }
@@ -94,7 +95,7 @@ static void replace_part( const wchar_t *begin,
 						  int append_mode )
 {
 	const wchar_t *buff = get_buffer();
-	long out_pos=get_cursor_pos();
+	size_t out_pos = get_cursor_pos();
     
     wcstring out;
 
@@ -127,7 +128,7 @@ static void replace_part( const wchar_t *begin,
 		}
 	}
 	out.append( end );
-	reader_set_buffer( out, (size_t)out_pos );
+	reader_set_buffer( out, out_pos );
 }
 	
 /**
@@ -222,12 +223,12 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
 	if( current_buffer )
 	{
-		current_cursor_pos = (int)wcslen( current_buffer );
+		current_cursor_pos = wcslen( current_buffer );
 	}
 	else
 	{
 		current_buffer = reader_get_buffer();
-		current_cursor_pos = (int)reader_get_cursor_pos();
+		current_cursor_pos = reader_get_cursor_pos();
 	}
 
 	if( !get_buffer() )
@@ -387,7 +388,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 
 			case 'I':
 				current_buffer = woptarg;
-				current_cursor_pos = (int)wcslen( woptarg );
+				current_cursor_pos = wcslen( woptarg );
 				break;
 				
 			case 'C':
@@ -551,7 +552,7 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 		}
 		else
 		{
-			append_format(stdout_buffer, L"%d\n", reader_get_cursor_pos() );
+			append_format(stdout_buffer, L"%lu\n", (unsigned long)reader_get_cursor_pos() );
 			return 0;
 		}
 		
@@ -559,9 +560,9 @@ static int builtin_commandline( parser_t &parser, wchar_t **argv )
 	
 	if( line_mode )
 	{
-		int pos = reader_get_cursor_pos();
+		size_t pos = reader_get_cursor_pos();
 		const wchar_t *buff = reader_get_buffer();
-		append_format(stdout_buffer, L"%d\n", parse_util_lineno( buff, pos ) );
+		append_format(stdout_buffer, L"%lu\n", (unsigned long)parse_util_lineno( buff, pos ) );
 		return 0;
 			
 	}

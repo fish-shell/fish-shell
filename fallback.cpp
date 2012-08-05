@@ -1111,7 +1111,7 @@ int lrand48_r(struct drand48_data *buffer, long int *result)
 
 int srand48_r(long int seedval, struct drand48_data *buffer)
 {
-	buffer->seed = (int)seedval;
+	buffer->seed = (unsigned int)seedval;
 	return 0;
 }
 

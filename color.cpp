@@ -41,6 +41,12 @@ static int parse_hex_digit(wchar_t x) {
     }
 }
 
+static unsigned long squared_difference(long p1, long p2)
+{
+    unsigned long diff = (unsigned long)labs(p1 - p2);
+    return diff * diff;
+}
+
 static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *colors, size_t color_count) {
     long r = rgb[0], g = rgb[1], b = rgb[2];
     unsigned long best_distance = (unsigned long)(-1);
@@ -48,10 +54,7 @@ static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *c
     for (unsigned char idx = 0; idx < color_count; idx++) {
         uint32_t color = colors[idx];
         long test_r = (color >> 16) & 0xFF, test_g = (color >> 8) & 0xFF, test_b = (color >> 0) & 0xFF;
-        unsigned long distance = 0;
-        distance += (r - test_r) * (r - test_r);
-        distance += (g - test_g) * (g - test_g);
-        distance += (b - test_b) * (b - test_b);
+        unsigned long distance = squared_difference(r, test_r) + squared_difference(g, test_g) + squared_difference(b, test_b);
         if (distance <= best_distance) {
             best_index = idx;
             best_distance = distance;
@@ -221,7 +224,7 @@ unsigned char rgb_color_t::to_name_index() const {
         return term8_color_for_rgb(data.rgb);
     } else {
         /* This is an error */
-        return -1;
+        return (unsigned char)(-1);
     }
 }
 

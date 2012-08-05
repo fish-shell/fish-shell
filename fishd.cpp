@@ -224,8 +224,9 @@ static void sprint_rand_digits( char *str, int maxlen )
      Cast to unsigned so that wrapping occurs on overflow as per ANSI C.
      */
 	(void)gettimeofday( &tv, NULL );
-	srand( (unsigned int)tv.tv_sec + (unsigned int)tv.tv_usec * 1000000UL );
-	max = 1 + (maxlen - 1) * (rand() / (RAND_MAX + 1.0));
+    unsigned long long seed = tv.tv_sec + tv.tv_usec * 1000000ULL;
+	srand( (unsigned int)seed );
+	max = (int)(1 + (maxlen - 1) * (rand() / (RAND_MAX + 1.0)));
 	for( i = 0; i < max; i++ )
 	{
 		str[i] = '0' + 10 * (rand() / (RAND_MAX + 1.0));

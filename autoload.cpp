@@ -39,9 +39,12 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
 }
 
 autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t * const scripts, size_t script_count) :
+                       lock(),
                        env_var_name(env_var_name_var),
                        builtin_scripts(scripts),
-                       builtin_script_count(script_count)
+                       builtin_script_count(script_count),
+                       last_path(),
+                       is_loading_set()
 {
     pthread_mutex_init(&lock, NULL);
 }

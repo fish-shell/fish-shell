@@ -85,7 +85,7 @@ struct event_t
 	*/
     std::auto_ptr<wcstring_list_t> arguments;
     
-    event_t(int t) : type(t), param1() { }
+    event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments() { }
     
     /** Copy constructor */
     event_t(const event_t &x);

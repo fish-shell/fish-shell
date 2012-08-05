@@ -134,15 +134,15 @@ class process_t
     /* narrow copy of argv0 so we don't have to convert after fork */
     narrow_string_rep_t argv0_narrow;
 
-
     /* No copying */
-    process_t(const process_t &rhs) { }
-    void operator=(const process_t &rhs) { }
+    process_t(const process_t &rhs);
+    void operator=(const process_t &rhs);
     
     public:
     
     process_t() :
-        argv_array(),    
+        argv_array(),
+        argv0_narrow(),
         type(0),
         actual_cmd(),
         pid(0),
@@ -316,13 +316,14 @@ class job_t
     narrow_string_rep_t command_narrow;
     
     /* No copying */
-    job_t(const job_t &rhs) : job_id(0) { }
-    void operator=(const job_t &) { }
+    job_t(const job_t &rhs);
+    void operator=(const job_t &);
     
     public:
     
     job_t(job_id_t jobid) :
         command_str(),
+        command_narrow(),
         first_process(NULL),
         pgid(0),
         tmodes(),

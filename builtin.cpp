@@ -1808,7 +1808,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	if( res )
 	{
 		size_t i;
-		int chars=0;
+		size_t chars=0;
 
 		builtin_print_help( parser, argv[0], stderr_buffer );
 		const wchar_t *cfa =  _( L"Current functions are: " );
@@ -1941,7 +1941,7 @@ static int builtin_random( parser_t &parser, wchar_t **argv )
 			}
 			lrand48_r( &seed_buffer, &res );
 			
-			append_format(stdout_buffer, L"%d\n", abs(res%32767) );
+			append_format(stdout_buffer, L"%ld\n", labs(res%32767) );
 			break;
 		}
 

@@ -886,7 +886,7 @@ static void join_completions( wcstring_list_t lst )
         prev_idx = desc_table[desc] - 1;
 		if( prev_idx == -1 )
 		{
-            desc_table[desc] = i+1;
+            desc_table[desc] = (long)(i+1);
 		}
 		else
 		{
@@ -951,7 +951,7 @@ static std::vector<comp_t *> mangle_completions( wcstring_list_t &lst, const wch
 			
 		}
 
-		comp->comp_width  += my_wcswidth(prefix)*comp->comp.size() + 2*(comp->comp.size()-1);
+		comp->comp_width  += (int)(my_wcswidth(prefix)*comp->comp.size() + 2*(comp->comp.size()-1));
 		comp->desc_width = comp->desc.empty()?0:my_wcswidth( comp->desc.c_str() );
 		
 		comp->pref_width = comp->comp_width + comp->desc_width + (comp->desc_width?4:0);

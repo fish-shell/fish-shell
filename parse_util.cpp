@@ -478,15 +478,15 @@ void parse_util_token_extent( const wchar_t *buff,
 		 tok_has_next( &tok );
 		 tok_next( &tok ) )
 	{
-		int tok_begin = tok_get_pos( &tok );
-		int tok_end=tok_begin;
+		size_t tok_begin = tok_get_pos( &tok );
+		size_t tok_end = tok_begin;
 
 		/*
 		  Calculate end of token
 		*/
 		if( tok_last_type( &tok ) == TOK_STRING )
 		{
-			tok_end +=wcslen(tok_last(&tok));
+			tok_end += wcslen(tok_last(&tok));
 		}
 		
 		/*

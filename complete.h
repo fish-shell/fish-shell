@@ -109,7 +109,7 @@ class completion_t
 
 private:
     /* No public default constructor */
-	completion_t(){ }
+	completion_t();
 public:
 
 	/**

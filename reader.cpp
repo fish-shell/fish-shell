@@ -2038,7 +2038,7 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before)
 		} else if (secs < 5400) { // 1.5 hours
 			swprintf(buf, 16, L"%lum %lus", secs / 60, secs % 60);
 		} else {
-			swprintf(buf, 16, L"%.1fh", secs / 3600.0f);
+			swprintf(buf, 16, L"%.1fh", secs / 3600.0);
 		}
 		env_set( ENV_CMD_DURATION, buf, ENV_EXPORT );
 	}

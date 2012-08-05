@@ -21,7 +21,7 @@ private:
     shared_ptr<std::vector<char> > out_buffer;
 
     /* No assignment allowed */
-    void operator=(const io_data_t &rhs) { assert(0); }
+    void operator=(const io_data_t &rhs);
 
 public:
 	/** Type of redirect */
@@ -88,7 +88,15 @@ public:
 	/** Pointer to the next IO redirection */
 	io_data_t *next;
     
-    io_data_t() : filename_cstr(NULL), next(NULL)
+    io_data_t() :
+        out_buffer(),
+        io_mode(0),
+        fd(0),
+        param1(),
+        param2(),
+        filename_cstr(NULL),
+        is_input(0),
+        next(NULL)
     {
     }
     

@@ -192,19 +192,14 @@ void show_stackframe();
 
 
 /**
-   Read a line from the stream f into the buffer buff of length len. If
-   buff is to small, it will be reallocated, and both buff and len will
-   be updated to reflect this. Returns the number of bytes read or -1
-   on failiure. 
+   Read a line from the stream f into the string. Returns 
+   the number of bytes read or -1 on failiure.
 
    If the carriage return character is encountered, it is
    ignored. fgetws() considers the line to end if reading the file
    results in either a newline (L'\n') character, the null (L'\\0')
    character or the end of file (WEOF) character.
 */
-int fgetws2( wchar_t **buff, int *len, FILE *f );
-
-/** Like fgetws2, but reads into a string */
 int fgetws2(wcstring *s, FILE *f);
 
 /**
@@ -454,6 +449,10 @@ class narrow_string_rep_t {
     private:
     const char *str;
     
+    /* No copying */
+    narrow_string_rep_t &operator=(const narrow_string_rep_t &);
+    narrow_string_rep_t(const narrow_string_rep_t &x);
+    
     public:
     ~narrow_string_rep_t() {
         free((void *)str);
@@ -477,6 +476,11 @@ bool is_forked_child();
 class scoped_lock {
     pthread_mutex_t *lock_obj;
     bool locked;
+    
+    /* No copying */
+    scoped_lock &operator=(const scoped_lock &);
+    scoped_lock(const scoped_lock &);
+
 public:
     void lock(void);
     void unlock(void);
@@ -488,6 +492,10 @@ public:
 class wcstokenizer {
     wchar_t *buffer, *str, *state;
     const wcstring sep;
+    
+    /* No copying */
+    wcstokenizer &operator=(const wcstokenizer &);
+    wcstokenizer(const wcstokenizer &);
     
 public:
     wcstokenizer(const wcstring &s, const wcstring &separator);

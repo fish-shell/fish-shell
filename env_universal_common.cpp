@@ -95,7 +95,7 @@ typedef struct var_uni_entry
 {
 	int exportv; /**< Whether the variable should be exported */
 	wcstring val; /**< The value of the variable */
-	var_uni_entry():exportv(0) { }
+	var_uni_entry():exportv(0), val() { }
 }
 var_uni_entry_t;
 

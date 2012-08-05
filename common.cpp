@@ -161,64 +161,6 @@ int fgetws2(wcstring *s, FILE *f)
 	}
 }
 
-int fgetws2( wchar_t **b, int *len, FILE *f )
-{
-	int i=0;
-	wint_t c;
-	
-	wchar_t *buff = *b;
-
-	while( 1 )
-	{
-		/* Reallocate the buffer if necessary */
-		if( i+1 >= *len )
-		{
-			int new_len = maxi( 128, (*len)*2);
-			buff = (wchar_t *)realloc( buff, sizeof(wchar_t)*new_len );
-			if( buff == 0 )
-			{
-				DIE_MEM();
-			}
-			else
-			{
-				*len = new_len;
-				*b = buff;
-			}			
-		}
-		
-		errno=0;		
-		
-		c = getwc( f );
-		
-		if( errno == EILSEQ )
-		{
-			continue;
-		}
-	
-//fwprintf( stderr, L"b\n" );
-		
-		switch( c )
-		{
-			/* End of line */ 
-			case WEOF:
-			case L'\n':
-			case L'\0':
-				buff[i]=L'\0';
-				return i;				
-				/* Ignore carriage returns */
-			case L'\r':
-				break;
-				
-			default:
-				buff[i++]=c;
-				break;
-		}		
-
-
-	}
-
-}
-
 wchar_t *str2wcs( const char *in )
 {
 	wchar_t *out;
@@ -253,8 +195,8 @@ wcstring str2wcstring( const std::string &in )
 wchar_t *str2wcs_internal( const char *in, wchar_t *out )
 {
 	size_t res=0;
-	int in_pos=0;
-	int out_pos = 0;
+	size_t in_pos=0;
+	size_t out_pos = 0;
 	mbstate_t state;
 	size_t len;
 
@@ -354,8 +296,8 @@ std::string wcs2string(const wcstring &input)
 char *wcs2str_internal( const wchar_t *in, char *out )
 {
 	size_t res=0;
-	int in_pos=0;
-	int out_pos = 0;
+	size_t in_pos=0;
+	size_t out_pos = 0;
 	mbstate_t state;
 
 	CHECK( in, 0 );
@@ -396,8 +338,7 @@ char *wcs2str_internal( const wchar_t *in, char *out )
 
 char **wcsv2strv( const wchar_t * const *in )
 {
-	int count =0;
-	int i;
+	size_t i, count = 0;
 
 	while( in[count] != 0 )
 		count++;
@@ -656,7 +597,7 @@ ssize_t write_loop(int fd, const char *buff, size_t count)
 			break;
 		}
 	}						
-	return out_cum;
+	return (ssize_t)out_cum;
 }
 
 ssize_t read_loop(int fd, void *buff, size_t count)
@@ -1807,7 +1748,7 @@ wcstring format_size(long long sz)
 		{
 			if( sz < (1024*1024) || !sz_name[i+1] )
 			{
-				int isz = sz/1024;
+				long isz = ((long)sz)/1024;
 				if( isz > 9 )
 					result.append( format_string( L"%d%ls", isz, sz_name[i] ));
 				else
@@ -2054,7 +1995,12 @@ scoped_lock::~scoped_lock() {
     if (locked) this->unlock();
 }
 
-wcstokenizer::wcstokenizer(const wcstring &s, const wcstring &separator) : sep(separator) {
+wcstokenizer::wcstokenizer(const wcstring &s, const wcstring &separator) :
+    buffer(),
+    str(),
+    state(),
+    sep(separator)
+{
     buffer = wcsdup(s.c_str());
     str = buffer;
     state = NULL;

@@ -74,7 +74,8 @@ static void read_file( FILE *f, wcstring &b )
  */
 static void insert_tabs( wcstring &out, int indent )
 {
-    out.append(indent, L'\t');
+    if (indent > 0)
+        out.append((size_t)indent, L'\t');
 	
 }
 

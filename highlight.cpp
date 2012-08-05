@@ -356,7 +356,7 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 /**
    Highlight operators (such as $, ~, %, as well as escaped characters.
 */
-static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, size_t pos, wcstring_list_t *error )
+static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, wcstring_list_t *error )
 {
     const wchar_t * const buff = buffstr.c_str();
 	enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
@@ -970,8 +970,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
                     std::vector<int>::const_iterator where = color.begin() + tok_pos;
                     std::vector<int> subcolors(where, where + param_str.size());
                     subcolors.push_back(-1);
-                    assert(pos >= tok_pos);
-                    highlight_param(param_str, subcolors, pos-tok_pos, error);
+                    highlight_param(param_str, subcolors, error);
                                         
                     /* Copy the subcolors back into our colors array */
                     std::copy(subcolors.begin(), subcolors.begin() + param_str.size(), color.begin() + tok_pos);

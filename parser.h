@@ -392,6 +392,9 @@ class parser_t {
 
     /** Returns the current line number */
     int get_lineno() const;
+    
+    /** Returns the line number for the character at the given index */
+    int line_number_of_character_at_offset(size_t idx) const;
 
     /** Returns the current position in the latest string of the tokenizer. */
     int get_pos() const;

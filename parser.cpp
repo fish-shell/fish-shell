@@ -1009,31 +1009,30 @@ const wchar_t *parser_t::is_function() const
 
 int parser_t::get_lineno() const
 {
-	const wchar_t *whole_str;
-	const wchar_t *function_name;
-
 	int lineno;
-	
-/*	static const wchar_t *prev_str = 0;
-  static int i=0;
-  static int lineno=1;
-*/
-	if( !current_tokenizer )
+    
+    if( ! current_tokenizer || ! tok_string( current_tokenizer ))
 		return -1;
-	
-	whole_str = tok_string( current_tokenizer );
-
-	if( !whole_str )
-		return -1;
-	
-	lineno = parse_util_lineno( whole_str, current_tokenizer_pos );
-
+        
+    lineno = current_tokenizer->line_number_of_character_at_offset(current_tokenizer_pos);
+    
+    const wchar_t *function_name;
 	if( (function_name = is_function()) )
 	{
 		lineno += function_get_definition_offset( function_name );
 	}
 
 	return lineno;
+}
+
+int parser_t::line_number_of_character_at_offset(size_t idx) const
+{
+    if( ! current_tokenizer)
+        return -1;
+    
+    int result = current_tokenizer->line_number_of_character_at_offset(idx);
+    //assert(result == parse_util_lineno(tok_string( current_tokenizer ), idx));
+    return result;
 }
 
 const wchar_t *parser_t::current_filename() const
@@ -2536,7 +2535,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 
 	this->push_block( block_type );
 
-	current_tokenizer = (tokenizer *)malloc( sizeof(tokenizer));
+	current_tokenizer = new tokenizer;
 	tok_init( current_tokenizer, cmd, 0 );
 
 	error_code = 0;
@@ -2588,7 +2587,7 @@ int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t blo
 	this->print_errors_stderr();
 
 	tok_destroy( current_tokenizer );
-	free( current_tokenizer );
+	delete current_tokenizer;
 
     while (forbidden_function.size() > forbid_count)
 		parser_t::allow_function();

@@ -90,9 +90,16 @@ struct tokenizer
 	wchar_t last_quote;
 	/** Last error */
 	int error;
-    
     /* Whether we are squashing errors */
     bool squash_errors;
+
+    /* Cached line number information */
+    size_t cached_lineno_offset;
+    int cached_lineno_count;
+
+    /** Return the line number of the character at the given offset */
+    int line_number_of_character_at_offset(size_t offset);
+
 };
 
 /**

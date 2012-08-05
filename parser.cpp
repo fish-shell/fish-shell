@@ -2344,7 +2344,7 @@ void parser_t::eval_job( tokenizer *tok )
 			{
 				if( job_start_pos < tok_get_pos( tok ) )
 				{
-					long stop_pos = tok_get_pos( tok );
+					int stop_pos = tok_get_pos( tok );
 					const wchar_t *newline = wcschr(tok_string(tok)+start_pos, L'\n');
 					if( newline )
 						stop_pos = mini( stop_pos, newline - tok_string(tok) );

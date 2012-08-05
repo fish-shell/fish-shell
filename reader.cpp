@@ -1948,7 +1948,7 @@ static void move_word( int dir, int erase, int newv )
 	/*
 	  Make sure we don't move beyond begining or end of buffer
 	*/
-	end_buff_pos = maxi( 0UL, mini( end_buff_pos, data->command_length() ) );
+	end_buff_pos = maxi( (size_t)0, mini( end_buff_pos, data->command_length() ) );
 	
 
 
@@ -2744,7 +2744,7 @@ const wchar_t *reader_readline()
 					if( *begin == L'\n' )
 						begin++;
 					
-					size_t len = maxi( end-begin, 1L );
+					size_t len = maxi( end-begin, 1 );
 					begin = end - len;
                     
 					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
@@ -2767,7 +2767,7 @@ const wchar_t *reader_readline()
 				if( *begin == L'\n' )
 					begin++;
 				
-				len = maxi( end-begin, 0L );
+				len = maxi( end-begin, 0 );
 				begin = end - len;
                 
 				while( *end && *end != L'\n' )

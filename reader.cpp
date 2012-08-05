@@ -2744,7 +2744,7 @@ const wchar_t *reader_readline()
 					if( *begin == L'\n' )
 						begin++;
 					
-					size_t len = maxi( end-begin, 1 );
+					size_t len = maxi<size_t>( end-begin, 1 );
 					begin = end - len;
                     
 					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
@@ -2767,7 +2767,7 @@ const wchar_t *reader_readline()
 				if( *begin == L'\n' )
 					begin++;
 				
-				len = maxi( end-begin, 0 );
+				len = maxi<size_t>( end-begin, 0 );
 				begin = end - len;
                 
 				while( *end && *end != L'\n' )

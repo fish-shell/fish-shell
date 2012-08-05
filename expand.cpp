@@ -1176,10 +1176,10 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 /**
    Perform bracket expansion
 */
-static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::vector<completion_t> &out )
+static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, std::vector<completion_t> &out )
 {
 	const wchar_t *pos;
-	int syntax_error=0;
+	bool syntax_error = false;
 	int bracket_count=0;
 
 	const wchar_t *bracket_begin=0, *bracket_end=0;
@@ -1187,9 +1187,8 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 
 	const wchar_t *item_begin;
 	size_t len1, len2, tot_len;
-
-	CHECK( in, 0 );
-//	CHECK( out, 0 );
+    
+    const wchar_t * const in = instr.c_str();
 	
 	for( pos=in;
 		 (*pos) && !syntax_error;
@@ -1215,7 +1214,7 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 				
 				if( bracket_count < 0 )
 				{
-					syntax_error = 1;
+					syntax_error = true;
 				}
 				break;
 			}
@@ -1231,7 +1230,7 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 	{
 		if( !(flags & ACCEPT_INCOMPLETE) )
 		{
-			syntax_error = 1;
+			syntax_error = true;
 		}
 		else
 		{
@@ -1248,7 +1247,7 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
                 mod.push_back(BRACKET_END);
 			}
 
-			return expand_brackets( parser, mod.c_str(), 1, out );
+			return expand_brackets( parser, mod, 1, out );
 		}
 	}
 
@@ -1276,17 +1275,16 @@ static int expand_brackets(parser_t &parser, const wchar_t *in, int flags, std::
 		{
 			if( (*pos == BRACKET_SEP) || (pos==bracket_end) )
 			{
-				wchar_t *whole_item;
                 assert(pos >= item_begin);
 				size_t item_len = pos-item_begin;
-
-				whole_item = (wchar_t *)malloc( sizeof(wchar_t)*(tot_len + item_len + 1) );
-				wcslcpy( whole_item, in, len1+1 );
-				wcslcpy( whole_item+len1, item_begin, item_len+1 );
-				wcscpy( whole_item+len1+item_len, bracket_end+1 );
-
-				expand_brackets( parser, whole_item, flags, out );
-
+                
+                wcstring whole_item;
+                whole_item.reserve(tot_len + item_len + 2);
+                whole_item.append(in, len1);
+                whole_item.append(item_begin, item_len);
+                whole_item.append(bracket_end + 1);
+                expand_brackets( parser, whole_item, flags, out );
+                
 				item_begin = pos+1;
 				if( pos == bracket_end )
 					break;
@@ -1615,7 +1613,7 @@ int expand_string( const wcstring &input, std::vector<completion_t> &output, exp
     {
         wcstring next = in->at(i).completion;
         
-        if( !expand_brackets( parser, next.c_str(), flags, *out ))
+        if( !expand_brackets( parser, next, flags, *out ))
         {
             return EXPAND_ERROR;
         }

@@ -870,6 +870,7 @@ void s_write( screen_t *s,
     wcstring truncated_autosuggestion_line;
     if (newline_count == 0 && prompt_width + max_line_width >= screen_width && prompt_width + explicit_portion_width < screen_width)
     {
+        assert(screen_width - prompt_width >= 1);
         max_line_width = screen_width - prompt_width - 1;
         truncated_autosuggestion_line = wcstring(commandline, 0, last_char_that_fits);
         truncated_autosuggestion_line.push_back(ellipsis_char);

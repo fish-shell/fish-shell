@@ -688,17 +688,17 @@ static int try_send( message_t *msg,
 {
 
 	debug( 3,
-		   L"before write of %d chars to fd %d", strlen(msg->body), fd );	
+		   L"before write of %d chars to fd %d", msg->body.size(), fd );
 
-	ssize_t res = write( fd, msg->body, strlen(msg->body) );
+	ssize_t res = write( fd, msg->body.c_str(), msg->body.size() );
 
 	if( res != -1 )
 	{
-		debug( 4, L"Wrote message '%s'", msg->body );
+		debug( 4, L"Wrote message '%s'", msg->body.c_str() );
 	}
 	else
 	{
-		debug( 4, L"Failed to write message '%s'", msg->body );
+		debug( 4, L"Failed to write message '%s'", msg->body.c_str() );
 	}
 	
 	if( res == -1 )
@@ -722,7 +722,7 @@ static int try_send( message_t *msg,
 	
 	if( !msg->count )
 	{
-		free( msg );
+		delete msg;
 	}
 	return 1;
 }
@@ -780,17 +780,39 @@ static wcstring full_escape( const wchar_t *in )
 	return out;
 }
 
-
-message_t *create_message( int type,
-						   const wchar_t *key_in, 
-						   const wchar_t *val_in )
+/* Sets the body of a message to the null-terminated list of null terminated const char *. */
+void set_body(message_t *msg, ...)
 {
-	message_t *msg=0;
+    /* Start by counting the length of all the strings */
+    size_t body_len = 0;
+    const char *arg;
+    va_list arg_list;
+	va_start(arg_list, msg);
+	while ((arg = va_arg(arg_list, const char *)) != NULL)
+		body_len += strlen(arg);
+	va_end(arg_list);
+    
+    /* Reserve that length in the string */
+    msg->body.reserve(body_len + 1); //+1 for trailing NULL? Do I need that?
+    
+    /* Set the string contents */
+	va_start(arg_list, msg);
+	while ((arg = va_arg(arg_list, const char *)) != NULL)
+		msg->body.append(arg);
+	va_end(arg_list);
+}
+
+/* Returns an instance of message_t allocated via new */
+message_t *create_message( int type,
+                          const wchar_t *key_in,
+                          const wchar_t *val_in )
+{
+	message_t *msg = new message_t;
+    msg->count = 0;
 	
 	char *key=0;
-	size_t sz;
-
-//	debug( 4, L"Crete message of type %d", type );
+    
+    //	debug( 4, L"Crete message of type %d", type );
 	
 	if( key_in )
 	{
@@ -804,8 +826,8 @@ message_t *create_message( int type,
 		if( !key )
 		{
 			debug( 0,
-				   L"Could not convert %ls to narrow character string",
-				   key_in );
+                  L"Could not convert %ls to narrow character string",
+                  key_in );
 			return 0;
 		}
 	}
@@ -821,74 +843,42 @@ message_t *create_message( int type,
 				val_in=L"";
 			}
 			
-			wcstring esc = full_escape( val_in );			
+			wcstring esc = full_escape( val_in );
 			char *val = wcs2utf(esc.c_str());
-						
-			sz = strlen(type==SET?SET_MBS:SET_EXPORT_MBS) + strlen(key) + strlen(val) + 4;
-			msg = (message_t *)malloc( sizeof( message_t ) + sz );
-			
-			if( !msg )
-				DIE_MEM();
-			
-			strcpy( msg->body, (type==SET?SET_MBS:SET_EXPORT_MBS) );
-			strcat( msg->body, " " );
-			strcat( msg->body, key );
-			strcat( msg->body, ":" );
-			strcat( msg->body, val );
-			strcat( msg->body, "\n" );
-			
+            set_body(msg, (type==SET?SET_MBS:SET_EXPORT_MBS), " ", key, ":", val, "\n", NULL);
 			free( val );
 			
 			break;
 		}
-
+            
 		case ERASE:
 		{
-            sz = strlen(ERASE_MBS) + strlen(key) + 3;
-            msg = (message_t *)malloc( sizeof( message_t ) + sz );
-
-			if( !msg )
-				DIE_MEM();
-			
-            strcpy( msg->body, ERASE_MBS " " );
-            strcat( msg->body, key );
-            strcat( msg->body, "\n" );
+            set_body(msg, ERASE_MBS, " ", key, "\n", NULL);
             break;
 		}
-
+            
 		case BARRIER:
 		{
-			msg = (message_t *)malloc( sizeof( message_t )  + 
-						  strlen( BARRIER_MBS ) +2);
-			if( !msg )
-				DIE_MEM();
-			strcpy( msg->body, BARRIER_MBS "\n" );
+            set_body(msg, BARRIER_MBS, "\n", NULL);
 			break;
 		}
-		
+            
 		case BARRIER_REPLY:
 		{
-			msg = (message_t *)malloc( sizeof( message_t )  +
-						  strlen( BARRIER_REPLY_MBS ) +2);
-			if( !msg )
-				DIE_MEM();
-			strcpy( msg->body, BARRIER_REPLY_MBS "\n" );
+            set_body(msg, BARRIER_REPLY_MBS, "\n", NULL);
 			break;
 		}
-		
+            
 		default:
 		{
 			debug( 0, L"create_message: Unknown message type" );
 		}
 	}
-
+    
 	free( key );
-
-	if( msg )
-		msg->count=0;
-
-//	debug( 4, L"Message body is '%s'", msg->body );
-
+    
+    //	debug( 4, L"Message body is '%s'", msg->body );
+    
 	return msg;	
 }
 

@@ -707,9 +707,9 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
         for ( ; j < o_line.size(); j++)
         {
             int width = fish_wcwidth(o_line.char_at(j));
-            skip_remaining -= width;
-            if (skip_remaining <= 0)
+            if (skip_remaining <= width)
                 break;
+            skip_remaining -= width;
             current_width += width;
         }
         

@@ -412,11 +412,11 @@ static void s_check_status( screen_t *s)
    on. This function automatically handles linebreaks and lines longer
    than the screen width. 
 */
-static void s_desired_append_char( screen_t *s, 
-				   wchar_t b,
-				   int c, 
-				   int indent,
-				   size_t prompt_width )
+static void s_desired_append_char( screen_t *s,
+                                  wchar_t b,
+                                  int c,
+                                  int indent,
+                                  size_t prompt_width )
 {
 	int line_no = s->desired.cursor.y;
 	
@@ -434,28 +434,27 @@ static void s_desired_append_char( screen_t *s,
 			}
 			break;
 		}
-		
+            
 		case L'\r':
 		{
             line_t &current = s->desired.line(line_no);
             current.clear();
             s->desired.cursor.x = 0;
-			break;			
-		}		
-
+			break;
+		}
+            
 		default:
 		{
 			int screen_width = common_get_width();
 			int cw = fish_wcwidth(b);
 			int ew = fish_wcwidth( ellipsis_char );
-			int i;
 			
             s->desired.create_line(line_no);
-
+            
 			/*
-			  Check if we are at the end of the line. If so, print an
-			  ellipsis character and continue on the next line.
-			*/
+             Check if we are at the end of the line. If so, print an
+             ellipsis character and continue on the next line.
+             */
 			if( s->desired.cursor.x + cw + ew > screen_width )
 			{
                 s->desired.line(line_no).append(ellipsis_char, HIGHLIGHT_COMMENT);
@@ -464,10 +463,12 @@ static void s_desired_append_char( screen_t *s,
                 s->desired.add_line();
 				s->desired.cursor.y++;
 				s->desired.cursor.x=0;
-				for( i=0; i < (prompt_width-ew); i++ )
-				{
-					s_desired_append_char( s, L' ', 0, indent, prompt_width );
-				}				
+                if (prompt_width > ew) {
+                    for( size_t i=0; i < (prompt_width-ew); i++ )
+                    {
+                        s_desired_append_char( s, L' ', 0, indent, prompt_width );
+                    }
+                }
 				s_desired_append_char( s, ellipsis_char, HIGHLIGHT_COMMENT, indent, prompt_width );
 			}
 			

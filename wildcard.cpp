@@ -18,6 +18,7 @@ wildcards using **.
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
+#include <set>
 
 
 #include "fallback.h"
@@ -663,6 +664,16 @@ static int test_flags( const wchar_t *filename,
 	return 1;
 }
 
+/** Appends a completion to the completion list, if the string is missing from the set. */
+static void insert_completion_if_missing(const wcstring &str, std::vector<completion_t> &out, std::set<wcstring> &completion_set)
+{
+    if (completion_set.insert(str).second)
+        append_completion(out, str);
+}
+
+/** Helper stuff to avoid symlink loops */
+typedef std::pair<dev_t, ino_t> file_id_t;
+
 /**
    The real implementation of wildcard expansion is in this
    function. Other functions are just wrappers around this one.
@@ -671,12 +682,15 @@ static int test_flags( const wchar_t *filename,
    matches, and recurses when needed to handle wildcrards spanning
    multiple components and recursive wildcards. 
  */
-static int wildcard_expand_internal( const wchar_t *wc, 
+static int wildcard_expand_internal( const wchar_t *wc,
 									 const wchar_t *base_dir,
 									 expand_flags_t flags,
-									 std::vector<completion_t> &out )
+									 std::vector<completion_t> &out,
+                                     std::set<wcstring> &completion_set,
+                                     std::set<file_id_t> &visited_files
+                                   )
 {
-	
+
 	/* Points to the end of the current wildcard segment */
 	const wchar_t *wc_end;
 
@@ -693,7 +707,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 	const wchar_t *wc_recursive;
 	int is_recursive;
 
-	/* Sligtly mangled version of base_dir */
+	/* Slightly mangled version of base_dir */
 	const wchar_t *dir_string;
 	
 	//	debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
@@ -719,7 +733,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		{
 			wchar_t * foo = wcsdup( wc );
 			foo[len-1]=0;
-			int res = wildcard_expand_internal( foo, base_dir, flags, out );
+			int res = wildcard_expand_internal( foo, base_dir, flags, out, completion_set, visited_files );
 			free( foo );
 			return res;			
 		}
@@ -782,13 +796,10 @@ static int wildcard_expand_internal( const wchar_t *wc,
 				}
 			}
 			else
-			{								
+			{
 				res = 1;
-				completion_t data_to_push(base_dir);
-				if (std::find( out.begin(), out.end(), data_to_push ) == out.end()) {
-					 out.push_back(data_to_push);
-				}
-			}							
+                insert_completion_if_missing(base_dir, out, completion_set);
+			}
 		}
 		else
 		{
@@ -848,7 +859,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 						}
 						if (! skip)
 						{
-							out.push_back(completion_t(long_name) );
+                            insert_completion_if_missing(long_name, out, completion_set);
 						}
 						res = 1;
 					}
@@ -883,7 +894,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 		char * narrow_dir_string = wcs2str( dir_string );
 
 		/*
-		  In recursive mode, we look through the direcotry twice. If
+		  In recursive mode, we look through the directory twice. If
 		  so, this rewind is needed.
 		*/
 		rewinddir( dir );
@@ -957,7 +968,10 @@ static int wildcard_expand_internal( const wchar_t *wc,
 					
 					if( !stat_res )
 					{
-						if( S_ISDIR(buf.st_mode) )
+                        // Insert a "file ID" into visited_files
+                        // If the insertion fails, we've already visited this file (i.e. a symlink loop)
+                        const file_id_t file_id(buf.st_dev, buf.st_ino);
+						if( S_ISDIR(buf.st_mode) && visited_files.insert(file_id).second)
 						{
 							size_t new_len = wcslen( new_dir );
 							new_dir[new_len] = L'/';
@@ -984,7 +998,9 @@ static int wildcard_expand_internal( const wchar_t *wc,
 								new_res = wildcard_expand_internal( new_wc,
 																	new_dir, 
 																	flags, 
-																	out );
+																	out,
+                                                                    completion_set,
+                                                                    visited_files );
 
 								if( new_res == -1 )
 								{
@@ -1004,7 +1020,9 @@ static int wildcard_expand_internal( const wchar_t *wc,
 								new_res = wildcard_expand_internal( wcschr( wc, ANY_STRING_RECURSIVE ), 
 																	new_dir,
 																	flags | WILDCARD_RECURSIVE, 
-																	out );
+																	out,
+                                                                    completion_set,
+                                                                    visited_files);
 
 								if( new_res == -1 )
 								{
@@ -1029,13 +1047,23 @@ static int wildcard_expand_internal( const wchar_t *wc,
 }
 
 
-int wildcard_expand( const wchar_t *wc, 
+int wildcard_expand( const wchar_t *wc,
 					 const wchar_t *base_dir,
 					 expand_flags_t flags,
 					 std::vector<completion_t> &out )
 {
 	size_t c = out.size();
-	int res = wildcard_expand_internal( wc, base_dir, flags, out );
+    
+    /* Make a set of used completion strings so we can do fast membership tests inside wildcard_expand_internal. Otherwise wildcards like '**' are very slow, because we end up with an N^2 membership test.
+    */
+	std::set<wcstring> completion_set;
+	for (std::vector<completion_t>::const_iterator iter = out.begin(); iter != out.end(); ++iter)
+	{
+        completion_set.insert(iter->completion);
+	}
+    
+	std::set<file_id_t> visited_files;
+	int res = wildcard_expand_internal( wc, base_dir, flags, out, completion_set, visited_files );
 			
 	if( flags & ACCEPT_INCOMPLETE )
 	{
@@ -1062,7 +1090,6 @@ int wildcard_expand( const wchar_t *wc,
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &outputs )
 {
     std::vector<completion_t> lst;
-    
     int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, lst);    
     outputs.insert(outputs.end(), lst.begin(), lst.end());
     return res;

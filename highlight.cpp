@@ -328,7 +328,6 @@ rgb_color_t highlight_get_color( int highlight, bool is_background )
 	}
     
 	env_var_t val_wstr = env_get_string( highlight_var[idx]); 
-
 //	debug( 1, L"%d -> %d -> %ls", highlight, idx, val );	
 	
 	if (val_wstr.missing()) {
@@ -944,7 +943,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 					{
 						if (wcsstr(word,lst.at(idx).c_str()))
 						{
-							color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+							color.at(tok_get_pos(&tok)) = HIGHLIGHT_ALERT;
 							alert_found = true;
 							break;
 						}

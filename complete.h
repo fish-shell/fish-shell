@@ -199,15 +199,15 @@ void sort_completions( std::vector<completion_t> &completions);
   \param flags A set of completion flags
 */
 void complete_add( const wchar_t *cmd, 
-		   bool cmd_is_path, 
-		   wchar_t short_opt,
-		   const wchar_t *long_opt,
-		   int long_mode, 
-		   int result_mode, 
-		   const wchar_t *condition,
-		   const wchar_t *comp,
-		   const wchar_t *desc,
-		   int flags ); 
+                   bool cmd_is_path,
+                   wchar_t short_opt,
+                   const wchar_t *long_opt,
+                   int long_mode,
+                   int result_mode,
+                   const wchar_t *condition,
+                   const wchar_t *comp,
+                   const wchar_t *desc,
+                   int flags ); 
 /**
   Sets whether the completion list for this command is complete. If
   true, any options not matching one of the provided options will be
@@ -219,9 +219,9 @@ void complete_set_authoritative( const wchar_t *cmd, bool cmd_type, bool authori
   Remove a previously defined completion
 */
 void complete_remove( const wchar_t *cmd, 
-		      bool cmd_is_path, 
-		      wchar_t short_opt,
-		      const wchar_t *long_opt );
+                      bool cmd_is_path, 
+                      wchar_t short_opt,
+                      const wchar_t *long_opt );
 
 
 /** Find all completions of the command cmd, insert them into out. If to_load is not NULL, append all commands that we would autoload, but did not (presumably because this is not the main thread) */
@@ -237,8 +237,8 @@ void complete_print( wcstring &out );
 /**
    Tests if the specified option is defined for the specified command
 */
-int complete_is_valid_option( const wchar_t *str, 
-							  const wchar_t *opt, 
+int complete_is_valid_option( const wcstring &str,
+							  const wcstring &opt,
 							  wcstring_list_t *inErrorsOrNull,
 							  bool allow_autoload );
 
@@ -246,9 +246,9 @@ int complete_is_valid_option( const wchar_t *str,
    Tests if the specified argument is valid for the specified option
    and command
 */
-int complete_is_valid_argument( const wchar_t *str, 
-								const wchar_t *opt, 
-								const wchar_t *arg );
+bool complete_is_valid_argument( const wcstring &str,
+								 const wcstring &opt,
+								 const wcstring &arg );
 
 
 /**

@@ -432,7 +432,7 @@ bool completer_t::condition_test( const wcstring &condition )
 
 
 /** Search for an exactly matching completion entry. Must be called while locked. */
-static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd, const bool cmd_is_path )
+static completion_entry_t *complete_find_exact_entry( const wcstring &cmd, const bool cmd_is_path )
 {
     ASSERT_IS_LOCKED(completion_lock);
     completion_entry_t *result = NULL;
@@ -445,7 +445,7 @@ static completion_entry_t *complete_find_exact_entry( const wchar_t *cmd, const 
 }
 
 /** Locate the specified entry. Create it if it doesn't exist. Must be called while locked. */
-static completion_entry_t *complete_get_exact_entry( const wchar_t *cmd, bool cmd_is_path )
+static completion_entry_t *complete_get_exact_entry( const wcstring &cmd, bool cmd_is_path )
 {
     ASSERT_IS_LOCKED(completion_lock);
 	completion_entry_t *c;
@@ -454,7 +454,7 @@ static completion_entry_t *complete_get_exact_entry( const wchar_t *cmd, bool cm
 
 	if( c == NULL )
 	{
-        c = new completion_entry_t(cmd, cmd_is_path, L"", true);
+        c = new completion_entry_t(cmd, cmd_is_path, L"", false);
         completion_set.insert(c);
 	}
 
@@ -623,71 +623,69 @@ static void parse_cmd_string(const wcstring &str, wcstring &path, wcstring &cmd)
     }
 }
 
-int complete_is_valid_option( const wchar_t *str,
-							  const wchar_t *opt,
+int complete_is_valid_option( const wcstring &str,
+							  const wcstring &opt,
 							  wcstring_list_t *errors,
 							  bool allow_autoload )
 {
     wcstring cmd, path;
-	int found_match = 0;
-	int authoritative = 1;
+	bool found_match = false;
+	bool authoritative = true;
 	int opt_found=0;
 	std::set<wcstring> gnu_match_set;
-	int is_gnu_opt=0;
-	int is_old_opt=0;
-	int is_short_opt=0;
-	int is_gnu_exact=0;
+	bool is_gnu_opt=false;
+	bool is_old_opt=false;
+	bool is_short_opt=false;
+	bool is_gnu_exact=false;
 	size_t gnu_opt_len=0;
     
-    std::vector<char> short_validated;
-
-	
-	CHECK( str, 0 );
-	CHECK( opt, 0 );
-		
+    if (opt.empty())
+        return false;
+    
+    std::vector<bool> short_validated;
 	/*
 	  Check some generic things like -- and - options.
 	*/
-	switch( wcslen(opt ) )
+	switch( opt.size() )
 	{
 
 		case 0:
 		case 1:
 		{
-			return 1;
+			return true;
 		}
 		
 		case 2:
 		{
-			if( wcscmp( L"--", opt ) == 0 )
+			if( opt == L"--" )
 			{
-				return 1;
+				return true;
 			}
 			break;
 		}
 	}
 	
-	if( opt[0] != L'-' )
+	if( opt.at(0) != L'-' )
 	{
 		if( errors )
             errors->push_back(L"Option does not begin with a '-'");
-		return 0;
+		return false;
 	}
 
 
-    short_validated.resize(wcslen(opt), 0);	
+    short_validated.resize(opt.size(), 0);
     
-	is_gnu_opt = opt[1]==L'-';
+	is_gnu_opt = opt.at(1) == L'-';
 	if( is_gnu_opt )
 	{
-		const wchar_t *opt_end = wcschr(opt, L'=' );
-		if( opt_end )
+        size_t opt_end = opt.find(L'=');
+		if( opt_end != wcstring::npos )
 		{
-			gnu_opt_len = (opt_end-opt)-2;
+			gnu_opt_len = opt_end-2;
 		}
 		else
 		{
-			gnu_opt_len = wcslen(opt)-2;
+			gnu_opt_len = opt.size() - 2;
 		}
 	}
 	
@@ -706,18 +704,17 @@ int complete_is_valid_option( const wchar_t *str,
 	{
         const completion_entry_t *i = *iter;
 		const wcstring &match = i->cmd_is_path ? path : cmd;
-		const wchar_t *a;
 
 		if( !wildcard_match( match, i->cmd ) )
 		{
 			continue;
 		}
 		
-		found_match = 1;
+		found_match = true;
 
-		if( !i->authoritative )
+		if (! i->authoritative)
 		{
-			authoritative = 0;
+			authoritative = false;
 			break;
 		}
 
@@ -732,14 +729,12 @@ int complete_is_valid_option( const wchar_t *str,
 					continue;
 				}
 				
-				if (wcsncmp(&opt[2], o.long_opt.c_str(), gnu_opt_len) == 0)
+                if (opt.compare(2, gnu_opt_len, o.long_opt) == 0)
 				{
                     gnu_match_set.insert(o.long_opt);
-					if( (wcsncmp( &opt[2],
-								  o.long_opt.c_str(),
-                                  o.long_opt.size())==0) )
+					if (opt.compare(2, o.long_opt.size(), o.long_opt))
 					{
-						is_gnu_exact=1;
+						is_gnu_exact = true;
 					}
 				}
 			}
@@ -755,10 +750,10 @@ int complete_is_valid_option( const wchar_t *str,
 					continue;
 
 
-				if( wcscmp( &opt[1], o.long_opt.c_str() )==0)
+				if( opt.compare(1, wcstring::npos, o.long_opt )==0)
 				{
-					opt_found = 1;
-					is_old_opt = 1;
+					opt_found = true;
+					is_old_opt = true;
 					break;
 				}
 
@@ -767,12 +762,10 @@ int complete_is_valid_option( const wchar_t *str,
 			if( is_old_opt )
 				break;
 
-
-			for( a = &opt[1]; *a; a++ )
+            for (size_t opt_idx = 1; opt_idx < opt.size(); opt_idx++)
 			{
-
                 const wcstring &short_opt_str = i->get_short_opt_str();
-                size_t str_idx = short_opt_str.find(*a);                
+                size_t str_idx = short_opt_str.find(opt.at(opt_idx));
 				if  (str_idx != wcstring::npos )
 				{
 					if (str_idx + 1 < short_opt_str.size() && short_opt_str.at(str_idx + 1) == L':' )
@@ -781,17 +774,13 @@ int complete_is_valid_option( const wchar_t *str,
 						  This is a short option with an embedded argument,
 						  call complete_is_valid_argument on the argument.
 						*/
-						wchar_t nopt[3];
-						nopt[0]=L'-';
-						nopt[1]=opt[1];
-						nopt[2]=L'\0';
-
-						short_validated.at(a-opt) =
-							complete_is_valid_argument( str, nopt, &opt[2]);
+                        const wcstring nopt = L"-" + opt.substr(1, 1);
+						short_validated.at(opt_idx) =
+							complete_is_valid_argument( str, nopt, opt.substr(2));
 					}
 					else
 					{
-						short_validated.at(a-opt)=1;
+						short_validated.at(opt_idx) = true;
 					}
 				}
 			}
@@ -807,19 +796,15 @@ int complete_is_valid_option( const wchar_t *str,
 
 		if( is_short_opt )
 		{
-			size_t j;
-
 			opt_found=1;
-			for( j=1; j<wcslen(opt); j++)
+			for( size_t j=1; j<opt.size(); j++)
 			{
 				if ( !short_validated.at(j))
 				{
 					if( errors )
 					{
-						wchar_t str[2];
-						str[0] = opt[j];
-						str[1]=0;
-                        errors->push_back(format_error(_(L"Unknown option: "), str));
+                        const wcstring str = opt.substr(j, 1);
+                        errors->push_back(format_error(_(L"Unknown option: "), str.c_str()));
 					}
 
 					opt_found = 0;
@@ -848,14 +833,12 @@ int complete_is_valid_option( const wchar_t *str,
 		}
 	}
 
-    return (authoritative && found_match)?opt_found:1;
+    return (authoritative && found_match)?opt_found:true;
 }
 
-int complete_is_valid_argument( const wchar_t *str,
-								const wchar_t *opt,
-								const wchar_t *arg )
+bool complete_is_valid_argument( const wcstring &str, const wcstring &opt, const wcstring &arg )
 {
-	return 1;
+	return true;
 }
 
 

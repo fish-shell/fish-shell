@@ -935,7 +935,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 						}
 						else if( accept_switches )
 						{
-							if( complete_is_valid_option( last_cmd.c_str(), param, error, false /* no autoload */ ) )
+							if( complete_is_valid_option( last_cmd, param, error, false /* no autoload */ ) )
 								color.at(tok_get_pos( &tok )) = HIGHLIGHT_PARAM;
 							else
 								color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;

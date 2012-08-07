@@ -562,132 +562,136 @@ std::vector<wcstring> expand_get_all_process_names(void)
 */
 
 static int find_process( const wchar_t *proc,
-						 int flags,
+						 expand_flags_t flags,
 						 std::vector<completion_t> &out )
 {
 	int found = 0;
+    
+    if (! (flags & EXPAND_SKIP_JOBS))
+    {
+        ASSERT_IS_MAIN_THREAD();
+        const job_t *j;
 
-	const job_t *j;
+        if( iswnumeric(proc) || (wcslen(proc)==0) )
+        {
+            /*
+              This is a numeric job string, like '%2'
+            */
 
-	if( iswnumeric(proc) || (wcslen(proc)==0) )
-	{
-		/*
-		  This is a numeric job string, like '%2'
-		*/
+            if( flags & ACCEPT_INCOMPLETE )
+            {
+                job_iterator_t jobs;
+                while ((j = jobs.next()))
+                {
+                    wchar_t jid[16];
+                    if( j->command_is_empty() )
+                        continue;
 
-		if( flags & ACCEPT_INCOMPLETE )
-		{
-            job_iterator_t jobs;
-            while ((j = jobs.next()))
-			{
-				wchar_t jid[16];
-				if( j->command_is_empty() )
-					continue;
+                    swprintf( jid, 16, L"%d", j->job_id );
 
-				swprintf( jid, 16, L"%d", j->job_id );
+                    if( wcsncmp( proc, jid, wcslen(proc ) )==0 )
+                    {
+                        wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
+                        append_completion( out, 
+                                             jid+wcslen(proc),
+                                             desc_buff,
+                                             0 );
+                    }
+                }
 
-				if( wcsncmp( proc, jid, wcslen(proc ) )==0 )
-				{
-                    wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
-					append_completion( out, 
-										 jid+wcslen(proc),
-										 desc_buff,
-										 0 );
-				}
-			}
+            }
+            else
+            {
 
-		}
-		else
-		{
-
-			int jid;
-			wchar_t *end;
-			
-			errno = 0;
-			jid = fish_wcstoi( proc, &end, 10 );
-			if( jid > 0 && !errno && !*end )
-			{
-				j = job_get( jid );
-				if( (j != 0) && (j->command_wcstr() != 0 ) )
-				{
-					{
-                        append_completion(out, to_string<long>(j->pgid));
-						found = 1;
-					}
-				}
-			}
-		}
-	}
-	if( found )
-		return 1;
-
-    job_iterator_t jobs;
-    while ((j = jobs.next()))
-	{
-		
-		if( j->command_is_empty() )
-			continue;
-	
-		size_t offset;
-		if( match_pid( j->command(), proc, flags, &offset ) )
-		{
-			if( flags & ACCEPT_INCOMPLETE )
-			{
-				append_completion( out, 
-									 j->command_wcstr() + offset + wcslen(proc),
-									 COMPLETE_JOB_DESC,
-									 0 );
-			}
-			else
-			{
-                append_completion(out, to_string<long>(j->pgid));
-				found = 1;
-			}
-		}
-	}
-
-	if( found )
-	{
-		return 1;
-	}
-
-    jobs.reset();
-    while ((j = jobs.next()))
-	{
-		process_t *p;
-		if( j->command_is_empty() )
-			continue;
-		for( p=j->first_process; p; p=p->next )
-		{
-			if( p->actual_cmd.empty() )
-				continue;
+                int jid;
+                wchar_t *end;
                 
-			size_t offset;
-			if( match_pid( p->actual_cmd, proc, flags, &offset ) )
-			{
-				if( flags & ACCEPT_INCOMPLETE )
-				{
-					append_completion( out, 
-										 wcstring(p->actual_cmd, offset + wcslen(proc)),
-										 COMPLETE_CHILD_PROCESS_DESC,
-										 0 );
-				}
-				else
-				{
-                    append_completion (out,
-                                         to_string<long>(p->pid),
-                                         L"",
-                                         0);
-					found = 1;
-				}
-			}
-		}
-	}
+                errno = 0;
+                jid = fish_wcstoi( proc, &end, 10 );
+                if( jid > 0 && !errno && !*end )
+                {
+                    j = job_get( jid );
+                    if( (j != 0) && (j->command_wcstr() != 0 ) )
+                    {
+                        {
+                            append_completion(out, to_string<long>(j->pgid));
+                            found = 1;
+                        }
+                    }
+                }
+            }
+        }
+        if( found )
+            return 1;
 
-	if( found )
-	{
-		return 1;
-	}
+        job_iterator_t jobs;
+        while ((j = jobs.next()))
+        {
+            
+            if( j->command_is_empty() )
+                continue;
+        
+            size_t offset;
+            if( match_pid( j->command(), proc, flags, &offset ) )
+            {
+                if( flags & ACCEPT_INCOMPLETE )
+                {
+                    append_completion( out, 
+                                         j->command_wcstr() + offset + wcslen(proc),
+                                         COMPLETE_JOB_DESC,
+                                         0 );
+                }
+                else
+                {
+                    append_completion(out, to_string<long>(j->pgid));
+                    found = 1;
+                }
+            }
+        }
+
+        if( found )
+        {
+            return 1;
+        }
+
+        jobs.reset();
+        while ((j = jobs.next()))
+        {
+            process_t *p;
+            if( j->command_is_empty() )
+                continue;
+            for( p=j->first_process; p; p=p->next )
+            {
+                if( p->actual_cmd.empty() )
+                    continue;
+                    
+                size_t offset;
+                if( match_pid( p->actual_cmd, proc, flags, &offset ) )
+                {
+                    if( flags & ACCEPT_INCOMPLETE )
+                    {
+                        append_completion( out, 
+                                             wcstring(p->actual_cmd, offset + wcslen(proc)),
+                                             COMPLETE_CHILD_PROCESS_DESC,
+                                             0 );
+                    }
+                    else
+                    {
+                        append_completion (out,
+                                             to_string<long>(p->pid),
+                                             L"",
+                                             0);
+                        found = 1;
+                    }
+                }
+            }
+        }
+
+        if( found )
+        {
+            return 1;
+        }
+    }
 
     /* Iterate over all processes */
     wcstring process_name;
@@ -719,7 +723,7 @@ static int find_process( const wchar_t *proc,
    Process id expansion
 */
 static int expand_pid( const wcstring &instr_with_sep,
-					   int flags,
+					   expand_flags_t flags,
 					   std::vector<completion_t> &out )
 {
  

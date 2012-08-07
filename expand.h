@@ -49,7 +49,10 @@ enum {
     EXPAND_NO_DESCRIPTIONS = 1 << 6,
     
     /** Don't do process expansion */
-    EXPAND_SKIP_PROCESS = 1 << 7
+    EXPAND_SKIP_PROCESS = 1 << 7,
+    
+    /** Don't expand jobs (but you can still expand processes). This is because job expansion is not thread safe. */
+    EXPAND_SKIP_JOBS = 1 << 8
 };
 typedef int expand_flags_t;
 

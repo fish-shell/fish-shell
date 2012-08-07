@@ -350,10 +350,10 @@ class completer_t {
                            complete_flags_t flags );
     
     expand_flags_t expand_flags() const {
-        /* Never do command substitution in autosuggestions. Sadly, we also can't yet do process expansion because it's not thread safe. */
+        /* Never do command substitution in autosuggestions. Sadly, we also can't yet do job expansion because it's not thread safe. */
         expand_flags_t result = 0;
         if (type == COMPLETE_AUTOSUGGEST)
-            result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_PROCESS;
+            result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS;
         return result;
     }
     

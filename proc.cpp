@@ -958,13 +958,21 @@ static int terminal_return_from_job( job_t *j)
 	/* 
 	   Restore the shell's terminal modes.  
 	*/
+	/*
+	 * Disabling restoring the mode since it is done by reader.cpp:term_steal()
+	 * Doing this here causes the -echo and -icanon to be set for all commands
+	 * inside a function other than the first one, and in situations like
+	 * true; true
+	 */
+
+	/*
 	if( tcsetattr (0, TCSADRAIN, &shell_modes))
 	{
 		debug( 1, _( L"Could not return shell to foreground" ) );
 		wperror( L"tcsetattr" );
 		return 0;
 	}
-
+	*/
 	return 1;
 }
 

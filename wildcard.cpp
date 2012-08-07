@@ -609,7 +609,7 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 			sz = (long long)buf.st_size;
 		}
 	}
-	
+
 	wcstring desc;
     if (! (expand_flags & EXPAND_NO_DESCRIPTIONS))
         desc = file_get_desc( fullname.c_str(), lstat_res, lbuf, stat_res, buf, stat_errno );
@@ -621,13 +621,13 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
         munged_completion.push_back(L'/');
         sb.append(desc);
 	}
-	else
+	else if (! (expand_flags & EXPAND_NO_DESCRIPTIONS))
 	{
         sb.append(desc);
         sb.append(L", ");
         sb.append(format_size(sz));
 	}
-    
+
     const wcstring &completion_to_use = munged_completion.empty() ? completion : munged_completion;
 	wildcard_complete(completion_to_use, wc, sb.c_str(), NULL, list, flags);
 }

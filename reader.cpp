@@ -1222,12 +1222,49 @@ static void update_autosuggestion(void) {
 #endif
 }
 
-static void accept_autosuggestion(void) {
-    /* Accept any autosuggestion by replacing the command line with it. */
+/* Accept any autosuggestion by replacing the command line with it.
+ * onetoken - Accept only the current or next available token from
+ *            the suggestion. 1 for a token, 0 for whole suggestion
+ */
+static void accept_autosuggestion(int onetoken = 0) {
     if (! data->autosuggestion.empty()) {
-        /* Accept the autosuggestion */
-        data->command_line = data->autosuggestion;
-        data->buff_pos = data->command_line.size();
+		if (onetoken)
+		{
+			wcstring sug = data->autosuggestion;
+			wcstring rem = sug.substr(data->command_line.size(),
+					sug.size() - data->command_line.size());
+			if (rem.size() == 0)
+				return;
+			tokenizer tok;
+			tok_init(&tok, rem.c_str(), TOK_SHOW_COMMENTS);
+			wchar_t *first_token = NULL, *sec_token = NULL;
+			if (tok_has_next(&tok))
+			{
+				first_token = tok_last(&tok);
+				tok_next(&tok);
+				if (tok_has_next(&tok))
+				{
+					sec_token = tok_last(&tok);
+				}
+			}
+			wcstring next;
+			if (sec_token)
+			{
+				next = rem.substr(0,rem.find(sec_token));
+			}
+			else
+			{
+				next = wcstring(first_token);
+			}
+			/* Accept the autosuggestion */
+			data->command_line += next;
+			data->buff_pos += next.size();
+		}
+		else
+		{
+			data->command_line = data->autosuggestion;
+			data->buff_pos = data->command_line.size();
+		}
         data->command_line_changed();
         reader_super_highlight_me_plenty(data->buff_pos);
         reader_repaint();
@@ -3022,7 +3059,7 @@ const wchar_t *reader_readline()
 					data->buff_pos++;
 					reader_repaint();
 				} else {
-                    accept_autosuggestion();
+                    accept_autosuggestion(0);
                 }
 				break;
 			}
@@ -3051,7 +3088,11 @@ const wchar_t *reader_readline()
                 /* move one word right*/
 			case R_FORWARD_WORD:
 			{
-				move_word( 1,0,0);
+				if( data->buff_pos < data->command_length() )
+					move_word( 1,0,0);
+				else
+                    accept_autosuggestion(1);
+
 				break;
 			}
                 

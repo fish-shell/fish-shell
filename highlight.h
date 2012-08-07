@@ -69,6 +69,10 @@
    Internal value representing highlighting an autosuggestion
 */
 #define HIGHLIGHT_AUTOSUGGESTION 0x2000
+/* 
+   Internal value representing highlighting an alert keyword
+*/
+#define HIGHLIGHT_ALERT 0x4000
 
 class history_item_t;
 struct file_detection_context_t;

@@ -14,6 +14,7 @@
 				D0F019F015A977010034B3B1 /* CopyFiles */,
 				D0F019F715A977A00034B3B1 /* CopyFiles */,
 				D0F019FC15A977B40034B3B1 /* CopyFiles */,
+				D033780F15DC6D2A00A634BA /* CopyFiles */,
 			);
 			dependencies = (
 				D0F01A1315AA36280034B3B1 /* PBXTargetDependency */,
@@ -31,6 +32,9 @@
 		D025C02A15D1FEA100B9DB63 /* completions in Resources */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
 		D025C02B15D1FEA100B9DB63 /* functions in Resources */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D025C02C15D1FEA100B9DB63 /* tools in Resources */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
+		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
+		D033781215DC6D5200A634BA /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
+		D033781315DC6D5400A634BA /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
 		D07A7D3C15A7A38100811FC6 /* builtin_scripts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F5E28215A7A32D00315DFF /* builtin_scripts.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
@@ -200,6 +204,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		D033780F15DC6D2A00A634BA /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = base/share/fish;
+			dstSubfolderSpec = 1;
+			files = (
+				D033781115DC6D4C00A634BA /* completions in CopyFiles */,
+				D033781215DC6D5200A634BA /* functions in CopyFiles */,
+				D033781315DC6D5400A634BA /* tools in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D0CBD570159ED2A30024809C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;

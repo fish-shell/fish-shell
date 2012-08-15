@@ -155,7 +155,7 @@ static int builtin_stdin;
    should normally not be used - sb_out and friends are already
    configured to handle everything.
 */
-static io_data_t *real_io;
+static const io_chain_t *real_io;
 
 /**
    Counts the number of non null pointers in the specified array
@@ -2752,7 +2752,7 @@ static int builtin_contains( parser_t &parser, wchar_t ** argv )
 		switch( opt )
 		{
 			case 0:
-                assert(opt_index >= 0 && opt_index < sizeof long_options / sizeof *long_options);
+                assert(opt_index >= 0 && (size_t)opt_index < sizeof long_options / sizeof *long_options);
 				if(long_options[opt_index].flag != 0)
 					break;
 				append_format(stderr_buffer,
@@ -2878,7 +2878,7 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 	
 	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), wcstring_list_t());
 	
-	res = reader_read( fd, real_io );
+	res = reader_read( fd, real_io ? *real_io : io_chain_t() );
 		
 	parser.pop_block();
 		
@@ -3470,7 +3470,7 @@ static int builtin_breakpoint( parser_t &parser, wchar_t **argv )
 {
 	parser.push_block( BREAKPOINT );		
 	
-	reader_read( STDIN_FILENO, real_io );
+	reader_read( STDIN_FILENO, real_io ? *real_io : io_chain_t() );
 	
 	parser.pop_block();		
 	
@@ -3861,10 +3861,10 @@ static int internal_help( const wchar_t *cmd )
 }
 
 
-int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io )
+int builtin_run( parser_t &parser, const wchar_t * const *argv, const io_chain_t &io )
 {
 	int (*cmd)(parser_t &parser, const wchar_t * const *argv)=0;
-	real_io = io;
+	real_io = &io;
 		
 	CHECK( argv, STATUS_BUILTIN_ERROR );
 	CHECK( argv[0], STATUS_BUILTIN_ERROR );

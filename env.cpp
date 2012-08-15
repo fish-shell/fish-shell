@@ -101,6 +101,7 @@ struct var_entry_t
 typedef std::map<wcstring, var_entry_t*> var_table_t;
 
 bool g_log_forks = false;
+bool g_use_posix_spawn = false; //will usually be set to true
 
 
 /**
@@ -187,7 +188,11 @@ static null_terminated_array_t<char> export_array;
    Flag for checking if we need to regenerate the exported variable
    array
 */
-static bool has_changed = true;
+static bool has_changed_exported = true;
+static void mark_changed_exported()
+{
+    has_changed_exported = true;
+}
 
 /**
    This string is used to store the value of dynamically
@@ -257,7 +262,7 @@ static void start_fishd()
     }
     
     parser_t &parser = parser_t::principal_parser();
-	parser.eval( cmd, 0, TOP );
+	parser.eval( cmd, io_chain_t(), TOP );
 }
 
 /**
@@ -394,7 +399,7 @@ static void universal_callback( int type,
 	
 	if( str )
 	{
-		has_changed=true;
+		mark_changed_exported();
 		
         event_t ev = event_t::variable_event(name);
         ev.arguments.reset(new wcstring_list_t());
@@ -682,6 +687,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /* Set g_log_forks */
     env_var_t log_forks = env_get_string(L"fish_log_forks");
     g_log_forks = ! log_forks.missing_or_empty() && from_string<bool>(log_forks);
+    
+    /* Set g_use_posix_spawn. Default to true. */
+    env_var_t use_posix_spawn = env_get_string(L"fish_use_posix_spawn");
+    g_use_posix_spawn = (use_posix_spawn.missing_or_empty() ? true : from_string<bool>(use_posix_spawn));
 }
 
 void env_destroy()
@@ -702,7 +711,7 @@ void env_destroy()
 		var_entry_t *entry = iter->second;	
 		if( entry->exportv )
 		{
-			has_changed = true;
+			mark_changed_exported();
 		}
 
 		delete entry;
@@ -741,12 +750,12 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
 {
     ASSERT_IS_MAIN_THREAD();
 	env_node_t *node = NULL;
-	bool has_changed_old = has_changed;
+	bool has_changed_old = has_changed_exported;
 	bool has_changed_new = false;
 	var_entry_t *e=0;	
 	int done=0;
     
-	int is_universal = 0;	
+	int is_universal = 0;
     
 	if( val && contains( key, L"PWD", L"HOME" ) )
 	{
@@ -935,7 +944,8 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
 			    node->exportv=1;
             }
             
-			has_changed = has_changed_old || has_changed_new;
+            if (has_changed_old || has_changed_new)
+                mark_changed_exported();
         }
         
     }
@@ -982,7 +992,7 @@ static int try_remove( env_node_t *n,
 
 		if( v->exportv )
 		{
-			has_changed = true;
+			mark_changed_exported();
 		}
         
 		n->env.erase(result);
@@ -1279,7 +1289,8 @@ void env_push( int new_scope )
 	
 	if( new_scope )
 	{
-		has_changed |= local_scope_exports(top);
+        if (local_scope_exports(top))
+            mark_changed_exported();
 	}
 	top = node;	
 
@@ -1307,7 +1318,8 @@ void env_pop()
 
 		if( killme->new_scope )
 		{
-			has_changed |= killme->exportv || local_scope_exports( killme->next );
+            if (killme->exportv || local_scope_exports( killme->next ))
+                mark_changed_exported();
 		}
 		
 		top = top->next;
@@ -1318,7 +1330,7 @@ void env_pop()
 			var_entry_t *entry = iter->second;	
 			if( entry->exportv )
 			{
-				has_changed = true;
+				mark_changed_exported();
 			}
 			delete entry;
 		}
@@ -1489,7 +1501,7 @@ static void update_export_array_if_necessary(bool recalc) {
 		env_universal_barrier();
 	}
 	
-	if( has_changed )
+	if( has_changed_exported )
 	{
 		std::map<wcstring, wcstring> vals;
 		size_t i;
@@ -1515,22 +1527,22 @@ static void update_export_array_if_necessary(bool recalc) {
         std::vector<std::string> local_export_buffer;
 		export_func(vals, local_export_buffer );
         export_array.set(local_export_buffer);
-		has_changed=false;
+		has_changed_exported=false;
 	}
 
 }
 
-char **env_export_arr( int recalc )
+char **env_export_arr( bool recalc )
 {
     ASSERT_IS_MAIN_THREAD();
-    update_export_array_if_necessary(recalc != 0);
+    update_export_array_if_necessary(recalc);
     return export_array.get();
 }
 
 void env_export_arr(bool recalc, null_terminated_array_t<char> &output)
 {
     ASSERT_IS_MAIN_THREAD();
-    update_export_array_if_necessary(recalc != 0);
+    update_export_array_if_necessary(recalc);
     output = export_array;
 }
 

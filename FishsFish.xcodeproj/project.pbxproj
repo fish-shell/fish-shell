@@ -28,14 +28,14 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		D025C02A15D1FEA100B9DB63 /* completions in Resources */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
+		D025C02B15D1FEA100B9DB63 /* functions in Resources */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
+		D025C02C15D1FEA100B9DB63 /* tools in Resources */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
 		D07A7D3C15A7A38100811FC6 /* builtin_scripts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F5E28215A7A32D00315DFF /* builtin_scripts.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
 		D0C4FD9515A7D80700212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
 		D0C4FD9615A7D80C00212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
-		D0CBD57B159EE4640024809C /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD578159EE4600024809C /* completions */; };
-		D0CBD57C159EE4640024809C /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD579159EE4600024809C /* functions */; };
-		D0CBD57D159EE4640024809C /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD57A159EE4600024809C /* tools */; };
 		D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */ = {isa = PBXBuildFile; fileRef = D0CBD586159EF0E10024809C /* launch_fish.scpt */; };
 		D0D02A67159837AD008E62BD /* complete.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853713B3ACEE0099B651 /* complete.cpp */; };
 		D0D02A69159837B2008E62BD /* env.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853A13B3ACEE0099B651 /* env.cpp */; };
@@ -121,9 +121,6 @@
 		D0F019F415A9772C0034B3B1 /* fish_pager in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02AE415986537008E62BD /* fish_pager */; };
 		D0F019F615A977360034B3B1 /* set_color in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0F019DC15A969970034B3B1 /* set_color */; };
 		D0F019F815A977AB0034B3B1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
-		D0F019F915A977AD0034B3B1 /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD578159EE4600024809C /* completions */; };
-		D0F019FA15A977AE0034B3B1 /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD579159EE4600024809C /* functions */; };
-		D0F019FB15A977B00034B3B1 /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD57A159EE4600024809C /* tools */; };
 		D0F019FD15A977CA0034B3B1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
 		D0F01A0315A978910034B3B1 /* osx_fish_launcher.m in Sources */ = {isa = PBXBuildFile; fileRef = D0D02AFA159871B2008E62BD /* osx_fish_launcher.m */; };
 		D0F01A0515A978A10034B3B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0CBD583159EEE010024809C /* Foundation.framework */; };
@@ -210,9 +207,6 @@
 			dstSubfolderSpec = 7;
 			files = (
 				D0C4FD9615A7D80C00212EF1 /* config.fish in CopyFiles */,
-				D0CBD57B159EE4640024809C /* completions in CopyFiles */,
-				D0CBD57C159EE4640024809C /* functions in CopyFiles */,
-				D0CBD57D159EE4640024809C /* tools in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -261,9 +255,6 @@
 			dstSubfolderSpec = 1;
 			files = (
 				D0F019F815A977AB0034B3B1 /* config.fish in CopyFiles */,
-				D0F019F915A977AD0034B3B1 /* completions in CopyFiles */,
-				D0F019FA15A977AE0034B3B1 /* functions in CopyFiles */,
-				D0F019FB15A977B00034B3B1 /* tools in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -280,6 +271,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D025C02715D1FEA100B9DB63 /* completions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = completions; path = share/completions; sourceTree = "<group>"; };
+		D025C02815D1FEA100B9DB63 /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
+		D025C02915D1FEA100B9DB63 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
 		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
@@ -387,9 +381,6 @@
 		D0C4FD9415A7D7EE00212EF1 /* config.fish */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.fish; path = etc/config.fish; sourceTree = "<group>"; };
 		D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = autoload.cpp; sourceTree = "<group>"; };
 		D0C6FCCB14CFA4B7004CE8AD /* autoload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = autoload.h; sourceTree = "<group>"; };
-		D0CBD578159EE4600024809C /* completions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = completions; path = share/completions; sourceTree = "<group>"; };
-		D0CBD579159EE4600024809C /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
-		D0CBD57A159EE4600024809C /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
 		D0CBD580159EE48F0024809C /* config.fish */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.fish; path = share/config.fish; sourceTree = "<group>"; };
 		D0CBD583159EEE010024809C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D0CBD586159EF0E10024809C /* launch_fish.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = launch_fish.scpt; path = osx/launch_fish.scpt; sourceTree = "<group>"; };
@@ -608,10 +599,10 @@
 				D0CBD580159EE48F0024809C /* config.fish */,
 				D0C4FD9415A7D7EE00212EF1 /* config.fish */,
 				D07B247515BCC4BE00D4ADB4 /* install.sh */,
-				D0CBD578159EE4600024809C /* completions */,
-				D0CBD579159EE4600024809C /* functions */,
-				D0CBD57A159EE4600024809C /* tools */,
 				D0D02AA915985C0C008E62BD /* Info.plist */,
+				D025C02715D1FEA100B9DB63 /* completions */,
+				D025C02815D1FEA100B9DB63 /* functions */,
+				D025C02915D1FEA100B9DB63 /* tools */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -813,6 +804,9 @@
 				D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */,
 				D07B247315BCC15700D4ADB4 /* add-shell in Resources */,
 				D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */,
+				D025C02A15D1FEA100B9DB63 /* completions in Resources */,
+				D025C02B15D1FEA100B9DB63 /* functions in Resources */,
+				D025C02C15D1FEA100B9DB63 /* tools in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

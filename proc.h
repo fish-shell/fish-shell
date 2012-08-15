@@ -140,31 +140,9 @@ class process_t
     
     public:
     
-    process_t() :
-        argv_array(),
-        argv0_narrow(),
-        type(0),
-        actual_cmd(),
-        pid(0),
-        pipe_write_fd(0),
-        pipe_read_fd(0),
-        completed(0),
-        stopped(0),
-        status(0),
-        count_help_magic(0),
-        next(NULL)
-#ifdef HAVE__PROC_SELF_STAT
-        ,last_time(),
-        last_jiffies(0)
-#endif
-    {
-    }
+    process_t();
     
-    ~process_t()
-    {
-        if (this->next != NULL)
-            delete this->next;
-    }
+    ~process_t();
     
 	/** 
 		Type of process. Can be one of \c EXTERNAL, \c
@@ -321,29 +299,8 @@ class job_t
     
     public:
     
-    job_t(job_id_t jobid) :
-        command_str(),
-        command_narrow(),
-        first_process(NULL),
-        pgid(0),
-        tmodes(),
-        job_id(jobid),
-        io(NULL),
-        flags(0)
-    {
-    }
-    
-    ~job_t() {
-        if (first_process != NULL)
-            delete first_process;
-        io_data_t *data = this->io;
-        while (data) {
-            io_data_t *tmp = data->next;
-            delete data;
-            data = tmp;
-        }
-        release_job_id(job_id);
-    }
+    job_t(job_id_t jobid);
+    ~job_t();
     
     /** Returns whether the command is empty. */
     bool command_is_empty() const { return command_str.empty(); }
@@ -389,10 +346,8 @@ class job_t
 	*/
 	const job_id_t job_id;
 	
-	/**
-	   List of all IO redirections for this job. This linked list is allocated via new, and owned by the object, which should delete them.
-	*/
-	io_data_t *io;
+	/** List of all IO redirections for this job. */
+	io_chain_t io;
 
 	/**
 	   Bitset containing information about the job. A combination of the JOB_* constants.

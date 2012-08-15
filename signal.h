@@ -6,6 +6,8 @@ The library for various signal related issues
 #ifndef FISH_SIGNALH
 #define FISH_SIGNALH
 
+#include <signal.h>
+
 /**
    Get the integer signal value representing the specified signal, or
    -1 of no signal was found
@@ -54,5 +56,10 @@ void signal_unblock();
    Returns true if signals are being blocked
 */
 int signal_is_blocked();
+
+/**
+  Returns signals with non-default handlers
+*/
+void get_signals_with_handlers(sigset_t *set);
 
 #endif

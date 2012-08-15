@@ -12,6 +12,8 @@ Utilities for io redirection.
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <set>
+#include <algorithm>
 
 #ifdef HAVE_SYS_TERMIOS_H
 #include <sys/termios.h>
@@ -98,20 +100,20 @@ void io_buffer_read( io_data_t *d )
 }
 
 
-io_data_t *io_buffer_create( int is_input )
+io_data_t *io_buffer_create( bool is_input )
 {
-	std::auto_ptr<io_data_t> buffer_redirect(new io_data_t);
+    bool success = true;
+	io_data_t *buffer_redirect = new io_data_t;
 	buffer_redirect->out_buffer_create();
-	buffer_redirect->io_mode=IO_BUFFER;
-	buffer_redirect->next=0;
-	buffer_redirect->is_input = is_input;
+	buffer_redirect->io_mode = IO_BUFFER;
+	buffer_redirect->is_input = is_input ? true : false;
 	buffer_redirect->fd=is_input?0:1;
 	
 	if( exec_pipe( buffer_redirect->param1.pipe_fd ) == -1 )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror (L"pipe");
-		return NULL;
+		success = false;
 	}
 	else if( fcntl( buffer_redirect->param1.pipe_fd[0],
 					F_SETFL,
@@ -119,9 +121,16 @@ io_data_t *io_buffer_create( int is_input )
 	{
 		debug( 1, PIPE_ERROR );
 		wperror( L"fcntl" );
-		return NULL;
+		success = false;
 	}
-	return buffer_redirect.release();
+    
+    if (! success)
+    {
+        delete buffer_redirect;
+        buffer_redirect = NULL;
+    }
+    
+	return buffer_redirect;
 }
 
 void io_buffer_destroy( io_data_t *io_buffer )
@@ -145,98 +154,146 @@ void io_buffer_destroy( io_data_t *io_buffer )
 	delete io_buffer;
 }
 
-
-
-io_data_t *io_add( io_data_t *list, io_data_t *element )
+void io_chain_t::remove(const io_data_t *element)
 {
-	io_data_t *curr = list;
-	if( curr == 0 )
-		return element;
-	while( curr->next != 0 )
-		curr = curr->next;
-	curr->next = element;
-	return list;
+    // See if you can guess why std::find doesn't work here
+    for (io_chain_t::iterator iter = this->begin(); iter != this->end(); ++iter)
+    {
+        if (*iter == element)
+        {
+            this->erase(iter);
+            break;
+        }
+    }
 }
 
-io_data_t *io_remove( io_data_t *list, io_data_t *element )
+io_chain_t io_chain_t::duplicate() const
 {
-	io_data_t *curr, *prev=0;
-	for( curr=list; curr; curr = curr->next )
-	{		
-		if( element == curr )
-		{
-			if( prev == 0 )
-			{
-				io_data_t *tmp = element->next;
-				element->next = 0;
-				return tmp;
-			}
-			else
-			{
-				prev->next = element->next;
-				element->next = 0;
-				return list;
-			}
-		}
-		prev = curr;
-	}
-	return list;
+    io_chain_t result;
+    result.reserve(this->size());
+    for (io_chain_t::const_iterator iter = this->begin(); iter != this->end(); iter++)
+    {
+        const io_data_t *io = *iter;
+        result.push_back(new io_data_t(*io));
+    }
+    return result;
 }
 
-io_data_t *io_duplicate( io_data_t *l )
+void io_chain_t::duplicate_append(const io_chain_t &src)
 {
-	io_data_t *res;
-	
-	if( l == 0 )
-		return 0;
-
-	res = new io_data_t(*l);
-	res->next=io_duplicate(l->next );
-	return res;	
+    this->reserve(this->size() + src.size());
+    for (size_t idx = 0; idx < src.size(); idx++)
+    {
+        const io_data_t *src_data = src.at(idx);
+        this->push_back(new io_data_t(*src_data));
+    }
 }
 
-io_data_t *io_get( io_data_t *io, int fd )
+void io_chain_t::destroy()
 {
-	if( io == NULL )
-		return 0;
-	
-	io_data_t *res = io_get( io->next, fd );
-	if( res )
-		return res;
-	
-	if( io->fd == fd )
-		return io;
-
-	return 0;
+    for (size_t idx = 0; idx < this->size(); idx++)
+    {
+        delete this->at(idx);
+    }
+    this->clear();
 }
 
-
-void io_print( io_data_t *io )
+void io_remove(io_chain_t &list, const io_data_t *element)
 {
-	if( !io )
-	{
-		return;
-	}
-	
-	debug( 1, L"IO fd %d, type ", io->fd );
-	switch( io->io_mode )
-	{
-		case IO_PIPE:
-			debug( 1, L"PIPE, data %d", io->param1.pipe_fd[io->fd?1:0] );
-			break;
-		
-		case IO_FD:
-			debug( 1, L"FD, copy %d", io->param1.old_fd );
-			break;
+    list.remove(element);
+}
 
-		case IO_BUFFER:
-			debug( 1, L"BUFFER" );
-			break;
-			
-		default:
-			debug( 1, L"OTHER" );
-	}
+io_chain_t io_duplicate(const io_chain_t &chain)
+{
+    return chain.duplicate();
+}
 
-	io_print( io->next );
-	
+void io_print(const io_chain_t &chain)
+{
+    if (chain.empty())
+    {
+        fprintf(stderr, "Empty chain %p\n", &chain);
+        return;
+    }
+    
+    fprintf(stderr, "Chain %p (%ld items):\n", &chain, (long)chain.size());
+    for (size_t i=0; i < chain.size(); i++) {
+        const io_data_t *io = chain.at(i);
+        fprintf(stderr, "\t%lu: fd:%d, input:%s, ", (unsigned long)i, io->fd, io->is_input ? "yes" : "no");
+        switch (io->io_mode)
+        {
+            case IO_FILE:
+                fprintf(stderr, "file (%s)\n", io->filename_cstr);
+                break;
+            case IO_PIPE:
+                fprintf(stderr, "pipe {%d, %d}\n", io->param1.pipe_fd[0], io->param1.pipe_fd[1]);
+                break;
+            case IO_FD:
+                fprintf(stderr, "FD map %d -> %d\n", io->param1.old_fd, io->fd);
+                break;
+            case IO_BUFFER:
+                fprintf(stderr, "buffer %p (size %lu)\n", io->out_buffer_ptr(), io->out_buffer_size());
+                break;
+            case IO_CLOSE:
+                fprintf(stderr, "close %d\n", io->fd);
+                break;
+        }
+    }
+}
+
+void io_duplicate_append( const io_chain_t &src, io_chain_t &dst )
+{
+    return dst.duplicate_append(src);
+}
+
+void io_chain_destroy(io_chain_t &chain) 
+{
+    chain.destroy();
+}
+
+/* Return the last IO for the given fd */
+const io_data_t *io_chain_t::get_io_for_fd(int fd) const
+{
+    size_t idx = this->size();
+    while (idx--)
+    {
+        const io_data_t *data = this->at(idx);
+        if (data->fd == fd) {
+            return data;
+        }
+    }
+    return NULL;
+}
+
+io_data_t *io_chain_t::get_io_for_fd(int fd)
+{
+    size_t idx = this->size();
+    while (idx--)
+    {
+        io_data_t *data = this->at(idx);
+        if (data->fd == fd) {
+            return data;
+        }
+    }
+    return NULL;
+}
+
+/* The old function returned the last match, so we mimic that. */
+const io_data_t *io_chain_get(const io_chain_t &src, int fd)
+{
+    return src.get_io_for_fd(fd);
+}
+
+io_data_t *io_chain_get(io_chain_t &src, int fd)
+{
+    return src.get_io_for_fd(fd);
+}
+
+io_chain_t::io_chain_t(io_data_t *data) : std::vector<io_data_t *>(1, data)
+{
+
+}
+
+io_chain_t::io_chain_t() : std::vector<io_data_t *>()
+{
 }

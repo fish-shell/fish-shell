@@ -1,9 +1,6 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-#ifndef FISH_CONFIG_H
-#define FISH_CONFIG_H
-
 /* Define to 1 if you have the `backtrace' function. */
 #define HAVE_BACKTRACE 1
 
@@ -75,6 +72,9 @@
 
 /* Define to 1 if you have the <siginfo.h> header file. */
 /* #undef HAVE_SIGINFO_H */
+
+/* Define to 1 if you have the <spawn.h> header file. */
+#define HAVE_SPAWN_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -218,6 +218,4 @@
 #else
 #define __warn_unused
 #define __sentinel
-#endif
-
 #endif

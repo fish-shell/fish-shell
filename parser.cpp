@@ -1541,7 +1541,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 								   tok_get_desc( tok_last_type(tok)) );
 					}
 
-					if( ! has_target || target.size() == 0 )
+					if( ! has_target || target.empty() )
 					{
 						if( error_code == 0 )
 							error( SYNTAX_ERROR,
@@ -1611,7 +1611,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 					}
 				}
 
-				j->io = io_add( j->io, new_io.release() );
+				j->io.push_back(new_io.release());
 				
 			}
 			break;
@@ -2488,14 +2488,18 @@ void parser_t::eval_job( tokenizer *tok )
 
 }
 
-int parser_t::eval( const wcstring &cmdStr, io_data_t *io, enum block_type_t block_type )
+int parser_t::eval( const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type )
 {
     const wchar_t * const cmd = cmdStr.c_str();
 	size_t forbid_count;
 	int code;
 	tokenizer *previous_tokenizer=current_tokenizer;
 	block_t *start_current_block = current_block;
-	io_data_t *prev_io = block_io;
+    
+    /* Record the current chain so we can put it back later */
+    const io_chain_t prev_io = block_io;
+    block_io = io;
+    
     std::vector<wcstring> prev_forbidden = forbidden_function;
 
 	if( block_type == SUBST )

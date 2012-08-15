@@ -49,6 +49,7 @@
 #include "expand.h"
 #include "signal.h"
 
+
 #include "parse_util.h"
 
 /**
@@ -148,24 +149,25 @@ int exec_pipe( int fd[2])
 /**
    Check if the specified fd is used as a part of a pipeline in the
    specidied set of IO redirections.
+   This is called after fork().
 
    \param fd the fd to search for
-   \param io the set of io redirections to search in
+   \param io_chain the set of io redirections to search in
 */
-static int use_fd_in_pipe( int fd, io_data_t *io )
-{	
-	if( !io )
-		return 0;
-	
-	if( ( io->io_mode == IO_BUFFER ) || 
-		( io->io_mode == IO_PIPE ) )
-	{
-		if( io->param1.pipe_fd[0] == fd ||
-			io->param1.pipe_fd[1] == fd )
-			return 1;
-	}
-		
-	return use_fd_in_pipe( fd, io->next );
+static bool use_fd_in_pipe(int fd, const io_chain_t &io_chain )
+{
+    for (size_t idx = 0; idx < io_chain.size(); idx++)
+    {
+        const io_data_t *io = io_chain.at(idx);
+        if( ( io->io_mode == IO_BUFFER ) || 
+            ( io->io_mode == IO_PIPE ) )
+        {
+            if( io->param1.pipe_fd[0] == fd ||
+                io->param1.pipe_fd[1] == fd )
+                return true;
+        }
+    }
+    return false;
 }
 
 
@@ -177,13 +179,13 @@ static int use_fd_in_pipe( int fd, io_data_t *io )
    \param io the list of io redirections for this job. Pipes mentioned
    here should not be closed.
 */
-void close_unused_internal_pipes( io_data_t *io )
+void close_unused_internal_pipes( const io_chain_t &io )
 {
     /* A call to exec_close will modify open_fds, so be careful how we walk */
     for (size_t i=0; i < open_fds.size(); i++) {
         if (open_fds[i]) {
             int fd = (int)i;
-            if( !use_fd_in_pipe( fd, io) )
+            if( !use_fd_in_pipe(fd, io))
             {
                 debug( 4, L"Close fd %d, used in other context", fd );
                 exec_close( fd );
@@ -193,11 +195,24 @@ void close_unused_internal_pipes( io_data_t *io )
     }
 }
 
+void get_unused_internal_pipes(std::vector<int> &fds, const io_chain_t &io)
+{
+    for (size_t i=0; i < open_fds.size(); i++) {
+        if (open_fds[i]) {
+            int fd = (int)i;
+            if( !use_fd_in_pipe(fd, io))
+            {
+                fds.push_back(fd);
+            }
+        }
+    }
+}
+
 /**
    Returns the interpreter for the specified script. Returns NULL if file
    is not a script with a shebang.
  */
-static char *get_interpreter( const char *command, char *interpreter, size_t buff_size )
+char *get_interpreter( const char *command, char *interpreter, size_t buff_size )
 {
     // OK to not use CLO_EXEC here because this is only called after fork
 	int fd = open( command, O_RDONLY );
@@ -239,9 +254,8 @@ static void safe_launch_process( process_t *p, const char *actual_cmd, char **ar
 	
 //	debug( 1, L"exec '%ls'", p->argv[0] );
 
-	execve ( wcs2str(p->actual_cmd.c_str()), 
-		 argv,
-		 envv );
+    // Wow, this wcs2str call totally allocates memory
+	execve ( actual_cmd, argv, envv );
 	
 	err = errno;
 	
@@ -275,88 +289,8 @@ static void safe_launch_process( process_t *p, const char *actual_cmd, char **ar
 	}
 	
 	errno = err;
-	debug_safe( 0, "Failed to execute process '%s'. Reason:", actual_cmd );
-	
-	switch( errno )
-	{
-		
-		case E2BIG:
-		{
-			char sz1[128], sz2[128];
-			
-			long arg_max = -1;
-
-			size_t sz = 0;
-			char **p;
-			for(p=argv; *p; p++)
-			{
-				sz += strlen(*p)+1;
-			}
-			
-			for(p=envv; *p; p++)
-			{
-				sz += strlen(*p)+1;
-			}
-			
-            format_size_safe(sz1, sz);
-			arg_max = sysconf( _SC_ARG_MAX );
-			
-			if( arg_max > 0 )
-			{
-                format_size_safe(sz2, sz);
-                debug_safe(0, "The total size of the argument and environment lists %s exceeds the operating system limit of %s.", sz1, sz2);
-			}
-			else
-			{
-				debug_safe( 0, "The total size of the argument and environment lists (%s) exceeds the operating system limit.", sz1);
-			}
-			
-			debug_safe(0, "Try running the command again with fewer arguments.");			
-			exit_without_destructors(STATUS_EXEC_FAIL);
-			break;
-		}
-
-		case ENOEXEC:
-		{
-            /* Hope strerror doesn't allocate... */
-            const char *err = strerror(errno);
-            debug_safe(0, "exec: %s", err);
-			
-			debug_safe(0, "The file '%ls' is marked as an executable but could not be run by the operating system.", actual_cmd);
-			exit_without_destructors(STATUS_EXEC_FAIL);
-		}
-
-		case ENOENT:
-		{
-            char interpreter_buff[128] = {}, *interpreter;
-            interpreter = get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
-			if( interpreter && 0 != access( interpreter, X_OK ) )
-			{
-				debug_safe(0, "The file '%s' specified the interpreter '%s', which is not an executable command.", actual_cmd, interpreter );
-			}
-			else
-			{
-				debug_safe(0, "The file '%s' or a script or ELF interpreter does not exist, or a shared library needed for file or interpreter cannot be found.", actual_cmd);
-			}
-			exit_without_destructors(STATUS_EXEC_FAIL);
-		}
-
-		case ENOMEM:
-		{
-			debug_safe(0, "Out of memory");
-			exit_without_destructors(STATUS_EXEC_FAIL);
-		}
-
-		default:
-		{
-            /* Hope strerror doesn't allocate... */
-            const char *err = strerror(errno);
-            debug_safe(0, "exec: %s", err);
-			
-			//		debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
-			exit_without_destructors(STATUS_EXEC_FAIL);
-		}
-	}
+    safe_report_exec_error(errno, actual_cmd, argv, envv);
+	exit_without_destructors(STATUS_EXEC_FAIL);
 }
 
 /**
@@ -368,7 +302,7 @@ static void launch_process_nofork( process_t *p )
     ASSERT_IS_NOT_FORKED_CHILD();
     
 	char **argv = wcsv2strv(p->get_argv());
-	char **envv = env_export_arr( 0 );
+	char **envv = env_export_arr( false );
     char *actual_cmd = wcs2str(p->actual_cmd.c_str());
 	
     /* Bounce to launch_process. This never returns. */
@@ -380,102 +314,9 @@ static void launch_process_nofork( process_t *p )
    Check if the IO redirection chains contains redirections for the
    specified file descriptor
 */
-static int has_fd( io_data_t *d, int fd )
+static int has_fd( const io_chain_t &d, int fd )
 {
-	return io_get( d, fd ) != 0;
-}
-
-
-/**
-   Free a transmogrified io chain. Only the chain itself and resources
-   used by a transmogrified IO_FILE redirection are freed, since the
-   original chain may still be needed.
-*/
-static void io_untransmogrify( io_data_t * in, io_data_t *out )
-{
-	if( !out )
-		return;
-    assert(in != NULL);
-	io_untransmogrify( in->next, out->next );
-	switch( in->io_mode )
-	{
-		case IO_FILE:
-			exec_close( out->param1.old_fd );
-			break;
-	}	
-	delete out;
-}
-
-
-/**
-   Make a copy of the specified io redirection chain, but change file
-   redirection into fd redirection. This makes the redirection chain
-   suitable for use as block-level io, since the file won't be
-   repeatedly reopened for every command in the block, which would
-   reset the cursor position.
-
-   \return the transmogrified chain on sucess, or 0 on failiure
-*/
-static io_data_t *io_transmogrify( io_data_t * in )
-{
-    ASSERT_IS_MAIN_THREAD();
-	if( !in )
-		return 0;
-	
-	std::auto_ptr<io_data_t> out(new io_data_t);
-	
-	out->fd = in->fd;
-	out->io_mode = IO_FD;
-	out->param2.close_old = 1;
-	out->next=0;
-		
-	switch( in->io_mode )
-	{
-		/*
-		  These redirections don't need transmogrification. They can be passed through.
-		*/
-		case IO_FD:
-		case IO_CLOSE:
-		case IO_BUFFER:
-		case IO_PIPE:
-		{
-            out.reset(new io_data_t(*in));
-			break;
-		}
-
-		/*
-		  Transmogrify file redirections
-		*/
-		case IO_FILE:
-		{
-			int fd;
-			
-			if( (fd=open( in->filename_cstr, in->param2.flags, OPEN_MASK ) )==-1 )
-			{
-				debug( 1, 
-					   FILE_ERROR,
-					   in->filename_cstr );
-								
-				wperror( L"open" );
-				return NULL;
-			}	
-
-			out->param1.old_fd = fd;
-			break;
-		}
-	}
-	
-	if( in->next)
-	{
-		out->next = io_transmogrify( in->next );
-		if( !out->next )
-		{
-			io_untransmogrify( in, out.release() );
-			return NULL;
-		}
-	}
-	
-	return out.release();
+	return io_chain_get( d, fd ) != NULL;
 }
 
 /**
@@ -490,28 +331,17 @@ static io_data_t *io_transmogrify( io_data_t * in )
 static void internal_exec_helper( parser_t &parser,
                                   const wchar_t *def, 
 								  enum block_type_t block_type,
-								  io_data_t *io )
+								  io_chain_t &ios )
 {
-	io_data_t *io_internal = io_transmogrify( io );
 	int is_block_old=is_block;
 	is_block=1;
-	
-	/*
-	  Did the transmogrification fail - if so, set error status and return
-	*/
-	if( io && !io_internal )
-	{
-		proc_set_last_status( STATUS_EXEC_FAIL );
-		return;
-	}
-	
+
 	signal_unblock();
 	
-	parser.eval( def, io_internal, block_type );		
+	parser.eval( def, ios, block_type );
 	
 	signal_block();
 	
-	io_untransmogrify( io, io_internal );
 	job_reap( 0 );
 	is_block=is_block_old;
 }
@@ -552,7 +382,6 @@ void exec( parser_t &parser, job_t *j )
 	sigset_t chldset; 
 	
 	io_data_t pipe_read, pipe_write;
-	io_data_t *tmp;
 
 	io_data_t *io_buffer =0;
 
@@ -577,23 +406,16 @@ void exec( parser_t &parser, job_t *j )
 	
 	debug( 4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id );	
 	
-	if( parser.block_io )
+	if( ! parser.block_io.empty() )
 	{
-		if( j->io )
-		{
-			j->io = io_add( io_duplicate(parser.block_io), j->io );
-		}
-		else
-		{
-			j->io=io_duplicate(parser.block_io);				
-		}
+        io_duplicate_append(parser.block_io, j->io);
 	}
 
-	
-	io_data_t *input_redirect;
-
-	for( input_redirect = j->io; input_redirect; input_redirect = input_redirect->next )
+	const io_data_t *input_redirect = NULL;
+    for (size_t idx = 0; idx < j->io.size(); idx++)
 	{
+        input_redirect = j->io.at(idx);
+        
 		if( (input_redirect->io_mode == IO_BUFFER) && 
 			input_redirect->is_input )
 		{
@@ -647,11 +469,9 @@ void exec( parser_t &parser, job_t *j )
 
 	pipe_write.io_mode=IO_PIPE;
 	pipe_write.is_input = 0;
-	pipe_read.next=0;
-	pipe_write.next=0;
 	pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=-1;
 	
-	j->io = io_add( j->io, &pipe_write );
+    j->io.push_back(&pipe_write);
 	
 	signal_block();
 
@@ -737,7 +557,7 @@ void exec( parser_t &parser, job_t *j )
 		   uniprocessor systems.
 		*/
 		if( p->type == EXTERNAL )
-			env_export_arr( 1 );
+			env_export_arr( true );
 		
 		
 		/*
@@ -746,7 +566,7 @@ void exec( parser_t &parser, job_t *j )
 		
 		if( p == j->first_process->next )
 		{
-			j->io = io_add( j->io, &pipe_read );
+            j->io.push_back(&pipe_read);
 		}
 		
 		if( p_wants_pipe )
@@ -769,8 +589,9 @@ void exec( parser_t &parser, job_t *j )
 			  This is the last element of the pipeline.
 			  Remove the io redirection for pipe output.
 			*/
-			j->io = io_remove( j->io, &pipe_write );
-			
+            io_chain_t::iterator where = std::find(j->io.begin(), j->io.end(), &pipe_write);
+            if (where != j->io.end())
+                j->io.erase(where);
 		}
 
 		switch( p->type )
@@ -825,8 +646,8 @@ void exec( parser_t &parser, job_t *j )
 
 				if( p->next )
 				{
-					io_buffer = io_buffer_create( 0 );					
-					j->io = io_add( j->io, io_buffer );
+					io_buffer = io_buffer_create( 0 );
+                    j->io.push_back(io_buffer);
 				}
 				
 				internal_exec_helper( parser, def, TOP, j->io );
@@ -842,8 +663,8 @@ void exec( parser_t &parser, job_t *j )
 			{
 				if( p->next )
 				{
-					io_buffer = io_buffer_create( 0 );					
-					j->io = io_add( j->io, io_buffer );
+					io_buffer = io_buffer_create( 0 );
+                    j->io.push_back(io_buffer);
 				}
                 
 				internal_exec_helper( parser, p->argv0(), TOP, j->io );			
@@ -864,7 +685,7 @@ void exec( parser_t &parser, job_t *j )
 				*/
 				if( p == j->first_process )
 				{
-					io_data_t *in = io_get( j->io, 0 );
+					const io_data_t *in = io_chain_get( j->io, 0 );
 					
 					if( in )
 					{
@@ -1040,7 +861,7 @@ void exec( parser_t &parser, job_t *j )
 					break;
 				}
 
-				j->io = io_remove( j->io, io_buffer );
+				io_remove( j->io, io_buffer );
 				
 				io_buffer_read( io_buffer );
 				
@@ -1159,7 +980,7 @@ void exec( parser_t &parser, job_t *j )
 				  performance quite a bit in complex completion code.
 				*/
 
-				io_data_t *io = io_get( j->io, 1 );
+				io_data_t *io = io_chain_get( j->io, 1 );
 				bool buffer_stdout = io && io->io_mode == IO_BUFFER;
 				
 				if( ( get_stderr_buffer().empty() ) && 
@@ -1172,10 +993,10 @@ void exec( parser_t &parser, job_t *j )
 					skip_fork = 1;
 				}
                 
-                if (! skip_fork && ! j->io) {
+                if (! skip_fork && j->io.empty()) {
                     /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO. */
                     if (g_log_forks) {
-                        printf("fork #-: Skipping fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", p->argv0(), io, j->io);
+                        printf("fork #-: Skipping fork for internal builtin for '%ls'\n", p->argv0());
                     }
                     const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
                     char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
@@ -1185,8 +1006,9 @@ void exec( parser_t &parser, job_t *j )
                     skip_fork = 1;
                 }
 
-				for( io_data_t *tmp_io = j->io; tmp_io != NULL; tmp_io=tmp_io->next )
+                for( io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++ )
 				{
+                    io_data_t *tmp_io = *iter;
 					if( tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
 					{
 						skip_fork = 0;
@@ -1218,8 +1040,8 @@ void exec( parser_t &parser, job_t *j )
                 fflush(stdout);
                 fflush(stderr);
                 if (g_log_forks) {
-                    printf("fork #%d: Executing fork for internal builtin for '%ls' (io is %p, job_io is %p)\n", g_fork_count, p->argv0(), io, j->io);
-                    io_print(io);
+                    printf("fork #%d: Executing fork for internal builtin for '%ls'\n", g_fork_count, p->argv0());
+                    io_print(io_chain_t(io));
                 }
 				pid = execute_fork(false);
 				if( pid == 0 )
@@ -1274,33 +1096,65 @@ void exec( parser_t &parser, job_t *j )
                     const wchar_t *file = reader_current_filename();
                     const wchar_t *func = parser_t::principal_parser().is_function();
                     printf("fork #%d: forking for '%s' in '%ls:%ls'\n", g_fork_count, actual_cmd, file ? file : L"", func ? func : L"?");
+                
+                    fprintf(stderr, "IO chain for %s:\n", actual_cmd);
+                    io_print(j->io);
                 }
-				pid = execute_fork(false);
-				if( pid == 0 )
-				{
-					/*
-					  This is the child process. 
-					*/
-					p->pid = getpid();
-					setup_child_process( j, p );
-					safe_launch_process( p, actual_cmd, argv, envv );
-					
-					/*
-					  safe_launch_process _never_ returns...
-					*/
-				}
-				else
-				{
-					/* 
-					   This is the parent process. Store away
-					   information on the child, and possibly fice
-					   it control over the terminal.
-					*/
-					p->pid = pid;
+                
+#if FISH_USE_POSIX_SPAWN
+                /* Prefer to use posix_spawn, since it's faster on some systems like OS X */
+                bool use_posix_spawn = g_use_posix_spawn;
+                if (use_posix_spawn)
+                {
+                    /* Create posix spawn attributes and actions */
+                    posix_spawnattr_t attr = posix_spawnattr_t();
+                    posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
+                    bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j, p);
+                    if (made_it)
+                    {
+                        /* We successfully made the attributes and actions; actually call posix_spawn */
+                        int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, argv, envv);
+                        if (spawn_ret != 0)
+                        {
+                            safe_report_exec_error(spawn_ret, actual_cmd, argv, envv);
+                            /* Make sure our pid isn't set */
+                            pid = 0;
+                        }
+                            
+                        /* Clean up our actions */
+                        posix_spawn_file_actions_destroy(&actions);
+                        posix_spawnattr_destroy(&attr);
+                    }
+                }
+                else
+#endif
+                {
+                    pid = execute_fork(false);
+                    if (pid == 0)
+                    {
+                        /*
+                          This is the child process. 
+                        */
+                        p->pid = getpid();
+                        setup_child_process( j, p );
+                        safe_launch_process( p, actual_cmd, argv, envv );
+                        
+                        /*
+                          safe_launch_process _never_ returns...
+                        */
+                    }
+                }
 
-					set_child_group( j, p, 0 );
-															
-				}
+
+                /* 
+                   This is the parent process. Store away
+                   information on the child, and possibly fice
+                   it control over the terminal.
+                */
+                p->pid = pid;
+
+                set_child_group( j, p, 0 );
+
 				break;
 			}
 			
@@ -1348,10 +1202,12 @@ void exec( parser_t &parser, job_t *j )
 
 	debug( 3, L"Job is constructed" );
 
-	j->io = io_remove( j->io, &pipe_read );
-
-	for( tmp = parser.block_io; tmp; tmp=tmp->next )
-		j->io = io_remove( j->io, tmp );
+	io_remove( j->io, &pipe_read );
+    
+    for (io_chain_t::const_iterator iter = parser.block_io.begin(); iter != parser.block_io.end(); iter++)
+    {
+        io_remove( j->io, *iter );
+    }
 	
 	job_set_flag( j, JOB_CONSTRUCTED, 1 );
 
@@ -1400,7 +1256,7 @@ static int exec_subshell_internal( const wcstring &cmd, wcstring_list_t *lst )
 	prev_status = proc_get_last_status();
 	
     parser_t &parser = parser_t::principal_parser();
-	if( parser.eval( cmd, io_buffer, SUBST ) )
+	if( parser.eval( cmd, io_chain_t(io_buffer), SUBST ) )
 	{
 		status = -1;
 	}

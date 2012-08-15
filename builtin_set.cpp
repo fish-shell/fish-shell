@@ -313,7 +313,7 @@ static void erase_values(wcstring_list_t &list, const std::vector<long> &indexes
     std::set<long>::const_reverse_iterator iter;
     for (iter = indexes_set.rbegin(); iter != indexes_set.rend(); iter++) {
         long val = *iter;
-        if (val > 0 && val <= list.size()) {
+        if (val > 0 && (size_t)val <= list.size()) {
             // One-based indexing!
             list.erase(list.begin() + val - 1);
         }

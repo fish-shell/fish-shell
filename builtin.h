@@ -135,7 +135,7 @@ int builtin_exists( const wcstring &cmd );
 
   \return the exit status of the builtin command
 */
-int builtin_run( parser_t &parser, const wchar_t * const *argv, io_data_t *io );
+int builtin_run( parser_t &parser, const wchar_t * const *argv, const io_chain_t &io );
 
 /** Returns a list of all builtin names */
 wcstring_list_t builtin_get_names(void);

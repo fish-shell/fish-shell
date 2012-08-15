@@ -628,6 +628,18 @@ void signal_handle( int sig, int do_handle )
 	sigaction( sig, &act, 0);
 }
 
+void get_signals_with_handlers(sigset_t *set)
+{
+    sigemptyset(set);
+	for( int i=0; lookup[i].desc ; i++ )
+	{
+        struct sigaction act = {};
+		sigaction(lookup[i].signal, NULL, &act);
+        if (act.sa_handler != SIG_DFL)
+            sigaddset(set, lookup[i].signal);
+	}
+}
+
 void signal_block()
 {
     ASSERT_IS_MAIN_THREAD();

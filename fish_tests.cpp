@@ -451,7 +451,7 @@ static void test_parser()
 		err( L"Null input when evaluating undetected" );
 	}
 #endif
-	if( !parser.eval( L"ls", 0, WHILE ) )
+	if( !parser.eval( L"ls", io_chain_t(), WHILE ) )
 	{
 		err( L"Invalid block mode when evaluating undetected" );
 	}	

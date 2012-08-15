@@ -24,7 +24,7 @@ class history_t;
 /**
   Read commands from \c fd until encountering EOF
 */
-int reader_read( int fd, io_data_t *io);
+int reader_read( int fd, const io_chain_t &io);
 
 /**
   Tell the shell that it should exit after the currently running command finishes.

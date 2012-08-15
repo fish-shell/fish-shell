@@ -135,9 +135,9 @@ extern const wchar_t *program_name;
 */
 #define FATAL_EXIT()											\
 	{															\
-		ssize_t exit_read_count;char exit_read_buff;			\
+		char exit_read_buff;			\
 		show_stackframe();										\
-		exit_read_count=read( 0, &exit_read_buff, 1 );			\
+		read( 0, &exit_read_buff, 1 );			\
 		exit_without_destructors( 1 );												\
 	}															\
 		

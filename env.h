@@ -165,7 +165,7 @@ void env_push( int new_scope );
 void env_pop();
 
 /** Returns an array containing all exported variables in a format suitable for execv. */
-char **env_export_arr( int recalc );
+char **env_export_arr( bool recalc );
 void env_export_arr(bool recalc, null_terminated_array_t<char> &result);
 
 /**
@@ -200,6 +200,8 @@ public:
 
 extern bool g_log_forks;
 extern int g_fork_count;
+
+extern bool g_use_posix_spawn;
 
 
 #endif

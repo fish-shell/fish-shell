@@ -412,6 +412,9 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
     if (! err)
         err = posix_spawnattr_setflags(attr, flags);
 
+    if (! err && should_set_parent_group_id)
+        err = posix_spawnattr_setpgroup(attr, desired_parent_group_id);
+
     /* Everybody gets default handlers */
     if (! err && reset_signal_handlers)
     {

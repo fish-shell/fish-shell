@@ -633,14 +633,6 @@ void get_signals_with_handlers(sigset_t *set)
     sigemptyset(set);
 	for( int i=0; lookup[i].desc ; i++ )
 	{
-        /* Don't include SIGTTIN or SIGTTOU until we figure out how to set the controlling terminal in POSIX_SPAWN */
-#ifdef SIGTTIN
-        if (lookup[i].signal == SIGTTIN) continue;
-#endif
-#ifdef SIGTTOU
-        if (lookup[i].signal == SIGTTOU) continue;
-#endif
-
         struct sigaction act = {};
 		sigaction(lookup[i].signal, NULL, &act);
         if (act.sa_handler != SIG_DFL)

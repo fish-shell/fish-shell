@@ -1,4 +1,9 @@
 function __fish_complete_cd -d "Completions for the cd command"
+	false
+end
+
+
+function __fish_complete_cd -d "Completions for the cd command"
 	#
 	# We can't simply use __fish_complete_directories because of the CDPATH
 	#
@@ -13,11 +18,15 @@ function __fish_complete_cd -d "Completions for the cd command"
 	else
 		set mycdpath $CDPATH
 	end
+	
+	# Note how this works: we evaluate $ctoken*/
+	# That trailing slash ensures that we only expand directories
 
     set -l ctoken (commandline -ct)
 	if echo $ctoken | sgrep '^/\|^\./\|^\.\./\|^~/' >/dev/null
 		# This is an absolute search path
-		eval printf '\%s\\tDirectory\\n' $ctoken\*/
+		# Squelch descriptions per issue 254
+		eval printf '\%s\\n' $ctoken\*/
 	else
 		# This is a relative search path
 		# Iterate over every directory in CDPATH
@@ -30,7 +39,14 @@ function __fish_complete_cd -d "Completions for the cd command"
 			builtin cd $wd
 			eval builtin cd $i
 
-			eval printf '"%s\tDirectory in "'$i'"\n"' $ctoken\*/
+			# What we would really like to do is skip descriptions if all
+			# valid paths are in the same directory, but we don't know how to
+			# do that yet; so instead skip descriptions if CDPATH is just .
+			if test "$mycdpath" = .
+				eval printf '"%s\n"' $ctoken\*/
+			else
+				eval printf '"%s\tin "'$i'"\n"' $ctoken\*/
+			end
 		end
 	end
 

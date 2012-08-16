@@ -610,8 +610,10 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		}
 	}
 	
+    
+    bool wants_desc = ! (expand_flags & EXPAND_NO_DESCRIPTIONS);
 	wcstring desc;
-    if (! (expand_flags & EXPAND_NO_DESCRIPTIONS))
+    if (wants_desc)
         desc = file_get_desc( fullname.c_str(), lstat_res, lbuf, stat_res, buf, stat_errno );
     
 	if( sz >= 0 && S_ISDIR(buf.st_mode) )
@@ -619,13 +621,20 @@ static void wildcard_completion_allocate( std::vector<completion_t> &list,
 		flags = flags | COMPLETE_NO_SPACE;
         munged_completion = completion;
         munged_completion.push_back(L'/');
-        sb.append(desc);
+        if (wants_desc)
+            sb.append(desc);
 	}
 	else
 	{
-        sb.append(desc);
-        sb.append(L", ");
-        sb.append(format_size(sz));
+        if (wants_desc)
+        {
+            if (! desc.empty())
+            {
+                sb.append(desc);
+                sb.append(L", ");
+            }
+            sb.append(format_size(sz));
+        }
 	}
     
     const wcstring &completion_to_use = munged_completion.empty() ? completion : munged_completion;
@@ -1089,8 +1098,9 @@ int wildcard_expand( const wchar_t *wc,
 
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &outputs )
 {
+    // PCA: not convinced this temporary variable is really necessary
     std::vector<completion_t> lst;
-    int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, lst);    
+    int res = wildcard_expand(wc.c_str(), base_dir.c_str(), flags, lst);
     outputs.insert(outputs.end(), lst.begin(), lst.end());
     return res;
 }

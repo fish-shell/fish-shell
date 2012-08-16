@@ -1521,8 +1521,9 @@ void completer_t::complete_param_expand( const wcstring &sstr, bool do_file)
     
     if (! do_file)
         flags |= EXPAND_SKIP_WILDCARDS;
-        
-    if (type == COMPLETE_AUTOSUGGEST)
+    
+    /* Squelch file descriptions per issue 254 */
+    if (type == COMPLETE_AUTOSUGGEST || do_file)
         flags |= EXPAND_NO_DESCRIPTIONS;
 	
 	if( expand_string( comp_str,

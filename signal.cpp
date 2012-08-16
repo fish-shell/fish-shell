@@ -635,10 +635,10 @@ void get_signals_with_handlers(sigset_t *set)
 	{
         /* Don't include SIGTTIN or SIGTTOU until we figure out how to set the controlling terminal in POSIX_SPAWN */
 #ifdef SIGTTIN
-        if (i == SIGTTIN) continue;
+        if (lookup[i].signal == SIGTTIN) continue;
 #endif
 #ifdef SIGTTOU
-        if (i == SIGTTOU) continue;
+        if (lookup[i].signal == SIGTTOU) continue;
 #endif
 
         struct sigaction act = {};

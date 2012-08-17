@@ -364,8 +364,9 @@ while PORT <= 9000:
         # Success
         break;
     except socket.error:
-        type, value = sys.exc_info()[:2]
-        if 'Address already in use' not in value:
+        err_type, err_value = sys.exc_info()[:2]
+        # str(err_value) handles Python3 correctly
+        if 'Address already in use' not in str(err_value):
             break
     PORT += 1
 

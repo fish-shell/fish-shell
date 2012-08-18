@@ -118,10 +118,8 @@ static size_t next_tab_stop( size_t in )
 	/*
 	  Assume tab stops every 8 characters if undefined
 	*/
-	if( init_tabs <= 0 )
-		init_tabs = 8;
-				
-	return ( (in/init_tabs)+1 )*init_tabs;
+    size_t tab_width = (init_tabs > 0 ? (size_t)init_tabs : 8);
+	return ( (in/tab_width)+1 )*tab_width;
 }
 
 // PCA for term256 support, let's just detect the escape codes directly

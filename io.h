@@ -124,12 +124,11 @@ public:
     
     void remove(const io_data_t *element);
     io_chain_t duplicate() const;
-    void duplicate_append(const io_chain_t &src);
+    void duplicate_prepend(const io_chain_t &src);
     void destroy();
     
     const io_data_t *get_io_for_fd(int fd) const;
     io_data_t *get_io_for_fd(int fd);
-    
     
 };
 
@@ -144,8 +143,8 @@ io_chain_t io_duplicate(const io_chain_t &chain);
 /** Return a shallow copy of the specified chain of redirections that contains only the applicable redirections. That is, if there's multiple redirections for the same fd, only the second one is included. */
 io_chain_t io_unique(const io_chain_t &chain);
 
-/** Appends a copy of the specified 'src' chain of redirections to 'dst.' Uses operator new. */
-void io_duplicate_append( const io_chain_t &src, io_chain_t &dst );
+/** Prepends a copy of the specified 'src' chain of redirections to 'dst.' Uses operator new. */
+void io_duplicate_prepend( const io_chain_t &src, io_chain_t &dst );
 
 /** Destroys an io_chain */
 void io_chain_destroy(io_chain_t &chain);

@@ -179,13 +179,14 @@ io_chain_t io_chain_t::duplicate() const
     return result;
 }
 
-void io_chain_t::duplicate_append(const io_chain_t &src)
+void io_chain_t::duplicate_prepend(const io_chain_t &src)
 {
-    this->reserve(this->size() + src.size());
+    /* Prepend a duplicate of src before this. Start by inserting a bunch of NULLs (so we only have to reallocate once) and then replace them. */
+    this->insert(this->begin(), src.size(), NULL);
     for (size_t idx = 0; idx < src.size(); idx++)
     {
         const io_data_t *src_data = src.at(idx);
-        this->push_back(new io_data_t(*src_data));
+        this->at(idx) = new io_data_t(*src_data);
     }
 }
 
@@ -241,9 +242,9 @@ void io_print(const io_chain_t &chain)
     }
 }
 
-void io_duplicate_append( const io_chain_t &src, io_chain_t &dst )
+void io_duplicate_prepend( const io_chain_t &src, io_chain_t &dst )
 {
-    return dst.duplicate_append(src);
+    return dst.duplicate_prepend(src);
 }
 
 void io_chain_destroy(io_chain_t &chain) 

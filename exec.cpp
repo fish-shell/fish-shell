@@ -408,7 +408,7 @@ void exec( parser_t &parser, job_t *j )
 	
 	if( ! parser.block_io.empty() )
 	{
-        io_duplicate_append(parser.block_io, j->io);
+        io_duplicate_prepend(parser.block_io, j->io);
 	}
 
 	const io_data_t *input_redirect = NULL;

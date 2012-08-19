@@ -7,9 +7,11 @@ IS_PY2 = sys.version_info[0] == 2
 if IS_PY2:
     import SimpleHTTPServer
     import SocketServer
+    from urlparse import parse_qs as parse_qs
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
+    from urllib.parse import parse_qs as parse_qs
 import webbrowser
 import subprocess
 import re, json, socket, os, sys, cgi, select, time
@@ -285,6 +287,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
         else: # Python 3
             ctype, pdict = cgi.parse_header(self.headers['content-type'])
+
         if ctype == 'multipart/form-data':
             postvars = cgi.parse_multipart(self.rfile, pdict)
         elif ctype == 'application/x-www-form-urlencoded':
@@ -292,7 +295,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 length = int(self.headers.getheader('content-length'))
             except AttributeError:
                 length = int(self.headers['content-length'])
-            postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+
+            data = self.rfile.read(length)
+            if not IS_PY2:
+                data = data.decode('utf-8')
+            postvars = parse_qs(data, keep_blank_values=1)
         else:
             postvars = {}
 
@@ -303,18 +310,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             bold = postvars.get('bold')
             underline = postvars.get('underline')
 
-            if what == None: #Will be None for python3
-                what = postvars.get(b'what')
-                what[0] = str(what[0]).lstrip("b'").rstrip("'")
-                color = postvars.get(b'color')
-                color[0] = str(color[0]).lstrip("b'").rstrip("'")
-                background_color = postvars.get(b'background_color')
-                background_color[0] = str(background_color[0]).lstrip("b'").rstrip("'")
-                bold = postvars.get(b'bold')
-                bold[0] = str(bold[0]).lstrip("b'").rstrip("'")
-                underline = postvars.get(b'underline')
-                underline[0] = str(underline[0]).lstrip("b'").rstrip("'")
-
             if what:
                 # Not sure why we get lists here?
                 output = self.do_set_color_for_variable(what[0], color[0], background_color[0], parse_bool(bold[0]), parse_bool(underline[0]))
@@ -322,15 +317,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 output = 'Bad request'
         elif p == '/get_function/':
             what = postvars.get('what')
-            if what == None: #Will be None for python3
-                what = postvars.get(b'what')
-                what[0] = str(what[0]).lstrip("b'").rstrip("'")
             output = [self.do_get_function(what[0])]
         elif p == '/delete_history_item/':
             what = postvars.get('what')
-            if what == None: #Will be None for python3
-                what = postvars.get(b'what')
-                what[0] = str(what[0]).lstrip("b'").rstrip("'")
             if self.do_delete_history_item(what[0]):
                 output = ["OK"]
             else:

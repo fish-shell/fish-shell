@@ -7,11 +7,11 @@ IS_PY2 = sys.version_info[0] == 2
 if IS_PY2:
     import SimpleHTTPServer
     import SocketServer
-    from urlparse import parse_qs as parse_qs
+    from urlparse import parse_qs
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
-    from urllib.parse import parse_qs as parse_qs
+    from urllib.parse import parse_qs
 import webbrowser
 import subprocess
 import re, json, socket, os, sys, cgi, select, time

@@ -297,7 +297,11 @@ img.delete_icon {
 	bottom: 10px;
 }
 
-.table_filter_text_box {
+#table_filter_text_box {
+	
+}
+
+.filter_text_box {
 	width: 250px;
 	padding: 5 10 5 10;
 	background-color: #888;
@@ -478,7 +482,11 @@ function switch_tab(new_tab) {
 	$('#detail_colorpicker').hide()
 	$('#detail_function').hide()
 	$('#data_table').hide()
+	$('#table_filter_container').hide()
 	$('#data_table').empty()
+	
+	/* Determine if we will want to show the data table (and associated filter box) */
+	var wants_data_table = false
 	
 	/* Load something new */
 	if (new_tab == 'tab_colors') {
@@ -499,6 +507,7 @@ function switch_tab(new_tab) {
 		})
 		$('#detail_colorpicker').show()
 		$('#master_detail_table').show()
+		wants_data_table = false
 	} else if (new_tab == 'tab_functions') {
 		/* Keep track of whether this is the first element */
 		var first = true
@@ -512,6 +521,7 @@ function switch_tab(new_tab) {
 		})
 		$('#detail_function').show()
 		$('#master_detail_table').show()
+		wants_data_table = false
 	} else if (new_tab == 'tab_variables') {
 		run_get_request_with_bulk_handler('/variables/', function(json_contents){
 			var rows = new Array()
@@ -525,7 +535,7 @@ function switch_tab(new_tab) {
 			}
 			$('#data_table').append(rows.join(''))
 		})
-		$('#data_table').show()
+		wants_data_table = true
 	} else if (new_tab == 'tab_history') {
 		// Clear the history map
 		history_element_map.length = 0
@@ -541,10 +551,20 @@ function switch_tab(new_tab) {
 			end = new Date().getTime()				
 			//alert(rows.length + " rows in " + (end - start) + " msec")
 		})
-		$('#data_table').show()
+		wants_data_table = true
 	} else {
 		alert("Unknown tab");
 	}
+	
+	/* Show or hide the data table and its search field */
+	if (wants_data_table) {
+		$('#data_table').show()
+		$('#table_filter_container').show()
+	} else {
+		$('#data_table').hide()
+		$('#table_filter_container').hide()	
+	}
+		
 	return false
 }
 
@@ -1141,7 +1161,7 @@ function populate_colorpicker_term256() {
 
 /* Update the filter text box */
 function update_table_filter_text_box(allow_transient_message) {
-	var box = $('.table_filter_text_box')
+	var box = $('#table_filter_text_box')
 	var has_transient = box.hasClass('text_box_transient')
 	if (! allow_transient_message && has_transient) {
 		box.val('')
@@ -1240,7 +1260,7 @@ $(document).ready(function() {
 			</div>
 			<table id="data_table">
 			<div id="table_filter_container">
-				<input type="text" class="table_filter_text_box text_box_transient" value="Filter" onInput="update_table_filter_text_box(false)" onFocus="update_table_filter_text_box(false)" onBlur="update_table_filter_text_box(true)">
+				<input type="text" id="table_filter_text_box" class="filter_text_box text_box_transient" value="Filter" onInput="update_table_filter_text_box(false)" onFocus="update_table_filter_text_box(false)" onBlur="update_table_filter_text_box(true)">
 			</div>
 			<tr><td>
 			</td></tr>

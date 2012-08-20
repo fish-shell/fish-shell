@@ -7,6 +7,7 @@ IS_PY2 = sys.version_info[0] == 2
 if IS_PY2:
     import SimpleHTTPServer
     import SocketServer
+    import urlparse
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
@@ -17,10 +18,10 @@ import re, json, socket, os, sys, cgi, select, time
 def run_fish_cmd(text):
     from subprocess import PIPE
     p = subprocess.Popen(["fish"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    if IS_PY2:
-    	out, err = p.communicate(text)
-    else:
-        out, err = p.communicate(bytes(text, 'utf-8'))        
+    if not IS_PY2:
+    	text = text.encode('utf-8')
+    out, err = p.communicate(text)
+    if not IS_PY2:
         out = str(out, 'utf-8')
         err = str(err, 'utf-8')
     return(out, err)
@@ -292,7 +293,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 length = int(self.headers.getheader('content-length'))
             except AttributeError:
                 length = int(self.headers['content-length'])
-            postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                
+            # parse_qs borks if we give it a Unicode string in Python2.
+            url_str = self.rfile.read(length).decode('utf-8')
+            if IS_PY2: url_str = str(url_str)
+            postvars = cgi.parse_qs(url_str, keep_blank_values=1)
         else:
             postvars = {}
 
@@ -331,7 +336,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if what == None: #Will be None for python3
                 what = postvars.get(b'what')
                 what[0] = str(what[0]).lstrip("b'").rstrip("'")
-            if self.do_delete_history_item(what[0]):
+            what = what[0] # It's a list!
+            if self.do_delete_history_item(what):
             	output = ["OK"]
             else:
             	output = ["Unable to delete history item"]

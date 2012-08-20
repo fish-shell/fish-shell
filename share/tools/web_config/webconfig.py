@@ -7,10 +7,11 @@ IS_PY2 = sys.version_info[0] == 2
 if IS_PY2:
     import SimpleHTTPServer
     import SocketServer
-    import urlparse
+    from urlparse import parse_qs
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
+    from urllib.parse import parse_qs
 import webbrowser
 import subprocess
 import re, json, socket, os, sys, cgi, select, time
@@ -18,18 +19,18 @@ import re, json, socket, os, sys, cgi, select, time
 def run_fish_cmd(text):
     from subprocess import PIPE
     p = subprocess.Popen(["fish"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    if not IS_PY2:
-    	text = text.encode('utf-8')
-    out, err = p.communicate(text)
-    if not IS_PY2:
+    if IS_PY2:
+        out, err = p.communicate(text)
+    else:
+        out, err = p.communicate(bytes(text, 'utf-8'))
         out = str(out, 'utf-8')
         err = str(err, 'utf-8')
     return(out, err)
-    
+
 def escape_fish_cmd(text):
-	# Replace one backslash with two, and single quotes with backslash-quote
-	escaped = text.replace('\\', '\\\\').replace("'", "\\'")
-	return "'" + escaped + "'"
+    # Replace one backslash with two, and single quotes with backslash-quote
+    escaped = text.replace('\\', '\\\\').replace("'", "\\'")
+    return "'" + escaped + "'"
 
 named_colors = {
     'black'   : '000000',
@@ -57,15 +58,15 @@ def parse_one_color(comp):
         return ''
 
 def better_color(c1, c2):
-	""" Indicate which color is "better", i.e. prefer term256 colors """
-	if not c2: return c1
-	if not c1: return c2
-	if c1 == 'normal': return c2
-	if c2 == 'normal': return c1
-	if c2 in named_colors: return c1
-	if c1 in named_colors: return c2
-	return c1
-	
+    """ Indicate which color is "better", i.e. prefer term256 colors """
+    if not c2: return c1
+    if not c1: return c2
+    if c1 == 'normal': return c2
+    if c2 == 'normal': return c1
+    if c2 in named_colors: return c1
+    if c1 in named_colors: return c2
+    return c1
+
 
 def parse_color(color_str):
     """ A basic function to parse a color string, for example, 'red' '--bold' """
@@ -86,10 +87,10 @@ def parse_color(color_str):
         else:
             # Regular color
             color = better_color(color, parse_one_color(comp))
-    
+
     return [color, background_color, bold, underline]
-    
-    
+
+
 def parse_bool(val):
     val = val.lower()
     if val.startswith('f') or val.startswith('0'): return False
@@ -103,7 +104,7 @@ class FishVar:
         self.value = value
         self.universal = False
         self.exported = False
-        
+
     def get_json_obj(self):
         # Return an array(3): name, value, flags
         flags = []
@@ -112,19 +113,19 @@ class FishVar:
         return [self.name, self.value, ', '.join(flags)]
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    
+
     def write_to_wfile(self, txt):
         if IS_PY2:
-        	self.wfile.write(txt)
+            self.wfile.write(txt)
         else: # Python 3
-        	self.wfile.write(bytes(txt, 'utf-8'))
+            self.wfile.write(bytes(txt, 'utf-8'))
 
-    
+
     def do_get_colors(self):
         # Looks for fish_color_*.
         # Returns an array of lists [color_name, color_description, color_value]
         result = []
-        
+
         # Make sure we return at least these
         remaining = set(['normal',
                          'error',
@@ -141,7 +142,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                          'valid_path',
                          'autosuggestion'
                          ])
-    
+
         # Here are our color descriptions
         descriptions = {
             'normal': 'Default text',
@@ -158,11 +159,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             'operator': 'Like * and ~',
             'escape': 'Escapes like \\n',
             'cwd': 'Current directory',
-			'cwd_root': 'cwd for root user',
+            'cwd_root': 'cwd for root user',
             'valid_path': 'Valid paths',
             'autosuggestion': 'Suggested completion'
         }
-    
+
         out, err = run_fish_cmd('set -L')
         for line in out.split('\n'):
 
@@ -171,36 +172,36 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 color_desc = descriptions.get(color_name, '')
                 result.append([color_name, color_desc, parse_color(color_value)])
                 remaining.discard(color_name)
-                
+
         # Ensure that we have all the color names we know about, so that if the
         # user deletes one he can still set it again via the web interface
         for color_name in remaining:
             color_desc = descriptions.get(color_name, '')
             result.append([color_name, color_desc, parse_color('')])
-            
+
         # Sort our result (by their keys)
         result.sort()
-        
+
         return result
-        
+
     def do_get_functions(self):
         out, err = run_fish_cmd('functions')
         out = out.strip()
-        
+
         # Not sure why fish sometimes returns this with newlines
         if "\n" in out:
             return out.split('\n')
         else:
             return out.strip().split(', ')
-    
+
     def do_get_variable_names(self, cmd):
         " Given a command like 'set -U' return all the variable names "
         out, err = run_fish_cmd(cmd)
         return out.split('\n')
-    
+
     def do_get_variables(self):
         out, err = run_fish_cmd('set -L')
-        
+
         # Put all the variables into a dictionary
         vars = {}
         for line in out.split('\n'):
@@ -208,16 +209,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if len(comps) < 2: continue
             fish_var = FishVar(comps[0], comps[1])
             vars[fish_var.name] = fish_var
-            
+
         # Mark universal variables. L means don't abbreviate.
         for name in self.do_get_variable_names('set -nUL'):
             if name in vars: vars[name].universal = True
         # Mark exported variables. L means don't abbreviate.
         for name in self.do_get_variable_names('set -nxL'):
             if name in vars: vars[name].exported = True
-        
+
         return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=str.lower)]
-    
+
     def do_get_history(self):
         # Use \x1e ("record separator") to distinguish between history items. The first
         # backslash is so Python passes one backslash to fish
@@ -225,13 +226,13 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         result = out.split(' \x1e')
         if result: result.pop() # Trim off the trailing element
         return result
-        
+
 
     def do_get_color_for_variable(self, name):
         "Return the color with the given name, or the empty string if there is none"
         out, err = run_fish_cmd("echo -n $" + name)
         return out
-        
+
     def do_set_color_for_variable(self, name, color, background_color, bold, underline):
         if not color: color = 'normal'
         "Sets a color for a fish color name, like 'autosuggestion'"
@@ -240,19 +241,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         if background_color: command += ' --background=' + background_color
         if bold: command += ' --bold'
         if underline: command += ' --underline'
-        
+
         out, err = run_fish_cmd(command)
         return out
-        
+
     def do_get_function(self, func_name):
         out, err = run_fish_cmd('functions ' + func_name)
         return out
-        
+
     def do_delete_history_item(self, history_item_text):
-    	# It's really lame that we always return success here
-    	out, err = run_fish_cmd('builtin history --save --delete -- ' + escape_fish_cmd(history_item_text))
-    	return True
-        
+        # It's really lame that we always return success here
+        out, err = run_fish_cmd('builtin history --save --delete -- ' + escape_fish_cmd(history_item_text))
+        return True
+
     def do_GET(self):
         p = self.path
         if p == '/colors/':
@@ -271,21 +272,22 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = self.do_get_color_for_variable(name)
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
-                
+
         # Return valid output
         self.send_response(200)
         self.send_header('Content-type','text/html')
         self.write_to_wfile('\n')
-        
+
         # Output JSON
         self.write_to_wfile(json.dumps(output))
-        
+
     def do_POST(self):
         p = self.path
         if IS_PY2:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
         else: # Python 3
             ctype, pdict = cgi.parse_header(self.headers['content-type'])
+
         if ctype == 'multipart/form-data':
             postvars = cgi.parse_multipart(self.rfile, pdict)
         elif ctype == 'application/x-www-form-urlencoded':
@@ -293,7 +295,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 length = int(self.headers.getheader('content-length'))
             except AttributeError:
                 length = int(self.headers['content-length'])
-                
             # parse_qs borks if we give it a Unicode string in Python2.
             url_str = self.rfile.read(length).decode('utf-8')
             if IS_PY2: url_str = str(url_str)
@@ -308,18 +309,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             bold = postvars.get('bold')
             underline = postvars.get('underline')
 
-            if what == None: #Will be None for python3
-                what = postvars.get(b'what')
-                what[0] = str(what[0]).lstrip("b'").rstrip("'")
-                color = postvars.get(b'color')
-                color[0] = str(color[0]).lstrip("b'").rstrip("'")
-                background_color = postvars.get(b'background_color')
-                background_color[0] = str(background_color[0]).lstrip("b'").rstrip("'")
-                bold = postvars.get(b'bold')
-                bold[0] = str(bold[0]).lstrip("b'").rstrip("'")
-                underline = postvars.get(b'underline')
-                underline[0] = str(underline[0]).lstrip("b'").rstrip("'")
-
             if what:
                 # Not sure why we get lists here?
                 output = self.do_set_color_for_variable(what[0], color[0], background_color[0], parse_bool(bold[0]), parse_bool(underline[0]))
@@ -327,28 +316,21 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 output = 'Bad request'
         elif p == '/get_function/':
             what = postvars.get('what')
-            if what == None: #Will be None for python3
-                what = postvars.get(b'what')
-                what[0] = str(what[0]).lstrip("b'").rstrip("'")
             output = [self.do_get_function(what[0])]
         elif p == '/delete_history_item/':
             what = postvars.get('what')
-            if what == None: #Will be None for python3
-                what = postvars.get(b'what')
-                what[0] = str(what[0]).lstrip("b'").rstrip("'")
-            what = what[0] # It's a list!
-            if self.do_delete_history_item(what):
-            	output = ["OK"]
+            if self.do_delete_history_item(what[0]):
+                output = ["OK"]
             else:
-            	output = ["Unable to delete history item"]
+                output = ["Unable to delete history item"]
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_POST(self)
-            
+
         # Return valid output
         self.send_response(200)
         self.send_header('Content-type','text/html')
         self.write_to_wfile('\n')
-		        
+
         # Output JSON
         self.write_to_wfile(json.dumps(output))
 
@@ -385,10 +367,10 @@ if PORT > 9000:
 # Just look at the first letter
 initial_tab = ''
 if len(sys.argv) > 1:
-	for tab in ['functions', 'colors', 'variables', 'history']:
-		if tab.startswith(sys.argv[1]):
-			initial_tab = '#' + tab
-			break
+    for tab in ['functions', 'colors', 'variables', 'history']:
+        if tab.startswith(sys.argv[1]):
+            initial_tab = '#' + tab
+            break
 
 url = 'http://localhost:{0}/{1}'.format(PORT, initial_tab)
 print("Web config started at '{0}'. Hit enter to stop.".format(url))

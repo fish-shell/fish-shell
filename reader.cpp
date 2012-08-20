@@ -975,18 +975,15 @@ static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<
 		long base_len=-1;
 		const completion_t &el = comp.at( i );
 
-		wchar_t *foo=0;
-		wchar_t *baz=0;
+		wcstring completion_text;
+		wcstring description_text;
 
 		if( has_case_sensitive && (el.flags & COMPLETE_NO_CASE ))
 		{
 			continue;
 		}
-
-		if( el.completion.empty() ){
-			continue;
-		}
-		
+        
+		// Note that an empty completion is perfectly sensible here, e.g. tab-completing 'foo' with a file called 'foo' and another called 'foobar'		
 		if( el.flags & COMPLETE_NO_CASE )
 		  {
 		    if( base_len == -1 )
@@ -997,40 +994,30 @@ static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<
                 base_len = data->buff_pos - (begin-buff);
             }
 								
-		    wcstring foo_wstr = escape_string( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-		    foo = wcsdup(foo_wstr.c_str());
+		    completion_text = escape_string( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
 		  }
 		else
         {
-		    wcstring foo_wstr = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-		    foo = wcsdup(foo_wstr.c_str());
+		    completion_text = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
         }
 		
 	
-		if( !el.description.empty() )
+		if( ! el.description.empty() )
 		{
-			wcstring baz_wstr = escape_string( el.description, 1 );
-			baz = wcsdup(baz_wstr.c_str());
-		}
-		
-		if( !foo )
-		{
-			debug( 0, L"Run pager called with bad argument." );
-			bugreport();
-			show_stackframe();
-		}
-		else if( baz )
-		{
-			append_format(msg, L"%ls%ls%ls\n", foo, escaped_separator, baz);
-		}
-		else
-		{
-			append_format(msg, L"%ls\n", foo);
+			description_text = escape_string( el.description, true );
 		}
 
-		free( foo );		
-		free( baz );		
-	}
+        /* It's possible (even common) to have an empty completion with no description. An example would be completing 'foo' with extant files 'foo' and 'foobar'. But fish_pager ignores blank lines. So if our completion text is empty, always include a description, even if it's empty.
+        */
+        msg.reserve(msg.size() + completion_text.size() + description_text.size() + 2);
+        msg.append(completion_text);
+        if (! description_text.empty() || completion_text.empty())
+        {
+            msg.append(escaped_separator);
+            msg.append(description_text);
+        }
+        msg.push_back(L'\n');
+    }
 
 	free( escaped_separator );		
 	
@@ -1490,7 +1477,7 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 			is_quoted = (quote != L'\0');
 			
 			write_loop(1, "\n", 1 );
-			
+            
 			run_pager( prefix, is_quoted, comp );
 		}
 		s_reset( &data->screen, true);

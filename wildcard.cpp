@@ -250,13 +250,8 @@ static bool wildcard_complete_internal(const wcstring &orig,
 			
 		}
 		
-		if (! out_completion.empty())
-		{
-			append_completion( out, 
-								 out_completion,
-								 out_desc,
-								 flags );
-		}		
+        /* Note: out_completion may be empty if the completion really is empty, e.g. tab-completing 'foo' when a file 'foo' exists. */
+        append_completion(out, out_completion, out_desc, flags);
 		return true;
 	}
 	
@@ -1073,7 +1068,7 @@ int wildcard_expand( const wchar_t *wc,
     
 	std::set<file_id_t> visited_files;
 	int res = wildcard_expand_internal( wc, base_dir, flags, out, completion_set, visited_files );
-			
+    
 	if( flags & ACCEPT_INCOMPLETE )
 	{
         wcstring wc_base;

@@ -7,9 +7,26 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		D0F019EC15A976F30034B3B1 /* root */ = {
+		D07D265615E33B86009E43F6 /* root */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "root" */;
+			buildConfigurationList = D07D266F15E33B86009E43F6 /* Build configuration list for PBXAggregateTarget "root" */;
+			buildPhases = (
+				D07D266915E33B86009E43F6 /* CopyFiles */,
+				D07D266B15E33B86009E43F6 /* Copy Files */,
+			);
+			dependencies = (
+				D07D265715E33B86009E43F6 /* PBXTargetDependency */,
+				D07D265915E33B86009E43F6 /* PBXTargetDependency */,
+				D07D265B15E33B86009E43F6 /* PBXTargetDependency */,
+				D07D265D15E33B86009E43F6 /* PBXTargetDependency */,
+				D07D265F15E33B86009E43F6 /* PBXTargetDependency */,
+			);
+			name = root;
+			productName = base;
+		};
+		D0F019EC15A976F30034B3B1 /* base */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "base" */;
 			buildPhases = (
 				D0F019F015A977010034B3B1 /* CopyFiles */,
 				D0F019F715A977A00034B3B1 /* CopyFiles */,
@@ -23,7 +40,7 @@
 				D0F01A1715AA36300034B3B1 /* PBXTargetDependency */,
 				D0F01A1B15AA36330034B3B1 /* PBXTargetDependency */,
 			);
-			name = root;
+			name = base;
 			productName = base;
 		};
 /* End PBXAggregateTarget section */
@@ -38,6 +55,11 @@
 		D07A7D3C15A7A38100811FC6 /* builtin_scripts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F5E28215A7A32D00315DFF /* builtin_scripts.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
+		D07D266A15E33B86009E43F6 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
+		D07D266C15E33B86009E43F6 /* completions in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
+		D07D266D15E33B86009E43F6 /* functions in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
+		D07D266E15E33B86009E43F6 /* tools in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
+		D07D267215E34171009E43F6 /* config.fish in Copy Files */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
 		D0C4FD9515A7D80700212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
 		D0C4FD9615A7D80C00212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
 		D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */ = {isa = PBXBuildFile; fileRef = D0CBD586159EF0E10024809C /* launch_fish.scpt */; };
@@ -131,6 +153,41 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D07D265815E33B86009E43F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D2693B159835CA005D9B9C;
+			remoteInfo = fish_shell;
+		};
+		D07D265A15E33B86009E43F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D02ABB15985EF9008E62BD;
+			remoteInfo = fishd;
+		};
+		D07D265C15E33B86009E43F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D02AE315986537008E62BD;
+			remoteInfo = fish_pager;
+		};
+		D07D265E15E33B86009E43F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0D02ACF1598642A008E62BD;
+			remoteInfo = fish_indent;
+		};
+		D07D266015E33B86009E43F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0F019DB15A969970034B3B1;
+			remoteInfo = set_color;
+		};
 		D0F01A0815A97C860034B3B1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
@@ -215,6 +272,30 @@
 				D033781315DC6D5400A634BA /* tools in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D07D266915E33B86009E43F6 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = "${INSTALL_PATH}/etc/fish";
+			dstSubfolderSpec = 0;
+			files = (
+				D07D266A15E33B86009E43F6 /* config.fish in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		D07D266B15E33B86009E43F6 /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = "${INSTALL_PATH}/share/fish";
+			dstSubfolderSpec = 0;
+			files = (
+				D07D267215E34171009E43F6 /* config.fish in Copy Files */,
+				D07D266C15E33B86009E43F6 /* completions in Copy Files */,
+				D07D266D15E33B86009E43F6 /* functions in Copy Files */,
+				D07D266E15E33B86009E43F6 /* tools in Copy Files */,
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 1;
 		};
 		D0CBD570159ED2A30024809C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -800,7 +881,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D0F019EC15A976F30034B3B1 /* root */,
+				D0F019EC15A976F30034B3B1 /* base */,
+				D07D265615E33B86009E43F6 /* root */,
 				D0D02A9915985A75008E62BD /* fish.app */,
 				D0D2693B159835CA005D9B9C /* fish_shell */,
 				D0D02ABB15985EF9008E62BD /* fishd */,
@@ -955,6 +1037,31 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D07D265715E33B86009E43F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D2693B159835CA005D9B9C /* fish_shell */;
+			targetProxy = D07D265815E33B86009E43F6 /* PBXContainerItemProxy */;
+		};
+		D07D265915E33B86009E43F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D02ABB15985EF9008E62BD /* fishd */;
+			targetProxy = D07D265A15E33B86009E43F6 /* PBXContainerItemProxy */;
+		};
+		D07D265B15E33B86009E43F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D02AE315986537008E62BD /* fish_pager */;
+			targetProxy = D07D265C15E33B86009E43F6 /* PBXContainerItemProxy */;
+		};
+		D07D265D15E33B86009E43F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0D02ACF1598642A008E62BD /* fish_indent */;
+			targetProxy = D07D265E15E33B86009E43F6 /* PBXContainerItemProxy */;
+		};
+		D07D265F15E33B86009E43F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0F019DB15A969970034B3B1 /* set_color */;
+			targetProxy = D07D266015E33B86009E43F6 /* PBXContainerItemProxy */;
+		};
 		D0F01A0915A97C860034B3B1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D0D2693B159835CA005D9B9C /* fish_shell */;
@@ -1008,6 +1115,26 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D07D267015E33B86009E43F6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INSTALL_PATH = /usr/local;
+				PRODUCT_NAME = "base copy";
+				SKIP_INSTALL = NO;
+			};
+			name = Debug;
+		};
+		D07D267115E33B86009E43F6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INSTALL_PATH = /usr/local;
+				PRODUCT_NAME = "base copy";
+				SKIP_INSTALL = NO;
+			};
+			name = Release;
+		};
 		D0A084F813B3AC130099B651 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1261,7 +1388,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				INSTALL_PATH = /usr/local;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
 			};
 			name = Debug;
 		};
@@ -1269,13 +1398,24 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
+				INSTALL_PATH = /usr/local;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D07D266F15E33B86009E43F6 /* Build configuration list for PBXAggregateTarget "root" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D07D267015E33B86009E43F6 /* Debug */,
+				D07D267115E33B86009E43F6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "FishsFish" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1348,7 +1488,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "root" */ = {
+		D0F019ED15A976F30034B3B1 /* Build configuration list for PBXAggregateTarget "base" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0F019EE15A976F30034B3B1 /* Debug */,

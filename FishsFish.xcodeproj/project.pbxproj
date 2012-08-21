@@ -46,9 +46,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		D025C02A15D1FEA100B9DB63 /* completions in Resources */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
-		D025C02B15D1FEA100B9DB63 /* functions in Resources */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
-		D025C02C15D1FEA100B9DB63 /* tools in Resources */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
+		D031890C15E36E4600D9CC39 /* base in Resources */ = {isa = PBXBuildFile; fileRef = D031890915E36D9800D9CC39 /* base */; };
 		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
 		D033781215DC6D5200A634BA /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D033781315DC6D5400A634BA /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
@@ -60,8 +58,6 @@
 		D07D266D15E33B86009E43F6 /* functions in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D07D266E15E33B86009E43F6 /* tools in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
 		D07D267215E34171009E43F6 /* config.fish in Copy Files */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
-		D0C4FD9515A7D80700212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
-		D0C4FD9615A7D80C00212EF1 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
 		D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */ = {isa = PBXBuildFile; fileRef = D0CBD586159EF0E10024809C /* launch_fish.scpt */; };
 		D0D02A67159837AD008E62BD /* complete.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853713B3ACEE0099B651 /* complete.cpp */; };
 		D0D02A69159837B2008E62BD /* env.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853A13B3ACEE0099B651 /* env.cpp */; };
@@ -129,10 +125,6 @@
 		D0D1CD7515B7458B00F03988 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853613B3ACEE0099B651 /* common.cpp */; };
 		D0D2694915983772005D9B9C /* function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854413B3ACEE0099B651 /* function.cpp */; };
 		D0D2694A15983779005D9B9C /* builtin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853513B3ACEE0099B651 /* builtin.cpp */; };
-		D0F019D415A969120034B3B1 /* fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D2693C159835CA005D9B9C /* fish */; };
-		D0F019D515A969140034B3B1 /* fishd in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02ABC15985EF9008E62BD /* fishd */; };
-		D0F019D615A969160034B3B1 /* fish_indent in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02AD01598642A008E62BD /* fish_indent */; };
-		D0F019D715A969190034B3B1 /* fish_pager in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02AE415986537008E62BD /* fish_pager */; };
 		D0F019E215A969B40034B3B1 /* set_color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855B13B3ACEE0099B651 /* set_color.cpp */; };
 		D0F019E315A969BA0034B3B1 /* print_help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855613B3ACEE0099B651 /* print_help.cpp */; };
 		D0F019E415A969C00034B3B1 /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853613B3ACEE0099B651 /* common.cpp */; };
@@ -140,7 +132,6 @@
 		D0F019E615A969C80034B3B1 /* wutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0856113B3ACEE0099B651 /* wutil.cpp */; };
 		D0F019E915A96A0A0034B3B1 /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
 		D0F019EA15A96A0C0034B3B1 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8A15983CDF008E62BD /* libiconv.dylib */; };
-		D0F019EB15A96AFB0034B3B1 /* set_color in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0F019DC15A969970034B3B1 /* set_color */; };
 		D0F019F115A977140034B3B1 /* fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D2693C159835CA005D9B9C /* fish */; };
 		D0F019F215A977270034B3B1 /* fishd in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02ABC15985EF9008E62BD /* fishd */; };
 		D0F019F315A977290034B3B1 /* fish_indent in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D02AD01598642A008E62BD /* fish_indent */; };
@@ -153,6 +144,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		D031890715E36CC000D9CC39 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D0F019EC15A976F30034B3B1;
+			remoteInfo = base;
+		};
 		D07D265815E33B86009E43F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
@@ -182,41 +180,6 @@
 			remoteInfo = fish_indent;
 		};
 		D07D266015E33B86009E43F6 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D0F019DB15A969970034B3B1;
-			remoteInfo = set_color;
-		};
-		D0F01A0815A97C860034B3B1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D0D2693B159835CA005D9B9C;
-			remoteInfo = fish_Xcode;
-		};
-		D0F01A0A15A97C870034B3B1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D0D02ABB15985EF9008E62BD;
-			remoteInfo = fishd;
-		};
-		D0F01A0C15A97C890034B3B1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D0D02ACF1598642A008E62BD;
-			remoteInfo = fish_indent;
-		};
-		D0F01A0E15A97C980034B3B1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D0D02AE315986537008E62BD;
-			remoteInfo = fish_pager;
-		};
-		D0F01A1015A97C9B0034B3B1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
 			proxyType = 1;
@@ -297,40 +260,6 @@
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		D0CBD570159ED2A30024809C /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = base/share/fish;
-			dstSubfolderSpec = 7;
-			files = (
-				D0C4FD9615A7D80C00212EF1 /* config.fish in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D0CBD57F159EE4800024809C /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = base/etc/fish;
-			dstSubfolderSpec = 7;
-			files = (
-				D0C4FD9515A7D80700212EF1 /* config.fish in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D0F019D215A968E40034B3B1 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = base/bin;
-			dstSubfolderSpec = 7;
-			files = (
-				D0F019D415A969120034B3B1 /* fish in CopyFiles */,
-				D0F019D515A969140034B3B1 /* fishd in CopyFiles */,
-				D0F019D715A969190034B3B1 /* fish_pager in CopyFiles */,
-				D0F019D615A969160034B3B1 /* fish_indent in CopyFiles */,
-				D0F019EB15A96AFB0034B3B1 /* set_color in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D0F019F015A977010034B3B1 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -371,6 +300,7 @@
 		D025C02715D1FEA100B9DB63 /* completions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = completions; path = share/completions; sourceTree = "<group>"; };
 		D025C02815D1FEA100B9DB63 /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
 		D025C02915D1FEA100B9DB63 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
+		D031890915E36D9800D9CC39 /* base */ = {isa = PBXFileReference; lastKnownFileType = text; path = base; sourceTree = BUILT_PRODUCTS_DIR; };
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
 		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
@@ -554,6 +484,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D031890A15E36DB500D9CC39 /* Other Build Products */ = {
+			isa = PBXGroup;
+			children = (
+				D031890915E36D9800D9CC39 /* base */,
+			);
+			name = "Other Build Products";
+			sourceTree = "<group>";
+		};
 		D0A084F013B3AC130099B651 = {
 			isa = PBXGroup;
 			children = (
@@ -562,6 +500,7 @@
 				D0D02AFC159871BF008E62BD /* Launcher */,
 				D0D02A8E15983D5F008E62BD /* Libraries */,
 				D0D02AAB15985C14008E62BD /* Resources */,
+				D031890A15E36DB500D9CC39 /* Other Build Products */,
 				D0D2693215983562005D9B9C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -760,20 +699,13 @@
 			buildConfigurationList = D0D02AA415985A75008E62BD /* Build configuration list for PBXNativeTarget "fish.app" */;
 			buildPhases = (
 				D0F01A0215A9788B0034B3B1 /* Sources */,
-				D0F019D215A968E40034B3B1 /* CopyFiles */,
-				D0CBD570159ED2A30024809C /* CopyFiles */,
-				D0CBD57F159EE4800024809C /* CopyFiles */,
 				D0CBD585159EF09F0024809C /* Resources */,
 				D0F01A0415A9789C0034B3B1 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				D0F01A0915A97C860034B3B1 /* PBXTargetDependency */,
-				D0F01A0B15A97C870034B3B1 /* PBXTargetDependency */,
-				D0F01A0D15A97C890034B3B1 /* PBXTargetDependency */,
-				D0F01A0F15A97C980034B3B1 /* PBXTargetDependency */,
-				D0F01A1115A97C9B0034B3B1 /* PBXTargetDependency */,
+				D031890815E36CC000D9CC39 /* PBXTargetDependency */,
 			);
 			name = fish.app;
 			productName = fish;
@@ -899,12 +831,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D031890C15E36E4600D9CC39 /* base in Resources */,
 				D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */,
 				D07B247315BCC15700D4ADB4 /* add-shell in Resources */,
 				D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */,
-				D025C02A15D1FEA100B9DB63 /* completions in Resources */,
-				D025C02B15D1FEA100B9DB63 /* functions in Resources */,
-				D025C02C15D1FEA100B9DB63 /* tools in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1037,6 +967,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D031890815E36CC000D9CC39 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D0F019EC15A976F30034B3B1 /* base */;
+			targetProxy = D031890715E36CC000D9CC39 /* PBXContainerItemProxy */;
+		};
 		D07D265715E33B86009E43F6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D0D2693B159835CA005D9B9C /* fish_shell */;
@@ -1061,31 +996,6 @@
 			isa = PBXTargetDependency;
 			target = D0F019DB15A969970034B3B1 /* set_color */;
 			targetProxy = D07D266015E33B86009E43F6 /* PBXContainerItemProxy */;
-		};
-		D0F01A0915A97C860034B3B1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D0D2693B159835CA005D9B9C /* fish_shell */;
-			targetProxy = D0F01A0815A97C860034B3B1 /* PBXContainerItemProxy */;
-		};
-		D0F01A0B15A97C870034B3B1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D0D02ABB15985EF9008E62BD /* fishd */;
-			targetProxy = D0F01A0A15A97C870034B3B1 /* PBXContainerItemProxy */;
-		};
-		D0F01A0D15A97C890034B3B1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D0D02ACF1598642A008E62BD /* fish_indent */;
-			targetProxy = D0F01A0C15A97C890034B3B1 /* PBXContainerItemProxy */;
-		};
-		D0F01A0F15A97C980034B3B1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D0D02AE315986537008E62BD /* fish_pager */;
-			targetProxy = D0F01A0E15A97C980034B3B1 /* PBXContainerItemProxy */;
-		};
-		D0F01A1115A97C9B0034B3B1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = D0F019DB15A969970034B3B1 /* set_color */;
-			targetProxy = D0F01A1015A97C9B0034B3B1 /* PBXContainerItemProxy */;
 		};
 		D0F01A1315AA36280034B3B1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

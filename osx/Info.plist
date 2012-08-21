@@ -5,7 +5,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>fish shell</string>
 	<key>CFBundleExecutable</key>
-	<string>fish_launcher</string>
+	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFile</key>
 	<string>fish.icns</string>
 	<key>CFBundleIdentifier</key>

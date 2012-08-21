@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		D07D265615E33B86009E43F6 /* root */ = {
+		D07D265615E33B86009E43F6 /* install_tree */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = D07D266F15E33B86009E43F6 /* Build configuration list for PBXAggregateTarget "root" */;
+			buildConfigurationList = D07D266F15E33B86009E43F6 /* Build configuration list for PBXAggregateTarget "install_tree" */;
 			buildPhases = (
 				D07D266915E33B86009E43F6 /* CopyFiles */,
 				D07D266B15E33B86009E43F6 /* Copy Files */,
@@ -21,7 +21,7 @@
 				D07D265D15E33B86009E43F6 /* PBXTargetDependency */,
 				D07D265F15E33B86009E43F6 /* PBXTargetDependency */,
 			);
-			name = root;
+			name = install_tree;
 			productName = base;
 		};
 		D0F019EC15A976F30034B3B1 /* base */ = {
@@ -814,7 +814,7 @@
 			projectRoot = "";
 			targets = (
 				D0F019EC15A976F30034B3B1 /* base */,
-				D07D265615E33B86009E43F6 /* root */,
+				D07D265615E33B86009E43F6 /* install_tree */,
 				D0D02A9915985A75008E62BD /* fish.app */,
 				D0D2693B159835CA005D9B9C /* fish_shell */,
 				D0D02ABB15985EF9008E62BD /* fishd */,
@@ -1317,7 +1317,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D07D266F15E33B86009E43F6 /* Build configuration list for PBXAggregateTarget "root" */ = {
+		D07D266F15E33B86009E43F6 /* Build configuration list for PBXAggregateTarget "install_tree" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D07D267015E33B86009E43F6 /* Debug */,

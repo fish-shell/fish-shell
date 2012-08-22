@@ -134,15 +134,17 @@ public:
 	*/
 	int flags;
     
+    bool is_case_insensitive() const { return !! (flags & COMPLETE_NO_CASE); }
+    
     /* Construction. Note: defining these so that they are not inlined reduces the executable size. */
     completion_t(const wcstring &comp, const wcstring &desc = L"", int flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
     
     /* The following are needed for sorting and uniquing completions */
-	bool operator < (const completion_t& rhs) const { return this->completion < rhs.completion; }
-	bool operator == (const completion_t& rhs) const { return this->completion == rhs.completion; }
-	bool operator != (const completion_t& rhs) const { return ! (*this == rhs); }
+	bool operator < (const completion_t& rhs) const;
+	bool operator == (const completion_t& rhs) const;
+	bool operator != (const completion_t& rhs) const;
 };
 
 enum complete_type_t {

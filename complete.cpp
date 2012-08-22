@@ -279,6 +279,21 @@ completion_t &completion_t::operator=(const completion_t &him)
     return *this;
 }
 
+bool completion_t::operator < (const completion_t& rhs) const
+{
+    return this->completion < rhs.completion;
+}
+
+bool completion_t::operator == (const completion_t& rhs) const
+{
+    return this->completion == rhs.completion;
+}
+
+bool completion_t::operator != (const completion_t& rhs) const
+{
+    return ! (*this == rhs);
+}
+
 wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &list )
 {
     wcstring_list_t strings;

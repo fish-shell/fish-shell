@@ -1256,21 +1256,21 @@ static void reader_flash()
 
 /**
    Check if the specified string can be replaced by a case insensitive
-   complition with the specified flags.
+   completion with the specified flags.
 
    Advanced tokens like those containing {}-style expansion can not at
    the moment be replaced, other than if the new token is already an
    exact replacement, e.g. if the COMPLETE_DONT_ESCAPE flag is set.
  */
 
-static int reader_can_replace( const wcstring &in, int flags )
+static bool reader_can_replace( const wcstring &in, int flags )
 {
 
 	const wchar_t * str = in.c_str();
 
 	if( flags & COMPLETE_DONT_ESCAPE )
 	{
-		return 1;
+		return true;
 	}
 	/*
 	  Test characters that have a special meaning in any character position
@@ -1278,11 +1278,64 @@ static int reader_can_replace( const wcstring &in, int flags )
 	while( *str )
 	{
 		if( wcschr( REPLACE_UNCLEAN, *str ) )
-			return 0;
+			return false;
 		str++;
 	}
 
-	return 1;
+	return true;
+}
+
+/* Compare two completions, except make the case insensitive comes larger than everyone (so they come last) */
+bool case_sensitive_completion_compare(const completion_t &a, const completion_t &b)
+{
+    if (a.is_case_insensitive() != b.is_case_insensitive())
+    {
+        /* Case insensitive ones come last. Exactly one of a, b is case insensitive. If it's a, return false, i.e. not less than, to make it appear at the end. */
+        return ! a.is_case_insensitive();
+    }
+    /* Compare using file comparison */
+    return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
+}
+
+/* Order completions such that case insensitive completions come first. */
+static void prioritize_completions(std::vector<completion_t> &comp)
+{
+    sort(comp.begin(), comp.end(), case_sensitive_completion_compare);
+}
+
+/* Given a list of completions, get the completion at an index past *inout_idx, and then increment it. inout_idx should be initialized to (size_t)(-1) for the first call. */
+static const completion_t *cycle_competions(const std::vector<completion_t> &comp, const wcstring &command_line, size_t *inout_idx)
+{
+    const size_t size = comp.size();
+    if (size == 0)
+        return NULL;
+
+    const size_t start_idx = *inout_idx;
+    size_t idx = start_idx;
+    const completion_t *result = NULL;
+    for (;;)
+    {
+        /* Bump the index */
+        idx = (idx + 1) % size;
+        
+        /* Bail if we've looped */
+        if (idx == start_idx)
+            break;
+        
+        /* Get the completion */
+        const completion_t &c = comp.at(idx);
+        
+        /* Try this completion */
+        if (! c.is_case_insensitive() || reader_can_replace(command_line, c.flags))
+        {
+            /* Success */
+            result = &c;
+            break;
+        }
+    }
+    
+    *inout_idx = idx;
+    return result;
 }
 
 /**
@@ -1298,14 +1351,16 @@ static int reader_can_replace( const wcstring &in, int flags )
    a common prefix, call run_pager to display a list of completions. Depending on terminal size and the length of the list, run_pager may either show less than a screenfull and exit or use an interactive pager to allow the user to scroll through the completions.
    
    \param comp the list of completion strings
+   
+   Return true if we inserted text into the command line, false if we did not.
 */
-
 
 static bool handle_completions( const std::vector<completion_t> &comp )
 {
 	wchar_t *base = NULL;
 	size_t len = 0;
 	bool done = false;
+    bool success = false;
 	int count = 0;
 	int flags=0;
 	const wchar_t *begin, *end, *buff = data->command_line.c_str();
@@ -1325,6 +1380,7 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 		{
 			reader_flash();
 			done = true;
+            success = false;
 			break;
 		}
 
@@ -1340,12 +1396,12 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 			  the token doesn't contain evil operators
 			  like {}
 			 */
-			if( !(c.flags & COMPLETE_NO_CASE) || reader_can_replace( tok, c.flags ) )
+			if( ! c.is_case_insensitive() || reader_can_replace( tok, c.flags ) )
 			{
 				completion_insert( c.completion.c_str(), c.flags );			
 			}
 			done = true;
-			len = 1; // I think this just means it's a true return
+			success = true;
 			break;
 		}
 	}
@@ -1353,13 +1409,13 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 		
 	if( !done )
 	{
-		/* Try to find something to insert whith the correct case */
+		/* Try to find something to insert with the correct case */
 		for( size_t i=0; i< comp.size() ; i++ )
 		{
 			const completion_t &c =  comp.at( i );
 
 			/* Ignore case insensitive completions for now */
-			if( c.flags & COMPLETE_NO_CASE )
+			if( c.is_case_insensitive() )
 				continue;
 			
 			count++;
@@ -1386,6 +1442,7 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 			base[len]=L'\0';
 			completion_insert(base, flags);
 			done = true;
+            success = true;
 		}
 	}
 	
@@ -1396,7 +1453,6 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 		/* Try to find something to insert ignoring case */
 		if( begin )
 		{
-
 			size_t offset = tok.size();
 			
 			count = 0;
@@ -1405,7 +1461,7 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 			{
 				const completion_t &c = comp.at( i );
 
-				if( !(c.flags & COMPLETE_NO_CASE) )
+				if( ! c.is_case_insensitive() )
 					continue;
 			
 				if( !reader_can_replace( tok, c.flags ) )
@@ -1438,6 +1494,7 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 				base[len]=L'\0';
 				completion_insert( base, flags );
 				done = 1;
+                success = true;
 			}
 			
 		}
@@ -1482,9 +1539,9 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 		}
 		s_reset( &data->screen, true);
 		reader_repaint();
-
+        success = false;
 	}		
-	return len > 0;
+	return success;
 }
 
 
@@ -2499,10 +2556,17 @@ const wchar_t *reader_readline()
 	int last_char=0;
     size_t yank_len=0;
 	const wchar_t *yank_str;
-	std::vector<completion_t> comp;
 	bool comp_empty = true;
+	std::vector<completion_t> comp;
 	int finished=0;
 	struct termios old_modes;
+
+    /* The cycle index in our completion list */
+    size_t completion_cycle_idx = (size_t)(-1);
+    
+    /* The command line before completion */
+    wcstring cycle_command_line;
+    size_t cycle_cursor_pos;
     
 	data->search_buff.clear();
 	data->search_mode = NO_SEARCH;
@@ -2577,13 +2641,7 @@ const wchar_t *reader_readline()
 			if( c != 0 )
 				break;
 		}
-        /*
-         if( (last_char == R_COMPLETE) && (c != R_COMPLETE) && (!comp_empty) )
-         {
-         halloc_destroy( comp );
-         comp = 0;
-         }
-         */
+
 		if( last_char != R_YANK && last_char != R_YANK_POP )
 			yank_len=0;
         const wchar_t *buff = data->command_line.c_str();
@@ -2662,12 +2720,30 @@ const wchar_t *reader_readline()
 				if( !data->complete_func )
 					break;
                 
- 				if( comp_empty || last_char != R_COMPLETE)
+                if (! comp_empty && last_char == R_COMPLETE)
+                {
+                    /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions */
+                    const completion_t *next_comp = cycle_competions(comp, cycle_command_line, &completion_cycle_idx);
+                    if (next_comp != NULL)
+                    {
+                        size_t cursor_pos = cycle_cursor_pos;
+                        const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos);
+                        reader_set_buffer(new_cmd_line, cursor_pos);
+                        
+                        /* Since we just inserted a completion, don't immediately do a new autosuggestion */
+                        data->suppress_autosuggestion = true;
+                    }
+                }
+ 				else
 				{
+                    /* Either the user hit tab only once, or we had no visible completion list. */
 					const wchar_t *begin, *end;
 					const wchar_t *token_begin, *token_end;
                     const wchar_t *buff = data->command_line.c_str();
 					long cursor_steps;
+                    
+                    /* Clear the completion list */
+                    comp.clear();
                     
 					parse_util_cmdsubst_extent( buff, data->buff_pos, &begin, &end );
                     
@@ -2687,11 +2763,19 @@ const wchar_t *reader_readline()
                     
 					data->complete_func( buffcpy, comp, COMPLETE_DEFAULT, NULL);
 					
+					/* Munge our completions */
 					sort(comp.begin(), comp.end());
 					remove_duplicates( comp );
-					
+					prioritize_completions(comp);
+                    
+					/* Record our cycle_command_line */
+					cycle_command_line = data->command_line;
+					cycle_cursor_pos = data->buff_pos;
+                    
 					comp_empty = handle_completions( comp );
-					comp.clear();
+                    
+					/* Start the cycle at the beginning */
+					completion_cycle_idx = (size_t)(-1);
 				}
                 
 				break;

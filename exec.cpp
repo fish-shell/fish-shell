@@ -320,6 +320,123 @@ static int has_fd( const io_chain_t &d, int fd )
 }
 
 /**
+   Free a transmogrified io chain. Only the chain itself and resources
+   used by a transmogrified IO_FILE redirection are freed, since the
+   original chain may still be needed.
+*/
+static void io_cleanup_chains(io_chain_t &chains, const std::vector<int> &opened_fds) {
+    /* Close all the fds */
+    for (size_t idx = 0; idx < opened_fds.size(); idx++) {
+        close(opened_fds.at(idx));
+    }
+    
+    /* Then delete all of the redirections we made */
+    chains.destroy();
+}
+
+/**
+   Make a copy of the specified io redirection chain, but change file
+   redirection into fd redirection. This makes the redirection chain
+   suitable for use as block-level io, since the file won't be
+   repeatedly reopened for every command in the block, which would
+   reset the cursor position.
+
+   \return the transmogrified chain on sucess, or 0 on failiure
+*/
+static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, std::vector<int> &out_opened_fds) {
+    ASSERT_IS_MAIN_THREAD();
+    assert(out_chain.empty());
+    
+    /* Just to be clear what we do for an empty chain */
+    if (in_chain.empty()) {
+        return true;
+    }
+    
+    bool success = true;
+    
+    /* Make our chain of redirections */
+    io_chain_t result_chain;
+    
+    /* In the event we can't finish transmorgrifying, we'll have to close all the files we opened. */
+    std::vector<int> opened_fds;
+    
+    for (size_t idx = 0; idx < in_chain.size(); idx++)
+    {
+        io_data_t *in = in_chain.at(idx);
+        io_data_t *out = NULL; //gets allocated via new
+                
+        switch( in->io_mode )
+        {
+            default:
+                /* Unknown type, should never happen */
+                fprintf(stderr, "Unknown io_mode %ld\n", (long)in->io_mode);
+                abort();
+                break;
+                
+            /*
+              These redirections don't need transmogrification. They can be passed through.
+            */
+            case IO_PIPE:
+            case IO_FD:
+            case IO_BUFFER:
+            case IO_CLOSE:
+            {
+                out = new io_data_t(*in);
+                break;
+            }
+            
+            /*
+              Transmogrify file redirections
+            */
+            case IO_FILE:
+            {
+                out = new io_data_t();                
+                out->fd = in->fd;
+                out->io_mode = IO_FD;
+                out->param2.close_old = 1;
+
+                int fd;
+                if ((fd=open(in->filename_cstr, in->param2.flags, OPEN_MASK))==-1)
+                {
+                    debug( 1, 
+                           FILE_ERROR,
+                           in->filename_cstr );
+                                    
+                    wperror( L"open" );
+                    success = false;
+                    break;
+                }	
+
+                opened_fds.push_back(fd);
+                out->param1.old_fd = fd;
+                
+                break;
+            }
+        }
+        
+        /* Record this IO redirection even if we failed (so we can free it) */
+        result_chain.push_back(out);
+        
+        /* But don't go any further if we failed */
+        if (! success) {
+            break;
+        }
+    }
+    
+    /* Now either return success, or clean up */
+    if (success) {
+        /* Yay */
+        out_chain.swap(result_chain);
+        out_opened_fds.swap(opened_fds);
+    } else {
+        /* No dice - clean up */
+        io_cleanup_chains(result_chain, opened_fds);
+    }
+    return success;
+}
+
+
+/**
    Morph an io redirection chain into redirections suitable for
    passing to eval, call eval, and clean up morphed redirections.
 
@@ -333,15 +450,29 @@ static void internal_exec_helper( parser_t &parser,
 								  enum block_type_t block_type,
 								  io_chain_t &ios )
 {
+    io_chain_t morphed_chain;
+    std::vector<int> opened_fds;
+    bool transmorgrified = io_transmogrify(ios, morphed_chain, opened_fds);
+    
 	int is_block_old=is_block;
 	is_block=1;
-
+	
+	/*
+	  Did the transmogrification fail - if so, set error status and return
+	*/
+	if( ! transmorgrified )
+	{
+		proc_set_last_status( STATUS_EXEC_FAIL );
+		return;
+	}
+	
 	signal_unblock();
 	
-	parser.eval( def, ios, block_type );
+	parser.eval( def, morphed_chain, block_type );		
 	
 	signal_block();
 	
+	io_cleanup_chains(morphed_chain, opened_fds);
 	job_reap( 0 );
 	is_block=is_block_old;
 }

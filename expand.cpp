@@ -1453,9 +1453,9 @@ static wcstring expand_unescape_string( const wcstring &in, int escape_special )
 /**
    Attempts tilde expansion of the string specified, modifying it in place.
 */
-static void expand_tilde_internal( wcstring &input )
+static void expand_home_directory( wcstring &input )
 {
-    const wchar_t * const in = input.c_str();
+	const wchar_t * const in = input.c_str();
 	if( in[0] == HOME_DIRECTORY )
 	{
 		int tilde_error = 0;
@@ -1503,12 +1503,12 @@ static void expand_tilde_internal( wcstring &input )
 	}
 }
 
-void expand_tilde( wcstring &input)
+void expand_tilde(wcstring &input)
 {
 	if( ! input.empty() && input.at(0) == L'~' )
 	{
 		input.at(0) = HOME_DIRECTORY;
-		expand_tilde_internal( input );
+		expand_home_directory( input );
 	}
 }
 
@@ -1631,7 +1631,7 @@ int expand_string( const wcstring &input, std::vector<completion_t> &output, exp
     {
         wcstring next = in->at(i).completion;
         
-        expand_tilde_internal(next);
+        expand_home_directory(next);
         
         
         if( flags & ACCEPT_INCOMPLETE )

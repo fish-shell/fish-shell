@@ -169,7 +169,6 @@ wcstring expand_escape_variable( const wcstring &in );
 */
 void expand_tilde(wcstring &input);
 
-
 /**
    Test if the specified argument is clean, i.e. it does not contain
    any tokens which need to be expanded or otherwise altered. Clean

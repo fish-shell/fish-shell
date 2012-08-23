@@ -139,8 +139,8 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
     
     wcstring path(const_path);
     if (flags & PATH_EXPAND_TILDE)
-        expand_tilde(path);    
-    
+        expand_tilde(path);
+        
     //	debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
     
     for( size_t i=0; i < path.size(); i++)
@@ -273,7 +273,8 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
 
 
 /* Given a string, return whether it prefixes a path that we could cd into. Return that path in out_path. Expects path to be unescaped. */
-static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory, path_flags_t flags, wcstring *out_path) {
+static bool is_potential_cd_path(const wcstring &path, const wcstring &working_directory, path_flags_t flags, wcstring *out_path)
+{
     wcstring_list_t directories;
     
     if (string_prefixes_string(L"./", path)) {
@@ -807,7 +808,8 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
         
         /* Big hack to avoid expanding a tilde inside quotes */
         path_flags_t path_flags = (quote == L'\0') ? PATH_EXPAND_TILDE : 0;
-        if (unescaped && is_potential_cd_path(unescaped_dir, working_directory, path_flags, &suggested_path)) {
+        if (unescaped && is_potential_cd_path(unescaped_dir, working_directory, path_flags, &suggested_path))
+        {
                     
             /* Note: this looks really wrong for strings that have an "unescapable" character in them, e.g. a \t, because parse_util_escape_string_with_quote will insert that character */
             wcstring escaped_suggested_path = parse_util_escape_string_with_quote(suggested_path, quote);
@@ -1351,16 +1353,22 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, size_t pos,
 		{
 			wcstring token(tok_begin, tok_end-tok_begin);
 			const wcstring_list_t working_directory_list(1, working_directory);
-			if (unescape_string(token, 1) && is_potential_path(token, working_directory_list, PATH_EXPAND_TILDE))
-			{
-				for( ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++ )
-				{
-                    // Don't color HIGHLIGHT_ERROR because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
-                    if (! (color.at(i) & HIGHLIGHT_ERROR)) {
-                        color.at(i) |= HIGHLIGHT_VALID_PATH;
+            if (unescape_string(token, 1))
+            {
+                /* Big hack: is_potential_path expects a tilde, but unescape_string gives us HOME_DIRECTORY. Put it back. */
+                if (! token.empty() && token.at(0) == HOME_DIRECTORY)
+                    token.at(0) = L'~';
+                if (is_potential_path(token, working_directory_list, PATH_EXPAND_TILDE))
+                {
+                    for( ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++ )
+                    {
+                        // Don't color HIGHLIGHT_ERROR because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
+                        if (! (color.at(i) & HIGHLIGHT_ERROR)) {
+                            color.at(i) |= HIGHLIGHT_VALID_PATH;
+                        }
                     }
-				}
-			}
+                }
+            }
 		}
 	}
 	

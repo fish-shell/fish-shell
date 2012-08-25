@@ -63,6 +63,11 @@ function help --description "Show help for the fish shell"
 			end
 		end
 
+		# If xdg-open is available, just use that
+		if type xdg-open > /dev/null
+			set fish_browser xdg-open
+		end
+
 		# On OS X, just use open
 		if test (uname) = Darwin
 			set fish_browser (which open)

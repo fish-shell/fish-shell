@@ -68,27 +68,28 @@ enum block_type_t
 }
 ;
 
-/** Block state template, to replace the discriminated union */
-struct block_state_base_t {
-    public:
-    virtual ~block_state_base_t() {}
-};
-
-template<typename T>
-struct block_state_t : public block_state_base_t {
-    T value;    
-    block_state_t() : value() {}
-};
-
 /**
    block_t represents a block of commands. 
 */
 struct block_t
 {
-	int type; /**< Type of block. Can be one of WHILE, FOR, IF and FUNCTION, or FAKE */
-	int skip; /**< Whether execution of the commands in this block should be skipped */
+    protected:
+    /** Protected constructor. Use one of the subclasses below. */
+    block_t(block_type_t t);
+
+    private:
+	const block_type_t block_type; /**< Type of block. */
+    bool made_fake;
+
+    public:
+    block_type_t type() const { return this->made_fake ? FAKE : this->block_type; }
+    
+    /** Mark a block as fake; this is used by the return statement. */
+    void mark_as_fake() { this->made_fake = true; }
+
+	bool skip; /**< Whether execution of the commands in this block should be skipped */
+	bool had_command; /**< Set to non-zero once a command has been executed in this block */
 	int tok_pos; /**< The start index of the block */
-	int had_command; /**< Set to non-zero once a command has been executed in this block */
 	
 	/**
 	   Status for the current loop block. Can be any of the values from the loop_status enum.
@@ -118,41 +119,6 @@ struct block_t
 	} param1;
 #endif
 
-	/** First block type specific variable	*/
-    block_state_base_t *state1_ptr;
-
-    template<typename T>
-    T& state1_NOPE(void) {
-        block_state_t<T> *state;
-        if (state1_ptr == NULL) {
-            state = new block_state_t<T>();
-            state1_ptr = state;
-        } else {
-            state = dynamic_cast<block_state_t<T> *>(state1_ptr);
-            if (state == NULL) {
-                printf("Expected type %s, but instead got type %s\n", typeid(T).name(), typeid(*state1_ptr).name());
-                abort();
-            }
-        }
-        return state->value;
-    }
-
-	/** Second block type specific variable	*/
-    block_state_base_t *state2_ptr;
-
-    template<typename T>
-    T& state2_NOPE(void) {
-        block_state_t<T> *state;
-        if (state2_ptr == NULL) {
-            state = new block_state_t<T>();
-            state2_ptr = state;
-        } else {
-            state = dynamic_cast<block_state_t<T> *>(state2_ptr);
-            assert(state != NULL);
-        }
-        return state->value;
-    }
-
 	/**
 	   Name of file that created this block
 	*/
@@ -173,10 +139,7 @@ struct block_t
 	   Next outer block 
 	*/
 	block_t *outer;
-    
-    /** Constructor */
-    block_t(int t);
-    
+        
     /** Destructor */
     virtual ~block_t();
 };
@@ -185,65 +148,56 @@ struct if_block_t : public block_t {
     bool if_expr_evaluated; // whether the clause of the if statement has been tested
     bool if_expr_result; // if so, whether it evaluated to true
     bool else_evaluated; // whether we've encountered a terminal else block
-    if_block_t() :
-        if_expr_evaluated(false),
-        if_expr_result(false),
-        else_evaluated(false),
-        block_t(IF)
-    {
-    }
+    if_block_t();
 };
 
 struct event_block_t : public block_t {
     const event_t * const event;
-    event_block_t(const event_t *evt) : block_t(EVENT), event(evt)
-    {
-    }
+    event_block_t(const event_t *evt);
 };
 
 struct function_block_t : public block_t {
     process_t *process;
     wcstring name;
-    
-    function_block_t(process_t *p, const wcstring &n, bool shadows) :
-        process(p),
-        name(n),
-        block_t( shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW )
-    {
-    }
+    function_block_t(process_t *p, const wcstring &n, bool shadows);
 };
 
 struct source_block_t : public block_t {
     const wchar_t * const source_file;
-    source_block_t(const wchar_t *src) : source_file(src), block_t(SOURCE)
-    {
-    }
+    source_block_t(const wchar_t *src);
 };
 
 struct for_block_t : public block_t {
     wcstring variable; // the variable that will be assigned each value in the sequence
     wcstring_list_t sequence; // the sequence of values
-    for_block_t(const wcstring &var) :
-        variable(var),
-        sequence(),
-        block_t(FOR)
-    {
-    }
+    for_block_t(const wcstring &var);
 };
 
 struct while_block_t : public block_t {
     int status;
-    while_block_t() : status(0), block_t(WHILE)
-    {
-    }
+    while_block_t();
 };
 
 struct switch_block_t : public block_t {
     bool switch_taken;
     const wcstring switch_value;
-    switch_block_t(const wcstring &sv) : switch_taken(false), switch_value(sv), block_t(SWITCH)
-    {
-    }
+    switch_block_t(const wcstring &sv);
+};
+
+struct fake_block_t : public block_t {
+    fake_block_t();
+};
+
+struct function_def_block_t : public block_t {
+    function_def_block_t();
+};
+
+struct scope_block_t : public block_t {
+    scope_block_t(block_type_t type); //must be BEGIN, TOP or SUBST
+};
+
+struct breakpoint_block_t : public block_t {
+    breakpoint_block_t();
 };
 
 /**

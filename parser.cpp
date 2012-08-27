@@ -422,13 +422,13 @@ static int block_count( block_t *b )
 
 void parser_t::push_block( block_t *newv )
 {
-    const int type = newv->type;
+    const enum block_type_t type = newv->type();
 	newv->src_lineno = parser_t::get_lineno();
 	newv->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
 	
 	newv->outer = current_block;
     if (current_block && current_block->skip)
-        newv->type = FAKE;
+        newv->mark_as_fake();
 	
 	/*
 	  New blocks should be skipped if the outer block is skipped,
@@ -458,9 +458,9 @@ void parser_t::push_block( block_t *newv )
 
 	current_block = newv;
 
-	if( (newv->type != FUNCTION_DEF) &&
-		(newv->type != FAKE) &&
-		(newv->type != TOP) )
+	if( (newv->type() != FUNCTION_DEF) &&
+		(newv->type() != FAKE) &&
+		(newv->type() != TOP) )
 	{
 		env_push( type == FUNCTION_CALL );
         newv->wants_pop_env = true;
@@ -887,7 +887,7 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 	if( !b )
 		return;
 
-	if( b->type==EVENT )
+	if( b->type()==EVENT )
 	{
 		/*
 		  This is an event handler
@@ -908,7 +908,7 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 		return;
 	}
 	
-	if( b->type == FUNCTION_CALL || b->type==SOURCE || b->type==SUBST)
+	if( b->type() == FUNCTION_CALL || b->type()==SOURCE || b->type()==SUBST)
 	{
 		/*
 		  These types of blocks should be printed
@@ -916,7 +916,7 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 
 		int i;
 
-		switch( b->type)
+		switch( b->type())
 		{
 			case SOURCE:
 			{
@@ -936,6 +936,9 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 				append_format( buff, _(L"in command substitution\n") );
 				break;
 			}
+            
+            default: /* Can't get here */
+                break;
 		}
 
 		const wchar_t *file = b->src_filename;
@@ -953,7 +956,7 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 					   _(L"\tcalled on standard input,\n") );
 		}
 		
-		if( b->type == FUNCTION_CALL )
+		if( b->type() == FUNCTION_CALL )
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
             const process_t * const process = fb->process;
@@ -999,7 +1002,7 @@ const wchar_t *parser_t::is_function() const
 		{
 			return NULL;
 		}
-		if( b->type == FUNCTION_CALL )
+		if( b->type() == FUNCTION_CALL )
 		{
             const function_block_t *fb = static_cast<const function_block_t *>(b);
 			return fb->name.c_str();
@@ -1051,7 +1054,7 @@ const wchar_t *parser_t::current_filename() const
 		{
 			return reader_current_filename();
 		}
-		if( b->type == FUNCTION_CALL )
+		if( b->type() == FUNCTION_CALL )
 		{
             const function_block_t *fb = static_cast<const function_block_t *>(b);
 			return function_get_definition_file(fb->name);
@@ -1403,7 +1406,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 					  But if this is in fact a case statement, then it should be evaluated
 					*/
 
-					if( (current_block->type == SWITCH) && args.at(0).completion == L"case" && p->type == INTERNAL_BUILTIN )
+					if( (current_block->type() == SWITCH) && args.at(0).completion == L"case" && p->type == INTERNAL_BUILTIN )
 					{
 						skip=0;
 					}
@@ -1855,7 +1858,7 @@ int parser_t::parse_job( process_t *p,
 			tok_next( tok );
             while_block_t *wb = NULL;
 
-			if( ( current_block->type != WHILE ) )
+			if( ( current_block->type() != WHILE ) )
 			{
 				new_block = true;
 			}
@@ -1917,9 +1920,9 @@ int parser_t::parse_job( process_t *p,
 			  block scopes are pushed on function invocation changes,
 			  then this check will break.
 			*/
-			if( ( current_block->type == TOP ) && 
+			if( ( current_block->type() == TOP ) &&
 				( current_block->outer ) && 
-				( current_block->outer->type == FUNCTION_CALL ) )
+				( current_block->outer->type() == FUNCTION_CALL ) )
 				is_function_call = 1;
 			
 			/*
@@ -2210,7 +2213,7 @@ int parser_t::parse_job( process_t *p,
 	{
 		if( !is_new_block )
 		{
-			current_block->had_command = 1;
+			current_block->had_command = true;
 		}
 	}
 
@@ -2249,7 +2252,7 @@ void parser_t::skipped_exec( job_t * j )
 			   ( wcscmp( p->argv0(), L"begin" )==0) ||
 			   ( wcscmp( p->argv0(), L"function" )==0))
 			{
-				this->push_block( new block_t(FAKE) );
+				this->push_block( new fake_block_t() );
 			}
 			else if( wcscmp( p->argv0(), L"end" )==0)
 			{
@@ -2262,7 +2265,7 @@ void parser_t::skipped_exec( job_t * j )
 			}
 			else if( wcscmp( p->argv0(), L"else" )==0)
 			{
-				if( (current_block->type == IF ) &&
+				if( (current_block->type() == IF ) &&
 					(static_cast<const if_block_t*>(current_block)->if_expr_evaluated))
 				{
 					exec( *this, j );
@@ -2271,7 +2274,7 @@ void parser_t::skipped_exec( job_t * j )
 			}
 			else if( wcscmp( p->argv0(), L"case" )==0)
 			{
-				if(current_block->type == SWITCH)
+				if(current_block->type() == SWITCH)
 				{
 					exec( *this, j );
 					return;
@@ -2395,7 +2398,7 @@ void parser_t::eval_job( tokenizer *tok )
 					profile_item->exec=(int)(t3-t2);
 				}
 
-				if( current_block->type == WHILE )
+				if( current_block->type() == WHILE )
 				{
                     while_block_t *wb = static_cast<while_block_t *>(current_block);
 					switch( wb->status )
@@ -2411,7 +2414,7 @@ void parser_t::eval_job( tokenizer *tok )
 					}
 				}
 
-				if( current_block->type == IF )
+				if( current_block->type() == IF )
 				{
                     if_block_t *ib = static_cast<if_block_t *>(current_block);
 					if( (! ib->if_expr_evaluated) &&
@@ -2543,7 +2546,7 @@ int parser_t::eval( const wcstring &cmdStr, const io_chain_t &io, enum block_typ
 
 	eval_level++;
 
-	this->push_block( new block_t(block_type) );
+	this->push_block( new scope_block_t(block_type) );
 
 	current_tokenizer = new tokenizer;
 	tok_init( current_tokenizer, cmd, 0 );
@@ -2580,7 +2583,7 @@ int parser_t::eval( const wcstring &cmdStr, const io_chain_t &io, enum block_typ
 			//debug( 2, L"Status %d\n", proc_get_last_status() );
 
 			debug( 1,
-				   L"%ls", parser_t::get_block_desc( current_block->type ) );
+				   L"%ls", parser_t::get_block_desc( current_block->type() ) );
 			debug( 1,
 				   BLOCK_END_ERR_MSG );
 			fwprintf( stderr, L"%ls", parser_t::current_line() );
@@ -3617,16 +3620,15 @@ int parser_t::test( const  wchar_t * buff,
 	
 }
 
-block_t::block_t(int t) :
-        type(t),
+block_t::block_t(block_type_t t) :
+        block_type(t),
+        made_fake(false),
         skip(),
-        tok_pos(),
         had_command(),
+        tok_pos(),
         loop_status(),
         job(),
         function_data(),
-        state1_ptr(),
-        state2_ptr(),
         src_filename(),
         src_lineno(),
         wants_pop_env(false),
@@ -3637,8 +3639,74 @@ block_t::block_t(int t) :
 
 block_t::~block_t()
 {
-    if (state1_ptr != NULL)
-        delete state1_ptr;
-    if (state2_ptr != NULL)
-        delete state2_ptr;
+}
+
+/* Various block constructors */
+
+if_block_t::if_block_t() :
+    if_expr_evaluated(false),
+    if_expr_result(false),
+    else_evaluated(false),
+    block_t(IF)
+{
+}
+
+event_block_t::event_block_t(const event_t *evt) :
+    block_t(EVENT),
+    event(evt)
+{
+}
+
+function_block_t::function_block_t(process_t *p, const wcstring &n, bool shadows) :
+    process(p),
+    name(n),
+    block_t( shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW )
+{
+}
+
+source_block_t::source_block_t(const wchar_t *src) :
+    source_file(src),
+    block_t(SOURCE)
+{
+}
+
+for_block_t::for_block_t(const wcstring &var) :
+    variable(var),
+    sequence(),
+    block_t(FOR)
+{
+}
+
+while_block_t::while_block_t() :
+    status(0),
+    block_t(WHILE)
+{
+}
+
+switch_block_t::switch_block_t(const wcstring &sv) :
+    switch_taken(false),
+    switch_value(sv),
+    block_t(SWITCH)
+{
+}
+
+fake_block_t::fake_block_t() :
+    block_t(FAKE)
+{
+}
+
+function_def_block_t::function_def_block_t() :
+    block_t(FUNCTION_DEF)
+{
+}
+
+scope_block_t::scope_block_t(block_type_t type) :
+    block_t(type)
+{
+    assert(type == BEGIN || type == TOP || type == SUBST);
+}
+
+breakpoint_block_t::breakpoint_block_t() :
+    block_t(BREAKPOINT)
+{
 }

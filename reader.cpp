@@ -2390,7 +2390,7 @@ static void handle_end_loop()
 	     b; 
 	     b = b->outer )
 	{
-		if( b->type == BREAKPOINT )
+		if( b->type() == BREAKPOINT )
 		{
 			is_breakpoint = 1;
 			break;

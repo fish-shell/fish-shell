@@ -842,8 +842,8 @@ static int builtin_block( parser_t &parser, wchar_t **argv )
 			case UNSET:
 			{
 				while( block && 
-				       block->type != FUNCTION_CALL &&
-				       block->type != FUNCTION_CALL_NO_SHADOW )
+				       block->type() != FUNCTION_CALL &&
+				       block->type() != FUNCTION_CALL_NO_SHADOW )
 					block = block->outer;
 			}
 		}
@@ -1530,8 +1530,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 		
 	woptind=0;
 
-    block_t *newv = new block_t(FUNCTION_DEF);
-	parser.push_block( newv );
+	parser.push_block( new function_def_block_t() );
 
 	static const struct woption
 		long_options[] =
@@ -1663,7 +1662,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 					{
 						block_t *b = parser.current_block;
 
-						while( b && (b->type != SUBST) )
+						while( b && (b->type() != SUBST) )
 							b = b->outer;
 
 						if( b )
@@ -1730,7 +1729,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				
 			case 'h':
 				parser.pop_block();
-				parser.push_block( new block_t(FAKE) );
+				parser.push_block( new fake_block_t() );
 				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 				
@@ -1835,7 +1834,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
         stderr_buffer.push_back(L'\n');
 
 		parser.pop_block();
-		parser.push_block( new block_t(FAKE) );
+		parser.push_block( new fake_block_t() );
 	}
 	else
 	{
@@ -3204,7 +3203,7 @@ static int builtin_for( parser_t &parser, wchar_t **argv )
 
 	if( res )
 	{
-		parser.push_block( new block_t(FAKE) );
+		parser.push_block( new fake_block_t() );
 	}
 	else
 	{
@@ -3235,7 +3234,7 @@ static int builtin_for( parser_t &parser, wchar_t **argv )
 */
 static int builtin_begin( parser_t &parser, wchar_t **argv )
 {
-	parser.push_block( new block_t(BEGIN) );
+	parser.push_block( new scope_block_t(BEGIN) );
 	parser.current_block->tok_pos = parser.get_pos();
 	return proc_get_last_status();
 }
@@ -3266,7 +3265,7 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 		*/
 		int kill_block = 1;
 
-		switch( parser.current_block->type )
+		switch( parser.current_block->type() )
 		{
 			case WHILE:
 			{
@@ -3290,6 +3289,7 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 			case IF:
 			case SUBST:
 			case BEGIN:
+            case SWITCH:
 				/*
 				  Nothing special happens at the end of these commands. The scope just ends.
 				*/
@@ -3364,6 +3364,10 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 
 			}
 			break;
+            
+            default:
+                assert(false); //should never get here
+                break;
 
 		}
 		if( kill_block )
@@ -3385,7 +3389,7 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
 {
     bool block_ok = false;
     if_block_t *if_block = NULL;
-    if (parser.current_block != NULL && parser.current_block->type == IF)
+    if (parser.current_block != NULL && parser.current_block->type() == IF)
     {
         if_block = static_cast<if_block_t *>(parser.current_block);
         if (if_block->if_expr_evaluated && ! if_block->else_evaluated)
@@ -3441,8 +3445,8 @@ static int builtin_break_continue( parser_t &parser, wchar_t **argv )
 
 
 	while( (b != 0) &&
-		   ( b->type != WHILE) &&
-		   (b->type != FOR ) )
+		   ( b->type() != WHILE) &&
+		   (b->type() != FOR ) )
 	{
 		b = b->outer;
 	}
@@ -3457,8 +3461,8 @@ static int builtin_break_continue( parser_t &parser, wchar_t **argv )
 	}
 
 	b = parser.current_block;
-	while( ( b->type != WHILE) &&
-		   (b->type != FOR ) )
+	while( ( b->type() != WHILE) &&
+		   (b->type() != FOR ) )
 	{
 		b->skip=1;
 		b = b->outer;
@@ -3475,7 +3479,7 @@ static int builtin_break_continue( parser_t &parser, wchar_t **argv )
 
 static int builtin_breakpoint( parser_t &parser, wchar_t **argv )
 {
-	parser.push_block( new block_t(BREAKPOINT) );
+	parser.push_block( new breakpoint_block_t() );
 	
 	reader_read( STDIN_FILENO, real_io ? *real_io : io_chain_t() );
 	
@@ -3525,8 +3529,8 @@ static int builtin_return( parser_t &parser, wchar_t **argv )
 
 
 	while( (b != 0) &&
-		   ( b->type != FUNCTION_CALL && 
-		     b->type != FUNCTION_CALL_NO_SHADOW) )
+		   ( b->type() != FUNCTION_CALL &&
+		     b->type() != FUNCTION_CALL_NO_SHADOW) )
 	{
 		b = b->outer;
 	}
@@ -3541,10 +3545,10 @@ static int builtin_return( parser_t &parser, wchar_t **argv )
 	}
 
 	b = parser.current_block;
-	while( ( b->type != FUNCTION_CALL &&
-		 b->type != FUNCTION_CALL_NO_SHADOW ) )
+	while( ( b->type() != FUNCTION_CALL &&
+		 b->type() != FUNCTION_CALL_NO_SHADOW ) )
 	{
-		b->type = FAKE;
+        b->mark_as_fake();
 		b->skip=1;
 		b = b->outer;
 	}
@@ -3571,7 +3575,7 @@ static int builtin_switch( parser_t &parser, wchar_t **argv )
 
 		builtin_print_help( parser, argv[0], stderr_buffer );
 		res=1;
-		parser.push_block( new block_t(FAKE) );
+		parser.push_block( new fake_block_t() );
 	}
 	else
 	{
@@ -3593,7 +3597,7 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 	int i;
 	wchar_t *unescaped=0;
 	
-	if( parser.current_block->type != SWITCH )
+	if( parser.current_block->type() != SWITCH )
 	{
 		append_format(stderr_buffer,
 				   _( L"%ls: 'case' command while not in switch block\n" ),

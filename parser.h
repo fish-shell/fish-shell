@@ -12,7 +12,6 @@
 #include "event.h"
 #include "function.h"
 #include <vector>
-#include <memory>
 
 #define PARSER_TEST_ERROR 1
 #define PARSER_TEST_INCOMPLETE 2
@@ -139,60 +138,71 @@ struct block_t
     virtual ~block_t();
 };
 
-struct if_block_t : public block_t {
+struct if_block_t : public block_t
+{
     bool if_expr_evaluated; // whether the clause of the if statement has been tested
     bool if_expr_result; // if so, whether it evaluated to true
     bool else_evaluated; // whether we've encountered a terminal else block
     if_block_t();
 };
 
-struct event_block_t : public block_t {
+struct event_block_t : public block_t
+{
     const event_t * const event;
     event_block_t(const event_t *evt);
 };
 
-struct function_block_t : public block_t {
+struct function_block_t : public block_t
+{
     process_t *process;
     wcstring name;
     function_block_t(process_t *p, const wcstring &n, bool shadows);
 };
 
-struct source_block_t : public block_t {
+struct source_block_t : public block_t
+{
     const wchar_t * const source_file;
     source_block_t(const wchar_t *src);
 };
 
-struct for_block_t : public block_t {
+struct for_block_t : public block_t
+{
     wcstring variable; // the variable that will be assigned each value in the sequence
     wcstring_list_t sequence; // the sequence of values
     for_block_t(const wcstring &var);
 };
 
-struct while_block_t : public block_t {
+struct while_block_t : public block_t
+{
     int status;
     while_block_t();
 };
 
-struct switch_block_t : public block_t {
+struct switch_block_t : public block_t
+{
     bool switch_taken;
     const wcstring switch_value;
     switch_block_t(const wcstring &sv);
 };
 
-struct fake_block_t : public block_t {
+struct fake_block_t : public block_t
+{
     fake_block_t();
 };
 
-struct function_def_block_t : public block_t {
+struct function_def_block_t : public block_t
+{
     function_data_t function_data;
     function_def_block_t();
 };
 
-struct scope_block_t : public block_t {
+struct scope_block_t : public block_t
+{
     scope_block_t(block_type_t type); //must be BEGIN, TOP or SUBST
 };
 
-struct breakpoint_block_t : public block_t {
+struct breakpoint_block_t : public block_t
+{
     breakpoint_block_t();
 };
 

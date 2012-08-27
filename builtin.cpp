@@ -1526,11 +1526,12 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
     std::auto_ptr<wcstring_list_t> named_arguments(NULL);
 
 	wchar_t *name = 0;
-	int shadows = 1;
+	bool shadows = true;
 		
 	woptind=0;
 
-	parser.push_block( new function_def_block_t() );
+    function_def_block_t * const fdb = new function_def_block_t();
+	parser.push_block( fdb );
 
 	static const struct woption
 		long_options[] =
@@ -1838,24 +1839,21 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 	}
 	else
 	{
-		function_data_t *d = new function_data_t();
+		function_data_t &d = fdb->function_data;
 		
-        d->name = name;
+        d.name = name;
         if (desc)
-            d->description = desc;
-		d->events.swap(events);
-		d->shadows = shadows;
+            d.description = desc;
+		d.events.swap(events);
+		d.shadows = shadows;
         if (named_arguments.get())
-            d->named_arguments.swap(*named_arguments);
+            d.named_arguments.swap(*named_arguments);
 		
-		for( size_t i=0; i<d->events.size(); i++ )
+		for( size_t i=0; i<d.events.size(); i++ )
 		{
-			event_t &e = d->events.at(i);
-			e.function_name = d->name;
+			event_t &e = d.events.at(i);
+			e.function_name = d.name;
 		}
-
-		parser.current_block->function_data.reset(d);
-		
 	}
 	
 	parser.current_block->tok_pos = parser.get_pos();
@@ -3325,43 +3323,32 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 
 			case FUNCTION_DEF:
 			{
+				function_def_block_t *fdb = static_cast<function_def_block_t *>(parser.current_block);
+				function_data_t &d = fdb->function_data;
 				
-				function_data_t *d = parser.current_block->function_data.get();
-				
-				if( d )
-				{
-                    if (d->name.empty())
-                    {
-                        /* Disallow empty function names */
-                		append_format(stderr_buffer, _( L"%ls: No function name given\n" ), argv[0] );
-                        
-                        /* Return an error via a crummy way. Don't just return here, since we need to pop the block. */
-                        proc_set_last_status(STATUS_BUILTIN_ERROR);
-                    }
-                    else
-                    {
-                        /**
-                           Copy the text from the beginning of the function
-                           until the end command and use as the new definition
-                           for the specified function
-                        */
+                if (d.name.empty())
+                {
+                    /* Disallow empty function names */
+                    append_format(stderr_buffer, _( L"%ls: No function name given\n" ), argv[0] );
+                    
+                    /* Return an error via a crummy way. Don't just return here, since we need to pop the block. */
+                    proc_set_last_status(STATUS_BUILTIN_ERROR);
+                }
+                else
+                {
+                    /**
+                       Copy the text from the beginning of the function
+                       until the end command and use as the new definition
+                       for the specified function
+                    */
 
-                        wchar_t *def = wcsndup( parser.get_buffer()+parser.current_block->tok_pos,
-                                                parser.get_job_pos()-parser.current_block->tok_pos );
-                        d->definition = def;
-            
-                        function_add( *d, parser );	
-                        free( def );
-                    }
-				}
-				else
-				{
-					debug(0, 
-						  _(L"%ls: Missing function definition information."),
-						  argv[0] );
-					bugreport();
-				}
-
+                    wchar_t *def = wcsndup( parser.get_buffer()+parser.current_block->tok_pos,
+                                            parser.get_job_pos()-parser.current_block->tok_pos );
+                    d.definition = def;
+        
+                    function_add( d, parser );	
+                    free( def );
+                }
 			}
 			break;
             

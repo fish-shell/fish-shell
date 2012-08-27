@@ -3628,7 +3628,6 @@ block_t::block_t(block_type_t t) :
         tok_pos(),
         loop_status(),
         job(),
-        function_data(),
         src_filename(),
         src_lineno(),
         wants_pop_env(false),
@@ -3696,6 +3695,7 @@ fake_block_t::fake_block_t() :
 }
 
 function_def_block_t::function_def_block_t() :
+    function_data(),
     block_t(FUNCTION_DEF)
 {
 }

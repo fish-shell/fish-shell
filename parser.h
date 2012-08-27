@@ -100,11 +100,6 @@ struct block_t
 	   The job that is currently evaluated in the specified block.
 	*/
 	job_t *job;
-
-	/**
-	   Block type-specific data
-	*/
-	std::auto_ptr<function_data_t> function_data;
 	
 #if 0
 	union 
@@ -189,6 +184,7 @@ struct fake_block_t : public block_t {
 };
 
 struct function_def_block_t : public block_t {
+    function_data_t function_data;
     function_def_block_t();
 };
 

@@ -420,16 +420,15 @@ static int block_count( block_t *b )
 }
 */
 
-void parser_t::push_block( int type )
+void parser_t::push_block( block_t *newv )
 {
-    block_t zerod = {};
-	block_t *newv = new block_t(zerod);
-	
+    const int type = newv->type;
 	newv->src_lineno = parser_t::get_lineno();
 	newv->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
 	
 	newv->outer = current_block;
-	newv->type = (current_block && current_block->skip)?FAKE:type;
+    if (current_block && current_block->skip)
+        newv->type = FAKE;
 	
 	/*
 	  New blocks should be skipped if the outer block is skipped,
@@ -893,7 +892,8 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 		/*
 		  This is an event handler
 		*/
-        wcstring description = event_get_desc( b->state1<const event_t *>() );
+        const event_block_t *eb = static_cast<const event_block_t *>(b);
+        wcstring description = event_get_desc( eb->event );
 		append_format( buff, _(L"in event handler: %ls\n"), description.c_str());
 		buff.append( L"\n" );
 
@@ -920,14 +920,15 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 		{
 			case SOURCE:
 			{
-                const wcstring &source_dest = b->state1<wcstring>();
-				append_format( buff, _(L"in . (source) call of file '%ls',\n"), source_dest.c_str() );
+                const source_block_t *sb = static_cast<const source_block_t*>(b);
+                const wchar_t *source_dest = sb->source_file;
+				append_format( buff, _(L"in . (source) call of file '%ls',\n"), source_dest );
 				break;
 			}
 			case FUNCTION_CALL:
 			{
-                const wcstring &function_call_name = b->state1<wcstring>();
-				append_format( buff, _(L"in function '%ls',\n"), function_call_name.c_str() );
+                const function_block_t *fb = static_cast<const function_block_t*>(b);
+				append_format( buff, _(L"in function '%ls',\n"), fb->name.c_str() );
 				break;
 			}
 			case SUBST:
@@ -953,8 +954,9 @@ void parser_t::stack_trace( block_t *b, wcstring &buff)
 		}
 		
 		if( b->type == FUNCTION_CALL )
-		{			
-            const process_t * const process = b->state2<process_t*>();
+        {
+            const function_block_t *fb = static_cast<const function_block_t *>(b);
+            const process_t * const process = fb->process;
 			if( process->argv(1) )
 			{
 				wcstring tmp;
@@ -999,8 +1001,8 @@ const wchar_t *parser_t::is_function() const
 		}
 		if( b->type == FUNCTION_CALL )
 		{
-            result = b->state1<wcstring>();
-			return result.c_str();
+            const function_block_t *fb = static_cast<const function_block_t *>(b);
+			return fb->name.c_str();
 		}
 		b=b->outer;
 	}
@@ -1051,8 +1053,8 @@ const wchar_t *parser_t::current_filename() const
 		}
 		if( b->type == FUNCTION_CALL )
 		{
-            wcstring function_call_name = b->state1<wcstring>();
-			return function_get_definition_file(function_call_name);
+            const function_block_t *fb = static_cast<const function_block_t *>(b);
+			return function_get_definition_file(fb->name);
 		}
 		b=b->outer;
 	}
@@ -1849,27 +1851,29 @@ int parser_t::parse_job( process_t *p,
 		}
 		else if( nxt == L"while" )
 		{
-			int new_block = 0;
+			bool new_block = false;
 			tok_next( tok );
+            while_block_t *wb = NULL;
 
 			if( ( current_block->type != WHILE ) )
 			{
-				new_block = 1;
+				new_block = true;
 			}
-			else if( current_block->state1<int>() == WHILE_TEST_AGAIN )
+			else if( (wb = static_cast<while_block_t*>(current_block))->status == WHILE_TEST_AGAIN )
 			{
-				current_block->state1<int>() = WHILE_TEST_FIRST;
+				wb->status = WHILE_TEST_FIRST;
 			}
 			else
 			{
-				new_block = 1;
+				new_block = true;
 			}
 
 			if( new_block )
 			{
-				this->push_block( WHILE );
-				current_block->state1<int>() = WHILE_TEST_FIRST;
-				current_block->tok_pos = mark;
+                while_block_t *wb = new while_block_t();
+				wb->status = WHILE_TEST_FIRST;
+				wb->tok_pos = mark;
+				this->push_block( wb );
 			}
 
 			consumed=1;
@@ -1880,10 +1884,9 @@ int parser_t::parse_job( process_t *p,
 		{
 			tok_next( tok );
 
-			this->push_block( IF );
-
-			current_block->state1<int>()=0;
-			current_block->tok_pos = mark;
+            if_block_t *ib = new if_block_t();
+			this->push_block( ib );
+			ib->tok_pos = mark;
 
 			is_new_block=1;
 			consumed=1;			
@@ -2246,7 +2249,7 @@ void parser_t::skipped_exec( job_t * j )
 			   ( wcscmp( p->argv0(), L"begin" )==0) ||
 			   ( wcscmp( p->argv0(), L"function" )==0))
 			{
-				this->push_block( FAKE );
+				this->push_block( new block_t(FAKE) );
 			}
 			else if( wcscmp( p->argv0(), L"end" )==0)
 			{
@@ -2260,7 +2263,7 @@ void parser_t::skipped_exec( job_t * j )
 			else if( wcscmp( p->argv0(), L"else" )==0)
 			{
 				if( (current_block->type == IF ) &&
-					(current_block->state1<int>() != 0))
+					(static_cast<const if_block_t*>(current_block)->if_expr_evaluated))
 				{
 					exec( *this, j );
 					return;
@@ -2394,15 +2397,15 @@ void parser_t::eval_job( tokenizer *tok )
 
 				if( current_block->type == WHILE )
 				{
-
-					switch( current_block->state1<int>() )
+                    while_block_t *wb = static_cast<while_block_t *>(current_block);
+					switch( wb->status )
 					{
 						case WHILE_TEST_FIRST:
 						{
 							// PCA I added the 'current_block->skip ||' part because we couldn't reliably
 							// control-C out of loops like this: while test 1 -eq 1; end
-							current_block->skip = current_block->skip || proc_get_last_status()!= 0;
-							current_block->state1<int>()=WHILE_TESTED;
+							wb->skip = wb->skip || proc_get_last_status()!= 0;
+							wb->status = WHILE_TESTED;
 						}
 						break;
 					}
@@ -2410,11 +2413,14 @@ void parser_t::eval_job( tokenizer *tok )
 
 				if( current_block->type == IF )
 				{
-					if( (!current_block->state1<int>()) &&
+                    if_block_t *ib = static_cast<if_block_t *>(current_block);
+					if( (! ib->if_expr_evaluated) &&
 						(!current_block->skip) )
 					{
-						current_block->skip = proc_get_last_status()!= 0;
-						current_block->state1<int>()++;
+                        bool if_result = (proc_get_last_status() == 0);
+                        ib->if_expr_result = if_result; // store expression result
+						current_block->skip = ! if_result; //don't execute if the expresion result was not zero
+						ib->if_expr_evaluated = true;
 					}
 				}
 
@@ -2537,7 +2543,7 @@ int parser_t::eval( const wcstring &cmdStr, const io_chain_t &io, enum block_typ
 
 	eval_level++;
 
-	this->push_block( block_type );
+	this->push_block( new block_t(block_type) );
 
 	current_tokenizer = new tokenizer;
 	tok_init( current_tokenizer, cmd, 0 );
@@ -3611,3 +3617,28 @@ int parser_t::test( const  wchar_t * buff,
 	
 }
 
+block_t::block_t(int t) :
+        type(t),
+        skip(),
+        tok_pos(),
+        had_command(),
+        loop_status(),
+        job(),
+        function_data(),
+        state1_ptr(),
+        state2_ptr(),
+        src_filename(),
+        src_lineno(),
+        wants_pop_env(false),
+        event_blocks(),
+        outer(NULL)
+{
+}
+
+block_t::~block_t()
+{
+    if (state1_ptr != NULL)
+        delete state1_ptr;
+    if (state2_ptr != NULL)
+        delete state2_ptr;
+}

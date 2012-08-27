@@ -758,11 +758,9 @@ void exec( parser_t &parser, job_t *j )
 					debug( 0, _( L"Unknown function '%ls'" ), p->argv0() );
 					break;
 				}
-				parser.push_block( shadows?FUNCTION_CALL:FUNCTION_CALL_NO_SHADOW );
-				
-				parser.current_block->state2<process_t *>() = p;
-				parser.current_block->state1<wcstring>() = p->argv0();
-						
+                function_block_t *newv = new function_block_t(p, p->argv0(), shadows);
+				parser.push_block( newv );
+										
 
 				/*
 				  set_argv might trigger an event

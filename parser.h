@@ -18,9 +18,9 @@
 #define PARSER_TEST_INCOMPLETE 2
 
 /**
-   event_block_t represents a block on events of the specified type
+   event_blockage_t represents a block on events of the specified type
 */
-struct event_block_t
+struct event_blockage_t
 {
 	/**
 	   The types of events to block. This is interpreted as a bitset
@@ -33,10 +33,10 @@ struct event_block_t
 	unsigned int typemask;
 };
 
-typedef std::list<event_block_t> event_block_list_t;
+typedef std::list<event_blockage_t> event_blockage_list_t;
 
-inline bool event_block_list_blocks_type(const event_block_list_t &ebls, int type) {
-    for (event_block_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); ++iter) {
+inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls, int type) {
+    for (event_blockage_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); ++iter) {
         if( iter->typemask & (1<<EVENT_ANY ) )
             return true;
         if( iter->typemask & (1<<type) )
@@ -45,6 +45,28 @@ inline bool event_block_list_blocks_type(const event_block_list_t &ebls, int typ
     return false;
 }
 
+
+/** 
+	Types of blocks
+*/
+enum block_type_t
+{
+	WHILE, /**< While loop block */
+	FOR,  /**< For loop block */
+	IF, /**< If block */
+	FUNCTION_DEF, /**< Function definition block */
+	FUNCTION_CALL, /**< Function invocation block */
+	FUNCTION_CALL_NO_SHADOW, /**< Function invocation block with no variable shadowing */
+	SWITCH, /**< Switch block */
+	FAKE, /**< Fake block */
+	SUBST, /**< Command substitution scope */
+	TOP, /**< Outermost block */
+	BEGIN, /**< Unconditional block */
+	SOURCE, /**< Block created by the . (source) builtin */
+	EVENT, /**< Block created on event notifier invocation */
+	BREAKPOINT, /**< Breakpoint block */
+}
+;
 
 /** Block state template, to replace the discriminated union */
 struct block_state_base_t {
@@ -61,9 +83,9 @@ struct block_state_t : public block_state_base_t {
 /**
    block_t represents a block of commands. 
 */
-typedef struct block
+struct block_t
 {
-	int type; /**< Type of block. Can be one of WHILE, FOR, IF and FUNCTION */
+	int type; /**< Type of block. Can be one of WHILE, FOR, IF and FUNCTION, or FAKE */
 	int skip; /**< Whether execution of the commands in this block should be skipped */
 	int tok_pos; /**< The start index of the block */
 	int had_command; /**< Set to non-zero once a command has been executed in this block */
@@ -100,7 +122,7 @@ typedef struct block
     block_state_base_t *state1_ptr;
 
     template<typename T>
-    T& state1(void) {
+    T& state1_NOPE(void) {
         block_state_t<T> *state;
         if (state1_ptr == NULL) {
             state = new block_state_t<T>();
@@ -119,7 +141,7 @@ typedef struct block
     block_state_base_t *state2_ptr;
 
     template<typename T>
-    T& state2(void) {
+    T& state2_NOPE(void) {
         block_state_t<T> *state;
         if (state2_ptr == NULL) {
             state = new block_state_t<T>();
@@ -145,44 +167,84 @@ typedef struct block
     bool wants_pop_env;
 	
 	/** List of event blocks. */
-	event_block_list_t event_blocks;
+	event_blockage_list_t event_blocks;
 	
     /**
 	   Next outer block 
 	*/
-	struct block *outer;
+	block_t *outer;
+    
+    /** Constructor */
+    block_t(int t);
     
     /** Destructor */
-    ~block()
-    {
-        if (state1_ptr != NULL)
-            delete state1_ptr;
-        if (state2_ptr != NULL)
-            delete state2_ptr;
-    }
-} block_t;
+    virtual ~block_t();
+};
 
-/** 
-	Types of blocks
-*/
-enum block_type_t
-{
-	WHILE, /**< While loop block */
-	FOR,  /**< For loop block */
-	IF, /**< If block */
-	FUNCTION_DEF, /**< Function definition block */
-	FUNCTION_CALL, /**< Function invocation block */
-	FUNCTION_CALL_NO_SHADOW, /**< Function invocation block with no variable shadowing */
-	SWITCH, /**< Switch block */
-	FAKE, /**< Fake block */
-	SUBST, /**< Command substitution scope */
-	TOP, /**< Outermost block */
-	BEGIN, /**< Unconditional block */
-	SOURCE, /**< Block created by the . (source) builtin */
-	EVENT, /**< Block created on event notifier invocation */
-	BREAKPOINT, /**< Breakpoint block */
-}
-;
+struct if_block_t : public block_t {
+    bool if_expr_evaluated; // whether the clause of the if statement has been tested
+    bool if_expr_result; // if so, whether it evaluated to true
+    bool else_evaluated; // whether we've encountered a terminal else block
+    if_block_t() :
+        if_expr_evaluated(false),
+        if_expr_result(false),
+        else_evaluated(false),
+        block_t(IF)
+    {
+    }
+};
+
+struct event_block_t : public block_t {
+    const event_t * const event;
+    event_block_t(const event_t *evt) : block_t(EVENT), event(evt)
+    {
+    }
+};
+
+struct function_block_t : public block_t {
+    process_t *process;
+    wcstring name;
+    
+    function_block_t(process_t *p, const wcstring &n, bool shadows) :
+        process(p),
+        name(n),
+        block_t( shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW )
+    {
+    }
+};
+
+struct source_block_t : public block_t {
+    const wchar_t * const source_file;
+    source_block_t(const wchar_t *src) : source_file(src), block_t(SOURCE)
+    {
+    }
+};
+
+struct for_block_t : public block_t {
+    wcstring variable; // the variable that will be assigned each value in the sequence
+    wcstring_list_t sequence; // the sequence of values
+    for_block_t(const wcstring &var) :
+        variable(var),
+        sequence(),
+        block_t(FOR)
+    {
+    }
+};
+
+struct while_block_t : public block_t {
+    int status;
+    while_block_t() : status(0), block_t(WHILE)
+    {
+    }
+};
+
+struct switch_block_t : public block_t {
+    bool switch_taken;
+    const wcstring switch_value;
+    switch_block_t(const wcstring &sv) : switch_taken(false), switch_value(sv), block_t(SWITCH)
+    {
+    }
+};
 
 /**
    Possible states for a loop
@@ -344,7 +406,7 @@ class parser_t {
     block_t *current_block;
     
     /** Global event blocks */
-    event_block_list_t global_event_blocks;
+    event_blockage_list_t global_event_blocks;
     
     /** Current block level io redirections  */
     io_chain_t block_io;
@@ -411,8 +473,8 @@ class parser_t {
     /** Get the list of jobs */
     job_list_t &job_list() { return my_job_list; }
 
-    /** Create block of specified type */
-    void push_block( int type);
+    /** Pushes the block. pop_block will call delete on it. */
+    void push_block( block_t *newv );
 
     /** Remove the outermost block namespace */
     void pop_block();

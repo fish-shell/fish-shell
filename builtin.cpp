@@ -824,7 +824,7 @@ static int builtin_block( parser_t &parser, wchar_t **argv )
 	{
 		block_t *block=parser.current_block;
 
-        event_block_t eb = {};
+        event_blockage_t eb = {};
 		eb.typemask = type;
 
 		switch( scope )
@@ -1530,7 +1530,8 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 		
 	woptind=0;
 
-	parser.push_block( FUNCTION_DEF );
+    block_t *newv = new block_t(FUNCTION_DEF);
+	parser.push_block( newv );
 
 	static const struct woption
 		long_options[] =
@@ -1729,7 +1730,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
 				
 			case 'h':
 				parser.pop_block();
-				parser.push_block( FAKE );
+				parser.push_block( new block_t(FAKE) );
 				builtin_print_help( parser, argv[0], stdout_buffer );
 				return STATUS_BUILTIN_OK;
 				
@@ -1834,7 +1835,7 @@ static int builtin_function( parser_t &parser, wchar_t **argv )
         stderr_buffer.push_back(L'\n');
 
 		parser.pop_block();
-		parser.push_block( FAKE );
+		parser.push_block( new block_t(FAKE) );
 	}
 	else
 	{
@@ -2869,13 +2870,9 @@ static int builtin_source( parser_t &parser, wchar_t ** argv )
 
 	}
 	
-	parser.push_block( SOURCE );		
+	parser.push_block( new source_block_t(fn_intern) );
 	reader_push_current_filename( fn_intern );
-	
-    // PCA We need the state to be a wcstring; it would be nice to figure out how to restore this optimization however
-    //parser.current_block->state1<const wchar_t *>() = fn_intern;
-    parser.current_block->state1<wcstring>() = fn_intern;
-	
+		
 	parse_util_set_argv( (argc>2)?(argv+2):(argv+1), wcstring_list_t());
 	
 	res = reader_read( fd, real_io ? *real_io : io_chain_t() );
@@ -3207,24 +3204,23 @@ static int builtin_for( parser_t &parser, wchar_t **argv )
 
 	if( res )
 	{
-		parser.push_block( FAKE );
+		parser.push_block( new block_t(FAKE) );
 	}
 	else
 	{
-		parser.push_block( FOR );
+        const wchar_t *for_variable = argv[1];
+        for_block_t *fb = new for_block_t(for_variable);
+		parser.push_block( fb );
+		fb->tok_pos = parser.get_pos();
 
-		int i;
-        const wcstring for_variable = argv[1];
-		parser.current_block->tok_pos = parser.get_pos();
-        parser.current_block->state1<wcstring>() = for_variable;
-
-        wcstring_list_t &for_vars = parser.current_block->state2<wcstring_list_t>();
-		for( i=argc-1; i>3; i-- )
+        /* Note that we store the sequence of values in opposite order */
+        wcstring_list_t &for_vars = fb->sequence;
+		for( int i=argc-1; i>3; i-- )
             for_vars.push_back(argv[i]);
 
 		if( argc > 3 )
 		{
-			env_set( for_variable.c_str(), argv[3], ENV_LOCAL );
+			env_set( for_variable, argv[3], ENV_LOCAL );
 		}
 		else
 		{
@@ -3239,7 +3235,7 @@ static int builtin_for( parser_t &parser, wchar_t **argv )
 */
 static int builtin_begin( parser_t &parser, wchar_t **argv )
 {
-	parser.push_block( BEGIN );
+	parser.push_block( new block_t(BEGIN) );
 	parser.current_block->tok_pos = parser.get_pos();
 	return proc_get_last_status();
 }
@@ -3284,7 +3280,8 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 					parser.current_block->skip = 0;
 					kill_block = 0;
 					parser.set_pos( parser.current_block->tok_pos);
-                    parser.current_block->state1<int>() = WHILE_TEST_AGAIN;
+                    while_block_t *blk = static_cast<while_block_t *>(parser.current_block);
+                    blk->status = WHILE_TEST_AGAIN;
 				}
 
 				break;
@@ -3304,7 +3301,8 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 				/*
 				  set loop variable to next element, and rewind to the beginning of the block.
 				*/
-                wcstring_list_t &for_vars = parser.current_block->state2<wcstring_list_t>();
+                for_block_t *fb = static_cast<for_block_t *>(parser.current_block);
+                wcstring_list_t &for_vars = fb->sequence;
 				if( parser.current_block->loop_status == LOOP_BREAK )
 				{
                     for_vars.clear();
@@ -3314,7 +3312,7 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 				{
                     const wcstring val = for_vars.back();
                     for_vars.pop_back();
-                    const wcstring for_variable = parser.current_block->state1<wcstring>();
+                    const wcstring &for_variable = fb->variable;
 					env_set( for_variable.c_str(), val.c_str(),  ENV_LOCAL);
 					parser.current_block->loop_status = LOOP_NORMAL;
 					parser.current_block->skip = 0;
@@ -3385,9 +3383,18 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 */
 static int builtin_else( parser_t &parser, wchar_t **argv )
 {
-	if( parser.current_block == 0 ||
-		parser.current_block->type != IF ||
-		parser.current_block->state1<int>() != 1)
+    bool block_ok = false;
+    if_block_t *if_block = NULL;
+    if (parser.current_block != NULL && parser.current_block->type == IF)
+    {
+        if_block = static_cast<if_block_t *>(parser.current_block);
+        if (if_block->if_expr_evaluated && ! if_block->else_evaluated)
+        {
+            block_ok = true;
+        }
+    }
+    
+	if( ! block_ok )
 	{
 		append_format(stderr_buffer,
 				   _( L"%ls: Not inside of 'if' block\n" ),
@@ -3397,9 +3404,9 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
 	}
 	else
 	{
-        int &if_state = parser.current_block->state1<int>();
-        if_state++;
-		parser.current_block->skip = !parser.current_block->skip;
+        /* If the 'if' expression evaluated to false, then we ought to take the else branch, which means skip ought to be false. So the sense of the skip variable matches the sense of the 'if' expression result. */
+		if_block->skip = if_block->if_expr_result;
+        if_block->else_evaluated = true;
 		env_pop();
 		env_push(0);
 	}
@@ -3462,13 +3469,13 @@ static int builtin_break_continue( parser_t &parser, wchar_t **argv )
 }
 
 /**
-   Implementation of the builtin count command, used to launch the
+   Implementation of the builtin breakpoint command, used to launch the
    interactive debugger.
  */
 
 static int builtin_breakpoint( parser_t &parser, wchar_t **argv )
 {
-	parser.push_block( BREAKPOINT );		
+	parser.push_block( new block_t(BREAKPOINT) );
 	
 	reader_read( STDIN_FILENO, real_io ? *real_io : io_chain_t() );
 	
@@ -3564,14 +3571,12 @@ static int builtin_switch( parser_t &parser, wchar_t **argv )
 
 		builtin_print_help( parser, argv[0], stderr_buffer );
 		res=1;
-		parser.push_block( FAKE );
+		parser.push_block( new block_t(FAKE) );
 	}
 	else
 	{
-		parser.push_block( SWITCH );
-		parser.current_block->state1<wcstring>() = argv[1];
+		parser.push_block( new switch_block_t(argv[1]) );
 		parser.current_block->skip=1;
-		parser.current_block->state2<int>() = 0;
         res = proc_get_last_status();
 	}
 	
@@ -3598,25 +3603,25 @@ static int builtin_case( parser_t &parser, wchar_t **argv )
 	}
 	
 	parser.current_block->skip = 1;
-	
-	if( parser.current_block->state2<int>() )
+	switch_block_t *sb = static_cast<switch_block_t *>(parser.current_block);
+	if( sb->switch_taken )
 	{
 		return proc_get_last_status();
 	}
 	
+    const wcstring &switch_value = sb->switch_value;
 	for( i=1; i<argc; i++ )
 	{
 		int match;
 		
 		unescaped = parse_util_unescape_wildcards( argv[i] );
-        const wcstring &switch_value = parser.current_block->state1<wcstring>();
 		match = wildcard_match( switch_value, unescaped );
 		free( unescaped );
 		
 		if( match )
 		{
 			parser.current_block->skip = 0;
-			parser.current_block->state2<int>() = 1;
+			sb->switch_taken = true;
 			break;
 		}
 	}

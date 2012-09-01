@@ -146,7 +146,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error when using else builtin outside of if block
 */
-#define INVALID_ELSE_ERR_MSG _( L"'else' builtin not inside of if block" )
+#define INVALID_ELSE_OR_ELSEIF_ERR_MSG _( L"'%ls' builtin not inside of if block" )
 
 /**
    Error when using end builtin outside of block
@@ -3293,9 +3293,9 @@ int parser_t::test( const  wchar_t * buff,
 					}
 
 					/*
-					  Test that else is only used directly in an if-block
+					  Test that else and elseif are only used directly in an if-block
 					*/
-					if( command == L"else" )
+					if( command == L"else" || command == L"elseif" )
 					{
 						if( !count || block_type[count-1]!=IF )
 						{
@@ -3304,7 +3304,8 @@ int parser_t::test( const  wchar_t * buff,
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
-									   INVALID_ELSE_ERR_MSG );
+									   INVALID_ELSE_OR_ELSEIF_ERR_MSG,
+                                       command.c_str());
 
 								print_errors( *out, prefix );
 							}

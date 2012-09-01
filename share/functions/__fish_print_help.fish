@@ -8,6 +8,11 @@ function __fish_print_help --description "Print help message for the specified f
 		case '*'
 		set item $argv[1]
 	end
+	
+	# Do nothing if the file does not exist
+	if not test -e "$__fish_datadir/man/man1/$item.1"
+		return
+	end
 
 	# These two expressions take care of underlines (Should be italic)
 	set -l cmd1 s/_\x08'\(.\)'/(set_color --underline)\\1(set_color normal)/g

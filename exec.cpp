@@ -116,7 +116,7 @@ void exec_close( int fd )
 	}
 	
     /* Maybe remove this from our set of open fds */
-    if (fd < open_fds.size()) {
+    if ((size_t)fd < open_fds.size()) {
         open_fds[fd] = false;
     }
 }
@@ -125,7 +125,7 @@ int exec_pipe( int fd[2])
 {
 	int res;
 	
-	while( ( res=pipe( fd ) ) )
+	while ((res=pipe(fd)))
 	{
 		if( errno != EINTR )
 		{
@@ -137,7 +137,7 @@ int exec_pipe( int fd[2])
 	debug( 4, L"Created pipe using fds %d and %d", fd[0], fd[1]);
 	
     int max_fd = std::max(fd[0], fd[1]);
-    if (open_fds.size() <= max_fd) {
+    if (max_fd >= 0 && open_fds.size() <= (size_t)max_fd) {
         open_fds.resize(max_fd + 1, false);
     }
     open_fds.at(fd[0]) = true;

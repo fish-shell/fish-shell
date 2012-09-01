@@ -140,18 +140,10 @@ struct block_t
 
 struct if_block_t : public block_t
 {
-    bool if_expr_evaluated; // whether the clause of the if statement has been tested
+    bool if_expr_evaluated; // whether we've evaluated the if expression
+    bool is_elseif_entry; // whether we're at the beginning of an active branch (IF or ELSEIF)
     bool any_branch_taken; // whether the clause of the if statement or any elseif has been found to be true
-    bool is_elseif_entry; // whether we're the first command in an elseif.
     bool else_evaluated; // whether we've encountered a terminal else block
-    
-    enum {
-        if_state_if,
-        if_state_elseif,
-        if_state_else
-    } if_state;
-    
-    bool has_reached_else() const { return if_state == if_state_else; }
     
     if_block_t();
 };

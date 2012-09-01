@@ -3308,6 +3308,9 @@ int parser_t::test( const  wchar_t * buff,
                                        command.c_str());
 
 								print_errors( *out, prefix );
+                                
+                                /* Don't complain about elseif missing a command for elseif if we already complained about elseif being out of place */
+                                if (needs_cmd) had_cmd = true;
 							}
 						}
 
@@ -3716,12 +3719,11 @@ block_t::~block_t()
 /* Various block constructors */
 
 if_block_t::if_block_t() :
+    block_t(IF),
     if_expr_evaluated(false),
-    any_branch_taken(false),
     is_elseif_entry(false),
-    else_evaluated(false),
-    if_state(if_state_if),
-    block_t(IF)
+    any_branch_taken(false),
+    else_evaluated(false)
 {
 }
 
@@ -3732,35 +3734,35 @@ event_block_t::event_block_t(const event_t *evt) :
 }
 
 function_block_t::function_block_t(process_t *p, const wcstring &n, bool shadows) :
+    block_t( shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW ),
     process(p),
-    name(n),
-    block_t( shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW )
+    name(n)
 {
 }
 
 source_block_t::source_block_t(const wchar_t *src) :
-    source_file(src),
-    block_t(SOURCE)
+    block_t(SOURCE),
+    source_file(src)
 {
 }
 
 for_block_t::for_block_t(const wcstring &var) :
+    block_t(FOR),
     variable(var),
-    sequence(),
-    block_t(FOR)
+    sequence()
 {
 }
 
 while_block_t::while_block_t() :
-    status(0),
-    block_t(WHILE)
+    block_t(WHILE),
+    status(0)
 {
 }
 
 switch_block_t::switch_block_t(const wcstring &sv) :
+    block_t(SWITCH),
     switch_taken(false),
-    switch_value(sv),
-    block_t(SWITCH)
+    switch_value(sv)
 {
 }
 
@@ -3770,8 +3772,8 @@ fake_block_t::fake_block_t() :
 }
 
 function_def_block_t::function_def_block_t() :
-    function_data(),
-    block_t(FUNCTION_DEF)
+    block_t(FUNCTION_DEF),
+    function_data()
 {
 }
 

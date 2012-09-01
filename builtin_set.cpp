@@ -288,7 +288,7 @@ static int update_values( wcstring_list_t &list,
 		{
 			return 1;
 		}
-        if ( ind >= list.size() )
+        if ( (size_t)ind >= list.size() )
         {
             list.resize( ind+1 );
         }

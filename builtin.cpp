@@ -3380,7 +3380,7 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
     {
         if_block = static_cast<if_block_t *>(parser.current_block);
         /* Ensure that we're past IF but not up to an ELSE */
-        if (if_block->if_expr_evaluated && ! if_block->has_reached_else())
+        if (if_block->if_expr_evaluated && ! if_block->else_evaluated)
         {
             block_ok = true;
         }
@@ -3399,49 +3399,11 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
         /* Run the else block if the IF expression was false and so were all the ELSEIF expressions (if any) */
         bool run_else = ! if_block->any_branch_taken;
 		if_block->skip = ! run_else;
-        if_block->if_state = if_block_t::if_state_else;
+        if_block->else_evaluated = true;
 		env_pop();
 		env_push(0);
 	}
 
-	/*
-	  If everything goes ok, return status of last command to execute.
-	*/
-	return proc_get_last_status();
-}
-
-static int builtin_elseif( parser_t &parser, wchar_t **argv )
-{
-    puts("BULITIN ELSEIF");
-    bool block_ok = false;
-    if_block_t *if_block = NULL;
-    if (parser.current_block != NULL && parser.current_block->type() == IF)
-    {
-        if_block = static_cast<if_block_t *>(parser.current_block);
-        /* Make sure that we're past IF, but not up to an ELSE */
-        if (if_block->if_expr_evaluated && ! if_block->has_reached_else())
-        {
-            block_ok = true;
-        }
-    }
-    
-	if( ! block_ok )
-	{
-		append_format(stderr_buffer,
-				   _( L"%ls: Not inside of 'if' block\n" ),
-				   argv[0] );
-		builtin_print_help( parser, argv[0], stderr_buffer );
-		return STATUS_BUILTIN_ERROR;
-	}
-	else
-	{
-        /* Run this elseif if the IF expression was false, and so were all ELSEIF expressions thus far. */
-        bool run_elseif = ! if_block->any_branch_taken;
-        if_block->skip = ! run_elseif;
-		env_pop();
-		env_push(0);
-	}
-    
 	/*
 	  If everything goes ok, return status of last command to execute.
 	*/

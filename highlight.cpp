@@ -1314,7 +1314,7 @@ void highlight_shell( const wcstring &buff, std::vector<int> &color, size_t pos,
         
         // highlight the end of the subcommand
         assert(end >= subbuff);
-        if ((end - subbuff) < length) {
+        if ((size_t)(end - subbuff) < length) {
             color.at(end-subbuff)=HIGHLIGHT_OPERATOR;
         }
 		

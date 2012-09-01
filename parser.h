@@ -99,7 +99,7 @@ struct block_t
 	   The job that is currently evaluated in the specified block.
 	*/
 	job_t *job;
-	
+
 #if 0
 	union 
 	{
@@ -141,8 +141,18 @@ struct block_t
 struct if_block_t : public block_t
 {
     bool if_expr_evaluated; // whether the clause of the if statement has been tested
-    bool if_expr_result; // if so, whether it evaluated to true
+    bool any_branch_taken; // whether the clause of the if statement or any elseif has been found to be true
+    bool is_elseif_entry; // whether we're the first command in an elseif.
     bool else_evaluated; // whether we've encountered a terminal else block
+    
+    enum {
+        if_state_if,
+        if_state_elseif,
+        if_state_else
+    } if_state;
+    
+    bool has_reached_else() const { return if_state == if_state_else; }
+    
     if_block_t();
 };
 
@@ -227,7 +237,6 @@ enum while_status
 	WHILE_TESTED, /**< This is not the first command in the loop */
 }
 ;
-
 
 
 /**

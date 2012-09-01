@@ -3379,7 +3379,8 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
     if (parser.current_block != NULL && parser.current_block->type() == IF)
     {
         if_block = static_cast<if_block_t *>(parser.current_block);
-        if (if_block->if_expr_evaluated && ! if_block->else_evaluated)
+        /* Ensure that we're past IF but not up to an ELSE */
+        if (if_block->if_expr_evaluated && ! if_block->has_reached_else())
         {
             block_ok = true;
         }
@@ -3395,13 +3396,52 @@ static int builtin_else( parser_t &parser, wchar_t **argv )
 	}
 	else
 	{
-        /* If the 'if' expression evaluated to false, then we ought to take the else branch, which means skip ought to be false. So the sense of the skip variable matches the sense of the 'if' expression result. */
-		if_block->skip = if_block->if_expr_result;
-        if_block->else_evaluated = true;
+        /* Run the else block if the IF expression was false and so were all the ELSEIF expressions (if any) */
+        bool run_else = ! if_block->any_branch_taken;
+		if_block->skip = ! run_else;
+        if_block->if_state = if_block_t::if_state_else;
 		env_pop();
 		env_push(0);
 	}
 
+	/*
+	  If everything goes ok, return status of last command to execute.
+	*/
+	return proc_get_last_status();
+}
+
+static int builtin_elseif( parser_t &parser, wchar_t **argv )
+{
+    puts("BULITIN ELSEIF");
+    bool block_ok = false;
+    if_block_t *if_block = NULL;
+    if (parser.current_block != NULL && parser.current_block->type() == IF)
+    {
+        if_block = static_cast<if_block_t *>(parser.current_block);
+        /* Make sure that we're past IF, but not up to an ELSE */
+        if (if_block->if_expr_evaluated && ! if_block->has_reached_else())
+        {
+            block_ok = true;
+        }
+    }
+    
+	if( ! block_ok )
+	{
+		append_format(stderr_buffer,
+				   _( L"%ls: Not inside of 'if' block\n" ),
+				   argv[0] );
+		builtin_print_help( parser, argv[0], stderr_buffer );
+		return STATUS_BUILTIN_ERROR;
+	}
+	else
+	{
+        /* Run this elseif if the IF expression was false, and so were all ELSEIF expressions thus far. */
+        bool run_elseif = ! if_block->any_branch_taken;
+        if_block->skip = ! run_elseif;
+		env_pop();
+		env_push(0);
+	}
+    
 	/*
 	  If everything goes ok, return status of last command to execute.
 	*/
@@ -3767,6 +3807,7 @@ static int builtin_history( parser_t &parser, wchar_t **argv )
 /**
    Data about all the builtin commands in fish.
    Functions that are bound to builtin_generic are handled directly by the parser.
+   NOTE: These must be kept in sorted order!
 */
 static const builtin_data_t builtin_datas[]=
 {
@@ -3787,8 +3828,9 @@ static const builtin_data_t builtin_datas[]=
 	{ 		L"contains",  &builtin_contains, N_( L"Search for a specified string in a list" )   },
 	{ 		L"continue",  &builtin_break_continue, N_( L"Skip the rest of the current lap of the innermost loop" )   },
 	{ 		L"count",  &builtin_count, N_( L"Count the number of arguments" )   },
-    {       L"echo",  &builtin_echo, N_( L"Print arguments" ) },
+	{       L"echo",  &builtin_echo, N_( L"Print arguments" ) },
 	{ 		L"else",  &builtin_else, N_( L"Evaluate block if condition is false" )   },
+	{ 		L"elseif",  &builtin_generic, N_( L"Evaluate block if this condition is true but all previous were false" )   },
 	{ 		L"emit",  &builtin_emit, N_( L"Emit an event" ) },
 	{ 		L"end",  &builtin_end, N_( L"End a block of commands" )   },
 	{ 		L"exec",  &builtin_generic, N_( L"Run command in current process" )  },

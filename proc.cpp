@@ -306,7 +306,7 @@ void job_set_flag( job_t *j, int flag, int set )
 	if( set )
 		j->flags |= flag;
 	else
-		j->flags = j->flags & (0xffffffff ^ flag);
+		j->flags = j->flags & ((unsigned int)(-1) ^ flag);
 }
 
 int job_get_flag( const job_t *j, int flag )

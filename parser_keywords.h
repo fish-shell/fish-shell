@@ -26,7 +26,7 @@ bool parser_keywords_is_switch( const wcstring &cmd );
 
 
 /**
-   Tests if the specified commands parameters should be interpreted as another command, which will be true if the command is either 'command', 'exec', 'if', 'while' or 'builtin'.  
+   Tests if the specified commands parameters should be interpreted as another command, which will be true if the command is either 'command', 'exec', 'if', 'while', 'elseif', or 'builtin'.  
 
    \param cmd The command name to test
    \return 1 of the command parameter is a command, 0 otherwise

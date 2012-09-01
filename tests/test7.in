@@ -36,3 +36,61 @@ contains -i string a b c d; or echo nothing
 contains -i -- string a b c string d
 contains -i -- -- a b c; or echo nothing
 contains -i -- -- a b c -- v
+
+# Test if, else, and elseif
+# Test if, else, and elseif
+if true
+	echo alpha1.1
+	echo alpha1.2
+elseif false
+	echo beta1.1
+	echo beta1.2
+elseif false
+	echo gamma1.1
+	echo gamma1.2
+else
+	echo delta1.1
+	echo delta1.2
+end
+
+if false
+	echo alpha2.1
+	echo alpha2.2
+elseif begin ; true ; end
+	echo beta2.1
+	echo beta2.2
+elseif begin ; echo nope2.1; false ; end
+	echo gamma2.1
+	echo gamma2.2
+else
+	echo delta2.1
+	echo delta2.2
+end
+
+if false
+	echo alpha3.1
+	echo alpha3.2
+elseif begin ; echo yep3.1; false ; end
+	echo beta3.1
+	echo beta3.2
+elseif begin ; echo yep3.2; true ; end
+	echo gamma3.1
+	echo gamma3.2
+else
+	echo delta3.1
+	echo delta3.2
+end
+
+if false
+	echo alpha4.1
+	echo alpha4.2
+elseif begin ; echo yep4.1; false ; end
+	echo beta4.1
+	echo beta4.2
+elseif begin ; echo yep4.2; false ; end
+	echo gamma4.1
+	echo gamma4.2
+else
+	echo delta4.1
+	echo delta4.2
+end

@@ -280,7 +280,7 @@ struct block_lookup_entry
 	/**
 	   The block type id. The legal values are defined in parser.h.
 	*/
-	int type;
+	block_type_t type;
 
 	/**
 	   The name of the builtin that creates this type of block, if any. 
@@ -356,7 +356,7 @@ static const struct block_lookup_entry block_lookup[]=
 	}
 	,
 	{
-		0, 0, 0
+		(block_type_t)0, 0, 0
 	}
 };
 
@@ -1402,14 +1402,17 @@ void parser_t::parse_job_argument_list( process_t *p,
 					*/
 					skip=1;
 
-					/*
-					  But if this is in fact a case statement, then it should be evaluated
-					*/
-
-					if( (current_block->type() == SWITCH) && args.at(0).completion == L"case" && p->type == INTERNAL_BUILTIN )
+					/* But if this is in fact a case statement or an elseif statement, then it should be evaluated */
+                    block_type_t type = current_block->type();
+					if( type == SWITCH && args.at(0).completion == L"case" && p->type == INTERNAL_BUILTIN )
 					{
 						skip=0;
 					}
+                    else if (type == IF && args.at(0).completion == L"elseif")
+                    {
+                        //skip = 0;
+                        printf("SKIP elseif???\n");
+                    }
 				}
 
 				if( !skip )
@@ -1701,17 +1704,18 @@ int parser_t::parse_job( process_t *p,
 	int use_builtin = 1;    // May builtins be considered when checking what action this command represents
 	int use_command = 1;    // May commands be considered when checking what action this command represents
 	int is_new_block=0;     // Does this command create a new block?
+	bool unskip = false;    // Maybe we are an elseif inside an if block; if so we may want to evaluate this even if the if block is currently set to skip
 
 	block_t *prev_block = current_block;
-	int prev_tokenizer_pos = current_tokenizer_pos;	
+	int prev_tokenizer_pos = current_tokenizer_pos;
 
 	current_tokenizer_pos = tok_get_pos( tok );
 
-	while( args.size() == 0 )
+	while( args.empty() )
 	{
 		wcstring nxt;
         bool has_nxt = false;
-		int consumed = 0; // Set to one if the command requires a second command, like e.g. while does
+		bool consumed = false; // Set to one if the command requires a second command, like e.g. while does
 		int mark;         // Use to save the position of the beginning of the token
 		
 		switch( tok_last_type( tok ))
@@ -1780,7 +1784,7 @@ int parser_t::parse_job( process_t *p,
 		}
 		
 		mark = tok_get_pos( tok );
-
+        
 		if( contains( nxt,
 					  L"command",
 					  L"builtin",
@@ -1815,7 +1819,7 @@ int parser_t::parse_job( process_t *p,
 					tok_next( tok );
 				}
 								
-				consumed=1;
+				consumed = true;
 
 				if( nxt == L"command" || nxt == L"builtin" )
 				{
@@ -1879,7 +1883,7 @@ int parser_t::parse_job( process_t *p,
 				this->push_block( wb );
 			}
 
-			consumed=1;
+			consumed = true;
 			is_new_block=1;
 
 		}
@@ -1892,8 +1896,23 @@ int parser_t::parse_job( process_t *p,
 			ib->tok_pos = mark;
 
 			is_new_block=1;
-			consumed=1;			
+			consumed = true;
 		}
+        else if( nxt == L"elseif" )
+        {
+            /* Piggyback on the if block, but we need the elseif command */
+            job_set_flag( j, JOB_ELSEIF, 1 );
+            tok_next( tok );
+            consumed = true;
+            
+            /* Determine if we need to unskip */
+            if (current_block->type() == IF)
+            {
+                const if_block_t *ib = static_cast<const if_block_t *>(current_block);
+                /* We want to execute this ELSEIF if the IF expression was evaluated, it failed, and so has every other ELSEIF (if any) */
+                unskip = (ib->if_expr_evaluated && ! ib->any_branch_taken);
+            }
+        }
 
 		/*
 		  Test if we need another command
@@ -1978,7 +1997,7 @@ int parser_t::parse_job( process_t *p,
 			  If we are not executing the current block, allow
 			  non-existent commands.
 			*/
-			if( current_block->skip )
+			if( current_block->skip && ! unskip)
 			{
 				p->actual_cmd.clear();
 			}
@@ -2243,6 +2262,7 @@ void parser_t::skipped_exec( job_t * j )
 {
 	process_t *p;
 
+    /* Handle other skipped guys */
 	for( p = j->first_process; p; p=p->next )
 	{
 		if( p->type == INTERNAL_BUILTIN )
@@ -2265,13 +2285,17 @@ void parser_t::skipped_exec( job_t * j )
 			}
 			else if( wcscmp( p->argv0(), L"else" )==0)
 			{
-				if( (current_block->type() == IF ) &&
-					(static_cast<const if_block_t*>(current_block)->if_expr_evaluated))
-				{
-					exec( *this, j );
-					return;
-				}
-			}
+				if (current_block->type() == IF)
+                {
+                    /* Evaluate this ELSE if the IF expression failed, and so has every ELSEIF (if any) expression thus far */
+                    const if_block_t *ib = static_cast<const if_block_t*>(current_block);
+                    if (ib->if_expr_evaluated && ! ib->any_branch_taken)
+                    {
+                        exec( *this, j );
+                        return;
+                    }
+                }
+            }
 			else if( wcscmp( p->argv0(), L"case" )==0)
 			{
 				if(current_block->type() == SWITCH)
@@ -2283,6 +2307,27 @@ void parser_t::skipped_exec( job_t * j )
 		}
 	}
 	job_free( j );
+}
+
+/* Return whether we should skip the current block, if it is an elseif. */
+static bool job_should_skip_elseif(const job_t *job, const block_t *current_block)
+{
+    if (current_block->type() != IF)
+    {
+        /* Not an IF block, so just honor the skip property */
+        return current_block->skip;
+    }
+    else
+    {
+        /* We are an IF block */
+        const if_block_t *ib = static_cast<const if_block_t *>(current_block);
+        
+        /* Execute this ELSEIF if the IF expression has been evaluated, it evaluated to false, and all ELSEIFs so far have evaluated to false. */
+        bool execute_elseif = (ib->if_expr_evaluated && ! ib->any_branch_taken);
+        
+        /* Invert the sense */
+        return ! execute_elseif;
+    }
 }
 
 /**
@@ -2367,7 +2412,24 @@ void parser_t::eval_job( tokenizer *tok )
 					profile_item->skipped=current_block->skip;
 				}
 				
-				skip = skip || current_block->skip;
+                /* If we're an ELSEIF, then we may want to unskip, if we're skipping because of an IF */
+                if (job_get_flag(j, JOB_ELSEIF))
+                {
+                    bool skip_elseif = job_should_skip_elseif(j, current_block);
+                    
+                    /* Record that we're entering an elseif */
+                    if (! skip_elseif)
+                    {
+                        /* We must be an IF block here */
+                        assert(current_block->type() == IF);
+                        static_cast<if_block_t *>(current_block)->is_elseif_entry = true;
+                    }
+                    
+                    /* Record that in the block too. This is similar to what builtin_else does. */
+                    current_block->skip = skip_elseif;
+                }
+                
+                skip = skip || current_block->skip;
 				skip = skip || job_get_flag( j, JOB_WILDCARD_ERROR );
 				skip = skip || job_get_flag( j, JOB_SKIP );
 				
@@ -2405,7 +2467,7 @@ void parser_t::eval_job( tokenizer *tok )
 					{
 						case WHILE_TEST_FIRST:
 						{
-							// PCA I added the 'current_block->skip ||' part because we couldn't reliably
+							// PCA I added the 'wb->skip ||' part because we couldn't reliably
 							// control-C out of loops like this: while test 1 -eq 1; end
 							wb->skip = wb->skip || proc_get_last_status()!= 0;
 							wb->status = WHILE_TESTED;
@@ -2416,15 +2478,28 @@ void parser_t::eval_job( tokenizer *tok )
 
 				if( current_block->type() == IF )
 				{
-                    if_block_t *ib = static_cast<if_block_t *>(current_block);
-					if( (! ib->if_expr_evaluated) &&
-						(!current_block->skip) )
-					{
+					if_block_t *ib = static_cast<if_block_t *>(current_block);
+                    
+                    if (ib->skip)
+                    {
+                        /* Nothing */
+                    }
+                    else if (! ib->if_expr_evaluated)
+                    {
+                        /* Execute the IF */
                         bool if_result = (proc_get_last_status() == 0);
-                        ib->if_expr_result = if_result; // store expression result
-						current_block->skip = ! if_result; //don't execute if the expresion result was not zero
+                        ib->any_branch_taken = if_result;
+						current_block->skip = ! if_result; //don't execute if the expression failed
 						ib->if_expr_evaluated = true;
-					}
+                    }
+                    else if (ib->is_elseif_entry && ! ib->any_branch_taken)
+                    {
+                        /* Maybe mark an ELSEIF branch as taken */
+                        bool elseif_taken = (proc_get_last_status() == 0);
+                        ib->any_branch_taken = elseif_taken;
+                        current_block->skip = ! elseif_taken;
+                        ib->is_elseif_entry = false;
+                    }
 				}
 
 			}
@@ -2625,7 +2700,7 @@ int parser_t::eval( const wcstring &cmdStr, const io_chain_t &io, enum block_typ
 /**
    \return the block type created by the specified builtin, or -1 on error.
 */
-int parser_get_block_type( const wcstring &cmd )
+block_type_t parser_get_block_type( const wcstring &cmd )
 {
 	int i;
 	
@@ -2636,7 +2711,7 @@ int parser_get_block_type( const wcstring &cmd )
 			return block_lookup[i].type;
 		}
 	}
-	return -1;
+	return (block_type_t)-1;
 }
 
 /**
@@ -2862,17 +2937,16 @@ int parser_t::test( const  wchar_t * buff,
 	   Set to one if a command name has been given for the currently
 	   parsed process specification 
 	*/
-	int had_cmd=0; 
-	int count = 0;
+	int had_cmd=0;
 	int err=0;
 	int unfinished = 0;
 	
 	tokenizer *previous_tokenizer=current_tokenizer;
 	int previous_pos=current_tokenizer_pos;
     
-    // PCA These statics are terrifying - I have no idea whether and why these variables need to be static
-	static int block_pos[BLOCK_MAX_COUNT];
-	static int block_type[BLOCK_MAX_COUNT];
+	int block_pos[BLOCK_MAX_COUNT] = {};
+	block_type_t block_type[BLOCK_MAX_COUNT] = {};
+	int count = 0;
 	int res = 0;
 	
 	/*
@@ -2933,7 +3007,6 @@ int parser_t::test( const  wchar_t * buff,
 			{
 				if( !had_cmd )
 				{
-					int is_else;
 					int mark = tok_get_pos( &tok );
 					had_cmd = 1;
 					arg_count=0;
@@ -2989,17 +3062,16 @@ int parser_t::test( const  wchar_t * buff,
 						count--;
 						tok_set_pos( &tok, mark );
 					}
-
-					is_else = (command == L"else");
 					
 					/*
 					  Store the block level. This needs to be done
 					  _after_ checking for end commands, but _before_
 					  shecking for block opening commands.
 					*/
+					bool is_else_or_elseif = (command == L"else" || command == L"elseif");
 					if( block_level )
 					{
-						block_level[tok_get_pos( &tok )] = count + (is_else?-1:0);
+						block_level[tok_get_pos( &tok )] = count + (is_else_or_elseif?-1:0);
 					}
 					
 					/*
@@ -3644,8 +3716,10 @@ block_t::~block_t()
 
 if_block_t::if_block_t() :
     if_expr_evaluated(false),
-    if_expr_result(false),
+    any_branch_taken(false),
+    is_elseif_entry(false),
     else_evaluated(false),
+    if_state(if_state_if),
     block_t(IF)
 {
 }

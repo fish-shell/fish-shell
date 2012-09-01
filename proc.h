@@ -214,64 +214,42 @@ class process_t
 #endif
 };
 
-/** 
-	Constant for the flag variable in the job struct
-
-	true if user was told about stopped job 
-*/
-#define JOB_NOTIFIED 1
-/** 
-	Constant for the flag variable in the job struct
-
-	Whether this job is in the foreground 
-*/
-#define JOB_FOREGROUND 2
-/** 
-	Constant for the flag variable in the job struct
-
+/* 	Constants for the flag variable in the job struct */
+enum {
+    /** true if user was told about stopped job */
+    JOB_NOTIFIED = 1 << 0,
+    
+    /** Whether this job is in the foreground */
+    JOB_FOREGROUND = 1 << 1,
+    
+    /**
 	Whether the specified job is completely constructed,
 	i.e. completely parsed, and every process in the job has been
 	forked, etc.
-*/
-#define JOB_CONSTRUCTED 4
-/**
-	Constant for the flag variable in the job struct
+    */
+    JOB_CONSTRUCTED = 1 << 2,
+    
+    /** Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported */
+    JOB_SKIP_NOTIFICATION = 1 << 3,
 
-   Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported
-*/
-#define JOB_SKIP_NOTIFICATION 8
-/** 
-	Constant for the flag variable in the job struct
+    /** Should the exit status be negated? This flag can only be set by the not builtin. */
+    JOB_NEGATE = 1 << 4,
+    
+    /** Should the exit status be used to reevaluate the condition in an if block? This is only used by elseif and is a big hack. */
+    JOB_ELSEIF = 1 << 5,
+    
+    /** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
+    JOB_WILDCARD_ERROR = 1 << 6,
+    
+    /** Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or  */
+    JOB_SKIP = 1 << 7,
+    
+    /** Whether the job is under job control  */
+    JOB_CONTROL = 1 << 8,
 
-	Should the exit status be negated? This flag can only be set by the not builtin. 
-*/
-#define JOB_NEGATE 16
-/** 
-	Constant for the flag variable in the job struct
-
-	This flag is set to one on wildcard expansion errors. It means that the current command should not be executed 
-*/
-#define JOB_WILDCARD_ERROR 32
-
-/** 
-	Constant for the flag variable in the job struct
-
-	Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or 
-*/
-#define JOB_SKIP 64
-
-/** 
-	Constant for the flag variable in the job struct
-
-	Whether the job is under job control 
-*/
-#define JOB_CONTROL 128
-/** 
-	Constant for the flag variable in the job struct
-
-	Whether the job wants to own the terminal when in the foreground 
-*/
-#define JOB_TERMINAL 256
+    /** Whether the job wants to own the terminal when in the foreground  */
+    JOB_TERMINAL = 1 << 9
+};
 
 /** 
     A struct represeting a job. A job is basically a pipeline of one
@@ -352,8 +330,7 @@ class job_t
 	/**
 	   Bitset containing information about the job. A combination of the JOB_* constants.
 	*/
-	int flags;
-	
+	unsigned int flags;
 };
 
 /** 

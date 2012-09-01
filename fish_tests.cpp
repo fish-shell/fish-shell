@@ -434,6 +434,11 @@ static void test_parser()
 	{
 		err( L"'else' command outside of conditional block context undetected" );		
 	}
+	if( !parser.test( L"elseif", 0, 0, 0 ) )
+	{
+		err( L"'elseif' command outside of conditional block context undetected" );		
+	}
+
 	if( !parser.test( L"break", 0, 0, 0 ) )
 	{
 		err( L"'break' command outside of loop block context undetected" );		

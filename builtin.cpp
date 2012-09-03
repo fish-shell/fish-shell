@@ -3792,7 +3792,6 @@ static const builtin_data_t builtin_datas[]=
 	{ 		L"count",  &builtin_count, N_( L"Count the number of arguments" )   },
 	{       L"echo",  &builtin_echo, N_( L"Print arguments" ) },
 	{ 		L"else",  &builtin_else, N_( L"Evaluate block if condition is false" )   },
-	{ 		L"elseif",  &builtin_generic, N_( L"Evaluate block if this condition is true but all previous were false" )   },
 	{ 		L"emit",  &builtin_emit, N_( L"Emit an event" ) },
 	{ 		L"end",  &builtin_end, N_( L"End a block of commands" )   },
 	{ 		L"exec",  &builtin_generic, N_( L"Run command in current process" )  },

@@ -43,7 +43,6 @@ bool parser_keywords_is_subcommand( const wcstring &cmd )
 				  L"while",
 				  L"exec",
 				  L"if",
-                  L"elseif",
 				  L"and",
 				  L"or",
 				  L"not" );
@@ -69,7 +68,6 @@ bool parser_keywords_is_reserved( const wcstring &word)
 				  L"end",
 				  L"case",
 				  L"else",
-				  L"elseif",
 				  L"return",
 				  L"continue",
 				  L"break" );

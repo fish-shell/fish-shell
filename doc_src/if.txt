@@ -1,7 +1,7 @@
 \section if if - conditionally execute a command
 
 \subsection if-synopsis Synopsis
-<tt>if CONDITION; COMMANDS_TRUE...; [elseif CONDITION2; COMMANDS_TRUE2...;] [else; COMMANDS_FALSE...;] end</tt>
+<tt>if CONDITION; COMMANDS_TRUE...; [else if CONDITION2; COMMANDS_TRUE2...;] [else; COMMANDS_FALSE...;] end</tt>
 
 \subsection if-description Description
 
@@ -24,7 +24,7 @@ variable.
 <pre>
 if test -f foo.txt
 	echo foo.txt exists
-elseif test -f bar.txt
+else if test -f bar.txt
 	echo bar.txt exists
 else
 	echo foo.txt and bar.txt do not exist

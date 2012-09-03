@@ -146,7 +146,12 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error when using else builtin outside of if block
 */
-#define INVALID_ELSE_OR_ELSEIF_ERR_MSG _( L"'%ls' builtin not inside of if block" )
+#define INVALID_ELSE_ERR_MSG _( L"'%ls' builtin not inside of if block" )
+
+/**
+   Error when using 'else if' past a naked 'else'
+*/
+#define INVALID_ELSEIF_PAST_ELSE_ERR_MSG _( L"'%ls' used past terminating 'else'" )
 
 /**
    Error when using end builtin outside of block
@@ -1408,11 +1413,6 @@ void parser_t::parse_job_argument_list( process_t *p,
 					{
 						skip=0;
 					}
-                    else if (type == IF && args.at(0).completion == L"elseif")
-                    {
-                        //skip = 0;
-                        printf("SKIP elseif???\n");
-                    }
 				}
 
 				if( !skip )
@@ -1898,19 +1898,37 @@ int parser_t::parse_job( process_t *p,
 			is_new_block=1;
 			consumed = true;
 		}
-        else if( nxt == L"elseif" )
+        else if (nxt == L"else")
         {
-            /* Piggyback on the if block, but we need the elseif command */
-            job_set_flag( j, JOB_ELSEIF, 1 );
-            tok_next( tok );
-            consumed = true;
-            
-            /* Determine if we need to unskip */
-            if (current_block->type() == IF)
+            /* Record where the else is for error reporting */
+            const int else_pos = tok_get_pos(tok);
+            /* See if we have any more arguments, that is, whether we're ELSE IF ... or just ELSE. */
+            tok_next(tok);
+            if (tok_last_type(tok) == TOK_STRING && current_block->type() == IF)
             {
                 const if_block_t *ib = static_cast<const if_block_t *>(current_block);
-                /* We want to execute this ELSEIF if the IF expression was evaluated, it failed, and so has every other ELSEIF (if any) */
-                unskip = (ib->if_expr_evaluated && ! ib->any_branch_taken);
+                
+                /* If we've already encountered an else, complain */
+                if (ib->else_evaluated)
+                {
+                    error( SYNTAX_ERROR,
+                           else_pos,
+                           INVALID_ELSEIF_PAST_ELSE_ERR_MSG,
+                           L"else if");
+
+                }
+                else
+                {
+                    
+                    job_set_flag( j, JOB_ELSEIF, 1 );
+                    consumed = true;
+                    
+                    /* We're at the IF. Go past it. */
+                    tok_next(tok);
+                    
+                    /* We want to execute this ELSEIF if the IF expression was evaluated, it failed, and so has every other ELSEIF (if any) */
+                    unskip = (ib->if_expr_evaluated && ! ib->any_branch_taken);
+                }
             }
         }
 
@@ -2489,7 +2507,9 @@ void parser_t::eval_job( tokenizer *tok )
                         /* Execute the IF */
                         bool if_result = (proc_get_last_status() == 0);
                         ib->any_branch_taken = if_result;
-						current_block->skip = ! if_result; //don't execute if the expression failed
+                        
+                        /* Don't execute if the expression failed */
+						current_block->skip = ! if_result;
 						ib->if_expr_evaluated = true;
                     }
                     else if (ib->is_elseif_entry && ! ib->any_branch_taken)
@@ -2962,7 +2982,7 @@ int parser_t::test( const  wchar_t * buff,
 	/* 
 	   Set to one if an additional process specification is needed 
 	*/
-	int needs_cmd=0; 
+	bool needs_cmd = false;
 
 	/*
 	  Counter on the number of arguments this function has encountered
@@ -3050,7 +3070,7 @@ int parser_t::test( const  wchar_t * buff,
 							}
 						}
 						
-						needs_cmd=0;
+						needs_cmd = false;
 					}
 					
 					/*
@@ -3066,9 +3086,9 @@ int parser_t::test( const  wchar_t * buff,
 					/*
 					  Store the block level. This needs to be done
 					  _after_ checking for end commands, but _before_
-					  shecking for block opening commands.
+					  checking for block opening commands.
 					*/
-					bool is_else_or_elseif = (command == L"else" || command == L"elseif");
+					bool is_else_or_elseif = (command == L"else");
 					if( block_level )
 					{
 						block_level[tok_get_pos( &tok )] = count + (is_else_or_elseif?-1:0);
@@ -3107,7 +3127,7 @@ int parser_t::test( const  wchar_t * buff,
 					*/
 					if( parser_keywords_is_subcommand( command ) && !parser_keywords_skip_arguments(command ) )
 					{
-						needs_cmd = 1;
+						needs_cmd = true;
 						had_cmd = 0;
 					}
 					
@@ -3231,8 +3251,6 @@ int parser_t::test( const  wchar_t * buff,
 								}
 							}
 						}
-
-
 					}
 					
 
@@ -3289,13 +3307,12 @@ int parser_t::test( const  wchar_t * buff,
 								}
 							}
 						}
-						
 					}
 
 					/*
-					  Test that else and elseif are only used directly in an if-block
+					  Test that else and else-if are only used directly in an if-block
 					*/
-					if( command == L"else" || command == L"elseif" )
+					if( command == L"else")
 					{
 						if( !count || block_type[count-1]!=IF )
 						{
@@ -3304,16 +3321,12 @@ int parser_t::test( const  wchar_t * buff,
 							{
 								error( SYNTAX_ERROR,
 									   tok_get_pos( &tok ),
-									   INVALID_ELSE_OR_ELSEIF_ERR_MSG,
+									   INVALID_ELSE_ERR_MSG,
                                        command.c_str());
 
 								print_errors( *out, prefix );
-                                
-                                /* Don't complain about elseif missing a command for elseif if we already complained about elseif being out of place */
-                                if (needs_cmd) had_cmd = true;
 							}
 						}
-
 					}
 
 					/*
@@ -3336,12 +3349,10 @@ int parser_t::test( const  wchar_t * buff,
 					
 				}
 				else
-				{
+				{                    
 					err |= parser_test_argument( tok_last( &tok ), out, prefix, tok_get_pos( &tok ) );
 					
-					/*
-					  If possible, keep track of number of supplied arguments
-					*/
+					/* If possible, keep track of number of supplied arguments */
 					if( arg_count >= 0 && expand_is_clean( tok_last( &tok ) ) )
 					{
 						arg_count++;
@@ -3398,6 +3409,32 @@ int parser_t::test( const  wchar_t * buff,
 								}
 							}
 						}
+                        else if (command == L"else")
+                        {
+                            if (arg_count == 1)
+                            {
+                                /* Any second argument must be "if" */
+								if (wcscmp(tok_last(&tok), L"if") != 0)
+								{
+									err = 1;
+									
+									if( out )
+									{
+										error( SYNTAX_ERROR,
+											   tok_get_pos( &tok ),
+											   BUILTIN_ELSEIF_ERR_ARGUMENT,
+											   L"else" );
+										print_errors( *out, prefix );
+									}
+								}
+                                else
+                                {
+                                    /* Successfully detected "else if". Now we need a new command. */
+                                    needs_cmd = true;
+                                    had_cmd = false;
+                                }
+                            }
+                        }
 					}
 
 				}
@@ -3439,7 +3476,7 @@ int parser_t::test( const  wchar_t * buff,
 						print_errors( *out, prefix );
 					}
 				}
-				needs_cmd=0;
+				needs_cmd = false;
 				had_cmd = 0;
 				is_pipeline=0;
 				forbid_pipeline=0;
@@ -3488,7 +3525,7 @@ int parser_t::test( const  wchar_t * buff,
 				}
 				else
 				{
-					needs_cmd=1;
+					needs_cmd = true;
 					is_pipeline=1;
 					had_cmd=0;
 					end_of_cmd = 1;
@@ -3576,8 +3613,26 @@ int parser_t::test( const  wchar_t * buff,
 						print_errors( *out, prefix );
 					}
 				}
-				
 			}
+            else if (has_command && command == L"else")
+            {
+                if (arg_count == 1)
+                {
+                    /* If we have any arguments, we must have at least two...either "else" or "else if foo..." */
+                    err = true;
+                    if (out)
+                    {
+						error( SYNTAX_ERROR,
+							   tok_get_pos( &tok ),
+							   BUILTIN_ELSEIF_ERR_COUNT,
+							   L"else",
+							   arg_count );
+						
+						print_errors( *out, prefix );
+
+                    }
+                }
+            }
 			
 		}
 		

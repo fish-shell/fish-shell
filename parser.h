@@ -141,7 +141,7 @@ struct block_t
 struct if_block_t : public block_t
 {
     bool if_expr_evaluated; // whether we've evaluated the if expression
-    bool is_elseif_entry; // whether we're at the beginning of an active branch (IF or ELSEIF)
+    bool is_elseif_entry; // whether we're at the beginning of an ELSEIF branch
     bool any_branch_taken; // whether the clause of the if statement or any elseif has been found to be true
     bool else_evaluated; // whether we've encountered a terminal else block
     

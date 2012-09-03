@@ -73,6 +73,10 @@ enum
 
 #define BUILTIN_FOR_ERR_NAME _( L"%ls: '%ls' is not a valid variable name\n" )
 
+/** Error messages for 'else if' */
+#define BUILTIN_ELSEIF_ERR_COUNT _( L"%ls: can only take 'if' and then another command as an argument\n")
+#define BUILTIN_ELSEIF_ERR_ARGUMENT _( L"%ls: any second argument must be 'if'\n")
+
 /**
    Error message when too many arguments are supplied to a builtin
 */

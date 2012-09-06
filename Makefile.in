@@ -589,6 +589,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
 	for i in $(COMPLETIONS_DIR_FILES); do \
@@ -609,6 +610,10 @@ install-force: all install-translations
 	done;
 	for i in share/tools/web_config/*; do\
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/; \
+		true; \
+	done;
+	for i in share/tools/web_config/sample_prompts/*.fish; do\
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts/; \
 		true; \
 	done;
 	for i in share/tools/web_config/*.py; do\

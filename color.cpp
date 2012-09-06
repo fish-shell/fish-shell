@@ -164,11 +164,9 @@ static unsigned char term8_color_for_rgb(const unsigned char rgb[3]) {
         0x000000, //Black
         0xFF0000, //Red
         0x00FF00, //Green
-        0x725000, //Brown
         0xFFFF00, //Yellow
         0x0000FF, //Blue
         0xFF00FF, //Magenta
-        0xFF00FF, //Purple
         0x00FFFF, //Cyan
         0xFFFFFF, //White
     };

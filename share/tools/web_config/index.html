@@ -38,7 +38,7 @@ body {
     padding-top: 15px;
     font-size: 17pt;
     text-align: center;
-    width: 25%;
+    width: 20%;
     background-color: #292929;
     cursor: pointer;
 }
@@ -93,8 +93,9 @@ body {
     text-align: right;
     min-width: 200px;
     font-size: 16pt;
-    padding-bottom: 5px;
-    margin-top: -7px;
+    padding-bottom: 20px;
+    padding-top: 35px;
+    vertical-align: top;
 }
 
 #detail {
@@ -316,6 +317,57 @@ img.delete_icon {
 	color: #C8C8C8;
 }
 
+.prompt_demo {
+	/* This is the div that holds what the prompt looks like */
+	width: 100%;
+	background-color: black;
+	border-radius: 5px;
+	display: table;
+}
+
+.prompt_save_button {
+	border-radius: 5px;
+	border: solid #474747 1px;
+	text-shadow: 0px 1px #000;
+	padding: 5px 8px;
+	font-size: 12pt;
+	display: inline-block;
+	margin-top: 12px;
+	background-color: #282828;
+	color: #DDD;
+	cursor: pointer;
+}
+
+.prompt_save_button:hover {
+	background-color: #333;
+	border: solid #525252 1px;
+	color: #EEE;
+}
+
+.prompt_demo_text {
+	white-space: pre;
+	line-height: 170%;
+	padding: 4px 12px;
+	font-size: 14pt;
+	top: 0px;
+	bottom: 0px;
+	vertical-align: middle;
+	display: table-cell;
+	height: 72px; /* this is really the min height */
+}
+
+.prompt_function {
+	/* This is the div that holds the prompt function's definition */
+	width: 100%;
+	color: #BBB;
+	font-size: 10pt;
+}
+
+.prompt_function_text {
+	white-space: pre-wrap;
+	padding: 25px 3px;
+}
+
 </style>
 
 <script type="text/javascript" src="jquery.js"></script>
@@ -466,6 +518,15 @@ function master_color_for_color(color_str) {
 	})
 }
 
+/* Update prompt_demo_text with the given text, adjusting the font */
+function set_prompt_demo_text(txt, font_size) {
+	/* Set the font size and the text */
+	var prompt_demo_text = $('.prompt_demo_text')
+	prompt_demo_text.css('font-size', font_size)
+	prompt_demo_text.html(txt)
+}
+
+
 function switch_tab(new_tab) {
 	/* Switch selected tab */
 	$(".selected_tab").removeClass("selected_tab")
@@ -480,6 +541,7 @@ function switch_tab(new_tab) {
 	/* Hide some things */
 	$('#master_detail_table').hide()
 	$('#detail_colorpicker').hide()
+	$('#detail_prompt').hide()
 	$('#detail_function').hide()
 	$('#data_table').hide()
 	$('#table_filter_container').hide()
@@ -508,11 +570,30 @@ function switch_tab(new_tab) {
 		$('#detail_colorpicker').show()
 		$('#master_detail_table').show()
 		wants_data_table = false
+	} else if (new_tab == 'tab_prompt') {
+		/* Get rid of all sample prompts */
+		sample_prompts.length = 0
+		/* Color the first one blue */
+		var first = true;
+		run_get_request('/sample_prompts/', function(sample_prompt){
+			var name = sample_prompt['name']
+			sample_prompts[name] = sample_prompt
+			var color = first ? '66F' : 'AAA'
+			var func = first ? select_current_prompt_master_element :  select_sample_prompt_master_element;
+			var elem = create_master_element(name, false/* description */, color, '13pt', func)
+			if (first) {
+				elem.children('.master_element_text').css('border-bottom-color', color)
+				select_current_prompt_master_element(elem)
+			}
+			first = false;
+		})
+		$('#detail_prompt').show()
+		$('#master_detail_table').show()
 	} else if (new_tab == 'tab_functions') {
 		/* Keep track of whether this is the first element */
 		var first = true
 		run_get_request('/functions/', function(contents){
-			elem = create_master_element(contents, false/* description */, 'AAAAAA', '11pt', select_function_master_element)
+			var elem = create_master_element(contents, false/* description */, 'AAAAAA', '11pt', select_function_master_element)
 			if (first) {
 				/* It's the first element, so select it, so something gets selected */
 				select_function_master_element(elem)
@@ -576,7 +657,7 @@ function current_master_element_name() {
 	}
 	elem = elems[0]
 	if (elem.id.indexOf('master_')  != 0) {
-		show_error('Unknown color variable')
+		show_error('Unknown master variable')
 		return ''
 	}
 	return elem.id.substring(7)
@@ -641,6 +722,24 @@ function reflect_style() {
 	}
 }
 
+function cleanup_fish_function(contents) {
+	/* Replace leading tabs and groups of four spaces at the beginning of a line with two spaces. */
+	lines = contents.split('\n')
+	rx = /^[\t ]+/
+	for (var i=0; i < lines.length; i++) {
+		line = lines[i]
+		/* Get leading tabs and spaces */
+		whitespace_arr = rx.exec(line)
+		if (whitespace_arr) {
+			/* Replace four spaces with two spaces, and tabs with two spaces */
+			var whitespace = whitespace_arr[0]
+			new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
+			lines[i] = new_whitespace + line.slice(whitespace.length)
+		}
+	}
+	return lines.join('\n')
+}
+
 function select_master_element(elem) {
 	$('.selected_master_elem').removeClass('selected_master_elem')
 	$(elem).addClass('selected_master_elem')
@@ -660,23 +759,55 @@ function select_function_master_element(elem) {
 		what: current_master_element_name()
 	}, function(contents){
 		/* Replace leading tabs and groups of four spaces at the beginning of a line with two spaces. */
-		lines = contents.split('\n')
-		rx = /^[\t ]+/
-		for (var i=0; i < lines.length; i++) {
-			line = lines[i]
-			/* Get leading tabs and spaces */
-			whitespace_arr = rx.exec(line)
-			if (whitespace_arr) {
-				/* Replace four spaces with two spaces, and tabs with two spaces */
-				var whitespace = whitespace_arr[0]
-				new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
-				lines[i] = new_whitespace + line.slice(whitespace.length)
-			}
-		}
-		munged_contents = lines.join('\n')
-	
+		munged_contents = cleanup_fish_function(contents)
 		$('#detail_function').text(munged_contents)
 	});
+}
+
+var sample_prompts = new Array();
+
+function select_sample_prompt_master_element(elem) {
+	$('.prompt_save_button').show()
+	select_master_element(elem)
+	var name = current_master_element_name()
+	sample_prompt = sample_prompts[name]
+	run_post_request('/get_sample_prompt/', {
+		what: sample_prompt['function']
+	}, function(keys_and_values){
+		var prompt_func = keys_and_values['function']
+		var prompt_demo = keys_and_values['demo']
+		var prompt_font_size = keys_and_values['font_size']
+		set_prompt_demo_text(prompt_demo, prompt_font_size)
+		//$('.prompt_demo_text').html(prompt_demo)
+		$('.prompt_function_text').text(cleanup_fish_function(prompt_func))
+	})
+}
+
+function select_current_prompt_master_element(elem) {
+	$('.prompt_save_button').hide()
+	select_master_element(elem)
+	run_get_request_with_bulk_handler('/current_prompt/', function(keys_and_values){
+		var prompt_func = keys_and_values['function']
+		var prompt_demo = keys_and_values['demo']
+		var prompt_font_size = keys_and_values['font_size']
+		set_prompt_demo_text(prompt_demo, prompt_font_size)
+		$('.prompt_function_text').text(cleanup_fish_function(prompt_func))
+	})
+}
+
+/* Applies the current prompt */
+function save_current_prompt() {
+	var name = current_master_element_name()
+	var sample_prompt = sample_prompts[name]
+	run_post_request('/set_prompt/', {
+		what: sample_prompt['function']
+	}, function(contents){
+		if (contents == "OK") {
+			select_current_prompt_master_element($('#master_Current'))
+		} else {
+			show_error(contents)
+		}
+	})
 }
 
 function post_style_to_server() {
@@ -1220,6 +1351,9 @@ $(document).ready(function() {
 		case '#history':
 			tab_name = 'tab_history'
 			break
+		case '#prompt':
+			tab_name = 'tab_prompt'
+			break
 		case '#colors':
 		default:
 			tab_name = 'tab_colors'
@@ -1237,6 +1371,7 @@ $(document).ready(function() {
     <div id="parent">
         <div id="tab_parent">
             <div class="tab selected_tab" id="tab_colors" onClick="switch_tab('tab_colors')">colors</div>
+            <div class="tab" id="tab_prompt" onClick="switch_tab('tab_prompt')">prompt</div>
             <div class="tab" id="tab_functions" onClick="switch_tab('tab_functions')">functions</div>
             <div class="tab" id="tab_variables" onClick="switch_tab('tab_variables')">variables</div>
             <div class="tab" id="tab_history" onClick="switch_tab('tab_history')">history</div>
@@ -1256,6 +1391,21 @@ $(document).ready(function() {
 						</div>
 					</div>
 					<div id="detail_function"></div>
+					<div id="detail_prompt">
+						<div class="prompt_demo">
+							<div class="prompt_demo_text">
+							</div>
+						</div>
+						<div style="text-align: right">
+							<span class="prompt_save_button" onClick="save_current_prompt()">
+								use prompt
+							</span>
+						</div>
+						<div class="prompt_function">
+							<div class="prompt_function_text">
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 			<table id="data_table">

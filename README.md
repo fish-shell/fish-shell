@@ -13,7 +13,7 @@ Detailed user documentation is available by running `help` within fish, and also
 
 ## Building
 
-fish can be built using autotools or Xcode:
+fish can be built using autotools or Xcode.
 
 ### Autotools Build
 

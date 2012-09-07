@@ -118,6 +118,7 @@ def get_special_ansi_escapes():
             val = None
             key = curses.tigetstr("sgr0")
             if key: val = curses.tparm(key)
+            if val: val = val.decode('utf-8')
             return val
             
         # Just a few for now
@@ -186,9 +187,9 @@ def ansi_to_html(val):
     # Hence this lame check
     separated = re.split("""
         (                        # Capture
-         \x1b                    # Escpae
-         [^m]+                    # One or more non-'m's
-         m                        # Literal m terminates the sequence
+         \x1b                    # Escape
+         [^m]+                   # One or more non-'m's
+         m                       # Literal m terminates the sequence
         )                        # End capture
         """, val, 0, re.VERBOSE)
     
@@ -211,6 +212,18 @@ def ansi_to_html(val):
     
     # Close final escape
     if span_open: result.append('</span>')
+    
+    # Remove empty elements
+    result = [x for x in result if x]
+    
+    # Clean up empty spans, the nasty way
+    idx = len(result) - 1
+    while idx >= 1:
+    	if result[idx] == '</span>' and result[idx-1].startswith('<span'):
+	    	# Empty span, delete these two
+	    	result[idx-1:idx+1] = []
+    	idx = idx - 1
+
     return ''.join(result)
 
 class FishVar:

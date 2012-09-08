@@ -19,13 +19,13 @@ function contains_seq --description 'Return true if array contains a sequence'
 	set -l i 1
 	for s in $string
 		if set -q printnext[2]
-			echo $s
+			#echo $s
 			return 0
 		end
-        echo a $nomatch
+        #echo a $nomatch
 		if test "$s" = "$pattern[$i]"
-            echo b $nomatch
-            echo c $nomatch[1]
+            #echo b $nomatch
+            #echo c $nomatch[1]
 			set -e nomatch[1]
 			set i (expr $i + 1)
 			if not set -q pattern[$i]

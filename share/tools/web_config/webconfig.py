@@ -185,13 +185,15 @@ def ansi_to_html(val):
     # Split us up by ANSI escape sequences
     # We want to catch not only the standard color codes, but also things like sgr0
     # Hence this lame check
-    separated = re.split("""
+    # Note that Python 2.6 doesn't have a flag param to re.split, so we have to compile it first
+    reg = re.compile("""
         (                        # Capture
          \x1b                    # Escape
          [^m]+                   # One or more non-'m's
          m                       # Literal m terminates the sequence
         )                        # End capture
-        """, val, 0, re.VERBOSE)
+        """, re.VERBOSE)
+    separated = reg.split(val)
     
     # We have to HTML escape the text and convert ANSI escapes into HTML
     # Collect it all into this array

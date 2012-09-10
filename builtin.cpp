@@ -3288,6 +3288,7 @@ static int builtin_end( parser_t &parser, wchar_t **argv )
 			case SUBST:
 			case BEGIN:
             case SWITCH:
+            case FAKE:
 				/*
 				  Nothing special happens at the end of these commands. The scope just ends.
 				*/

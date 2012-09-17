@@ -660,7 +660,6 @@ static void exec_prompt()
 	
 	for( i = 0; i < prompt_list.size(); i++ )
 	{
-        if (i > 0) data->prompt_buff += L'\n';
         data->prompt_buff += prompt_list.at(i);
 	}	
 }
@@ -1522,7 +1521,6 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 		else
 		{
             // append just the end of the string
-            prefix = wcstring(&ellipsis_char, 1);
 			prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN, wcstring::npos);
         }
 

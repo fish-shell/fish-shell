@@ -641,6 +641,7 @@ install-force: all install-translations
 	@echo
 	@echo To set your colors, run \'fish_config\'
 	@echo To scan your man pages for completions, run \'fish_update_completions\'
+	@echo To autocomplete command suggestions press Ctrl + F or right arrow key.
 	@echo
 	@echo Have fun!
 .PHONY: install-force

@@ -660,6 +660,7 @@ static void exec_prompt()
 	
 	for( i = 0; i < prompt_list.size(); i++ )
 	{
+        if (i > 0) data->prompt_buff += L'\n';
         data->prompt_buff += prompt_list.at(i);
 	}	
 }

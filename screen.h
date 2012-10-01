@@ -21,6 +21,11 @@ struct line_t
 {
     std::vector<wchar_t> text;
     std::vector<int> colors;
+    bool is_soft_wrapped;
+    
+    line_t() : text(), colors(), is_soft_wrapped(false)
+    {
+    }
     
     void clear(void)
     {
@@ -63,6 +68,8 @@ class screen_data_t
     struct cursor_t {
         int x;
         int y;
+        cursor_t() : x(0), y(0) { }
+        cursor_t(int a, int b) : x(a), y(b) { }
     } cursor;
     
     line_t &add_line(void) {
@@ -96,28 +103,35 @@ class screen_data_t
 class screen_t
 {
     public:
-	/**
-	  The internal representation of the desired screen contents.
-	*/
-	screen_data_t desired;
-	/**
-	  The internal representation of the actual screen contents.
-	*/
-	screen_data_t actual;
 
-	/**
-	   A string containing the prompt which was last printed to
-	   the screen.
-	*/
-	wcstring actual_prompt;
+    /** Constructor */
+    screen_t();
 
-	/**
-	  The actual width of the screen at the time of the last screen
-	  write.
-	*/
-	int actual_width;	
+    /**
+      The internal representation of the desired screen contents.
+    */
+    screen_data_t desired;
+    /**
+      The internal representation of the actual screen contents.
+    */
+    screen_data_t actual;
 
-	/**
+    /**
+       A string containing the prompt which was last printed to
+       the screen.
+    */
+    wcstring actual_prompt;
+
+    /**
+      The actual width of the screen at the time of the last screen
+      write.
+    */
+    int actual_width;
+    
+    /** If we support soft wrapping, we can output to this location without any cursor motion. */
+    screen_data_t::cursor_t soft_wrap_location;
+
+    /**
 	   This flag is set to true when there is reason to suspect that
 	   the parts of the screen lines where the actual content is not
 	   filled in may be non-empty. This means that a clr_eol command

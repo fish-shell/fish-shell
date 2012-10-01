@@ -1199,7 +1199,7 @@ static void update_autosuggestion(void) {
     if (can_autosuggest()) {
         history_search_t searcher = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
         if (searcher.go_backwards()) {
-            data->autosuggestion = searcher.current_item();
+            data->autosuggestion = searcher.current_item().str();
         }
     }
 #else

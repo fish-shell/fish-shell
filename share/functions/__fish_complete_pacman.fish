@@ -1,18 +1,25 @@
 function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --argument-names progname
-    # Completions for pacman, using short options when possible
+    # Completions for pacman
     # Author: Giorgio Lando <patroclo7@gmail.com>
-    # Updated by maxfl
+    # Updated by maxfl, SanskritFritz.
+
     set -q progname[1]; or set -l progname pacman
 
-    set -l listinstalled "(pacman -Q | tr ' ' \t)" 
-    set -l listall       "(pacman -Sl | cut --delim ' ' --fields 2- | tr ' ' \t | sort)" 
-    set -l listgroups    "(cat /etc/pacman.conf | grep '^\[.\+\]' | sed 's/[]\[]//g')"
+    set -l listinstalled "(pacman -Q | tr ' ' \t)"
+    set -l listall       "(pacman -Sl | cut --delim ' ' --fields 2- | tr ' ' \t)"
+    set -l listrepos     "(cat /etc/pacman.conf | grep '^\[.\+\]' | sed 's/[]\[]//g')"
+    set -l listgroups    "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
-    set -l noopt   'commandline | not sgrep -qe "-[a-z]*[DQRSTU]\|--database\|--query\|--sync\|--remove\|--upgrade\|--deptest"' 
-    set -l query   'commandline | sgrep -qe "-[a-z]*Q\|--query"' 
-    set -l remove  'commandline | sgrep -qe "-[a-z]*R\|--remove"' 
-    set -l sync    'commandline | sgrep -qe "-[a-z]*S\|--sync"' 
-    set -l upgrade 'commandline | sgrep -qe "-[a-z]*U\|--upgrade"' 
+    set -l noopt   'commandline | not sgrep -qe "-[a-z]*[DQRSTU]\|--database\|--query\|--sync\|--remove\|--upgrade\|--deptest"'
+    set -l query   'commandline | sgrep -qe "-[a-z]*Q\|--query"'
+    set -l remove  'commandline | sgrep -qe "-[a-z]*R\|--remove"'
+    set -l sync    'commandline | sgrep -qe "-[a-z]*S\|--sync"'
+    set -l upgrade 'commandline | sgrep -qe "-[a-z]*U\|--upgrade"'
+
+    # By default fish expands the arguments with the option which is not desired
+    # due to performance reasons.
+    # This will make sure we are expanding an argument and not an option:
+    set -l argument 'not expr -- (commandline --current-token) : "^-.*" > /dev/null'
 
     # Primary operations
     complete -c $progname -s D -f -l database -n $noopt -d 'Modify the package database'
@@ -37,7 +44,7 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
     complete -c $progname -l gpgdir    -d 'Specify a directory of files used by GnuPG to verify package signatures'
     complete -c $progname -l logfile   -d 'Specify alternative log file'
     complete -c $progname -l noconfirm -d 'Bypass any question'
-    
+
     # Transaction options (query, sync, remove, upgrade)
     for condition in query sync remove upgrade
         complete -c $progname -n $$condition -s d -l nodeps     -d 'Skip dependency check'
@@ -47,7 +54,7 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
         complete -c $progname -n $$condition -s p -l print      -d 'Only print targets instead of performing the actual operation'
         complete -c $progname -n $$condition -l print-format -x -d 'Specify printf-like format'
     end
-    
+
     # Upgrade options (sync, upgrade)
     for condition in sync upgrade
         complete -c $progname -n $$condition -s f -l force       -d 'Bypass file conflict checks'
@@ -58,7 +65,7 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
         complete -c $progname -n $$condition      -l needed      -d 'Do not reinstall up-to-date targets'
         complete -c $progname -n $$condition      -l recursive   -d 'Recursively reinstall all dependencies'
     end
-    
+
     # Query and sync options
     for condition in query sync
         complete -c $progname -n $$condition -s g -l groups     -d 'Display all packages in the group'
@@ -78,24 +85,24 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
     complete -c $progname -n $query -s p -l file       -d 'Apply the query to a package file and not to an installed package'
     complete -c $progname -n $query -s t -l unrequired -d 'List packages not required by any of installed packages'
     complete -c $progname -n $query -s u -l upgrades   -d 'List all out of date packages in the system'
-    complete -c $progname -n $query -xa $listinstalled -d 'Installed package'
-    
+    complete -c $progname -n "$query; and $argument" -xa $listinstalled -d 'Installed package'
+
     # Remove options
     complete -c $progname -n $remove -s c -l cascade   -d 'Remove also the packages that depends on the target packages'
     complete -c $progname -n $remove -s n -l nosave    -d 'Ignore file backup designations'
     complete -c $progname -n $remove -s s -l recursive -d 'Remove also the dependencies of the target packages'
     complete -c $progname -n $remove -s u -l unneeded  -d 'Remove targets that are not required by any other package'
-    complete -c $progname -n $remove -xa $listinstalled -d 'Installed package'
+    complete -c $progname -n "$remove; and $argument" -xa $listinstalled -d 'Installed package'
 
     # Sync options
-    complete -c $progname -n $sync -s c -l clean        -d 'Remove old packages from the cache; if iterated, remove all the packages from the cache'
-    complete -c $progname -n $sync -s l -l list         -d 'List all packages in the repository'
+    complete -c $progname -n $sync -s c -l clean        -d 'Remove old packages from the cache; if iterated, remove all'
+    complete -c $progname -n $sync -s l -l list -xa "$listrepos" -d 'List all packages in the repository'
     complete -c $progname -n $sync -s u -l sysupgrade   -d 'Upgrade all packages that are out of date'
     complete -c $progname -n $sync -s w -l downloadonly -d 'Only download the target packages'
-    complete -c $progname -n $sync -s y -l refresh      -d 'Download a fresh copy of the master package list from the servers'
-    complete -c $progname -n $sync -xa $listall -d 'Repo package'
+    complete -c $progname -n $sync -s y -l refresh      -d 'Download a fresh copy of the master package list'
+    complete -c $progname -n "$argument; and $sync" -xa "$listall $listgroups"
 
     # Upgrade options
-    complete -c $progname -n $upgrade -a '(__fish_complete_suffix pkg.tar.xz)' -d 'Local package'
-    complete -c $progname -n $upgrade -a '(__fish_complete_suffix pkg.tar.gz)' -d 'Local package'
+    complete -c $progname -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.xz)' -d 'Package file'
+    complete -c $progname -n "$upgrade; and $argument" -xa '(__fish_complete_suffix pkg.tar.gz)' -d 'Package file'
 end

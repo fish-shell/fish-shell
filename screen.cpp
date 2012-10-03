@@ -62,6 +62,8 @@ efficient way for transforming that to the desired screen content.
 /** A helper value for an invalid location */
 #define INVALID_LOCATION (screen_data_t::cursor_t(-1, -1))
 
+static void invalidate_soft_wrap(screen_t *scr);
+
 /**
    Ugly kludge. The internal buffer used to store output of
    tputs. Since tputs external function can only take an integer and
@@ -621,7 +623,7 @@ static void s_write_char( screen_t *s, data_buffer_t *b, wchar_t c )
     }
     else
     {
-        s->soft_wrap_location = INVALID_LOCATION;
+        invalidate_soft_wrap(s);
     }
 }
 
@@ -683,6 +685,12 @@ static bool perform_any_impending_soft_wrap(screen_t *scr, int x, int y)
     return false;
 }
 
+/* Make sure we don't soft wrap */
+static void invalidate_soft_wrap(screen_t *scr)
+{
+    scr->soft_wrap_location = INVALID_LOCATION;
+}
+
 /**
    Update the screen to match the desired output.
 */
@@ -690,14 +698,19 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 {
 	size_t prompt_width = calc_prompt_width( prompt );
 	int screen_width = common_get_width();
-	int need_clear = scr->need_clear;
+	bool need_clear = scr->need_clear;
+    
+    /* Figure out how many following lines we need to clear (probably 0) */
+    size_t actual_lines_before_reset = scr->actual_lines_before_reset;
+    scr->actual_lines_before_reset = 0;
+    
 	data_buffer_t output;
 
-	scr->need_clear = 0;
+	scr->need_clear = false;
 		
 	if( scr->actual_width != screen_width )
 	{
-		need_clear = 1;
+		need_clear = true;
 		s_move( scr, &output, 0, 0 );
 		scr->actual_width = screen_width;
 		s_reset( scr, false );
@@ -717,14 +730,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 		line_t &s_line = scr->actual.create_line(i);
 		size_t start_pos = (i==0 ? prompt_width : 0);
         int current_width = 0;
-        
-		if( need_clear )
-		{
-			s_move( scr, &output, (int)start_pos, (int)i );
-			s_write_mbs( &output, clr_eol);
-            s_line.clear();
-		}
-        
+                
         /* Note that skip_remaining is a width, not a character count */
         size_t skip_remaining = start_pos;
         
@@ -742,6 +748,7 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
         if (o_line.is_soft_wrapped)
             skip_remaining = mini(skip_remaining, (size_t)(scr->actual_width - 2));
         
+        skip_remaining = start_pos;
         
         /* Skip over skip_remaining width worth of characters */
         size_t j = 0;
@@ -772,17 +779,30 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
             current_width += fish_wcwidth(o_line.char_at(j));
         }
         
-        /* If we wrote more on this line last time, clear it */
-        int prev_length = (s_line.text.empty() ? 0 : fish_wcswidth(&s_line.text.at(0), s_line.text.size()));
-        if (prev_length > current_width )
+        bool clear_remainder = false;
+        /* Clear the remainder of the line if we need to clear and if we didn't write to the end of the line. If we did write to the end of the line, the "sticky right edge" (as part of auto_right_margin) means that we'll be clearing the last character we wrote! */
+        if (need_clear && current_width < screen_width)
+        {
+            clear_remainder = true;
+        }
+        else
+        {
+            int prev_width = (s_line.text.empty() ? 0 : fish_wcswidth(&s_line.text.at(0), s_line.text.size()));
+            clear_remainder = prev_width > current_width;
+            
+        }
+        if (clear_remainder)
 		{
 			s_move( scr, &output, current_width, (int)i );
 			s_write_mbs( &output, clr_eol);
 		}
 	}
     
+    /* Determine how many lines have stuff on them; we need to clear lines with stuff that we don't want */
+    size_t lines_with_stuff = maxi(actual_lines_before_reset, scr->actual.line_count());
+    
     /* Clear remaining lines */
-    for( size_t i=scr->desired.line_count(); i < scr->actual.line_count(); i++ )
+    for( size_t i=scr->desired.line_count(); i < lines_with_stuff; i++ )
 	{
 		s_move( scr, &output, 0, (int)i );
 		s_write_mbs( &output, clr_eol);
@@ -963,12 +983,16 @@ void s_write( screen_t *s,
 void s_reset( screen_t *s, bool reset_cursor )
 {
 	CHECK( s, );
+    
+    /* If we are resetting the cursor, we're going to make a new line and leave junk behind. If we are not resetting the cursor, we need to remember how many lines we had output to, so we can clear the remaining lines in the next call to s_update. This prevents leaving junk underneath the cursor when resizing a window wider such that it reduces our desired line count. */
+    if (! reset_cursor)
+        s->actual_lines_before_reset =  s->actual.line_count();
 
 	int prev_line = s->actual.cursor.y;
     s->actual.resize(0);
 	s->actual.cursor.x = s->actual.cursor.y = 0;
     s->actual_prompt = L"";
-	s->need_clear=1;
+	s->need_clear=true;
 
 	if( !reset_cursor )
 	{
@@ -989,7 +1013,8 @@ screen_t::screen_t() :
     actual_prompt(),
     actual_width(0),
     soft_wrap_location(INVALID_LOCATION),
-    need_clear(0),
+    need_clear(false),
+    actual_lines_before_reset(0),
     prev_buff_1(), prev_buff_2(), post_buff_1(), post_buff_2()
 {
 }

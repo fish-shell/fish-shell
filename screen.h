@@ -137,7 +137,10 @@ class screen_t
 	   filled in may be non-empty. This means that a clr_eol command
 	   has to be sent to the terminal at the end of each line.
 	*/
-	int need_clear;
+	bool need_clear;
+    
+    /** If we need to clear, this is how many lines the actual screen had, before we reset it. This is used when resizing the window larger: if the cursor jumps to the line above, we need to remember to clear the subsequent lines. */
+    size_t actual_lines_before_reset;
 	
 	/**
 	   These status buffers are used to check if any output has occurred

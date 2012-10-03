@@ -542,7 +542,11 @@ void reader_pop_current_filename()
 void reader_data_t::command_line_changed() {
     ASSERT_IS_MAIN_THREAD();
     size_t len = command_length();
-    colors.resize(len);
+    
+    /* When we grow colors, propagate the last color (if any), under the assumption that usually it will be correct. If it is, it avoids a repaint. */
+    color_t last_color = colors.empty() ? color_t() : colors.back();
+    colors.resize(len, last_color);
+    
     indents.resize(len);
     
     /* Update the gen count */
@@ -2314,17 +2318,19 @@ static void highlight_search(void) {
 static void highlight_complete(background_highlight_context_t *ctx, int result) {
     ASSERT_IS_MAIN_THREAD();
 	if (ctx->string_to_highlight == data->command_line) {
-		/* The data hasn't changed, so swap in our colors */
+		/* The data hasn't changed, so swap in our colors. The colors may not have changed, so do nothing if they have not. */
         assert(ctx->colors.size() == data->command_length());
-        data->colors.swap(ctx->colors);
-        
-        
-		//data->repaint_needed = 1;
-        //s_reset( &data->screen, 1 );
-        
-        sanity_check();
-        highlight_search();
-        reader_repaint();
+        if (data->colors != ctx->colors)
+        {
+            data->colors.swap(ctx->colors);
+            
+            //data->repaint_needed = 1;
+            //s_reset( &data->screen, 1 );
+            
+            sanity_check();
+            highlight_search();
+            reader_repaint();
+        }
 	}
 	
 	/* Free our context */

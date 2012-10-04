@@ -22,7 +22,7 @@ execute. If something goes wrong while opening or reading the file,
 
 \subsection source-example Example
 
-<tt>. ~/.fish</tt>
+<tt>. ~/.config/fish/config.fish</tt>
 
 causes fish to reread its initialization file.
 

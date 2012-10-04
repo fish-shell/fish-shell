@@ -1876,6 +1876,48 @@ static void handle_token_history( int forward, int reset )
 	}
 }
 
+/* Our state machine that implements "one word" movement or erasure. */
+class move_word_state_machine_t
+{
+    enum {
+        s_whitespace,
+        s_punctuation,
+        s_alphanumeric_or_punctuation_except_slash,
+        s_end
+    } state;
+    
+    public:
+    
+    move_word_state_machine_t() : state(s_whitespace)
+    {
+    }
+    
+    bool consume_char(wchar_t c)
+    {
+        /* Note fall-through in all of these! */
+        switch (state)
+        {
+            case s_whitespace:
+                if (iswspace(c))
+                    return true;
+                state = s_punctuation;
+            
+            case s_punctuation:
+                if (iswpunct(c))
+                    return true;
+                state = s_alphanumeric_or_punctuation_except_slash;
+            
+            case s_alphanumeric_or_punctuation_except_slash:
+                if (c != L'/' && (iswalnum(c) || iswpunct(c)))
+                    return true;
+                state = s_end;
+            
+            case s_end:
+            default:
+                return false;                
+        }
+    }
+};
 
 /**
    Move buffer position one word or erase one word. This function
@@ -1885,31 +1927,37 @@ static void handle_token_history( int forward, int reset )
    \param dir Direction to move/erase. 0 means move left, 1 means move right.
    \param erase Whether to erase the characters along the way or only move past them.
    \param new if the new kill item should be appended to the previous kill item or not.
+   
+   The regex we implement:
+   
+      WHITESPACE*
+      PUNCTUATION*
+      ALPHANUMERIC_OR_PUNCTUATION_EXCEPT_SLASH*
+ 
+   Interesting test case:
+     /foo/bar/baz/ -> /foo/bar/ -> /foo/ -> /
+     echo --foo --bar -> echo --foo -> echo
 */
-static void move_word( int dir, int erase, int newv )
+enum move_word_dir_t {
+    MOVE_DIR_LEFT,
+    MOVE_DIR_RIGHT
+};
+static void move_word( bool move_right, bool erase, bool newv )
 {
-	size_t end_buff_pos=data->buff_pos;
-	int step = dir?1:-1;
+    const size_t start_buff_pos = data->buff_pos;
+	size_t end_buff_pos = data->buff_pos; //this is the last character we delete; we always delete at least one character
 
-	/*
-	  Return if we are already at the edge
-	*/
-	if( !dir && data->buff_pos == 0 )
-	{
-		return;
-	}
-	
-	if( dir && data->buff_pos == data->command_length() )
-	{
-		return;
-	}
+	/* Return if we are already at the edge */
+    const size_t boundary = move_right ? data->command_length() : 0;
+    if (data->buff_pos == boundary)
+        return;
 	
 	/*
 	  If we are beyond the last character and moving left, start by
-	  moving one step, since otehrwise we'll start on the \0, which
+	  moving one step, since otherwise we'll start on the \0, which
 	  should be ignored.
 	*/
-	if( !dir && (end_buff_pos == data->command_length()) )
+	if (! move_right && (end_buff_pos == data->command_length()) )
 	{
 		if( !end_buff_pos )
 			return;
@@ -1917,102 +1965,34 @@ static void move_word( int dir, int erase, int newv )
 		end_buff_pos--;
 	}
 	
-	/*
-	  Remove all whitespace characters before finding a word
-	*/
-	while( 1 )
-	{
-		wchar_t c;
-
-		if( !dir )
-		{
-			if( end_buff_pos <= 0 )
-				break;
-		}
-		else
-		{
-			if( end_buff_pos >= data->command_length() )
-				break;
-		}
-
-		/*
-		  Always eat at least one character
-		*/
-		if( end_buff_pos != data->buff_pos )
-		{
-			
-			c = data->command_line.c_str()[end_buff_pos];
-			
-			if( !iswspace( c ) )
-			{
-				break;
-			}
-		}
-		
-		end_buff_pos+=step;
-
-	}
-	
-	/*
-	  Remove until we find a character that is not alphanumeric
-	*/
-	while( 1 )
-	{
-		wchar_t c;
-		
-		if( !dir )
-		{
-			if( end_buff_pos <= 0 )
-				break;
-		}
-		else
-		{
-			if( end_buff_pos >= data->command_length() )
-				break;
-		}
-		
-		c = data->command_line.c_str()[end_buff_pos];
-		
-		if( !iswalnum( c ) )
-		{
-			/*
-			  Don't gobble the boundary character when moving to the
-			  right
-			*/
-			if( !dir )
-				end_buff_pos -= step;
-			break;
-		}
-		end_buff_pos+=step;
-	}
-
-	/*
-	  Make sure we move at least one character
-	*/
-	if( end_buff_pos==data->buff_pos )
-	{
-		end_buff_pos+=step;
-	}
-
-	/*
-	  Make sure we don't move beyond begining or end of buffer
-	*/
-	end_buff_pos = maxi( (size_t)0, mini( end_buff_pos, data->command_length() ) );
-	
-
+    const wchar_t * const command_line = data->command_line.c_str();
+    move_word_state_machine_t state;
+    const size_t last_valid_end_buff_pos = (move_right ? data->command_length() - 1 : 0);
+    while (end_buff_pos != last_valid_end_buff_pos)
+    {
+        size_t next_buff_pos = (move_right ? end_buff_pos + 1 : end_buff_pos - 1);
+        wchar_t c = command_line[next_buff_pos];
+        if (! state.consume_char(c))
+            break;
+        end_buff_pos = next_buff_pos;
+    }
 
 	if( erase )
 	{
-		size_t remove_count = labs(data->buff_pos - end_buff_pos);
-		long first_char = mini( data->buff_pos, end_buff_pos );
-//		fwprintf( stderr, L"Remove from %d to %d\n", first_char, first_char+remove_count );
-		
-		reader_kill( first_char, remove_count, dir?KILL_APPEND:KILL_PREPEND, newv );
-		
+        size_t start_idx = mini(start_buff_pos, end_buff_pos); //first char to delete
+        size_t end_idx = maxi(start_buff_pos, end_buff_pos); //last char to delete
+        
+        // Don't try to delete past the end
+        end_idx = mini(end_idx, data->command_length() - 1);
+        
+        // Don't autosuggest after a kill
+        data->suppress_autosuggestion = true;
+        
+		reader_kill( start_idx, end_idx - start_idx + 1, move_right?KILL_APPEND:KILL_PREPEND, newv );
 	}
 	else
 	{
-		data->buff_pos = end_buff_pos;
+		data->buff_pos = move_right ? end_buff_pos + 1 : end_buff_pos;
 		reader_repaint();
 	}
 }
@@ -3108,28 +3088,28 @@ const wchar_t *reader_readline()
                 /* kill one word left */
 			case R_BACKWARD_KILL_WORD:
 			{
-				move_word(0,1, last_char!=R_BACKWARD_KILL_WORD);
+				move_word(MOVE_DIR_LEFT, true /* erase */, last_char!=R_BACKWARD_KILL_WORD);
 				break;
 			}
                 
                 /* kill one word right */
 			case R_KILL_WORD:
 			{
-				move_word(1,1, last_char!=R_KILL_WORD);
+				move_word(MOVE_DIR_RIGHT, true /* erase */, last_char!=R_KILL_WORD);
 				break;
 			}
                 
                 /* move one word left*/
 			case R_BACKWARD_WORD:
 			{
-				move_word(0,0,0);
+				move_word(MOVE_DIR_LEFT, false /* do not erase */, false);
 				break;
 			}
                 
                 /* move one word right*/
 			case R_FORWARD_WORD:
 			{
-				move_word( 1,0,0);
+				move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
 				break;
 			}
                 

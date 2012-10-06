@@ -1000,6 +1000,11 @@ static int terminal_return_from_job( job_t *j)
 		return 0;
 	}
 	
+        /* Disabling this per https://github.com/adityagodbole/fish-shell/commit/9d229cd18c3e5c25a8bd37e9ddd3b67ddc2d1b72
+           On Linux, 'cd . ; ftp' prevents you from typing into the ftp prompt
+           See https://github.com/fish-shell/fish-shell/issues/121
+        */
+#if 0
 	/* 
 	   Restore the shell's terminal modes.  
 	*/
@@ -1009,6 +1014,7 @@ static int terminal_return_from_job( job_t *j)
 		wperror( L"tcsetattr" );
 		return 0;
 	}
+#endif
 
 	return 1;
 }

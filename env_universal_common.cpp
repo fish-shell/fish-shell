@@ -112,7 +112,7 @@ env_var_table_t env_universal_var;
 /**
    Callback function, should be called on all events
 */
-void (*callback)( int type, 
+static void (*callback)( fish_message_type_t type,
 				  const wchar_t *key, 
 				  const wchar_t *val );
 
@@ -405,7 +405,7 @@ static char *wcs2utf( const wchar_t *in )
 
 
 
-void env_universal_common_init( void (*cb)(int type, const wchar_t *key, const wchar_t *val ) )
+void env_universal_common_init( void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val ) )
 {
 	callback = cb;
 }
@@ -592,7 +592,7 @@ void env_universal_common_set( const wchar_t *key, const wchar_t *val, int expor
 /**
    Parse message msg
 */
-static void parse_message( wchar_t *msg, 
+static void parse_message( wchar_t *msg,
 						   connection_t *src )
 {
 //	debug( 3, L"parse_message( %ls );", msg );
@@ -622,7 +622,8 @@ static void parse_message( wchar_t *msg,
 			val = tmp+1;
 			val = unescape( val, 0 );
 			
-			env_universal_common_set( key, val, exportv );
+			if (key && val)
+			    env_universal_common_set( key, val, exportv );
 			
 			free( val );
 			free( key );
@@ -752,6 +753,15 @@ void try_send_all( connection_t *c )
 	}
 }
 
+/* The universal variable format has some funny escaping requirements; here we try to be safe */
+static bool is_universal_safe_to_encode_directly(wchar_t c)
+{
+    if (c < 32 || c > 128)
+        return false;
+    
+    return iswalnum(c) || wcschr(L"/", c);
+}
+
 /**
    Escape specified string
  */
@@ -760,21 +770,22 @@ static wcstring full_escape( const wchar_t *in )
 	wcstring out;
 	for( ; *in; in++ )
 	{
-		if( *in < 32 )
+        wchar_t c = *in;
+        if (is_universal_safe_to_encode_directly(c))
+        {
+            out.push_back(c);
+        }
+		else if (c < 256)
 		{
-			append_format( out, L"\\x%.2x", *in );
+			append_format(out, L"\\x%.2x", c);
 		}
-		else if( *in < 128 )
+		else if (c < 65536)
 		{
-			out.push_back(*in);
-		}
-		else if( *in < 65536 )
-		{
-			append_format( out, L"\\u%.4x", *in );
+			append_format(out, L"\\u%.4x", c);
 		}
 		else
 		{
-			append_format( out, L"\\U%.8x", *in );
+			append_format(out, L"\\U%.8x", c);
 		}
 	}
 	return out;
@@ -803,7 +814,7 @@ void set_body(message_t *msg, ...)
 }
 
 /* Returns an instance of message_t allocated via new */
-message_t *create_message( int type,
+message_t *create_message( fish_message_type_t type,
                           const wchar_t *key_in,
                           const wchar_t *val_in )
 {

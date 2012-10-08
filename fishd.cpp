@@ -496,7 +496,7 @@ unlock:
 /**
    Event handler. Broadcasts updates to all clients.
 */
-static void broadcast( int type, const wchar_t *key, const wchar_t *val )
+static void broadcast( fish_message_type_t type, const wchar_t *key, const wchar_t *val )
 {
 	connection_t *c;
 	message_t *msg;
@@ -540,6 +540,9 @@ static void daemonize()
 			
 		case 0:
 		{
+			/* Ordinarily there's very limited things we will do after fork, due to multithreading. But fishd is safe because it's single threaded. So don't die in is_forked_child. */
+			setup_fork_guards();
+        
 			/*
 			  Make fishd ignore the HUP signal.
 			*/
@@ -557,6 +560,7 @@ static void daemonize()
 			act.sa_handler=&handle_term;
 			sigaction( SIGTERM, &act, 0);
 			break;
+            
 		}
 		
 		default:

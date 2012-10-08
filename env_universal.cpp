@@ -61,7 +61,7 @@ static int get_socket_count = 0;
 static wchar_t * path;
 static wchar_t *user;
 static void (*start_fishd)();
-static void (*external_callback)( int type, const wchar_t *name, const wchar_t *val );
+static void (*external_callback)( fish_message_type_t type, const wchar_t *name, const wchar_t *val );
 
 /**
    Flag set to 1 when a barrier reply is recieved
@@ -165,7 +165,7 @@ static int get_socket( int fork_ok )
 /**
    Callback function used whenever a new fishd message is recieved
 */
-static void callback( int type, const wchar_t *name, const wchar_t *val )
+static void callback( fish_message_type_t type, const wchar_t *name, const wchar_t *val )
 {	
 	if( type == BARRIER_REPLY )
 	{
@@ -250,7 +250,7 @@ static void reconnect()
 void env_universal_init( wchar_t * p, 
 						 wchar_t *u, 
 						 void (*sf)(),
-						 void (*cb)( int type, const wchar_t *name, const wchar_t *val ))
+						 void (*cb)( fish_message_type_t type, const wchar_t *name, const wchar_t *val ))
 {
 	path=p;
 	user=u;

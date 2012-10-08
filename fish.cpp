@@ -410,10 +410,34 @@ static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
    parses commands from stdin or files, depending on arguments
 */
 
+static wcstring full_escape( const wchar_t *in )
+{
+	wcstring out;
+	for( ; *in; in++ )
+	{
+		if( *in < 32 )
+		{
+			append_format( out, L"\\x%.2x", *in );
+		}
+		else if( *in < 128 )
+		{
+			out.push_back(*in);
+		}
+		else if( *in < 65536 )
+		{
+			append_format( out, L"\\u%.4x", *in );
+		}
+		else
+		{
+			append_format( out, L"\\U%.8x", *in );
+		}
+	}
+	return out;
+}
+
 extern int g_fork_count;
 int main( int argc, char **argv )
 {    
-    struct stat tmp;
 	int res=1;
 	const char *cmd=0;
 	int my_optind=0;
@@ -425,7 +449,8 @@ int main( int argc, char **argv )
 	is_interactive_session=1;
 	program_name=L"fish";
 
-    stat("----------FISH_HIT_MAIN----------", &tmp);
+    //struct stat tmp;
+    //stat("----------FISH_HIT_MAIN----------", &tmp);
 
 	my_optind = fish_parse_opt( argc, argv, &cmd );
 

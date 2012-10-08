@@ -375,7 +375,7 @@ static void react_to_variable_change(const wcstring &key) {
    Universal variable callback function. This function makes sure the
    proper events are triggered when an event occurs.
 */
-static void universal_callback( int type,
+static void universal_callback( fish_message_type_t type,
 								const wchar_t *name, 
 								const wchar_t *val )
 {
@@ -395,6 +395,9 @@ static void universal_callback( int type,
 			str=L"ERASE";
 			break;
 		}
+        
+		default:
+		    break;
 	}
 	
 	if( str )

@@ -20,7 +20,7 @@ extern connection_t env_universal_server;
 void env_universal_init( wchar_t * p, 
                         wchar_t *u, 
                         void (*sf)(),
-                        void (*cb)( int type, const wchar_t *name, const wchar_t *val ));
+                        void (*cb)( fish_message_type_t type, const wchar_t *name, const wchar_t *val ));
 /**
   Free memory used by envuni
 */

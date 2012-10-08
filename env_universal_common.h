@@ -40,15 +40,14 @@
 /**
    The different types of commands that can be sent between client/server
 */
-enum
+typedef enum
 {
 	SET,
 	SET_EXPORT,
 	ERASE,
 	BARRIER,
 	BARRIER_REPLY,
-}
-	;
+} fish_message_type_t;
 
 /**
    The size of the buffer used for reading from the socket
@@ -133,12 +132,12 @@ void try_send_all( connection_t *c );
 /**
    Create a messge with the specified properties
 */
-message_t *create_message( int type, const wchar_t *key, const wchar_t *val );
+message_t *create_message( fish_message_type_t type, const wchar_t *key, const wchar_t *val );
 
 /**
    Init the library
 */
-void env_universal_common_init(void (*cb)(int type, const wchar_t *key, const wchar_t *val ) );
+void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val ) );
 
 /**
    Destroy library data

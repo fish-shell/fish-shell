@@ -494,7 +494,9 @@ static void reader_kill( size_t begin_idx, size_t length, int mode, int newv )
 	}
 
 	if( data->buff_pos > begin_idx ) {
-		data->buff_pos = maxi( begin_idx, data->buff_pos-length );
+        /* Move the buff position back by the number of characters we deleted, but don't go past buff_pos */
+        size_t backtrack = mini(data->buff_pos - begin_idx, length);
+        data->buff_pos -= backtrack;
 	}
 	
     data->command_line.erase(begin_idx, length);

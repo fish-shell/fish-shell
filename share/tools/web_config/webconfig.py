@@ -224,6 +224,7 @@ def ansi_to_html(val):
     	if result[idx] == '</span>' and result[idx-1].startswith('<span'):
 	    	# Empty span, delete these two
 	    	result[idx-1:idx+1] = []
+	    	idx = idx - 1
     	idx = idx - 1
 
     return ''.join(result)

@@ -589,7 +589,7 @@ static void test_expand()
 	{
 		err( L"Expansion not correctly handling dotfiles" );
 	}
-	if (! expand_test( L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/.foo", 0 ))
+	if (! expand_test( L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/./.foo", 0 ))
 	{
 		err( L"Expansion not correctly handling literal path components in dotfiles" );
 	}

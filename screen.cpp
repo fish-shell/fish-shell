@@ -162,69 +162,70 @@ static bool allow_soft_wrap(void)
    to detect common escape sequences that may be embeded in a prompt,
    such as color codes.
 */
-static size_t calc_prompt_width( const wchar_t *prompt )
+static size_t calc_prompt_width_and_lines( const wchar_t *prompt, size_t *out_prompt_lines )
 {
 	size_t res = 0;
 	size_t j, k;
-
+    *out_prompt_lines = 1;
+    
 	for( j=0; prompt[j]; j++ )
 	{
 		if( prompt[j] == L'\x1b' )
 		{
 			/*
-			  This is the start of an escape code. Try to guess it's width.
-			*/
+             This is the start of an escape code. Try to guess it's width.
+             */
 			size_t p;
 			int len=0;
 			bool found = false;
 			
 			/*
-			  Detect these terminfo color escapes with parameter
-			  value 0..7, all of which don't move the cursor
-			*/
+             Detect these terminfo color escapes with parameter
+             value 0..7, all of which don't move the cursor
+             */
 			char * const esc[] =
-				{
-					set_a_foreground,
-					set_a_background,
-					set_foreground,
-					set_background,
-				}
+            {
+                set_a_foreground,
+                set_a_background,
+                set_foreground,
+                set_background,
+            }
 			;
-
+            
 			/*
-			  Detect these semi-common terminfo escapes without any
-			  parameter values, all of which don't move the cursor
-			*/
+             Detect these semi-common terminfo escapes without any
+             parameter values, all of which don't move the cursor
+             */
 			char * const esc2[] =
-				{
-					enter_bold_mode,
-					exit_attribute_mode,
-					enter_underline_mode,
-					exit_underline_mode,
-					enter_standout_mode,
-					exit_standout_mode,
-					flash_screen,
-					enter_subscript_mode,
-					exit_subscript_mode,
-					enter_superscript_mode,
-					exit_superscript_mode,
-					enter_blink_mode,
-					enter_italics_mode,
-					exit_italics_mode,
-					enter_reverse_mode,
-					enter_shadow_mode,
-					exit_shadow_mode,
-					enter_standout_mode,
-					exit_standout_mode,
-					enter_secure_mode
-				}
+            {
+                enter_bold_mode,
+                exit_attribute_mode,
+                enter_underline_mode,
+                exit_underline_mode,
+                enter_standout_mode,
+                exit_standout_mode,
+                flash_screen,
+                enter_subscript_mode,
+                exit_subscript_mode,
+                enter_superscript_mode,
+                exit_superscript_mode,
+                enter_blink_mode,
+                enter_italics_mode,
+                exit_italics_mode,
+                enter_reverse_mode,
+                enter_shadow_mode,
+                exit_shadow_mode,
+                enter_standout_mode,
+                exit_standout_mode,
+                enter_secure_mode
+            }
 			;
-
+            
 			for( p=0; p < sizeof esc / sizeof *esc && !found; p++ )
 			{
 				if( !esc[p] )
 					continue;
-
+                
 				for( k=0; k<8; k++ )
 				{
 					len = try_sequence( tparm(esc[p],k), &prompt[j] );
@@ -245,27 +246,27 @@ static size_t calc_prompt_width( const wchar_t *prompt )
                     found = true;
                 }
             }
-
-
+            
+            
 			for( p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++ )
 			{
 				if( !esc2[p] )
 					continue;
 				/*
-				  Test both padded and unpadded version, just to
-				  be safe. Most versions of tparm don't actually
-				  seem to do anything these days.
-				*/
+                 Test both padded and unpadded version, just to
+                 be safe. Most versions of tparm don't actually
+                 seem to do anything these days.
+                 */
 				len = maxi( try_sequence( tparm(esc2[p]), &prompt[j] ),
-					    try_sequence( esc2[p], &prompt[j] ));
-					
+                           try_sequence( esc2[p], &prompt[j] ));
+                
 				if( len )
 				{
 					j += (len-1);
 					found = true;
 				}
 			}
-				
+            
 			if( !found )
 			{
 				if( prompt[j+1] == L'k' )
@@ -280,13 +281,13 @@ static size_t calc_prompt_width( const wchar_t *prompt )
 						if( end )
 						{
 							/*
-							  You'd thing this should be
-							  '(end-prompt)+2', in order to move j
-							  past the end of the string, but there is
-							  a 'j++' at the end of each lap, so j
-							  should always point to the last menged
-							  character, e.g. +1.
-							*/
+                             You'd thing this should be
+                             '(end-prompt)+2', in order to move j
+                             past the end of the string, but there is
+                             a 'j++' at the end of each lap, so j
+                             should always point to the last menged
+                             character, e.g. +1.
+                             */
 							j = (end-prompt)+1;
 						}
 						else
@@ -296,7 +297,7 @@ static size_t calc_prompt_width( const wchar_t *prompt )
 					}						
 				}					
 			}
-				
+            
 		}
 		else if( prompt[j] == L'\t' )
 		{
@@ -305,16 +306,36 @@ static size_t calc_prompt_width( const wchar_t *prompt )
 		else if( prompt[j] == L'\n' )
 		{
 			res = 0;
+            *out_prompt_lines += 1;
 		}
 		else
 		{
 			/*
-			  Ordinary decent character. Just add width.
-			*/
+             Ordinary decent character. Just add width.
+             */
 			res += fish_wcwidth( prompt[j] );
 		}
 	}
 	return res;
+}
+
+static size_t calc_prompt_width(const wchar_t *prompt)
+{
+    size_t ignored;
+    return calc_prompt_width_and_lines(prompt, &ignored);
+}
+
+static size_t calc_prompt_lines(const wchar_t *prompt)
+{
+    // Hack for the common case where there's no newline at all
+    // I don't know if a newline can appear in an escape sequence,
+    // so if we detect a newline we have to defer to calc_prompt_width_and_lines
+    size_t result = 1;
+    if (wcschr(prompt, L'\n') != NULL)
+    {
+        calc_prompt_width_and_lines(prompt, &result);
+    }
+    return result;
 }
 
 /**
@@ -987,19 +1008,26 @@ void s_reset( screen_t *s, bool reset_cursor )
     /* If we are resetting the cursor, we're going to make a new line and leave junk behind. If we are not resetting the cursor, we need to remember how many lines we had output to, so we can clear the remaining lines in the next call to s_update. This prevents leaving junk underneath the cursor when resizing a window wider such that it reduces our desired line count. */
     if (! reset_cursor)
         s->actual_lines_before_reset =  s->actual.line_count();
-
+    
 	int prev_line = s->actual.cursor.y;
+    
+    /* If the prompt is multi-line, we need to move up to the prompt's initial line. We do this by lying to ourselves and claiming that we're really below what we consider "line 0" (which is the last line of the prompt). This will cause is to move up to try to get back to line 0, but really we're getting back to the initial line of the prompt. */
+    const size_t prompt_line_count = calc_prompt_lines(s->actual_prompt.c_str());
+    assert(prompt_line_count >= 1);
+    prev_line += (prompt_line_count - 1);
+    
     s->actual.resize(0);
-	s->actual.cursor.x = s->actual.cursor.y = 0;
-    s->actual_prompt = L"";
+    s->actual.cursor.x = 0;
+    s->actual.cursor.y = 0;
+    s->actual_prompt.clear();
 	s->need_clear=true;
-
+    
 	if( !reset_cursor )
 	{
 		/*
-		  This should prevent reseting the cursor position during the
-		  next repaint.
-		*/
+         This should prevent reseting the cursor position during the
+         next repaint.
+         */
 		write_loop( 1, "\r", 1 );
 		s->actual.cursor.y = prev_line;
 	}

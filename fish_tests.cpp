@@ -527,7 +527,13 @@ static int expand_test( const wchar_t *in, int flags, ... )
 		
 	}
 	
-	
+#if 0
+    for (size_t idx=0; idx < output.size(); idx++)
+    {
+        printf("%ls\n", output.at(idx).completion.c_str());
+    }
+#endif
+    
 	va_start( va, flags );
 
 	while( (arg=va_arg(va, wchar_t *) )!= 0 ) 
@@ -573,7 +579,22 @@ static void test_expand()
 	{
 		err( L"Cannot skip wildcard expansion" );
 	}
-	
+    
+    if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
+    if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
+    
+    // This is checking that .* does NOT match . and .. (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal components (e.g. "./*" has to match the same as "*"
+	if (! expand_test( L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0 ))
+	{
+		err( L"Expansion not correctly handling dotfiles" );
+	}
+	if (! expand_test( L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/.foo", 0 ))
+	{
+		err( L"Expansion not correctly handling literal path components in dotfiles" );
+	}
+
+    //system("rm -Rf /tmp/fish_expand_test");
 }
 
 /** Test path functions */

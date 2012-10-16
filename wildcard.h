@@ -75,7 +75,7 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_
    \param wc The wildcard to test against
    \return true if the wildcard matched
 */
-int wildcard_match( const wcstring &str, const wcstring &wc );
+bool wildcard_match( const wcstring &str, const wcstring &wc );
 
 
 /**

@@ -175,7 +175,7 @@ extern const wchar_t *program_name;
 #define N_(wstr) wstr
 
 /**
-   Check if the specified stringelement is a part of the specified string list
+   Check if the specified string element is a part of the specified string list
  */
 #define contains( str,... ) contains_internal( str, __VA_ARGS__, NULL )
 

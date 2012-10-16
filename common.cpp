@@ -512,7 +512,7 @@ bool contains_internal( const wchar_t *a, ... )
 {
 	const wchar_t *arg;
 	va_list va;
-	int res = 0;
+	bool res = false;
 
 	CHECK( a, 0 );
 	
@@ -521,7 +521,7 @@ bool contains_internal( const wchar_t *a, ... )
 	{
 		if( wcscmp( a,arg) == 0 )
 		{
-			res=1;
+			res = true;
 			break;
 		}
 		

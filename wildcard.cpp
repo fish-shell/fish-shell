@@ -143,29 +143,36 @@ int wildcard_has( const wchar_t *str, int internal )
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards. 
 */
-static int wildcard_match2( const wchar_t *str, 
+static bool wildcard_match2(const wchar_t *str,
 							const wchar_t *wc, 
-							int is_first )
+							bool is_first )
 {
 	if( *str == 0 && *wc==0 )
-		return 1;
+		return true;
+    
+    /* Hackish fix for https://github.com/fish-shell/fish-shell/issues/270. Prevent wildcards from matching . or .., but we must still allow literal matches. */
+    if (is_first && contains(str, L".", L".."))
+    {
+        /* The string is '.' or '..'. Return true if the wildcard exactly matches. */
+        return ! wcscmp(str, wc);
+    }
 	
 	if( *wc == ANY_STRING || *wc == ANY_STRING_RECURSIVE)
 	{		
 		/* Ignore hidden file */
 		if( is_first && *str == L'.' )
 		{
-			return 0;
+			return false;
 		}
 		
 		/* Try all submatches */
 		do
 		{
-			if( wildcard_match2( str, wc+1, 0 ) )
-				return 1;
+			if( wildcard_match2( str, wc+1, false ) )
+				return true;
 		}
 		while( *(str++) != 0 );
-		return 0;
+		return false;
 	}
 	else if( *str == 0 )
 	{
@@ -173,23 +180,23 @@ static int wildcard_match2( const wchar_t *str,
 		  End of string, but not end of wildcard, and the next wildcard
 		  element is not a '*', so this is not a match.
 		*/
-		return 0;
+		return false;
 	}
 
 	if( *wc == ANY_CHAR )
 	{
 		if( is_first && *str == L'.' )
 		{
-			return 0;
+			return false;
 		}
 		
-		return wildcard_match2( str+1, wc+1, 0 );
+		return wildcard_match2( str+1, wc+1, false );
 	}
 	
 	if( *wc == *str )
-		return wildcard_match2( str+1, wc+1, 0 );
+		return wildcard_match2( str+1, wc+1, false );
 
-	return 0;
+	return false;
 }
 
 /**
@@ -303,9 +310,9 @@ bool wildcard_complete(const wcstring &str,
 }
 
 
-int wildcard_match( const wcstring &str, const wcstring &wc )
+bool wildcard_match( const wcstring &str, const wcstring &wc )
 {
-	return wildcard_match2( str.c_str(), wc.c_str(), 1 );	
+	return wildcard_match2( str.c_str(), wc.c_str(), true );
 }
 
 /**
@@ -684,7 +691,11 @@ typedef std::pair<dev_t, ino_t> file_id_t;
 
    This function traverses the relevant directory tree looking for
    matches, and recurses when needed to handle wildcrards spanning
-   multiple components and recursive wildcards. 
+   multiple components and recursive wildcards.
+   
+   Because this function calls itself recursively with substrings,
+   it's important that the parameters be raw pointers instead of wcstring,
+   which would be too expensive to construct for all substrings.
  */
 static int wildcard_expand_internal( const wchar_t *wc,
 									 const wchar_t *base_dir,
@@ -709,7 +720,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 
 	/* Variables for testing for presense of recursive wildcards */
 	const wchar_t *wc_recursive;
-	int is_recursive;
+	bool is_recursive;
 
 	/* Slightly mangled version of base_dir */
 	const wchar_t *dir_string;
@@ -843,7 +854,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 				}
 				else
 				{
-					if( wildcard_match2( name, wc, 1 ) )
+					if( wildcard_match2( name, wc, true ) )
 					{
                         const wcstring long_name = make_path(base_dir, next);
 						int skip = 0;
@@ -938,7 +949,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			  Test if the file/directory name matches the whole
 			  wildcard element, i.e. regular matching.
 			*/
-			int whole_match = wildcard_match2( name, wc_str, 1 );
+			int whole_match = wildcard_match2( name, wc_str, true );
 			int partial_match = 0;
 			
 			/* 
@@ -951,7 +962,7 @@ static int wildcard_expand_internal( const wchar_t *wc,
 			{
 				const wchar_t *end = wcschr( wc, ANY_STRING_RECURSIVE );
 				wchar_t *wc_sub = wcsndup( wc, end-wc+1);
-				partial_match = wildcard_match2( name, wc_sub, 1 );
+				partial_match = wildcard_match2( name, wc_sub, true );
 				free( wc_sub );
 			}			
 
@@ -974,8 +985,9 @@ static int wildcard_expand_internal( const wchar_t *wc,
 					{
                         // Insert a "file ID" into visited_files
                         // If the insertion fails, we've already visited this file (i.e. a symlink loop)
+                        // If we're not recursive, insert anyways (in case we loop back around in a future recursive segment), but continue on; the idea being that literal path components should still work
                         const file_id_t file_id(buf.st_dev, buf.st_ino);
-						if( S_ISDIR(buf.st_mode) && visited_files.insert(file_id).second)
+						if( S_ISDIR(buf.st_mode) && (visited_files.insert(file_id).second || ! is_recursive))
 						{
 							size_t new_len = wcslen( new_dir );
 							new_dir[new_len] = L'/';

@@ -1463,6 +1463,86 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 	return res;
 }
 
+static unsigned int builtin_echo_octal_digit(wchar_t wc)
+{
+    switch (wc)
+    {
+        case L'0': return 0;
+        case L'1': return 1;
+        case L'2': return 2;
+        case L'3': return 3;
+        case L'4': return 4;
+        case L'5': return 5;
+        case L'6': return 6;
+        case L'7': return 7;
+        default: return UINT_MAX;
+    }
+}
+
+static unsigned int builtin_echo_hex_digit(wchar_t wc)
+{
+    switch (wc)
+    {
+        case L'a': case L'A': return 10;
+        case L'b': case L'B': return 11;
+        case L'c': case L'C': return 12;
+        case L'd': case L'D': return 13;
+        case L'e': case L'E': return 14;
+        case L'f': case L'F': return 15;
+        default: return builtin_echo_octal_digit(wc);
+    }
+}
+
+/* Parse a numeric escape sequence in str, returning whether we succeeded.
+   Also return the number of characters consumed and the resulting value.
+   Supported escape sequences:
+   
+   \0nnn: octal value, zero to three digits
+   \nnn: octal value, one to three digits
+   \xhh: hex value, one to two digits
+*/
+static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *consumed, unsigned char *out_val)
+{
+    bool success = false;
+    unsigned char val = 0;
+    size_t idx = 0;
+    if (builtin_echo_octal_digit(str[0]) != UINT_MAX)
+    {
+        // If the first digit is a 0, we allow four digits (including that zero)
+        // Otherwise we allow 3.
+        unsigned int max_digits = (str[0] == L'0' ? 4 : 3);
+        for (idx = 0; idx < max_digits; idx++)
+        {
+            unsigned int digit = builtin_echo_octal_digit(str[idx]);
+            if (digit == UINT_MAX)
+                break;
+            val = val * 8 + digit;
+        }
+        // Can't fail, since we know we had at least one octal digit at str[1]
+        success = true;
+    }
+    else if (str[0] == L'x')
+    {
+        // Hex escape
+        for (idx = 1; idx < 3; idx++)
+        {
+            unsigned int digit = builtin_echo_hex_digit(str[idx]);
+            if (digit == UINT_MAX)
+                break;
+            val = val * 16 + digit;
+        }
+        // Requires at least one digit
+        success = (idx > 1);
+    }
+
+    if (success)
+    {
+        *consumed = idx;
+        *out_val = val;
+    }
+    return success;
+}
+
 /** The echo builtin.
     bash only respects -n if it's the first argument. We'll do the same.
     We also support a new option -s to mean "no spaces"
@@ -1475,23 +1555,83 @@ static int builtin_echo( parser_t &parser, wchar_t **argv )
         return STATUS_BUILTIN_ERROR;
     
     /* Process options */
-    bool print_newline = true, print_spaces = true;
+    bool print_newline = true, print_spaces = true, interpret_special_chars = false;
     while (*argv) {
         if (! wcscmp(*argv, L"-n")) {
             print_newline = false;
-            argv++;
         } else if (! wcscmp(*argv, L"-s")) {
             print_spaces = false;
-            argv++;
+        } else if (! wcscmp(*argv, L"-e")) {
+            interpret_special_chars = true;
+        } else if (! wcscmp(*argv, L"-E")) {
+            interpret_special_chars = false;
         } else {
             break;
         }
+        argv++;
     }
-        
-    for (size_t idx = 0; argv[idx]; idx++) {
+    
+    /* The special character \c can be used to indicate no more output */
+    bool continue_output = true;
+    
+    for (size_t idx = 0; continue_output && argv[idx] != NULL; idx++) {
+
         if (print_spaces && idx > 0)
             stdout_buffer.push_back(' ');
-        stdout_buffer.append(argv[idx]);
+
+        const wchar_t *str = argv[idx];
+        for (size_t j=0; continue_output && str[j]; j++)
+        {
+            if (! interpret_special_chars || str[j] != L'\\')
+            {
+                /* Not an escape */
+                stdout_buffer.push_back(str[j]);
+            }
+            else
+            {
+                /* Most escapes consume one character in addition to the backslash; the numeric sequences may consume more, while an unrecognized escape sequence consumes none. */
+                wchar_t wc;
+                size_t consumed = 1;
+                switch (str[j+1])
+                {
+                    case L'a': wc = L'\a'; break;
+                    case L'b': wc = L'\b'; break;
+                    case L'e': wc = L'\e'; break;
+                    case L'f': wc = L'\f'; break;
+                    case L'n': wc = L'\n'; break;
+                    case L'r': wc = L'\r'; break;
+                    case L't': wc = L'\t'; break;
+                    case L'v': wc = L'\v'; break;
+                    case L'\\': wc = L'\\'; break;
+                    
+                    case L'c': wc = 0; continue_output = false; break;
+                    
+                    default:
+                    {
+                        /* Octal and hex escape sequences */
+                        unsigned char narrow_val = 0;
+                        if (builtin_echo_parse_numeric_sequence(str + j + 1, &consumed, &narrow_val))
+                        {
+                            /* Here consumed must have been set to something */
+                            wc = narrow_val; //is this OK for conversion?
+                        }
+                        else
+                        {
+                            /* Not a recognized escape. We consume only the backslash. */
+                            wc = L'\\';
+                            consumed = 0;
+                        }
+                        break;
+                    }
+                }
+            
+                /* Skip over characters that were part of this escape sequence (but not the backslash, which will be handled by the loop increment */
+                j += consumed;
+                
+                if (continue_output)
+                    stdout_buffer.push_back(wc);
+            }
+        }
     }
     if (print_newline)
         stdout_buffer.push_back('\n');

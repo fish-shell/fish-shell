@@ -73,3 +73,19 @@ else
 	set sta fail
 end
 echo Test 5 $sta
+
+# echo tests
+
+echo 'abc\ndef'
+echo -e 'abc\ndef'
+echo -e 'abc\zdef'
+echo -e 'abc\41def'
+echo -e 'abc\041def'
+echo -e 'abc\121def'
+echo -e 'abc\1212def'
+echo -e 'abc\cdef'
+
+echo -e Catch your breath
+
+echo -e 'abc\x21def'
+echo -e 'abc\x211def'

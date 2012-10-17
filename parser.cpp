@@ -365,6 +365,7 @@ static const struct block_lookup_entry block_lookup[]=
 	}
 };
 
+static bool job_should_skip_elseif(const job_t *job, const block_t *current_block);
 
 parser_t::parser_t(enum parser_type_t type, bool errors) :
     parser_type(type),
@@ -1413,7 +1414,19 @@ void parser_t::parse_job_argument_list( process_t *p,
 					{
 						skip=0;
 					}
+                    else if (job_get_flag(j, JOB_ELSEIF) && ! job_should_skip_elseif(j, current_block))
+                    {
+                        skip=0;
+                    }
 				}
+                else
+                {
+                    /* If this is an else if, and we should skip it, then don't expand any arguments */
+                    if (job_get_flag(j, JOB_ELSEIF) && job_should_skip_elseif(j, current_block))
+                    {
+                        skip = 1;
+                    }
+                }
 
 				if( !skip )
 				{
@@ -1705,6 +1718,7 @@ int parser_t::parse_job( process_t *p,
 	int use_command = 1;    // May commands be considered when checking what action this command represents
 	int is_new_block=0;     // Does this command create a new block?
 	bool unskip = false;    // Maybe we are an elseif inside an if block; if so we may want to evaluate this even if the if block is currently set to skip
+	bool allow_bogus_command = false; // If we are an elseif that will not be executed, or an AND or OR that will have been short circuited, don't complain about non-existent commands
 
 	block_t *prev_block = current_block;
 	int prev_tokenizer_pos = current_tokenizer_pos;
@@ -1841,11 +1855,15 @@ int parser_t::parse_job( process_t *p,
 				}
 				else if( nxt == L"and" )
 				{
-					job_set_flag( j, JOB_SKIP, proc_get_last_status());
+                    bool skip = (proc_get_last_status() != 0);
+					job_set_flag( j, JOB_SKIP, skip);
+                    allow_bogus_command = skip;
 				}
 				else if( nxt == L"or" )
 				{
-					job_set_flag( j, JOB_SKIP, !proc_get_last_status());
+                    bool skip = (proc_get_last_status() == 0);
+					job_set_flag( j, JOB_SKIP, skip);
+                    allow_bogus_command = skip;
 				}
 				else if( is_exec )
 				{
@@ -1928,6 +1946,10 @@ int parser_t::parse_job( process_t *p,
                     
                     /* We want to execute this ELSEIF if the IF expression was evaluated, it failed, and so has every other ELSEIF (if any) */
                     unskip = (ib->if_expr_evaluated && ! ib->any_branch_taken);
+                    
+                    /* But if we're not executing it, don't complain about its command if it doesn't exist */
+                    if (! unskip)
+                        allow_bogus_command = true;
                 }
             }
         }
@@ -2015,7 +2037,10 @@ int parser_t::parse_job( process_t *p,
 			  If we are not executing the current block, allow
 			  non-existent commands.
 			*/
-			if( current_block->skip && ! unskip)
+            if (current_block->skip && ! unskip)
+                allow_bogus_command = true; //note this may already be true for other reasons
+                
+			if (allow_bogus_command)
 			{
 				p->actual_cmd.clear();
 			}

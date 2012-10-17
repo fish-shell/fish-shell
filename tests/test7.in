@@ -93,3 +93,12 @@ else
 	echo delta4.1
 	echo delta4.2
 end
+
+if test ! -n "abc"
+else if test -n "def"
+	echo "epsilon5.2"
+else if not_a_valid_command but it should be OK because a previous branch was taken
+	echo "epsilon 5.3"
+else if test ! -n "abc"
+	echo "epsilon 5.4"	
+end

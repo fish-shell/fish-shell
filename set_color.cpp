@@ -182,6 +182,10 @@ static unsigned char index_for_color(rgb_color_t c) {
 
 int main( int argc, char **argv )
 {
+    /* Some code passes variables to set_color that don't exist, like $fish_user_whatever. As a hack, quietly return failure. */
+    if (argc <= 1)
+        return EXIT_FAILURE;
+    
 	char *bgcolor=0;
 	char *fgcolor=0;
 	bool bold=false;

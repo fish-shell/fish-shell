@@ -1633,7 +1633,7 @@ static int builtin_echo( parser_t &parser, wchar_t **argv )
             }
         }
     }
-    if (print_newline)
+    if (print_newline && continue_output)
         stdout_buffer.push_back('\n');
     return STATUS_BUILTIN_OK;
 }

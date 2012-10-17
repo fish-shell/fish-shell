@@ -83,7 +83,8 @@ echo -e 'abc\41def'
 echo -e 'abc\041def'
 echo -e 'abc\121def'
 echo -e 'abc\1212def'
-echo -e 'abc\cdef'
+echo -e 'abc\cdef' # won't output a newline!
+echo ''
 
 echo -e Catch your breath
 

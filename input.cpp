@@ -162,7 +162,7 @@ static const wchar_t *desc_arr[] =
 	L"Move entire line to killring",
 	L"Move next word to killring",
 	L"Move previous word to killring",
-	L"Write out keybindings",
+	L"Write out key bindings",
 	L"Clear entire screen",
 	L"Quit the running program",
 	L"Search backward through list of previous commands for matching token",
@@ -865,4 +865,3 @@ wchar_t input_function_get_code( const wcstring &name )
 	}
 	return -1;		
 }
-

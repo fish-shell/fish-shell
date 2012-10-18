@@ -199,21 +199,21 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		set -U fish_key_bindings fish_default_key_bindings
 	end
 
-	# Reload keybindings when binding variable change
-	function __fish_reload_key_bindings -d "Reload keybindings when binding variable change" --on-variable fish_key_bindings
+	# Reload key bindings when binding variable change
+	function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
 		# Do something nasty to avoid two forks
 		if test "$fish_key_bindings" =  fish_default_key_bindings
 			fish_default_key_bindings
-			#Load user keybindings if they are defined
-			if functions --query fish_user_keybindings > /dev/null
-			   fish_user_keybindings
+			#Load user key bindings if they are defined
+			if functions --query fish_user_key bindings > /dev/null
+			   fish_user_key_bindings
 			end
 		else
 			eval $fish_key_bindings ^/dev/null
 		end
 	end
 
-	# Load keybindings
+	# Load key bindings
 	__fish_reload_key_bindings
 
 	# Repaint screen when window changes size

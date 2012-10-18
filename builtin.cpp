@@ -1463,8 +1463,10 @@ static int builtin_functions( parser_t &parser, wchar_t **argv )
 	return res;
 }
 
-static unsigned int builtin_echo_octal_digit(wchar_t wc)
+static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base)
 {
+    // base must be hex or octal
+    assert(base == 8 || base == 16);
     switch (wc)
     {
         case L'0': return 0;
@@ -1475,22 +1477,20 @@ static unsigned int builtin_echo_octal_digit(wchar_t wc)
         case L'5': return 5;
         case L'6': return 6;
         case L'7': return 7;
-        default: return UINT_MAX;
     }
-}
 
-static unsigned int builtin_echo_hex_digit(wchar_t wc)
-{
-    switch (wc)
+    if (base == 16) switch (wc)
     {
+        case L'8': return 8;
+        case L'9': return 9;
         case L'a': case L'A': return 10;
         case L'b': case L'B': return 11;
         case L'c': case L'C': return 12;
         case L'd': case L'D': return 13;
         case L'e': case L'E': return 14;
         case L'f': case L'F': return 15;
-        default: return builtin_echo_octal_digit(wc);
     }
+    return UINT_MAX;
 }
 
 /* Parse a numeric escape sequence in str, returning whether we succeeded.
@@ -1504,41 +1504,46 @@ static unsigned int builtin_echo_hex_digit(wchar_t wc)
 static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *consumed, unsigned char *out_val)
 {
     bool success = false;
-    unsigned char val = 0;
-    size_t idx = 0;
-    if (builtin_echo_octal_digit(str[0]) != UINT_MAX)
+    unsigned char val = 0; //resulting character
+    unsigned int start = 0; //the first character of the numeric part of the sequence
+    
+    unsigned int base = 0, max_digits = 0;
+    if (builtin_echo_digit(str[0], 8) != UINT_MAX)
     {
+        // Octal escape
+        base = 8;
+
         // If the first digit is a 0, we allow four digits (including that zero)
         // Otherwise we allow 3.
-        unsigned int max_digits = (str[0] == L'0' ? 4 : 3);
-        for (idx = 0; idx < max_digits; idx++)
-        {
-            unsigned int digit = builtin_echo_octal_digit(str[idx]);
-            if (digit == UINT_MAX)
-                break;
-            val = val * 8 + digit;
-        }
-        // Can't fail, since we know we had at least one octal digit at str[1]
-        success = true;
+        max_digits = (str[0] == L'0' ? 4 : 3);
     }
     else if (str[0] == L'x')
     {
         // Hex escape
-        for (idx = 1; idx < 3; idx++)
-        {
-            unsigned int digit = builtin_echo_hex_digit(str[idx]);
-            if (digit == UINT_MAX)
-                break;
-            val = val * 16 + digit;
-        }
-        // Requires at least one digit
-        success = (idx > 1);
+        base = 16;
+        max_digits = 2;
+        
+        // Skip the x
+        start = 1;
     }
-
-    if (success)
+    
+    if (base != 0)
     {
-        *consumed = idx;
-        *out_val = val;
+        unsigned int idx;
+        for (idx = start; idx < start + max_digits; idx++)
+        {
+            unsigned int digit = builtin_echo_digit(str[idx], base);
+            if (digit == UINT_MAX) break;
+            val = val * base + digit;
+        }
+        
+        // We succeeded if we consumed at least one digit
+        if (idx > start)
+        {
+            *consumed = idx;
+            *out_val = val;
+            success = true;
+        }
     }
     return success;
 }

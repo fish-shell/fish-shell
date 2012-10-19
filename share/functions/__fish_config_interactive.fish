@@ -202,11 +202,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	# Reload key bindings when binding variable change
 	function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
 		# Do something nasty to avoid two forks
-		if test "$fish_key_bindings" =  fish_default_key_bindings
+		if test "$fish_key_bindings" = fish_default_key_bindings
 			fish_default_key_bindings
 			#Load user key bindings if they are defined
 			if functions --query fish_user_key_bindings > /dev/null
-			   fish_user_key_bindings
+				fish_user_key_bindings
 			# Deprecated. Retained for backwards compatibility reasons.
 			else if functions --query fish_user_keybindings > /dev/null
 				fish_user_keybindings

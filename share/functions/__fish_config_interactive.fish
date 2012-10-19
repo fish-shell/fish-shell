@@ -205,7 +205,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		if test "$fish_key_bindings" =  fish_default_key_bindings
 			fish_default_key_bindings
 			#Load user key bindings if they are defined
-			if functions --query fish_user_key bindings > /dev/null
+			if functions --query fish_user_key_bindings > /dev/null
 			   fish_user_key_bindings
 			end
 		else

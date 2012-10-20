@@ -207,9 +207,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			#Load user key bindings if they are defined
 			if functions --query fish_user_key_bindings > /dev/null
 				fish_user_key_bindings
-			# Deprecated. Retained for backwards compatibility reasons.
-			else if functions --query fish_user_keybindings > /dev/null
-				fish_user_keybindings
 			end
 		else
 			eval $fish_key_bindings ^/dev/null

@@ -93,6 +93,7 @@ complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and
 complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
 complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
+complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
 # TODO options
 
 ### apply
@@ -110,11 +111,14 @@ complete -f -c git -n '__fish_git_needs_command' -a bisect -d 'Find the change t
 ### branch
 complete -f -c git -n '__fish_git_needs_command' -a branch -d 'List, create, or delete branches'
 complete -f -c git -n '__fish_git_using_command branch' -a '(__fish_git_branches)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command branch' -s d -d 'Delete Branch'
+complete -f -c git -n '__fish_git_using_command branch' -s d -d 'Delete branch'
 complete -f -c git -n '__fish_git_using_command branch' -s D -d 'Force deletion of branch'
 complete -f -c git -n '__fish_git_using_command branch' -s m -d 'Rename branch'
 complete -f -c git -n '__fish_git_using_command branch' -s M -d 'Force renaming branch'
 complete -f -c git -n '__fish_git_using_command branch' -s a -d 'Lists both local and remote branches'
+complete -f -c git -n '__fish_git_using_command branch' -s t -l track -d 'Track remote branch'
+complete -f -c git -n '__fish_git_using_command branch' -l no-track -d 'Do not track remote branch'
+complete -f -c git -n '__fish_git_using_command branch' -l set-upstream -d 'Set remote branch to track'
 
 ### cherry-pick
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'

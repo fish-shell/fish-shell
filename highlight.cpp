@@ -983,7 +983,7 @@ static void tokenize( const wchar_t * const buff, std::vector<int> &color, const
 					 Command. First check that the command actually exists.
 					 */
                     cmd = tok_last( &tok );
-                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
 					if (! expanded || has_expand_reserved(cmd.c_str()))
 					{
 						color.at(tok_get_pos( &tok )) = HIGHLIGHT_ERROR;

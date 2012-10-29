@@ -2,8 +2,10 @@
 # Completions for the help command
 #
 
-for i in case (sed -n < $__fish_help_dir/commands.html -e "s/.*<h2><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
-	complete -c help -x -a $i --description "Help for the specified command"
+if test -f "$__fish_help_dir/commands.html"
+	for i in case (sed -n < $__fish_help_dir/commands.html -e "s/.*<h2><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
+		complete -c help -x -a $i --description "Help for the specified command"
+	end
 end
 
 complete -c help -x -a syntax --description 'Introduction to the fish syntax'

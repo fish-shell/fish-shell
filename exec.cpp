@@ -504,11 +504,36 @@ static void do_builtin_io( const char *out, const char *err )
 	}
 }
 
+/* Returns whether we can use posix spawn for a given process in a given job.
+ Per https://github.com/fish-shell/fish-shell/issues/364 , error handling for file redirections is too difficult with posix_spawn
+ So in that case we use fork/exec.
+
+*/
+static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *process)
+{
+    bool result = true;
+    for (size_t idx = 0; idx < job->io.size(); idx++)
+    {
+        const io_data_t *io = job->io.at(idx);
+        if (io->io_mode == IO_FILE)
+        {
+            const char *path = io->filename_cstr;
+            /* This IO action is a file redirection. Only allow /dev/null, which is a common case we assume won't fail. */
+            if (strcmp(path, "/dev/null") != 0)
+            {
+                result = false;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
 
 void exec( parser_t &parser, job_t *j )
 {
 	process_t *p;
-	pid_t pid;
+	pid_t pid = 0;
 	int mypipe[2];
 	sigset_t chldset; 
 	
@@ -517,10 +542,10 @@ void exec( parser_t &parser, job_t *j )
 	io_data_t *io_buffer =0;
 
 	/*
-	  Set to 1 if something goes wrong while exec:ing the job, in
+	  Set to true if something goes wrong while exec:ing the job, in
 	  which case the cleanup code will kick in.
 	*/
-	int exec_error=0;
+	bool exec_error = false;
 
 	bool needs_keepalive = false;
 	process_t keepalive;
@@ -708,7 +733,7 @@ void exec( parser_t &parser, job_t *j )
 			{
 				debug( 1, PIPE_ERROR );
 				wperror (L"pipe");
-				exec_error=1;
+				exec_error = true;
 				break;
 			}
 
@@ -897,7 +922,7 @@ void exec( parser_t &parser, job_t *j )
 
 				if( builtin_stdin == -1 )
 				{
-					exec_error=1;
+					exec_error = true;
 					break;
 				}
 				else
@@ -1232,7 +1257,7 @@ void exec( parser_t &parser, job_t *j )
                 
 #if FISH_USE_POSIX_SPAWN
                 /* Prefer to use posix_spawn, since it's faster on some systems like OS X */
-                bool use_posix_spawn = g_use_posix_spawn;
+                bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, p);
                 if (use_posix_spawn)
                 {
                     /* Create posix spawn attributes and actions */
@@ -1254,6 +1279,13 @@ void exec( parser_t &parser, job_t *j )
                         posix_spawn_file_actions_destroy(&actions);
                         posix_spawnattr_destroy(&attr);
                     }
+                    
+                    /* A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get told when it's exited, so we have to mark the process as failed. */
+                    if (pid == 0)
+                    {
+                        job_mark_process_as_failed(j, p);
+                        exec_error = true;
+                    }
                 }
                 else
 #endif
@@ -1261,9 +1293,7 @@ void exec( parser_t &parser, job_t *j )
                     pid = execute_fork(false);
                     if (pid == 0)
                     {
-                        /*
-                          This is the child process. 
-                        */
+                        /* This is the child process. */
                         p->pid = getpid();
                         setup_child_process( j, p );
                         safe_launch_process( p, actual_cmd, argv, envv );

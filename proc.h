@@ -509,6 +509,9 @@ void job_handle_signal( int signal, siginfo_t *info, void *con );
 */
 int job_signal( job_t *j, int signal );
 
+/* Marks a process as failed to execute (and therefore completed) */
+void job_mark_process_as_failed( const job_t *job, process_t *p );
+
 #ifdef HAVE__PROC_SELF_STAT
 /**
    Use the procfs filesystem to look up how many jiffies of cpu time

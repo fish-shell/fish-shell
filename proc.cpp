@@ -388,6 +388,12 @@ static void mark_process_status( const job_t *j,
 	}
 }
 
+void job_mark_process_as_failed( const job_t *job, process_t *p )
+{
+    /* The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a valid pid. Mark it as dead. */
+    p->completed = 1;
+}
+
 /**
    Handle status update for child \c pid. This function is called by
    the signal handler, so it mustn't use malloc or any such hitech

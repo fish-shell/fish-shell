@@ -566,6 +566,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char *
 
 		case ENOENT:
 		{
+            /* ENOENT is returned by exec() when the path fails, but also returned by posix_spawn if an open file action fails. These cases appear to be impossible to distinguish. We address this by not using posix_spawn for file redirections, so all the ENOENTs we find must be errors from exec(). */
             char interpreter_buff[128] = {}, *interpreter;
             interpreter = get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
 			if( interpreter && 0 != access( interpreter, X_OK ) )
@@ -574,7 +575,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char *
 			}
 			else
 			{
-				debug_safe(0, "The file '%s' or a script or ELF interpreter does not exist, or a shared library needed for file or interpreter cannot be found.", actual_cmd);
+				debug_safe(0, "The file '%s' does not exist or could not be executed.", actual_cmd);
 			}
             break;
 		}

@@ -350,7 +350,7 @@ int input_init()
     update_fish_term256();
 
 	/* If we have no keybindings, add a few simple defaults */
-	if( mapping_list.size() )
+	if( mapping_list.empty() )
 	{
 		input_mapping_add( L"", L"self-insert" );
 		input_mapping_add( L"\n", L"execute" );

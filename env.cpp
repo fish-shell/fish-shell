@@ -557,6 +557,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         L"COLUMNS",
         L"PWD",
         L"SHLVL",
+        L"FISH_VERSION",
     };
     for (size_t i=0; i < sizeof ro_keys / sizeof *ro_keys; i++) {
         env_read_only.insert(ro_keys[i]);
@@ -653,10 +654,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
 	}
 
 	/*
-	  Set up the version variable
+	  Set up the version variables
 	*/
 	version = str2wcs( PACKAGE_VERSION );
 	env_set( L"version", version, ENV_GLOBAL );
+	env_set( L"FISH_VERSION", version, ENV_GLOBAL );
 	free( version );
 
 	const env_var_t fishd_dir_wstr = env_get_string( L"FISHD_SOCKET_DIR");

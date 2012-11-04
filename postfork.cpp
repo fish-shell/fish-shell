@@ -386,7 +386,6 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
         // means that the process becomes its own
         // group leader, which is what set_child_group did
         // in this case. So we want this to be 0 if j->pgid is 0.
-        //if (!j->pgid) j->pgid = getpid();
         desired_parent_group_id = j->pgid;
     }
     

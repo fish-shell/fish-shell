@@ -1110,14 +1110,6 @@ void job_continue (job_t *j, int cont)
 				}
 				while (got_signal && !quit);
                 
-                if (quit) {
-                    // It's possible that the job will produce output and exit before we've even read from it.
-                    // We'll eventually read the output, but it may be after we've executed subsequent calls
-                    // This is why my prompt colors kept getting screwed up - the builtin echo calls
-                    // were sometimes having their output combined with the set_color calls in the wrong order!
-                    read_try(j);
-                }
-
 				if( !quit )
 				{
 					
@@ -1175,6 +1167,14 @@ void job_continue (job_t *j, int cont)
 		
 		if( job_is_completed( j ))
 		{
+        
+            // It's possible that the job will produce output and exit before we've even read from it.
+            // We'll eventually read the output, but it may be after we've executed subsequent calls
+            // This is why my prompt colors kept getting screwed up - the builtin echo calls
+            // were sometimes having their output combined with the set_color calls in the wrong order!
+            read_try(j);
+
+        
 			process_t *p = j->first_process;
 			while( p->next )
 				p = p->next;

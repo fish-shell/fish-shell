@@ -644,8 +644,6 @@ void reader_write_title()
 */
 static void exec_prompt()
 {
-	size_t i;
-
     wcstring_list_t prompt_list;
 	
 	if( data->prompt.size() )
@@ -664,7 +662,7 @@ static void exec_prompt()
 	
     data->prompt_buff.clear();
 	
-	for( i = 0; i < prompt_list.size(); i++ )
+	for( size_t i = 0; i < prompt_list.size(); i++ )
 	{
         if (i > 0) data->prompt_buff += L'\n';
         data->prompt_buff += prompt_list.at(i);

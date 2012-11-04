@@ -506,11 +506,22 @@ static void do_builtin_io( const char *out, const char *err )
 
 /* Returns whether we can use posix spawn for a given process in a given job.
  Per https://github.com/fish-shell/fish-shell/issues/364 , error handling for file redirections is too difficult with posix_spawn
- So in that case we use fork/exec.
-
+ So in that case we use fork/exec
+ 
+ Furthermore, to avoid the race between the caller calling tcsetpgrp() and the client checking the foreground process group, we don't use posix_spawn if we're going to foreground the process. (If we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the racse).
 */
 static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *process)
 {
+    if ( job_get_flag( job, JOB_CONTROL ) )
+    {
+        /* We are going to use job control; therefore when we launch this job it will get its own process group ID. But will it be foregrounded? */
+        if ( job_get_flag( job, JOB_TERMINAL ) && job_get_flag( job, JOB_FOREGROUND ) )
+        {
+            /* It will be foregrounded, so we will call tcsetpgrp(), therefore do not use posix_spawn */
+            return false;
+        }
+    }
+
     bool result = true;
     for (size_t idx = 0; idx < job->io.size(); idx++)
     {
@@ -1142,7 +1153,7 @@ void exec( parser_t &parser, job_t *j )
 					( ! get_stdout_buffer().empty() ) && 
 					( buffer_stdout ) )
 				{
-					std::string res = wcs2string( get_stdout_buffer() );
+					const std::string res = wcs2string( get_stdout_buffer() );
 					io->out_buffer_append( res.c_str(), res.size() );
 					skip_fork = 1;
 				}
@@ -1268,6 +1279,10 @@ void exec( parser_t &parser, job_t *j )
                     {
                         /* We successfully made the attributes and actions; actually call posix_spawn */
                         int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, argv, envv);
+                        
+                        /* This usleep can be used to test for various race conditions (https://github.com/fish-shell/fish-shell/issues/360) */
+                        //usleep(10000);
+                        
                         if (spawn_ret != 0)
                         {
                             safe_report_exec_error(spawn_ret, actual_cmd, argv, envv);

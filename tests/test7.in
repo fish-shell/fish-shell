@@ -102,3 +102,11 @@ else if not_a_valid_command but it should be OK because a previous branch was ta
 else if test ! -n "abc"
 	echo "epsilon 5.4"	
 end
+
+# Ensure builtins work
+# https://github.com/fish-shell/fish-shell/issues/359
+if not echo skip1 > /dev/null
+	echo "zeta 6.1"
+else if echo skip2 > /dev/null
+	echo "zeta 6.2"
+end

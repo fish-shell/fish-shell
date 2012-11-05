@@ -333,7 +333,7 @@ class parser_t {
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
     
-    void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, std::vector<completion_t>& );
+    void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, std::vector<completion_t>&, bool );
     int parse_job( process_t *p, job_t *j, tokenizer *tok );
     void skipped_exec( job_t * j );
     void eval_job( tokenizer *tok );

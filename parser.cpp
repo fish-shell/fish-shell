@@ -1309,11 +1309,13 @@ job_t *parser_t::job_get_from_pid( int pid )
    \param j the job to which the process belongs to
    \param tok the tokenizer to read options from
    \param args the argument list to insert options into
+   \param args unskip whether we should ignore current_block->skip. Big hack because of our dumb handling of if statements.
 */
 void parser_t::parse_job_argument_list( process_t *p,
 									 job_t *j,
 									 tokenizer *tok,
-									 std::vector<completion_t> &args )
+									 std::vector<completion_t> &args,
+                                     bool unskip )
 {
 	int is_finished=0;
 
@@ -1401,7 +1403,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 				{
 					skip = 1;
 				}
-				else if( current_block->skip )
+				else if( current_block->skip && ! unskip )
 				{
 					/*
 					  If this command should be skipped, we do not expand the arguments
@@ -1505,7 +1507,7 @@ void parser_t::parse_job_argument_list( process_t *p,
 				  Otherwise, bogus errors may be the result. (Do check
 				  that token is string, though)
 				*/
-				if( current_block->skip )
+				if( current_block->skip && ! unskip )
 				{
 					tok_next( tok );
 					if( tok_last_type( tok ) != TOK_STRING )
@@ -1965,7 +1967,7 @@ int parser_t::parse_job( process_t *p,
 			continue;
 		}
 		
-		if( use_function && !current_block->skip )
+		if( use_function && ( unskip || ! current_block->skip ))
 		{
 			bool nxt_forbidden=false;
 			wcstring forbid;
@@ -2267,7 +2269,7 @@ int parser_t::parse_job( process_t *p,
 		}
 		else
 		{
-			parse_job_argument_list(p, j, tok, args);
+			parse_job_argument_list(p, j, tok, args, unskip);
 		}
 	}
 

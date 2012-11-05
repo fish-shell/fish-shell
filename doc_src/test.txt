@@ -33,11 +33,11 @@ Tests the expression given and returns true or false.
 
 \subsection test-example Example
 
-<tt>
-    if test -d "/"                                                                                                                                                    
-	echo "Fish is cool";                                                                                                                                      
-    end  
-</tt> 
+<pre>
+    if test -d "/"
+	echo "Fish is cool"
+    end
+</pre> 
 
 Because "/" is a directory the expression will evaluate
 to true, and "Fish is cool" will be echoed

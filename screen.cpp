@@ -715,9 +715,11 @@ static void invalidate_soft_wrap(screen_t *scr)
 /**
    Update the screen to match the desired output.
 */
-static void s_update( screen_t *scr, const wchar_t *prompt )
+static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *right_prompt )
 {
-	size_t prompt_width = calc_prompt_width( prompt );
+	const size_t left_prompt_width = calc_prompt_width( left_prompt );
+    const size_t right_prompt_width = calc_prompt_width( right_prompt );
+    
 	int screen_width = common_get_width();
 	bool need_clear = scr->need_clear;
     
@@ -737,19 +739,19 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 		s_reset( scr, false );
 	}
 	
-	if( wcscmp( prompt, scr->actual_prompt.c_str() ) )
+	if( wcscmp( left_prompt, scr->actual_left_prompt.c_str() ) )
 	{
 		s_move( scr, &output, 0, 0 );
-		s_write_str( &output, prompt );
-        scr->actual_prompt = prompt;
-		scr->actual.cursor.x = (int)prompt_width;
+		s_write_str( &output, left_prompt );
+        scr->actual_left_prompt = left_prompt;
+		scr->actual.cursor.x = (int)left_prompt_width;
 	}
 	
     for (size_t i=0; i < scr->desired.line_count(); i++)
 	{
 		const line_t &o_line = scr->desired.line(i);
 		line_t &s_line = scr->actual.create_line(i);
-		size_t start_pos = (i==0 ? prompt_width : 0);
+		size_t start_pos = (i==0 ? left_prompt_width : 0);
         int current_width = 0;
                 
         /* Note that skip_remaining is a width, not a character count */
@@ -817,6 +819,15 @@ static void s_update( screen_t *scr, const wchar_t *prompt )
 			s_move( scr, &output, current_width, (int)i );
 			s_write_mbs( &output, clr_eol);
 		}
+        
+        /* Output any rprompt if this is the first line. We do this at the end under the assumption that we will have to issue fewer commands this way. */
+        if (i == 0 && right_prompt_width > 0)
+        {
+            s_move( scr, &output, (int)(screen_width - right_prompt_width - 1), (int)i );
+            s_set_color( scr, &output, 0xffffffff);
+            s_write_str( &output, right_prompt );
+            scr->actual.cursor.x += right_prompt_width;
+        }
 	}
     
     /* Determine how many lines have stuff on them; we need to clear lines with stuff that we don't want */
@@ -853,7 +864,8 @@ static int is_dumb()
 
 
 void s_write( screen_t *s,
-	      const wchar_t *prompt,
+	      const wchar_t *left_prompt,
+          const wchar_t *right_prompt,
 	      const wchar_t *commandline, 
 	      size_t explicit_len,
 	      const int *c, 
@@ -869,18 +881,18 @@ void s_write( screen_t *s,
     size_t max_line_width = 0;
 	
 	CHECK( s, );
-	CHECK( prompt, );
+	CHECK( left_prompt, );
 	CHECK( commandline, );
 	CHECK( c, );
 	CHECK( indent, );
 
 	/*
 	  If we are using a dumb terminal, don't try any fancy stuff,
-	  just print out the text.
+	  just print out the text. right_prompt not supported.
 	 */
 	if( is_dumb() )
 	{
-		char *prompt_narrow = wcs2str( prompt );
+		char *prompt_narrow = wcs2str( left_prompt );
 		char *buffer_narrow = wcs2str( commandline );
 		
 		write_loop( 1, "\r", 1 );
@@ -893,7 +905,7 @@ void s_write( screen_t *s,
 		return;
 	}
 	
-	prompt_width = calc_prompt_width( prompt );
+	prompt_width = calc_prompt_width( left_prompt );
 	screen_width = common_get_width();
 
 	s_check_status( s );
@@ -907,7 +919,7 @@ void s_write( screen_t *s,
 	*/
 	if( prompt_width >= screen_width )
 	{
-		prompt = L"> ";
+		left_prompt = L"> ";
 		prompt_width = 2;
 	}
 	
@@ -997,7 +1009,7 @@ void s_write( screen_t *s,
 	}
 	
     s->desired.cursor = cursor_arr;
-	s_update( s, prompt );
+	s_update( s, left_prompt, right_prompt ? right_prompt : L"" );
 	s_save_status( s );
 }
 
@@ -1012,14 +1024,14 @@ void s_reset( screen_t *s, bool reset_cursor )
 	int prev_line = s->actual.cursor.y;
     
     /* If the prompt is multi-line, we need to move up to the prompt's initial line. We do this by lying to ourselves and claiming that we're really below what we consider "line 0" (which is the last line of the prompt). This will cause is to move up to try to get back to line 0, but really we're getting back to the initial line of the prompt. */
-    const size_t prompt_line_count = calc_prompt_lines(s->actual_prompt.c_str());
+    const size_t prompt_line_count = calc_prompt_lines(s->actual_left_prompt.c_str());
     assert(prompt_line_count >= 1);
     prev_line += (prompt_line_count - 1);
     
     s->actual.resize(0);
     s->actual.cursor.x = 0;
     s->actual.cursor.y = 0;
-    s->actual_prompt.clear();
+    s->actual_left_prompt.clear();
 	s->need_clear=true;
     
 	if( !reset_cursor )
@@ -1038,7 +1050,7 @@ void s_reset( screen_t *s, bool reset_cursor )
 screen_t::screen_t() :
     desired(),
     actual(),
-    actual_prompt(),
+    actual_left_prompt(),
     actual_width(0),
     soft_wrap_location(INVALID_LOCATION),
     need_clear(false),

@@ -120,7 +120,7 @@ class screen_t
        A string containing the prompt which was last printed to
        the screen.
     */
-    wcstring actual_prompt;
+    wcstring actual_left_prompt;
 
     /**
       The actual width of the screen at the time of the last screen
@@ -157,7 +157,8 @@ class screen_t
    as possible.
    
     \param s the screen on which to write
-    \param prompt the prompt to prepend to the command line
+    \param left_prompt the prompt to prepend to the command line
+    \param right_prompt the right prompt, or NULL if none
     \param commandline the command line
     \param explicit_len the number of characters of the "explicit" (non-autosuggestion) portion of the command line
     \param colors the colors to use for the comand line
@@ -165,7 +166,8 @@ class screen_t
     \param cursor_pos where the cursor is
 */
 void s_write( screen_t *s, 
-			  const wchar_t *prompt, 
+			  const wchar_t *left_prompt,
+			  const wchar_t *right_prompt,
 			  const wchar_t *commandline,
 			  size_t explicit_len,
 			  const int *colors, 

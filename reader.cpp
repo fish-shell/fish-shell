@@ -246,7 +246,10 @@ class reader_data_t
 	wcstring prompt;
 
 	/** The output of the last evaluation of the prompt command */
-	wcstring prompt_buff;
+	wcstring left_prompt_buff;
+    
+	/** The output of the last evaluation of the right prompt command */
+	wcstring right_prompt_buff;
 	
 	/**
 	   Color is the syntax highlighting for buff.  The format is that
@@ -455,7 +458,8 @@ static void reader_repaint()
     indents.resize(len);
 
 	s_write( &data->screen,
-		 data->prompt_buff.c_str(),
+		 data->left_prompt_buff.c_str(),
+         data->right_prompt_buff.c_str(),
 		 full_line.c_str(),
          data->command_line.size(),
 		 &colors[0],
@@ -660,13 +664,15 @@ static void exec_prompt()
 	
 	reader_write_title();
 	
-    data->prompt_buff.clear();
+    data->left_prompt_buff.clear();
 	
 	for( size_t i = 0; i < prompt_list.size(); i++ )
 	{
-        if (i > 0) data->prompt_buff += L'\n';
-        data->prompt_buff += prompt_list.at(i);
-	}	
+        if (i > 0) data->left_prompt_buff += L'\n';
+        data->left_prompt_buff += prompt_list.at(i);
+	}
+    
+    data->right_prompt_buff = L"This is my right prompt";
 }
 
 void reader_init()
@@ -2120,7 +2126,7 @@ int reader_shell_test( const wchar_t *b )
 		int tmp[1];
 		int tmp2[1];
 		
-		s_write( &data->screen, L"", L"", 0, tmp, tmp2, 0 );
+		s_write( &data->screen, L"", L"", L"", 0, tmp, tmp2, 0 );
 		
 		parser_t::principal_parser().test( b, 0, &sb, L"fish" );
 		fwprintf( stderr, L"%ls", sb.c_str() );

@@ -88,6 +88,8 @@ struct termios shell_modes;
 static pthread_t main_thread_id = 0;
 static bool thread_assertions_configured_for_testing = false;
 
+wchar_t ellipsis_char;
+
 char *profile=0;
 
 const wchar_t *program_name;
@@ -502,6 +504,12 @@ wcstring wsetlocale(int category, const wchar_t *locale)
 	char * res = setlocale(category,lang);
 	free( lang );
 
+	/*
+	  Use ellipsis if on known unicode system, otherwise use $
+	*/
+	char *ctype = setlocale( LC_CTYPE, NULL );
+	ellipsis_char = (strstr( ctype, ".UTF")||strstr( ctype, ".utf") )?L'\x2026':L'$';	
+		
 	if( !res )
 		return wcstring();
     else
@@ -753,6 +761,7 @@ void write_screen( const wcstring &msg, wcstring &buff )
 	int line_width = 0;
 	int tok_width = 0;
 	int screen_width = common_get_width();
+	
 	if( screen_width )
 	{
 		start = pos = msg.c_str();

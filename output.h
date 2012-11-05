@@ -117,6 +117,12 @@ int writech( wint_t ch );
 void writestr( const wchar_t *str );
 
 /**
+   Write a wide character string to FD 1. If the string is wider than
+   the specified maximum, truncate and ellipsize it.
+*/
+void writestr_ellipsis( const wchar_t *str, int max_width );
+
+/**
    Escape and write a string to fd 1
 */
 int write_escaped_str( const wchar_t *str, int max_len );

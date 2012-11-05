@@ -377,6 +377,8 @@ static int print_max( const wchar_t *str, int max, int has_more )
 			break;
 		if( ( written + wcwidth(str[i]) == max) && (has_more || str[i+1]) )
 		{
+			writech( ellipsis_char );
+			written += wcwidth(ellipsis_char );
 			break;
 		}
 			

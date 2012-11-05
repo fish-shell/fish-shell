@@ -90,6 +90,12 @@ void exit_without_destructors(int code) __attribute__ ((noreturn));
 extern struct termios shell_modes;      
 
 /**
+   The character to use where the text has been truncated. Is an
+   ellipsis on unicode system and a $ on other systems.
+*/
+extern wchar_t ellipsis_char;
+
+/**
    The verbosity level of fish. If a call to debug has a severity
    level higher than \c debug_level, it will not be printed.
 */
@@ -564,7 +570,9 @@ void error_reset();
 
 /**
    This function behaves exactly like a wide character equivalent of
-   the C function setlocale.
+   the C function setlocale, except that it will also try to detect if
+   the user is using a Unicode character set, and if so, use the
+   unicode ellipsis character as ellipsis, instead of '$'.      
 */
 wcstring wsetlocale( int category, const wchar_t *locale );
 

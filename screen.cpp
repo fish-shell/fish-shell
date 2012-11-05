@@ -968,6 +968,7 @@ void s_write( screen_t *s,
         assert(screen_width - prompt_width >= 1);
         max_line_width = screen_width - prompt_width - 1;
         truncated_autosuggestion_line = wcstring(commandline, 0, last_char_that_fits);
+        truncated_autosuggestion_line.push_back(ellipsis_char);
         commandline = truncated_autosuggestion_line.c_str();
     }
 	for( size_t i=0; i<prompt_width; i++ )
@@ -1002,6 +1003,17 @@ void s_write( screen_t *s,
 		
 		s_desired_append_char( s, commandline[i], col, indent[i], prompt_width );
 		
+		if( i== cursor_pos && s->desired.cursor.y != cursor_arr.y && commandline[i] != L'\n' )
+		{
+			/*
+			   Ugh. We are placed exactly at the wrapping point of a
+			   wrapped line, move cursor to the line below so the
+			   cursor won't be on the ellipsis which looks
+			   unintuitive.
+			*/
+			cursor_arr.x = s->desired.cursor.x - fish_wcwidth(commandline[i]);
+			cursor_arr.y = s->desired.cursor.y;
+		}
 	}
 	if( i == cursor_pos )
 	{

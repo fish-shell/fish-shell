@@ -2819,7 +2819,7 @@ int exit_status()
 static void handle_end_loop()
 {
     job_t *j;
-    int job_count=0;
+    int stopped_jobs_count=0;
     int is_breakpoint=0;
     block_t *b;
     parser_t &parser = parser_t::principal_parser();
@@ -2838,14 +2838,14 @@ static void handle_end_loop()
     job_iterator_t jobs;
     while ((j = jobs.next()))
     {
-        if (!job_is_completed(j))
+        if (!job_is_completed(j) && (job_is_stopped(j)))
         {
-            job_count++;
+            stopped_jobs_count++;
             break;
         }
     }
 
-    if (!reader_exit_forced() && !data->prev_end_loop && job_count && !is_breakpoint)
+    if (!reader_exit_forced() && !data->prev_end_loop && stopped_jobs_count && !is_breakpoint)
     {
         writestr(_(L"There are stopped jobs. A second attempt to exit will enforce their termination.\n"));
 

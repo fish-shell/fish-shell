@@ -121,6 +121,9 @@ class screen_t
        the screen.
     */
     wcstring actual_left_prompt;
+    
+    /** Last right prompt width */
+    size_t last_right_prompt_width;
 
     /**
       The actual width of the screen at the time of the last screen
@@ -138,7 +141,7 @@ class screen_t
 	   has to be sent to the terminal at the end of each line.
 	*/
 	bool need_clear;
-    
+        
     /** If we need to clear, this is how many lines the actual screen had, before we reset it. This is used when resizing the window larger: if the cursor jumps to the line above, we need to remember to clear the subsequent lines. */
     size_t actual_lines_before_reset;
 	
@@ -174,13 +177,24 @@ void s_write( screen_t *s,
 			  const int *indent,
 			  size_t cursor_pos );
 
+
+void s_write( screen_t *s,
+              const wcstring &left_prompt,
+              const wcstring &right_prompt,
+              const wcstring &commandline,
+              size_t explicit_len,
+              const int *colors,
+              const int *indent,
+              size_t cursor_pos );
+
 /** 
     This function resets the screen buffers internal knowledge about
     the contents of the screen. Use this function when some other
     function than s_write has written to the screen.
 
     \param s the screen to reset
-    \param reset_cursor whether the line on which the curor has changed should be assumed to have changed. If \c reset_cursor is set to 0, the library will attempt to make sure that the screen area does not seem to move up or down on repaint. 
+    \param reset_cursor whether the line on which the curor has changed should be assumed to have changed. If \c reset_cursor is false, the library will attempt to make sure that the screen area does not seem to move up or down on repaint.
+    \param Whether to reset the prompt as well. If so
 
     If reset_cursor is incorreclt set to 0, this may result in screen
     contents being erased. If it is incorrectly set to one, it may
@@ -189,6 +203,6 @@ void s_write( screen_t *s,
     resizing, there will be one line of garbage for every repaint,
     which will quicly fill the screen.
 */
-void s_reset( screen_t *s, bool reset_cursor );
+void s_reset( screen_t *s, bool reset_cursor, bool reset_prompt = true );
 
 #endif

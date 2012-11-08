@@ -123,7 +123,13 @@ commence.
 /**
    The name of the function that prints the fish prompt
  */
-#define PROMPT_FUNCTION_NAME L"fish_prompt"
+#define LEFT_PROMPT_FUNCTION_NAME L"fish_prompt"
+
+/**
+   The name of the function that prints the fish right prompt (RPROMPT)
+ */
+#define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
+
 
 /**
    The default title for the reader. This is used by reader_readline.
@@ -242,8 +248,9 @@ class reader_data_t
 	/** Name of the current application */
 	wcstring app_name;
 
-	/** The prompt command */
-	wcstring prompt;
+	/** The prompt commands */
+	wcstring left_prompt;
+    wcstring right_prompt;
 
 	/** The output of the last evaluation of the prompt command */
 	wcstring left_prompt_buff;
@@ -457,14 +464,15 @@ static void reader_repaint()
     std::vector<int> indents = data->indents;
     indents.resize(len);
 
-	s_write( &data->screen,
-		 data->left_prompt_buff.c_str(),
-         data->right_prompt_buff.c_str(),
-		 full_line.c_str(),
-         data->command_line.size(),
-		 &colors[0],
-		 &indents[0], 
-		 data->buff_pos );
+    s_write( &data->screen,
+             data->left_prompt_buff,
+             data->right_prompt_buff,
+             full_line,
+             data->command_length(),
+             &colors[0],
+             &indents[0],
+             data->buff_pos);
+
 	data->repaint_needed = false;
 }
 
@@ -648,31 +656,46 @@ void reader_write_title()
 */
 static void exec_prompt()
 {
-    wcstring_list_t prompt_list;
-	
-	if( data->prompt.size() )
-	{
-		proc_push_interactive( 0 );
-		
-		if( exec_subshell( data->prompt, prompt_list ) == -1 )
-		{
-			/* If executing the prompt fails, make sure we at least don't print any junk */
-            prompt_list.clear();
-		}
-		proc_pop_interactive();
-	}
-	
-	reader_write_title();
-	
+    /* Clear existing prompts */
     data->left_prompt_buff.clear();
-	
-	for( size_t i = 0; i < prompt_list.size(); i++ )
-	{
-        if (i > 0) data->left_prompt_buff += L'\n';
-        data->left_prompt_buff += prompt_list.at(i);
-	}
+    data->right_prompt_buff.clear();
     
-    data->right_prompt_buff = L"This is my right prompt";
+    /* If we have any prompts, they must be run non-interactively */
+    if (data->left_prompt.size() || data->right_prompt.size())
+    {
+        proc_push_interactive( 0 );
+    
+        if (data->left_prompt.size())
+        {
+            wcstring_list_t prompt_list;
+            if( exec_subshell( data->left_prompt, prompt_list ) == 0 )
+            {
+                for( size_t i = 0; i < prompt_list.size(); i++ )
+                {
+                    if (i > 0) data->left_prompt_buff += L'\n';
+                    data->left_prompt_buff += prompt_list.at(i);
+                }
+            }
+        }
+        
+        if (data->right_prompt.size())
+        {
+            wcstring_list_t prompt_list;
+            if( exec_subshell( data->right_prompt, prompt_list ) == 0 )
+            {
+                for( size_t i = 0; i < prompt_list.size(); i++ )
+                {
+                    // Right prompt does not support multiple lines, so just concatenate all of them
+                    data->right_prompt_buff += prompt_list.at(i);
+                }
+            }
+        }
+        
+        proc_pop_interactive();
+    }
+    
+    /* Write the screen title */
+	reader_write_title();
 }
 
 void reader_init()
@@ -2124,10 +2147,19 @@ int reader_shell_test( const wchar_t *b )
 	{
 		wcstring sb;
 
-		int tmp[1];
-		int tmp2[1];
-		
-		s_write( &data->screen, L"", L"", L"", 0, tmp, tmp2, 0 );
+		const int tmp[1] = {0};
+		const int tmp2[1] = {0};
+        const wcstring empty;
+        
+        s_write( &data->screen,
+                 empty,
+                 empty,
+                 empty,
+                 0,
+                 tmp,
+                 tmp2,
+                 0);
+        
 		
 		parser_t::principal_parser().test( b, 0, &sb, L"fish" );
 		fwprintf( stderr, L"%ls", sb.c_str() );
@@ -2165,7 +2197,7 @@ void reader_push( const wchar_t *name )
 	exec_prompt();
 	reader_set_highlight_function( &highlight_universal );
 	reader_set_test_function( &default_test );
-	reader_set_prompt( L"" );
+	reader_set_left_prompt( L"" );
 }
 
 void reader_pop()
@@ -2196,9 +2228,14 @@ void reader_pop()
 	}
 }
 
-void reader_set_prompt( const wchar_t *new_prompt )
+void reader_set_left_prompt( const wcstring &new_prompt )
 {
-    data->prompt = new_prompt;
+    data->left_prompt = new_prompt;
+}
+
+void reader_set_right_prompt(const wcstring &new_prompt)
+{
+    data->right_prompt = new_prompt;
 }
 
 void reader_set_complete_function( complete_function_t f )
@@ -2454,10 +2491,16 @@ static int read_i()
 		const wchar_t *tmp;
 
 		event_fire_generic(L"fish_prompt");
-		if( function_exists( PROMPT_FUNCTION_NAME ) )
-			reader_set_prompt( PROMPT_FUNCTION_NAME );
+		if( function_exists( LEFT_PROMPT_FUNCTION_NAME ) )
+			reader_set_left_prompt( LEFT_PROMPT_FUNCTION_NAME );
 		else
-			reader_set_prompt( DEFAULT_PROMPT );
+			reader_set_left_prompt( DEFAULT_PROMPT );
+        
+		if( function_exists( RIGHT_PROMPT_FUNCTION_NAME ) )
+			reader_set_right_prompt( RIGHT_PROMPT_FUNCTION_NAME );
+		else
+			reader_set_right_prompt( L"" );
+        
 
 		/*
 		  Put buff in temporary string and clear buff, so

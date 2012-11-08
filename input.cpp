@@ -95,7 +95,7 @@ struct terminfo_mapping_t
 /**
    Names of all the input functions supported
 */
-static const wchar_t *name_arr[] = 
+static const wchar_t * const name_arr[] =
 {
 	L"beginning-of-line",
 	L"end-of-line",

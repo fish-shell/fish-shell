@@ -169,7 +169,13 @@ void reader_set_test_function( int (*f)( const wchar_t * ) );
    Specify string of shell commands to be run in order to generate the
    prompt.
 */
-void reader_set_prompt( const wchar_t *prompt );
+void reader_set_left_prompt( const wcstring &prompt );
+
+/**
+   Specify string of shell commands to be run in order to generate the
+   right prompt.
+*/
+void reader_set_right_prompt( const wcstring &prompt );
 
 /**
    Returns true if the shell is exiting, 0 otherwise. 

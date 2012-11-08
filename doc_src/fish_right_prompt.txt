@@ -1,0 +1,23 @@
+\section fish_right_prompt fish_right_prompt - define the apperance of the right-side command line prompt
+
+\subsection fish_right_prompt-synopsis Synopsis
+<pre>function fish_right_prompt
+    ...
+end</pre>
+
+\subsection fish_right_prompt-description Description
+
+\c fish_right_prompt is similar to \c fish_prompt, except that it appears on the right side of the terminal window.
+
+Multiple lines are not supported in \c fish_right_prompt.
+
+\subsection fish_prompt-example Example
+
+A simple right prompt:
+
+<pre>
+function fish_right_prompt -d "Write out the right prompt"
+    date "+%m/%d/%y"
+end
+</pre>
+

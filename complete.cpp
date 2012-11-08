@@ -1776,7 +1776,7 @@ void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_t
 				{
 
 					const wcstring ncmd = tok_last( &tok );
-					int is_ddash = (ncmd == L"--") && ( (tok_get_pos( &tok )+2) < pos );
+					int is_ddash = (ncmd == L"--") && ( (tok_get_pos( &tok )+2) < (long)pos );
 					
 					if( !had_cmd )
 					{
@@ -1842,7 +1842,7 @@ void complete( const wcstring &cmd, std::vector<completion_t> &comps, complete_t
 				
 			}
 
-			if( tok_get_pos( &tok ) >= pos )
+			if( tok_get_pos( &tok ) >= (long)pos )
 			{
 				end_loop=1;
 			}

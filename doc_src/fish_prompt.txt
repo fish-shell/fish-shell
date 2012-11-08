@@ -1,6 +1,6 @@
 \section fish_prompt fish_prompt - define the apperance of the command line prompt
 
-\subsection fish_promt-synopsis Synopsis
+\subsection fish_prompt-synopsis Synopsis
 <pre>function fish_prompt
     ...
 end</pre>

@@ -2320,7 +2320,7 @@ static int builtin_read( parser_t &parser, wchar_t **argv )
 		const wchar_t *line;
 		
 		reader_push( mode_name );
-		reader_set_prompt( prompt );
+		reader_set_left_prompt( prompt );
 		if( shell )
 		{
 			reader_set_complete_function( &complete );

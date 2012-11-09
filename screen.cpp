@@ -853,13 +853,9 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
             s_move( scr, &output, (int)(screen_width - right_prompt_width), (int)i );
             s_set_color( scr, &output, 0xffffffff);
             s_write_str( &output, right_prompt );
-            /* We output in the last column. Some terms (Linux) push the cursor further right, past the window. Others make it "stick." Since we don't really know which is which, issue a cr so it goes back to the left. Note that we depend on s_move to use a cr here.
-            
-                If we expect to have more lines, move down at the same time, since vertical motion seems to avoid a flicker.
-            */
-            int target_line = (int)i;
-            if (scr->desired.line_count() > 1) i++;
-            s_move( scr, &output, 0, target_line);
+            /* We output in the last column. Some terms (Linux) push the cursor further right, past the window. Others make it "stick." Since we don't really know which is which, issue a cr so it goes back to the left. */
+            s_write_str( &output, L"\r");
+            scr->actual.cursor.x = 0;
         }
 	}
         

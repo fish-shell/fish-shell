@@ -769,11 +769,10 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
         /* Note that skip_remaining is a width, not a character count */
         size_t skip_remaining = start_pos;
         
-        /* Only skip the prompt if we're clearing the screen */
         if (! should_clear_screen_this_line) {
             /* Compute how much we should skip. At a minimum we skip over the prompt. But also skip over the shared prefix of what we want to output now, and what we output before, to avoid repeatedly outputting it. */
             const size_t shared_prefix = line_shared_prefix(o_line, s_line);
-            if (! shared_prefix > 0)
+            if (shared_prefix > 0)
             {
                 int prefix_width = fish_wcswidth(&o_line.text.at(0), shared_prefix);
                 if (prefix_width > skip_remaining)
@@ -804,7 +803,7 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
                 break;
         }
         
-        /* Clear the screen before outputting. If we clear the screen after outputting, then we may erase the last character due to the sticky right margin. */
+        /* Maybe clear the screen before outputting. If we clear the screen after outputting, then we may erase the last character due to the sticky right margin. */
         if (should_clear_screen_this_line) {
             s_move( scr, &output, current_width, (int)i );
             s_write_mbs(&output, clr_eos);
@@ -854,12 +853,9 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
             s_move( scr, &output, (int)(screen_width - right_prompt_width), (int)i );
             s_set_color( scr, &output, 0xffffffff);
             s_write_str( &output, right_prompt );
-            scr->actual.cursor.x += right_prompt_width;
-            if (auto_right_margin) {
-                /* Lame test for sticky right edge, which means that we output in the last column and the cursor did not advance to the next line, but remains in the last column. Every term I've tested has this behavior. */
-                scr->actual.cursor.x--;
-            }
-
+            /* We output in the last column. Some terms (Linux) push the cursor further right, past the window. Others make it "stick." Since we don't really know which is which, issue a cr so it goes back to the left. */
+            s_write_str( &output, L"\r");
+            scr->actual.cursor.x = 0;
         }
 	}
         

@@ -111,7 +111,7 @@ commence.
    Maximum length of prefix string when printing completion
    list. Longer prefixes will be ellipsized.
 */
-#define PREFIX_MAX_LEN 8
+#define PREFIX_MAX_LEN 9
 
 /**
    A simple prompt for reading shell commands that does not rely on
@@ -985,7 +985,7 @@ static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<
 	{
 		prefix_esc = escape_string(prefix, 1);
 	}
-    	
+    
     wcstring cmd = format_string(L"fish_pager -c 3 -r 4 %ls -p %ls",
                                  // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
                                 is_quoted?L"-q":L"",
@@ -1053,7 +1053,7 @@ static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<
     }
 
 	free( escaped_separator );		
-	
+	   
 	foo = wcs2str(msg.c_str());
 	in->out_buffer_append(foo, strlen(foo) );
 	free( foo );
@@ -1556,7 +1556,7 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 		{
             // append just the end of the string
             prefix = wcstring(&ellipsis_char, 1);
-			prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN, wcstring::npos);
+			prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN - 1, wcstring::npos);
         }
 
 		{

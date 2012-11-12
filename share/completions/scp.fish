@@ -12,14 +12,14 @@ complete -c scp -d Hostname -a "
 
 (
 	#Find a suitable hostname from the knownhosts files
-	cat ~/.ssh/known_hosts(quote '' 2) ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
+	cat ~/.ssh/known_hosts(array '' 2) ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
 ):
 
 (
 	#Prepend any username specified in the completion to the hostname
 	echo (commandline -ct)|sed -ne 's/\(.*@\).*/\1/p'
 )(
-	cat ~/.ssh/known_hosts(quote '' 2) ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
+	cat ~/.ssh/known_hosts(array '' 2) ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
 ):
 
 (__fish_print_users)@

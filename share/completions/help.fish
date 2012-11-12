@@ -28,7 +28,6 @@ complete -c help -x -a globbing --description "Help on parameter expansion (Glob
 complete -c help -x -a expand --description "Help on parameter expansion (Globbing)"
 complete -c help -x -a expand-variable --description "Help on variable expansion \$VARNAME"
 complete -c help -x -a expand-home --description "Help on home directory expansion ~USER"
-complete -c help -x -a expand-brace --description "Help on brace expansion {a,b,c}"
 complete -c help -x -a expand-wildcard --description "Help on wildcard expansion *.*"
 complete -c help -x -a expand-command-substitution --description "Help on command substitution (SUBCOMMAND)"
 complete -c help -x -a expand-process --description "Help on process expansion %JOB"

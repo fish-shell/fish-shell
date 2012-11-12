@@ -314,7 +314,7 @@ static void test_tok()
 	
 	{
 
-		const wchar_t *str = L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect";
+		const wchar_t *str = L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells )(quote and quotes)$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect";
 		const int types[] = 
 		{
 			TOK_STRING, TOK_REDIRECT_IN, TOK_STRING, TOK_REDIRECT_FD, TOK_STRING, TOK_STRING, TOK_STRING, TOK_REDIRECT_OUT, TOK_REDIRECT_APPEND, TOK_STRING, TOK_END
@@ -522,10 +522,7 @@ static int expand_test( const wchar_t *in, int flags, ... )
 	int res=1;
 	wchar_t *arg;
 	
-	if( expand_string( in, output, flags) )
-	{
-		
-	}
+	expand_string( in, output, flags);
 	
 #if 0
     for (size_t idx=0; idx < output.size(); idx++)
@@ -568,11 +565,6 @@ static void test_expand()
 	if( !expand_test( L"foo", 0, L"foo", 0 ))
 	{
 		err( L"Strings do not expand to themselves" );
-	}
-
-	if( !expand_test( L"a{b,c,d}e", 0, L"abe", L"ace", L"ade", 0 ) )
-	{
-		err( L"Bracket expansion is broken" );
 	}
 
 	if( !expand_test( L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0 ) )

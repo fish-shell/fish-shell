@@ -281,7 +281,7 @@ function __fish_complete_svn -d 'Complete svn and its wrappers' --argument-names
     #
     # Complete pget, pset, pedit options with svn props
     #
-    set -l props svn:{ignore,keywords,executable,eol-style,mime-type,externals,need-lock}
+    set -l props svn:(quote ignore keywords executable eol-style mime-type externals need-lock)
     _svn_cmpl_ $propget -a "$props"
     _svn_cmpl_ $propedit -a "$props"
     _svn_cmpl_ $propdel -a "$props"

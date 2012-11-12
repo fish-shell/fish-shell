@@ -1,9 +1,9 @@
 complete -x -c ifconfig -a down --description "Stop interface"
 complete -x -c ifconfig -a up --description "Start interface"
 complete -x -c ifconfig -a "
-	{,-}arp
-	{,-}promisc
-	{,-}allmulti
+	(quote '' -)arp
+	(quote '' -)promisc
+	(quote '' -)allmulti
 	metric
 	mtu
 	dstaddr
@@ -15,8 +15,8 @@ complete -x -c ifconfig -a "
 	io_addr
 	mem_start
 	media
-	{,-}broadcast
-	{,-}pointopoint
+	(quote '' -)broadcast
+	(quote '' -)pointopoint
 	hw
 	multicast
 	address

@@ -976,8 +976,6 @@ wchar_t *escape( const wchar_t *in_orig, escape_flags_t flags )
 				case L')':
 				case L'[':
 				case L']':
-				case L'{':
-				case L'}':
 				case L'?':
 				case L'*':
 				case L'|':
@@ -1060,7 +1058,6 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 	size_t in_pos;
     size_t len;
 	int c;
-	int bracket_count=0;
 	wchar_t prev=0;	
 	wchar_t *in;
 	int unescape_special = flags & UNESCAPE_SPECIAL;
@@ -1373,47 +1370,6 @@ wchar_t *unescape( const wchar_t * orig, int flags )
 							else
 							{
 								in[out_pos]=in[in_pos];											
-							}
-							break;					
-						}
-
-						case L'{':
-						{
-							if( unescape_special )
-							{
-								bracket_count++;
-								in[out_pos]=BRACKET_BEGIN;
-							}
-							else
-							{
-								in[out_pos]=in[in_pos];						
-							}
-							break;					
-						}
-						
-						case L'}':
-						{
-							if( unescape_special )
-							{
-								bracket_count--;
-								in[out_pos]=BRACKET_END;
-							}
-							else
-							{
-								in[out_pos]=in[in_pos];						
-							}
-							break;					
-						}
-						
-						case L',':
-						{
-							if( unescape_special && bracket_count && prev!=BRACKET_SEP)
-							{
-								in[out_pos]=BRACKET_SEP;
-							}
-							else
-							{
-								in[out_pos]=in[in_pos];						
 							}
 							break;					
 						}

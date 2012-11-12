@@ -151,9 +151,6 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
             case PROCESS_EXPAND:
             case VARIABLE_EXPAND:
             case VARIABLE_EXPAND_SINGLE:
-            case BRACKET_BEGIN:
-            case BRACKET_END:
-            case BRACKET_SEP:
             case ANY_CHAR:
             case ANY_STRING:
             case ANY_STRING_RECURSIVE:
@@ -362,7 +359,6 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
     const wchar_t * const buff = buffstr.c_str();
 	enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
 	size_t in_pos, len = buffstr.size();
-	int bracket_count=0;
 	int normal_status = colors.at(0);
 	
 	for (in_pos=0; in_pos<len; in_pos++)
@@ -388,15 +384,7 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							colors.at(in_pos+1) = normal_status;
 						}
 					}
-					else if( buff[in_pos]==L',' )
-					{
-						if( bracket_count )
-						{
-							colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-							colors.at(in_pos+1) = normal_status;
-						}
-					}
-					else if( wcschr( L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", buff[in_pos] ) )
+					else if( wcschr( L"abefnrtv*?$()[]'\"<>^ \\#;|&", buff[in_pos] ) )
 					{
 						colors.at(start_pos)=HIGHLIGHT_ESCAPE;
 						colors.at(in_pos+1)=normal_status;
@@ -509,33 +497,6 @@ static void highlight_param( const wcstring &buffstr, std::vector<int> &colors, 
 							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
 							colors.at(in_pos+1) = normal_status;
 							break;
-						}
-                            
-						case L'{':
-						{
-							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-							colors.at(in_pos+1) = normal_status;
-							bracket_count++;
-							break;					
-						}
-                            
-						case L'}':
-						{
-							colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-							colors.at(in_pos+1) = normal_status;
-							bracket_count--;
-							break;						
-						}
-                            
-						case L',':
-						{
-							if( bracket_count )
-							{
-								colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-								colors.at(in_pos+1) = normal_status;
-							}
-                            
-							break;					
 						}
                             
 						case L'\'':

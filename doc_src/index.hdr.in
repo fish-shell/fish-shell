@@ -594,18 +594,6 @@ end</code> will convert all Jpeg files in the current directory to the
 PNG format.
 
 
-\subsection expand-brace Brace expansion
-
-A comma separated list of characters enclosed in curly braces will be
-expanded so each element of the list becomes a new parameter.
-
-Example:
-
-<code>echo input.{c,h,txt}</code> outputs 'input.c input.h input.txt'
-
-The command <code>mv *.{c,h} src/</code> moves all files with the suffix
-'.c' or '.h' to the subdirectory src.
-
 \subsection expand-variable Variable expansion
 
 A dollar sign followed by a string of characters is expanded into the
@@ -618,28 +606,9 @@ Example:
 <code> echo \$HOME</code> prints the home directory of the current
 user.
 
-If you wish to combine environment variables with text, you can
-encase the variables within braces to embed a variable inside running
-text like <code>echo Konnichiwa {$USER}san</code>, which will print a
-personalized Japanese greeting.
-
-The {$USER}san syntax might need a bit of an elaboration.  Posix
-shells allow you to specify a variable name using '$VARNAME' or
-'${VARNAME}'. Fish supports the former, and has no support whatsoever
-for the latter or anything like it. So what is '{$VARNAME}' then?
-Well, '{WHATEVER}' is <a href='#brace'>brace expansion</a>, e.g. 'a{b,c}d' -> 'abd acd'.
-So '{$VARNAME}' is a bracket-expansion with
-only a single element, i.e.  it becomes expanded to '$VARNAME', which
-will be variable expanded to the value of the variable 'VARNAME'. So
-you might think that the brackets don't actually do anything, and that
-is nearly the truth. The snag is that there once along the way was a
-'}' in there somewhere, and } is not a valid character in a variable
-name.  So anything after the otherwise pointless bracket expansion
-becomes explicitly NOT a part of the variable name, even if it happens
-to be a legal variable name character. That's why '{$USER}san' looks
-for the variable '$USER' and not for the variable '$USERsan'. It's
-simply a case of one syntax lending itself nicely to solving an
-unrelated problem in its spare time.
+If you wish to combine environment variables with text, you can use 'echo' to
+denote the variable boundaries like <code>echo Konnichiwa
+(echo $USER)san</code>, which will print a personalized Japanese greeting.
 
 Variable expansion is the only type of expansion performed on double
 quoted strings. There is, however, an important difference in how
@@ -764,17 +733,16 @@ When combining multiple parameter expansions, expansions are performed in the fo
 
 - Command substitutions
 - Variable expansions
-- Bracket expansion
 - Pid expansion
 - Wildcard expansion
 
-Expansions are performed from right to left, nested bracket expansions
+Expansions are performed from right to left, nested command substitutions
 are performed from the inside and out.
 
 Example:
 
 If the current directory contains the files 'foo' and 'bar', the command
-<code>echo a(ls){1,2,3} </code>
+<code>echo a(ls)(quote 1 2 3) </code>
 will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
 
 

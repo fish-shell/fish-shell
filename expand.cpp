@@ -798,48 +798,6 @@ void expand_variable_error( parser_t &parser, const wchar_t *token, size_t token
 	
 	switch( token[stop_pos] )
 	{
-		case BRACKET_BEGIN:
-		{
-			wchar_t *cpy = wcsdup( token );
-			*(cpy+token_pos)=0;
-			wchar_t *name = &cpy[stop_pos+1];
-			wchar_t *end = wcschr( name, BRACKET_END );
-			wchar_t *post;
-			int is_var=0;
-			if( end )
-			{
-				post = end+1;
-				*end = 0;
-				
-				if( !wcsvarname( name ) )
-				{
-					is_var = 1;
-				}
-			}
-			
-			if( is_var )
-			{
-				parser.error( SYNTAX_ERROR,
-					   error_pos,
-					   COMPLETE_VAR_BRACKET_DESC,
-					   cpy,
-					   name,
-					   post );				
-			}
-			else
-			{
-				parser.error( SYNTAX_ERROR,
-					   error_pos,
-					   COMPLETE_VAR_BRACKET_DESC,
-					   L"",
-					   L"VARIABLE",
-					   L"" );
-			}
-			free( cpy );
-			
-			break;
-		}
-		
 		case INTERNAL_SEPARATOR:
 		{
 			parser.error( SYNTAX_ERROR,
@@ -1178,137 +1136,6 @@ static int expand_variables_internal( parser_t &parser, wchar_t * const in, std:
 }
 
 /**
-   Perform bracket expansion
-*/
-static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, std::vector<completion_t> &out )
-{
-	const wchar_t *pos;
-	bool syntax_error = false;
-	int bracket_count=0;
-
-	const wchar_t *bracket_begin=0, *bracket_end=0;
-	const wchar_t *last_sep=0;
-
-	const wchar_t *item_begin;
-	size_t len1, len2, tot_len;
-    
-    const wchar_t * const in = instr.c_str();
-	
-	for( pos=in;
-		 (*pos) && !syntax_error;
-		 pos++ )
-	{
-		switch( *pos )
-		{
-			case BRACKET_BEGIN:
-			{
-				bracket_begin = pos;
-
-				bracket_count++;
-				break;
-
-			}
-			case BRACKET_END:
-			{
-				bracket_count--;
-				if( bracket_end < bracket_begin )
-				{
-					bracket_end = pos;
-				}
-				
-				if( bracket_count < 0 )
-				{
-					syntax_error = true;
-				}
-				break;
-			}
-			case BRACKET_SEP:
-			{
-				if( bracket_count == 1 )
-					last_sep = pos;
-			}
-		}
-	}
-
-	if( bracket_count > 0 )
-	{
-		if( !(flags & ACCEPT_INCOMPLETE) )
-		{
-			syntax_error = true;
-		}
-		else
-		{
-            wcstring mod;
-			if( last_sep )
-			{
-				mod.append( in, bracket_begin-in+1 );
-				mod.append( last_sep+1 );
-				mod.push_back( BRACKET_END );
-			}
-			else
-			{
-                mod.append(in);
-                mod.push_back(BRACKET_END);
-			}
-
-			return expand_brackets( parser, mod, 1, out );
-		}
-	}
-
-	if( syntax_error )
-	{
-		parser.error( SYNTAX_ERROR,
-			   -1,
-			   _(L"Mismatched brackets") );
-		return 0;
-	}
-
-	if( bracket_begin == 0 )
-	{
-		append_completion(out, in);
-		return 1;
-	}
-
-	len1 = (bracket_begin-in);
-	len2 = wcslen(bracket_end)-1;
-	tot_len = len1+len2;
-	item_begin = bracket_begin+1;
-	for( pos=(bracket_begin+1); 1; pos++ )
-	{
-		if( bracket_count == 0 )
-		{
-			if( (*pos == BRACKET_SEP) || (pos==bracket_end) )
-			{
-                assert(pos >= item_begin);
-				size_t item_len = pos-item_begin;
-                
-                wcstring whole_item;
-                whole_item.reserve(tot_len + item_len + 2);
-                whole_item.append(in, len1);
-                whole_item.append(item_begin, item_len);
-                whole_item.append(bracket_end + 1);
-                expand_brackets( parser, whole_item, flags, out );
-                
-				item_begin = pos+1;
-				if( pos == bracket_end )
-					break;
-			}
-		}
-
-		if( *pos == BRACKET_BEGIN )
-		{
-			bracket_count++;
-		}
-
-		if( *pos == BRACKET_END )
-		{
-			bracket_count--;
-		}
-	}
-	return 1;
-}
-
-/**
  Perform cmdsubst expansion
  */
 static int expand_cmdsubst( parser_t &parser, const wcstring &input, std::vector<completion_t> &outList )
@@ -1616,11 +1443,7 @@ int expand_string( const wcstring &input, std::vector<completion_t> &output, exp
     for( i=0; i < in->size(); i++ )
     {
         wcstring next = in->at(i).completion;
-        
-        if( !expand_brackets( parser, next, flags, *out ))
-        {
-            return EXPAND_ERROR;
-        }
+		append_completion(*out, next.c_str());
     }
     in->clear();
     

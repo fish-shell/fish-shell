@@ -81,21 +81,9 @@ enum
 	/** Character rpresenting variable expansion into a single element*/
 	VARIABLE_EXPAND_SINGLE,
 
-	/** Character representing the start of a bracket expansion */
-	BRACKET_BEGIN,
-
-	/** Character representing the end of a bracket expansion */
-	BRACKET_END,
-
-	/** Character representing separation between two bracket elements */
-	BRACKET_SEP,
-	/**
-	   Separate subtokens in a token with this character. 
-	*/
+	/** Separate subtokens in a token with this character.  */
 	INTERNAL_SEPARATOR,
-
-}
-	;
+};
 
 
 /**

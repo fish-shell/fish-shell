@@ -18,7 +18,7 @@ function __terlar_git_prompt --description 'Write out the git prompt'
 
   echo -n '|'
 
-  set -l index (git status --porcelain ^/dev/null|cut -c 1-2|uniq)
+  set -l index (git status --porcelain ^/dev/null|cut -c 1-2|sort -u)
 
   if test -z "$index"
     set_color $fish_color_git_clean
@@ -42,7 +42,7 @@ function __terlar_git_prompt --description 'Write out the git prompt'
       case 'R '               ; set renamed
       case 'C '               ; set copied
       case 'D ' ' D'          ; set deleted
-      case '??'               ; set untracked
+      case '\?\?'             ; set untracked
       case 'U*' '*U' 'DD' 'AA'; set unmerged
     end
   end

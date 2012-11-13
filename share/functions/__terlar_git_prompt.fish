@@ -10,6 +10,16 @@ set -gx fish_color_git_deleted red
 set -gx fish_color_git_untracked yellow
 set -gx fish_color_git_unmerged red
 
+set -gx fish_prompt_git_status_added '✚'
+set -gx fish_prompt_git_status_modified '*'
+set -gx fish_prompt_git_status_renamed '➜'
+set -gx fish_prompt_git_status_copied '⇒'
+set -gx fish_prompt_git_status_deleted '✖'
+set -gx fish_prompt_git_status_untracked '?'
+set -gx fish_prompt_git_status_unmerged '!'
+
+set -gx fish_prompt_git_status_order added modified renamed copied deleted untracked unmerged
+
 function __terlar_git_prompt --description 'Write out the git prompt'
   set -l branch (git rev-parse --abbrev-ref HEAD ^/dev/null)
   if test -z $branch
@@ -27,7 +37,7 @@ function __terlar_git_prompt --description 'Write out the git prompt'
     return
   end
 
-  if printf '%s\n' $index|grep '^[ADRCM]' >/dev/null
+  if printf '%s\n' $index|grep '^[AMRCD]' >/dev/null
     set_color $fish_color_git_staged
   else
     set_color $fish_color_git_dirty
@@ -35,45 +45,24 @@ function __terlar_git_prompt --description 'Write out the git prompt'
 
   echo -n $branch'⚡'
 
+  set -l gs
   for i in $index
     switch $i
-      case 'A '               ; set added
-      case 'M ' ' M'          ; set modified
-      case 'R '               ; set renamed
-      case 'C '               ; set copied
-      case 'D ' ' D'          ; set deleted
-      case '\?\?'             ; set untracked
-      case 'U*' '*U' 'DD' 'AA'; set unmerged
+      case 'A '               ; set gs $gs added
+      case 'M ' ' M'          ; set gs $gs modified
+      case 'R '               ; set gs $gs renamed
+      case 'C '               ; set gs $gs copied
+      case 'D ' ' D'          ; set gs $gs deleted
+      case '\?\?'             ; set gs $gs untracked
+      case 'U*' '*U' 'DD' 'AA'; set gs $gs unmerged
     end
   end
 
-  if set -q added
-    set_color $fish_color_git_added
-    echo -n '✚'
-  end
-  if set -q modified
-    set_color $fish_color_git_modified
-    echo -n '*'
-  end
-  if set -q renamed
-    set_color $fish_color_git_renamed
-    echo -n '➜'
-  end
-  if set -q copied
-    set_color $fish_color_git_copied
-    echo -n '⇒'
-  end
-  if set -q deleted
-    set_color $fish_color_git_deleted
-    echo -n '✖'
-  end
-  if set -q untracked
-    set_color $fish_color_git_untracked
-    echo -n '?'
-  end
-  if set -q unmerged
-    set_color $fish_color_git_unmerged
-    echo -n '!'
+  for i in $fish_prompt_git_status_order
+    if contains $i in $gs
+      eval 'set_color $fish_color_git_'$i
+      eval 'echo -n $fish_prompt_git_status_'$i
+    end
   end
 
   set_color normal

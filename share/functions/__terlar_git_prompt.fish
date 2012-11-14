@@ -60,8 +60,11 @@ function __terlar_git_prompt --description 'Write out the git prompt'
 
   for i in $fish_prompt_git_status_order
     if contains $i in $gs
-      eval 'set_color $fish_color_git_'$i
-      eval 'echo -n $fish_prompt_git_status_'$i
+      set -l color_name fish_color_git_$i
+      set -l status_name fish_prompt_git_status_$i
+
+      set_color $$color_name
+      echo -n $$status_name
     end
   end
 

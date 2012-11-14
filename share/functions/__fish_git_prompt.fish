@@ -332,7 +332,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 		set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
 	end
 	set -l f "$w$i$s$u"
-	set -l format $args[1]
+	set -l format $argv[1]
 	if test -z "$format"
 		set format " (%s)"
 	end

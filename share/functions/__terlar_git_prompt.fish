@@ -37,16 +37,14 @@ function __terlar_git_prompt --description 'Write out the git prompt'
     return
   end
 
-  if printf '%s\n' $index|grep '^[AMRCD]' >/dev/null
-    set_color $fish_color_git_staged
-  else
-    set_color $fish_color_git_dirty
-  end
-
-  echo -n $branch'⚡'
-
   set -l gs
+  set -l staged
+
   for i in $index
+    if echo $i | grep '^[AMRCD]' >/dev/null
+      set staged 1
+    end
+
     switch $i
       case 'A '               ; set gs $gs added
       case 'M ' ' M'          ; set gs $gs modified
@@ -57,6 +55,14 @@ function __terlar_git_prompt --description 'Write out the git prompt'
       case 'U*' '*U' 'DD' 'AA'; set gs $gs unmerged
     end
   end
+
+  if set -q staged[1]
+    set_color $fish_color_git_staged
+  else
+    set_color $fish_color_git_dirty
+  end
+
+  echo -n $branch'⚡'
 
   for i in $fish_prompt_git_status_order
     if contains $i in $gs

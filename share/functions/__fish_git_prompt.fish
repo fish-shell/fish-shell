@@ -516,12 +516,12 @@ function __fish_git_prompt_repaint_color $varargs --description "Event handler, 
 	if status --is-interactive
 		set -l var $argv[3]
 		set -e _$var
-		set -e _{$var}_done
+		set -e _(echo $var)_done
 		if test $var = __fish_git_prompt_color
 			# reset all the other colors too
 			for name in prefix suffix bare merging branch dirtystate stagedstate invalidstate stashstate untrackedfiles upstream
 				set -e ___fish_git_prompt_color_$name
-				set -e ___fish_git_prompt_color_{$name}_done
+				set -e ___fish_git_prompt_color_(echo $name)_done
 			end
 		end
 		commandline -f repaint ^/dev/null

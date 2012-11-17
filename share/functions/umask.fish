@@ -118,15 +118,15 @@ function __fish_umask_print_symbolic
 		set val (echo $umask|cut -c $i)
 
 		if contains $val 0 1 2 3
-			set res {$res}r
+			set res (echo $res)r
 		end
 
 		if contains $val 0 1 4 5
-			set res {$res}w
+			set res (echo $res)w
 		end
 
 		if contains $val 0 2 4 6
-			set res {$res}x
+			set res (echo $res)x
 		end
 
 	end

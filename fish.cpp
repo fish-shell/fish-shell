@@ -444,6 +444,7 @@ int main( int argc, char **argv )
 
 	set_main_thread();
     setup_fork_guards();
+    save_term_foreground_process_group();
     
 	wsetlocale( LC_ALL, L"" );
 	is_interactive_session=1;
@@ -468,7 +469,6 @@ int main( int argc, char **argv )
 	proc_init();	
 	event_init();	
 	wutil_init();
-	//parser_init();
 	builtin_init();
 	function_init();
 	env_init(&paths);
@@ -554,6 +554,7 @@ int main( int argc, char **argv )
 	
 	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
 	
+    restore_term_foreground_process_group();
 	history_destroy();
 	proc_destroy();
 	builtin_destroy();

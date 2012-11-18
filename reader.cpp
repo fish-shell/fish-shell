@@ -1666,6 +1666,7 @@ static void reader_interactive_init()
 
 	common_handle_winch(0);
 
+
     if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
     {
         wperror(L"tcsetattr");
@@ -2445,6 +2446,7 @@ static void handle_end_loop()
 	}
 	else
 	{
+        
         /* PCA: we used to only hangup jobs if stdin was closed. This prevented child processes from exiting. It's unclear to my why it matters if stdin is closed, but it seems to me if we're forcing an exit, we definitely want to hang up our processes.
         
             See https://github.com/fish-shell/fish-shell/issues/138

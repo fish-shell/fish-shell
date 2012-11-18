@@ -1917,6 +1917,9 @@ void configure_thread_assertions_for_testing(void) {
 /* Notice when we've forked */
 static pid_t initial_pid = 0;
 
+/* Be able to restore the term's foreground process group */
+static pid_t initial_foreground_process_group = -1;
+
 bool is_forked_child(void) {
     /* Just bail if nobody's called setup_fork_guards - e.g. fishd */
     if (! initial_pid) return false;
@@ -1929,9 +1932,23 @@ bool is_forked_child(void) {
     return is_child_of_fork;
 }
 
-void setup_fork_guards(void) {
+void setup_fork_guards(void)
+{
     /* Notice when we fork by stashing our pid. This seems simpler than pthread_atfork(). */
     initial_pid = getpid();
+}
+
+void save_term_foreground_process_group(void)
+{
+    initial_foreground_process_group = tcgetpgrp(STDIN_FILENO);
+}
+
+void restore_term_foreground_process_group(void)
+{
+    if (initial_foreground_process_group != -1)
+    {
+        tcsetpgrp(STDIN_FILENO, initial_foreground_process_group);
+    }
 }
 
 bool is_main_thread() {

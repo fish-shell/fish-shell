@@ -458,6 +458,14 @@ static void handle_hup( int sig, siginfo_t *info, void *context )
 	}	
 }
 
+/** Handle sigterm. The only thing we do is restore the front process ID, then die. */
+static void handle_term( int sig, siginfo_t *info, void *context )
+{
+    restore_term_foreground_process_group();
+    signal(SIGTERM, SIG_DFL);
+    raise(SIGTERM);
+}
+
 /**
    Interactive mode ^C handler. Respond to int signal by setting
    interrupted-flag and stopping all loops and conditionals.
@@ -568,6 +576,15 @@ void signal_set_handlers()
 		act.sa_flags = SA_SIGINFO;
 		act.sa_sigaction= &handle_hup;
 		if( sigaction( SIGHUP, &act, 0 ) )
+		{
+			wperror( L"sigaction" );
+			FATAL_EXIT();
+		}
+        
+		// SIGTERM restores the terminal controlling process before dying
+		act.sa_flags = SA_SIGINFO;
+		act.sa_sigaction= &handle_term;
+		if( sigaction( SIGTERM, &act, 0 ) )
 		{
 			wperror( L"sigaction" );
 			FATAL_EXIT();

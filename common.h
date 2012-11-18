@@ -729,6 +729,10 @@ void configure_thread_assertions_for_testing();
 /** Set up a guard to complain if we try to do certain things (like take a lock) after calling fork */
 void setup_fork_guards(void);
 
+/** Save the value of tcgetpgrp so we can restore it on exit */
+void save_term_foreground_process_group(void);
+void restore_term_foreground_process_group(void);
+
 /** Return whether we are the child of a fork */
 bool is_forked_child(void);
 void assert_is_not_forked_child(const char *who);

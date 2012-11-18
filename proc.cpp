@@ -350,7 +350,8 @@ int job_signal( job_t *j, int signal )
 
 /**
    Store the status of the process pid that was returned by waitpid.
-   Return 0 if all went well, nonzero otherwise.  
+   Return 0 if all went well, nonzero otherwise. 
+   This is called from a signal handler.
 */
 static void mark_process_status( const job_t *j,
 								 process_t *p,

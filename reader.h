@@ -177,6 +177,10 @@ void reader_set_left_prompt( const wcstring &prompt );
 */
 void reader_set_right_prompt( const wcstring &prompt );
 
+
+/** Sets whether autosuggesting is allowed. */
+void reader_set_allow_autosuggesting(bool flag);
+
 /**
    Returns true if the shell is exiting, 0 otherwise. 
 */

@@ -201,7 +201,10 @@ class reader_data_t
     /** String containing the autosuggestion */
     wcstring autosuggestion;
 
-    /** When backspacing, we suppress autosuggestions */
+    /** Whether autosuggesting is allowed at all */
+    bool allow_autosuggestion;
+
+    /** When backspacing, we temporarily suppress autosuggestions */
     bool suppress_autosuggestion;
 
 	/** The representation of the current screen contents */
@@ -319,6 +322,7 @@ class reader_data_t
     
     /** Constructor */
     reader_data_t() :
+        allow_autosuggestion(0),
         suppress_autosuggestion(0),
         history(0),
         token_history_pos(0),
@@ -1237,7 +1241,7 @@ static void update_autosuggestion(void) {
     }
 #else
     data->autosuggestion.clear();
-    if (! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end()) {
+    if (data->allow_autosuggestion && ! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end()) {
         autosuggestion_context_t *ctx = new autosuggestion_context_t(data->history, data->command_line, data->buff_pos);
         iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
     }
@@ -2239,6 +2243,11 @@ void reader_set_right_prompt(const wcstring &new_prompt)
     data->right_prompt = new_prompt;
 }
 
+void reader_set_allow_autosuggesting(bool flag)
+{
+    data->allow_autosuggestion = flag;
+}
+
 void reader_set_complete_function( complete_function_t f )
 {
 	data->complete_func = f;
@@ -2446,7 +2455,6 @@ static void handle_end_loop()
 	}
 	else
 	{
-        
         /* PCA: we used to only hangup jobs if stdin was closed. This prevented child processes from exiting. It's unclear to my why it matters if stdin is closed, but it seems to me if we're forcing an exit, we definitely want to hang up our processes.
         
             See https://github.com/fish-shell/fish-shell/issues/138
@@ -2470,8 +2478,6 @@ static void handle_end_loop()
 	}
 }
 
-
-
 /**
    Read interactively. Read input from stdin while providing editing
    facilities.
@@ -2482,7 +2488,8 @@ static int read_i()
 	reader_set_complete_function( &complete );
 	reader_set_highlight_function( &highlight_shell );
 	reader_set_test_function( &reader_shell_test );
-    reader_import_history_if_necessary();
+	reader_set_allow_autosuggesting(true);
+	reader_import_history_if_necessary();
     
 	parser_t &parser = parser_t::principal_parser();
     

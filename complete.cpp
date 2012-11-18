@@ -227,7 +227,11 @@ static bool compare_completions_by_order(const completion_entry_t *p1, const com
 /** The lock that guards the list of completion entries */
 static pthread_mutex_t completion_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/** The lock that guards the options list of individual completion entries. If both completion_lock and completion_entry_lock are to be taken, completion_lock must be taken first. */
+/**
+ * The lock that guards the options list of individual completion entries.
+ * If both completion_lock and completion_entry_lock are to be taken,
+ * completion_lock must be taken first.
+ */
 static pthread_mutex_t completion_entry_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
@@ -488,38 +492,37 @@ void complete_set_authoritative( const wchar_t *cmd, bool cmd_is_path, bool auth
 }
 
 
-void complete_add( const wchar_t *cmd,
-           bool cmd_is_path,
-           wchar_t short_opt,
-           const wchar_t *long_opt,
-           int old_mode,
-           int result_mode,
-           const wchar_t *condition,
-           const wchar_t *comp,
-           const wchar_t *desc,
-           complete_flags_t flags )
-{
+void complete_add(const wchar_t *cmd,
+    bool cmd_is_path,
+    wchar_t short_opt,
+    const wchar_t *long_opt,
+    int old_mode,
+    int result_mode,
+    const wchar_t *condition,
+    const wchar_t *comp,
+    const wchar_t *desc,
+    complete_flags_t flags) {
   CHECK( cmd, );
 
-    /* Lock the lock that allows us to edit the completion entry list */
-    scoped_lock lock(completion_lock);
+  /* Lock the lock that allows us to edit the completion entry list */
+  scoped_lock lock(completion_lock);
 
-    /* Lock the lock that allows us to edit individual completion entries */
-    scoped_lock lock2(completion_entry_lock);
+  /* Lock the lock that allows us to edit individual completion entries */
+  scoped_lock lock2(completion_entry_lock);
 
   completion_entry_t *c;
   c = complete_get_exact_entry( cmd, cmd_is_path );
 
-    /* Create our new option */
-    complete_entry_opt_t opt;
+  /* Create our new option */
+  complete_entry_opt_t opt;
   if( short_opt != L'\0' )
   {
     int len = 1 + ((result_mode & NO_COMMON) != 0);
 
-        c->get_short_opt_str().push_back(short_opt);
+    c->get_short_opt_str().push_back(short_opt);
     if( len == 2 )
     {
-            c->get_short_opt_str().push_back(L':');
+      c->get_short_opt_str().push_back(L':');
     }
   }
 
@@ -527,13 +530,13 @@ void complete_add( const wchar_t *cmd,
   opt.result_mode = result_mode;
   opt.old_mode=old_mode;
 
-    if (comp) opt.comp = comp;
-    if (condition) opt.condition = condition;
-    if (long_opt) opt.long_opt = long_opt;
-    if (desc) opt.desc = desc;
+  if (comp) opt.comp = comp;
+  if (condition) opt.condition = condition;
+  if (long_opt) opt.long_opt = long_opt;
+  if (desc) opt.desc = desc;
   opt.flags = flags;
 
-    c->add_option(opt);
+  c->add_option(opt);
 }
 
 /**

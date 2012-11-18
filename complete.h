@@ -18,53 +18,53 @@
 #include "util.h"
 #include "common.h"
 /**
-  Use all completions
-*/
+ * Use all completions
+ */
 #define SHARED 0
 /**
-  Do not use file completion
-*/
+ * Do not use file completion
+ */
 #define NO_FILES 1
 /**
-  Require a parameter after completion
-*/
+ * Require a parameter after completion
+ */
 #define NO_COMMON 2
 /**
-  Only use the argument list specifies with completion after
-  option. This is the same as (NO_FILES & NO_COMMON)
-*/
+ * Only use the argument list specifies with completion after
+ * option. This is the same as (NO_FILES & NO_COMMON)
+ */
 #define EXCLUSIVE 3
 
 /**
-  Command is a path
-*/
+ * Command is a path
+ */
 #define PATH 1
 /**
-  Command is not a path
-*/
+ * Command is not a path
+ */
 #define COMMAND 0
 
 /**
-  Separator between completion and description
-*/
+ * Separator between completion and description
+ */
 #define COMPLETE_SEP L'\004'
 
 /**
-  Separator between completion and description
-*/
+ * Separator between completion and description
+ */
 #define COMPLETE_SEP_STR L"\004"
 
 /**
-   Separator between completion items in fish_pager. This is used for
-   completion grouping, e.g. when putting completions with the same
-   descriptions on the same line.
-*/
+ * Separator between completion items in fish_pager. This is used for
+ * completion grouping, e.g. when putting completions with the same
+ * descriptions on the same line.
+ */
 #define COMPLETE_ITEM_SEP L'\uf500'
 
 /**
-   Character that separates the completion and description on
-   programmable completions
-*/
+ * Character that separates the completion and description on
+ * programmable completions
+ */
 #define PROG_COMPLETE_SEP L'\t'
 
 enum {
@@ -183,21 +183,24 @@ void sort_completions( std::vector<completion_t> &completions);
 
   \param cmd Command to complete.
   \param cmd_type If cmd_type is PATH, cmd will be interpreted as the absolute
-  path of the program (optionally containing wildcards), otherwise it
-  will be interpreted as the command name.
-  \param short_opt The single character name of an option. (-a is a short option, --all and  -funroll are long options)
-  \param long_opt The multi character name of an option. (-a is a short option, --all and  -funroll are long options)
+      path of the program (optionally containing wildcards), otherwise it
+      will be interpreted as the command name.
+  \param short_opt The single character name of an option. (-a is a short option,
+      --all and  -funroll are long options)
+  \param long_opt The multi character name of an option. (-a is a short option,
+      --all and  -funroll are long options)
   \param long_mode Whether to use old style, single dash long options.
   \param result_mode Whether to search further completions when this
-  completion has been succesfully matched. If result_mode is SHARED,
-  any other completions may also be used. If result_mode is NO_FILES,
-  file completion should not be used, but other completions may be
-  used. If result_mode is NO_COMMON, on option may follow it - only a
-  parameter. If result_mode is EXCLUSIVE, no option may follow it, and
-  file completion is not performed.
+      completion has been succesfully matched. If result_mode is SHARED,
+      any other completions may also be used. If result_mode is NO_FILES,
+      file completion should not be used, but other completions may be
+      used. If result_mode is NO_COMMON, on option may follow it - only a
+      parameter. If result_mode is EXCLUSIVE, no option may follow it, and
+      file completion is not performed.
   \param comp A space separated list of completions which may contain subshells.
   \param desc A description of the completion.
-  \param condition a command to be run to check it this completion should be used. If \c condition is empty, the completion is always used.
+  \param condition a command to be run to check it this completion should be used.
+      If \c condition is empty, the completion is always used.
   \param flags A set of completion flags
 */
 void complete_add( const wchar_t *cmd,
@@ -226,8 +229,14 @@ void complete_remove( const wchar_t *cmd,
                       const wchar_t *long_opt );
 
 
-/** Find all completions of the command cmd, insert them into out. If to_load is not NULL, append all commands that we would autoload, but did not (presumably because this is not the main thread) */
-void complete( const wcstring &cmd, std::vector<completion_t> &comp, complete_type_t type, wcstring_list_t *to_load = NULL );
+/** Find all completions of the command cmd, insert them into out. If to_load is
+ * not NULL, append all commands that we would autoload, but did not (presumably
+ * because this is not the main thread)
+ */
+void complete(const wcstring &cmd,
+              std::vector<completion_t> &comp,
+              complete_type_t type,
+              wcstring_list_t *to_load = NULL);
 
 /**
    Print a list of all current completions into the string.
@@ -260,7 +269,9 @@ bool complete_is_valid_argument( const wcstring &str,
    with internal dependencies.
 
    \param cmd the command for which to load command-specific completions
-   \param reload should the commands completions be reloaded, even if they where previously loaded. (This is set to true on actual completions, so that changed completion are updated in running shells)
+   \param reload should the commands completions be reloaded, even if they where
+      previously loaded. (This is set to true on actual completions, so that
+      changed completion are updated in running shells)
 */
 void complete_load( const wcstring &cmd, bool reload );
 

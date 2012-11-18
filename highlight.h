@@ -1,5 +1,5 @@
 /** \file highlight.h
-	Prototypes for functions for syntax highlighting
+  Prototypes for functions for syntax highlighting
 */
 
 #ifndef FISH_HIGHLIGHT_H
@@ -59,7 +59,7 @@
 /**
    Internal value representing highlighting of an IO redirection
 */
-#define HIGHLIGHT_REDIRECTION 0x800 
+#define HIGHLIGHT_REDIRECTION 0x800
 /**
    Internal value representing highlighting a potentially valid path
 */
@@ -79,7 +79,7 @@ struct file_detection_context_t;
    for each character in buff.
 
    \param buff The buffer on which to perform syntax highlighting
-   \param color The array in wchich to store the color codes. The first 8 bits are used for fg color, the next 8 bits for bg color. 
+   \param color The array in wchich to store the color codes. The first 8 bits are used for fg color, the next 8 bits for bg color.
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
@@ -91,7 +91,7 @@ void highlight_shell( const wcstring &buffstr, std::vector<int> &color, size_t p
    for each character in buff.
 
    \param buff The buffer on which to perform syntax highlighting
-   \param color The array in wchich to store the color codes. The first 8 bits are used for fg color, the next 8 bits for bg color. 
+   \param color The array in wchich to store the color codes. The first 8 bits are used for fg color, the next 8 bits for bg color.
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
@@ -101,7 +101,7 @@ void highlight_universal( const wcstring &buffstr, std::vector<int> &color, size
    Translate from HIGHLIGHT_* to FISH_COLOR_* according to environment
    variables. Defaults to FISH_COLOR_NORMAL.
 
-   Example: 
+   Example:
 
    If the environment variable FISH_FISH_COLOR_ERROR is set to 'red', a
    call to highlight_get_color( HIGHLIGHT_ERROR) will return
@@ -125,7 +125,7 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 enum {
     /* The path must be to a directory */
     PATH_REQUIRE_DIR = 1 << 0,
-    
+
     /* Expand any leading tilde in the path */
     PATH_EXPAND_TILDE = 1 << 1
 };

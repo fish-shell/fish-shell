@@ -48,7 +48,7 @@ complete -c latexmk -o print=ps     -d 'when file is to be printed, print the ps
 complete -c latexmk -o print=pdf    -d 'when file is to be printed, print the pdf file'
 complete -c latexmk -o pv   -d 'preview document'
 complete -c latexmk -o pv-  -d 'turn off preview mode'
-complete -c latexmk -o pvc  -d 'preview document and continuously update' 
+complete -c latexmk -o pvc  -d 'preview document and continuously update'
 complete -c latexmk -o pvc- -d 'turn off -pvc'
 complete -c latexmk -o quiet -d 'silence progress messages from called programs'
 complete -c latexmk -o r -r  -d 'Read custom RC file'

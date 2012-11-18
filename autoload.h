@@ -25,7 +25,7 @@ struct file_access_attempt_t {
 file_access_attempt_t access_file(const wcstring &path, int mode);
 
 struct autoload_function_t : public lru_node_t
-{   
+{
     autoload_function_t(const wcstring &key) : lru_node_t(key), access(), is_loaded(false), is_placeholder(false), is_internalized(false) { }
     file_access_attempt_t access; /** The last access attempt */
     bool is_loaded; /** Whether we have actually loaded this function */
@@ -48,61 +48,61 @@ private:
 
     /** The environment variable name */
     const wcstring env_var_name;
-    
+
     /** Builtin script array */
     const struct builtin_script_t *const builtin_scripts;
-    
+
     /** Builtin script count */
     const size_t builtin_script_count;
 
     /** The path from which we most recently autoloaded */
     wcstring last_path;
 
-	/**
-	   A table containing all the files that are currently being
-	   loaded. This is here to help prevent recursion.
-	*/
+  /**
+     A table containing all the files that are currently being
+     loaded. This is here to help prevent recursion.
+  */
     std::set<wcstring> is_loading_set;
 
     bool is_loading(const wcstring &name) const {
         return is_loading_set.find(name) != is_loading_set.end();
     }
-    
+
     void remove_all_functions(void) {
         this->evict_all_nodes();
     }
-    
+
     bool locate_file_and_maybe_load_it( const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list );
-    
+
     virtual void node_was_evicted(autoload_function_t *node);
 
     autoload_function_t *get_autoloaded_function_with_creation(const wcstring &cmd, bool allow_eviction);
-    
-    protected:    
+
+    protected:
     /** Overridable callback for when a command is removed */
     virtual void command_removed(const wcstring &cmd) { }
-    
+
     public:
-    
+
     /** Create an autoload_t for the given environment variable name */
     autoload_t(const wcstring &env_var_name_var, const builtin_script_t *scripts, size_t script_count );
-    
+
     /** Destructor */
     virtual ~autoload_t();
-    
+
     /**
        Autoload the specified file, if it exists in the specified path. Do
        not load it multiple times unless it's timestamp changes or
        parse_util_unload is called.
 
-       Autoloading one file may unload another. 
+       Autoloading one file may unload another.
 
        \param cmd the filename to search for. The suffix '.fish' is always added to this name
        \param on_unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
        \param reload wheter to recheck file timestamps on already loaded files
     */
     int load( const wcstring &cmd, bool reload );
-    
+
     /** Check whether we have tried loading the given command. Does not do any I/O. */
     bool has_tried_loading( const wcstring &cmd );
 
@@ -115,12 +115,12 @@ private:
        \return non-zero if the file was removed, zero if the file had not yet been loaded
     */
     int unload( const wcstring &cmd );
-    
+
     /**
        Unloads all files.
     */
     void unload_all( );
-    
+
     /** Check whether the given command could be loaded, but do not load it. */
     bool can_load( const wcstring &cmd, const env_vars_snapshot_t &vars );
 

@@ -85,7 +85,7 @@ time the original barrier request was sent have been received.
 /**
    Maximum length of socket filename
 */
-#ifndef UNIX_PATH_MAX 
+#ifndef UNIX_PATH_MAX
 #define UNIX_PATH_MAX 100
 #endif
 
@@ -153,47 +153,47 @@ static int quit=0;
 */
 static char *get_socket_filename()
 {
-	char *name;
-	const char *dir = getenv( "FISHD_SOCKET_DIR" );
-	char *uname = getenv( "USER" );
+  char *name;
+  const char *dir = getenv( "FISHD_SOCKET_DIR" );
+  char *uname = getenv( "USER" );
 
-	if( dir == NULL )
-	{
-		dir = "/tmp";
-	}
+  if( dir == NULL )
+  {
+    dir = "/tmp";
+  }
 
-	if( uname == NULL )
-	{
-		struct passwd *pw;
-		pw = getpwuid( getuid() );
-		uname = strdup( pw->pw_name );
-	}
+  if( uname == NULL )
+  {
+    struct passwd *pw;
+    pw = getpwuid( getuid() );
+    uname = strdup( pw->pw_name );
+  }
 
-	name = (char *)malloc( strlen(dir)+ strlen(uname)+ strlen(SOCK_FILENAME) + 2 );
-	if( name == NULL )
-	{
-		wperror( L"get_socket_filename" );
-		exit( EXIT_FAILURE );
-	}
-	strcpy( name, dir );
-	strcat( name, "/" );
-	strcat( name, SOCK_FILENAME );
-	strcat( name, uname );
+  name = (char *)malloc( strlen(dir)+ strlen(uname)+ strlen(SOCK_FILENAME) + 2 );
+  if( name == NULL )
+  {
+    wperror( L"get_socket_filename" );
+    exit( EXIT_FAILURE );
+  }
+  strcpy( name, dir );
+  strcat( name, "/" );
+  strcat( name, SOCK_FILENAME );
+  strcat( name, uname );
 
-	if( strlen( name ) >= UNIX_PATH_MAX )
-	{
-		debug( 1, L"Filename too long: '%s'", name );
-		exit( EXIT_FAILURE );
-	}
-	return name;
+  if( strlen( name ) >= UNIX_PATH_MAX )
+  {
+    debug( 1, L"Filename too long: '%s'", name );
+    exit( EXIT_FAILURE );
+  }
+  return name;
 }
 
 /**
-   Signal handler for the term signal. 
+   Signal handler for the term signal.
 */
 static void handle_term( int signal )
 {
-	quit=1;
+  quit=1;
 }
 
 
@@ -214,24 +214,24 @@ static void handle_term( int signal )
  */
 static void sprint_rand_digits( char *str, int maxlen )
 {
-	int i, max;
-	struct timeval tv;
-	
-	/* 
+  int i, max;
+  struct timeval tv;
+
+  /*
      Seed the pseudo-random generator based on time - this assumes
      that consecutive calls to gettimeofday will return different values
      and ignores errors returned by gettimeofday.
      Cast to unsigned so that wrapping occurs on overflow as per ANSI C.
      */
-	(void)gettimeofday( &tv, NULL );
+  (void)gettimeofday( &tv, NULL );
     unsigned long long seed = tv.tv_sec + tv.tv_usec * 1000000ULL;
-	srand( (unsigned int)seed );
-	max = (int)(1 + (maxlen - 1) * (rand() / (RAND_MAX + 1.0)));
-	for( i = 0; i < max; i++ )
-	{
-		str[i] = '0' + 10 * (rand() / (RAND_MAX + 1.0));
-	}
-	str[i] = 0;
+  srand( (unsigned int)seed );
+  max = (int)(1 + (maxlen - 1) * (rand() / (RAND_MAX + 1.0)));
+  for( i = 0; i < max; i++ )
+  {
+    str[i] = '0' + 10 * (rand() / (RAND_MAX + 1.0));
+  }
+  str[i] = 0;
 }
 
 
@@ -239,174 +239,174 @@ static void sprint_rand_digits( char *str, int maxlen )
  Generate a filename unique in an NFS namespace by creating a copy of str and
  appending .{hostname}.{pid} to it.  If gethostname() fails then a pseudo-
  random string is substituted for {hostname} - the randomness of the string
- should be strong enough across different machines.  The main assumption 
+ should be strong enough across different machines.  The main assumption
  though is that gethostname will not fail and this is just a "safe enough"
  fallback.
  The memory returned should be freed using free().
  */
 static std::string gen_unique_nfs_filename( const char *filename )
 {
-	char hostname[HOST_NAME_MAX + 1];    
+  char hostname[HOST_NAME_MAX + 1];
     char pid_str[256];
     snprintf(pid_str, sizeof pid_str, "%ld", (long)getpid());
-	
-	if ( gethostname( hostname, sizeof hostname ) != 0 )
+
+  if ( gethostname( hostname, sizeof hostname ) != 0 )
     {
-		sprint_rand_digits( hostname, HOST_NAME_MAX );
-	}
-    
+    sprint_rand_digits( hostname, HOST_NAME_MAX );
+  }
+
     std::string newname(filename);
-	newname.push_back('.');
+  newname.push_back('.');
     newname.append(hostname);
     newname.push_back('.');
-    newname.append(pid_str);    
-	return newname;
+    newname.append(pid_str);
+  return newname;
 }
 
 
 /**
- The number of milliseconds to wait between polls when attempting to acquire 
+ The number of milliseconds to wait between polls when attempting to acquire
  a lockfile
  */
 #define LOCKPOLLINTERVAL 10
 
 /**
- Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL 
- milliseconds between polls and timing out after timeout seconds, 
+ Attempt to acquire a lock based on a lockfile, waiting LOCKPOLLINTERVAL
+ milliseconds between polls and timing out after timeout seconds,
  thereafter forcibly attempting to obtain the lock if force is non-zero.
  Returns 1 on success, 0 on failure.
  To release the lock the lockfile must be unlinked.
- A unique temporary file named by appending characters to the lockfile name 
+ A unique temporary file named by appending characters to the lockfile name
  is used; any pre-existing file of the same name is subject to deletion.
  */
 static int acquire_lock_file( const char *lockfile, const int timeout, int force )
 {
-	int fd, timed_out = 0;
-	int ret = 0; /* early exit returns failure */
-	struct timespec pollint;
-	struct timeval start, end;
-	double elapsed;
-	struct stat statbuf;
-    
-	/*
+  int fd, timed_out = 0;
+  int ret = 0; /* early exit returns failure */
+  struct timespec pollint;
+  struct timeval start, end;
+  double elapsed;
+  struct stat statbuf;
+
+  /*
      (Re)create a unique file and check that it has one only link.
      */
-	const std::string linkfile_str = gen_unique_nfs_filename( lockfile );
+  const std::string linkfile_str = gen_unique_nfs_filename( lockfile );
     const char * const linkfile = linkfile_str.c_str();
-	(void)unlink( linkfile );
+  (void)unlink( linkfile );
     /* OK to not use CLO_EXEC here because fishd is single threaded */
-	if( ( fd = open( linkfile, O_CREAT|O_RDONLY, 0600 ) ) == -1 )
-	{
-		debug( 1, L"acquire_lock_file: open: %s", strerror( errno ) );
-		goto done;
-	}
-	/*
+  if( ( fd = open( linkfile, O_CREAT|O_RDONLY, 0600 ) ) == -1 )
+  {
+    debug( 1, L"acquire_lock_file: open: %s", strerror( errno ) );
+    goto done;
+  }
+  /*
      Don't need to check exit status of close on read-only file descriptors
      */
-	close( fd );
-	if( stat( linkfile, &statbuf ) != 0 )
-	{
-		debug( 1, L"acquire_lock_file: stat: %s", strerror( errno ) );
-		goto done;
-	}
-	if ( statbuf.st_nlink != 1 )
-	{
-		debug( 1, L"acquire_lock_file: number of hardlinks on unique "
+  close( fd );
+  if( stat( linkfile, &statbuf ) != 0 )
+  {
+    debug( 1, L"acquire_lock_file: stat: %s", strerror( errno ) );
+    goto done;
+  }
+  if ( statbuf.st_nlink != 1 )
+  {
+    debug( 1, L"acquire_lock_file: number of hardlinks on unique "
               L"tmpfile is %d instead of 1.", (int)statbuf.st_nlink );
-		goto done;
-	}
-	if( gettimeofday( &start, NULL ) != 0 )
-	{
-		debug( 1, L"acquire_lock_file: gettimeofday: %s", strerror( errno ) );
-		goto done;
-	}
-	end = start;
-	pollint.tv_sec = 0;
-	pollint.tv_nsec = LOCKPOLLINTERVAL * 1000000;
-	do 
-	{
-		/*
-         Try to create a hard link to the unique file from the 
-         lockfile.  This will only succeed if the lockfile does not 
-         already exist.  It is guaranteed to provide race-free 
-         semantics over NFS which the alternative of calling 
-         open(O_EXCL|O_CREAT) on the lockfile is not.  The lock 
-         succeeds if the call to link returns 0 or the link count on 
+    goto done;
+  }
+  if( gettimeofday( &start, NULL ) != 0 )
+  {
+    debug( 1, L"acquire_lock_file: gettimeofday: %s", strerror( errno ) );
+    goto done;
+  }
+  end = start;
+  pollint.tv_sec = 0;
+  pollint.tv_nsec = LOCKPOLLINTERVAL * 1000000;
+  do
+  {
+    /*
+         Try to create a hard link to the unique file from the
+         lockfile.  This will only succeed if the lockfile does not
+         already exist.  It is guaranteed to provide race-free
+         semantics over NFS which the alternative of calling
+         open(O_EXCL|O_CREAT) on the lockfile is not.  The lock
+         succeeds if the call to link returns 0 or the link count on
          the unique file increases to 2.
          */
-		if( link( linkfile, lockfile ) == 0 ||
-           ( stat( linkfile, &statbuf ) == 0 && 
+    if( link( linkfile, lockfile ) == 0 ||
+           ( stat( linkfile, &statbuf ) == 0 &&
             statbuf.st_nlink == 2 ) )
-		{
-			/* Successful lock */
-			ret = 1;
-			break;
-		}
-		elapsed = end.tv_sec + end.tv_usec/1000000.0 - 
+    {
+      /* Successful lock */
+      ret = 1;
+      break;
+    }
+    elapsed = end.tv_sec + end.tv_usec/1000000.0 -
         ( start.tv_sec + start.tv_usec/1000000.0 );
-		/* 
-         The check for elapsed < 0 is to deal with the unlikely event 
+    /*
+         The check for elapsed < 0 is to deal with the unlikely event
          that after the loop is entered the system time is set forward
-         past the loop's end time.  This would otherwise result in a 
+         past the loop's end time.  This would otherwise result in a
          (practically) infinite loop.
          */
-		if( timed_out || elapsed >= timeout || elapsed < 0 )
-		{
-			if ( timed_out == 0 && force )
-			{
-				/*
+    if( timed_out || elapsed >= timeout || elapsed < 0 )
+    {
+      if ( timed_out == 0 && force )
+      {
+        /*
                  Timed out and force was specified - attempt to
                  remove stale lock and try a final time
                  */
-				(void)unlink( lockfile );
-				timed_out = 1;
-				continue;
-			}
-			else
-			{
-				/*
-                 Timed out and final try was unsuccessful or 
+        (void)unlink( lockfile );
+        timed_out = 1;
+        continue;
+      }
+      else
+      {
+        /*
+                 Timed out and final try was unsuccessful or
                  force was not specified
                  */
-				debug( 1, L"acquire_lock_file: timed out "
+        debug( 1, L"acquire_lock_file: timed out "
                       L"trying to obtain lockfile %s using "
                       L"linkfile %s", lockfile, linkfile );
-				break;
-			}
-		}
-		nanosleep( &pollint, NULL );
-	} while( gettimeofday( &end, NULL ) == 0 );
+        break;
+      }
+    }
+    nanosleep( &pollint, NULL );
+  } while( gettimeofday( &end, NULL ) == 0 );
 done:
-	/* The linkfile is not needed once the lockfile has been created */
-	(void)unlink( linkfile );
-	return ret;
+  /* The linkfile is not needed once the lockfile has been created */
+  (void)unlink( linkfile );
+  return ret;
 }
 
 /**
    Acquire the lock for the socket
-   Returns the name of the lock file if successful or 
+   Returns the name of the lock file if successful or
    NULL if unable to obtain lock.
-   The returned string must be free()d after unlink()ing the file to release 
+   The returned string must be free()d after unlink()ing the file to release
    the lock
 */
 static char *acquire_socket_lock( const char *sock_name )
 {
-	size_t len = strlen( sock_name );
-	char *lockfile = (char *)malloc( len + strlen( LOCKPOSTFIX ) + 1 );
-	
-	if( lockfile == NULL ) 
-	{
-		wperror( L"acquire_socket_lock" );
-		exit( EXIT_FAILURE );
-	}
-	strcpy( lockfile, sock_name );
-	strcpy( lockfile + len, LOCKPOSTFIX );
-	if ( !acquire_lock_file( lockfile, LOCKTIMEOUT, 1 ) )
-	{
-		free( lockfile );
-		lockfile = NULL;
-	}
-	return lockfile;
+  size_t len = strlen( sock_name );
+  char *lockfile = (char *)malloc( len + strlen( LOCKPOSTFIX ) + 1 );
+
+  if( lockfile == NULL )
+  {
+    wperror( L"acquire_socket_lock" );
+    exit( EXIT_FAILURE );
+  }
+  strcpy( lockfile, sock_name );
+  strcpy( lockfile + len, LOCKPOSTFIX );
+  if ( !acquire_lock_file( lockfile, LOCKTIMEOUT, 1 ) )
+  {
+    free( lockfile );
+    lockfile = NULL;
+  }
+  return lockfile;
 }
 
 /**
@@ -414,83 +414,83 @@ static char *acquire_socket_lock( const char *sock_name )
 */
 static int get_socket()
 {
-	int s, len, doexit = 0;
-	int exitcode = EXIT_FAILURE;
-	struct sockaddr_un local;
-	char *sock_name = get_socket_filename();
+  int s, len, doexit = 0;
+  int exitcode = EXIT_FAILURE;
+  struct sockaddr_un local;
+  char *sock_name = get_socket_filename();
 
-	/*
-	   Start critical section protected by lock
-	*/
-	char *lockfile = acquire_socket_lock( sock_name );
-	if( lockfile == NULL )
-	{
-		debug( 0, L"Unable to obtain lock on socket, exiting" );
-		exit( EXIT_FAILURE );
-	}
-	debug( 4, L"Acquired lockfile: %s", lockfile );
-	
-	local.sun_family = AF_UNIX;
-	strcpy( local.sun_path, sock_name );
-	len = sizeof(local);
-	
-	debug(1, L"Connect to socket at %s", sock_name);
-	
-	if( ( s = socket( AF_UNIX, SOCK_STREAM, 0 ) ) == -1 )
-	{
-		wperror( L"socket" );
-		doexit = 1;
-		goto unlock;
-	}
+  /*
+     Start critical section protected by lock
+  */
+  char *lockfile = acquire_socket_lock( sock_name );
+  if( lockfile == NULL )
+  {
+    debug( 0, L"Unable to obtain lock on socket, exiting" );
+    exit( EXIT_FAILURE );
+  }
+  debug( 4, L"Acquired lockfile: %s", lockfile );
 
-	/*
-	   First check whether the socket has been opened by another fishd;
-	   if so, exit with success status
-	*/
-	if( connect( s, (struct sockaddr *)&local, len ) == 0 )
-	{
-		debug( 1, L"Socket already exists, exiting" );
-		doexit = 1;
-		exitcode = 0;
-		goto unlock;
-	}
-	
-	unlink( local.sun_path );
-	if( bind( s, (struct sockaddr *)&local, len ) == -1 )
-	{
-		wperror( L"bind" );
-		doexit = 1;
-		goto unlock;
-	}
+  local.sun_family = AF_UNIX;
+  strcpy( local.sun_path, sock_name );
+  len = sizeof(local);
 
-	if( fcntl( s, F_SETFL, O_NONBLOCK ) != 0 )
-	{
-		wperror( L"fcntl" );
-		close( s );
-		doexit = 1;
-	} else if( listen( s, 64 ) == -1 )
-	{
-		wperror( L"listen" );
-		doexit = 1;
-	}
+  debug(1, L"Connect to socket at %s", sock_name);
+
+  if( ( s = socket( AF_UNIX, SOCK_STREAM, 0 ) ) == -1 )
+  {
+    wperror( L"socket" );
+    doexit = 1;
+    goto unlock;
+  }
+
+  /*
+     First check whether the socket has been opened by another fishd;
+     if so, exit with success status
+  */
+  if( connect( s, (struct sockaddr *)&local, len ) == 0 )
+  {
+    debug( 1, L"Socket already exists, exiting" );
+    doexit = 1;
+    exitcode = 0;
+    goto unlock;
+  }
+
+  unlink( local.sun_path );
+  if( bind( s, (struct sockaddr *)&local, len ) == -1 )
+  {
+    wperror( L"bind" );
+    doexit = 1;
+    goto unlock;
+  }
+
+  if( fcntl( s, F_SETFL, O_NONBLOCK ) != 0 )
+  {
+    wperror( L"fcntl" );
+    close( s );
+    doexit = 1;
+  } else if( listen( s, 64 ) == -1 )
+  {
+    wperror( L"listen" );
+    doexit = 1;
+  }
 
 unlock:
-	(void)unlink( lockfile );
-	debug( 4, L"Released lockfile: %s", lockfile );
-	/*
-	   End critical section protected by lock
-	*/
-	
-	free( lockfile );
-	
-	free( sock_name );
+  (void)unlink( lockfile );
+  debug( 4, L"Released lockfile: %s", lockfile );
+  /*
+     End critical section protected by lock
+  */
 
-	if( doexit )
-	{
-		exit( exitcode );
-	}
+  free( lockfile );
 
-	return s;
+  free( sock_name );
+
+  if( doexit )
+  {
+    exit( exitcode );
+  }
+
+  return s;
 }
 
 /**
@@ -498,29 +498,29 @@ unlock:
 */
 static void broadcast( fish_message_type_t type, const wchar_t *key, const wchar_t *val )
 {
-	connection_t *c;
-	message_t *msg;
+  connection_t *c;
+  message_t *msg;
 
-	if( !conn )
-		return;
-	
-	msg = create_message( type, key, val );
-	
-	/*
-	  Don't merge these loops, or try_send_all can free the message
-	  prematurely
-	*/
-	
-	for( c = conn; c; c=c->next )
-	{
-		msg->count++;
+  if( !conn )
+    return;
+
+  msg = create_message( type, key, val );
+
+  /*
+    Don't merge these loops, or try_send_all can free the message
+    prematurely
+  */
+
+  for( c = conn; c; c=c->next )
+  {
+    msg->count++;
         c->unsent->push(msg);
-	}	
-	
-	for( c = conn; c; c=c->next )
-	{
-		try_send_all( c );
-	}	
+  }
+
+  for( c = conn; c; c=c->next )
+  {
+    try_send_all( c );
+  }
 }
 
 /**
@@ -528,58 +528,58 @@ static void broadcast( fish_message_type_t type, const wchar_t *key, const wchar
 */
 static void daemonize()
 {
-	/*
-	  Fork, and let parent exit
-	*/
-	switch( fork() )
-	{
-		case -1:
-			debug( 0, L"Could not put fishd in background. Quitting" );
-			wperror( L"fork" );
-			exit(1);
-			
-		case 0:
-		{
-			/* Ordinarily there's very limited things we will do after fork, due to multithreading. But fishd is safe because it's single threaded. So don't die in is_forked_child. */
-			setup_fork_guards();
-        
-			/*
-			  Make fishd ignore the HUP signal.
-			*/
-			struct sigaction act;
-			sigemptyset( & act.sa_mask );
-			act.sa_flags=0;
-			act.sa_handler=SIG_IGN;
-			sigaction( SIGHUP, &act, 0);
+  /*
+    Fork, and let parent exit
+  */
+  switch( fork() )
+  {
+    case -1:
+      debug( 0, L"Could not put fishd in background. Quitting" );
+      wperror( L"fork" );
+      exit(1);
 
-			/*
-			  Make fishd save and exit on the TERM signal.
-			*/
-			sigfillset( & act.sa_mask );
-			act.sa_flags=0;
-			act.sa_handler=&handle_term;
-			sigaction( SIGTERM, &act, 0);
-			break;
-            
-		}
-		
-		default:
-		{			
-			debug( 0, L"Parent process exiting (This is normal)" );
-			exit(0);
-		}		
-	}
-	
-	/*
-	  Put ourself in out own processing group
-	*/
-	setsid();
-	
-	/*
-	  Close stdin and stdout. We only use stderr, anyway.
-	*/
-	close( 0 );
-	close( 1 );
+    case 0:
+    {
+      /* Ordinarily there's very limited things we will do after fork, due to multithreading. But fishd is safe because it's single threaded. So don't die in is_forked_child. */
+      setup_fork_guards();
+
+      /*
+        Make fishd ignore the HUP signal.
+      */
+      struct sigaction act;
+      sigemptyset( & act.sa_mask );
+      act.sa_flags=0;
+      act.sa_handler=SIG_IGN;
+      sigaction( SIGHUP, &act, 0);
+
+      /*
+        Make fishd save and exit on the TERM signal.
+      */
+      sigfillset( & act.sa_mask );
+      act.sa_flags=0;
+      act.sa_handler=&handle_term;
+      sigaction( SIGTERM, &act, 0);
+      break;
+
+    }
+
+    default:
+    {
+      debug( 0, L"Parent process exiting (This is normal)" );
+      exit(0);
+    }
+  }
+
+  /*
+    Put ourself in out own processing group
+  */
+  setsid();
+
+  /*
+    Close stdin and stdout. We only use stderr, anyway.
+  */
+  close( 0 );
+  close( 1 );
 
 }
 
@@ -588,23 +588,23 @@ static void daemonize()
 */
 static wchar_t *fishd_env_get( const wchar_t *key )
 {
-	char *nres, *nkey;
-	wchar_t *res;
-	
-	nkey = wcs2str( key );
-	nres = getenv( nkey );
-	free( nkey );
-	if( nres )
-	{
-		return str2wcs( nres );
-	}
-	else
-	{
-		res = env_universal_common_get( key );
-		if( res )
-			res = wcsdup( res );		
-		return res;
-	}
+  char *nres, *nkey;
+  wchar_t *res;
+
+  nkey = wcs2str( key );
+  nres = getenv( nkey );
+  free( nkey );
+  if( nres )
+  {
+    return str2wcs( nres );
+  }
+  else
+  {
+    res = env_universal_common_get( key );
+    if( res )
+      res = wcsdup( res );
+    return res;
+  }
 }
 
 /**
@@ -615,42 +615,42 @@ static wchar_t *fishd_env_get( const wchar_t *key )
 */
 static wcstring fishd_get_config()
 {
-	wchar_t *xdg_dir, *home;
-	bool done = false;
-	wcstring result;
-	
-	xdg_dir = fishd_env_get( L"XDG_CONFIG_HOME" );
-	if (xdg_dir)
-	{
+  wchar_t *xdg_dir, *home;
+  bool done = false;
+  wcstring result;
+
+  xdg_dir = fishd_env_get( L"XDG_CONFIG_HOME" );
+  if (xdg_dir)
+  {
         result = xdg_dir;
         append_path_component(result, L"/fish");
-		if (!create_directory(result))
-		{
-			done = true;
-		}
-		free(xdg_dir);
-	}
-	else
-	{		
-		home = fishd_env_get( L"HOME" );
-		if( home )
-		{
+    if (!create_directory(result))
+    {
+      done = true;
+    }
+    free(xdg_dir);
+  }
+  else
+  {
+    home = fishd_env_get( L"HOME" );
+    if( home )
+    {
             result = home;
             append_path_component(result, L"/.config/fish");
-			if (!create_directory(result))
-			{
-				done = 1;
-			}
-			free( home );
-		}
-	}
-    
+      if (!create_directory(result))
+      {
+        done = 1;
+      }
+      free( home );
+    }
+  }
+
     if (! done) {
         /* Bad juju */
-		debug( 0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access." ));
-        result.clear();        
+    debug( 0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access." ));
+        result.clear();
     }
-    
+
     return result;
 }
 
@@ -659,51 +659,51 @@ static wcstring fishd_get_config()
 */
 static void load_or_save( int save)
 {
-	const wcstring wdir = fishd_get_config();
-	char hostname[HOSTNAME_LEN];
-	connection_t c;
-	int fd;
-	
-	if (wdir.empty())
-		return;
-	
-	std::string dir = wcs2string( wdir );
-	
-	gethostname( hostname, HOSTNAME_LEN );
-	
+  const wcstring wdir = fishd_get_config();
+  char hostname[HOSTNAME_LEN];
+  connection_t c;
+  int fd;
+
+  if (wdir.empty())
+    return;
+
+  std::string dir = wcs2string( wdir );
+
+  gethostname( hostname, HOSTNAME_LEN );
+
     std::string name;
     name.append(dir);
     name.append("/");
     name.append(FILE);
     name.append(hostname);
-	
-	debug( 4, L"Open file for %s: '%s'", 
-		   save?"saving":"loading", 
-		   name.c_str() );
-	
+
+  debug( 4, L"Open file for %s: '%s'",
+       save?"saving":"loading",
+       name.c_str() );
+
     /* OK to not use CLO_EXEC here because fishd is single threaded */
-	fd = open(name.c_str(), save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
-	
-	if( fd == -1 )
-	{
-		debug( 1, L"Could not open load/save file. No previous saves?" );
-		wperror( L"open" );
-		return;		
-	}
-	debug( 4, L"File open on fd %d", c.fd );
+  fd = open(name.c_str(), save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
 
-	connection_init( &c, fd );
+  if( fd == -1 )
+  {
+    debug( 1, L"Could not open load/save file. No previous saves?" );
+    wperror( L"open" );
+    return;
+  }
+  debug( 4, L"File open on fd %d", c.fd );
 
-	if( save )
-	{
-		
-		write_loop( c.fd, SAVE_MSG, strlen(SAVE_MSG) );
-		enqueue_all( &c );
-	}
-	else
-		read_message( &c );
+  connection_init( &c, fd );
 
-	connection_destroy( &c );	
+  if( save )
+  {
+
+    write_loop( c.fd, SAVE_MSG, strlen(SAVE_MSG) );
+    enqueue_all( &c );
+  }
+  else
+    read_message( &c );
+
+  connection_destroy( &c );
 }
 
 /**
@@ -711,7 +711,7 @@ static void load_or_save( int save)
 */
 static void load()
 {
-	load_or_save(0);
+  load_or_save(0);
 }
 
 /**
@@ -719,7 +719,7 @@ static void load()
 */
 static void save()
 {
-	load_or_save(1);
+  load_or_save(1);
 }
 
 /**
@@ -728,11 +728,11 @@ static void save()
 static void init()
 {
 
-	sock = get_socket();
-	daemonize();	
-	env_universal_common_init( &broadcast );
-	
-	load();	
+  sock = get_socket();
+  daemonize();
+  env_universal_common_init( &broadcast );
+
+  load();
 }
 
 /**
@@ -740,220 +740,220 @@ static void init()
 */
 int main( int argc, char ** argv )
 {
-	int child_socket;
-	struct sockaddr_un remote;
-	socklen_t t;
-	int max_fd;
-	int update_count=0;
-	
-	fd_set read_fd, write_fd;
+  int child_socket;
+  struct sockaddr_un remote;
+  socklen_t t;
+  int max_fd;
+  int update_count=0;
 
-	set_main_thread();
+  fd_set read_fd, write_fd;
+
+  set_main_thread();
     setup_fork_guards();
-	
-	program_name=L"fishd";
-	wsetlocale( LC_ALL, L"" );	
 
-	/*
-	  Parse options
-	*/
-	while( 1 )
-	{
-		static struct option
-			long_options[] =
-			{
-				{
-					"help", no_argument, 0, 'h' 
-				}
-				,
-				{
-					"version", no_argument, 0, 'v' 
-				}
-				,
-				{ 
-					0, 0, 0, 0 
-				}
-			}
-		;
-		
-		int opt_index = 0;
-		
-		int opt = getopt_long( argc,
-							   argv, 
-							   GETOPT_STRING,
-							   long_options, 
-							   &opt_index );
-		
-		if( opt == -1 )
-			break;
-		
-		switch( opt )
-		{
-			case 0:
-				break;				
+  program_name=L"fishd";
+  wsetlocale( LC_ALL, L"" );
 
-			case 'h':
-				print_help( argv[0], 1 );
-				exit(0);				
-								
-			case 'v':
-				debug( 0, L"%ls, version %s\n", program_name, PACKAGE_VERSION );
-				exit( 0 );				
-				
-			case '?':
-				return 1;
-				
-		}		
-	}
-	
-	init();
-	while(1) 
-	{
-		connection_t *c;
-		int res;
+  /*
+    Parse options
+  */
+  while( 1 )
+  {
+    static struct option
+      long_options[] =
+      {
+        {
+          "help", no_argument, 0, 'h'
+        }
+        ,
+        {
+          "version", no_argument, 0, 'v'
+        }
+        ,
+        {
+          0, 0, 0, 0
+        }
+      }
+    ;
 
-		t = sizeof( remote );		
-		
-		FD_ZERO( &read_fd );
-		FD_ZERO( &write_fd );
-		FD_SET( sock, &read_fd );
-		max_fd = sock+1;
-		for( c=conn; c; c=c->next )
-		{
-			FD_SET( c->fd, &read_fd );
-			max_fd = maxi( max_fd, c->fd+1);
-			
-			if( ! c->unsent->empty() )
-			{
-				FD_SET( c->fd, &write_fd );
-			}
-		}
+    int opt_index = 0;
 
-		while( 1 )
-		{
-			res=select( max_fd, &read_fd, &write_fd, 0, 0 );
+    int opt = getopt_long( argc,
+                 argv,
+                 GETOPT_STRING,
+                 long_options,
+                 &opt_index );
 
-			if( quit )
-			{
-				save();
-				exit(0);
-			}
-			
-			if( res != -1 )
-				break;
-			
-			if( errno != EINTR )
-			{
-				wperror( L"select" );
-				exit(1);
-			}
-		}
-				
-		if( FD_ISSET( sock, &read_fd ) )
-		{
-			if( (child_socket = 
-				 accept( sock, 
-						 (struct sockaddr *)&remote, 
-						 &t) ) == -1) {
-				wperror( L"accept" );
-				exit(1);
-			}
-			else
-			{
-				debug( 4, L"Connected with new child on fd %d", child_socket );
+    if( opt == -1 )
+      break;
 
-				if( fcntl( child_socket, F_SETFL, O_NONBLOCK ) != 0 )
-				{
-					wperror( L"fcntl" );
-					close( child_socket );		
-				}
-				else
-				{
-					connection_t *newc = (connection_t *)malloc( sizeof(connection_t));
-					connection_init( newc, child_socket );					
-					newc->next = conn;
-					send( newc->fd, GREETING, strlen(GREETING), MSG_DONTWAIT );
-					enqueue_all( newc );				
-					conn=newc;
-				}
-			}
-		}
-		
-		for( c=conn; c; c=c->next )
-		{
-			if( FD_ISSET( c->fd, &write_fd ) )
-			{
-				try_send_all( c );
-			}
-		}
-		
-		for( c=conn; c; c=c->next )
-		{
-			if( FD_ISSET( c->fd, &read_fd ) )
-			{
-				read_message( c );
+    switch( opt )
+    {
+      case 0:
+        break;
 
-				/*
-				  Occasionally we save during normal use, so that we
-				  won't lose everything on a system crash
-				*/
-				update_count++;
-				if( update_count >= 64 )
-				{
-					save();
-					update_count = 0;
-				}
-			}
-		}
-		
-		connection_t *prev=0;
-		c=conn;
-		
-		while( c )
-		{
-			if( c->killme )
-			{
-				debug( 4, L"Close connection %d", c->fd );
+      case 'h':
+        print_help( argv[0], 1 );
+        exit(0);
 
-				while( ! c->unsent->empty() )
-				{
-					message_t *msg = c->unsent->front();
+      case 'v':
+        debug( 0, L"%ls, version %s\n", program_name, PACKAGE_VERSION );
+        exit( 0 );
+
+      case '?':
+        return 1;
+
+    }
+  }
+
+  init();
+  while(1)
+  {
+    connection_t *c;
+    int res;
+
+    t = sizeof( remote );
+
+    FD_ZERO( &read_fd );
+    FD_ZERO( &write_fd );
+    FD_SET( sock, &read_fd );
+    max_fd = sock+1;
+    for( c=conn; c; c=c->next )
+    {
+      FD_SET( c->fd, &read_fd );
+      max_fd = maxi( max_fd, c->fd+1);
+
+      if( ! c->unsent->empty() )
+      {
+        FD_SET( c->fd, &write_fd );
+      }
+    }
+
+    while( 1 )
+    {
+      res=select( max_fd, &read_fd, &write_fd, 0, 0 );
+
+      if( quit )
+      {
+        save();
+        exit(0);
+      }
+
+      if( res != -1 )
+        break;
+
+      if( errno != EINTR )
+      {
+        wperror( L"select" );
+        exit(1);
+      }
+    }
+
+    if( FD_ISSET( sock, &read_fd ) )
+    {
+      if( (child_socket =
+         accept( sock,
+             (struct sockaddr *)&remote,
+             &t) ) == -1) {
+        wperror( L"accept" );
+        exit(1);
+      }
+      else
+      {
+        debug( 4, L"Connected with new child on fd %d", child_socket );
+
+        if( fcntl( child_socket, F_SETFL, O_NONBLOCK ) != 0 )
+        {
+          wperror( L"fcntl" );
+          close( child_socket );
+        }
+        else
+        {
+          connection_t *newc = (connection_t *)malloc( sizeof(connection_t));
+          connection_init( newc, child_socket );
+          newc->next = conn;
+          send( newc->fd, GREETING, strlen(GREETING), MSG_DONTWAIT );
+          enqueue_all( newc );
+          conn=newc;
+        }
+      }
+    }
+
+    for( c=conn; c; c=c->next )
+    {
+      if( FD_ISSET( c->fd, &write_fd ) )
+      {
+        try_send_all( c );
+      }
+    }
+
+    for( c=conn; c; c=c->next )
+    {
+      if( FD_ISSET( c->fd, &read_fd ) )
+      {
+        read_message( c );
+
+        /*
+          Occasionally we save during normal use, so that we
+          won't lose everything on a system crash
+        */
+        update_count++;
+        if( update_count >= 64 )
+        {
+          save();
+          update_count = 0;
+        }
+      }
+    }
+
+    connection_t *prev=0;
+    c=conn;
+
+    while( c )
+    {
+      if( c->killme )
+      {
+        debug( 4, L"Close connection %d", c->fd );
+
+        while( ! c->unsent->empty() )
+        {
+          message_t *msg = c->unsent->front();
                     c->unsent->pop();
-					msg->count--;
-					if( !msg->count )
-						free( msg );
-				}
-				
-				connection_destroy( c );
-				if( prev )
-				{
-					prev->next=c->next;
-				}
-				else
-				{
-					conn=c->next;
-				}
-				
-				free(c);
-				
-				c=(prev?prev->next:conn);
-				
-			}
-			else
-			{
-				prev=c;
-				c=c->next;
-			}
-		}
+          msg->count--;
+          if( !msg->count )
+            free( msg );
+        }
 
-		if( !conn )
-		{
-			debug( 0, L"No more clients. Quitting" );
-			save();			
-			env_universal_common_destroy();
-			break;
-		}		
+        connection_destroy( c );
+        if( prev )
+        {
+          prev->next=c->next;
+        }
+        else
+        {
+          conn=c->next;
+        }
 
-	}
+        free(c);
+
+        c=(prev?prev->next:conn);
+
+      }
+      else
+      {
+        prev=c;
+        c=c->next;
+      }
+    }
+
+    if( !conn )
+    {
+      debug( 0, L"No more clients. Quitting" );
+      save();
+      env_universal_common_destroy();
+      break;
+    }
+
+  }
 }
 

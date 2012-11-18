@@ -4,10 +4,10 @@
 # Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > man_completions.fish
 
 """
-<OWNER> = Siteshwar Vashisht 
-<YEAR> = 2012 
+<OWNER> = Siteshwar Vashisht
+<YEAR> = 2012
 
-Copyright (c) 2012, Siteshwar Vashisht 
+Copyright (c) 2012, Siteshwar Vashisht
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -47,7 +47,7 @@ def add_diagnostic(dgn, msg_verbosity = VERY_VERBOSE):
     # Add a diagnostic message, if msg_verbosity <= VERBOSITY
     if msg_verbosity <= VERBOSITY:
         diagnostic_output.append('   '*diagnostic_indent + dgn)
-    
+
 def flush_diagnostics(where):
     if diagnostic_output:
         output_str = '\n'.join(diagnostic_output) + '\n'
@@ -77,7 +77,7 @@ def unquoteSingleQuotes(data):
     if data[0] == '`' and data[len(data)-1] == '\'':
         data = data[1:len(data)-1]
     return data
-    
+
 
 # Make a string of characters that are deemed safe in fish without needing to be escaped
 # Note that space is not included
@@ -88,7 +88,7 @@ def fish_escape_single_quote(str):
     # If it has no non-safe chars, there's nothing to do
     if g_fish_safe_chars.issuperset(str):
         return str
-    
+
     str = str.replace('\\', '\\\\') # Replace one backslash with two
     str = str.replace("'", "\\'") # Replace one single quote with a backslash-single-quote
     return "'" + str + "'"
@@ -107,10 +107,10 @@ def builtcommand(options, description):
     fish_options = []
     for option in man_optionlist:
         option = option.strip()
-        
+
         # Skip some problematic cases
         if option in ['-', '--']: continue
-        
+
         if option.startswith('--'):
             # New style long option (--recursive)
             fish_options.append('-l ' + fish_escape_single_quote(option[2:]))
@@ -120,29 +120,29 @@ def builtcommand(options, description):
         elif option.startswith('-') and len(option) > 2:
             # Old style long option (-recursive)
             fish_options.append('-o ' + fish_escape_single_quote(option[1:]))
-    
+
     # Determine which options are new (not already in existing_options)
     # Then add those to the existing options
     existing_options = already_output_completions.setdefault(CMDNAME, set())
     fish_options = [opt for opt in fish_options if opt not in existing_options]
     existing_options.update(fish_options)
-    
+
     # Maybe it's all for naught
     if not fish_options: return
-    
-    first_period = description.find(".") 
+
+    first_period = description.find(".")
     if first_period >= 45 or (first_period == -1 and len(description) > 45):
         description = description[:45] + '... [See Man Page]'
     elif first_period >= 0:
         description = description[:first_period]
-    
+
     # Escape some more things
     description = fish_escape_single_quote(description)
     escaped_cmd = fish_escape_single_quote(CMDNAME)
-    
+
     output_complete_command(escaped_cmd, fish_options, description, built_command_output)
 
-    
+
 
 def removeGroffFormatting(data):
 #    data = data.replace("\fI","")
@@ -193,7 +193,7 @@ class Type1ManParser(ManParser):
     def parseManPage(self, manpage):
         options_section_regex = re.compile( "\.SH \"OPTIONS\"(.*?)(\.SH|\Z)", re.DOTALL)
         options_section_matched = re.search( options_section_regex, manpage)
-        
+
         options_section = options_section_matched.group(0)
         #   print options_section
         options_parts_regex = re.compile("\.PP(.*?)\.RE", re.DOTALL)
@@ -208,7 +208,7 @@ class Type1ManParser(ManParser):
             elif (self.fallback2(options_section) ):
                 return True
             return False
-        
+
         while (options_matched != None):
             #       print len(options_matched.groups())
             #       print options_matched.group()
@@ -222,7 +222,7 @@ class Type1ManParser(ManParser):
             #       print data
             if (len (data) > 1): #and len(data[1]) <= 300):
                 optionName = data[0].strip()
-                
+
                 if ( optionName.find("-") == -1):
                     add_diagnostic(optionName + " doesn't contain - ")
 #                    return False
@@ -232,7 +232,7 @@ class Type1ManParser(ManParser):
                     optionDescription = data[1].strip().replace("\n"," ")
 #                    print >> sys.stderr, "Option: ", optionName," Description: ", optionDescription , '\n'
                     builtcommand(optionName, optionDescription)
-                    
+
             else:
                 add_diagnostic('Unable to split option from description')
                 return False
@@ -283,7 +283,7 @@ class Type1ManParser(ManParser):
             return False
         while options_matched != None:
             data = options_matched.group(1)
-            
+
 #            print "Data is : ", data
             data = removeGroffFormatting(data)
             data = data.strip()
@@ -293,7 +293,7 @@ class Type1ManParser(ManParser):
 
 #                data = re.sub(trailing_num_regex, "", data)
                 optionName = re.sub(trailing_num_regex, "", data[0].strip())
-                
+
                 if ('-' not in optionName):
                     add_diagnostic(optionName + " doesn't contain -")
                 else:
@@ -311,7 +311,7 @@ class Type1ManParser(ManParser):
             options_section = options_section[options_matched.end()-3:]
             options_matched = re.search(options_parts_regex, options_section)
         return True
-        
+
     def name(self):
         return "Type1"
 
@@ -328,7 +328,7 @@ class Type2ManParser(ManParser):
     def parseManPage(self, manpage):
         options_section_regex = re.compile( "\.SH OPTIONS(.*?)(\.SH|\Z)", re.DOTALL)
         options_section_matched = re.search( options_section_regex, manpage)
-        
+
 #        if (options_section_matched == None):
 #            print "Falling Back"
 #            options_section_regex = re.compile( "\.SH OPTIONS(.*?)$", re.DOTALL)
@@ -372,13 +372,13 @@ class Type2ManParser(ManParser):
             else:
                 # print >> sys.stderr, data
                 add_diagnostic('Unable to split option from description')
-                
+
 #                return False
 
             options_section = options_section[options_matched.end()-3:]
             options_matched = re.search(options_parts_regex, options_section)
 
-    
+
 
     def name(self):
         return "Type2"
@@ -396,7 +396,7 @@ class Type3ManParser(ManParser):
     def parseManPage(self, manpage):
         options_section_regex = re.compile( "\.SH DESCRIPTION(.*?)(\.SH|\Z)", re.DOTALL)
         options_section_matched = re.search( options_section_regex, manpage)
-        
+
         options_section = options_section_matched.group(1)
         #   print options_section
         #   sys.exit(1)
@@ -452,7 +452,7 @@ class Type4ManParser(ManParser):
     def parseManPage(self, manpage):
         options_section_regex = re.compile( "\.SH FUNCTION LETTERS(.*?)(\.SH|\Z)", re.DOTALL)
         options_section_matched = re.search( options_section_regex, manpage)
-        
+
         options_section = options_section_matched.group(1)
         #   print options_section
         #   sys.exit(1)
@@ -499,7 +499,7 @@ class TypeDarwinManParser(ManParser):
     def isMyType(self, manpage):
         options_section_matched = compileAndSearch("\.S[hH] DESCRIPTION", manpage)
         return options_section_matched != None
-    
+
     def trim_groff(self, line):
         # Remove initial period
         if line.startswith('.'):
@@ -508,49 +508,49 @@ class TypeDarwinManParser(ManParser):
         while re.match('[A-Z][a-z]\s', line):
             line = line[3:]
         return line
-    
+
     # Replace some groff escapes. There's a lot we don't bother to handle.
     def groff_replace_escapes(self, line):
         line = line.replace('\\ ', ' ')
         line = line.replace('\& ', '')
         return line
-    
+
     def is_option(self, line):
         return line.startswith('.It Fl')
-    
+
     def parseManPage(self, manpage):
         got_something = False
         lines =  manpage.splitlines()
         # Discard lines until we get to ".sh Description"
         while lines and not (lines[0].startswith('.Sh DESCRIPTION') or lines[0].startswith('.SH DESCRIPTION')):
             lines.pop(0)
-        
+
         while lines:
             # Pop until we get to the next option
             while lines and not self.is_option(lines[0]):
                 lines.pop(0)
-                
+
             if not lines:
                 continue
-            
+
             # Get the line and clean it up
             line = lines.pop(0)
             line = self.groff_replace_escapes(line)
             line = self.trim_groff(line)
             line = line.strip()
             if not line: continue
-            
+
             # Extract the name
             name = line.split(None, 2)[0]
-            
+
             # Extract the description
             desc = ''
             while lines and not self.is_option(lines[0]):
                 # print "*", lines[0]
                 desc = desc + lines.pop(0)
-            
+
             # print "name: ", name
-            
+
             if name == '-':
                 # Skip double -- arguments
                 continue
@@ -561,9 +561,9 @@ class TypeDarwinManParser(ManParser):
             elif len(name) == 1:
                 builtcommand('-' + name, desc)
                 got_something = True
-                
+
         return got_something
-                
+
     def name(self):
         return "Darwin man parser"
 
@@ -571,25 +571,25 @@ class TypeDarwinManParser(ManParser):
 class TypeDeroffManParser(ManParser):
     def isMyType(self, manpage):
         return True # We're optimists
-    
+
     def is_option(self, line):
         return line.startswith('-')
-        
+
     def could_be_description(self, line):
         return len(line) > 0 and not line.startswith('-')
-    
+
     def parseManPage(self, manpage):
         d = Deroffer()
         d.deroff(manpage)
         output = d.get_output()
         lines = output.split('\n')
-        
+
         got_something = False
-        
+
         # Discard lines until we get to DESCRIPTION or OPTIONS
         while lines and not (lines[0].startswith('DESCRIPTION') or lines[0].startswith('OPTIONS') or lines[0].startswith('COMMAND OPTIONS')):
             lines.pop(0)
-        
+
         # Look for BUGS and stop there
         for idx in range(len(lines)):
             line = lines[idx]
@@ -597,32 +597,32 @@ class TypeDeroffManParser(ManParser):
                 # Drop remaining elements
                 lines[idx:] = []
                 break
-        
+
         while lines:
             # Pop until we get to the next option
             while lines and not self.is_option(lines[0]):
                 line = lines.pop(0)
-            
+
             if not lines:
                 continue
-            
+
             options = lines.pop(0)
-            
+
             # Pop until we get to either an empty line or a line starting with -
             description = ''
             while lines and self.could_be_description(lines[0]):
                 if description: description += ' '
                 description += lines.pop(0)
-            
+
             builtcommand(options, description)
             got_something = True
-            
+
         return got_something
-            
-                
+
+
     def name(self):
         return "Deroffing man parser"
-        
+
 # Return whether the file at the given path is overwritable
 # Raises IOError if it cannot be opened
 def file_is_overwritable(path):
@@ -633,16 +633,16 @@ def file_is_overwritable(path):
         line = line.strip()
         if not line:
             continue
-        
+
         # We look in the initial run of lines that start with #
         if not line.startswith('#'):
             break
-            
+
         # See if this contains the magic word
         if 'Autogenerated' in line:
             result = True
             break
-            
+
     file.close()
     return result
 
@@ -658,7 +658,7 @@ def file_missing_or_overwritable(path):
         else:
             # Something else happened
             return False
-    
+
 # Delete the file if it is autogenerated
 def cleanup_autogenerated_file(path):
     try:
@@ -678,7 +678,7 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
     # Set up some diagnostics
     add_diagnostic('Considering ' + manpage_path)
     diagnostic_indent += 1
-    
+
     if manpage_path.endswith('.gz'):
         fd = gzip.open(manpage_path, 'r')
         manpage = fd.read()
@@ -692,32 +692,32 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
     fd.close()
 
     manpage = str(manpage)
-    
+
     # Get the "base" command, e.g. gcc.1.gz -> gcc
     cmd_base = CMDNAME.split('.', 1)[0]
     ignoredcommands = ["cc", "g++", "gcc", "c++", "cpp", "emacs", "gprof", "wget", "ld", "awk"]
     if cmd_base in ignoredcommands:
         return
-        
+
     # Ignore perl's gazillion man pages
     ignored_prefixes = ['perl', 'zsh']
     for prefix in ignored_prefixes:
         if cmd_base.startswith(prefix):
             return
-            
+
     # Ignore the millions of links to BUILTIN(1)
     if manpage.find('BUILTIN 1') != -1:
         return
-    
+
     # Clear the output list
     built_command_output[:] = []
-    
+
     if DEROFF_ONLY:
         parsers = [TypeDeroffManParser()]
     else:
         parsers = [Type1ManParser(), Type2ManParser(), Type4ManParser(), Type3ManParser(), TypeDarwinManParser(), TypeDeroffManParser()]
     parsersToTry = [p for p in parsers if p.isMyType(manpage)]
-    
+
     success = False
     if not parsersToTry:
         add_diagnostic(manpage_path + ": Not supported")
@@ -731,7 +731,7 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
             if success:
                 PARSER_INFO.setdefault(parser_name, []).append(CMDNAME)
                 break
-        
+
         if success:
             if WRITE_TO_STDOUT:
                 output_file = sys.stdout
@@ -742,13 +742,13 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
                         output_file = open(fullpath, 'w')
                     else:
                         add_diagnostic("Not overwriting the file at '%s'" % fullpath)
-                        
+
                 except IOError as err:
                     add_diagnostic("Unable to open file '%s': error(%d): %s" % (fullpath, err.errno, err.strerror))
                     return False
-            
+
             built_command_output.insert(0, "# %s: %s" % (CMDNAME, parser.name()))
-            
+
             # Output the magic word Autogenerated so we can tell if we can overwrite this
             built_command_output.insert(1, "# Autogenerated from man pages")
             built_command_output.insert(2, "# using " + parser_name)
@@ -780,22 +780,22 @@ def should_skip_man_page(output_path, filename, yield_to_dirs):
     # No reason to skip if we're writing to stdout
     if WRITE_TO_STDOUT:
         return false
-        
+
     # Check all the yield directories
     for yield_dir in yield_to_dirs:
         test_path = os.path.join(yield_dir, filename)
         if os.path.isfile(test_path):
             # Yield to the existing file
             return true
-        
+
     # See if there's a hand-written file already
     if not file_missing_or_overwritable(output_path):
         return true
-    
+
     # We made it through, so don't skip
     return false
-            
-    
+
+
 
 def parse_and_output_man_pages(paths, output_directory, yield_to_dirs, show_progress):
     global diagnostic_indent, CMDNAME
@@ -808,12 +808,12 @@ def parse_and_output_man_pages(paths, output_directory, yield_to_dirs, show_prog
         print("Parsing man pages and writing completions to {0}".format(output_directory))
     for manpage_path in paths:
         index += 1
-        
+
         # Get the "base" command, e.g. gcc.1.gz -> gcc
         man_file_name = os.path.basename(manpage_path)
         CMDNAME = man_file_name.split('.', 1)[0]
         output_file_name = CMDNAME + '.fish'
-        
+
         # Show progress if we're doing that
         if show_progress:
             progress_str = '  {0} / {1} : {2}'.format((str(index).rjust(padding_len)), total_count, man_file_name)
@@ -822,7 +822,7 @@ def parse_and_output_man_pages(paths, output_directory, yield_to_dirs, show_prog
             last_progress_string_length = len(progress_str)
             sys.stdout.write("\r{0}\r".format(padded_progress_str))
             sys.stdout.flush()
-                        
+
         # Maybe we want to skip this item
         skip = False
         if not WRITE_TO_STDOUT:
@@ -840,7 +840,7 @@ def parse_and_output_man_pages(paths, output_directory, yield_to_dirs, show_prog
         # Now skip if requested
         if skip:
             continue
-        
+
         try:
             if parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
                 successful_count += 1
@@ -878,8 +878,8 @@ def get_paths_from_manpath():
         for name in names:
             result.append(os.path.join(directory_path, name))
     return result
-            
-        
+
+
 
 def usage(script_name):
     print("Usage: {0} [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress] files...".format(script_name))
@@ -901,11 +901,11 @@ if __name__ == "__main__":
         print(err.msg) # will print something like "option -a not recognized"
         usage(script_name)
         sys.exit(2)
-    
+
     # If a completion already exists in one of the yield-to directories, then don't overwrite it
     # And even delete an existing autogenerated one
     yield_to_dirs = []
-    
+
     use_manpath, show_progress, custom_dir = False, False, False
     output_directory = ''
     for opt, value in opts:
@@ -930,15 +930,15 @@ if __name__ == "__main__":
             DEROFF_ONLY = True
         else:
             assert False, "unhandled option"
-    
+
     if use_manpath:
         # Fetch all man1 files from the manpath
         file_paths.extend(get_paths_from_manpath())
-    
+
     if not file_paths:
         print("No paths specified")
         sys.exit(0)
-    
+
     if not WRITE_TO_STDOUT and not output_directory:
         # Default to ~/.config/fish/completions/
         # Create it if it doesn't exist
@@ -948,7 +948,7 @@ if __name__ == "__main__":
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-        
+
     if True:
         parse_and_output_man_pages(file_paths, output_directory, yield_to_dirs, show_progress)
     else:
@@ -957,7 +957,7 @@ if __name__ == "__main__":
         cProfile.run('parse_and_output_man_pages(file_paths, output_directory, yield_to_dirs, show_progress)', 'fooprof')
         p = pstats.Stats('fooprof')
         p.sort_stats('cumulative').print_stats(100)
-    
+
     # Here we can write out all the parser infos
     if False:
         for name in PARSER_INFO:

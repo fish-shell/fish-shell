@@ -1,13 +1,13 @@
 /** \file screen.h High level library for handling the terminal screen
 
-	The screen library allows the interactive reader to write its
-	output to screen efficiently by keeping an inetrnal representation
-	of the current screen contents and trying to find a reasonably
-	efficient way for transforming that to the desired screen content.
+  The screen library allows the interactive reader to write its
+  output to screen efficiently by keeping an inetrnal representation
+  of the current screen contents and trying to find a reasonably
+  efficient way for transforming that to the desired screen content.
 
-	The current implementation is less smart than ncurses allows
-	and can not for example move blocks of text around to handle text
-	insertion.
+  The current implementation is less smart than ncurses allows
+  and can not for example move blocks of text around to handle text
+  insertion.
   */
 #ifndef FISH_SCREEN_H
 #define FISH_SCREEN_H
@@ -22,38 +22,38 @@ struct line_t
     std::vector<wchar_t> text;
     std::vector<int> colors;
     bool is_soft_wrapped;
-    
+
     line_t() : text(), colors(), is_soft_wrapped(false)
     {
     }
-    
+
     void clear(void)
     {
         text.clear();
         colors.clear();
     }
-    
+
     void append(wchar_t txt, int color)
     {
         text.push_back(txt);
         colors.push_back(color);
     }
-        
+
     size_t size(void) const
     {
         return text.size();
     }
-    
+
     wchar_t char_at(size_t idx) const
     {
         return text.at(idx);
     }
-    
+
     int color_at(size_t idx) const
     {
         return colors.at(idx);
     }
-    
+
 };
 
 /**
@@ -62,36 +62,36 @@ struct line_t
 class screen_data_t
 {
     std::vector<line_t> line_datas;
-    
+
     public:
-    
+
     struct cursor_t {
         int x;
         int y;
         cursor_t() : x(0), y(0) { }
         cursor_t(int a, int b) : x(a), y(b) { }
     } cursor;
-    
+
     line_t &add_line(void) {
         line_datas.resize(line_datas.size() + 1);
         return line_datas.back();
     }
-    
+
     void resize(size_t size) {
         line_datas.resize(size);
     }
-        
+
     line_t &create_line(size_t idx) {
         if (idx >= line_datas.size()) {
             line_datas.resize(idx + 1);
         }
         return line_datas.at(idx);
     }
-    
+
     line_t &line(size_t idx) {
         return line_datas.at(idx);
     }
-    
+
     size_t line_count(void) {
         return line_datas.size();
     }
@@ -121,7 +121,7 @@ class screen_t
        the screen.
     */
     wcstring actual_left_prompt;
-    
+
     /** Last right prompt width */
     size_t last_right_prompt_width;
 
@@ -130,26 +130,26 @@ class screen_t
       write.
     */
     int actual_width;
-    
+
     /** If we support soft wrapping, we can output to this location without any cursor motion. */
     screen_data_t::cursor_t soft_wrap_location;
 
     /**
-	   This flag is set to true when there is reason to suspect that
-	   the parts of the screen lines where the actual content is not
-	   filled in may be non-empty. This means that a clr_eol command
-	   has to be sent to the terminal at the end of each line.
-	*/
-	bool need_clear;
-        
+     This flag is set to true when there is reason to suspect that
+     the parts of the screen lines where the actual content is not
+     filled in may be non-empty. This means that a clr_eol command
+     has to be sent to the terminal at the end of each line.
+  */
+  bool need_clear;
+
     /** If we need to clear, this is how many lines the actual screen had, before we reset it. This is used when resizing the window larger: if the cursor jumps to the line above, we need to remember to clear the subsequent lines. */
     size_t actual_lines_before_reset;
-	
-	/**
-	   These status buffers are used to check if any output has occurred
-	   other than from fish's main loop, in which case we need to redraw.
-	*/
-	struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
+
+  /**
+     These status buffers are used to check if any output has occurred
+     other than from fish's main loop, in which case we need to redraw.
+  */
+  struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
 };
 
 /**
@@ -158,7 +158,7 @@ class screen_t
    will use it's knowlege of the current contents of the screen in
    order to render the desired output using as few terminal commands
    as possible.
-   
+
     \param s the screen on which to write
     \param left_prompt the prompt to prepend to the command line
     \param right_prompt the right prompt, or NULL if none
@@ -168,14 +168,14 @@ class screen_t
     \param indent the indent to use for the command line
     \param cursor_pos where the cursor is
 */
-void s_write( screen_t *s, 
-			  const wchar_t *left_prompt,
-			  const wchar_t *right_prompt,
-			  const wchar_t *commandline,
-			  size_t explicit_len,
-			  const int *colors, 
-			  const int *indent,
-			  size_t cursor_pos );
+void s_write( screen_t *s,
+        const wchar_t *left_prompt,
+        const wchar_t *right_prompt,
+        const wchar_t *commandline,
+        size_t explicit_len,
+        const int *colors,
+        const int *indent,
+        size_t cursor_pos );
 
 
 void s_write( screen_t *s,
@@ -187,7 +187,7 @@ void s_write( screen_t *s,
               const int *indent,
               size_t cursor_pos );
 
-/** 
+/**
     This function resets the screen buffers internal knowledge about
     the contents of the screen. Use this function when some other
     function than s_write has written to the screen.

@@ -1,8 +1,8 @@
 /** \file complete.h
-	Prototypes for functions related to tab-completion.
+  Prototypes for functions related to tab-completion.
 
-	These functions are used for storing and retrieving tab-completion
-	data, as well as for performing tab-completion.
+  These functions are used for storing and retrieving tab-completion
+  data, as well as for performing tab-completion.
 */
 
 #ifndef FISH_COMPLETE_H
@@ -17,40 +17,40 @@
 
 #include "util.h"
 #include "common.h"
-/** 
-	Use all completions 
+/**
+  Use all completions
 */
 #define SHARED 0
-/** 
-	Do not use file completion 
+/**
+  Do not use file completion
 */
 #define NO_FILES 1
-/** 
-	Require a parameter after completion 
+/**
+  Require a parameter after completion
 */
 #define NO_COMMON 2
-/** 
-	Only use the argument list specifies with completion after
-	option. This is the same as (NO_FILES & NO_COMMON)
+/**
+  Only use the argument list specifies with completion after
+  option. This is the same as (NO_FILES & NO_COMMON)
 */
 #define EXCLUSIVE 3
 
-/** 
-	Command is a path 
+/**
+  Command is a path
 */
 #define PATH 1
-/** 
-	Command is not a path 
+/**
+  Command is not a path
 */
 #define COMMAND 0
 
-/** 
-	Separator between completion and description
+/**
+  Separator between completion and description
 */
 #define COMPLETE_SEP L'\004'
 
-/** 
-	Separator between completion and description
+/**
+  Separator between completion and description
 */
 #define COMPLETE_SEP_STR L"\004"
 
@@ -75,7 +75,7 @@ enum {
     COMPLETE_NO_SPACE = 1 << 0,
 
     /**
-       This compeltion is case insensitive. 
+       This compeltion is case insensitive.
 
        Warning: The contents of the completion_t structure is actually
        different if this flag is set! Specifically, the completion string
@@ -109,42 +109,42 @@ class completion_t
 
 private:
     /* No public default constructor */
-	completion_t();
+  completion_t();
 public:
 
-	/**
-	   The completion string
-	*/
-	wcstring completion;
+  /**
+     The completion string
+  */
+  wcstring completion;
 
-	/**
-	   The description for this completion
-	*/
-	wcstring description;
+  /**
+     The description for this completion
+  */
+  wcstring description;
 
-	/**
-	   Flags determining the completion behaviour. 
+  /**
+     Flags determining the completion behaviour.
 
-	   Determines whether a space should be inserted after this
-	   compeltion if it is the only possible completion using the
-	   COMPLETE_NO_SPACE flag.
+     Determines whether a space should be inserted after this
+     compeltion if it is the only possible completion using the
+     COMPLETE_NO_SPACE flag.
 
-	   The COMPLETE_NO_CASE can be used to signal that this completion
-	   is case insensitive.
-	*/
-	int flags;
-    
+     The COMPLETE_NO_CASE can be used to signal that this completion
+     is case insensitive.
+  */
+  int flags;
+
     bool is_case_insensitive() const { return !! (flags & COMPLETE_NO_CASE); }
-    
+
     /* Construction. Note: defining these so that they are not inlined reduces the executable size. */
     completion_t(const wcstring &comp, const wcstring &desc = L"", int flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
-    
+
     /* The following are needed for sorting and uniquing completions */
-	bool operator < (const completion_t& rhs) const;
-	bool operator == (const completion_t& rhs) const;
-	bool operator != (const completion_t& rhs) const;
+  bool operator < (const completion_t& rhs) const;
+  bool operator == (const completion_t& rhs) const;
+  bool operator != (const completion_t& rhs) const;
 };
 
 enum complete_type_t {
@@ -160,17 +160,17 @@ void sort_completions( std::vector<completion_t> &completions);
 
 /**
 
-  Add a completion. 
+  Add a completion.
 
   All supplied values are copied, they should be freed by or otherwise
   disposed by the caller.
 
-  Examples: 
-  
+  Examples:
+
   The command 'gcc -o' requires that a file follows it, so the
   NO_COMMON option is suitable. This can be done using the following
   line:
-  
+
   complete -c gcc -s o -r
 
   The command 'grep -d' required that one of the strings 'read',
@@ -187,7 +187,7 @@ void sort_completions( std::vector<completion_t> &completions);
   will be interpreted as the command name.
   \param short_opt The single character name of an option. (-a is a short option, --all and  -funroll are long options)
   \param long_opt The multi character name of an option. (-a is a short option, --all and  -funroll are long options)
-  \param long_mode Whether to use old style, single dash long options. 
+  \param long_mode Whether to use old style, single dash long options.
   \param result_mode Whether to search further completions when this
   completion has been succesfully matched. If result_mode is SHARED,
   any other completions may also be used. If result_mode is NO_FILES,
@@ -200,7 +200,7 @@ void sort_completions( std::vector<completion_t> &completions);
   \param condition a command to be run to check it this completion should be used. If \c condition is empty, the completion is always used.
   \param flags A set of completion flags
 */
-void complete_add( const wchar_t *cmd, 
+void complete_add( const wchar_t *cmd,
                    bool cmd_is_path,
                    wchar_t short_opt,
                    const wchar_t *long_opt,
@@ -209,7 +209,7 @@ void complete_add( const wchar_t *cmd,
                    const wchar_t *condition,
                    const wchar_t *comp,
                    const wchar_t *desc,
-                   int flags ); 
+                   int flags );
 /**
   Sets whether the completion list for this command is complete. If
   true, any options not matching one of the provided options will be
@@ -220,8 +220,8 @@ void complete_set_authoritative( const wchar_t *cmd, bool cmd_type, bool authori
 /**
   Remove a previously defined completion
 */
-void complete_remove( const wchar_t *cmd, 
-                      bool cmd_is_path, 
+void complete_remove( const wchar_t *cmd,
+                      bool cmd_is_path,
                       wchar_t short_opt,
                       const wchar_t *long_opt );
 
@@ -230,7 +230,7 @@ void complete_remove( const wchar_t *cmd,
 void complete( const wcstring &cmd, std::vector<completion_t> &comp, complete_type_t type, wcstring_list_t *to_load = NULL );
 
 /**
-   Print a list of all current completions into the string. 
+   Print a list of all current completions into the string.
 
    \param out The string to write completions to
 */
@@ -240,17 +240,17 @@ void complete_print( wcstring &out );
    Tests if the specified option is defined for the specified command
 */
 int complete_is_valid_option( const wcstring &str,
-							  const wcstring &opt,
-							  wcstring_list_t *inErrorsOrNull,
-							  bool allow_autoload );
+                const wcstring &opt,
+                wcstring_list_t *inErrorsOrNull,
+                bool allow_autoload );
 
 /**
    Tests if the specified argument is valid for the specified option
    and command
 */
 bool complete_is_valid_argument( const wcstring &str,
-								 const wcstring &opt,
-								 const wcstring &arg );
+                 const wcstring &opt,
+                 const wcstring &arg );
 
 
 /**

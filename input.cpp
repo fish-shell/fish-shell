@@ -74,10 +74,10 @@
  */
 struct input_mapping_t
 {
-	wcstring seq; /**< Character sequence which generates this event */
-	wcstring command; /**< command that should be evaluated by this mapping */
-    
-    
+  wcstring seq; /**< Character sequence which generates this event */
+  wcstring command; /**< command that should be evaluated by this mapping */
+
+
     input_mapping_t(const wcstring &s, const wcstring &c) : seq(s), command(c) {}
 };
 
@@ -86,9 +86,9 @@ struct input_mapping_t
  */
 struct terminfo_mapping_t
 {
-	const wchar_t *name; /**< Name of key */
-	const char *seq; /**< Character sequence generated on keypress. Constant string. */
-		
+  const wchar_t *name; /**< Name of key */
+  const char *seq; /**< Character sequence generated on keypress. Constant string. */
+
 };
 
 
@@ -97,43 +97,43 @@ struct terminfo_mapping_t
 */
 static const wchar_t * const name_arr[] =
 {
-	L"beginning-of-line",
-	L"end-of-line",
-	L"forward-char",
-	L"backward-char",
-	L"forward-word",
-	L"backward-word",
-	L"history-search-backward",
-	L"history-search-forward",
-	L"delete-char",
-	L"backward-delete-char",
-	L"kill-line",
-	L"yank",
-	L"yank-pop",
-	L"complete",
-	L"beginning-of-history",
-	L"end-of-history",
-	L"backward-kill-line",
-	L"kill-whole-line",
-	L"kill-word",
-	L"backward-kill-word",
-	L"dump-functions",
-	L"history-token-search-backward",
-	L"history-token-search-forward",
-	L"self-insert",
-	L"null",
-	L"eof",
-	L"vi-arg-digit",
-	L"execute",
-	L"beginning-of-buffer",
-	L"end-of-buffer",
-	L"repaint",
-	L"up-line",
-	L"down-line",
-	L"suppress-autosuggestion",
-	L"accept-autosuggestion"
+  L"beginning-of-line",
+  L"end-of-line",
+  L"forward-char",
+  L"backward-char",
+  L"forward-word",
+  L"backward-word",
+  L"history-search-backward",
+  L"history-search-forward",
+  L"delete-char",
+  L"backward-delete-char",
+  L"kill-line",
+  L"yank",
+  L"yank-pop",
+  L"complete",
+  L"beginning-of-history",
+  L"end-of-history",
+  L"backward-kill-line",
+  L"kill-whole-line",
+  L"kill-word",
+  L"backward-kill-word",
+  L"dump-functions",
+  L"history-token-search-backward",
+  L"history-token-search-forward",
+  L"self-insert",
+  L"null",
+  L"eof",
+  L"vi-arg-digit",
+  L"execute",
+  L"beginning-of-buffer",
+  L"end-of-buffer",
+  L"repaint",
+  L"up-line",
+  L"down-line",
+  L"suppress-autosuggestion",
+  L"accept-autosuggestion"
 }
-	;
+  ;
 
 /**
    Description of each supported input function
@@ -141,82 +141,82 @@ static const wchar_t * const name_arr[] =
 /*
 static const wchar_t *desc_arr[] =
 {
-	L"Move to beginning of line",
-	L"Move to end of line",
-	L"Move forward one character",
-	L"Move backward one character",
-	L"Move forward one word",
-	L"Move backward one word",
-	L"Search backward through list of previous commands",
-	L"Search forward through list of previous commands",
-	L"Delete one character forward",
-	L"Delete one character backward",
-	L"Move contents from cursor to end of line to killring",
-	L"Paste contents of killring",
-	L"Rotate to previous killring entry",
-	L"Guess the rest of the next input token",
-	L"Move to first item of history",
-	L"Move to last item of history",
-	L"Clear current line",
-	L"Move contents from beginning of line to cursor to killring",
-	L"Move entire line to killring",
-	L"Move next word to killring",
-	L"Move previous word to killring",
-	L"Write out key bindings",
-	L"Clear entire screen",
-	L"Quit the running program",
-	L"Search backward through list of previous commands for matching token",
-	L"Search forward through list of previous commands for matching token",
-	L"Insert the pressed key",
-	L"Do nothing",
-	L"End of file",
-	L"Repeat command"
+  L"Move to beginning of line",
+  L"Move to end of line",
+  L"Move forward one character",
+  L"Move backward one character",
+  L"Move forward one word",
+  L"Move backward one word",
+  L"Search backward through list of previous commands",
+  L"Search forward through list of previous commands",
+  L"Delete one character forward",
+  L"Delete one character backward",
+  L"Move contents from cursor to end of line to killring",
+  L"Paste contents of killring",
+  L"Rotate to previous killring entry",
+  L"Guess the rest of the next input token",
+  L"Move to first item of history",
+  L"Move to last item of history",
+  L"Clear current line",
+  L"Move contents from beginning of line to cursor to killring",
+  L"Move entire line to killring",
+  L"Move next word to killring",
+  L"Move previous word to killring",
+  L"Write out key bindings",
+  L"Clear entire screen",
+  L"Quit the running program",
+  L"Search backward through list of previous commands for matching token",
+  L"Search forward through list of previous commands for matching token",
+  L"Insert the pressed key",
+  L"Do nothing",
+  L"End of file",
+  L"Repeat command"
 }
-	;
+  ;
 */
 
 /**
    Internal code for each supported input function
 */
-static const wchar_t code_arr[] = 
+static const wchar_t code_arr[] =
 {
-	R_BEGINNING_OF_LINE,
-	R_END_OF_LINE,
-	R_FORWARD_CHAR,
-	R_BACKWARD_CHAR,
-	R_FORWARD_WORD,
-	R_BACKWARD_WORD,
-	R_HISTORY_SEARCH_BACKWARD,
-	R_HISTORY_SEARCH_FORWARD,
-	R_DELETE_CHAR,
-	R_BACKWARD_DELETE_CHAR,
-	R_KILL_LINE,
-	R_YANK,
-	R_YANK_POP,
-	R_COMPLETE,
-	R_BEGINNING_OF_HISTORY,
-	R_END_OF_HISTORY,
-	R_BACKWARD_KILL_LINE,
-	R_KILL_WHOLE_LINE,
-	R_KILL_WORD,
-	R_BACKWARD_KILL_WORD,
-	R_DUMP_FUNCTIONS,
-	R_HISTORY_TOKEN_SEARCH_BACKWARD,
-	R_HISTORY_TOKEN_SEARCH_FORWARD,
-	R_SELF_INSERT,
-	R_NULL,
-	R_EOF,
-	R_VI_ARG_DIGIT,
-	R_EXECUTE,
-	R_BEGINNING_OF_BUFFER,
-	R_END_OF_BUFFER,
-	R_REPAINT,
-	R_UP_LINE,
-	R_DOWN_LINE,
-	R_SUPPRESS_AUTOSUGGESTION,
-	R_ACCEPT_AUTOSUGGESTION
+  R_BEGINNING_OF_LINE,
+  R_END_OF_LINE,
+  R_FORWARD_CHAR,
+  R_BACKWARD_CHAR,
+  R_FORWARD_WORD,
+  R_BACKWARD_WORD,
+  R_HISTORY_SEARCH_BACKWARD,
+  R_HISTORY_SEARCH_FORWARD,
+  R_DELETE_CHAR,
+  R_BACKWARD_DELETE_CHAR,
+  R_KILL_LINE,
+  R_YANK,
+  R_YANK_POP,
+  R_COMPLETE,
+  R_BEGINNING_OF_HISTORY,
+  R_END_OF_HISTORY,
+  R_BACKWARD_KILL_LINE,
+  R_KILL_WHOLE_LINE,
+  R_KILL_WORD,
+  R_BACKWARD_KILL_WORD,
+  R_DUMP_FUNCTIONS,
+  R_HISTORY_TOKEN_SEARCH_BACKWARD,
+  R_HISTORY_TOKEN_SEARCH_FORWARD,
+  R_SELF_INSERT,
+  R_NULL,
+  R_EOF,
+  R_VI_ARG_DIGIT,
+  R_EXECUTE,
+  R_BEGINNING_OF_BUFFER,
+  R_END_OF_BUFFER,
+  R_REPAINT,
+  R_UP_LINE,
+  R_DOWN_LINE,
+  R_SUPPRESS_AUTOSUGGESTION,
+  R_ACCEPT_AUTOSUGGESTION
 }
-	;
+  ;
 
 /** Mappings for the current input mode */
 static std::vector<input_mapping_t> mapping_list;
@@ -234,7 +234,7 @@ static std::vector<terminfo_mapping_t> mappings;
 
 
 /**
-   Set to one when the input subsytem has been initialized. 
+   Set to one when the input subsytem has been initialized.
 */
 static int is_init = 0;
 
@@ -249,25 +249,25 @@ static void input_terminfo_init();
 */
 
 void input_mapping_add( const wchar_t *sequence,
-			const wchar_t *command )
+      const wchar_t *command )
 {
-	size_t i;
-	CHECK( sequence, );
-	CHECK( command, );
-	
-	//	debug( 0, L"Add mapping from %ls to %ls", escape(sequence, 1), escape(command, 1 ) );
-	
+  size_t i;
+  CHECK( sequence, );
+  CHECK( command, );
 
-	for( i=0; i<mapping_list.size(); i++ )
-	{
-		input_mapping_t &m = mapping_list.at(i);
-		if(  m.seq == sequence )
-		{
-			m.command = command;
-			return;
-		}
-	}
-    mapping_list.push_back(input_mapping_t(sequence, command));	
+  //  debug( 0, L"Add mapping from %ls to %ls", escape(sequence, 1), escape(command, 1 ) );
+
+
+  for( i=0; i<mapping_list.size(); i++ )
+  {
+    input_mapping_t &m = mapping_list.at(i);
+    if(  m.seq == sequence )
+    {
+      m.command = command;
+      return;
+    }
+  }
+    mapping_list.push_back(input_mapping_t(sequence, command));
 }
 
 /**
@@ -276,29 +276,29 @@ void input_mapping_add( const wchar_t *sequence,
 */
 static int interrupt_handler()
 {
-	/*
-	  Fire any pending events
-	*/
-	event_fire( NULL );
-	
-	/*
-	  Reap stray processes, including printing exit status messages
-	*/
-	if( job_reap( 1 ) )
-		reader_repaint_needed();
-	
-	/*
-	  Tell the reader an event occured
-	*/
-	if( reader_interrupted() )
-	{
-		/*
-		  Return 3, i.e. the character read by a Control-C.
-		*/
-		return 3;
-	}
+  /*
+    Fire any pending events
+  */
+  event_fire( NULL );
 
-	return R_NULL;	
+  /*
+    Reap stray processes, including printing exit status messages
+  */
+  if( job_reap( 1 ) )
+    reader_repaint_needed();
+
+  /*
+    Tell the reader an event occured
+  */
+  if( reader_interrupted() )
+  {
+    /*
+      Return 3, i.e. the character read by a Control-C.
+    */
+    return 3;
+  }
+
+  return R_NULL;
 }
 
 void update_fish_term256(void)
@@ -329,54 +329,54 @@ void update_fish_term256(void)
 
 int input_init()
 {
-	if( is_init )
-		return 1;
-	
-	is_init = 1;
+  if( is_init )
+    return 1;
 
-	input_common_init( &interrupt_handler );
+  is_init = 1;
 
-	if( setupterm( 0, STDOUT_FILENO, 0) == ERR )
-	{
-		debug( 0, _( L"Could not set up terminal" ) );
-		exit_without_destructors(1);
-	}
+  input_common_init( &interrupt_handler );
+
+  if( setupterm( 0, STDOUT_FILENO, 0) == ERR )
+  {
+    debug( 0, _( L"Could not set up terminal" ) );
+    exit_without_destructors(1);
+  }
     const env_var_t term = env_get_string( L"TERM" );
     assert(! term.missing());
-	output_set_term( term.c_str() );
-	
-	input_terminfo_init();
-    
+  output_set_term( term.c_str() );
+
+  input_terminfo_init();
+
     update_fish_term256();
 
-	/* If we have no keybindings, add a few simple defaults */
-	if( mapping_list.empty() )
-	{
-		input_mapping_add( L"", L"self-insert" );
-		input_mapping_add( L"\n", L"execute" );
-		input_mapping_add( L"\t", L"complete" );
-		input_mapping_add( L"\x3", L"commandline \"\"" );
-		input_mapping_add( L"\x4", L"exit" );
-		input_mapping_add( L"\x5", L"bind" );
-	}
+  /* If we have no keybindings, add a few simple defaults */
+  if( mapping_list.empty() )
+  {
+    input_mapping_add( L"", L"self-insert" );
+    input_mapping_add( L"\n", L"execute" );
+    input_mapping_add( L"\t", L"complete" );
+    input_mapping_add( L"\x3", L"commandline \"\"" );
+    input_mapping_add( L"\x4", L"exit" );
+    input_mapping_add( L"\x5", L"bind" );
+  }
 
-	return 1;
+  return 1;
 }
 
 void input_destroy()
 {
-	if( !is_init )
-		return;
-	
+  if( !is_init )
+    return;
 
-	is_init=0;
-	
-	input_common_destroy();
-	
-	if( del_curterm( cur_term ) == ERR )
-	{
-		debug( 0, _(L"Error while closing terminfo") );
-	}
+
+  is_init=0;
+
+  input_common_destroy();
+
+  if( del_curterm( cur_term ) == ERR )
+  {
+    debug( 0, _(L"Error while closing terminfo") );
+  }
 }
 
 /**
@@ -384,50 +384,50 @@ void input_destroy()
 */
 static wint_t input_exec_binding( const input_mapping_t &m, const wcstring &seq )
 {
-	wchar_t code = input_function_get_code( m.command );
-	if( code != -1 )
-	{				
-		switch( code )
-		{
+  wchar_t code = input_function_get_code( m.command );
+  if( code != -1 )
+  {
+    switch( code )
+    {
 
-			case R_SELF_INSERT:
-			{
-				return seq[0];
-			}
-			
-			default:
-			{
-				return code;
-			}
-			
-		}
-	}
-	else
-	{
-		
-		/*
-		  This key sequence is bound to a command, which
-		  is sent to the parser for evaluation.
-		*/
-		int last_status = proc_get_last_status();
-	  		
-		parser_t::principal_parser().eval( m.command.c_str(), io_chain_t(), TOP );
-		
-		proc_set_last_status( last_status );
-		
-		/*
-		  We still need to return something to the caller, R_NULL
-		  tells the reader that no key press needs to be handled, 
-		  and no repaint is needed.
+      case R_SELF_INSERT:
+      {
+        return seq[0];
+      }
 
-		  Bindings that produce output should emit a R_REPAINT
-		  function by calling 'commandline -f repaint' to tell
-		  fish that a repaint is in order. 
-		*/
-		
-		return R_NULL;
+      default:
+      {
+        return code;
+      }
 
-	}
+    }
+  }
+  else
+  {
+
+    /*
+      This key sequence is bound to a command, which
+      is sent to the parser for evaluation.
+    */
+    int last_status = proc_get_last_status();
+
+    parser_t::principal_parser().eval( m.command.c_str(), io_chain_t(), TOP );
+
+    proc_set_last_status( last_status );
+
+    /*
+      We still need to return something to the caller, R_NULL
+      tells the reader that no key press needs to be handled,
+      and no repaint is needed.
+
+      Bindings that produce output should emit a R_REPAINT
+      function by calling 'commandline -f repaint' to tell
+      fish that a repaint is in order.
+    */
+
+    return R_NULL;
+
+  }
 }
 
 
@@ -437,18 +437,18 @@ static wint_t input_exec_binding( const input_mapping_t &m, const wcstring &seq 
 */
 static wint_t input_try_mapping( const input_mapping_t &m)
 {
-	wint_t c=0;
-	int j;
-    
-	/*
-	  Check if the actual function code of this mapping is on the stack
-	 */
-	c = input_common_readch( 0 );
-	if( c == input_function_get_code( m.command ) )
-	{
-		return input_exec_binding( m, m.seq );
-	}
-	input_unreadch( c );
+  wint_t c=0;
+  int j;
+
+  /*
+    Check if the actual function code of this mapping is on the stack
+   */
+  c = input_common_readch( 0 );
+  if( c == input_function_get_code( m.command ) )
+  {
+    return input_exec_binding( m, m.seq );
+  }
+  input_unreadch( c );
 
     const wchar_t *str = m.seq.c_str();
     for (j=0; str[j] != L'\0'; j++)
@@ -458,7 +458,7 @@ static wint_t input_try_mapping( const input_mapping_t &m)
         if (str[j] != c)
             break;
     }
-    
+
     if( str[j] == L'\0' )
     {
         /* We matched the entire sequence */
@@ -476,130 +476,130 @@ static wint_t input_try_mapping( const input_mapping_t &m)
             input_unreadch( m.seq[k] );
         }
     }
-	return 0;
-		
+  return 0;
+
 }
 
 void input_unreadch( wint_t ch )
 {
-	input_common_unreadch( ch );
+  input_common_unreadch( ch );
 }
 
 wint_t input_readch()
 {
-	
-	size_t i;
-    
-	CHECK_BLOCK( R_NULL );
-	
-	/*
+
+  size_t i;
+
+  CHECK_BLOCK( R_NULL );
+
+  /*
      Clear the interrupted flag
      */
-	reader_interrupted();
-	
-	/*
+  reader_interrupted();
+
+  /*
      Search for sequence in mapping tables
      */
-    
-	while( 1 )
-	{
-		const input_mapping_t *generic = 0;
-		for( i=0; i<mapping_list.size(); i++ )
-		{
-			const input_mapping_t &m = mapping_list.at(i);
-			wint_t res = input_try_mapping( m );		
-			if( res )
-				return res;
-			
-			if( m.seq.length() == 0 )
-			{
-				generic = &m;
-			}
-			
-		}
-		
-		/*
+
+  while( 1 )
+  {
+    const input_mapping_t *generic = 0;
+    for( i=0; i<mapping_list.size(); i++ )
+    {
+      const input_mapping_t &m = mapping_list.at(i);
+      wint_t res = input_try_mapping( m );
+      if( res )
+        return res;
+
+      if( m.seq.length() == 0 )
+      {
+        generic = &m;
+      }
+
+    }
+
+    /*
          No matching exact mapping, try to find generic mapping.
          */
-        
-		if( generic )
-		{	
-			wchar_t arr[2]=
+
+    if( generic )
+    {
+      wchar_t arr[2]=
             {
-                0, 
+                0,
                 0
             }
-			;
-			arr[0] = input_common_readch(0);
-			
-			return input_exec_binding( *generic, arr );				
-		}
-        
-		/*
+      ;
+      arr[0] = input_common_readch(0);
+
+      return input_exec_binding( *generic, arr );
+    }
+
+    /*
          No action to take on specified character, ignore it
          and move to next one.
          */
-		wchar_t c = input_common_readch( 0 );
-        
+    wchar_t c = input_common_readch( 0 );
+
         /* If it's closed, then just return */
         if (c == R_EOF)
         {
             return WEOF;
         }
-    }	
+    }
 }
 
 void input_mapping_get_names( wcstring_list_t &lst )
 {
-	size_t i;
-	
-	for( i=0; i<mapping_list.size(); i++ )
-	{
-		const input_mapping_t &m = mapping_list.at(i);
+  size_t i;
+
+  for( i=0; i<mapping_list.size(); i++ )
+  {
+    const input_mapping_t &m = mapping_list.at(i);
         lst.push_back(wcstring(m.seq));
-	}
-	
+  }
+
 }
 
 
 bool input_mapping_erase( const wchar_t *sequence )
 {
     ASSERT_IS_MAIN_THREAD();
-	bool result = false;
-	size_t i, sz = mapping_list.size();
-	
-	for( i=0; i<sz; i++ )
-	{
-		const input_mapping_t &m = mapping_list.at(i);
-		if( sequence == m.seq )
-		{
-			if( i != (sz-1 ) )
-			{
+  bool result = false;
+  size_t i, sz = mapping_list.size();
+
+  for( i=0; i<sz; i++ )
+  {
+    const input_mapping_t &m = mapping_list.at(i);
+    if( sequence == m.seq )
+    {
+      if( i != (sz-1 ) )
+      {
                 mapping_list[i] = mapping_list[sz-1];
-			}
+      }
             mapping_list.pop_back();
-			result = true;
-			break;
-			
-		}
-	}
-	return result;
+      result = true;
+      break;
+
+    }
+  }
+  return result;
 }
 
 bool input_mapping_get( const wcstring &sequence, wcstring &cmd )
 {
-	size_t i, sz = mapping_list.size();
-	
-	for( i=0; i<sz; i++ )
-	{
-		const input_mapping_t &m = mapping_list.at(i);
-		if( sequence == m.seq )
-		{
-			cmd = m.command;
+  size_t i, sz = mapping_list.size();
+
+  for( i=0; i<sz; i++ )
+  {
+    const input_mapping_t &m = mapping_list.at(i);
+    if( sequence == m.seq )
+    {
+      cmd = m.command;
             return true;
-		}
-	}
-	return false;
+    }
+  }
+  return false;
 }
 
 /**
@@ -655,11 +655,11 @@ static void input_terminfo_init()
        TERMINFO_ADD(key_f19),
        TERMINFO_ADD(key_f20),
        /*
-	 I know of no keyboard with more than 20 function keys, so
-	 adding the rest here makes very little sense, since it will
-	 take up a lot of room in any listings (like tab completions),
-	 but with no benefit.
-	*/
+   I know of no keyboard with more than 20 function keys, so
+   adding the rest here makes very little sense, since it will
+   take up a lot of room in any listings (like tab completions),
+   but with no benefit.
+  */
        /*
        TERMINFO_ADD(key_f21),
        TERMINFO_ADD(key_f22),
@@ -773,76 +773,76 @@ static void input_terminfo_init()
 const wchar_t *input_terminfo_get_sequence( const wchar_t *name )
 {
     ASSERT_IS_MAIN_THREAD();
-    
-	const char *res = 0;
+
+  const char *res = 0;
     static wcstring buff;
-	int err = ENOENT;
-	
-	CHECK( name, 0 );
-	input_init();
-	
-	for( size_t i=0; i<terminfo_mappings.size(); i++ )
-	{
-		const terminfo_mapping_t &m = terminfo_mappings.at(i);
-		if( !wcscmp( name, m.name ) )
-		{
-			res = m.seq;
-			err = EILSEQ;
-			break;
-		}
-	}
-	
-	if( !res )
-	{
-		errno = err;
-		return 0;
-	}
-	
+  int err = ENOENT;
+
+  CHECK( name, 0 );
+  input_init();
+
+  for( size_t i=0; i<terminfo_mappings.size(); i++ )
+  {
+    const terminfo_mapping_t &m = terminfo_mappings.at(i);
+    if( !wcscmp( name, m.name ) )
+    {
+      res = m.seq;
+      err = EILSEQ;
+      break;
+    }
+  }
+
+  if( !res )
+  {
+    errno = err;
+    return 0;
+  }
+
     buff = format_string(L"%s", res);
-	return buff.c_str();
-		
+  return buff.c_str();
+
 }
 
 bool input_terminfo_get_name( const wcstring &seq, wcstring &name )
 {
-	input_init();
-	
-	for( size_t i=0; i<terminfo_mappings.size(); i++ )
-	{
-		terminfo_mapping_t &m = terminfo_mappings.at(i);
-		
-		if( !m.seq )
-		{
-			continue;
-		}
-		
+  input_init();
+
+  for( size_t i=0; i<terminfo_mappings.size(); i++ )
+  {
+    terminfo_mapping_t &m = terminfo_mappings.at(i);
+
+    if( !m.seq )
+    {
+      continue;
+    }
+
         const wcstring map_buf = format_string(L"%s",  m.seq);
         if (map_buf == seq) {
             name = m.name;
             return true;
         }
     }
-	
-	return false;
+
+  return false;
 }
 
 wcstring_list_t input_terminfo_get_names( bool skip_null )
 {
     wcstring_list_t result;
     result.reserve(terminfo_mappings.size());
-    
-	input_init();
-		
-	for( size_t i=0; i<terminfo_mappings.size(); i++ )
-	{
-		terminfo_mapping_t &m = terminfo_mappings.at(i);
-		
-		if( skip_null && !m.seq )
-		{
-			continue;
-		}
+
+  input_init();
+
+  for( size_t i=0; i<terminfo_mappings.size(); i++ )
+  {
+    terminfo_mapping_t &m = terminfo_mappings.at(i);
+
+    if( skip_null && !m.seq )
+    {
+      continue;
+    }
         result.push_back(wcstring(m.name));
-	}
+  }
     return result;
 }
 
@@ -855,13 +855,13 @@ wcstring_list_t input_function_get_names( void )
 wchar_t input_function_get_code( const wcstring &name )
 {
 
-	size_t i;
-	for( i = 0; i<(sizeof( code_arr )/sizeof(wchar_t)) ; i++ )
-	{
-		if( name == name_arr[i] )
-		{
-			return code_arr[i];
-		}
-	}
-	return -1;		
+  size_t i;
+  for( i = 0; i<(sizeof( code_arr )/sizeof(wchar_t)) ; i++ )
+  {
+    if( name == name_arr[i] )
+    {
+      return code_arr[i];
+    }
+  }
+  return -1;
 }

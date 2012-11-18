@@ -18,7 +18,7 @@ complete -c xdg-mime -d 'Mimetype'           -n '__fish_seen_subcommand_from def
 # complete xdg-mime install
 complete -c xdg-mime -d 'Add filetype description' -n 'contains_seq xdg-mime install -- (commandline -cop)' -r
 complete -c xdg-mime -d 'Set mode'                 -n 'contains_seq xdg-mime install -- (commandline -cop)' -l mode -xa 'user system'
-complete -c xdg-mime -d 'Disable vendor check'     -n 'contains_seq xdg-mime install -- (commandline -cop)' -l novendor 
+complete -c xdg-mime -d 'Disable vendor check'     -n 'contains_seq xdg-mime install -- (commandline -cop)' -l novendor
 
 # complete xdg-mime uninstall
 complete -c xdg-mime -d 'Remove filetype description' -n 'contains_seq xdg-mime uninstall -- (commandline -cop)' -r

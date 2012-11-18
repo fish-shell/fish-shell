@@ -71,7 +71,7 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
 
     # Query and sync options
     for condition in query sync
-        complete -c $progname -n $$condition -s g -l groups     -d 'Display all packages in GROUP' -xa "$listgroups" 
+        complete -c $progname -n $$condition -s g -l groups     -d 'Display all packages in GROUP' -xa "$listgroups"
         complete -c $progname -n $$condition -s i -l info       -d 'Display information on PACKAGE'
         complete -c $progname -n $$condition -s q -l quiet      -d 'Show less information'
         complete -c $progname -n $$condition -s s -l search -r  -d 'Search packages for regexp'

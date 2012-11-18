@@ -1,13 +1,13 @@
 /** \file event.h
 
-	Functions for handling event triggers
+  Functions for handling event triggers
 
-	Because most of these functions can be called by signal
-	handler, it is important to make it well defined when these
-	functions produce output or perform memory allocations, since
-	such functions may not be safely called by signal handlers.
+  Because most of these functions can be called by signal
+  handler, it is important to make it well defined when these
+  functions produce output or perform memory allocations, since
+  such functions may not be safely called by signal handlers.
 
-	
+
 */
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
@@ -31,14 +31,14 @@
 */
 enum
 {
-	EVENT_ANY, /**< Matches any event type (Not always any event, as the function name may limit the choice as well */
-	EVENT_SIGNAL, /**< An event triggered by a signal */
-	EVENT_VARIABLE, /**< An event triggered by a variable update */
-	EVENT_EXIT, /**< An event triggered by a job or process exit */
-	EVENT_JOB_ID, /**< An event triggered by a job exit */
-	EVENT_GENERIC, /**< A generic event */
+  EVENT_ANY, /**< Matches any event type (Not always any event, as the function name may limit the choice as well */
+  EVENT_SIGNAL, /**< An event triggered by a signal */
+  EVENT_VARIABLE, /**< An event triggered by a variable update */
+  EVENT_EXIT, /**< An event triggered by a job or process exit */
+  EVENT_JOB_ID, /**< An event triggered by a job exit */
+  EVENT_GENERIC, /**< A generic event */
 }
-	;
+  ;
 
 /**
    The structure which represents an event. The event_t struct has
@@ -49,75 +49,75 @@ enum
 */
 struct event_t
 {
-	/**
-	   Type of event
-	*/
-	int type;
+  /**
+     Type of event
+  */
+  int type;
 
-	/** The type-specific parameter. The int types are one of the following:
-    
-		   signal: Signal number for signal-type events.Use EVENT_ANY_SIGNAL to match any signal
+  /** The type-specific parameter. The int types are one of the following:
+
+       signal: Signal number for signal-type events.Use EVENT_ANY_SIGNAL to match any signal
            pid: Process id for process-type events. Use EVENT_ANY_PID to match any pid.
            job_id: Job id for EVENT_JOB_ID type events
-    */     
+    */
     union {
         int signal;
         int job_id;
         pid_t pid;
     } param1;
-    
+
     /** The string types are one of the following:
-    
+
           variable: Variable name for variable-type events.
           param: The parameter describing this generic event.
     */
     wcstring str_param1;
 
-	/**
-	   The name of the event handler function
-	*/
-	wcstring function_name;	
+  /**
+     The name of the event handler function
+  */
+  wcstring function_name;
 
-	/**
-	   The argument list. Only used when sending a new event using
-	   event_fire. In all other situations, the value of this variable
-	   is ignored.
-	*/
+  /**
+     The argument list. Only used when sending a new event using
+     event_fire. In all other situations, the value of this variable
+     is ignored.
+  */
     std::auto_ptr<wcstring_list_t> arguments;
-    
+
     event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments() { }
-    
+
     /** Copy constructor */
     event_t(const event_t &x);
-    
+
     static event_t signal_event(int sig);
     static event_t variable_event(const wcstring &str);
     static event_t generic_event(const wcstring &str);
 };
 
 /**
-   Add an event handler 
+   Add an event handler
 
    May not be called by a signal handler, since it may allocate new memory.
 */
 void event_add_handler( const event_t *event );
 
 /**
-   Remove all events matching the specified criterion. 
+   Remove all events matching the specified criterion.
 
    May not be called by a signal handler, since it may free allocated memory.
 */
 void event_remove( event_t *event );
 
 /**
-   Return all events which match the specified event class 
+   Return all events which match the specified event class
 
    This function is safe to call from a signal handler _ONLY_ if the
    out parameter is null.
 
    \param criterion Is the class of events to return. If the criterion has a non-null function_name, only events which trigger the specified function will return.
    \param out the list to add events to. May be 0, in which case no events will be added, but the result count will still be valid
-   
+
    \return the number of found matches
 */
 int event_get( event_t *criterion, std::vector<event_t *> *out );

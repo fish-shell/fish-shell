@@ -1,5 +1,5 @@
 /** \file input_common.h
-	
+
 Header file for the low level input library
 
 */
@@ -15,15 +15,15 @@ Header file for the low level input library
 
 enum
 {
-	/**
-	   R_NULL is sometimes returned by the input when a character was
-	   requested but none could be delivered, or when an exception
-	   happened.
-	*/
-	R_NULL = INPUT_COMMON_RESERVED,
-	R_EOF
+  /**
+     R_NULL is sometimes returned by the input when a character was
+     requested but none could be delivered, or when an exception
+     happened.
+  */
+  R_NULL = INPUT_COMMON_RESERVED,
+  R_EOF
 }
-	;
+  ;
 
 /**
    Init the library

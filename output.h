@@ -1,5 +1,5 @@
 /** \file output.h
-	Generic output functions
+  Generic output functions
 */
 /**
    Constants for various character classifications. Each character of a command string can be classified as one of the following types.
@@ -13,22 +13,22 @@
 #include "color.h"
 
 /**
-   Constants for various colors as used by the set_color function. 
+   Constants for various colors as used by the set_color function.
 */
 enum
 {
-	FISH_COLOR_BLACK,
-	FISH_COLOR_RED,
-	FISH_COLOR_GREEN,
-	FISH_COLOR_YELLOW,
-	FISH_COLOR_BLUE,
-	FISH_COLOR_MAGENTA,
-	FISH_COLOR_CYAN,
-	FISH_COLOR_WHITE,
-	/** The default fg color of the terminal */
-	FISH_COLOR_NORMAL,
-	FISH_COLOR_IGNORE,
-	FISH_COLOR_RESET
+  FISH_COLOR_BLACK,
+  FISH_COLOR_RED,
+  FISH_COLOR_GREEN,
+  FISH_COLOR_YELLOW,
+  FISH_COLOR_BLUE,
+  FISH_COLOR_MAGENTA,
+  FISH_COLOR_CYAN,
+  FISH_COLOR_WHITE,
+  /** The default fg color of the terminal */
+  FISH_COLOR_NORMAL,
+  FISH_COLOR_IGNORE,
+  FISH_COLOR_RESET
 }
 ;
 
@@ -81,21 +81,21 @@ void set_color(rgb_color_t c, rgb_color_t c2);
 #define writembs( mbs )                         \
         {                                       \
                 char *tmp = mbs;                \
-                if( tmp )				\
-                {					\
-                        writembs_internal( tmp );			\
-                }							\
-                else							\
-                {							\
-                        debug( 0,					\
-			       _(L"Tried to use terminfo string %s on line %d of %s, which is undefined in terminal of type \"%ls\". Please report this error to %s"), \
-			       #mbs,					\
-			       __LINE__,				\
-			       __FILE__,				\
-			       output_get_term(),			\
-			       PACKAGE_BUGREPORT);			\
-		}                                                       \
-	}
+                if( tmp )        \
+                {          \
+                        writembs_internal( tmp );      \
+                }              \
+                else              \
+                {              \
+                        debug( 0,          \
+             _(L"Tried to use terminfo string %s on line %d of %s, which is undefined in terminal of type \"%ls\". Please report this error to %s"), \
+             #mbs,          \
+             __LINE__,        \
+             __FILE__,        \
+             output_get_term(),      \
+             PACKAGE_BUGREPORT);      \
+    }                                                       \
+  }
 
 
 /**

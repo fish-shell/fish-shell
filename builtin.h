@@ -1,5 +1,5 @@
 /** \file builtin.h
-	Prototypes for functions for executing builtin functions.
+  Prototypes for functions for executing builtin functions.
 */
 
 #ifndef FISH_BUILTIN_H
@@ -15,9 +15,9 @@ class parser_t;
 
 enum
 {
-	COMMAND_NOT_BUILTIN,
-	BUILTIN_REGULAR,
-	BUILTIN_FUNCTION
+  COMMAND_NOT_BUILTIN,
+  BUILTIN_REGULAR,
+  BUILTIN_FUNCTION
 }
 ;
 
@@ -49,7 +49,7 @@ enum
 /**
    Error message for unknown switch
 */
-#define BUILTIN_ERR_UNKNOWN	_( L"%ls: Unknown option '%ls'\n" )
+#define BUILTIN_ERR_UNKNOWN  _( L"%ls: Unknown option '%ls'\n" )
 
 /**
    Error message for invalid character in variable name
@@ -67,7 +67,7 @@ enum
 #define BUILTIN_FOR_ERR_IN _( L"%ls: Second argument must be 'in'\n" )
 
 /**
-   Error message for insufficient number of arguments 
+   Error message for insufficient number of arguments
 */
 #define BUILTIN_FOR_ERR_COUNT _( L"%ls: Expected at least two arguments, got %d\n")
 
@@ -113,7 +113,7 @@ extern int builtin_err_redirect;
 
 
 /**
-   Initialize builtin data. 
+   Initialize builtin data.
 */
 void builtin_init();
 
@@ -128,12 +128,12 @@ void builtin_destroy();
 int builtin_exists( const wcstring &cmd );
 
 /**
-  Execute a builtin command 
+  Execute a builtin command
 
   \param parser The parser being used
-  \param argv Array containing the command and parameters 
+  \param argv Array containing the command and parameters
   of the builtin.  The list is terminated by a
-  null pointer. This syntax resembles the syntax 
+  null pointer. This syntax resembles the syntax
   for exec.
   \param io the io redirections to perform on this builtin.
 

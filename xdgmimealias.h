@@ -16,7 +16,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.   See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -40,11 +40,11 @@ typedef struct XdgAliasList XdgAliasList;
 #endif
 
 void          _xdg_mime_alias_read_from_file (XdgAliasList *list,
-					      const char   *file_name);
+                const char   *file_name);
 XdgAliasList *_xdg_mime_alias_list_new       (void);
 void          _xdg_mime_alias_list_free      (XdgAliasList *list);
 const char   *_xdg_mime_alias_list_lookup    (XdgAliasList *list,
-					      const char  *alias);
+                const char  *alias);
 void          _xdg_mime_alias_list_dump      (XdgAliasList *list);
 
 #endif /* __XDG_MIME_ALIAS_H__ */

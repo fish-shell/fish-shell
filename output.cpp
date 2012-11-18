@@ -65,21 +65,21 @@
 static int writeb_internal( char c );
 
 /**
- Names of different colors. 
+ Names of different colors.
  */
 static const wchar_t *col[]=
 {
-	L"black",
-	L"red",
-	L"green",
-	L"brown",
-	L"yellow",
-	L"blue",
-	L"magenta",
-	L"purple",
-	L"cyan",
-	L"white"
-	L"normal"
+  L"black",
+  L"red",
+  L"green",
+  L"brown",
+  L"yellow",
+  L"blue",
+  L"magenta",
+  L"purple",
+  L"cyan",
+  L"white"
+  L"normal"
 }
 ;
 
@@ -91,17 +91,17 @@ static const wchar_t *col[]=
  */
 static const int col_idx[]=
 {
-	0, 
-	1,
-	2,
-	3,
-	3,
-	4,
-	5,
-	5,
-	6,
-	7,
-	FISH_COLOR_NORMAL,
+  0,
+  1,
+  2,
+  3,
+  3,
+  4,
+  5,
+  5,
+  6,
+  7,
+  FISH_COLOR_NORMAL,
 };
 
 /**
@@ -121,13 +121,13 @@ static bool support_term256 = false;
 
 void output_set_writer( int (*writer)(char) )
 {
-	CHECK( writer, );
-	out = writer;
+  CHECK( writer, );
+  out = writer;
 }
 
 int (*output_get_writer())(char)
 {
-	return out;
+  return out;
 }
 
 static bool term256_support_is_native(void) {
@@ -166,14 +166,14 @@ static bool write_color(char *todo, unsigned char idx, bool is_fg) {
         strcat(buff, is_fg ? "38;5;" : "48;5;");
         strcat(buff, stridx);
         strcat(buff, "m");
-        
+
         int (*writer)(char) = output_get_writer();
         if (writer) {
             for (size_t i=0; buff[i]; i++) {
                 writer(buff[i]);
             }
         }
-        
+
         result = true;
     }
     return result;
@@ -202,188 +202,188 @@ static bool write_background_color(unsigned char idx) {
 
 void set_color(rgb_color_t c, rgb_color_t c2)
 {
-    
+
 #if 0
     wcstring tmp = c.description();
     wcstring tmp2 = c2.description();
     printf("set_color %ls : %ls\n", tmp.c_str(), tmp2.c_str());
-#endif    
+#endif
     ASSERT_IS_MAIN_THREAD();
-    
+
     const rgb_color_t normal = rgb_color_t::normal();
     static rgb_color_t last_color = rgb_color_t::normal();
-	static rgb_color_t last_color2 = rgb_color_t::normal();
-	static int was_bold=0;
-	static int was_underline=0;
-	int bg_set=0, last_bg_set=0;
-    
-	int is_bold = 0;
-	int is_underline = 0;
-    
-	/*
+  static rgb_color_t last_color2 = rgb_color_t::normal();
+  static int was_bold=0;
+  static int was_underline=0;
+  int bg_set=0, last_bg_set=0;
+
+  int is_bold = 0;
+  int is_underline = 0;
+
+  /*
      Test if we have at least basic support for setting fonts, colors
      and related bits - otherwise just give up...
      */
-	if( !exit_attribute_mode )
-	{
-		return;
-	}
-	
-    
-	is_bold |= c.is_bold();
-	is_bold |= c2.is_bold();
-    
-	is_underline |= c.is_underline();
-	is_underline |= c2.is_underline();
-    
-	if( c.is_reset() || c2.is_reset())
-	{
-		c = c2 = normal;
-		was_bold=0;
-		was_underline=0;
+  if( !exit_attribute_mode )
+  {
+    return;
+  }
+
+
+  is_bold |= c.is_bold();
+  is_bold |= c2.is_bold();
+
+  is_underline |= c.is_underline();
+  is_underline |= c2.is_underline();
+
+  if( c.is_reset() || c2.is_reset())
+  {
+    c = c2 = normal;
+    was_bold=0;
+    was_underline=0;
         /*
          If we exit attibute mode, we must first set a color, or
          previously coloured text might lose it's
          color. Terminals are weird...
          */
         write_foreground_color(0);
-		writembs( exit_attribute_mode );
-		return;
-	}
-    
-	if( was_bold && !is_bold )
-	{
-		/*
-         Only way to exit bold mode is a reset of all attributes. 
+    writembs( exit_attribute_mode );
+    return;
+  }
+
+  if( was_bold && !is_bold )
+  {
+    /*
+         Only way to exit bold mode is a reset of all attributes.
          */
-		writembs( exit_attribute_mode );
-		last_color = normal;
-		last_color2 = normal;
-		was_bold=0;
-		was_underline=0;
-	}
-	
-	if( ! last_color2.is_normal() &&
+    writembs( exit_attribute_mode );
+    last_color = normal;
+    last_color2 = normal;
+    was_bold=0;
+    was_underline=0;
+  }
+
+  if( ! last_color2.is_normal() &&
        ! last_color2.is_reset() &&
        ! last_color2.is_ignore() )
-	{
-		/*
+  {
+    /*
          Background was set
          */
-		last_bg_set=1;
-	}
-    
-	if( ! c2.is_normal() &&
+    last_bg_set=1;
+  }
+
+  if( ! c2.is_normal() &&
        ! c2.is_ignore())
-	{
-		/*
+  {
+    /*
          Background is set
          */
-		bg_set=1;
+    bg_set=1;
         if ( c==c2 )
             c = (c2==rgb_color_t::white())?rgb_color_t::black():rgb_color_t::white();
-	}
-    
-	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))
-	{
-		if(bg_set && !last_bg_set)
-		{
-			/*
+  }
+
+  if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))
+  {
+    if(bg_set && !last_bg_set)
+    {
+      /*
              Background color changed and is set, so we enter bold
              mode to make reading easier. This means bold mode is
              _always_ on when the background color is set.
              */
-			writembs( enter_bold_mode );
-		}
-		if(!bg_set && last_bg_set)
-		{
-			/*
+      writembs( enter_bold_mode );
+    }
+    if(!bg_set && last_bg_set)
+    {
+      /*
              Background color changed and is no longer set, so we
              exit bold mode
              */
-			writembs( exit_attribute_mode );
-			was_bold=0;
-			was_underline=0;
-			/*
+      writembs( exit_attribute_mode );
+      was_bold=0;
+      was_underline=0;
+      /*
              We don't know if exit_attribute_mode resets colors, so
              we set it to something known.
              */
-			if( write_foreground_color(0))
-			{
-				last_color=rgb_color_t::black();
-			}
-		}
-	}
-    
-	if( last_color != c )
-	{
-		if( c.is_normal() )
-		{
-			write_foreground_color(0);
-			writembs( exit_attribute_mode );
-            
-			last_color2 = rgb_color_t::normal();
-			was_bold=0;
-			was_underline=0;
-		}
-		else if( ! c.is_special() )
-		{
+      if( write_foreground_color(0))
+      {
+        last_color=rgb_color_t::black();
+      }
+    }
+  }
+
+  if( last_color != c )
+  {
+    if( c.is_normal() )
+    {
+      write_foreground_color(0);
+      writembs( exit_attribute_mode );
+
+      last_color2 = rgb_color_t::normal();
+      was_bold=0;
+      was_underline=0;
+    }
+    else if( ! c.is_special() )
+    {
             write_foreground_color(index_for_color(c));
-		}
-	}
-    
-	last_color = c;
-    
-	if( last_color2 != c2 )
-	{
-		if( c2.is_normal() )
-		{
+    }
+  }
+
+  last_color = c;
+
+  if( last_color2 != c2 )
+  {
+    if( c2.is_normal() )
+    {
             write_background_color(0);
-            
-			writembs( exit_attribute_mode );
-			if( ! last_color.is_normal())
-			{
+
+      writembs( exit_attribute_mode );
+      if( ! last_color.is_normal())
+      {
                 write_foreground_color(index_for_color(last_color));
-			}
-			
-            
-			was_bold=0;
-			was_underline=0;
-			last_color2 = c2;
-		}
-		else if ( ! c2.is_special() )
-		{
+      }
+
+
+      was_bold=0;
+      was_underline=0;
+      last_color2 = c2;
+    }
+    else if ( ! c2.is_special() )
+    {
             write_background_color(index_for_color(c2));
-			last_color2 = c2;
-		}
-	}
-    
-	/*
+      last_color2 = c2;
+    }
+  }
+
+  /*
      Lastly, we set bold mode and underline mode correctly
      */
-	if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set )
-	{
-		if( is_bold && !was_bold )
-		{
-			if( enter_bold_mode )
-			{
-				writembs( tparm( enter_bold_mode ) );
-			}
-		}
-		was_bold = is_bold;	
-	}
-    
-	if( was_underline && !is_underline )
-	{
-		writembs( exit_underline_mode );		
-	}
-	
-	if( !was_underline && is_underline )
-	{
-		writembs( enter_underline_mode );		
-	}
-	was_underline = is_underline;
-	
+  if( (enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0) && !bg_set )
+  {
+    if( is_bold && !was_bold )
+    {
+      if( enter_bold_mode )
+      {
+        writembs( tparm( enter_bold_mode ) );
+      }
+    }
+    was_bold = is_bold;
+  }
+
+  if( was_underline && !is_underline )
+  {
+    writembs( exit_underline_mode );
+  }
+
+  if( !was_underline && is_underline )
+  {
+    writembs( enter_underline_mode );
+  }
+  was_underline = is_underline;
+
 }
 
 /**
@@ -391,80 +391,80 @@ void set_color(rgb_color_t c, rgb_color_t c2)
  */
 static int writeb_internal( char c )
 {
-	write_loop( 1, &c, 1 );
-	return 0;
+  write_loop( 1, &c, 1 );
+  return 0;
 }
 
 int writeb( tputs_arg_t b )
 {
-	out( b );
-	return 0;
+  out( b );
+  return 0;
 }
 
 int writembs_internal( char *str )
 {
-	CHECK( str, 1 );
-    
-	return tputs(str,1,&writeb)==ERR?1:0;
+  CHECK( str, 1 );
+
+  return tputs(str,1,&writeb)==ERR?1:0;
 }
 
 int writech( wint_t ch )
 {
-	mbstate_t state;
-	size_t i;
-	char buff[MB_LEN_MAX+1];
-	size_t bytes;
-    
-	if( ( ch >= ENCODE_DIRECT_BASE) &&
+  mbstate_t state;
+  size_t i;
+  char buff[MB_LEN_MAX+1];
+  size_t bytes;
+
+  if( ( ch >= ENCODE_DIRECT_BASE) &&
        ( ch < ENCODE_DIRECT_BASE+256) )
-	{
-		buff[0] = ch - ENCODE_DIRECT_BASE;
-		bytes=1;
-	}
-	else
-	{
-		memset( &state, 0, sizeof(state) );
-		bytes= wcrtomb( buff, ch, &state );
-		
-		switch( bytes )
-		{
-			case (size_t)(-1):
-			{
-				return 1;
-			}
-		}
-	}
-	
-	for( i=0; i<bytes; i++ )
-	{
-		out( buff[i] );
-	}
-	return 0;
+  {
+    buff[0] = ch - ENCODE_DIRECT_BASE;
+    bytes=1;
+  }
+  else
+  {
+    memset( &state, 0, sizeof(state) );
+    bytes= wcrtomb( buff, ch, &state );
+
+    switch( bytes )
+    {
+      case (size_t)(-1):
+      {
+        return 1;
+      }
+    }
+  }
+
+  for( i=0; i<bytes; i++ )
+  {
+    out( buff[i] );
+  }
+  return 0;
 }
 
 void writestr( const wchar_t *str )
 {
-	char *pos;
-    
-	CHECK( str, );
-	
-    //	while( *str )
-    //		writech( *str++ );
-    
-	/*
+  char *pos;
+
+  CHECK( str, );
+
+    //  while( *str )
+    //    writech( *str++ );
+
+  /*
      Check amount of needed space
      */
-	size_t len = wcstombs( 0, str, 0 );
-    
-	if( len == (size_t)-1 )
-	{
-		debug( 1, L"Tried to print invalid wide character string" );
-		return;
-	}
-	
-	len++;
-    
-	/*
+  size_t len = wcstombs( 0, str, 0 );
+
+  if( len == (size_t)-1 )
+  {
+    debug( 1, L"Tried to print invalid wide character string" );
+    return;
+  }
+
+  len++;
+
+  /*
      Convert
      */
     char *buffer, static_buffer[256];
@@ -472,19 +472,19 @@ void writestr( const wchar_t *str )
         buffer = static_buffer;
     else
         buffer = new char[len];
-    
-	wcstombs( buffer, 
+
+  wcstombs( buffer,
              str,
              len );
-    
-	/*
+
+  /*
      Write
      */
-	for( pos = buffer; *pos; pos++ )
-	{
-		out( *pos );
-	}
-    
+  for( pos = buffer; *pos; pos++ )
+  {
+    out( *pos );
+  }
+
     if (buffer != static_buffer)
         delete[] buffer;
 }
@@ -492,93 +492,93 @@ void writestr( const wchar_t *str )
 
 void writestr_ellipsis( const wchar_t *str, int max_width )
 {
-	int written=0;
-	int tot;
-    
-	CHECK( str, );
-	
-	tot = my_wcswidth(str);
-    
-	if( tot <= max_width )
-	{
-		writestr( str );
-		return;
-	}
-    
-	while( *str != 0 )
-	{
-		int w = fish_wcwidth( *str );
-		if( written+w+fish_wcwidth( ellipsis_char )>max_width )
-		{
-			break;
-		}
-		written+=w;
-		writech( *(str++) );
-	}
-    
-	written += fish_wcwidth( ellipsis_char );
-	writech( ellipsis_char );
-    
-	while( written < max_width )
-	{
-		written++;
-		writestr( L" " );
-	}
+  int written=0;
+  int tot;
+
+  CHECK( str, );
+
+  tot = my_wcswidth(str);
+
+  if( tot <= max_width )
+  {
+    writestr( str );
+    return;
+  }
+
+  while( *str != 0 )
+  {
+    int w = fish_wcwidth( *str );
+    if( written+w+fish_wcwidth( ellipsis_char )>max_width )
+    {
+      break;
+    }
+    written+=w;
+    writech( *(str++) );
+  }
+
+  written += fish_wcwidth( ellipsis_char );
+  writech( ellipsis_char );
+
+  while( written < max_width )
+  {
+    written++;
+    writestr( L" " );
+  }
 }
 
 int write_escaped_str( const wchar_t *str, int max_len )
 {
-    
-	wchar_t *out;
-	int i;
-	int len;
-	int written=0;
-    
-	CHECK( str, 0 );
-	
-	out = escape( str, 1 );
-	len = my_wcswidth( out );
-    
-	if( max_len && (max_len < len))
-	{
-		for( i=0; (written+fish_wcwidth(out[i]))<=(max_len-1); i++ )
-		{
-			writech( out[i] );
-			written += fish_wcwidth( out[i] );
-		}
-		writech( ellipsis_char );
-		written += fish_wcwidth( ellipsis_char );
-		
-		for( i=written; i<max_len; i++ )
-		{
-			writech( L' ' );
-			written++;
-		}
-	}
-	else
-	{
-		written = len;
-		writestr( out );
-	}
-    
-	free( out );
-	return written;
+
+  wchar_t *out;
+  int i;
+  int len;
+  int written=0;
+
+  CHECK( str, 0 );
+
+  out = escape( str, 1 );
+  len = my_wcswidth( out );
+
+  if( max_len && (max_len < len))
+  {
+    for( i=0; (written+fish_wcwidth(out[i]))<=(max_len-1); i++ )
+    {
+      writech( out[i] );
+      written += fish_wcwidth( out[i] );
+    }
+    writech( ellipsis_char );
+    written += fish_wcwidth( ellipsis_char );
+
+    for( i=written; i<max_len; i++ )
+    {
+      writech( L' ' );
+      written++;
+    }
+  }
+  else
+  {
+    written = len;
+    writestr( out );
+  }
+
+  free( out );
+  return written;
 }
 
 
 int output_color_code( const wcstring &val, bool is_background ) {
-	size_t i;
+  size_t i;
     int color=FISH_COLOR_NORMAL;
-	int is_bold=0;
-	int is_underline=0;
-	
-	if (val.empty())
-		return FISH_COLOR_NORMAL;
-	
+  int is_bold=0;
+  int is_underline=0;
+
+  if (val.empty())
+    return FISH_COLOR_NORMAL;
+
     wcstring_list_t el;
-	tokenize_variable_array( val, el );
-	
-	for(size_t j=0; j < el.size(); j++ ) {
+  tokenize_variable_array( val, el );
+
+  for(size_t j=0; j < el.size(); j++ ) {
         const wcstring &next = el.at(j);
         wcstring color_name;
         if (is_background) {
@@ -587,7 +587,7 @@ int output_color_code( const wcstring &val, bool is_background ) {
             if (string_prefixes_string(prefix, next)) {
                 color_name = wcstring(next, prefix.size());
             }
-            
+
         } else {
             if (next == L"--bold" || next == L"-o")
                 is_bold = true;
@@ -596,7 +596,7 @@ int output_color_code( const wcstring &val, bool is_background ) {
             else
                 color_name = next;
         }
-        
+
         if (! color_name.empty()) {
             for( i=0; i<COLORS; i++ )
             {
@@ -607,22 +607,22 @@ int output_color_code( const wcstring &val, bool is_background ) {
                 }
             }
         }
-		
-	}
-	
-	return color | (is_bold?FISH_COLOR_BOLD:0) | (is_underline?FISH_COLOR_UNDERLINE:0);	
+
+  }
+
+  return color | (is_bold?FISH_COLOR_BOLD:0) | (is_underline?FISH_COLOR_UNDERLINE:0);
 }
 
 rgb_color_t parse_color( const wcstring &val, bool is_background ) {
     int is_bold=0;
-	int is_underline=0;
-    
+  int is_underline=0;
+
     std::vector<rgb_color_t> candidates;
-    
+
     wcstring_list_t el;
-	tokenize_variable_array( val, el );
-	
-	for(size_t j=0; j < el.size(); j++ ) {
+  tokenize_variable_array( val, el );
+
+  for(size_t j=0; j < el.size(); j++ ) {
         const wcstring &next = el.at(j);
         wcstring color_name;
         if (is_background) {
@@ -639,7 +639,7 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
             else
                 color_name = next;
         }
-        
+
         if (! color_name.empty()) {
             rgb_color_t color = rgb_color_t(color_name);
             if (! color.is_none()) {
@@ -647,7 +647,7 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
             }
         }
     }
-    
+
     // Pick the best candidate
     rgb_color_t first_rgb = rgb_color_t::none(), first_named = rgb_color_t::none();
     for (size_t i=0; i < candidates.size(); i++) {
@@ -657,7 +657,7 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
         if (color.is_named() && first_named.is_none())
             first_named = color;
     }
-    
+
     // If we have both RGB and named colors, then prefer rgb if term256 is supported
     rgb_color_t result;
     if ((!first_rgb.is_none() && output_get_supports_term256()) || first_named.is_none()) {
@@ -665,24 +665,24 @@ rgb_color_t parse_color( const wcstring &val, bool is_background ) {
     } else {
         result = first_named;
     }
-    
+
     if (result.is_none())
         result = rgb_color_t::normal();
-    
+
     result.set_bold(is_bold);
     result.set_underline(is_underline);
-    
+
 #if 0
     wcstring desc = result.description();
     printf("Parsed %ls from %ls (%s)\n", desc.c_str(), val.c_str(), is_background ? "background" : "foreground");
 #endif
-    
+
     return result;
 }
 
 void output_set_term( const wchar_t *term )
 {
-	current_term = term;
+  current_term = term;
 }
 
 const wchar_t *output_get_term()

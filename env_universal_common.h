@@ -42,11 +42,11 @@
 */
 typedef enum
 {
-	SET,
-	SET_EXPORT,
-	ERASE,
-	BARRIER,
-	BARRIER_REPLY,
+  SET,
+  SET_EXPORT,
+  ERASE,
+  BARRIER,
+  BARRIER_REPLY,
 } fish_message_type_t;
 
 /**
@@ -57,18 +57,18 @@ typedef enum
 /**
    A struct representing a message to be sent between client and server
 */
-typedef struct 
+typedef struct
 {
-	/**
-	   Number of queues that contain this message. Once this reaches zero, the message should be deleted
-	*/
-	int count;
+  /**
+     Number of queues that contain this message. Once this reaches zero, the message should be deleted
+  */
+  int count;
 
-	/**
-	   Message body. The message must be allocated using enough memory to actually contain the message.
-	*/
-	std::string body;
-    
+  /**
+     Message body. The message must be allocated using enough memory to actually contain the message.
+  */
+  std::string body;
+
 } message_t;
 
 typedef std::queue<message_t *> message_queue_t;
@@ -78,46 +78,46 @@ typedef std::queue<message_t *> message_queue_t;
 */
 typedef struct connection
 {
-	/**
-	   The file descriptor this socket lives on
-	*/
-	int fd;
-	/**
-	   Queue of onsent messages
-	*/
+  /**
+     The file descriptor this socket lives on
+  */
+  int fd;
+  /**
+     Queue of onsent messages
+  */
     message_queue_t *unsent;
-	/**
-	   Set to one when this connection should be killed
-	*/
-	int killme;
-	/**
-	   The input string. Input from the socket goes here. When a
-	   newline is encountered, the buffer is parsed and cleared.
-	*/
-	std::vector<char> input;
-	
-	/**
-	   The read buffer. 
-	*/
-	char buffer[ENV_UNIVERSAL_BUFFER_SIZE];
+  /**
+     Set to one when this connection should be killed
+  */
+  int killme;
+  /**
+     The input string. Input from the socket goes here. When a
+     newline is encountered, the buffer is parsed and cleared.
+  */
+  std::vector<char> input;
 
-	/**
-	   Number of bytes that have already been consumed.
-	*/
-	size_t buffer_consumed;
-	
-	/**
-	   Number of bytes that have been read into the buffer. 
-	*/
-	size_t buffer_used;
-	
+  /**
+     The read buffer.
+  */
+  char buffer[ENV_UNIVERSAL_BUFFER_SIZE];
 
-	/**
-	   Link to the next connection
-	*/
-	struct connection *next;
+  /**
+     Number of bytes that have already been consumed.
+  */
+  size_t buffer_consumed;
+
+  /**
+     Number of bytes that have been read into the buffer.
+  */
+  size_t buffer_used;
+
+
+  /**
+     Link to the next connection
+  */
+  struct connection *next;
 }
-	connection_t;
+  connection_t;
 
 /**
    Read all available messages on this connection
@@ -151,8 +151,8 @@ void env_universal_common_destroy();
    variables, it does not communicate with any other process.
 */
 void env_universal_common_get_names( wcstring_list_t &lst,
-									 int show_exported,
-									 int show_unexported );
+                   int show_exported,
+                   int show_unexported );
 
 /**
    Perform the specified variable assignment.
@@ -166,7 +166,7 @@ void env_universal_common_get_names( wcstring_list_t &lst,
 void env_universal_common_set( const wchar_t *key, const wchar_t *val, int exportv );
 
 /**
-   Remove the specified variable. 
+   Remove the specified variable.
 
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.

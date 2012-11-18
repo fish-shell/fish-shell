@@ -1,11 +1,11 @@
-/** \file proc.h 
+/** \file proc.h
 
     Prototypes for utilities for keeping track of jobs, processes and subshells, as
-	well as signal handling functions for tracking children. These
-	functions do not themselves launch new processes, the exec library
-	will call proc to create representations of the running jobs as
-	needed.
-	
+  well as signal handling functions for tracking children. These
+  functions do not themselves launch new processes, the exec library
+  will call proc to create representations of the running jobs as
+  needed.
+
 */
 
 #ifndef FISH_PROC_H
@@ -56,194 +56,194 @@
 */
 enum
 {
-	/**
-	   A regular external command
-	*/
-	EXTERNAL,
-	/**
-	   A builtin command
-	*/
-	INTERNAL_BUILTIN,
-	/**
-	   A shellscript function
-	*/
-	INTERNAL_FUNCTION,
-	/**
-	   A block of commands
-	*/
-	INTERNAL_BLOCK,
-	/**
-	   The exec builtin
-	*/
-	INTERNAL_EXEC,
-	/**
-	   A buffer
-	*/
-	INTERNAL_BUFFER,
-      
+  /**
+     A regular external command
+  */
+  EXTERNAL,
+  /**
+     A builtin command
+  */
+  INTERNAL_BUILTIN,
+  /**
+     A shellscript function
+  */
+  INTERNAL_FUNCTION,
+  /**
+     A block of commands
+  */
+  INTERNAL_BLOCK,
+  /**
+     The exec builtin
+  */
+  INTERNAL_EXEC,
+  /**
+     A buffer
+  */
+  INTERNAL_BUFFER,
+
 }
-	;
+  ;
 
 enum
 {
-	JOB_CONTROL_ALL, 
-	JOB_CONTROL_INTERACTIVE,
-	JOB_CONTROL_NONE,
+  JOB_CONTROL_ALL,
+  JOB_CONTROL_INTERACTIVE,
+  JOB_CONTROL_NONE,
 }
-	;
+  ;
 
-/** 
-	A structure representing a single fish process. Contains variables
-	for tracking process state and the process argument
-	list. Actually, a fish process can be either a regular externa
-	lrocess, an internal builtin which may or may not spawn a fake IO
-	process during execution, a shellscript function or a block of
-	commands to be evaluated by calling eval. Lastly, this process can
-	be the result of an exec command. The role of this process_t is
-	determined by the type field, which can be one of EXTERNAL,
-	INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK and
-	INTERNAL_EXEC, INTERNAL_BUFFER
+/**
+  A structure representing a single fish process. Contains variables
+  for tracking process state and the process argument
+  list. Actually, a fish process can be either a regular externa
+  lrocess, an internal builtin which may or may not spawn a fake IO
+  process during execution, a shellscript function or a block of
+  commands to be evaluated by calling eval. Lastly, this process can
+  be the result of an exec command. The role of this process_t is
+  determined by the type field, which can be one of EXTERNAL,
+  INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK and
+  INTERNAL_EXEC, INTERNAL_BUFFER
 
-	The process_t contains information on how the process should be
-	started, such as command name and arguments, as well as runtime
-	information on the status of the actual physical process which
-	represents it. Shellscript functions, builtins and blocks of code
-	may all need to spawn an external process that handles the piping
-	and redirecting of IO for them.
+  The process_t contains information on how the process should be
+  started, such as command name and arguments, as well as runtime
+  information on the status of the actual physical process which
+  represents it. Shellscript functions, builtins and blocks of code
+  may all need to spawn an external process that handles the piping
+  and redirecting of IO for them.
 
-	If the process is of type EXTERNAL or INTERNAL_EXEC, argv is the
-	argument array and actual_cmd is the absolute path of the command
-	to execute.
+  If the process is of type EXTERNAL or INTERNAL_EXEC, argv is the
+  argument array and actual_cmd is the absolute path of the command
+  to execute.
 
-	If the process is of type INTERNAL_BUILTIN, argv is the argument
-	vector, and argv[0] is the name of the builtin command.
+  If the process is of type INTERNAL_BUILTIN, argv is the argument
+  vector, and argv[0] is the name of the builtin command.
 
-	If the process is of type INTERNAL_FUNCTION, argv is the argument
-	vector, and argv[0] is the name of the shellscript function.
+  If the process is of type INTERNAL_FUNCTION, argv is the argument
+  vector, and argv[0] is the name of the shellscript function.
 
-	If the process is of type INTERNAL_BLOCK, argv has exactly one
-	element, which is the block of commands to execute.
+  If the process is of type INTERNAL_BLOCK, argv has exactly one
+  element, which is the block of commands to execute.
 
 */
 class process_t
 {
     private:
-	
+
     null_terminated_array_t<wchar_t> argv_array;
-    
+
     /* narrow copy of argv0 so we don't have to convert after fork */
     narrow_string_rep_t argv0_narrow;
 
     /* No copying */
     process_t(const process_t &rhs);
     void operator=(const process_t &rhs);
-    
+
     public:
-    
+
     process_t();
-    
+
     ~process_t();
-    
-	/** 
-		Type of process. Can be one of \c EXTERNAL, \c
-		INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
-		INTERNAL_EXEC, or INTERNAL_BUFFER
-	*/
-	int type;
-    
-    
+
+  /**
+    Type of process. Can be one of \c EXTERNAL, \c
+    INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
+    INTERNAL_EXEC, or INTERNAL_BUFFER
+  */
+  int type;
+
+
     /** Sets argv */
     void set_argv(const wcstring_list_t &argv) {
         argv_array.set(argv);
         argv0_narrow.set(argv.empty() ? L"" : argv[0]);
     }
-    
+
     /** Returns argv */
     const wchar_t * const *get_argv(void) const { return argv_array.get(); }
     const null_terminated_array_t<wchar_t> &get_argv_array(void) const { return argv_array; }
-    
+
     /** Returns argv[idx] */
     const wchar_t *argv(size_t idx) const {
         const wchar_t * const *argv = argv_array.get();
         assert(argv != NULL);
         return argv[idx];
     }
-    
+
     /** Returns argv[0], or NULL */
     const wchar_t *argv0(void) const {
         const wchar_t * const *argv = argv_array.get();
         return argv ? argv[0] : NULL;
     }
-    
+
     /** Returns argv[0] as a char * */
     const char *argv0_cstr(void) const {
         return argv0_narrow.get();
     }
 
-	/** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. */
-	wcstring actual_cmd;       
+  /** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. */
+  wcstring actual_cmd;
 
-	/** process ID */
-	pid_t pid;
+  /** process ID */
+  pid_t pid;
 
-	/** File descriptor that pipe output should bind to */
-	int pipe_write_fd;
+  /** File descriptor that pipe output should bind to */
+  int pipe_write_fd;
 
-	/** File descriptor that the _next_ process pipe input should bind to */
-	int pipe_read_fd;
+  /** File descriptor that the _next_ process pipe input should bind to */
+  int pipe_read_fd;
 
-	/** true if process has completed */
-	volatile int completed;
+  /** true if process has completed */
+  volatile int completed;
 
-	/** true if process has stopped */
-	volatile int stopped;
+  /** true if process has stopped */
+  volatile int stopped;
 
-	/** reported status value */
-	volatile int status;
+  /** reported status value */
+  volatile int status;
 
-	/** Special flag to tell the evaluation function for count to print the help information */
-	int count_help_magic;
+  /** Special flag to tell the evaluation function for count to print the help information */
+  int count_help_magic;
 
-	/** Next process in pipeline. We own this and we are responsible for deleting it. */
-	process_t *next;
+  /** Next process in pipeline. We own this and we are responsible for deleting it. */
+  process_t *next;
 #ifdef HAVE__PROC_SELF_STAT
-	/** Last time of cpu time check */
-	struct timeval last_time;
-	/** Number of jiffies spent in process at last cpu time check */
-	unsigned long last_jiffies;	
+  /** Last time of cpu time check */
+  struct timeval last_time;
+  /** Number of jiffies spent in process at last cpu time check */
+  unsigned long last_jiffies;
 #endif
 };
 
-/* 	Constants for the flag variable in the job struct */
+/*   Constants for the flag variable in the job struct */
 enum {
     /** true if user was told about stopped job */
     JOB_NOTIFIED = 1 << 0,
-    
+
     /** Whether this job is in the foreground */
     JOB_FOREGROUND = 1 << 1,
-    
+
     /**
-	Whether the specified job is completely constructed,
-	i.e. completely parsed, and every process in the job has been
-	forked, etc.
+  Whether the specified job is completely constructed,
+  i.e. completely parsed, and every process in the job has been
+  forked, etc.
     */
     JOB_CONSTRUCTED = 1 << 2,
-    
+
     /** Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported */
     JOB_SKIP_NOTIFICATION = 1 << 3,
 
     /** Should the exit status be negated? This flag can only be set by the not builtin. */
     JOB_NEGATE = 1 << 4,
-    
+
     /** Should the exit status be used to reevaluate the condition in an if block? This is only used by elseif and is a big hack. */
     JOB_ELSEIF = 1 << 5,
-    
+
     /** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
     JOB_WILDCARD_ERROR = 1 << 6,
-    
+
     /** Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or  */
     JOB_SKIP = 1 << 7,
-    
+
     /** Whether the job is under job control  */
     JOB_CONTROL = 1 << 8,
 
@@ -251,7 +251,7 @@ enum {
     JOB_TERMINAL = 1 << 9
 };
 
-/** 
+/**
     A struct represeting a job. A job is basically a pipeline of one
     or more processes and a couple of flags.
  */
@@ -261,105 +261,105 @@ void release_job_id(job_id_t jobid);
 
 class job_t
 {
-	/** 
-	    The original command which led to the creation of this
-	    job. It is used for displaying messages about job status
-	    on the terminal.
-	*/
-	wcstring command_str;
-    
+  /**
+      The original command which led to the creation of this
+      job. It is used for displaying messages about job status
+      on the terminal.
+  */
+  wcstring command_str;
+
     /* narrow copy so we don't have to convert after fork */
     narrow_string_rep_t command_narrow;
-    
+
     /* No copying */
     job_t(const job_t &rhs);
     void operator=(const job_t &);
-    
+
     public:
-    
+
     job_t(job_id_t jobid);
     ~job_t();
-    
+
     /** Returns whether the command is empty. */
     bool command_is_empty() const { return command_str.empty(); }
-    
+
     /** Returns the command as a wchar_t *. */
     const wchar_t *command_wcstr() const { return command_str.c_str(); }
-    
+
     /** Returns the command */
     const wcstring &command() const { return command_str; }
-    
+
     /** Returns the command as a char *. */
     const char *command_cstr() const { return command_narrow.get(); }
-    
+
     /** Sets the command */
     void set_command(const wcstring &cmd) {
         command_str = cmd;
         command_narrow.set(cmd);
     }
-	
-	/** 
-	    A linked list of all the processes in this job. We are responsible for deleting this when we are deallocated.
-	*/
-	process_t *first_process;
-	
-	/** 
-	    process group ID for the process group that this job is
-	    running in. 
-	*/
-	pid_t pgid;   
-	
-	/** 
-	    The saved terminal modes of this job. This needs to be
-	    saved so that we can restore the terminal to the same
-	    state after temporarily taking control over the terminal
-	    when a job stops. 
-	*/
-	struct termios tmodes;
-    
-	/**
-	   The job id of the job. This is a small integer that is a
-	   unique identifier of the job within this shell, and is
-	   used e.g. in process expansion.
-	*/
-	const job_id_t job_id;
-	
-	/** List of all IO redirections for this job. */
-	io_chain_t io;
 
-	/**
-	   Bitset containing information about the job. A combination of the JOB_* constants.
-	*/
-	unsigned int flags;
+  /**
+      A linked list of all the processes in this job. We are responsible for deleting this when we are deallocated.
+  */
+  process_t *first_process;
+
+  /**
+      process group ID for the process group that this job is
+      running in.
+  */
+  pid_t pgid;
+
+  /**
+      The saved terminal modes of this job. This needs to be
+      saved so that we can restore the terminal to the same
+      state after temporarily taking control over the terminal
+      when a job stops.
+  */
+  struct termios tmodes;
+
+  /**
+     The job id of the job. This is a small integer that is a
+     unique identifier of the job within this shell, and is
+     used e.g. in process expansion.
+  */
+  const job_id_t job_id;
+
+  /** List of all IO redirections for this job. */
+  io_chain_t io;
+
+  /**
+     Bitset containing information about the job. A combination of the JOB_* constants.
+  */
+  unsigned int flags;
 };
 
-/** 
-	Whether we are running a subshell command 
+/**
+  Whether we are running a subshell command
 */
 extern int is_subshell;
 
-/** 
-	Whether we are running a block of commands 
+/**
+  Whether we are running a block of commands
 */
 extern int is_block;
 
-/** 
-	Whether we are reading from the keyboard right now
+/**
+  Whether we are reading from the keyboard right now
 */
 int get_is_interactive(void);
 
-/** 
-	Whether this shell is attached to the keyboard at all
+/**
+  Whether this shell is attached to the keyboard at all
 */
 extern int is_interactive_session;
 
-/** 
-	Whether we are a login shell
+/**
+  Whether we are a login shell
 */
 extern int is_login;
 
-/** 
-	Whether we are running an event handler
+/**
+  Whether we are running an event handler
 */
 extern int is_event;
 
@@ -375,9 +375,9 @@ class job_iterator_t {
     job_list_t * const job_list;
     job_list_t::iterator current, end;
     public:
-    
+
     void reset(void);
-    
+
     job_t *next() {
         job_t *job = NULL;
         if (current != end) {
@@ -386,7 +386,7 @@ class job_iterator_t {
         }
         return job;
     }
-    
+
     job_iterator_t(job_list_t &jobs);
     job_iterator_t();
 };
@@ -471,7 +471,7 @@ job_t *job_get(job_id_t id);
 job_t *job_get_from_pid(int pid);
 
 /**
-   Tests if the job is stopped 
+   Tests if the job is stopped
  */
 int job_is_stopped( const job_t *j );
 

@@ -1,5 +1,5 @@
 /** \file env.h
-	Prototypes for functions for setting and getting environment variables.
+  Prototypes for functions for setting and getting environment variables.
 */
 
 #ifndef FISH_ENV_H
@@ -47,8 +47,8 @@
    Error code for trying to alter read-only variable
 */
 enum{
-	ENV_PERM = 1,
-	ENV_INVALID
+  ENV_PERM = 1,
+  ENV_INVALID
 }
 ;
 
@@ -74,7 +74,7 @@ void env_destroy();
 
 
 /**
-   Set the value of the environment variable whose name matches key to val. 
+   Set the value of the environment variable whose name matches key to val.
 
    Memory policy: All keys and values are copied, the parameters can and should be freed by the caller afterwards
 
@@ -119,7 +119,7 @@ public:
         wcstring::operator=(s);
         return *this;
     }
-    
+
     bool operator==(const env_var_t &s) const {
         if (is_missing &&  s.is_missing)
             return true;
@@ -146,7 +146,7 @@ int env_exist( const wchar_t *key, int mode );
 
 /**
    Remove environemnt variable
-   
+
    \param key The name of the variable to remove
    \param mode should be ENV_USER if this is a remove request from the user, 0 otherwise. If this is a user request, read-only variables can not be removed. The mode may also specify the scope of the variable that should be erased.
 
@@ -188,12 +188,12 @@ class env_vars_snapshot_t {
 public:
     env_vars_snapshot_t(const wchar_t * const * keys);
     env_vars_snapshot_t(void);
-    
+
     env_var_t get(const wcstring &key) const;
-    
+
     // Returns the fake snapshot representing the live variables array
     static const env_vars_snapshot_t &current();
-    
+
     // vars necessary for highlighting
     static const wchar_t * const highlighting_keys[];
 };

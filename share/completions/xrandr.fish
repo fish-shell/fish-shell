@@ -6,11 +6,11 @@ complete -c xrandr -s v -l version -d 'Print out the RandR version reported by t
 complete -c xrandr -s q -l query   -d 'Display the current state of the system'
 complete -c xrandr -s d -o display -d 'Select X display to use' -x
 complete -c xrandr -l screen -d 'Select which screen to manipulate' -x
-complete -c xrandr -l q1    -d 'Use RandR version 1.1 protocol' 
-complete -c xrandr -l q12   -d 'Use RandR version 1.2 protocol' 
+complete -c xrandr -l q1    -d 'Use RandR version 1.1 protocol'
+complete -c xrandr -l q12   -d 'Use RandR version 1.2 protocol'
 
 set -l ver (xrandr -v | grep RandR | sed 's/^.\+\s\([0-9\.]\+\)$/\1/')
-if not expr match $ver '^[0-9.]*$' >/dev/null 
+if not expr match $ver '^[0-9.]*$' >/dev/null
     set ver 10
 end
 
@@ -25,7 +25,7 @@ if expr $ver '>' 1.1
     complete -c xrandr -l prop -l properties -d 'Display the contents of properties for each output'
     complete -c xrandr -l fb -d 'Set screen size' -x
     complete -c xrandr -l fbmm -d 'Set reported physical screen size' -x
-    complete -c xrandr -l dpi -d 'Set dpi to calculate reported physical screen size' 
+    complete -c xrandr -l dpi -d 'Set dpi to calculate reported physical screen size'
     complete -c xrandr -l newmode -d 'Add new mode' -r
     complete -c xrandr -l rmmode -d 'Removes a mode from the server' -xa '(__fish_print_xrandr_modes)'
     complete -c xrandr -l addmode -d 'Add a mode to the set of valid modes for an output' -xa '(__fish_print_xrandr_outputs)'
@@ -53,7 +53,7 @@ end
 if expr $ver '>' 1.2
     complete -c xrandr -l noprimary -d 'Don\'t define a primary output.'
     complete -c xrandr -l current -d 'Print current screen configuration'
-    complete -c xrandr -l panning  -d 'Set panning: widthxheight[+x+y[/track_widthxtrack_height+track_x+track_y[/border_left/border_top/border_right/border_bottom]]]' -x 
+    complete -c xrandr -l panning  -d 'Set panning: widthxheight[+x+y[/track_widthxtrack_height+track_x+track_y[/border_left/border_top/border_right/border_bottom]]]' -x
     complete -c xrandr -l transform -d 'Set transformation matrix: a,b,c,d,e,f,g,h,i for [ [a,b,c], [d,e,f], [g,h,i] ]' -x
     complete -c xrandr -l scale -d 'Set scren scale' -x
     complete -c xrandr -l primary -d 'Set the output as primary'

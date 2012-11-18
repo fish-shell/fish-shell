@@ -61,16 +61,16 @@ typedef char tputs_arg_t;
 /**
    Structure used to get the size of a terminal window
  */
-struct winsize 
+struct winsize
 {
-	/**
-	   Number of rows
-	 */
-	unsigned short ws_row;	
-	/**
-	   Number of columns
-	 */
-	unsigned short ws_col;
+  /**
+     Number of rows
+   */
+  unsigned short ws_row;
+  /**
+     Number of columns
+   */
+  unsigned short ws_col;
 }
 ;
 
@@ -197,7 +197,7 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr);
 /**
    Return the number of columns used by a character. This is a libc
    function, but the prototype for this function is missing in some libc
-   implementations. 
+   implementations.
 
    Fish has a fallback implementation in case the implementation is
    missing altogether.  In locales without a native wcwidth, Unicode
@@ -219,7 +219,7 @@ int wcwidth( wchar_t c );
  int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
  #define wcsdup(a) wcsdup_use_weak((a))
  #define wcscasecmp(a, b) wcscasecmp_use_weak((a), (b))
- 
+
 #else
 
  #ifndef HAVE_WCSDUP
@@ -312,8 +312,8 @@ long convert_digit( wchar_t d, int base );
    supported.
 */
 long wcstol(const wchar_t *nptr,
-	    wchar_t **endptr,
-	    int base);
+      wchar_t **endptr,
+      int base);
 
 #endif
 #ifndef HAVE_WCSLCAT
@@ -340,7 +340,7 @@ size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
    wcslen(src); if retval >= siz, truncation occurred.
 
    This is the OpenBSD strlcpy function, modified for wide characters,
-   and renamed to reflect this change. 
+   and renamed to reflect this change.
 */
 size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
 
@@ -361,10 +361,10 @@ size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
 */
 struct drand48_data
 {
-	/**
-	   Seed value
-	*/
-	unsigned int seed;
+  /**
+     Seed value
+  */
+  unsigned int seed;
 }
 ;
 
@@ -410,9 +410,9 @@ char * textdomain( const char * domainname );
 /**
    Fallback implementation of dcgettext. Just returns the original string.
 */
-char * dcgettext ( const char * domainname, 
-		   const char * msgid,
-		   int category );
+char * dcgettext ( const char * domainname,
+       const char * msgid,
+       int category );
 
 #endif
 
@@ -441,44 +441,44 @@ int killpg( int pgr, int sig );
 /**
    Struct describing a long getopt option
  */
-struct option 
+struct option
 {
-	/**
-	   Name of option
-	 */
-	const char *name;
-	/**
-	   Flag
-	 */
-	int has_arg;
-	/**
-	   Flag
-	 */
-	int *flag;
-	/**
-	   Return value
-	 */
-	int val;	
+  /**
+     Name of option
+   */
+  const char *name;
+  /**
+     Flag
+   */
+  int has_arg;
+  /**
+     Flag
+   */
+  int *flag;
+  /**
+     Return value
+   */
+  int val;
 }
 ;
 
 #ifndef no_argument
-#define	no_argument 0
+#define  no_argument 0
 #endif
 
 #ifndef required_argument
-#define	required_argument 1
+#define  required_argument 1
 #endif
 
 #ifndef optional_argument
-#define	optional_argument 2
+#define  optional_argument 2
 #endif
 
-int getopt_long(int argc, 
-		char * const argv[],
-		const char *optstring,
-		const struct option *longopts, 
-		int *longindex);
+int getopt_long(int argc,
+    char * const argv[],
+    const char *optstring,
+    const struct option *longopts,
+    int *longindex);
 
 #endif
 

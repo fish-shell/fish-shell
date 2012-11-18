@@ -16,7 +16,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.   See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -37,17 +37,17 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#ifndef	FALSE
-#define	FALSE	(0)
+#ifndef  FALSE
+#define  FALSE  (0)
 #endif
 
-#ifndef	TRUE
-#define	TRUE	(!FALSE)
+#ifndef  TRUE
+#define  TRUE  (!FALSE)
 #endif
 
 typedef struct XdgAlias XdgAlias;
 
-struct XdgAlias 
+struct XdgAlias
 {
   char *alias;
   char *mime_type;
@@ -72,7 +72,7 @@ _xdg_mime_alias_list_new (void)
   return list;
 }
 
-void         
+void
 _xdg_mime_alias_list_free (XdgAliasList *list)
 {
   int i;
@@ -80,10 +80,10 @@ _xdg_mime_alias_list_free (XdgAliasList *list)
   if (list->aliases)
     {
       for (i = 0; i < list->n_aliases; i++)
-	{
-	  free (list->aliases[i].alias);
-	  free (list->aliases[i].mime_type);
-	}
+  {
+    free (list->aliases[i].alias);
+    free (list->aliases[i].mime_type);
+  }
       free (list->aliases);
     }
   free (list);
@@ -97,7 +97,7 @@ alias_entry_cmp (const void *v1, const void *v2)
 
 const char  *
 _xdg_mime_alias_list_lookup (XdgAliasList *list,
-			     const char   *alias)
+           const char   *alias)
 {
   XdgAlias *entry;
   XdgAlias key;
@@ -108,7 +108,7 @@ _xdg_mime_alias_list_lookup (XdgAliasList *list,
       key.mime_type = 0;
 
       entry = (XdgAlias *)bsearch (&key, list->aliases, list->n_aliases,
-		       sizeof (XdgAlias), alias_entry_cmp);
+           sizeof (XdgAlias), alias_entry_cmp);
       if (entry)
         return entry->mime_type;
     }
@@ -118,7 +118,7 @@ _xdg_mime_alias_list_lookup (XdgAliasList *list,
 
 void
 _xdg_mime_alias_read_from_file (XdgAliasList *list,
-				const char   *file_name)
+        const char   *file_name)
 {
   FILE *file;
   char line[255];
@@ -138,30 +138,30 @@ _xdg_mime_alias_read_from_file (XdgAliasList *list,
     {
       char *sep;
       if (line[0] == '#')
-	continue;
+  continue;
 
       sep = strchr (line, ' ');
       if (sep == NULL)
-	continue;
+  continue;
       *(sep++) = '\000';
       sep[strlen (sep) -1] = '\000';
       if (list->n_aliases == alloc)
-	{
-	  alloc <<= 1;
-	  list->aliases = (XdgAlias *)realloc (list->aliases, 
-				   alloc * sizeof (XdgAlias));
-	}
+  {
+    alloc <<= 1;
+    list->aliases = (XdgAlias *)realloc (list->aliases,
+           alloc * sizeof (XdgAlias));
+  }
       list->aliases[list->n_aliases].alias = strdup (line);
       list->aliases[list->n_aliases].mime_type = strdup (sep);
       list->n_aliases++;
     }
-  list->aliases = (XdgAlias *)realloc (list->aliases, 
-			   list->n_aliases * sizeof (XdgAlias));
+  list->aliases = (XdgAlias *)realloc (list->aliases,
+         list->n_aliases * sizeof (XdgAlias));
 
-  fclose (file);  
-  
+  fclose (file);
+
   if (list->n_aliases > 1)
-    qsort (list->aliases, list->n_aliases, 
+    qsort (list->aliases, list->n_aliases,
            sizeof (XdgAlias), alias_entry_cmp);
 }
 
@@ -174,11 +174,11 @@ _xdg_mime_alias_list_dump (XdgAliasList *list)
   if (list->aliases)
     {
       for (i = 0; i < list->n_aliases; i++)
-	{
-	  printf ("%s %s\n", 
-		  list->aliases[i].alias,
-		  list->aliases[i].mime_type);
-	}
+  {
+    printf ("%s %s\n",
+      list->aliases[i].alias,
+      list->aliases[i].mime_type);
+  }
     }
 }
 

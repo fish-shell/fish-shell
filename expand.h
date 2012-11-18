@@ -6,7 +6,7 @@
    benefit from using a more clever memory allocation scheme, perhaps
    an evil combination of talloc, string buffers and reference
    counting.
-   
+
 */
 
 #ifndef FISH_EXPAND_H
@@ -24,10 +24,10 @@
 enum {
     /** Flag specifying that cmdsubst expansion should be skipped */
     EXPAND_SKIP_CMDSUBST = 1 << 0,
-    
+
     /** Flag specifying that variable expansion should be skipped */
     EXPAND_SKIP_VARIABLES = 1 << 1,
-    
+
     /** Flag specifying that wildcard expansion should be skipped */
     EXPAND_SKIP_WILDCARDS = 1 << 2,
 
@@ -36,21 +36,21 @@ enum {
        completion). An incomplete match is a wildcard that matches a
        prefix of the filename. If accept_incomplete is true, only the
        remainder of the string is returned.
-    */    
+    */
     ACCEPT_INCOMPLETE = 1 << 3,
 
     /** Only match files that are executable by the current user. Only applicable together with ACCEPT_INCOMPLETE. */
     EXECUTABLES_ONLY = 1 << 4,
-    
+
     /** Only match directories. Only applicable together with ACCEPT_INCOMPLETE. */
     DIRECTORIES_ONLY = 1 << 5,
-    
+
     /** Don't generate descriptions */
     EXPAND_NO_DESCRIPTIONS = 1 << 6,
-    
+
     /** Don't do process expansion */
     EXPAND_SKIP_PROCESS = 1 << 7,
-    
+
     /** Don't expand jobs (but you can still expand processes). This is because job expansion is not thread safe. */
     EXPAND_SKIP_JOBS = 1 << 8
 };
@@ -69,33 +69,33 @@ class completion_t;
 
 enum
 {
-	/** Character represeting a home directory */
-	HOME_DIRECTORY = EXPAND_RESERVED,
+  /** Character represeting a home directory */
+  HOME_DIRECTORY = EXPAND_RESERVED,
 
-	/** Character represeting process expansion */
-	PROCESS_EXPAND,
-	
-	/** Character representing variable expansion */
-	VARIABLE_EXPAND,
+  /** Character represeting process expansion */
+  PROCESS_EXPAND,
 
-	/** Character rpresenting variable expansion into a single element*/
-	VARIABLE_EXPAND_SINGLE,
+  /** Character representing variable expansion */
+  VARIABLE_EXPAND,
 
-	/** Character representing the start of a bracket expansion */
-	BRACKET_BEGIN,
+  /** Character rpresenting variable expansion into a single element*/
+  VARIABLE_EXPAND_SINGLE,
 
-	/** Character representing the end of a bracket expansion */
-	BRACKET_END,
+  /** Character representing the start of a bracket expansion */
+  BRACKET_BEGIN,
 
-	/** Character representing separation between two bracket elements */
-	BRACKET_SEP,
-	/**
-	   Separate subtokens in a token with this character. 
-	*/
-	INTERNAL_SEPARATOR,
+  /** Character representing the end of a bracket expansion */
+  BRACKET_END,
+
+  /** Character representing separation between two bracket elements */
+  BRACKET_SEP,
+  /**
+     Separate subtokens in a token with this character.
+  */
+  INTERNAL_SEPARATOR,
 
 }
-	;
+  ;
 
 
 /**
@@ -103,14 +103,14 @@ enum
 */
 enum
 {
-	/** Error */
-	EXPAND_ERROR,
-	/** Ok */
-	EXPAND_OK,
-	/** Ok, a wildcard in the string matched no files */
-	EXPAND_WILDCARD_NO_MATCH,
-	/* Ok, a wildcard in the string matched a file */
-	EXPAND_WILDCARD_MATCH
+  /** Error */
+  EXPAND_ERROR,
+  /** Ok */
+  EXPAND_OK,
+  /** Ok, a wildcard in the string matched no files */
+  EXPAND_WILDCARD_NO_MATCH,
+  /* Ok, a wildcard in the string matched a file */
+  EXPAND_WILDCARD_MATCH
 };
 
 /** Character for separating two array elements. We use 30, i.e. the ascii record separator since that seems logical. */
@@ -132,7 +132,7 @@ class parser_t;
    (\$VAR_NAME becomes the value of the environment variable VAR_NAME),
    cmdsubst expansion and wildcard expansion. The results are inserted
    into the list out.
-   
+
    If the parameter does not need expansion, it is copied into the list
    out.
 
@@ -148,7 +148,7 @@ __warn_unused int expand_string( const wcstring &input, std::vector<completion_t
    expand_one is identical to expand_string, except it will fail if in
    expands to more than one string. This is used for expanding command
    names.
- 
+
    \param inout_str The parameter to expand in-place
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return Whether expansion succeded

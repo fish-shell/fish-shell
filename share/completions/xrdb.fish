@@ -16,6 +16,6 @@ complete -c xrdb -o symbols          -d 'show preprocessor symbols'
 complete -c xrdb -o remove           -d 'remove resources'
 complete -c xrdb -o retain           -d 'avoid server reset (avoid using this)'
 complete -c xrdb -o quiet            -d 'don\'t warn about duplicates'
-#complete -c xrdb -s Dname[=value], 
-#complete -c xrdb -s Uname, 
+#complete -c xrdb -s Dname[=value],
+#complete -c xrdb -s Uname,
 #complete -c xrdb -s Idirectory  -d 'passed to preprocessor'

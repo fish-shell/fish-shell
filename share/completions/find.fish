@@ -36,9 +36,9 @@ complete -c find -o cmin --description "File status last changed specified numbe
 complete -c find -o cnewer --description "File status last changed more recently than file was modified" -r
 complete -c find -o ctime --description "File status last changed specified number of days ago" -r
 
-complete -c find -o empty --description "File is empty and is either a regular file or a directory" 
-complete -c find -o executable --description "File is executable" 
-complete -c find -o false --description "Always false" 
+complete -c find -o empty --description "File is empty and is either a regular file or a directory"
+complete -c find -o executable --description "File is executable"
+complete -c find -o false --description "Always false"
 complete -c find -o fstype --description "File is on filesystem of specified type" -a "(__fish_print_filesystems)" -r
 complete -c find -o gid --description "Numeric group id of file" -r
 complete -c find -o group --description "Group name of file" -a "(__fish_complete_groups)"

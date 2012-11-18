@@ -23,7 +23,7 @@ complete -c mocp -s U -l unpause            -d "Unpause"
 complete -c mocp -s G -l toggle-pause       -d "Toggle between play/pause"
 complete -c mocp -s v -l volume             -d "(+/-)LEVEL Adjust PCM volume" -xa '+ -'
 complete -c mocp -s y -l sync               -d "Synchronize the playlist with other clients"
-complete -c mocp -s n -l nosync             -d "Don't synchronize the playlist with other client's" 
+complete -c mocp -s n -l nosync             -d "Don't synchronize the playlist with other client's"
 complete -c mocp -s A -l ascii              -d "Use ASCII characters to draw lines"
 complete -c mocp -s i -l info               -d "Print the information about the currently played file"
 complete -c mocp -s Q -l format  -rf        -d "Print the formatted information about the currently played file"

@@ -45,17 +45,17 @@ static pthread_mutex_t intern_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static const wchar_t *intern_with_dup( const wchar_t *in, bool dup )
 {
-	if( !in )
-		return NULL;
-        
-//	debug( 0, L"intern %ls", in );
+  if( !in )
+    return NULL;
+
+//  debug( 0, L"intern %ls", in );
     scoped_lock lock(intern_lock);
     const wchar_t *result;
-    
+
 #if USE_SET
     string_table_t::const_iterator iter = string_table.find(in);
     if (iter != string_table.end()) {
-        result = *iter; 
+        result = *iter;
     } else {
         result = dup ? wcsdup(in) : in;
         string_table.insert(result);
@@ -74,11 +74,11 @@ static const wchar_t *intern_with_dup( const wchar_t *in, bool dup )
 
 const wchar_t *intern( const wchar_t *in )
 {
-	return intern_with_dup(in, true);
+  return intern_with_dup(in, true);
 }
 
 
 const wchar_t *intern_static( const wchar_t *in )
 {
-	return intern_with_dup(in, false);
+  return intern_with_dup(in, false);
 }

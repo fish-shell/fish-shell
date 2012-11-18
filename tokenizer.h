@@ -1,4 +1,4 @@
-/** \file tokenizer.h 
+/** \file tokenizer.h
 
     A specialized tokenizer for tokenizing the fish language. In the
     future, the tokenizer should be extended to support marks,
@@ -16,19 +16,19 @@
 */
 enum token_type
 {
-	TOK_NONE, /**< Tokenizer not yet constructed */
-	TOK_ERROR, /**< Error reading token */
-	TOK_INVALID,/**< Invalid token */
-	TOK_STRING,/**< String token */
-	TOK_PIPE,/**< Pipe token */
-	TOK_END,/**< End token */
-	TOK_REDIRECT_OUT, /**< redirection token */
-	TOK_REDIRECT_APPEND,/**< redirection append token */
-	TOK_REDIRECT_IN,/**< input redirection token */
-	TOK_REDIRECT_FD,/**< redirection to new fd token */
-	TOK_REDIRECT_NOCLOB, /**<? redirection token */
-	TOK_BACKGROUND,/**< send job to bg token */
-	TOK_COMMENT/**< comment token */
+  TOK_NONE, /**< Tokenizer not yet constructed */
+  TOK_ERROR, /**< Error reading token */
+  TOK_INVALID,/**< Invalid token */
+  TOK_STRING,/**< String token */
+  TOK_PIPE,/**< Pipe token */
+  TOK_END,/**< End token */
+  TOK_REDIRECT_OUT, /**< redirection token */
+  TOK_REDIRECT_APPEND,/**< redirection append token */
+  TOK_REDIRECT_IN,/**< input redirection token */
+  TOK_REDIRECT_FD,/**< redirection to new fd token */
+  TOK_REDIRECT_NOCLOB, /**<? redirection token */
+  TOK_BACKGROUND,/**< send job to bg token */
+  TOK_COMMENT/**< comment token */
 };
 
 /**
@@ -36,12 +36,12 @@ enum token_type
 */
 enum tokenizer_error
 {
-	TOK_UNTERMINATED_QUOTE,
-	TOK_UNTERMINATED_SUBSHELL,
-	TOK_UNTERMINATED_ESCAPE,
-	TOK_OTHER
+  TOK_UNTERMINATED_QUOTE,
+  TOK_UNTERMINATED_SUBSHELL,
+  TOK_UNTERMINATED_ESCAPE,
+  TOK_OTHER
 }
-	;
+  ;
 
 
 /**
@@ -63,33 +63,33 @@ enum tokenizer_error
 
 
 /**
-   The tokenizer struct. 
+   The tokenizer struct.
 */
 struct tokenizer
 {
-	/** A pointer into the original string, showing where the next token begins */
-	const wchar_t *buff;
-	/** A copy of the original string */
-	const wchar_t *orig_buff;
-	/** A pointer to the last token*/
-	wchar_t *last;
-	
-	/** Type of last token*/
-	int last_type;
-	/** Length of last token*/
-	size_t last_len;
-	/** Offset of last token*/
-	size_t last_pos;
-	/** Whether there are more tokens*/
-	bool has_next;
-	/** Whether incomplete tokens are accepted*/
-	bool accept_unfinished;
-	/** Whether commants should be returned*/
-	bool show_comments;
-	/** Type of last quote, can be either ' or ".*/
-	wchar_t last_quote;
-	/** Last error */
-	int error;
+  /** A pointer into the original string, showing where the next token begins */
+  const wchar_t *buff;
+  /** A copy of the original string */
+  const wchar_t *orig_buff;
+  /** A pointer to the last token*/
+  wchar_t *last;
+
+  /** Type of last token*/
+  int last_type;
+  /** Length of last token*/
+  size_t last_len;
+  /** Offset of last token*/
+  size_t last_pos;
+  /** Whether there are more tokens*/
+  bool has_next;
+  /** Whether incomplete tokens are accepted*/
+  bool accept_unfinished;
+  /** Whether commants should be returned*/
+  bool show_comments;
+  /** Type of last quote, can be either ' or ".*/
+  wchar_t last_quote;
+  /** Last error */
+  int error;
     /* Whether we are squashing errors */
     bool squash_errors;
 
@@ -112,7 +112,7 @@ struct tokenizer
   \param flags Flags to the tokenizer. Setting TOK_ACCEPT_UNFINISHED will cause the tokenizer
   to accept incomplete tokens, such as a subshell without a closing
   parenthesis, as a valid token. Setting TOK_SHOW_COMMENTS will return comments as tokens
-  
+
 */
 void tok_init( tokenizer *tok, const wchar_t *b, int flags );
 

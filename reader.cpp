@@ -194,129 +194,129 @@ typedef int color_t;
 class reader_data_t
 {
     public:
-    
-	/** String containing the whole current commandline */
-	wcstring command_line;
-    
+
+  /** String containing the whole current commandline */
+  wcstring command_line;
+
     /** String containing the autosuggestion */
     wcstring autosuggestion;
 
     /** When backspacing, we suppress autosuggestions */
     bool suppress_autosuggestion;
 
-	/** The representation of the current screen contents */
-	screen_t screen;
-    
+  /** The representation of the current screen contents */
+  screen_t screen;
+
     /** The history */
     history_t *history;
 
-	/**
-	   String containing the current search item
-	*/
-	wcstring search_buff;
+  /**
+     String containing the current search item
+  */
+  wcstring search_buff;
 
     /* History search */
     history_search_t history_search;
 
-	/**
-	   Saved position used by token history search
-	*/
-	int token_history_pos;
+  /**
+     Saved position used by token history search
+  */
+  int token_history_pos;
 
-	/**
-	   Saved search string for token history search. Not handled by command_line_changed.
-	*/
-	wcstring token_history_buff;
+  /**
+     Saved search string for token history search. Not handled by command_line_changed.
+  */
+  wcstring token_history_buff;
 
-	/**
-	   List for storing previous search results. Used to avoid duplicates.
-	*/
-	wcstring_list_t search_prev;
+  /**
+     List for storing previous search results. Used to avoid duplicates.
+  */
+  wcstring_list_t search_prev;
 
-	/** The current position in search_prev */
-	size_t search_pos;
-    
+  /** The current position in search_prev */
+  size_t search_pos;
+
     /** Length of the command */
     size_t command_length() const { return command_line.size(); }
-    
+
     /** Do what we need to do whenever our command line changes */
     void command_line_changed(void);
 
-	/** The current position of the cursor in buff. */
-	size_t buff_pos;
+  /** The current position of the cursor in buff. */
+  size_t buff_pos;
 
-	/** Name of the current application */
-	wcstring app_name;
+  /** Name of the current application */
+  wcstring app_name;
 
-	/** The prompt commands */
-	wcstring left_prompt;
+  /** The prompt commands */
+  wcstring left_prompt;
     wcstring right_prompt;
 
-	/** The output of the last evaluation of the prompt command */
-	wcstring left_prompt_buff;
-    
-	/** The output of the last evaluation of the right prompt command */
-	wcstring right_prompt_buff;
-	
-	/**
-	   Color is the syntax highlighting for buff.  The format is that
-	   color[i] is the classification (according to the enum in
-	   highlight.h) of buff[i].
-	*/
+  /** The output of the last evaluation of the prompt command */
+  wcstring left_prompt_buff;
+
+  /** The output of the last evaluation of the right prompt command */
+  wcstring right_prompt_buff;
+
+  /**
+     Color is the syntax highlighting for buff.  The format is that
+     color[i] is the classification (according to the enum in
+     highlight.h) of buff[i].
+  */
     std::vector<color_t> colors;
 
-	/** An array defining the block level at each character. */
-	std::vector<int> indents;
+  /** An array defining the block level at each character. */
+  std::vector<int> indents;
 
-	/**
-	   Function for tab completion
-	*/
+  /**
+     Function for tab completion
+  */
     complete_function_t complete_func;
 
-	/**
-	   Function for syntax highlighting
-	*/
-	highlight_function_t highlight_function;
+  /**
+     Function for syntax highlighting
+  */
+  highlight_function_t highlight_function;
 
-	/**
-	   Function for testing if the string can be returned
-	*/
-	int (*test_func)( const wchar_t * );
+  /**
+     Function for testing if the string can be returned
+  */
+  int (*test_func)( const wchar_t * );
 
-	/**
-	   When this is true, the reader will exit
-	*/
-	bool end_loop;
+  /**
+     When this is true, the reader will exit
+  */
+  bool end_loop;
 
-	/**
-	   If this is true, exit reader even if there are running
-	   jobs. This happens if we press e.g. ^D twice.
-	*/
-	bool prev_end_loop;
+  /**
+     If this is true, exit reader even if there are running
+     jobs. This happens if we press e.g. ^D twice.
+  */
+  bool prev_end_loop;
 
-	/** The current contents of the top item in the kill ring.  */
-	wcstring kill_item;
+  /** The current contents of the top item in the kill ring.  */
+  wcstring kill_item;
 
-	/**
-	   Pointer to previous reader_data
-	*/
-	reader_data_t *next;
+  /**
+     Pointer to previous reader_data
+  */
+  reader_data_t *next;
 
-	/**
-	   This variable keeps state on if we are in search mode, and
-	   if yes, what mode
-	 */
-	int search_mode;
+  /**
+     This variable keeps state on if we are in search mode, and
+     if yes, what mode
+   */
+  int search_mode;
 
-	/**
-	   Keep track of whether any internal code has done something
-	   which is known to require a repaint.
-	 */
-	bool repaint_needed;
-    
+  /**
+     Keep track of whether any internal code has done something
+     which is known to require a repaint.
+   */
+  bool repaint_needed;
+
     /** Whether the a screen reset is needed after a repaint. */
     bool screen_reset_needed;
-    
+
     /** Constructor */
     reader_data_t() :
         suppress_autosuggestion(0),
@@ -392,22 +392,22 @@ static int exit_forced;
 */
 static void term_donate()
 {
-	set_color(rgb_color_t::normal(), rgb_color_t::normal());
+  set_color(rgb_color_t::normal(), rgb_color_t::normal());
 
-	while( 1 )
-	{
-		if(	tcsetattr(0,TCSANOW,&saved_modes) )
-		{
-			if( errno != EINTR )
-			{
-				debug( 1, _( L"Could not set terminal mode for new job" ) );
-				wperror( L"tcsetattr" );
-				break;
-			}
-		}
-		else
-			break;
-	}
+  while( 1 )
+  {
+    if(  tcsetattr(0,TCSANOW,&saved_modes) )
+    {
+      if( errno != EINTR )
+      {
+        debug( 1, _( L"Could not set terminal mode for new job" ) );
+        wperror( L"tcsetattr" );
+        break;
+      }
+    }
+    else
+      break;
+  }
 
 
 }
@@ -418,28 +418,28 @@ static void term_donate()
 static void term_steal()
 {
 
-	while( 1 )
-	{
-		if(	tcsetattr(0,TCSANOW,&shell_modes) )
-		{
-			if( errno != EINTR )
-			{
-				debug( 1, _( L"Could not set terminal mode for shell" ) );
-				wperror( L"tcsetattr" );
-				break;
-			}
-		}
-		else
-			break;
-	}
+  while( 1 )
+  {
+    if(  tcsetattr(0,TCSANOW,&shell_modes) )
+    {
+      if( errno != EINTR )
+      {
+        debug( 1, _( L"Could not set terminal mode for shell" ) );
+        wperror( L"tcsetattr" );
+        break;
+      }
+    }
+    else
+      break;
+  }
 
-	common_handle_winch(0 );
+  common_handle_winch(0 );
 
 }
 
 int reader_exit_forced()
 {
-	return exit_forced;
+  return exit_forced;
 }
 
 /**
@@ -451,16 +451,16 @@ int reader_exit_forced()
 static void reader_repaint()
 {
     //Update the indentation
-	parser_t::principal_parser().test( data->command_line.c_str(), &data->indents[0], 0, 0 );
-	    
+  parser_t::principal_parser().test( data->command_line.c_str(), &data->indents[0], 0, 0 );
+
     wcstring full_line = (data->autosuggestion.empty() ? data->command_line : data->autosuggestion);
     size_t len = full_line.size();
     if (len < 1)
         len = 1;
-    
+
     std::vector<color_t> colors = data->colors;
     colors.resize(len, HIGHLIGHT_AUTOSUGGESTION);
-    
+
     std::vector<int> indents = data->indents;
     indents.resize(len);
 
@@ -473,7 +473,7 @@ static void reader_repaint()
              &indents[0],
              data->buff_pos);
 
-	data->repaint_needed = false;
+  data->repaint_needed = false;
 }
 
 /**
@@ -482,53 +482,53 @@ static void reader_repaint()
 static void reader_kill( size_t begin_idx, size_t length, int mode, int newv )
 {
     const wchar_t *begin = data->command_line.c_str() + begin_idx;
-	if( newv )
-	{
+  if( newv )
+  {
         data->kill_item = wcstring(begin, length);
-		kill_add(data->kill_item);
-	}
-	else
-	{
+    kill_add(data->kill_item);
+  }
+  else
+  {
 
         wcstring old = data->kill_item;
-		if( mode == KILL_APPEND )
-		{
+    if( mode == KILL_APPEND )
+    {
             data->kill_item.append(begin, length);
-		}
-		else
-		{
+    }
+    else
+    {
             data->kill_item = wcstring(begin, length);
             data->kill_item.append(old);
-		}
+    }
 
-		
-		kill_replace( old, data->kill_item );
-	}
 
-	if( data->buff_pos > begin_idx ) {
+    kill_replace( old, data->kill_item );
+  }
+
+  if( data->buff_pos > begin_idx ) {
         /* Move the buff position back by the number of characters we deleted, but don't go past buff_pos */
         size_t backtrack = mini(data->buff_pos - begin_idx, length);
         data->buff_pos -= backtrack;
-	}
-	
+  }
+
     data->command_line.erase(begin_idx, length);
     data->command_line_changed();
-	
-	reader_super_highlight_me_plenty( data->buff_pos );
-	reader_repaint();
-	
+
+  reader_super_highlight_me_plenty( data->buff_pos );
+  reader_repaint();
+
 }
 
 /* This is called from a signal handler! */
 void reader_handle_int( int sig )
 {
-	if( !is_interactive_read )
-	{
+  if( !is_interactive_read )
+  {
         parser_t::skip_all_blocks();
-	}
-	
-	interrupted = 1;
-	
+  }
+
+  interrupted = 1;
+
 }
 
 const wchar_t *reader_current_filename()
@@ -548,7 +548,7 @@ void reader_push_current_filename( const wchar_t *fn )
 void reader_pop_current_filename()
 {
     ASSERT_IS_MAIN_THREAD();
-	current_filename.pop();
+  current_filename.pop();
 }
 
 
@@ -556,13 +556,13 @@ void reader_pop_current_filename()
 void reader_data_t::command_line_changed() {
     ASSERT_IS_MAIN_THREAD();
     size_t len = command_length();
-    
+
     /* When we grow colors, propagate the last color (if any), under the assumption that usually it will be correct. If it is, it avoids a repaint. */
     color_t last_color = colors.empty() ? color_t() : colors.back();
     colors.resize(len, last_color);
-    
+
     indents.resize(len);
-    
+
     /* Update the gen count */
     s_generation_count++;
 }
@@ -571,84 +571,84 @@ void reader_data_t::command_line_changed() {
 /** Remove any duplicate completions in the list. This relies on the list first beeing sorted. */
 static void remove_duplicates(std::vector<completion_t> &l)
 {
-	l.erase(std::unique( l.begin(), l.end()), l.end());
+  l.erase(std::unique( l.begin(), l.end()), l.end());
 }
 
 int reader_interrupted()
 {
-	int res=interrupted;
-	if( res )
-		interrupted=0;
-	return res;
+  int res=interrupted;
+  if( res )
+    interrupted=0;
+  return res;
 }
 
 void reader_write_title()
 {
-	const wchar_t *title;
-	const env_var_t term_str = env_get_string( L"TERM" );
+  const wchar_t *title;
+  const env_var_t term_str = env_get_string( L"TERM" );
 
-	/*
-	  This is a pretty lame heuristic for detecting terminals that do
-	  not support setting the title. If we recognise the terminal name
-	  as that of a virtual terminal, we assume it supports setting the
-	  title. If we recognise it as that of a console, we assume it
-	  does not support setting the title. Otherwise we check the
-	  ttyname and see if we belive it is a virtual terminal.
+  /*
+    This is a pretty lame heuristic for detecting terminals that do
+    not support setting the title. If we recognise the terminal name
+    as that of a virtual terminal, we assume it supports setting the
+    title. If we recognise it as that of a console, we assume it
+    does not support setting the title. Otherwise we check the
+    ttyname and see if we belive it is a virtual terminal.
 
-	  One situation in which this breaks down is with screen, since
-	  screen supports setting the terminal title if the underlying
-	  terminal does so, but will print garbage on terminals that
-	  don't. Since we can't see the underlying terminal below screen
-	  there is no way to fix this.
-	*/
-	if ( term_str.missing() )
-		return;
+    One situation in which this breaks down is with screen, since
+    screen supports setting the terminal title if the underlying
+    terminal does so, but will print garbage on terminals that
+    don't. Since we can't see the underlying terminal below screen
+    there is no way to fix this.
+  */
+  if ( term_str.missing() )
+    return;
 
-	const wchar_t *term = term_str.c_str();
+  const wchar_t *term = term_str.c_str();
     bool recognized = false;
     recognized = recognized || contains( term, L"xterm", L"screen", L"nxterm", L"rxvt" );
     recognized = recognized || ! wcsncmp(term, L"xterm-", wcslen(L"xterm-"));
     recognized = recognized || ! wcsncmp(term, L"screen-", wcslen(L"screen-"));
 
-	if( ! recognized )
-	{
-		char *n = ttyname( STDIN_FILENO );
+  if( ! recognized )
+  {
+    char *n = ttyname( STDIN_FILENO );
 
 
-		if( contains( term, L"linux" ) )
-		{
-			return;
-		}
+    if( contains( term, L"linux" ) )
+    {
+      return;
+    }
 
-		if( strstr( n, "tty" ) || strstr( n, "/vc/") )
-			return;
-		
-			
-	}
+    if( strstr( n, "tty" ) || strstr( n, "/vc/") )
+      return;
 
-	title = function_exists( L"fish_title" )?L"fish_title":DEFAULT_TITLE;
 
-	if( wcslen( title ) ==0 )
-		return;
+  }
+
+  title = function_exists( L"fish_title" )?L"fish_title":DEFAULT_TITLE;
+
+  if( wcslen( title ) ==0 )
+    return;
 
     wcstring_list_t lst;
 
-	proc_push_interactive(0);
-	if( exec_subshell( title, lst ) != -1 )
-	{
-		size_t i;
-		if( lst.size() > 0 )
-		{
-			writestr( L"\x1b]0;" );
-			for( i=0; i<lst.size(); i++ )
-			{
-				writestr( lst.at(i).c_str() );
-			}
-			writestr( L"\7" );
-		}
-	}
-	proc_pop_interactive();		
-	set_color( rgb_color_t::reset(), rgb_color_t::reset() );
+  proc_push_interactive(0);
+  if( exec_subshell( title, lst ) != -1 )
+  {
+    size_t i;
+    if( lst.size() > 0 )
+    {
+      writestr( L"\x1b]0;" );
+      for( i=0; i<lst.size(); i++ )
+      {
+        writestr( lst.at(i).c_str() );
+      }
+      writestr( L"\7" );
+    }
+  }
+  proc_pop_interactive();
+  set_color( rgb_color_t::reset(), rgb_color_t::reset() );
 }
 
 /**
@@ -659,12 +659,12 @@ static void exec_prompt()
     /* Clear existing prompts */
     data->left_prompt_buff.clear();
     data->right_prompt_buff.clear();
-    
+
     /* If we have any prompts, they must be run non-interactively */
     if (data->left_prompt.size() || data->right_prompt.size())
     {
         proc_push_interactive( 0 );
-    
+
         if (data->left_prompt.size())
         {
             wcstring_list_t prompt_list;
@@ -677,7 +677,7 @@ static void exec_prompt()
                 }
             }
         }
-        
+
         if (data->right_prompt.size())
         {
             wcstring_list_t prompt_list;
@@ -690,34 +690,34 @@ static void exec_prompt()
                 }
             }
         }
-        
+
         proc_pop_interactive();
     }
-    
+
     /* Write the screen title */
-	reader_write_title();
+  reader_write_title();
 }
 
 void reader_init()
 {
 
-	tcgetattr(0,&shell_modes);        /* get the current terminal modes */
-	memcpy( &saved_modes,
-			&shell_modes,
-			sizeof(saved_modes));     /* save a copy so we can reset the terminal later */
-	
-	shell_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
-	shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
+  tcgetattr(0,&shell_modes);        /* get the current terminal modes */
+  memcpy( &saved_modes,
+      &shell_modes,
+      sizeof(saved_modes));     /* save a copy so we can reset the terminal later */
+
+  shell_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
+  shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
     shell_modes.c_cc[VMIN]=1;
     shell_modes.c_cc[VTIME]=0;
-    
+
     // PCA disable VDSUSP (typically control-Y), which is a funny job control
     // function available only on OS X and BSD systems
     // This lets us use control-Y for yank instead
     #ifdef VDSUSP
-    shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;  
+    shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;
     #endif
-    
+
     /* Repaint if necessary before each byte is read. This lets us react immediately to universal variable color changes. */
     input_common_set_poll_callback(reader_repaint_if_needed);
 }
@@ -725,25 +725,25 @@ void reader_init()
 
 void reader_destroy()
 {
-	tcsetattr(0, TCSANOW, &saved_modes);
+  tcsetattr(0, TCSANOW, &saved_modes);
 }
 
 
 void reader_exit( int do_exit, int forced )
 {
-	if( data )
-		data->end_loop=do_exit;
-	end_loop=do_exit;
-	if( forced )
-		exit_forced = 1;
-	
+  if( data )
+    data->end_loop=do_exit;
+  end_loop=do_exit;
+  if( forced )
+    exit_forced = 1;
+
 }
 
 void reader_repaint_needed()
 {
-	if (data) {
-		data->repaint_needed = true;
-	}
+  if (data) {
+    data->repaint_needed = true;
+  }
 }
 
 void reader_repaint_if_needed() {
@@ -759,10 +759,10 @@ void reader_repaint_if_needed() {
 }
 
 void reader_react_to_color_change() {
-	if (data) {
+  if (data) {
         data->repaint_needed = true;
         data->screen_reset_needed = true;
-	}
+  }
 }
 
 
@@ -773,22 +773,22 @@ void reader_react_to_color_change() {
 static void remove_backward()
 {
 
-	if( data->buff_pos <= 0 )
-		return;
-    
+  if( data->buff_pos <= 0 )
+    return;
+
     /* Fake composed character sequences by continuning to delete until we delete a character of width at least 1. */
     int width;
     do {
         data->buff_pos -= 1;
         width = fish_wcwidth(data->command_line.at(data->buff_pos));
-        data->command_line.erase(data->buff_pos, 1);        
+        data->command_line.erase(data->buff_pos, 1);
     } while (width == 0 && data->buff_pos > 0);
     data->command_line_changed();
     data->suppress_autosuggestion = true;
 
-	reader_super_highlight_me_plenty( data->buff_pos );
+  reader_super_highlight_me_plenty( data->buff_pos );
 
-	reader_repaint();
+  reader_repaint();
 
 }
 
@@ -802,18 +802,18 @@ static int insert_string(const wcstring &str)
     size_t len = str.size();
     if (len == 0)
         return 0;
-        
+
     data->command_line.insert(data->buff_pos, str);
     data->buff_pos += len;
     data->command_line_changed();
     data->suppress_autosuggestion = false;
-    
-	/* Syntax highlight. Note we must have that buff_pos > 0 because we just added something nonzero to its length  */
+
+  /* Syntax highlight. Note we must have that buff_pos > 0 because we just added something nonzero to its length  */
     assert(data->buff_pos > 0);
-	reader_super_highlight_me_plenty( data->buff_pos-1 );
-	
-	reader_repaint();
-	return 1;
+  reader_super_highlight_me_plenty( data->buff_pos-1 );
+
+  reader_repaint();
+  return 1;
 }
 
 
@@ -823,7 +823,7 @@ static int insert_string(const wcstring &str)
 */
 static int insert_char( wchar_t c )
 {
-	return insert_string(wcstring(&c, 1));
+  return insert_string(wcstring(&c, 1));
 }
 
 
@@ -832,10 +832,10 @@ static int insert_char( wchar_t c )
 */
 static size_t comp_len( const wchar_t *a, const wchar_t *b )
 {
-	size_t i;
-	for( i=0; a[i] != L'\0' && b[i] != L'\0' && a[i]==b[i]; i++ )
-		;
-	return i;
+  size_t i;
+  for( i=0; a[i] != L'\0' && b[i] != L'\0' && a[i]==b[i]; i++ )
+    ;
+  return i;
 }
 
 /**
@@ -843,10 +843,10 @@ static size_t comp_len( const wchar_t *a, const wchar_t *b )
 */
 static size_t comp_ilen( const wchar_t *a, const wchar_t *b )
 {
-	size_t i;
-	for( i=0; a[i] != L'\0' && b[i] != L'\0' && towlower(a[i])==towlower(b[i]); i++ )
-		;
-	return i;
+  size_t i;
+  for( i=0; a[i] != L'\0' && b[i] != L'\0' && towlower(a[i])==towlower(b[i]); i++ )
+    ;
+  return i;
 }
 
 
@@ -863,71 +863,71 @@ static size_t comp_ilen( const wchar_t *a, const wchar_t *b )
 static wcstring completion_apply_to_command_line(const wcstring &val_str, int flags, const wcstring &command_line, size_t *inout_cursor_pos)
 {
     const wchar_t *val = val_str.c_str();
-	bool add_space = !(flags & COMPLETE_NO_SPACE);
-	bool do_replace = !!(flags & COMPLETE_NO_CASE);
-	bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
+  bool add_space = !(flags & COMPLETE_NO_SPACE);
+  bool do_replace = !!(flags & COMPLETE_NO_CASE);
+  bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
     const size_t cursor_pos = *inout_cursor_pos;
-    
-	//	debug( 0, L"Insert completion %ls with flags %d", val, flags);
 
-	if( do_replace )
-	{
-		
-		size_t move_cursor;
-		const wchar_t *begin, *end;
-		wchar_t *escaped;
-		
+  //  debug( 0, L"Insert completion %ls with flags %d", val, flags);
+
+  if( do_replace )
+  {
+
+    size_t move_cursor;
+    const wchar_t *begin, *end;
+    wchar_t *escaped;
+
         const wchar_t *buff = command_line.c_str();
-		parse_util_token_extent( buff, cursor_pos, &begin, 0, 0, 0 );
-		end = buff + cursor_pos;
+    parse_util_token_extent( buff, cursor_pos, &begin, 0, 0, 0 );
+    end = buff + cursor_pos;
 
-		wcstring sb(buff, begin - buff);
-		
-		if( do_escape )
-		{
-			escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );		
-			sb.append( escaped );
-			move_cursor = wcslen(escaped);
-			free( escaped );
-		}
-		else
-		{
-			sb.append( val );
-			move_cursor = wcslen(val);
-		}
-		
+    wcstring sb(buff, begin - buff);
 
-		if( add_space ) 
-		{
-			sb.append( L" " );
-			move_cursor += 1;
-		}
-		sb.append( end );
-        
+    if( do_escape )
+    {
+      escaped = escape( val, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+      sb.append( escaped );
+      move_cursor = wcslen(escaped);
+      free( escaped );
+    }
+    else
+    {
+      sb.append( val );
+      move_cursor = wcslen(val);
+    }
+
+
+    if( add_space )
+    {
+      sb.append( L" " );
+      move_cursor += 1;
+    }
+    sb.append( end );
+
         size_t new_cursor_pos = (begin - buff) + move_cursor;
         *inout_cursor_pos = new_cursor_pos;
         return sb;
-	}
-	else
-	{
+  }
+  else
+  {
         wchar_t quote = L'\0';
         wcstring replaced;
-		if( do_escape )
-		{
+    if( do_escape )
+    {
             parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
             replaced = parse_util_escape_string_with_quote(val_str, quote);
-		}
-		else
-		{
-			replaced = val;
-		}
-		
+    }
+    else
+    {
+      replaced = val;
+    }
+
         wcstring result = command_line;
         result.insert(cursor_pos, replaced);
         size_t new_cursor_pos = cursor_pos + replaced.size();
         if (add_space)
         {
-            if (quote && (command_line.c_str()[cursor_pos] != quote)) 
+            if (quote && (command_line.c_str()[cursor_pos] != quote))
             {
                 /* This is a quoted parameter, first print a quote */
                 result.insert(new_cursor_pos++, wcstring(&quote, 1));
@@ -936,7 +936,7 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
         }
         *inout_cursor_pos = new_cursor_pos;
         return result;
-	}
+  }
 }
 
 /**
@@ -953,7 +953,7 @@ static void completion_insert( const wchar_t *val, int flags )
     size_t cursor = data->buff_pos;
     wcstring new_command_line = completion_apply_to_command_line(val, flags, data->command_line, &cursor);
     reader_set_buffer(new_command_line, cursor);
-    
+
     /* Since we just inserted a completion, don't immediately do a new autosuggestion */
     data->suppress_autosuggestion = true;
 }
@@ -963,7 +963,7 @@ static void completion_insert( const wchar_t *val, int flags )
    fish_pager outputs any text, it is inserted into the input
    backbuffer.
 
-   \param prefix the string to display before every completion. 
+   \param prefix the string to display before every completion.
    \param is_quoted should be set if the argument is quoted. This will change the display style.
    \param comp the list of completions to display
 */
@@ -971,74 +971,74 @@ static void completion_insert( const wchar_t *val, int flags )
 static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<completion_t> &comp )
 {
     wcstring msg;
-	wcstring prefix_esc;
-	char *foo;
+  wcstring prefix_esc;
+  char *foo;
 
-	wchar_t *escaped_separator;
-	int has_case_sensitive=0;
+  wchar_t *escaped_separator;
+  int has_case_sensitive=0;
 
-	if (prefix.empty())
-	{
-		prefix_esc = L"\"\"";
-	}
-	else
-	{
-		prefix_esc = escape_string(prefix, 1);
-	}
-    
+  if (prefix.empty())
+  {
+    prefix_esc = L"\"\"";
+  }
+  else
+  {
+    prefix_esc = escape_string(prefix, 1);
+  }
+
     wcstring cmd = format_string(L"fish_pager -c 3 -r 4 %ls -p %ls",
                                  // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
                                 is_quoted?L"-q":L"",
                                 prefix_esc.c_str() );
-    
+
     io_data_t *in = io_buffer_create(true);
-	in->fd = 3;
+  in->fd = 3;
 
-	escaped_separator = escape( COMPLETE_SEP_STR, 1);
-	
-	for( size_t i=0; i< comp.size(); i++ )
-	{
-		const completion_t &el = comp.at( i );
-		has_case_sensitive |= !(el.flags & COMPLETE_NO_CASE );
-	}
-	
-	for( size_t i=0; i< comp.size(); i++ )
-	{
+  escaped_separator = escape( COMPLETE_SEP_STR, 1);
 
-		long base_len=-1;
-		const completion_t &el = comp.at( i );
+  for( size_t i=0; i< comp.size(); i++ )
+  {
+    const completion_t &el = comp.at( i );
+    has_case_sensitive |= !(el.flags & COMPLETE_NO_CASE );
+  }
 
-		wcstring completion_text;
-		wcstring description_text;
+  for( size_t i=0; i< comp.size(); i++ )
+  {
 
-		if( has_case_sensitive && (el.flags & COMPLETE_NO_CASE ))
-		{
-			continue;
-		}
-        
-		// Note that an empty completion is perfectly sensible here, e.g. tab-completing 'foo' with a file called 'foo' and another called 'foobar'		
-		if( el.flags & COMPLETE_NO_CASE )
-		  {
-		    if( base_len == -1 )
+    long base_len=-1;
+    const completion_t &el = comp.at( i );
+
+    wcstring completion_text;
+    wcstring description_text;
+
+    if( has_case_sensitive && (el.flags & COMPLETE_NO_CASE ))
+    {
+      continue;
+    }
+
+    // Note that an empty completion is perfectly sensible here, e.g. tab-completing 'foo' with a file called 'foo' and another called 'foobar'
+    if( el.flags & COMPLETE_NO_CASE )
+      {
+        if( base_len == -1 )
             {
                 const wchar_t *begin, *buff = data->command_line.c_str();
-                
+
                 parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
                 base_len = data->buff_pos - (begin-buff);
             }
-								
-		    completion_text = escape_string( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
-		  }
-		else
+
+        completion_text = escape_string( el.completion.c_str() + base_len, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+      }
+    else
         {
-		    completion_text = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
+        completion_text = escape_string( el.completion, ESCAPE_ALL | ESCAPE_NO_QUOTED );
         }
-		
-	
-		if( ! el.description.empty() )
-		{
-			description_text = escape_string( el.description, true );
-		}
+
+
+    if( ! el.description.empty() )
+    {
+      description_text = escape_string( el.description, true );
+    }
 
         /* It's possible (even common) to have an empty completion with no description. An example would be completing 'foo' with extant files 'foo' and 'foobar'. But fish_pager ignores blank lines. So if our completion text is empty, always include a description, even if it's empty.
         */
@@ -1052,44 +1052,44 @@ static void run_pager( const wcstring &prefix, int is_quoted, const std::vector<
         msg.push_back(L'\n');
     }
 
-	free( escaped_separator );		
-	   
-	foo = wcs2str(msg.c_str());
-	in->out_buffer_append(foo, strlen(foo) );
-	free( foo );
-	
-	term_donate();
-	
-	io_data_t *out = io_buffer_create( false );
-	out->fd = 4;
-	
+  free( escaped_separator );
+
+  foo = wcs2str(msg.c_str());
+  in->out_buffer_append(foo, strlen(foo) );
+  free( foo );
+
+  term_donate();
+
+  io_data_t *out = io_buffer_create( false );
+  out->fd = 4;
+
     parser_t &parser = parser_t::principal_parser();
     io_chain_t io_chain;
     io_chain.push_back(out);
     io_chain.push_back(in);
-	parser.eval( cmd, io_chain, TOP);
-	term_steal();
+  parser.eval( cmd, io_chain, TOP);
+  term_steal();
 
-	io_buffer_read( out );
+  io_buffer_read( out );
 
-	int nil=0;
+  int nil=0;
     out->out_buffer_append((char *)&nil, 1);
 
-	wchar_t *tmp;
-	wchar_t *str = str2wcs(out->out_buffer_ptr());
+  wchar_t *tmp;
+  wchar_t *str = str2wcs(out->out_buffer_ptr());
 
-	if( str )
-	{
-		for( tmp = str + wcslen(str)-1; tmp >= str; tmp-- )
-		{
-			input_unreadch( *tmp );
-		}
-		free( str );
-	}
+  if( str )
+  {
+    for( tmp = str + wcslen(str)-1; tmp >= str; tmp-- )
+    {
+      input_unreadch( *tmp );
+    }
+    free( str );
+  }
 
 
-	io_buffer_destroy( out);
-	io_buffer_destroy( in);
+  io_buffer_destroy( out);
+  io_buffer_destroy( in);
 }
 
 struct autosuggestion_context_t {
@@ -1102,10 +1102,10 @@ struct autosuggestion_context_t {
     const env_vars_snapshot_t vars;
     wcstring_list_t commands_to_load;
     const unsigned int generation_count;
-    
+
     // don't reload more than once
     bool has_tried_reloading;
-    
+
     autosuggestion_context_t(history_t *history, const wcstring &term, size_t pos) :
         search_string(term),
         cursor_pos(pos),
@@ -1117,28 +1117,28 @@ struct autosuggestion_context_t {
         has_tried_reloading(false)
     {
     }
-    
+
     /* The function run in the background thread to determine an autosuggestion */
     int threaded_autosuggest(void) {
         ASSERT_IS_BACKGROUND_THREAD();
-        
+
         /* If the main thread has moved on, skip all the work */
         if (generation_count != s_generation_count) {
             return 0;
         }
-        
+
         /* Let's make sure we aren't using the empty string */
         if (search_string.empty()) {
             return 0;
         }
-        
+
         while (searcher.go_backwards()) {
             history_item_t item = searcher.current_item();
-            
+
             /* Skip items with newlines because they make terrible autosuggestions */
             if (item.str().find('\n') != wcstring::npos)
                 continue;
-            
+
             if (autosuggest_validate_from_history(item, detector, working_directory, vars)) {
                 /* The command autosuggestion was handled specially, so we're done */
                 this->autosuggestion = searcher.current_string();
@@ -1146,14 +1146,14 @@ struct autosuggestion_context_t {
             }
 
         }
-        
+
         /* Try handling a special command like cd */
         wcstring special_suggestion;
         if (autosuggest_suggest_special(search_string, working_directory, special_suggestion)) {
             this->autosuggestion = special_suggestion;
             return 1;
         }
-        
+
         // Here we do something a little funny
         // If the line ends with a space, and the cursor is not at the end,
         // don't use completion autosuggestions. It ends up being pretty weird seeing stuff get spammed on the right
@@ -1176,7 +1176,7 @@ struct autosuggestion_context_t {
             this->autosuggestion = completion_apply_to_command_line(comp.completion.c_str(), comp.flags, this->search_string, &cursor);
             return 1;
         }
-        
+
         return 0;
     }
 };
@@ -1198,7 +1198,7 @@ static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
     /* Extract the commands to load */
     wcstring_list_t commands_to_load;
     ctx->commands_to_load.swap(commands_to_load);
-    
+
     /* If we have autosuggestions to load, load them and try again */
     if (! result && ! commands_to_load.empty() && ! ctx->has_tried_reloading)
     {
@@ -1210,7 +1210,7 @@ static void autosuggest_completed(autosuggestion_context_t *ctx, int result) {
         iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
         return;
     }
-    
+
     if (result &&
         can_autosuggest() &&
         ctx->search_string == data->command_line &&
@@ -1263,22 +1263,22 @@ static void accept_autosuggestion(void) {
 */
 static void reader_flash()
 {
-	struct timespec pollint;
+  struct timespec pollint;
 
-	for( size_t i=0; i<data->buff_pos; i++ )
-	{
-		data->colors.at(i) = HIGHLIGHT_SEARCH_MATCH<<16;
-	}
-	
-	reader_repaint();
-	
-	pollint.tv_sec = 0;
-	pollint.tv_nsec = 100 * 1000000;
-	nanosleep( &pollint, NULL );
+  for( size_t i=0; i<data->buff_pos; i++ )
+  {
+    data->colors.at(i) = HIGHLIGHT_SEARCH_MATCH<<16;
+  }
 
-	reader_super_highlight_me_plenty( data->buff_pos );
-    
-	reader_repaint();
+  reader_repaint();
+
+  pollint.tv_sec = 0;
+  pollint.tv_nsec = 100 * 1000000;
+  nanosleep( &pollint, NULL );
+
+  reader_super_highlight_me_plenty( data->buff_pos );
+
+  reader_repaint();
 }
 
 /**
@@ -1299,23 +1299,23 @@ static void reader_flash()
 static bool reader_can_replace( const wcstring &in, int flags )
 {
 
-	const wchar_t * str = in.c_str();
+  const wchar_t * str = in.c_str();
 
-	if( flags & COMPLETE_DONT_ESCAPE )
-	{
-		return true;
-	}
-	/*
-	  Test characters that have a special meaning in any character position
-	*/
-	while( *str )
-	{
-		if( wcschr( REPLACE_UNCLEAN, *str ) )
-			return false;
-		str++;
-	}
+  if( flags & COMPLETE_DONT_ESCAPE )
+  {
+    return true;
+  }
+  /*
+    Test characters that have a special meaning in any character position
+  */
+  while( *str )
+  {
+    if( wcschr( REPLACE_UNCLEAN, *str ) )
+      return false;
+    str++;
+  }
 
-	return true;
+  return true;
 }
 
 /* Compare two completions, except make the case insensitive comes larger than everyone (so they come last) */
@@ -1350,14 +1350,14 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
     {
         /* Bump the index */
         idx = (idx + 1) % size;
-        
+
         /* Bail if we've looped */
         if (idx == start_idx)
             break;
-        
+
         /* Get the completion */
         const completion_t &c = comp.at(idx);
-        
+
         /* Try this completion */
         if (! c.is_case_insensitive() || reader_can_replace(command_line, c.flags))
         {
@@ -1366,14 +1366,14 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
             break;
         }
     }
-    
+
     *inout_idx = idx;
     return result;
 }
 
 /**
    Handle the list of completions. This means the following:
-   
+
    - If the list is empty, flash the terminal.
    - If the list contains one element, write the whole element, and if
    the element does not end on a '/', '@', ':', or a '=', also write a trailing
@@ -1382,199 +1382,199 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
    the prefix.
    - If the list contains multiple elements without.
    a common prefix, call run_pager to display a list of completions. Depending on terminal size and the length of the list, run_pager may either show less than a screenfull and exit or use an interactive pager to allow the user to scroll through the completions.
-   
+
    \param comp the list of completion strings
-   
+
    Return true if we inserted text into the command line, false if we did not.
 */
 
 static bool handle_completions( const std::vector<completion_t> &comp )
 {
-	wchar_t *base = NULL;
-	size_t len = 0;
-	bool done = false;
+  wchar_t *base = NULL;
+  size_t len = 0;
+  bool done = false;
     bool success = false;
-	int count = 0;
-	int flags=0;
-	const wchar_t *begin, *end, *buff = data->command_line.c_str();
-	
-	parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
-	end = buff+data->buff_pos;
-	
+  int count = 0;
+  int flags=0;
+  const wchar_t *begin, *end, *buff = data->command_line.c_str();
+
+  parse_util_token_extent( buff, data->buff_pos, &begin, 0, 0, 0 );
+  end = buff+data->buff_pos;
+
     const wcstring tok(begin, end - begin);
-	
-	/*
-	  Check trivial cases
-	 */
-	switch(comp.size())
-	{
-		/* No suitable completions found, flash screen and return */
-		case 0:
-		{
-			reader_flash();
-			done = true;
+
+  /*
+    Check trivial cases
+   */
+  switch(comp.size())
+  {
+    /* No suitable completions found, flash screen and return */
+    case 0:
+    {
+      reader_flash();
+      done = true;
             success = false;
-			break;
-		}
+      break;
+    }
 
-		/* Exactly one suitable completion found - insert it */
-		case 1:
-		{
-			
-			const completion_t &c = comp.at( 0 );
-		
-			/*
-			  If this is a replacement completion, check
-			  that we know how to replace it, e.g. that
-			  the token doesn't contain evil operators
-			  like {}
-			 */
-			if( ! c.is_case_insensitive() || reader_can_replace( tok, c.flags ) )
-			{
-				completion_insert( c.completion.c_str(), c.flags );			
-			}
-			done = true;
-			success = true;
-			break;
-		}
-	}
-	
-		
-	if( !done )
-	{
-		/* Try to find something to insert with the correct case */
-		for( size_t i=0; i< comp.size() ; i++ )
-		{
-			const completion_t &c =  comp.at( i );
+    /* Exactly one suitable completion found - insert it */
+    case 1:
+    {
 
-			/* Ignore case insensitive completions for now */
-			if( c.is_case_insensitive() )
-				continue;
-			
-			count++;
-			
-			if( base )
-			{
-				size_t new_len = comp_len( base, c.completion.c_str() );
+      const completion_t &c = comp.at( 0 );
+
+      /*
+        If this is a replacement completion, check
+        that we know how to replace it, e.g. that
+        the token doesn't contain evil operators
+        like {}
+       */
+      if( ! c.is_case_insensitive() || reader_can_replace( tok, c.flags ) )
+      {
+        completion_insert( c.completion.c_str(), c.flags );
+      }
+      done = true;
+      success = true;
+      break;
+    }
+  }
+
+
+  if( !done )
+  {
+    /* Try to find something to insert with the correct case */
+    for( size_t i=0; i< comp.size() ; i++ )
+    {
+      const completion_t &c =  comp.at( i );
+
+      /* Ignore case insensitive completions for now */
+      if( c.is_case_insensitive() )
+        continue;
+
+      count++;
+
+      if( base )
+      {
+        size_t new_len = comp_len( base, c.completion.c_str() );
                 len = mini(new_len, len);
-			}
-			else
-			{
-				base = wcsdup( c.completion.c_str() );
-				len = wcslen( base );
-				flags = c.flags;
-			}
-		}
+      }
+      else
+      {
+        base = wcsdup( c.completion.c_str() );
+        len = wcslen( base );
+        flags = c.flags;
+      }
+    }
 
-		/* If we found something to insert, do it. */
-		if( len > 0 )
-		{
-			if( count > 1 )
-				flags = flags | COMPLETE_NO_SPACE;
+    /* If we found something to insert, do it. */
+    if( len > 0 )
+    {
+      if( count > 1 )
+        flags = flags | COMPLETE_NO_SPACE;
 
-			base[len]=L'\0';
-			completion_insert(base, flags);
-			done = true;
+      base[len]=L'\0';
+      completion_insert(base, flags);
+      done = true;
             success = true;
-		}
-	}
-	
-	
+    }
+  }
 
-	if( !done && base == NULL )
-	{
-		/* Try to find something to insert ignoring case */
-		if( begin )
-		{
-			size_t offset = tok.size();
-			
-			count = 0;
-			
-			for( size_t i=0; i< comp.size(); i++ )
-			{
-				const completion_t &c = comp.at( i );
 
-				if( ! c.is_case_insensitive() )
-					continue;
-			
-				if( !reader_can_replace( tok, c.flags ) )
-				{
-					len=0;
-					break;
-				}
 
-				count++;
+  if( !done && base == NULL )
+  {
+    /* Try to find something to insert ignoring case */
+    if( begin )
+    {
+      size_t offset = tok.size();
 
-				if( base )
-				{
-					size_t new_len = offset + comp_ilen( base+offset, c.completion.c_str()+offset );
-					len = new_len < len ? new_len: len;
-				}
-				else
-				{
-					base = wcsdup( c.completion.c_str() );
-					len = wcslen( base );
-					flags = c.flags;
-					
-				}
-			}
+      count = 0;
 
-			if( len > offset )
-			{
-				if( count > 1 )
-					flags = flags | COMPLETE_NO_SPACE;
-				
-				base[len]=L'\0';
-				completion_insert( base, flags );
-				done = 1;
-                success = true;
-			}
-			
-		}
-	}
-		
-	free( base );
+      for( size_t i=0; i< comp.size(); i++ )
+      {
+        const completion_t &c = comp.at( i );
 
-	if( !done )
-	{
-		/*
-		  There is no common prefix in the completions, and show_list
-		  is true, so we print the list
-		*/
-		size_t len, prefix_start = 0;
-		wcstring prefix;
-		parse_util_get_parameter_info(data->command_line, data->buff_pos, NULL, &prefix_start, NULL);
+        if( ! c.is_case_insensitive() )
+          continue;
 
-		assert(data->buff_pos >= prefix_start); 
-		len = data->buff_pos - prefix_start;
-
-		if( len <= PREFIX_MAX_LEN )
+        if( !reader_can_replace( tok, c.flags ) )
         {
-            prefix.append(data->command_line, prefix_start, len);
-		}
-		else
-		{
-            // append just the end of the string
-            prefix = wcstring(&ellipsis_char, 1);
-			prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN - 1, wcstring::npos);
+          len=0;
+          break;
         }
 
-		{
-			int is_quoted;
+        count++;
 
-			wchar_t quote;
-			parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
-			is_quoted = (quote != L'\0');
-			
-			write_loop(1, "\n", 1 );
-            
-			run_pager( prefix, is_quoted, comp );
-		}
-		s_reset( &data->screen, true);
-		reader_repaint();
+        if( base )
+        {
+          size_t new_len = offset + comp_ilen( base+offset, c.completion.c_str()+offset );
+          len = new_len < len ? new_len: len;
+        }
+        else
+        {
+          base = wcsdup( c.completion.c_str() );
+          len = wcslen( base );
+          flags = c.flags;
+
+        }
+      }
+
+      if( len > offset )
+      {
+        if( count > 1 )
+          flags = flags | COMPLETE_NO_SPACE;
+
+        base[len]=L'\0';
+        completion_insert( base, flags );
+        done = 1;
+                success = true;
+      }
+
+    }
+  }
+
+  free( base );
+
+  if( !done )
+  {
+    /*
+      There is no common prefix in the completions, and show_list
+      is true, so we print the list
+    */
+    size_t len, prefix_start = 0;
+    wcstring prefix;
+    parse_util_get_parameter_info(data->command_line, data->buff_pos, NULL, &prefix_start, NULL);
+
+    assert(data->buff_pos >= prefix_start);
+    len = data->buff_pos - prefix_start;
+
+    if( len <= PREFIX_MAX_LEN )
+        {
+            prefix.append(data->command_line, prefix_start, len);
+    }
+    else
+    {
+            // append just the end of the string
+            prefix = wcstring(&ellipsis_char, 1);
+      prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN - 1, wcstring::npos);
+        }
+
+    {
+      int is_quoted;
+
+      wchar_t quote;
+      parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
+      is_quoted = (quote != L'\0');
+
+      write_loop(1, "\n", 1 );
+
+      run_pager( prefix, is_quoted, comp );
+    }
+    s_reset( &data->screen, true);
+    reader_repaint();
         success = false;
-	}		
-	return success;
+  }
+  return success;
 }
 
 
@@ -1583,101 +1583,101 @@ static bool handle_completions( const std::vector<completion_t> &comp )
 */
 static void reader_interactive_init()
 {
-	/* See if we are running interactively.  */
-	pid_t shell_pgid;
+  /* See if we are running interactively.  */
+  pid_t shell_pgid;
 
-	input_init();
-	kill_init();
-	shell_pgid = getpgrp ();
+  input_init();
+  kill_init();
+  shell_pgid = getpgrp ();
 
-	/*
-	  This should enable job control on fish, even if our parent process did
-	  not enable it for us.
-	*/
+  /*
+    This should enable job control on fish, even if our parent process did
+    not enable it for us.
+  */
 
-	/* 
-	   Check if we are in control of the terminal, so that we don't do
-	   semi-expensive things like reset signal handlers unless we
-	   really have to, which we often don't.
-	 */
-	if (tcgetpgrp( 0 ) != shell_pgid)
-	{
-		int block_count = 0;
-		int i;
-		
-		/*
-		  Bummer, we are not in control of the terminal. Stop until
-		  parent has given us control of it. Stopping in fish is a bit
-		  of a challange, what with all the signal fidgeting, we need
-		  to reset a bunch of signal state, making this coda a but
-		  unobvious.
+  /*
+     Check if we are in control of the terminal, so that we don't do
+     semi-expensive things like reset signal handlers unless we
+     really have to, which we often don't.
+   */
+  if (tcgetpgrp( 0 ) != shell_pgid)
+  {
+    int block_count = 0;
+    int i;
 
-		  In theory, reseting signal handlers could cause us to miss
-		  signal deliveries. In practice, this code should only be run
-		  suring startup, when we're not waiting for any signals.
-		*/
-		while (signal_is_blocked()) 
-		{
-			signal_unblock();
-			block_count++;
-		}
-		signal_reset_handlers();
-	
-		/*
-		  Ok, signal handlers are taken out of the picture. Stop ourself in a loop
-		  until we are in control of the terminal.
-		 */
-		while (tcgetpgrp( 0 ) != shell_pgid)
-		{
-			killpg( shell_pgid, SIGTTIN);
-		}
-		
-		signal_set_handlers();
+    /*
+      Bummer, we are not in control of the terminal. Stop until
+      parent has given us control of it. Stopping in fish is a bit
+      of a challange, what with all the signal fidgeting, we need
+      to reset a bunch of signal state, making this coda a but
+      unobvious.
 
-		for( i=0; i<block_count; i++ ) 
-		{
-			signal_block();
-		}
-		
-	}
-	
+      In theory, reseting signal handlers could cause us to miss
+      signal deliveries. In practice, this code should only be run
+      suring startup, when we're not waiting for any signals.
+    */
+    while (signal_is_blocked())
+    {
+      signal_unblock();
+      block_count++;
+    }
+    signal_reset_handlers();
 
-	/* Put ourselves in our own process group.  */
-	shell_pgid = getpid ();
-	if( getpgrp() != shell_pgid )
-	{
-		if (setpgid (shell_pgid, shell_pgid) < 0)
-		{
-			debug( 1,
-				   _( L"Couldn't put the shell in its own process group" ));
-			wperror( L"setpgid" );
-			exit (1);
-		}
-	}
+    /*
+      Ok, signal handlers are taken out of the picture. Stop ourself in a loop
+      until we are in control of the terminal.
+     */
+    while (tcgetpgrp( 0 ) != shell_pgid)
+    {
+      killpg( shell_pgid, SIGTTIN);
+    }
 
-	/* Grab control of the terminal.  */
-	if( tcsetpgrp (STDIN_FILENO, shell_pgid) )
-	{
-		debug( 1,
-			   _( L"Couldn't grab control of terminal" ) );
-		wperror( L"tcsetpgrp" );
-		exit_without_destructors(1);
-	}
+    signal_set_handlers();
 
-	common_handle_winch(0);
+    for( i=0; i<block_count; i++ )
+    {
+      signal_block();
+    }
+
+  }
+
+
+  /* Put ourselves in our own process group.  */
+  shell_pgid = getpid ();
+  if( getpgrp() != shell_pgid )
+  {
+    if (setpgid (shell_pgid, shell_pgid) < 0)
+    {
+      debug( 1,
+           _( L"Couldn't put the shell in its own process group" ));
+      wperror( L"setpgid" );
+      exit (1);
+    }
+  }
+
+  /* Grab control of the terminal.  */
+  if( tcsetpgrp (STDIN_FILENO, shell_pgid) )
+  {
+    debug( 1,
+         _( L"Couldn't grab control of terminal" ) );
+    wperror( L"tcsetpgrp" );
+    exit_without_destructors(1);
+  }
+
+  common_handle_winch(0);
 
     if( tcsetattr(0,TCSANOW,&shell_modes))      /* set the new modes */
     {
         wperror(L"tcsetattr");
     }
 
-	/* 
-	   We need to know our own pid so we'll later know if we are a
-	   fork 
-	*/
-	original_pid = getpid();
+  /*
+     We need to know our own pid so we'll later know if we are a
+     fork
+  */
+  original_pid = getpid();
 
-	env_set( L"_", L"fish", ENV_GLOBAL );
+  env_set( L"_", L"fish", ENV_GLOBAL );
 }
 
 /**
@@ -1685,30 +1685,30 @@ static void reader_interactive_init()
 */
 static void reader_interactive_destroy()
 {
-	kill_destroy();
-	writestr( L"\n" );
-	set_color( rgb_color_t::reset(), rgb_color_t::reset() );
-	input_destroy();
+  kill_destroy();
+  writestr( L"\n" );
+  set_color( rgb_color_t::reset(), rgb_color_t::reset() );
+  input_destroy();
 }
 
 
 void reader_sanity_check()
 {
-	if( get_is_interactive())
-	{
-		if( !data )
-			sanity_lose();
+  if( get_is_interactive())
+  {
+    if( !data )
+      sanity_lose();
 
-		if(!( data->buff_pos <= data->command_length() ))
-			sanity_lose();
-        
+    if(!( data->buff_pos <= data->command_length() ))
+      sanity_lose();
+
         if (data->colors.size() != data->command_length())
             sanity_lose();
-            
+
         if (data->indents.size() != data->command_length())
             sanity_lose();
-            
-	}
+
+  }
 }
 
 /**
@@ -1727,22 +1727,22 @@ static void set_command_line_and_position( const wcstring &new_str, size_t pos )
 void reader_replace_current_token( const wchar_t *new_token )
 {
 
-	const wchar_t *begin, *end;
-	size_t new_pos;
+  const wchar_t *begin, *end;
+  size_t new_pos;
 
-	/* Find current token */
+  /* Find current token */
     const wchar_t *buff = data->command_line.c_str();
-	parse_util_token_extent( (wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0 );
+  parse_util_token_extent( (wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0 );
 
-	if( !begin || !end )
-		return;
+  if( !begin || !end )
+    return;
 
-	/* Make new string */
+  /* Make new string */
     wcstring new_buff(buff, begin - buff);
     new_buff.append(new_token);
     new_buff.append(end);
-	new_pos = (begin-buff) + wcslen(new_token);
-    
+  new_pos = (begin-buff) + wcslen(new_token);
+
     set_command_line_and_position(new_buff, new_pos);
 }
 
@@ -1752,21 +1752,21 @@ void reader_replace_current_token( const wchar_t *new_token )
 */
 static void reset_token_history()
 {
-	const wchar_t *begin, *end;
+  const wchar_t *begin, *end;
     const wchar_t *buff = data->command_line.c_str();
-	parse_util_token_extent( (wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0 );
-	
-	data->search_buff.clear();
-	if( begin )
-	{
-        data->search_buff.append(begin, end - begin);
-	}
+  parse_util_token_extent( (wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0 );
 
-	data->token_history_pos = -1;
-	data->search_pos=0;
+  data->search_buff.clear();
+  if( begin )
+  {
+        data->search_buff.append(begin, end - begin);
+  }
+
+  data->token_history_pos = -1;
+  data->search_pos=0;
     data->search_prev.clear();
     data->search_prev.push_back(data->search_buff);
-    
+
     data->history_search = history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
 }
 
@@ -1782,128 +1782,128 @@ static void handle_token_history( int forward, int reset )
     /* Paranoia */
     if (! data)
         return;
-        
-	const wchar_t *str=0;
-	long current_pos;
-	tokenizer tok;
 
-	if( reset )
-	{
-		/*
-		  Start a new token search using the current token
-		*/
-		reset_token_history();
+  const wchar_t *str=0;
+  long current_pos;
+  tokenizer tok;
 
-	}
+  if( reset )
+  {
+    /*
+      Start a new token search using the current token
+    */
+    reset_token_history();
+
+  }
 
 
-	current_pos  = data->token_history_pos;
+  current_pos  = data->token_history_pos;
 
-	if( forward || data->search_pos + 1 < data->search_prev.size() )
-	{
-		if( forward )
-		{
-			if( data->search_pos > 0 )
-			{
-				data->search_pos--;
-			}
+  if( forward || data->search_pos + 1 < data->search_prev.size() )
+  {
+    if( forward )
+    {
+      if( data->search_pos > 0 )
+      {
+        data->search_pos--;
+      }
             str = data->search_prev.at(data->search_pos).c_str();
-		}
-		else
-		{
-			data->search_pos++;
+    }
+    else
+    {
+      data->search_pos++;
             str = data->search_prev.at(data->search_pos).c_str();
-		}
+    }
 
-		reader_replace_current_token( str );
-		reader_super_highlight_me_plenty( data->buff_pos );
-		reader_repaint();
-	}
-	else
-	{
-		if( current_pos == -1 )
-		{
+    reader_replace_current_token( str );
+    reader_super_highlight_me_plenty( data->buff_pos );
+    reader_repaint();
+  }
+  else
+  {
+    if( current_pos == -1 )
+    {
             data->token_history_buff.clear();
-            
-			/*
-			  Search for previous item that contains this substring
-			*/
+
+      /*
+        Search for previous item that contains this substring
+      */
             if (data->history_search.go_backwards()) {
                 wcstring item = data->history_search.current_string();
                 data->token_history_buff = data->history_search.current_string();
             }
-			current_pos = data->token_history_buff.size();
+      current_pos = data->token_history_buff.size();
 
-		}
+    }
 
-		if( data->token_history_buff.empty() )
-		{
-			/*
-			  We have reached the end of the history - check if the
-			  history already contains the search string itself, if so
-			  return, otherwise add it.
-			*/
+    if( data->token_history_buff.empty() )
+    {
+      /*
+        We have reached the end of the history - check if the
+        history already contains the search string itself, if so
+        return, otherwise add it.
+      */
 
-			const wcstring &last = data->search_prev.back();
-            if (data->search_buff != last) 
-			{
-				str = wcsdup( data->search_buff.c_str() );
-			}
-			else
-			{
-				return;
-			}
-		}
-		else
-		{
+      const wcstring &last = data->search_prev.back();
+            if (data->search_buff != last)
+      {
+        str = wcsdup( data->search_buff.c_str() );
+      }
+      else
+      {
+        return;
+      }
+    }
+    else
+    {
 
-			//debug( 3, L"new '%ls'", data->token_history_buff.c_str() );
+      //debug( 3, L"new '%ls'", data->token_history_buff.c_str() );
 
-			for( tok_init( &tok, data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED );
-				 tok_has_next( &tok);
-				 tok_next( &tok ))
-			{
-				switch( tok_last_type( &tok ) )
-				{
-					case TOK_STRING:
-					{
-						if( wcsstr( tok_last( &tok ), data->search_buff.c_str() ) )
-						{
-							//debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
-							if( tok_get_pos( &tok ) >= current_pos )
-							{
-								break;
-							}
-							//debug( 3, L"ok pos" );
+      for( tok_init( &tok, data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED );
+         tok_has_next( &tok);
+         tok_next( &tok ))
+      {
+        switch( tok_last_type( &tok ) )
+        {
+          case TOK_STRING:
+          {
+            if( wcsstr( tok_last( &tok ), data->search_buff.c_str() ) )
+            {
+              //debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
+              if( tok_get_pos( &tok ) >= current_pos )
+              {
+                break;
+              }
+              //debug( 3, L"ok pos" );
 
                             const wcstring last_tok = tok_last( &tok );
                             if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) == data->search_prev.end()) {
-								data->token_history_pos = tok_get_pos( &tok );
-								str = wcsdup(tok_last( &tok ));
-							}
+                data->token_history_pos = tok_get_pos( &tok );
+                str = wcsdup(tok_last( &tok ));
+              }
 
-						}
-					}
-				}
-			}
+            }
+          }
+        }
+      }
 
-			tok_destroy( &tok );
-		}
+      tok_destroy( &tok );
+    }
 
-		if( str )
-		{
-			reader_replace_current_token( str );
-			reader_super_highlight_me_plenty( data->buff_pos );
-			reader_repaint();
+    if( str )
+    {
+      reader_replace_current_token( str );
+      reader_super_highlight_me_plenty( data->buff_pos );
+      reader_repaint();
             data->search_pos = data->search_prev.size();
             data->search_prev.push_back(str);
-		}
-		else if( ! reader_interrupted() )
-		{
-			data->token_history_pos=-1;
-			handle_token_history( 0, 0 );
-		}
-	}
+    }
+    else if( ! reader_interrupted() )
+    {
+      data->token_history_pos=-1;
+      handle_token_history( 0, 0 );
+    }
+  }
 }
 
 /* Our state machine that implements "one word" movement or erasure. */
@@ -1915,13 +1915,13 @@ class move_word_state_machine_t
         s_alphanumeric_or_punctuation_except_slash,
         s_end
     } state;
-    
+
     public:
-    
+
     move_word_state_machine_t() : state(s_whitespace)
     {
     }
-    
+
     bool consume_char(wchar_t c)
     {
         /* Note fall-through in all of these! */
@@ -1931,20 +1931,20 @@ class move_word_state_machine_t
                 if (iswspace(c))
                     return true;
                 state = s_punctuation;
-            
+
             case s_punctuation:
                 if (iswpunct(c))
                     return true;
                 state = s_alphanumeric_or_punctuation_except_slash;
-            
+
             case s_alphanumeric_or_punctuation_except_slash:
                 if (c != L'/' && (iswalnum(c) || iswpunct(c)))
                     return true;
                 state = s_end;
-            
+
             case s_end:
             default:
-                return false;                
+                return false;
         }
     }
 };
@@ -1957,13 +1957,13 @@ class move_word_state_machine_t
    \param dir Direction to move/erase. 0 means move left, 1 means move right.
    \param erase Whether to erase the characters along the way or only move past them.
    \param new if the new kill item should be appended to the previous kill item or not.
-   
+
    The regex we implement:
-   
+
       WHITESPACE*
       PUNCTUATION*
       ALPHANUMERIC_OR_PUNCTUATION_EXCEPT_SLASH*
- 
+
    Interesting test case:
      /foo/bar/baz/ -> /foo/bar/ -> /foo/ -> /
      echo --foo --bar -> echo --foo -> echo
@@ -1975,26 +1975,26 @@ enum move_word_dir_t {
 static void move_word( bool move_right, bool erase, bool newv )
 {
     const size_t start_buff_pos = data->buff_pos;
-	size_t end_buff_pos = data->buff_pos; //this is the last character we delete; we always delete at least one character
+  size_t end_buff_pos = data->buff_pos; //this is the last character we delete; we always delete at least one character
 
-	/* Return if we are already at the edge */
+  /* Return if we are already at the edge */
     const size_t boundary = move_right ? data->command_length() : 0;
     if (data->buff_pos == boundary)
         return;
-	
-	/*
-	  If we are beyond the last character and moving left, start by
-	  moving one step, since otherwise we'll start on the \0, which
-	  should be ignored.
-	*/
-	if (! move_right && (end_buff_pos == data->command_length()) )
-	{
-		if( !end_buff_pos )
-			return;
-		
-		end_buff_pos--;
-	}
-	
+
+  /*
+    If we are beyond the last character and moving left, start by
+    moving one step, since otherwise we'll start on the \0, which
+    should be ignored.
+  */
+  if (! move_right && (end_buff_pos == data->command_length()) )
+  {
+    if( !end_buff_pos )
+      return;
+
+    end_buff_pos--;
+  }
+
     const wchar_t * const command_line = data->command_line.c_str();
     move_word_state_machine_t state;
     const size_t last_valid_end_buff_pos = (move_right ? data->command_length() - 1 : 0);
@@ -2007,132 +2007,132 @@ static void move_word( bool move_right, bool erase, bool newv )
         end_buff_pos = next_buff_pos;
     }
 
-	if( erase )
-	{
+  if( erase )
+  {
         size_t start_idx = mini(start_buff_pos, end_buff_pos); //first char to delete
         size_t end_idx = maxi(start_buff_pos, end_buff_pos); //last char to delete
-        
+
         // Don't try to delete past the end
         end_idx = mini(end_idx, data->command_length() - 1);
-        
+
         // Don't autosuggest after a kill
         data->suppress_autosuggestion = true;
-        
-		reader_kill( start_idx, end_idx - start_idx + 1, move_right?KILL_APPEND:KILL_PREPEND, newv );
-	}
-	else
-	{
-		data->buff_pos = move_right ? end_buff_pos + 1 : end_buff_pos;
-		reader_repaint();
-	}
+
+    reader_kill( start_idx, end_idx - start_idx + 1, move_right?KILL_APPEND:KILL_PREPEND, newv );
+  }
+  else
+  {
+    data->buff_pos = move_right ? end_buff_pos + 1 : end_buff_pos;
+    reader_repaint();
+  }
 }
 
 
 const wchar_t *reader_get_buffer(void)
 {
     ASSERT_IS_MAIN_THREAD();
-	return data?data->command_line.c_str():NULL;
+  return data?data->command_line.c_str():NULL;
 }
 
 history_t *reader_get_history(void) {
     ASSERT_IS_MAIN_THREAD();
-	return data ? data->history : NULL;
+  return data ? data->history : NULL;
 }
 
 void reader_set_buffer( const wcstring &b, size_t pos )
 {
-	if( !data )
-		return;
+  if( !data )
+    return;
 
     /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
-	size_t command_line_len = b.size();
+  size_t command_line_len = b.size();
     data->command_line = b;
     data->command_line_changed();
 
     /* Don't set a position past the command line length */
     if (pos > command_line_len)
         pos = command_line_len;
-        
+
     data->buff_pos = pos;
 
-	data->search_mode = NO_SEARCH;
-	data->search_buff.clear();
-	data->history_search.go_to_end();
+  data->search_mode = NO_SEARCH;
+  data->search_buff.clear();
+  data->history_search.go_to_end();
 
-	reader_super_highlight_me_plenty( data->buff_pos );
-	reader_repaint_needed();
+  reader_super_highlight_me_plenty( data->buff_pos );
+  reader_repaint_needed();
 }
 
 
 size_t reader_get_cursor_pos()
 {
-	if( !data )
-		return (size_t)(-1);
+  if( !data )
+    return (size_t)(-1);
 
-	return data->buff_pos;
+  return data->buff_pos;
 }
 
 #define ENV_CMD_DURATION L"CMD_DURATION"
 
 void set_env_cmd_duration(struct timeval *after, struct timeval *before)
 {
-	time_t secs = after->tv_sec - before->tv_sec;
-	suseconds_t usecs = after->tv_usec - before->tv_usec;
-	wchar_t buf[16];
+  time_t secs = after->tv_sec - before->tv_sec;
+  suseconds_t usecs = after->tv_usec - before->tv_usec;
+  wchar_t buf[16];
 
-	if (after->tv_usec < before->tv_usec) {
-		usecs += 1000000;
-		secs -= 1;
-	}
+  if (after->tv_usec < before->tv_usec) {
+    usecs += 1000000;
+    secs -= 1;
+  }
 
-	if (secs < 1) {
-		env_remove( ENV_CMD_DURATION, 0 );
-	} else {
-		if (secs < 10) { // 10 secs
-			swprintf(buf, 16, L"%lu.%02us", secs, usecs / 10000);
-		} else if (secs < 60) { // 1 min
-			swprintf(buf, 16, L"%lu.%01us", secs, usecs / 100000);
-		} else if (secs < 600) { // 10 mins
-			swprintf(buf, 16, L"%lum %lu.%01us", secs / 60, secs % 60, usecs / 100000);
-		} else if (secs < 5400) { // 1.5 hours
-			swprintf(buf, 16, L"%lum %lus", secs / 60, secs % 60);
-		} else {
-			swprintf(buf, 16, L"%.1fh", secs / 3600.0);
-		}
-		env_set( ENV_CMD_DURATION, buf, ENV_EXPORT );
-	}
+  if (secs < 1) {
+    env_remove( ENV_CMD_DURATION, 0 );
+  } else {
+    if (secs < 10) { // 10 secs
+      swprintf(buf, 16, L"%lu.%02us", secs, usecs / 10000);
+    } else if (secs < 60) { // 1 min
+      swprintf(buf, 16, L"%lu.%01us", secs, usecs / 100000);
+    } else if (secs < 600) { // 10 mins
+      swprintf(buf, 16, L"%lum %lu.%01us", secs / 60, secs % 60, usecs / 100000);
+    } else if (secs < 5400) { // 1.5 hours
+      swprintf(buf, 16, L"%lum %lus", secs / 60, secs % 60);
+    } else {
+      swprintf(buf, 16, L"%.1fh", secs / 3600.0);
+    }
+    env_set( ENV_CMD_DURATION, buf, ENV_EXPORT );
+  }
 }
 
 void reader_run_command( parser_t &parser, const wchar_t *cmd )
 {
 
-	wchar_t *ft;
-	struct timeval time_before, time_after;
+  wchar_t *ft;
+  struct timeval time_before, time_after;
 
-	ft= tok_first( cmd );
+  ft= tok_first( cmd );
 
-	if( ft != 0 )
-		env_set( L"_", ft, ENV_GLOBAL );
-	free(ft);
+  if( ft != 0 )
+    env_set( L"_", ft, ENV_GLOBAL );
+  free(ft);
 
-	reader_write_title();
+  reader_write_title();
 
-	term_donate();
+  term_donate();
 
-	gettimeofday(&time_before, NULL);
+  gettimeofday(&time_before, NULL);
 
-	parser.eval( cmd, io_chain_t(), TOP );
-	job_reap( 1 );
+  parser.eval( cmd, io_chain_t(), TOP );
+  job_reap( 1 );
 
-	gettimeofday(&time_after, NULL);
-	set_env_cmd_duration(&time_after, &time_before);
+  gettimeofday(&time_after, NULL);
+  set_env_cmd_duration(&time_after, &time_before);
 
-	term_steal();
+  term_steal();
 
-	env_set( L"_", program_name, ENV_GLOBAL );
+  env_set( L"_", program_name, ENV_GLOBAL );
 
 #ifdef HAVE__PROC_SELF_STAT
-	proc_update_jiffies();
+  proc_update_jiffies();
 #endif
 
 
@@ -2141,16 +2141,16 @@ void reader_run_command( parser_t &parser, const wchar_t *cmd )
 
 int reader_shell_test( const wchar_t *b )
 {
-	int res = parser_t::principal_parser().test( b, 0, 0, 0 );
-	
-	if( res & PARSER_TEST_ERROR )
-	{
-		wcstring sb;
+  int res = parser_t::principal_parser().test( b, 0, 0, 0 );
 
-		const int tmp[1] = {0};
-		const int tmp2[1] = {0};
+  if( res & PARSER_TEST_ERROR )
+  {
+    wcstring sb;
+
+    const int tmp[1] = {0};
+    const int tmp2[1] = {0};
         const wcstring empty;
-        
+
         s_write( &data->screen,
                  empty,
                  empty,
@@ -2159,12 +2159,12 @@ int reader_shell_test( const wchar_t *b )
                  tmp,
                  tmp2,
                  0);
-        
-		
-		parser_t::principal_parser().test( b, 0, &sb, L"fish" );
-		fwprintf( stderr, L"%ls", sb.c_str() );
-	}
-	return res;
+
+
+    parser_t::principal_parser().test( b, 0, &sb, L"fish" );
+    fwprintf( stderr, L"%ls", sb.c_str() );
+  }
+  return res;
 }
 
 /**
@@ -2174,58 +2174,58 @@ int reader_shell_test( const wchar_t *b )
 */
 static int default_test( const wchar_t *b )
 {
-	return 0;
+  return 0;
 }
 
 void reader_push( const wchar_t *name )
 {
     reader_data_t *n = new reader_data_t();
-    
+
     n->history = & history_t::history_with_name(name);
-	n->app_name = name;
-	n->next = data;
+  n->app_name = name;
+  n->next = data;
 
-	data=n;
+  data=n;
 
-	data->command_line_changed();
+  data->command_line_changed();
 
-	if( data->next == 0 )
-	{
-		reader_interactive_init();
-	}
+  if( data->next == 0 )
+  {
+    reader_interactive_init();
+  }
 
-	exec_prompt();
-	reader_set_highlight_function( &highlight_universal );
-	reader_set_test_function( &default_test );
-	reader_set_left_prompt( L"" );
+  exec_prompt();
+  reader_set_highlight_function( &highlight_universal );
+  reader_set_test_function( &default_test );
+  reader_set_left_prompt( L"" );
 }
 
 void reader_pop()
 {
-	reader_data_t *n = data;
+  reader_data_t *n = data;
 
-	if( data == 0 )
-	{
-		debug( 0, _( L"Pop null reader block" ) );
-		sanity_lose();
-		return;
-	}
+  if( data == 0 )
+  {
+    debug( 0, _( L"Pop null reader block" ) );
+    sanity_lose();
+    return;
+  }
 
-	data=data->next;
-	
+  data=data->next;
+
     /* Invoke the destructor to balance our new */
     delete n;
 
-	if( data == 0 )
-	{
-		reader_interactive_destroy();
-	}
-	else
-	{
-		end_loop = 0;
-		//history_set_mode( data->app_name.c_str() );
-		s_reset( &data->screen, true);
-	}
+  if( data == 0 )
+  {
+    reader_interactive_destroy();
+  }
+  else
+  {
+    end_loop = 0;
+    //history_set_mode( data->app_name.c_str() );
+    s_reset( &data->screen, true);
+  }
 }
 
 void reader_set_left_prompt( const wcstring &new_prompt )
@@ -2240,17 +2240,17 @@ void reader_set_right_prompt(const wcstring &new_prompt)
 
 void reader_set_complete_function( complete_function_t f )
 {
-	data->complete_func = f;
+  data->complete_func = f;
 }
 
 void reader_set_highlight_function( highlight_function_t func )
 {
-	data->highlight_function = func;
+  data->highlight_function = func;
 }
 
 void reader_set_test_function( int (*f)( const wchar_t * ) )
 {
-	data->test_func = f;
+  data->test_func = f;
 }
 
 void reader_import_history_if_necessary(void)
@@ -2276,26 +2276,26 @@ void reader_import_history_if_necessary(void)
 class background_highlight_context_t {
 public:
     /** The string to highlight */
-	const wcstring string_to_highlight;
-	
-	/** Color buffer */
-	std::vector<color_t> colors;
-	
-	/** The position to use for bracket matching */
-	const size_t match_highlight_pos;
-	
-	/** Function for syntax highlighting */
-	const highlight_function_t highlight_function;
-    
+  const wcstring string_to_highlight;
+
+  /** Color buffer */
+  std::vector<color_t> colors;
+
+  /** The position to use for bracket matching */
+  const size_t match_highlight_pos;
+
+  /** Function for syntax highlighting */
+  const highlight_function_t highlight_function;
+
     /** Environment variables */
     const env_vars_snapshot_t vars;
 
     /** When the request was made */
     const double when;
-    
+
     /** Gen count at the time the request was made */
     const unsigned int generation_count;
-    
+
     background_highlight_context_t(const wcstring &pbuff, size_t phighlight_pos, highlight_function_t phighlight_func) :
         string_to_highlight(pbuff),
         colors(pbuff.size(), 0),
@@ -2306,7 +2306,7 @@ public:
         generation_count(s_generation_count)
     {
     }
-    
+
     int threaded_highlight() {
         if (generation_count != s_generation_count)
         {
@@ -2323,41 +2323,41 @@ public:
 
 /* Called to set the highlight flag for search results */
 static void highlight_search(void) {
-	if( ! data->search_buff.empty() && ! data->history_search.is_at_end())
-	{
+  if( ! data->search_buff.empty() && ! data->history_search.is_at_end())
+  {
         const wchar_t *buff = data->command_line.c_str();
-		const wchar_t *match = wcsstr( buff, data->search_buff.c_str() );
-		if( match )
-		{
-			size_t start = match-buff;
-			size_t i, count = data->search_buff.size();
-			for( i=0; i<count; i++ )
-			{
-				data->colors.at(start+i) |= HIGHLIGHT_SEARCH_MATCH<<16;
-			}
-		}
-	}
+    const wchar_t *match = wcsstr( buff, data->search_buff.c_str() );
+    if( match )
+    {
+      size_t start = match-buff;
+      size_t i, count = data->search_buff.size();
+      for( i=0; i<count; i++ )
+      {
+        data->colors.at(start+i) |= HIGHLIGHT_SEARCH_MATCH<<16;
+      }
+    }
+  }
 }
 
 static void highlight_complete(background_highlight_context_t *ctx, int result) {
     ASSERT_IS_MAIN_THREAD();
-	if (ctx->string_to_highlight == data->command_line) {
-		/* The data hasn't changed, so swap in our colors. The colors may not have changed, so do nothing if they have not. */
+  if (ctx->string_to_highlight == data->command_line) {
+    /* The data hasn't changed, so swap in our colors. The colors may not have changed, so do nothing if they have not. */
         assert(ctx->colors.size() == data->command_length());
         if (data->colors != ctx->colors)
         {
             data->colors.swap(ctx->colors);
-            
+
             //data->repaint_needed = 1;
             //s_reset( &data->screen, 1 );
-            
+
             sanity_check();
             highlight_search();
             reader_repaint();
         }
-	}
-	
-	/* Free our context */
+  }
+
+  /* Free our context */
     delete ctx;
 }
 
@@ -2378,11 +2378,11 @@ static int threaded_highlight(background_highlight_context_t *ctx) {
 static void reader_super_highlight_me_plenty( size_t match_highlight_pos )
 {
     reader_sanity_check();
-    
-	background_highlight_context_t *ctx = new background_highlight_context_t(data->command_line, match_highlight_pos, data->highlight_function);
-	iothread_perform(threaded_highlight, highlight_complete, ctx);
+
+  background_highlight_context_t *ctx = new background_highlight_context_t(data->command_line, match_highlight_pos, data->highlight_function);
+  iothread_perform(threaded_highlight, highlight_complete, ctx);
     highlight_search();
-    
+
     /* Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it. Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into the autosuggestion. */
     const wcstring &cmd = data->command_line, &suggest = data->autosuggestion;
     if (can_autosuggest() && ! suggest.empty() && string_prefixes_string_case_insensitive(cmd, suggest)) {
@@ -2395,10 +2395,10 @@ static void reader_super_highlight_me_plenty( size_t match_highlight_pos )
 
 int exit_status()
 {
-	if( get_is_interactive() )
-		return job_list_is_empty() && data->end_loop;
-	else
-		return end_loop;
+  if( get_is_interactive() )
+    return job_list_is_empty() && data->end_loop;
+  else
+    return end_loop;
 }
 
 /**
@@ -2409,63 +2409,63 @@ int exit_status()
 
 static void handle_end_loop()
 {
-	job_t *j;
-	int job_count=0;
-	int is_breakpoint=0;
-	block_t *b;
-	parser_t &parser = parser_t::principal_parser();
-    
-	for( b = parser.current_block; 
-	     b; 
-	     b = b->outer )
-	{
-		if( b->type() == BREAKPOINT )
-		{
-			is_breakpoint = 1;
-			break;
-		}
-	}
-	
+  job_t *j;
+  int job_count=0;
+  int is_breakpoint=0;
+  block_t *b;
+  parser_t &parser = parser_t::principal_parser();
+
+  for( b = parser.current_block;
+       b;
+       b = b->outer )
+  {
+    if( b->type() == BREAKPOINT )
+    {
+      is_breakpoint = 1;
+      break;
+    }
+  }
+
     job_iterator_t jobs;
     while ((j = jobs.next()))
-	{
-		if( !job_is_completed(j) )
-		{
-			job_count++;
-			break;
-		}
-	}
-	
-	if( !reader_exit_forced() && !data->prev_end_loop && job_count && !is_breakpoint )
-	{
-		writestr(_( L"There are stopped jobs. A second attempt to exit will enforce their termination.\n" ));
-		
-		reader_exit( 0, 0 );
-		data->prev_end_loop=1;
-	}
-	else
-	{
+  {
+    if( !job_is_completed(j) )
+    {
+      job_count++;
+      break;
+    }
+  }
+
+  if( !reader_exit_forced() && !data->prev_end_loop && job_count && !is_breakpoint )
+  {
+    writestr(_( L"There are stopped jobs. A second attempt to exit will enforce their termination.\n" ));
+
+    reader_exit( 0, 0 );
+    data->prev_end_loop=1;
+  }
+  else
+  {
         /* PCA: we used to only hangup jobs if stdin was closed. This prevented child processes from exiting. It's unclear to my why it matters if stdin is closed, but it seems to me if we're forcing an exit, we definitely want to hang up our processes.
-        
+
             See https://github.com/fish-shell/fish-shell/issues/138
         */
-		if( reader_exit_forced() || !isatty(0) )
-		{
-			/*
-			  We already know that stdin is a tty since we're
-			  in interactive mode. If isatty returns false, it
-			  means stdin must have been closed. 
-			*/
-			job_iterator_t jobs;
-			while ((j = jobs.next()))
-			{
-				if( ! job_is_completed( j ) )
-				{
-					job_signal( j, SIGHUP );						
-				}
-			}
-		}
-	}
+    if( reader_exit_forced() || !isatty(0) )
+    {
+      /*
+        We already know that stdin is a tty since we're
+        in interactive mode. If isatty returns false, it
+        means stdin must have been closed.
+      */
+      job_iterator_t jobs;
+      while ((j = jobs.next()))
+      {
+        if( ! job_is_completed( j ) )
+        {
+          job_signal( j, SIGHUP );
+        }
+      }
+    }
+  }
 }
 
 
@@ -2476,69 +2476,69 @@ static void handle_end_loop()
 */
 static int read_i()
 {
-	reader_push(L"fish");
-	reader_set_complete_function( &complete );
-	reader_set_highlight_function( &highlight_shell );
-	reader_set_test_function( &reader_shell_test );
+  reader_push(L"fish");
+  reader_set_complete_function( &complete );
+  reader_set_highlight_function( &highlight_shell );
+  reader_set_test_function( &reader_shell_test );
     reader_import_history_if_necessary();
-    
-	parser_t &parser = parser_t::principal_parser();
-    
-	data->prev_end_loop=0;
 
-	while( (!data->end_loop) && (!sanity_check()) )
-	{
-		const wchar_t *tmp;
+  parser_t &parser = parser_t::principal_parser();
 
-		event_fire_generic(L"fish_prompt");
-		if( function_exists( LEFT_PROMPT_FUNCTION_NAME ) )
-			reader_set_left_prompt( LEFT_PROMPT_FUNCTION_NAME );
-		else
-			reader_set_left_prompt( DEFAULT_PROMPT );
-        
-		if( function_exists( RIGHT_PROMPT_FUNCTION_NAME ) )
-			reader_set_right_prompt( RIGHT_PROMPT_FUNCTION_NAME );
-		else
-			reader_set_right_prompt( L"" );
-        
+  data->prev_end_loop=0;
 
-		/*
-		  Put buff in temporary string and clear buff, so
-		  that we can handle a call to reader_set_buffer
-		  during evaluation.
-		*/
+  while( (!data->end_loop) && (!sanity_check()) )
+  {
+    const wchar_t *tmp;
 
-	
-		tmp = reader_readline();
-	
+    event_fire_generic(L"fish_prompt");
+    if( function_exists( LEFT_PROMPT_FUNCTION_NAME ) )
+      reader_set_left_prompt( LEFT_PROMPT_FUNCTION_NAME );
+    else
+      reader_set_left_prompt( DEFAULT_PROMPT );
 
-		if( data->end_loop)
-		{
-			handle_end_loop();
-		}
-		else if( tmp )
-		{
-			tmp = wcsdup( tmp );
-			
-			data->buff_pos=0;
+    if( function_exists( RIGHT_PROMPT_FUNCTION_NAME ) )
+      reader_set_right_prompt( RIGHT_PROMPT_FUNCTION_NAME );
+    else
+      reader_set_right_prompt( L"" );
+
+
+    /*
+      Put buff in temporary string and clear buff, so
+      that we can handle a call to reader_set_buffer
+      during evaluation.
+    */
+
+
+    tmp = reader_readline();
+
+
+    if( data->end_loop)
+    {
+      handle_end_loop();
+    }
+    else if( tmp )
+    {
+      tmp = wcsdup( tmp );
+
+      data->buff_pos=0;
             data->command_line.clear();
             data->command_line_changed();
-			reader_run_command( parser, tmp );
-			free( (void *)tmp );
-			if( data->end_loop)
-			{
-				handle_end_loop();
-			}
-			else
-			{
-				data->prev_end_loop=0;
-			}
-		}
-		
+      reader_run_command( parser, tmp );
+      free( (void *)tmp );
+      if( data->end_loop)
+      {
+        handle_end_loop();
+      }
+      else
+      {
+        data->prev_end_loop=0;
+      }
+    }
 
-	}
-	reader_pop();
-	return 0;
+
+  }
+  reader_pop();
+  return 0;
 }
 
 /**
@@ -2547,10 +2547,10 @@ static int read_i()
 */
 static int can_read( int fd )
 {
-	struct timeval can_read_timeout = { 0, 0 };
-	fd_set fds;
+  struct timeval can_read_timeout = { 0, 0 };
+  fd_set fds;
 
-	FD_ZERO(&fds);
+  FD_ZERO(&fds);
     FD_SET(fd, &fds);
     return select(fd + 1, &fds, 0, 0, &can_read_timeout) == 1;
 }
@@ -2561,7 +2561,7 @@ static int can_read( int fd )
 */
 static int wchar_private( wchar_t c )
 {
-	return ( (c >= 0xe000) && (c <= 0xf8ff ) );
+  return ( (c >= 0xe000) && (c <= 0xf8ff ) );
 }
 
 /**
@@ -2570,191 +2570,191 @@ static int wchar_private( wchar_t c )
 */
 static bool is_backslashed( const wchar_t *str, size_t pos )
 {
-	size_t count = 0;
-	size_t idx = pos;
-	while (idx--)
-	{
-		if( str[idx] != L'\\' )
-			break;
-		
-		count++;
-	}
+  size_t count = 0;
+  size_t idx = pos;
+  while (idx--)
+  {
+    if( str[idx] != L'\\' )
+      break;
 
-	return (count % 2) == 1;
+    count++;
+  }
+
+  return (count % 2) == 1;
 }
 
 
 const wchar_t *reader_readline()
 {
-    
-	wint_t c;
-	int last_char=0;
+
+  wint_t c;
+  int last_char=0;
     size_t yank_len=0;
-	const wchar_t *yank_str;
-	bool comp_empty = true;
-	std::vector<completion_t> comp;
-	int finished=0;
-	struct termios old_modes;
+  const wchar_t *yank_str;
+  bool comp_empty = true;
+  std::vector<completion_t> comp;
+  int finished=0;
+  struct termios old_modes;
 
     /* The cycle index in our completion list */
     size_t completion_cycle_idx = (size_t)(-1);
-    
+
     /* The command line before completion */
     wcstring cycle_command_line;
     size_t cycle_cursor_pos;
-    
-	data->search_buff.clear();
-	data->search_mode = NO_SEARCH;
-	
-	
-	exec_prompt();
-    
-	reader_super_highlight_me_plenty( data->buff_pos );
-	s_reset( &data->screen, true);
-	reader_repaint();
-    
-	/*
+
+  data->search_buff.clear();
+  data->search_mode = NO_SEARCH;
+
+
+  exec_prompt();
+
+  reader_super_highlight_me_plenty( data->buff_pos );
+  s_reset( &data->screen, true);
+  reader_repaint();
+
+  /*
      get the current terminal modes. These will be restored when the
      function returns.
      */
-	tcgetattr(0,&old_modes);
-	/* set the new modes */
-	if( tcsetattr(0,TCSANOW,&shell_modes))
-	{
-		wperror(L"tcsetattr");
+  tcgetattr(0,&old_modes);
+  /* set the new modes */
+  if( tcsetattr(0,TCSANOW,&shell_modes))
+  {
+    wperror(L"tcsetattr");
     }
-    
-	while( !finished && !data->end_loop)
-	{
-		/*
+
+  while( !finished && !data->end_loop)
+  {
+    /*
          Sometimes strange input sequences seem to generate a zero
          byte. I believe these simply mean a character was pressed
          but it should be ignored. (Example: Trying to add a tilde
          (~) to digit)
          */
-		while( 1 )
-		{
-			int was_interactive_read = is_interactive_read;
-			is_interactive_read = 1;
-			c=input_readch();
-			is_interactive_read = was_interactive_read;
-            
-			if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
-			{
-				if( can_read(0) )
-				{
-                    
-					wchar_t arr[READAHEAD_MAX+1];
-					int i;
-                    
-					memset( arr, 0, sizeof( arr ) );
-					arr[0] = c;
-                    
-					for( i=1; i<READAHEAD_MAX; i++ )
-					{
-                        
-						if( !can_read( 0 ) )
-						{
-							c = 0;
-							break;
-						}
-						c = input_readch();
-						if( (!wchar_private(c)) && (c>31) && (c != 127) )
-						{
-							arr[i]=c;
-							c=0;
-						}
-						else
-							break;
-					}
-                    
-					insert_string( arr );
-                    
-				}
-			}
-            
-			if( c != 0 )
-				break;
-		}
+    while( 1 )
+    {
+      int was_interactive_read = is_interactive_read;
+      is_interactive_read = 1;
+      c=input_readch();
+      is_interactive_read = was_interactive_read;
 
-		if( last_char != R_YANK && last_char != R_YANK_POP )
-			yank_len=0;
+      if( ( (!wchar_private(c))) && (c>31) && (c != 127) )
+      {
+        if( can_read(0) )
+        {
+
+          wchar_t arr[READAHEAD_MAX+1];
+          int i;
+
+          memset( arr, 0, sizeof( arr ) );
+          arr[0] = c;
+
+          for( i=1; i<READAHEAD_MAX; i++ )
+          {
+
+            if( !can_read( 0 ) )
+            {
+              c = 0;
+              break;
+            }
+            c = input_readch();
+            if( (!wchar_private(c)) && (c>31) && (c != 127) )
+            {
+              arr[i]=c;
+              c=0;
+            }
+            else
+              break;
+          }
+
+          insert_string( arr );
+
+        }
+      }
+
+      if( c != 0 )
+        break;
+    }
+
+    if( last_char != R_YANK && last_char != R_YANK_POP )
+      yank_len=0;
         const wchar_t *buff = data->command_line.c_str();
-		switch( c )
-		{
-                
+    switch( c )
+    {
+
                 /* go to beginning of line*/
-			case R_BEGINNING_OF_LINE:
-			{
-				while( ( data->buff_pos>0 ) &&
+      case R_BEGINNING_OF_LINE:
+      {
+        while( ( data->buff_pos>0 ) &&
                       ( buff[data->buff_pos-1] != L'\n' ) )
-				{
-					data->buff_pos--;
-				}
-				
-				reader_repaint();
-				break;
-			}
-                
-			case R_END_OF_LINE:
-			{
-				while( buff[data->buff_pos] &&
+        {
+          data->buff_pos--;
+        }
+
+        reader_repaint();
+        break;
+      }
+
+      case R_END_OF_LINE:
+      {
+        while( buff[data->buff_pos] &&
                       buff[data->buff_pos] != L'\n' )
-				{
-					data->buff_pos++;
-				}
-				
-				reader_repaint();
-				break;
-			}
-                
-                
-			case R_BEGINNING_OF_BUFFER:
-			{
-				data->buff_pos = 0;
-                
-				reader_repaint();
-				break;
-			}
-                
+        {
+          data->buff_pos++;
+        }
+
+        reader_repaint();
+        break;
+      }
+
+
+      case R_BEGINNING_OF_BUFFER:
+      {
+        data->buff_pos = 0;
+
+        reader_repaint();
+        break;
+      }
+
                 /* go to EOL*/
-			case R_END_OF_BUFFER:
-			{
-				data->buff_pos = data->command_length();
-                
-				reader_repaint();
-				break;
-			}
-                
-			case R_NULL:
-			{
-				reader_repaint_if_needed();
-				break;
-			}
-                
-			case R_REPAINT:
-			{
-				exec_prompt();
-				write_loop( 1, "\r", 1 );
-				s_reset( &data->screen, false);
-				reader_repaint();
-				break;
-			}
-                
-			case R_EOF:
-			{
-				exit_forced = 1;
-				data->end_loop=1;
-				break;
-			}
-                
+      case R_END_OF_BUFFER:
+      {
+        data->buff_pos = data->command_length();
+
+        reader_repaint();
+        break;
+      }
+
+      case R_NULL:
+      {
+        reader_repaint_if_needed();
+        break;
+      }
+
+      case R_REPAINT:
+      {
+        exec_prompt();
+        write_loop( 1, "\r", 1 );
+        s_reset( &data->screen, false);
+        reader_repaint();
+        break;
+      }
+
+      case R_EOF:
+      {
+        exit_forced = 1;
+        data->end_loop=1;
+        break;
+      }
+
                 /* complete */
-			case R_COMPLETE:
-			{
-                
-				if( !data->complete_func )
-					break;
-                
+      case R_COMPLETE:
+      {
+
+        if( !data->complete_func )
+          break;
+
                 if (! comp_empty && last_char == R_COMPLETE)
                 {
                     /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions */
@@ -2764,541 +2764,541 @@ const wchar_t *reader_readline()
                         size_t cursor_pos = cycle_cursor_pos;
                         const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos);
                         reader_set_buffer(new_cmd_line, cursor_pos);
-                        
+
                         /* Since we just inserted a completion, don't immediately do a new autosuggestion */
                         data->suppress_autosuggestion = true;
                     }
                 }
- 				else
-				{
+         else
+        {
                     /* Either the user hit tab only once, or we had no visible completion list. */
-					const wchar_t *begin, *end;
-					const wchar_t *token_begin, *token_end;
+          const wchar_t *begin, *end;
+          const wchar_t *token_begin, *token_end;
                     const wchar_t *buff = data->command_line.c_str();
-					long cursor_steps;
-                    
+          long cursor_steps;
+
                     /* Clear the completion list */
                     comp.clear();
-                    
-					parse_util_cmdsubst_extent( buff, data->buff_pos, &begin, &end );
-                    
-					parse_util_token_extent( begin, data->buff_pos - (begin-buff), &token_begin, &token_end, 0, 0 );
-					
-					cursor_steps = token_end - buff- data->buff_pos;
-					data->buff_pos += cursor_steps;
-					if( is_backslashed( buff, data->buff_pos ) )
-					{
-						remove_backward();
-					}
-					
-					reader_repaint();
-					
-					size_t len = data->buff_pos - (begin-buff);
+
+          parse_util_cmdsubst_extent( buff, data->buff_pos, &begin, &end );
+
+          parse_util_token_extent( begin, data->buff_pos - (begin-buff), &token_begin, &token_end, 0, 0 );
+
+          cursor_steps = token_end - buff- data->buff_pos;
+          data->buff_pos += cursor_steps;
+          if( is_backslashed( buff, data->buff_pos ) )
+          {
+            remove_backward();
+          }
+
+          reader_repaint();
+
+          size_t len = data->buff_pos - (begin-buff);
                     const wcstring buffcpy = wcstring(begin, len);
-                    
-					data->complete_func( buffcpy, comp, COMPLETE_DEFAULT, NULL);
-					
-					/* Munge our completions */
-					sort(comp.begin(), comp.end());
-					remove_duplicates( comp );
-					prioritize_completions(comp);
-                    
-					/* Record our cycle_command_line */
-					cycle_command_line = data->command_line;
-					cycle_cursor_pos = data->buff_pos;
-                    
-					comp_empty = handle_completions( comp );
-                    
-					/* Start the cycle at the beginning */
-					completion_cycle_idx = (size_t)(-1);
-				}
-                
-				break;
-			}
-                
+
+          data->complete_func( buffcpy, comp, COMPLETE_DEFAULT, NULL);
+
+          /* Munge our completions */
+          sort(comp.begin(), comp.end());
+          remove_duplicates( comp );
+          prioritize_completions(comp);
+
+          /* Record our cycle_command_line */
+          cycle_command_line = data->command_line;
+          cycle_cursor_pos = data->buff_pos;
+
+          comp_empty = handle_completions( comp );
+
+          /* Start the cycle at the beginning */
+          completion_cycle_idx = (size_t)(-1);
+        }
+
+        break;
+      }
+
                 /* kill */
-			case R_KILL_LINE:
-			{
+      case R_KILL_LINE:
+      {
                 const wchar_t *buff = data->command_line.c_str();
-				const wchar_t *begin = &buff[data->buff_pos];
-				const wchar_t *end = begin;
-                
-				while( *end && *end != L'\n' )
-					end++;
-				
-				if( end==begin && *end )
-					end++;
-				
-				size_t len = end-begin;
-				if( len )
-				{
-					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE );
-				}
-				
-				break;
-			}
-                
-			case R_BACKWARD_KILL_LINE:
-			{
-				if( data->buff_pos > 0 )
-				{
+        const wchar_t *begin = &buff[data->buff_pos];
+        const wchar_t *end = begin;
+
+        while( *end && *end != L'\n' )
+          end++;
+
+        if( end==begin && *end )
+          end++;
+
+        size_t len = end-begin;
+        if( len )
+        {
+          reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE );
+        }
+
+        break;
+      }
+
+      case R_BACKWARD_KILL_LINE:
+      {
+        if( data->buff_pos > 0 )
+        {
                     const wchar_t *buff = data->command_line.c_str();
-					const wchar_t *end = &buff[data->buff_pos];
-					const wchar_t *begin = end;
-					
-					while( begin > buff  && *begin != L'\n' )
-						begin--;
-					
-					if( *begin == L'\n' )
-						begin++;
-					
-					size_t len = maxi<size_t>( end-begin, 1 );
-					begin = end - len;
-                    
-					reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
-					
-				}
-				break;
-                
-			}
-                
-			case R_KILL_WHOLE_LINE:
-			{
+          const wchar_t *end = &buff[data->buff_pos];
+          const wchar_t *begin = end;
+
+          while( begin > buff  && *begin != L'\n' )
+            begin--;
+
+          if( *begin == L'\n' )
+            begin++;
+
+          size_t len = maxi<size_t>( end-begin, 1 );
+          begin = end - len;
+
+          reader_kill( begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE );
+
+        }
+        break;
+
+      }
+
+      case R_KILL_WHOLE_LINE:
+      {
                 const wchar_t *buff = data->command_line.c_str();
-				const wchar_t *end = &buff[data->buff_pos];
-				const wchar_t *begin = end;
-				size_t len;
-                
-				while( begin > buff  && *begin != L'\n' )
-					begin--;
-				
-				if( *begin == L'\n' )
-					begin++;
-				
-				len = maxi<size_t>( end-begin, 0 );
-				begin = end - len;
-                
-				while( *end && *end != L'\n' )
-					end++;
-				
-				if( begin == end && *end )
-					end++;
-				
-				len = end-begin;
-				
-				if( len )
-				{
-					reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );
-				}
-				
-				break;
-			}
-                
+        const wchar_t *end = &buff[data->buff_pos];
+        const wchar_t *begin = end;
+        size_t len;
+
+        while( begin > buff  && *begin != L'\n' )
+          begin--;
+
+        if( *begin == L'\n' )
+          begin++;
+
+        len = maxi<size_t>( end-begin, 0 );
+        begin = end - len;
+
+        while( *end && *end != L'\n' )
+          end++;
+
+        if( begin == end && *end )
+          end++;
+
+        len = end-begin;
+
+        if( len )
+        {
+          reader_kill( begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE );
+        }
+
+        break;
+      }
+
                 /* yank*/
-			case R_YANK:
-			{
-				yank_str = kill_yank();
-				insert_string( yank_str );
-				yank_len = wcslen( yank_str );
-				break;
-			}
-                
+      case R_YANK:
+      {
+        yank_str = kill_yank();
+        insert_string( yank_str );
+        yank_len = wcslen( yank_str );
+        break;
+      }
+
                 /* rotate killring*/
-			case R_YANK_POP:
-			{
-				if( yank_len )
-				{
-					for( size_t i=0; i<yank_len; i++ )
-						remove_backward();
-                    
-					yank_str = kill_yank_rotate();
-					insert_string(yank_str);
-					yank_len = wcslen(yank_str);
-				}
-				break;
-			}
-                
+      case R_YANK_POP:
+      {
+        if( yank_len )
+        {
+          for( size_t i=0; i<yank_len; i++ )
+            remove_backward();
+
+          yank_str = kill_yank_rotate();
+          insert_string(yank_str);
+          yank_len = wcslen(yank_str);
+        }
+        break;
+      }
+
                 /* Escape was pressed */
-			case L'\x1b':
-			{
-				if( data->search_mode )
-				{
-					data->search_mode= NO_SEARCH;
-                    
-					if( data->token_history_pos==-1 )
-					{
-						//history_reset();
+      case L'\x1b':
+      {
+        if( data->search_mode )
+        {
+          data->search_mode= NO_SEARCH;
+
+          if( data->token_history_pos==-1 )
+          {
+            //history_reset();
                         data->history_search.go_to_end();
-						reader_set_buffer( data->search_buff.c_str(), data->search_buff.size() );
-					}
-					else
-					{
-						reader_replace_current_token( data->search_buff.c_str() );
-					}
-					data->search_buff.clear();
-					reader_super_highlight_me_plenty( data->buff_pos );
-					reader_repaint();
-					
-				}
-                
-				break;
-			}
-                
+            reader_set_buffer( data->search_buff.c_str(), data->search_buff.size() );
+          }
+          else
+          {
+            reader_replace_current_token( data->search_buff.c_str() );
+          }
+          data->search_buff.clear();
+          reader_super_highlight_me_plenty( data->buff_pos );
+          reader_repaint();
+
+        }
+
+        break;
+      }
+
                 /* delete backward*/
-			case R_BACKWARD_DELETE_CHAR:
-			{
-				remove_backward();
-				break;
-			}
-                
+      case R_BACKWARD_DELETE_CHAR:
+      {
+        remove_backward();
+        break;
+      }
+
                 /* delete forward*/
-			case R_DELETE_CHAR:
-			{
-				/**
+      case R_DELETE_CHAR:
+      {
+        /**
                  Remove the current character in the character buffer and on the
                  screen using syntax highlighting, etc.
                  */
-				if( data->buff_pos < data->command_length() )
-				{
-					data->buff_pos++;
-					remove_backward();
-				}
-				break;
-			}
-                
+        if( data->buff_pos < data->command_length() )
+        {
+          data->buff_pos++;
+          remove_backward();
+        }
+        break;
+      }
+
                 /*
                  Evaluate. If the current command is unfinished, or if
                  the charater is escaped using a backslash, insert a
                  newline
                  */
-			case R_EXECUTE:
-			{
+      case R_EXECUTE:
+      {
                 /* Delete any autosuggestion */
                 data->autosuggestion.clear();
-                
-				/*
+
+        /*
                  Allow backslash-escaped newlines
                  */
-				if( is_backslashed( data->command_line.c_str(), data->buff_pos ) )
-				{
-					insert_char( '\n' );
-					break;
-				}
-				
-				switch( data->test_func( data->command_line.c_str() ) )
-				{
-                        
-					case 0:
-					{
-						/*
+        if( is_backslashed( data->command_line.c_str(), data->buff_pos ) )
+        {
+          insert_char( '\n' );
+          break;
+        }
+
+        switch( data->test_func( data->command_line.c_str() ) )
+        {
+
+          case 0:
+          {
+            /*
                          Finished commend, execute it
                          */
-						if( ! data->command_line.empty() )
-						{
+            if( ! data->command_line.empty() )
+            {
                             if (data->history) {
                                 data->history->add_with_file_detection(data->command_line);
                             }
-						}
-						finished=1;
-						data->buff_pos=data->command_length();
-						reader_repaint();
-						break;
-					}
-                        
+            }
+            finished=1;
+            data->buff_pos=data->command_length();
+            reader_repaint();
+            break;
+          }
+
                         /*
                          We are incomplete, continue editing
                          */
-					case PARSER_TEST_INCOMPLETE:
-					{
-						insert_char( '\n' );
-						break;
-					}
-                        
+          case PARSER_TEST_INCOMPLETE:
+          {
+            insert_char( '\n' );
+            break;
+          }
+
                         /*
                          Result must be some combination including an
                          error. The error message will already be
                          printed, all we need to do is repaint
                          */
-					default:
-					{
-						s_reset( &data->screen, true);
-						reader_repaint();
-						break;
-					}
-                        
-				}
-				
-				break;
-			}
-                
+          default:
+          {
+            s_reset( &data->screen, true);
+            reader_repaint();
+            break;
+          }
+
+        }
+
+        break;
+      }
+
                 /* History functions */
-			case R_HISTORY_SEARCH_BACKWARD:
-			case R_HISTORY_TOKEN_SEARCH_BACKWARD:
-			case R_HISTORY_SEARCH_FORWARD:
-			case R_HISTORY_TOKEN_SEARCH_FORWARD:
-			{
-				int reset = 0;
-				
-				if( data->search_mode == NO_SEARCH )
-				{
-					reset = 1;
-					if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
+      case R_HISTORY_SEARCH_BACKWARD:
+      case R_HISTORY_TOKEN_SEARCH_BACKWARD:
+      case R_HISTORY_SEARCH_FORWARD:
+      case R_HISTORY_TOKEN_SEARCH_FORWARD:
+      {
+        int reset = 0;
+
+        if( data->search_mode == NO_SEARCH )
+        {
+          reset = 1;
+          if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
                        ( c == R_HISTORY_SEARCH_FORWARD ) )
-					{
-						data->search_mode = LINE_SEARCH;
-					}
-					else
-					{
-						data->search_mode = TOKEN_SEARCH;
-					}
-					
+          {
+            data->search_mode = LINE_SEARCH;
+          }
+          else
+          {
+            data->search_mode = TOKEN_SEARCH;
+          }
+
                     data->search_buff.append(data->command_line);
                     data->history_search = history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
-                    
+
                     /* Skip the autosuggestion as history */
                     const wcstring &suggest = data->autosuggestion;
                     if (! suggest.empty()) {
                         data->history_search.skip_matches(wcstring_list_t(&suggest, 1 + &suggest));
                     }
-				}
-                
-				switch( data->search_mode )
-				{
-                        
-					case LINE_SEARCH:
-					{
-						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
+        }
+
+        switch( data->search_mode )
+        {
+
+          case LINE_SEARCH:
+          {
+            if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
                            ( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
-						{
-							data->history_search.go_backwards();
-						}
-						else
-						{
-							if (! data->history_search.go_forwards()) {
+            {
+              data->history_search.go_backwards();
+            }
+            else
+            {
+              if (! data->history_search.go_forwards()) {
                                 /* If you try to go forwards past the end, we just go to the end */
                                 data->history_search.go_to_end();
                             }
-						}
-						
+            }
+
                         wcstring new_text;
                         if (data->history_search.is_at_end()) {
                             new_text = data->search_buff;
                         } else {
                             new_text = data->history_search.current_string();
                         }
-						set_command_line_and_position(new_text, new_text.size());
-						
-						break;
-					}
-                        
-					case TOKEN_SEARCH:
-					{
-						if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
+            set_command_line_and_position(new_text, new_text.size());
+
+            break;
+          }
+
+          case TOKEN_SEARCH:
+          {
+            if( ( c == R_HISTORY_SEARCH_BACKWARD ) ||
                            ( c == R_HISTORY_TOKEN_SEARCH_BACKWARD ) )
-						{
-							handle_token_history( SEARCH_BACKWARD, reset );
-						}
-						else
-						{
-							handle_token_history( SEARCH_FORWARD, reset );
-						}
-						
-						break;
-					}
-						
-				}
-				break;
-			}
-                
-                
+            {
+              handle_token_history( SEARCH_BACKWARD, reset );
+            }
+            else
+            {
+              handle_token_history( SEARCH_FORWARD, reset );
+            }
+
+            break;
+          }
+
+        }
+        break;
+      }
+
+
                 /* Move left*/
-			case R_BACKWARD_CHAR:
-			{
-				if( data->buff_pos > 0 )
-				{
-					data->buff_pos--;
-					reader_repaint();
-				}
-				break;
-			}
-                
+      case R_BACKWARD_CHAR:
+      {
+        if( data->buff_pos > 0 )
+        {
+          data->buff_pos--;
+          reader_repaint();
+        }
+        break;
+      }
+
                 /* Move right*/
-			case R_FORWARD_CHAR:
-			{
-				if( data->buff_pos < data->command_length() )
-				{
-					data->buff_pos++;
-					reader_repaint();
-				} else {
+      case R_FORWARD_CHAR:
+      {
+        if( data->buff_pos < data->command_length() )
+        {
+          data->buff_pos++;
+          reader_repaint();
+        } else {
                     accept_autosuggestion();
                 }
-				break;
-			}
-                
+        break;
+      }
+
                 /* kill one word left */
-			case R_BACKWARD_KILL_WORD:
-			{
-				move_word(MOVE_DIR_LEFT, true /* erase */, last_char!=R_BACKWARD_KILL_WORD);
-				break;
-			}
-                
+      case R_BACKWARD_KILL_WORD:
+      {
+        move_word(MOVE_DIR_LEFT, true /* erase */, last_char!=R_BACKWARD_KILL_WORD);
+        break;
+      }
+
                 /* kill one word right */
-			case R_KILL_WORD:
-			{
-				move_word(MOVE_DIR_RIGHT, true /* erase */, last_char!=R_KILL_WORD);
-				break;
-			}
-                
+      case R_KILL_WORD:
+      {
+        move_word(MOVE_DIR_RIGHT, true /* erase */, last_char!=R_KILL_WORD);
+        break;
+      }
+
                 /* move one word left*/
-			case R_BACKWARD_WORD:
-			{
-				move_word(MOVE_DIR_LEFT, false /* do not erase */, false);
-				break;
-			}
-                
+      case R_BACKWARD_WORD:
+      {
+        move_word(MOVE_DIR_LEFT, false /* do not erase */, false);
+        break;
+      }
+
                 /* move one word right*/
-			case R_FORWARD_WORD:
-			{
-				move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
-				break;
-			}
-                
-			case R_BEGINNING_OF_HISTORY:
-			{
+      case R_FORWARD_WORD:
+      {
+        move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
+        break;
+      }
+
+      case R_BEGINNING_OF_HISTORY:
+      {
                 data->history_search = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
                 data->history_search.go_to_beginning();
                 if (! data->history_search.is_at_end()) {
                     wcstring new_text = data->history_search.current_string();
                     set_command_line_and_position(new_text, new_text.size());
                 }
-                
-				break;
-			}
-                
-			case R_END_OF_HISTORY:
-			{
-				data->history_search.go_to_end();
-				break;
-			}
-                
-			case R_UP_LINE:
-			case R_DOWN_LINE:
-			{
-				int line_old = parse_util_get_line_from_offset( data->command_line, data->buff_pos );
-				int line_new;
-				
-				if( c == R_UP_LINE )
-					line_new = line_old-1;
-				else
-					line_new = line_old+1;
-                
-				int line_count = parse_util_lineno( data->command_line.c_str(), data->command_length() )-1;
-				
-				if( line_new >= 0 && line_new <= line_count)
-				{
-					size_t base_pos_new;
-					size_t base_pos_old;
-					
-					int indent_old;
-					int indent_new;
-					size_t line_offset_old;
-					size_t total_offset_new;
-                    
-					base_pos_new = parse_util_get_offset_from_line( data->command_line, line_new );
-                    
-					base_pos_old = parse_util_get_offset_from_line( data->command_line,  line_old );
-					
-					assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
-					indent_old = data->indents.at(base_pos_old);
-					indent_new = data->indents.at(base_pos_new);
-					
-					line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->command_line, line_old );
-					total_offset_new = parse_util_get_offset( data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
-					data->buff_pos = total_offset_new;
-					reader_repaint();
-				}
-                
-				break;
-			}
-                
-			case R_SUPPRESS_AUTOSUGGESTION:
-			{
-				data->suppress_autosuggestion = true;
-				data->autosuggestion.clear();
-				reader_repaint();
-				break;
-			}
-                
-			case R_ACCEPT_AUTOSUGGESTION:
-			{
-				accept_autosuggestion();
-				break;
-			}
-                
+
+        break;
+      }
+
+      case R_END_OF_HISTORY:
+      {
+        data->history_search.go_to_end();
+        break;
+      }
+
+      case R_UP_LINE:
+      case R_DOWN_LINE:
+      {
+        int line_old = parse_util_get_line_from_offset( data->command_line, data->buff_pos );
+        int line_new;
+
+        if( c == R_UP_LINE )
+          line_new = line_old-1;
+        else
+          line_new = line_old+1;
+
+        int line_count = parse_util_lineno( data->command_line.c_str(), data->command_length() )-1;
+
+        if( line_new >= 0 && line_new <= line_count)
+        {
+          size_t base_pos_new;
+          size_t base_pos_old;
+
+          int indent_old;
+          int indent_new;
+          size_t line_offset_old;
+          size_t total_offset_new;
+
+          base_pos_new = parse_util_get_offset_from_line( data->command_line, line_new );
+
+          base_pos_old = parse_util_get_offset_from_line( data->command_line,  line_old );
+
+          assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
+          indent_old = data->indents.at(base_pos_old);
+          indent_new = data->indents.at(base_pos_new);
+
+          line_offset_old = data->buff_pos - parse_util_get_offset_from_line( data->command_line, line_old );
+          total_offset_new = parse_util_get_offset( data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
+          data->buff_pos = total_offset_new;
+          reader_repaint();
+        }
+
+        break;
+      }
+
+      case R_SUPPRESS_AUTOSUGGESTION:
+      {
+        data->suppress_autosuggestion = true;
+        data->autosuggestion.clear();
+        reader_repaint();
+        break;
+      }
+
+      case R_ACCEPT_AUTOSUGGESTION:
+      {
+        accept_autosuggestion();
+        break;
+      }
+
                 /* Other, if a normal character, we add it to the command */
-			default:
-			{
-				
-				if( (!wchar_private(c)) && (( (c>31) || (c==L'\n'))&& (c != 127)) )
-				{
+      default:
+      {
+
+        if( (!wchar_private(c)) && (( (c>31) || (c==L'\n'))&& (c != 127)) )
+        {
                     /* Regular character */
-					insert_char( c );
-				}
-				else
-				{
-					/*
+          insert_char( c );
+        }
+        else
+        {
+          /*
                      Low priority debug message. These can happen if
                      the user presses an unefined control
                      sequnece. No reason to report.
                      */
-					debug( 2, _( L"Unknown keybinding %d" ), c );
-				}
-				break;
-			}
-                
-		}
-		
-		if( (c != R_HISTORY_SEARCH_BACKWARD) &&
+          debug( 2, _( L"Unknown keybinding %d" ), c );
+        }
+        break;
+      }
+
+    }
+
+    if( (c != R_HISTORY_SEARCH_BACKWARD) &&
            (c != R_HISTORY_SEARCH_FORWARD) &&
            (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
            (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
            (c != R_NULL) )
-		{
-			data->search_mode = NO_SEARCH;
-			data->search_buff.clear();
-			data->history_search.go_to_end();
-			data->token_history_pos=-1;
-		}
-		
-		last_char = c;
-	}
-    
-	writestr( L"\n" );
+    {
+      data->search_mode = NO_SEARCH;
+      data->search_buff.clear();
+      data->history_search.go_to_end();
+      data->token_history_pos=-1;
+    }
+
+    last_char = c;
+  }
+
+  writestr( L"\n" );
     /*
      if( comp )
      halloc_free( comp );
      */
-	if( !reader_exit_forced() )
-	{
-		if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */
-		{
-			wperror(L"tcsetattr");
-		}
-		
-		set_color( rgb_color_t::reset(), rgb_color_t::reset() );
-	}
-	
-	return finished ? data->command_line.c_str() : 0;
+  if( !reader_exit_forced() )
+  {
+    if( tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */
+    {
+      wperror(L"tcsetattr");
+    }
+
+    set_color( rgb_color_t::reset(), rgb_color_t::reset() );
+  }
+
+  return finished ? data->command_line.c_str() : 0;
 }
 
 int reader_search_mode()
 {
-	if( !data )
-	{
-		return -1;
-	}
-	
-	return !!data->search_mode;	
+  if( !data )
+  {
+    return -1;
+  }
+
+  return !!data->search_mode;
 }
 
 
@@ -3310,123 +3310,123 @@ int reader_search_mode()
 static int read_ni( int fd, const io_chain_t &io )
 {
     parser_t &parser = parser_t::principal_parser();
-	FILE *in_stream;
-	wchar_t *buff=0;
-	std::vector<char> acc;
+  FILE *in_stream;
+  wchar_t *buff=0;
+  std::vector<char> acc;
 
-	int des = fd == 0 ? dup(0) : fd;
-	int res=0;
+  int des = fd == 0 ? dup(0) : fd;
+  int res=0;
 
-	if (des == -1)
-	{
-		wperror( L"dup" );
-		return 1;
-	}
+  if (des == -1)
+  {
+    wperror( L"dup" );
+    return 1;
+  }
 
-	in_stream = fdopen( des, "r" );
-	if( in_stream != 0 )
-	{
-		wchar_t *str;
-		size_t acc_used;
+  in_stream = fdopen( des, "r" );
+  if( in_stream != 0 )
+  {
+    wchar_t *str;
+    size_t acc_used;
 
-		while(!feof( in_stream ))
-		{
-			char buff[4096];
-			size_t c = fread(buff, 1, 4096, in_stream);
-			
-			if( ferror( in_stream ) && ( errno != EINTR ) )
-			{
-				debug( 1,
-					   _( L"Error while reading from file descriptor" ) );
-				
-				/*
-				  Reset buffer on error. We won't evaluate incomplete files.
-				*/
-				acc.clear();
-				break;
-				
-			}
+    while(!feof( in_stream ))
+    {
+      char buff[4096];
+      size_t c = fread(buff, 1, 4096, in_stream);
 
-			acc.insert(acc.end(), buff, buff + c);
-		}
+      if( ferror( in_stream ) && ( errno != EINTR ) )
+      {
+        debug( 1,
+             _( L"Error while reading from file descriptor" ) );
+
+        /*
+          Reset buffer on error. We won't evaluate incomplete files.
+        */
+        acc.clear();
+        break;
+
+      }
+
+      acc.insert(acc.end(), buff, buff + c);
+    }
         acc.push_back(0);
-		acc_used = acc.size();
-		str = str2wcs(&acc.at(0));
+    acc_used = acc.size();
+    str = str2wcs(&acc.at(0));
         acc.clear();
 
-		if(	fclose( in_stream ))
-		{
-			debug( 1,
-				   _( L"Error while closing input stream" ) );
-			wperror( L"fclose" );
-			res = 1;
-		}
+    if(  fclose( in_stream ))
+    {
+      debug( 1,
+           _( L"Error while closing input stream" ) );
+      wperror( L"fclose" );
+      res = 1;
+    }
 
-		if( str )
-		{
-			wcstring sb;
-			if( ! parser.test( str, 0, &sb, L"fish" ) )
-			{
-				parser.eval( str, io, TOP );
-			}
-			else
-			{
-				fwprintf( stderr, L"%ls", sb.c_str() );
-				res = 1;
-			}
-			free( str );
-		}
-		else
-		{
-			if( acc_used > 1 )
-			{
-				debug( 1,
-					   _( L"Could not convert input. Read %d bytes." ),
-					   acc_used-1 );
-			}
-			else
-			{
-				debug( 1,
-					   _( L"Could not read input stream" ) );
-			}
-			res=1;
-		}
+    if( str )
+    {
+      wcstring sb;
+      if( ! parser.test( str, 0, &sb, L"fish" ) )
+      {
+        parser.eval( str, io, TOP );
+      }
+      else
+      {
+        fwprintf( stderr, L"%ls", sb.c_str() );
+        res = 1;
+      }
+      free( str );
+    }
+    else
+    {
+      if( acc_used > 1 )
+      {
+        debug( 1,
+             _( L"Could not convert input. Read %d bytes." ),
+             acc_used-1 );
+      }
+      else
+      {
+        debug( 1,
+             _( L"Could not read input stream" ) );
+      }
+      res=1;
+    }
 
-	}
-	else
-	{
-		debug( 1,
-			   _( L"Error while opening input stream" ) );
-		wperror( L"fdopen" );
-		free( buff );
-		res=1;
-	}
-	return res;
+  }
+  else
+  {
+    debug( 1,
+         _( L"Error while opening input stream" ) );
+    wperror( L"fdopen" );
+    free( buff );
+    res=1;
+  }
+  return res;
 }
 
 int reader_read( int fd, const io_chain_t &io )
 {
-	int res;
+  int res;
 
-	/*
-	  If reader_read is called recursively through the '.' builtin, we
-	  need to preserve is_interactive. This, and signal handler setup
-	  is handled by proc_push_interactive/proc_pop_interactive.
-	*/
+  /*
+    If reader_read is called recursively through the '.' builtin, we
+    need to preserve is_interactive. This, and signal handler setup
+    is handled by proc_push_interactive/proc_pop_interactive.
+  */
 
-	int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
-	proc_push_interactive( inter );
-	
-	res= get_is_interactive() ? read_i():read_ni( fd, io );
+  int inter = ((fd == STDIN_FILENO) && isatty(STDIN_FILENO));
+  proc_push_interactive( inter );
 
-	/*
-	  If the exit command was called in a script, only exit the
-	  script, not the program.
-	*/
-	if( data )
-		data->end_loop = 0;
-	end_loop = 0;
-	
-	proc_pop_interactive();
-	return res;
+  res= get_is_interactive() ? read_i():read_ni( fd, io );
+
+  /*
+    If the exit command was called in a script, only exit the
+    script, not the program.
+  */
+  if( data )
+    data->end_loop = 0;
+  end_loop = 0;
+
+  proc_pop_interactive();
+  return res;
 }

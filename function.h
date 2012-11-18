@@ -1,10 +1,10 @@
-/** \file function.h 
+/** \file function.h
 
     Prototypes for functions for storing and retrieving function
-	information. These functions also take care of autoloading
-	functions in the $fish_function_path. Actual function evaluation
-	is taken care of by the parser and to some degree the builtin
-	handling library.
+  information. These functions also take care of autoloading
+  functions in the $fish_function_path. Actual function evaluation
+  is taken care of by the parser and to some degree the builtin
+  handling library.
 */
 
 #ifndef FISH_FUNCTION_H
@@ -28,66 +28,66 @@ class env_vars_snapshot_t;
   */
 struct function_data_t
 {
-	/**
-	   Name of function
-	 */
-	wcstring name;
-	/**
-	   Description of function
-	 */
-	wcstring description;
-	/**
-	   Function definition
-	 */
-	wchar_t *definition;
-	/**
-	   List of all event handlers for this function
-	 */
-	std::vector<event_t> events;
-	/**
-	   List of all named arguments for this function
-	 */
-	wcstring_list_t named_arguments;
-	/**
-	   Set to non-zero if invoking this function shadows the variables
-	   of the underlying function.
-	 */
-	int shadows;
+  /**
+     Name of function
+   */
+  wcstring name;
+  /**
+     Description of function
+   */
+  wcstring description;
+  /**
+     Function definition
+   */
+  wchar_t *definition;
+  /**
+     List of all event handlers for this function
+   */
+  std::vector<event_t> events;
+  /**
+     List of all named arguments for this function
+   */
+  wcstring_list_t named_arguments;
+  /**
+     Set to non-zero if invoking this function shadows the variables
+     of the underlying function.
+   */
+  int shadows;
 };
 
 class function_info_t {
 public:
     /** Constructs relevant information from the function_data */
     function_info_t(const function_data_t &data, const wchar_t *filename, int def_offset, bool autoload);
-    
+
     /** Used by function_copy */
     function_info_t(const function_info_t &data, const wchar_t *filename, int def_offset, bool autoload);
 
     /** Function definition */
     const wcstring definition;
-    
+
     /** Function description. Only the description may be changed after the function is created. */
     wcstring description;
-    
-	/** File where this function was defined (intern'd string) */
+
+  /** File where this function was defined (intern'd string) */
     const wchar_t * const definition_file;
-    
-	/** Line where definition started */
-	const int definition_offset;
-    
-	/** List of all named arguments for this function */
+
+  /** Line where definition started */
+  const int definition_offset;
+
+  /** List of all named arguments for this function */
     const wcstring_list_t named_arguments;
-    
-	/** Flag for specifying that this function was automatically loaded */
+
+  /** Flag for specifying that this function was automatically loaded */
     const bool is_autoload;
-    
-	/** Set to true if invoking this function shadows the variables of the underlying function. */
-	const bool shadows;
+
+  /** Set to true if invoking this function shadows the variables of the underlying function. */
+  const bool shadows;
 };
 
 
 /**
-   Initialize function data   
+   Initialize function data
 */
 void function_init();
 
@@ -128,7 +128,7 @@ int function_exists_no_autoload( const wcstring &name, const env_vars_snapshot_t
 
 /**
    Returns all function names.
-   
+
    \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore
 */
 wcstring_list_t function_get_names( int get_hidden );
@@ -139,7 +139,7 @@ wcstring_list_t function_get_names( int get_hidden );
 
    This function does not autoload functions, it will only work on
    functions that have already been defined.
-   
+
    This returns an intern'd string.
 */
 const wchar_t *function_get_definition_file( const wcstring &name );

@@ -1,9 +1,9 @@
-/** \file reader.h 
+/** \file reader.h
 
     Prototypes for functions for reading data from stdin and passing
-	to the parser. If stdin is a keyboard, it supplies a killring,
-	history, syntax highlighting, tab-completion and various other
-	features.
+  to the parser. If stdin is a keyboard, it supplies a killring,
+  history, syntax highlighting, tab-completion and various other
+  features.
 */
 
 #ifndef FISH_READER_H
@@ -53,7 +53,7 @@ const wchar_t *reader_current_filename();
 
 /**
    Push a new filename on the stack of read files
-   
+
    \param fn The fileanme to push
 */
 void reader_push_current_filename( const wchar_t *fn );
@@ -125,7 +125,7 @@ int reader_interrupted();
 const wchar_t *reader_readline();
 
 /**
-   Push a new reader environment. 
+   Push a new reader environment.
 */
 void reader_push( const wchar_t *name );
 
@@ -135,7 +135,7 @@ void reader_push( const wchar_t *name );
 void reader_pop();
 
 /**
-   Specify function to use for finding possible tab completions. The function must take these arguments: 
+   Specify function to use for finding possible tab completions. The function must take these arguments:
 
    - The command to be completed as a null terminated array of wchar_t
    - An array_list_t in which completions will be inserted.
@@ -151,7 +151,7 @@ typedef void (*highlight_function_t)( const wcstring &, std::vector<int> &, size
 
 /**
  Specify function for syntax highlighting. The function must take these arguments:
- 
+
  - The command to be highlighted as a null terminated array of wchar_t
  - The color code of each character as an array of ints
  - The cursor position
@@ -178,7 +178,7 @@ void reader_set_left_prompt( const wcstring &prompt );
 void reader_set_right_prompt( const wcstring &prompt );
 
 /**
-   Returns true if the shell is exiting, 0 otherwise. 
+   Returns true if the shell is exiting, 0 otherwise.
 */
 int exit_status();
 

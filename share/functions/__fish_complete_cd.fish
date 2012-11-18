@@ -18,7 +18,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 	else
 		set mycdpath $CDPATH
 	end
-	
+
 	# Note how this works: we evaluate $ctoken*/
 	# That trailing slash ensures that we only expand directories
 

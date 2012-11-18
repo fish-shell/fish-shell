@@ -1,5 +1,5 @@
 
- 
+
 ## Listing options
 complete -c tree -s a            -d 'All files are listed'
 complete -c tree -s d            -d 'List directories only'
@@ -16,7 +16,7 @@ complete -c tree -l filelimit -r -d 'Do not descend dirs with more than # files 
 complete -c tree -l timefmt -x   -d 'Print and format time according to the format <f>'
 complete -c tree -s o -r         -d 'Output to file instead of stdout'
 
-## File options 
+## File options
 complete -c tree -s q            -d 'Print non-printable characters as \'?\''
 complete -c tree -s N            -d 'Print non-printable characters as is'
 complete -c tree -s Q            -d 'Quote filenames with double quotes'
@@ -32,27 +32,27 @@ complete -c tree -l inodes       -d 'Print inode number of each file'
 complete -c tree -l device       -d 'Print device ID number to which each file belongs'
 
 
-## Sorting options 
+## Sorting options
 complete -c tree -s v            -d 'Sort files alphanumerically by version'
 complete -c tree -s r            -d 'Sort files in reverse alphanumeric order'
 complete -c tree -s t            -d 'Sort files by last modification time'
 complete -c tree -s c            -d 'Sort files by last status change time'
 complete -c tree -s U            -d 'Leave files unsorted'
 complete -c tree -l dirsfirst    -d 'List directories before files (-U disables)'
-  
-## Graphics options 
+
+## Graphics options
 complete -c tree -s i            -d 'Don\'t print indentation lines'
 complete -c tree -s A            -d 'Print ANSI lines graphic indentation lines'
 complete -c tree -s S            -d 'Print with ASCII graphics indentation lines'
 complete -c tree -s n            -d 'Turn colorization off always (-C overrides)'
 complete -c tree -s C            -d 'Turn colorization on always'
 
-## XML/HTML options 
+## XML/HTML options
 complete -c tree -s X            -d 'Prints out an XML representation of the tree'
 complete -c tree -s H -r         -d 'Prints out HTML format with baseHREF as top directory'
 complete -c tree -s T -r         -d 'Replace the default HTML title and H1 header with string'
 complete -c tree -l nolinks      -d 'Turn off hyperlinks in HTML output'
-  
+
 ## Miscellaneous options
 complete -c tree -l version      -d 'Print version and exit'
 complete -c tree -l help         -d 'Print usage and this help message and exit'

@@ -14,7 +14,7 @@
 
 /**
    Find the beginning and end of the first subshell in the specified string.
-   
+
    \param in the string to search for subshells
    \param begin the starting paranthesis of the subshell
    \param end the ending paranthesis of the subshell
@@ -22,10 +22,10 @@
    \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
 */
 
-int parse_util_locate_cmdsubst( const wchar_t *in, 
-								wchar_t **begin, 
-								wchar_t **end,
-								int flags );
+int parse_util_locate_cmdsubst( const wchar_t *in,
+                wchar_t **begin,
+                wchar_t **end,
+                int flags );
 
 /**
    Find the beginning and end of the command substitution under the
@@ -40,9 +40,9 @@ int parse_util_locate_cmdsubst( const wchar_t *in,
    \param b the end of the searched string
 */
 void parse_util_cmdsubst_extent( const wchar_t *buff,
-								 size_t cursor_pos,
-								 const wchar_t **a, 
-								 const wchar_t **b );
+                 size_t cursor_pos,
+                 const wchar_t **a,
+                 const wchar_t **b );
 
 /**
    Find the beginning and end of the process definition under the cursor
@@ -53,9 +53,9 @@ void parse_util_cmdsubst_extent( const wchar_t *buff,
    \param b the end of the searched string
 */
 void parse_util_process_extent( const wchar_t *buff,
-								size_t cursor_pos,
-								const wchar_t **a, 
-								const wchar_t **b );
+                size_t cursor_pos,
+                const wchar_t **a,
+                const wchar_t **b );
 
 
 /**
@@ -67,9 +67,9 @@ void parse_util_process_extent( const wchar_t *buff,
    \param b the end of the searched string
 */
 void parse_util_job_extent( const wchar_t *buff,
-							size_t cursor_pos,
-							const wchar_t **a, 
-							const wchar_t **b );
+              size_t cursor_pos,
+              const wchar_t **a,
+              const wchar_t **b );
 
 /**
    Find the beginning and end of the token under the cursor and the
@@ -84,11 +84,11 @@ void parse_util_job_extent( const wchar_t *buff,
    \param prev_end the end of the token before the current token
 */
 void parse_util_token_extent( const wchar_t *buff,
-							  size_t cursor_pos,
-							  const wchar_t **tok_begin,
-							  const wchar_t **tok_end,
-							  const wchar_t **prev_begin, 
-							  const wchar_t **prev_end );
+                size_t cursor_pos,
+                const wchar_t **tok_begin,
+                const wchar_t **tok_end,
+                const wchar_t **prev_begin,
+                const wchar_t **prev_end );
 
 
 /**
@@ -114,7 +114,7 @@ size_t parse_util_get_offset( const wcstring &str, int line, long line_offset );
 
 /**
    Set the argv environment variable to the specified null-terminated
-   array of strings. 
+   array of strings.
 */
 void parse_util_set_argv( const wchar_t * const *argv, const wcstring_list_t &named_arguments );
 

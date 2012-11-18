@@ -1,5 +1,5 @@
 /** \file sanity.h
-	Prototypes for functions for performing sanity checks on the program state
+  Prototypes for functions for performing sanity checks on the program state
 */
 
 #ifndef FISH_SANITY_H
@@ -19,7 +19,7 @@ int sanity_check();
 
 /**
   Try and determine if ptr is a valid pointer. If not, loose sanity.
-  
+
   \param ptr The pointer to validate
   \param err A description of what the pointer refers to, for use in error messages
   \param null_ok Wheter the pointer is allowed to point to 0

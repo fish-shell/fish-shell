@@ -10,7 +10,7 @@ using std::tr1::shared_ptr;
 */
 enum io_mode
 {
-	IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
+  IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
 };
 
 /** Represents an FD redirection */
@@ -24,35 +24,35 @@ private:
     void operator=(const io_data_t &rhs);
 
 public:
-	/** Type of redirect */
-	int io_mode;
-	/** FD to redirect */
-	int fd;
+  /** Type of redirect */
+  int io_mode;
+  /** FD to redirect */
+  int fd;
 
-	/** 
-		Type-specific parameter for redirection 
-	*/
-	union
-	{
-		/** Fds for IO_PIPE and for IO_BUFFER */
-		int pipe_fd[2];
-		/** fd to redirect specified fd to, for IO_FD */
-		int old_fd;
-	} param1;
-    
+  /**
+    Type-specific parameter for redirection
+  */
+  union
+  {
+    /** Fds for IO_PIPE and for IO_BUFFER */
+    int pipe_fd[2];
+    /** fd to redirect specified fd to, for IO_FD */
+    int old_fd;
+  } param1;
 
-	/**  Second type-specific paramter for redirection */
-	union
-	{
-		/** file creation flags to send to open for IO_FILE */
-		int flags;
-		/** Whether to close old_fd for IO_FD */
-		int close_old;
-	} param2;
-    
+
+  /**  Second type-specific paramter for redirection */
+  union
+  {
+    /** file creation flags to send to open for IO_FILE */
+    int flags;
+    /** Whether to close old_fd for IO_FD */
+    int close_old;
+  } param2;
+
     /** Filename IO_FILE. malloc'd. This needs to be used after fork, so don't use wcstring here. */
     const char *filename_cstr;
-    
+
     /** Convenience to set filename_cstr via wcstring */
     void set_filename(const wcstring &str) {
         free((void *)filename_cstr);
@@ -63,33 +63,33 @@ public:
     void out_buffer_create() {
         out_buffer.reset(new std::vector<char>);
     }
-        
+
     /** Function to append to the buffer */
     void out_buffer_append(const char *ptr, size_t count) {
-        assert(out_buffer.get() != NULL); 
+        assert(out_buffer.get() != NULL);
         out_buffer->insert(out_buffer->end(), ptr, ptr + count);
     }
-    
+
     /** Function to get a pointer to the buffer */
     char *out_buffer_ptr(void) {
         assert(out_buffer.get() != NULL);
         return out_buffer->empty() ? NULL : &out_buffer->at(0);
     }
-    
+
     const char *out_buffer_ptr(void) const {
         assert(out_buffer.get() != NULL);
         return out_buffer->empty() ? NULL : &out_buffer->at(0);
     }
-    
+
     /** Function to get the size of the buffer */
     size_t out_buffer_size(void) const {
         assert(out_buffer.get() != NULL);
         return out_buffer->size();
     }
 
-	/** Set to true if this is an input io redirection */
-	bool is_input;
-	
+  /** Set to true if this is an input io redirection */
+  bool is_input;
+
     io_data_t() :
         out_buffer(),
         io_mode(0),
@@ -100,7 +100,7 @@ public:
         is_input(0)
     {
     }
-    
+
     io_data_t(const io_data_t &rhs) :
         out_buffer(rhs.out_buffer),
         io_mode(rhs.io_mode),
@@ -111,7 +111,7 @@ public:
         is_input(rhs.is_input)
     {
     }
-    
+
     ~io_data_t() {
         free((void *)filename_cstr);
     }
@@ -121,15 +121,15 @@ class io_chain_t : public std::vector<io_data_t *> {
 public:
     io_chain_t();
     io_chain_t(io_data_t *);
-    
+
     void remove(const io_data_t *element);
     io_chain_t duplicate() const;
     void duplicate_prepend(const io_chain_t &src);
     void destroy();
-    
+
     const io_data_t *get_io_for_fd(int fd) const;
     io_data_t *get_io_for_fd(int fd);
-    
+
 };
 
 /**

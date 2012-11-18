@@ -16,7 +16,7 @@
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.   See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -44,11 +44,11 @@ typedef struct XdgMimeMagic XdgMimeMagic;
 
 XdgMimeMagic *_xdg_mime_magic_new                (void);
 void          _xdg_mime_magic_read_from_file     (XdgMimeMagic *mime_magic,
-						  const char   *file_name);
+              const char   *file_name);
 void          _xdg_mime_magic_free               (XdgMimeMagic *mime_magic);
 int           _xdg_mime_magic_get_buffer_extents (XdgMimeMagic *mime_magic);
 const char   *_xdg_mime_magic_lookup_data        (XdgMimeMagic *mime_magic,
-						  const void   *data,
-						  size_t        len);
+              const void   *data,
+              size_t        len);
 
 #endif /* __XDG_MIME_MAGIC_H__ */

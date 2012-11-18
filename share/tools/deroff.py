@@ -78,17 +78,17 @@ class Deroffer:
         '/O': '\330',
         'oA': '\305',
         'oa': '\345',
-        
+
         # Ligatures
         'fi': 'fi',
         'ff': 'ff',
         'fl': 'fl',
-        
+
         'Fi': 'ffi',
         'Ff': 'fff',
         'Fl': 'ffl'
     }
-    
+
     g_specs = {
         'mi': '-',
         'en': '-',
@@ -212,7 +212,7 @@ class Deroffer:
         '/_': "/_",
         'lz': "<>",
         'an': '-',
-        
+
         # Output Greek
         '*A': "Alpha",
         '*B': "Beta",
@@ -267,16 +267,16 @@ class Deroffer:
         '*z': "zeta",
         'ts': "sigma",
     }
-    
+
     g_re_word = re.compile(r'[a-zA-Z_]+') # equivalent to the word() method
     g_re_number = re.compile(r'[+-]?\d+') # equivalent to the number() method
     g_re_esc_char = re.compile(r"""([a-zA-Z_]) |   # Word
                                    ([+-]?\d)   |   # Number
                                    \\              # Backslash (for escape seq)
                                """, re.VERBOSE)
-                               
+
     g_re_not_backslash_or_whitespace = re.compile(r'[^ \t\n\r\f\v\\]+') # Match a sequence of not backslash or whitespace
-    
+
     g_re_newline_collapse = re.compile(r'\n{3,}')
 
     g_re_font = re.compile(r"""\\f(         # Starts with backslash f
@@ -284,10 +284,10 @@ class Deroffer:
                                (\[\S*?\]) |  # Open bracket, zero or more printable characters, then close bracket
                                \S)          # Any printable character
                             """,  re.VERBOSE)
-    
+
     # This gets filled in in __init__ below
     g_macro_dict = False
-    
+
     def __init__(self):
         self.reg_table = {}
         self.tr_from = ''
@@ -310,13 +310,13 @@ class Deroffer:
         self.ignore_sonx = False
         self.output = []
         self.name = ''
-        
+
         self.OPTIONS = 0
         self.FORMAT = 1
         self.DATA = 2
-        
+
         # words is uninteresting and should be treated as false
-        
+
         if not Deroffer.g_macro_dict:
             Deroffer.g_macro_dict = {
                 'SH': Deroffer.macro_sh,
@@ -363,41 +363,41 @@ class Deroffer:
                 'tr': Deroffer.macro_tr,
                 'sp': Deroffer.macro_sp
             }
-    
+
     def flush_output(self, where):
         if where:
             where.write(self.get_output())
         self.output[:] = []
-    
+
     def get_output(self):
         res = ''.join(self.output)
         clean_res = Deroffer.g_re_newline_collapse.sub('\n', res)
         return clean_res
-            
+
     def putchar(self, c):
         self.output.append(c)
         return c
-        
+
     # This gets swapped in in place of condputs the first time tr gets modified
     def condputs_tr(self, str):
         special = self.pic or self.eqn or self.refer or self.macro or (self.skiplists and self.inlist) or (self.skipheaders and self.inheader)
         if not special:
             self.output.append(str.translate(self.tr))
-        
+
     def condputs(self, str):
         special = self.pic or self.eqn or self.refer or self.macro or (self.skiplists and self.inlist) or (self.skipheaders and self.inheader)
-        if not special:        
+        if not special:
             self.output.append(str)
-            
+
     def str_at(self, idx):
         return self.s[idx:idx+1]
-    
+
     def skip_char(self, amt=1):
         self.s = self.s[amt:]
-        
+
     def skip_leading_whitespace(self):
         self.s = self.s.lstrip()
-        
+
     def is_white(self, idx):
         # Note this returns false for empty strings (idx >= len(self.s))
         return self.s[idx:idx+1].isspace()
@@ -415,7 +415,7 @@ class Deroffer:
         if not match: return False
         self.skip_char(match.end())
         return True
-        
+
     def font2(self):
         if self.s[0:2] == '\\f':
             c = self.str_at(2)
@@ -430,7 +430,7 @@ class Deroffer:
                 self.skip_char(3)
                 return True
         return False
-            
+
     def comment(self):
         # Here we require that the string start with \"
         while self.str_at(0) and self.str_at(0) != '\n': self.skip_char()
@@ -485,7 +485,7 @@ class Deroffer:
                 self.skip_char(3)
             else:
                 return False
-            
+
             if reg in self.reg_table:
                 old_s = self.s
                 self.s = self.reg_table[reg]
@@ -518,7 +518,7 @@ class Deroffer:
             return True
         else:
             return False
-            
+
     def esc(self):
         # We require that the string start with backslash
         c = self.s[1:2]
@@ -544,11 +544,11 @@ class Deroffer:
             got_something = True
             self.condputs(match.group(0))
             self.skip_char(match.end(0))
-            
+
             # Consume all specials
             while self.spec():
                 if not self.specletter: break
-            
+
         return got_something
 
 
@@ -571,7 +571,7 @@ class Deroffer:
         ch = self.str_at(idx)
         return ch.isalpha() or ch == '_' # underscore is used in C identifiers
 
-    
+
     def digit(self, idx):
         ch = self.str_at(idx)
         return ch.isdigit()
@@ -584,7 +584,7 @@ class Deroffer:
             self.condputs(match.group(0))
             self.skip_char(match.end())
             return True
-    
+
     def esc_char_backslash(self):
         # Like esc_char, but we know the string starts with a backslash
         c = self.s[1:2]
@@ -620,7 +620,7 @@ class Deroffer:
             return True
         else:
             return False
-    
+
     def text_arg(self):
         # PCA: The deroff.c textArg() disallowed quotes at the start of an argument
         # I'm not sure if this was a bug or not
@@ -632,21 +632,21 @@ class Deroffer:
                 self.condputs(match.group(0))
                 self.skip_char(match.end(0))
                 got_something = True
-                
+
             # Next is either an escape, or whitespace, or the end
             # If it's the whitespace or the end, we're done
             if not self.s or self.is_white(0):
                 return got_something
-            
+
             # Try an escape
             if not self.esc_char():
                 # Some busted escape? Just output it
                 self.condputs(self.str_at(0))
                 self.skip_char()
                 got_something = True
-                        
-                
-    
+
+
+
     def text_arg2(self):
         if not self.esc_char():
             if self.s and not self.is_white(0):
@@ -673,95 +673,95 @@ class Deroffer:
             # Did not find a header string
             self.inheader = False
             self.nobody = True
-            
+
     def macro_ss_ip(self):
         self.nobody = True
         return False
-        
+
     def macro_i_ir(self):
         pass
         return False
-        
+
     def macro_Nm(self):
         if self.s == 'Nm\n':
             self.condputs(self.name)
         else:
             self.name = self.s[3:].strip() + ' '
         return True
-               
+
     def macro_close_bracket(self):
         self.refer = False
         return False
-    
+
     def macro_ps(self):
         if self.is_white(2): self.pic = True
         self.condputs('\n')
         return True
-        
+
     def macro_pe(self):
         if self.is_white(2): self.pic = False
         self.condputs('\n')
         return True
-        
+
     def macro_ts(self):
         if self.is_white(2): self.tbl, self.tblstate = True, self.OPTIONS
         self.condputs('\n')
         return True
-        
+
     def macro_t_and(self):
         if self.is_white(2): self.tbl, self.tblstate = True, self.FORMAT
         self.condputs('\n')
         return True
-        
+
     def macro_te(self):
         if self.is_white(2): self.tbl = False
         self.condputs('\n')
         return True
-        
+
     def macro_eq(self):
         if self.is_white(2): self.eqn = True
         self.condputs('\n')
         return True
-        
+
     def macro_en(self):
         if self.is_white(2): self.eqn = False
         self.condputs('\n')
         return True
-        
+
     def macro_r1(self):
         if self.is_white(2): self.refer2 = True
         self.condputs('\n')
         return True
-        
+
     def macro_r2(self):
         if self.is_white(2): self.refer2 = False
         self.condputs('\n')
         return True
-    
+
     def macro_de(self):
         macro=True
         self.condputs('\n')
         return True
-        
+
     def macro_bl_vl(self):
         if self.is_white(2): self.inlist = True
         self.condputs('\n')
         return True
-        
+
     def macro_bv(self):
         if self.str_at(2) == 'L' and self.white(self.str_at(3)): self.inlist = True
         self.condputs('\n')
         return True
-        
+
     def macro_le(self):
         if self.is_white(2): self.inlist = False
         self.condputs('\n')
         return True
-        
+
     def macro_lp_pp(self):
         self.condputs('\n')
         return True
-        
+
     def macro_ds(self):
         self.skip_char(2)
         self.skip_leading_whitespace()
@@ -774,13 +774,13 @@ class Deroffer:
                 self.reg_table[name] = value
         self.condputs('\n')
         return True
-        
+
     def macro_so_nx(self):
         # We always ignore include directives
         # deroff.c for some reason allowed this to fall through to the 'tr' case
         # I think that was just a bug so I won't replicate it
         return True
-        
+
     def macro_tr(self):
         self.skip_char(2)
         self.skip_leading_whitespace()
@@ -791,7 +791,7 @@ class Deroffer:
             if not ns or ns == '\n': ns = ' '
             self.tr_from += c
             self.tr_to += ns
-        
+
         # Update our table, then swap in the slower tr-savvy condputs
         try: #Python2
             self.tr = string.maketrans(self.tr_from, self.tr_to)
@@ -799,11 +799,11 @@ class Deroffer:
             self.tr = "".maketrans(self.tr_from, self.tr_to)
         self.condputs = self.condputs_tr
         return True
-        
+
     def macro_sp(self):
         self.condputs('\n')
         return True
-        
+
     def macro_other(self):
         self.condputs('\n')
         return True
@@ -830,16 +830,16 @@ class Deroffer:
             self.macro = False
             self.condputs('\n')
             return True
-        
+
         self.nobody = False
         s0s1 = self.s[0:2]
-        
+
         macro_func = Deroffer.g_macro_dict.get(s0s1, Deroffer.macro_other)
         if macro_func(self):
             return True
-        
+
         if self.skipheaders and self.nobody: return True
-        
+
         self.skip_leading_whitespace()
         while self.s and not self.is_white(0): self.skip_char()
         self.skip_leading_whitespace()
@@ -873,7 +873,7 @@ class Deroffer:
             self.macro = False
             self.condputs('\n')
             return True
-        
+
         self.nobody = False
         s0s1 = self.s[0:2]
         if s0s1 == 'SH':
@@ -973,14 +973,14 @@ class Deroffer:
                 if not ns or ns == '\n': ns = ' '
                 self.tr_from += c
                 self.tr_to += ns
-            
+
             # Update our table, then swap in the slower tr-savvy condputs
             try: #Python2
                 self.tr = string.maketrans(self.tr_from, self.tr_to)
             except AttributeError: #Python3
                 self.tr = "".maketrans(self.tr_from, self.tr_to)
             self.condputs = self.condputs_tr
-                
+
             return True
         elif s0s1 in ['sp']:
             self.condputs('\n')
@@ -988,9 +988,9 @@ class Deroffer:
         else:
             self.condputs('\n')
             return True
-        
+
         if self.skipheaders and self.nobody: return True
-        
+
         self.skip_leading_whitespace()
         while self.s and not self.is_white(0): self.skip_char()
         self.skip_leading_whitespace()
@@ -1011,21 +1011,21 @@ class Deroffer:
                     # deroff.c has a bug where it can loop forever here...we try to work around it
                     self.skip_char()
                 else: # Parse option
-                
+
                     option = self.s
                     arg = ''
-                    
+
                     idx = 0
                     while option[idx:idx+1].isalpha():
                         idx += 1
-                        
+
                     if option[idx:idx+1] == '(':
                         option = option[:idx]
                         self.s = self.s[idx+1:]
                         arg = self.s
                     else:
                         self.s = ''
-                    
+
                     if arg:
                         idx = arg.find(')')
                         if idx != -1:
@@ -1034,18 +1034,18 @@ class Deroffer:
                     else:
                         #self.skip_char()
                         pass
-                    
+
                     if option.lower() == 'tab':
                         self.tblTab = arg[0:1]
-                        
+
             self.tblstate = self.FORMAT
             self.condputs('\n')
-            
+
         elif self.tblstate == self.FORMAT:
             while self.s and self.str_at(0) != '.' and self.str_at(0) != '\n':
                 self.skip_leading_whitespace()
                 if self.str_at(0): self.skip_char()
-                
+
             if self.str_at(0) == '.': self.tblstate = self.DATA
             self.condputs('\n')
         elif self.tblstate == self.DATA:
@@ -1062,7 +1062,7 @@ class Deroffer:
         else:
             self.text()
         return True
-        
+
     def deroff(self, str):
         lines = str.split('\n')
         for line in lines:
@@ -1086,7 +1086,7 @@ def deroff_files(files):
         d.flush_output(sys.stdout)
         f.close()
 
-    
+
 
 if __name__ == "__main__":
     import gzip

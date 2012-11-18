@@ -2,7 +2,7 @@ function __fish_complete_svn_diff --description 'Complete "svn diff" arguments'
 	set -l cmdl (commandline -cop)
 #set -l cmdl svn diff --diff-cmd diff --extensions '-a -b'
 set -l diff diff
-set -l args 
+set -l args
 while set -q cmdl[1]
 switch $cmdl[1]
 case --diff-cmd

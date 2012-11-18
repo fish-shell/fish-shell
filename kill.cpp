@@ -1,9 +1,9 @@
 /** \file kill.c
-	The killring.
+  The killring.
 
-	Works like the killring in emacs and readline. The killring is cut
-	and paste with a memory of previous cuts. It supports integration
-	with the X clipboard.
+  Works like the killring in emacs and readline. The killring is cut
+  and paste with a memory of previous cuts. It supports integration
+  with the X clipboard.
 */
 
 #include "config.h"
@@ -57,12 +57,12 @@ static wchar_t *cut_buffer=0;
 */
 static int has_xsel()
 {
-	static int res=-1;
-	if (res < 0) {
-		res = !! path_get_path(L"xsel", NULL);
+  static int res=-1;
+  if (res < 0) {
+    res = !! path_get_path(L"xsel", NULL);
     }
-    
-	return res;
+
+  return res;
 }
 
 void kill_add( const wcstring &str )
@@ -70,57 +70,57 @@ void kill_add( const wcstring &str )
     ASSERT_IS_MAIN_THREAD();
     if (str.empty())
         return;
-        
-	wcstring cmd;
+
+  wcstring cmd;
     wchar_t *escaped_str = NULL;
-	kill_list.push_front(str);
+  kill_list.push_front(str);
 
-	/*
-	   Check to see if user has set the FISH_CLIPBOARD_CMD variable,
-	   and, if so, use it instead of checking the display, etc.
+  /*
+     Check to see if user has set the FISH_CLIPBOARD_CMD variable,
+     and, if so, use it instead of checking the display, etc.
 
-	   I couldn't think of a safe way to allow overide of the echo
-	   command too, so, the command used must accept the input via stdin.
-	*/
+     I couldn't think of a safe way to allow overide of the echo
+     command too, so, the command used must accept the input via stdin.
+  */
 
-	const env_var_t clipboard_wstr = env_get_string(L"FISH_CLIPBOARD_CMD");
-	if( !clipboard_wstr.missing() )
-	{
-		escaped_str = escape( str.c_str(), 1 );
+  const env_var_t clipboard_wstr = env_get_string(L"FISH_CLIPBOARD_CMD");
+  if( !clipboard_wstr.missing() )
+  {
+    escaped_str = escape( str.c_str(), 1 );
         cmd.assign(L"echo -n ");
         cmd.append(escaped_str);
         cmd.append(clipboard_wstr);
-	}
-	else
-	{
-	/* This is for sending the kill to the X copy-and-paste buffer */
-		if( !has_xsel() ) {
-			return;
-		}
+  }
+  else
+  {
+  /* This is for sending the kill to the X copy-and-paste buffer */
+    if( !has_xsel() ) {
+      return;
+    }
 
-	const env_var_t disp_wstr = env_get_string( L"DISPLAY" );
-	if( !disp_wstr.missing() )
-	{
-			escaped_str = escape( str.c_str(), 1 );
+  const env_var_t disp_wstr = env_get_string( L"DISPLAY" );
+  if( !disp_wstr.missing() )
+  {
+      escaped_str = escape( str.c_str(), 1 );
             cmd.assign(L"echo ");
             cmd.append(escaped_str);
             cmd.append(L"|xsel -b" );
-		}
-	}
+    }
+  }
 
-	if (! cmd.empty())
-	{
-		if( exec_subshell(cmd) == -1 )
-		{
-			/* 
-			   Do nothing on failiure
-			*/
-		}
-		
-		free( cut_buffer );
-	
-		cut_buffer = escaped_str;
-	}
+  if (! cmd.empty())
+  {
+    if( exec_subshell(cmd) == -1 )
+    {
+      /*
+         Do nothing on failiure
+      */
+    }
+
+    free( cut_buffer );
+
+    cut_buffer = escaped_str;
+  }
 }
 
 /**
@@ -133,13 +133,13 @@ static void kill_remove( const wcstring &s )
     if (iter != kill_list.end())
         kill_list.erase(iter);
 }
-		
-		
+
+
 
 void kill_replace( const wcstring &old, const wcstring &newv )
 {
-	kill_remove( old );
-	kill_add( newv );	
+  kill_remove( old );
+  kill_add( newv );
 }
 
 const wchar_t *kill_yank_rotate()
@@ -159,50 +159,50 @@ const wchar_t *kill_yank_rotate()
    clipboard contents to the fish killring.
 */
 static void kill_check_x_buffer()
-{		
-	if( !has_xsel() )
-		return;
-	
-	const env_var_t disp = env_get_string(L"DISPLAY");
-	if( ! disp.missing())
-	{
-		size_t i;
-		wcstring cmd = L"xsel -t 500 -b";
-		wcstring new_cut_buffer=L"";
+{
+  if( !has_xsel() )
+    return;
+
+  const env_var_t disp = env_get_string(L"DISPLAY");
+  if( ! disp.missing())
+  {
+    size_t i;
+    wcstring cmd = L"xsel -t 500 -b";
+    wcstring new_cut_buffer=L"";
         wcstring_list_t list;
-		if( exec_subshell( cmd, list ) != -1 )
-		{
-					
-			for( i=0; i<list.size(); i++ )
-			{
-				wcstring next_line = escape_string( list.at(i), 0 );
+    if( exec_subshell( cmd, list ) != -1 )
+    {
+
+      for( i=0; i<list.size(); i++ )
+      {
+        wcstring next_line = escape_string( list.at(i), 0 );
                 if (i > 0) new_cut_buffer += L"\\n";
                 new_cut_buffer += next_line;
-			}
-		
-			if( new_cut_buffer.size() > 0 )
-			{
-				/*  
-					The buffer is inserted with backslash escapes,
-					since we don't really like tabs, newlines,
-					etc. anyway.
-				*/
-				
+      }
+
+      if( new_cut_buffer.size() > 0 )
+      {
+        /*
+          The buffer is inserted with backslash escapes,
+          since we don't really like tabs, newlines,
+          etc. anyway.
+        */
+
                 if (cut_buffer == NULL || cut_buffer != new_cut_buffer)
                 {
                     free(cut_buffer);
                     cut_buffer = wcsdup(new_cut_buffer.c_str());
                     kill_list.push_front( new_cut_buffer );
                 }
-			}
-		}
-	}
+      }
+    }
+  }
 }
 
 
 const wchar_t *kill_yank()
 {
-	kill_check_x_buffer();
+  kill_check_x_buffer();
     if (kill_list.empty()) {
         return L"";
     } else {
@@ -220,7 +220,7 @@ void kill_init()
 
 void kill_destroy()
 {
-	if( cut_buffer )
-		free( cut_buffer );
+  if( cut_buffer )
+    free( cut_buffer );
 }
 

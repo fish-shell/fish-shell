@@ -1,6 +1,6 @@
 /** \file postfork.h
 
-	Functions that we may safely call after fork(), of which there are very few. In particular we cannot allocate memory, since we're insane enough to call fork from a multithreaded process.
+  Functions that we may safely call after fork(), of which there are very few. In particular we cannot allocate memory, since we're insane enough to call fork from a multithreaded process.
 */
 
 #ifndef FISH_POSTFORK_H
@@ -38,7 +38,7 @@
    exit. The parent process may safely ignore the exit status of this
    call.
 
-   Returns 0 on sucess, -1 on failiure. 
+   Returns 0 on sucess, -1 on failiure.
 */
 int set_child_group( job_t *j, process_t *p, int print_errors );
 

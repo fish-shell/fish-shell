@@ -70,53 +70,53 @@
 
 const char *col[]=
 {
-	"black",
-	"red",
-	"green",
-	"brown",
-	"yellow",
-	"blue",
-	"magenta",
-	"purple",
-	"cyan",
-	"white",
-	"normal"
+  "black",
+  "red",
+  "green",
+  "brown",
+  "yellow",
+  "blue",
+  "magenta",
+  "purple",
+  "cyan",
+  "white",
+  "normal"
 };
 
 const int col_idx[]=
 {
-	0, 
-	1,
-	2,
-	3,
-	3,
-	4,
-	5,
-	5,
-	6,
-	7,
-	8
+  0,
+  1,
+  2,
+  3,
+  3,
+  4,
+  5,
+  5,
+  6,
+  7,
+  8
 };
 
 void print_colors()
 {
-	size_t i;
-	for( i=0; i<COLORS; i++ )
-	{
-		printf( "%s\n", col[i] );
-	}	
+  size_t i;
+  for( i=0; i<COLORS; i++ )
+  {
+    printf( "%s\n", col[i] );
+  }
 }
 
 static void check_locale_init()
 {
-	static int is_init = 0;
-	if( is_init )
-		return;
-	
-	is_init = 1;
-	setlocale( LC_ALL, "" );
-	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
-	textdomain( PACKAGE_NAME );
+  static int is_init = 0;
+  if( is_init )
+    return;
+
+  is_init = 1;
+  setlocale( LC_ALL, "" );
+  bindtextdomain( PACKAGE_NAME, LOCALEDIR );
+  textdomain( PACKAGE_NAME );
 }
 
 /* A lot of this code is taken straight from output.cpp; it sure would be nice to factor these together. */
@@ -185,111 +185,111 @@ int main( int argc, char **argv )
     /* Some code passes variables to set_color that don't exist, like $fish_user_whatever. As a hack, quietly return failure. */
     if (argc <= 1)
         return EXIT_FAILURE;
-    
-	char *bgcolor=0;
-	char *fgcolor=0;
-	bool bold=false;
-	bool underline=false;
 
-	while( 1 )
-	{
-		static struct option
-			long_options[] =
-			{
-				{
-					"background", required_argument, 0, 'b' 
-				}
-				,
-				{
-					"help", no_argument, 0, 'h' 
-				}
-				,
-				{
-					"bold", no_argument, 0, 'o' 
-				}
-				,
-				{
-					"underline", no_argument, 0, 'u' 
-				}
-				,
-				{
-					"version", no_argument, 0, 'v' 
-				}
-				,
-				{
-					"print-colors", no_argument, 0, 'c' 
-				}
-				,
-				{ 
-					0, 0, 0, 0 
-				}
-			}
-		;		
-		
-		int opt_index = 0;
-		
-		int opt = getopt_long( argc,
-							   argv, 
-							   GETOPT_STRING, 
-							   long_options, 
-							   &opt_index );
+  char *bgcolor=0;
+  char *fgcolor=0;
+  bool bold=false;
+  bool underline=false;
 
-		if( opt == -1 )
-			break;
-			
-		switch( opt )
-		{
-			case 0:
-				break;
-				
-			case 'b':				
-				bgcolor = optarg;
-				break;
-			case 'h':
-				print_help( argv[0], 1 );
-				exit(0);				
-								
-			case 'o':
-				bold=true;
-				break;
-				
-			case 'u':
-				underline=true;
-				break;
-				
-			case 'v':
-				check_locale_init();
-				fprintf( stderr, _("%s, version %s\n"), SET_COLOR, PACKAGE_VERSION );
-				exit( 0 );								
+  while( 1 )
+  {
+    static struct option
+      long_options[] =
+      {
+        {
+          "background", required_argument, 0, 'b'
+        }
+        ,
+        {
+          "help", no_argument, 0, 'h'
+        }
+        ,
+        {
+          "bold", no_argument, 0, 'o'
+        }
+        ,
+        {
+          "underline", no_argument, 0, 'u'
+        }
+        ,
+        {
+          "version", no_argument, 0, 'v'
+        }
+        ,
+        {
+          "print-colors", no_argument, 0, 'c'
+        }
+        ,
+        {
+          0, 0, 0, 0
+        }
+      }
+    ;
 
-			case 'c':
-				print_colors();
-				exit(0);
-				
-			case '?':
-				return 1;
-				
-		}
-		
-	}		
-	
-	switch( argc-optind)
-	{
-		case 0:
-//			printf( "no fg\n" );
-			break;
-			
-		case 1:
-			fgcolor=argv[optind];
-//			printf( "fg %s\n", fgcolor );
-			break;
-			
-		default:
-			check_locale_init();
-			printf( _("%s: Too many arguments\n"), SET_COLOR );
-			return 1;
-	}
-    
+    int opt_index = 0;
+
+    int opt = getopt_long( argc,
+                 argv,
+                 GETOPT_STRING,
+                 long_options,
+                 &opt_index );
+
+    if( opt == -1 )
+      break;
+
+    switch( opt )
+    {
+      case 0:
+        break;
+
+      case 'b':
+        bgcolor = optarg;
+        break;
+      case 'h':
+        print_help( argv[0], 1 );
+        exit(0);
+
+      case 'o':
+        bold=true;
+        break;
+
+      case 'u':
+        underline=true;
+        break;
+
+      case 'v':
+        check_locale_init();
+        fprintf( stderr, _("%s, version %s\n"), SET_COLOR, PACKAGE_VERSION );
+        exit( 0 );
+
+      case 'c':
+        print_colors();
+        exit(0);
+
+      case '?':
+        return 1;
+
+    }
+
+  }
+
+  switch( argc-optind)
+  {
+    case 0:
+//      printf( "no fg\n" );
+      break;
+
+    case 1:
+      fgcolor=argv[optind];
+//      printf( "fg %s\n", fgcolor );
+      break;
+
+    default:
+      check_locale_init();
+      printf( _("%s: Too many arguments\n"), SET_COLOR );
+      return 1;
+  }
+
     /* Infer term256 support */
     char *fish_term256 = getenv("fish_term256");
     if (fish_term256) {
@@ -299,77 +299,77 @@ int main( int argc, char **argv )
         support_term256 = term && strstr(term, "256color");
     }
 
-	if( !fgcolor && !bgcolor && !bold && !underline )
-	{
-		check_locale_init();
-		fprintf( stderr, _("%s: Expected an argument\n"), SET_COLOR );
-		print_help( argv[0], 2 );		
-		return 1;
-	}
-    
+  if( !fgcolor && !bgcolor && !bold && !underline )
+  {
+    check_locale_init();
+    fprintf( stderr, _("%s: Expected an argument\n"), SET_COLOR );
+    print_help( argv[0], 2 );
+    return 1;
+  }
+
     rgb_color_t fg = rgb_color_t(fgcolor ? fgcolor : "");
-	if( fgcolor && fg.is_none())
-	{
-		check_locale_init();
-		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, fgcolor );
-		return 1;		
-	}
+  if( fgcolor && fg.is_none())
+  {
+    check_locale_init();
+    fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, fgcolor );
+    return 1;
+  }
 
     rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : "");
-	if( bgcolor && bg.is_none())
-	{
-		check_locale_init();
-		fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, bgcolor );
-		return 1;		
-	}
+  if( bgcolor && bg.is_none())
+  {
+    check_locale_init();
+    fprintf( stderr, _("%s: Unknown color '%s'\n"), SET_COLOR, bgcolor );
+    return 1;
+  }
 
-	setupterm( 0, STDOUT_FILENO, 0);
+  setupterm( 0, STDOUT_FILENO, 0);
 
-	if( bold )
-	{
-		if( enter_bold_mode )
-			putp( enter_bold_mode );
-	}
+  if( bold )
+  {
+    if( enter_bold_mode )
+      putp( enter_bold_mode );
+  }
 
-	if( underline )
-	{
-		if( enter_underline_mode )
-			putp( enter_underline_mode );
-	}
+  if( underline )
+  {
+    if( enter_underline_mode )
+      putp( enter_underline_mode );
+  }
 
-	if( bgcolor )
-	{
-		if( bg.is_normal() )
-		{
+  if( bgcolor )
+  {
+    if( bg.is_normal() )
+    {
             write_background_color(0);
-			putp( tparm(exit_attribute_mode) );		
-		}	
-	}
+      putp( tparm(exit_attribute_mode) );
+    }
+  }
 
-	if( fgcolor )
-	{
-		if( fg.is_normal() )
-		{
+  if( fgcolor )
+  {
+    if( fg.is_normal() )
+    {
             write_foreground_color(0);
-			putp( tparm(exit_attribute_mode) );		
-		}	
-		else
-		{
+      putp( tparm(exit_attribute_mode) );
+    }
+    else
+    {
             write_foreground_color(index_for_color(fg));
-		}
-	}
-	
-	if( bgcolor )
-	{
-		if( ! bg.is_normal() )
-		{
-            write_background_color(index_for_color(bg));
-		}
-	}
+    }
+  }
 
-	if( del_curterm( cur_term ) == ERR )
-	{
-		fprintf( stderr, "%s", _("Error while closing terminfo") );
-	}
+  if( bgcolor )
+  {
+    if( ! bg.is_normal() )
+    {
+            write_background_color(index_for_color(bg));
+    }
+  }
+
+  if( del_curterm( cur_term ) == ERR )
+  {
+    fprintf( stderr, "%s", _("Error while closing terminfo") );
+  }
 
 }

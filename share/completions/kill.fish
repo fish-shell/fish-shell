@@ -6,7 +6,7 @@ for i in $__kill_signals
 	complete -c kill -o $number -d $name
 	complete -c kill -o $name -d $name
 	complete -c kill -o s -x -a \"$number\tSend\ $name\ signal\"
-	complete -c kill -o s -x -a \"$name\tSend\ $name\ signal\" 
+	complete -c kill -o s -x -a \"$name\tSend\ $name\ signal\"
 end
 
 complete -c kill -xa '(__fish_complete_pids)'

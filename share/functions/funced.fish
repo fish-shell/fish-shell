@@ -11,7 +11,7 @@ function funced --description 'Edit function definition'
             case -e --editor
             set editor $argv[2]
             set -e argv[2]
-            
+
             case -i --interactive
             set interactive 1
 
@@ -83,7 +83,7 @@ function funced --description 'Edit function definition'
     if eval $editor $tmpname
         . $tmpname
     end
-    set -l stat $status 
+    set -l stat $status
     rm -f $tmpname >/dev/null
     return $stat
 end

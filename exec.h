@@ -1,5 +1,5 @@
 /** \file exec.h
-	Prototypes for functions for executing a program
+  Prototypes for functions for executing a program
 */
 
 #ifndef FISH_EXEC_H
@@ -21,7 +21,7 @@
 #define PIPE_ERROR _(L"An error occurred while setting up pipe")
 
 /**
-  Execute the processes specified by j. 
+  Execute the processes specified by j.
 
    I've put a fair bit of work into making builtins behave like other
    programs as far as pipes are concerned. Unlike i.e. bash, builtins

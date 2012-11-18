@@ -12,7 +12,7 @@ function history --description "Deletes an item from history"
 
     set -l search_mode none
 
-    if test $argc -gt 0  
+    if test $argc -gt 0
         for i in (seq $argc)
             switch $argv[$i]
                 case --delete
@@ -43,7 +43,7 @@ function history --description "Deletes an item from history"
     		# Note this may end up passing --search twice to the builtin,
     		# but that's harmless
     		builtin history --search $argv
-    	
+
     	case delete
     		# Interactively delete history
 			set -l found_items ""
@@ -57,43 +57,43 @@ function history --description "Deletes an item from history"
 
  					#Save changes after deleting item
   					builtin history --save
-					return 0 
+					return 0
 			end
-			
+
 			set found_items_count (count $found_items)
-			if test $found_items_count -gt 0 
+			if test $found_items_count -gt 0
 				echo "[0] cancel"
 				echo "[1] all"
 				echo
-				
+
 				for i in (seq $found_items_count)
 					printf "[%s] %s \n" (math $i + 1) $found_items[$i]
 				end
-	
+
 				read --local --prompt "echo 'Delete which entries? > '" choice
 				set choice (echo $choice | tr " " "\n")
-				
+
 				for i in $choice
-					
+
 					# Skip empty input, for example, if the user just hits return
 					if test -z $i
 						continue
 					end
-				
-					#Following two validations could be embedded with "and" but I find the syntax kind of weird. 
+
+					#Following two validations could be embedded with "and" but I find the syntax kind of weird.
 					if not echo $i | grep -E -q "^[0-9]+\$"
-						printf "Invalid input: %s\n" $i 
-						continue 
-					end
-	 
-					if test $i -gt (math $found_items_count + 1)
-						printf "Invalid input : %s\n" $i 
+						printf "Invalid input: %s\n" $i
 						continue
 					end
-					
+
+					if test $i -gt (math $found_items_count + 1)
+						printf "Invalid input : %s\n" $i
+						continue
+					end
+
 					if test $i = "0"
 						printf "Cancel\n"
-						return 
+						return
 					else
 						if test $i = "1"
 							for item in $found_items

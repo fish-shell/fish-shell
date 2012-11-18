@@ -17,18 +17,18 @@ function __fish_complete_python -d 'Make completion for python' --argument-names
     complete -c $cmd -s x -d 'Skip first line of source, allowing use of non-Unix forms of #!cmd'
     complete -c $cmd -a "(__fish_complete_suffix .py)"
     complete -c $cmd -a '-' -d 'Read program from stdin'
-    
+
     switch (eval $cmd -V 2>| sed 's/^.*\s\(.\).*/\1/')
         case 2
         complete -c $cmd -s 3 -d 'Warn about Python 3.x incompatibilities that 2to3 cannot trivially fix'
         complete -c $cmd -s t --description "Warn on mixed tabs and spaces"
         complete -c $cmd -s Q -x -a "old new warn warnall" --description "Division control"
-        
+
         case 3
         complete -c $cmd -s q --description 'Don\'t print version and copyright messages on interactive startup'
         complete -c $cmd -s X -x -d 'Set implementation-specific option'
         complete -c $cmd -s b  -d 'Issue warnings about str(bytes_instance), str(bytearray_instance) and comparing bytes/bytearray with str'
         complete -c $cmd -o bb -d 'Issue errors'
-        
+
     end
 end

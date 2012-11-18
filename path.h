@@ -1,9 +1,9 @@
 /** \file path.h
 
-	Directory utilities. This library contains functions for locating
-	configuration directories, for testing if a command with a given
-	name can be found in the PATH, and various other path-related
-	issues.
+  Directory utilities. This library contains functions for locating
+  configuration directories, for testing if a command with a given
+  name can be found in the PATH, and various other path-related
+  issues.
 */
 
 #ifndef FISH_PATH_H
@@ -27,7 +27,7 @@ bool path_get_config(wcstring &path);
 
 /**
    Finds the full path of an executable. Returns YES if successful.
-   
+
    \param cmd The name of the executable.
    \param output_or_NULL If non-NULL, store the full path.
    \param vars The environment variables snapshot to use
@@ -42,14 +42,14 @@ bool path_get_path(const wcstring &cmd,
    variable as a list of base directories for relative paths. The
    returned string is allocated using halloc and the specified
    context.
-   
+
    If no valid path is found, null is returned and errno is set to
    ENOTDIR if at least one such path was found, but it did not point
    to a directory, EROTTEN if a arotten symbolic link was found, or
    ENOENT if no file of the specified name was found. If both a rotten
    symlink and a file are found, it is undefined which error status
    will be returned.
-   
+
    \param dir The name of the directory.
    \param out_or_NULL If non-NULL, return the path to the resolved directory
    \param wd The working directory, or NULL to use the default. The working directory should have a slash appended at the end.

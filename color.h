@@ -22,22 +22,22 @@ class rgb_color_t {
         type_ignore
     };
     unsigned char type:4;
-    
+
     /* Flags */
     enum {
         flag_bold = 1 << 0,
         flag_underline = 1 << 1
     };
     unsigned char flags:4;
-    
+
     union {
         unsigned char name_idx; //0-10
         unsigned char rgb[3];
     } data;
-            
+
     /** Try parsing a special color name like "normal" */
     bool try_parse_special(const wcstring &str);
-    
+
     /** Try parsing an rgb color like "#F0A030" */
     bool try_parse_rgb(const wcstring &str);
 
@@ -49,52 +49,52 @@ class rgb_color_t {
 
     /** Private constructor */
     explicit rgb_color_t(unsigned char t, unsigned char i=0);
-    
+
     public:
-    
+
     /** Default constructor of type none */
     explicit rgb_color_t() : type(type_none), flags(), data() {}
-    
+
     /** Parse a color from a string */
     explicit rgb_color_t(const wcstring &str);
     explicit rgb_color_t(const std::string &str);
 
-    /** Returns white */    
+    /** Returns white */
     static rgb_color_t white();
-    
+
     /** Returns black */
     static rgb_color_t black();
-    
+
     /** Returns the reset special color */
     static rgb_color_t reset();
-    
+
     /** Returns the normal special color */
     static rgb_color_t normal();
-    
+
     /** Returns the ignore special color */
     static rgb_color_t ignore();
-    
+
     /** Returns the none special color */
     static rgb_color_t none();
-        
+
     /** Returns whether the color is the ignore special color */
     bool is_ignore(void) const { return type == type_ignore; }
 
     /** Returns whether the color is the normal special color */
     bool is_normal(void) const { return type == type_normal; }
-    
+
     /** Returns whether the color is the reset special color */
     bool is_reset(void) const { return type == type_reset; }
-    
+
     /** Returns whether the color is the none special color */
     bool is_none(void) const { return type == type_none; }
-    
+
     /** Returns whether the color is a named color (like "magenta") */
     bool is_named(void) const { return type == type_named; }
-    
+
     /** Returns whether the color is specified via RGB components */
     bool is_rgb(void) const { return type == type_rgb; }
-    
+
     /** Returns whether the color is special, that is, not rgb or named */
     bool is_special(void) const { return type != type_named && type != type_rgb; }
 
@@ -103,27 +103,27 @@ class rgb_color_t {
 
     /** Returns the name index for the given color. Requires that the color be named or RGB. */
     unsigned char to_name_index() const;
-    
+
     /** Returns the term256 index for the given color. Requires that the color be named or RGB. */
     unsigned char to_term256_index() const;
-    
+
     /** Returns whether the color is bold */
     bool is_bold() const { return flags & flag_bold; }
-    
+
     /** Set whether the color is bold */
     void set_bold(bool x) { if (x) flags |= flag_bold; else flags &= ~flag_bold; }
-    
+
     /** Returns whether the color is underlined */
     bool is_underline() const { return !! (flags & flag_underline); }
-    
+
     /** Set whether the color is underlined */
     void set_underline(bool x) { if (x) flags |= flag_underline; else flags &= ~flag_underline; }
-    
+
     /** Compare two colors for equality */
     bool operator==(const rgb_color_t &other) const {
         return type == other.type && ! memcmp(&data, &other.data, sizeof data);
     }
-    
+
     /** Compare two colors for inequality */
     bool operator!=(const rgb_color_t &other) const {
         return !(*this == other);

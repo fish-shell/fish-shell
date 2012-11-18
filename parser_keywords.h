@@ -9,11 +9,11 @@ Functions having to do with parser keywords, like testing if a function is a blo
 /**
    Return values for parser_keywords_is_switch()
 */
-enum 
+enum
 {
-	ARG_NON_SWITCH,
-	ARG_SWITCH,
-	ARG_SKIP
+  ARG_NON_SWITCH,
+  ARG_SWITCH,
+  ARG_SKIP
 };
 
 

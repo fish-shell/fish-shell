@@ -1,10 +1,10 @@
 /** \file function.c
 
     Prototypes for functions for storing and retrieving function
-	information. These functions also take care of autoloading
-	functions in the $fish_function_path. Actual function evaluation
-	is taken care of by the parser and to some degree the builtin
-	handling library.
+  information. These functions also take care of autoloading
+  functions in the $fish_function_path. Actual function evaluation
+  is taken care of by the parser and to some degree the builtin
+  handling library.
 */
 
 #include "config.h"
@@ -89,18 +89,18 @@ static int load( const wcstring &name )
 {
     ASSERT_IS_MAIN_THREAD();
     scoped_lock lock(functions_lock);
-	bool was_autoload = is_autoload;
-	int res;
+  bool was_autoload = is_autoload;
+  int res;
     function_map_t::iterator iter = loaded_functions.find(name);
-	if( iter !=  loaded_functions.end() && !iter->second.is_autoload ) {
+  if( iter !=  loaded_functions.end() && !iter->second.is_autoload ) {
         /* We have a non-autoload version already */
-		return 0;
+    return 0;
     }
-	
-	is_autoload = true;	
-	res = function_autoloader.load( name, true );
-	is_autoload = was_autoload;
-	return res;
+
+  is_autoload = true;
+  res = function_autoloader.load( name, true );
+  is_autoload = was_autoload;
+  return res;
 }
 
 /**
@@ -109,41 +109,41 @@ static int load( const wcstring &name )
 */
 static void autoload_names( std::set<wcstring> &names, int get_hidden )
 {
-	size_t i;
-	
-	const env_var_t path_var_wstr =  env_get_string( L"fish_function_path" );
+  size_t i;
+
+  const env_var_t path_var_wstr =  env_get_string( L"fish_function_path" );
     if (path_var_wstr.missing())
         return;
-	const wchar_t *path_var = path_var_wstr.c_str(); 
-	
+  const wchar_t *path_var = path_var_wstr.c_str();
+
     wcstring_list_t path_list;
 
-	tokenize_variable_array( path_var, path_list );
-	for( i=0; i<path_list.size(); i++ )
-	{
+  tokenize_variable_array( path_var, path_list );
+  for( i=0; i<path_list.size(); i++ )
+  {
         const wcstring &ndir_str = path_list.at(i);
-		const wchar_t *ndir = (wchar_t *)ndir_str.c_str();
-		DIR *dir = wopendir( ndir );
-		if( !dir )
-			continue;
-		
-		wcstring name;
-		while (wreaddir(dir, name))
-		{
-			const wchar_t *fn = name.c_str();
-			const wchar_t *suffix;
-			if( !get_hidden && fn[0] == L'_' )
-				continue;
-			
+    const wchar_t *ndir = (wchar_t *)ndir_str.c_str();
+    DIR *dir = wopendir( ndir );
+    if( !dir )
+      continue;
+
+    wcstring name;
+    while (wreaddir(dir, name))
+    {
+      const wchar_t *fn = name.c_str();
+      const wchar_t *suffix;
+      if( !get_hidden && fn[0] == L'_' )
+        continue;
+
             suffix = wcsrchr( fn, L'.' );
-			if( suffix && (wcscmp( suffix, L".fish" ) == 0 ) )
-			{
+      if( suffix && (wcscmp( suffix, L".fish" ) == 0 ) )
+      {
                 wcstring name(fn, suffix - fn);
                 names.insert(name);
-			}
-		}				
-		closedir(dir);
-	}
+      }
+    }
+    closedir(dir);
+  }
 }
 
 void function_init()
@@ -181,53 +181,53 @@ function_info_t::function_info_t(const function_info_t &data, const wchar_t *fil
 void function_add( const function_data_t &data, const parser_t &parser )
 {
     ASSERT_IS_MAIN_THREAD();
-    
-	CHECK( ! data.name.empty(), );
-	CHECK( data.definition, );
-	scoped_lock lock(functions_lock);
-    
+
+  CHECK( ! data.name.empty(), );
+  CHECK( data.definition, );
+  scoped_lock lock(functions_lock);
+
     /* Remove the old function */
-	function_remove( data.name );
-    
-    
+  function_remove( data.name );
+
+
     /* Create and store a new function */
     const wchar_t *filename = reader_current_filename();
     int def_offset = parser.line_number_of_character_at_offset(parser.current_block->tok_pos) - 1;
     const function_map_t::value_type new_pair(data.name, function_info_t(data, filename, def_offset, is_autoload));
     loaded_functions.insert(new_pair);
-	
+
     /* Add event handlers */
-	for( std::vector<event_t>::const_iterator iter = data.events.begin(); iter != data.events.end(); ++iter )
-	{
-		event_add_handler( &*iter );
-	}
+  for( std::vector<event_t>::const_iterator iter = data.events.begin(); iter != data.events.end(); ++iter )
+  {
+    event_add_handler( &*iter );
+  }
 }
 
 int function_exists( const wcstring &cmd )
 {
-	if( parser_keywords_is_reserved(cmd) )
-		return 0;
+  if( parser_keywords_is_reserved(cmd) )
+    return 0;
     scoped_lock lock(functions_lock);
     load(cmd);
-    return loaded_functions.find(cmd) != loaded_functions.end();            
+    return loaded_functions.find(cmd) != loaded_functions.end();
 }
 
 int function_exists_no_autoload( const wcstring &cmd, const env_vars_snapshot_t &vars )
 {
-	if( parser_keywords_is_reserved(cmd) )
-		return 0;
+  if( parser_keywords_is_reserved(cmd) )
+    return 0;
     scoped_lock lock(functions_lock);
-    return loaded_functions.find(cmd) != loaded_functions.end() || function_autoloader.can_load(cmd, vars);            
+    return loaded_functions.find(cmd) != loaded_functions.end() || function_autoloader.can_load(cmd, vars);
 }
 
 static bool function_remove_ignore_autoload(const wcstring &name)
 {
     scoped_lock lock(functions_lock);
     bool erased = (loaded_functions.erase(name) > 0);
-	
-	if (erased) {
+
+  if (erased) {
         event_t ev(EVENT_ANY);
-        ev.function_name=name;	
+        ev.function_name=name;
         event_remove( &ev );
     }
     return erased;
@@ -252,7 +252,7 @@ static const function_info_t *function_get(const wcstring &name)
         return &iter->second;
     }
 }
-	
+
 bool function_get_definition(const wcstring &name, wcstring *out_definition)
 {
     scoped_lock lock(functions_lock);
@@ -277,7 +277,7 @@ int function_get_shadows(const wcstring &name)
     return func ? func->shadows : false;
 }
 
-	
+
 bool function_get_desc(const wcstring &name, wcstring *out_desc)
 {
     /* Empty length string goes to NULL */
@@ -293,7 +293,7 @@ bool function_get_desc(const wcstring &name, wcstring *out_desc)
 
 void function_set_desc(const wcstring &name, const wcstring &desc)
 {
-	load(name);
+  load(name);
     scoped_lock lock(functions_lock);
     function_map_t::iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
@@ -307,24 +307,24 @@ bool function_copy(const wcstring &name, const wcstring &new_name)
     scoped_lock lock(functions_lock);
     function_map_t::const_iterator iter = loaded_functions.find(name);
     if (iter != loaded_functions.end()) {
-		// This new instance of the function shouldn't be tied to the definition file of the original, so pass NULL filename, etc.
+    // This new instance of the function shouldn't be tied to the definition file of the original, so pass NULL filename, etc.
         const function_map_t::value_type new_pair(new_name, function_info_t(iter->second, NULL, 0, false));
         loaded_functions.insert(new_pair);
         result = true;
     }
-	return result;
+  return result;
 }
 
 wcstring_list_t function_get_names(int get_hidden)
 {
     std::set<wcstring> names;
     scoped_lock lock(functions_lock);
-	autoload_names(names, get_hidden);
-	
+  autoload_names(names, get_hidden);
+
     function_map_t::const_iterator iter;
     for (iter = loaded_functions.begin(); iter != loaded_functions.end(); ++iter) {
         const wcstring &name = iter->first;
-        
+
         /* Maybe skip hidden */
         if (! get_hidden) {
             if (name.empty() || name.at(0) == L'_') continue;

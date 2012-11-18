@@ -1,5 +1,5 @@
 /** \file history.c
-	History functions, part of the user interface.
+  History functions, part of the user interface.
 */
 #include "config.h"
 
@@ -42,7 +42,7 @@ Our history format is intended to be valid YAML. Here it is:
     paths:
       - /path/to/something
       - /path/to/something_else
-    
+
   Newlines are replaced by \n. Backslashes are replaced by \\.
 */
 
@@ -64,14 +64,14 @@ class time_profiler_t {
     const char *what;
     double start;
     public:
-    
+
     time_profiler_t(const char *w) {
         if (LOG_TIMES) {
             what = w;
             start = timef();
         }
     }
-    
+
     ~time_profiler_t() {
         if (LOG_TIMES) {
             double end = timef();
@@ -90,13 +90,13 @@ class history_lru_node_t : public lru_node_t {
         timestamp(item.timestamp()),
         required_paths(item.required_paths)
     {}
-    
+
     bool write_yaml_to_file(FILE *f) const;
 };
 
 class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
     protected:
-    
+
     /* Override to delete evicted nodes */
     virtual void node_was_evicted(history_lru_node_t *node) {
         delete node;
@@ -104,13 +104,13 @@ class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
 
     public:
     history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) { }
-    
+
     /* Function to add a history item */
     void add_item(const history_item_t &item) {
         /* Skip empty items */
         if (item.empty())
             return;
-            
+
         /* See if it's in the cache. If it is, update the timestamp. If not, we create a new node and add it. Note that calling get_node promotes the node to the front. */
         history_lru_node_t *node = this->get_node(item.str());
         if (node != NULL) {
@@ -159,15 +159,15 @@ history_item_t::history_item_t(const wcstring &str, time_t when, const path_list
 
 bool history_item_t::matches_search(const wcstring &term, enum history_search_type_t type) const {
     switch (type) {
-    
+
         case HISTORY_SEARCH_TYPE_CONTAINS:
         /* We consider equal strings to NOT match a contains search (so that you don't have to see history equal to what you typed). The length check ensures that. */
             return contents.size() > term.size() && contents.find(term) != wcstring::npos;
-            
+
         case HISTORY_SEARCH_TYPE_PREFIX:
             /* We consider equal strings to match a prefix search, so that autosuggest will allow suggesting what you've typed */
             return string_prefixes_string(term, contents);
-            
+
         default:
             sanity_lose();
             return false;
@@ -180,18 +180,18 @@ bool history_lru_node_t::write_yaml_to_file(FILE *f) const {
     escape_yaml(cmd);
     if (fprintf(f, "- cmd: %s\n", cmd.c_str()) < 0)
         return false;
-        
+
     if (fprintf(f, "   when: %ld\n", (long)timestamp) < 0)
         return false;
-    
+
     if (! required_paths.empty()) {
         if (fputs("   paths:\n", f) < 0)
             return false;
-            
+
         for (path_list_t::const_iterator iter = required_paths.begin(); iter != required_paths.end(); ++iter) {
             std::string path = wcs2string(*iter);
             escape_yaml(path);
-            
+
             if (fprintf(f, "    - %s\n", path.c_str()) < 0)
                 return false;
         }
@@ -207,17 +207,17 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
     /* Advance past spaces */
     while (*cursor == ' ')
         cursor++;
-        
+
     /* Look for "when:" */
     size_t when_len = 5;
     if (strncmp(cursor, "when:", when_len) != 0)
         return false;
     cursor += when_len;
-    
+
     /* Advance past spaces */
     while (*cursor == ' ')
         cursor++;
-    
+
     /* Try to parse a timestamp. */
     long timestamp = 0;
     if (isdigit(*cursor) && (timestamp = strtol(cursor, NULL, 0)) > 0) {
@@ -234,10 +234,10 @@ static const char *next_line(const char *start, size_t length) {
     /* Handle the hopeless case */
     if (length < 1)
         return NULL;
-    
+
     /* Get a pointer to the end, that we must not pass */
     const char * const end = start + length;
-    
+
     /* Skip past the next newline */
     const char *nextline = (const char *)memchr(start, '\n', length);
     if (! nextline || nextline >= end) {
@@ -247,13 +247,13 @@ static const char *next_line(const char *start, size_t length) {
     if (++nextline >= end) {
         return NULL;
     }
-    
+
     /* Make sure this new line is itself "newline terminated". If it's not, return NULL; */
     const char *next_newline = (const char *)memchr(nextline, '\n', end - nextline);
     if (! next_newline) {
         return NULL;
     }
-    
+
     /* Done */
     return nextline;
 }
@@ -269,12 +269,12 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
     size_t result = (size_t)(-1);
     while (cursor < mmap_length) {
         const char * const line_start = begin + cursor;
-        
+
         /* Advance the cursor to the next line */
         const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
         if (newline == NULL)
             break;
-        
+
         /* Advance the cursor past this line. +1 is for the newline */
         size_t line_len = newline - line_start;
         cursor += line_len + 1;
@@ -282,11 +282,11 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
         /* Skip lines with a leading space, since these are in the interior of one of our items */
         if (line_start[0] == ' ')
             continue;
-        
+
         /* Skip very short lines to make one of the checks below easier */
         if (line_len < 3)
             continue;
-        
+
         /* Try to be a little YAML compatible. Skip lines with leading %, ---, or ... */
         if (! memcmp(line_start, "%", 1) ||
             ! memcmp(line_start, "---", 3) ||
@@ -298,7 +298,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
             /* Hackish fast way to skip items created after our timestamp. This is the mechanism by which we avoid "seeing" commands from other sessions that started after we started. We try hard to ensure that our items are sorted by their timestamps, so in theory we could just break, but I don't think that works well if (for example) the clock changes. So we'll read all subsequent items.
              */
             const char * const end = begin + mmap_length;
-            
+
             /* Walk over lines that we think are interior. These lines are not null terminated, but are guaranteed to contain a newline. */
             bool has_timestamp = false;
             time_t timestamp;
@@ -306,18 +306,18 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
             for (interior_line = next_line(line_start, end - line_start);
                  interior_line != NULL && ! has_timestamp;
                  interior_line = next_line(interior_line, end - interior_line)) {
-                 
+
                 /* If the first character is not a space, it's not an interior line, so we're done */
                 if (interior_line[0] != ' ')
                     break;
-                    
+
                 /* Hackish optimization: since we just stepped over some interior line, update the cursor so we don't have to look at these lines next time */
                 cursor = interior_line - begin;
-                
+
                 /* Try parsing a timestamp from this line. If we succeed, the loop will break. */
                 has_timestamp = parse_timestamp(interior_line, &timestamp);
             }
-                 
+
             /* Skip this item if the timestamp is at or after our cutoff. */
             if (has_timestamp && timestamp >= cutoff_timestamp) {
                 continue;
@@ -338,47 +338,47 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
 static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length, size_t *inout_cursor, time_t cutoff_timestamp) {
     if (mmap_length == 0 || *inout_cursor >= mmap_length)
         return (size_t)(-1);
-    
-	const char *end = begin + mmap_length;    
-	const char *pos;
 
-	bool ignore_newline = false;
-	bool do_push = true;
+  const char *end = begin + mmap_length;
+  const char *pos;
+
+  bool ignore_newline = false;
+  bool do_push = true;
     bool all_done = false;
 
     size_t result = *inout_cursor;
-	for( pos = begin + *inout_cursor; pos < end && ! all_done; pos++ )
-	{
+  for( pos = begin + *inout_cursor; pos < end && ! all_done; pos++ )
+  {
 
-		if( do_push )
-		{
-			ignore_newline = (*pos == '#');
-			do_push = false;
-		}
+    if( do_push )
+    {
+      ignore_newline = (*pos == '#');
+      do_push = false;
+    }
 
-		switch( *pos )
-		{
-			case '\\':
-			{
-				pos++;
-				break;
-			}
+    switch( *pos )
+    {
+      case '\\':
+      {
+        pos++;
+        break;
+      }
 
-			case '\n':
-			{
-				if( ignore_newline )
-				{
-					ignore_newline = false;
-				}
-				else
-				{
+      case '\n':
+      {
+        if( ignore_newline )
+        {
+          ignore_newline = false;
+        }
+        else
+        {
                     /* Note: pos will be left pointing just after this newline, because of the ++ in the loop */
                     all_done = true;
-				}
-				break;
-			}
-		}
-	}
+        }
+        break;
+      }
+    }
+  }
     *inout_cursor = (pos - begin);
     return result;
 }
@@ -390,11 +390,11 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length, history
         case history_type_fish_2_0:
             result = offset_of_next_item_fish_2_0(begin, mmap_length, inout_cursor, cutoff_timestamp);
             break;
-        
+
         case history_type_fish_1_x:
             result = offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor, cutoff_timestamp);
             break;
-    
+
         default:
         case history_type_unknown:
             // Oh well
@@ -433,7 +433,7 @@ history_t::~history_t()
 void history_t::add(const history_item_t &item)
 {
     scoped_lock locker(lock);
-    
+
     /* Try merging with the last item */
     if (! new_items.empty() && new_items.back().merge(item)) {
         /* We merged, so we don't have to add anything */
@@ -444,16 +444,16 @@ void history_t::add(const history_item_t &item)
         new_items.push_back(item);
         unsaved_item_count++;
     }
-    
+
     /* Prevent the first write from always triggering a save */
     time_t now = time(NULL);
     if (! save_timestamp)
         save_timestamp = now;
-    
+
     /* This might be a good candidate for moving to a background thread */
     if((now > save_timestamp + SAVE_INTERVAL) || (unsaved_item_count >= SAVE_COUNT)) {
         time_profiler_t profiler("save_internal");
-		this->save_internal();
+    this->save_internal();
     }
 
 }
@@ -467,7 +467,7 @@ void history_t::remove(const wcstring &str)
 {
     /* Add to our list of deleted items */
     deleted_items.insert(str);
-    
+
     /* Remove from our list of new items */
     for (std::vector<history_item_t>::iterator iter = new_items.begin(); iter != new_items.end();)
     {
@@ -482,9 +482,9 @@ void history_t::remove(const wcstring &str)
 void history_t::get_string_representation(wcstring &result, const wcstring &separator)
 {
     scoped_lock locker(lock);
-    
+
     bool first = true;
-    
+
     /* Append new items */
     for (std::vector<history_item_t>::const_reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter) {
         if (! first)
@@ -492,10 +492,10 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
         result.append(iter->str());
         first = false;
     }
-    
+
     /* Append old items */
     load_old_if_needed();
-    for (std::vector<size_t>::const_reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter) {        
+    for (std::vector<size_t>::const_reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter) {
         size_t offset = *iter;
         const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
         if (! first)
@@ -507,17 +507,17 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
 
 history_item_t history_t::item_at_index(size_t idx) {
     scoped_lock locker(lock);
-    
+
     /* 0 is considered an invalid index */
     assert(idx > 0);
     idx--;
-    
+
     /* idx=0 corresponds to last item in new_items */
     size_t new_item_count = new_items.size();
     if (idx < new_item_count) {
         return new_items.at(new_item_count - idx - 1);
     }
-    
+
     /* Now look in our old items */
     idx -= new_item_count;
     load_old_if_needed();
@@ -527,7 +527,7 @@ history_item_t history_t::item_at_index(size_t idx) {
         size_t offset = old_item_offsets.at(old_item_count - idx - 1);
         return history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
     }
-    
+
     /* Index past the valid range, so return an empty history item */
     return history_item_t(wcstring(), 0);
 }
@@ -541,7 +541,7 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     if (newline != NULL) {
         /* We found a newline. */
         result.assign(start, newline - start);
-        
+
         /* Return the amount to advance the cursor; skip over the newline */
         return newline - start + 1;
     } else {
@@ -564,13 +564,13 @@ static bool extract_prefix(std::string &key, std::string &value, const std::stri
     size_t where = line.find(":");
     if (where != std::string::npos) {
         key = line.substr(0, where);
-        
+
         // skip a space after the : if necessary
         size_t val_start = where + 1;
         if (val_start < line.size() && line.at(val_start) == ' ')
             val_start++;
         value = line.substr(val_start);
-        
+
         unescape_yaml(key);
         unescape_yaml(value);
     }
@@ -582,16 +582,16 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len) {
     wcstring cmd;
     time_t when = 0;
     path_list_t paths;
-    
+
     size_t indent = 0, cursor = 0;
     std::string key, value, line;
-    
+
     /* Read the "- cmd:" line */
     size_t advance = read_line(base, cursor, len, line);
     trim_leading_spaces(line);
     if (! extract_prefix(key, value, line) || key != "- cmd")
         goto done;
-    
+
     cursor += advance;
     cmd = str2wcstring(value);
 
@@ -599,22 +599,22 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len) {
     for (;;) {
         /* Read a line */
         size_t advance = read_line(base, cursor, len, line);
-        
+
         /* Count and trim leading spaces */
         size_t this_indent = trim_leading_spaces(line);
         if (indent == 0)
             indent = this_indent;
-        
+
         if (this_indent == 0 || indent != this_indent)
             break;
-        
+
         if (! extract_prefix(key, value, line))
             break;
-            
+
         /* We are definitely going to consume this line */
         unescape_yaml(value);
         cursor += advance;
-        
+
         if (key == "when") {
             /* Parse an int from the timestamp */
             long tmp = 0;
@@ -627,13 +627,13 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len) {
                 size_t advance = read_line(base, cursor, len, line);
                 if (trim_leading_spaces(line) <= indent)
                     break;
-                    
+
                 if (strncmp(line.c_str(), "- ", 2))
                     break;
-                    
+
                 /* We're going to consume this line */
                 cursor += advance;
-                
+
                 /* Skip the leading dash-space and then store this path it */
                 line.erase(0, 2);
                 unescape_yaml(line);
@@ -660,21 +660,21 @@ history_item_t history_t::decode_item(const char *base, size_t len, history_file
 static wcstring history_unescape_newlines_fish_1_x( const wcstring &in_str )
 {
     wcstring out;
-	for (const wchar_t *in = in_str.c_str(); *in; in++)
-	{
-		if( *in == L'\\' )
-		{
-			if( *(in+1)!= L'\n')
-			{
-				out.push_back(*in);
-			}
-		}
-		else
-		{
-			out.push_back(*in);
-		}
-	}
-	return out;
+  for (const wchar_t *in = in_str.c_str(); *in; in++)
+  {
+    if( *in == L'\\' )
+    {
+      if( *(in+1)!= L'\n')
+      {
+        out.push_back(*in);
+      }
+    }
+    else
+    {
+      out.push_back(*in);
+    }
+  }
+  return out;
 }
 
 
@@ -689,7 +689,7 @@ history_item_t history_t::decode_item_fish_1_x(const char *begin, size_t length)
     bool first_char = true;
     bool timestamp_mode = false;
     time_t timestamp = 0;
-    
+
     while( 1 )
     {
         wchar_t c;
@@ -761,7 +761,7 @@ history_item_t history_t::decode_item_fish_1_x(const char *begin, size_t length)
         was_backslash = ( (c == L'\\') && !was_backslash);
 
     }
-    
+
     out = history_unescape_newlines_fish_1_x(out);
     return history_item_t(out, timestamp);
 }
@@ -793,7 +793,7 @@ void history_t::populate_from_mmap(void)
             break;
 
         // Remember this item
-        old_item_offsets.push_back(offset);        
+        old_item_offsets.push_back(offset);
     }
 }
 
@@ -805,25 +805,25 @@ static bool map_file(const wcstring &name, const char **out_map_start, size_t *o
     if (! filename.empty())
     {
         int fd;
-		if((fd = wopen_cloexec(filename, O_RDONLY)) > 0)
-		{
-			off_t len = lseek( fd, 0, SEEK_END );
-			if(len != (off_t)-1)
-			{
-				size_t mmap_length = (size_t)len;
-				if(lseek(fd, 0, SEEK_SET) == 0)
-				{
+    if((fd = wopen_cloexec(filename, O_RDONLY)) > 0)
+    {
+      off_t len = lseek( fd, 0, SEEK_END );
+      if(len != (off_t)-1)
+      {
+        size_t mmap_length = (size_t)len;
+        if(lseek(fd, 0, SEEK_SET) == 0)
+        {
                     char *mmap_start;
-					if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) != MAP_FAILED)
-					{
-						result = true;
+          if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) != MAP_FAILED)
+          {
+            result = true;
                         *out_map_start = mmap_start;
                         *out_map_len = mmap_length;
-					}
-				}
-			}
-			close( fd );
-		}
+          }
+        }
+      }
+      close( fd );
+    }
     }
     return result;
 }
@@ -832,20 +832,20 @@ bool history_t::load_old_if_needed(void)
 {
     if (loaded_old) return true;
     loaded_old = true;
-    
-    
+
+
     // PCA not sure why signals were blocked here
-	//signal_block();
-    
-	bool ok = false;    
+  //signal_block();
+
+  bool ok = false;
     if (map_file(name, &mmap_start, &mmap_length)) {
         // Here we've mapped the file
         ok = true;
         time_profiler_t profiler("populate_from_mmap");
         this->populate_from_mmap();
-    } 
-    
-	//signal_unblock();
+    }
+
+  //signal_unblock();
     return ok;
 }
 
@@ -874,10 +874,10 @@ bool history_search_t::go_backwards() {
     size_t idx = 0;
     if (! prev_matches.empty())
         idx = prev_matches.back().first;
-    
+
     if (idx == max_idx)
         return false;
-        
+
     while (++idx < max_idx) {
         const history_item_t item = history->item_at_index(idx);
         /* We're done if it's empty */
@@ -915,7 +915,7 @@ void history_search_t::go_to_beginning(void) {
 
 
 history_item_t history_search_t::current_item() const {
-    assert(! prev_matches.empty()); 
+    assert(! prev_matches.empty());
     return prev_matches.back().second;
 }
 
@@ -974,7 +974,7 @@ static wcstring history_filename(const wcstring &name, const wcstring &suffix)
     wcstring path;
     if (! path_get_config(path))
         return L"";
-    
+
     wcstring result = path;
     result.append(L"/");
     result.append(name);
@@ -1014,25 +1014,25 @@ void history_t::save_internal()
 {
     /* This must be called while locked */
     ASSERT_IS_LOCKED(lock);
-    
+
     /* Nothing to do if there's no new items */
     if (new_items.empty() && deleted_items.empty())
         return;
-        
+
     /* Compact our new items so we don't have duplicates */
     this->compact_new_items();
-    
-	bool ok = true;
-    
-    wcstring tmp_name = history_filename(name, L".tmp");    
-	if( ! tmp_name.empty() )
-	{        
+
+  bool ok = true;
+
+    wcstring tmp_name = history_filename(name, L".tmp");
+  if( ! tmp_name.empty() )
+  {
         /* Make an LRU cache to save only the last N elements */
         history_lru_cache_t lru(HISTORY_SAVE_MAX);
-        
+
         /* Insert old items in, from old to new. Merge them with our new items, inserting items with earlier timestamps first. */
         std::vector<history_item_t>::const_iterator new_item_iter = new_items.begin();
-        
+
         /* Map in existing items (which may have changed out from underneath us, so don't trust our old mmap'd data) */
         const char *local_mmap_start = NULL;
         size_t local_mmap_size = 0;
@@ -1062,24 +1062,24 @@ void history_t::save_internal()
                         break;
                     }
                 }
-                
+
                 /* Now add this old item */
                 lru.add_item(old_item);
             }
             munmap((void *)local_mmap_start, local_mmap_size);
         }
-        
+
         /* Insert any remaining new items */
         for (; new_item_iter != new_items.end(); ++new_item_iter)
         {
             lru.add_item(*new_item_iter);
         }
-                
+
         signal_block();
-    
+
         FILE *out;
-		if( (out=wfopen( tmp_name, "w" ) ) )
-		{
+    if( (out=wfopen( tmp_name, "w" ) ) )
+    {
             /* Write them out */
             for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter) {
                 const history_lru_node_t *node = *iter;
@@ -1088,36 +1088,36 @@ void history_t::save_internal()
                     break;
                 }
             }
-            
-			if( fclose( out ) || !ok )
-			{
-				/*
-				  This message does not have high enough priority to
-				  be shown by default.
-				*/
-				debug( 2, L"Error when writing history file" );
-			}
-			else
-			{
+
+      if( fclose( out ) || !ok )
+      {
+        /*
+          This message does not have high enough priority to
+          be shown by default.
+        */
+        debug( 2, L"Error when writing history file" );
+      }
+      else
+      {
                 wcstring new_name = history_filename(name, wcstring());
-				wrename(tmp_name, new_name);
-			}
-		}
-        
+        wrename(tmp_name, new_name);
+      }
+    }
+
         signal_unblock();
-        
+
         /* Make sure we clear all nodes, since this doesn't happen automatically */
         lru.evict_all_nodes();
-        
+
         /* We've saved everything, so we have no more unsaved items */
         unsaved_item_count = 0;
-	}	
+  }
 
-	if( ok )
-	{
-		/* Our history has been written to the file, so clear our state so we can re-reference the file. */
-		this->clear_file_state();
-	}
+  if( ok )
+  {
+    /* Our history has been written to the file, so clear our state so we can re-reference the file. */
+    this->clear_file_state();
+  }
 }
 
 void history_t::save(void)
@@ -1137,7 +1137,7 @@ void history_t::clear(void)
     if (! filename.empty())
         wunlink(filename);
     this->clear_file_state();
-    
+
 }
 
 bool history_t::is_empty(void)
@@ -1157,24 +1157,24 @@ static bool should_import_bash_history_line(const std::string &line)
 {
     if (line.empty())
         return false;
-    
+
     /* Very naive tests! Skip export; probably should skip others. */
     const char * const ignore_prefixes[] = {
         "export ",
         "#"
     };
-    
+
     for (size_t i=0; i < sizeof ignore_prefixes / sizeof *ignore_prefixes; i++) {
         const char *prefix = ignore_prefixes[i];
         if (! line.compare(0, strlen(prefix), prefix)) {
             return false;
         }
     }
-    
+
     /* Skip lines with backticks */
     if (line.find('`') != std::string::npos)
         return false;
-    
+
     return true;
 }
 
@@ -1187,7 +1187,7 @@ void history_t::populate_from_bash(FILE *stream)
     for (;;) {
         line.clear();
         bool success = false, has_newline = false;
-        
+
         /* Loop until we've read a line */
         do {
             char buff[128];
@@ -1197,17 +1197,17 @@ void history_t::populate_from_bash(FILE *stream)
                 char *newline = strchr(buff, '\n');
                 if (newline) *newline = '\0';
                 has_newline = (newline != NULL);
-                
+
                 /* Append what we've got */
                 line.append(buff);
             }
         } while (success && ! has_newline);
-        
+
         /* Maybe add this line */
         if (should_import_bash_history_line(line)) {
             this->add(str2wcstring(line));
         }
-        
+
         if (line.empty())
             break;
     }
@@ -1229,16 +1229,16 @@ void history_destroy()
 
 void history_sanity_check()
 {
-	/*
-	  No sanity checking implemented yet...
-	*/
+  /*
+    No sanity checking implemented yet...
+  */
 }
 
 int file_detection_context_t::perform_file_detection(bool test_all) {
     ASSERT_IS_BACKGROUND_THREAD();
     valid_paths.clear();
     int result = 1;
-    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); ++iter) {    
+    for (path_list_t::const_iterator iter = potential_paths.begin(); iter != potential_paths.end(); ++iter) {
         if (path_is_valid(*iter, working_directory)) {
             /* Push the original (possibly relative) path */
             valid_paths.push_back(*iter);
@@ -1274,7 +1274,7 @@ static int threaded_perform_file_detection(file_detection_context_t *ctx) {
 static void perform_file_detection_done(file_detection_context_t *ctx, int success) {
     /* Now that file detection is done, create the history item */
     ctx->history->add(ctx->command, ctx->valid_paths);
-    
+
     /* Done with the context. */
     delete ctx;
 }
@@ -1290,7 +1290,7 @@ void history_t::add_with_file_detection(const wcstring &str)
 {
     ASSERT_IS_MAIN_THREAD();
     path_list_t potential_paths;
-    
+
     tokenizer tokenizer;
     for( tok_init( &tokenizer, str.c_str(), TOK_SQUASH_ERRORS );
         tok_has_next( &tokenizer );
@@ -1308,11 +1308,11 @@ void history_t::add_with_file_detection(const wcstring &str)
         }
     }
     tok_destroy(&tokenizer);
-    
+
     if (! potential_paths.empty()) {
         /* We have some paths. Make a context. */
         file_detection_context_t *context = new file_detection_context_t(this, str);
-                        
+
         /* Store the potential paths. Reverse them to put them in the same order as in the command. */
         context->potential_paths.swap(potential_paths);
         iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);

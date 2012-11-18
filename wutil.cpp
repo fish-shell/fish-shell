@@ -1,6 +1,6 @@
 /** \file wutil.c
-	Wide character equivalents of various standard unix
-	functions.
+  Wide character equivalents of various standard unix
+  functions.
 */
 #include "config.h"
 
@@ -70,7 +70,7 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
 {
     struct dirent *d = readdir( dir );
     if ( !d ) return false;
-    
+
     out_name = str2wcstring(d->d_name);
     if (out_is_dir) {
         /* The caller cares if this is a directory, so check */
@@ -100,7 +100,7 @@ bool wreaddir(DIR *dir, std::wstring &out_name)
 {
     struct dirent *d = readdir( dir );
     if ( !d ) return false;
-    
+
     out_name = str2wcstring(d->d_name);
     return true;
 }
@@ -108,34 +108,34 @@ bool wreaddir(DIR *dir, std::wstring &out_name)
 
 wchar_t *wgetcwd( wchar_t *buff, size_t sz )
 {
-	char *buffc = (char *)malloc( sz*MAX_UTF8_BYTES);
-	char *res;
-	wchar_t *ret = 0;
-		
-	if( !buffc )
-	{
-		errno = ENOMEM;
-		return 0;
-	}
-	
-	res = getcwd( buffc, sz*MAX_UTF8_BYTES );
-	if( res )
-	{
-		if( (size_t)-1 != mbstowcs( buff, buffc, sizeof( wchar_t ) * sz ) )
-		{
-			ret = buff;
-		}	
-	}
-	
-	free( buffc );
-	
-	return ret;
+  char *buffc = (char *)malloc( sz*MAX_UTF8_BYTES);
+  char *res;
+  wchar_t *ret = 0;
+
+  if( !buffc )
+  {
+    errno = ENOMEM;
+    return 0;
+  }
+
+  res = getcwd( buffc, sz*MAX_UTF8_BYTES );
+  if( res )
+  {
+    if( (size_t)-1 != mbstowcs( buff, buffc, sizeof( wchar_t ) * sz ) )
+    {
+      ret = buff;
+    }
+  }
+
+  free( buffc );
+
+  return ret;
 }
 
 int wchdir( const wcstring &dir )
 {
     cstring tmp = wcs2string(dir);
-	return chdir( tmp.c_str() );
+  return chdir( tmp.c_str() );
 }
 
 FILE *wfopen(const wcstring &path, const char *mode)
@@ -162,11 +162,11 @@ FILE *wfopen(const wcstring &path, const char *mode)
     /* Skip binary */
     if (mode[idx] == 'b')
         idx++;
-    
+
     /* Consider append option */
     if (mode[idx] == '+')
         permissions = O_RDWR;
-    
+
     int fd = wopen_cloexec(path, permissions | options, 0666);
     if (fd < 0)
         return NULL;
@@ -210,7 +210,7 @@ static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool
         fd = -1;
     }
     return fd;
-    
+
 }
 int wopen(const wcstring &pathname, int flags, mode_t mode)
 {
@@ -266,40 +266,40 @@ int wunlink(const wcstring &file_name)
 
 void wperror(const wcstring &s)
 {
-	int e = errno;
-	if( !s.empty() )
-	{
-		fwprintf( stderr, L"%ls: ", s.c_str() );
-	}
-	fwprintf( stderr, L"%s\n", strerror( e ) );
+  int e = errno;
+  if( !s.empty() )
+  {
+    fwprintf( stderr, L"%ls: ", s.c_str() );
+  }
+  fwprintf( stderr, L"%s\n", strerror( e ) );
 }
 
 #ifdef HAVE_REALPATH_NULL
 
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 {
-	cstring tmp = wcs2string(pathname);
-	char *narrow_res = realpath( tmp.c_str(), 0 );	
-	wchar_t *res;	
+  cstring tmp = wcs2string(pathname);
+  char *narrow_res = realpath( tmp.c_str(), 0 );
+  wchar_t *res;
 
-	if( !narrow_res )
-		return 0;
-		
-	if( resolved_path )
-	{
-		wchar_t *tmp2 = str2wcs( narrow_res );
-		wcslcpy( resolved_path, tmp2, PATH_MAX );
-		free( tmp2 );
-		res = resolved_path;		
-	}
-	else
-	{
-		res = str2wcs( narrow_res );
-	}
+  if( !narrow_res )
+    return 0;
+
+  if( resolved_path )
+  {
+    wchar_t *tmp2 = str2wcs( narrow_res );
+    wcslcpy( resolved_path, tmp2, PATH_MAX );
+    free( tmp2 );
+    res = resolved_path;
+  }
+  else
+  {
+    res = str2wcs( narrow_res );
+  }
 
     free( narrow_res );
 
-	return res;
+  return res;
 }
 
 #else
@@ -307,25 +307,25 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 {
     cstring tmp = wcs2string(pathname);
-	char narrow_buff[PATH_MAX];
-	char *narrow_res = realpath( tmp.c_str(), narrow_buff );
-	wchar_t *res;	
+  char narrow_buff[PATH_MAX];
+  char *narrow_res = realpath( tmp.c_str(), narrow_buff );
+  wchar_t *res;
 
-	if( !narrow_res )
-		return 0;
-		
-	if( resolved_path )
-	{
-		wchar_t *tmp2 = str2wcs( narrow_res );
-		wcslcpy( resolved_path, tmp2, PATH_MAX );
-		free( tmp2 );
-		res = resolved_path;		
-	}
-	else
-	{
-		res = str2wcs( narrow_res );
-	}
-	return res;
+  if( !narrow_res )
+    return 0;
+
+  if( resolved_path )
+  {
+    wchar_t *tmp2 = str2wcs( narrow_res );
+    wcslcpy( resolved_path, tmp2, PATH_MAX );
+    free( tmp2 );
+    res = resolved_path;
+  }
+  else
+  {
+    res = str2wcs( narrow_res );
+  }
+  return res;
 }
 
 #endif
@@ -352,8 +352,8 @@ wcstring wbasename( const wcstring &path )
 /* Really init wgettext */
 static void wgettext_really_init() {
     pthread_mutex_init(&wgettext_lock, NULL);
-	bindtextdomain( PACKAGE_NAME, LOCALEDIR );
-	textdomain( PACKAGE_NAME );
+  bindtextdomain( PACKAGE_NAME, LOCALEDIR );
+  textdomain( PACKAGE_NAME );
 }
 
 /**
@@ -367,31 +367,31 @@ static void wgettext_init_if_necessary()
 
 const wchar_t *wgettext( const wchar_t *in )
 {
-	if( !in )
-		return in;
-        
-	// preserve errno across this since this is often used in printing error messages
-	int err = errno;
-	
+  if( !in )
+    return in;
+
+  // preserve errno across this since this is often used in printing error messages
+  int err = errno;
+
     wgettext_init_if_necessary();
-    
-	wcstring key = in;
+
+  wcstring key = in;
     scoped_lock lock(wgettext_lock);
-    
+
     wcstring *& val = wgettext_map[key];
     if (val == NULL) {
         cstring mbs_in = wcs2string(key);
         char *out = gettext(mbs_in.c_str());
         val = new wcstring(format_string(L"%s", out));
     }
-	errno = err;
-	return val->c_str();
+  errno = err;
+  return val->c_str();
 }
 
 wcstring wgettext2(const wcstring &in) {
     wgettext_init_if_necessary();
-    std::string mbs_in = wcs2string(in);	
-	char *out = gettext( mbs_in.c_str() );
+    std::string mbs_in = wcs2string(in);
+  char *out = gettext( mbs_in.c_str() );
     wcstring result = format_string(L"%s", out);
     return result;
 }
@@ -400,28 +400,28 @@ const wchar_t *wgetenv( const wcstring &name )
 {
     ASSERT_IS_MAIN_THREAD();
     cstring name_narrow = wcs2string(name);
-	char *res_narrow = getenv( name_narrow.c_str() );
-	static wcstring out;
+  char *res_narrow = getenv( name_narrow.c_str() );
+  static wcstring out;
 
-	if( !res_narrow )
-		return 0;
-	
+  if( !res_narrow )
+    return 0;
+
     out = format_string(L"%s", res_narrow);
-	return out.c_str();
-	
+  return out.c_str();
+
 }
 
 int wmkdir( const wcstring &name, int mode )
 {
-	cstring name_narrow = wcs2string(name);
-	return mkdir( name_narrow.c_str(), mode );
+  cstring name_narrow = wcs2string(name);
+  return mkdir( name_narrow.c_str(), mode );
 }
 
 int wrename( const wcstring &old, const wcstring &newv )
 {
     cstring old_narrow = wcs2string(old);
-	cstring new_narrow =wcs2string(newv);
-	return rename( old_narrow.c_str(), new_narrow.c_str() );
+  cstring new_narrow =wcs2string(newv);
+  return rename( old_narrow.c_str(), new_narrow.c_str() );
 }
 
 int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base)

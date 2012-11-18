@@ -120,7 +120,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		# Pager colors
 		set_default fish_pager_color_prefix cyan
 		set_default fish_pager_color_completion normal
-		set_default fish_pager_color_description normal
+		set_default fish_pager_color_description 555 yellow
 		set_default fish_pager_color_progress cyan
 
 		#

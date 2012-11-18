@@ -17,7 +17,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 /** \file fish.c
-  The main loop of <tt>fish</tt>.
+	The main loop of <tt>fish</tt>.
 */
 
 #include "config.h"
@@ -104,12 +104,12 @@ static std::string get_executable_path(const char *argv0)
         uint32_t buffSize = sizeof buff;
         if (0 == _NSGetExecutablePath(buff, &buffSize))
             return std::string(buff);
-
+        
         /* Loop until we're big enough */
         char *mbuff = (char *)malloc(buffSize);
         while (0 > _NSGetExecutablePath(mbuff, &buffSize))
             mbuff = (char *)realloc(mbuff, buffSize);
-
+        
         /* Return the string */
         std::string result = mbuff;
         free(mbuff);
@@ -125,7 +125,7 @@ static std::string get_executable_path(const char *argv0)
             return std::string(buff);
         }
     }
-
+    
     /* Just return argv0, which probably won't work (i.e. it's not an absolute path or a path relative to the working directory, but instead something the caller found via $PATH). We'll eventually fall back to the compile time paths. */
     return std::string(argv0 ? argv0 : "");
 }
@@ -137,9 +137,9 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     bool done = false;
     std::string exec_path = get_executable_path(argv0);
     if (get_realpath(exec_path))
-    {
+    {        
 #if __APPLE__
-
+        
         /* On OS X, maybe we're an app bundle, and should use the bundle's files. Since we don't link CF, use this lame approach to test it: see if the resolved path ends with /Contents/MacOS/fish, case insensitive since HFS+ usually is.
          */
         if (! done)
@@ -152,28 +152,28 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 wcstring wide_resolved_path = str2wcstring(exec_path);
                 wide_resolved_path.resize(exec_path.size() - suffixlen);
                 wide_resolved_path.append(L"/Contents/Resources/");
-
+                
                 /* Append share, etc, doc */
                 paths.data = wide_resolved_path + L"share/fish";
                 paths.sysconf = wide_resolved_path + L"etc/fish";
                 paths.doc = wide_resolved_path + L"doc/fish";
-
+                
                 /* But the bin_dir is the resolved_path, minus fish (aka the MacOS directory) */
                 paths.bin = str2wcstring(exec_path);
                 paths.bin.resize(paths.bin.size() - strlen("/fish"));
-
+                
                 done = true;
             }
         }
 #endif
-
+        
         if (! done)
         {
             /* The next check is that we are in a reloctable directory tree like this:
                  bin/fish
                  etc/fish
                  share/fish
-
+                 
                  Check it!
             */
             const char *suffix = "/bin/fish";
@@ -181,12 +181,12 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
             {
                 wcstring base_path = str2wcstring(exec_path);
                 base_path.resize(base_path.size() - strlen(suffix));
-
+                
                 paths.data = base_path + L"/share/fish";
                 paths.sysconf = base_path + L"/etc/fish";
                 paths.doc = base_path + L"/share/doc/fish";
                 paths.bin = base_path + L"/bin";
-
+                
                 struct stat buf;
                 if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf))
                 {
@@ -195,7 +195,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
             }
         }
     }
-
+    
     if (! done)
     {
         /* Fall back to what got compiled in. */
@@ -203,10 +203,10 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         paths.sysconf = L"" SYSCONFDIR "/fish";
         paths.doc = L"" DATADIR "/doc/fish";
         paths.bin = L"" PREFIX "/bin";
-
+        
         done = true;
     }
-
+    
     return paths;
 }
 
@@ -217,27 +217,27 @@ static int read_init(const struct config_paths_t &paths)
 {
     parser_t &parser = parser_t::principal_parser();
     const io_chain_t empty_ios;
-  parser.eval( L"builtin . " + paths.data + L"/config.fish 2>/dev/null", empty_ios, TOP );
-  parser.eval( L"builtin . " + paths.sysconf + L"/config.fish 2>/dev/null", empty_ios, TOP );
+	parser.eval( L"builtin . " + paths.data + L"/config.fish 2>/dev/null", empty_ios, TOP );
+	parser.eval( L"builtin . " + paths.sysconf + L"/config.fish 2>/dev/null", empty_ios, TOP );
 
+	
+	/*
+	  We need to get the configuration directory before we can source the user configuration file
+	*/
+	wcstring config_dir;
 
-  /*
-    We need to get the configuration directory before we can source the user configuration file
-  */
-  wcstring config_dir;
-
-  /*
-    If path_get_config returns false then we have no configuration directory
-    and no custom config to load.
-  */
+	/*
+	  If path_get_config returns false then we have no configuration directory
+	  and no custom config to load.
+	*/
     if (path_get_config(config_dir))
-  {
-    wcstring config_dir_escaped = escape_string( config_dir, 1 );
+	{
+		wcstring config_dir_escaped = escape_string( config_dir, 1 );
         wcstring eval_buff = format_string(L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
-    parser.eval( eval_buff, empty_ios, TOP );
-  }
-
-  return 1;
+		parser.eval( eval_buff, empty_ios, TOP );
+	}
+	
+	return 1;
 }
 
 
@@ -247,162 +247,162 @@ static int read_init(const struct config_paths_t &paths)
  */
 static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
 {
-  int my_optind;
-  int force_interactive=0;
+	int my_optind;
+	int force_interactive=0;
+		
+	while( 1 )
+	{
+		static struct option
+			long_options[] =
+			{
+				{
+					"command", required_argument, 0, 'c' 
+				}
+				,
+				{
+					"debug-level", required_argument, 0, 'd' 
+				}
+				,
+				{
+					"interactive", no_argument, 0, 'i' 
+				}
+				,
+				{
+					"login", no_argument, 0, 'l' 
+				}
+				,
+				{
+					"no-execute", no_argument, 0, 'n' 
+				}
+				,
+				{
+					"profile", required_argument, 0, 'p' 
+				}
+				,
+				{
+					"help", no_argument, 0, 'h' 
+				}
+				,
+				{
+					"version", no_argument, 0, 'v' 
+				}
+				,
+				{ 
+					0, 0, 0, 0 
+				}
+			}
+		;
+		
+		int opt_index = 0;
+		
+		int opt = getopt_long( argc,
+							   argv, 
+							   GETOPT_STRING,
+							   long_options, 
+							   &opt_index );
+		
+		if( opt == -1 )
+			break;
+		
+		switch( opt )
+		{
+			case 0:
+			{
+				break;
+			}
+			
+			case 'c':		
+			{
+				*cmd_ptr = optarg;				
+				is_interactive_session = 0;
+				break;
+			}
+			
+			case 'd':		
+			{
+				char *end;
+				long tmp;
 
-  while( 1 )
-  {
-    static struct option
-      long_options[] =
-      {
-        {
-          "command", required_argument, 0, 'c'
-        }
-        ,
-        {
-          "debug-level", required_argument, 0, 'd'
-        }
-        ,
-        {
-          "interactive", no_argument, 0, 'i'
-        }
-        ,
-        {
-          "login", no_argument, 0, 'l'
-        }
-        ,
-        {
-          "no-execute", no_argument, 0, 'n'
-        }
-        ,
-        {
-          "profile", required_argument, 0, 'p'
-        }
-        ,
-        {
-          "help", no_argument, 0, 'h'
-        }
-        ,
-        {
-          "version", no_argument, 0, 'v'
-        }
-        ,
-        {
-          0, 0, 0, 0
-        }
-      }
-    ;
+				errno = 0;
+				tmp = strtol(optarg, &end, 10);
+				
+				if( tmp >= 0 && tmp <=10 && !*end && !errno )
+				{
+					debug_level = (int)tmp;
+				}
+				else
+				{
+					debug( 0, _(L"Invalid value '%s' for debug level switch"), optarg );
+					exit_without_destructors(1);
+				}
+				break;
+			}
+			
+			case 'h':
+			{
+				*cmd_ptr = "__fish_print_help fish";
+				break;
+			}
+			
+			case 'i':
+			{
+				force_interactive = 1;
+				break;				
+			}
+			
+			case 'l':
+			{
+				is_login=1;
+				break;				
+			}
+			
+			case 'n':
+			{
+				no_exec=1;
+				break;				
+			}
+			
+			case 'p':
+			{
+				profile = optarg;
+				break;				
+			}
+			
+			case 'v':
+			{
+				fwprintf( stderr, 
+						  _(L"%s, version %s\n"), 
+						  PACKAGE_NAME,
+						  PACKAGE_VERSION );
+				exit_without_destructors( 0 );				
+			}
+			
+			case '?':
+			{
+				exit_without_destructors( 1 );
+			}
+			
+		}		
+	}
 
-    int opt_index = 0;
+	my_optind = optind;
+	
+	is_login |= (strcmp( argv[0], "-fish") == 0);
+		
+	/*
+	  We are an interactive session if we have not been given an
+	  explicit command to execute, _and_ stdin is a tty.
+	 */
+	is_interactive_session &= (*cmd_ptr == 0);
+	is_interactive_session &= (my_optind == argc);
+	is_interactive_session &= isatty(STDIN_FILENO);	
 
-    int opt = getopt_long( argc,
-                 argv,
-                 GETOPT_STRING,
-                 long_options,
-                 &opt_index );
+	/*
+	  We are also an interactive session if we have are forced-
+	 */
+	is_interactive_session |= force_interactive;
 
-    if( opt == -1 )
-      break;
-
-    switch( opt )
-    {
-      case 0:
-      {
-        break;
-      }
-
-      case 'c':
-      {
-        *cmd_ptr = optarg;
-        is_interactive_session = 0;
-        break;
-      }
-
-      case 'd':
-      {
-        char *end;
-        long tmp;
-
-        errno = 0;
-        tmp = strtol(optarg, &end, 10);
-
-        if( tmp >= 0 && tmp <=10 && !*end && !errno )
-        {
-          debug_level = (int)tmp;
-        }
-        else
-        {
-          debug( 0, _(L"Invalid value '%s' for debug level switch"), optarg );
-          exit_without_destructors(1);
-        }
-        break;
-      }
-
-      case 'h':
-      {
-        *cmd_ptr = "__fish_print_help fish";
-        break;
-      }
-
-      case 'i':
-      {
-        force_interactive = 1;
-        break;
-      }
-
-      case 'l':
-      {
-        is_login=1;
-        break;
-      }
-
-      case 'n':
-      {
-        no_exec=1;
-        break;
-      }
-
-      case 'p':
-      {
-        profile = optarg;
-        break;
-      }
-
-      case 'v':
-      {
-        fwprintf( stderr,
-              _(L"%s, version %s\n"),
-              PACKAGE_NAME,
-              PACKAGE_VERSION );
-        exit_without_destructors( 0 );
-      }
-
-      case '?':
-      {
-        exit_without_destructors( 1 );
-      }
-
-    }
-  }
-
-  my_optind = optind;
-
-  is_login |= (strcmp( argv[0], "-fish") == 0);
-
-  /*
-    We are an interactive session if we have not been given an
-    explicit command to execute, _and_ stdin is a tty.
-   */
-  is_interactive_session &= (*cmd_ptr == 0);
-  is_interactive_session &= (my_optind == argc);
-  is_interactive_session &= isatty(STDIN_FILENO);
-
-  /*
-    We are also an interactive session if we have are forced-
-   */
-  is_interactive_session |= force_interactive;
-
-  return my_optind;
+	return my_optind;
 }
 
 /**
@@ -412,68 +412,68 @@ static int fish_parse_opt( int argc, char **argv, const char **cmd_ptr )
 
 static wcstring full_escape( const wchar_t *in )
 {
-  wcstring out;
-  for( ; *in; in++ )
-  {
-    if( *in < 32 )
-    {
-      append_format( out, L"\\x%.2x", *in );
-    }
-    else if( *in < 128 )
-    {
-      out.push_back(*in);
-    }
-    else if( *in < 65536 )
-    {
-      append_format( out, L"\\u%.4x", *in );
-    }
-    else
-    {
-      append_format( out, L"\\U%.8x", *in );
-    }
-  }
-  return out;
+	wcstring out;
+	for( ; *in; in++ )
+	{
+		if( *in < 32 )
+		{
+			append_format( out, L"\\x%.2x", *in );
+		}
+		else if( *in < 128 )
+		{
+			out.push_back(*in);
+		}
+		else if( *in < 65536 )
+		{
+			append_format( out, L"\\u%.4x", *in );
+		}
+		else
+		{
+			append_format( out, L"\\U%.8x", *in );
+		}
+	}
+	return out;
 }
 
 extern int g_fork_count;
 int main( int argc, char **argv )
-{
-  int res=1;
-  const char *cmd=0;
-  int my_optind=0;
+{    
+	int res=1;
+	const char *cmd=0;
+	int my_optind=0;
 
-  set_main_thread();
+	set_main_thread();
     setup_fork_guards();
-
-  wsetlocale( LC_ALL, L"" );
-  is_interactive_session=1;
-  program_name=L"fish";
+    save_term_foreground_process_group();
+    
+	wsetlocale( LC_ALL, L"" );
+	is_interactive_session=1;
+	program_name=L"fish";
 
     //struct stat tmp;
     //stat("----------FISH_HIT_MAIN----------", &tmp);
 
-  my_optind = fish_parse_opt( argc, argv, &cmd );
+	my_optind = fish_parse_opt( argc, argv, &cmd );
 
-  /*
-    No-exec is prohibited when in interactive mode
-  */
-  if( is_interactive_session && no_exec)
-  {
-    debug( 1, _(L"Can not use the no-execute mode when running an interactive session") );
-    no_exec = 0;
-  }
-
-  const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
-
-  proc_init();
-  event_init();
-  wutil_init();
-  //parser_init();
-  builtin_init();
-  function_init();
-  env_init(&paths);
-  reader_init();
-  history_init();
+	/*
+	  No-exec is prohibited when in interactive mode
+	*/
+	if( is_interactive_session && no_exec)
+	{
+		debug( 1, _(L"Can not use the no-execute mode when running an interactive session") );
+		no_exec = 0;
+	}
+    
+	const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
+    	
+	proc_init();	
+	event_init();	
+	wutil_init();
+	builtin_init();
+	function_init();
+	env_init(&paths);
+	reader_init();
+	history_init();
 
     parser_t &parser = parser_t::principal_parser();
 
@@ -481,91 +481,92 @@ int main( int argc, char **argv )
         printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
     const io_chain_t empty_ios;
-  if( read_init(paths) )
-  {
-    if( cmd != 0 )
-    {
-      wchar_t *cmd_wcs = str2wcs( cmd );
-      res = parser.eval( cmd_wcs, empty_ios, TOP );
-      free(cmd_wcs);
-      reader_exit(0, 0);
-    }
-    else
-    {
-      if( my_optind == argc )
-      {
-        res = reader_read( STDIN_FILENO, empty_ios );
-      }
-      else
-      {
-        char **ptr;
-        char *file = *(argv+(my_optind++));
-        int i;
-        int fd;
-        wchar_t *rel_filename, *abs_filename;
+	if( read_init(paths) )
+	{
+		if( cmd != 0 )
+		{
+			wchar_t *cmd_wcs = str2wcs( cmd );
+			res = parser.eval( cmd_wcs, empty_ios, TOP );
+			free(cmd_wcs);
+			reader_exit(0, 0);
+		}
+		else
+		{
+			if( my_optind == argc )
+			{
+				res = reader_read( STDIN_FILENO, empty_ios );
+			}
+			else
+			{
+				char **ptr; 
+				char *file = *(argv+(my_optind++));
+				int i; 
+				int fd;
+				wchar_t *rel_filename, *abs_filename;
 
-
-        if( ( fd = open(file, O_RDONLY) ) == -1 )
-        {
-          wperror( L"open" );
-          return 1;
-        }
-
+                
+				if( ( fd = open(file, O_RDONLY) ) == -1 )
+				{
+					wperror( L"open" );
+					return 1;
+				}
+                
                 // OK to not do this atomically since we cannot have gone multithreaded yet
                 set_cloexec(fd);
-
-        if( *(argv+my_optind))
-        {
+                
+				if( *(argv+my_optind))
+				{
                     wcstring sb;
-          for( i=1,ptr = argv+my_optind; *ptr; i++, ptr++ )
-          {
-            if( i != 1 )
+					for( i=1,ptr = argv+my_optind; *ptr; i++, ptr++ )
+					{
+						if( i != 1 )
                             sb.append( ARRAY_SEP_STR );
                         sb.append( str2wcstring( *ptr ));
-          }
+					}
+				
+					env_set( L"argv", sb.c_str(), 0 );
+				}
 
-          env_set( L"argv", sb.c_str(), 0 );
-        }
+				rel_filename = str2wcs( file );
+				abs_filename = wrealpath( rel_filename, 0 );
 
-        rel_filename = str2wcs( file );
-        abs_filename = wrealpath( rel_filename, 0 );
+				if( !abs_filename )
+				{
+					abs_filename = wcsdup(rel_filename);
+				}
 
-        if( !abs_filename )
-        {
-          abs_filename = wcsdup(rel_filename);
-        }
+				reader_push_current_filename( intern( abs_filename ) );
+				free( rel_filename );
+				free( abs_filename );
 
-        reader_push_current_filename( intern( abs_filename ) );
-        free( rel_filename );
-        free( abs_filename );
+				res = reader_read( fd, empty_ios );
 
-        res = reader_read( fd, empty_ios );
-
-        if( res )
-        {
-          debug( 1,
-                 _(L"Error while reading file %ls\n"),
-                 reader_current_filename()?reader_current_filename(): _(L"Standard input") );
-        }
-        reader_pop_current_filename();
-      }
-    }
-  }
-
-  proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
-
-  history_destroy();
-  proc_destroy();
-  builtin_destroy();
-  reader_destroy();
-  parser.destroy();
-  wutil_destroy();
-  event_destroy();
-
-  env_destroy();
-
+				if( res )
+				{
+					debug( 1, 
+					       _(L"Error while reading file %ls\n"), 
+					       reader_current_filename()?reader_current_filename(): _(L"Standard input") );
+				}				
+				reader_pop_current_filename();
+			}
+		}
+	}
+	
+	proc_fire_event( L"PROCESS_EXIT", EVENT_EXIT, getpid(), res );
+	
+    restore_term_foreground_process_group();
+	history_destroy();
+	proc_destroy();
+	builtin_destroy();
+	reader_destroy();
+	parser.destroy();
+	wutil_destroy();
+	event_destroy();
+	
+	env_destroy();
+	
     if (g_log_forks)
         printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
-
-  return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();
+    
+	return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();	
 }

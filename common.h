@@ -64,13 +64,14 @@ typedef std::vector<wcstring> wcstring_list_t;
 #define UNESCAPE_INCOMPLETE 2
 
 /* Flags for the escape() and escape_string() functions */
-enum {
+enum
+{
     /** Escape all characters, including magic characters like the semicolon */
-     ESCAPE_ALL = 1 << 0,
-     
+    ESCAPE_ALL = 1 << 0,
+
     /** Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty string */
     ESCAPE_NO_QUOTED = 1 << 1,
-    
+
     /** Do not escape tildes */
     ESCAPE_NO_TILDE = 1 << 2
 };
@@ -82,12 +83,12 @@ typedef unsigned int escape_flags_t;
 #define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
 
 /** Exits without invoking destructors (via _exit), useful for code after fork. */
-void exit_without_destructors(int code) __attribute__ ((noreturn));
+void exit_without_destructors(int code) __attribute__((noreturn));
 
-/** 
+/**
 	Save the shell mode on startup so we can restore them on exit
 */
-extern struct termios shell_modes;      
+extern struct termios shell_modes;
 
 /**
    The character to use where the text has been truncated. Is an
@@ -119,7 +120,7 @@ extern const wchar_t *program_name;
    parameter is the return value of the current function on failiure.
 */
 #define CHECK( arg, retval )											\
-	if( !(arg) )														\
+	if (!(arg)) 														\
 	{																	\
 		debug( 0,														\
 			   "function %s called with null value for argument %s. ",  \
@@ -140,7 +141,7 @@ extern const wchar_t *program_name;
 		read( 0, &exit_read_buff, 1 );			\
 		exit_without_destructors( 1 );												\
 	}															\
-		
+	
 
 /**
    Exit program at once, leaving an error message about running out of memory.
@@ -158,8 +159,8 @@ extern const wchar_t *program_name;
    Check if signals are blocked. If so, print an error message and
    return from the function performing this check.
 */
-#define CHECK_BLOCK( retval )											\
-	if( signal_is_blocked() )											\
+#define CHECK_BLOCK(retval) 											\
+	if (signal_is_blocked()) 											\
 	{																	\
 		debug( 0,														\
 			    "function %s called while blocking signals. ",  		\
@@ -168,7 +169,7 @@ extern const wchar_t *program_name;
 		show_stackframe();												\
 		return retval;													\
 	}
-		
+
 /**
    Shorthand for wgettext call
 */
@@ -176,7 +177,7 @@ extern const wchar_t *program_name;
 
 /**
    Noop, used to tell xgettext that a string should be translated,
-   even though it is not directly sent to wgettext. 
+   even though it is not directly sent to wgettext.
 */
 #define N_(wstr) wstr
 
@@ -192,7 +193,7 @@ void show_stackframe();
 
 
 /**
-   Read a line from the stream f into the string. Returns 
+   Read a line from the stream f into the string. Returns
    the number of bytes read or -1 on failiure.
 
    If the carriage return character is encountered, it is
@@ -209,17 +210,17 @@ int fgetws2(wcstring *s, FILE *f);
    This function encodes illegal character sequences in a reversible
    way using the private use area.
 */
-wchar_t *str2wcs( const char *in );
+wchar_t *str2wcs(const char *in);
 
 /**
  Returns a newly allocated wide character string equivalent of the
  specified multibyte character string
- 
+
  This function encodes illegal character sequences in a reversible
  way using the private use area.
  */
-wcstring str2wcstring( const char *in );
-wcstring str2wcstring( const std::string &in );
+wcstring str2wcstring(const char *in);
+wcstring str2wcstring(const std::string &in);
 
 /**
    Converts the narrow character string \c in into it's wide
@@ -229,7 +230,7 @@ wcstring str2wcstring( const std::string &in );
    This function encodes illegal character sequences in a reversible
    way using the private use area.
 */
-wchar_t *str2wcs_internal( const char *in, wchar_t *out );
+wchar_t *str2wcs_internal(const char *in, wchar_t *out);
 
 /**
    Returns a newly allocated multibyte character string equivalent of
@@ -238,7 +239,7 @@ wchar_t *str2wcs_internal( const char *in, wchar_t *out );
    This function decodes illegal character sequences in a reversible
    way using the private use area.
 */
-char *wcs2str( const wchar_t *in );
+char *wcs2str(const wchar_t *in);
 std::string wcs2string(const wcstring &input);
 
 /** Test if a string prefixes another. Returns true if a is a prefix of b */
@@ -277,7 +278,7 @@ void assert_is_locked(void *mutex, const char *who, const char *caller);
    This function decodes illegal character sequences in a reversible
    way using the private use area.
 */
-char *wcs2str_internal( const wchar_t *in, char *out );
+char *wcs2str_internal(const wchar_t *in, char *out);
 
 /** Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer. */
 wcstring format_size(long long sz);
@@ -294,7 +295,8 @@ void format_long_safe(wchar_t buff[128], long val);
 
 
 template<typename T>
-T from_string(const wcstring &x) {
+T from_string(const wcstring &x)
+{
     T result;
     std::wstringstream stream(x);
     stream >> result;
@@ -302,7 +304,8 @@ T from_string(const wcstring &x) {
 }
 
 template<typename T>
-T from_string(const std::string &x) {
+T from_string(const std::string &x)
+{
     T result = T();
     std::stringstream stream(x);
     stream >> result;
@@ -310,7 +313,8 @@ T from_string(const std::string &x) {
 }
 
 template<typename T>
-wcstring to_string(const T &x) {
+wcstring to_string(const T &x)
+{
     std::wstringstream stream;
     stream << x;
     return stream.str();
@@ -318,86 +322,109 @@ wcstring to_string(const T &x) {
 
 /* wstringstream is a huge memory pig. Let's provide some specializations where we can. */
 template<>
-inline wcstring to_string(const long &x) {
+inline wcstring to_string(const long &x)
+{
     wchar_t buff[128];
     format_long_safe(buff, x);
     return wcstring(buff);
 }
 
 template<>
-inline bool from_string(const std::string &x) {
+inline bool from_string(const std::string &x)
+{
     return ! x.empty() && strchr("YTyt1", x.at(0));
 }
 
 template<>
-inline bool from_string(const wcstring &x) {
+inline bool from_string(const wcstring &x)
+{
     return ! x.empty() && wcschr(L"YTyt1", x.at(0));
 }
 
 template<>
-inline wcstring to_string(const int &x) {
+inline wcstring to_string(const int &x)
+{
     return to_string(static_cast<long>(x));
 }
 
 
 /* Helper class for managing a null-terminated array of null-terminated strings (of some char type) */
 template <typename CharType_t>
-class null_terminated_array_t {
+class null_terminated_array_t
+{
     CharType_t **array;
-    
+
     typedef std::basic_string<CharType_t> string_t;
     typedef std::vector<string_t> string_list_t;
 
-    void swap(null_terminated_array_t<CharType_t> &him) { std::swap(array, him.array); }
+    void swap(null_terminated_array_t<CharType_t> &him)
+    {
+        std::swap(array, him.array);
+    }
 
     /* Silly function to get the length of a null terminated array of...something */
     template <typename T>
-    static size_t count_not_null(const T *arr) {
+    static size_t count_not_null(const T *arr)
+    {
         size_t len;
         for (len=0; arr[len] != T(0); len++)
             ;
-        return len;        
+        return len;
     }
 
-    size_t size() const {
+    size_t size() const
+    {
         return count_not_null(array);
     }
 
-    void free(void) {
-        if (array != NULL) {
-            for (size_t i = 0; array[i] != NULL; i++) {
+    void free(void)
+    {
+        if (array != NULL)
+        {
+            for (size_t i = 0; array[i] != NULL; i++)
+            {
                 delete [] array[i];
             }
             delete [] array;
             array = NULL;
         }
     }
-        
-    public:
+
+public:
     null_terminated_array_t() : array(NULL) { }
-    null_terminated_array_t(const string_list_t &argv) : array(NULL) { this->set(argv); }
-    ~null_terminated_array_t() { this->free(); }
-    
+    null_terminated_array_t(const string_list_t &argv) : array(NULL)
+    {
+        this->set(argv);
+    }
+    ~null_terminated_array_t()
+    {
+        this->free();
+    }
+
     /** operator=. Notice the pass-by-value parameter. */
-    null_terminated_array_t& operator=(null_terminated_array_t rhs) {
+    null_terminated_array_t& operator=(null_terminated_array_t rhs)
+    {
         if (this != &rhs)
             this->swap(rhs);
         return *this;
     }
-    
+
     /* Copy constructor. */
-    null_terminated_array_t(const null_terminated_array_t &him) : array(NULL) {
+    null_terminated_array_t(const null_terminated_array_t &him) : array(NULL)
+    {
         this->set(him.array);
     }
-    
-    void set(const string_list_t &argv) {
+
+    void set(const string_list_t &argv)
+    {
         /* Get rid of the old argv */
         this->free();
 
         /* Allocate our null-terminated array of null-terminated strings */
         size_t i, count = argv.size();
         this->array = new CharType_t * [count + 1];
-        for (i=0; i < count; i++) {
+        for (i=0; i < count; i++)
+        {
             const string_t &str = argv.at(i);
             this->array[i] = new CharType_t [1 + str.size()];
             std::copy(str.begin(), str.end(), this->array[i]);
@@ -405,19 +432,22 @@ class null_terminated_array_t {
         }
         this->array[count] = NULL;
     }
-    
-    void set(const CharType_t * const *new_array) {
+
+    void set(const CharType_t * const *new_array)
+    {
         if (new_array == array)
             return;
-            
+
         /* Get rid of the old argv */
         this->free();
-        
+
         /* Copy the new one */
-        if (new_array) {
+        if (new_array)
+        {
             size_t i, count = count_not_null(new_array);
             this->array = new CharType_t * [count + 1];
-            for (i=0; i < count; i++) {
+            for (i=0; i < count; i++)
+            {
                 size_t len = count_not_null(new_array[i]);
                 this->array[i] = new CharType_t [1 + len];
                 std::copy(new_array[i], new_array[i] + len, this->array[i]);
@@ -426,13 +456,21 @@ class null_terminated_array_t {
             this->array[count] = NULL;
         }
     }
-    
-    CharType_t **get() { return array; }
-    const CharType_t * const *get() const { return array; }
-    
-    string_list_t to_list() const {
+
+    CharType_t **get()
+    {
+        return array;
+    }
+    const CharType_t * const *get() const
+    {
+        return array;
+    }
+
+    string_list_t to_list() const
+    {
         string_list_t lst;
-        if (array != NULL) {
+        if (array != NULL)
+        {
             size_t count = this->size();
             lst.reserve(count);
             lst.insert(lst.end(), array, array + count);
@@ -445,27 +483,31 @@ class null_terminated_array_t {
 null_terminated_array_t<char> convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr);
 
 /* Helper class to cache a narrow version of a wcstring in a malloc'd buffer, so that we can read it after fork() */
-class narrow_string_rep_t {
-    private:
+class narrow_string_rep_t
+{
+private:
     const char *str;
-    
+
     /* No copying */
     narrow_string_rep_t &operator=(const narrow_string_rep_t &);
     narrow_string_rep_t(const narrow_string_rep_t &x);
-    
-    public:
-    ~narrow_string_rep_t() {
+
+public:
+    ~narrow_string_rep_t()
+    {
         free((void *)str);
     }
-    
+
     narrow_string_rep_t() : str(NULL) {}
-    
-    void set(const wcstring &s) {
+
+    void set(const wcstring &s)
+    {
         free((void *)str);
         str = wcs2str(s.c_str());
     }
-    
-    const char *get() const {
+
+    const char *get() const
+    {
         return str;
     }
 };
@@ -473,10 +515,11 @@ class narrow_string_rep_t {
 bool is_forked_child();
 
 /* Basic scoped lock class */
-class scoped_lock {
+class scoped_lock
+{
     pthread_mutex_t *lock_obj;
     bool locked;
-    
+
     /* No copying */
     scoped_lock &operator=(const scoped_lock &);
     scoped_lock(const scoped_lock &);
@@ -489,21 +532,22 @@ public:
 };
 
 /* Wrapper around wcstok */
-class wcstokenizer {
+class wcstokenizer
+{
     wchar_t *buffer, *str, *state;
     const wcstring sep;
-    
+
     /* No copying */
     wcstokenizer &operator=(const wcstokenizer &);
     wcstokenizer(const wcstokenizer &);
-    
+
 public:
     wcstokenizer(const wcstring &s, const wcstring &separator);
     bool next(wcstring &result);
     ~wcstokenizer();
 };
 
-/** 
+/**
  Appends a path component, with a / if necessary
  */
 void append_path_component(wcstring &path, const wcstring &component);
@@ -516,38 +560,38 @@ void append_format(wcstring &str, const wchar_t *format, ...);
    Returns a newly allocated wide character string array equivalent of
    the specified multibyte character string array
 */
-char **wcsv2strv( const wchar_t * const *in );
+char **wcsv2strv(const wchar_t * const *in);
 
 /**
-   Test if the given string is a valid variable name. 
+   Test if the given string is a valid variable name.
 
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
 
-wchar_t *wcsvarname( const wchar_t *str );
+wchar_t *wcsvarname(const wchar_t *str);
 
 
 /**
-   Test if the given string is a valid function name. 
+   Test if the given string is a valid function name.
 
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
 
-const wchar_t *wcsfuncname( const wchar_t *str );
+const wchar_t *wcsfuncname(const wchar_t *str);
 
 /**
-   Test if the given string is valid in a variable name 
+   Test if the given string is valid in a variable name
 
    \return 1 if this is a valid name, 0 otherwise
 */
 
-int wcsvarchr( wchar_t chr );
+int wcsvarchr(wchar_t chr);
 
 
 /**
    A wcswidth workalike. Fish uses this since the regular wcswidth seems flaky.
 */
-int my_wcswidth( const wchar_t *c );
+int my_wcswidth(const wchar_t *c);
 
 /**
    This functions returns the end of the quoted substring beginning at
@@ -556,7 +600,7 @@ int my_wcswidth( const wchar_t *c );
 
    \param in the position of the opening quote
 */
-wchar_t *quote_end( const wchar_t *in );
+wchar_t *quote_end(const wchar_t *in);
 
 /**
    A call to this function will reset the error counter. Some
@@ -572,19 +616,19 @@ void error_reset();
    This function behaves exactly like a wide character equivalent of
    the C function setlocale, except that it will also try to detect if
    the user is using a Unicode character set, and if so, use the
-   unicode ellipsis character as ellipsis, instead of '$'.      
+   unicode ellipsis character as ellipsis, instead of '$'.
 */
-wcstring wsetlocale( int category, const wchar_t *locale );
+wcstring wsetlocale(int category, const wchar_t *locale);
 
 /**
    Checks if \c needle is included in the list of strings specified. A warning is printed if needle is zero.
 
-   \param needle the string to search for in the list 
+   \param needle the string to search for in the list
 
    \return zero if needle is not found, of if needle is null, non-zero otherwise
 */
-__sentinel bool contains_internal( const wchar_t *needle, ... );
-__sentinel bool contains_internal( const wcstring &needle, ... );
+__sentinel bool contains_internal(const wchar_t *needle, ...);
+__sentinel bool contains_internal(const wcstring &needle, ...);
 
 /**
    Call read while blocking the SIGCHLD signal. Should only be called
@@ -614,9 +658,9 @@ ssize_t read_loop(int fd, void *buff, size_t count);
    Because debug is often called to tell the user about an error,
    before using wperror to give a specific error message, debug will
    never ever modify the value of errno.
-   
+
    \param level the priority of the message. Lower number means higher priority. Messages with a priority_number higher than \c debug_level will be ignored..
-   \param msg the message format string. 
+   \param msg the message format string.
 
    Example:
 
@@ -624,20 +668,20 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 
    will print the string 'fish: Pi = 3.141', given that debug_level is 1 or higher, and that program_name is 'fish'.
 */
-void debug( int level, const char *msg, ... );
-void debug( int level, const wchar_t *msg, ... );
+void debug(int level, const char *msg, ...);
+void debug(int level, const wchar_t *msg, ...);
 
 /**
    Replace special characters with backslash escape sequences. Newline is
-   replaced with \n, etc. 
+   replaced with \n, etc.
 
    \param in The string to be escaped
    \param escape_all Whether all characters wich hold special meaning in fish (Pipe, semicolon, etc,) should be escaped, or only unprintable characters
    \return The escaped string, or 0 if there is not enough memory
 */
 
-wchar_t *escape( const wchar_t *in, escape_flags_t flags );
-wcstring escape_string( const wcstring &in, escape_flags_t flags );
+wchar_t *escape(const wchar_t *in, escape_flags_t flags);
+wcstring escape_string(const wcstring &in, escape_flags_t flags);
 
 /**
    Expand backslashed escapes and substitute them with their unescaped
@@ -650,14 +694,14 @@ wcstring escape_string( const wcstring &in, escape_flags_t flags );
    an invalid sequence is specified, 0 is returned.
 
 */
-wchar_t *unescape( const wchar_t * in, 
-				   int escape_special );
+wchar_t *unescape(const wchar_t * in,
+                  int escape_special);
 
-bool unescape_string( wcstring &str, 
-                  int escape_special );
+bool unescape_string(wcstring &str,
+                     int escape_special);
 
 
-/** 
+/**
     Returns the width of the terminal window, so that not all
     functions that use these values continually have to keep track of
     it separately.
@@ -679,20 +723,20 @@ int common_get_height();
   saving it in an internal variable used by common_get_wisth and
   common_get_height().
 */
-void common_handle_winch( int signal );
+void common_handle_winch(int signal);
 
 /**
    Write paragraph of output to the specified stringbuffer, and redo
    the linebreaks to fit the current screen.
 */
-void write_screen( const wcstring &msg, wcstring &buff );
+void write_screen(const wcstring &msg, wcstring &buff);
 
 /**
-   Tokenize the specified string into the specified wcstring_list_t.   
+   Tokenize the specified string into the specified wcstring_list_t.
    \param val the input string. The contents of this string is not changed.
-   \param out the list in which to place the elements. 
+   \param out the list in which to place the elements.
 */
-void tokenize_variable_array( const wcstring &val, wcstring_list_t &out);
+void tokenize_variable_array(const wcstring &val, wcstring_list_t &out);
 
 /**
    Make sure the specified direcotry exists. If needed, try to create
@@ -700,7 +744,7 @@ void tokenize_variable_array( const wcstring &val, wcstring_list_t &out);
 
    \return 0 if, at the time of function return the directory exists, -1 otherwise.
 */
-int create_directory( const wcstring &d );
+int create_directory(const wcstring &d);
 
 /**
    Print a short message about how to file a bug report to stderr
@@ -740,7 +784,7 @@ void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
 
 extern "C" {
-__attribute__((noinline)) void debug_thread_error(void);
+    __attribute__((noinline)) void debug_thread_error(void);
 }
 
 

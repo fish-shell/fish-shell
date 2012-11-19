@@ -15,7 +15,8 @@
 
 typedef std::vector<wcstring> path_list_t;
 
-enum history_search_type_t {
+enum history_search_type_t
+{
     /** The history searches for strings containing the given string */
     HISTORY_SEARCH_TYPE_CONTAINS,
 
@@ -23,39 +24,53 @@ enum history_search_type_t {
     HISTORY_SEARCH_TYPE_PREFIX
 };
 
-class history_item_t {
+class history_item_t
+{
     friend class history_t;
     friend class history_lru_node_t;
     friend class history_tests_t;
 
-    private:
+private:
     explicit history_item_t(const wcstring &);
     explicit history_item_t(const wcstring &, time_t, const path_list_t &paths = path_list_t());
 
     /** Attempts to merge two compatible history items together */
     bool merge(const history_item_t &item);
 
-  /** The actual contents of the entry */
-  wcstring contents;
+    /** The actual contents of the entry */
+    wcstring contents;
 
-  /** Original creation time for the entry */
-  time_t creation_timestamp;
+    /** Original creation time for the entry */
+    time_t creation_timestamp;
 
     /** Paths that we require to be valid for this item to be autosuggested */
     path_list_t required_paths;
 
-    public:
-    const wcstring &str() const { return contents; }
-    bool empty() const { return contents.empty(); }
+public:
+    const wcstring &str() const
+    {
+        return contents;
+    }
+    bool empty() const
+    {
+        return contents.empty();
+    }
 
     /* Whether our contents matches a search term. */
     bool matches_search(const wcstring &term, enum history_search_type_t type) const;
 
-    time_t timestamp() const { return creation_timestamp; }
+    time_t timestamp() const
+    {
+        return creation_timestamp;
+    }
 
-    const path_list_t &get_required_paths() const { return required_paths; }
+    const path_list_t &get_required_paths() const
+    {
+        return required_paths;
+    }
 
-    bool operator==(const history_item_t &other) const {
+    bool operator==(const history_item_t &other) const
+    {
         return contents == other.contents &&
                creation_timestamp == other.creation_timestamp &&
                required_paths == other.required_paths;
@@ -63,13 +78,15 @@ class history_item_t {
 };
 
 /* The type of file that we mmap'd */
-enum history_file_type_t {
+enum history_file_type_t
+{
     history_type_unknown,
     history_type_fish_2_0,
     history_type_fish_1_x
 };
 
-class history_t {
+class history_t
+{
     friend class history_tests_t;
 private:
     /** No copying */
@@ -91,23 +108,23 @@ private:
     /** Internal function */
     void clear_file_state();
 
-  /** The name of this list. Used for picking a suitable filename and for switching modes. */
-  const wcstring name;
+    /** The name of this list. Used for picking a suitable filename and for switching modes. */
+    const wcstring name;
 
-  /** New items. */
-  std::vector<history_item_t> new_items;
+    /** New items. */
+    std::vector<history_item_t> new_items;
 
     /** Deleted item contents. */
-  std::set<wcstring> deleted_items;
+    std::set<wcstring> deleted_items;
 
-  /** How many items we've added without saving */
-  size_t unsaved_item_count;
+    /** How many items we've added without saving */
+    size_t unsaved_item_count;
 
-  /** The mmaped region for the history file */
-  const char *mmap_start;
+    /** The mmaped region for the history file */
+    const char *mmap_start;
 
-  /** The size of the mmap'd region */
-  size_t mmap_length;
+    /** The size of the mmap'd region */
+    size_t mmap_length;
 
     /** The type of file we mmap'd */
     history_file_type_t mmap_type;
@@ -115,8 +132,8 @@ private:
     /** Timestamp of when this history was created */
     const time_t birth_timestamp;
 
-  /** Timestamp of last save */
-  time_t save_timestamp;
+    /** Timestamp of last save */
+    time_t save_timestamp;
 
     void populate_from_mmap(void);
 
@@ -174,7 +191,8 @@ public:
     bool is_deleted(const history_item_t &item) const;
 };
 
-class history_search_t {
+class history_search_t
+{
 
     /** The history in which we are searching */
     history_t * history;
@@ -197,10 +215,13 @@ class history_search_t {
 
     bool should_skip_match(const wcstring &str) const;
 
-    public:
+public:
 
     /** Gets the search term */
-    const wcstring &get_term() const { return term; }
+    const wcstring &get_term() const
+    {
+        return term;
+    }
 
     /** Sets additional string matches to skip */
     void skip_matches(const wcstring_list_t &skips);
@@ -262,7 +283,8 @@ void history_destroy();
 void history_sanity_check();
 
 /* A helper class for threaded detection of paths */
-struct file_detection_context_t {
+struct file_detection_context_t
+{
 
     /* Constructor */
     file_detection_context_t(history_t *hist, const wcstring &cmd);

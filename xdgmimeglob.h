@@ -34,9 +34,9 @@ typedef struct XdgGlobHash XdgGlobHash;
 
 typedef enum
 {
-  XDG_GLOB_LITERAL, /* Makefile */
-  XDG_GLOB_SIMPLE,  /* *.gif */
-  XDG_GLOB_FULL     /* x*.[ch] */
+    XDG_GLOB_LITERAL, /* Makefile */
+    XDG_GLOB_SIMPLE,  /* *.gif */
+    XDG_GLOB_FULL     /* x*.[ch] */
 } XdgGlobType;
 
 
@@ -50,16 +50,16 @@ typedef enum
 #define _xdg_glob_hash_dump                   XDG_ENTRY(hash_dump)
 #endif
 
-void         _xdg_mime_glob_read_from_file   (XdgGlobHash *glob_hash,
-                const char  *file_name);
-XdgGlobHash *_xdg_glob_hash_new              (void);
-void         _xdg_glob_hash_free             (XdgGlobHash *glob_hash);
-const char  *_xdg_glob_hash_lookup_file_name (XdgGlobHash *glob_hash,
-                const char  *text);
-void         _xdg_glob_hash_append_glob      (XdgGlobHash *glob_hash,
-                const char  *glob,
-                const char  *mime_type);
-XdgGlobType  _xdg_glob_determine_type        (const char  *glob);
-void         _xdg_glob_hash_dump             (XdgGlobHash *glob_hash);
+void         _xdg_mime_glob_read_from_file(XdgGlobHash *glob_hash,
+        const char  *file_name);
+XdgGlobHash *_xdg_glob_hash_new(void);
+void         _xdg_glob_hash_free(XdgGlobHash *glob_hash);
+const char  *_xdg_glob_hash_lookup_file_name(XdgGlobHash *glob_hash,
+        const char  *text);
+void         _xdg_glob_hash_append_glob(XdgGlobHash *glob_hash,
+                                        const char  *glob,
+                                        const char  *mime_type);
+XdgGlobType  _xdg_glob_determine_type(const char  *glob);
+void         _xdg_glob_hash_dump(XdgGlobHash *glob_hash);
 
 #endif /* __XDG_MIME_GLOB_H__ */

@@ -24,6 +24,6 @@ int sanity_check();
   \param err A description of what the pointer refers to, for use in error messages
   \param null_ok Wheter the pointer is allowed to point to 0
 */
-void validate_pointer( const void *ptr, const wchar_t *err, int null_ok );
+void validate_pointer(const void *ptr, const wchar_t *err, int null_ok);
 
 #endif

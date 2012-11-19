@@ -46,9 +46,10 @@
 /**
    Error code for trying to alter read-only variable
 */
-enum{
-  ENV_PERM = 1,
-  ENV_INVALID
+enum
+{
+    ENV_PERM = 1,
+    ENV_INVALID
 }
 ;
 
@@ -102,7 +103,8 @@ int env_set(const wcstring &key, const wchar_t *val, int mode);
 */
 //const wchar_t *env_get( const wchar_t *key );
 
-class env_var_t : public wcstring {
+class env_var_t : public wcstring
+{
 private:
     bool is_missing;
 public:
@@ -111,16 +113,24 @@ public:
     env_var_t(const wcstring & x) : wcstring(x), is_missing(false) { }
     env_var_t(const wchar_t *x) : wcstring(x), is_missing(false) { }
     env_var_t() : wcstring(L""), is_missing(false) { }
-    bool missing(void) const { return is_missing; }
-    bool missing_or_empty(void) const { return missing() || empty(); }
+    bool missing(void) const
+    {
+        return is_missing;
+    }
+    bool missing_or_empty(void) const
+    {
+        return missing() || empty();
+    }
     const wchar_t *c_str(void) const;
-    env_var_t &operator=(const env_var_t &s) {
+    env_var_t &operator=(const env_var_t &s)
+    {
         is_missing = s.is_missing;
         wcstring::operator=(s);
         return *this;
     }
 
-    bool operator==(const env_var_t &s) const {
+    bool operator==(const env_var_t &s) const
+    {
         if (is_missing &&  s.is_missing)
             return true;
         else if (s.is_missing || s.is_missing)
@@ -133,7 +143,7 @@ public:
 /**
  Gets the variable with the specified name, or an empty string if it does not exist.
  */
-env_var_t env_get_string( const wcstring &key );
+env_var_t env_get_string(const wcstring &key);
 
 /**
    Returns 1 if the specified key exists. This can't be reliably done
@@ -142,7 +152,7 @@ env_var_t env_get_string( const wcstring &key );
    \param key The name of the variable to remove
    \param mode the scope to search in. All scopes are searched if unset
 */
-int env_exist( const wchar_t *key, int mode );
+int env_exist(const wchar_t *key, int mode);
 
 /**
    Remove environemnt variable
@@ -152,12 +162,12 @@ int env_exist( const wchar_t *key, int mode );
 
    \return zero if the variable existed, and non-zero if the variable did not exist
 */
-int env_remove( const wcstring &key, int mode );
+int env_remove(const wcstring &key, int mode);
 
 /**
   Push the variable stack. Used for implementing local variables for functions and for-loops.
 */
-void env_push( int new_scope );
+void env_push(int new_scope);
 
 /**
   Pop the variable stack. Used for implementing local variables for functions and for-loops.
@@ -165,13 +175,13 @@ void env_push( int new_scope );
 void env_pop();
 
 /** Returns an array containing all exported variables in a format suitable for execv. */
-char **env_export_arr( bool recalc );
+char **env_export_arr(bool recalc);
 void env_export_arr(bool recalc, null_terminated_array_t<char> &result);
 
 /**
   Returns all variable names.
 */
-wcstring_list_t env_get_names( int flags );
+wcstring_list_t env_get_names(int flags);
 
 
 
@@ -181,7 +191,8 @@ wcstring_list_t env_get_names( int flags );
 */
 int env_set_pwd();
 
-class env_vars_snapshot_t {
+class env_vars_snapshot_t
+{
     std::map<wcstring, wcstring> vars;
     bool is_current() const;
 

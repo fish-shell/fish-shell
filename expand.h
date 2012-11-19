@@ -21,7 +21,8 @@
 #include "common.h"
 #include <list>
 
-enum {
+enum
+{
     /** Flag specifying that cmdsubst expansion should be skipped */
     EXPAND_SKIP_CMDSUBST = 1 << 0,
 
@@ -69,33 +70,33 @@ class completion_t;
 
 enum
 {
-  /** Character represeting a home directory */
-  HOME_DIRECTORY = EXPAND_RESERVED,
+    /** Character represeting a home directory */
+    HOME_DIRECTORY = EXPAND_RESERVED,
 
-  /** Character represeting process expansion */
-  PROCESS_EXPAND,
+    /** Character represeting process expansion */
+    PROCESS_EXPAND,
 
-  /** Character representing variable expansion */
-  VARIABLE_EXPAND,
+    /** Character representing variable expansion */
+    VARIABLE_EXPAND,
 
-  /** Character rpresenting variable expansion into a single element*/
-  VARIABLE_EXPAND_SINGLE,
+    /** Character rpresenting variable expansion into a single element*/
+    VARIABLE_EXPAND_SINGLE,
 
-  /** Character representing the start of a bracket expansion */
-  BRACKET_BEGIN,
+    /** Character representing the start of a bracket expansion */
+    BRACKET_BEGIN,
 
-  /** Character representing the end of a bracket expansion */
-  BRACKET_END,
+    /** Character representing the end of a bracket expansion */
+    BRACKET_END,
 
-  /** Character representing separation between two bracket elements */
-  BRACKET_SEP,
-  /**
-     Separate subtokens in a token with this character.
-  */
-  INTERNAL_SEPARATOR,
+    /** Character representing separation between two bracket elements */
+    BRACKET_SEP,
+    /**
+       Separate subtokens in a token with this character.
+    */
+    INTERNAL_SEPARATOR,
 
 }
-  ;
+;
 
 
 /**
@@ -103,14 +104,14 @@ enum
 */
 enum
 {
-  /** Error */
-  EXPAND_ERROR,
-  /** Ok */
-  EXPAND_OK,
-  /** Ok, a wildcard in the string matched no files */
-  EXPAND_WILDCARD_NO_MATCH,
-  /* Ok, a wildcard in the string matched a file */
-  EXPAND_WILDCARD_MATCH
+    /** Error */
+    EXPAND_ERROR,
+    /** Ok */
+    EXPAND_OK,
+    /** Ok, a wildcard in the string matched no files */
+    EXPAND_WILDCARD_NO_MATCH,
+    /* Ok, a wildcard in the string matched a file */
+    EXPAND_WILDCARD_MATCH
 };
 
 /** Character for separating two array elements. We use 30, i.e. the ascii record separator since that seems logical. */
@@ -141,7 +142,7 @@ class parser_t;
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
-__warn_unused int expand_string( const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags );
+__warn_unused int expand_string(const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags);
 
 
 /**
@@ -153,14 +154,14 @@ __warn_unused int expand_string( const wcstring &input, std::vector<completion_t
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
    \return Whether expansion succeded
 */
-bool expand_one( wcstring &inout_str, expand_flags_t flags );
+bool expand_one(wcstring &inout_str, expand_flags_t flags);
 
 /**
    Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing. The result must be free'd!
 
    \param in the value to escape
 */
-wcstring expand_escape_variable( const wcstring &in );
+wcstring expand_escape_variable(const wcstring &in);
 
 /**
    Perform tilde expansion and nothing else on the specified string, which is modified in place.
@@ -180,7 +181,7 @@ void expand_tilde(wcstring &input);
 
    \param in the string to test
 */
-int expand_is_clean( const wchar_t *in );
+int expand_is_clean(const wchar_t *in);
 
 /**
    Perform error reporting for a syntax error related to the variable
@@ -192,7 +193,7 @@ int expand_is_clean( const wchar_t *in );
    \param token_pos The position where the expansion begins
    \param error_pos The position on the line to report to the error function.
 */
-void expand_variable_error( parser_t &parser, const wchar_t *token, size_t token_pos, int error_pos );
+void expand_variable_error(parser_t &parser, const wchar_t *token, size_t token_pos, int error_pos);
 
 /**
    Testing function for getting all process names.

@@ -72,14 +72,15 @@ static void invalidate_soft_wrap(screen_t *scr);
 typedef std::vector<char> data_buffer_t;
 static data_buffer_t *s_writeb_buffer=0;
 
-static int s_writeb( char c );
+static int s_writeb(char c);
 
 /* Class to temporarily set s_writeb_buffer and the writer function in a scoped way */
-class scoped_buffer_t {
+class scoped_buffer_t
+{
     data_buffer_t * const old_buff;
     int (* const old_writer)(char);
 
-    public:
+public:
     scoped_buffer_t(data_buffer_t *buff) : old_buff(s_writeb_buffer), old_writer(output_get_writer())
     {
         s_writeb_buffer = buff;
@@ -98,33 +99,33 @@ class scoped_buffer_t {
    specified position of the specified wide character string. All of
    \c seq must match, but str may be longer than seq.
 */
-static int try_sequence( const char *seq, const wchar_t *str )
+static int try_sequence(const char *seq, const wchar_t *str)
 {
-  int i;
+    int i;
 
-  for( i=0;; i++ )
-  {
-    if( !seq[i] )
-      return i;
+    for (i=0;; i++)
+    {
+        if (!seq[i])
+            return i;
 
-    if( seq[i] != str[i] )
-      return 0;
-  }
+        if (seq[i] != str[i])
+            return 0;
+    }
 
-  return 0;
+    return 0;
 }
 
 /**
    Returns the number of columns left until the next tab stop, given
    the current cursor postion.
  */
-static size_t next_tab_stop( size_t in )
+static size_t next_tab_stop(size_t in)
 {
-  /*
-    Assume tab stops every 8 characters if undefined
-  */
-  size_t tab_width = (init_tabs > 0 ? (size_t)init_tabs : 8);
-  return ( (in/tab_width)+1 )*tab_width;
+    /*
+      Assume tab stops every 8 characters if undefined
+    */
+    size_t tab_width = (init_tabs > 0 ? (size_t)init_tabs : 8);
+    return ((in/tab_width)+1)*tab_width;
 }
 
 // PCA for term256 support, let's just detect the escape codes directly
@@ -162,41 +163,41 @@ static bool allow_soft_wrap(void)
    to detect common escape sequences that may be embeded in a prompt,
    such as color codes.
 */
-static size_t calc_prompt_width_and_lines( const wchar_t *prompt, size_t *out_prompt_lines )
+static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_prompt_lines)
 {
-  size_t res = 0;
-  size_t j, k;
+    size_t res = 0;
+    size_t j, k;
     *out_prompt_lines = 1;
 
-  for( j=0; prompt[j]; j++ )
-  {
-    if( prompt[j] == L'\x1b' )
+    for (j=0; prompt[j]; j++)
     {
-      /*
-             This is the start of an escape code. Try to guess it's width.
-             */
-      size_t p;
-      int len=0;
-      bool found = false;
+        if (prompt[j] == L'\x1b')
+        {
+            /*
+                   This is the start of an escape code. Try to guess it's width.
+                   */
+            size_t p;
+            int len=0;
+            bool found = false;
 
-      /*
-             Detect these terminfo color escapes with parameter
-             value 0..7, all of which don't move the cursor
-             */
-      char * const esc[] =
+            /*
+                   Detect these terminfo color escapes with parameter
+                   value 0..7, all of which don't move the cursor
+                   */
+            char * const esc[] =
             {
                 set_a_foreground,
                 set_a_background,
                 set_foreground,
                 set_background,
             }
-      ;
+            ;
 
-      /*
-             Detect these semi-common terminfo escapes without any
-             parameter values, all of which don't move the cursor
-             */
-      char * const esc2[] =
+            /*
+                   Detect these semi-common terminfo escapes without any
+                   parameter values, all of which don't move the cursor
+                   */
+            char * const esc2[] =
             {
                 enter_bold_mode,
                 exit_attribute_mode,
@@ -219,104 +220,106 @@ static size_t calc_prompt_width_and_lines( const wchar_t *prompt, size_t *out_pr
                 exit_standout_mode,
                 enter_secure_mode
             }
-      ;
+            ;
 
-      for( p=0; p < sizeof esc / sizeof *esc && !found; p++ )
-      {
-        if( !esc[p] )
-          continue;
+            for (p=0; p < sizeof esc / sizeof *esc && !found; p++)
+            {
+                if (!esc[p])
+                    continue;
 
-        for( k=0; k<8; k++ )
-        {
-          len = try_sequence( tparm(esc[p],k), &prompt[j] );
-          if( len )
-          {
-            j += (len-1);
-            found = true;
-            break;
-          }
-        }
-      }
+                for (k=0; k<8; k++)
+                {
+                    len = try_sequence(tparm(esc[p],k), &prompt[j]);
+                    if (len)
+                    {
+                        j += (len-1);
+                        found = true;
+                        break;
+                    }
+                }
+            }
 
             // PCA for term256 support, let's just detect the escape codes directly
-            if (! found) {
+            if (! found)
+            {
                 len = is_term256_escape(&prompt[j]);
-                if (len) {
+                if (len)
+                {
                     j += (len - 1);
                     found = true;
                 }
             }
 
 
-      for( p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++ )
-      {
-        if( !esc2[p] )
-          continue;
-        /*
-                 Test both padded and unpadded version, just to
-                 be safe. Most versions of tparm don't actually
-                 seem to do anything these days.
-                 */
-        len = maxi( try_sequence( tparm(esc2[p]), &prompt[j] ),
-                           try_sequence( esc2[p], &prompt[j] ));
-
-        if( len )
-        {
-          j += (len-1);
-          found = true;
-        }
-      }
-
-      if( !found )
-      {
-        if( prompt[j+1] == L'k' )
-        {
-          const env_var_t term_name = env_get_string( L"TERM" );
-          if( !term_name.missing() && wcsstr( term_name.c_str(), L"screen" ) == term_name )
-          {
-            const wchar_t *end;
-            j+=2;
-            found = true;
-            end = wcsstr( &prompt[j], L"\x1b\\" );
-            if( end )
+            for (p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++)
             {
-              /*
-                             You'd thing this should be
-                             '(end-prompt)+2', in order to move j
-                             past the end of the string, but there is
-                             a 'j++' at the end of each lap, so j
-                             should always point to the last menged
-                             character, e.g. +1.
-                             */
-              j = (end-prompt)+1;
-            }
-            else
-            {
-              break;
-            }
-          }
-        }
-      }
+                if (!esc2[p])
+                    continue;
+                /*
+                         Test both padded and unpadded version, just to
+                         be safe. Most versions of tparm don't actually
+                         seem to do anything these days.
+                         */
+                len = maxi(try_sequence(tparm(esc2[p]), &prompt[j]),
+                           try_sequence(esc2[p], &prompt[j]));
 
-    }
-    else if( prompt[j] == L'\t' )
-    {
-      res = next_tab_stop( res );
-    }
-    else if( prompt[j] == L'\n' )
-    {
-      res = 0;
+                if (len)
+                {
+                    j += (len-1);
+                    found = true;
+                }
+            }
+
+            if (!found)
+            {
+                if (prompt[j+1] == L'k')
+                {
+                    const env_var_t term_name = env_get_string(L"TERM");
+                    if (!term_name.missing() && wcsstr(term_name.c_str(), L"screen") == term_name)
+                    {
+                        const wchar_t *end;
+                        j+=2;
+                        found = true;
+                        end = wcsstr(&prompt[j], L"\x1b\\");
+                        if (end)
+                        {
+                            /*
+                                           You'd thing this should be
+                                           '(end-prompt)+2', in order to move j
+                                           past the end of the string, but there is
+                                           a 'j++' at the end of each lap, so j
+                                           should always point to the last menged
+                                           character, e.g. +1.
+                                           */
+                            j = (end-prompt)+1;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+        }
+        else if (prompt[j] == L'\t')
+        {
+            res = next_tab_stop(res);
+        }
+        else if (prompt[j] == L'\n')
+        {
+            res = 0;
             *out_prompt_lines += 1;
+        }
+        else
+        {
+            /*
+                   Ordinary decent character. Just add width.
+                   */
+            res += fish_wcwidth(prompt[j]);
+        }
     }
-    else
-    {
-      /*
-             Ordinary decent character. Just add width.
-             */
-      res += fish_wcwidth( prompt[j] );
-    }
-  }
-  return res;
+    return res;
 }
 
 static size_t calc_prompt_width(const wchar_t *prompt)
@@ -345,9 +348,9 @@ static size_t calc_prompt_lines(const wchar_t *prompt)
 */
 static int room_for_usec(struct stat *st)
 {
-  int res = ((&(st->st_atime) + 2) == &(st->st_mtime) &&
-       (&(st->st_atime) + 4) == &(st->st_ctime));
-  return res;
+    int res = ((&(st->st_atime) + 2) == &(st->st_mtime) &&
+               (&(st->st_atime) + 4) == &(st->st_ctime));
+    return res;
 }
 
 /**
@@ -356,44 +359,44 @@ static int room_for_usec(struct stat *st)
    This should be done before calling a function that may cause output.
 */
 
-static void s_save_status( screen_t *s)
+static void s_save_status(screen_t *s)
 {
 
     // PCA Let's not do this futimes stuff, because sudo dumbly uses the
     // tty's ctime as part of its tty_tickets feature
     // Disabling this should fix https://github.com/fish-shell/fish-shell/issues/122
 #if 0
-  /*
-    This futimes call tries to trick the system into using st_mtime
-    as a tampering flag. This of course only works on systems where
-    futimes is defined, but it should make the status saving stuff
-    failsafe.
-  */
-  struct timeval t[]=
+    /*
+      This futimes call tries to trick the system into using st_mtime
+      as a tampering flag. This of course only works on systems where
+      futimes is defined, but it should make the status saving stuff
+      failsafe.
+    */
+    struct timeval t[]=
     {
-      {
-        time(0)-1,
-        0
-      }
-      ,
-      {
-        time(0)-1,
-        0
-      }
+        {
+            time(0)-1,
+            0
+        }
+        ,
+        {
+            time(0)-1,
+            0
+        }
     }
-  ;
+    ;
 
-  /*
-    Don't check return value on these. We don't care if they fail,
-    really.  This is all just to make the prompt look ok, which is
-    impossible to do 100% reliably. We try, at least.
-  */
-  futimes( 1, t );
-  futimes( 2, t );
+    /*
+      Don't check return value on these. We don't care if they fail,
+      really.  This is all just to make the prompt look ok, which is
+      impossible to do 100% reliably. We try, at least.
+    */
+    futimes(1, t);
+    futimes(2, t);
 #endif
 
-  fstat( 1, &s->prev_buff_1 );
-  fstat( 2, &s->prev_buff_2 );
+    fstat(1, &s->prev_buff_1);
+    fstat(2, &s->prev_buff_2);
 }
 
 /**
@@ -404,39 +407,39 @@ static void s_save_status( screen_t *s)
    false positives, at least under Linux.
 */
 
-static void s_check_status( screen_t *s)
+static void s_check_status(screen_t *s)
 {
-  fflush( stdout );
-  fflush( stderr );
+    fflush(stdout);
+    fflush(stderr);
 
-  fstat( 1, &s->post_buff_1 );
-  fstat( 2, &s->post_buff_2 );
+    fstat(1, &s->post_buff_1);
+    fstat(2, &s->post_buff_2);
 
-  int changed = ( s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime ) ||
-    ( s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime );
+    int changed = (s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime) ||
+                  (s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime);
 
-  if (room_for_usec( &s->post_buff_1))
-  {
-    changed = changed || ( (&s->prev_buff_1.st_mtime)[1] != (&s->post_buff_1.st_mtime)[1] ) ||
-      ( (&s->prev_buff_2.st_mtime)[1] != (&s->post_buff_2.st_mtime)[1] );
-  }
+    if (room_for_usec(&s->post_buff_1))
+    {
+        changed = changed || ((&s->prev_buff_1.st_mtime)[1] != (&s->post_buff_1.st_mtime)[1]) ||
+                  ((&s->prev_buff_2.st_mtime)[1] != (&s->post_buff_2.st_mtime)[1]);
+    }
 
-  if( changed )
-  {
-    /*
-      Ok, someone has been messing with our screen. We will want
-      to repaint. However, we do not know where the cursor is. It
-      is our best bet that we are still on the same line, so we
-      move to the beginning of the line, reset the modelled screen
-      contents, and then set the modeled cursor y-pos to its
-      earlier value.
-    */
+    if (changed)
+    {
+        /*
+          Ok, someone has been messing with our screen. We will want
+          to repaint. However, we do not know where the cursor is. It
+          is our best bet that we are still on the same line, so we
+          move to the beginning of the line, reset the modelled screen
+          contents, and then set the modeled cursor y-pos to its
+          earlier value.
+        */
 
-    int prev_line = s->actual.cursor.y;
-    write_loop( 1, "\r", 1 );
-    s_reset( s, false );
-    s->actual.cursor.y = prev_line;
-  }
+        int prev_line = s->actual.cursor.y;
+        write_loop(1, "\r", 1);
+        s_reset(s, false);
+        s->actual.cursor.y = prev_line;
+    }
 }
 
 /**
@@ -444,89 +447,89 @@ static void s_check_status( screen_t *s)
    on. This function automatically handles linebreaks and lines longer
    than the screen width.
 */
-static void s_desired_append_char( screen_t *s,
+static void s_desired_append_char(screen_t *s,
                                   wchar_t b,
                                   int c,
                                   int indent,
-                                  size_t prompt_width )
+                                  size_t prompt_width)
 {
-  int line_no = s->desired.cursor.y;
+    int line_no = s->desired.cursor.y;
 
-  switch( b )
-  {
+    switch (b)
+    {
     case L'\n':
     {
-      int i;
-            /* Current line is definitely hard wrapped */
-            s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
-            s->desired.create_line(s->desired.line_count());
-      s->desired.cursor.y++;
-      s->desired.cursor.x=0;
-      for( i=0; i < prompt_width+indent*INDENT_STEP; i++ )
-      {
-        s_desired_append_char( s, L' ', 0, indent, prompt_width );
-      }
-      break;
+        int i;
+        /* Current line is definitely hard wrapped */
+        s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
+        s->desired.create_line(s->desired.line_count());
+        s->desired.cursor.y++;
+        s->desired.cursor.x=0;
+        for (i=0; i < prompt_width+indent*INDENT_STEP; i++)
+        {
+            s_desired_append_char(s, L' ', 0, indent, prompt_width);
+        }
+        break;
     }
 
     case L'\r':
     {
-            line_t &current = s->desired.line(line_no);
-            current.clear();
-            s->desired.cursor.x = 0;
-      break;
+        line_t &current = s->desired.line(line_no);
+        current.clear();
+        s->desired.cursor.x = 0;
+        break;
     }
 
     default:
     {
-      int screen_width = common_get_width();
-      int cw = fish_wcwidth(b);
+        int screen_width = common_get_width();
+        int cw = fish_wcwidth(b);
 
-            s->desired.create_line(line_no);
+        s->desired.create_line(line_no);
 
-      /*
-             Check if we are at the end of the line. If so, continue on the next line.
-             */
-      if( (s->desired.cursor.x + cw) > screen_width )
-      {
-                /* Current line is soft wrapped (assuming we support it) */
-                s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
-                //fprintf(stderr, "\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
+        /*
+               Check if we are at the end of the line. If so, continue on the next line.
+               */
+        if ((s->desired.cursor.x + cw) > screen_width)
+        {
+            /* Current line is soft wrapped (assuming we support it) */
+            s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
+            //fprintf(stderr, "\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
 
-                line_no = (int)s->desired.line_count();
-                s->desired.add_line();
-        s->desired.cursor.y++;
-        s->desired.cursor.x=0;
-                for( size_t i=0; i < prompt_width; i++ )
-                {
-                    s_desired_append_char( s, L' ', 0, indent, prompt_width );
-                }
-      }
-
-            line_t &line = s->desired.line(line_no);
-            line.append(b, c);
-      s->desired.cursor.x+= cw;
-
-            /* Maybe wrap the cursor to the next line, even if the line itself did not wrap. This avoids wonkiness in the last column. */
-            if (s->desired.cursor.x >= screen_width)
+            line_no = (int)s->desired.line_count();
+            s->desired.add_line();
+            s->desired.cursor.y++;
+            s->desired.cursor.x=0;
+            for (size_t i=0; i < prompt_width; i++)
             {
-                line.is_soft_wrapped = true;
-                s->desired.cursor.x = 0;
-                s->desired.cursor.y++;
+                s_desired_append_char(s, L' ', 0, indent, prompt_width);
             }
-      break;
+        }
+
+        line_t &line = s->desired.line(line_no);
+        line.append(b, c);
+        s->desired.cursor.x+= cw;
+
+        /* Maybe wrap the cursor to the next line, even if the line itself did not wrap. This avoids wonkiness in the last column. */
+        if (s->desired.cursor.x >= screen_width)
+        {
+            line.is_soft_wrapped = true;
+            s->desired.cursor.x = 0;
+            s->desired.cursor.y++;
+        }
+        break;
     }
-  }
+    }
 
 }
 
 /**
    The writeb function offered to tputs.
 */
-static int s_writeb( char c )
+static int s_writeb(char c)
 {
     s_writeb_buffer->push_back(c);
-  return 0;
+    return 0;
 }
 
 /**
@@ -539,100 +542,100 @@ static int s_writeb( char c )
    \param new_x the new x position
    \param new_y the new y position
 */
-static void s_move( screen_t *s, data_buffer_t *b, int new_x, int new_y )
+static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
 {
     if (s->actual.cursor.x == new_x && s->actual.cursor.y == new_y)
         return;
 
-  int i;
-  int x_steps, y_steps;
+    int i;
+    int x_steps, y_steps;
 
-  char *str;
-/*
-  debug( 0, L"move from %d %d to %d %d",
-  s->screen_cursor[0], s->screen_cursor[1],
-  new_x, new_y );
-*/
+    char *str;
+    /*
+      debug( 0, L"move from %d %d to %d %d",
+      s->screen_cursor[0], s->screen_cursor[1],
+      new_x, new_y );
+    */
     scoped_buffer_t scoped_buffer(b);
 
-  y_steps = new_y - s->actual.cursor.y;
+    y_steps = new_y - s->actual.cursor.y;
 
-  if( y_steps > 0 && (strcmp( cursor_down, "\n")==0))
-  {
-    /*
-      This is very strange - it seems some (all?) consoles use a
-      simple newline as the cursor down escape. This will of
-      course move the cursor to the beginning of the line as well
-      as moving it down one step. The cursor_up does not have this
-      behaviour...
-    */
-    s->actual.cursor.x=0;
-  }
-
-  if( y_steps < 0 )
-  {
-    str = cursor_up;
-  }
-  else
-  {
-    str = cursor_down;
-
-  }
-
-  for( i=0; i<abs(y_steps); i++)
-  {
-    writembs(str);
-  }
-
-
-  x_steps = new_x - s->actual.cursor.x;
-
-  if( x_steps && new_x == 0 )
-  {
-        b->push_back('\r');
-    x_steps = 0;
-  }
-
-  if( x_steps < 0 )
+    if (y_steps > 0 && (strcmp(cursor_down, "\n")==0))
     {
-    str = cursor_left;
-  }
-  else
-  {
-    str = cursor_right;
-  }
+        /*
+          This is very strange - it seems some (all?) consoles use a
+          simple newline as the cursor down escape. This will of
+          course move the cursor to the beginning of the line as well
+          as moving it down one step. The cursor_up does not have this
+          behaviour...
+        */
+        s->actual.cursor.x=0;
+    }
 
-  for( i=0; i<abs(x_steps); i++)
-  {
-    writembs(str);
-  }
+    if (y_steps < 0)
+    {
+        str = cursor_up;
+    }
+    else
+    {
+        str = cursor_down;
+
+    }
+
+    for (i=0; i<abs(y_steps); i++)
+    {
+        writembs(str);
+    }
 
 
-  s->actual.cursor.x = new_x;
-  s->actual.cursor.y = new_y;
+    x_steps = new_x - s->actual.cursor.x;
+
+    if (x_steps && new_x == 0)
+    {
+        b->push_back('\r');
+        x_steps = 0;
+    }
+
+    if (x_steps < 0)
+    {
+        str = cursor_left;
+    }
+    else
+    {
+        str = cursor_right;
+    }
+
+    for (i=0; i<abs(x_steps); i++)
+    {
+        writembs(str);
+    }
+
+
+    s->actual.cursor.x = new_x;
+    s->actual.cursor.y = new_y;
 }
 
 /**
    Set the pen color for the terminal
 */
-static void s_set_color( screen_t *s, data_buffer_t *b, int c )
+static void s_set_color(screen_t *s, data_buffer_t *b, int c)
 {
     scoped_buffer_t scoped_buffer(b);
 
     unsigned int uc = (unsigned int)c;
-  set_color( highlight_get_color( uc & 0xffff, false ),
-       highlight_get_color( (uc>>16)&0xffff, true ) );
+    set_color(highlight_get_color(uc & 0xffff, false),
+              highlight_get_color((uc>>16)&0xffff, true));
 }
 
 /**
    Convert a wide character to a multibyte string and append it to the
    buffer.
 */
-static void s_write_char( screen_t *s, data_buffer_t *b, wchar_t c )
+static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c)
 {
-  scoped_buffer_t scoped_buffer(b);
-  s->actual.cursor.x+=fish_wcwidth( c );
-  writech( c );
+    scoped_buffer_t scoped_buffer(b);
+    s->actual.cursor.x+=fish_wcwidth(c);
+    writech(c);
     if (s->actual.cursor.x == s->actual_width && allow_soft_wrap())
     {
         s->soft_wrap_location.x = 0;
@@ -652,20 +655,20 @@ static void s_write_char( screen_t *s, data_buffer_t *b, wchar_t c )
    Send the specified string through tputs and append the output to
    the specified buffer.
 */
-static void s_write_mbs( data_buffer_t *b, char *s )
+static void s_write_mbs(data_buffer_t *b, char *s)
 {
     scoped_buffer_t scoped_buffer(b);
-  writembs( s );
+    writembs(s);
 }
 
 /**
    Convert a wide string to a multibyte string and append it to the
    buffer.
 */
-static void s_write_str( data_buffer_t *b, const wchar_t *s )
+static void s_write_str(data_buffer_t *b, const wchar_t *s)
 {
     scoped_buffer_t scoped_buffer(b);
-  writestr( s );
+    writestr(s);
 }
 
 /** Returns the length of the "shared prefix" of the two lines, which is the run of matching text and colors.
@@ -715,30 +718,30 @@ static void invalidate_soft_wrap(screen_t *scr)
 /**
    Update the screen to match the desired output.
 */
-static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *right_prompt )
+static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *right_prompt)
 {
-  const size_t left_prompt_width = calc_prompt_width( left_prompt );
-    const size_t right_prompt_width = calc_prompt_width( right_prompt );
+    const size_t left_prompt_width = calc_prompt_width(left_prompt);
+    const size_t right_prompt_width = calc_prompt_width(right_prompt);
 
-  int screen_width = common_get_width();
-  bool need_clear = scr->need_clear;
+    int screen_width = common_get_width();
+    bool need_clear = scr->need_clear;
     bool has_cleared_screen = false;
 
     /* Figure out how many following lines we need to clear (probably 0) */
     size_t actual_lines_before_reset = scr->actual_lines_before_reset;
     scr->actual_lines_before_reset = 0;
 
-  data_buffer_t output;
+    data_buffer_t output;
 
-  scr->need_clear = false;
+    scr->need_clear = false;
 
-  if( scr->actual_width != screen_width )
-  {
-    need_clear = true;
-    s_move( scr, &output, 0, 0 );
-    scr->actual_width = screen_width;
-    s_reset( scr, false, false /* don't clear prompt */);
-  }
+    if (scr->actual_width != screen_width)
+    {
+        need_clear = true;
+        s_move(scr, &output, 0, 0);
+        scr->actual_width = screen_width;
+        s_reset(scr, false, false /* don't clear prompt */);
+    }
 
     /* Determine how many lines have stuff on them; we need to clear lines with stuff that we don't want */
     const size_t lines_with_stuff = maxi(actual_lines_before_reset, scr->actual.line_count());
@@ -748,19 +751,19 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
         need_clear = true;
     }
 
-  if( wcscmp( left_prompt, scr->actual_left_prompt.c_str() ) )
-  {
-    s_move( scr, &output, 0, 0 );
-    s_write_str( &output, left_prompt );
+    if (wcscmp(left_prompt, scr->actual_left_prompt.c_str()))
+    {
+        s_move(scr, &output, 0, 0);
+        s_write_str(&output, left_prompt);
         scr->actual_left_prompt = left_prompt;
-    scr->actual.cursor.x = (int)left_prompt_width;
-  }
+        scr->actual.cursor.x = (int)left_prompt_width;
+    }
 
     for (size_t i=0; i < scr->desired.line_count(); i++)
-  {
-    const line_t &o_line = scr->desired.line(i);
-    line_t &s_line = scr->actual.create_line(i);
-    size_t start_pos = (i==0 ? left_prompt_width : 0);
+    {
+        const line_t &o_line = scr->desired.line(i);
+        line_t &s_line = scr->actual.create_line(i);
+        size_t start_pos = (i==0 ? left_prompt_width : 0);
         int current_width = 0;
 
         /* If this is the last line, maybe we should clear the screen */
@@ -769,7 +772,8 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
         /* Note that skip_remaining is a width, not a character count */
         size_t skip_remaining = start_pos;
 
-        if (! should_clear_screen_this_line) {
+        if (! should_clear_screen_this_line)
+        {
             /* Compute how much we should skip. At a minimum we skip over the prompt. But also skip over the shared prefix of what we want to output now, and what we output before, to avoid repeatedly outputting it. */
             const size_t shared_prefix = line_shared_prefix(o_line, s_line);
             if (shared_prefix > 0)
@@ -786,7 +790,7 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
 
         /* Skip over skip_remaining width worth of characters */
         size_t j = 0;
-        for ( ; j < o_line.size(); j++)
+        for (; j < o_line.size(); j++)
         {
             int width = fish_wcwidth(o_line.char_at(j));
             if (skip_remaining < width)
@@ -796,7 +800,7 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
         }
 
         /* Skip over zero-width characters (e.g. combining marks at the end of the prompt) */
-        for ( ; j < o_line.size(); j++)
+        for (; j < o_line.size(); j++)
         {
             int width = fish_wcwidth(o_line.char_at(j));
             if (width > 0)
@@ -804,19 +808,20 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
         }
 
         /* Maybe clear the screen before outputting. If we clear the screen after outputting, then we may erase the last character due to the sticky right margin. */
-        if (should_clear_screen_this_line) {
-            s_move( scr, &output, current_width, (int)i );
+        if (should_clear_screen_this_line)
+        {
+            s_move(scr, &output, current_width, (int)i);
             s_write_mbs(&output, clr_eos);
             has_cleared_screen = true;
         }
 
         /* Now actually output stuff */
-        for ( ; j < o_line.size(); j++)
+        for (; j < o_line.size(); j++)
         {
             perform_any_impending_soft_wrap(scr, current_width, (int)i);
-            s_move( scr, &output, current_width, (int)i );
-            s_set_color( scr, &output, o_line.color_at(j) );
-            s_write_char( scr, &output, o_line.char_at(j) );
+            s_move(scr, &output, current_width, (int)i);
+            s_set_color(scr, &output, o_line.color_at(j));
+            s_write_char(scr, &output, o_line.char_at(j));
             current_width += fish_wcwidth(o_line.char_at(j));
         }
 
@@ -842,42 +847,42 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
 
         }
         if (clear_remainder)
-    {
-      s_move( scr, &output, current_width, (int)i );
-      s_write_mbs( &output, clr_eol);
-    }
+        {
+            s_move(scr, &output, current_width, (int)i);
+            s_write_mbs(&output, clr_eol);
+        }
 
         /* Output any rprompt if this is the first line. */
         if (i == 0 && right_prompt_width > 0)
         {
-            s_move( scr, &output, (int)(screen_width - right_prompt_width), (int)i );
-            s_set_color( scr, &output, 0xffffffff);
-            s_write_str( &output, right_prompt );
+            s_move(scr, &output, (int)(screen_width - right_prompt_width), (int)i);
+            s_set_color(scr, &output, 0xffffffff);
+            s_write_str(&output, right_prompt);
             /* We output in the last column. Some terms (Linux) push the cursor further right, past the window. Others make it "stick." Since we don't really know which is which, issue a cr so it goes back to the left. */
-            s_write_str( &output, L"\r");
+            s_write_str(&output, L"\r");
             scr->actual.cursor.x = 0;
         }
-  }
+    }
 
 
     /* Clear remaining lines if we haven't done so already */
     if (need_clear && ! has_cleared_screen)
     {
         /* Clear remaining lines individually */
-        for( size_t i=scr->desired.line_count(); i < lines_with_stuff; i++ )
+        for (size_t i=scr->desired.line_count(); i < lines_with_stuff; i++)
         {
-            s_move( scr, &output, 0, (int)i );
-            s_write_mbs( &output, clr_eol);
+            s_move(scr, &output, 0, (int)i);
+            s_write_mbs(&output, clr_eol);
         }
     }
 
-  s_move( scr, &output, scr->desired.cursor.x, scr->desired.cursor.y );
-  s_set_color( scr, &output, 0xffffffff);
+    s_move(scr, &output, scr->desired.cursor.x, scr->desired.cursor.y);
+    s_set_color(scr, &output, 0xffffffff);
 
-  if( ! output.empty() )
-  {
-    write_loop( 1, &output.at(0), output.size() );
-  }
+    if (! output.empty())
+    {
+        write_loop(1, &output.at(0), output.size());
+    }
 
     /* We have now synced our actual screen against our desired screen. Note that this is a big assignment! */
     scr->actual = scr->desired;
@@ -887,10 +892,11 @@ static void s_update( screen_t *scr, const wchar_t *left_prompt, const wchar_t *
 /** Returns true if we are using a dumb terminal. */
 static bool is_dumb(void)
 {
-  return ( !cursor_up || !cursor_down || !cursor_left || !cursor_right );
+    return (!cursor_up || !cursor_down || !cursor_left || !cursor_right);
 }
 
-struct screen_layout_t {
+struct screen_layout_t
+{
     /* The left prompt that we're going to use */
     wcstring left_prompt;
 
@@ -922,12 +928,12 @@ static size_t truncation_offset_for_width(const std::vector<size_t> &width_by_of
 }
 
 static screen_layout_t compute_layout(screen_t *s,
-        size_t screen_width,
-        const wcstring &left_prompt_str,
-          const wcstring &right_prompt_str,
-        const wcstring &commandline,
-          const wcstring &autosuggestion_str,
-        const int *indent)
+                                      size_t screen_width,
+                                      const wcstring &left_prompt_str,
+                                      const wcstring &right_prompt_str,
+                                      const wcstring &commandline,
+                                      const wcstring &autosuggestion_str,
+                                      const int *indent)
 {
     screen_layout_t result = {};
 
@@ -936,8 +942,8 @@ static screen_layout_t compute_layout(screen_t *s,
     const wchar_t *right_prompt = right_prompt_str.c_str();
     const wchar_t *autosuggestion = autosuggestion_str.c_str();
 
-  size_t left_prompt_width = calc_prompt_width( left_prompt );
-    size_t right_prompt_width = calc_prompt_width( right_prompt );
+    size_t left_prompt_width = calc_prompt_width(left_prompt);
+    size_t right_prompt_width = calc_prompt_width(right_prompt);
 
     if (left_prompt_width + right_prompt_width >= screen_width)
     {
@@ -961,20 +967,20 @@ static screen_layout_t compute_layout(screen_t *s,
     wcstring_list_t command_lines(1);
     std::vector<size_t> line_widths(1);
     for (size_t i=0; i < commandline.size(); i++)
-  {
-        wchar_t c = commandline.at(i);
-    if (c == L'\n')
     {
+        wchar_t c = commandline.at(i);
+        if (c == L'\n')
+        {
             /* Make a new line */
             command_lines.push_back(wcstring());
             line_widths.push_back(indent[i]*INDENT_STEP);
-    }
-    else
-    {
+        }
+        else
+        {
             command_lines.back() += c;
-      line_widths.back() += fish_wcwidth(c);
+            line_widths.back() += fish_wcwidth(c);
+        }
     }
-  }
     const size_t first_command_line_width = line_widths.at(0);
 
     /* If we have more than one line, ensure we have no autosuggestion */
@@ -1054,67 +1060,67 @@ static screen_layout_t compute_layout(screen_t *s,
 }
 
 
-void s_write( screen_t *s,
-              const wcstring &left_prompt,
-              const wcstring &right_prompt,
-              const wcstring &commandline,
-              size_t explicit_len,
-              const int *colors,
-              const int *indent,
-              size_t cursor_pos )
+void s_write(screen_t *s,
+             const wcstring &left_prompt,
+             const wcstring &right_prompt,
+             const wcstring &commandline,
+             size_t explicit_len,
+             const int *colors,
+             const int *indent,
+             size_t cursor_pos)
 {
-  screen_data_t::cursor_t cursor_arr;
+    screen_data_t::cursor_t cursor_arr;
 
-  CHECK( s, );
-  CHECK( indent, );
+    CHECK(s,);
+    CHECK(indent,);
 
     /* Turn the command line into the explicit portion and the autosuggestion */
     const wcstring explicit_command_line = commandline.substr(0, explicit_len);
     const wcstring autosuggestion = commandline.substr(explicit_len);
 
-  /*
-    If we are using a dumb terminal, don't try any fancy stuff,
-    just print out the text. right_prompt not supported.
-   */
-  if( is_dumb() )
-  {
-    const std::string prompt_narrow = wcs2string( left_prompt );
-    const std::string command_line_narrow = wcs2string( explicit_command_line );
+    /*
+      If we are using a dumb terminal, don't try any fancy stuff,
+      just print out the text. right_prompt not supported.
+     */
+    if (is_dumb())
+    {
+        const std::string prompt_narrow = wcs2string(left_prompt);
+        const std::string command_line_narrow = wcs2string(explicit_command_line);
 
-    write_loop( 1, "\r", 1 );
-    write_loop( 1, prompt_narrow.c_str(), prompt_narrow.size() );
-    write_loop( 1, command_line_narrow.c_str(), command_line_narrow.size() );
+        write_loop(1, "\r", 1);
+        write_loop(1, prompt_narrow.c_str(), prompt_narrow.size());
+        write_loop(1, command_line_narrow.c_str(), command_line_narrow.size());
 
-    return;
-  }
+        return;
+    }
 
-  s_check_status( s );
+    s_check_status(s);
     const size_t screen_width = common_get_width();
 
-  /* Completely ignore impossibly small screens */
-  if( screen_width < 4 )
-  {
-    return;
-  }
+    /* Completely ignore impossibly small screens */
+    if (screen_width < 4)
+    {
+        return;
+    }
 
     /* Compute a layout */
     const screen_layout_t layout = compute_layout(s, screen_width, left_prompt, right_prompt, explicit_command_line, autosuggestion, indent);
 
     /* Clear the desired screen */
     s->desired.resize(0);
-  s->desired.cursor.x = s->desired.cursor.y = 0;
+    s->desired.cursor.x = s->desired.cursor.y = 0;
 
     /* Append spaces for the left prompt */
-  for (size_t i=0; i < layout.left_prompt_space; i++)
-  {
-    s_desired_append_char( s, L' ', 0, 0, layout.left_prompt_space );
-  }
+    for (size_t i=0; i < layout.left_prompt_space; i++)
+    {
+        s_desired_append_char(s, L' ', 0, 0, layout.left_prompt_space);
+    }
 
-  /* If overflowing, give the prompt its own line to improve the situation. */
+    /* If overflowing, give the prompt its own line to improve the situation. */
     size_t first_line_prompt_space = layout.left_prompt_space;
     if (layout.prompts_get_own_line)
     {
-    s_desired_append_char( s, L'\n', 0, 0, 0 );
+        s_desired_append_char(s, L'\n', 0, 0, 0);
         first_line_prompt_space = 0;
     }
 
@@ -1123,132 +1129,132 @@ void s_write( screen_t *s,
 
     /* Output the command line */
     size_t i;
-  for( i=0; i < effective_commandline.size(); i++ )
-  {
-    int color = colors[i];
-
-    if( i == cursor_pos )
+    for (i=0; i < effective_commandline.size(); i++)
     {
-      color = 0;
-    }
+        int color = colors[i];
 
-    if( i == cursor_pos )
-    {
+        if (i == cursor_pos)
+        {
+            color = 0;
+        }
+
+        if (i == cursor_pos)
+        {
             cursor_arr = s->desired.cursor;
-    }
+        }
 
-    s_desired_append_char( s, effective_commandline.at(i), color, indent[i], first_line_prompt_space );
-  }
-  if( i == cursor_pos )
-  {
+        s_desired_append_char(s, effective_commandline.at(i), color, indent[i], first_line_prompt_space);
+    }
+    if (i == cursor_pos)
+    {
         cursor_arr = s->desired.cursor;
-  }
+    }
 
     s->desired.cursor = cursor_arr;
-  s_update( s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
-  s_save_status( s );
+    s_update(s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
+    s_save_status(s);
 }
 
 
-void s_write_OLD( screen_t *s,
-        const wchar_t *left_prompt,
-          const wchar_t *right_prompt,
-        const wchar_t *commandline,
-        size_t explicit_len,
-        const int *c,
-        const int *indent,
-        size_t cursor_pos )
+void s_write_OLD(screen_t *s,
+                 const wchar_t *left_prompt,
+                 const wchar_t *right_prompt,
+                 const wchar_t *commandline,
+                 size_t explicit_len,
+                 const int *c,
+                 const int *indent,
+                 size_t cursor_pos)
 {
-  screen_data_t::cursor_t cursor_arr;
+    screen_data_t::cursor_t cursor_arr;
 
-  int current_line_width = 0, newline_count = 0, explicit_portion_width = 0;
+    int current_line_width = 0, newline_count = 0, explicit_portion_width = 0;
     size_t max_line_width = 0;
 
-  CHECK( s, );
-  CHECK( left_prompt, );
-  CHECK( right_prompt, );
-  CHECK( commandline, );
-  CHECK( c, );
-  CHECK( indent, );
+    CHECK(s,);
+    CHECK(left_prompt,);
+    CHECK(right_prompt,);
+    CHECK(commandline,);
+    CHECK(c,);
+    CHECK(indent,);
 
-  /*
-    If we are using a dumb terminal, don't try any fancy stuff,
-    just print out the text. right_prompt not supported.
-   */
-  if( is_dumb() )
-  {
-    char *prompt_narrow = wcs2str( left_prompt );
-    char *buffer_narrow = wcs2str( commandline );
+    /*
+      If we are using a dumb terminal, don't try any fancy stuff,
+      just print out the text. right_prompt not supported.
+     */
+    if (is_dumb())
+    {
+        char *prompt_narrow = wcs2str(left_prompt);
+        char *buffer_narrow = wcs2str(commandline);
 
-    write_loop( 1, "\r", 1 );
-    write_loop( 1, prompt_narrow, strlen( prompt_narrow ) );
-    write_loop( 1, buffer_narrow, strlen( buffer_narrow ) );
+        write_loop(1, "\r", 1);
+        write_loop(1, prompt_narrow, strlen(prompt_narrow));
+        write_loop(1, buffer_narrow, strlen(buffer_narrow));
 
-    free( prompt_narrow );
-    free( buffer_narrow );
+        free(prompt_narrow);
+        free(buffer_narrow);
 
-    return;
-  }
+        return;
+    }
 
-  size_t left_prompt_width = calc_prompt_width( left_prompt );
-    size_t right_prompt_width = calc_prompt_width( right_prompt );
-  const size_t screen_width = common_get_width();
+    size_t left_prompt_width = calc_prompt_width(left_prompt);
+    size_t right_prompt_width = calc_prompt_width(right_prompt);
+    const size_t screen_width = common_get_width();
 
-  s_check_status( s );
+    s_check_status(s);
 
-  /*
-    Ignore prompts wider than the screen - only print a two
-    character placeholder...
+    /*
+      Ignore prompts wider than the screen - only print a two
+      character placeholder...
 
-    It would be cool to truncate the prompt, but because it can
-    contain escape sequences, this is harder than you'd think.
-  */
-  if( left_prompt_width >= screen_width )
-  {
-    left_prompt = L"> ";
-    left_prompt_width = 2;
+      It would be cool to truncate the prompt, but because it can
+      contain escape sequences, this is harder than you'd think.
+    */
+    if (left_prompt_width >= screen_width)
+    {
+        left_prompt = L"> ";
+        left_prompt_width = 2;
 
         right_prompt = L"";
         right_prompt_width = 0;
-  }
-
-  /*
-    Completely ignore impossibly small screens
-  */
-  if( screen_width < 4 )
-  {
-    return;
-  }
-
-  /*
-    Check if we are overflowing
-   */
-    size_t last_char_that_fits = 0;
-  for( size_t i=0; commandline[i]; i++ )
-  {
-    if( commandline[i] == L'\n' )
-    {
-      if( current_line_width > max_line_width )
-        max_line_width = current_line_width;
-      current_line_width = indent[i]*INDENT_STEP;
-            newline_count++;
     }
-    else
+
+    /*
+      Completely ignore impossibly small screens
+    */
+    if (screen_width < 4)
     {
+        return;
+    }
+
+    /*
+      Check if we are overflowing
+     */
+    size_t last_char_that_fits = 0;
+    for (size_t i=0; commandline[i]; i++)
+    {
+        if (commandline[i] == L'\n')
+        {
+            if (current_line_width > max_line_width)
+                max_line_width = current_line_width;
+            current_line_width = indent[i]*INDENT_STEP;
+            newline_count++;
+        }
+        else
+        {
             int width = fish_wcwidth(commandline[i]);
-      current_line_width += width;
+            current_line_width += width;
             if (i < explicit_len)
                 explicit_portion_width += width;
 
             if (left_prompt_width + current_line_width < screen_width)
                 last_char_that_fits = i;
+        }
     }
-  }
-  if( current_line_width > max_line_width )
-    max_line_width = current_line_width;
+    if (current_line_width > max_line_width)
+        max_line_width = current_line_width;
 
     s->desired.resize(0);
-  s->desired.cursor.x = s->desired.cursor.y = 0;
+    s->desired.cursor.x = s->desired.cursor.y = 0;
 
     /* If we cannot fit with the autosuggestion, but we can fit without it, truncate the autosuggestion. We limit this check to just one line to avoid confusion; not sure how well this would work with multiple lines */
     wcstring truncated_autosuggestion_line;
@@ -1260,63 +1266,65 @@ void s_write_OLD( screen_t *s,
         truncated_autosuggestion_line.push_back(ellipsis_char);
         commandline = truncated_autosuggestion_line.c_str();
     }
-  for( size_t i=0; i<left_prompt_width; i++ )
-  {
-    s_desired_append_char( s, L' ', 0, 0, left_prompt_width );
-  }
+    for (size_t i=0; i<left_prompt_width; i++)
+    {
+        s_desired_append_char(s, L' ', 0, 0, left_prompt_width);
+    }
 
-  /*
-    If overflowing, give the prompt its own line to improve the
-    situation.
-   */
-  if( max_line_width + left_prompt_width >= screen_width )
-  {
-    s_desired_append_char( s, L'\n', 0, 0, 0 );
-    left_prompt_width = 0;
-  }
+    /*
+      If overflowing, give the prompt its own line to improve the
+      situation.
+     */
+    if (max_line_width + left_prompt_width >= screen_width)
+    {
+        s_desired_append_char(s, L'\n', 0, 0, 0);
+        left_prompt_width = 0;
+    }
 
     size_t i;
-  for( i=0; commandline[i]; i++ )
-  {
-    int col = c[i];
-
-    if( i == cursor_pos )
+    for (i=0; commandline[i]; i++)
     {
-      col = 0;
-    }
+        int col = c[i];
 
-    if( i == cursor_pos )
-    {
+        if (i == cursor_pos)
+        {
+            col = 0;
+        }
+
+        if (i == cursor_pos)
+        {
             cursor_arr = s->desired.cursor;
-    }
+        }
 
-    s_desired_append_char( s, commandline[i], col, indent[i], left_prompt_width );
-  }
-  if( i == cursor_pos )
-  {
+        s_desired_append_char(s, commandline[i], col, indent[i], left_prompt_width);
+    }
+    if (i == cursor_pos)
+    {
         cursor_arr = s->desired.cursor;
-  }
+    }
 
     s->desired.cursor = cursor_arr;
-  s_update( s, left_prompt, right_prompt);
-  s_save_status( s );
+    s_update(s, left_prompt, right_prompt);
+    s_save_status(s);
 }
 
-void s_reset( screen_t *s, bool reset_cursor, bool reset_prompt )
+void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt)
 {
-  CHECK( s, );
+    CHECK(s,);
 
     /* If we're resetting the cursor, we must also be resetting the prompt */
     assert(! reset_cursor || reset_prompt);
 
     /* If we are resetting the cursor, we're going to make a new line and leave junk behind. If we are not resetting the cursor, we need to remember how many lines we had output to, so we can clear the remaining lines in the next call to s_update. This prevents leaving junk underneath the cursor when resizing a window wider such that it reduces our desired line count. */
-    if (! reset_cursor) {
+    if (! reset_cursor)
+    {
         s->actual_lines_before_reset =  s->actual.line_count();
     }
 
-  int prev_line = s->actual.cursor.y;
+    int prev_line = s->actual.cursor.y;
 
-    if (reset_prompt) {
+    if (reset_prompt)
+    {
         /* If the prompt is multi-line, we need to move up to the prompt's initial line. We do this by lying to ourselves and claiming that we're really below what we consider "line 0" (which is the last line of the prompt). This will cause is to move up to try to get back to line 0, but really we're getting back to the initial line of the prompt. */
         const size_t prompt_line_count = calc_prompt_lines(s->actual_left_prompt.c_str());
         assert(prompt_line_count >= 1);
@@ -1329,19 +1337,19 @@ void s_reset( screen_t *s, bool reset_cursor, bool reset_prompt )
     s->actual.resize(0);
     s->actual.cursor.x = 0;
     s->actual.cursor.y = 0;
-  s->need_clear=true;
+    s->need_clear=true;
 
-  if( !reset_cursor )
-  {
-    /*
-         This should prevent reseting the cursor position during the
-         next repaint.
-         */
-    write_loop( 1, "\r", 1 );
-    s->actual.cursor.y = prev_line;
-  }
-  fstat( 1, &s->prev_buff_1 );
-  fstat( 2, &s->prev_buff_2 );
+    if (!reset_cursor)
+    {
+        /*
+             This should prevent reseting the cursor position during the
+             next repaint.
+             */
+        write_loop(1, "\r", 1);
+        s->actual.cursor.y = prev_line;
+    }
+    fstat(1, &s->prev_buff_1);
+    fstat(2, &s->prev_buff_2);
 }
 
 screen_t::screen_t() :

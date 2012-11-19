@@ -61,7 +61,7 @@ static int get_socket_count = 0;
 static wchar_t * path;
 static wchar_t *user;
 static void (*start_fishd)();
-static void (*external_callback)( fish_message_type_t type, const wchar_t *name, const wchar_t *val );
+static void (*external_callback)(fish_message_type_t type, const wchar_t *name, const wchar_t *val);
 
 /**
    Flag set to 1 when a barrier reply is recieved
@@ -72,110 +72,110 @@ void env_universal_barrier();
 
 static int is_dead()
 {
-  return env_universal_server.fd < 0;
+    return env_universal_server.fd < 0;
 }
 
 
 /**
    Get a socket for reading from the server
 */
-static int get_socket( int fork_ok )
+static int get_socket(int fork_ok)
 {
-  int s, len;
-  struct sockaddr_un local;
+    int s, len;
+    struct sockaddr_un local;
 
-  char *name;
-  wchar_t *wdir;
-  wchar_t *wuname;
-  char *dir =0, *uname=0;
+    char *name;
+    wchar_t *wdir;
+    wchar_t *wuname;
+    char *dir =0, *uname=0;
 
-  get_socket_count++;
-  wdir = path;
-  wuname = user;
+    get_socket_count++;
+    wdir = path;
+    wuname = user;
 
-  if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
-  {
-    wperror(L"socket");
-    return -1;
-  }
-
-  if( wdir )
-    dir = wcs2str(wdir );
-  else
-    dir = strdup("/tmp");
-
-  if( wuname )
-    uname = wcs2str(wuname );
-  else
-  {
-    struct passwd *pw;
-    pw = getpwuid( getuid() );
-    uname = strdup( pw->pw_name );
-  }
-
-  name = (char *)malloc( strlen(dir) +
-           strlen(uname) +
-           strlen(SOCK_FILENAME) +
-           2 );
-
-  strcpy( name, dir );
-  strcat( name, "/" );
-  strcat( name, SOCK_FILENAME );
-  strcat( name, uname );
-
-  free( dir );
-  free( uname );
-
-  debug( 3, L"Connect to socket %s at fd %2", name, s );
-
-  local.sun_family = AF_UNIX;
-  strcpy(local.sun_path, name );
-  free( name );
-  len = sizeof(local);
-
-  if( connect( s, (struct sockaddr *)&local, len) == -1 )
-  {
-    close( s );
-    if( fork_ok && start_fishd )
+    if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
-      debug( 2, L"Could not connect to socket %d, starting fishd", s );
-
-      start_fishd();
-
-      return get_socket( 0 );
+        wperror(L"socket");
+        return -1;
     }
 
-    debug( 1, L"Could not connect to universal variable server, already tried manual restart (or no command supplied). You will not be able to share variable values between fish sessions. Is fish properly installed?" );
-    return -1;
-  }
+    if (wdir)
+        dir = wcs2str(wdir);
+    else
+        dir = strdup("/tmp");
 
-  if( (fcntl( s, F_SETFL, O_NONBLOCK ) != 0) || (fcntl( s, F_SETFD, FD_CLOEXEC ) != 0) )
-  {
-    wperror( L"fcntl" );
-    close( s );
+    if (wuname)
+        uname = wcs2str(wuname);
+    else
+    {
+        struct passwd *pw;
+        pw = getpwuid(getuid());
+        uname = strdup(pw->pw_name);
+    }
 
-    return -1;
-  }
+    name = (char *)malloc(strlen(dir) +
+                          strlen(uname) +
+                          strlen(SOCK_FILENAME) +
+                          2);
 
-  debug( 3, L"Connected to fd %d", s );
+    strcpy(name, dir);
+    strcat(name, "/");
+    strcat(name, SOCK_FILENAME);
+    strcat(name, uname);
 
-  return s;
+    free(dir);
+    free(uname);
+
+    debug(3, L"Connect to socket %s at fd %2", name, s);
+
+    local.sun_family = AF_UNIX;
+    strcpy(local.sun_path, name);
+    free(name);
+    len = sizeof(local);
+
+    if (connect(s, (struct sockaddr *)&local, len) == -1)
+    {
+        close(s);
+        if (fork_ok && start_fishd)
+        {
+            debug(2, L"Could not connect to socket %d, starting fishd", s);
+
+            start_fishd();
+
+            return get_socket(0);
+        }
+
+        debug(1, L"Could not connect to universal variable server, already tried manual restart (or no command supplied). You will not be able to share variable values between fish sessions. Is fish properly installed?");
+        return -1;
+    }
+
+    if ((fcntl(s, F_SETFL, O_NONBLOCK) != 0) || (fcntl(s, F_SETFD, FD_CLOEXEC) != 0))
+    {
+        wperror(L"fcntl");
+        close(s);
+
+        return -1;
+    }
+
+    debug(3, L"Connected to fd %d", s);
+
+    return s;
 }
 
 /**
    Callback function used whenever a new fishd message is recieved
 */
-static void callback( fish_message_type_t type, const wchar_t *name, const wchar_t *val )
+static void callback(fish_message_type_t type, const wchar_t *name, const wchar_t *val)
 {
-  if( type == BARRIER_REPLY )
-  {
-    barrier_reply = 1;
-  }
-  else
-  {
-    if( external_callback )
-      external_callback( type, name, val );
-  }
+    if (type == BARRIER_REPLY)
+    {
+        barrier_reply = 1;
+    }
+    else
+    {
+        if (external_callback)
+            external_callback(type, name, val);
+    }
 }
 
 /**
@@ -184,23 +184,23 @@ static void callback( fish_message_type_t type, const wchar_t *name, const wchar
 */
 static void check_connection()
 {
-  if( !init )
-    return;
+    if (!init)
+        return;
 
-  if( env_universal_server.killme )
-  {
-    debug( 3, L"Lost connection to universal variable server." );
-
-    if( close( env_universal_server.fd ) )
+    if (env_universal_server.killme)
     {
-      wperror( L"close" );
-    }
+        debug(3, L"Lost connection to universal variable server.");
 
-    env_universal_server.fd = -1;
-    env_universal_server.killme=0;
-    env_universal_server.input.clear();
-    env_universal_read_all();
-  }
+        if (close(env_universal_server.fd))
+        {
+            wperror(L"close");
+        }
+
+        env_universal_server.fd = -1;
+        env_universal_server.killme=0;
+        env_universal_server.input.clear();
+        env_universal_read_all();
+    }
 }
 
 /**
@@ -208,17 +208,17 @@ static void check_connection()
 */
 static void env_universal_remove_all()
 {
-  size_t i;
+    size_t i;
 
-  wcstring_list_t lst;
-  env_universal_common_get_names( lst,
-                  1,
-                  1 );
-  for( i=0; i<lst.size(); i++ )
-  {
-    const wcstring &key = lst.at(i);
-    env_universal_common_remove( key );
-  }
+    wcstring_list_t lst;
+    env_universal_common_get_names(lst,
+                                   1,
+                                   1);
+    for (i=0; i<lst.size(); i++)
+    {
+        const wcstring &key = lst.at(i);
+        env_universal_common_remove(key);
+    }
 
 }
 
@@ -230,63 +230,63 @@ static void env_universal_remove_all()
 */
 static void reconnect()
 {
-  if( get_socket_count >= RECONNECT_COUNT )
-    return;
+    if (get_socket_count >= RECONNECT_COUNT)
+        return;
 
-  debug( 3, L"Get new fishd connection" );
+    debug(3, L"Get new fishd connection");
 
-  init = 0;
-  env_universal_server.buffer_consumed = env_universal_server.buffer_used = 0;
-  env_universal_server.fd = get_socket(1);
-  init = 1;
-  if( env_universal_server.fd >= 0 )
-  {
-    env_universal_remove_all();
-    env_universal_barrier();
-  }
+    init = 0;
+    env_universal_server.buffer_consumed = env_universal_server.buffer_used = 0;
+    env_universal_server.fd = get_socket(1);
+    init = 1;
+    if (env_universal_server.fd >= 0)
+    {
+        env_universal_remove_all();
+        env_universal_barrier();
+    }
 }
 
 
-void env_universal_init( wchar_t * p,
-             wchar_t *u,
-             void (*sf)(),
-             void (*cb)( fish_message_type_t type, const wchar_t *name, const wchar_t *val ))
+void env_universal_init(wchar_t * p,
+                        wchar_t *u,
+                        void (*sf)(),
+                        void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val))
 {
-  path=p;
-  user=u;
-  start_fishd=sf;
-  external_callback = cb;
+    path=p;
+    user=u;
+    start_fishd=sf;
+    external_callback = cb;
 
-  connection_init( &env_universal_server, -1 );
+    connection_init(&env_universal_server, -1);
 
-  env_universal_server.fd = get_socket(1);
-  env_universal_common_init( &callback );
-  env_universal_read_all();
-  init = 1;
-  if( env_universal_server.fd >= 0 )
-  {
-    env_universal_barrier();
-  }
+    env_universal_server.fd = get_socket(1);
+    env_universal_common_init(&callback);
+    env_universal_read_all();
+    init = 1;
+    if (env_universal_server.fd >= 0)
+    {
+        env_universal_barrier();
+    }
 }
 
 void env_universal_destroy()
 {
-  /*
-    Go into blocking mode and send all data before exiting
-  */
-  if( env_universal_server.fd >= 0 )
-  {
-    if( fcntl( env_universal_server.fd, F_SETFL, 0 ) != 0 )
+    /*
+      Go into blocking mode and send all data before exiting
+    */
+    if (env_universal_server.fd >= 0)
     {
-      wperror( L"fcntl" );
+        if (fcntl(env_universal_server.fd, F_SETFL, 0) != 0)
+        {
+            wperror(L"fcntl");
+        }
+        try_send_all(&env_universal_server);
     }
-    try_send_all( &env_universal_server );
-  }
 
-  connection_destroy( &env_universal_server );
-  env_universal_server.fd =-1;
-  env_universal_common_destroy();
-  init = 0;
+    connection_destroy(&env_universal_server);
+    env_universal_server.fd =-1;
+    env_universal_common_destroy();
+    init = 0;
 }
 
 
@@ -295,177 +295,177 @@ void env_universal_destroy()
 */
 int env_universal_read_all()
 {
-  if( !init)
-    return 0;
+    if (!init)
+        return 0;
 
-  if( env_universal_server.fd == -1 )
-  {
-    reconnect();
-    if( env_universal_server.fd == -1 )
-      return 0;
-  }
+    if (env_universal_server.fd == -1)
+    {
+        reconnect();
+        if (env_universal_server.fd == -1)
+            return 0;
+    }
 
-  if( env_universal_server.fd != -1 )
-  {
-    read_message( &env_universal_server );
-    check_connection();
-    return 1;
-  }
-  else
-  {
-    debug( 2, L"No connection to universal variable server" );
-    return 0;
-  }
+    if (env_universal_server.fd != -1)
+    {
+        read_message(&env_universal_server);
+        check_connection();
+        return 1;
+    }
+    else
+    {
+        debug(2, L"No connection to universal variable server");
+        return 0;
+    }
 }
 
-wchar_t *env_universal_get( const wcstring &name )
+wchar_t *env_universal_get(const wcstring &name)
 {
-  if( !init)
-    return 0;
+    if (!init)
+        return 0;
 
-  return env_universal_common_get( name );
+    return env_universal_common_get(name);
 }
 
-int env_universal_get_export( const wcstring &name )
+int env_universal_get_export(const wcstring &name)
 {
-  if( !init)
-    return 0;
+    if (!init)
+        return 0;
 
-  return env_universal_common_get_export( name );
+    return env_universal_common_get_export(name);
 }
 
 void env_universal_barrier()
 {
     ASSERT_IS_MAIN_THREAD();
-  message_t *msg;
-  fd_set fds;
+    message_t *msg;
+    fd_set fds;
 
-  if( !init || is_dead() )
-    return;
+    if (!init || is_dead())
+        return;
 
-  barrier_reply = 0;
+    barrier_reply = 0;
 
-  /*
-    Create barrier request
-  */
-  msg= create_message( BARRIER, 0, 0);
-  msg->count=1;
+    /*
+      Create barrier request
+    */
+    msg= create_message(BARRIER, 0, 0);
+    msg->count=1;
     env_universal_server.unsent->push(msg);
 
-  /*
-    Wait until barrier request has been sent
-  */
-  debug( 3, L"Create barrier" );
-  while( 1 )
-  {
-    try_send_all( &env_universal_server );
-    check_connection();
-
-    if( env_universal_server.unsent->empty() )
-      break;
-
-    if( env_universal_server.fd == -1 )
+    /*
+      Wait until barrier request has been sent
+    */
+    debug(3, L"Create barrier");
+    while (1)
     {
-      reconnect();
-      debug( 2, L"barrier interrupted, exiting" );
-      return;
+        try_send_all(&env_universal_server);
+        check_connection();
+
+        if (env_universal_server.unsent->empty())
+            break;
+
+        if (env_universal_server.fd == -1)
+        {
+            reconnect();
+            debug(2, L"barrier interrupted, exiting");
+            return;
+        }
+
+        FD_ZERO(&fds);
+        FD_SET(env_universal_server.fd, &fds);
+        select(env_universal_server.fd+1, 0, &fds, 0, 0);
     }
 
-    FD_ZERO( &fds );
-    FD_SET( env_universal_server.fd, &fds );
-    select( env_universal_server.fd+1, 0, &fds, 0, 0 );
-  }
-
-  /*
-    Wait for barrier reply
-  */
-  debug( 3, L"Sent barrier request" );
-  while( !barrier_reply )
-  {
-    if( env_universal_server.fd == -1 )
+    /*
+      Wait for barrier reply
+    */
+    debug(3, L"Sent barrier request");
+    while (!barrier_reply)
     {
-      reconnect();
-      debug( 2, L"barrier interrupted, exiting (2)" );
-      return;
+        if (env_universal_server.fd == -1)
+        {
+            reconnect();
+            debug(2, L"barrier interrupted, exiting (2)");
+            return;
+        }
+        FD_ZERO(&fds);
+        FD_SET(env_universal_server.fd, &fds);
+        select(env_universal_server.fd+1, &fds, 0, 0, 0);
+        env_universal_read_all();
     }
-    FD_ZERO( &fds );
-        FD_SET( env_universal_server.fd, &fds );
-        select( env_universal_server.fd+1, &fds, 0, 0, 0 );
-    env_universal_read_all();
-  }
-  debug( 3, L"End barrier" );
+    debug(3, L"End barrier");
 }
 
 
-void env_universal_set( const wcstring &name, const wcstring &value, int exportv )
+void env_universal_set(const wcstring &name, const wcstring &value, int exportv)
 {
-  message_t *msg;
+    message_t *msg;
 
-  if( !init )
-    return;
+    if (!init)
+        return;
 
-  debug( 3, L"env_universal_set( \"%ls\", \"%ls\" )", name.c_str(), value.c_str() );
+    debug(3, L"env_universal_set( \"%ls\", \"%ls\" )", name.c_str(), value.c_str());
 
-  if( is_dead() )
-  {
-    env_universal_common_set( name.c_str(), value.c_str(), exportv );
-  }
-  else
-  {
-    msg = create_message( exportv?SET_EXPORT:SET,
-                name.c_str(),
-                value.c_str());
-
-    if( !msg )
+    if (is_dead())
     {
-      debug( 1, L"Could not create universal variable message" );
-      return;
+        env_universal_common_set(name.c_str(), value.c_str(), exportv);
+    }
+    else
+    {
+        msg = create_message(exportv?SET_EXPORT:SET,
+                             name.c_str(),
+                             value.c_str());
+
+        if (!msg)
+        {
+            debug(1, L"Could not create universal variable message");
+            return;
+        }
+
+        msg->count=1;
+        env_universal_server.unsent->push(msg);
+        env_universal_barrier();
+    }
+}
+
+int env_universal_remove(const wchar_t *name)
+{
+    int res;
+
+    message_t *msg;
+    if (!init)
+        return 1;
+
+    CHECK(name, 1);
+
+    res = !env_universal_common_get(name);
+    debug(3,
+          L"env_universal_remove( \"%ls\" )",
+          name);
+
+    if (is_dead())
+    {
+        env_universal_common_remove(wcstring(name));
+    }
+    else
+    {
+        msg= create_message(ERASE, name, 0);
+        msg->count=1;
+        env_universal_server.unsent->push(msg);
+        env_universal_barrier();
     }
 
-    msg->count=1;
-        env_universal_server.unsent->push(msg);
-    env_universal_barrier();
-  }
+    return res;
 }
 
-int env_universal_remove( const wchar_t *name )
-{
-  int res;
-
-  message_t *msg;
-  if( !init )
-    return 1;
-
-  CHECK( name, 1 );
-
-  res = !env_universal_common_get( name );
-  debug( 3,
-       L"env_universal_remove( \"%ls\" )",
-       name );
-
-  if( is_dead() )
-  {
-    env_universal_common_remove( wcstring(name) );
-  }
-  else
-  {
-    msg= create_message( ERASE, name, 0);
-    msg->count=1;
-        env_universal_server.unsent->push(msg);
-    env_universal_barrier();
-  }
-
-  return res;
-}
-
-void env_universal_get_names2( wcstring_list_t &lst,
+void env_universal_get_names2(wcstring_list_t &lst,
                               int show_exported,
-                              int show_unexported )
+                              int show_unexported)
 {
-  if( !init )
-    return;
+    if (!init)
+        return;
 
-  env_universal_common_get_names( lst,
-                  show_exported,
-                  show_unexported );
+    env_universal_common_get_names(lst,
+                                   show_exported,
+                                   show_unexported);
 }

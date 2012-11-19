@@ -49,171 +49,171 @@ typedef struct XdgMimeParents XdgMimeParents;
 
 struct XdgMimeParents
 {
-  char *mime;
-  char **parents;
-  int n_parents;
+    char *mime;
+    char **parents;
+    int n_parents;
 };
 
 struct XdgParentList
 {
-  struct XdgMimeParents *parents;
-  int n_mimes;
+    struct XdgMimeParents *parents;
+    int n_mimes;
 };
 
 XdgParentList *
-_xdg_mime_parent_list_new (void)
+_xdg_mime_parent_list_new(void)
 {
-  XdgParentList *list;
+    XdgParentList *list;
 
-  list = (XdgParentList *)malloc (sizeof (XdgParentList));
+    list = (XdgParentList *)malloc(sizeof(XdgParentList));
 
-  list->parents = NULL;
-  list->n_mimes = 0;
+    list->parents = NULL;
+    list->n_mimes = 0;
 
-  return list;
+    return list;
 }
 
 void
-_xdg_mime_parent_list_free (XdgParentList *list)
+_xdg_mime_parent_list_free(XdgParentList *list)
 {
-  int i;
-  char **p;
+    int i;
+    char **p;
 
-  if (list->parents)
+    if (list->parents)
     {
-      for (i = 0; i < list->n_mimes; i++)
-  {
-    for (p = list->parents[i].parents; *p; p++)
-      free (*p);
+        for (i = 0; i < list->n_mimes; i++)
+        {
+            for (p = list->parents[i].parents; *p; p++)
+                free(*p);
 
-    free (list->parents[i].parents);
-    free (list->parents[i].mime);
-  }
-      free (list->parents);
+            free(list->parents[i].parents);
+            free(list->parents[i].mime);
+        }
+        free(list->parents);
     }
-  free (list);
+    free(list);
 }
 
 static int
-parent_entry_cmp (const void *v1, const void *v2)
+parent_entry_cmp(const void *v1, const void *v2)
 {
-  return strcmp (((XdgMimeParents *)v1)->mime, ((XdgMimeParents *)v2)->mime);
+    return strcmp(((XdgMimeParents *)v1)->mime, ((XdgMimeParents *)v2)->mime);
 }
 
 const char **
-_xdg_mime_parent_list_lookup (XdgParentList *list,
-            const char    *mime)
+_xdg_mime_parent_list_lookup(XdgParentList *list,
+                             const char    *mime)
 {
-  XdgMimeParents *entry;
-  XdgMimeParents key;
+    XdgMimeParents *entry;
+    XdgMimeParents key;
 
-  if (list->n_mimes > 0)
+    if (list->n_mimes > 0)
     {
-      key.mime = (char *)mime;
-      key.parents = NULL;
+        key.mime = (char *)mime;
+        key.parents = NULL;
 
-      entry = (XdgMimeParents *)bsearch (&key, list->parents, list->n_mimes,
-           sizeof (XdgMimeParents), &parent_entry_cmp);
-      if (entry)
-        return (const char **)entry->parents;
+        entry = (XdgMimeParents *)bsearch(&key, list->parents, list->n_mimes,
+                                          sizeof(XdgMimeParents), &parent_entry_cmp);
+        if (entry)
+            return (const char **)entry->parents;
     }
 
-  return NULL;
+    return NULL;
 }
 
 void
-_xdg_mime_parent_read_from_file (XdgParentList *list,
-         const char    *file_name)
+_xdg_mime_parent_read_from_file(XdgParentList *list,
+                                const char    *file_name)
 {
-  FILE *file;
-  char line[255];
-  int i, alloc;
-  XdgMimeParents *entry;
+    FILE *file;
+    char line[255];
+    int i, alloc;
+    XdgMimeParents *entry;
 
-  /* OK to not use CLO_EXEC here because mimedb is single threaded */
-  file = fopen (file_name, "r");
+    /* OK to not use CLO_EXEC here because mimedb is single threaded */
+    file = fopen(file_name, "r");
 
-  if (file == NULL)
-    return;
+    if (file == NULL)
+        return;
 
-  /* FIXME: Not UTF-8 safe.  Doesn't work if lines are greater than 255 chars.
-   * Blah */
-  alloc = list->n_mimes + 16;
-  list->parents = (XdgMimeParents *)realloc (list->parents, alloc * sizeof (XdgMimeParents));
-  while (fgets (line, 255, file) != NULL)
+    /* FIXME: Not UTF-8 safe.  Doesn't work if lines are greater than 255 chars.
+     * Blah */
+    alloc = list->n_mimes + 16;
+    list->parents = (XdgMimeParents *)realloc(list->parents, alloc * sizeof(XdgMimeParents));
+    while (fgets(line, 255, file) != NULL)
     {
-      char *sep;
-      if (line[0] == '#')
-  continue;
+        char *sep;
+        if (line[0] == '#')
+            continue;
 
-      sep = strchr (line, ' ');
-      if (sep == NULL)
-  continue;
-      *(sep++) = '\000';
-      sep[strlen (sep) -1] = '\000';
-      entry = NULL;
-      for (i = 0; i < list->n_mimes; i++)
-  {
-    if (strcmp (list->parents[i].mime, line) == 0)
-      {
-        entry = &(list->parents[i]);
-        break;
-      }
-  }
+        sep = strchr(line, ' ');
+        if (sep == NULL)
+            continue;
+        *(sep++) = '\000';
+        sep[strlen(sep) -1] = '\000';
+        entry = NULL;
+        for (i = 0; i < list->n_mimes; i++)
+        {
+            if (strcmp(list->parents[i].mime, line) == 0)
+            {
+                entry = &(list->parents[i]);
+                break;
+            }
+        }
 
-      if (!entry)
-  {
-    if (list->n_mimes == alloc)
-      {
-        alloc <<= 1;
-        list->parents = (XdgMimeParents *)realloc (list->parents,
-               alloc * sizeof (XdgMimeParents));
-      }
-    list->parents[list->n_mimes].mime = strdup (line);
-    list->parents[list->n_mimes].parents = NULL;
-    entry = &(list->parents[list->n_mimes]);
-    list->n_mimes++;
-  }
+        if (!entry)
+        {
+            if (list->n_mimes == alloc)
+            {
+                alloc <<= 1;
+                list->parents = (XdgMimeParents *)realloc(list->parents,
+                                alloc * sizeof(XdgMimeParents));
+            }
+            list->parents[list->n_mimes].mime = strdup(line);
+            list->parents[list->n_mimes].parents = NULL;
+            entry = &(list->parents[list->n_mimes]);
+            list->n_mimes++;
+        }
 
-      if (!entry->parents)
-  {
-    entry->n_parents = 1;
-    entry->parents = (char **)malloc ((entry->n_parents + 1) * sizeof (char *));
-  }
-      else
-  {
-    entry->n_parents += 1;
-    entry->parents = (char **)realloc (entry->parents,
-            (entry->n_parents + 2) * sizeof (char *));
-  }
-      entry->parents[entry->n_parents - 1] = strdup (sep);
-      entry->parents[entry->n_parents] = NULL;
+        if (!entry->parents)
+        {
+            entry->n_parents = 1;
+            entry->parents = (char **)malloc((entry->n_parents + 1) * sizeof(char *));
+        }
+        else
+        {
+            entry->n_parents += 1;
+            entry->parents = (char **)realloc(entry->parents,
+                                              (entry->n_parents + 2) * sizeof(char *));
+        }
+        entry->parents[entry->n_parents - 1] = strdup(sep);
+        entry->parents[entry->n_parents] = NULL;
     }
 
-  list->parents = (XdgMimeParents *)realloc (list->parents,
-         list->n_mimes * sizeof (XdgMimeParents));
+    list->parents = (XdgMimeParents *)realloc(list->parents,
+                    list->n_mimes * sizeof(XdgMimeParents));
 
-  fclose (file);
+    fclose(file);
 
-  if (list->n_mimes > 1)
-    qsort (list->parents, list->n_mimes,
-           sizeof (XdgMimeParents), &parent_entry_cmp);
+    if (list->n_mimes > 1)
+        qsort(list->parents, list->n_mimes,
+              sizeof(XdgMimeParents), &parent_entry_cmp);
 }
 
 
 void
-_xdg_mime_parent_list_dump (XdgParentList *list)
+_xdg_mime_parent_list_dump(XdgParentList *list)
 {
-  int i;
-  char **p;
+    int i;
+    char **p;
 
-  if (list->parents)
+    if (list->parents)
     {
-      for (i = 0; i < list->n_mimes; i++)
-  {
-    for (p = list->parents[i].parents; *p; p++)
-      printf ("%s %s\n", list->parents[i].mime, *p);
-  }
+        for (i = 0; i < list->n_mimes; i++)
+        {
+            for (p = list->parents[i].parents; *p; p++)
+                printf("%s %s\n", list->parents[i].mime, *p);
+        }
     }
 }
 

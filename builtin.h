@@ -15,9 +15,9 @@ class parser_t;
 
 enum
 {
-  COMMAND_NOT_BUILTIN,
-  BUILTIN_REGULAR,
-  BUILTIN_FUNCTION
+    COMMAND_NOT_BUILTIN,
+    BUILTIN_REGULAR,
+    BUILTIN_FUNCTION
 }
 ;
 
@@ -125,7 +125,7 @@ void builtin_destroy();
 /**
   Is there a builtin command with the given name?
 */
-int builtin_exists( const wcstring &cmd );
+int builtin_exists(const wcstring &cmd);
 
 /**
   Execute a builtin command
@@ -139,7 +139,7 @@ int builtin_exists( const wcstring &cmd );
 
   \return the exit status of the builtin command
 */
-int builtin_run( parser_t &parser, const wchar_t * const *argv, const io_chain_t &io );
+int builtin_run(parser_t &parser, const wchar_t * const *argv, const io_chain_t &io);
 
 /** Returns a list of all builtin names */
 wcstring_list_t builtin_get_names(void);
@@ -150,7 +150,7 @@ void builtin_get_names(std::vector<completion_t> &list);
 /**
    Pushes a new set of input/output to the stack. The new stdin is supplied, a new set of output strings is created.
 */
-void builtin_push_io( parser_t &parser, int stdin_fd );
+void builtin_push_io(parser_t &parser, int stdin_fd);
 
 /**
    Pops a set of input/output from the stack. The output strings are destroued, but the input file is not closed.
@@ -161,7 +161,7 @@ void builtin_pop_io(parser_t &parser);
 /**
    Return a one-line description of the specified builtin.
 */
-wcstring builtin_get_desc( const wcstring &b );
+wcstring builtin_get_desc(const wcstring &b);
 
 
 /**
@@ -177,6 +177,6 @@ const wchar_t *builtin_complete_get_temporary_buffer();
    for the specified command.
 */
 
-wcstring builtin_help_get( parser_t &parser, const wchar_t *cmd );
+wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
 #endif

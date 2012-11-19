@@ -20,9 +20,9 @@
 */
 typedef struct buffer
 {
-  char *buff; /**<data buffer*/
-  size_t length; /**< Size of buffer */
-  size_t used; /**< Size of data in buffer */
+    char *buff; /**<data buffer*/
+    size_t length; /**< Size of buffer */
+    size_t used; /**< Size of data in buffer */
 }
 buffer_t;
 
@@ -30,7 +30,7 @@ buffer_t;
    Returns the larger of two ints
 */
 template<typename T>
-static inline T maxi( T a, T b )
+static inline T maxi(T a, T b)
 {
     return a>b?a:b;
 }
@@ -39,7 +39,7 @@ static inline T maxi( T a, T b )
    Returns the smaller of two ints
  */
 template<typename T>
-static inline T mini( T a, T b )
+static inline T mini(T a, T b)
 {
     return a<b?a:b;
 }
@@ -78,7 +78,7 @@ static inline T mini( T a, T b )
    internal sort order is not arbitrary, but the names 'file1',
    'File2' and 'file3' will still be sorted in the order given above.
 */
-int wcsfilecmp( const wchar_t *a, const wchar_t *b );
+int wcsfilecmp(const wchar_t *a, const wchar_t *b);
 
 /**
    Get the current time in microseconds since Jan 1, 1970

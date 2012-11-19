@@ -30,7 +30,8 @@ void iothread_drain_all(void);
 
 /** Helper template */
 template<typename T>
-int iothread_perform(int (*handler)(T *), void (*completionCallback)(T *, int), T *context) {
+int iothread_perform(int (*handler)(T *), void (*completionCallback)(T *, int), T *context)
+{
     return iothread_perform_base((int (*)(void *))handler, (void (*)(void *, int))completionCallback, static_cast<void *>(context));
 }
 

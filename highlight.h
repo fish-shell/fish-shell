@@ -83,7 +83,7 @@ struct file_detection_context_t;
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
-void highlight_shell( const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars );
+void highlight_shell(const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
    Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are highlighted. The result is
@@ -95,7 +95,7 @@ void highlight_shell( const wcstring &buffstr, std::vector<int> &color, size_t p
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
-void highlight_universal( const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars );
+void highlight_universal(const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
    Translate from HIGHLIGHT_* to FISH_COLOR_* according to environment
@@ -107,7 +107,7 @@ void highlight_universal( const wcstring &buffstr, std::vector<int> &color, size
    call to highlight_get_color( HIGHLIGHT_ERROR) will return
    FISH_COLOR_RED.
 */
-rgb_color_t highlight_get_color( int highlight, bool is_background );
+rgb_color_t highlight_get_color(int highlight, bool is_background);
 
 /** Given a command 'str' from the history, try to determine whether we ought to suggest it by specially recognizing the command.
     Returns true if we validated the command. If so, returns by reference whether the suggestion is valid or not.
@@ -122,7 +122,8 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 
     This is used only internally to this file, and is exposed only for testing.
 */
-enum {
+enum
+{
     /* The path must be to a directory */
     PATH_REQUIRE_DIR = 1 << 0,
 

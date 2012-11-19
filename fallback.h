@@ -63,14 +63,14 @@ typedef char tputs_arg_t;
  */
 struct winsize
 {
-  /**
-     Number of rows
-   */
-  unsigned short ws_row;
-  /**
-     Number of columns
-   */
-  unsigned short ws_col;
+    /**
+       Number of rows
+     */
+    unsigned short ws_row;
+    /**
+       Number of columns
+     */
+    unsigned short ws_col;
 }
 ;
 
@@ -94,7 +94,7 @@ int tputs(const char *str, int affcnt, int (*fish_putc)(tputs_arg_t));
 */
 
 #define tparm tparm_solaris_kludge
-char *tparm_solaris_kludge( char *str, ... );
+char *tparm_solaris_kludge(char *str, ...);
 
 #endif
 
@@ -107,7 +107,7 @@ char *tparm_solaris_kludge( char *str, ... );
    strings and decimal numbers, position (%n), field width and
    precision.
 */
-int fwprintf( FILE *f, const wchar_t *format, ... );
+int fwprintf(FILE *f, const wchar_t *format, ...);
 
 
 /**
@@ -117,7 +117,7 @@ int fwprintf( FILE *f, const wchar_t *format, ... );
    strings and decimal numbers, position (%n), field width and
    precision.
 */
-int swprintf( wchar_t *str, size_t l, const wchar_t *format, ... );
+int swprintf(wchar_t *str, size_t l, const wchar_t *format, ...);
 
 /**
    Print formated string. Some operating systems (Like NetBSD) do not
@@ -126,7 +126,7 @@ int swprintf( wchar_t *str, size_t l, const wchar_t *format, ... );
    strings and decimal numbers, position (%n), field width and
    precision.
 */
-int wprintf( const wchar_t *format, ... );
+int wprintf(const wchar_t *format, ...);
 
 /**
    Print formated string. Some operating systems (Like NetBSD) do not
@@ -135,7 +135,7 @@ int wprintf( const wchar_t *format, ... );
    strings and decimal numbers, position (%n), field width and
    precision.
 */
-int vwprintf( const wchar_t *filter, va_list va );
+int vwprintf(const wchar_t *filter, va_list va);
 
 /**
    Print formated string. Some operating systems (Like NetBSD) do not
@@ -144,7 +144,7 @@ int vwprintf( const wchar_t *filter, va_list va );
    strings and decimal numbers, position (%n), field width and
    precision.
 */
-int vfwprintf( FILE *f, const wchar_t *filter, va_list va );
+int vfwprintf(FILE *f, const wchar_t *filter, va_list va);
 
 /**
    Print formated string. Some operating systems (Like NetBSD) do not
@@ -153,7 +153,7 @@ int vfwprintf( FILE *f, const wchar_t *filter, va_list va );
    strings and decimal numbers, position (%n), field width and
    precision.
 */
-int vswprintf( wchar_t *out, size_t n, const wchar_t *filter, va_list va );
+int vswprintf(wchar_t *out, size_t n, const wchar_t *filter, va_list va);
 
 #endif
 
@@ -205,7 +205,7 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **ptr);
    real wcwidth. Therefore, the fallback wcwidth assumes any printing
    character takes up one column and anything else uses 0 columns.
 */
-int wcwidth( wchar_t c );
+int wcwidth(wchar_t c);
 
 #endif
 
@@ -215,14 +215,14 @@ int wcwidth( wchar_t c );
     On other platforms, use what's detected at build time.
 */
 #if __APPLE__ && __DARWIN_C_LEVEL >= 200809L
- wchar_t *wcsdup_use_weak(const wchar_t *);
- int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
- #define wcsdup(a) wcsdup_use_weak((a))
- #define wcscasecmp(a, b) wcscasecmp_use_weak((a), (b))
+wchar_t *wcsdup_use_weak(const wchar_t *);
+int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
+#define wcsdup(a) wcsdup_use_weak((a))
+#define wcscasecmp(a, b) wcscasecmp_use_weak((a), (b))
 
 #else
 
- #ifndef HAVE_WCSDUP
+#ifndef HAVE_WCSDUP
 
 /**
    Create a duplicate string. Wide string version of strdup. Will
@@ -230,9 +230,9 @@ int wcwidth( wchar_t c );
 */
 wchar_t *wcsdup(const wchar_t *in);
 
- #endif
+#endif
 
- #ifndef HAVE_WCSCASECMP
+#ifndef HAVE_WCSCASECMP
 /**
    Case insensitive string compare function. Wide string version of
    strcasecmp.
@@ -244,9 +244,9 @@ wchar_t *wcsdup(const wchar_t *in);
    fish and guaranteed to be a sane, english word. Using wcscasecmp on
    a user-supplied string should be considered a bug.
 */
-int wcscasecmp( const wchar_t *a, const wchar_t *b );
+int wcscasecmp(const wchar_t *a, const wchar_t *b);
 
- #endif
+#endif
 #endif //__APPLE__
 
 
@@ -273,7 +273,7 @@ size_t wcslen(const wchar_t *in);
    fish and guaranteed to be a sane, english word. Using wcsncasecmp on
    a user-supplied string should be considered a bug.
 */
-int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
+int wcsncasecmp(const wchar_t *a, const wchar_t *b, int count);
 
 /**
    Returns a newly allocated wide character string wich is a copy of
@@ -290,7 +290,7 @@ int wcsncasecmp( const wchar_t *a, const wchar_t *b, int count );
    Fallback for wcsndup function. Returns a copy of \c in, truncated
    to a maximum length of \c c.
 */
-wchar_t *wcsndup( const wchar_t *in, size_t c );
+wchar_t *wcsndup(const wchar_t *in, size_t c);
 
 #endif
 
@@ -299,7 +299,7 @@ wchar_t *wcsndup( const wchar_t *in, size_t c );
    a valid digit in the specified base, return -1. This is a helper
    function for wcstol, but it is useful itself, so it is exported.
 */
-long convert_digit( wchar_t d, int base );
+long convert_digit(wchar_t d, int base);
 
 #ifndef HAVE_WCSTOL
 
@@ -312,8 +312,8 @@ long convert_digit( wchar_t d, int base );
    supported.
 */
 long wcstol(const wchar_t *nptr,
-      wchar_t **endptr,
-      int base);
+            wchar_t **endptr,
+            int base);
 
 #endif
 #ifndef HAVE_WCSLCAT
@@ -329,7 +329,7 @@ long wcstol(const wchar_t *nptr,
    and renamed to reflect this change.
 
 */
-size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
+size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t siz);
 
 #endif
 #ifndef HAVE_WCSLCPY
@@ -342,7 +342,7 @@ size_t wcslcat( wchar_t *dst, const wchar_t *src, size_t siz );
    This is the OpenBSD strlcpy function, modified for wide characters,
    and renamed to reflect this change.
 */
-size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
+size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
 
 #endif
 
@@ -361,28 +361,28 @@ size_t wcslcpy( wchar_t *dst, const wchar_t *src, size_t siz );
 */
 struct drand48_data
 {
-  /**
-     Seed value
-  */
-  unsigned int seed;
+    /**
+       Seed value
+    */
+    unsigned int seed;
 }
 ;
 
 /**
    Fallback implementation of lrand48_r. Internally uses rand_r, so it is pretty weak.
 */
-int lrand48_r( struct drand48_data *buffer, long int *result );
+int lrand48_r(struct drand48_data *buffer, long int *result);
 
 /**
    Fallback implementation of srand48_r, the seed function for lrand48_r.
 */
-int srand48_r( long int seedval, struct drand48_data *buffer );
+int srand48_r(long int seedval, struct drand48_data *buffer);
 
 #endif
 
 #ifndef HAVE_FUTIMES
 
-int futimes( int fd, const struct timeval *times );
+int futimes(int fd, const struct timeval *times);
 
 #endif
 
@@ -391,17 +391,17 @@ int futimes( int fd, const struct timeval *times );
 /**
    Fallback implementation of gettext. Just returns the original string.
 */
-char * gettext( const char * msgid );
+char * gettext(const char * msgid);
 
 /**
    Fallback implementation of bindtextdomain. Does nothing.
 */
-char * bindtextdomain( const char * domainname, const char * dirname );
+char * bindtextdomain(const char * domainname, const char * dirname);
 
 /**
    Fallback implementation of textdomain. Does nothing.
 */
-char * textdomain( const char * domainname );
+char * textdomain(const char * domainname);
 
 #endif
 
@@ -410,9 +410,9 @@ char * textdomain( const char * domainname );
 /**
    Fallback implementation of dcgettext. Just returns the original string.
 */
-char * dcgettext ( const char * domainname,
-       const char * msgid,
-       int category );
+char * dcgettext(const char * domainname,
+                 const char * msgid,
+                 int category);
 
 #endif
 
@@ -432,7 +432,7 @@ extern int _nl_msg_cat_cntr;
 /**
    Send specified signal to specified process group.
  */
-int killpg( int pgr, int sig );
+int killpg(int pgr, int sig);
 #endif
 
 
@@ -443,22 +443,22 @@ int killpg( int pgr, int sig );
  */
 struct option
 {
-  /**
-     Name of option
-   */
-  const char *name;
-  /**
-     Flag
-   */
-  int has_arg;
-  /**
-     Flag
-   */
-  int *flag;
-  /**
-     Return value
-   */
-  int val;
+    /**
+       Name of option
+     */
+    const char *name;
+    /**
+       Flag
+     */
+    int has_arg;
+    /**
+       Flag
+     */
+    int *flag;
+    /**
+       Return value
+     */
+    int val;
 }
 ;
 
@@ -475,10 +475,10 @@ struct option
 #endif
 
 int getopt_long(int argc,
-    char * const argv[],
-    const char *optstring,
-    const struct option *longopts,
-    int *longindex);
+                char * const argv[],
+                const char *optstring,
+                const struct option *longopts,
+                int *longindex);
 
 #endif
 

@@ -21,24 +21,26 @@
 */
 struct event_blockage_t
 {
-  /**
-     The types of events to block. This is interpreted as a bitset
-     whete the value is 1 for every bit corresponding to a blocked
-     event type. For example, if EVENT_VARIABLE type events should
-     be blocked, (type & 1<<EVENT_BLOCKED) should be set.
+    /**
+       The types of events to block. This is interpreted as a bitset
+       whete the value is 1 for every bit corresponding to a blocked
+       event type. For example, if EVENT_VARIABLE type events should
+       be blocked, (type & 1<<EVENT_BLOCKED) should be set.
 
-     Note that EVENT_ANY can be used to specify any event.
-  */
-  unsigned int typemask;
+       Note that EVENT_ANY can be used to specify any event.
+    */
+    unsigned int typemask;
 };
 
 typedef std::list<event_blockage_t> event_blockage_list_t;
 
-inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls, int type) {
-    for (event_blockage_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); ++iter) {
-        if( iter->typemask & (1<<EVENT_ANY ) )
+inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls, int type)
+{
+    for (event_blockage_list_t::const_iterator iter = ebls.begin(); iter != ebls.end(); ++iter)
+    {
+        if (iter->typemask & (1<<EVENT_ANY))
             return true;
-        if( iter->typemask & (1<<type) )
+        if (iter->typemask & (1<<type))
             return true;
     }
     return false;
@@ -50,20 +52,20 @@ inline bool event_block_list_blocks_type(const event_blockage_list_t &ebls, int 
 */
 enum block_type_t
 {
-  WHILE, /**< While loop block */
-  FOR,  /**< For loop block */
-  IF, /**< If block */
-  FUNCTION_DEF, /**< Function definition block */
-  FUNCTION_CALL, /**< Function invocation block */
-  FUNCTION_CALL_NO_SHADOW, /**< Function invocation block with no variable shadowing */
-  SWITCH, /**< Switch block */
-  FAKE, /**< Fake block */
-  SUBST, /**< Command substitution scope */
-  TOP, /**< Outermost block */
-  BEGIN, /**< Unconditional block */
-  SOURCE, /**< Block created by the . (source) builtin */
-  EVENT, /**< Block created on event notifier invocation */
-  BREAKPOINT, /**< Breakpoint block */
+    WHILE, /**< While loop block */
+    FOR,  /**< For loop block */
+    IF, /**< If block */
+    FUNCTION_DEF, /**< Function definition block */
+    FUNCTION_CALL, /**< Function invocation block */
+    FUNCTION_CALL_NO_SHADOW, /**< Function invocation block with no variable shadowing */
+    SWITCH, /**< Switch block */
+    FAKE, /**< Fake block */
+    SUBST, /**< Command substitution scope */
+    TOP, /**< Outermost block */
+    BEGIN, /**< Unconditional block */
+    SOURCE, /**< Block created by the . (source) builtin */
+    EVENT, /**< Block created on event notifier invocation */
+    BREAKPOINT, /**< Breakpoint block */
 }
 ;
 
@@ -72,67 +74,73 @@ enum block_type_t
 */
 struct block_t
 {
-    protected:
+protected:
     /** Protected constructor. Use one of the subclasses below. */
     block_t(block_type_t t);
 
-    private:
-  const block_type_t block_type; /**< Type of block. */
+private:
+    const block_type_t block_type; /**< Type of block. */
     bool made_fake;
 
-    public:
-    block_type_t type() const { return this->made_fake ? FAKE : this->block_type; }
+public:
+    block_type_t type() const
+    {
+        return this->made_fake ? FAKE : this->block_type;
+    }
 
     /** Mark a block as fake; this is used by the return statement. */
-    void mark_as_fake() { this->made_fake = true; }
+    void mark_as_fake()
+    {
+        this->made_fake = true;
+    }
 
-  bool skip; /**< Whether execution of the commands in this block should be skipped */
-  bool had_command; /**< Set to non-zero once a command has been executed in this block */
-  int tok_pos; /**< The start index of the block */
+    bool skip; /**< Whether execution of the commands in this block should be skipped */
+    bool had_command; /**< Set to non-zero once a command has been executed in this block */
+    int tok_pos; /**< The start index of the block */
 
-  /**
-     Status for the current loop block. Can be any of the values from the loop_status enum.
-  */
-  int loop_status;
+    /**
+       Status for the current loop block. Can be any of the values from the loop_status enum.
+    */
+    int loop_status;
 
-  /**
-     The job that is currently evaluated in the specified block.
-  */
-  job_t *job;
+    /**
+       The job that is currently evaluated in the specified block.
+    */
+    job_t *job;
 
 #if 0
-  union
-  {
-    int while_state;  /**< True if the loop condition has not yet been evaluated*/
-    wchar_t *for_variable; /**< Name of the variable to loop over */
-    int if_state; /**< The state of the if block, can be one of IF_STATE_UNTESTED, IF_STATE_FALSE, IF_STATE_TRUE */
-    wchar_t *switch_value; /**< The value to test in a switch block */
-    const wchar_t *source_dest; /**< The name of the file to source*/
-    event_t *event; /**<The event that triggered this block */
-    wchar_t *function_call_name;
-  } param1;
+    union
+    {
+        int while_state;  /**< True if the loop condition has not yet been evaluated*/
+        wchar_t *for_variable; /**< Name of the variable to loop over */
+        int if_state; /**< The state of the if block, can be one of IF_STATE_UNTESTED, IF_STATE_FALSE, IF_STATE_TRUE */
+        wchar_t *switch_value; /**< The value to test in a switch block */
+        const wchar_t *source_dest; /**< The name of the file to source*/
+        event_t *event; /**<The event that triggered this block */
+        wchar_t *function_call_name;
+    } param1;
 #endif
 
-  /**
-     Name of file that created this block
-  */
-  const wchar_t *src_filename;
+    /**
+       Name of file that created this block
+    */
+    const wchar_t *src_filename;
 
-  /**
-     Line number where this block was created
-  */
-  int src_lineno;
+    /**
+       Line number where this block was created
+    */
+    int src_lineno;
 
     /** Whether we should pop the environment variable stack when we're popped off of the block stack */
     bool wants_pop_env;
 
-  /** List of event blocks. */
-  event_blockage_list_t event_blocks;
+    /** List of event blocks. */
+    event_blockage_list_t event_blocks;
 
     /**
      Next outer block
-  */
-  block_t *outer;
+    */
+    block_t *outer;
 
     /** Destructor */
     virtual ~block_t();
@@ -213,9 +221,9 @@ struct breakpoint_block_t : public block_t
 */
 enum loop_status
 {
-  LOOP_NORMAL, /**< Current loop block executed as normal */
-  LOOP_BREAK, /**< Current loop block should be removed */
-  LOOP_CONTINUE, /**< Current loop block should be skipped */
+    LOOP_NORMAL, /**< Current loop block executed as normal */
+    LOOP_BREAK, /**< Current loop block should be removed */
+    LOOP_CONTINUE, /**< Current loop block should be skipped */
 };
 
 
@@ -224,9 +232,9 @@ enum loop_status
 */
 enum while_status
 {
-  WHILE_TEST_FIRST, /**< This is the first command of the first lap of a while loop */
-  WHILE_TEST_AGAIN, /**< This is not the first lap of the while loop, but it is the first command of the loop */
-  WHILE_TESTED, /**< This is not the first command in the loop */
+    WHILE_TEST_FIRST, /**< This is the first command of the first lap of a while loop */
+    WHILE_TEST_AGAIN, /**< This is not the first lap of the while loop, but it is the first command of the loop */
+    WHILE_TESTED, /**< This is not the first command in the loop */
 }
 ;
 
@@ -236,59 +244,62 @@ enum while_status
 */
 enum parser_error
 {
-  /**
-     No error
-  */
-  NO_ERR=0,
-  /**
-     An error in the syntax
-  */
-  SYNTAX_ERROR,
-  /**
-     Error occured while evaluating commands
-  */
-  EVAL_ERROR,
-  /**
-     Error while evaluating cmdsubst
-  */
-  CMDSUBST_ERROR,
+    /**
+       No error
+    */
+    NO_ERR=0,
+    /**
+       An error in the syntax
+    */
+    SYNTAX_ERROR,
+    /**
+       Error occured while evaluating commands
+    */
+    EVAL_ERROR,
+    /**
+       Error while evaluating cmdsubst
+    */
+    CMDSUBST_ERROR,
 };
 
-enum parser_type_t {
+enum parser_type_t
+{
     PARSER_TYPE_NONE,
     PARSER_TYPE_GENERAL,
     PARSER_TYPE_FUNCTIONS_ONLY,
     PARSER_TYPE_COMPLETIONS_ONLY,
-  PARSER_TYPE_ERRORS_ONLY
+    PARSER_TYPE_ERRORS_ONLY
 };
 
-struct profile_item_t {
-  /**
-     Time spent executing the specified command, including parse time for nested blocks.
-  */
-  int exec;
-  /**
-     Time spent parsing the specified command, including execution time for command substitutions.
-  */
-  int parse;
-  /**
-     The block level of the specified command. nested blocks and command substitutions both increase the block level.
-  */
-  size_t level;
-  /**
-     If the execution of this command was skipped.
-  */
-  int skipped;
-  /**
-     The command string.
-  */
-  wcstring cmd;
+struct profile_item_t
+{
+    /**
+       Time spent executing the specified command, including parse time for nested blocks.
+    */
+    int exec;
+    /**
+       Time spent parsing the specified command, including execution time for command substitutions.
+    */
+    int parse;
+    /**
+       The block level of the specified command. nested blocks and command substitutions both increase the block level.
+    */
+    size_t level;
+    /**
+       If the execution of this command was skipped.
+    */
+    int skipped;
+    /**
+       The command string.
+    */
+    wcstring cmd;
 };
 
 struct tokenizer;
 
-class parser_t {
-    private:
+class parser_t
+{
+private:
     enum parser_type_t parser_type;
     std::vector<block_t> blocks;
 
@@ -333,15 +344,15 @@ class parser_t {
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
 
-    void parse_job_argument_list( process_t *p, job_t *j, tokenizer *tok, std::vector<completion_t>&, bool );
-    int parse_job( process_t *p, job_t *j, tokenizer *tok );
-    void skipped_exec( job_t * j );
-    void eval_job( tokenizer *tok );
-    int parser_test_argument( const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset );
-    void print_errors( wcstring &target, const wchar_t *prefix );
+    void parse_job_argument_list(process_t *p, job_t *j, tokenizer *tok, std::vector<completion_t>&, bool);
+    int parse_job(process_t *p, job_t *j, tokenizer *tok);
+    void skipped_exec(job_t * j);
+    void eval_job(tokenizer *tok);
+    int parser_test_argument(const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset);
+    void print_errors(wcstring &target, const wchar_t *prefix);
     void print_errors_stderr();
 
-    public:
+public:
     std::vector<profile_item_t> profile_items;
 
     /**
@@ -381,7 +392,7 @@ class parser_t {
 
       \return 0 on success, 1 otherwise
     */
-    int eval( const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type );
+    int eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type);
 
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
@@ -390,11 +401,11 @@ class parser_t {
       \param line Line to evaluate
       \param output List to insert output to
     */
-  /**
-    \param line Line to evaluate
-    \param output List to insert output to
-  */
-  int eval_args( const wchar_t *line, std::vector<completion_t> &output );
+    /**
+      \param line Line to evaluate
+      \param output List to insert output to
+    */
+    int eval_args(const wchar_t *line, std::vector<completion_t> &output);
 
     /**
        Sets the current evaluation error. This function should only be used by libraries that are called by
@@ -403,7 +414,7 @@ class parser_t {
        \param p The character offset at which the error occured
        \param str The printf-style error message filter
     */
-    void error( int ec, int p, const wchar_t *str, ... );
+    void error(int ec, int p, const wchar_t *str, ...);
 
     /**
        Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.
@@ -426,22 +437,25 @@ class parser_t {
     int get_job_pos() const;
 
     /** Set the current position in the latest string of the tokenizer. */
-    void set_pos( int p);
+    void set_pos(int p);
 
     /** Get the string currently parsed */
     const wchar_t *get_buffer() const;
 
     /** Get the list of jobs */
-    job_list_t &job_list() { return my_job_list; }
+    job_list_t &job_list()
+    {
+        return my_job_list;
+    }
 
     /** Pushes the block. pop_block will call delete on it. */
-    void push_block( block_t *newv );
+    void push_block(block_t *newv);
 
     /** Remove the outermost block namespace */
     void pop_block();
 
     /** Return a description of the given blocktype */
-    const wchar_t *get_block_desc( int block ) const;
+    const wchar_t *get_block_desc(int block) const;
 
     /** Create a job */
     job_t *job_create();
@@ -456,7 +470,7 @@ class parser_t {
     job_t *job_get(int job_id);
 
     /** Returns the job with the given pid */
-    job_t *job_get_from_pid( int pid );
+    job_t *job_get_from_pid(int pid);
 
     /**
        Test if the specified string can be parsed, or if more bytes need
@@ -470,7 +484,7 @@ class parser_t {
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    int test( const wchar_t * buff, int *block_level, wcstring *out, const wchar_t *prefix );
+    int test(const wchar_t * buff, int *block_level, wcstring *out, const wchar_t *prefix);
 
     /**
        Test if the specified string can be parsed as an argument list,
@@ -478,14 +492,14 @@ class parser_t {
        string contains errors, and the second bit is set if the string
        contains an unclosed block.
     */
-    int test_args( const wchar_t * buff, wcstring *out, const wchar_t *prefix );
+    int test_args(const wchar_t * buff, wcstring *out, const wchar_t *prefix);
 
     /**
        Tell the parser that the specified function may not be run if not
        inside of a conditional block. This is to remove some possibilities
        of infinite recursion.
     */
-    void forbid_function( const wcstring &function );
+    void forbid_function(const wcstring &function);
     /**
        Undo last call to parser_forbid_function().
     */
@@ -507,7 +521,7 @@ class parser_t {
        \param s the string to test
        \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
     */
-    int is_help( const wchar_t *s, int min_match ) const;
+    int is_help(const wchar_t *s, int min_match) const;
 
     /**
        Returns the file currently evaluated by the parser. This can be
@@ -519,10 +533,10 @@ class parser_t {
     /**
        Write a stack trace starting at the specified block to the specified wcstring
     */
-    void stack_trace( block_t *b, wcstring &buff);
+    void stack_trace(block_t *b, wcstring &buff);
 
-    int get_block_type( const wchar_t *cmd ) const;
-    const wchar_t *get_block_command( int type ) const;
+    int get_block_type(const wchar_t *cmd) const;
+    const wchar_t *get_block_command(int type) const;
 };
 
 

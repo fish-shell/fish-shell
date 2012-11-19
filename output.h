@@ -17,18 +17,18 @@
 */
 enum
 {
-  FISH_COLOR_BLACK,
-  FISH_COLOR_RED,
-  FISH_COLOR_GREEN,
-  FISH_COLOR_YELLOW,
-  FISH_COLOR_BLUE,
-  FISH_COLOR_MAGENTA,
-  FISH_COLOR_CYAN,
-  FISH_COLOR_WHITE,
-  /** The default fg color of the terminal */
-  FISH_COLOR_NORMAL,
-  FISH_COLOR_IGNORE,
-  FISH_COLOR_RESET
+    FISH_COLOR_BLACK,
+    FISH_COLOR_RED,
+    FISH_COLOR_GREEN,
+    FISH_COLOR_YELLOW,
+    FISH_COLOR_BLUE,
+    FISH_COLOR_MAGENTA,
+    FISH_COLOR_CYAN,
+    FISH_COLOR_WHITE,
+    /** The default fg color of the terminal */
+    FISH_COLOR_NORMAL,
+    FISH_COLOR_IGNORE,
+    FISH_COLOR_RESET
 }
 ;
 
@@ -104,41 +104,41 @@ void set_color(rgb_color_t c, rgb_color_t c2);
    as the sending function. But a weird bug on PPC Linux means that on
    this platform, write is instead used directly.
 */
-int writembs_internal( char *str );
+int writembs_internal(char *str);
 
 /**
    Write a wide character using the output method specified using output_set_writer().
 */
-int writech( wint_t ch );
+int writech(wint_t ch);
 
 /**
    Write a wide character string to FD 1.
 */
-void writestr( const wchar_t *str );
+void writestr(const wchar_t *str);
 
 /**
    Write a wide character string to FD 1. If the string is wider than
    the specified maximum, truncate and ellipsize it.
 */
-void writestr_ellipsis( const wchar_t *str, int max_width );
+void writestr_ellipsis(const wchar_t *str, int max_width);
 
 /**
    Escape and write a string to fd 1
 */
-int write_escaped_str( const wchar_t *str, int max_len );
+int write_escaped_str(const wchar_t *str, int max_len);
 
 /**
    Return the internal color code representing the specified color
 */
-int output_color_code( const wcstring &val, bool is_background );
-rgb_color_t parse_color( const wcstring &val, bool is_background );
+int output_color_code(const wcstring &val, bool is_background);
+rgb_color_t parse_color(const wcstring &val, bool is_background);
 
 /**
    This is for writing process notification messages. Has to write to
    stdout, so clr_eol and such functions will work correctly. Not an
    issue since this function is only used in interactive mode anyway.
 */
-int writeb( tputs_arg_t b );
+int writeb(tputs_arg_t b);
 
 /**
    Set the function used for writing in move_cursor, writespace and
@@ -146,7 +146,7 @@ int writeb( tputs_arg_t b );
    default, the write call is used to give completely unbuffered
    output to stdout.
 */
-void output_set_writer( int (*writer)(char) );
+void output_set_writer(int (*writer)(char));
 
 /**
    Return the current output writer
@@ -154,7 +154,7 @@ void output_set_writer( int (*writer)(char) );
 int (*output_get_writer())(char) ;
 
 /** Set the terminal name */
-void output_set_term( const wchar_t *term );
+void output_set_term(const wchar_t *term);
 
 /** Return the terminal name */
 const wchar_t *output_get_term();

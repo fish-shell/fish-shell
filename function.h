@@ -28,34 +28,35 @@ class env_vars_snapshot_t;
   */
 struct function_data_t
 {
-  /**
-     Name of function
-   */
-  wcstring name;
-  /**
-     Description of function
-   */
-  wcstring description;
-  /**
-     Function definition
-   */
-  wchar_t *definition;
-  /**
-     List of all event handlers for this function
-   */
-  std::vector<event_t> events;
-  /**
-     List of all named arguments for this function
-   */
-  wcstring_list_t named_arguments;
-  /**
-     Set to non-zero if invoking this function shadows the variables
-     of the underlying function.
-   */
-  int shadows;
+    /**
+       Name of function
+     */
+    wcstring name;
+    /**
+       Description of function
+     */
+    wcstring description;
+    /**
+       Function definition
+     */
+    wchar_t *definition;
+    /**
+       List of all event handlers for this function
+     */
+    std::vector<event_t> events;
+    /**
+       List of all named arguments for this function
+     */
+    wcstring_list_t named_arguments;
+    /**
+       Set to non-zero if invoking this function shadows the variables
+       of the underlying function.
+     */
+    int shadows;
 };
 
-class function_info_t {
+class function_info_t
+{
 public:
     /** Constructs relevant information from the function_data */
     function_info_t(const function_data_t &data, const wchar_t *filename, int def_offset, bool autoload);
@@ -69,20 +70,20 @@ public:
     /** Function description. Only the description may be changed after the function is created. */
     wcstring description;
 
-  /** File where this function was defined (intern'd string) */
+    /** File where this function was defined (intern'd string) */
     const wchar_t * const definition_file;
 
-  /** Line where definition started */
-  const int definition_offset;
+    /** Line where definition started */
+    const int definition_offset;
 
-  /** List of all named arguments for this function */
+    /** List of all named arguments for this function */
     const wcstring_list_t named_arguments;
 
-  /** Flag for specifying that this function was automatically loaded */
+    /** Flag for specifying that this function was automatically loaded */
     const bool is_autoload;
 
-  /** Set to true if invoking this function shadows the variables of the underlying function. */
-  const bool shadows;
+    /** Set to true if invoking this function shadows the variables of the underlying function. */
+    const bool shadows;
 };
 
 
@@ -92,46 +93,46 @@ public:
 void function_init();
 
 /** Add a function. */
-void function_add( const function_data_t &data, const parser_t &parser );
+void function_add(const function_data_t &data, const parser_t &parser);
 
 /**
    Remove the function with the specified name.
 */
-void function_remove( const wcstring &name );
+void function_remove(const wcstring &name);
 
 /**
    Returns by reference the definition of the function with the name \c name.
    Returns true if successful, false if no function with the given name exists.
 */
-bool function_get_definition( const wcstring &name, wcstring *out_definition );
+bool function_get_definition(const wcstring &name, wcstring *out_definition);
 
 /**
    Returns by reference the description of the function with the name \c name.
    Returns true if the function exists and has a nonempty description, false if it does not.
 */
-bool function_get_desc( const wcstring &name, wcstring *out_desc );
+bool function_get_desc(const wcstring &name, wcstring *out_desc);
 
 /**
    Sets the description of the function with the name \c name.
 */
-void function_set_desc( const wcstring &name, const wcstring &desc );
+void function_set_desc(const wcstring &name, const wcstring &desc);
 
 /**
    Returns true if the function with the name name exists.
 */
-int function_exists( const wcstring &name );
+int function_exists(const wcstring &name);
 
 /**
    Returns true if the function with the name name exists, without triggering autoload.
 */
-int function_exists_no_autoload( const wcstring &name, const env_vars_snapshot_t &vars );
+int function_exists_no_autoload(const wcstring &name, const env_vars_snapshot_t &vars);
 
 /**
    Returns all function names.
 
    \param get_hidden whether to include hidden functions, i.e. ones starting with an underscore
 */
-wcstring_list_t function_get_names( int get_hidden );
+wcstring_list_t function_get_names(int get_hidden);
 
 /**
    Returns tha absolute path of the file where the specified function
@@ -142,7 +143,7 @@ wcstring_list_t function_get_names( int get_hidden );
 
    This returns an intern'd string.
 */
-const wchar_t *function_get_definition_file( const wcstring &name );
+const wchar_t *function_get_definition_file(const wcstring &name);
 
 /**
    Returns the linenumber where the definition of the specified
@@ -151,23 +152,23 @@ const wchar_t *function_get_definition_file( const wcstring &name );
    This function does not autoload functions, it will only work on
    functions that have already been defined.
 */
-int function_get_definition_offset( const wcstring &name );
+int function_get_definition_offset(const wcstring &name);
 
 /**
    Returns a list of all named arguments of the specified function.
 */
-wcstring_list_t function_get_named_arguments( const wcstring &name );
+wcstring_list_t function_get_named_arguments(const wcstring &name);
 
 /**
    Creates a new function using the same definition as the specified function.
    Returns true if copy is successful.
 */
-bool function_copy( const wcstring &name, const wcstring &new_name );
+bool function_copy(const wcstring &name, const wcstring &new_name);
 
 
 /**
    Returns whether this function shadows variables of the underlying function
 */
-int function_get_shadows( const wcstring &name );
+int function_get_shadows(const wcstring &name);
 
 #endif

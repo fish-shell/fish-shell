@@ -14,7 +14,7 @@
 
    \param in the string to return an interned copy of
 */
-const wchar_t *intern( const wchar_t *in );
+const wchar_t *intern(const wchar_t *in);
 
 /**
    Insert the specified string literal into the pool of unique
@@ -23,6 +23,6 @@ const wchar_t *intern( const wchar_t *in );
 
    \param in the string to add to the interned pool
 */
-const wchar_t *intern_static( const wchar_t *in );
+const wchar_t *intern_static(const wchar_t *in);
 
 #endif

@@ -56,41 +56,41 @@
 */
 enum
 {
-  /**
-     A regular external command
-  */
-  EXTERNAL,
-  /**
-     A builtin command
-  */
-  INTERNAL_BUILTIN,
-  /**
-     A shellscript function
-  */
-  INTERNAL_FUNCTION,
-  /**
-     A block of commands
-  */
-  INTERNAL_BLOCK,
-  /**
-     The exec builtin
-  */
-  INTERNAL_EXEC,
-  /**
-     A buffer
-  */
-  INTERNAL_BUFFER,
+    /**
+       A regular external command
+    */
+    EXTERNAL,
+    /**
+       A builtin command
+    */
+    INTERNAL_BUILTIN,
+    /**
+       A shellscript function
+    */
+    INTERNAL_FUNCTION,
+    /**
+       A block of commands
+    */
+    INTERNAL_BLOCK,
+    /**
+       The exec builtin
+    */
+    INTERNAL_EXEC,
+    /**
+       A buffer
+    */
+    INTERNAL_BUFFER,
 
 }
-  ;
+;
 
 enum
 {
-  JOB_CONTROL_ALL,
-  JOB_CONTROL_INTERACTIVE,
-  JOB_CONTROL_NONE,
+    JOB_CONTROL_ALL,
+    JOB_CONTROL_INTERACTIVE,
+    JOB_CONTROL_NONE,
 }
-  ;
+;
 
 /**
   A structure representing a single fish process. Contains variables
@@ -127,7 +127,7 @@ enum
 */
 class process_t
 {
-    private:
+private:
 
     null_terminated_array_t<wchar_t> argv_array;
 
@@ -138,84 +138,95 @@ class process_t
     process_t(const process_t &rhs);
     void operator=(const process_t &rhs);
 
-    public:
+public:
 
     process_t();
 
     ~process_t();
 
-  /**
-    Type of process. Can be one of \c EXTERNAL, \c
-    INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
-    INTERNAL_EXEC, or INTERNAL_BUFFER
-  */
-  int type;
+    /**
+      Type of process. Can be one of \c EXTERNAL, \c
+      INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
+      INTERNAL_EXEC, or INTERNAL_BUFFER
+    */
+    int type;
 
 
     /** Sets argv */
-    void set_argv(const wcstring_list_t &argv) {
+    void set_argv(const wcstring_list_t &argv)
+    {
         argv_array.set(argv);
         argv0_narrow.set(argv.empty() ? L"" : argv[0]);
     }
 
     /** Returns argv */
-    const wchar_t * const *get_argv(void) const { return argv_array.get(); }
-    const null_terminated_array_t<wchar_t> &get_argv_array(void) const { return argv_array; }
+    const wchar_t * const *get_argv(void) const
+    {
+        return argv_array.get();
+    }
+    const null_terminated_array_t<wchar_t> &get_argv_array(void) const
+    {
+        return argv_array;
+    }
 
     /** Returns argv[idx] */
-    const wchar_t *argv(size_t idx) const {
+    const wchar_t *argv(size_t idx) const
+    {
         const wchar_t * const *argv = argv_array.get();
         assert(argv != NULL);
         return argv[idx];
     }
 
     /** Returns argv[0], or NULL */
-    const wchar_t *argv0(void) const {
+    const wchar_t *argv0(void) const
+    {
         const wchar_t * const *argv = argv_array.get();
         return argv ? argv[0] : NULL;
     }
 
     /** Returns argv[0] as a char * */
-    const char *argv0_cstr(void) const {
+    const char *argv0_cstr(void) const
+    {
         return argv0_narrow.get();
     }
 
-  /** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. */
-  wcstring actual_cmd;
+    /** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. */
+    wcstring actual_cmd;
 
-  /** process ID */
-  pid_t pid;
+    /** process ID */
+    pid_t pid;
 
-  /** File descriptor that pipe output should bind to */
-  int pipe_write_fd;
+    /** File descriptor that pipe output should bind to */
+    int pipe_write_fd;
 
-  /** File descriptor that the _next_ process pipe input should bind to */
-  int pipe_read_fd;
+    /** File descriptor that the _next_ process pipe input should bind to */
+    int pipe_read_fd;
 
-  /** true if process has completed */
-  volatile int completed;
+    /** true if process has completed */
+    volatile int completed;
 
-  /** true if process has stopped */
-  volatile int stopped;
+    /** true if process has stopped */
+    volatile int stopped;
 
-  /** reported status value */
-  volatile int status;
+    /** reported status value */
+    volatile int status;
 
-  /** Special flag to tell the evaluation function for count to print the help information */
-  int count_help_magic;
+    /** Special flag to tell the evaluation function for count to print the help information */
+    int count_help_magic;
 
-  /** Next process in pipeline. We own this and we are responsible for deleting it. */
-  process_t *next;
+    /** Next process in pipeline. We own this and we are responsible for deleting it. */
+    process_t *next;
 #ifdef HAVE__PROC_SELF_STAT
-  /** Last time of cpu time check */
-  struct timeval last_time;
-  /** Number of jiffies spent in process at last cpu time check */
-  unsigned long last_jiffies;
+    /** Last time of cpu time check */
+    struct timeval last_time;
+    /** Number of jiffies spent in process at last cpu time check */
+    unsigned long last_jiffies;
 #endif
 };
 
 /*   Constants for the flag variable in the job struct */
-enum {
+enum
+{
     /** true if user was told about stopped job */
     JOB_NOTIFIED = 1 << 0,
 
@@ -223,9 +234,9 @@ enum {
     JOB_FOREGROUND = 1 << 1,
 
     /**
-  Whether the specified job is completely constructed,
-  i.e. completely parsed, and every process in the job has been
-  forked, etc.
+    Whether the specified job is completely constructed,
+    i.e. completely parsed, and every process in the job has been
+    forked, etc.
     */
     JOB_CONSTRUCTED = 1 << 2,
 
@@ -261,12 +272,12 @@ void release_job_id(job_id_t jobid);
 
 class job_t
 {
-  /**
-      The original command which led to the creation of this
-      job. It is used for displaying messages about job status
-      on the terminal.
-  */
-  wcstring command_str;
+    /**
+        The original command which led to the creation of this
+        job. It is used for displaying messages about job status
+        on the terminal.
+    */
+    wcstring command_str;
 
     /* narrow copy so we don't have to convert after fork */
     narrow_string_rep_t command_narrow;
@@ -275,62 +286,75 @@ class job_t
     job_t(const job_t &rhs);
     void operator=(const job_t &);
 
-    public:
+public:
 
     job_t(job_id_t jobid);
     ~job_t();
 
     /** Returns whether the command is empty. */
-    bool command_is_empty() const { return command_str.empty(); }
+    bool command_is_empty() const
+    {
+        return command_str.empty();
+    }
 
     /** Returns the command as a wchar_t *. */
-    const wchar_t *command_wcstr() const { return command_str.c_str(); }
+    const wchar_t *command_wcstr() const
+    {
+        return command_str.c_str();
+    }
 
     /** Returns the command */
-    const wcstring &command() const { return command_str; }
+    const wcstring &command() const
+    {
+        return command_str;
+    }
 
     /** Returns the command as a char *. */
-    const char *command_cstr() const { return command_narrow.get(); }
+    const char *command_cstr() const
+    {
+        return command_narrow.get();
+    }
 
     /** Sets the command */
-    void set_command(const wcstring &cmd) {
+    void set_command(const wcstring &cmd)
+    {
         command_str = cmd;
         command_narrow.set(cmd);
     }
 
-  /**
-      A linked list of all the processes in this job. We are responsible for deleting this when we are deallocated.
-  */
-  process_t *first_process;
+    /**
+        A linked list of all the processes in this job. We are responsible for deleting this when we are deallocated.
+    */
+    process_t *first_process;
 
-  /**
-      process group ID for the process group that this job is
-      running in.
-  */
-  pid_t pgid;
+    /**
+        process group ID for the process group that this job is
+        running in.
+    */
+    pid_t pgid;
 
-  /**
-      The saved terminal modes of this job. This needs to be
-      saved so that we can restore the terminal to the same
-      state after temporarily taking control over the terminal
-      when a job stops.
-  */
-  struct termios tmodes;
+    /**
+        The saved terminal modes of this job. This needs to be
+        saved so that we can restore the terminal to the same
+        state after temporarily taking control over the terminal
+        when a job stops.
+    */
+    struct termios tmodes;
 
-  /**
-     The job id of the job. This is a small integer that is a
-     unique identifier of the job within this shell, and is
-     used e.g. in process expansion.
-  */
-  const job_id_t job_id;
+    /**
+       The job id of the job. This is a small integer that is a
+       unique identifier of the job within this shell, and is
+       used e.g. in process expansion.
+    */
+    const job_id_t job_id;
 
-  /** List of all IO redirections for this job. */
-  io_chain_t io;
+    /** List of all IO redirections for this job. */
+    io_chain_t io;
 
-  /**
-     Bitset containing information about the job. A combination of the JOB_* constants.
-  */
-  unsigned int flags;
+    /**
+       Bitset containing information about the job. A combination of the JOB_* constants.
+    */
+    unsigned int flags;
 };
 
 /**
@@ -371,16 +395,19 @@ bool job_list_is_empty(void);
 /** A class to aid iteration over jobs list.
     Note this is used from a signal handler, so it must be careful to not allocate memory.
 */
-class job_iterator_t {
+class job_iterator_t
+{
     job_list_t * const job_list;
     job_list_t::iterator current, end;
-    public:
+public:
 
     void reset(void);
 
-    job_t *next() {
+    job_t *next()
+    {
         job_t *job = NULL;
-        if (current != end) {
+        if (current != end)
+        {
             job = *current;
             ++current;
         }
@@ -426,17 +453,17 @@ extern int no_exec;
 /**
    Add the specified flag to the bitset of flags for the specified job
  */
-void job_set_flag( job_t *j, int flag, int set );
+void job_set_flag(job_t *j, int flag, int set);
 
 /**
    Returns one if the specified flag is set in the specified job, 0 otherwise.
  */
-int job_get_flag( const job_t *j, int flag );
+int job_get_flag(const job_t *j, int flag);
 
 /**
    Sets the status of the last process to exit
 */
-void proc_set_last_status( int s );
+void proc_set_last_status(int s);
 
 /**
    Returns the status of the last process to exit
@@ -446,7 +473,7 @@ int proc_get_last_status();
 /**
    Remove the specified job
 */
-void job_free( job_t* j );
+void job_free(job_t* j);
 
 /**
  Promotes a job to the front of the job list.
@@ -473,12 +500,12 @@ job_t *job_get_from_pid(int pid);
 /**
    Tests if the job is stopped
  */
-int job_is_stopped( const job_t *j );
+int job_is_stopped(const job_t *j);
 
 /**
    Tests if the job has completed, i.e. if the last process of the pipeline has ended.
  */
-int job_is_completed( const job_t *j );
+int job_is_completed(const job_t *j);
 
 /**
   Reassume a (possibly) stopped job. Put job j in the foreground.  If
@@ -488,7 +515,7 @@ int job_is_completed( const job_t *j );
   \param j The job
   \param cont Whether the function should wait for the job to complete before returning
 */
-void job_continue( job_t *j, int cont );
+void job_continue(job_t *j, int cont);
 
 /**
    Notify the user about stopped or terminated jobs. Delete terminated
@@ -496,21 +523,21 @@ void job_continue( job_t *j, int cont );
 
    \param interactive whether interactive jobs should be reaped as well
 */
-int job_reap( bool interactive );
+int job_reap(bool interactive);
 
 /**
    Signal handler for SIGCHLD. Mark any processes with relevant
    information.
 */
-void job_handle_signal( int signal, siginfo_t *info, void *con );
+void job_handle_signal(int signal, siginfo_t *info, void *con);
 
 /**
    Send the specified signal to all processes in the specified job.
 */
-int job_signal( job_t *j, int signal );
+int job_signal(job_t *j, int signal);
 
 /* Marks a process as failed to execute (and therefore completed) */
-void job_mark_process_as_failed( const job_t *job, process_t *p );
+void job_mark_process_as_failed(const job_t *job, process_t *p);
 
 #ifdef HAVE__PROC_SELF_STAT
 /**
@@ -518,7 +545,7 @@ void job_mark_process_as_failed( const job_t *job, process_t *p );
    was used by this process. This function is only available on
    systems with the procfs file entry 'stat', i.e. Linux.
 */
-unsigned long proc_get_jiffies( process_t *p );
+unsigned long proc_get_jiffies(process_t *p);
 
 /**
    Update process time usage for all processes by calling the
@@ -539,7 +566,7 @@ void proc_sanity_check();
    Send a process/job exit event notification. This function is a
    conveniance wrapper around event_fire().
 */
-void proc_fire_event( const wchar_t *msg, int type, pid_t pid, int status );
+void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status);
 
 /**
   Initializations
@@ -555,7 +582,7 @@ void proc_destroy();
    Set new value for is_interactive flag, saving previous value. If
    needed, update signal handlers.
 */
-void proc_push_interactive( int value );
+void proc_push_interactive(int value);
 
 /**
    Set is_interactive flag to the previous value. If needed, update

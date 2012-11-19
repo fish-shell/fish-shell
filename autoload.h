@@ -14,7 +14,8 @@
 #include "lru.h"
 
 /** A struct responsible for recording an attempt to access a file. */
-struct file_access_attempt_t {
+struct file_access_attempt_t
+{
     time_t mod_time; /** The modification time of the file */
     time_t last_checked; /** When we last checked the file */
     bool accessible; /** Whether we believe we could access this file */
@@ -40,7 +41,8 @@ class env_vars_snapshot_t;
 /**
   A class that represents a path from which we can autoload, and the autoloaded contents.
  */
-class autoload_t : private lru_cache_t<autoload_function_t> {
+class autoload_t : private lru_cache_t<autoload_function_t>
+{
 private:
 
     /** Lock for thread safety */
@@ -58,34 +60,36 @@ private:
     /** The path from which we most recently autoloaded */
     wcstring last_path;
 
-  /**
-     A table containing all the files that are currently being
-     loaded. This is here to help prevent recursion.
-  */
+    /**
+       A table containing all the files that are currently being
+       loaded. This is here to help prevent recursion.
+    */
     std::set<wcstring> is_loading_set;
 
-    bool is_loading(const wcstring &name) const {
+    bool is_loading(const wcstring &name) const
+    {
         return is_loading_set.find(name) != is_loading_set.end();
     }
 
-    void remove_all_functions(void) {
+    void remove_all_functions(void)
+    {
         this->evict_all_nodes();
     }
 
-    bool locate_file_and_maybe_load_it( const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list );
+    bool locate_file_and_maybe_load_it(const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list);
 
     virtual void node_was_evicted(autoload_function_t *node);
 
     autoload_function_t *get_autoloaded_function_with_creation(const wcstring &cmd, bool allow_eviction);
 
-    protected:
+protected:
     /** Overridable callback for when a command is removed */
     virtual void command_removed(const wcstring &cmd) { }
 
-    public:
+public:
 
     /** Create an autoload_t for the given environment variable name */
-    autoload_t(const wcstring &env_var_name_var, const builtin_script_t *scripts, size_t script_count );
+    autoload_t(const wcstring &env_var_name_var, const builtin_script_t *scripts, size_t script_count);
 
     /** Destructor */
     virtual ~autoload_t();
@@ -101,10 +105,10 @@ private:
        \param on_unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
        \param reload wheter to recheck file timestamps on already loaded files
     */
-    int load( const wcstring &cmd, bool reload );
+    int load(const wcstring &cmd, bool reload);
 
     /** Check whether we have tried loading the given command. Does not do any I/O. */
-    bool has_tried_loading( const wcstring &cmd );
+    bool has_tried_loading(const wcstring &cmd);
 
     /**
        Tell the autoloader that the specified file, in the specified path,
@@ -114,15 +118,15 @@ private:
        \param on_unload a callback function which will be called before (re)loading a file, may be used to unload the previous file.
        \return non-zero if the file was removed, zero if the file had not yet been loaded
     */
-    int unload( const wcstring &cmd );
+    int unload(const wcstring &cmd);
 
     /**
        Unloads all files.
     */
-    void unload_all( );
+    void unload_all();
 
     /** Check whether the given command could be loaded, but do not load it. */
-    bool can_load( const wcstring &cmd, const env_vars_snapshot_t &vars );
+    bool can_load(const wcstring &cmd, const env_vars_snapshot_t &vars);
 
 };
 

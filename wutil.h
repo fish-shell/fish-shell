@@ -84,12 +84,12 @@ void wperror(const wcstring &s);
 /**
    Wide character version of getcwd().
 */
-wchar_t *wgetcwd( wchar_t *buff, size_t sz );
+wchar_t *wgetcwd(wchar_t *buff, size_t sz);
 
 /**
    Wide character version of chdir()
 */
-int wchdir( const wcstring &dir );
+int wchdir(const wcstring &dir);
 
 /**
   Wide character version of realpath function. Just like the GNU
@@ -108,12 +108,12 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
 /**
    Wide character version of dirname()
 */
-std::wstring wdirname( const std::wstring &path);
+std::wstring wdirname(const std::wstring &path);
 
 /**
    Wide character version of basename()
 */
-std::wstring wbasename( const std::wstring &path);
+std::wstring wbasename(const std::wstring &path);
 
 /**
    Wide character wrapper around the gettext function. For historic
@@ -123,23 +123,23 @@ std::wstring wbasename( const std::wstring &path);
    wgettext, so that wgettext will be nothing more than a wrapper
    around gettext, like all other functions in this file.
 */
-const wchar_t *wgettext( const wchar_t *in );
+const wchar_t *wgettext(const wchar_t *in);
 wcstring wgettext2(const wcstring &in);
 
 /**
    Wide character version of getenv
 */
-const wchar_t *wgetenv( const wcstring &name );
+const wchar_t *wgetenv(const wcstring &name);
 
 /**
    Wide character version of mkdir
 */
-int wmkdir( const wcstring &dir, int mode );
+int wmkdir(const wcstring &dir, int mode);
 
 /**
    Wide character version of rename
 */
-int wrename( const wcstring &oldName, const wcstring &newName );
+int wrename(const wcstring &oldName, const wcstring &newName);
 
 /** Like wcstol(), but fails on a value outside the range of an int */
 int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base);

@@ -1,4 +1,4 @@
-/** \file reader.h 
+/** \file reader.h
 
     Prototypes for functions for reading data from stdin and passing
 	to the parser. If stdin is a keyboard, it supplies a killring,
@@ -24,12 +24,12 @@ class history_t;
 /**
   Read commands from \c fd until encountering EOF
 */
-int reader_read( int fd, const io_chain_t &io);
+int reader_read(int fd, const io_chain_t &io);
 
 /**
   Tell the shell that it should exit after the currently running command finishes.
 */
-void reader_exit( int do_exit, int force );
+void reader_exit(int do_exit, int force);
 
 /**
    Check that the reader is in a sane state
@@ -53,10 +53,10 @@ const wchar_t *reader_current_filename();
 
 /**
    Push a new filename on the stack of read files
-   
+
    \param fn The fileanme to push
 */
-void reader_push_current_filename( const wchar_t *fn );
+void reader_push_current_filename(const wchar_t *fn);
 /**
    Pop the current filename from the stack of read files
  */
@@ -85,7 +85,7 @@ void reader_repaint_if_needed();
    Run the specified command with the correct terminal modes, and
    while taking care to perform job notification, set the title, etc.
 */
-void reader_run_command( const wchar_t *buff );
+void reader_run_command(const wchar_t *buff);
 
 /**
    Get the string of character currently entered into the command
@@ -103,7 +103,7 @@ history_t *reader_get_history(void);
    \param p the cursor position. If \c p is larger than the length of the command line,
             the cursor is placed on the last character.
 */
-void reader_set_buffer( const wcstring &b, size_t p );
+void reader_set_buffer(const wcstring &b, size_t p);
 
 /**
    Get the current cursor position in the command line. If interactive
@@ -125,9 +125,9 @@ int reader_interrupted();
 const wchar_t *reader_readline();
 
 /**
-   Push a new reader environment. 
+   Push a new reader environment.
 */
-void reader_push( const wchar_t *name );
+void reader_push(const wchar_t *name);
 
 /**
    Return to previous reader environment
@@ -135,66 +135,66 @@ void reader_push( const wchar_t *name );
 void reader_pop();
 
 /**
-   Specify function to use for finding possible tab completions. The function must take these arguments: 
+   Specify function to use for finding possible tab completions. The function must take these arguments:
 
    - The command to be completed as a null terminated array of wchar_t
    - An array_list_t in which completions will be inserted.
 */
-typedef void (*complete_function_t)( const wcstring &, std::vector<completion_t> &, complete_type_t, wcstring_list_t * lst );
-void reader_set_complete_function( complete_function_t );
+typedef void (*complete_function_t)(const wcstring &, std::vector<completion_t> &, complete_type_t, wcstring_list_t * lst);
+void reader_set_complete_function(complete_function_t);
 
 /**
  The type of a highlight function.
  */
 class env_vars_snapshot_t;
-typedef void (*highlight_function_t)( const wcstring &, std::vector<int> &, size_t, wcstring_list_t *, const env_vars_snapshot_t &vars );
+typedef void (*highlight_function_t)(const wcstring &, std::vector<int> &, size_t, wcstring_list_t *, const env_vars_snapshot_t &vars);
 
 /**
  Specify function for syntax highlighting. The function must take these arguments:
- 
+
  - The command to be highlighted as a null terminated array of wchar_t
  - The color code of each character as an array of ints
  - The cursor position
  - An array_list_t used for storing error messages
  */
-void reader_set_highlight_function( highlight_function_t );
+void reader_set_highlight_function(highlight_function_t);
 
 /**
    Specify function for testing if the command buffer contains syntax
    errors that must be corrected before returning.
 */
-void reader_set_test_function( int (*f)( const wchar_t * ) );
+void reader_set_test_function(int (*f)(const wchar_t *));
 
 /**
    Specify string of shell commands to be run in order to generate the
    prompt.
 */
-void reader_set_left_prompt( const wcstring &prompt );
+void reader_set_left_prompt(const wcstring &prompt);
 
 /**
    Specify string of shell commands to be run in order to generate the
    right prompt.
 */
-void reader_set_right_prompt( const wcstring &prompt );
+void reader_set_right_prompt(const wcstring &prompt);
 
 
 /** Sets whether autosuggesting is allowed. */
 void reader_set_allow_autosuggesting(bool flag);
 
 /**
-   Returns true if the shell is exiting, 0 otherwise. 
+   Returns true if the shell is exiting, 0 otherwise.
 */
 int exit_status();
 
 /**
    Replace the current token with the specified string
 */
-void reader_replace_current_token( const wchar_t *new_token );
+void reader_replace_current_token(const wchar_t *new_token);
 
 /**
    The readers interrupt signal handler. Cancels all currently running blocks.
 */
-void reader_handle_int( int signal );
+void reader_handle_int(int signal);
 
 /**
    This function returns true if fish is exiting by force, i.e. because stdin died
@@ -205,7 +205,7 @@ int reader_exit_forced();
    Test if the given shell command contains errors. Uses parser_test
    for testing. Suitable for reader_set_test_function().
 */
-int reader_shell_test( const wchar_t *b );
+int reader_shell_test(const wchar_t *b);
 
 /**
    Test whether the interactive reader is in search mode.

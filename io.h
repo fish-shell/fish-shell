@@ -10,7 +10,7 @@ using std::tr1::shared_ptr;
 */
 enum io_mode
 {
-  IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
+    IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
 };
 
 /** Represents an FD redirection */
@@ -24,71 +24,77 @@ private:
     void operator=(const io_data_t &rhs);
 
 public:
-  /** Type of redirect */
-  int io_mode;
-  /** FD to redirect */
-  int fd;
+    /** Type of redirect */
+    int io_mode;
+    /** FD to redirect */
+    int fd;
 
-  /**
-    Type-specific parameter for redirection
-  */
-  union
-  {
-    /** Fds for IO_PIPE and for IO_BUFFER */
-    int pipe_fd[2];
-    /** fd to redirect specified fd to, for IO_FD */
-    int old_fd;
-  } param1;
+    /**
+      Type-specific parameter for redirection
+    */
+    union
+    {
+        /** Fds for IO_PIPE and for IO_BUFFER */
+        int pipe_fd[2];
+        /** fd to redirect specified fd to, for IO_FD */
+        int old_fd;
+    } param1;
 
 
-  /**  Second type-specific paramter for redirection */
-  union
-  {
-    /** file creation flags to send to open for IO_FILE */
-    int flags;
-    /** Whether to close old_fd for IO_FD */
-    int close_old;
-  } param2;
+    /**  Second type-specific paramter for redirection */
+    union
+    {
+        /** file creation flags to send to open for IO_FILE */
+        int flags;
+        /** Whether to close old_fd for IO_FD */
+        int close_old;
+    } param2;
 
     /** Filename IO_FILE. malloc'd. This needs to be used after fork, so don't use wcstring here. */
     const char *filename_cstr;
 
     /** Convenience to set filename_cstr via wcstring */
-    void set_filename(const wcstring &str) {
+    void set_filename(const wcstring &str)
+    {
         free((void *)filename_cstr);
         filename_cstr = wcs2str(str.c_str());
     }
 
     /** Function to create the output buffer */
-    void out_buffer_create() {
+    void out_buffer_create()
+    {
         out_buffer.reset(new std::vector<char>);
     }
 
     /** Function to append to the buffer */
-    void out_buffer_append(const char *ptr, size_t count) {
+    void out_buffer_append(const char *ptr, size_t count)
+    {
         assert(out_buffer.get() != NULL);
         out_buffer->insert(out_buffer->end(), ptr, ptr + count);
     }
 
     /** Function to get a pointer to the buffer */
-    char *out_buffer_ptr(void) {
+    char *out_buffer_ptr(void)
+    {
         assert(out_buffer.get() != NULL);
         return out_buffer->empty() ? NULL : &out_buffer->at(0);
     }
 
-    const char *out_buffer_ptr(void) const {
+    const char *out_buffer_ptr(void) const
+    {
         assert(out_buffer.get() != NULL);
         return out_buffer->empty() ? NULL : &out_buffer->at(0);
     }
 
     /** Function to get the size of the buffer */
-    size_t out_buffer_size(void) const {
+    size_t out_buffer_size(void) const
+    {
         assert(out_buffer.get() != NULL);
         return out_buffer->size();
     }
 
-  /** Set to true if this is an input io redirection */
-  bool is_input;
+    /** Set to true if this is an input io redirection */
+    bool is_input;
 
     io_data_t() :
         out_buffer(),
@@ -112,12 +118,14 @@ public:
     {
     }
 
-    ~io_data_t() {
+    ~io_data_t()
+    {
         free((void *)filename_cstr);
     }
 };
 
-class io_chain_t : public std::vector<io_data_t *> {
+class io_chain_t : public std::vector<io_data_t *>
+{
 public:
     io_chain_t();
     io_chain_t(io_data_t *);
@@ -144,7 +152,7 @@ io_chain_t io_duplicate(const io_chain_t &chain);
 io_chain_t io_unique(const io_chain_t &chain);
 
 /** Prepends a copy of the specified 'src' chain of redirections to 'dst.' Uses operator new. */
-void io_duplicate_prepend( const io_chain_t &src, io_chain_t &dst );
+void io_duplicate_prepend(const io_chain_t &src, io_chain_t &dst);
 
 /** Destroys an io_chain */
 void io_chain_destroy(io_chain_t &chain);
@@ -159,7 +167,7 @@ io_data_t *io_chain_get(io_chain_t &src, int fd);
 /**
    Free all resources used by a IO_BUFFER type io redirection.
 */
-void io_buffer_destroy( io_data_t *io_buffer );
+void io_buffer_destroy(io_data_t *io_buffer);
 
 /**
    Create a IO_BUFFER type io redirection, complete with a pipe and a
@@ -170,14 +178,14 @@ void io_buffer_destroy( io_data_t *io_buffer );
    used to buffer the output of a command, or non-zero to buffer the
    input to a command.
 */
-io_data_t *io_buffer_create( bool is_input );
+io_data_t *io_buffer_create(bool is_input);
 
 /**
    Close output pipe, and read from input pipe until eof.
 */
-void io_buffer_read( io_data_t *d );
+void io_buffer_read(io_data_t *d);
 
 /** Print debug information about the specified IO redirection chain to stderr. */
-void io_print( const io_chain_t &chain );
+void io_print(const io_chain_t &chain);
 
 #endif

@@ -15,20 +15,20 @@ Header file for the low level input library
 
 enum
 {
-  /**
-     R_NULL is sometimes returned by the input when a character was
-     requested but none could be delivered, or when an exception
-     happened.
-  */
-  R_NULL = INPUT_COMMON_RESERVED,
-  R_EOF
+    /**
+       R_NULL is sometimes returned by the input when a character was
+       requested but none could be delivered, or when an exception
+       happened.
+    */
+    R_NULL = INPUT_COMMON_RESERVED,
+    R_EOF
 }
-  ;
+;
 
 /**
    Init the library
 */
-void input_common_init( int (*ih)() );
+void input_common_init(int (*ih)());
 
 /* Sets a callback to be invoked every time a byte is read */
 void input_common_set_poll_callback(void (*handler)(void));
@@ -47,13 +47,13 @@ void input_common_destroy();
    WAIT_ON_ESCAPE milliseconds for a character to be available for
    reading before returning with the value WEOF.
 */
-wchar_t input_common_readch( int timed );
+wchar_t input_common_readch(int timed);
 
 /**
    Push a character or a readline function onto the stack of unread
    characters that input_readch will return before actually reading from fd
    0.
 */
-void input_common_unreadch( wint_t ch );
+void input_common_unreadch(wint_t ch);
 
 #endif

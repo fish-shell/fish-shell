@@ -67,7 +67,8 @@
  */
 #define PROG_COMPLETE_SEP L'\t'
 
-enum {
+enum
+{
     /**
        Do not insert space afterwards if this is the only completion. (The
        default is to try insert a space)
@@ -109,32 +110,35 @@ class completion_t
 
 private:
     /* No public default constructor */
-  completion_t();
+    completion_t();
 public:
 
-  /**
-     The completion string
-  */
-  wcstring completion;
+    /**
+       The completion string
+    */
+    wcstring completion;
 
-  /**
-     The description for this completion
-  */
-  wcstring description;
+    /**
+       The description for this completion
+    */
+    wcstring description;
 
-  /**
-     Flags determining the completion behaviour.
+    /**
+       Flags determining the completion behaviour.
 
-     Determines whether a space should be inserted after this
-     compeltion if it is the only possible completion using the
-     COMPLETE_NO_SPACE flag.
+       Determines whether a space should be inserted after this
+       compeltion if it is the only possible completion using the
+       COMPLETE_NO_SPACE flag.
 
-     The COMPLETE_NO_CASE can be used to signal that this completion
-     is case insensitive.
-  */
-  int flags;
+       The COMPLETE_NO_CASE can be used to signal that this completion
+       is case insensitive.
+    */
+    int flags;
 
-    bool is_case_insensitive() const { return !! (flags & COMPLETE_NO_CASE); }
+    bool is_case_insensitive() const
+    {
+        return !!(flags & COMPLETE_NO_CASE);
+    }
 
     /* Construction. Note: defining these so that they are not inlined reduces the executable size. */
     completion_t(const wcstring &comp, const wcstring &desc = L"", int flags_val = 0);
@@ -142,21 +146,22 @@ public:
     completion_t &operator=(const completion_t &);
 
     /* The following are needed for sorting and uniquing completions */
-  bool operator < (const completion_t& rhs) const;
-  bool operator == (const completion_t& rhs) const;
-  bool operator != (const completion_t& rhs) const;
+    bool operator < (const completion_t& rhs) const;
+    bool operator == (const completion_t& rhs) const;
+    bool operator != (const completion_t& rhs) const;
 };
 
-enum complete_type_t {
+enum complete_type_t
+{
     COMPLETE_DEFAULT,
     COMPLETE_AUTOSUGGEST
 };
 
 /** Given a list of completions, returns a list of their completion fields */
-wcstring_list_t completions_to_wcstring_list( const std::vector<completion_t> &completions );
+wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &completions);
 
 /** Sorts a list of completions */
-void sort_completions( std::vector<completion_t> &completions);
+void sort_completions(std::vector<completion_t> &completions);
 
 /**
 
@@ -203,30 +208,30 @@ void sort_completions( std::vector<completion_t> &completions);
       If \c condition is empty, the completion is always used.
   \param flags A set of completion flags
 */
-void complete_add( const wchar_t *cmd,
-                   bool cmd_is_path,
-                   wchar_t short_opt,
-                   const wchar_t *long_opt,
-                   int long_mode,
-                   int result_mode,
-                   const wchar_t *condition,
-                   const wchar_t *comp,
-                   const wchar_t *desc,
-                   int flags );
+void complete_add(const wchar_t *cmd,
+                  bool cmd_is_path,
+                  wchar_t short_opt,
+                  const wchar_t *long_opt,
+                  int long_mode,
+                  int result_mode,
+                  const wchar_t *condition,
+                  const wchar_t *comp,
+                  const wchar_t *desc,
+                  int flags);
 /**
   Sets whether the completion list for this command is complete. If
   true, any options not matching one of the provided options will be
   flagged as an error by syntax highlighting.
 */
-void complete_set_authoritative( const wchar_t *cmd, bool cmd_type, bool authoritative );
+void complete_set_authoritative(const wchar_t *cmd, bool cmd_type, bool authoritative);
 
 /**
   Remove a previously defined completion
 */
-void complete_remove( const wchar_t *cmd,
-                      bool cmd_is_path,
-                      wchar_t short_opt,
-                      const wchar_t *long_opt );
+void complete_remove(const wchar_t *cmd,
+                     bool cmd_is_path,
+                     wchar_t short_opt,
+                     const wchar_t *long_opt);
 
 
 /** Find all completions of the command cmd, insert them into out. If to_load is
@@ -243,23 +248,23 @@ void complete(const wcstring &cmd,
 
    \param out The string to write completions to
 */
-void complete_print( wcstring &out );
+void complete_print(wcstring &out);
 
 /**
    Tests if the specified option is defined for the specified command
 */
-int complete_is_valid_option( const wcstring &str,
-                const wcstring &opt,
-                wcstring_list_t *inErrorsOrNull,
-                bool allow_autoload );
+int complete_is_valid_option(const wcstring &str,
+                             const wcstring &opt,
+                             wcstring_list_t *inErrorsOrNull,
+                             bool allow_autoload);
 
 /**
    Tests if the specified argument is valid for the specified option
    and command
 */
-bool complete_is_valid_argument( const wcstring &str,
-                 const wcstring &opt,
-                 const wcstring &arg );
+bool complete_is_valid_argument(const wcstring &str,
+                                const wcstring &opt,
+                                const wcstring &arg);
 
 
 /**
@@ -273,7 +278,7 @@ bool complete_is_valid_argument( const wcstring &str,
       previously loaded. (This is set to true on actual completions, so that
       changed completion are updated in running shells)
 */
-void complete_load( const wcstring &cmd, bool reload );
+void complete_load(const wcstring &cmd, bool reload);
 
 /**
    Create a new completion entry

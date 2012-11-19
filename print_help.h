@@ -10,6 +10,6 @@
   Print help message for the specified command
 */
 
-void print_help( const char *cmd, int fd );
+void print_help(const char *cmd, int fd);
 
 #endif

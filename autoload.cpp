@@ -17,17 +17,24 @@ The classes responsible for autoloading functions and completions.
 /* The time before we'll recheck an autoloaded file */
 static const int kAutoloadStalenessInterval = 15;
 
-file_access_attempt_t access_file(const wcstring &path, int mode) {
+file_access_attempt_t access_file(const wcstring &path, int mode)
+{
     //printf("Touch %ls\n", path.c_str());
     file_access_attempt_t result = {0};
     struct stat statbuf;
-    if (wstat(path, &statbuf)) {
+    if (wstat(path, &statbuf))
+    {
         result.error = errno;
-    } else {
+    }
+    else
+    {
         result.mod_time = statbuf.st_mtime;
-        if (waccess(path, mode)) {
+        if (waccess(path, mode))
+        {
             result.error = errno;
-        } else {
+        }
+        else
+        {
             result.accessible = true;
         }
     }
@@ -39,21 +46,23 @@ file_access_attempt_t access_file(const wcstring &path, int mode) {
 }
 
 autoload_t::autoload_t(const wcstring &env_var_name_var, const builtin_script_t * const scripts, size_t script_count) :
-                       lock(),
-                       env_var_name(env_var_name_var),
-                       builtin_scripts(scripts),
-                       builtin_script_count(script_count),
-                       last_path(),
-                       is_loading_set()
+    lock(),
+    env_var_name(env_var_name_var),
+    builtin_scripts(scripts),
+    builtin_script_count(script_count),
+    last_path(),
+    is_loading_set()
 {
     pthread_mutex_init(&lock, NULL);
 }
 
-autoload_t::~autoload_t() {
+autoload_t::~autoload_t()
+{
     pthread_mutex_destroy(&lock);
 }
 
-void autoload_t::node_was_evicted(autoload_function_t *node) {
+void autoload_t::node_was_evicted(autoload_function_t *node)
+{
     // This should only ever happen on the main thread
     ASSERT_IS_MAIN_THREAD();
 
@@ -63,27 +72,27 @@ void autoload_t::node_was_evicted(autoload_function_t *node) {
     delete node;
 }
 
-int autoload_t::unload( const wcstring &cmd )
+int autoload_t::unload(const wcstring &cmd)
 {
     return this->evict_node(cmd);
 }
 
-int autoload_t::load( const wcstring &cmd, bool reload )
+int autoload_t::load(const wcstring &cmd, bool reload)
 {
-  int res;
-  CHECK_BLOCK( 0 );
+    int res;
+    CHECK_BLOCK(0);
     ASSERT_IS_MAIN_THREAD();
 
-  env_var_t path_var = env_get_string( env_var_name );
+    env_var_t path_var = env_get_string(env_var_name);
 
     /*
       Do we know where to look?
     */
-    if( path_var.empty() )
+    if (path_var.empty())
         return 0;
 
     /* Check if the lookup path has changed. If so, drop all loaded files. path_var may only be inspected on the main thread. */
-    if( path_var != this->last_path )
+    if (path_var != this->last_path)
     {
         this->last_path = path_var;
         scoped_lock locker(lock);
@@ -93,10 +102,10 @@ int autoload_t::load( const wcstring &cmd, bool reload )
     /** Warn and fail on infinite recursion. It's OK to do this because this function is only called on the main thread. */
     if (this->is_loading(cmd))
     {
-        debug( 0,
-               _( L"Could not autoload item '%ls', it is already being autoloaded. "
-                  L"This is a circular dependency in the autoloading scripts, please remove it."),
-               cmd.c_str() );
+        debug(0,
+              _(L"Could not autoload item '%ls', it is already being autoloaded. "
+                L"This is a circular dependency in the autoloading scripts, please remove it."),
+              cmd.c_str());
         return 1;
     }
 
@@ -105,27 +114,27 @@ int autoload_t::load( const wcstring &cmd, bool reload )
 
     /* Get the list of paths from which we will try to load */
     std::vector<wcstring> path_list;
-  tokenize_variable_array( path_var, path_list );
+    tokenize_variable_array(path_var, path_list);
 
-  /* Try loading it */
-  res = this->locate_file_and_maybe_load_it( cmd, true, reload, path_list );
+    /* Try loading it */
+    res = this->locate_file_and_maybe_load_it(cmd, true, reload, path_list);
 
     /* Clean up */
     bool erased = !! is_loading_set.erase(cmd);
     assert(erased);
 
-  return res;
+    return res;
 }
 
-bool autoload_t::can_load( const wcstring &cmd, const env_vars_snapshot_t &vars )
+bool autoload_t::can_load(const wcstring &cmd, const env_vars_snapshot_t &vars)
 {
     const env_var_t path_var = vars.get(env_var_name);
     if (path_var.missing_or_empty())
         return false;
 
     std::vector<wcstring> path_list;
-  tokenize_variable_array( path_var, path_list );
-    return this->locate_file_and_maybe_load_it( cmd, false, false, path_list );
+    tokenize_variable_array(path_var, path_list);
+    return this->locate_file_and_maybe_load_it(cmd, false, false, path_list);
 }
 
 static bool script_name_precedes_script_name(const builtin_script_t &script1, const builtin_script_t &script2)
@@ -133,20 +142,22 @@ static bool script_name_precedes_script_name(const builtin_script_t &script1, co
     return wcscmp(script1.name, script2.name) < 0;
 }
 
-void autoload_t::unload_all(void) {
+void autoload_t::unload_all(void)
+{
     scoped_lock locker(lock);
     this->evict_all_nodes();
 }
 
 /** Check whether the given command is loaded. */
-bool autoload_t::has_tried_loading( const wcstring &cmd )
+bool autoload_t::has_tried_loading(const wcstring &cmd)
 {
     scoped_lock locker(lock);
     autoload_function_t * func = this->get_node(cmd);
     return func != NULL;
 }
 
-static bool is_stale(const autoload_function_t *func) {
+static bool is_stale(const autoload_function_t *func)
+{
     /** Return whether this function is stale. Internalized functions can never be stale. */
     return ! func->is_internalized && time(NULL) - func->access.last_checked > kAutoloadStalenessInterval;
 }
@@ -155,11 +166,15 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
 {
     ASSERT_IS_LOCKED(lock);
     autoload_function_t *func = this->get_node(cmd);
-    if (! func) {
+    if (! func)
+    {
         func = new autoload_function_t(cmd);
-        if (allow_eviction) {
+        if (allow_eviction)
+        {
             this->add_node(func);
-        } else {
+        }
+        else
+        {
             this->add_node_without_eviction(func);
         }
     }
@@ -178,11 +193,11 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
 
      Result: if really_load is true, returns whether the function was loaded. Otherwise returns whether the function existed.
 */
-bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list )
+bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list)
 {
     /* Note that we are NOT locked in this function! */
-  size_t i;
-  bool reloaded = 0;
+    size_t i;
+    bool reloaded = 0;
 
     /* Try using a cached function. If we really want the function to be loaded, require that it be really loaded. If we're not reloading, allow stale functions. */
     {
@@ -196,22 +211,30 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
 
         /* Determine if we can use this cached function */
         bool use_cached;
-        if (! func) {
+        if (! func)
+        {
             /* Can't use a function that doesn't exist */
             use_cached = false;
-        } else if (really_load && ! func->is_placeholder && ! func->is_loaded) {
+        }
+        else if (really_load && ! func->is_placeholder && ! func->is_loaded)
+        {
             /* Can't use an unloaded function */
             use_cached = false;
-        } else if ( ! allow_stale_functions && is_stale(func)) {
+        }
+        else if (! allow_stale_functions && is_stale(func))
+        {
             /* Can't use a stale function */
             use_cached = false;
-        } else {
+        }
+        else
+        {
             /* I guess we can use it */
             use_cached = true;
         }
 
         /* If we can use this function, return whether we were able to access it */
-        if (use_cached) {
+        if (use_cached)
+        {
             return func->is_internalized || func->access.accessible;
         }
     }
@@ -235,7 +258,8 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
             matching_builtin_script = found;
         }
     }
-    if (matching_builtin_script) {
+    if (matching_builtin_script)
+    {
         has_script_source = true;
         script_source = str2wcstring(matching_builtin_script->def);
 
@@ -253,13 +277,14 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
     if (! has_script_source)
     {
         /* Iterate over path searching for suitable completion files */
-        for( i=0; i<path_list.size(); i++ )
+        for (i=0; i<path_list.size(); i++)
         {
             wcstring next = path_list.at(i);
             wcstring path = next + L"/" + cmd + L".fish";
 
             const file_access_attempt_t access = access_file(path, R_OK);
-            if (access.accessible) {
+            if (access.accessible)
+            {
                 /* Found it! */
                 found_file = true;
 
@@ -269,7 +294,8 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
 
                 /* Generate the source if we need to load it */
                 bool need_to_load_function = really_load && (func == NULL || func->access.mod_time != access.mod_time || ! func->is_loaded);
-                if (need_to_load_function) {
+                if (need_to_load_function)
+                {
 
                     /* Generate the script source */
                     wcstring esc = escape_string(path, 1);
@@ -277,7 +303,8 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
                     has_script_source = true;
 
                     /* Remove any loaded command because we are going to reload it. Note that this will deadlock if command_removed calls back into us. */
-                    if (func && func->is_loaded) {
+                    if (func && func->is_loaded)
+                    {
                         command_removed(cmd);
                         func->is_placeholder = false;
                     }
@@ -287,7 +314,8 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
                 }
 
                 /* Create the function if we haven't yet. This does not load it. Do not trigger eviction unless we are actually loading, because we don't want to evict off of the main thread. */
-                if (! func) {
+                if (! func)
+                {
                     func = get_autoloaded_function_with_creation(cmd, really_load);
                 }
 
@@ -306,17 +334,21 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
           Later we only research if the current time is at least five seconds later.
           This way, the files won't be searched over and over again.
         */
-        if( ! found_file && ! has_script_source )
+        if (! found_file && ! has_script_source)
         {
             scoped_lock locker(lock);
             /* Generate a placeholder */
             autoload_function_t *func = this->get_node(cmd);
-            if (! func) {
+            if (! func)
+            {
                 func = new autoload_function_t(cmd);
                 func->is_placeholder = true;
-                if (really_load) {
+                if (really_load)
+                {
                     this->add_node(func);
-                } else {
+                }
+                else
+                {
                     this->add_node_without_eviction(func);
                 }
             }
@@ -327,7 +359,7 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
     /* If we have a script, either built-in or a file source, then run it */
     if (really_load && has_script_source)
     {
-        if( exec_subshell( script_source) == -1 )
+        if (exec_subshell(script_source) == -1)
         {
             /*
               Do nothing on failiure
@@ -336,9 +368,12 @@ bool autoload_t::locate_file_and_maybe_load_it( const wcstring &cmd, bool really
 
     }
 
-    if (really_load) {
+    if (really_load)
+    {
         return reloaded;
-    } else {
+    }
+    else
+    {
         return found_file || has_script_source;
     }
 }

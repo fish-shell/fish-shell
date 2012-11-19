@@ -4,40 +4,73 @@
 #include "color.h"
 #include "fallback.h"
 
-bool rgb_color_t::try_parse_special(const wcstring &special) {
+bool rgb_color_t::try_parse_special(const wcstring &special)
+{
     bzero(&data, sizeof data);
     const wchar_t *name = special.c_str();
-    if (! wcscasecmp(name, L"normal")) {
+    if (! wcscasecmp(name, L"normal"))
+    {
         this->type = type_normal;
-    } else if (! wcscasecmp(name, L"reset")) {
+    }
+    else if (! wcscasecmp(name, L"reset"))
+    {
         this->type = type_reset;
-    } else if (! wcscasecmp(name, L"ignore")) {
+    }
+    else if (! wcscasecmp(name, L"ignore"))
+    {
         this->type = type_ignore;
-    } else {
+    }
+    else
+    {
         this->type = type_none;
     }
     return this->type != type_none;
 }
 
-static int parse_hex_digit(wchar_t x) {
-    switch (x) {
-        case L'0': return 0x0;
-        case L'1': return 0x1;
-        case L'2': return 0x2;
-        case L'3': return 0x3;
-        case L'4': return 0x4;
-        case L'5': return 0x5;
-        case L'6': return 0x6;
-        case L'7': return 0x7;
-        case L'8': return 0x8;
-        case L'9': return 0x9;
-        case L'a':case L'A': return 0xA;
-        case L'b':case L'B': return 0xB;
-        case L'c':case L'C': return 0xC;
-        case L'd':case L'D': return 0xD;
-        case L'e':case L'E': return 0xE;
-        case L'f':case L'F': return 0xF;
-        default: return -1;
+static int parse_hex_digit(wchar_t x)
+{
+    switch (x)
+    {
+    case L'0':
+        return 0x0;
+    case L'1':
+        return 0x1;
+    case L'2':
+        return 0x2;
+    case L'3':
+        return 0x3;
+    case L'4':
+        return 0x4;
+    case L'5':
+        return 0x5;
+    case L'6':
+        return 0x6;
+    case L'7':
+        return 0x7;
+    case L'8':
+        return 0x8;
+    case L'9':
+        return 0x9;
+    case L'a':
+    case L'A':
+        return 0xA;
+    case L'b':
+    case L'B':
+        return 0xB;
+    case L'c':
+    case L'C':
+        return 0xC;
+    case L'd':
+    case L'D':
+        return 0xD;
+    case L'e':
+    case L'E':
+        return 0xE;
+    case L'f':
+    case L'F':
+        return 0xF;
+    default:
+        return -1;
     }
 }
 
@@ -47,15 +80,18 @@ static unsigned long squared_difference(long p1, long p2)
     return diff * diff;
 }
 
-static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *colors, size_t color_count) {
+static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *colors, size_t color_count)
+{
     long r = rgb[0], g = rgb[1], b = rgb[2];
     unsigned long best_distance = (unsigned long)(-1);
     unsigned char best_index = (unsigned char)(-1);
-    for (unsigned char idx = 0; idx < color_count; idx++) {
+    for (unsigned char idx = 0; idx < color_count; idx++)
+    {
         uint32_t color = colors[idx];
         long test_r = (color >> 16) & 0xFF, test_g = (color >> 8) & 0xFF, test_b = (color >> 0) & 0xFF;
         unsigned long distance = squared_difference(r, test_r) + squared_difference(g, test_g) + squared_difference(b, test_b);
-        if (distance <= best_distance) {
+        if (distance <= best_distance)
+        {
             best_index = idx;
             best_distance = distance;
         }
@@ -64,7 +100,8 @@ static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *c
 
 }
 
-bool rgb_color_t::try_parse_rgb(const wcstring &name) {
+bool rgb_color_t::try_parse_rgb(const wcstring &name)
+{
     bzero(&data, sizeof data);
     /* We support the following style of rgb formats (case insensitive):
         #FA3
@@ -81,17 +118,22 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name) {
 
     bool success = false;
     size_t i;
-    if (len - digit_idx == 3) {
+    if (len - digit_idx == 3)
+    {
         // type FA3
-        for (i=0; i < 3; i++) {
+        for (i=0; i < 3; i++)
+        {
             int val = parse_hex_digit(name.at(digit_idx++));
             if (val < 0) break;
             data.rgb[i] = val*16+val;
         }
         success = (i == 3);
-    } else if (len - digit_idx == 6) {
+    }
+    else if (len - digit_idx == 6)
+    {
         // type F3A035
-        for (i=0; i < 3; i++) {
+        for (i=0; i < 3; i++)
+        {
             int hi = parse_hex_digit(name.at(digit_idx++));
             int lo = parse_hex_digit(name.at(digit_idx++));
             if (lo < 0 || hi < 0) break;
@@ -99,19 +141,22 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name) {
         }
         success = (i == 3);
     }
-    if (success) {
+    if (success)
+    {
         this->type = type_rgb;
     }
     return success;
 }
 
-struct named_color_t {
+struct named_color_t
+{
     const wchar_t * name;
     unsigned char idx;
     unsigned char rgb[3];
 };
 
-static const named_color_t named_colors[11] = {
+static const named_color_t named_colors[11] =
+{
     {L"black", 0, {0, 0, 0}},
     {L"red", 1, {0xFF, 0, 0}},
     {L"green", 2, {0, 0xFF, 0}},
@@ -125,11 +170,14 @@ static const named_color_t named_colors[11] = {
     {L"normal", 8, {0xFF, 0xFF, 0XFF}}
 };
 
-bool rgb_color_t::try_parse_named(const wcstring &str) {
+bool rgb_color_t::try_parse_named(const wcstring &str)
+{
     bzero(&data, sizeof data);
     size_t max = sizeof named_colors / sizeof *named_colors;
-    for (size_t idx=0; idx < max; idx++) {
-        if (0 == wcscasecmp(str.c_str(), named_colors[idx].name)) {
+    for (size_t idx=0; idx < max; idx++)
+    {
+        if (0 == wcscasecmp(str.c_str(), named_colors[idx].name))
+        {
             data.name_idx = named_colors[idx].idx;
             this->type = type_named;
             return true;
@@ -138,29 +186,53 @@ bool rgb_color_t::try_parse_named(const wcstring &str) {
     return false;
 }
 
-static const wchar_t *name_for_color_idx(unsigned char idx) {
+static const wchar_t *name_for_color_idx(unsigned char idx)
+{
     size_t max = sizeof named_colors / sizeof *named_colors;
-    for (size_t i=0; i < max; i++) {
-        if (named_colors[i].idx == idx) {
+    for (size_t i=0; i < max; i++)
+    {
+        if (named_colors[i].idx == idx)
+        {
             return named_colors[i].name;
         }
     }
     return L"unknown";
 }
 
-rgb_color_t::rgb_color_t(unsigned char t, unsigned char i) : type(t), flags(), data() {
+rgb_color_t::rgb_color_t(unsigned char t, unsigned char i) : type(t), flags(), data()
+{
     data.name_idx = i;
 }
 
-rgb_color_t rgb_color_t::normal() { return rgb_color_t(type_normal); }
-rgb_color_t rgb_color_t::reset() { return rgb_color_t(type_reset); }
-rgb_color_t rgb_color_t::ignore() { return rgb_color_t(type_ignore); }
-rgb_color_t rgb_color_t::none() { return rgb_color_t(type_none); }
-rgb_color_t rgb_color_t::white() { return rgb_color_t(type_named, 7); }
-rgb_color_t rgb_color_t::black() { return rgb_color_t(type_named, 0); }
+rgb_color_t rgb_color_t::normal()
+{
+    return rgb_color_t(type_normal);
+}
+rgb_color_t rgb_color_t::reset()
+{
+    return rgb_color_t(type_reset);
+}
+rgb_color_t rgb_color_t::ignore()
+{
+    return rgb_color_t(type_ignore);
+}
+rgb_color_t rgb_color_t::none()
+{
+    return rgb_color_t(type_none);
+}
+rgb_color_t rgb_color_t::white()
+{
+    return rgb_color_t(type_named, 7);
+}
+rgb_color_t rgb_color_t::black()
+{
+    return rgb_color_t(type_named, 0);
+}
 
-static unsigned char term8_color_for_rgb(const unsigned char rgb[3]) {
-    const uint32_t kColors[] = {
+static unsigned char term8_color_for_rgb(const unsigned char rgb[3])
+{
+    const uint32_t kColors[] =
+    {
         0x000000, //Black
         0xFF0000, //Red
         0x00FF00, //Green
@@ -173,8 +245,10 @@ static unsigned char term8_color_for_rgb(const unsigned char rgb[3]) {
     return convert_color(rgb, kColors, sizeof kColors / sizeof *kColors);
 }
 
-static unsigned char term256_color_for_rgb(const unsigned char rgb[3]) {
-    const uint32_t kColors[240] = {
+static unsigned char term256_color_for_rgb(const unsigned char rgb[3])
+{
+    const uint32_t kColors[240] =
+    {
         0x000000, 0x00005f, 0x000087, 0x0000af, 0x0000d7, 0x0000ff, 0x005f00, 0x005f5f,
         0x005f87, 0x005faf, 0x005fd7, 0x005fff, 0x008700, 0x00875f, 0x008787, 0x0087af,
         0x0087d7, 0x0087ff, 0x00af00, 0x00af5f, 0x00af87, 0x00afaf, 0x00afd7, 0x00afff,
@@ -209,58 +283,71 @@ static unsigned char term256_color_for_rgb(const unsigned char rgb[3]) {
     return 16 + convert_color(rgb, kColors, sizeof kColors / sizeof *kColors);
 }
 
-unsigned char rgb_color_t::to_term256_index() const {
+unsigned char rgb_color_t::to_term256_index() const
+{
     assert(type == type_rgb);
     return term256_color_for_rgb(data.rgb);
 }
 
-unsigned char rgb_color_t::to_name_index() const {
+unsigned char rgb_color_t::to_name_index() const
+{
     assert(type == type_named || type == type_rgb);
-    if (type == type_named) {
+    if (type == type_named)
+    {
         return data.name_idx;
-    } else if (type == type_rgb) {
+    }
+    else if (type == type_rgb)
+    {
         return term8_color_for_rgb(data.rgb);
-    } else {
+    }
+    else
+    {
         /* This is an error */
         return (unsigned char)(-1);
     }
 }
 
-void rgb_color_t::parse(const wcstring &str) {
+void rgb_color_t::parse(const wcstring &str)
+{
     bool success = false;
     if (! success) success = try_parse_special(str);
     if (! success) success = try_parse_named(str);
     if (! success) success = try_parse_rgb(str);
-    if (! success) {
+    if (! success)
+    {
         bzero(this->data.rgb, sizeof this->data.rgb);
         this->type = type_none;
     }
 }
 
-rgb_color_t::rgb_color_t(const wcstring &str) {
+rgb_color_t::rgb_color_t(const wcstring &str)
+{
     this->parse(str);
 }
 
-rgb_color_t::rgb_color_t(const std::string &str) {
+rgb_color_t::rgb_color_t(const std::string &str)
+{
     this->parse(str2wcstring(str));
 }
 
-wcstring rgb_color_t::description() const {
-    switch (type) {
-        case type_none:
-            return L"none";
-        case type_named:
-            return format_string(L"named(%d: %ls)", (int)data.name_idx, name_for_color_idx(data.name_idx));
-        case type_rgb:
-            return format_string(L"rgb(0x%02x%02x%02x)", data.rgb[0], data.rgb[1], data.rgb[2]);
-        case type_reset:
-            return L"reset";
-        case type_normal:
-            return L"normal";
-        case type_ignore:
-            return L"ignore";
-        default:
-            abort();
-            return L"";
+wcstring rgb_color_t::description() const
+{
+    switch (type)
+    {
+    case type_none:
+        return L"none";
+    case type_named:
+        return format_string(L"named(%d: %ls)", (int)data.name_idx, name_for_color_idx(data.name_idx));
+    case type_rgb:
+        return format_string(L"rgb(0x%02x%02x%02x)", data.rgb[0], data.rgb[1], data.rgb[2]);
+    case type_reset:
+        return L"reset";
+    case type_normal:
+        return L"normal";
+    case type_ignore:
+        return L"ignore";
+    default:
+        abort();
+        return L"";
     }
 }

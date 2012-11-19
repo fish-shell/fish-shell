@@ -14,62 +14,67 @@ Functions having to do with parser keywords, like testing if a function is a blo
 #include "parser_keywords.h"
 
 
-bool parser_keywords_is_switch( const wcstring &cmd )
+bool parser_keywords_is_switch(const wcstring &cmd)
 {
-  if (cmd == L"--") {
-    return ARG_SKIP;
-    } else if (! cmd.empty() && cmd.at(0) == L'-') {
+    if (cmd == L"--")
+    {
+        return ARG_SKIP;
+    }
+    else if (! cmd.empty() && cmd.at(0) == L'-')
+    {
         return ARG_SWITCH;
-    } else {
+    }
+    else
+    {
         return ARG_NON_SWITCH;
     }
 }
 
-bool parser_keywords_skip_arguments( const wcstring &cmd )
+bool parser_keywords_skip_arguments(const wcstring &cmd)
 {
-  return contains( cmd,
-           L"else",
-           L"begin" );
+    return contains(cmd,
+                    L"else",
+                    L"begin");
 }
 
 
-bool parser_keywords_is_subcommand( const wcstring &cmd )
+bool parser_keywords_is_subcommand(const wcstring &cmd)
 {
 
-  return parser_keywords_skip_arguments( cmd ) ||
-    contains( cmd,
-          L"command",
-          L"builtin",
-          L"while",
-          L"exec",
-          L"if",
-          L"and",
-          L"or",
-          L"not" );
+    return parser_keywords_skip_arguments(cmd) ||
+           contains(cmd,
+                    L"command",
+                    L"builtin",
+                    L"while",
+                    L"exec",
+                    L"if",
+                    L"and",
+                    L"or",
+                    L"not");
 
 }
 
-bool parser_keywords_is_block( const wcstring &word)
+bool parser_keywords_is_block(const wcstring &word)
 {
-  return contains( word,
-           L"for",
-           L"while",
-           L"if",
-           L"function",
-           L"switch",
-           L"begin" );
+    return contains(word,
+                    L"for",
+                    L"while",
+                    L"if",
+                    L"function",
+                    L"switch",
+                    L"begin");
 }
 
-bool parser_keywords_is_reserved( const wcstring &word)
+bool parser_keywords_is_reserved(const wcstring &word)
 {
-  return parser_keywords_is_block(word) ||
-    parser_keywords_is_subcommand( word ) ||
-    contains( word,
-          L"end",
-          L"case",
-          L"else",
-          L"return",
-          L"continue",
-          L"break" );
+    return parser_keywords_is_block(word) ||
+           parser_keywords_is_subcommand(word) ||
+           contains(word,
+                    L"end",
+                    L"case",
+                    L"else",
+                    L"return",
+                    L"continue",
+                    L"break");
 }
 

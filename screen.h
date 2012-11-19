@@ -63,36 +63,43 @@ class screen_data_t
 {
     std::vector<line_t> line_datas;
 
-    public:
+public:
 
-    struct cursor_t {
+    struct cursor_t
+    {
         int x;
         int y;
         cursor_t() : x(0), y(0) { }
         cursor_t(int a, int b) : x(a), y(b) { }
     } cursor;
 
-    line_t &add_line(void) {
+    line_t &add_line(void)
+    {
         line_datas.resize(line_datas.size() + 1);
         return line_datas.back();
     }
 
-    void resize(size_t size) {
+    void resize(size_t size)
+    {
         line_datas.resize(size);
     }
 
-    line_t &create_line(size_t idx) {
-        if (idx >= line_datas.size()) {
+    line_t &create_line(size_t idx)
+    {
+        if (idx >= line_datas.size())
+        {
             line_datas.resize(idx + 1);
         }
         return line_datas.at(idx);
     }
 
-    line_t &line(size_t idx) {
+    line_t &line(size_t idx)
+    {
         return line_datas.at(idx);
     }
 
-    size_t line_count(void) {
+    size_t line_count(void)
+    {
         return line_datas.size();
     }
 };
@@ -102,7 +109,7 @@ class screen_data_t
 */
 class screen_t
 {
-    public:
+public:
 
     /** Constructor */
     screen_t();
@@ -139,17 +146,17 @@ class screen_t
      the parts of the screen lines where the actual content is not
      filled in may be non-empty. This means that a clr_eol command
      has to be sent to the terminal at the end of each line.
-  */
-  bool need_clear;
+    */
+    bool need_clear;
 
     /** If we need to clear, this is how many lines the actual screen had, before we reset it. This is used when resizing the window larger: if the cursor jumps to the line above, we need to remember to clear the subsequent lines. */
     size_t actual_lines_before_reset;
 
-  /**
-     These status buffers are used to check if any output has occurred
-     other than from fish's main loop, in which case we need to redraw.
-  */
-  struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
+    /**
+       These status buffers are used to check if any output has occurred
+       other than from fish's main loop, in which case we need to redraw.
+    */
+    struct stat prev_buff_1, prev_buff_2, post_buff_1, post_buff_2;
 };
 
 /**
@@ -168,24 +175,24 @@ class screen_t
     \param indent the indent to use for the command line
     \param cursor_pos where the cursor is
 */
-void s_write( screen_t *s,
-        const wchar_t *left_prompt,
-        const wchar_t *right_prompt,
-        const wchar_t *commandline,
-        size_t explicit_len,
-        const int *colors,
-        const int *indent,
-        size_t cursor_pos );
+void s_write(screen_t *s,
+             const wchar_t *left_prompt,
+             const wchar_t *right_prompt,
+             const wchar_t *commandline,
+             size_t explicit_len,
+             const int *colors,
+             const int *indent,
+             size_t cursor_pos);
 
 
-void s_write( screen_t *s,
-              const wcstring &left_prompt,
-              const wcstring &right_prompt,
-              const wcstring &commandline,
-              size_t explicit_len,
-              const int *colors,
-              const int *indent,
-              size_t cursor_pos );
+void s_write(screen_t *s,
+             const wcstring &left_prompt,
+             const wcstring &right_prompt,
+             const wcstring &commandline,
+             size_t explicit_len,
+             const int *colors,
+             const int *indent,
+             size_t cursor_pos);
 
 /**
     This function resets the screen buffers internal knowledge about
@@ -203,6 +210,6 @@ void s_write( screen_t *s,
     resizing, there will be one line of garbage for every repaint,
     which will quicly fill the screen.
 */
-void s_reset( screen_t *s, bool reset_cursor, bool reset_prompt = true );
+void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
 
 #endif

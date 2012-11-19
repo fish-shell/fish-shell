@@ -31,16 +31,16 @@ class completion_t;
 */
 enum
 {
-  /** Character representing any character except '/' */
-  ANY_CHAR = WILDCARD_RESERVED,
+    /** Character representing any character except '/' */
+    ANY_CHAR = WILDCARD_RESERVED,
 
-  /** Character representing any character string not containing '/' (A slash) */
-  ANY_STRING,
+    /** Character representing any character string not containing '/' (A slash) */
+    ANY_STRING,
 
-  /** Character representing any character string */
-  ANY_STRING_RECURSIVE,
+    /** Character representing any character string */
+    ANY_STRING_RECURSIVE,
 }
-  ;
+;
 
 /**
     Expand the wildcard by matching against the filesystem.
@@ -67,7 +67,7 @@ enum
   \return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
 
 */
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &out );
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &out);
 /**
    Test whether the given wildcard matches the string. Does not perform any I/O.
 
@@ -75,22 +75,22 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_
    \param wc The wildcard to test against
    \return true if the wildcard matched
 */
-bool wildcard_match( const wcstring &str, const wcstring &wc );
+bool wildcard_match(const wcstring &str, const wcstring &wc);
 
 
 /**
    Check if the specified string contains wildcards
 */
-int wildcard_has( const wchar_t *str, int internal );
+int wildcard_has(const wchar_t *str, int internal);
 
 /**
    Test wildcard completion
 */
 bool wildcard_complete(const wcstring &str,
-             const wchar_t *wc,
-             const wchar_t *desc,
-             wcstring (*desc_func)(const wcstring &),
-             std::vector<completion_t> &out,
-             expand_flags_t flags );
+                       const wchar_t *wc,
+                       const wchar_t *desc,
+                       wcstring(*desc_func)(const wcstring &),
+                       std::vector<completion_t> &out,
+                       expand_flags_t flags);
 
 #endif

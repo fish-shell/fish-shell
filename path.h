@@ -71,7 +71,7 @@ bool path_can_be_implicit_cd(const wcstring &path,
    Remove double slashes and trailing slashes from a path,
    e.g. transform foo//bar/ into foo/bar. The string is modified in-place.
  */
-void path_make_canonical( wcstring &path );
+void path_make_canonical(wcstring &path);
 
 bool path_is_valid(const wcstring &path, const wcstring &working_directory);
 

@@ -24,7 +24,7 @@
 #endif
 
 #ifndef FISH_USE_POSIX_SPAWN
- #define FISH_USE_POSIX_SPAWN HAVE_SPAWN_H
+#define FISH_USE_POSIX_SPAWN HAVE_SPAWN_H
 #endif
 
 
@@ -40,7 +40,7 @@
 
    Returns 0 on sucess, -1 on failiure.
 */
-int set_child_group( job_t *j, process_t *p, int print_errors );
+int set_child_group(job_t *j, process_t *p, int print_errors);
 
 /**
    Initialize a new child process. This should be called right away
@@ -59,7 +59,7 @@ int set_child_group( job_t *j, process_t *p, int print_errors );
    signals are always unblocked. On failiure, signal handlers, io
    redirections and process group of the process is undefined.
 */
-int setup_child_process( job_t *j, process_t *p );
+int setup_child_process(job_t *j, process_t *p);
 
 /* Call fork(), optionally waiting until we are no longer multithreaded. If the forked child doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's not necessary to wait for threads to die. If the forked child may do those things, it should wait for threads to die.
 */

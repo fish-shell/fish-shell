@@ -224,7 +224,7 @@ int tokenizer::line_number_of_character_at_offset(size_t offset)
 /**
    Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the first character.
 */
-static bool is_string_char(wchar_t c, bool is_first)
+bool tok_is_string_character(wchar_t c, bool is_first)
 {
     switch (c)
     {
@@ -248,7 +248,6 @@ static bool is_string_char(wchar_t c, bool is_first)
 
         default:
             return true;
-
     }
 }
 
@@ -368,7 +367,7 @@ static void read_string(tokenizer *tok)
 
                         default:
                         {
-                            if (!is_string_char(*(tok->buff), is_first))
+                            if (!tok_is_string_character(*(tok->buff), is_first))
                             {
                                 do_loop=0;
                             }

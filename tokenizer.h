@@ -168,6 +168,14 @@ const wchar_t *tok_string(tokenizer *tok);
 wchar_t *tok_first(const wchar_t *str);
 
 /**
+   Indicates whether a character can be part of a string, or is a string separator.
+   Separators include newline, tab, |, ^, >, <, etc.
+
+   is_first should indicate whether this is the first character in a potential string.
+*/
+bool tok_is_string_character(wchar_t c, bool is_first);
+
+/**
    Move tokenizer position
 */
 void tok_set_pos(tokenizer *tok, int pos);

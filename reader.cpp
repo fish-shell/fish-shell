@@ -1950,8 +1950,9 @@ class move_word_state_machine_t
     enum
     {
         s_whitespace,
-        s_punctuation,
-        s_alphanumeric_or_punctuation_except_slash,
+        s_separator,
+        s_slash,
+        s_nonseparators_except_slash,
         s_end
     } state;
 
@@ -1963,28 +1964,75 @@ public:
 
     bool consume_char(wchar_t c)
     {
-        /* Note fall-through in all of these! */
-        switch (state)
+        //printf("state %d, consume '%lc'\n", state, c);
+        bool consumed = false;
+        /* Always treat separators as first. All this does is ensure that we treat ^ as a string character instead of as stderr redirection, which I hypothesize is usually what is desired. */
+        bool was_first = true;
+        while (state != s_end && ! consumed)
         {
-            case s_whitespace:
-                if (iswspace(c))
-                    return true;
-                state = s_punctuation;
+            switch (state)
+            {
+                case s_whitespace:
+                    if (iswspace(c))
+                    {
+                        /* Consumed whitespace */
+                        consumed = true;
+                    }
+                    else if (tok_is_string_character(c, was_first))
+                    {
+                        /* String path */
+                        state = s_slash;
+                    }
+                    else
+                    {
+                        /* Separator path */
+                        state = s_separator;
+                    }
+                    break;
 
-            case s_punctuation:
-                if (iswpunct(c))
-                    return true;
-                state = s_alphanumeric_or_punctuation_except_slash;
+                case s_separator:
+                    if (! iswspace(c) && ! tok_is_string_character(c, was_first))
+                    {
+                        /* Consumed separator */
+                        consumed = true;
+                    }
+                    else
+                    {
+                        state = s_end;
+                    }
+                    break;
 
-            case s_alphanumeric_or_punctuation_except_slash:
-                if (c != L'/' && (iswalnum(c) || iswpunct(c)))
-                    return true;
-                state = s_end;
+                case s_slash:
+                    if (c == L'/')
+                    {
+                        /* Consumed slash */
+                        consumed = true;
+                    }
+                    else
+                    {
+                        state = s_nonseparators_except_slash;
+                    }
+                    break;
 
-            case s_end:
-            default:
-                return false;
+                case s_nonseparators_except_slash:
+                    if (c != L'/' && tok_is_string_character(c, was_first))
+                    {
+                        /* Consumed string character except slash */
+                        consumed = true;
+                    }
+                    else
+                    {
+                        state = s_end;
+                    }
+                    break;
+
+                    /* We won't get here, but keep the compiler happy */
+                case s_end:
+                default:
+                    break;
+            }
         }
+        return consumed;
     }
 };
 
@@ -2000,8 +2048,10 @@ public:
    The regex we implement:
 
       WHITESPACE*
-      PUNCTUATION*
-      ALPHANUMERIC_OR_PUNCTUATION_EXCEPT_SLASH*
+        (SEPARATOR+)
+      |
+        (SLASH*
+         TOK_STRING_CHARACTERS_EXCEPT_SLASH*)
 
    Interesting test case:
      /foo/bar/baz/ -> /foo/bar/ -> /foo/ -> /
@@ -2013,61 +2063,55 @@ enum move_word_dir_t
     MOVE_DIR_LEFT,
     MOVE_DIR_RIGHT
 };
+
 static void move_word(bool move_right, bool erase, bool newv)
 {
-    const size_t start_buff_pos = data->buff_pos;
-    size_t end_buff_pos = data->buff_pos; //this is the last character we delete; we always delete at least one character
-
     /* Return if we are already at the edge */
     const size_t boundary = move_right ? data->command_length() : 0;
     if (data->buff_pos == boundary)
         return;
 
-    /*
-      If we are beyond the last character and moving left, start by
-      moving one step, since otherwise we'll start on the \0, which
-      should be ignored.
-    */
-    if (! move_right && (end_buff_pos == data->command_length()))
-    {
-        if (!end_buff_pos)
-            return;
-
-        end_buff_pos--;
-    }
-
-    const wchar_t * const command_line = data->command_line.c_str();
+    /* When moving left, a value of 1 means the character at index 0. */
     move_word_state_machine_t state;
-    const size_t last_valid_end_buff_pos = (move_right ? data->command_length() - 1 : 0);
-    while (end_buff_pos != last_valid_end_buff_pos)
+    const wchar_t * const command_line = data->command_line.c_str();
+    const size_t start_buff_pos = data->buff_pos;
+
+    size_t buff_pos = data->buff_pos;
+    while (buff_pos != boundary)
     {
-        size_t next_buff_pos = (move_right ? end_buff_pos + 1 : end_buff_pos - 1);
-        wchar_t c = command_line[next_buff_pos];
+        size_t idx = (move_right ? buff_pos : buff_pos - 1);
+        wchar_t c = command_line[idx];
         if (! state.consume_char(c))
             break;
-        end_buff_pos = next_buff_pos;
+        buff_pos = (move_right ? buff_pos + 1 : buff_pos - 1);
     }
 
+    /* Always consume at least one character */
+    if (buff_pos == start_buff_pos)
+        buff_pos = (move_right ? buff_pos + 1 : buff_pos - 1);
+
+    /* If we are moving left, buff_pos-1 is the index of the first character we do not delete (possibly -1). If we are moving right, then buff_pos is that index - possibly data->command_length(). */
     if (erase)
     {
-        size_t start_idx = mini(start_buff_pos, end_buff_pos); //first char to delete
-        size_t end_idx = maxi(start_buff_pos, end_buff_pos); //last char to delete
-
-        // Don't try to delete past the end
-        end_idx = mini(end_idx, data->command_length() - 1);
-
-        // Don't autosuggest after a kill
+        /* Don't autosuggest after a kill */
         data->suppress_autosuggestion = true;
 
-        reader_kill(start_idx, end_idx - start_idx + 1, move_right?KILL_APPEND:KILL_PREPEND, newv);
+        if (move_right)
+        {
+            reader_kill(start_buff_pos, buff_pos - start_buff_pos, KILL_APPEND, newv);
+        }
+        else
+        {
+            reader_kill(buff_pos, start_buff_pos - buff_pos, KILL_PREPEND, newv);
+        }
     }
     else
     {
-        data->buff_pos = move_right ? end_buff_pos + 1 : end_buff_pos;
+        data->buff_pos = buff_pos;
         reader_repaint();
     }
-}
 
+}
 
 const wchar_t *reader_get_buffer(void)
 {

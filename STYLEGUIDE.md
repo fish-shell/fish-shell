@@ -99,7 +99,7 @@ Document your code using [Doxygen][dox].
 
 ## Naming
 
-All names in code should be `small_snake_case`. No Hungary notation is used.
+All names in code should be `small_snake_case`. No Hungarian notation is used.
 Classes and structs names should be followed by `_t`.
 
 [dox]: http://www.stack.nl/~dimitri/doxygen/ "Doxygen homepage"

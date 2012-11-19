@@ -801,7 +801,7 @@
 			attributes = {
 				LastUpgradeCheck = 0440;
 			};
-			buildConfigurationList = D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "FishsFish" */;
+			buildConfigurationList = D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "fish" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -1326,7 +1326,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "FishsFish" */ = {
+		D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "fish" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0A084F813B3AC130099B651 /* Debug */,

@@ -6,29 +6,33 @@ style.
 
 ## Formatting
 
-1. Always use 2 spaces instead tabs as indent (unless needed like `Makefile`).
-2. Opening curly bracket is always the same line as declaration.
+1. fish uses the Allman/BSD style of indentation.
+2. Indent with spaces, not tabs.
+3. Use 4 spaces per indent (unless needed like `Makefile`).
+4. Opening curly bracket is on the following line:
 
         // ✔:
-        struct name {
+        struct name
+        {
           // code
         };
 
-        void func() {
-          // code
-        }
-
-        if (...) {
-          // code
-        }
-
-        // ✗:
         void func()
         {
           // code
         }
 
-3. Put space after `if`, `while` and `for` before conditions.
+        if (...)
+        {
+          // code
+        }
+
+        // ✗:
+        void func() {
+          // code
+        }
+
+5. Put space after `if`, `while` and `for` before conditions.
 
         // ✔:
         if () {}
@@ -36,7 +40,7 @@ style.
         // ✗:
         if() {}
 
-4. Put spaces before and after operators excluding increment and decrement;
+6. Put spaces before and after operators excluding increment and decrement;
 
         // ✔:
         int a = 1 + 2 * 3;
@@ -46,7 +50,7 @@ style.
         int a=1+2*3;
         a ++;
 
-5. Never put spaces between function name and parameters list.
+7. Never put spaces between function name and parameters list.
 
         // ✔:
         func(args);
@@ -54,8 +58,8 @@ style.
         // ✗:
         func (args);
 
-6. Never put spaces after `(` and before `)`.
-7. Always put space after comma and semicolon.
+8. Never put spaces after `(` and before `)`.
+9. Always put space after comma and semicolon.
 
         // ✔:
         func(arg1, arg2);
@@ -71,7 +75,7 @@ style.
 
 Document your code using [Doxygen][dox].
 
-1. Documentation comment should use double star notation or tipple slash:
+1. Documentation comment should use double star notation or tripple slash:
 
         // ✔:
         /// Some var
